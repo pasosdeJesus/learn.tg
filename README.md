@@ -1,20 +1,18 @@
-# Aprender mediante juegos / Learn through games
+#  Learn through games / Aprender mediante juegos
 
 
-## Directorio `servidor`
+## Directory `servidor`
 
-Aplicación al lado del servidor con rails basada en cor1440
+Backend application with rails based on
+[cor1440](https://gitlab.com/pasosdeJesus/cor1440)
 
-Debe iniciarse primero.
+It must be started first.
 
-Ver detalles en servidor/README.md
+See details at servidor/README.md
 
 
-## Directorio `cliente`
+## Directory `cliente`
 
-Aplicación al lado del cliente con vue y vite.
+Frontend application with vue and vite.
 
-Inicialmente supone uso de OKX wallet.
-
-Ver detalles en cliente/README.md
-
+See details at cliente/README.md
