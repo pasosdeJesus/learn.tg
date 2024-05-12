@@ -1,15 +1,65 @@
 <template>
   <header class="encabezado-pagina">
-    Ejemplo de previsualización markdown
+    <div class="marca">
+      <RouterLink to="/">
+        <div class="logo-titulo">
+          <img class="logomin"src="/public/logo-learntg.png">
+          <div class="titulo">
+            <div class="aprender">Aprender</div>
+            <div class="mediante-juegos">mediante juegos</div>
+          </div>
+        </div>
+      </RouterLink>
+    </div>
+    <div class="controles">
+      <button>Conectar</button>
+    </div>
   </header>
 </template>
 
 <style scoped>
-header {
-  font-size: 3em;
-  line-height: 1.1;
-  text-align: center;
-  padding: 1rem;
+
+.titulo {
+  text-align: right;
+}
+
+.logo-titulo {
+  text-decoration: none;
+  width: 12rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aprender {
+   text-decoration: none;
+}
+
+.mediante-juegos {
+   text-decoration: none;
+}
+
+.logomin {
+  width: 70px;
+}
+
+.encabezado-pagina {
+  position: fixed;
+  width: 100%;
+  top: 0px;
+  left: 0px;
+  height: 75px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, .8);
+}
+.marca {
+  padding-left: 2em;
+}
+.controles {
+  padding-right: 2em;
 }
 </style>
 

@@ -1,4 +1,21 @@
-# Pastores como influencers de OKX oportunidad de bendición y para alcanzar más personas para Cristo
+<script setup>
+  import { ref, computed } from 'vue'
+  import Encabezado from '../components/Encabezado.vue'
+  import Piedepagina from '../components/Piedepagina.vue'
+
+  import {unified} from 'unified'
+  import remarkDirective from 'remark-directive'
+  import remarkFrontmatter from 'remark-frontmatter'
+  import remarkGfm from 'remark-gfm'
+  import remarkParse from 'remark-parse'
+  import remarkRehype from 'remark-rehype'
+  import rehypeStringify from 'rehype-stringify'
+
+  import addFillInTheBlank from '../lib/add-fill-in-the-blank'
+
+  const textoMd = ref(`
+# Pastores como influenciadores de OKX
+## Oportunidad de bendición y para alcanzar más personas para Cristo
 
 Del 1.May.2024 al 1.Jul.2024 la plataforma OKX está ofrenciendo la posibilidad 
 de afiliarse como influenciador (influencer) para:
@@ -7,10 +24,11 @@ de afiliarse como influenciador (influencer) para:
    influenciador.
 2. Hacer crecer la marca de cada influenciador junto con la de OKX y 
    ampliar la red de cada influenciador y de OKX.
-3. Promover el uso de criptoactivos en mi humilde opinión como ejercicio 
-   de libertad (por ejemplo del sistema bancario).
+3. Promover el uso de criptoactivos, que en nuestra humilde opinión 
+   representan un ejercicio de libertad (por ejemplo del sistema bancario).
 
-Apliqué a ese programa pero aún no he sido aceptado,
+Estimado pastor menonita, yo Vladimir Támara, deseo contarle que apliqué
+a ese programa pero aún no he sido aceptado,
 tal vez los pastores menonitas que tienen más influencia que yo (por
 ejemplo en sus iglesias), sean aceptados más pronto.
 
@@ -40,3 +58,52 @@ dolares y retiro en mi cuenta bancaría a un costo fijo muy bajo.
 
 
 
+  `)
+ 
+  // Idea de usar remark de freecodecamp
+  const htmlGen = computed( () => {
+    let processor = unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(remarkDirective)
+      .use(remarkFrontmatter)
+      .use(addFillInTheBlank)
+      .use(remarkRehype)
+      .use(rehypeStringify)
+    let html = processor.processSync(textoMd.value).toString()
+
+    return html
+  })
+</script>
+
+<template>
+  <Encabezado></Encabezado>
+  <div class="contenido">
+    <div v-html='htmlGen'></div>
+  </div>
+  <Piedepagina></Piedepagina>
+</template>
+
+<style scoped>
+
+.html-gen {
+  width: 50%;
+  padding: 1rem;
+}
+
+.area-de-texto {
+  width: 100%
+}
+
+.texto-md {
+  box-sizing: border-box;
+  height: 100%;
+  width: 50%;
+  border: none;
+  border-right: 1px solid #ccc;
+  background-color: #f6f6f6;
+  font-size: 14px;
+  font-family: 'Monaco', courier, monospace;
+  padding: 20px;
+}
+</style>
