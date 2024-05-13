@@ -3,7 +3,7 @@
     <div class="marca">
       <RouterLink to="/">
         <div class="logo-titulo">
-          <img class="logomin"src="/public/logo-learntg.png">
+          <img class="imglogo"src="/public/logo-learntg.png">
           <div class="titulo">
             <div class="aprender">Aprender</div>
             <div class="mediante-juegos">mediante juegos</div>
@@ -39,8 +39,9 @@
    text-decoration: none;
 }
 
-.logomin {
-  width: 70px;
+.imglogo {
+  padding-top: 10px;
+  width: 60px;
 }
 
 .encabezado-pagina {
