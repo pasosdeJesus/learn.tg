@@ -16,7 +16,7 @@
   const textoMd = ref(`
 # Registrate en OKX como referido e instala la aplicación
 
-# 1. Registrate en OKX como referido de pasosdeJesus.org
+# 1. Registrate como referido de pasosdeJesus.org
 
 Al hacerlo ganamos una "caja misteriosa" que nos dará un premio tras 
 completar varias transaccciones.

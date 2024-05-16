@@ -28,7 +28,7 @@ de afiliarse como influenciador (influencer) para:
    representan un ejercicio de libertad (por ejemplo del sistema bancario).
 
 Estimado pastor menonita, yo Vladimir Támara tras usar OKX por más de un año
-para ahorrar y cambiar pesos por dolares, deseo contarle que en la
+para ahorrar en dolares y cambiar pesos por dolares, deseo contarle que en la
 actual campaña de OKX para influenciadores veo oportunidades especiales para:
 
 1. El público general de Colombia tanto de conocer a Cristo como de ahorrar 
