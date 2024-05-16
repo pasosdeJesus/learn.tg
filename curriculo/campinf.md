@@ -40,3 +40,10 @@ dolares y retiro en mi cuenta bancaría a un costo fijo muy bajo.
 
 
 
+
+
+Hace casi un año moví a ese fondo de ahorro, parte de
+un Fondo para Misión a Sierra Leona --vigilado por el pastor Jaime Ramírez--
+y estoy satisfecho con el resultado que supera el 11% en un año .
+Así en conclusión veo oportunidad para
+

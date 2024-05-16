@@ -1,7 +1,12 @@
-# Vue 3 + Vite
+# Aprender mediante juegos / Learn through games
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## Directorio `cliente`
 
-## Recommended IDE Setup
+Aplicación al lado del cliente con vue y vite.
 
-- [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (previously Volar) and disable Vetur
+Inicialmente supone uso de OKX wallet.
+
+## Directorio `servidor`
+
+Aplicación al lado del servidor con rails basada en cor1440
+

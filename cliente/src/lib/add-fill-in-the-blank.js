@@ -54,7 +54,7 @@ Example of good formatting:
 function plugin() {
   return transformer;
   function transformer(tree, file) {
-    debugger
+    //debugger
     const fillInTheBlankNodes = getAllBetween(tree, '--fillInTheBlank--');
     if (fillInTheBlankNodes.length > 0) {
       const fillInTheBlankTree = root(fillInTheBlankNodes);

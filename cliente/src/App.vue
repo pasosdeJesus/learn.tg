@@ -19,6 +19,10 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  font-family: "DM Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
 }
 
 @media (prefers-color-scheme: light) {
