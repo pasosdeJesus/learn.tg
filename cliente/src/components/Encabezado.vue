@@ -42,8 +42,7 @@
 
   const red = ref("")
   const cuenta = ref("")
-  const texto_boton = ref("Ingresar")
-
+  const estado_boton = ref("Ingresar") // o Desconectar o Enlace
   function manejarCambioDeRed(chainId) {
     console.log("Cambio de red", chainId)
     if (typeof RED[+chainId] == "undefined") {
@@ -58,28 +57,28 @@
   }
 
   function asigna_direccion() {
-    texto_boton.vlaue = "Ingresar"
+    estado_boton.value = "Ingresar"
     cuenta.value = ""
     red.value = ""
     if (typeof okxwallet != "undefined" && 
       typeof okxwallet.selectedAddress != "undefined" &&
       okxwallet.selectedAddress != null) {
-      texto_boton.value = "Desconectar"
+      estado_boton.value = "Desconectar"
       let dir = okxwallet.selectedAddress
       let ab = `${dir.slice(2,6)}...${dir.slice(-4,-1)}`
       cuenta.value = `Cuenta: ${ab}`
       okxwallet.on('accountsChanged', manejarCambioDeCuenta);
       if (typeof okxwallet.networkVersion != "undefined") {
-        red.value = okxwallet.networkVersion
+        console.log("networkVersion", okxwallet.networkVersion)
         red.value = `Red: ${RED[okxwallet.networkVersion]}`
-        okxwallet.on('chainChanged', manejarCambioDeRed);
+        okxwallet.on('chainChanged', manejarCambioDeRed)
       }
     }
   }
 
   asigna_direccion()
 
-  function conectar_desconectar(event) {
+  function conectar(event) {
     const ua = navigator.userAgent;
     const esIOS = /iphone|ipad|ipod|ios/i.test(ua);
     const esAndroid = /android|XiaoMi|MiuiBrowser/i.test(ua);
@@ -87,56 +86,55 @@
     const esOKApp = /OKApp/i.test(ua);
 
     if (esMovil && !esOKApp){
-      const miurl = location.href
+      let miurl = location.href
       if (miurl.slice(-1) == "/") {
         miurl = miurl.slice(0,-1)
       }
-      const urlCodificado = "https://www.okx.com/download?deeplink=" +
+      enlace_celular.value = "https://www.okx.com/download?deeplink=" +
         encodeURIComponent("okx://wallet/dapp/url?dappUrl=" +
         encodeURIComponent(miurl));
-      cuenta.value = `Usar este enlace:<br> <a href="${urlCodificado}">${urlCodificado}</a>`
+      alert(`Si ya te registraste en okx como referido, ` +
+        `usa el enlace para celular`)
+      estado_boton.value = "Enlace"
+      cuenta.value = ""
       red.value = ""
     } else {
       if (typeof okxwallet == "undefined") {
-        alert("Ver el curso de registro como referido e instalación");
+        alert("Primero registrate en OKX como referido e instala la aplicación");
         return;
       }
-      if (texto_boton.value == "Ingresar") {
-        okxwallet
-          .request({ method: "eth_requestAccounts" })
-          .then((cuentas) => {
-            console.log("eth_requestAccounts dio", cuentas)
-            window.ethereum
-            .request({ method: "eth_chainId" })
-            .then((id_cadena) => {
-              console.log("eth_chainId dio", id_cadena)
-              asigna_direccion()
-
-            })
-            
+      okxwallet
+        .request({ method: "eth_requestAccounts" })
+        .then((cuentas) => {
+          console.log("eth_requestAccounts dio", cuentas)
+          window.ethereum
+          .request({ method: "eth_chainId" })
+          .then((id_cadena) => {
+            console.log("eth_chainId dio", id_cadena)
+            asigna_direccion()
           })
-          .catch((err) => {
-            if (err.code === 4001) {
-              console.log("Conexión rechazada por el usuario.");
-            } else {
-              console.error(err);
-            }
-          });
-      } else {
-        okxwallet
-          .disconnect()
-          .then((res) => {
-            okxwallet.removeListener('accountsChanged', manejarCambioDeCuenta);
-            okxwallet.removeListener('chainChanged', manejarCambioDeRed);
-            debugger
-            asigna_direcion()
-          })
-          .catch((err) => {
+        })
+        .catch((err) => {
+          if (err.code === 4001) {
+            console.log("Conexión rechazada por el usuario.");
+          } else {
             console.error(err);
-          });
-
-      }
+          }
+        });
     }
+  }
+
+  function desconectar(event) {
+    okxwallet
+      .disconnect()
+      .then((res) => {
+        okxwallet.removeListener('accountsChanged', manejarCambioDeCuenta);
+        okxwallet.removeListener('chainChanged', manejarCambioDeRed);
+        asigna_direcion()
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }
 </script>
 
@@ -155,12 +153,21 @@
       </RouterLink>
     </div>
     <div class="controles">
-      <div>
-        <button class="btn" @click="conectar_desconectar">{{texto_boton}}</button>
-      </div>
-      <div class="cuenta">
-        {{cuenta}}<br>
-        {{red}}
+      <button 
+         class='btn' 
+         @click='conectar' 
+         v-if="estado_boton.value == 'Ingresar'">Ingresar</button>
+      <button 
+         class='btn' 
+         @click='desconectar' 
+         v-if="estado_boton.value == 'Desconectar'">Desconectar</button>
+      <a 
+         href='{{enlace_celular}}'
+         class='btn' 
+         v-if="estado_boton.value == 'Enlace'">Abrir en aplicación OKX</a>
+      <div class="cuenta-y-red">
+        <div v-html="cuenta"></div>
+        <div v-html="red"></div>
       </div>
     </div>
   </header>
@@ -168,7 +175,7 @@
 
 <style scoped>
 
-.cuenta {
+.cuenta-y-red {
   text-align: center;
 }
 
