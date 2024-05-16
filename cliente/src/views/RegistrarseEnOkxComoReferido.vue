@@ -18,8 +18,8 @@
 
 # 1. Registrate como referido de pasosdeJesus.org
 
-Al hacerlo ganamos una "caja misteriosa" que nos dará un premio tras 
-completar varias transaccciones.
+Al hacerlo ganamos una "caja misteriosa" que nos dará un premio cuando
+completes varias transaccciones.
 
 1. Emplea el siguiente enlace de referido:
 <a href="https://www.okx.com/es-la/join/87372281">https://www.okx.com/es-la/join/87372281</a>
@@ -53,7 +53,8 @@ a este sitio.
 
 # 3. Opcionalmente desde tu computador instala la billetera de OKX como extensión de tu navegador
 
-El sitio web de OKX no te permite ingresar a sitios con aplicaciones como esta, 
+La aplicación web de OKX no te permitirá ingresar a sitios con aplicaciones 
+como esta (dApp que permite conexión a una billetera),
 necesitarás bien la billetera en tu celular o si prefieres usar tu computador
 instala la extension OKX Wallet en tu navegador:
 

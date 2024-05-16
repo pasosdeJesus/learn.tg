@@ -43,6 +43,9 @@
   const red = ref("")
   const cuenta = ref("")
   const estado_boton = ref("Ingresar") // o Desconectar o Enlace
+  const enlace_celular = ref("") // o Desconectar o Enlace
+
+
   function manejarCambioDeRed(chainId) {
     console.log("Cambio de red", chainId)
     if (typeof RED[+chainId] == "undefined") {
@@ -90,11 +93,13 @@
       if (miurl.slice(-1) == "/") {
         miurl = miurl.slice(0,-1)
       }
-      enlace_celular.value = "https://www.okx.com/download?deeplink=" +
+      let enlace  = "https://www.okx.com/download?deeplink=" +
         encodeURIComponent("okx://wallet/dapp/url?dappUrl=" +
         encodeURIComponent(miurl));
+      enlace_celular.value = `<a href="${enlace}" class='btn'>`+
+          `Abrir en aplicación OKX</a>`
       alert(`Si ya te registraste en okx como referido, ` +
-        `usa el enlace para celular`)
+        `usa el enlace para celular ${enlace_celular.value}`)
       estado_boton.value = "Enlace"
       cuenta.value = ""
       red.value = ""
@@ -153,18 +158,19 @@
       </RouterLink>
     </div>
     <div class="controles">
-      <button 
-         class='btn' 
-         @click='conectar' 
-         v-if="estado_boton.value == 'Ingresar'">Ingresar</button>
-      <button 
-         class='btn' 
-         @click='desconectar' 
-         v-if="estado_boton.value == 'Desconectar'">Desconectar</button>
-      <a 
-         href='{{enlace_celular}}'
-         class='btn' 
-         v-if="estado_boton.value == 'Enlace'">Abrir en aplicación OKX</a>
+      <template v-if="estado_boton == 'Ingresar'">
+        <button 
+           class='btn' 
+           @click='conectar'>Ingresar</button>
+      </template>
+      <template v-else-if="estado_boton == 'Desconectar'">
+        <button 
+          class='btn' 
+          @click='desconectar'>Desconectar</button>
+      </template>
+      <template v-else>
+        <div v-html="enlace_celular"></div>
+      </template>
       <div class="cuenta-y-red">
         <div v-html="cuenta"></div>
         <div v-html="red"></div>
