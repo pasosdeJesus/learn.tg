@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --host",
-    "build": "vite build; cp -rf ./dist/* /var/www/htdocs/learntg/",
+    "build": "vite build; cp -rf ./dist/* /var/www/htdocs/learntg/; cd /var/www/htdocs/learntg; pwd; ln -sf . public",
     "preview": "vite preview"
   },
   "dependencies": {

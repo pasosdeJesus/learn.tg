@@ -13,13 +13,9 @@
 
   import addFillInTheBlank from '../lib/add-fill-in-the-blank'
 
-  const titulo = ref("Pastores menonitas como influenciadores de Cristo usando OKX")
-  const subtitulo = ref("Oportunidad de bendición y para alcanzar más personas para Cristo")
-  const imagen = ref("public/img/rollerskatewedding.svg")
-  const creditoImagen = ref("Basada en dibujo de j4p4n")
-  const enlaceImagen =
-    ref("https://openclipart.org/detail/189255/rollerskate-wedding")
-  const altImagen = ref("Dibujo de pastor casando a una pareja en patines")
+  const titulo = ref("Compra, ahorra y vende USDT en OKX")
+  const subtitulo = ref("Para los primeros 1000 USDT la tasa de ahorro es superior al 10% anual")
+  const imagen = ref("public/img/usdtenokx.svg")
   const resumenMd = ref(`
 
 Del 1.May.2024 al 1.Jul.2024 la plataforma OKX está ofreciendo la posibilidad 
@@ -96,25 +92,10 @@ por favor escribame por Telegram o WhatsApp al 3165383162.
   <Encabezado></Encabezado>
   <div class="contenido">
     <div class="cont-flex-centro">
-      <div>
-        <div class="titulo"><h1>{{titulo}}</h1></div>
-        <div class="subtitulo"><h2>{{subtitulo}}</h2></div>
-      </div>
-      <div class="imagen">
-        <figure>
-          <img v-bind:src="imagen" width="300px" v-bind:alt="altImagen">
-          <figcaption>
-            <a
-              target="_blank"
-              v-bind:href="enlaceImagen"
-              class="credito-imagen">
-              {{creditoImagen}}
-            </a>
-                
-          </figcaption>
-        </figure>
-      </div>
+      <div class="titulo"><h1>{{titulo}}</h1></div>
+      <div class="imagen"><img v-bind:src="imagen" width="200px"></div>
     </div>
+    <div class="subtitulo"><h2>{{subtitulo}}</h2></div>
     <div v-html='resumenHtml'></div>
     <div class="cont-flex-centro">
       <button class='btn ancho-8'>Registrarse</button>
@@ -128,11 +109,6 @@ por favor escribame por Telegram o WhatsApp al 3165383162.
 </template>
 
 <style scoped>
-
-figcaption {
-  font-size: 0.8rem;
-  text-align: right;
-}
 
 .contenido {
   display: flex;

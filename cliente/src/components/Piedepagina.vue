@@ -2,7 +2,7 @@
   <footer class="piedepagina">
     <div class="derechos">
       <div>
-        Dominio público de acuerdo a legislación colombiana. 2004<br>
+        Dominio público de acuerdo a legislación colombiana. 2024<br>
         Puedes reusar abiertamente dando crédito a
         <a href="https://pasosdeJesus.org">pasosdeJesus.org</a>
       </div>
@@ -32,12 +32,12 @@
 </template>
 
 <style>
-/* #714BA6 #8D69BF #B9A3D9 #4C4359 #A63005 */
 .piedepagina {
   padding-top: 2rem;
   padding-bottom: 1rem;
   width: 100%;
-  background-color: #B9A3D9;
+  background-color: var(--color-1);
+  color: white;
   display: flex;
   justify-content: space-between;
 }

@@ -160,16 +160,16 @@
     <div class="controles">
       <template v-if="estado_boton == 'Ingresar'">
         <button 
-           class='btn' 
+           class='btn ancho-8' 
            @click='conectar'>Ingresar</button>
       </template>
       <template v-else-if="estado_boton == 'Desconectar'">
         <button 
-          class='btn' 
+          class='btn ancho-8' 
           @click='desconectar'>Desconectar</button>
       </template>
       <template v-else>
-        <div v-html="enlace_celular"></div>
+        <div v-html="enlace_celular" class='btn'></div>
       </template>
       <div class="cuenta-y-red">
         <div v-html="cuenta"></div>
@@ -183,18 +183,6 @@
 
 .cuenta-y-red {
   text-align: center;
-}
-
-.btn {
-  color: #fff;
-  font-size: 1rem;
-  width: 8rem;
-  line-height: 35px;
-  text-align: center;
-  border-radius: 10px;
-  cursor: pointer;
-  background: #714BA6;
-  border-color: #4C4359;
 }
 
 .titulo {
@@ -211,8 +199,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #B9A3D9;
-  font-family: "DM Serif Display", serif;
+  background-color: white;
+  color: var(--color-1);
+  /*font-family: "DM Serif Display", serif; */
+  font-weight: 800;
   border-radius: 5%;
 
 }

@@ -25,7 +25,7 @@ completes varias transaccciones.
 <a href="https://www.okx.com/es-la/join/87372281">https://www.okx.com/es-la/join/87372281</a>
   Deberías ver en la pantalla de registro este mensaje:
 
-> ![Image](public/img/pdJOKX.png)
+> ![Mensaje pasosdeJesus.org te ha invitado](public/img/pdJOKX.png)
 
   2. Proporciona tu correo en el campo para eso y presiona el botón **Registrarse**
 3. En otra pestaña de tu navegador o con una aplicación de correo ingresa 
