@@ -33,18 +33,18 @@ de afiliarse como influenciador (influencer) para:
    representan un ejercicio de libertad (por ejemplo del sistema bancario).
 
 Estimado pastor menonita, yo Vladimir Támara tras usar OKX por más de un año
-para ahorrar en dolares y cambiar pesos por dolares, deseo contarle que en la
-actual campaña de OKX para influenciadores veo oportunidades especiales para:
+para ahorrar en dolares y cambiar pesos por dolares, veo oportunidades en la
+actual campaña de OKX para influenciadores:
 
-1. El público general de Colombia tanto de conocer a Cristo como de ahorrar 
-   en dolares con una tasa superior al 10% anual.
-2. Miembros de la iglesia menonita que no tengan trabajo o que requieran
-   un trabajo extra con horas flexibles: haciendo cambios de moneda,   
+1. Para el público general de Colombia tanto de conocer a Cristo como de 
+   ahorrar en dolares con una tasa superior al 10% anual.
+2. Para miembros de la iglesia menonita que no tengan trabajo o que requieran
+   un trabajo extra con horas flexibles: haciendo cambios de moneda,
    invitando a las personas con las que interactuen a conocer a Cristo 
    e invitando a más público general a ahorrar y a conocer a Cristo.
-3. Pastores que podrían ser influenciadores con sus comunidades invitando 
-   y mostrandoles a miembros de su iglesia como hacer el trabajo del punto 2
-   y expaniendo la iglesia con público del punto 1.
+3. Para pastores que podrían ser influenciadores con sus comunidades 
+   invitando y mostrandoles a miembros de su iglesia como hacer el 
+   trabajo del punto 2 y expaniendo la iglesia con público del punto 1.
 
 Puedo estar equivocado por lo que oro por discernimiento y l@ invito a conocer
 más en detalle la idea este viernes 17 de Mayo a las 6:30PM en una reunión 
