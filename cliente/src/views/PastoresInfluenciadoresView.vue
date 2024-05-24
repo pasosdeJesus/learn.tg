@@ -1,5 +1,14 @@
 <script setup>
   import { ref, computed } from 'vue'
+  import {
+    actualizarConexion, 
+    conectar,
+    cuenta,
+    desconectar,
+    estadoBoton,
+    red
+  } from '../components/conexion.js'
+
   import Encabezado from '../components/Encabezado.vue'
   import Piedepagina from '../components/Piedepagina.vue'
 
@@ -39,12 +48,11 @@ actual campaña de OKX para influenciadores:
 1. Para el público general de Colombia tanto de conocer a Cristo como de 
    ahorrar en dolares con una tasa superior al 10% anual.
 2. Para miembros de la iglesia menonita que no tengan trabajo o que requieran
-   un trabajo extra con horas flexibles: haciendo cambios de moneda,
-   invitando a las personas con las que interactuen a conocer a Cristo 
-   e invitando a más público general a ahorrar y a conocer a Cristo.
-3. Para pastores que podrían ser influenciadores con sus comunidades 
-   invitando y mostrandoles a miembros de su iglesia como hacer el 
-   trabajo del punto 2 y expaniendo la iglesia con público del punto 1.
+   un trabajo extra con horas flexibles, en el que además podrían
+   invitar a las personas con las que interactuen a conocer a Cristo 
+   e invitar a más público general a ahorrar y a conocer a Cristo.
+3. Para pastores que podrían ser influenciadores con los miembros
+   de sus comunidades que hagan el trabajo del punto 2.
 
 Puedo estar equivocado por lo que oro por discernimiento y l@ invito a conocer
 más en detalle la idea este viernes 17 de Mayo a las 6:30PM en una reunión 
@@ -53,8 +61,7 @@ pastores menonitas de Colombia. Si tiene interes en recibir el enlace
 por favor escribame por Telegram o WhatsApp al 3165383162.
 
   `)
-   // Idea de usar remark de freecodecamp
-  const resumenHtml = computed( () => {
+  let htmlDeMd = (md) => {
     let processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
@@ -63,10 +70,49 @@ por favor escribame por Telegram o WhatsApp al 3165383162.
       .use(addFillInTheBlank)
       .use(remarkRehype)
       .use(rehypeStringify)
-    let html = processor.processSync(resumenMd.value).toString()
+    let html = processor.processSync(md).toString()
 
     return html
-  })
+  }
+
+   // Idea de usar remark de freecodecamp
+  const resumenHtml = computed( () => htmlDeMd(resumenMd.value) )
+
+  const ampliaMd = ref(`
+Apliqué a ese programa de afiliados pero aún no he sido aceptado (dicen que
+puede tomar hasta 14 días),
+tal vez los pastores menonitas que tienen más influencia que yo (por
+ejemplo en sus iglesias), sean aceptados más pronto.
+
+Por mi situación personal (buena parte de ingresos en Colombia en pesos
+pero la mayoría de gastos en dolares en Estados Unidos) he ganado experiencia 
+como comerciante en el mercado P2P de OKX con el que he usando mi marca
+pasosdeJesus.org y mis cuentas de Nequi y Bancolombia para comprar 
+USDT (criptoactivo estable equivalente al dolar) a comienzo del 
+mes tipicamente con 2% de ganancia y logro comprar un millón más
+o menos cada 2 horas (es decir con un plante de un millón unos 20.000 
+de ganancia cada 2 horas).
+También he aprovechado para invitar a la iglesia a las personas con 
+las que he interactuado. 
+Por eso me parece que ese mercado puede ser oportunidad de trabajo extra 
+para miembros de las iglesias menonitas.
+
+Una vez cambio parte de mis ingresos en Colombia a USDT a comienzo
+de mes, los dejo en un fondo de ahorro flexible durante el mes
+para que ganen intereses en dolares y por hora a una 
+tasa fluctuante superior al 10% anual (para montos inferiores a 1000 
+dolares). Hace casi un año moví a ese fondo de ahorro, parte de
+un Fondo para Misión a Sierra Leona --vigilado por el pastor Jaime Ramírez--
+y estoy satisfecho con el resultado que supera el 11% en un año .
+Al final del mes (o cuando necesito) retiro parte del ahorro lo
+convierto y lo monetizó en Estados Unidos a una tasa baja.
+
+Veo comerciantes que están conectados continuamente lo que me hace pensar
+que puede ser su trabajo principal, he visto comercitantes por ejemplo
+que no usan banco sino que reciben/entregan dinero en efectivo reuniendose
+con el vendedor/comprador.
+`)
+  const ampliaHtml = computed( () => htmlDeMd(ampliaMd.value) )
 
   const contenidoMd = ref(`
 1. [Registrate en OKX como referido e instala la aplicación](/registrarse-en-okx-como-referido)
@@ -76,19 +122,7 @@ por favor escribame por Telegram o WhatsApp al 3165383162.
 5. Comparte 1, 2 y 3 con miembros de tu iglesia
 6. Con tu iglesia continuamente inviten al público general a conocer de Cristo y compartan 1 y 2
   `)
-  const contenidoHtml = computed( () => {
-    let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-    let html = processor.processSync(contenidoMd.value).toString()
-
-    return html
-  })
+  const contenidoHtml = computed( () => htmlDeMd(contenidoMd.value) )
 
 </script>
 
@@ -116,9 +150,14 @@ por favor escribame por Telegram o WhatsApp al 3165383162.
       </div>
     </div>
     <div v-html='resumenHtml'></div>
-    <div class="cont-flex-centro">
-      <button class='btn ancho-8'>Registrarse</button>
-    </div>
+    <template v-if="estadoBoton == 'Desconectar'">
+      <div v-html='ampliaHtml'></div>
+    </template>
+    <template v-else>
+      <div class="cont-flex-centro">
+       <button class='btn ancho-8'>Registrarse</button>
+      </div>
+    </template>
     <div class="tdc cont-flex-centro-vertical">
       <h2 class="titulo">Contenido del curso</h2>
       <div v-html='contenidoHtml'></div>

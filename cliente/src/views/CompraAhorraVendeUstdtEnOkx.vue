@@ -13,44 +13,96 @@
 
   import addFillInTheBlank from '../lib/add-fill-in-the-blank'
 
-  const titulo = ref("Compra, ahorra y vende USDT en OKX")
-  const subtitulo = ref("Para los primeros 1000 USDT la tasa de ahorro es superior al 10% anual")
-  const imagen = ref("public/img/usdtenokx.svg")
-  const resumenMd = ref(`
+  const textoMd = ref(`
+# Compra, ahorra y vende USDT
 
-Del 1.May.2024 al 1.Jul.2024 la plataforma OKX está ofreciendo la posibilidad 
-de afiliarse como influenciador (influencer) para:
-1. Obtener 50% de las ganancias de ese intercambiador (exchange) por cada 
-   transacción hecha por las personas que se afilien mediante el 
-   influenciador.
-2. Hacer crecer la marca de cada influenciador junto con la de OKX y 
-   ampliar la red de cada influenciador y de OKX.
-3. Promover el uso de criptoactivos, que en mi humilde opinión 
-   representan un ejercicio de libertad (por ejemplo del sistema bancario).
+# 1. Compra USDT en el mercado P2P
 
-Estimado pastor menonita, yo Vladimir Támara tras usar OKX por más de un año
-para ahorrar en dolares y cambiar pesos por dolares, deseo contarle que en la
-actual campaña de OKX para influenciadores veo oportunidades especiales para:
+Para quienes se inscribieron como referidos de pasosdeJesus.org, para poder
+ganar otra "caja misteriosa" la compra mínima debe ser de US$50.  Será otro
+bono que te será util para no perder dinero con las primeras transacciones
+que debes hacer en el mercado P2P.
 
-1. El público general de Colombia tanto de conocer a Cristo como de ahorrar 
-   en dolares con una tasa superior al 10% anual.
-2. Miembros de la iglesia menonita que no tengan trabajo o que requieran
-   un trabajo extra con horas flexibles: haciendo cambios de moneda,   
-   invitando a las personas con las que interactuen a conocer a Cristo 
-   e invitando a más público general a ahorrar y a conocer a Cristo.
-3. Pastores que podrían ser influenciadores con sus comunidades invitando 
-   y mostrandoles a miembros de su iglesia como hacer el trabajo del punto 2
-   y expaniendo la iglesia con público del punto 1.
+Dirigete a Comprar y desde allí elige mercado P2P.
 
-Puedo estar equivocado por lo que oro por discernimiento y l@ invito a conocer
-más en detalle la idea este viernes 17 de Mayo a las 6:30PM en una reunión 
-virtual de una hora.  Por la visión es una invitación exclusiva para
-pastores menonitas de Colombia. Si tiene interes en recibir el enlace 
-por favor escribame por Telegram o WhatsApp al 3165383162.
+Veras anuncios para quiens compran sus USDT y anuncios para quienes venden
+sus USDT.   Entre los anuncios de quienes compran elije un vendedor que 
+tenga varias transacciones y buen porcentaje de transacciones completadas
+y de recomendación.
 
-  `)
-   // Idea de usar remark de freecodecamp
-  const resumenHtml = computed( () => {
+Elige un medio de pago, Nequi, Bancolombia, Daviplata, etc.
+
+
+
+que nos dará un primer
+premio cuando completes la verificación de identidad (tipicamente
+US$5) y cuando realices el primer depósito por US$50.
+
+1. Emplea el siguiente enlace de referido:
+<a href="https://www.okx.com/es-la/join/87372281">https://www.okx.com/es-la/join/87372281</a>
+  Deberías ver en la pantalla de registro este mensaje:
+
+> ![Mensaje pasosdeJesus.org te ha invitado](public/img/pdJOKX.png)
+
+  2. Proporciona tu correo en el campo para eso y presiona el botón **Registrarse**
+3. En otra pestaña de tu navegador o con una aplicación de correo ingresa 
+   a tu correo y copia el código de verificación de 6 dígitos
+4. Tendrás 10 minutos para escribir ese código en la página de registro y 
+   presionar **Siguiente**.
+5. Ingresa la clave con la que quieres proteger tu cuenta y presiona
+   **Siguiente**.  Te sugerimos usar una combinación de números, letras 
+   mayúsculas, minúsculas y símbolos.  No debes compartir tu clave. 
+   Te invitamos a revisar [Cómo proteger tu cuenta de exchange de criptomonedas en OKX](https://www.okx.com/es-la/learn/account-security-on-okex)
+6. Tras esto podrás acceder el tablero de control de tu cuenta en OKX.
+
+# 2. Instala la aplicación de OKX en tu celular
+
+La aplicación de OKX para celular suele ser más
+práctica para las operaciones típicas de compra y venta de
+divisas, por eso recomendamos instalarla.
+
+* Para celulares [Android](https://play.google.com/store/apps/details?id=com.okinc.okex.gp)
+* Para celulares [iOS](https://apps.apple.com/us/app/okx-buy-bitcoin-btc-crypto/id1327268470)
+
+Esta aplicación incluye la billetera OKX que podrás usar para ingresar
+a este sitio.
+
+
+# 3. Verifica tu identidad
+
+Para la verificación tendrás que enviar foto de cédula y hacerte una selfie.
+
+Mira el estado de tu verificación y completala así:
+
+1. Ve al menú general con los puntos de la parte superior izquierda:
+
+> ![Pantallazo enfoca puntos en aplicación de OKX](public/img/verif1.jpg)
+
+2. Ve a \`Perfil y Configuración\` presionando sobre tu usuario:
+
+> ![Pantallazo enfoca Perfil y Configuración en aplicación de OKX](public/img/verif2.jpg)
+
+3. Desde la pestaña \`Perfil\` presiona sobre \`Verificación\`:
+
+> ![Mensaje pasosdeJesus.org te ha invitado](public/img/verif3.jpg)
+
+
+
+
+
+# 4. Opcionalmente desde tu computador instala la billetera de OKX como extensión de tu navegador
+
+La aplicación web de OKX no te permitirá ingresar a sitios con aplicaciones 
+como esta (dApp que permite conexión a una billetera),
+necesitarás bien la billetera en tu celular o si prefieres usar tu computador
+instala la extension OKX Wallet en tu navegador:
+
+* [Chrome y Brave](https://chrome.google.com/webstore/detail/okx-wallet/mcohilncbfahbmgdjkbpemcciiolgcge)
+* [Edge](https://microsoftedge.microsoft.com/addons/detail/okx-wallet/pbpjkcldjiffchgbbndmhojiacbgflha)
+
+`)
+  // Idea de usar remark de freecodecamp
+  const htmlGen = computed( () => {
     let processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
@@ -59,67 +111,21 @@ por favor escribame por Telegram o WhatsApp al 3165383162.
       .use(addFillInTheBlank)
       .use(remarkRehype)
       .use(rehypeStringify)
-    let html = processor.processSync(resumenMd.value).toString()
+    let html = processor.processSync(textoMd.value).toString()
 
     return html
   })
-
-  const contenidoMd = ref(`
-1. [Registrate en OKX como referido e instala la aplicación](/registrarse-en-okx-como-referido)
-2. Compra, ahorra y vende USDT en OKX
-3. Compra y vende como comerciante, invita a conocer de Cristo y sube de nivel
-4. Aplica al programa de afiliados
-5. Comparte 1, 2 y 3 con miembros de tu iglesia
-6. Con tu iglesia continuamente inviten al público general a conocer de Cristo y compartan 1 y 2
-  `)
-  const contenidoHtml = computed( () => {
-    let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-    let html = processor.processSync(contenidoMd.value).toString()
-
-    return html
-  })
-
 </script>
 
 <template>
   <Encabezado></Encabezado>
   <div class="contenido">
-    <div class="cont-flex-centro">
-      <div class="titulo"><h1>{{titulo}}</h1></div>
-      <div class="imagen"><img v-bind:src="imagen" width="200px"></div>
-    </div>
-    <div class="subtitulo"><h2>{{subtitulo}}</h2></div>
-    <div v-html='resumenHtml'></div>
-    <div class="cont-flex-centro">
-      <button class='btn ancho-8'>Registrarse</button>
-    </div>
-    <div class="tdc cont-flex-centro-vertical">
-      <h2 class="titulo">Contenido del curso</h2>
-      <div v-html='contenidoHtml'></div>
-    </div>
+    <div v-html='htmlGen'></div>
   </div>
   <Piedepagina></Piedepagina>
 </template>
 
 <style scoped>
-
-.contenido {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.tdc {
-  color: black; 
-  background-color: var(--color-2); 
-}
 
 .html-gen {
   width: 50%;
@@ -141,4 +147,9 @@ por favor escribame por Telegram o WhatsApp al 3165383162.
   font-family: 'Monaco', courier, monospace;
   padding: 20px;
 }
+
+img[src*="celular"] {
+  width: 100px;
+}
+
 </style>

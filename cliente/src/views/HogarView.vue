@@ -25,7 +25,17 @@
       </div>
       <div class="curso">
         <RouterLink to="/registrarse-en-okx-como-referido">
-        Registrate en OKX como referido e instala la aplicación
+          <div class="img-curso">
+            <img class="logo-okx" src="/public/img/OKX_Logo.svg">
+          </div>
+          <div class="desc-curso">
+            <div class="titulo-curso">Registrate en OKX como referido</div>
+            <div class="res-curso">
+              Instrucciones para el público general para
+              registrarse en OKX como referido para ganar
+              un premio.
+            </div>
+          </div>
         </RouterLink>
       </div>
       <div class="curso">
@@ -46,6 +56,19 @@
 
 <style>
 
+.img-curso { 
+  display: flex;
+  justify-content: center;
+}
+
+.img-curso img {
+  width: 100%;
+}
+
+.logo-okx {
+  max-width: 280px;
+}
+
 .enlace-plano {
   texto-decoration: none;
 }
@@ -64,6 +87,10 @@
   width: 25%;
   height: 25rem;
   border-radius: 10px;
+}
+
+.curso a {
+  text-decoration: none;
 }
 
 .desc-curso {
