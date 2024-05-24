@@ -1,6 +1,11 @@
 <script setup>
   import Encabezado from '../components/Encabezado.vue'
   import Piedepagina from '../components/Piedepagina.vue'
+  import {
+    estadoBoton
+  } from '../components/conexion.js'
+
+
 </script>
 
 <template>
@@ -8,7 +13,8 @@
   <div class="contenido">
     <div class="cursos">
       <div class="curso">
-        <RouterLink to="/pastores-influenciadores" style="text-decoration: none">
+        <template v-if="estadoBoton == 'Desconectar'">
+          <RouterLink to="/pastores-influenciadores" style="text-decoration: none">
           <div class="img-curso">
             <img src="/public/img/rollerskatewedding.svg">
           </div>
@@ -21,7 +27,8 @@
               como comerciantes.
             </div>
           </div>
-        </RouterLink>
+          </RouterLink>
+        </template>
       </div>
       <div class="curso">
         <RouterLink to="/registrarse-en-okx-como-referido">

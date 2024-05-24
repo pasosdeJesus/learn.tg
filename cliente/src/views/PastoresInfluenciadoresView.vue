@@ -1,12 +1,8 @@
 <script setup>
   import { ref, computed } from 'vue'
   import {
-    actualizarConexion, 
     conectar,
-    cuenta,
-    desconectar,
-    estadoBoton,
-    red
+    estadoBoton
   } from '../components/conexion.js'
 
   import Encabezado from '../components/Encabezado.vue'
@@ -115,14 +111,20 @@ con el vendedor/comprador.
   const ampliaHtml = computed( () => htmlDeMd(ampliaMd.value) )
 
   const contenidoMd = ref(`
-1. [Registrate en OKX como referido e instala la aplicación](/registrarse-en-okx-como-referido)
-2. Compra, ahorra y vende USDT en OKX
-3. Compra y vende como comerciante, invita a conocer de Cristo y sube de nivel
-4. Aplica al programa de afiliados
-5. Comparte 1, 2 y 3 con miembros de tu iglesia
-6. Con tu iglesia continuamente inviten al público general a conocer de Cristo y compartan 1 y 2
+1. Compra y vende como comerciante, invita a conocer de Cristo y sube de nivel
+2. Aplica al programa de afiliados
+3. Permitenos compartir o comparte de la posibilidad de trabajo con miembros de tu iglesia
+4. Animemos a tu iglesia para que inviten al público general a conocer de Cristo
+y que compartan posibilidad de ahorro
   `)
   const contenidoHtml = computed( () => htmlDeMd(contenidoMd.value) )
+
+  const prerequisitosMd = ref(`
+1. [Registrate en OKX como referido e instala la aplicación](/registrarse-en-okx-como-referido)
+2. Compra, ahorra y vende USDT en OKX
+  `)
+  const prerequisitosHtml = computed( () => htmlDeMd(prerequisitosMd.value) )
+
 
 </script>
 
@@ -154,14 +156,21 @@ con el vendedor/comprador.
       <div v-html='ampliaHtml'></div>
     </template>
     <template v-else>
+      <div class="tdc cont-flex-centro-vertical">
+        <h2 class="titulo">Pre-requisitos</h2>
+        <div v-html='prerequisitosHtml'></div>
+      </div>
+
+      <div class="tdc cont-flex-centro-vertical">
+        <h2 class="titulo">Contenido del curso</h2>
+        <div v-html='contenidoHtml'></div>
+      </div>
       <div class="cont-flex-centro">
-       <button class='btn ancho-8'>Registrarse</button>
+        <button 
+           class='btn ancho-8' 
+           @click='conectar'>Ingresar</button>
       </div>
     </template>
-    <div class="tdc cont-flex-centro-vertical">
-      <h2 class="titulo">Contenido del curso</h2>
-      <div v-html='contenidoHtml'></div>
-    </div>
   </div>
   <Piedepagina></Piedepagina>
 </template>
