@@ -109,7 +109,7 @@ export function conectar(event) {
     conexion.red = ""
   } else {
     if (typeof okxwallet == "undefined") {
-      alert("Primero registrate en OKX como referido e instala la aplicación");
+      alert("Primero registrate en OKX como referido e instala la aplicación en tu celular o la extensión en tu navegador");
       return;
     }
     okxwallet

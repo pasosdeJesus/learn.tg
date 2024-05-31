@@ -2,9 +2,8 @@
   <footer class="piedepagina">
     <div class="derechos">
       <div>
-        Dominio público de acuerdo a legislación colombiana. 2024<br>
         Puedes reusar abiertamente dando crédito a
-        <a href="https://pasosdeJesus.org">pasosdeJesus.org</a>
+        <a href="https://pasosdeJesus.org">pasosdeJesus.org</a>. 2024
       </div>
     </div>
     <div class="legal">

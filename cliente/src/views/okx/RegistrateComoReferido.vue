@@ -1,7 +1,7 @@
 <script setup>
   import { ref, computed } from 'vue'
-  import Encabezado from '../components/Encabezado.vue'
-  import Piedepagina from '../components/Piedepagina.vue'
+  import Encabezado from '../../components/Encabezado.vue'
+  import Piedepagina from '../../components/Piedepagina.vue'
 
   import {unified} from 'unified'
   import remarkDirective from 'remark-directive'
@@ -11,24 +11,24 @@
   import remarkRehype from 'remark-rehype'
   import rehypeStringify from 'rehype-stringify'
 
-  import addFillInTheBlank from '../lib/add-fill-in-the-blank'
+  import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
 
   const textoMd = ref(`
 # Registrate en OKX como referido e instala la aplicación
 
 # 1. Registrate como referido de pasosdeJesus.org
 
-Al hacerlo ganamos una "caja misteriosa" que nos dará un primer
-premio cuando completes la verificación de identidad (tipicamente
-US$5) y cuando realices el primer depósito por US$50.
+Al hacerlo obtienes !5% de descuento en las comisiones que OKX
+normalmente cobra en todas tus transacciones!
 
 1. Emplea el siguiente enlace de referido:
 <a href="https://www.okx.com/es-la/join/87372281">https://www.okx.com/es-la/join/87372281</a>
   Deberías ver en la pantalla de registro este mensaje:
 
-> ![Mensaje pasosdeJesus.org te ha invitado](public/img/pdJOKX.png)
+> ![Mensaje pasosdeJesus.org te ha invitado](/img/pdJOKX.png)
 
-  2. Proporciona tu correo en el campo para eso y presiona el botón **Registrarse**
+2. Proporciona tu correo en el campo para eso y presiona el botón 
+   **Registrarse**
 3. En otra pestaña de tu navegador o con una aplicación de correo ingresa 
    a tu correo y copia el código de verificación de 6 dígitos
 4. Tendrás 10 minutos para escribir ese código en la página de registro y 
@@ -60,15 +60,15 @@ Mira el estado de tu verificación y completala así:
 
 1. Ve al menú general con los puntos de la parte superior izquierda:
 
-> ![Pantallazo enfoca puntos en aplicación de OKX](public/img/verif1.jpg)
+> ![Pantallazo enfoca puntos en aplicación de OKX](/img/verif1.jpg)
 
 2. Ve a \`Perfil y Configuración\` presionando sobre tu usuario:
 
-> ![Pantallazo enfoca Perfil y Configuración en aplicación de OKX](public/img/verif2.jpg)
+> ![Pantallazo enfoca Perfil y Configuración en aplicación de OKX](/img/verif2.jpg)
 
 3. Desde la pestaña \`Perfil\` presiona sobre \`Verificación\`:
 
-> ![Mensaje pasosdeJesus.org te ha invitado](public/img/verif3.jpg)
+> ![Mensaje pasosdeJesus.org te ha invitado](/img/verif3.jpg)
 
 
 

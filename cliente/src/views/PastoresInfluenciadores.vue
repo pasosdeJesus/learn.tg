@@ -20,7 +20,7 @@
 
   const titulo = ref("Pastores menonitas como influenciadores de Cristo usando OKX")
   const subtitulo = ref("Oportunidad de bendición y para alcanzar más personas para Cristo")
-  const imagen = ref("public/img/rollerskatewedding.svg")
+  const imagen = ref("/img/rollerskatewedding.svg")
   const creditoImagen = ref("Basada en dibujo de j4p4n")
   const enlaceImagen =
     ref("https://openclipart.org/detail/189255/rollerskate-wedding")
