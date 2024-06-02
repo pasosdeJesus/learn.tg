@@ -23,8 +23,13 @@ import Guia3VeAEncontrarteConJesus from
 import Guia4HablandoConDios from
   './views/relacion/Guia4HablandoConDios.vue'
 
+
+import ARelationshipWithJesus from
+  './views/relationship/ARelationshipWithJesus.vue'
+
 const routes = [
   { path: '/', component: Hogar },
+  { path: '/relationship/a-relationship-with-Jesus', component: ARelationshipWithJesus},
   { path: '/relacion/una-relacion-con-Jesus', component: UnaRelacionConJesus},
   { path: '/relacion/no-tengas-miedo', component: Guia1NoTengasMiedo},
   { path: '/relacion/encuentro-con-Jesus', component: Guia2EncuentroConJesus},
