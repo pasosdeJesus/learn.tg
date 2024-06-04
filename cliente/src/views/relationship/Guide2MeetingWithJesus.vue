@@ -14,95 +14,93 @@
   import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
 
   const textoMd = ref(`
-# Guía 2: Encuentro con Jesús -  Juan 4:1-26[^1]
+# Guide 2: Meeting with Jesus - John 4:1-26[^1]
 
-
-
->  **1** Cuando, pues, el Señor entendió que los fariseos habían oído decir: 
-   Jesús hace y bautiza más discípulos que Juan
-   **2** (aunque Jesús no bautizaba, sino sus discípulos), 
-   **3** salió de Judea, 
-   y se fue otra vez a Galilea.
-   **4** Y le era necesario pasar por Samaria. 
-   **5** Vino, pues, a una ciudad de Samaria llamada Sicar, junto a la 
-   heredad que Jacob dio a su hijo José. 
-   **6** Y estaba allí el pozo de Jacob. Entonces Jesús, cansado del camino,
-   se sentó así junto al pozo. Era como la hora sexta.
-   **7** Vino una mujer de Samaria a sacar agua; y Jesús le dijo: Dame de 
-   beber.
-   **8** Pues sus discípulos habían ido a la ciudad a comprar de comer. 
-   **9** La mujer samaritana le dijo: ¿Cómo tú, siendo judío, me pides a mí de 
-   beber, que soy mujer samaritana? Porque judíos y samaritanos no se 
-   tratan entre sí. 
-   **10** Respondió Jesús y le dijo: Si conocieras el don de Dios, y quién 
-   es el que te dice: Dame de beber; tú le pedirías, y él te daría agua viva.
-   **11** La mujer le dijo: Señor, no tienes con qué sacarla, y el pozo es 
-   hondo. ¿De dónde, pues, tienes el agua viva? 
-   **12** ¿Acaso eres tú mayor que nuestro padre Jacob, que nos dio este pozo, 
-   del cual bebieron él, sus hijos y sus ganados? 
-   **13** Respondió Jesús y le dijo: Cualquiera que bebiere de esta agua, 
-   volverá a tener sed; 
-   **14** mas el que bebiere del agua que yo le daré, no tendrá sed jamás; 
-   sino que el agua que yo le daré será en él una fuente de agua que salte 
-   para vida eterna. 
-   **15** La mujer le dijo: Señor, dame esa agua, para que no tenga yo sed,
-   ni venga aquí a sacarla. 
-   **16** Jesús le dijo: Ve, llama a tu marido, y ven acá. 
-   **17** Respondió la mujer y dijo: No tengo marido. Jesús le dijo: 
-   Bien has dicho: No tengo marido; 
-   **18** porque cinco maridos has tenido, y el que ahora tienes no es tu 
-   marido; esto has dicho con verdad. 
-   **19** Le dijo la mujer: Señor, me parece que tú eres profeta. 
-   **20** Nuestros padres adoraron en este monte, y vosotros decís que en 
-   Jerusalén es el lugar donde se debe adorar. 
-   **21** Jesús le dijo: Mujer, créeme, que la hora viene cuando ni en este 
-   monte ni en Jerusalén adoraréis al Padre. 
-   **22** Vosotros adoráis lo que no sabéis; nosotros adoramos lo que sabemos;
-   porque la salvación viene de los judíos. **23** Mas la hora viene, y ahora
-   es, cuando los verdaderos adoradores adorarán al Padre en espíritu y en 
-   verdad; porque también el Padre tales adoradores busca que le adoren. 
-   **24** Dios es Espíritu; y los que le adoran, en espíritu y en verdad es 
-   necesario que adoren. 
-   **25** Le dijo la mujer: Sé que ha de venir el Mesías, llamado el Cristo; 
-   cuando él venga nos declarará todas las cosas. 
-   **26** Jesús le dijo: Yo soy, el que habla contigo.   
- 
-> (Biblia traducción Reina Valera 1960)
+> **1** Now Jesus learned that the Pharisees had heard that he was gaining and 
+   baptizing more disciples than John— 
+   **2** although in fact it was not Jesus who baptized, but his disciples. 
+   **3** So he left Judea and went back once more to Galilee. 
+   **4** Now he had to go through Samaria. 
+   **5** So he came to a town in Samaria called Sychar, near the plot of ground 
+   Jacob had given to his son Joseph. 
+   **6** Jacob’s well was there, and Jesus, tired as he was from the journey, 
+   sat down by the well. It was about noon. 
+   **7** When a Samaritan woman came to draw water, Jesus said to her, 
+   “Will you give me a drink?” **8** (His disciples had gone into the town to 
+   buy food.) 
+   **9** The Samaritan woman said to him, “You are a Jew and I am a Samaritan 
+   woman. How can you ask me for a drink?” (For Jews do not associate with 
+   Samaritans.) 
+   **10** Jesus answered her, “If you knew the gift of God and who it is that 
+   asks you for a drink, you would have asked him and he would have given you 
+   living water.”  
+   **11** “Sir,” the woman said, “you have nothing to draw with and the well is 
+   deep. Where can you get this living water? 
+   **12** Are you greater than our father Jacob, who gave us the well and drank 
+   from it himself, as did also his sons and his livestock?”  
+   **13** Jesus answered, “Everyone who drinks this water will be thirsty again, 
+   **14** but whoever drinks the water I give them will never thirst. Indeed, 
+   the water I give them will become in them a spring of water welling up to 
+   eternal life.” 
+   **15** The woman said to him, “Sir, give me this water so that I won’t get 
+   thirsty and have to keep coming here to draw water.” 
+   **16** He told her, “Go, call your husband and come back.” 
+   **17** “I have no husband,” she replied. Jesus said to her, 
+   “You are right when you say you have no husband. 
+   **18** The fact is, you have had five husbands, and the man you now 
+   have is not your husband. What you have just said is quite true.” 
+   **19** “Sir,” the woman said, “I can see that you are a prophet. 
+   **20** Our ancestors worshiped on this mountain, but you Jews claim that 
+   the place where we must worship is in Jerusalem.” 
+   **21** “Woman,” Jesus replied, “believe me, a time is coming when you 
+   will worship the Father neither on this mountain nor in Jerusalem. 
+   **22** You Samaritans worship what you do not know; we worship what we 
+   do know, for salvation is from the Jews. 
+   **23** Yet a time is coming and has now come when the true worshipers 
+   will worship the Father in the Spirit and in truth, for they are the 
+   kind of worshipers the Father seeks. 
+   **24** God is spirit, and his worshipers must worship in the Spirit and in 
+   truth.” 
+   **25** The woman said, “I know that Messiah” (called Christ) “is coming. 
+   When he comes, he will explain everything to us.” 
+   **26** Then Jesus declared, “I, the one speaking to you—I am he.”  
+   
+> (Translation WEBUS)
 
 ![Pozo de Jacob en 1912](/img/Nablus_jacob_well_1912.jpg "Pozo de Jacob en 1912")
 
 [Foto del Pozo de Jacob en 1912 --dominio público](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Nablus_jacob_well_1912.jpg)
 
-## 1. Comprensión de lectura.
 
-* ¿Cuáles son los personajes de la historia ?
-* ¿De acuerdo con el verso 4 cuál es la región por la que 
-  necesariamente tiene que pasar Jesús?  
-* ¿De acuerdo con el verso 7 quien llega al pozo a sacar agua?
-* ¿Qué favor le pide Jesús a la mujer?
-* ¿Qué le dice Jesus a la mujer en el verso 14?
-* ¿De acuerdo con el verso 19 como llama la mujer a Jesús ? 
-* **_Completa:_** Los verdaderos adoradores adorarán al padre en espíritu y en _________
-* ¿Quien le declarará todas las cosas a la mujer según el verso 25?
-* ¿A quien le llama padre la mujer en el verso 12?
-* **_Completa_**: Yo soy, el que habla _________
+## Reading comprehension. 
 
-## 2. Reflexión
+* Who are the characters in the story?
+* According to verse 4 what is the region through which Jesus has yet to pass?
+* According to verse 7, who comes to the well to draw water?
+* What favor does Jesus ask of the woman?
+* What does Jesus say to the woman in verse 14?
+* According to verse 19 what does the woman call Jesus?
+* Complete the sentence: will the true worshipers worship the father in 
+  spirit and in _________?
+* Who will declare all things to the woman according to verse 25?
+* Who is the woman calling father in verse 12?
+* Complete the sentence: I am the one speaking __ ___ I am he.
 
-* ¿De este pasaje qué te permite pensar que la historia realmente ocurrió?
-* La historia de la mujer samaritana es un relato de cómo el encuentro con 
-  Jesús nos restaura; por esta razón la mujer es un ejemplo de adoración 
-  en espíritu y en verdad. ¿Qué piensas al leer esta historia ? Jesus es 
-  quien puede verte sinceramente y con amor y no te juzga, acercate a 
-  Jesus tal y como eres porque Dios está dispuesto a perdonarte y a darte 
-  agua viva.
+## Reflection
 
-## 3. Aplicación
+* What of this passage allows you to think that the story really occurred.
+* The story of the Samaritan woman is a story of how the encounter with 
+Jesus restores us; for this reason the woman is an example of worship in 
+spirit and in truth. What do you think when reading this story? Jesus is the 
+one who can see you sincerely and with love and does not judge you, approach 
+Jesus as you are because God is willing to forgive you and give you living 
+water. 
 
-* ¿Cómo puedes aplicar lo que este pasaje enseña a tu vida?
-* Desafío de memorización: _…el agua que yo le daré será en él una fuente de agua que salte para vida eterna_ Juan 6:14
+## Application
 
-
+* How can you apply what this passage teaches to your life?
+* Memorization challenge: …_ the water I give them will become in them a 
+  spring of water welling up to eternal life._ John 6:14
 
 
 ![Pozo de Jacob en 2013](/img/j2013.jpg "Pozo de Jacob en 2013")
@@ -110,10 +108,8 @@
 [Foto del Pozo de Jacob en 2013 por Jermiah K. Garrett](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Jacob's_Well_in_2013.jpg)
 
 
-
 [^1]:
-     Preparado por Julían Martínez y Vladimir Támara Patiño [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org). Este es contenido abierto con licencia.
-     [CC-BY Internacional 4.0](https://creativecommons.org/licenses/by/4.0/)
+     Prepared by Julian Martinez and Vladimir Támara Patiño. [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org)  This is open content with license [CC-BY International 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 `)
   // Idea de usar remark de freecodecamp

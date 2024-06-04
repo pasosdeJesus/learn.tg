@@ -27,14 +27,18 @@
   **21** Y Marta dijo a Jesús: Señor, si hubieses estado aquí, mi hermano
   no habría muerto.
   **22** Mas también sé ahora que todo lo que pidas a Dios, Dios te lo dará.
-  **23** Jesús le dijo: Tu hermano resucitará.
-  **24** Marta le dijo: Yo sé que resucitará en la resurrección, en el
+
+> **23** Jesús le dijo: Tu hermano resucitará.
+
+> **24** Marta le dijo: Yo sé que resucitará en la resurrección, en el
   día postrero.
-  **25** Le dijo Jesús: Yo soy la resurrección y la vida; el que cree en mí,
+
+>  **25** Le dijo Jesús: Yo soy la resurrección y la vida; el que cree en mí,
   aunque esté muerto, vivirá.
   **26** Y todo aquel que vive y cree en mí, no morirá eternamente.
   ¿Crees esto?
-  **27** Le dijo: Sí, Señor; yo he creído que tú eres el Cristo, el
+
+> **27** Le dijo: Sí, Señor; yo he creído que tú eres el Cristo, el
   Hijo de Dios, que has venido al mundo.
 
 

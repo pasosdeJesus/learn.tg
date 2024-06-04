@@ -15,65 +15,70 @@
 
   const textoMd = ref(`
 
-# Guia 3: Ve a encontrarte con Jesús - Juan 11:17-27[^1]
+# Guide 3: Go out to meet Jesus - John 11:17-27[^1]
 
-> **17** Vino, pues, Jesús, y halló que hacía ya cuatro días que Lázaro
-  estaba en el sepulcro.
-  **18** Betania estaba cerca de Jerusalén, como a quince estadios;
-  **19** y muchos de los judíos habían venido a Marta y a María, para
-  consolarlas por su hermano.
-  **20** Entonces Marta, cuando oyó que Jesús venía, salió a encontrarle;
-  pero María se quedó en casa.
-  **21** Y Marta dijo a Jesús: Señor, si hubieses estado aquí, mi hermano
-  no habría muerto.
-  **22** Mas también sé ahora que todo lo que pidas a Dios, Dios te lo dará.
-  **23** Jesús le dijo: Tu hermano resucitará.
-  **24** Marta le dijo: Yo sé que resucitará en la resurrección, en el
-  día postrero.
-  **25** Le dijo Jesús: Yo soy la resurrección y la vida; el que cree en mí,
-  aunque esté muerto, vivirá.
-  **26** Y todo aquel que vive y cree en mí, no morirá eternamente.
-  ¿Crees esto?
-  **27** Le dijo: Sí, Señor; yo he creído que tú eres el Cristo, el
-  Hijo de Dios, que has venido al mundo.
+> **17** So when Jesus came, he found that he had been in the tomb four 
+  days already. 
+  **18** Now Bethany was near Jerusalem, about fifteen stadia away. 
+  **19** Many of the Jews had joined the women around Martha and Mary, 
+  to console them concerning their brother. 
+  **20** Then when Martha heard that Jesus was coming, she went and met him, 
+  but Mary stayed in the house. 
+  **21** Therefore Martha said to Jesus, “Lord, if you would have been here, 
+  my brother wouldn’t have died. 
+  **22** Even now I know that whatever you ask of God, God will give you.”
 
+> **23** Jesus said to her, “Your brother will rise again.”
 
-![Cuadro de la resurrección de Lazaro](/img/RaisingOfLazarusBloch.jpg "Cuadro de la resurrección de Lazaro")
+> **24** Martha said to him, “I know that he will rise again in the 
+  resurrection at the last day.”
 
-[Resurrección de Lazaro por Carl Bloch](https://commons.wikimedia.org/wiki/File:RaisingofLazarusBloch.jpg)
+> **25** Jesus said to her, “I am the resurrection and the life. He who 
+  believes in me will still live, even if he dies. 
+  **26**  Whoever lives and believes in me will never die. Do you believe this?”
 
+> **27** She said to him, “Yes, Lord. I have come to believe that you are 
+  the Christ, God’s Son, he who comes into the world.”
 
-## 1. Comprensión de lectura
+> (Translation WEBUS).
 
-* ¿Cuáles son los personajes de la historia ?
-* ¿Quién había muerto?
-* ¿Has sido consolado alguna vez por alguien cuando enfrentas una situación de desesperanza?
-* ¿De acuerdo con la lectura  quién sale al encuentro con Jesús?
-* ¿Cual es la respuesta de Jesus en el versículo 23?
-* ¿Cuál es la respuesta de Marta en el versículo 26?
-* **_Completa la frase_**:  Le dijo Jesús: Yo soy la resurrección y la vida; el que cree en mí, aunque esté muerto _________
-* ¿Cuál es la respuesta de Jesus en el versículo 25?
-* ¿Cuál era la distancia aproximada entre Betania y Jerusalén?
-* ¿Cuál es la ciudad en la que vive Maria de acuerdo con la información que proporciona el texto?
+![Drawing Raising of Lazarus](/img/RaisingOfLazarusBloch.jpg "Drawing Raising of
+Lazarus")
 
-## Reflexión
-
-* ¿Confiarías en alguien que tiene el poder de superar la muerte? Jesús de 
-Nazaret al contrario de la gran mayoría de los dioses no quiere que 
-nosotros nos acerquemos primero, sino que Él se acercó a nosotros 
-por amor a través  de Jesús para que nosotros nos pudiéramos acercar a Él.
-
-## Aplicación
-
-* ¿Cómo puedes aplicar lo que este pasaje enseña a tu vida?
-* Desafío de memorización: _porque todos le vieron, y se turbaron. Le dijo Jesús: Yo soy la resurrección y la vida; el que cree en mí, aunque esté muerto, vivirá._ Juan 11:25
+[Rising of Lazarus by Carl Bloch](https://commons.wikimedia.org/wiki/File:RaisingofLazarusBloch.jpg)
 
 
+## Reading comprehension. 
+
+* Who had died?
+* Have you ever been comforted by someone when you are facing a hopeless 
+  situation?
+* According to the reading, who goes out to meet Jesus?
+* What is Jesus' response in verse 23?
+* What is Martha's response in verse 26?
+* **Complete the sentence**: Jesus said to him: I am the resurrection and 
+  the life; the one who believes in me, even though he is dead _________
+* What is Jesus' response in verse 25?
+* What was the approximate distance between Bethany and Jerusalem?
+* What is the city where Maria lives according to the information 
+  provided in the text?
+
+## Reflection
+
+* Would you trust someone who has the power to overcome death? Jesus of 
+  Nazareth, contrary to the vast majority of gods, does not want us to 
+  get close first, but He came to us out of love through Jesus so that 
+  we could get close to Him.
+
+## Aplication
+
+* How can you apply what this passage teaches to your life?
+* Memorization challenge: _for they all saw him, and were troubled. Jesus 
+  said to her, “I am the resurrection and the life. He who believes in me 
+  will still live, even if he dies._ John 11:25
 
 [^1]:
-     Preparado por Julían Martínez y Vladimir Támara Patiño [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org). Este es contenido abierto con licencia.
-     [CC-BY Internacional 4.0](https://creativecommons.org/licenses/by/4.0/)
-
+     Prepared by Julian Martínez and Vladimir Támara Patiño. [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org)  This is open content with license [CC-BY International 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 `)
   // Idea de usar remark de freecodecamp

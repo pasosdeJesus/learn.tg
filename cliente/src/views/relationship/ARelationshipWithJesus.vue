@@ -63,7 +63,7 @@ inhabitants of Sierra Leone, if you want to help, please donate here.
   const contenidoMd = ref(`
 1. [Don't be afraid](/relationship/dont-be-afraid)
 2. [Meeting with Jesus](/relationship/meeting-with-Jesus)
-3. [Go out to meet Jesus](/relationship/goe-out-to-meet-Jesus)
+3. [Go out to meet Jesus](/relationship/go-out-to-meet-Jesus)
 4. [Talking With God](/relationship/talking-with-God)
   `)
   const contenidoHtml = computed( () => htmlDeMd(contenidoMd.value) )

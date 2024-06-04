@@ -26,10 +26,23 @@ import Guia4HablandoConDios from
 
 import ARelationshipWithJesus from
   './views/relationship/ARelationshipWithJesus.vue'
+import Guide1DontBeAfraid from
+  './views/relationship/Guide1DontBeAfraid.vue'
+import Guide2MeetingWithJesus from
+  './views/relationship/Guide2MeetingWithJesus.vue'
+import Guide3GoOutToMeetJesus from
+  './views/relationship/Guide3GoOutToMeetJesus.vue'
+import Guide4TalkingWithGod from
+  './views/relationship/Guide4TalkingWithGod.vue'
 
 const routes = [
   { path: '/', component: Hogar },
   { path: '/relationship/a-relationship-with-Jesus', component: ARelationshipWithJesus},
+  { path: '/relationship/dont-be-afraid', component: Guide1DontBeAfraid},
+  { path: '/relationship/meeting-with-Jesus', component: Guide2MeetingWithJesus},
+  { path: '/relationship/go-out-to-meet-Jesus', component: Guide3GoOutToMeetJesus},
+  { path: '/relationship/talking-with-God', component: Guide4TalkingWithGod},
+
   { path: '/relacion/una-relacion-con-Jesus', component: UnaRelacionConJesus},
   { path: '/relacion/no-tengas-miedo', component: Guia1NoTengasMiedo},
   { path: '/relacion/encuentro-con-Jesus', component: Guia2EncuentroConJesus},
