@@ -1,0 +1,955 @@
+/*
+* https://remixicon.com
+* https://github.com/Remix-Design/RemixIcon
+* Copyright RemixIcon.com
+* Released under the Apache License Version 2.0
+*/
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+@font-face {
+  font-family: "remixicon";
+  src: url(/learntg-admin//assets/remixicon-f3a5e585bea0688df5d4384e14afb8548e2ada08cd52aa3b943440326c05a600.eot?t=1650940606064);
+  /* IE9*/
+  src: url(/learntg-admin//assets/remixicon-f3a5e585bea0688df5d4384e14afb8548e2ada08cd52aa3b943440326c05a600.eot?t=1650940606064#iefix) format("embedded-opentype"), url(/learntg-admin//assets/remixicon-f66e7c38ba5aeb90475dac072d88abdb7703b6d72f97bf8f364d32aaac3eb9fa.woff2?t=1650940606064) format("woff2"), url(/learntg-admin//assets/remixicon-4c623953ad4acde7cd94dad68c0fda848795cb451179884b578b45674890c51d.woff?t=1650940606064) format("woff"), url(/learntg-admin//assets/remixicon-b0fbcd8315346675b97584f50b3b6b7d2b1e4ad73dea2270bca0af6b0959b77c.ttf?t=1650940606064) format("truetype"), url(/learntg-admin//assets/remixicon-2fe7432654ad5a2ad43fb01735a62e9a01708093e5f24d46c48734a58a964582.svg?t=1650940606064#remixicon) format("svg");
+  /* iOS 4.1- */
+  font-display: swap;
+}
+
+/* line 20, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+[class^="ri-"], [class*="ri-"] {
+  font-family: 'remixicon' !important;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* line 27, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-lg {
+  font-size: 1.3333em;
+  line-height: 0.75em;
+  vertical-align: -.0667em;
+}
+
+/* line 28, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-xl {
+  font-size: 1.5em;
+  line-height: 0.6666em;
+  vertical-align: -.075em;
+}
+
+/* line 29, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-xxs {
+  font-size: .5em;
+}
+
+/* line 30, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-xs {
+  font-size: .75em;
+}
+
+/* line 31, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-sm {
+  font-size: .875em;
+}
+
+/* line 32, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-1x {
+  font-size: 1em;
+}
+
+/* line 33, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-2x {
+  font-size: 2em;
+}
+
+/* line 34, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-3x {
+  font-size: 3em;
+}
+
+/* line 35, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-4x {
+  font-size: 4em;
+}
+
+/* line 36, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-5x {
+  font-size: 5em;
+}
+
+/* line 37, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-6x {
+  font-size: 6em;
+}
+
+/* line 38, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-7x {
+  font-size: 7em;
+}
+
+/* line 39, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-8x {
+  font-size: 8em;
+}
+
+/* line 40, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-9x {
+  font-size: 9em;
+}
+
+/* line 41, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-10x {
+  font-size: 10em;
+}
+
+/* line 42, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-fw {
+  text-align: center;
+  width: 1.25em;
+}
+
+/* line 44, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-briefcase-4-fill:before {
+  content: "\eaf0";
+}
+
+/* line 45, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-riding-fill:before {
+  content: "\f08b";
+}
+
+/* line 46, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-book-open-fill:before {
+  content: "\eada";
+}
+
+/* line 47, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-settings-4-fill:before {
+  content: "\f0e7";
+}
+
+/* line 48, app/assets/stylesheets/../../../vendor/assets/remixicon/remixicon.scss */
+.ri-swap-box-fill:before {
+  content: "\f1c8";
+}
+
+/* line 57, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  flex-grow: 1;
+}
+
+/* line 64, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout.has-sidebar {
+  flex-direction: row;
+}
+
+/* line 67, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout .header {
+  transition: width, 0.3s;
+  height: 64px;
+  min-height: 64px;
+  position: relative;
+}
+
+/* line 73, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout .sidebar {
+  width: 280px;
+  min-width: 280px;
+  transition: width, left, right, 0.3s;
+}
+
+/* line 77, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout .sidebar.collapsed {
+  width: 80px;
+  min-width: 80px;
+}
+
+@media (max-width: 480px) {
+  /* line 50, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xs {
+    position: fixed;
+    left: -280px;
+    height: 100%;
+    top: 0;
+    z-index: 100;
+  }
+  /* line 9, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xs.collapsed {
+    left: -80px;
+  }
+  /* line 12, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xs.toggled {
+    left: 0;
+  }
+  /* line 14, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xs.toggled ~ .overlay {
+    display: block;
+  }
+  /* line 20, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xs ~ .layout .header {
+    width: 100% !important;
+    transition: none;
+  }
+}
+
+@media (max-width: 576px) {
+  /* line 50, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-sm {
+    position: fixed;
+    left: -280px;
+    height: 100%;
+    top: 0;
+    z-index: 100;
+  }
+  /* line 9, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-sm.collapsed {
+    left: -80px;
+  }
+  /* line 12, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-sm.toggled {
+    left: 0;
+  }
+  /* line 14, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-sm.toggled ~ .overlay {
+    display: block;
+  }
+  /* line 20, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-sm ~ .layout .header {
+    width: 100% !important;
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* line 50, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-md {
+    position: fixed;
+    left: -280px;
+    height: 100%;
+    top: 0;
+    z-index: 100;
+  }
+  /* line 9, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-md.collapsed {
+    left: -80px;
+  }
+  /* line 12, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-md.toggled {
+    left: 0;
+  }
+  /* line 14, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-md.toggled ~ .overlay {
+    display: block;
+  }
+  /* line 20, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-md ~ .layout .header {
+    width: 100% !important;
+    transition: none;
+  }
+}
+
+@media (max-width: 992px) {
+  /* line 50, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-lg {
+    position: fixed;
+    left: -280px;
+    height: 100%;
+    top: 0;
+    z-index: 100;
+  }
+  /* line 9, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-lg.collapsed {
+    left: -80px;
+  }
+  /* line 12, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-lg.toggled {
+    left: 0;
+  }
+  /* line 14, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-lg.toggled ~ .overlay {
+    display: block;
+  }
+  /* line 20, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-lg ~ .layout .header {
+    width: 100% !important;
+    transition: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  /* line 50, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xl {
+    position: fixed;
+    left: -280px;
+    height: 100%;
+    top: 0;
+    z-index: 100;
+  }
+  /* line 9, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xl.collapsed {
+    left: -80px;
+  }
+  /* line 12, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xl.toggled {
+    left: 0;
+  }
+  /* line 14, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xl.toggled ~ .overlay {
+    display: block;
+  }
+  /* line 20, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xl ~ .layout .header {
+    width: 100% !important;
+    transition: none;
+  }
+}
+
+@media (max-width: 1600px) {
+  /* line 50, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xxl {
+    position: fixed;
+    left: -280px;
+    height: 100%;
+    top: 0;
+    z-index: 100;
+  }
+  /* line 9, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xxl.collapsed {
+    left: -80px;
+  }
+  /* line 12, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xxl.toggled {
+    left: 0;
+  }
+  /* line 14, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xxl.toggled ~ .overlay {
+    display: block;
+  }
+  /* line 20, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar.break-point-xxl ~ .layout .header {
+    width: 100% !important;
+    transition: none;
+  }
+}
+
+/* line 86, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout .footer {
+  height: 64px;
+  min-height: 64px;
+}
+
+/* line 90, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout .content {
+  flex-grow: 1;
+}
+
+/* line 94, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout .overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 99;
+  display: none;
+}
+
+/* line 105, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout .sidebar-toggler {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  /* line 109, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar-toggler.break-point-xs {
+    display: initial;
+  }
+}
+
+@media (max-width: 576px) {
+  /* line 109, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar-toggler.break-point-sm {
+    display: initial;
+  }
+}
+
+@media (max-width: 768px) {
+  /* line 109, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar-toggler.break-point-md {
+    display: initial;
+  }
+}
+
+@media (max-width: 992px) {
+  /* line 109, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar-toggler.break-point-lg {
+    display: initial;
+  }
+}
+
+@media (max-width: 1200px) {
+  /* line 109, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar-toggler.break-point-xl {
+    display: initial;
+  }
+}
+
+@media (max-width: 1600px) {
+  /* line 109, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout .sidebar-toggler.break-point-xxl {
+    display: initial;
+  }
+}
+
+/* line 117, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout.fixed-sidebar {
+  height: 100%;
+}
+
+/* line 119, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout.fixed-sidebar .sidebar {
+  height: 100%;
+  overflow: auto;
+}
+
+/* line 122, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout.fixed-sidebar .sidebar ~ .layout {
+  height: 100%;
+  overflow: auto;
+}
+
+/* line 130, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout.fixed-header .header {
+  position: fixed;
+  width: 100%;
+  z-index: 2;
+}
+
+/* line 134, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout.fixed-header .header ~ .layout,
+.layout.fixed-header .header ~ .content {
+  margin-top: 64px;
+}
+
+/* line 140, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout.fixed-header.fixed-sidebar .header {
+  width: calc(100% - 280px);
+}
+
+/* line 145, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout.fixed-header.fixed-sidebar .sidebar.collapsed ~ .layout .header {
+  width: calc(100% - 80px);
+}
+
+/* line 153, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+.layout.rtl {
+  direction: rtl;
+}
+
+@media (max-width: 480px) {
+  /* line 157, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-xs {
+    left: auto;
+    right: -280px;
+  }
+  /* line 39, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-xs.collapsed {
+    left: auto;
+    right: -80px;
+  }
+  /* line 43, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-xs.toggled {
+    left: auto;
+    right: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  /* line 157, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-sm {
+    left: auto;
+    right: -280px;
+  }
+  /* line 39, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-sm.collapsed {
+    left: auto;
+    right: -80px;
+  }
+  /* line 43, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-sm.toggled {
+    left: auto;
+    right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  /* line 157, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-md {
+    left: auto;
+    right: -280px;
+  }
+  /* line 39, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-md.collapsed {
+    left: auto;
+    right: -80px;
+  }
+  /* line 43, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-md.toggled {
+    left: auto;
+    right: 0;
+  }
+}
+
+@media (max-width: 992px) {
+  /* line 157, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-lg {
+    left: auto;
+    right: -280px;
+  }
+  /* line 39, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-lg.collapsed {
+    left: auto;
+    right: -80px;
+  }
+  /* line 43, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-lg.toggled {
+    left: auto;
+    right: 0;
+  }
+}
+
+@media (max-width: 1200px) {
+  /* line 157, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-xl {
+    left: auto;
+    right: -280px;
+  }
+  /* line 39, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-xl.collapsed {
+    left: auto;
+    right: -80px;
+  }
+  /* line 43, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-xl.toggled {
+    left: auto;
+    right: 0;
+  }
+}
+
+@media (max-width: 1600px) {
+  /* line 157, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-xxl {
+    left: auto;
+    right: -280px;
+  }
+  /* line 39, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-xxl.collapsed {
+    left: auto;
+    right: -80px;
+  }
+  /* line 43, node_modules/css-pro-layout/dist/scss/css-pro-layout.scss */
+  .layout.rtl .sidebar.break-point-xxl.toggled {
+    left: auto;
+    right: 0;
+  }
+}
+
+/* line 1, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_layout.scss */
+.layout {
+  z-index: 1;
+}
+
+/* line 3, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_layout.scss */
+.layout .header {
+  box-shadow: 1px 1px 4px #9aa0b9;
+  display: flex;
+  align-items: center;
+  padding: 20px;
+}
+
+/* line 9, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_layout.scss */
+.layout .content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* line 15, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_layout.scss */
+.layout .footer {
+  text-align: center;
+  margin-top: auto;
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+/* line 22, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_layout.scss */
+.layout.rtl .header {
+  box-shadow: -1px 1px 4px #9aa0b9;
+}
+
+/* line 1, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar {
+  color: #b3b8d4;
+  overflow-x: hidden !important;
+  position: relative;
+  background-color: #0c1e35;
+}
+
+/* line 7, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar .image-wrapper {
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0.2;
+  z-index: 1;
+  display: none;
+}
+
+/* line 17, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar .image-wrapper > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* line 24, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar.has-bg-image .image-wrapper {
+  display: block;
+}
+
+/* line 28, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar .sidebar-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+/* line 34, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar .sidebar-layout .sidebar-header {
+  height: 64px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(83, 93, 125, 0.3);
+}
+
+/* line 41, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar .sidebar-layout .sidebar-header > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* line 47, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar .sidebar-layout .sidebar-content {
+  flex-grow: 1;
+  padding: 10px 0;
+}
+
+/* line 51, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar .sidebar-layout .sidebar-footer {
+  height: 64px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid rgba(83, 93, 125, 0.3);
+  padding: 0 20px;
+}
+
+/* line 58, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_sidebar.scss */
+.sidebar .sidebar-layout .sidebar-footer > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@keyframes swing {
+  0%,
+30%,
+50%,
+70%,
+100% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(10deg);
+  }
+  40% {
+    transform: rotate(-10deg);
+  }
+  60% {
+    transform: rotate(5deg);
+  }
+  80% {
+    transform: rotate(-5deg);
+  }
+}
+
+/* line 30, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* line 36, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item a {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 0 20px;
+  color: #b3b8d4;
+}
+
+/* line 43, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item a .menu-icon {
+  font-size: 1.2rem;
+  width: 35px;
+  min-width: 35px;
+  height: 35px;
+  line-height: 35px;
+  text-align: center;
+  display: inline-block;
+  margin-right: 10px;
+  border-radius: 2px;
+  transition: color 0.3s;
+}
+
+/* line 54, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item a .menu-icon i {
+  display: inline-block;
+}
+
+/* line 59, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item a .menu-title {
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-grow: 1;
+  transition: color 0.3s;
+}
+
+/* line 67, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item a .menu-prefix,
+.layout .sidebar .menu .menu-item a .menu-suffix {
+  display: inline-block;
+  padding: 5px;
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+/* line 75, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item a:hover .menu-title {
+  color: #dee2ec;
+}
+
+/* line 78, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item a:hover .menu-icon {
+  color: #dee2ec;
+}
+
+/* line 80, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item a:hover .menu-icon i {
+  animation: swing ease-in-out 0.5s 1 alternate;
+}
+
+/* line 84, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item a:hover::after {
+  border-color: #dee2ec !important;
+}
+
+/* line 90, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item.sub-menu {
+  position: relative;
+}
+
+/* line 93, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item.sub-menu > a::after {
+  content: '';
+  transition: transform 0.3s;
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  width: 5px;
+  height: 5px;
+  transform: rotate(-45deg);
+}
+
+/* line 104, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item.sub-menu > .sub-menu-list {
+  padding-left: 20px;
+  display: none;
+  overflow: hidden;
+  z-index: 999;
+}
+
+/* line 112, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item.sub-menu.open > a::after {
+  transform: rotate(45deg);
+}
+
+/* line 121, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item.active > a .menu-title {
+  color: #dee2ec;
+}
+
+/* line 124, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item.active > a::after {
+  border-color: #dee2ec;
+}
+
+/* line 127, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu .menu-item.active > a .menu-icon {
+  color: #dee2ec;
+}
+
+/* line 133, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu > ul > .sub-menu > .sub-menu-list {
+  background-color: #0b1a2c;
+}
+
+/* line 140, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu.icon-shape-circle .menu-item a .menu-icon, .layout .sidebar .menu.icon-shape-rounded .menu-item a .menu-icon, .layout .sidebar .menu.icon-shape-square .menu-item a .menu-icon {
+  background-color: #0b1a2c;
+}
+
+/* line 145, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu.icon-shape-circle .menu-item a .menu-icon {
+  border-radius: 50%;
+}
+
+/* line 148, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu.icon-shape-rounded .menu-item a .menu-icon {
+  border-radius: 4px;
+}
+
+/* line 151, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar .menu.icon-shape-square .menu-item a .menu-icon {
+  border-radius: 0;
+}
+
+/* line 160, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar:not(.collapsed) .menu > ul > .menu-item.sub-menu > .sub-menu-list {
+  visibility: visible !important;
+  position: static !important;
+  transform: translate(0, 0) !important;
+}
+
+/* line 174, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar.collapsed .menu > ul > .menu-item > a .menu-prefix,
+.layout .sidebar.collapsed .menu > ul > .menu-item > a .menu-suffix {
+  opacity: 0;
+}
+
+/* line 181, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar.collapsed .menu > ul > .menu-item.sub-menu > a::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  background-color: currentcolor;
+  border-radius: 50%;
+  display: inline-block;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  border: none;
+  transform: translateY(-50%);
+}
+
+/* line 195, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar.collapsed .menu > ul > .menu-item.sub-menu > a:hover::after {
+  background-color: #dee2ec;
+}
+
+/* line 200, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar.collapsed .menu > ul > .menu-item.sub-menu > .sub-menu-list {
+  transition: none !important;
+  width: 200px;
+  margin-left: 3px !important;
+  border-radius: 4px;
+  display: block !important;
+}
+
+/* line 210, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar.collapsed .menu > ul > .menu-item.active > a::after {
+  background-color: #dee2ec;
+}
+
+/* line 223, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar.has-bg-image .menu.icon-shape-circle .menu-item a .menu-icon, .layout .sidebar.has-bg-image .menu.icon-shape-rounded .menu-item a .menu-icon, .layout .sidebar.has-bg-image .menu.icon-shape-square .menu-item a .menu-icon {
+  background-color: rgba(11, 26, 44, 0.6);
+}
+
+/* line 230, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout .sidebar.has-bg-image:not(.collapsed) .menu > ul > .sub-menu > .sub-menu-list {
+  background-color: rgba(11, 26, 44, 0.6);
+}
+
+/* line 243, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout.rtl .sidebar .menu .menu-item a .menu-icon {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+/* line 251, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout.rtl .sidebar .menu .menu-item.sub-menu > a::after {
+  transform: rotate(135deg);
+}
+
+/* line 256, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout.rtl .sidebar .menu .menu-item.sub-menu > .sub-menu-list {
+  padding-left: 0;
+  padding-right: 20px;
+}
+
+/* line 262, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout.rtl .sidebar .menu .menu-item.sub-menu.open > a::after {
+  transform: rotate(45deg);
+}
+
+/* line 275, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout.rtl .sidebar.collapsed .menu > ul > .menu-item.sub-menu a::after {
+  right: auto;
+  left: 10px;
+}
+
+/* line 280, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/_menu.scss */
+.layout.rtl .sidebar.collapsed .menu > ul > .menu-item.sub-menu > .sub-menu-list {
+  margin-left: -3px !important;
+}
+
+/* line 8, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/styles.scss */
+* {
+  box-sizing: border-box;
+}
+
+/* line 12, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/styles.scss */
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: 'Roboto', sans-serif;
+  color: #212529;
+}
+
+/* line 19, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/styles.scss */
+a {
+  text-decoration: none;
+}
+
+@media (max-width: 992px) {
+  /* line 24, app/assets/stylesheets/../../../vendor/assets/stylesheets/prosidebar/styles.scss */
+  #btn-collapse {
+    display: none;
+  }
+}

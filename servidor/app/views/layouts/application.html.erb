@@ -1,0 +1,83 @@
+<% content_for :title do %>
+    <%= Msip.titulo %>
+<% end %>
+
+<% content_for :menu do %>
+  <%= grupo_menus_prosidebar do %>
+    <%= opcion_menu_prosidebar "Inicio", 
+      Rails.configuration.relative_url_root.to_s %>
+    <% if !current_usuario.nil? %>
+      <%= despliega_abajo_prosidebar "Proyectos", 'ri-briefcase-4-fill', nil do %>
+        <%= opcion_menu_prosidebar "Listado", 
+          cor1440_gen.proyectosfinancieros_path %>
+        <%= opcion_menu_prosidebar "Validar", 
+          cor1440_gen.validar_proyectosfinancieros_path %>
+        <% if can? :manage, Cor1440Gen::Mindicadorpf %>
+          <%= opcion_menu_prosidebar "Medir Indicadores", 
+            cor1440_gen.mindicadorespf_path %>
+        <% end %>
+      <% end %>
+      <%= despliega_abajo_prosidebar "Actividades", 'ri-riding-fill', nil do %>
+        <%= opcion_menu_prosidebar "Listado", 
+          cor1440_gen.actividades_path %>
+        <%= opcion_menu_prosidebar "Contar por actividad de marco lógico", 
+          cor1440_gen.contar_actividades_path %>
+        <%= opcion_menu_prosidebar "Contar por beneficiario y actividad de marco lógico",
+          cor1440_gen.contar_actividades_beneficiarios_path %>
+        <% if can? :manage, ::Msip::Orgsocial %>
+          <%= opcion_menu_prosidebar "Organizaciones sociales", 
+            msip.orgsociales_path %>
+        <% end %>
+        <% if can? :manage, ::Msip::Persona %>
+          <%= opcion_menu_prosidebar "Beneficiarios", msip.personas_path %>
+        <% end %>
+      <% end %>
+    <% end %>
+    <% if !current_usuario.nil? %>
+      <%= despliega_abajo_prosidebar "Documentos y plantillas", 
+        'ri-book-open-fill', nil do %>
+        <%= opcion_menu_prosidebar "Nube", heb412_gen.sisini_path %>
+        <% if can? :manage, ::Heb412Gen::Plantillahcm %>
+          <%= opcion_menu_prosidebar "Plantillas para listados en hojas de calculo",
+            heb412_gen.plantillashcm_path %>
+        <% end %>
+        <% if can? :manage, ::Heb412Gen::Plantillahcr %>
+          <%= opcion_menu_prosidebar "Plantillas para un registro en hoja de calculo",
+            heb412_gen.plantillashcr_path %>
+        <% end %>
+      <% end %>
+      <%= despliega_abajo_prosidebar "Administrar", 'ri-settings-4-fill', nil do %>
+        <%= opcion_menu_prosidebar "Clave y tema", 
+          main_app.editar_registro_usuario_path %>
+        <% if current_usuario.rol == Ability::ROLADMIN %>
+          <%= opcion_menu_prosidebar "Usuarios", main_app.usuarios_path %>
+        <% end %>
+        <% if can? :manage, Mr519Gen::Formulario %>
+          <%= opcion_menu_prosidebar "Formularios", 
+            mr519_gen.formularios_path %>
+        <% end %>
+        <% if current_usuario.rol == Ability::ROLADMIN %>
+          <%= opcion_menu_prosidebar "Tablas básicas", 
+            msip.tablasbasicas_path %>
+        <% end %>
+      <% end %>
+      <%= opcion_menu_prosidebar "Salir #{current_usuario.nusuario}", 
+        main_app.terminar_sesion_path %>
+    <% else %>
+      <%= opcion_menu_prosidebar "Acerca de", 
+        msip.acercade_path %>
+      <%= opcion_menu_prosidebar "Iniciar Sesión", 
+        main_app.iniciar_sesion_path %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% content_for :piedepagina do %>
+  <p><span class='derechos'>Sistema de información de 
+    <a href='https://github.com/pasosdeJesus/cor1440'>código abierto</a> con 
+    <a href="https://github.com/pasosdeJesus/msip/blob/main/LICENCIA.md">licencia ISC</a>
+    <br/>
+    Desarrollado por <a id='pasosdeJesus' href="http://www.pasosdeJesus.org" target="_blank">Pasos de Jesús</a>. 2023. 
+<% end %>
+
+<%= render template: "layouts/msip/application-prosidebar" %>
