@@ -68,7 +68,7 @@ walking on teh sea")
   you straight today “Don’t be afraid” and we tell you by our personal 
   experience: He is love.
 
-## Appliction
+## Application
 
 * How can you apply what this passage teaches to your life?
 

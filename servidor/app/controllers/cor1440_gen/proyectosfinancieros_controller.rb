@@ -52,6 +52,20 @@ module Cor1440Gen
       ]
     end
 
+    def lista_proyectofinanciero_params
+      l = 
+      at = proyectofinanciero_params_cor1440_gen.select {
+        |i,v| i.class == Hash && i.keys == [:actividadpf_attributes]
+      }[0]
+      at[:actividadpf_attributes].insert(-1, :rutamd) 
+      return l
+    end
+
+    def proyectofinanciero_params
+      params.require(:proyectofinanciero).permit(
+        lista_proyectofinanciero_params
+      )
+    end
 
   end 
 end

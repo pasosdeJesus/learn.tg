@@ -132,3 +132,7 @@ group :production do
   gem "unicorn"
 
 end
+
+gem "redis", "~> 5.2"
+
+gem "jwt_sessions", "~> 3.2"

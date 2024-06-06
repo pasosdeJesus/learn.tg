@@ -18,7 +18,7 @@
 
 # 1. Registrate como referido de pasosdeJesus.org
 
-Al hacerlo obtienes !5% de descuento en las comisiones que OKX
+¡Al hacerlo obtienes 5% de descuento en las comisiones que OKX
 normalmente cobra en todas tus transacciones!
 
 1. Emplea el siguiente enlace de referido:
