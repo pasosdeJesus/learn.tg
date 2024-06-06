@@ -16,17 +16,21 @@
   const textoMd = ref(`
 # Compra USDT, ahorra y vende cuando quieras
 
-## 1. Compra USDT en el mercado P2P
-
 Si te inscribiste como referido de pasosdeJesus.org tendrás
 el 5% de descuento en la comisión que tipicamente OKX cobra 
 al comprar o vender USDT.
 
-Te servirá conocer la pantalla principal de la aplicación OKX:
+## 1. Conoce la interfaz de OKX en celular
+
+Te servirá conocer la pantalla principal de la aplicación OKX
+en celular:
 
 > ![Pantallazo enfoca puntos en aplicación de OKX](/img/verif1.jpg)
 
 Nota que en la parte inferior tiene las pestañas OKX, 
+
+
+## 2. Compra USDT en el mercado P2P
 
 
 Dirigete a Comprar y desde allí elige mercado P2P.
