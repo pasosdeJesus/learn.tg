@@ -18,19 +18,27 @@
 
 Si te inscribiste como referido de pasosdeJesus.org tendrás
 el 5% de descuento en la comisión que tipicamente OKX cobra 
-al comprar o vender USDT.
+al comprar o vender USDT.  Si aún no te has inscrito
+[sigue estas instrucciones](okx/registrate-como-referido).
 
 ## 1. Conoce la interfaz de OKX en celular
 
 Te servirá conocer la pantalla principal de la aplicación OKX
-en celular:
+en celular.
 
 > ![Pantallazo enfoca puntos en aplicación de OKX](/img/verif1.jpg)
 
-Nota que en la parte inferior tiene las pestañas OKX, 
-
+Nota que entre otros detalles ves tu saldo y los precios de
+algunos criptoactivos. En la parte superior debe decir **Exchange**
+y en la parte inferior debe estar marcada la pestaña **OKX** (si
+no lo estás presionando en esta llegarás a la pantalla principal):
 
 ## 2. Compra USDT en el mercado P2P
+
+Desde la pantalla principal de OKX presiona el botón \`Trading P2P\`
+para ver los anuncios de compra que debe lucir como así:
+
+
 
 
 Dirigete a Comprar y desde allí elige mercado P2P.
