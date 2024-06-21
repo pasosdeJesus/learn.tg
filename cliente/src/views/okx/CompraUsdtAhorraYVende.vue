@@ -14,14 +14,16 @@
   import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
 
   const textoMd = ref(`
-# Compra USDT, ahorra y vende cuando quieras
+# Curso: Ahorra en dólares en OKX
+
+## Guía 2. Compra USDT, ahorra y vende cuando quieras
 
 Si te inscribiste como referido de pasosdeJesus.org tendrás
 el 5% de descuento en la comisión que tipicamente OKX cobra 
-al comprar o vender USDT.  Si aún no te has inscrito
-[sigue estas instrucciones](okx/registrate-como-referido).
+al hacer trading.  Si aún no te has inscrito
+[sigue las instrucciones de la Guia 1](okx/registrate-como-referido).
 
-## 1. Conoce la interfaz de OKX en celular
+### 1. Conoce la interfaz de OKX en celular
 
 Te servirá conocer la pantalla principal de la aplicación OKX
 en celular.
@@ -33,18 +35,16 @@ algunos criptoactivos. En la parte superior debe decir **Exchange**
 y en la parte inferior debe estar marcada la pestaña **OKX** (si
 no lo estás presionando en esta llegarás a la pantalla principal):
 
-## 2. Compra USDT en el mercado P2P
+### 2. Compra USDT en el mercado P2P
 
 Desde la pantalla principal de OKX presiona el botón \`Trading P2P\`
 para ver los anuncios de compra que debe lucir como así:
 
 
+Asegurate que en la parte superior está elegida la pestaña \`Comprar\`
+para ver anuncios para quienes quieren comprar USDT.
 
-
-Dirigete a Comprar y desde allí elige mercado P2P.
-
-Veras anuncios para quiens compran sus USDT y anuncios para quienes venden
-sus USDT.   Entre los anuncios de quienes compran elije un vendedor que 
+Entre los anuncios elije un vendedor que 
 tenga varias transacciones y buen porcentaje de transacciones completadas
 y de recomendación.
 

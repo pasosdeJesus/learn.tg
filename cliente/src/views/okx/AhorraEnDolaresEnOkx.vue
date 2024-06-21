@@ -18,8 +18,8 @@
 
   import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
 
-  const titulo = ref("Ahorra en dólares OKX")
-  const subtitulo = ref("Con 5% de descuento al cambiar entre pesos y dólares y con una tasa de interés superior al 10% efectiva anual")
+  const titulo = ref("Ahorra en dólares en OKX")
+  const subtitulo = ref("Con una tasa de interés superior al 10% efectiva anual")
   const imagen = ref("/img/OKX_Logo.svg")
   const creditoImagen = ref("Logo de OKX")
   const enlaceImagen = ref("https://okx.com")
@@ -28,7 +28,7 @@
 
 Pasos de Jesús es un afiliado a OKX por eso al registrarte 
 como referido de Pasos de Jesús obtendrás un 5% de descuento 
-en las comisiones de todas tus transacciones.
+en las comisiones de trading.
 
 Una vez registrado y verificado podrás emplear el mercado P2P
 para convertir parte de tus pesos en cuentas bancarias y billeteras 
@@ -72,7 +72,7 @@ si quieres donar puedes hacerlo aquí.
 En este curso gratuito te enseñamos como hacer estas operaciones, sólo necesitas:
 1. Una cuenta bancaría en Colombia o una billetera en tu teléfono como
 Nequí o Daviplata
-2. Un celular con Android o IOS
+2. Un celular con Android o iOS
 3. Tu identificación personal para la verificación de identidad de OKX.
   `)
   const prerequisitosHtml = computed( () => htmlDeMd(prerequisitosMd.value) )

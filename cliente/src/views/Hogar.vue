@@ -35,8 +35,8 @@
           <div class="desc-curso">
             <div class="titulo-curso">Ahorra en dólares en OKX</div>
             <div class="res-curso">
-              Aprende a cambiar tus pesos colombianos por dólares con 5% 
-              de descuento y a ahorra en dólares con una tasa superior al 
+              Aprende a cambiar tus pesos colombianos por dólares 
+              y a ahorrar en dólares con una tasa superior al 
               10% efectivo anual sin tiempo mínimo de retención de tu dinero.
             </div>
           </div>
@@ -45,17 +45,19 @@
 
       <template v-if="estadoBoton == 'Desconectar'">
         <div class="curso">
-          <RouterLink to="/pastores-influenciadores" style="text-decoration: none">
+          <RouterLink to="/cursos-de-ahorro-de-mas-del-100" style="text-decoration: none">
           <div class="img-curso">
             <img src="/public/img/rollerskatewedding.svg">
           </div>
           <div class="desc-curso">
-            <div class="titulo-curso">Pastores Influenciadores</div>
-            <div class="res-curso">Curso dirigido a pastores menonitas
-              colombianos, para que sean influenciadores en OKX,
-              que aumenten la red de la iglesia para Cristo y den
-              oportunidad laboral a algunos miembros de su iglesia
-              como comerciantes.
+            <div class="titulo-curso">
+              Cursos de ahorro de mas del 100%
+            </div>
+            <div class="res-curso">Aprende como puedes pagar con
+              tu billetera OKX en este sitio para ver nuestro catálogo 
+              vigente en Junio de 2024 de cursos de inversiones 
+              de bajo riesgo, corto plazo y utilidad superior al 100% 
+              efectivo anual.
             </div>
           </div>
           </RouterLink>

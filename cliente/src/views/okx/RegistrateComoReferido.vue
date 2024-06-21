@@ -14,12 +14,14 @@
   import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
 
   const textoMd = ref(`
-# Registrate en OKX como referido e instala la aplicación
+# Curso: Ahorra en dólares en OKX
 
-# 1. Registrate como referido de pasosdeJesus.org
+## Guía 1. Registrate en OKX como referido(a) e instala la aplicación
 
-¡Al hacerlo obtienes 5% de descuento en las comisiones que OKX
-normalmente cobra en todas tus transacciones!
+### 1. Registrate como referido(a) de pasosdeJesus.org
+
+¡Al registrarte como refereido nuestro obtienes 5% de descuento en las 
+comisiones que OKX normalmente cobra en tus transacciones de trading!
 
 1. Emplea el siguiente enlace de referido:
 <a href="https://www.okx.com/es-la/join/87372281">https://www.okx.com/es-la/join/87372281</a>
@@ -30,16 +32,16 @@ normalmente cobra en todas tus transacciones!
 2. Proporciona tu correo en el campo para eso y presiona el botón 
    **Registrarse**
 3. En otra pestaña de tu navegador o con una aplicación de correo ingresa 
-   a tu correo y copia el código de verificación de 6 dígitos
+   a tu correo y copia el código de verificación de 6 dígitos.
 4. Tendrás 10 minutos para escribir ese código en la página de registro y 
    presionar **Siguiente**.
 5. Ingresa la clave con la que quieres proteger tu cuenta y presiona
    **Siguiente**.  Te sugerimos usar una combinación de números, letras 
    mayúsculas, minúsculas y símbolos.  No debes compartir tu clave. 
-   Te invitamos a revisar [Cómo proteger tu cuenta de exchange de criptomonedas en OKX](https://www.okx.com/es-la/learn/account-security-on-okex)
+   Te insitamos a revisar más recomendaciones en [Cómo proteger tu cuenta de exchange de criptomonedas en OKX](https://www.okx.com/es-la/learn/account-security-on-okex)
 6. Tras esto podrás acceder el tablero de control de tu cuenta en OKX.
 
-# 2. Instala la aplicación de OKX en tu celular
+### 2. Instala la aplicación de OKX en tu celular
 
 La aplicación de OKX para celular suele ser más
 práctica para las operaciones típicas de compra y venta de
@@ -52,9 +54,9 @@ Esta aplicación incluye la billetera OKX que podrás usar para ingresar
 a este sitio.
 
 
-# 3. Verifica tu identidad
+### 3. Verifica tu identidad
 
-Para la verificación tendrás que enviar foto de cédula y hacerte una selfie.
+Para la verificación tendrás que enviar foto de tu cédula y hacerte una selfie.
 
 Mira el estado de tu verificación y completala así:
 
@@ -72,9 +74,7 @@ Mira el estado de tu verificación y completala así:
 
 
 
-
-
-# 4. Opcionalmente desde tu computador instala la billetera de OKX como extensión de tu navegador
+### 4. Opcionalmente desde tu computador instala la billetera de OKX como extensión de tu navegador
 
 La aplicación web de OKX no te permitirá ingresar a sitios con aplicaciones 
 como esta (dApp que permite conexión a una billetera),
@@ -84,8 +84,14 @@ instala la extension OKX Wallet en tu navegador:
 * [Chrome y Brave](https://chrome.google.com/webstore/detail/okx-wallet/mcohilncbfahbmgdjkbpemcciiolgcge)
 * [Edge](https://microsoftedge.microsoft.com/addons/detail/okx-wallet/pbpjkcldjiffchgbbndmhojiacbgflha)
 
+---
+
+
+| Anterior | Siguiente |
+|---|---|
+| | [Guia 2: Compra USDT, ahorra y vende cuando quieras](/okx/compra-usdt-ahorra-y-vende) |
+
 `)
-  // Idea de usar remark de freecodecamp
   const htmlGen = computed( () => {
     let processor = unified()
       .use(remarkParse)
