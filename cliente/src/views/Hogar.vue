@@ -4,6 +4,7 @@
   import {
     estadoBoton
   } from '../components/conexion.js'
+  import { cursos } from '../definiciones' 
 
 
 </script>
@@ -12,58 +13,19 @@
   <Encabezado></Encabezado>
   <div class="contenido">
     <div class="cursos">
-      <div class="curso">
-        <RouterLink to="/relacion/una-relacion-con-Jesus">
+      <template v-for="curso in cursos">
+        <div class="curso" v-if="(estadoBoton == 'Ingresar' && curso.sinbilletera) || (estadoBoton == 'Desconectar' && curso.conbilletera)">
+          <RouterLink :to="curso.prefijoRuta + curso.introduccion.posfijoRuta">
           <div class="img-curso">
-            <img class="logo-relacion" src="/public/img/Jn6_col.jpg">
+            <img class="logo-relacion" :src="curso.imagen">
           </div>
           <div class="desc-curso">
-            <div class="titulo-curso">Una relación con Jesús</div>
-            <div class="res-curso">
-              Cuatro breves guías para empezar
-              una relación con Jesús como Señor, Salvador y amigo.
-            </div>
-          </div>
-        </RouterLink>
-      </div>
-
-      <div class="curso">
-        <RouterLink to="/okx/ahorra-en-dolares-en-okx">
-          <div class="img-curso">
-            <img class="logo-okx" src="/public/img/OKX_Logo.svg">
-          </div>
-          <div class="desc-curso">
-            <div class="titulo-curso">Ahorra en dólares en OKX</div>
-            <div class="res-curso">
-              Aprende a cambiar tus pesos colombianos por dólares 
-              y a ahorrar en dólares con una tasa superior al 
-              10% efectivo anual sin tiempo mínimo de retención de tu dinero.
-            </div>
-          </div>
-        </RouterLink>
-      </div>
-
-      <template v-if="estadoBoton == 'Desconectar'">
-        <div class="curso">
-          <RouterLink to="/cursos-de-ahorro-de-mas-del-100" style="text-decoration: none">
-          <div class="img-curso">
-            <img src="/public/img/rollerskatewedding.svg">
-          </div>
-          <div class="desc-curso">
-            <div class="titulo-curso">
-              Cursos de ahorro de mas del 100%
-            </div>
-            <div class="res-curso">Aprende como puedes pagar con
-              tu billetera OKX en este sitio para ver nuestro catálogo 
-              vigente en Junio de 2024 de cursos de inversiones 
-              de bajo riesgo, corto plazo y utilidad superior al 100% 
-              efectivo anual.
-            </div>
+            <div class="titulo-curso">{{curso.titulo}}</div>
+            <div class="res-curso">{{curso.subtitulo}}</div>
           </div>
           </RouterLink>
         </div>
       </template>
-
 
     </div>
   </div>

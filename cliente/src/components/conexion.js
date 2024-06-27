@@ -74,7 +74,7 @@ export function actualizarConexion() {
     conexion.estadoBoton = "Desconectar"
     let dir = okxwallet.selectedAddress
     let ab = `${dir.slice(2,6)}...${dir.slice(-4,-1)}`
-    conexion.cuenta = `Cuenta: ${ab}`
+    conexion.cuenta = `${ab}`
     okxwallet.on('accountsChanged', manejarCambioDeCuenta);
     if (typeof okxwallet.networkVersion != "undefined") {
       console.log("networkVersion", okxwallet.networkVersion)

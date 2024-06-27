@@ -87,9 +87,9 @@ instala la extension OKX Wallet en tu navegador:
 ---
 
 
-| Anterior | Siguiente |
-|---|---|
-| | [Guia 2: Compra USDT, ahorra y vende cuando quieras](/okx/compra-usdt-ahorra-y-vende) |
+| Anterior | | Siguiente |
+|---|---|---|
+| | | [Guia 2: Compra USDT, ahorra y vende cuando quieras](/okx/compra-usdt-ahorra-y-vende) |
 
 `)
   const htmlGen = computed( () => {
