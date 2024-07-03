@@ -1,21 +1,8 @@
 <script setup>
   import { ref, computed } from 'vue'
-  import Encabezado from '../../components/Encabezado.vue'
-  import Piedepagina from '../../components/Piedepagina.vue'
+  import Guia from "../../components/Guia.vue"
 
-  import {unified} from 'unified'
-  import remarkDirective from 'remark-directive'
-  import remarkFrontmatter from 'remark-frontmatter'
-  import remarkGfm from 'remark-gfm'
-  import remarkParse from 'remark-parse'
-  import remarkRehype from 'remark-rehype'
-  import rehypeStringify from 'rehype-stringify'
-
-  import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
-
-  const textoMd = ref(`
-# Guía 1: No tengas miedo -  Marcos 6:45-52[^1]
-
+  const textoMd = `
 > **45** En seguida hizo a sus discípulos entrar en la barca e ir delante 
   de él a Betsaida, en la otra ribera, entre tanto que él despedía a la 
   multitud. 
@@ -41,8 +28,6 @@
 caminando sobre el lago")
 
 [Jesús camina sobre el lago de Gustave Dore -- Dominio público](https://commons.wikimedia.org/wiki/File:Jesus_walks_on_the_sea.jpg)
-
-
 
 
 ## 1. Comprensión de lectura.
@@ -75,63 +60,10 @@ nuestra experiencia pesonal: Él es amor.
 ## 3. Aplicación
 
 * ¿Cómo puedes aplicar lo que este pasaje enseña a tu vida?
-
-[^1]:
-     Preparado por Vladimir Támara Patiño.
-     [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org) y Julián
-     Martinez. Este es contenido abierto con licencia. 
-     [CC-BY Internacional 4.0](https://creativecommons.org/licenses/by/4.0/)
-
-`)
-  // Idea de usar remark de freecodecamp
-  const htmlGen = computed( () => {
-    let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-    let html = processor.processSync(textoMd.value).toString()
-
-    return html
-  })
+`
 </script>
 
 <template>
-  <Encabezado></Encabezado>
-  <div class="contenido">
-    <div v-html='htmlGen'></div>
-  </div>
-  <Piedepagina></Piedepagina>
+  <Guia :textoMd="textoMd">
+  </Guia>
 </template>
-
-<style scoped>
-
-.html-gen {
-  width: 50%;
-  padding: 1rem;
-}
-
-.area-de-texto {
-  width: 100%
-}
-
-.texto-md {
-  box-sizing: border-box;
-  height: 100%;
-  width: 50%;
-  border: none;
-  border-right: 1px solid #ccc;
-  background-color: #f6f6f6;
-  font-size: 14px;
-  font-family: 'Monaco', courier, monospace;
-  padding: 20px;
-}
-
-img[src*="celular"] {
-  width: 100px;
-}
-
-</style>

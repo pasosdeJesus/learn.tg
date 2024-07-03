@@ -159,3 +159,69 @@ export const red = computed(() => {
   return conexion.red
 })
 
+
+export async function cambiarXLayer(event) {
+    try {
+      console.log(okxwallet.chainId)
+      const chainId = "0xc4"; // X Layer
+      await okxwallet.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: chainId }]
+      });
+    } catch (switchError) {
+      // This error code indicates that the chain
+      // has not been added to OKX Wallet.
+      console.log("switchError.code=", switchError.code)
+      if (switchError.code === 4902) {
+        try {
+          await okxwallet.request({
+            method: "wallet_addEthereumChain",
+            params: [{ chainId: "0xf00", rpcUrl: "https://..."
+        /* ... */ }]
+          });
+        } catch (addError) {
+          // handle "add" error
+        }
+      }
+      // handle other "switch" errors
+    }
+  }
+
+export async function pagarOKB(event) {
+  okxwallet
+    .request({
+      method: 'eth_sendTransaction',
+      params: [
+        {
+          from: okxwallet.selectedAddress,
+          to: '0x2e2c4ac19c93d0984840cdd8e7f77500e2ef978e',
+          value: '0x3782dace9d90000', // 0.25okb=25x10^16wei
+          gasPrice: '0x09184e72a000',
+          gas: '0x2710',
+        },
+      ],
+    })
+    .then((txHash) => console.log("txHash", txHash))
+    .catch((error) => console.error("error", error));
+}
+
+export async function pagarUSDT(event) {
+  // https://ethereum.stackexchange.com/questions/66345/how-to-use-sendtransaction-to-send-erc20-tokens-through-metamask
+  okxwallet
+    .request({
+      method: 'eth_sendTransaction',
+      params: [
+        {
+          from: okxwallet.selectedAddress,
+          to: '0x2e2c4ac19c93d0984840cdd8e7f77500e2ef978e',
+          value: '0x3782dace9d90000', // 0.25okb=25x10^16wei
+          gasPrice: '0x09184e72a000',
+          gas: '0x2710',
+        },
+      ],
+    })
+    .then((txHash) => console.log("txHash", txHash))
+    .catch((error) => console.error("error", error));
+}
+
+

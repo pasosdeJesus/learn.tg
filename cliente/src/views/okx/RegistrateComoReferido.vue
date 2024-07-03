@@ -1,23 +1,7 @@
 <script setup>
-  import { ref, computed } from 'vue'
-  import Encabezado from '../../components/Encabezado.vue'
-  import Piedepagina from '../../components/Piedepagina.vue'
+  import Guia from '../../components/Guia.vue'
 
-  import {unified} from 'unified'
-  import remarkDirective from 'remark-directive'
-  import remarkFrontmatter from 'remark-frontmatter'
-  import remarkGfm from 'remark-gfm'
-  import remarkParse from 'remark-parse'
-  import remarkRehype from 'remark-rehype'
-  import rehypeStringify from 'rehype-stringify'
-
-  import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
-
-  const textoMd = ref(`
-# Curso: Ahorra en dólares en OKX
-
-## Guía 1. Registrate en OKX como referido(a) e instala la aplicación
-
+  const textoMd = `
 ### 1. Registrate como referido(a) de pasosdeJesus.org
 
 ¡Al registrarte como refereido nuestro obtienes 5% de descuento en las 
@@ -71,75 +55,9 @@ Mira el estado de tu verificación y completala así:
 3. Desde la pestaña \`Perfil\` presiona sobre \`Verificación\`:
 
 > ![Mensaje pasosdeJesus.org te ha invitado](/img/verif3.jpg)
-
-
-
-### 4. Opcionalmente desde tu computador instala la billetera de OKX como extensión de tu navegador
-
-La aplicación web de OKX no te permitirá ingresar a sitios con aplicaciones 
-como esta (dApp que permite conexión a una billetera),
-necesitarás bien la billetera en tu celular o si prefieres usar tu computador
-instala la extension OKX Wallet en tu navegador:
-
-* [Chrome y Brave](https://chrome.google.com/webstore/detail/okx-wallet/mcohilncbfahbmgdjkbpemcciiolgcge)
-* [Edge](https://microsoftedge.microsoft.com/addons/detail/okx-wallet/pbpjkcldjiffchgbbndmhojiacbgflha)
-
----
-
-
-| Anterior | | Siguiente |
-|---|---|---|
-| | | [Guia 2: Compra USDT, ahorra y vende cuando quieras](/okx/compra-usdt-ahorra-y-vende) |
-
-`)
-  const htmlGen = computed( () => {
-    let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-    let html = processor.processSync(textoMd.value).toString()
-
-    return html
-  })
+`
 </script>
 
 <template>
-  <Encabezado></Encabezado>
-  <div class="contenido">
-    <div v-html='htmlGen'></div>
-  </div>
-  <Piedepagina></Piedepagina>
+  <Guia :textoMd="textoMd"/>
 </template>
-
-<style scoped>
-
-.html-gen {
-  width: 50%;
-  padding: 1rem;
-}
-
-.area-de-texto {
-  width: 100%
-}
-
-.texto-md {
-  box-sizing: border-box;
-  height: 100%;
-  width: 50%;
-  border: none;
-  border-right: 1px solid #ccc;
-  background-color: #f6f6f6;
-  font-size: 14px;
-  font-family: 'Monaco', courier, monospace;
-  padding: 20px;
-}
-
-img[src*="celular"] {
-  width: 100px;
-}
-
-</style>

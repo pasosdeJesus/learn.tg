@@ -1,22 +1,7 @@
 <script setup>
-  import { ref, computed } from 'vue'
-  import Encabezado from '../../components/Encabezado.vue'
-  import Piedepagina from '../../components/Piedepagina.vue'
-
-  import {unified} from 'unified'
-  import remarkDirective from 'remark-directive'
-  import remarkFrontmatter from 'remark-frontmatter'
-  import remarkGfm from 'remark-gfm'
-  import remarkParse from 'remark-parse'
-  import remarkRehype from 'remark-rehype'
-  import rehypeStringify from 'rehype-stringify'
-
-  import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
-
-  const textoMd = ref(`
-
-# Guide 3: Go out to meet Jesus - John 11:17-27[^1]
-
+  import Guia from '../../components/Guia.vue'
+  
+  const textoMd = `
 > **17** So when Jesus came, he found that he had been in the tomb four 
   days already. 
   **18** Now Bethany was near Jerusalem, about fifteen stadia away. 
@@ -76,60 +61,9 @@ Lazarus")
 * Memorization challenge: _for they all saw him, and were troubled. Jesus 
   said to her, “I am the resurrection and the life. He who believes in me 
   will still live, even if he dies._ John 11:25
-
-[^1]:
-     Prepared by Julian Martínez and Vladimir Támara Patiño. [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org)  This is open content with license [CC-BY International 4.0](https://creativecommons.org/licenses/by/4.0/)
-
-`)
-  // Idea de usar remark de freecodecamp
-  const htmlGen = computed( () => {
-    let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-    let html = processor.processSync(textoMd.value).toString()
-
-    return html
-  })
+`
 </script>
 
 <template>
-  <Encabezado></Encabezado>
-  <div class="contenido">
-    <div v-html='htmlGen'></div>
-  </div>
-  <Piedepagina></Piedepagina>
+  <Guia :textoMd="textoMd"/>
 </template>
-
-<style scoped>
-
-.html-gen {
-  width: 50%;
-  padding: 1rem;
-}
-
-.area-de-texto {
-  width: 100%
-}
-
-.texto-md {
-  box-sizing: border-box;
-  height: 100%;
-  width: 50%;
-  border: none;
-  border-right: 1px solid #ccc;
-  background-color: #f6f6f6;
-  font-size: 14px;
-  font-family: 'Monaco', courier, monospace;
-  padding: 20px;
-}
-
-img {
-  width: 100px;
-}
-
-</style>

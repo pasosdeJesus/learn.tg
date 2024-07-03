@@ -2,8 +2,11 @@
   <footer class="piedepagina">
     <div class="derechos">
       <div>
-        Puedes reusar abiertamente dando crédito a
-        <a href="https://pasosdeJesus.org">pasosdeJesus.org</a>. 2024
+        Puedes reusar abiertamente el contenido gratuito dando crédito. 2024
+      </div>
+      <div>
+        Si tienes preguntas o sugerencias escribenos a
+        <a href="mailto:info@pasosdeJesus.org">info@pasosdeJesus.org</a>
       </div>
     </div>
     <div class="legal">
@@ -14,7 +17,7 @@
           <img style="width: 1rem" src="/public/twitter.svg" alt="Logo de Twitter">
         </a>
       </div>
-     
+
       <div class="gitlab">
         <a href="https://gitlab.com/pasosdeJesus/" target="_blank"        >
           <img src="/public/gitlab.svg" alt="Logo de Gitlab">

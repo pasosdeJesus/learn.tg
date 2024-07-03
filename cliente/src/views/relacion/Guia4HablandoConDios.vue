@@ -1,23 +1,7 @@
 <script setup>
-  import { ref, computed } from 'vue'
-  import Encabezado from '../../components/Encabezado.vue'
-  import Piedepagina from '../../components/Piedepagina.vue'
+  import Guia from '../../components/Guia.vue'
 
-  import {unified} from 'unified'
-  import remarkDirective from 'remark-directive'
-  import remarkFrontmatter from 'remark-frontmatter'
-  import remarkGfm from 'remark-gfm'
-  import remarkParse from 'remark-parse'
-  import remarkRehype from 'remark-rehype'
-  import rehypeStringify from 'rehype-stringify'
-
-  import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
-
-  const textoMd = ref(`
-
-# Guia 4: Hablando con Dios - Hechos 8:26-39[^1]
-
-
+  const textoMd = `
 > **26** Un ángel del Señor habló a Felipe, diciendo: Levántate y ve hacia 
   el sur, por el camino que desciende de Jerusalén a Gaza, el cual es 
   desierto. 
@@ -59,7 +43,6 @@ de Felipe bautizando al Eunuco")
 [Cuadro de Felipe bautizando al Eunuco de Aelbert Cuyp --Dominio Público](https://picryl.com/media/aelbert-cuyp-saint-philip-baptising-the-ethiopian-eunuch-ntiii-ang-515655-a00e41)
 
 
-
 ## 1. Comprensión de lectura
 
 * ¿Cuáles son los personajes de la historia ?
@@ -84,62 +67,9 @@ suma importancia para nosotros.
 
 * ¿Cómo puedes aplicar lo que este pasaje enseña a tu vida?
 * Desafío de memorización: _Felipe dijo: Si crees de todo corazón, bien puedes. Y respondiendo, dijo: Creo que Jesucristo es el Hijo de Dios._ Hechos 8:37
-
-
-[^1]:
-     Preparado por Julían Martínez y Vladimir Támara Patiño [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org). Este es contenido abierto con licencia.
-     [CC-BY Internacional 4.0](https://creativecommons.org/licenses/by/4.0/)
-
-`)
-  // Idea de usar remark de freecodecamp
-  const htmlGen = computed( () => {
-    let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-    let html = processor.processSync(textoMd.value).toString()
-
-    return html
-  })
+`
 </script>
 
 <template>
-  <Encabezado></Encabezado>
-  <div class="contenido">
-    <div v-html='htmlGen'></div>
-  </div>
-  <Piedepagina></Piedepagina>
+  <Guia :textoMd="textoMd"/>
 </template>
-
-<style scoped>
-
-.html-gen {
-  width: 50%;
-  padding: 1rem;
-}
-
-.area-de-texto {
-  width: 100%
-}
-
-.texto-md {
-  box-sizing: border-box;
-  height: 100%;
-  width: 50%;
-  border: none;
-  border-right: 1px solid #ccc;
-  background-color: #f6f6f6;
-  font-size: 14px;
-  font-family: 'Monaco', courier, monospace;
-  padding: 20px;
-}
-
-img {
-  width: 100px;
-}
- 
-</style>

@@ -1,23 +1,8 @@
 <script setup>
   import { ref, computed } from 'vue'
-  import Encabezado from '../../components/Encabezado.vue'
-  import Piedepagina from '../../components/Piedepagina.vue'
+  import Guia from '../../components/Guia.vue'
 
-  import {unified} from 'unified'
-  import remarkDirective from 'remark-directive'
-  import remarkFrontmatter from 'remark-frontmatter'
-  import remarkGfm from 'remark-gfm'
-  import remarkParse from 'remark-parse'
-  import remarkRehype from 'remark-rehype'
-  import rehypeStringify from 'rehype-stringify'
-
-  import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
-
-  const textoMd = ref(`
-# Guía 2: Encuentro con Jesús -  Juan 4:1-26[^1]
-
-
-
+  const textoMd = `
 >  **1** Cuando, pues, el Señor entendió que los fariseos habían oído decir: 
    Jesús hace y bautiza más discípulos que Juan
    **2** (aunque Jesús no bautizaba, sino sus discípulos), 
@@ -102,69 +87,12 @@
 * ¿Cómo puedes aplicar lo que este pasaje enseña a tu vida?
 * Desafío de memorización: _…el agua que yo le daré será en él una fuente de agua que salte para vida eterna_ Juan 6:14
 
-
-
-
 ![Pozo de Jacob en 2013](/img/j2013.jpg "Pozo de Jacob en 2013")
 
 [Foto del Pozo de Jacob en 2013 por Jermiah K. Garrett](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Jacob's_Well_in_2013.jpg)
-
-
-
-[^1]:
-     Preparado por Julían Martínez y Vladimir Támara Patiño [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org). Este es contenido abierto con licencia.
-     [CC-BY Internacional 4.0](https://creativecommons.org/licenses/by/4.0/)
-
-`)
-  // Idea de usar remark de freecodecamp
-  const htmlGen = computed( () => {
-    let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-    let html = processor.processSync(textoMd.value).toString()
-
-    return html
-  })
+`
 </script>
 
 <template>
-  <Encabezado></Encabezado>
-  <div class="contenido">
-    <div v-html='htmlGen'></div>
-  </div>
-  <Piedepagina></Piedepagina>
+  <Guia :textoMd="textoMd"/>
 </template>
-
-<style scoped>
-
-.html-gen {
-  width: 50%;
-  padding: 1rem;
-}
-
-.area-de-texto {
-  width: 100%
-}
-
-.texto-md {
-  box-sizing: border-box;
-  height: 100%;
-  width: 50%;
-  border: none;
-  border-right: 1px solid #ccc;
-  background-color: #f6f6f6;
-  font-size: 14px;
-  font-family: 'Monaco', courier, monospace;
-  padding: 20px;
-}
-
-img {
-  width: 100px;
-}
- 
-</style>

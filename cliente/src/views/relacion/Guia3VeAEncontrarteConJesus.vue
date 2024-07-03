@@ -1,22 +1,7 @@
 <script setup>
-  import { ref, computed } from 'vue'
-  import Encabezado from '../../components/Encabezado.vue'
-  import Piedepagina from '../../components/Piedepagina.vue'
+  import Guia from '../../components/Guia.vue'
 
-  import {unified} from 'unified'
-  import remarkDirective from 'remark-directive'
-  import remarkFrontmatter from 'remark-frontmatter'
-  import remarkGfm from 'remark-gfm'
-  import remarkParse from 'remark-parse'
-  import remarkRehype from 'remark-rehype'
-  import rehypeStringify from 'rehype-stringify'
-
-  import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
-
-  const textoMd = ref(`
-
-# Guia 3: Ve a encontrarte con Jesús - Juan 11:17-27[^1]
-
+  const textoMd = `
 > **17** Vino, pues, Jesús, y halló que hacía ya cuatro días que Lázaro
   estaba en el sepulcro.
   **18** Betania estaba cerca de Jerusalén, como a quince estadios;
@@ -71,64 +56,9 @@ por amor a través  de Jesús para que nosotros nos pudiéramos acercar a Él.
 
 * ¿Cómo puedes aplicar lo que este pasaje enseña a tu vida?
 * Desafío de memorización: _porque todos le vieron, y se turbaron. Le dijo Jesús: Yo soy la resurrección y la vida; el que cree en mí, aunque esté muerto, vivirá._ Juan 11:25
-
-
-
-[^1]:
-     Preparado por Julían Martínez y Vladimir Támara Patiño [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org). Este es contenido abierto con licencia.
-     [CC-BY Internacional 4.0](https://creativecommons.org/licenses/by/4.0/)
-
-
-`)
-  // Idea de usar remark de freecodecamp
-  const htmlGen = computed( () => {
-    let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-    let html = processor.processSync(textoMd.value).toString()
-
-    return html
-  })
+`
 </script>
 
 <template>
-  <Encabezado></Encabezado>
-  <div class="contenido">
-    <div v-html='htmlGen'></div>
-  </div>
-  <Piedepagina></Piedepagina>
+  <Guia :textoMd="textoMd"/>
 </template>
-
-<style scoped>
-
-.html-gen {
-  width: 50%;
-  padding: 1rem;
-}
-
-.area-de-texto {
-  width: 100%
-}
-
-.texto-md {
-  box-sizing: border-box;
-  height: 100%;
-  width: 50%;
-  border: none;
-  border-right: 1px solid #ccc;
-  background-color: #f6f6f6;
-  font-size: 14px;
-  font-family: 'Monaco', courier, monospace;
-  padding: 20px;
-}
-
-img {
-  width: 100px;
-}
-
-</style>

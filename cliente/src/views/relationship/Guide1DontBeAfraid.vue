@@ -1,21 +1,7 @@
 <script setup>
-  import { ref, computed } from 'vue'
-  import Encabezado from '../../components/Encabezado.vue'
-  import Piedepagina from '../../components/Piedepagina.vue'
+  import Guia from '../../components/Guia.vue'
 
-  import {unified} from 'unified'
-  import remarkDirective from 'remark-directive'
-  import remarkFrontmatter from 'remark-frontmatter'
-  import remarkGfm from 'remark-gfm'
-  import remarkParse from 'remark-parse'
-  import remarkRehype from 'remark-rehype'
-  import rehypeStringify from 'rehype-stringify'
-
-  import addFillInTheBlank from '../../lib/add-fill-in-the-blank'
-
-  const textoMd = ref(`
-# Guide 1: Don't be afraid - Mark 6:45-52[^1]
-
+  const textoMd = `
 > **45** Immediately He made his disciples get into the boat, and go ahead 
    to the other side, to Bethsaida, while He himself sent the multitude away. 
    **46** After He had taken leave of them, He went up the mountain to pray.
@@ -74,61 +60,9 @@ walking on teh sea")
 
 * Memorization challenge:_... But He immediately spoke with them, and said 
   to them, “Cheer up! It is I! Don’t be afraid.”_ Mark 6:50
-
-
-[^1]:
-     Prepared by Vladimir Támara Patiño [vtamara@pasosdeJesus.org](mailto:vtamara@pasosdeJesus.org) and Julian Martínez.  This is open content with license [CC-BY International 4.0](https://creativecommons.org/licenses/by/4.0/)
-
-`)
-  // Idea de usar remark de freecodecamp
-  const htmlGen = computed( () => {
-    let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-    let html = processor.processSync(textoMd.value).toString()
-
-    return html
-  })
+`
 </script>
 
 <template>
-  <Encabezado></Encabezado>
-  <div class="contenido">
-    <div v-html='htmlGen'></div>
-  </div>
-  <Piedepagina></Piedepagina>
+  <Guia :textoMd="textoMd"/>
 </template>
-
-<style scoped>
-
-.html-gen {
-  width: 50%;
-  padding: 1rem;
-}
-
-.area-de-texto {
-  width: 100%
-}
-
-.texto-md {
-  box-sizing: border-box;
-  height: 100%;
-  width: 50%;
-  border: none;
-  border-right: 1px solid #ccc;
-  background-color: #f6f6f6;
-  font-size: 14px;
-  font-family: 'Monaco', courier, monospace;
-  padding: 20px;
-}
-
-img[src*="celular"] {
-  width: 100px;
-}
-
-</style>

@@ -2,12 +2,13 @@
   import { ref, computed } from 'vue'
   import {
     actualizarConexion, 
+    cambiarXLayer,
     conectar,
     cuenta,
     desconectar,
     estadoBoton,
     red
-  } from '../components/conexion.js'
+  } from '../lib/conexion.js'
 
   actualizarConexion()
 
@@ -37,14 +38,21 @@
         <button 
           class='btn ancho-8' 
           @click='desconectar'>Desconectar</button>
+        <div class="cuenta-y-red">
+          <div v-html="cuenta"></div>
+          <div v-html="red"></div>
+          <template v-if="red != 'Red: X Layer Mainnet'">
+            <div class="cont-flex-centro">
+              <button 
+                 class='btn ancho-8' 
+                 @click='cambiarXLayer'>X Layer</button>
+            </div>
+          </template>
+        </div>
       </template>
       <template v-else>
         <div v-html="enlace_celular" class='btn'></div>
       </template>
-      <div class="cuenta-y-red">
-        <div v-html="cuenta"></div>
-        <div v-html="red"></div>
-      </div>
     </div>
   </header>
 </template>

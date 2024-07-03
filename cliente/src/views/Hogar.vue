@@ -3,7 +3,7 @@
   import Piedepagina from '../components/Piedepagina.vue'
   import {
     estadoBoton
-  } from '../components/conexion.js'
+    } from '../lib/conexion.js'
   import { cursos } from '../definiciones' 
 
 
@@ -15,7 +15,7 @@
     <div class="cursos">
       <template v-for="curso in cursos">
         <div class="curso" v-if="(estadoBoton == 'Ingresar' && curso.sinbilletera) || (estadoBoton == 'Desconectar' && curso.conbilletera)">
-          <RouterLink :to="curso.prefijoRuta + curso.introduccion.posfijoRuta">
+          <RouterLink :to="'/' + curso.idioma + curso.prefijoRuta">
           <div class="img-curso">
             <img class="logo-relacion" :src="curso.imagen">
           </div>
