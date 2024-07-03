@@ -91,8 +91,10 @@
     </div>
     <h1>Guía {{numGuia}}: {{miGuia.titulo}}</h1>
     <div v-html='htmlGen'></div>
-    <h2>Créditos</h2>
-    <div v-html="creditosGen"></div>
+    <template v-if="creditosGen != ''">
+      <h2>Créditos</h2>
+      <div v-html="creditosGen"></div>
+    </template>
   </div>
   <table width="100%" border="1px">
     <td width="33%">

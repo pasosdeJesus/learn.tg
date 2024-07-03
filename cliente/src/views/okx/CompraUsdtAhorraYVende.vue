@@ -17,7 +17,7 @@ en celular.
 Nota que entre otros detalles ves tu saldo y los precios de
 algunos criptoactivos. En la parte superior debe decir **Exchange**
 y en la parte inferior debe estar marcada la pestaña **OKX** (si
-no lo estás presionando en esta llegarás a la pantalla principal):
+no lo estás presionando en esta llegarás a la pantalla principal).
 
 ### 2. Compra USDT en el mercado P2P
 
