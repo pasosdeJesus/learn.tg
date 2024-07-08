@@ -18,7 +18,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/cor1440_gen.git
-  revision: e0c39828449ae81f0f99b374308c6a31b3309392
+  revision: 7e967dace4a9f680e70be72b1613de7ff9c9850f
   branch: tomselect
   specs:
     cor1440_gen (2.2.0.beta6)
@@ -31,7 +31,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/heb412_gen.git
-  revision: 60dbf58b5d1646cc32028de3ecf7ac94f7cd96be
+  revision: a6fe20558f67d4127e43ee2e63f193cb2a5dabd0
   branch: tomselect
   specs:
     heb412_gen (2.2.0.beta6)
@@ -42,7 +42,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/mr519_gen.git
-  revision: 5997a881b73529d007ac268bad0c2ef2d4f591d3
+  revision: c3523f67ba6c6828d6de1b3606a744fee5c38c1d
   branch: tomselect
   specs:
     mr519_gen (2.2.0.beta6)
@@ -51,7 +51,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/msip.git
-  revision: 4f6be22e535ac5b47caea723b0ee1295793d1bcb
+  revision: 049ed9053e9ffcc312f07da347b31d53d878032a
   branch: tomselect
   specs:
     msip (2.2.0.beta6)
@@ -146,8 +146,8 @@ GEM
       minitest (>= 5.1)
       mutex_m
       tzinfo (~> 2.0)
-    addressable (2.8.6)
-      public_suffix (>= 2.0.2, < 6.0)
+    addressable (2.8.7)
+      public_suffix (>= 2.0.2, < 7.0)
     andand (1.3.3)
     apexcharts (0.2.0)
     babel-source (5.8.35)
@@ -160,7 +160,7 @@ GEM
     bindex (0.8.1)
     bootsnap (1.18.3)
       msgpack (~> 1.2)
-    builder (3.2.4)
+    builder (3.3.0)
     camertron-eprun (1.1.1)
     cancancan (3.6.1)
     capybara (3.40.0)
@@ -183,12 +183,12 @@ GEM
       execjs
     coffee-script-source (1.12.2)
     colorize (1.1.0)
-    concurrent-ruby (1.3.1)
+    concurrent-ruby (1.3.3)
     connection_pool (2.4.1)
     crass (1.0.6)
-    cuprite (0.15)
+    cuprite (0.15.1)
       capybara (~> 3.0)
-      ferrum (~> 0.14.0)
+      ferrum (~> 0.15.0)
     date (3.3.4)
     debug (1.9.2)
       irb (~> 1.10)
@@ -210,20 +210,20 @@ GEM
     erd (0.8.2)
       nokogiri
       ruby-graphviz
-    erubi (1.12.0)
+    erubi (1.13.0)
     execjs (2.9.1)
-    ferrum (0.14)
+    ferrum (0.15)
       addressable (~> 2.5)
       concurrent-ruby (~> 1.1)
       webrick (~> 1.7)
-      websocket-driver (>= 0.6, < 0.8)
+      websocket-driver (~> 0.7)
     ffi (1.17.0)
     globalid (1.2.1)
       activesupport (>= 6.1)
     i18n (1.14.5)
       concurrent-ruby (~> 1.0)
     io-console (0.7.2)
-    irb (1.13.1)
+    irb (1.14.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jbuilder (2.12.0)
@@ -231,7 +231,7 @@ GEM
       activesupport (>= 5.0.0)
     jsbundling-rails (1.3.0)
       railties (>= 6.0.0)
-    jwt (2.8.1)
+    jwt (2.8.2)
       base64
     jwt_sessions (3.2.2)
       jwt (>= 2.8, < 3)
@@ -249,13 +249,13 @@ GEM
     matrix (0.4.2)
     mime-types (3.5.2)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2024.0507)
+    mime-types-data (3.2024.0702)
     mini_mime (1.1.5)
     mini_portile2 (2.8.7)
-    minitest (5.23.1)
+    minitest (5.24.1)
     msgpack (1.7.2)
     mutex_m (0.2.0)
-    net-imap (0.4.12)
+    net-imap (0.4.14)
       date
       net-protocol
     net-pop (0.1.2)
@@ -265,7 +265,7 @@ GEM
     net-smtp (0.5.0)
       net-protocol
     nio4r (2.7.3)
-    nokogiri (1.16.5)
+    nokogiri (1.16.6)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
     odf-report (0.8.1)
@@ -287,7 +287,7 @@ GEM
       rails (>= 3.2)
     psych (5.1.2)
       stringio
-    public_suffix (5.0.5)
+    public_suffix (6.0.0)
     puma (6.4.2)
       nio4r (~> 2.0)
     racc (1.8.0)
@@ -346,13 +346,13 @@ GEM
     redis-client (0.22.2)
       connection_pool
     regexp_parser (2.9.2)
-    reline (0.5.8)
+    reline (0.5.9)
       io-console (~> 0.5)
     responders (3.1.1)
       actionpack (>= 5.2)
       railties (>= 5.2)
-    rexml (3.2.8)
-      strscan (>= 3.0.9)
+    rexml (3.3.1)
+      strscan
     rspreadsheet (0.5.3)
       andand (>= 1.3)
       rubyzip (>= 1.3)
@@ -379,18 +379,18 @@ GEM
     sprockets (4.2.1)
       concurrent-ruby (~> 1.0)
       rack (>= 2.2.4, < 4)
-    sprockets-rails (3.4.2)
-      actionpack (>= 5.2)
-      activesupport (>= 5.2)
+    sprockets-rails (3.5.1)
+      actionpack (>= 6.1)
+      activesupport (>= 6.1)
       sprockets (>= 3.0.0)
     stimulus-rails (1.3.3)
       railties (>= 6.0.0)
-    stringio (3.1.0)
+    stringio (3.1.1)
     strscan (3.1.0)
     terrapin (1.0.1)
       climate_control
     thor (1.3.1)
-    tilt (2.3.0)
+    tilt (2.4.0)
     timeout (0.4.1)
     ttfunk (1.8.0)
       bigdecimal (~> 3.1)
@@ -421,7 +421,7 @@ GEM
     will_paginate (3.3.1)
     xpath (3.2.0)
       nokogiri (~> 1.8)
-    zeitwerk (2.6.15)
+    zeitwerk (2.6.16)
 
 PLATFORMS
   x86_64-openbsd
@@ -484,4 +484,4 @@ RUBY VERSION
    ruby 3.2.0p0
 
 BUNDLED WITH
-   2.5.11
+   2.5.14

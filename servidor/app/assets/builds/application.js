@@ -46099,7 +46099,17 @@
         _Msip__Motor.configurarElementoTomSelect(el);
       });
     }
-    // Llamada después de cargar el documento, los paquetes javascript
+    // Si el elemento es campos de selección tal vez antes con tom-select
+    // pero con opciones modificadas dinamicamente, refresca
+    static refrescarElementoTomSelect(el) {
+      if (typeof el.tomselect == "undefined" && (el.tagName == "INPUT" || el.tagName == "SELECT")) {
+        new window.TomSelect(el, window.configuracionTomSelect);
+      }
+      el.tomselect.clear();
+      el.tomselect.clearOptions();
+      el.tomselect.sync();
+      el.tomselect.refreshOptions();
+    }
     // y los recurso sprockets
     static ejecutarAlCargarDocumentoYRecursos() {
       _Msip__Motor.configurarElementosTomSelect();

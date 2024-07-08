@@ -260,7 +260,7 @@ de la inversión (digamos 15 días) y algunas con menos tiempo o incluso que
 permiten retirar los fondos en cualquier momento.
 
 La inversión debe convertirse a monedas del blockchain en una billetera para 
-el mismo y después conectar la billetar a un AMM con promoción
+el mismo y después conectar la billetera a un AMM con promoción
 para hacer la inversión e ir obteniendo ganancias a diario --las ganancias
 pueden retirarse en cualquier momento.
 
@@ -308,7 +308,7 @@ poder pagar e ingresar a este curso
         componente: null
       }, 
       {
-        titulo: 'Con peridicidad revisa los premios y cuando tengas suficiente retiralos',
+        titulo: 'Con periodicidad revisa los premios y cuando tengas suficiente retiralos',
         posfijoRuta: null, 
         componente: null 
       }, 
