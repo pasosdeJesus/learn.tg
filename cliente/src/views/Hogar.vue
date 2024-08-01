@@ -46,8 +46,8 @@
 }
 
 .logo-okx {
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
 }
 
 .enlace-plano {
@@ -68,6 +68,8 @@
   width: 25%;
   height: 25rem;
   border-radius: 10px;
+  min-width: 200px;
+  background-color: white;
 }
 
 .curso a {

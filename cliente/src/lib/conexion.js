@@ -103,7 +103,7 @@ export function conectar(event) {
     conexion.enlaceCelular = `<a href="${enlace}" class='btn'>`+
       `Abrir en aplicación OKX</a>`
     alert(`Si ya te registraste en okx como referido, ` +
-      `usa el enlace para celular ${enlaceCelular.value}`)
+      `usa el enlace para celular ${conexion.enlaceCelular}`)
     conexion.estadoBoton = "Enlace"
     conexion.cuenta = ""
     conexion.red = ""
