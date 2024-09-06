@@ -4,10 +4,10 @@ es:
     actividadareas: Áreas de actividad
     proyectos: Financiables
     proyecto: Financiable
-    proyectosfinancieros: Proyectos
-    proyectofinanciero: Proyecto
-    Proyectosfinancieros: Proyectos
-    Proyectofinanciero: Proyecto
+    proyectofinanciero: Curos
+    proyectosfinancieros: Cursos
+    Proyectofinanciero: Curso
+    Proyectosfinancieros: Cursos
   activerecord:
     attributes:
       "cor1440_gen/actividadarea":
@@ -17,8 +17,16 @@ es:
         Proyecto: Financiable
         Proyectos: Financiables
       "cor1440_gen/proyectofinanciero":
-        Proyectofinanciero: Proyecto
-        Proyectosfinancieros: Proyectos
+        Proyectofinanciero: Curso
+        Proyectosfinancieros: Cursos
+        altImagen: Descripción de imagen
+        conBilletera: Ofertar a usuarios con billetera
+        creditoImagen: Crédito de la imagen
+        enlaceImagen: Enlace a fuente de la imagen
+        imagen: Ruta a la imagen
+        prefijoRuta: Prefijo en rutas de este curso
+        resumenMd: Resumen del curso en Markdown
+        sinBilletera: Ofertar a usuarios sin billetera
       "cor1440_gen/informe":
         filtroproyecto: Financiable
         filtroactividadarea: Área 

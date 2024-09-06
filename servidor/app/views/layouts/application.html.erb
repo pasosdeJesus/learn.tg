@@ -7,7 +7,7 @@
     <%= opcion_menu_prosidebar "Inicio", 
       Rails.configuration.relative_url_root.to_s %>
     <% if !current_usuario.nil? %>
-      <%= despliega_abajo_prosidebar "Proyectos", 'ri-briefcase-4-fill', nil do %>
+      <%= despliega_abajo_prosidebar "Cursos", 'ri-briefcase-4-fill', nil do %>
         <%= opcion_menu_prosidebar "Listado", 
           cor1440_gen.proyectosfinancieros_path %>
         <%= opcion_menu_prosidebar "Validar", 

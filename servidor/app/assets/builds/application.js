@@ -46076,6 +46076,14 @@
      * Use funciones por ejemplo con
      *
      *  Msip__Motor.partiFechaLocalizada(fl, formato)
+     *
+     * Para poderlo usar desde Javascript global con 
+     * window.Msip__Motor 
+     * asegure que en app/javascript/application.js ejecuta:
+     *
+     * import Msip__Motor from './controllers/msip/motor.js'
+     * window.Msip__Motor = Msip__Motor
+     *
      */
     static MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
     static arreglarPuntoMontaje() {
@@ -46099,6 +46107,96 @@
         _Msip__Motor.configurarElementoTomSelect(el);
       });
     }
+    // Pone colores del tema en elementos de la interfaz de manera dinámica
+    static ponerTema(root, tema) {
+      console.log("entro a msip_ pone_tema");
+      document.querySelectorAll(".table-striped>tbody>tr:nth-child(odd)").forEach((element) => {
+        element.style.backgroundColor = tema.fondo_lista;
+      });
+      document.querySelector(".navbar").style.backgroundImage = `linear-gradient(${tema.nav_ini}, ${tema.nav_fin})`;
+      document.querySelectorAll(".navbar-default .navbar-nav>li>a").forEach((element) => {
+        element.style.color = tema.nav_fuente;
+      });
+      document.querySelector(".navbar .navbar-brand").style.color = tema.nav_fuente;
+      document.querySelectorAll(".navbar-light .navbar-nav .nav-link").forEach((element) => {
+        element.style.color = tema.nav_fuente;
+      });
+      document.querySelector(".navbar-light .navbar-brand").style.color = tema.nav_fuente;
+      document.querySelector(".dropdown-menu").style.backgroundColor = tema.nav_fin;
+      document.querySelectorAll(".dropdown-item").forEach((element) => {
+        element.style.color = tema.nav_fuente;
+        element.addEventListener("mouseover", () => {
+          element.style.color = tema.color_flota_subitem_fuente;
+          element.style.backgroundColor = tema.color_flota_subitem_fondo;
+        });
+        element.addEventListener("mouseout", () => {
+          element.style.color = tema.nav_fuente;
+          element.style.backgroundColor = tema.nav_fin;
+        });
+      });
+      document.querySelectorAll(".alert-success").forEach((element) => {
+        element.style.color = tema.alerta_exito_fuente;
+        element.style.backgroundColor = tema.alerta_exito_fondo;
+      });
+      document.querySelectorAll(".alert-danger").forEach((element) => {
+        element.style.color = tema.alerta_problema_fuente;
+        element.style.backgroundColor = tema.alerta_problema_fondo;
+      });
+      document.querySelectorAll(".btn").forEach((element) => {
+        element.style.backgroundImage = `linear-gradient(to bottom, ${tema.btn_accion_fondo_ini}, ${tema.btn_accion_fondo_fin})`;
+        element.style.color = tema.btn_accion_fuente;
+      });
+      document.querySelectorAll(".btn-primary").forEach((element) => {
+        element.style.backgroundImage = `linear-gradient(to bottom, ${tema.btn_primario_fondo_ini}, ${tema.btn_primario_fondo_fin})`;
+        element.style.color = tema.btn_primario_fuente;
+      });
+      document.querySelectorAll(".btn-danger").forEach((element) => {
+        element.style.backgroundImage = `linear-gradient(to bottom, ${tema.btn_peligro_fondo_ini}, ${tema.btn_peligro_fondo_fin})`;
+        element.style.color = tema.btn_peligro_fuente;
+      });
+      document.body.style.backgroundColor = tema.fondo;
+      document.querySelectorAll(".card").forEach((element) => {
+        element.style.backgroundColor = tema.fondo;
+      });
+      document.querySelectorAll(".msip-sf-bs-input:not(.form-check-input)").forEach((element) => {
+        element.style.backgroundColor = tema.fondo;
+        element.style.color = tema.color_fuente;
+      });
+      document.querySelectorAll(".page-link").forEach((element) => {
+        element.style.backgroundColor = tema.fondo;
+      });
+      document.body.style.color = tema.color_fuente;
+      document.querySelectorAll("table").forEach((element) => {
+        element.style.color = tema.color_fuente;
+      });
+    }
+    static async ponerTemaUsuarioAjax() {
+      var root = window;
+      var ruta = "temausuario";
+      var datos = {};
+      var t = Date.now();
+      var d = -1;
+      if (root.msip_ajax_recibe_json_t) {
+        if (root.msip_ajax_recibe_json_t[ruta]) {
+          d = (t - root.msip_ajax_recibe_json_t[ruta]) / 1e3;
+        }
+      } else {
+        root.msip_ajax_recibe_json_t = {};
+      }
+      root.msip_ajax_recibe_json_t[ruta] = t;
+      if (d === -1 || d > 2) {
+        var rutac = root.puntomontaje + ruta + ".json";
+        await fetch(rutac).then(function(response) {
+          if (!response.ok) {
+            console.error("Request failed with status:", response.status);
+          }
+          return response.json();
+        }).then(function(data) {
+          return _Msip__Motor.ponerTema(root, data);
+        });
+      }
+      return true;
+    }
     // Si el elemento es campos de selección tal vez antes con tom-select
     // pero con opciones modificadas dinamicamente, refresca
     static refrescarElementoTomSelect(el) {
@@ -46120,6 +46218,7 @@
     // Podría ser llamada varias veces consecutivas por lo que debe detectarlo
     // para no ejecutar dos veces lo que no conviene.
     static ejecutarAlCargarPagina() {
+      _Msip__Motor.ponerTemaUsuarioAjax();
       _Msip__Motor.configurarElementosTomSelect();
     }
     // Llamada desde application.js tal vez antes de cargar el documento,

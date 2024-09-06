@@ -17,7 +17,9 @@ module Cor1440Gen
         :id, 
         :nombre 
       ] +
-      [ :financiador_ids =>  [] ] +
+      [ 
+        :financiador_ids =>  [] 
+      ] +
       [ 
         :fechainicio_localizada,
         :fechacierre_localizada,
@@ -44,6 +46,17 @@ module Cor1440Gen
         :indicadorpf,
         :actividadpf
       ] + [ 
+        :subtitulo,
+        :idioma,
+        :prefijoRuta,
+        :imagen,
+        :altImagen,
+        :creditoImagen,
+        :enlaceImagen,
+        :imagen,
+        :resumenMd,
+        :conBilletera,
+        :sinBilletera,
         :marcologico,
         :caracterizacion, 
         :beneficiario,
@@ -52,12 +65,25 @@ module Cor1440Gen
       ]
     end
 
+
     def lista_proyectofinanciero_params
-      l = 
-      at = proyectofinanciero_params_cor1440_gen.select {
-        |i,v| i.class == Hash && i.keys == [:actividadpf_attributes]
-      }[0]
-      at[:actividadpf_attributes].insert(-1, :rutamd) 
+      l = [
+        :altImagen,
+        :creditoImagen,
+        :conBilletera,
+        :enlaceImagen,
+        :idioma,
+        :imagen,
+        :prefijoRuta,
+        :resumenMd,
+        :imagen,
+        :sinBilletera,
+        :subtitulo
+      ] + proyectofinanciero_params_cor1440_gen
+      #at = proyectofinanciero_params_cor1440_gen.select {
+      #  |i,v| i.class == Hash && i.keys == [:actividadpf_attributes]
+      #}[0]
+      #at[:actividadpf_attributes].insert(-1, :rutamd) 
       return l
     end
 

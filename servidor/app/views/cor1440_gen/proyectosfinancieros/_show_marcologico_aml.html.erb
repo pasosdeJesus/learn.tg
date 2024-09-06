@@ -1,0 +1,19 @@
+<%= prefijo_codigo + aml.nombrecorto %> <%= aml.titulo %>
+<% if aml.formulario_id || aml.heredade_id || aml.actividadtipo_id || aml.posfijoRuta %>
+  (
+  <% if aml.formulario_id then %>
+    <%= Cor1440Gen::Proyectofinanciero.human_attribute_name('Formulario') %>: <%= aml.formulario.presenta_nombre %>.
+  <% end %>
+  <% if aml.heredade_id then %>
+    <%= Cor1440Gen::Proyectofinanciero.human_attribute_name('Hereda de') %>: <%= aml.heredade.presenta_nombre %>.
+  <% end %>
+  <% if aml.actividadtipo_id then %>
+    <%= Cor1440Gen::Proyectofinanciero.human_attribute_name('Tipo') %>: <%= aml.actividadtipo.nombre %>.
+  <% end %>
+  <% if aml.posfijoRuta then %>
+    <%= Cor1440Gen::Proyectofinanciero.human_attribute_name('posfijoRuta') %>: <%= aml.posfijoRuta %>.
+  <% end %>
+
+  )
+<% end %>
+<%= aml.descripcion %>

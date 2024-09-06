@@ -1,7 +1,18 @@
 
 require_relative 'boot'
 
-require 'rails/all'
+require "rails/all"
+require "active_model/railtie"
+require "active_job/railtie"
+# require "active_record/railtie"
+# require "active_storage/engine"
+require "action_controller/railtie"
+require "action_mailer/railtie"
+# require "action_mailbox/engine"
+# require "action_text/engine"
+require "action_view/railtie"
+require "action_cable/engine"
+require "rails/test_unit/railtie"
 
 # Requiere gemas listas en el Gemfile, incluyendo las
 # limitadas a :test, :development, o :production.
@@ -10,7 +21,7 @@ Bundler.require(*Rails.groups)
 module Cor1440
   class Application < Rails::Application
 
-    config.load_defaults 7.0
+    config.load_defaults Rails::VERSION::STRING.to_f
 
     # Las configuraciones en config/environments/* tiene precedencia sobre
     # las especificadas aquí.
@@ -30,7 +41,7 @@ module Cor1440
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     config.i18n.default_locale = :es
 
-    #config.railties_order = [:main_app, Msip::Engine, :all]
+    config.railties_order = [:main_app, Msip::Engine, :all]
 
     config.colorize_logging = true
 

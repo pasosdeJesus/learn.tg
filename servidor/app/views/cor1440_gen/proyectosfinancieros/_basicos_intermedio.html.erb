@@ -1,0 +1,56 @@
+<div class='row'>
+  <div class="offset-sm-0 col-sm-12">
+    <%= f.input :subtitulo %>
+  </div>
+</div>
+
+<div class='row'>
+  <div class="col-sm-6">
+    <%= f.input :idioma, 
+      collection: ::ApplicationHelper::IDIOMAS,
+      include_blank: false,
+      input_html: {
+        value: f.object.idioma ? f.object.idioma : 'es',
+        class: 'tom-select' 
+      }
+    %>
+  </div>
+  <div class="offset-sm-0 col-sm-6">
+    <%= f.input :prefijoRuta %>
+  </div>
+
+</div>
+
+<div class='row'>
+  <div class="offset-sm-0 col-sm-6">
+    <%= f.input :imagen %>
+  </div>
+  <div class="offset-sm-0 col-sm-6">
+     <%= f.input :altImagen %>
+  </div>
+</div>
+
+<div class='row'>
+  <div class="offset-sm-0 col-sm-6">
+     <%= f.input :creditoImagen %>
+  </div>
+  <div class="offset-sm-0 col-sm-6">
+    <%= f.input :enlaceImagen %>
+  </div>
+</div>
+
+<div class='row'>
+  <div class="offset-sm-0 col-sm-12">
+    <%= f.input :resumenMd, as: :text %>
+  </div>
+</div>
+
+<div class='row'>
+  <div class="offset-sm-0 col-sm-6">
+     <%= f.input :sinBilletera %>
+  </div>
+  <div class="offset-sm-0 col-sm-6">
+    <%= f.input :conBilletera %>
+  </div>
+</div>
+
