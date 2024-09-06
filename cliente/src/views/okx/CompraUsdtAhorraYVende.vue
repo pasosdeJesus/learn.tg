@@ -33,7 +33,7 @@ de cada uno se ve:
   punto verde que indica que está en línea, si no hay ícono a la derecha
   se trata de un comerciante Lite o principinate, si es una estrella
   verde es un comerciante Super con buena reputación ante OKX, si es un 
-  diamante púrpura es un comerciante diamante con más de 100 transacciones y
+  diamante púrpura es un comerciante diamante con más de 1000 transacciones y
   la mejor reputación ante OKX.
 * Cantidad de transacciones que ha realizado, porcentaje de finalización y
   porcenaje de buenas calificaciones
@@ -43,12 +43,40 @@ de cada uno se ve:
 * Métodos de Pago --hemos notado que el medio de pago más usado es Nequi seguido de Bancolombia.
 
 
-Elije un vendedor que tenga: bastantes transacciones,
+Puedes filtrar por método de pago para ver sólo comerciantes que usen tus
+mismos métodos de pago.  Elije un vendedor que tenga: bastantes transacciones,
 buen porcentaje de finalización y de calificaciones positivas,
 que venda a un precio bajo, que use uno de los método de pago
 que usas y que sus límites de disponibilidad sean acordes a lo
-que tienes disponible --i. Así mismo asegura que use uno de los medios
-de pago que tengas disponibles 
+que tienes disponible.
+
+Una vez presiones Comprar podrás diligenciar cuanto comprarás y confirmar 
+para crear un orden de compra (que tendrá un número único que podrías 
+usar en caso de requerir apelación).
+
+Podrás ver las ordenes que tienes pendientes en la pestaña Ordenes que 
+esta en la parte inferior del mercado P2P. 
+Desde una orden podrás ver ingresar al chat o ver los detalles para el pago.
+
+Es bueno que ingreses al chat para saludar, para asegurar que el comerciante
+está en línea y para cuadrar detalles de la transaccción.  
+Si el comerciante no está en línea puedes o bien cancelar la orden 
+(aunque esto empeorará tu porcentaje de finalización) o bien proceder
+con el pago pues en el peor caso, tendrías que iniciar una apelación 
+adjuntando un video de tu medio de pago donde se vea la hora, tu nombre,
+la historia reciente de transacciones y el envío de dinero que hiciste y 
+después de 12 horas OKX te liberará los USDT del comerciante queno responda
+--pero normalmente el comerciante para mantener su reputación te liberará tan
+pronto se conecte.
+
+Entre los detalles para el pago verás el número de cuenta en el medio 
+de pago del comerciante y su nombre completo.  Emplea ese medio de pago
+para hacer el pago y verifica que el nombre concuerde con el que de OKX.
+(Tipicamente será así, en el caso eventual que sea diferente no pagues
+e inicia una apelación explicando que el comerciante usa un nombre
+diferente en el medio de pago y adjuntando un pantallazo donde se
+ve el nombre en el medio de pago).
+
 
 ## 2. Ahorra los USDT
 
@@ -56,7 +84,7 @@ de pago que tengas disponibles
 
 ## 3. Cambia los USDT por pesos
 
-...
+El proceso pra cambiar USDT que tienes en OKX ...
 
 `
 </script>

@@ -202,7 +202,7 @@ como referido obtendrás un 5% de descuento en las comisiones de trading.
 Una vez registrado y verificado podrás emplear el mercado P2P
 para convertir parte de tus pesos en cuentas bancarias y billeteras
 colombianas en doláres digitales (USDT) en tu cuenta en OKX, donde podrás
-ahorrar los al 10% efectivo anual al menos los primeros 1000 USDT 
+ahorrarlos al 10% efectivo anual (para los primeros 1000 USDT),
 con pago de intereses cada hora, intereses que se abonan a tu cuenta para 
 ganar intereses también sobre los intereses.
 
@@ -215,12 +215,12 @@ lo que necesites y conviertelo a pesos mediante el mercado P2P.
     componenteIntro: IntroCurso, 
     guias: [
       {
-        titulo: "Registrate como referido e instala la aplicación",
+        titulo: "Registrate como referido, instala la aplicación y verifica tu identidad",
         posfijoRuta: "/registrate-como-referido",
         componente: RegistrateComoReferido
       },
       {
-        titulo: "Compra USDT, Ahorra y Vende cuando quieras",
+        titulo: "Compra USDT, Ahorralos y Vendelos cuando quieras",
         posfijoRuta: "/compra-usdt-ahorra-y-vende",
         componente: CompraUsdtAhorraYVende
       },
@@ -233,8 +233,8 @@ lo que necesites y conviertelo a pesos mediante el mercado P2P.
     ]
   },
   {
-    titulo: "Ahorra a más del 100% hasta Julio de 2024",
-    subtitulo: "Aprovecha esta inversión promocional de bajo riesgo que ha venido rentando de Mayo a Julio de 2024 a más del 100% efectivo anual",
+    titulo: "Ahorra a más del 50% hasta Agosto de 2024",
+    subtitulo: "Aprovecha esta inversión promocional de bajo riesgo que ha venido rentando de Mayo a Julio de 2024 a más del 50% efectivo anual",
     idioma: "es",
     prefijoRuta: "/ahorra-a-mas-del-100-hasta-Ago-2024",
     imagen: "/img/100pp.png",
