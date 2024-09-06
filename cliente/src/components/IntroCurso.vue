@@ -25,14 +25,14 @@
   let purl = window.location.href.split("/")
   let miruta = purl[purl.length - 1] == "" && purl.length > 2 ? 
     purl[purl.length - 2] : purl[purl.length - 1]
-  let micurso = cursos.filter( r => r.prefijoRuta == ("/" + miruta))[0]
-  const titulo = ref(micurso.titulo)
-  const subtitulo = ref(micurso.subtitulo)
-  const imagen = ref(micurso.imagen)
-  const creditoImagen = ref(micurso.creditoImagen)
-  const enlaceImagen = ref(micurso.enlaceImagen)
-  const altImagen = ref(micurso.altImagen)
-  const resumenMd = ref(micurso.resumenMd)
+  let miCurso = cursos.filter( r => r.prefijoRuta == ("/" + miruta))[0]
+  const titulo = ref(miCurso.titulo)
+  const subtitulo = ref(miCurso.subtitulo)
+  const imagen = ref(miCurso.imagen)
+  const creditoImagen = ref(miCurso.creditoImagen)
+  const enlaceImagen = ref(miCurso.enlaceImagen)
+  const altImagen = ref(miCurso.altImagen)
+  const resumenMd = ref(miCurso.resumenMd)
   let htmlDeMd = (md) => {
     let processor = unified()
       .use(remarkParse)
@@ -50,15 +50,15 @@
    // Idea de usar remark de freecodecamp
   const resumenHtml = computed( () => htmlDeMd(resumenMd.value) )
 
-  const ampliaMd = ref(micurso.ampliaMd)
+  const ampliaMd = ref(miCurso.ampliaMd)
   const ampliaHtml = computed( () => htmlDeMd(ampliaMd.value) )
 
   const prerequisitosHtml = computed( () => htmlDeMd(
-    micurso.prerequisitosMd
+    miCurso.prerequisitosMd
   ) )
   let cursosPrerequisitoMd = ""
-  if (typeof micurso.cursosPrerequisito != "undefined") {
-    for (const prefijoCp of micurso.cursosPrerequisito) {
+  if (typeof miCurso.cursosPrerequisito != "undefined") {
+    for (const prefijoCp of miCurso.cursosPrerequisito) {
       let cp = cursos.filter( r => r.prefijoRuta == prefijoCp)[0]
       cursosPrerequisitoMd += "* " + "[" + cp.titulo + "](/" +
         cp.idioma + "/" + cp.prefijoRuta + ")\n"
@@ -71,13 +71,13 @@
 
   let guias=""
   let numero = 1
-  for (const guia of micurso.guias) {
+  for (const guia of miCurso.guias) {
     guias += '' + numero + ". "
     if (guia.posfijoRuta == null) {
       guias += guia.titulo 
     } else {
-      guias += "[" + guia.titulo + "](/" + micurso.idioma +
-        micurso.prefijoRuta + guia.posfijoRuta + ")"
+      guias += "[" + guia.titulo + "](/" + miCurso.idioma +
+        miCurso.prefijoRuta + guia.posfijoRuta + ")"
     }
     guias += "\n"
     numero++
@@ -85,7 +85,7 @@
   const contenidoMd = ref(guias)
   const contenidoHtml = computed( () => htmlDeMd(contenidoMd.value) )
 
-  const porPagar = ref(micurso.porPagar)
+  const porPagar = ref(miCurso.porPagar)
 
 </script>
 
@@ -114,7 +114,7 @@
       </div>
       <div v-html='resumenHtml'></div>
 
-      <template v-if="micurso.prerequisitosMd || micurso.cursosPrerequisito">
+      <template v-if="miCurso.prerequisitosMd || miCurso.cursosPrerequisito">
         <div class="tdc cont-flex-centro-vertical">
           <h2 class="titulo">Pre-requisitos</h2>
           <div v-html='prerequisitosHtml'></div>
@@ -126,7 +126,10 @@
       </template>
 
       <div class="tdc cont-flex-centro-vertical">
-        <h2 class="titulo">Contenido del curso / Course contents</h2>
+        <h2 class="titulo">
+          <template v-if="miCurso.idioma == 'en'">Course contents</template>
+          <template v-else>Contenido del curso</template>
+        </h2>
         <div v-html='contenidoHtml'></div>
       </div>
       <template v-if="estadoBoton == 'Desconectar'">

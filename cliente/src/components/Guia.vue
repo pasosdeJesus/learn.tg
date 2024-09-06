@@ -76,7 +76,7 @@
       .use(addFillInTheBlank)
       .use(remarkRehype)
       .use(rehypeStringify)
-    let html = processor.processSync(miGuia.creditosMd).toString()
+    let html = processor.processSync(miCurso.creditosMd).toString()
 
     return html
   })
@@ -87,28 +87,53 @@
   <Encabezado></Encabezado>
   <div class="contenido">
     <div class="cont-flex-centro">
-      <h3>Curso: {{miCurso.titulo}}</h3>
+      <h3>
+        <template v-if="miCurso.idioma == 'en'">Course:</template>
+        <template v-else>Curso:</template>
+        {{miCurso.titulo}}</h3>
     </div>
-    <h1>Guía {{numGuia}}: {{miGuia.titulo}}</h1>
+    <h1>
+      <template v-if="miCurso.idioma == 'en'">Guide</template>
+      <template v-else>Guía</template>
+      {{numGuia}}: {{miGuia.titulo}}
+    </h1>
     <div v-html='htmlGen'></div>
     <template v-if="creditosGen != ''">
-      <h2>Créditos</h2>
+      <h2>
+        <template v-if="miCurso.idioma == 'en'">Credits</template>
+        <template v-else>Créditos</template>
+      </h2>
       <div v-html="creditosGen"></div>
     </template>
   </div>
   <table width="100%" border="1px">
-    <td width="33%">
-      <template v-if="numGuia>1">
-        <a :href="rutaGuiaAnterior">Guía anterior</a>
-      </template>
-    </td>
-    <td width="34%" style="text-align: center"><a :href="rutaCurso">Inicio del Curso</a></td>
-    <td class="cont-flex-derecha">
-      &nbsp;
-      <template v-if="numGuia < miCurso.guias.length">
-        <a :href="rutaGuiaSiguiente">Guía siguiente</a>
-      </template>
-    </td>
+    <tbody>
+      <tr>
+        <td width="33%">
+          <template v-if="numGuia>1">
+            <a :href="rutaGuiaAnterior">
+              <template v-if="miCurso.idioma == 'en'">Previous Guide</template>
+              <template v-else>Guía anterior</template>
+            </a>
+          </template>
+        </td>
+        <td width="34%" style="text-align: center">
+          <a :href="rutaCurso">
+            <template v-if="miCurso.idioma == 'en'">Start of Course</template>
+            <template v-else>Inicio del Curso</template>
+          </a>
+        </td>
+        <td class="cont-flex-derecha">
+          &nbsp;
+          <template v-if="numGuia < miCurso.guias.length">
+            <a :href="rutaGuiaSiguiente">
+              <template v-if="miCurso.idioma == 'en'">Next Guide</template>
+              <template v-else>Guía siguiente</template>
+            </a>
+          </template>
+        </td>
+      </tr>
+    </tbody>
   </table>
   <div>&nbsp;</div>
 

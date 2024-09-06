@@ -28,7 +28,7 @@ let creditosARelationshipWithJesus = `
 Prepared by [Vladimir Támara Patiño](mailto:vtamara@pasosdeJesus.org) and
 [Julián Martinez](mailto:julianrz98@gmail.co). 
 This is open content with license 
-[CC-BY Internacional 4.0](https://creativecommons.org/licenses/by/4.0/)`
+[CC-BY International 4.0](https://creativecommons.org/licenses/by/4.0/)`
 
 
 import Guide1DontBeAfraid from
@@ -65,30 +65,27 @@ If you want, we can also connect you with a church nearby.
     conbilletera: true,
     porPagar: 0,
     componenteIntro: IntroCurso,
+    creditosMd: creditosARelationshipWithJesus,
     guias: [
       {
         titulo: "Don't be afraid - Mark 6:45-52",
         posfijoRuta: "/dont-be-afraid",
-        componente: Guide1DontBeAfraid,
-        creditosMd: creditosARelationshipWithJesus
+        componente: Guide1DontBeAfraid
       },
       {
         titulo: "Meeting with Jesus - John 4:1-26",
         posfijoRuta: "/meeting-with-Jesus",
-        componente: Guide2MeetingWithJesus,
-        creditosMd: creditosARelationshipWithJesus
+        componente: Guide2MeetingWithJesus
       },
       {
         titulo: "Go out to meet Jesus - John 11:17-27",
         posfijoRuta: "/go-out-to-meet-Jesus",
-        componente: Guide3GoOutToMeetJesus,
-        creditosMd: creditosARelationshipWithJesus
+        componente: Guide3GoOutToMeetJesus
       },
       {
         titulo: "Talking with God - Acts 8:26-39",
         posfijoRuta: "/talking-with-God",
-        componente: Guide4TalkingWithGod,
-        creditosMd: creditosARelationshipWithJesus
+        componente: Guide4TalkingWithGod
       },
     ]
   },
@@ -118,30 +115,27 @@ cercana.
     conbilletera: true,
     porPagar: 0,
     componenteIntro: IntroCurso,
+    creditosMd: creditosUnaRelacionConJesus,
     guias: [
       {
         titulo: "No tengas miedo - Marcos 6:45-52",
         posfijoRuta: "/no-tengas-miedo",
-        componente: Guia1NoTengasMiedo,
-        creditosMd: creditosUnaRelacionConJesus
+        componente: Guia1NoTengasMiedo
       },
       {
         titulo: "Encuentro con Jesús - Juan 4:1-26",
         posfijoRuta: "/encuentro-con-Jesus",
-        componente: Guia2EncuentroConJesus,
-        creditosMd: creditosUnaRelacionConJesus
+        componente: Guia2EncuentroConJesus
       },
       {
         titulo: "Ve a encontrarte con Jesús - Juan 11:17-27",
         posfijoRuta: "/ve-a-encontrarte-con-Jesus",
-        componente: Guia3VeAEncontrarteConJesus,
-        creditosMd: creditosUnaRelacionConJesus
+        componente: Guia3VeAEncontrarteConJesus
       },
       {
         titulo: "Hablando con Dios - Hechos 8:26-39",
         posfijoRuta: "/hablando-con-Dios",
-        componente: Guia4HablandoConDios,
-        creditosMd: creditosUnaRelacionConJesus
+        componente: Guia4HablandoConDios
       }
     ]
   },

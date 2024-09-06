@@ -53,9 +53,9 @@
    
 > (Translation WEBUS)
 
-![Pozo de Jacob en 1912](/img/Nablus_jacob_well_1912.jpg "Pozo de Jacob en 1912")
+![Jacob's well in 1912](/img/Nablus_jacob_well_1912.jpg "Jacob's well in 1912")
 
-[Foto del Pozo de Jacob en 1912 --dominio público](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Nablus_jacob_well_1912.jpg)
+[Picture of Jacob's Well in 1912 --public domain](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Nablus_jacob_well_1912.jpg)
 
 
 ## Reading comprehension. 
@@ -89,9 +89,9 @@ water.
   spring of water welling up to eternal life._ John 6:14
 
 
-![Pozo de Jacob en 2013](/img/j2013.jpg "Pozo de Jacob en 2013")
+![Jacob's well in 2013](/img/j2013.jpg "Jacob's well in 2013")
 
-[Foto del Pozo de Jacob en 2013 por Jermiah K. Garrett](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Jacob's_Well_in_2013.jpg)
+[Picture of Jacob's well in 2013 by Jermiah K. Garrett](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Jacob's_Well_in_2013.jpg)
 `
 </script>
 
