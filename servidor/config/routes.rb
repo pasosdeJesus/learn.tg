@@ -28,6 +28,9 @@ Rails.application.routes.draw do
   get '/usuarios/foto/:id', to: 'usuarios#foto',
     as: 'usuarios_foto'
 
+  resources :cursos, path_names: {new: 'crear', edit: 'editar' },
+    controller: 'cor1440_gen/proyectosfinancieros'
+
   root 'cor1440_gen/hogar#index'
 
   mount Msip::Engine, at: "/", as: 'msip'

@@ -2533,7 +2533,9 @@ CREATE TABLE public.cor1440_gen_proyectofinanciero (
     "altImagen" character varying(255),
     "resumenMd" character varying(5000),
     "sinBilletera" boolean,
-    "conBilletera" boolean
+    "conBilletera" boolean,
+    "creditosMd" character varying(5000),
+    "porPagar" double precision
 );
 
 
@@ -7952,6 +7954,7 @@ ALTER TABLE ONLY public.usuario
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20240906192730'),
 ('20240830161915'),
 ('20240723152453'),
 ('20240723140427'),
