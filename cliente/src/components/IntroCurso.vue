@@ -91,32 +91,33 @@
 
 <template>
   <Encabezado></Encabezado>
-  <div class="contenido">
+  <div class="container flex flex-col mx-auto lg:flex-row ">
     <template v-if="porPagar == 0 || estadoBoton == 'Desconectar'">
-      <div class="cont-flex-centro">
+      <div class="flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 lg:w-1/2 xl:w-3/5">
         <div>
-          <div class="titulo"><h1>{{titulo}}</h1></div>
-          <div class="subtitulo"><h2>{{subtitulo}}</h2></div>
+          <div class="text-2xl lg:text-2xl font-bold pb-6 pt-14 text-center"><h1>{{titulo}}</h1></div>
+          <div class="text-1xl lg:text-1xl font-bold"><h2>{{subtitulo}}</h2></div>
         </div>
         <div class="imagen">
           <figure>
-            <img v-bind:src="imagen" width="300px" v-bind:alt="altImagen">
-            <figcaption>
+            <img v-bind:src="imagen" width="300px" v-bind:alt="altImagen" class="py-6">
+            <figcaption class="pb-6">
               <a
                 target="_blank"
-                v-bind:href="enlaceImagen"
-                class="credito-imagen">
+                v-bind:href="enlaceImagen">
                 {{creditoImagen}}
               </a>
             </figcaption>
           </figure>
         </div>
+        <div v-html='resumenHtml'></div>
       </div>
-      <div v-html='resumenHtml'></div>
-
+    </template>
+    <div class="my-20 pt-7">
       <template v-if="miCurso.prerequisitosMd || miCurso.cursosPrerequisito">
-        <div class="tdc cont-flex-centro-vertical">
-          <h2 class="titulo">Pre-requisitos</h2>
+        <div  class="px-6 py-8 h-full  w-full space-y-46 sm:p-8 lg:p-12 lg:w-5/18 xl:w-5/18 rounded-sm bg-secondary-100 dark:text-gray-50"
+        >
+          <h2 class="text-2xl lg:text-2xl font-bold py-8 text-white">Pre-requisitos</h2>
           <div v-html='prerequisitosHtml'></div>
           <template v-if="cursosPrerequisitoHtml != ''">
             Cursos 
@@ -124,25 +125,25 @@
           </template>
         </div>
       </template>
-
-      <div class="tdc cont-flex-centro-vertical">
-        <h2 class="titulo">
+      <div  class="px-6 py-8 h-full  w-full space-y-46 sm:p-8 lg:p-12 lg:w-5/18 xl:w-5/18 rounded-sm bg-secondary-100 dark:text-gray-50"
+    >
+        <h2 class="text-2xl lg:text-2xl font-bold py-8 text-white">
           <template v-if="miCurso.idioma == 'en'">Course contents</template>
           <template v-else>Contenido del curso</template>
         </h2>
-        <div v-html='contenidoHtml'></div>
+        <div v-html='contenidoHtml' active-class="active"  class="text-base/10"></div>
       </div>
       <template v-if="estadoBoton == 'Desconectar'">
         <div v-html='ampliaHtml'></div>
         <template v-if="red == 'Red: X Layer Mainnet' && porPagar > 0">
-          <div class="cont-flex-centro">
+          <div>
             <button 
-               class='btn ancho-8' 
+               class="hidden md:block px-8 py-3 rounded-full text-white font-medium tracking-wider uppercase bg-secondary-100 w-full lg:w-auto"
                   @click='pagarOKB'>Inscribirse por {{porPagar}}OKB</button>
           </div>
         </template>
       </template>
-    </template>
+    </div>
   </div>
   <Piedepagina></Piedepagina>
 </template>

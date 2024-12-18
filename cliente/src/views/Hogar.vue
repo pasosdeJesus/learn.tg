@@ -10,18 +10,19 @@
 </script>
 
 <template>
-  <Encabezado></Encabezado>
-  <div class="contenido">
-    <div class="cursos">
+  <Encabezado/>
+  <div class=" overflow-x-hidden py-6 dark:bg-gray-100 dark:text-gray-900">
+    <div class="container overflow-x-hidden py-6 dark:bg-gray-100 dark:text-gray-900 flex flex-row flex-wrap justify-center mt-8">
       <template v-for="curso in cursos">
-        <div class="curso" v-if="(estadoBoton == 'Ingresar' && curso.sinbilletera) || (estadoBoton == 'Desconectar' && curso.conbilletera)">
+        <div  class="flex flex-col justify-center w-full px-8 mx-6 my-12 py-9 text-center rounded-md md:w-96 lg:w-80 xl:w-65 bg-gray-300 dark:text-gray-900" 
+        v-if="(estadoBoton == 'Ingresar' && curso.sinbilletera) || (estadoBoton == 'Desconectar' && curso.conbilletera)">
           <RouterLink :to="'/' + curso.idioma + curso.prefijoRuta">
           <div class="img-curso">
-            <img class="logo-relacion" :src="curso.imagen">
+            <img class="w-[100%] h-[12rem] pt-2 object-cover" :src="curso.imagen">
           </div>
-          <div class="desc-curso">
-            <div class="titulo-curso">{{curso.titulo}}</div>
-            <div class="res-curso">{{curso.subtitulo}}</div>
+          <div>
+            <div class="text-xl py-2 font-bold">{{curso.titulo}}</div>
+            <div class="w-[90%] text-justify">{{curso.subtitulo}}</div>
           </div>
           </RouterLink>
         </div>
@@ -29,7 +30,7 @@
 
     </div>
   </div>
-  <Piedepagina></Piedepagina>
+  <Piedepagina/>
 </template>
 
 <style>

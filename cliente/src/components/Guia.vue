@@ -85,48 +85,47 @@
 
 <template>
   <Encabezado></Encabezado>
-  <div class="contenido">
-    <div class="cont-flex-centro">
-      <h3>
+  <div class="pt-16  dark:bg-gray-100 dark:text-gray-800">
+    <div class="container p-4 px-8 md:px-16 mx-auto pt-16 space-y-1">
+      <h3 class="pb-3 text-3xl font-bold md:text-4xl text-center">
         <template v-if="miCurso.idioma == 'en'">Course:</template>
         <template v-else>Curso:</template>
         {{miCurso.titulo}}</h3>
     </div>
-    <h1>
+    <h1 class="py-3 px-16 text-1xl font-bold md:text-1xl">
       <template v-if="miCurso.idioma == 'en'">Guide</template>
       <template v-else>Guía</template>
       {{numGuia}}: {{miGuia.titulo}}
     </h1>
-    <div v-html='htmlGen'></div>
+    <div v-html='htmlGen' class="py-3 px-16 text-1xl md:text-1xl text-justify"></div>
     <template v-if="creditosGen != ''">
-      <h2>
+      <h2 class="px-16 text-1xl font-bold md:text-1xl">
         <template v-if="miCurso.idioma == 'en'">Credits</template>
         <template v-else>Créditos</template>
       </h2>
-      <div v-html="creditosGen"></div>
+      <div v-html="creditosGen" class="py-3 px-16 text-1xl md:text-1xl text-justify"></div>
     </template>
-  </div>
-  <table width="100%" border="1px">
+    <table class="mx-auto text-center mt-12">
     <tbody>
       <tr>
-        <td width="33%">
+        <td>
           <template v-if="numGuia>1">
-            <a :href="rutaGuiaAnterior">
+            <a :href="rutaGuiaAnterior" class="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-3 hover:bg-secondary-100 hover:text-white">
               <template v-if="miCurso.idioma == 'en'">Previous Guide</template>
               <template v-else>Guía anterior</template>
             </a>
           </template>
         </td>
-        <td width="34%" style="text-align: center">
-          <a :href="rutaCurso">
+        <td>
+          <a :href="rutaCurso" class="inline-flex items-center bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white">
             <template v-if="miCurso.idioma == 'en'">Start of Course</template>
             <template v-else>Inicio del Curso</template>
           </a>
         </td>
-        <td class="cont-flex-derecha">
+        <td>
           &nbsp;
           <template v-if="numGuia < miCurso.guias.length">
-            <a :href="rutaGuiaSiguiente">
+            <a :href="rutaGuiaSiguiente" class="inline-flex items-center bg-gray-800 text-white  py-2 px-3 hover:bg-secondary-100 hover:text-white">
               <template v-if="miCurso.idioma == 'en'">Next Guide</template>
               <template v-else>Guía siguiente</template>
             </a>
@@ -136,7 +135,7 @@
     </tbody>
   </table>
   <div>&nbsp;</div>
-
+  </div>
   <Piedepagina></Piedepagina>
 </template>
 

@@ -1,6 +1,6 @@
 <script setup>
   import Guia from '../../components/Guia.vue'
-
+  
   const textoMd = `
 ### 1. Registrate como referido(a) de pasosdeJesus.org
 
@@ -56,6 +56,7 @@ Mira el estado de tu verificación y completala así:
 
 > ![Mensaje pasosdeJesus.org te ha invitado](/img/verif3.jpg)
 `
+
 </script>
 
 <template>
