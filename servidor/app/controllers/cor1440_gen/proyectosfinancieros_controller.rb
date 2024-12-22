@@ -9,7 +9,7 @@ module Cor1440Gen
     skip_before_action :set_proyectofinanciero, only: [:validar]
 
     load_and_authorize_resource  class: Cor1440Gen::Proyectofinanciero,
-      only: [:new, :create, :destroy, :edit, :update, :index, :show,
+      only: [:new, :create, :destroy, :edit, :update, :show,
              :objetivospf]
 
     def atributos_index
@@ -65,6 +65,18 @@ module Cor1440Gen
       ]
     end
 
+    def new
+      new_cor1440_gen
+      @registro.subtitulo = ((0...8).map { (65 + rand(26)).chr }.join)
+      @registro.prefijoRuta = "/" + @registro.subtitulo
+      @registro.save!
+      redirect_to(cor1440_gen.edit_proyectofinanciero_path(@registro)) 
+    end
+
+    def index(c = nil)
+      index_cor1440_gen(c)
+      super(c)
+    end
 
     def lista_proyectofinanciero_params
       l = [
@@ -86,6 +98,7 @@ module Cor1440Gen
       #at[:actividadpf_attributes].insert(-1, :rutamd) 
       return l
     end
+
 
     def proyectofinanciero_params
       params.require(:proyectofinanciero).permit(

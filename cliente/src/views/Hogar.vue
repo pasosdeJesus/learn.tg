@@ -1,4 +1,8 @@
 <script setup>
+  import { ref, onMounted } from 'vue'
+
+  import axios from 'axios';
+
   import Encabezado from '../components/Encabezado.vue'
   import Piedepagina from '../components/Piedepagina.vue'
   import {
@@ -6,16 +10,30 @@
     } from '../lib/conexion.js'
   import { cursos } from '../definiciones' 
 
+  const API_CURSOS_URL = 'http://127.0.0.1:3000/learntg-admin/cursos.json'
+  const cursosj = ref([])
+
+  onMounted(() => {
+      axios.get(API_CURSOS_URL)
+        .then(response => {
+          if (response.data) {
+            cursosj.value = response.data;
+          }
+        })
+        .catch(error => {
+          console.error(error);
+        })
+  })
 
 </script>
 
 <template>
   <Encabezado/>
-  <div class=" overflow-x-hidden py-6 dark:bg-gray-100 dark:text-gray-900">
+  <div class="overflow-x-hidden py-6 dark:bg-gray-100 dark:text-gray-900">
     <div class="container overflow-x-hidden py-6 dark:bg-gray-100 dark:text-gray-900 flex flex-row flex-wrap justify-center mt-8">
-      <template v-for="curso in cursos">
+      <template v-for="curso in cursosj">
         <div  class="flex flex-col justify-center w-full px-8 mx-6 my-12 py-9 text-center rounded-md md:w-96 lg:w-80 xl:w-65 bg-gray-300 dark:text-gray-900" 
-        v-if="(estadoBoton == 'Ingresar' && curso.sinbilletera) || (estadoBoton == 'Desconectar' && curso.conbilletera)">
+        v-if="(estadoBoton == 'Ingresar' && curso.sinBilletera) || (estadoBoton == 'Desconectar' && curso.conBilletera)">
           <RouterLink :to="'/' + curso.idioma + curso.prefijoRuta">
           <div class="img-curso">
             <img class="w-[100%] h-[12rem] pt-2 object-cover" :src="curso.imagen">
@@ -27,11 +45,11 @@
           </RouterLink>
         </div>
       </template>
-
     </div>
   </div>
   <Piedepagina/>
 </template>
+
 
 <style>
 

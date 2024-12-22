@@ -55,6 +55,9 @@ module Cor1440
 
     config.relative_url_root = ENV.fetch('RUTA_RELATIVA', '/cor1440')
 
+    config.x.origen_cors = ENV.fetch('ORIGEN_CORS','').split(',')
+    puts "config.x.origen_cors=#{config.x.origen_cors.inspect}"
+
     # msip
     config.x.formato_fecha = ENV.fetch('MSIP_FORMATO_FECHA', 'dd/M/yyyy')
     # En el momento soporta 3 formatos: yyyy-mm-dd, dd-mm-yyyy y dd/M/yyyy
@@ -66,6 +69,7 @@ module Cor1440
     # cor1440
     config.x.cor1440_permisos_por_oficina = 
       (ENV['COR1440_PERMISOS_POR_OFICINA'] && ENV['COR1440_PERMISOS_POR_OFICINA'] != '')
+
 
   end
 end

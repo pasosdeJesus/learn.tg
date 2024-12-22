@@ -8,10 +8,10 @@ motor.each do |m|
 end
 
 #cor1440, cor1440
-conexion.execute("INSERT INTO public.usuario 
-	(nusuario, nombre, email, encrypted_password, password, 
-  fechacreacion, created_at, updated_at, rol) 
-	VALUES ('cor1440', 'cor1440', 'cor1440@localhost', 
-	'$2a$10$q0KcAa.H6.3VrXeKTJHa/ue8uT0y7WVKKHlAVor.Nejpz1OAgAQOq',
-	'', '2014-08-26', '2014-08-26', '2014-08-26', 1);")
+#conexion.execute("INSERT INTO public.usuario 
+#	(nusuario, nombre, email, encrypted_password, password, 
+#  fechacreacion, created_at, updated_at, rol) 
+#	VALUES ('cor1440', 'cor1440', 'cor1440@localhost', 
+#	'$2a$10$q0KcAa.H6.3VrXeKTJHa/ue8uT0y7WVKKHlAVor.Nejpz1OAgAQOq',
+#	'', '2014-08-26', '2014-08-26', '2014-08-26', 1);")
 
