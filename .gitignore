@@ -82,3 +82,5 @@ cobertura-unitarias/
 servidor/public/learntg-admin/assets/
 servidor/archivos/bd/
 servidor/public/learntg-admin/cobertura/
+servidor/app/javascript/controllers/heb412_gen
+servidor/app/javascript/controllers/mr519_gen
