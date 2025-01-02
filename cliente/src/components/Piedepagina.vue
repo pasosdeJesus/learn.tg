@@ -1,20 +1,12 @@
 <template>
-  <footer class=" w-full bg-primary-200 z-20 dark:text-gray-900 flex flex-col p-8 px-16">
+  <footer class="w-full bg-primary-200 z-20 dark:text-gray-900 flex flex-col px-16">
     <div class="flex  flex-col lg:flex-row">
-      <div class="container flex flex-col p-2 mx-auto dark:divide-gray-600">
-        <h1 class="text-gray-700 font-bold text-2xl pb-2">
-              Learn<span class="text-secondary-100">Free</span>
-        </h1>
-        <div class="text-white leading-loose tracking-wide w-full md:w-[60%] font-semibold lg:justify-start">
-          Puedes reusar abiertamente el contenido gratuito dando crédito. 2024
-        </div>
+      <div class="container flex flex-col mx-auto dark:divide-gray-600">
         <div class="text-white leading-loose tracking-wide w-full md:w-[60%] font-semibold lg:justify-start">
           Si tienes preguntas o sugerencias escribenos a
           <a href="mailto:info@pasosdeJesus.org" class="hover:underline text-secondary-100 font-bold">info@pasosdeJesus.org</a>
         </div>
       </div>
-    <div class="legal">
-    </div>
     <div class="flex flex-col justify-center pt-6 lg:pt-0">
       <div class="flex justify-center space-x-4">
         <a target="_blank" href="https://twitter.com/pasosdeJesus" class="flex items-center justify-center w-8 h-8 rounded-full sm:w-10 sm:h-10 dark:bg-violet-600 dark:text-gray-50">
@@ -57,11 +49,11 @@
     </div>
     </div>
    
-    <div class="grid place-items-center py-2 w-full">
+    <div class="grid place-items-center w-full">
       <p
         class="md:text-lg font-medium text-center text-white mt-4 tracking-wider"
       >
-        &copy; Copyright, pasosdeJesus.org 2024, Todos los derechos reservados.
+          Puedes reusar abiertamente el contenido gratuito dando crédito. 2024
       </p>
     </div>
   </footer>

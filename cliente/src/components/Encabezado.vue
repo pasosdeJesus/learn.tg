@@ -19,7 +19,7 @@
     <div class="container flex items-center justify-between h-25" style="padding-right: 20px; padding-left: 30px;">
       <RouterLink to="/" class="ml-2" active-class="active">
         <div class="relative z-30 flex flex-col items-center gap-1 mb-1 lg:mb-0">
-          <img src="/public/logo-learntg.png" class="rounded-full h-14 w-14 flex items-center justify-center" alt="imglogo" />
+          <img src="/logo-learntg.png" class="rounded-full h-14 w-14 flex items-center justify-center" alt="imglogo" />
               <h6 class="circular-text text-secondary-100 font-bold">
                   <span class="text-secondary font-bold">Aprender mediante juegos</span>
               </h6>

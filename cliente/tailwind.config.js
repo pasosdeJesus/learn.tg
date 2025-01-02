@@ -3,7 +3,6 @@ export default {
   content: [
     './index.html', './src/**/*.{vue,js,ts,jsx,tsx}'
   ],
-  darkMode: false,
   mode: 'jit',
   theme: {
     container: {
@@ -15,15 +14,19 @@ export default {
         lg: '3rem',
       },
     },
+    fontFamily: {
+      sans: ['DM Sans', 'sans-serif'],
+      serif: ['Merriweather', 'serif'],
+    },
     extend: {
       colors: {
         primary: {
-          100: '#d0c0e1',
-          200: '#b9a2d3'
+          100: '#a63005',
+          200: '#b9a3d9'
         },
         secondary: {
           100: '#714ba6',
-          200: '#937cc4'
+          200: '#8d69bf'
         }
 
       }

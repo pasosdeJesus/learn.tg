@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, onMounted } from 'vue'
+  import { reactive, watchEffect, ref, onMounted } from 'vue'
 
   import axios from 'axios';
 
@@ -12,8 +12,10 @@
 
   const API_CURSOS_URL = 'http://127.0.0.1:3000/learntg-admin/cursos.json'
   const cursosj = ref([])
+  const isMounted = reactive({ value: false });
 
   onMounted(() => {
+    isMounted.value = true;
       axios.get(API_CURSOS_URL)
         .then(response => {
           if (response.data) {
@@ -24,6 +26,14 @@
           console.error(error);
         })
   })
+
+  watchEffect(() => {
+    if (isMounted.value) {
+      // Code to be executed on page refresh
+      console.log('Page refreshed!');
+      // Fetch data here
+    }
+  });
 
 </script>
 
@@ -36,7 +46,7 @@
         v-if="(estadoBoton == 'Ingresar' && curso.sinBilletera) || (estadoBoton == 'Desconectar' && curso.conBilletera)">
           <RouterLink :to="'/' + curso.idioma + curso.prefijoRuta">
           <div class="img-curso">
-            <img class="w-[100%] h-[12rem] pt-2 object-cover" :src="curso.imagen">
+            <img class="w-[100%] h-[17rem] pt-2 object-cover" :src="curso.imagen">
           </div>
           <div>
             <div class="text-xl py-2 font-bold">{{curso.titulo}}</div>
