@@ -27,11 +27,11 @@
       </RouterLink>
       <div>
         <template v-if="estadoBoton == 'Ingresar'">
-          <button class="hidden md:block px-8 py-3 rounded-full text-white font-medium tracking-wider uppercase bg-secondary-100 w-full lg:w-auto" @click='conectar'>Ingresar</button>
+          <button class="px-8 py-3 rounded-full text-white font-medium tracking-wider uppercase bg-secondary-100 w-full lg:w-auto" @click='conectar'>Ingresar</button>
         </template>
         <template v-else-if="estadoBoton == 'Desconectar'">
         <button 
-          class="hidden md:block px-8 py-3 rounded-full text-white font-medium tracking-wider uppercase bg-secondary-100 w-full lg:w-auto"
+          class="px-8 py-3 rounded-full text-white font-medium tracking-wider uppercase bg-secondary-100 w-full lg:w-auto"
           @click='desconectar'>Desconectar</button>
         <div class="cuenta-y-red">
           <div v-html="cuenta"></div>
@@ -39,7 +39,7 @@
           <template v-if="red != 'Red: X Layer Mainnet'">
             <div class="cont-flex-centro">
               <button 
-                 class="hidden md:block px-8 py-3 rounded-full text-white font-medium tracking-wider uppercase bg-secondary-100 w-full lg:w-auto"
+                 class="px-8 py-3 rounded-full text-white font-medium tracking-wider uppercase bg-secondary-100 w-full lg:w-auto"
                  @click='cambiarXLayer'>X Layer</button>
             </div>
           </template>
