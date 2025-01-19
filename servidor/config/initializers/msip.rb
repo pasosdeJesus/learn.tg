@@ -9,20 +9,21 @@ Msip.setup do |config|
   if ENV["HEROKU_POSTGRESQL_MAUVE_URL"]
     config.ruta_anexos = "#{Rails.root}/tmp/"
   end
-  config.titulo = "Cor1440 #{Cor1440Gen::VERSION}"
+  config.titulo = "Learntg Admin #{Cor1440Gen::VERSION}"
 
-  config.descripcion = "Aplicación genérica para proyectos y actividades con metodología de marco lógico"
-  config.codigofuente = "https://gitlab.com/pasosdeJesus/cor1440"
-  config.urlcontribuyentes = "https://gitlab.com/pasosdeJesus/cor1440_gen/-/graphs/main?ref_type=heads"
+  config.descripcion = "Administración de learn.tg"
+  config.codigofuente = "https://gitlab.com/vtamara/learn.tg"
+  config.urlcontribuyentes = "https://gitlab.com/vtamara/learn.tg/-/graphs/main?ref_type=heads"
   config.urlcreditos = "https://gitlab.com/pasosdeJesus/cor1440_gen/-/blob/main/CREDITOS.md"
   config.agradecimientoDios = "<p>
-Agradecemos a Dios que es Dios de orden
+Agradecemos a Dios que nos enseña
 </p>
 <blockquote>
 <p>
-Pero hágase todo decentemente y con orden.
+Te enseñaré y te mostraré el camino;<br/>
+te estaré observando y seré tu guía.
 </p>
-<p>I Corintios 14:40</p>
+<p>Salmo 32:8</p>
 </blockquote>".html_safe
 
 end

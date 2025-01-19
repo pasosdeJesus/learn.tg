@@ -11,10 +11,9 @@ import {Turbo} from "@hotwired/turbo-rails";
 // no hacer "Turbo.session.drive = false " porque dejan de operar
 // operaciones con turbo como añadir familiar
 
-import './jquery'
-
 import 'popper.js'              // Dialogos emergentes usados por bootstrap
 import * as bootstrap from 'bootstrap'              // Maquetacion y elementos de diseño
+window.bootstrap = bootstrap
 
 import ApexCharts from 'apexcharts'
 window.ApexCharts = ApexCharts
@@ -58,7 +57,7 @@ window.inicializaProsidebar = inicializaProsidebar
 
 
 let esperarRecursosSprocketsYDocumento = function (resolver) {
-  if (typeof window.puntomontaje == 'undefined') {
+  if (typeof window.puntoMontaje == 'undefined') {
     setTimeout(esperarRecursosSprocketsYDocumento, 100, resolver)
     return false
   }
@@ -77,8 +76,6 @@ let promesaRecursosSprocketsYDocumento = new Promise((resolver, rechazar) => {
 
 promesaRecursosSprocketsYDocumento.then((mensaje) => {
   console.log(mensaje)
-  var root = window 
-  root.cor1440_gen_activa_autocompleta_mismotipo = true
 
   Msip__Motor.ejecutarAlCargarDocumentoYRecursos()
   Mr519Gen__Motor.ejecutarAlCargarDocumentoYRecursos()
