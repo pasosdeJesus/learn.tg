@@ -37,6 +37,12 @@ module Cor1440Gen
       ]
     end
 
+    def atributos_filtro_antestabla
+      [
+        :idioma,
+        :prefijoRuta,
+      ]
+    end
 
     def atributos_show
       atributos_index - [

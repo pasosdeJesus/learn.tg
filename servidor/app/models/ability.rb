@@ -63,6 +63,16 @@ class Ability  < Cor1440Gen::Ability
           responsable: { id: usuario.id },
         )
 
+        can(:manage, [
+          Cor1440Gen::Actividadpf,
+          Cor1440Gen::ActividadProyectofinanciero,
+          Cor1440Gen::AnexoProyectofinanciero,
+          Cor1440Gen::Desembolso,
+          Cor1440Gen::Informeauditoria,
+          Cor1440Gen::Informefinanciero,
+          Cor1440Gen::Informenarrativo,
+          Cor1440Gen::ProyectofinancieroUsuario
+        ])
         # Convención: Los proyectos sin usuarios se suponen como
         # institucionales o para todos los usuarios
         psinusuario = Cor1440Gen::Proyectofinanciero.all.map(&:id) -
@@ -122,19 +132,26 @@ class Ability  < Cor1440Gen::Ability
 
       when Ability::ROLADMIN, Ability::ROLDIR
         can(:manage, [
-          Cor1440Gen::Pmindicadorpf, 
           Cor1440Gen::Actividad,
+          Cor1440Gen::ActividadProyectofinanciero,
+          Cor1440Gen::AnexoProyectofinanciero,
           Cor1440Gen::Asistencia,
           Cor1440Gen::Actividadpf,
+          Cor1440Gen::Desembolso,
           Cor1440Gen::Efecto,
           Cor1440Gen::Financiador,
           Cor1440Gen::FormularioTipoindicador,
           Cor1440Gen::Indicadorpf,
           Cor1440Gen::Informe,
+          Cor1440Gen::Informeauditoria,
+          Cor1440Gen::Informefinanciero,
+          Cor1440Gen::Informenarrativo,
           Cor1440Gen::Mindicadorpf,
           Cor1440Gen::Objetivopf,
-          Cor1440Gen::Resultadopf,
+          Cor1440Gen::Pmindicadorpf, 
           Cor1440Gen::Proyectofinanciero,
+          Cor1440Gen::ProyectofinancieroUsuario,
+          Cor1440Gen::Resultadopf,
           Cor1440Gen::Tipoindicador,
 
           Heb412Gen::Doc,

@@ -17,5 +17,13 @@ module Cor1440Gen
     validates :subtitulo,
       presence: true
 
+    scope :filtro_idioma, lambda { |i|
+      where(idioma: i)
+    }
+
+    scope :filtro_prefijoRuta, lambda { |p|
+      where(prefijoRuta: p)
+    }
+
   end
 end
