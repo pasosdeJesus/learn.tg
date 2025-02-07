@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/kreeti/kt-paperclip.git
-  revision: 26139d89d34bcfefae0e9c724c4573a8fae089ab
+  revision: 83dc8d92e63e4c360bb9f45af1cf3b63d99bed54
   specs:
     kt-paperclip (7.2.2)
       activemodel (>= 4.2.0)
@@ -24,7 +24,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/heb412_gen.git
-  revision: 4068048559e404392b933a60cef91c5897f04c5b
+  revision: 1779ae205757f4b9ea6d56615e1b1cc3b72c774a
   branch: main
   specs:
     heb412_gen (2.3.0.alfa3)
@@ -35,7 +35,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/mr519_gen.git
-  revision: 9a10af9b80829ce70e5107309c466256c1dbd9d3
+  revision: a3e44ad6b6eb891571b8f65adc52ace7fd5f77fb
   branch: main
   specs:
     mr519_gen (2.3.0.alfa3)
@@ -210,10 +210,11 @@ GEM
     ffi (1.17.1-x86_64-linux-musl)
     globalid (1.2.1)
       activesupport (>= 6.1)
-    i18n (1.14.6)
+    i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     io-console (0.8.0)
-    irb (1.14.3)
+    irb (1.15.1)
+      pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jbuilder (2.13.0)
@@ -241,39 +242,39 @@ GEM
     mime-types (3.6.0)
       logger
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2025.0107)
+    mime-types-data (3.2025.0204)
     mini_mime (1.1.5)
     mini_portile2 (2.8.8)
     minitest (5.25.4)
-    msgpack (1.7.5)
-    net-imap (0.5.5)
+    msgpack (1.8.0)
+    net-imap (0.5.6)
       date
       net-protocol
     net-pop (0.1.2)
       net-protocol
     net-protocol (0.2.2)
       timeout
-    net-smtp (0.5.0)
+    net-smtp (0.5.1)
       net-protocol
     nio4r (2.7.4)
-    nokogiri (1.18.1)
+    nokogiri (1.18.2)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
-    nokogiri (1.18.1-aarch64-linux-gnu)
+    nokogiri (1.18.2-aarch64-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.18.1-aarch64-linux-musl)
+    nokogiri (1.18.2-aarch64-linux-musl)
       racc (~> 1.4)
-    nokogiri (1.18.1-arm-linux-gnu)
+    nokogiri (1.18.2-arm-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.18.1-arm-linux-musl)
+    nokogiri (1.18.2-arm-linux-musl)
       racc (~> 1.4)
-    nokogiri (1.18.1-arm64-darwin)
+    nokogiri (1.18.2-arm64-darwin)
       racc (~> 1.4)
-    nokogiri (1.18.1-x86_64-darwin)
+    nokogiri (1.18.2-x86_64-darwin)
       racc (~> 1.4)
-    nokogiri (1.18.1-x86_64-linux-gnu)
+    nokogiri (1.18.2-x86_64-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.18.1-x86_64-linux-musl)
+    nokogiri (1.18.2-x86_64-linux-musl)
       racc (~> 1.4)
     odf-report (0.8.1)
       mime-types
@@ -284,6 +285,8 @@ GEM
     parslet (2.0.0)
     pdf-core (0.10.0)
     pg (1.5.9)
+    pp (0.6.2)
+      prettyprint
     prawn (2.5.0)
       matrix (~> 0.4)
       pdf-core (~> 0.10.0)
@@ -293,11 +296,12 @@ GEM
     prawnto_2 (0.3.1)
       prawn (>= 1.0.0)
       rails (>= 3.2)
+    prettyprint (0.2.0)
     psych (5.2.3)
       date
       stringio
     public_suffix (6.0.1)
-    puma (6.5.0)
+    puma (6.6.0)
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (2.2.10)
@@ -349,7 +353,7 @@ GEM
       zeitwerk (~> 2.6)
     raindrops (0.20.1)
     rake (13.2.1)
-    rdoc (6.11.0)
+    rdoc (6.12.0)
       psych (>= 4.0.0)
     redcarpet (3.6.0)
     redis (5.3.0)
@@ -503,7 +507,7 @@ DEPENDENCIES
   will_paginate
 
 RUBY VERSION
-   ruby 3.4.1p0
+   ruby 3.3.3p89
 
 BUNDLED WITH
    2.6.3

@@ -79,13 +79,11 @@ app/javascript/controllers/sal7711_gen
 app/javascript/controllers/sivel2_gen
 cobertura-sistema/
 cobertura-unitarias/
-servidor/public/learntg-admin/assets/
 servidor/archivos/bd/
-servidor/public/learntg-admin/cobertura/
+servidor/app/assets/builds/application.js
 servidor/app/javascript/controllers/heb412_gen
 servidor/app/javascript/controllers/mr519_gen
-servidor/archivos
+servidor/app/javascript/controllers/msip
+servidor/app/assets/
 servidor/public
 .cert
-
-servidor/app/assets/builds/application.js
