@@ -1,10 +1,7 @@
-<script setup>
-  import Guia from '../../components/Guia.vue'
-  
-  const textoMd = `
-### 1. Registrate como referido(a) de pasosdeJesus.org
 
-¡Al registrarte como refereido nuestro obtienes 5% de descuento en las 
+# 1. Registrate como referido(a) de pasosdeJesus.org
+
+¡Al registrarte como refereido nuestro obtienes 15% de descuento en las 
 comisiones que OKX normalmente cobra en tus transacciones de trading!
 
 1. Emplea el siguiente enlace de referido:
@@ -13,17 +10,19 @@ comisiones que OKX normalmente cobra en tus transacciones de trading!
 
 > ![Mensaje pasosdeJesus.org te ha invitado](/img/pdJOKX.png)
 
-2. Proporciona tu correo en el campo para eso y presiona el botón 
+2. Indica tu país (necesitarás identificación de ese país y 
+   prueba de domicilio)
+3. Proporciona tu correo en el campo para eso y presiona el botón 
    **Registrarse**
-3. En otra pestaña de tu navegador o con una aplicación de correo ingresa 
+4. En otra pestaña de tu navegador o con una aplicación de correo ingresa 
    a tu correo y copia el código de verificación de 6 dígitos.
-4. Tendrás 10 minutos para escribir ese código en la página de registro y 
+5. Tendrás 10 minutos para escribir ese código en la página de registro y 
    presionar **Siguiente**.
-5. Ingresa la clave con la que quieres proteger tu cuenta y presiona
+6. Ingresa la clave con la que quieres proteger tu cuenta y presiona
    **Siguiente**.  Te sugerimos usar una combinación de números, letras 
    mayúsculas, minúsculas y símbolos.  No debes compartir tu clave. 
    Te insitamos a revisar más recomendaciones en [Cómo proteger tu cuenta de exchange de criptomonedas en OKX](https://www.okx.com/es-la/learn/account-security-on-okex)
-6. Tras esto podrás acceder el tablero de control de tu cuenta en OKX.
+7. Tras esto podrás acceder el tablero de control de tu cuenta en OKX.
 
 ### 2. Instala la aplicación de OKX en tu celular
 
@@ -40,7 +39,8 @@ a este sitio.
 
 ### 3. Verifica tu identidad
 
-Para la verificación tendrás que enviar foto de tu cédula y hacerte una selfie.
+Para la verificación tendrás que enviar foto de tu cédula y hacerte una 
+selfie.
 
 Mira el estado de tu verificación y completala así:
 
@@ -55,10 +55,3 @@ Mira el estado de tu verificación y completala así:
 3. Desde la pestaña \`Perfil\` presiona sobre \`Verificación\`:
 
 > ![Mensaje pasosdeJesus.org te ha invitado](/img/verif3.jpg)
-`
-
-</script>
-
-<template>
-  <Guia :textoMd="textoMd"/>
-</template>

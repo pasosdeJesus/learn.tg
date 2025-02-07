@@ -1,8 +1,3 @@
-<script setup>
-  import Guia from '../../components/Guia.vue'
-
-  const textoMd = `
-
 Este sitio ofrece más cursos, podrás ver el catálogo completo ingresando
 desde un computador con tu billetera OKX.
 
@@ -24,9 +19,3 @@ instala la extension OKX Wallet en tu navegador:
 
 Una vez tengas instalada la billetera presiona el botón \`Ingresar\` y después
 ve a la [página de inicio de este sitio](/).
-`
-</script>
-
-<template>
-  <Guia :textoMd="textoMd"/>
-</template>

@@ -16,7 +16,7 @@ export default {
     },
     fontFamily: {
       sans: ['DM Sans', 'sans-serif'],
-      serif: ['Merriweather', 'serif'],
+      serif: ['DM Serif Display', 'serif'],
     },
     extend: {
       colors: {

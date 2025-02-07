@@ -1,7 +1,4 @@
-<script setup>
-  import Guia from '../../components/Guia.vue'
 
-  const textoMd = `
 > **26** Un ángel del Señor habló a Felipe, diciendo: Levántate y ve hacia 
   el sur, por el camino que desciende de Jerusalén a Gaza, el cual es 
   desierto. 
@@ -67,9 +64,3 @@ suma importancia para nosotros.
 
 * ¿Cómo puedes aplicar lo que este pasaje enseña a tu vida?
 * Desafío de memorización: _Felipe dijo: Si crees de todo corazón, bien puedes. Y respondiendo, dijo: Creo que Jesucristo es el Hijo de Dios._ Hechos 8:37
-`
-</script>
-
-<template>
-  <Guia :textoMd="textoMd"/>
-</template>

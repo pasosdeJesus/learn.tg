@@ -1,13 +1,15 @@
+<script setup>
+  import { ref } from 'vue'
+  const anioActual=ref(new Date().getFullYear());
+</script>
 <template>
   <footer class="w-full bg-primary-200 z-20 dark:text-gray-900 flex flex-col px-16">
-    <div class="flex  flex-col lg:flex-row">
-      <div class="container flex flex-col mx-auto dark:divide-gray-600">
-        <div class="text-white leading-loose tracking-wide w-full md:w-[60%] font-semibold lg:justify-start">
+    <div class="flex flex-col justify-between lg:flex-row">
+      <div class="pt-4">
           Si tienes preguntas o sugerencias escribenos a
           <a href="mailto:info@pasosdeJesus.org" class="hover:underline text-secondary-100 font-bold">info@pasosdeJesus.org</a>
-        </div>
       </div>
-    <div class="flex flex-col justify-center pt-6 lg:pt-0">
+      <div class="flex flex-col justify-center pt-6 lg:pt-0">
       <div class="flex justify-center space-x-4">
         <a target="_blank" href="https://twitter.com/pasosdeJesus" class="flex items-center justify-center w-8 h-8 rounded-full sm:w-10 sm:h-10 dark:bg-violet-600 dark:text-gray-50">
           <svg
@@ -53,7 +55,8 @@
       <p
         class="md:text-lg font-medium text-center text-white mt-4 tracking-wider"
       >
-          Puedes reusar abiertamente el contenido gratuito dando crédito. 2024
+      Puedes reusar abiertamente el contenido gratuito dando crédito.
+      {{anioActual}}
       </p>
     </div>
   </footer>

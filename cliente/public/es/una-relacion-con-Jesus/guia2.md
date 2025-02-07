@@ -1,8 +1,3 @@
-<script setup>
-  import { ref, computed } from 'vue'
-  import Guia from '../../components/Guia.vue'
-
-  const textoMd = `
 >  **1** Cuando, pues, el Señor entendió que los fariseos habían oído decir: 
    Jesús hace y bautiza más discípulos que Juan
    **2** (aunque Jesús no bautizaba, sino sus discípulos), 
@@ -51,7 +46,7 @@
    **25** Le dijo la mujer: Sé que ha de venir el Mesías, llamado el Cristo; 
    cuando él venga nos declarará todas las cosas. 
    **26** Jesús le dijo: Yo soy, el que habla contigo.   
- 
+
 > (Biblia traducción Reina Valera 1960)
 
 ![Pozo de Jacob en 1912](/img/Nablus_jacob_well_1912.jpg "Pozo de Jacob en 1912")
@@ -77,9 +72,9 @@
 * ¿De este pasaje qué te permite pensar que la historia realmente ocurrió?
 * La historia de la mujer samaritana es un relato de cómo el encuentro con 
   Jesús nos restaura; por esta razón la mujer es un ejemplo de adoración 
-  en espíritu y en verdad. ¿Qué piensas al leer esta historia ? Jesus es 
-  quien puede verte sinceramente y con amor y no te juzga, acercate a 
-  Jesus tal y como eres porque Dios está dispuesto a perdonarte y a darte 
+  en espíritu y en verdad. ¿Qué piensas al leer esta historia ? Jesús es 
+  quien puede verte sinceramente y con amor y no te juzga, acércate a 
+  Jesús tal y como eres porque Dios está dispuesto a perdonarte y a darte 
   agua viva.
 
 ## 3. Aplicación
@@ -90,9 +85,3 @@
 ![Pozo de Jacob en 2013](/img/j2013.jpg "Pozo de Jacob en 2013")
 
 [Foto del Pozo de Jacob en 2013 por Jermiah K. Garrett](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Jacob's_Well_in_2013.jpg)
-`
-</script>
-
-<template>
-  <Guia :textoMd="textoMd"/>
-</template>

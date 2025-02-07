@@ -1,7 +1,3 @@
-<script setup>
-  import Guia from '../../components/Guia.vue'
-
-  const textoMd = `
 > **26** Then an angel of the Lord spoke to Philip, saying, 
   “Arise, and go toward the south to the way that goes down from 
   Jerusalem to Gaza. This is a desert.” 
@@ -71,18 +67,12 @@
 ## Reflection
 
 * The story of the Eunuch's conversion is a beautiful testimony of how the 
-  gospel of the Jesus reaches people. What do you think when you hear the 
-  story of the eunuch and Philip? Share your ideas is very important to us.
+  gospel of Jesus reaches people. What do you think when you hear the 
+  story of the eunuch and Philip? Share your ideas, it is very important to us.
 
 ## Application
 
 * How can you apply what this passage teaches to your life?
 * Memorization challenge:  _Philip said, “If you believe with all your heart, 
   you may.” He answered, “I believe that Jesus Christ is the Son of 
-  God.” _Acts 8:37
-`
-</script>
-
-<template>
-  <Guia :textoMd="textoMd"></Guia>
-</template>
+  God.”_ Acts 8:37

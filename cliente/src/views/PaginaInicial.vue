@@ -1,30 +1,38 @@
 <script setup>
-  import { reactive, watchEffect, ref, onMounted } from 'vue'
+  import { onMounted, reactive, ref, watchEffect } from 'vue'
 
   import axios from 'axios';
 
   import Encabezado from '../components/Encabezado.vue'
-  import Piedepagina from '../components/Piedepagina.vue'
-  import {
-    estadoBoton
-    } from '../lib/conexion.js'
-  import { cursos } from '../definiciones' 
+  import PieDePagina from '../components/PieDePagina.vue'
+  //import { estadoBoton } from '../lib/conexion.js'
+  //import { cursos } from '../definiciones' 
 
-  const API_CURSOS_URL = 'http://127.0.0.1:3000/learntg-admin/cursos.json'
+  const API_CURSOS_URL = 'https://192.168.5.100:3000/learntg-admin/cursos.json'
   const cursosj = ref([])
   const isMounted = reactive({ value: false });
 
-  onMounted(() => {
-    isMounted.value = true;
+
+  const configurar = async () => {
+      isMounted.value = true;
+      alert("configurar " + API_CURSOS_URL)
       axios.get(API_CURSOS_URL)
         .then(response => {
+          alert("1")
           if (response.data) {
+            alert("2")
             cursosj.value = response.data;
           }
         })
         .catch(error => {
+          alert(error)
           console.error(error);
         })
+
+  }
+
+  onMounted(async () => {
+    await configurar()
   })
 
   watchEffect(() => {
@@ -38,12 +46,13 @@
 </script>
 
 <template>
-  <Encabezado/>
-  <div class="overflow-x-hidden py-6 dark:bg-gray-100 dark:text-gray-900">
-    <div class="container overflow-x-hidden py-6 dark:bg-gray-100 dark:text-gray-900 flex flex-row flex-wrap justify-center mt-8">
-      <template v-for="curso in cursosj">
-        <div  class="flex flex-col justify-center w-full px-8 mx-6 my-12 py-9 text-center rounded-md md:w-96 lg:w-80 xl:w-65 bg-gray-300 dark:text-gray-900" 
-        v-if="(estadoBoton == 'Ingresar' && curso.sinBilletera) || (estadoBoton == 'Desconectar' && curso.conBilletera)">
+  <Encabezado></Encabezado>
+  <div class="overflow-x-hidden py-8 dark:bg-gray-100 dark:text-gray-900">
+    <div class="overflow-x-hidden py-1 dark:bg-gray-100 dark:text-gray-900 flex flex-row flex-wrap justify-center mt-2">
+      <template v-for="curso in cursosj" :key="curso.id">
+        <div  class="flex flex-col justify-center w-full px-8 mx-6 my-12 py-9
+              text-center rounded-md md:w-96 lg:w-80 xl:w-65 bg-gray-300
+              dark:text-gray-900">
           <RouterLink :to="'/' + curso.idioma + curso.prefijoRuta">
           <div class="img-curso">
             <img class="w-[100%] h-[17rem] pt-2 object-cover" :src="curso.imagen">
@@ -57,7 +66,7 @@
       </template>
     </div>
   </div>
-  <Piedepagina/>
+  <PieDePagina></PieDePagina>
 </template>
 
 

@@ -1,10 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { cursos, rutas } from './definiciones'
+import PaginaInicial from './views/PaginaInicial.vue'
 
-const router = createRouter({
+import IntroCurso from './views/IntroCurso.vue'
+import GuiaCurso from './views/GuiaCurso.vue'
+
+export const router = createRouter({
   history: createWebHistory(),
-  routes: rutas,
+  routes: [
+    {
+      path: '/:idioma/:prefijoRuta',
+      component: IntroCurso
+    }, {
+      path: '/:idioma/:prefijoRuta/:sufijoRuta',
+      component: GuiaCurso
+    }, {
+      path: "/",
+      component: PaginaInicial
+    }
+  ]
 })
-
-export default router

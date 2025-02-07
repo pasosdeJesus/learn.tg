@@ -1,14 +1,19 @@
 <script setup>
-  import { computed, onMounted, reactive, ref, watchEffect} from 'vue'
+  import { onMounted, ref} from 'vue'
+  import { useRoute } from 'vue-router'
 
   import axios from 'axios';
 
   import {
-    conectar,
     estadoBoton,
     pagarOKB,
     red
   } from '../lib/conexion.js'
+
+  import {
+    API_BUSCA_CURSOS_URL,
+    API_PRESENTA_CURSO_URL
+  } from '../definiciones.js'
 
   import Encabezado from '../components/Encabezado.vue'
   import PieDePagina from '../components/PieDePagina.vue'
@@ -23,8 +28,6 @@
 
   import addFillInTheBlank from '../lib/add-fill-in-the-blank'
 
-  import { cursos } from '../definiciones'
-
   const miCurso = ref({})
   const titulo = ref("")
   const subtitulo = ref("")
@@ -32,25 +35,20 @@
   const creditoImagen = ref("")
   const enlaceImagen = ref("")
   const altImagen = ref("")
-  const resumenMd = ref("")
    // Idea de usar remark de freecodecamp
   const resumenHtml = ref("")
 
-  const ampliaMd = ref("")
   const ampliaHtml = ref("")
 
   const prerequisitosHtml = null
 
   const cursosPrerequisitoHtml = null
 
-  const contenidoMd = ref(null)
-  const contenidoHtml = null
+  const contenidoHtml = ref(null)
 
   const porPagar = ref("")
 
-  const API_BUSCA_CURSOS_URL = 
-    'http://127.0.0.1:3000/learntg-admin/proyectosfinancieros.json'
-  const cursosj = ref([])
+  const route = useRoute()
 
   let htmlDeMd = (md) => {
     let processor = unified()
@@ -66,25 +64,21 @@
     return html
   }
 
+  /*watch(
+    () => route.params.id,
+      (newId, oldId) => {
+        // react to route changes...
+      }
+    ) */
 
   onMounted(() => {
-    debugger
-    //isMounted.value = true
-    let purl = window.location.href.split("/")
-    let ruta = purl.length > 2 && purl[purl.length - 1] == "" ?
-      purl[purl.length - 2] : purl[purl.length - 1]
-      debugger
-    let idioma = purl.length > 2 && purl[purl.length - 1] == "" ?
-      purl[purl.length - 3] : purl[purl.length - 2]
-
     let url = `${API_BUSCA_CURSOS_URL}?` +
-      `filtro[busprefijoRuta]=/${ruta}&` +
-      `filtro[busidioma]=${idioma}`
+      `filtro[busprefijoRuta]=/${route.params.prefijoRuta}&` +
+      `filtro[busidioma]=${route.params.idioma}`
     console.log(`Fetching ${url}`)
     axios.get(url)
       .then(response => {
         if (response.data) {
-          debugger
           if (response.data.length != 1) {
             alert("No se encontró el curso")
             return false
@@ -97,48 +91,63 @@
           creditoImagen.value = rcurso.creditoImagen
           enlaceImagen.value = rcurso.enlaceImagen
           altImagen.value = rcurso.altImagen
-          resumenMd.value = rcurso.resumenMd
           // Idea de usar remark de freecodecamp
           resumenHtml.value = htmlDeMd(rcurso.resumenMd)
-          ampliaMd.value = rcurso.ampliaMd
           ampliaHtml.value = htmlDeMd(rcurso.ampliaMd)
 
-          /*
-          prerequisitosHtml.value = htmlDeMd(rcurso.prerequisitosMd)
+          //prerequisitosHtml.value = htmlDeMd(rcurso.prerequisitosMd)
 
-          let cursosPrerequisitoMd = ""
-          if (typeof miCurso.cursosPrerequisito != "undefined") {
-           for (const prefijoCp of miCurso.cursosPrerequisito) {
-             let cp = cursos.filter( r => r.prefijoRuta == prefijoCp)[0]
-             cursosPrerequisitoMd += "* " + "[" + cp.titulo + "](/" +
-               cp.idioma + "/" + cp.prefijoRuta + ")\n"
-           }
-          }
-          cursosPrerequisitoHtml.value = htmlDeMd(cursosPrerequisitoMd)
+          let urld = API_PRESENTA_CURSO_URL.replace("curso_id", rcurso.id)
+          console.log(`Fetching ${urld}`)
+          axios.get(urld)
+            .then(responsed => {
+              if (responsed.data) {
+                if (response.data.length != 1) {
+                 alert("No se encontró el curso")
+                 return false
+                }
+                let dcurso = responsed.data
 
-          let guias=""
-          let numero = 1
-          for (const guia of rcurso.guias) {
-            guias += '' + numero + ". "
-            if (guia.posfijoRuta == null) {
-             guias += guia.titulo 
-            } else {
-              guias += "[" + guia.titulo + "](/" + rcurso.idioma +
-                rcurso.prefijoRuta + guia.posfijoRuta + ")"
-            }
-            guias += "\n"
-            numero++
-          }
-          contenidoMd.value = guias
-          contenidoHtml = htmlDeMd(guias)
-          */
+                let cursosPrerequisitoMd = ""
+                if (typeof miCurso.cursosPrerequisito != "undefined") {
+                 for (const prefijoCp of miCurso.cursosPrerequisito) {
+                   let cp = cursos.filter( r => r.prefijoRuta == prefijoCp)[0]
+                   cursosPrerequisitoMd += "* " + "[" + cp.titulo + "](/" +
+                     cp.idioma + "/" + cp.prefijoRuta + ")\n"
+                 }
+                }
+                //cursosPrerequisitoHtml.value = htmlDeMd(cursosPrerequisitoMd)
+                let guias="<ol class='list-decimal text-white'>\n"
+                let numero = 1
+                for (const guia of dcurso.guias) {
+                  guias += "<li>"
+                  if (guia.sufijoRuta != null) {
+
+                   guias += `<a href='/${rcurso.idioma}${rcurso.prefijoRuta}` +
+                    `/${guia.sufijoRuta}' `+
+                    `style='text-decoration: underline'>${guia.titulo}</a>`
+                  } else {
+                    guias += guia.titulo
+                  }
+                  guias += "</li>\n"
+                }
+                guias += "</ol>\n"
+                contenidoHtml.value = guias
+              }
+        })
+      .catch(error => {
+        console.error(error);
+      })
+
+
+ 
         }
       })
       .catch(error => {
         console.error(error);
       })
 
-    porPagar.value = miCurso.porPagar
+    porPagar.value = false //miCurso.porPagar
 
   })
 </script>
@@ -164,13 +173,12 @@
             </figcaption>
           </figure>
         </div>
-        <div v-html='resumenHtml'></div>
+        <div class="text-justify" v-html='resumenHtml'></div>
       </div>
     </template>
     <div class="my-20 pt-7">
       <template v-if="miCurso.prerequisitosMd || miCurso.cursosPrerequisito">
-        <div  class="px-6 py-8 h-full  w-full space-y-46 sm:p-8 lg:p-12 lg:w-5/18 xl:w-5/18 rounded-sm bg-secondary-100 dark:text-gray-50"
-        >
+        <div  class="px-6 py-8 h-full  w-full space-y-46 sm:p-8 lg:p-12 lg:w-5/18 xl:w-5/18 rounded-sm bg-secondary-100 dark:text-gray-50">
           <h2 class="text-2xl lg:text-2xl font-bold py-8 text-white">Pre-requisitos</h2>
           <div v-html='prerequisitosHtml'></div>
           <template v-if="cursosPrerequisitoHtml != ''">
@@ -185,7 +193,7 @@
           <template v-if="miCurso.idioma == 'en'">Course contents</template>
           <template v-else>Contenido del curso</template>
         </h2>
-        <div v-html='contenidoHtml' active-class="active"  class="text-base/10"></div>
+        <div v-html='contenidoHtml' active-class="active"  class="list-decimal text-justify text-base/10"></div>
       </div>
       <template v-if="estadoBoton == 'Desconectar'">
         <div v-html='ampliaHtml'></div>
@@ -209,35 +217,4 @@ figcaption {
   text-align: right;
 }
 
-.contenido {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.tdc {
-  color: black; 
-  background-color: var(--color-2); 
-}
-
-.html-gen {
-  width: 50%;
-  padding: 1rem;
-}
-
-.area-de-texto {
-  width: 100%
-}
-
-.texto-md {
-  box-sizing: border-box;
-  height: 100%;
-  width: 50%;
-  border: none;
-  border-right: 1px solid #ccc;
-  background-color: #f6f6f6;
-  font-size: 14px;
-  font-family: 'Monaco', courier, monospace;
-  padding: 20px;
-}
 </style>

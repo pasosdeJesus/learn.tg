@@ -1,8 +1,3 @@
-<script setup>
-  import { ref, computed } from 'vue'
-  import Guia from "../../components/Guia.vue"
-
-  const textoMd = `
 > **45** En seguida hizo a sus discípulos entrar en la barca e ir delante 
   de él a Betsaida, en la otra ribera, entre tanto que él despedía a la 
   multitud. 
@@ -32,13 +27,13 @@ caminando sobre el lago")
 
 ## 1. Comprensión de lectura.
 
-* Dos paisajes mencionados en esta lectura: ____ y ​​____
+* Dos paisajes mencionados en esta lectura: ____ y ____
 * ¿Adónde envió Jesús a sus discípulos? ____ ¿Obedecieron? ____
 * ¿Qué fue a hacer Jesús solo después de despedir a la gente y a sus 
   discípulos?  ____
 * La cuarta vigilia de la noche significa de 3AM a 6AM, suponiendo que fueran
-  las 3AM cuando Jesús quiso partir y que envió a sus discípulos a Betsaida a
-  las 6PM, ¿cuánto tiempo estuvieron remando sus discípulos? ___
+  las 3:00 AM cuando Jesús quiso partir y que envió a sus discípulos a Betsaida a
+  las 6:00 PM, ¿cuánto tiempo estuvieron remando sus discípulos? ___
 * Al ver a sus discípulos angustiados, Jesús se acercó a la barca donde estaban
   ____ sobre el ____
 * Los discípulos gritaron porque pensaron que el que caminaba sobre el lago era
@@ -53,17 +48,10 @@ caminando sobre el lago")
 ## 2. Reflexión
 
 * ¿De este pasaje qué te permite pensar que la historia realmente ocurrió?
-* Es posible que haya escuchado comentarios sobre Jesús de otras
-personas, pero hoy Él te dice directamente "No tenga miedo" y te decimos por
-nuestra experiencia pesonal: Él es amor.
+* Es posible que hayas escuchado comentarios sobre Jesús de otras
+personas, pero hoy Él te dice directamente "No tengas miedo" y te decimos por
+nuestra experiencia personal: Él es amor.
 
 ## 3. Aplicación
 
 * ¿Cómo puedes aplicar lo que este pasaje enseña a tu vida?
-`
-</script>
-
-<template>
-  <Guia :textoMd="textoMd">
-  </Guia>
-</template>

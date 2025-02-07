@@ -84,3 +84,8 @@ servidor/archivos/bd/
 servidor/public/learntg-admin/cobertura/
 servidor/app/javascript/controllers/heb412_gen
 servidor/app/javascript/controllers/mr519_gen
+servidor/archivos
+servidor/public
+.cert
+
+servidor/app/assets/builds/application.js

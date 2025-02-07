@@ -1,7 +1,3 @@
-<script setup>
-  import Guia from '../../components/Guia.vue'
-  
-  const textoMd = `
 > **17** So when Jesus came, he found that he had been in the tomb four 
   days already. 
   **18** Now Bethany was near Jerusalem, about fifteen stadia away. 
@@ -52,8 +48,8 @@ Lazarus")
 
 * Would you trust someone who has the power to overcome death? Jesus of 
   Nazareth, contrary to the vast majority of gods, does not want us to 
-  get close first, but He came to us out of love through Jesus so that 
-  we could get close to Him.
+  get close first, but He came to us out of love so that we could get 
+  close to Him.
 
 ## Aplication
 
@@ -61,9 +57,3 @@ Lazarus")
 * Memorization challenge: _for they all saw him, and were troubled. Jesus 
   said to her, “I am the resurrection and the life. He who believes in me 
   will still live, even if he dies._ John 11:25
-`
-</script>
-
-<template>
-  <Guia :textoMd="textoMd"/>
-</template>

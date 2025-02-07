@@ -1,7 +1,3 @@
-<script setup>
-  import Guia from '../../components/Guia.vue'
-
-  const textoMd = `
 > **1** Now Jesus learned that the Pharisees had heard that he was gaining and 
    baptizing more disciples than John— 
    **2** although in fact it was not Jesus who baptized, but his disciples. 
@@ -85,16 +81,10 @@ water.
 ## Application
 
 * How can you apply what this passage teaches to your life?
-* Memorization challenge: …_ the water I give them will become in them a 
+* Memorization challenge: ... _the water I give them will become in them a 
   spring of water welling up to eternal life._ John 6:14
 
 
 ![Jacob's well in 2013](/img/j2013.jpg "Jacob's well in 2013")
 
 [Picture of Jacob's well in 2013 by Jermiah K. Garrett](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Jacob's_Well_in_2013.jpg)
-`
-</script>
-
-<template>
-  <Guia :textoMd="textoMd"/>
-</template>
