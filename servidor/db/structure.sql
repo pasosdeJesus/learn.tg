@@ -1584,8 +1584,7 @@ CREATE TABLE public.cor1440_gen_actividadpf (
     actividadtipo_id integer,
     formulario_id integer,
     heredade_id integer,
-    rutamd character varying(2047),
-    "posfijoRuta" character varying(255)
+    "sufijoRuta" character varying(255)
 );
 
 
@@ -7661,6 +7660,7 @@ ALTER TABLE ONLY public.usuario
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250126104713'),
 ('20241125115043'),
 ('20241113150932'),
 ('20241113141404'),

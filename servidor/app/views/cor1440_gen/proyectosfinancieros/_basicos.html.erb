@@ -1,0 +1,94 @@
+<%= f.input :nombre,
+  input_html: { 
+    'data-msip--cancelar-vacio-es-eliminar-target' => 'determinador'
+  }
+%>
+
+<%= f.input :titulo, 
+  input_html: { 
+    'data-msip--cancelar-vacio-es-eliminar-target' => 'determinador'
+  }
+%>
+
+<div class='row'>
+  <div class="offset-sm-0 col-sm-6">
+    <%= f.association :financiador,
+      collection: Cor1440Gen::Financiador.habilitados,
+      label_method: :nombre,
+      value_method: :id,
+      input_html: { 
+        class: 'tom-select'
+      }
+    %>
+  </div>
+</div>
+
+
+<div class='row'>
+  <div class="offset-sm-0 col-sm-4">
+    <%= f.input :fechainicio, 
+      input_html: { 
+        "data-msip--cancelar-vacio-es-eliminar-target" => "determinador",
+        type: "date"
+      },
+      as: :string
+    %>
+  </div>
+
+  <div class="col-sm-4">
+    <%= f.input :fechacierre, 
+      input_html: { 
+        type: "date"
+      },
+      as: :string
+    %>
+  </div>
+  <div class="col-sm-4">
+    <%
+      f.object.duracion = ''
+      if f.object.fechainicio && f.object.fechacierre then
+        f.object.duracion = Msip::FormatoFechaHelper.dif_meses_dias(
+          f.object.fechainicio, f.object.fechacierre
+        )
+      end
+    %>
+    <%= f.input :duracion,
+      :input_html => { 'readonly' => 'readonly' }
+    %>
+  </div>
+</div>
+
+<%= render partial: 'basicos_intermedio', locals: {f: f} %>
+
+<div class='row'>
+  <%= f.input :resumenMd, as: :text,
+    input_html: {rows: 5} %>
+</div>
+<div class='row'>
+  <%= f.input :creditosMd, as: :text,
+    input_html: {rows: 3} %>
+</div>
+
+<div class='row'>
+  <div class="offset-sm-0 col-sm-6">
+    <%= f.input :estado, 
+      collection: Cor1440Gen::ApplicationHelper::ESTADO,
+      include_blank: false,
+      input_html: {
+        value: f.object.estado ? f.object.estado : 'E',
+        class: 'tom-select' 
+      } 
+    %>
+  </div>
+  <div class="col-sm-6">
+    <%= f.input :dificultad, 
+      collection: Cor1440Gen::ApplicationHelper::DIFICULTAD,
+      include_blank: false,
+      input_html: {
+        value: f.object.estado ? f.object.estado : 'N',
+        class: 'tom-select' 
+      }
+    %>
+  </div>
+</div>
+

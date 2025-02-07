@@ -14,7 +14,7 @@ json.resumenMd @proyectofinanciero.resumenMd.to_s
 json.sinBilletera @proyectofinanciero.sinBilletera.to_s
 json.conBilletera @proyectofinanciero.conBilletera.to_s
 json.creditosMd @proyectofinanciero.creditosMd.to_s
-json.guias @proyectofinanciero.actividadpf.select {|a| a.posfijoRuta }.each do |apf|
+json.guias @proyectofinanciero.actividadpf.select {|a| a.sufijoRuta }.each do |apf|
   json.titulo apf.titulo.to_s
-  json.posfijoRuta apf.posfijoRuta.to_s
+  json.sufijoRuta apf.sufijoRuta.to_s
 end

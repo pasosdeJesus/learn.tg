@@ -61,6 +61,7 @@ module Cor1440Gen
         :enlaceImagen,
         :imagen,
         :resumenMd,
+        :creditosMd,
         :conBilletera,
         :sinBilletera,
         :marcologico,
@@ -94,14 +95,15 @@ module Cor1440Gen
         :imagen,
         :prefijoRuta,
         :resumenMd,
+        :creditosMd,
         :imagen,
         :sinBilletera,
         :subtitulo
       ] + proyectofinanciero_params_cor1440_gen
-      #at = proyectofinanciero_params_cor1440_gen.select {
-      #  |i,v| i.class == Hash && i.keys == [:actividadpf_attributes]
-      #}[0]
-      #at[:actividadpf_attributes].insert(-1, :rutamd) 
+      at = l.select {
+        |i,v| i.class == Hash && i.keys == [:actividadpf_attributes]
+      }[0]
+      at[:actividadpf_attributes].insert(-1, :sufijoRuta) 
       return l
     end
 
