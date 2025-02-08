@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import fs from 'fs'
-import dotenv from "dotenv"
 
+import dotenv from "dotenv"
 dotenv.config({path: "../servidor/.env"})
 
 // https://vite.dev/config/
