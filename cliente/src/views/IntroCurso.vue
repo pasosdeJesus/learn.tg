@@ -140,7 +140,7 @@
       })
 
 
- 
+
         }
       })
       .catch(error => {
@@ -182,7 +182,7 @@
           <h2 class="text-2xl lg:text-2xl font-bold py-8 text-white">Pre-requisitos</h2>
           <div v-html='prerequisitosHtml'></div>
           <template v-if="cursosPrerequisitoHtml != ''">
-            Cursos 
+            Cursos
             <div v-html='cursosPrerequisitoHtml'></div>
           </template>
         </div>
@@ -199,7 +199,7 @@
         <div v-html='ampliaHtml'></div>
         <template v-if="red == 'Red: X Layer Mainnet' && porPagar > 0">
           <div>
-            <button 
+            <button
                class="hidden md:block px-8 py-3 rounded-full text-white font-medium tracking-wider uppercase bg-secondary-100 w-full lg:w-auto"
                   @click='pagarOKB'>Inscribirse por {{porPagar}}OKB</button>
           </div>

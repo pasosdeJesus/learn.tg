@@ -19,12 +19,9 @@
 
   const configurar = async () => {
       isMounted.value = true;
-      alert("configurar " + API_BUSCA_CURSOS_URL)
       axios.get(API_BUSCA_CURSOS_URL)
         .then(response => {
-          alert("1")
           if (response.data) {
-            alert("2")
             cursosj.value = response.data;
           }
         })
