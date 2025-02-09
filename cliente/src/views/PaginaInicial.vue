@@ -3,20 +3,24 @@
 
   import axios from 'axios';
 
+  import {
+    API_BUSCA_CURSOS_URL,
+    API_PRESENTA_CURSO_URL
+  } from '../definiciones.js'
+
   import Encabezado from '../components/Encabezado.vue'
   import PieDePagina from '../components/PieDePagina.vue'
   //import { estadoBoton } from '../lib/conexion.js'
   //import { cursos } from '../definiciones' 
 
-  const API_CURSOS_URL = 'https://192.168.5.100:3000/learntg-admin/cursos.json'
   const cursosj = ref([])
   const isMounted = reactive({ value: false });
 
 
   const configurar = async () => {
       isMounted.value = true;
-      alert("configurar " + API_CURSOS_URL)
-      axios.get(API_CURSOS_URL)
+      alert("configurar " + API_BUSCA_CURSOS_URL)
+      axios.get(API_BUSCA_CURSOS_URL)
         .then(response => {
           alert("1")
           if (response.data) {

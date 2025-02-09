@@ -87,3 +87,4 @@ servidor/app/javascript/controllers/msip
 servidor/app/assets/
 servidor/public
 .cert
+cliente/src/definiciones.js

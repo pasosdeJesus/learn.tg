@@ -4,9 +4,6 @@
 
   const route = useRoute()
 
-  import dotenv from "dotenv"
-  dotenv.config({path: "../servidor/.env"})
-
   import axios from 'axios';
 
   import {
