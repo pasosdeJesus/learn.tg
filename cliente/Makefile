@@ -1,4 +1,4 @@
 
 consdesarrollo:
 	npm run build
-	doas rsync -rav --delete dist/ /var/www/htdocs/learn.tg-des/
+	(. ../servidor/.env && echo $${DIR_BUILD}; rsync -rav --delete dist/ $${DIR_BUILD}/)
