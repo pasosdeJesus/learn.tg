@@ -11,7 +11,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/cor1440_gen.git
-  revision: e994f618ef19bc385f5e76cc12c5cd5e55c91d0b
+  revision: e037233051825577470a36011712f483c1a8d013
   branch: main
   specs:
     cor1440_gen (2.3.0.alfa4)
@@ -24,7 +24,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/heb412_gen.git
-  revision: acacda1ef1f112df134fdb7aa78ee4cc835c7a0c
+  revision: e83863120ea0df40ca8f88c159583ef0f1641c12
   branch: main
   specs:
     heb412_gen (2.3.0.alfa4)
@@ -35,7 +35,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/mr519_gen.git
-  revision: dd74ed6c1b28f3296703615715513304362fbbe2
+  revision: 243b0381d65e1ffb5f41033761da171e00ab26ea
   branch: main
   specs:
     mr519_gen (2.3.0.alfa4)
@@ -44,7 +44,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/msip.git
-  revision: ab4f1a4276a649f97b8f107b5b7003fba3514e8e
+  revision: 5a24ec6e25e9f15106e9353fb0c4413835495c4b
   branch: main
   specs:
     msip (2.3.0.alfa4)
@@ -179,8 +179,9 @@ GEM
       railties (>= 4.1.0)
       responders
       warden (~> 1.2.3)
-    devise-i18n (1.12.1)
+    devise-i18n (1.13.0)
       devise (>= 4.9.0)
+      rails-i18n
     docile (1.4.1)
     dotenv (3.1.7)
     dotenv-rails (3.1.7)
@@ -304,7 +305,7 @@ GEM
     puma (6.6.0)
       nio4r (~> 2.0)
     racc (1.8.1)
-    rack (2.2.11)
+    rack (2.2.13)
     rack-cors (2.0.2)
       rack (>= 2.0.0)
     rack-session (1.0.2)
