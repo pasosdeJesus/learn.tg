@@ -13,6 +13,7 @@ class AutController < ApplicationController
 
 
   def verificar_firma
+    puts "OJO verificar_firma 1"
     direccion = params[:direccion]
     firma = params[:firma]
     mensaje = params[:mensaje]
@@ -37,6 +38,7 @@ class AutController < ApplicationController
       render json: { eror: "nonce no encontrado" }, status: :unauthorized
       return
     end
+    puts "OJO verificar_firma 2 nonce=#{nonce}"
     rnonce = Nonce.where(nonce: nonce).take
     emision = rnonce.created_at
 
@@ -45,11 +47,13 @@ class AutController < ApplicationController
       render json: { eror: "nonce expiró" }, status: :unauthorized
       return
     end
+    puts "OJO verificar_firma 2.5 emision.utc=#{emision.utc}"
 
     if request.origin != Rails.configuration.x.maq_cliente
       render json: { eror: "Diferencia en cliente esperado" }, status: :unauthorized
       return
     end
+    puts "OJO verificar_firma 3 request.origin=#{request.origin}"
 
 
     mensaje_esperado = formar_mensaje_siwe(
@@ -62,10 +66,12 @@ class AutController < ApplicationController
     )
 
     if mensaje != mensaje_esperado
-      debugger
+      puts "OJO mensaje=\n'#{mensaje}'"
+      puts "'#{mensaje_esperado}'\n=OJO mensajesperado"
       render json: { eror: "Problema con mensajes" }, status: :unauthorized
       return
     end
+    puts "OJO verificar_firma 4"
 
     es_valida = es_valida_firma_ethereum?(
       mensaje: mensaje_esperado,
@@ -74,6 +80,7 @@ class AutController < ApplicationController
       mensajeorig: mensaje
     )
 
+    puts "OJO verificar_firma 5 es_valida=#{es_valida}"
 
     if es_valida
       session[:direccion_usuario] = direccion

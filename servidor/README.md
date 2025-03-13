@@ -6,9 +6,21 @@ Sistema para planeación y seguimiento de actividades e informes en una ONG.
 
 
 ### Requerimientos
-* Ruby version >= 3.3
+* Ruby version >= 3.4
 * PostgreSQL >= 16.2 con extensión unaccent disponible
-* Recomendado sobre adJ 7.5 (que incluye todos los componentes mencionados).  Las siguientes instrucciones suponen que opera en este ambiente.
+* Recomendado sobre adJ 7.6 (que incluye todos los componentes mencionados).  Las siguientes instrucciones suponen que opera en este ambiente.
+
+Para añadir la gema rbsecp256k1 antes se recomienda:
+
+gemil securerandom openssl keccak scrypt
+
+        doas pkg_add autoconf
+y elegir 2.69x
+
+        doas pkg_add automake
+y elegir 1.16.x
+
+Tras eso desde el directorio `servidor`:
 
 
 ### Arquitectura
