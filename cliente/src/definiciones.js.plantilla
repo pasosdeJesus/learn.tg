@@ -1,6 +1,8 @@
 
-export const API_BUSCA_CURSOS_URL =
-    'https://learn.tg:9000/learntg-admin/proyectosfinancieros.json'
+export const API_BASE = 'https://localhost:9000/learntg-admin'
+export const API_BUSCA_CURSOS_URL = `${API_BASE}/proyectosfinancieros.json`
 export const API_PRESENTA_CURSO_URL =
-    'https://learn.tg:9000/learntg-admin/proyectosfinancieros/curso_id.json'
+  `${API_BASE}/proyectosfinancieros/curso_id.json`
+export const API_AUT_NONCE_URL = `${API_BASE}/aut/generar_nonce.json`
+export const API_AUT_VERIFICAR_URL = `${API_BASE}/aut/verificar_firma.json`
 
