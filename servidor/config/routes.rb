@@ -31,6 +31,11 @@ Rails.application.routes.draw do
   resources :cursos, path_names: {new: 'crear', edit: 'editar' },
     controller: 'cor1440_gen/proyectosfinancieros'
 
+  get 'aut/generar_nonce', to: 'aut#generar_nonce',
+    as: 'generar_nonce'
+  post 'aut/verificar_firma', to: 'aut#verificar_firma',
+    as: 'verificar_firma'
+
   root 'cor1440_gen/hogar#index'
 
   mount Msip::Engine, at: "/", as: 'msip'

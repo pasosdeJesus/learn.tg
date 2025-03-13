@@ -1,4 +1,10 @@
 import { reactive, computed } from 'vue'
+import { ethers } from 'ethers'
+
+import {
+  API_AUT_NONCE_URL,
+  API_AUT_VERIFICAR_URL,
+} from '../definiciones.js'
 
 // https://www.okx.com/es-la/web3/build/docs/sdks/chains/evm/web-detect-user-network
 const RED = {
@@ -50,6 +56,10 @@ export const conexion = reactive({
   enlaceCelular: ""
 })
 
+function presentarEspanol() {
+  return false
+  return navigator.languages.includes("es")
+}
 
 function manejarCambioDeRed(chainId) {
   console.log("Cambio de red", chainId)
@@ -68,24 +78,24 @@ export function actualizarConexion() {
   conexion.estadoBoton = "Ingresar"
   conexion.cuenta = ""
   conexion.red = ""
-  if (typeof okxwallet != "undefined" && 
-    typeof okxwallet.selectedAddress != "undefined" &&
-    okxwallet.selectedAddress != null) {
+  if (typeof ethereum != "undefined" &&
+    typeof ethereum.selectedAddress != "undefined" &&
+    ethereum.selectedAddress != null) {
     conexion.estadoBoton = "Desconectar"
-    let dir = okxwallet.selectedAddress
+    let dir = ethereum.selectedAddress
     let ab = `${dir.slice(2,6)}...${dir.slice(-4,-1)}`
     conexion.cuenta = `${ab}`
-    okxwallet.on('accountsChanged', manejarCambioDeCuenta);
-    if (typeof okxwallet.networkVersion != "undefined") {
-      console.log("networkVersion", okxwallet.networkVersion)
-      conexion.red = `Red: ${RED[okxwallet.networkVersion]}`
-      okxwallet.on('chainChanged', manejarCambioDeRed)
+    ethereum.on('accountsChanged', manejarCambioDeCuenta);
+    if (typeof ethereum.networkVersion != "undefined") {
+      console.log("networkVersion", ethereum.networkVersion)
+      conexion.red = `Red: ${RED[ethereum.networkVersion]}`
+      ethereum.on('chainChanged', manejarCambioDeRed)
     }
   }
 }
 
 
-export function conectar(event) {
+export async function conectar(event) {
   const ua = navigator.userAgent;
   const esIOS = /iphone|ipad|ipod|ios/i.test(ua);
   const esAndroid = /android|XiaoMi|MiuiBrowser/i.test(ua);
@@ -108,11 +118,53 @@ export function conectar(event) {
     conexion.cuenta = ""
     conexion.red = ""
   } else {
-    if (typeof okxwallet == "undefined") {
-      alert("Primero registrate en OKX como referido e instala la aplicación en tu celular o la extensión en tu navegador");
+    if (typeof window.ethereum == "undefined") {
+      let  msg = "Missing WEB3 wallet. We recommend that you register in OKX with our referral link and after that you install the OKX app in your mobile phone or the extension for your browser"
+      if (presentarEspanol()) {
+        msg = "Falta una billetera WEB3. Recomendamos que primero te registres en OKX como referido y después que instales la aplicación de OKX en tu celular o la extensión en tu navegador"
+      } 
+      alert(msg)
       return;
     }
-    okxwallet
+
+    const nonceR = await fetch(API_AUT_NONCE_URL)
+    const { nonce, emision } = await nonceR.json()
+
+    const proveedor = new ethers.BrowserProvider(window.ethereum)
+    const firmante = await proveedor.getSigner()
+    const direccion = await firmante.getAddress()
+
+    const mensaje = formarMensajeSiwe(
+      direccion,
+      nonce,
+      window.location.hostname,
+      window.location.origin,
+      'Ingreso a learn.tg',
+      emision
+    )
+
+    const firma = await firmante.signMessage(mensaje)
+    //const sig = ethers.Signature.from(firma);
+
+    const respuesta = await fetch(API_AUT_VERIFICAR_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ direccion, firma, mensaje, nonce }),
+    })
+
+    if (respuesta.ok) {
+      const dir = await respuesta.text()
+      console.log(`dir: ${dir}`)
+      console.log("¡Autenticado!")
+      actualizarConexion()
+    } else {
+      console.log("Fallo autenticacion")
+    }
+
+    return
+    ethereum
       .request({ method: "eth_requestAccounts" })
       .then((cuentas) => {
         console.log("eth_requestAccounts dio", cuentas)
@@ -133,17 +185,35 @@ export function conectar(event) {
   }
 }
 
+export function formarMensajeSiwe(
+  direccion, nonce, dominio, uri, declaracion, emision
+) {
+  return `${dominio} quiere que ingrese con su cuenta X Layer:
+${direccion}
+
+${declaracion}
+
+URI: ${uri}
+Version: 1
+Chain ID: 196
+Nonce: ${nonce}
+Emisión: ${emision}
+`
+}
+
 export function desconectar(event) {
-  okxwallet
-    .disconnect()
-    .then((res) => {
-      okxwallet.removeListener('accountsChanged', manejarCambioDeCuenta);
-      okxwallet.removeListener('chainChanged', manejarCambioDeRed);
-      actualizarConexion()
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+  if (typeof okxwallet != "undefined") {
+    okxwallet
+      .disconnect()
+      .then((res) => {
+        ethereum.removeListener('accountsChanged', manejarCambioDeCuenta);
+        ethereum.removeListener('chainChanged', manejarCambioDeRed);
+        actualizarConexion()
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }
 }
 
 export const estadoBoton = computed(() => {
@@ -162,9 +232,33 @@ export const red = computed(() => {
 
 export async function cambiarXLayer(event) {
     try {
-      console.log(okxwallet.chainId)
+      console.log(ethereum.chainId)
       const chainId = "0xc4"; // X Layer
-      await okxwallet.request({
+      await ethereum.request({
+         "method": "wallet_addEthereumChain",
+         "params": [
+             {
+                   chainId: "0xc4",
+                   chainName: "X Layer mainnet",
+                   rpcUrls: [
+                           "https://rpc.xlayer.tech"
+                         ],
+                   iconUrls: [
+                           "https://xdaichain.com/fake/example/url/xdai.svg",
+                           "https://xdaichain.com/fake/example/url/xdai.png"
+                         ],
+                   nativeCurrency: {
+                           name: "OKB",
+                           symbol: "OKB",
+                           decimals: 18
+                         },
+                   blockExplorerUrls: [
+                           "https://www.okx.com/web3/explorer/xlayer"
+                         ]
+                 }
+         ],
+      });
+      await ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: chainId }]
       });
@@ -174,7 +268,7 @@ export async function cambiarXLayer(event) {
       console.log("switchError.code=", switchError.code)
       if (switchError.code === 4902) {
         try {
-          await okxwallet.request({
+          await ethereum.request({
             method: "wallet_addEthereumChain",
             params: [{ chainId: "0xf00", rpcUrl: "https://..."
         /* ... */ }]
@@ -188,12 +282,12 @@ export async function cambiarXLayer(event) {
   }
 
 export async function pagarOKB(event) {
-  okxwallet
+  ethereum
     .request({
       method: 'eth_sendTransaction',
       params: [
         {
-          from: okxwallet.selectedAddress,
+          from: ethereum.selectedAddress,
           to: '0x2e2c4ac19c93d0984840cdd8e7f77500e2ef978e',
           value: '0x3782dace9d90000', // 0.25okb=25x10^16wei
           gasPrice: '0x09184e72a000',
@@ -207,12 +301,12 @@ export async function pagarOKB(event) {
 
 export async function pagarUSDT(event) {
   // https://ethereum.stackexchange.com/questions/66345/how-to-use-sendtransaction-to-send-erc20-tokens-through-metamask
-  okxwallet
+  ethereum
     .request({
       method: 'eth_sendTransaction',
       params: [
         {
-          from: okxwallet.selectedAddress,
+          from: ethereum.selectedAddress,
           to: '0x2e2c4ac19c93d0984840cdd8e7f77500e2ef978e',
           value: '0x3782dace9d90000', // 0.25okb=25x10^16wei
           gasPrice: '0x09184e72a000',

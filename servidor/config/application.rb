@@ -70,7 +70,9 @@ module Cor1440
     config.x.cor1440_permisos_por_oficina = 
       (ENV['COR1440_PERMISOS_POR_OFICINA'] && ENV['COR1440_PERMISOS_POR_OFICINA'] != '')
 
+    config.x.maq_cliente = ENV.fetch('MAQ_CLIENTE')
 
+    config.forgery_protection_origin_check = false
   end
 end
 

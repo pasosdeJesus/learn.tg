@@ -133,3 +133,13 @@ gem "redis", "~> 5.2"
 
 gem "jwt_sessions", "~> 3.2"
 
+
+gem "ecdsa", "~> 1.2"
+
+gem "eth", "~> 0.5.13"
+
+gem "securerandom", "~> 0.4.1"
+
+gem "openssl", "~> 3.3"
+
+gem "rbsecp256k1", "~> 6.0"

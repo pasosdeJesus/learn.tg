@@ -11,6 +11,7 @@
   "dependencies": {
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.9",
+    "ethers": "^6.13.5",
     "mdast-builder": "^1.1.1",
     "rehype-stringify": "^10.0.1",
     "remark-directive": "^3.0.0",

@@ -4563,6 +4563,37 @@ ALTER SEQUENCE public.msip_vereda_id_seq OWNED BY public.msip_vereda.id;
 
 
 --
+-- Name: nonce; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.nonce (
+    id bigint NOT NULL,
+    nonce character varying(32),
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: nonce_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.nonce_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: nonce_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.nonce_id_seq OWNED BY public.nonce.id;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5132,6 +5163,13 @@ ALTER TABLE ONLY public.msip_ubicacionpre ALTER COLUMN id SET DEFAULT nextval('p
 --
 
 ALTER TABLE ONLY public.msip_vereda ALTER COLUMN id SET DEFAULT nextval('public.msip_vereda_id_seq'::regclass);
+
+
+--
+-- Name: nonce id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.nonce ALTER COLUMN id SET DEFAULT nextval('public.nonce_id_seq'::regclass);
 
 
 --
@@ -5951,6 +5989,14 @@ ALTER TABLE ONLY public.msip_vereda
 
 
 --
+-- Name: nonce nonce_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.nonce
+    ADD CONSTRAINT nonce_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: cor1440_gen_rangoedadac rangoedadac_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6140,6 +6186,13 @@ CREATE INDEX index_msip_ubicacion_on_pais_id ON public.msip_ubicacion USING btre
 --
 
 CREATE INDEX index_msip_ubicacionpre_on_vereda_id ON public.msip_ubicacionpre USING btree (vereda_id);
+
+
+--
+-- Name: index_nonce_on_nonce; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_nonce_on_nonce ON public.nonce USING btree (nonce);
 
 
 --
@@ -7660,6 +7713,7 @@ ALTER TABLE ONLY public.usuario
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250312193025'),
 ('20250128142614'),
 ('20250128092632'),
 ('20250126220001'),
