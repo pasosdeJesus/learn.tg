@@ -10,7 +10,7 @@
 
   import Encabezado from '../components/Encabezado.vue'
   import PieDePagina from '../components/PieDePagina.vue'
-  //import { estadoBoton } from '../lib/conexion.js'
+  import { estadoBoton } from '../lib/conexion.js'
   //import { cursos } from '../definiciones' 
 
   const cursosj = ref([])
@@ -18,8 +18,14 @@
 
 
   const configurar = async () => {
-      isMounted.value = true;
-      axios.get(API_BUSCA_CURSOS_URL)
+      isMounted.value = true
+      console.log(estadoBoton)
+      let url = API_BUSCA_CURSOS_URL
+      if (estadoBoton.value == 'Desconectar') {
+        url += "?proyectofinanciero[conBilletera]=true"
+      }
+
+      axios.get(url)
         .then(response => {
           if (response.data) {
             cursosj.value = response.data;

@@ -21,7 +21,7 @@ class Ability  < Cor1440Gen::Ability
       Msip::Municipio, 
       Msip::Centropoblado
     ])
-    can(:read, Cor1440Gen::Proyectofinanciero, {sinBilletera: true})
+    can(:read, Cor1440Gen::Proyectofinanciero)
 
     if !usuario || usuario.fechadeshabilitacion
       return

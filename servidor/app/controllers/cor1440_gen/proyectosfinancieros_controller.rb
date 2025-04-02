@@ -81,6 +81,13 @@ module Cor1440Gen
     end
 
     def index(c = nil)
+      c = Cor1440Gen::Proyectofinanciero.all
+      if !params || !params[:proyectofinanciero] ||
+          !params[:proyectofinanciero][:conBilletera] || 
+          params[:proyectofinanciero][:conBilletera] != "true"
+        c = c.where(sinBilletera: true)
+      end
+
       index_cor1440_gen(c)
       super(c)
     end
