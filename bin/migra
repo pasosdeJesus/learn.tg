@@ -1,0 +1,11 @@
+#!/bin/sh
+
+cd servidor
+bin/migra
+if (test "$?" != "0") then {
+  exit 1;
+} fi;
+
+cd ../cliente
+make
+

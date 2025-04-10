@@ -42,10 +42,11 @@
     await configurar()
   })
 
-  watchEffect(() => {
+  watchEffect(async () => {
     if (isMounted.value) {
       // Code to be executed on page refresh
       console.log('Page refreshed!');
+      await configurar()
       // Fetch data here
     }
   });

@@ -112,14 +112,34 @@ El siguiente video presenta el procedimiento
 7. Presiona `Canjear`
 8. Presiona `Confirmar`
 
-
-
-
 ## 4. Cambia los USDT por pesos
 
 El proceso para cambiar USDT que tienes en OKX ...
 
+## 5. Cambia USDT por USDC (o por otro criptoactivo)
 
-## 5. Obtén 7.5% de interés anual en tus ahorros usando USDC
+
+Suponiendo que tengas USDT en tu cuenta de fondos.
+
+[![Video de como cambiar USDT por USDC en OKX](https://img.youtube.com/vi/FYVNBlm6qkU/0.jpg)](https://www.youtube.com/embed/FYVNBlm6qkU)
+
+
+1. Presiona la pestaña `Activos` para pasar USDT de tu cuenta de Fondos a
+   tu cuenta Trading.
+2. Presiona `Transferir` y elige Desde `Fondos` A `Trading`.
+3. Digita la cantidad de USDT y presiona el botón Transferir
+4. Presiona la pestaña `Trading`
+5. En la parte superior cambia el par de trading para que sea `USDC/USDT`
+6. Elije el tipo de orden, lal más rápido y directa es `Orden de mercado`
+   que hará el cambio al precio del mercado --por ejemplo
+   `Orden limite` esperará hasta que se logre el precio que propongas, 
+   si es que el mercado llega a ese precio o hasta que canceles la orden.
+7. Digita o desliza el control con la cantidad d USDT que vas a cambiar
+8. Presiona `Comprar USDC`. Los USDC (menos el descuento por trading que 
+   hace OKX) quedará en la cuenta de trading.
+9. Pasa los USDC a la cuenta de Fondos desde la pestaña `Activos` eligiendo
+   `Transferir`
+
+## 6. Obtén 7.5% de interés anual en tus ahorros usando USDC
 
 
