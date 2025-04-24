@@ -114,9 +114,28 @@ El siguiente video presenta el procedimiento
 
 ## 4. Cambia los USDT por pesos
 
-El proceso para cambiar USDT que tienes en OKX ...
 
-## 5. Cambia USDT por USDC (o por otro criptoactivo)
+[![Video de como cambiar USDT por USDC en OKX](https://img.youtube.com/vi/tCxULERRvNE/0.jpg)](https://www.youtube.com/embed/tCxULERRvNE)
+
+1. Desde la pantalla principal de OKX presiona `Trading P2P`
+2. Pasa a anuncios de venta de USDT presionando sobre la pestaña `Vender`
+3. Elije un comerciante con: buen precio, tu mismo medio de pago, buena
+   reputación (comerciantes super o diamante), límites acorde a cuanto
+   quieres vender y el menor tiempo para liberar; y presiona su botón `Vender`.
+4. En el nuevo formulario ingresa el valor y el medio d pago y presiona 
+   `Vender USDT sin comisiones` y confirma incluso con el método de 
+   verificación que tengas configurado.
+5. Una vez creada la orden puedes presionar Chat para saludar y si el caso
+   preguntar al comerciante sobre el estado del pago.
+6. Una vez el comerciante informe que hizo el pago ingresa a tu medio de pago
+   (e.g Nequi) y comprueba que te haya llegado la cantidad esperada y del
+   comerciante mismo.  Si no recibes el valor correcto o recibes d otra
+   persona habla con el comerciante y si no logran resolver inicia una
+   disputa.
+7. Tras verificar libera los USDT presionando el botón `Liberar cripto`
+
+
+## 5. Has trading de USDT por USDC (o por otro criptoactivo)
 
 
 Suponiendo que tengas USDT en tu cuenta de fondos.
@@ -140,6 +159,8 @@ Suponiendo que tengas USDT en tu cuenta de fondos.
 9. Pasa los USDC a la cuenta de Fondos desde la pestaña `Activos` eligiendo
    `Transferir`
 
-## 6. Obtén 7.5% de interés anual en tus ahorros usando USDC
 
+Es riesgoso el trading con cripto-activos que no son estabales 
+(como Bitcoin, Ethereum y otros que no están pegados al oro o a una 
+moneda estable).
 
