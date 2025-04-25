@@ -31,17 +31,17 @@ Lazarus")
 
 ## Reading comprehension. 
 
-* Who had died?
-* Have you ever been comforted by someone when you are facing a hopeless 
+1. Who had died?
+2. Have you ever been comforted by someone when you are facing a hopeless 
   situation?
-* According to the reading, who goes out to meet Jesus?
-* What is Jesus' response in verse 23?
-* What is Martha's response in verse 26?
-* **Complete the sentence**: Jesus said to him: I am the resurrection and 
+3. According to the reading, who goes out to meet Jesus?
+4. What is Jesus' response in verse 23?
+5. What is Martha's response in verse 26?
+6. **Complete the sentence**: Jesus said to him: I am the resurrection and 
   the life; the one who believes in me, even though he is dead _________
-* What is Jesus' response in verse 25?
-* What was the approximate distance between Bethany and Jerusalem?
-* What is the city where Maria lives according to the information 
+7. What is Jesus' response in verse 25?
+8. What was the approximate distance between Bethany and Jerusalem?
+9. What is the city where Maria lives according to the information 
   provided in the text?
 
 ## Reflection

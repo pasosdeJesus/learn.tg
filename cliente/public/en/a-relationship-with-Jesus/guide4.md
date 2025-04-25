@@ -54,15 +54,15 @@
 
 ## Reading comprehension
 
-* Who spoke to Philip in verse 26?
-* What is the name of the Queen of eunuchs?
-* According to the text which prophet was reading the eunuch?
-* What does the Spirit say to Philip in verse 29?
-* According to the text of which person does the prophecy speak?
-* Complete the sentence: do you understand what _________?
-* What is the eunuch's response in verse 31?
-* Was the eunuch baptized?
-* Who snatched Philip in verse 39?
+1. Who spoke to Philip in verse 26?
+2. What is the name of the Queen of eunuchs?
+3. According to the text which prophet was reading the eunuch?
+4. What does the Spirit say to Philip in verse 29?
+5. According to the text of which person does the prophecy speak?
+6. Complete the sentence: do you understand what _________?
+7. What is the eunuch's response in verse 31?
+8. Was the eunuch baptized?
+9. Who snatched Philip in verse 39?
 
 ## Reflection
 

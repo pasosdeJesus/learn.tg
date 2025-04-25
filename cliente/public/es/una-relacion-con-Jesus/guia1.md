@@ -27,21 +27,21 @@ caminando sobre el lago")
 
 ## 1. Comprensión de lectura.
 
-* Dos paisajes mencionados en esta lectura: ____ y ____
-* ¿Adónde envió Jesús a sus discípulos? ____ ¿Obedecieron? ____
-* ¿Qué fue a hacer Jesús solo después de despedir a la gente y a sus 
+1. Dos paisajes mencionados en esta lectura: ____ y ____
+2. ¿Adónde envió Jesús a sus discípulos? ____ ¿Obedecieron? ____
+3. ¿Qué fue a hacer Jesús solo después de despedir a la gente y a sus 
   discípulos?  ____
-* La cuarta vigilia de la noche significa de 3AM a 6AM, suponiendo que fueran
+4. La cuarta vigilia de la noche significa de 3AM a 6AM, suponiendo que fueran
   las 3:00 AM cuando Jesús quiso partir y que envió a sus discípulos a Betsaida a
   las 6:00 PM, ¿cuánto tiempo estuvieron remando sus discípulos? ___
-* Al ver a sus discípulos angustiados, Jesús se acercó a la barca donde estaban
+5. Al ver a sus discípulos angustiados, Jesús se acercó a la barca donde estaban
   ____ sobre el ____
-* Los discípulos gritaron porque pensaron que el que caminaba sobre el lago era
+6. Los discípulos gritaron porque pensaron que el que caminaba sobre el lago era
   un ____
-* Como los discípulos se asustaron, Jesús les dijo: “¡Ánimo! 
+7. Como los discípulos se asustaron, Jesús les dijo: “¡Ánimo! 
   ¡Soy yo! ____ ____  ____
-* Entonces Jesús subió a la barca con ellos y además el viento ____
-* Si lees el pasaje anterior a este en la Biblia, se trata de la 
+8. Entonces Jesús subió a la barca con ellos y además el viento ____
+9. Si lees el pasaje anterior a este en la Biblia, se trata de la 
   multiplicación milagros del pan, los discípulos no podían entender eso 
   y sus corazones estaban ____
 

@@ -56,17 +56,17 @@
 
 ## Reading comprehension. 
 
-* Who are the characters in the story?
-* According to verse 4 what is the region through which Jesus has yet to pass?
-* According to verse 7, who comes to the well to draw water?
-* What favor does Jesus ask of the woman?
-* What does Jesus say to the woman in verse 14?
-* According to verse 19 what does the woman call Jesus?
-* Complete the sentence: will the true worshipers worship the father in 
+1. Who are the characters in the story?
+2. According to verse 4 what is the region through which Jesus has yet to pass?
+3. According to verse 7, who comes to the well to draw water?
+4. What favor does Jesus ask of the woman?
+5. What does Jesus say to the woman in verse 14?
+6. According to verse 19 what does the woman call Jesus?
+7. Complete the sentence: will the true worshipers worship the father in 
   spirit and in _________?
-* Who will declare all things to the woman according to verse 25?
-* Who is the woman calling father in verse 12?
-* Complete the sentence: I am the one speaking __ ___ I am he.
+8. Who will declare all things to the woman according to verse 25?
+9. Who is the woman calling father in verse 12?
+10. Complete the sentence: I am the one speaking __ ___ I am he.
 
 ## Reflection
 

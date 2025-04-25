@@ -25,20 +25,20 @@ walking on teh sea")
 
 ## Reading comprehension.
 
-* Two landscapes mentioned in this reading: ____ and ____
-* Where did Jesus sent His disciples? ____
-* What Jesus went to do alone after sending away people and his disciples?
-* The fourth watch of the night means from 3AM to 6AM, supposing it was 3AM
+1. Two landscapes mentioned in this reading: ____ and ____
+2. Where did Jesus sent His disciples? ____
+3. What Jesus went to do alone after sending away people and his disciples?
+4. The fourth watch of the night means from 3AM to 6AM, supposing it was 3AM
   when Jesus departed and that He had sent His disciples to Bethsaida the
   previous day at 6PM, how long were his disciples rowing?
-* Seeing His disciples distress Jesus came close to the boat where they were
+5. Seeing His disciples distress Jesus came close to the boat where they were
   by ____ on the ____
-* The disciples cried because they thought that the one walking on the lake
+6. The disciples cried because they thought that the one walking on the lake
   was a ____
-* As soon as the disciples got scared Jesus told them “Cheer up! Its i I!
+7. As soon as the disciples got scared Jesus told them “Cheer up! Its i I!
   ____  ____  ____”
-* Then Jesus went into the boat with them the wind ____
-* If you read the passage before this one in the Bible, it is about the
+8. Then Jesus went into the boat with them the wind ____
+9. If you read the passage before this one in the Bible, it is about the
   miraculous sharing of bread, the disciples couldn’t understand
   that and their hearts were ____
 

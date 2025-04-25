@@ -42,16 +42,16 @@ de Felipe bautizando al Eunuco")
 
 ## 1. Comprensión de lectura
 
-* ¿Cuáles son los personajes de la historia ?
-* ¿Quién habló a Felipe en el verso 26?  
-* ¿Cual es el nombre de la Reina del eunuco?
-* ¿De acuerdo con el texto que profeta estaba leyendo el eunuco?
-* ¿Qué le dice el Espíritu a Felipe en el verso 29?
-* ¿De acuerdo con el texto de qué persona habla la profecía? 
-* Completa la frase:  ¿entiendes lo que _________?
-* ¿Cuál es la respuesta del eunuco en el versículo 31?
-* ¿Fue el eunuco bautizado?
-* ¿Quién arrebató a Felipe en el verso 39 ?
+1. ¿Cuáles son los personajes de la historia ?
+2. ¿Quién habló a Felipe en el verso 26?  
+3. ¿Cual es el nombre de la Reina del eunuco?
+4. ¿De acuerdo con el texto que profeta estaba leyendo el eunuco?
+5. ¿Qué le dice el Espíritu a Felipe en el verso 29?
+6. ¿De acuerdo con el texto de qué persona habla la profecía? 
+7. Completa la frase:  ¿entiendes lo que _________?
+8. ¿Cuál es la respuesta del eunuco en el versículo 31?
+9. ¿Fue el eunuco bautizado?
+10. ¿Quién arrebató a Felipe en el verso 39 ?
 
 ## 2. Reflexión
 
