@@ -31,16 +31,17 @@
 
 ## 1. Comprensión de lectura
 
-1. ¿Cuáles son los personajes de la historia ?
-2. ¿Quién había muerto?
-3. ¿Has sido consolado alguna vez por alguien cuando enfrentas una situación de desesperanza?
-4. ¿De acuerdo con la lectura  quién sale al encuentro con Jesús?
-5. ¿Cual es la respuesta de Jesús en el versículo 23?
-6. ¿Cuál es la respuesta de Marta en el versículo 26?
-7. **_Completa la frase_**:  Le dijo Jesús: Yo soy la resurrección y la vida; el que cree en mí, aunque esté muerto _________
-8. ¿Cuál es la respuesta de Jesús en el versículo 25?
-9. ¿Cuál era la distancia aproximada entre Betania y Jerusalén?
-10. ¿Cuál es la ciudad en la que vive Maria de acuerdo con la información que proporciona el texto?
+1. ¿Quién había muerto? ___
+2. ¿Has sido consolado alguna vez por alguien cuando enfrentas una situación de desesperanza?
+3. ¿De acuerdo con la lectura  quién sale al encuentro con Jesús? ___
+4. Completa la respuesta de Jesús en el versículo 23: Tu hermano ___
+5. Completa la respuesta de Jesús en el versículo 24: Yo sé que resucitará 
+   en la resurrección, en el ___ ___
+6. Completa: Yo soy la resurrección y la vida; el que cree en mí,
+  aunque esté muerto, ___
+7. ¿Cuál era la distancia aproximada en estadios entre Betania y Jerusalén? ___
+10. Sabiendo que Jesús estaba en Jerusalén antes de visitar a María,
+    Marta y Lazaro, ¿en que ciudad vivían María, Martha y Lazaro? ___
 
 ## Reflexión
 
