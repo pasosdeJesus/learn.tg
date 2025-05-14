@@ -40,7 +40,7 @@
 6. Completa: Yo soy la resurrección y la vida; el que cree en mí,
   aunque esté muerto, ___
 7. ¿Cuál era la distancia aproximada en estadios entre Betania y Jerusalén? ___
-10. Sabiendo que Jesús estaba en Jerusalén antes de visitar a María,
+8. Sabiendo que Jesús estaba en Jerusalén antes de visitar a María,
     Marta y Lazaro, ¿en que ciudad vivían María, Martha y Lazaro? ___
 
 ## Reflexión

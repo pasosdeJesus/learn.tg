@@ -27,8 +27,8 @@ caminando sobre el lago")
 
 ## 1. Comprensión de lectura.
 
-1. Dos paisajes mencionados en esta lectura: ____ y ____
-2. ¿Adónde envió Jesús a sus discípulos? ____ ¿Obedecieron? ____
+1. Dos paisajes mencionados en esta lectura: ___ y ___
+2. ¿Adónde envió Jesús a sus discípulos? ___ 
 3. ¿Qué fue a hacer Jesús solo después de despedir a la gente y a sus 
   discípulos?  ____
 4. La cuarta vigilia de la noche significa de 3AM a 6AM, suponiendo que fueran
