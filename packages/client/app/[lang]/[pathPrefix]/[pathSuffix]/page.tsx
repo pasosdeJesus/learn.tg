@@ -27,7 +27,7 @@ export default function Page({params} : {
   })
   const [guideNumber, setGuideNumber] = useState(0);
   const [myGuide, setMyGuide] = useState({
-    title: "",
+    titulo: "",
   });
   const [coursePath, setCoursePath] = useState("")
   const [nextGuidePath, setNextGuidePath] = useState("")
@@ -71,21 +71,23 @@ export default function Page({params} : {
 
                 setMyCourse(dcurso)
 
+                let gnumber = 0
                 for(let g=0; g < dcurso.guias.length; g++) {
                   if (dcurso.guias[g].sufijoRuta == (pathSuffix)) {
                     setGuideNumber(g + 1);
+                    gnumber = g + 1
                     setMyGuide(dcurso.guias[g])
                   }
                 }
 
-                if (guideNumber > 1) {
-                  let ga = dcurso.guias[guideNumber - 2]
+                if (gnumber > 1) {
+                  let ga = dcurso.guias[gnumber - 2]
                   setPreviousGuidePath("/" + dcurso.idioma +
                     dcurso.pathPrefix + "/" + ga.sufijoRuta)
                 }
 
-                if (guideNumber < dcurso.guias.length) {
-                  let gs = dcurso.guias[guideNumber]
+                if (gnumber < dcurso.guias.length) {
+                  let gs = dcurso.guias[gnumber]
                   setNextGuidePath("/" + dcurso.idioma +
                     dcurso.pathPrefix + "/" + gs.sufijoRuta)
                 }
@@ -176,12 +178,6 @@ export default function Page({params} : {
     return html_con_tailwind
   }
 
-  let htmlDecode = (input: string) => {
-    var e = document.createElement('div');
-    e.innerHTML = `<div>${input}</div>`;
-    return e.childNodes.length === 0 ? "" : e.childNodes[0].getHTML();
-  }
-
 
   return (
     <div>
@@ -198,7 +194,7 @@ export default function Page({params} : {
       <span>{guideNumber}</span>: {myGuide.titulo}
     </h1>
     { isClient && 
-      <div className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside **:list-disc" dangerouslySetInnerHTML={{ __html: htmlDecode(guideHtml) }} />
+      <div className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside **:list-disc" dangerouslySetInnerHTML={{ __html: guideHtml }} />
     }
     { creditsHtml != '' && (
       <div>

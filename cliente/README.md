@@ -1,5 +1,5 @@
 
-# Correr aplicación de prueba
+# Run test application
 
 ```
 npm i

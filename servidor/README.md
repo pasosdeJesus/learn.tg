@@ -1,26 +1,35 @@
 # learn.tg
 
-[![Revisado por Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com) Pruebas y seguridad:[![Estado Construcción](https://gitlab.com/pasosdeJesus/learntg/badges/main/pipeline.svg)](https://gitlab.com/pasosdeJesus/learntg/-/pipelines?page=1&scope=all&ref=main) [![Clima del Código](https://codeclimate.com/github/pasosdeJesus/learntg/badges/gpa.svg)](https://codeclimate.com/github/pasosdeJesus/learntg) [![Cobertura de Pruebas](https://codeclimate.com/github/pasosdeJesus/learntg/badges/coverage.svg)](https://codeclimate.com/github/pasosdeJesus/learntg)
+[![Revisado por Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com) Pruebas y seguridad:[![Estado Construcción](https://gitlab.com/pasosdeJesus/learn.tg/badges/main/pipeline.svg)](https://gitlab.com/pasosdeJesus/learn.tg/-/pipelines?page=1&scope=all&ref=main) [![Clima del Código](https://codeclimate.com/github/pasosdeJesus/learn.tg/badges/gpa.svg)](https://codeclimate.com/github/pasosdeJesus/learn.tg) [![Cobertura de Pruebas](https://codeclimate.com/github/pasosdeJesus/learn.tg/badges/coverage.svg)](https://codeclimate.com/github/pasosdeJesus/learn.tg)
 
-Sistema para planeación y seguimiento de actividades e informes en una ONG.
+Manage courses.
 
 
 ### Requerimientos
 * Ruby version >= 3.4
-* PostgreSQL >= 16.2 con extensión unaccent disponible
-* Recomendado sobre adJ 7.6 (que incluye todos los componentes mencionados).  Las siguientes instrucciones suponen que opera en este ambiente.
+* PostgreSQL >= 16.2 with extension unaccent 
+* We suggest to run on adJ 7.6 (that includes all the components mentioned).
+  The following instructions suppose that you are working on that environment.
 
-Para añadir la gema rbsecp256k1 antes se recomienda:
+To add the gem `rbsecp256k1`, we suggest:
 
-gemil securerandom openssl keccak scrypt
+1. Install other gems that it will require
+
+        doas gem install --install-dir /var/www/bundler/ruby/3.4 securerandom openssl keccak scrypt
+
+2. Install `autoconf`:
 
         doas pkg_add autoconf
-y elegir 2.69x
+    and choose 2.69x
+
+3. Install `automake`:
 
         doas pkg_add automake
-y elegir 1.16.x
+  and choose 1.16.x
 
-Tras eso desde el directorio `servidor`:
+4. And then `rbsecp256k1` with the correct environment variables:
+
+        AUTOMAKE_VERSION=1.16 AUTOCONF_VERSION=2.69 doas gem install --install-dir /var/www/bundler/ruby/3.4 rbsecp256k1
 
 
 ### Arquitectura
@@ -30,8 +39,34 @@ Ver https://github.com/pasosdeJesus/msip
 y el motor cor1440_gen ver https://github.com/pasosdeJesus/cor1440_gen entre
 otros.
 
-## Uso
+## Run a development instance
 
-Por favor vea las instrucciones de sivel2 pues es muy similar:
-https://github.com/pasosdeJesus/sivel2
+Generate a certificate to run in TLS. Private key and public key should be at:
+`../cert/llave.pem` ../.cert/cert.pem
+
+The list of certification authorities is expected at `/etc/ssl/cert.pem` you
+could set a different location by replacing it in `IPDES`
+
+Configure environment variables:
+
+        cp .env.plantilla .env
+
+Change at least:
+1. Variables for the PostgreSQL engine: `BD_SERVIDOR`, `BD_USUARIO`, `BD_CLAVE`, 
+2. Name of databases development `BD_DES`, test `BD_PRUEBA` and 
+   production `BD_PRO`
+3. Path to the sources in `DIRAP`
+
+And then run:
+
+./bin/corre
+
+To stop it, from another terminal you could run: `./bin/detiene`
+
+Once started, with a browser check https://127.0.0.1:3000/learntg-admin
+
+You can login with the default user cor1440 and password cor1440.
+
+
+
 
