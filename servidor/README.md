@@ -57,9 +57,36 @@ Change at least:
    production `BD_PRO`
 3. Path to the sources in `DIRAP`
 
-And then run:
+Create the user for the database that you specified in `BD_USUARIO`, for example `learntg` with:
 
+```sh
+doas su - _postgresql
+createuser -h /var/www/var/run/postgresql -U postgres -s learntg
+psql -h /var/www/var/run/postgresql -U postgres learntg
+> alter user learntg with password 'mypassword';
+> \e
+exit
+```
+
+And add the password for the user `learntg` at `~/.pgpass` with a line like:
+```
+*:*:*:learntg:mypassword
+```
+
+Create the database that you specified in `BD_DES` (for example `learntg_des`) with something like:
+```sh
+createdb -U learntg -h /var/www/var/run/postgresql learntg_des
+```
+
+Create the schema and the initial data (seed) with:
+```sh
+bin/rails db:drop db:create db:setup db:seed msip:indices
+```
+
+And then run the development server with:
+```sh
 ./bin/corre
+```
 
 To stop it, from another terminal you could run: `./bin/detiene`
 
