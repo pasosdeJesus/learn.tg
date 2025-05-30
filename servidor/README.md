@@ -92,7 +92,7 @@ To stop it, from another terminal you could run: `./bin/detiene`
 
 Once started, with a browser check https://127.0.0.1:3000/learntg-admin
 
-You can login with the default user cor1440 and password cor1440.
+You can login with the default user `cor1440` and password `cor1440`.
 
 
 
