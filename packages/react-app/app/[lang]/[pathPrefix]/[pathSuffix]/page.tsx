@@ -201,9 +201,8 @@ export default function Page({params} : {
         <h2 className="px-16 text-1xl font-bold md:text-1xl">
           { myCourse.idioma == 'en' ? "Credits" : "Créditos" }
         </h2>
-        <div className="py-3 px-16 text-1xl md:text-1xl text-justify">
-          {creditsHtml}
-        </div>
+        <div className="py-3 px-16 text-1xl md:text-1xl text-justify"
+          dangerouslySetInnerHTML={{ __html: creditsHtml }} />
       </div>
     )}
 

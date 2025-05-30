@@ -1,0 +1,74 @@
+"use client"
+
+import axios from 'axios';
+import {use, useEffect, useState} from "react"
+import { useWeb3 } from "@/contexts/useWeb3";
+
+export default async function Home({params} : {
+  params: Promise<{
+    lang:string,
+  }>
+}) {
+  const { lang } = await params
+
+  const {
+    address,
+    getShortAddress,
+    getUserAddress,
+    sendCUSD,
+    signTransaction,
+  } = useWeb3();
+
+  const [cursosj, setCursosj] = useState<any[]>([])
+
+  useEffect(() => {
+    const configurar = async () => {
+      if (process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL == undefined) {
+        alert("NEXT_PUBLIC_API_BUSCA_CURSOS_URL not defined")
+        return
+      }
+      let url = process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL
+      if (address) {
+        url += `?proyectofinanciero[conBilletera]=true&proyectofinanciero[idioma]=${lang}`
+      }
+
+      axios.get(url)
+      .then(response => {
+        if (response.data) {
+          setCursosj(response.data);
+        }
+      })
+      .catch(error => {
+        alert(error)
+        console.error(error);
+      })
+
+    }
+    configurar()
+  }, [])
+
+
+  return (
+  <div className="overflow-x-hidden py-8 dark:bg-gray-100 dark:text-gray-900">
+    <div className="overflow-x-hidden py-1 dark:bg-gray-100 dark:text-gray-900 flex flex-row flex-wrap justify-center mt-2">
+      <>
+      {cursosj.map((curso) => (
+        <div  className="flex flex-col justify-center w-full px-8 mx-6 my-12 py-9
+              text-center rounded-md md:w-96 lg:w-80 xl:w-65 bg-gray-300
+              dark:text-gray-900">
+          <a href="/{curso.idioma}{curso.prefijoRuta}">
+            <div className="img-curso">
+              <img className="w-[100%] h-[17rem] pt-2 object-cover" src={curso.imagen}/>
+            </div>
+            <div>
+              <div className="text-xl py-2 font-bold">{curso.titulo}</div>
+              <div className="w-[90%] text-justify">{curso.subtitulo}</div>
+            </div>
+          </a>
+        </div>
+      ))}
+      </>
+    </div>
+  </div>
+  )
+}

@@ -89,6 +89,9 @@ importers:
       eslint-config-next:
         specifier: 15.3.2
         version: 15.3.2(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3)
+      postcss:
+        specifier: ^8.5.4
+        version: 8.5.4
       tailwindcss:
         specifier: ^4.1.5
         version: 4.1.5
@@ -602,8 +605,8 @@ packages:
   '@tailwindcss/node@4.1.5':
     resolution: {integrity: sha512-CBhSWo0vLnWhXIvpD0qsPephiaUYfHUX3U9anwDaHZAeuGpTiB3XmsxPAN6qX7bFhipyGBqOa1QYQVVhkOUGxg==}
 
-  '@tailwindcss/oxide-wasm32-wasi@4.1.6':
-    resolution: {integrity: sha512-qAp4ooTYrBQ5pk5jgg54/U1rCJ/9FLYOkkQ/nTE+bVMseMfB6O7J8zb19YTpWuu4UdfRf5zzOrNKfl6T64MNrQ==}
+  '@tailwindcss/oxide-wasm32-wasi@4.1.8':
+    resolution: {integrity: sha512-CXBPVFkpDjM67sS1psWohZ6g/2/cd+cq56vPxK4JeawelxwK4YECgl9Y9TjkE2qfF+9/s1tHHJqrC4SS6cVvSg==}
     engines: {node: '>=14.0.0'}
     cpu: [wasm32]
     bundledDependencies:
@@ -2078,8 +2081,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  lightningcss-wasm@1.30.0:
-    resolution: {integrity: sha512-6Ym1ok5uwkXh4gkWupJNAfXj7T9NygtIH4OH4hWnkRkEpV+SJHcZh78GwcKrgORFll1NyW59nlPV5woolnj7Kg==}
+  lightningcss-wasm@1.30.1:
+    resolution: {integrity: sha512-KJTnKEn0REV6DoJzxG0m5EKVEFA1CVE1isDYpXjsuqWXwLKFPJtA9Z9BSzPZJwAZFN2KaUzy+IWGP59p5bm2sA==}
     engines: {node: '>= 12.0.0'}
     bundledDependencies:
       - napi-wasm
@@ -2565,8 +2568,8 @@ packages:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.3:
-    resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
+  postcss@8.5.4:
+    resolution: {integrity: sha512-QSa9EBe+uwlGTFmHsPKokv3B/oEMQZxfqW0QqNCyhpa6mB1afzulwn8hihglqAb2pOw+BJgNlmXQ8la2VeHB7w==}
     engines: {node: ^10 || ^12 || >=14}
 
   preact@10.26.6:
@@ -4178,17 +4181,17 @@ snapshots:
     dependencies:
       enhanced-resolve: 5.18.1
       jiti: 2.4.2
-      lightningcss: lightningcss-wasm@1.30.0
+      lightningcss: lightningcss-wasm@1.30.1
       tailwindcss: 4.1.5
 
-  '@tailwindcss/oxide-wasm32-wasi@4.1.6': {}
+  '@tailwindcss/oxide-wasm32-wasi@4.1.8': {}
 
   '@tailwindcss/postcss@4.1.5':
     dependencies:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.1.5
-      '@tailwindcss/oxide': '@tailwindcss/oxide-wasm32-wasi@4.1.6'
-      postcss: 8.5.3
+      '@tailwindcss/oxide': '@tailwindcss/oxide-wasm32-wasi@4.1.8'
+      postcss: 8.5.4
       tailwindcss: 4.1.5
 
   '@tanstack/query-core@5.75.6': {}
@@ -6326,7 +6329,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  lightningcss-wasm@1.30.0: {}
+  lightningcss-wasm@1.30.1: {}
 
   lit-element@4.2.0:
     dependencies:
@@ -7043,7 +7046,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.5.3:
+  postcss@8.5.4:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1

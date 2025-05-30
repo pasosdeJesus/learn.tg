@@ -27,7 +27,7 @@ const connectors = connectorsForWallets(
   ],
   {
     appName: process.env.NEXT_PUBLIC_APPNAME ?? "Learn Through Games",
-    projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? '044601f65212332475a09bc14ceb3c34',
+    projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? '0123',
   }
 );
 
@@ -48,11 +48,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider 
           theme={lightTheme({
-            accentColor: '#06955f',
+            accentColor: '#714ba6',
             accentColorForeground: 'white',
-            borderRadius: 'small',
-            fontStack: 'system',
-            overlayBlur: 'small',
+            borderRadius: 'large',
+            fontStack: 'rounded',
+            overlayBlur: 'none',
           })}
         >
           {children}

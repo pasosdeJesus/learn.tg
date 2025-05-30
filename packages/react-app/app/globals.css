@@ -1,23 +1,17 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #2c3e50;
-  /*--foreground: #171717;*/
-}
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: "DM Sans", sans-serif;
+  --font-serif: "DM Serif Display", serif;
+  --font-mono: "DM Mono", mono;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary-100: #a63005;
+  --color-primary-200: #b9a3d9;
+  --color-secondary-100: #714ba6;
+  --color-secondary-200: #8d69bf;
 }
 
 @layer base {
@@ -172,3 +166,62 @@ img[src*="celular"] {
 .social {
   padding-right: 4rem;
 }
+
+.img-curso { 
+  display: flex;
+  justify-content: center;
+}
+
+.img-curso img {
+  width: 100%;
+  max-width: 400px;
+  max-height: 280px;
+}
+
+.logo-okx {
+  width: 180px;
+  height: 180px;
+}
+
+.enlace-plano {
+  texto-decoration: none;
+}
+
+.cursos {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-around;
+  align-content: space-around;
+  background: var(--color-2);
+  gap: 10px;
+}
+
+.curso {
+  border: 1px solid var(--color-4);
+  width: 25%;
+  height: 25rem;
+  border-radius: 10px;
+  min-width: 200px;
+  background-color: white;
+}
+
+.curso a {
+  text-decoration: none;
+}
+
+.desc-curso {
+  background-color: white;
+  color: black;
+}
+
+.titulo-curso {
+  font-weight: 800;
+  padding-top: 1rem;
+  text-align: center;
+}
+
+.res-curso {
+  padding: 1rem;
+  text-align: justify;
+}
+

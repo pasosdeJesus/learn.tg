@@ -20,7 +20,6 @@ type PageProps = {
 };
 
 export default function Page({ params }: PageProps) {
-  const [ counter, setCounter ] = useState(0)
 
   const [myCourse, setMyCourse] = useState({
     idioma: 'en',
@@ -141,7 +140,7 @@ export default function Page({ params }: PageProps) {
   }, [])
 
   return (
-  <div className="container flex flex-col mx-auto lg:flex-row ">
+  <div className="container flex flex-col mx-auto lg:flex-row justify-center">
     { (toPay == 0 || estadoBoton == 'Desconectar') &&
       <div className="flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 lg:w-1/2 xl:w-3/5">
         <div>
@@ -176,7 +175,7 @@ export default function Page({ params }: PageProps) {
           }
         </div>
       }
-      <div  className="px-6 py-8 h-full  w-full space-y-46 sm:p-8 lg:p-12 lg:w-5/18 xl:w-5/18 rounded-sm bg-secondary-100 dark:text-gray-50">
+      <div  className="px-6 py-8 h-full  w-full space-y-46 sm:p-8 lg:p-12 rounded-sm bg-secondary-100 dark:text-gray-50">
         <h2 className="text-2xl lg:text-2xl font-bold py-8 text-white">
           {myCourse.idioma == 'en' ?
             "Course contents" : "Contenido del curso" }
