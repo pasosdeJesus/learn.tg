@@ -18,9 +18,14 @@ It must be started first.
 See details at servidor/README.md
 
 
-## Directory `cliente`
+## Directory `packages/react-app`
 
-Frontend application with vue and vite.
+Frontend application with react and next.js.
 
-See details at cliente/README.md
-We will open its sources in this repository once we receive funding.
+See details at `packages/react-app/README.md`
+
+
+## Directory `resources` 
+
+It has markdown of guides, images and media.
+
