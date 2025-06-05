@@ -14,15 +14,6 @@
   He begged Philip to come up and sit with him. 
   **32** Now the passage of the Scripture which he was reading was this, 
 
->> Como oveja a la muerte fue llevado;
-   Y como cordero mudo delante del que lo trasquila,
-   Así no abrió su boca.
-
->> **33** En su humillación no se le hizo justicia;
-   Mas su generación, ¿quién la contará?
-   Porque fue quitada de la tierra su vida.
-
-
 >> He was led as a sheep to the slaughter. 
   As a lamb before his shearer is silent,
   so he doesn’t open his mouth.

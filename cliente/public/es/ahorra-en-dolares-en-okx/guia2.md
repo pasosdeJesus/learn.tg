@@ -75,7 +75,7 @@ diferente en el medio de pago y adjuntando un pantallazo donde se
 vea el nombre en el medio de pago).
 
 
-## 2. Ahorra los USDT
+## 3. Ahorra los USDT
 
 El porcentaje que se gana proviene de prestamos que OKX hace con el dinero de
 quienes ahorran.
@@ -97,9 +97,9 @@ El siguiente video presenta el procedimiento
 8. Presiona el botón `Suscribirse`
 
 
-## 3. Retira tus ahorros en USDT o  parte de ellos
+## 4. Retira tus ahorros en USDT o  parte de ellos
 
-[![Video de como ahorrar USDT en OKX](https://img.youtube.com/vi/Y7e8pk0z7x8/0.jpg)](https://www.youtube.com/embed/Y7e8pk0z7x8?si=niXZHOnSERtKBlq9)
+[![Video de como retirar ahorros en OKX](https://img.youtube.com/vi/Y7e8pk0z7x8/0.jpg)](https://www.youtube.com/embed/Y7e8pk0z7x8?si=niXZHOnSERtKBlq9)
 
 1. Dirígete a la pestaña `Activos`
 2. Ve a la cuenta `Earn` donde tienes tu ahorro flexible en USDT
@@ -112,7 +112,7 @@ El siguiente video presenta el procedimiento
 7. Presiona `Canjear`
 8. Presiona `Confirmar`
 
-## 4. Cambia los USDT por pesos
+## 5. Cambia los USDT por pesos
 
 
 [![Video de como cambiar USDT por USDC en OKX](https://img.youtube.com/vi/tCxULERRvNE/0.jpg)](https://www.youtube.com/embed/tCxULERRvNE)
@@ -135,7 +135,7 @@ El siguiente video presenta el procedimiento
 7. Tras verificar libera los USDT presionando el botón `Liberar cripto`
 
 
-## 5. Has trading de USDT por USDC (o por otro criptoactivo)
+## 6. Has trading de USDT por USDC (o por otro criptoactivo)
 
 
 Suponiendo que tengas USDT en tu cuenta de fondos.
