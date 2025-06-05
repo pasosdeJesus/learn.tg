@@ -16,10 +16,10 @@ import {
     parseEther,
     stringToHex,
 } from "viem";
-import { celoAlfajores } from "viem/chains";
+import { celo } from "viem/chains";
 
 const publicClient = createPublicClient({
-    chain: celoAlfajores,
+    chain: celo,
     transport: http(),
 });
 
@@ -37,7 +37,7 @@ export const useWeb3 = () => {
         if (typeof window !== "undefined" && window.ethereum) {
             let walletClient = createWalletClient({
                 transport: custom(window.ethereum),
-                chain: celoAlfajores,
+                chain: celo,
             });
 
             let [address] = await walletClient.getAddresses();
@@ -48,7 +48,7 @@ export const useWeb3 = () => {
     const sendCUSD = async (to: string, amount: string) => {
         let walletClient = createWalletClient({
             transport: custom(window.ethereum),
-            chain: celoAlfajores,
+            chain: celo,
         });
 
         let [address] = await walletClient.getAddresses();
@@ -73,7 +73,7 @@ export const useWeb3 = () => {
     const signTransaction = async () => {
         let walletClient = createWalletClient({
             transport: custom(window.ethereum),
-            chain: celoAlfajores,
+            chain: celo,
         });
 
         let [address] = await walletClient.getAddresses();

@@ -4,12 +4,13 @@ import axios from 'axios';
 import {use, useEffect, useState} from "react"
 import { useWeb3 } from "@/contexts/useWeb3";
 
-export default async function Home({params} : {
+type PageProps = {
   params: Promise<{
     lang:string,
   }>
-}) {
-  const { lang } = await params
+}
+
+export default function Home({ params } : PageProps) {
 
   const {
     address,
@@ -21,6 +22,9 @@ export default async function Home({params} : {
 
   const [cursosj, setCursosj] = useState<any[]>([])
 
+  const parameters = use(params)
+  const { lang } = parameters
+
   useEffect(() => {
     const configurar = async () => {
       if (process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL == undefined) {
@@ -28,10 +32,11 @@ export default async function Home({params} : {
         return
       }
       let url = process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL
+      url += `?filtro[busidioma]=${lang}`
       if (address) {
-        url += `?proyectofinanciero[conBilletera]=true&proyectofinanciero[idioma]=${lang}`
+        url += `&filtro[busconBilletera]=true`
       }
-
+      console.log("url=", url)
       axios.get(url)
       .then(response => {
         if (response.data) {
@@ -53,10 +58,10 @@ export default async function Home({params} : {
     <div className="overflow-x-hidden py-1 dark:bg-gray-100 dark:text-gray-900 flex flex-row flex-wrap justify-center mt-2">
       <>
       {cursosj.map((curso) => (
-        <div  className="flex flex-col justify-center w-full px-8 mx-6 my-12 py-9
+        <div  key={curso.id} className="flex flex-col justify-center w-full px-8 mx-6 my-12 py-9
               text-center rounded-md md:w-96 lg:w-80 xl:w-65 bg-gray-300
               dark:text-gray-900">
-          <a href="/{curso.idioma}{curso.prefijoRuta}">
+          <a href={`/${curso.idioma}${curso.prefijoRuta}`}>
             <div className="img-curso">
               <img className="w-[100%] h-[17rem] pt-2 object-cover" src={curso.imagen}/>
             </div>
