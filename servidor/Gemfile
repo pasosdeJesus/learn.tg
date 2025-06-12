@@ -6,13 +6,17 @@ ruby ">=3.3"
 
 gem "apexcharts"
 
+gem "babel-transpiler"
+
 gem "bcrypt"
 
 gem "bootsnap"
 
 gem "cancancan"
 
-gem "cssbundling-rails"
+gem "cocoon", git: "https://github.com/vtamara/cocoon.git", branch: "new_id_with_ajax" # Formularios anidados (algunos con ajax)
+
+gem "coffee-rails"
 
 gem "devise" # Autenticación 
 
@@ -33,8 +37,6 @@ gem "nokogiri"
 
 gem "odf-report" # Genera ODT
 
-gem "ostruct"
-
 gem "parslet"
 
 gem "pg" # Postgresql
@@ -45,13 +47,11 @@ gem "prawnto_2",  :require => "prawnto"
 
 gem "prawn-table"
 
-gem "propshaft"
-
 gem "rack", "~> 2"
 
 gem "rack-cors", "~> 2.0"
 
-gem "rails", "~> 8.0"
+gem "rails", "~> 7.2"
   #git: "https://github.com/rails/rails.git", branch: "6-1-stable"
 
 gem "rails-i18n"
@@ -66,7 +66,9 @@ gem "simple_form" # Formularios simples
 
 gem "stimulus-rails"
 
-gem "turbo-rails", "~> 1.0"
+gem "sprockets-rails"
+
+gem "turbo-rails"
 
 gem "twitter_cldr" # ICU con CLDR
 
@@ -80,19 +82,19 @@ gem "will_paginate" # Listados en páginas
 # lógico y no alfabetico como las gemas anteriores) 
 
 gem "msip", # Motor generico
-  git: "https://gitlab.com/pasosdeJesus/msip.git", branch: "main"
+  git: "https://gitlab.com/pasosdeJesus/msip.git", branch: "v2.2"
   #path: "~/comp/rails/msip"
 
 gem "mr519_gen", # Motor de gestion de formularios y encuestas
-  git: "https://gitlab.com/pasosdeJesus/mr519_gen.git", branch: "main"
+  git: "https://gitlab.com/pasosdeJesus/mr519_gen.git", branch: "v2.2"
   #path: "../mr519_gen"
 
 gem "heb412_gen",  # Motor de nube y llenado de plantillas
-  git: "https://gitlab.com/pasosdeJesus/heb412_gen.git", branch: "main"
+  git: "https://gitlab.com/pasosdeJesus/heb412_gen.git", branch: "v2.2"
   #path: "../heb412_gen"
 
 gem "cor1440_gen", # Motor Cor1440_gen
-  git: "https://gitlab.com/pasosdeJesus/cor1440_gen.git", branch: "main"
+  git: "https://gitlab.com/pasosdeJesus/cor1440_gen.git", branch: "v2.2"
   #path: "~/comp/rails/cor1440_gen"
 
 

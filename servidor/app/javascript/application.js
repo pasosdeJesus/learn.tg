@@ -11,6 +11,8 @@ import {Turbo} from "@hotwired/turbo-rails";
 // no hacer "Turbo.session.drive = false " porque dejan de operar
 // operaciones con turbo como añadir familiar
 
+import './jquery'
+
 import 'popper.js'              // Dialogos emergentes usados por bootstrap
 import * as bootstrap from 'bootstrap'              // Maquetacion y elementos de diseño
 window.bootstrap = bootstrap
@@ -28,13 +30,10 @@ window.Msip__Motor = Msip__Motor
 Msip__Motor.iniciar()
 import Mr519Gen__Motor from "./controllers/mr519_gen/motor"
 window.Mr519Gen__Motor = Mr519Gen__Motor
-Mr519Gen__Motor.iniciar()
 import Heb412Gen__Motor from "./controllers/heb412_gen/motor"
 window.Heb412Gen__Motor = Heb412Gen__Motor
-Heb412Gen__Motor.iniciar()
 import Cor1440Gen__Motor from "./controllers/cor1440_gen/motor"
 window.Cor1440Gen__Motor = Cor1440Gen__Motor
-Cor1440Gen__Motor.iniciar()
 
 import TomSelect from 'tom-select';
 window.TomSelect = TomSelect;
@@ -57,7 +56,7 @@ window.inicializaProsidebar = inicializaProsidebar
 
 
 let esperarRecursosSprocketsYDocumento = function (resolver) {
-  if (typeof window.puntoMontaje == 'undefined') {
+  if (typeof window.puntomontaje == 'undefined') {
     setTimeout(esperarRecursosSprocketsYDocumento, 100, resolver)
     return false
   }
@@ -77,10 +76,14 @@ let promesaRecursosSprocketsYDocumento = new Promise((resolver, rechazar) => {
 promesaRecursosSprocketsYDocumento.then((mensaje) => {
   console.log(mensaje)
 
+  var root
+  root = window
   Msip__Motor.ejecutarAlCargarDocumentoYRecursos()
-  Mr519Gen__Motor.ejecutarAlCargarDocumentoYRecursos()
-  Heb412Gen__Motor.ejecutarAlCargarDocumentoYRecursos()
-  Cor1440Gen__Motor.ejecutarAlCargarDocumentoYRecursos()
+  root.cor1440_gen_activa_autocompleta_mismotipo = true
+  msip_prepara_eventos_comunes(root);
+  heb412_gen_prepara_eventos_comunes(root);
+  mr519_gen_prepara_eventos_comunes(root);
+  cor1440_gen_prepara_eventos_comunes(root);
 
 
 })
@@ -98,10 +101,11 @@ document.addEventListener('turbo:load', (e) => {
   Mr519Gen__Motor.ejecutarAlCargarPagina()
   Heb412Gen__Motor.ejecutarAlCargarPagina()
   Cor1440Gen__Motor.ejecutarAlCargarPagina()
+  //msip_ejecutarAlCargarPagina(window)
+
 
   window.inicializaProsidebar()
 })
-
 
 
 

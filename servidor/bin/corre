@@ -79,7 +79,7 @@ FileUtils.chdir(RAIZ_AP) do
     system! "rm -rf app/assets/builds/*"
 
     puts "\n== Enlaza controladores stimulus de motores =="
-    system! "bin/rails msip:enlaces_motores"
+    system! "bin/rails msip:stimulus_motores"
 
     puts "\n== Crea recursos CSS y Javascript =="
     system! "RAILS_ENV=#{ENV["RAILS_ENV"]} bin/rails assets:precompile --trace"
