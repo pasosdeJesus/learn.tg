@@ -47,6 +47,13 @@
       "@parcel/watcher": "npm:@parcel/watcher-wasm",
       "lightningcss": "npm:lightningcss-wasm",
       "@tailwindcss/oxide": "npm:@tailwindcss/oxide-wasm32-wasi"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "bufferutil",
+      "keccak",
+      "sharp",
+      "unrs-resolver",
+      "utf-8-validate"
+    ]
   }
 }

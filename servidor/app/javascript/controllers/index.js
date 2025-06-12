@@ -10,6 +10,12 @@ application.register("cor1440-gen--pf-duracion", Cor1440Gen__PfDuracionControlle
 import Cor1440Gen__PfMontospesosController from "./cor1440_gen/pf_montospesos_controller"
 application.register("cor1440-gen--pf-montospesos", Cor1440Gen__PfMontospesosController)
 
+import Cor1440Gen__PfDuracionController from "./cor1440_gen/pf_duracion_controller"
+application.register("cor1440-gen--pf-duracion", Cor1440Gen__PfDuracionController)
+
+import Cor1440Gen__PfMontospesosController from "./cor1440_gen/pf_montospesos_controller"
+application.register("cor1440-gen--pf-montospesos", Cor1440Gen__PfMontospesosController)
+
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)
 

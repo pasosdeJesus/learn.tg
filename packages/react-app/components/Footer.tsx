@@ -1,14 +1,13 @@
 import { useState } from "react"
 
-export default function Footer() {
+export default function Footer({lang = "en"}) {
 
   const [anioActual, setAnioActual] = useState(new Date().getFullYear())
   return (
     <footer className="w-full bg-primary-200 z-20 dark:text-gray-900 flex flex-col px-16">
       <div className="flex flex-col justify-between lg:flex-row">
         <div className="pt-4">
-          Si tienes preguntas o sugerencias escribenos a 
-          <a href="mailto:info@pasosdeJesus.org" className="hover:underline text-secondary-100 font-bold">info@pasosdeJesus.org</a>
+          Unete a <a href="https://t.me/learn_t_g" className="hover:underline text-secondary-100 font-bold">la comunidad en Telegram</a>
         </div>
         <div className="flex flex-col justify-center pt-6 lg:pt-0">
           <div className="flex justify-center space-x-4">
