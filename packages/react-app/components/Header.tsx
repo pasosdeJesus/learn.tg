@@ -4,7 +4,9 @@
  * Based on Header of Celo Composer
  */
 import { ConnectButton } from "@rainbow-me/rainbowkit"
-import { useEffect, useState } from "react" import { useConnect } from "wagmi" import { injected } from "wagmi/connectors"
+import { useEffect, useState } from "react"
+import { useConnect } from "wagmi" 
+import { injected } from "wagmi/connectors"
 
 export default function Header({lang = "en"}) {
   const [hideConnectBtn, setHideConnectBtn] = useState(false)
