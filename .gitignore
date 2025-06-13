@@ -94,3 +94,4 @@ servidor/app/assets/stylesheets/heb412_gen
 servidor/app/assets/stylesheets/mr519_gen
 servidor/app/assets/stylesheets/msip
 *.cp
+.pnpm-store

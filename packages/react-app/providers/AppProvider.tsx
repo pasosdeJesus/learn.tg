@@ -50,8 +50,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           theme={lightTheme({
             accentColor: '#714ba6',
             accentColorForeground: 'white',
-            borderRadius: 'large',
-            fontStack: 'rounded',
+            borderRadius: 'small',
+            fontStack: 'system',
             overlayBlur: 'none',
           })}
         >

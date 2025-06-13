@@ -1,0 +1,6 @@
+#!/bin/sh
+
+pnpm install
+. ./.env
+node_modules/next/dist/bin/next dev -p${PORT}
+#NODE_OPTIONS="--trace-warnings --inspect" node_modules/next/dist/bin/next dev -p${PORT}

@@ -4,9 +4,7 @@
  * Based on Header of Celo Composer
  */
 import { ConnectButton } from "@rainbow-me/rainbowkit"
-import { useEffect, useState } from "react"
-import { useConnect } from "wagmi"
-import { injected } from "wagmi/connectors"
+import { useEffect, useState } from "react" import { useConnect } from "wagmi" import { injected } from "wagmi/connectors"
 
 export default function Header({lang = "en"}) {
   const [hideConnectBtn, setHideConnectBtn] = useState(false)
@@ -27,7 +25,12 @@ export default function Header({lang = "en"}) {
                 <div className="relative z-30 flex flex-col items-center gap-1 mb-1 lg:mb-0">
                   <img src="/logo-learntg.png" className="rounded-full h-14 w-14 flex items-center justify-center" alt="imglogo" />
                   <h6 className="circular-text text-secondary-100 font-bold">
-                    <span style={{ fontFamily: "DM Serif Display" }} className="text-secondary font-bold">Aprender mediante juegos</span>
+                    <span className="text-secondary font-bold">
+                      { lang == "es" ? 
+                        "Aprender mediante juegos" :
+                        "Learn through games"
+                      }
+                    </span>
                   </h6>
                 </div>
               </a>

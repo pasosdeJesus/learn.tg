@@ -83,13 +83,13 @@ export default function Page({params} : {
                 if (gnumber > 1) {
                   let ga = dcurso.guias[gnumber - 2]
                   setPreviousGuidePath("/" + dcurso.idioma +
-                    dcurso.pathPrefix + "/" + ga.sufijoRuta)
+                    dcurso.prefijoRuta + "/" + ga.sufijoRuta)
                 }
 
-                if (gnumber < dcurso.guias.length) {
+                if (gnumber <  dcurso.guias.length) {
                   let gs = dcurso.guias[gnumber]
                   setNextGuidePath("/" + dcurso.idioma +
-                    dcurso.pathPrefix + "/" + gs.sufijoRuta)
+                    dcurso.prefijoRuta + "/" + gs.sufijoRuta)
                 }
 
                 setCreditsHtml(htmlDeMd(dcurso.creditosMd))
@@ -180,7 +180,7 @@ export default function Page({params} : {
 
 
   return (
-    <div>
+    <>
   <div className="pt-2  dark:bg-gray-100 dark:text-gray-800">
     <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
       <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
@@ -215,6 +215,12 @@ export default function Page({params} : {
              { myCourse.idioma == 'en' ? "Previous Guide" : "Guía anterior" }
             </a>)
           }
+          { guideNumber <= 1 &&
+            (<div className="inline-flex items-center bg-gray-400 text-white border-r border-gray-100 py-2 px-3">
+             { myCourse.idioma == 'en' ? "Previous Guide" : "Guía anterior" }
+            </div>)
+          }
+
         </td>
         <td>
           <a href={coursePath} className="inline-flex items-center bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white">
@@ -228,6 +234,12 @@ export default function Page({params} : {
               {myCourse.idioma == 'en' ? "Next Guide" : "Guía siguiente"}
             </a>
           )}
+          { guideNumber >= myCourse.guias.length  && (
+            <div className="inline-flex items-center bg-gray-400 text-white  py-2 px-3">
+              {myCourse.idioma == 'en' ? "Next Guide" : "Guía siguiente"}
+            </div>
+          )}
+
         </td>
       </tr>
     </tbody>
@@ -235,6 +247,6 @@ export default function Page({params} : {
   </div>
 
   <div>&nbsp;</div>
-  </div>
+  </>
   )
 }

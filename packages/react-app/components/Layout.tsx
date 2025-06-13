@@ -10,23 +10,20 @@ interface Props {
 }
 const Layout: FC<Props> = ({ children }) => {
 
-  let idioma = "en"
+  let lang = "en"
   if (typeof window !== "undefined") {
-    let phref = window.location.href.split("/")
-    let ruta = phref.length > 2 && phref[phref.length - 1] == "" ?
-      phref[phref.length - 2] : phref[phref.length - 1]
-    idioma = phref.length > 2 && phref[phref.length - 1] == "" ?
-      phref[phref.length - 3] : phref[phref.length - 2]
+    let purl = window.location.href.split("/")
+    lang = purl.length > 3 ? purl[3] : "en"
   }
 
   return (
     <>
      <div className="bg-gypsum overflow-hidden flex flex-col min-h-screen">
-       <Header lang={idioma} />
+       <Header lang={lang} />
        <div>
          {children}
        </div>
-       <Footer lang={idioma} />
+       <Footer lang={lang} />
     </div>
     </>
   );
