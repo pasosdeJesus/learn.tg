@@ -1,6 +1,9 @@
 "use client"
 
 import axios from 'axios';
+
+import { ClaimSDK } from '@goodsdks/citizen-sdk';
+
 import { use, useEffect, useState } from 'react'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -186,6 +189,14 @@ export default function Page({params} : {
     return html_con_tailwind
   }
 
+  const claimUBI = async () => {
+  //  try {
+  //    await claimSDK.claim();
+      alert('Claim successful');
+  //  } catch (error) {
+  //    console.error('Claim failed:', error);
+  //  }
+  };
 
   return (
     <>
@@ -203,6 +214,9 @@ export default function Page({params} : {
     </h1>
     { isClient && 
       <div className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside **:list-disc" dangerouslySetInnerHTML={{ __html: guideHtml }} />
+    }
+    { isClient && prefixPath == "good-dollar" && suffixPath == "guide1" &&
+      <button onClick={claimUBI}>Claim UBI</button>
     }
     { creditsHtml != '' && (
       <div>

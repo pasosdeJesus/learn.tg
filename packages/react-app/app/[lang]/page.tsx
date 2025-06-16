@@ -4,15 +4,6 @@ import axios from 'axios';
 import {use, useEffect, useState} from "react"
 import { useWeb3 } from "@/contexts/useWeb3";
 
-
-/*export function generateStaticParams() {
-  const langs = ['en', 'es']
-
-  return langs.map((l) => ({
-    lang: l,
-  }))
-}*/
-
 type PageProps = {
   params: Promise<{
     lang:string,
