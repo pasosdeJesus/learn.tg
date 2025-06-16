@@ -25,5 +25,9 @@ module Cor1440Gen
       where(prefijoRuta: p)
     }
 
+    scope :filtro_conBilletera, lambda { |c|
+      where(conBilletera: c)
+    }
+
   end
 end

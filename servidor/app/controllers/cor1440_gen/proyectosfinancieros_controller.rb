@@ -39,6 +39,7 @@ module Cor1440Gen
 
     def atributos_filtro_antestabla
       [
+        :conBilletera,
         :idioma,
         :prefijoRuta,
       ]
@@ -82,9 +83,9 @@ module Cor1440Gen
 
     def index(c = nil)
       c = Cor1440Gen::Proyectofinanciero.all
-      if !params || !params[:proyectofinanciero] ||
-          !params[:proyectofinanciero][:conBilletera] || 
-          params[:proyectofinanciero][:conBilletera] != "true"
+      if !params || !params[:filtro] ||
+          !params[:filtro][:busconBilletera] || 
+          params[:filtro][:busconBilletera] != "true"
         c = c.where(sinBilletera: true)
       end
 

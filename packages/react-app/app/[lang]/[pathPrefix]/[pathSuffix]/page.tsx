@@ -95,7 +95,15 @@ export default function Page({params} : {
                 setCreditsHtml(htmlDeMd(dcurso.creditosMd))
                 let urlg = window.location.href + ".md"
                 console.log(`Fetching ${urlg}`)
-                axios.get(urlg)
+
+                let nurl = process.env.NEXT_PUBLIC_API_DESCARGA_URL.replace(
+                  "lang", lang
+                ).replace(
+                  "prefix", pathPrefix
+                ).replace(
+                  "guia", pathSuffix
+                )
+                axios.get(nurl)
                   .then(response => {
                     if (response.data) {
                       setGuideHtml(htmlDeMd(response.data))

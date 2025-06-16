@@ -42,7 +42,9 @@ export const useWeb3 = () => {
 
             let [address] = await walletClient.getAddresses();
             setAddress(address);
+            return address
         }
+        return null
     };
 
     const sendCUSD = async (to: string, amount: string) => {

@@ -22,6 +22,7 @@ class Ability  < Cor1440Gen::Ability
       Msip::Centropoblado
     ])
     can(:read, Cor1440Gen::Proyectofinanciero)
+    can(:read, Heb412Gen::Doc)
 
     if !usuario || usuario.fechadeshabilitacion
       return

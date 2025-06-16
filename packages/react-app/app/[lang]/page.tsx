@@ -42,7 +42,9 @@ export default function Home({ params } : PageProps) {
       }
       let url = process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL
       url += `?filtro[busidioma]=${lang}`
-      if (address) {
+      let ua = await getUserAddress()
+      console.log("ua=", ua)
+      if (ua) {
         url += `&filtro[busconBilletera]=true`
       }
       console.log("url=", url)
