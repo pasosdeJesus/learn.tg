@@ -215,7 +215,7 @@ export default function Page({params} : {
     { isClient && 
       <div className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside **:list-disc" dangerouslySetInnerHTML={{ __html: guideHtml }} />
     }
-    { isClient && prefixPath == "good-dollar" && suffixPath == "guide1" &&
+    { isClient && pathPrefix == "gooddollar" && pathSuffix == "guide1" &&
       <button onClick={claimUBI}>Claim UBI</button>
     }
     { creditsHtml != '' && (
