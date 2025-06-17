@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-import { ClaimSDK } from '@goodsdks/citizen-sdk';
+import { ClaimSDK, useIdentitySDK } from '@goodsdks/citizen-sdk';
 
 import { use, useEffect, useState } from 'react'
 import remarkDirective from 'remark-directive'
@@ -12,6 +12,7 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 //import addFillInTheBlank from '../lib/add-fill-in-the-blank'
 
 
@@ -23,10 +24,11 @@ export default function Page({params} : {
   }>
 }) {
 
-  const [myCourse, setMyCourse] = useState({
+  const [course, setCourse] = useState({
     titulo: "",
     idioma: "",
-    guias: []
+    guias: [],
+    conBilletera: false
   })
   const [guideNumber, setGuideNumber] = useState(0);
   const [myGuide, setMyGuide] = useState({
@@ -56,7 +58,7 @@ export default function Page({params} : {
           let rcurso = response.data[0]
 
           if (process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL == undefined) {
-            alert("NEidiomaXT_PUBLIC_API_PRESENTA_CURSO_URL no definido")
+            alert("Undefined NEXT_PUBLIC_API_PRESENTA_CURSO_URL")
             return false
           }
           let urld = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL.replace(
@@ -71,8 +73,7 @@ export default function Page({params} : {
                  return false
                 }
                 let dcurso = responsed.data
-
-                setMyCourse(dcurso)
+                setCourse(dcurso)
 
                 let gnumber = 0
                 for(let g=0; g < dcurso.guias.length; g++) {
@@ -96,9 +97,11 @@ export default function Page({params} : {
                 }
 
                 setCreditsHtml(htmlDeMd(dcurso.creditosMd))
-                let urlg = window.location.href + ".md"
-                console.log(`Fetching ${urlg}`)
 
+                if (process.env.NEXT_PUBLIC_API_DESCARGA_URL == undefined) {
+                  alert("Undefined NEXT_PUBLIC_API_DESCARGA_URL")
+                  return false
+                }
                 let nurl = process.env.NEXT_PUBLIC_API_DESCARGA_URL.replace(
                   "lang", lang
                 ).replace(
@@ -106,6 +109,7 @@ export default function Page({params} : {
                 ).replace(
                   "guia", pathSuffix
                 )
+                console.log(`Fetching ${nurl}`)
                 axios.get(nurl)
                   .then(response => {
                     if (response.data) {
@@ -189,86 +193,105 @@ export default function Page({params} : {
     return html_con_tailwind
   }
 
+  const { address } = useAccount();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
+  const identitySDK = useIdentitySDK('production');
+
   const claimUBI = async () => {
-  //  try {
-  //    await claimSDK.claim();
-      alert('Claim successful');
-  //  } catch (error) {
-  //    console.error('Claim failed:', error);
-  //  }
-  };
+
+    if (!address || !publicClient || !walletClient || !identitySDK) {
+      return (<div>Works only with wallet connected</div>)
+    }
+    const claimSDK = new ClaimSDK({
+      account: address,
+      publicClient,
+      walletClient,
+      identitySDK,
+      env: 'production',
+    });
+
+    try {
+      await claimSDK.claim();
+      console.log('Claim successful');
+    } catch (error) {
+      console.error('Claim failed:', error);
+    }
+  }
+  if (!course.sinBilletera && course.conBilletera && address == null) {
+    return <div className="mt-40">Connect Wallet</div>
+  }
 
   return (
     <>
-  <div className="pt-2  dark:bg-gray-100 dark:text-gray-800">
-    <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
-      <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
-        {myCourse.idioma == 'en' ? "Course:" : "Curso:"}
-        {myCourse.titulo}
-      </h3>
-    </div>
-    <h1 className="py-3 px-16 text-[2rem] font-bold text-left">
-      { myCourse.idioma == 'en' ? "Guide" : "Guía" }
-      &nbsp;
-      <span>{guideNumber}</span>: {myGuide.titulo}
-    </h1>
-    { isClient && 
-      <div className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside **:list-disc" dangerouslySetInnerHTML={{ __html: guideHtml }} />
-    }
-    { isClient && pathPrefix == "gooddollar" && pathSuffix == "guide1" &&
-      <button onClick={claimUBI}>Claim UBI</button>
-    }
-    { creditsHtml != '' && (
-      <div>
-        <h2 className="px-16 text-1xl font-bold md:text-1xl">
-          { myCourse.idioma == 'en' ? "Credits" : "Créditos" }
-        </h2>
-        <div className="py-3 px-16 text-1xl md:text-1xl text-justify"
-          dangerouslySetInnerHTML={{ __html: creditsHtml }} />
-      </div>
-    )}
-
-    <table className="mx-auto text-center mt-12">
-    <tbody>
-      <tr>
-        <td>
-          { guideNumber > 1 &&
-            (<a href={previousGuidePath} className="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-3 hover:bg-secondary-100 hover:text-white">
-             { myCourse.idioma == 'en' ? "Previous Guide" : "Guía anterior" }
-            </a>)
-          }
-          { guideNumber <= 1 &&
-            (<div className="inline-flex items-center bg-gray-400 text-white border-r border-gray-100 py-2 px-3">
-             { myCourse.idioma == 'en' ? "Previous Guide" : "Guía anterior" }
-            </div>)
-          }
-
-        </td>
-        <td>
-          <a href={coursePath} className="inline-flex items-center bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white">
-            { myCourse.idioma == 'en' ? "Start of Course" : "Inicio del Curso"}
-          </a>
-        </td>
-        <td>
+      <div className="pt-2  dark:bg-gray-100 dark:text-gray-800">
+        <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
+          <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
+            {course.idioma == 'en' ? "Course:" : "Curso:"}
+            {course.titulo}
+          </h3>
+        </div>
+        <h1 className="py-3 px-16 text-[2rem] font-bold text-left">
+          { course.idioma == 'en' ? "Guide" : "Guía" }
           &nbsp;
-          { guideNumber < myCourse.guias.length  && (
-            <a href={nextGuidePath} className="inline-flex items-center bg-gray-800 text-white  py-2 px-3 hover:bg-secondary-100 hover:text-white">
-              {myCourse.idioma == 'en' ? "Next Guide" : "Guía siguiente"}
-            </a>
-          )}
-          { guideNumber >= myCourse.guias.length  && (
-            <div className="inline-flex items-center bg-gray-400 text-white  py-2 px-3">
-              {myCourse.idioma == 'en' ? "Next Guide" : "Guía siguiente"}
-            </div>
-          )}
+          <span>{guideNumber}</span>: {myGuide.titulo}
+        </h1>
+        <div className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside **:list-disc" dangerouslySetInnerHTML={{ __html: guideHtml }} />
+        { isClient && pathPrefix == "gooddollar" && pathSuffix == "guide1" &&
+          <button onClick={claimUBI}
+            className="inline-flex items-center bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white"
+          >Claim UBI</button>
+        }
+        { creditsHtml != '' && (
+          <div>
+            <h2 className="px-16 text-1xl font-bold md:text-1xl">
+              { course.idioma == 'en' ? "Credits" : "Créditos" }
+            </h2>
+            <div className="py-3 px-16 text-1xl md:text-1xl text-justify"
+              dangerouslySetInnerHTML={{ __html: creditsHtml }} />
+          </div>
+        )}
+    
+        <table className="mx-auto text-center mt-12">
+        <tbody>
+          <tr>
+            <td>
+              { guideNumber > 1 &&
+                (<a href={previousGuidePath} className="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-2 hover:bg-secondary-100 hover:text-white">
+                 { course.idioma == 'en' ? "Previous" : "Anterior" }
+                </a>)
+              }
+              { guideNumber <= 1 &&
+                (<div className="inline-flex items-center bg-gray-400 text-white border-r border-gray-100 py-2 px-2">
+                 { course.idioma == 'en' ? "Previous" : "Anterior" }
+                </div>)
+              }
+    
+            </td>
+            <td>
+              <a href={coursePath} className="inline-flex items-center bg-gray-800 text-white py-2 px-2 hover:bg-secondary-100 hover:text-white">
+                { course.idioma == 'en' ? "Start of Course" : "Inicio del Curso"}
+              </a>
+            </td>
+            <td>
+              &nbsp;
+              { guideNumber < course.guias.length  && (
+                <a href={nextGuidePath} className="inline-flex items-center bg-gray-800 text-white  py-2 px-2 hover:bg-secondary-100 hover:text-white">
+                  {course.idioma == 'en' ? "Next" : "Siguiente"}
+                </a>
+              )}
+              { guideNumber >= course.guias.length  && (
+                <div className="inline-flex items-center bg-gray-400 text-white  py-2 px-3">
+                  {course.idioma == 'en' ? "Next" : "Siguiente"}
+                </div>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
 
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  </div>
-
-  <div>&nbsp;</div>
-  </>
+      <div>&nbsp;</div>
+    </>
   )
 }
