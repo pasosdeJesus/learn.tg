@@ -83,9 +83,7 @@ module Cor1440Gen
 
     def index(c = nil)
       c = Cor1440Gen::Proyectofinanciero.all
-      if !params || !params[:filtro] ||
-          !params[:filtro][:busconBilletera] || 
-          params[:filtro][:busconBilletera] != "true"
+      if !current_usuario && (!params || !params[:filtro])
         c = c.where(sinBilletera: true)
       end
 
