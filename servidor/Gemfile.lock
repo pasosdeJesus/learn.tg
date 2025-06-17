@@ -49,8 +49,10 @@ GIT
       msip
       rails
 
-PATH
-  remote: ../../../../../home/vtamara/comp/rails/msip-2.2
+GIT
+  remote: https://gitlab.com/pasosdeJesus/msip.git
+  revision: f9bf19bd7ead19e34bedef1a3e1db03d42cd6772
+  branch: v2.2
   specs:
     msip (2.2.0)
       cancancan (~> 3)
