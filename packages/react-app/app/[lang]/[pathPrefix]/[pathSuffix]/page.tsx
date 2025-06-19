@@ -47,6 +47,9 @@ export default function Page({params} : {
     let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
       `filtro[busprefijoRuta]=/${pathPrefix}&` +
       `filtro[busidioma]=${lang}`
+    if (address) {
+      url += `&walletAddress=${address}`
+    }
     console.log(`Fetching ${url}`)
     axios.get(url)
       .then(response => {
@@ -64,6 +67,9 @@ export default function Page({params} : {
           let urld = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL.replace(
             "curso_id", rcurso.id
           )
+          if (address) {
+            urld += `&walletAddress=${address}`
+          }
           console.log(`Fetching ${urld}`)
           axios.get(urld)
             .then(responsed => {
@@ -109,6 +115,9 @@ export default function Page({params} : {
                 ).replace(
                   "guia", pathSuffix
                 )
+                if (address) {
+                  nurl += `&walletAddress=${address}`
+                }
                 console.log(`Fetching ${nurl}`)
                 axios.get(nurl)
                   .then(response => {
@@ -185,6 +194,8 @@ export default function Page({params} : {
       'allowfullscreen></iframe>'+
       '</p>'
     ).replaceAll(
+      "<li><p>([^<]*)</p></li>","<li>$1</li>"
+    ).replaceAll(
       "<p>", '<p class="pt-2 pb-2">'
     ).replaceAll(
       "<ul>", '<ul class="block list-disc ml-8">'
@@ -224,7 +235,7 @@ export default function Page({params} : {
 
   return (
     <>
-      <div className="pt-2  dark:bg-gray-100 dark:text-gray-800">
+      <div className="mt-8 pt-2  dark:bg-gray-100 dark:text-gray-800">
         <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
           <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
             {course.idioma == 'en' ? "Course:" : "Curso:"}
@@ -242,18 +253,8 @@ export default function Page({params} : {
             className="inline-flex items-center bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white"
           >Claim UBI</button>
         }
-        { creditsHtml != '' && (
-          <div>
-            <h2 className="px-16 text-1xl font-bold md:text-1xl">
-              { course.idioma == 'en' ? "Credits" : "Créditos" }
-            </h2>
-            <div className="py-3 px-16 text-1xl md:text-1xl text-justify"
-              dangerouslySetInnerHTML={{ __html: creditsHtml }} />
-          </div>
-        )}
     
-        <table className="mx-auto text-center mt-12">
-        <tbody>
+        <table className="mx-auto text-center mt-12"><tbody>
           <tr>
             <td>
               { guideNumber > 1 &&
@@ -287,8 +288,19 @@ export default function Page({params} : {
               )}
             </td>
           </tr>
-        </tbody>
-      </table>
+        </tbody></table>
+        { creditsHtml != '' && (
+          <div className="text-sm mt-2">
+            <h2 className="px-16 text-1xl font-bold md:text-1xl">
+              { course.idioma == "en" ?
+                "Credits and License of this course" :
+                "Créditos y Licencia de este curso"
+              }
+            </h2>
+            <div className="py-3 px-16 text-1xl md:text-1xl text-justify"
+              dangerouslySetInnerHTML={{ __html: creditsHtml }} />
+          </div>
+        )}
       </div>
 
       <div>&nbsp;</div>

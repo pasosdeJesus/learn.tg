@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import {use, useEffect, useState} from "react"
-import { useWeb3 } from "@/contexts/useWeb3";
+import { useAccount } from 'wagmi';
 
 type PageProps = {
   params: Promise<{
@@ -12,13 +12,7 @@ type PageProps = {
 
 export default function Home({ params } : PageProps) {
 
-  const {
-    address,
-    getShortAddress,
-    getUserAddress,
-    sendCUSD,
-    signTransaction,
-  } = useWeb3();
+  const { address } = useAccount();
 
   const [cursosj, setCursosj] = useState<any[]>([])
 
@@ -33,10 +27,9 @@ export default function Home({ params } : PageProps) {
       }
       let url = process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL
       url += `?filtro[busidioma]=${lang}`
-      let ua = await getUserAddress()
-      console.log("ua=", ua)
-      if (ua) {
-        url += `&filtro[busconBilletera]=true`
+      console.log("address=", address)
+      if (address) {
+        url += `&filtro[busconBilletera]=true&walletAddress=${address}`
       }
       console.log("url=", url)
       axios.get(url)
@@ -52,11 +45,11 @@ export default function Home({ params } : PageProps) {
 
     }
     configurar()
-  }, [])
+  }, [address])
 
 
   return (
-  <div className="overflow-x-hidden py-8 dark:bg-gray-100 dark:text-gray-900">
+  <div className="mt-8 overflow-x-hidden py-8 dark:bg-gray-100 dark:text-gray-900">
     <div className="overflow-x-hidden py-1 dark:bg-gray-100 dark:text-gray-900 flex flex-row flex-wrap justify-center mt-2">
       <>
       {cursosj.map((curso) => (

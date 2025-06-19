@@ -9,6 +9,7 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
+import { useAccount } from 'wagmi';
 //  import addFillInTheBlank from '../lib/add-fill-in-the-blank'
 
 
@@ -20,6 +21,8 @@ type PageProps = {
 };
 
 export default function Page({ params }: PageProps) {
+
+  const { address } = useAccount();
 
   const [myCourse, setMyCourse] = useState({
     idioma: 'en',
@@ -65,6 +68,9 @@ export default function Page({ params }: PageProps) {
     let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL ?? "l"}?` +
       `filtro[busprefijoRuta]=/${pathPrefix}&` +
       `filtro[busidioma]=${lang}`
+    if (address) {
+      url += `&walletAddress=${address}`
+    }
     console.log(`Fetching ${url}`)
     axios.get(url)
     .then(response => {
@@ -89,6 +95,9 @@ export default function Page({ params }: PageProps) {
 
         let pc = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL ?? "x"
         let urld = pc.replace("curso_id", rcurso.id)
+        if (address) {
+          urld += `&walletAddress=${address}`
+        }
         console.log(`Fetching ${urld}`)
         axios.get(urld)
         .then(responsed => {
@@ -137,7 +146,7 @@ export default function Page({ params }: PageProps) {
 
     setToPay(0) //myCourse.toPay
 
-  }, [])
+  }, [address])
 
   return (
   <div className="container flex flex-col mx-auto lg:flex-row justify-center">

@@ -83,7 +83,7 @@ module Cor1440Gen
 
     def index(c = nil)
       c = Cor1440Gen::Proyectofinanciero.all
-      if !current_usuario && (!params || !params[:filtro])
+      if !(current_usuario || (params && params[:walletAddress]))
         c = c.where(sinBilletera: true)
       end
 
