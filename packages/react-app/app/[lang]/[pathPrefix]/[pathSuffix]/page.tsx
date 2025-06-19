@@ -247,11 +247,13 @@ export default function Page({params} : {
           &nbsp;
           <span>{guideNumber}</span>: {myGuide.titulo}
         </h1>
-        <div className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside **:list-disc" dangerouslySetInnerHTML={{ __html: guideHtml }} />
+        <div className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside" dangerouslySetInnerHTML={{ __html: guideHtml }} />
         { isClient && pathPrefix == "gooddollar" && pathSuffix == "guide1" &&
-          <button onClick={claimUBI}
-            className="inline-flex items-center bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white"
+          <div className="flex items-center justify-center">
+            <button onClick={claimUBI}
+              className="inline-flex items-center bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white"
           >Claim UBI</button>
+          </div>
         }
     
         <table className="mx-auto text-center mt-12"><tbody>

@@ -14,3 +14,9 @@
   --color-secondary-200: #8d69bf;
 }
 
+
+figcaption {
+  font-size: 0.8rem;
+  text-align: right;
+}
+

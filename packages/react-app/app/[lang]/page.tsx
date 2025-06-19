@@ -49,7 +49,7 @@ export default function Home({ params } : PageProps) {
 
 
   return (
-  <div className="mt-8 overflow-x-hidden py-8 dark:bg-gray-100 dark:text-gray-900">
+  <div className="mt-8 overflow-x-hidden py-8 dark:bg-gray-100 dark:text-gray-900 mt-8">
     <div className="overflow-x-hidden py-1 dark:bg-gray-100 dark:text-gray-900 flex flex-row flex-wrap justify-center mt-2">
       <>
       {cursosj.map((curso) => (
