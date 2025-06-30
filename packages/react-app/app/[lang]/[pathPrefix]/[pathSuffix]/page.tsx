@@ -55,7 +55,6 @@ export default function Page({params} : {
       .then(response => {
         if (response.data) {
           if (response.data.length != 1) {
-            alert("No se encontró el curso")
             return false
           }
           let rcurso = response.data[0]
@@ -75,7 +74,6 @@ export default function Page({params} : {
             .then(responsed => {
               if (responsed.data) {
                 if (response.data.length != 1) {
-                 alert("No se encontró el curso")
                  return false
                 }
                 let dcurso = responsed.data
@@ -252,7 +250,7 @@ export default function Page({params} : {
           <div className="flex items-center justify-center">
             <button onClick={claimUBI}
               className="inline-flex items-center bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white"
-          >Claim UBI</button>
+          >Sign up with GoodDollar or Claim UBI</button>
           </div>
         }
     
