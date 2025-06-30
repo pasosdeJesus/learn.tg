@@ -20,7 +20,7 @@ const Layout: FC<Props> = ({ children }) => {
     <>
      <div className="bg-gypsum overflow-hidden flex flex-col min-h-screen">
        <Header lang={lang} />
-       <div>
+       <div className="mt-8">
          {children}
        </div>
        <Footer lang={lang} />
