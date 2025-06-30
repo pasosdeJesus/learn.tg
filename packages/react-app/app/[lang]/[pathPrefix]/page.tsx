@@ -83,7 +83,6 @@ export default function Page({ params }: PageProps) {
     .then(response => {
       if (response.data) {
         if (response.data.length != 1) {
-          alert("No se encontró el curso")
           return false
         }
         let rcurso = response.data[0]
@@ -110,7 +109,6 @@ export default function Page({ params }: PageProps) {
         .then(responsed => {
           if (responsed.data) {
             if (response.data.length != 1) {
-              alert("No se encontró el curso")
               return false
             }
             let dcurso = responsed.data
