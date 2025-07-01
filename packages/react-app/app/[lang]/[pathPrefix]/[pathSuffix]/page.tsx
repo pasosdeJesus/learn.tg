@@ -13,6 +13,7 @@ import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
 import { usePublicClient, useWalletClient } from 'wagmi';
+import { useAccount } from 'wagmi'
 //import addFillInTheBlank from '../lib/add-fill-in-the-blank'
 
 
@@ -23,6 +24,9 @@ export default function Page({params} : {
     pathSuffix:string,
   }>
 }) {
+
+  const { address } = useAccount()
+  const { data: session } = useSession();
 
   const [course, setCourse] = useState({
     conBilletera: false,
@@ -43,12 +47,17 @@ export default function Page({params} : {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    if ((session && !address) || (address && !session) || 
+        (address && session && session.address && 
+         address != session.address)) {
+      return
+    }
     setIsClient(true)
     setCoursePath(`/${lang}/${pathPrefix}`)
     let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
       `filtro[busprefijoRuta]=/${pathPrefix}&` +
       `filtro[busidioma]=${lang}`
-    if (session) {
+    if (session && address && session.address == address) {
       url += `&walletAddress=${session.address}`
     }
     console.log(`Fetching ${url}`)
@@ -67,7 +76,7 @@ export default function Page({params} : {
           let urld = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL.replace(
             "curso_id", rcurso.id
           )
-          if (session) {
+          if (session && address && session.address == address) {
             urld += `&walletAddress=${session.address}`
           }
           console.log(`Fetching ${urld}`)
@@ -114,7 +123,7 @@ export default function Page({params} : {
                 ).replace(
                   "guia", pathSuffix
                 )
-                if (session) {
+                if (session && address && session.address == address) {
                   nurl += `&walletAddress=${session.address}`
                 }
                 console.log(`Fetching ${nurl}`)
@@ -138,7 +147,7 @@ export default function Page({params} : {
         console.error(error);
       })
 
-  }, [])
+  }, [session, address])
 
 
   const parameters = use(params)
@@ -203,14 +212,14 @@ export default function Page({params} : {
     return html_con_tailwind
   }
 
-  const { data: session } = useSession();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
   const identitySDK = useIdentitySDK('production');
 
   const claimUBI = async () => {
 
-    if (!session || !publicClient || !walletClient || !identitySDK) {
+    if (!session  || !address || session.address != address || 
+        !publicClient || !walletClient || !identitySDK) {
       return (<div>Works only with wallet connected</div>)
     }
     const claimSDK = new ClaimSDK({
@@ -230,7 +239,7 @@ export default function Page({params} : {
   }
   if (
     !course.sinBilletera && course.conBilletera && 
-    (!session || session.address == null)
+    (!session || !address || !session.address || session.address != address)
   ) {
     return <div className="mt-40">Connect Wallet</div>
   }

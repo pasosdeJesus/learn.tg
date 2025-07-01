@@ -10,6 +10,7 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
+import { useAccount } from 'wagmi'
 //  import addFillInTheBlank from '../lib/add-fill-in-the-blank'
 
 
@@ -22,6 +23,7 @@ type PageProps = {
 
 export default function Page({ params }: PageProps) {
 
+  const { address } = useAccount()
   const { data: session } = useSession()
 
   const [myCourse, setMyCourse] = useState({
@@ -65,10 +67,15 @@ export default function Page({ params }: PageProps) {
   }
 
   useEffect(() => {
+    if ((session && !address) || (address && !session) || 
+        (address && session && session.address && 
+         address != session.address)) {
+      return
+    }
     let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL ?? "l"}?` +
       `filtro[busprefijoRuta]=/${pathPrefix}&` +
       `filtro[busidioma]=${lang}`
-    if (session) {
+    if (session && address && session.address && session.address == address) {
       url += `&walletAddress=${session.address}`
     }
     console.log(`Fetching ${url}`)
@@ -94,7 +101,7 @@ export default function Page({ params }: PageProps) {
 
         let pc = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL ?? "x"
         let urld = pc.replace("curso_id", rcurso.id)
-        if (session) {
+        if (session && address && session.address == address) {
           urld += `&walletAddress=${session.address}`
         }
         console.log(`Fetching ${urld}`)
@@ -144,7 +151,7 @@ export default function Page({ params }: PageProps) {
 
     setToPay(0) //myCourse.toPay
 
-  }, [session])
+  }, [session, address])
 
   return (
   <div className="mt-8 container flex flex-col mx-auto lg:flex-row justify-center">
