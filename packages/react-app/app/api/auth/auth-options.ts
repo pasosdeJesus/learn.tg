@@ -30,14 +30,16 @@ export const authOptions: NextAuthOptions = {
           const nextAuthUrl = new URL(process.env.NEXTAUTH_URL as string);
           console.log("OJO nextAuthUrl=", nextAuthUrl)
 
+          const signature = credentials?.signature || ""
           // From https://github.com/nextauthjs/next-auth/discussions/7923
           const result = await siwe.verify({
-            signature: credentials?.signature || "",
+            signature: signature,
             domain: nextAuthUrl.host,
             nonce: await getCsrfToken({ req: { headers: req.headers } }),
           });
           console.log("OJO result=", result)
-
+          console.log("OJO signature=", signature)
+          
           if (result.success) {
             console.log("OJO siwe.address=", siwe.address)
             return {

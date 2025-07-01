@@ -3,6 +3,7 @@
 import axios from 'axios';
 import { useSession } from "next-auth/react"
 import {use, useEffect, useState} from "react"
+import { useAccount } from 'wagmi'
 
 type PageProps = {
   params: Promise<{
@@ -12,6 +13,7 @@ type PageProps = {
 
 export default function Home({ params } : PageProps) {
 
+  const { address } = useAccount()
   const { data: session } = useSession()
 
   const [cursosj, setCursosj] = useState<any[]>([])
@@ -20,6 +22,11 @@ export default function Home({ params } : PageProps) {
   const { lang } = parameters
 
   useEffect(() => {
+    if ((session && !address) || (address && !session) || 
+        (address && session && session.address && 
+         address != session.address)) {
+      return
+    }
     const configurar = async () => {
       if (process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL == undefined) {
         alert("NEXT_PUBLIC_API_BUSCA_CURSOS_URL not defined")
@@ -29,17 +36,13 @@ export default function Home({ params } : PageProps) {
       url += `?filtro[busidioma]=${lang}`
       let axiosConfig = {}
       console.log("session=", session)
-      if (session) {
+      console.log("address=", address)
+      if (session && address && session.address && 
+          session.address == address) {
         url += `&filtro[busconBilletera]=true&walletAddress=${session.address}`
-        axiosConfig = {
-          headers: { Authorization: `Bearer ${session.address}` }
-        }
       }
       console.log("url=", url)
-      axios.get(
-        url,
-        axiosConfig
-      )
+      axios.get(url)
       .then(response => {
         if (response.data) {
           setCursosj(response.data);
@@ -49,10 +52,9 @@ export default function Home({ params } : PageProps) {
         alert(error)
         console.error(error);
       })
-
     }
     configurar()
-  }, [session])
+  }, [session, address])
 
 
   return (
