@@ -6,17 +6,29 @@
  */
 'use client'
 
+import { SessionProvider } from 'next-auth/react';
+import { AppProps } from 'next/app';
 import {
   connectorsForWallets,
   lightTheme,
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
+import '@rainbow-me/rainbowkit/styles.css';
 import { injectedWallet } from '@rainbow-me/rainbowkit/wallets';
+import { 
+  RainbowKitSiweNextAuthProvider,
+  type GetSiweMessageOptions,
+} from '@rainbow-me/rainbowkit-siwe-next-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider, createConfig, http } from 'wagmi';
+import { createConfig, http, WagmiProvider } from 'wagmi';
 import { celo, celoAlfajores } from 'wagmi/chains';
 
-import '@rainbow-me/rainbowkit/styles.css';
+
+
+interface RainbowKitProviderProps {
+  children: React.ReactNode;
+  autoConnect?: boolean;
+}
 
 const connectors = connectorsForWallets(
   [
@@ -40,24 +52,37 @@ const config = createConfig({
   },
 });
 
+
+const getSiweMessageOptions: GetSiweMessageOptions = () => ({
+  statement: 'Sign in to Learn through games',
+});
+
 const queryClient = new QueryClient();
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
+// Taking ideas of
+// https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/providers/web3-providers.tsx
+export function AppProvider(props: RainbowKitProviderProps) {
   return (
     <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider 
-          theme={lightTheme({
-            accentColor: '#714ba6',
-            accentColorForeground: 'white',
-            borderRadius: 'small',
-            fontStack: 'system',
-            overlayBlur: 'none',
-          })}
-        >
-          {children}
-        </RainbowKitProvider>
-      </QueryClientProvider>
+      <SessionProvider>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitSiweNextAuthProvider
+            getSiweMessageOptions={getSiweMessageOptions}
+          >
+            <RainbowKitProvider 
+              theme={lightTheme({
+              accentColor: '#714ba6',
+              accentColorForeground: 'white',
+              borderRadius: 'small',
+              fontStack: 'system',
+              overlayBlur: 'none',
+              })}
+            >
+              {props.children}
+            </RainbowKitProvider>
+          </RainbowKitSiweNextAuthProvider>
+        </QueryClientProvider>
+      </SessionProvider>
     </WagmiProvider>
   );
 }

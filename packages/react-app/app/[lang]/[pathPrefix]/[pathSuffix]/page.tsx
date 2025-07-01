@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 import { ClaimSDK, useIdentitySDK } from '@goodsdks/citizen-sdk';
-
+import { useSession } from "next-auth/react"
 import { use, useEffect, useState } from 'react'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -12,7 +12,7 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
-import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
+import { usePublicClient, useWalletClient } from 'wagmi';
 //import addFillInTheBlank from '../lib/add-fill-in-the-blank'
 
 
@@ -25,10 +25,11 @@ export default function Page({params} : {
 }) {
 
   const [course, setCourse] = useState({
-    titulo: "",
-    idioma: "",
+    conBilletera: false,
     guias: [],
-    conBilletera: false
+    idioma: "",
+    titulo: "",
+    sinBilletera: false,
   })
   const [guideNumber, setGuideNumber] = useState(0);
   const [myGuide, setMyGuide] = useState({
@@ -47,8 +48,8 @@ export default function Page({params} : {
     let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
       `filtro[busprefijoRuta]=/${pathPrefix}&` +
       `filtro[busidioma]=${lang}`
-    if (address) {
-      url += `&walletAddress=${address}`
+    if (session) {
+      url += `&walletAddress=${session.address}`
     }
     console.log(`Fetching ${url}`)
     axios.get(url)
@@ -66,8 +67,8 @@ export default function Page({params} : {
           let urld = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL.replace(
             "curso_id", rcurso.id
           )
-          if (address) {
-            urld += `&walletAddress=${address}`
+          if (session) {
+            urld += `&walletAddress=${session.address}`
           }
           console.log(`Fetching ${urld}`)
           axios.get(urld)
@@ -113,8 +114,8 @@ export default function Page({params} : {
                 ).replace(
                   "guia", pathSuffix
                 )
-                if (address) {
-                  nurl += `&walletAddress=${address}`
+                if (session) {
+                  nurl += `&walletAddress=${session.address}`
                 }
                 console.log(`Fetching ${nurl}`)
                 axios.get(nurl)
@@ -202,18 +203,18 @@ export default function Page({params} : {
     return html_con_tailwind
   }
 
-  const { address } = useAccount();
+  const { data: session } = useSession();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
   const identitySDK = useIdentitySDK('production');
 
   const claimUBI = async () => {
 
-    if (!address || !publicClient || !walletClient || !identitySDK) {
+    if (!session || !publicClient || !walletClient || !identitySDK) {
       return (<div>Works only with wallet connected</div>)
     }
     const claimSDK = new ClaimSDK({
-      account: address,
+      account: session.address,
       publicClient,
       walletClient,
       identitySDK,
@@ -227,7 +228,10 @@ export default function Page({params} : {
       console.error('Claim failed:', error);
     }
   }
-  if (!course.sinBilletera && course.conBilletera && address == null) {
+  if (
+    !course.sinBilletera && course.conBilletera && 
+    (!session || session.address == null)
+  ) {
     return <div className="mt-40">Connect Wallet</div>
   }
 

@@ -1,8 +1,8 @@
 "use client"
 
 import axios from 'axios';
+import { useSession } from "next-auth/react"
 import {use, useEffect, useState} from "react"
-import { useAccount } from 'wagmi';
 
 type PageProps = {
   params: Promise<{
@@ -12,7 +12,7 @@ type PageProps = {
 
 export default function Home({ params } : PageProps) {
 
-  const { address } = useAccount();
+  const { data: session } = useSession()
 
   const [cursosj, setCursosj] = useState<any[]>([])
 
@@ -27,12 +27,19 @@ export default function Home({ params } : PageProps) {
       }
       let url = process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL
       url += `?filtro[busidioma]=${lang}`
-      console.log("address=", address)
-      if (address) {
-        url += `&filtro[busconBilletera]=true&walletAddress=${address}`
+      let axiosConfig = {}
+      console.log("session=", session)
+      if (session) {
+        url += `&filtro[busconBilletera]=true&walletAddress=${session.address}`
+        axiosConfig = {
+          headers: { Authorization: `Bearer ${session.address}` }
+        }
       }
       console.log("url=", url)
-      axios.get(url)
+      axios.get(
+        url,
+        axiosConfig
+      )
       .then(response => {
         if (response.data) {
           setCursosj(response.data);
@@ -45,7 +52,7 @@ export default function Home({ params } : PageProps) {
 
     }
     configurar()
-  }, [address])
+  }, [session])
 
 
   return (
