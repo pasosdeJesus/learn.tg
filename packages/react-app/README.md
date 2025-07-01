@@ -14,14 +14,9 @@ Configure port for example 3025 in .env:
 PORT=3025
 ```
 
-Build it with:
+Build and runwith:
 ```sh
-make
-```
-
-Run it and keep it running:
-```sh
-./bin/start
+./bin/prod.sh
 ```
 
 nginx should run it with a proxy
