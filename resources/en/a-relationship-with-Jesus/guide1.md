@@ -45,7 +45,6 @@ walking on teh sea")
 ## Reflection
 
 * What of this passage allows you to think that the story really occurred.
-
 * You may have heard comments about Jesus from other people,  but He tells
   you straight today “Don’t be afraid” and we tell you by our personal
   experience: He is love.
@@ -53,6 +52,5 @@ walking on teh sea")
 ## Application
 
 * How can you apply what this passage teaches to your life?
-
 * Memorization challenge:_... But He immediately spoke with them, and said
   to them, “Cheer up! It is I! Don’t be afraid.”_ Mark 6:50
