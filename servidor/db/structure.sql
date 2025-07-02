@@ -1304,6 +1304,39 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
+-- Name: billetera_usuario; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.billetera_usuario (
+    id bigint NOT NULL,
+    billetera character varying(60) NOT NULL,
+    usuario_id integer NOT NULL,
+    token character varying(256),
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: billetera_usuario_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.billetera_usuario_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: billetera_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.billetera_usuario_id_seq OWNED BY public.billetera_usuario.id;
+
+
+--
 -- Name: cor1440_gen_actividad; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4656,6 +4689,13 @@ CREATE TABLE public.usuario (
 
 
 --
+-- Name: billetera_usuario id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billetera_usuario ALTER COLUMN id SET DEFAULT nextval('public.billetera_usuario_id_seq'::regclass);
+
+
+--
 -- Name: cor1440_gen_actividad id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -5203,6 +5243,14 @@ ALTER TABLE ONLY public.cor1440_gen_actividadareas_actividad
 
 ALTER TABLE ONLY public.ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: billetera_usuario billetera_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billetera_usuario
+    ADD CONSTRAINT billetera_usuario_pkey PRIMARY KEY (id);
 
 
 --
@@ -6071,6 +6119,27 @@ CREATE UNIQUE INDEX cor1440_gen_datointermedioti_pmindicadorpf_llaves_idx ON pub
 
 
 --
+-- Name: index_billetera_usuario_on_billetera; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_billetera_usuario_on_billetera ON public.billetera_usuario USING btree (billetera);
+
+
+--
+-- Name: index_billetera_usuario_on_usuario_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_billetera_usuario_on_usuario_id ON public.billetera_usuario USING btree (usuario_id);
+
+
+--
+-- Name: index_billetera_usuario_on_usuario_id_and_billetera; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_billetera_usuario_on_usuario_id_and_billetera ON public.billetera_usuario USING btree (usuario_id, billetera);
+
+
+--
 -- Name: index_cor1440_gen_actividad_anexo_on_anexo_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6641,6 +6710,14 @@ ALTER TABLE ONLY public.cor1440_gen_actividad_rangoedadac
 
 ALTER TABLE ONLY public.mr519_gen_encuestapersona
     ADD CONSTRAINT fk_rails_13f8d66312 FOREIGN KEY (planencuesta_id) REFERENCES public.mr519_gen_planencuesta(id);
+
+
+--
+-- Name: billetera_usuario fk_rails_16c33c90b0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billetera_usuario
+    ADD CONSTRAINT fk_rails_16c33c90b0 FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
 
 
 --
@@ -7714,6 +7791,7 @@ ALTER TABLE ONLY public.usuario
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250701233327'),
 ('20250312193025'),
 ('20250128142614'),
 ('20250128092632'),

@@ -1,0 +1,7 @@
+
+#!/bin/sh
+
+. ./.env
+cmd="psql -h $DB_SOCKET -U $DB_USER $DB_NAME"
+echo $cmd
+eval $cmd

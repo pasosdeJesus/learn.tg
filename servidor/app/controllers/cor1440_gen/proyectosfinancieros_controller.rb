@@ -82,6 +82,12 @@ module Cor1440Gen
     end
 
     def index(c = nil)
+      merr = "".dup
+      if !::ApplicationHelper::verificaToken(request, merr)
+        puts "OJO #{merr}"
+        render json: { error: "Unauthorized. #{merr}" }, status: :unauthorized
+        return
+      end
       c = Cor1440Gen::Proyectofinanciero.all
       if !(current_usuario || (params && params[:walletAddress]))
         c = c.where(sinBilletera: true)
@@ -89,6 +95,16 @@ module Cor1440Gen
 
       index_cor1440_gen(c)
       super(c)
+    end
+
+    def show
+      merr = "".dup
+      if !::ApplicationHelper::verificaToken(request, merr)
+        puts "OJO #{merr}"
+        render json: { error: "Unauthorized. #{merr}" }, status: :unauthorized
+        return
+      end
+      super
     end
 
     def lista_proyectofinanciero_params

@@ -1,7 +1,7 @@
 "use client"
 
 import axios from 'axios';
-import { useSession } from "next-auth/react" 
+import { useSession, getCsrfToken } from "next-auth/react" 
 import {use, useEffect, useState} from "react"
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -72,86 +72,105 @@ export default function Page({ params }: PageProps) {
          address != session.address)) {
       return
     }
-    let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL ?? "l"}?` +
-      `filtro[busprefijoRuta]=/${pathPrefix}&` +
-      `filtro[busidioma]=${lang}`
-    if (session && address && session.address && session.address == address) {
-      url += `&walletAddress=${session.address}`
-    }
-    console.log(`Fetching ${url}`)
-    axios.get(url)
-    .then(response => {
-      if (response.data) {
-        if (response.data.length != 1) {
-          return false
-        }
-        let rcurso = response.data[0]
-        setMyCourse(rcurso)
-        setTitle(rcurso.titulo)
-        setSubtitle(rcurso.subtitulo)
-        setImage(rcurso.imagen)
-        setImageCredits(rcurso.creditoImagen)
-        setImageLink(rcurso.enlaceImagen)
-        setAltImage(rcurso.altImagen)
-        // Idea de usar remark de freecodecamp
-        setHtmlSummary(htmlDeMd(rcurso.resumenMd))
-        setHtmlExtended(htmlDeMd(rcurso.ampliaMd))
 
-        //preHtml.value = htmlDeMd(rcurso.prerequisitosMd)
-
-        let pc = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL ?? "x"
-        let urld = pc.replace("curso_id", rcurso.id)
-        if (session && address && session.address == address) {
-          urld += `&walletAddress=${session.address}`
-        }
-        console.log(`Fetching ${urld}`)
-        axios.get(urld)
-        .then(responsed => {
-          if (responsed.data) {
-            if (response.data.length != 1) {
-              return false
-            }
-            let dcurso = responsed.data
-
-            let cursosPrerequisitoMd = ""
-/*            if (typeof myCourse.cursosPrerequisito != "undefined") {
-              for (const prefijoCp of myCourse.cursosPrerequisito) {
-                let cp = cursos.filter( r:any => r.prefijoRuta == prefijoCp)[0]
-                cursosPrerequisitoMd += "* " + "[" + cp.titulo + "](/" +
-                  cp.idioma + "/" + cp.prefijoRuta + ")\n"
-              }
-            } */
-            //preCourseHtml.value = htmlDeMd(cursosPrerequisitoMd)
-            let guias="<ol class='list-decimal text-white'>\n"
-            let numero = 1
-            for (const guia of dcurso.guias) {
-              guias += "<li>"
-              if (guia.sufijoRuta != null) {
-
-                guias += `<a href='/${rcurso.idioma}${rcurso.prefijoRuta}` +
-                  `/${guia.sufijoRuta}' `+
-                  `style='text-decoration: underline'>${guia.titulo}</a>`
-              } else {
-                guias += guia.titulo
-              }
-              guias += "</li>\n"
-            }
-            guias += "</ol>\n"
-            setContentsHtml(guias)
-          }
-        })
-        .catch(error => {
-          console.error(error);
-        })
+    const configurar = async() => {
+      let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL ?? "l"}?` +
+        `filtro[busprefijoRuta]=/${pathPrefix}&` +
+        `filtro[busidioma]=${lang}`
+      let csrfToken = ""
+      if (session && address && session.address && session.address == address) {
+        csrfToken = await getCsrfToken()
+        url += `&walletAddress=${session.address}` +
+          `&token=${csrfToken}`
       }
-    })
-    .catch(error => {
-      console.error(error);
-    })
+      console.log(`Fetching ${url}`)
+      axios.get(url)
+      .then(response => {
+        if (response.data) {
+          if (response.data.length != 1) {
+            return false
+          }
+          let rcurso = response.data[0]
+          setMyCourse(rcurso)
+          setTitle(rcurso.titulo)
+          setSubtitle(rcurso.subtitulo)
+          setImage(rcurso.imagen)
+          setImageCredits(rcurso.creditoImagen)
+          setImageLink(rcurso.enlaceImagen)
+          setAltImage(rcurso.altImagen)
+          // Idea de usar remark de freecodecamp
+          setHtmlSummary(htmlDeMd(rcurso.resumenMd))
+          setHtmlExtended(htmlDeMd(rcurso.ampliaMd))
 
-    setToPay(0) //myCourse.toPay
+          //preHtml.value = htmlDeMd(rcurso.prerequisitosMd)
 
+          let pc = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL ?? "x"
+          let urld = pc.replace("curso_id", rcurso.id)
+          if (session && address && session.address &&
+              session.address == address) {
+            urld += `&walletAddress=${session.address}` +
+            `&token=${csrfToken}`
+          }
+          console.log(`Fetching ${urld}`)
+          axios.get(urld)
+          .then(responsed => {
+            if (responsed.data) {
+              if (response.data.length != 1) {
+                return false
+              }
+              let dcurso = responsed.data
+
+              let cursosPrerequisitoMd = ""
+              /*            if (typeof myCourse.cursosPrerequisito != "undefined") {
+                            for (const prefijoCp of myCourse.cursosPrerequisito) {
+                            let cp = cursos.filter( r:any => r.prefijoRuta == prefijoCp)[0]
+                            cursosPrerequisitoMd += "* " + "[" + cp.titulo + "](/" +
+                            cp.idioma + "/" + cp.prefijoRuta + ")\n"
+                            }
+                            } */
+              //preCourseHtml.value = htmlDeMd(cursosPrerequisitoMd)
+              let guias="<ol class='list-decimal text-white'>\n"
+              let numero = 1
+              for (const guia of dcurso.guias) {
+                guias += "<li>"
+                if (guia.sufijoRuta != null) {
+
+                  guias += `<a href='/${rcurso.idioma}${rcurso.prefijoRuta}` +
+                    `/${guia.sufijoRuta}' `+
+                    `style='text-decoration: underline'>${guia.titulo}</a>`
+                } else {
+                  guias += guia.titulo
+                }
+                guias += "</li>\n"
+              }
+              guias += "</ol>\n"
+              setContentsHtml(guias)
+            }
+          })
+          .catch(error => {
+            console.error(error);
+          })
+        }
+      })
+      .catch(error => {
+        console.error(error);
+      })
+
+      setToPay(0) //myCourse.toPay
+    }
+    configurar()
   }, [session, address])
+
+  if ((session && !address) || (address && !session) || 
+      (address && session && session.address && 
+       address != session.address)) {
+    return (
+      <div>
+      Partial login. 
+        Please disconnect your wallet and connect and sign again.
+        </div>
+    )
+  }
 
   return (
   <div className="mt-8 container flex flex-col mx-auto lg:flex-row justify-center">
@@ -213,9 +232,5 @@ export default function Page({ params }: PageProps) {
   </div>
   )
 
-  /*figcaption {
-    font-size: 0.8rem;
-    text-align: right;
-  }*/
 
 }

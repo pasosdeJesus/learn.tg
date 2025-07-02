@@ -3,6 +3,8 @@ require 'cor1440_gen/concerns/models/usuario'
 class Usuario < ActiveRecord::Base 
   include Cor1440Gen::Concerns::Models::Usuario
 
+  has_many :billetera_usuario
+
   has_attached_file :foto, 
     path: (Msip.ruta_anexos.to_s + "/fotos/:id_:filename")
 

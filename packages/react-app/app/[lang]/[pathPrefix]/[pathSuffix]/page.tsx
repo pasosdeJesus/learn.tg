@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 import { ClaimSDK, useIdentitySDK } from '@goodsdks/citizen-sdk';
-import { useSession } from "next-auth/react"
+import { useSession, getCsrfToken } from "next-auth/react"
 import { use, useEffect, useState } from 'react'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -52,16 +52,20 @@ export default function Page({params} : {
          address != session.address)) {
       return
     }
-    setIsClient(true)
-    setCoursePath(`/${lang}/${pathPrefix}`)
-    let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
-      `filtro[busprefijoRuta]=/${pathPrefix}&` +
-      `filtro[busidioma]=${lang}`
-    if (session && address && session.address == address) {
-      url += `&walletAddress=${session.address}`
-    }
-    console.log(`Fetching ${url}`)
-    axios.get(url)
+    const configurar = async () => {
+      setIsClient(true)
+      setCoursePath(`/${lang}/${pathPrefix}`)
+      let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
+        `filtro[busprefijoRuta]=/${pathPrefix}&` +
+        `filtro[busidioma]=${lang}`
+      let csrfToken = await getCsrfToken()
+      if (session && address && session.address &&
+          session.address == address) {
+        url += `&walletAddress=${session.address}` +
+          `&token=${csrfToken}`
+      }
+      console.log(`Fetching ${url}`)
+      axios.get(url)
       .then(response => {
         if (response.data) {
           if (response.data.length != 1) {
@@ -76,77 +80,82 @@ export default function Page({params} : {
           let urld = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL.replace(
             "curso_id", rcurso.id
           )
-          if (session && address && session.address == address) {
-            urld += `&walletAddress=${session.address}`
+          if (session && address && session.address &&
+              session.address == address) {
+            urld += `&walletAddress=${session.address}` +
+              `&token=${csrfToken}`
           }
           console.log(`Fetching ${urld}`)
           axios.get(urld)
-            .then(responsed => {
-              if (responsed.data) {
-                if (response.data.length != 1) {
-                 return false
-                }
-                let dcurso = responsed.data
-                setCourse(dcurso)
-
-                let gnumber = 0
-                for(let g=0; g < dcurso.guias.length; g++) {
-                  if (dcurso.guias[g].sufijoRuta == (pathSuffix)) {
-                    setGuideNumber(g + 1);
-                    gnumber = g + 1
-                    setMyGuide(dcurso.guias[g])
-                  }
-                }
-
-                if (gnumber > 1) {
-                  let ga = dcurso.guias[gnumber - 2]
-                  setPreviousGuidePath("/" + dcurso.idioma +
-                    dcurso.prefijoRuta + "/" + ga.sufijoRuta)
-                }
-
-                if (gnumber <  dcurso.guias.length) {
-                  let gs = dcurso.guias[gnumber]
-                  setNextGuidePath("/" + dcurso.idioma +
-                    dcurso.prefijoRuta + "/" + gs.sufijoRuta)
-                }
-
-                setCreditsHtml(htmlDeMd(dcurso.creditosMd))
-
-                if (process.env.NEXT_PUBLIC_API_DESCARGA_URL == undefined) {
-                  alert("Undefined NEXT_PUBLIC_API_DESCARGA_URL")
-                  return false
-                }
-                let nurl = process.env.NEXT_PUBLIC_API_DESCARGA_URL.replace(
-                  "lang", lang
-                ).replace(
-                  "prefix", pathPrefix
-                ).replace(
-                  "guia", pathSuffix
-                )
-                if (session && address && session.address == address) {
-                  nurl += `&walletAddress=${session.address}`
-                }
-                console.log(`Fetching ${nurl}`)
-                axios.get(nurl)
-                  .then(response => {
-                    if (response.data) {
-                      setGuideHtml(htmlDeMd(response.data))
-                    }
-                  })
-                  .catch(error => {
-                    console.error(error);
-                  })
+          .then(responsed => {
+            if (responsed.data) {
+              if (response.data.length != 1) {
+                return false
               }
-            })
-            .catch(error => {
-              console.error(error);
-            })
+              let dcurso = responsed.data
+              setCourse(dcurso)
+
+              let gnumber = 0
+              for(let g=0; g < dcurso.guias.length; g++) {
+                if (dcurso.guias[g].sufijoRuta == (pathSuffix)) {
+                  setGuideNumber(g + 1);
+                  gnumber = g + 1
+                  setMyGuide(dcurso.guias[g])
+                }
+              }
+
+              if (gnumber > 1) {
+                let ga = dcurso.guias[gnumber - 2]
+                setPreviousGuidePath("/" + dcurso.idioma +
+                                     dcurso.prefijoRuta + "/" + ga.sufijoRuta)
+              }
+
+              if (gnumber <  dcurso.guias.length) {
+                let gs = dcurso.guias[gnumber]
+                setNextGuidePath("/" + dcurso.idioma +
+                                 dcurso.prefijoRuta + "/" + gs.sufijoRuta)
+              }
+
+              setCreditsHtml(htmlDeMd(dcurso.creditosMd))
+
+              if (process.env.NEXT_PUBLIC_API_DESCARGA_URL == undefined) {
+                alert("Undefined NEXT_PUBLIC_API_DESCARGA_URL")
+                return false
+              }
+              let nurl = process.env.NEXT_PUBLIC_API_DESCARGA_URL.replace(
+                "lang", lang
+              ).replace(
+              "prefix", pathPrefix
+              ).replace(
+              "guia", pathSuffix
+              )
+              if (session && address && session.address &&
+                  session.address == address) {
+                nurl += `&walletAddress=${session.address}` +
+                  `&token=${csrfToken}`
+              }
+              console.log(`Fetching ${nurl}`)
+              axios.get(nurl)
+              .then(response => {
+                if (response.data) {
+                  setGuideHtml(htmlDeMd(response.data))
+                }
+              })
+              .catch(error => {
+                console.error(error);
+              })
+            }
+          })
+          .catch(error => {
+            console.error(error);
+          })
         }
       })
       .catch(error => {
         console.error(error);
       })
-
+    }
+    configurar()
   }, [session, address])
 
 

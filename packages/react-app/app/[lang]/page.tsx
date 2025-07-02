@@ -1,7 +1,7 @@
 "use client"
 
 import axios from 'axios';
-import { useSession } from "next-auth/react"
+import { useSession, getCsrfToken } from "next-auth/react";
 import {use, useEffect, useState} from "react"
 import { useAccount } from 'wagmi'
 
@@ -25,7 +25,7 @@ export default function Home({ params } : PageProps) {
     if ((session && !address) || (address && !session) || 
         (address && session && session.address && 
          address != session.address)) {
-      return
+      return 
     }
     const configurar = async () => {
       if (process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL == undefined) {
@@ -39,7 +39,10 @@ export default function Home({ params } : PageProps) {
       console.log("address=", address)
       if (session && address && session.address && 
           session.address == address) {
-        url += `&filtro[busconBilletera]=true&walletAddress=${session.address}`
+        let csrfToken = await getCsrfToken()
+        url += '&filtro[busconBilletera]=true' +
+          `&walletAddress=${session.address}` +
+          `&token=${csrfToken}`
       }
       console.log("url=", url)
       axios.get(url)
@@ -56,6 +59,16 @@ export default function Home({ params } : PageProps) {
     configurar()
   }, [session, address])
 
+  if ((session && !address) || (address && !session) || 
+      (address && session && session.address && 
+       address != session.address)) {
+    return (
+      <div>
+        Partial login. 
+        Please disconnect your wallet and connect and sign again.
+      </div>
+    )
+  }
 
   return (
   <div className="mt-8 overflow-x-hidden py-8 dark:bg-gray-100 dark:text-gray-900 mt-8">
