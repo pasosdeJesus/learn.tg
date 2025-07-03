@@ -2,4 +2,6 @@
 
 pnpm install
 . ./.env
-node_modules/next/dist/bin/next dev -p${PORT} --experimental-https --experimental-https-key ../../.cert/llave.pem --experimental-https-cert ../../.cert/cert.pem --experimental-https-ca /etc/ssl/cert.pem
+cmd="node_modules/next/dist/bin/next dev -p${PORT} ${OPDEV}"
+echo $cmd
+eval $cmd
