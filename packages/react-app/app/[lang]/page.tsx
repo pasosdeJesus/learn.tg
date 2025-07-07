@@ -63,7 +63,7 @@ export default function Home({ params } : PageProps) {
       (address && session && session.address && 
        address != session.address)) {
     return (
-      <div>
+      <div className="p-10 mt-10">
         Partial login. 
         Please disconnect your wallet and connect and sign again.
       </div>
