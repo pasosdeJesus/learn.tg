@@ -38,6 +38,7 @@ export interface BilleteraUsuario {
   billetera: string;
   created_at: Timestamp;
   id: Generated<Int8>;
+  token: string | null;
   updated_at: Timestamp;
   usuario_id: number;
 }
