@@ -246,6 +246,18 @@ export default function Page({params} : {
       console.error('Claim failed:', error);
     }
   }
+
+  if ((session && !address) || (address && !session) || 
+      (address && session && session.address && 
+       address != session.address)) {
+    return (
+      <div className="p-10 mt-10">
+        Partial login. 
+        Please disconnect your wallet and connect and sign again.
+      </div>
+    )
+  }
+
   if (
     !course.sinBilletera && course.conBilletera && 
     (!session || !address || !session.address || session.address != address)

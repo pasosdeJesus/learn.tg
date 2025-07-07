@@ -165,10 +165,10 @@ export default function Page({ params }: PageProps) {
       (address && session && session.address && 
        address != session.address)) {
     return (
-      <div>
-      Partial login. 
+      <div className="p-10 mt-10">
+        Partial login. 
         Please disconnect your wallet and connect and sign again.
-        </div>
+      </div>
     )
   }
 
