@@ -6,6 +6,7 @@
  */
 'use client'
 
+import { getReferralTag, submitReferral } from '@divvi/referral-sdk'
 import { SessionProvider } from 'next-auth/react';
 import { AppProps } from 'next/app';
 import {
@@ -15,12 +16,9 @@ import {
 } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { injectedWallet } from '@rainbow-me/rainbowkit/wallets';
-import { 
-  RainbowKitSiweNextAuthProvider,
-  type GetSiweMessageOptions,
-} from '@rainbow-me/rainbowkit-siwe-next-auth';
+import { RainbowKitSiweNextAuthProvider, type GetSiweMessageOptions } from '@rainbow-me/rainbowkit-siwe-next-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createConfig, http, WagmiProvider } from 'wagmi';
+import { createConfig, http, useAccount, WagmiProvider } from 'wagmi';
 import { celo, celoAlfajores } from 'wagmi/chains';
 
 
@@ -53,9 +51,17 @@ const config = createConfig({
 });
 
 
-const getSiweMessageOptions: GetSiweMessageOptions = () => ({
-  statement: 'Sign in to Learn through games',
-});
+const getSiweMessageOptions: GetSiweMessageOptions = () => {
+  const referralTag = getReferralTag({
+    user: ethereum?.selectedAddress || '0x0',
+    consumer: '0x358643badcc77cccb28a319abd439438a57339a7',
+  })
+  const msg={
+    statement: `Sign in to Learn through games with DIVVI tracking.` // + ` Referral Tag: ${referralTag}`
+  }
+  console.log("OJO msg=", msg)
+  return msg
+}
 
 const queryClient = new QueryClient();
 

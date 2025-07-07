@@ -13,6 +13,9 @@ importers:
 
   .:
     dependencies:
+      '@divvi/referral-sdk':
+        specifier: ^2.2.0
+        version: 2.2.0
       '@goodsdks/citizen-sdk':
         specifier: ^1.0.1
         version: 1.0.1(jiti@2.4.2)(postcss@8.5.6)(typescript@5.8.3)(viem@2.31.6(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.4))(wagmi@2.15.6(@tanstack/query-core@5.81.5)(@tanstack/react-query@5.81.5(react@19.1.0))(@types/react@19.1.8)(bufferutil@4.0.9)(react@19.1.0)(typescript@5.8.3)(utf-8-validate@5.0.10)(viem@2.31.6(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.4))(zod@3.24.4))
@@ -165,6 +168,9 @@ packages:
 
   '@coinbase/wallet-sdk@4.3.3':
     resolution: {integrity: sha512-h8gMLQNvP5TIJVXFOyQZaxbi1Mg5alFR4Z2/PEIngdyXZEoQGcVhzyQGuDa3t9zpllxvqfAaKfzDhsfCo+nhSQ==}
+
+  '@divvi/referral-sdk@2.2.0':
+    resolution: {integrity: sha512-C02v8YY+H6TunWz1lUGU04pJzaOrnjVbe12Gv/iFo1C9NNE1+o5oVR/xGuxfXqsPJ1tVlvS0s+5kqQEDAl8Blg==}
 
   '@ecies/ciphers@0.2.3':
     resolution: {integrity: sha512-tapn6XhOueMwht3E2UzY0ZZjYokdaw9XtL9kEyjhQ/Fb9vL9xTFbOaI+fV0AWvTpYu4BNloC6getKW6NtSg4mA==}
@@ -4224,6 +4230,8 @@ snapshots:
       clsx: 1.2.1
       eventemitter3: 5.0.1
       preact: 10.26.9
+
+  '@divvi/referral-sdk@2.2.0': {}
 
   '@ecies/ciphers@0.2.3(@noble/ciphers@1.3.0)':
     dependencies:

@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@divvi/referral-sdk": "^2.2.0",
     "@goodsdks/citizen-sdk": "^1.0.1",
     "@rainbow-me/rainbowkit": "^2.2.8",
     "@rainbow-me/rainbowkit-siwe-next-auth": "^0.5.0",

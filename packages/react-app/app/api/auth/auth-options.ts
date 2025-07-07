@@ -1,13 +1,14 @@
 // From
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/api/auth/auth-options.ts
-import { Insertable, Kysely, PostgresDialect, sql } from 'kysely';
+import { submitReferral } from '@divvi/referral-sdk'
+import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely';
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getCsrfToken } from "next-auth/react";
 import { SiweMessage } from "siwe";
 
 import defineConfig from '@/.config/kysely.config.ts'
-import { DB, BilleteraUsuario } from '@/db/db.d.ts';
+import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -36,7 +37,7 @@ export const authOptions: NextAuthOptions = {
 
           // From https://github.com/nextauthjs/next-auth/discussions/7923
           const result = await siwe.verify({
-            signature: credentials?.signature || "",
+            signature: credentials?.signature || "0x0",
             domain: nextAuthUrl.host,
             nonce: await getCsrfToken({ req: { headers: req.headers } }),
           });
@@ -47,6 +48,13 @@ export const authOptions: NextAuthOptions = {
             console.log("OJO siwe.address=", siwe.address)
             //localStorage.setItem('authToken', signature)
 
+            console.log("OJO Submitting referral " + (new Date()))
+            const sr = await submitReferral({
+              message: credentials?.message || "",
+              signature: credentials?.signature || "0x0",
+              chainId: result.data.chainId,
+            })
+            console.log("OJO Submitted ", sr, (new Date()))
             const db = new Kysely<DB>({
               dialect: defineConfig.dialect
             })
@@ -98,7 +106,7 @@ export const authOptions: NextAuthOptions = {
             } else {
               console.log("existe ", puser.rows[0].usuario_id)
 
-              let uWalletUser:Updatable<Usuario> = {
+              let uWalletUser:Updateable<Usuario> = {
                 token: result.data.nonce,
                 updated_at: now,
               }
