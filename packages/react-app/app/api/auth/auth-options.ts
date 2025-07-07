@@ -27,13 +27,13 @@ export const authOptions: NextAuthOptions = {
         },
       },
       async authorize(credentials, req) {
-        console.log("OJO authorize. credentials=", credentials, " req=", req)
+        console.log(new Date(), "OJO authorize. credentials=", credentials, " req=", req, new Date())
         try {
-          console.log("OJO credentials.message=", credentials?.message)
+          console.log(new Date(), "OJO credentials.message=", credentials?.message)
           const siwe = new SiweMessage( credentials?.message || "")
-          console.log("OJO siwe=", siwe)
+          console.log(new Date(), "OJO siwe=", siwe)
           const nextAuthUrl = new URL(process.env.NEXTAUTH_URL as string);
-          console.log("OJO nextAuthUrl=", nextAuthUrl)
+          console.log(new Date(), "OJO nextAuthUrl=", nextAuthUrl)
 
           // From https://github.com/nextauthjs/next-auth/discussions/7923
           const result = await siwe.verify({
@@ -41,20 +41,19 @@ export const authOptions: NextAuthOptions = {
             domain: nextAuthUrl.host,
             nonce: await getCsrfToken({ req: { headers: req.headers } }),
           });
-          console.log("OJO result=", result)
-          console.log("OJO nonce=", result.data.nonce)
+          console.log(new Date(), "OJO verify result=", result)
+          console.log(new Date(), "OJO nonce=", result.data.nonce)
 
           if (result.success) {
-            console.log("OJO siwe.address=", siwe.address)
-            //localStorage.setItem('authToken', signature)
+            console.log(new Date(), "OJO siwe.address=", siwe.address)
 
-            console.log("OJO Submitting referral " + (new Date()))
+            console.log(new Date(), "OJO Submitting referral ", new Date())
             const sr = await submitReferral({
               message: credentials?.message || "",
               signature: credentials?.signature || "0x0",
               chainId: result.data.chainId,
             })
-            console.log("OJO Submitted ", sr, (new Date()))
+            console.log(new Date(), "OJO Submitted ", sr)
             const db = new Kysely<DB>({
               dialect: defineConfig.dialect
             })
@@ -66,13 +65,13 @@ export const authOptions: NextAuthOptions = {
               FROM billetera_usuario
               WHERE billetera=${sql.val(siwe.address)}`
               .execute(db)
-            console.log("puser=", puser) 
-            console.log("puser.rows=", puser.rows) 
+            console.log(new Date(), "puser=", puser) 
+            console.log(new Date(), "puser.rows=", puser.rows) 
 
             if (puser.rows.length == 0) {
               let address15 = siwe.address.slice(0,7) + "..." +
                 siwe.address.slice(-5)
-              console.log("OJO address15=", address15,
+              console.log(new Date(), "OJO address15=", address15,
                           ", address15.length", address15.length)
               let nuser:Insertable<Usuario> = {
                 nombre: siwe.address,
@@ -88,7 +87,7 @@ export const authOptions: NextAuthOptions = {
                 .values(nuser)
                 .returningAll()
                 .executeTakeFirstOrThrow()
-              console.log("After insert iuser=", iuser)
+              console.log(new Date(), "After insert iuser=", iuser)
 
               let nWalletUser:Insertable<BilleteraUsuario> = {
                 usuario_id: iuser.id,
@@ -102,9 +101,9 @@ export const authOptions: NextAuthOptions = {
                 .values(nWalletUser)
                 .returningAll()
                 .executeTakeFirstOrThrow()
-              console.log("After insert iWalletUser=", iWalletUser)
+              console.log(new Date(), "After insert iWalletUser=", iWalletUser)
             } else {
-              console.log("existe ", puser.rows[0].usuario_id)
+              console.log(new Date(), "existe ", puser.rows[0].usuario_id)
 
               let uWalletUser:Updateable<Usuario> = {
                 token: result.data.nonce,
@@ -113,8 +112,9 @@ export const authOptions: NextAuthOptions = {
               let rUpdate=await db.updateTable('billetera_usuario')
               .set(uWalletUser)
               .where('usuario_id', '=', puser.rows[0].usuario_id).execute()
-              console.log("After update rUpdate=", rUpdate)
+              console.log(new Date(), "After update rUpdate=", rUpdate)
             }
+            console.log(new Date(), "OJO Before return. ", (new Date()))
 
             return {
               id: siwe.address
@@ -122,7 +122,7 @@ export const authOptions: NextAuthOptions = {
           }
           return null;
         } catch (e) {
-          console.log("OJO exception e=", e)
+          console.log(new Date(), "OJO exception e=", e)
           return null;
         }
       },
@@ -134,7 +134,7 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async session({ session, token }: { session: any; token: any }) {
-      console.log("OJO session. session=", session, ", token=", token)
+      console.log(new Date(), "OJO session. session=", session, ", token=", token)
       session.address = token.sub;
       session.user.name = token.sub;
       return session;

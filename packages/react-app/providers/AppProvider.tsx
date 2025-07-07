@@ -6,7 +6,7 @@
  */
 'use client'
 
-import { getReferralTag, submitReferral } from '@divvi/referral-sdk'
+import { getReferralTag } from '@divvi/referral-sdk'
 import { SessionProvider } from 'next-auth/react';
 import { AppProps } from 'next/app';
 import {
@@ -57,7 +57,8 @@ const getSiweMessageOptions: GetSiweMessageOptions = () => {
     consumer: '0x358643badcc77cccb28a319abd439438a57339a7',
   })
   const msg={
-    statement: `Sign in to Learn through games with DIVVI tracking.` // + ` Referral Tag: ${referralTag}`
+    statement: 'Sign in to Learn through games with DIVVI tracking. ' +
+      `Referral Tag: ${referralTag}`
   }
   console.log("OJO msg=", msg)
   return msg
