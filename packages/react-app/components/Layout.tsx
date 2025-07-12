@@ -1,12 +1,11 @@
 "use client"
 
-import { FC, ReactNode } from "react";
-
-import Footer from "./Footer";
-import Header from "./Header";
+import React, { FC, ReactNode } from "react"
+import Footer from "./Footer"
+import Header from "./Header"
 
 interface Props {
-      children: ReactNode;
+  children: ReactNode
 }
 const Layout: FC<Props> = ({ children }) => {
 
@@ -15,16 +14,13 @@ const Layout: FC<Props> = ({ children }) => {
     let purl = window.location.href.split("/")
     lang = purl.length > 3 ? purl[3] : "en"
   }
-
   return (
     <>
-     <div className="bg-gypsum overflow-hidden flex flex-col min-h-screen">
-       <Header lang={lang} />
-       <div className="mt-8">
-         {children}
-       </div>
-       <Footer lang={lang} />
-    </div>
+      <div className="bg-gypsum overflow-hidden flex flex-col min-h-screen">
+        <Header lang={lang} />
+        <div className="mt-8">{children}</div>
+        <Footer lang={lang} />
+      </div>
     </>
   );
 };
