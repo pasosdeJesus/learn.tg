@@ -62,6 +62,7 @@
   "pnpm": {
     "overrides": {
       "@parcel/watcher": "npm:@parcel/watcher-wasm",
+      "rollup": "npm:@rollup/wasm-node",
       "lightningcss": "npm:lightningcss-wasm",
       "@tailwindcss/oxide": "npm:@tailwindcss/oxide-wasm32-wasi"
     },
