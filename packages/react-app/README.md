@@ -1,7 +1,9 @@
 # Frontend of learn.tg
+
 ## Getting Started
 
-Adjust .env and run in development mode with:
+Copy `.env.template` into `.env`, adjust `.env` and run in 
+development mode with:
 
 ```bash
 bin/dev
@@ -14,7 +16,7 @@ Configure port for example 3025 in .env:
 PORT=3025
 ```
 
-Build and runwith:
+Build and run with:
 ```sh
 ./bin/prod.sh
 ```
