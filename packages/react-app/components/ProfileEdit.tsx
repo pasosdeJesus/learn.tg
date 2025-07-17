@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { Button, Form, Input, Select } from 'antd';
+import { useState } from 'react'
+import { Button, Form, Input, Select } from 'antd'
 
-const ProfileEdit = () => {
-  const [form] = Form.useForm();
-  
+export default function ProfileEdit({lang = "en"}) {
+
+  const [form] = Form.useForm()
+
   const onFinish = (values) => {
     // TODO: Add API call to save profile data
-    console.log('Profile data:', values);
-  };
+    console.log('Profile data:', values)
+  }
 
   return (
     <div style={{ maxWidth: '600px', margin: '20px auto', padding: '20px' }}>
@@ -76,7 +77,6 @@ const ProfileEdit = () => {
         </Form.Item>
       </Form>
     </div>
-  );
-};
+  )
+}
 
-export default ProfileEdit;

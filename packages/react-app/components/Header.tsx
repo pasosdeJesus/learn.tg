@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { useConnect } from "wagmi"
 import { injected } from "wagmi/connectors"
-import { ProfileEdit } from './ProfileEdit';
+import ProfileEdit from './ProfileEdit';
 
 export default function Header({lang = "en"}) {
   const [hideConnectBtn, setHideConnectBtn] = useState(false)
