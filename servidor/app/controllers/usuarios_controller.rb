@@ -57,7 +57,7 @@ class UsuariosController < Msip::ModelosController
         :nusuario,
         :id,
         :nombre,
-        :grupos,
+        :grupo,
         :email,
         :foto,
       ]
@@ -89,6 +89,9 @@ class UsuariosController < Msip::ModelosController
     return c
   end
 
+  def index()
+    super
+  end
 
   def foto
     if !params[:id].nil?

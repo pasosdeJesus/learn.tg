@@ -17,5 +17,13 @@ class Usuario < ActiveRecord::Base
     # No tiene restricciones de oficina
   end
 
+  scope :filtrar_alterno, lambda  { |otros_params| 
+    uid = []
+    if otros_params["walletAddress"]
+      uid = BilleteraUsuario.where(billetera: otros_params["walletAddress"]).
+        pluck(:usuario_id)
+    end
+    where(id: uid)
+  }
 
 end
