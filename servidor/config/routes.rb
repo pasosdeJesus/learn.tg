@@ -2,8 +2,7 @@ Rails.application.routes.draw do
 
   devise_scope :usuario do
     get 'sign_out' => 'devise/sessions#destroy'
-    get 'salir' => 'devise/sessions#destroy',
-      as: :terminar_sesion
+    get 'salir' => 'devise/sessions#destroy', as: :terminar_sesion
     post 'usuarios/iniciar_sesion', to: 'devise/sessions#create'
     get 'usuarios/iniciar_sesion', to: 'devise/sessions#new',
       as: :iniciar_sesion
@@ -17,17 +16,21 @@ Rails.application.routes.draw do
       post ruta, to: 'devise/sessions#create'
     end
   end
-  devise_for :usuarios, :skip => [:registrations], module: :devise
+  devise_for :usuarios, 
+    #:skip => [:registrations], 
+    module: :devise
   as :usuario do
     get 'usuarios/edit' => 'devise/registrations#edit',
       :as => 'editar_registro_usuario'
-    put 'usuarios/:id' => 'devise/registrations#update',
+    put 'usuarios/:id' => 'registrations#update',
       :as => 'registro_usuario'
   end
   resources :usuarios, path_names: { new: 'nuevo', edit: 'edita' }
   get '/usuarios/foto/:id', to: 'usuarios#foto',
     as: 'usuarios_foto'
 
+  post "/usuarios/actualiza_mi_usuario", to: "usuarios#actualiza_mi_usuario", 
+    as: 'actualiza_mi_usuario'
   resources :cursos, path_names: {new: 'crear', edit: 'editar' },
     controller: 'cor1440_gen/proyectosfinancieros'
 

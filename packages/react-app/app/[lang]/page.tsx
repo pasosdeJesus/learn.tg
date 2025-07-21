@@ -11,7 +11,7 @@ type PageProps = {
   }>
 }
 
-export default function Home({ params } : PageProps) {
+export default function Page({ params } : PageProps) {
 
   const { address } = useAccount()
   const { data: session } = useSession()

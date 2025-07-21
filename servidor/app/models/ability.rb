@@ -13,6 +13,7 @@ class Ability  < Cor1440Gen::Ability
 
   # Autorizacion con CanCanCan
   def initialize(usuario = nil)
+    puts "OJO usuario=", usuario
     # Sin autenticación puede consultarse información geográfica
     # Cursos para todos
     can(:read, [
@@ -130,6 +131,8 @@ class Ability  < Cor1440Gen::Ability
             Msip::Orgsocial,
           )
           can(:manage, Msip::Persona)
+
+          can(:read, Usuario, id: usuario.id)
 
       when Ability::ROLADMIN, Ability::ROLDIR
         can(:manage, [

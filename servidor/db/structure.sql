@@ -4657,7 +4657,7 @@ CREATE TABLE public.usuario (
     password character varying(64) DEFAULT ''::character varying NOT NULL,
     nombre character varying(50) COLLATE public.es_co_utf_8,
     descripcion character varying(50),
-    rol integer DEFAULT 4,
+    rol integer DEFAULT 5,
     idioma character varying(6) DEFAULT 'es_CO'::character varying NOT NULL,
     email character varying(255) DEFAULT ''::character varying NOT NULL,
     encrypted_password character varying(255) DEFAULT ''::character varying NOT NULL,
@@ -7790,6 +7790,7 @@ ALTER TABLE ONLY public.usuario
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250721002737'),
 ('20250701233327'),
 ('20250312193025'),
 ('20250128142614'),

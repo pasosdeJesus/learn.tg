@@ -73,6 +73,8 @@ module Cor1440
     config.x.maq_cliente = ENV.fetch('MAQ_CLIENTE')
 
     config.forgery_protection_origin_check = false
+
+    config.x.autentica_token_cripto_billetera = true
   end
 end
 
