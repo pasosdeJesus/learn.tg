@@ -8,7 +8,6 @@
     "build:css": "postcss ./app/assets/stylesheets/application.postcss.css -o ./app/assets/builds/application.css"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^6.7.2",
     "@hotwired/stimulus": "^3.2.2",
     "@hotwired/turbo-rails": "^8.0.13",
     "@pasosdejesus/autocompleta_ajax": "https://gitlab.com/pasosdeJesus/autocompleta_ajax.git",
@@ -17,7 +16,6 @@
     "apexcharts": "^3.27.2",
     "autoprefixer": "^10.4.21",
     "bootstrap": "^5.3.3",
-    "bootstrap-icons": "^1.11.3",
     "css-pro-layout": "^1.1.0",
     "esbuild": "^0.25.0",
     "gridstack": "^0.6.0",
@@ -33,7 +31,7 @@
     "eslint": "^8.11.0",
     "glob-parent": "^6.0.1",
     "normalize-url": "^4.5.1",
-    "postcss": "^8.5.3"
+    "postcss": "^8.5.6"
   },
   "browserslist": [
     "defaults"
