@@ -221,7 +221,7 @@ export default function ProfileForm({ params } : PageProps) {
   if (!(address && session && session.address && address == session.address)) {
     return (
       <div className="p-10 mt-10">
-        Partial uname.
+        Partial login.
         Please disconnect your wallet and connect and sign again.
       </div>
     )

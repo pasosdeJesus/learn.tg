@@ -6,8 +6,6 @@ import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { useAccount, useConnect } from "wagmi"
 import { injected } from "wagmi/connectors"
 
-import ProfileEdit from './ProfileEdit';
-
 export default function Header({lang = "en"}) {
   const [hideConnectBtn, setHideConnectBtn] = useState(false)
   const { connect } = useConnect()
@@ -43,7 +41,7 @@ export default function Header({lang = "en"}) {
          session.address == address && (
           <div className="flex h-16 content-center justify-end items-center mr-4">
             <div className="relative">
-              <a href={`/${lang}/profile`}
+              <a href={`/${lang == "es" ? "es" : "en"}/profile`}
                 className="btn px-4 py-2 bg-secondary-100 text-white rounded hover:bg-secondary-200"
               >
                 Profile
