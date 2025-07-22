@@ -43,7 +43,10 @@ const connectors = connectorsForWallets(
 
 const config = createConfig({
   connectors,
-  chains: [celo, celoAlfajores],
+  chains: (
+    process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
+    [celo] : [celoAlfajores]
+  ),
   transports: {
     [celo.id]: http(),
     [celoAlfajores.id]: http(),

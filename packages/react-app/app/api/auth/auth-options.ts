@@ -32,7 +32,7 @@ export const authOptions: NextAuthOptions = {
           console.log(new Date(), "OJO credentials.message=", credentials?.message)
           const siwe = new SiweMessage( credentials?.message || "")
           console.log(new Date(), "OJO siwe=", siwe)
-          const nextAuthUrl = new URL(process.env.NEXTAUTH_URL as string);
+          const nextAuthUrl = new URL(process.env.NEXT_PUBLIC_AUTH_URL as string);
           console.log(new Date(), "OJO nextAuthUrl=", nextAuthUrl)
 
           // From https://github.com/nextauthjs/next-auth/discussions/7923
