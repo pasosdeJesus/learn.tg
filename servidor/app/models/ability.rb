@@ -1,5 +1,29 @@
 class Ability  < Cor1440Gen::Ability
 
+  ROLBILLETERA = 7
+
+  ROLES = [
+    ["Administrador", ROLADMIN], # 1
+    ["", 0], # 2
+    ["Directivo", ROLDIR], # 3
+    ["", 0], # 4
+    ["Operador", ROLOPERADOR], # 5
+    ["", 0], # 6
+    ["Billetera", ROLBILLETERA], #7
+  ]
+
+  ROLES_CA = [
+    "Crear copias de respaldo cifradas. " \
+    "Administrar usuarios. " \
+    "Administrar tablas básicas. ",
+    "", # 2
+    "", # 3
+    "", # 4
+    "", # 5
+    "", # 6
+    "Editar su perfil", # 7
+  ]
+
   BASICAS_PROPIAS = [
     ['', 'religion'],
   ]
@@ -51,6 +75,9 @@ class Ability  < Cor1440Gen::Ability
 
     if !usuario.nil? && !usuario.rol.nil?
       case usuario.rol
+      when ROLBILLETERA
+          can(:read, Usuario, id: usuario.id)
+
       when ROLOPERADOR
 
         can(:manage, Cor1440Gen::Actividadpf)
@@ -137,7 +164,6 @@ class Ability  < Cor1440Gen::Ability
           )
           can(:manage, Msip::Persona)
 
-          can(:read, Usuario, id: usuario.id)
 
       when Ability::ROLADMIN, Ability::ROLDIR
         can(:manage, [
