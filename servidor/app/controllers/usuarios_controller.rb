@@ -96,6 +96,7 @@ class UsuariosController < Msip::ModelosController
   end
 
   def index()
+    puts "OJO paso por index"
     super
   end
 
@@ -115,9 +116,9 @@ class UsuariosController < Msip::ModelosController
       pais_id: params["pais_id"]
     })
     if !u.save
-      merr = u.errors.full_messages.join(". ")
-      puts merr
-      render json: { error: merr}, 
+      me = u.errors.full_messages.join(". ")
+      puts me
+      render json: { error: me}, 
         status: :unauthorized
       return
     end

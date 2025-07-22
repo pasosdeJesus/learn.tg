@@ -4627,40 +4627,6 @@ ALTER SEQUENCE public.nonce_id_seq OWNED BY public.nonce.id;
 
 
 --
--- Name: religion; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.religion (
-    id bigint NOT NULL,
-    nombre character varying(500) NOT NULL COLLATE public.es_co_utf_8,
-    observaciones character varying(5000),
-    fechacreacion date NOT NULL,
-    fechadeshabilitacion date,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: religion_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.religion_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: religion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.religion_id_seq OWNED BY public.religion.id;
-
-
---
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4691,7 +4657,7 @@ CREATE TABLE public.usuario (
     password character varying(64) DEFAULT ''::character varying NOT NULL,
     nombre character varying(50) COLLATE public.es_co_utf_8,
     descripcion character varying(50),
-    rol integer DEFAULT 5,
+    rol integer DEFAULT 7,
     idioma character varying(6) DEFAULT 'es_CO'::character varying NOT NULL,
     email character varying(255) DEFAULT ''::character varying NOT NULL,
     encrypted_password character varying(255) DEFAULT ''::character varying NOT NULL,
@@ -4716,8 +4682,6 @@ CREATE TABLE public.usuario (
     foto_content_type character varying,
     foto_file_size bigint,
     foto_updated_at timestamp without time zone,
-    religion_id integer DEFAULT 1,
-    pais_id integer,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
@@ -5246,13 +5210,6 @@ ALTER TABLE ONLY public.msip_vereda ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.nonce ALTER COLUMN id SET DEFAULT nextval('public.nonce_id_seq'::regclass);
-
-
---
--- Name: religion id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.religion ALTER COLUMN id SET DEFAULT nextval('public.religion_id_seq'::regclass);
 
 
 --
@@ -6093,14 +6050,6 @@ ALTER TABLE ONLY public.nonce
 
 ALTER TABLE ONLY public.cor1440_gen_rangoedadac
     ADD CONSTRAINT rangoedadac_pkey PRIMARY KEY (id);
-
-
---
--- Name: religion religion_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.religion
-    ADD CONSTRAINT religion_pkey PRIMARY KEY (id);
 
 
 --
@@ -6955,14 +6904,6 @@ ALTER TABLE ONLY public.cor1440_gen_informeauditoria
 
 
 --
--- Name: usuario fk_rails_4649f3efec; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.usuario
-    ADD CONSTRAINT fk_rails_4649f3efec FOREIGN KEY (pais_id) REFERENCES public.msip_pais(id);
-
-
---
 -- Name: msip_orgsocial_persona fk_rails_4672f6cbcd; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7579,14 +7520,6 @@ ALTER TABLE ONLY public.cor1440_gen_actividad_orgsocial
 
 
 --
--- Name: usuario fk_rails_ee8a18179f; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.usuario
-    ADD CONSTRAINT fk_rails_ee8a18179f FOREIGN KEY (religion_id) REFERENCES public.religion(id);
-
-
---
 -- Name: msip_orgsocial_sectororgsocial fk_rails_f032bb21a6; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7857,8 +7790,7 @@ ALTER TABLE ONLY public.usuario
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
-('20250728005208'),
-('20250728001345'),
+('20250722101020'),
 ('20250721002737'),
 ('20250701233327'),
 ('20250312193025'),
