@@ -30,4 +30,6 @@ es:
       "cor1440_gen/informe":
         filtroproyecto: Financiable
         filtroactividadarea: Área 
-
+      "religion":
+        Religion: Religión
+        Religiones: Religiones

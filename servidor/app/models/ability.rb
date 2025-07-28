@@ -1,5 +1,9 @@
 class Ability  < Cor1440Gen::Ability
 
+  BASICAS_PROPIAS = [
+    ['', 'religion'],
+  ]
+
   def tablasbasicas 
     Msip::Ability::BASICAS_PROPIAS + BASICAS_PROPIAS - [
       ['Msip', 'fuenteprensa'], 
@@ -24,6 +28,7 @@ class Ability  < Cor1440Gen::Ability
     ])
     can(:read, Cor1440Gen::Proyectofinanciero)
     can(:read, Heb412Gen::Doc)
+    can(:read, ::Religion)
 
     if !usuario || usuario.fechadeshabilitacion
       return
@@ -176,6 +181,7 @@ class Ability  < Cor1440Gen::Ability
         ])
         tablasbasicas.each do |t|
           c = Ability.tb_clase(t)
+          #puts "OJO c=#{c}"
           can(:manage, c)
         end
       end

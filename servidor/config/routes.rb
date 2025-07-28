@@ -39,6 +39,10 @@ Rails.application.routes.draw do
   post 'aut/verificar_firma', to: 'aut#verificar_firma',
     as: 'verificar_firma'
 
+  namespace :admin do
+    resources :religiones, path_names: { new: "nueva", edit: "edita" }
+  end
+
   root 'cor1440_gen/hogar#index'
 
   mount Msip::Engine, at: "/", as: 'msip'

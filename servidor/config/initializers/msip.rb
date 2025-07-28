@@ -8,10 +8,10 @@ Msip.setup do |config|
   config.titulo = "Learntg Admin #{Cor1440Gen::VERSION}"
 
   config.descripcion = "Administración de learn.tg"
-  config.codigofuente = "https://gitlab.com/vtamara/learn.tg"
-  config.urlcontribuyentes = "https://gitlab.com/vtamara/learn.tg/-/graphs/main"
-  config.urlcreditos = "https://gitlab.com/vtamara/learn.tg/-/blob/main/CREDITOS.md"
-  config.urllicencia = "https://gitlab.com/vtamara/learn.tg/-/blob/main/LICENCIA.md"
+  config.codigofuente = "https://github.com/pasosdeJesus/learn.tg"
+  config.urlcontribuyentes = "https://github.com/pasosdeJesus/learn.tg/graphs/contributors"
+  config.urlcreditos = "https://github.com/pasosdeJesus/learn.tg/blob/main/CREDITOS.md"
+  config.urllicencia = "https://github.com/pasosdeJesus/learn.tg/blob/main/LICENCIA.md"
   config.agradecimientoDios = "<p>
 Agradecemos a Dios que nos enseña
 </p>

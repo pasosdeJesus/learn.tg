@@ -4627,6 +4627,40 @@ ALTER SEQUENCE public.nonce_id_seq OWNED BY public.nonce.id;
 
 
 --
+-- Name: religion; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.religion (
+    id bigint NOT NULL,
+    nombre character varying(500) NOT NULL COLLATE public.es_co_utf_8,
+    observaciones character varying(5000),
+    fechacreacion date NOT NULL,
+    fechadeshabilitacion date,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: religion_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.religion_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: religion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.religion_id_seq OWNED BY public.religion.id;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5210,6 +5244,13 @@ ALTER TABLE ONLY public.msip_vereda ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.nonce ALTER COLUMN id SET DEFAULT nextval('public.nonce_id_seq'::regclass);
+
+
+--
+-- Name: religion id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.religion ALTER COLUMN id SET DEFAULT nextval('public.religion_id_seq'::regclass);
 
 
 --
@@ -6050,6 +6091,14 @@ ALTER TABLE ONLY public.nonce
 
 ALTER TABLE ONLY public.cor1440_gen_rangoedadac
     ADD CONSTRAINT rangoedadac_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: religion religion_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.religion
+    ADD CONSTRAINT religion_pkey PRIMARY KEY (id);
 
 
 --
@@ -7790,6 +7839,7 @@ ALTER TABLE ONLY public.usuario
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250728001345'),
 ('20250721002737'),
 ('20250701233327'),
 ('20250312193025'),
