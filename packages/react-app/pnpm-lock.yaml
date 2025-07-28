@@ -32,9 +32,6 @@ importers:
       axios:
         specifier: ^1.10.0
         version: 1.10.0
-      country-list:
-        specifier: ^2.3.0
-        version: 2.3.0
       dotenv:
         specifier: ^17.2.0
         version: 17.2.0
@@ -915,8 +912,8 @@ packages:
   '@reown/appkit@1.7.8':
     resolution: {integrity: sha512-51kTleozhA618T1UvMghkhKfaPcc9JlKwLJ5uV+riHyvSoWPKPRIa5A6M1Wano5puNyW0s3fwywhyqTHSilkaA==}
 
-  '@rollup/wasm-node@4.45.1':
-    resolution: {integrity: sha512-0ydWt30RgbJ55QJfJxQ7L4Prs4geZmAZBMGaQtuNOQH+IilZkF4Is5dLi7G2sdb92Mnba5Mf1NKNyvxk8ohnzg==}
+  '@rollup/wasm-node@4.46.0':
+    resolution: {integrity: sha512-km3kBsS6QoCRISp10/eh5M+3OFq1sY1OwRs+UfD7YGlUANYt/5EbrAM3xS/ZF159U3yWnjboJr6dbRSSvaUU/A==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -1764,9 +1761,6 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
-
-  country-list@2.3.0:
-    resolution: {integrity: sha512-qZk66RlmQm7fQjMYWku1AyjlKPogjPEorAZJG88owPExoPV8EsyCcuFLvO2afTXHEhi9liVOoyd+5A6ZS5QwaA==}
 
   crc-32@1.2.2:
     resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==}
@@ -5641,7 +5635,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rollup/wasm-node@4.45.1':
+  '@rollup/wasm-node@4.46.0':
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
@@ -7048,8 +7042,6 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.3
 
-  country-list@2.3.0: {}
-
   crc-32@1.2.2: {}
 
   cross-fetch@3.2.0:
@@ -7751,7 +7743,7 @@ snapshots:
     dependencies:
       magic-string: 0.30.17
       mlly: 1.7.4
-      rollup: '@rollup/wasm-node@4.45.1'
+      rollup: '@rollup/wasm-node@4.46.0'
 
   flat-cache@4.0.1:
     dependencies:
@@ -9949,7 +9941,7 @@ snapshots:
       picocolors: 1.1.1
       postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.6)
       resolve-from: 5.0.0
-      rollup: '@rollup/wasm-node@4.45.1'
+      rollup: '@rollup/wasm-node@4.46.0'
       source-map: 0.8.0-beta.0
       sucrase: 3.35.0
       tinyexec: 0.3.2
@@ -10236,7 +10228,7 @@ snapshots:
       fdir: 6.4.6(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: '@rollup/wasm-node@4.45.1'
+      rollup: '@rollup/wasm-node@4.46.0'
       tinyglobby: 0.2.14
     optionalDependencies:
       '@types/node': 24.0.15

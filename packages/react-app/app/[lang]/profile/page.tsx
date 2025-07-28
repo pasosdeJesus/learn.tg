@@ -1,7 +1,6 @@
 "use client"
 
 import axios from 'axios';
-import { getNames, getCodes } from "country-list"
 import { Loader2 } from "lucide-react"
 import { useSession, getCsrfToken } from "next-auth/react";
 import {use, useEffect, useState} from "react"
@@ -15,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface UserProfile {
-  country: string
+  country: integer | null
   email: string
   groups: string
   id: string
@@ -23,7 +22,7 @@ interface UserProfile {
   name: string
   phone: string
   picture: string
-  religion: string
+  religion: integer
   uname: string
   userId: string
 }
@@ -35,23 +34,10 @@ type PageProps = {
   }>
 }
 
-// Get all countries from the country-list library
-const countryNames = getNames()
-const countryCodes = getCodes()
-
-// Create countries array with all countries from the library
-const countries = countryNames
-  .map((name, index) => ({
-    name,
-    code: countryCodes[index],
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically
-
-
 export default function ProfileForm({ params } : PageProps) {
 
   const [profile, setProfile] = useState<UserProfile>({
-    country: "",
+    country: null,
     email: "",
     groups: "",
     id: "",
@@ -59,12 +45,14 @@ export default function ProfileForm({ params } : PageProps) {
     name: "",
     phone: "",
     picture: "",
-    religion: "",
+    religion: 1,
     uname: "",
     userId: "",
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [religions, setReligions] = useState([])
+  const [countries, setCountries] = useState([])
 
   const { address } = useAccount()
   const { data: session } = useSession()
@@ -85,6 +73,30 @@ export default function ProfileForm({ params } : PageProps) {
           alert("NEXT_PUBLIC_API_SHOW_USER not defined")
           return
         }
+        if (process.env.NEXT_PUBLIC_API_RELIGIONS == undefined) {
+          alert("NEXT_PUBLIC_API_RELIGIONS not defined")
+          return
+        }
+        if (process.env.NEXT_PUBLIC_API_COUNTRIES == undefined) {
+          alert("NEXT_PUBLIC_API_COUNTRIES not defined")
+          return
+        }
+
+        let response = await fetch(process.env.NEXT_PUBLIC_API_COUNTRIES);
+        if (!response.ok) {
+          throw new Error(`Response status in countries: ${response.status}`);
+        }
+        let data = await response.json();
+        console.log(data);
+        setCountries(data)
+
+        response = await fetch(process.env.NEXT_PUBLIC_API_RELIGIONS);
+        if (!response.ok) {
+          throw new Error(`Response status in religions: ${response.status}`);
+        }
+        data = await response.json();
+        console.log(data);
+        setReligions(data)
 
         let url = process.env.NEXT_PUBLIC_API_USERS
         url += `?filtro[walletAddress]=${session.address}`
@@ -93,23 +105,26 @@ export default function ProfileForm({ params } : PageProps) {
           `&token=${csrfToken}`
         console.log("OJO url=", url)
 
-        const response = await fetch(url);
+        response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Response status: ${response.status}`);
         }
-        const data = await response.json();
+        data = await response.json();
         console.log(data);
         if (data.length != 1) {
           throw new Error(`Expected data.length == 1`);
         }
         let rUser = data[0]
         let locProfile = {
+          uname: rUser.nusuario,
           name: rUser.nombre,
           userId: rUser.id,
           email: rUser.email,
-          picture: rUser.foto_file_name
+          picture: rUser.foto_file_name,
+          religion: rUser.religion_id,
+          country: rUser.pais_id,
         }
-        let pc = process.env.NEXT_PUBLIC_API_SHOW_USER ?? "x"
+/*        let pc = process.env.NEXT_PUBLIC_API_SHOW_USER ?? "x"
         let url2 = pc.replace("usuario_id", rUser.id)
         url2 += `?walletAddress=${session.address}` +
           `&token=${csrfToken}`
@@ -124,13 +139,13 @@ export default function ProfileForm({ params } : PageProps) {
           ...locProfile,
           uname: data2.nusuario,
           language: data2.idioma,
-          country: data2.pais,
-          religion: data2.religion,
-        }
+          country: data2.pais_id,
+          religion: data2.religion_id,
+        }*/
         setProfile(locProfile)
  
       } catch (error) {
-        alert("Failed to load profile data")
+        alert("Failed to load profile data: " + error)
       } finally {
         setLoading(false)
       }
@@ -154,7 +169,8 @@ export default function ProfileForm({ params } : PageProps) {
         nombre: profile.name,
         email: profile.email,
         nusuario: profile.uname,
-//        telefono: profile.phone
+        religion_id: profile.religion,
+        pais_id: profile.country,
       }
 
       let csrfToken = await getCsrfToken()
@@ -222,19 +238,19 @@ export default function ProfileForm({ params } : PageProps) {
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="uname" className="block text-sm font-medium text-gray-700">
-                Login
-              </label>
-              <input
-                id="uname"
-                type="text"
-                value={profile.uname}
-                onChange={(e) => handleChange("uname", e.target.value)}
-                placeholder="Enter your user-name"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="space-y-2">
+                <label htmlFor="uname" className="block text-sm font-medium text-gray-700">
+                  Login
+                </label>
+                <input
+                  id="uname"
+                  type="text"
+                  value={profile.uname}
+                  onChange={(e) => handleChange("uname", e.target.value)}
+                  placeholder="Enter your user-name"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
               <div className="space-y-2">
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -250,7 +266,7 @@ export default function ProfileForm({ params } : PageProps) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-             </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -267,7 +283,48 @@ export default function ProfileForm({ params } : PageProps) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              <div className="space-y-2">
+                <label htmlFor="religion" className="block text-sm font-medium text-gray-700">
+                  Religion
+                </label>
+	              <select
+                  id="religion"
+                  value={profile.religion}
+                  onChange={(e) => handleChange("religion", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">Select your religion</option>
+                  {religions.map((religion) => (
+                    <option key={religion.id} value={religion.id}>
+                      {religion.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="country" className="block text-sm font-medium text-gray-700">
+                  Country
+                </label>
+                <select
+                  id="country"
+                  value={profile.country}
+                  onChange={(e) => handleChange("country", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">Select your country</option>
+                  {countries.map((country) => (
+                    <option key={country.id} value={country.id}>
+                      {country.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+
 
             <div className="flex gap-4">
                 <button
