@@ -4716,6 +4716,8 @@ CREATE TABLE public.usuario (
     foto_content_type character varying,
     foto_file_size bigint,
     foto_updated_at timestamp without time zone,
+    religion_id integer DEFAULT 1,
+    pais_id integer,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
@@ -6953,6 +6955,14 @@ ALTER TABLE ONLY public.cor1440_gen_informeauditoria
 
 
 --
+-- Name: usuario fk_rails_4649f3efec; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario
+    ADD CONSTRAINT fk_rails_4649f3efec FOREIGN KEY (pais_id) REFERENCES public.msip_pais(id);
+
+
+--
 -- Name: msip_orgsocial_persona fk_rails_4672f6cbcd; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7569,6 +7579,14 @@ ALTER TABLE ONLY public.cor1440_gen_actividad_orgsocial
 
 
 --
+-- Name: usuario fk_rails_ee8a18179f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario
+    ADD CONSTRAINT fk_rails_ee8a18179f FOREIGN KEY (religion_id) REFERENCES public.religion(id);
+
+
+--
 -- Name: msip_orgsocial_sectororgsocial fk_rails_f032bb21a6; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7839,6 +7857,7 @@ ALTER TABLE ONLY public.usuario
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20250728005208'),
 ('20250728001345'),
 ('20250721002737'),
 ('20250701233327'),

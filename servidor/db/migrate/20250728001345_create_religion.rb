@@ -18,7 +18,7 @@ class CreateReligion < ActiveRecord::Migration[8.0]
         '2025-07-28', '2025-07-28', '2025-07-28');
       INSERT INTO religion (id, nombre,
         fechacreacion, created_at, updated_at) VALUES (
-        2,'Christian',
+        2,'Christianity',
         '2025-07-28', '2025-07-28', '2025-07-28');
       INSERT INTO religion (id, nombre,
         fechacreacion, created_at, updated_at) VALUES (
@@ -26,15 +26,15 @@ class CreateReligion < ActiveRecord::Migration[8.0]
         '2025-07-28', '2025-07-28', '2025-07-28');
       INSERT INTO religion (id, nombre,
         fechacreacion, created_at, updated_at) VALUES (
-        4,'Budist',
+        4,'Budhism',
         '2025-07-28', '2025-07-28', '2025-07-28');
       INSERT INTO religion (id, nombre,
         fechacreacion, created_at, updated_at) VALUES (
-        5,'Induism',
+        5,'Hinduism',
         '2025-07-28', '2025-07-28', '2025-07-28');
       INSERT INTO religion (id, nombre,
         fechacreacion, created_at, updated_at) VALUES (
-        6,'Jewish',
+        6,'Judaism',
         '2025-07-28', '2025-07-28', '2025-07-28');
       INSERT INTO religion (id, nombre,
         fechacreacion, created_at, updated_at) VALUES (

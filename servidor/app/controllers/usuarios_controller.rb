@@ -11,6 +11,8 @@ class UsuariosController < Msip::ModelosController
       :nombre,
       :email,
       :grupo_ids,
+      :pais,
+      :religion,
       :foto,
       :habilitado,
     ]
@@ -33,6 +35,8 @@ class UsuariosController < Msip::ModelosController
         :email,
         :tema,
         :msip_grupo,
+        :pais,
+        :religion,
         :foto,
         :fechacreacion_localizada,
         :fechadeshabilitacion_localizada,
@@ -59,6 +63,8 @@ class UsuariosController < Msip::ModelosController
         :nombre,
         :grupo,
         :email,
+        :pais,
+        :religion,
         :foto,
       ]
     end
@@ -105,6 +111,8 @@ class UsuariosController < Msip::ModelosController
       nusuario: params["nusuario"],
       nombre: params["nombre"],
       email: params["email"],
+      religion_id: params["religion_id"],
+      pais_id: params["pais_id"]
     })
     if !u.save
       merr = u.errors.full_messages.join(". ")
@@ -139,7 +147,7 @@ class UsuariosController < Msip::ModelosController
 
 
   def lista_params
-    p = lista_params_cor1440_gen + [:foto]
+    p = lista_params_cor1440_gen + [:foto, :religion_id, :pais_id]
     return p
   end
 end
