@@ -11,8 +11,8 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/cor1440_gen.git
-  revision: 2f7ad2db738824fc85b618ccc09152cf881bc7ea
-  branch: sintema
+  revision: 58f5994749469f9e4a76c627b3f2ccc85d07858b
+  branch: main
   specs:
     cor1440_gen (2.3.0.alfa4)
       devise
@@ -24,8 +24,8 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/heb412_gen.git
-  revision: 1b78bea6a7b9478f0ad2b87b6f06844cfa91a5f0
-  branch: sintema
+  revision: 4460724cd7fe8deab33db7e546b007b392fecdc6
+  branch: main
   specs:
     heb412_gen (2.3.0.alfa4)
       mr519_gen
@@ -35,15 +35,17 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/mr519_gen.git
-  revision: dbb6862a627c58bbd57e0949df267d6efc3c9220
-  branch: sintema
+  revision: 959e7f1ea73ff6a0687a834f71169c0b3fbc7a86
+  branch: main
   specs:
     mr519_gen (2.3.0.alfa4)
       msip
       rails
 
-PATH
-  remote: /home/vtamara/comp/rails/msip-sintema
+GIT
+  remote: https://gitlab.com/pasosdeJesus/msip.git
+  revision: 2ade044a34a14eeaa46fd67a3f57cd967f701f07
+  branch: main
   specs:
     msip (2.3.0.alfa4)
       cancancan (~> 3)
@@ -234,7 +236,7 @@ GEM
     mime-types (3.7.0)
       logger
       mime-types-data (~> 3.2025, >= 3.2025.0507)
-    mime-types-data (3.2025.0715)
+    mime-types-data (3.2025.0722)
     mini_mime (1.1.5)
     mini_portile2 (2.8.9)
     minitest (5.25.5)
@@ -249,24 +251,24 @@ GEM
     net-smtp (0.5.1)
       net-protocol
     nio4r (2.7.4)
-    nokogiri (1.18.8)
+    nokogiri (1.18.9)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
-    nokogiri (1.18.8-aarch64-linux-gnu)
+    nokogiri (1.18.9-aarch64-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.18.8-aarch64-linux-musl)
+    nokogiri (1.18.9-aarch64-linux-musl)
       racc (~> 1.4)
-    nokogiri (1.18.8-arm-linux-gnu)
+    nokogiri (1.18.9-arm-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.18.8-arm-linux-musl)
+    nokogiri (1.18.9-arm-linux-musl)
       racc (~> 1.4)
-    nokogiri (1.18.8-arm64-darwin)
+    nokogiri (1.18.9-arm64-darwin)
       racc (~> 1.4)
-    nokogiri (1.18.8-x86_64-darwin)
+    nokogiri (1.18.9-x86_64-darwin)
       racc (~> 1.4)
-    nokogiri (1.18.8-x86_64-linux-gnu)
+    nokogiri (1.18.9-x86_64-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.18.8-x86_64-linux-musl)
+    nokogiri (1.18.9-x86_64-linux-musl)
       racc (~> 1.4)
     odf-report (0.8.1)
       mime-types
@@ -276,7 +278,11 @@ GEM
     orm_adapter (0.5.0)
     parslet (2.0.0)
     pdf-core (0.10.0)
-    pg (1.5.9)
+    pg (1.6.0)
+    pg (1.6.0-aarch64-linux)
+    pg (1.6.0-arm64-darwin)
+    pg (1.6.0-x86_64-darwin)
+    pg (1.6.0-x86_64-linux)
     pkg-config (1.6.2)
     pp (0.6.2)
       prettyprint
@@ -357,7 +363,7 @@ GEM
       redis-client (>= 0.22.0)
     redis-client (0.25.1)
       connection_pool
-    reline (0.6.1)
+    reline (0.6.2)
       io-console (~> 0.5)
     responders (3.1.1)
       actionpack (>= 5.2)
@@ -369,9 +375,9 @@ GEM
     ruby-graphviz (1.2.5)
       rexml
     rubyzip (2.4.1)
-    scrypt (3.0.8)
+    scrypt (3.1.0)
       ffi-compiler (>= 1.0, < 2.0)
-      rake (>= 9, < 14)
+      rake (~> 13)
     securerandom (0.4.1)
     simple_form (5.3.1)
       actionpack (>= 5.2)
@@ -500,4 +506,4 @@ RUBY VERSION
    ruby 3.4.1p0
 
 BUNDLED WITH
-   2.7.0
+   2.7.1
