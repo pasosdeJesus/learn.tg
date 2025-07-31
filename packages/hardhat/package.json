@@ -20,6 +20,7 @@
     "chain": "^0.4.0",
     "hardhat": "^2.22.15",
     "hardhat-gas-reporter": "^1.0.8",
+    "minimatch": "^10.0.3",
     "solidity-coverage": "^0.8.1",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
@@ -31,7 +32,7 @@
   "scripts": {
     "postinstall": "chmod +x sync-abis.js",
     "compile": "hardhat compile && node sync-abis.js",
-    "tsc": "npx tsc -p . && cp typechain/*.d.ts dist/typechain/",
+    "tsc": "npx tsc -p . && mkdir -p dist/typechain-types/ && cp typechain-types/*.d.ts dist/typechain-types/",
     "build": "yarn compile && yarn tsc",
     "clean": "hardhat clean",
     "run:node": "hardhat node",
