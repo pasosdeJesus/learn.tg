@@ -213,12 +213,12 @@ describe("ScholarshipVaults", function () {
     });
 
     it("Should return true for new student eligibility", async function () {
-      expect(await scholarshipVaults.canReleaseScholarship(COURSE_ID_1, student1.address)).to.be.true;
+      expect(await scholarshipVaults.studentCanSubmit(COURSE_ID_1, student1.address)).to.be.true;
     });
 
     it("Should return false during cooldown period", async function () {
       await scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true);
-      expect(await scholarshipVaults.canReleaseScholarship(COURSE_ID_1, student1.address)).to.be.false;
+      expect(await scholarshipVaults.studentCanSubmit(COURSE_ID_1, student1.address)).to.be.false;
     });
 
     it("Should return true after cooldown period", async function () {
@@ -227,7 +227,7 @@ describe("ScholarshipVaults", function () {
       // Fast forward 24 hours + 1 second
       await time.increase(24 * 60 * 60 + 1);
       
-      expect(await scholarshipVaults.canReleaseScholarship(COURSE_ID_1, student1.address)).to.be.true;
+      expect(await scholarshipVaults.studentCanSubmit(COURSE_ID_1, student1.address)).to.be.true;
     });
   });
 
@@ -282,7 +282,7 @@ describe("ScholarshipVaults", function () {
       await scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true);
       
       // Student1 should be eligible for course 2 immediately (different course)
-      expect(await scholarshipVaults.canReleaseScholarship(COURSE_ID_2, student1.address)).to.be.true;
+      expect(await scholarshipVaults.studentCanSubmit(COURSE_ID_2, student1.address)).to.be.true;
       
       // Student1 gets scholarship from course 2
       await scholarshipVaults.submitGuideResult(COURSE_ID_2, GUIDE_NUMBER_1, student1.address, true);
