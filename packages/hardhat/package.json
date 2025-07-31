@@ -39,6 +39,8 @@
     "test": "hardhat test",
     "deploy": "hardhat run scripts/verifyDeployment.ts --network alfajores",
     "verify-deployment": "hardhat run scripts/verifyDeployment.ts --network alfajores",
+    "deploy-mock-usdt": "hardhat run scripts/deployMockUSDT.ts --network alfajores",
+    "verify-mock-usdt": "hardhat run scripts/verifyMockUSDT.ts --network alfajores",
     "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'",
     "sync:abis": "node sync-abis.js"
   },
