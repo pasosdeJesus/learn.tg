@@ -240,7 +240,7 @@ export default function ProfileForm({ params } : PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="uname" className="block text-sm font-medium text-gray-700">
-                  Login
+                  Display name
                 </label>
                 <input
                   id="uname"
