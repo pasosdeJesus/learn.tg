@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.24;
 
 interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
@@ -9,7 +9,7 @@ interface IERC20 {
 }
 
 contract ScholarshipVaults {
-    address public owner;
+    address public immutable owner;
     IERC20 public usdtToken;
 
     struct Vault {
@@ -68,13 +68,13 @@ contract ScholarshipVaults {
     function deposit(uint256 courseId, uint256 amount) external vaultExists(courseId) {
         require(courseId > 0, "Course id must be greater than 0");
         require(amount > 0, "Deposit amount must be greater than 0");
+        // Prevent reentracy atacks https://docs.soliditylang.org/en/latest/security-considerations.html#re-entrancy
+        vaults[courseId].balance += amount;  
+        emit Deposit(courseId, amount);
         require(
             usdtToken.transferFrom(msg.sender, address(this), amount),
             "USDT transfer failed"
         );
-        
-        vaults[courseId].balance += amount;
-        emit Deposit(courseId, amount);
     }
 
     // Check if a student can submit and receive scholarship for a course (24 hours have 
@@ -98,25 +98,24 @@ contract ScholarshipVaults {
         require(courseId > 0, "Course id must be greater than 0");
         require(guideNumber > 0, "Guide number must be greater than 0");
         require(student != address(0), "Invalid student address");
+        require(studentCanSubmit(courseId, student), "Student is in cooldown period, cannot submit");
+        require(!guidePaid[courseId][guideNumber][student], "Student already received an scolarship for this guide");
+        require(vaults[courseId].balance >= vaults[courseId].amountPerGuide, "There are not enough funds to pay the scolarship");
         
+        // Prevent reentracy atacks https://docs.soliditylang.org/en/latest/security-considerations.html#re-entrancy
 
-        if (isPerfect && !guidePaid[courseId][guideNumber][student] &&
-            studentCanSubmit(courseId, student) && 
-            vaults[courseId].balance >= vaults[courseId].amountPerGuide) {
+        // Cooldown of 24 hours before the student tries to submit again in this course
+        studentCooldowns[courseId][student] = block.timestamp;
+
+        if (isPerfect) {
             // Release scholarship
             uint256 amount = vaults[courseId].amountPerGuide;
-            
+            vaults[courseId].balance -= amount;
+            guidePaid[courseId][guideNumber][student] = true;
+            emit ScholarshipReleased(courseId, guideNumber, student, amount);
             require(
               usdtToken.transfer(student, amount), "USDT transfer failed"
             );
-            vaults[courseId].balance -= amount;
-            studentCooldowns[courseId][student] = block.timestamp;
-            guidePaid[courseId][guideNumber][student] = true;
-            emit ScholarshipReleased(courseId, guideNumber, student, amount);
-        } else if (!isPerfect) {
-            // If the answer is wrong set cooldown for this student in this 
-            // course for 24 hours
-            studentCooldowns[courseId][student] = block.timestamp;
         }
     }
 

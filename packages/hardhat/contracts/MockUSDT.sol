@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.24;
 
 contract MockUSDT {
-    string public name = "Mock USDT";
-    string public symbol = "MUSDT";
-    uint8 public decimals = 6;
+    string public constant name = "Mock USDT";
+    string public constant symbol = "MUSDT";
+    uint8 public constant decimals = 6;
     uint256 public totalSupply;
     
     mapping(address => uint256) public balanceOf;
