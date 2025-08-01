@@ -19,13 +19,13 @@ async function main() {
   // USDT has 6 decimals, so we need to multiply by 10^6
   const deployer = (await ethers.getSigners())[0];
   const deployerAddress = await deployer.getAddress();
-  const amount = ethers.parseUnits("1000000", 6); // 1,000,000 tokens with 6 decimals
+  const amount = ethers.parseUnits("10000000000", 6); // 10,000,000,000 tokens with 6 decimals
   
-  console.log("Minting 1,000,000 tokens to:", deployerAddress);
+  console.log("Minting 10,000,000,000 tokens to:", deployerAddress);
   const tx = await mockUSDT.mint(deployerAddress, amount);
   await tx.wait();
   
-  console.log("Minted 1,000,000 tokens to the owner's account");
+  console.log("Minted 10,000,000,000 tokens to the owner's account");
   
   // Verify the balance
   const balance = await mockUSDT.balanceOf(deployerAddress);

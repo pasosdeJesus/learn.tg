@@ -36,7 +36,7 @@ async function main() {
   console.log("Owner Balance:", ethers.formatUnits(balance, decimals), symbol);
   
   // Verify that the owner has 1,000,000 tokens
-  const expectedBalance = ethers.parseUnits("1000000", decimals);
+  const expectedBalance = ethers.parseUnits("10000000000", decimals);
   if (balance.toString() === expectedBalance.toString()) {
     console.log("✓ Verification successful: Owner has exactly 1,000,000 tokens");
   } else {
