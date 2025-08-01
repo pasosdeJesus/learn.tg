@@ -37,7 +37,7 @@
     "clean": "hardhat clean",
     "run:node": "hardhat node",
     "test": "hardhat test",
-    "deploy": "hardhat run scripts/deployScholarshipVaults.ts --network alfajores",
+    "deploy": "bin/deploy",
     "verify-deployment": "hardhat run scripts/verifyDeployment.ts --network alfajores",
     "deploy-mock-usdt": "hardhat run scripts/deployMockUSDT.ts --network alfajores",
     "verify-mock-usdt": "hardhat run scripts/verifyMockUSDT.ts --network alfajores",
