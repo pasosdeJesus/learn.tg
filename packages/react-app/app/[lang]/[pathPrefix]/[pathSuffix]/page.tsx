@@ -14,7 +14,8 @@ import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
 import { usePublicClient, useWalletClient } from 'wagmi';
 import { useAccount } from 'wagmi'
-//import addFillInTheBlank from '../lib/add-fill-in-the-blank'
+
+import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 
 export default function Page({params} : {
@@ -169,10 +170,16 @@ export default function Page({params} : {
       .use(remarkGfm)
       .use(remarkDirective)
       .use(remarkFrontmatter)
-      //.use(addFillInTheBlank)
-      .use(remarkRehype)
-      .use(rehypeStringify)
+      .use(remarkFillInTheBlank, { url: "guide1/test" })
+      .use(remarkRehype, { allowDangerousHtml: true })
+      .use(rehypeStringify, { allowDangerousHtml: true })
     let html = processor.processSync(md).toString()
+
+    // Save questions
+    localStorage.setItem(
+      'fillInTheBlank', 
+      JSON.stringify( window.fillInTheBlank || [] ) 
+    )
 
     // Agregamos estilo
     let html_con_tailwind = html.replaceAll(
@@ -223,7 +230,10 @@ export default function Page({params} : {
 
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
-  const identitySDK = useIdentitySDK('production');
+  let identitySDK = null
+  if (process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg") {
+    identitySDK = useIdentitySDK('production')
+  }
 
   const claimUBI = async () => {
 

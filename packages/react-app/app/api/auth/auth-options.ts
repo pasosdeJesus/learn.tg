@@ -48,12 +48,14 @@ export const authOptions: NextAuthOptions = {
             console.log(new Date(), "OJO siwe.address=", siwe.address)
 
             console.log(new Date(), "OJO Submitting referral ", new Date())
-            const sr = await submitReferral({
-              message: credentials?.message || "",
-              signature: credentials?.signature || "0x0",
-              chainId: result.data.chainId,
-            })
-            console.log(new Date(), "OJO Submitted ", sr)
+            if (process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg") {
+              const sr = await submitReferral({
+                message: credentials?.message || "",
+                signature: credentials?.signature || "0x0",
+                chainId: result.data.chainId,
+              })
+              console.log(new Date(), "OJO Submitted ", sr)
+            }
             const db = new Kysely<DB>({
               dialect: defineConfig.dialect
             })

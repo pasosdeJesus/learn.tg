@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface UserProfile {
-  country: integer | null
+  country: number | null
   email: string
   groups: string
   id: string
@@ -22,7 +22,7 @@ interface UserProfile {
   name: string
   phone: string
   picture: string
-  religion: integer
+  religion: number
   uname: string
   userId: string
 }
@@ -99,9 +99,9 @@ export default function ProfileForm({ params } : PageProps) {
         setReligions(data)
 
         let url = process.env.NEXT_PUBLIC_API_USERS
-        url += `?filtro[walletAddress]=${session.address}`
+        url += `?filtro[walletAddress]=${session.address || ""}`
         let csrfToken = await getCsrfToken()
-        url += `&walletAddress=${session.address}` +
+        url += `&walletAddress=${session.address || ""}` +
           `&token=${csrfToken}`
         console.log("OJO url=", url)
 

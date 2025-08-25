@@ -56,7 +56,8 @@
 
 ## Reading comprehension. 
 
-1. Who are the characters in the story?
+1. The characters in this story are Jesús, his disciples, and the ___ woman.
+   (samarithan)
 2. According to verse 4 what is the region through which Jesus has yet to pass?
 3. According to verse 7, who comes to the well to draw water?
 4. What favor does Jesus ask of the woman?

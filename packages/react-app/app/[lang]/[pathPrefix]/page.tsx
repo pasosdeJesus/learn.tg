@@ -79,7 +79,7 @@ export default function Page({ params }: PageProps) {
         `filtro[busidioma]=${lang}`
       let csrfToken = ""
       if (session && address && session.address && session.address == address) {
-        csrfToken = await getCsrfToken()
+        csrfToken = await getCsrfToken() || ""
         url += `&walletAddress=${session.address}` +
           `&token=${csrfToken}`
       }
