@@ -173,63 +173,84 @@ export default function Page({ params }: PageProps) {
   }
 
   return (
-  <div className="mt-8 container flex flex-col mx-auto lg:flex-row justify-center">
-    { (toPay == 0 || estadoBoton == 'Desconectar') &&
-      <div className="flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 lg:w-1/2 xl:w-3/5">
-        <div>
-          <div className="text-2xl lg:text-2xl font-bold pb-6 pt-14 text-center"><h1>{title}</h1></div>
-          <div className="text-1xl lg:text-1xl font-bold"><h2>{subtitle}</h2></div>
-        </div>
-        <div className="image">
-          <figure>
-            <img src={image} width="300px" alt={altImage} className="py-6"/>
-            <figcaption className="pb-6">
-              <a
-                target="_blank"
-                href={imageLink}>
+    <div className="container mx-auto my-8 flex flex-col lg:flex-row justify-center gap-6 min-h-screen">
+      {/* Columna izquierda */}
+      {(toPay === 0 || estadoBoton === "Desconectar") && (
+        <section className="flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 lg:w-1/2 xl:w-3/5 bg-white rounded-2xl shadow">
+          {/* Título */}
+          <header className="text-center mb-6">
+            <h1 className="text-2xl lg:text-3xl font-bold mb-2">{title}</h1>
+            <h2 className="text-lg lg:text-xl font-semibold text-gray-600">{subtitle}</h2>
+          </header>
+    
+          {/* Imagen */}
+          <figure className="my-6">
+            <img
+              src={image}
+              width="300"
+              alt={altImage}
+              className="mx-auto rounded-lg shadow-md"
+            />
+            <figcaption className="text-sm text-gray-500 mt-3 text-center">
+              <a href={imageLink} target="_blank" className="underline hover:text-secondary-600">
                 {imageCredits}
               </a>
             </figcaption>
           </figure>
-        </div>
-        <div className="text-justify" dangerouslySetInnerHTML={{ __html: htmlSummary }}></div>
-      </div>
-    }
-    <div className="my-2 pt-2">
-      { (myCourse.prerequisitosMd || myCourse.cursosPrerequisito) &&
-        <div  className="px-6 h-full  w-full sm:p-8 lg:p-12 lg:w-5/18 xl:w-5/18 rounded-sm bg-secondary-100 dark:text-gray-50">
-          <h2 className="text-2xl font-bold py-2 text-white">Pre-requisitos</h2>
-          <div dangerouslySetInnerHTML={{ __html: preHtml}}></div>
-          { preCourseHtml != '' &&
-            <div>
-              Cursos
-              <div dangerouslySetInnerHTML={{ __html: preCourseHtml}}></div>
-            </div>
-          }
-        </div>
-      }
-      <div  className="px-6 py-8 h-full  w-full sm:p-8 lg:p-12 rounded-sm bg-secondary-100 dark:text-gray-50">
-        <h2 className="text-2xl lg:text-2xl font-bold py-8 text-white">
-          {myCourse.idioma == 'en' ?
-            "Course contents" : "Contenido del curso" }
-        </h2>
-        <div dangerouslySetInnerHTML={{ __html: contentsHtml}} active-class="active"  className="list-decimal text-justify text-base/10"></div>
-      </div>
-      { estadoBoton == 'Desconectar' && (
-        <div>
-          <div dangerouslySetInnerHTML={{ __html: htmlExtended }}></div>
-          { (red == 'Red: X Layer Mainnet' && toPay > 0) && (
-            <div>
-              <button
-                 className="hidden md:block px-8 py-3 rounded-full text-white font-medium tracking-wider uppercase bg-secondary-100 w-full lg:w-auto">
-                 Inscribirse por {toPay}OKB
-               </button>
-            </div>
-          )}
-        </div>
+    
+          {/* Resumen */}
+          <article
+            className="prose max-w-prose text-justify text-gray-700"
+            dangerouslySetInnerHTML={{ __html: htmlSummary }}
+          />
+        </section>
       )}
+    
+      {/* Columna derecha */}
+      <aside className="flex flex-col gap-6 w-full lg:w-2/5">
+        {/* Pre-requisitos */}
+        {(myCourse.prerequisitosMd || myCourse.cursosPrerequisito) && (
+          <div className="px-6 py-8 rounded-xl bg-white text-gray-800 shadow">
+            <h2 className="text-2xl font-bold mb-4">Pre-requisitos</h2>
+            <div dangerouslySetInnerHTML={{ __html: preHtml }} />
+            {preCourseHtml !== "" && (
+              <div className="mt-4">
+                <h3 className="font-semibold">Cursos</h3>
+                <div dangerouslySetInnerHTML={{ __html: preCourseHtml }} />
+              </div>
+            )}
+          </div>
+        )}
+    
+        {/* Contenidos */}
+        <div className="px-6 py-8 rounded-xl bg-white text-gray-800 shadow">
+          <h2 className="text-2xl lg:text-3xl font-bold mb-6">
+            {myCourse.idioma === "en" ? "Course contents" : "Contenido del curso"}
+          </h2>
+          <div
+            className="list-decimal text-justify space-y-2"
+            dangerouslySetInnerHTML={{ __html: contentsHtml }}
+          />
+        </div>
+    
+        {/* Extendido + Botón */}
+        {estadoBoton === "Desconectar" && (
+          <div>
+            <div dangerouslySetInnerHTML={{ __html: htmlExtended }} />
+            {red === "Red: X Layer Mainnet" && toPay > 0 && (
+              <button
+                className="mt-6 w-full lg:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-secondary-100 to-secondary-200 
+                           text-white font-semibold tracking-wide uppercase shadow-md 
+                           hover:shadow-lg hover:scale-105 transition-transform duration-200"
+              >
+                Inscribirse por {toPay} OKB
+              </button>
+            )}
+          </div>
+        )}
+      </aside>
     </div>
-  </div>
+
   )
 
 
