@@ -127,10 +127,11 @@ export default function Page({params} : {
               setCreditsHtml(htmlDeMd("", dcurso.creditosMd))
 
               let urlc = process.env.NEXT_PUBLIC_AUTH_URL + 
-                `/api/crossword?guideId=${dcurso.id}` +
+                `/api/crossword?courseId=${dcurso.id}` +
                 `&lang=${lang}` +
                 `&prefix=${pathPrefix}` +
-                `&guide=${pathSuffix}`
+                `&guide=${pathSuffix}` +
+                `&guideNumber=${guideNumber}`
               if (session && address && session.address &&
                   session.address == address) {
                 urlc += `&walletAddress=${session.address}` +

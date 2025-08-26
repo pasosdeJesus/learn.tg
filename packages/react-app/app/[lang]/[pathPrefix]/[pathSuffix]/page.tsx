@@ -123,13 +123,12 @@ export default function Page({params} : {
                 alert("Undefined NEXT_PUBLIC_API_DESCARGA_URL")
                 return false
               }
-              let nurl = process.env.NEXT_PUBLIC_API_DESCARGA_URL.replace(
-                "lang", lang
-              ).replace(
-              "prefix", pathPrefix
-              ).replace(
-              "guia", pathSuffix
-              )
+              let nurl = process.env.NEXT_PUBLIC_AUTH_URL +
+                `/api/guide?courseId=${dcurso.id}` +
+                `&lang=${lang}` +
+                `&prefix=${pathPrefix}` +
+                `&guide=${pathSuffix}` +
+                `&guideNumber=${guideNumber}`
               if (session && address && session.address &&
                   session.address == address) {
                 nurl += `&walletAddress=${session.address}` +
@@ -139,7 +138,11 @@ export default function Page({params} : {
               axios.get(nurl)
               .then(response => {
                 if (response.data) {
-                  setGuideHtml(htmlDeMd(response.data))
+                  if (response.data.message != "") {
+                    alert(response.data.message)
+                  } else {
+                    setGuideHtml(htmlDeMd(response.data.markdown))
+                  }
                 }
               })
               .catch(error => {

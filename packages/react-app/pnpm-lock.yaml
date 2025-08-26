@@ -1546,8 +1546,8 @@ packages:
   '@reown/appkit@1.7.8':
     resolution: {integrity: sha512-51kTleozhA618T1UvMghkhKfaPcc9JlKwLJ5uV+riHyvSoWPKPRIa5A6M1Wano5puNyW0s3fwywhyqTHSilkaA==}
 
-  '@rollup/wasm-node@4.48.0':
-    resolution: {integrity: sha512-okCfjmQpxlazk/aodVb/7he7/6OBtmSHTDAYmaPBziIppPwQGzs3G3Z2CfThRUgLu7zxzxBaPZpn++aOjGH8Qw==}
+  '@rollup/wasm-node@4.48.1':
+    resolution: {integrity: sha512-BGNxbwNHAwBj82DwDHc6Yia1bOs2NP1gvF181l7HYEUGfq8EoFkzr+S6sbuF2j5TXQHWbl/ev1g4kU7ZN4QSPw==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -6900,7 +6900,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rollup/wasm-node@4.48.0':
+  '@rollup/wasm-node@4.48.1':
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
@@ -9018,7 +9018,7 @@ snapshots:
     dependencies:
       magic-string: 0.30.17
       mlly: 1.7.4
-      rollup: '@rollup/wasm-node@4.48.0'
+      rollup: '@rollup/wasm-node@4.48.1'
 
   flat-cache@4.0.1:
     dependencies:
@@ -11229,7 +11229,7 @@ snapshots:
       picocolors: 1.1.1
       postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.6)
       resolve-from: 5.0.0
-      rollup: '@rollup/wasm-node@4.48.0'
+      rollup: '@rollup/wasm-node@4.48.1'
       source-map: 0.8.0-beta.0
       sucrase: 3.35.0
       tinyexec: 0.3.2
@@ -11520,7 +11520,7 @@ snapshots:
       fdir: 6.4.6(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: '@rollup/wasm-node@4.48.0'
+      rollup: '@rollup/wasm-node@4.48.1'
       tinyglobby: 0.2.14
     optionalDependencies:
       '@types/node': 24.0.15

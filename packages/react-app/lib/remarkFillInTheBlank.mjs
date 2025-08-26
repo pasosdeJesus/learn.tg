@@ -65,14 +65,20 @@ export function remarkFillInTheBlank(options) {
               },
               {
                 type: 'text',
-                value: 'Solve a puzzle to test your understanding and earn cryptocurrency if eligible',
+                value: 'Solve a puzzle',
                 position: { start: l[i].position.start, end: l[i].position.end }
               },
               {
                 type: 'html',
                 value: '</a>',
                 position: { start: l[i].position.end, end: l[i].position.end }
-              }
+              },
+              {
+                type: 'text',
+                value: ' to test your understanding and earn cryptocurrency if eligible',
+                position: { start: l[i].position.start, end: l[i].position.end }
+              },
+
             ]
           }
         )

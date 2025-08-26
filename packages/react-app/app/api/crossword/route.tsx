@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     let retMessage = "";
 
     const { searchParams } = req.nextUrl
-    const guideId = searchParams.get("guideId")
+    const courseId = searchParams.get("courseId")
     const lang = searchParams.get("lang")
     const prefix = searchParams.get("prefix")
     const guide = searchParams.get("guide")
