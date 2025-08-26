@@ -56,18 +56,19 @@
 
 ## Reading comprehension. 
 
-1. The characters in this story are Jesús, his disciples, and the 
+1. The characters in this story are Jesus, His disciples, and the 
    samarithan ___ (woman)
 2. According to verse 4 Jesus had to pass through ___ (Samaria)
-3. According to verse 7, who comes to the well to draw water?
-4. What favor does Jesus ask of the woman?
-5. What does Jesus say to the woman in verse 14?
-6. According to verse 19 what does the woman call Jesus?
-7. Complete the sentence: will the true worshipers worship the father in 
-  spirit and in _________?
-8. Who will declare all things to the woman according to verse 25?
-9. Who is the woman calling father in verse 12?
-10. Complete the sentence: I am the one speaking __ ___ I am he.
+3. Jesus asked the woman for a ___ (drink)
+4. In verse 12 the woman calls ___ father (Jacob)
+5. In verse 14 Jesus said that the water He gives becomes a spring of water
+   welling up to ___ life (eternal)
+6. In verse 19 the woman says calls Jesus a ___ (prophet)
+7. Jesus said that the true worshipers worship the father in 
+  spirit and in ___ (truth)
+8. In verse 25 the woman said that the ___ would come and explain everything
+   (Mesiah)
+9. Jesus said `I, the one speaking to you—I __ he´ (am)
 
 ## Reflection
 

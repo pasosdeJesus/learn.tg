@@ -55,17 +55,19 @@
 
 ## 1. Comprensión de lectura.
 
-1. ¿Cuáles son los personajes de la historia ?
-2. ¿De acuerdo con el verso 4 cuál es la región por la que 
-  necesariamente tiene que pasar Jesús?  
-3. ¿De acuerdo con el verso 7 quien llega al pozo a sacar agua?
-4. ¿Qué favor le pide Jesús a la mujer?
-5. ¿Qué le dice Jesus a la mujer en el verso 14?
-6. ¿De acuerdo con el verso 19 como llama la mujer a Jesús ? 
-7. **_Completa:_** Los verdaderos adoradores adorarán al padre en espíritu y en _________
-8. ¿Quien le declarará todas las cosas a la mujer según el verso 25?
-9. ¿A quien le llama padre la mujer en el verso 12?
-10. **_Completa_**: Yo soy, el que habla _________
+1. Los personaes en esta historia son Jesús, Sus discípulos y la ___
+   samaritana. (woman)
+2. De acuerdo con el versículo 4, Jesús debía pasar por ___ (Samaria)
+3. Jesús le pidió a la mujer que le diera de ___ (beber)
+4. En el versículo 12 la mujer llama padre a ___ (Jacob)
+5. En el versículo 14 Jesús dijo que el agua que Él da es como una
+   fuente de agua que salta para vida ___ (eterna)
+6. En el versículo 19 la mujer llama ___ a Jesús (profeta)
+7. Jesús dijo que los verdaderos adoradores, adoran al Padre en espíritu y
+   en ___ (verdad)
+8. En el versículo 25 la mujer dijo que el ___ vendría y les explicaría
+   todas las cosas. (Mesías)
+9. Jesús dijo `Yo ___, el que habla contigo.´ (soy)
 
 ## 2. Reflexión
 

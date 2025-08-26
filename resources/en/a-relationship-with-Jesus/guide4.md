@@ -45,15 +45,17 @@
 
 ## Reading comprehension
 
-1. Who spoke to Philip in verse 26?
-2. What is the name of the Queen of eunuchs?
-3. According to the text which prophet was reading the eunuch?
-4. What does the Spirit say to Philip in verse 29?
-5. According to the text of which person does the prophecy speak?
-6. Complete the sentence: do you understand what _________?
-7. What is the eunuch's response in verse 31?
-8. Was the eunuch baptized?
-9. Who snatched Philip in verse 39?
+1. According to verse 26 an ___ spoke to Philip. (angel)
+2. The name of the queen of the ethiopians was ___. (Candace)
+3. The eunuch was reading the prophet ___. (Isaiah)
+4. In verse 29 the Spirit said to Philip to go ___ and join to the 
+   chariot. (near)
+5. Complete the sentence: "do you understand what you are ___?" (reading)
+6. In verse 31 the eunuch answers “How can I, unless someone ___ it to 
+   me?” (explains)
+7. According to the text the prophecy spoke about ___. (Jesus)
+8. Philip ___ the eunuch. (baptized)
+9. According to verse 39 the ___ of the Lord caught Philip away (Spirit)
 
 ## Reflection
 

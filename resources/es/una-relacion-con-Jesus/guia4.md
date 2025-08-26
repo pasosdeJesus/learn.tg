@@ -18,8 +18,8 @@
    Así no abrió su boca.
 
 >> **33** En su humillación no se le hizo justicia;
-   Mas su generación, ¿quién la contará?
-   Porque fue quitada de la tierra su vida.
+   jMas su generación, ¿quién la contará?
+   kPorque fue quitada de la tierra su vida.
 
 > **34** Respondiendo el eunuco, dijo a Felipe: Te ruego que me digas: 
   ¿de quién dice el profeta esto; de sí mismo, o de algún otro? 
@@ -42,16 +42,17 @@ de Felipe bautizando al Eunuco")
 
 ## 1. Comprensión de lectura
 
-1. ¿Cuáles son los personajes de la historia ?
-2. ¿Quién habló a Felipe en el verso 26?  
-3. ¿Cual es el nombre de la Reina del eunuco?
-4. ¿De acuerdo con el texto que profeta estaba leyendo el eunuco?
-5. ¿Qué le dice el Espíritu a Felipe en el verso 29?
-6. ¿De acuerdo con el texto de qué persona habla la profecía? 
-7. Completa la frase:  ¿entiendes lo que _________?
-8. ¿Cuál es la respuesta del eunuco en el versículo 31?
-9. ¿Fue el eunuco bautizado?
-10. ¿Quién arrebató a Felipe en el verso 39 ?
+1. De acuerdo al versículo 26 un ___ le hablo a Felipe. (angel)
+2. El nombre de la reina de los etiopes era ___. (Candace)
+3. El eunuco estaba leyendo al profeta ___. (Isaías)
+4. En el versículo 29 el Espíritu le dice a Felipe "___ y 
+   júntate a ese carro." (Acércate)
+5. Completa la frase:  ¿entiendes lo que ___? (lees)
+6. En el versículo 31 el eunuco responde "¿Y cómo podré, si alguno 
+   no me ___? (enseñare)
+7. De acuerdo al texto la profecía hablaba de ___. (Jesús)
+8. Felipe ___ al eunuco. (bautizó)
+9. De acuerdo al versículo 39 el ___ del Señor arrebató a Felipe. (Espíritu)
 
 ## 2. Reflexión
 

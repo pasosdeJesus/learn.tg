@@ -31,18 +31,17 @@ Lazarus")
 
 ## Reading comprehension. 
 
-1. Who had died? _______ 
-2. Have you ever been comforted by someone when you are facing a hopeless 
-  situation?
-3. According to the reading, who goes out to meet Jesus? ______
-4. Complete the Jesus' answer in verse 23: `Your brother will ____ again´
-5. Complete Martha's answer in verse 24: `I know that he will rise again in
-   theresurection at ___ ___ ___.´
-6. Complete: Jesus said to him: I am the resurrection and 
-  the life; He who· believes in me ____ _____ ____, even if he dies.·
-7. What was the approximate distance in stadia between Bethany and Jerusalem? __ 
-8. Knowing that Jesus was in Jerusalen before visiting Mary, Martha and 
-   Lazarus, in what town did Mary, Martha and Lazarus lived? _______
+1. Who had died? ___ (Lazarus)
+2. According to the reading, who goes out to meet Jesus? ___ (Martha)
+3. Complete the Jesus' answer in verse 23: `Your brother will ___ again´ (rise)
+4. Complete Martha's answer in verse 24: `I know that he will rise again in
+   the resurection at the ___ day.´ (last)
+5. Jesus said to him: I am the ___ and the life; He who· believes in me
+   will still live, even if he dies. (resurrection)
+6. What was the approximate distance in stadia between Bethany and 
+   Jerusalem? ___ (fifteen)
+7. Knowing that Jesus was in Jerusalen before visiting Mary, Martha and 
+   Lazarus, in what town did Mary, Martha and Lazarus lived? ___ (Bethany)
 
 ## Reflection
 

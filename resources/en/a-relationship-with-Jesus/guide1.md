@@ -28,10 +28,10 @@ walking on teh sea")
 1. A landscape mentioned in this reading is ___ (mountain)
 2. Jesus had sent His disciples to ____ (Bethsaida)
 3. After sending away the people and His disciplies Jesus went to ___ (pray)
-4. The disciples were rowing ___ hours.  (To answer take into account
-   that the night means from 3AM to 6AM and suppose it was 3AM
-    when Jesus departed and that He had sent His disciples to Bethsaida the
-    previous day at 6PM) (nine)
+4. The disciples were rowing around ___ hours.  (The fourth watch of the night
+   was between 3:00AM to 6:00AM, suppose it was 3:00AM when Jesus wanted to
+   departed and that He had sent His disciples to Bethsaida the previous 
+   day at 8:00PM) (seven)
 5. Seeing His disciples distress Jesus came close to the boat where they were
    by ____ on the sea (walking)
 6. The disciples cried because they thought that the one walking on the lake
@@ -40,8 +40,8 @@ walking on teh sea")
    Don't be ____” (afraid)
 8. Then Jesus went into the boat with them the wind ____ (ceased)
 9. If you read the passage before this one in the Bible, it is about the
-  miraculous sharing of bread, the disciples couldn’t understand
-  that and their hearts were ____ (hardened)
+   miraculous sharing of bread, the disciples couldn’t understand
+   that and their hearts were ____ (hardened)
 
 
 ## Reflection
