@@ -263,25 +263,31 @@ export default function Page({params} : {
 
     let urlc = process.env.NEXT_PUBLIC_AUTH_URL + 
       `/api/check_crossword`
-       if (session && address && session.address &&
-        session.address == address) {
-      urlc += `&walletAddress=${session.address}` +
-      `&token=${gCsrfToken}`
-    }
-    console.log(`Fetching ${urlc}`)
-    axios.post(urlc,{
+    let data = {
       guideId: course.id,
       lang: lang,
       prefix: pathPrefix,
       guide:  pathSuffix,
       grid: grid,
       placements: placements
+    }
+    if (session && address && session.address &&
+        session.address == address) {
+      data["walletAddress"]=session.address
+      data["token"]=gCsrfToken
+    }
+    console.log(`Fetching ${urlc}`)
+    axios.post(urlc, data, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     })
     .then(response => {
+      console.log(response)
       if (response.data) {
-        if (response.data.probs && response.data.probs != []) {
-          setFlashError("Problem(s) with word(s) " + probs.join(", "))
-        } else if (response.data.message) {
+        if (response.data.probs && response.data.probs.length > 0) {
+          setFlashError("Problem(s) with word(s) " + response.data.probs.join(", "))
+        } else if (response.data.message != "") {
           setFlashError("Problem: " + response.data.message)
         } else {
           setFlashSuccess("Perfect, however this course doesn't have scolarships active in this moment")

@@ -34,9 +34,18 @@ interface Cell {
 }
 
 
-export async function POST(req: NextRequest) {
-  console.log("** check_crossword POST req=", req)
+export async function GET(req: NextRequest) {
+  return NextResponse.json(
+    {error: "Expecting POST request"},
+    {status: 400}
+  )
+}
 
+export async function POST(req: NextRequest) {
+  console.log("** OJO check_crossword POST")
+  console.log(1/0)
+
+  let retMessage = ""
   const removeAccents = (s) => s.replace('á', 'A').
     replace('é', 'E').
     replace('í', 'I').
@@ -50,25 +59,25 @@ export async function POST(req: NextRequest) {
     replace('Ü', 'U')
 
   try {
-    let prob = [] 
+    let probs = [] 
 
     const requestJson = await req.json()
     console.log("OJO request.json()=", requestJson)
     const guideId = requestJson['guideId'] ?? ''
     console.log('OJO guideId=', guideId)
-    const lang = requestJson['lang '] ?? ''
+    const lang = requestJson['lang'] ?? ''
     console.log('OJO lang=', lang)
-    const prefix = requestJson['prefix '] ?? ''
+    const prefix = requestJson['prefix'] ?? ''
     console.log('OJO prefix=', prefix)
-    const guide = requestJson['guide '] ?? ''
+    const guide = requestJson['guide'] ?? ''
     console.log('OJO guide=', guide)
-    const grid = requestJson['grid '] ?? ''
+    const grid = requestJson['grid'] ?? ''
     console.log('OJO grid=', grid)
-    const placements = requestJson['placements '] ?? ''
+    const placements = requestJson['placements'] ?? ''
     console.log('OJO placements=', placements)
-    const walletAddress = requestJson['walletAddress '] ?? ''
+    const walletAddress = requestJson['walletAddress'] ?? ''
     console.log('OJO walletAddress=', walletAddress)
-    const token = requestJson['token '] ?? ''
+    const token = requestJson['token'] ?? ''
     console.log('OJO token=', token)
 
     const db = new Kysely<DB>({
@@ -82,40 +91,40 @@ export async function POST(req: NextRequest) {
         .where('billetera', '=', walletAddress)
         .selectAll()
         .executeTakeFirst()
-        if (billeteraUsuario.token != token) {
-          retMessage += "\nToken stored for user doesn't match given token. "
-        }
-    }
-    if (retMessage == "") {
-      let wordNumber = 1
+      if (!billeteraUsuario || billeteraUsuario.token != token) {
+        retMessage += "\nToken stored for user doesn't match given token. "
+      } else {
+        console.log("billeteraUsuario=", billeteraUsuario)
+        let wordNumber = 1
 
-      let words = billeteraUsuario.words.split(" | ")
-      console.log(words.length)
-      let probs = []
-      for(let i = 0; i < words.length; i++) {
-        let nrow = placements[i].row
-        let ncol = placements[i].col
-        let dir = placements[i].direction
-        let word = words[i]
-        for (let j = 0; j < word.length; j++) {
-          if (
-            nrow >= grid.length || ncol >= grid[nrow].length ||
-            removeAccents(grid[nrow][ncol].userInput.toUpperCase()) != 
+        let words = billeteraUsuario.answer_fib ?
+          billeteraUsuario.answer_fib.split(" | ") : []
+        console.log(words.length)
+        for(let i = 0; i < words.length; i++) {
+          let nrow = placements[i].row
+          let ncol = placements[i].col
+          let dir = placements[i].direction
+          let word = words[i]
+          for (let j = 0; j < word.length; j++) {
+            if (
+              nrow >= grid.length || ncol >= grid[nrow].length ||
+              removeAccents(grid[nrow][ncol].userInput.toUpperCase()) != 
             removeAccents(word[j].toUpperCase())
-          ) {
-            console.log(
-              "Problema en i",i, "-esima palabra word=", word, 
-              ", posición j=", j, ", se esperaba =", word[j].toUpperCase(),
-              "se obtuvo",grid[nrow][ncol].userInput.toUpperCase()
-            )
-            if (!probs.includes(i+1)) {
-              probs.push(i+1)
+            ) {
+              console.log(
+                "Problema en i",i, "-esima palabra word=", word, 
+                ", posición j=", j, ", se esperaba =", word[j].toUpperCase(),
+                "se obtuvo",grid[nrow][ncol].userInput.toUpperCase()
+              )
+              if (!probs.includes(i+1)) {
+                probs.push(i+1)
+              }
             }
-          }
-          if (dir == "across") {
-            ncol++
-          } else {
-            nrow++
+            if (dir == "across") {
+              ncol++
+            } else {
+                nrow++
+              }
           }
         }
       }

@@ -35,6 +35,7 @@ export interface ArInternalMetadata {
 }
 
 export interface BilleteraUsuario {
+  answer_fib: string | null;
   billetera: string;
   created_at: Timestamp;
   id: Generated<Int8>;
@@ -1216,6 +1217,16 @@ export interface Nonce {
   updated_at: Timestamp;
 }
 
+export interface Religion {
+  created_at: Timestamp;
+  fechacreacion: Timestamp;
+  fechadeshabilitacion: Timestamp | null;
+  id: Generated<Int8>;
+  nombre: string;
+  observaciones: string | null;
+  updated_at: Timestamp;
+}
+
 export interface SchemaMigrations {
   version: string;
 }
@@ -1242,7 +1253,9 @@ export interface Usuario {
   nombre: string | null;
   nusuario: string;
   oficina_id: number | null;
+  pais_id: number | null;
   password: Generated<string>;
+  religion_id: Generated<number | null>;
   remember_created_at: Timestamp | null;
   reset_password_sent_at: Timestamp | null;
   reset_password_token: string | null;
@@ -1365,6 +1378,7 @@ export interface DB {
   msip_ubicacionpre: MsipUbicacionpre;
   msip_vereda: MsipVereda;
   nonce: Nonce;
+  religion: Religion;
   schema_migrations: SchemaMigrations;
   usuario: Usuario;
 }
