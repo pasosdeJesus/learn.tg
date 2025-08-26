@@ -71,26 +71,31 @@ export default function Page({ params } : PageProps) {
   }
 
   return (
-  <div className="mt-8 overflow-x-hidden py-8 dark:bg-gray-100 dark:text-gray-900 mt-8">
-    <div className="overflow-x-hidden py-1 dark:bg-gray-100 dark:text-gray-900 flex flex-row flex-wrap justify-center mt-2">
-      <>
-      {cursosj.map((curso) => (
-        <div  key={curso.id} className="flex flex-col justify-center w-full px-8 mx-6 my-12 py-9
-              text-center rounded-md md:w-96 lg:w-80 xl:w-65 bg-gray-300
-              dark:text-gray-900">
-          <a href={`/${curso.idioma}${curso.prefijoRuta}`}>
-            <div className="img-curso">
-              <img className="w-[100%] h-[17rem] pt-2 object-cover" src={curso.imagen}/>
-            </div>
-            <div>
-              <div className="text-xl py-2 font-bold">{curso.titulo}</div>
-              <div className="w-[90%] text-justify">{curso.subtitulo}</div>
-            </div>
-          </a>
+  <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
+    <div className="max-w-6xl mx-auto">
+
+        <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {cursosj.map((curso) => (
+            <a
+              key={curso.id}
+              href={`/${curso.idioma}${curso.prefijoRuta}`}
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden 
+                         transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
+            >
+              <div className="img-curso">
+              <img className="w-full h-[17rem] pt-2 object-cover" 
+                src={curso.imagen}
+                alt={curso.titulo}
+                />
+              </div>
+              <div className="p-5">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">{curso.titulo}</h3>
+                <p className="text-sm text-gray-600 line-clamp-3">{curso.subtitulo}</p>
+              </div>
+            </a>
+          ))}
         </div>
-      ))}
-      </>
-    </div>
+      </div>
   </div>
   )
 }
