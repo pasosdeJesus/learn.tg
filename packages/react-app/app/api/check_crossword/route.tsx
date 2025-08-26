@@ -37,6 +37,18 @@ interface Cell {
 export async function POST(req: NextRequest) {
   console.log("** check_crossword POST req=", req)
 
+  const removeAccents = (s) => s.replace('á', 'A').
+    replace('é', 'E').
+    replace('í', 'I').
+    replace('ó', 'O').
+    replace('ú', 'U').
+    replace('ü', 'U').
+    replace('Á', 'A').
+    replace('É', 'E').
+    replace('Ó', 'O').
+    replace('Ú', 'U').
+    replace('Ü', 'U')
+
   try {
     let prob = [] 
 
@@ -88,7 +100,8 @@ export async function POST(req: NextRequest) {
         for (let j = 0; j < word.length; j++) {
           if (
             nrow >= grid.length || ncol >= grid[nrow].length ||
-            grid[nrow][ncol].userInput.toUpperCase() != word[j].toUpperCase()
+            removeAccents(grid[nrow][ncol].userInput.toUpperCase()) != 
+            removeAccents(word[j].toUpperCase())
           ) {
             console.log(
               "Problema en i",i, "-esima palabra word=", word, 

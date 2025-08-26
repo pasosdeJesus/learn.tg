@@ -53,8 +53,7 @@ export default function Page({params} : {
     titulo: "",
   });
   const [coursePath, setCoursePath] = useState("")
-  const [nextGuidePath, setNextGuidePath] = useState("")
-  const [previousGuidePath, setPreviousGuidePath] = useState("")
+  const [thisGuidePath, setThisGuidePath] = useState("")
   const [guideHtml, setGuideHtml] = useState("")
   const [creditsHtml, setCreditsHtml] = useState("")
   const [isClient, setIsClient] = useState(false)
@@ -119,20 +118,10 @@ export default function Page({params} : {
                 if (dcurso.guias[g].sufijoRuta == (pathSuffix)) {
                   setGuideNumber(g + 1);
                   gnumber = g + 1
+                  setThisGuidePath("/" + dcurso.idioma +
+                                     dcurso.prefijoRuta + "/" + pathSuffix)
                   setMyGuide(dcurso.guias[g])
                 }
-              }
-
-              if (gnumber > 1) {
-                let ga = dcurso.guias[gnumber - 2]
-                setPreviousGuidePath("/" + dcurso.idioma +
-                                     dcurso.prefijoRuta + "/" + ga.sufijoRuta)
-              }
-
-              if (gnumber <  dcurso.guias.length) {
-                let gs = dcurso.guias[gnumber]
-                setNextGuidePath("/" + dcurso.idioma +
-                                 dcurso.prefijoRuta + "/" + gs.sufijoRuta)
               }
 
               setCreditsHtml(htmlDeMd("", dcurso.creditosMd))
@@ -336,8 +325,19 @@ export default function Page({params} : {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    Crossword Puzzle
+                    <div>Crossword Puzzle</div>
+                    {isPuzzleSolved() && 
+                      <div>
+                        <Button className="bg-gray-600" onClick={handleSubmit}>Submit answer</Button>
+                      </div>
+                    }
+                    {!isPuzzleSolved() && 
+                      <div>
+                        <Button disabled="disabled" className="bg-gray-600">Submit answer</Button>
+                      </div>
+                    }
                   </CardTitle>
+
                   {flashError != "" && <div className="bg-red-500">{flashError}</div>}
                   {flashSuccess != "" && <div className="bg-green-500">{flashSuccess}</div>}
                 </CardHeader>
@@ -374,12 +374,6 @@ export default function Page({params} : {
                       </div>
                     ))}
                   </div>
-                  {isPuzzleSolved() && 
-                    <div>
-                      <Badge className="bg-orange-500">Completed</Badge>
-                      <Button className="bg-gray-600" onClick={handleSubmit}>Submit answer and earn part of scolarship if elegible</Button>
-                    </div>
-                  }
                 </CardContent>
               </Card>
             </div>
@@ -417,35 +411,9 @@ export default function Page({params} : {
         <table className="mx-auto text-center mt-12"><tbody>
           <tr>
             <td>
-              { guideNumber > 1 &&
-                (<a href={previousGuidePath} className="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-2 hover:bg-secondary-100 hover:text-white">
-                 { course.idioma == 'en' ? "Previous" : "Anterior" }
-                </a>)
-              }
-              { guideNumber <= 1 &&
-                (<div className="inline-flex items-center bg-gray-400 text-white border-r border-gray-100 py-2 px-2">
-                 { course.idioma == 'en' ? "Previous" : "Anterior" }
-                </div>)
-              }
-    
-            </td>
-            <td>
-              <a href={coursePath} className="inline-flex items-center bg-gray-800 text-white py-2 px-2 hover:bg-secondary-100 hover:text-white">
-                { course.idioma == 'en' ? "Start of Course" : "Inicio del Curso"}
-              </a>
-            </td>
-            <td>
-              &nbsp;
-              { guideNumber < course.guias.length  && (
-                <a href={nextGuidePath} className="inline-flex items-center bg-gray-800 text-white  py-2 px-2 hover:bg-secondary-100 hover:text-white">
-                  {course.idioma == 'en' ? "Next" : "Siguiente"}
+                <a href={thisGuidePath} className="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-2 hover:bg-secondary-100 hover:text-white">
+                 { course.idioma == 'en' ? "Return to guide" : "Regresar a la guía" }
                 </a>
-              )}
-              { guideNumber >= course.guias.length  && (
-                <div className="inline-flex items-center bg-gray-400 text-white  py-2 px-3">
-                  {course.idioma == 'en' ? "Next" : "Siguiente"}
-                </div>
-              )}
             </td>
           </tr>
         </tbody></table>

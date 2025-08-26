@@ -112,45 +112,51 @@ export async function GET(req: NextRequest) {
         qa.splice(np, 1)
       }
       console.log("scrambled=", scrambled)
-      // Save in Database
-      let layout = clg.generateLayout(scrambled)
-      let rows = layout.rows;
-      let cols = layout.cols;
-      let table = layout.table; // table as two-dimensional array
-      let output_html = layout.table_string; // table as plain text (with HTML line breaks)
-      let output_json = layout.result;
-
-
-      for(let index = 0; index < output_json.length; index++) {
-        let word = output_json[index].answer
-        let clue = output_json[index].clue
-        let row = output_json[index].starty
-        let col = output_json[index].startx
-        let direction = output_json[index].orientation
-        if (direction == "down" || direction == "across") {
-          for (let i = 0; i < word.length; i++) {
-            const currentRow = direction === "down" ? row + i : row
-            const currentCol = direction === "across" ? col + i : col
-            newGrid[currentRow][currentCol] = {
-              letter: "", // Originally word[i] but we don't send answer
-              number: i === 0 ? wordNumber : newGrid[currentRow][currentCol].number,
-              isBlocked: false,
-              userInput: "",
-              belongsToWords: [...(newGrid[currentRow][currentCol].belongsToWords || []), wordNumber],
+      if (scrambled.length > 0) {
+        // Save in Database
+        let layout = clg.generateLayout(scrambled)
+        let rows = layout.rows;
+        let cols = layout.cols;
+        let table = layout.table; // table as two-dimensional array
+        let output_html = layout.table_string; // table as plain text (with HTML line breaks)
+        let output_json = layout.result;
+  
+  
+        for(let index = 0; index < output_json.length; index++) {
+          let word = output_json[index].answer
+          let clue = output_json[index].clue
+          let row = output_json[index].starty
+          let col = output_json[index].startx
+          let direction = output_json[index].orientation
+          if (direction == "down" || direction == "across") {
+            for (let i = 0; i < word.length; i++) {
+              const currentRow = direction === "down" ? row + i : row
+              const currentCol = direction === "across" ? col + i : col
+              let ebelongs = typeof newGrid[currentRow][currentCol] == "undefined" ?
+                [] : newGrid[currentRow][currentCol].belongsToWords
+              newGrid[currentRow][currentCol] = {
+                letter: "", // Originally word[i] but we don't send answer
+                number: i === 0 ? wordNumber : 
+                  (typeof newGrid[currentRow][currentCol] != "undefined" ? 
+                   newGrid[currentRow][currentCol].number : -1),
+                isBlocked: false,
+                userInput: "",
+                belongsToWords: ebelongs.concat(wordNumber),
+              }
             }
+            newPlacements.push({
+              word: "-",
+              row: row,
+              col: col,
+              direction: direction,
+              number: wordNumber,
+              clue: clue,
+            })
+            wordNumber++
           }
-          newPlacements.push({
-            word: "-",
-            row: row,
-            col: col,
-            direction: direction,
-            number: wordNumber,
-            clue: clue,
-          })
-          wordNumber++
         }
+        console.log("** newPlacements=", newPlacements)
       }
-      console.log("** newPlacements=", newPlacements)
 
       let now = new Date()
       let uWalletUser:Updateable<BilleteraUsuario> = {
