@@ -170,7 +170,7 @@ export default function Page({params} : {
       .use(remarkGfm)
       .use(remarkDirective)
       .use(remarkFrontmatter)
-      .use(remarkFillInTheBlank, { url: "guide1/test" })
+      .use(remarkFillInTheBlank, { url: `${pathSuffix}/test` })
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeStringify, { allowDangerousHtml: true })
     let html = processor.processSync(md).toString()
