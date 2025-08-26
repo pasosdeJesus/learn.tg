@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     const walletAddress = searchParams.get("walletAddress")
     const token = searchParams.get("token")
 
-    const newGrid = initializeGrid(15, 15)
+    let newGrid = initializeGrid(15, 15)
     const newPlacements: WordPlacement[] = []
 
     const db = new Kysely<DB>({
@@ -115,23 +115,31 @@ export async function GET(req: NextRequest) {
       if (scrambled.length > 0) {
         // Save in Database
         let layout = clg.generateLayout(scrambled)
+        console.log("** layout=", layout)
         let rows = layout.rows;
         let cols = layout.cols;
+        console.log("** rows=", rows)
+        console.log("** cols=", cols)
+        newGrid = initializeGrid(rows, cols)
         let table = layout.table; // table as two-dimensional array
+        console.log("** table=", table)
         let output_html = layout.table_string; // table as plain text (with HTML line breaks)
+        console.log("** output_html=", output_html)
         let output_json = layout.result;
-  
-  
+        console.log("** output_json=", output_json)
+
         for(let index = 0; index < output_json.length; index++) {
           let word = output_json[index].answer
           let clue = output_json[index].clue
-          let row = output_json[index].starty
-          let col = output_json[index].startx
+          let row = output_json[index].starty - 1
+          let col = output_json[index].startx - 1
           let direction = output_json[index].orientation
           if (direction == "down" || direction == "across") {
             for (let i = 0; i < word.length; i++) {
               const currentRow = direction === "down" ? row + i : row
               const currentCol = direction === "across" ? col + i : col
+              console.log("** currentRow=", currentRow, 
+                         ", currentCol=", currentCol)
               let ebelongs = typeof newGrid[currentRow][currentCol] == "undefined" ?
                 [] : newGrid[currentRow][currentCol].belongsToWords
               newGrid[currentRow][currentCol] = {

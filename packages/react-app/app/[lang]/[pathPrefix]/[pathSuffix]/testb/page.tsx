@@ -350,10 +350,11 @@ export default function Page({params} : {
                             key={`${rowIndex}-${colIndex}`}
                             className={cn(
                               "w-8 h-8 border border-border relative",
-                              cell.isBlocked ? "bg-black" : "bg-white dark:bg-background",
+                              (!cell || cell.isBlocked) ? 
+                                "bg-black" : "bg-white dark:bg-background",
                             )}
                           >
-                            {!cell.isBlocked && (
+                            {cell && !cell.isBlocked && (
                               <>
                                 {cell.number && (
                                   <span className="absolute top-0 left-0 text-xs font-bold leading-none p-0.5">
