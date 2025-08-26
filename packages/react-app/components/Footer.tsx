@@ -26,7 +26,7 @@ export default function Footer({lang = "en"}) {
           
           {/* Columna 2 */}
           <div>
-            <h3 className="font-semibold !text-white mb-4">Síguenos</h3>
+            <h3 className="font-semibold !text-white mb-4">{ lang == "es" ? "Síguenos" : "Follow us"}</h3>
             <div className="flex space-x-4">
 
               {/* Twitter */}
@@ -92,11 +92,6 @@ export default function Footer({lang = "en"}) {
 
             </div>
           </div>
-        </div>
-
-        {/* Línea inferior */}
-        <div className="mt-10 border-t border-gray-700 pt-6 text-center text-sm text-gray-400">
-          © {new Date().getFullYear()} Pasos de Jesús. Todos los derechos reservados.
         </div>
       </div>
     </footer>
