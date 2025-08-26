@@ -1,0 +1,183 @@
+"use server"
+
+import clg from "crossword-layout-generator-with-isolated"
+import { readFile } from 'fs/promises'
+import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely';
+import { NextRequest, NextResponse } from 'next/server'
+import remarkDirective from 'remark-directive'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkGfm from 'remark-gfm'
+import remarkParse from 'remark-parse'
+import remarkRehype from 'remark-rehype'
+import rehypeStringify from 'rehype-stringify'
+import {unified} from 'unified'
+
+import defineConfig from '@/.config/kysely.config.ts'
+import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts';
+import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
+
+interface WordPlacement {
+  word: string
+  row: number
+  col: number
+  direction: "across" | "down"
+  number: number
+  clue: string
+}
+
+interface Cell {
+  letter: string
+  number?: number
+  isBlocked: boolean
+  userInput: string
+  belongsToWords: number[]
+}
+
+
+export async function GET(req: NextRequest) {
+  console.log("** crossword GET req=", req)
+
+  const initializeGrid = (rows: number, cols: number): Cell[][] => {
+    return Array(rows)
+      .fill(null)
+      .map(() =>
+        Array(cols)
+          .fill(null)
+          .map(() => ({
+            letter: "",
+            isBlocked: true,
+            userInput: "",
+            belongsToWords: [],
+          })),
+      )
+  }
+
+  try {
+    let retMessage = "";
+
+    const { searchParams } = req.nextUrl
+    const guideId = searchParams.get("guideId")
+    const lang = searchParams.get("lang")
+    const prefix = searchParams.get("prefix")
+    const guide = searchParams.get("guide")
+    const walletAddress = searchParams.get("walletAddress")
+    const token = searchParams.get("token")
+
+    const newGrid = initializeGrid(15, 15)
+    const newPlacements: WordPlacement[] = []
+
+    const db = new Kysely<DB>({
+      dialect: defineConfig.dialect
+    })
+
+    let billeteraUsuario = {}
+    if (!walletAddress || walletAddress == null || walletAddress == "") {
+      retMessage += "\nThe answer will not be graded nor will possible scholarships be sought. "
+    } else {
+      billeteraUsuario = await db.selectFrom('billetera_usuario')
+        .where('billetera', '=', walletAddress)
+        .selectAll()
+        .executeTakeFirst()
+        if (billeteraUsuario.token != token) {
+          retMessage += "\nToken stored for user doesn't match given token. "
+        }
+    }
+    if (retMessage == "") {
+      let wordNumber = 1
+
+      console.log("** cwd=", process.cwd())
+      let fname = `../../resources/${lang}/${prefix}/${guide}.md`
+      console.log("** fname=", fname)
+      let md = await readFile(fname, 'utf8')
+      console.log(md)
+
+      let processor = unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(remarkDirective)
+      .use(remarkFrontmatter)
+      .use(remarkFillInTheBlank, { url: "" })
+      .use(remarkRehype, { allowDangerousHtml: true })
+      .use(rehypeStringify, { allowDangerousHtml: true })
+      let html = processor.processSync(md).toString()
+
+      let qa = global.fillInTheBlank || []
+
+      let scrambled = []
+      let words = []
+      while (qa.length > 0) {
+        let np = Math.floor(Math.random() * qa.length)
+        scrambled.push(qa[np])
+        words.push(qa[np].answer)
+        qa.splice(np, 1)
+      }
+      console.log("scrambled=", scrambled)
+      // Save in Database
+      let layout = clg.generateLayout(scrambled)
+      let rows = layout.rows;
+      let cols = layout.cols;
+      let table = layout.table; // table as two-dimensional array
+      let output_html = layout.table_string; // table as plain text (with HTML line breaks)
+      let output_json = layout.result;
+
+
+      for(let index = 0; index < output_json.length; index++) {
+        let word = output_json[index].answer
+        let clue = output_json[index].clue
+        let row = output_json[index].starty
+        let col = output_json[index].startx
+        let direction = output_json[index].orientation
+        if (direction == "down" || direction == "across") {
+          for (let i = 0; i < word.length; i++) {
+            const currentRow = direction === "down" ? row + i : row
+            const currentCol = direction === "across" ? col + i : col
+            newGrid[currentRow][currentCol] = {
+              letter: "", // Originally word[i] but we don't send answer
+              number: i === 0 ? wordNumber : newGrid[currentRow][currentCol].number,
+              isBlocked: false,
+              userInput: "",
+              belongsToWords: [...(newGrid[currentRow][currentCol].belongsToWords || []), wordNumber],
+            }
+          }
+          newPlacements.push({
+            word: "-",
+            row: row,
+            col: col,
+            direction: direction,
+            number: wordNumber,
+            clue: clue,
+          })
+          wordNumber++
+        }
+      }
+      console.log("** newPlacements=", newPlacements)
+
+      let now = new Date()
+      let uWalletUser:Updateable<BilleteraUsuario> = {
+        answer_fib: words.join(" | "),
+        updated_at: now,
+      }
+      let rUpdate=await db.updateTable('billetera_usuario')
+        .set(uWalletUser)
+        .where('id', '=', billeteraUsuario.id).execute()
+      console.log(new Date(), "After update rUpdate=", rUpdate)
+    }
+
+    console.log("** newGrid=", newGrid)
+    return NextResponse.json(
+      {
+        grid: newGrid,
+        placements: newPlacements,
+        message: retMessage,
+      },
+      {status: 200}
+    )
+  } catch (error) {
+    console.error("Excepción error=", error)
+    return NextResponse.json(
+      {error: error},
+      {status: 500}
+    )
+  }
+
+}
