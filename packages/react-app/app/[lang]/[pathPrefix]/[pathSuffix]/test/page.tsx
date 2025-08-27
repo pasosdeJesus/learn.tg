@@ -316,7 +316,7 @@ export default function Page({params} : {
       <div className="mt-8 pt-2  dark:bg-gray-100 dark:text-gray-800">
         <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
           <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
-            {course.idioma == 'en' ? "Course:" : "Curso:"}
+            {course.idioma == 'en' ? "Course: " : "Curso: "}
             {course.titulo}
           </h3>
         </div>
@@ -335,12 +335,12 @@ export default function Page({params} : {
                     <div>Crossword Puzzle</div>
                     {isPuzzleSolved() && 
                       <div>
-                        <Button className="bg-gray-600" onClick={handleSubmit}>Submit answer</Button>
+                        <Button className="primary" onClick={handleSubmit}>Submit answer</Button>
                       </div>
                     }
                     {!isPuzzleSolved() && 
                       <div>
-                        <Button disabled="disabled" className="bg-gray-600">Submit answer</Button>
+                        <Button disabled="disabled" className="primary">Submit answer</Button>
                       </div>
                     }
                   </CardTitle>

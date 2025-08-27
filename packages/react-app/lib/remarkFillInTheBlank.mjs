@@ -60,7 +60,8 @@ export function remarkFillInTheBlank(options) {
             children: [
               {
                 type: 'html',
-                value: '<a class="rounded-md text-sm outline-none text-primary-foreground shadow-xs hover:bg-primary/90 h-9 px-4 py-2 bg-gray-600" href="' + (options['url'] || "") + '">',
+
+                value: '<a class="btn primary" href="' + (options['url'] || "") + '">',
                 position: { start: l[i].position.start, end: l[i].position.start }
               },
               {
