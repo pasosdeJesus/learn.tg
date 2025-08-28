@@ -9,9 +9,9 @@ export default function Footer({lang = "en"}) {
       style={{ background: "linear-gradient(90deg,var(--color-primary-200),var(--color-primary-100))" }} 
      > 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:justify-between items-center">
           {/* Columna 1 */}
-          <div>
+          <div className="justify-self-start">
             { lang == "es" &&
               <div className="pt-4">
                 Unete a <a href="https://t.me/learn_t_g" className="hover:underline !text-white font-bold">la comunidad en Telegram</a> 
@@ -25,7 +25,7 @@ export default function Footer({lang = "en"}) {
           </div>
           
           {/* Columna 2 */}
-          <div>
+          <div className="justify-self-end">
             <h3 className="font-semibold !text-white mb-4">{ lang == "es" ? "Síguenos" : "Follow us"}</h3>
             <div className="flex space-x-4">
 
