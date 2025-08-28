@@ -11,16 +11,16 @@
 
   /* Colores base */
   --color-background: #f9fafb; /* gris claro */
-  --color-foreground: #111827; /* gris oscuro legible */
+  --color-foreground: #1f1f29; /* gris oscuro legible */
 
-  /* Branding principal */
-  --color-primary-100: #6366f1; /* Indigo suave */
-  --color-primary-200: #4f46e5; /* Indigo medio */
-  --color-primary-300: #4338ca; /* Indigo fuerte */
+  /* Branding principal (inspirado en lilas/morados del logo) */
+  --color-primary-100: #cba3e0; /* Lila claro */
+  --color-primary-200: #a875d6; /* Lila pastel */
+  --color-primary-300: #5b2d82; /* Morado fuerte */
 
-  /* Secundarios (acentos frescos) */
-  --color-secondary-100: #06b6d4; /* Cyan brillante */
-  --color-secondary-200: #0891b2; /* Cyan oscuro */
+  /* Secundarios (contraste y acento cálido) */
+  --color-secondary-100: #f4b77a; /* Piel cálida */
+  --color-secondary-200: #4a3b60; /* Morado grisáceo */
 
   /* Escala de grises elegante */
   --color-gray-50:  #f9fafb;
@@ -32,7 +32,6 @@
   --color-gray-600: #4b5563;
   --color-gray-700: #374151;
 }
-
 /* ================================
    ✨ Estilos Globales
 ================================== */
