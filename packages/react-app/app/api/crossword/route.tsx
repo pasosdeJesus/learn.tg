@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
 
     let billeteraUsuario = {}
     if (!walletAddress || walletAddress == null || walletAddress == "") {
-      retMessage += "\nThe answer will not be graded nor will possible scholarships be sought. "
+      retMessage += "\nTo solve the puzzle, please connect your web3 Wallet. "
     } else {
       billeteraUsuario = await db.selectFrom('billetera_usuario')
         .where('billetera', '=', walletAddress)
