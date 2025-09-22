@@ -15,17 +15,17 @@ Backend application with rails based on
 
 It must be started first.
 
-See details at servidor/README.md
+See details at [servidor/README.md](servidor/README.md)
 
 
 ## Directory `packages/react-app`
 
 Frontend application with react and next.js.
 
-See details at `packages/react-app/README.md`
+See details at [packages/react-app/README.md](packages/react-app/README.md)
 
 
-## Directory `resources` 
+## Directory [resources](resources) 
 
 It has markdown of guides, images and media.
 
