@@ -15,6 +15,11 @@ const config: HardhatUserConfig = {
       accounts: [process.env.PRIVATE_KEY ?? '0x0'],
       url: 'https://forno.celo.org',
     },
+    celoSepolia: {
+      accounts: [process.env.PRIVATE_KEY ?? '0x0'],
+      url: 'https://forno.celo-sepolia.celo-testnet.org/',
+    },
+
     'base-sepolia': {
       accounts: [process.env.PRIVATE_KEY ?? '0x0'],
       url: 'https://sepolia.base.org',
@@ -23,10 +28,19 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       alfajores: process.env.CELOSCAN_API_KEY ?? '',
+      celoSepolia: process.env.CELOSEPOLIASCAN_API_KEY ?? '',
       celo: process.env.CELOSCAN_API_KEY ?? '',
       'base-sepolia': process.env.BASESCAN_API_KEY ?? '',
     },
     customChains: [
+      {
+        chainId: 11_142_220,
+        network: 'celoSepolia',
+        urls: {
+          apiURL: 'https://celo-sepolia.blockscout.com/api',
+          browserURL: 'https://celo-sepolia.blockscout.com/',
+        },
+      },
       {
         chainId: 44_787,
         network: 'alfajores',

@@ -10,7 +10,7 @@ The owner (deployer) has 1,000,000 tokens with 6 decimals.
 
 ## Available Scripts
 
-- `yarn deploy-mock-usdt` - Deploy a new MockUSDT token to Alfajores
+- `yarn deploy-mock-usdt` - Deploy a new MockUSDT token to Sepolia Celo
 - `yarn verify-mock-usdt` - Verify the deployed MockUSDT token
 
 ## Token Details

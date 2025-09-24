@@ -8,6 +8,7 @@ async function main() {
     "ScholarshipVaults", 
     process.env.DEPLOYED_AT  // The deployed address
   );
+  console.log("scholarshipVaults at :", process.env.DEPLOYED_AT);
   
   // Get the owner of the contract
   const owner = await scholarshipVaults.owner();
