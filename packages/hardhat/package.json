@@ -41,6 +41,7 @@
     "verify-deployment": "hardhat run scripts/verifyDeployment.ts --network celoSepolia",
     "deploy-mock-usdt": "bin/deployMockUsdt",
     "verify-mock-usdt": "hardhat run scripts/verifyMockUSDT.ts --network celoSepolia",
+    "contract-verification": "bin/contractVerification",
     "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'",
     "sync:abis": "node sync-abis.js"
   },

@@ -28,14 +28,14 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       alfajores: process.env.CELOSCAN_API_KEY ?? '',
-      celoSepolia: process.env.CELOSEPOLIASCAN_API_KEY ?? '',
+      celoSepolia: process.env.BLOCKSCOUT_API_KEY ?? '',
       celo: process.env.CELOSCAN_API_KEY ?? '',
       'base-sepolia': process.env.BASESCAN_API_KEY ?? '',
     },
     customChains: [
       {
-        chainId: 11_142_220,
         network: 'celoSepolia',
+        chainId: 11_142_220,
         urls: {
           apiURL: 'https://celo-sepolia.blockscout.com/api',
           browserURL: 'https://celo-sepolia.blockscout.com/',
