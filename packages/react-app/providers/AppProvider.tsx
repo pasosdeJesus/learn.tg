@@ -19,7 +19,7 @@ import { injectedWallet } from '@rainbow-me/rainbowkit/wallets';
 import { RainbowKitSiweNextAuthProvider, type GetSiweMessageOptions } from '@rainbow-me/rainbowkit-siwe-next-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createConfig, http, useAccount, WagmiProvider } from 'wagmi';
-import { celo, celoAlfajores } from 'wagmi/chains';
+import { celo, celoSepolia } from 'wagmi/chains';
 
 
 
@@ -45,11 +45,11 @@ const config = createConfig({
   connectors,
   chains: (
     process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
-    [celo] : [celoAlfajores]
+    [celo] : [celoSepolia]
   ),
   transports: {
     [celo.id]: http(),
-    [celoAlfajores.id]: http(),
+    [celoSepolia.id]: http(),
   },
 });
 
