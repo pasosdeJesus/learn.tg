@@ -37,6 +37,18 @@ export default function Header({ lang = "en" }) {
 
         {/* Zona derecha */}
         <div className="ml-auto flex items-center gap-4">
+          {isConnected && address && session && session.address &&
+            session.address == address && (
+              <div className="flex h-16 content-center justify-end items-center mr-4">
+                <div className="relative">
+                  <a href={`/${lang == "es" ? "es" : "en"}/profile`}
+                  className="btn px-4 py-2 bg-secondary text-white rounded hover:bg-secondary-200"
+              >
+                    {lang == "es" ? "Perfil" : "Profile"}
+                  </a>
+                </div>
+              </div>
+          )}
          {/* 
             <div className="hidden md:block w-64 relative">
               <input

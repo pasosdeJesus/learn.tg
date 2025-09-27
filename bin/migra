@@ -6,6 +6,6 @@ if (test "$?" != "0") then {
   exit 1;
 } fi;
 
-cd ../cliente
+cd ../packages/nextjs-app
 make
 
