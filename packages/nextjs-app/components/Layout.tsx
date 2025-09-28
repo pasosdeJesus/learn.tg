@@ -1,6 +1,7 @@
 "use client"
 
-import React, { FC, ReactNode } from "react"
+import * as React from "react";
+import { FC, ReactNode } from "react";
 import Footer from "./Footer"
 import Header from "./Header"
 

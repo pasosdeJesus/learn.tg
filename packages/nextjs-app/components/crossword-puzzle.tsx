@@ -7,13 +7,11 @@ import { usePublicClient, useWalletClient } from 'wagmi';
 import { useAccount } from 'wagmi'
 
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-
-import { checkCrosswordPuzzle } from '@/app/actions'
+import { Button } from "./ui/button"
+import { Input } from "./ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
+import { Badge } from "./ui/badge"
+import { cn } from "../lib/utils"
 
 interface WordPlacement {
   word: string

@@ -55,8 +55,10 @@ const config = createConfig({
 
 
 const getSiweMessageOptions: GetSiweMessageOptions = () => {
+  // Check if ethereum is available in window object
+  const selectedAddress = typeof window !== 'undefined' && (window as any).ethereum?.selectedAddress || '0x0';
   const referralTag = getReferralTag({
-    user: ethereum?.selectedAddress || '0x0',
+    user: selectedAddress,
     consumer: '0x358643badcc77cccb28a319abd439438a57339a7',
   })
   const msg={

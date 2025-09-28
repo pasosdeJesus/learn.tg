@@ -1,7 +1,8 @@
 "use client"
 
 import { useSession } from "next-auth/react";
-import React, { useEffect, useState } from "react"
+import * as React from "react";
+import { useEffect, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { useAccount, useConnect } from "wagmi"
 import { injected } from "wagmi/connectors"
@@ -37,8 +38,8 @@ export default function Header({ lang = "en" }) {
 
         {/* Zona derecha */}
         <div className="ml-auto flex items-center gap-4">
-          {isConnected && address && session && session.address &&
-            session.address == address && (
+          {isConnected && address && session && (session as any).address &&
+            (session as any).address == address && (
               <div className="flex h-16 content-center justify-end items-center mr-4">
                 <div className="relative">
                   <a href={`/${lang == "es" ? "es" : "en"}/profile`}
