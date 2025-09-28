@@ -3,8 +3,11 @@
 import axios from 'axios';
 
 import { ClaimSDK, IdentitySDK } from '@goodsdks/citizen-sdk';
+import { type PublicClient, type WalletClient } from 'viem';
+import { Session } from "next-auth";
 import { useSession, getCsrfToken } from "next-auth/react"
 import { use, useEffect, useState } from 'react'
+import Link from 'next/link'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -56,10 +59,10 @@ export default function Page({params} : {
     const configurar = async () => {
       setIsClient(true)
       setCoursePath(`/${lang}/${pathPrefix}`)
-      let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
+      const url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
         `filtro[busprefijoRuta]=/${pathPrefix}&` +
         `filtro[busidioma]=${lang}`
-      let csrfToken = await getCsrfToken()
+      const csrfToken = await getCsrfToken()
       if (session && address && session.address &&
           session.address == address) {
         url += `&walletAddress=${session.address}` +
@@ -72,7 +75,7 @@ export default function Page({params} : {
           if (response.data.length != 1) {
             return false
           }
-          let rcurso = response.data[0]
+          const rcurso = response.data[0]
 
           if (process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL == undefined) {
             alert("Undefined NEXT_PUBLIC_API_PRESENTA_CURSO_URL")
@@ -93,7 +96,7 @@ export default function Page({params} : {
               if (response.data.length != 1) {
                 return false
               }
-              let dcurso = responsed.data
+              const dcurso = responsed.data
               setCourse(dcurso)
 
               let gnumber = 0
@@ -106,13 +109,13 @@ export default function Page({params} : {
               }
 
               if (gnumber > 1) {
-                let ga = dcurso.guias[gnumber - 2]
+                const ga = dcurso.guias[gnumber - 2]
                 setPreviousGuidePath("/" + dcurso.idioma +
                                      dcurso.prefijoRuta + "/" + ga.sufijoRuta)
               }
 
               if (gnumber <  dcurso.guias.length) {
-                let gs = dcurso.guias[gnumber]
+                const gs = dcurso.guias[gnumber]
                 setNextGuidePath("/" + dcurso.idioma +
                                  dcurso.prefijoRuta + "/" + gs.sufijoRuta)
               }
@@ -167,8 +170,8 @@ export default function Page({params} : {
   const { lang, pathPrefix, pathSuffix } = parameters
 
 
-  let htmlDeMd = (md: string) => {
-    let processor = unified()
+  const htmlDeMd = (md: string) => {
+    const processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkDirective)
@@ -176,7 +179,7 @@ export default function Page({params} : {
       .use(remarkFillInTheBlank, { url: `${pathSuffix}/test` })
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeStringify, { allowDangerousHtml: true })
-    let html = processor.processSync(md).toString()
+    const html = processor.processSync(md).toString()
 
     // Save questions
     localStorage.setItem(
@@ -185,7 +188,7 @@ export default function Page({params} : {
     )
 
     // Agregamos estilo
-    let html_con_tailwind = html.replaceAll(
+    const html_con_tailwind = html.replaceAll(
       "<a href", '<a class="underline" href'
     ).replaceAll(
       "<blockquote>", '<blockquote class="ml-8 pt-2">'
@@ -233,10 +236,36 @@ export default function Page({params} : {
 
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
-  let identitySDK = null
-  if (process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg") {
-    identitySDK = new IdentitySDK({ env: 'production', publicClient: publicClient as any, walletClient: walletClient as any })
+  const identitySDK = process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
+    new IdentitySDK({
+      env: 'production',
+      publicClient: publicClient as PublicClient,
+      walletClient: walletClient as WalletClient
+    }) :
+    null;
+
+  const claimUBI = async () => {
+    if (!session || !address || session.address != address || 
+        !publicClient || !walletClient || !identitySDK) {
+      return (<div>Works only with wallet connected</div>)
+    }
+
+    const claimSDK = new ClaimSDK({
+      account: session.address,
+      publicClient,
+      walletClient,
+      identitySDK,
+      env: 'production',
+    });
+
+    try {
+      await claimSDK.claim();
+      console.log('Claim successful');
+    } catch (error) {
+      console.error('Claim failed:', error);
+    }
   }
+  
 
   const claimUBI = async () => {
 
@@ -305,9 +334,9 @@ export default function Page({params} : {
           <tr>
             <td>
               { guideNumber > 1 &&
-                (<a href={previousGuidePath} className="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-2 hover:bg-secondary-100 hover:text-white">
+                (<Link href={previousGuidePath} className="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-2 hover:bg-secondary-100 hover:text-white">
                  { course.idioma == 'en' ? "Previous" : "Anterior" }
-                </a>)
+                </Link>)
               }
               { guideNumber <= 1 &&
                 (<div className="inline-flex items-center bg-gray-400 text-white border-r border-gray-100 py-2 px-2">
@@ -317,16 +346,16 @@ export default function Page({params} : {
     
             </td>
             <td>
-              <a href={coursePath} className="inline-flex items-center bg-gray-800 text-white py-2 px-2 hover:bg-secondary-100 hover:text-white">
+              <Link href={coursePath} className="inline-flex items-center bg-gray-800 text-white py-2 px-2 hover:bg-secondary-100 hover:text-white">
                 { course.idioma == 'en' ? "Start of Course" : "Inicio del Curso"}
-              </a>
+              </Link>
             </td>
             <td>
               &nbsp;
               { guideNumber < course.guias.length  && (
-                <a href={nextGuidePath} className="inline-flex items-center bg-gray-800 text-white  py-2 px-2 hover:bg-secondary-100 hover:text-white">
+                <Link href={nextGuidePath} className="inline-flex items-center bg-gray-800 text-white  py-2 px-2 hover:bg-secondary-100 hover:text-white">
                   {course.idioma == 'en' ? "Next" : "Siguiente"}
-                </a>
+                </Link>
               )}
               { guideNumber >= course.guias.length  && (
                 <div className="inline-flex items-center bg-gray-400 text-white  py-2 px-3">

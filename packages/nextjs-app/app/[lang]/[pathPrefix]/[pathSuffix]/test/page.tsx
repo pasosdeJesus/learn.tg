@@ -180,7 +180,7 @@ export default function Page({params} : {
       })
     }
     configurar()
-  }, [session, address])
+  }, [session, address, guideNumber, lang, pathPrefix, pathSuffix])
 
 
   const parameters = use(params)

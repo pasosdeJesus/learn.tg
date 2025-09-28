@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useSession, getCsrfToken } from "next-auth/react";
 import {use, useEffect, useState} from "react"
 import { useAccount } from 'wagmi'
+import Image from 'next/image'
 
 type PageProps = {
   params: Promise<{
@@ -84,7 +85,7 @@ export default function Page({ params } : PageProps) {
       })
     }
     configurar()
-  }, [session, address])
+  }, [session, address, lang])
 
   if ((session && !address) || (address && !session) || 
       (address && session && session.address && 
@@ -110,9 +111,12 @@ export default function Page({ params } : PageProps) {
                          transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
             >
               <div className="img-course">
-              <img className="w-full h-[17rem] pt-2 object-cover" 
+              <Image 
+                className="w-full h-[17rem] pt-2 object-cover"
                 src={course.imagen}
                 alt={course.titulo}
+                width={680}
+                height={272}
                 />
               </div>
               <div className="p-5">

@@ -1,17 +1,9 @@
 "use client"
 
-import axios from 'axios';
 import { Loader2 } from "lucide-react"
 import { useSession, getCsrfToken } from "next-auth/react";
 import {use, useEffect, useState} from "react"
 import { useAccount } from 'wagmi'
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface UserProfile {
   country: number | null

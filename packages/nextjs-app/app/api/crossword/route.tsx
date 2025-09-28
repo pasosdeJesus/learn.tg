@@ -2,18 +2,16 @@
 
 import clg from "crossword-layout-generator-with-isolated"
 import { readFile } from 'fs/promises'
-import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely';
+import { Kysely } from 'kysely';
 import { NextRequest, NextResponse } from 'next/server'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
-import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
 
 import defineConfig from '@/.config/kysely.config.ts'
-import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts';
+import type { DB } from '@/db/db.d.ts';
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 interface WordPlacement {

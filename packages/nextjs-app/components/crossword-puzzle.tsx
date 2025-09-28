@@ -192,7 +192,7 @@ export default function CrosswordPuzzle(props: CrosswordPuzzleProps) {
   // Generate crossword on words change
   useEffect(() => {
     generateCrossword()
-  }, [])
+  }, [generateCrossword])
 
   const acrossClues = placements.filter((p) => p.direction === "across")
   const downClues = placements.filter((p) => p.direction === "down")

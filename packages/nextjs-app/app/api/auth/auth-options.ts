@@ -2,10 +2,11 @@
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/api/auth/auth-options.ts
 import { submitReferral } from '@divvi/referral-sdk'
 import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely';
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getCsrfToken } from "next-auth/react";
 import { SiweMessage } from "siwe";
+import { JWT } from "next-auth/jwt";
 
 import defineConfig from '@/.config/kysely.config.ts'
 import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts';
@@ -135,10 +136,16 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       console.log(new Date(), "OJO session. session=", session, ", token=", token)
-      session.address = token.sub;
-      session.user.name = token.sub;
+      if (token.sub) {
+        session.address = token.sub;
+        if (!session.user) {
+          session.user = { name: token.sub };
+        } else {
+          session.user.name = token.sub;
+        }
+      }
       return session;
     },
   },

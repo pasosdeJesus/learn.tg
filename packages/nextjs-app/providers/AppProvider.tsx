@@ -8,6 +8,12 @@
 
 import { getReferralTag } from '@divvi/referral-sdk'
 import { SessionProvider } from 'next-auth/react';
+
+interface ExtendedWindow extends Window {
+  ethereum?: {
+    selectedAddress?: string;
+  }
+}
 import { AppProps } from 'next/app';
 import {
   connectorsForWallets,
@@ -56,7 +62,7 @@ const config = createConfig({
 
 const getSiweMessageOptions: GetSiweMessageOptions = () => {
   // Check if ethereum is available in window object
-  const selectedAddress = typeof window !== 'undefined' && (window as any).ethereum?.selectedAddress || '0x0';
+  const selectedAddress = typeof window !== 'undefined' && (window as ExtendedWindow).ethereum?.selectedAddress || '0x0';
   const referralTag = getReferralTag({
     user: selectedAddress,
     consumer: '0x358643badcc77cccb28a319abd439438a57339a7',

@@ -1,17 +1,24 @@
 "use client"
 
+import { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { useAccount, useConnect } from "wagmi"
 import { injected } from "wagmi/connectors"
+import Link from 'next/link'
+import Image from 'next/image'
+
+interface ExtendedSession extends Session {
+  address?: string;
+}
 
 export default function Header({ lang = "en" }) {
   const [hideConnectBtn, setHideConnectBtn] = useState(false)
   const { connect } = useConnect()
   const { address, isConnected } = useAccount()
-  const { data: session } = useSession()
+  const { data: session } = useSession() as { data: ExtendedSession | null }
 
   useEffect(() => {
     if (window.ethereum && window.ethereum.isMiniPay) {
@@ -27,26 +34,26 @@ export default function Header({ lang = "en" }) {
     >
       <div className="container mx-auto flex items-center h-16 gap-4 px-4">
         {/* Logo + Nombre */}
-        <a href="/" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center">
-            <img src="/logo-learntg.png" alt="logo" className="h-8 w-8 rounded-full" />
+            <Image src="/logo-learntg.png" alt="logo" width={32} height={32} className="rounded-full" />
           </div>
           <span className="text-white font-semibold">
             {lang === "es" ? "Aprender mediante juegos" : "Learn through games"}
           </span>
-        </a>
+        </Link>
 
         {/* Zona derecha */}
         <div className="ml-auto flex items-center gap-4">
-          {isConnected && address && session && (session as any).address &&
-            (session as any).address == address && (
+          {isConnected && address && session && session.address &&
+            session.address == address && (
               <div className="flex h-16 content-center justify-end items-center mr-4">
                 <div className="relative">
-                  <a href={`/${lang == "es" ? "es" : "en"}/profile`}
+                  <Link href={`/${lang == "es" ? "es" : "en"}/profile`}
                   className="btn px-4 py-2 bg-secondary text-white rounded hover:bg-secondary-200"
               >
                     {lang == "es" ? "Perfil" : "Profile"}
-                  </a>
+                  </Link>
                 </div>
               </div>
           )}

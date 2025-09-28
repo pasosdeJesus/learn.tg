@@ -159,7 +159,7 @@ export default function Page({ params }: PageProps) {
       setToPay(0) //myCourse.toPay
     }
     configurar()
-  }, [session, address])
+  }, [session, address, lang, pathPrefix])
 
   if ((session && !address) || (address && !session) || 
       (address && session && session.address && 
