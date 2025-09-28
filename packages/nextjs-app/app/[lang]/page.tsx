@@ -50,9 +50,19 @@ export default function Page({ params } : PageProps) {
         if (response.data) {
           let courseInfo = response.data
           if (csrfToken) {
-            courseInfo.forEach((course) => {
+            interface Course {
+              id: string;
+              idioma: string;
+              prefijoRuta: string;
+              imagen: string;
+              titulo: string;
+              subtitulo: string;
+              amountPerGuide?: number;
+              canSubmit?: boolean;
+            }
+            courseInfo.forEach((course: Course) => {
               let url2 = `/api/scolarship?cursoId=${course.id}` +
-                `&walletAddress=${session.address}` +
+                `&walletAddress=${session!.address}` +
                 `&token=${csrfToken}`
               axios.get(url2)
               .then(response2 => {

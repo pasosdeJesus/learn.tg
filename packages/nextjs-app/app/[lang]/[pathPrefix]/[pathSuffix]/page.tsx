@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-import { ClaimSDK, useIdentitySDK } from '@goodsdks/citizen-sdk';
+import { ClaimSDK, IdentitySDK } from '@goodsdks/citizen-sdk';
 import { useSession, getCsrfToken } from "next-auth/react"
 import { use, useEffect, useState } from 'react'
 import remarkDirective from 'remark-directive'
@@ -235,7 +235,7 @@ export default function Page({params} : {
   const { data: walletClient } = useWalletClient();
   let identitySDK = null
   if (process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg") {
-    identitySDK = useIdentitySDK('production')
+    identitySDK = new IdentitySDK({ env: 'production', publicClient: publicClient as any, walletClient: walletClient as any })
   }
 
   const claimUBI = async () => {

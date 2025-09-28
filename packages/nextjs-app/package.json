@@ -55,6 +55,7 @@
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.63.0",
     "react-resizable-panels": "^3.0.6",
+    "recharts": "^2.12.7",
     "rehype-stringify": "^10.0.1",
     "remark-directive": "^4.0.0",
     "remark-frontmatter": "^5.0.0",

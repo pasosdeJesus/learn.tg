@@ -27,6 +27,16 @@ interface UserProfile {
   userId: string
 }
 
+interface Religion {
+  id: number;
+  nombre: string;
+}
+
+interface Country {
+  id: number;
+  nombre: string;
+}
+
 
 type PageProps = {
   params: Promise<{
@@ -51,8 +61,8 @@ export default function ProfileForm({ params } : PageProps) {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [religions, setReligions] = useState([])
-  const [countries, setCountries] = useState([])
+  const [religions, setReligions] = useState<Religion[]>([])
+  const [countries, setCountries] = useState<Country[]>([])
 
   const { address } = useAccount()
   const { data: session } = useSession()
@@ -99,9 +109,9 @@ export default function ProfileForm({ params } : PageProps) {
         setReligions(data)
 
         let url = process.env.NEXT_PUBLIC_API_USERS
-        url += `?filtro[walletAddress]=${session.address || ""}`
+        url += `?filtro[walletAddress]=${session!.address || ""}`
         let csrfToken = await getCsrfToken()
-        url += `&walletAddress=${session.address || ""}` +
+        url += `&walletAddress=${session!.address || ""}` +
           `&token=${csrfToken}`
         console.log("OJO url=", url)
 
@@ -123,6 +133,10 @@ export default function ProfileForm({ params } : PageProps) {
           picture: rUser.foto_file_name,
           religion: rUser.religion_id,
           country: rUser.pais_id,
+          groups: "",
+          id: "",
+          language: "",
+          phone: "",
         }
 /*        let pc = process.env.NEXT_PUBLIC_API_SHOW_USER ?? "x"
         let url2 = pc.replace("usuario_id", rUser.id)
@@ -177,7 +191,7 @@ export default function ProfileForm({ params } : PageProps) {
       let url = process.env.NEXT_PUBLIC_API_UPDATE_USER.replace(
         "usuario_id", profile.userId
       )
-      url += `?walletAddress=${session.address}` +
+      url += `?walletAddress=${session!.address}` +
         `&token=${csrfToken}`
       console.log(`Posting ${url}`)
 
@@ -310,7 +324,7 @@ export default function ProfileForm({ params } : PageProps) {
                 </label>
                 <select
                   id="country"
-                  value={profile.country}
+                  value={profile.country?.toString() || ""}
                   onChange={(e) => handleChange("country", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >

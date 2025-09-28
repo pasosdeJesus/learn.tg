@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-import { ClaimSDK, useIdentitySDK } from '@goodsdks/citizen-sdk';
+import { ClaimSDK, IdentitySDK } from '@goodsdks/citizen-sdk';
 import { useSession, getCsrfToken } from "next-auth/react"
 import { use, useEffect, useState } from 'react'
 import remarkDirective from 'remark-directive'
@@ -21,6 +21,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 import { cn } from "@/lib/utils"
+
+interface WordPlacement {
+  word: string
+  row: number
+  col: number
+  direction: "across" | "down"
+  number: number
+  clue: string
+}
 
 interface Cell {
   letter: string
@@ -42,6 +51,7 @@ export default function Page({params} : {
   const { data: session } = useSession();
 
   const [course, setCourse] = useState({
+    id: "",
     conBilletera: false,
     guias: [],
     idioma: "",
@@ -76,7 +86,9 @@ export default function Page({params} : {
         `filtro[busprefijoRuta]=/${pathPrefix}&` +
         `filtro[busidioma]=${lang}`
       let csrfToken = await getCsrfToken()
-      setGCsrfToken(csrfToken)
+      if (csrfToken) {
+        setGCsrfToken(csrfToken)
+      }
       if (session && address && session.address &&
           session.address == address) {
         url += `&walletAddress=${session.address}` +
@@ -174,7 +186,7 @@ export default function Page({params} : {
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
 
-  let htmlDeMd = (suffix, md: string) => {
+  let htmlDeMd = (suffix: string, md: string) => {
     let processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
@@ -264,7 +276,18 @@ export default function Page({params} : {
 
     let urlc = process.env.NEXT_PUBLIC_AUTH_URL + 
       `/api/check_crossword`
-    let data = {
+    interface CrosswordData {
+      guideId: string;
+      lang: string;
+      prefix: string;
+      guide: string;
+      grid: Cell[][];
+      placements: WordPlacement[];
+      walletAddress?: string;
+      token?: string;
+    }
+
+    let data: CrosswordData = {
       guideId: course.id,
       lang: lang,
       prefix: pathPrefix,
@@ -274,8 +297,8 @@ export default function Page({params} : {
     }
     if (session && address && session.address &&
         session.address == address) {
-      data["walletAddress"]=session.address
-      data["token"]=gCsrfToken
+      data.walletAddress=session.address
+      data.token=gCsrfToken
     }
     console.log(`Fetching ${urlc}`)
     axios.post(urlc, data, {
@@ -340,7 +363,7 @@ export default function Page({params} : {
                     }
                     {!isPuzzleSolved() && 
                       <div>
-                        <Button disabled="disabled" className="primary">Submit answer</Button>
+                        <Button disabled={true} className="primary">Submit answer</Button>
                       </div>
                     }
                   </CardTitle>

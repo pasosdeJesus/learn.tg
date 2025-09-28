@@ -30,7 +30,11 @@ interface Cell {
   belongsToWords: number[]
 }
 
-export default function CrosswordPuzzle(props) {
+interface CrosswordPuzzleProps {
+  questions: string;
+}
+
+export default function CrosswordPuzzle(props: CrosswordPuzzleProps) {
   const [newWord, setNewWord] = useState("")
   const [grid, setGrid] = useState<Cell[][]>([])
   const [placements, setPlacements] = useState<WordPlacement[]>([])
@@ -146,7 +150,7 @@ export default function CrosswordPuzzle(props) {
     setFlashError("")
     console.log(grid)
     console.log(placements.length)
-    let probs = []
+    let probs: number[] = []
     for(let i = 0; i < placements.length; i++) {
       let nrow = placements[i].row
       let ncol = placements[i].col
