@@ -34,12 +34,12 @@ export default function Page({ params } : PageProps) {
       }
       let url = process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL
       url += `?filtro[busidioma]=${lang}`
-      let axiosConfig = {}
       console.log("session=", session)
       console.log("address=", address)
+      let csrfToken = null
       if (session && address && session.address && 
           session.address == address) {
-        let csrfToken = await getCsrfToken()
+        csrfToken = await getCsrfToken()
         url += '&filtro[busconBilletera]=true' +
           `&walletAddress=${session.address}` +
           `&token=${csrfToken}`
@@ -48,7 +48,24 @@ export default function Page({ params } : PageProps) {
       axios.get(url)
       .then(response => {
         if (response.data) {
-          setCursosj(response.data);
+          let courseInfo = response.data
+          if (csrfToken) {
+            courseInfo.forEach((course) => {
+              let url2 = `/api/scolarship?cursoId=${course.id}` +
+                `&walletAddress=${session.address}` +
+                `&token=${csrfToken}`
+              axios.get(url2)
+              .then(response2 => {
+                course.amountPerGuide = response2.data.amountPerGuide
+                course.canSubmit = response2.data.canSubmit
+              })
+              .catch(error => {
+                alert(error)
+                console.error(error);
+              })
+            })
+          }
+          setCursosj(courseInfo);
         }
       })
       .catch(error => {
