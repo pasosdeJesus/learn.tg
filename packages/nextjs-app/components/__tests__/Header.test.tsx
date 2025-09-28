@@ -1,12 +1,13 @@
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { SessionProvider } from 'next-auth/react';
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { describe, it, expect } from 'vitest';
 import Header from '../Header';
-import '@testing-library/jest-dom';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 
 const config = createConfig({
   chains: [mainnet],
@@ -16,19 +17,25 @@ const config = createConfig({
 });
 const queryClient = new QueryClient();
 function renderWithProviders(ui: React.ReactElement) {
+  const mockSession = {
+    data: { user: { name: "Test User" }, address: "0x123" },
+    status: "authenticated",
+  };
   return render(
-    <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={config}>
-        <RainbowKitProvider>{ui}</RainbowKitProvider>
-      </WagmiProvider>
-    </QueryClientProvider>
+    <SessionProvider session={mockSession}>
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={config}>
+          <RainbowKitProvider>{ui}</RainbowKitProvider>
+        </WagmiProvider>
+      </QueryClientProvider>
+    </SessionProvider>
   );
 }
 
 describe('Header', () => {
   it('renders logo and title in English', () => {
     renderWithProviders(<Header lang="en" />);
-    expect(screen.getByAltText('imglogo')).toBeInTheDocument();
+    expect(screen.getByAltText('logo')).toBeInTheDocument();
     expect(screen.getByText(/Learn through games/)).toBeInTheDocument();
     expect(screen.getByRole('link')).toHaveAttribute('href', '/');
   });

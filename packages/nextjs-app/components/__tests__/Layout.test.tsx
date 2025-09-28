@@ -1,4 +1,5 @@
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { SessionProvider } from 'next-auth/react';
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -17,12 +18,18 @@ const config = createConfig({
 const queryClient = new QueryClient();
 
 function renderWithProviders(ui: React.ReactElement) {
+  const mockSession = {
+    data: { user: { name: "Test User" }, address: "0x123" },
+    status: "authenticated",
+  };
   return render(
-    <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={config}>
-        <RainbowKitProvider>{ui}</RainbowKitProvider>
-      </WagmiProvider>
-    </QueryClientProvider>
+    <SessionProvider session={mockSession}>
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={config}>
+          <RainbowKitProvider>{ui}</RainbowKitProvider>
+        </WagmiProvider>
+      </QueryClientProvider>
+    </SessionProvider>
   );
 }
 
@@ -34,7 +41,7 @@ describe('Layout', () => {
 
   it('renders Header and Footer', () => {
     renderWithProviders(<Layout><div>Test Child</div></Layout>);
-    expect(screen.getByAltText('imglogo')).toBeInTheDocument();
+    expect(screen.getByAltText('logo')).toBeInTheDocument();
     expect(screen.getByText(/Telegram/)).toBeInTheDocument();
   });
 
