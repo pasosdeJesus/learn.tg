@@ -16,7 +16,7 @@ export default function Page({ params } : PageProps) {
   const { address } = useAccount()
   const { data: session } = useSession()
 
-  const [cursosj, setCursosj] = useState<any[]>([])
+  const [coursesj, setCoursesj] = useState<any[]>([])
 
   const parameters = use(params)
   const { lang } = parameters
@@ -65,7 +65,7 @@ export default function Page({ params } : PageProps) {
               })
             })
           }
-          setCursosj(courseInfo);
+          setCoursesj(courseInfo);
         }
       })
       .catch(error => {
@@ -92,23 +92,29 @@ export default function Page({ params } : PageProps) {
     <div className="max-w-6xl mx-auto">
 
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {cursosj.map((curso) => (
+          {coursesj.map((course) => (
             <a
-              key={curso.id}
-              href={`/${curso.idioma}${curso.prefijoRuta}`}
+              key={course.id}
+              href={`/${course.idioma}${course.prefijoRuta}`}
               className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden 
                          transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
             >
-              <div className="img-curso">
+              <div className="img-course">
               <img className="w-full h-[17rem] pt-2 object-cover" 
-                src={curso.imagen}
-                alt={curso.titulo}
+                src={course.imagen}
+                alt={course.titulo}
                 />
               </div>
               <div className="p-5">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">{curso.titulo}</h3>
-                <p className="text-sm text-gray-600 line-clamp-3">{curso.subtitulo}</p>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">{course.titulo}</h3>
+                <p className="text-sm text-gray-600 line-clamp-3">{course.subtitulo}</p>
               </div>
+              {course.amountPerGuide > 0 &&
+                <div className="p-5 bg-green">
+                  Scolarship per guide: {course.amountPerGuide}
+                  Can Submit: {course.canSubmit}
+                </div>
+              }
             </a>
           ))}
         </div>
