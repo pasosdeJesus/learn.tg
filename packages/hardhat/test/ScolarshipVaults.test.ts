@@ -147,19 +147,24 @@ describe("ScholarshipVaults", function () {
       // First submission - should succeed
       await scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true);
       
-      // Second submission for same guide - should not pay again
-      await scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true);
+      // Fast forward 24 hours + 1 second to bypass cooldown for the next attempt
+      await time.increase(24 * 60 * 60 + 1);
+
+      // Second submission for same guide - should revert because it's already paid
+      await expect(scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true))
+        .to.be.revertedWith("Student already received an scolarship for this guide");
 
       // Student should only receive one payment
       expect(await mockUSDT.balanceOf(student1.address)).to.equal(AMOUNT_PER_GUIDE);
     });
 
-    it("Should not release scholarship if 24 hours haven't passed", async function () {
+    it("Should not release scholarship for other guide if 24 hours haven't passed", async function () {
       // First submission
       await scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true);
       
-      // Try second submission immediately - should not pay
-      await scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_2, student1.address, true);
+      // Try second submission immediately - should revert due to cooldown
+      await expect(scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_2, student1.address, true))
+        .to.be.revertedWith("Student is in cooldown period, cannot submit");
 
       // Student should only receive one payment
       expect(await mockUSDT.balanceOf(student1.address)).to.equal(AMOUNT_PER_GUIDE);
