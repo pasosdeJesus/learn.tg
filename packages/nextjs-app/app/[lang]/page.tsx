@@ -76,6 +76,16 @@ export default function Page({ params } : PageProps) {
                 `&token=${csrfToken}`
               axios.get(url2)
               .then(response2 => {
+                if (response2.data.message == undefined) {
+                  console.error("Response without data.message")
+                  alert("Response without data.message")
+                } else if (response2.data.message != "") {
+                  console.error(
+                    "Error message received:",
+                    response2.data.message
+                  )
+                  alert(response2.data.message)
+                }
                 course.amountPerGuide = response2.data.amountPerGuide
                 course.canSubmit = response2.data.canSubmit
               })
