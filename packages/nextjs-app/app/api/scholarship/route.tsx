@@ -114,47 +114,24 @@ export async function GET(req: NextRequest) {
         console.log("** walletClient creado")
       }
 
-      // Quisieramso usar getContract de viem asi:
-      //      const contract = getContract({
-      //    address: process.env.NEXT_PUBLIC_DEPLOYED_AT,
-      //    abi: ScholarshipVaultsAbi,
-      //    publicClient,
-      //    walletClient,
-      // })
-      // console.log("** contract=", contract)
-      // const vault = await contract.read.getVault( courseId )
-      //
-      // Pero contract.read ha resultado undefined al ejecutar con diversas
-      // combinaciones de publicClient, walletClient con diversos
-      // RPCs
-
-      try {
-        const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
-        if (!contractAddress) {
-          retMessage += "\nMissing contract address"
-        } else if (walletClient) {
-          const contract = getContract({
-            address: contractAddress,
-            abi: ScholarshipVaultsAbi as any,
-            client: { public: publicClient, wallet: walletClient }
-          })
-          const courseIdArg = courseId && /^\d+$/.test(courseId) ? BigInt(courseId) : courseId
-          const vault = await contract.read.getVault([courseIdArg]) as any
-          console.log("** vault=", vault)
-          if (vault && vault.exists && vault.amountPerGuide > 0 && vault.balance >= vault.amountPerGuide) {
-            amountPerGuide = Number(vault.amountPerGuide)
-            if (walletAddress) {
-              try {
-                canSubmit = await contract.read.studentCanSubmit([courseIdArg, walletAddress as Address]) as boolean
-              } catch (e) {
-                console.warn("** studentCanSubmit failed", e)
-              }
-            }
+      const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
+      if (!contractAddress) {
+        retMessage += "\nMissing contract address"
+      } else if (walletClient) {
+        const contract = getContract({
+          address: contractAddress,
+          abi: ScholarshipVaultsAbi as any,
+          client: { public: publicClient, wallet: walletClient }
+        })
+        const courseIdArg = courseId && /^\d+$/.test(courseId) ? BigInt(courseId) : courseId
+        const vault = await contract.read.getVault([courseIdArg]) as any
+        console.log("** vault=", vault)
+        if (vault && vault.exists && vault.amountPerGuide > 0 && vault.balance >= vault.amountPerGuide) {
+          amountPerGuide = Number(vault.amountPerGuide)
+          if (walletAddress) {
+            canSubmit = await contract.read.studentCanSubmit([courseIdArg, walletAddress as Address]) as boolean
           }
         }
-      } catch (e) {
-        console.warn("** contract interaction failed", e)
-        retMessage += "\nUnable to interact with contract"
       }
     }
 
