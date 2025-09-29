@@ -1,0 +1,4 @@
+#!/bin/sh
+
+. .env
+npx hardhat verify --network celoSepolia $MOCK_USDT_ADDRESS
