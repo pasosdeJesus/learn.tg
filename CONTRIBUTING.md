@@ -1,6 +1,6 @@
-# Contributing to Learn.tg
+# Contributing to learn.tg
 
-Thank you for your interest in contributing to Learn.tg! 🎯
+Thank you for your interest in contributing to learn.tg! 🎯
 
 ## 📋 Code of Conduct
 By participating in this project, you agree to maintain a respectful and collaborative environment.
@@ -18,7 +18,7 @@ See instructions in [packages/nextjs-app/README.md](packages/nextjs-app/README.m
 1. **Fork** the repository
 2. **Create a branch** from `main`: `git checkout -b feature/my-feature`
 3. **Make your changes** following the style guides
-4. **Run tests**: `make syntax` and `npm test`
+4. **Run tests in directory `packages/nextjs-app`**: `make syntax` and `npm test`
 5. **Commit** with clear messages: `git commit -m "feat: add feature X"`
 6. **Push** and create a **Pull Request**
 
@@ -27,9 +27,9 @@ See instructions in [packages/nextjs-app/README.md](packages/nextjs-app/README.m
 - **TypeScript**: 
   - Use explicit types, avoid `any` when possible
   - Don´t use ; at the end of the lines
-- **Tests**: Include tests for new functionality
+- **Tests**: Try to include tests for new functionality
 - **Commits**: Use [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`
-- **Linting**: Code must pass `make syntax` without errors
+- **Linting**: Code at `packages/nextjs-app` must pass `make syntax` without errors
 
 ## 🐛 Reporting Bugs
 

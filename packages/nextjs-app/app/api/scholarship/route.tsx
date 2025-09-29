@@ -1,14 +1,14 @@
 "use server"
 
-import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely';
+import { Kysely, PostgresDialect } from 'kysely';
 import { NextRequest, NextResponse } from 'next/server'
 import { privateKeyToAccount } from "viem/accounts";
 import { createPublicClient, createWalletClient, getContract, http } from 'viem'
+import type { Address } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
-
-import defineConfig from '@/.config/kysely.config.ts'
-import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts';
+import type { DB, BilleteraUsuario } from '@/db/db.d.ts';
 import ScholarshipVaultsAbi from '@/abis/ScholarshipVaults.json'
+import { Pool } from 'pg'
 
 export async function GET(req: NextRequest) {
   console.log("** scolarship GET req=", req)
@@ -38,31 +38,47 @@ export async function GET(req: NextRequest) {
     console.log("** walletAddress =", walletAddress)
     console.log("** token=", token)
     const db = new Kysely<DB>({
-      dialect: defineConfig.dialect
+      dialect: new PostgresDialect({
+        pool: new Pool({
+          host: process.env.DB_HOST,
+            database: process.env.DB_NAME,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            port: 5432,
+        })
+      })
     })
 
-    let billeteraUsuario = {}
-    if (walletAddress && walletAddress != null) {
-      billeteraUsuario = await db.selectFrom('billetera_usuario')
+  // Usamos un tipo más laxo porque los tipos generados de timestamp no coinciden exactamente con Date
+  let billeteraUsuario: Partial<BilleteraUsuario> | undefined
+    if (walletAddress) {
+      const billeteraRow = await db.selectFrom('billetera_usuario')
         .where('billetera', '=', walletAddress)
         .selectAll()
         .executeTakeFirst()
-        console.log("** billeteraUsuario=", billeteraUsuario)
-        if (billeteraUsuario.token != token) {
-          retMessage += "\nToken stored for user doesn't match given token. "
-        }
+      billeteraUsuario = billeteraRow as unknown as Partial<BilleteraUsuario>
+      console.log("** billeteraUsuario=", billeteraUsuario)
+      if (billeteraUsuario && billeteraUsuario.token && billeteraUsuario.token != token) {
+        retMessage += "\nToken stored for user doesn't match given token. "
+      }
     }
     if (courseId == null) {
       retMessage += "\nMissing courseId"
     } else {
-      let course = await db.selectFrom("cor1440_gen_proyectofinanciero")
-        .where('id', "=", courseId)
-        .selectAll()
-        .executeTakeFirst()
+      // id parece ser numérico; intentar conversión
+      const courseIdNumber = /^\d+$/.test(courseId) ? parseInt(courseId, 10) : NaN
+      if (isNaN(courseIdNumber)) {
+        retMessage += "\nWrong courseId format"
+      } else {
+        const course = await db.selectFrom("cor1440_gen_proyectofinanciero")
+          .where('id', "=", courseIdNumber)
+          .selectAll()
+          .executeTakeFirst()
         console.log("** course=", course)
-        if (course == null) {
-          retMessage += "\nWront courseId"
+        if (!course) {
+          retMessage += "\nWrong courseId"
         }
+      }
     }
 
     let canSubmit = false
@@ -78,17 +94,25 @@ export async function GET(req: NextRequest) {
       })
       console.log("** publicClient=", publicClient)
 
-      const account = privateKeyToAccount(
-        process.env.NEXT_PUBLIC_PRIVATE_KEY as Address
-      )
-      console.log("** account=", account)
-      const walletClient = createWalletClient({
+      const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY as string | undefined
+      let account: ReturnType<typeof privateKeyToAccount> | undefined
+      if (privateKey) {
+        try {
+          account = privateKeyToAccount(privateKey as Address)
+          console.log("** account=", account?.address)
+        } catch (e) {
+          retMessage += "\nInvalid private key"
+        }
+      }
+      const walletClient = account ? createWalletClient({
         account,
         chain: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
           celo : celoSepolia,
         transport: http(rpcUrl)
-      })
-      console.log("** walletClient=", walletClient)
+      }) : undefined
+      if (walletClient) {
+        console.log("** walletClient creado")
+      }
 
       // Quisieramso usar getContract de viem asi:
       //      const contract = getContract({
@@ -104,24 +128,33 @@ export async function GET(req: NextRequest) {
       // combinaciones de publicClient, walletClient con diversos
       // RPCs
 
-      const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
-      const vault = await publicClient.readContract({
-        abi: ScholarshipVaultsAbi,
-        address: contractAddress,
-        functionName: "getVault",
-        args: [courseId],
-      })
-      console.log("** vault=", vault)
-      if (vault.exists && vault.amountPerGuide > 0 &&
-          vault.balance >= vault.amountPerGuide
-        // userElegible(courseId, walletAddress)
-      ) {
-        amountPerGuide = vault.amountPerGuide // * verificationScore/maxVerificationScore
-        canSubmit = await contract.read.studentCanSubmit(
-          courseId, walletAddress
-        )
-      } else {
-        //retMessage += "\nCourse doesn't have a scolarship available"
+      try {
+        const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
+        if (!contractAddress) {
+          retMessage += "\nMissing contract address"
+        } else if (walletClient) {
+          const contract = getContract({
+            address: contractAddress,
+            abi: ScholarshipVaultsAbi as any,
+            client: { public: publicClient, wallet: walletClient }
+          })
+          const courseIdArg = courseId && /^\d+$/.test(courseId) ? BigInt(courseId) : courseId
+          const vault = await contract.read.getVault([courseIdArg]) as any
+          console.log("** vault=", vault)
+          if (vault && vault.exists && vault.amountPerGuide > 0 && vault.balance >= vault.amountPerGuide) {
+            amountPerGuide = Number(vault.amountPerGuide)
+            if (walletAddress) {
+              try {
+                canSubmit = await contract.read.studentCanSubmit([courseIdArg, walletAddress as Address]) as boolean
+              } catch (e) {
+                console.warn("** studentCanSubmit failed", e)
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("** contract interaction failed", e)
+        retMessage += "\nUnable to interact with contract"
       }
     }
 
