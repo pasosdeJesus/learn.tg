@@ -1,140 +1,146 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { NextRequest } from 'next/server'
-import { POST } from '../route'
 
-// Mock Kysely database
-const mockDb = {
-  selectFrom: vi.fn(() => mockDb),
-  select: vi.fn(() => mockDb),
-  where: vi.fn(() => mockDb),
-  insertInto: vi.fn(() => mockDb),
-  values: vi.fn(() => mockDb),
-  execute: vi.fn(),
+// Mocks de dependencias de base de datos para evitar conexiones reales
+const mockExecuteTakeFirst = vi.fn()
+class MockKysely {
+  constructor(_cfg: any) {}
+  selectFrom() { return this }
+  where() { return this }
+  selectAll() { return this }
+  executeTakeFirst() { return mockExecuteTakeFirst() }
 }
+class MockPostgresDialect { constructor(_cfg: any) {} }
+class MockPool { constructor(_cfg: any) {} }
 
-// Mock the database module
-vi.mock('../../../db/database', () => ({
-  db: mockDb
+vi.mock('kysely', () => ({
+  Kysely: MockKysely,
+  PostgresDialect: MockPostgresDialect
 }))
 
-// TODO: Suite temporalmente deshabilitada (skip) porque la ruta original difiere de las asunciones del test.
-describe.skip('API /api/check_crossword', () => {
+vi.mock('pg', () => ({
+  Pool: MockPool
+}))
+
+let POST: any
+let GET: any
+
+describe('API /api/check_crossword', () => {
+  beforeAll(async () => {
+    // Importar la ruta después de configurar los mocks
+    const route = await import('../route')
+    POST = route.POST
+    GET = route.GET
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('should process crossword answers successfully', async () => {
-    const mockExistingRecord = [{ id: '1', respuestas: '["old1","old2"]' }]
-    const mockUpdateResult = { success: true }
-    
-    mockDb.execute
-      .mockResolvedValueOnce(mockExistingRecord) // First call for existing record
-      .mockResolvedValueOnce(mockUpdateResult) // Second call for update
-    
-    const requestBody = {
-      cursoId: 'test-course',
-      guiaId: '1',
-      walletAddress: '0x123',
-      respuestas: JSON.stringify(['answer1', 'answer2']),
-      token: 'valid-token'
-    }
-    
-    const request = new NextRequest('http://localhost:3000/api/check_crossword', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: { 'Content-Type': 'application/json' }
-    })
-    
-    const response = await POST(request)
-    const data = await response.json()
-    
-    expect(response.status).toBe(200)
-    expect(data).toHaveProperty('success', true)
+  it('GET responde 400 indicando que espera POST', async () => {
+    const req = new NextRequest('http://localhost:3000/api/check_crossword', { method: 'GET' })
+    const res = await GET(req)
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/Expecting POST/i)
   })
 
-  it('should handle missing walletAddress', async () => {
-    const requestBody = {
-      cursoId: 'test-course',
-      guiaId: '1',
-      respuestas: JSON.stringify(['answer1']),
-      token: 'valid-token'
+  it('POST sin walletAddress devuelve 200 y mensaje informativo (no califica)', async () => {
+    const body = {
+      guideId: 'g1',
+      lang: 'en',
+      prefix: 'p',
+      guide: 'intro',
+      grid: [],
+      placements: [],
+      // walletAddress omitido
+      token: 'tok'
     }
-    
-    const request = new NextRequest('http://localhost:3000/api/check_crossword', {
+    const req = new NextRequest('http://localhost:3000/api/check_crossword', {
       method: 'POST',
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' }
     })
-    
-    const response = await POST(request)
-    
-    expect(response.status).toBe(400)
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.probs).toEqual([])
+    expect(data.message).toMatch(/will not be graded/i)
   })
 
-  it('should handle invalid JSON in respuestas', async () => {
-    const requestBody = {
-      cursoId: 'test-course',
-      guiaId: '1',
-      walletAddress: '0x123',
-      respuestas: 'invalid-json',
-      token: 'valid-token'
+  it('POST con walletAddress y token que no coincide devuelve mensaje de token', async () => {
+    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', token: 'otro', answer_fib: 'TEST' })
+    const body = {
+      guideId: 'g1',
+      lang: 'en',
+      prefix: 'p',
+      guide: 'intro',
+      grid: [],
+      placements: [],
+      walletAddress: '0xabc',
+      token: 'NOPE'
     }
-    
-    const request = new NextRequest('http://localhost:3000/api/check_crossword', {
+    const req = new NextRequest('http://localhost:3000/api/check_crossword', {
       method: 'POST',
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' }
     })
-    
-    const response = await POST(request)
-    
-    expect(response.status).toBe(400)
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.probs).toEqual([])
+    expect(data.message).toMatch(/Token stored for user doesn't match/i)
   })
 
-  it('should handle database errors gracefully', async () => {
-    mockDb.execute.mockRejectedValue(new Error('Database connection failed'))
-    
-    const requestBody = {
-      cursoId: 'test-course',
-      guiaId: '1',
-      walletAddress: '0x123',
-      respuestas: JSON.stringify(['answer1']),
-      token: 'valid-token'
+  it('POST con respuestas correctas produce probs vacío y sin mensaje de error', async () => {
+    // billetera con token válido y una palabra
+    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', token: 'TOK', answer_fib: 'TEST' })
+    const grid = [
+      [
+        { userInput: 'T' }, { userInput: 'E' }, { userInput: 'S' }, { userInput: 'T' }
+      ]
+    ]
+    const placements = [
+      { row: 0, col: 0, direction: 'across' }
+    ]
+    const body = {
+      guideId: 'g1', lang: 'en', prefix: 'p', guide: 'intro', grid, placements,
+      walletAddress: '0xabc', token: 'TOK'
     }
-    
-    const request = new NextRequest('http://localhost:3000/api/check_crossword', {
+    const req = new NextRequest('http://localhost:3000/api/check_crossword', {
       method: 'POST',
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' }
     })
-    
-    const response = await POST(request)
-    
-    expect(response.status).toBe(500)
+    const res = await POST(req)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.probs).toEqual([])
+    expect(data.message).toBe('')
   })
 
-  it('should create new record when no existing crossword found', async () => {
-    mockDb.execute
-      .mockResolvedValueOnce([]) // No existing record
-      .mockResolvedValueOnce({ insertId: 'new-id' }) // Insert new record
-    
-    const requestBody = {
-      cursoId: 'new-course',
-      guiaId: '1',
-      walletAddress: '0x456',
-      respuestas: JSON.stringify(['new-answer']),
-      token: 'valid-token'
+  it('POST con respuestas incorrectas devuelve probs con índice de palabra', async () => {
+    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', token: 'TOK', answer_fib: 'TEST' })
+    const grid = [
+      [
+        { userInput: 'X' }, { userInput: 'E' }, { userInput: 'S' }, { userInput: 'T' }
+      ]
+    ]
+    const placements = [
+      { row: 0, col: 0, direction: 'across' }
+    ]
+    const body = {
+      guideId: 'g1', lang: 'en', prefix: 'p', guide: 'intro', grid, placements,
+      walletAddress: '0xabc', token: 'TOK'
     }
-    
-    const request = new NextRequest('http://localhost:3000/api/check_crossword', {
+    const req = new NextRequest('http://localhost:3000/api/check_crossword', {
       method: 'POST',
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' }
     })
-    
-    const response = await POST(request)
-    
-    expect(response.status).toBe(200)
-    expect(mockDb.insertInto).toHaveBeenCalledWith('crucigrama')
+    const res = await POST(req)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.probs).toEqual([1])
   })
 })
