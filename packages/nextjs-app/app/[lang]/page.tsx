@@ -71,11 +71,13 @@ export default function Page({ params } : PageProps) {
               canSubmit?: boolean;
             }
             courseInfo.forEach((course: Course) => {
-              const url2 = `/api/scolarship?cursoId=${course.id}` +
+              const url2 = `/api/scholarship?courseId=${course.id}` +
                 `&walletAddress=${session!.address}` +
                 `&token=${csrfToken}`
+              console.log("** url2=", url2)
               axios.get(url2)
               .then(response2 => {
+                console.log("** response2=", response2)
                 if (response2.data.message == undefined) {
                   console.error("Response without data.message")
                   alert("Response without data.message")

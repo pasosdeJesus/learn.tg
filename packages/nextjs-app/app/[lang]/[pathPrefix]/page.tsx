@@ -1,3 +1,4 @@
+"use client"
 
 import axios from 'axios'
 import { useSession, getCsrfToken } from "next-auth/react" 
