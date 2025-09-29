@@ -1,10 +1,11 @@
 "use server"
 
-import { Kysely } from 'kysely';
+import { Kysely } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
 
-import defineConfig from '@/.config/kysely.config.ts'
-import type { DB } from '@/db/db.d.ts';
+import { PostgresDialect } from 'kysely'
+import { Pool } from 'pg'
+import type { DB } from '@/db/db.d.ts'
 
 interface WordPlacement {
   word: string
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   console.log(1/0)
 
   let retMessage = ""
-  const removeAccents = (s) => s.replace('á', 'A').
+  const removeAccents = (s: string) => s.replace('á', 'A').
     replace('é', 'E').
     replace('í', 'I').
     replace('ó', 'O').
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     replace('Ü', 'U')
 
   try {
-    let probs = [] 
+    let probs: number[] = [] 
 
     const requestJson = await req.json()
     console.log("OJO request.json()=", requestJson)
@@ -71,7 +72,15 @@ export async function POST(req: NextRequest) {
     console.log('OJO token=', token)
 
     const db = new Kysely<DB>({
-      dialect: defineConfig.dialect
+      dialect: new PostgresDialect({
+        pool: new Pool({
+          host: process.env.DB_HOST,
+          database: process.env.DB_NAME,
+          user: process.env.DB_USER,
+          password: process.env.DB_PASSWORD,
+          port: 5432,
+        }),
+      }),
     })
 
     if (!walletAddress || walletAddress == null || walletAddress == "") {

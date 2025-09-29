@@ -1,15 +1,16 @@
 // From
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/api/auth/auth-options.ts
 import { submitReferral } from '@divvi/referral-sdk'
-import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely';
-import { NextAuthOptions, Session } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { getCsrfToken } from "next-auth/react";
-import { SiweMessage } from "siwe";
-import { JWT } from "next-auth/jwt";
+import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely'
+import { NextAuthOptions, Session } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
+import { getCsrfToken } from "next-auth/react"
+import { SiweMessage } from "siwe"
+import { JWT } from "next-auth/jwt"
+import { Address } from 'viem'
 
-import defineConfig from '@/.config/kysely.config.ts'
-import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts';
+import { Pool } from 'pg'
+import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -38,7 +39,7 @@ export const authOptions: NextAuthOptions = {
 
           // From https://github.com/nextauthjs/next-auth/discussions/7923
           const result = await siwe.verify({
-            signature: credentials?.signature || "0x0",
+            signature: (credentials?.signature || "0x0") as Address,
             domain: nextAuthUrl.host,
             nonce: await getCsrfToken({ req: { headers: req.headers } }),
           });
@@ -52,15 +53,22 @@ export const authOptions: NextAuthOptions = {
             if (process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg") {
               const sr = await submitReferral({
                 message: credentials?.message || "",
-                signature: credentials?.signature || "0x0",
+                signature: (credentials?.signature || "0x0") as Address,
                 chainId: result.data.chainId,
               })
               console.log(new Date(), "OJO Submitted ", sr)
             }
-            const db = new Kysely<DB>({
-              dialect: defineConfig.dialect
-            })
-
+const db = new Kysely<DB>({
+  dialect: new PostgresDialect({
+    pool: new Pool({
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      port: 5432,
+    }),
+  }),
+})
             let now = new Date()
 
             let puser = await sql<number>`
@@ -106,24 +114,24 @@ export const authOptions: NextAuthOptions = {
                 .executeTakeFirstOrThrow()
               console.log(new Date(), "After insert iWalletUser=", iWalletUser)
             } else {
-              console.log(new Date(), "existe ", puser.rows[0].usuario_id)
+              console.log(new Date(), "existe ", (puser.rows[0] as any).usuario_id)
 
-              let uWalletUser:Updateable<Usuario> = {
+              let uWalletUser: any = {
                 token: result.data.nonce,
                 updated_at: now,
               }
               let rUpdate=await db.updateTable('billetera_usuario')
               .set(uWalletUser)
-              .where('usuario_id', '=', puser.rows[0].usuario_id).execute()
+              .where('usuario_id', '=', (puser.rows[0] as any).usuario_id).execute()
               console.log(new Date(), "After update rUpdate=", rUpdate)
             }
             console.log(new Date(), "OJO Before return. ", (new Date()))
 
             return {
               id: siwe.address
-            };
+            }
           }
-          return null;
+          return null
         } catch (e) {
           console.log(new Date(), "OJO exception e=", e)
           return null;
@@ -139,14 +147,14 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }: { session: Session; token: JWT }) {
       console.log(new Date(), "OJO session. session=", session, ", token=", token)
       if (token.sub) {
-        session.address = token.sub;
+        session.address = token.sub
         if (!session.user) {
-          session.user = { name: token.sub };
+          session.user = { name: token.sub }
         } else {
-          session.user.name = token.sub;
+          session.user.name = token.sub
         }
       }
-      return session;
+      return session
     },
   },
-};
+}

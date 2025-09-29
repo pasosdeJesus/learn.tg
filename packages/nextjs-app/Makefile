@@ -3,11 +3,14 @@ all:
 	pnpm i
 	pnpm build
 
-dev:
-	./bin/dev
-
 syntax:
 	pnpm typecheck
+
+test:
+	pnpm test
+
+dev:
+	./bin/dev
 
 prod:
 	pnpm build

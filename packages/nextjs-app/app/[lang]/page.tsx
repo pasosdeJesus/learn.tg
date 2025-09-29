@@ -17,7 +17,16 @@ export default function Page({ params } : PageProps) {
   const { address } = useAccount()
   const { data: session } = useSession()
 
-  const [coursesj, setCoursesj] = useState<any[]>([])
+  const [coursesj, setCoursesj] = useState<Array<{
+    id: string;
+    titulo: string;
+    subtitulo: string;
+    imagen: string;
+    idioma: string;
+    prefijoRuta: string;
+    amountPerGuide: number;
+    canSubmit: boolean;
+  }>>([])
 
   const parameters = use(params)
   const { lang } = parameters
@@ -49,7 +58,7 @@ export default function Page({ params } : PageProps) {
       axios.get(url)
       .then(response => {
         if (response.data) {
-          let courseInfo = response.data
+          const courseInfo = response.data
           if (csrfToken) {
             interface Course {
               id: string;
@@ -62,7 +71,7 @@ export default function Page({ params } : PageProps) {
               canSubmit?: boolean;
             }
             courseInfo.forEach((course: Course) => {
-              let url2 = `/api/scolarship?cursoId=${course.id}` +
+              const url2 = `/api/scolarship?cursoId=${course.id}` +
                 `&walletAddress=${session!.address}` +
                 `&token=${csrfToken}`
               axios.get(url2)
@@ -72,7 +81,7 @@ export default function Page({ params } : PageProps) {
               })
               .catch(error => {
                 alert(error)
-                console.error(error);
+                console.error(error)
               })
             })
           }

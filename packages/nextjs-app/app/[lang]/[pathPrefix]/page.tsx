@@ -1,6 +1,5 @@
-"use client"
 
-import axios from 'axios';
+import axios from 'axios'
 import { useSession, getCsrfToken } from "next-auth/react" 
 import {use, useEffect, useState} from "react"
 import remarkDirective from 'remark-directive'
@@ -52,8 +51,8 @@ export default function Page({ params }: PageProps) {
   const [preCourseHtml, setPreCourseHtml] = useState("")
 
 
-  let htmlDeMd = (md: string) => {
-    let processor = unified()
+  const htmlDeMd = (md: string) => {
+    const processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkDirective)
@@ -61,7 +60,7 @@ export default function Page({ params }: PageProps) {
  //     .use(addFillInTheBlank)
       .use(remarkRehype)
       .use(rehypeStringify)
-    let html = processor.processSync(md).toString()
+    const html = processor.processSync(md).toString()
 
     return html
   }
@@ -90,7 +89,7 @@ export default function Page({ params }: PageProps) {
           if (response.data.length != 1) {
             return false
           }
-          let rcurso = response.data[0]
+          const rcurso = response.data[0]
           setMyCourse(rcurso)
           setTitle(rcurso.titulo)
           setSubtitle(rcurso.subtitulo)

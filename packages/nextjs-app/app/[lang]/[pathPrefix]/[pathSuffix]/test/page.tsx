@@ -1,9 +1,9 @@
 "use client"
 
-import axios from 'axios';
+import axios from 'axios'
 
-import { ClaimSDK, IdentitySDK } from '@goodsdks/citizen-sdk';
 import { useSession, getCsrfToken } from "next-auth/react"
+
 import { use, useEffect, useState } from 'react'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -12,13 +12,10 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
-import { usePublicClient, useWalletClient } from 'wagmi';
 import { useAccount } from 'wagmi'
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 import { cn } from "@/lib/utils"
 
@@ -48,7 +45,7 @@ export default function Page({params} : {
 }) {
 
   const { address } = useAccount()
-  const { data: session } = useSession();
+  const { data: session } = useSession()
 
   const [course, setCourse] = useState({
     id: "",
@@ -58,10 +55,10 @@ export default function Page({params} : {
     titulo: "",
     sinBilletera: false,
   })
-  const [guideNumber, setGuideNumber] = useState(0);
+  const [guideNumber, setGuideNumber] = useState(0)
   const [myGuide, setMyGuide] = useState({
     titulo: "",
-  });
+  })
   const [coursePath, setCoursePath] = useState("")
   const [thisGuidePath, setThisGuidePath] = useState("")
   const [guideHtml, setGuideHtml] = useState("")
@@ -101,7 +98,7 @@ export default function Page({params} : {
           if (response.data.length != 1) {
             return false
           }
-          let rcurso = response.data[0]
+          const rcurso = response.data[0]
 
           if (process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL == undefined) {
             alert("Undefined NEXT_PUBLIC_API_PRESENTA_CURSO_URL")
@@ -122,13 +119,13 @@ export default function Page({params} : {
               if (response.data.length != 1) {
                 return false
               }
-              let dcurso = responsed.data
+              const dcurso = responsed.data
               setCourse(dcurso)
 
               let gnumber = 0
               for(let g=0; g < dcurso.guias.length; g++) {
                 if (dcurso.guias[g].sufijoRuta == (pathSuffix)) {
-                  setGuideNumber(g + 1);
+                  setGuideNumber(g + 1)
                   gnumber = g + 1
                   setThisGuidePath("/" + dcurso.idioma +
                                      dcurso.prefijoRuta + "/" + pathSuffix)
@@ -136,7 +133,7 @@ export default function Page({params} : {
                 }
               }
 
-              setCreditsHtml(htmlDeMd("", dcurso.creditosMd))
+              setCreditsHtml(htmlDeMd(dcurso.creditosMd))
 
               let urlc = process.env.NEXT_PUBLIC_AUTH_URL + 
                 `/api/crossword?courseId=${dcurso.id}` +
@@ -163,36 +160,37 @@ export default function Page({params} : {
                 }
               })
               .catch(error => {
-                console.error(error);
-                alert(error);
+                console.error(error)
+                alert(error)
               })
             }
           })
           .catch(error => {
-            console.error(error);
-            alert(error);
+            console.error(error)
+            alert(error)
           })
         }
       })
       .catch(error => {
-        console.error(error);
-        alert(error);
+        console.error(error)
+        alert(error)
       })
     }
     configurar()
-  }, [session, address, guideNumber, lang, pathPrefix, pathSuffix])
+  }, [session, address])
 
 
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
 
-  let htmlDeMd = (suffix: string, md: string) => {
-    let processor = unified()
+        const htmlDeMd = (md: string) => {
+        const processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkDirective)
       .use(remarkFrontmatter)
-      .use(remarkFillInTheBlank, { url: `${suffix}/test` })
+      .use(remarkFillInTheBlank, { url: `${pathSuffix}/test` })
+      // @ts-ignore
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeStringify, { allowDangerousHtml: true })
     let html = processor.processSync(md).toString()
@@ -277,14 +275,14 @@ export default function Page({params} : {
     let urlc = process.env.NEXT_PUBLIC_AUTH_URL + 
       `/api/check_crossword`
     interface CrosswordData {
-      guideId: string;
-      lang: string;
-      prefix: string;
-      guide: string;
-      grid: Cell[][];
-      placements: WordPlacement[];
-      walletAddress?: string;
-      token?: string;
+      guideId: string
+      lang: string
+      prefix: string
+      guide: string
+      grid: Cell[][]
+      placements: WordPlacement[]
+      walletAddress?: string
+      token?: string
     }
 
     let data: CrosswordData = {
@@ -319,8 +317,8 @@ export default function Page({params} : {
       }
     })
     .catch(error => {
-      console.error(error);
-      alert(error);
+      console.error(error)
+      alert(error)
     })
   }
 

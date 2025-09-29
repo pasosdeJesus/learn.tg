@@ -20,7 +20,8 @@ function renderWithProviders(ui: React.ReactElement) {
   const mockSession = {
     data: { user: { name: "Test User" }, address: "0x123" },
     status: "authenticated",
-  };
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+  }
   return render(
     <SessionProvider session={mockSession}>
       <QueryClientProvider client={queryClient}>

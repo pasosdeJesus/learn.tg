@@ -1,12 +1,11 @@
 "use client"
 
-import axios from 'axios';
+import axios from 'axios'
 
-import { ClaimSDK, IdentitySDK } from '@goodsdks/citizen-sdk';
-import { type PublicClient, type WalletClient } from 'viem';
-import { Session } from "next-auth";
+import { ClaimSDK, IdentitySDK } from '@goodsdks/citizen-sdk'
+import { type PublicClient, type WalletClient } from 'viem'
 import { useSession, getCsrfToken } from "next-auth/react"
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -15,7 +14,7 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
-import { usePublicClient, useWalletClient } from 'wagmi';
+import { usePublicClient, useWalletClient } from 'wagmi'
 import { useAccount } from 'wagmi'
 
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
@@ -30,7 +29,7 @@ export default function Page({params} : {
 }) {
 
   const { address } = useAccount()
-  const { data: session } = useSession();
+  const { data: session } = useSession()
 
   const [course, setCourse] = useState({
     conBilletera: false,
@@ -39,10 +38,10 @@ export default function Page({params} : {
     titulo: "",
     sinBilletera: false,
   })
-  const [guideNumber, setGuideNumber] = useState(0);
+  const [guideNumber, setGuideNumber] = useState(0)
   const [myGuide, setMyGuide] = useState({
     titulo: "",
-  });
+  })
   const [coursePath, setCoursePath] = useState("")
   const [nextGuidePath, setNextGuidePath] = useState("")
   const [previousGuidePath, setPreviousGuidePath] = useState("")
@@ -59,7 +58,7 @@ export default function Page({params} : {
     const configurar = async () => {
       setIsClient(true)
       setCoursePath(`/${lang}/${pathPrefix}`)
-      const url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
+      let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
         `filtro[busprefijoRuta]=/${pathPrefix}&` +
         `filtro[busidioma]=${lang}`
       const csrfToken = await getCsrfToken()
@@ -102,7 +101,7 @@ export default function Page({params} : {
               let gnumber = 0
               for(let g=0; g < dcurso.guias.length; g++) {
                 if (dcurso.guias[g].sufijoRuta == (pathSuffix)) {
-                  setGuideNumber(g + 1);
+                  setGuideNumber(g + 1)
                   gnumber = g + 1
                   setMyGuide(dcurso.guias[g])
                 }
@@ -149,34 +148,34 @@ export default function Page({params} : {
                 }
               })
               .catch(error => {
-                console.error(error);
+                console.error(error)
               })
             }
           })
           .catch(error => {
-            console.error(error);
+            console.error(error)
           })
         }
       })
       .catch(error => {
-        console.error(error);
+        console.error(error)
       })
     }
     configurar()
   }, [session, address])
 
-
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
 
 
-  const htmlDeMd = (md: string) => {
+  const htmlDeMd = useCallback((md: string) => {
     const processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkDirective)
       .use(remarkFrontmatter)
       .use(remarkFillInTheBlank, { url: `${pathSuffix}/test` })
+      // @ts-ignore
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeStringify, { allowDangerousHtml: true })
     const html = processor.processSync(md).toString()
@@ -184,7 +183,7 @@ export default function Page({params} : {
     // Save questions
     localStorage.setItem(
       'fillInTheBlank', 
-      JSON.stringify( window.fillInTheBlank || [] ) 
+      JSON.stringify( (window as Window & { fillInTheBlank?: any[] }).fillInTheBlank || [] ) 
     )
 
     // Agregamos estilo
@@ -232,17 +231,17 @@ export default function Page({params} : {
     )
 
     return html_con_tailwind
-  }
+  }, [pathSuffix])
 
-  const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient()
+  const { data: walletClient } = useWalletClient()
   const identitySDK = process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
     new IdentitySDK({
       env: 'production',
       publicClient: publicClient as PublicClient,
       walletClient: walletClient as WalletClient
     }) :
-    null;
+    null
 
   const claimUBI = async () => {
     if (!session || !address || session.address != address || 
@@ -256,36 +255,13 @@ export default function Page({params} : {
       walletClient,
       identitySDK,
       env: 'production',
-    });
+    })
 
     try {
-      await claimSDK.claim();
-      console.log('Claim successful');
+      await claimSDK.claim()
+      console.log('Claim successful')
     } catch (error) {
-      console.error('Claim failed:', error);
-    }
-  }
-  
-
-  const claimUBI = async () => {
-
-    if (!session  || !address || session.address != address || 
-        !publicClient || !walletClient || !identitySDK) {
-      return (<div>Works only with wallet connected</div>)
-    }
-    const claimSDK = new ClaimSDK({
-      account: session.address,
-      publicClient,
-      walletClient,
-      identitySDK,
-      env: 'production',
-    });
-
-    try {
-      await claimSDK.claim();
-      console.log('Claim successful');
-    } catch (error) {
-      console.error('Claim failed:', error);
+      console.error('Claim failed:', error)
     }
   }
 

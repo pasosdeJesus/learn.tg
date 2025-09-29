@@ -7,7 +7,7 @@
 'use client'
 
 import { getReferralTag } from '@divvi/referral-sdk'
-import { SessionProvider } from 'next-auth/react';
+import { SessionProvider } from 'next-auth/react'
 
 interface ExtendedWindow extends Window {
   ethereum?: {
@@ -26,8 +26,7 @@ import { RainbowKitSiweNextAuthProvider, type GetSiweMessageOptions } from '@rai
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createConfig, http, useAccount, WagmiProvider } from 'wagmi';
 import { celo, celoSepolia } from 'wagmi/chains';
-
-
+import { Address } from 'viem';
 
 interface RainbowKitProviderProps {
   children: React.ReactNode;
@@ -64,7 +63,7 @@ const getSiweMessageOptions: GetSiweMessageOptions = () => {
   // Check if ethereum is available in window object
   const selectedAddress = typeof window !== 'undefined' && (window as ExtendedWindow).ethereum?.selectedAddress || '0x0';
   const referralTag = getReferralTag({
-    user: selectedAddress,
+    user: selectedAddress as Address,
     consumer: '0x358643badcc77cccb28a319abd439438a57339a7',
   })
   const msg={

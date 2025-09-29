@@ -10,10 +10,11 @@ import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import remarkStringify from 'remark-stringify'
+import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
 
-import defineConfig from '@/.config/kysely.config.ts'
-import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts';
+import { Pool } from 'pg'
+import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 
@@ -34,16 +35,24 @@ export async function GET(req: NextRequest) {
     const token = searchParams.get("token")
 
     const db = new Kysely<DB>({
-      dialect: defineConfig.dialect
+      dialect: new PostgresDialect({
+        pool: new Pool({
+          host: process.env.DB_HOST,
+          database: process.env.DB_NAME,
+          user: process.env.DB_USER,
+          password: process.env.DB_PASSWORD,
+          port: 5432,
+        }),
+      }),
     })
 
-    let billeteraUsuario = {}
+    let billeteraUsuario: any = null
     if (walletAddress && walletAddress != null) {
       billeteraUsuario = await db.selectFrom('billetera_usuario')
         .where('billetera', '=', walletAddress)
         .selectAll()
         .executeTakeFirst()
-        if (billeteraUsuario.token != token) {
+        if (billeteraUsuario && billeteraUsuario.token != token) {
           retMessage += "\nToken stored for user doesn't match given token. "
         }
     }
@@ -60,7 +69,9 @@ export async function GET(req: NextRequest) {
       .use(remarkDirective)
       .use(remarkFrontmatter)
       .use(remarkFillInTheBlank, { url: `${guide}/test` })
-      .use(remarkStringify, { allowDangerousHtml: true })
+      // @ts-ignore
+      .use(remarkRehype, { allowDangerousHtml: true })
+      .use(rehypeStringify, { allowDangerousHtml: true })
       md2 = processor.processSync(md).toString()
 
     }

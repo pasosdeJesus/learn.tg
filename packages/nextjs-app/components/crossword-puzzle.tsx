@@ -1,14 +1,9 @@
 "use client"
 
 import clg from "crossword-layout-generator-with-isolated"
-import { useSession, getCsrfToken } from "next-auth/react"
 import { useState, useEffect } from "react"
-import { usePublicClient, useWalletClient } from 'wagmi';
-import { useAccount } from 'wagmi'
-
 
 import { Button } from "./ui/button"
-import { Input } from "./ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Badge } from "./ui/badge"
 import { cn } from "../lib/utils"
