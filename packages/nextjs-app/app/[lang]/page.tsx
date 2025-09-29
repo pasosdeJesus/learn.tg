@@ -11,22 +11,39 @@ type PageProps = {
     lang:string,
   }>
 }
+interface Course {
+  id: string;
+  idioma: string;
+  prefijoRuta: string;
+  imagen: string;
+  titulo: string;
+  subtitulo: string;
+  vaultCreated?: boolean;
+  vaultBalance?: number;
+  amountPerGuide?: number;
+  canSubmit?: boolean;
+}
+interface CourseComplete {
+  id: string;
+  idioma: string;
+  prefijoRuta: string;
+  imagen: string;
+  titulo: string;
+  subtitulo: string;
+  vaultCreated: boolean;
+  vaultBalance: number;
+  amountPerGuide: number;
+  canSubmit: boolean;
+}
+
+
 
 export default function Page({ params } : PageProps) {
-
   const { address } = useAccount()
   const { data: session } = useSession()
 
-  const [coursesj, setCoursesj] = useState<Array<{
-    id: string;
-    titulo: string;
-    subtitulo: string;
-    imagen: string;
-    idioma: string;
-    prefijoRuta: string;
-    amountPerGuide: number;
-    canSubmit: boolean;
-  }>>([])
+  const [coursesj, setCoursesj] = useState<Array<CourseComplete>>([])
+  const [extCourses, setExtCourses] = useState({ map: new Map() });
 
   const parameters = use(params)
   const { lang } = parameters
@@ -60,16 +77,7 @@ export default function Page({ params } : PageProps) {
         if (response.data) {
           const courseInfo = response.data
           if (csrfToken) {
-            interface Course {
-              id: string;
-              idioma: string;
-              prefijoRuta: string;
-              imagen: string;
-              titulo: string;
-              subtitulo: string;
-              amountPerGuide?: number;
-              canSubmit?: boolean;
-            }
+            setCoursesj(courseInfo);
             courseInfo.forEach((course: Course) => {
               const url2 = `/api/scholarship?courseId=${course.id}` +
                 `&walletAddress=${session!.address}` +
@@ -88,8 +96,14 @@ export default function Page({ params } : PageProps) {
                   )
                   alert(response2.data.message)
                 }
-                course.amountPerGuide = response2.data.amountPerGuide
-                course.canSubmit = response2.data.canSubmit
+                setExtCourses(prevState => ({
+                  map: prevState.map.set(response2.data.courseId, {
+                    vaultCreated: response2.data.vaultCreated,
+                    vaultBalance: +response2.data.vaultBalance,
+                    amountPerGuide: +response2.data.amountPerGuide,
+                    canSubmit: response2.data.canSubmit,
+                  })
+                }))
               })
               .catch(error => {
                 alert(error)
@@ -97,7 +111,6 @@ export default function Page({ params } : PageProps) {
               })
             })
           }
-          setCoursesj(courseInfo);
         }
       })
       .catch(error => {
@@ -119,38 +132,55 @@ export default function Page({ params } : PageProps) {
     )
   }
 
+  let handleDonate = (courseId: Number) => {
+    alert(courseId)
+  }
+
   return (
   <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
     <div className="max-w-6xl mx-auto">
 
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {coursesj.map((course) => (
-            <a
-              key={course.id}
-              href={`/${course.idioma}${course.prefijoRuta}`}
-              className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden 
-                         transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
-            >
-              <div className="img-course">
-              <Image 
-                className="w-full h-[17rem] pt-2 object-cover"
-                src={course.imagen}
-                alt={course.titulo}
-                width={680}
-                height={272}
-                />
-              </div>
-              <div className="p-5">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">{course.titulo}</h3>
-                <p className="text-sm text-gray-600 line-clamp-3">{course.subtitulo}</p>
-              </div>
-              {course.amountPerGuide > 0 &&
-                <div className="p-5 bg-green">
-                  Scolarship per guide: {course.amountPerGuide}
-                  Can Submit: {course.canSubmit}
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200">
+              <a
+                key={course.id}
+                href={`/${course.idioma}${course.prefijoRuta}`} >
+                <div className="img-course">
+                <Image 
+                  className="w-full h-[17rem] pt-2 object-cover"
+                  src={course.imagen}
+                  alt={course.titulo}
+                  width={680}
+                  height={272}
+                  />
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{course.titulo}</h3>
+                  <p className="text-sm text-gray-600 line-clamp-3">{course.subtitulo}</p>
+                </div>
+                { extCourses.map.get(course.id) && 
+                  extCourses.map.get(course.id).amountPerGuide > 0 &&
+                  <div className="p-5 bg-green">
+                    Scolarship per guide: {extCourses.map.get(course.id).amountPerGuide}
+                    Can Submit: {extCourses.map.get(course.id).canSubmit}
+                  </div>
+                }
+              </a>
+              { extCourses.map.get(course.id) && 
+                extCourses.map.get(course.id).vaultCreated &&
+                <div className="p-5 bg-green flex items-center">
+                 <div>
+                   Vault for this course: {extCourses.map.get(course.id).vaultBalance} $USDT
+                 </div>
+                 <button onClick={() => handleDonate(+course.id)}
+                    className="bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white"
+                  >
+                    Donate for this course
+                 </button>
                 </div>
               }
-            </a>
+            </div>
           ))}
         </div>
       </div>

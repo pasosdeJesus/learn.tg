@@ -3,7 +3,9 @@
 import { Kysely, PostgresDialect } from 'kysely';
 import { NextRequest, NextResponse } from 'next/server'
 import { privateKeyToAccount } from "viem/accounts";
-import { createPublicClient, createWalletClient, getContract, http } from 'viem'
+import { 
+  createPublicClient, createWalletClient, formatUnits, getContract, http 
+} from 'viem'
 import type { Address } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 import type { DB, BilleteraUsuario } from '@/db/db.d.ts';
@@ -28,6 +30,13 @@ export async function GET(req: NextRequest) {
     if (process.env.NEXT_PUBLIC_RPC_URL == undefined) {
       retMessage = "\nNEXT_PUBLIC_RPC_URL undefined"
     }
+    let usdtDecimals = 0
+    if (process.env.NEXT_PUBLIC_USDT_DECIMALS == undefined) {
+      retMessage = "\nNEXT_PUBLIC_USDT_DECIMALS undefined"
+    } else {
+      usdtDecimals = +process.env.NEXT_PUBLIC_USDT_DECIMALS
+    }
+
 
     const { searchParams } = req.nextUrl
     const courseId = searchParams.get("courseId")
@@ -81,6 +90,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    let vaultCreated = false
+    let vaultBalance = 0
     let canSubmit = false
     let amountPerGuide = 0
     if (retMessage == "") {
@@ -123,23 +134,47 @@ export async function GET(req: NextRequest) {
           abi: ScholarshipVaultsAbi as any,
           client: { public: publicClient, wallet: walletClient }
         })
+ 
         const courseIdArg = courseId && /^\d+$/.test(courseId) ? BigInt(courseId) : courseId
-        const vault = await contract.read.getVault([courseIdArg]) as any
+        const vaultArray = await contract.read.getVault([courseIdArg]) as any
+        console.log("** vaultArray=", vaultArray)
+        const vault = {
+          courseId: Number(vaultArray[0]),
+          preBalance: Number(vaultArray[1]),
+          preAmountPerGuide: Number(vaultArray[2]),
+          exists: Boolean(vaultArray[3])
+        }
         console.log("** vault=", vault)
-        if (vault && vault.exists && vault.amountPerGuide > 0 && vault.balance >= vault.amountPerGuide) {
-          amountPerGuide = Number(vault.amountPerGuide)
-          if (walletAddress) {
-            canSubmit = await contract.read.studentCanSubmit([courseIdArg, walletAddress as Address]) as boolean
+        if (vault && vault.exists) {
+          vaultCreated = true
+          vaultBalance = +formatUnits(BigInt(vault.preBalance), usdtDecimals)
+          if (
+            vault.preAmountPerGuide > 0 && 
+            vault.preBalance >= vault.preAmountPerGuide
+          ) {
+            amountPerGuide = +formatUnits(
+              BigInt(vault.preAmountPerGuide), usdtDecimals
+            )
+            if (walletAddress) {
+              canSubmit = await contract.read.studentCanSubmit(
+                [courseIdArg, walletAddress as Address]
+              ) as boolean
+            }
           }
         }
       }
     }
 
+    console.log("** Normal exit with vaultCreated=", vaultCreated)
+    console.log("** Normal exit with vaultBalance=", vaultBalance)
     console.log("** Normal exit with amountPerGuide=", amountPerGuide)
     console.log("** Normal exit with canSubmit=", canSubmit)
     console.log("** Normal exit with message=", retMessage)
     return NextResponse.json(
       {
+        courseId: courseId == null ? 0 : Number(courseId),
+        vaultCreated: vaultCreated,
+        vaultBalance: vaultBalance,
         amountPerGuide: amountPerGuide,
         canSubmit: canSubmit,
         message: retMessage,
