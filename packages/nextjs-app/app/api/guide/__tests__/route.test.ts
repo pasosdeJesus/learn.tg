@@ -17,6 +17,10 @@ vi.mock('fs/promises', async (importOriginal) => {
     readFile: vi.fn(() => Promise.resolve('# Sample Guide\n\nSome content'))
   }
 })
+// Algunos entornos ESM usan 'node:fs/promises'
+vi.mock('node:fs/promises', async () => ({
+  readFile: vi.fn(() => Promise.resolve('# Sample Guide (node namespace)'))
+}))
 
 // Mock remarkFillInTheBlank side effect (global.fillInTheBlank)
 vi.mock('@/lib/remarkFillInTheBlank.mjs', () => ({
@@ -47,7 +51,7 @@ describe('API /api/guide', () => {
   })
 
   it('should return markdown when required guide params provided', async () => {
-    const url = new URL('http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=intro&guideNumber=1')
+  const url = new URL('http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&guideNumber=1')
     const request = new NextRequest(url)
     
     const response = await GET(request)
@@ -69,7 +73,7 @@ describe('API /api/guide', () => {
   })
 
   it('should respond 200 without walletAddress', async () => {
-    const url = new URL('http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=intro&guideNumber=1')
+  const url = new URL('http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&guideNumber=1')
     const request = new NextRequest(url)
     
     const response = await GET(request)
@@ -82,7 +86,7 @@ describe('API /api/guide', () => {
     const mockFn = readFile as unknown as ReturnType<typeof vi.fn>
     mockFn.mockRejectedValueOnce(new Error('FS error forzado'))
 
-    const url = new URL('http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=intro&guideNumber=1')
+  const url = new URL('http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&guideNumber=1')
     const request = new NextRequest(url)
 
     const response = await GET(request)

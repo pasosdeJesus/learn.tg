@@ -45,10 +45,20 @@ vi.mock('next-auth/react', () => ({
   getCsrfToken: () => getCsrfTokenMock()
 }))
 
-// Mock wagmi
+// Mock wagmi (incluye usePublicClient requerido por el componente principal)
 const useAccountMock = vi.fn((): { address: string; isConnected: boolean } => ({ address: '0x123', isConnected: true }))
+const usePublicClientMock = vi.fn(() => ({
+  readContract: vi.fn().mockResolvedValue(0n),
+  getBalance: vi.fn().mockResolvedValue(0n),
+  getGasPrice: vi.fn().mockResolvedValue(1n),
+  estimateContractGas: vi.fn().mockResolvedValue(21000n),
+  waitForTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' }),
+}))
+const useWalletClientMock = vi.fn(() => ({ data: { writeContract: vi.fn().mockResolvedValue('0xhash') } }))
 vi.mock('wagmi', () => ({
-  useAccount: () => useAccountMock()
+  useAccount: () => useAccountMock(),
+  usePublicClient: () => usePublicClientMock(),
+  useWalletClient: () => useWalletClientMock(),
 }))
 
 // Render directo (el componente usa hooks mockeados)

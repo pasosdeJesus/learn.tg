@@ -148,8 +148,8 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
               </div>
             )}
             <div className="mt-4">
-              <label className="block text-sm mb-1">{t('Amount (USDT)','Monto (USDT)')}</label>
-              <input type="number" min="0" step={1/10**Math.min(usdtDecimals,6)} className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400" value={amount} onChange={e => setAmount(e.target.value)} placeholder={t('Enter amount','Ingresa monto')} />
+              <label htmlFor={`donate-amount-${courseId}`} className="block text-sm mb-1">{t('Amount (USDT)','Monto (USDT)')}</label>
+              <input id={`donate-amount-${courseId}`} type="number" min="0" step={1/10**Math.min(usdtDecimals,6)} className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400" value={amount} onChange={e => setAmount(e.target.value)} placeholder={t('Enter amount','Ingresa monto')} />
               <div className="flex justify-end mt-1 space-x-2 text-xs">
                 <button onClick={() => setAmount(formatUnits(usdtBalance, usdtDecimals))} className="text-gray-500 hover:underline">{t('Max','Todo')}</button>
                 <button onClick={() => setAmount('')} className="text-gray-500 hover:underline">{t('Clear','Limpiar')}</button>

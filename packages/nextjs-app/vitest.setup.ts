@@ -16,11 +16,29 @@ vi.mock('@rainbow-me/rainbowkit', () => {
   }
 })
 
-// Silenciar logs ruidosos de las rutas API durante pruebas
+// Silenciar logs ruidosos de las rutas API y del modal durante pruebas
 const originalError = console.error
+const originalLog = console.log
+const originalWarn = console.warn
+const NOISY_PATTERNS = [
+  'ECONNREFUSED',
+  'crossword GET req=',
+  'Donating raw (scaled) amount:',
+  '** fname=',
+  '** cwd=',
+]
+function shouldSilence(arg: any) {
+  return typeof arg === 'string' && NOISY_PATTERNS.some(p => arg.includes(p))
+}
 console.error = (...args: any[]) => {
-  if (typeof args[0] === 'string' && args[0].includes('ECONNREFUSED')) {
-    return
-  }
+  if (args.some(shouldSilence)) return
   originalError(...args)
+}
+console.log = (...args: any[]) => {
+  if (args.some(shouldSilence)) return
+  originalLog(...args)
+}
+console.warn = (...args: any[]) => {
+  if (args.some(shouldSilence)) return
+  originalWarn(...args)
 }

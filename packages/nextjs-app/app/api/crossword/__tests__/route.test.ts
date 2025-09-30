@@ -15,6 +15,9 @@ vi.mock('fs/promises', async (importOriginal) => {
     readFile: vi.fn(() => Promise.resolve('# Crossword Source\n\nTexto con blanks'))
   }
 })
+vi.mock('node:fs/promises', async () => ({
+  readFile: vi.fn(() => Promise.resolve('# Crossword Source (node namespace)'))
+}))
 
 // Mock remarkFillInTheBlank para poblar global.fillInTheBlank
 vi.mock('@/lib/remarkFillInTheBlank.mjs', () => ({
@@ -68,7 +71,7 @@ describe('API /api/crossword', () => {
   })
 
   it('retorna grid y placements con parámetros completos y wallet', async () => {
-    const url = new URL('http://localhost:3000/api/crossword?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=intro&walletAddress=0xabc&token=tok123')
+  const url = new URL('http://localhost:3000/api/crossword?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&walletAddress=0xabc&token=tok123')
     const request = new NextRequest(url)
     const response = await GET(request)
     const data = await response.json()
@@ -80,7 +83,7 @@ describe('API /api/crossword', () => {
   })
 
   it('retorna mensaje si falta walletAddress pero sigue con 200', async () => {
-    const url = new URL('http://localhost:3000/api/crossword?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=intro')
+  const url = new URL('http://localhost:3000/api/crossword?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1')
     const request = new NextRequest(url)
     const response = await GET(request)
     const data = await response.json()
@@ -98,7 +101,7 @@ describe('API /api/crossword', () => {
   it('maneja error forzado de fs (readFile) pero termina respondiendo 200', async () => {
     const { readFile } = await import('fs/promises')
     ;(readFile as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('FS fail'))
-    const url = new URL('http://localhost:3000/api/crossword?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=intro&walletAddress=0xabc&token=tok123')
+  const url = new URL('http://localhost:3000/api/crossword?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&walletAddress=0xabc&token=tok123')
     const request = new NextRequest(url)
     const response = await GET(request)
     expect(response.status).toBe(200)
