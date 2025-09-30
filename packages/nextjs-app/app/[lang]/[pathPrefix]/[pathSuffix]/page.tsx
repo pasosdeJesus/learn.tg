@@ -1,8 +1,7 @@
 "use client"
 
 import axios from 'axios'
-
-import { ClaimSDK, IdentitySDK } from '@goodsdks/citizen-sdk'
+import { ClaimSDK, useIdentitySDK } from '@goodsdks/citizen-sdk'
 import { type PublicClient, type WalletClient } from 'viem'
 import { useSession, getCsrfToken } from "next-auth/react"
 import { use, useEffect, useState, useCallback } from 'react'
@@ -236,12 +235,7 @@ export default function Page({params} : {
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const identitySDK = process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
-    new IdentitySDK({
-      env: 'production',
-      publicClient: publicClient as PublicClient,
-      walletClient: walletClient as WalletClient
-    }) :
-    null
+     useIdentitySDK('production') : null;
 
   const claimUBI = async () => {
     if (!session || !address || session.address != address || 
@@ -260,8 +254,10 @@ export default function Page({params} : {
     try {
       await claimSDK.claim()
       console.log('Claim successful')
+      alert('Claim successful')
     } catch (error) {
       console.error('Claim failed:', error)
+      alert('Claim failed:'+ JSON.stringify(error))
     }
   }
 

@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@divvi/referral-sdk": "^2.3.0",
-    "@goodsdks/citizen-sdk": "^1.2.1",
+    "@goodsdks/citizen-sdk": "1.0.1",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.1.10",

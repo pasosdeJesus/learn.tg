@@ -19,20 +19,20 @@ export async function GET(req: NextRequest) {
     let retMessage = "";
     let md2 = "";
     if (process.env.NEXT_PUBLIC_AUTH_URL == undefined) {
-      retMessage = "\nNEXT_PUBLIC_AUTH_URL undefined"
+      retMessage += "\nNEXT_PUBLIC_AUTH_URL undefined"
     }
     if (process.env.NEXT_PUBLIC_DEPLOYED_AT == undefined) {
-      retMessage = "\nNEXT_PUBLIC_DEPLOYED_AT undefined"
+      retMessage += "\nNEXT_PUBLIC_DEPLOYED_AT undefined"
     }
     if (process.env.NEXT_PUBLIC_PRIVATE_KEY == undefined) {
-      retMessage = "\nNEXT_PUBLIC_PRIVATE_KEY undefined"
+      retMessage += "\nNEXT_PUBLIC_PRIVATE_KEY undefined"
     }
     if (process.env.NEXT_PUBLIC_RPC_URL == undefined) {
-      retMessage = "\nNEXT_PUBLIC_RPC_URL undefined"
+      retMessage += "\nNEXT_PUBLIC_RPC_URL undefined"
     }
     let usdtDecimals = 0
     if (process.env.NEXT_PUBLIC_USDT_DECIMALS == undefined) {
-      retMessage = "\nNEXT_PUBLIC_USDT_DECIMALS undefined"
+      retMessage += "\nNEXT_PUBLIC_USDT_DECIMALS undefined"
     } else {
       usdtDecimals = +process.env.NEXT_PUBLIC_USDT_DECIMALS
     }
@@ -121,11 +121,13 @@ export async function GET(req: NextRequest) {
           celo : celoSepolia,
         transport: http(rpcUrl)
       }) : undefined
+      console.log("** walletClient=", walletClient)
       if (walletClient) {
         console.log("** walletClient creado")
       }
 
       const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
+      console.log("** contractAddress=", contractAddress)
       if (!contractAddress) {
         retMessage += "\nMissing contract address"
       } else if (walletClient) {

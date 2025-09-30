@@ -18,8 +18,8 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@goodsdks/citizen-sdk':
-        specifier: ^1.2.1
-        version: 1.2.1(jiti@2.6.0)(postcss@8.5.6)(typescript@5.9.2)(viem@2.37.9(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@4.1.11))(wagmi@2.17.5(@tanstack/query-core@5.90.2)(@tanstack/react-query@5.90.2(react@19.1.1))(@types/react@19.1.15)(bufferutil@4.0.9)(immer@10.1.1)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(viem@2.37.9(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@4.1.11))(zod@4.1.11))
+        specifier: 1.0.1
+        version: 1.0.1(jiti@2.6.0)(postcss@8.5.6)(typescript@5.9.2)(viem@2.37.9(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@4.1.11))(wagmi@2.17.5(@tanstack/query-core@5.90.2)(@tanstack/react-query@5.90.2(react@19.1.1))(@types/react@19.1.15)(bufferutil@4.0.9)(immer@10.1.1)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(viem@2.37.9(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@4.1.11))(zod@4.1.11))
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.1.9(@types/react@19.1.15))(@types/react@19.1.15)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -577,8 +577,8 @@ packages:
     peerDependencies:
       viem: '>=2.0.0'
 
-  '@goodsdks/citizen-sdk@1.2.1':
-    resolution: {integrity: sha512-Qb9M3y57er+3u/a/Jqq/lYtdAXx3nHvXomvX21PCVlLQBgkpm1NDqNVJ3MFQ5cCxoI+QpX77KjKEQTCVqcz5kg==}
+  '@goodsdks/citizen-sdk@1.0.1':
+    resolution: {integrity: sha512-hKAeLt+z1T67akEagWsBL4IhCBc7IWomG3nIQqTT25gHin3nmXpYQlFAkB7t55vsduRTl9zONMfFqQQdhRXC1g==}
     peerDependencies:
       viem: '*'
       wagmi: '*'
@@ -3618,8 +3618,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  lightningcss-wasm@1.30.1:
-    resolution: {integrity: sha512-KJTnKEn0REV6DoJzxG0m5EKVEFA1CVE1isDYpXjsuqWXwLKFPJtA9Z9BSzPZJwAZFN2KaUzy+IWGP59p5bm2sA==}
+  lightningcss-wasm@1.30.2:
+    resolution: {integrity: sha512-3QB24h07oFTwiXI/wItgEv5De1prsmrZFWluuTyLO7/CFk4kEC5zgG7V6qQNGLBB5+QhSnGMixUALWHXj+J3Ug==}
     engines: {node: '>= 12.0.0'}
     bundledDependencies:
       - napi-wasm
@@ -5849,7 +5849,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@goodsdks/citizen-sdk@1.2.1(jiti@2.6.0)(postcss@8.5.6)(typescript@5.9.2)(viem@2.37.9(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@4.1.11))(wagmi@2.17.5(@tanstack/query-core@5.90.2)(@tanstack/react-query@5.90.2(react@19.1.1))(@types/react@19.1.15)(bufferutil@4.0.9)(immer@10.1.1)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(viem@2.37.9(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@4.1.11))(zod@4.1.11))':
+  '@goodsdks/citizen-sdk@1.0.1(jiti@2.6.0)(postcss@8.5.6)(typescript@5.9.2)(viem@2.37.9(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@4.1.11))(wagmi@2.17.5(@tanstack/query-core@5.90.2)(@tanstack/react-query@5.90.2(react@19.1.1))(@types/react@19.1.15)(bufferutil@4.0.9)(immer@10.1.1)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(viem@2.37.9(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@4.1.11))(zod@4.1.11))':
     dependencies:
       lz-string: 1.5.0
       tsup: 8.5.0(jiti@2.6.0)(postcss@8.5.6)(typescript@5.9.2)
@@ -7253,7 +7253,7 @@ snapshots:
       '@jridgewell/remapping': 2.3.5
       enhanced-resolve: 5.18.3
       jiti: 2.6.0
-      lightningcss: lightningcss-wasm@1.30.1
+      lightningcss: lightningcss-wasm@1.30.2
       magic-string: 0.30.19
       source-map-js: 1.2.1
       tailwindcss: 4.1.13
@@ -9939,7 +9939,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  lightningcss-wasm@1.30.1: {}
+  lightningcss-wasm@1.30.2: {}
 
   lilconfig@3.1.3: {}
 
