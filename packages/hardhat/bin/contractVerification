@@ -1,4 +1,4 @@
 #!/bin/sh
 
 . .env
-npx hardhat verify --network celoSepolia $DEPLOYED_AT $USDT_ADDRESS
+npx hardhat verify --network $NETWORK $DEPLOYED_AT $USDT_ADDRESS

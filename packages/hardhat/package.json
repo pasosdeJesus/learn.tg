@@ -30,8 +30,8 @@
     "dotenv": "^16.4.5"
   },
   "scripts": {
-    "postinstall": "chmod +x sync-abis.js",
-    "compile": "hardhat compile && node sync-abis.js",
+    "postinstall": "chmod +x sync-abis.mjs",
+    "compile": "hardhat compile && node sync-abis.mjs",
     "tsc": "npx tsc -p . && mkdir -p dist/typechain-types/ && cp typechain-types/*.d.ts dist/typechain-types/",
     "build": "yarn compile && yarn tsc",
     "clean": "hardhat clean",
@@ -43,7 +43,7 @@
     "verify-mock-usdt": "hardhat run scripts/verifyMockUSDT.ts --network celoSepolia",
     "contract-verification": "bin/contractVerification",
     "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'",
-    "sync:abis": "node sync-abis.js"
+    "sync:abis": "node sync-abis.mjs"
   },
   "author": "pasosdeJesus",
   "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"

@@ -64,16 +64,24 @@ contract ScholarshipVaults {
         emit VaultCreated(courseId, amountPerGuide);
     }
 
-    // Deposit USDT into a vault (caller must approve this contract first)
+    // Deposit 80% of indicated USDT into a vault and 20% to learn.tg 
+    // (caller must approve this contract first)
     function deposit(uint256 courseId, uint256 amount) external vaultExists(courseId) {
         require(courseId > 0, "Course id must be greater than 0");
         require(amount > 0, "Deposit amount must be greater than 0");
         // Prevent reentracy atacks https://docs.soliditylang.org/en/latest/security-considerations.html#re-entrancy
-        vaults[courseId].balance += amount;  
+        uint256 forLearntg = amount/5;
+        uint256 forVault = amount - forLearntg;
+        vaults[courseId].balance += forVault;  
         emit Deposit(courseId, amount);
         require(
-            usdtToken.transferFrom(msg.sender, address(this), amount),
-            "USDT transfer failed"
+            usdtToken.transferFrom(msg.sender, owner, forLearntg),
+            "USDT transfer for learntg failed"
+        );
+
+        require(
+            usdtToken.transferFrom(msg.sender, address(this), forVault),
+            "USDT transfer for vault failed, please write to support"
         );
     }
 
