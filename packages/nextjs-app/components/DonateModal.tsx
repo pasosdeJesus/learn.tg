@@ -32,7 +32,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
   const [celoBalance, setCeloBalance] = useState<bigint>(0n)
   const [amount, setAmount] = useState<string>("")
   const [estimating, setEstimating] = useState(false)
-  const [hasGas, setHasGas] = useState(false)
+  const [gasState, setGasState] = useState<'idle' | 'ok' | 'no-gas' | 'warn'>('idle')
   const [needsApproval, setNeedsApproval] = useState<boolean>(true)
   const [allowance, setAllowance] = useState<bigint>(0n)
   const [submitting, setSubmitting] = useState(false)
@@ -62,15 +62,16 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
   }, [isOpen, address, publicClient, courseId, usdtAddress, vaultAddress, usdtDecimals])
 
   useEffect(() => { loadData() }, [loadData])
-  useEffect(() => { if (!amount) { setNeedsApproval(true); return }; try { const parsed = parseUserAmount(amount, usdtDecimals); setNeedsApproval(parsed > allowance) } catch { setNeedsApproval(true) } }, [amount, allowance, usdtDecimals])
+  useEffect(() => { if (!amount) { setNeedsApproval(true); setGasState('idle'); return }; try { const parsed = parseUserAmount(amount, usdtDecimals); setNeedsApproval(parsed > allowance) } catch { setNeedsApproval(true) } }, [amount, allowance, usdtDecimals])
 
   useEffect(() => {
     const estimate = async () => {
-      if (!amount || !address || !walletClient || !publicClient || !vaultAddress || !courseId) { setHasGas(false); return }
+      if (!amount || parseFloat(amount) <= 0) { setGasState('idle'); return }
+      if (!address || !walletClient || !publicClient || !vaultAddress || !courseId) { setGasState('no-gas'); return }
       try {
         setEstimating(true)
         const value = parseUserAmount(amount, usdtDecimals)
-  if (value <= 0n) { setHasGas(false); return }
+        if (value <= 0n) { setGasState('idle'); return }
         const gasPrice = await publicClient.getGasPrice()
         let totalGas = 0n
         if (needsApproval && usdtAddress) {
@@ -80,12 +81,11 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
         const depositGas = await publicClient.estimateContractGas({ address: vaultAddress, abi: ScholarshipVaultsAbi as any, functionName: 'deposit', account: address, args: [BigInt(courseId), value] })
         totalGas += depositGas
         const cost = totalGas * gasPrice
-        setHasGas(celoBalance > cost)
+        setGasState(celoBalance > cost ? 'ok' : 'no-gas')
       } catch (e) {
-        // Si falla la estimación permitimos continuar pero avisamos
-        console.warn('Gas estimation failed. Allowing continue with warning.', e)
-        setHasGas(true)
-        setStatus(s => s?.type === 'error' ? s : { type: 'info', text: (lang==='es' ? 'No se pudo estimar el gas, proceda bajo su propio riesgo' : 'Gas estimation failed, proceed at your own risk') })
+        console.warn('Gas estimation failed. Allowing continue.', e)
+        // Consideramos warn (permitido continuar)
+        setGasState('warn')
       } finally { setEstimating(false) }
     }
     estimate()
@@ -95,7 +95,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
     if (!walletClient || !publicClient || !address || !vaultAddress || !usdtAddress || !courseId) return
     let parsed: bigint
     try { parsed = parseUserAmount(amount, usdtDecimals) } catch { setStatus({ type: 'error', text: 'Invalid amount' }); return }
-    if (parsed <= 0n || parsed > usdtBalance) { setStatus({ type: 'error', text: 'Amount out of range' }); return }
+  if (parsed <= 0n || parsed > usdtBalance) { setStatus({ type: 'error', text: 'Amount out of range' }); return }
     setSubmitting(true); setStatus({ type: 'info', text: 'Submitting transaction(s)...' })
     try {
       if (needsApproval) {
@@ -103,21 +103,23 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
         await publicClient.waitForTransactionReceipt({ hash: approveHash })
         setStatus({ type: 'info', text: 'Approval confirmed. Depositing...' })
       }
+      console.log('Donating raw (scaled) amount:', parsed.toString())
       const depositHash = await walletClient.writeContract({ address: vaultAddress, abi: ScholarshipVaultsAbi as any, functionName: 'deposit', args: [BigInt(courseId), parsed] })
       const receipt = await publicClient.waitForTransactionReceipt({ hash: depositHash })
       if (receipt.status !== 'success') throw new Error('Deposit failed')
       await loadData()
-      setStatus({ type: 'success', text: lang === 'es' ? 'Donación exitosa' : 'Donation successful' })
+      // Cerramos modal y delegamos la notificación a la página
       onSuccess && onSuccess()
+      closeAll()
     } catch (e:any) { console.error(e); setStatus({ type: 'error', text: e.message || 'Transaction failed' }) } finally { setSubmitting(false) }
   }
 
   if (!isOpen || courseId === null) return null
   const t = (en: string, es: string) => (lang === 'es' ? es : en)
-  const usdtBalFmt = formatUnits(usdtBalance, usdtDecimals)
-  const celoBalFmt = formatUnits(celoBalance, 18)
+  const usdtBalFmt = formatDisplay(usdtBalance, usdtDecimals)
+  const celoBalFmt = formatDisplay(celoBalance, 18)
   const amountNum = safeParseFloat(amount)
-  const donateDisabled = submitting || !amount || amountNum <= 0 || parseUserAmountSafe(amount, usdtDecimals) > usdtBalance || !hasGas
+  const donateDisabled = submitting || !amount || amountNum <= 0 || parseUserAmountSafe(amount, usdtDecimals) > usdtBalance || (amountNum>0 && gasState==='no-gas')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -129,14 +131,18 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
         <div className="space-y-2 text-sm">
           <div>{t('Your USDT Balance','Tu saldo USDT')}: <span className="font-mono">{usdtBalFmt}</span></div>
           <div>{t('Your CELO (gas)','Tu CELO (gas)')}: <span className="font-mono">{celoBalFmt}</span></div>
-          <div className={hasGas ? 'text-green-600' : 'text-red-600'}>
-            {hasGas ? t('Enough gas estimated','Gas suficiente estimado') : t('Not enough gas for transaction','Gas insuficiente para la transacción')}
-            {estimating && <span className="ml-2 animate-pulse">{t('estimating...','estimando...')}</span>}
-          </div>
+          { amountNum > 0 && (
+            <div className={gasState==='ok' ? 'text-green-600' : gasState==='no-gas' ? 'text-red-600' : gasState==='warn' ? 'text-yellow-600' : 'text-gray-500'}>
+              {gasState==='ok' && t('Enough gas estimated','Gas suficiente estimado')}
+              {gasState==='no-gas' && t('Not enough gas for transaction','Gas insuficiente para la transacción')}
+              {gasState==='warn' && t('Gas estimation failed, proceed at your own risk','Fallo al estimar gas, continúe bajo su propio riesgo')}
+              {estimating && <span className="ml-2 animate-pulse">{t('estimating...','estimando...')}</span>}
+            </div>
+          )}
         </div>
         {usdtBalance > 0n && (
           <>
-            {hasGas && (
+            { (amountNum === 0 || gasState==='ok' || gasState==='warn') && (
               <div className="mt-4 text-xs bg-yellow-50 border border-yellow-200 rounded p-3">
                 {t('80% of your donation increases the scholarship vault and 20% helps sustain learn.tg operations','80% de tu donación aumenta el fondo de becas y 20% ayuda a sostener learn.tg')}
               </div>
@@ -166,6 +172,13 @@ export function parseUserAmount(value: string, decimals: number): bigint {
   const normalized = value.replace(',', '.')
   if (normalized.trim() === '') return 0n
   return parseUnits(normalized as `${number}`, decimals)
+}
+function formatDisplay(v: bigint, decimals: number): string {
+  try {
+    const num = Number(formatUnits(v, decimals))
+    if (isNaN(num)) return '0'
+    return num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+  } catch { return '0' }
 }
 function parseUserAmountSafe(value: string, decimals: number): bigint { try { return parseUserAmount(value, decimals) } catch { return 0n } }
 function safeParseFloat(v: string): number { return isNaN(parseFloat(v)) ? 0 : parseFloat(v) }

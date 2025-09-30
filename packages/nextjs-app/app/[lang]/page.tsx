@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useSession, getCsrfToken } from "next-auth/react";
 import {use, useEffect, useState} from "react"
 import { useAccount, usePublicClient } from 'wagmi'
+import * as Toast from '@radix-ui/react-toast'
 import Image from 'next/image'
 import DonateModal from '@/components/DonateModal'
 
@@ -46,6 +47,8 @@ export default function Page({ params } : PageProps) {
   const [coursesj, setCoursesj] = useState<Array<CourseComplete>>([])
   const [extCourses, setExtCourses] = useState({ map: new Map() });
   const [donateCourseId, setDonateCourseId] = useState<number | null>(null)
+  const [toastMsg, setToastMsg] = useState<string>("")
+  const [toastOpen, setToastOpen] = useState<boolean>(false)
   const publicClient = usePublicClient()
 
   const parameters = use(params)
@@ -161,7 +164,13 @@ export default function Page({ params } : PageProps) {
     setDonateCourseId(Number(courseId))
   }
 
+  const handleDonationSuccess = () => {
+    setToastMsg(lang === 'es' ? 'Donación exitosa' : 'Donation successful')
+    setToastOpen(true)
+  }
+
   return (
+  <Toast.Provider swipeDirection="right">
   <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
     <div className="max-w-6xl mx-auto">
 
@@ -212,9 +221,22 @@ export default function Page({ params } : PageProps) {
         courseId={donateCourseId}
         isOpen={donateCourseId !== null}
         onClose={() => setDonateCourseId(null)}
-        onSuccess={() => { if (donateCourseId) refreshCourseVault(donateCourseId) }}
+        onSuccess={() => { if (donateCourseId) { refreshCourseVault(donateCourseId); handleDonationSuccess() } }}
         lang={lang}
       />
+      <Toast.Root
+        open={toastOpen}
+        onOpenChange={setToastOpen}
+        duration={5000}
+        className="bg-gray-800 text-white rounded px-4 py-3 text-sm shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+      >
+        <Toast.Title className="font-medium">
+          {toastMsg}
+        </Toast.Title>
+        <Toast.Close className="absolute top-1 right-2 text-gray-300 hover:text-white">×</Toast.Close>
+      </Toast.Root>
+      <Toast.Viewport className="fixed bottom-4 right-4 flex flex-col gap-2 w-96 max-w-[100vw] outline-none z-[60]" />
   </div>
+  </Toast.Provider>
   )
 }
