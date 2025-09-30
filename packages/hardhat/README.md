@@ -29,8 +29,10 @@ You can get test tokens for deploying it on Sepolia from the
 bin/deployScolarshipVault.ts
 ```
 
-4. Verify the contract
+It will present the address where it is deployed. Copy and paste that 
+address in the variable `DEPLOYED_AT` of the file `.env`
 
+4. Verify the contract
 
 ```bash
 bin/contractVerification

@@ -74,15 +74,10 @@ try {
       }
       env_replacements.forEach((ve) => {
         let s1 = RegExp(`^\\s*${ve[1]}\\s*=.*`, "m")
-        console.log("s1=", s1)
         let s2 = `${ve[1]}=${process.env[ve[0]]}`
-        console.log("s2=", s2)
         var result = data.replace(s1, s2)
-
-        console.log("data antes=", data)
         console.log(`*******Updated ${ve[1]} in ${NEXTJS_ENV_PATH}`)
         data = result
-        console.log("data despues=", data)
       })
 
       fs.writeFile(NEXTJS_ENV_PATH, data, 'utf8', function (err) {
