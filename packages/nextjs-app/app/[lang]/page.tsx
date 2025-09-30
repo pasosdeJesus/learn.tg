@@ -3,8 +3,9 @@
 import axios from 'axios';
 import { useSession, getCsrfToken } from "next-auth/react";
 import {use, useEffect, useState} from "react"
-import { useAccount } from 'wagmi'
+import { useAccount, usePublicClient } from 'wagmi'
 import Image from 'next/image'
+import DonateModal from '@/components/DonateModal'
 
 type PageProps = {
   params: Promise<{
@@ -44,6 +45,8 @@ export default function Page({ params } : PageProps) {
 
   const [coursesj, setCoursesj] = useState<Array<CourseComplete>>([])
   const [extCourses, setExtCourses] = useState({ map: new Map() });
+  const [donateCourseId, setDonateCourseId] = useState<number | null>(null)
+  const publicClient = usePublicClient()
 
   const parameters = use(params)
   const { lang } = parameters
@@ -132,8 +135,30 @@ export default function Page({ params } : PageProps) {
     )
   }
 
+  const refreshCourseVault = async (courseId: number) => {
+    if (!session || !address || !session.address || session.address != address) return
+    const csrfToken = await getCsrfToken()
+    const url2 = `/api/scholarship?courseId=${courseId}` +
+      `&walletAddress=${session.address}` +
+      `&token=${csrfToken}`
+    axios.get(url2)
+      .then(response2 => {
+        if (response2.data && response2.data.message == "") {
+          setExtCourses(prevState => ({
+            map: prevState.map.set(response2.data.courseId, {
+              vaultCreated: response2.data.vaultCreated,
+              vaultBalance: +response2.data.vaultBalance,
+              amountPerGuide: +response2.data.amountPerGuide,
+              canSubmit: response2.data.canSubmit,
+            })
+          }))
+        }
+      })
+      .catch(error => console.error(error))
+  }
+
   let handleDonate = (courseId: Number) => {
-    alert(courseId)
+    setDonateCourseId(Number(courseId))
   }
 
   return (
@@ -142,9 +167,8 @@ export default function Page({ params } : PageProps) {
 
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {coursesj.map((course) => (
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200">
+            <div key={course.id} className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200">
               <a
-                key={course.id}
                 href={`/${course.idioma}${course.prefijoRuta}`} >
                 <div className="img-course">
                 <Image 
@@ -169,21 +193,28 @@ export default function Page({ params } : PageProps) {
               </a>
               { extCourses.map.get(course.id) && 
                 extCourses.map.get(course.id).vaultCreated &&
-                <div className="p-5 bg-green flex items-center">
-                 <div>
-                   Vault for this course: {extCourses.map.get(course.id).vaultBalance} $USDT
-                 </div>
-                 <button onClick={() => handleDonate(+course.id)}
-                    className="bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white"
+                <div className="p-5 bg-green flex items-center gap-3 justify-between">
+                  <div className="text-sm">
+                    Vault for this course: {extCourses.map.get(course.id).vaultBalance} $USDT
+                  </div>
+                  <button onClick={() => handleDonate(+course.id)}
+                    className="bg-gray-800 text-white py-2 px-3 text-xs rounded hover:bg-secondary-100 hover:text-white"
                   >
                     Donate for this course
-                 </button>
+                  </button>
                 </div>
               }
             </div>
           ))}
         </div>
       </div>
+      <DonateModal
+        courseId={donateCourseId}
+        isOpen={donateCourseId !== null}
+        onClose={() => setDonateCourseId(null)}
+        onSuccess={() => { if (donateCourseId) refreshCourseVault(donateCourseId) }}
+        lang={lang}
+      />
   </div>
   )
 }
