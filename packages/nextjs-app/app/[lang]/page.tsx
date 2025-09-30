@@ -195,8 +195,20 @@ export default function Page({ params } : PageProps) {
                 { extCourses.map.get(course.id) && 
                   extCourses.map.get(course.id).amountPerGuide > 0 &&
                   <div className="p-5 bg-green">
-                    Scolarship per guide: {extCourses.map.get(course.id).amountPerGuide}
-                    Can Submit: {extCourses.map.get(course.id).canSubmit}
+
+                    <p>{lang === 'es' ? "Eres elegible para beca de" :
+                      "You are elegible for scolarship of"}</p>
+                    <p>${extCourses.map.get(course.id).amountPerGuide} USDT
+                      {lang === 'es' ? " por guía. " : " per guide."}</p>
+                  </div>
+                }
+                { extCourses.map.get(course.id) && 
+                  extCourses.map.get(course.id).amountPerGuide > 0 &&
+                  !extCourses.map.get(course.id).canSubmit &&
+                  <div className="text-red">
+                    {lang === 'es' ? 
+                      "Aunque estás en etapa de enfriamiento" :
+                      "Although you are in cooldown period."}
                   </div>
                 }
               </a>
@@ -204,7 +216,8 @@ export default function Page({ params } : PageProps) {
                 extCourses.map.get(course.id).vaultCreated &&
                 <div className="p-5 bg-green flex items-center gap-3 justify-between">
                   <div className="text-sm">
-                    Vault for this course: {extCourses.map.get(course.id).vaultBalance} $USDT
+                  {lang === 'es' ? "En boveda: " : "In vault: "}
+                  ${extCourses.map.get(course.id).vaultBalance} USDT
                   </div>
                   <button onClick={() => handleDonate(+course.id)}
                     className="bg-gray-800 text-white py-2 px-3 text-xs rounded hover:bg-secondary-100 hover:text-white"
