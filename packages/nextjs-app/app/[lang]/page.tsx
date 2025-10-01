@@ -7,6 +7,7 @@ import { useAccount, usePublicClient } from 'wagmi'
 import * as Toast from '@radix-ui/react-toast'
 import Image from 'next/image'
 import DonateModal from '@/components/DonateModal'
+import { Button } from '@/components/ui/button'
 
 type PageProps = {
   params: Promise<{
@@ -221,11 +222,12 @@ export default function Page({ params } : PageProps) {
                   {lang === 'es' ? "En boveda: " : "In vault: "}
                   ${extCourses.map.get(course.id).vaultBalance} USDT
                   </div>
-                  <button onClick={() => handleDonate(+course.id)}
-                    className="bg-gray-800 text-white py-2 px-3 text-xs rounded hover:bg-secondary-100 hover:text-white"
+                  <Button 
+                    onClick={() => handleDonate(+course.id)}
+                    size="sm"
                   >
                     Donate for this course
-                  </button>
+                  </Button>
                 </div>
               }
             </div>
@@ -243,12 +245,12 @@ export default function Page({ params } : PageProps) {
         open={toastOpen}
         onOpenChange={setToastOpen}
         duration={5000}
-        className="bg-gray-800 text-white rounded px-4 py-3 text-sm shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        className="bg-primary text-primary-foreground rounded px-4 py-3 text-sm shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
       >
         <Toast.Title className="font-medium">
           {toastMsg}
         </Toast.Title>
-        <Toast.Close className="absolute top-1 right-2 text-gray-300 hover:text-white">×</Toast.Close>
+        <Toast.Close className="absolute top-1 right-2 text-primary-foreground/70 hover:text-primary-foreground">×</Toast.Close>
       </Toast.Root>
       <Toast.Viewport className="fixed bottom-4 right-4 flex flex-col gap-2 w-96 max-w-[100vw] outline-none z-[60]" />
   </div>
