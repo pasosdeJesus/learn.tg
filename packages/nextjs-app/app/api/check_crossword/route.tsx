@@ -1,11 +1,14 @@
 "use server"
 
-import { Kysely } from 'kysely'
+import { Kysely, PostgresDialect } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
-
-import { PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
 import type { DB } from '@/db/db.d.ts'
+import ScholarshipVaultsAbi from '@/abis/ScholarshipVaults.json'
+import { privateKeyToAccount } from "viem/accounts";
+import { createPublicClient, createWalletClient, formatUnits, getContract, http } from 'viem'
+import type { Address } from 'viem'
+import { celo, celoSepolia } from 'viem/chains'
 
 interface WordPlacement {
   word: string
@@ -51,25 +54,17 @@ export async function POST(req: NextRequest) {
 
   try {
     let probs: number[] = [] 
-
+    let retMessage = ""
+    let scholarshipResult: any = null
     const requestJson = await req.json()
-    console.log("OJO request.json()=", requestJson)
     const guideId = requestJson['guideId'] ?? ''
-    console.log('OJO guideId=', guideId)
     const lang = requestJson['lang'] ?? ''
-    console.log('OJO lang=', lang)
     const prefix = requestJson['prefix'] ?? ''
-    console.log('OJO prefix=', prefix)
     const guide = requestJson['guide'] ?? ''
-    console.log('OJO guide=', guide)
     const grid = requestJson['grid'] ?? ''
-    console.log('OJO grid=', grid)
     const placements = requestJson['placements'] ?? ''
-    console.log('OJO placements=', placements)
     const walletAddress = requestJson['walletAddress'] ?? ''
-    console.log('OJO walletAddress=', walletAddress)
     const token = requestJson['token'] ?? ''
-    console.log('OJO token=', token)
 
     const db = new Kysely<DB>({
       dialect: new PostgresDialect({
@@ -83,22 +78,41 @@ export async function POST(req: NextRequest) {
       }),
     })
 
+    // Mensajes localizados
+    const msg = {
+      es: {
+        noWallet: "La respuesta no será calificada ni se buscarán becas posibles.",
+        tokenMismatch: "El token almacenado para el usuario no coincide con el token proporcionado.",
+        correct: "¡Respuesta correcta! Se ha enviado tu resultado para beca.",
+        submitError: "No se pudo enviar el resultado para beca: ",
+        cannotSubmit: "No puedes enviar resultado para beca en este momento.",
+        contractError: "No se pudo conectar con el contrato de becas.",
+        invalidKey: "Clave privada inválida"
+      },
+      en: {
+        noWallet: "Your answer will not be graded nor will possible scholarships be sought.",
+        tokenMismatch: "Token stored for user doesn't match given token.",
+        correct: "Correct answer! Your result has been submitted for scholarship.",
+        submitError: "Could not submit result for scholarship: ",
+        cannotSubmit: "You cannot submit a scholarship result at this time.",
+        contractError: "Could not connect to scholarship contract.",
+        invalidKey: "Invalid private key"
+      }
+    }
+    const locale = lang === "es" ? "es" : "en"
+
     if (!walletAddress || walletAddress == null || walletAddress == "") {
-      retMessage += "\nThe answer will not be graded nor will possible scholarships be sought. "
+      retMessage += "\n" + msg[locale].noWallet
     } else {
       let billeteraUsuario = await db.selectFrom('billetera_usuario')
         .where('billetera', '=', walletAddress)
         .selectAll()
         .executeTakeFirst()
       if (!billeteraUsuario || billeteraUsuario.token != token) {
-        retMessage += "\nToken stored for user doesn't match given token. "
+        retMessage += "\n" + msg[locale].tokenMismatch
       } else {
-        console.log("billeteraUsuario=", billeteraUsuario)
-        let wordNumber = 1
-
         let words = billeteraUsuario.answer_fib ?
           billeteraUsuario.answer_fib.split(" | ") : []
-        console.log(words.length)
         for(let i = 0; i < words.length; i++) {
           let nrow = placements[i].row
           let ncol = placements[i].col
@@ -110,11 +124,6 @@ export async function POST(req: NextRequest) {
               removeAccents(grid[nrow][ncol].userInput.toUpperCase()) != 
             removeAccents(word[j].toUpperCase())
             ) {
-              console.log(
-                "Problema en i",i, "-esima palabra word=", word, 
-                ", posición j=", j, ", se esperaba =", word[j].toUpperCase(),
-                "se obtuvo",grid[nrow][ncol].userInput.toUpperCase()
-              )
               if (!probs.includes(i+1)) {
                 probs.push(i+1)
               }
@@ -122,8 +131,67 @@ export async function POST(req: NextRequest) {
             if (dir == "across") {
               ncol++
             } else {
-                nrow++
+              nrow++
+            }
+          }
+        }
+
+        // Si no hay errores, intentamos beca
+        if (probs.length === 0) {
+          // Lógica similar a /api/scholarship
+          let usdtDecimals = 0
+          if (process.env.NEXT_PUBLIC_USDT_DECIMALS != undefined) {
+            usdtDecimals = +process.env.NEXT_PUBLIC_USDT_DECIMALS
+          }
+          const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
+          const publicClient = createPublicClient({
+            chain: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
+              celo : celoSepolia,
+            transport: http(rpcUrl)
+          })
+          const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY as string | undefined
+          let account: ReturnType<typeof privateKeyToAccount> | undefined
+          if (privateKey) {
+            try {
+              account = privateKeyToAccount(privateKey as Address)
+            } catch (e) {
+              retMessage += "\n" + msg[locale].invalidKey
+            }
+          }
+          const walletClient = account ? createWalletClient({
+            account,
+            chain: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
+              celo : celoSepolia,
+            transport: http(rpcUrl)
+          }) : undefined
+          const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
+          if (contractAddress && walletClient) {
+            const contract = getContract({
+              address: contractAddress,
+              abi: ScholarshipVaultsAbi as any,
+              client: { public: publicClient, wallet: walletClient }
+            })
+            const courseIdArg = guideId && /^\d+$/.test(guideId) ? BigInt(guideId) : guideId
+            // Verificar si puede enviar
+            const canSubmit = await contract.read.studentCanSubmit([
+              courseIdArg, walletAddress as Address
+            ]) as boolean
+            if (canSubmit) {
+              // Enviar resultado
+              try {
+                const tx = await contract.write.submitGuideResult([
+                  courseIdArg, walletAddress as Address, placements.length // guideNumber
+                ])
+                scholarshipResult = tx
+                retMessage += "\n" + msg[locale].correct
+              } catch (err) {
+                retMessage += "\n" + msg[locale].submitError + err
               }
+            } else {
+              retMessage += "\n" + msg[locale].cannotSubmit
+            }
+          } else {
+            retMessage += "\n" + msg[locale].contractError
           }
         }
       }
@@ -132,7 +200,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         probs: probs,
-        message: retMessage
+        message: retMessage,
+        scholarshipResult: scholarshipResult
       },
       {status: 200}
     )

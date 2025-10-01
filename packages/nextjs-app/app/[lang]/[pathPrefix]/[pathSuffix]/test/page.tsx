@@ -307,12 +307,42 @@ export default function Page({params} : {
     .then(response => {
       console.log(response)
       if (response.data) {
+        // Mensajes localizados
+        const locale = lang === "en" ? "en" : "es"
+        const uiMsg = {
+          es: {
+            problemWords: "Problema(s) con la(s) palabra(s) ",
+            scholarshipSent: "\nResultado de beca enviado: ",
+            connectWallet: "Conectar billetera",
+            crossword: "Crucigrama",
+            submit: "Enviar respuesta",
+            across: "Horizontal",
+            down: "Vertical",
+            returnGuide: "Regresar a la guía",
+            credits: "Créditos y Licencia de este curso"
+          },
+          en: {
+            problemWords: "Problem(s) with word(s) ",
+            scholarshipSent: "\nScholarship result sent: ",
+            connectWallet: "Connect Wallet",
+            crossword: "Crossword Puzzle",
+            submit: "Submit answer",
+            across: "Across",
+            down: "Down",
+            returnGuide: "Return to guide",
+            credits: "Credits and License of this course"
+          }
+        }
         if (response.data.probs && response.data.probs.length > 0) {
-          setFlashError("Problem(s) with word(s) " + response.data.probs.join(", "))
-        } else if (response.data.message != "") {
-          setFlashError("Problem: " + response.data.message)
+          setFlashError(uiMsg[locale].problemWords + response.data.probs.join(", "))
         } else {
-          setFlashSuccess("Perfect, however this course doesn't have scolarships active in this moment")
+          let msg = response.data.message || ""
+          let scholarship = response.data.scholarshipResult
+          if (scholarship) {
+            setFlashSuccess(msg + uiMsg[locale].scholarshipSent + JSON.stringify(scholarship))
+          } else {
+            setFlashSuccess(msg)
+          }
         }
       }
     })
@@ -322,11 +352,32 @@ export default function Page({params} : {
     })
   }
 
+  const locale = lang === "en" ? "en" : "es"
+  const uiMsg = {
+    es: {
+      connectWallet: "Conectar billetera",
+      crossword: "Crucigrama",
+      submit: "Enviar respuesta",
+      across: "Horizontal",
+      down: "Vertical",
+      returnGuide: "Regresar a la guía",
+      credits: "Créditos y Licencia de este curso"
+    },
+    en: {
+      connectWallet: "Connect Wallet",
+      crossword: "Crossword Puzzle",
+      submit: "Submit answer",
+      across: "Across",
+      down: "Down",
+      returnGuide: "Return to guide",
+      credits: "Credits and License of this course"
+    }
+  }
   if (
     !course.sinBilletera && course.conBilletera && 
     (!session || !address || !session.address || session.address != address)
   ) {
-    return <div className="mt-40">Connect Wallet</div>
+    return <div className="mt-40">{uiMsg[locale].connectWallet}</div>
   }
 
   const acrossClues = placements.filter((p) => p.direction === "across")
@@ -337,12 +388,12 @@ export default function Page({params} : {
       <div className="mt-8 pt-2  dark:bg-gray-100 dark:text-gray-800">
         <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
           <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
-            {course.idioma == 'en' ? "Course: " : "Curso: "}
+            {locale === 'en' ? "Course: " : "Curso: "}
             {course.titulo}
           </h3>
         </div>
         <h1 className="py-3 px-16 text-[2rem] font-bold text-left">
-          { course.idioma == 'en' ? "Guide" : "Guía" }
+          { locale === 'en' ? "Guide" : "Guía" }
           &nbsp;
           <span>{guideNumber}</span>: {myGuide.titulo}
         </h1>
@@ -353,15 +404,15 @@ export default function Page({params} : {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <div>Crossword Puzzle</div>
+                    <div>{uiMsg[locale].crossword}</div>
                     {isPuzzleSolved() && 
                       <div>
-                        <Button className="primary" onClick={handleSubmit}>Submit answer</Button>
+                        <Button className="primary" onClick={handleSubmit}>{uiMsg[locale].submit}</Button>
                       </div>
                     }
                     {!isPuzzleSolved() && 
                       <div>
-                        <Button disabled={true} className="primary">Submit answer</Button>
+                        <Button disabled={true} className="primary">{uiMsg[locale].submit}</Button>
                       </div>
                     }
                   </CardTitle>
@@ -411,7 +462,7 @@ export default function Page({params} : {
             <div className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Across</CardTitle>
+                  <CardTitle>{uiMsg[locale].across}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {acrossClues.map((placement) => (
@@ -424,7 +475,7 @@ export default function Page({params} : {
     
               <Card>
                 <CardHeader>
-                  <CardTitle>Down</CardTitle>
+                  <CardTitle>{uiMsg[locale].down}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {downClues.map((placement) => (
@@ -441,7 +492,7 @@ export default function Page({params} : {
           <tr>
             <td>
                 <a href={thisGuidePath} className="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-2 hover:bg-secondary-100 hover:text-white">
-                 { course.idioma == 'en' ? "Return to guide" : "Regresar a la guía" }
+                 { uiMsg[locale].returnGuide }
                 </a>
             </td>
           </tr>
@@ -449,10 +500,7 @@ export default function Page({params} : {
         { creditsHtml != '' && (
           <div className="text-sm mt-2">
             <h2 className="px-16 text-1xl font-bold md:text-1xl">
-              { course.idioma == "en" ?
-                "Credits and License of this course" :
-                "Créditos y Licencia de este curso"
-              }
+              { uiMsg[locale].credits }
             </h2>
             <div className="py-3 px-16 text-1xl md:text-1xl text-justify"
               dangerouslySetInnerHTML={{ __html: creditsHtml }} />
