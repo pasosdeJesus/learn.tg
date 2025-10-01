@@ -493,9 +493,11 @@ export default function Page({params} : {
         <table className="mx-auto text-center mt-12"><tbody>
           <tr>
             <td>
-                <a href={thisGuidePath} className="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-2 hover:bg-secondary-100 hover:text-white">
-                 { uiMsg[locale].returnGuide }
+              <Button asChild>
+                <a href={thisGuidePath}>
+                  { uiMsg[locale].returnGuide }
                 </a>
+              </Button>
             </td>
           </tr>
         </tbody></table>

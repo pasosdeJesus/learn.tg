@@ -11,6 +11,7 @@ import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
 import { useAccount } from 'wagmi'
+import { Button } from '@/components/ui/button'
 //  import addFillInTheBlank from '../lib/add-fill-in-the-blank'
 
 
@@ -238,13 +239,13 @@ export default function Page({ params }: PageProps) {
           <div>
             <div dangerouslySetInnerHTML={{ __html: htmlExtended }} />
             {red === "Red: X Layer Mainnet" && toPay > 0 && (
-              <button
-                className="mt-6 w-full lg:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-secondary-100 to-secondary-200 
-                           text-white font-semibold tracking-wide uppercase shadow-md 
-                           hover:shadow-lg hover:scale-105 transition-transform duration-200"
+              <Button
+                variant="secondary"
+                size="lg"
+                className="mt-6 w-full lg:w-auto rounded-full uppercase shadow-md hover:shadow-lg hover:scale-105 transition-transform duration-200"
               >
                 Inscribirse por {toPay} OKB
-              </button>
+              </Button>
             )}
           </div>
         )}

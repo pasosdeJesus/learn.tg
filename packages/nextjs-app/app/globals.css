@@ -31,6 +31,25 @@
   --color-gray-500: #6b7280;
   --color-gray-600: #4b5563;
   --color-gray-700: #374151;
+
+  /* Semantic colors for Radix UI components */
+  --color-primary: var(--color-primary-300); /* Morado fuerte para botones por defecto */
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--color-secondary-100); /* Piel cálida */
+  --color-secondary-foreground: #ffffff;
+  --color-accent: var(--color-primary-100); /* Lila claro para acentos */
+  --color-accent-foreground: var(--color-foreground);
+  --color-muted: var(--color-gray-100);
+  --color-muted-foreground: var(--color-gray-500);
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--color-gray-200);
+  --color-input: var(--color-gray-200);
+  --color-ring: var(--color-primary-200);
+  --color-popover: #ffffff;
+  --color-popover-foreground: var(--color-foreground);
+  --color-card: #ffffff;
+  --color-card-foreground: var(--color-foreground);
 }
 /* ================================
    ✨ Estilos Globales

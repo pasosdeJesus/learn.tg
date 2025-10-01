@@ -17,6 +17,7 @@ import { usePublicClient, useWalletClient } from 'wagmi'
 import { useAccount } from 'wagmi'
 
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
+import { Button } from '@/components/ui/button'
 
 
 export default function Page({params} : {
@@ -296,9 +297,12 @@ export default function Page({params} : {
         <div className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside" dangerouslySetInnerHTML={{ __html: guideHtml }} />
         { isClient && pathPrefix == "gooddollar" && pathSuffix == "guide1" &&
           <div className="flex items-center justify-center">
-            <button onClick={claimUBI}
-              className="inline-flex items-center bg-gray-800 text-white py-2 px-3 hover:bg-secondary-100 hover:text-white"
-          >Sign up with GoodDollar or Claim UBI</button>
+            <Button 
+              onClick={claimUBI}
+              size="lg"
+            >
+              Sign up with GoodDollar or Claim UBI
+            </Button>
           </div>
         }
     
@@ -306,33 +310,39 @@ export default function Page({params} : {
           <tr>
             <td>
               { guideNumber > 1 &&
-                (<Link href={previousGuidePath} className="inline-flex items-center bg-gray-800 text-white border-r border-gray-100 py-2 px-2 hover:bg-secondary-100 hover:text-white">
-                 { course.idioma == 'en' ? "Previous" : "Anterior" }
-                </Link>)
+                (<Button asChild>
+                  <Link href={previousGuidePath}>
+                    { course.idioma == 'en' ? "Previous" : "Anterior" }
+                  </Link>
+                </Button>)
               }
               { guideNumber <= 1 &&
-                (<div className="inline-flex items-center bg-gray-400 text-white border-r border-gray-100 py-2 px-2">
-                 { course.idioma == 'en' ? "Previous" : "Anterior" }
-                </div>)
+                (<Button disabled>
+                  { course.idioma == 'en' ? "Previous" : "Anterior" }
+                </Button>)
               }
     
             </td>
             <td>
-              <Link href={coursePath} className="inline-flex items-center bg-gray-800 text-white py-2 px-2 hover:bg-secondary-100 hover:text-white">
-                { course.idioma == 'en' ? "Start of Course" : "Inicio del Curso"}
-              </Link>
+              <Button asChild>
+                <Link href={coursePath}>
+                  { course.idioma == 'en' ? "Start of Course" : "Inicio del Curso"}
+                </Link>
+              </Button>
             </td>
             <td>
               &nbsp;
               { guideNumber < course.guias.length  && (
-                <Link href={nextGuidePath} className="inline-flex items-center bg-gray-800 text-white  py-2 px-2 hover:bg-secondary-100 hover:text-white">
-                  {course.idioma == 'en' ? "Next" : "Siguiente"}
-                </Link>
+                <Button asChild>
+                  <Link href={nextGuidePath}>
+                    {course.idioma == 'en' ? "Next" : "Siguiente"}
+                  </Link>
+                </Button>
               )}
               { guideNumber >= course.guias.length  && (
-                <div className="inline-flex items-center bg-gray-400 text-white  py-2 px-3">
+                <Button disabled>
                   {course.idioma == 'en' ? "Next" : "Siguiente"}
-                </div>
+                </Button>
               )}
             </td>
           </tr>
