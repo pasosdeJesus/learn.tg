@@ -245,7 +245,7 @@ export default function CrosswordPuzzle(props: CrosswordPuzzleProps) {
               {isPuzzleSolved() && 
                 <div>
                   <Badge className="bg-orange-500">Completed</Badge>
-                  <Button className="bg-gray-600" onClick={handleSubmit}>Submit answer and earn part of scolarship if elegible</Button>
+                  <Button onClick={handleSubmit}>Submit answer and earn part of scolarship if elegible</Button>
                 </div>
               }
             </CardContent>
