@@ -53,11 +53,12 @@ export async function POST(req: NextRequest) {
     replace('Ü', 'U')
 
   try {
-    let probs: number[] = [] 
+    let mistakesInCW: number[] = [] 
     let retMessage = ""
     let scholarshipResult: any = null
     const requestJson = await req.json()
-    const guideId = requestJson['guideId'] ?? ''
+    const courseId = +requestJson['courseId']
+    const guideId = +requestJson['guideId']
     const lang = requestJson['lang'] ?? ''
     const prefix = requestJson['prefix'] ?? ''
     const guide = requestJson['guide'] ?? ''
@@ -124,8 +125,8 @@ export async function POST(req: NextRequest) {
               removeAccents(grid[nrow][ncol].userInput.toUpperCase()) != 
             removeAccents(word[j].toUpperCase())
             ) {
-              if (!probs.includes(i+1)) {
-                probs.push(i+1)
+              if (!mistakesInCW.includes(i+1)) {
+                mistakesInCW.push(i+1)
               }
             }
             if (dir == "across") {
@@ -136,70 +137,72 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Si no hay errores, intentamos beca
-        if (probs.length === 0) {
-          // Lógica similar a /api/scholarship
-          let usdtDecimals = 0
-          if (process.env.NEXT_PUBLIC_USDT_DECIMALS != undefined) {
-            usdtDecimals = +process.env.NEXT_PUBLIC_USDT_DECIMALS
+        // Intentamos beca
+        // Lógica similar a /api/scholarship
+        let usdtDecimals = 0
+        if (process.env.NEXT_PUBLIC_USDT_DECIMALS != undefined) {
+          usdtDecimals = +process.env.NEXT_PUBLIC_USDT_DECIMALS
+        }
+        const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
+        const publicClient = createPublicClient({
+          chain: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
+          celo : celoSepolia,
+          transport: http(rpcUrl)
+        })
+        const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY as string | undefined
+        let account: ReturnType<typeof privateKeyToAccount> | undefined
+        if (privateKey) {
+          try {
+            account = privateKeyToAccount(privateKey as Address)
+          } catch (e) {
+            retMessage += "\n" + msg[locale].invalidKey
           }
-          const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
-          const publicClient = createPublicClient({
-            chain: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
-              celo : celoSepolia,
-            transport: http(rpcUrl)
+        }
+        const walletClient = account ? createWalletClient({
+          account,
+          chain: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
+          celo : celoSepolia,
+          transport: http(rpcUrl)
+        }) : undefined
+        console.log("*** walletClient=", walletClient)
+        const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
+        if (contractAddress && walletClient) {
+          const contract = getContract({
+            address: contractAddress,
+            abi: ScholarshipVaultsAbi as any,
+            client: { public: publicClient, wallet: walletClient }
           })
-          const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY as string | undefined
-          let account: ReturnType<typeof privateKeyToAccount> | undefined
-          if (privateKey) {
+          console.log("*** contract=", contract)
+          const courseIdArg = BigInt(courseId)
+          const guideIdArg = BigInt(guideId)
+          // Verificar si puede enviar
+          const canSubmit = await contract.read.studentCanSubmit([
+            courseIdArg, walletAddress as Address
+          ]) as boolean
+          if (canSubmit) {
+            // Enviar resultado
             try {
-              account = privateKeyToAccount(privateKey as Address)
-            } catch (e) {
-              retMessage += "\n" + msg[locale].invalidKey
-            }
-          }
-          const walletClient = account ? createWalletClient({
-            account,
-            chain: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
-              celo : celoSepolia,
-            transport: http(rpcUrl)
-          }) : undefined
-          const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
-          if (contractAddress && walletClient) {
-            const contract = getContract({
-              address: contractAddress,
-              abi: ScholarshipVaultsAbi as any,
-              client: { public: publicClient, wallet: walletClient }
-            })
-            const courseIdArg = guideId && /^\d+$/.test(guideId) ? BigInt(guideId) : guideId
-            // Verificar si puede enviar
-            const canSubmit = await contract.read.studentCanSubmit([
-              courseIdArg, walletAddress as Address
-            ]) as boolean
-            if (canSubmit) {
-              // Enviar resultado
-              try {
-                const tx = await contract.write.submitGuideResult([
-                  courseIdArg, walletAddress as Address, placements.length // guideNumber
-                ])
-                scholarshipResult = tx
-                retMessage += "\n" + msg[locale].correct
-              } catch (err) {
-                retMessage += "\n" + msg[locale].submitError + err
-              }
-            } else {
-              retMessage += "\n" + msg[locale].cannotSubmit
+              const tx = await contract.write.submitGuideResult([
+                courseIdArg, guideIdArg, walletAddress as Address, 
+                mistakesInCW.length == 0
+              ])
+              scholarshipResult = tx
+              retMessage += "\n" + msg[locale].correct
+            } catch (err) {
+              retMessage += "\n" + msg[locale].submitError + err
             }
           } else {
-            retMessage += "\n" + msg[locale].contractError
+            retMessage += "\n" + msg[locale].cannotSubmit
           }
+        } else {
+          retMessage += "\n" + msg[locale].contractError
         }
       }
     }
 
     return NextResponse.json(
       {
-        probs: probs,
+        mistakesInCW: mistakesInCW,
         message: retMessage,
         scholarshipResult: scholarshipResult
       },

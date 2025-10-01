@@ -275,7 +275,8 @@ export default function Page({params} : {
     let urlc = process.env.NEXT_PUBLIC_AUTH_URL + 
       `/api/check_crossword`
     interface CrosswordData {
-      guideId: string
+      courseId: number
+      guideId: number
       lang: string
       prefix: string
       guide: string
@@ -286,7 +287,8 @@ export default function Page({params} : {
     }
 
     let data: CrosswordData = {
-      guideId: course.id,
+      courseId: +course.id,
+      guideId: guideNumber,
       lang: lang,
       prefix: pathPrefix,
       guide:  pathSuffix,
