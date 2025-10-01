@@ -205,10 +205,12 @@ export default function Page({ params } : PageProps) {
                 { extCourses.map.get(course.id) && 
                   extCourses.map.get(course.id).amountPerGuide > 0 &&
                   !extCourses.map.get(course.id).canSubmit &&
-                  <div className="text-red">
-                    {lang === 'es' ? 
-                      "Aunque estás en etapa de enfriamiento" :
-                      "Although you are in cooldown period."}
+                  <div className="p-5 text-red">
+                    <p>
+                      {lang === 'es' ? 
+                        "Aunque estás en etapa de enfriamiento" :
+                        "Although you are in cooldown period."}
+                    </p>
                   </div>
                 }
               </a>
