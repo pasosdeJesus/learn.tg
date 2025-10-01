@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import { formatUnits, parseUnits, type Address } from 'viem'
 import ScholarshipVaultsAbi from '@/abis/ScholarshipVaults.json'
+import { Button } from '@/components/ui/button'
 
 const erc20Abi = [
   { name: 'decimals', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint8' }] },
@@ -124,7 +125,14 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
-        <button onClick={closeAll} className="absolute top-2 right-2 text-gray-500 hover:text-gray-800">✕</button>
+        <Button 
+          onClick={closeAll} 
+          variant="ghost" 
+          size="icon"
+          className="absolute top-2 right-2"
+        >
+          ✕
+        </Button>
         <h2 className="text-xl font-semibold mb-4">{t('Donate to course','Donar al curso')} #{courseId}</h2>
         {(!address || !walletClient) && (<div className="text-sm text-red-600 mb-4">{t('Connect and sign with your wallet to donate','Conecta y firma con tu billetera para donar')}</div>)}
         {(!vaultAddress || !usdtAddress) && (<div className="text-sm text-red-600 mb-4">Missing contract env vars</div>)}
@@ -151,16 +159,38 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
               <label htmlFor={`donate-amount-${courseId}`} className="block text-sm mb-1">{t('Amount (USDT)','Monto (USDT)')}</label>
               <input id={`donate-amount-${courseId}`} type="number" min="0" step={1/10**Math.min(usdtDecimals,6)} className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400" value={amount} onChange={e => setAmount(e.target.value)} placeholder={t('Enter amount','Ingresa monto')} />
               <div className="flex justify-end mt-1 space-x-2 text-xs">
-                <button onClick={() => setAmount(formatUnits(usdtBalance, usdtDecimals))} className="text-gray-500 hover:underline">{t('Max','Todo')}</button>
-                <button onClick={() => setAmount('')} className="text-gray-500 hover:underline">{t('Clear','Limpiar')}</button>
+                <Button 
+                  onClick={() => setAmount(formatUnits(usdtBalance, usdtDecimals))} 
+                  variant="link" 
+                  size="sm"
+                  className="h-auto p-0"
+                >
+                  {t('Max','Todo')}
+                </Button>
+                <Button 
+                  onClick={() => setAmount('')} 
+                  variant="link" 
+                  size="sm"
+                  className="h-auto p-0"
+                >
+                  {t('Clear','Limpiar')}
+                </Button>
               </div>
             </div>
           </>
         )}
         {status && (<div className={`mt-3 text-xs rounded p-2 border ${status.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : status.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>{status.text}</div>)}
         <div className="mt-6 flex justify-end space-x-3">
-          <button onClick={closeAll} className="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-100">{t('Cancel','Cancelar')}</button>
-            <button disabled={donateDisabled} onClick={donate} className={`px-4 py-2 text-sm rounded text-white ${donateDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-800 hover:bg-secondary-100'}`}>{submitting ? t('Processing...','Procesando...') : needsApproval ? t('Approve & Donate','Aprobar y Donar') : t('Donate','Donar')}</button>
+          <Button onClick={closeAll} variant="outline" size="sm">
+            {t('Cancel','Cancelar')}
+          </Button>
+          <Button 
+            disabled={donateDisabled} 
+            onClick={donate} 
+            size="sm"
+          >
+            {submitting ? t('Processing...','Procesando...') : needsApproval ? t('Approve & Donate','Aprobar y Donar') : t('Donate','Donar')}
+          </Button>
         </div>
       </div>
     </div>
