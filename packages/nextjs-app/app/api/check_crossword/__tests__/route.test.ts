@@ -64,7 +64,7 @@ describe('API /api/check_crossword', () => {
     const res = await POST(req)
     expect(res.status).toBe(200)
     const data = await res.json()
-    expect(data.probs).toEqual([])
+  expect(data.mistakesInCW).toEqual([])
     expect(data.message).toMatch(/will not be graded/i)
   })
 
@@ -88,7 +88,7 @@ describe('API /api/check_crossword', () => {
     const res = await POST(req)
     expect(res.status).toBe(200)
     const data = await res.json()
-    expect(data.probs).toEqual([])
+  expect(data.mistakesInCW).toEqual([])
     expect(data.message).toMatch(/Token stored for user doesn't match/i)
   })
 
@@ -115,9 +115,9 @@ describe('API /api/check_crossword', () => {
     const res = await POST(req)
     const data = await res.json()
     expect(res.status).toBe(200)
-    expect(data.probs).toEqual([])
-    // Permitir mensaje vacío o mensaje de error de contrato
-    expect([ '', '\nCould not connect to scholarship contract.' ]).toContain(data.message)
+  expect(data.mistakesInCW).toEqual([])
+  // Permitir mensaje vacío o mensaje de error de contrato
+  expect([ '', '\nCould not connect to scholarship contract.' ]).toContain(data.message)
   })
 
   it('POST con respuestas incorrectas devuelve probs con índice de palabra', async () => {
@@ -142,6 +142,6 @@ describe('API /api/check_crossword', () => {
     const res = await POST(req)
     const data = await res.json()
     expect(res.status).toBe(200)
-    expect(data.probs).toEqual([1])
+  expect(data.mistakesInCW).toEqual([1])
   })
 })

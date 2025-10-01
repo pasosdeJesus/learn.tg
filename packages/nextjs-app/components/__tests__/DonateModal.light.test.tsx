@@ -45,8 +45,10 @@ describe('DonateModal (light)', () => {
   }
 
   it('renderiza encabezado y campo de monto', async () => {
-    renderModal()
-    expect(screen.getByText(/Donate to course/i)).toBeInTheDocument()
+    await waitFor(() => {
+      renderModal()
+      expect(screen.getByText(/Donate to course/i)).toBeInTheDocument()
+    })
     const input = await screen.findByLabelText(/Amount \(USDT\)/i)
     expect(input).toBeInTheDocument()
   })
