@@ -2,8 +2,8 @@
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-gray-100 to-gray-200 text-gray-900">
-      <div className="flex flex-wrap justify-center gap-8">
+    <div className="flex items-center justify-center bg-gradient-to-br from-white via-gray-100 to-gray-200 text-gray-900">
+        <div className="flex flex-wrap justify-center gap-8 py-5">
         
         {/* Card English */}
         <a
