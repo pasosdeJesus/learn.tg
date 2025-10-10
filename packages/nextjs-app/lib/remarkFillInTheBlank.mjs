@@ -61,7 +61,8 @@ export function remarkFillInTheBlank(options) {
               {
                 type: 'html',
 
-                value: '<a class="btn primary" href="' + (options['url'] || "") + '">',
+                value: '<a class="rounded-md text-sm font-medium bg-primary text-primary-foreground! hover:bg-primary/90  h-9 px-4 py-2" href="' + (options['url'] || "") + '">',
+                
                 position: { start: l[i].position.start, end: l[i].position.start }
               },
               {

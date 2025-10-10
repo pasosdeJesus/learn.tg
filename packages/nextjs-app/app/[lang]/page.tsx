@@ -172,7 +172,7 @@ export default function Page({ params } : PageProps) {
 
   return (
   <Toast.Provider swipeDirection="right">
-  <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
+  <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
     <div className="max-w-6xl mx-auto">
 
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

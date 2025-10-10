@@ -130,7 +130,7 @@ export default function Page({ params }: PageProps) {
                             }
                             } */
               //preCourseHtml.value = htmlDeMd(cursosPrerequisitoMd)
-              let guias="<ol class='list-decimal text-white'>\n"
+              let guias="<ol class='list-decimal text-primary-foreground'>\n"
               let numero = 1
               for (const guia of dcurso.guias) {
                 guias += "<li>"

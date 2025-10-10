@@ -2,13 +2,15 @@
 
 import { Session } from "next-auth";
 import { useSession } from "next-auth/react";
+import Link from 'next/link'
+import Image from 'next/image'
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { useAccount, useConnect } from "wagmi"
 import { injected } from "wagmi/connectors"
-import Link from 'next/link'
-import Image from 'next/image'
+
+import { Button } from '@/components/ui/button' 
 
 interface ExtendedSession extends Session {
   address?: string;
@@ -38,7 +40,7 @@ export default function Header({ lang = "en" }) {
           <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center">
             <Image src="/logo-learntg.png" alt="logo" width={32} height={32} className="rounded-full" />
           </div>
-          <span className="text-white font-semibold">
+          <span className="text-primary-foreground font-semibold">
             {lang === "es" ? "Aprender mediante juegos" : "Learn through games"}
           </span>
         </Link>
@@ -49,11 +51,12 @@ export default function Header({ lang = "en" }) {
             session.address == address && (
               <div className="flex h-16 content-center justify-end items-center mr-4">
                 <div className="relative">
-                  <Link href={`/${lang == "es" ? "es" : "en"}/profile`}
-                  className="btn px-4 py-2 bg-secondary text-white rounded hover:bg-secondary-200"
-              >
+                <Button asChild>
+                  <Link className="text-primary-foreground!" 
+                    href={`/${lang == "es" ? "es" : "en"}/profile`} >
                     {lang == "es" ? "Perfil" : "Profile"}
                   </Link>
+                  </Button>
                 </div>
               </div>
           )}

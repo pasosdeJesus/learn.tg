@@ -409,7 +409,7 @@ export default function Page({params} : {
                     <div>{uiMsg[locale].crossword}</div>
                     {isPuzzleSolved() && 
                       <div>
-                        <Button className="primary" onClick={handleSubmit}>{uiMsg[locale].submit}</Button>
+                        <Button className="text-primary-foreground!" onClick={handleSubmit}>{uiMsg[locale].submit}</Button>
                       </div>
                     }
                     {!isPuzzleSolved() && 
@@ -494,7 +494,7 @@ export default function Page({params} : {
           <tr>
             <td>
               <Button asChild>
-                <a href={thisGuidePath}>
+                <a className="text-primary-foreground!" href={thisGuidePath}>
                   { uiMsg[locale].returnGuide }
                 </a>
               </Button>

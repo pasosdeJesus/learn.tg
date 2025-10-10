@@ -325,7 +325,7 @@ export default function Page({params} : {
             </td>
             <td>
               <Button asChild>
-                <Link href={coursePath}>
+                <Link className="text-primary-foreground!" href={coursePath}>
                   { course.idioma == 'en' ? "Start of Course" : "Inicio del Curso"}
                 </Link>
               </Button>
@@ -334,7 +334,7 @@ export default function Page({params} : {
               &nbsp;
               { guideNumber < course.guias.length  && (
                 <Button asChild>
-                  <Link href={nextGuidePath}>
+                  <Link className="text-primary-foreground!" href={nextGuidePath}>
                     {course.idioma == 'en' ? "Next" : "Siguiente"}
                   </Link>
                 </Button>
