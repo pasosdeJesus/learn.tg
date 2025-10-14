@@ -83,8 +83,8 @@ export default function Page({ params } : PageProps) {
       .then(response => {
         if (response.data) {
           const courseInfo = response.data
+          setCoursesj(courseInfo);
           if (csrfToken) {
-            setCoursesj(courseInfo);
             courseInfo.forEach((course: Course) => {
               const url2 = `/api/scholarship?courseId=${course.id}` +
                 `&walletAddress=${session!.address}` +
