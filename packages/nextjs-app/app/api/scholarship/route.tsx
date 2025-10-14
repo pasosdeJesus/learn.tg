@@ -58,8 +58,8 @@ export async function GET(req: NextRequest) {
       })
     })
 
-  // Usamos un tipo más laxo porque los tipos generados de timestamp no coinciden exactamente con Date
-  let billeteraUsuario: Partial<BilleteraUsuario> | undefined
+    // Usamos un tipo más laxo porque los tipos generados de timestamp no coinciden exactamente con Date
+    let billeteraUsuario: Partial<BilleteraUsuario> | undefined
     if (walletAddress) {
       const billeteraRow = await db.selectFrom('billetera_usuario')
         .where('billetera', '=', walletAddress)
@@ -95,7 +95,6 @@ export async function GET(req: NextRequest) {
     let canSubmit = false
     let amountPerGuide = 0
     if (retMessage == "") {
-
       const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
       console.log("** rpcUrl=", rpcUrl)
       const publicClient = createPublicClient({

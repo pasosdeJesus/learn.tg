@@ -84,40 +84,40 @@ export default function Page({ params } : PageProps) {
         if (response.data) {
           const courseInfo = response.data
           setCoursesj(courseInfo);
-          if (csrfToken) {
-            courseInfo.forEach((course: Course) => {
-              const url2 = `/api/scholarship?courseId=${course.id}` +
-                `&walletAddress=${session!.address}` +
+          courseInfo.forEach((course: Course) => {
+            let url2 = `/api/scholarship?courseId=${course.id}`
+            if (csrfToken) {
+              url2 +=`&walletAddress=${session!.address}` +
                 `&token=${csrfToken}`
-              console.log("** url2=", url2)
-              axios.get(url2)
-              .then(response2 => {
-                console.log("** response2=", response2)
-                if (response2.data.message == undefined) {
-                  console.error("Response without data.message")
-                  alert("Response without data.message")
-                } else if (response2.data.message != "") {
-                  console.error(
-                    "Error message received:",
-                    response2.data.message
-                  )
-                  alert(response2.data.message)
-                }
-                setExtCourses(prevState => ({
-                  map: prevState.map.set(response2.data.courseId, {
-                    vaultCreated: response2.data.vaultCreated,
-                    vaultBalance: +response2.data.vaultBalance,
-                    amountPerGuide: +response2.data.amountPerGuide,
-                    canSubmit: response2.data.canSubmit,
-                  })
-                }))
-              })
-              .catch(error => {
-                alert(error)
-                console.error(error)
-              })
+            }
+            console.log("** url2=", url2)
+            axios.get(url2)
+            .then(response2 => {
+              console.log("** response2=", response2)
+              if (response2.data.message == undefined) {
+                console.error("Response without data.message")
+                alert("Response without data.message")
+              } else if (response2.data.message != "") {
+                console.error(
+                  "Error message received:",
+                  response2.data.message
+                )
+                alert(response2.data.message)
+              }
+              setExtCourses(prevState => ({
+                map: prevState.map.set(response2.data.courseId, {
+                  vaultCreated: response2.data.vaultCreated,
+                  vaultBalance: +response2.data.vaultBalance,
+                  amountPerGuide: +response2.data.amountPerGuide,
+                  canSubmit: response2.data.canSubmit,
+                })
+              }))
             })
-          }
+            .catch(error => {
+              alert(error)
+              console.error(error)
+            })
+          })
         }
       })
       .catch(error => {
@@ -195,39 +195,53 @@ export default function Page({ params } : PageProps) {
                 </div>
                 { extCourses.map.get(course.id) && 
                   extCourses.map.get(course.id).amountPerGuide > 0 &&
-                  <div className="p-5 bg-green">
-
-                    <p>{lang === 'es' ? "Eres elegible para beca de" :
-                      "You are elegible for scolarship of"}</p>
-                    <p>${extCourses.map.get(course.id).amountPerGuide} USDT
-                      {lang === 'es' ? " por guía. " : " per guide."}</p>
+                  <div className="p-2">
+                    <span>{lang === 'es' ? "Beca de " :
+                      "Scholarship of "}
+                      ${extCourses.map.get(course.id).amountPerGuide} USDT
+                      {lang === 'es' ? " por guía. " : " per guide."}</span>
                   </div>
                 }
                 { extCourses.map.get(course.id) && 
                   extCourses.map.get(course.id).amountPerGuide > 0 &&
+                  session && session.address &&
                   !extCourses.map.get(course.id).canSubmit &&
-                  <div className="p-5 text-red">
-                    <p>
+                  <div className="p-2">
+                    <span style={{color: "red"}}>
                       {lang === 'es' ? 
                         "Aunque estás en etapa de enfriamiento" :
                         "Although you are in cooldown period."}
-                    </p>
+                    </span>
                   </div>
                 }
+                { extCourses.map.get(course.id) && 
+                  extCourses.map.get(course.id).amountPerGuide > 0 &&
+                  extCourses.map.get(course.id).canSubmit &&
+                  <div className="p-2 !text-green">
+                    <span style={{color: "green"}}>
+                      {lang === 'es' ? 
+                        "Eres elegible." :
+                        "You are elegible."}
+                    </span>
+                  </div>
+                }
+
               </a>
               { extCourses.map.get(course.id) && 
                 extCourses.map.get(course.id).vaultCreated &&
-                <div className="p-5 bg-green flex items-center gap-3 justify-between">
+                <div className="p-2 bg-green flex items-center gap-3 justify-between">
                   <div className="text-sm">
                   {lang === 'es' ? "En boveda: " : "In vault: "}
                   ${extCourses.map.get(course.id).vaultBalance} USDT
                   </div>
-                  <Button 
-                    onClick={() => handleDonate(+course.id)}
-                    size="sm"
-                  >
-                    Donate for this course
-                  </Button>
+                  { session && session.address &&
+                    <Button 
+                      onClick={() => handleDonate(+course.id)}
+                      size="sm"
+                    >
+                      Donate for this course
+                    </Button>
+                  }
                 </div>
               }
             </div>
