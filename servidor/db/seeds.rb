@@ -8,6 +8,8 @@ conexion.execute("INSERT INTO public.usuario
   '$2a$10$q0KcAa.H6.3VrXeKTJHa/ue8uT0y7WVKKHlAVor.Nejpz1OAgAQOq',
   '', '2014-08-26', '2014-08-26', '2014-08-26', 1);")
 
+
+
 # De motores
 motor = ['msip', 'cor1440_gen', nil]
 motor.each do |m|
