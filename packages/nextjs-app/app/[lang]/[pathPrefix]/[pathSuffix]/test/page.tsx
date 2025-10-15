@@ -402,7 +402,7 @@ export default function Page({params} : {
         <div className="space-y-6">
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Crossword Grid */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 overflow-x-auto">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
