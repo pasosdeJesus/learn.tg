@@ -27,7 +27,10 @@ To add the gem `rbsecp256k1`, we suggest:
         doas pkg_add automake
   and choose 1.16.x
 
-4. And then `rbsecp256k1` with the correct environment variables:
+4. Install `libtool`:
+        doas pkg_add libtool
+
+5. And then `rbsecp256k1` with the correct environment variables:
 
         AUTOMAKE_VERSION=1.16 AUTOCONF_VERSION=2.69 doas gem install --install-dir /var/www/bundler/ruby/3.4 rbsecp256k1
 
