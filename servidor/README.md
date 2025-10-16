@@ -65,7 +65,7 @@ Create the user for the database that you specified in `BD_USUARIO`, for example
 ```sh
 doas su - _postgresql
 createuser -h /var/www/var/run/postgresql -U postgres -s learntg
-psql -h /var/www/var/run/postgresql -U postgres learntg
+psql -h /var/www/var/run/postgresql -U postgres
 > alter user learntg with password 'mypassword';
 > \e
 exit
