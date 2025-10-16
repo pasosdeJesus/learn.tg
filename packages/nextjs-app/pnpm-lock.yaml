@@ -20,6 +20,9 @@ importers:
       '@goodsdks/citizen-sdk':
         specifier: 1.0.1
         version: 1.0.1(jiti@2.6.1)(postcss@8.5.6)(typescript@5.9.3)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))(wagmi@2.18.1(@tanstack/query-core@5.90.3)(@tanstack/react-query@5.90.3(react@19.2.0))(@types/react@19.2.2)(bufferutil@4.0.9)(immer@10.1.1)(react@19.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))(zod@4.1.12))
+      '@pasosdejesus/msipn':
+        specifier: gitlab:pasosdeJesus/msip#msipn
+        version: https://gitlab.com/api/v4/projects/pasosdeJesus%2Fmsip/repository/archive.tar.gz?sha=f83054e678d6e101375fc9a24113a4ae121ef2f7(kysely@0.28.8)(pg@8.16.3)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -960,6 +963,15 @@ packages:
 
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
+
+  '@pasosdejesus/msipn@https://gitlab.com/api/v4/projects/pasosdeJesus%2Fmsip/repository/archive.tar.gz?sha=f83054e678d6e101375fc9a24113a4ae121ef2f7':
+    resolution: {tarball: https://gitlab.com/api/v4/projects/pasosdeJesus%2Fmsip/repository/archive.tar.gz?sha=f83054e678d6e101375fc9a24113a4ae121ef2f7}
+    version: 0.0.1
+    engines: {node: '>=24'}
+    hasBin: true
+    peerDependencies:
+      kysely: ^0.27.3
+      pg: ^8.11.5
 
   '@paulmillr/qr@0.2.1':
     resolution: {integrity: sha512-IHnV6A+zxU7XwmKFinmYjUcwlyK9+xkG3/s9KcQhI9BjQKycrJ1JRO+FbNYPwZiPKW3je/DR0k7w8/gLa5eaxQ==}
@@ -2425,6 +2437,10 @@ packages:
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
 
+  commander@11.1.0:
+    resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
+    engines: {node: '>=16'}
+
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
     engines: {node: '>= 6'}
@@ -3250,6 +3266,12 @@ packages:
   https-proxy-agent@7.0.6:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
+
+  i18next-fs-backend@2.6.0:
+    resolution: {integrity: sha512-3ZlhNoF9yxnM8pa8bWp5120/Ob6t4lVl1l/tbLmkml/ei3ud8IWySCHt2lrY5xWRlSU5D9IV2sm5bEbGuTqwTw==}
+
+  i18next@23.16.8:
+    resolution: {integrity: sha512-06r/TitrM88Mg5FdUXAKL96dJMzgqLE5dv3ryBAra4KCwD9mJ4ndOTS95ZuymIGoE+2hzfdaMak2X11/es7ZWg==}
 
   iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
@@ -6283,6 +6305,16 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
+  '@pasosdejesus/msipn@https://gitlab.com/api/v4/projects/pasosdeJesus%2Fmsip/repository/archive.tar.gz?sha=f83054e678d6e101375fc9a24113a4ae121ef2f7(kysely@0.28.8)(pg@8.16.3)':
+    dependencies:
+      commander: 11.1.0
+      dotenv: 16.6.1
+      i18next: 23.16.8
+      i18next-fs-backend: 2.6.0
+      kysely: 0.28.8
+      pg: 8.16.3
+      picocolors: 1.1.1
+
   '@paulmillr/qr@0.2.1': {}
 
   '@pkgjs/parseargs@0.11.0':
@@ -8583,6 +8615,8 @@ snapshots:
 
   comma-separated-tokens@2.0.3: {}
 
+  commander@11.1.0: {}
+
   commander@4.1.1: {}
 
   concat-map@0.0.1: {}
@@ -9580,6 +9614,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
     optional: true
+
+  i18next-fs-backend@2.6.0: {}
+
+  i18next@23.16.8:
+    dependencies:
+      '@babel/runtime': 7.28.4
 
   iconv-lite@0.6.3:
     dependencies:

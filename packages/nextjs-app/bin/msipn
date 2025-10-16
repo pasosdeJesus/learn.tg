@@ -1,0 +1,2 @@
+#!/usr/bin/env node
+import('@pasosdejesus/msipn/packages/msipn/cli/bin/msipn.js')
