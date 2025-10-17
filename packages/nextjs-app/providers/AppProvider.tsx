@@ -21,7 +21,13 @@ import {
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
-import { injectedWallet } from '@rainbow-me/rainbowkit/wallets';
+import { 
+  injectedWallet,
+  metaMaskWallet,
+  okxWallet,
+  walletConnectWallet,
+
+} from '@rainbow-me/rainbowkit/wallets';
 import { RainbowKitSiweNextAuthProvider, type GetSiweMessageOptions } from '@rainbow-me/rainbowkit-siwe-next-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createConfig, http, useAccount, WagmiProvider } from 'wagmi';
@@ -37,7 +43,7 @@ const connectors = connectorsForWallets(
   [
     {
       groupName: 'Recommended',
-      wallets: [injectedWallet],
+      wallets: [okxWallet, walletConnectWallet, metaMaskWallet, injectedWallet],
     },
   ],
   {
