@@ -210,8 +210,12 @@ export async function POST(req: NextRequest) {
     )
   } catch (error) {
     console.error("Excepción error=", error)
+    const sError = JSON.stringify(
+      data, 
+      (key, value) => typeof value === 'bigint' ? value.toString() + 'n' : value
+    );
     return NextResponse.json(
-      {error: error},
+      {error: sError},
       {status: 500}
     )
   }

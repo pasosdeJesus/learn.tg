@@ -181,13 +181,13 @@ export default function Page({ params } : PageProps) {
               <a
                 href={`/${course.idioma}${course.prefijoRuta}`} >
                 <div className="img-course">
-                <Image 
+                {course.imagen && course.imagen[0] == "/" && <Image 
                   className="w-full h-[17rem] pt-2 object-cover"
                   src={course.imagen}
                   alt={course.titulo}
                   width={680}
                   height={272}
-                  />
+                  />}
                 </div>
                 <div className="p-5">
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">{course.titulo}</h3>
