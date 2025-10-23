@@ -118,14 +118,52 @@ export default function CrosswordPuzzle(props: CrosswordPuzzleProps) {
 
   // Handle user input
   const handleCellInput = (row: number, col: number, value: string) => {
-    if (value.length > 1) return
+    if (value.length > 1) {
+      return
+    }
 
-      const newGrid = [...grid]
-      newGrid[row][col] = {
-        ...newGrid[row][col],
-        userInput: value.toUpperCase(),
+    debugger
+    const newGrid = [...grid]
+    newGrid[row][col] = {
+      ...newGrid[row][col],
+      userInput: value.toUpperCase(),
+    }
+    setGrid(newGrid)
+    // Auto-advance to next cell if a letter was entered
+    if (value.length === 1) {
+      const currentCell = grid[row][col]
+      const wordNumbers = currentCell.belongsToWords
+
+      // Find which word(s) this cell belongs to
+      for (const wordNum of wordNumbers) {
+        const placement = placements.find((p) => p.number === wordNum)
+        if (!placement) continue
+          // Calculate position within the word
+          let posInWord = 0
+          if (placement.direction === "across") {
+            posInWord = col - placement.col
+          } else {
+            posInWord = row - placement.row
+          }
+
+          // If not the last letter of the word, move to next cell
+          if (posInWord < placement.word.length - 1) {
+            const nextRow =
+              placement.direction === "down" ? row + 1 : row
+            const nextCol =
+              placement.direction === "across" ? col + 1 : col
+
+            // Focus the next input
+            const nextInput = document.querySelector(
+              `input[data-row="${nextRow}"][data-col="${nextCol}"]`,
+            ) as HTMLInputElement
+              if (nextInput) {
+                nextInput.focus()
+              }
+              break // Only advance in the first word direction
+          }
       }
-      setGrid(newGrid)
+    }
   }
 
   // Check if puzzle is solved
@@ -228,6 +266,8 @@ export default function CrosswordPuzzle(props: CrosswordPuzzleProps) {
                               type="text"
                               value={showSolution ? cell.letter : cell.userInput}
                               onChange={(e) => handleCellInput(rowIndex, colIndex, e.target.value)}
+                              data-row={rowIndex}
+                              data-col={colIndex}
                               className={cn(
                                 "w-full h-full text-center text-sm font-bold border-none outline-none bg-transparent",
                                 showSolution && "text-blue-600 dark:text-blue-400",
