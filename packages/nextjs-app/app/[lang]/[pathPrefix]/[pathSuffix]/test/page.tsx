@@ -69,6 +69,8 @@ export default function Page({params} : {
   const [flashError, setFlashError] = useState("")
   const [flashSuccess, setFlashSuccess] = useState("")
   const [gCsrfToken, setGCsrfToken] = useState("")
+  const [prevRow, setPrevRow] = useState(-1)
+  const [prevCol, setPrevCol] = useState(-1)
 
   useEffect(() => {
     if ((session && !address) || (address && !session) || 
@@ -244,14 +246,69 @@ export default function Page({params} : {
 
   // Handle user input
   const handleCellInput = (row: number, col: number, value: string) => {
-    if (value.length > 1) return
+    if (value.length > 1) {
+      return
+    }
 
-      const newGrid = [...grid]
-      newGrid[row][col] = {
-        ...newGrid[row][col],
-        userInput: value.toUpperCase(),
+    const newGrid = [...grid]
+    newGrid[row][col] = {
+      ...newGrid[row][col],
+      userInput: value.toUpperCase(),
+    }
+    setGrid(newGrid)
+
+    if (value.length === 1) {
+      let prevDirAcross = true
+      if (prevRow >=0 && prevCol >= 0 &&
+          prevRow == row - 1 && prevCol == col) {
+        prevDirAcross = false
       }
-      setGrid(newGrid)
+      setPrevRow(row)
+      setPrevCol(col)
+
+      let dirAcross = prevDirAcross
+      const currentCell = grid[row][col]
+      const wordNumbers = currentCell.belongsToWords
+      // If more than one word on this cell keep using previous direction
+      if (wordNumbers.length ==  1) {
+        const placement = placements.find((p) => p.number === wordNumbers[0])
+        if (placement) {
+          dirAcross = placement.direction === "across"
+        }
+      }
+
+      // Calculate next position
+      let nextRow =
+        dirAcross ? row : row + 1
+      let nextCol =
+        dirAcross ? col + 1 : col
+
+      // If next position is part of the word
+      if (nextRow < grid.length && nextCol < grid[nextRow].length &&
+          !grid[nextRow][nextCol].isBlocked) {
+        // If next position is empty we just focus on it
+        // but if it is part of an existing word we suppose it is correct
+        // and try to skip it
+        if (grid[nextRow][nextCol].userInput != '') {
+          const sNextRow =
+            dirAcross ? nextRow : nextRow + 1
+          const sNextCol =
+            dirAcross ? nextCol + 1 : nextCol
+          if (sNextRow < grid.length && sNextCol < grid[sNextRow].length &&
+              !grid[sNextRow][sNextCol].isBlocked) {
+            nextRow = sNextRow
+            nextCol = sNextCol
+          }
+        }
+        // Focus the next input
+        const nextInput = document.querySelector(
+          `input[data-row="${nextRow}"][data-col="${nextCol}"]`,
+        ) as HTMLInputElement
+        if (nextInput) {
+          nextInput.focus()
+        }
+      }
+    }
   }
 
   // Check if puzzle is solved
@@ -446,6 +503,8 @@ export default function Page({params} : {
                                   type="text"
                                   value={cell.userInput}
                                   onChange={(e) => handleCellInput(rowIndex, colIndex, e.target.value)}
+                                  data-row={rowIndex}
+                                  data-col={colIndex}
                                   className="w-full h-full text-center text-sm font-bold border-none outline-none bg-transparent"
                                   maxLength={1}
                                 />
