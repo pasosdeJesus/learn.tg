@@ -1254,8 +1254,10 @@ export interface Usuario {
   nusuario: string;
   oficina_id: number | null;
   pais_id: number | null;
+  passport_name: string | null;
+  passport_nationality: number | null;
   password: Generated<string>;
-  religion_id: Generated<number | null>;
+  religion_id: number | null;
   remember_created_at: Timestamp | null;
   reset_password_sent_at: Timestamp | null;
   reset_password_token: string | null;

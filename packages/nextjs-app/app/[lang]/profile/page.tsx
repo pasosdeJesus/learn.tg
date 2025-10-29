@@ -2,16 +2,22 @@
 
 import { Loader2 } from "lucide-react"
 import { useSession, getCsrfToken } from "next-auth/react";
-import {use, useEffect, useState} from "react"
+import { use, useEffect, useState } from "react"
+import { countries, SelfQRcodeWrapper } from '@selfxyz/qrcode'
+import { SelfAppBuilder } from '@selfxyz/qrcode'
 import { useAccount } from 'wagmi'
+
+import { Button } from '@/components/ui/button'
 
 interface UserProfile {
   country: number | null
+  passport_nationality: number | null
   email: string
   groups: string
   id: string
   language: string
   name: string
+  passport_name: string
   phone: string
   picture: string
   religion: number
@@ -40,11 +46,13 @@ export default function ProfileForm({ params } : PageProps) {
 
   const [profile, setProfile] = useState<UserProfile>({
     country: null,
+    passport_nationality: null,
     email: "",
     groups: "",
     id: "",
     language: "",
     name: "",
+    passport_name: "",
     phone: "",
     picture: "",
     religion: 1,
@@ -53,14 +61,56 @@ export default function ProfileForm({ params } : PageProps) {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [verifyingSelf, setVerifyingSelf] = useState(false)
+  const [updateAfterSelf, setUpdateAfterSelf] = useState(false)
   const [religions, setReligions] = useState<Religion[]>([])
   const [countries, setCountries] = useState<Country[]>([])
+  const [selfApp, setSelfApp] = useState<any | null>(null)
 
   const { address } = useAccount()
   const { data: session } = useSession()
 
   const parameters = use(params)
   const { lang } = parameters
+
+
+  const handleSuccessfulSelfVerification = () => {
+    // Persist the attestation / session result to your backend, then gate content
+    setSelfApp(null)
+    setVerifyingSelf(false)
+    setUpdateAfterSelf(true)
+    alert('Verified, information stored')
+  }
+
+
+  const handleSelfVerify = () => {
+    setVerifyingSelf(true)
+    const userId = session!.address
+    const app = new SelfAppBuilder({
+      version: 2,
+      appName: 'Learn Through Games',
+      scope: 'learn.tg',
+      devMode: process.env.NEXT_PUBLIC_AUTH_URL != "https://learn.tg",
+      endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}` || "none",
+      logoBase64: 'https://i.postimg.cc/mrmVf9hm/self.png',
+      userId,
+      endpointType: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
+        'https' : 'staging_https',
+      userIdType: 'hex', // 'hex' for EVM address or 'uuid' for uuidv4
+      userDefinedData: 'Information to verify your humanity on Learn Through Games. Continuing means you accept the privacy policy available at https://learn.tg/en/privacy-policy',
+      disclosures: {
+        // What you want to verify from the user's identity
+        excludedCountries: [],
+        ofac: true,
+
+        // What you want users to disclose
+        name: true,
+        nationality: true,
+      },
+    }).build()
+
+    setSelfApp(app)
+  }
 
 
   // Fetch user data from API
@@ -117,9 +167,12 @@ export default function ProfileForm({ params } : PageProps) {
           throw new Error(`Expected data.length == 1`);
         }
         let rUser = data[0]
+        console.log("rUser=", rUser)
         let locProfile = {
           uname: rUser.nusuario,
           name: rUser.nombre,
+          passport_name: rUser.passport_name,
+          passport_nationality: rUser.passport_nationality,
           userId: rUser.id,
           email: rUser.email,
           picture: rUser.foto_file_name,
@@ -130,24 +183,7 @@ export default function ProfileForm({ params } : PageProps) {
           language: "",
           phone: "",
         }
-/*        let pc = process.env.NEXT_PUBLIC_API_SHOW_USER ?? "x"
-        let url2 = pc.replace("usuario_id", rUser.id)
-        url2 += `?walletAddress=${session.address}` +
-          `&token=${csrfToken}`
-        console.log(`Fetching ${url2}`)
-        const response2 = await fetch(url2);
-        if (!response2.ok) {
-          throw new Error(`Response2 status: ${response2.status}`);
-        }
-        const data2 = await response2.json();
-        console.log(data2);
-        locProfile = {
-          ...locProfile,
-          uname: data2.nusuario,
-          language: data2.idioma,
-          country: data2.pais_id,
-          religion: data2.religion_id,
-        }*/
+        console.log("locProfile=", locProfile)
         setProfile(locProfile)
  
       } catch (error) {
@@ -160,7 +196,10 @@ export default function ProfileForm({ params } : PageProps) {
     if (address && session && session.address && address == session.address) {
       fetchProfile()
     }
-  }, [address, session])
+    setUpdateAfterSelf(false)
+  }, [address, session, updateAfterSelf])
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -260,7 +299,11 @@ export default function ProfileForm({ params } : PageProps) {
               </div>
               <div className="space-y-2">
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                        Full Name
+                        Full Name ( Verified: 
+                          { profile.name != "" && 
+                          profile.name == profile.passport_name ? 
+                          "✅" : "❌" }
+                        )
                 </label>
                 <input
                   id="name"
@@ -312,7 +355,10 @@ export default function ProfileForm({ params } : PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-                  Country
+                  Country ( Verified: 
+                  { profile.country != null && 
+                    profile.country == profile.passport_nationality ? 
+                    "✅" : "❌" } )
                 </label>
                 <select
                   id="country"
@@ -330,17 +376,35 @@ export default function ProfileForm({ params } : PageProps) {
               </div>
             </div>
 
-
+            <div>
+            {selfApp && (
+              <SelfQRcodeWrapper
+              selfApp={selfApp}
+              onSuccess={handleSuccessfulSelfVerification}
+              onError={() => {
+                alert('Error: Failed to verify identity')
+              }}
+              />
+            ) }
+            </div>
 
             <div className="flex gap-4">
-                <button
+                <Button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {saving ? "Saving..." : "Save Changes"}
-              </button>
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSelfVerify}
+                disabled={verifyingSelf}
+              >
+                {verifyingSelf && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {verifyingSelf ? "Verifiying..." : "Verify with self"}
+              </Button>
+
               <button
                 type="button"
                 onClick={() => window.location.reload()}
