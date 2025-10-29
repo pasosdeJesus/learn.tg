@@ -4720,6 +4720,8 @@ CREATE TABLE public.usuario (
     foto_updated_at timestamp without time zone,
     religion_id integer,
     pais_id integer,
+    passport_name character varying(127),
+    passport_nationality integer,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
@@ -7859,6 +7861,7 @@ ALTER TABLE ONLY public.usuario
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20251029074157'),
 ('20251015091623'),
 ('20250826014211'),
 ('20250728005208'),
