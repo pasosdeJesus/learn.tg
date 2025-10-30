@@ -222,7 +222,8 @@ export default function ProfileForm({ params } : PageProps) {
         setProfile(locProfile)
  
       } catch (error) {
-        alert("Failed to load profile data: " + error)
+        alert("Failed to load profile data: " + error + 
+             "\n If error persis try disconnecting your wallet and connecting again")
       } finally {
         setLoading(false)
       }
@@ -435,8 +436,7 @@ export default function ProfileForm({ params } : PageProps) {
                 onClick={handleSelfVerify}
                 disabled={verifyingSelf}
               >
-                {verifyingSelf && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {verifyingSelf ? "Verifiying..." : "Verify with self"}
+                "Verify with self"
               </Button>
 
               <button
