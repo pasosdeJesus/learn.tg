@@ -3,11 +3,14 @@
 import { Loader2 } from "lucide-react"
 import { useSession, getCsrfToken } from "next-auth/react";
 import { use, useEffect, useState } from "react"
-import { countries, SelfQRcodeWrapper } from '@selfxyz/qrcode'
+import { countries } from '@selfxyz/qrcode'
 import { SelfAppBuilder } from '@selfxyz/qrcode'
 import { useAccount } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
+import { QRCodeDialog } from '@/components/ui/qr-code-dialog'
+import { useMobileDetection } from '@/lib/mobile-detection'
+import { openSelfApp, createDeeplinkConfigFromSelfApp } from '@/lib/deeplink'
 
 interface UserProfile {
   country: number | null
@@ -66,9 +69,11 @@ export default function ProfileForm({ params } : PageProps) {
   const [religions, setReligions] = useState<Religion[]>([])
   const [countries, setCountries] = useState<Country[]>([])
   const [selfApp, setSelfApp] = useState<any | null>(null)
+  const [showQRDialog, setShowQRDialog] = useState(false)
 
   const { address } = useAccount()
   const { data: session } = useSession()
+  const isMobile = useMobileDetection()
 
   const parameters = use(params)
   const { lang } = parameters
@@ -78,6 +83,7 @@ export default function ProfileForm({ params } : PageProps) {
     // Persist the attestation / session result to your backend, then gate content
     setSelfApp(null)
     setVerifyingSelf(false)
+    setShowQRDialog(false)
     setUpdateAfterSelf(true)
     alert('Verified, information stored')
   }
@@ -110,6 +116,35 @@ export default function ProfileForm({ params } : PageProps) {
     }).build()
 
     setSelfApp(app)
+    setShowQRDialog(true)
+  }
+
+  const handleMobileVerify = async () => {
+    if (selfApp) {
+      try {
+        const deeplinkConfig = createDeeplinkConfigFromSelfApp(selfApp)
+        const success = await openSelfApp(deeplinkConfig)
+        if (!success) {
+          const message = lang === 'es' 
+            ? 'No se pudo abrir la aplicación Self. Asegúrate de que esté instalada.'
+            : 'Unable to open Self app. Please make sure it is installed.'
+          alert(message)
+        }
+      } catch (error) {
+        console.error('Error opening Self app:', error)
+        const message = lang === 'es'
+          ? 'Error al abrir la aplicación Self. Por favor, inténtalo de nuevo.'
+          : 'Error opening Self app. Please try again.'
+        alert(message)
+        throw error // Re-throw to be caught by dialog error handler
+      }
+    }
+  }
+
+  const handleQRDialogError = (error: string) => {
+    console.error('QR Dialog error:', error)
+    const prefix = lang === 'es' ? 'Error: ' : 'Error: '
+    alert(`${prefix}${error}`)
   }
 
 
@@ -376,17 +411,16 @@ export default function ProfileForm({ params } : PageProps) {
               </div>
             </div>
 
-            <div>
-            {selfApp && (
-              <SelfQRcodeWrapper
+            <QRCodeDialog
+              open={showQRDialog}
+              onOpenChange={setShowQRDialog}
               selfApp={selfApp}
               onSuccess={handleSuccessfulSelfVerification}
-              onError={() => {
-                alert('Error: Failed to verify identity')
-              }}
-              />
-            ) }
-            </div>
+              onError={handleQRDialogError}
+              isMobile={isMobile}
+              onMobileVerify={handleMobileVerify}
+              lang={lang}
+            />
 
             <div className="flex gap-4">
                 <Button
