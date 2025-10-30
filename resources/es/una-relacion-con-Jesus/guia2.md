@@ -55,8 +55,8 @@
 
 ## 1. Comprensión de lectura.
 
-1. Los personaes en esta historia son Jesús, Sus discípulos y la ___
-   samaritana. (woman)
+1. Los personajes en esta historia son Jesús, Sus discípulos y la ___
+   samaritana. (mujer)
 2. De acuerdo con el versículo 4, Jesús debía pasar por ___ (Samaria)
 3. Jesús le pidió a la mujer que le diera de ___ (beber)
 4. En el versículo 12 la mujer llama padre a ___ (Jacob)
@@ -66,7 +66,7 @@
 7. Jesús dijo que los verdaderos adoradores, adoran al Padre en espíritu y
    en ___ (verdad)
 8. En el versículo 25 la mujer dijo que el ___ vendría y les explicaría
-   todas las cosas. (Mesías)
+   todas las cosas --sin tilde. (Mesias)
 9. Jesús dijo `Yo ___, el que habla contigo.´ (soy)
 
 ## 2. Reflexión
