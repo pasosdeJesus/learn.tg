@@ -1,8 +1,10 @@
 import { Kysely, PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
-import type { DB } from '@/db/db.d'
 // @ts-ignore vitest disponible en entorno test
 import { vi } from 'vitest'
+
+import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import type { DB } from '@/db/db.d'
 
 let _db: Kysely<DB> | null = null
 
@@ -30,17 +32,7 @@ export function getDb() {
     return testDb as unknown as Kysely<DB>
   }
   if (!_db) {
-    _db = new Kysely<DB>({
-      dialect: new PostgresDialect({
-        pool: new Pool({
-          host: process.env.DB_HOST,
-          database: process.env.DB_NAME,
-          user: process.env.DB_USER,
-          password: process.env.DB_PASSWORD,
-          port: 5432,
-        }),
-      }),
-    })
+    _db = newKyselyPostgresql()
   }
   return _db
 }

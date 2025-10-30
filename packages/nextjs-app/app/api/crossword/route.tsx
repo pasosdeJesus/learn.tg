@@ -2,7 +2,7 @@
 
 import clg from "crossword-layout-generator-with-isolated"
 import { readFile } from 'fs/promises'
-import { Kysely, Updateable } from 'kysely'
+import { Kysely, PostgresDialect, Updateable } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -10,11 +10,11 @@ import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
+import { Pool } from 'pg'
 import {unified} from 'unified'
 
-import { PostgresDialect } from 'kysely'
-import { Pool } from 'pg'
 import type { DB, BilleteraUsuario } from '@/db/db.d.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 interface WordPlacement {
@@ -67,17 +67,7 @@ export async function GET(req: NextRequest) {
     let newGrid = initializeGrid(15, 15)
     const newPlacements: WordPlacement[] = []
 
-    const db = new Kysely<DB>({
-      dialect: new PostgresDialect({
-        pool: new Pool({
-          host: process.env.DB_HOST,
-          database: process.env.DB_NAME,
-          user: process.env.DB_USER,
-          password: process.env.DB_PASSWORD,
-          port: 5432,
-        }),
-      }),
-    })
+    const db = newKyselyPostgresql()
 
     let billeteraUsuario: any = null
     if (!walletAddress || walletAddress == null || walletAddress == "") {

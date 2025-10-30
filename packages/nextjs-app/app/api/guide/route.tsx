@@ -4,6 +4,7 @@ import clg from "crossword-layout-generator-with-isolated"
 import { readFile } from 'fs/promises'
 import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely';
 import { NextRequest, NextResponse } from 'next/server'
+import { Pool } from 'pg'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -13,10 +14,9 @@ import remarkStringify from 'remark-stringify'
 import rehypeStringify from 'rehype-stringify'
 import {unified} from 'unified'
 
-import { Pool } from 'pg'
+import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
-
 
 export async function GET(req: NextRequest) {
   console.log("** crossword GET req=", req)
@@ -34,17 +34,8 @@ export async function GET(req: NextRequest) {
     const walletAddress = searchParams.get("walletAddress")
     const token = searchParams.get("token")
 
-    const db = new Kysely<DB>({
-      dialect: new PostgresDialect({
-        pool: new Pool({
-          host: process.env.DB_HOST,
-          database: process.env.DB_NAME,
-          user: process.env.DB_USER,
-          password: process.env.DB_PASSWORD,
-          port: 5432,
-        }),
-      }),
-    })
+
+    const db = newKyselyPostgresql()
 
     let billeteraUsuario: any = null
     if (walletAddress && walletAddress != null) {

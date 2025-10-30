@@ -3,12 +3,13 @@
 import { Kysely, PostgresDialect } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
 import { Pool } from 'pg'
+import { privateKeyToAccount } from "viem/accounts";
+import { Address, createPublicClient, createWalletClient, formatUnits, getContract, http } from 'viem'
+import { celo, celoSepolia } from 'viem/chains'
+
+import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 import type { DB } from '@/db/db.d.ts'
 import ScholarshipVaultsAbi from '@/abis/ScholarshipVaults.json'
-import { privateKeyToAccount } from "viem/accounts";
-import { createPublicClient, createWalletClient, formatUnits, getContract, http } from 'viem'
-import type { Address } from 'viem'
-import { celo, celoSepolia } from 'viem/chains'
 
 interface WordPlacement {
   word: string
@@ -67,17 +68,7 @@ export async function POST(req: NextRequest) {
     const walletAddress = requestJson['walletAddress'] ?? ''
     const token = requestJson['token'] ?? ''
 
-    const db = new Kysely<DB>({
-      dialect: new PostgresDialect({
-        pool: new Pool({
-          host: process.env.DB_HOST,
-          database: process.env.DB_NAME,
-          user: process.env.DB_USER,
-          password: process.env.DB_PASSWORD,
-          port: 5432,
-        }),
-      }),
-    })
+    const db = newKyselyPostgresql()
 
     // Mensajes localizados
     const msg = {

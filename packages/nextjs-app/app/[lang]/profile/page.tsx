@@ -436,7 +436,7 @@ export default function ProfileForm({ params } : PageProps) {
                 onClick={handleSelfVerify}
                 disabled={verifyingSelf}
               >
-                "Verify with self"
+                Verify with self
               </Button>
 
               <button

@@ -42,10 +42,10 @@ describe('API /api/scholarship', () => {
     process.env.NEXT_PUBLIC_DEPLOYED_AT = '0x0000000000000000000000000000000000000001'
     process.env.NEXT_PUBLIC_PRIVATE_KEY = '0x123'
     process.env.NEXT_PUBLIC_RPC_URL = 'https://rpc.test'
-    process.env.DB_HOST = 'localhost'
-    process.env.DB_NAME = 'db'
-    process.env.DB_USER = 'user'
-    process.env.DB_PASSWORD = 'pass'
+    process.env.PGHOST = 'localhost'
+    process.env.PGDATABASE = 'db'
+    process.env.PGUSER = 'user'
+    process.env.PGPASSWORD = 'pass'
   })
 
   it('retorna mensaje de error cuando falta courseId', async () => {

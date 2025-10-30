@@ -6,7 +6,7 @@ import {
   SelfBackendVerifier
 } from "@selfxyz/core";
 
-import defineConfig from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 import type { DB, Usuario } from '@/db/db.d.ts';
 
 // Reuse a single verifier instance
@@ -60,17 +60,15 @@ export async function POST(req: Request) {
       const wallet=result.userData.userIdentifier
       console.log("wallet=", wallet)
 
-      const db = new Kysely<DB>({
-        dialect: defineConfig.dialect
-      })
+      const db = newKyselyPostgresql()
 
-      let qBilleteraUsuario = await sql<number[]>`select usuario_id from billetera_usuario where lower(billetera) = lower(${wallet})`.execute(db)
+      let qBilleteraUsuario = await sql<any>`select usuario_id from billetera_usuario where lower(billetera) = lower(${wallet})`.execute(db)
       console.log("usuario=", qBilleteraUsuario)
       if (qBilleteraUsuario.rows[0]?.usuario_id === null) {
         throw new Error("User not found");
       }
       console.log("result.discloseOutput.nationality=", result.discloseOutput.nationality)
-      let qCountryId = await sql<number[]>`select id from msip_pais where lower(alfa3) = lower(${result.discloseOutput.nationality})`.execute(db)
+      let qCountryId = await sql<any>`select id from msip_pais where lower(alfa3) = lower(${result.discloseOutput.nationality})`.execute(db)
       console.log("qCountryId=", qCountryId)
       if (qCountryId.rows[0]?.id === null) {
         throw new Error("Country not found");

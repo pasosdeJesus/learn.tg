@@ -2,6 +2,6 @@
 #!/bin/sh
 
 . ./.env
-cmd="psql -h $DB_SOCKET -U $DB_USER $DB_NAME"
+cmd="psql -h $PGHOST -U $PGUSER $PGDATABASE"
 echo $cmd
 eval $cmd

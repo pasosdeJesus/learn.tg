@@ -1,15 +1,17 @@
-import { PostgresDialect } from 'kysely'
-import { defineConfig, getKnexTimestampPrefix } from 'kysely-ctl'
 import 'dotenv/config'
+import { Kysely, PostgresDialect } from 'kysely'
+import { defineConfig, getKnexTimestampPrefix } from 'kysely-ctl'
 import { Pool } from 'pg';
+
+import type { DB } from '@/db/db.d.ts'
 
 export default defineConfig({
   dialect: new PostgresDialect({
     pool: new Pool({
-      host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
+      host: process.env.PGHOST,
+      database: process.env.PGDATABASE,
+      user: process.env.PGUSER,
+      password: process.env.PGPASSWORD,
       port: 5432,
     }),
   }),
@@ -18,3 +20,18 @@ export default defineConfig({
     getMigrationPrefix: getKnexTimestampPrefix,
   },
 })
+
+export function newKyselyPostgresql() {
+  return new Kysely<DB>({
+    dialect: new PostgresDialect({
+      pool: new Pool({
+        host: process.env.PGHOST,
+        database: process.env.PGDATABASE,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        port: 5432,
+      }),
+    }),
+  })
+}
+

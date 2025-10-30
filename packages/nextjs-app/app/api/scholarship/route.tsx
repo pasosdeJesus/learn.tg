@@ -2,15 +2,17 @@
 
 import { Kysely, PostgresDialect } from 'kysely';
 import { NextRequest, NextResponse } from 'next/server'
+import { Pool } from 'pg'
 import { privateKeyToAccount } from "viem/accounts";
 import { 
   createPublicClient, createWalletClient, formatUnits, getContract, http 
 } from 'viem'
 import type { Address } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
-import type { DB, BilleteraUsuario } from '@/db/db.d.ts';
+
+import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 import ScholarshipVaultsAbi from '@/abis/ScholarshipVaults.json'
-import { Pool } from 'pg'
+import type { DB, BilleteraUsuario } from '@/db/db.d.ts';
 
 export async function GET(req: NextRequest) {
   console.log("** scolarship GET req=", req)
@@ -46,17 +48,8 @@ export async function GET(req: NextRequest) {
     console.log("** courseId=", courseId)
     console.log("** walletAddress =", walletAddress)
     console.log("** token=", token)
-    const db = new Kysely<DB>({
-      dialect: new PostgresDialect({
-        pool: new Pool({
-          host: process.env.DB_HOST,
-            database: process.env.DB_NAME,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            port: 5432,
-        })
-      })
-    })
+
+    const db = newKyselyPostgresql()
 
     // Usamos un tipo más laxo porque los tipos generados de timestamp no coinciden exactamente con Date
     let billeteraUsuario: Partial<BilleteraUsuario> | undefined

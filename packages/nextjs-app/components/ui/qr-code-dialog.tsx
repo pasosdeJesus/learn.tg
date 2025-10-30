@@ -99,7 +99,7 @@ export function QRCodeDialog({
                   onSuccess={onSuccess}
                   onError={(error) => {
                     console.error('QR code verification error:', error)
-                    const errorMessage = error?.message || t('Verification failed', 'Falló la verificación')
+                    const errorMessage = error?.reason || t('Verification failed', 'Falló la verificación')
                     onError(errorMessage)
                   }}
                 />

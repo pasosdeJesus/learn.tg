@@ -11,6 +11,7 @@ import { Address } from 'viem'
 
 import { Pool } from 'pg'
 import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
+import { newKyselyPostgresql } from "@/.config/kysely.config.ts"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -58,17 +59,7 @@ export const authOptions: NextAuthOptions = {
               })
               console.log(new Date(), "OJO Submitted ", sr)
             }
-const db = new Kysely<DB>({
-  dialect: new PostgresDialect({
-    pool: new Pool({
-      host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      port: 5432,
-    }),
-  }),
-})
+            const db = newKyselyPostgresql()
             let now = new Date()
 
             let puser = await sql<number>`
