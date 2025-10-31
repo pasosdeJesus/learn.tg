@@ -10,7 +10,7 @@ import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import { QRCodeDialog } from '@/components/ui/qr-code-dialog'
 import { useMobileDetection } from '@/lib/mobile-detection'
-import { openSelfApp, createDeeplinkConfigFromSelfApp } from '@/lib/deeplink'
+import { openSelfApp } from '@/lib/deeplink'
 
 interface UserProfile {
   country: number | null
@@ -122,8 +122,7 @@ export default function ProfileForm({ params } : PageProps) {
   const handleMobileVerify = async () => {
     if (selfApp) {
       try {
-        const deeplinkConfig = createDeeplinkConfigFromSelfApp(selfApp)
-        const success = await openSelfApp(deeplinkConfig)
+        const success = await openSelfApp(selfApp)
         if (!success) {
           const message = lang === 'es' 
             ? 'No se pudo abrir la aplicación Self. Asegúrate de que esté instalada.'
