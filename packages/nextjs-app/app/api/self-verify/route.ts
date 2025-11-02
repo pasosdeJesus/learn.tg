@@ -26,11 +26,18 @@ export async function POST(req: Request) {
   try {
     console.log("POST /api/self-verify/")
     // Extract data from the request
-    const { attestationId, proof, publicSignals, userContextData } = await req.json();
+    const { attestationId, proof, publicSignals, userContextData } = 
+      await req.json();
     console.log("attestationId=", attestationId)
     console.log("proof=", proof)
     console.log("publicSignals=", publicSignals)
     console.log("userContextData=", userContextData)
+
+    console.log("NEXT_PUBLIC_SELF_ENDPOINT",
+                process.env.NEXT_PUBLIC_SELF_ENDPOINT)
+    console.log("NEXT_PUBLiC_AUTH_RUL=", process.env.NEXT_PUBLIC_AUTH_URL)
+    console.log("AllIds=", AllIds)
+    console.log("selfBackendVerifier=", selfBackendVerifier)
 
     // Verify all required fields are present
     if (!proof || !publicSignals || !attestationId || !userContextData) {

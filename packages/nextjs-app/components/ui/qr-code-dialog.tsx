@@ -31,29 +31,31 @@ export function QRCodeDialog({
   onError,
   isMobile = false,
   onMobileVerify,
-  lang = "en"
+  lang = "en",
 }: QRCodeDialogProps) {
   const handleCancel = () => {
     onOpenChange(false)
   }
 
+  // Translation helper
+  const t = (en: string, es: string) => (lang === 'es' ? es : en)
+
   const handleMobileVerify = async () => {
-    try {
-      if (onMobileVerify) {
-        await onMobileVerify()
+    if (onMobileVerify) {
+      try {
+        onMobileVerify()
+      } catch (error) {
+        const message = t(
+          `Mobile verification failed: ${error}`,
+          `Falló la verificación móvil: ${error}`
+        )
+        console.error('Error opening Self app:', message)
+        alert(message)
+        throw error // Re-throw to be caught by dialog error handler
       }
-    } catch (error) {
-      console.error('Error in mobile verification:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      onError(t(
-        `Mobile verification failed: ${errorMessage}`,
-        `Falló la verificación móvil: ${errorMessage}`
-      ))
     }
   }
 
-  // Translation helper
-  const t = (en: string, es: string) => (lang === 'es' ? es : en)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,6 +87,7 @@ export function QRCodeDialog({
               </p>
               <Button 
                 onClick={handleMobileVerify}
+                type="button"
                 className="w-full"
                 size="lg"
               >

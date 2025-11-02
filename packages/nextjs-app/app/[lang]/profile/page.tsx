@@ -1,10 +1,10 @@
 "use client"
 
 import { Loader2 } from "lucide-react"
-import { useSession, getCsrfToken } from "next-auth/react";
+import { useSession, getCsrfToken } from "next-auth/react"
 import { use, useEffect, useState } from "react"
-import { countries } from '@selfxyz/qrcode'
-import { SelfAppBuilder } from '@selfxyz/qrcode'
+import { getUniversalLink } from '@selfxyz/core'
+import { countries, SelfAppBuilder } from '@selfxyz/qrcode'
 import { useAccount } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
@@ -64,11 +64,11 @@ export default function ProfileForm({ params } : PageProps) {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [verifyingSelf, setVerifyingSelf] = useState(false)
   const [updateAfterSelf, setUpdateAfterSelf] = useState(false)
   const [religions, setReligions] = useState<Religion[]>([])
   const [countries, setCountries] = useState<Country[]>([])
   const [selfApp, setSelfApp] = useState<any | null>(null)
+  const [deeplink, setDeeplink] = useState("")
   const [showQRDialog, setShowQRDialog] = useState(false)
 
   const { address } = useAccount()
@@ -82,7 +82,6 @@ export default function ProfileForm({ params } : PageProps) {
   const handleSuccessfulSelfVerification = () => {
     // Persist the attestation / session result to your backend, then gate content
     setSelfApp(null)
-    setVerifyingSelf(false)
     setShowQRDialog(false)
     setUpdateAfterSelf(true)
     alert('Verified, information stored')
@@ -90,7 +89,6 @@ export default function ProfileForm({ params } : PageProps) {
 
 
   const handleSelfVerify = () => {
-    setVerifyingSelf(true)
     const userId = session!.address
     const app = new SelfAppBuilder({
       version: 2,
@@ -116,19 +114,14 @@ export default function ProfileForm({ params } : PageProps) {
     }).build()
 
     setSelfApp(app)
+    setDeeplink(getUniversalLink(app));
     setShowQRDialog(true)
   }
 
   const handleMobileVerify = async () => {
     if (selfApp) {
       try {
-        const success = await openSelfApp(selfApp)
-        if (!success) {
-          const message = lang === 'es' 
-            ? 'No se pudo abrir la aplicación Self. Asegúrate de que esté instalada.'
-            : 'Unable to open Self app. Please make sure it is installed.'
-          alert(message)
-        }
+        window.open(deeplink, '_blank');
       } catch (error) {
         console.error('Error opening Self app:', error)
         const message = lang === 'es'
@@ -410,7 +403,7 @@ export default function ProfileForm({ params } : PageProps) {
                 </select>
               </div>
             </div>
-
+            <div>deeplink es {deeplink}</div>
             <QRCodeDialog
               open={showQRDialog}
               onOpenChange={setShowQRDialog}
@@ -433,18 +426,9 @@ export default function ProfileForm({ params } : PageProps) {
               <Button
                 type="button"
                 onClick={handleSelfVerify}
-                disabled={verifyingSelf}
               >
                 Verify with self
               </Button>
-
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-black bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Reset
-              </button>
             </div>
           </form>
         </div>
