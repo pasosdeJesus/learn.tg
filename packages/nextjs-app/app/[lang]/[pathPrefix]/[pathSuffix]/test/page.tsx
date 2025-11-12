@@ -312,7 +312,7 @@ export default function Page({params} : {
   }
 
   // Check if puzzle is solved
-  const isPuzzleSolved = () => {
+  const isPuzzleCompleted = () => {
     if (grid.length == 0) {
       return false
     }
@@ -464,12 +464,12 @@ export default function Page({params} : {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div>{uiMsg[locale].crossword}</div>
-                    {isPuzzleSolved() && 
+                    {isPuzzleCompleted() && 
                       <div>
                         <Button className="text-primary-foreground!" onClick={handleSubmit}>{uiMsg[locale].submit}</Button>
                       </div>
                     }
-                    {!isPuzzleSolved() && 
+                    {!isPuzzleCompleted() && 
                       <div>
                         <Button disabled={true} className="primary">{uiMsg[locale].submit}</Button>
                       </div>
