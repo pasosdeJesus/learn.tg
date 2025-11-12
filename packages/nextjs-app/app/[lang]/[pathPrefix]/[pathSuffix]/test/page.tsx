@@ -354,8 +354,8 @@ export default function Page({params} : {
     }
     if (session && address && session.address &&
         session.address == address) {
-      data.walletAddress=session.address
-      data.token=gCsrfToken
+      data.walletAddress = session.address
+      data.token = gCsrfToken
     }
     console.log(`Fetching ${urlc}`)
     axios.post(urlc, data, {
@@ -392,8 +392,8 @@ export default function Page({params} : {
             credits: "Credits and License of this course"
           }
         }
-        if (response.data.probs && response.data.probs.length > 0) {
-          setFlashError(uiMsg[locale].problemWords + response.data.probs.join(", "))
+        if (response.data.mistakesInCW && response.data.mistakesInCW.length > 0) {
+          setFlashError(uiMsg[locale].problemWords + response.data.mistakesInCW.join(", "))
         } else {
           let msg = response.data.message || ""
           let scholarship = response.data.scholarshipResult

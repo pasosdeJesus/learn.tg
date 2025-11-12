@@ -37,7 +37,7 @@ export default function Footer({lang = "en"}) {
           </div>
 
           {/* Columna 2 */}
-          <div className="justify-self-end">
+          <div className="justify-self-end" style={{"margin-right": "85px"}}>
             <h3 className="font-semibold !text-white mb-4">{ lang == "es" ? "Síguenos" : "Follow us"}</h3>
             <div className="flex space-x-4">
 
