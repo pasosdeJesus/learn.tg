@@ -75,10 +75,14 @@ export async function POST(req: Request) {
         throw new Error("User not found");
       }
       console.log("result.discloseOutput.nationality=", result.discloseOutput.nationality)
-      let qCountryId = await sql<any>`select id from msip_pais where lower(alfa3) = lower(${result.discloseOutput.nationality})`.execute(db)
+      let ISOcode = result.discloseOutput.nationality
+      if (ISOcode == "D<<") {
+        ISOcode = "DEU"
+      }
+      let qCountryId = await sql<any>`select id from msip_pais where lower(alfa3) = lower(${ISOcode})`.execute(db)
       console.log("qCountryId=", qCountryId)
-      if (qCountryId.rows[0]?.id === null) {
-        throw new Error("Country not found");
+      if (qCountryId.rows.length != 1 || qCountryId.rows[0]?.id === null) {
+        throw new Error(`Country ${ISOcode} not found`);
       }
 
       let uUsuario:Updateable<Usuario> = {

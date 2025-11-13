@@ -403,7 +403,6 @@ export default function ProfileForm({ params } : PageProps) {
                 </select>
               </div>
             </div>
-            <div>deeplink es {deeplink}</div>
             <QRCodeDialog
               open={showQRDialog}
               onOpenChange={setShowQRDialog}

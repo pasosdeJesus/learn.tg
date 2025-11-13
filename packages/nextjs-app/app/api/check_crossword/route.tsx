@@ -48,7 +48,6 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   console.log("** OJO check_crossword POST")
-  console.log(1/0)
 
   let retMessage = ""
   const removeAccents = (s: string) => s.replace('á', 'A').
@@ -165,10 +164,10 @@ export async function POST(req: NextRequest) {
           celo : celoSepolia,
           transport: http(rpcUrl)
         }) : undefined
-        console.log("*** walletClient=", walletClient)
+        //console.log("*** walletClient=", walletClient)
         const referralTag = account ? getReferralTag({
-          user: walletAddress,
-          consumer: account.address,
+          user: account.address,
+          consumer: walletAddress,
         }) : undefined
         console.log("*** referralTag=", referralTag)
 
@@ -179,9 +178,11 @@ export async function POST(req: NextRequest) {
             abi: ScholarshipVaultsAbi as any,
             client: { public: publicClient, wallet: walletClient }
           })
-          console.log("*** contract=", contract)
+          //console.log("*** contract=", contract)
           const courseIdArg = BigInt(courseId)
+          console.log("*** courseIdArg=", courseIdArg)
           const guideIdArg = BigInt(guideId)
+          console.log("*** guideIdArg=", guideIdArg)
           // Existe la boveda
           const vault:any = await contract.read.getVault([
             courseIdArg
@@ -192,6 +193,7 @@ export async function POST(req: NextRequest) {
             const canSubmit = await contract.read.studentCanSubmit([
               courseIdArg, walletAddress as Address
             ]) as boolean
+            console.log("** canSubmit=", canSubmit)
             if (canSubmit) {
               // Enviar resultado
               try {
@@ -217,11 +219,7 @@ export async function POST(req: NextRequest) {
                   data: txData as Hex,
                 });
                 console.log("tx=", tx)
-                const receipt = await walletClient.waitForTransactionReceipt(
-                  {tx}
-                );
-                console.log("receipt=", receipt)
-                const transactionUrl = `${process.env.NEXT_PUBLIC_EXPLORER_TX}${receipt?.transactionHash}`;
+                const transactionUrl = `${process.env.NEXT_PUBLIC_EXPLORER_TX}${tx}`;
                  const chainId = await walletClient.getChainId()
                  console.log("chainId=", chainId)
 
@@ -255,6 +253,7 @@ export async function POST(req: NextRequest) {
         }
     }
 
+    console.log("Retornando mensaje ", retMessage)
     return NextResponse.json(
       {
         mistakesInCW: mistakesInCW,
