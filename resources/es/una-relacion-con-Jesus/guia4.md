@@ -44,15 +44,15 @@ de Felipe bautizando al Eunuco")
 
 1. De acuerdo al versículo 26 un ___ le hablo a Felipe. (angel)
 2. El nombre de la reina de los etiopes era ___. (Candace)
-3. El eunuco estaba leyendo al profeta ___. (Isaías)
+3. El eunuco estaba leyendo al profeta ___ --con tilde. (Isaías)
 4. En el versículo 29 el Espíritu le dice a Felipe "___ y 
-   júntate a ese carro." (Acércate)
+   júntate a ese carro." --con tilde (Acércate)
 5. Completa la frase:  ¿entiendes lo que ___? (lees)
 6. En el versículo 31 el eunuco responde "¿Y cómo podré, si alguno 
    no me ___? (enseñare)
-7. De acuerdo al texto la profecía hablaba de ___. (Jesús)
-8. Felipe ___ al eunuco. (bautizó)
-9. De acuerdo al versículo 39 el ___ del Señor arrebató a Felipe. (Espíritu)
+7. De acuerdo al texto la profecía hablaba de ___ --con tilde. (Jesús)
+8. Felipe ___ al eunuco --con tilde. (bautizó)
+9. De acuerdo al versículo 39 el ___ del Señor arrebató a Felipe --con tilde. (Espíritu)
 
 ## 2. Reflexión
 

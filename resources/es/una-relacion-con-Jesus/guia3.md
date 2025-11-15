@@ -33,12 +33,12 @@
 
 1. ¿Quién había muerto? ___ (Lazaro)
 2. ¿De acuerdo con la lectura  quién sale al encuentro con Jesús? ___ (Marta)
-3. Completa la respuesta de Jesús en el versículo 23: Tu hermano ___
-   (resucitará)
-4. Completa la respuesta de Jesús en el versículo 24: Yo sé que resucitará 
+3. Completa la respuesta de Jesús en el versículo 23: Tu hermano ___ --con
+   tilde. (resucitará)
+4. Completa la respuesta de Marta en el versículo 24: Yo sé que resucitará 
    en la resurrección, en el dia ___ (postrero)
 5. Completa: Yo soy la resurrección y la vida; el que cree en mí,
-  aunque esté muerto, ___ (vivirá)
+  aunque esté muerto, ___ --con tilde. (vivirá)
 6. ¿Cuál era la distancia aproximada en estadios entre Betania y Jerusalén? 
    ___ (quince)
 7. Sabiendo que Jesús estaba en Jerusalén antes de visitar a María,
