@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
           celo : celoSepolia,
           transport: http(rpcUrl)
         })
-        const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY as string | undefined
+        const privateKey = process.env.PRIVATE_KEY as string | undefined
         let account: ReturnType<typeof privateKeyToAccount> | undefined
         if (privateKey) {
           try {
