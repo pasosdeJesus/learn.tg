@@ -26,8 +26,8 @@ export async function GET(req: NextRequest) {
     if (process.env.NEXT_PUBLIC_DEPLOYED_AT == undefined) {
       retMessage += "\nNEXT_PUBLIC_DEPLOYED_AT undefined"
     }
-    if (process.env.NEXT_PUBLIC_PRIVATE_KEY == undefined) {
-      retMessage += "\nNEXT_PUBLIC_PRIVATE_KEY undefined"
+    if (process.env.PRIVATE_KEY == undefined) {
+      retMessage += "\nPRIVATE_KEY undefined"
     }
     if (process.env.NEXT_PUBLIC_RPC_URL == undefined) {
       retMessage += "\nNEXT_PUBLIC_RPC_URL undefined"
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
       })
       console.log("** publicClient=", publicClient)
 
-      const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY as string | undefined
+      const privateKey = process.env.PRIVATE_KEY as string | undefined
       let account: ReturnType<typeof privateKeyToAccount> | undefined
       if (privateKey) {
         try {
