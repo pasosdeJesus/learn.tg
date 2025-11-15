@@ -68,6 +68,7 @@ export default function Page({params} : {
   const [placements, setPlacements] = useState<WordPlacement[]>([])
   const [flashError, setFlashError] = useState("")
   const [flashSuccess, setFlashSuccess] = useState("")
+  const [flashWarning, setFlashWarning] = useState("")
   const [gCsrfToken, setGCsrfToken] = useState("")
   const [prevRow, setPrevRow] = useState(-1)
   const [prevCol, setPrevCol] = useState(-1)
@@ -326,6 +327,7 @@ export default function Page({params} : {
   const handleSubmit = () => {
     setFlashSuccess("")
     setFlashError("")
+    setFlashWarning("")
     console.log(grid)
     console.log(placements.length)
 
@@ -393,14 +395,17 @@ export default function Page({params} : {
           }
         }
         if (response.data.mistakesInCW && response.data.mistakesInCW.length > 0) {
-          setFlashError(uiMsg[locale].problemWords + response.data.mistakesInCW.join(", "))
+          setFlashError(
+            uiMsg[locale].problemWords + response.data.mistakesInCW.join(", ") +
+              "\n" + (response.data.message || "")
+          )
         } else {
           let msg = response.data.message || ""
           let scholarship = response.data.scholarshipResult
           if (scholarship) {
             setFlashSuccess(msg + uiMsg[locale].scholarshipSent + JSON.stringify(scholarship))
           } else {
-            setFlashSuccess(msg)
+            setFlashWarning(msg)
           }
         }
       }
@@ -477,6 +482,7 @@ export default function Page({params} : {
                   </CardTitle>
 
                   {flashError != "" && <div className="bg-red-500">{flashError}</div>}
+                  {flashWarning != "" && <div className="bg-orange-500">{flashWarning}</div>}
                   {flashSuccess != "" && <div className="bg-green-500">{flashSuccess}</div>}
                 </CardHeader>
                 <CardContent>

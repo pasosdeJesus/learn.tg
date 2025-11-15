@@ -38,7 +38,6 @@ interface Cell {
   belongsToWords: number[]
 }
 
-
 export async function GET(req: NextRequest) {
   return NextResponse.json(
     {error: "Expecting POST request"},
@@ -82,22 +81,24 @@ export async function POST(req: NextRequest) {
     // Mensajes localizados
     const msg = {
       es: {
-        noWallet: "La respuesta no será calificada ni se buscarán becas posibles.",
-        tokenMismatch: "El token almacenado para el usuario no coincide con el token proporcionado.",
-        correct: "¡Respuesta correcta! Se ha enviado tu resultado para beca.",
-        submitError: "No se pudo enviar el resultado para beca: ",
-        cannotSubmit: "No puedes enviar resultado para beca en este momento.",
+        cannotSubmit: "Estás es un periodo de espera de 24 horas desde tu último envío para este curso. No puedes enviar resultado para beca en este momento.",
         contractError: "No se pudo conectar con el contrato de becas.",
-        invalidKey: "Clave privada inválida"
+        correct: "¡Respuesta correcta! Se ha enviado tu resultado para beca, por favor espera 24 horas antes de volver a enviar para este curso.",
+        incorrect: "Respuesta equivocada. Se ha enviado tu resultado al blockchain, por favor espera 24 horas antes de volver a enviar para este curso.",
+        invalidKey: "Clave privada inválida",
+        noWallet: "La respuesta no será calificada ni se buscarán becas posibles.",
+        submitError: "No se pudo enviar el resultado para beca: ",
+        tokenMismatch: "El token almacenado para el usuario no coincide con el token proporcionado.",
       },
       en: {
-        noWallet: "Your answer will not be graded nor will possible scholarships be sought.",
-        tokenMismatch: "Token stored for user doesn't match given token.",
-        correct: "Correct answer! Your result has been submitted for scholarship.",
-        submitError: "Could not submit result for scholarship: ",
-        cannotSubmit: "You cannot submit a scholarship result at this time.",
+        cannotSubmit: "You are in a waiting period of 24 hours since our last submission. You cannot submit a scholarship result at this time.",
         contractError: "Could not connect to scholarship contract.",
-        invalidKey: "Invalid private key"
+        correct: "Correct answer! Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
+        incorrect: "Wrong answer. Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
+        invalidKey: "Invalid private key",
+        noWallet: "Your answer will not be graded nor will possible scholarships be sought.",
+        submitError: "Could not submit result for scholarship: ",
+        tokenMismatch: "Token stored for user doesn't match given token.",
       }
     }
     const locale = lang === "es" ? "es" : "en"
@@ -125,6 +126,7 @@ export async function POST(req: NextRequest) {
               removeAccents(grid[nrow][ncol].userInput.toUpperCase()) !=
             removeAccents(word[j].toUpperCase())
             ) {
+              console.log(`** Reviewing answer, problem in word ${i+1} in position ${j}, received ${removeAccents(grid[nrow][ncol].userInput.toUpperCase())} but expected ${removeAccents(word[j].toUpperCase())}`)
               if (!mistakesInCW.includes(i+1)) {
                 mistakesInCW.push(i+1)
               }
@@ -166,7 +168,7 @@ export async function POST(req: NextRequest) {
         }) : undefined
         //console.log("*** walletClient=", walletClient)
         const referralTag = account ? getReferralTag({
-          user: account.address,
+          user: '0x358643bAdcC77Cccb28A319abD439438A57339A7',
           consumer: walletAddress,
         }) : undefined
         console.log("*** referralTag=", referralTag)
@@ -220,24 +222,24 @@ export async function POST(req: NextRequest) {
                 });
                 console.log("tx=", tx)
                 const transactionUrl = `${process.env.NEXT_PUBLIC_EXPLORER_TX}${tx}`;
-                 const chainId = await walletClient.getChainId()
-                 console.log("chainId=", chainId)
+                const chainId = await walletClient.getChainId()
+                console.log("chainId=", chainId)
 
-                 if (chainId == 42220) { // Celo mainnet
-                   const sr = await submitReferral({
-                     txHash: tx,
-                     chainId: chainId,
-                   })
+                if (chainId == 42220) { // Celo mainnet
+                  const sr = await submitReferral({
+                    txHash: tx,
+                    chainId: chainId,
+                  })
 
-                   console.log("sr=", sr)
-                 }
+                  console.log("sr=", sr)
+                }
 
-                /*const tx = await contract.write.submitGuideResult([
-                  courseIdArg, guideIdArg, walletAddress as Address,
-                  mistakesInCW.length == 0
-                ]) */
                 scholarshipResult = tx
-                retMessage += "\n" + msg[locale].correct
+                if (mistakesInCW.length == 0) {
+                  retMessage += "\n" + msg[locale].correct
+                } else {
+                  retMessage += "\n" + msg[locale].incorrect
+                }
               } catch (err) {
                 retMessage += "\n" + msg[locale].submitError + err
               }
