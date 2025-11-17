@@ -9,6 +9,7 @@ yarn install
 mkdir tmpart
 cd node_modules/@nomicfoundation/solidity-analyzer/
 yarn 
+yarn build
 cd ../../..
 cp node_modules/@nomicfoundation/solidity-analyzer/solidity-analyzer.openbsd-x64.node tmpart/
 sed -e "s/freebsd/openbsd/g" node_modules/@nomicfoundation/solidity-analyzer/index.js > tmpart/index-s.js
@@ -17,7 +18,6 @@ cp .env.template .env
 Edit .env and add mnemonic of wallet to use, private key to use and celoscan API
 Key.
 
-yarn build
 
 cd node_modules/@nomicfoundation/edr
 yarn

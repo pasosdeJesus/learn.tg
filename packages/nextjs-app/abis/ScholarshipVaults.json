@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_usdtTokenAddress",
+        "name": "_usdtToken",
         "type": "address"
       }
     ],
@@ -14,7 +14,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "courseId",
         "type": "uint256"
@@ -33,19 +33,44 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "courseId",
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "guideNumber",
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
+        "internalType": "address",
+        "name": "student",
+        "type": "address"
+      }
+    ],
+    "name": "ScholarshipAlreadyPaid",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "guideNumber",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "student",
         "type": "address"
@@ -57,14 +82,57 @@
         "type": "uint256"
       }
     ],
-    "name": "ScholarshipReleased",
+    "name": "ScholarshipClaimed",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "guideNumber",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "student",
+        "type": "address"
+      },
+      {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "fullAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "actualAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "profileScore",
+        "type": "uint8"
+      }
+    ],
+    "name": "ScholarshipPrepared",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "uint256",
         "name": "courseId",
         "type": "uint256"
@@ -78,6 +146,37 @@
     ],
     "name": "VaultCreated",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "VERSION",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "guideNumber",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimScolarship",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -149,50 +248,31 @@
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "guideNumber",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "student",
         "type": "address"
       }
     ],
-    "name": "getStudentCooldown",
+    "name": "getStudentGuideStatus",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "courseId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getVault",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "courseIdReturn",
+        "name": "paidAmount",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "balance",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountPerGuide",
+        "name": "pendingAmount",
         "type": "uint256"
       },
       {
         "internalType": "bool",
-        "name": "exists",
+        "name": "canSubmit",
         "type": "bool"
       }
     ],
@@ -220,9 +300,9 @@
     "name": "guidePaid",
     "outputs": [
       {
-        "internalType": "bool",
+        "internalType": "uint256",
         "name": "",
-        "type": "bool"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -236,6 +316,35 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "pendingScholarship",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -310,22 +419,14 @@
         "internalType": "bool",
         "name": "isPerfect",
         "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "profileScore",
+        "type": "uint8"
       }
     ],
     "name": "submitGuideResult",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_newUSDTAddress",
-        "type": "address"
-      }
-    ],
-    "name": "updateUSDTAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

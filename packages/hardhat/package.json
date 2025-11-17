@@ -37,7 +37,7 @@
     "clean": "hardhat clean",
     "run:node": "hardhat node",
     "test": "hardhat test",
-    "deploy": "bin/deployScolarshipVault",
+    "deploy": "bin/deployScholarshipVault",
     "verify-deployment": "hardhat run scripts/verifyDeployment.ts --network celoSepolia",
     "deploy-mock-usdt": "bin/deployMockUsdt",
     "verify-mock-usdt": "hardhat run scripts/verifyMockUSDT.ts --network celoSepolia",
