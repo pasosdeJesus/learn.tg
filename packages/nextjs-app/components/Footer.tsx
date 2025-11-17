@@ -3,24 +3,37 @@ import Link from 'next/link';
 
 export default function Footer({ lang = "en" }) {
   return (
-    <footer className="bg-gray-800 text-white py-8">
+    <footer className="bg-gray-800 text-white py-8 relative">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap justify-between">
-          <div className="w-full md:w-1/3 mb-4 md:mb-0">
-            <h3 className="text-lg font-semibold mb-2">Learn through games</h3>
-            <p className="text-gray-400">
-              {lang === "es" ? "Una plataforma para aprender jugando." : "A platform for learning through games."}
-            </p>
+
+          <div
+            className="absolute -right-8 bottom-8 px-12 py-1 text-white font-semibold text-sm shadow-md"
+            style={{
+              backgroundColor: '#90EE90',
+              transform: 'rotate(-45deg)',
+              transformOrigin: 'center',
+              zIndex: 50
+            }}
+          >
+            Let Gaza Live
           </div>
-          <div className="w-full md:w-1/3 mb-4 md:mb-0">
-            <h3 className="text-lg font-semibold mb-2">Links</h3>
-            <ul>
-              <li><Link href="/" className="text-gray-400 hover:text-white">{lang === "es" ? "Inicio" : "Home"}</Link></li>
-              <li><Link href={`/${lang}/profile`} className="text-gray-400 hover:text-white">{lang === "es" ? "Perfil" : "Profile"}</Link></li>
-            </ul>
+
+          <div className="justify-self-start">
+            { lang == "es" &&
+              <div className="pt-4">
+                <a href="https://t.me/learn_t_g" className="hover:underline !text-white font-bold">Grupo en Telegram</a>
+              </div>
+            }
+            { lang != "es" &&
+              <div className="pt-4">
+                Join <a href="https://t.me/learn_t_g" className="hover:underline !text-white font-bold">Telegram group</a>
+              </div>
+            }
           </div>
+
           <div className="w-full md:w-1/3">
-            <h3 className="text-lg font-semibold mb-2">{lang === "es" ? "Síguenos" : "Follow us"}</h3>
+            <h3 className="text-lg !text-accent font-semibold mb-2">{lang === "es" ? "Síguenos" : "Follow us"}</h3>
             <div className="flex space-x-4">
               <a href="https://twitter.com/pasosdeJesus" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -29,7 +42,7 @@ export default function Footer({ lang = "en" }) {
               </a>
               <a href="https://gitlab.com/pasosdeJesus/" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M22.42 6.64a1.84 1.84 0 00-1.5-1.5L12 2 3.08 5.14a1.84 1.84 0 00-1.5 1.5L.02 15.4a1.84 1.84 0 001.5 1.5L12 22l8.92-5.14a1.84 1.84 0 001.5-1.5l1.56-8.72zM12 19.5L6.5 16.82 4.75 12 12 4.5l5.5 2.68L19.25 12 12 19.5z" />
+                  <path d="m15.734 6.1-.022-.058L13.534.358a.57.57 0 0 0-.563-.356.6.6 0 0 0-.328.122.6.6 0 0 0-.193.294l-1.47 4.499H5.025l-1.47-4.5A.572.572 0 0 0 2.47.358L.289 6.04l-.022.057A4.044 4.044 0 0 0 1.61 10.77l.007.006.02.014 3.318 2.485 1.64 1.242 1 .755a.67.67 0 0 0 .814 0l1-.755 1.64-1.242 3.338-2.5.009-.007a4.05 4.05 0 0 0 1.34-4.668Z" />
                 </svg>
               </a>
               <a href="https://github.com/pasosdeJesus" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white">
