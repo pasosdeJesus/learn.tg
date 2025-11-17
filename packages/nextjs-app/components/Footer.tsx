@@ -8,12 +8,14 @@ export default function Footer({ lang = "en" }) {
         <div className="flex flex-wrap justify-between">
 
           <div
-            className="absolute -right-8 bottom-8 px-12 py-1 text-white font-semibold text-sm shadow-md"
+            className="absolute text-center -right-2 bottom-12  w-35 h-8 overflow-hidden pointer-events-none"
             style={{
               backgroundColor: '#90EE90',
               transform: 'rotate(-45deg)',
               transformOrigin: 'center',
-              zIndex: 50
+              zIndex: 50,
+              border: '2px solid #228B22',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
             }}
           >
             Let Gaza Live
@@ -27,7 +29,7 @@ export default function Footer({ lang = "en" }) {
             }
             { lang != "es" &&
               <div className="pt-4">
-                Join <a href="https://t.me/learn_t_g" className="hover:underline !text-white font-bold">Telegram group</a>
+                <a href="https://t.me/learn_t_g" className="hover:underline !text-white font-bold">Telegram group</a>
               </div>
             }
           </div>

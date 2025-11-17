@@ -37,7 +37,7 @@ export default function Header({ lang = "en" }) {
             <Link href="/" className="flex items-center gap-2">
               <Image src="/logo-learntg.png" alt="logo" width={32} height={32} className="rounded-full" />
               <span className="text-gray-800 font-semibold text-lg">
-                {lang === "es" ? "Aprender jugando" : "Learn through games"}
+                {lang === "es" ? "Aprender mediante juegos" : "Learn through games"}
               </span>
             </Link>
           </div>
