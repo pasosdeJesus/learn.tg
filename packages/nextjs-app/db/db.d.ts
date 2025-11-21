@@ -1268,6 +1268,22 @@ export interface Usuario {
   updated_at: Timestamp | null;
 }
 
+export interface UsuarioCoursecompleted {
+  points: number;
+  proyectofinanciero_id: number;
+  usuario_id: number;
+}
+
+export interface UsuarioGuidepaid {
+  actividadml_id: number;
+  amount_pending: number;
+  amountpaid: number;
+  points: number;
+  profilescore: number;
+  proyectofinanciero_id: number;
+  usuario_id: number;
+}
+
 export interface DB {
   ar_internal_metadata: ArInternalMetadata;
   billetera_usuario: BilleteraUsuario;
@@ -1383,4 +1399,6 @@ export interface DB {
   religion: Religion;
   schema_migrations: SchemaMigrations;
   usuario: Usuario;
+  usuario_coursecompleted: UsuarioCoursecompleted;
+  usuario_guidepaid: UsuarioGuidepaid;
 }

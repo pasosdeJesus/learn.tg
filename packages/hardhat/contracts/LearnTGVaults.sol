@@ -22,7 +22,7 @@ abstract contract ReentrancyGuard {
     }
 }
 
-contract ScholarshipVaults is ReentrancyGuard {
+contract LearnTGVaults is ReentrancyGuard {
   uint256 public constant VERSION = 2;
   address public immutable owner;
   IERC20 public immutable usdtToken;

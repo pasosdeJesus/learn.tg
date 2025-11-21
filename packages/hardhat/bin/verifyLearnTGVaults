@@ -1,0 +1,4 @@
+#!/bin/sh
+
+. ./.env
+npx hardhat run scripts/verifyDeployment.ts --network $NETWORK

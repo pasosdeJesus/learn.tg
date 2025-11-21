@@ -37,10 +37,10 @@
     "clean": "hardhat clean",
     "run:node": "hardhat node",
     "test": "hardhat test",
-    "deploy": "bin/deployScholarshipVault",
-    "verify-deployment": "hardhat run scripts/verifyDeployment.ts --network celoSepolia",
+    "deploy": "bin/deployLearnTGVaults",
+    "verify-deployment": "bin/verifyLearnTGVaults",
     "deploy-mock-usdt": "bin/deployMockUsdt",
-    "verify-mock-usdt": "hardhat run scripts/verifyMockUSDT.ts --network celoSepolia",
+    "verify-mock-usdt": "bin/verifyMockUSDT",
     "contract-verification": "bin/contractVerification",
     "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'",
     "sync:abis": "node sync-abis.mjs"

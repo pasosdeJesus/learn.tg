@@ -16,7 +16,7 @@ export default defineConfig({
     }),
   }),
   migrations: {
-    migrationFolder: "migrations",
+    migrationFolder: "db/migrations",
     getMigrationPrefix: getKnexTimestampPrefix,
   },
 })
