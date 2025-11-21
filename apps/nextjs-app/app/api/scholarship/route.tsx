@@ -11,7 +11,7 @@ import type { Address } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
-import ScholarshipVaultsAbi from '@/abis/ScholarshipVaults.json'
+import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import type { DB, BilleteraUsuario } from '@/db/db.d.ts';
 
 export async function GET(req: NextRequest) {
@@ -125,12 +125,12 @@ export async function GET(req: NextRequest) {
       } else if (walletClient) {
         const contract = getContract({
           address: contractAddress,
-          abi: ScholarshipVaultsAbi as any,
+          abi: LearnTGVaultsAbi as any,
           client: { public: publicClient, wallet: walletClient }
         })
  
         const courseIdArg = courseId && /^\d+$/.test(courseId) ? BigInt(courseId) : courseId
-        const vaultArray = await contract.read.getVault([courseIdArg]) as any
+        const vaultArray = await contract.read.vaults([courseIdArg]) as any
         console.log("** vaultArray=", vaultArray)
         const vault = {
           courseId: Number(vaultArray[0]),

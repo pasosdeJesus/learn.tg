@@ -11,32 +11,32 @@ import { SessionProvider } from 'next-auth/react'
 
 interface ExtendedWindow extends Window {
   ethereum?: {
-    selectedAddress?: string;
+    selectedAddress?: string
   }
 }
-import { AppProps } from 'next/app';
+import { AppProps } from 'next/app'
 import {
   connectorsForWallets,
   lightTheme,
   RainbowKitProvider,
-} from '@rainbow-me/rainbowkit';
-import '@rainbow-me/rainbowkit/styles.css';
+} from '@rainbow-me/rainbowkit'
+import '@rainbow-me/rainbowkit/styles.css'
 import { 
   injectedWallet,
   metaMaskWallet,
   okxWallet,
   walletConnectWallet,
 
-} from '@rainbow-me/rainbowkit/wallets';
-import { RainbowKitSiweNextAuthProvider, type GetSiweMessageOptions } from '@rainbow-me/rainbowkit-siwe-next-auth';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createConfig, http, useAccount, WagmiProvider } from 'wagmi';
-import { celo, celoSepolia } from 'wagmi/chains';
-import { Address } from 'viem';
+} from '@rainbow-me/rainbowkit/wallets'
+import { RainbowKitSiweNextAuthProvider, type GetSiweMessageOptions } from '@rainbow-me/rainbowkit-siwe-next-auth'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { createConfig, http, useAccount, WagmiProvider } from 'wagmi'
+import { celo, celoSepolia } from 'wagmi/chains'
+import { Address } from 'viem'
 
 interface RainbowKitProviderProps {
-  children: React.ReactNode;
-  autoConnect?: boolean;
+  children: React.ReactNode
+  autoConnect?: boolean
 }
 
 const connectors = connectorsForWallets(
@@ -50,7 +50,7 @@ const connectors = connectorsForWallets(
     appName: process.env.NEXT_PUBLIC_APPNAME ?? "Learn Through Games",
     projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? '0123',
   }
-);
+)
 
 const config = createConfig({
   connectors,
@@ -62,12 +62,12 @@ const config = createConfig({
     [celo.id]: http(),
     [celoSepolia.id]: http(),
   },
-});
+})
 
 
 const getSiweMessageOptions: GetSiweMessageOptions = () => {
   // Check if ethereum is available in window object
-  const selectedAddress = typeof window !== 'undefined' && (window as ExtendedWindow).ethereum?.selectedAddress || '0x0';
+  const selectedAddress = typeof window !== 'undefined' && (window as ExtendedWindow).ethereum?.selectedAddress || '0x0'
   const referralTag = getReferralTag({
     user: selectedAddress as Address,
     consumer: '0x358643badcc77cccb28a319abd439438a57339a7',
@@ -80,7 +80,7 @@ const getSiweMessageOptions: GetSiweMessageOptions = () => {
   return msg
 }
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient()
 
 // Taking ideas of
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/providers/web3-providers.tsx
@@ -107,5 +107,5 @@ export function AppProvider(props: RainbowKitProviderProps) {
         </QueryClientProvider>
       </SessionProvider>
     </WagmiProvider>
-  );
+  )
 }

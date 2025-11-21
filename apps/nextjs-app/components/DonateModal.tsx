@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import { formatUnits, parseUnits, type Address } from 'viem'
-import ScholarshipVaultsAbi from '@/abis/ScholarshipVaults.json'
+import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { Button } from '@/components/ui/button'
 
 const erc20Abi = [
@@ -79,7 +79,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
           const approveGas = await publicClient.estimateContractGas({ address: usdtAddress, abi: erc20Abi, functionName: 'approve', account: address, args: [vaultAddress, value] })
           totalGas += approveGas
         }
-        const depositGas = await publicClient.estimateContractGas({ address: vaultAddress, abi: ScholarshipVaultsAbi as any, functionName: 'deposit', account: address, args: [BigInt(courseId), value] })
+        const depositGas = await publicClient.estimateContractGas({ address: vaultAddress, abi: LearnTGVaultsAbi as any, functionName: 'deposit', account: address, args: [BigInt(courseId), value] })
         totalGas += depositGas
         const cost = totalGas * gasPrice
         setGasState(celoBalance > cost ? 'ok' : 'no-gas')
@@ -105,7 +105,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
         setStatus({ type: 'info', text: 'Approval confirmed. Depositing...' })
       }
       console.log('Donating raw (scaled) amount:', parsed.toString())
-      const depositHash = await walletClient.writeContract({ address: vaultAddress, abi: ScholarshipVaultsAbi as any, functionName: 'deposit', args: [BigInt(courseId), parsed] })
+      const depositHash = await walletClient.writeContract({ address: vaultAddress, abi: LearnTGVaultsAbi as any, functionName: 'deposit', args: [BigInt(courseId), parsed] })
       const receipt = await publicClient.waitForTransactionReceipt({ hash: depositHash })
       if (receipt.status !== 'success') throw new Error('Deposit failed')
       await loadData()

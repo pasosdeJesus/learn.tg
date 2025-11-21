@@ -10,6 +10,7 @@ const NEXTJS_ABI_PATH = '../nextjs-app/abis'
 const NEXTJS_ENV_PATH = '../nextjs-app/.env'
 
 const env_replacements = [
+  ['DEPLOYED_AT_1', 'NEXT_PUBLIC_DEPLOYED_AT_1'],
   ['DEPLOYED_AT', 'NEXT_PUBLIC_DEPLOYED_AT'],
   ['USDT_ADDRESS', 'NEXT_PUBLIC_USDT_ADDRESS'],
   ['USDT_DECIMALS', 'NEXT_PUBLIC_USDT_DECIMALS'],

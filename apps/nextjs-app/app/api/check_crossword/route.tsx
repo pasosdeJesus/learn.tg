@@ -19,7 +19,7 @@ import { getReferralTag, submitReferral } from '@divvi/referral-sdk'
 
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 import type { DB } from '@/db/db.d.ts'
-import ScholarshipVaultsAbi from '@/abis/ScholarshipVaults.json'
+import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 
 interface WordPlacement {
   word: string
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
         if (account && contractAddress && walletClient) {
           const contract = getContract({
             address: contractAddress,
-            abi: ScholarshipVaultsAbi as any,
+            abi: LearnTGVaultsAbi as any,
             client: { public: publicClient, wallet: walletClient }
           })
           //console.log("*** contract=", contract)
@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
           const guideIdArg = BigInt(guideId)
           console.log("*** guideIdArg=", guideIdArg)
           // Existe la boveda
-          const vault:any = await contract.read.getVault([
+          const vault:any = await contract.read.vaults([
             courseIdArg
           ])
           console.log("*** vault=", vault)
@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
               // Enviar resultado
               try {
                 const encodedData = encodeFunctionData({
-                  abi: ScholarshipVaultsAbi,
+                  abi: LearnTGVaultsAbi,
                   functionName: 'submitGuideResult',
                   args: [
                     courseIdArg,
