@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { Kysely, PostgresDialect } from 'kysely'
 import pg from 'pg'
+import type { Address } from 'viem';
 import { 
   createPublicClient, 
   createWalletClient, 
@@ -13,6 +14,13 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia, base } from 'viem/chains' // o la chain que uses
 
 import { newKyselyPostgresql } from '../../.config/kysely.config.ts'
+import ScholarshipVaultsV1Abi from 
+  '../../abis/ScholarshipVaults-v1.json' with { type: "json" }
+import Erc20Abi from 
+  '../../abis/IERC20.json' with { type: "json" }
+import LearnTGVaultsAbi from 
+  '../../abis/LearnTGVaults.json' with { type: "json" }
+
 
 export async function up(db: Kysely<any>): Promise<void> {
 
@@ -24,79 +32,71 @@ export async function up(db: Kysely<any>): Promise<void> {
   const USDT_ADDRESS = process.env.NEXT_PUBLIC_USDT_ADDRESS!
   const NETWORK = process.env.NEXT_PUBLIC_NETWORK!
 
-  const client = createPublicClient({
+  const publicClient = createPublicClient({
     chain: NETWORK == "celo" ? celo : celoSepolia,
     transport: http(RPC_URL),
   })
 
-  const account = privateKeyToAccount(PRIVATE_KEY)
+  const account = privateKeyToAccount(PRIVATE_KEY as Address)
+  //console.log("OJO account=", account)
 
-  const walletClient = account ? createWalletClient({
+  const walletClient = createWalletClient({
     account,
     chain: NETWORK == "celo" ? celo : celoSepolia,
     transport: http(RPC_URL)
-  }) : undefined
+  })
   //console.log("*** walletClient=", walletClient)
   
-  const oldAbi = [ /* solo las funciones que necesitas del viejo contrato */
-    'function emergencyWithdraw(uint256 amount) external',
-    'function getContractUSDTBalance() view returns (uint256)',
-  ] as const
-
-  const newAbi = [ /* ABI completo del contrato final limpio que ya tienes */
-    'function createVault(uint256 courseId, uint256 amountPerGuide) external',
-    'function vaults(uint256 courseId) view returns (tuple(uint256 courseId, uint256 balance, uint256 amountPerGuide, bool exists))',
-    'function pendingScholarship(uint256 courseId, uint256 guideNumber, address student) view returns (uint256)',
-    'function guidePaid(uint256 courseId, uint256 guideNumber, address student) view returns (uint256)',
-    'function profileScoreAtSubmission(uint256 courseId, uint256 guideNumber, address student) view returns (uint8)',
-    'function studentCooldowns(uint256 courseId, address student) view returns (uint256)',
-  ] as const
-
-  const oldContract = { 
-    address: process.env.NEXT_PUBLIC_DEPLOYED_AT_1!, abi: oldAbi 
-  }
-  const newContract = { 
-    address: process.env.NEXT_PUBLIC_DEPLOYED_AT!, abi: newAbi 
-  }
-  const usdtContract = { 
-    address: process.env.NEXT_PUBLIC_USDT_ADDRESS!, 
-    abi: ['function transfer(address to, uint256 amount) returns (bool)'] as const 
-  }
-
   console.log('Iniciando migración con viem')
 
   console.log('1. Drenar contrato viejo')
-  const oldC = getContract({
-    address: process.env.NEXT_PUBLIC_DEPLOYED_AT_1!,
-    abi: oldAbi,
-    client: { public: client, wallet: walletClient }
+  const usdtAbi = [ 
+    {
+      constant: false,
+      inputs: [
+        { name: '_to', type: 'address' },
+        { name: '_value', type: 'uint256' },
+      ],
+      name: 'transfer',
+      outputs: [], // Note: no return value
+      payable: false,
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+  ] as const;
+  const usdtContract = getContract({
+    address: process.env.NEXT_PUBLIC_USDT_ADDRESS! as Address,
+    abi: usdtAbi as any,
+    client: { public: publicClient, wallet: walletClient }
   })
-  console.log("oldC=", oldC)
-  const oldBalance = await oldC.read.getContractUSDTBalance([])
-  console.log(oldBalance)
+  const newContract = getContract({
+    address: process.env.NEXT_PUBLIC_DEPLOYED_AT! as Address,
+    abi: LearnTGVaultsAbi as any,
+    client: { public: publicClient, wallet: walletClient }
+  })
+  const oldContract = getContract({
+    address: process.env.NEXT_PUBLIC_DEPLOYED_AT_1! as Address,
+    abi: ScholarshipVaultsV1Abi as any,
+    client: { public: publicClient, wallet: walletClient }
+  })
+  //console.log("oldContract=", oldContract)
+  const oldBalance = await oldContract.read.getContractUSDTBalance([]) || 0n
 
   if (oldBalance > 0n) {
     console.log(`Drenando ${formatUnits(oldBalance, 6)} USDT del contrato viejo...`)
-    const hash1 = await client.writeContract({
-      ...oldContract,
-      functionName: 'emergencyWithdraw',
-      args: [oldBalance],
-      account,
-    })
-    await client.waitForTransactionReceipt({ hash: hash1 })
+    const hash1 = await oldContract.write.emergencyWithdraw([oldBalance])
     console.log(`Fondos drenados: ${hash1}`)
-  }
 
-  // 2. Transferir fondos al nuevo contrato
-  if (oldBalance > 0n) {
-    const hash2 = await client.writeContract({
-      address: process.env.NEXT_PUBLIC_USDT_ADDRESS!,
-      abi: usdtContract.abi,
-      functionName: 'transfer',
-      args: [process.env.NEXT_PUBLIC_DEPLOYED_AT!, oldBalance],
+    // 2. Transferir fondos al nuevo contrato
+    const { request } = await publicClient.simulateContract({
       account,
+      address: process.env.NEXT_PUBLIC_USDT_ADDRESS!,
+      abi: usdtAbi,
+      functionName: 'transfer',
+      args: [process.env.NEXT_PUBLIC_DEPLOYED_AT!, oldBalance]
     })
-    await client.waitForTransactionReceipt({ hash: hash2 })
+    console.log("request=", request)
+    const hash2 = await walletClient.writeContract(request)
     console.log(`Fondos transferidos al nuevo contrato: ${hash2}`)
   }
 
@@ -110,26 +110,26 @@ export async function up(db: Kysely<any>): Promise<void> {
     const courseId = BigInt(c.id)
     const amount = parseUnits(c.scholarship_per_guide.toString(), 6)
 
-    const oldVault = await client.readContract({
+    const oldVault:any = await publicClient.readContract({
       ...oldContract,
       functionName: 'vaults',
       args: [courseId],
     })
 
-    const newVault = await client.readContract({
+    const newVault:any = await publicClient.readContract({
       ...newContract,
       functionName: 'vaults',
       args: [courseId],
     })
 
     if (oldVault.exists && !newVault.exists) {
-      const hash = await client.writeContract({
+      const hash = await walletClient.writeContract({
         ...newContract,
         functionName: 'createVault',
         args: [courseId, oldVault.amountPerGuide],
         account,
       })
-      await client.waitForTransactionReceipt({ hash })
+      await publicClient.waitForTransactionReceipt({ hash })
       console.log(`Vault creado: course ${c.id}`)
     }
 
@@ -152,20 +152,20 @@ export async function up(db: Kysely<any>): Promise<void> {
       ])
       .execute()
       for (const uw of uwallets) {
-        const oldGuidePaid = await client.readContract({
+        const oldGuidePaid = await publicClient.readContract({
           ...oldContract,
           functionName: 'guidePaid',
           args: [courseId, g, uw.billetera],
         })
 
-        const newGuidePaid = await client.readContract({
+        const newGuidePaid = await publicClient.readContract({
           ...newContract,
           functionName: 'guidePaid',
           args: [courseId, g, uw.billetera],
         })
 
         if (oldGuidePaid && newGuidePaid == 0) {
-          batch.push(client.writeContract({
+          batch.push(walletClient.writeContract({
             ...newContract,
             functionName: 'guidePaid',
             args: [courseId, g, uw.billetera, 
@@ -182,7 +182,7 @@ export async function up(db: Kysely<any>): Promise<void> {
           await Promise.all(batch.map(
             p => p.then(
               h => {
-                client.waitForTransactionReceipt({ hash: h })
+                publicClient.waitForTransactionReceipt({ hash: h })
                 console.log(`Hash ${h}`)
               }
             )
@@ -194,7 +194,10 @@ export async function up(db: Kysely<any>): Promise<void> {
     if (batch.length > 0) {
       await Promise.all(batch.map(
         p => p.then(
-          h => client.waitForTransactionReceipt({ hash: h })
+          h => {
+            publicClient.waitForTransactionReceipt({ hash: h })
+            console.log(`Hash ${h}`)
+          }
         )
       ))
     }
