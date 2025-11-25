@@ -109,7 +109,7 @@ contract LearnTGVaults is ReentrancyGuard {
     require(courseId > 0, "Course id must be greater than 0");
     require(amount > 0, "Deposit amount must be greater than 0");
 
-    uint256 forTeam = amount * 100 / 20;     // 20%
+    uint256 forTeam = amount / 5;     // 20% *20/100 could overflow
     uint256 forVault = amount - forTeam;
 
     vaults[courseId].balance += forVault;

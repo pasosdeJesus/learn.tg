@@ -17,6 +17,7 @@ describe("ScholarshipVaults", function () {
   const GUIDE_NUMBER_2 = 2;
   const AMOUNT_PER_GUIDE = hre.ethers.parseUnits("2", 6); // 2 USDT
   const DEPOSIT_AMOUNT = hre.ethers.parseUnits("100", 6); // 100 USDT
+  const VAULT_DEPOSIT_AMOUNT = DEPOSIT_AMOUNT * 4n / 5n; // 80%
 
   beforeEach(async function () {
     [owner, student1, student2, donor, ...addrs] = await hre.ethers.getSigners();
@@ -87,7 +88,7 @@ describe("ScholarshipVaults", function () {
         .withArgs(COURSE_ID_1, DEPOSIT_AMOUNT);
 
       const vault = await scholarshipVaults.getVault(COURSE_ID_1);
-      expect(vault.balance).to.equal(DEPOSIT_AMOUNT);
+      expect(vault.balance).to.equal(VAULT_DEPOSIT_AMOUNT);
     });
 
     it("Should revert if vault doesn't exist", async function () {
@@ -101,7 +102,7 @@ describe("ScholarshipVaults", function () {
     });
 
     it("Should revert if USDT transfer fails", async function () {
-      // Try to deposit without approval
+      // Try to deposit without approval/balance
       await expect(scholarshipVaults.connect(student1).deposit(COURSE_ID_1, DEPOSIT_AMOUNT))
         .to.be.revertedWith("Insufficient balance");
     });
@@ -120,7 +121,7 @@ describe("ScholarshipVaults", function () {
 
       // Check vault balance decreased
       const vault = await scholarshipVaults.getVault(COURSE_ID_1);
-      expect(vault.balance).to.equal(DEPOSIT_AMOUNT - AMOUNT_PER_GUIDE);
+      expect(vault.balance).to.equal(VAULT_DEPOSIT_AMOUNT - AMOUNT_PER_GUIDE);
 
       // Check student received USDT
       expect(await mockUSDT.balanceOf(student1.address)).to.equal(AMOUNT_PER_GUIDE);
@@ -187,13 +188,12 @@ describe("ScholarshipVaults", function () {
     });
 
     it("Should not release scholarship if insufficient vault balance", async function () {
-      // Drain the vault balance to less than amount per guide
-      const vault = await scholarshipVaults.getVault(COURSE_ID_1);
-      const amountToWithdraw = vault.balance - (AMOUNT_PER_GUIDE / 2n);
-      await scholarshipVaults.emergencyWithdraw(amountToWithdraw);
 
-      // Try to submit perfect guide - should not pay due to insufficient balance
-      // We expect this to fail with "Insufficient balance" from the MockUSDT contract
+      // Drain the vault balance so the vault has enough balance, but the
+      // contract does not.
+      const contractBalance = await mockUSDT.balanceOf(await scholarshipVaults.getAddress());
+      await scholarshipVaults.emergencyWithdraw(contractBalance - (AMOUNT_PER_GUIDE / 2n));
+
       await expect(scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true))
         .to.be.revertedWith("Insufficient balance");
 
@@ -246,7 +246,7 @@ describe("ScholarshipVaults", function () {
       const withdrawAmount = hre.ethers.parseUnits("50", 6);
       await scholarshipVaults.emergencyWithdraw(withdrawAmount);
       
-      expect(await mockUSDT.balanceOf(owner.address)).to.equal(withdrawAmount);
+      expect(await mockUSDT.balanceOf(owner.address)).to.equal(ownerInitialBalance + withdrawAmount);
     });
 
     it("Should revert emergency withdraw if called by non-owner", async function () {
@@ -270,7 +270,7 @@ describe("ScholarshipVaults", function () {
     });
 
     it("Should return correct contract USDT balance", async function () {
-      expect(await scholarshipVaults.getContractUSDTBalance()).to.equal(DEPOSIT_AMOUNT);
+      expect(await scholarshipVaults.getContractUSDTBalance()).to.equal(VAULT_DEPOSIT_AMOUNT);
     });
   });
 
@@ -298,6 +298,10 @@ describe("ScholarshipVaults", function () {
     it("Should handle multiple students independently", async function () {
       // Both students submit perfect guides
       await scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true);
+
+      // Fast forward to allow student2 to submit for a different guide
+      await time.increase(1);
+
       await scholarshipVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_2, student2.address, true);
       
       expect(await mockUSDT.balanceOf(student1.address)).to.equal(AMOUNT_PER_GUIDE);
@@ -305,3 +309,4 @@ describe("ScholarshipVaults", function () {
     });
   });
 });
+
