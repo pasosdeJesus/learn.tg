@@ -39,7 +39,7 @@
     "run:node": "hardhat node",
     "test": "hardhat test",
     "deploy": "bin/deployLearnTGVaults",
-    "verify-deployment": "bin/verifyLearnTGVaults",
+    "verify": "bin/verifyLearnTGVaults",
     "deploy-mock-usdt": "bin/deployMockUsdt",
     "verify-mock-usdt": "bin/verifyMockUSDT",
     "contract-verification": "bin/contractVerification",

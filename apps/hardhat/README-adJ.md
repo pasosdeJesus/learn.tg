@@ -1,26 +1,24 @@
-# Special instructions on OpenBSD/adJ 7.7
+# Special instructions to use hardhat 2 on OpenBSD/adJ 7.7
 
-Since hardhat doesn't work right away on OpenBSD/adJ 7.7, although we have
-reported and tried to contribute:
+Neither hardhat 2 nor 3 work on OpenBSD/adJ 7.7, however with an
+extra step we have been able to use hardhat 2 with yarn (not with npm
+neither pnpm) as explained below.
 
-pnpm doesn't work, only yarn
-
+```sh
 yarn install
 mkdir tmpart
+sed -e "s/freebsd/openbsd/g" node_modules/@nomicfoundation/solidity-analyzer/index.js > tmpart/index-s.js
+cp tmpart/index-s.js node_modules/@nomicfoundation/solidity-analyzer/index.js
 cd node_modules/@nomicfoundation/solidity-analyzer/
 yarn 
 yarn build
 cd ../../..
-cp node_modules/@nomicfoundation/solidity-analyzer/solidity-analyzer.openbsd-x64.node tmpart/
-sed -e "s/freebsd/openbsd/g" node_modules/@nomicfoundation/solidity-analyzer/index.js > tmpart/index-s.js
+yarn
 cp tmpart/index-s.js node_modules/@nomicfoundation/solidity-analyzer/index.js
-cp .env.template .env
-Edit .env and add mnemonic of wallet to use, private key to use and celoscan API
-Key.
-
+yarn build
+```
 
 cd node_modules/@nomicfoundation/edr
 yarn
-
 
 
