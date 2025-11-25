@@ -6,8 +6,7 @@ hardhat 2 that only supports ethers.
 
 ## How to use
 
-1. If running on OpenBSD/adJ compile solidity-analizer as explained in
-   README-adJ.md
+1. If running on OpenBSD/adJ run bin/prepadJ.sh to compile solidity-analizer 
 
 2. Create a copy of `.env.example` and rename it to `.env`.
 
