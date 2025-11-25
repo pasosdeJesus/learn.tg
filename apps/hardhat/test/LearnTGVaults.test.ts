@@ -1,232 +1,253 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+  import { expect } from "chai";
+  import hre from "hardhat";
+  import { time, loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers.js";
 
-interface IERC20 {
-    function transfer(address to, uint256 amount) external returns (bool);
-    function transferFrom(address from, address to, uint256 amount)
-      external returns (bool);
-    function balanceOf(address account) external view returns (uint256);
-}
+  describe("LearnTGVaults", function () {
+    const COURSE_ID_1 = 1;
+    const COURSE_ID_2 = 2;
+    const GUIDE_NUMBER_1 = 1;
+    const GUIDE_NUMBER_2 = 2;
+    const AMOUNT_PER_GUIDE = hre.ethers.parseUnits("10", 6); // 10 USDT
+    const DEPOSIT_AMOUNT = hre.ethers.parseUnits("100", 6); // 100 USDT
+    const VAULT_DEPOSIT_AMOUNT = (DEPOSIT_AMOUNT * 4n) / 5n; // 80%
 
-// ReentrancyGuard optimizado (más barato que OpenZeppelin)
-abstract contract ReentrancyGuard {
-    uint256 private constant _NOT_ENTERED = 1;
-    uint256 private constant _ENTERED = 2;
-    uint256 private _status = _NOT_ENTERED;
+    async function deployFixture() {
+      const [owner, student1, student2, donor, ...addrs] = await hre.ethers.getSigners();
 
-    modifier nonReentrant() {
-        require(_status != _ENTERED, "Reentrancy detected");
-        _status = _ENTERED;
-        _;
-        _status = _NOT_ENTERED;
+      // Deploy mock USDT token
+      const MockUSDT = await hre.ethers.getContractFactory("MockUSDT");
+      const mockUSDT = await MockUSDT.deploy();
+      await mockUSDT.waitForDeployment();
+      const usdtAddress = await mockUSDT.getAddress();
+
+      // Deploy LearnTGVaults contract
+      const LearnTGVaults = await hre.ethers.getContractFactory("LearnTGVaults");
+      const learnTGVaults = await LearnTGVaults.deploy(usdtAddress);
+      await learnTGVaults.waitForDeployment();
+
+      // Mint USDT for the donor and approve the LearnTGVaults contract
+      await mockUSDT.mint(donor.address, hre.ethers.parseUnits("1000", 6));
+      await mockUSDT.connect(donor).approve(await learnTGVaults.getAddress(), hre.ethers.parseUnits("1000", 6));
+
+      // Pre-create and fund a vault for testing
+      await learnTGVaults.createVault(COURSE_ID_1, AMOUNT_PER_GUIDE);
+      await learnTGVaults.connect(donor).deposit(COURSE_ID_1, DEPOSIT_AMOUNT);
+
+      return { learnTGVaults, mockUSDT, owner, student1, student2, donor, addrs };
     }
-}
 
-contract LearnTGVaults is ReentrancyGuard {
-  uint256 public constant VERSION = 2;
-  address public immutable owner;
-  IERC20 public immutable usdtToken;
-
-  struct Vault {
-    uint256 courseId;
-    uint256 balance;
-    uint256 amountPerGuide;
-    bool exists;
-  }
-
-  mapping(uint256 => Vault) public vaults;
-
-  // Estado final (nada de funciones temporales)
-  mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
-    public guidePaid;            // courseId => guide => wallet => amount paid
-  mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
-    public pendingScholarship;
-  mapping(uint256 => mapping(address => uint256))
-    public studentCooldowns;
-
-  // Eventos
-  event VaultCreated(uint256 indexed courseId, uint256 amountPerGuide);
-  event Deposit(uint256 indexed courseId, uint256 amount);
-  event ScholarshipPrepared(
-    uint256 indexed courseId,
-    uint256 indexed guideNumber,
-    address indexed student,
-    uint256 fullAmount,
-    uint256 actualAmount,
-    uint8 profileScore
-  );
-  event ScholarshipClaimed(
-    uint256 indexed courseId,
-    uint256 indexed guideNumber,
-    address indexed student,
-    uint256 amount
-  );
-  event ScholarshipAlreadyPaid(
-    uint256 indexed courseId,
-    uint256 indexed guideNumber,
-    address indexed student
-  );
-
-  modifier onlyOwner() {
-    require(msg.sender == owner, "Only owner");
-    _;
-  }
-
-  modifier vaultExists(uint256 courseId) {
-    require(vaults[courseId].exists, "Vault does not exist");
-    _;
-  }
-
-  constructor(address _usdtToken) {
-    owner = msg.sender;
-    usdtToken = IERC20(_usdtToken);
-  }
-
-  // Create a vault for a course (amount in USDT with 6 decimals)
-  function createVault(uint256 courseId, uint256 amountPerGuide)
-  external onlyOwner {
-    require(courseId > 0, "Course id must be greater than 0");
-    require(amountPerGuide > 0, "Amount per guide must be greater than 0");
-    require(
-      !vaults[courseId].exists, "Vault already exists for this course"
-    );
-    vaults[courseId] = Vault({
-      courseId: courseId,
-      balance: 0,
-      amountPerGuide: amountPerGuide,
-      exists: true
+    describe("Deployment", function () {
+      it("Should set the right owner, token, and version", async function () {
+        const { learnTGVaults, mockUSDT, owner } = await loadFixture(deployFixture);
+        expect(await learnTGVaults.owner()).to.equal(owner.address);
+        expect(await learnTGVaults.usdtToken()).to.equal(await mockUSDT.getAddress());
+        expect(await learnTGVaults.VERSION()).to.equal(2);
+      });
     });
 
-    emit VaultCreated(courseId, amountPerGuide);
-  }
+    describe("Vault Creation", function () {
+      it("Should create a vault successfully", async function () {
+        const { learnTGVaults } = await loadFixture(deployFixture);
+        const courseId = 99;
+        await expect(learnTGVaults.createVault(courseId, AMOUNT_PER_GUIDE))
+          .to.emit(learnTGVaults, "VaultCreated")
+          .withArgs(courseId, AMOUNT_PER_GUIDE);
 
+        const vault = await learnTGVaults.vaults(courseId);
+        expect(vault.courseId).to.equal(courseId);
+        expect(vault.balance).to.equal(0);
+        expect(vault.amountPerGuide).to.equal(AMOUNT_PER_GUIDE);
+        expect(vault.exists).to.be.true;
+      });
 
+      it("Should revert if vault already exists", async function () {
+        const { learnTGVaults } = await loadFixture(deployFixture);
+        await expect(learnTGVaults.createVault(COURSE_ID_1, AMOUNT_PER_GUIDE))
+          .to.be.revertedWith("Vault already exists for this course");
+      });
 
-  // Deposit 80% of indicated USDT into a vault and 20% to learn.tg
-  // (caller must approve this contract first)
-  function deposit(uint256 courseId, uint256 amount)
-  external vaultExists(courseId) nonReentrant {
-    require(courseId > 0, "Course id must be greater than 0");
-    require(amount > 0, "Deposit amount must be greater than 0");
+      it("Should revert if amount per guide is zero", async function () {
+        const { learnTGVaults } = await loadFixture(deployFixture);
+        await expect(learnTGVaults.createVault(99, 0))
+          .to.be.revertedWith("Amount per guide must be greater than 0");
+      });
 
-    uint256 forTeam = amount / 5;     // 20%
-    uint256 forVault = amount - forTeam;
+      it("Should revert if course id is zero", async function() {
+        const { learnTGVaults } = await loadFixture(deployFixture);
+        await expect(learnTGVaults.createVault(0, AMOUNT_PER_GUIDE))
+          .to.be.revertedWith("Course id must be greater than 0");
+      });
 
-    vaults[courseId].balance += forVault;
-    emit Deposit(courseId, amount);
+      it("Should revert if called by non-owner", async function () {
+        const { learnTGVaults, student1 } = await loadFixture(deployFixture);
+        await expect(learnTGVaults.connect(student1).createVault(99, AMOUNT_PER_GUIDE))
+          .to.be.revertedWith("Only owner");
+      });
+    });
 
-    require(
-      usdtToken.transferFrom(msg.sender, owner, forTeam),
-      "Team transfer failed"
-    );
-    require(
-      usdtToken.transferFrom(msg.sender, address(this), forVault),
-      "Vault transfer failed"
-    );
-  }
+    describe("Deposits", function () {
+      it("Should deposit USDT successfully, splitting funds", async function () {
+        const { learnTGVaults, mockUSDT, owner, donor } = await loadFixture(deployFixture);
+        const vaultBefore = await learnTGVaults.vaults(COURSE_ID_1);
+        const ownerBalanceBefore = await mockUSDT.balanceOf(owner.address);
 
-  // Usada para migrar de versión anterior a esta
-  function setGuidePaid(
-    uint256 courseId,
-    uint256 guideNumber,
-    address student,
-    uint256 amount
-  ) external onlyOwner vaultExists(courseId) {
-    require(
-      courseId > 0 && guideNumber > 0 && student != address(0) &&
-      amount > 0, "Invalid params"
-    );
-    guidePaid[courseId][guideNumber][student] = amount;
-  }
+        await expect(learnTGVaults.connect(donor).deposit(COURSE_ID_1, DEPOSIT_AMOUNT))
+          .to.emit(learnTGVaults, "Deposit")
+          .withArgs(COURSE_ID_1, DEPOSIT_AMOUNT);
 
+        const vaultAfter = await learnTGVaults.vaults(COURSE_ID_1);
+        expect(vaultAfter.balance).to.equal(vaultBefore.balance + VAULT_DEPOSIT_AMOUNT);
 
-  // Backend llama esto cuando el estudiante envía solución
-  function submitGuideResult(
-    uint256 courseId,
-    uint256 guideNumber,
-    address student,
-    bool isPerfect,
-    uint8 profileScore
-  ) external onlyOwner vaultExists(courseId) {
-    require(
-      courseId > 0 && guideNumber > 0 && student != address(0),
-      "Invalid params");
-      require(profileScore >= 50 && profileScore <= 100, "Score 50-100");
-      require(studentCanSubmit(courseId, student), "In cooldown");
+        const feeAmount = DEPOSIT_AMOUNT / 5n;
+        const ownerBalanceAfter = await mockUSDT.balanceOf(owner.address);
+        expect(ownerBalanceAfter).to.equal(ownerBalanceBefore + feeAmount);
+      });
 
-      uint256 paid = guidePaid[courseId][guideNumber][student];
-      bool alreadyPaid = paid > 0;
-      bool hasPending = pendingScholarship[courseId][guideNumber][student] > 0;
+      it("Should revert if vault doesn't exist", async function () {
+        const { learnTGVaults, donor } = await loadFixture(deployFixture);
+        await expect(learnTGVaults.connect(donor).deposit(999, DEPOSIT_AMOUNT))
+          .to.be.revertedWith("Vault does not exist");
+      });
 
-      if (alreadyPaid || hasPending) {
-        if (alreadyPaid) {
-          emit ScholarshipAlreadyPaid(courseId, guideNumber, student);
-        }
-        return;
-      }
+      it("Should revert if deposit amount is zero", async function () {
+        const { learnTGVaults, donor } = await loadFixture(deployFixture);
+        await expect(learnTGVaults.connect(donor).deposit(COURSE_ID_1, 0))
+          .to.be.revertedWith("Deposit amount must be greater than 0");
+      });
+    });
 
-      studentCooldowns[courseId][student] = block.timestamp;
+    describe("Guide Submission and Scholarship", function () {
+      it("Should prepare a scholarship for a perfect submission", async function () {
+        const { learnTGVaults, student1 } = await loadFixture(deployFixture);
+        const profileScore = 100;
+        const actualAmount = (AMOUNT_PER_GUIDE * BigInt(profileScore)) / 100n;
+        
+        await expect(learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true, profileScore))
+          .to.emit(learnTGVaults, "ScholarshipPrepared")
+          .withArgs(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, AMOUNT_PER_GUIDE, actualAmount, profileScore);
 
-      if (!isPerfect) {
-        return;
-      }
+        expect(await learnTGVaults.pendingScholarship(COURSE_ID_1, GUIDE_NUMBER_1, student1.address)).to.equal(actualAmount);
+      });
 
-      uint256 fullAmount = vaults[courseId].amountPerGuide;
-      uint256 actualAmount = (fullAmount * profileScore) / 100;
+      it("Should allow student to claim a prepared scholarship", async () => {
+        const { learnTGVaults, mockUSDT, student1 } = await loadFixture(deployFixture);
+        await learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true, 100);
+        
+        await expect(learnTGVaults.connect(student1).claimScolarship(COURSE_ID_1, GUIDE_NUMBER_1))
+          .to.emit(learnTGVaults, "ScholarshipClaimed")
+          .withArgs(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, AMOUNT_PER_GUIDE);
+        
+        expect(await mockUSDT.balanceOf(student1.address)).to.equal(AMOUNT_PER_GUIDE);
+        expect(await learnTGVaults.pendingScholarship(COURSE_ID_1, GUIDE_NUMBER_1, student1.address)).to.equal(0);
+        expect(await learnTGVaults.guidePaid(COURSE_ID_1, GUIDE_NUMBER_1, student1.address)).to.equal(AMOUNT_PER_GUIDE);
+      });
 
-      require(vaults[courseId].balance >= actualAmount, "Insufficient funds");
+      it("Should not prepare scholarship if answer is not perfect", async function () {
+        const { learnTGVaults, student1 } = await loadFixture(deployFixture);
+        await learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, false, 100);
+        expect(await learnTGVaults.pendingScholarship(COURSE_ID_1, GUIDE_NUMBER_1, student1.address)).to.equal(0);
+      });
+      
+      it("Should revert on claim if no scholarship is pending", async () => {
+        const { learnTGVaults, student1 } = await loadFixture(deployFixture);
+        await expect(learnTGVaults.connect(student1).claimScolarship(COURSE_ID_1, GUIDE_NUMBER_1))
+          .to.be.revertedWith("No pending scholarship");
+      });
+      
+      it("Should emit event and not prepare scholarship if already paid", async () => {
+        const { learnTGVaults, student1 } = await loadFixture(deployFixture);
+        await learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true, 100);
+        await learnTGVaults.connect(student1).claimScolarship(COURSE_ID_1, GUIDE_NUMBER_1);
+        
+        await time.increase(24 * 60 * 60 + 1); // Elapse cooldown
 
-      pendingScholarship[courseId][guideNumber][student] = actualAmount;
-      vaults[courseId].balance -= actualAmount;
+        await expect(learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true, 100))
+          .to.emit(learnTGVaults, "ScholarshipAlreadyPaid")
+          .withArgs(COURSE_ID_1, GUIDE_NUMBER_1, student1.address);
+      });
 
-      emit ScholarshipPrepared(courseId, guideNumber, student, fullAmount, actualAmount, profileScore);
-  }
+      it("Should return early and not prepare scholarship if another is pending", async () => {
+        const { learnTGVaults, student1 } = await loadFixture(deployFixture);
+        await learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true, 100);
 
+        // Elapse cooldown to specifically test the 'hasPending' logic
+        await time.increase(24 * 60 * 60 + 1);
 
-  // Estudiante reclama su beca
-  function claimScolarship(uint256 courseId, uint256 guideNumber)
-  external vaultExists(courseId) nonReentrant {
-    uint256 amount = pendingScholarship[courseId][guideNumber][msg.sender];
-    require(amount > 0, "No pending scholarship");
+        // Calling again should not revert, but should return early due to a pending scholarship and not emit the event.
+        await expect(learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true, 100))
+          .to.not.emit(learnTGVaults, "ScholarshipPrepared");
+      });
 
-    pendingScholarship[courseId][guideNumber][msg.sender] = 0;
-    guidePaid[courseId][guideNumber][msg.sender] = amount;
+      it("Should revert if on cooldown", async () => {
+        const { learnTGVaults, student1 } = await loadFixture(deployFixture);
+        await learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true, 100);
+        await expect(learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_2, student1.address, true, 100))
+          .to.be.revertedWith("In cooldown");
+      });
+    });
 
-    emit ScholarshipClaimed(courseId, guideNumber, msg.sender, amount);
-    require(usdtToken.transfer(msg.sender, amount), "Transfer failed");
-  }
+    describe("Cooldown Logic", function() {
+      it("Should apply cooldown after a perfect submission and allow submission after period", async function() {
+        const { learnTGVaults, student1 } = await loadFixture(deployFixture);
+        await learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true, 100);
+        expect(await learnTGVaults.studentCanSubmit(COURSE_ID_1, student1.address)).to.be.false;
+        
+        await time.increase(24 * 60 * 60 + 1); // Elapse cooldown
 
-  function studentCanSubmit(uint256 courseId, address student)
-  public view returns (bool) {
-    uint256 last = studentCooldowns[courseId][student];
-    return last == 0 || block.timestamp >= last + 1 days;
-  }
+        expect(await learnTGVaults.studentCanSubmit(COURSE_ID_1, student1.address)).to.be.true;
+        await expect(learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_2, student1.address, true, 100)).to.not.be.reverted;
+      });
 
-  // Emergency withdraw (solo owner)
-  function emergencyWithdraw(uint256 amount)
-  external onlyOwner nonReentrant {
-    require(amount > 0, "Amount > 0");
-    require(usdtToken.transfer(owner, amount), "Transfer failed");
-  }
+      it("Should handle cooldowns independently for different courses", async function() {
+        const { learnTGVaults, student1, donor } = await loadFixture(deployFixture);
+        await learnTGVaults.createVault(COURSE_ID_2, AMOUNT_PER_GUIDE);
+        await learnTGVaults.connect(donor).deposit(COURSE_ID_2, DEPOSIT_AMOUNT);
+        
+        await learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, student1.address, true, 100);
 
-  // Getters útiles
-  function getContractUSDTBalance() external view returns (uint256) {
-    return usdtToken.balanceOf(address(this));
-  }
+        // Cooldown for course 1 should not affect course 2
+        await expect(learnTGVaults.submitGuideResult(COURSE_ID_2, GUIDE_NUMBER_1, student1.address, true, 100))
+          .to.emit(learnTGVaults, "ScholarshipPrepared");
+      });
+    });
 
-  function getStudentGuideStatus(
-    uint256 courseId,
-    uint256 guideNumber,
-    address student
-  ) external view returns (
-  uint256 paidAmount,
-  uint256 pendingAmount,
-  bool canSubmit
-  ) {
-    paidAmount = guidePaid[courseId][guideNumber][student];
-    pendingAmount = pendingScholarship[courseId][guideNumber][student];
-    canSubmit = studentCanSubmit(courseId, student);
-  }
+    describe("Administrative Functions", function() {
+      it("Should allow owner to withdraw emergency funds", async function() {
+        const { learnTGVaults, mockUSDT, owner } = await loadFixture(deployFixture);
+        const contractBalance = await learnTGVaults.getContractUSDTBalance();
+        const ownerBalanceBefore = await mockUSDT.balanceOf(owner.address);
+        
+        await learnTGVaults.emergencyWithdraw(contractBalance);
 
-}
+        const ownerBalanceAfter = await mockUSDT.balanceOf(owner.address);
+        expect(ownerBalanceAfter).to.equal(ownerBalanceBefore + contractBalance);
+        expect(await learnTGVaults.getContractUSDTBalance()).to.equal(0);
+      });
+
+      it("Should prevent non-owner from withdrawing emergency funds", async function() {
+        const { learnTGVaults, student1 } = await loadFixture(deployFixture);
+        await expect(learnTGVaults.connect(student1).emergencyWithdraw(100))
+          .to.be.revertedWith("Only owner");
+      });
+    });
+
+    describe("Edge Cases", function() {
+      it("Should revert submission if vault has insufficient funds", async function() {
+        const { learnTGVaults, student1, donor } = await loadFixture(deployFixture);
+        const highAmount = hre.ethers.parseUnits("100", 6);
+        const lowDeposit = hre.ethers.parseUnits("50", 6);
+        await learnTGVaults.createVault(COURSE_ID_2, highAmount);
+        await learnTGVaults.connect(donor).deposit(COURSE_ID_2, lowDeposit); 
+        
+        await expect(learnTGVaults.submitGuideResult(COURSE_ID_2, GUIDE_NUMBER_1, student1.address, true, 100))
+          .to.be.revertedWith("Insufficient funds");
+      });
+
+      it("Should revert if student address is zero on submission", async function() {
+        const { learnTGVaults } = await loadFixture(deployFixture);
+        await expect(learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_NUMBER_1, hre.ethers.ZeroAddress, true, 100))
+          .to.be.revertedWith("Invalid params");
+      });
+    });
+  });
 
