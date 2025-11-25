@@ -536,6 +536,21 @@ export interface Cor1440GenTipomoneda {
   updated_at: Timestamp;
 }
 
+export interface CoursecompletedUsuario {
+  points: number;
+  proyectofinanciero_id: number;
+  usuario_id: number;
+}
+
+export interface GuidepaidUsuario {
+  actividadpf_id: number;
+  amountpaid: number;
+  amountpending: number;
+  points: number;
+  profilescore: number;
+  usuario_id: number;
+}
+
 export interface Heb412GenCampohc {
   columna: string;
   doc_id: number;
@@ -1268,22 +1283,6 @@ export interface Usuario {
   updated_at: Timestamp | null;
 }
 
-export interface UsuarioCoursecompleted {
-  points: number;
-  proyectofinanciero_id: number;
-  usuario_id: number;
-}
-
-export interface UsuarioGuidepaid {
-  actividadml_id: number;
-  amount_pending: number;
-  amountpaid: number;
-  points: number;
-  profilescore: number;
-  proyectofinanciero_id: number;
-  usuario_id: number;
-}
-
 export interface DB {
   ar_internal_metadata: ArInternalMetadata;
   billetera_usuario: BilleteraUsuario;
@@ -1337,6 +1336,8 @@ export interface DB {
   cor1440_gen_sectorapc: Cor1440GenSectorapc;
   cor1440_gen_tipoindicador: Cor1440GenTipoindicador;
   cor1440_gen_tipomoneda: Cor1440GenTipomoneda;
+  coursecompleted_usuario: CoursecompletedUsuario;
+  guidepaid_usuario: GuidepaidUsuario;
   heb412_gen_campohc: Heb412GenCampohc;
   heb412_gen_campoplantillahcm: Heb412GenCampoplantillahcm;
   heb412_gen_campoplantillahcr: Heb412GenCampoplantillahcr;
@@ -1399,6 +1400,4 @@ export interface DB {
   religion: Religion;
   schema_migrations: SchemaMigrations;
   usuario: Usuario;
-  usuario_coursecompleted: UsuarioCoursecompleted;
-  usuario_guidepaid: UsuarioGuidepaid;
 }

@@ -1,8 +1,15 @@
-# Celo Composer | Hardhat
+# Soliidty Contracts with Hardhat
+
+In 2025, on OpenBSD/adJ hardhat 3 doesn't work, so we have to use
+hardhat 2 that only supports ethers.
+
 
 ## How to use
 
-1. Create a copy of `.env.example` and rename it to `.env`.
+1. If running on OpenBSD/adJ compile solidity-analizer as explained in
+   README-adJ.md
+
+2. Create a copy of `.env.example` and rename it to `.env`.
 
    1. If you will work in testet in NETWORK use `celoSepolia` for mainnet in
       NETWORK set `celo`
@@ -13,33 +20,39 @@
       [Blockscout API Key](https://.io/myapikey) `BLOCKSCOUT_API_KEY` 
       set in `.env`.
 
-2. Compile the contract 
+3. Compile the contract 
 
 ```bash
 yarn build
 ```
 
-3. Deploy the contract
+4. Deploy the contract
 
 Make sure your wallet is funded when deploying to testnet or mainnet. 
 You can get test tokens for deploying it on Sepolia from the 
 [Celo Faucet](https://faucet.celo.org/celo-sepolia).
 
 ```bash
-bin/deployScolarshipVault.ts
+bin/deployLearnTGVaults
 ```
 
 It will present the address where it is deployed. Copy and paste that 
 address in the variable `DEPLOYED_AT` of the file `.env`
 
-4. Verify the contract
+4. Verify operation of the contract
+
+```bash
+bin/verifyLearnTGVaults
+```
+
+
+4. Verify source code of the deployed contract
 
 ```bash
 bin/contractVerification
 ```
 
 5. ABI Synchronization
-
 
 The project includes automatic ABI synchronization with your Nextjs app. 
 ABIs are synced to `../nextjs-app/abis/` during compilation.

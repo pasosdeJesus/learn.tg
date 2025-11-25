@@ -6,8 +6,8 @@ import 'dotenv/config.js'
 
 // Configuration - directory files
 const HARDHAT_ARTIFACTS_PATH = './artifacts/contracts'
-const NEXTJS_ABI_PATH = '../nextjs-app/abis'
-const NEXTJS_ENV_PATH = '../nextjs-app/.env'
+const NEXTJS_ABI_PATH = '../nextjs/abis'
+const NEXTJS_ENV_PATH = '../nextjs/.env'
 
 const env_replacements = [
   ['DEPLOYED_AT_1', 'NEXT_PUBLIC_DEPLOYED_AT_1'],

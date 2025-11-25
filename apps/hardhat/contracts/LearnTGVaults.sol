@@ -38,11 +38,11 @@ contract LearnTGVaults is ReentrancyGuard {
 
   // Estado final (nada de funciones temporales)
   mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
-  public guidePaid;            // amount paid
+    public guidePaid;            // courseId => guide => wallet => amount paid
   mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
-  public pendingScholarship;
+    public pendingScholarship;
   mapping(uint256 => mapping(address => uint256))
-  public studentCooldowns;
+    public studentCooldowns;
 
   // Eventos
   event VaultCreated(uint256 indexed courseId, uint256 amountPerGuide);
@@ -123,6 +123,20 @@ contract LearnTGVaults is ReentrancyGuard {
       usdtToken.transferFrom(msg.sender, address(this), forVault),
       "Vault transfer failed"
     );
+  }
+
+  // Usada para migrar de versión anterior a esta
+  function setGuidePaid(
+    uint256 courseId,
+    uint256 guideNumber,
+    address student,
+    uint256 amount
+  ) external onlyOwner vaultExists(courseId) {
+    require(
+      courseId > 0 && guideNumber > 0 && student != address(0) &&
+      amount > 0, "Invalid params"
+    );
+    guidePaid[courseId][guideNumber][student] = amount;
   }
 
 
