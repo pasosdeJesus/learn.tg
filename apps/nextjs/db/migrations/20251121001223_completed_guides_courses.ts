@@ -20,6 +20,6 @@ export async function up(db: Kysely<any>): Promise<void> {
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  await db.schema.dropTable('coursecompleted_usuario').execute()
-  await db.schema.dropTable('guidepaid_usuario').execute()
+  await db.schema.dropTable('course_usuario').execute()
+  await db.schema.dropTable('guide_usuario').execute()
 }

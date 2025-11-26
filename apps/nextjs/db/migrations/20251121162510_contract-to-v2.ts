@@ -25,41 +25,42 @@ import type { GuideUsuario, CourseUsuario } from
   '../../db/db.d.ts';
 
 
-async function calcNonce(publicClient, account) {
-  console.log("  * Reintentando con nonce")
-  let nonce = await publicClient.getTransactionCount({
-    address: account.address,
-    blockTag: 'pending', // includes pending transactions
-  });
-  console.log("OJO  nonce=", nonce)
-  let nextNonce = nonce + 1;
-  console.log("OJO  nextNonce=", nextNonce)
-  return nextNonce;
-}
-
-
-async function callWriteFun(publicClient, account, contractFun, contractParams) {
-  console.log("  Calling function", contractFun, "with params", contractParams)
+async function callWriteFun(
+  publicClient, account, contractFun, contractParams, indent
+) {
+  let sindent = indent > 0 ? ' '.repeat(indent-1) : ''
+  console.log(
+    sindent, "Calling function", contractFun, 
+    "with params", contractParams
+  )
   let tx:Address = '0x0'
   try {
     tx = await contractFun(contractParams)
   } catch (e) {
-    let nextNonce = await calcNonce(publicClient, account)
+    console.log(sindent, "* Reintentando con nonce")
+    let nonce = await publicClient.getTransactionCount({
+      address: account.address,
+      blockTag: 'pending', // includes pending transactions
+    });
+    let nextNonce = nonce + 1;
+    console.log(sindent, "OJO  nextNonce=", nextNonce)
     tx = await contractFun(
       contractParams,
       { account, nonce: nextNonce }
     )
   }
-  console.log("* tx=", tx)
+  console.log(sindent, "tx=", tx)
   try {
     const receipt = await publicClient.waitForTransactionReceipt({
       hash: tx,
       confirmations: 2, // Optional: number of confirmations to wait for
       timeout: 3_000, // 2 seconds
     });
-    console.log(`Receipt: ${receipt}`)
+    console.log(sindent, `Receipt: ${receipt}`)
   } catch (e) {
-    console.error(`**No operó waitForTransactionReceipt de ${tx}, continuando`)
+    console.error(
+      sindent, `**No operó waitForTransactionReceipt de ${tx}, continuando`
+    )
   }
   return tx
 }
@@ -113,63 +114,22 @@ export async function up(db: Kysely<any>): Promise<void> {
   if (oldBalance > 0n) {
     console.log('1. Drenar contrato viejo')
     console.log(`Drenando ${formatUnits(oldBalance, 6)} USDT del contrato viejo...`)
-    const hash1 = await oldContract.write.emergencyWithdraw([oldBalance])
-    console.log(`Fondos drenados: ${hash1}`)
-
-    // Wait for the transaction to be mined
-    try {
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash: hash1,
-        confirmations: 1, // Optional: number of confirmations to wait for
-        timeout: 1_000, // 1 second
-      });
-      console.log(`Receipt: ${receipt}`)
-    } catch (e) {
-      console.error(`**No operó waitForTransactionReceipt de ${hash1}`)
-    }
-    
-  
+    let tx:Address = await callWriteFun(
+      publicClient, 
+      account, 
+      oldContract.write.emergencyWithdraw,
+      [oldBalance],
+      0
+    )
     console.log("2. Transferir fondos al nuevo contrato")
-    let tx:Address = '0x0'
-    try {
-      tx = await usdtContract.write.transfer(
-        [
-          DEPLOYED_AT, 
-          oldBalance
-        ],
-      )
-    } catch (e) {
-      console.log("** Falló transacción reintentando con calculo de nonce")
-      // Tuvimos que manejar nonce para evitar errores por 2 writes
-      // consecutivos como `replacement transaction underpriced` y
-      // `once too low: next nonce 45, tx nonce 44`
-      let nonce = await publicClient.getTransactionCount({
-        address: account.address,
-        blockTag: 'pending', // includes pending transactions
-      });
-      console.log("OJO  nonce=", nonce)
-      let nextNonce = nonce + 1;
-      console.log("OJO  nextNonce=", nextNonce)
-      tx = await usdtContract.write.transfer(
-        [
-          DEPLOYED_AT, 
-          oldBalance
-        ],
-        { account, nonce: nextNonce }
-      )
-    }
+    tx = await callWriteFun(
+      publicClient, 
+      account, 
+      usdtContract.write.transfer,
+      [ DEPLOYED_AT, oldBalance ],
+      0
+    )
     console.log(`Fondos transferidos al nuevo contrato: ${tx}`)
-    try {
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash: tx,
-        confirmations: 1, // Optional: number of confirmations to wait for
-        timeout: 1_000, // 1 second
-      });
-      console.log(`Receipt: ${receipt}`)
-    } catch (e) {
-      console.error(`**No operó waitForTransactionReceipt de ${tx}`)
-    }
-
   }
 
   console.log("3. Recrear bovedas")
@@ -200,36 +160,13 @@ export async function up(db: Kysely<any>): Promise<void> {
     //console.log("newVault=", newVault)
     if (oldVault.exists && !newVault.exists) {
       console.log("  Creando boveda como", oldVault)
-      let tx:Address = '0x0'
-      try {
-        tx = await newContract.write.createVault(
-          [ courseId, oldVault.amountPerGuide ],
-        )
-      } catch (e) {
-        console.log("  * Reintentando con nonce")
-        let nonce = await publicClient.getTransactionCount({
-          address: account.address,
-          blockTag: 'pending', // includes pending transactions
-        });
-        console.log("OJO  nonce=", nonce)
-        let nextNonce = nonce + 1;
-        console.log("OJO  nextNonce=", nextNonce)
-        tx = await newContract.write.createVault(
-          [ courseId, oldVault.amountPerGuide ],
-          { account, nonce: nextNonce }
-        )
-        console.log("* hash=", tx)
-      }
-      try {
-        const receipt = await publicClient.waitForTransactionReceipt({
-          hash: tx,
-          confirmations: 1, // Optional: number of confirmations to wait for
-          timeout: 2_000, // 1 second
-        });
-        console.log(`Receipt: ${receipt}`)
-      } catch (e) {
-        console.error(`**No operó waitForTransactionReceipt de ${tx}`)
-      }
+      let tx:Address = await callWriteFun(
+        publicClient, 
+        account, 
+        newContract.write.createVault,
+        [ courseId, oldVault.amountPerGuide ],
+        2
+      )
       lNewVault = await newContract.read.vaults([courseId])
       newVault = {
         courseId: lNewVault[0],
@@ -244,13 +181,15 @@ export async function up(db: Kysely<any>): Promise<void> {
 
 
     if (oldVault.exists && newVault.exists) {
-
+      console.log("  newVault.balance=", newVault.balance)
       if (oldVault.balance > 0 && newVault.balance == 0) {
-        let tx = callWriteFun(
+        console.log("Setting balance to", oldVault, balance) 
+        let tx = await callWriteFun(
           publicClient, 
           account, 
           newContract.write.setVaultBalance,
-          [courseId, oldVault.balance]
+          [courseId, oldVault.balance],
+          4
         )
       }
       const uwallets = await db
@@ -262,7 +201,7 @@ export async function up(db: Kysely<any>): Promise<void> {
       .execute()
       console.log("  Cantidad de billeteras=", uwallets.length)
       for (const uw of uwallets) {
-        console.log("   Billetera", uw.billetera)
+        console.log("  Billetera", uw.billetera)
         let guiasCompletadas = 0
         const guides = await sql<any>(
           'select id, nombrecorto, "sufijoRuta" from cor1440_gen_actividadpf ' +
@@ -273,12 +212,12 @@ export async function up(db: Kysely<any>): Promise<void> {
         ).execute(db)
         //console.log("guides=", guides)
         console.log(
-          "    Curso", courseId, " con", guides.rows.length, "guias"
+          "  Curso", courseId, " con", guides.rows.length, "guias"
         )
         let numGuia = 0
         for (const g of guides.rows) {
           numGuia++
-          console.log("      Guía ", g.nombrecorto)
+          console.log("    Guía ", g.nombrecorto)
           const oldGuidePaid = await oldContract.read.guidePaid(
             [courseId, numGuia, uw.billetera]
           )
@@ -316,45 +255,17 @@ export async function up(db: Kysely<any>): Promise<void> {
               .values(gp)
               .returningAll()
               .executeTakeFirstOrThrow()
-              console.log("      After insert igp.amountpaid=", igp.amountpaid)
+              console.log("    After insert igp.amountpaid=", igp.amountpaid)
             }
             if (newGuidePaid == 0) {
-              let tx:Address = "0x0"
-              console.log("      Registrando en blockchain")
-              try {
-                tx = await newContract.write.setGuidePaid(
-                  [courseId, numGuia, uw.billetera, oldVault.amountPerGuide],
-                )
-              } catch (e) {
-                console.log("      Falló normla, intentando con nonce")
-                let nonce = await publicClient.getTransactionCount({
-                  address: account.address,
-                  blockTag: 'pending', // includes pending transactions
-                });
-                console.log("      ** OJO  nonce=", nonce)
-                let nextNonce = nonce + 1;
-                console.log("      ** OJO  nextNonce=", nextNonce)
-                tx = await newContract.write.setGuidePaid(
-                  [courseId, numGuia, uw.billetera, oldVault.amountPerGuide],
-                  { account, nonce: nextNonce }
-                )
-              }
-              console.log(
-                `      guidePaid con ${courseId}, ${numGuia}, ` +
-                  `${uw.billetera}, ${oldVault.amountPerGuide}` +
-                  ` tx: `, tx
+              console.log("    Registrando en blockchain")
+              let tx = await callWriteFun(
+                publicClient, 
+                account, 
+                newContract.write.setGuidePaid,
+                [courseId, numGuia, uw.billetera, oldVault.amountPerGuide],
+                4
               )
-              try {
-                const receipt = await publicClient.waitForTransactionReceipt({
-                  hash: tx,
-                  confirmations: 1, // Optional: number of confirmations to wait for
-                  timeout: 1_000, // 1 second
-                });
-                console.log(`      Receipt: ${receipt}`)
-              } catch (e) {
-                console.error(`      **No operó waitForTransactionReceipt de ${tx}`)
-              }
-
             }
 
           }
