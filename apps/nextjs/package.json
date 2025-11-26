@@ -108,5 +108,6 @@
       "unrs-resolver",
       "utf-8-validate"
     ]
-  }
+  },
+  "packageManager": "pnpm"
 }
