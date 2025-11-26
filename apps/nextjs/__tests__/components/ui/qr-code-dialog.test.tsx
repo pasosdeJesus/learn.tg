@@ -3,12 +3,13 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { QRCodeDialog } from '@/components/ui/qr-code-dialog'
 
-// Mock the SelfQRcodeWrapper component
+// Mock the SelfQRcodeWrapper component to cover all cases
 vi.mock('@selfxyz/qrcode', () => ({
   SelfQRcodeWrapper: ({ onSuccess, onError }: any) => (
     <div data-testid="mock-qr-wrapper">
       <button onClick={() => onSuccess()}>Mock Success</button>
-      <button onClick={() => onError({ message: 'Mock Error' })}>Mock Error</button>
+      <button onClick={() => onError({ reason: 'Mock Error With Reason' })}>Mock Error With Reason</button>
+      <button onClick={() => onError()}>Mock Error Without Reason</button>
     </div>
   ),
 }))
@@ -88,28 +89,19 @@ describe('QRCodeDialog', () => {
     expect(defaultProps.onSuccess).toHaveBeenCalledTimes(1)
   })
 
-  it('handles QR wrapper error', () => {
+  it('handles QR wrapper error with reason', () => {
     render(<QRCodeDialog {...defaultProps} isMobile={false} />)
     
-    const errorButton = screen.getByText('Mock Error')
+    const errorButton = screen.getByText('Mock Error With Reason')
     fireEvent.click(errorButton)
     
-    expect(defaultProps.onError).toHaveBeenCalledWith('Mock Error')
+    expect(defaultProps.onError).toHaveBeenCalledWith('Mock Error With Reason')
   })
 
-  it('handles QR wrapper error without message', () => {
-    const mockSelfApp = { mockApp: true }
+  it('handles QR wrapper error without reason', () => {
+    render(<QRCodeDialog {...defaultProps} isMobile={false} />)
     
-    // Re-mock to test error without message
-    vi.doMock('@selfxyz/qrcode', () => ({
-      SelfQRcodeWrapper: ({ onError }: any) => (
-        <button onClick={() => onError()}>Mock Error No Message</button>
-      ),
-    }))
-
-    render(<QRCodeDialog {...defaultProps} selfApp={mockSelfApp} isMobile={false} />)
-    
-    const errorButton = screen.getByText('Mock Error No Message')
+    const errorButton = screen.getByText('Mock Error Without Reason')
     fireEvent.click(errorButton)
     
     expect(defaultProps.onError).toHaveBeenCalledWith('Verification failed')
@@ -121,3 +113,4 @@ describe('QRCodeDialog', () => {
     expect(screen.queryByTestId('mock-qr-wrapper')).not.toBeInTheDocument()
   })
 })
+

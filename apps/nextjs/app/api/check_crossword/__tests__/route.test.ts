@@ -3,24 +3,43 @@ import { NextRequest } from 'next/server'
 
 // Mocks de dependencias de base de datos para evitar conexiones reales
 const mockExecuteTakeFirst = vi.fn()
+const mockExecute = vi.fn()
 class MockKysely {
   constructor(_cfg: any) {}
   selectFrom() { return this }
   where() { return this }
   selectAll() { return this }
   executeTakeFirst() { return mockExecuteTakeFirst() }
+  orderBy() { return this }
+  limit() { return this }
+  select(){ return this }
+  insertInto() { return this }
+  values() { return this }
+  returningAll() { return this }
+  execute() { return mockExecute() }
+  executeTakeFirstOrThrow() { return mockExecuteTakeFirst() } 
 }
 class MockPostgresDialect { constructor(_cfg: any) {} }
 class MockPool { constructor(_cfg: any) {} }
 
+const mockSql = {
+  execute: vi.fn(),
+};
+
 vi.mock('kysely', () => ({
   Kysely: MockKysely,
-  PostgresDialect: MockPostgresDialect
+  PostgresDialect: MockPostgresDialect,
+  sql: vi.fn(() => mockSql),
 }))
 
 vi.mock('pg', () => ({
   Pool: MockPool
 }))
+
+// Mock the config loader to return our mock db
+vi.mock('@/.config/kysely.config.ts', () => ({
+  newKyselyPostgresql: () => new MockKysely()
+}));
 
 let POST: any
 let GET: any
@@ -35,6 +54,13 @@ describe('API /api/check_crossword', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset mocks for each test
+    mockExecuteTakeFirst.mockReset();
+    mockExecute.mockReset();
+    mockSql.execute.mockClear();
+    mockSql.execute.mockResolvedValue({ // Default mock for sql.execute
+      rows: [ { id: 101 }, { id: 102 } ]
+    });
   })
 
   it('GET responde 400 indicando que espera POST', async () => {
@@ -47,7 +73,8 @@ describe('API /api/check_crossword', () => {
 
   it('POST sin walletAddress devuelve 200 y mensaje informativo (no califica)', async () => {
     const body = {
-      guideId: 'g1',
+      guideId: 1,
+      courseId: 1,
       lang: 'en',
       prefix: 'p',
       guide: 'intro',
@@ -64,14 +91,15 @@ describe('API /api/check_crossword', () => {
     const res = await POST(req)
     expect(res.status).toBe(200)
     const data = await res.json()
-  expect(data.mistakesInCW).toEqual([])
+    expect(data.mistakesInCW).toEqual([])
     expect(data.message).toMatch(/will not be graded/i)
   })
 
   it('POST con walletAddress y token que no coincide devuelve mensaje de token', async () => {
     mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', token: 'otro', answer_fib: 'TEST' })
     const body = {
-      guideId: 'g1',
+      guideId: 1,
+      courseId: 1,
       lang: 'en',
       prefix: 'p',
       guide: 'intro',
@@ -88,13 +116,16 @@ describe('API /api/check_crossword', () => {
     const res = await POST(req)
     expect(res.status).toBe(200)
     const data = await res.json()
-  expect(data.mistakesInCW).toEqual([])
+    expect(data.mistakesInCW).toEqual([])
     expect(data.message).toMatch(/Token stored for user doesn't match/i)
   })
 
   it('POST con respuestas correctas produce probs vacío y sin mensaje de error', async () => {
-    // billetera con token válido y una palabra
-    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', token: 'TOK', answer_fib: 'TEST' })
+    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', usuario_id: 1, token: 'TOK', answer_fib: 'TEST' }) // for billetera_usuario
+      .mockResolvedValueOnce({ id: 1, profilescore: 60 }); // for usuario
+    mockExecute.mockResolvedValueOnce([]); // for guide_usuario check (ug)
+    mockExecuteTakeFirst.mockResolvedValueOnce({ points: 1 }); // for insert into guide_usuario
+
     const grid = [
       [
         { userInput: 'T' }, { userInput: 'E' }, { userInput: 'S' }, { userInput: 'T' }
@@ -104,7 +135,7 @@ describe('API /api/check_crossword', () => {
       { row: 0, col: 0, direction: 'across' }
     ]
     const body = {
-      guideId: 'g1', lang: 'en', prefix: 'p', guide: 'intro', grid, placements,
+      courseId: 1, guideId: 1, lang: 'en', prefix: 'p', guide: 'intro', grid, placements,
       walletAddress: '0xabc', token: 'TOK'
     }
     const req = new NextRequest('http://localhost:3000/api/check_crossword', {
@@ -115,13 +146,16 @@ describe('API /api/check_crossword', () => {
     const res = await POST(req)
     const data = await res.json()
     expect(res.status).toBe(200)
-  expect(data.mistakesInCW).toEqual([])
-  // Permitir mensaje vacío o mensaje de error de contrato
-  expect([ '', '\nCould not connect to scholarship contract.' ]).toContain(data.message)
+    expect(data.mistakesInCW).toEqual([])
+    // Permitir mensaje vacío o mensaje de error de contrato
+    expect([ 'Correct answer! +1 point\nCould not connect to scholarship contract.', 'Correct answer! +1 point', ]).toContain(data.message)
   })
 
   it('POST con respuestas incorrectas devuelve probs con índice de palabra', async () => {
-    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', token: 'TOK', answer_fib: 'TEST' })
+    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', usuario_id: 1, token: 'TOK', answer_fib: 'TEST' }) // for billetera_usuario
+      .mockResolvedValueOnce({ id: 1, profilescore: 60 }); // for usuario
+    mockExecute.mockResolvedValue([]); // for guide_usuario check (ug)
+    
     const grid = [
       [
         { userInput: 'X' }, { userInput: 'E' }, { userInput: 'S' }, { userInput: 'T' }
@@ -131,7 +165,7 @@ describe('API /api/check_crossword', () => {
       { row: 0, col: 0, direction: 'across' }
     ]
     const body = {
-      guideId: 'g1', lang: 'en', prefix: 'p', guide: 'intro', grid, placements,
+      courseId: 1, guideId: 1, lang: 'en', prefix: 'p', guide: 'intro', grid, placements,
       walletAddress: '0xabc', token: 'TOK'
     }
     const req = new NextRequest('http://localhost:3000/api/check_crossword', {
@@ -142,6 +176,7 @@ describe('API /api/check_crossword', () => {
     const res = await POST(req)
     const data = await res.json()
     expect(res.status).toBe(200)
-  expect(data.mistakesInCW).toEqual([1])
+    expect(data.mistakesInCW).toEqual([1])
   })
 })
+
