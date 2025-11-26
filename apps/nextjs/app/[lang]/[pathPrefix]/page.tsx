@@ -2,14 +2,14 @@
 
 import axios from 'axios'
 import { useSession, getCsrfToken } from "next-auth/react" 
-import {use, useEffect, useState} from "react"
+import { use, useEffect, useState } from "react"
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
-import {unified} from 'unified'
+import { unified } from 'unified'
 import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 //  import addFillInTheBlank from '../lib/add-fill-in-the-blank'
@@ -135,7 +135,6 @@ export default function Page({ params }: PageProps) {
               for (const guia of dcurso.guias) {
                 guias += "<li>"
                 if (guia.sufijoRuta != null) {
-
                   guias += `<a href='/${rcurso.idioma}${rcurso.prefijoRuta}` +
                     `/${guia.sufijoRuta}' `+
                     `style='text-decoration: underline'>${guia.titulo}</a>`

@@ -18,14 +18,22 @@ It must be started first.
 See details at [servidor/README.md](servidor/README.md)
 
 
-## Directory [packages/nextjs-app](packages/nextjs-app)
+## Directory [apps/nextjs](apps/nextjs)
 
 Frontend application with react and next.js.
 
-See details at [packages/nextjs-app/README.md](packages/nextjs-app/README.md)
+See details at [apps/nextjs/README.md](apps/nextjs/README.md)
+
+
+## Directory [apps/hardhat](apps/hardhat)
+
+Smart contracts for the platform developed with Hardhat.
+
+See details at [apps/hardhat/README.md](apps/hardhat/README.md)
 
 
 ## Directory [resources](resources) 
 
 It has markdown of guides, images and media.
+
 

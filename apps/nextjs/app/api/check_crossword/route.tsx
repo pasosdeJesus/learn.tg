@@ -1,6 +1,7 @@
 "use server"
 
-import { Kysely, PostgresDialect } from 'kysely'
+import { Kysely, PostgresDialect, sql } from 'kysely'
+import type { Insertable } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
 import { Pool } from 'pg'
 import { privateKeyToAccount } from "viem/accounts";
@@ -17,9 +18,9 @@ import {
 import { celo, celoSepolia } from 'viem/chains'
 import { getReferralTag, submitReferral } from '@divvi/referral-sdk'
 
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
-import type { DB } from '@/db/db.d.ts'
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
+import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import type { GuideUsuario, CourseUsuario } from '@/db/db.d.ts'
 
 interface WordPlacement {
   word: string
@@ -81,8 +82,10 @@ export async function POST(req: NextRequest) {
     // Mensajes localizados
     const msg = {
       es: {
+        atLeast50: "No se enviaron resultados al blockchain. Necesita al menos 50 puntos en su perfil para habilitar el envío",
         cannotSubmit: "Estás es un periodo de espera de 24 horas desde tu último envío para este curso. No puedes enviar resultado para beca en este momento.",
         contractError: "No se pudo conectar con el contrato de becas.",
+        correctPoint: "¡Respuesta correcto! +1 punto",
         correct: "¡Respuesta correcta! Se ha enviado tu resultado para beca, por favor espera 24 horas antes de volver a enviar para este curso.",
         incorrect: "Respuesta equivocada. Se ha enviado tu resultado al blockchain, por favor espera 24 horas antes de volver a enviar para este curso.",
         invalidKey: "Clave privada inválida",
@@ -91,9 +94,11 @@ export async function POST(req: NextRequest) {
         tokenMismatch: "El token almacenado para el usuario no coincide con el token proporcionado.",
       },
       en: {
+        atLeast50: "The results were not sent to the blockchain. You need at least 50 points in your profile to enable sending",
         cannotSubmit: "You are in a waiting period of 24 hours since our last submission. You cannot submit a scholarship result at this time.",
         contractError: "Could not connect to scholarship contract.",
         correct: "Correct answer! Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
+        correctPoint: "Correct answer! +1 point",
         incorrect: "Wrong answer. Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
         invalidKey: "Invalid private key",
         noWallet: "Your answer will not be graded nor will possible scholarships be sought.",
@@ -137,6 +142,47 @@ export async function POST(req: NextRequest) {
               nrow++
             }
           }
+        }
+
+        // Perfil de usuario. Punto si hacía falta y la respuesta es correcta
+        let usuario = await db.selectFrom('usuario')
+        .where('id', '=', billeteraUsuario.usuario_id)
+        .selectAll()
+        .executeTakeFirst()
+        console.log("OJO usuario=", usuario)
+        const guides = await sql<any>(
+          `select id, nombrecorto, "sufijoRuta" `+
+            `from cor1440_gen_actividadpf `+
+            `where proyectofinanciero_id = ${courseId} `+
+            `and "sufijoRuta" IS NOT NULL `+
+            `and "sufijoRuta" <>'' `+
+            `order by nombrecorto`
+        ).execute(db)
+        console.log("OJO guides=", guides)
+        const ug = await db
+          .selectFrom('guide_usuario')
+          .select([
+            'usuario_id'
+          ])
+          .where('usuario_id', '=', billeteraUsuario.usuario_id)
+          .where('actividadpf_id', '=', guides.rows[guideId - 1 ].id)
+          .execute()
+        if (ug.length == 0 && mistakesInCW.length == 0) {
+          let gp:Insertable<GuideUsuario> = {
+            usuario_id: billeteraUsuario.usuario_id,
+            actividadpf_id: guides.rows[guideId - 1].id,
+            amountpaid: 0,
+            profilescore: usuario.profilescore || 0,
+            amountpending: 0,
+            points: 1,
+          }
+          let igp = await db
+          .insertInto('guide_usuario')
+          .values(gp)
+          .returningAll()
+          .executeTakeFirstOrThrow()
+          retMessage += msg[locale].correctPoint
+          console.log("      After insert igp.points=", igp.points)
         }
 
         // Intentamos beca
@@ -196,7 +242,9 @@ export async function POST(req: NextRequest) {
               courseIdArg, walletAddress as Address
             ]) as boolean
             console.log("** canSubmit=", canSubmit)
-            if (canSubmit) {
+            if (usuario.profilescore == null || usuario.profilescore < 50) {
+              retMessage += msg[locale].atLeast50
+            } else if (canSubmit) {
               // Enviar resultado
               try {
                 const encodedData = encodeFunctionData({
@@ -207,6 +255,7 @@ export async function POST(req: NextRequest) {
                     guideIdArg,
                     walletAddress as Address,
                     mistakesInCW.length == 0,
+                    usuario.profilescore || 0
                   ]
                 })
                 console.log("encodedData=", encodedData)
@@ -252,7 +301,8 @@ export async function POST(req: NextRequest) {
         } else {
           retMessage += "\n" + msg[locale].contractError
         }
-        }
+
+      }
     }
 
     console.log("Retornando mensaje ", retMessage)

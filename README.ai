@@ -17,10 +17,10 @@ Learn.tg is a live, production gamified educational platform making learning eng
 - **Key Models:** Courses, Chapters, Guides, Users, Submissions
 - **Admin Interface:** Teachers organize courses into chapters and guides via `/learntg-admin`
 
-### 2. **Smart Contracts: Hardhat (packages/hardhat/)**
+### 2. **Smart Contracts: Hardhat (apps/hardhat/)**
 - **Language:** Solidity ^0.8.24
 - **Network:** Celo (testnet: celoSepolia, mainnet: celo)
-- **Main Contract:** `ScholarshipVaults.sol`
+- **Main Contract:** `LearnTGVaults.sol`
   - Manages USDT reward distribution per course
   - Creates vaults with configurable rewards per guide
   - Implements 24-hour cooldown between submissions
@@ -29,7 +29,7 @@ Learn.tg is a live, production gamified educational platform making learning eng
 - **Token:** USDT (ERC20 compatible)
 - **ABI Sync:** Automatic sync to frontend during compilation
 
-### 3. **Frontend: Next.js (packages/nextjs-app/)**
+### 3. **Frontend: Next.js (apps/nextjs/)**
 - **Framework:** Next.js with React + TypeScript
 - **Purpose:** User interface, content delivery, SIWE authentication
 - **Authentication:** Sign-In With Ethereum (SIWE)
@@ -92,7 +92,7 @@ Course
 **Process:**
 1. Frontend submits crossword answer to `/api/check_crossword`
 2. Backend validates answer against guide questions
-3. If perfect: calls `submitGuideResult()` on ScholarshipVaults contract
+3. If perfect: calls `submitGuideResult()` on LearnTGVaults contract
 4. Contract verifies:
    - Student hasn't received reward for this guide
    - 24-hour cooldown has passed since last submission
@@ -134,3 +134,4 @@ Learn.tg demonstrates that education can be engaging, transparent, and rewarding
 - Uses blockchain for transparent, trustless reward distribution
 - Enables teachers to create and manage courses globally
 - Supports multiple languages and subjects
+

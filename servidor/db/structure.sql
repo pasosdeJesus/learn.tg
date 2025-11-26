@@ -2714,6 +2714,31 @@ ALTER SEQUENCE public.cor1440_gen_tipomoneda_id_seq OWNED BY public.cor1440_gen_
 
 
 --
+-- Name: course_usuario; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.course_usuario (
+    usuario_id integer NOT NULL,
+    proyectofinanciero_id integer NOT NULL,
+    points integer NOT NULL
+);
+
+
+--
+-- Name: guide_usuario; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.guide_usuario (
+    usuario_id integer NOT NULL,
+    actividadpf_id integer NOT NULL,
+    amountpaid integer NOT NULL,
+    profilescore integer NOT NULL,
+    amountpending integer NOT NULL,
+    points integer NOT NULL
+);
+
+
+--
 -- Name: heb412_gen_campohc; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3025,6 +3050,26 @@ CREATE SEQUENCE public.heb412_gen_plantillahcr_id_seq
 --
 
 ALTER SEQUENCE public.heb412_gen_plantillahcr_id_seq OWNED BY public.heb412_gen_plantillahcr.id;
+
+
+--
+-- Name: kysely_migration; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.kysely_migration (
+    name character varying(255) NOT NULL,
+    "timestamp" character varying(255) NOT NULL
+);
+
+
+--
+-- Name: kysely_migration_lock; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.kysely_migration_lock (
+    id character varying(255) NOT NULL,
+    is_locked integer DEFAULT 0 NOT NULL
+);
 
 
 --
@@ -4722,6 +4767,7 @@ CREATE TABLE public.usuario (
     pais_id integer,
     passport_name character varying(127),
     passport_nationality integer,
+    profilescore integer,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
@@ -5633,6 +5679,22 @@ ALTER TABLE ONLY public.heb412_gen_plantillahcm
 
 ALTER TABLE ONLY public.heb412_gen_plantillahcr
     ADD CONSTRAINT heb412_gen_plantillahcr_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: kysely_migration_lock kysely_migration_lock_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kysely_migration_lock
+    ADD CONSTRAINT kysely_migration_lock_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: kysely_migration kysely_migration_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kysely_migration
+    ADD CONSTRAINT kysely_migration_pkey PRIMARY KEY (name);
 
 
 --

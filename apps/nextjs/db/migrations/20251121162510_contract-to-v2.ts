@@ -21,8 +21,48 @@ import Erc20Abi from
 import LearnTGVaultsAbi from 
   '../../abis/LearnTGVaults.json' with { type: "json" }
 import { newKyselyPostgresql } from '../../.config/kysely.config.ts'
-import type { GuidepaidUsuario, CoursecompletedUsuario } from 
+import type { GuideUsuario, CourseUsuario } from 
   '../../db/db.d.ts';
+
+
+async function calcNonce(publicClient, account) {
+  console.log("  * Reintentando con nonce")
+  let nonce = await publicClient.getTransactionCount({
+    address: account.address,
+    blockTag: 'pending', // includes pending transactions
+  });
+  console.log("OJO  nonce=", nonce)
+  let nextNonce = nonce + 1;
+  console.log("OJO  nextNonce=", nextNonce)
+  return nextNonce;
+}
+
+
+async function callWriteFun(publicClient, account, contractFun, contractParams) {
+  console.log("  Calling function", contractFun, "with params", contractParams)
+  let tx:Address = '0x0'
+  try {
+    tx = await contractFun(contractParams)
+  } catch (e) {
+    let nextNonce = await calcNonce(publicClient, account)
+    tx = await contractFun(
+      contractParams,
+      { account, nonce: nextNonce }
+    )
+  }
+  console.log("* tx=", tx)
+  try {
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: tx,
+      confirmations: 2, // Optional: number of confirmations to wait for
+      timeout: 3_000, // 2 seconds
+    });
+    console.log(`Receipt: ${receipt}`)
+  } catch (e) {
+    console.error(`**No operó waitForTransactionReceipt de ${tx}, continuando`)
+  }
+  return tx
+}
 
 
 export async function up(db: Kysely<any>): Promise<void> {
@@ -162,7 +202,7 @@ export async function up(db: Kysely<any>): Promise<void> {
       console.log("  Creando boveda como", oldVault)
       let tx:Address = '0x0'
       try {
-        await newContract.write.createVault(
+        tx = await newContract.write.createVault(
           [ courseId, oldVault.amountPerGuide ],
         )
       } catch (e) {
@@ -184,7 +224,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         const receipt = await publicClient.waitForTransactionReceipt({
           hash: tx,
           confirmations: 1, // Optional: number of confirmations to wait for
-          timeout: 1_000, // 1 second
+          timeout: 2_000, // 1 second
         });
         console.log(`Receipt: ${receipt}`)
       } catch (e) {
@@ -199,10 +239,20 @@ export async function up(db: Kysely<any>): Promise<void> {
       }
       console.log('newVault=', newVault)
 
-      console.log(`Vault creado: course ${newVault.courseId}`)
+      console.log(`Vault creado: ${newVault.courseId}`)
     }
 
+
     if (oldVault.exists && newVault.exists) {
+
+      if (oldVault.balance > 0 && newVault.balance == 0) {
+        let tx = callWriteFun(
+          publicClient, 
+          account, 
+          newContract.write.setVaultBalance,
+          [courseId, oldVault.balance]
+        )
+      }
       const uwallets = await db
       .selectFrom('billetera_usuario')
       .select([
@@ -244,7 +294,7 @@ export async function up(db: Kysely<any>): Promise<void> {
               "USDT"
             )
             const ug = await db
-            .selectFrom('guidepaid_usuario')
+            .selectFrom('guide_usuario')
             .select([
               'usuario_id'
             ])
@@ -253,7 +303,7 @@ export async function up(db: Kysely<any>): Promise<void> {
             .execute()
             if (ug.length == 0) {
               guiasCompletadas++
-              let gp:Insertable<GuidepaidUsuario> = {
+              let gp:Insertable<GuideUsuario> = {
                 usuario_id: uw.usuario_id,
                 actividadpf_id: g.id,
                 amountpaid: oldVault.amountPerGuide,
@@ -262,7 +312,7 @@ export async function up(db: Kysely<any>): Promise<void> {
                 points: 1,
               }
               let igp = await db
-              .insertInto('guidepaid_usuario')
+              .insertInto('guide_usuario')
               .values(gp)
               .returningAll()
               .executeTakeFirstOrThrow()
@@ -290,7 +340,7 @@ export async function up(db: Kysely<any>): Promise<void> {
                 )
               }
               console.log(
-                `guidePaid con ${courseId}, ${numGuia}, ` +
+                `      guidePaid con ${courseId}, ${numGuia}, ` +
                   `${uw.billetera}, ${oldVault.amountPerGuide}` +
                   ` tx: `, tx
               )
@@ -310,13 +360,13 @@ export async function up(db: Kysely<any>): Promise<void> {
           }
         }
         if (guiasCompletadas == guides.rows.length) {
-          let cp:Insertable<CoursecompletedUsuario> = {
+          let cp:Insertable<CourseUsuario> = {
             usuario_id: uw.usuario_id,
             proyectofinanciero_id: c.id,
             points: 2
           }
           let icp = await db
-          .insertInto('coursecompleted_usuario')
+          .insertInto('course_usuario')
           .values(cp)
           .returningAll()
           .executeTakeFirstOrThrow()
@@ -329,6 +379,6 @@ export async function up(db: Kysely<any>): Promise<void> {
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  console.error("Irreversible migration")
-  process.exit(1)
+ // console.error("Irreversible migration")
+ // process.exit(1)
 }

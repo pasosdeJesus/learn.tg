@@ -2,7 +2,7 @@ import type { Kysely } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
-  .createTable('guidepaid_usuario')
+  .createTable('guide_usuario')
   .addColumn('usuario_id', 'integer', (col) => col.notNull())
   .addColumn('actividadpf_id', 'integer', (col) => col.notNull())
   .addColumn('amountpaid', 'integer', (col) => col.notNull())
@@ -11,7 +11,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   .addColumn('points', 'integer', (col) => col.notNull())
   .execute();
   await db.schema
-  .createTable('coursecompleted_usuario')
+  .createTable('course_usuario')
   .addColumn('usuario_id', 'integer', (col) => col.notNull())
   .addColumn('proyectofinanciero_id', 'integer', (col) => col.notNull())
   .addColumn('points', 'integer', (col) => col.notNull())

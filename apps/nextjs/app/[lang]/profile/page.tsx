@@ -110,6 +110,7 @@ export default function ProfileForm({ params } : PageProps) {
         // What you want users to disclose
         name: true,
         nationality: true,
+        passportnumber: true
       },
     }).build()
 

@@ -536,13 +536,13 @@ export interface Cor1440GenTipomoneda {
   updated_at: Timestamp;
 }
 
-export interface CoursecompletedUsuario {
+export interface CourseUsuario {
   points: number;
   proyectofinanciero_id: number;
   usuario_id: number;
 }
 
-export interface GuidepaidUsuario {
+export interface GuideUsuario {
   actividadpf_id: number;
   amountpaid: number;
   amountpending: number;
@@ -1272,6 +1272,7 @@ export interface Usuario {
   passport_name: string | null;
   passport_nationality: number | null;
   password: Generated<string>;
+  profilescore: number | null;
   religion_id: number | null;
   remember_created_at: Timestamp | null;
   reset_password_sent_at: Timestamp | null;
@@ -1336,8 +1337,8 @@ export interface DB {
   cor1440_gen_sectorapc: Cor1440GenSectorapc;
   cor1440_gen_tipoindicador: Cor1440GenTipoindicador;
   cor1440_gen_tipomoneda: Cor1440GenTipomoneda;
-  coursecompleted_usuario: CoursecompletedUsuario;
-  guidepaid_usuario: GuidepaidUsuario;
+  course_usuario: CourseUsuario;
+  guide_usuario: GuideUsuario;
   heb412_gen_campohc: Heb412GenCampohc;
   heb412_gen_campoplantillahcm: Heb412GenCampoplantillahcm;
   heb412_gen_campoplantillahcr: Heb412GenCampoplantillahcr;
