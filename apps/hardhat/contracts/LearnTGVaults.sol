@@ -26,6 +26,7 @@ contract LearnTGVaults is ReentrancyGuard {
   uint256 public constant VERSION = 2;
   address public immutable owner;
   IERC20 public immutable usdtToken;
+  uint256 private constant PERCENTAGE_FOR_TEAM = 20;
 
   struct Vault {
     uint256 courseId;
@@ -109,7 +110,7 @@ contract LearnTGVaults is ReentrancyGuard {
     require(courseId > 0, "Course id must be greater than 0");
     require(amount > 0, "Deposit amount must be greater than 0");
 
-    uint256 forTeam = amount / 5;     // 20% *20/100 could overflow
+    uint256 forTeam = (amount / 100) * PERCENTAGE_FOR_TEAM;
     uint256 forVault = amount - forTeam;
 
     vaults[courseId].balance += forVault;
@@ -137,6 +138,17 @@ contract LearnTGVaults is ReentrancyGuard {
       amount > 0, "Invalid params"
     );
     guidePaid[courseId][guideNumber][student] = amount;
+  }
+
+  // Usada para migrar de versión anterior a esta
+  function setVaultBalance(
+    uint256 courseId,
+    uint256 balance
+  ) external onlyOwner vaultExists(courseId) {
+    require(
+      balance > 0, "Balance should be positive"
+    );
+    vaults[courseId].balance = balance;
   }
 
 
