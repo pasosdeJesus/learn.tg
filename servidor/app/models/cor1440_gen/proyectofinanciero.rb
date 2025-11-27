@@ -10,9 +10,9 @@ module Cor1440Gen
       presence: true
     validates :prefijoRuta,
       presence: true,
-      format: { 
-        with: /\A\/[a-zA-Z].*\z/,
-        message: "debe comenzar con /"
+      format: {
+        with: %r{\A/[a-zA-Z].*\z},
+        message: "debe comenzar con /",
       }
     validates :subtitulo,
       presence: true
@@ -28,6 +28,5 @@ module Cor1440Gen
     scope :filtro_conBilletera, lambda { |c|
       where(conBilletera: c)
     }
-
   end
 end

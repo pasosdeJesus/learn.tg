@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module Admin
   class ReligionesController < Msip::Admin::BasicasController
-    before_action :set_religion, 
+    before_action :set_religion,
       only: [:show, :edit, :update, :destroy]
-    load_and_authorize_resource  class: ::Religion
+    load_and_authorize_resource class: ::Religion
 
-    def clase 
+    def clase
       "::Religion"
     end
 
@@ -14,21 +16,20 @@ module Admin
 
     def atributos_index
       [
-        :id, 
-        :nombre, 
-        :observaciones, 
-        :fechacreacion_localizada, 
-        :habilitado
+        :id,
+        :nombre,
+        :observaciones,
+        :fechacreacion_localizada,
+        :habilitado,
       ]
     end
 
     def genclase
-      'F'
+      "F"
     end
 
     def religion_params
       params.require(:religion).permit(*atributos_form)
     end
-
   end
 end

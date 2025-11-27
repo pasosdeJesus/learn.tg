@@ -1,10 +1,16 @@
-require 'msip/version'
+# frozen_string_literal: true
+
+require "msip/version"
 
 Msip.setup do |config|
-  config.ruta_anexos = ENV.fetch('MSIP_RUTA_ANEXOS', 
-                                 "#{Rails.root}/archivos/anexos")
-  config.ruta_volcados = ENV.fetch('MSIP_RUTA_VOLCADOS',
-                                   "#{Rails.root}/archivos/bd")
+  config.ruta_anexos = ENV.fetch(
+    "MSIP_RUTA_ANEXOS",
+    "#{Rails.root.join("archivos/anexos")}",
+  )
+  config.ruta_volcados = ENV.fetch(
+    "MSIP_RUTA_VOLCADOS",
+    "#{Rails.root.join("archivos/bd")}",
+  )
   config.titulo = "Learntg Admin #{Cor1440Gen::VERSION}"
 
   config.descripcion = "Administración de learn.tg"
@@ -22,5 +28,4 @@ te estaré observando y seré tu guía.
 </p>
 <p>Salmo 32:8</p>
 </blockquote>".html_safe
-
 end

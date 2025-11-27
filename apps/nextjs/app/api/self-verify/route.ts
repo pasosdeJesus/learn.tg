@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       // Verification successful - process the result
       console.log("Verification successful")
 
-      const wallet=result.userData.userIdentifier
+      const wallet = result.userData.userIdentifier
       console.log("wallet=", wallet)
 
       const db = newKyselyPostgresql()
@@ -84,7 +84,18 @@ export async function POST(req: Request) {
       if (qCountryId.rows.length != 1 || qCountryId.rows[0]?.id === null) {
         throw new Error(`Country ${ISOcode} not found`);
       }
+      let qRepetido = await sql<any>`select usuario_id from usuario where lower(nombre) = lower('${result.discloseOutput.name}') AND pais_id = ${qCountryId.rows[0].id}`.execute(db)
+      if (qRepetido.rows.length > 1 || 
+          (qRepetido.rows.length == 1 && 
+           qRepetido.rows[0].usuario_id != qBilleteraUsuario.rows[0].usuario_id)) {
+        throw new Error("Passport used with another wallet, cannot verify this one");
+      }
 
+      console.log("usuario=", qBilleteraUsuario)
+      if (qBilleteraUsuario.rows[0]?.usuario_id === null) {
+        throw new Error("User not found");
+      }
+ 
       let uUsuario:Updateable<Usuario> = {
         passport_name: result.discloseOutput.name,
         nombre: result.discloseOutput.name,

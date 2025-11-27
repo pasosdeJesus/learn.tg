@@ -1,24 +1,26 @@
-require 'cor1440_gen/concerns/models/usuario'
+# frozen_string_literal: true
 
-class Usuario < ActiveRecord::Base 
+require "cor1440_gen/concerns/models/usuario"
+
+class Usuario < ActiveRecord::Base
   include Cor1440Gen::Concerns::Models::Usuario
 
-  belongs_to :religion, 
+  belongs_to :religion,
     optional: true,
     validate: true
-  belongs_to :pais, 
+  belongs_to :pais,
     class_name: "Msip::Pais",
-    foreign_key: "pais_id",
     optional: true,
     validate: true
 
   has_many :billetera_usuario
 
-  has_attached_file :foto, 
+  has_attached_file :foto,
     path: (Msip.ruta_anexos.to_s + "/fotos/:id_:filename")
 
-  validates_attachment :foto, content_type: { 
-    content_type: ["image/jpg", "image/jpeg", "image/png", "image/gif"] }
+  validates_attachment :foto, content_type: {
+    content_type: ["image/jpg", "image/jpeg", "image/png", "image/gif"],
+  }
 
   validates :foto_file_name, length: { maximum: 255 }
 
@@ -26,13 +28,12 @@ class Usuario < ActiveRecord::Base
     # No tiene restricciones de oficina
   end
 
-  scope :filtrar_alterno, lambda  { |otros_params| 
+  scope :filtrar_alterno, lambda { |otros_params|
     uid = []
     if otros_params["walletAddress"]
-      uid = BilleteraUsuario.where(billetera: otros_params["walletAddress"]).
-        pluck(:usuario_id)
+      uid = BilleteraUsuario.where(billetera: otros_params["walletAddress"])
+        .pluck(:usuario_id)
     end
     where(id: uid)
   }
-
 end

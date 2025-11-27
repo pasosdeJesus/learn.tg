@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_dependency "cor1440_gen/concerns/controllers/proyectosfinancieros_controller"
 
 module Cor1440Gen
@@ -8,33 +10,41 @@ module Cor1440Gen
       only: [:show, :edit, :update, :destroy]
     skip_before_action :set_proyectofinanciero, only: [:validar]
 
-    load_and_authorize_resource  class: Cor1440Gen::Proyectofinanciero,
-      only: [:new, :create, :destroy, :edit, :update, :show,
-             :objetivospf]
+    load_and_authorize_resource class: Cor1440Gen::Proyectofinanciero,
+      only: [
+        :new,
+        :create,
+        :destroy,
+        :edit,
+        :update,
+        :show,
+        :objetivospf,
+      ]
 
     def atributos_index
-      [ 
-        :id, 
-        :nombre 
+      [
+        :id,
+        :nombre,
       ] +
-      [ 
-        :financiador_ids =>  [] 
-      ] +
-      [ 
-        :fechainicio_localizada,
-        :fechacierre_localizada,
-        :responsable,
-        :proyectofinanciero_usuario,
-      ] +
-      [ :compromisos, 
-        :monto, 
-        :observaciones, 
-        :objetivopf,
-        :indicadorobjetivo,
-        :resultadopf,
-        :indicadorpf,
-        :actividadpf
-      ]
+        [
+          financiador_ids: [],
+        ] +
+        [
+          :fechainicio_localizada,
+          :fechacierre_localizada,
+          :responsable,
+          :proyectofinanciero_usuario,
+        ] +
+        [
+          :compromisos,
+          :monto,
+          :observaciones,
+          :objetivopf,
+          :indicadorobjetivo,
+          :resultadopf,
+          :indicadorpf,
+          :actividadpf,
+        ]
     end
 
     def atributos_filtro_antestabla
@@ -51,8 +61,8 @@ module Cor1440Gen
         :indicadorobjetivo,
         :resultadopf,
         :indicadorpf,
-        :actividadpf
-      ] + [ 
+        :actividadpf,
+      ] + [
         :subtitulo,
         :idioma,
         :prefijoRuta,
@@ -66,30 +76,22 @@ module Cor1440Gen
         :conBilletera,
         :sinBilletera,
         :marcologico,
-        :caracterizacion, 
+        :caracterizacion,
         :beneficiario,
         :plantillahcm,
-        :anexo_proyectofinanciero
+        :anexo_proyectofinanciero,
       ]
-    end
-
-    def new
-      new_cor1440_gen
-      @registro.subtitulo = ((0...8).map { (65 + rand(26)).chr }.join)
-      @registro.prefijoRuta = "/" + @registro.subtitulo
-      @registro.save!
-      redirect_to(cor1440_gen.edit_proyectofinanciero_path(@registro)) 
     end
 
     def index(c = nil)
       merr = "".dup
-      if !::ApplicationHelper::verificaToken(request, merr)
+      unless ::ApplicationHelper.verificaToken(request, merr)
         puts "OJO #{merr}"
-        render json: { error: "Unauthorized. #{merr}" }, status: :unauthorized
+        render(json: { error: "Unauthorized. #{merr}" }, status: :unauthorized)
         return
       end
       c = Cor1440Gen::Proyectofinanciero.all
-      if !(current_usuario || (params && params[:walletAddress]))
+      unless current_usuario || (params && params[:walletAddress])
         c = c.where(sinBilletera: true)
       end
 
@@ -99,12 +101,20 @@ module Cor1440Gen
 
     def show
       merr = "".dup
-      if !::ApplicationHelper::verificaToken(request, merr)
+      unless ::ApplicationHelper.verificaToken(request, merr)
         puts "OJO #{merr}"
-        render json: { error: "Unauthorized. #{merr}" }, status: :unauthorized
+        render(json: { error: "Unauthorized. #{merr}" }, status: :unauthorized)
         return
       end
       super
+    end
+
+    def new
+      new_cor1440_gen
+      @registro.subtitulo = ((0...8).map { (65 + rand(26)).chr }.join)
+      @registro.prefijoRuta = "/" + @registro.subtitulo
+      @registro.save!
+      redirect_to(cor1440_gen.edit_proyectofinanciero_path(@registro))
     end
 
     def lista_proyectofinanciero_params
@@ -120,21 +130,19 @@ module Cor1440Gen
         :creditosMd,
         :imagen,
         :sinBilletera,
-        :subtitulo
+        :subtitulo,
       ] + proyectofinanciero_params_cor1440_gen
-      at = l.select {
-        |i,v| i.class == Hash && i.keys == [:actividadpf_attributes]
-      }[0]
-      at[:actividadpf_attributes].insert(-1, :sufijoRuta) 
-      return l
+      at = l.select do |i, _v|
+        i.class == Hash && i.keys == [:actividadpf_attributes]
+      end[0]
+      at[:actividadpf_attributes].insert(-1, :sufijoRuta)
+      l
     end
-
 
     def proyectofinanciero_params
       params.require(:proyectofinanciero).permit(
-        lista_proyectofinanciero_params
+        lista_proyectofinanciero_params,
       )
     end
-
-  end 
+  end
 end

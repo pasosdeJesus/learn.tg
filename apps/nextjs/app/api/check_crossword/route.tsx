@@ -88,7 +88,6 @@ export async function POST(req: NextRequest) {
         correctPoint: "¡Respuesta correcto! +1 punto",
         correct: "¡Respuesta correcta! Se ha enviado tu resultado para beca, por favor espera 24 horas antes de volver a enviar para este curso.",
         incorrect: "Respuesta equivocada. Se ha enviado tu resultado al blockchain, por favor espera 24 horas antes de volver a enviar para este curso.",
-        invalidKey: "Clave privada inválida",
         noWallet: "La respuesta no será calificada ni se buscarán becas posibles.",
         submitError: "No se pudo enviar el resultado para beca: ",
         tokenMismatch: "El token almacenado para el usuario no coincide con el token proporcionado.",
@@ -100,7 +99,6 @@ export async function POST(req: NextRequest) {
         correct: "Correct answer! Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
         correctPoint: "Correct answer! +1 point",
         incorrect: "Wrong answer. Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
-        invalidKey: "Invalid private key",
         noWallet: "Your answer will not be graded nor will possible scholarships be sought.",
         submitError: "Could not submit result for scholarship: ",
         tokenMismatch: "Token stored for user doesn't match given token.",
@@ -197,30 +195,36 @@ export async function POST(req: NextRequest) {
           celo : celoSepolia,
           transport: http(rpcUrl)
         })
-        const privateKey = process.env.PRIVATE_KEY as string | undefined
-        let account: ReturnType<typeof privateKeyToAccount> | undefined
-        if (privateKey) {
-          try {
-            account = privateKeyToAccount(privateKey as Address)
-          } catch (e) {
-            retMessage += "\n" + msg[locale].invalidKey
-          }
+
+        const privateKey = process.env.PRIVATE_KEY as Hex | undefined
+        if (!privateKey) {
+            console.error("CRITICAL: PRIVATE_KEY is not set in environment variables.");
+            throw new Error("Server configuration error.");
         }
-        const walletClient = account ? createWalletClient({
+
+        let account;
+        try {
+            account = privateKeyToAccount(privateKey);
+        } catch (e) {
+            console.error("CRITICAL: Failed to load account from private key.", e);
+            throw new Error("Server configuration error.");
+        }
+        
+        const walletClient = createWalletClient({
           account,
           chain: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
           celo : celoSepolia,
           transport: http(rpcUrl)
-        }) : undefined
-        //console.log("*** walletClient=", walletClient)
-        const referralTag = account ? getReferralTag({
+        })
+        
+        const referralTag = getReferralTag({
           user: '0x358643bAdcC77Cccb28A319abD439438A57339A7',
           consumer: walletAddress,
-        }) : undefined
+        })
         console.log("*** referralTag=", referralTag)
 
         const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
-        if (account && contractAddress && walletClient) {
+        if (contractAddress) {
           const contract = getContract({
             address: contractAddress,
             abi: LearnTGVaultsAbi as any,
@@ -327,3 +331,4 @@ export async function POST(req: NextRequest) {
   }
 
 }
+

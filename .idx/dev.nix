@@ -6,13 +6,21 @@
 
   # Use https://search.nixos.org/packages to find packages
   packages = [
-    # pkgs.go
-    # pkgs.python311
-    # pkgs.python311Packages.pip
-    # pkgs.nodejs_20
-    # pkgs.nodePackages.nodemon
     pkgs.corepack
     pkgs.postgresql
+    pkgs.postgresql.lib
+    pkgs.ruby_3_3
+    pkgs.gcc
+    pkgs.gnumake
+    pkgs.libxml2.dev
+    pkgs.binutils
+    pkgs.pkg-config
+    pkgs.libyaml.dev
+    pkgs.openssl.dev
+    pkgs.autoconf
+    pkgs.automake
+    pkgs.libtool
+    pkgs.m4
   ];
 
   # Sets environment variables in the workspace

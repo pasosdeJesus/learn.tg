@@ -41,6 +41,29 @@ vi.mock('@/.config/kysely.config.ts', () => ({
   newKyselyPostgresql: () => new MockKysely()
 }));
 
+// Mock viem to prevent actual blockchain interactions
+vi.mock('viem', async () => {
+  const actual = await vi.importActual('viem');
+  return {
+    ...actual, // Use actual implementations for most functions
+    createPublicClient: vi.fn(() => ({})), 
+    createWalletClient: vi.fn(() => ({
+        sendTransaction: vi.fn().mockResolvedValue('0xmocktxhash'),
+        getChainId: vi.fn().mockResolvedValue(44787), // Celo Alfajores
+    })),
+    getContract: vi.fn(() => ({
+      address: '0xmockContractAddress',
+      read: {
+        vaults: vi.fn().mockResolvedValue([0n, 0n, 0n, true, 0n]), // vault.exists = true
+        studentCanSubmit: vi.fn().mockResolvedValue(true),
+      },
+    })),
+    encodeFunctionData: vi.fn(() => '0xmockEncodedData'),
+    http: vi.fn(), // Mock http transport
+  };
+});
+
+
 let POST: any
 let GET: any
 
@@ -54,6 +77,11 @@ describe('API /api/check_crossword', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    // Set dummy environment variables for tests that need to simulate contract interaction
+    process.env.PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+    process.env.NEXT_PUBLIC_DEPLOYED_AT = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+
     // Reset mocks for each test
     mockExecuteTakeFirst.mockReset();
     mockExecute.mockReset();
@@ -96,7 +124,7 @@ describe('API /api/check_crossword', () => {
   })
 
   it('POST con walletAddress y token que no coincide devuelve mensaje de token', async () => {
-    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', token: 'otro', answer_fib: 'TEST' })
+    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', token: 'otro', answer_fib: 'TEST' })
     const body = {
       guideId: 1,
       courseId: 1,
@@ -105,7 +133,7 @@ describe('API /api/check_crossword', () => {
       guide: 'intro',
       grid: [],
       placements: [],
-      walletAddress: '0xabc',
+      walletAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
       token: 'NOPE'
     }
     const req = new NextRequest('http://localhost:3000/api/check_crossword', {
@@ -121,7 +149,7 @@ describe('API /api/check_crossword', () => {
   })
 
   it('POST con respuestas correctas produce probs vacío y sin mensaje de error', async () => {
-    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', usuario_id: 1, token: 'TOK', answer_fib: 'TEST' }) // for billetera_usuario
+    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', usuario_id: 1, token: 'TOK', answer_fib: 'TEST' }) // for billetera_usuario
       .mockResolvedValueOnce({ id: 1, profilescore: 60 }); // for usuario
     mockExecute.mockResolvedValueOnce([]); // for guide_usuario check (ug)
     mockExecuteTakeFirst.mockResolvedValueOnce({ points: 1 }); // for insert into guide_usuario
@@ -136,7 +164,7 @@ describe('API /api/check_crossword', () => {
     ]
     const body = {
       courseId: 1, guideId: 1, lang: 'en', prefix: 'p', guide: 'intro', grid, placements,
-      walletAddress: '0xabc', token: 'TOK'
+      walletAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', token: 'TOK'
     }
     const req = new NextRequest('http://localhost:3000/api/check_crossword', {
       method: 'POST',
@@ -147,12 +175,12 @@ describe('API /api/check_crossword', () => {
     const data = await res.json()
     expect(res.status).toBe(200)
     expect(data.mistakesInCW).toEqual([])
-    // Permitir mensaje vacío o mensaje de error de contrato
-    expect([ 'Correct answer! +1 point\nCould not connect to scholarship contract.', 'Correct answer! +1 point', ]).toContain(data.message)
+    expect(data.message).toContain('Correct answer')
+    expect(data.scholarshipResult).toBe('0xmocktxhash')
   })
 
   it('POST con respuestas incorrectas devuelve probs con índice de palabra', async () => {
-    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xabc', usuario_id: 1, token: 'TOK', answer_fib: 'TEST' }) // for billetera_usuario
+    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', usuario_id: 1, token: 'TOK', answer_fib: 'TEST' }) // for billetera_usuario
       .mockResolvedValueOnce({ id: 1, profilescore: 60 }); // for usuario
     mockExecute.mockResolvedValue([]); // for guide_usuario check (ug)
     
@@ -166,7 +194,7 @@ describe('API /api/check_crossword', () => {
     ]
     const body = {
       courseId: 1, guideId: 1, lang: 'en', prefix: 'p', guide: 'intro', grid, placements,
-      walletAddress: '0xabc', token: 'TOK'
+      walletAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', token: 'TOK'
     }
     const req = new NextRequest('http://localhost:3000/api/check_crossword', {
       method: 'POST',
@@ -177,6 +205,8 @@ describe('API /api/check_crossword', () => {
     const data = await res.json()
     expect(res.status).toBe(200)
     expect(data.mistakesInCW).toEqual([1])
+    expect(data.message).toContain('Wrong answer')
+    expect(data.scholarshipResult).toBe('0xmocktxhash')
   })
 })
 
