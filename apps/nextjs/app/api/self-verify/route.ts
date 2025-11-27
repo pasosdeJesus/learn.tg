@@ -17,7 +17,7 @@ const selfBackendVerifier = new SelfBackendVerifier(
   AllIds,
   new DefaultConfigStore({
     excludedCountries: [],
-    ofac: true,
+    ofac: false, // See https://t.me/localismfund/1/435
   }),
   "hex" // userIdentifierType
 );

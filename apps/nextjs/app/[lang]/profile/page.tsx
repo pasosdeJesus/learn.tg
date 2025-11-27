@@ -105,7 +105,7 @@ export default function ProfileForm({ params } : PageProps) {
       disclosures: {
         // What you want to verify from the user's identity
         excludedCountries: [],
-        ofac: true,
+        ofac: false, // See https://t.me/localismfund/1/435 
 
         // What you want users to disclose
         name: true,
