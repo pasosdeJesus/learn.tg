@@ -109,8 +109,7 @@ export default function ProfileForm({ params } : PageProps) {
 
         // What you want users to disclose
         name: true,
-        nationality: true,
-        passportnumber: true
+        nationality: true
       },
     }).build()
 
@@ -367,7 +366,7 @@ export default function ProfileForm({ params } : PageProps) {
                 </label>
 	              <select
                   id="religion"
-                  value={profile.religion}
+                  value={profile.religion || ''}
                   onChange={(e) => handleChange("religion", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >

@@ -84,7 +84,8 @@ export async function POST(req: Request) {
       if (qCountryId.rows.length != 1 || qCountryId.rows[0]?.id === null) {
         throw new Error(`Country ${ISOcode} not found`);
       }
-      let qRepetido = await sql<any>`select usuario_id from usuario where lower(nombre) = lower('${result.discloseOutput.name}') AND pais_id = ${qCountryId.rows[0].id}`.execute(db)
+      let qRepetido = await sql<any>`select id from usuario where lower(passport_name) = lower(${result.discloseOutput.name as string}) AND passport_nationality = ${qCountryId.rows[0].id}`.execute(db)
+      console.log("** qRepetido=", qRepetido)
       if (qRepetido.rows.length > 1 || 
           (qRepetido.rows.length == 1 && 
            qRepetido.rows[0].usuario_id != qBilleteraUsuario.rows[0].usuario_id)) {
