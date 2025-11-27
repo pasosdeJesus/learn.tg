@@ -88,7 +88,7 @@ export async function POST(req: Request) {
       console.log("** qRepetido=", qRepetido)
       if (qRepetido.rows.length > 1 || 
           (qRepetido.rows.length == 1 && 
-           qRepetido.rows[0].usuario_id != qBilleteraUsuario.rows[0].usuario_id)) {
+           qRepetido.rows[0].id != qBilleteraUsuario.rows[0].usuario_id)) {
         throw new Error("Passport used with another wallet, cannot verify this one");
       }
 

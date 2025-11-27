@@ -46,8 +46,8 @@ export default function Header({ lang = "en" }) {
             {isConnected && address && session && session.address &&
               session.address == address && (
                 <Button asChild variant="ghost">
-                  <Link href={`/${lang}/profile`}>
-                    {lang === "es" ? "Perfil" : "Profile"}
+                  <Link href={`/${lang ? lang : "es"}/profile`}>
+                    {lang === "en" ? "Profile" : "Perfil"}
                   </Link>
                 </Button>
             )}
