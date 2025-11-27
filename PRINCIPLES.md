@@ -19,3 +19,16 @@
 6. **Humanity** We can receive clean money from non-violent people and
    organizations, based on mutual respect and sincere desire of helping
    the needy out of love and mercy.
+
+
+# From Internal Motivation to Community Action
+
+These foundational principles are communitary expression of or core internal motivations.
+
+| Internal Motivation ("The Heart") | Logical & Theological Connector ("The Reason") | Community Principle ("The Action") |
+| :-------------------------------- | :--------------------------------------------- | :-------------------------------- |
+| **Love + Respect** | **Because** every person is created in **God's image (Genesis 1:27)**, possessing inherent and inviolable dignity. | **Sacredness of Human Life & Non-Violence** |
+| **Diligence + Love** | **Compelled by** Christ's command to make **disciples of all nations (Matthew 28:19)**, carrying the integral gospel (word and action). | **Mission to the Ends of the Earth** |
+| **Respect + Humility** | **Because** God's Kingdom is characterized by **the justice the Lord requires (Micah 6:8)** and **peace that surpasses all understanding (Philippians 4:7)**, not by the world's oppression. | **Biblical Peace and Justice** |
+| **Love + Respect + Humility + Diligence** | **Because** money can corrupt the mission, but clean resources facilitate it. We are **faithful stewards (1 Corinthians 4:2)** who will give account to God for every partnership. | **Funding: "Humanity" - Only Clean Money** |
+
