@@ -77,7 +77,7 @@ class Ability < Cor1440Gen::Ability
     if !usuario.nil? && !usuario.rol.nil?
       case usuario.rol
       when ROLBILLETERA
-        // El siguiente falla si se cambia por `can(:read, usuario)`
+        # El siguiente falla si se cambia por `can(:read, usuario)`
         can(:read, Usuario, id: usuario.id)
 
       when ROLOPERADOR
