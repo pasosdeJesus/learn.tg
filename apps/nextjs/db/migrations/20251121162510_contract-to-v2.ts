@@ -117,7 +117,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     let tx:Address = await callWriteFun(
       publicClient, 
       account, 
-      oldContract.write.emergencyWithdraw,
+      oldContract.write.emergencyWithdrawUsdt,
       [oldBalance],
       0
     )
