@@ -58,7 +58,7 @@ describe("LearnTGVaults", function () {
 
       const vault = await learnTGVaults.vaults(courseId);
       expect(vault.courseId).to.equal(courseId);
-      expect(vault.balance).to.equal(0);
+      expect(vault.balanceUsdt).to.equal(0);
       expect(vault.amountPerGuide).to.equal(AMOUNT_PER_GUIDE);
       expect(vault.exists).to.be.true;
     });
@@ -99,7 +99,7 @@ describe("LearnTGVaults", function () {
         .withArgs(COURSE_ID_1, DEPOSIT_AMOUNT);
 
       const vaultAfter = await learnTGVaults.vaults(COURSE_ID_1);
-      expect(vaultAfter.balance).to.equal(vaultBefore.balance + VAULT_DEPOSIT_AMOUNT);
+      expect(vaultAfter.balanceUsdt).to.equal(vaultBefore.balanceUsdt + VAULT_DEPOSIT_AMOUNT);
 
       const ownerBalanceAfter = await mockUSDT.balanceOf(owner.address);
       expect(ownerBalanceAfter).to.equal(ownerBalanceBefore + TEAM_FEE);
@@ -294,17 +294,17 @@ describe("LearnTGVaults", function () {
         .to.be.revertedWith("Invalid params");
     });
 
-    it("Should allow owner to set a vault balance", async function() {
+    it("Should allow owner to set a vault balanceUsdt", async function() {
       const { learnTGVaults } = await loadFixture(deployFixture);
       const newBalance = hre.ethers.parseUnits("500", 6);
 
       await learnTGVaults.setVaultBalance(COURSE_ID_1, newBalance);
 
       const vault = await learnTGVaults.vaults(COURSE_ID_1);
-      expect(vault.balance).to.equal(newBalance);
+      expect(vault.balanceUsdt).to.equal(newBalance);
     });
 
-    it("Should prevent non-owner from setting a vault balance", async function() {
+    it("Should prevent non-owner from setting a vault balanceUsdt", async function() {
       const { learnTGVaults, student1 } = await loadFixture(deployFixture);
       const newBalance = hre.ethers.parseUnits("500", 6);
 
@@ -322,7 +322,7 @@ describe("LearnTGVaults", function () {
   });
 
   describe("Edge Cases", function() {
-    it("Should revert submission if vault balance is just below scholarship amount", async function() {
+    it("Should revert submission if vault balanceUsdt is just below scholarship amount", async function() {
       const { learnTGVaults, student1, donor } = await loadFixture(deployFixture);
       const amountPerGuide = hre.ethers.parseUnits("50", 6); // Scholarship is 50 USDT
       await learnTGVaults.createVault(COURSE_ID_2, amountPerGuide);

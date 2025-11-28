@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+// Main contract of https://learn.tg
+
 interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
     function transferFrom(address from, address to, uint256 amount)
@@ -8,7 +10,7 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-// ReentrancyGuard optimizado (más barato que OpenZeppelin)
+// Optimized ReentrancyGuard (cheaper than OpenZeppelin)
 abstract contract ReentrancyGuard {
     uint256 private constant _NOT_ENTERED = 1;
     uint256 private constant _ENTERED = 2;
@@ -25,19 +27,21 @@ abstract contract ReentrancyGuard {
 contract LearnTGVaults is ReentrancyGuard {
   uint256 public constant VERSION = 2;
   address public immutable owner;
-  IERC20 public immutable usdtToken;
   uint256 private constant PERCENTAGE_FOR_TEAM = 20;
+  IERC20 public immutable usdtToken;
+  // In future multitoken, by now just try cCop
+  IERC20 public immutable cCopToken;
 
   struct Vault {
     uint256 courseId;
-    uint256 balance;
+    uint256 balanceUsdt;
+    uint256 balanceCcop;
     uint256 amountPerGuide;
     bool exists;
   }
 
   mapping(uint256 => Vault) public vaults;
 
-  // Estado final (nada de funciones temporales)
   mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
     public guidePaid;            // courseId => guide => wallet => amount paid
   mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
@@ -45,9 +49,10 @@ contract LearnTGVaults is ReentrancyGuard {
   mapping(uint256 => mapping(address => uint256))
     public studentCooldowns;
 
-  // Eventos
+  // Events
   event VaultCreated(uint256 indexed courseId, uint256 amountPerGuide);
   event Deposit(uint256 indexed courseId, uint256 amount);
+  event DepositCcop(uint256 indexed courseId, uint256 amount);
   event ScholarshipPrepared(
     uint256 indexed courseId,
     uint256 indexed guideNumber,
@@ -78,9 +83,10 @@ contract LearnTGVaults is ReentrancyGuard {
     _;
   }
 
-  constructor(address _usdtToken) {
+  constructor(address _usdtToken, address _cCopToken) {
     owner = msg.sender;
     usdtToken = IERC20(_usdtToken);
+    cCopToken = IERC20(_cCopToken);
   }
 
   // Create a vault for a course (amount in USDT with 6 decimals)
@@ -93,7 +99,8 @@ contract LearnTGVaults is ReentrancyGuard {
     );
     vaults[courseId] = Vault({
       courseId: courseId,
-      balance: 0,
+      balanceUsdt: 0,
+      balanceCcop: 0,
       amountPerGuide: amountPerGuide,
       exists: true
     });
@@ -106,14 +113,14 @@ contract LearnTGVaults is ReentrancyGuard {
   // Deposit 80% of indicated USDT into a vault and 20% to learn.tg
   // (caller must approve this contract first)
   function deposit(uint256 courseId, uint256 amount)
-  external vaultExists(courseId) nonReentrant {
+    external vaultExists(courseId) nonReentrant {
     require(courseId > 0, "Course id must be greater than 0");
     require(amount > 0, "Deposit amount must be greater than 0");
 
     uint256 forTeam = (amount / 100) * PERCENTAGE_FOR_TEAM;
     uint256 forVault = amount - forTeam;
 
-    vaults[courseId].balance += forVault;
+    vaults[courseId].balanceUsdt += forVault;
     emit Deposit(courseId, amount);
 
     require(
@@ -125,6 +132,30 @@ contract LearnTGVaults is ReentrancyGuard {
       "Vault transfer failed"
     );
   }
+
+  // Deposit 80% of indicated cCop into a vault and 20% to learn.tg
+  // (caller must approve this contract first)
+  function depositCcop(uint256 courseId, uint256 amount)
+    external vaultExists(courseId) nonReentrant {
+    require(courseId > 0, "Course id must be greater than 0");
+    require(amount > 0, "Deposit amount must be greater than 0");
+
+    uint256 forTeam = (amount / 100) * PERCENTAGE_FOR_TEAM;
+    uint256 forVault = amount - forTeam;
+
+    vaults[courseId].balanceCcop += forVault;
+    emit Deposit(courseId, amount);
+
+    require(
+      cCopToken.transferFrom(msg.sender, owner, forTeam),
+      "Team transfer failed"
+    );
+    require(
+      cCopToken.transferFrom(msg.sender, address(this), forVault),
+      "Vault transfer failed"
+    );
+  }
+
 
   // Usada para migrar de versión anterior a esta
   function setGuidePaid(
@@ -143,12 +174,12 @@ contract LearnTGVaults is ReentrancyGuard {
   // Usada para migrar de versión anterior a esta
   function setVaultBalance(
     uint256 courseId,
-    uint256 balance
+    uint256 balanceUsdt
   ) external onlyOwner vaultExists(courseId) {
     require(
-      balance > 0, "Balance should be positive"
+      balanceUsdt > 0, "Balance should be positive"
     );
-    vaults[courseId].balance = balance;
+    vaults[courseId].balanceUsdt = balanceUsdt;
   }
 
 
@@ -186,10 +217,10 @@ contract LearnTGVaults is ReentrancyGuard {
       uint256 fullAmount = vaults[courseId].amountPerGuide;
       uint256 actualAmount = (fullAmount * profileScore) / 100;
 
-      require(vaults[courseId].balance >= actualAmount, "Insufficient funds");
+      require(vaults[courseId].balanceUsdt >= actualAmount, "Insufficient funds");
 
       pendingScholarship[courseId][guideNumber][student] = actualAmount;
-      vaults[courseId].balance -= actualAmount;
+      vaults[courseId].balanceUsdt -= actualAmount;
 
       emit ScholarshipPrepared(courseId, guideNumber, student, fullAmount, actualAmount, profileScore);
   }
