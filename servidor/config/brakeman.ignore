@@ -1,0 +1,28 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "File Access",
+      "warning_code": 16,
+      "fingerprint": "b65ab695b0b6f84eccccb619203eb8461a03b61eef74b285a19b8fc0705fb5f3",
+      "check_name": "SendFile",
+      "message": "Model attribute used in file name",
+      "file": "app/controllers/usuarios_controller.rb",
+      "line": 152,
+      "link": "https://brakemanscanner.org/docs/warning_types/file_access/",
+      "code": "send_file(Usuario.find_by(:id => Integer(params[:id])).foto.path, :type => Usuario.find_by(:id => Integer(params[:id])).foto_content_type, :disposition => \"inline\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "UsuariosController",
+        "method": "foto"
+      },
+      "user_input": "Usuario.find_by(:id => Integer(params[:id])).foto.path",
+      "confidence": "Medium",
+      "cwe_id": [
+        22
+      ],
+      "note": ""
+    }
+  ],
+  "brakeman_version": "7.1.1"
+}
