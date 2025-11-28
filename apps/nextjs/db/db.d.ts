@@ -1264,6 +1264,7 @@ export interface Usuario {
   idioma: Generated<string>;
   last_sign_in_at: Timestamp | null;
   last_sign_in_ip: string | null;
+  lastgooddollarverification: Timestamp | null;
   locked_at: Timestamp | null;
   nombre: string | null;
   nusuario: string;

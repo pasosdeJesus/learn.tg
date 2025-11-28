@@ -14,8 +14,8 @@ import {
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia, base } from 'viem/chains' // o la chain que uses
 
-import ScholarshipVaultsV1Abi from 
-  '../../abis/ScholarshipVaults-v1.json' with { type: "json" }
+import ScholarshipVaultsAbi from 
+  '../../abis/ScholarshipVaults.json' with { type: "json" }
 import Erc20Abi from 
   '../../abis/IERC20.json' with { type: "json" }
 import LearnTGVaultsAbi from 
@@ -105,7 +105,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   })
   const oldContract = getContract({
     address: process.env.NEXT_PUBLIC_DEPLOYED_AT_1! as Address,
-    abi: ScholarshipVaultsV1Abi as any,
+    abi: ScholarshipVaultsAbi as any,
     client: { public: publicClient, wallet: walletClient }
   })
   //console.log("oldContract=", oldContract)

@@ -9,18 +9,19 @@ import { useAccount } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
 import { QRCodeDialog } from '@/components/ui/qr-code-dialog'
-import { useMobileDetection } from '@/lib/mobile-detection'
 import { openSelfApp } from '@/lib/deeplink'
+import { useMobileDetection } from '@/lib/mobile-detection'
 
 interface UserProfile {
   country: number | null
-  passport_nationality: number | null
   email: string
   groups: string
   id: string
   language: string
+  lastgooddollarverification: integer | null
   name: string
   passport_name: string
+  passport_nationality: number | null
   phone: string
   picture: string
   religion: number
@@ -49,13 +50,14 @@ export default function ProfileForm({ params } : PageProps) {
 
   const [profile, setProfile] = useState<UserProfile>({
     country: null,
-    passport_nationality: null,
     email: "",
     groups: "",
+    gooddollarverification: null,
     id: "",
     language: "",
     name: "",
     passport_name: "",
+    passport_nationality: null,
     phone: "",
     picture: "",
     religion: 1,
@@ -78,7 +80,25 @@ export default function ProfileForm({ params } : PageProps) {
   const parameters = use(params)
   const { lang } = parameters
 
-
+  const handleGooddollarVerify = () => {
+    if (process.env.NEXT_PUBLIC_AUTH_URL === undefined) {
+      alert("process.env.NEXT_PUBLIC_AUTH_URL is undefined" )
+      return
+    }
+    let url = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/gooddollar-verify`
+    console.log(`Fetching ${url}`)
+    axios.get(url)
+    .then(response => {
+      if (response.data) {
+        debugger
+      }
+    })
+    .catch(error => {
+      console.error(error)
+      alert(error)
+    })
+  }
+ 
   const handleSuccessfulSelfVerification = () => {
     // Persist the attestation / session result to your backend, then gate content
     setSelfApp(null)
@@ -196,19 +216,20 @@ export default function ProfileForm({ params } : PageProps) {
         let rUser = data[0]
         console.log("rUser=", rUser)
         let locProfile = {
-          uname: rUser.nusuario,
-          name: rUser.nombre,
-          passport_name: rUser.passport_name,
-          passport_nationality: rUser.passport_nationality,
-          userId: rUser.id,
-          email: rUser.email,
-          picture: rUser.foto_file_name,
-          religion: rUser.religion_id,
           country: rUser.pais_id,
+          email: rUser.email,
           groups: "",
           id: "",
           language: "",
+          lastgooddollarverification: rUser.lastgooddollarverification,
+          name: rUser.nombre,
+          passport_name: rUser.passport_name,
+          passport_nationality: rUser.passport_nationality,
           phone: "",
+          picture: rUser.foto_file_name,
+          religion: rUser.religion_id,
+          uname: rUser.nusuario,
+          userId: rUser.id,
         }
         console.log("locProfile=", locProfile)
         setProfile(locProfile)
@@ -305,15 +326,25 @@ export default function ProfileForm({ params } : PageProps) {
     <div className="mt-12 max-w-2xl mx-auto p-6">
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Profile</h2>
-          <p className="text-gray-600 mt-1">Update your profile information below</p>
+          <h2 className="text-2xl font-bold text-gray-900">
+          { lang === 'es' ? 
+            'Edición del Perfil' : 
+            'Edit Profile' }
+          </h2>
+          <p className="text-gray-600 mt-1">
+          { lang === 'es' ? 
+            'Actualiza la información de tu perfil a continuación' : 
+            'Update your profile information below' }
+          </p>
         </div>
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="uname" className="block text-sm font-medium text-gray-700">
-                  Display name
+                { lang === 'es' ? 
+                  'Nombre por presentar' : 
+                  'Display name' }
                 </label>
                 <input
                   id="uname"
@@ -327,11 +358,15 @@ export default function ProfileForm({ params } : PageProps) {
               </div>
               <div className="space-y-2">
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                        Full Name ( Verified: 
-                          { profile.name != "" && 
-                          profile.name == profile.passport_name ? 
-                          "✅" : "❌" }
-                        )
+                { lang === 'es' ? 
+                  'Nombre completo ( Verificado:' : 
+                  'Full Name ( Verified:' 
+                }
+
+                { profile.name != "" && 
+                  profile.name == profile.passport_name ? 
+                  "✅" : "❌" }
+                { ")" }
                 </label>
                 <input
                   id="name"
@@ -362,7 +397,9 @@ export default function ProfileForm({ params } : PageProps) {
               </div>
               <div className="space-y-2">
                 <label htmlFor="religion" className="block text-sm font-medium text-gray-700">
-                  Religion
+                  { lang === 'es' ? 
+                    'Religión' : 
+                    'Religion' }
                 </label>
 	              <select
                   id="religion"
@@ -370,7 +407,10 @@ export default function ProfileForm({ params } : PageProps) {
                   onChange={(e) => handleChange("religion", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
-                  <option value="">Select your religion</option>
+                  <option value="">{ lang === 'es' ? 
+                    'Elige tu religión:' : 
+                    'Select your religion'
+                  }</option>
                   {religions.map((religion) => (
                     <option key={religion.id} value={religion.id}>
                       {religion.nombre}
@@ -383,7 +423,9 @@ export default function ProfileForm({ params } : PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-                  Country ( Verified: 
+                  { lang === 'es' ? 
+                    'País (Verificado:' : 
+                    'Country ( Verified:' }
                   { profile.country != null && 
                     profile.country == profile.passport_nationality ? 
                     "✅" : "❌" } )
@@ -394,13 +436,24 @@ export default function ProfileForm({ params } : PageProps) {
                   onChange={(e) => handleChange("country", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
-                  <option value="">Select your country</option>
+                  <option value="">{ lang === 'es' ? 
+                    'Selecciona tu país' : 
+                    'Select your country'
+                  }</option>
                   {countries.map((country) => (
                     <option key={country.id} value={country.id}>
                       {country.nombre}
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="gooddollarverification" className="block text-sm font-medium text-gray-700">
+                { lang === 'es' ? 'Unicidad con GoodDollar ( Verificada:' : 
+                  'Uniquenes with GoodDollar ( Verified:' }
+                { profile.lastgooddollarverification != null ? "✅" : "❌" }
+                { ")" }
+                </label>
               </div>
             </div>
             <QRCodeDialog
@@ -420,14 +473,22 @@ export default function ProfileForm({ params } : PageProps) {
                 disabled={saving}
               >
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? (lang === 'es' ? 'Guardando' : 'Saving')  :
+                  (lang === 'es' ? 'Guardar Cambios' : 'Save Changes')}
               </Button>
               <Button
                 type="button"
                 onClick={handleSelfVerify}
               >
-                Verify with self
+              {lang === 'es' ? 'Verificar con self' : 'Verify with self' }
               </Button>
+              <Button
+                type="button"
+                onClick={handleGooddollarVerify}
+              >
+              {lang === 'es' ? 'Verificar con gooddollar' : 'Verify with gooddollar' }
+              </Button>
+
             </div>
           </form>
         </div>
