@@ -36,4 +36,5 @@ See details at [apps/hardhat/README.md](apps/hardhat/README.md)
 
 It has markdown of guides, images and media.
 
-
+# IA AGENTS
+Read AGENTS.md
