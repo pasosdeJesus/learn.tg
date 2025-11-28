@@ -246,15 +246,25 @@ contract LearnTGVaults is ReentrancyGuard {
   }
 
   // Emergency withdraw (solo owner)
-  function emergencyWithdraw(uint256 amount)
+  function emergencyWithdrawUsdt(uint256 amount)
   external onlyOwner nonReentrant {
     require(amount > 0, "Amount > 0");
     require(usdtToken.transfer(owner, amount), "Transfer failed");
   }
 
-  // Getters útiles
+  function emergencyWithdrawCcop(uint256 amount)
+  external onlyOwner nonReentrant {
+    require(amount > 0, "Amount > 0");
+    require(cCopToken.transfer(owner, amount), "Transfer failed");
+  }
+
+  // Useful getters
   function getContractUSDTBalance() external view returns (uint256) {
     return usdtToken.balanceOf(address(this));
+  }
+  
+  function getContractCcopBalance() external view returns (uint256) {
+    return cCopToken.balanceOf(address(this));
   }
 
   function getStudentGuideStatus(

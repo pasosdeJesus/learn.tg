@@ -245,7 +245,7 @@ describe("LearnTGVaults", function () {
       const contractBalance = await learnTGVaults.getContractUSDTBalance();
       const ownerBalanceBefore = await mockUSDT.balanceOf(owner.address);
       
-      await learnTGVaults.emergencyWithdraw(contractBalance);
+      await learnTGVaults.emergencyWithdrawUsdt(contractBalance);
 
       const ownerBalanceAfter = await mockUSDT.balanceOf(owner.address);
       expect(ownerBalanceAfter).to.equal(ownerBalanceBefore + contractBalance);
@@ -254,7 +254,7 @@ describe("LearnTGVaults", function () {
 
     it("Should prevent non-owner from withdrawing emergency funds", async function() {
       const { learnTGVaults, student1 } = await loadFixture(deployFixture);
-      await expect(learnTGVaults.connect(student1).emergencyWithdraw(100))
+      await expect(learnTGVaults.connect(student1).emergencyWithdrawUsdt(100))
         .to.be.revertedWith("Only owner");
     });
   });
