@@ -146,15 +146,17 @@ export async function up(db: Kysely<any>): Promise<void> {
       amountPerGuide: lOldVault[2],
       exists: lOldVault[3],
     }
-    //console.log("oldVault=", oldVault)
+    console.log("oldVault=", oldVault)
     let lNewVault: any = await newContract.read.vaults([courseId])
     let newVault = {
       courseId: lNewVault[0],
-      balance: lNewVault[1],
-      amountPerGuide: lNewVault[2],
-      exists: lNewVault[3],
+      balanceUsdt: lNewVault[1],
+      balanceCcop: lNewVault[2],
+      balanceGooddollar: lNewVault[3],
+      amountPerGuide: lNewVault[4],
+      exists: lNewVault[5],
     }
-    //console.log("newVault=", newVault)
+    console.log("newVault=", newVault)
     if (oldVault.exists && !newVault.exists) {
       console.log('  Creando boveda como', oldVault)
       let tx: Address = await callWriteFun(
@@ -167,9 +169,11 @@ export async function up(db: Kysely<any>): Promise<void> {
       lNewVault = await newContract.read.vaults([courseId])
       newVault = {
         courseId: lNewVault[0],
-        balance: lNewVault[1],
-        amountPerGuide: lNewVault[2],
-        exists: lNewVault[3],
+        balanceUsdt: lNewVault[1],
+        balanceCcop: lNewVault[2],
+        balanceGooddollar: lNewVault[3],
+        amountPerGuide: lNewVault[4],
+        exists: lNewVault[5],
       }
       console.log('newVault=', newVault)
 
@@ -177,9 +181,9 @@ export async function up(db: Kysely<any>): Promise<void> {
     }
 
     if (oldVault.exists && newVault.exists) {
-      console.log('  newVault.balance=', newVault.balance)
-      if (oldVault.balance > 0n && newVault.balance == 0n) {
-        console.log('Setting balance to', oldVault, oldVault.balance)
+      console.log('  newVault.balanceUsdt=', newVault.balanceUsdt)
+      if (oldVault.balance > 0n && newVault.balanceUsdt == 0n) {
+        console.log('Setting balance to', oldVault.balance)
         let tx = await callWriteFun(
           publicClient,
           account,
