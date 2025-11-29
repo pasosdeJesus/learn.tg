@@ -99,7 +99,7 @@ export default function ProfileForm({ params } : PageProps) {
       token: csrfToken
     }
     let url = `${process.env.NEXT_PUBLIC_AUTH_URL}/` +
-      `api/gooddollar-verify`
+      `api/update-scores`
     console.log(`Posting to ${url}`)
     axios.post(url, data, {
       headers: {
@@ -504,7 +504,7 @@ export default function ProfileForm({ params } : PageProps) {
                 type="button"
                 onClick={handleGooddollarVerify}
               >
-              {lang === 'es' ? 'Verificar con gooddollar' : 'Verify with gooddollar' }
+              {lang === 'es' ? 'Actualizar puntajes' : 'Update scores' }
               </Button>
 
             </div>
