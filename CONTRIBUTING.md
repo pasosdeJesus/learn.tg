@@ -2,6 +2,14 @@
 
 Thank you for your interest in contributing to learn.tg! 🎯
 
+## Our Collaborative Spirit
+
+While this project has a specific Christian mission, we welcome all contributors who act with respect, humility, and diligence. Our goal is to create a positive and excellent development environment. As our guiding verse says:
+
+> *"Whatever you do, work at it with all your heart, as working for the Lord, not for human masters." (Colossians 3:23)*
+
+---
+
 ## 📋 Code of Conduct
 By participating in this project, you agree to maintain a respectful and collaborative environment.
 

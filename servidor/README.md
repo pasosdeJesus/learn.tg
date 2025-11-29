@@ -1,11 +1,8 @@
-# learn.tg
+# Learn.tg - Main Backend Server
 
-[![Revisado por Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com) Pruebas y seguridad:[![Estado Construcción](https://gitlab.com/pasosdeJesus/learn.tg/badges/main/pipeline.svg)](https://gitlab.com/pasosdeJesus/learn.tg/-/pipelines?page=1&scope=all&ref=main) [![Clima del Código](https://codeclimate.com/github/pasosdeJesus/learn.tg/badges/gpa.svg)](https://codeclimate.com/github/pasosdeJesus/learn.tg) [![Cobertura de Pruebas](https://codeclimate.com/github/pasosdeJesus/learn.tg/badges/coverage.svg)](https://codeclimate.com/github/pasosdeJesus/learn.tg)
+This directory contains the Ruby on Rails backend for Learn.tg. It serves as an administrative API and management hub for courses, users, and educational content.
 
-Manage courses.
-
-
-### Requerimientos
+### Requirements
 * Ruby version >= 3.4
 * PostgreSQL >= 16.2 with extension unaccent 
 * We suggest to run on adJ 7.6 (that includes all the components mentioned).
@@ -35,12 +32,12 @@ To add the gem `rbsecp256k1`, we suggest:
         AUTOMAKE_VERSION=1.16 AUTOCONF_VERSION=2.69 doas gem install --install-dir /var/www/bundler/ruby/3.4 rbsecp256k1
 
 
-### Arquitectura
+### Architecture
 
-Es una aplicación que emplea el motor genérico estilo Pasos de Jesús ```msip```
-Ver https://github.com/pasosdeJesus/msip
-y el motor cor1440_gen ver https://github.com/pasosdeJesus/cor1440_gen entre
-otros.
+It is an application that uses the generic Pasos de Jesús-style engine `msip`.
+See https://github.com/pasosdeJesus/msip
+and the cor1440_gen engine, see https://github.com/pasosdeJesus/cor1440_gen, among
+others.
 
 ## Run a development instance
 
@@ -56,11 +53,11 @@ Configure environment variables:
 
 Change at least:
 1. Variables for the PostgreSQL engine: `BD_SERVIDOR`, `BD_USUARIO`, `BD_CLAVE`, 
-2. Name of databases development `BD_DES`, test `BD_PRUEBA` and 
+2. Name of the databases: development `BD_DES`, test `BD_PRUEBA` and 
    production `BD_PRO`
 3. Path to the sources in `DIRAP`
 
-Create the user for the database that you specified in `BD_USUARIO`, for example `learntg` with:
+Create the database user you specified in `BD_USUARIO`, for example `learntg`, with:
 
 ```sh
 doas su - _postgresql
@@ -71,12 +68,12 @@ psql -h /var/www/var/run/postgresql -U postgres
 exit
 ```
 
-And add the password for the user `learntg` at `~/.pgpass` with a line like:
+And add the password for the `learntg` user at `~/.pgpass` with a line like:
 ```
 *:*:*:learntg:mypassword
 ```
 
-Create the database that you specified in `BD_DES` (for example `learntg_des`) with something like:
+Create the database you specified in `BD_DES` (for example `learntg_des`) with something like:
 ```sh
 createdb -U learntg -h /var/www/var/run/postgresql learntg_des
 ```
@@ -91,12 +88,9 @@ And then run the development server with:
 ./bin/corre
 ```
 
-To stop it, from another terminal you could run: `./bin/detiene`
+To stop it, from another terminal, you can run: `./bin/detiene`
 
 Once started, with a browser check https://127.0.0.1:3000/learntg-admin
 
 You can login with the default user `cor1440` and password `cor1440`.
-
-
-
 

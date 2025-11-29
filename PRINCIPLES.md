@@ -11,7 +11,7 @@
 4. **Biblical Peace and Justice** - Commitment to non-violence and righteous action
 
 ## MISSION
-5. **Gospel to the ends of the earth with initial focus in Sierra Leone** - 
+5. **Gospel to the ends of the earth with special focus in Sierra Leone** - 
    Through education that forms disciples committed to peace, justice, and 
    biblical truth *(Acts 1:8)*
 
@@ -23,7 +23,7 @@
 
 # From Internal Motivation to Community Action
 
-These foundational principles are communitary expression of or core internal motivations.
+These foundational principles are communitary expression of our core internal motivations.
 
 | Internal Motivation ("The Heart") | Logical & Theological Connector ("The Reason") | Community Principle ("The Action") |
 | :-------------------------------- | :--------------------------------------------- | :-------------------------------- |
@@ -31,4 +31,3 @@ These foundational principles are communitary expression of or core internal mot
 | **Diligence + Love** | **Compelled by** Christ's command to make **disciples of all nations (Matthew 28:19)**, carrying the integral gospel (word and action). | **Mission to the Ends of the Earth** |
 | **Respect + Humility** | **Because** God's Kingdom is characterized by **the justice the Lord requires (Micah 6:8)** and **peace that surpasses all understanding (Philippians 4:7)**, not by the world's oppression. | **Biblical Peace and Justice** |
 | **Love + Respect + Humility + Diligence** | **Because** money can corrupt the mission, but clean resources facilitate it. We are **faithful stewards (1 Corinthians 4:2)** who will give account to God for every partnership. | **Funding: "Humanity" - Only Clean Money** |
-

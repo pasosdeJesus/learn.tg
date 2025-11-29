@@ -1,105 +1,95 @@
-# Learn.tg - Project Architecture Analysis
+# Learn.tg - Project Architecture
 
 ## Overview
 
-Learn.tg is a live, production gamified educational platform making learning engaging and rewarding. Students complete quality content through interactive guides and games, earning USDT cryptocurrency rewards for perfect answers. The platform is currently operational at https://learn.tg with multiple courses across different subjects.
+Learn.tg is a live, production gamified educational platform making learning engaging and rewarding. Students complete quality content through interactive guides and games, earning USDT cryptocurrency rewards for correct answers. The platform is currently operational at https://learn.tg with multiple courses across different subjects.
 
 ---
+
+## System Architecture Diagram
+
+This diagram illustrates the flow of information and actions between the user, the different parts of the application, and the blockchain.
+
+```mermaid
+graph TD
+    subgraph User
+        A[User's Wallet]
+        B[Browser]
+    end
+
+    subgraph Platform
+        C[Frontend - Next.js/React]
+        D[Backend - Rails]
+        E[Smart Contract - Solidity/Celo]
+    end
+
+    subgraph Blockchain
+        F[Celo Network]
+    end
+
+    A -- 1. Connects & Signs (SIWE) --> C
+    B -- 2. Interacts with Content --> C
+    C -- 3. Fetches Guides/Data (JWT Auth) --> D
+    D -- 4. Returns Content --> C
+    C -- 5. Submits Answers --> D
+    D -- 6. Validates Answers --> D
+    D -- 7. Triggers Reward --> E
+    E -- 8. Executes Transaction --> F
+    F -- 9. Sends USDT Reward --> A
+
+    style E fill:#f9f,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#9f9,stroke:#333,stroke-width:2px
+```
 
 ## Architecture Stack
 
 ### 1. **Major Backend: Rails (servidor/)**
 - **Framework:** Ruby on Rails (>= 3.4)
 - **Database:** PostgreSQL (>= 16.2) with unaccent extension
-- **Purpose:** Course management, guide organization, user data persistence, teacher administration
+- **Purpose:** Course management, guide organization, user data persistence, teacher administration. Also responsible for validating game answers.
 - **Based on:** MSIP and cor1440_gen frameworks
-- **Authentication:** Token-based (receives JWT tokens from frontend)
-- **Key Models:** Courses, Chapters, Guides, Users, Submissions
-- **Admin Interface:** Teachers organize courses into chapters and guides via `/learntg-admin`
+- **Authentication:** Token-based (receives and validates JWT tokens from the Next.js frontend).
 
-### 2. **Smart Contracts: Hardhat (apps/hardhat/)**
-- **Language:** Solidity ^0.8.24
-- **Network:** Celo (testnet: celoSepolia, mainnet: celo)
-- **Main Contract:** `LearnTGVaults.sol`
-  - Manages USDT reward distribution per course
-  - Creates vaults with configurable rewards per guide
-  - Implements 24-hour cooldown between submissions
-  - Splits deposits: 80% to vault, 20% to learn.tg operations
-  - Releases rewards only for perfect guide completions
-- **Token:** USDT (ERC20 compatible)
-- **ABI Sync:** Automatic sync to frontend during compilation
-
-### 3. **Frontend: Next.js (apps/nextjs/)**
+### 2. **Frontend and minor backend: Next.js (apps/nextjs/)**
 - **Framework:** Next.js with React + TypeScript
-- **Purpose:** User interface, content delivery, SIWE authentication
-- **Authentication:** Sign-In With Ethereum (SIWE)
-  - Users connect with OKX wallet (or other Web3 wallets)
-  - Generates JWT token for Rails backend
-  - No password required - wallet-based authentication
-- **API Routes:**
-  - `/api/auth/[...nextauth]` - SIWE authentication
-  - `/api/guide` - Fetch guide content
-  - `/api/crossword` - Crossword game logic
-  - `/api/check_crossword` - Validate crossword answers
-  - `/api/scholarship` - Reward distribution
-- **Internationalization:** Multi-language support ([lang] dynamic routes)
-- **Content Rendering:** Markdown guides with embedded questions
+- **UI Components:** Utilizes **Radix UI** for building a flexible and accessible component library.
+- **Purpose:** User interface, content delivery, and user authentication.
+- **Authentication:** Implements Sign-In With Ethereum (SIWE). The user connects with a Web3 wallet, and the frontend generates a JWT token for authenticating with the Rails backend.
 
----
-
-## Content Structure (resources/)
-
-### Course Organization
-```
-Course
-  └─ Guide (guide1.md, guide2.md, etc.)
-      └─ Reading comprehension questions
-          └─ Game: Crossword puzzle
-              └─ Perfect answer → USDT reward
-```
-
-### Public Courses (in repository)
-1. **English:** "A Relationship with Jesus" (4 guides)
-2. **Spanish:** 
-   - "Una Relación con Jesús" (4 guides)
-   - "Ahorra en Dólares en OKX" (4 guides)
-
-**Note:** Live platform at learn.tg contains additional private courses managed through the Rails admin interface.
-
-### Guide Format
-- Markdown-based content
-- Reading comprehension questions
-- Reflection and application sections
-- Crossword game for answer validation
+### 3. **Smart Contracts: Hardhat (apps/hardhat/)**
+- **Language:** Solidity ^0.8.24
+- **Network:** Celo (mainnet) & Celo Sepolia (testnet)
+- **Main Contract:** `LearnTGVaults.sol`
+  - Manages USDT reward distribution per course.
+  - Implements a 24-hour cooldown between submissions for a user.
+  - Splits deposits: 80% to the student reward vault, 20% to platform operations.
 
 ---
 
 ## Authentication & Communication Flow
 
-1. **Frontend (Next.js):** User connects OKX wallet → SIWE signature
-2. **Frontend:** Validates signature → generates JWT token
-3. **Major Backend (Rails):** Receives token in requests → authenticates user
-4. **Smart Contract:** Validates perfect completion → releases USDT rewards
+1.  **Frontend (Next.js):** A user connects their OKX wallet and signs a message (SIWE).
+2.  **Frontend:** Validates the signature and generates a JWT token.
+3.  **Backend (Rails):** The frontend sends the JWT in the `Authorization` header for all requests to the Rails backend, which uses it to identify and authenticate the user.
+4.  **Smart Contract:** The backend system (likely a Next.js API route or the Rails server) calls the smart contract to trigger a reward after successfully validating a user's perfect submission.
 
-**Key Point:** SIWE is implemented in the frontend; Rails backend uses token-based authentication for API communication.
+**Key Point:** The frontend handles wallet-based authentication (SIWE), while the backend uses traditional token-based authentication (JWT) for its APIs. This separates concerns effectively.
 
 ---
-
 ## Reward System
 
-**Trigger:** Student completes guide with perfect crossword answer
+**Trigger:** A student completes a guide with a correct crossword answer.
 
 **Process:**
-1. Frontend submits crossword answer to `/api/check_crossword`
-2. Backend validates answer against guide questions
-3. If perfect: calls `submitGuideResult()` on LearnTGVaults contract
-4. Contract verifies:
-   - Student hasn't received reward for this guide
-   - 24-hour cooldown has passed since last submission
-   - Vault has sufficient USDT balance
-5. If all checks pass: transfers `amountPerGuide` USDT to student's wallet
-
-**Cooldown:** 24 hours between submissions per course per student (prevents gaming)
+1.  The frontend submits the crossword answer to the backend.
+2.  The backend validates the answer against the correct solutions for that guide.
+3.  If the answer is perfect, the backend calls the `submitGuideResult()` function on the `LearnTGVaults` smart contract.
+4.  The contract verifies on-chain:
+   - The student has not already received a reward for this guide.
+   - At least 24 hours have passed since the student's last reward claim.
+   - The course vault has a sufficient USDT balance.
+5.  If all checks pass, the contract transfers the configured `amountPerGuide` in USDT to the student's wallet address.
 
 ---
 
@@ -112,7 +102,7 @@ Course
 | Frontend | Next.js + React + TypeScript | UI, content delivery, SIWE auth |
 | Blockchain | Celo | USDT transfers, decentralized rewards |
 | Content | Markdown | Guide storage, version control |
-| Wallet | OKX | User authentication and reward receipt |
+| Wallet | OKX/Metamask/etc | User authentication and reward receipt |
 
 ---
 
@@ -123,15 +113,4 @@ Course
 - **Testing:** Hound CI, CodeClimate integration
 - **Code Quality:** Automated linting and security checks
 - **Live Deployment:** Running at https://learn.tg
-
----
-
-## Impact
-
-Learn.tg demonstrates that education can be engaging, transparent, and rewarding. By combining quality content with gamification and cryptocurrency incentives, the platform:
-- Makes learning fun and interactive
-- Provides tangible rewards for achievement
-- Uses blockchain for transparent, trustless reward distribution
-- Enables teachers to create and manage courses globally
-- Supports multiple languages and subjects
 
