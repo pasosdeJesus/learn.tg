@@ -17,6 +17,10 @@ async function main() {
   // Get the USDT token address that the contract was initialized with
   const usdtToken = await learnTGVaults.usdtToken();
   console.log("Contract USDT token address:", usdtToken);
+ 
+  // Get the cCop token address that the contract was initialized with
+  const cCopToken = await learnTGVaults.cCopToken();
+  console.log("Contract cCop token address:", cCopToken);
   
   console.log("Contract deployed and verified successfully!");
 }

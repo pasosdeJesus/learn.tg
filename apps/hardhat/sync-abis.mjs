@@ -14,6 +14,8 @@ const env_replacements = [
   ['DEPLOYED_AT', 'NEXT_PUBLIC_DEPLOYED_AT'],
   ['USDT_ADDRESS', 'NEXT_PUBLIC_USDT_ADDRESS'],
   ['USDT_DECIMALS', 'NEXT_PUBLIC_USDT_DECIMALS'],
+  ['CCOP_ADDRESS', 'NEXT_PUBLIC_CCOP_ADDRESS'],
+  ['CCOP_DECIMALS', 'NEXT_PUBLIC_CCOP_DECIMALS'],
 ]
 
 // Create the React ABI directory if it doesn't exist

@@ -8,20 +8,30 @@ async function main() {
   
   // Get the USDT address from environment variables
   const usdtAddress = process.env.USDT_ADDRESS;
-  
   if (!usdtAddress) {
     throw new Error("USDT_ADDRESS not found in environment variables");
   }
+  const cCopAddress = process.env.CCOP_ADDRESS;
+   if (!cCopAddress) {
+    throw new Error("CCOP_ADDRESS not found in environment variables");
+  }
   
-  console.log("Deploying LearnTGVaults with USDT address:", usdtAddress);
+  console.log(
+    "Deploying LearnTGVaults with USDT address:", usdtAddress,
+    "and cCop address:", cCopAddress
+  );
   
   // Deploy the contract
-  const learnTGVaults = await LearnTGVaults.deploy(usdtAddress);
+  const learnTGVaults = await LearnTGVaults.deploy(
+    usdtAddress, cCopAddress
+  );
   
   // Wait for the deployment transaction to be mined
   await learnTGVaults.waitForDeployment();
   
-  console.log("LearnTGVaults deployed to:", await learnTGVaults.getAddress());
+  console.log(
+    "LearnTGVaults deployed to:", await learnTGVaults.getAddress()
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere
