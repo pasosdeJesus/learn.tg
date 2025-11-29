@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
               await identitySDK.getWhitelistedRoot(walletAddress)
 
             let uUsuario:Updateable<Usuario> = {
-              lastgooddollarverification: isWhitelisted ? Time.now() : null,
+              lastgooddollarverification: isWhitelisted ? new Date() : null,
             }
             console.log("uUsuario=", uUsuario)
             let rupdate=await db.updateTable('usuario').set(uUsuario).where(
