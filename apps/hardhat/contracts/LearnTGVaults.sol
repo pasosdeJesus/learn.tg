@@ -72,6 +72,22 @@ contract LearnTGVaults is ReentrancyGuard {
     uint256 indexed guideNumber,
     address indexed student
   );
+  event EmergencyWithdrawal(
+    IERC20 token, 
+    uint256 amount
+  );
+  event VaultBalanceSet(
+    uint256 courseId,
+    uint256 balanceUsdt
+  );
+  event GuidePaidSet(
+    uint256 courseId,
+    uint256 guideNumber,
+    address student,
+    uint256 amount
+  );
+
+
 
   modifier onlyOwner() {
     require(msg.sender == owner, "Only owner");
@@ -84,6 +100,8 @@ contract LearnTGVaults is ReentrancyGuard {
   }
 
   constructor(address _usdtToken, address _cCopToken) {
+    require(address(_usdtToken) != address(0), "Zero token");
+    require(address(_cCopToken) != address(0), "Zero token");
     owner = msg.sender;
     usdtToken = IERC20(_usdtToken);
     cCopToken = IERC20(_cCopToken);
@@ -169,6 +187,7 @@ contract LearnTGVaults is ReentrancyGuard {
       amount > 0, "Invalid params"
     );
     guidePaid[courseId][guideNumber][student] = amount;
+    emit GuidePaidSet(courseId, guideNumber, student, amount);
   }
 
   // Usada para migrar de versión anterior a esta
@@ -180,6 +199,7 @@ contract LearnTGVaults is ReentrancyGuard {
       balanceUsdt > 0, "Balance should be positive"
     );
     vaults[courseId].balanceUsdt = balanceUsdt;
+    emit VaultBalanceSet(courseId, balanceUsdt);
   }
 
 
@@ -249,12 +269,14 @@ contract LearnTGVaults is ReentrancyGuard {
   function emergencyWithdrawUsdt(uint256 amount)
   external onlyOwner nonReentrant {
     require(amount > 0, "Amount > 0");
+    emit EmergencyWithdrawal(usdtToken, amount);
     require(usdtToken.transfer(owner, amount), "Transfer failed");
   }
 
   function emergencyWithdrawCcop(uint256 amount)
   external onlyOwner nonReentrant {
     require(amount > 0, "Amount > 0");
+    emit EmergencyWithdrawal(cCopToken, amount);
     require(cCopToken.transfer(owner, amount), "Transfer failed");
   }
 
