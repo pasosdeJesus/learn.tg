@@ -1,16 +1,14 @@
 "use server"
 
-import { Kysely, PostgresDialect, sql } from 'kysely'
+import { Kysely, sql } from 'kysely'
 import type { Insertable } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
-import { Pool } from 'pg'
 import { privateKeyToAccount } from "viem/accounts";
 import {
   Address,
   createPublicClient,
   createWalletClient,
   encodeFunctionData,
-  formatUnits,
   getContract,
   Hex,
   http
@@ -31,14 +29,6 @@ interface WordPlacement {
   clue: string
 }
 
-interface Cell {
-  letter: string
-  number?: number
-  isBlocked: boolean
-  userInput: string
-  belongsToWords: number[]
-}
-
 export async function GET(req: NextRequest) {
   return NextResponse.json(
     {error: "Expecting POST request"},
@@ -49,7 +39,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   console.log("** OJO check_crossword POST")
 
-  let retMessage = ""
   const removeAccents = (s: string) => s.replace('á', 'A').
     replace('é', 'E').
     replace('í', 'I').
@@ -70,8 +59,6 @@ export async function POST(req: NextRequest) {
     const courseId = +requestJson['courseId']
     const guideId = +requestJson['guideId']
     const lang = requestJson['lang'] ?? ''
-    const prefix = requestJson['prefix'] ?? ''
-    const guide = requestJson['guide'] ?? ''
     const grid = requestJson['grid'] ?? ''
     const placements = requestJson['placements'] ?? ''
     const walletAddress = requestJson['walletAddress'] ?? ''
@@ -91,6 +78,7 @@ export async function POST(req: NextRequest) {
         noWallet: "La respuesta no será calificada ni se buscarán becas posibles.",
         submitError: "No se pudo enviar el resultado para beca: ",
         tokenMismatch: "El token almacenado para el usuario no coincide con el token proporcionado.",
+        userNotFound: "No se encontró el usuario para la billetera.",
       },
       en: {
         atLeast50: "The results were not sent to the blockchain. You need at least 50 points in your profile to enable sending",
@@ -102,6 +90,7 @@ export async function POST(req: NextRequest) {
         noWallet: "Your answer will not be graded nor will possible scholarships be sought.",
         submitError: "Could not submit result for scholarship: ",
         tokenMismatch: "Token stored for user doesn't match given token.",
+        userNotFound: "User not found for wallet."
       }
     }
     const locale = lang === "es" ? "es" : "en"
@@ -147,15 +136,21 @@ export async function POST(req: NextRequest) {
         .where('id', '=', billeteraUsuario.usuario_id)
         .selectAll()
         .executeTakeFirst()
+        if (!usuario) {
+          return NextResponse.json(
+            {error: msg[locale].userNotFound},
+            {status: 500}
+          )
+        }
         console.log("OJO usuario=", usuario)
-        const guides = await sql<any>(
-          `select id, nombrecorto, "sufijoRuta" `+
-            `from cor1440_gen_actividadpf `+
-            `where proyectofinanciero_id = ${courseId} `+
-            `and "sufijoRuta" IS NOT NULL `+
-            `and "sufijoRuta" <>'' `+
-            `order by nombrecorto`
-        ).execute(db)
+        const guides = await sql<any>`
+          SELECT id, nombrecorto, "sufijoRuta"
+          FROM cor1440_gen_actividadpf
+          WHERE proyectofinanciero_id = ${courseId}
+          AND "sufijoRuta" IS NOT NULL
+          AND "sufijoRuta" <> ''
+          ORDER BY nombrecorto
+        `.execute(db)
         console.log("OJO guides=", guides)
         const ug = await db
           .selectFrom('guide_usuario')
@@ -185,10 +180,6 @@ export async function POST(req: NextRequest) {
 
         // Intentamos beca
         // Lógica similar a /api/scholarship
-        let usdtDecimals = 0
-        if (process.env.NEXT_PUBLIC_USDT_DECIMALS != undefined) {
-          usdtDecimals = +process.env.NEXT_PUBLIC_USDT_DECIMALS
-        }
         const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
         const publicClient = createPublicClient({
           chain: process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
@@ -274,7 +265,6 @@ export async function POST(req: NextRequest) {
                   data: txData as Hex,
                 });
                 console.log("tx=", tx)
-                const transactionUrl = `${process.env.NEXT_PUBLIC_EXPLORER_TX}${tx}`;
                 const chainId = await walletClient.getChainId()
                 console.log("chainId=", chainId)
 

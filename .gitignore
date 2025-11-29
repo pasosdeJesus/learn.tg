@@ -95,3 +95,7 @@ servidor/app/assets/stylesheets/mr519_gen
 servidor/app/assets/stylesheets/msip
 *.cp
 .pnpm-store
+dist/
+artifacts/
+cache/
+typechain-types/

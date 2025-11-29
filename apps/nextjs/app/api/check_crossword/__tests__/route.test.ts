@@ -38,7 +38,7 @@ vi.mock('pg', () => ({
 
 // Mock the config loader to return our mock db
 vi.mock('@/.config/kysely.config.ts', () => ({
-  newKyselyPostgresql: () => new MockKysely()
+  newKyselyPostgresql: () => new MockKysely({})
 }));
 
 // Mock viem to prevent actual blockchain interactions

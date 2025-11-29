@@ -5,6 +5,11 @@
         "internalType": "address",
         "name": "_usdtToken",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_cCopToken",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -27,6 +32,25 @@
       }
     ],
     "name": "Deposit",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "DepositCcop",
     "type": "event"
   },
   {
@@ -161,6 +185,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "cCopToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -218,13 +255,57 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "emergencyWithdraw",
+    "name": "depositCcop",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "emergencyWithdrawCcop",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "emergencyWithdrawUsdt",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getContractCcopBalance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -387,7 +468,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "balance",
+        "name": "balanceUsdt",
         "type": "uint256"
       }
     ],
@@ -507,7 +588,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "balance",
+        "name": "balanceUsdt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "balanceCcop",
         "type": "uint256"
       },
       {

@@ -1,10 +1,12 @@
 "use client"
 
+import axios from 'axios'; 
+import type { AxiosResponse } from 'axios'; 
 import { Loader2 } from "lucide-react"
 import { useSession, getCsrfToken } from "next-auth/react"
 import { use, useEffect, useState } from "react"
 import { getUniversalLink } from '@selfxyz/core'
-import { countries, SelfAppBuilder } from '@selfxyz/qrcode'
+import { SelfAppBuilder } from '@selfxyz/qrcode'
 import { useAccount } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
@@ -18,7 +20,7 @@ interface UserProfile {
   groups: string
   id: string
   language: string
-  lastgooddollarverification: integer | null
+  lastgooddollarverification: number| null
   name: string
   passport_name: string
   passport_nationality: number | null
@@ -52,9 +54,9 @@ export default function ProfileForm({ params } : PageProps) {
     country: null,
     email: "",
     groups: "",
-    gooddollarverification: null,
     id: "",
     language: "",
+    lastgooddollarverification: null,
     name: "",
     passport_name: "",
     passport_nationality: null,
@@ -80,20 +82,36 @@ export default function ProfileForm({ params } : PageProps) {
   const parameters = use(params)
   const { lang } = parameters
 
-  const handleGooddollarVerify = () => {
+  const handleGooddollarVerify = async () => {
     if (process.env.NEXT_PUBLIC_AUTH_URL === undefined) {
       alert("process.env.NEXT_PUBLIC_AUTH_URL is undefined" )
       return
     }
-    let url = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/gooddollar-verify`
-    console.log(`Fetching ${url}`)
-    axios.get(url)
-    .then(response => {
+    if (!session || !address || !session.address ||
+        session.address != address) {
+      alert("Problem with session, disconnect and connect again")
+      return
+    }
+    let csrfToken = await getCsrfToken()
+    let data = {
+      lang: lang,
+      walletAddress: session.address,
+      token: csrfToken
+    }
+    let url = `${process.env.NEXT_PUBLIC_AUTH_URL}/` +
+      `api/gooddollar-verify`
+    console.log(`Posting to ${url}`)
+    axios.post(url, data, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then((response: AxiosResponse) => {
       if (response.data) {
         debugger
       }
     })
-    .catch(error => {
+    .catch( (error: any) => {
       console.error(error)
       alert(error)
     })
@@ -215,7 +233,7 @@ export default function ProfileForm({ params } : PageProps) {
         }
         let rUser = data[0]
         console.log("rUser=", rUser)
-        let locProfile = {
+        let locProfile: UserProfile = {
           country: rUser.pais_id,
           email: rUser.email,
           groups: "",
@@ -448,7 +466,7 @@ export default function ProfileForm({ params } : PageProps) {
                 </select>
               </div>
               <div className="space-y-2">
-                <label htmlFor="gooddollarverification" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="lastgooddollarverification" className="block text-sm font-medium text-gray-700">
                 { lang === 'es' ? 'Unicidad con GoodDollar ( Verificada:' : 
                   'Uniquenes with GoodDollar ( Verified:' }
                 { profile.lastgooddollarverification != null ? "✅" : "❌" }

@@ -1,36 +1,33 @@
 import 'dotenv/config'
-import { Kysely, PostgresDialect, sql } from 'kysely'
+import { Kysely, sql } from 'kysely'
 import type { Insertable } from 'kysely'
-import pg from 'pg'
 import type { Address } from 'viem';
-import { 
-  createPublicClient, 
-  createWalletClient, 
+import {
+  createPublicClient,
+  createWalletClient,
   getContract,
   http,
-  parseUnits,
-  formatUnits 
+  formatUnits
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { celo, celoSepolia, base } from 'viem/chains' // o la chain que uses
+import { celo, celoSepolia, base } from 'viem/chains'
 
-import ScholarshipVaultsAbi from 
+import ScholarshipVaultsAbi from
   '../../abis/ScholarshipVaults.json' with { type: "json" }
-import Erc20Abi from 
+import Erc20Abi from
   '../../abis/IERC20.json' with { type: "json" }
-import LearnTGVaultsAbi from 
+import LearnTGVaultsAbi from
   '../../abis/LearnTGVaults.json' with { type: "json" }
-import { newKyselyPostgresql } from '../../.config/kysely.config.ts'
-import type { GuideUsuario, CourseUsuario } from 
-  '../../db/db.d.ts';
+import type { GuideUsuario, CourseUsuario } from '../../db/db.d.ts';
 
 
 async function callWriteFun(
-  publicClient, account, contractFun, contractParams, indent
+  publicClient: any, account: any, contractFun: any, contractParams: any,
+  indent: any
 ) {
   let sindent = indent > 0 ? ' '.repeat(indent-1) : ''
   console.log(
-    sindent, "Calling function", contractFun, 
+    sindent, "Calling function", contractFun.name,
     "with params", contractParams
   )
   let tx:Address = '0x0'
@@ -90,7 +87,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     transport: http(RPC_URL)
   })
   //console.log("*** walletClient=", walletClient)
-  
+
   console.log('Iniciando migración con viem')
 
   const usdtContract = getContract({
@@ -109,22 +106,22 @@ export async function up(db: Kysely<any>): Promise<void> {
     client: { public: publicClient, wallet: walletClient }
   })
   //console.log("oldContract=", oldContract)
-  const oldBalance = await oldContract.read.getContractUSDTBalance([]) || 0n
+  const oldBalance = await oldContract.read.getContractUSDTBalance([]) as bigint || 0n
 
   if (oldBalance > 0n) {
     console.log('1. Drenar contrato viejo')
     console.log(`Drenando ${formatUnits(oldBalance, 6)} USDT del contrato viejo...`)
     let tx:Address = await callWriteFun(
-      publicClient, 
-      account, 
+      publicClient,
+      account,
       oldContract.write.emergencyWithdrawUsdt,
       [oldBalance],
       0
     )
     console.log("2. Transferir fondos al nuevo contrato")
     tx = await callWriteFun(
-      publicClient, 
-      account, 
+      publicClient,
+      account,
       usdtContract.write.transfer,
       [ DEPLOYED_AT, oldBalance ],
       0
@@ -149,7 +146,6 @@ export async function up(db: Kysely<any>): Promise<void> {
       exists: lOldVault[3]
     }
     //console.log("oldVault=", oldVault)
-    const amount = oldVault.balance
     let lNewVault:any = await newContract.read.vaults([courseId])
     let newVault = {
       courseId: lNewVault[0],
@@ -161,8 +157,8 @@ export async function up(db: Kysely<any>): Promise<void> {
     if (oldVault.exists && !newVault.exists) {
       console.log("  Creando boveda como", oldVault)
       let tx:Address = await callWriteFun(
-        publicClient, 
-        account, 
+        publicClient,
+        account,
         newContract.write.createVault,
         [ courseId, oldVault.amountPerGuide ],
         2
@@ -182,11 +178,11 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     if (oldVault.exists && newVault.exists) {
       console.log("  newVault.balance=", newVault.balance)
-      if (oldVault.balance > 0 && newVault.balance == 0) {
-        console.log("Setting balance to", oldVault, balance) 
+      if (oldVault.balance > 0n && newVault.balance == 0n) {
+        console.log("Setting balance to", oldVault, oldVault.balance)
         let tx = await callWriteFun(
-          publicClient, 
-          account, 
+          publicClient,
+          account,
           newContract.write.setVaultBalance,
           [courseId, oldVault.balance],
           4
@@ -203,40 +199,35 @@ export async function up(db: Kysely<any>): Promise<void> {
       for (const uw of uwallets) {
         console.log("  Billetera", uw.billetera)
         let guiasCompletadas = 0
-        const guides = await sql<any>(
-          'select id, nombrecorto, "sufijoRuta" from cor1440_gen_actividadpf ' +
-            `where proyectofinanciero_id = ${courseId} ` +
-            'and "sufijoRuta" IS NOT NULL ' +
-            'and "sufijoRuta" <>\'\' ' +
-            'order by nombrecorto'
-        ).execute(db)
+        const guides = await sql<any>`
+          SELECT id, nombrecorto, "sufijoRuta"
+          FROM cor1440_gen_actividadpf
+          WHERE proyectofinanciero_id = ${c.id}
+          AND "sufijoRuta" IS NOT NULL
+          AND "sufijoRuta" <> ''
+          ORDER BY nombrecorto
+        `.execute(db)
         //console.log("guides=", guides)
         console.log(
           "  Curso", courseId, " con", guides.rows.length, "guias"
         )
         let numGuia = 0
-        for (const g of guides.rows) {
+        for (const g of (guides.rows as any[])) {
           numGuia++
           console.log("    Guía ", g.nombrecorto)
           const oldGuidePaid = await oldContract.read.guidePaid(
             [courseId, numGuia, uw.billetera]
           )
           console.log("      ** oldGuidePaid=", oldGuidePaid)
-          const newGuidePaid = await newContract.read.guidePaid(
-            [courseId, numGuia, uw.billetera]
-          )
-          console.log("      ** newGuidePaid=", newGuidePaid)
           if (oldGuidePaid) {
             console.log(
-              "      Registrando pago de guía por", 
+              "      Registrando pago de guía por",
               formatUnits(oldVault.amountPerGuide, 6),
               "USDT"
             )
             const ug = await db
             .selectFrom('guide_usuario')
-            .select([
-              'usuario_id'
-            ])
+            .select(['usuario_id'])
             .where('usuario_id', '=', uw.usuario_id)
             .where('actividadpf_id', '=', g.id)
             .execute()
@@ -245,7 +236,7 @@ export async function up(db: Kysely<any>): Promise<void> {
               let gp:Insertable<GuideUsuario> = {
                 usuario_id: uw.usuario_id,
                 actividadpf_id: g.id,
-                amountpaid: oldVault.amountPerGuide,
+                amountpaid: oldVault.amountPerGuide.toString(),
                 profilescore: 0,
                 amountpending: 0,
                 points: 1,
@@ -257,11 +248,14 @@ export async function up(db: Kysely<any>): Promise<void> {
               .executeTakeFirstOrThrow()
               console.log("    After insert igp.amountpaid=", igp.amountpaid)
             }
-            if (newGuidePaid == 0) {
+            const newGuidePaid = await newContract.read.guidePaid(
+              [courseId, numGuia, uw.billetera]
+            ) as bigint
+            if (newGuidePaid == 0n) {
               console.log("    Registrando en blockchain")
               let tx = await callWriteFun(
-                publicClient, 
-                account, 
+                publicClient,
+                account,
                 newContract.write.setGuidePaid,
                 [courseId, numGuia, uw.billetera, oldVault.amountPerGuide],
                 4
@@ -270,7 +264,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
           }
         }
-        if (guiasCompletadas == guides.rows.length) {
+        if (guides.rows.length > 0 && guiasCompletadas == guides.rows.length) {
           let cp:Insertable<CourseUsuario> = {
             usuario_id: uw.usuario_id,
             proyectofinanciero_id: c.id,
