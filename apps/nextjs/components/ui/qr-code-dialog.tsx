@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import * as React from "react"
+import * as React from 'react'
 import { SelfQRcodeWrapper } from '@selfxyz/qrcode'
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 
 interface QRCodeDialogProps {
   open: boolean
@@ -31,7 +31,7 @@ export function QRCodeDialog({
   onError,
   isMobile = false,
   onMobileVerify,
-  lang = "en",
+  lang = 'en',
 }: QRCodeDialogProps) {
   const handleCancel = () => {
     onOpenChange(false)
@@ -47,7 +47,7 @@ export function QRCodeDialog({
       } catch (error) {
         const message = t(
           `Mobile verification failed: ${error}`,
-          `Falló la verificación móvil: ${error}`
+          `Falló la verificación móvil: ${error}`,
         )
         console.error('Error opening Self app:', message)
         alert(message)
@@ -56,42 +56,42 @@ export function QRCodeDialog({
     }
   }
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("Verify with Self", "Verificar con Self")}</DialogTitle>
+          <DialogTitle>
+            {t('Verify with Self', 'Verificar con Self')}
+          </DialogTitle>
           <DialogDescription>
-            {isMobile 
+            {isMobile
               ? t(
-                  "Tap the button below to open the Self application and complete verification.",
-                  "Toca el botón de abajo para abrir la aplicación Self y completar la verificación."
+                  'Tap the button below to open the Self application and complete verification.',
+                  'Toca el botón de abajo para abrir la aplicación Self y completar la verificación.',
                 )
               : t(
-                  "Open the Self application on your phone and scan this QR code to verify your identity.",
-                  "Abre la aplicación Self en tu teléfono y escanea este código QR para verificar tu identidad."
-                )
-            }
+                  'Open the Self application on your phone and scan this QR code to verify your identity.',
+                  'Abre la aplicación Self en tu teléfono y escanea este código QR para verificar tu identidad.',
+                )}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="flex flex-col items-center justify-center py-6">
           {isMobile ? (
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-4">
                 {t(
-                  "Make sure you have the Self app installed on your device.",
-                  "Asegúrate de tener la aplicación Self instalada en tu dispositivo."
+                  'Make sure you have the Self app installed on your device.',
+                  'Asegúrate de tener la aplicación Self instalada en tu dispositivo.',
                 )}
               </p>
-              <Button 
+              <Button
                 onClick={handleMobileVerify}
                 type="button"
                 className="w-full"
                 size="lg"
               >
-                {t("Open Self App", "Abrir App Self")}
+                {t('Open Self App', 'Abrir App Self')}
               </Button>
             </div>
           ) : (
@@ -102,7 +102,9 @@ export function QRCodeDialog({
                   onSuccess={onSuccess}
                   onError={(error) => {
                     console.error('QR code verification error:', error)
-                    const errorMessage = error?.reason || t('Verification failed', 'Falló la verificación')
+                    const errorMessage =
+                      error?.reason ||
+                      t('Verification failed', 'Falló la verificación')
                     onError(errorMessage)
                   }}
                 />
@@ -112,12 +114,12 @@ export function QRCodeDialog({
         </div>
 
         <DialogFooter className="flex justify-between sm:justify-between">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleCancel}
             className="w-full sm:w-auto"
           >
-            {t("Cancel", "Cancelar")}
+            {t('Cancel', 'Cancelar')}
           </Button>
         </DialogFooter>
       </DialogContent>

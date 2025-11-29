@@ -1,6 +1,6 @@
-"use server"
+'use server'
 
-import clg from "crossword-layout-generator-with-isolated"
+import clg from 'crossword-layout-generator-with-isolated'
 import { readFile } from 'fs/promises'
 import { Kysely, PostgresDialect, Updateable } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
@@ -11,7 +11,7 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { Pool } from 'pg'
-import {unified} from 'unified'
+import { unified } from 'unified'
 
 import type { DB, BilleteraUsuario } from '@/db/db.d.ts'
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
@@ -21,7 +21,7 @@ interface WordPlacement {
   word: string
   row: number
   col: number
-  direction: "across" | "down"
+  direction: 'across' | 'down'
   number: number
   clue: string
 }
@@ -34,9 +34,8 @@ interface Cell {
   belongsToWords: number[]
 }
 
-
 export async function GET(req: NextRequest) {
-  console.log("** crossword GET req=", req)
+  console.log('** crossword GET req=', req)
 
   const initializeGrid = (rows: number, cols: number): Cell[][] => {
     return Array(rows)
@@ -45,24 +44,24 @@ export async function GET(req: NextRequest) {
         Array(cols)
           .fill(null)
           .map(() => ({
-            letter: "",
+            letter: '',
             isBlocked: true,
-            userInput: "",
+            userInput: '',
             belongsToWords: [],
           })),
       )
   }
 
   try {
-    let retMessage = "";
+    let retMessage = ''
 
     const { searchParams } = req.nextUrl
-    const courseId = searchParams.get("courseId")
-    const lang = searchParams.get("lang")
-    const prefix = searchParams.get("prefix")
-    const guide = searchParams.get("guide")
-    const walletAddress = searchParams.get("walletAddress")
-    const token = searchParams.get("token")
+    const courseId = searchParams.get('courseId')
+    const lang = searchParams.get('lang')
+    const prefix = searchParams.get('prefix')
+    const guide = searchParams.get('guide')
+    const walletAddress = searchParams.get('walletAddress')
+    const token = searchParams.get('token')
 
     let newGrid = initializeGrid(15, 15)
     const newPlacements: WordPlacement[] = []
@@ -70,35 +69,36 @@ export async function GET(req: NextRequest) {
     const db = newKyselyPostgresql()
 
     let billeteraUsuario: any = null
-    if (!walletAddress || walletAddress == null || walletAddress == "") {
-      retMessage += "\nTo solve the puzzle, please connect your web3 Wallet. "
+    if (!walletAddress || walletAddress == null || walletAddress == '') {
+      retMessage += '\nTo solve the puzzle, please connect your web3 Wallet. '
     } else {
-      billeteraUsuario = await db.selectFrom('billetera_usuario')
+      billeteraUsuario = await db
+        .selectFrom('billetera_usuario')
         .where('billetera', '=', walletAddress)
         .selectAll()
         .executeTakeFirst()
-        if (billeteraUsuario && billeteraUsuario.token != token) {
-          retMessage += "\nToken stored for user doesn't match given token. "
-        }
+      if (billeteraUsuario && billeteraUsuario.token != token) {
+        retMessage += "\nToken stored for user doesn't match given token. "
+      }
     }
-    if (retMessage == "") {
+    if (retMessage == '') {
       let wordNumber = 1
 
-      console.log("** cwd=", process.cwd())
+      console.log('** cwd=', process.cwd())
       let fname = `../../resources/${lang}/${prefix}/${guide}.md`
-      console.log("** fname=", fname)
+      console.log('** fname=', fname)
       let md = await readFile(fname, 'utf8')
       console.log(md)
 
       let processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(remarkFillInTheBlank, { url: "" })
-      // @ts-ignore
-      .use(remarkRehype, { allowDangerousHtml: true })
-      .use(rehypeStringify, { allowDangerousHtml: true })
+        .use(remarkParse)
+        .use(remarkGfm)
+        .use(remarkDirective)
+        .use(remarkFrontmatter)
+        .use(remarkFillInTheBlank, { url: '' })
+        // @ts-ignore
+        .use(remarkRehype, { allowDangerousHtml: true })
+        .use(rehypeStringify, { allowDangerousHtml: true })
       let html = processor.processSync(md).toString()
 
       let qa = (global as any).fillInTheBlank || []
@@ -111,49 +111,58 @@ export async function GET(req: NextRequest) {
         words.push(qa[np].answer)
         qa.splice(np, 1)
       }
-      console.log("scrambled=", scrambled)
+      console.log('scrambled=', scrambled)
       if (scrambled.length > 0) {
         // Save in Database
         let layout = clg.generateLayout(scrambled)
-        console.log("** layout=", layout)
-        let rows = layout.rows;
-        let cols = layout.cols;
-        console.log("** rows=", rows)
-        console.log("** cols=", cols)
+        console.log('** layout=', layout)
+        let rows = layout.rows
+        let cols = layout.cols
+        console.log('** rows=', rows)
+        console.log('** cols=', cols)
         newGrid = initializeGrid(rows, cols)
-        let table = layout.table; // table as two-dimensional array
-        console.log("** table=", table)
-        let output_html = layout.table_string; // table as plain text (with HTML line breaks)
-        console.log("** output_html=", output_html)
-        let output_json = layout.result;
-        console.log("** output_json=", output_json)
+        let table = layout.table // table as two-dimensional array
+        console.log('** table=', table)
+        let output_html = layout.table_string // table as plain text (with HTML line breaks)
+        console.log('** output_html=', output_html)
+        let output_json = layout.result
+        console.log('** output_json=', output_json)
 
-        for(let index = 0; index < output_json.length; index++) {
+        for (let index = 0; index < output_json.length; index++) {
           let word = output_json[index].answer
           let clue = output_json[index].clue
           let row = output_json[index].starty - 1
           let col = output_json[index].startx - 1
           let direction = output_json[index].orientation
-          if (direction == "down" || direction == "across") {
+          if (direction == 'down' || direction == 'across') {
             for (let i = 0; i < word.length; i++) {
-              const currentRow = direction === "down" ? row + i : row
-              const currentCol = direction === "across" ? col + i : col
-              console.log("** currentRow=", currentRow, 
-                         ", currentCol=", currentCol)
-              let ebelongs = typeof newGrid[currentRow][currentCol] == "undefined" ?
-                [] : newGrid[currentRow][currentCol].belongsToWords
+              const currentRow = direction === 'down' ? row + i : row
+              const currentCol = direction === 'across' ? col + i : col
+              console.log(
+                '** currentRow=',
+                currentRow,
+                ', currentCol=',
+                currentCol,
+              )
+              let ebelongs =
+                typeof newGrid[currentRow][currentCol] == 'undefined'
+                  ? []
+                  : newGrid[currentRow][currentCol].belongsToWords
               newGrid[currentRow][currentCol] = {
-                letter: "", // Originally word[i] but we don't send answer
-                number: i === 0 ? wordNumber : 
-                  (typeof newGrid[currentRow][currentCol] != "undefined" ? 
-                   newGrid[currentRow][currentCol].number : -1),
+                letter: '', // Originally word[i] but we don't send answer
+                number:
+                  i === 0
+                    ? wordNumber
+                    : typeof newGrid[currentRow][currentCol] != 'undefined'
+                      ? newGrid[currentRow][currentCol].number
+                      : -1,
                 isBlocked: false,
-                userInput: "",
+                userInput: '',
                 belongsToWords: ebelongs.concat(wordNumber),
               }
             }
             newPlacements.push({
-              word: "-",
+              word: '-',
               row: row,
               col: col,
               direction: direction,
@@ -163,35 +172,33 @@ export async function GET(req: NextRequest) {
             wordNumber++
           }
         }
-        console.log("** newPlacements=", newPlacements)
+        console.log('** newPlacements=', newPlacements)
       }
 
       let now = new Date()
-      let uWalletUser:Updateable<BilleteraUsuario> = {
-        answer_fib: words.join(" | "),
+      let uWalletUser: Updateable<BilleteraUsuario> = {
+        answer_fib: words.join(' | '),
         updated_at: now,
       }
-      let rUpdate=await db.updateTable('billetera_usuario')
+      let rUpdate = await db
+        .updateTable('billetera_usuario')
         .set(uWalletUser)
-        .where('id', '=', billeteraUsuario?.id).execute()
-      console.log(new Date(), "After update rUpdate=", rUpdate)
+        .where('id', '=', billeteraUsuario?.id)
+        .execute()
+      console.log(new Date(), 'After update rUpdate=', rUpdate)
     }
 
-    console.log("** newGrid=", newGrid)
+    console.log('** newGrid=', newGrid)
     return NextResponse.json(
       {
         grid: newGrid,
         placements: newPlacements,
         message: retMessage,
       },
-      {status: 200}
+      { status: 200 },
     )
   } catch (error) {
-    console.error("Excepción error=", error)
-    return NextResponse.json(
-      {error: error},
-      {status: 500}
-    )
+    console.error('Excepción error=', error)
+    return NextResponse.json({ error: error }, { status: 500 })
   }
-
 }

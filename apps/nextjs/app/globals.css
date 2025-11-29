@@ -1,13 +1,13 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ================================
    🎨 Diseño Global Moderno & Profesional
 ================================== */
 @theme {
   /* Tipografías */
-  --font-sans: "Inter", sans-serif;
-  --font-serif: "Merriweather", serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Merriweather', serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   /* Colores base */
   --color-background: #f9fafb; /* gris claro */
@@ -23,7 +23,7 @@
   --color-secondary-200: #4a3b60; /* Morado grisáceo */
 
   /* Escala de grises elegante */
-  --color-gray-50:  #f9fafb;
+  --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
   --color-gray-200: #e5e7eb;
   --color-gray-300: #d1d5db;
@@ -33,7 +33,9 @@
   --color-gray-700: #374151;
 
   /* Semantic colors for Radix UI components */
-  --color-primary: var(--color-primary-300); /* Morado fuerte para botones por defecto */
+  --color-primary: var(
+    --color-primary-300
+  ); /* Morado fuerte para botones por defecto */
   --color-primary-foreground: #ffffff;
   --color-secondary: var(--color-secondary-100); /* Piel cálida */
   --color-secondary-foreground: #ffffff;
@@ -54,7 +56,8 @@
 /* ================================
    ✨ Estilos Globales
 ================================== */
-html, body {
+html,
+body {
   font-family: var(--font-sans);
   background-color: var(--color-background);
   color: var(--color-foreground);
@@ -65,20 +68,34 @@ html, body {
 }
 
 /* Títulos */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-sans);
   font-weight: 700;
   color: var(--color-foreground);
   line-height: 1.3;
 }
 
-h1 { font-size: 2.25rem; }
-h2 { font-size: 1.875rem; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.25rem; }
+h1 {
+  font-size: 2.25rem;
+}
+h2 {
+  font-size: 1.875rem;
+}
+h3 {
+  font-size: 1.5rem;
+}
+h4 {
+  font-size: 1.25rem;
+}
 
 /* Código */
-code, pre {
+code,
+pre {
   font-family: var(--font-mono);
   background: var(--color-gray-100);
   padding: 0.3rem 0.6rem;
@@ -107,7 +124,8 @@ a:hover {
 }
 
 /* Botones básicos */
-a.btn, button {
+a.btn,
+button {
   font-family: var(--font-sans);
   font-weight: 500;
   border-radius: 0.5rem;
@@ -115,30 +133,34 @@ a.btn, button {
   padding: 0.6rem 1.2rem;
   transition: all 0.3s ease;
   cursor: pointer;
-  
 }
 
-a.btn:hover, button:hover {
+a.btn:hover,
+button:hover {
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
-a.primary, button.primary {
+a.primary,
+button.primary {
   background: var(--color-primary-100);
   color: white;
 }
 
-a.primary:hover, button.primary:hover {
+a.primary:hover,
+button.primary:hover {
   background: var(--color-primary-200);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
-a.secondary, button.secondary {
+a.secondary,
+button.secondary {
   background: var(--color-secondary-100);
   color: white;
 }
 
-a.secondary:hover, button.secondary:hover {
+a.secondary:hover,
+button.secondary:hover {
   background: var(--color-secondary-200);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
@@ -180,7 +202,8 @@ a.secondary:hover, button.secondary:hover {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4);
   }
   50% {
@@ -244,11 +267,19 @@ a.secondary:hover, button.secondary:hover {
 }
 
 /* Smooth transitions for interactive elements only */
-a, button, input, select, textarea, 
-.card, .card-hover,
-[role="button"], [role="link"],
-.transition, .group {
-  transition-property: color, background-color, border-color, transform, box-shadow, opacity;
+a,
+button,
+input,
+select,
+textarea,
+.card,
+.card-hover,
+[role='button'],
+[role='link'],
+.transition,
+.group {
+  transition-property:
+    color, background-color, border-color, transform, box-shadow, opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
@@ -298,7 +329,9 @@ a, button, input, select, textarea,
 
 .card-hover:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Loading spinner */
@@ -311,4 +344,3 @@ a, button, input, select, textarea,
 .animate-spin {
   animation: spin 1s linear infinite;
 }
-

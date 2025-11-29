@@ -5,94 +5,94 @@
  * Based on contexts/useWeb3.ts of Celo-composer
  */
 
-import { useState } from "react";
-import StableTokenABI from "./cusd-abi.json";
+import { useState } from 'react'
+import StableTokenABI from './cusd-abi.json'
 import {
-    createPublicClient,
-    createWalletClient,
-    custom,
-    getContract,
-    http,
-    parseEther,
-    stringToHex,
-} from "viem";
-import { celo } from "viem/chains";
+  createPublicClient,
+  createWalletClient,
+  custom,
+  getContract,
+  http,
+  parseEther,
+  stringToHex,
+} from 'viem'
+import { celo } from 'viem/chains'
 
 const publicClient = createPublicClient({
-    chain: celo,
-    transport: http(),
-});
+  chain: celo,
+  transport: http(),
+})
 
-const cUSDTokenAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"; // Testnet
-const MINIPAY_NFT_CONTRACT = "0xE8F4699baba6C86DA9729b1B0a1DA1Bd4136eFeF"; // Testnet
+const cUSDTokenAddress = '0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1' // Testnet
+const MINIPAY_NFT_CONTRACT = '0xE8F4699baba6C86DA9729b1B0a1DA1Bd4136eFeF' // Testnet
 
 export const useWeb3 = () => {
-    const [address, setAddress] = useState<string | null>(null);
+  const [address, setAddress] = useState<string | null>(null)
 
-    const getShortAddress = () => {
-      return address ? `${address.slice(0,5)}...${address.slice(39,42)}` : ""
+  const getShortAddress = () => {
+    return address ? `${address.slice(0, 5)}...${address.slice(39, 42)}` : ''
+  }
+
+  const getUserAddress = async () => {
+    if (typeof window !== 'undefined' && window.ethereum) {
+      let walletClient = createWalletClient({
+        transport: custom(window.ethereum),
+        chain: celo,
+      })
+
+      let [address] = await walletClient.getAddresses()
+      setAddress(address)
+      return address
     }
+    return null
+  }
 
-    const getUserAddress = async () => {
-        if (typeof window !== "undefined" && window.ethereum) {
-            let walletClient = createWalletClient({
-                transport: custom(window.ethereum),
-                chain: celo,
-            });
+  const sendCUSD = async (to: string, amount: string) => {
+    let walletClient = createWalletClient({
+      transport: custom(window.ethereum),
+      chain: celo,
+    })
 
-            let [address] = await walletClient.getAddresses();
-            setAddress(address);
-            return address
-        }
-        return null
-    };
+    let [address] = await walletClient.getAddresses()
 
-    const sendCUSD = async (to: string, amount: string) => {
-        let walletClient = createWalletClient({
-            transport: custom(window.ethereum),
-            chain: celo,
-        });
+    const amountInWei = parseEther(amount)
 
-        let [address] = await walletClient.getAddresses();
+    const tx = await walletClient.writeContract({
+      address: cUSDTokenAddress,
+      abi: StableTokenABI.abi,
+      functionName: 'transfer',
+      account: address,
+      args: [to, amountInWei],
+    })
 
-        const amountInWei = parseEther(amount);
+    let receipt = await publicClient.waitForTransactionReceipt({
+      hash: tx,
+    })
 
-        const tx = await walletClient.writeContract({
-            address: cUSDTokenAddress,
-            abi: StableTokenABI.abi,
-            functionName: "transfer",
-            account: address,
-            args: [to, amountInWei],
-        });
+    return receipt
+  }
 
-        let receipt = await publicClient.waitForTransactionReceipt({
-            hash: tx,
-        });
+  const signTransaction = async () => {
+    let walletClient = createWalletClient({
+      transport: custom(window.ethereum),
+      chain: celo,
+    })
 
-        return receipt;
-    };
+    let [address] = await walletClient.getAddresses()
 
-    const signTransaction = async () => {
-        let walletClient = createWalletClient({
-            transport: custom(window.ethereum),
-            chain: celo,
-        });
+    const res = await walletClient.signMessage({
+      account: address,
+      message: stringToHex('Hello from Celo Composer MiniPay Template!'),
+    })
 
-        let [address] = await walletClient.getAddresses();
+    return res
+  }
 
-        const res = await walletClient.signMessage({
-            account: address,
-            message: stringToHex("Hello from Celo Composer MiniPay Template!"),
-        });
-
-        return res;
-    };
-
-    return {
-        address,
-        getShortAddress,
-        getUserAddress,
-        sendCUSD,
-        signTransaction,
-    };
-};
+  return {
+    address,
+    getShortAddress,
+    getUserAddress,
+    sendCUSD,
+    signTransaction,
+  }
+}

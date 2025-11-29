@@ -13,10 +13,11 @@ export function isMobileDevice(): boolean {
   }
 
   const userAgent = navigator.userAgent.toLowerCase()
-  
+
   // Check for mobile device indicators in user agent
-  const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i
-  
+  const mobileRegex =
+    /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i
+
   return mobileRegex.test(userAgent)
 }
 
@@ -30,7 +31,7 @@ export function isIOSDevice(): boolean {
   }
 
   const userAgent = navigator.userAgent.toLowerCase()
-  
+
   return /iphone|ipad|ipod/i.test(userAgent)
 }
 
@@ -44,7 +45,7 @@ export function isAndroidDevice(): boolean {
   }
 
   const userAgent = navigator.userAgent.toLowerCase()
-  
+
   return /android/i.test(userAgent)
 }
 

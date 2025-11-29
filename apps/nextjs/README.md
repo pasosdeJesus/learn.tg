@@ -8,8 +8,8 @@ The frontend is built with [Next.js](https://nextjs.org/) (a React framework) an
 
 ## Prerequisites
 
-*   [Node.js](https://nodejs.org/) (>= 18)
-*   [Yarn](https://yarnpkg.com/)
+- [Node.js](https://nodejs.org/) (>= 18)
+- [Yarn](https://yarnpkg.com/)
 
 ## Environment Variables
 
@@ -21,11 +21,11 @@ cp .env.template .env
 
 Then, review and update the `.env` file with the following:
 
-*   `NEXT_PUBLIC_URL`: The public URL of the application (e.g., `http://localhost:3000` for development).
-*   `NEXT_PUBLIC_API_URL`: The URL of the Ruby on Rails backend server (e.g., `https://127.0.0.1:3000`).
-*   `PORT`: The port on which to run the Next.js server (e.g., `3000`).
-*   `NEXTAUTH_URL`: The full URL of the Next.js app, required by NextAuth.
-*   `NEXTAUTH_SECRET`: A secret string used to sign session cookies. You can generate one with `openssl rand -hex 32`.
+- `NEXT_PUBLIC_URL`: The public URL of the application (e.g., `http://localhost:3000` for development).
+- `NEXT_PUBLIC_API_URL`: The URL of the Ruby on Rails backend server (e.g., `https://127.0.0.1:3000`).
+- `PORT`: The port on which to run the Next.js server (e.g., `3000`).
+- `NEXTAUTH_URL`: The full URL of the Next.js app, required by NextAuth.
+- `NEXTAUTH_SECRET`: A secret string used to sign session cookies. You can generate one with `openssl rand -hex 32`.
 
 ## Local Development
 
@@ -72,4 +72,3 @@ This will execute all test files and display a coverage report in the console.
     ```
 
     It is recommended to run this behind a reverse proxy like Nginx for handling SSL and routing traffic correctly.
-

@@ -15,15 +15,20 @@ async function main() {
    if (!cCopAddress) {
     throw new Error("CCOP_ADDRESS not found in environment variables");
   }
+  const gooddollarAddress = process.env.GOODDOLLAR_ADDRESS;
+   if (!gooddollarAddress) {
+    throw new Error("CCOP_ADDRESS not found in environment variables");
+  }
   
   console.log(
     "Deploying LearnTGVaults with USDT address:", usdtAddress,
-    "and cCop address:", cCopAddress
+    "cCop address:", cCopAddress,
+    "goodDollar address:", gooddollarAddress
   );
   
   // Deploy the contract
   const learnTGVaults = await LearnTGVaults.deploy(
-    usdtAddress, cCopAddress
+    usdtAddress, cCopAddress, gooddollarAddress
   );
   
   // Wait for the deployment transaction to be mined

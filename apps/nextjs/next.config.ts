@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   typescript: {
@@ -7,15 +7,14 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  allowedDevOrigins: ["learn.tg", "127.0.0.1"],
+  allowedDevOrigins: ['learn.tg', '127.0.0.1'],
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@react-native-async-storage/async-storage': false,
-    };
-    return config;
+    }
+    return config
   },
-};
+}
 
-export default nextConfig;
-
+export default nextConfig

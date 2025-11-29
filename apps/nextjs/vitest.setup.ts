@@ -11,8 +11,9 @@ global.React = React
 // Mock liviano de RainbowKit para pruebas evitando lógica interna compleja
 vi.mock('@rainbow-me/rainbowkit', () => {
   return {
-    RainbowKitProvider: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
-    ConnectButton: () => React.createElement('button', null, 'Connect Wallet')
+    RainbowKitProvider: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
+    ConnectButton: () => React.createElement('button', null, 'Connect Wallet'),
   }
 })
 
@@ -28,7 +29,7 @@ const NOISY_PATTERNS = [
   '** cwd=',
 ]
 function shouldSilence(arg: any) {
-  return typeof arg === 'string' && NOISY_PATTERNS.some(p => arg.includes(p))
+  return typeof arg === 'string' && NOISY_PATTERNS.some((p) => arg.includes(p))
 }
 console.error = (...args: any[]) => {
   if (args.some(shouldSilence)) return

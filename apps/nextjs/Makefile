@@ -6,6 +6,9 @@ all:
 syntax:
 	pnpm typecheck
 
+format:
+	pnpm format
+
 test:
 	pnpm test
 

@@ -1,7 +1,7 @@
 // @ts-ignore
 import axios from 'axios'
 // @ts-ignore
-import { getCsrfToken } from "next-auth/react"
+import { getCsrfToken } from 'next-auth/react'
 
 export interface ScholarshipInfo {
   vaultCreated: boolean
@@ -11,13 +11,16 @@ export interface ScholarshipInfo {
   courseId: string
 }
 
-export async function fetchScholarshipInfo(courseId: string, walletAddress: string): Promise<ScholarshipInfo | null> {
+export async function fetchScholarshipInfo(
+  courseId: string,
+  walletAddress: string,
+): Promise<ScholarshipInfo | null> {
   const csrfToken = await getCsrfToken()
   if (!csrfToken) return null
   const url = `/api/scholarship?courseId=${courseId}&walletAddress=${walletAddress}&token=${csrfToken}`
   try {
     const response = await axios.get(url)
-    if (response.data && response.data.message === "") {
+    if (response.data && response.data.message === '') {
       return {
         vaultCreated: response.data.vaultCreated,
         vaultBalance: +response.data.vaultBalance,
@@ -33,7 +36,11 @@ export async function fetchScholarshipInfo(courseId: string, walletAddress: stri
   }
 }
 
-export async function submitGuideResult(contract: any, guideId: string, userAddress: string): Promise<any> {
+export async function submitGuideResult(
+  contract: any,
+  guideId: string,
+  userAddress: string,
+): Promise<any> {
   // contract: instancia de ScolarshipVaults
   // guideId: id de la guía
   // userAddress: dirección del usuario

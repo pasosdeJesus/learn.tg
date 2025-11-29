@@ -10,6 +10,11 @@
         "internalType": "address",
         "name": "_cCopToken",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_gooddollarToken",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -51,6 +56,56 @@
       }
     ],
     "name": "DepositCcop",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "contract IERC20",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EmergencyWithdrawal",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "guideNumber",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "student",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "GuidePaidSet",
     "type": "event"
   },
   {
@@ -150,6 +205,25 @@
       }
     ],
     "name": "ScholarshipPrepared",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "balanceUsdt",
+        "type": "uint256"
+      }
+    ],
+    "name": "VaultBalanceSet",
     "type": "event"
   },
   {
@@ -273,11 +347,42 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "depositGooddollar",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
     ],
     "name": "emergencyWithdrawCcop",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "emergencyWithdrawGooddollar",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -298,6 +403,19 @@
   {
     "inputs": [],
     "name": "getContractCcopBalance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getContractGooddollarBalance",
     "outputs": [
       {
         "internalType": "uint256",
@@ -355,6 +473,19 @@
         "internalType": "bool",
         "name": "canSubmit",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "gooddollarToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -594,6 +725,11 @@
       {
         "internalType": "uint256",
         "name": "balanceCcop",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "balanceGooddollar",
         "type": "uint256"
       },
       {

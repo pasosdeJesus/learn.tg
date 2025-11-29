@@ -14,28 +14,40 @@ vi.mock('fs/promises', async (importOriginal) => {
   const actual: any = await importOriginal()
   return {
     ...actual,
-    readFile: vi.fn(() => Promise.resolve('# Sample Guide\n\nSome content'))
+    readFile: vi.fn(() => Promise.resolve('# Sample Guide\n\nSome content')),
   }
 })
 // Algunos entornos ESM usan 'node:fs/promises'
 vi.mock('node:fs/promises', async () => ({
-  readFile: vi.fn(() => Promise.resolve('# Sample Guide (node namespace)'))
+  readFile: vi.fn(() => Promise.resolve('# Sample Guide (node namespace)')),
 }))
 
 // Mock remarkFillInTheBlank side effect (global.fillInTheBlank)
 vi.mock('@/lib/remarkFillInTheBlank.mjs', () => ({
-  remarkFillInTheBlank: () => (tree: any) => { /* noop for test */ }
+  remarkFillInTheBlank: () => (tree: any) => {
+    /* noop for test */
+  },
 }))
 
 // Mock Kysely para evitar conexiones reales a Postgres
 vi.mock('kysely', () => {
   class FakeKysely {
-    selectFrom() { return this }
-    where() { return this }
-    selectAll() { return this }
-    executeTakeFirst() { return Promise.resolve(undefined) }
+    selectFrom() {
+      return this
+    }
+    where() {
+      return this
+    }
+    selectAll() {
+      return this
+    }
+    executeTakeFirst() {
+      return Promise.resolve(undefined)
+    }
   }
-  class PostgresDialect { constructor(_cfg: any) {} }
+  class PostgresDialect {
+    constructor(_cfg: any) {}
+  }
   return { Kysely: FakeKysely, PostgresDialect }
 })
 
@@ -51,12 +63,14 @@ describe('API /api/guide', () => {
   })
 
   it('should return markdown when required guide params provided', async () => {
-  const url = new URL('http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&guideNumber=1')
+    const url = new URL(
+      'http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&guideNumber=1',
+    )
     const request = new NextRequest(url)
-    
+
     const response = await GET(request)
     const data = await response.json()
-    
+
     expect(response.status).toBe(200)
     expect(data).toHaveProperty('markdown')
     expect(typeof data.markdown).toBe('string')
@@ -65,7 +79,7 @@ describe('API /api/guide', () => {
   it('should return 500 when params missing (current behavior)', async () => {
     const url = new URL('http://localhost:3000/api/guide')
     const request = new NextRequest(url)
-    
+
     const response = await GET(request)
     const data = await response.json()
     expect(response.status).toBe(500)
@@ -73,9 +87,11 @@ describe('API /api/guide', () => {
   })
 
   it('should respond 200 without walletAddress', async () => {
-  const url = new URL('http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&guideNumber=1')
+    const url = new URL(
+      'http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&guideNumber=1',
+    )
     const request = new NextRequest(url)
-    
+
     const response = await GET(request)
     expect(response.status).toBe(200)
   })
@@ -86,7 +102,9 @@ describe('API /api/guide', () => {
     const mockFn = readFile as unknown as ReturnType<typeof vi.fn>
     mockFn.mockRejectedValueOnce(new Error('FS error forzado'))
 
-  const url = new URL('http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&guideNumber=1')
+    const url = new URL(
+      'http://localhost:3000/api/guide?courseId=c1&lang=en&prefix=a-relationship-with-Jesus&guide=guide1&guideNumber=1',
+    )
     const request = new NextRequest(url)
 
     const response = await GET(request)

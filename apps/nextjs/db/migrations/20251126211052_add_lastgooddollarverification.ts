@@ -1,16 +1,15 @@
-
 import type { Kysely } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .alterTable('usuario')
     .addColumn('lastgooddollarverification', 'timestamp')
-    .execute();
+    .execute()
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
   await db.schema
     .alterTable('usuario')
-    .dropColumn('lastgooddolalrverification')
-    .execute();
+    .dropColumn('lastgooddollarverification')
+    .execute()
 }

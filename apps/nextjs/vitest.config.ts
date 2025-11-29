@@ -18,6 +18,6 @@ export default defineConfig({
   esbuild: {
     // Asegura runtime JSX automático para no requerir import manual de React
     jsx: 'automatic',
-    jsxImportSource: 'react'
-  }
+    jsxImportSource: 'react',
+  },
 })

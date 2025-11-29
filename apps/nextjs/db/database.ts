@@ -25,7 +25,7 @@ const testDb = (() => {
   return self
 })()
 
-export const db: any = (process.env.NODE_ENV === 'test') ? testDb : undefined
+export const db: any = process.env.NODE_ENV === 'test' ? testDb : undefined
 
 export function getDb() {
   if (process.env.NODE_ENV === 'test') {
@@ -36,4 +36,3 @@ export function getDb() {
   }
   return _db
 }
-

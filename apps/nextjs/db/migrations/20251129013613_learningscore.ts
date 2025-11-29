@@ -4,12 +4,9 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .alterTable('usuario')
     .addColumn('learningscore', 'integer')
-    .execute();
+    .execute()
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  await db.schema
-    .alterTable('usuario')
-    .dropColumn('learningscore')
-    .execute();
+  await db.schema.alterTable('usuario').dropColumn('learningscore').execute()
 }

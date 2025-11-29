@@ -6,10 +6,18 @@ vi.mock('pg', () => ({ Pool: vi.fn(() => ({})) }))
 let mockRow: any = undefined
 vi.mock('kysely', () => {
   class DummyKysely {
-    selectFrom() { return this }
-    where() { return this }
-    selectAll() { return this }
-    executeTakeFirst() { return Promise.resolve(mockRow) }
+    selectFrom() {
+      return this
+    }
+    where() {
+      return this
+    }
+    selectAll() {
+      return this
+    }
+    executeTakeFirst() {
+      return Promise.resolve(mockRow)
+    }
   }
   return { Kysely: DummyKysely, PostgresDialect: class {} }
 })
@@ -22,8 +30,8 @@ vi.mock('viem', () => ({
   getContract: () => ({
     read: {
       getVault: () => Promise.resolve({ exists: false }),
-      studentCanSubmit: () => Promise.resolve(false)
-    }
+      studentCanSubmit: () => Promise.resolve(false),
+    },
   }),
   http: () => ({}),
 }))
@@ -39,7 +47,8 @@ function makeReq(url: string) {
 describe('API /api/scholarship', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_AUTH_URL = 'https://learn.tg'
-    process.env.NEXT_PUBLIC_DEPLOYED_AT = '0x0000000000000000000000000000000000000001'
+    process.env.NEXT_PUBLIC_DEPLOYED_AT =
+      '0x0000000000000000000000000000000000000001'
     process.env.PRIVATE_KEY = '0x123'
     process.env.NEXT_PUBLIC_RPC_URL = 'https://rpc.test'
     process.env.PGHOST = 'localhost'
@@ -49,7 +58,9 @@ describe('API /api/scholarship', () => {
   })
 
   it('retorna mensaje de error cuando falta courseId', async () => {
-    const req = makeReq('http://localhost:3000/api/scholarship?walletAddress=0xabc&token=t1')
+    const req = makeReq(
+      'http://localhost:3000/api/scholarship?walletAddress=0xabc&token=t1',
+    )
     const res = await GET(req)
     const json: any = await res.json()
     expect(res.status).toBe(200)
@@ -59,7 +70,9 @@ describe('API /api/scholarship', () => {
 
   it('agrega mensaje de token mismatch cuando token difiere', async () => {
     mockRow = { token: 'DIFFERENT' }
-    const req = makeReq('http://localhost:3000/api/scholarship?courseId=1&walletAddress=0xabc&token=tok1')
+    const req = makeReq(
+      'http://localhost:3000/api/scholarship?courseId=1&walletAddress=0xabc&token=tok1',
+    )
     const res = await GET(req)
     const json: any = await res.json()
     expect(res.status).toBe(200)

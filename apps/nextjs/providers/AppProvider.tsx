@@ -2,7 +2,7 @@
  * MIT License
  * Copyright (c) 2022 DevRel Team & Community
  *
- * Based on Celo Composer. See 
+ * Based on Celo Composer. See
  */
 'use client'
 
@@ -21,14 +21,16 @@ import {
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
-import { 
+import {
   injectedWallet,
   metaMaskWallet,
   okxWallet,
   walletConnectWallet,
-
 } from '@rainbow-me/rainbowkit/wallets'
-import { RainbowKitSiweNextAuthProvider, type GetSiweMessageOptions } from '@rainbow-me/rainbowkit-siwe-next-auth'
+import {
+  RainbowKitSiweNextAuthProvider,
+  type GetSiweMessageOptions,
+} from '@rainbow-me/rainbowkit-siwe-next-auth'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createConfig, http, useAccount, WagmiProvider } from 'wagmi'
 import { celo, celoSepolia } from 'wagmi/chains'
@@ -47,36 +49,39 @@ const connectors = connectorsForWallets(
     },
   ],
   {
-    appName: process.env.NEXT_PUBLIC_APPNAME ?? "Learn Through Games",
+    appName: process.env.NEXT_PUBLIC_APPNAME ?? 'Learn Through Games',
     projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? '0123',
-  }
+  },
 )
 
 const config = createConfig({
   connectors,
-  chains: (
-    process.env.NEXT_PUBLIC_AUTH_URL == "https://learn.tg" ?
-    [celo] : [celoSepolia]
-  ),
+  chains:
+    process.env.NEXT_PUBLIC_AUTH_URL == 'https://learn.tg'
+      ? [celo]
+      : [celoSepolia],
   transports: {
     [celo.id]: http(),
     [celoSepolia.id]: http(),
   },
 })
 
-
 const getSiweMessageOptions: GetSiweMessageOptions = () => {
   // Check if ethereum is available in window object
-  const selectedAddress = typeof window !== 'undefined' && (window as ExtendedWindow).ethereum?.selectedAddress || '0x0'
+  const selectedAddress =
+    (typeof window !== 'undefined' &&
+      (window as ExtendedWindow).ethereum?.selectedAddress) ||
+    '0x0'
   const referralTag = getReferralTag({
     user: selectedAddress as Address,
     consumer: '0x358643badcc77cccb28a319abd439438a57339a7',
   })
-  const msg={
-    statement: 'Sign in to Learn through games with DIVVI tracking. ' +
-      `Referral Tag: ${referralTag}`
+  const msg = {
+    statement:
+      'Sign in to Learn through games with DIVVI tracking. ' +
+      `Referral Tag: ${referralTag}`,
   }
-  console.log("OJO msg=", msg)
+  console.log('OJO msg=', msg)
   return msg
 }
 
@@ -92,13 +97,13 @@ export function AppProvider(props: RainbowKitProviderProps) {
           <RainbowKitSiweNextAuthProvider
             getSiweMessageOptions={getSiweMessageOptions}
           >
-            <RainbowKitProvider 
+            <RainbowKitProvider
               theme={lightTheme({
-              accentColor: '#714ba6',
-              accentColorForeground: 'white',
-              borderRadius: 'small',
-              fontStack: 'system',
-              overlayBlur: 'none',
+                accentColor: '#714ba6',
+                accentColorForeground: 'white',
+                borderRadius: 'small',
+                fontStack: 'system',
+                overlayBlur: 'none',
               })}
             >
               {props.children}

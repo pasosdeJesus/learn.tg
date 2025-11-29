@@ -29,13 +29,15 @@ contract LearnTGVaults is ReentrancyGuard {
   address public immutable owner;
   uint256 private constant PERCENTAGE_FOR_TEAM = 20;
   IERC20 public immutable usdtToken;
-  // In future multitoken, by now just try cCop
+  // In future multitoken, by now just try cCop and GoodDollar
   IERC20 public immutable cCopToken;
+  IERC20 public immutable gooddollarToken;
 
   struct Vault {
     uint256 courseId;
     uint256 balanceUsdt;
     uint256 balanceCcop;
+    uint256 balanceGooddollar;
     uint256 amountPerGuide;
     bool exists;
   }
@@ -99,12 +101,16 @@ contract LearnTGVaults is ReentrancyGuard {
     _;
   }
 
-  constructor(address _usdtToken, address _cCopToken) {
+  constructor(
+    address _usdtToken, address _cCopToken, address _gooddollarToken
+  ) {
     require(address(_usdtToken) != address(0), "Zero token");
     require(address(_cCopToken) != address(0), "Zero token");
+    require(address(_gooddollarToken) != address(0), "Zero token");
     owner = msg.sender;
     usdtToken = IERC20(_usdtToken);
     cCopToken = IERC20(_cCopToken);
+    gooddollarToken = IERC20(_gooddollarToken);
   }
 
   // Create a vault for a course (amount in USDT with 6 decimals)
@@ -119,6 +125,7 @@ contract LearnTGVaults is ReentrancyGuard {
       courseId: courseId,
       balanceUsdt: 0,
       balanceCcop: 0,
+      balanceGooddollar: 0,
       amountPerGuide: amountPerGuide,
       exists: true
     });
@@ -173,6 +180,30 @@ contract LearnTGVaults is ReentrancyGuard {
       "Vault transfer failed"
     );
   }
+
+  // Deposit 80% of indicated gooddollar into a vault and 20% to learn.tg
+  // (caller must approve this contract first)
+  function depositGooddollar(uint256 courseId, uint256 amount)
+    external vaultExists(courseId) nonReentrant {
+    require(courseId > 0, "Course id must be greater than 0");
+    require(amount > 0, "Deposit amount must be greater than 0");
+
+    uint256 forTeam = (amount / 100) * PERCENTAGE_FOR_TEAM;
+    uint256 forVault = amount - forTeam;
+
+    vaults[courseId].balanceGooddollar += forVault;
+    emit Deposit(courseId, amount);
+
+    require(
+      gooddollarToken.transferFrom(msg.sender, owner, forTeam),
+      "Team transfer failed"
+    );
+    require(
+      gooddollarToken.transferFrom(msg.sender, address(this), forVault),
+      "Vault transfer failed"
+    );
+  }
+
 
 
   // Usada para migrar de versión anterior a esta
@@ -280,6 +311,14 @@ contract LearnTGVaults is ReentrancyGuard {
     require(cCopToken.transfer(owner, amount), "Transfer failed");
   }
 
+  function emergencyWithdrawGooddollar(uint256 amount)
+  external onlyOwner nonReentrant {
+    require(amount > 0, "Amount > 0");
+    emit EmergencyWithdrawal(gooddollarToken, amount);
+    require(gooddollarToken.transfer(owner, amount), "Transfer failed");
+  }
+
+
   // Useful getters
   function getContractUSDTBalance() external view returns (uint256) {
     return usdtToken.balanceOf(address(this));
@@ -288,6 +327,11 @@ contract LearnTGVaults is ReentrancyGuard {
   function getContractCcopBalance() external view returns (uint256) {
     return cCopToken.balanceOf(address(this));
   }
+
+  function getContractGooddollarBalance() external view returns (uint256) {
+    return gooddollarToken.balanceOf(address(this));
+  }
+
 
   function getStudentGuideStatus(
     uint256 courseId,

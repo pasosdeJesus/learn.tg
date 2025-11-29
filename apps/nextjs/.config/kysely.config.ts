@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { Kysely, PostgresDialect } from 'kysely'
 import { defineConfig, getKnexTimestampPrefix } from 'kysely-ctl'
-import { Pool } from 'pg';
+import { Pool } from 'pg'
 
 import type { DB } from '@/db/db.d.ts'
 
@@ -16,7 +16,7 @@ export default defineConfig({
     }),
   }),
   migrations: {
-    migrationFolder: "db/migrations",
+    migrationFolder: '../db/migrations',
     getMigrationPrefix: getKnexTimestampPrefix,
   },
 })
@@ -34,4 +34,3 @@ export function newKyselyPostgresql() {
     }),
   })
 }
-
