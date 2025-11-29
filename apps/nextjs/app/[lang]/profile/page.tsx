@@ -71,7 +71,7 @@ export default function ProfileForm({ params }: PageProps) {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [updateAfterSelf, setUpdateAfterSelf] = useState(false)
+  const [updateProfile, setUpdateProfile] = useState(false)
   const [religions, setReligions] = useState<Religion[]>([])
   const [countries, setCountries] = useState<Country[]>([])
   const [selfApp, setSelfApp] = useState<any | null>(null)
@@ -115,7 +115,7 @@ export default function ProfileForm({ params }: PageProps) {
       })
       .then((response: AxiosResponse) => {
         if (response.data) {
-          debugger
+          setUpdateProfile(true)
         }
       })
       .catch((error: any) => {
@@ -128,7 +128,7 @@ export default function ProfileForm({ params }: PageProps) {
     // Persist the attestation / session result to your backend, then gate content
     setSelfApp(null)
     setShowQRDialog(false)
-    setUpdateAfterSelf(true)
+    setUpdateProfile(true)
     alert('Verified, information stored')
   }
 
@@ -275,8 +275,8 @@ export default function ProfileForm({ params }: PageProps) {
     if (address && session && session.address && address == session.address) {
       fetchProfile()
     }
-    setUpdateAfterSelf(false)
-  }, [address, session, updateAfterSelf])
+    setUpdateProfile(false)
+  }, [address, session, updateProfile])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -30,6 +30,8 @@ export async function POST(req: NextRequest) {
   let retMessage = ''
 
   try {
+    let learningscore = 0
+    let profilescore = 0
     const requestJson = await req.json()
     const lang = requestJson['lang'] ?? ''
     const walletAddress = requestJson['walletAddress'] ?? ''
@@ -108,70 +110,82 @@ export async function POST(req: NextRequest) {
             chain,
             transport: http(rpcUrl),
           })
-          const identitySDK = new IdentitySDK(
-            publicClient as any,
-            walletClient as any,
-            'production',
-          )
-          if (identitySDK == null) {
-            retMessage += '\n identitySDK is null'
+
+          let whitelisted = process.env.NETWORK == "celoSepolia"
+          if (process.env.NETWORK == "celo") {
+            const identitySDK = new IdentitySDK(
+              publicClient as any,
+              walletClient as any,
+              'production',
+            )
+            if (identitySDK == null) {
+              retMessage += '\n identitySDK is null'
+            }  else {
+              const { isWhitelisted, root } =
+                await identitySDK.getWhitelistedRoot(walletAddress)
+              whitelisted = isWhitelisted
+            }
           } else {
-            const { isWhitelisted, root } =
-              await identitySDK.getWhitelistedRoot(walletAddress)
-
-            // LEARNING SCORE CALCULATION
-            const guidePointsQuery = await db
-              .selectFrom('guide_usuario')
-              .where('usuario_id', '=', usuario.id)
-              .select(sql<number>`sum(points)`.as('total_points'))
-              .executeTakeFirst()
-            const coursePointsQuery = await db
-              .selectFrom('course_usuario')
-              .where('usuario_id', '=', usuario.id)
-              .select(sql<number>`sum(points)`.as('total_points'))
-              .executeTakeFirst()
-
-            const guidePoints = Number(guidePointsQuery?.total_points) || 0
-            const coursePoints = Number(coursePointsQuery?.total_points) || 0
-            const learningscore = guidePoints + coursePoints
-
-            // PROFILE SCORE CALCULATION
-            let profilescore = 0
-            if (usuario.lastgooddollarverification || usuario.passport_name) {
-              profilescore += 51
-            }
-            if (usuario.passport_name) {
-              profilescore += 15
-            }
-            if (usuario.passport_nationality) {
-              profilescore += 15
-            }
-            if (usuario.email) {
-              profilescore += 9
-            }
-            if (usuario.religion_id) {
-              profilescore += 9
-            }
-
-            let uUsuario: Updateable<Usuario> = {
-              lastgooddollarverification: isWhitelisted ? new Date() : null,
-              learningscore: learningscore,
-              profilescore: profilescore,
-            }
-            console.log('uUsuario=', uUsuario)
-            let rupdate = await db
-              .updateTable('usuario')
-              .set(uUsuario)
-              .where('id', '=', usuario.id)
-              .execute()
-            console.log('rupdate=', rupdate)
+            // Gooddollar doesn't work in testnet
+            whitelisted = true
           }
+
+          // LEARNING SCORE CALCULATION
+          const guidePointsQuery = await db
+          .selectFrom('guide_usuario')
+          .where('usuario_id', '=', usuario.id)
+          .select(sql<number>`sum(points)`.as('total_points'))
+          .executeTakeFirst()
+          const coursePointsQuery = await db
+          .selectFrom('course_usuario')
+          .where('usuario_id', '=', usuario.id)
+          .select(sql<number>`sum(points)`.as('total_points'))
+          .executeTakeFirst()
+
+          const guidePoints = Number(guidePointsQuery?.total_points) || 0
+          const coursePoints = Number(coursePointsQuery?.total_points) || 0
+          learningscore = guidePoints + coursePoints
+
+          // PROFILE SCORE CALCULATION
+          profilescore = 0
+          if (whitelisted || usuario.passport_name) {
+            profilescore += 52
+          }
+          if (usuario.passport_name) {
+            profilescore += 24
+          }
+          if (usuario.passport_nationality) {
+            profilescore += 24
+          }
+          /*if (usuario.email) {
+            profilescore += 8
+          }
+          if (usuario.religion_id) {
+            profilescore += 8
+          } */
+
+          let uUsuario: Updateable<Usuario> = {
+            lastgooddollarverification: whitelisted ? new Date() : null,
+            learningscore: learningscore,
+            profilescore: profilescore,
+          }
+          console.log('uUsuario=', uUsuario)
+          let rupdate = await db
+          .updateTable('usuario')
+          .set(uUsuario)
+          .where('id', '=', usuario.id)
+          .execute()
+          console.log('rupdate=', rupdate)
         }
       }
     }
 
     console.log('Retornando mensaje ', retMessage)
-    return NextResponse.json({ message: retMessage }, { status: 200 })
+    return NextResponse.json({ 
+      message: retMessage, 
+      profilescore: profilescore,
+      learningscore: learningscore
+    }, { status: 200 })
   } catch (error) {
     console.error('Excepción error=', error)
     const sError = JSON.stringify(error, (key, value) =>
