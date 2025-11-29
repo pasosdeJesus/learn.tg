@@ -1,4 +1,4 @@
 #!/bin/sh
 
 . .env
-npx hardhat verify --network $NETWORK $DEPLOYED_AT $USDT_ADDRESS $CCOP_ADDRESS
+npx hardhat verify --network $NETWORK $DEPLOYED_AT $USDT_ADDRESS $CCOP_ADDRESS $GOODDOLLAR_ADDRESS
