@@ -14,7 +14,7 @@ import {
   http,
 } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
-import { getReferralTag, submitReferral } from '@divvi/referral-sdk'
+//import { getReferralTag, submitReferral } from '@divvi/referral-sdk'
 
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
@@ -228,11 +228,12 @@ export async function POST(req: NextRequest) {
           transport: http(rpcUrl),
         })
 
-        const referralTag = getReferralTag({
+        /* No fue posible usar DIVVI aqui
+          const referralTag = getReferralTag({
           user: '0x358643bAdcC77Cccb28A319abD439438A57339A7',
           consumer: walletAddress,
         })
-        console.log('*** referralTag=', referralTag)
+        console.log('*** referralTag=', referralTag) */
 
         const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
         if (contractAddress) {
@@ -285,9 +286,10 @@ export async function POST(req: NextRequest) {
                 })
                 console.log('encodedData=', encodedData)
                 let txData = encodedData
+                /* No fue posible usar DIVVI aqui 
                 if (txData && txData.length >= 10) {
                   txData += referralTag
-                }
+                } */
                 console.log('txData=', txData)
                 const tx = await walletClient.sendTransaction({
                   account,
@@ -295,6 +297,7 @@ export async function POST(req: NextRequest) {
                   data: txData as Hex,
                 })
                 console.log('tx=', tx)
+                /*
                 const chainId = await walletClient.getChainId()
                 console.log('chainId=', chainId)
 
@@ -306,7 +309,7 @@ export async function POST(req: NextRequest) {
                   })
 
                   console.log('sr=', sr)
-                }
+                } */
 
                 scholarshipResult = tx
                 if (mistakesInCW.length == 0) {
