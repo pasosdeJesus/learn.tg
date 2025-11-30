@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  console.log('** OJO check_crossword POST')
+  console.log('** OJO check-crossword POST')
 
   const removeAccents = (s: string) =>
     s
@@ -247,9 +247,19 @@ export async function POST(req: NextRequest) {
           const guideIdArg = BigInt(guideId)
           console.log('*** guideIdArg=', guideIdArg)
           // Existe la boveda
-          const vault: any = await contract.read.vaults([courseIdArg])
+          const vaultArray: any = await contract.read.vaults(
+            [courseIdArg]
+          )
+          const vault = {
+            courseId: Number(vaultArray[0]),
+            balance: Number(vaultArray[1]),
+            balanceCcop: Number(vaultArray[2]),
+            balanceGooddollar: Number(vaultArray[3]),
+            amountPerGuide: Number(vaultArray[4]),
+            exists: Boolean(vaultArray[5]),
+          }
           console.log('*** vault=', vault)
-          if (vault[3]) {
+          if (vault.exists) {
             // vault.exists
             // Verificar si puede enviar
             const canSubmit = (await contract.read.studentCanSubmit([

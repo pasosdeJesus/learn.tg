@@ -342,7 +342,7 @@ export default function Page({
     console.log(grid)
     console.log(placements.length)
 
-    let urlc = process.env.NEXT_PUBLIC_AUTH_URL + `/api/check_crossword`
+    let urlc = process.env.NEXT_PUBLIC_AUTH_URL + `/api/check-crossword`
     interface CrosswordData {
       courseId: number
       guideId: number

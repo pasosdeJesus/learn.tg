@@ -94,7 +94,7 @@ vi.mock('viem', async () => {
 let POST: any
 let GET: any
 
-describe('API /api/check_crossword', () => {
+describe('API /api/check-crossword', () => {
   beforeAll(async () => {
     // Importar la ruta después de configurar los mocks
     const route = await import('../route')
@@ -122,7 +122,7 @@ describe('API /api/check_crossword', () => {
   })
 
   it('GET responde 400 indicando que espera POST', async () => {
-    const req = new NextRequest('http://localhost:3000/api/check_crossword', {
+    const req = new NextRequest('http://localhost:3000/api/check-crossword', {
       method: 'GET',
     })
     const res = await GET(req)
@@ -143,7 +143,7 @@ describe('API /api/check_crossword', () => {
       // walletAddress omitido
       token: 'tok',
     }
-    const req = new NextRequest('http://localhost:3000/api/check_crossword', {
+    const req = new NextRequest('http://localhost:3000/api/check-crossword', {
       method: 'POST',
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
@@ -172,7 +172,7 @@ describe('API /api/check_crossword', () => {
       walletAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
       token: 'NOPE',
     }
-    const req = new NextRequest('http://localhost:3000/api/check_crossword', {
+    const req = new NextRequest('http://localhost:3000/api/check-crossword', {
       method: 'POST',
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
@@ -216,7 +216,7 @@ describe('API /api/check_crossword', () => {
       walletAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
       token: 'TOK',
     }
-    const req = new NextRequest('http://localhost:3000/api/check_crossword', {
+    const req = new NextRequest('http://localhost:3000/api/check-crossword', {
       method: 'POST',
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
@@ -260,7 +260,7 @@ describe('API /api/check_crossword', () => {
       walletAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
       token: 'TOK',
     }
-    const req = new NextRequest('http://localhost:3000/api/check_crossword', {
+    const req = new NextRequest('http://localhost:3000/api/check-crossword', {
       method: 'POST',
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },

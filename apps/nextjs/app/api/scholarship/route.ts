@@ -153,8 +153,10 @@ export async function GET(req: NextRequest) {
         const vault = {
           courseId: Number(vaultArray[0]),
           preBalance: Number(vaultArray[1]),
-          preAmountPerGuide: Number(vaultArray[2]),
-          exists: Boolean(vaultArray[3]),
+          preBalanceCcop: Number(vaultArray[2]),
+          preBalanceGooddollar: Number(vaultArray[3]),
+          preAmountPerGuide: Number(vaultArray[4]),
+          exists: Boolean(vaultArray[5]),
         }
         console.log('** vault=', vault)
         if (vault && vault.exists) {
