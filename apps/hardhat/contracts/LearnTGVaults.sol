@@ -46,28 +46,20 @@ contract LearnTGVaults is ReentrancyGuard {
 
   mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
     public guidePaid;            // courseId => guide => wallet => amount paid
-  mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
-    public pendingScholarship;
   mapping(uint256 => mapping(address => uint256))
-    public studentCooldowns;
+    public studentCooldowns; // courseId => student => lastTimestamp
 
   // Events
   event VaultCreated(uint256 indexed courseId, uint256 amountPerGuide);
   event Deposit(uint256 indexed courseId, uint256 amount);
   event DepositCcop(uint256 indexed courseId, uint256 amount);
-  event ScholarshipPrepared(
+  event ScholarshipPaid(
     uint256 indexed courseId,
     uint256 indexed guideNumber,
     address indexed student,
     uint256 fullAmount,
     uint256 actualAmount,
     uint8 profileScore
-  );
-  event ScholarshipClaimed(
-    uint256 indexed courseId,
-    uint256 indexed guideNumber,
-    address indexed student,
-    uint256 amount
   );
   event ScholarshipAlreadyPaid(
     uint256 indexed courseId,
@@ -250,12 +242,9 @@ contract LearnTGVaults is ReentrancyGuard {
 
       uint256 paid = guidePaid[courseId][guideNumber][student];
       bool alreadyPaid = paid > 0;
-      bool hasPending = pendingScholarship[courseId][guideNumber][student] > 0;
 
-      if (alreadyPaid || hasPending) {
-        if (alreadyPaid) {
-          emit ScholarshipAlreadyPaid(courseId, guideNumber, student);
-        }
+      if (alreadyPaid) {
+        emit ScholarshipAlreadyPaid(courseId, guideNumber, student);
         return;
       }
 
@@ -268,27 +257,22 @@ contract LearnTGVaults is ReentrancyGuard {
       uint256 fullAmount = vaults[courseId].amountPerGuide;
       uint256 actualAmount = (fullAmount * profileScore) / 100;
 
-      require(vaults[courseId].balanceUsdt >= actualAmount, "Insufficient funds");
+      require(
+        vaults[courseId].balanceUsdt >= actualAmount, "Insufficient funds"
+      );
 
-      pendingScholarship[courseId][guideNumber][student] = actualAmount;
       vaults[courseId].balanceUsdt -= actualAmount;
+      guidePaid[courseId][guideNumber][msg.sender] = actualAmount;
 
-      emit ScholarshipPrepared(courseId, guideNumber, student, fullAmount, actualAmount, profileScore);
+      emit ScholarshipPaid(
+        courseId, guideNumber, student, fullAmount, 
+        actualAmount, profileScore
+      );
+      require(
+        usdtToken.transfer(student, actualAmount), "Transfer failed"
+      );
   }
 
-
-  // Estudiante reclama su beca
-  function claimScolarship(uint256 courseId, uint256 guideNumber)
-  external vaultExists(courseId) nonReentrant {
-    uint256 amount = pendingScholarship[courseId][guideNumber][msg.sender];
-    require(amount > 0, "No pending scholarship");
-
-    pendingScholarship[courseId][guideNumber][msg.sender] = 0;
-    guidePaid[courseId][guideNumber][msg.sender] = amount;
-
-    emit ScholarshipClaimed(courseId, guideNumber, msg.sender, amount);
-    require(usdtToken.transfer(msg.sender, amount), "Transfer failed");
-  }
 
   function studentCanSubmit(uint256 courseId, address student)
   public view returns (bool) {
@@ -339,11 +323,9 @@ contract LearnTGVaults is ReentrancyGuard {
     address student
   ) external view returns (
   uint256 paidAmount,
-  uint256 pendingAmount,
   bool canSubmit
   ) {
     paidAmount = guidePaid[courseId][guideNumber][student];
-    pendingAmount = pendingScholarship[courseId][guideNumber][student];
     canSubmit = studentCanSubmit(courseId, student);
   }
 
