@@ -262,7 +262,7 @@ contract LearnTGVaults is ReentrancyGuard {
       );
 
       vaults[courseId].balanceUsdt -= actualAmount;
-      guidePaid[courseId][guideNumber][msg.sender] = actualAmount;
+      guidePaid[courseId][guideNumber][student] = actualAmount;
 
       emit ScholarshipPaid(
         courseId, guideNumber, student, fullAmount, 
