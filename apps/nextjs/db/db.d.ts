@@ -39,6 +39,8 @@ export interface BilleteraUsuario {
   billetera: string;
   created_at: Timestamp;
   id: Generated<Int8>;
+  nonce: string | null;
+  nonce_expires_at: Timestamp | null;
   token: string | null;
   updated_at: Timestamp;
   usuario_id: number;
