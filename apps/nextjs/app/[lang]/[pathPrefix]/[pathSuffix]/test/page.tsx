@@ -1,9 +1,7 @@
 'use client'
 
 import axios from 'axios'
-
 import { useSession, getCsrfToken } from 'next-auth/react'
-
 import { use, useEffect, useState } from 'react'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -13,11 +11,16 @@ import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 import { useAccount } from 'wagmi'
+import { useWriteContract, useConfig } from 'wagmi'
+import { waitForTransactionReceipt } from 'wagmi/actions'
+import { parseAbi } from 'viem'
 
+import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 import { cn } from '@/lib/utils'
+
 
 interface WordPlacement {
   word: string
@@ -47,6 +50,8 @@ export default function Page({
 }) {
   const { address } = useAccount()
   const { data: session } = useSession()
+  const { data: hash, writeContract } = useWriteContract()
+  const wagmiConfig = useConfig();
 
   const [course, setCourse] = useState({
     id: '',
@@ -73,6 +78,72 @@ export default function Page({
   const [gCsrfToken, setGCsrfToken] = useState('')
   const [prevRow, setPrevRow] = useState(-1)
   const [prevCol, setPrevCol] = useState(-1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isClaiming, setIsClaiming] = useState(false)
+
+  async function handleClaimScholarship(courseId: number, guideId: number) {
+    const locale = lang === 'es' ? 'es' : 'en';
+    const uiMsg = {
+      es: {
+        claiming: 'Reclamando tu beca... Por favor, aprueba la transacción en tu billetera.',
+        claimSuccess: '¡Beca reclamada con éxito!',
+        claimError: 'Error al reclamar la beca.',
+        txProcessing: 'Procesando transacción...'
+      },
+      en: {
+        claiming: 'Claiming your scholarship... Please approve the transaction in your wallet.',
+        claimSuccess: 'Scholarship claimed successfully!',
+        claimError: 'Error claiming scholarship.',
+        txProcessing: 'Processing transaction...'
+      },
+    }
+
+    setIsClaiming(true)
+    setFlashWarning(uiMsg[locale].claiming)
+
+    try {
+      let tx = writeContract({
+        address: process.env.NEXT_PUBLIC_DEPLOYED_AT as `0x${string}`,
+        abi: LearnTGVaultsAbi,
+        functionName: 'claimScolarship',
+        args: [BigInt(courseId), BigInt(guideId)],
+      })
+      console.log("tx=" , tx)
+      alert(tx)
+      setIsClaiming(false)
+      setFlashWarning(tx)
+    } catch (e) {
+      console.error(e)
+      setFlashError(`${uiMsg[locale].claimError} ${e}`)
+      setIsClaiming(false)
+    }
+  }
+
+  useEffect(() => {
+    if (hash) {
+      const locale = lang === 'es' ? 'es' : 'en';
+      const uiMsg = {
+        es: { txProcessing: 'Procesando transacción...', claimSuccess: '¡Beca reclamada con éxito!', claimError: 'Error al reclamar la beca.' },
+        en: { txProcessing: 'Processing transaction...', claimSuccess: 'Scholarship claimed successfully!', claimError: 'Error claiming scholarship.' },
+      }
+
+      setFlashWarning(uiMsg[locale].txProcessing);
+
+      waitForTransactionReceipt(wagmiConfig, { hash })
+        .then((receipt) => {
+          console.log('Transaction receipt', receipt);
+          setFlashSuccess(uiMsg[locale].claimSuccess)
+          setFlashWarning('');
+          setIsClaiming(false)
+        })
+        .catch((e) => {
+          console.error(e);
+          setFlashError(`${uiMsg[locale].claimError} ${e.message}`)
+          setIsClaiming(false)
+        });
+    }
+  }, [hash, wagmiConfig]);
+
 
   useEffect(() => {
     if (
@@ -336,6 +407,7 @@ export default function Page({
   }
 
   const handleSubmit = () => {
+    setIsSubmitting(true)
     setFlashSuccess('')
     setFlashError('')
     setFlashWarning('')
@@ -378,7 +450,6 @@ export default function Page({
       .then((response) => {
         console.log(response)
         if (response.data) {
-          // Mensajes localizados
           const locale = lang === 'en' ? 'en' : 'es'
           const uiMsg = {
             es: {
@@ -414,17 +485,23 @@ export default function Page({
                 '\n' +
                 (response.data.message || ''),
             )
+            setIsSubmitting(false)
           } else {
             let msg = response.data.message || ''
             let scholarship = response.data.scholarshipResult
-            if (scholarship) {
+            if (scholarship && scholarship.length > 0) {
+              setFlashWarning(msg)
+              handleClaimScholarship(+course.id, guideNumber);
+            } else if (scholarship) {
               setFlashSuccess(
                 msg +
                   uiMsg[locale].scholarshipSent +
                   JSON.stringify(scholarship),
               )
+              setIsSubmitting(false)
             } else {
               setFlashWarning(msg)
+              setIsSubmitting(false)
             }
           }
         }
@@ -432,6 +509,7 @@ export default function Page({
       .catch((error) => {
         console.error(error)
         alert(error)
+        setIsSubmitting(false)
       })
   }
 
@@ -441,6 +519,7 @@ export default function Page({
       connectWallet: 'Conectar billetera',
       crossword: 'Crucigrama',
       submit: 'Enviar respuesta',
+      claiming: 'Reclamando...',
       across: 'Horizontal',
       down: 'Vertical',
       returnGuide: 'Regresar a la guía',
@@ -450,6 +529,7 @@ export default function Page({
       connectWallet: 'Connect Wallet',
       crossword: 'Crossword Puzzle',
       submit: 'Submit answer',
+      claiming: 'Claiming...',
       across: 'Across',
       down: 'Down',
       returnGuide: 'Return to guide',
@@ -494,8 +574,9 @@ export default function Page({
                         <Button
                           className="text-primary-foreground!"
                           onClick={handleSubmit}
+                          disabled={isSubmitting || isClaiming}
                         >
-                          {uiMsg[locale].submit}
+                          {isClaiming ? uiMsg[locale].claiming : uiMsg[locale].submit}
                         </Button>
                       </div>
                     )}
@@ -509,13 +590,13 @@ export default function Page({
                   </CardTitle>
 
                   {flashError != '' && (
-                    <div className="bg-red-500">{flashError}</div>
+                    <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800">{flashError}</div>
                   )}
                   {flashWarning != '' && (
-                    <div className="bg-orange-500">{flashWarning}</div>
+                    <div className="p-4 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg dark:bg-yellow-200 dark:text-yellow-800">{flashWarning}</div>
                   )}
                   {flashSuccess != '' && (
-                    <div className="bg-green-500">{flashSuccess}</div>
+                    <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800">{flashSuccess}</div>
                   )}
                 </CardHeader>
                 <CardContent>
@@ -627,3 +708,4 @@ export default function Page({
     </>
   )
 }
+

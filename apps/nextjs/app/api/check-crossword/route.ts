@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
         cannotSubmit:
           'Estás es un periodo de espera de 24 horas desde tu último envío para este curso. No puedes enviar resultado para beca en este momento.',
         contractError: 'No se pudo conectar con el contrato de becas.',
-        correctPoint: '¡Respuesta correcto! +1 punto',
+        correctPoint: '¡Respuesta correcta! +1 punto. ',
         correct:
           '¡Respuesta correcta! Se ha enviado tu resultado para beca, por favor espera 24 horas antes de volver a enviar para este curso.',
         incorrect:
@@ -92,8 +92,8 @@ export async function POST(req: NextRequest) {
           'You are in a waiting period of 24 hours since our last submission. You cannot submit a scholarship result at this time.',
         contractError: 'Could not connect to scholarship contract.',
         correct:
-          'Correct answer! Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.',
-        correctPoint: 'Correct answer! +1 point',
+          'Correct answer! Your result has been submitted for scholarship, please waith 24 hours before submitting again answers for this course.',
+        correctPoint: 'Correct answer! +1 point. ',
         incorrect:
           'Wrong answer. Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.',
         noWallet:
@@ -297,6 +297,18 @@ export async function POST(req: NextRequest) {
                   data: txData as Hex,
                 })
                 console.log('tx=', tx)
+                try {
+                  const receipt = await publicClient.waitForTransactionReceipt({
+                    hash: tx,
+                    confirmations: 2, // Optional: number of confirmations to wait for
+                    timeout: 2_000, // 2 seconds
+                  })
+                  console.log(`Receipt: ${receipt}`)
+                } catch (e) {
+                  console.error(
+                    `*waitForTransactionReceipt(${tx}) didnt work, continuing`,
+                  )
+                }
                 /*
                 const chainId = await walletClient.getChainId()
                 console.log('chainId=', chainId)
@@ -333,6 +345,7 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('Retornando mensaje ', retMessage)
+    console.log('Retornando scholarshipResult', scholarshipResult)
     return NextResponse.json(
       {
         mistakesInCW: mistakesInCW,
