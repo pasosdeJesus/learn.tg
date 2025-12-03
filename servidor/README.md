@@ -1,12 +1,15 @@
 # Learn.tg - Main Backend Server
 
-This directory contains the Ruby on Rails backend for Learn.tg. It serves as an administrative API and management hub for courses, users, and educational content.
+This directory contains the Ruby on Rails backend for Learn.tg. It 
+serves as an administrative API and management hub for courses, users, 
+and educational content.
 
 ### Requirements
 * Ruby version >= 3.4
 * PostgreSQL >= 16.2 with extension unaccent 
-* We suggest to run on adJ 7.6 (that includes all the components mentioned).
-  The following instructions suppose that you are working on that environment.
+* We suggest to run on adJ 7.7 (that includes all the components mentioned).
+  The following instructions suppose that you are working on that 
+  environment.
 
 To add the gem `rbsecp256k1`, we suggest:
 
@@ -17,12 +20,12 @@ To add the gem `rbsecp256k1`, we suggest:
 2. Install `autoconf`:
 
         doas pkg_add autoconf
-    and choose 2.69x
+    and choose `2.69x`
 
 3. Install `automake`:
 
         doas pkg_add automake
-  and choose 1.16.x
+  and choose `1.16.x`
 
 4. Install `libtool`:
         doas pkg_add libtool
@@ -34,14 +37,16 @@ To add the gem `rbsecp256k1`, we suggest:
 
 ### Architecture
 
-It is an application that uses the generic Pasos de Jesús-style engine `msip`.
-See https://github.com/pasosdeJesus/msip
-and the cor1440_gen engine, see https://github.com/pasosdeJesus/cor1440_gen, among
-others.
+It is an application that uses the generic Pasos de Jesús-style 
+engine `msipn`.
+See https://github.com/pasosdeJesus/msip branch msipn
+and the cor1440_gen engine, see https://github.com/pasosdeJesus/cor1440_gen,
+among others.
 
 ## Run a development instance
 
-Generate a certificate to run in TLS. Private key and public key should be at:
+Generate a certificate to run in TLS. Private key and public key should 
+be at:
 `../cert/llave.pem` ../.cert/cert.pem
 
 The list of certification authorities is expected at `/etc/ssl/cert.pem` you
@@ -52,12 +57,14 @@ Configure environment variables:
         cp .env.plantilla .env
 
 Change at least:
-1. Variables for the PostgreSQL engine: `BD_SERVIDOR`, `BD_USUARIO`, `BD_CLAVE`, 
+1. Variables for the PostgreSQL engine: `BD_SERVIDOR`, `BD_USUARIO`, 
+   `BD_CLAVE`, 
 2. Name of the databases: development `BD_DES`, test `BD_PRUEBA` and 
    production `BD_PRO`
 3. Path to the sources in `DIRAP`
 
-Create the database user you specified in `BD_USUARIO`, for example `learntg`, with:
+Create the database user you specified in `BD_USUARIO`, for example 
+`learntg`, with:
 
 ```sh
 doas su - _postgresql
@@ -68,12 +75,14 @@ psql -h /var/www/var/run/postgresql -U postgres
 exit
 ```
 
-And add the password for the `learntg` user at `~/.pgpass` with a line like:
+And add the password for the `learntg` user at `~/.pgpass` with a line 
+like:
 ```
 *:*:*:learntg:mypassword
 ```
 
-Create the database you specified in `BD_DES` (for example `learntg_des`) with something like:
+Create the database you specified in `BD_DES` (for example `learntg_des`)
+with something like:
 ```sh
 createdb -U learntg -h /var/www/var/run/postgresql learntg_des
 ```
@@ -90,7 +99,7 @@ And then run the development server with:
 
 To stop it, from another terminal, you can run: `./bin/detiene`
 
-Once started, with a browser check https://127.0.0.1:3000/learntg-admin
+Once started, with a browser check <https://127.0.0.1:3000/learntg-admin>
 
 You can login with the default user `cor1440` and password `cor1440`.
 
