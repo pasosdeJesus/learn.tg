@@ -159,6 +159,10 @@ export async function up(db: Kysely<any>): Promise<void> {
     console.log("newVault=", newVault)
     if (oldVault.exists && !newVault.exists) {
       console.log('  Creando boveda como', oldVault)
+      //if (oldVault.courseId == 103) {
+        // temporal
+        //oldVault.amountPerGuide = 1000000
+      //}
       let tx: Address = await callWriteFun(
         publicClient,
         account,
