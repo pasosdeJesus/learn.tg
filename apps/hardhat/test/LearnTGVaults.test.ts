@@ -1,4 +1,3 @@
-
 import { expect } from "chai";
 import hre from "hardhat";
 import {
@@ -204,11 +203,10 @@ describe("LearnTGVaults", function () {
 
       it("Should not pay a scholarship for an incorrect answer", async function () {
         const { learnTGVaults, student1 } = await loadFixture(deployAndFundVaultFixture);
-        const tx = await learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_ID_1, student1.address, false, 100);
-        const receipt = await tx.wait();
+        
+        await expect(learnTGVaults.submitGuideResult(COURSE_ID_1, GUIDE_ID_1, student1.address, false, 100))
+          .to.not.emit(learnTGVaults, "ScholarshipPaid");
 
-        const event = receipt?.events?.find(e => e.event === 'ScholarshipPaid');
-        expect(event).to.be.undefined;
         expect(await learnTGVaults.guidePaid(COURSE_ID_1, GUIDE_ID_1, student1.address)).to.equal(0);
       });
     });
@@ -243,6 +241,8 @@ describe("LearnTGVaults", function () {
       await expect(learnTGVaults.connect(student1).emergencyWithdrawUsdt(100))
         .to.be.revertedWith("Only owner");
     });
+
+
 
     it("Should allow owner to manually set a guide as paid", async function() {
       const { learnTGVaults, student1 } = await loadFixture(deployAndFundVaultFixture);
