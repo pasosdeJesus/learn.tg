@@ -14,7 +14,7 @@ import {
   http,
 } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
-//import { getReferralTag, submitReferral } from '@divvi/referral-sdk'
+import { SiweMessage } from 'siwe'
 
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
@@ -60,11 +60,10 @@ export async function POST(req: NextRequest) {
     const lang = requestJson['lang'] ?? ''
     const grid = requestJson['grid'] ?? ''
     const placements = requestJson['placements'] ?? ''
-    const walletAddress = requestJson['walletAddress'] ?? ''
-    const token = requestJson['token'] ?? ''
+    const message = requestJson['message']
+    const signature = requestJson['signature']
 
-    const db = newKyselyPostgresql()
-
+    const locale = lang === 'es' ? 'es' : 'en'
     // Mensajes localizados
     const msg = {
       es: {
@@ -75,14 +74,14 @@ export async function POST(req: NextRequest) {
         contractError: 'No se pudo conectar con el contrato de becas.',
         correctPoint: '¡Respuesta correcta! +1 punto. ',
         correct:
-          '¡Respuesta correcta! Se ha enviado tu resultado para beca, por favor espera 24 horas antes de volver a enviar para este curso.',
+          'Se ha enviado tu resultado para beca, por favor espera 24 horas antes de volver a enviar para este curso.',
         incorrect:
           'Respuesta equivocada. Se ha enviado tu resultado al blockchain, por favor espera 24 horas antes de volver a enviar para este curso.',
-        noWallet:
-          'La respuesta no será calificada ni se buscarán becas posibles.',
-        submitError: 'No se pudo enviar el resultado para beca: ',
-        tokenMismatch:
-          'El token almacenado para el usuario no coincide con el token proporcionado.',
+        invalidSignature: 'Firma SIWE inválida.',
+        missingAuth: 'Faltan la firma o el mensaje SIWE.',
+        nonceExpired: 'El nonce ha expirado. Por favor, intente de nuevo.',
+        nonceMismatch: 'El nonce no coincide.',
+        submitError: 'Error al enviar el resultado a la blockchain: ',
         userNotFound: 'No se encontró el usuario para la billetera.',
       },
       en: {
@@ -95,253 +94,264 @@ export async function POST(req: NextRequest) {
           'Correct answer! Your result has been submitted for scholarship, please waith 24 hours before submitting again answers for this course.',
         correctPoint: 'Correct answer! +1 point. ',
         incorrect:
-          'Wrong answer. Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.',
-        noWallet:
-          'Your answer will not be graded nor will possible scholarships be sought.',
-        submitError: 'Could not submit result for scholarship: ',
-        tokenMismatch: "Token stored for user doesn't match given token.",
+          "\nWrong answer. Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
+        invalidSignature: 'Invalid SIWE signature.',
+        missingAuth: 'Missing SIWE message or signature.',
+        nonceExpired: 'Nonce has expired. Please try again.',
+        nonceMismatch: 'Nonce mismatch.',
+        submitError: 'Error submitting result to the blockchain: ',
         userNotFound: 'User not found for wallet.',
       },
     }
-    const locale = lang === 'es' ? 'es' : 'en'
 
-    if (!walletAddress || walletAddress == null || walletAddress == '') {
-      retMessage += '\n' + msg[locale].noWallet
-    } else {
-      let billeteraUsuario = await db
-        .selectFrom('billetera_usuario')
+    if (!message || !signature) {
+      return NextResponse.json({ error: msg[locale].missingAuth }, { status: 400 });
+    }
+
+    const db = newKyselyPostgresql()
+    
+    const siweMessage = new SiweMessage(message)
+    const { data: verifiedMessage } = await siweMessage.verify({ signature })
+
+    if (!verifiedMessage) {
+        return NextResponse.json({ error: msg[locale].invalidSignature }, { status: 401 });
+    }
+    
+    const walletAddress = verifiedMessage.address;
+
+    let billeteraUsuario = await db
+      .selectFrom('billetera_usuario')
+      .where('billetera', '=', walletAddress)
+      .selectAll()
+      .executeTakeFirst()
+
+    if (!billeteraUsuario) {
+      return NextResponse.json({ error: msg[locale].userNotFound }, { status: 404 });
+    }
+
+    if (billeteraUsuario.nonce !== verifiedMessage.nonce) {
+        return NextResponse.json({ error: msg[locale].nonceMismatch }, { status: 401 });
+    }
+
+    if (!billeteraUsuario.nonce_expires_at || new Date() > new Date(billeteraUsuario.nonce_expires_at)) {
+        return NextResponse.json({ error: msg[locale].nonceExpired }, { status: 401 });
+    }
+
+    // Invalidate nonce after use
+    await db.updateTable('billetera_usuario')
+        .set({ nonce: null, nonce_expires_at: null })
         .where('billetera', '=', walletAddress)
-        .selectAll()
-        .executeTakeFirst()
-      if (!billeteraUsuario || billeteraUsuario.token != token) {
-        retMessage += '\n' + msg[locale].tokenMismatch
-      } else {
-        let words = billeteraUsuario.answer_fib
-          ? billeteraUsuario.answer_fib.split(' | ')
-          : []
-        for (let i = 0; i < words.length; i++) {
-          let nrow = placements[i].row
-          let ncol = placements[i].col
-          let dir = placements[i].direction
-          let word = words[i]
-          for (let j = 0; j < word.length; j++) {
-            if (
-              nrow >= grid.length ||
-              ncol >= grid[nrow].length ||
-              removeAccents(grid[nrow][ncol].userInput.toUpperCase()) !=
-                removeAccents(word[j].toUpperCase())
-            ) {
-              console.log(
-                `** Reviewing answer, problem in word ${i + 1} in position ${j}, received ${removeAccents(grid[nrow][ncol].userInput.toUpperCase())} but expected ${removeAccents(word[j].toUpperCase())}`,
-              )
-              if (!mistakesInCW.includes(i + 1)) {
-                mistakesInCW.push(i + 1)
-              }
-            }
-            if (dir == 'across') {
-              ncol++
-            } else {
-              nrow++
-            }
-          }
-        }
+        .execute();
 
-        // Perfil de usuario. Punto si hacía falta y la respuesta es correcta
-        let usuario = await db
-          .selectFrom('usuario')
-          .where('id', '=', billeteraUsuario.usuario_id)
-          .selectAll()
-          .executeTakeFirst()
-        if (!usuario) {
-          return NextResponse.json(
-            { error: msg[locale].userNotFound },
-            { status: 500 },
+    let words = billeteraUsuario.answer_fib
+      ? billeteraUsuario.answer_fib.split(' | ')
+      : []
+    for (let i = 0; i < words.length; i++) {
+      let nrow = placements[i].row
+      let ncol = placements[i].col
+      let dir = placements[i].direction
+      let word = words[i]
+      for (let j = 0; j < word.length; j++) {
+        if (
+          nrow >= grid.length ||
+          ncol >= grid[nrow].length ||
+          removeAccents(grid[nrow][ncol].userInput.toUpperCase()) !=
+            removeAccents(word[j].toUpperCase())
+        ) {
+          console.log(
+            `** Reviewing answer, problem in word ${i + 1} in position ${j}, received ${removeAccents(grid[nrow][ncol].userInput.toUpperCase())} but expected ${removeAccents(word[j].toUpperCase())}`,
           )
-        }
-        console.log('OJO usuario=', usuario)
-        const guides = await sql<any>`
-          SELECT id, nombrecorto, "sufijoRuta"
-          FROM cor1440_gen_actividadpf
-          WHERE proyectofinanciero_id = ${courseId}
-          AND "sufijoRuta" IS NOT NULL
-          AND "sufijoRuta" <> ''
-          ORDER BY nombrecorto
-        `.execute(db)
-        console.log('OJO guides=', guides)
-        const ug = await db
-          .selectFrom('guide_usuario')
-          .select(['usuario_id'])
-          .where('usuario_id', '=', billeteraUsuario.usuario_id)
-          .where('actividadpf_id', '=', guides.rows[guideId - 1].id)
-          .execute()
-        if (ug.length == 0 && mistakesInCW.length == 0) {
-          let gp: Insertable<GuideUsuario> = {
-            usuario_id: billeteraUsuario.usuario_id,
-            actividadpf_id: guides.rows[guideId - 1].id,
-            amountpaid: 0,
-            profilescore: usuario.profilescore || 0,
-            amountpending: 0,
-            points: 1,
+          if (!mistakesInCW.includes(i + 1)) {
+            mistakesInCW.push(i + 1)
           }
-          let igp = await db
-            .insertInto('guide_usuario')
-            .values(gp)
-            .returningAll()
-            .executeTakeFirstOrThrow()
-          retMessage += msg[locale].correctPoint
-          console.log('      After insert igp.points=', igp.points)
         }
-
-        // Intentamos beca
-        // Lógica similar a /api/scholarship
-        const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
-        const publicClient = createPublicClient({
-          chain:
-            process.env.NEXT_PUBLIC_AUTH_URL == 'https://learn.tg'
-              ? celo
-              : celoSepolia,
-          transport: http(rpcUrl),
-        })
-
-        const privateKey = process.env.PRIVATE_KEY as Hex | undefined
-        if (!privateKey) {
-          console.error(
-            'CRITICAL: PRIVATE_KEY is not set in environment variables.',
-          )
-          throw new Error('Server configuration error.')
-        }
-
-        let account
-        try {
-          account = privateKeyToAccount(privateKey)
-        } catch (e) {
-          console.error('CRITICAL: Failed to load account from private key.', e)
-          throw new Error('Server configuration error.')
-        }
-
-        const walletClient = createWalletClient({
-          account,
-          chain:
-            process.env.NEXT_PUBLIC_AUTH_URL == 'https://learn.tg'
-              ? celo
-              : celoSepolia,
-          transport: http(rpcUrl),
-        })
-
-        /* No fue posible usar DIVVI aqui
-          const referralTag = getReferralTag({
-          user: '0x358643bAdcC77Cccb28A319abD439438A57339A7',
-          consumer: walletAddress,
-        })
-        console.log('*** referralTag=', referralTag) */
-
-        const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
-        if (contractAddress) {
-          const contract = getContract({
-            address: contractAddress,
-            abi: LearnTGVaultsAbi as any,
-            client: { public: publicClient, wallet: walletClient },
-          })
-          //console.log("*** contract=", contract)
-          const courseIdArg = BigInt(courseId)
-          console.log('*** courseIdArg=', courseIdArg)
-          const guideIdArg = BigInt(guideId)
-          console.log('*** guideIdArg=', guideIdArg)
-          // Existe la boveda
-          const vaultArray: any = await contract.read.vaults(
-            [courseIdArg]
-          )
-          const vault = {
-            courseId: Number(vaultArray[0]),
-            balance: Number(vaultArray[1]),
-            balanceCcop: Number(vaultArray[2]),
-            balanceGooddollar: Number(vaultArray[3]),
-            amountPerGuide: Number(vaultArray[4]),
-            exists: Boolean(vaultArray[5]),
-          }
-          console.log('*** vault=', vault)
-          if (vault.exists) {
-            // vault.exists
-            // Verificar si puede enviar
-            const canSubmit = (await contract.read.studentCanSubmit([
-              courseIdArg,
-              walletAddress as Address,
-            ])) as boolean
-            console.log('** canSubmit=', canSubmit)
-            if (usuario.profilescore == null || usuario.profilescore < 50) {
-              retMessage += msg[locale].atLeast50
-            } else if (canSubmit) {
-              // Enviar resultado
-              try {
-                const encodedData = encodeFunctionData({
-                  abi: LearnTGVaultsAbi,
-                  functionName: 'submitGuideResult',
-                  args: [
-                    courseIdArg,
-                    guideIdArg,
-                    walletAddress as Address,
-                    mistakesInCW.length == 0,
-                    usuario.profilescore || 0,
-                  ],
-                })
-                console.log('encodedData=', encodedData)
-                let txData = encodedData
-                /* No fue posible usar DIVVI aqui 
-                if (txData && txData.length >= 10) {
-                  txData += referralTag
-                } */
-                console.log('txData=', txData)
-                const tx = await walletClient.sendTransaction({
-                  account,
-                  to: contract.address,
-                  data: txData as Hex,
-                })
-                console.log('tx=', tx)
-                try {
-                  const receipt = await publicClient.waitForTransactionReceipt({
-                    hash: tx,
-                    confirmations: 2, // Optional: number of confirmations to wait for
-                    timeout: 2_000, // 2 seconds
-                  })
-                  console.log(`Receipt: ${receipt}`)
-                } catch (e) {
-                  console.error(
-                    `*waitForTransactionReceipt(${tx}) didnt work, continuing`,
-                  )
-                }
-                /*
-                const chainId = await walletClient.getChainId()
-                console.log('chainId=', chainId)
-
-                if (chainId == 42220) {
-                  // Celo mainnet
-                  const sr = await submitReferral({
-                    txHash: tx,
-                    chainId: chainId,
-                  })
-
-                  console.log('sr=', sr)
-                } */
-
-                scholarshipResult = tx
-                if (mistakesInCW.length == 0) {
-                  retMessage += '\n' + msg[locale].correct
-                } else {
-                  retMessage += '\n' + msg[locale].incorrect
-                }
-              } catch (err) {
-                retMessage += '\n' + msg[locale].submitError + err
-              }
-            } else {
-              retMessage += '\n' + msg[locale].cannotSubmit
-            }
-          } else {
-            retMessage += `\nThere is not vault for the course (${courseId})`
-          }
+        if (dir == 'across') {
+          ncol++
         } else {
-          retMessage += '\n' + msg[locale].contractError
+          nrow++
         }
       }
+    }
+
+    // Perfil de usuario. Punto si hacía falta y la respuesta es correcta
+    let usuario = await db
+      .selectFrom('usuario')
+      .where('id', '=', billeteraUsuario.usuario_id)
+      .selectAll()
+      .executeTakeFirst()
+    if (!usuario) {
+      return NextResponse.json(
+        { error: msg[locale].userNotFound },
+        { status: 500 },
+      )
+    }
+    console.log('OJO usuario=', usuario)
+    const guides = await sql<any>`
+      SELECT id, nombrecorto, "sufijoRuta"
+      FROM cor1440_gen_actividadpf
+      WHERE proyectofinanciero_id = ${courseId}
+      AND "sufijoRuta" IS NOT NULL
+      AND "sufijoRuta" <> ''
+      ORDER BY nombrecorto
+    `.execute(db)
+    console.log('OJO guides=', guides)
+    const ug = await db
+      .selectFrom('guide_usuario')
+      .select(['usuario_id', 'points'])
+      .where('usuario_id', '=', billeteraUsuario.usuario_id)
+      .where('actividadpf_id', '=', guides.rows[guideId - 1].id)
+      .execute()
+    if (mistakesInCW.length == 0) {
+      if (ug.length == 0) {
+        let gp: Insertable<GuideUsuario> = {
+          usuario_id: billeteraUsuario.usuario_id,
+          actividadpf_id: guides.rows[guideId - 1].id,
+          amountpaid: 0,
+          profilescore: usuario.profilescore || 0,
+          amountpending: 0,
+          points: 1,
+        }
+        let igp = await db
+        .insertInto('guide_usuario')
+        .values(gp)
+        .returningAll()
+        .executeTakeFirstOrThrow()
+        console.log('      After insert igp.points=', igp.points)
+      } else {
+        await db.updateTable('guide_usuario')
+          .set({ points: ug[0].points + 1 })
+          .where('usuario_id', '=', billeteraUsuario.usuario_id)
+          .where('actividadpf_id', '=', guides.rows[guideId - 1].id)
+          .execute();
+        console.log('      After update points=', ug[0].points + 1 )
+      }
+      retMessage += msg[locale].correctPoint
+    }
+
+    // Intentamos beca
+    // Lógica similar a /api/scholarship
+    const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
+    const publicClient = createPublicClient({
+      chain:
+        process.env.NEXT_PUBLIC_AUTH_URL == 'https://learn.tg'
+          ? celo
+          : celoSepolia,
+      transport: http(rpcUrl),
+    })
+
+    const privateKey = process.env.PRIVATE_KEY as Hex | undefined
+    if (!privateKey) {
+      console.error(
+        'CRITICAL: PRIVATE_KEY is not set in environment variables.',
+      )
+      throw new Error('Server configuration error.')
+    }
+
+    let account
+    try {
+      account = privateKeyToAccount(privateKey)
+    } catch (e) {
+      console.error('CRITICAL: Failed to load account from private key.', e)
+      throw new Error('Server configuration error.')
+    }
+
+    const walletClient = createWalletClient({
+      account,
+      chain:
+        process.env.NEXT_PUBLIC_AUTH_URL == 'https://learn.tg'
+          ? celo
+          : celoSepolia,
+      transport: http(rpcUrl),
+    })
+
+    const contractAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address
+    if (contractAddress) {
+      const contract = getContract({
+        address: contractAddress,
+        abi: LearnTGVaultsAbi as any,
+        client: { public: publicClient, wallet: walletClient },
+      })
+      //console.log("*** contract=", contract)
+      const courseIdArg = BigInt(courseId)
+      console.log('*** courseIdArg=', courseIdArg)
+      const guideIdArg = BigInt(guideId)
+      console.log('*** guideIdArg=', guideIdArg)
+      // Existe la boveda
+      const vaultArray: any = await contract.read.vaults(
+        [courseIdArg]
+      )
+      const vault = {
+        courseId: Number(vaultArray[0]),
+        balance: Number(vaultArray[1]),
+        balanceCcop: Number(vaultArray[2]),
+        balanceGooddollar: Number(vaultArray[3]),
+        amountPerGuide: Number(vaultArray[4]),
+        exists: Boolean(vaultArray[5]),
+      }
+      console.log('*** vault=', vault)
+      if (vault.exists) {
+        // vault.exists
+        // Verificar si puede enviar
+        const canSubmit = (await contract.read.studentCanSubmit([
+          courseIdArg,
+          walletAddress as Address,
+        ])) as boolean
+        console.log('** canSubmit=', canSubmit)
+        if (usuario.profilescore == null || usuario.profilescore < 50) {
+          retMessage += msg[locale].atLeast50
+        } else if (canSubmit) {
+          // Enviar resultado
+          try {
+            const encodedData = encodeFunctionData({
+              abi: LearnTGVaultsAbi,
+              functionName: 'submitGuideResult',
+              args: [
+                courseIdArg,
+                guideIdArg,
+                walletAddress as Address,
+                mistakesInCW.length == 0,
+                usuario.profilescore || 0,
+              ],
+            })
+            console.log('encodedData=', encodedData)
+            let txData = encodedData
+            console.log('txData=', txData)
+            const tx = await walletClient.sendTransaction({
+              account,
+              to: contract.address,
+              data: txData as Hex,
+            })
+            console.log('tx=', tx)
+            try {
+              const receipt = await publicClient.waitForTransactionReceipt({
+                hash: tx,
+                confirmations: 2, // Optional: number of confirmations to wait for
+                timeout: 2_000, // 2 seconds
+              })
+              console.log(`Receipt: ${receipt}`)
+            } catch (e) {
+              console.error(
+                `*waitForTransactionReceipt(${tx}) didnt work, continuing`,
+              )
+            }
+
+            scholarshipResult = tx
+            if (mistakesInCW.length == 0) {
+              retMessage += '\n' + msg[locale].correct
+            } else {
+              retMessage += '\n' + msg[locale].incorrect
+            }
+          } catch (err) {
+            retMessage += '\n' + msg[locale].submitError + err
+          }
+        } else {
+          retMessage += '\n' + msg[locale].cannotSubmit
+        }
+      } else {
+        retMessage += `\nThere is not vault for the course (${courseId})`
+      }
+    } else {
+      retMessage += '\n' + msg[locale].contractError
     }
 
     console.log('Retornando mensaje ', retMessage)
@@ -362,3 +372,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: sError }, { status: 500 })
   }
 }
+

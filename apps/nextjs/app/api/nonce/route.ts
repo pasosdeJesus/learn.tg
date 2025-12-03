@@ -1,7 +1,6 @@
-
 import { NextResponse } from 'next/server';
 import { generateNonce } from 'siwe';
-import { db } from '@/db/database'; // Assuming you have a db instance
+import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 
 /**
  * @swagger
@@ -38,6 +37,9 @@ export async function GET(req: Request) {
   }
 
   const nonce = generateNonce();
+
+  const db = newKyselyPostgresql()
+
   const expires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
 
   await db.updateTable('billetera_usuario')
