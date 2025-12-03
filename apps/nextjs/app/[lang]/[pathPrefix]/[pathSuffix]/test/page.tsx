@@ -1,7 +1,7 @@
 'use client'
 
 import axios from 'axios'
-import { useSession, getCsrfToken } from 'next-auth/react'
+import { getCsrfToken, useSession } from 'next-auth/react'
 import { use, useEffect, useState } from 'react'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -9,18 +9,16 @@ import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
+import { SiweMessage } from 'siwe'
 import { unified } from 'unified'
-import { useAccount } from 'wagmi'
-import { useWriteContract, useConfig } from 'wagmi'
+import { useAccount, useSignMessage, useConfig, useWriteContract } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
-import { parseAbi } from 'viem'
 
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 import { cn } from '@/lib/utils'
-
 
 interface WordPlacement {
   word: string
@@ -48,10 +46,11 @@ export default function Page({
     pathSuffix: string
   }>
 }) {
-  const { address } = useAccount()
+  const { address, chainId } = useAccount()
   const { data: session } = useSession()
   const { data: hash, writeContract } = useWriteContract()
-  const wagmiConfig = useConfig();
+  const { signMessageAsync } = useSignMessage()
+  const wagmiConfig = useConfig()
 
   const [course, setCourse] = useState({
     id: '',
@@ -79,71 +78,37 @@ export default function Page({
   const [prevRow, setPrevRow] = useState(-1)
   const [prevCol, setPrevCol] = useState(-1)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isClaiming, setIsClaiming] = useState(false)
-
-  async function handleClaimScholarship(courseId: number, guideId: number) {
-    const locale = lang === 'es' ? 'es' : 'en';
-    const uiMsg = {
-      es: {
-        claiming: 'Reclamando tu beca... Por favor, aprueba la transacción en tu billetera.',
-        claimSuccess: '¡Beca reclamada con éxito!',
-        claimError: 'Error al reclamar la beca.',
-        txProcessing: 'Procesando transacción...'
-      },
-      en: {
-        claiming: 'Claiming your scholarship... Please approve the transaction in your wallet.',
-        claimSuccess: 'Scholarship claimed successfully!',
-        claimError: 'Error claiming scholarship.',
-        txProcessing: 'Processing transaction...'
-      },
-    }
-
-    setIsClaiming(true)
-    setFlashWarning(uiMsg[locale].claiming)
-
-    try {
-      let tx = writeContract({
-        address: process.env.NEXT_PUBLIC_DEPLOYED_AT as `0x${string}`,
-        abi: LearnTGVaultsAbi,
-        functionName: 'claimScolarship',
-        args: [BigInt(courseId), BigInt(guideId)],
-      })
-      console.log("tx=" , tx)
-      alert(tx)
-      setIsClaiming(false)
-      setFlashWarning(tx)
-    } catch (e) {
-      console.error(e)
-      setFlashError(`${uiMsg[locale].claimError} ${e}`)
-      setIsClaiming(false)
-    }
-  }
 
   useEffect(() => {
     if (hash) {
-      const locale = lang === 'es' ? 'es' : 'en';
+      const locale = lang === 'es' ? 'es' : 'en'
       const uiMsg = {
-        es: { txProcessing: 'Procesando transacción...', claimSuccess: '¡Beca reclamada con éxito!', claimError: 'Error al reclamar la beca.' },
-        en: { txProcessing: 'Processing transaction...', claimSuccess: 'Scholarship claimed successfully!', claimError: 'Error claiming scholarship.' },
+        es: {
+          txProcessing: 'Procesando transacción...',
+          claimSuccess: '¡Beca reclamada con éxito!',
+          claimError: 'Error al reclamar la beca.',
+        },
+        en: {
+          txProcessing: 'Processing transaction...',
+          claimSuccess: 'Scholarship claimed successfully!',
+          claimError: 'Error claiming scholarship.',
+        },
       }
 
-      setFlashWarning(uiMsg[locale].txProcessing);
+      setFlashWarning(uiMsg[locale].txProcessing)
 
       waitForTransactionReceipt(wagmiConfig, { hash })
         .then((receipt) => {
-          console.log('Transaction receipt', receipt);
+          console.log('Transaction receipt', receipt)
           setFlashSuccess(uiMsg[locale].claimSuccess)
-          setFlashWarning('');
-          setIsClaiming(false)
+          setFlashWarning('')
         })
         .catch((e) => {
-          console.error(e);
+          console.error(e)
           setFlashError(`${uiMsg[locale].claimError} ${e.message}`)
-          setIsClaiming(false)
-        });
+        })
     }
-  }, [hash, wagmiConfig]);
-
+  }, [hash, wagmiConfig])
 
   useEffect(() => {
     if (
@@ -406,111 +371,97 @@ export default function Page({
     )
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true)
     setFlashSuccess('')
     setFlashError('')
-    setFlashWarning('')
-    console.log(grid)
-    console.log(placements.length)
+    setFlashWarning('Please sign the message in your wallet to submit your answer.')
 
-    let urlc = process.env.NEXT_PUBLIC_AUTH_URL + `/api/check-crossword`
-    interface CrosswordData {
-      courseId: number
-      guideId: number
-      lang: string
-      prefix: string
-      guide: string
-      grid: Cell[][]
-      placements: WordPlacement[]
-      walletAddress?: string
-      token?: string
-    }
+    try {
+      // 1. Obtener nonce
+      const nonceRes = await axios.get(`/api/nonce?walletAddress=${address}`)
+      console.log("OJO nonceRes=", nonceRes)
+      const nonce = nonceRes.data
+      if (!nonce) {
+        throw new Error('Could not get nonce from server.')
+      }
 
-    let data: CrosswordData = {
-      courseId: +course.id,
-      guideId: guideNumber,
-      lang: lang,
-      prefix: pathPrefix,
-      guide: pathSuffix,
-      grid: grid,
-      placements: placements,
-    }
-    if (session && address && session.address && session.address == address) {
-      data.walletAddress = session.address
-      data.token = gCsrfToken
-    }
-    console.log(`Fetching ${urlc}`)
-    axios
-      .post(urlc, data, {
+      // 2. Crear mensaje SIWE
+      const message = new SiweMessage({
+        domain: window.location.host,
+        address,
+        statement: 'Sign in with Ethereum to the app.',
+        uri: window.location.origin,
+        version: '1',
+        chainId,
+        nonce,
+      })
+
+      // 3. Firmar mensaje
+      const signature = await signMessageAsync({ 
+        message: message.prepareMessage() 
+      })
+
+      // 4. Enviar todo al backend
+      const urlc = '/api/check-crossword'
+      const data = {
+        courseId: +course.id,
+        guideId: guideNumber,
+        lang: lang,
+        grid: grid,
+        placements: placements,
+        message, // Mensaje SIWE
+        signature, // Firma
+      }
+
+      const response = await axios.post(urlc, data, {
         headers: {
           'Content-Type': 'application/json',
         },
       })
-      .then((response) => {
-        console.log(response)
-        if (response.data) {
-          const locale = lang === 'en' ? 'en' : 'es'
-          const uiMsg = {
-            es: {
-              problemWords: 'Problema(s) con la(s) palabra(s) ',
-              scholarshipSent: '\nResultado de beca enviado: ',
-              connectWallet: 'Conectar billetera',
-              crossword: 'Crucigrama',
-              submit: 'Enviar respuesta',
-              across: 'Horizontal',
-              down: 'Vertical',
-              returnGuide: 'Regresar a la guía',
-              credits: 'Créditos y Licencia de este curso',
-            },
-            en: {
-              problemWords: 'Problem(s) with word(s) ',
-              scholarshipSent: '\nScholarship result sent: ',
-              connectWallet: 'Connect Wallet',
-              crossword: 'Crossword Puzzle',
-              submit: 'Submit answer',
-              across: 'Across',
-              down: 'Down',
-              returnGuide: 'Return to guide',
-              credits: 'Credits and License of this course',
-            },
-          }
-          if (
-            response.data.mistakesInCW &&
-            response.data.mistakesInCW.length > 0
-          ) {
-            setFlashError(
-              uiMsg[locale].problemWords +
-                response.data.mistakesInCW.join(', ') +
-                '\n' +
-                (response.data.message || ''),
+
+      if (response.data) {
+        const locale = lang === 'en' ? 'en' : 'es'
+        const uiMsg = {
+          es: {
+            problemWords: 'Problema(s) con la(s) palabra(s) ',
+            scholarshipSent: '\nResultado de beca enviado: ',
+          },
+          en: {
+            problemWords: 'Problem(s) with word(s) ',
+            scholarshipSent: '\nScholarship result sent: ',
+          },
+        }
+
+        if (response.data.mistakesInCW && response.data.mistakesInCW.length > 0) {
+          setFlashError(
+            uiMsg[locale].problemWords +
+              response.data.mistakesInCW.join(', ') +
+              '\n' +
+              (response.data.message || ''),
+          )
+          setIsSubmitting(false)
+        } else {
+          let msg = response.data.message || ''
+          let scholarship = response.data.scholarshipResult
+          console.log("OJO scholarship=", scholarship)
+          if (scholarship && scholarship.length > 0) {
+            setFlashSuccess(msg)
+          } else if (scholarship) {
+            setFlashWarning(
+              msg + uiMsg[locale].scholarshipSent + JSON.stringify(scholarship),
             )
-            setIsSubmitting(false)
           } else {
-            let msg = response.data.message || ''
-            let scholarship = response.data.scholarshipResult
-            if (scholarship && scholarship.length > 0) {
-              setFlashWarning(msg)
-              handleClaimScholarship(+course.id, guideNumber);
-            } else if (scholarship) {
-              setFlashSuccess(
-                msg +
-                  uiMsg[locale].scholarshipSent +
-                  JSON.stringify(scholarship),
-              )
-              setIsSubmitting(false)
-            } else {
-              setFlashWarning(msg)
-              setIsSubmitting(false)
-            }
+            setFlashSuccess(msg) // Cambiado a Success para mostrar mensajes como "ya ganaste puntos"
           }
         }
-      })
-      .catch((error) => {
-        console.error(error)
-        alert(error)
         setIsSubmitting(false)
-      })
+      }
+    } catch (error: any) {
+      console.error(error)
+      setFlashError(error.response?.data?.error || error.message)
+      setIsSubmitting(false)
+    }
   }
 
   const locale = lang === 'en' ? 'en' : 'es'
@@ -520,6 +471,7 @@ export default function Page({
       crossword: 'Crucigrama',
       submit: 'Enviar respuesta',
       claiming: 'Reclamando...',
+      signing: 'Firmando...',
       across: 'Horizontal',
       down: 'Vertical',
       returnGuide: 'Regresar a la guía',
@@ -529,7 +481,7 @@ export default function Page({
       connectWallet: 'Connect Wallet',
       crossword: 'Crossword Puzzle',
       submit: 'Submit answer',
-      claiming: 'Claiming...',
+      signing: 'Signing...',
       across: 'Across',
       down: 'Down',
       returnGuide: 'Return to guide',
@@ -574,9 +526,11 @@ export default function Page({
                         <Button
                           className="text-primary-foreground!"
                           onClick={handleSubmit}
-                          disabled={isSubmitting || isClaiming}
+                          disabled={isSubmitting}
                         >
-                          {isClaiming ? uiMsg[locale].claiming : uiMsg[locale].submit}
+                          {isSubmitting
+                            ? uiMsg[locale].signing
+                            : uiMsg[locale].submit}
                         </Button>
                       </div>
                     )}
@@ -590,13 +544,28 @@ export default function Page({
                   </CardTitle>
 
                   {flashError != '' && (
-                    <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800">{flashError}</div>
+                    <div
+                      className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800"
+                      onClick={() => setFlashError('')}
+                    >
+                      {flashError}
+                    </div>
                   )}
                   {flashWarning != '' && (
-                    <div className="p-4 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg dark:bg-yellow-200 dark:text-yellow-800">{flashWarning}</div>
+                    <div
+                      className="p-4 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg dark:bg-yellow-200 dark:text-yellow-800"
+                      onClick={() => setFlashWarning('')}
+                    >
+                      {flashWarning}
+                    </div>
                   )}
                   {flashSuccess != '' && (
-                    <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800">{flashSuccess}</div>
+                    <div
+                      className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800"
+                      onClick={() => setFlashSuccess('')}
+                    >
+                      {flashSuccess}
+                    </div>
                   )}
                 </CardHeader>
                 <CardContent>
