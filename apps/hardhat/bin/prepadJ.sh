@@ -9,5 +9,5 @@ yarn
 yarn build
 cd ../../..
 yarn
-cp tmpart/index-s.js node_modules/@nomicfoundation/solidity-analyzer/index.js
+cp tmpart/index-sa.js node_modules/@nomicfoundation/solidity-analyzer/index.js
 yarn build
