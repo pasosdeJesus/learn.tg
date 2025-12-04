@@ -421,12 +421,12 @@ export default function Page({
           if (scholarshipTx && scholarshipTx.length > 0) {
             setFlashSuccess(
               msg + ' ' + 
-                `<a href='${NEXT_PUBLIC_EXPLORER_TX}${scholarshipTx}'>` +
+                `<a href='${process.env.NEXT_PUBLIC_EXPLORER_TX}${scholarshipTx}'>` +
                 `${scholarshipTx}</a>`
             )
-          } else if (scholarship) {
+          } else if (scholarshipTx) {
             setFlashWarning(
-              msg + uiMsg[locale].scholarshipSent + JSON.stringify(scholarship),
+              msg + uiMsg[locale].scholarshipSent + JSON.stringify(scholarshipTx),
             )
           } else {
             setFlashSuccess(msg) // Cambiado a Success para mostrar mensajes como "ya ganaste puntos"
