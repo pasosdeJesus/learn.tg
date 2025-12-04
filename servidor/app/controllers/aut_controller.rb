@@ -8,7 +8,7 @@ class AutController < ApplicationController
     nonce = SecureRandom.hex(16)
     n = Nonce.create!(nonce: nonce)
     Nonce.where("created_at < ?", Date.today - 15).delete_all
-    puts "OJO nonce=#{nonce}"
+    puts "OJO nonce generated"
     render(json: { nonce: n.nonce, emision: n.created_at.iso8601 })
   end
 
@@ -38,7 +38,7 @@ class AutController < ApplicationController
       render(json: { eror: "nonce no encontrado" }, status: :unauthorized)
       return
     end
-    puts "OJO verificar_firma 2 nonce=#{nonce}"
+    puts "OJO verificar_firma 2"
     rnonce = Nonce.find_by(nonce: nonce)
     emision = rnonce.created_at
 
@@ -65,8 +65,7 @@ class AutController < ApplicationController
     )
 
     if mensaje != mensaje_esperado
-      puts "OJO mensaje=\n'#{mensaje}'"
-      puts "'#{mensaje_esperado}'\n=OJO mensajesperado"
+      puts "OJO mensaje mismatch"
       render(json: { eror: "Problema con mensajes" }, status: :unauthorized)
       return
     end
@@ -109,12 +108,8 @@ class AutController < ApplicationController
   end
 
   def es_valida_firma_ethereum?(mensaje:, firma:, direccion:, mensajeorig:)
-    puts "OJO es_valida_firma_ethereum?(mensaje: #{mensaje}, firma: #{firma}, direccion: #{direccion}, mensajeorig: #{mensajeorig})"
-    v = Eth::Signature.verify(mensaje, firma, direccion, 196)
-    unless v
-      debugger
-    end
-    v
+    puts "OJO es_valida_firma_ethereum? direccion=#{direccion[0..8]}..."
+    Eth::Signature.verify(mensaje, firma, direccion, 196)
   rescue
     false
   end

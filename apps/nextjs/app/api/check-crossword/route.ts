@@ -37,17 +37,12 @@ export async function POST(req: NextRequest) {
 
   const removeAccents = (s: string) =>
     s
-      .replace('á', 'A')
-      .replace('é', 'E')
-      .replace('í', 'I')
-      .replace('ó', 'O')
-      .replace('ú', 'U')
-      .replace('ü', 'U')
-      .replace('Á', 'A')
-      .replace('É', 'E')
-      .replace('Ó', 'O')
-      .replace('Ú', 'U')
-      .replace('Ü', 'U')
+      .replace(/á/gi, 'A')
+      .replace(/é/gi, 'E')
+      .replace(/í/gi, 'I')
+      .replace(/ó/gi, 'O')
+      .replace(/ú/gi, 'U')
+      .replace(/ü/gi, 'U')
 
   try {
     let mistakesInCW: number[] = []
@@ -80,6 +75,11 @@ export async function POST(req: NextRequest) {
         submitError: 'Error al enviar el resultado a la blockchain: ',
         userNotFound: 'No se encontró el usuario para la billetera.',
         tokenMismatch: 'El token almacenado para el usuario no coincide con el token proporcionado.',
+        invalidCourse: 'ID de curso inválido',
+        invalidGuide: 'ID de guía inválido',
+        invalidToken: 'Token inválido',
+        invalidGrid: 'Estructura de cuadrícula inválida',
+        invalidPlacements: 'Estructura de colocaciones inválida',
       },
       en: {
         atLeast50:
@@ -96,12 +96,34 @@ export async function POST(req: NextRequest) {
         submitError: 'Error submitting result to the blockchain: ',
         userNotFound: 'User not found for wallet.',
         tokenMismatch: "Token stored for user doesn't match given token.",
+        invalidCourse: 'Invalid course ID',
+        invalidGuide: 'Invalid guide ID',
+        invalidToken: 'Invalid token',
+        invalidGrid: 'Invalid grid structure',
+        invalidPlacements: 'Invalid placements structure',
       },
     }
 
     console.log('walletAddress=', walletAddress)
     if (!walletAddress || walletAddress == null || walletAddress == '') {
       return NextResponse.json({ error: msg[locale].noWallet}, { status: 400 });
+    }
+
+    // Input validation
+    if (!Number.isInteger(courseId) || courseId <= 0) {
+      return NextResponse.json({ error: msg[locale].invalidCourse }, { status: 400 })
+    }
+    if (!Number.isInteger(guideId) || guideId <= 0) {
+      return NextResponse.json({ error: msg[locale].invalidGuide }, { status: 400 })
+    }
+    if (!token || token.trim() === '') {
+      return NextResponse.json({ error: msg[locale].invalidToken }, { status: 400 })
+    }
+    if (!grid || !Array.isArray(grid)) {
+      return NextResponse.json({ error: msg[locale].invalidGrid }, { status: 400 })
+    }
+    if (!placements || !Array.isArray(placements)) {
+      return NextResponse.json({ error: msg[locale].invalidPlacements }, { status: 400 })
     }
 
     const db = newKyselyPostgresql()
@@ -174,6 +196,13 @@ export async function POST(req: NextRequest) {
       ORDER BY nombrecorto
     `.execute(db)
     console.log('OJO guides=', guides)
+    // Validate guideId bounds
+    if (!guides.rows || guides.rows.length === 0) {
+      return NextResponse.json({ error: msg[locale].invalidCourse }, { status: 400 })
+    }
+    if (guideId < 1 || guideId > guides.rows.length) {
+      return NextResponse.json({ error: msg[locale].invalidGuide }, { status: 400 })
+    }
     const ug = await db
       .selectFrom('guide_usuario')
       .select(['usuario_id', 'points'])
@@ -320,7 +349,8 @@ export async function POST(req: NextRequest) {
               retMessage += '\n' + msg[locale].incorrect
             }
           } catch (err) {
-            retMessage += '\n' + msg[locale].submitError + err
+            console.error('Error submitting transaction:', err)
+            retMessage += '\n' + msg[locale].submitError
           }
         } else {
           retMessage += '\n' + msg[locale].cannotSubmit
@@ -343,11 +373,22 @@ export async function POST(req: NextRequest) {
       { status: 200 },
     )
   } catch (error) {
-    console.error('Excepción error=', error)
-    const sError = JSON.stringify(error, (key, value) =>
-      typeof value === 'bigint' ? value.toString() + 'n' : value,
-    )
-    return NextResponse.json({ error: sError }, { status: 500 })
+    console.error('Internal server error in check-crossword:', error)
+    // Return generic error response to client
+    const errorMessage = process.env.NODE_ENV === 'development'
+      ? String(error)
+      : 'Internal server error'
+
+    return NextResponse.json({
+      error: errorMessage,
+      errorCode: 'INTERNAL_SERVER_ERROR'
+    }, {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Content-Type-Options': 'nosniff'
+      }
+    })
   }
 }
 

@@ -9,7 +9,11 @@
 
 Rails.application.config.middleware.insert_before(0, Rack::Cors) do
   allow do
-    origins "*"
+    # Use configured CORS origins, fallback to MAQ_CLIENTE if none specified
+    origins = Rails.configuration.x.origen_cors
+    origins = [Rails.configuration.x.maq_cliente] if origins.empty?
+
+    origins origins
 
     resource "*",
       headers: :any,
