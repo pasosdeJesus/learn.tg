@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-debugger
 
 json.id(@proyectofinanciero.id)
 json.titulo(@proyectofinanciero.titulo.to_s)
