@@ -14,7 +14,6 @@ import {
   http,
 } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
-import { SiweMessage } from 'siwe'
 
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
@@ -60,8 +59,8 @@ export async function POST(req: NextRequest) {
     const lang = requestJson['lang'] ?? ''
     const grid = requestJson['grid'] ?? ''
     const placements = requestJson['placements'] ?? ''
-    const message = requestJson['message']
-    const signature = requestJson['signature']
+    const walletAddress = requestJson['walletAddress'] ?? ''
+    const token = requestJson['token'] ?? ''
 
     const locale = lang === 'es' ? 'es' : 'en'
     // Mensajes localizados
@@ -77,12 +76,10 @@ export async function POST(req: NextRequest) {
           'Se ha enviado tu resultado para beca, por favor espera 24 horas antes de volver a enviar para este curso.',
         incorrect:
           'Respuesta equivocada. Se ha enviado tu resultado al blockchain, por favor espera 24 horas antes de volver a enviar para este curso.',
-        invalidSignature: 'Firma SIWE inválida.',
-        missingAuth: 'Faltan la firma o el mensaje SIWE.',
-        nonceExpired: 'El nonce ha expirado. Por favor, intente de nuevo.',
-        nonceMismatch: 'El nonce no coincide.',
+        noWallet: 'La respuesta no será calificada ni se buscarán becas posibles.',
         submitError: 'Error al enviar el resultado a la blockchain: ',
         userNotFound: 'No se encontró el usuario para la billetera.',
+        tokenMismatch: 'El token almacenado para el usuario no coincide con el token proporcionado.',
       },
       en: {
         atLeast50:
@@ -91,33 +88,23 @@ export async function POST(req: NextRequest) {
           'You are in a waiting period of 24 hours since our last submission. You cannot submit a scholarship result at this time.',
         contractError: 'Could not connect to scholarship contract.',
         correct:
-          'Correct answer! Your result has been submitted for scholarship, please waith 24 hours before submitting again answers for this course.',
+          'Your result has been submitted for scholarship, please waith 24 hours before submitting again answers for this course.',
         correctPoint: 'Correct answer! +1 point. ',
         incorrect:
           "\nWrong answer. Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
-        invalidSignature: 'Invalid SIWE signature.',
-        missingAuth: 'Missing SIWE message or signature.',
-        nonceExpired: 'Nonce has expired. Please try again.',
-        nonceMismatch: 'Nonce mismatch.',
+        noWallet: 'Your answer will not be graded nor will possible scholarships be sought.',
         submitError: 'Error submitting result to the blockchain: ',
         userNotFound: 'User not found for wallet.',
+        tokenMismatch: "Token stored for user doesn't match given token.",
       },
     }
 
-    if (!message || !signature) {
-      return NextResponse.json({ error: msg[locale].missingAuth }, { status: 400 });
+    console.log('walletAddress=', walletAddress)
+    if (!walletAddress || walletAddress == null || walletAddress == '') {
+      return NextResponse.json({ error: msg[locale].noWallet}, { status: 400 });
     }
 
     const db = newKyselyPostgresql()
-    
-    const siweMessage = new SiweMessage(message)
-    const { data: verifiedMessage } = await siweMessage.verify({ signature })
-
-    if (!verifiedMessage) {
-        return NextResponse.json({ error: msg[locale].invalidSignature }, { status: 401 });
-    }
-    
-    const walletAddress = verifiedMessage.address;
 
     let billeteraUsuario = await db
       .selectFrom('billetera_usuario')
@@ -125,27 +112,19 @@ export async function POST(req: NextRequest) {
       .selectAll()
       .executeTakeFirst()
 
+    console.log('billeteraUsuario=', billeteraUsuario)
     if (!billeteraUsuario) {
       return NextResponse.json({ error: msg[locale].userNotFound }, { status: 404 });
     }
 
-    if (billeteraUsuario.nonce !== verifiedMessage.nonce) {
-        return NextResponse.json({ error: msg[locale].nonceMismatch }, { status: 401 });
+    if (billeteraUsuario.token !== token) {
+        return NextResponse.json({ error: msg[locale].tokenMismatch }, { status: 401 });
     }
-
-    if (!billeteraUsuario.nonce_expires_at || new Date() > new Date(billeteraUsuario.nonce_expires_at)) {
-        return NextResponse.json({ error: msg[locale].nonceExpired }, { status: 401 });
-    }
-
-    // Invalidate nonce after use
-    await db.updateTable('billetera_usuario')
-        .set({ nonce: null, nonce_expires_at: null })
-        .where('billetera', '=', walletAddress)
-        .execute();
 
     let words = billeteraUsuario.answer_fib
       ? billeteraUsuario.answer_fib.split(' | ')
       : []
+    console.log('words=', words)
     for (let i = 0; i < words.length; i++) {
       let nrow = placements[i].row
       let ncol = placements[i].col
@@ -229,7 +208,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Intentamos beca
-    // Lógica similar a /api/scholarship
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
     const publicClient = createPublicClient({
       chain:

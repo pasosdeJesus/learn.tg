@@ -9,9 +9,8 @@ import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
-import { SiweMessage } from 'siwe'
 import { unified } from 'unified'
-import { useAccount, useSignMessage, useConfig, useWriteContract } from 'wagmi'
+import { useAccount, useConfig, useWriteContract } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
@@ -49,7 +48,6 @@ export default function Page({
   const { address, chainId } = useAccount()
   const { data: session } = useSession()
   const { data: hash, writeContract } = useWriteContract()
-  const { signMessageAsync } = useSignMessage()
   const wagmiConfig = useConfig()
 
   const [course, setCourse] = useState({
@@ -375,34 +373,9 @@ export default function Page({
     setIsSubmitting(true)
     setFlashSuccess('')
     setFlashError('')
-    setFlashWarning('Please sign the message in your wallet to submit your answer.')
+    setFlashWarning('')
 
     try {
-      // 1. Obtener nonce
-      const nonceRes = await axios.get(`/api/nonce?walletAddress=${address}`)
-      console.log("OJO nonceRes=", nonceRes)
-      const nonce = nonceRes.data
-      if (!nonce) {
-        throw new Error('Could not get nonce from server.')
-      }
-
-      // 2. Crear mensaje SIWE
-      const message = new SiweMessage({
-        domain: window.location.host,
-        address,
-        statement: 'Sign in with Ethereum to the app.',
-        uri: window.location.origin,
-        version: '1',
-        chainId,
-        nonce,
-      })
-
-      // 3. Firmar mensaje
-      const signature = await signMessageAsync({ 
-        message: message.prepareMessage() 
-      })
-
-      // 4. Enviar todo al backend
       const urlc = '/api/check-crossword'
       const data = {
         courseId: +course.id,
@@ -410,8 +383,8 @@ export default function Page({
         lang: lang,
         grid: grid,
         placements: placements,
-        message, // Mensaje SIWE
-        signature, // Firma
+        walletAddress: session.address,
+        token: gCsrfToken
       }
 
       const response = await axios.post(urlc, data, {
@@ -443,10 +416,14 @@ export default function Page({
           setIsSubmitting(false)
         } else {
           let msg = response.data.message || ''
-          let scholarship = response.data.scholarshipResult
-          console.log("OJO scholarship=", scholarship)
-          if (scholarship && scholarship.length > 0) {
-            setFlashSuccess(msg)
+          let scholarshipTx = response.data.scholarshipResult
+          console.log("OJO scholarshipTx=", scholarshipTx)
+          if (scholarshipTx && scholarshipTx.length > 0) {
+            setFlashSuccess(
+              msg + ' ' + 
+                `<a href='${NEXT_PUBLIC_EXPLORER_TX}${scholarshipTx}'>` +
+                `${scholarshipTx}</a>`
+            )
           } else if (scholarship) {
             setFlashWarning(
               msg + uiMsg[locale].scholarshipSent + JSON.stringify(scholarship),
@@ -471,7 +448,7 @@ export default function Page({
       crossword: 'Crucigrama',
       submit: 'Enviar respuesta',
       claiming: 'Reclamando...',
-      signing: 'Firmando...',
+      sending: 'Enviando...',
       across: 'Horizontal',
       down: 'Vertical',
       returnGuide: 'Regresar a la guía',
@@ -481,7 +458,7 @@ export default function Page({
       connectWallet: 'Connect Wallet',
       crossword: 'Crossword Puzzle',
       submit: 'Submit answer',
-      signing: 'Signing...',
+      sending: 'Sending...',
       across: 'Across',
       down: 'Down',
       returnGuide: 'Return to guide',
@@ -529,7 +506,7 @@ export default function Page({
                           disabled={isSubmitting}
                         >
                           {isSubmitting
-                            ? uiMsg[locale].signing
+                            ? uiMsg[locale].sending
                             : uiMsg[locale].submit}
                         </Button>
                       </div>

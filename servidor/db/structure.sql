@@ -1314,7 +1314,9 @@ CREATE TABLE public.billetera_usuario (
     token character varying(256),
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    answer_fib character varying
+    answer_fib character varying,
+    nonce character varying(255),
+    nonce_expires_at timestamp with time zone
 );
 
 
@@ -4768,6 +4770,8 @@ CREATE TABLE public.usuario (
     passport_name character varying(127),
     passport_nationality integer,
     profilescore integer,
+    lastgooddollarverification timestamp without time zone,
+    learningscore integer,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
