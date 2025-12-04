@@ -1,10 +1,9 @@
 'use client'
 
 import axios from 'axios'
-import { ClaimSDK, useIdentitySDK } from '@goodsdks/citizen-sdk'
-import { type PublicClient, type WalletClient } from 'viem'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import { use, useEffect, useState, useCallback } from 'react'
+import ReactDOM from 'react-dom/client'
 import Link from 'next/link'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -13,11 +12,11 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
-import { usePublicClient, useWalletClient } from 'wagmi'
 import { useAccount } from 'wagmi'
 
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 import { Button } from '@/components/ui/button'
+import { GoodDollarClaimButton } from '@/components/GoodDollarClaimButton'
 
 export default function Page({
   params,
@@ -47,7 +46,6 @@ export default function Page({
   const [previousGuidePath, setPreviousGuidePath] = useState('')
   const [guideHtml, setGuideHtml] = useState('')
   const [creditsHtml, setCreditsHtml] = useState('')
-  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
     if (
@@ -58,7 +56,6 @@ export default function Page({
       return
     }
     const configurar = async () => {
-      setIsClient(true)
       setCoursePath(`/${lang}/${pathPrefix}`)
       let url =
         `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
@@ -194,6 +191,9 @@ export default function Page({
 
   const htmlDeMd = useCallback(
     (md: string) => {
+      if (!md) {
+        return ''
+      }
       const processor = unified()
         .use(remarkParse)
         .use(remarkGfm)
@@ -243,48 +243,23 @@ export default function Page({
         .replaceAll('<li><p>([^<]*)</p></li>', '<li>$1</li>')
         .replaceAll('<p>', '<p class="pt-2 pb-2">')
         .replaceAll('<ul>', '<ul class="block list-disc ml-8">')
+        .replaceAll(
+          '{GoodDollarClaimButton}',
+          '<div id="gooddollar-claim-button-placeholder"></div>',
+        )
 
       return html_con_tailwind
     },
     [pathSuffix],
   )
 
-  const publicClient = usePublicClient()
-  const { data: walletClient } = useWalletClient()
-  const identitySDK =
-    process.env.NEXT_PUBLIC_AUTH_URL == 'https://learn.tg'
-      ? useIdentitySDK('production')
-      : null
-
-  const claimUBI = async () => {
-    if (
-      !session ||
-      !address ||
-      session.address != address ||
-      !publicClient ||
-      !walletClient ||
-      !identitySDK
-    ) {
-      return <div>Works only with wallet connected</div>
+  useEffect(() => {
+    const placeholder = document.getElementById('gooddollar-claim-button-placeholder')
+    if (placeholder) {
+      const root = ReactDOM.createRoot(placeholder)
+      root.render(<GoodDollarClaimButton />)
     }
-
-    const claimSDK = new ClaimSDK({
-      account: session.address,
-      publicClient,
-      walletClient,
-      identitySDK,
-      env: 'production',
-    })
-
-    try {
-      await claimSDK.claim()
-      console.log('Claim successful')
-      alert('Claim successful')
-    } catch (error) {
-      console.error('Claim failed:', error)
-      alert('Claim failed:' + JSON.stringify(error))
-    }
-  }
+  }, [guideHtml])
 
   if (
     (session && !address) ||
@@ -324,14 +299,7 @@ export default function Page({
           className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside"
           dangerouslySetInnerHTML={{ __html: guideHtml }}
         />
-        {isClient && pathPrefix == 'gooddollar' && pathSuffix == 'guide1' && (
-          <div className="flex items-center justify-center">
-            <Button onClick={claimUBI} size="lg">
-              Sign up with GoodDollar or Claim UBI
-            </Button>
-          </div>
-        )}
-
+        <GoodDollarClaimButton/>
         <table className="mx-auto text-center mt-12">
           <tbody>
             <tr>
@@ -398,3 +366,4 @@ export default function Page({
     </>
   )
 }
+
