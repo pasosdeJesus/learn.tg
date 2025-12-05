@@ -531,7 +531,7 @@ export default function ProfileForm({ params }: PageProps) {
               lang={lang}
             />
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Button type="submit" disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {saving
