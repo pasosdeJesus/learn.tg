@@ -3,20 +3,12 @@
 import axios from 'axios'
 import { getCsrfToken, useSession } from 'next-auth/react'
 import { use, useEffect, useState } from 'react'
-import remarkDirective from 'remark-directive'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
-import rehypeStringify from 'rehype-stringify'
-import { unified } from 'unified'
 import { useAccount, useConfig, useWriteContract } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 
-import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
+import { useCourseData } from '@/lib/hooks/useCourseData'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 import { cn } from '@/lib/utils'
 
 interface WordPlacement {
@@ -45,31 +37,23 @@ export default function Page({
     pathSuffix: string
   }>
 }) {
-  const { address, chainId } = useAccount()
+  const { address } = useAccount()
   const { data: session } = useSession()
   const { data: hash, writeContract } = useWriteContract()
   const wagmiConfig = useConfig()
+  const parameters = use(params)
+  const { lang, pathPrefix, pathSuffix } = parameters
 
-  const [course, setCourse] = useState({
-    id: '',
-    conBilletera: false,
-    guias: [],
-    idioma: '',
-    titulo: '',
-    sinBilletera: false,
-  })
-  const [guideNumber, setGuideNumber] = useState(0)
-  const [myGuide, setMyGuide] = useState<{
-    titulo: string;
-    completed: boolean;
-    receivedScholarship: boolean;
-  }>({ titulo: '', completed: false, receivedScholarship: false })
+  const {
+    course,
+    loading,
+    error,
+    myGuide,
+    guideNumber,
+    coursePath,
+  } = useCourseData({ lang, pathPrefix, pathSuffix })
 
-  const [coursePath, setCoursePath] = useState('')
   const [thisGuidePath, setThisGuidePath] = useState('')
-  const [guideHtml, setGuideHtml] = useState('')
-  const [creditsHtml, setCreditsHtml] = useState('')
-  const [isClient, setIsClient] = useState(false)
   const [grid, setGrid] = useState<Cell[][]>([])
   const [placements, setPlacements] = useState<WordPlacement[]>([])
   const [flashError, setFlashError] = useState('')
@@ -87,259 +71,75 @@ export default function Page({
       const uiMsg = {
         es: {
           txProcessing: 'Procesando transacción...',
-          claimSuccess: '¡Beca reclamada con éxito!',
-          claimError: 'Error al reclamar la beca.',
         },
         en: {
           txProcessing: 'Processing transaction...',
-          claimSuccess: 'Scholarship claimed successfully!',
-          claimError: 'Error claiming scholarship.',
         },
       }
-
       setFlashWarning(uiMsg[locale].txProcessing)
 
-      waitForTransactionReceipt(wagmiConfig, { hash })
-        .then((receipt) => {
+      waitForTransactionReceipt(wagmiConfig, { hash }).
+        then((receipt) => {
           console.log('Transaction receipt', receipt)
-          setFlashSuccess(uiMsg[locale].claimSuccess)
+          // Actualizar el estado de la guía localmente para reflejar el pago
+          if (myGuide) {
+            // @ts-ignore
+            myGuide.receivedScholarship = true 
+          }
           setFlashWarning('')
-        })
-        .catch((e) => {
-          console.error(e)
-          setFlashError(`${uiMsg[locale].claimError} ${e.message}`)
-        })
+      }).catch((e) => {
+        console.error(e)
+        setFlashError(e.message)
+        setFlashWarning('')
+      })
     }
-  }, [hash, wagmiConfig])
+  }, [hash, wagmiConfig, lang, myGuide])
 
   useEffect(() => {
-    if (
-      (session && !address) ||
-      (address && !session) ||
-      (address && session && session.address && address != session.address)
-    ) {
-      return
-    }
-    const configurar = async () => {
-      setIsClient(true)
-      setCoursePath(`/${lang}/${pathPrefix}`)
-      let url =
-        `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
-        `filtro[busprefijoRuta]=/${pathPrefix}&` +
-        `filtro[busidioma]=${lang}`
-      let csrfToken = await getCsrfToken()
-      if (csrfToken) {
-        setGCsrfToken(csrfToken)
-      }
-      if (session && address && session.address && session.address == address) {
-        url += `&walletAddress=${session.address}` + `&token=${csrfToken}`
-      }
-      console.log(`Fetching ${url}`)
-      axios
-        .get(url)
-        .then((response) => {
-          if (response.data) {
-            if (response.data.length != 1) {
-              return false
-            }
-            const rcurso = response.data[0]
+    const loadCrossword = async () => {
+      if (course && guideNumber > 0 && address && session) {
+        try {
+          const csrfToken = await getCsrfToken()
+          if (!csrfToken) throw new Error('Could not get CSRF token')
+          setGCsrfToken(csrfToken)
 
-            if (process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL == undefined) {
-              alert('Undefined NEXT_PUBLIC_API_PRESENTA_CURSO_URL')
-              return false
-            }
-            let urld = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL.replace(
-              'curso_id',
-              rcurso.id,
-            )
-            if (
-              session &&
-              address &&
-              session.address &&
-              session.address == address
-            ) {
-              urld +=
-                `&walletAddress=${session.address}` + `&token=${csrfToken}`
-            }
-            console.log(`Fetching ${urld}`)
-            axios
-              .get(urld)
-              .then((responsed) => {
-                if (responsed.data) {
-                  if (response.data.length != 1) {
-                    return false
-                  }
-                  const dcurso = responsed.data
-                  setCourse(dcurso)
+          let urlc =
+            `/api/crossword?courseId=${course.id}` +
+            `&lang=${lang}` +
+            `&prefix=${pathPrefix}` +
+            `&guide=${pathSuffix}` +
+            `&guideNumber=${guideNumber}` +
+            `&walletAddress=${address}` +
+            `&token=${csrfToken}`
 
-                  let gnumber = 0
-                  for (let g = 0; g < dcurso.guias.length; g++) {
-                    if (dcurso.guias[g].sufijoRuta == pathSuffix) {
-                      setGuideNumber(g + 1)
-                      gnumber = g + 1
-                      setThisGuidePath(
-                        '/' +
-                          dcurso.idioma +
-                          dcurso.prefijoRuta +
-                          '/' +
-                          pathSuffix,
-                      )
-                      // Set basic guide data first, assuming no completion
-                      const initialGuideData = {
-                        ...dcurso.guias[g],
-                        completed: false,
-                        receivedScholarship: false,
-                      }
-                      setMyGuide(initialGuideData)
+          console.log(`Fetching Crossword: ${urlc}`)
+          const response = await axios.get(urlc)
 
-                      // Then, fetch and update with completion status
-                      if (session && address) {
-                        const statusUrl = '/api/guide-status?' +
-                          `walletAddress=${address}&` +
-                          `courseId=${dcurso.id}&` +
-                          `guideNumber=${g + 1}`
-                        axios
-                          .get(statusUrl)
-                          .then((statusResponse) => {
-                            const { completed, receivedScholarship } = 
-                              statusResponse.data
-                            setMyGuide((prevGuide) => ({
-                              ...prevGuide,
-                              completed,
-                              receivedScholarship,
-                            }))
-                          })
-                          .catch((err) => { 
-                            alert('Could not fetch guide status')
-                            console.error('Could not fetch guide status', err) 
-                          })
-                      }
-                    }
-                  }
-
-                  setCreditsHtml(htmlDeMd(dcurso.creditosMd))
-
-                  let urlc =
-                    process.env.NEXT_PUBLIC_AUTH_URL +
-                    `/api/crossword?courseId=${dcurso.id}` +
-                    `&lang=${lang}` +
-                    `&prefix=${pathPrefix}` +
-                    `&guide=${pathSuffix}` +
-                    `&guideNumber=${guideNumber}`
-                  if (
-                    session &&
-                    address &&
-                    session.address &&
-                    session.address == address
-                  ) {
-                    urlc +=
-                      `&walletAddress=${session.address}` +
-                      `&token=${csrfToken}`
-                  }
-
-                  console.log(`Fetching ${urlc}`)
-                  axios
-                    .get(urlc)
-                    .then((response) => {
-                      if (response.data) {
-                        if (response.data.message != '') {
-                          alert(response.data.message)
-                        } else {
-                          setGrid(response.data.grid)
-                          setPlacements(response.data.placements)
-                        }
-                      }
-                    })
-                    .catch((error) => {
-                      console.error(error)
-                      alert(error)
-                    })
-                }
-              })
-              .catch((error) => {
-                console.error(error)
-                alert(error)
-              })
+          if (response.data.message) {
+            throw new Error(response.data.message)
           }
-        })
-        .catch((error) => {
-          console.error(error)
-          alert(error)
-        })
+          setGrid(response.data.grid)
+          setPlacements(response.data.placements)
+          setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
+        } catch (err: any) {
+          console.error(err)
+          setFlashError(err.message)
+        }
+      }
     }
-    configurar()
-  }, [session, address])
+    loadCrossword()
+  }, [course, guideNumber, address, session, lang, pathPrefix, pathSuffix])
 
-  const parameters = use(params)
-  const { lang, pathPrefix, pathSuffix } = parameters
-
-  const htmlDeMd = (md: string) => {
-    const processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(remarkFillInTheBlank, { url: `${pathSuffix}/test` })
-      // @ts-ignore
-      .use(remarkRehype, { allowDangerousHtml: true })
-      .use(rehypeStringify, { allowDangerousHtml: true })
-    let html = processor.processSync(md).toString()
-
-    // Agregamos estilo
-    let html_con_tailwind = html
-      .replaceAll('<a href', '<a class="underline" href')
-      .replaceAll('<blockquote>', '<blockquote class="ml-8 pt-2">')
-      .replaceAll('<code>', '<code class="bg-gray-200">')
-      .replaceAll('<h1>', '<h1 class="pt-6 pb-2 font-bold text-[1.9rem]">')
-      .replaceAll('<h2>', '<h2 class="pt-6 pb-2 font-bold text-[1.7rem]">')
-      .replaceAll('<h3>', '<h2 class="pt-6 pb-2 font-bold text-[1.5rem]">')
-      .replace(/(<img [^>]*)>/g, '$1 class="pb-2">')
-      .replace(/(<img [^>]*><\/p>\n)<p>/g, '$1<p class="flex justify-end">')
-      .replace(/(<ol[^>]*)>/g, '$1 class="block list-decimal ml-8">')
-      .replaceAll('<p><img', '<p class="pt-4 flex justify-center">' + '<img')
-      .replace(
-        /<p><a([^>]*youtube.com\/watch[^>]*)><img/g,
-        '<p class="pt-4 pb-4 flex justify-center"><a target="_blank" $1><img',
-      )
-      .replace(
-        /<p><a[^>]*("https:\/\/www.youtube.com\/embed[^"]*")><img[^>]*><\/a><\/p>/g,
-        '<p class="pt-4 pb-4 flex justify-center">' +
-          '<iframe width="560" height="315" ' +
-          'src=$1 title="Reproductor de video de YouTube" frameborder="0" ' +
-          'allow="accelerometer; autoplay; clipboard-write; encrypted-media; ' +
-          'gyroscope; picture-in-picture; web-share" ' +
-          'referrerpolicy="strict-origin-when-cross-origin" ' +
-          'allowfullscreen></iframe>' +
-          '</p>',
-      )
-      .replaceAll('<li><p>([^<]*)</p></li>', '<li>$1</li>')
-      .replaceAll('<p>', '<p class="pt-2 pb-2">')
-      .replaceAll('<ul>', '<ul class="block list-disc ml-8">')
-
-    return html_con_tailwind
-  }
-
-  // Handle user input
   const handleCellInput = (row: number, col: number, value: string) => {
-    if (value.length > 1) {
-      return
-    }
+    if (value.length > 1) return
 
     const newGrid = [...grid]
-    newGrid[row][col] = {
-      ...newGrid[row][col],
-      userInput: value.toUpperCase(),
-    }
+    newGrid[row][col] = { ...newGrid[row][col], userInput: value.toUpperCase() }
     setGrid(newGrid)
 
     if (value.length === 1) {
       let prevDirAcross = true
-      if (
-        prevRow >= 0 &&
-        prevCol >= 0 &&
-        prevRow == row - 1 &&
-        prevCol == col
-      ) {
+      if (prevRow >= 0 && prevCol >= 0 && prevRow === row - 1 && prevCol === col) {
         prevDirAcross = false
       }
       setPrevRow(row)
@@ -348,28 +148,22 @@ export default function Page({
       let dirAcross = prevDirAcross
       const currentCell = grid[row][col]
       const wordNumbers = currentCell.belongsToWords
-      // If more than one word on this cell keep using previous direction
-      if (wordNumbers.length == 1) {
+      if (wordNumbers.length === 1) {
         const placement = placements.find((p) => p.number === wordNumbers[0])
         if (placement) {
           dirAcross = placement.direction === 'across'
         }
       }
 
-      // Calculate next position
       let nextRow = dirAcross ? row : row + 1
       let nextCol = dirAcross ? col + 1 : col
 
-      // If next position is part of the word
       if (
         nextRow < grid.length &&
         nextCol < grid[nextRow].length &&
         !grid[nextRow][nextCol].isBlocked
       ) {
-        // If next position is empty we just focus on it
-        // but if it is part of an existing word we suppose it is correct
-        // and try to skip it
-        if (grid[nextRow][nextCol].userInput != '') {
+        if (grid[nextRow][nextCol].userInput !== '') {
           const sNextRow = dirAcross ? nextRow : nextRow + 1
           const sNextCol = dirAcross ? nextCol + 1 : nextCol
           if (
@@ -381,7 +175,6 @@ export default function Page({
             nextCol = sNextCol
           }
         }
-        // Focus the next input
         const nextInput = document.querySelector(
           `input[data-row="${nextRow}"][data-col="${nextCol}"]`,
         ) as HTMLInputElement
@@ -392,17 +185,15 @@ export default function Page({
     }
   }
 
-  // Check if puzzle is solved
   const isPuzzleCompleted = () => {
-    if (grid.length == 0) {
-      return false
-    }
+    if (grid.length === 0) return false
     return grid.every((row) =>
-      row.every((cell) => cell.isBlocked || cell.userInput != ''),
+      row.every((cell) => cell.isBlocked || cell.userInput !== ''),
     )
   }
 
   const handleSubmit = async () => {
+    if (!course) return
     setIsSubmitting(true)
     setFlashSuccess('')
     setFlashError('')
@@ -410,64 +201,44 @@ export default function Page({
     setScholarshipTx('')
 
     try {
-      const urlc = '/api/check-crossword'
-      const data = {
+      const response = await axios.post('/api/check-crossword', {
         courseId: +course.id,
         guideId: guideNumber,
         lang: lang,
         grid: grid,
         placements: placements,
-        walletAddress: session?.address || '0x0',
-        token: gCsrfToken
-      }
-
-      const response = await axios.post(urlc, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        walletAddress: address || '0x0',
+        token: gCsrfToken,
       })
 
-      if (response.data) {
-        const locale = lang === 'en' ? 'en' : 'es'
-        const uiMsg = {
-          es: {
-            problemWords: 'Problema(s) con la(s) palabra(s) ',
-            scholarshipSent: ".\n Resultado de beca enviado: ",
-          },
-          en: {
-            problemWords: 'Problem(s) with word(s) ',
-            scholarshipSent: ".\n Scholarship result sent: ",
-          },
-        }
+      const locale = lang === 'en' ? 'en' : 'es'
+      const uiMsg = {
+        es: { problemWords: 'Problema(s) con la(s) palabra(s) ' },
+        en: { problemWords: 'Problem(s) with word(s) ' },
+      }
 
-        if (response.data.mistakesInCW && response.data.mistakesInCW.length > 0) {
-          setFlashError(
-            uiMsg[locale].problemWords +
-              response.data.mistakesInCW.join(', ') +
-              "\n" +
-              (response.data.message || ''),
-          )
-        } else {
-          let msg = response.data.message || ''
-          let tx = response.data.scholarshipResult
-          console.log("OJO scholarshipTx=", tx)
-          if (tx && tx.length > 0) {
-            setFlashSuccess(msg)
-            setScholarshipTx(tx)
-          } else if (tx) {
-            setFlashWarning(
-              msg + uiMsg[locale].scholarshipSent + JSON.stringify(tx),
-            )
-          } else {
-            setFlashSuccess(msg) // Also show "already won" as success
-          }
+      if (response.data.mistakesInCW?.length > 0) {
+        setFlashError(
+          uiMsg[locale].problemWords +
+            response.data.mistakesInCW.join(', ') +
+            '\n' +
+            (response.data.message || ''),
+        )
+      } else {
+        if (myGuide) {
+            // @ts-ignore
+          myGuide.completed = true
+        }
+        setFlashSuccess(response.data.message || '')
+        if (response.data.scholarshipResult) {
+          setScholarshipTx(response.data.scholarshipResult)
         }
       }
     } catch (error: any) {
       console.error(error)
       setFlashError(error.response?.data?.error || error.message)
     } finally {
-        setIsSubmitting(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -475,9 +246,7 @@ export default function Page({
   const uiMsg = {
     es: {
       across: 'Horizontal',
-      claiming: 'Reclamando...',
       connectWallet: 'Conectar billetera',
-      credits: 'Créditos y Licencia de este curso',
       crossword: 'Crucigrama',
       down: 'Vertical',
       returnGuide: 'Regresar a la guía',
@@ -488,7 +257,6 @@ export default function Page({
     en: {
       across: 'Across',
       connectWallet: 'Connect Wallet',
-      credits: 'Credits and License of this course',
       crossword: 'Crossword Puzzle',
       down: 'Down',
       returnGuide: 'Return to guide',
@@ -497,10 +265,23 @@ export default function Page({
       submit: 'Submit answer',
     },
   }
+
+  if (loading) {
+    return <div className="p-10 mt-10">Loading test...</div>
+  }
+
+  if (error) {
+    return <div className="p-10 mt-10">Error: {error}</div>
+  }
+
+  if (!course || !myGuide) {
+    return <div className="p-10 mt-10">Test not found.</div>
+  }
+
   if (
     !course.sinBilletera &&
     course.conBilletera &&
-    (!session || !address || !session.address || session.address != address)
+    (!session || !address || session.address !== address)
   ) {
     return <div className="mt-40">{uiMsg[locale].connectWallet}</div>
   }
@@ -510,7 +291,7 @@ export default function Page({
 
   return (
     <>
-      <div className="mt-8 pt-2  dark:bg-gray-100 dark:text-gray-800">
+      <div className="mt-8 pt-2 dark:bg-gray-100 dark:text-gray-800">
         <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
           <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
             {locale === 'en' ? 'Course: ' : 'Curso: '}
@@ -526,32 +307,17 @@ export default function Page({
         </h1>
         <div className="space-y-6">
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Crossword Grid */}
             <div className="lg:col-span-2 overflow-x-auto">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div>{uiMsg[locale].crossword}</div>
-                    {isPuzzleCompleted() && (
-                      <div>
-                        <Button
-                          className="text-primary-foreground!"
-                          onClick={handleSubmit}
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting
-                            ? uiMsg[locale].sending
-                            : uiMsg[locale].submit}
-                        </Button>
-                      </div>
-                    )}
-                    {!isPuzzleCompleted() && (
-                      <div>
-                        <Button disabled={true} className="primary">
-                          {uiMsg[locale].submit}
-                        </Button>
-                      </div>
-                    )}
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={isSubmitting || !isPuzzleCompleted() || myGuide.receivedScholarship}
+                    >
+                      {isSubmitting ? uiMsg[locale].sending : uiMsg[locale].submit}
+                    </Button>
                   </CardTitle>
                   {myGuide.receivedScholarship && (
                     <div className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800">
@@ -559,7 +325,7 @@ export default function Page({
                     </div>
                   )}
 
-                  {flashError != '' && (
+                  {flashError && (
                     <div
                       className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 break-all whitespace-pre-wrap"
                       onClick={() => setFlashError('')}
@@ -567,7 +333,7 @@ export default function Page({
                       {flashError}
                     </div>
                   )}
-                  {flashWarning != '' && (
+                   {flashWarning != '' && (
                     <div
                       className="p-4 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg dark:bg-yellow-200 dark:text-yellow-800 break-all whitespace-pre-wrap"
                       onClick={() => setFlashWarning('')}
@@ -585,10 +351,10 @@ export default function Page({
                   )}
                   {scholarshipTx && (
                     <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800 break-all">
-                      <a 
-                        href={`${process.env.NEXT_PUBLIC_EXPLORER_TX}${scholarshipTx}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_EXPLORER_TX}${scholarshipTx}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="underline"
                       >
                         {scholarshipTx}
@@ -605,9 +371,7 @@ export default function Page({
                             key={`${rowIndex}-${colIndex}`}
                             className={cn(
                               'w-8 h-8 border border-border relative',
-                              !cell || cell.isBlocked
-                                ? 'bg-black'
-                                : 'bg-white dark:bg-background',
+                              !cell || cell.isBlocked ? 'bg-black' : 'bg-white dark:bg-background',
                             )}
                           >
                             {cell && !cell.isBlocked && (
@@ -621,11 +385,7 @@ export default function Page({
                                   type="text"
                                   value={cell.userInput}
                                   onChange={(e) =>
-                                    handleCellInput(
-                                      rowIndex,
-                                      colIndex,
-                                      e.target.value,
-                                    )
+                                    handleCellInput(rowIndex, colIndex, e.target.value)
                                   }
                                   data-row={rowIndex}
                                   data-col={colIndex}
@@ -643,7 +403,6 @@ export default function Page({
               </Card>
             </div>
 
-            {/* Clues */}
             <div className="space-y-4">
               <Card>
                 <CardHeader>
@@ -652,8 +411,7 @@ export default function Page({
                 <CardContent className="space-y-2">
                   {acrossClues.map((placement) => (
                     <div key={`across-${placement.number}`} className="text-sm">
-                      <span className="font-bold">{placement.number}.</span>{' '}
-                      {placement.clue}
+                      <span className="font-bold">{placement.number}.</span> {placement.clue}
                     </div>
                   ))}
                 </CardContent>
@@ -666,8 +424,7 @@ export default function Page({
                 <CardContent className="space-y-2">
                   {downClues.map((placement) => (
                     <div key={`down-${placement.number}`} className="text-sm">
-                      <span className="font-bold">{placement.number}.</span>{' '}
-                      {placement.clue}
+                      <span className="font-bold">{placement.number}.</span> {placement.clue}
                     </div>
                   ))}
                 </CardContent>
@@ -688,17 +445,6 @@ export default function Page({
             </tr>
           </tbody>
         </table>
-        {creditsHtml != '' && (
-          <div className="text-sm mt-2">
-            <h2 className="px-16 text-1xl font-bold md:text-1xl">
-              {uiMsg[locale].credits}
-            </h2>
-            <div
-              className="py-3 px-16 text-1xl md:text-1xl text-justify"
-              dangerouslySetInnerHTML={{ __html: creditsHtml }}
-            />
-          </div>
-        )}
       </div>
 
       <div>&nbsp;</div>
