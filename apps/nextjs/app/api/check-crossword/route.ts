@@ -58,7 +58,6 @@ export async function POST(req: NextRequest) {
     const token = requestJson['token'] ?? ''
 
     const locale = lang === 'es' ? 'es' : 'en'
-    // Mensajes localizados
     const msg = {
       es: {
         atLeast50:
@@ -85,7 +84,7 @@ export async function POST(req: NextRequest) {
         atLeast50:
           'The results were not sent to the blockchain. You need at least 50 points in your profile to enable sending',
         cannotSubmit:
-          'You are in a waiting period of 24 hours since our last submission. You cannot submit a scholarship result at this time.',
+          'You are in a waiting period of 24 hours since your last submission. You cannot submit a scholarship result at this time.',
         contractError: 'Could not connect to scholarship contract.',
         correct:
           'Your result has been submitted for scholarship, please waith 24 hours before submitting again answers for this course.',
@@ -109,7 +108,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg[locale].noWallet}, { status: 400 });
     }
 
-    // Input validation
     if (!Number.isInteger(courseId) || courseId <= 0) {
       return NextResponse.json({ error: msg[locale].invalidCourse }, { status: 400 })
     }
@@ -174,7 +172,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Perfil de usuario. Punto si hacía falta y la respuesta es correcta
     let usuario = await db
       .selectFrom('usuario')
       .where('id', '=', billeteraUsuario.usuario_id)
@@ -196,24 +193,24 @@ export async function POST(req: NextRequest) {
       ORDER BY nombrecorto
     `.execute(db)
     console.log('OJO guides=', guides)
-    // Validate guideId bounds
     if (!guides.rows || guides.rows.length === 0) {
       return NextResponse.json({ error: msg[locale].invalidCourse }, { status: 400 })
     }
     if (guideId < 1 || guideId > guides.rows.length) {
       return NextResponse.json({ error: msg[locale].invalidGuide }, { status: 400 })
     }
+    const actividadpfId = guides.rows[guideId - 1].id
     const ug = await db
       .selectFrom('guide_usuario')
       .select(['usuario_id', 'points'])
       .where('usuario_id', '=', billeteraUsuario.usuario_id)
-      .where('actividadpf_id', '=', guides.rows[guideId - 1].id)
+      .where('actividadpf_id', '=', actividadpfId)
       .execute()
     if (mistakesInCW.length == 0) {
       if (ug.length == 0) {
         let gp: Insertable<GuideUsuario> = {
           usuario_id: billeteraUsuario.usuario_id,
-          actividadpf_id: guides.rows[guideId - 1].id,
+          actividadpf_id: actividadpfId,
           amountpaid: 0,
           profilescore: usuario.profilescore || 0,
           amountpending: 0,
@@ -229,14 +226,13 @@ export async function POST(req: NextRequest) {
         await db.updateTable('guide_usuario')
           .set({ points: ug[0].points + 1 })
           .where('usuario_id', '=', billeteraUsuario.usuario_id)
-          .where('actividadpf_id', '=', guides.rows[guideId - 1].id)
+          .where('actividadpf_id', '=', actividadpfId)
           .execute();
         console.log('      After update points=', ug[0].points + 1 )
       }
       retMessage += msg[locale].correctPoint
     }
 
-    // Intentamos beca
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
     const publicClient = createPublicClient({
       chain:
@@ -278,12 +274,10 @@ export async function POST(req: NextRequest) {
         abi: LearnTGVaultsAbi as any,
         client: { public: publicClient, wallet: walletClient },
       })
-      //console.log("*** contract=", contract)
       const courseIdArg = BigInt(courseId)
       console.log('*** courseIdArg=', courseIdArg)
       const guideIdArg = BigInt(guideId)
       console.log('*** guideIdArg=', guideIdArg)
-      // Existe la boveda
       const vaultArray: any = await contract.read.vaults(
         [courseIdArg]
       )
@@ -297,8 +291,6 @@ export async function POST(req: NextRequest) {
       }
       console.log('*** vault=', vault)
       if (vault.exists) {
-        // vault.exists
-        // Verificar si puede enviar
         const canSubmit = (await contract.read.studentCanSubmit([
           courseIdArg,
           walletAddress as Address,
@@ -307,7 +299,6 @@ export async function POST(req: NextRequest) {
         if (usuario.profilescore == null || usuario.profilescore < 50) {
           retMessage += msg[locale].atLeast50
         } else if (canSubmit) {
-          // Enviar resultado
           try {
             const encodedData = encodeFunctionData({
               abi: LearnTGVaultsAbi,
@@ -332,15 +323,41 @@ export async function POST(req: NextRequest) {
             try {
               const receipt = await publicClient.waitForTransactionReceipt({
                 hash: tx,
-                confirmations: 2, // Optional: number of confirmations to wait for
-                timeout: 2_000, // 2 seconds
+                confirmations: 2,
+                timeout: 2_000, 
               })
+              // waitForTransactionReceipt has not worked anytime
+              // Control has not reach this point, but we leave it
+              // to give some time for the transaction to settel before
+              // querying the contract
               console.log(`Receipt: ${receipt}`)
+
             } catch (e) {
               console.error(
                 `*waitForTransactionReceipt(${tx}) didnt work, continuing`,
               )
             }
+            // VERIFICAR Y GUARDAR MONTO
+            const statusArray: any = await contract.read.getStudentGuideStatus([
+              courseIdArg,
+              guideIdArg,
+              walletAddress as Address,
+            ])
+            console.log("OJO statusArray=",statusArray)
+            const status = {
+              paidAmount: statusArray[0],
+              canSubmit: statusArray[1],
+            }
+            console.log("OJO status=",status)
+            const paidAmount = status.paidAmount
+
+            await db
+            .updateTable('guide_usuario')
+            .set({ amountpaid: paidAmount.toString() })
+            .where('usuario_id', '=', billeteraUsuario.usuario_id)
+            .where('actividadpf_id', '=', actividadpfId)
+            .execute()
+
 
             scholarshipResult = tx
             if (mistakesInCW.length == 0) {
@@ -374,7 +391,6 @@ export async function POST(req: NextRequest) {
     )
   } catch (error) {
     console.error('Internal server error in check-crossword:', error)
-    // Return generic error response to client
     const errorMessage = process.env.NODE_ENV === 'development'
       ? String(error)
       : 'Internal server error'

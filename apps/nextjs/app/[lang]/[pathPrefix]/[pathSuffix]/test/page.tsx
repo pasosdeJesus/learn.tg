@@ -432,11 +432,11 @@ export default function Page({
         const uiMsg = {
           es: {
             problemWords: 'Problema(s) con la(s) palabra(s) ',
-            scholarshipSent: '\\nResultado de beca enviado: ',
+            scholarshipSent: ".\n Resultado de beca enviado: ",
           },
           en: {
             problemWords: 'Problem(s) with word(s) ',
-            scholarshipSent: '\\nScholarship result sent: ',
+            scholarshipSent: ".\n Scholarship result sent: ",
           },
         }
 
@@ -444,7 +444,7 @@ export default function Page({
           setFlashError(
             uiMsg[locale].problemWords +
               response.data.mistakesInCW.join(', ') +
-              '\\n' +
+              "\n" +
               (response.data.message || ''),
           )
         } else {
