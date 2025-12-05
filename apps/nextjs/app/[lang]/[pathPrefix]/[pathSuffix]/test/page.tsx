@@ -60,9 +60,9 @@ export default function Page({
   })
   const [guideNumber, setGuideNumber] = useState(0)
   const [myGuide, setMyGuide] = useState<{
-    titulo: '',
-    completed: boolean,
-    receivedScholarship: boolean,
+    titulo: string;
+    completed: boolean;
+    receivedScholarship: boolean;
   }>({ titulo: '', completed: false, receivedScholarship: false })
 
   const [coursePath, setCoursePath] = useState('')

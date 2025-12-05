@@ -135,23 +135,47 @@ export default function Page({ params }: PageProps) {
                             }
                             } */
                   //preCourseHtml.value = htmlDeMd(cursosPrerequisitoMd)
-                  let guias =
-                    "<ol class='list-decimal text-primary-foreground'>\n"
-                  let numero = 1
-                  for (const guia of dcurso.guias) {
-                    guias += '<li>'
-                    if (guia.sufijoRuta != null) {
-                      guias +=
-                        `<a href='/${rcurso.idioma}${rcurso.prefijoRuta}` +
-                        `/${guia.sufijoRuta}' ` +
-                        `style='text-decoration: underline'>${guia.titulo}</a>`
-                    } else {
-                      guias += guia.titulo
+                  const buildGuidesHtml = async (guides: any[], courseId: string, idioma: string, prefijoRuta: string, session: any, address: string | undefined) => {
+                    let guias = "<ol class='list-decimal text-primary-foreground'>\n"
+                    // Prepare status fetches for guides with sufijoRuta
+                    const statusPromises = []
+                    for (let i = 0; i < guides.length; i++) {
+                      const guia = guides[i]
+                      if (guia.sufijoRuta != null && session && address) {
+                        const statusUrl = '/api/guide-status?' +
+                          `walletAddress=${address}&` +
+                          `courseId=${courseId}&` +
+                          `guideNumber=${i + 1}`
+                        statusPromises.push(axios.get(statusUrl))
+                      } else {
+                        statusPromises.push(Promise.resolve(null))
+                      }
                     }
-                    guias += '</li>\n'
+                    const statusResults = await Promise.allSettled(statusPromises)
+                    // Now build HTML
+                    for (let i = 0; i < guides.length; i++) {
+                      const guia = guides[i]
+                      guias += '<li>'
+                      if (guia.sufijoRuta != null) {
+                        guias += `<a href='/${idioma}${prefijoRuta}/${guia.sufijoRuta}' style='text-decoration: underline'>${guia.titulo}</a>`
+                        // Add indicators if status fetch succeeded
+                        const result = statusResults[i]
+                        if (result && result.status === 'fulfilled' && result.value) {
+                          const { completed, receivedScholarship } = result.value.data
+                          if (completed) guias += ' ✅'
+                          if (receivedScholarship) guias += ' 💰'
+                        }
+                      } else {
+                        guias += guia.titulo
+                      }
+                      guias += '</li>\n'
+                    }
+                    guias += '</ol>\n'
+                    return guias
                   }
-                  guias += '</ol>\n'
-                  setContentsHtml(guias)
+                  buildGuidesHtml(dcurso.guias, dcurso.id, rcurso.idioma, rcurso.prefijoRuta, session, address)
+                    .then((guias) => setContentsHtml(guias))
+                    .catch((error) => console.error('Error building guides HTML', error))
                 }
               })
               .catch((error) => {
