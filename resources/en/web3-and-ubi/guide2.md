@@ -1,0 +1,58 @@
+# Guide 2: Your Digital Identity - Setting Up Your Web3 Wallet
+
+
+Need to mix this with https://learn.tg/en/save-in-dollars-on-OKX/guide3 
+
+Include its video here
+
+
+### **Introduction**
+Your **Web3 wallet** is your personal gateway to the blockchain. It's like a digital passport and bank account in one, allowing you to securely receive, store, and manage your digital UBI and your identification.
+
+For this course, we recommend the **OKX Web3 Wallet**. It’s user-friendly, supports the Celo network (which powers our UBI projects), and has helpful built-in tools for beginners.
+
+Your wallet’s security depends entirely on one thing: your **Secret Recovery Phrase**. As the master key to your digital assets, whoever possesses it has full control.
+
+---
+
+### **Step-by-Step: Installing the OKX Web3 Wallet**
+
+#### **Step 1: Download the Wallet**
+*   Go to the official [OKX Wallet website](https://www.okx.com/web3).
+*   Download the wallet extension for your browser (like Chrome or Brave) or the mobile app from your device's official app store.
+
+#### **Step 2: Create a New Wallet**
+*   Open the OKX Wallet and tap **"Create Wallet"**.
+*   You will be prompted to set a strong password for daily access to this device.
+
+#### **Step 3: Secure Your Secret Recovery Phrase (THE MOST IMPORTANT STEP)**
+*   The wallet will generate a unique **12-word Secret Recovery Phrase**.
+*   **Write these 12 words down on paper, in the exact order shown.**
+*   **⚠️ Critical Security Rules:**
+    *   **NEVER** save it as a screenshot, digital note, or email.
+    *   **NEVER** share it with anyone for any reason.
+    *   Store the paper in a safe, physical place.
+*   Confirm you have written it down correctly by selecting the words in order.
+
+#### **Step 4: Access Your Wallet**
+*   Your wallet is now ready! You will see your wallet's **public address** (a long string starting with `0x...`). This is like your account number—you can share it to receive funds.
+
+---
+
+### **Connecting to the Celo Network**
+To interact with GoodDollar and learn.tg, your wallet needs to be connected to the Celo network.
+
+1.  In your OKX Wallet, look for the network selector (often at the top right).
+2.  Search and choose CELO
+3.  Close the selector
+
+---
+
+### **Comprehension Questions**
+
+1. You must **never** ___ your Secret Recovery Phrase (share)
+2. Your public address allows others to send you crypto and is also
+   like your ___ in the blockchain. (identification)
+3. In order to receive UBI from this course your wallet must be
+   connected to the ___ blockchain.  (CELO)
+
