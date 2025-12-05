@@ -59,9 +59,12 @@ export default function Page({
     sinBilletera: false,
   })
   const [guideNumber, setGuideNumber] = useState(0)
-  const [myGuide, setMyGuide] = useState({
+  const [myGuide, setMyGuide] = useState<{
     titulo: '',
-  })
+    completed: boolean,
+    receivedScholarship: boolean,
+  }>({ titulo: '', completed: false, receivedScholarship: false })
+
   const [coursePath, setCoursePath] = useState('')
   const [thisGuidePath, setThisGuidePath] = useState('')
   const [guideHtml, setGuideHtml] = useState('')
@@ -72,6 +75,7 @@ export default function Page({
   const [flashError, setFlashError] = useState('')
   const [flashSuccess, setFlashSuccess] = useState('')
   const [flashWarning, setFlashWarning] = useState('')
+  const [scholarshipTx, setScholarshipTx] = useState('')
   const [gCsrfToken, setGCsrfToken] = useState('')
   const [prevRow, setPrevRow] = useState(-1)
   const [prevCol, setPrevCol] = useState(-1)
@@ -180,7 +184,36 @@ export default function Page({
                           '/' +
                           pathSuffix,
                       )
-                      setMyGuide(dcurso.guias[g])
+                      // Set basic guide data first, assuming no completion
+                      const initialGuideData = {
+                        ...dcurso.guias[g],
+                        completed: false,
+                        receivedScholarship: false,
+                      }
+                      setMyGuide(initialGuideData)
+
+                      // Then, fetch and update with completion status
+                      if (session && address) {
+                        const statusUrl = '/api/guide-status?' +
+                          `walletAddress=${address}&` +
+                          `courseId=${dcurso.id}&` +
+                          `guideNumber=${g + 1}`
+                        axios
+                          .get(statusUrl)
+                          .then((statusResponse) => {
+                            const { completed, receivedScholarship } = 
+                              statusResponse.data
+                            setMyGuide((prevGuide) => ({
+                              ...prevGuide,
+                              completed,
+                              receivedScholarship,
+                            }))
+                          })
+                          .catch((err) => { 
+                            alert('Could not fetch guide status')
+                            console.error('Could not fetch guide status', err) 
+                          })
+                      }
                     }
                   }
 
@@ -374,6 +407,7 @@ export default function Page({
     setFlashSuccess('')
     setFlashError('')
     setFlashWarning('')
+    setScholarshipTx('')
 
     try {
       const urlc = '/api/check-crossword'
@@ -383,7 +417,7 @@ export default function Page({
         lang: lang,
         grid: grid,
         placements: placements,
-        walletAddress: session?.address,
+        walletAddress: session?.address || '0x0',
         token: gCsrfToken
       }
 
@@ -398,11 +432,11 @@ export default function Page({
         const uiMsg = {
           es: {
             problemWords: 'Problema(s) con la(s) palabra(s) ',
-            scholarshipSent: '\nResultado de beca enviado: ',
+            scholarshipSent: '\\nResultado de beca enviado: ',
           },
           en: {
             problemWords: 'Problem(s) with word(s) ',
-            scholarshipSent: '\nScholarship result sent: ',
+            scholarshipSent: '\\nScholarship result sent: ',
           },
         }
 
@@ -410,59 +444,57 @@ export default function Page({
           setFlashError(
             uiMsg[locale].problemWords +
               response.data.mistakesInCW.join(', ') +
-              '\n' +
+              '\\n' +
               (response.data.message || ''),
           )
-          setIsSubmitting(false)
         } else {
           let msg = response.data.message || ''
-          let scholarshipTx = response.data.scholarshipResult
-          console.log("OJO scholarshipTx=", scholarshipTx)
-          if (scholarshipTx && scholarshipTx.length > 0) {
-            setFlashSuccess(
-              msg + ' ' + 
-                `<a href='${process.env.NEXT_PUBLIC_EXPLORER_TX}${scholarshipTx}'>` +
-                `${scholarshipTx}</a>`
-            )
-          } else if (scholarshipTx) {
+          let tx = response.data.scholarshipResult
+          console.log("OJO scholarshipTx=", tx)
+          if (tx && tx.length > 0) {
+            setFlashSuccess(msg)
+            setScholarshipTx(tx)
+          } else if (tx) {
             setFlashWarning(
-              msg + uiMsg[locale].scholarshipSent + JSON.stringify(scholarshipTx),
+              msg + uiMsg[locale].scholarshipSent + JSON.stringify(tx),
             )
           } else {
-            setFlashSuccess(msg) // Cambiado a Success para mostrar mensajes como "ya ganaste puntos"
+            setFlashSuccess(msg) // Also show "already won" as success
           }
         }
-        setIsSubmitting(false)
       }
     } catch (error: any) {
       console.error(error)
       setFlashError(error.response?.data?.error || error.message)
-      setIsSubmitting(false)
+    } finally {
+        setIsSubmitting(false)
     }
   }
 
   const locale = lang === 'en' ? 'en' : 'es'
   const uiMsg = {
     es: {
-      connectWallet: 'Conectar billetera',
-      crossword: 'Crucigrama',
-      submit: 'Enviar respuesta',
-      claiming: 'Reclamando...',
-      sending: 'Enviando...',
       across: 'Horizontal',
+      claiming: 'Reclamando...',
+      connectWallet: 'Conectar billetera',
+      credits: 'Créditos y Licencia de este curso',
+      crossword: 'Crucigrama',
       down: 'Vertical',
       returnGuide: 'Regresar a la guía',
-      credits: 'Créditos y Licencia de este curso',
+      scholarshipPaid: 'La beca para este crucigrama ya ha sido pagada. Puedes resolverlo de nuevo, pero no recibirás otro pago.',
+      sending: 'Enviando...',
+      submit: 'Enviar respuesta',
     },
     en: {
-      connectWallet: 'Connect Wallet',
-      crossword: 'Crossword Puzzle',
-      submit: 'Submit answer',
-      sending: 'Sending...',
       across: 'Across',
+      connectWallet: 'Connect Wallet',
+      credits: 'Credits and License of this course',
+      crossword: 'Crossword Puzzle',
       down: 'Down',
       returnGuide: 'Return to guide',
-      credits: 'Credits and License of this course',
+      scholarshipPaid: 'The scholarship for this crossword has already been paid. You can solve it again, but you will not receive another payment.',
+      sending: 'Sending...',
+      submit: 'Submit answer',
     },
   }
   if (
@@ -489,6 +521,8 @@ export default function Page({
           {locale === 'en' ? 'Guide' : 'Guía'}
           &nbsp;
           <span>{guideNumber}</span>: {myGuide.titulo}
+          {myGuide.completed ? ' ✅' : ''}
+          {myGuide.receivedScholarship ? ' 💰' : ''}
         </h1>
         <div className="space-y-6">
           <div className="grid lg:grid-cols-3 gap-6">
@@ -519,10 +553,15 @@ export default function Page({
                       </div>
                     )}
                   </CardTitle>
+                  {myGuide.receivedScholarship && (
+                    <div className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800">
+                      {uiMsg[locale].scholarshipPaid}
+                    </div>
+                  )}
 
                   {flashError != '' && (
                     <div
-                      className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800"
+                      className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 break-all whitespace-pre-wrap"
                       onClick={() => setFlashError('')}
                     >
                       {flashError}
@@ -530,7 +569,7 @@ export default function Page({
                   )}
                   {flashWarning != '' && (
                     <div
-                      className="p-4 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg dark:bg-yellow-200 dark:text-yellow-800"
+                      className="p-4 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg dark:bg-yellow-200 dark:text-yellow-800 break-all whitespace-pre-wrap"
                       onClick={() => setFlashWarning('')}
                     >
                       {flashWarning}
@@ -538,10 +577,22 @@ export default function Page({
                   )}
                   {flashSuccess != '' && (
                     <div
-                      className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800"
+                      className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800 break-all whitespace-pre-wrap"
                       onClick={() => setFlashSuccess('')}
                     >
                       {flashSuccess}
+                    </div>
+                  )}
+                  {scholarshipTx && (
+                    <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800 break-all">
+                      <a 
+                        href={`${process.env.NEXT_PUBLIC_EXPLORER_TX}${scholarshipTx}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="underline"
+                      >
+                        {scholarshipTx}
+                      </a>
                     </div>
                   )}
                 </CardHeader>

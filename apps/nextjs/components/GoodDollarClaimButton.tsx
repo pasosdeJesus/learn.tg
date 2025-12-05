@@ -54,8 +54,8 @@ export function GoodDollarClaimButton({
     ) {
       setError(
         lang === 'es'
-          ? 'Funciona solo con billetera conectada'
-          : 'Works only with wallet connected',
+          ? 'Funciona solo en mainnet con billetera conectada'
+          : 'Works only in mainnet with wallet connected',
       )
       return
     }
