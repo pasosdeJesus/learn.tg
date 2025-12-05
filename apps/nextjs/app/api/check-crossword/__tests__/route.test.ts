@@ -82,7 +82,7 @@ vi.mock('viem', async () => {
     getContract: vi.fn(() => ({
       address: '0xmockContractAddress',
       read: {
-        vaults: vi.fn().mockResolvedValue([0n, 0n, 0n, true, 0n]), // vault.exists = true
+        vaults: vi.fn().mockResolvedValue([0n, 0n, 0n, 0n, 0n, 1n]), // vault.exists = true (index 5)
         studentCanSubmit: vi.fn().mockResolvedValue(true),
       },
     })),
@@ -131,7 +131,7 @@ describe('API /api/check-crossword', () => {
     expect(data.error).toMatch(/Expecting POST/i)
   })
 
-  it('POST sin walletAddress devuelve 200 y mensaje informativo (no califica)', async () => {
+  it('POST sin walletAddress devuelve 400 y mensaje informativo (no califica)', async () => {
     const body = {
       guideId: 1,
       courseId: 1,
@@ -149,10 +149,9 @@ describe('API /api/check-crossword', () => {
       headers: { 'Content-Type': 'application/json' },
     })
     const res = await POST(req)
-    expect(res.status).toBe(200)
+    expect(res.status).toBe(400)
     const data = await res.json()
-    expect(data.mistakesInCW).toEqual([])
-    expect(data.message).toMatch(/will not be graded/i)
+    expect(data.error).toMatch(/will not be graded/i)
   })
 
   it('POST con walletAddress y token que no coincide devuelve mensaje de token', async () => {
@@ -178,10 +177,9 @@ describe('API /api/check-crossword', () => {
       headers: { 'Content-Type': 'application/json' },
     })
     const res = await POST(req)
-    expect(res.status).toBe(200)
+    expect(res.status).toBe(401)
     const data = await res.json()
-    expect(data.mistakesInCW).toEqual([])
-    expect(data.message).toMatch(/Token stored for user doesn't match/i)
+    expect(data.error).toMatch(/Token stored for user doesn't match/i)
   })
 
   it('POST con respuestas correctas produce probs vacío y sin mensaje de error', async () => {

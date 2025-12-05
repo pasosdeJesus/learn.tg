@@ -383,7 +383,7 @@ export default function Page({
         lang: lang,
         grid: grid,
         placements: placements,
-        walletAddress: session.address,
+        walletAddress: session?.address,
         token: gCsrfToken
       }
 

@@ -1,8 +1,6 @@
 'use client'
 
 import axios from 'axios'
-import { ClaimSDK, useIdentitySDK } from '@goodsdks/citizen-sdk'
-import { type PublicClient, type WalletClient } from 'viem'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import { use, useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
@@ -13,11 +11,11 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
-import { usePublicClient, useWalletClient } from 'wagmi'
 import { useAccount } from 'wagmi'
 
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 import { Button } from '@/components/ui/button'
+import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
 
 export default function Page({
   params,
@@ -249,42 +247,7 @@ export default function Page({
     [pathSuffix],
   )
 
-  const publicClient = usePublicClient()
-  const { data: walletClient } = useWalletClient()
-  const identitySDK =
-    process.env.NEXT_PUBLIC_AUTH_URL == 'https://learn.tg'
-      ? useIdentitySDK('production')
-      : null
 
-  const claimUBI = async () => {
-    if (
-      !session ||
-      !address ||
-      session.address != address ||
-      !publicClient ||
-      !walletClient ||
-      !identitySDK
-    ) {
-      return <div>Works only with wallet connected</div>
-    }
-
-    const claimSDK = new ClaimSDK({
-      account: session.address,
-      publicClient,
-      walletClient,
-      identitySDK,
-      env: 'production',
-    })
-
-    try {
-      await claimSDK.claim()
-      console.log('Claim successful')
-      alert('Claim successful')
-    } catch (error) {
-      console.error('Claim failed:', error)
-      alert('Claim failed:' + JSON.stringify(error))
-    }
-  }
 
   if (
     (session && !address) ||
@@ -325,11 +288,11 @@ export default function Page({
           dangerouslySetInnerHTML={{ __html: guideHtml }}
         />
         {isClient && pathPrefix == 'gooddollar' && pathSuffix == 'guide1' && (
-          <div className="flex items-center justify-center">
-            <Button onClick={claimUBI} size="lg">
-              Sign up with GoodDollar or Claim UBI
-            </Button>
-          </div>
+          <GoodDollarClaimButton
+            lang={course.idioma}
+            pathPrefix={pathPrefix}
+            pathSuffix={pathSuffix}
+          />
         )}
 
         <table className="mx-auto text-center mt-12">
