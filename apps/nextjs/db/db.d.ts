@@ -541,6 +541,7 @@ export interface Cor1440GenTipomoneda {
 export interface CourseUsuario {
   amountscholarship: Numeric | null;
   guidespoints: Numeric | null;
+  percentagecompleted: Numeric | null;
   points: number;
   proyectofinanciero_id: number;
   usuario_id: number;
