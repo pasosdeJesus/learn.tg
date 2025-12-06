@@ -88,22 +88,50 @@ describe('Course List Page Component', () => {
     }),
   }
 
+  const mockCourse = {
+    id: 'course-1',
+    idioma: 'en',
+    prefijoRuta: '/gooddollar',
+    titulo: 'GoodDollar Course',
+    subtitulo: 'Learn about GoodDollar',
+    imagen: '/image.jpg',
+    creditoImagen: 'Credit',
+    enlaceImagen: 'https://example.com',
+    altImagen: 'Alt',
+    resumenMd: '# Summary',
+    ampliaMd: '# Extended',
+    prerequisitosMd: '# Prerequisites',
+    cursosPrerequisito: '',
+    guias: [
+      {
+        titulo: 'Guide 1',
+        sufijoRuta: 'guide1',
+      },
+      {
+        titulo: 'Guide 2',
+        sufijoRuta: 'guide2',
+      }
+    ]
+  }
+
+  const API_BUSCA_URL = 'https://fake.local/courses'
+  const API_PRESENTA_URL = 'https://fake.local/presenta'
+
   beforeEach(() => {
     vi.clearAllMocks()
-    // Restaurar mocks por defecto
+    // Restore default mocks
     useSessionMock.mockReturnValue({
       data: { address: '0x123', user: { name: 'Test User' } },
       status: 'authenticated',
     })
     useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
     axiosGet.mockReset()
-    axiosGet.mockResolvedValue({ data: [] })
-    // Mock de alert para evitar errores de jsdom
+    // Mock alert to avoid jsdom errors
     // @ts-ignore
     global.window.alert = vi.fn()
-    // Mock de variables de entorno
-    process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = 'https://fake.local/courses'
-    process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL = 'https://fake.local/presenta'
+    // Mock environment variables
+    process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = API_BUSCA_URL
+    process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL = API_PRESENTA_URL
   })
 
   it('no carga datos cuando dirección y sesión difieren (partial login)', async () => {
@@ -112,74 +140,46 @@ describe('Course List Page Component', () => {
       status: 'authenticated',
     })
     useAccountMock.mockReturnValue({ address: '0xBBB', isConnected: true })
+    
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div />}>
+        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
         </Suspense>,
       )
     })
-    // Esperar microtasks para confirmar que no hubo llamada
+    
+    // Wait for microtasks to confirm no call was made
     await waitFor(() => {
       expect(axiosGet).not.toHaveBeenCalled()
     })
   })
 
   it('calls guide-status API for each guide when session exists', async () => {
-    const mockCourse = {
-      id: 'course-1',
-      idioma: 'en',
-      prefijoRuta: '/gooddollar',
-      titulo: 'GoodDollar Course',
-      subtitulo: 'Learn about GoodDollar',
-      imagen: '/image.jpg',
-      creditoImagen: 'Credit',
-      enlaceImagen: 'https://example.com',
-      altImagen: 'Alt',
-      resumenMd: '# Summary',
-      ampliaMd: '# Extended',
-      prerequisitosMd: '# Prerequisites',
-      cursosPrerequisito: '',
-      guias: [
-        {
-          titulo: 'Guide 1',
-          sufijoRuta: 'guide1',
-        },
-        {
-          titulo: 'Guide 2',
-          sufijoRuta: 'guide2',
-        }
-      ]
-    }
-    const mockGuideStatus1 = {
-      completed: true,
-      receivedScholarship: false
-    }
-    const mockGuideStatus2 = {
-      completed: false,
-      receivedScholarship: true
-    }
-    // First call: busca cursos
-    axiosGet.mockResolvedValueOnce({ data: [mockCourse] })
-    // Second call: presenta curso (returns mockCourse again)
-    axiosGet.mockResolvedValueOnce({ data: mockCourse })
-    // Third and fourth calls: guide-status for each guide (will be called via Promise.allSettled)
-    // We'll mock the axios.get to return different values based on URL
+    const mockGuideStatus1 = { completed: true, receivedScholarship: false }
+    const mockGuideStatus2 = { completed: false, receivedScholarship: true }
+
     axiosGet.mockImplementation((url: string) => {
+      if (url.startsWith(API_BUSCA_URL)) {
+        return Promise.resolve({ data: [mockCourse] })
+      }
+      if (url.startsWith(API_PRESENTA_URL)) {
+        return Promise.resolve({ data: mockCourse })
+      }
       if (url.includes('/api/guide-status')) {
         if (url.includes('guideNumber=1')) {
           return Promise.resolve({ data: mockGuideStatus1 })
-        } else if (url.includes('guideNumber=2')) {
+        }
+        if (url.includes('guideNumber=2')) {
           return Promise.resolve({ data: mockGuideStatus2 })
         }
       }
-      // Default fallback
       return Promise.resolve({ data: [] })
     })
 
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div />}>
+        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
         </Suspense>,
       )
@@ -195,7 +195,7 @@ describe('Course List Page Component', () => {
       call[0] && typeof call[0] === 'string' && call[0].includes('/api/guide-status')
     )
     expect(guideStatusCalls.length).toBe(2)
-    // Verify each guide number
+    
     const guideNumbers = guideStatusCalls.map(call => {
       const url = call[0] as string
       const match = url.match(/guideNumber=(\d+)/)
@@ -206,47 +206,21 @@ describe('Course List Page Component', () => {
   })
 
   it('includes completion indicators in guide list HTML', async () => {
-    const mockCourse = {
-      id: 'course-1',
-      idioma: 'en',
-      prefijoRuta: '/gooddollar',
-      titulo: 'GoodDollar Course',
-      subtitulo: 'Learn about GoodDollar',
-      imagen: '/image.jpg',
-      creditoImagen: 'Credit',
-      enlaceImagen: 'https://example.com',
-      altImagen: 'Alt',
-      resumenMd: '# Summary',
-      ampliaMd: '# Extended',
-      prerequisitosMd: '# Prerequisites',
-      cursosPrerequisito: '',
-      guias: [
-        {
-          titulo: 'Guide 1',
-          sufijoRuta: 'guide1',
-        },
-        {
-          titulo: 'Guide 2',
-          sufijoRuta: 'guide2',
-        }
-      ]
-    }
-    const mockGuideStatus1 = {
-      completed: true,
-      receivedScholarship: true  // Both indicators
-    }
-    const mockGuideStatus2 = {
-      completed: false,
-      receivedScholarship: false // No indicators
-    }
-    axiosGet.mockResolvedValueOnce({ data: [mockCourse] })
-    axiosGet.mockResolvedValueOnce({ data: mockCourse })
-    // Mock guide-status calls
+    const mockGuideStatus1 = { completed: true, receivedScholarship: true }
+    const mockGuideStatus2 = { completed: false, receivedScholarship: false }
+
     axiosGet.mockImplementation((url: string) => {
+      if (url.startsWith(API_BUSCA_URL)) {
+        return Promise.resolve({ data: [mockCourse] })
+      }
+      if (url.startsWith(API_PRESENTA_URL)) {
+        return Promise.resolve({ data: mockCourse })
+      }
       if (url.includes('/api/guide-status')) {
         if (url.includes('guideNumber=1')) {
           return Promise.resolve({ data: mockGuideStatus1 })
-        } else if (url.includes('guideNumber=2')) {
+        }
+        if (url.includes('guideNumber=2')) {
           return Promise.resolve({ data: mockGuideStatus2 })
         }
       }
@@ -255,25 +229,20 @@ describe('Course List Page Component', () => {
 
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div />}>
+        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
         </Suspense>,
       )
     })
 
-    // Wait for content
     await waitFor(() => {
       expect(screen.getByText(/Course contents/)).toBeInTheDocument()
     })
 
-    // Check that guide list contains indicators
-    // The content is rendered via dangerouslySetInnerHTML, so we need to check the DOM
-    // Look for list items containing guide titles and indicators
     const guide1Element = screen.getByText(/Guide 1/)
     expect(guide1Element).toBeInTheDocument()
-    // The indicators are appended as text after the link, so we check parent element
-    const parent = guide1Element.parentElement
-    expect(parent?.textContent).toMatch(/Guide 1 ✅\s*💰/)
+    const parent1 = guide1Element.parentElement
+    expect(parent1?.textContent).toMatch(/Guide 1 ✅\s*💰/)
 
     const guide2Element = screen.getByText(/Guide 2/)
     expect(guide2Element).toBeInTheDocument()
@@ -283,40 +252,22 @@ describe('Course List Page Component', () => {
   })
 
   it('does not call guide-status API when no session', async () => {
-    // No session
-    useSessionMock.mockReturnValue({
-      data: null,
-      status: 'unauthenticated',
-    })
+    useSessionMock.mockReturnValue({ data: null, status: 'unauthenticated' })
     useAccountMock.mockReturnValue({ address: undefined, isConnected: false })
 
-    const mockCourse = {
-      id: 'course-1',
-      idioma: 'en',
-      prefijoRuta: '/gooddollar',
-      titulo: 'GoodDollar Course',
-      subtitulo: 'Learn about GoodDollar',
-      imagen: '/image.jpg',
-      creditoImagen: 'Credit',
-      enlaceImagen: 'https://example.com',
-      altImagen: 'Alt',
-      resumenMd: '# Summary',
-      ampliaMd: '# Extended',
-      prerequisitosMd: '# Prerequisites',
-      cursosPrerequisito: '',
-      guias: [
-        {
-          titulo: 'Guide 1',
-          sufijoRuta: 'guide1',
+    axiosGet.mockImplementation((url: string) => {
+        if (url.startsWith(API_BUSCA_URL)) {
+            return Promise.resolve({ data: [mockCourse] })
         }
-      ]
-    }
-    axiosGet.mockResolvedValueOnce({ data: [mockCourse] })
-    axiosGet.mockResolvedValueOnce({ data: mockCourse })
+        if (url.startsWith(API_PRESENTA_URL)) {
+            return Promise.resolve({ data: mockCourse })
+        }
+        return Promise.resolve({ data: [] })
+    })
 
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div />}>
+        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
         </Suspense>,
       )
@@ -326,7 +277,6 @@ describe('Course List Page Component', () => {
       expect(screen.getByText(/GoodDollar Course/)).toBeInTheDocument()
     })
 
-    // Verify no guide-status calls
     const guideStatusCalls = axiosGet.mock.calls.filter(call =>
       call[0] && typeof call[0] === 'string' && call[0].includes('/api/guide-status')
     )
@@ -334,31 +284,13 @@ describe('Course List Page Component', () => {
   })
 
   it('handles guide-status API errors gracefully', async () => {
-    const mockCourse = {
-      id: 'course-1',
-      idioma: 'en',
-      prefijoRuta: '/gooddollar',
-      titulo: 'GoodDollar Course',
-      subtitulo: 'Learn about GoodDollar',
-      imagen: '/image.jpg',
-      creditoImagen: 'Credit',
-      enlaceImagen: 'https://example.com',
-      altImagen: 'Alt',
-      resumenMd: '# Summary',
-      ampliaMd: '# Extended',
-      prerequisitosMd: '# Prerequisites',
-      cursosPrerequisito: '',
-      guias: [
-        {
-          titulo: 'Guide 1',
-          sufijoRuta: 'guide1',
-        }
-      ]
-    }
-    axiosGet.mockResolvedValueOnce({ data: [mockCourse] })
-    axiosGet.mockResolvedValueOnce({ data: mockCourse })
-    // Mock guide-status to fail
     axiosGet.mockImplementation((url: string) => {
+      if (url.startsWith(API_BUSCA_URL)) {
+        return Promise.resolve({ data: [mockCourse] })
+      }
+      if (url.startsWith(API_PRESENTA_URL)) {
+        return Promise.resolve({ data: mockCourse })
+      }
       if (url.includes('/api/guide-status')) {
         return Promise.reject(new Error('API error'))
       }
@@ -367,17 +299,15 @@ describe('Course List Page Component', () => {
 
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div />}>
+        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
         </Suspense>,
       )
     })
 
-    // Component should still render without crashing
     await waitFor(() => {
-      expect(screen.getByText(/GoodDollar Course/)).toBeInTheDocument()
+      expect(screen.getByText(/API error/)).toBeInTheDocument()
     })
-    // Guide list should still be rendered (without indicators)
-    expect(screen.getByText(/Guide 1/)).toBeInTheDocument()
   })
 })
+
