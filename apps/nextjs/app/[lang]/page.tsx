@@ -112,6 +112,7 @@ export default function Page({ params }: PageProps) {
                       vaultBalance: +response2.data.vaultBalance,
                       amountPerGuide: +response2.data.amountPerGuide,
                       canSubmit: response2.data.canSubmit,
+                      percentageCompleted: response2.data.percentageCompleted,
                     }),
                   }))
                 })
@@ -160,6 +161,7 @@ export default function Page({ params }: PageProps) {
               vaultBalance: +response2.data.vaultBalance,
               amountPerGuide: +response2.data.amountPerGuide,
               canSubmit: response2.data.canSubmit,
+              percentageCompleted: response2.data.percentageCompleted,
             }),
           }))
         }
@@ -237,6 +239,15 @@ export default function Page({ params }: PageProps) {
                           {lang === 'es'
                             ? 'Eres elegible.'
                             : 'You are elegible.'}
+                        </span>
+                      </div>
+                    )}
+                  {extCourses.map.get(course.id) &&
+                    extCourses.map.get(course.id).percentageCompleted !== null && (
+                      <div className="p-2">
+                        <span>
+                          {lang === 'es' ? 'Completado: ' : 'Completed: '}
+                          {Math.round(extCourses.map.get(course.id).percentageCompleted)}%
                         </span>
                       </div>
                     )}

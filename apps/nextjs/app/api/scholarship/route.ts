@@ -1,6 +1,6 @@
 'use server'
 
-import { Kysely, PostgresDialect } from 'kysely'
+import { Kysely, PostgresDialect, sql } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
 import { Pool } from 'pg'
 import { privateKeyToAccount } from 'viem/accounts'
@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
     console.log('** token=', token)
 
     const db = newKyselyPostgresql()
+    let courseIdNumber = NaN
 
     // Usamos un tipo más laxo porque los tipos generados de timestamp no coinciden exactamente con Date
     let billeteraUsuario: Partial<BilleteraUsuario> | undefined
@@ -76,7 +77,7 @@ export async function GET(req: NextRequest) {
       retMessage += '\nMissing courseId'
     } else {
       // id parece ser numérico; intentar conversión
-      const courseIdNumber = /^\d+$/.test(courseId)
+      courseIdNumber = /^\d+$/.test(courseId)
         ? parseInt(courseId, 10)
         : NaN
       if (isNaN(courseIdNumber)) {
@@ -98,6 +99,25 @@ export async function GET(req: NextRequest) {
     let vaultBalance = 0
     let canSubmit = false
     let amountPerGuide = 0
+    let percentageCompleted = null
+
+    // Obtener porcentaje completado del curso si hay usuario y curso válido
+    if (retMessage === '' && billeteraUsuario && billeteraUsuario.usuario_id && !isNaN(courseIdNumber)) {
+      try {
+        const courseUsuario = await db
+          .selectFrom('course_usuario')
+          .select('percentagecompleted')
+          .where('usuario_id', '=', billeteraUsuario.usuario_id)
+          .where('proyectofinanciero_id', '=', courseIdNumber)
+          .executeTakeFirst()
+        if (courseUsuario && courseUsuario.percentagecompleted !== null) {
+          percentageCompleted = Number(courseUsuario.percentagecompleted)
+        }
+      } catch (error) {
+        console.error('Error fetching percentage completed:', error)
+        // No bloquear el flujo por este error
+      }
+    }
     if (retMessage == '') {
       const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
       console.log('** rpcUrl=', rpcUrl)
@@ -185,6 +205,7 @@ export async function GET(req: NextRequest) {
     console.log('** Normal exit with vaultBalance=', vaultBalance)
     console.log('** Normal exit with amountPerGuide=', amountPerGuide)
     console.log('** Normal exit with canSubmit=', canSubmit)
+    console.log('** Normal exit with percentageCompleted=', percentageCompleted)
     console.log('** Normal exit with message=', retMessage)
     return NextResponse.json(
       {
@@ -193,6 +214,7 @@ export async function GET(req: NextRequest) {
         vaultBalance: vaultBalance,
         amountPerGuide: amountPerGuide,
         canSubmit: canSubmit,
+        percentageCompleted: percentageCompleted,
         message: retMessage,
       },
       { status: 200 },

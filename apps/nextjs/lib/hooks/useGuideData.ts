@@ -53,6 +53,7 @@ export function useGuideData({
   const [nextGuidePath, setNextGuidePath] = useState('')
   const [previousGuidePath, setPreviousGuidePath] = useState('')
   const [coursePath, setCoursePath] = useState('')
+  const [percentageCompleted, setPercentageCompleted] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchGuideData = async () => {
@@ -104,6 +105,20 @@ export function useGuideData({
         console.log(`useGuideData: Fetching ${detailUrl}`)
         const detailResponse = await axios.get(detailUrl)
         const detailedCourse = detailResponse.data
+
+        // Fetch percentage completed
+        if (session && address && detailedCourse.id) {
+          try {
+            const scholarshipUrl = `/api/scholarship?courseId=${detailedCourse.id}&walletAddress=${address}&token=${csrfToken}`
+            const scholarshipRes = await axios.get(scholarshipUrl)
+            if (scholarshipRes.data.percentageCompleted !== null) {
+              setPercentageCompleted(Number(scholarshipRes.data.percentageCompleted))
+            }
+          } catch (err) {
+            console.error('Error fetching percentage completed:', err)
+            // Don't fail the whole request
+          }
+        }
 
         const guideStatusPromises = detailedCourse.guias.map((_: Guide, index: number) => {
           if (session && address && detailedCourse.id) {
@@ -172,6 +187,7 @@ export function useGuideData({
     nextGuidePath,
     previousGuidePath,
     coursePath,
+    percentageCompleted,
   }
 }
 

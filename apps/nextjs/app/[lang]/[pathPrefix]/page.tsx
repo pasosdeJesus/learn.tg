@@ -28,7 +28,7 @@ export default function Page({ params }: PageProps) {
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
 
-  const { course, loading, error } = useGuideData({
+  const { course, loading, error, percentageCompleted } = useGuideData({
     lang,
     pathPrefix,
   })
@@ -108,6 +108,14 @@ export default function Page({ params }: PageProps) {
           <h2 className="text-lg lg:text-xl font-semibold text-gray-600">
             {course.subtitulo}
           </h2>
+          {percentageCompleted !== null && (
+            <div className="mt-4">
+              <span className="text-lg font-medium text-gray-700">
+                {lang === 'es' ? 'Completado: ' : 'Completed: '}
+                {Math.round(percentageCompleted)}%
+              </span>
+            </div>
+          )}
         </header>
 
         <figure className="my-6">
