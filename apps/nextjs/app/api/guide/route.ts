@@ -34,6 +34,14 @@ export async function GET(req: NextRequest) {
     const walletAddress = searchParams.get('walletAddress')
     const token = searchParams.get('token')
 
+    // Validate required parameters
+    if (!lang || !prefix || !guide) {
+      return NextResponse.json(
+        { error: 'Missing required parameters: lang, prefix, guide' },
+        { status: 500 }
+      )
+    }
+
     const db = newKyselyPostgresql()
 
     let billeteraUsuario: any = null

@@ -104,11 +104,13 @@ describe('Main Page Component', () => {
       status: 'authenticated',
     })
     useAccountMock.mockReturnValue({ address: '0xBBB', isConnected: true })
-    renderWithProviders(
-      <Suspense fallback={<div />}>
-        <Page {...defaultProps} />
-      </Suspense>,
-    )
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
     // Esperar microtasks para confirmar que no hubo llamada
     await waitFor(() => {
       expect(axiosGet).not.toHaveBeenCalled()
@@ -130,11 +132,13 @@ describe('Main Page Component', () => {
     axiosGet
       .mockResolvedValueOnce({ data: mockCourses as Course[] }) // cursos
       .mockResolvedValueOnce({ data: { message: '', ...mockScholarshipData } }) // scholarship
-    renderWithProviders(
-      <Suspense fallback={<div />}>
-        <Page {...defaultProps} />
-      </Suspense>,
-    )
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
     await waitFor(() => expect(axiosGet).toHaveBeenCalledTimes(2))
     const callList: any[] = axiosGet.mock.calls as any
     const secondCall = callList.length > 1 ? callList[1][0] : ''
@@ -143,11 +147,13 @@ describe('Main Page Component', () => {
 
   it('tolera errores de API sin colapsar', async () => {
     axiosGet.mockRejectedValueOnce(new Error('API Error'))
-    renderWithProviders(
-      <Suspense fallback={<div />}>
-        <Page {...defaultProps} />
-      </Suspense>,
-    )
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
 
     // Component should still render without crashing
     await waitFor(() => {
@@ -170,11 +176,13 @@ describe('Main Page Component', () => {
     ]
     // Primera llamada: cursos
     axiosGet.mockResolvedValueOnce({ data: mockCourses as Course[] })
-    renderWithProviders(
-      <Suspense fallback={<div />}>
-        <Page {...defaultProps} />
-      </Suspense>,
-    )
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
     // No se hace llamada a scholarship porque el componente sólo lo hace cuando csrfToken válido y session/address coinciden
     await waitFor(() =>
       expect(screen.getByText(/Test Course/i)).toBeInTheDocument(),
@@ -193,11 +201,13 @@ describe('Main Page Component', () => {
       },
     ]
     axiosGet.mockResolvedValueOnce({ data: mockCourses as Course[] })
-    renderWithProviders(
-      <Suspense fallback={<div />}>
-        <Page {...defaultProps} />
-      </Suspense>,
-    )
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
     await waitFor(() => expect(axiosGet).toHaveBeenCalled())
     const callList2: any[] = axiosGet.mock.calls as any
     const firstUrl = callList2.length > 0 ? callList2[0][0] : ''

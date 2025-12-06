@@ -111,17 +111,30 @@ export function useCourseData({
           if (session && address && detailedCourse.id) {
             const statusUrl = `/api/guide-status?walletAddress=${address}&courseId=${detailedCourse.id}&guideNumber=${index + 1}`
             return axios.get(statusUrl)
-          } 
+          }
           return Promise.resolve({ data: { completed: false, receivedScholarship: false } })
         })
 
-        const guideStatuses = await Promise.all(guideStatusPromises)
+        const guideStatuses = await Promise.allSettled(guideStatusPromises)
 
-        const guidesWithStatus = detailedCourse.guias.map((guide: Guide, index: number) => ({
-          ...guide,
-          completed: guideStatuses[index].data.completed,
-          receivedScholarship: guideStatuses[index].data.receivedScholarship,
-        }))
+        const guidesWithStatus = detailedCourse.guias.map((guide: Guide, index: number) => {
+          const statusResult = guideStatuses[index]
+          if (statusResult.status === 'fulfilled') {
+            return {
+              ...guide,
+              completed: statusResult.value.data.completed,
+              receivedScholarship: statusResult.value.data.receivedScholarship,
+            }
+          } else {
+            // If guide-status API fails, treat as not completed and no scholarship
+            console.warn(`Failed to fetch guide status for guide ${index + 1}:`, statusResult.reason)
+            return {
+              ...guide,
+              completed: false,
+              receivedScholarship: false,
+            }
+          }
+        })
 
         const fullCourse: Course = {
           ...basicCourse,
