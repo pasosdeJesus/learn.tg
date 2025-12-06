@@ -20,7 +20,7 @@
     newKyselyPostgresql: () => mockKysely,
   }))
 
-  const mockGetServerSession = getServerSession as vi.Mock
+  const mockGetServerSession = getServerSession as any
 
   let GET: any
 

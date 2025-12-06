@@ -15,12 +15,19 @@ export interface Guide {
 export interface Course {
   id: string
   titulo: string
+  subtitulo?: string
   idioma: string
   prefijoRuta: string
   guias: Guide[]
   conBilletera: boolean
   sinBilletera: boolean
   creditosMd: string
+  resumenMd?: string
+  ampliaMd?: string
+  imagen?: string
+  altImagen?: string
+  enlaceImagen?: string
+  creditoImagen?: string
 }
 
 interface UseCourseDataProps {
