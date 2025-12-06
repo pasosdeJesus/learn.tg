@@ -50,7 +50,7 @@ To interact with GoodDollar and learn.tg, your wallet needs to be connected to t
 
 ### **Comprehension Questions**
 
-1. You must **never** ___ your Secret Recovery Phrase (share)
+1. You must never ___ your Secret Recovery Phrase (share)
 2. Your public address allows others to send you crypto and is also
    like your ___ in the blockchain. (identification)
 3. In order to receive UBI from this course your wallet must be
