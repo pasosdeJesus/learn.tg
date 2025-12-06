@@ -6,7 +6,7 @@ import { use, useEffect, useState } from 'react'
 import { useAccount, useConfig, useWriteContract } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 
-import { useCourseData } from '@/lib/hooks/useCourseData'
+import { useGuideData } from '@/lib/hooks/useGuideData'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -51,7 +51,7 @@ export default function Page({
     myGuide,
     guideNumber,
     coursePath,
-  } = useCourseData({ lang, pathPrefix, pathSuffix })
+  } = useGuideData({ lang, pathPrefix, pathSuffix })
 
   const [thisGuidePath, setThisGuidePath] = useState('')
   const [grid, setGrid] = useState<Cell[][]>([])
@@ -451,3 +451,4 @@ export default function Page({
     </>
   )
 }
+

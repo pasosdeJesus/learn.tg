@@ -30,17 +30,17 @@ export interface Course {
   creditoImagen?: string
 }
 
-interface UseCourseDataProps {
+interface UseGuideDataProps {
   lang: string
   pathPrefix: string
   pathSuffix?: string
 }
 
-export function useCourseData({
+export function useGuideData({
   lang,
   pathPrefix,
   pathSuffix,
-}: UseCourseDataProps) {
+}: UseGuideDataProps) {
   const { address } = useAccount()
   const { data: session } = useSession()
 
@@ -55,13 +55,12 @@ export function useCourseData({
   const [coursePath, setCoursePath] = useState('')
 
   useEffect(() => {
-    const fetchCourseData = async () => {
+    const fetchGuideData = async () => {
       if (
         (session && !address) ||
         (address && !session) ||
         (address && session && session.address && address !== session.address)
       ) {
-        // Evita ejecutar la carga si la sesión no es consistente
         return
       }
 
@@ -81,7 +80,7 @@ export function useCourseData({
           url += `&walletAddress=${session.address}&token=${csrfToken}`
         }
 
-        console.log(`useCourseData: Fetching ${url}`)
+        console.log(`useGuideData: Fetching ${url}`)
         const courseListResponse = await axios.get(url)
 
         if (!courseListResponse.data || courseListResponse.data.length !== 1) {
@@ -102,11 +101,10 @@ export function useCourseData({
           detailUrl += `&walletAddress=${session.address}&token=${csrfToken}`
         }
 
-        console.log(`useCourseData: Fetching ${detailUrl}`)
+        console.log(`useGuideData: Fetching ${detailUrl}`)
         const detailResponse = await axios.get(detailUrl)
         const detailedCourse = detailResponse.data
 
-        // Fetch guide statuses in parallel
         const guideStatusPromises = detailedCourse.guias.map((_: Guide, index: number) => {
           if (session && address && detailedCourse.id) {
             const statusUrl = `/api/guide-status?walletAddress=${address}&courseId=${detailedCourse.id}&guideNumber=${index + 1}`
@@ -115,26 +113,13 @@ export function useCourseData({
           return Promise.resolve({ data: { completed: false, receivedScholarship: false } })
         })
 
-        const guideStatuses = await Promise.allSettled(guideStatusPromises)
+        const guideStatuses = await Promise.all(guideStatusPromises)
 
-        const guidesWithStatus = detailedCourse.guias.map((guide: Guide, index: number) => {
-          const statusResult = guideStatuses[index]
-          if (statusResult.status === 'fulfilled') {
-            return {
-              ...guide,
-              completed: statusResult.value.data.completed,
-              receivedScholarship: statusResult.value.data.receivedScholarship,
-            }
-          } else {
-            // If guide-status API fails, treat as not completed and no scholarship
-            console.warn(`Failed to fetch guide status for guide ${index + 1}:`, statusResult.reason)
-            return {
-              ...guide,
-              completed: false,
-              receivedScholarship: false,
-            }
-          }
-        })
+        const guidesWithStatus = detailedCourse.guias.map((guide: Guide, index: number) => ({
+          ...guide,
+          completed: guideStatuses[index].data.completed,
+          receivedScholarship: guideStatuses[index].data.receivedScholarship,
+        }))
 
         const fullCourse: Course = {
           ...basicCourse,
@@ -143,7 +128,6 @@ export function useCourseData({
         }
         setCourse(fullCourse)
 
-        // Logic for specific guide page
         if (pathSuffix) {
           const currentGuideIndex = fullCourse.guias.findIndex(
             (g: Guide) => g.sufijoRuta === pathSuffix,
@@ -169,14 +153,14 @@ export function useCourseData({
           }
         }
       } catch (e: any) {
-        console.error('Failed to fetch course data:', e)
+        console.error('Failed to fetch guide data:', e)
         setError(e.message)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchCourseData()
+    fetchGuideData()
   }, [session, address, lang, pathPrefix, pathSuffix])
 
   return {

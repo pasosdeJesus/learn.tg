@@ -6,7 +6,7 @@ import { useAccount } from 'wagmi'
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
 
-import { useCourseData } from '@/lib/hooks/useCourseData'
+import { useGuideData } from '@/lib/hooks/useGuideData'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 import { Button } from '@/components/ui/button'
@@ -42,7 +42,7 @@ export default function Page({ params }: PageProps) {
     nextGuidePath, 
     previousGuidePath, 
     coursePath 
-  } = useCourseData({
+  } = useGuideData({
     lang,
     pathPrefix,
     pathSuffix,
@@ -251,4 +251,5 @@ export default function Page({ params }: PageProps) {
       <div>&nbsp;</div>
     </>)
 }
+
 

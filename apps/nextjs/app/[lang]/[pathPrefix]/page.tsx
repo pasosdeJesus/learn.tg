@@ -4,7 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useAccount } from 'wagmi'
 
-import { useCourseData } from '@/lib/hooks/useCourseData'
+import { useGuideData } from '@/lib/hooks/useGuideData'
 
 import { Button } from '@/components/ui/button'
 import remarkDirective from 'remark-directive'
@@ -28,7 +28,7 @@ export default function Page({ params }: PageProps) {
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
 
-  const { course, loading, error } = useCourseData({
+  const { course, loading, error } = useGuideData({
     lang,
     pathPrefix,
   })
