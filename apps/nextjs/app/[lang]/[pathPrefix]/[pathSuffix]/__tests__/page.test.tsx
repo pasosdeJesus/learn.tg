@@ -5,7 +5,7 @@ import '@testing-library/jest-dom'
 import Page from '../page.tsx'
 import React, { Suspense } from 'react'
 
-global.IS_REACT_ACT_ENVIRONMENT = true;
+(global as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
