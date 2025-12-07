@@ -128,7 +128,7 @@ describe('Main Page Component', () => {
         subtitulo: 'Description 1',
       },
     ]
-    const mockScholarshipData = { amountPerGuide: 5, canSubmit: true }
+    const mockScholarshipData = { amountPerGuide: 5, canSubmit: true, percentageCompleted: null }
     axiosGet
       .mockResolvedValueOnce({ data: mockCourses as Course[] }) // cursos
       .mockResolvedValueOnce({ data: { message: '', ...mockScholarshipData } }) // scholarship

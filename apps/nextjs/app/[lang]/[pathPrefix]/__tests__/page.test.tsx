@@ -174,6 +174,9 @@ describe('Course List Page Component', () => {
           return Promise.resolve({ data: mockGuideStatus2 })
         }
       }
+      if (url.includes('/api/scholarship')) {
+        return Promise.resolve({ data: { percentageCompleted: null } })
+      }
       return Promise.resolve({ data: [] })
     })
 
@@ -224,6 +227,9 @@ describe('Course List Page Component', () => {
           return Promise.resolve({ data: mockGuideStatus2 })
         }
       }
+      if (url.includes('/api/scholarship')) {
+        return Promise.resolve({ data: { percentageCompleted: null } })
+      }
       return Promise.resolve({ data: [] })
     })
 
@@ -262,6 +268,9 @@ describe('Course List Page Component', () => {
         if (url.startsWith(API_PRESENTA_URL)) {
             return Promise.resolve({ data: mockCourse })
         }
+        if (url.includes('/api/scholarship')) {
+          return Promise.resolve({ data: { percentageCompleted: null } })
+        }
         return Promise.resolve({ data: [] })
     })
 
@@ -293,6 +302,9 @@ describe('Course List Page Component', () => {
       }
       if (url.includes('/api/guide-status')) {
         return Promise.reject(new Error('API error'))
+      }
+      if (url.includes('/api/scholarship')) {
+        return Promise.resolve({ data: { percentageCompleted: null } })
       }
       return Promise.resolve({ data: [] })
     })

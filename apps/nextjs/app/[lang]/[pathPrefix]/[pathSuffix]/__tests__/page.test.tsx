@@ -169,6 +169,7 @@ describe('Guide Page Component', () => {
       if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
       if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: mockGuideData })
       if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus })
+      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
       return Promise.resolve({ data: [] })
     })
 
@@ -180,7 +181,7 @@ describe('Guide Page Component', () => {
       )
     })
 
-    await waitFor(() => expect(axiosGet).toHaveBeenCalledTimes(4))
+    await waitFor(() => expect(axiosGet).toHaveBeenCalledTimes(5))
     const guideStatusCall = axiosGet.mock.calls.find(call => call[0]?.includes('/api/guide-status'))
     expect(guideStatusCall).toBeDefined()
     expect(guideStatusCall?.[0]).toMatch(/walletAddress=0x123/)
@@ -196,6 +197,7 @@ describe('Guide Page Component', () => {
       if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
       if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: mockGuideData })
       if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus })
+      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
       return Promise.resolve({ data: [] })
     })
 
@@ -221,6 +223,7 @@ describe('Guide Page Component', () => {
       if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
       if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: mockGuideData })
       if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus })
+      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
       return Promise.resolve({ data: [] })
     })
 
@@ -246,6 +249,7 @@ describe('Guide Page Component', () => {
       if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
       if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: mockGuideData })
       if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus })
+      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
       return Promise.resolve({ data: [] })
     })
 
@@ -269,6 +273,7 @@ describe('Guide Page Component', () => {
         if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
         if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: { markdown: '' } })
         if (url.includes('/api/guide-status')) return Promise.reject(new Error('Guide status error'))
+        if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
         return Promise.resolve({ data: [] })
       })
 
