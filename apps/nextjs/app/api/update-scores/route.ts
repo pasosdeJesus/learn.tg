@@ -19,6 +19,7 @@ import { celo, celoSepolia } from 'viem/chains'
 
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 import type { Usuario } from '@/db/db.d.ts'
+import { calculateLearningScore, calculateProfileScore } from '@/lib/scores'
 
 export async function GET(req: NextRequest) {
   return NextResponse.json({ error: 'Expecting POST request' }, { status: 400 })
@@ -130,39 +131,8 @@ export async function POST(req: NextRequest) {
             whitelisted = true
           }
 
-          // LEARNING SCORE CALCULATION
-          const guidePointsQuery = await db
-          .selectFrom('guide_usuario')
-          .where('usuario_id', '=', usuario.id)
-          .select(sql<number>`sum(points)`.as('total_points'))
-          .executeTakeFirst()
-          const coursePointsQuery = await db
-          .selectFrom('course_usuario')
-          .where('usuario_id', '=', usuario.id)
-          .select(sql<number>`sum(points)`.as('total_points'))
-          .executeTakeFirst()
-
-          const guidePoints = Number(guidePointsQuery?.total_points) || 0
-          const coursePoints = Number(coursePointsQuery?.total_points) || 0
-          learningscore = guidePoints + coursePoints
-
-          // PROFILE SCORE CALCULATION
-          profilescore = 0
-          if (whitelisted || usuario.passport_name) {
-            profilescore += 52
-          }
-          if (usuario.passport_name) {
-            profilescore += 24
-          }
-          if (usuario.passport_nationality) {
-            profilescore += 24
-          }
-          /*if (usuario.email) {
-            profilescore += 8
-          }
-          if (usuario.religion_id) {
-            profilescore += 8
-          } */
+          learningscore = await calculateLearningScore(db, usuario.id)
+          profilescore = calculateProfileScore(usuario, whitelisted)
 
           let uUsuario: Updateable<Usuario> = {
             lastgooddollarverification: whitelisted ? new Date() : null,
