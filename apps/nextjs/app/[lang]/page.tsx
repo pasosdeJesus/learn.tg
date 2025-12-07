@@ -242,12 +242,11 @@ export default function Page({ params }: PageProps) {
                         </span>
                       </div>
                     )}
-                  {extCourses.map.get(course.id) &&
-                    extCourses.map.get(course.id).percentageCompleted !== null && (
+                  {extCourses.map.get(course.id) && (
                       <div className="p-2">
                         <span>
                           {lang === 'es' ? 'Completado: ' : 'Completed: '}
-                          {Math.round(extCourses.map.get(course.id).percentageCompleted)}%
+                          {Math.round(extCourses.map.get(course.id).percentageCompleted || 0)}%
                         </span>
                       </div>
                     )}

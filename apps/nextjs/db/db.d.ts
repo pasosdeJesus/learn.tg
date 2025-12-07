@@ -550,7 +550,6 @@ export interface CourseUsuario {
 export interface GuideUsuario {
   actividadpf_id: number;
   amountpaid: number;
-  amountpending: number;
   points: number;
   profilescore: number;
   usuario_id: number;

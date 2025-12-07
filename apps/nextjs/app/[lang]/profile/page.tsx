@@ -85,7 +85,7 @@ export default function ProfileForm({ params }: PageProps) {
   const parameters = use(params)
   const { lang } = parameters
 
-  const handleGooddollarVerify = async () => {
+  const handleUpdateScores = async () => {
     if (process.env.NEXT_PUBLIC_AUTH_URL === undefined) {
       alert('process.env.NEXT_PUBLIC_AUTH_URL is undefined')
       return
@@ -545,7 +545,7 @@ export default function ProfileForm({ params }: PageProps) {
               <Button type="button" onClick={handleSelfVerify}>
                 {lang === 'es' ? 'Verificar con self' : 'Verify with self'}
               </Button>
-              <Button type="button" onClick={handleGooddollarVerify}>
+              <Button type="button" onClick={handleUpdateScores}>
                 {lang === 'es' ? 'Actualizar puntajes' : 'Update scores'}
               </Button>
             </div>

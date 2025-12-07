@@ -213,7 +213,6 @@ export async function POST(req: NextRequest) {
           actividadpf_id: actividadpfId,
           amountpaid: 0,
           profilescore: usuario.profilescore || 0,
-          amountpending: 0,
           points: 1,
         }
         let igp = await db

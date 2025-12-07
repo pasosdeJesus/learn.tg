@@ -243,7 +243,6 @@ export async function up(db: Kysely<any>): Promise<void> {
                 actividadpf_id: g.id,
                 amountpaid: oldVault.amountPerGuide.toString(),
                 profilescore: 0,
-                amountpending: 0,
                 points: 1,
               }
               let igp = await db
