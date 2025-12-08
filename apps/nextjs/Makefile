@@ -3,7 +3,7 @@ all:
 	pnpm i
 	pnpm build
 
-syntax:
+type:
 	pnpm typecheck
 
 format:

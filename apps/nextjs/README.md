@@ -45,6 +45,12 @@ Then, review and update the `.env` file with the following:
     pnpm install
     ```
 
+2. **Check syntax and typing errors:**
+
+    ```sh
+    make type
+    ```
+
 2.  **Run the Development Server:**
 
     The provided script will start the Next.js development server.
@@ -63,7 +69,7 @@ The project uses [Vitest](https://vitest.dev/) for unit and integration
 testing. You can run the entire test suite with the following command:
 
 ```sh
-pnpm test
+make test
 ```
 
 This will execute all test files and display a coverage report in the 
