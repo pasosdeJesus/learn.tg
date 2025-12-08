@@ -15,6 +15,7 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
+import { formatUnits } from 'viem'
 
 type PageProps = {
   params: Promise<{
@@ -124,7 +125,7 @@ export default function Page({ params }: PageProps) {
                 {amountScholarship !== null && (
                   <div className="text-sm text-gray-600 font-medium">
                     {lang === 'es' ? 'Total en USDT ganado: ' : 'Total USDT earned: '}
-                    ${amountScholarship.toFixed(2)} USDT
+                    ${formatUnits(BigInt(amountScholarship), 6)} USDT
                   </div>
                 )}
               </div>
