@@ -1,25 +1,16 @@
 'use server'
 
 import { IdentitySDK } from '@goodsdks/citizen-sdk'
-import { Kysely, PostgresDialect, sql, type RawBuilder } from 'kysely'
-import type { Updateable } from 'kysely'
+import { Kysely, sql, type Selectable, type Updateable } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
 import { privateKeyToAccount } from 'viem/accounts'
-import {
-  Address,
-  createPublicClient,
-  createWalletClient,
-  encodeFunctionData,
-  formatUnits,
-  getContract,
-  Hex,
-  http,
-} from 'viem'
+import { createPublicClient, createWalletClient, Hex, http } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
-import type { Usuario } from '@/db/db.d.ts'
-import { calculateLearningScore, calculateProfileScore } from '@/lib/scores'
+import { updateUserAndCoursePoints } from '@/lib/scores'
+import type { DB, Usuario, CourseUsuario } from '@/db/db.d'
+
 
 export async function GET(req: NextRequest) {
   return NextResponse.json({ error: 'Expecting POST request' }, { status: 400 })
@@ -31,8 +22,6 @@ export async function POST(req: NextRequest) {
   let retMessage = ''
 
   try {
-    let learningscore = 0
-    let profilescore = 0
     const requestJson = await req.json()
     const lang = requestJson['lang'] ?? ''
     const walletAddress = requestJson['walletAddress'] ?? ''
@@ -40,127 +29,123 @@ export async function POST(req: NextRequest) {
 
     const db = newKyselyPostgresql()
 
-    // Mensajes localizados
+    // Localized messages
     const msg = {
       es: {
-        noWallet:
-          'La respuesta no será calificada ni se buscarán becas posibles.',
-        tokenMismatch:
-          'El token almacenado para el usuario no coincide con el token proporcionado.',
+        noWallet: 'La respuesta no será calificada.',
+        tokenMismatch: 'El token no coincide con el esperado.',
         userNotFound: 'Usuario no encontrado',
+        serverError: 'Error del servidor.',
       },
       en: {
-        noWallet:
-          'Your answer will not be graded nor will possible scholarships be sought.',
-        tokenMismatch: "Token stored for user doesn't match given token.",
+        noWallet: 'Your answer will not be graded.',
+        tokenMismatch: "Token doesn't match expected.",
         userNotFound: 'User not found',
+        serverError: 'Server error.',
       },
     }
     const locale = lang === 'es' ? 'es' : 'en'
 
-    if (!walletAddress || walletAddress == null || walletAddress == '') {
+    if (!walletAddress) {
       retMessage += '\n' + msg[locale].noWallet
-    } else {
-      let billeteraUsuario = await db
-        .selectFrom('billetera_usuario')
-        .where('billetera', '=', walletAddress)
-        .selectAll()
-        .executeTakeFirst()
-      if (!billeteraUsuario || billeteraUsuario.token != token) {
-        retMessage += '\n' + msg[locale].tokenMismatch
-      } else {
-        let usuario = await db
-          .selectFrom('usuario')
-          .where('id', '=', billeteraUsuario.usuario_id)
-          .selectAll()
-          .executeTakeFirst()
-        console.log('OJO usuario=', usuario)
-
-        if (usuario == null) {
-          retMessage += '\n' + msg[locale].userNotFound
-        } else {
-          const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
-          const chain =
-            process.env.NEXT_PUBLIC_NETWORK == 'celo' ? celo : celoSepolia
-
-          const publicClient = createPublicClient({
-            chain,
-            transport: http(rpcUrl),
-          })
-          const privateKey = process.env.PRIVATE_KEY as Hex | undefined
-          if (!privateKey) {
-            console.error(
-              'CRITICAL: PRIVATE_KEY is not set in environment variables.',
-            )
-            throw new Error('Server configuration error.')
-          }
-
-          let account
-          try {
-            account = privateKeyToAccount(privateKey)
-          } catch (e) {
-            console.error(
-              'CRITICAL: Failed to load account from private key.',
-              e,
-            )
-            throw new Error('Server configuration error.')
-          }
-
-          const walletClient = createWalletClient({
-            account,
-            chain,
-            transport: http(rpcUrl),
-          })
-
-          let whitelisted = process.env.NETWORK == "celoSepolia"
-          if (process.env.NETWORK == "celo") {
-            const identitySDK = new IdentitySDK(
-              publicClient as any,
-              walletClient as any,
-              'production',
-            )
-            if (identitySDK == null) {
-              retMessage += '\n identitySDK is null'
-            }  else {
-              const { isWhitelisted, root } =
-                await identitySDK.getWhitelistedRoot(walletAddress)
-              whitelisted = isWhitelisted
-            }
-          } else {
-            // Gooddollar doesn't work in testnet
-            whitelisted = true
-          }
-
-          learningscore = await calculateLearningScore(db, usuario.id)
-          profilescore = calculateProfileScore(usuario, whitelisted)
-
-          let uUsuario: Updateable<Usuario> = {
-            lastgooddollarverification: whitelisted ? new Date() : null,
-            learningscore: learningscore,
-            profilescore: profilescore,
-          }
-          console.log('uUsuario=', uUsuario)
-          let rupdate = await db
-          .updateTable('usuario')
-          .set(uUsuario)
-          .where('id', '=', usuario.id)
-          .execute()
-          console.log('rupdate=', rupdate)
-        }
-      }
+      return NextResponse.json({ message: retMessage }, { status: 400 })
     }
 
-    console.log('Retornando mensaje ', retMessage)
-    return NextResponse.json({ 
-      message: retMessage, 
+    const billeteraUsuario = await db
+      .selectFrom('billetera_usuario')
+      .where('billetera', '=', walletAddress)
+      .selectAll()
+      .executeTakeFirst()
+
+    if (!billeteraUsuario || billeteraUsuario.token !== token) {
+      retMessage += '\n' + msg[locale].tokenMismatch
+      return NextResponse.json({ message: retMessage }, { status: 401 })
+    }
+
+    const usuario = await db
+      .selectFrom('usuario')
+      .where('id', '=', billeteraUsuario.usuario_id)
+      .selectAll()
+      .executeTakeFirst()
+
+    if (!usuario) {
+      retMessage += '\n' + msg[locale].userNotFound
+      return NextResponse.json({ message: retMessage }, { status: 404 })
+    }
+
+    const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
+    const chain = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? celo : celoSepolia
+
+    const publicClient = createPublicClient({
+      chain,
+      transport: http(rpcUrl),
+    })
+    const privateKey = process.env.PRIVATE_KEY as Hex | undefined
+    if (!privateKey) {
+      console.error('CRITICAL: PRIVATE_KEY is not set')
+      throw new Error(msg[locale].serverError)
+    }
+
+    const account = privateKeyToAccount(privateKey)
+    const walletClient = createWalletClient({
+      account,
+      chain,
+      transport: http(rpcUrl),
+    })
+
+    let whitelisted = false
+    if (process.env.NEXT_PUBLIC_NETWORK === 'celo') {
+      const identitySDK = new IdentitySDK(publicClient as any, walletClient as any, 'production')
+      if (identitySDK) {
+        const { isWhitelisted } = await identitySDK.getWhitelistedRoot(walletAddress)
+        whitelisted = isWhitelisted
+      } else {
+        console.warn('IdentitySDK is null')
+      }
+    } else {
+      // Gooddollar doesn't work in testnet, so we assume whitelisted
+      whitelisted = true
+    }
+
+    // 1. Calculate Profile Score
+    let profilescore = 0
+    if (whitelisted || usuario.passport_name) {
+      profilescore += 52
+    }
+    if (usuario.passport_name) {
+      profilescore += 24
+    }
+    if (usuario.passport_nationality) {
+      profilescore += 24
+    }
+
+    const uUsuario: Updateable<Usuario> = {
+      lastgooddollarverification: whitelisted ? new Date() : null,
       profilescore: profilescore,
-      learningscore: learningscore
-    }, { status: 200 })
-  } catch (error) {
-    console.error('Excepción error=', error)
-    const sError = JSON.stringify(error, (key, value) =>
-      typeof value === 'bigint' ? value.toString() + 'n' : value,
+      updated_at: new Date(),
+    }
+    await db.updateTable('usuario')
+      .set(uUsuario)
+      .where('id', '=', usuario.id).execute()
+
+    const learningscore = await updateUserAndCoursePoints(
+      db,
+      usuario,
     )
+
+    console.log('Scores updated successfully.')
+    return NextResponse.json(
+      {
+        message: retMessage,
+        profilescore: profilescore,
+        learningscore: learningscore,
+      },
+      { status: 200 },
+    )
+  } catch (error) {
+    console.error('Exception in update-scores:', error)
+    const sError = String(error)
     return NextResponse.json({ error: sError }, { status: 500 })
   }
 }
+
