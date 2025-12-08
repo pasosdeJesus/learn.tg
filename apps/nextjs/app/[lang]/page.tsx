@@ -8,6 +8,7 @@ import * as Toast from '@radix-ui/react-toast'
 import Image from 'next/image'
 import DonateModal from '@/components/DonateModal'
 import { Button } from '@/components/ui/button'
+import { CompletedProgress } from '@/components/ui/completed-progress'
 
 type PageProps = {
   params: Promise<{
@@ -208,48 +209,52 @@ export default function Page({ params }: PageProps) {
                       {course.subtitulo}
                     </p>
                   </div>
-                  {extCourses.map.get(course.id) &&
-                    extCourses.map.get(course.id).amountPerGuide > 0 && (
-                      <div className="p-2">
-                        <span>
-                          {lang === 'es' ? 'Beca de ' : 'Scholarship of '}$
-                          {extCourses.map.get(course.id).amountPerGuide} USDT
-                          {lang === 'es' ? ' por guía. ' : ' per guide.'}
-                        </span>
-                      </div>
+                  <div className="flex justify-between items-center p-4">
+                    <div>
+                      { extCourses.map.get(course.id) &&
+                        extCourses.map.get(course.id).amountPerGuide > 0 && (
+                        <div className="p-2">
+                          <span>
+                            {lang === 'es' ? 'Beca de ' : 'Scholarship of '}$
+                            {extCourses.map.get(course.id).amountPerGuide} USDT
+                            {lang === 'es' ? ' por guía. ' : ' per guide.'}
+                          </span>
+                        </div>
+                      )}
+                      { extCourses.map.get(course.id) &&
+                        extCourses.map.get(course.id).amountPerGuide > 0 &&
+                        session &&
+                        session.address &&
+                        extCourses.map.get(course.id).percentageCompleted < 100 &&
+                        !extCourses.map.get(course.id).canSubmit && (
+                        <div className="p-2">
+                          <span style={{ color: 'red' }}>
+                            {lang === 'es'
+                              ? 'Aunque estás en etapa de enfriamiento'
+                              : 'Although you are in cooldown period.'}
+                          </span>
+                        </div>
+                      )}
+                      { extCourses.map.get(course.id) &&
+                        extCourses.map.get(course.id).amountPerGuide > 0 &&
+                        extCourses.map.get(course.id).canSubmit &&
+                        extCourses.map.get(course.id).percentageCompleted < 100 && (
+                        <div className="p-2 !text-green">
+                          <span style={{ color: 'green' }}>
+                            {lang === 'es'
+                              ? 'Eres elegible.'
+                              : 'You are elegible.'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {extCourses.map.get(course.id) && (
+                      <CompletedProgress
+                        progress={extCourses.map.get(course.id).percentageCompleted || 0}
+                        lang={lang}
+                      />
                     )}
-                  {extCourses.map.get(course.id) &&
-                    extCourses.map.get(course.id).amountPerGuide > 0 &&
-                    session &&
-                    session.address &&
-                    !extCourses.map.get(course.id).canSubmit && (
-                      <div className="p-2">
-                        <span style={{ color: 'red' }}>
-                          {lang === 'es'
-                            ? 'Aunque estás en etapa de enfriamiento'
-                            : 'Although you are in cooldown period.'}
-                        </span>
-                      </div>
-                    )}
-                  {extCourses.map.get(course.id) &&
-                    extCourses.map.get(course.id).amountPerGuide > 0 &&
-                    extCourses.map.get(course.id).canSubmit && (
-                      <div className="p-2 !text-green">
-                        <span style={{ color: 'green' }}>
-                          {lang === 'es'
-                            ? 'Eres elegible.'
-                            : 'You are elegible.'}
-                        </span>
-                      </div>
-                    )}
-                  {extCourses.map.get(course.id) && (
-                      <div className="p-2">
-                        <span>
-                          {lang === 'es' ? 'Completado: ' : 'Completed: '}
-                          {Math.round(extCourses.map.get(course.id).percentageCompleted || 0)}%
-                        </span>
-                      </div>
-                    )}
+                  </div>
                 </a>
                 {extCourses.map.get(course.id) &&
                   extCourses.map.get(course.id).vaultCreated && (
@@ -300,3 +305,4 @@ export default function Page({ params }: PageProps) {
     </Toast.Provider>
   )
 }
+

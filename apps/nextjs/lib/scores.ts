@@ -5,13 +5,16 @@ import type { Insertable, Selectable, Updateable } from 'kysely'
 
 import type { DB, Usuario, CourseUsuario } from '@/db/db.d'
 
+interface CourseData {
+  [key: number]: number
+}
+
 /**
  * Calculates and updates all scores for a user, including global scores
  * and course-specific metrics, within a single database transaction.
  *
  * @param db - The Kysely database instance.
  * @param user - The user object, as selected from the database.
- * @param whitelisted - A boolean indicating if the user is whitelisted (e.g., via GoodDollar).
  * @returns An object containing the final learningscore and profilescore.
  */
 export async function updateUserAndCoursePoints(
@@ -29,32 +32,35 @@ export async function updateUserAndCoursePoints(
   `.execute(db)
 
   console.log("OJO guidesUsuario=", guidesUsuario)
-  let pointsGuidesCourse = {}
-  let earnedCourse = {}
-  let amountGuidesCourse = {}
+  let pointsGuidesCourse: CourseData = {}
+  let earnedCourse: CourseData = {}
+  let amountGuidesCourse: CourseData = {}
 
   for (const guideUsuario of guidesUsuario.rows) {
     console.log("  OJO guideUsuario=", guideUsuario)
-    if (pointsGuidesCourse[guideUsuario.proyectofinanciero_id] == 
+    const courseId = guideUsuario.proyectofinanciero_id;
+    if (pointsGuidesCourse[courseId] == 
         undefined) {
-      pointsGuidesCourse[guideUsuario.proyectofinanciero_id] = 0
+      pointsGuidesCourse[courseId] = 0
     }
-    pointsGuidesCourse[guideUsuario.proyectofinanciero_id] += 
+    pointsGuidesCourse[courseId] += 
       guideUsuario.points
-    if (amountGuidesCourse[guideUsuario.proyectofinanciero_id] == 
+    if (amountGuidesCourse[courseId] == 
         undefined) {
-      amountGuidesCourse[guideUsuario.proyectofinanciero_id] = 0
+      amountGuidesCourse[courseId] = 0
     }
     if (guideUsuario.points > 0) {
-      amountGuidesCourse[guideUsuario.proyectofinanciero_id] += 1
+      amountGuidesCourse[courseId] += 1
     }
-    if (earnedCourse[guideUsuario.proyectofinanciero_id] == undefined) {
-      earnedCourse[guideUsuario.proyectofinanciero_id] = 0
+    if (earnedCourse[courseId] == undefined) {
+      earnedCourse[courseId] = 0
     }
-    earnedCourse[guideUsuario.proyectofinanciero_id] += 
+    earnedCourse[courseId] += 
       guideUsuario.amountpaid
   }
-  Object.keys(pointsGuidesCourse).forEach(async (courseId) => {
+  const courseIds = Object.keys(pointsGuidesCourse);
+  for (const cId of courseIds) {
+    const courseId = Number(cId);
     console.log("  OJO courseId=", courseId)
     const userCourse = await db
     .selectFrom('course_usuario')
@@ -93,7 +99,7 @@ export async function updateUserAndCoursePoints(
     const updateCourseUsuario = {
       guidespoints: pointsGuidesCourse[courseId],
       amountscholarship: earnedCourse[courseId],
-      percentagecompleted: Math.round(percentd).toString(),
+      percentagecompleted: Math.round(percentd),
     }
     await db
     .updateTable('course_usuario')
@@ -101,7 +107,7 @@ export async function updateUserAndCoursePoints(
     .where('usuario_id', '=', user.id)
     .where('proyectofinanciero_id', '=', courseId)
     .execute()
-  })
+  }
 
 
   // 3. Calculate global Learning Score
