@@ -62,6 +62,7 @@ export function useGuideData({
         (address && !session) ||
         (address && session && session.address && address !== session.address)
       ) {
+        setLoading(false)
         return
       }
 

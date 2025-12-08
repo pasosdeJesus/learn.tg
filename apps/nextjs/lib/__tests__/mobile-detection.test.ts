@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import {
   isMobileDevice,
   isIOSDevice,
   isAndroidDevice,
   getDeviceInfo,
+  useMobileDetection,
 } from '@/lib/mobile-detection'
 
 describe('Mobile Detection', () => {
@@ -209,6 +211,32 @@ describe('Mobile Detection', () => {
         isAndroid: false,
         userAgent: '',
       })
+    })
+  })
+
+  describe('useMobileDetection', () => {
+    it('returns true for mobile device after effect', async () => {
+      const userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)'
+      vi.stubGlobal('navigator', { userAgent })
+
+      const { result } = renderHook(() => useMobileDetection())
+
+      // Wait for useEffect to run
+      await act(async () => {
+        // This allows useEffect to complete
+      })
+
+      expect(result.current).toBe(true)
+    })
+
+    it('returns false for desktop device', async () => {
+      const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      vi.stubGlobal('navigator', { userAgent })
+
+      const { result } = renderHook(() => useMobileDetection())
+
+      await act(async () => {})
+      expect(result.current).toBe(false)
     })
   })
 })
