@@ -114,11 +114,11 @@ export default function Page({ params }: PageProps) {
               <CompletedProgress progress={percentageCompleted} lang={lang} />
               <div className="flex flex-col gap-1">
                 <div className="text-sm text-gray-600">
-                  {lang === 'es' ? 'Total de puntos en el curso: ' : 'Total points in course: '}
+                  {lang === 'es' ? 'Total de guias en el curso: ' : 'Total of guides in course: '}
                   {course.guias.length}
                 </div>
                 <div className="text-sm text-gray-600">
-                  {lang === 'es' ? 'Total ganado en el curso: ' : 'Total earned in course: '}
+                  {lang === 'es' ? 'Total de guías aprovadas: ' : 'Total de guías aprovadas: '}
                   {course.guias.filter(g => g.completed).length}
                 </div>
               </div>

@@ -9,6 +9,7 @@ import {
   createPublicClient,
   createWalletClient,
   encodeFunctionData,
+  formatUnits,
   getContract,
   Hex,
   http,
@@ -17,7 +18,8 @@ import { celo, celoSepolia } from 'viem/chains'
 
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
-import type { GuideUsuario, CourseUsuario } from '@/db/db.d.ts'
+import type { CourseUsuario, DB, GuideUsuario, Usuario } from '@/db/db.d.ts'
+import { updateUserAndCoursePoints } from '@/lib/scores'
 
 interface WordPlacement {
   word: string
@@ -74,6 +76,7 @@ export async function POST(req: NextRequest) {
         submitError: 'Error al enviar el resultado a la blockchain: ',
         userNotFound: 'No se encontró el usuario para la billetera.',
         tokenMismatch: 'El token almacenado para el usuario no coincide con el token proporcionado.',
+        youReceived: "Recibiste",
         invalidCourse: 'ID de curso inválido',
         invalidGuide: 'ID de guía inválido',
         invalidToken: 'Token inválido',
@@ -95,6 +98,7 @@ export async function POST(req: NextRequest) {
         submitError: 'Error submitting result to the blockchain: ',
         userNotFound: 'User not found for wallet.',
         tokenMismatch: "Token stored for user doesn't match given token.",
+        youReceived: "You received",
         invalidCourse: 'Invalid course ID',
         invalidGuide: 'Invalid guide ID',
         invalidToken: 'Invalid token',
@@ -347,22 +351,34 @@ export async function POST(req: NextRequest) {
               paidAmount: statusArray[0],
               canSubmit: statusArray[1],
             }
+            scholarshipResult = tx
             console.log("OJO status=",status)
             const paidAmount = status.paidAmount
 
-            await db
-            .updateTable('guide_usuario')
-            .set({ amountpaid: paidAmount.toString() })
-            .where('usuario_id', '=', billeteraUsuario.usuario_id)
-            .where('actividadpf_id', '=', actividadpfId)
-            .execute()
-
-
-            scholarshipResult = tx
             if (mistakesInCW.length == 0) {
               retMessage += '\n' + msg[locale].correct
+
+              if (paidAmount > 0) {
+                await db
+                  .updateTable('guide_usuario')
+                  .set({ amountpaid: paidAmount.toString() })
+                  .where('usuario_id', '=', billeteraUsuario.usuario_id)
+                  .where('actividadpf_id', '=', actividadpfId)
+                  .execute()
+                retMessage += '\n' + msg[locale].youReceived + ' ' +
+                  formatUnits(paidAmount, 6) + 'USDT'
+              }
+
+              const learningscore = await updateUserAndCoursePoints(
+                db, usuario
+              )
+
             } else {
               retMessage += '\n' + msg[locale].incorrect
+              if (paidAmount > 0) {
+                console.log("*** PROBLEMA GRAVE, se pago a alguine que no tenía bien la respuesta, tx=", tx)
+                console.log(mistakesInCW)
+              }
             }
           } catch (err) {
             console.error('Error submitting transaction:', err)

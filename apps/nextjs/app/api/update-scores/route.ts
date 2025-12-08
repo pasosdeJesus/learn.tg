@@ -1,7 +1,8 @@
 'use server'
 
 import { IdentitySDK } from '@goodsdks/citizen-sdk'
-import { Kysely, sql, type Selectable, type Updateable } from 'kysely'
+import { Kysely, sql} from 'kysely'
+import type { Selectable, Updateable } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
 import { privateKeyToAccount } from 'viem/accounts'
 import { createPublicClient, createWalletClient, Hex, http } from 'viem'
