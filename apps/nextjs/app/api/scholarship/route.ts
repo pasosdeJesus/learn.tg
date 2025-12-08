@@ -100,18 +100,24 @@ export async function GET(req: NextRequest) {
     let canSubmit = false
     let amountPerGuide = 0
     let percentageCompleted = null
+    let amountScholarship = null
 
     // Obtener porcentaje completado del curso si hay usuario y curso válido
     if (retMessage === '' && billeteraUsuario && billeteraUsuario.usuario_id && !isNaN(courseIdNumber)) {
       try {
         const courseUsuario = await db
           .selectFrom('course_usuario')
-          .select('percentagecompleted')
+          .select(['percentagecompleted', 'amountscholarship'])
           .where('usuario_id', '=', billeteraUsuario.usuario_id)
           .where('proyectofinanciero_id', '=', courseIdNumber)
           .executeTakeFirst()
-        if (courseUsuario && courseUsuario.percentagecompleted !== null) {
-          percentageCompleted = Number(courseUsuario.percentagecompleted)
+        if (courseUsuario) {
+          if (courseUsuario.percentagecompleted !== null) {
+            percentageCompleted = Number(courseUsuario.percentagecompleted)
+          }
+          if (courseUsuario.amountscholarship !== null) {
+            amountScholarship = Number(courseUsuario.amountscholarship)
+          }
         }
       } catch (error) {
         console.error('Error fetching percentage completed:', error)
@@ -206,6 +212,7 @@ export async function GET(req: NextRequest) {
     console.log('** Normal exit with amountPerGuide=', amountPerGuide)
     console.log('** Normal exit with canSubmit=', canSubmit)
     console.log('** Normal exit with percentageCompleted=', percentageCompleted)
+    console.log('** Normal exit with amountScholarship=', amountScholarship)
     console.log('** Normal exit with message=', retMessage)
     return NextResponse.json(
       {
@@ -215,6 +222,7 @@ export async function GET(req: NextRequest) {
         amountPerGuide: amountPerGuide,
         canSubmit: canSubmit,
         percentageCompleted: percentageCompleted,
+        amountScholarship: amountScholarship,
         message: retMessage,
       },
       { status: 200 },

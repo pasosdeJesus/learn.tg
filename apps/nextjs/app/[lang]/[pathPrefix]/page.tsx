@@ -29,7 +29,7 @@ export default function Page({ params }: PageProps) {
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
 
-  const { course, loading, error, percentageCompleted } = useGuideData({
+  const { course, loading, error, percentageCompleted, amountScholarship } = useGuideData({
     lang,
     pathPrefix,
   })
@@ -121,6 +121,12 @@ export default function Page({ params }: PageProps) {
                   {lang === 'es' ? 'Total de guías aprovadas: ' : 'Total de guías aprovadas: '}
                   {course.guias.filter(g => g.completed).length}
                 </div>
+                {amountScholarship !== null && (
+                  <div className="text-sm text-gray-600 font-medium">
+                    {lang === 'es' ? 'Total en USDT ganado: ' : 'Total USDT earned: '}
+                    ${amountScholarship.toFixed(2)} USDT
+                  </div>
+                )}
               </div>
             </div>
           )}
