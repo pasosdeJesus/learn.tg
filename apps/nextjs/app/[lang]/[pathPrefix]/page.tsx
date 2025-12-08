@@ -7,6 +7,7 @@ import { useAccount } from 'wagmi'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 
 import { Button } from '@/components/ui/button'
+import { CompletedProgress } from '@/components/ui/completed-progress'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -109,11 +110,18 @@ export default function Page({ params }: PageProps) {
             {course.subtitulo}
           </h2>
           {percentageCompleted !== null && (
-            <div className="mt-4">
-              <span className="text-lg font-medium text-gray-700">
-                {lang === 'es' ? 'Completado: ' : 'Completed: '}
-                {Math.round(percentageCompleted)}%
-              </span>
+            <div className="mt-4 flex items-center justify-center gap-6">
+              <CompletedProgress progress={percentageCompleted} lang={lang} />
+              <div className="flex flex-col gap-1">
+                <div className="text-sm text-gray-600">
+                  {lang === 'es' ? 'Total de puntos en el curso: ' : 'Total points in course: '}
+                  {course.guias.length}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {lang === 'es' ? 'Total ganado en el curso: ' : 'Total earned in course: '}
+                  {course.guias.filter(g => g.completed).length}
+                </div>
+              </div>
             </div>
           )}
         </header>
