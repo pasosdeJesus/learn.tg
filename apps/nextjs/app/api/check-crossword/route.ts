@@ -20,6 +20,7 @@ import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 import type { CourseUsuario, DB, GuideUsuario, Usuario } from '@/db/db.d.ts'
 import { updateUserAndCoursePoints } from '@/lib/scores'
+import { callWriteFun } from '@/lib/crypto'
 
 interface WordPlacement {
   word: string
@@ -303,43 +304,19 @@ export async function POST(req: NextRequest) {
           retMessage += msg[locale].atLeast50
         } else if (canSubmit) {
           try {
-            const encodedData = encodeFunctionData({
-              abi: LearnTGVaultsAbi,
-              functionName: 'submitGuideResult',
-              args: [
+            let tx: Address = await callWriteFun(
+              publicClient,
+              account,
+              contract.write.submitGuideResult,
+              [
                 courseIdArg,
                 guideIdArg,
                 walletAddress as Address,
                 mistakesInCW.length == 0,
                 usuario.profilescore || 0,
               ],
-            })
-            console.log('encodedData=', encodedData)
-            let txData = encodedData
-            console.log('txData=', txData)
-            const tx = await walletClient.sendTransaction({
-              account,
-              to: contract.address,
-              data: txData as Hex,
-            })
-            console.log('tx=', tx)
-            try {
-              const receipt = await publicClient.waitForTransactionReceipt({
-                hash: tx,
-                confirmations: 2,
-                timeout: 2_000, 
-              })
-              // waitForTransactionReceipt has not worked anytime
-              // Control has not reach this point, but we leave it
-              // to give some time for the transaction to settel before
-              // querying the contract
-              console.log(`Receipt: ${receipt}`)
-
-            } catch (e) {
-              console.error(
-                `*waitForTransactionReceipt(${tx}) didnt work, continuing`,
-              )
-            }
+              0
+            )
             // VERIFICAR Y GUARDAR MONTO
             const statusArray: any = await contract.read.getStudentGuideStatus([
               courseIdArg,
