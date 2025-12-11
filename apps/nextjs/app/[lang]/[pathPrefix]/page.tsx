@@ -110,27 +110,23 @@ export default function Page({ params }: PageProps) {
           <h2 className="text-lg lg:text-xl font-semibold text-gray-600">
             {course.subtitulo}
           </h2>
-          {percentageCompleted !== null && (
-            <div className="mt-4 flex items-center justify-center gap-6">
-              <CompletedProgress progress={percentageCompleted} lang={lang} />
-              <div className="flex flex-col gap-1">
-                <div className="text-sm text-gray-600">
-                  {lang === 'es' ? 'Total de guias en el curso: ' : 'Total of guides in course: '}
-                  {course.guias.length}
-                </div>
-                <div className="text-sm text-gray-600">
-                  {lang === 'es' ? 'Total de guías aprovadas: ' : 'Total de guías aprovadas: '}
-                  {course.guias.filter(g => g.completed).length}
-                </div>
-                {amountScholarship !== null && (
-                  <div className="text-sm text-gray-600 font-medium">
-                    {lang === 'es' ? 'Total en USDT ganado: ' : 'Total USDT earned: '}
-                    ${formatUnits(BigInt(amountScholarship), 6)} USDT
-                  </div>
-                )}
+          <div className="mt-4 flex items-center justify-center gap-6">
+            <CompletedProgress progress={percentageCompleted || 0} lang={lang} />
+            <div className="flex flex-col gap-1">
+              <div className="text-sm text-gray-600">
+                {lang === 'es' ? 'Total de guias en el curso: ' : 'Total of guides in course: '}
+                {course.guias.length}
+              </div>
+              <div className="text-sm text-gray-600">
+                {lang === 'es' ? 'Total de guías aprovadas: ' : 'Total de guías aprovadas: '}
+                {course.guias.filter(g => g.completed).length}
+              </div>
+              <div className="text-sm text-gray-600 font-medium">
+                {lang === 'es' ? 'Total en USDT ganado: ' : 'Total USDT earned: '}
+                ${formatUnits(BigInt(amountScholarship || 0), 6)} USDT
               </div>
             </div>
-          )}
+          </div>
         </header>
 
         <figure className="my-6">

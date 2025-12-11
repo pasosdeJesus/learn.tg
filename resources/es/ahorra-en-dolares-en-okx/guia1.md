@@ -24,7 +24,7 @@ comisiones que OKX normalmente cobra en tus transacciones de trading!
    Te insitamos a revisar más recomendaciones en [Cómo proteger tu cuenta de exchange de criptomonedas en OKX](https://www.okx.com/es-la/learn/account-security-on-okex)
 7. Tras esto podrás acceder el tablero de control de tu cuenta en OKX.
 
-### 2. Instala la aplicación de OKX en tu celular
+# 2. Instala la aplicación de OKX en tu celular
 
 La aplicación de OKX para celular suele ser más
 práctica para las operaciones típicas de compra y venta de
@@ -37,7 +37,7 @@ Esta aplicación incluye la billetera OKX que podrás usar para ingresar
 a este sitio.
 
 
-### 3. Verifica tu identidad
+# 3. Verifica tu identidad
 
 Para la verificación tendrás que enviar foto de tu cédula y hacerte una 
 selfie.
@@ -55,3 +55,13 @@ Mira el estado de tu verificación y completala así:
 3. Desde la pestaña \`Perfil\` presiona sobre \`Verificación\`:
 
 > ![Mensaje pasosdeJesus.org te ha invitado](/img/verif3.jpg)
+
+# 4. Preguntas de comprensión de lectura
+
+1. Al registrarse a OKX con nuestro enlace de referido, recibe ___ porciento de
+   descuento en tasas de intercambio. (quince) 
+2. Después de registarte puedes descargar la ___ para tu telefono --sin tilde
+   (aplicacion)
+3. Una vez instales la aplicación, para usar el Exchange, tendrás que
+   verificar tu identidad mediante una ___ de tu documento de identidad. (foto)
+
