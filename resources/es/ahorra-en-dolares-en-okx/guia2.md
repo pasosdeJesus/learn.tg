@@ -164,3 +164,11 @@ Es riesgoso el trading con cripto-activos que no son estabales
 (como Bitcoin, Ethereum y otros que no están pegados al oro o a una 
 moneda estable).
 
+
+## 7. Coprensión de lectura
+
+1. ___ es un stablecoin que puedes comprar y ahorrar en OKX. (USDT)
+2. El mercado ___ en la aplicación OKX le permite comprar y vender USDT. (P2P)
+3. Al vender USDT en el mercado P2P, solo después de confirmar que ha
+   recibido el pago en su medio de pago debe presionar el boton ___. (liberar)
+4. Al poner USDT en ahorro ___ puede retirarlo en cualquier momento. (flexible)
