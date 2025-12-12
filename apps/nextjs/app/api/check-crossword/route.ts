@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         cannotSubmit:
           'Estás es un periodo de espera de 24 horas desde tu último envío para este curso. No puedes enviar resultado para beca en este momento.',
         contractError: 'No se pudo conectar con el contrato de becas.',
-        correctPoint: '¡Respuesta correcta! +1 punto. ',
+        correctPoint: '¡Respuesta correcta! 1 punto. ',
         correct:
           'Se ha enviado tu resultado para beca, por favor espera 24 horas antes de volver a enviar para este curso.',
         incorrect:
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
         contractError: 'Could not connect to scholarship contract.',
         correct:
           'Your result has been submitted for scholarship, please waith 24 hours before submitting again answers for this course.',
-        correctPoint: 'Correct answer! +1 point. ',
+        correctPoint: 'Correct answer! 1 point. ',
         incorrect:
           "\nWrong answer. Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
         noWallet: 'Your answer will not be graded nor will possible scholarships be sought.',
@@ -228,11 +228,11 @@ export async function POST(req: NextRequest) {
         console.log('      After insert igp.points=', igp.points)
       } else {
         await db.updateTable('guide_usuario')
-          .set({ points: ug[0].points + 1 })
+          .set({ points: 1 })
           .where('usuario_id', '=', billeteraUsuario.usuario_id)
           .where('actividadpf_id', '=', actividadpfId)
           .execute();
-        console.log('      After update points=', ug[0].points + 1 )
+        console.log('      After update points=1')
       }
       retMessage += msg[locale].correctPoint
     }
