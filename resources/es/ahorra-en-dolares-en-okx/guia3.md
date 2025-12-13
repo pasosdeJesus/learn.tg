@@ -47,3 +47,16 @@ instala la extension OKX Wallet en tu navegador:
 
 Una vez tengas instalada la billetera presiona el botón \`Ingresar\` y después
 ve a la [página de inicio de este sitio](/) para ver más cursos.
+
+
+# 4. Preguntas de comprensión
+
+1. Con una billetera web3 tu eres el ___ de proteger la frase semilla.
+   (responsable)
+2. Tu billetera Web3 queda protegida por una frase semilla de ___ palabras.
+   (doce)
+3. Después de crear tu billetera web3 e ingresar a este sitio con esta, 
+   presiona el botón "___Wallet" para ver más cursos. (Connect)
+4. En la aplicación OKX, puedes crear o usar tu billetera desde la pestaña
+   principal al seleccionar la opción ___ de la parte superior. (web3)
+

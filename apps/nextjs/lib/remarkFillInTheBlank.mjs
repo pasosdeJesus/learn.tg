@@ -16,7 +16,7 @@ export function remarkFillInTheBlank(options) {
     let n = []
     globalThis.fillInTheBlank = []
     for (let i = 0; i < l.length; i++) {
-      const re = /^(.*___.*)\s+\(([A-Za-záéíóúñüÁÉÍÓÚÑÜ]*)*\)\s*$/s
+      const re = /^(.*___.*)\s+\(([0-9A-Za-záéíóúñüÁÉÍÓÚÑÜ]*)*\)\s*$/s
       let rm = ''
       if (
         l[i].type == 'list' &&
