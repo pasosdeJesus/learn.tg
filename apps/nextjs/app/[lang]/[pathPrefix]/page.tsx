@@ -6,7 +6,6 @@ import { useAccount } from 'wagmi'
 
 import { useGuideData } from '@/lib/hooks/useGuideData'
 
-import { Button } from '@/components/ui/button'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -30,7 +29,7 @@ export default function Page({ params }: PageProps) {
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
 
-  const { course, loading, error, percentageCompleted, amountScholarship } = useGuideData({
+  const { course, loading, error, percentageCompleted, percentagePaid, amountScholarship } = useGuideData({
     lang,
     pathPrefix,
   })
@@ -111,7 +110,7 @@ export default function Page({ params }: PageProps) {
             {course.subtitulo}
           </h2>
           <div className="mt-4 flex items-center justify-center gap-6">
-            <CompletedProgress progress={percentageCompleted || 0} lang={lang} />
+            <CompletedProgress percentageCompleted={percentageCompleted || 0} percentagePaid={percentagePaid || 0} lang={lang} />
             <div className="flex flex-col gap-1">
               <div className="text-sm text-gray-600">
                 {lang === 'es' ? 'Total de guias en el curso: ' : 'Total of guides in course: '}

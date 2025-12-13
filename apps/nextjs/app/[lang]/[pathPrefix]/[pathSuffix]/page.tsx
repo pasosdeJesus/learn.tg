@@ -1,23 +1,22 @@
 'use client'
 
-import { use, useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
-import { useAccount } from 'wagmi'
-import { useSession } from 'next-auth/react'
 import axios from 'axios'
-
-import { useGuideData } from '@/lib/hooks/useGuideData'
-import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
-
-import { Button } from '@/components/ui/button'
-import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
-import { unified } from 'unified'
+import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+import { use, useEffect, useState, useCallback } from 'react'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
+import { unified } from 'unified'
+import { useAccount } from 'wagmi'
+
+import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
+import { Button } from '@/components/ui/button'
+import { useGuideData } from '@/lib/hooks/useGuideData'
+import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 type PageProps = {
   params: Promise<{

@@ -98,6 +98,20 @@ describe('useGuideData', () => {
   })
 
   it('should fetch course data successfully', async () => {
+    axiosGetMock.mockImplementation((url: string) => {
+      if (url.includes('/api/guide-status')) {
+        // Mock first guide as completed
+        if (url.includes('guideNumber=1')) {
+            return Promise.resolve({ data: { completed: true, receivedScholarship: false } })
+        }
+        return Promise.resolve({ data: { completed: false, receivedScholarship: false } })
+      }
+      if (url.includes('presenta')) {
+        return Promise.resolve({ data: mockCourse })
+      }
+      return Promise.resolve({ data: [mockCourse] })
+    })
+
     const { result } = renderHook(() =>
       useGuideData({ lang: 'en', pathPrefix: 'test' })
     )
@@ -109,7 +123,7 @@ describe('useGuideData', () => {
     expect(result.current.course).toBeTruthy()
     expect(result.current.course?.id).toBe('course-1')
     expect(result.current.error).toBe(null)
-    expect(result.current.percentageCompleted).toBe(75.5)
+    expect(result.current.percentageCompleted).toBe(50)
   })
 
   it('should handle session/address mismatch (early return)', async () => {
@@ -314,3 +328,4 @@ describe('useGuideData', () => {
     expect(result.current.course?.guias[1].completed).toBe(false)
   })
 })
+

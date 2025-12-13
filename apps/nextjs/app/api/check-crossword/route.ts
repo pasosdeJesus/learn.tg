@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
     }
     console.log('OJO usuario=', usuario)
     const guides = await sql<any>`
-      SELECT id, nombrecorto, "sufijoRuta"
+      SELECT id, nombrecorto, "sufijoRuta", proyectofinanciero_id
       FROM cor1440_gen_actividadpf
       WHERE proyectofinanciero_id = ${courseId}
       AND "sufijoRuta" IS NOT NULL
@@ -399,4 +399,5 @@ export async function POST(req: NextRequest) {
     })
   }
 }
+
 

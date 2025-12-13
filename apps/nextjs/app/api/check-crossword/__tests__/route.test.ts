@@ -88,6 +88,9 @@ describe('API /api/check-crossword', () => {
         studentCanSubmit: vi.fn().mockResolvedValue(true),
         getStudentGuideStatus: mockGetStudentGuideStatus,
       },
+      write: {
+        submitGuideResult: vi.fn().mockResolvedValue('0xmocktxhash'),
+      },
     })
   })
 
@@ -155,7 +158,7 @@ describe('API /api/check-crossword', () => {
     const res = await POST(req)
     expect(res.status).toBe(401)
     const data = await res.json()
-    expect(data.error).toMatch(/Token stored for user doesn't match/i)
+    expect(data.error).toMatch(/Token stored for user doesn\'t match/i)
   })
 
   it('POST con respuestas incorrectas devuelve probs con índice de palabra', async () => {

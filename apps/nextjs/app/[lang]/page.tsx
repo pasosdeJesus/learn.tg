@@ -15,41 +15,36 @@ type PageProps = {
     lang: string
   }>
 }
+
 interface Course {
-  id: string
+  id: number
   idioma: string
   prefijoRuta: string
   imagen: string
   titulo: string
   subtitulo: string
-  vaultCreated?: boolean
-  vaultBalance?: number
-  amountPerGuide?: number
-  canSubmit?: boolean
 }
-interface CourseComplete {
-  id: string
-  idioma: string
-  prefijoRuta: string
-  imagen: string
-  titulo: string
-  subtitulo: string
+
+interface CourseExtra {
   vaultCreated: boolean
   vaultBalance: number
   amountPerGuide: number
   canSubmit: boolean
+  percentageCompleted: number
+  percentagePaid: number
 }
 
 export default function Page({ params }: PageProps) {
   const { address } = useAccount()
   const { data: session } = useSession()
 
-  const [coursesj, setCoursesj] = useState<Array<CourseComplete>>([])
-  const [extCourses, setExtCourses] = useState({ map: new Map() })
+  const [courses, setCourses] = useState<Course[]>([])
+  const [extCourses, setExtCourses] = useState<Map<number, CourseExtra>>(
+    new Map(),
+  )
   const [donateCourseId, setDonateCourseId] = useState<number | null>(null)
   const [toastMsg, setToastMsg] = useState<string>('')
   const [toastOpen, setToastOpen] = useState<boolean>(false)
-  const publicClient = usePublicClient()
 
   const parameters = use(params)
   const { lang } = parameters
@@ -58,84 +53,78 @@ export default function Page({ params }: PageProps) {
     if (
       (session && !address) ||
       (address && !session) ||
-      (address && session && session.address && address != session.address)
+      (address && session && session.address && address !== session.address)
     ) {
       return
     }
-    const configurar = async () => {
-      if (process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL == undefined) {
+
+    const configure = async () => {
+      if (!process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL) {
         alert('NEXT_PUBLIC_API_BUSCA_CURSOS_URL not defined')
         return
       }
-      let url = process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL
-      url += `?filtro[busidioma]=${lang}`
-      console.log('session=', session)
-      console.log('address=', address)
+
+      let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?filtro[busidioma]=${lang}`
       let csrfToken = null
-      if (session && address && session.address && session.address == address) {
+
+      if (session && address && session.address === address) {
         csrfToken = await getCsrfToken()
-        url +=
-          '&filtro[busconBilletera]=true' +
-          `&walletAddress=${session.address}` +
-          `&token=${csrfToken}`
+        url += `&filtro[busconBilletera]=true&walletAddress=${session.address}&token=${csrfToken}`
       }
-      console.log('url=', url)
-      axios
-        .get(url)
-        .then((response) => {
-          if (response.data) {
-            const courseInfo = response.data
-            setCoursesj(courseInfo)
-            courseInfo.forEach((course: Course) => {
-              let url2 = `/api/scholarship?courseId=${course.id}`
-              if (csrfToken) {
-                url2 +=
-                  `&walletAddress=${session!.address}` + `&token=${csrfToken}`
+
+      try {
+        const response = await axios.get<Course[]>(url)
+        if (response.data) {
+          const courseInfo = response.data
+          setCourses(courseInfo)
+
+          courseInfo.forEach(async (course) => {
+            let url2 = `/api/scholarship?courseId=${course.id}`
+            if (csrfToken) {
+              url2 += `&walletAddress=${session!.address}&token=${csrfToken}`
+            }
+            try {
+              const response2 = await axios.get(url2)
+              if (response2.data.message) {
+                console.error(
+                  'Error message received:',
+                  response2.data.message,
+                )
+                alert(response2.data.message)
+                return
               }
-              console.log('** url2=', url2)
-              axios
-                .get(url2)
-                .then((response2) => {
-                  console.log('** response2=', response2)
-                  if (response2.data.message == undefined) {
-                    console.error('Response without data.message')
-                    alert('Response without data.message')
-                  } else if (response2.data.message != '') {
-                    console.error(
-                      'Error message received:',
-                      response2.data.message,
-                    )
-                    alert(response2.data.message)
-                  }
-                  setExtCourses((prevState) => ({
-                    map: prevState.map.set(response2.data.courseId, {
-                      vaultCreated: response2.data.vaultCreated,
-                      vaultBalance: +response2.data.vaultBalance,
-                      amountPerGuide: +response2.data.amountPerGuide,
-                      canSubmit: response2.data.canSubmit,
-                      percentageCompleted: response2.data.percentageCompleted,
-                    }),
-                  }))
-                })
-                .catch((error) => {
-                  alert(error)
-                  console.error(error)
-                })
-            })
-          }
-        })
-        .catch((error) => {
-          alert(error)
-          console.error(error)
-        })
+
+              const extraData: CourseExtra = {
+                vaultCreated: response2.data.vaultCreated,
+                vaultBalance: +response2.data.vaultBalance,
+                amountPerGuide: +response2.data.amountPerGuide,
+                canSubmit: response2.data.canSubmit,
+                percentageCompleted: response2.data.percentageCompleted,
+                percentagePaid: response2.data.percentagePaid,
+              }
+
+              setExtCourses((prevMap) =>
+                new Map(prevMap.set(response2.data.courseId, extraData)),
+              )
+            } catch (error) { 
+              alert(error)
+              console.error(error)
+            }
+          })
+        }
+      } catch (error) {
+        alert(error)
+        console.error(error)
+      }
     }
-    configurar()
+
+    configure()
   }, [session, address, lang])
 
   if (
     (session && !address) ||
     (address && !session) ||
-    (address && session && session.address && address != session.address)
+    (address && session && session.address && address !== session.address)
   ) {
     return (
       <div className="p-10 mt-10">
@@ -145,33 +134,32 @@ export default function Page({ params }: PageProps) {
   }
 
   const refreshCourseVault = async (courseId: number) => {
-    if (!session || !address || !session.address || session.address != address)
-      return
+    if (!session || !address || !session.address || session.address !== address) return
     const csrfToken = await getCsrfToken()
-    const url2 =
-      `/api/scholarship?courseId=${courseId}` +
-      `&walletAddress=${session.address}` +
-      `&token=${csrfToken}`
-    axios
-      .get(url2)
-      .then((response2) => {
-        if (response2.data && response2.data.message == '') {
-          setExtCourses((prevState) => ({
-            map: prevState.map.set(response2.data.courseId, {
-              vaultCreated: response2.data.vaultCreated,
-              vaultBalance: +response2.data.vaultBalance,
-              amountPerGuide: +response2.data.amountPerGuide,
-              canSubmit: response2.data.canSubmit,
-              percentageCompleted: response2.data.percentageCompleted,
-            }),
-          }))
+    const url2 = `/api/scholarship?courseId=${courseId}&walletAddress=${session.address}&token=${csrfToken}`
+
+    try {
+      const response2 = await axios.get(url2)
+      if (response2.data && !response2.data.message) {
+        const extraData: CourseExtra = {
+          vaultCreated: response2.data.vaultCreated,
+          vaultBalance: +response2.data.vaultBalance,
+          amountPerGuide: +response2.data.amountPerGuide,
+          canSubmit: response2.data.canSubmit,
+          percentageCompleted: response2.data.percentageCompleted,
+          percentagePaid: response2.data.percentagePaid,
         }
-      })
-      .catch((error) => console.error(error))
+        setExtCourses((prevMap) =>
+          new Map(prevMap.set(response2.data.courseId, extraData)),
+        )
+      }
+    } catch (error) {
+      console.error(error)
+    }
   }
 
-  let handleDonate = (courseId: Number) => {
-    setDonateCourseId(Number(courseId))
+  const handleDonate = (courseId: number) => {
+    setDonateCourseId(courseId)
   }
 
   const handleDonationSuccess = () => {
@@ -184,97 +172,99 @@ export default function Page({ params }: PageProps) {
       <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {coursesj.map((course) => (
-              <div
-                key={course.id}
-                className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
-              >
-                <a href={`/${course.idioma}${course.prefijoRuta}`}>
-                  <div className="img-course">
-                    {course.imagen && course.imagen[0] == '/' && (
-                      <Image
-                        className="w-full h-[17rem] pt-2 object-cover"
-                        src={course.imagen}
-                        alt={course.titulo}
-                        width={680}
-                        height={272}
-                      />
-                    )}
-                  </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      {course.titulo}
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-3">
-                      {course.subtitulo}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center p-4">
-                    <div>
-                      { extCourses.map.get(course.id) &&
-                        extCourses.map.get(course.id).amountPerGuide > 0 && (
-                        <div className="p-2">
-                          <span>
-                            {lang === 'es' ? 'Beca de ' : 'Scholarship of '}$
-                            {extCourses.map.get(course.id).amountPerGuide} USDT
-                            {lang === 'es' ? ' por guía. ' : ' per guide.'}
-                          </span>
-                        </div>
-                      )}
-                      { extCourses.map.get(course.id) &&
-                        extCourses.map.get(course.id).amountPerGuide > 0 &&
-                        session &&
-                        session.address &&
-                        extCourses.map.get(course.id).percentageCompleted < 100 &&
-                        !extCourses.map.get(course.id).canSubmit && (
-                        <div className="p-2">
-                          <span style={{ color: 'red' }}>
-                            {lang === 'es'
-                              ? 'Aunque estás en etapa de enfriamiento'
-                              : 'Although you are in cooldown period.'}
-                          </span>
-                        </div>
-                      )}
-                      { extCourses.map.get(course.id) &&
-                        extCourses.map.get(course.id).amountPerGuide > 0 &&
-                        extCourses.map.get(course.id).canSubmit &&
-                        extCourses.map.get(course.id).percentageCompleted < 100 && (
-                        <div className="p-2 !text-green">
-                          <span style={{ color: 'green' }}>
-                            {lang === 'es'
-                              ? 'Eres elegible.'
-                              : 'You are elegible.'}
-                          </span>
-                        </div>
+            {courses.map((course) => {
+              const extra = extCourses.get(course.id)
+
+              return (
+                <div
+                  key={course.id}
+                  className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
+                >
+                  <a href={`/${course.idioma}${course.prefijoRuta}`}>
+                    <div className="img-course">
+                      {course.imagen && course.imagen.startsWith('/') && (
+                        <Image
+                          className="w-full h-[17rem] pt-2 object-cover"
+                          src={course.imagen}
+                          alt={course.titulo}
+                          width={680}
+                          height={272}
+                        />
                       )}
                     </div>
-                    {extCourses.map.get(course.id) && (
-                      <CompletedProgress
-                        progress={extCourses.map.get(course.id).percentageCompleted || 0}
-                        lang={lang}
-                      />
-                    )}
-                  </div>
-                </a>
-                {extCourses.map.get(course.id) &&
-                  extCourses.map.get(course.id).vaultCreated && (
-                    <div className="p-2 bg-green flex items-center gap-3 justify-between">
-                      <div className="text-sm">
-                        {lang === 'es' ? 'En boveda: ' : 'In vault: '}$
-                        {extCourses.map.get(course.id).vaultBalance} USDT
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                        {course.titulo}
+                      </h3>
+                      <p className="text-sm text-gray-600 line-clamp-3">
+                        {course.subtitulo}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center p-4">
+                      <div>
+                        {extra && extra.amountPerGuide > 0 && (
+                          <div className="p-2">
+                            <span>
+                              {lang === 'es' ? 'Beca de ' : 'Scholarship of '}$
+                              {extra.amountPerGuide} USDT
+                              {lang === 'es' ? ' por guía.' : ' per guide.'}
+                            </span>
+                          </div>
+                        )}
+                        {extra &&
+                          extra.amountPerGuide > 0 &&
+                          session?.address &&
+                          extra.percentageCompleted < 100 &&
+                          !extra.canSubmit && (
+                            <div className="p-2">
+                              <span className="text-red-500">
+                                {lang === 'es'
+                                  ? 'Aunque estás en etapa de enfriamiento'
+                                  : 'Although you are in cooldown period.'}
+                              </span>
+                            </div>
+                          )}
+                        {extra &&
+                          extra.amountPerGuide > 0 &&
+                          extra.canSubmit &&
+                          extra.percentageCompleted < 100 && (
+                            <div className="p-2 text-green-600">
+                              <span className="text-green-600">
+                                {lang === 'es'
+                                  ? 'Eres elegible.'
+                                  : 'You are eligible.'}
+                              </span>
+                            </div>
+                          )}
                       </div>
-                      {session && session.address && (
+                      {extra && (
+                        <CompletedProgress
+                          percentageCompleted={extra.percentageCompleted || 0}
+                          percentagePaid={extra.percentagePaid || 0}
+                          lang={lang}
+                        />
+                      )}
+                    </div>
+                  </a>
+                  {extra && extra.vaultCreated && (
+                    <div className="p-4 bg-green-100 flex items-center gap-3 justify-between">
+                      <div className="text-sm text-green-800">
+                        {lang === 'es' ? 'En bóveda: ' : 'In vault: '}$
+                        {extra.vaultBalance} USDT
+                      </div>
+                      {session?.address && (
                         <Button
-                          onClick={() => handleDonate(+course.id)}
+                          onClick={() => handleDonate(course.id)}
                           size="sm"
                         >
-                          Donate for this course
+                          {lang === 'es' ? 'Donar a este curso' : 'Donate for this course'}
                         </Button>
                       )}
                     </div>
                   )}
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
         </div>
         <DonateModal
@@ -295,7 +285,7 @@ export default function Page({ params }: PageProps) {
           duration={5000}
           className="bg-primary text-primary-foreground rounded px-4 py-3 text-sm shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
         >
-          <Toast.Title className="font-medium">{toastMsg}</Toast.Title>
+          <Toast.Title className="font-bold">{toastMsg}</Toast.Title>
           <Toast.Close className="absolute top-1 right-2 text-primary-foreground/70 hover:text-primary-foreground">
             ×
           </Toast.Close>

@@ -53,7 +53,10 @@ export function useGuideData({
   const [nextGuidePath, setNextGuidePath] = useState('')
   const [previousGuidePath, setPreviousGuidePath] = useState('')
   const [coursePath, setCoursePath] = useState('')
-  const [percentageCompleted, setPercentageCompleted] = useState<number | null>(null)
+  const [percentageCompleted, setPercentageCompleted] = useState<number | null>(
+    null,
+  )
+  const [percentagePaid, setPercentagePaid] = useState<number | null>(null)
   const [amountScholarship, setAmountScholarship] = useState<number | null>(null)
 
   useEffect(() => {
@@ -83,7 +86,6 @@ export function useGuideData({
           url += `&walletAddress=${session.address}&token=${csrfToken}`
         }
 
-        console.log(`useGuideData: Fetching ${url}`)
         const courseListResponse = await axios.get(url)
 
         if (!courseListResponse.data || courseListResponse.data.length !== 1) {
@@ -104,26 +106,8 @@ export function useGuideData({
           detailUrl += `&walletAddress=${session.address}&token=${csrfToken}`
         }
 
-        console.log(`useGuideData: Fetching ${detailUrl}`)
         const detailResponse = await axios.get(detailUrl)
         const detailedCourse = detailResponse.data
-
-        // Fetch percentage completed and scholarship amount
-        if (session && address && detailedCourse.id) {
-          try {
-            const scholarshipUrl = `/api/scholarship?courseId=${detailedCourse.id}&walletAddress=${address}&token=${csrfToken}`
-            const scholarshipRes = await axios.get(scholarshipUrl)
-            if (scholarshipRes.data.percentageCompleted !== null) {
-              setPercentageCompleted(Number(scholarshipRes.data.percentageCompleted))
-            }
-            if (scholarshipRes.data.amountScholarship !== null) {
-              setAmountScholarship(Number(scholarshipRes.data.amountScholarship))
-            }
-          } catch (err) {
-            console.error('Error fetching scholarship data:', err)
-            // Don't fail the whole request
-          }
-        }
 
         const guideStatusPromises = detailedCourse.guias.map((_: Guide, index: number) => {
           if (session && address && detailedCourse.id) {
@@ -140,6 +124,31 @@ export function useGuideData({
           completed: guideStatuses[index].data.completed,
           receivedScholarship: guideStatuses[index].data.receivedScholarship,
         }))
+
+        if (session && address && detailedCourse.id) {
+          try {
+            const scholarshipUrl = `/api/scholarship?courseId=${detailedCourse.id}&walletAddress=${address}&token=${csrfToken}`
+            const scholarshipRes = await axios.get(scholarshipUrl)
+            if (scholarshipRes.data.amountScholarship !== null) {
+              setAmountScholarship(Number(scholarshipRes.data.amountScholarship))
+            }
+            
+            const completedGuides = guidesWithStatus.filter((g: Guide) => g.completed).length
+            const paidGuides = guidesWithStatus.filter((g: Guide) => g.receivedScholarship).length
+            const totalGuides = guidesWithStatus.length
+
+            if (totalGuides > 0) {
+                setPercentageCompleted((completedGuides / totalGuides) * 100)
+                setPercentagePaid((paidGuides / totalGuides) * 100)
+            } else {
+                setPercentageCompleted(0)
+                setPercentagePaid(0)
+            }
+
+          } catch (err) {
+            console.error('Error fetching scholarship amount:', err)
+          }
+        }
 
         const fullCourse: Course = {
           ...basicCourse,
@@ -193,6 +202,7 @@ export function useGuideData({
     previousGuidePath,
     coursePath,
     percentageCompleted,
+    percentagePaid,
     amountScholarship,
   }
 }
