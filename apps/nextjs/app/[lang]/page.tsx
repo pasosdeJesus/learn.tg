@@ -137,6 +137,7 @@ export default function Page({ params }: PageProps) {
     if (!session || !address || !session.address || session.address !== address) return
     const csrfToken = await getCsrfToken()
     const url2 = `/api/scholarship?courseId=${courseId}&walletAddress=${session.address}&token=${csrfToken}`
+    console.log("OJO url2=", url2)
 
     try {
       const response2 = await axios.get(url2)
