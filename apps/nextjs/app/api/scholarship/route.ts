@@ -101,8 +101,9 @@ export async function GET(req: NextRequest) {
           SELECT 
             (COUNT(CASE WHEN gu.points > 0 THEN 1 END) * 100.0 / COUNT(a.id)) as percentage_completed,
             (COUNT(CASE WHEN gu.amountpaid > 0 THEN 1 END) * 100.0 / COUNT(a.id)) as percentage_paid
-          FROM actividadpf AS a
-          LEFT JOIN guide_usuario AS gu ON a.id = gu.actividadpf_id AND gu.usuario_id = ${billeteraUsuario.usuario_id}
+          FROM cor1440_gen_actividadpf AS a
+          LEFT JOIN guide_usuario AS gu ON a.id = gu.actividadpf_id 
+          AND gu.usuario_id = ${billeteraUsuario.usuario_id}
           WHERE a.proyectofinanciero_id = ${courseIdNumber}
         `.execute(db)
 
