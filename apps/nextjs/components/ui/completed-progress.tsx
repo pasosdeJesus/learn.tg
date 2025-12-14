@@ -19,12 +19,11 @@ const CombinedCircularProgress = ({
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
 
-  // Clamp values between 0 and 100
   const clampedCompleted = Math.min(100, Math.max(0, percentageCompleted))
-  const clampedPaid = Math.min(100, Math.max(0, percentagePaid))
+  const clampedPaid = Math.min(clampedCompleted, Math.max(0, percentagePaid))
 
-  const offsetCompleted = circumference - (clampedCompleted / 100) * circumference
-  const offsetPaid = circumference - (clampedPaid / 100) * circumference
+  const completedSegment = (clampedCompleted / 100) * circumference
+  const paidSegment = (clampedPaid / 100) * circumference
 
   const isCourseCompleted = clampedCompleted >= 100
 
@@ -32,46 +31,45 @@ const CombinedCircularProgress = ({
     <div
       className="relative flex items-center justify-center"
       style={{ width: size, height: size }}
-      title={lang === 'es' ? `${Math.round(clampedPaid)}% pagado de lo completado` : `${Math.round(clampedPaid)}% paid of completed`}
     >
       <svg width={size} height={size} className="transform -rotate-90">
-        {/* Background Circle */}
+        {/* Background Circle (Gray) */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           strokeWidth={strokeWidth}
-          className="text-gray-200"
+          className="text-gray-300"
           fill="transparent"
           stroke="currentColor"
         />
-        {/* Completed Progress (Bottom Layer) */}
+
+        {/* Completed Progress (Yellow) */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           strokeWidth={strokeWidth}
-          className="text-primary/30 transition-all duration-500" // Lighter color for completed
+          className="text-yellow-400"
           fill="transparent"
           stroke="currentColor"
           strokeDasharray={circumference}
-          strokeDashoffset={offsetCompleted}
-          strokeLinecap="round"
+          strokeDashoffset={circumference - completedSegment}
+          strokeLinecap="butt" // Use 'butt' to avoid rounded edges overlapping
         />
-        {/* Paid Progress (Top Layer) */}
+
+        {/* Paid Progress (Green) - Rendered on top of the yellow */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           strokeWidth={strokeWidth}
-          className={`transition-all duration-500 ${
-            isCourseCompleted ? 'text-green-500' : 'text-primary'
-          }`}
+          className="text-green-500"
           fill="transparent"
           stroke="currentColor"
           strokeDasharray={circumference}
-          strokeDashoffset={offsetPaid}
-          strokeLinecap="round"
+          strokeDashoffset={circumference - paidSegment}
+          strokeLinecap="butt" // Use 'butt' to ensure clean lines
         />
       </svg>
       <div className="absolute flex flex-col items-center justify-center">
@@ -99,7 +97,8 @@ const CombinedCircularProgress = ({
             <span className="text-xs text-gray-500">
               {lang === 'es' ? 'Avance' : 'Progress'}
             </span>
-          </>)}
+          </>
+        )}
       </div>
     </div>
   )

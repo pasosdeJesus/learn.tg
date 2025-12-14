@@ -149,6 +149,7 @@ export default function Page({ params }: PageProps) {
           percentageCompleted: response2.data.percentageCompleted,
           percentagePaid: response2.data.percentagePaid,
         }
+        console.log("OJO extraData=", extraData)
         setExtCourses((prevMap) =>
           new Map(prevMap.set(response2.data.courseId, extraData)),
         )

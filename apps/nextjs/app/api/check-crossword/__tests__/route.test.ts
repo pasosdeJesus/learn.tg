@@ -79,7 +79,7 @@ describe('API /api/check-crossword', () => {
     process.env.PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
     process.env.NEXT_PUBLIC_DEPLOYED_AT = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
 
-    mockSql.execute.mockResolvedValue({ rows: [{ id: 101, sufijoRuta: 'test-guide' }] })
+    mockSql.execute.mockResolvedValue({ rows: [{ id: 101, sufijoRuta: 'test-guide', proyectofinanciero_id: 1 }] })
 
     mockGetContract.mockReturnValue({
       address: '0xmockContractAddress',

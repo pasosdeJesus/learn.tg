@@ -113,11 +113,11 @@ export default function Page({ params }: PageProps) {
             <CompletedProgress percentageCompleted={percentageCompleted || 0} percentagePaid={percentagePaid || 0} lang={lang} />
             <div className="flex flex-col gap-1">
               <div className="text-sm text-gray-600">
-                {lang === 'es' ? 'Total de guias en el curso: ' : 'Total of guides in course: '}
+                {lang === 'es' ? 'Total de guias en el curso: ' : 'Total number of guides in the course: '}
                 {course.guias.length}
               </div>
               <div className="text-sm text-gray-600">
-                {lang === 'es' ? 'Total de guías aprovadas: ' : 'Total de guías aprovadas: '}
+                {lang === 'es' ? 'Total de guías aprobadas: ' : 'Total number of approved guides: '}
                 {course.guias.filter(g => g.completed).length}
               </div>
               <div className="text-sm text-gray-600 font-medium">
