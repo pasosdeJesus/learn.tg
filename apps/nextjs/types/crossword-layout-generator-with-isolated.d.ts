@@ -1,1 +1,1 @@
-declare module 'crossword-layout-generator-with-isolated'
+declare module 'crossword-layout-generator-with-isolated';

@@ -1,10 +1,14 @@
+/// <reference types="vitest/globals" />
+
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import Page from '../page.tsx'
 import React, { Suspense } from 'react'
+import axios from 'axios'
 
-// Mock next/navigation
+// Mock entire modules first
+vi.mock('axios')
 vi.mock('next/navigation', () => ({
   usePathname: () => '/en',
   useRouter: () => ({
@@ -14,66 +18,23 @@ vi.mock('next/navigation', () => ({
   }),
   useSearchParams: () => new URLSearchParams(),
 }))
+vi.mock('next-auth/react')
+vi.mock('wagmi')
 
-// Mock axios (permite reasignar comportamiento por test)
-// Definiciones antes de mocks para evitar hoisting issues
-interface Course {
-  id: string
-  idioma: string
-  prefijoRuta: string
-  imagen: string
-  titulo: string
-  subtitulo: string
-  amountPerGuide?: number
-  canSubmit?: boolean
-}
-type AxiosGetReturn = { data: any }
-const axiosGet = vi.fn(
-  (..._args: any[]): Promise<AxiosGetReturn> => Promise.resolve({ data: [] }),
-)
-vi.mock('axios', () => ({
-  default: { get: (...args: any[]) => axiosGet(...args) },
-}))
+// Then, define the mock implementations
+const mockedAxios = vi.mocked(axios, true)
+const { useSession, getCsrfToken } = await import('next-auth/react')
+const { useAccount, usePublicClient, useWalletClient } = await import('wagmi')
 
-// Mock next-auth/react
-interface SessionLike {
-  address: string
-  user: { name: string }
-}
-const useSessionMock = vi.fn((): { data: SessionLike; status: string } => ({
-  data: { address: '0x123', user: { name: 'Test User' } },
-  status: 'authenticated',
-}))
-const getCsrfTokenMock = vi.fn(() => Promise.resolve('mock-csrf-token'))
-vi.mock('next-auth/react', () => ({
-  useSession: () => useSessionMock(),
-  getCsrfToken: () => getCsrfTokenMock(),
-}))
+const useSessionMock = useSession as vi.Mock
+const getCsrfTokenMock = getCsrfToken as vi.Mock
+const useAccountMock = useAccount as vi.Mock
+const usePublicClientMock = usePublicClient as vi.Mock
+const useWalletClientMock = useWalletClient as vi.Mock
 
-// Mock wagmi (incluye usePublicClient requerido por el componente principal)
-const useAccountMock = vi.fn((): { address: string; isConnected: boolean } => ({
-  address: '0x123',
-  isConnected: true,
-}))
-const usePublicClientMock = vi.fn(() => ({
-  readContract: vi.fn().mockResolvedValue(0n),
-  getBalance: vi.fn().mockResolvedValue(0n),
-  getGasPrice: vi.fn().mockResolvedValue(1n),
-  estimateContractGas: vi.fn().mockResolvedValue(21000n),
-  waitForTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' }),
-}))
-const useWalletClientMock = vi.fn(() => ({
-  data: { writeContract: vi.fn().mockResolvedValue('0xhash') },
-}))
-vi.mock('wagmi', () => ({
-  useAccount: () => useAccountMock(),
-  usePublicClient: () => usePublicClientMock(),
-  useWalletClient: () => useWalletClientMock(),
-}))
-
-// Render directo (el componente usa hooks mockeados)
+// Render direct
 function renderWithProviders(ui: React.ReactElement) {
-  return render(ui)
+  return render(<Suspense fallback={<div>Loading...</div>}>{ui}</Suspense>)
 }
 
 describe('Main Page Component', () => {
@@ -83,134 +44,108 @@ describe('Main Page Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    // Restaurar mocks por defecto
     useSessionMock.mockReturnValue({
       data: { address: '0x123', user: { name: 'Test User' } },
       status: 'authenticated',
     })
+    getCsrfTokenMock.mockResolvedValue('mock-csrf-token')
     useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
-    axiosGet.mockReset()
-    axiosGet.mockResolvedValue({ data: [] })
-    // Mock de alert para evitar errores de jsdom
+    usePublicClientMock.mockReturnValue({
+      readContract: vi.fn().mockResolvedValue(0n),
+      getBalance: vi.fn().mockResolvedValue(1000n), // Provide a balance
+      getGasPrice: vi.fn().mockResolvedValue(1n),
+      estimateContractGas: vi.fn().mockResolvedValue(21000n),
+      waitForTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' }),
+    })
+    useWalletClientMock.mockReturnValue({
+      data: { writeContract: vi.fn().mockResolvedValue('0xhash') },
+    })
+    mockedAxios.get.mockResolvedValue({ data: [] })
     // @ts-ignore
     global.window.alert = vi.fn()
-    // Mock de variable de entorno usada en componente
-    process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = 'https://fake.local/courses'
   })
 
-  it('no carga cursos (early return) cuando dirección y sesión difieren (partial login)', async () => {
+  it('shows partial login message when session and account addresses differ', async () => {
     useSessionMock.mockReturnValue({
       data: { address: '0xAAA', user: { name: 'Test User' } },
       status: 'authenticated',
     })
     useAccountMock.mockReturnValue({ address: '0xBBB', isConnected: true })
+    
     await act(async () => {
-      renderWithProviders(
-        <Suspense fallback={<div />}>
-          <Page {...defaultProps} />
-        </Suspense>,
-      )
+      renderWithProviders(<Page {...defaultProps} />)
     })
-    // Esperar microtasks para confirmar que no hubo llamada
+
     await waitFor(() => {
-      expect(axiosGet).not.toHaveBeenCalled()
+      expect(screen.getByText(/Partial login/)).toBeInTheDocument()
+      expect(mockedAxios.get).not.toHaveBeenCalled()
     })
   })
 
-  it('consulta scholarship para cada curso cuando hay coincidencia de wallet', async () => {
+  it('fetches courses with progress when wallet is connected and session matches', async () => {
     const mockCourses = [
       {
-        id: 'course-1',
+        id: 1,
         idioma: 'en',
         prefijoRuta: '/course-1',
         imagen: '/image1.jpg',
         titulo: 'Course 1',
         subtitulo: 'Description 1',
+        percentageCompleted: 50,
+        percentagePaid: 25,
       },
     ]
-    const mockScholarshipData = { amountPerGuide: 5, canSubmit: true, percentageCompleted: null }
-    axiosGet
-      .mockResolvedValueOnce({ data: mockCourses as Course[] }) // cursos
-      .mockResolvedValueOnce({ data: { message: '', ...mockScholarshipData } }) // scholarship
-    await act(async () => {
-      renderWithProviders(
-        <Suspense fallback={<div />}>
-          <Page {...defaultProps} />
-        </Suspense>,
-      )
-    })
-    await waitFor(() => expect(axiosGet).toHaveBeenCalledTimes(2))
-    const callList: any[] = axiosGet.mock.calls as any
-    const secondCall = callList.length > 1 ? callList[1][0] : ''
-    expect(secondCall).toMatch(/\/api\/scholarship/)
-  })
+    mockedAxios.get.mockResolvedValueOnce({ data: mockCourses })
 
-  it('tolera errores de API sin colapsar', async () => {
-    axiosGet.mockRejectedValueOnce(new Error('API Error'))
     await act(async () => {
-      renderWithProviders(
-        <Suspense fallback={<div />}>
-          <Page {...defaultProps} />
-        </Suspense>,
-      )
+      renderWithProviders(<Page {...defaultProps} />)
     })
 
-    // Component should still render without crashing
     await waitFor(() => {
-      expect(document.body).toBeInTheDocument()
+      expect(mockedAxios.get).toHaveBeenCalledTimes(1)
+      expect(mockedAxios.get).toHaveBeenCalledWith('/api/courses-with-progress?lang=en&walletAddress=0x123')
+      expect(screen.getByText('Course 1')).toBeInTheDocument()
+      expect(screen.getByText('50%')).toBeInTheDocument()
+      expect(screen.getByText('Progress')).toBeInTheDocument()
     })
   })
 
-  it('muestra información de scholarship cuando disponible', async () => {
-    const mockCourses = [
-      {
-        id: '1',
-        idioma: 'en',
-        prefijoRuta: '/test-course',
-        imagen: '/test.jpg',
-        titulo: 'Test Course',
-        subtitulo: 'Test desc',
-        amountPerGuide: 15,
-        canSubmit: true,
-      },
-    ]
-    // Primera llamada: cursos
-    axiosGet.mockResolvedValueOnce({ data: mockCourses as Course[] })
+  it('handles API errors gracefully without crashing', async () => {
+    mockedAxios.get.mockRejectedValueOnce(new Error('API Error'))
+    
     await act(async () => {
-      renderWithProviders(
-        <Suspense fallback={<div />}>
-          <Page {...defaultProps} />
-        </Suspense>,
-      )
+      renderWithProviders(<Page {...defaultProps} />)
     })
-    // No se hace llamada a scholarship porque el componente sólo lo hace cuando csrfToken válido y session/address coinciden
-    await waitFor(() =>
-      expect(screen.getByText(/Test Course/i)).toBeInTheDocument(),
-    )
+
+    await waitFor(() => {
+      expect(global.window.alert).toHaveBeenCalledWith('API Error')
+      expect(screen.queryByText('Course 1')).not.toBeInTheDocument()
+    })
   })
 
-  it('construye correctamente URL base de cursos', async () => {
+  it('clears courses when wallet disconnects', async () => {
     const mockCourses = [
-      {
-        id: 'test-course',
-        idioma: 'en',
-        prefijoRuta: '/test',
-        imagen: '/test.jpg',
-        titulo: 'Test',
-        subtitulo: 'Test',
-      },
+      { id: 1, titulo: 'Course 1', subtitulo: 'Desc 1', percentageCompleted: 10, percentagePaid: 5, idioma: 'en', prefijoRuta: '/c1', imagen: '/i1.jpg' },
     ]
-    axiosGet.mockResolvedValueOnce({ data: mockCourses as Course[] })
-    await act(async () => {
-      renderWithProviders(
-        <Suspense fallback={<div />}>
-          <Page {...defaultProps} />
-        </Suspense>,
-      )
+    mockedAxios.get.mockResolvedValueOnce({ data: mockCourses })
+
+    const { rerender } = renderWithProviders(<Page {...defaultProps} />);
+    
+    await waitFor(() => {
+        expect(screen.getByText('Course 1')).toBeInTheDocument()
     })
-    await waitFor(() => expect(axiosGet).toHaveBeenCalled())
-    const callList2: any[] = axiosGet.mock.calls as any
-    const firstUrl = callList2.length > 0 ? callList2[0][0] : ''
-    expect(firstUrl).toMatch(/filtro\[busidioma\]=en/)
+
+    // Simulate wallet disconnect
+    useAccountMock.mockReturnValue({ address: undefined, isConnected: false })
+    
+    await act(async () => {
+        rerender(<Page {...defaultProps} />)
+    })
+
+    await waitFor(() => {
+        expect(screen.queryByText('Course 1')).not.toBeInTheDocument()
+        // Ensure we don't re-fetch when address is undefined
+        expect(mockedAxios.get).toHaveBeenCalledTimes(1)
+    })
   })
 })
