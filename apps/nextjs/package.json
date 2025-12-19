@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "vitest run --coverage",
     "coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit && vitest run --typecheck",
+    "typecheck": "tsc --noEmit",
+    "tests-type": "vitest run --typecheck",
     "format": "prettier --write ."
   },
   "dependencies": {
