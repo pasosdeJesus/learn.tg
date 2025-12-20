@@ -67,15 +67,15 @@ export async function GET(request: Request) {
         'p.creditosMd',
         sql<number>`
           COALESCE(
-            (SUM(CASE WHEN gu.points > 0 THEN 1 ELSE 0 END) * 100.0) /
-            NULLIF(COUNT(a.id), 0),
+            (COUNT(DISTINCT CASE WHEN gu.points > 0 THEN a.id ELSE NULL END) * 100.0) /
+            NULLIF(COUNT(DISTINCT a.id), 0),
             0
           )
         `.as('percentageCompleted'),
         sql<number>`
           COALESCE(
-            (SUM(CASE WHEN gu.amountpaid > 0 THEN 1 ELSE 0 END) * 100.0) /
-            NULLIF(COUNT(a.id), 0),
+            (COUNT(DISTINCT CASE WHEN gu.amountpaid > 0 THEN a.id ELSE NULL END) * 100.0) /
+            NULLIF(COUNT(DISTINCT a.id), 0),
             0
           )
         `.as('percentagePaid')
