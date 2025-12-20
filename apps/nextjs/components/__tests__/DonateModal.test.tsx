@@ -5,18 +5,22 @@ import DonateModal, { parseUserAmount } from '../DonateModal'
 
 // Mock @/components/ui/button
 vi.mock('@/components/ui/button', () => ({
-  Button: React.forwardRef(({ children, onClick, disabled, variant, size, className, ...props }: any, ref: any) => (
-    <button
-      ref={ref}
-      onClick={onClick}
-      disabled={disabled}
-      data-testid={`button-${variant}-${size}`}
-      className={className}
-      {...props}
-    >
-      {children}
-    </button>
-  )),
+    Button: React.forwardRef<HTMLButtonElement, { children: React.ReactNode, onClick: () => void, disabled: boolean, variant: string, size: string, className: string }>(({ children, onClick, disabled, variant, size, className, ...props }, ref) => {
+    const button = (
+        <button
+        ref={ref}
+        onClick={onClick}
+        disabled={disabled}
+        data-testid={`button-${variant}-${size}`}
+        className={className}
+        {...props}
+        >
+        {children}
+        </button>
+    );
+    button.displayName = 'Button';
+    return button;
+    }),
 }))
 
 // Mock @/abis/LearnTGVaults.json
@@ -57,7 +61,7 @@ describe('DonateModal', () => {
   beforeEach(() => {
     // Set environment variables
     Object.keys(defaultEnv).forEach(key => {
-      ;(process.env as any)[key] = (defaultEnv as any)[key]
+      ;(process.env as any)[key] = (defaultEnv as Record<string, string>)[key]
     })
 
     // Default wagmi mocks
@@ -74,7 +78,7 @@ describe('DonateModal', () => {
     })
 
     // Default contract responses
-    mockReadContract.mockImplementation((opts: any) => {
+    mockReadContract.mockImplementation((opts: { functionName: string }) => {
       switch (opts.functionName) {
         case 'decimals':
           return Promise.resolve(6n)
@@ -176,7 +180,7 @@ describe('DonateModal', () => {
 
   describe('Balance display', () => {
     it('displays USDT balance', async () => {
-      mockReadContract.mockImplementation((opts: any) => {
+      mockReadContract.mockImplementation((opts: { functionName: string }) => {
         if (opts.functionName === 'balanceOf') {
           return Promise.resolve(5_000_000_000n) // 5000 USDT
         }
@@ -290,7 +294,7 @@ describe('DonateModal', () => {
 
   describe('Approval flow', () => {
     it('shows "Approve & Donate" when allowance is insufficient', async () => {
-      mockReadContract.mockImplementation((opts: any) => {
+      mockReadContract.mockImplementation((opts: { functionName: string }) => {
         if (opts.functionName === 'allowance') {
           return Promise.resolve(0n) // No allowance
         }
@@ -309,7 +313,7 @@ describe('DonateModal', () => {
     })
 
     it('shows "Donate" when allowance is sufficient', async () => {
-      mockReadContract.mockImplementation((opts: any) => {
+      mockReadContract.mockImplementation((opts: { functionName: string }) => {
         if (opts.functionName === 'allowance') {
           return Promise.resolve(parseUserAmount('1000', 6)) // Allowance for full balance
         }

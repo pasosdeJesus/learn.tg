@@ -30,6 +30,12 @@ export interface Course {
   creditoImagen?: string
 }
 
+interface CourseProgress {
+    id: number;
+    percentageCompleted: number;
+    percentagePaid: number;
+}
+
 interface UseGuideDataProps {
   lang: string
   pathPrefix: string
@@ -133,16 +139,15 @@ export function useGuideData({
               setAmountScholarship(Number(scholarshipRes.data.amountScholarship))
             }
             
-            const completedGuides = guidesWithStatus.filter((g: Guide) => g.completed).length
-            const paidGuides = guidesWithStatus.filter((g: Guide) => g.receivedScholarship).length
-            const totalGuides = guidesWithStatus.length
+            const progressUrl = `/api/courses-with-progress?lang=${lang}&walletAddress=${address}`
+            const progressResponse = await axios.get<CourseProgress[]>(progressUrl)
 
-            if (totalGuides > 0) {
-                setPercentageCompleted((completedGuides / totalGuides) * 100)
-                setPercentagePaid((paidGuides / totalGuides) * 100)
-            } else {
-                setPercentageCompleted(0)
-                setPercentagePaid(0)
+            if (progressResponse.data) {
+                const courseProgress = progressResponse.data.find((c) => c.id === detailedCourse.id)
+                if (courseProgress) {
+                    setPercentageCompleted(courseProgress.percentageCompleted)
+                    setPercentagePaid(courseProgress.percentagePaid)
+                }
             }
 
           } catch (err) {
@@ -181,9 +186,11 @@ export function useGuideData({
             }
           }
         }
-      } catch (e: any) {
-        console.error('Failed to fetch guide data:', e)
-        setError(e.message)
+      } catch (e) {
+        if (e instanceof Error) {
+            console.error('Failed to fetch guide data:', e)
+            setError(e.message)
+        }
       } finally {
         setLoading(false)
       }
@@ -206,4 +213,3 @@ export function useGuideData({
     amountScholarship,
   }
 }
-

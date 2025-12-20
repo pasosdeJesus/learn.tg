@@ -5,7 +5,7 @@ import '@testing-library/jest-dom'
 import Page from '../page.tsx'
 import React, { Suspense } from 'react'
 
-(global as any).IS_REACT_ACT_ENVIRONMENT = true;
+(global as unknown).IS_REACT_ACT_ENVIRONMENT = true;
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -19,12 +19,12 @@ vi.mock('next/navigation', () => ({
 }))
 
 // Mock axios
-interface AxiosGetReturn { data: any }
+interface AxiosGetReturn { data: unknown }
 const axiosGet = vi.fn(
-  (..._args: any[]): Promise<AxiosGetReturn> => Promise.resolve({ data: [] }),
+  (): Promise<AxiosGetReturn> => Promise.resolve({ data: [] }),
 )
 vi.mock('axios', () => ({
-  default: { get: (...args: any[]) => axiosGet(...args) },
+  default: { get: (...args: ReadonlyArray<string>) => axiosGet(...args) },
 }))
 
 // Mock next-auth/react
@@ -83,7 +83,7 @@ vi.mock('@/components/GoodDollarClaimButton', () => ({
 
 // Mock window.fillInTheBlank
 if (typeof global.window !== 'undefined') {
-  (global.window as any).fillInTheBlank = []
+  (global.window as unknown as { fillInTheBlank: unknown[] }).fillInTheBlank = []
 }
 
 // Mock localStorage
@@ -135,7 +135,7 @@ describe('Guide Page Component', () => {
     })
     useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
     axiosGet.mockReset()
-    // @ts-ignore
+    // @ts-expect-error
     global.window.alert = vi.fn()
     process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = API_BUSCA_URL
     process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL = API_PRESENTA_URL
@@ -290,4 +290,3 @@ describe('Guide Page Component', () => {
     })
   })
 })
-

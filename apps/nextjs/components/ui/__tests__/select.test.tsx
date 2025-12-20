@@ -5,53 +5,80 @@ import { describe, it, expect, vi } from 'vitest'
 
 // Mock @radix-ui/react-select
 vi.mock('@radix-ui/react-select', () => ({
-  Root: ({ children }: any) => <div data-testid="select-root">{children}</div>,
-  Group: ({ children }: any) => <div data-testid="select-group">{children}</div>,
-  Value: ({ children }: any) => <div data-testid="select-value">{children}</div>,
-  Trigger: React.forwardRef(({ className, children, ...props }: any, ref: any) => (
-    <div ref={ref} data-testid="select-trigger" className={className} {...props}>
-      {children}
-      <div data-testid="select-icon">icon</div>
-    </div>
-  )),
-  Icon: ({ asChild, children }: any) => asChild ? children : <div data-testid="select-icon">{children}</div>,
-  Portal: ({ children }: any) => <div data-testid="select-portal">{children}</div>,
-  Content: React.forwardRef(({ className, children, position, ...props }: any, ref: any) => (
-    <div ref={ref} data-testid="select-content" className={className} {...props}>
-      {children}
-    </div>
-  )),
-  Viewport: ({ className, children }: any) => <div data-testid="select-viewport" className={className}>{children}</div>,
-  Label: React.forwardRef(({ className, ...props }: any, ref: any) => (
-    <div ref={ref} data-testid="select-label" className={className} {...props} />
-  )),
-  Item: React.forwardRef(({ className, children, ...props }: any, ref: any) => (
-    <div ref={ref} data-testid="select-item" className={className} {...props}>
-      {children}
-    </div>
-  )),
-  ItemIndicator: ({ children }: any) => <div data-testid="select-item-indicator">{children}</div>,
-  ItemText: ({ children }: any) => <div data-testid="select-item-text">{children}</div>,
-  Separator: React.forwardRef(({ className, ...props }: any, ref: any) => (
-    <div ref={ref} data-testid="select-separator" className={className} {...props} />
-  )),
-  ScrollUpButton: React.forwardRef(({ className, ...props }: any, ref: any) => (
-    <div ref={ref} data-testid="select-scroll-up" className={className} {...props} />
-  )),
-  ScrollDownButton: React.forwardRef(({ className, ...props }: any, ref: any) => (
-    <div ref={ref} data-testid="select-scroll-down" className={className} {...props} />
-  )),
+  Root: ({ children }: { children: React.ReactNode }) => <div data-testid="select-root">{children}</div>,
+  Group: ({ children }: { children: React.ReactNode }) => <div data-testid="select-group">{children}</div>,
+  Value: ({ children }: { children: React.ReactNode }) => <div data-testid="select-value">{children}</div>,
+  Trigger: React.forwardRef(({ className, children, ...props }: { className: string, children: React.ReactNode }, ref: React.Ref<HTMLDivElement>) => {
+    const Trigger = (
+        <div ref={ref} data-testid="select-trigger" className={className} {...props}>
+        {children}
+        <div data-testid="select-icon">icon</div>
+        </div>
+    );
+    Trigger.displayName = 'Trigger';
+    return Trigger;
+  }),
+  Icon: ({ asChild, children }: { asChild: boolean, children: React.ReactNode }) => asChild ? children : <div data-testid="select-icon">{children}</div>,
+  Portal: ({ children }: { children: React.ReactNode }) => <div data-testid="select-portal">{children}</div>,
+  Content: React.forwardRef(({ className, children, ...props }: { className: string, children: React.ReactNode }, ref: React.Ref<HTMLDivElement>) => {
+    const Content = (
+        <div ref={ref} data-testid="select-content" className={className} {...props}>
+        {children}
+        </div>
+    );
+    Content.displayName = 'Content';
+    return Content;
+  }),
+  Viewport: ({ className, children }: { className: string, children: React.ReactNode }) => <div data-testid="select-viewport" className={className}>{children}</div>,
+  Label: React.forwardRef(({ className, ...props }: { className: string }, ref: React.Ref<HTMLDivElement>) => {
+    const Label = (
+        <div ref={ref} data-testid="select-label" className={className} {...props} />
+    );
+    Label.displayName = 'Label';
+    return Label;
+  }),
+  Item: React.forwardRef(({ className, children, ...props }: { className: string, children: React.ReactNode }, ref: React.Ref<HTMLDivElement>) => {
+    const Item = (
+        <div ref={ref} data-testid="select-item" className={className} {...props}>
+        {children}
+        </div>
+    );
+    Item.displayName = 'Item';
+    return Item;
+  }),
+  ItemIndicator: ({ children }: { children: React.ReactNode }) => <div data-testid="select-item-indicator">{children}</div>,
+  ItemText: ({ children }: { children: React.ReactNode }) => <div data-testid="select-item-text">{children}</div>,
+  Separator: React.forwardRef(({ className, ...props }: { className: string }, ref: React.Ref<HTMLDivElement>) => {
+    const Separator = (
+        <div ref={ref} data-testid="select-separator" className={className} {...props} />
+    );
+    Separator.displayName = 'Separator';
+    return Separator;
+  }),
+  ScrollUpButton: React.forwardRef(({ className, ...props }: { className: string }, ref: React.Ref<HTMLDivElement>) => {
+    const ScrollUpButton = (
+        <div ref={ref} data-testid="select-scroll-up" className={className} {...props} />
+    );
+    ScrollUpButton.displayName = 'ScrollUpButton';
+    return ScrollUpButton;
+  }),
+  ScrollDownButton: React.forwardRef(({ className, ...props }: { className: string }, ref: React.Ref<HTMLDivElement>) => {
+    const ScrollDownButton = (
+        <div ref={ref} data-testid="select-scroll-down" className={className} {...props} />
+    );
+    ScrollDownButton.displayName = 'ScrollDownButton';
+    return ScrollDownButton;
+  }),
 }))
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
-  Check: ({ className }: any) => <div data-testid="check-icon" className={className}>✓</div>,
-  ChevronDown: ({ className }: any) => <div data-testid="chevron-down-icon" className={className}>▼</div>,
-  ChevronUp: ({ className }: any) => <div data-testid="chevron-up-icon" className={className}>▲</div>,
+  Check: ({ className }: { className: string }) => <div data-testid="check-icon" className={className}>✓</div>,
+  ChevronDown: ({ className }: { className: string }) => <div data-testid="chevron-down-icon" className={className}>▼</div>,
+  ChevronUp: ({ className }: { className: string }) => <div data-testid="chevron-up-icon" className={className}>▲</div>,
 }))
 
 import {
-  Select,
   SelectGroup,
   SelectValue,
   SelectTrigger,

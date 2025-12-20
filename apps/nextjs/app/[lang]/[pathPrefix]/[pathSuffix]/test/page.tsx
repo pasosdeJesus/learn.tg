@@ -1,6 +1,6 @@
 'use client'
 
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { getCsrfToken, useSession } from 'next-auth/react'
 import { use, useEffect, useState } from 'react'
 import { useAccount, useConfig, useWriteContract } from 'wagmi'
@@ -39,18 +39,17 @@ export default function Page({
 }) {
   const { address } = useAccount()
   const { data: session } = useSession()
-  const { data: hash, writeContract } = useWriteContract()
+  const { data: hash } = useWriteContract()
   const wagmiConfig = useConfig()
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
 
-  const {
-    course,
-    loading,
-    error,
-    myGuide,
-    guideNumber,
-    coursePath,
+  const { 
+    course, 
+    loading, 
+    error, 
+    myGuide, 
+    guideNumber 
   } = useGuideData({ lang, pathPrefix, pathSuffix })
 
   const [thisGuidePath, setThisGuidePath] = useState('')
@@ -83,11 +82,10 @@ export default function Page({
           console.log('Transaction receipt', receipt)
           // Actualizar el estado de la guía localmente para reflejar el pago
           if (myGuide) {
-            // @ts-ignore
             myGuide.receivedScholarship = true 
           }
           setFlashWarning('')
-      }).catch((e) => {
+      }).catch((e: Error) => {
         console.error(e)
         setFlashError(e.message)
         setFlashWarning('')
@@ -103,7 +101,7 @@ export default function Page({
           if (!csrfToken) throw new Error('Could not get CSRF token')
           setGCsrfToken(csrfToken)
 
-          let urlc =
+          const urlc =
             `/api/crossword?courseId=${course.id}` +
             `&lang=${lang}` +
             `&prefix=${pathPrefix}` +
@@ -113,7 +111,7 @@ export default function Page({
             `&token=${csrfToken}`
 
           console.log(`Fetching Crossword: ${urlc}`)
-          const response = await axios.get(urlc)
+          const response = await axios.get<{grid: Cell[][], placements: WordPlacement[], message?: string}>(urlc)
 
           if (response.data.message) {
             throw new Error(response.data.message)
@@ -121,9 +119,11 @@ export default function Page({
           setGrid(response.data.grid)
           setPlacements(response.data.placements)
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
-        } catch (err: any) {
-          console.error(err)
-          setFlashError(err.message)
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                console.error(err)
+                setFlashError(err.message)
+            }
         }
       }
     }
@@ -201,7 +201,7 @@ export default function Page({
     setScholarshipTx('')
 
     try {
-      const response = await axios.post('/api/check-crossword', {
+      const response = await axios.post<{mistakesInCW: [], message: string, scholarshipResult: string}>('/api/check-crossword', {
         courseId: +course.id,
         guideId: guideNumber,
         lang: lang,
@@ -226,7 +226,6 @@ export default function Page({
         )
       } else {
         if (myGuide) {
-            // @ts-ignore
           myGuide.completed = true
         }
         setFlashSuccess(response.data.message || '')
@@ -234,9 +233,11 @@ export default function Page({
           setScholarshipTx(response.data.scholarshipResult)
         }
       }
-    } catch (error: any) {
-      console.error(error)
-      setFlashError(error.response?.data?.error || error.message)
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            console.error(error)
+            setFlashError(error.response?.data?.error || error.message)
+        }
     } finally {
       setIsSubmitting(false)
     }

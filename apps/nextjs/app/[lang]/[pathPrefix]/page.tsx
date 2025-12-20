@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useAccount } from 'wagmi'
+import Image from 'next/image'
 
 import { useGuideData } from '@/lib/hooks/useGuideData'
 
@@ -52,10 +53,8 @@ export default function Page({ params }: PageProps) {
 
   useEffect(() => {
     if (course) {
-      // @ts-ignore
-      setHtmlSummary(htmlDeMd(course.resumenMd))
-      // @ts-ignore
-      setHtmlExtended(htmlDeMd(course.ampliaMd))
+      setHtmlSummary(htmlDeMd(course.resumenMd || ''))
+      setHtmlExtended(htmlDeMd(course.ampliaMd || ''))
 
       let guias = "<ol class='list-decimal text-primary-foreground'>\n"
       for (const guia of course.guias) {
@@ -105,7 +104,6 @@ export default function Page({ params }: PageProps) {
           <h1 className="text-2xl lg:text-3xl font-bold mb-2">
             {course.titulo}
           </h1>
-          {/* @ts-ignore */}
           <h2 className="text-lg lg:text-xl font-semibold text-gray-600">
             {course.subtitulo}
           </h2>
@@ -128,16 +126,16 @@ export default function Page({ params }: PageProps) {
           </div>
         </header>
 
+        {course.imagen && (
         <figure className="my-6">
-          {/* @ts-ignore */}
-          <img
+          <Image
             src={course.imagen}
             width="300"
-            alt={course.altImagen}
+            height="200"
+            alt={course.altImagen || 'Course image'}
             className="mx-auto rounded-lg shadow-md"
           />
           <figcaption className="text-sm text-gray-500 mt-3 text-center">
-            {/* @ts-ignore */}
             <a
               href={course.enlaceImagen}
               target="_blank"
@@ -147,6 +145,7 @@ export default function Page({ params }: PageProps) {
             </a>
           </figcaption>
         </figure>
+        )}
 
         <article
           className="prose max-w-prose text-justify text-gray-700"
@@ -172,4 +171,3 @@ export default function Page({ params }: PageProps) {
     </div>
   )
 }
-

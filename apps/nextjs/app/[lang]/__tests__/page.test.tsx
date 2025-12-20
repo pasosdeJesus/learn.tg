@@ -61,7 +61,7 @@ describe('Main Page Component', () => {
       data: { writeContract: vi.fn().mockResolvedValue('0xhash') },
     })
     mockedAxios.get.mockResolvedValue({ data: [] })
-    // @ts-ignore
+    // @ts-expect-error
     global.window.alert = vi.fn()
   })
 

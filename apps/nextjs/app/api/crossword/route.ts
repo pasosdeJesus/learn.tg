@@ -2,7 +2,7 @@
 
 import clg from 'crossword-layout-generator-with-isolated'
 import { readFile } from 'fs/promises'
-import { Kysely, PostgresDialect, Updateable } from 'kysely'
+import { Updateable } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -10,10 +10,9 @@ import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
-import { Pool } from 'pg'
 import { unified } from 'unified'
 
-import type { DB, BilleteraUsuario } from '@/db/db.d.ts'
+import type { BilleteraUsuario } from '@/db/db.d.ts'
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
@@ -56,7 +55,6 @@ export async function GET(req: NextRequest) {
     let retMessage = ''
 
     const { searchParams } = req.nextUrl
-    const courseId = searchParams.get('courseId')
     const lang = searchParams.get('lang')
     const prefix = searchParams.get('prefix')
     const guide = searchParams.get('guide')
@@ -68,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     const db = newKyselyPostgresql()
 
-    let billeteraUsuario: any = null
+    let billeteraUsuario
     if (!walletAddress || walletAddress == null || walletAddress == '') {
       retMessage += '\nTo solve the puzzle, please connect your web3 Wallet. '
     } else {
@@ -85,28 +83,27 @@ export async function GET(req: NextRequest) {
       let wordNumber = 1
 
       console.log('** cwd=', process.cwd())
-      let fname = `../../resources/${lang}/${prefix}/${guide}.md`
+      const fname = `../../resources/${lang}/${prefix}/${guide}.md`
       console.log('** fname=', fname)
-      let md = await readFile(fname, 'utf8')
+      const md = await readFile(fname, 'utf8')
       console.log(md)
 
-      let processor = unified()
+      const processor = (unified() as any)
         .use(remarkParse)
         .use(remarkGfm)
         .use(remarkDirective)
         .use(remarkFrontmatter)
         .use(remarkFillInTheBlank, { url: '' })
-        // @ts-ignore
         .use(remarkRehype, { allowDangerousHtml: true })
         .use(rehypeStringify, { allowDangerousHtml: true })
-      let html = processor.processSync(md).toString()
+      processor.processSync(md).toString()
 
-      let qa = (global as any).fillInTheBlank || []
+      const qa: { question: string, answer: string }[] = (global as any).fillInTheBlank || []
 
-      let scrambled = []
-      let words = []
+      const scrambled: { question: string, answer: string }[] = []
+      const words: string[] = []
       while (qa.length > 0) {
-        let np = Math.floor(Math.random() * qa.length)
+        const np = Math.floor(Math.random() * qa.length)
         scrambled.push(qa[np])
         words.push(qa[np].answer)
         qa.splice(np, 1)
@@ -114,26 +111,26 @@ export async function GET(req: NextRequest) {
       console.log('scrambled=', scrambled)
       if (scrambled.length > 0) {
         // Save in Database
-        let layout = clg.generateLayout(scrambled)
+        const layout = clg.generateLayout(scrambled)
         console.log('** layout=', layout)
-        let rows = layout.rows
-        let cols = layout.cols
+        const rows = layout.rows
+        const cols = layout.cols
         console.log('** rows=', rows)
         console.log('** cols=', cols)
         newGrid = initializeGrid(rows, cols)
-        let table = layout.table // table as two-dimensional array
+        const table = layout.table // table as two-dimensional array
         console.log('** table=', table)
-        let output_html = layout.table_string // table as plain text (with HTML line breaks)
+        const output_html = layout.table_string // table as plain text (with HTML line breaks)
         console.log('** output_html=', output_html)
-        let output_json = layout.result
+        const output_json = layout.result
         console.log('** output_json=', output_json)
 
         for (let index = 0; index < output_json.length; index++) {
-          let word = output_json[index].answer
-          let clue = output_json[index].clue
-          let row = output_json[index].starty - 1
-          let col = output_json[index].startx - 1
-          let direction = output_json[index].orientation
+          const word = output_json[index].answer
+          const clue = output_json[index].clue
+          const row = output_json[index].starty - 1
+          const col = output_json[index].startx - 1
+          const direction = output_json[index].orientation
           if (direction == 'down' || direction == 'across') {
             for (let i = 0; i < word.length; i++) {
               const currentRow = direction === 'down' ? row + i : row
@@ -144,7 +141,7 @@ export async function GET(req: NextRequest) {
                 ', currentCol=',
                 currentCol,
               )
-              let ebelongs =
+              const ebelongs =
                 typeof newGrid[currentRow][currentCol] == 'undefined'
                   ? []
                   : newGrid[currentRow][currentCol].belongsToWords
@@ -175,17 +172,19 @@ export async function GET(req: NextRequest) {
         console.log('** newPlacements=', newPlacements)
       }
 
-      let now = new Date()
-      let uWalletUser: Updateable<BilleteraUsuario> = {
+      const now = new Date()
+      const uWalletUser: Updateable<BilleteraUsuario> = {
         answer_fib: words.join(' | '),
         updated_at: now,
       }
-      let rUpdate = await db
-        .updateTable('billetera_usuario')
-        .set(uWalletUser)
-        .where('id', '=', billeteraUsuario?.id)
-        .execute()
-      console.log(new Date(), 'After update rUpdate=', rUpdate)
+      if (billeteraUsuario) {
+        const rUpdate = await db
+          .updateTable('billetera_usuario')
+          .set(uWalletUser)
+          .where('id', '=', billeteraUsuario.id)
+          .execute()
+        console.log(new Date(), 'After update rUpdate=', rUpdate)
+      }
     }
 
     console.log('** newGrid=', newGrid)

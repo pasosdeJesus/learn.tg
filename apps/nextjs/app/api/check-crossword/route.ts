@@ -1,6 +1,6 @@
 'use server'
 
-import { Kysely, sql } from 'kysely'
+import { sql } from 'kysely'
 import type { Insertable } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
 import { privateKeyToAccount } from 'viem/accounts'
@@ -8,7 +8,6 @@ import {
   Address,
   createPublicClient,
   createWalletClient,
-  encodeFunctionData,
   formatUnits,
   getContract,
   Hex,
@@ -18,20 +17,11 @@ import { celo, celoSepolia } from 'viem/chains'
 
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
-import type { CourseUsuario, DB, GuideUsuario, Usuario } from '@/db/db.d.ts'
+import type { GuideUsuario } from '@/db/db.d.ts'
 import { updateUserAndCoursePoints } from '@/lib/scores'
 import { callWriteFun } from '@/lib/crypto'
 
-interface WordPlacement {
-  word: string
-  row: number
-  col: number
-  direction: 'across' | 'down'
-  number: number
-  clue: string
-}
-
-export async function GET(req: NextRequest) {
+export async function GET() {
   return NextResponse.json({ error: 'Expecting POST request' }, { status: 400 })
 }
 
@@ -48,9 +38,9 @@ export async function POST(req: NextRequest) {
       .replace(/ü/gi, 'U')
 
   try {
-    let mistakesInCW: number[] = []
+    const mistakesInCW: number[] = []
     let retMessage = ''
-    let scholarshipResult: any = null
+    let scholarshipResult: Address | null = null
     const requestJson = await req.json()
     const courseId = +requestJson['courseId']
     const guideId = +requestJson['guideId']
@@ -131,7 +121,7 @@ export async function POST(req: NextRequest) {
 
     const db = newKyselyPostgresql()
 
-    let billeteraUsuario = await db
+    const billeteraUsuario = await db
       .selectFrom('billetera_usuario')
       .where('billetera', '=', walletAddress)
       .selectAll()
@@ -146,15 +136,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: msg[locale].tokenMismatch }, { status: 401 });
     }
 
-    let words = billeteraUsuario.answer_fib
+    const words = billeteraUsuario.answer_fib
       ? billeteraUsuario.answer_fib.split(' | ')
       : []
     console.log('words=', words)
     for (let i = 0; i < words.length; i++) {
       let nrow = placements[i].row
       let ncol = placements[i].col
-      let dir = placements[i].direction
-      let word = words[i]
+      const dir = placements[i].direction
+      const word = words[i]
       for (let j = 0; j < word.length; j++) {
         if (
           nrow >= grid.length ||
@@ -177,7 +167,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let usuario = await db
+    const usuario = await db
       .selectFrom('usuario')
       .where('id', '=', billeteraUsuario.usuario_id)
       .selectAll()
@@ -213,14 +203,14 @@ export async function POST(req: NextRequest) {
       .execute()
     if (mistakesInCW.length == 0) {
       if (ug.length == 0) {
-        let gp: Insertable<GuideUsuario> = {
+        const gp: Insertable<GuideUsuario> = {
           usuario_id: billeteraUsuario.usuario_id,
           actividadpf_id: actividadpfId,
           amountpaid: 0,
           profilescore: usuario.profilescore || 0,
           points: 1,
         }
-        let igp = await db
+        const igp = await db
         .insertInto('guide_usuario')
         .values(gp)
         .returningAll()
@@ -275,16 +265,16 @@ export async function POST(req: NextRequest) {
     if (contractAddress) {
       const contract = getContract({
         address: contractAddress,
-        abi: LearnTGVaultsAbi as any,
+        abi: LearnTGVaultsAbi,
         client: { public: publicClient, wallet: walletClient },
       })
       const courseIdArg = BigInt(courseId)
       console.log('*** courseIdArg=', courseIdArg)
       const guideIdArg = BigInt(guideId)
       console.log('*** guideIdArg=', guideIdArg)
-      const vaultArray: any = await contract.read.vaults(
+      const vaultArray = (await contract.read.vaults(
         [courseIdArg]
-      )
+      )) as readonly [bigint, bigint, bigint, bigint, bigint, boolean]
       const vault = {
         courseId: Number(vaultArray[0]),
         balance: Number(vaultArray[1]),
@@ -304,7 +294,7 @@ export async function POST(req: NextRequest) {
           retMessage += msg[locale].atLeast50
         } else if (canSubmit) {
           try {
-            let tx: Address = await callWriteFun(
+            const tx: Address = await callWriteFun(
               publicClient,
               account,
               contract.write.submitGuideResult,
@@ -318,11 +308,11 @@ export async function POST(req: NextRequest) {
               0
             )
             // VERIFICAR Y GUARDAR MONTO
-            const statusArray: any = await contract.read.getStudentGuideStatus([
+            const statusArray = (await contract.read.getStudentGuideStatus([
               courseIdArg,
               guideIdArg,
               walletAddress as Address,
-            ])
+            ])) as readonly [bigint, boolean]
             console.log("OJO statusArray=",statusArray)
             const status = {
               paidAmount: statusArray[0],
@@ -338,7 +328,7 @@ export async function POST(req: NextRequest) {
               if (paidAmount > 0) {
                 await db
                   .updateTable('guide_usuario')
-                  .set({ amountpaid: paidAmount.toString() })
+                  .set({ amountpaid: Number(paidAmount) })
                   .where('usuario_id', '=', billeteraUsuario.usuario_id)
                   .where('actividadpf_id', '=', actividadpfId)
                   .execute()
@@ -346,7 +336,7 @@ export async function POST(req: NextRequest) {
                   formatUnits(paidAmount, 6) + 'USDT'
               }
 
-              const learningscore = await updateUserAndCoursePoints(
+              await updateUserAndCoursePoints(
                 db, usuario
               )
 

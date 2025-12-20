@@ -1,6 +1,6 @@
 'use client'
 
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { use, useEffect, useState, useCallback } from 'react'
@@ -51,15 +51,14 @@ export default function Page({ params }: PageProps) {
   const [creditsHtml, setCreditsHtml] = useState('')
   const [isClient, setIsClient] = useState(false)
 
-  const htmlDeMd = useCallback((md: string | undefined) => {
+  const htmlDeMd = useCallback((md: string) => {
     if (!md) return ''
-    const processor = unified()
+    const processor = (unified() as any)
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkDirective)
       .use(remarkFrontmatter)
       .use(remarkFillInTheBlank, { url: `${pathSuffix}/test` })
-      // @ts-ignore
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeStringify, { allowDangerousHtml: true })
     const html = processor.processSync(md).toString()
@@ -68,7 +67,7 @@ export default function Page({ params }: PageProps) {
       localStorage.setItem(
         'fillInTheBlank',
         JSON.stringify(
-          (window as Window & { fillInTheBlank?: any[] }).fillInTheBlank || [],
+          (window as Window & { fillInTheBlank?: [] }).fillInTheBlank || [],
         ),
       )
     }
@@ -97,7 +96,7 @@ export default function Page({ params }: PageProps) {
           'gyroscope; picture-in-picture; web-share" ' +
           'referrerpolicy="strict-origin-when-cross-origin" ' +
           'allowfullscreen></iframe>' +
-          '</p>',
+          '</p',
       )
       .replaceAll('<li><p>([^<]*)</p></li>', '<li>$1</li>')
       .replaceAll('<p>', '<p class="pt-2 pb-2">')
@@ -111,20 +110,22 @@ export default function Page({ params }: PageProps) {
     if (course && guideNumber > 0) {
         const fetchGuideContent = async () => {
             try {
-                let nurl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
+                const nurl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
                     `&lang=${lang}&prefix=${pathPrefix}&guide=${pathSuffix}&guideNumber=${guideNumber}`
 
-                const response = await axios.get(nurl)
+                const response = await axios.get<{ markdown?: string, message?: string }>(nurl)
                 if (response.data && response.data.markdown) {
                     setGuideHtml(htmlDeMd(response.data.markdown))
                 } else if (response.data && response.data.message) {
                     throw new Error(response.data.message)
                 }
-                setCreditsHtml(htmlDeMd(course.creditosMd))
+                setCreditsHtml(htmlDeMd(course.creditosMd || ''))
 
-            } catch (err: any) {
-                console.error("Error fetching guide content:", err)
-                setGuideHtml(`<p>Error: ${err.message}</p>`)
+            } catch (err) {
+                if (err instanceof AxiosError) {
+                    console.error("Error fetching guide content:", err)
+                    setGuideHtml(`<p>Error: ${err.message}</p>`)
+                }
             }
         }
         fetchGuideContent()
@@ -250,5 +251,3 @@ export default function Page({ params }: PageProps) {
       <div>&nbsp;</div>
     </>)
 }
-
-
