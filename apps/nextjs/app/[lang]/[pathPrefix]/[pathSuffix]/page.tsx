@@ -50,6 +50,7 @@ export default function Page({ params }: PageProps) {
   const [guideHtml, setGuideHtml] = useState('')
   const [creditsHtml, setCreditsHtml] = useState('')
   const [isClient, setIsClient] = useState(false)
+  const [showGoodDollarButton, setShowGoodDollarButton] = useState(false)
 
   const htmlDeMd = useCallback((md: string) => {
     if (!md) return ''
@@ -96,7 +97,7 @@ export default function Page({ params }: PageProps) {
           'gyroscope; picture-in-picture; web-share" ' +
           'referrerpolicy="strict-origin-when-cross-origin" ' +
           'allowfullscreen></iframe>' +
-          '</p',
+          '</p>',
       )
       .replaceAll('<li><p>([^<]*)</p></li>', '<li>$1</li>')
       .replaceAll('<p>', '<p class="pt-2 pb-2">')
@@ -115,7 +116,11 @@ export default function Page({ params }: PageProps) {
 
                 const response = await axios.get<{ markdown?: string, message?: string }>(nurl)
                 if (response.data && response.data.markdown) {
-                    setGuideHtml(htmlDeMd(response.data.markdown))
+                    const markdown = response.data.markdown
+                    const hasGoodDollarButton = markdown.includes('{GoodDollarButton}')
+                    setShowGoodDollarButton(hasGoodDollarButton)
+                    const mdWithoutButton = markdown.replace('{GoodDollarButton}', '')
+                    setGuideHtml(htmlDeMd(mdWithoutButton))
                 } else if (response.data && response.data.message) {
                     throw new Error(response.data.message)
                 }
@@ -169,8 +174,7 @@ export default function Page({ params }: PageProps) {
       <div className="mt-8 pt-2 dark:bg-gray-100 dark:text-gray-800">
         <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
           <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
-            {course.idioma === 'en' ? 'Course: ' : 'Curso: '}
-            {course.titulo}
+            {course.idioma === 'en' ? 'Course: ' : 'Curso: '}{course.titulo}
           </h3>
         </div>
         <h1 className="py-3 px-16 text-[2rem] font-bold text-left">
@@ -184,7 +188,7 @@ export default function Page({ params }: PageProps) {
           className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside"
           dangerouslySetInnerHTML={{ __html: guideHtml }}
         />
-        {isClient && pathPrefix === 'gooddollar' && pathSuffix === 'guide1' && (
+        {isClient && showGoodDollarButton && (
           <GoodDollarClaimButton
             lang={course.idioma}
             pathPrefix={pathPrefix}
@@ -249,5 +253,6 @@ export default function Page({ params }: PageProps) {
       </div>
 
       <div>&nbsp;</div>
-    </>)
+    </>
+  )
 }
