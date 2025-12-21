@@ -92,6 +92,7 @@ export function useGuideData({
           url += `&walletAddress=${session.address}&token=${csrfToken}`
         }
 
+        console.log("url=", url)
         const courseListResponse = await axios.get(url)
 
         if (!courseListResponse.data || courseListResponse.data.length !== 1) {

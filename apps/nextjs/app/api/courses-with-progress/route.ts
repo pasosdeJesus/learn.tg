@@ -37,15 +37,17 @@ export async function GET(request: Request) {
       return NextResponse.json(coursesWithZeroProgress);
     }
 
+    console.log("OJO user.userId=", user.userId)
     const coursesWithProgress = await db
       .selectFrom('cor1440_gen_proyectofinanciero as p')
-      .leftJoin('cor1440_gen_actividadpf as a', 'a.proyectofinanciero_id', 'p.id')
+      .leftJoin('cor1440_gen_actividadpf as a', 
+                'a.proyectofinanciero_id', 'p.id')
       .leftJoin('guide_usuario as gu', (join) =>
         join.onRef('a.id', '=', 'gu.actividadpf_id')
             .on('gu.usuario_id', '=', user.userId)
       )
       .where('p.idioma', '=', lang)
-      .where('p.conBilletera', '=', true)
+      .where('a.sufijoRuta', '<>', '')
       .groupBy([
         'p.id',
         'p.titulo',
@@ -82,6 +84,7 @@ export async function GET(request: Request) {
       ])
       .execute();
 
+    console.log("OJO coursesWithProgress=", coursesWithProgress)
     return NextResponse.json(coursesWithProgress);
 
   } catch (error) {

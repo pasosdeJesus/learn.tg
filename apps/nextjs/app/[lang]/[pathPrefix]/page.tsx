@@ -97,6 +97,7 @@ export default function Page({ params }: PageProps) {
     return <div className="p-10 mt-10">Course not found.</div>
   }
 
+  debugger
   return (
     <div className="container mx-auto my-8 flex flex-col lg:flex-row justify-center gap-6 min-h-screen">
       <section className="flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 lg:w-1/2 xl:w-3/5 bg-white rounded-2xl shadow">
