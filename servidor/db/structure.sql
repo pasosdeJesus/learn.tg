@@ -2722,7 +2722,10 @@ ALTER SEQUENCE public.cor1440_gen_tipomoneda_id_seq OWNED BY public.cor1440_gen_
 CREATE TABLE public.course_usuario (
     usuario_id integer NOT NULL,
     proyectofinanciero_id integer NOT NULL,
-    points integer NOT NULL
+    points integer NOT NULL,
+    guidespoints numeric,
+    amountscholarship numeric,
+    percentagecompleted numeric
 );
 
 
@@ -2735,7 +2738,6 @@ CREATE TABLE public.guide_usuario (
     actividadpf_id integer NOT NULL,
     amountpaid integer NOT NULL,
     profilescore integer NOT NULL,
-    amountpending integer NOT NULL,
     points integer NOT NULL
 );
 

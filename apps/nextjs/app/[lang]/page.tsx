@@ -85,6 +85,7 @@ export default function Page({ params }: PageProps) {
             }
             try {
               const response2 = await axios.get(url2)
+              console.log("OJO response2=", response2)
               if (response2.data.message) {
                 console.error(
                   'Error message received:',

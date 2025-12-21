@@ -105,6 +105,7 @@ export async function GET(req: NextRequest) {
           LEFT JOIN guide_usuario AS gu ON a.id = gu.actividadpf_id 
           AND gu.usuario_id = ${billeteraUsuario.usuario_id}
           WHERE a.proyectofinanciero_id = ${courseIdNumber}
+          AND a."sufijoRuta" <> ''
         `.execute(db)
 
         if (result.rows.length > 0) {
