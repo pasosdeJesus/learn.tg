@@ -21,6 +21,7 @@
     pkgs.automake
     pkgs.libtool
     pkgs.m4
+    pkgs.patch
   ];
 
   # Sets environment variables in the workspace
@@ -63,4 +64,3 @@
     };
   };
 }
-
