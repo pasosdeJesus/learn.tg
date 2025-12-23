@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
     const learningscore = await updateUserAndCoursePoints(
       db,
       usuario,
+      null
     )
 
     console.log('Scores updated successfully.')
@@ -149,4 +150,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: sError }, { status: 500 })
   }
 }
-

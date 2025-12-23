@@ -3,7 +3,7 @@ import * as React from 'react'
 
 type CombinedCircularProgressProps = {
   percentageCompleted: number
-  percentagePaid: number
+  percentagePaid?: number
   size?: number
   strokeWidth?: number
   lang?: string
@@ -11,7 +11,7 @@ type CombinedCircularProgressProps = {
 
 const CombinedCircularProgress = ({
   percentageCompleted,
-  percentagePaid,
+  percentagePaid = 0,
   size = 70,
   strokeWidth = 7,
   lang = 'en',
@@ -35,6 +35,7 @@ const CombinedCircularProgress = ({
       <svg width={size} height={size} className="transform -rotate-90">
         {/* Background Circle (Gray) */}
         <circle
+          data-testid="background-circle"
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -46,6 +47,7 @@ const CombinedCircularProgress = ({
 
         {/* Completed Progress (Yellow) */}
         <circle
+          data-testid="completed-circle"
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -59,18 +61,21 @@ const CombinedCircularProgress = ({
         />
 
         {/* Paid Progress (Green) - Rendered on top of the yellow */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          strokeWidth={strokeWidth}
-          className="text-green-500"
-          fill="transparent"
-          stroke="currentColor"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference - paidSegment}
-          strokeLinecap="butt" // Use 'butt' to ensure clean lines
-        />
+        {paidSegment > 0 && (
+          <circle
+            data-testid="paid-circle"
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            strokeWidth={strokeWidth}
+            className="text-green-500"
+            fill="transparent"
+            stroke="currentColor"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference - paidSegment}
+            strokeLinecap="butt" // Use 'butt' to ensure clean lines
+          />
+        )}
       </svg>
       <div className="absolute flex flex-col items-center justify-center">
         {isCourseCompleted ? (
@@ -105,4 +110,3 @@ const CombinedCircularProgress = ({
 }
 
 export { CombinedCircularProgress as CompletedProgress }
-

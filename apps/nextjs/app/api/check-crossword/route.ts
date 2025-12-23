@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
         contractError: 'Could not connect to scholarship contract.',
         correct:
           'Your result has been submitted for scholarship, please waith 24 hours before submitting again answers for this course.',
-        correctPoint: 'Correct answer! 1 point. ',
+        correctPoint: 'Correct answer! +1 point. ',
         incorrect:
           "\nWrong answer. Your result has been submitted for scholarship, please waith 24 hourse before submitting again answers for this course.",
         noWallet: 'Your answer will not be graded nor will possible scholarships be sought.',
@@ -235,6 +235,7 @@ export async function POST(req: NextRequest) {
         console.log('      After update points=1')
       }
       retMessage += msg[locale].correctPoint
+      await updateUserAndCoursePoints(db, usuario, courseId)
     }
 
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
@@ -346,10 +347,6 @@ export async function POST(req: NextRequest) {
                   formatUnits(paidAmount, 6) + 'USDT'
               }
 
-              const learningscore = await updateUserAndCoursePoints(
-                db, usuario
-              )
-
             } else {
               retMessage += '\n' + msg[locale].incorrect
               if (paidAmount > 0) {
@@ -366,7 +363,7 @@ export async function POST(req: NextRequest) {
         }
       } else {
         retMessage += `\nThere is not vault for the course (${courseId})`
-      }
+      } 
     } else {
       retMessage += '\n' + msg[locale].contractError
     }
@@ -399,5 +396,3 @@ export async function POST(req: NextRequest) {
     })
   }
 }
-
-

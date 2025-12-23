@@ -10,6 +10,15 @@ const mockUpdateTable = vi.fn(() => ({
 }))
 const mockSet = vi.fn().mockReturnThis()
 
+const mockFn = {
+  countAll: vi.fn(() => ({
+    as: vi.fn(() => mockFn),
+  })),
+  sum: vi.fn(() => ({
+    as: vi.fn(() => mockFn),
+  })),
+}
+
 class MockKysely {
   selectFrom() { return this }
   where() { return this }
@@ -24,6 +33,7 @@ class MockKysely {
   execute() { return mockExecute() }
   executeTakeFirstOrThrow() { return mockExecuteTakeFirst() }
   updateTable() { return mockUpdateTable() }
+  fn = mockFn
 }
 
 const mockSql = {
@@ -100,6 +110,9 @@ describe('API /api/check-crossword', () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ billetera: '0x123', usuario_id: 1, token: 'TOK', answer_fib: 'TEST' })
       .mockResolvedValueOnce({ id: 1, profilescore: 60 })
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ total_points: 0 })
+      .mockResolvedValueOnce({ total_points: 0 })
     mockExecute.mockResolvedValueOnce([])
     mockExecuteTakeFirst.mockResolvedValueOnce({ points: 1 })
     mockGetStudentGuideStatus.mockResolvedValueOnce([PAID_AMOUNT, true])
@@ -188,4 +201,3 @@ describe('API /api/check-crossword', () => {
     expect(data.scholarshipResult).toBe('0xmocktxhash')
   })
 })
-

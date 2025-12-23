@@ -20,6 +20,7 @@ interface CourseData {
 export async function updateUserAndCoursePoints(
   db: Kysely<DB>,
   user: Selectable<Usuario>,
+  courseId: number | null,
 ): Promise<number> {
   console.log("OJO updateUserAndCoursePoints. user=", user)
   // Process each guide the user has answered
@@ -59,20 +60,23 @@ export async function updateUserAndCoursePoints(
       guideUsuario.amountpaid
   }
   const courseIds = Object.keys(pointsGuidesCourse);
+  if (courseId && !courseIds.includes(courseId.toString())) {
+    courseIds.push(courseId.toString());
+  }
   for (const cId of courseIds) {
-    const courseId = Number(cId);
-    console.log("  OJO courseId=", courseId)
-    const userCourse = await db
+    const currentCourseId = Number(cId);
+    console.log("  OJO courseId=", currentCourseId)
+    const userCourse = (await db
     .selectFrom('course_usuario')
     .where('usuario_id', '=', user.id)
-    .where('proyectofinanciero_id', '=', courseId)
+    .where('proyectofinanciero_id', '=', currentCourseId)
     .selectAll()
-    .execute()
+    .execute()) || []
     console.log(" OJO userCourse=", userCourse)
     if (userCourse.length == 0) {
       let cp: Insertable<CourseUsuario> = {
         usuario_id: user.id,
-        proyectofinanciero_id: courseId,
+        proyectofinanciero_id: currentCourseId,
         points: 0,
         guidespoints: 0,
         amountscholarship: 0,
@@ -87,25 +91,25 @@ export async function updateUserAndCoursePoints(
     }
     const courseGuidesCountResult = await db
     .selectFrom('cor1440_gen_actividadpf')
-    .where('proyectofinanciero_id', '=', courseId)
-    .select(sql<number>`count(*)`.as('count'))
+    .where('proyectofinanciero_id', '=', currentCourseId)
+    .select(db.fn.countAll().as('count'))
     .executeTakeFirst()
     const totalGuidesInCourse = Number(courseGuidesCountResult?.count) || 0
     console.log("  OJO totalGuidesInCourse=", totalGuidesInCourse)
     const percentd = totalGuidesInCourse > 0 ? 
-      (amountGuidesCourse[courseId] / totalGuidesInCourse) * 100 : 0
+      ((amountGuidesCourse[currentCourseId] || 0) / totalGuidesInCourse) * 100 : 0
     console.log("  OJO percentd=", percentd)
 
     const updateCourseUsuario = {
-      guidespoints: pointsGuidesCourse[courseId],
-      amountscholarship: earnedCourse[courseId],
+      guidespoints: pointsGuidesCourse[currentCourseId] || 0,
+      amountscholarship: earnedCourse[currentCourseId] || 0,
       percentagecompleted: Math.round(percentd),
     }
     await db
     .updateTable('course_usuario')
     .set(updateCourseUsuario as any)
     .where('usuario_id', '=', user.id)
-    .where('proyectofinanciero_id', '=', courseId)
+    .where('proyectofinanciero_id', '=', currentCourseId)
     .execute()
   }
 
@@ -114,7 +118,7 @@ export async function updateUserAndCoursePoints(
   const totalGuidePointsResult = await db
   .selectFrom('guide_usuario')
   .where('usuario_id', '=', user.id)
-  .select(sql<number>`sum(points)`.as('total_points'))
+  .select(db.fn.sum('points').as('total_points'))
   .executeTakeFirst()
   const totalGuidePoints = Number(totalGuidePointsResult?.total_points) || 0
   console.log("OJO totalGuidePoints=", totalGuidePoints)
@@ -122,7 +126,7 @@ export async function updateUserAndCoursePoints(
   const totalCoursePointsResult = await db
   .selectFrom('course_usuario')
   .where('usuario_id', '=', user.id)
-  .select(sql<number>`sum(points)`.as('total_points'))
+  .select(db.fn.sum('points').as('total_points'))
   .executeTakeFirst()
   const totalCoursePoints = Number(totalCoursePointsResult?.total_points) || 0
   console.log("OJO totalCoursePoints=", totalCoursePoints)
@@ -143,4 +147,3 @@ export async function updateUserAndCoursePoints(
 
   return learningscore
 }
-

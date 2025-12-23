@@ -1,6 +1,6 @@
 'use client'
 
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { use, useEffect, useState, useCallback } from 'react'
@@ -13,6 +13,7 @@ import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 import { useAccount } from 'wagmi'
 
+import CeloSupportStreamButton from '@/components/CeloSupportStreamButton'
 import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
 import { Button } from '@/components/ui/button'
 import { useGuideData } from '@/lib/hooks/useGuideData'
@@ -51,16 +52,16 @@ export default function Page({ params }: PageProps) {
   const [creditsHtml, setCreditsHtml] = useState('')
   const [isClient, setIsClient] = useState(false)
   const [showGoodDollarButton, setShowGoodDollarButton] = useState(false)
+  const [showCeloUbiButton, setShowCeloUbiButton] = useState(false)
 
-  const htmlDeMd = useCallback((md: string | undefined) => {
+  const htmlDeMd = useCallback((md: string) => {
     if (!md) return ''
-    const processor = unified()
+    const processor = (unified() as any)
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkDirective)
       .use(remarkFrontmatter)
       .use(remarkFillInTheBlank, { url: `${pathSuffix}/test` })
-      // @ts-ignore
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeStringify, { allowDangerousHtml: true })
     const html = processor.processSync(md).toString()
@@ -69,7 +70,7 @@ export default function Page({ params }: PageProps) {
       localStorage.setItem(
         'fillInTheBlank',
         JSON.stringify(
-          (window as Window & { fillInTheBlank?: any[] }).fillInTheBlank || [],
+          (window as Window & { fillInTheBlank?: [] }).fillInTheBlank || [],
         ),
       )
     }
@@ -112,24 +113,36 @@ export default function Page({ params }: PageProps) {
     if (course && guideNumber > 0) {
         const fetchGuideContent = async () => {
             try {
-                let nurl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
+                const nurl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
                     `&lang=${lang}&prefix=${pathPrefix}&guide=${pathSuffix}&guideNumber=${guideNumber}`
 
-                const response = await axios.get(nurl)
+                const response = await axios.get<{ markdown?: string, message?: string }>(nurl)
                 if (response.data && response.data.markdown) {
-                    const markdown = response.data.markdown
+                    let markdown = response.data.markdown
+                    
                     const hasGoodDollarButton = markdown.includes('{GoodDollarButton}')
                     setShowGoodDollarButton(hasGoodDollarButton)
-                    const mdWithoutButton = markdown.replace('{GoodDollarButton}', '')
-                    setGuideHtml(htmlDeMd(mdWithoutButton))
+                    if (hasGoodDollarButton) {
+                        markdown = markdown.replace('{GoodDollarButton}', '')
+                    }
+
+                    const hasCeloUbiButton = markdown.includes('{CeloUbiButton}')
+                    setShowCeloUbiButton(hasCeloUbiButton)
+                    if (hasCeloUbiButton) {
+                        markdown = markdown.replace('{CeloUbiButton}', '')
+                    }
+
+                    setGuideHtml(htmlDeMd(markdown))
                 } else if (response.data && response.data.message) {
                     throw new Error(response.data.message)
                 }
-                setCreditsHtml(htmlDeMd(course.creditosMd))
+                setCreditsHtml(htmlDeMd(course.creditosMd || ''))
 
-            } catch (err: any) {
-                console.error("Error fetching guide content:", err)
-                setGuideHtml(`<p>Error: ${err.message}</p>`)
+            } catch (err) {
+                if (err instanceof AxiosError) {
+                    console.error("Error fetching guide content:", err)
+                    setGuideHtml(`<p>Error: ${err.message}</p>`)
+                }
             }
         }
         fetchGuideContent()
@@ -194,6 +207,7 @@ export default function Page({ params }: PageProps) {
             pathSuffix={pathSuffix}
           />
         )}
+        {isClient && showCeloUbiButton && <CeloSupportStreamButton />}
 
         <table className="mx-auto text-center mt-12">
           <tbody>
@@ -255,5 +269,3 @@ export default function Page({ params }: PageProps) {
     </>
   )
 }
-
-
