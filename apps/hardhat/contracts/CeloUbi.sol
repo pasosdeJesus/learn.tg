@@ -12,8 +12,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * This ensures that on-chain rules are met and prevents Sybil attacks.
  */
 contract CeloUbi is Ownable {
-    // The fixed amount of CELO to be rewarded per claim (1 CELO).
-    uint256 public constant REWARD_AMOUNT = 1 ether;
+    // The maximum amount of CELO to be rewarded per claim (1 CELO). The actual
+    // amount is a percentage of this, determined by the user's profileScore.
+    uint256 public constant MAX_REWARD = 1 ether;
 
     // The cooldown period required between claims for a single user (24 hours).
     uint256 public constant COOLDOWN_PERIOD = 24 hours;
@@ -73,18 +74,23 @@ contract CeloUbi is Ownable {
     /**
      * @notice Called by the backend to process a user's UBI claim.
      * @param recipient The user's address that will receive the UBI.
+     * @param profileScore A score from 50 to 100, used to calculate the reward amount.
      * @dev This function enforces the cooldown period and sufficient balance checks.
      */
-    function claim(address recipient) public onlyBackend {
+    function claim(address recipient, uint256 profileScore) public onlyBackend {
+        require(profileScore >= 50 && profileScore <= 100, "CeloUbi: Profile score must be between 50 and 100");
         require(block.timestamp >= lastClaimed[recipient] + COOLDOWN_PERIOD, "CeloUbi: Cooldown period not over");
-        require(address(this).balance >= REWARD_AMOUNT, "CeloUbi: Insufficient contract balance");
+        
+        uint256 reward = (MAX_REWARD * profileScore) / 100;
+        
+        require(address(this).balance >= reward, "CeloUbi: Insufficient contract balance");
 
         lastClaimed[recipient] = block.timestamp;
 
-        (bool success, ) = recipient.call{value: REWARD_AMOUNT}("");
+        (bool success, ) = recipient.call{value: reward}("");
         require(success, "CeloUbi: CELO transfer failed");
 
-        emit Claimed(recipient, REWARD_AMOUNT);
+        emit Claimed(recipient, reward);
     }
 
     /**
