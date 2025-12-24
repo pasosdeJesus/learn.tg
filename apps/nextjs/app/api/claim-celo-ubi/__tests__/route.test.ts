@@ -1,8 +1,11 @@
 
 import { NextRequest } from 'next/server';
 import { vi, describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
+import { BaseError, ContractFunctionRevertedError } from 'viem';
 
-// --- Kysely & DB Mocking (from check-crossword) ---
+import CeloUbi from '@celo-legacy/celo-ubi-contracts/artifacts/contracts/CeloUbi.sol/CeloUbi.json';
+
+// --- Kysely & DB Mocking ---
 const mockExecuteTakeFirst = vi.fn();
 
 class MockKysely {
@@ -24,7 +27,7 @@ const mockWaitForTransactionReceipt = vi.fn();
 vi.mock('viem', async () => {
     const actual = await vi.importActual('viem');
     return {
-        ...actual,
+        ...actual, // Import actual to get access to error classes
         createPublicClient: vi.fn(() => ({
             readContract: mockReadContract,
             waitForTransactionReceipt: mockWaitForTransactionReceipt,
@@ -36,14 +39,9 @@ vi.mock('viem', async () => {
     };
 });
 
-vi.mock('viem/accounts', async () => {
-    const actual = await vi.importActual('viem/accounts');
-    return {
-        ...actual,
-        privateKeyToAccount: vi.fn(() => '0xMockAccount'),
-    };
-});
-
+vi.mock('viem/accounts', () => ({
+    privateKeyToAccount: vi.fn(() => '0xMockAccount'),
+}));
 
 // --- NextAuth Mocking ---
 vi.mock('next-auth/next', () => ({
@@ -63,7 +61,6 @@ describe('POST /api/claim-celo-ubi', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-
     const nextAuth = require('next-auth/next');
     getServerSession = vi.mocked(nextAuth.getServerSession);
 
@@ -96,56 +93,56 @@ describe('POST /api/claim-celo-ubi', () => {
 
   it('should return 403 if profile score is less than 50', async () => {
     getServerSession.mockResolvedValue({ user: { email: 'user@example.com' } });
-    const mockUser = { id: 1, profilescore: 49 };
-    mockExecuteTakeFirst.mockResolvedValue(mockUser);
+    mockExecuteTakeFirst.mockResolvedValue({ id: 1, profilescore: 49 });
     const response = await POST(mockRequest);
     expect(response.status).toBe(403);
   });
 
   it('should return 400 if user has no wallet', async () => {
     getServerSession.mockResolvedValue({ user: { email: 'user@example.com' } });
-    const mockUser = { id: 1, profilescore: 75 };
-    mockExecuteTakeFirst.mockResolvedValueOnce(mockUser).mockResolvedValueOnce(null);
+    mockExecuteTakeFirst.mockResolvedValueOnce({ id: 1, profilescore: 75 }).mockResolvedValueOnce(null);
     const response = await POST(mockRequest);
     expect(response.status).toBe(400);
   });
 
   it('should return 429 if cooldown period is not over', async () => {
     getServerSession.mockResolvedValue({ user: { email: 'user@example.com' } });
-    const mockUser = { id: 1, profilescore: 75 };
-    const mockWallet = { billetera: '0x123' };
-    mockExecuteTakeFirst.mockResolvedValueOnce(mockUser).mockResolvedValueOnce(mockWallet);
+    mockExecuteTakeFirst.mockResolvedValueOnce({ id: 1, profilescore: 75 }).mockResolvedValueOnce({ billetera: '0x123' });
     mockReadContract.mockResolvedValue(BigInt(Math.floor(Date.now() / 1000)));
-
     const response = await POST(mockRequest);
     expect(response.status).toBe(429);
   });
 
   it('should return 400 if contract call reverts', async () => {
     getServerSession.mockResolvedValue({ user: { email: 'user@example.com' } });
-    const mockUser = { id: 1, profilescore: 75 };
-    const mockWallet = { billetera: '0x123' };
-    mockExecuteTakeFirst.mockResolvedValueOnce(mockUser).mockResolvedValueOnce(mockWallet);
-    mockReadContract.mockResolvedValue(BigInt(0)); 
-    mockWriteContract.mockRejectedValue(new Error('Transaction reverted'));
+    mockExecuteTakeFirst.mockResolvedValueOnce({ id: 1, profilescore: 75 }).mockResolvedValueOnce({ billetera: '0x123' });
+    mockReadContract.mockResolvedValue(BigInt(0));
+    
+    const revertError = new ContractFunctionRevertedError({
+      abi: CeloUbi.abi,
+      functionName: 'claim',
+      data: { errorName: 'InsufficientBalance', args: [] },
+    });
+    const baseError = new BaseError('Transaction reverted', { cause: revertError });
+    mockWriteContract.mockRejectedValue(baseError);
 
     const response = await POST(mockRequest);
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.message).toBe('Claim failed: InsufficientBalance');
   });
 
   it('should return 200 on successful claim', async () => {
     getServerSession.mockResolvedValue({ user: { email: 'user@example.com' } });
-    const mockUser = { id: 1, profilescore: 80 };
-    const mockWallet = { billetera: '0x123' };
-    mockExecuteTakeFirst.mockResolvedValueOnce(mockUser).mockResolvedValueOnce(mockWallet);
-
+    mockExecuteTakeFirst.mockResolvedValueOnce({ id: 1, profilescore: 80 }).mockResolvedValueOnce({ billetera: '0x123' });
     mockReadContract.mockResolvedValue(BigInt(0));
-    mockWriteContract.mockResolvedValue({ hash: '0xabc123' });
+    mockWriteContract.mockResolvedValue('0xabc123');
     mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success' });
 
     const response = await POST(mockRequest);
     expect(response.status).toBe(200);
     const body = await response.json();
+    expect(body.message).toBe('Claim successful!');
     expect(body.transactionHash).toBe('0xabc123');
   });
 });

@@ -7,7 +7,8 @@ import {
     createWalletClient, 
     http, 
     BaseError,
-    ContractFunctionRevertedError
+    ContractFunctionRevertedError,
+    Address
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { celoAlfajores } from 'viem/chains';
@@ -56,9 +57,9 @@ export async function POST(req: NextRequest) {
         if (!billeteraUsuario || !billeteraUsuario.billetera) {
             return NextResponse.json({ message: 'User does not have a wallet address.' }, { status: 400 });
         }
-        const userWallet = billeteraUsuario.billetera as `0x${string}`;
+        const userWallet = billeteraUsuario.billetera as Address;
 
-        const contractAddress = process.env.CELO_UBI_CONTRACT_ADDRESS as `0x${string}`;
+        const contractAddress = process.env.CELO_UBI_CONTRACT_ADDRESS as Address;
         const privateKey = process.env.BACKEND_WALLET_PRIVATE_KEY as `0x${string}`;
         const celoRpcUrl = process.env.CELO_RPC_URL;
 
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
              return NextResponse.json({ message: 'You can only claim once every 24 hours.' }, { status: 429 });
         }
 
-        const { hash } = await walletClient.writeContract({
+        const hash = await walletClient.writeContract({
             address: contractAddress,
             abi: CeloUbi.abi,
             functionName: 'claim',
