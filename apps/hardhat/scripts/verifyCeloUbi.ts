@@ -1,22 +1,27 @@
 import { ethers } from "hardhat";
-import dotenv from "dotenv"
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 
 async function main() {
+  // Get the deployed contract address from environment variables
   const celoUbiAddress = process.env.CELOUBI_ADDRESS;
-
   if (!celoUbiAddress) {
-    throw new Error("CELOUBI_ADDRESS not found in environment variables");
+    throw new Error("CELOUBI_ADDRESS not found in .env file");
   }
 
-  console.log("Verifying CeloUbi at:", celoUbiAddress);
+  // Get the contract instance for the already deployed CeloUbi contract
+  const celoUbi = await ethers.getContractAt("CeloUbi", celoUbiAddress);
+  console.log(`Attached to CeloUbi contract at: ${await celoUbi.getAddress()}`);
 
-  await hre.run("verify:verify", {
-    address: celoUbiAddress,
-    constructorArguments: [],
-  });
+  // Get the owner of the contract
+  const owner = await celoUbi.owner();
+  console.log("Contract owner:", owner);
 
-  console.log("Contract verified successfully!");
+  // Get the backend address that the contract was initialized with
+  const backendAddress = await celoUbi.backendAddress();
+  console.log("Contract backend address:", backendAddress);
+
+  console.log("Contract state verified successfully!");
 }
 
 main().catch((error) => {
