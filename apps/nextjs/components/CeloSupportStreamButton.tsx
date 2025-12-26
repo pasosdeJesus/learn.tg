@@ -1,47 +1,93 @@
 'use client'
 
-import { useState } from 'react';
-import axios, { AxiosError } from 'axios';
-import { Button } from '@/components/ui/button';
+import { useSession } from 'next-auth/react'
+import { useState } from 'react'
 
-const CeloSupportStreamButton = () => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState('');
-    const [isError, setIsError] = useState(false);
+import { Button } from '@/components/ui/button'
 
-    const handleClick = async () => {
-        setIsLoading(true);
-        setMessage('');
-        setIsError(false);
+export interface CeloSupportStreamButtonProps {
+  /** Current language ('en' or 'es') for button text */
+  lang?: string
+}
 
-        try {
-            const response = await axios.post('/api/claim-celo-ubi');
-            setMessage(response.data.message || 'Success!');
-        } catch (err) {
-            const error = err as AxiosError<{ message: string }>;
-            setIsError(true);
-            if (error.response) {
-                setMessage(error.response.data.message || 'An unknown error occurred.');
-            } else {
-                setMessage('An error occurred while sending the request.');
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    };
+export function CeloSupportStreamButton({
+  lang = 'en',
+}: CeloSupportStreamButtonProps) {
+  const { data: session } = useSession()
+  const [isClaiming, setIsClaiming] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
-    return (
-        <div className="my-4 text-center">
-            <Button onClick={handleClick} disabled={isLoading}>
-                {isLoading ? 'Processing...' : 'Claim 1 CELO daily UBI'}
-            </Button>
-            {message && (
-                <p className={`mt-2 text-sm ${isError ? 'text-red-500' : 'text-green-500'}`}>
-                    {message}
-                </p>
-            )}
+  const handleClaim = async () => {
+    if (!session) {
+      setError(
+        lang === 'es'
+          ? 'Debes iniciar sesión para reclamar'
+          : 'You must be logged in to claim',
+      )
+      return
+    }
+
+    setIsClaiming(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const response = await fetch('/api/claim-celo-ubi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || (lang === 'es' ? 'Ocurrió un error' : 'An error occurred'))
+      }
+
+      setSuccess(data.message || (lang === 'es' ? 'Reclamo exitoso!' : 'Claim successful!'))
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : JSON.stringify(err, null, 2)
+      setError(errorMessage)
+    } finally {
+      setIsClaiming(false)
+    }
+  }
+
+  const buttonText = lang === 'es' ? 'Reclamar Apoyo de Celo' : 'Claim Celo Support'
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-2">
+      <Button
+        onClick={handleClaim}
+        size="lg"
+        disabled={isClaiming || !session}
+      >
+        {isClaiming
+          ? lang === 'es'
+            ? 'Reclamando...'
+            : 'Claiming...'
+          : buttonText}
+      </Button>
+      {error && (
+        <div className="text-sm text-red-600 mt-2 text-center">{error}</div>
+      )}
+      {success && (
+        <div className="text-sm text-green-600 mt-2 text-center">{success}</div>
+      )}
+      {!session && (
+        <div className="text-sm text-gray-500 mt-2 text-center">
+          {lang === 'es'
+            ? 'Inicia sesión para reclamar'
+            : 'Log in to claim'}
         </div>
-    );
-};
+      )}
+    </div>
+  )
+}
 
-export default CeloSupportStreamButton;
+export default CeloSupportStreamButton

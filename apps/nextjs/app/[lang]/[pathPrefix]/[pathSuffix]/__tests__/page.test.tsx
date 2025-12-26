@@ -81,6 +81,11 @@ vi.mock('@/components/GoodDollarClaimButton', () => ({
   default: () => <div data-testid="gooddollar-claim-button">Mock GoodDollarClaimButton</div>,
 }))
 
+// Mock CeloSupportStreamButton component
+vi.mock('@/components/CeloSupportStreamButton', () => ({
+    default: () => <div data-testid="celo-ubi-button">Mock CeloUbiButton</div>,
+  }))
+
 // Mock window.fillInTheBlank
 if (typeof global.window !== 'undefined') {
   (global.window as any).fillInTheBlank = []
@@ -289,5 +294,30 @@ describe('Guide Page Component', () => {
       expect(screen.getByText(/Guide status error/)).toBeInTheDocument()
     })
   })
-})
 
+  it('renders CeloSupportStreamButton when tag is present in markdown', async () => {
+    const mockGuideDataWithButton = { markdown: 'Some content {CeloUbiButton} more content' };
+    const mockGuideStatus = { completed: false, receivedScholarship: false };
+
+    axiosGet.mockImplementation((url: string) => {
+      if (url.startsWith(API_BUSCA_URL)) return Promise.resolve({ data: [mockCourse] });
+      if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse });
+      if (url.startsWith(process.env.NEXT_PUBLIC_AUTH_URL!)) return Promise.resolve({ data: mockGuideDataWithButton });
+      if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus });
+      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } });
+      return Promise.resolve({ data: [] });
+    });
+
+    renderWithProviders(
+      <Suspense fallback={<div />}>
+        <Page {...defaultProps} />
+      </Suspense>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('celo-ubi-button')).toBeInTheDocument();
+      expect(screen.queryByTestId('gooddollar-claim-button')).not.toBeInTheDocument();
+    });
+  });
+
+})

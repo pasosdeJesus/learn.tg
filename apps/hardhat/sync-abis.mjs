@@ -18,6 +18,7 @@ const env_replacements = [
   ['CCOP_DECIMALS', 'NEXT_PUBLIC_CCOP_DECIMALS'],
   ['GOODDOLLAR_ADDRESS', 'NEXT_PUBLIC_GOODDOLLAR_ADDRESS'],
   ['GOODDOLLAR_DECIMALS', 'NEXT_PUBLIC_GOODDOLLAR_DECIMALS'],
+  ['CELOUBI_ADDRESS', 'NEXT_PUBLIC_CELOUBI_ADDRESS'],
 ]
 
 // Create the React ABI directory if it doesn't exist
@@ -78,7 +79,7 @@ try {
         return console.log(err)
       }
       env_replacements.forEach((ve) => {
-        let s1 = RegExp(`^\\s*${ve[1]}\\s*=.*`, "m")
+        let s1 = RegExp(`^\\s*${ve[1]\\s*=.*`, "m")
         let s2 = `${ve[1]}=${process.env[ve[0]]}`
         var result = data.replace(s1, s2)
         console.log(`*******Updated ${ve[1]} in ${NEXTJS_ENV_PATH}`)
