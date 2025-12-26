@@ -10,7 +10,7 @@ describe("CeloUbi", function () {
     async function deployCeloUbiFixture() {
         const [owner, backend, recipient, otherAccount] = await ethers.getSigners();
         const CeloUbiFactory = await ethers.getContractFactory("CeloUbi");
-        const celoUbi = await CeloUbiFactory.deploy(owner.address, backend.address) as CeloUbi;
+        const celoUbi = await CeloUbiFactory.deploy(owner.address, backend.address) as unknown as CeloUbi;
         return { celoUbi, owner, backend, recipient, otherAccount };
     }
 

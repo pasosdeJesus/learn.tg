@@ -14,7 +14,7 @@
     "noImplicitAny": false
   },
   "include": [
-    "./typechain", 
+    "./typechain-types", 
     "./src", 
     "./test", 
     "./deploy", 
