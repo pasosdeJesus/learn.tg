@@ -5,7 +5,9 @@ async function main() {
 
   console.log("Deploying CeloUbi...");
 
-  const celoUbi = await CeloUbi.deploy();
+  const deployer = (await ethers.getSigners())[0];
+  const deployerAddress = await deployer.getAddress();
+  const celoUbi = await CeloUbi.deploy(deployerAddress, deployerAddress);
 
   await celoUbi.waitForDeployment();
 

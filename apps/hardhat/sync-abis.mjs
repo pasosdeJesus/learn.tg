@@ -79,7 +79,7 @@ try {
         return console.log(err)
       }
       env_replacements.forEach((ve) => {
-        let s1 = RegExp(`^\\s*${ve[1]\\s*=.*`, "m")
+        let s1 = RegExp(`^\s*${ve[1]}\s*=.*`, "m")
         let s2 = `${ve[1]}=${process.env[ve[0]]}`
         var result = data.replace(s1, s2)
         console.log(`*******Updated ${ve[1]} in ${NEXTJS_ENV_PATH}`)
