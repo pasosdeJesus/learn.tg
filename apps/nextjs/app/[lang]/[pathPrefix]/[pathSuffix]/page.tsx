@@ -13,7 +13,7 @@ import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 import { useAccount } from 'wagmi'
 
-import CeloSupportStreamButton from '@/components/CeloSupportStreamButton'
+import CeloUbiButton from '@/components/CeloUbiButton'
 import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
 import { Button } from '@/components/ui/button'
 import { useGuideData } from '@/lib/hooks/useGuideData'
@@ -207,7 +207,7 @@ export default function Page({ params }: PageProps) {
             pathSuffix={pathSuffix}
           />
         )}
-        {isClient && showCeloUbiButton && <CeloSupportStreamButton />}
+        {isClient && showCeloUbiButton && <CeloUbiButton />}
 
         <table className="mx-auto text-center mt-12">
           <tbody>

@@ -1,18 +1,19 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import axios from 'axios'
+import { getCsrfToken, useSession } from 'next-auth/react'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 
-export interface CeloSupportStreamButtonProps {
+export interface CeloUbiButtonProps {
   /** Current language ('en' or 'es') for button text */
   lang?: string
 }
 
-export function CeloSupportStreamButton({
+export function CeloUbiButton({
   lang = 'en',
-}: CeloSupportStreamButtonProps) {
+}: CeloUbiButtonProps) {
   const { data: session } = useSession()
   const [isClaiming, setIsClaiming] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -33,12 +34,13 @@ export function CeloSupportStreamButton({
     setSuccess(null)
 
     try {
-      const response = await fetch('/api/claim-celo-ubi', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const csrfToken = await getCsrfToken()
+      const url = '/api/claim-celo-ubi'
+      const response = await axios.post(url, {
+        walletAddress: session.address,
+        token: csrfToken,
       })
+      debugger
 
       const data = await response.json()
 
@@ -90,4 +92,4 @@ export function CeloSupportStreamButton({
   )
 }
 
-export default CeloSupportStreamButton
+export default CeloUbiButton

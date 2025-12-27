@@ -64,6 +64,8 @@ Complete each sentence by filling in the missing word.
 3. Supposing that the exchange rate of UBI/USDT and the exchange rate of USDT/SLE is constant as presented in this guide,  to have at least 1SLE you will have to claim GoodDollar UBI at least ___ days. (four)
 4. It is possible to claim the UBI of multiple ___ in your household from one single OKX app --to transfer easier to only one account. (adults)
 
+{CeloUbiButton}
+
 ## 5. Bibliography
 
 * GoodDollar Official Website:  https://www.gooddollar.org/
