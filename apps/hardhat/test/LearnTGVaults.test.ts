@@ -5,8 +5,8 @@ import {
   time,
   loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers.js";
-import { LearnTGVaults } from "../typechain-types/LearnTGVaults";
-import { MockUSDT } from "../typechain-types/MockUSDT";
+import { LearnTGVaults } from "../typechain-types/contracts/LearnTGVaults.sol/LearnTGVaults";
+import { MockUSDT } from "../typechain-types/contracts/MockUSDT";
 
 describe("LearnTGVaults", function () {
   // --- Constants ---
