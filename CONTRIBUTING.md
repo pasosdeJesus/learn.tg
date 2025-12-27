@@ -26,7 +26,7 @@ See instructions in [apps/nextjs/README.md](apps/nextjs/README.md)
 1. **Fork** the repository
 2. **Create a branch** from `main`: `git checkout -b feature/my-feature`
 3. **Make your changes** following the style guides
-4. **Run tests in directory `apps/nextjs`**: `make syntax` and `npm test`
+4. **Run tests in directory `apps/nextjs`**: `make type` and `make test`
 5. **Commit** with clear messages: `git commit -m "feat: add feature X"`
 6. **Push** and create a **Pull Request**
 
@@ -37,7 +37,7 @@ See instructions in [apps/nextjs/README.md](apps/nextjs/README.md)
   - Don´t use ; at the end of the lines
 - **Tests**: Try to include tests for new functionality
 - **Commits**: Use [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`
-- **Linting**: Code at `apps/nextjs` must pass `make syntax` without errors
+- **Type checking**: Code at `apps/nextjs` must pass `make type` without errors
 
 ## 🐛 Reporting Bugs
 

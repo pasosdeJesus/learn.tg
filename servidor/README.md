@@ -103,3 +103,35 @@ Once started, with a browser check <https://127.0.0.1:3000/learntg-admin>
 
 You can login with the default user `cor1440` and password `cor1440`.
 
+## Testing
+
+The project uses Minitest for Ruby tests and Rubocop for linting.
+
+### Running Tests
+
+To run the test suite:
+
+```sh
+bundle exec rails test
+```
+
+Or using rake:
+
+```sh
+bundle exec rake test
+```
+
+### Code Quality and Linting
+
+To run Rubocop and check code style:
+
+```sh
+bundle exec rubocop
+```
+
+To automatically fix some linting issues:
+
+```sh
+bundle exec rubocop -a
+```
+
