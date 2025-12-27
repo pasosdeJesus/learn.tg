@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
-import { createPublicClient, createWalletClient, http, getContract, BaseError, ContractFunctionRevertedError } from 'viem'
+import { createPublicClient, createWalletClient, http, BaseError, ContractFunctionRevertedError } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
-    if (user.profilescore < PROFILE_SCORE_THRESHOLD) {
+    if (user.profilescore === null || user.profilescore < PROFILE_SCORE_THRESHOLD) {
       return NextResponse.json({ message: `Profile score must be at least ${PROFILE_SCORE_THRESHOLD}` }, { status: 403 });
     }
 
@@ -51,14 +51,14 @@ export async function POST(request: NextRequest) {
 
     const lastClaim = await publicClient.readContract({
         address: contractAddress,
-        abi: CeloUbiAbi.abi,
+        abi: CeloUbiAbi,
         functionName: 'lastClaim',
         args: [billetera.billetera as Address]
     });
 
     const cooldown = await publicClient.readContract({
         address: contractAddress,
-        abi: CeloUbiAbi.abi,
+        abi: CeloUbiAbi,
         functionName: 'cooldown',
         args: []
     });
@@ -78,9 +78,9 @@ export async function POST(request: NextRequest) {
     try {
       const tx = await walletClient.writeContract({
         address: contractAddress,
-        abi: CeloUbiAbi.abi,
+        abi: CeloUbiAbi,
         functionName: 'claim',
-        args: [billetera.billetera as Address],
+        args: [billetera.billetera as Address, user.profilescore],
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
@@ -91,14 +91,15 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ message: 'Claim successful!', transactionHash: tx });
     } catch (err) {
+        console.error('Claim transaction failed:', err);
+        let errorMessage = 'Claim failed: Unknown error';
         if (err instanceof BaseError) {
-            const revertError = err.walk(err => err instanceof ContractFunctionRevertedError)
+            const revertError = err.walk(e => e instanceof ContractFunctionRevertedError) as ContractFunctionRevertedError | null;
             if (revertError) {
-                const errorName = revertError.data?.errorName ?? ''
-                return NextResponse.json({ message: `Claim failed: ${errorName}` }, { status: 400 });
+                errorMessage = `Claim failed: ${revertError.reason || revertError.shortMessage}`;
             }
         }
-        return NextResponse.json({ message: 'Claim failed: Unknown error' }, { status: 400 });
+        return NextResponse.json({ message: errorMessage }, { status: 400 });
     }
 
   } catch (error) {
