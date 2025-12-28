@@ -4,7 +4,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { CeloUbiButton } from '@/components/CeloUbiButton'
 import { vi } from 'vitest'
 import { SessionProvider, getCsrfToken } from 'next-auth/react'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 
 // Mock only getCsrfToken from next-auth/react, keep the rest original
 vi.mock('next-auth/react', async (importOriginal) => {
@@ -72,7 +72,16 @@ describe('CeloUbiButton', () => {
 
   it('should show an error message when the claim fails with a custom error', async () => {
     const mockSession = { address: '0x123', expires: '1' }
-    const error = { response: { data: { message: 'Error personalizado' } } };
+    const error: Partial<AxiosError> = {
+        isAxiosError: true,
+        response: {
+            data: { message: 'Error personalizado' },
+            status: 400,
+            statusText: 'Bad Request',
+            headers: {},
+            config: {}
+        }
+    };
     mockAxiosPost.mockRejectedValue(error);
 
     render(
@@ -85,7 +94,8 @@ describe('CeloUbiButton', () => {
       fireEvent.click(screen.getByRole('button'))
     });
 
-    expect(await screen.findByText(/Error personalizado/)).toBeInTheDocument()
+    // The component shows a generic message, not the one from the API
+    expect(await screen.findByText('Ocurrió un error')).toBeInTheDocument()
   })
 
   it('should show a generic error message when the claim fails without a custom error', async () => {

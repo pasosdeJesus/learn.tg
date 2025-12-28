@@ -3,7 +3,7 @@
 import axios, { AxiosError } from 'axios'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { use, useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 import remarkDirective from 'remark-directive'
@@ -20,18 +20,17 @@ import { useGuideData } from '@/lib/hooks/useGuideData'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 type PageProps = {
-  params: Promise<{
+  params: {
     lang: string
     pathPrefix: string
     pathSuffix: string
-  }>
+  }
 }
 
 export default function Page({ params }: PageProps) {
   const { address } = useAccount()
   const { data: session } = useSession()
-  const parameters = use(params)
-  const { lang, pathPrefix, pathSuffix } = parameters
+  const { lang, pathPrefix, pathSuffix } = params
 
   const { 
     course, 

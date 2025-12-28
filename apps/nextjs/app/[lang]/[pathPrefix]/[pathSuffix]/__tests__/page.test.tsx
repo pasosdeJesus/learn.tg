@@ -5,75 +5,99 @@ import { render, screen, act } from '@testing-library/react'
 import axios from 'axios'
 import { vi } from 'vitest'
 import { unified } from 'unified'
-import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
-import rehypeReact from 'rehype-react'
-import { CeloUbiButton } from '@/components/CeloUbiButton'
 import React from 'react'
 import { SessionProvider } from 'next-auth/react'
+import { WagmiProvider, createConfig, http, useAccount } from 'wagmi'
+import { celo } from 'viem/chains'
 
+import { CeloUbiButton } from '@/components/CeloUbiButton'
+import { useGuideData } from '@/lib/hooks/useGuideData'
+
+// Mock dependencies
+vi.mock('@/components/GoodDollarClaimButton', () => ({
+  GoodDollarClaimButton: () => <div data-testid="gooddollar-claim-button"></div>,
+}))
+vi.mock('@/lib/hooks/useGuideData')
 vi.mock('axios')
 vi.mock('unified', () => ({
   unified: vi.fn(),
 }))
 
+// Mock useAccount to provide a consistent address
+vi.mock('wagmi', async (importOriginal) => {
+  const actualWagmi = await importOriginal<typeof import('wagmi')>()
+  return {
+    ...actualWagmi,
+    useAccount: vi.fn(() => ({ address: '0x123' })),
+  }
+})
+
+// Setup Wagmi config for testing
+const config = createConfig({
+  chains: [celo],
+  transports: {
+    [celo.id]: http(),
+  },
+})
+
 describe('Page', () => {
   const mockAxios = axios as vi.Mocked<typeof axios>
   const mockUnified = unified as vi.Mock
+  const mockUseGuideData = useGuideData as vi.Mock
 
   const mockProcess = vi.fn()
   const mockUse = vi.fn().mockReturnThis()
   const mockParse = vi.fn().mockReturnThis()
 
   beforeEach(() => {
-    // Reset mocks before each test
     vi.clearAllMocks()
-
-    // Setup the mock chain for unified
     mockUnified.mockReturnValue({
       use: mockUse,
       parse: mockParse,
       process: mockProcess,
     } as any)
+    vi.stubGlobal('process', {
+      env: { NEXT_PUBLIC_AUTH_URL: 'http://localhost:3000' },
+    })
   })
 
   it('should render the CeloUbiButton when the markdown contains the magic string', async () => {
     const markdownContent = 'This is some content with the magic button: {CeloUbiButton}'
-    const downloadUrl = 'http://localhost:3000/guia.md'
-
-    mockAxios.get.mockResolvedValueOnce({ data: markdownContent })
-
-    // Mock the result of the unified processor
-    const unifiedResult = {
-      result: React.createElement('div', null, 
-        'This is some content with the magic button: ',
-        React.createElement(CeloUbiButton, { key: 'celo-ubi-button', lang: 'en' })
-      ),
+    const params = {
+      lang: 'en',
+      pathPrefix: 'guia',
+      pathSuffix: 'celo-ubi',
     }
-    mockProcess.mockResolvedValue(unifiedResult)
+
+    mockUseGuideData.mockReturnValue({
+      course: { id: 1, idioma: 'en', titulo: 'Test Course', sinBilletera: false, conBilletera: true },
+      loading: false,
+      error: null,
+      myGuide: { titulo: 'Test Guide', completed: false, receivedScholarship: false },
+      guideNumber: 1,
+      nextGuidePath: null,
+      previousGuidePath: null,
+      coursePath: '/',
+    })
+    mockAxios.get.mockResolvedValue({ data: { markdown: markdownContent } })
+
+    mockProcess.mockReturnValue({ toString: () => 'This is some content with the magic button: ' })
 
     const mockSession = { address: '0x123', expires: '1' };
 
-    // Use act to wait for async operations
     await act(async () => {
       render(
-        <SessionProvider session={mockSession as any}>
-          <Page
-            params={{
-              lang: 'en',
-              pathPrefix: 'guia',
-              pathSuffix: 'celo-ubi',
-              downloadUrl: downloadUrl,
-            }}
-          />
-        </SessionProvider>
+        <WagmiProvider config={config}>
+          <SessionProvider session={mockSession as any}>
+            <Page params={params} />
+          </SessionProvider>
+        </WagmiProvider>
       )
     })
     
-    // Check if axios was called with the correct URL
-    expect(mockAxios.get).toHaveBeenCalledWith(downloadUrl)
+    const expectedUrl = `http://localhost:3000/api/guide?courseId=1&lang=en&prefix=guia&guide=celo-ubi&guideNumber=1`
+    expect(mockAxios.get).toHaveBeenCalledWith(expectedUrl)
     
-    // Check if the button is rendered
     expect(await screen.findByTestId('celo-ubi-button')).toBeInTheDocument()
   })
 })
