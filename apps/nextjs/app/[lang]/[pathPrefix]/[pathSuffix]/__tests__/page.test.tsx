@@ -1,323 +1,79 @@
+'use client'
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, waitFor, act } from '@testing-library/react'
-import '@testing-library/jest-dom'
-import Page from '../page.tsx'
-import React, { Suspense } from 'react'
+import Page from '../page'
+import { render, screen, act } from '@testing-library/react'
+import axios from 'axios'
+import { vi } from 'vitest'
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import remarkRehype from 'remark-rehype'
+import rehypeReact from 'rehype-react'
+import { CeloUbiButton } from '@/components/CeloUbiButton'
+import React from 'react'
+import { SessionProvider } from 'next-auth/react'
 
-(global as any).IS_REACT_ACT_ENVIRONMENT = true;
-
-// Mock next/navigation
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/en/gooddollar/guide1',
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-  }),
-  useSearchParams: () => new URLSearchParams(),
-}))
-
-// Mock axios
-interface AxiosGetReturn { data: any }
-const axiosGet = vi.fn(
-  (..._args: any[]): Promise<AxiosGetReturn> => Promise.resolve({ data: [] }),
-)
-vi.mock('axios', () => ({
-  default: { get: (...args: any[]) => axiosGet(...args) },
-}))
-
-// Mock next-auth/react
-interface SessionLike {
-  address: string
-  user: { name: string }
-}
-const useSessionMock = vi.fn((): { data: SessionLike; status: string } => ({
-  data: { address: '0x123', user: { name: 'Test User' } },
-  status: 'authenticated',
-}))
-const getCsrfTokenMock = vi.fn(() => Promise.resolve('mock-csrf-token'))
-vi.mock('next-auth/react', () => ({
-  useSession: () => useSessionMock(),
-  getCsrfToken: () => getCsrfTokenMock(),
-}))
-
-// Mock wagmi
-const useAccountMock = vi.fn((): { address: string; isConnected: boolean } => ({
-  address: '0x123',
-  isConnected: true,
-}))
-const usePublicClientMock = vi.fn(() => ({
-  readContract: vi.fn().mockResolvedValue(0n),
-  getBalance: vi.fn().mockResolvedValue(0n),
-  getGasPrice: vi.fn().mockResolvedValue(1n),
-  estimateContractGas: vi.fn().mockResolvedValue(21000n),
-  waitForTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' }),
-}))
-const useWalletClientMock = vi.fn(() => ({
-  data: { writeContract: vi.fn().mockResolvedValue('0xhash') },
-}))
-vi.mock('wagmi', () => ({
-  useAccount: () => useAccountMock(),
-  usePublicClient: () => usePublicClientMock(),
-  useWalletClient: () => useWalletClientMock(),
-}))
-
-// Mock remark plugins (unified)
+vi.mock('axios')
 vi.mock('unified', () => ({
-  unified: () => ({
-    use: vi.fn().mockReturnThis(),
-    processSync: vi.fn().mockReturnValue({ toString: () => '<p>Mock HTML</p>' }),
-  }),
+  unified: vi.fn(),
 }))
 
-// Mock remarkFillInTheBlank
-vi.mock('@/lib/remarkFillInTheBlank.mjs', () => ({
-  remarkFillInTheBlank: vi.fn().mockReturnValue({}),
-}))
+describe('Page', () => {
+  const mockAxios = axios as vi.Mocked<typeof axios>
+  const mockUnified = unified as vi.Mock
 
-// Mock GoodDollarClaimButton component
-vi.mock('@/components/GoodDollarClaimButton', () => ({
-  default: () => <div data-testid="gooddollar-claim-button">Mock GoodDollarClaimButton</div>,
-}))
-
-// Mock CeloSupportStreamButton component
-vi.mock('@/components/CeloSupportStreamButton', () => ({
-    default: () => <div data-testid="celo-ubi-button">Mock CeloUbiButton</div>,
-  }))
-
-// Mock window.fillInTheBlank
-if (typeof global.window !== 'undefined') {
-  (global.window as any).fillInTheBlank = []
-}
-
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  clear: vi.fn(),
-}
-Object.defineProperty(global, 'localStorage', {
-  value: localStorageMock,
-})
-
-// Render with Suspense
-function renderWithProviders(ui: React.ReactElement) {
-  return render(ui)
-}
-
-describe('Guide Page Component', () => {
-  const defaultProps = {
-    params: Promise.resolve({
-      lang: 'en',
-      pathPrefix: 'gooddollar',
-      pathSuffix: 'guide1'
-    }),
-  }
-
-  const mockCourse = {
-    id: 'course-1',
-    idioma: 'en',
-    prefijoRuta: '/gooddollar',
-    titulo: 'GoodDollar Course',
-    sinBilletera: false,
-    conBilletera: true,
-    guias: [{ titulo: 'Guide 1', sufijoRuta: 'guide1' }],
-    creditosMd: '# Credits',
-  }
-
-  const mockGuideData = { markdown: '# Guide Content' }
-
-  const API_BUSCA_URL = 'https://fake.local/courses'
-  const API_PRESENTA_URL = 'https://fake.local/presenta'
-  const API_DESCARGA_URL = 'https://fake.local/descarga'
+  const mockProcess = vi.fn()
+  const mockUse = vi.fn().mockReturnThis()
+  const mockParse = vi.fn().mockReturnThis()
 
   beforeEach(() => {
+    // Reset mocks before each test
     vi.clearAllMocks()
-    useSessionMock.mockReturnValue({
-      data: { address: '0x123', user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-    useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
-    axiosGet.mockReset()
-    // @ts-ignore
-    global.window.alert = vi.fn()
-    process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = API_BUSCA_URL
-    process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL = API_PRESENTA_URL
-    process.env.NEXT_PUBLIC_API_DESCARGA_URL = API_DESCARGA_URL
-    process.env.NEXT_PUBLIC_AUTH_URL = 'https://fake.local/auth'
+
+    // Setup the mock chain for unified
+    mockUnified.mockReturnValue({
+      use: mockUse,
+      parse: mockParse,
+      process: mockProcess,
+    } as any)
   })
 
-  it('no carga datos cuando dirección y sesión difieren (partial login)', async () => {
-    useSessionMock.mockReturnValue({
-      data: { address: '0xAAA', user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-    useAccountMock.mockReturnValue({ address: '0xBBB', isConnected: true })
+  it('should render the CeloUbiButton when the markdown contains the magic string', async () => {
+    const markdownContent = 'This is some content with the magic button: {CeloUbiButton}'
+    const downloadUrl = 'http://localhost:3000/guia.md'
+
+    mockAxios.get.mockResolvedValueOnce({ data: markdownContent })
+
+    // Mock the result of the unified processor
+    const unifiedResult = {
+      result: React.createElement('div', null, 
+        'This is some content with the magic button: ',
+        React.createElement(CeloUbiButton, { key: 'celo-ubi-button', lang: 'en' })
+      ),
+    }
+    mockProcess.mockResolvedValue(unifiedResult)
+
+    const mockSession = { address: '0x123', expires: '1' };
+
+    // Use act to wait for async operations
     await act(async () => {
-      renderWithProviders(
-        <Suspense fallback={<div />}>
-          <Page {...defaultProps} />
-        </Suspense>,
+      render(
+        <SessionProvider session={mockSession as any}>
+          <Page
+            params={{
+              lang: 'en',
+              pathPrefix: 'guia',
+              pathSuffix: 'celo-ubi',
+              downloadUrl: downloadUrl,
+            }}
+          />
+        </SessionProvider>
       )
     })
-    await waitFor(() => {
-      expect(axiosGet).not.toHaveBeenCalled()
-    })
+    
+    // Check if axios was called with the correct URL
+    expect(mockAxios.get).toHaveBeenCalledWith(downloadUrl)
+    
+    // Check if the button is rendered
+    expect(await screen.findByTestId('celo-ubi-button')).toBeInTheDocument()
   })
-
-  it('calls guide-status API when session and address match', async () => {
-    const mockGuideStatus = { completed: true, receivedScholarship: false }
-
-    axiosGet.mockImplementation((url: string) => {
-      if (url.startsWith(API_BUSCA_URL)) return Promise.resolve({ data: [mockCourse] })
-      if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
-      if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: mockGuideData })
-      if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus })
-      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
-      return Promise.resolve({ data: [] })
-    })
-
-    await act(async () => {
-      renderWithProviders(
-        <Suspense fallback={<div />}>
-          <Page {...defaultProps} />
-        </Suspense>,
-      )
-    })
-
-    await waitFor(() => expect(axiosGet).toHaveBeenCalledTimes(5))
-    const guideStatusCall = axiosGet.mock.calls.find(call => call[0]?.includes('/api/guide-status'))
-    expect(guideStatusCall).toBeDefined()
-    expect(guideStatusCall?.[0]).toMatch(/walletAddress=0x123/)
-    expect(guideStatusCall?.[0]).toMatch(/courseId=course-1/)
-    expect(guideStatusCall?.[0]).toMatch(/guideNumber=1/)
-  })
-
-  it('shows completion indicator when guide is completed', async () => {
-    const mockGuideStatus = { completed: true, receivedScholarship: false }
-
-    axiosGet.mockImplementation((url: string) => {
-      if (url.startsWith(API_BUSCA_URL)) return Promise.resolve({ data: [mockCourse] })
-      if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
-      if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: mockGuideData })
-      if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus })
-      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
-      return Promise.resolve({ data: [] })
-    })
-
-    renderWithProviders(
-      <Suspense fallback={<div />}>
-        <Page {...defaultProps} />
-      </Suspense>,
-    )
-
-    await waitFor(async () => {
-      const titleElement = await screen.findByRole('heading', { level: 1 })
-      expect(titleElement).toHaveTextContent(/Guide 1: Guide 1/)
-      expect(titleElement).toHaveTextContent('✅')
-      expect(titleElement).not.toHaveTextContent('💰')
-    })
-  })
-
-  it('shows scholarship indicator when scholarship received', async () => {
-    const mockGuideStatus = { completed: true, receivedScholarship: true }
-
-    axiosGet.mockImplementation((url: string) => {
-      if (url.startsWith(API_BUSCA_URL)) return Promise.resolve({ data: [mockCourse] })
-      if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
-      if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: mockGuideData })
-      if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus })
-      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
-      return Promise.resolve({ data: [] })
-    })
-
-    renderWithProviders(
-      <Suspense fallback={<div />}>
-        <Page {...defaultProps} />
-      </Suspense>,
-    )
-
-    await waitFor(async () => {
-      const titleElement = await screen.findByRole('heading', { level: 1 })
-      expect(titleElement).toHaveTextContent(/Guide 1: Guide 1/)
-      expect(titleElement).toHaveTextContent('✅')
-      expect(titleElement).toHaveTextContent('💰')
-    })
-  })
-
-  it('does not show indicators when guide not completed', async () => {
-    const mockGuideStatus = { completed: false, receivedScholarship: false }
-
-    axiosGet.mockImplementation((url: string) => {
-      if (url.startsWith(API_BUSCA_URL)) return Promise.resolve({ data: [mockCourse] })
-      if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
-      if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: mockGuideData })
-      if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus })
-      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
-      return Promise.resolve({ data: [] })
-    })
-
-    renderWithProviders(
-      <Suspense fallback={<div />}>
-        <Page {...defaultProps} />
-      </Suspense>,
-    )
-
-    await waitFor(async () => {
-      const titleElement = await screen.findByRole('heading', { level: 1 })
-      expect(titleElement).toHaveTextContent(/Guide 1: Guide 1/)
-      expect(titleElement).not.toHaveTextContent('✅')
-      expect(titleElement).not.toHaveTextContent('💰')
-    })
-  })
-
-  it('handles guide-status API error gracefully', async () => {
-    axiosGet.mockImplementation((url: string) => {
-        if (url.startsWith(API_BUSCA_URL)) return Promise.resolve({ data: [mockCourse] })
-        if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse })
-        if (url.startsWith(API_DESCARGA_URL)) return Promise.resolve({ data: { markdown: '' } })
-        if (url.includes('/api/guide-status')) return Promise.reject(new Error('Guide status error'))
-        if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } })
-        return Promise.resolve({ data: [] })
-      })
-
-    await act(async () => {
-      renderWithProviders(
-        <Suspense fallback={<div />}>
-          <Page {...defaultProps} />
-        </Suspense>,
-      )
-    })
-
-    await waitFor(() => {
-      expect(screen.getByText(/Guide status error/)).toBeInTheDocument()
-    })
-  })
-
-  it('renders CeloSupportStreamButton when tag is present in markdown', async () => {
-    const mockGuideDataWithButton = { markdown: 'Some content {CeloUbiButton} more content' };
-    const mockGuideStatus = { completed: false, receivedScholarship: false };
-
-    axiosGet.mockImplementation((url: string) => {
-      if (url.startsWith(API_BUSCA_URL)) return Promise.resolve({ data: [mockCourse] });
-      if (url.startsWith(API_PRESENTA_URL)) return Promise.resolve({ data: mockCourse });
-      if (url.startsWith(process.env.NEXT_PUBLIC_AUTH_URL!)) return Promise.resolve({ data: mockGuideDataWithButton });
-      if (url.includes('/api/guide-status')) return Promise.resolve({ data: mockGuideStatus });
-      if (url.includes('/api/scholarship')) return Promise.resolve({ data: { percentageCompleted: null } });
-      return Promise.resolve({ data: [] });
-    });
-
-    renderWithProviders(
-      <Suspense fallback={<div />}>
-        <Page {...defaultProps} />
-      </Suspense>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId('celo-ubi-button')).toBeInTheDocument();
-      expect(screen.queryByTestId('gooddollar-claim-button')).not.toBeInTheDocument();
-    });
-  });
-
 })

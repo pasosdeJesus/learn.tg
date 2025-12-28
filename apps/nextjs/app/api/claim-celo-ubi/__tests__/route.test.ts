@@ -1,147 +1,136 @@
+import { describe, it, expect, beforeEach, vi, beforeAll, afterEach } from 'vitest'
+import { NextRequest } from 'next/server'
 
-import { NextRequest } from 'next/server';
-import { vi, describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
-import { BaseError, ContractFunctionRevertedError } from 'viem';
-import { getServerSession } from 'next-auth/next';
-
-import CeloUbiAbi from '@/abis/CeloUbi.json';
-
-// --- Kysely & DB Mocking ---
-const mockExecuteTakeFirst = vi.fn();
+const mockExecuteTakeFirst = vi.fn()
 
 class MockKysely {
-  selectFrom() { return this; }
-  where() { return this; }
-  selectAll() { return this; }
-  executeTakeFirst() { return mockExecuteTakeFirst(); }
+  selectFrom() { return this }
+  where() { return this }
+  selectAll() { return this }
+  executeTakeFirst() { return mockExecuteTakeFirst() }
 }
 
-vi.mock('@/.config/kysely.config.ts', () => ({
-  newKyselyPostgresql: () => new MockKysely(),
-}));
+vi.mock('kysely', () => ({
+  Kysely: MockKysely,
+  PostgresDialect: vi.fn(),
+}))
 
-// --- Viem & Contract Mocking ---
-const mockReadContract = vi.fn();
-const mockWriteContract = vi.fn();
-const mockWaitForTransactionReceipt = vi.fn();
+vi.mock('pg', () => ({
+  Pool: vi.fn(),
+}))
+
+vi.mock('@/.config/kysely.config', () => ({
+  newKyselyPostgresql: () => new MockKysely(),
+}))
+
+const mockReadContract = vi.fn()
+const mockWriteContract = vi.fn()
+const mockWaitForTransactionReceipt = vi.fn()
 
 vi.mock('viem', async () => {
-    const actual = await vi.importActual('viem');
-    return {
-        ...actual, // Import actual to get access to error classes
-        createPublicClient: vi.fn(() => ({
-            readContract: mockReadContract,
-            waitForTransactionReceipt: mockWaitForTransactionReceipt,
-        })),
-        createWalletClient: vi.fn(() => ({ 
-            writeContract: mockWriteContract,
-        })),
-        http: vi.fn(),
-    };
-});
+  const actual = await vi.importActual('viem')
+  return {
+    ...actual,
+    createPublicClient: vi.fn(() => ({
+      readContract: mockReadContract,
+      waitForTransactionReceipt: mockWaitForTransactionReceipt,
+    })),
+    createWalletClient: vi.fn(() => ({
+      writeContract: mockWriteContract,
+    })),
+    privateKeyToAccount: vi.fn(() => ({ address: '0xmockbackendwallet'})),
+    http: vi.fn(),
+  }
+})
 
-vi.mock('viem/accounts', () => ({
-    privateKeyToAccount: vi.fn(() => '0xMockAccount'),
-}));
+let POST: any
 
-// --- NextAuth Mocking ---
-vi.mock('next-auth/next', () => ({
-  getServerSession: vi.fn(),
-}));
-
-// --- Main Test Suite ---
-let POST: (req: NextRequest) => Promise<Response>;
-
-describe('POST /api/claim-celo-ubi', () => {
-
+describe('API /api/claim-celo-ubi', () => {
   beforeAll(async () => {
-    const route = await import('../route');
-    POST = route.POST;
-  });
+    const route = await import('../route')
+    POST = route.POST
+  })
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.stubEnv('CELO_RPC_URL', 'http://localhost:8545');
-    vi.stubEnv('CELO_UBI_CONTRACT_ADDRESS', '0xMockAddress');
-    vi.stubEnv('BACKEND_WALLET_PRIVATE_KEY', '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
+    vi.restoreAllMocks() 
+    process.env.CELO_RPC_URL = 'https://forno.celo.org'
+    process.env.CELO_UBI_CONTRACT_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a'
+    process.env.BACKEND_WALLET_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+  })
 
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
+  it('POST con walletAddress y token válidos reclama la beca exitosamente', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ billetera: '0x123', usuario_id: 1, token: 'VALID_TOKEN' })
+      .mockResolvedValueOnce({ id: 1, profilescore: 60 })
+    mockReadContract
+      .mockResolvedValueOnce(BigInt(Math.floor(Date.now() / 1000) - 3601)) // lastClaim
+      .mockResolvedValueOnce(BigInt(3600)) // cooldown
+    mockWriteContract.mockResolvedValue('0xmocktxhash')
+    mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success' })
 
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.restoreAllMocks();
-  });
+    const body = { walletAddress: '0x123', token: 'VALID_TOKEN' };
+    const req = new NextRequest('http://localhost/api/claim-celo-ubi', {
+      method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' },
+    })
 
-  const mockRequest = new NextRequest('http://localhost', { method: 'POST' });
+    const res = await POST(req)
+    const data = await res.json()
 
-  it('should return 401 if user is not logged in', async () => {
-    (getServerSession as vi.Mock).mockResolvedValue(null);
-    const response = await POST(mockRequest);
-    expect(response.status).toBe(401);
-  });
+    expect(res.status).toBe(200)
+    expect(data.message).toBe('Claim successful!')
+    expect(data.transactionHash).toBe('0xmocktxhash')
+    expect(mockWriteContract).toHaveBeenCalled()
+  })
 
-  it('should return 404 if user is not found', async () => {
-    (getServerSession as vi.Mock).mockResolvedValue({ user: { email: 'user@example.com' } });
-    mockExecuteTakeFirst.mockResolvedValue(null);
-    const response = await POST(mockRequest);
-    expect(response.status).toBe(404);
-  });
+  it('POST con token inválido devuelve error 401', async () => {
+    mockExecuteTakeFirst.mockResolvedValueOnce({ billetera: '0x123', usuario_id: 1, token: 'DIFFERENT_TOKEN' })
 
-  it('should return 403 if profile score is less than 50', async () => {
-    (getServerSession as vi.Mock).mockResolvedValue({ user: { email: 'user@example.com' } });
-    mockExecuteTakeFirst.mockResolvedValue({ id: 1, profilescore: 49 });
-    const response = await POST(mockRequest);
-    expect(response.status).toBe(403);
-  });
+    const body = { walletAddress: '0x123', token: 'INVALID_TOKEN' };
+    const req = new NextRequest('http://localhost/api/claim-celo-ubi', {
+      method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' },
+    })
 
-  it('should return 400 if user has no wallet', async () => {
-    (getServerSession as vi.Mock).mockResolvedValue({ user: { email: 'user@example.com' } });
-    mockExecuteTakeFirst.mockResolvedValueOnce({ id: 1, profilescore: 75 }).mockResolvedValueOnce(null);
-    const response = await POST(mockRequest);
-    expect(response.status).toBe(400);
-  });
+    const res = await POST(req)
+    const data = await res.json()
 
-  it('should return 429 if cooldown period is not over', async () => {
-    (getServerSession as vi.Mock).mockResolvedValue({ user: { email: 'user@example.com' } });
-    mockExecuteTakeFirst.mockResolvedValueOnce({ id: 1, profilescore: 75 }).mockResolvedValueOnce({ billetera: '0x123' });
-    mockReadContract.mockResolvedValue(BigInt(Math.floor(Date.now() / 1000)));
-    const response = await POST(mockRequest);
-    expect(response.status).toBe(429);
-  });
+    expect(res.status).toBe(401)
+    expect(data.message).toMatch(/doesn't match/i)
+  })
 
-  it('should return 400 if contract call reverts', async () => {
-    (getServerSession as vi.Mock).mockResolvedValue({ user: { email: 'user@example.com' } });
-    mockExecuteTakeFirst.mockResolvedValueOnce({ id: 1, profilescore: 75 }).mockResolvedValueOnce({ billetera: '0x123' });
-    mockReadContract.mockResolvedValue(BigInt(0));
-    
-    const revertError = new ContractFunctionRevertedError({ 
-      abi: CeloUbiAbi,
-      functionName: 'claim'
-    });
-    // @ts-ignore
-    revertError.reason = 'InsufficientBalance';
+  it('POST con profilescore bajo devuelve error 403', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ billetera: '0x123', usuario_id: 1, token: 'VALID_TOKEN' })
+      .mockResolvedValueOnce({ id: 1, profilescore: 40 })
 
-    const baseError = new BaseError('Transaction reverted', { cause: revertError });
-    mockWriteContract.mockRejectedValue(baseError);
+    const body = { walletAddress: '0x123', token: 'VALID_TOKEN' };
+    const req = new NextRequest('http://localhost/api/claim-celo-ubi', {
+      method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' },
+    })
 
-    const response = await POST(mockRequest);
-    expect(response.status).toBe(400);
-    const body = await response.json();
-    expect(body.message).toBe('Claim failed: InsufficientBalance');
-  });
+    const res = await POST(req)
+    const data = await res.json()
 
-  it('should return 200 on successful claim', async () => {
-    (getServerSession as vi.Mock).mockResolvedValue({ user: { email: 'user@example.com' } });
-    mockExecuteTakeFirst.mockResolvedValueOnce({ id: 1, profilescore: 80 }).mockResolvedValueOnce({ billetera: '0x123' });
-    mockReadContract.mockResolvedValue(BigInt(0));
-    mockWriteContract.mockResolvedValue('0xabc123');
-    mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success' });
+    expect(res.status).toBe(403)
+    expect(data.message).toMatch(/Profile score must be at least/i)
+  })
 
-    const response = await POST(mockRequest);
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.message).toBe('Claim successful!');
-    expect(body.transactionHash).toBe('0xabc123');
-  });
-});
+  it('POST durante el periodo de cooldown devuelve error 429', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ billetera: '0x123', usuario_id: 1, token: 'VALID_TOKEN' })
+      .mockResolvedValueOnce({ id: 1, profilescore: 60 })
+    mockReadContract
+      .mockResolvedValueOnce(BigInt(Math.floor(Date.now() / 1000) - 1800)) // lastClaim (30 mins ago)
+      .mockResolvedValueOnce(BigInt(3600)) // cooldown (1 hour)
+
+    const body = { walletAddress: '0x123', token: 'VALID_TOKEN' };
+    const req = new NextRequest('http://localhost/api/claim-celo-ubi', {
+      method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' },
+    })
+
+    const res = await POST(req)
+    const data = await res.json()
+
+    expect(res.status).toBe(429)
+    expect(data.message).toBe('Cooldown period not over')
+  })
+})

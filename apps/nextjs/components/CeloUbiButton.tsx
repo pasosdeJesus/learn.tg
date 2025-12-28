@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 
 export interface CeloUbiButtonProps {
-  /** Current language ('en' or 'es') for button text */
+  /** Current language (\'en\' or \'es\') for button text */
   lang?: string
 }
 
@@ -20,7 +20,7 @@ export function CeloUbiButton({
   const [success, setSuccess] = useState<string | null>(null)
 
   const handleClaim = async () => {
-    if (!session) {
+    if (!session?.address) {
       setError(
         lang === 'es'
           ? 'Debes iniciar sesión para reclamar'
@@ -36,24 +36,24 @@ export function CeloUbiButton({
     try {
       const csrfToken = await getCsrfToken()
       const url = '/api/claim-celo-ubi'
-      const response = await axios.post(url, {
-        walletAddress: session.address,
-        token: csrfToken,
-      })
-      debugger
+      const response = await axios.post(
+        url,
+        {
+          walletAddress: session.address,
+          token: csrfToken,
+        },
+      )
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || (lang === 'es' ? 'Ocurrió un error' : 'An error occurred'))
-      }
+      const data = response.data
 
       setSuccess(data.message || (lang === 'es' ? 'Reclamo exitoso!' : 'Claim successful!'))
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : JSON.stringify(err, null, 2)
+      let errorMessage = lang === 'es' ? 'Ocurrió un error' : 'An error occurred';
+      if (axios.isAxiosError(err) && err.response) {
+        errorMessage = err.response.data.message || err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
       setError(errorMessage)
     } finally {
       setIsClaiming(false)
@@ -68,6 +68,7 @@ export function CeloUbiButton({
         onClick={handleClaim}
         size="lg"
         disabled={isClaiming || !session}
+        data-testid="celo-ubi-button"
       >
         {isClaiming
           ? lang === 'es'
