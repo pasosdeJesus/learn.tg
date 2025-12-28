@@ -40,9 +40,12 @@
     "test": "hardhat test",
     "deploy": "bin/deployLearnTGVaults",
     "verify": "bin/verifyLearnTGVaults",
+    "contract-verification": "bin/contractVerification",
     "deploy-mock-usdt": "bin/deployMockUsdt",
     "verify-mock-usdt": "bin/verifyMockUSDT",
-    "contract-verification": "bin/contractVerification",
+    "deploy-celoubi": "bin/deployCeloUbi",
+    "verify-celoubi": "bin/verifyCeloUbi",
+    "contract-verification-celoubi": "bin/contractVerificationCeloUbi",
     "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'",
     "sync:abis": "node sync-abis.mjs"
   },

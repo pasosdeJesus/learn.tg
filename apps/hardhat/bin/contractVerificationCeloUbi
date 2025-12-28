@@ -1,0 +1,4 @@
+#!/bin/sh
+
+. .env
+npx hardhat verify --network $NETWORK $CELOUBI_ADDRESS $PUBLIC_ADDRESS $PUBLIC_ADDRESS
