@@ -1250,6 +1250,14 @@ export interface SchemaMigrations {
   version: string;
 }
 
+export interface Ubitransactions {
+  amount: Numeric;
+  date: Timestamp;
+  hash: string;
+  id: Generated<number>;
+  wallet: string;
+}
+
 export interface Usuario {
   created_at: Timestamp | null;
   current_sign_in_at: Timestamp | null;
@@ -1406,5 +1414,6 @@ export interface DB {
   nonce: Nonce;
   religion: Religion;
   schema_migrations: SchemaMigrations;
+  ubitransactions: Ubitransactions;
   usuario: Usuario;
 }
