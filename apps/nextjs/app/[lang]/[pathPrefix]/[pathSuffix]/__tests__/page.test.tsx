@@ -1,6 +1,6 @@
 'use client'
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, type Mocked, type Mock } from 'vitest'
 import Page from '../page'
 import { render, screen, act } from '@testing-library/react'
 import axios from 'axios'
@@ -40,9 +40,9 @@ const config = createConfig({
 })
 
 describe('Page', () => {
-  const mockAxios = axios as vi.Mocked<typeof axios>
-  const mockUnified = unified as vi.Mock
-  const mockUseGuideData = useGuideData as vi.Mock
+  const mockAxios = axios as Mocked<typeof axios>
+  const mockUnified = unified as any
+  const mockUseGuideData = useGuideData as Mock
 
   const mockProcess = vi.fn()
   const mockUse = vi.fn().mockReturnThis()

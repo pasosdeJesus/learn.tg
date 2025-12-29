@@ -3,10 +3,10 @@
   import { getServerSession } from 'next-auth/next'
 
   // Mocks de dependencias
-  const mockExecuteTakeFirst = vi.fn()
-  const mockExecute = vi.fn()
+  const mockExecuteTakeFirst: any = vi.fn()
+  const mockExecute: any = vi.fn()
 
-  const mockKysely = {
+  const mockKysely: any = {
     selectFrom: vi.fn(() => mockKysely),
     select: vi.fn(() => mockKysely),
     where: vi.fn(() => mockKysely),
@@ -16,7 +16,7 @@
   }
 
   vi.mock('next-auth/next')
-  vi.mock('@/.config/kysely.config.ts', () => ({
+  vi.mock('@/.config/kysely.config', () => ({
     newKyselyPostgresql: () => mockKysely,
   }))
 

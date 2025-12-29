@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 
 import { authOptions } from '@/app/api/auth/auth-options'
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)

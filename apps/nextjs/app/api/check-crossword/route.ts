@@ -17,7 +17,7 @@ import {
 import { celo, celoSepolia } from 'viem/chains'
 
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 import type { CourseUsuario, DB, GuideUsuario, Usuario } from '@/db/db.d.ts'
 import { updateUserAndCoursePoints } from '@/lib/scores'
 import { callWriteFun } from '@/lib/crypto'

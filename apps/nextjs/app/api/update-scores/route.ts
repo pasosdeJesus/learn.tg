@@ -8,7 +8,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { createPublicClient, createWalletClient, Hex, http } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 import { updateUserAndCoursePoints } from '@/lib/scores'
 import type { DB, Usuario, CourseUsuario } from '@/db/db.d'
 

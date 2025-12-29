@@ -14,7 +14,7 @@ import { Pool } from 'pg'
 import { unified } from 'unified'
 
 import type { DB, BilleteraUsuario } from '@/db/db.d.ts'
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 interface WordPlacement {

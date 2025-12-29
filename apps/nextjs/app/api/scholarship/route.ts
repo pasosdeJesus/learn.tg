@@ -13,7 +13,7 @@ import type { Address } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 import { sql } from 'kysely'
 
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import type { BilleteraUsuario } from '@/db/db.d.ts'
 

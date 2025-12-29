@@ -14,7 +14,7 @@ import remarkStringify from 'remark-stringify'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 

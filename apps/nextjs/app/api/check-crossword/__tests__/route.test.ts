@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { NextRequest } from 'next/server'
 
-const mockExecuteTakeFirst = vi.fn()
-const mockExecute = vi.fn()
-const mockUpdateTable = vi.fn(() => ({
+const mockExecuteTakeFirst: any = vi.fn()
+const mockExecute: any = vi.fn()
+const mockUpdateTable: any = vi.fn(() => ({
   set: mockSet,
   where: vi.fn().mockReturnThis(),
   execute: vi.fn(),
 }))
-const mockSet = vi.fn().mockReturnThis()
+const mockSet: any = vi.fn().mockReturnThis()
 
-const mockFn = {
+const mockFn: any = {
   countAll: vi.fn(() => ({
     as: vi.fn(() => mockFn),
   })),

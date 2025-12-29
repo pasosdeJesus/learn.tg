@@ -3,7 +3,7 @@ import { Pool } from 'pg'
 // @ts-ignore vitest disponible en entorno test
 import { vi } from 'vitest'
 
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 import type { DB } from '@/db/db.d'
 
 let _db: Kysely<DB> | null = null

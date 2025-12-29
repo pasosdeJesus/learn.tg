@@ -2,7 +2,7 @@
 
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { CeloUbiButton } from '@/components/CeloUbiButton'
-import { vi } from 'vitest'
+import { vi, type Mock } from 'vitest'
 import { SessionProvider, getCsrfToken } from 'next-auth/react'
 import axios, { AxiosError } from 'axios'
 
@@ -19,8 +19,8 @@ vi.mock('next-auth/react', async (importOriginal) => {
 vi.mock('axios')
 
 describe('CeloUbiButton', () => {
-  const mockGetCsrfToken = getCsrfToken as vi.Mock
-  const mockAxiosPost = axios.post as vi.Mock
+  const mockGetCsrfToken = getCsrfToken as Mock
+  const mockAxiosPost = axios.post as Mock
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -78,8 +78,8 @@ describe('CeloUbiButton', () => {
             data: { message: 'Error personalizado' },
             status: 400,
             statusText: 'Bad Request',
-            headers: {},
-            config: {}
+            headers: {} as any,
+            config: { headers: {} as any }
         }
     };
     mockAxiosPost.mockRejectedValue(error);

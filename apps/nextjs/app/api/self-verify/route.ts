@@ -2,7 +2,7 @@ import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely'
 import { NextResponse } from 'next/server'
 import { AllIds, DefaultConfigStore, SelfBackendVerifier } from '@selfxyz/core'
 
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 import type { DB, Usuario } from '@/db/db.d.ts'
 
 // Reuse a single verifier instance

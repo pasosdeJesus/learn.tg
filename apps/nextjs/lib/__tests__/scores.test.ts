@@ -14,12 +14,12 @@ const usuarioUpdateMock = {
   execute: vi.fn().mockResolvedValue({}),
 }
 
-const mockSql = {
+const mockSql: any = {
   execute: vi.fn(),
   as: vi.fn(() => mockSql),
 }
 
-const mockFn = {
+const mockFn: any = {
   countAll: vi.fn(() => ({
     as: vi.fn(() => mockFn),
   })),
@@ -29,7 +29,7 @@ const mockFn = {
 }
 
 // Main DB mock
-const mockDb = {
+const mockDb: any = {
   selectFrom: vi.fn().mockReturnThis(),
   where: vi.fn().mockReturnThis(),
   selectAll: vi.fn().mockReturnThis(),

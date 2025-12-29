@@ -11,7 +11,7 @@ import { Address } from 'viem'
 
 import { Pool } from 'pg'
 import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
-import { newKyselyPostgresql } from '@/.config/kysely.config.ts'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 
 export const authOptions: NextAuthOptions = {
   providers: [
