@@ -115,12 +115,12 @@ export async function POST(request: NextRequest) {
         .find(event => event?.eventName === 'UbiClaimed');
 
       if (claimEvent && claimEvent.args) {
-        const { amount } = claimEvent.args as { amount: bigint };
+        const { amount } = claimEvent.args as unknown as { amount: bigint };
         const formattedAmount = (Number(amount) / 1e18).toString();
 
         try {
           await db
-            .insertInto('ubitransactions')
+            .insertInto('ubitransactions' as any)
             .values({
               wallet: walletAddress,
               amount: formattedAmount,

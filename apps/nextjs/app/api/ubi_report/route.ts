@@ -1,9 +1,10 @@
 
 import { NextResponse } from 'next/server'
-import { db } from '@/db'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 import { sql } from 'kysely'
 
 export async function GET() {
+  const db = newKyselyPostgresql()
   try {
     const report = await db
       .selectFrom('ubitransactions')

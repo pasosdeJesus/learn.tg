@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server'
-import { db } from '@/db'
+import { newKyselyPostgresql } from '@/.config/kysely.config'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -8,6 +8,7 @@ const schema = z.object({
 })
 
 export async function GET(request: Request) {
+  const db = newKyselyPostgresql()
   const { searchParams } = new URL(request.url)
   const wallet = searchParams.get('wallet')
 
