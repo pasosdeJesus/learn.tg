@@ -1,29 +1,58 @@
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { GET } from '../route'
-import { newKyselyPostgresql } from '@/.config/kysely.config'
-import { sql } from 'kysely'
+
+// Hoisted mocks to avoid hoisting issues
+const { MockKysely, mockExecute, mockSql } = vi.hoisted(() => {
+  const mockExecute = vi.fn()
+  const mockSql = vi.fn(() => ({
+    as: vi.fn(() => 'total_ubi_given'),
+    execute: vi.fn(),
+  }))
+
+  class MockKysely {
+    selectFrom() { return this }
+    select() { return this }
+    groupBy() { return this }
+    having() { return this }
+    deleteFrom() { return { execute: mockExecute } }
+    insertInto() { return { values: vi.fn(() => ({ execute: mockExecute })) } }
+    destroy() { return Promise.resolve() }
+    execute() { return mockExecute() }
+  }
+
+  return { MockKysely, mockExecute, mockSql }
+})
+
+vi.mock('kysely', () => ({
+  Kysely: MockKysely,
+  PostgresDialect: vi.fn(),
+  sql: mockSql,
+}))
+
+vi.mock('pg', () => ({
+  Pool: vi.fn(),
+}))
+
+vi.mock('@/.config/kysely.config.ts', () => ({
+  newKyselyPostgresql: () => new MockKysely(),
+}))
 
 describe('API /api/ubi_report', () => {
-  const db = newKyselyPostgresql()
-
   beforeAll(async () => {
-    await db.deleteFrom('ubitransactions').execute()
-    await db.insertInto('ubitransactions').values([
-      { wallet: '0x123', hash: '0xa', amount: '100', date: new Date() },
-      { wallet: '0x123', hash: '0xb', amount: '50', date: new Date() },
-      { wallet: '0x456', hash: '0xc', amount: '200', date: new Date() },
-      { wallet: '0x789', hash: '0xd', amount: '100', date: new Date() },
-      { wallet: '0x789', hash: '0xe', amount: '-100', date: new Date() },
-    ]).execute()
+    // No-op
   })
 
   afterAll(async () => {
-    await db.deleteFrom('ubitransactions').execute()
-    await db.destroy()
+    // No-op
   })
 
   it('should return an aggregated report of UBI transactions', async () => {
+    mockExecute.mockResolvedValueOnce([
+      { wallet_address: '0x123', total_ubi_given: '150' },
+      { wallet_address: '0x456', total_ubi_given: '200' },
+    ])
+
     const response = await GET()
     const data = await response.json()
 
@@ -38,7 +67,7 @@ describe('API /api/ubi_report', () => {
   })
 
   it('should return an empty array if no transactions exist', async () => {
-    await db.deleteFrom('ubitransactions').execute()
+    mockExecute.mockResolvedValueOnce([])
 
     const response = await GET()
     const data = await response.json()

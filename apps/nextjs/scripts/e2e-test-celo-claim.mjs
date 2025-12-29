@@ -1,16 +1,18 @@
+import 'dotenv/config';
 import axios from 'axios';
 import { createPublicClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { celoAlfajores } from 'viem/chains';
+import { celoSepolia } from 'viem/chains';
 import https from 'https';
 
 // ADVERTENCIA DE SEGURIDAD:
-// Esta clave privada es pública y conocida. Solo para desarrollo.
+// Usar clave privada desde variables de entorno. Solo para desarrollo.
 // NO USAR en mainnet. NO ENVIAR fondos reales a esta dirección.
-const DEV_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+const DEV_PRIVATE_KEY = process.env.PRIVATE_KEY || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://celo-sepolia.infura.io/v3/';
 
 // --- Parámetros de la Prueba ---
-const BASE_URL = 'https://learn.tg:9001';
+const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001';
 const LANG = 'es';
 const COURSE_PREFIX = 'una-relacion-con-Jesus';
 const GUIDE_SUFFIX = 'guia1';
@@ -18,8 +20,8 @@ const GUIDE_SUFFIX = 'guia1';
 // --- Configuración ---
 const account = privateKeyToAccount(DEV_PRIVATE_KEY);
 const publicClient = createPublicClient({
-  chain: celoAlfajores,
-  transport: http(),
+  chain: celoSepolia,
+  transport: http(RPC_URL),
 });
 
 // Ignorar errores de certificados autofirmados en el entorno de desarrollo
@@ -115,7 +117,7 @@ async function runTest() {
     console.log(`-> Hash de la transacción: ${txHash}`);
 
     // 5. Verificar que la transacción fue exitosa en la blockchain
-    console.log('\nPASO 5: Verificando la transacción en Celo Alfajores...');
+    console.log('\nPASO 5: Verificando la transacción en Celo Sepolia...');
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
 
     if (receipt.status === 'success') {
