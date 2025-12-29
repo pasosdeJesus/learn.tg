@@ -117,21 +117,19 @@ export default function Page({ params }: PageProps) {
 
                 const response = await axios.get<{ markdown?: string, message?: string }>(nurl)
                 if (response.data && response.data.markdown) {
-                    let markdown = response.data.markdown
-                    
+                    const markdown = response.data.markdown
+
+                    // Detect buttons before altering the markdown
                     const hasGoodDollarButton = markdown.includes('{GoodDollarButton}')
-                    setShowGoodDollarButton(hasGoodDollarButton)
-                    if (hasGoodDollarButton) {
-                        markdown = markdown.replace('{GoodDollarButton}', '')
-                    }
-
                     const hasCeloUbiButton = markdown.includes('{CeloUbiButton}')
-                    setShowCeloUbiButton(hasCeloUbiButton)
-                    if (hasCeloUbiButton) {
-                        markdown = markdown.replace('{CeloUbiButton}', '')
-                    }
 
-                    setGuideHtml(htmlDeMd(markdown))
+                    setShowGoodDollarButton(hasGoodDollarButton)
+                    setShowCeloUbiButton(hasCeloUbiButton)
+
+                    // Clean up all placeholders at once
+                    const cleanedMarkdown = markdown.replace(/\{GoodDollarButton\}|\{CeloUbiButton\}/g, '')
+                    
+                    setGuideHtml(htmlDeMd(cleanedMarkdown))
                 } else if (response.data && response.data.message) {
                     throw new Error(response.data.message)
                 }
@@ -141,6 +139,9 @@ export default function Page({ params }: PageProps) {
                 if (err instanceof AxiosError) {
                     console.error("Error fetching guide content:", err)
                     setGuideHtml(`<p>Error: ${err.message}</p>`)
+                } else {
+                    console.error("An unexpected error occurred:", err);
+                    setGuideHtml(`<p>An unexpected error occurred</p>`);
                 }
             }
         }
