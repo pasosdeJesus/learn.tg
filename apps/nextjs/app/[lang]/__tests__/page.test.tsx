@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import Page from '../page.tsx'
+import Page from '../page'
 import React, { Suspense } from 'react'
 
 // Mock next/navigation

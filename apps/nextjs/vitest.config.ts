@@ -9,7 +9,7 @@ export default defineConfig({
     },
   },
   test: {
-    globals: true,
+    globals: false,
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     coverage: {

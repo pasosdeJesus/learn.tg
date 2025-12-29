@@ -1,5 +1,6 @@
+
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicClient, createWalletClient, http, BaseError, ContractFunctionRevertedError } from 'viem'
+import { createPublicClient, createWalletClient, http, BaseError, ContractFunctionRevertedError, decodeEventLog } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
@@ -101,6 +102,36 @@ export async function POST(request: NextRequest) {
 
       if (receipt.status !== 'success') {
         return NextResponse.json({ message: 'Transaction failed' }, { status: 500 })
+      }
+
+      const claimEvent = receipt.logs
+        .map(log => {
+          try {
+            return decodeEventLog({ abi: CeloUbiAbi, ...log });
+          } catch {
+            return null;
+          }
+        })
+        .find(event => event?.eventName === 'UbiClaimed');
+
+      if (claimEvent && claimEvent.args) {
+        const { amount } = claimEvent.args as { amount: bigint };
+        const formattedAmount = (Number(amount) / 1e18).toString();
+
+        try {
+          await db
+            .insertInto('ubitransactions')
+            .values({
+              wallet: walletAddress,
+              amount: formattedAmount,
+              hash: tx,
+              date: new Date(),
+            })
+            .execute();
+        } catch (dbError) {
+          console.error('Failed to save UBI transaction to db:', dbError);
+          // No devolver error al cliente, pero sí loguearlo.
+        }
       }
 
       return NextResponse.json({ message: 'Claim successful!', transactionHash: tx })

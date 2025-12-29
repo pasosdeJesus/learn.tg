@@ -1,16 +1,15 @@
 'use client'
 
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import Page from '../page'
 import { render, screen, act } from '@testing-library/react'
 import axios from 'axios'
-import { vi } from 'vitest'
 import { unified } from 'unified'
 import React from 'react'
 import { SessionProvider } from 'next-auth/react'
 import { WagmiProvider, createConfig, http, useAccount } from 'wagmi'
 import { celo } from 'viem/chains'
 
-import { CeloUbiButton } from '@/components/CeloUbiButton'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 
 // Mock dependencies

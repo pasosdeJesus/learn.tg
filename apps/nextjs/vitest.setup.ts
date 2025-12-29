@@ -1,5 +1,5 @@
 // Setup global para pruebas
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import { vi } from 'vitest'
 

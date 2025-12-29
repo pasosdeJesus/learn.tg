@@ -6,6 +6,9 @@ all:
 type:
 	pnpm typecheck
 
+type-check-tests:
+	pnpm tsc --noEmit -p tsconfig.test.json
+
 format:
 	pnpm format
 
