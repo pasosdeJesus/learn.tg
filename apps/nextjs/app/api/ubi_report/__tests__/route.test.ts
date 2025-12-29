@@ -58,7 +58,7 @@ describe('API /api/ubi_report', () => {
 
     expect(response.status).toBe(200)
 
-    const sortedData = data.sort((a, b) => a.wallet_address.localeCompare(b.wallet_address))
+    const sortedData = data.sort((a: { wallet_address: string; total_ubi_given: string }, b: { wallet_address: string; total_ubi_given: string }) => a.wallet_address.localeCompare(b.wallet_address))
 
     expect(sortedData).toEqual([
       { wallet_address: '0x123', total_ubi_given: '150' },
