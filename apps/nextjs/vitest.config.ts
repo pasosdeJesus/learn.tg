@@ -9,17 +9,16 @@ export default defineConfig({
     },
   },
   test: {
-    globals: false,
+    globals: true,
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    coverage: {
-      reporter: ['text', 'json', 'html'],
-    },
     deps: {
       inline: ['lz-string'],
     },
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+    },
   },
-  server: {},
   esbuild: {
     // Asegura runtime JSX automático para no requerir import manual de React
     jsx: 'automatic',

@@ -67,7 +67,7 @@ describe('API /api/claim-celo-ubi', () => {
       .mockResolvedValueOnce(BigInt(Math.floor(Date.now() / 1000) - 3601)) // lastClaim
       .mockResolvedValueOnce(BigInt(3600)) // cooldown
     mockWriteContract.mockResolvedValue('0xmocktxhash')
-    mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success' })
+    mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success', logs: [] })
 
     const body = { walletAddress: '0x123', token: 'VALID_TOKEN' };
     const req = new NextRequest('http://localhost/api/claim-celo-ubi', {
