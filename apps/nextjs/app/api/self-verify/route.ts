@@ -73,7 +73,7 @@ export async function POST(req: Request) {
           db,
         )
       console.log('usuario=', qBilleteraUsuario)
-      if (qBilleteraUsuario.rows[0]?.usuario_id === null) {
+      if (qBilleteraUsuario.rows.length === 0 || qBilleteraUsuario.rows[0]?.usuario_id === null) {
         throw new Error('User not found')
       }
       console.log(
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
       }
 
       console.log('usuario=', qBilleteraUsuario)
-      if (qBilleteraUsuario.rows[0]?.usuario_id === null) {
+      if (qBilleteraUsuario.rows.length === 0 || qBilleteraUsuario.rows[0]?.usuario_id === null) {
         throw new Error('User not found')
       }
 

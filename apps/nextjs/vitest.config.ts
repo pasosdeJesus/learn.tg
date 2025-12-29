@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
+      'lz-string': path.resolve(__dirname, './__mocks__/lz-string.ts'),
     },
   },
   test: {
@@ -14,7 +15,11 @@ export default defineConfig({
     coverage: {
       reporter: ['text', 'json', 'html'],
     },
+    deps: {
+      inline: ['lz-string'],
+    },
   },
+  server: {},
   esbuild: {
     // Asegura runtime JSX automático para no requerir import manual de React
     jsx: 'automatic',

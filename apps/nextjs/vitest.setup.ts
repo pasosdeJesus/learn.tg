@@ -43,3 +43,15 @@ console.warn = (...args: any[]) => {
   if (args.some(shouldSilence)) return
   originalWarn(...args)
 }
+
+// Mock lz-string to avoid CommonJS/ES module compatibility issues
+vi.mock('lz-string', () => ({
+  compressToEncodedURIComponent: vi.fn((input) => input),
+  decompressFromEncodedURIComponent: vi.fn((input) => input),
+}))
+
+// Mock @goodsdks/citizen-sdk to avoid lz-string import issues
+vi.mock('@goodsdks/citizen-sdk', () => ({
+  ClaimSDK: vi.fn(),
+  useIdentitySDK: vi.fn(),
+}))

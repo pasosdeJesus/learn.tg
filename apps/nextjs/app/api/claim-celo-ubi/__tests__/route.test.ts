@@ -52,10 +52,11 @@ describe('API /api/claim-celo-ubi', () => {
   })
 
   beforeEach(() => {
-    vi.restoreAllMocks() 
-    process.env.CELO_RPC_URL = 'https://forno.celo.org'
-    process.env.CELO_UBI_CONTRACT_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a'
-    process.env.BACKEND_WALLET_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+    vi.restoreAllMocks()
+    process.env.NEXT_PUBLIC_RPC_URL = 'https://forno.celo.org'
+    process.env.NEXT_PUBLIC_CELOUBI_ADDRESS = '0x765DE816845861e75A25fCA122bb6898B8B1282a'
+    process.env.PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+    process.env.NEXT_PUBLIC_AUTH_URL = 'https://learn.tg'
   })
 
   it('POST con walletAddress y token válidos reclama la beca exitosamente', async () => {
