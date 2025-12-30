@@ -121,6 +121,7 @@ export default function Page({ params }: PageProps) {
 
                     // Detect buttons before altering the markdown
                     const hasGoodDollarButton = markdown.includes('{GoodDollarButton}')
+                    console.log("OJO hasGoodDollarButton=", hasGoodDollarButton)
                     const hasCeloUbiButton = markdown.includes('{CeloUbiButton}')
 
                     setShowGoodDollarButton(hasGoodDollarButton)
@@ -203,8 +204,6 @@ export default function Page({ params }: PageProps) {
         {isClient && showGoodDollarButton && (
           <GoodDollarClaimButton
             lang={course.idioma}
-            pathPrefix={pathPrefix}
-            pathSuffix={pathSuffix}
           />
         )}
         {isClient && showCeloUbiButton && <CeloUbiButton />}

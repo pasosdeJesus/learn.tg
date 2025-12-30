@@ -11,18 +11,12 @@ import { Button } from '@/components/ui/button'
 export interface GoodDollarClaimButtonProps {
   /** Current language ('en' or 'es') for button text */
   lang?: string
-  /** Optional path prefix to conditionally show button */
-  pathPrefix?: string
-  /** Optional path suffix to conditionally show button */
-  pathSuffix?: string
   /** Text to display on the button */
   buttonText?: string
 }
 
 export function GoodDollarClaimButton({
   lang = 'en',
-  pathPrefix,
-  pathSuffix,
   buttonText,
 }: GoodDollarClaimButtonProps) {
   const { address } = useAccount()
@@ -37,11 +31,6 @@ export function GoodDollarClaimButton({
     process.env.NEXT_PUBLIC_AUTH_URL === 'https://learn.tg'
       ? useIdentitySDK('production')
       : null
-
-  // Check if button should be shown based on path conditions
-  const shouldShowButton =
-    (!pathPrefix && !pathSuffix) ||
-    (pathPrefix === 'gooddollar' && pathSuffix === 'guide1')
 
   const handleClaim = async () => {
     if (
@@ -90,11 +79,6 @@ export function GoodDollarClaimButton({
     } finally {
       setIsClaiming(false)
     }
-  }
-
-  // Don't render if path conditions don't match
-  if (!shouldShowButton) {
-    return null
   }
 
   // Determine button text
