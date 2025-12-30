@@ -1,13 +1,25 @@
-import { describe, it, expect, beforeEach, vi, beforeAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { NextRequest } from 'next/server'
 
 const mockExecuteTakeFirst = vi.fn()
+const mockInsertInto = vi.fn()
+const mockValues = vi.fn()
+const mockExecute = vi.fn()
 
 class MockKysely {
   selectFrom() { return this }
   where() { return this }
   selectAll() { return this }
   executeTakeFirst() { return mockExecuteTakeFirst() }
+  insertInto() { 
+    mockInsertInto()
+    return this 
+  }
+  values() { 
+    mockValues()
+    return this 
+  }
+  execute() { return mockExecute() }
 }
 
 vi.mock('kysely', () => ({
@@ -98,6 +110,34 @@ describe('API /api/claim-celo-ubi', () => {
     expect(data.message).toMatch(/doesn't match/i)
   })
 
+  it('POST con reclamo exitoso actualiza la base de datos', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ billetera: '0x123', usuario_id: 1, token: 'VALID_TOKEN' })
+      .mockResolvedValueOnce({ id: 1, profilescore: 60 })
+    mockReadContract
+      .mockResolvedValueOnce(BigInt(Math.floor(Date.now() / 1000) - 3601))
+      .mockResolvedValueOnce(BigInt(3600))
+    mockWriteContract.mockResolvedValue('0xmocktxhash')
+    const mockLogs = [
+      {
+        eventName: 'UbiClaimed',
+        args: { amount: 1000000000000000000n },
+      },
+    ];
+    mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success', logs: mockLogs })
+    
+    const body = { walletAddress: '0x123', token: 'VALID_TOKEN' };
+    const req = new NextRequest('http://localhost/api/claim-celo-ubi', {
+      method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' },
+    })
+
+    await POST(req)
+
+    expect(mockInsertInto).toHaveBeenCalled() 
+    expect(mockValues).toHaveBeenCalled() 
+    expect(mockExecute).toHaveBeenCalled() 
+  })
+
   it('POST con profilescore bajo devuelve error 403', async () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ billetera: '0x123', usuario_id: 1, token: 'VALID_TOKEN' })
@@ -115,23 +155,33 @@ describe('API /api/claim-celo-ubi', () => {
     expect(data.message).toMatch(/Profile score must be at least/i)
   })
 
-  it('POST durante el periodo de cooldown devuelve error 429', async () => {
+  it('POST durante el periodo de cooldown devuelve error 429 con tiempo restante', async () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ billetera: '0x123', usuario_id: 1, token: 'VALID_TOKEN' })
       .mockResolvedValueOnce({ id: 1, profilescore: 60 })
+    
+    const now = Math.floor(Date.now() / 1000);
+    const lastClaimTime = now - 1800; // 30 minutos atrás
+    const cooldownPeriod = 3600; // 1 hora
+
     mockReadContract
-      .mockResolvedValueOnce(BigInt(Math.floor(Date.now() / 1000) - 1800)) // lastClaim (30 mins ago)
-      .mockResolvedValueOnce(BigInt(3600)) // cooldown (1 hour)
+      .mockResolvedValueOnce(BigInt(lastClaimTime)) // lastClaim
+      .mockResolvedValueOnce(BigInt(cooldownPeriod)) // cooldown
 
     const body = { walletAddress: '0x123', token: 'VALID_TOKEN' };
     const req = new NextRequest('http://localhost/api/claim-celo-ubi', {
-      method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' },
+      method: 'POST', 
+      body: JSON.stringify(body), 
+      headers: { 
+        'Content-Type': 'application/json',
+        'accept-language': 'en'
+      },
     })
 
     const res = await POST(req)
     const data = await res.json()
 
     expect(res.status).toBe(429)
-    expect(data.message).toBe('Cooldown period not over')
+    expect(data.message).toMatch(/Cooldown period not over. Please try again in about 0 hour\(s\) and 30 minute\(s\)\./i);
   })
 })

@@ -11,6 +11,7 @@ const PROFILE_SCORE_THRESHOLD = 50
 
 export async function POST(request: NextRequest) {
   try {
+    const lang = request.headers.get('accept-language')?.startsWith('es') ? 'es' : 'en';
     const requestJson = await request.json()
     const walletAddress = requestJson['walletAddress'] ?? ''
     const token = requestJson['token'] ?? ''
@@ -79,7 +80,18 @@ export async function POST(request: NextRequest) {
     })
 
     if (Date.now() / 1000 - Number(lastClaimed) < Number(cooldown)) {
-        return NextResponse.json({ message: 'Cooldown period not over' }, { status: 429 })
+        const remainingSeconds = Math.ceil(Number(cooldown) - (Date.now() / 1000 - Number(lastClaimed)));
+        const hours = Math.floor(remainingSeconds / 3600);
+        const minutes = Math.floor((remainingSeconds % 3600) / 60);
+
+        let message = '';
+        if (lang === 'es') {
+            message = `Periodo de enfriamiento no ha terminado. Inténtalo de nuevo en aproximadamente ${hours} hora(s) y ${minutes} minuto(s).`;
+        } else {
+            message = `Cooldown period not over. Please try again in about ${hours} hour(s) and ${minutes} minute(s).`;
+        }
+
+        return NextResponse.json({ message: message }, { status: 429 })
     }
 
     const account = privateKeyToAccount(privateKey)
