@@ -60,38 +60,8 @@ describe('GoodDollarClaimButton', () => {
     global.window.alert = vi.fn()
   })
 
-  it('no renderiza el botón cuando pathPrefix y pathSuffix no coinciden', () => {
-    const { container } = render(
-      <GoodDollarClaimButton
-        lang="en"
-        pathPrefix="other"
-        pathSuffix="guide2"
-      />,
-    )
-    expect(container.firstChild).toBeNull()
-  })
-
-  it('renderiza el botón cuando pathPrefix y pathSuffix son gooddollar y guide1', () => {
-    render(
-      <GoodDollarClaimButton
-        lang="en"
-        pathPrefix="gooddollar"
-        pathSuffix="guide1"
-      />,
-    )
-    expect(
-      screen.getByRole('button', { name: /Sign up with GoodDollar or Claim UBI/i }),
-    ).toBeInTheDocument()
-  })
-
   it('renderiza el botón con texto en español cuando lang="es"', () => {
-    render(
-      <GoodDollarClaimButton
-        lang="es"
-        pathPrefix="gooddollar"
-        pathSuffix="guide1"
-      />,
-    )
+    render(<GoodDollarClaimButton lang="es" />)
     expect(
       screen.getByRole('button', { name: /Regístrate con GoodDollar o reclama UBI/i }),
     ).toBeInTheDocument()
@@ -101,13 +71,7 @@ describe('GoodDollarClaimButton', () => {
     mockUseSession.mockReturnValue({ data: null, status: 'unauthenticated' })
     mockUseAccount.mockReturnValue({ address: undefined, isConnected: false })
 
-    render(
-      <GoodDollarClaimButton
-        lang="en"
-        pathPrefix="gooddollar"
-        pathSuffix="guide1"
-      />,
-    )
+    render(<GoodDollarClaimButton lang="en" />)
 
     expect(
       screen.getByText(/Connect your wallet to claim/i),
@@ -120,26 +84,14 @@ describe('GoodDollarClaimButton', () => {
     mockUseSession.mockReturnValue({ data: null, status: 'unauthenticated' })
     mockUseAccount.mockReturnValue({ address: undefined, isConnected: false })
 
-    render(
-      <GoodDollarClaimButton
-        lang="en"
-        pathPrefix="gooddollar"
-        pathSuffix="guide1"
-      />,
-    )
+    render(<GoodDollarClaimButton lang="en" />)
 
     const button = screen.getByRole('button')
     expect(button).toBeDisabled()
   })
 
   it('llama a claim SDK cuando se hace clic y todo está configurado', async () => {
-    render(
-      <GoodDollarClaimButton
-        lang="en"
-        pathPrefix="gooddollar"
-        pathSuffix="guide1"
-      />,
-    )
+    render(<GoodDollarClaimButton lang="en" />)
 
     const button = screen.getByRole('button')
     fireEvent.click(button)
@@ -157,13 +109,7 @@ describe('GoodDollarClaimButton', () => {
     })
     mockClaimSDKInstance.claim.mockReturnValue(claimPromise)
 
-    render(
-      <GoodDollarClaimButton
-        lang="en"
-        pathPrefix="gooddollar"
-        pathSuffix="guide1"
-      />,
-    )
+    render(<GoodDollarClaimButton lang="en" />)
 
     const button = screen.getByRole('button')
     fireEvent.click(button)
@@ -184,13 +130,7 @@ describe('GoodDollarClaimButton', () => {
     const errorMessage = 'Network error'
     mockClaimSDKInstance.claim.mockRejectedValue(new Error(errorMessage))
 
-    render(
-      <GoodDollarClaimButton
-        lang="en"
-        pathPrefix="gooddollar"
-        pathSuffix="guide1"
-      />,
-    )
+    render(<GoodDollarClaimButton lang="en" />)
 
     const button = screen.getByRole('button')
     fireEvent.click(button)
@@ -204,13 +144,7 @@ describe('GoodDollarClaimButton', () => {
     process.env.NEXT_PUBLIC_AUTH_URL = 'http://localhost:3000'
     mockUseIdentitySDK.mockReturnValue(null)
 
-    render(
-      <GoodDollarClaimButton
-        lang="en"
-        pathPrefix="gooddollar"
-        pathSuffix="guide1"
-      />,
-    )
+    render(<GoodDollarClaimButton lang="en" />)
 
     const button = screen.getByRole('button')
     // El botón no está deshabilitado pero la validación en handleClaim mostrará error
@@ -218,14 +152,7 @@ describe('GoodDollarClaimButton', () => {
   })
 
   it('acepta texto personalizado del botón', () => {
-    render(
-      <GoodDollarClaimButton
-        lang="en"
-        pathPrefix="gooddollar"
-        pathSuffix="guide1"
-        buttonText="Custom button text"
-      />,
-    )
+    render(<GoodDollarClaimButton lang="en" buttonText="Custom button text" />)
 
     expect(
       screen.getByRole('button', { name: /Custom button text/i }),

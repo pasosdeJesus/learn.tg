@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ message: 'Claim successful!', transactionHash: tx })
+      return NextResponse.json({ message: 'Claim successful!', txHash: tx })
     } catch (err) {
         console.error('Claim transaction failed:', err)
         let errorMessage = 'Claim failed: Unknown error'

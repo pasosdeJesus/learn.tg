@@ -18,6 +18,7 @@ export function CeloUbiButton({
   const [isClaiming, setIsClaiming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [txHash, setTxHash] = useState<string | null>(null)
 
   const handleClaim = async () => {
     if (!session?.address) {
@@ -32,6 +33,7 @@ export function CeloUbiButton({
     setIsClaiming(true)
     setError(null)
     setSuccess(null)
+    setTxHash(null)
 
     try {
       const csrfToken = await getCsrfToken()
@@ -47,6 +49,9 @@ export function CeloUbiButton({
       const data = response.data
 
       setSuccess(data.message || (lang === 'es' ? 'Reclamo exitoso!' : 'Claim successful!'))
+      if (data.txHash) {
+        setTxHash(data.txHash)
+      }
     } catch (err) {
       let errorMessage = lang === 'es' ? 'Ocurrió un error' : 'An error occurred';
       if (axios.isAxiosError(err) && err.response) {
@@ -81,6 +86,19 @@ export function CeloUbiButton({
       )}
       {success && (
         <div className="text-sm text-green-600 mt-2 text-center">{success}</div>
+      )}
+      {txHash && (
+        <div className="text-sm text-gray-500 mt-2 text-center">
+          <p>{lang === 'es' ? 'Transacción:' : 'Transaction:'}</p>
+          <a
+            href={`https://explorer.celo.org/mainnet/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            {txHash}
+          </a>
+        </div>
       )}
       {!session && (
         <div className="text-sm text-gray-500 mt-2 text-center">

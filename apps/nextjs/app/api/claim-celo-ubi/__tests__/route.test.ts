@@ -79,7 +79,7 @@ describe('API /api/claim-celo-ubi', () => {
 
     expect(res.status).toBe(200)
     expect(data.message).toBe('Claim successful!')
-    expect(data.transactionHash).toBe('0xmocktxhash')
+    expect(data.txHash).toBe('0xmocktxhash')
     expect(mockWriteContract).toHaveBeenCalled()
   })
 
