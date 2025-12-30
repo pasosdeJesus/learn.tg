@@ -91,7 +91,7 @@ export function CeloUbiButton({
         <div className="text-sm text-gray-500 mt-2 text-center">
           <p>{lang === 'es' ? 'Transacción:' : 'Transaction:'}</p>
           <a
-            href={`https://explorer.celo.org/mainnet/tx/${txHash}`}
+            href={`${process.env.NEXT_PUBLIC_EXPLORER_TX}/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="underline"

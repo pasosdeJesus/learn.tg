@@ -201,12 +201,14 @@ export default function Page({ params }: PageProps) {
           className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside"
           dangerouslySetInnerHTML={{ __html: guideHtml }}
         />
-        {isClient && showGoodDollarButton && (
-          <GoodDollarClaimButton
+        <div className="flex space-x-4 items-center justify-center">
+          {isClient && showGoodDollarButton && (
+            <GoodDollarClaimButton
             lang={course.idioma}
-          />
-        )}
-        {isClient && showCeloUbiButton && <CeloUbiButton />}
+            />
+          )}
+          {isClient && showCeloUbiButton && <CeloUbiButton />}
+        </div>
 
         <table className="mx-auto text-center mt-12">
           <tbody>

@@ -10,6 +10,7 @@ import type { Address } from 'viem'
 const PROFILE_SCORE_THRESHOLD = 50
 
 export async function POST(request: NextRequest) {
+  console.log("OJO POST claim-celo-ubi")
   try {
     const lang = request.headers.get('accept-language')?.startsWith('es') ? 'es' : 'en';
     const requestJson = await request.json()
@@ -109,26 +110,33 @@ export async function POST(request: NextRequest) {
         functionName: 'claim',
         args: [billeteraUsuario.billetera as Address, user.profilescore],
       })
+      console.log("OJO claim-celo-ubi tx=", tx)
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx })
+      console.log("OJO claim-celo-ubi receipt=", receipt)
 
       if (receipt.status !== 'success') {
         return NextResponse.json({ message: 'Transaction failed' }, { status: 500 })
       }
 
+      console.log("OJO claim-celo-ubi receipt.logs=", receipt.logs)
       const claimEvent = receipt.logs
         .map(log => {
           try {
-            return decodeEventLog({ abi: CeloUbiAbi, ...log });
+            const del = decodeEventLog({ abi: CeloUbiAbi, ...log })
+            console.log("OJO claim-celo-ubi del=", del)
+            return del;
           } catch {
             return null;
           }
         })
-        .find(event => event?.eventName === 'UbiClaimed');
+        .find(event => event?.eventName === 'Claimed');
+      console.log("OJO claim-celo-ubi claimEvent=", claimEvent)
 
       if (claimEvent && claimEvent.args) {
         const { amount } = claimEvent.args as unknown as { amount: bigint };
         const formattedAmount = (Number(amount) / 1e18).toString();
+        console.log("OJO claim-celo-ubi formattedAmount=", formattedAmount)
 
         try {
           await db
