@@ -5,6 +5,8 @@ import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts';
 import { celoSepolia } from 'viem/chains';
 import https from 'https';
 import { SiweMessage } from 'siwe';
+import fs from 'fs';
+import path from 'path';
 
 // Funciones para manejo de cookies (de test-auth-cookies.mjs)
 function parseCookieHeader(cookieHeader) {
@@ -38,6 +40,286 @@ function updateCookies(currentCookies, setCookieHeaders) {
   return Array.from(cookieMap.values()).join('; ');
 }
 
+// --- Funciones para análisis de HTML y UX ---
+async function downloadAndSaveHTML(url, filename, cookies) {
+  try {
+    console.log(`📥 Descargando HTML de: ${url}`);
+    const response = await apiClient.get(url, {
+      headers: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Cookie': cookies || '',
+      },
+      responseType: 'text',
+    });
+
+    const html = response.data;
+    const outputDir = path.join(process.cwd(), 'html-snapshots');
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    const filepath = path.join(outputDir, filename);
+    fs.writeFileSync(filepath, html);
+    console.log(`💾 HTML guardado en: ${filepath} (${html.length} bytes)`);
+
+    return { html, filepath, success: true };
+  } catch (error) {
+    console.error(`❌ Error descargando HTML de ${url}:`, error.message);
+    return { html: '', filepath: '', success: false, error };
+  }
+}
+
+function analyzeHTMLForUX(html, url) {
+  const issues = [];
+  const suggestions = [];
+
+  // Análisis básico del HTML
+  if (!html || html.length === 0) {
+    issues.push({ type: 'error', message: 'HTML vacío o nulo' });
+    return { issues, suggestions };
+  }
+
+  // 1. Verificar etiquetas meta importantes
+  const hasViewport = html.includes('viewport');
+  const hasTitle = /<title>.*<\/title>/i.test(html);
+  const hasDescription = /<meta.*name="description".*>/i.test(html);
+
+  if (!hasViewport) {
+    issues.push({ type: 'ux', message: 'Falta meta viewport para responsive design' });
+    suggestions.push('Agregar: <meta name="viewport" content="width=device-width, initial-scale=1">');
+  }
+
+  if (!hasTitle) {
+    issues.push({ type: 'seo', message: 'Falta etiqueta <title>' });
+  }
+
+  if (!hasDescription) {
+    suggestions.push('Considerar agregar meta description para SEO');
+  }
+
+  // 2. Verificar estructura semántica
+  const hasHeader = /<header|<h1|<h2|<h3/i.test(html);
+  const hasMain = /<main|<section|<article/i.test(html);
+  const hasFooter = /<footer/i.test(html);
+
+  if (!hasHeader) {
+    suggestions.push('Considerar usar etiquetas de encabezado (h1-h6) para estructura semántica');
+  }
+
+  if (!hasMain) {
+    suggestions.push('Considerar usar etiquetas semánticas como <main>, <section>, <article>');
+  }
+
+  // 3. Analizar imágenes
+  const imgTags = (html.match(/<img[^>]*>/gi) || []);
+  const imgCount = imgTags.length;
+  const imgsWithoutAlt = imgTags.filter(img => !/alt=["'][^"']*["']/i.test(img)).length;
+
+  if (imgCount > 0) {
+    suggestions.push(`Se encontraron ${imgCount} imágenes en la página`);
+    if (imgsWithoutAlt > 0) {
+      issues.push({
+        type: 'accessibility',
+        message: `${imgsWithoutAlt} imágenes sin atributo alt`
+      });
+      suggestions.push('Agregar atributos alt descriptivos a todas las imágenes para accesibilidad');
+    }
+  }
+
+  // 4. Verificar scripts y estilos
+  const hasInlineScripts = /<script[^>]*>[\s\S]*?<\/script>/gi.test(html);
+  const hasExternalScripts = /<script[^>]*src=["'][^"']*["'][^>]*>/gi.test(html);
+  const hasInlineStyles = /<style[^>]*>[\s\S]*?<\/style>/gi.test(html);
+  const hasExternalStyles = /<link[^>]*rel=["']stylesheet["'][^>]*>/gi.test(html);
+
+  if (hasInlineScripts) {
+    suggestions.push('Considerar mover scripts inline a archivos externos para mejor caché');
+  }
+
+  if (hasInlineStyles) {
+    suggestions.push('Considerar mover estilos inline a archivos CSS externos');
+  }
+
+  // 5. Análisis de contenido
+  const textContent = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const wordCount = textContent.split(/\s+/).filter(w => w.length > 0).length;
+
+  if (wordCount < 50) {
+    issues.push({ type: 'content', message: `Contenido escaso: solo ${wordCount} palabras` });
+  }
+
+  suggestions.push(`Contenido de texto: ~${wordCount} palabras`);
+
+  return {
+    issues,
+    suggestions,
+    stats: {
+      hasViewport,
+      hasTitle,
+      hasDescription,
+      imgCount,
+      imgsWithoutAlt,
+      hasHeader,
+      hasMain,
+      hasFooter,
+      wordCount
+    }
+  };
+}
+
+async function analyzeGuideMarkdown(guidePath) {
+  try {
+    const fullPath = path.join(process.cwd(), '..', '..', 'resources', guidePath);
+    if (!fs.existsSync(fullPath)) {
+      console.log(`⚠️  Archivo no encontrado: ${fullPath}`);
+      return null;
+    }
+
+    const content = fs.readFileSync(fullPath, 'utf8');
+    const lines = content.split('\n');
+    const analysis = {
+      filename: guidePath,
+      lineCount: lines.length,
+      wordCount: content.split(/\s+/).filter(w => w.length > 0).length,
+      charCount: content.length,
+      sections: [],
+      issues: [],
+      suggestions: []
+    };
+
+    // Identificar secciones
+    let currentSection = '';
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.startsWith('# ')) {
+        currentSection = line.replace('# ', '').trim();
+        analysis.sections.push({ title: currentSection, startLine: i + 1 });
+      } else if (line.startsWith('## ')) {
+        currentSection = line.replace('## ', '').trim();
+        analysis.sections.push({ title: currentSection, startLine: i + 1 });
+      }
+    }
+
+    // Análisis básico de calidad
+    if (analysis.wordCount < 100) {
+      analysis.issues.push({ type: 'content', message: 'Contenido muy corto' });
+      analysis.suggestions.push('Considerar expandir el contenido educativo');
+    }
+
+    // Verificar formato de preguntas
+    const hasQuestions = content.includes('? ___') || content.includes('? ____') || /^\d+\./.test(content);
+    if (!hasQuestions) {
+      analysis.suggestions.push('Considerar agregar preguntas de comprensión interactivas');
+    }
+
+    // Verificar elementos visuales
+    const hasImages = content.includes('![') || content.includes('<img');
+    if (!hasImages) {
+      analysis.suggestions.push('Considerar agregar imágenes o diagramas para mejor aprendizaje visual');
+    }
+
+    // Verificar citas bíblicas
+    const hasBibleQuotes = content.includes('> **') || content.includes('(Translation') || /[0-9]+:[0-9]+/.test(content);
+    if (!hasBibleQuotes && analysis.filename.includes('Jesus')) {
+      analysis.suggestions.push('Considerar incluir citas bíblicas directas para referencia');
+    }
+
+    // Verificar secciones de reflexión/aplicación
+    const hasReflection = content.toLowerCase().includes('reflection') || content.toLowerCase().includes('reflexión');
+    const hasApplication = content.toLowerCase().includes('application') || content.toLowerCase().includes('aplicación');
+
+    if (!hasReflection) {
+      analysis.suggestions.push('Considerar agregar sección "Reflection" para conectar con la vida personal');
+    }
+
+    if (!hasApplication) {
+      analysis.suggestions.push('Considerar agregar sección "Application" para guiar práctica');
+    }
+
+    return analysis;
+  } catch (error) {
+    console.error(`❌ Error analizando markdown ${guidePath}:`, error.message);
+    return null;
+  }
+}
+
+function generateUXReport(allAnalyses) {
+  console.log('\n' + '='.repeat(80));
+  console.log('📊 INFORME DE ANÁLISIS DE EXPERIENCIA DE USUARIO');
+  console.log('='.repeat(80));
+
+  let totalIssues = 0;
+  let totalSuggestions = 0;
+
+  allAnalyses.forEach(({ url, htmlAnalysis, markdownAnalysis }) => {
+    console.log(`\n📍 PÁGINA: ${url}`);
+
+    if (htmlAnalysis) {
+      console.log('\n  🎨 ANÁLISIS HTML/UX:');
+      if (htmlAnalysis.issues.length > 0) {
+        console.log('    ❌ PROBLEMAS IDENTIFICADOS:');
+        htmlAnalysis.issues.forEach(issue => {
+          console.log(`      • [${issue.type.toUpperCase()}] ${issue.message}`);
+          totalIssues++;
+        });
+      } else {
+        console.log('    ✅ No se encontraron problemas críticos');
+      }
+
+      if (htmlAnalysis.suggestions.length > 0) {
+        console.log('\n    💡 SUGERENCIAS DE MEJORA:');
+        htmlAnalysis.suggestions.forEach(suggestion => {
+          console.log(`      • ${suggestion}`);
+          totalSuggestions++;
+        });
+      }
+
+      console.log('\n    📈 ESTADÍSTICAS:');
+      Object.entries(htmlAnalysis.stats).forEach(([key, value]) => {
+        console.log(`      • ${key}: ${value}`);
+      });
+    }
+
+    if (markdownAnalysis) {
+      console.log('\n  📚 ANÁLISIS DE CONTENIDO (MARKDOWN):');
+      console.log(`    • Archivo: ${markdownAnalysis.filename}`);
+      console.log(`    • Líneas: ${markdownAnalysis.lineCount}`);
+      console.log(`    • Palabras: ${markdownAnalysis.wordCount}`);
+      console.log(`    • Secciones: ${markdownAnalysis.sections.length}`);
+
+      if (markdownAnalysis.sections.length > 0) {
+        console.log('    • Nombres de secciones:');
+        markdownAnalysis.sections.forEach(section => {
+          console.log(`      - ${section.title} (línea ${section.startLine})`);
+        });
+      }
+
+      if (markdownAnalysis.issues.length > 0) {
+        console.log('\n    ❌ PROBLEMAS DE CONTENIDO:');
+        markdownAnalysis.issues.forEach(issue => {
+          console.log(`      • [${issue.type}] ${issue.message}`);
+          totalIssues++;
+        });
+      }
+
+      if (markdownAnalysis.suggestions.length > 0) {
+        console.log('\n    💡 SUGERENCIAS PARA EL CONTENIDO:');
+        markdownAnalysis.suggestions.forEach(suggestion => {
+          console.log(`      • ${suggestion}`);
+          totalSuggestions++;
+        });
+      }
+    }
+  });
+
+  console.log('\n' + '='.repeat(80));
+  console.log(`📋 RESUMEN TOTAL:`);
+  console.log(`   • Problemas identificados: ${totalIssues}`);
+  console.log(`   • Sugerencias generadas: ${totalSuggestions}`);
+  console.log(`   • Páginas analizadas: ${allAnalyses.length}`);
+  console.log('='.repeat(80) + '\n');
+}
+
 // ADVERTENCIA DE SEGURIDAD:
 // Usar clave privada desde variables de entorno. Solo para desarrollo.
 // NO USAR en mainnet. NO ENVIAR fondos reales a esta dirección.
@@ -53,6 +335,10 @@ const CHAIN_ID = 11142220; // Celo Sepolia
 // IDs from database (see servidor/db/datos-basicas.sql)
 const COURSE_ID = 2; // A relationship with Jesus
 const GUIDE_ID = 1;  // First guide ordered by nombrecorto
+
+// CELO UBI parameters
+const CELO_UBI_PREFIX = 'web3-and-ubi';
+const CELO_UBI_GUIDE = 'guide3';
 
 // Question-answer pairs from resources/en/a-relationship-with-Jesus/guide1.md
 // Multiple clue substrings for flexible matching
@@ -184,7 +470,9 @@ Guide: ${GUIDE_SUFFIX} (ID: ${GUIDE_ID})
 `);
 
 async function runTest() {
+  const allAnalyses = []; // Array para recopilar todos los análisis
   try {
+
     // 0. Autenticación SIWE y actualización de puntaje
     console.log('PASO 0: Autenticación SIWE con billetera aleatoria...');
     console.log(`   Billetera: ${account.address}`);
@@ -284,6 +572,63 @@ async function runTest() {
       }
     } else {
       console.log('      ❌ No se pudo obtener perfil');
+    }
+
+    // 0.8 Visitar y analizar páginas clave para UX
+    console.log('\nPASO 0.8: Analizando páginas para UX y contenido...');
+
+    // 0.8.1 Página principal
+    console.log('\n   0.8.1 Página principal...');
+    const homepageUrl = `${BASE_URL}/`;
+    const homepageResult = await downloadAndSaveHTML(homepageUrl, 'homepage.html', cookies);
+    if (homepageResult.success) {
+      const htmlAnalysis = analyzeHTMLForUX(homepageResult.html, homepageUrl);
+      const markdownAnalysis = null; // No hay markdown para homepage
+      allAnalyses.push({ url: homepageUrl, htmlAnalysis, markdownAnalysis });
+      console.log('      ✅ Análisis completado');
+    }
+
+    // 0.8.2 Página del curso
+    console.log('\n   0.8.2 Página del curso...');
+    const courseUrl = `${BASE_URL}/${LANG}/${COURSE_PREFIX}`;
+    const courseResult = await downloadAndSaveHTML(courseUrl, 'course-page.html', cookies);
+    if (courseResult.success) {
+      const htmlAnalysis = analyzeHTMLForUX(courseResult.html, courseUrl);
+      const markdownAnalysis = null;
+      allAnalyses.push({ url: courseUrl, htmlAnalysis, markdownAnalysis });
+      console.log('      ✅ Análisis completado');
+    }
+
+    // 0.8.3 Analizar markdown de la guía actual
+    console.log('\n   0.8.3 Analizando contenido de la guía...');
+    const guideMarkdownPath = `${LANG}/${COURSE_PREFIX}/${GUIDE_SUFFIX}.md`;
+    const markdownAnalysis = await analyzeGuideMarkdown(guideMarkdownPath);
+    if (markdownAnalysis) {
+      // También descargar HTML de la página de la guía
+      const guideUrl = `${BASE_URL}/${LANG}/${COURSE_PREFIX}/${GUIDE_SUFFIX}`;
+      const guideResult = await downloadAndSaveHTML(guideUrl, 'guide-page.html', cookies);
+      let htmlAnalysis = null;
+      if (guideResult.success) {
+        htmlAnalysis = analyzeHTMLForUX(guideResult.html, guideUrl);
+      }
+      allAnalyses.push({ url: guideUrl, htmlAnalysis, markdownAnalysis });
+      console.log('      ✅ Análisis de contenido completado');
+    }
+
+    // 0.8.4 Analizar markdown de guía CELO UBI
+    console.log('\n   0.8.4 Analizando contenido de guía CELO UBI...');
+    const celoGuideMarkdownPath = `${LANG}/${CELO_UBI_PREFIX}/${CELO_UBI_GUIDE}.md`;
+    const celoMarkdownAnalysis = await analyzeGuideMarkdown(celoGuideMarkdownPath);
+    if (celoMarkdownAnalysis) {
+      // También descargar HTML de la página CELO UBI
+      const celoGuideUrl = `${BASE_URL}/${LANG}/${CELO_UBI_PREFIX}/${CELO_UBI_GUIDE}`;
+      const celoGuideResult = await downloadAndSaveHTML(celoGuideUrl, 'celo-ubi-guide-page.html', cookies);
+      let htmlAnalysis = null;
+      if (celoGuideResult.success) {
+        htmlAnalysis = analyzeHTMLForUX(celoGuideResult.html, celoGuideUrl);
+      }
+      allAnalyses.push({ url: celoGuideUrl, htmlAnalysis, markdownAnalysis: celoMarkdownAnalysis });
+      console.log('      ✅ Análisis de contenido CELO UBI completado');
     }
 
     // 1. Verificar la existencia de la guía (el token se obtiene en el siguiente paso)
@@ -421,7 +766,58 @@ async function runTest() {
       throw new Error(`La transacción de la beca falló. Estado: ${receipt.status}`);
     }
 
-    console.log('\nPrueba completada con éxito. El flujo de cobro de beca funciona.');
+    // 6.5 Generar reporte de análisis UX
+    console.log('\nPASO 6.5: Generando reporte de análisis UX...');
+    generateUXReport(allAnalyses);
+
+    // 7. Visitar guía de CELO UBI
+    console.log('\nPASO 7: Visiting CELO UBI guide (web3-and-ubi/guide3)...');
+    const guideResponse = await apiClient.get('/api/guide', {
+      params: {
+        lang: LANG,
+        prefix: CELO_UBI_PREFIX,
+        guide: CELO_UBI_GUIDE,
+        walletAddress: account.address,
+        token: newToken,
+      },
+    });
+    console.log(`-> Guide loaded successfully. Status: ${guideResponse.status}`);
+
+    // 8. Reclamar CELO UBI
+    console.log('\nPASO 8: Claiming CELO UBI...');
+    const claimResponse = await apiClient.post('/api/claim-celo-ubi', {
+      walletAddress: account.address,
+      token: newToken,
+    }, {
+      headers: { 'Accept-Language': 'en' }
+    });
+    console.log(`-> Claim response status: ${claimResponse.status}`);
+    console.log(`-> Claim response data: ${JSON.stringify(claimResponse.data, null, 2)}`);
+
+    const { txHash: celoTxHash, message: claimMessage } = claimResponse.data;
+    if (!celoTxHash) {
+      throw new Error(`CELO UBI claim failed. Message: ${claimMessage}`);
+    }
+    console.log(`-> CELO UBI claim successful. Message: "${claimMessage.split('\n')[0]}"`);
+    console.log(`-> Transaction hash: ${celoTxHash}`);
+
+    // 9. Verificar transacción de CELO UBI
+    console.log('\nPASO 9: Verifying CELO UBI transaction on Celo Sepolia...');
+    const celoReceipt = await publicClient.waitForTransactionReceipt({ hash: celoTxHash });
+    if (celoReceipt.status === 'success') {
+      console.log('✅ ÉXITO: La transacción de CELO UBI fue minada y confirmada en la blockchain.');
+      console.log(`-> Block number: ${celoReceipt.blockNumber}`);
+    } else {
+      throw new Error(`La transacción de CELO UBI falló. Estado: ${celoReceipt.status}`);
+    }
+
+    // Generar reporte completo de UX y contenido
+    console.log('\n' + '='.repeat(80));
+    console.log('📋 GENERANDO REPORTE DE ANÁLISIS DE UX Y CONTENIDO');
+    console.log('='.repeat(80));
+    generateUXReport(allAnalyses);
+
+    console.log('\nPrueba completada con éxito. El flujo de cobro de beca y claim de CELO UBI funciona.');
 
   } catch (error) {
     console.error('\n❌ ERROR DURANTE LA PRUEBA:');
@@ -431,6 +827,13 @@ async function runTest() {
     } else {
       console.error(error.message);
     }
+
+    // Generar reporte de análisis UX antes de salir
+    console.log('\n' + '='.repeat(80));
+    console.log('📋 GENERANDO REPORTE DE ANÁLISIS DE UX (tras error)');
+    console.log('='.repeat(80));
+    generateUXReport(allAnalyses);
+
     process.exit(1);
   }
 }
