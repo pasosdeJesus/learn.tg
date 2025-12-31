@@ -35,6 +35,8 @@ See instructions in [apps/nextjs/README.md](apps/nextjs/README.md)
 - **TypeScript**: 
   - Use explicit types, avoid `any` when possible
   - Don´t use ; at the end of the lines
+- **SQL**:
+  - Use singular for table names
 - **Tests**: Try to include tests for new functionality
 - **Commits**: Use [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`
 - **Type checking**: Code at `apps/nextjs` must pass `make type` without errors

@@ -37,7 +37,9 @@ To ensure fairness and prevent one person from claiming multiple times, both sys
 *   **Note:** With OKX Wallet, you may need to allow camera access several times (around 5) at the beginning.
 
 **Reference video:**
-[![Video showing the verification process](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI)
+
+[![Video showing how to save USDT on OKX](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI) 
+
 
 **At the end of this guide you'll find the button to start your GoodDollar verification.**
 
