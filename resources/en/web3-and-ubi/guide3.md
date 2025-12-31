@@ -1,79 +1,73 @@
-## 1. Introduction
+# Guide 3: Claim Your Daily UBI - GoodDollar and CELO
 
-CELO and GoodDollar (also known as G$) are crypto currencies that 
-operate in the CELO blockchain.
+## 1. What are GoodDollar (G$) and CELO?
 
-GoodDollar is supported by companies like eToro.  The CELO UBI offered 
-in this site is sponsored by Celo Support Streams.
+GoodDollar (G$) and CELO are cryptocurrencies that operate on the **Celo blockchain**.
+*   **GoodDollar** is a global UBI protocol supported by companies like eToro.
+*   **CELO UBI** on this site is sponsored by **Celo Support Streams**.
 
-To avoid that one person uses two different wallets to claim UBIs,
-GoodDollar and this site use anti-sybil mechanisms:
+To ensure fairness and prevent one person from claiming multiple times, both systems use **anti-sybil mechanisms**:
+*   **GoodDollar:** Requires unique **facial verification** every 6 months.
+*   **CELO UBI on learn.tg:** You need at least **50 points** in your profile score.
 
-* Before claiming GoodDollar UBI you need to verify your uniqueness with 
-  facial verification, this needs to be done every six months.
-* Before claiming CELO UBI you need at least 50 points in your 
-  profile score. There are two ways to have more than 50 points in 
-  your profile score:
-    1. Doing the GoodDollar uniqueness verification process and pushing 
-        the button "Update Score" from the [profile](/en/profile) page 
-        gives 52 points.
-    2. Installing the [Self](https://self.xyz) app in your phone, scanning 
-        your passport with it, from the profile page push verify with self,
-        scan with the self app the QR code and accept providing us your
-        name and country will give 100 points (52 of uniqueness verification,
-        and the rest for verifying your name and country).
+**How to get +50 points?**
+1.  **GoodDollar Verification (52 points):** Complete the facial process, then click "Update Score" on your [profile](/en/profile) page.
+2.  **Verification with Self (100 points):** Install the [Self](https://self.xyz) app and scan your passport with it. Then, from your profile page here, click the **"Verify with Self"** button. This will display a **QR code** (on computers) or directly open the Self app (on smartphones). Scan the QR code with the Self app and authorize sharing your verified **name and country** to receive 100 points.
 
-GoodDollar  UBI is aroun 100G$ daily, worth about US$0.01 (around 0.25 
-New Leones). You can save up daily G$ over a week or month for converting 
-or buying.  Multiple adults in a household can each claim it daily, 
-managing each account in a different phone or all accounts in on phone 
-with one OKX app.
+**Approximate daily value:**
+*   **GoodDollar:** ~100 G$ (≈ $0.01 USD / ~0.25 New Leones). You can save up over several days before converting.
+*   **CELO UBI:** Up to 1 CELO daily, depending on your profile score. With 52 points, you receive 0.52 CELO.
 
-CELO UBI is at most 1 CELO daily, depending on your profile score.  If your
-profile score is 52 points you would receive 0.52 CELO.
+**💡 Tip:** Multiple adults in a household can claim, each with their own wallet, all manageable from **a single OKX app**.
 
+---
 
-## 2. GoodDollars's facial verification
+## 2. Step 1: Verify Your Identity with GoodDollar
 
-Facial verification is how GoodDollar ensures that your wallet belongs
-to a unique real adult (above 18 years old) and that each person claims 
-at most once per day. 
+**Facial verification** ensures your wallet belongs to a **unique real adult (over 18 years old)**.
 
-You use your smartphone’s camera to take a short video of your face, 
-GoodDollar’s system will retrieve the features of your face and compare
-with exisintg ones in a centralized database to make sure it is not 
-repeated and then it will store your face features in the database 
-not linking it with your personal information (except your wallet's address). 
-This keeps the system fair and prevents fraud. 
+**How it works:**
+1.  You'll use your smartphone's camera to record a short video of your face.
+2.  GoodDollar's system extracts your facial features and compares them with a centralized database to avoid duplicates.
+3.  **Your facial data is stored securely**, linked **only to your wallet's address**, not to your name or other personal info.
 
-The process is quick, usually taking less than 10 minutes, and you only
-need to do it once during signup --we noticed that with the OKX wallet
-it will require permission to open the camera around 5 times but after
-it will work.  Make sure you’re in a well-lit place.  The process
-will take a couple of minutes and you’ll get a confirmation.
+**Process requirements:**
+*   **Time:** About 10 minutes. Done **once** (then every 6 months).
+*   **Location:** Good lighting.
+*   **Note:** With OKX Wallet, you may need to allow camera access several times (around 5) at the beginning.
 
+**Reference video:**
+[![Video showing the verification process](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI)
 
-[![Video showing how to save USDT on OKX](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI)
+**At the end of this guide you'll find the button to start your GoodDollar verification.**
 
-At the end of this guide there is a button to Verify yourself with GoodDollar.
+---
 
+## 3. Step 2: Claim Your Daily UBI
 
-## 3. Claim Daily UBI
+Once verified, you can claim daily through your **Web3 wallet** (like OKX, which you set up in Guide 2).
 
-After verification, you can claim your daily G$ through your Web3 wallet, 
-like OKX on <https://learn.tg> or from the original <https://gooddapp.org/>
+*   **GoodDollar (G$):** You can claim on <https://learn.tg> or the official app at <https://gooddapp.org>.
+*   **CELO UBI:** You can only claim it on **this site (learn.tg)**.
 
-The CELO UBI can be claimed only in this site.
+**Daily process:** Open the app, click to claim, and the funds are added to your wallet.
 
-Each day, you open the app, click to claim your UBI, and it’s added to your 
-wallet.
+**The buttons at the end of this guide will allow you to claim both UBIs.**
 
-The buttons at the end of this guide allows you to claim your daily UBIs.
+---
 
+## 4. Next Steps
 
-## 4. Reading Comprehension
+Congratulations! By completing this guide you have:
+1.  Understood the value and purpose of GoodDollar and CELO UBI.
+2.  Learned how the anti-sybil verifications work.
+3.  Prepared to verify your identity and claim your first funds.
 
-Complete each sentence by filling in the missing word.
+In **Guide 4** you will learn how to **convert your G$ or CELO into Leones** through local services to use your UBI in the daily economy.
+
+---
+
+## 5. Reading Comprehension
 
 1. ___ is a crypto currency that allows you to claim daily a little of free money as Universal Basic Income. (GoodDollar)
 2. In order to prove that your are a unique person for GoodDollar, you need to do facial ___ every 6 months. (verification)
