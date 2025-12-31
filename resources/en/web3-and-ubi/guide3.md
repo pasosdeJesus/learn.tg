@@ -1,18 +1,19 @@
 ## 1. Introduction
 
-CELO and GoodDollar (also known as G$) are crypto currencies that operate in 
-the CELO blockchain.
+CELO and GoodDollar (also known as G$) are crypto currencies that 
+operate in the CELO blockchain.
 
-GoodDollar is supported by companies like eToro.  The CELO UBI offered in this
-site is sponsored by Celo Support Streams.
+GoodDollar is supported by companies like eToro.  The CELO UBI offered 
+in this site is sponsored by Celo Support Streams.
 
-To avoid that one person uses two different wallets to claim UBIs GoodDollar
-and this site use anti-sybil mechanisms:
+To avoid that one person uses two different wallets to claim UBIs,
+GoodDollar and this site use anti-sybil mechanisms:
 
 * Before claiming GoodDollar UBI you need to verify your uniqueness with 
   facial verification, this needs to be done every six months.
-* Before claiming CELO UBI you need at least 50 points in your profile score. 
-  There are tow ways to have more than 50 points in your profile score:
+* Before claiming CELO UBI you need at least 50 points in your 
+  profile score. There are two ways to have more than 50 points in 
+  your profile score:
     1. Doing the GoodDollar uniqueness verification process and pushing 
         the button "Update Score" from the [profile](/en/profile) page 
         gives 52 points.

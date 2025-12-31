@@ -65,7 +65,7 @@ export function CeloUbiButton({
     }
   }
 
-  const buttonText = lang === 'es' ? 'Reclamar Apoyo de Celo' : 'Claim Celo Support'
+  const buttonText = lang === 'es' ? 'Reclamar Celo UBI' : 'Claim Celo UBI'
 
   return (
     <div className="flex flex-col items-center justify-center gap-2">
