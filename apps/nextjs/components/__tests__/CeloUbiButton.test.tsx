@@ -25,7 +25,13 @@ describe('CeloUbiButton', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetCsrfToken.mockResolvedValue('mock-csrf-token')
+    // Suppress console.error for Radix UI accessibility warnings in tests
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   })
+
+  afterEach(() => {
+    (console.error as Mock).mockRestore();
+  });
 
   it('should render the button in English and be disabled when not logged in', () => {
     render(
@@ -33,9 +39,8 @@ describe('CeloUbiButton', () => {
         <CeloUbiButton lang="en" />
       </SessionProvider>
     )
-    expect(screen.getByText('Claim Celo Support')).toBeInTheDocument()
+    expect(screen.getByText('Claim Celo Scholarship')).toBeInTheDocument()
     expect(screen.getByRole('button')).toBeDisabled()
-    expect(screen.getByText('Log in to claim')).toBeInTheDocument()
   })
 
   it('should render the button in Spanish and be enabled when logged in', () => {
@@ -45,13 +50,13 @@ describe('CeloUbiButton', () => {
         <CeloUbiButton lang="es" />
       </SessionProvider>
     )
-    expect(screen.getByText('Reclamar Apoyo de Celo')).toBeInTheDocument()
+    expect(screen.getByText('Reclamar Beca Celo')).toBeInTheDocument()
     expect(screen.getByRole('button')).not.toBeDisabled()
   })
 
-  it('should show a success message when the claim is successful', async () => {
+  it('should show a success dialog when the claim is successful', async () => {
     const mockSession = { address: '0x123', expires: '1' }
-    mockAxiosPost.mockResolvedValue({ data: { message: 'Éxito!' } })
+    mockAxiosPost.mockResolvedValue({ data: { message: 'Éxito!', txHash: '0xabc' } })
 
     render(
       <SessionProvider session={mockSession as any}>
@@ -67,10 +72,15 @@ describe('CeloUbiButton', () => {
       walletAddress: '0x123',
       token: 'mock-csrf-token',
     })
-    expect(await screen.findByText('Éxito!')).toBeInTheDocument()
+    
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toBeInTheDocument()
+    expect(screen.getByText('Reclamo Exitoso')).toBeInTheDocument()
+    expect(screen.getByText('Éxito!')).toBeInTheDocument()
+    expect(screen.getByText('Ver transacción')).toHaveAttribute('href', `${process.env.NEXT_PUBLIC_EXPLORER_TX}/0xabc`)
   })
 
-  it('should show an error message when the claim fails with a custom error', async () => {
+  it('should show an error dialog when the claim fails with a custom error', async () => {
     const mockSession = { address: '0x123', expires: '1' }
     const error: Partial<AxiosError> = {
         isAxiosError: true,
@@ -94,13 +104,16 @@ describe('CeloUbiButton', () => {
       fireEvent.click(screen.getByRole('button'))
     });
 
-    // The component shows a generic message, not the one from the API
-    expect(await screen.findByText('Ocurrió un error')).toBeInTheDocument()
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toBeInTheDocument()
+    expect(screen.getByText('Error en el Reclamo')).toBeInTheDocument()
+    expect(screen.getByText('Error personalizado')).toBeInTheDocument()
   })
 
-  it('should show a generic error message when the claim fails without a custom error', async () => {
+  it('should show a generic error dialog when the claim fails without a custom error', async () => {
     const mockSession = { address: '0x123', expires: '1' }
-    mockAxiosPost.mockRejectedValue(new Error('Network Error'))
+    const error = new Error('Network Error');
+    mockAxiosPost.mockRejectedValue(error)
 
     render(
       <SessionProvider session={mockSession as any}>
@@ -112,6 +125,9 @@ describe('CeloUbiButton', () => {
       fireEvent.click(screen.getByRole('button'))
     });
 
-    expect(await screen.findByText('Network Error')).toBeInTheDocument()
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toBeInTheDocument()
+    expect(screen.getByText('Claim Error')).toBeInTheDocument()
+    expect(screen.getByText('Network Error')).toBeInTheDocument()
   })
 })

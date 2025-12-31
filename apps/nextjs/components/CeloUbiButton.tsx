@@ -49,8 +49,6 @@ export function CeloUbiButton({ lang = 'es' }: CeloUbiButtonProps) {
 
   const handleClaimClick = async () => {
     if (!session?.address) {
-      // This case should ideally not be reached if the button is disabled,
-      // but it's good practice to keep it.
       setClaimResult({ message: t('mustLogin') })
       setClaimState('error')
       setDialogOpen(true)
@@ -72,9 +70,9 @@ export function CeloUbiButton({ lang = 'es' }: CeloUbiButtonProps) {
       setClaimState('success')
     } catch (err: any) {
       let errorMessage = t('claimErrorTitle');
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage = err.response.data.message || err.message;
-      } else if (err instanceof Error) {
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
         errorMessage = err.message;
       }
       setClaimResult({ message: errorMessage })
@@ -84,7 +82,6 @@ export function CeloUbiButton({ lang = 'es' }: CeloUbiButtonProps) {
 
   const closeDialog = () => {
     setDialogOpen(false)
-    // Delay state reset to prevent content flashing while dialog closes
     setTimeout(() => {
         setClaimState('idle')
         setClaimResult(null)
