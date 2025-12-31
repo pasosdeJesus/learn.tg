@@ -172,19 +172,19 @@ export default function Page({ params }: PageProps) {
 
   return (
     <Toast.Provider swipeDirection="right">
-      <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
+      <section aria-label="Courses grid" className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((course) => {
               const extra = extCourses.get(course.id)
 
               return (
-                <div
+                <article
                   key={course.id}
                   className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
                 >
                   <a href={`/${course.idioma}${course.prefijoRuta}`}>
-                    <div className="img-course">
+                    <figure className="img-course">
                       {course.imagen && course.imagen.startsWith('/') && (
                         <Image
                           className="w-full h-[17rem] pt-2 object-cover"
@@ -194,16 +194,16 @@ export default function Page({ params }: PageProps) {
                           height={272}
                         />
                       )}
-                    </div>
-                    <div className="p-5">
+                    </figure>
+                    <header className="p-5">
                       <h3 className="text-lg font-semibold text-gray-800 mb-2">
                         {course.titulo}
                       </h3>
                       <p className="text-sm text-gray-600 line-clamp-3">
                         {course.subtitulo}
                       </p>
-                    </div>
-                    <div className="flex justify-between items-center p-4">
+                    </header>
+                    <footer className="flex justify-between items-center p-4">
                       <div>
                         {extra && extra.amountPerGuide > 0 && (
                           <div className="p-2">
@@ -247,7 +247,7 @@ export default function Page({ params }: PageProps) {
                           lang={lang}
                         />
                       )}
-                    </div>
+                    </footer>
                   </a>
                   {extra && extra.vaultCreated && (
                     <div className="p-4 bg-green-100 flex items-center gap-3 justify-between">
@@ -265,7 +265,7 @@ export default function Page({ params }: PageProps) {
                       )}
                     </div>
                   )}
-                </div>
+                </article>
               )
             })}
           </div>
@@ -294,7 +294,7 @@ export default function Page({ params }: PageProps) {
           </Toast.Close>
         </Toast.Root>
         <Toast.Viewport className="fixed bottom-4 right-4 flex flex-col gap-2 w-96 max-w-[100vw] outline-none z-[60]" />
-      </div>
+      </section>
     </Toast.Provider>
   )
 }

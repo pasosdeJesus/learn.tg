@@ -184,12 +184,12 @@ export default function Page({ params }: PageProps) {
 
   return (
     <>
-      <div className="mt-8 pt-2 dark:bg-gray-100 dark:text-gray-800">
-        <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
+      <article className="mt-8 pt-2 dark:bg-gray-100 dark:text-gray-800" aria-label="Guide content">
+        <header className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
           <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
             {course.idioma === 'en' ? 'Course: ' : 'Curso: '}{course.titulo}
           </h3>
-        </div>
+        </header>
         <h1 className="py-3 px-16 text-[2rem] font-bold text-left">
           {course.idioma === 'en' ? 'Guide' : 'Guía'}
           &nbsp;
@@ -197,20 +197,21 @@ export default function Page({ params }: PageProps) {
           {myGuide.completed ? ' ✅' : ''}
           {myGuide.receivedScholarship ? ' 💰' : ''}
         </h1>
-        <div
+        <section
           className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside"
           dangerouslySetInnerHTML={{ __html: guideHtml }}
+          aria-label="Guide text"
         />
-        <div className="flex space-x-4 items-center justify-center">
+        <aside className="flex space-x-4 items-center justify-center" aria-label="Interactive buttons">
           {isClient && showGoodDollarButton && (
             <GoodDollarClaimButton
             lang={course.idioma}
             />
           )}
           {isClient && showCeloUbiButton && <CeloUbiButton />}
-        </div>
+        </aside>
 
-        <table className="mx-auto text-center mt-12">
+        <nav aria-label="Guide navigation"><table className="mx-auto text-center mt-12">
           <tbody>
             <tr>
               <td>
@@ -250,9 +251,9 @@ export default function Page({ params }: PageProps) {
               </td>
             </tr>
           </tbody>
-        </table>
+        </table></nav>
         {creditsHtml && (
-          <div className="text-sm mt-2">
+          <footer className="text-sm mt-2" aria-label="Course credits and license">
             <h2 className="px-16 text-1xl font-bold md:text-1xl">
               {course.idioma === 'en'
                 ? 'Credits and License of this course'
@@ -262,9 +263,9 @@ export default function Page({ params }: PageProps) {
               className="py-3 px-16 text-1xl md:text-1xl text-justify"
               dangerouslySetInnerHTML={{ __html: creditsHtml }}
             />
-          </div>
+          </footer>
         )}
-      </div>
+      </article>
 
       <div>&nbsp;</div>
     </>
