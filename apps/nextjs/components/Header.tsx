@@ -33,41 +33,45 @@ export default function Header({ lang = 'en' }) {
     <header className="bg-white shadow-md">
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/logo-learntg.png"
-                alt="logo"
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
-              <span className="text-gray-800 font-semibold text-lg">
-                {lang === 'es'
-                  ? 'Aprender mediante juegos'
-                  : 'Learn through games'}
-              </span>
-            </Link>
-          </div>
+          <nav aria-label="Primary navigation">
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center gap-2">
+                <Image
+                  src="/logo-learntg.png"
+                  alt="logo"
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+                <span className="text-gray-800 font-semibold text-lg">
+                  {lang === 'es'
+                    ? 'Aprender mediante juegos'
+                    : 'Learn through games'}
+                </span>
+              </Link>
+            </div>
+          </nav>
 
-          <div className="flex items-center gap-4">
-            {isConnected &&
-              address &&
-              session &&
-              session.address &&
-              session.address == address && (
-                <Button asChild variant="ghost">
-                  <Link href={`/${lang ? lang : 'es'}/profile`}>
-                    {lang === 'en' ? 'Profile' : 'Perfil'}
-                  </Link>
-                </Button>
+          <nav aria-label="User authentication">
+            <div className="flex items-center gap-4">
+              {isConnected &&
+                address &&
+                session &&
+                session.address &&
+                session.address == address && (
+                  <Button asChild variant="ghost">
+                    <Link href={`/${lang ? lang : 'es'}/profile`}>
+                      {lang === 'en' ? 'Profile' : 'Perfil'}
+                    </Link>
+                  </Button>
+                )}
+              {!hideConnectBtn && (
+                <ConnectButton
+                  showBalance={{ smallScreen: false, largeScreen: false }}
+                />
               )}
-            {!hideConnectBtn && (
-              <ConnectButton
-                showBalance={{ smallScreen: false, largeScreen: false }}
-              />
-            )}
-          </div>
+            </div>
+          </nav>
         </div>
       </div>
     </header>
