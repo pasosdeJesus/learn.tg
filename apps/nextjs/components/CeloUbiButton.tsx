@@ -1,113 +1,150 @@
 'use client'
 
+import { useState } from 'react'
 import axios from 'axios'
 import { getCsrfToken, useSession } from 'next-auth/react'
-import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 export interface CeloUbiButtonProps {
-  /** Current language (\'en\' or \'es\') for button text */
   lang?: string
 }
 
-export function CeloUbiButton({
-  lang = 'en',
-}: CeloUbiButtonProps) {
-  const { data: session } = useSession()
-  const [isClaiming, setIsClaiming] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [txHash, setTxHash] = useState<string | null>(null)
+type ClaimStatus = 'idle' | 'loading' | 'success' | 'error'
 
-  const handleClaim = async () => {
+interface ClaimResult {
+  message: string;
+  txHash?: string;
+}
+
+export function CeloUbiButton({ lang = 'es' }: CeloUbiButtonProps) {
+  const { data: session } = useSession()
+
+  const [claimState, setClaimState] = useState<ClaimStatus>('idle')
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [claimResult, setClaimResult] = useState<ClaimResult | null>(null)
+
+  const t = (key: string) => {
+    const translations: { [key: string]: { [lang: string]: string } } = {
+      claimButton: { es: 'Reclamar Beca Celo', en: 'Claim Celo Scholarship' },
+      loading: { es: 'Cargando...', en: 'Loading...' },
+      claiming: { es: 'Reclamando...', en: 'Claiming...' },
+      mustLogin: { es: 'Debes iniciar sesión para reclamar', en: 'You must be logged in to claim' },
+      error: { es: 'Error', en: 'Error' },
+      close: { es: 'Cerrar', en: 'Close' },
+      successTitle: { es: 'Reclamo Exitoso', en: 'Claim Successful' },
+      claimErrorTitle: { es: 'Error en el Reclamo', en: 'Claim Error' },
+      viewTransaction: { es: 'Ver transacción', en: 'View Transaction' },
+    }
+    return translations[key]?.[lang] || key
+  }
+
+  const handleClaimClick = async () => {
     if (!session?.address) {
-      setError(
-        lang === 'es'
-          ? 'Debes iniciar sesión para reclamar'
-          : 'You must be logged in to claim',
-      )
+      // This case should ideally not be reached if the button is disabled,
+      // but it's good practice to keep it.
+      setClaimResult({ message: t('mustLogin') })
+      setClaimState('error')
+      setDialogOpen(true)
       return
     }
 
-    setIsClaiming(true)
-    setError(null)
-    setSuccess(null)
-    setTxHash(null)
+    setClaimState('loading')
+    setDialogOpen(true)
+    setClaimResult(null)
 
     try {
       const csrfToken = await getCsrfToken()
-      const url = '/api/claim-celo-ubi'
-      const response = await axios.post(
-        url,
-        {
-          walletAddress: session.address,
-          token: csrfToken,
-        },
-      )
-
-      const data = response.data
-
-      setSuccess(data.message || (lang === 'es' ? 'Reclamo exitoso!' : 'Claim successful!'))
-      if (data.txHash) {
-        setTxHash(data.txHash)
-      }
-    } catch (err) {
-      let errorMessage = lang === 'es' ? 'Ocurrió un error' : 'An error occurred';
+      const response = await axios.post('/api/claim-celo-ubi', {
+        walletAddress: session.address,
+        token: csrfToken,
+      })
+      
+      setClaimResult(response.data)
+      setClaimState('success')
+    } catch (err: any) {
+      let errorMessage = t('claimErrorTitle');
       if (axios.isAxiosError(err) && err.response) {
         errorMessage = err.response.data.message || err.message;
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
-      setError(errorMessage)
-    } finally {
-      setIsClaiming(false)
+      setClaimResult({ message: errorMessage })
+      setClaimState('error')
     }
   }
 
-  const buttonText = lang === 'es' ? 'Reclamar Celo UBI' : 'Claim Celo UBI'
+  const closeDialog = () => {
+    setDialogOpen(false)
+    // Delay state reset to prevent content flashing while dialog closes
+    setTimeout(() => {
+        setClaimState('idle')
+        setClaimResult(null)
+    }, 300)
+  }
+  
+  const renderDialogContent = () => {
+    if (claimState === 'loading' || !claimResult) {
+        return <div className="py-4">{t('loading')}</div>
+    }
+
+    switch (claimState) {
+      case 'success':
+        return (
+          <DialogHeader>
+            <DialogTitle>{t('successTitle')}</DialogTitle>
+            <DialogDescription className="py-4">
+              {claimResult.message}
+              {claimResult.txHash && (
+                <div className="mt-4">
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_EXPLORER_TX}/${claimResult.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    {t('viewTransaction')}
+                  </a>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+        )
+      case 'error':
+        return (
+          <DialogHeader>
+            <DialogTitle>{t('claimErrorTitle')}</DialogTitle>
+            <DialogDescription className="py-4 text-red-600">{claimResult.message}</DialogDescription>
+          </DialogHeader>
+        )
+      default:
+        return null
+    }
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-2">
-      <Button
-        onClick={handleClaim}
-        size="lg"
-        disabled={isClaiming || !session}
-        data-testid="celo-ubi-button"
-      >
-        {isClaiming
-          ? lang === 'es'
-            ? 'Reclamando...'
-            : 'Claiming...'
-          : buttonText}
+    <>
+      <Button onClick={handleClaimClick} disabled={claimState === 'loading' || !session} size="lg">
+        {claimState === 'loading' ? t('claiming') : t('claimButton')}
       </Button>
-      {error && (
-        <div className="text-sm text-red-600 mt-2 text-center">{error}</div>
-      )}
-      {success && (
-        <div className="text-sm text-green-600 mt-2 text-center">{success}</div>
-      )}
-      {txHash && (
-        <div className="text-sm text-gray-500 mt-2 text-center">
-          <p>{lang === 'es' ? 'Transacción:' : 'Transaction:'}</p>
-          <a
-            href={`${process.env.NEXT_PUBLIC_EXPLORER_TX}/${txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            {txHash}
-          </a>
-        </div>
-      )}
-      {!session && (
-        <div className="text-sm text-gray-500 mt-2 text-center">
-          {lang === 'es'
-            ? 'Inicia sesión para reclamar'
-            : 'Log in to claim'}
-        </div>
-      )}
-    </div>
+
+      <Dialog open={dialogOpen} onOpenChange={closeDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          {renderDialogContent()}
+          <DialogFooter>
+            <Button onClick={closeDialog} disabled={claimState === 'loading'}>{t('close')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
