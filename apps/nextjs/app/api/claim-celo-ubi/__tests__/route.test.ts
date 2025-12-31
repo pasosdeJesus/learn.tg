@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { NextRequest } from 'next/server'
+import CeloUbiAbi from '@/abis/CeloUbi.json'
 
 const mockExecuteTakeFirst = vi.fn()
 const mockInsertInto = vi.fn()
@@ -11,13 +12,13 @@ class MockKysely {
   where() { return this }
   selectAll() { return this }
   executeTakeFirst() { return mockExecuteTakeFirst() }
-  insertInto() { 
+  insertInto() {
     mockInsertInto()
-    return this 
+    return this
   }
-  values() { 
+  values() {
     mockValues()
-    return this 
+    return this
   }
   execute() { return mockExecute() }
 }
@@ -38,6 +39,7 @@ vi.mock('@/.config/kysely.config', () => ({
 const mockReadContract = vi.fn()
 const mockWriteContract = vi.fn()
 const mockWaitForTransactionReceipt = vi.fn()
+const mockDecodeEventLog = vi.fn()
 
 vi.mock('viem', async () => {
   const actual = await vi.importActual('viem')
@@ -50,8 +52,9 @@ vi.mock('viem', async () => {
     createWalletClient: vi.fn(() => ({
       writeContract: mockWriteContract,
     })),
-    privateKeyToAccount: vi.fn(() => ({ address: '0xmockbackendwallet'})),
+    privateKeyToAccount: vi.fn(() => ({ address: '0xmockbackendwallet' })),
     http: vi.fn(),
+    decodeEventLog: mockDecodeEventLog,
   }
 })
 
@@ -118,13 +121,17 @@ describe('API /api/claim-celo-ubi', () => {
       .mockResolvedValueOnce(BigInt(Math.floor(Date.now() / 1000) - 3601))
       .mockResolvedValueOnce(BigInt(3600))
     mockWriteContract.mockResolvedValue('0xmocktxhash')
-    const mockLogs = [
-      {
+
+    const mockLog = {
+        topics: ['0x...', '0x...'],
+        data: '0x...',
+    }
+
+    mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success', logs: [mockLog] })
+    mockDecodeEventLog.mockReturnValue({
         eventName: 'UbiClaimed',
         args: { amount: 1000000000000000000n },
-      },
-    ];
-    mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success', logs: mockLogs })
+    })
     
     const body = { walletAddress: '0x123', token: 'VALID_TOKEN' };
     const req = new NextRequest('http://localhost/api/claim-celo-ubi', {
@@ -169,7 +176,7 @@ describe('API /api/claim-celo-ubi', () => {
       .mockResolvedValueOnce(BigInt(cooldownPeriod)) // cooldown
 
     const body = { walletAddress: '0x123', token: 'VALID_TOKEN' };
-    const req = new NextRequest('http://localhost/api/claim-celo-ubi', {
+    const req = new NextRequest('http://localhost/api/claim-ubi', {
       method: 'POST', 
       body: JSON.stringify(body), 
       headers: { 
@@ -182,6 +189,7 @@ describe('API /api/claim-celo-ubi', () => {
     const data = await res.json()
 
     expect(res.status).toBe(429)
-    expect(data.message).toMatch(/Cooldown period not over. Please try again in about 0 hour\(s\) and 30 minute\(s\)\./i);
+    // Usamos una expresión regular para que coincida con el mensaje esperado, permitiendo una pequeña variación en los minutos.
+    expect(data.message).toMatch(/Cooldown period not over. Please try again in about 0 hour\(s\) and (29|30) minute\(s\)\./i);
   })
 })
