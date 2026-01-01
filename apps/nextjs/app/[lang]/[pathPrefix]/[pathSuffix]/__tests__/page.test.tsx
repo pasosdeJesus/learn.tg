@@ -16,6 +16,9 @@ import { useGuideData } from '@/lib/hooks/useGuideData'
 vi.mock('@/components/GoodDollarClaimButton', () => ({
   GoodDollarClaimButton: () => <div data-testid="gooddollar-claim-button"></div>,
 }))
+vi.mock('@/components/CeloUbiButton', () => ({
+  default: () => <div data-testid="celo-ubi-button"></div>,
+}))
 vi.mock('@/lib/hooks/useGuideData')
 vi.mock('axios')
 vi.mock('unified', () => ({

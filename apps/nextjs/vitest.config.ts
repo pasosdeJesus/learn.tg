@@ -18,6 +18,7 @@ export default defineConfig({
     coverage: {
       reporter: ['text', 'json', 'html'],
     },
+    onConsoleLog: (log, type) => type !== 'stderr',
   },
   esbuild: {
     // Asegura runtime JSX automático para no requerir import manual de React

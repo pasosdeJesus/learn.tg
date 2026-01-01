@@ -25,6 +25,13 @@ const NOISY_PATTERNS = [
   'Donating raw (scaled) amount:',
   '** fname=',
   '** cwd=',
+  'Course not found',
+  'API presentation URL is not defined',
+  'Network error',
+  'Scholarship API down',
+  'API Error',
+  'Failed to fetch guide data:',
+  'Error fetching scholarship amount:',
 ];
 
 function shouldSilence(arg: any) {

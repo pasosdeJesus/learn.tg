@@ -94,6 +94,8 @@ describe('Main Page Component', () => {
     // Mock de alert para evitar errores de jsdom
     // @ts-ignore
     global.window.alert = vi.fn()
+    // Mock console.error para evitar stderr en tests de errores
+    vi.spyOn(console, 'error').mockImplementation(() => {})
     // Mock de variable de entorno usada en componente
     process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = 'https://fake.local/courses'
   })

@@ -129,7 +129,7 @@ describe('API /api/claim-celo-ubi', () => {
 
     mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success', logs: [mockLog] })
     mockDecodeEventLog.mockReturnValue({
-        eventName: 'UbiClaimed',
+        eventName: 'Claimed',
         args: { amount: 1000000000000000000n },
     })
     
