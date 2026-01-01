@@ -93,7 +93,7 @@ describe('API /api/claim-celo-ubi', () => {
     const data = await res.json()
 
     expect(res.status).toBe(200)
-    expect(data.message).toBe('Claim successful!')
+    expect(data.message).toBe('Claim successful! You have received 0 Celo UBI.')
     expect(data.txHash).toBe('0xmocktxhash')
     expect(mockWriteContract).toHaveBeenCalled()
   })

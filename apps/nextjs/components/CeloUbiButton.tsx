@@ -23,6 +23,7 @@ type ClaimStatus = 'idle' | 'loading' | 'success' | 'error'
 interface ClaimResult {
   message: string;
   txHash?: string;
+  amount?: string;
 }
 
 export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
@@ -32,7 +33,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [claimResult, setClaimResult] = useState<ClaimResult | null>(null)
 
-  const t = (key: string) => {
+  const t = (key: string, params?: { amount?: string }) => {
     const translations: { [key: string]: { [lang: string]: string } } = {
       claimButton: { es: 'Reclamar UBI Celo', en: 'Claim Celo UBI' },
       loading: { es: 'Cargando...', en: 'Loading...' },
@@ -43,8 +44,16 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
       successTitle: { es: 'Reclamo Exitoso', en: 'Claim Successful' },
       claimErrorTitle: { es: 'Error en el Reclamo', en: 'Claim Error' },
       viewTransaction: { es: 'Ver transacción', en: 'View Transaction' },
+      successMessage: {
+        es: `¡Reclamo exitoso! Has recibido {amount} Celo UBI.`,
+        en: `Claim successful! You have received {amount} Celo UBI.`,
+      },
     }
-    return translations[key]?.[lang] || key
+    let message = translations[key]?.[lang] || key;
+    if (params?.amount) {
+      message = message.replace('{amount}', params.amount);
+    }
+    return message;
   }
 
   const handleClaimClick = async () => {

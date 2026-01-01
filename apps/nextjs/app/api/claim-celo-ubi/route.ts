@@ -133,9 +133,10 @@ export async function POST(request: NextRequest) {
         .find(event => event?.eventName === 'Claimed');
       console.log("OJO claim-celo-ubi claimEvent=", claimEvent)
 
+      let formattedAmount = '0';
       if (claimEvent && claimEvent.args) {
         const { amount } = claimEvent.args as unknown as { amount: bigint };
-        const formattedAmount = (Number(amount) / 1e18).toString();
+        formattedAmount = (Number(amount) / 1e18).toString();
         console.log("OJO claim-celo-ubi formattedAmount=", formattedAmount)
 
         try {
@@ -154,7 +155,12 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ message: 'Claim successful!', txHash: tx })
+      return NextResponse.json({ 
+        message: lang === 'es' ? `¡Reclamo exitoso! Has recibido ${formattedAmount} Celo UBI.` : `Claim successful! You have received ${formattedAmount} Celo UBI.`,
+        txHash: tx,
+        amount: formattedAmount 
+      });
+
     } catch (err) {
         console.error('Claim transaction failed:', err)
         let errorMessage = 'Claim failed: Unknown error'

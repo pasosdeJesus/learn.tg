@@ -54,31 +54,38 @@ describe('CeloUbiButton', () => {
     expect(screen.getByRole('button')).not.toBeDisabled()
   })
 
-  it('should show a success dialog when the claim is successful', async () => {
-    const mockSession = { address: '0x123', expires: '1' }
-    mockAxiosPost.mockResolvedValue({ data: { message: 'Éxito!', txHash: '0xabc' } })
+  it('should show a success dialog with the amount when the claim is successful', async () => {
+    const mockSession = { address: '0x123', expires: '1' };
+    const mockAmount = '10';
+    mockAxiosPost.mockResolvedValue({ 
+      data: { 
+        message: `¡Reclamo exitoso! Has recibido ${mockAmount} Celo UBI.`,
+        txHash: '0xabc',
+        amount: mockAmount
+      }
+    });
 
     render(
       <SessionProvider session={mockSession as any}>
         <CeloUbiButton lang="es" />
       </SessionProvider>
-    )
+    );
     
     await act(async () => {
-      fireEvent.click(screen.getByRole('button'))
+      fireEvent.click(screen.getByRole('button'));
     });
 
     expect(mockAxiosPost).toHaveBeenCalledWith('/api/claim-celo-ubi', {
       walletAddress: '0x123',
       token: 'mock-csrf-token',
-    })
+    });
     
-    const dialog = await screen.findByRole('dialog')
-    expect(dialog).toBeInTheDocument()
-    expect(screen.getByText('Reclamo Exitoso')).toBeInTheDocument()
-    expect(screen.getByText('Éxito!')).toBeInTheDocument()
-    expect(screen.getByText('Ver transacción')).toHaveAttribute('href', `${process.env.NEXT_PUBLIC_EXPLORER_TX}/0xabc`)
-  })
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByText('Reclamo Exitoso')).toBeInTheDocument();
+    expect(screen.getByText(`¡Reclamo exitoso! Has recibido ${mockAmount} Celo UBI.`)).toBeInTheDocument();
+    expect(screen.getByText('Ver transacción')).toHaveAttribute('href', `${process.env.NEXT_PUBLIC_EXPLORER_TX}/0xabc`);
+  });
 
   it('should show an error dialog when the claim fails with a custom error', async () => {
     const mockSession = { address: '0x123', expires: '1' }
