@@ -41,7 +41,7 @@
     "@rainbow-me/rainbowkit-siwe-next-auth": "^0.5.0",
     "@selfxyz/core": "1.1.0-beta.7",
     "@selfxyz/qrcode": "^1.0.17",
-    "@tanstack/react-query": "^5.90.15",
+    "@tanstack/react-query": "^5.90.16",
     "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -71,9 +71,9 @@
     "siwe": "^3.0.0",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
-    "viem": "^2.43.3",
+    "viem": "^2.43.4",
     "wagmi": "^2.19.5",
-    "zod": "^4.2.1"
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "latest",

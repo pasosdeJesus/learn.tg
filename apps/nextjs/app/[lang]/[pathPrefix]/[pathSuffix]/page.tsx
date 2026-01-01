@@ -208,7 +208,11 @@ export default function Page({ params }: PageProps) {
             lang={course.idioma}
             />
           )}
-          {isClient && showCeloUbiButton && <CeloUbiButton />}
+          {isClient && showCeloUbiButton && 
+            <CeloUbiButton 
+            lang={course.idioma}
+            />
+          }
         </aside>
 
         <nav aria-label="Guide navigation"><table className="mx-auto text-center mt-12">

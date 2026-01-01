@@ -25,7 +25,7 @@ interface ClaimResult {
   txHash?: string;
 }
 
-export function CeloUbiButton({ lang = 'es' }: CeloUbiButtonProps) {
+export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
   const { data: session } = useSession()
 
   const [claimState, setClaimState] = useState<ClaimStatus>('idle')
@@ -34,7 +34,7 @@ export function CeloUbiButton({ lang = 'es' }: CeloUbiButtonProps) {
 
   const t = (key: string) => {
     const translations: { [key: string]: { [lang: string]: string } } = {
-      claimButton: { es: 'Reclamar Beca Celo', en: 'Claim Celo Scholarship' },
+      claimButton: { es: 'Reclamar UBI Celo', en: 'Claim Celo UBI' },
       loading: { es: 'Cargando...', en: 'Loading...' },
       claiming: { es: 'Reclamando...', en: 'Claiming...' },
       mustLogin: { es: 'Debes iniciar sesión para reclamar', en: 'You must be logged in to claim' },
