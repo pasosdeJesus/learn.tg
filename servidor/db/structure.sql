@@ -4721,6 +4721,39 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: ubitransactions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ubitransactions (
+    id integer NOT NULL,
+    wallet character varying(42) NOT NULL,
+    amount numeric(30,18) NOT NULL,
+    hash character varying(66) NOT NULL,
+    date timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: ubitransactions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.ubitransactions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: ubitransactions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.ubitransactions_id_seq OWNED BY public.ubitransactions.id;
+
+
+--
 -- Name: usuario_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -5309,6 +5342,13 @@ ALTER TABLE ONLY public.nonce ALTER COLUMN id SET DEFAULT nextval('public.nonce_
 --
 
 ALTER TABLE ONLY public.religion ALTER COLUMN id SET DEFAULT nextval('public.religion_id_seq'::regclass);
+
+
+--
+-- Name: ubitransactions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ubitransactions ALTER COLUMN id SET DEFAULT nextval('public.ubitransactions_id_seq'::regclass);
 
 
 --
@@ -6173,6 +6213,22 @@ ALTER TABLE ONLY public.cor1440_gen_rangoedadac
 
 ALTER TABLE ONLY public.religion
     ADD CONSTRAINT religion_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ubitransactions ubitransactions_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ubitransactions
+    ADD CONSTRAINT ubitransactions_hash_key UNIQUE (hash);
+
+
+--
+-- Name: ubitransactions ubitransactions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ubitransactions
+    ADD CONSTRAINT ubitransactions_pkey PRIMARY KEY (id);
 
 
 --
