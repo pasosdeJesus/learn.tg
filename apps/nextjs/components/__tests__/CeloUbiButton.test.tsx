@@ -39,7 +39,7 @@ describe('CeloUbiButton', () => {
         <CeloUbiButton lang="en" />
       </SessionProvider>
     )
-    expect(screen.getByText('Claim Celo Scholarship')).toBeInTheDocument()
+    expect(screen.getByText('Claim Celo UBI')).toBeInTheDocument()
     expect(screen.getByRole('button')).toBeDisabled()
   })
 
@@ -50,7 +50,7 @@ describe('CeloUbiButton', () => {
         <CeloUbiButton lang="es" />
       </SessionProvider>
     )
-    expect(screen.getByText('Reclamar Beca Celo')).toBeInTheDocument()
+    expect(screen.getByText('Reclamar UBI Celo')).toBeInTheDocument()
     expect(screen.getByRole('button')).not.toBeDisabled()
   })
 
