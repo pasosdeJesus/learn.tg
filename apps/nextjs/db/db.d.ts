@@ -540,10 +540,12 @@ export interface Cor1440GenTipomoneda {
 
 export interface CourseUsuario {
   amountscholarship: Numeric | null;
+  created_at: Timestamp | null;
   guidespoints: Numeric | null;
   percentagecompleted: Numeric | null;
   points: number;
   proyectofinanciero_id: number;
+  updated_at: Timestamp | null;
   usuario_id: number;
 }
 
@@ -1265,7 +1267,6 @@ export interface Userevent {
   event_data: Json | null;
   event_type: string;
   id: Generated<Int8>;
-  updated_at: Timestamp;
   usuario_id: number;
 }
 
