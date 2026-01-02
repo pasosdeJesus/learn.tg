@@ -18,6 +18,7 @@ import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
 import { Button } from '@/components/ui/button'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
+import { metrics } from '@/lib/metrics'
 
 type PageProps = {
   params: {
@@ -149,6 +150,13 @@ export default function Page({ params }: PageProps) {
         fetchGuideContent()
     }
   }, [course, guideNumber, lang, pathPrefix, pathSuffix, htmlDeMd])
+
+  // Track guide view event
+  useEffect(() => {
+    if (course && guideNumber > 0) {
+      metrics.guideView(Number(guideNumber), Number(course.id))
+    }
+  }, [course, guideNumber])
 
   if (loading) {
     return <div className="p-10 mt-10">Loading guide...</div>

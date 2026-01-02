@@ -37,6 +37,7 @@ See instructions in [apps/nextjs/README.md](apps/nextjs/README.md)
   - Don´t use ; at the end of the lines
 - **SQL**:
   - Use singular for table names
+  - Reserve _ in table name for join tables
 - **Tests**: Try to include tests for new functionality
 - **Commits**: Use [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`
 - **Type checking**: Code at `apps/nextjs` must pass `make type` without errors
