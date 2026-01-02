@@ -1267,7 +1267,7 @@ export interface Userevent {
   event_data: Json | null;
   event_type: string;
   id: Generated<Int8>;
-  usuario_id: number;
+  usuario_id: number | null;
 }
 
 export interface Usuario {
