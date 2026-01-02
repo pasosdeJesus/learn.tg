@@ -7,13 +7,13 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('updated_at', 'timestamp')
     .execute()
   await db.schema
-    .createTable('user_event')
-    .addColumn('id', 'bigserial', (col) => col.notNull())
+    .createTable('userevent')
+    .addColumn('id', 'bigserial', (col) => col.primaryKey())
     .addColumn('usuario_id', 'integer', (col) => col.notNull())
-    .addColumn('event_type', 'varchar(30)' )
+    .addColumn('event_type', 'varchar(30)', (col) => col.notNull() )
     .addColumn('event_data', 'jsonb')
-    .addColumn('created_at', 'timestamp')
-    .addColumn('updated_at', 'timestamp')
+    .addColumn('created_at', 'timestamp', (col) => col.notNull())
+    .addColumn('updated_at', 'timestamp', (col) => col.notNull())
     .execute()
 
 }

@@ -550,8 +550,10 @@ export interface CourseUsuario {
 export interface GuideUsuario {
   actividadpf_id: number;
   amountpaid: number;
+  created_at: Timestamp | null;
   points: number;
   profilescore: number;
+  updated_at: Timestamp | null;
   usuario_id: number;
 }
 
@@ -1258,6 +1260,15 @@ export interface Ubitransactions {
   wallet: string;
 }
 
+export interface Userevent {
+  created_at: Timestamp;
+  event_data: Json | null;
+  event_type: string;
+  id: Generated<Int8>;
+  updated_at: Timestamp;
+  usuario_id: number;
+}
+
 export interface Usuario {
   created_at: Timestamp | null;
   current_sign_in_at: Timestamp | null;
@@ -1415,5 +1426,6 @@ export interface DB {
   religion: Religion;
   schema_migrations: SchemaMigrations;
   ubitransactions: Ubitransactions;
+  userevent: Userevent;
   usuario: Usuario;
 }
