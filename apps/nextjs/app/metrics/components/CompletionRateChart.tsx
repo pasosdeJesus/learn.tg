@@ -10,27 +10,26 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import type { CompletionRateData } from '@/lib/metrics/queries'
 
-// Mock data - to be replaced with actual database queries
-const mockData = [
-  { date: '2025-11-01', completionRate: 65 },
-  { date: '2025-11-08', completionRate: 68 },
-  { date: '2025-11-15', completionRate: 72 },
-  { date: '2025-11-22', completionRate: 70 },
-  { date: '2025-11-29', completionRate: 75 },
-  { date: '2025-12-06', completionRate: 78 },
-  { date: '2025-12-13', completionRate: 80 },
-  { date: '2025-12-20', completionRate: 82 },
-  { date: '2025-12-27', completionRate: 85 },
-  { date: '2026-01-01', completionRate: 87 },
-]
+interface CompletionRateChartProps {
+  data: CompletionRateData[]
+}
 
-export default function CompletionRateChart() {
+export default function CompletionRateChart({ data }: CompletionRateChartProps) {
+  // Transform data for chart
+  const chartData = data.map(item => ({
+    date: item.date,
+    completionRate: item.completionRate,
+    totalGuides: item.totalGuides,
+    completedGuides: item.completedGuides,
+  }))
+
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
-          data={mockData}
+          data={chartData}
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" />

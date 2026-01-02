@@ -10,9 +10,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import type { UserGrowthData } from '@/lib/metrics/queries'
 
-// Mock data - to be replaced with actual database queries
-const mockData = [
+// Mock data - fallback when no data provided
+const mockData: UserGrowthData[] = [
   { date: '2025-10-01', newUsers: 15, totalUsers: 15, activeUsers: 12 },
   { date: '2025-10-08', newUsers: 22, totalUsers: 37, activeUsers: 28 },
   { date: '2025-10-15', newUsers: 18, totalUsers: 55, activeUsers: 35 },
@@ -30,12 +31,16 @@ const mockData = [
   { date: '2026-01-01', newUsers: 80, totalUsers: 685, activeUsers: 235 },
 ]
 
-export default function UserGrowthTimeline() {
+interface UserGrowthTimelineProps {
+  data?: UserGrowthData[]
+}
+
+export default function UserGrowthTimeline({ data = mockData }: UserGrowthTimelineProps) {
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
-          data={mockData}
+          data={data}
           margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />

@@ -6,6 +6,7 @@
 
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
+import { getAllMetrics } from '@/lib/metrics/queries'
 
 // Dynamically import chart components to avoid SSR issues with Recharts
 const CompletionRateChart = dynamic(
@@ -29,7 +30,18 @@ const GameTypeEngagementChart = dynamic(
   { ssr: false }
 )
 
-export default function MetricsDashboardPage() {
+export default async function MetricsDashboardPage() {
+  // Fetch metrics data server-side
+  const metrics = await getAllMetrics()
+  const {
+    completionRate,
+    retention,
+    timeBetweenGuides,
+    userGrowth,
+    gameEngagement,
+    lastUpdated
+  } = metrics
+
   return (
     <div className="container mx-auto p-6">
       <header className="mb-8">
@@ -47,7 +59,7 @@ export default function MetricsDashboardPage() {
             Percentage of guides completed successfully across all courses
           </p>
           <Suspense fallback={<div className="h-64 flex items-center justify-center">Loading completion data...</div>}>
-            <CompletionRateChart />
+            <CompletionRateChart data={completionRate} />
           </Suspense>
         </section>
 
@@ -58,7 +70,7 @@ export default function MetricsDashboardPage() {
             User retention rates based on 24-hour cooldown periods
           </p>
           <Suspense fallback={<div className="h-64 flex items-center justify-center">Loading retention data...</div>}>
-            <RetentionByCooldownChart />
+            <RetentionByCooldownChart data={retention} />
           </Suspense>
         </section>
 
@@ -69,7 +81,7 @@ export default function MetricsDashboardPage() {
             Distribution of time users take between completing consecutive guides
           </p>
           <Suspense fallback={<div className="h-64 flex items-center justify-center">Loading time distribution data...</div>}>
-            <TimeBetweenGuidesHistogram />
+            <TimeBetweenGuidesHistogram data={timeBetweenGuides} />
           </Suspense>
         </section>
 
@@ -80,7 +92,7 @@ export default function MetricsDashboardPage() {
             New user registrations and active users over time
           </p>
           <Suspense fallback={<div className="h-64 flex items-center justify-center">Loading user growth data...</div>}>
-            <UserGrowthTimeline />
+            <UserGrowthTimeline data={userGrowth} />
           </Suspense>
         </section>
 
@@ -91,14 +103,14 @@ export default function MetricsDashboardPage() {
             User engagement and completion rates by game type (crossword, etc.)
           </p>
           <Suspense fallback={<div className="h-64 flex items-center justify-center">Loading game engagement data...</div>}>
-            <GameTypeEngagementChart />
+            <GameTypeEngagementChart data={gameEngagement} />
           </Suspense>
         </section>
       </div>
 
       <footer className="mt-8 pt-6 border-t border-gray-200 text-sm text-gray-500">
         <p>
-          <strong>Data Last Updated:</strong> {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+          <strong>Data Last Updated:</strong> {new Date(lastUpdated).toLocaleDateString()} {new Date(lastUpdated).toLocaleTimeString()}
         </p>
         <p className="mt-2">
           <em>

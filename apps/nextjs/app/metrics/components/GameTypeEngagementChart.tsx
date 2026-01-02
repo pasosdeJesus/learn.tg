@@ -11,23 +11,36 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts'
+import type { GameEngagementData } from '@/lib/metrics/queries'
 
-// Mock data - to be replaced with actual database queries
-const mockData = [
-  { gameType: 'Crossword', completionRate: 85, avgTime: 12.5, users: 520, color: '#3b82f6' },
-  { gameType: 'Word Search', completionRate: 78, avgTime: 8.2, users: 380, color: '#10b981' },
-  { gameType: 'Matching', completionRate: 82, avgTime: 6.5, users: 420, color: '#f59e0b' },
-  { gameType: 'Hangman', completionRate: 75, avgTime: 10.3, users: 310, color: '#ef4444' },
-  { gameType: 'Fill-in-Blank', completionRate: 88, avgTime: 5.8, users: 480, color: '#8b5cf6' },
-  { gameType: 'Tree Growth', completionRate: 90, avgTime: 15.2, users: 290, color: '#ec4899' },
+// Mock data - fallback when no data provided
+const mockData: GameEngagementData[] = [
+  { gameType: 'Crossword', completionRate: 85, avgTime: 12.5, users: 520 },
+  { gameType: 'Word Search', completionRate: 78, avgTime: 8.2, users: 380 },
+  { gameType: 'Matching', completionRate: 82, avgTime: 6.5, users: 420 },
+  { gameType: 'Hangman', completionRate: 75, avgTime: 10.3, users: 310 },
+  { gameType: 'Fill-in-Blank', completionRate: 88, avgTime: 5.8, users: 480 },
+  { gameType: 'Tree Growth', completionRate: 90, avgTime: 15.2, users: 290 },
 ]
 
-export default function GameTypeEngagementChart() {
+const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+
+interface GameTypeEngagementChartProps {
+  data?: GameEngagementData[]
+}
+
+export default function GameTypeEngagementChart({ data = mockData }: GameTypeEngagementChartProps) {
+  // Add colors to data for consistent coloring
+  const chartData = data.map((item, index) => ({
+    ...item,
+    color: colors[index % colors.length]
+  }))
+
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={mockData}
+          data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -65,7 +78,7 @@ export default function GameTypeEngagementChart() {
             name="Completion Rate"
             radius={[4, 4, 0, 0]}
           >
-            {mockData.map((entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Bar>

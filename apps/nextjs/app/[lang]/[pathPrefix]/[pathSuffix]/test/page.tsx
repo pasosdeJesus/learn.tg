@@ -10,6 +10,7 @@ import { useGuideData } from '@/lib/hooks/useGuideData'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { metrics } from '@/lib/metrics'
 
 interface WordPlacement {
   word: string
@@ -64,6 +65,7 @@ export default function Page({
   const [prevRow, setPrevRow] = useState(-1)
   const [prevCol, setPrevCol] = useState(-1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [gameStartTime, setGameStartTime] = useState<Date | null>(null)
 
   useEffect(() => {
     if (hash) {
@@ -121,6 +123,9 @@ export default function Page({
           setGrid(response.data.grid)
           setPlacements(response.data.placements)
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
+          // Track game start
+          metrics.gameStart('crossword', guideNumber)
+          setGameStartTime(new Date())
         } catch (err: any) {
           console.error(err)
           setFlashError(err.message)
@@ -225,11 +230,25 @@ export default function Page({
             (response.data.message || ''),
         )
       } else {
+        const wasAlreadyCompleted = myGuide?.completed || false
+
         if (myGuide) {
             // @ts-ignore
           myGuide.completed = true
         }
         setFlashSuccess(response.data.message || '')
+
+        // Track game completion and guide completion
+        const score = 100 // Perfect score since no mistakes
+        const timeMs = gameStartTime ? new Date().getTime() - gameStartTime.getTime() : 0
+
+        metrics.gameComplete('crossword', score, timeMs)
+
+        // Only track guide completion if it wasn't already completed before this submission
+        if (!wasAlreadyCompleted && course) {
+          metrics.guideComplete(guideNumber, course.id, true)
+        }
+
         if (response.data.scholarshipResult) {
           setScholarshipTx(response.data.scholarshipResult)
         }

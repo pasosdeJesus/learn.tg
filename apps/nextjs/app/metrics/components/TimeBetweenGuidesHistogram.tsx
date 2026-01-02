@@ -10,9 +10,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import type { TimeBetweenGuidesData } from '@/lib/metrics/queries'
 
-// Mock data - to be replaced with actual database queries
-const mockData = [
+// Mock data - fallback when no data provided
+const mockData: TimeBetweenGuidesData[] = [
   { timeRange: '0-6h', users: 120, percentage: 25 },
   { timeRange: '6-12h', users: 85, percentage: 18 },
   { timeRange: '12-18h', users: 65, percentage: 14 },
@@ -23,12 +24,16 @@ const mockData = [
   { timeRange: '48h+', users: 20, percentage: 4 },
 ]
 
-export default function TimeBetweenGuidesHistogram() {
+interface TimeBetweenGuidesHistogramProps {
+  data?: TimeBetweenGuidesData[]
+}
+
+export default function TimeBetweenGuidesHistogram({ data = mockData }: TimeBetweenGuidesHistogramProps) {
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={mockData}
+          data={data}
           margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />

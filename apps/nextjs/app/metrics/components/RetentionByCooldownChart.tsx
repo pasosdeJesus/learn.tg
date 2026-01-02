@@ -10,47 +10,57 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import type { RetentionData } from '@/lib/metrics/queries'
 
-// Mock data - to be replaced with actual database queries
-const mockData = [
+// Mock data - fallback when no data provided
+const mockData: RetentionData[] = [
   {
     cooldownType: 'After 24h',
     retentionRate: 62,
     users: 450,
-    color: '#3b82f6'
   },
   {
     cooldownType: 'After 48h',
     retentionRate: 45,
     users: 320,
-    color: '#10b981'
   },
   {
     cooldownType: 'After 72h',
     retentionRate: 35,
     users: 210,
-    color: '#f59e0b'
   },
   {
     cooldownType: 'No Cooldown\n(Control)',
     retentionRate: 28,
     users: 180,
-    color: '#ef4444'
   },
   {
     cooldownType: 'Flexible\n(12-36h)',
     retentionRate: 55,
     users: 390,
-    color: '#8b5cf6'
   },
 ]
 
-export default function RetentionByCooldownChart() {
+interface RetentionByCooldownChartProps {
+  data?: RetentionData[]
+}
+
+export default function RetentionByCooldownChart({ data = mockData }: RetentionByCooldownChartProps) {
+  // Transform data for chart (add color based on index)
+  const chartData = data.map((item, index) => ({
+    ...item,
+    color: index === 0 ? '#3b82f6' :
+           index === 1 ? '#10b981' :
+           index === 2 ? '#f59e0b' :
+           index === 3 ? '#ef4444' :
+           '#8b5cf6'
+  }))
+
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={mockData}
+          data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -85,7 +95,7 @@ export default function RetentionByCooldownChart() {
           />
           <Bar
             dataKey="users"
-            name="Users (Sample)"
+            name="Users"
             fill="#10b981"
             radius={[4, 4, 0, 0]}
           />

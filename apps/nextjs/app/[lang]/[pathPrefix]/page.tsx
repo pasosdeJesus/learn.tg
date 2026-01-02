@@ -15,6 +15,7 @@ import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 import { formatUnits } from 'viem'
+import { metrics } from '@/lib/metrics'
 
 type PageProps = {
   params: Promise<{
@@ -73,6 +74,20 @@ export default function Page({ params }: PageProps) {
       setContentsHtml(guias)
     }
   }, [course, lang, pathPrefix])
+
+  // Track course start when course loads
+  useEffect(() => {
+    if (course) {
+      metrics.courseStart(course.id)
+    }
+  }, [course])
+
+  // Track course progress when percentage changes
+  useEffect(() => {
+    if (course && percentageCompleted !== undefined && percentageCompleted !== null) {
+      metrics.courseProgress(course.id, percentageCompleted)
+    }
+  }, [course, percentageCompleted])
 
   if (
     (session && !address) ||
