@@ -78,14 +78,14 @@ export default function Page({ params }: PageProps) {
   // Track course start when course loads
   useEffect(() => {
     if (course) {
-      metrics.courseStart(course.id)
+      metrics.courseStart(Number(course.id))
     }
   }, [course])
 
   // Track course progress when percentage changes
   useEffect(() => {
     if (course && percentageCompleted !== undefined && percentageCompleted !== null) {
-      metrics.courseProgress(course.id, percentageCompleted)
+      metrics.courseProgress(Number(course.id), percentageCompleted)
     }
   }, [course, percentageCompleted])
 

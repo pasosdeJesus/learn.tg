@@ -124,7 +124,7 @@ export default function Page({
           setPlacements(response.data.placements)
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
           // Track game start
-          metrics.gameStart('crossword', guideNumber)
+          metrics.gameStart('crossword', Number(guideNumber))
           setGameStartTime(new Date())
         } catch (err: any) {
           console.error(err)
@@ -246,7 +246,7 @@ export default function Page({
 
         // Only track guide completion if it wasn't already completed before this submission
         if (!wasAlreadyCompleted && course) {
-          metrics.guideComplete(guideNumber, course.id, true)
+          metrics.guideComplete(Number(guideNumber), Number(course.id), true)
         }
 
         if (response.data.scholarshipResult) {

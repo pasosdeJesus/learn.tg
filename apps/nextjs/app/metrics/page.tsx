@@ -11,23 +11,23 @@ import { getAllMetrics } from '@/lib/metrics/queries'
 // Dynamically import chart components to avoid SSR issues with Recharts
 const CompletionRateChart = dynamic(
   () => import('./components/CompletionRateChart'),
-  { ssr: false }
+  { loading: () => <div className="h-64 flex items-center justify-center">Loading completion data...</div> }
 )
 const RetentionByCooldownChart = dynamic(
   () => import('./components/RetentionByCooldownChart'),
-  { ssr: false }
+  { loading: () => <div className="h-64 flex items-center justify-center">Loading retention data...</div> }
 )
 const TimeBetweenGuidesHistogram = dynamic(
   () => import('./components/TimeBetweenGuidesHistogram'),
-  { ssr: false }
+  { loading: () => <div className="h-64 flex items-center justify-center">Loading time distribution data...</div> }
 )
 const UserGrowthTimeline = dynamic(
   () => import('./components/UserGrowthTimeline'),
-  { ssr: false }
+  { loading: () => <div className="h-64 flex items-center justify-center">Loading user growth data...</div> }
 )
 const GameTypeEngagementChart = dynamic(
   () => import('./components/GameTypeEngagementChart'),
-  { ssr: false }
+  { loading: () => <div className="h-64 flex items-center justify-center">Loading game engagement data...</div> }
 )
 
 export default async function MetricsDashboardPage() {

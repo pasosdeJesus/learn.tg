@@ -109,42 +109,8 @@ export async function trackEvent(event: UserEvent, auth?: AuthParams): Promise<v
   }
 }
 
-/**
- * Record an event directly from server-side code
- * Inserts event into the database
- */
-export async function recordEvent(event: BaseEvent): Promise<void> {
-  // This function should only be called server-side
-  if (typeof window !== 'undefined') {
-    throw new Error('recordEvent should only be called server-side')
-  }
-
-  const { getDb } = await import('@/db/database')
-  const db = getDb()
-
-  const { event_type, event_data, usuario_id } = event
-  const timestamp = event.timestamp || new Date()
-
-  try {
-    const values: any = {
-      event_type,
-      event_data: event_data ? JSON.stringify(event_data) : null,
-      created_at: timestamp,
-    }
-
-    if (usuario_id !== undefined && usuario_id !== null) {
-      values.usuario_id = usuario_id
-    }
-
-    await db
-      .insertInto('userevent')
-      .values(values)
-      .execute()
-  } catch (error) {
-    console.error('[metrics] Failed to record event:', error)
-    throw error
-  }
-}
+// recordEvent has been moved to '@/lib/metrics-server' for server-side only usage
+// Import it directly in server components/API routes
 
 /**
  * Helper functions for specific event types
