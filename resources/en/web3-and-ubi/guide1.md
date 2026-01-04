@@ -3,16 +3,8 @@
 **Universal Basic Income (UBI)** is a  regular, unconditional payment given 
 to all members of a community to help covering basic needs.
 
-In the third guide of this lesson you can receive daily UBI from
-two projects:
-
-1. **GoodDollar**: A global, community-driven UBI protocol, supported by major
-   companies like eToro. It's designed to empower financially millions 
-   around the globe.
-2. **learn.tg UBI:** This christian learning platform has partnered with 
-   **Celo Support Streams** to distribute UBI in the form of CELO 
-   cryptocurrency directly to people in Sierra Leone, creating new economic 
-   opportunities through blockchain technology.
+In the third guide of this lesson you can receive 2 kinds of UBI: GoodDollar
+and learn.tg-UBI
 
 **Bonus Opportunity:** Each lesson on learn.tg features a scholarship vault!
 When you answer all comprehension questions correctly in a guide, you become
@@ -28,11 +20,11 @@ key tools and concepts, which we will explain in this guide.
 
 #### 1. Blockchain (The Foundation)
 A **blockchain** (or **network**) is a secure, public, and decentralized digital ledger that
-records transactions across Internet. Think of it as a shared
+records transactions across the Internet. Think of it as a shared
 database that no single entity controls, making the records transparent and very
 difficult to alter.
 
-*   **Examples:** Bitcoin, Ethereum, **Celo**.
+*   **Examples:** Bitcoin, Ethereum and **Celo**.
 
 ![Drawing of Bitcoin blockchain](/img/2025/bitcoin-3012035.png)
 
@@ -49,9 +41,9 @@ A **cryptocurrency** (or just **crypto**) is a digital asset designed to
 work as a medium of exchange on its specific blockchain. It can be the 
 native coin of a network or a token built on top of it.
 
-*   **Native Coin:** The main currency of a blockchain (e.g., CELO on the Celo
+*   **Native Coin:** The main currency of a blockchain (for example CELO on the Celo
     network).
-*   **Token:** A digital asset built on an existing blockchain (e.g., GoodDollar
+*   **Token:** A digital asset built on an existing blockchain (for example GoodDollar
     **G$** and USDT on Celo).
 
 > **Why it matters for you:** The UBI you claim will be in the form of
@@ -86,7 +78,7 @@ For each blockchain, your Web3 wallet manages a unique set of keys:
 These are services that act as a bridge between traditional money (fiat) and
 cryptocurrency.
 
-*   **On-Ramp:** Converts your local currency (e.g Leones) into cryptocurrency.
+*   **On-Ramp:** Converts your local currency (for example Leones) into cryptocurrency.
 *   **Off-Ramp:** Converts your cryptocurrency back into Leones for use in
     Sierra Leone.
 
@@ -99,17 +91,14 @@ Leones and digital assets.
 
 ### Comprehension Questions:
 
-1. A ___ is a secure, decentralized digital ledger that records all transactions (Blockchain)
+1. A ___ is a secure, decentralized digital ledger that records all 
+   transactions (Blockchain)
 2. In the Celo network the native cryptocurrency is called ___ (CELO)
-
-
-
-
-. Your 12-24 word Secret Recovery Phrase managed by your wallet represents 
-  the ___ key (Private)
-. The country specifically targeted by the learn.tg UBI program is ___ --remove
-   the space. (SierraLeone)
-. ___ Basic Income (UBI) is a  regular, unconditional payment given 
+3. Your 12-24 word Secret Recovery Phrase managed by your wallet represents 
+   the ___ key (Private)
+4. The country specifically targeted by the learn.tg UBI program 
+   is ___ --remove the space. (SierraLeone)
+5. ___ Basic Income (UBI) is a  regular, unconditional payment given 
    to all members of a community to help covering basic needs. (Universal)
 
 
