@@ -14,12 +14,60 @@ import type { Userevent } from '@/db/db.d.ts'
  * "Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres" (Colosenses 3:23)
  */
 
+// Rate limiting configuration - prevents abuse while allowing normal user flows
+const rateLimit = new Map<string, { count: number, resetTime: number }>()
+const MAX_REQUESTS_PER_MINUTE = 60 // 1 request/second average - sufficient for normal guide → crossword → event flow
+const WINDOW_MS = 60 * 1000 // 1 minute window
+
+/**
+ * Simple in-memory rate limiting
+ * Uses walletAddress when available, falls back to IP for anonymous events
+ * Returns true if request is allowed, false if rate limited
+ */
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now()
+  const window = rateLimit.get(identifier)
+
+  // New identifier or window expired
+  if (!window || window.resetTime <= now) {
+    rateLimit.set(identifier, { count: 1, resetTime: now + WINDOW_MS })
+    return true
+  }
+
+  // Check if over limit
+  if (window.count >= MAX_REQUESTS_PER_MINUTE) {
+    return false
+  }
+
+  // Increment count for existing window
+  window.count++
+  return true
+}
+
+/**
+ * Clean up old rate limit entries periodically
+ * Simple approach: clean ~1% of requests to avoid memory leak
+ */
+function cleanupOldRateLimits() {
+  if (Math.random() < 0.01) { // ~1% of requests trigger cleanup
+    const now = Date.now()
+    for (const [key, value] of rateLimit.entries()) {
+      if (value.resetTime <= now) {
+        rateLimit.delete(key)
+      }
+    }
+  }
+}
+
 export async function GET(req: NextRequest) {
   return NextResponse.json({ error: 'Expecting POST request' }, { status: 400 })
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // Clean up old rate limit entries periodically
+    cleanupOldRateLimits()
+
     const requestJson = await req.json()
 
     // Required fields
@@ -50,6 +98,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'event_data must be an object' },
         { status: 400 }
+      )
+    }
+
+    // Apply rate limiting - use walletAddress when available, fallback to IP for anonymous events
+    // This prevents abuse while allowing normal user flows (guide → crossword → event)
+    const identifier = walletAddress || (req.ip || 'unknown')
+    if (!checkRateLimit(identifier)) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Try again later.' },
+        { status: 429, headers: { 'Retry-After': '60' } }
       )
     }
 
