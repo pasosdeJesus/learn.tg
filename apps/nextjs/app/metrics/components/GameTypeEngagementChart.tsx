@@ -13,23 +13,25 @@ import {
 } from 'recharts'
 import type { GameEngagementData } from '@/lib/metrics/queries'
 
-// Mock data - fallback when no data provided
-const mockData: GameEngagementData[] = [
-  { gameType: 'Crossword', completionRate: 85, avgTime: 12.5, users: 520 },
-  { gameType: 'Word Search', completionRate: 78, avgTime: 8.2, users: 380 },
-  { gameType: 'Matching', completionRate: 82, avgTime: 6.5, users: 420 },
-  { gameType: 'Hangman', completionRate: 75, avgTime: 10.3, users: 310 },
-  { gameType: 'Fill-in-Blank', completionRate: 88, avgTime: 5.8, users: 480 },
-  { gameType: 'Tree Growth', completionRate: 90, avgTime: 15.2, users: 290 },
-]
 
 const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
 
 interface GameTypeEngagementChartProps {
-  data?: GameEngagementData[]
+  data: GameEngagementData[]
 }
 
-export default function GameTypeEngagementChart({ data = mockData }: GameTypeEngagementChartProps) {
+export default function GameTypeEngagementChart({ data }: GameTypeEngagementChartProps) {
+  // Handle empty data
+  if (data.length === 0) {
+    return (
+      <div className="h-64 flex flex-col items-center justify-center text-gray-500">
+        <div className="text-lg mb-2">📊</div>
+        <p className="text-center">No hay datos suficientes para mostrar métricas.</p>
+        <p className="text-center text-sm">Los datos aparecerán cuando los usuarios interactúen con las guías.</p>
+      </div>
+    )
+  }
+
   // Add colors to data for consistent coloring
   const chartData = data.map((item, index) => ({
     ...item,

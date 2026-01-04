@@ -17,6 +17,17 @@ interface CompletionRateChartProps {
 }
 
 export default function CompletionRateChart({ data }: CompletionRateChartProps) {
+  // Handle empty data
+  if (data.length === 0) {
+    return (
+      <div className="h-64 flex flex-col items-center justify-center text-gray-500">
+        <div className="text-lg mb-2">📊</div>
+        <p className="text-center">No hay datos suficientes para mostrar métricas.</p>
+        <p className="text-center text-sm">Los datos aparecerán cuando los usuarios interactúen con las guías.</p>
+      </div>
+    )
+  }
+
   // Transform data for chart
   const chartData = data.map(item => ({
     date: item.date,

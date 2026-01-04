@@ -12,23 +12,23 @@ import {
 } from 'recharts'
 import type { TimeBetweenGuidesData } from '@/lib/metrics/queries'
 
-// Mock data - fallback when no data provided
-const mockData: TimeBetweenGuidesData[] = [
-  { timeRange: '0-6h', users: 120, percentage: 25 },
-  { timeRange: '6-12h', users: 85, percentage: 18 },
-  { timeRange: '12-18h', users: 65, percentage: 14 },
-  { timeRange: '18-24h', users: 95, percentage: 20 },
-  { timeRange: '24-30h', users: 45, percentage: 9 },
-  { timeRange: '30-36h', users: 30, percentage: 6 },
-  { timeRange: '36-48h', users: 25, percentage: 5 },
-  { timeRange: '48h+', users: 20, percentage: 4 },
-]
 
 interface TimeBetweenGuidesHistogramProps {
-  data?: TimeBetweenGuidesData[]
+  data: TimeBetweenGuidesData[]
 }
 
-export default function TimeBetweenGuidesHistogram({ data = mockData }: TimeBetweenGuidesHistogramProps) {
+export default function TimeBetweenGuidesHistogram({ data }: TimeBetweenGuidesHistogramProps) {
+  // Handle empty data
+  if (data.length === 0) {
+    return (
+      <div className="h-64 flex flex-col items-center justify-center text-gray-500">
+        <div className="text-lg mb-2">📊</div>
+        <p className="text-center">No hay datos suficientes para mostrar métricas.</p>
+        <p className="text-center text-sm">Los datos aparecerán cuando los usuarios interactúen con las guías.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">

@@ -12,40 +12,23 @@ import {
 } from 'recharts'
 import type { RetentionData } from '@/lib/metrics/queries'
 
-// Mock data - fallback when no data provided
-const mockData: RetentionData[] = [
-  {
-    cooldownType: 'After 24h',
-    retentionRate: 62,
-    users: 450,
-  },
-  {
-    cooldownType: 'After 48h',
-    retentionRate: 45,
-    users: 320,
-  },
-  {
-    cooldownType: 'After 72h',
-    retentionRate: 35,
-    users: 210,
-  },
-  {
-    cooldownType: 'No Cooldown\n(Control)',
-    retentionRate: 28,
-    users: 180,
-  },
-  {
-    cooldownType: 'Flexible\n(12-36h)',
-    retentionRate: 55,
-    users: 390,
-  },
-]
 
 interface RetentionByCooldownChartProps {
-  data?: RetentionData[]
+  data: RetentionData[]
 }
 
-export default function RetentionByCooldownChart({ data = mockData }: RetentionByCooldownChartProps) {
+export default function RetentionByCooldownChart({ data }: RetentionByCooldownChartProps) {
+  // Handle empty data
+  if (data.length === 0) {
+    return (
+      <div className="h-64 flex flex-col items-center justify-center text-gray-500">
+        <div className="text-lg mb-2">📊</div>
+        <p className="text-center">No hay datos suficientes para mostrar métricas.</p>
+        <p className="text-center text-sm">Los datos aparecerán cuando los usuarios interactúen con las guías.</p>
+      </div>
+    )
+  }
+
   // Transform data for chart (add color based on index)
   const chartData = data.map((item, index) => ({
     ...item,

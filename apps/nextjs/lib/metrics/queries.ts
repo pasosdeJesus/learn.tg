@@ -46,6 +46,8 @@ export interface GameEngagementData {
 export async function getCompletionRate(): Promise<CompletionRateData[]> {
   try {
     const db = getDb()
+
+    // First try to get data grouped by date (requires created_at)
     const result = await sql<{
       date: string
       completion_rate: string
@@ -63,38 +65,50 @@ export async function getCompletionRate(): Promise<CompletionRateData[]> {
       ORDER BY date
     `.execute(db)
 
-    if (result.rows.length === 0) {
-      console.warn('[metrics] No completion rate data found, using mock data')
-      return getMockCompletionRate()
+    if (result.rows.length > 0) {
+      return result.rows.map(row => ({
+        date: row.date,
+        completionRate: parseFloat(row.completion_rate),
+        totalGuides: row.total_guides,
+        completedGuides: row.completed_guides,
+      }))
     }
 
-    return result.rows.map(row => ({
-      date: row.date,
-      completionRate: parseFloat(row.completion_rate),
-      totalGuides: row.total_guides,
-      completedGuides: row.completed_guides,
-    }))
+    // If no dated data, try to get overall completion rate (ignoring dates)
+    const overallResult = await sql<{
+      completion_rate: string
+      total_guides: number
+      completed_guides: number
+    }>`
+      SELECT
+        COUNT(*) FILTER (WHERE points > 0) * 100.0 / COUNT(*) as completion_rate,
+        COUNT(*) as total_guides,
+        COUNT(*) FILTER (WHERE points > 0) as completed_guides
+      FROM guide_usuario
+      WHERE points IS NOT NULL
+    `.execute(db)
+
+    if (overallResult.rows.length > 0) {
+      const row = overallResult.rows[0]
+      // Return a single data point with today's date for visualization
+      return [{
+        date: new Date().toISOString().split('T')[0], // Today's date
+        completionRate: parseFloat(row.completion_rate || '0'),
+        totalGuides: row.total_guides,
+        completedGuides: row.completed_guides,
+      }]
+    }
+
+    // No data at all
+    console.warn('[metrics] No completion rate data found in database')
+    return []
   } catch (error) {
     console.error('[metrics] Error fetching completion rate:', error)
-    // Fallback to mock data
-    return getMockCompletionRate()
+    // Return empty array instead of mock data
+    return []
   }
 }
 
-function getMockCompletionRate(): CompletionRateData[] {
-  return [
-    { date: '2025-11-01', completionRate: 65, totalGuides: 200, completedGuides: 130 },
-    { date: '2025-11-08', completionRate: 68, totalGuides: 220, completedGuides: 150 },
-    { date: '2025-11-15', completionRate: 72, totalGuides: 240, completedGuides: 173 },
-    { date: '2025-11-22', completionRate: 70, totalGuides: 260, completedGuides: 182 },
-    { date: '2025-11-29', completionRate: 75, totalGuides: 280, completedGuides: 210 },
-    { date: '2025-12-06', completionRate: 78, totalGuides: 300, completedGuides: 234 },
-    { date: '2025-12-13', completionRate: 80, totalGuides: 320, completedGuides: 256 },
-    { date: '2025-12-20', completionRate: 82, totalGuides: 340, completedGuides: 279 },
-    { date: '2025-12-27', completionRate: 85, totalGuides: 360, completedGuides: 306 },
-    { date: '2026-01-01', completionRate: 87, totalGuides: 380, completedGuides: 331 },
-  ]
-}
 
 /**
  * Get retention rates by cooldown period
@@ -174,41 +188,21 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
     `.execute(db)
 
     if (result.rows.length === 0) {
-      console.warn('[metrics] No retention data found, using mock data')
-      return getMockRetentionByCooldown()
+      console.warn('[metrics] No retention data found')
+      return []
     }
 
-    // Add mock data for "No Cooldown (Control)" as it's hypothetical
-    const realData = result.rows.map(row => ({
+    return result.rows.map(row => ({
       cooldownType: row.cooldown_type,
       retentionRate: parseFloat(row.retention_rate.toFixed(1)),
       users: row.users,
     }))
-
-    // Add mock control group
-    realData.push({
-      cooldownType: 'No Cooldown\n(Control)',
-      retentionRate: 28,
-      users: 180,
-    })
-
-    return realData
   } catch (error) {
     console.error('[metrics] Error fetching retention by cooldown:', error)
-    // Fallback to mock data
-    return getMockRetentionByCooldown()
+    return []
   }
 }
 
-function getMockRetentionByCooldown(): RetentionData[] {
-  return [
-    { cooldownType: 'After 24h', retentionRate: 62, users: 450 },
-    { cooldownType: 'After 48h', retentionRate: 45, users: 320 },
-    { cooldownType: 'After 72h', retentionRate: 35, users: 210 },
-    { cooldownType: 'No Cooldown\n(Control)', retentionRate: 28, users: 180 },
-    { cooldownType: 'Flexible\n(12-36h)', retentionRate: 55, users: 390 },
-  ]
-}
 
 /**
  * Get time distribution between guides
@@ -276,8 +270,8 @@ export async function getTimeBetweenGuides(): Promise<TimeBetweenGuidesData[]> {
     `.execute(db)
 
     if (result.rows.length === 0) {
-      console.warn('[metrics] No time between guides data found, using mock data')
-      return getMockTimeBetweenGuides()
+      console.warn('[metrics] No time between guides data found')
+      return []
     }
 
     return result.rows.map(row => ({
@@ -287,23 +281,10 @@ export async function getTimeBetweenGuides(): Promise<TimeBetweenGuidesData[]> {
     }))
   } catch (error) {
     console.error('[metrics] Error fetching time between guides:', error)
-    // Fallback to mock data
-    return getMockTimeBetweenGuides()
+    return []
   }
 }
 
-function getMockTimeBetweenGuides(): TimeBetweenGuidesData[] {
-  return [
-    { timeRange: '0-6h', users: 120, percentage: 25 },
-    { timeRange: '6-12h', users: 85, percentage: 18 },
-    { timeRange: '12-18h', users: 65, percentage: 14 },
-    { timeRange: '18-24h', users: 95, percentage: 20 },
-    { timeRange: '24-30h', users: 45, percentage: 9 },
-    { timeRange: '30-36h', users: 30, percentage: 6 },
-    { timeRange: '36-48h', users: 25, percentage: 5 },
-    { timeRange: '48h+', users: 20, percentage: 4 },
-  ]
-}
 
 /**
  * Get user growth timeline
@@ -330,8 +311,8 @@ export async function getUserGrowth(): Promise<UserGrowthData[]> {
     `.execute(db)
 
     if (result.rows.length === 0) {
-      console.warn('[metrics] No user growth data found, using mock data')
-      return getMockUserGrowth()
+      console.warn('[metrics] No user growth data found')
+      return []
     }
 
     return result.rows.map(row => ({
@@ -342,30 +323,10 @@ export async function getUserGrowth(): Promise<UserGrowthData[]> {
     }))
   } catch (error) {
     console.error('[metrics] Error fetching user growth:', error)
-    // Fallback to mock data
-    return getMockUserGrowth()
+    return []
   }
 }
 
-function getMockUserGrowth(): UserGrowthData[] {
-  return [
-    { date: '2025-10-01', newUsers: 15, totalUsers: 15, activeUsers: 12 },
-    { date: '2025-10-08', newUsers: 22, totalUsers: 37, activeUsers: 28 },
-    { date: '2025-10-15', newUsers: 18, totalUsers: 55, activeUsers: 35 },
-    { date: '2025-10-22', newUsers: 25, totalUsers: 80, activeUsers: 45 },
-    { date: '2025-10-29', newUsers: 30, totalUsers: 110, activeUsers: 52 },
-    { date: '2025-11-05', newUsers: 35, totalUsers: 145, activeUsers: 65 },
-    { date: '2025-11-12', newUsers: 40, totalUsers: 185, activeUsers: 78 },
-    { date: '2025-11-19', newUsers: 45, totalUsers: 230, activeUsers: 92 },
-    { date: '2025-11-26', newUsers: 50, totalUsers: 280, activeUsers: 105 },
-    { date: '2025-12-03', newUsers: 55, totalUsers: 335, activeUsers: 125 },
-    { date: '2025-12-10', newUsers: 60, totalUsers: 395, activeUsers: 145 },
-    { date: '2025-12-17', newUsers: 65, totalUsers: 460, activeUsers: 165 },
-    { date: '2025-12-24', newUsers: 70, totalUsers: 530, activeUsers: 185 },
-    { date: '2025-12-31', newUsers: 75, totalUsers: 605, activeUsers: 210 },
-    { date: '2026-01-01', newUsers: 80, totalUsers: 685, activeUsers: 235 },
-  ]
-}
 
 /**
  * Get game type engagement metrics
@@ -393,8 +354,8 @@ export async function getGameEngagement(): Promise<GameEngagementData[]> {
     `.execute(db)
 
     if (result.rows.length === 0) {
-      console.warn('[metrics] No game engagement data found, using mock data')
-      return getMockGameEngagement()
+      console.warn('[metrics] No game engagement data found')
+      return []
     }
 
     const realData = result.rows.map(row => ({
@@ -404,34 +365,13 @@ export async function getGameEngagement(): Promise<GameEngagementData[]> {
       users: row.users,
     }))
 
-    // If we only have crossword data, add mock data for other game types
-    // to show potential future game types (for visualization)
-    const hasCrossword = realData.some(d => d.gameType.toLowerCase().includes('crossword'))
-    if (hasCrossword && realData.length === 1) {
-      const mockOthers = getMockGameEngagement().filter(mock =>
-        !mock.gameType.toLowerCase().includes('crossword')
-      )
-      return [...realData, ...mockOthers]
-    }
-
     return realData
   } catch (error) {
     console.error('[metrics] Error fetching game engagement:', error)
-    // Fallback to mock data
-    return getMockGameEngagement()
+    return []
   }
 }
 
-function getMockGameEngagement(): GameEngagementData[] {
-  return [
-    { gameType: 'Crossword', completionRate: 85, avgTime: 12.5, users: 520 },
-    { gameType: 'Word Search', completionRate: 78, avgTime: 8.2, users: 380 },
-    { gameType: 'Matching', completionRate: 82, avgTime: 6.5, users: 420 },
-    { gameType: 'Hangman', completionRate: 75, avgTime: 10.3, users: 310 },
-    { gameType: 'Fill-in-Blank', completionRate: 88, avgTime: 5.8, users: 480 },
-    { gameType: 'Tree Growth', completionRate: 90, avgTime: 15.2, users: 290 },
-  ]
-}
 
 /**
  * Get all metrics data in one call
