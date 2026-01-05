@@ -156,27 +156,31 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
       )
       SELECT
         'After 24h' as cooldown_type,
-        COUNT(*) FILTER (WHERE retained_24h) * 100.0 / NULLIF(total_users, 0) as retention_rate,
+        COUNT(*) FILTER (WHERE retained_24h) * 100.0 / NULLIF(totals.total_users, 0) as retention_rate,
         COUNT(*) FILTER (WHERE retained_24h) as users
-      FROM user_retention, totals
+      FROM user_retention
+      CROSS JOIN totals
       UNION ALL
       SELECT
         'After 48h',
-        COUNT(*) FILTER (WHERE retained_48h) * 100.0 / NULLIF(total_users, 0),
+        COUNT(*) FILTER (WHERE retained_48h) * 100.0 / NULLIF(totals.total_users, 0),
         COUNT(*) FILTER (WHERE retained_48h)
-      FROM user_retention, totals
+      FROM user_retention
+      CROSS JOIN totals
       UNION ALL
       SELECT
         'After 72h',
-        COUNT(*) FILTER (WHERE retained_72h) * 100.0 / NULLIF(total_users, 0),
+        COUNT(*) FILTER (WHERE retained_72h) * 100.0 / NULLIF(totals.total_users, 0),
         COUNT(*) FILTER (WHERE retained_72h)
-      FROM user_retention, totals
+      FROM user_retention
+      CROSS JOIN totals
       UNION ALL
       SELECT
         'Flexible\n(12-36h)',
-        COUNT(*) FILTER (WHERE retained_flexible) * 100.0 / NULLIF(total_users, 0),
+        COUNT(*) FILTER (WHERE retained_flexible) * 100.0 / NULLIF(totals.total_users, 0),
         COUNT(*) FILTER (WHERE retained_flexible)
-      FROM user_retention, totals
+      FROM user_retention
+      CROSS JOIN totals
       ORDER BY
         CASE cooldown_type
           WHEN 'After 24h' THEN 1
