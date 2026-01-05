@@ -185,13 +185,7 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
       FROM user_retention
       CROSS JOIN totals
       GROUP BY 1
-      ORDER BY
-        CASE cooldown_type
-          WHEN 'After 24h' THEN 1
-          WHEN 'After 48h' THEN 2
-          WHEN 'After 72h' THEN 3
-          ELSE 4
-        END
+      ORDER BY 1
     `.execute(db)
 
     if (result.rows.length === 0) {
