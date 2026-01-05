@@ -3,11 +3,17 @@
 
 ### **Introduction**
 
-Your **Web3 wallet** is your personal gateway to the blockchain. It's like a digital passport and bank account in one, allowing you to securely receive, store, and manage your digital UBI and your identification.
+Your **Web3 wallet** is your personal gateway to the blockchain. It's like a 
+digital passport and bank account in one, allowing you to securely receive, 
+store, and manage your digital UBI and your identification.
 
-For this course, we recommend the **OKX Web3 Wallet**. It’s user-friendly, supports the Celo network (which powers our UBI projects), and has helpful built-in tools for beginners.
+For this course, we recommend the **OKX Web3 Wallet** or MetaMask. 
+They are user-friendly, support the Celo network (which powers our UBI projects),
+and they have helpful built-in tools for beginners.
 
-Your wallet’s security depends entirely on one thing: your **Secret Recovery Phrase**. As the master key to your digital assets, whoever possesses it has full control.
+Your wallet’s security depends entirely on one thing: your 
+**Secret Recovery Phrase**. As the master key to your digital assets, whoever 
+possesses it has full control.
 
 ---
 
@@ -16,7 +22,7 @@ Your wallet’s security depends entirely on one thing: your **Secret Recovery P
 #### **Step 1: Install the Wallet**
 *  In your smartphone install the OKX wallet (its icon is black and green) 
    or the OKX application (its icon is white and black). If you install the OKX
-   application in the top choose "Web3" to switch from the exchange to the
+   application in the top choose "Web3" to switch from the Exchange to the
    web3 wallet.
 
 #### **Step 2: Create a New Wallet**
