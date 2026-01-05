@@ -49,7 +49,8 @@ randomly generate the private key and associate it with your public key
 
 
 #### **Step 4: Access Your Wallet**
-*   Your wallet is now ready! You will see your wallet's **public address** (a long string starting with `0x...`). This is like your account number—you can share it to receive funds.
+* Your wallet is now ready! You will see your wallet's **public address** 
+  (a long string starting with `0x...`). This is like your account number—you can share it to receive funds.
 
 ---
 
@@ -64,9 +65,13 @@ To interact with GoodDollar and learn.tg, your wallet needs to be connected to t
 
 ### **Comprehension Questions**
 
-1. You must never ___ your Secret Recovery Phrase (share)
-2. Your public address allows others to send you crypto and is also
-   like your ___ in the blockchain. (identification)
-3. In order to receive UBI from this course your wallet must be
+1. You must never ___ your Secret Recovery Phrase. (share)
+2. You can share your public address with someone who will send you crypto 
+   and it is also like your ___ number in the blockchain. (account)
+3. In order to receive UBI from GoodDollar or from Learn.tg your wallet must be
    connected to the ___ blockchain.  (CELO)
+4. Your wallet includes two parts: (1) your public address that you
+   can share to receive funds and (2) your private address associated with a
+   secret recovery phrase that you cannot share because whoever controls the 
+   secret recovery phrase has ___ control of the assets in your wallet. (CELO)
 
