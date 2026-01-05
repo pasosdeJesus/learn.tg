@@ -73,5 +73,5 @@ To interact with GoodDollar and learn.tg, your wallet needs to be connected to t
 4. Your wallet includes two parts: (1) your public address that you
    can share to receive funds and (2) your private address associated with a
    secret recovery phrase that you cannot share because whoever controls the 
-   secret recovery phrase has ___ control of the assets in your wallet. (CELO)
+   secret recovery phrase has ___ control of the assets in your wallet. (full)
 

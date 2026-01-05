@@ -1,18 +1,24 @@
-# Guide 3: Claim Your Daily UBI - GoodDollar and CELO
+# Guide 3: Claim Your Daily UBI - GoodDollar and Learn.tg-UBI
 
-## 1. What are GoodDollar (G$) and CELO?
+## 1. What are GoodDollar (G$), CELO and Learn.tg-UBI ?
 
-GoodDollar (G$) and CELO are cryptocurrencies that operate on the **Celo blockchain**.
-*   **GoodDollar** is a global UBI protocol supported by companies like eToro.
-*   **CELO UBI** on this site is sponsored by **Celo Support Streams**.
+GoodDollar (G$) and CELO are cryptocurrencies that operate on the
+**Celo blockchain**.
 
-To ensure fairness and prevent one person from claiming multiple times, both systems use **anti-sybil mechanisms**:
+*   **GoodDollar** is also a global UBI protocol supported by companies like 
+    eToro.
+*   **Learn.tg-UBI** is an exclusive UBI for learn.tg that gives CELO token to 
+    people in Sierra Leone and that is sponsored by **Celo Support Streams**.
+
+To ensure fairness and prevent one person from claiming multiple times, both 
+UBI systems use **anti-sybil mechanisms**:
 *   **GoodDollar:** Requires unique **facial verification** every 6 months.
-*   **CELO UBI on learn.tg:** You need at least **50 points** in your profile score.
+*   **Learn.tg-UBI:** You need at least **50 points** in your profile score.
 
-**How to get +50 points?**
-1.  **GoodDollar Verification (52 points):** Complete the facial process, then click "Update Score" on your [profile](/en/profile) page.
-2.  **Verification with Self (100 points):** Install the [Self](https://self.xyz) app and scan your passport with it. Then, from your profile page here, click the **"Verify with Self"** button. This will display a **QR code** (on computers) or directly open the Self app (on smartphones). Scan the QR code with the Self app and authorize sharing your verified **name and country** to receive 100 points.
+**How to get +50 points in profile score?**
+1. **GoodDollar Verification (52 points):** Complete the facial verification 
+   process, then click "Update Score" on your [profile](/en/profile) page.
+2. **Verification with Self (100 points):** Install the [Self](https://self.xyz) app and scan your passport with it. Then, from your profile page here, click the **"Verify with Self"** button. This will display a **QR code** (on computers) or directly open the Self app (on smartphones). Scan the QR code with the Self app and authorize sharing your verified **name and country** to receive 100 points.
 
 **Approximate daily value:**
 *   **GoodDollar:** ~100 G$ (≈ $0.01 USD / ~0.25 New Leones). You can save up over several days before converting.
