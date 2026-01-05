@@ -71,11 +71,6 @@ function getAuthFromStorage(): AuthParams | null {
  */
 export async function trackEvent(event: UserEvent, auth?: AuthParams): Promise<void> {
   try {
-    // In development, log to console
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[metrics] Tracking event:', event)
-    }
-
     // Prepare request body with authentication
     const body: any = {
       event_type: event.event_type,
@@ -87,6 +82,25 @@ export async function trackEvent(event: UserEvent, auth?: AuthParams): Promise<v
     if (authParams) {
       body.walletAddress = authParams.walletAddress
       body.token = authParams.token
+      // Debug logging in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[metrics] Tracking event with auth:', {
+          event_type: event.event_type,
+          hasWalletAddress: !!authParams.walletAddress,
+          hasToken: !!authParams.token,
+          walletAddress: authParams.walletAddress?.slice(0, 10) + '...',
+        })
+      }
+    } else {
+      // Debug logging in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[metrics] Tracking event without auth:', event.event_type)
+      }
+    }
+
+    // In development, log to console
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[metrics] Tracking event:', event)
     }
 
     // Send to internal API endpoint

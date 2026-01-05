@@ -24,6 +24,14 @@ vi.mock('axios')
 vi.mock('unified', () => ({
   unified: vi.fn(),
 }))
+// Mock next-auth/react to avoid network requests (only getCsrfToken)
+vi.mock('next-auth/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next-auth/react')>()
+  return {
+    ...actual,
+    getCsrfToken: vi.fn(() => Promise.resolve('mock-csrf-token')),
+  }
+})
 
 // Mock useAccount to provide a consistent address
 vi.mock('wagmi', async (importOriginal) => {
