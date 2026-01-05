@@ -146,11 +146,12 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      if (billeteraUsuario.token !== token) {
+      if (!billeteraUsuario.token || billeteraUsuario.token !== token) {
         console.log('[metrics/track-event] Token mismatch:', {
-          storedTokenStart: billeteraUsuario.token.slice(0, 10) + '...',
+          storedTokenStart: billeteraUsuario.token?.slice(0, 10) + '...',
           receivedTokenStart: token.slice(0, 10) + '...',
-          fullMatch: billeteraUsuario.token === token
+          fullMatch: billeteraUsuario.token === token,
+          tokenIsNull: !billeteraUsuario.token
         })
         return NextResponse.json(
           { error: 'Token mismatch' },

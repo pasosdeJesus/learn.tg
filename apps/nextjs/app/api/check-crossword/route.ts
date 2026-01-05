@@ -219,6 +219,8 @@ export async function POST(req: NextRequest) {
           amountpaid: 0,
           profilescore: usuario.profilescore || 0,
           points: 1,
+          created_at: new Date(),
+          updated_at: new Date(),
         }
         let igp = await db
         .insertInto('guide_usuario')
