@@ -160,7 +160,7 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
         COUNT(*) FILTER (WHERE retained_24h) as users
       FROM user_retention
       CROSS JOIN totals
-      GROUP BY 1  -- Agrupar por cooldown_type aunque solo hay una fila
+      GROUP BY cooldown_type  -- Aunque solo hay una fila
       UNION ALL
       SELECT
         'After 48h',
@@ -168,7 +168,7 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
         COUNT(*) FILTER (WHERE retained_48h)
       FROM user_retention
       CROSS JOIN totals
-      GROUP BY 1
+      GROUP BY cooldown_type
       UNION ALL
       SELECT
         'After 72h',
@@ -176,7 +176,7 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
         COUNT(*) FILTER (WHERE retained_72h)
       FROM user_retention
       CROSS JOIN totals
-      GROUP BY 1
+      GROUP BY cooldown_type
       UNION ALL
       SELECT
         'Flexible\n(12-36h)',
@@ -184,8 +184,8 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
         COUNT(*) FILTER (WHERE retained_flexible)
       FROM user_retention
       CROSS JOIN totals
-      GROUP BY 1
-      ORDER BY 1
+      GROUP BY cooldown_type
+      ORDER BY cooldown_type
     `.execute(db)
 
     if (result.rows.length === 0) {
@@ -195,7 +195,7 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
 
     return result.rows.map(row => ({
       cooldownType: row.cooldown_type,
-      retentionRate: parseFloat(row.retention_rate.toFixed(1)),
+      retentionRate: row.retention_rate !== null ? parseFloat(row.retention_rate.toFixed(1)) : 0,
       users: row.users,
     }))
   } catch (error) {
@@ -246,7 +246,7 @@ export async function getTimeBetweenGuides(): Promise<TimeBetweenGuidesData[]> {
           END as time_range,
           COUNT(DISTINCT usuario_id) as users
         FROM time_differences
-        GROUP BY 1
+        GROUP BY time_range
       ),
       total AS (
         SELECT SUM(users) as total_users FROM binned

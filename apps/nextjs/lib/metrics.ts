@@ -82,26 +82,20 @@ export async function trackEvent(event: UserEvent, auth?: AuthParams): Promise<v
     if (authParams) {
       body.walletAddress = authParams.walletAddress
       body.token = authParams.token
-      // Debug logging in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[metrics] Tracking event with auth:', {
-          event_type: event.event_type,
-          hasWalletAddress: !!authParams.walletAddress,
-          hasToken: !!authParams.token,
-          walletAddress: authParams.walletAddress?.slice(0, 10) + '...',
-        })
-      }
+      // Debug logging (always enabled for troubleshooting)
+      console.log('[metrics] Tracking event with auth:', {
+        event_type: event.event_type,
+        hasWalletAddress: !!authParams.walletAddress,
+        hasToken: !!authParams.token,
+        walletAddress: authParams.walletAddress?.slice(0, 10) + '...',
+      })
     } else {
-      // Debug logging in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[metrics] Tracking event without auth:', event.event_type)
-      }
+      // Debug logging (always enabled for troubleshooting)
+      console.log('[metrics] Tracking event without auth:', event.event_type)
     }
 
-    // In development, log to console
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[metrics] Tracking event:', event)
-    }
+    // Log event details (always enabled for troubleshooting)
+    console.log('[metrics] Tracking event:', event.event_type)
 
     // Send to internal API endpoint
     const response = await fetch('/api/track-event', {
@@ -116,10 +110,8 @@ export async function trackEvent(event: UserEvent, auth?: AuthParams): Promise<v
       console.warn('[metrics] Failed to track event:', response.status, response.statusText)
     }
   } catch (error) {
-    // Fail silently in production, log in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[metrics] Error tracking event:', error)
-    }
+    // Log error in both development and production for troubleshooting
+    console.warn('[metrics] Error tracking event:', error)
   }
 }
 
