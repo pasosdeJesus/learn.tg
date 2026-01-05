@@ -26,8 +26,8 @@ export default function GameTypeEngagementChart({ data }: GameTypeEngagementChar
     return (
       <div className="h-64 flex flex-col items-center justify-center text-gray-500">
         <div className="text-lg mb-2">📊</div>
-        <p className="text-center">No hay datos suficientes para mostrar métricas.</p>
-        <p className="text-center text-sm">Los datos aparecerán cuando los usuarios interactúen con las guías.</p>
+        <p className="text-center">Not enough data to show metrics.</p>
+        <p className="text-center text-sm">Data will appear when users interact with guides.</p>
       </div>
     )
   }

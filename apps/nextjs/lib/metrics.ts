@@ -117,60 +117,60 @@ export async function trackEvent(event: UserEvent, auth?: AuthParams): Promise<v
  */
 export const metrics = {
   /** Track guide view */
-  guideView: (guideId: number, courseId: number) =>
+  guideView: (guideId: number, courseId: number, auth?: AuthParams) =>
     trackEvent({
       event_type: 'guide_view',
       event_data: { guideId, courseId, timestamp: new Date().toISOString() }
-    }),
+    }, auth),
 
   /** Track game start */
-  gameStart: (gameType: string, guideId: number) =>
+  gameStart: (gameType: string, guideId: number, auth?: AuthParams) =>
     trackEvent({
       event_type: 'game_start',
       event_data: { gameType, guideId }
-    }),
+    }, auth),
 
   /** Track game completion */
-  gameComplete: (gameType: string, score: number, timeMs: number) =>
+  gameComplete: (gameType: string, score: number, timeMs: number, auth?: AuthParams) =>
     trackEvent({
       event_type: 'game_complete',
       event_data: { gameType, score, timeMs }
-    }),
+    }, auth),
 
   /** Track cooldown start */
-  cooldownStart: (courseId: number, guideId: number) =>
+  cooldownStart: (courseId: number, guideId: number, auth?: AuthParams) =>
     trackEvent({
       event_type: 'cooldown_start',
       event_data: { courseId, guideId }
-    }),
+    }, auth),
 
   /** Track wallet connection */
-  walletConnect: (walletAddress: string) =>
+  walletConnect: (walletAddress: string, auth?: AuthParams) =>
     trackEvent({
       event_type: 'wallet_connect',
       event_data: { walletAddress }
-    }),
+    }, auth),
 
   /** Track guide completion */
-  guideComplete: (guideId: number, courseId: number, correct: boolean) =>
+  guideComplete: (guideId: number, courseId: number, correct: boolean, auth?: AuthParams) =>
     trackEvent({
       event_type: 'guide_complete',
       event_data: { guideId, courseId, correct }
-    }),
+    }, auth),
 
   /** Track course start */
-  courseStart: (courseId: number) =>
+  courseStart: (courseId: number, auth?: AuthParams) =>
     trackEvent({
       event_type: 'course_start',
       event_data: { courseId }
-    }),
+    }, auth),
 
   /** Track course progress */
-  courseProgress: (courseId: number, percentage: number) =>
+  courseProgress: (courseId: number, percentage: number, auth?: AuthParams) =>
     trackEvent({
       event_type: 'course_progress',
       event_data: { courseId, percentage }
-    }),
+    }, auth),
 }
 
 /**

@@ -33,7 +33,7 @@ async function checkDbConnection() {
     await db.selectFrom('userevent').select(sql`1`.as('one')).limit(1).execute()
     return { healthy: true, message: 'Database connection OK' }
   } catch (error) {
-    return { healthy: false, message: `Database error: ${error.message}` }
+    return { healthy: false, message: `Database error: ${error instanceof Error ? error.message : String(error)}` }
   }
 }
 
@@ -46,7 +46,7 @@ async function checkEventsTable() {
       message: `Events table OK (${count?.count || 0} events)`
     }
   } catch (error) {
-    return { healthy: false, message: `Events table error: ${error.message}` }
+    return { healthy: false, message: `Events table error: ${error instanceof Error ? error.message : String(error)}` }
   }
 }
 
@@ -67,11 +67,11 @@ async function checkRecentActivity() {
     return {
       healthy: hoursAgo !== null && hoursAgo < 24,
       message: recent ?
-        `Last event ${hoursAgo.toFixed(1)} hours ago` :
+        `Last event ${hoursAgo!.toFixed(1)} hours ago` :
         'No recent events'
     }
   } catch (error) {
-    return { healthy: false, message: `Recent activity check error: ${error.message}` }
+    return { healthy: false, message: `Recent activity check error: ${error instanceof Error ? error.message : String(error)}` }
   }
 }
 
@@ -84,17 +84,17 @@ async function checkDataFreshness() {
       .executeTakeFirst()
 
     const hoursAgo = lastUpdate?.last_updated ?
-      (Date.now() - new Date(lastUpdate.last_updated).getTime()) / (1000 * 60 * 60) :
+      (Date.now() - new Date(String(lastUpdate.last_updated)).getTime()) / (1000 * 60 * 60) :
       null
 
     return {
       healthy: hoursAgo !== null && hoursAgo < 24,
       message: lastUpdate ?
-        `Data updated ${hoursAgo.toFixed(1)} hours ago` :
+        `Data updated ${hoursAgo!.toFixed(1)} hours ago` :
         'No data freshness info'
     }
   } catch (error) {
-    return { healthy: false, message: `Data freshness check error: ${error.message}` }
+    return { healthy: false, message: `Data freshness check error: ${error instanceof Error ? error.message : String(error)}` }
   }
 }
 

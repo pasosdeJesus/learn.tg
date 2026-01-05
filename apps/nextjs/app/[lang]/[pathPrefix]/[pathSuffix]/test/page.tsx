@@ -124,7 +124,7 @@ export default function Page({
           setPlacements(response.data.placements)
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
           // Track game start
-          metrics.gameStart('crossword', Number(guideNumber))
+          metrics.gameStart('crossword', Number(guideNumber), { walletAddress: address, token: csrfToken })
           setGameStartTime(new Date())
         } catch (err: any) {
           console.error(err)
@@ -242,11 +242,19 @@ export default function Page({
         const score = 100 // Perfect score since no mistakes
         const timeMs = gameStartTime ? new Date().getTime() - gameStartTime.getTime() : 0
 
-        metrics.gameComplete('crossword', score, timeMs)
+        if (address && gCsrfToken) {
+          metrics.gameComplete('crossword', score, timeMs, { walletAddress: address, token: gCsrfToken })
+        } else {
+          metrics.gameComplete('crossword', score, timeMs)
+        }
 
         // Only track guide completion if it wasn't already completed before this submission
         if (!wasAlreadyCompleted && course) {
-          metrics.guideComplete(Number(guideNumber), Number(course.id), true)
+          if (address && gCsrfToken) {
+            metrics.guideComplete(Number(guideNumber), Number(course.id), true, { walletAddress: address, token: gCsrfToken })
+          } else {
+            metrics.guideComplete(Number(guideNumber), Number(course.id), true)
+          }
         }
 
         if (response.data.scholarshipResult) {

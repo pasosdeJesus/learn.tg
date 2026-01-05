@@ -1,7 +1,7 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, getCsrfToken } from 'next-auth/react'
 import { useAccount } from 'wagmi'
 
 import { useGuideData } from '@/lib/hooks/useGuideData'
@@ -29,6 +29,7 @@ export default function Page({ params }: PageProps) {
   const { data: session } = useSession()
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
+  const [csrfToken, setCsrfToken] = useState('')
 
   const { course, loading, error, percentageCompleted, percentagePaid, amountScholarship } = useGuideData({
     lang,
@@ -38,6 +39,17 @@ export default function Page({ params }: PageProps) {
   const [htmlSummary, setHtmlSummary] = useState('')
   const [htmlExtended, setHtmlExtended] = useState('')
   const [contentsHtml, setContentsHtml] = useState('')
+
+  // Get CSRF token when address is available
+  useEffect(() => {
+    if (address) {
+      getCsrfToken().then(token => {
+        setCsrfToken(token || '')
+      })
+    } else {
+      setCsrfToken('')
+    }
+  }, [address])
 
   const htmlDeMd = (md: string) => {
     if (!md) return ''
@@ -78,16 +90,30 @@ export default function Page({ params }: PageProps) {
   // Track course start when course loads
   useEffect(() => {
     if (course) {
-      metrics.courseStart(Number(course.id))
+      if (address && csrfToken) {
+        metrics.courseStart(Number(course.id), {
+          walletAddress: address,
+          token: csrfToken
+        })
+      } else {
+        metrics.courseStart(Number(course.id))
+      }
     }
-  }, [course])
+  }, [course, address, csrfToken])
 
   // Track course progress when percentage changes
   useEffect(() => {
     if (course && percentageCompleted !== undefined && percentageCompleted !== null) {
-      metrics.courseProgress(Number(course.id), percentageCompleted)
+      if (address && csrfToken) {
+        metrics.courseProgress(Number(course.id), percentageCompleted, {
+          walletAddress: address,
+          token: csrfToken
+        })
+      } else {
+        metrics.courseProgress(Number(course.id), percentageCompleted)
+      }
     }
-  }, [course, percentageCompleted])
+  }, [course, percentageCompleted, address, csrfToken])
 
   if (
     (session && !address) ||

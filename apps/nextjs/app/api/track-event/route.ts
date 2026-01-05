@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
     // Apply rate limiting - use walletAddress when available, fallback to IP for anonymous events
     // This prevents abuse while allowing normal user flows (guide → crossword → event)
-    const identifier = walletAddress || (req.ip || 'unknown')
+    const identifier = walletAddress || 'unknown'
     if (!checkRateLimit(identifier)) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Try again later.' },

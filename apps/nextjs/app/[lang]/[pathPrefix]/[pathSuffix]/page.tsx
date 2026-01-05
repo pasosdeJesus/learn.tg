@@ -1,7 +1,7 @@
 'use client'
 
 import axios, { AxiosError } from 'axios'
-import { useSession } from 'next-auth/react'
+import { useSession, getCsrfToken } from 'next-auth/react'
 import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
 import remarkParse from 'remark-parse'
@@ -32,6 +32,7 @@ export default function Page({ params }: PageProps) {
   const { address } = useAccount()
   const { data: session } = useSession()
   const { lang, pathPrefix, pathSuffix } = params
+  const [csrfToken, setCsrfToken] = useState('')
 
   const { 
     course, 
@@ -53,6 +54,17 @@ export default function Page({ params }: PageProps) {
   const [isClient, setIsClient] = useState(false)
   const [showGoodDollarButton, setShowGoodDollarButton] = useState(false)
   const [showCeloUbiButton, setShowCeloUbiButton] = useState(false)
+
+  // Get CSRF token when address is available
+  useEffect(() => {
+    if (address) {
+      getCsrfToken().then(token => {
+        setCsrfToken(token || '')
+      })
+    } else {
+      setCsrfToken('')
+    }
+  }, [address])
 
   const htmlDeMd = useCallback((md: string) => {
     if (!md) return ''
@@ -154,9 +166,16 @@ export default function Page({ params }: PageProps) {
   // Track guide view event
   useEffect(() => {
     if (course && guideNumber > 0) {
-      metrics.guideView(Number(guideNumber), Number(course.id))
+      if (address && csrfToken) {
+        metrics.guideView(Number(guideNumber), Number(course.id), {
+          walletAddress: address,
+          token: csrfToken
+        })
+      } else {
+        metrics.guideView(Number(guideNumber), Number(course.id))
+      }
     }
-  }, [course, guideNumber])
+  }, [course, guideNumber, address, csrfToken])
 
   if (loading) {
     return <div className="p-10 mt-10">Loading guide...</div>
