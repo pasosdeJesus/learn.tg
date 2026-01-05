@@ -147,6 +147,84 @@ The frontend displays progress using a three-color arc showing completion and pa
 
 ---
 
+## Metrics and Analytics System
+
+The platform includes a comprehensive metrics and analytics system to track user engagement, measure platform performance, and inform data-driven decisions.
+
+### Event Tracking
+
+**Client-side tracking** (`lib/metrics.ts`):
+- `trackEvent()` function sends user events to `/api/track-event`
+- Helper functions: `metrics.guideView()`, `metrics.gameStart()`, `metrics.gameComplete()`, etc.
+- Authentication via wallet token for user-associated events
+
+**Server-side recording** (`lib/metrics-server.ts`):
+- `recordEvent()` function inserts events into `userevent` table
+- Events include: `guide_view`, `game_start`, `game_complete`, `cooldown_start`, `wallet_connect`, `guide_complete`, `course_start`, `course_progress`
+
+**Event storage** (`userevent` table):
+- `event_type`: Type identifier (string)
+- `event_data`: JSON payload with event-specific data
+- `usuario_id`: Optional foreign key to `usuario` table
+- `created_at`: Timestamp of event
+
+### Metrics Dashboard
+
+**Dashboard page** (`/metrics`):
+- Interactive charts using Recharts
+- Server-side data fetching via `getAllMetrics()`
+- Five key metrics visualizations:
+  1. **Completion Rate**: Percentage of guides completed over time
+  2. **Retention by Cooldown**: User retention across 24h, 48h, 72h cooldown periods
+  3. **Time Between Guides**: Distribution of hours between consecutive guide completions
+  4. **User Growth Timeline**: New user registrations and active users over time
+  5. **Game Type Engagement**: Completion rates and average time by game type
+
+**API endpoint** (`/api/metrics`):
+- Returns aggregated metrics data in JSON format
+- Cached for 5 minutes to reduce database load
+- Used by both dashboard page and external monitoring tools
+
+### Key Metrics & Queries
+
+**Completion rate** (`getCompletionRate()`):
+```sql
+SELECT DATE(gu.created_at) as date,
+       COUNT(*) FILTER (WHERE gu.points > 0) * 100.0 / COUNT(*) as completion_rate
+FROM guide_usuario gu
+WHERE gu.created_at IS NOT NULL
+GROUP BY DATE(gu.created_at)
+```
+
+**Retention analysis** (`getRetentionByCooldown()`):
+- Tracks users who complete guide N and N+1 within specific time windows
+- Measures effectiveness of 24-hour cooldown policy
+
+**User growth** (`getUserGrowth()`):
+- Tracks new user registrations from `usuario.created_at`
+- Calculates cumulative user growth and active users with wallets
+
+**Game engagement** (`getGameEngagement()`):
+- Analyzes completion rates and average time per game type
+- Currently focused on crossword game, extensible for future game types
+
+### Data Flow
+
+1. **Event generation**: User interacts with guide/game → `metrics.*()` function called
+2. **Event transmission**: Client sends event to `/api/track-event` with auth token
+3. **Event storage**: Server validates auth, inserts into `userevent` table
+4. **Metrics aggregation**: Scheduled or on-demand queries aggregate raw events
+5. **Visualization**: Dashboard components fetch aggregated data via `/api/metrics`
+
+### Integration Points
+
+- **Course/guide pages**: Track `guide_view`, `course_start`, `course_progress`
+- **Game pages**: Track `game_start`, `game_complete`, `guide_complete`
+- **Wallet connection**: Track `wallet_connect` on SIWE authentication
+- **Cooldown system**: Track `cooldown_start` when 24-hour timer begins
+
+---
+
 ## Database Schema
 
 The PostgreSQL database is shared between the Rails backend and Next.js backend. Rails manages the core schema through ActiveRecord migrations, while Next.js accesses the same tables directly via the Kysely ORM for performance-critical operations like answer validation and progress tracking.
@@ -202,12 +280,20 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 - `amountscholarship`: Total USDT received for the course
 - `percentagecompleted`: Percentage of guides completed (points > 0)
 
+##### `userevent` (user events)
+- `id`: Primary key
+- `usuario_id`: Optional foreign key to `usuario`
+- `event_type`: Type identifier (guide_view, game_start, etc.)
+- `event_data`: JSON payload with event-specific data
+- `created_at`: Timestamp of event
+
 ### Data Flow Notes
 1. User wallet connection creates/updates `billetera_usuario` with a signed token
 2. Course and guide data is fetched from Rails APIs (which query the above tables)
 3. Crossword answers are validated against `billetera_usuario.answer_fib`
 4. Progress is tracked in `guide_usuario` and aggregated in `course_usuario`
 5. Blockchain rewards update `guide_usuario.amountpaid` and `course_usuario.amountscholarship`
+6. User events (guide views, game completions, etc.) are recorded in `userevent` via the metrics tracking system
 
 ---
 
@@ -220,6 +306,7 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 | Frontend & API | Next.js + React + TypeScript | UI, content delivery, SIWE auth, answer validation |
 | Blockchain | Celo | USDT transfers, decentralized rewards |
 | Content | Markdown | Guide storage, version control |
+| Metrics & Analytics | Next.js + Recharts + PostgreSQL | User engagement tracking, performance metrics, dashboard visualization |
 | Wallet | OKX/Metamask/etc | User authentication and reward receipt |
 
 ---

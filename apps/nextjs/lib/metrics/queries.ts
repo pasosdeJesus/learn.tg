@@ -112,7 +112,6 @@ export async function getCompletionRate(): Promise<CompletionRateData[]> {
 
 /**
  * Get retention rates by cooldown period
- * TODO: Implement actual SQL query
  */
 export async function getRetentionByCooldown(): Promise<RetentionData[]> {
   try {
@@ -206,7 +205,6 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
 
 /**
  * Get time distribution between guides
- * TODO: Implement actual SQL query
  */
 export async function getTimeBetweenGuides(): Promise<TimeBetweenGuidesData[]> {
   try {
@@ -330,7 +328,6 @@ export async function getUserGrowth(): Promise<UserGrowthData[]> {
 
 /**
  * Get game type engagement metrics
- * TODO: Implement actual SQL query (currently only crossword exists)
  */
 export async function getGameEngagement(): Promise<GameEngagementData[]> {
   try {
