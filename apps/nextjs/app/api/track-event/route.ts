@@ -101,6 +101,16 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Log all incoming events for debugging
+    console.log('[metrics/track-event] Request received:', {
+      event_type,
+      hasWalletAddress: !!walletAddress,
+      hasToken: !!token,
+      walletAddress: walletAddress ? walletAddress.slice(0, 10) + '...' : 'none',
+      tokenLength: token ? token.length : 0,
+      timestamp: new Date().toISOString()
+    })
+
     // Apply rate limiting - use walletAddress when available, fallback to IP for anonymous events
     // This prevents abuse while allowing normal user flows (guide → crossword → event)
     const identifier = walletAddress || 'unknown'
@@ -194,6 +204,14 @@ export async function POST(req: NextRequest) {
       .values(event)
       .returningAll()
       .executeTakeFirst()
+
+    // Always log event insertion for debugging
+    console.log('[metrics/track-event] Event inserted:', {
+      id: inserted?.id,
+      event_type,
+      usuario_id,
+      has_usuario_id: usuario_id !== null
+    })
 
     // Log in development
     if (process.env.NODE_ENV === 'development') {
