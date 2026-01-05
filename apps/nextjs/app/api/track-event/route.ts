@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
-import type { Insertable } from 'kysely'
+import { sql, type Insertable } from 'kysely'
 import type { Userevent } from '@/db/db.d.ts'
 
 /**
@@ -116,13 +116,30 @@ export async function POST(req: NextRequest) {
 
     // If authentication provided, validate and get usuario_id
     if (walletAddress && token) {
+      // Debug logging for authentication parameters
+      console.log('[metrics/track-event] Auth attempt:', {
+        walletAddress,
+        tokenLength: token.length,
+        tokenStart: token.slice(0, 10) + '...',
+        timestamp: new Date().toISOString()
+      })
+
       const billeteraUsuario = await db
         .selectFrom('billetera_usuario')
-        .where('billetera', '=', walletAddress)
+        .where(sql`LOWER(billetera)`, '=', walletAddress.toLowerCase())
         .selectAll()
         .executeTakeFirst()
 
+      // Debug logging for query result
+      console.log('[metrics/track-event] Query result:', {
+        foundUser: !!billeteraUsuario,
+        usuario_id: billeteraUsuario?.usuario_id,
+        storedTokenStart: billeteraUsuario?.token ? billeteraUsuario.token.slice(0, 10) + '...' : 'none',
+        storedWallet: billeteraUsuario?.billetera
+      })
+
       if (!billeteraUsuario) {
+        console.log('[metrics/track-event] User not found for wallet:', walletAddress)
         return NextResponse.json(
           { error: 'User not found for wallet' },
           { status: 404 }
@@ -130,13 +147,32 @@ export async function POST(req: NextRequest) {
       }
 
       if (billeteraUsuario.token !== token) {
+        console.log('[metrics/track-event] Token mismatch:', {
+          storedTokenStart: billeteraUsuario.token.slice(0, 10) + '...',
+          receivedTokenStart: token.slice(0, 10) + '...',
+          fullMatch: billeteraUsuario.token === token
+        })
         return NextResponse.json(
           { error: 'Token mismatch' },
           { status: 401 }
         )
       }
 
+      console.log('[metrics/track-event] Authentication successful:', {
+        usuario_id: billeteraUsuario.usuario_id,
+        walletAddress,
+        event_type
+      })
+
       usuario_id = billeteraUsuario.usuario_id
+    } else {
+      console.log('[metrics/track-event] No authentication provided:', {
+        walletAddress: !!walletAddress,
+        token: !!token,
+        event_type,
+        hasWalletAddress: !!walletAddress,
+        hasToken: !!token
+      })
     }
 
     // Prepare event for insertion
