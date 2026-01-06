@@ -61,6 +61,18 @@ export default function Page() {
 
   const htmlDeMd = useCallback((md: string) => {
     if (!md) return ''
+
+    let processedMd = md
+    if (address) {
+        processedMd = processedMd.replace(/\{walletAddress\}/g, 
+            `<p class="font-mono bg-gray-200 dark:bg-gray-700 p-2 rounded break-words"><strong>Your connected address:</strong><br/>${address}</p>`
+        )
+    } else {
+        processedMd = processedMd.replace(/\{walletAddress\}/g, 
+            '<p class="text-center"><i>Connect your wallet to see your address here.</i></p>'
+        )
+    }
+
     const processor = (unified() as any)
       .use(remarkParse)
       .use(remarkGfm)
@@ -69,14 +81,24 @@ export default function Page() {
       .use(remarkFillInTheBlank, { url: `${pathSuffix}/test` })
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeStringify, { allowDangerousHtml: true })
-    const html = processor.processSync(md).toString()
+    const html = processor.processSync(processedMd).toString()
 
     if (typeof window !== 'undefined') {
+      const fillInTheBlankQuestions = (window as Window & { fillInTheBlank?: any[] }).fillInTheBlank || []
+      
+      const processedQuestions = fillInTheBlankQuestions.map(q => {
+        if (q.answer === '{last4WalletAddress}') {
+          return {
+            ...q,
+            answer: address ? address.slice(-4) : 'xxxx', 
+          }
+        }
+        return q
+      })
+
       localStorage.setItem(
         'fillInTheBlank',
-        JSON.stringify(
-          (window as Window & { fillInTheBlank?: [] }).fillInTheBlank || [],
-        ),
+        JSON.stringify(processedQuestions),
       )
     }
 
@@ -111,7 +133,7 @@ export default function Page() {
       .replaceAll('<ul>', '<ul class="block list-disc ml-8">')
 
     return html_con_tailwind
-  }, [pathSuffix])
+  }, [pathSuffix, address])
 
   useEffect(() => {
     setIsClient(true)
@@ -127,7 +149,6 @@ export default function Page() {
 
                     // Detect buttons before altering the markdown
                     const hasGoodDollarButton = markdown.includes('{GoodDollarButton}')
-                    console.log("OJO hasGoodDollarButton=", hasGoodDollarButton)
                     const hasCeloUbiButton = markdown.includes('{CeloUbiButton}')
 
                     setShowGoodDollarButton(hasGoodDollarButton)

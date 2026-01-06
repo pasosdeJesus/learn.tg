@@ -47,20 +47,20 @@ graph TD
 ## Architecture Stack
 
 ### 1. **Major Backend: Rails (servidor/)**
-- **Framework:** Ruby on Rails (>= 3.4)
+- **Framework:** Ruby on Rails (v8.0)
 - **Database:** PostgreSQL (>= 16.2) with unaccent extension
 - **Purpose:** Course management, guide organization, user data persistence, teacher administration.
 - **Based on:** MSIP and cor1440_gen frameworks
 - **Authentication:** Token-based (receives and validates JWT tokens from the Next.js frontend).
 
 ### 2. **Frontend and minor backend: Next.js (apps/nextjs/)**
-- **Framework:** Next.js with React + TypeScript
+- **Framework:** Next.js (v15.3.6) with React (v19.2.3) + TypeScript
 - **UI Components:** Utilizes **Radix UI** for building a flexible and accessible component library.
 - **Purpose:** User interface, content delivery, and user authentication.
 - **Authentication:** Implements Sign-In With Ethereum (SIWE). The user connects with a Web3 wallet, and the frontend generates a JWT token for authenticating with the Rails backend.
 
 ### 3. **Smart Contracts: Hardhat (apps/hardhat/)**
-- **Language:** Solidity ^0.8.24
+- **Language:** Solidity (^0.8.24)
 - **Network:** Celo (mainnet) & Celo Sepolia (testnet)
 - **Main Contract:** `LearnTGVaults.sol`
   - Manages USDT reward distribution per course.

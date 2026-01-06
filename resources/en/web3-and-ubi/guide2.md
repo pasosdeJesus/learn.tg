@@ -52,6 +52,8 @@ randomly generate the private key and associate it with your public key
 * Your wallet is now ready! You will see your wallet's **public address** 
   (a long string starting with `0x...`). This is like your account number—you can share it to receive funds.
 
+{walletAddress}
+
 ---
 
 ### **Connecting to the Celo Network**
@@ -74,4 +76,3 @@ To interact with GoodDollar and learn.tg, your wallet needs to be connected to t
    can share to receive funds and (2) your private address associated with a
    secret recovery phrase that you cannot share because whoever controls the 
    secret recovery phrase has ___ control of the assets in your wallet. (full)
-
