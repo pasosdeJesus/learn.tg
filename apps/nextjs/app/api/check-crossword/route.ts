@@ -233,9 +233,7 @@ export async function POST(req: NextRequest) {
           actividadpf_id: actividadpfId,
           amountpaid: 0,
           profilescore: usuario.profilescore || 0,
-          points: 1,
-          created_at: new Date(),
-          updated_at: new Date(),
+          points: 1
         }
         let igp = await db
         .insertInto('guide_usuario')

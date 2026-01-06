@@ -201,6 +201,35 @@ CREATE PROCEDURE public.cor1440_gen_recalcular_poblacion_actividad(IN par_activi
 
 
 --
+-- Name: course_usuario_timestamps(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.course_usuario_timestamps() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Para inserciones (INSERT)
+    IF TG_OP = 'INSERT' THEN
+        -- Si created_at no fue proporcionado, establecer a ahora
+        IF NEW.created_at IS NULL THEN
+            NEW.created_at = NOW();
+        END IF;
+        -- Siempre establecer updated_at a ahora en inserción
+        NEW.updated_at = NOW();
+
+    -- Para actualizaciones (UPDATE)
+    ELSIF TG_OP = 'UPDATE' THEN
+        -- Nunca modificar created_at en actualizaciones
+        -- Solo actualizar updated_at
+        NEW.updated_at = NOW();
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: f_unaccent(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -209,6 +238,35 @@ CREATE FUNCTION public.f_unaccent(text) RETURNS text
     AS $_$
       SELECT public.unaccent('public.unaccent', $1)  
       $_$;
+
+
+--
+-- Name: guide_usuario_timestamps(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.guide_usuario_timestamps() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Para inserciones (INSERT)
+    IF TG_OP = 'INSERT' THEN
+        -- Si created_at no fue proporcionado, establecer a ahora
+        IF NEW.created_at IS NULL THEN
+            NEW.created_at = NOW();
+        END IF;
+        -- Siempre establecer updated_at a ahora en inserción
+        NEW.updated_at = NOW();
+
+    -- Para actualizaciones (UPDATE)
+    ELSIF TG_OP = 'UPDATE' THEN
+        -- Nunca modificar created_at en actualizaciones
+        -- Solo actualizar updated_at
+        NEW.updated_at = NOW();
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
 
 
 --
@@ -2732,7 +2790,9 @@ CREATE TABLE public.course_usuario (
     points integer NOT NULL,
     guidespoints numeric,
     amountscholarship numeric,
-    percentagecompleted numeric
+    percentagecompleted numeric,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
 );
 
 
@@ -2745,7 +2805,9 @@ CREATE TABLE public.guide_usuario (
     actividadpf_id integer NOT NULL,
     amountpaid integer NOT NULL,
     profilescore integer NOT NULL,
-    points integer NOT NULL
+    points integer NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
 );
 
 
@@ -4728,6 +4790,71 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: ubitransactions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ubitransactions (
+    id integer NOT NULL,
+    wallet character varying(42) NOT NULL,
+    amount numeric(30,18) NOT NULL,
+    hash character varying(66) NOT NULL,
+    date timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: ubitransactions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.ubitransactions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: ubitransactions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.ubitransactions_id_seq OWNED BY public.ubitransactions.id;
+
+
+--
+-- Name: userevent; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.userevent (
+    id bigint NOT NULL,
+    usuario_id integer,
+    event_type character varying(30) NOT NULL,
+    event_data jsonb,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: userevent_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.userevent_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: userevent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.userevent_id_seq OWNED BY public.userevent.id;
+
+
+--
 -- Name: usuario_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -5316,6 +5443,20 @@ ALTER TABLE ONLY public.nonce ALTER COLUMN id SET DEFAULT nextval('public.nonce_
 --
 
 ALTER TABLE ONLY public.religion ALTER COLUMN id SET DEFAULT nextval('public.religion_id_seq'::regclass);
+
+
+--
+-- Name: ubitransactions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ubitransactions ALTER COLUMN id SET DEFAULT nextval('public.ubitransactions_id_seq'::regclass);
+
+
+--
+-- Name: userevent id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.userevent ALTER COLUMN id SET DEFAULT nextval('public.userevent_id_seq'::regclass);
 
 
 --
@@ -6183,6 +6324,30 @@ ALTER TABLE ONLY public.religion
 
 
 --
+-- Name: ubitransactions ubitransactions_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ubitransactions
+    ADD CONSTRAINT ubitransactions_hash_key UNIQUE (hash);
+
+
+--
+-- Name: ubitransactions ubitransactions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ubitransactions
+    ADD CONSTRAINT ubitransactions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: userevent userevent_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.userevent
+    ADD CONSTRAINT userevent_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: usuario usuario_nusuario_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6553,6 +6718,20 @@ CREATE TRIGGER cor1440_gen_recalcular_tras_cambiar_asistencia AFTER INSERT OR DE
 --
 
 CREATE TRIGGER cor1440_gen_recalcular_tras_cambiar_persona AFTER UPDATE ON public.msip_persona FOR EACH ROW EXECUTE FUNCTION public.cor1440_gen_persona_cambiada();
+
+
+--
+-- Name: course_usuario course_usuario_timestamps_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER course_usuario_timestamps_trigger BEFORE INSERT OR UPDATE ON public.course_usuario FOR EACH ROW EXECUTE FUNCTION public.course_usuario_timestamps();
+
+
+--
+-- Name: guide_usuario guide_usuario_timestamps_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER guide_usuario_timestamps_trigger BEFORE INSERT OR UPDATE ON public.guide_usuario FOR EACH ROW EXECUTE FUNCTION public.guide_usuario_timestamps();
 
 
 --
