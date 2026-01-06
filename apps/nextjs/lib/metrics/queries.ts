@@ -160,7 +160,7 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
         COUNT(*) FILTER (WHERE retained_24h) as users
       FROM user_retention
       CROSS JOIN totals
-      GROUP BY cooldown_type  -- Aunque solo hay una fila
+      GROUP BY 1  -- Aunque solo hay una fila
       UNION ALL
       SELECT
         'After 48h',
@@ -168,7 +168,7 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
         COUNT(*) FILTER (WHERE retained_48h)
       FROM user_retention
       CROSS JOIN totals
-      GROUP BY cooldown_type
+      GROUP BY 1
       UNION ALL
       SELECT
         'After 72h',
@@ -176,7 +176,7 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
         COUNT(*) FILTER (WHERE retained_72h)
       FROM user_retention
       CROSS JOIN totals
-      GROUP BY cooldown_type
+      GROUP BY 1
       UNION ALL
       SELECT
         'Flexible\n(12-36h)',
@@ -184,8 +184,8 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
         COUNT(*) FILTER (WHERE retained_flexible)
       FROM user_retention
       CROSS JOIN totals
-      GROUP BY cooldown_type
-      ORDER BY cooldown_type
+      GROUP BY 1
+      ORDER BY 1
     `.execute(db)
 
     if (result.rows.length === 0) {

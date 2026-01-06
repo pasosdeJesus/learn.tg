@@ -15,6 +15,7 @@ import { unified } from 'unified'
 
 import type { DB, BilleteraUsuario } from '@/db/db.d.ts'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
+import { recordEvent } from '@/lib/metrics-server'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 interface WordPlacement {
@@ -82,6 +83,21 @@ export async function GET(req: NextRequest) {
       }
     }
     if (retMessage == '') {
+      // Record game start event if user is authenticated
+      if (billeteraUsuario?.usuario_id) {
+        try {
+          await recordEvent({
+            event_type: 'game_start',
+            event_data: {
+              gameType: 'crossword',
+              guideId: 0, // TODO: Get actual guideId
+            },
+            usuario_id: billeteraUsuario.usuario_id,
+          })
+        } catch (error) {
+          console.error('Failed to record game_start event:', error)
+        }
+      }
       let wordNumber = 1
 
       console.log('** cwd=', process.cwd())

@@ -15,6 +15,7 @@ import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 
 import { newKyselyPostgresql } from '@/.config/kysely.config'
+import { recordEvent } from '@/lib/metrics-server'
 import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
@@ -56,6 +57,22 @@ export async function GET(req: NextRequest) {
       }
     }
     if (retMessage == '') {
+      // Record guide view event if user is authenticated
+      if (billeteraUsuario?.usuario_id) {
+        try {
+          await recordEvent({
+            event_type: 'guide_view',
+            event_data: {
+              guideId: 0, // TODO: Get actual guideId
+              courseId: courseId ? parseInt(courseId) : 0,
+              timestamp: new Date().toISOString(),
+            },
+            usuario_id: billeteraUsuario.usuario_id,
+          })
+        } catch (error) {
+          console.error('Failed to record guide_view event:', error)
+        }
+      }
       console.log('** cwd=', process.cwd())
       let fname = `../../resources/${lang}/${prefix}/${guide}.md`
       console.log('** fname=', fname)

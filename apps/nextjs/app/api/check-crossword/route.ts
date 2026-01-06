@@ -20,6 +20,7 @@ import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
 import type { CourseUsuario, DB, GuideUsuario, Usuario } from '@/db/db.d.ts'
 import { updateUserAndCoursePoints } from '@/lib/scores'
+import { recordEvent } from '@/lib/metrics-server'
 import { callWriteFun } from '@/lib/crypto'
 
 interface WordPlacement {
@@ -189,6 +190,20 @@ export async function POST(req: NextRequest) {
       )
     }
     console.log('OJO usuario=', usuario)
+    // Record game completion event
+    try {
+      await recordEvent({
+        event_type: 'game_complete',
+        event_data: {
+          gameType: 'crossword',
+          score: mistakesInCW.length == 0 ? 1 : 0,
+          timeMs: 0,
+        },
+        usuario_id: usuario.id,
+      })
+    } catch (error) {
+      console.error('Failed to record game_complete event:', error)
+    }
     const guides = await sql<any>`
       SELECT id, nombrecorto, "sufijoRuta", proyectofinanciero_id
       FROM cor1440_gen_actividadpf
@@ -238,6 +253,20 @@ export async function POST(req: NextRequest) {
       }
       retMessage += msg[locale].correctPoint
       await updateUserAndCoursePoints(db, usuario, courseId)
+      // Record guide completion event
+      try {
+        await recordEvent({
+          event_type: 'guide_complete',
+          event_data: {
+            guideId: guideId,
+            courseId: courseId,
+            correct: true,
+          },
+          usuario_id: usuario.id,
+        })
+      } catch (error) {
+        console.error('Failed to record guide_complete event:', error)
+      }
     }
 
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
