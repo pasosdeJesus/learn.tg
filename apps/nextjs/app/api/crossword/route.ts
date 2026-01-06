@@ -16,6 +16,7 @@ import { unified } from 'unified'
 import type { DB, BilleteraUsuario } from '@/db/db.d.ts'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
 import { recordEvent } from '@/lib/metrics-server'
+import { getGuideIdBySuffix } from '@/lib/guide-utils'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 interface WordPlacement {
@@ -64,6 +65,19 @@ export async function GET(req: NextRequest) {
     const walletAddress = searchParams.get('walletAddress')
     const token = searchParams.get('token')
 
+    // Calculate actual guideId for metrics
+    let actualGuideId = 0
+    if (courseId && guide) {
+      try {
+        const guideId = await getGuideIdBySuffix(parseInt(courseId), guide)
+        if (guideId !== null) {
+          actualGuideId = guideId
+        }
+      } catch (error) {
+        console.error('Error calculating guideId for metrics:', error)
+      }
+    }
+
     let newGrid = initializeGrid(15, 15)
     const newPlacements: WordPlacement[] = []
 
@@ -90,7 +104,7 @@ export async function GET(req: NextRequest) {
             event_type: 'game_start',
             event_data: {
               gameType: 'crossword',
-              guideId: 0, // TODO: Get actual guideId
+              guideId: actualGuideId,
             },
             usuario_id: billeteraUsuario.usuario_id,
           })

@@ -16,6 +16,7 @@ import { unified } from 'unified'
 
 import { newKyselyPostgresql } from '@/.config/kysely.config'
 import { recordEvent } from '@/lib/metrics-server'
+import { getGuideIdBySuffix } from '@/lib/guide-utils'
 import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
@@ -34,6 +35,19 @@ export async function GET(req: NextRequest) {
     const guideNumber = searchParams.get('guideNumber')
     const walletAddress = searchParams.get('walletAddress')
     const token = searchParams.get('token')
+
+    // Calculate actual guideId for metrics
+    let actualGuideId = 0
+    if (courseId && guide) {
+      try {
+        const guideId = await getGuideIdBySuffix(parseInt(courseId), guide)
+        if (guideId !== null) {
+          actualGuideId = guideId
+        }
+      } catch (error) {
+        console.error('Error calculating guideId for metrics:', error)
+      }
+    }
 
     // Validate required parameters
     if (!lang || !prefix || !guide) {
@@ -63,7 +77,7 @@ export async function GET(req: NextRequest) {
           await recordEvent({
             event_type: 'guide_view',
             event_data: {
-              guideId: 0, // TODO: Get actual guideId
+              guideId: actualGuideId,
               courseId: courseId ? parseInt(courseId) : 0,
               timestamp: new Date().toISOString(),
             },

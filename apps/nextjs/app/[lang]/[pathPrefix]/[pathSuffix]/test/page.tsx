@@ -10,7 +10,6 @@ import { useGuideData } from '@/lib/hooks/useGuideData'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { metrics } from '@/lib/metrics'
 
 interface WordPlacement {
   word: string
@@ -123,14 +122,8 @@ export default function Page({
           setGrid(response.data.grid)
           setPlacements(response.data.placements)
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
-          // Track game start
-          console.log('[metrics] Calling gameStart with auth:', {
-            hasAddress: !!address,
-            hasCsrfToken: !!csrfToken,
-            address: address?.slice(0, 10) + '...',
-            guideNumber
-          })
-          metrics.gameStart('crossword', Number(guideNumber), { walletAddress: address, token: csrfToken })
+          // Track game start (now handled server-side in /api/crossword)
+          console.log('[metrics] Game start tracked server-side')
           setGameStartTime(new Date())
         } catch (err: any) {
           console.error(err)
@@ -248,44 +241,9 @@ export default function Page({
         const score = 100 // Perfect score since no mistakes
         const timeMs = gameStartTime ? new Date().getTime() - gameStartTime.getTime() : 0
 
-        if (address && gCsrfToken) {
-          console.log('[metrics] Calling gameComplete with auth:', {
-            hasAddress: !!address,
-            hasCsrfToken: !!gCsrfToken,
-            address: address?.slice(0, 10) + '...',
-            score,
-            timeMs
-          })
-          metrics.gameComplete('crossword', score, timeMs, { walletAddress: address, token: gCsrfToken })
-        } else {
-          console.log('[metrics] Calling gameComplete without auth (missing address or token)', {
-            hasAddress: !!address,
-            hasCsrfToken: !!gCsrfToken
-          })
-          metrics.gameComplete('crossword', score, timeMs)
-        }
+        console.log('[metrics] Game completion tracked server-side')
 
-        // Only track guide completion if it wasn't already completed before this submission
-        if (!wasAlreadyCompleted && course) {
-          if (address && gCsrfToken) {
-            console.log('[metrics] Calling guideComplete with auth:', {
-              hasAddress: !!address,
-              hasCsrfToken: !!gCsrfToken,
-              address: address?.slice(0, 10) + '...',
-              guideNumber,
-              courseId: course.id
-            })
-            metrics.guideComplete(Number(guideNumber), Number(course.id), true, { walletAddress: address, token: gCsrfToken })
-          } else {
-            console.log('[metrics] Calling guideComplete without auth (missing address or token)', {
-              hasAddress: !!address,
-              hasCsrfToken: !!gCsrfToken,
-              guideNumber,
-              courseId: course.id
-            })
-            metrics.guideComplete(Number(guideNumber), Number(course.id), true)
-          }
-        }
+        // Guide completion tracked server-side in /api/check-crossword
 
         if (response.data.scholarshipResult) {
           setScholarshipTx(response.data.scholarshipResult)

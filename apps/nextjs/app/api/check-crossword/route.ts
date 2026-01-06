@@ -349,6 +349,19 @@ export async function POST(req: NextRequest) {
               ],
               0
             )
+            // Record cooldown start event
+            try {
+              await recordEvent({
+                event_type: 'cooldown_start',
+                event_data: {
+                  courseId: courseId,
+                  guideId: guideId,
+                },
+                usuario_id: usuario.id,
+              })
+            } catch (error) {
+              console.error('Failed to record cooldown_start event:', error)
+            }
             // VERIFICAR Y GUARDAR MONTO
             const statusArray: any = await contract.read.getStudentGuideStatus([
               courseIdArg,

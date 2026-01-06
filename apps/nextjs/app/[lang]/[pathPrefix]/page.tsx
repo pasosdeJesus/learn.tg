@@ -87,31 +87,23 @@ export default function Page({ params }: PageProps) {
     }
   }, [course, lang, pathPrefix])
 
-  // Track course start when course loads
+  // Track course start when course loads (only if authenticated)
   useEffect(() => {
-    if (course) {
-      if (address && csrfToken) {
-        metrics.courseStart(Number(course.id), {
-          walletAddress: address,
-          token: csrfToken
-        })
-      } else {
-        metrics.courseStart(Number(course.id))
-      }
+    if (course && address && csrfToken) {
+      metrics.courseStart(Number(course.id), {
+        walletAddress: address,
+        token: csrfToken
+      })
     }
   }, [course, address, csrfToken])
 
-  // Track course progress when percentage changes
+  // Track course progress when percentage changes (only if authenticated)
   useEffect(() => {
-    if (course && percentageCompleted !== undefined && percentageCompleted !== null) {
-      if (address && csrfToken) {
-        metrics.courseProgress(Number(course.id), percentageCompleted, {
-          walletAddress: address,
-          token: csrfToken
-        })
-      } else {
-        metrics.courseProgress(Number(course.id), percentageCompleted)
-      }
+    if (course && percentageCompleted !== undefined && percentageCompleted !== null && address && csrfToken) {
+      metrics.courseProgress(Number(course.id), percentageCompleted, {
+        walletAddress: address,
+        token: csrfToken
+      })
     }
   }, [course, percentageCompleted, address, csrfToken])
 
