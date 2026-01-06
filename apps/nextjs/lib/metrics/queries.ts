@@ -195,7 +195,7 @@ export async function getRetentionByCooldown(): Promise<RetentionData[]> {
 
     return result.rows.map(row => ({
       cooldownType: row.cooldown_type,
-      retentionRate: row.retention_rate !== null ? parseFloat(row.retention_rate.toFixed(1)) : 0,
+      retentionRate: row.retention_rate !== null ? parseFloat(Number(row.retention_rate).toFixed(1)) : 0,
       users: row.users,
     }))
   } catch (error) {
@@ -359,8 +359,8 @@ export async function getGameEngagement(): Promise<GameEngagementData[]> {
 
     const realData = result.rows.map(row => ({
       gameType: row.game_type,
-      completionRate: parseFloat(row.completion_rate.toFixed(1)),
-      avgTime: parseFloat(row.avg_time.toFixed(1)),
+      completionRate: row.completion_rate !== null ? parseFloat(Number(row.completion_rate).toFixed(1)) : 0,
+      avgTime: row.avg_time !== null ? parseFloat(Number(row.avg_time).toFixed(1)) : 0,
       users: row.users,
     }))
 
