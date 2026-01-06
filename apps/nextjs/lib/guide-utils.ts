@@ -108,3 +108,48 @@ export async function getActividadpfId(
     return null
   }
 }
+
+/**
+ * Get course ID by prefix (pathPrefix without leading slash)
+ * Maps e.g. 'a-relationship-with-Jesus' to course ID 2
+ *
+ * @param prefix - Course path prefix (without leading slash)
+ * @returns Course ID (proyectofinanciero_id), or null if not found
+ */
+export async function getCourseIdByPrefix(
+  prefix: string
+): Promise<number | null> {
+  const db = newKyselyPostgresql()
+
+  try {
+    console.log('[getCourseIdByPrefix] Input:', { prefix })
+
+    // Validate prefix is not empty
+    if (!prefix || prefix.trim() === '') {
+      console.log('[getCourseIdByPrefix] Invalid prefix:', prefix)
+      return null
+    }
+
+    // prefijoRuta includes leading slash in database
+    const prefijoRuta = `/${prefix}`
+
+    const result = await sql<any>`
+      SELECT id
+      FROM cor1440_gen_proyectofinanciero
+      WHERE "prefijoRuta" = ${prefijoRuta}
+      LIMIT 1
+    `.execute(db)
+
+    if (!result.rows || result.rows.length === 0) {
+      console.log('[getCourseIdByPrefix] No course found for prefix:', prefix)
+      return null
+    }
+
+    const courseId = result.rows[0].id
+    console.log('[getCourseIdByPrefix] Found courseId:', courseId, 'for prefix:', prefix)
+    return courseId
+  } catch (error) {
+    console.error('Error getting courseId by prefix:', error)
+    return null
+  }
+}

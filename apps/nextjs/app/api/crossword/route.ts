@@ -16,7 +16,7 @@ import { unified } from 'unified'
 import type { DB, BilleteraUsuario } from '@/db/db.d.ts'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
 import { recordEvent } from '@/lib/metrics-server'
-import { getGuideIdBySuffix } from '@/lib/guide-utils'
+import { getGuideIdBySuffix, getCourseIdByPrefix } from '@/lib/guide-utils'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 interface WordPlacement {
@@ -74,11 +74,25 @@ export async function GET(req: NextRequest) {
       tokenLength: token?.length || 0
     })
 
+    // Resolve courseId if not provided
+    let resolvedCourseId: number | null = null
+    if (courseId) {
+      resolvedCourseId = parseInt(courseId)
+    } else if (prefix) {
+      // Try to get courseId from prefix
+      resolvedCourseId = await getCourseIdByPrefix(prefix)
+      if (resolvedCourseId !== null) {
+        console.log('[crossword API] Resolved courseId from prefix:', { prefix, resolvedCourseId })
+      } else {
+        console.log('[crossword API] Could not resolve courseId from prefix:', prefix)
+      }
+    }
+
     // Calculate actual guideId for metrics
     let actualGuideId = 0
-    if (courseId && guide) {
+    if (resolvedCourseId && guide) {
       try {
-        const guideId = await getGuideIdBySuffix(parseInt(courseId), guide)
+        const guideId = await getGuideIdBySuffix(resolvedCourseId, guide)
         if (guideId !== null) {
           actualGuideId = guideId
         }
