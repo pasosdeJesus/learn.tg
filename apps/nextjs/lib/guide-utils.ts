@@ -24,6 +24,14 @@ export async function getGuideIdBySuffix(
   const db = newKyselyPostgresql()
 
   try {
+    console.log('[getGuideIdBySuffix] Input:', { courseId, suffix })
+
+    // Validate courseId is a positive integer
+    if (!Number.isFinite(courseId) || courseId <= 0) {
+      console.log('[getGuideIdBySuffix] Invalid courseId:', courseId)
+      return null
+    }
+
     const guides = await sql<any>`
       SELECT id, nombrecorto, "sufijoRuta", proyectofinanciero_id
       FROM cor1440_gen_actividadpf
@@ -33,19 +41,30 @@ export async function getGuideIdBySuffix(
       ORDER BY nombrecorto
     `.execute(db)
 
+    console.log('[getGuideIdBySuffix] Found guides:', guides.rows?.length || 0)
+
     if (!guides.rows || guides.rows.length === 0) {
+      console.log('[getGuideIdBySuffix] No guides found for courseId:', courseId)
       return null
     }
+
+    // Debug: log all suffixes
+    console.log('[getGuideIdBySuffix] Available suffixes:', guides.rows.map((r: any) => r.sufijoRuta))
 
     // Find the index of the guide with matching suffix
     const index = guides.rows.findIndex((row: any) => row.sufijoRuta === suffix)
 
+    console.log('[getGuideIdBySuffix] Match index:', index, 'for suffix:', suffix)
+
     if (index === -1) {
+      console.log('[getGuideIdBySuffix] No matching suffix found')
       return null
     }
 
     // Return 1-indexed guideId
-    return index + 1
+    const guideId = index + 1
+    console.log('[getGuideIdBySuffix] Returning guideId:', guideId)
+    return guideId
   } catch (error) {
     console.error('Error getting guideId by suffix:', error)
     return null

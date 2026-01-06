@@ -21,7 +21,7 @@ import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 export async function GET(req: NextRequest) {
-  console.log('** crossword GET req=', req)
+  console.log('** guide GET req=', req)
 
   try {
     let retMessage = ''
@@ -35,6 +35,16 @@ export async function GET(req: NextRequest) {
     const guideNumber = searchParams.get('guideNumber')
     const walletAddress = searchParams.get('walletAddress')
     const token = searchParams.get('token')
+
+    console.log('[guide API] Parameters:', {
+      courseId,
+      lang,
+      prefix,
+      guide,
+      guideNumber,
+      walletAddress: walletAddress ? `${walletAddress.substring(0, 10)}...` : 'null',
+      tokenLength: token?.length || 0
+    })
 
     // Calculate actual guideId for metrics
     let actualGuideId = 0

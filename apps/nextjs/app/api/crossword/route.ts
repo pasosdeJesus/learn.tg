@@ -65,6 +65,15 @@ export async function GET(req: NextRequest) {
     const walletAddress = searchParams.get('walletAddress')
     const token = searchParams.get('token')
 
+    console.log('[crossword API] Parameters:', {
+      courseId,
+      lang,
+      prefix,
+      guide,
+      walletAddress: walletAddress ? `${walletAddress.substring(0, 10)}...` : 'null',
+      tokenLength: token?.length || 0
+    })
+
     // Calculate actual guideId for metrics
     let actualGuideId = 0
     if (courseId && guide) {
