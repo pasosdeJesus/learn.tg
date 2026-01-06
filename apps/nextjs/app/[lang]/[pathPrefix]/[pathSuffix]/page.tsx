@@ -3,6 +3,7 @@
 import axios, { AxiosError } from 'axios'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
@@ -19,18 +20,11 @@ import { Button } from '@/components/ui/button'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
-type PageProps = {
-  params: {
-    lang: string
-    pathPrefix: string
-    pathSuffix: string
-  }
-}
-
-export default function Page({ params }: PageProps) {
+export default function Page() {
+  const params = useParams()
   const { address } = useAccount()
   const { data: session } = useSession()
-  const { lang, pathPrefix, pathSuffix } = params
+  const { lang, pathPrefix, pathSuffix } = params as { lang: string; pathPrefix: string; pathSuffix: string }
   const [csrfToken, setCsrfToken] = useState('')
 
   const { 

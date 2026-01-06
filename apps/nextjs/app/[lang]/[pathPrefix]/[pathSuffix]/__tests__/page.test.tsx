@@ -9,6 +9,7 @@ import React from 'react'
 import { SessionProvider } from 'next-auth/react'
 import { WagmiProvider, createConfig, http, useAccount } from 'wagmi'
 import { celo } from 'viem/chains'
+import { useParams } from 'next/navigation'
 
 import { useGuideData } from '@/lib/hooks/useGuideData'
 
@@ -30,6 +31,15 @@ vi.mock('next-auth/react', async (importOriginal) => {
   return {
     ...actual,
     getCsrfToken: vi.fn(() => Promise.resolve('mock-csrf-token')),
+  }
+})
+
+// Mock next/navigation to provide useParams
+vi.mock('next/navigation', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next/navigation')>()
+  return {
+    ...actual,
+    useParams: vi.fn(),
   }
 })
 
@@ -61,6 +71,7 @@ describe('Page', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(useParams).mockReturnValue({ lang: 'en', pathPrefix: 'guia', pathSuffix: 'celo-ubi' })
     mockUnified.mockReturnValue({
       use: mockUse,
       parse: mockParse,
@@ -99,7 +110,7 @@ describe('Page', () => {
       render(
         <WagmiProvider config={config}>
           <SessionProvider session={mockSession as any}>
-            <Page params={params} />
+            <Page />
           </SessionProvider>
         </WagmiProvider>
       )
