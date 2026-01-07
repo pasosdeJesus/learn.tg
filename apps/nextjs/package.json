@@ -16,6 +16,8 @@
   "dependencies": {
     "@divvi/referral-sdk": "^2.3.0",
     "@goodsdks/citizen-sdk": "1.0.1",
+    "@goodsdks/engagement-sdk": "^1.0.3",
+    "@goodsdks/react-hooks": "^1.0.3",
     "@pasosdejesus/msipn": "gitlab:pasosdeJesus/msip#msipn",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -114,5 +116,5 @@
       "utf-8-validate"
     ]
   },
-  "packageManager": "pnpm@10.25.0"
+  "packageManager": "pnpm@10.27.0"
 }
