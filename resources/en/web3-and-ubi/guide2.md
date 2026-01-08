@@ -20,9 +20,9 @@ possesses it has full control.
 ### **Step-by-Step: Installing the OKX Web3 Wallet**
 
 #### **Step 1: Install the Wallet**
-*  In your smartphone install the OKX wallet (its icon is black and green) 
+*  On your smartphone install the OKX wallet (its icon is black and green) 
    or the OKX application (its icon is white and black). If you install the OKX
-   application in the top choose "Web3" to switch from the Exchange to the
+   application, choose "Web3" at the top to switch from the Exchange to the
    web3 wallet.
 
 #### **Step 2: Create a New Wallet**
@@ -43,10 +43,6 @@ The procedure is presented in this video:
 
 [![Video showing how to create a web3 wallet with OKX](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
 
-From the OKX home page, open the Wallet tab. Create a new one. OKX will
-randomly generate the private key and associate it with your public key 
-(which will be your wallet address).
-
 
 #### **Step 4: Access Your Wallet**
 * Your wallet is now ready! You will see your wallet's **public address** 
@@ -60,7 +56,7 @@ randomly generate the private key and associate it with your public key
 To interact with GoodDollar and learn.tg, your wallet needs to be connected to the Celo network.
 
 1.  In your OKX Wallet, look for the network selector (often at the top right).
-2.  Search and choose CELO
+2.  Search for and select CELO
 3.  Close the selector
 
 ---

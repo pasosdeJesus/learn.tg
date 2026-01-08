@@ -1,10 +1,7 @@
 ### Introduction
 
 **Universal Basic Income (UBI)** is a  regular, unconditional payment given 
-to all members of a community to help covering basic needs.
-
-In the third guide of this lesson you can receive 2 kinds of UBI: GoodDollar
-and learn.tg-UBI
+to all members of a community to help cover basic needs.  This course will walk you through how to receive two kinds of digital UBI: GoodDollar and learn.tg-UBI.
 
 **Bonus Opportunity:** Each lesson on learn.tg features a scholarship vault!
 When you answer all comprehension questions correctly in a guide, you become
@@ -47,8 +44,8 @@ native coin of a network or a token built on top of it.
     **G$** and USDT on Celo).
 
 > **Why it matters for you:** The UBI you claim will be in the form of
-> cryptocurrency tokens (G$ and CELO), while the bonus scolarships are in USDT
-> all of them live on the Celo blockchain.
+> cryptocurrency tokens (G$ and CELO), while the bonus scholarships are in USDT
+> all of which live on the Celo blockchain.
 
 
 #### 3. Web3 Wallet & Digital Identity (Your Passport)
