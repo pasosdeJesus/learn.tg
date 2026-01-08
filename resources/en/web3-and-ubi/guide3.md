@@ -26,6 +26,14 @@ UBI systems use **anti-sybil mechanisms**:
 
 **💡 Tip:** Multiple adults in a household can claim, each with their own wallet, all manageable from **a single OKX app**.
 
+### A Strategy for Your UBI: Save and Grow
+
+As you can see, the daily UBI amounts are small. While they add up over time, converting very small amounts to cash can be inefficient due to transaction fees.
+
+A powerful strategy is to **save your UBI** for several days or weeks.
+
+To accelerate your savings, you can **combine your UBI with other earnings** on learn.tg. For example, completing crossword puzzles on the platform rewards you with **1 USDT** for each solved puzzle. By saving your G$, CELO, and adding your USDT earnings, you can accumulate a more significant amount to convert to cash when you need it.
+
 ---
 
 ## 2. Step 1: Verify Your Identity with GoodDollar

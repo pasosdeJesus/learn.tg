@@ -15,7 +15,7 @@ currency. Depending on your country this can be done in different ways:
     local currency.
 
 The following section provides specific instructions for users in **Sierra
-Leone** using our local partner.
+Leone**. Remember, it is best to save your crypto over time and convert a larger amount to make the transaction worthwhile.
 
 ---
 
