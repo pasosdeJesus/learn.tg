@@ -2,7 +2,7 @@
 
 ## Overview
 
-Learn.tg is a live, production gamified educational platform making learning engaging and rewarding. Students complete quality content through interactive guides and games, earning USDT cryptocurrency rewards for correct answers. The platform is currently operational at https://learn.tg with multiple courses across different subjects.
+Learn.tg is a live, production gamified educational platform making learning engaging and rewarding. Students complete quality content through interactive guides and games, earning cryptocurrency rewards for correct answers. The platform is currently operational at https://learn.tg with multiple courses across different subjects.
 
 ---
 
@@ -32,11 +32,10 @@ graph TD
     B -- 2. Interacts with Content --> C
     C -- 3. Fetches Guides/Data (JWT Auth) --> D
     D -- 4. Returns Content --> C
-    C -- 5. Submits Answers --> F
-    F -- 6. Validates Answers --> F
-    F -- 7. Triggers Reward --> E
-    E -- 8. Executes Transaction --> G
-    G -- 9. Sends USDT Reward --> A
+    C -- 5. Submits Answers/Actions --> F
+    F -- 6. Validates, Records Events, Triggers Reward --> E
+    E -- 7. Executes Transaction --> G
+    G -- 8. Sends USDT/CELO Reward --> A
 
     style E fill:#f9f,stroke:#333,stroke-width:2px
     style D fill:#bbf,stroke:#333,stroke-width:2px
@@ -62,11 +61,9 @@ graph TD
 ### 3. **Smart Contracts: Hardhat (apps/hardhat/)**
 - **Language:** Solidity (^0.8.24)
 - **Network:** Celo (mainnet) & Celo Sepolia (testnet)
-- **Main Contract:** `LearnTGVaults.sol`
-  - Manages USDT reward distribution per course.
-  - Implements a 24-hour cooldown between submissions for a user.
-  - Splits deposits: 80% to the student reward vault, 20% to platform
-    operations.
+- **Contracts:**
+    - `LearnTGVaults.sol`: Manages USDT rewards for crossword puzzle completions.
+    - `CeloUBI.sol`: Manages periodic claims of Universal Basic Income (UBI) in CELO.
 
 ---
 
@@ -92,29 +89,23 @@ and blockchain interactions.
 
 ## Reward System
 
-**Trigger:** A student submits a crossword answer.
+The platform features two distinct reward mechanisms, demonstrating our principle of **amor** through tangible provision.
 
-**Process:**
-1. The frontend sends the crossword solution to the
-   `POST / api/check-crossword` endpoint in the **Next.js backend**.
-2. The Next.js backend validates the answer. If it's correct, it may award
-   points to the user in the database.
-3. The backend then calls the `submitGuideResult()` function on the
-   `LearnTGVaults` smart contract. It passes the student's wallet address,
-   a `profileScore` (a metric of user engagement), and a boolean indicating
-   if the answer was perfect.
-4.  The contract verifies on-chain:
-   - The student has not already received a reward for this guide.
-   - At least 24 hours have passed since the student's last submission for
-     that course.
-   - The course vault has a sufficient USDT balance.
-   - The user's `profileScore` is at least 50.
-5. If all checks pass, the contract calculates the final reward amount
-   by multiplying the guide's base reward (`amountPerGuide`) by the
-   `profileScore`.
-6. The contract then transfers the calculated USDT amount to the student's
-    wallet address.
+### 1. Activity Rewards (USDT for Crosswords)
+- **Trigger:** A student submits a crossword answer via the `/api/check-crossword` endpoint.
+- **Process:**
+    1. The Next.js backend validates the answer.
+    2. If correct, it calls the `submitGuideResult()` function on the `LearnTGVaults.sol` contract.
+    3. The contract verifies on-chain that the user has a `profileScore` of at least 50, has not already been rewarded for the guide, and has respected the 24-hour cooldown period.
+    4. If checks pass, the contract calculates and transfers the USDT reward to the student's wallet.
 
+### 2. Universal Basic Income (UBI) Claims in CELO
+- **Trigger:** A user initiates a UBI claim via the `/api/claim-celo-ubi` endpoint.
+- **Process:**
+    1. The Next.js backend verifies the user's eligibility (e.g., wallet, `profileScore`, potential cooldowns).
+    2. It then calls the `claim()` function on the `CeloUBI.sol` contract.
+    3. The contract validates the claim conditions (such as cooldown periods) on-chain.
+    4. Upon successful validation, it transfers a set amount of CELO to the user's wallet.
 
 ---
 
@@ -149,79 +140,28 @@ The frontend displays progress using a three-color arc showing completion and pa
 
 ## Metrics and Analytics System
 
-The platform includes a comprehensive metrics and analytics system to track user engagement, measure platform performance, and inform data-driven decisions.
+In line with our principle of **transparency**, we have refactored our metrics system to be a robust, server-side-only process. This ensures data integrity, prevents event manipulation, and provides a single source of truth for user interactions.
 
-### Event Tracking
+### Philosophy: Backend-Driven Tracking
 
-**Client-side tracking** (`lib/metrics.ts`):
-- `trackEvent()` function sends user events to `/api/track-event`
-- Helper functions: `metrics.guideView()`, `metrics.gameStart()`, `metrics.gameComplete()`, etc.
-- Authentication via wallet token for user-associated events
+- **The backend is the source of truth.** The client-side application no longer tracks events. Instead, it makes API calls for its core functions (e.g., fetching a guide, checking an answer).
+- **Events are side-effects of API calls.** The server records an event as a direct consequence of a user's action being processed. For example, when a user successfully fetches a guide's content from `/api/guide`, the server records a `guide_view` event.
 
-**Server-side recording** (`lib/metrics-server.ts`):
-- `recordEvent()` function inserts events into `userevent` table
-- Events include: `guide_view`, `game_start`, `game_complete`, `cooldown_start`, `wallet_connect`, `guide_complete`, `course_start`, `course_progress`
+### Implementation and Data Flow
 
-**Event storage** (`userevent` table):
-- `event_type`: Type identifier (string)
-- `event_data`: JSON payload with event-specific data
-- `usuario_id`: Optional foreign key to `usuario` table
-- `created_at`: Timestamp of event
+1.  **User Action**: A user performs an action in the frontend, such as viewing a guide or submitting a crossword.
+2.  **API Request**: The frontend makes a standard API request to the Next.js backend (e.g., `GET /api/guide` or `POST /api/check-crossword`).
+3.  **Backend Logic Execution**: The API endpoint performs its primary function (fetches content, validates the answer, etc.).
+4.  **Event Recording**: After successfully executing the primary logic, the API endpoint itself calls the `recordEvent()` function from `lib/metrics-server.ts`.
+5.  **Database Storage**: The `recordEvent()` function inserts a new entry into the `userevent` table with the relevant event type (`guide_view`, `course_start`, `course_progress`, `game_complete`) and associated data.
 
-### Metrics Dashboard
+### Key Changes Implemented
 
-**Dashboard page** (`/metrics`):
-- Interactive charts using Recharts
-- Server-side data fetching via `getAllMetrics()`
-- Five key metrics visualizations:
-  1. **Completion Rate**: Percentage of guides completed over time
-  2. **Retention by Cooldown**: User retention across 24h, 48h, 72h cooldown periods
-  3. **Time Between Guides**: Distribution of hours between consecutive guide completions
-  4. **User Growth Timeline**: New user registrations and active users over time
-  5. **Game Type Engagement**: Completion rates and average time by game type
+-   **Deleted Endpoint**: The `/api/track-event` endpoint has been completely removed.
+-   **No Client-Side Logic**: The `lib/metrics.ts` file and all client-side `trackEvent` calls have been deleted.
+-   **Centralized Recording**: All event recording now happens within the API routes in the Next.js backend (`/api/guide`, `/api/check-crossword`), making the system more secure and reliable.
 
-**API endpoint** (`/api/metrics`):
-- Returns aggregated metrics data in JSON format
-- Cached for 5 minutes to reduce database load
-- Used by both dashboard page and external monitoring tools
-
-### Key Metrics & Queries
-
-**Completion rate** (`getCompletionRate()`):
-```sql
-SELECT DATE(gu.created_at) as date,
-       COUNT(*) FILTER (WHERE gu.points > 0) * 100.0 / COUNT(*) as completion_rate
-FROM guide_usuario gu
-WHERE gu.created_at IS NOT NULL
-GROUP BY DATE(gu.created_at)
-```
-
-**Retention analysis** (`getRetentionByCooldown()`):
-- Tracks users who complete guide N and N+1 within specific time windows
-- Measures effectiveness of 24-hour cooldown policy
-
-**User growth** (`getUserGrowth()`):
-- Tracks new user registrations from `usuario.created_at`
-- Calculates cumulative user growth and active users with wallets
-
-**Game engagement** (`getGameEngagement()`):
-- Analyzes completion rates and average time per game type
-- Currently focused on crossword game, extensible for future game types
-
-### Data Flow
-
-1. **Event generation**: User interacts with guide/game → `metrics.*()` function called
-2. **Event transmission**: Client sends event to `/api/track-event` with auth token
-3. **Event storage**: Server validates auth, inserts into `userevent` table
-4. **Metrics aggregation**: Scheduled or on-demand queries aggregate raw events
-5. **Visualization**: Dashboard components fetch aggregated data via `/api/metrics`
-
-### Integration Points
-
-- **Course/guide pages**: Track `guide_view`, `course_start`, `course_progress`
-- **Game pages**: Track `game_start`, `game_complete`, `guide_complete`
-- **Wallet connection**: Track `wallet_connect` on SIWE authentication
-- **Cooldown system**: Track `cooldown_start` when 24-hour timer begins
+The existing **Metrics Dashboard** (`/metrics`) and its corresponding API (`/api/metrics`) continue to function as before, but they now draw from a more reliable and accurate dataset.
 
 ---
 

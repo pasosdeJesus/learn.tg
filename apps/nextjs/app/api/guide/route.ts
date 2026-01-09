@@ -1,24 +1,44 @@
 'use server'
 
-import clg from 'crossword-layout-generator-with-isolated'
 import { readFile } from 'fs/promises'
-import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely'
+import { Kysely, sql } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
-import { Pool } from 'pg'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
-import remarkStringify from 'remark-stringify'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 
 import { newKyselyPostgresql } from '@/.config/kysely.config'
+import type { DB } from '@/db/db.d.ts'
+import { getCourseIdByPrefix, getGuideIdBySuffix } from '@/lib/guide-utils'
 import { recordEvent } from '@/lib/metrics-server'
-import { getGuideIdBySuffix, getCourseIdByPrefix } from '@/lib/guide-utils'
-import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
+
+/**
+ * Checks if a user has already a 'course_start' event for a given course.
+ * @param db - The Kysely database instance.
+ * @param usuario_id - The user's ID.
+ * @param courseId - The course's ID.
+ * @returns True if a `course_start` event exists, false otherwise.
+ */
+async function hasCourseStarted(
+  db: Kysely<DB>,
+  usuario_id: number,
+  courseId: number,
+): Promise<boolean> {
+  const event = await db
+    .selectFrom('userevent')
+    .where('usuario_id', '=', usuario_id)
+    .where('event_type', '=', 'course_start')
+    .where(sql`event_data->>'courseId'`, '=', String(courseId))
+    .select('id')
+    .limit(1)
+    .executeTakeFirst()
+  return !!event
+}
 
 export async function GET(req: NextRequest) {
   console.log('** guide GET req=', req)
@@ -43,7 +63,7 @@ export async function GET(req: NextRequest) {
       guide,
       guideNumber,
       walletAddress: walletAddress ? `${walletAddress.substring(0, 10)}...` : 'null',
-      tokenLength: token?.length || 0
+      tokenLength: token?.length || 0,
     })
 
     // Resolve courseId if not provided
@@ -54,7 +74,10 @@ export async function GET(req: NextRequest) {
       // Try to get courseId from prefix
       resolvedCourseId = await getCourseIdByPrefix(prefix)
       if (resolvedCourseId !== null) {
-        console.log('[guide API] Resolved courseId from prefix:', { prefix, resolvedCourseId })
+        console.log(
+          '[guide API] Resolved courseId from prefix:',
+          { prefix, resolvedCourseId },
+        )
       } else {
         console.log('[guide API] Could not resolve courseId from prefix:', prefix)
       }
@@ -77,7 +100,7 @@ export async function GET(req: NextRequest) {
     if (!lang || !prefix || !guide) {
       return NextResponse.json(
         { error: 'Missing required parameters: lang, prefix, guide' },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
@@ -95,22 +118,41 @@ export async function GET(req: NextRequest) {
       }
     }
     if (retMessage == '') {
-      // Record guide view event if user is authenticated
-      if (billeteraUsuario?.usuario_id) {
+      // Record events if user is authenticated and course is known
+      if (billeteraUsuario?.usuario_id && resolvedCourseId) {
         try {
+          // First, check if the user has already started this course.
+          const started = await hasCourseStarted(
+            db,
+            billeteraUsuario.usuario_id,
+            resolvedCourseId,
+          )
+
+          // If not, this view marks the beginning of the course. Record the course_start event.
+          if (!started) {
+            await recordEvent({
+              event_type: 'course_start',
+              usuario_id: billeteraUsuario.usuario_id,
+              event_data: { courseId: resolvedCourseId },
+            })
+          }
+
+          // Then, always record the specific guide_view event.
           await recordEvent({
             event_type: 'guide_view',
             event_data: {
               guideId: actualGuideId,
-              courseId: resolvedCourseId || 0,
+              courseId: resolvedCourseId,
               timestamp: new Date().toISOString(),
             },
             usuario_id: billeteraUsuario.usuario_id,
           })
         } catch (error) {
-          console.error('Failed to record guide_view event:', error)
+          // Non-blocking error for metrics
+          console.error('Failed to record event:', error)
         }
       }
+
       console.log('** cwd=', process.cwd())
       let fname = `../../resources/${lang}/${prefix}/${guide}.md`
       console.log('** fname=', fname)
