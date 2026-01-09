@@ -251,6 +251,30 @@ export async function POST(req: NextRequest) {
       }
       retMessage += msg[locale].correctPoint
       await updateUserAndCoursePoints(db, usuario, courseId)
+      
+      // After updating points, fetch the new progress and record the event
+      try {
+        const courseProgress = await db
+          .selectFrom('course_usuario')
+          .where('usuario_id', '=', usuario.id)
+          .where('proyectofinanciero_id', '=', courseId)
+          .select(['percentagecompleted'])
+          .executeTakeFirst()
+
+        if (courseProgress && courseProgress.percentagecompleted != null) {
+          await recordEvent({
+            event_type: 'course_progress',
+            usuario_id: usuario.id,
+            event_data: {
+              courseId: courseId,
+              percentageCompleted: courseProgress.percentagecompleted,
+            },
+          })
+        }
+      } catch (error) {
+        console.error('Failed to record course_progress event:', error)
+      }
+
       // Record guide completion event
       try {
         await recordEvent({

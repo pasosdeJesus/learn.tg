@@ -6,7 +6,12 @@
  * "Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres" (Colosenses 3:23)
  */
 
-import type { BaseEvent } from './metrics'
+export interface BaseEvent {
+  event_type: string
+  event_data?: Record<string, unknown>
+  usuario_id?: number | null
+  timestamp?: Date
+}
 
 /**
  * Record an event directly from server-side code
