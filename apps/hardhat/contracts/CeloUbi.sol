@@ -78,7 +78,7 @@ contract CeloUbi is Ownable {
      * @dev This function enforces the cooldown period and sufficient balance checks.
      */
     function claim(address recipient, uint256 profileScore) public onlyBackend {
-        require(profileScore >= 50 && profileScore <= 100, "CeloUbi: Profile score must be between 50 and 100");
+        require(profileScore >= 50, "CeloUbi: Profile score must be greather or equal to 50");
         require(block.timestamp >= lastClaimed[recipient] + COOLDOWN_PERIOD, "CeloUbi: Cooldown period not over");
         
         uint256 reward = (MAX_REWARD * profileScore) / 100;

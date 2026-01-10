@@ -1,4 +1,6 @@
 #!/bin/sh
 
 . .env
-npx hardhat verify --network $NETWORK $CELOUBI_ADDRESS $PUBLIC_ADDRESS $PUBLIC_ADDRESS
+cmd="npx hardhat verify --network $NETWORK $CELOUBI_ADDRESS $PUBLIC_ADDRESS $PUBLIC_ADDRESS"
+echo $cmd
+eval $cmd
