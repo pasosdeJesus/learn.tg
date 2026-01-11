@@ -98,8 +98,17 @@ export async function POST(req: NextRequest) {
     if (process.env.NEXT_PUBLIC_NETWORK === 'celo') {
       const identitySDK = new IdentitySDK(publicClient as any, walletClient as any, 'production')
       if (identitySDK) {
-        const { isWhitelisted } = await identitySDK.getWhitelistedRoot(walletAddress)
-        whitelisted = isWhitelisted
+        const { isWhitelisted, root } = await identitySDK.getWhitelistedRoot(walletAddress)
+        console.log("root=", root, ", walletAddress=", walletAddress)
+        if (root != "" && 
+            root.toLowerCase() != walletAddress.toLowerCase()) {
+          retMessage += '\n' + "Please  use your root goodDollar wallet"
+          console.log(retMessage)
+        } else  if (root != "" && 
+            root.toLowerCase() == walletAddress.toLowerCase() &&
+                   isWhitelisted) {
+            whitelisted = true
+        }
       } else {
         console.warn('IdentitySDK is null')
       }
