@@ -104,11 +104,17 @@ export async function POST(request: NextRequest) {
     })
 
     try {
+      let profileScore = user.profilescore
+      if (profileScore > 50 && user.passport_nationality == user.pais_id &&
+          user.pais_id == 694) {
+        // Special for people of Sierra Leone
+        profileScore = 500
+      }
       const tx = await walletClient.writeContract({
         address: contractAddress,
         abi: CeloUbiAbi,
         functionName: 'claim',
-        args: [billeteraUsuario.billetera as Address, user.profilescore],
+        args: [billeteraUsuario.billetera as Address, profileScore],
       })
       console.log("OJO claim-celo-ubi tx=", tx)
 
