@@ -10,7 +10,7 @@ import path from 'path';
 
 // NOTA: Este script está diseñado para pruebas E2E remotas contra https://learn.tg:9001
 // No tiene acceso a la base de datos PostgreSQL directamente.
-// La verificación de eventos depende de que la API de métricas (/api/metrics, /api/track-event)
+// La verificación de eventos depende de que la API de métricas (/api/metrics)
 // esté funcionando correctamente en el servidor desplegado.
 // Cualquier cambio en los endpoints de la API debe ser desplegado primero en https://learn.tg:9001
 // antes de ejecutar este script para validación.
@@ -329,101 +329,8 @@ function generateUXReport(allAnalyses) {
 
 // --- Funciones para verificación del sistema de métricas ---
 
-/**
- * Conectar a la base de datos PostgreSQL usando variables de entorno
- */
-function createDbPool() {
-  let host = 'localhost';
-  let port = 5432;
 
-  // Si PGHOST es un directorio de socket y existe, usarlo como socket
-  const pgHost = process.env.PGHOST;
-  if (pgHost && pgHost.startsWith('/')) {
-    // Es una ruta de socket, verificar si el directorio existe
-    if (fs.existsSync(pgHost)) {
-      host = pgHost;
-    } else {
-      console.warn(`⚠️  Directorio de socket PGHOST no encontrado: ${pgHost}. Usando localhost.`);
-    }
-  } else if (pgHost && pgHost !== 'localhost') {
-    host = pgHost;
-  }
 
-  const poolConfig = {
-    host,
-    database: process.env.PGDATABASE || 'learntg_des',
-    user: process.env.PGUSER || 'learntg',
-    password: process.env.PGPASSWORD || 'xyz',
-    port,
-  };
-
-  console.log(`🔌 Configuración de conexión a DB: ${JSON.stringify({ ...poolConfig, password: '***' })}`);
-  return new Pool(poolConfig);
-}
-
-/**
- * Consultar eventos de usuario desde la tabla userevent
- */
-async function queryUserEvents(pool, walletAddress) {
-  try {
-    const query = `
-      SELECT ue.*
-      FROM userevent ue
-      JOIN usuario u ON ue.usuario_id = u.id
-      JOIN billetera_usuario bu ON u.id = bu.usuario_id
-      WHERE bu.billetera = $1
-      ORDER BY ue.created_at DESC
-      LIMIT 50
-    `;
-    const result = await pool.query(query, [walletAddress.toLowerCase()]);
-    return result.rows;
-  } catch (error) {
-    console.error(`❌ Error consultando eventos: ${error.message}`);
-    return [];
-  }
-}
-
-/**
- * Verificar que un evento específico exista en la lista de eventos
- */
-function verifyEventExists(events, eventType, expectedData = {}) {
-  const matchingEvents = events.filter(event => event.event_type === eventType);
-
-  if (matchingEvents.length === 0) {
-    return {
-      success: false,
-      message: `Evento '${eventType}' no encontrado`
-    };
-  }
-
-  // Si se esperan datos específicos, verificar al menos un evento los cumple
-  if (Object.keys(expectedData).length > 0) {
-    const eventWithData = matchingEvents.find(event => {
-      if (!event.event_data) return false;
-      try {
-        const data = JSON.parse(event.event_data);
-        return Object.keys(expectedData).every(key =>
-          data[key] !== undefined && data[key] == expectedData[key]
-        );
-      } catch {
-        return false;
-      }
-    });
-
-    if (!eventWithData) {
-      return {
-        success: false,
-        message: `Evento '${eventType}' encontrado pero con datos incorrectos. Esperados: ${JSON.stringify(expectedData)}`
-      };
-    }
-  }
-
-  return {
-    success: true,
-    message: `✅ Evento '${eventType}' registrado correctamente`,
-    count: matchingEvents.length
-  };
-}
 
 /**
  * Obtener snapshot de métricas actuales desde la API
@@ -579,57 +486,6 @@ async function verifyMetricsPage(apiClient, cookies) {
   }
 }
 
-/**
- * Generar reporte de verificación de métricas
- */
-function generateMetricsReport(eventVerifications, metricsApiResult, metricsPageResult) {
-  console.log('\n' + '='.repeat(80));
-  console.log('📊 INFORME DE VERIFICACIÓN DEL SISTEMA DE MÉTRICAS');
-  console.log('='.repeat(80));
-
-  console.log('\n📋 EVENTOS REGISTRADOS:');
-  let totalEvents = 0;
-  let successfulEvents = 0;
-
-  eventVerifications.forEach(({ eventType, verification }) => {
-    totalEvents++;
-    if (verification.success) {
-      successfulEvents++;
-      console.log(`   ${verification.message}`);
-      if (verification.count > 1) {
-        console.log(`     (${verification.count} ocurrencias)`);
-      }
-    } else {
-      console.log(`   ❌ ${verification.message}`);
-    }
-  });
-
-  console.log(`\n   📈 Resumen eventos: ${successfulEvents}/${totalEvents} correctos`);
-
-  console.log('\n🌐 API DE MÉTRICAS:');
-  if (metricsApiResult.success) {
-    console.log('   ✅ API funciona correctamente');
-  } else {
-    console.log(`   ❌ API no disponible: ${metricsApiResult.message || metricsApiResult.error?.message}`);
-  }
-
-  console.log('\n📄 PÁGINA DE MÉTRICAS:');
-  if (metricsPageResult.success) {
-    console.log('   ✅ Página carga correctamente');
-  } else {
-    console.log(`   ❌ Página no disponible: ${metricsPageResult.message || metricsPageResult.error?.message}`);
-  }
-
-  console.log('\n' + '='.repeat(80));
-  console.log(`🎯 CONCLUSIÓN SISTEMA DE MÉTRICAS:`);
-  const allGood = successfulEvents === totalEvents && metricsApiResult.success && metricsPageResult.success;
-  if (allGood) {
-    console.log(`   ✅ SISTEMA DE MÉTRICAS FUNCIONANDO CORRECTAMENTE`);
-  } else {
-    console.log(`   ⚠️  SISTEMA DE MÉTRICAS CON PROBLEMAS - Revisar arriba`);
-  }
-  console.log('='.repeat(80) + '\n');
-}
 
 // ADVERTENCIA DE SEGURIDAD:
 // Usar clave privada desde variables de entorno. Solo para desarrollo.
@@ -1069,45 +925,11 @@ async function runTest() {
     // 📋 Verificación del sistema de métricas (sin acceso directo a PostgreSQL)
     console.log('\n📋 Verificando sistema de métricas mediante API...');
 
-    // NOTA: Esta prueba no tiene acceso directo a la base de datos PostgreSQL.
-    // La verificación completa de eventos requiere que el endpoint /api/track-event
-    // esté implementado en https://learn.tg:9001 con rate limiting activo.
-    // El propietario debe desplegar los cambios en la API primero.
 
-    // Prueba básica del endpoint track-event con evento anónimo
-    console.log('\n   🔍 Probando endpoint /api/track-event...');
-    try {
-      const testEventResponse = await apiClient.post('/api/track-event', {
-        event_type: 'test_metrics_verification',
-        event_data: {
-          test: true,
-          timestamp: new Date().toISOString(),
-          script: 'e2e-test-celo-claim',
-          wallet: account.address
-        }
-      });
-
-      if (testEventResponse.status === 200 || testEventResponse.status === 429) {
-        // Status 200 = éxito, 429 = rate limiting activo (también es éxito para esta prueba)
-        console.log(`   ✅ Endpoint /api/track-event responde correctamente`);
-        console.log(`      Status: ${testEventResponse.status}`);
-        if (testEventResponse.status === 429) {
-          console.log(`      ⚠️  Rate limiting activo (esperado si ya hubo muchas solicitudes)`);
-        } else {
-          console.log(`      📝 Event ID: ${testEventResponse.data?.eventId || 'N/A'}`);
-        }
-      } else {
-        console.log(`   ⚠️  Endpoint respondió con status inesperado: ${testEventResponse.status}`);
-      }
-    } catch (error) {
-      console.log(`   ❌ Error probando /api/track-event: ${error.message}`);
-      console.log(`      ℹ️  Asegúrate de que el endpoint esté implementado en https://learn.tg:9001`);
-    }
 
     // Verificación de que los eventos se están registrando mediante métricas agregadas
     console.log('\n   📊 Verificando métricas agregadas...');
     console.log('      ℹ️  Los eventos individuales no pueden verificarse sin acceso a DB.');
-    console.log('      ℹ️  Se asume que si /api/track-event funciona, los eventos se registran.');
     console.log('      ℹ️  Las métricas agregadas en /api/metrics mostrarán el impacto con el tiempo.');
 
     // También verificar métricas antes/después
@@ -1206,26 +1028,6 @@ async function runTest() {
     console.log('\n   10.3 Verificando página de métricas...');
     const metricsPageResult = await verifyMetricsPage(apiClient, cookies);
 
-    // 10.4 Probar endpoint de track-event
-    console.log('\n   10.4 Probando endpoint de track-event...');
-    try {
-      const testEvent = {
-        event_type: 'test_metrics',
-        event_data: { test: true, timestamp: new Date().toISOString() },
-        walletAddress: account.address,
-        token: newToken
-      };
-
-      const trackResponse = await apiClient.post('/api/track-event', testEvent);
-      if (trackResponse.status === 200) {
-        console.log(`      ✅ Endpoint de track-event funciona correctamente`);
-        console.log(`      • Event ID: ${trackResponse.data.eventId}`);
-      } else {
-        console.log(`      ⚠️  Track-event respondió con status ${trackResponse.status}`);
-      }
-    } catch (error) {
-      console.log(`      ⚠️  Error probando track-event: ${error.message}`);
-    }
 
     // 10.5 Generar reporte resumido
     console.log('\n   10.5 Resumen del sistema de métricas:');
