@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract CeloUbi is Ownable {
     // The maximum amount of CELO to be rewarded per claim (1 CELO). The actual
     // amount is a percentage of this, determined by the user's profileScore.
-    uint256 public constant MAX_REWARD = 1 ether;
+    uint256 public constant MAX_REWARD = 0.2 ether;
 
     // The cooldown period required between claims for a single user (24 hours).
     uint256 public constant COOLDOWN_PERIOD = 24 hours;

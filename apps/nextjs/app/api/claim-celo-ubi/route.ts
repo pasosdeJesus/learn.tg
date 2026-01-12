@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       if (profileScore > 50 && user.passport_nationality == user.pais_id &&
           user.pais_id == 694) {
         // Special for people of Sierra Leone
-        profileScore = 500
+        profileScore = 2500 // This way instead of 0.2CELO a user will have 1CELO
       }
       const tx = await walletClient.writeContract({
         address: contractAddress,
