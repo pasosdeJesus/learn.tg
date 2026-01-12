@@ -152,7 +152,7 @@ export default function Page({
       let dirAcross = prevDirAcross
       const currentCell = grid[row][col]
       const wordNumbers = currentCell.belongsToWords
-      if (wordNumbers.length === 1) {
+      if (wordNumbers.length === 1 && Array.isArray(placements)) {
         const placement = placements.find((p) => p.number === wordNumbers[0])
         if (placement) {
           dirAcross = placement.direction === 'across'
@@ -304,8 +304,10 @@ export default function Page({
     return <div className="mt-40">{uiMsg[locale].connectWallet}</div>
   }
 
-  const acrossClues = placements.filter((p) => p.direction === 'across')
-  const downClues = placements.filter((p) => p.direction === 'down')
+  const acrossClues = Array.isArray(placements) ? 
+    placements.filter((p) => p.direction === 'across') : []
+  const downClues = Array.isArray(placements) ? 
+    placements.filter((p) => p.direction === 'down') : []
 
   return (
     <>
