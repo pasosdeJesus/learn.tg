@@ -24,11 +24,13 @@ export async function POST(req: Request) {
 
     // Initialize viem clients
     const account = privateKeyToAccount(APP_PRIVATE_KEY)
-    const publicClient = createPublicClient({ 
+    // @ts-ignore
+    const publicClient = createPublicClient({
       chain: celo,
       transport: http()
     })
-    const walletClient = createWalletClient({ 
+    // @ts-ignore
+    const walletClient = createWalletClient({
       chain: celo,
       transport: http(),
       account
@@ -36,8 +38,8 @@ export async function POST(req: Request) {
 
     // Initialize SDK
     const engagementRewards = new EngagementRewardsSDK(
-      publicClient,
-      walletClient,
+      publicClient as any,
+      walletClient as any,
       REWARDS_CONTRACT
     )
 

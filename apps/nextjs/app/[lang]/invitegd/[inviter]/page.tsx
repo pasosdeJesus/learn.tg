@@ -61,12 +61,15 @@ export default function InviteGD({ params }:PageProps) {
     return
   }
   if (!process.env.NEXT_PUBLIC_REWARDS_CONTRACT) {
-    alert("NEXT_PUBLIC_ADDRESS not defined")
+    alert("NEXT_PUBLIC_REWARDS_CONTRACT not defined")
     return
   }
 
+  const appAddress = process.env.NEXT_PUBLIC_ADDRESS as Address
+  const rewardsContractAddress = process.env.NEXT_PUBLIC_REWARDS_CONTRACT as Address
+
   const engagementRewards = useEngagementRewards(
-    process.env.NEXT_PUBLIC_REWARDS_CONTRACT as Address
+    rewardsContractAddress
   )
 
   // Handle inviter storage and reward details
@@ -79,7 +82,7 @@ export default function InviteGD({ params }:PageProps) {
         const [amount, [, , , , , userInviterPercentage, userPercentage]] =
           await Promise.all([
             engagementRewards.getRewardAmount(),
-            engagementRewards.getAppInfo(process.env.NEXT_PUBLIC_ADDRESS),
+            engagementRewards.getAppInfo(appAddress),
           ])
 
         console.log(userInviterPercentage, userPercentage)
@@ -96,15 +99,15 @@ export default function InviteGD({ params }:PageProps) {
 
         // Check if rewards can be claimed
         const canClaim = await engagementRewards.canClaim(
-          process.env.NEXT_PUBLIC_ADDRESS,
-          session.address,
+          appAddress,
+          session.address as `0x${string}`,
         )
         setIsClaimable(canClaim)
 
         // Get recent rewards
         const events = await engagementRewards.getAppRewardEvents(
-          process.env.NEXT_PUBLIC_ADDRESS, {
-            inviter: session.address,
+          appAddress, {
+            inviter: session.address as `0x${string}`,
           }
         )
 
@@ -112,7 +115,7 @@ export default function InviteGD({ params }:PageProps) {
         const inviterEvents = events
           .filter(
             (event: any) =>
-              (event.inviter?.toLowerCase() ?? '') === (session?.address?.toLowerCase() ?? ''),
+              (event.inviter?.toLowerCase() ?? '') === (session.address!.toLowerCase() ?? ''),
           )
           .map((event: any) => ({
             invitedWallet: event.user || "Unknown",
@@ -155,7 +158,7 @@ export default function InviteGD({ params }:PageProps) {
 
       try {
         const { isWhitelisted } =
-          await identitySDK.getWhitelistedRoot(session.address)
+          await identitySDK.getWhitelistedRoot(session.address as `0x${string}`)
         setIsWhitelisted(isWhitelisted)
       } catch (error) {
         console.error("Error checking whitelist status:", error)
@@ -212,14 +215,14 @@ export default function InviteGD({ params }:PageProps) {
 
       // Get user signature
       const userSignature = await engagementRewards.signClaim(
-        process.env.NEXT_PUBLIC_ADDRESS,
+        appAddress,
         inviter as `0x${string}`,
         validUntilBlock,
       )
 
       // Submit claim transaction
       await engagementRewards.nonContractAppClaim(
-        process.env.NEXT_PUBLIC_ADDRESS,
+        appAddress,
         inviter as `0x${string}`,
         validUntilBlock,
         userSignature,
