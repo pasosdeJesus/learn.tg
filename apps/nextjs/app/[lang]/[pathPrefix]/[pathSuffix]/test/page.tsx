@@ -39,7 +39,7 @@ export default function Page({
 }) {
   const { address } = useAccount()
   const { data: session } = useSession()
-  const { data: hash } = useWriteContract()
+  const { data: hash, writeContract } = useWriteContract()
   const wagmiConfig = useConfig()
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
@@ -50,6 +50,7 @@ export default function Page({
     error,
     myGuide,
     guideNumber,
+    coursePath,
   } = useGuideData({ lang, pathPrefix, pathSuffix })
 
   const [thisGuidePath, setThisGuidePath] = useState('')
@@ -63,6 +64,7 @@ export default function Page({
   const [prevRow, setPrevRow] = useState(-1)
   const [prevCol, setPrevCol] = useState(-1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [gameStartTime, setGameStartTime] = useState<Date | null>(null)
 
   useEffect(() => {
     if (hash) {
@@ -82,6 +84,7 @@ export default function Page({
           console.log('Transaction receipt', receipt)
           // Actualizar el estado de la guía localmente para reflejar el pago
           if (myGuide) {
+            // @ts-ignore
             myGuide.receivedScholarship = true 
           }
           setFlashWarning('')
@@ -96,12 +99,37 @@ export default function Page({
   useEffect(() => {
     const loadCrossword = async () => {
       if (course && guideNumber > 0 && address && session) {
+        const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`;
+        const savedStateJSON = localStorage.getItem(storageKey);
+
+        if (savedStateJSON) {
+          try {
+            const savedState = JSON.parse(savedStateJSON);
+            if (savedState.grid && savedState.placements) {
+              console.log('Restoring crossword from localStorage');
+              setGrid(savedState.grid);
+              setPlacements(savedState.placements);
+              setGameStartTime(new Date(savedState.startTime));
+              setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`);
+              
+              const csrfToken = await getCsrfToken();
+              if (!csrfToken) throw new Error('Could not get CSRF token for restored session');
+              setGCsrfToken(csrfToken);
+
+              return; 
+            }
+          } catch (e) {
+            console.error("Failed to parse or use saved crossword state:", e);
+            localStorage.removeItem(storageKey);
+          }
+        }
+        
         try {
           const csrfToken = await getCsrfToken()
           if (!csrfToken) throw new Error('Could not get CSRF token')
           setGCsrfToken(csrfToken)
 
-          const urlc =
+          let urlc =
             `/api/crossword?courseId=${course.id}` +
             `&lang=${lang}` +
             `&prefix=${pathPrefix}` +
@@ -116,18 +144,23 @@ export default function Page({
           if (response.data.message) {
             throw new Error(response.data.message)
           }
+          
+          const startTime = new Date();
+          const initialState = {
+            grid: response.data.grid,
+            placements: response.data.placements,
+            startTime: startTime.toISOString()
+          };
+          localStorage.setItem(storageKey, JSON.stringify(initialState));
+
           setGrid(response.data.grid)
           setPlacements(response.data.placements)
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
-          // Track game start (now handled server-side in /api/crossword)
           console.log('[metrics] Game start tracked server-side')
-        } catch (err: unknown) {
+          setGameStartTime(startTime)
+        } catch (err: any) {
           console.error(err)
-          if (err instanceof Error) {
-            setFlashError(err.message)
-          } else {
-            setFlashError(String(err))
-          }
+          setFlashError(err.message)
         }
       }
     }
@@ -140,6 +173,16 @@ export default function Page({
     const newGrid = [...grid]
     newGrid[row][col] = { ...newGrid[row][col], userInput: value.toUpperCase() }
     setGrid(newGrid)
+
+    if (course && guideNumber > 0 && address) {
+      const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`;
+      const currentState = {
+          grid: newGrid,
+          placements: placements,
+          startTime: gameStartTime?.toISOString()
+      };
+      localStorage.setItem(storageKey, JSON.stringify(currentState));
+    }
 
     if (value.length === 1) {
       let prevDirAcross = true
@@ -229,13 +272,22 @@ export default function Page({
             (response.data.message || ''),
         )
       } else {
+        if (course && guideNumber > 0 && address) {
+            const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`;
+            localStorage.removeItem(storageKey);
+            console.log("Crossword completed. Cleared saved state.");
+        }
+        const wasAlreadyCompleted = myGuide?.completed || false
 
         if (myGuide) {
+          // @ts-ignore
           myGuide.completed = true
         }
         setFlashSuccess(response.data.message || '')
 
         // Track game completion and guide completion
+        const score = 100 // Perfect score since no mistakes
+        const timeMs = gameStartTime ? new Date().getTime() - gameStartTime.getTime() : 0
 
         console.log('[metrics] Game completion tracked server-side')
 
@@ -245,16 +297,9 @@ export default function Page({
           setScholarshipTx(response.data.scholarshipResult)
         }
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error(error)
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { data?: { error?: string } } }
-        setFlashError(err.response?.data?.error || 'Unknown error')
-      } else if (error instanceof Error) {
-        setFlashError(error.message)
-      } else {
-        setFlashError(String(error))
-      }
+      setFlashError(error.response?.data?.error || error.message)
     } finally {
       setIsSubmitting(false)
     }
