@@ -46,7 +46,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
       viewTransaction: { es: 'Ver transacción', en: 'View Transaction' },
       successMessage: {
         es: `¡Reclamo exitoso! Has recibido {amount} Celo de Learn.tg-IBU.`,
-        en: `Claim successful! You have received {amount} Celo of Leanr.tg-UBI.`,
+        en: `Claim successful! You have received {amount} Celo of Learn.tg-UBI.`,
       },
     }
     let message = translations[key]?.[lang] || key;

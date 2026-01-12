@@ -39,7 +39,7 @@ describe('CeloUbiButton', () => {
         <CeloUbiButton lang="en" />
       </SessionProvider>
     )
-    expect(screen.getByText('Claim Celo UBI')).toBeInTheDocument()
+    expect(screen.getByText('Claim Learn.tg-UBI')).toBeInTheDocument()
     expect(screen.getByRole('button')).toBeDisabled()
   })
 
@@ -50,7 +50,7 @@ describe('CeloUbiButton', () => {
         <CeloUbiButton lang="es" />
       </SessionProvider>
     )
-    expect(screen.getByText('Reclamar UBI Celo')).toBeInTheDocument()
+    expect(screen.getByText('Reclamar Learn.tg-IBU')).toBeInTheDocument()
     expect(screen.getByRole('button')).not.toBeDisabled()
   })
 
@@ -59,7 +59,7 @@ describe('CeloUbiButton', () => {
     const mockAmount = '10';
     mockAxiosPost.mockResolvedValue({ 
       data: { 
-        message: `¡Reclamo exitoso! Has recibido ${mockAmount} Celo UBI.`,
+        message: `¡Reclamo exitoso! Has recibido ${mockAmount} Celo de Learn.tg-IBU.`,
         txHash: '0xabc',
         amount: mockAmount
       }
@@ -83,7 +83,7 @@ describe('CeloUbiButton', () => {
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toBeInTheDocument();
     expect(screen.getByText('Reclamo Exitoso')).toBeInTheDocument();
-    expect(screen.getByText(`¡Reclamo exitoso! Has recibido ${mockAmount} Celo UBI.`)).toBeInTheDocument();
+    expect(screen.getByText(`¡Reclamo exitoso! Has recibido ${mockAmount} Celo de Learn.tg-IBU.`)).toBeInTheDocument();
     expect(screen.getByText('Ver transacción')).toHaveAttribute('href', `${process.env.NEXT_PUBLIC_EXPLORER_TX}/0xabc`);
   });
 

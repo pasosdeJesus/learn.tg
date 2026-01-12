@@ -12,6 +12,7 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
+import type { Processor } from 'unified'
 import { useAccount } from 'wagmi'
 
 import CeloUbiButton from '@/components/CeloUbiButton'
@@ -62,7 +63,7 @@ export default function Page() {
         )
     }
 
-    const processor = (unified() as unknown)
+    const processor = (unified() as any)
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkDirective)

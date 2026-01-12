@@ -82,7 +82,6 @@ export default function Page({
           console.log('Transaction receipt', receipt)
           // Actualizar el estado de la guía localmente para reflejar el pago
           if (myGuide) {
-            // @ts-expect-error - mock assignment to update guide status
             myGuide.receivedScholarship = true 
           }
           setFlashWarning('')
@@ -232,7 +231,6 @@ export default function Page({
       } else {
 
         if (myGuide) {
-            // @ts-expect-error - mock assignment to update guide status
           myGuide.completed = true
         }
         setFlashSuccess(response.data.message || '')

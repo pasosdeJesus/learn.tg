@@ -5,8 +5,10 @@ import Page from '../page'
 import { render, screen, act } from '@testing-library/react'
 import axios from 'axios'
 import { unified } from 'unified'
+import type { Processor } from 'unified'
 import React from 'react'
 import { SessionProvider } from 'next-auth/react'
+import type { Session } from 'next-auth'
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { celo } from 'viem/chains'
 import { useParams } from 'next/navigation'
@@ -76,7 +78,7 @@ describe('Page', () => {
       use: mockUse,
       parse: mockParse,
       process: mockProcess,
-    } as unknown)
+    } as unknown as Processor)
     vi.stubGlobal('process', {
       env: { NEXT_PUBLIC_AUTH_URL: 'http://localhost:3000' },
     })
@@ -104,7 +106,7 @@ describe('Page', () => {
     await act(async () => {
       render(
         <WagmiProvider config={config}>
-          <SessionProvider session={mockSession as unknown}>
+          <SessionProvider session={mockSession as any}>
             <Page />
           </SessionProvider>
         </WagmiProvider>

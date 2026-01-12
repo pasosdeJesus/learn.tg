@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, Mock } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import Page from '../page'
@@ -17,11 +17,11 @@ vi.mock('next/navigation', () => ({
 
 // Mock axios
 interface AxiosGetReturn { data: unknown }
-const axiosGet = vi.fn(
-  (..._: unknown[]): Promise<AxiosGetReturn> => Promise.resolve({ data: [] }),
+const axiosGet = vi.fn<[url: string, ...rest: unknown[]], Promise<AxiosGetReturn>>(
+  (url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => Promise.resolve({ data: [] }),
 )
 vi.mock('axios', () => ({
-  default: { get: (...args: unknown[]) => axiosGet(...args) },
+  default: { get: (url: string, ...rest: unknown[]) => axiosGet(url, ...rest) },
 }))
 
 // Mock next-auth/react
@@ -127,7 +127,6 @@ describe('Course List Page Component', () => {
     useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
     axiosGet.mockReset()
     // Mock alert to avoid jsdom errors
-    // @ts-expect-error - mock global alert
     global.window.alert = vi.fn()
     // Mock environment variables
     process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = API_BUSCA_URL
@@ -159,7 +158,7 @@ describe('Course List Page Component', () => {
     const mockGuideStatus1 = { completed: true, receivedScholarship: false }
     const mockGuideStatus2 = { completed: false, receivedScholarship: true }
 
-    axiosGet.mockImplementation((url: string) => {
+    axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
       if (url.startsWith(API_BUSCA_URL)) {
         return Promise.resolve({ data: [mockCourse] })
       }
@@ -194,12 +193,12 @@ describe('Course List Page Component', () => {
     })
 
     // Verify guide-status calls were made
-    const guideStatusCalls = axiosGet.mock.calls.filter(call =>
+    const guideStatusCalls = axiosGet.mock.calls.filter((call: [string, ...unknown[]]) =>
       call[0] && typeof call[0] === 'string' && call[0].includes('/api/guide-status')
     )
     expect(guideStatusCalls.length).toBe(2)
     
-    const guideNumbers = guideStatusCalls.map(call => {
+    const guideNumbers = guideStatusCalls.map((call: [string, ...unknown[]]) => {
       const url = call[0] as string
       const match = url.match(/guideNumber=(\d+)/)
       return match ? parseInt(match[1]) : 0
@@ -212,7 +211,7 @@ describe('Course List Page Component', () => {
     const mockGuideStatus1 = { completed: true, receivedScholarship: true }
     const mockGuideStatus2 = { completed: false, receivedScholarship: false }
 
-    axiosGet.mockImplementation((url: string) => {
+    axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
       if (url.startsWith(API_BUSCA_URL)) {
         return Promise.resolve({ data: [mockCourse] })
       }
@@ -261,7 +260,7 @@ describe('Course List Page Component', () => {
     useSessionMock.mockReturnValue({ data: null, status: 'unauthenticated' })
     useAccountMock.mockReturnValue({ address: undefined, isConnected: false })
 
-    axiosGet.mockImplementation((url: string) => {
+    axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
         if (url.startsWith(API_BUSCA_URL)) {
             return Promise.resolve({ data: [mockCourse] })
         }
@@ -286,14 +285,14 @@ describe('Course List Page Component', () => {
       expect(screen.getByText(/GoodDollar Course/)).toBeInTheDocument()
     })
 
-    const guideStatusCalls = axiosGet.mock.calls.filter(call =>
+    const guideStatusCalls = axiosGet.mock.calls.filter((call: [string, ...unknown[]]) =>
       call[0] && typeof call[0] === 'string' && call[0].includes('/api/guide-status')
     )
     expect(guideStatusCalls.length).toBe(0)
   })
 
   it('handles guide-status API errors gracefully', async () => {
-    axiosGet.mockImplementation((url: string) => {
+    axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
       if (url.startsWith(API_BUSCA_URL)) {
         return Promise.resolve({ data: [mockCourse] })
       }

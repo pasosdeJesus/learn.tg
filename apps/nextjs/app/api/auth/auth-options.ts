@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
           req,
           new Date(),
         )
-        const headersList = req.headers;
+        const headersList = req.headers!;
         console.log("OJO headersList=", headersList)
         const forwardedFor = headersList["x-forwarded-for"];
         console.log("OJO forwardedFor=", forwardedFor)
@@ -144,7 +144,7 @@ export const authOptions: NextAuthOptions = {
               console.log(new Date(), 'cUser=', cUser)
               console.log(
                 new Date(), 
-                'cUser.current_sign_in_ip=', cUser.current_sign_in_ip
+                'cUser.current_sign_in_ip=', cUser?.current_sign_in_ip
               )
               const uWalletUser: any = {
                 token: result.data.nonce,
@@ -156,9 +156,9 @@ export const authOptions: NextAuthOptions = {
                 .where('usuario_id', '=', (puser.rows[0] as any).usuario_id)
                 .execute()
               console.log(new Date(), 'After update rUpdate=', rUpdate)
-              let uUser: Updatable<Usuario> = {
-                last_sign_in_ip: cUser.current_sign_in_ip,
-                last_sign_in_at: cUser.current_sign_in_at,
+              let uUser: Updateable<Usuario> = {
+                last_sign_in_ip: cUser?.current_sign_in_ip ?? null,
+                last_sign_in_at: cUser?.current_sign_in_at ?? null,
                 current_sign_in_ip: ip,
                 current_sign_in_at: now,
                 updated_at: now,
