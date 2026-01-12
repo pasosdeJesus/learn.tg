@@ -1,3 +1,4 @@
+// @ts-ignore
 import { EngagementRewardsSDK } from '@goodsdks/engagement-sdk'
 import { NextResponse } from 'next/server'
 import { createWalletClient, http, parseEther, createPublicClient } from 'viem'
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
 
 
     // Authorization
-    let billeteraUsuario = await db
+    const billeteraUsuario = await db
       .selectFrom('billetera_usuario')
       .where('billetera', '=', walletAddress)
       .selectAll()

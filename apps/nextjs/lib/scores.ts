@@ -33,9 +33,9 @@ export async function updateUserAndCoursePoints(
   `.execute(db)
 
   console.log("OJO guidesUsuario=", guidesUsuario)
-  let pointsGuidesCourse: CourseData = {}
-  let earnedCourse: CourseData = {}
-  let amountGuidesCourse: CourseData = {}
+  const pointsGuidesCourse: CourseData = {}
+  const earnedCourse: CourseData = {}
+  const amountGuidesCourse: CourseData = {}
 
   for (const guideUsuario of guidesUsuario.rows) {
     console.log("  OJO guideUsuario=", guideUsuario)
@@ -74,7 +74,7 @@ export async function updateUserAndCoursePoints(
     .execute()) || []
     console.log(" OJO userCourse=", userCourse)
     if (userCourse.length == 0) {
-      let cp: Insertable<CourseUsuario> = {
+      const cp: Insertable<CourseUsuario> = {
         usuario_id: user.id,
         proyectofinanciero_id: currentCourseId,
         points: 0,
@@ -82,7 +82,7 @@ export async function updateUserAndCoursePoints(
         amountscholarship: 0,
         percentagecompleted: 0,
       }
-      let icp = await db
+      const icp = await db
       .insertInto('course_usuario')
       .values(cp)
       .returningAll()

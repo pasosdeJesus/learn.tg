@@ -1,13 +1,13 @@
 'use client'
 
-import { describe, it, expect, beforeEach, vi, type Mocked, type Mock } from 'vitest'
+import { describe, it, expect, beforeEach, vi, type Mocked, type Mock, type MockedFunction } from 'vitest'
 import Page from '../page'
 import { render, screen, act } from '@testing-library/react'
 import axios from 'axios'
 import { unified } from 'unified'
 import React from 'react'
 import { SessionProvider } from 'next-auth/react'
-import { WagmiProvider, createConfig, http, useAccount } from 'wagmi'
+import { WagmiProvider, createConfig, http } from 'wagmi'
 import { celo } from 'viem/chains'
 import { useParams } from 'next/navigation'
 
@@ -62,7 +62,7 @@ const config = createConfig({
 
 describe('Page', () => {
   const mockAxios = axios as Mocked<typeof axios>
-  const mockUnified = unified as any
+  const mockUnified = unified as MockedFunction<typeof unified>
   const mockUseGuideData = useGuideData as Mock
 
   const mockProcess = vi.fn()
@@ -76,7 +76,7 @@ describe('Page', () => {
       use: mockUse,
       parse: mockParse,
       process: mockProcess,
-    } as any)
+    } as unknown)
     vi.stubGlobal('process', {
       env: { NEXT_PUBLIC_AUTH_URL: 'http://localhost:3000' },
     })
@@ -84,11 +84,6 @@ describe('Page', () => {
 
   it('should render the CeloUbiButton when the markdown contains the magic string', async () => {
     const markdownContent = 'This is some content with the magic button: {CeloUbiButton}'
-    const params = {
-      lang: 'en',
-      pathPrefix: 'guia',
-      pathSuffix: 'celo-ubi',
-    }
 
     mockUseGuideData.mockReturnValue({
       course: { id: 1, idioma: 'en', titulo: 'Test Course', sinBilletera: false, conBilletera: true },
@@ -109,7 +104,7 @@ describe('Page', () => {
     await act(async () => {
       render(
         <WagmiProvider config={config}>
-          <SessionProvider session={mockSession as any}>
+          <SessionProvider session={mockSession as unknown}>
             <Page />
           </SessionProvider>
         </WagmiProvider>

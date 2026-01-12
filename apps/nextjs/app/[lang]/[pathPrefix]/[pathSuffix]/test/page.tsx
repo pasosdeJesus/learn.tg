@@ -39,7 +39,7 @@ export default function Page({
 }) {
   const { address } = useAccount()
   const { data: session } = useSession()
-  const { data: hash, writeContract } = useWriteContract()
+  const { data: hash } = useWriteContract()
   const wagmiConfig = useConfig()
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
@@ -50,7 +50,6 @@ export default function Page({
     error,
     myGuide,
     guideNumber,
-    coursePath,
   } = useGuideData({ lang, pathPrefix, pathSuffix })
 
   const [thisGuidePath, setThisGuidePath] = useState('')
@@ -64,7 +63,6 @@ export default function Page({
   const [prevRow, setPrevRow] = useState(-1)
   const [prevCol, setPrevCol] = useState(-1)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [gameStartTime, setGameStartTime] = useState<Date | null>(null)
 
   useEffect(() => {
     if (hash) {
@@ -84,7 +82,7 @@ export default function Page({
           console.log('Transaction receipt', receipt)
           // Actualizar el estado de la guía localmente para reflejar el pago
           if (myGuide) {
-            // @ts-ignore
+            // @ts-expect-error - mock assignment to update guide status
             myGuide.receivedScholarship = true 
           }
           setFlashWarning('')
@@ -104,7 +102,7 @@ export default function Page({
           if (!csrfToken) throw new Error('Could not get CSRF token')
           setGCsrfToken(csrfToken)
 
-          let urlc =
+          const urlc =
             `/api/crossword?courseId=${course.id}` +
             `&lang=${lang}` +
             `&prefix=${pathPrefix}` +
@@ -124,10 +122,13 @@ export default function Page({
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
           // Track game start (now handled server-side in /api/crossword)
           console.log('[metrics] Game start tracked server-side')
-          setGameStartTime(new Date())
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error(err)
-          setFlashError(err.message)
+          if (err instanceof Error) {
+            setFlashError(err.message)
+          } else {
+            setFlashError(String(err))
+          }
         }
       }
     }
@@ -229,17 +230,14 @@ export default function Page({
             (response.data.message || ''),
         )
       } else {
-        const wasAlreadyCompleted = myGuide?.completed || false
 
         if (myGuide) {
-            // @ts-ignore
+            // @ts-expect-error - mock assignment to update guide status
           myGuide.completed = true
         }
         setFlashSuccess(response.data.message || '')
 
         // Track game completion and guide completion
-        const score = 100 // Perfect score since no mistakes
-        const timeMs = gameStartTime ? new Date().getTime() - gameStartTime.getTime() : 0
 
         console.log('[metrics] Game completion tracked server-side')
 
@@ -249,9 +247,16 @@ export default function Page({
           setScholarshipTx(response.data.scholarshipResult)
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error)
-      setFlashError(error.response?.data?.error || error.message)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { error?: string } } }
+        setFlashError(err.response?.data?.error || 'Unknown error')
+      } else if (error instanceof Error) {
+        setFlashError(error.message)
+      } else {
+        setFlashError(String(error))
+      }
     } finally {
       setIsSubmitting(false)
     }

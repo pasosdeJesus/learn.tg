@@ -138,12 +138,12 @@ export async function GET(req: NextRequest) {
       let wordNumber = 1
 
       console.log('** cwd=', process.cwd())
-      let fname = `../../resources/${lang}/${prefix}/${guide}.md`
+      const fname = `../../resources/${lang}/${prefix}/${guide}.md`
       console.log('** fname=', fname)
-      let md = await readFile(fname, 'utf8')
+      const md = await readFile(fname, 'utf8')
       console.log(md)
 
-      let processor = unified()
+      const processor = unified()
         .use(remarkParse)
         .use(remarkGfm)
         .use(remarkDirective)
@@ -152,14 +152,14 @@ export async function GET(req: NextRequest) {
         // @ts-ignore
         .use(remarkRehype, { allowDangerousHtml: true })
         .use(rehypeStringify, { allowDangerousHtml: true })
-      let html = processor.processSync(md).toString()
+      const html = processor.processSync(md).toString()
 
-      let qa = (global as any).fillInTheBlank || []
+      const qa = (global as any).fillInTheBlank || []
 
-      let scrambled = []
-      let words = []
+      const scrambled = []
+      const words = []
       while (qa.length > 0) {
-        let np = Math.floor(Math.random() * qa.length)
+        const np = Math.floor(Math.random() * qa.length)
         scrambled.push(qa[np])
         words.push(qa[np].answer)
         qa.splice(np, 1)
@@ -167,26 +167,26 @@ export async function GET(req: NextRequest) {
       console.log('scrambled=', scrambled)
       if (scrambled.length > 0) {
         // Save in Database
-        let layout = clg.generateLayout(scrambled)
+        const layout = clg.generateLayout(scrambled)
         console.log('** layout=', layout)
-        let rows = layout.rows
-        let cols = layout.cols
+        const rows = layout.rows
+        const cols = layout.cols
         console.log('** rows=', rows)
         console.log('** cols=', cols)
         newGrid = initializeGrid(rows, cols)
-        let table = layout.table // table as two-dimensional array
+        const table = layout.table // table as two-dimensional array
         console.log('** table=', table)
-        let output_html = layout.table_string // table as plain text (with HTML line breaks)
+        const output_html = layout.table_string // table as plain text (with HTML line breaks)
         console.log('** output_html=', output_html)
-        let output_json = layout.result
+        const output_json = layout.result
         console.log('** output_json=', output_json)
 
         for (let index = 0; index < output_json.length; index++) {
-          let word = output_json[index].answer
-          let clue = output_json[index].clue
-          let row = output_json[index].starty - 1
-          let col = output_json[index].startx - 1
-          let direction = output_json[index].orientation
+          const word = output_json[index].answer
+          const clue = output_json[index].clue
+          const row = output_json[index].starty - 1
+          const col = output_json[index].startx - 1
+          const direction = output_json[index].orientation
           if (direction == 'down' || direction == 'across') {
             for (let i = 0; i < word.length; i++) {
               const currentRow = direction === 'down' ? row + i : row
@@ -197,7 +197,7 @@ export async function GET(req: NextRequest) {
                 ', currentCol=',
                 currentCol,
               )
-              let ebelongs =
+              const ebelongs =
                 typeof newGrid[currentRow][currentCol] == 'undefined'
                   ? []
                   : newGrid[currentRow][currentCol].belongsToWords
@@ -228,12 +228,12 @@ export async function GET(req: NextRequest) {
         console.log('** newPlacements=', newPlacements)
       }
 
-      let now = new Date()
-      let uWalletUser: Updateable<BilleteraUsuario> = {
+      const now = new Date()
+      const uWalletUser: Updateable<BilleteraUsuario> = {
         answer_fib: words.join(' | '),
         updated_at: now,
       }
-      let rUpdate = await db
+      const rUpdate = await db
         .updateTable('billetera_usuario')
         .set(uWalletUser)
         .where('id', '=', billeteraUsuario?.id)

@@ -99,13 +99,13 @@ export default function ProfileForm({ params }: PageProps) {
       alert('Problem with session, disconnect and connect again')
       return
     }
-    let csrfToken = await getCsrfToken()
-    let data = {
+    const csrfToken = await getCsrfToken()
+    const data = {
       lang: lang,
       walletAddress: session.address,
       token: csrfToken,
     }
-    let url = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/update-scores`
+    const url = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/update-scores`
     console.log(`Posting to ${url}`)
     axios
       .post(url, data, {
@@ -226,7 +226,7 @@ export default function ProfileForm({ params }: PageProps) {
 
         let url = process.env.NEXT_PUBLIC_API_USERS
         url += `?filtro[walletAddress]=${session!.address || ''}`
-        let csrfToken = await getCsrfToken()
+        const csrfToken = await getCsrfToken()
         url += `&walletAddress=${session!.address || ''}&token=${csrfToken}`
         console.log('OJO url=', url)
 
@@ -239,9 +239,9 @@ export default function ProfileForm({ params }: PageProps) {
         if (data.length != 1) {
           throw new Error(`Expected data.length == 1`)
         }
-        let rUser = data[0]
+        const rUser = data[0]
         console.log('rUser=', rUser)
-        let locProfile: UserProfile = {
+        const locProfile: UserProfile = {
           country: rUser.pais_id,
           email: rUser.email,
           groups: '',
@@ -287,7 +287,7 @@ export default function ProfileForm({ params }: PageProps) {
         alert('Undefined NEXT_PUBLIC_API_UPDATE_USER')
         return
       }
-      let reg = {
+      const reg = {
         nombre: profile.name,
         email: profile.email,
         nusuario: profile.uname,
@@ -295,7 +295,7 @@ export default function ProfileForm({ params }: PageProps) {
         pais_id: profile.country,
       }
 
-      let csrfToken = await getCsrfToken()
+      const csrfToken = await getCsrfToken()
       let url = process.env.NEXT_PUBLIC_API_UPDATE_USER.replace(
         'usuario_id',
         profile.userId,

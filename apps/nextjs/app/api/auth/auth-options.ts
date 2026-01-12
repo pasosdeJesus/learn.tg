@@ -82,17 +82,17 @@ export const authOptions: NextAuthOptions = {
               console.log(new Date(), 'OJO Submitted ', sr)
             }
             const db = newKyselyPostgresql()
-            let now = new Date()
+            const now = new Date()
 
-            let puser = await sql<number>`
-              SELECT usuario_id
+            const puser = await sql<number>`
+              SELECT usuario_id 
               FROM billetera_usuario
               WHERE billetera=${sql.val(siwe.address)}`.execute(db)
             console.log(new Date(), 'puser=', puser)
             console.log(new Date(), 'puser.rows=', puser.rows)
 
             if (puser.rows.length == 0) {
-              let address15 =
+              const address15 =
                 siwe.address.slice(0, 7) + '...' + siwe.address.slice(-5)
               console.log(
                 new Date(),
@@ -101,7 +101,7 @@ export const authOptions: NextAuthOptions = {
                 ', address15.length',
                 address15.length,
               )
-              let nuser: Insertable<Usuario> = {
+              const nuser: Insertable<Usuario> = {
                 nombre: siwe.address,
                 nusuario: address15,
                 email: `${address15}@localhost`,
@@ -110,21 +110,21 @@ export const authOptions: NextAuthOptions = {
                 created_at: now,
                 updated_at: now,
               }
-              let iuser = await db
+              const iuser = await db
                 .insertInto('usuario')
                 .values(nuser)
                 .returningAll()
                 .executeTakeFirstOrThrow()
               console.log(new Date(), 'After insert iuser=', iuser)
 
-              let nWalletUser: Insertable<BilleteraUsuario> = {
+              const nWalletUser: Insertable<BilleteraUsuario> = {
                 usuario_id: iuser.id,
                 billetera: siwe.address,
                 token: result.data.nonce,
                 created_at: now,
                 updated_at: now,
               }
-              let iWalletUser = await db
+              const iWalletUser = await db
                 .insertInto('billetera_usuario')
                 .values(nWalletUser)
                 .returningAll()
@@ -136,7 +136,7 @@ export const authOptions: NextAuthOptions = {
                 'existe ',
                 (puser.rows[0] as any).usuario_id,
               )
-              let cUser = await db
+              const cUser = await db
                 .selectFrom('usuario')
                 .where('id', '=', (puser.rows[0] as any).usuario_id)
                 .selectAll()
@@ -146,11 +146,11 @@ export const authOptions: NextAuthOptions = {
                 new Date(), 
                 'cUser.current_sign_in_ip=', cUser.current_sign_in_ip
               )
-              let uWalletUser: any = {
+              const uWalletUser: any = {
                 token: result.data.nonce,
                 updated_at: now,
               }
-              let rUpdate = await db
+              const rUpdate = await db
                 .updateTable('billetera_usuario')
                 .set(uWalletUser)
                 .where('usuario_id', '=', (puser.rows[0] as any).usuario_id)

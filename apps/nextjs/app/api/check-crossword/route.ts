@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       .replace(/ü/gi, 'U')
 
   try {
-    let mistakesInCW: number[] = []
+    const mistakesInCW: number[] = []
     let retMessage = ''
     let scholarshipResult: any = null
     const requestJson = await req.json()
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
 
     const db = newKyselyPostgresql()
 
-    let billeteraUsuario = await db
+    const billeteraUsuario = await db
       .selectFrom('billetera_usuario')
       .where('billetera', '=', walletAddress)
       .selectAll()
@@ -147,15 +147,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: msg[locale].tokenMismatch }, { status: 401 });
     }
 
-    let words = billeteraUsuario.answer_fib
+    const words = billeteraUsuario.answer_fib
       ? billeteraUsuario.answer_fib.split(' | ')
       : []
     console.log('words=', words)
     for (let i = 0; i < words.length; i++) {
       let nrow = placements[i].row
       let ncol = placements[i].col
-      let dir = placements[i].direction
-      let word = words[i]
+      const dir = placements[i].direction
+      const word = words[i]
       for (let j = 0; j < word.length; j++) {
         if (
           nrow >= grid.length ||
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let usuario = await db
+    const usuario = await db
       .selectFrom('usuario')
       .where('id', '=', billeteraUsuario.usuario_id)
       .selectAll()
@@ -228,14 +228,14 @@ export async function POST(req: NextRequest) {
       .execute()
     if (mistakesInCW.length == 0) {
       if (ug.length == 0) {
-        let gp: Insertable<GuideUsuario> = {
+        const gp: Insertable<GuideUsuario> = {
           usuario_id: billeteraUsuario.usuario_id,
           actividadpf_id: actividadpfId,
           amountpaid: 0,
           profilescore: usuario.profilescore || 0,
           points: 1
         }
-        let igp = await db
+        const igp = await db
         .insertInto('guide_usuario')
         .values(gp)
         .returningAll()
@@ -358,7 +358,7 @@ export async function POST(req: NextRequest) {
           retMessage += msg[locale].atLeast50
         } else if (canSubmit) {
           try {
-            let tx: Address = await callWriteFun(
+            const tx: Address = await callWriteFun(
               publicClient,
               account,
               contract.write.submitGuideResult,

@@ -16,12 +16,12 @@ vi.mock('next/navigation', () => ({
 }))
 
 // Mock axios
-interface AxiosGetReturn { data: any }
+interface AxiosGetReturn { data: unknown }
 const axiosGet = vi.fn(
-  (..._args: any[]): Promise<AxiosGetReturn> => Promise.resolve({ data: [] }),
+  (..._: unknown[]): Promise<AxiosGetReturn> => Promise.resolve({ data: [] }),
 )
 vi.mock('axios', () => ({
-  default: { get: (...args: any[]) => axiosGet(...args) },
+  default: { get: (...args: unknown[]) => axiosGet(...args) },
 }))
 
 // Mock next-auth/react
@@ -70,7 +70,7 @@ vi.mock('unified', () => ({
 
 // Mock Button component
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => (
+  Button: ({ children, ...props }: React.ComponentPropsWithoutRef<'button'>) => (
     <button {...props}>{children}</button>
   ),
 }))
@@ -127,7 +127,7 @@ describe('Course List Page Component', () => {
     useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
     axiosGet.mockReset()
     // Mock alert to avoid jsdom errors
-    // @ts-ignore
+    // @ts-expect-error - mock global alert
     global.window.alert = vi.fn()
     // Mock environment variables
     process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = API_BUSCA_URL

@@ -19,7 +19,7 @@ export async function callWriteFun(
   contractParams: any,
   indent: any,
 ) {
-  let sindent = indent > 0 ? ' '.repeat(indent - 1) : ''
+  const sindent = indent > 0 ? ' '.repeat(indent - 1) : ''
   console.log(
     sindent,
     'Calling function',
@@ -32,11 +32,11 @@ export async function callWriteFun(
     tx = await contractFun(contractParams)
   } catch (e) {
     console.log(sindent, '* Reintentando con nonce')
-    let nonce = await publicClient.getTransactionCount({
+    const nonce = await publicClient.getTransactionCount({
       address: account.address,
       blockTag: 'pending', // includes pending transactions
     })
-    let nextNonce = nonce + 1
+    const nextNonce = nonce + 1
     console.log(sindent, 'OJO  nextNonce=', nextNonce)
     tx = await contractFun(contractParams, { account, nonce: nextNonce })
   }

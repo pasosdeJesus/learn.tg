@@ -100,11 +100,11 @@ export async function POST(req: NextRequest) {
       if (identitySDK) {
         const { isWhitelisted, root } = await identitySDK.getWhitelistedRoot(walletAddress)
         console.log("root=", root, ", walletAddress=", walletAddress)
-        if (root != "" && 
+        if (root && root.length > 0 &&
             root.toLowerCase() != walletAddress.toLowerCase()) {
           retMessage += '\n' + "Please  use your root goodDollar wallet"
           console.log(retMessage)
-        } else  if (root != "" && 
+        } else  if (root && root.length > 0 &&
             root.toLowerCase() == walletAddress.toLowerCase() &&
                    isWhitelisted) {
             whitelisted = true

@@ -6,7 +6,9 @@
  */
 
 import axios from 'axios'
+// @ts-ignore
 import { useEngagementRewards } from "@goodsdks/engagement-sdk"
+// @ts-ignore
 import { useIdentitySDK } from "@goodsdks/react-hooks"
 import { CopyIcon, CheckIcon } from "lucide-react"
 import { useSession, getCsrfToken } from 'next-auth/react'
@@ -109,10 +111,10 @@ export default function InviteGD({ params }:PageProps) {
         // Filter and map events where this wallet was the inviter
         const inviterEvents = events
           .filter(
-            (event) =>
-              event.inviter?.toLowerCase() === session.address.toLowerCase(),
+            (event: any) =>
+              (event.inviter?.toLowerCase() ?? '') === (session?.address?.toLowerCase() ?? ''),
           )
-          .map((event) => ({
+          .map((event: any) => ({
             invitedWallet: event.user || "Unknown",
             rewardAmount: formatAmount(
               BigInt(event.inviterAmount || 0),
@@ -222,7 +224,7 @@ export default function InviteGD({ params }:PageProps) {
         validUntilBlock,
         userSignature,
         appSignature,
-        (hash) => {
+        (hash: string) => {
           alert(`Succes. Hash: ${hash}`)
         },
       )

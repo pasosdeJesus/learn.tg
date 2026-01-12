@@ -1,7 +1,7 @@
 'use client'
 
 import axios, { AxiosError } from 'axios'
-import { useSession, getCsrfToken } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
@@ -25,7 +25,6 @@ export default function Page() {
   const { address } = useAccount()
   const { data: session } = useSession()
   const { lang, pathPrefix, pathSuffix } = params as { lang: string; pathPrefix: string; pathSuffix: string }
-  const [csrfToken, setCsrfToken] = useState('')
 
   const { 
     course, 
@@ -48,16 +47,6 @@ export default function Page() {
   const [showGoodDollarButton, setShowGoodDollarButton] = useState(false)
   const [showCeloUbiButton, setShowCeloUbiButton] = useState(false)
 
-  // Get CSRF token when address is available
-  useEffect(() => {
-    if (address) {
-      getCsrfToken().then(token => {
-        setCsrfToken(token || '')
-      })
-    } else {
-      setCsrfToken('')
-    }
-  }, [address])
 
   const htmlDeMd = useCallback((md: string) => {
     if (!md) return ''
@@ -73,7 +62,7 @@ export default function Page() {
         )
     }
 
-    const processor = (unified() as any)
+    const processor = (unified() as unknown)
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkDirective)
@@ -84,16 +73,17 @@ export default function Page() {
     const html = processor.processSync(processedMd).toString()
 
     if (typeof window !== 'undefined') {
-      const fillInTheBlankQuestions = (window as Window & { fillInTheBlank?: any[] }).fillInTheBlank || []
+      const fillInTheBlankQuestions = (window as Window & { fillInTheBlank?: unknown[] }).fillInTheBlank || []
       
       const processedQuestions = fillInTheBlankQuestions.map(q => {
-        if (q.answer === '{last4WalletAddress}') {
+        const question = q as { answer: string }
+        if (question.answer === '{last4WalletAddress}') {
           return {
-            ...q,
-            answer: address ? address.slice(-4) : 'xxxx', 
+            ...question,
+            answer: address ? address.slice(-4) : 'xxxx',
           }
         }
-        return q
+        return question
       })
 
       localStorage.setItem(

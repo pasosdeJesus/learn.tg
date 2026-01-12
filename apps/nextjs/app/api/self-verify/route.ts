@@ -68,7 +68,7 @@ export async function POST(req: Request) {
 
       const db = newKyselyPostgresql()
 
-      let qBilleteraUsuario =
+      const qBilleteraUsuario =
         await sql<any>`select usuario_id from billetera_usuario where lower(billetera) = lower(${wallet})`.execute(
           db,
         )
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       if (ISOcode == 'D<<') {
         ISOcode = 'DEU'
       }
-      let qCountryId =
+      const qCountryId =
         await sql<any>`select id from msip_pais where lower(alfa3) = lower(${ISOcode})`.execute(
           db,
         )
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
       if (qCountryId.rows.length != 1 || qCountryId.rows[0]?.id === null) {
         throw new Error(`Country ${ISOcode} not found`)
       }
-      let qRepetido =
+      const qRepetido =
         await sql<any>`select id from usuario where lower(passport_name) = lower(${result.discloseOutput.name as string}) AND passport_nationality = ${qCountryId.rows[0].id}`.execute(
           db,
         )
@@ -112,14 +112,14 @@ export async function POST(req: Request) {
         throw new Error('User not found')
       }
 
-      let uUsuario: Updateable<Usuario> = {
+      const uUsuario: Updateable<Usuario> = {
         passport_name: result.discloseOutput.name,
         nombre: result.discloseOutput.name,
         passport_nationality: qCountryId.rows[0].id,
         pais_id: qCountryId.rows[0].id,
       }
       console.log('uUsuario=', uUsuario)
-      let rupdate = await db
+      const rupdate = await db
         .updateTable('usuario')
         .set(uUsuario)
         .where('id', '=', qBilleteraUsuario.rows[0].usuario_id)

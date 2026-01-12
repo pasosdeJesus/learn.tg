@@ -154,12 +154,12 @@ export async function GET(req: NextRequest) {
       }
 
       console.log('** cwd=', process.cwd())
-      let fname = `../../resources/${lang}/${prefix}/${guide}.md`
+      const fname = `../../resources/${lang}/${prefix}/${guide}.md`
       console.log('** fname=', fname)
-      let md = await readFile(fname, 'utf8')
+      const md = await readFile(fname, 'utf8')
       console.log(md)
 
-      let processor = unified()
+      const processor = unified()
         .use(remarkParse)
         .use(remarkGfm)
         .use(remarkDirective)

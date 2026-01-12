@@ -11,7 +11,7 @@ interface Props {
 const Layout: FC<Props> = ({ children }) => {
   let lang = 'en'
   if (typeof window !== 'undefined') {
-    let purl = window.location.href.split('/')
+    const purl = window.location.href.split('/')
     lang = purl.length > 3 ? purl[3] : 'en'
   }
   return (
