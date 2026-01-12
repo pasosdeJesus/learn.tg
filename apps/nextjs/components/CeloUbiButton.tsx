@@ -35,7 +35,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
 
   const t = (key: string, params?: { amount?: string }) => {
     const translations: { [key: string]: { [lang: string]: string } } = {
-      claimButton: { es: 'Reclamar UBI Celo', en: 'Claim Celo UBI' },
+      claimButton: { es: 'Reclamar Learn.tg-IBU', en: 'Claim Learn.tg-UBI' },
       loading: { es: 'Cargando...', en: 'Loading...' },
       claiming: { es: 'Reclamando...', en: 'Claiming...' },
       mustLogin: { es: 'Debes iniciar sesión para reclamar', en: 'You must be logged in to claim' },
@@ -45,8 +45,8 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
       claimErrorTitle: { es: 'Error en el Reclamo', en: 'Claim Error' },
       viewTransaction: { es: 'Ver transacción', en: 'View Transaction' },
       successMessage: {
-        es: `¡Reclamo exitoso! Has recibido {amount} Celo UBI.`,
-        en: `Claim successful! You have received {amount} Celo UBI.`,
+        es: `¡Reclamo exitoso! Has recibido {amount} Celo de Learn.tg-IBU.`,
+        en: `Claim successful! You have received {amount} Celo of Leanr.tg-UBI.`,
       },
     }
     let message = translations[key]?.[lang] || key;
