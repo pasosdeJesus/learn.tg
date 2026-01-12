@@ -19,7 +19,7 @@
 6. **Pedagogy of Service: The Five Pillars of Edification** - Our teaching is structured into **Courses**, which are composed of individual **Guides**. Each Guide is a self-contained module of learning designed according to five guiding pillars:
 
     *   **Focus:** It centers on a single, clear learning objective to ensure clarity and prevent cognitive overload.
-    *   **Brevity:** It is concise enough to be completed in one short session (approx. 5-7 minutes), respecting the user's time and fostering a sense of accomplishment, in line with the principles of [Micro-learning](https://www.sciencedirect.com/science/article/pii/B9780323919250000150).  From 3 to
+    *   **Brevity:** It is concise enough to be completed in one short session (approx. 5-7 minutes or between 400-600 words), respecting the user's time and fostering a sense of accomplishment, in line with the principles of [Micro-learning](https://www.sciencedirect.com/science/article/pii/B9780323919250000150).  From 3 to
     5 comprenhension questions to help with understanding/memory withouth being heavy burden.
     *   **Action:** It equips the user with knowledge that leads to a tangible action or a specific, applicable skill, ensuring our teaching is practical and empowering.
     *   **Joyful Engagement:** It is presented through interactive, game-like activities. We believe learning should not be a chore but a delightful discovery, reflecting the inherent creativity of God's world.

@@ -154,7 +154,20 @@ export async function GET(req: NextRequest) {
         .use(rehypeStringify, { allowDangerousHtml: true })
       const html = processor.processSync(md).toString()
 
-      const qa = (global as any).fillInTheBlank || []
+      let qa = (global as any).fillInTheBlank || []
+      
+      if (qa.length > 5) {
+        const selectedQuestions = [];
+        const usedIndices = new Set();
+        while (selectedQuestions.length < 5) {
+          const randomIndex = Math.floor(Math.random() * qa.length);
+          if (!usedIndices.has(randomIndex)) {
+            selectedQuestions.push(qa[randomIndex]);
+            usedIndices.add(randomIndex);
+          }
+        }
+        qa = selectedQuestions;
+      }
 
       const scrambled = []
       const words = []
