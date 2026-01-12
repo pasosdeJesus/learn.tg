@@ -14,8 +14,8 @@ export default function Home() {
                   Learn Through Games
                 </h1>
                 <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
-                  Blockchain-powered education with real rewards. Study and earn
-                  scholarships as you learn.
+                  Blockchain-powered education with real rewards. Study, 
+                  play and earn scholarships as you learn.
                 </p>
               </div>
 
@@ -96,7 +96,7 @@ export default function Home() {
                     Interactive Courses
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Engaging content with quizzes and challenges
+                    Engaging content with games and challenges
                   </p>
                 </article>
 
