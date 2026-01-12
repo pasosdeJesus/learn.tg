@@ -2,14 +2,15 @@
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/api/auth/auth-options.ts
 import { submitReferral } from '@divvi/referral-sdk'
 import { Insertable, Kysely, PostgresDialect, sql, Updateable } from 'kysely'
+import { headers } from "next/headers";
 import { NextAuthOptions, Session } from 'next-auth'
+import { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { getCsrfToken } from 'next-auth/react'
+import { Pool } from 'pg'
 import { SiweMessage } from 'siwe'
-import { JWT } from 'next-auth/jwt'
 import { Address } from 'viem'
 
-import { Pool } from 'pg'
 import type { DB, BilleteraUsuario, Usuario } from '@/db/db.d.ts'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
 
@@ -31,13 +32,21 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials, req) {
         console.log(
-          new Date(),
           'OJO authorize. credentials=',
           credentials,
           ' req=',
           req,
           new Date(),
         )
+        const headersList = req.headers;
+        console.log("OJO headersList=", headersList)
+        const forwardedFor = headersList["x-forwarded-for"];
+        console.log("OJO forwardedFor=", forwardedFor)
+        const realIp = headersList["x-real-ip"];
+        console.log("OJO realIp=", realIp)
+        const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : realIp || "127.0.0.1";
+        console.log("OJO ip=", ip)
+
         try {
           console.log(
             new Date(),
@@ -76,7 +85,7 @@ export const authOptions: NextAuthOptions = {
             let now = new Date()
 
             let puser = await sql<number>`
-              SELECT usuario_id 
+              SELECT usuario_id
               FROM billetera_usuario
               WHERE billetera=${sql.val(siwe.address)}`.execute(db)
             console.log(new Date(), 'puser=', puser)
@@ -97,7 +106,7 @@ export const authOptions: NextAuthOptions = {
                 nusuario: address15,
                 email: `${address15}@localhost`,
                 current_sign_in_at: now,
-                current_sign_in_ip: '0.0.0.0',
+                current_sign_in_ip: ip,
                 created_at: now,
                 updated_at: now,
               }
@@ -127,7 +136,16 @@ export const authOptions: NextAuthOptions = {
                 'existe ',
                 (puser.rows[0] as any).usuario_id,
               )
-
+              let cUser = await db
+                .selectFrom('usuario')
+                .where('id', '=', (puser.rows[0] as any).usuario_id)
+                .selectAll()
+                .executeTakeFirst()
+              console.log(new Date(), 'cUser=', cUser)
+              console.log(
+                new Date(), 
+                'cUser.current_sign_in_ip=', cUser.current_sign_in_ip
+              )
               let uWalletUser: any = {
                 token: result.data.nonce,
                 updated_at: now,
@@ -138,6 +156,19 @@ export const authOptions: NextAuthOptions = {
                 .where('usuario_id', '=', (puser.rows[0] as any).usuario_id)
                 .execute()
               console.log(new Date(), 'After update rUpdate=', rUpdate)
+              let uUser: Updatable<Usuario> = {
+                last_sign_in_ip: cUser.current_sign_in_ip,
+                last_sign_in_at: cUser.current_sign_in_at,
+                current_sign_in_ip: ip,
+                current_sign_in_at: now,
+                updated_at: now,
+              }
+              let uUpdate = await db
+                .updateTable('usuario')
+                .set(uUser)
+                .where('id', '=', (puser.rows[0] as any).usuario_id)
+                .execute()
+              console.log(new Date(), 'After update uUpdate=', uUpdate)
             }
             console.log(new Date(), 'OJO Before return. ', new Date())
 
