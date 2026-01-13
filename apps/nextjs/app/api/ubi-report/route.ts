@@ -25,7 +25,11 @@ export async function GET() {
       .having(sql`sum(amount)`, '>', 0)
       .execute()
 
-    return NextResponse.json(report)
+    const total = report
+      .reduce((sum, row) => sum + BigInt(row.total_ubi_given), BigInt(0))
+      .toString()
+
+    return NextResponse.json({ report, total })
   } catch (error) {
     console.error('Error fetching UBI report:', error)
     return new NextResponse('Internal Server Error', { status: 500 })
