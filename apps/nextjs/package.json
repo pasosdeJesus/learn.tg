@@ -73,7 +73,7 @@
     "siwe": "^3.0.0",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
-    "viem": "^2.44.1",
+    "viem": "^2.44.2",
     "wagmi": "^2.19.5",
     "zod": "^4.3.5"
   },
@@ -82,7 +82,7 @@
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
-    "@types/node": "^24.10.7",
+    "@types/node": "^24.10.8",
     "@types/pg": "^8.16.0",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
@@ -116,5 +116,5 @@
       "utf-8-validate"
     ]
   },
-  "packageManager": "pnpm@10.27.0"
+  "packageManager": "pnpm@10.28.0"
 }
