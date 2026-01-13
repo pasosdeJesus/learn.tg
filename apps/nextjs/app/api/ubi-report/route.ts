@@ -26,7 +26,7 @@ export async function GET() {
       .execute()
 
     const total = report
-      .reduce((sum, row) => sum + BigInt(row.total_ubi_given), BigInt(0))
+      .reduce((sum, row) => sum + (+row.total_ubi_given), 0)
       .toString()
 
     return NextResponse.json({ report, total })
