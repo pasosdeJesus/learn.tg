@@ -342,8 +342,8 @@ export async function getGameEngagement(): Promise<GameEngagementData[]> {
     }>`
       SELECT
         COALESCE(event_data->>'gameType', event_type) as game_type,
-        100.0 as completion_rate, -- Assuming all recorded games are completed
-        AVG((event_data->>'timeMs')::numeric) / 1000.0 as avg_time,
+        SUM(CASE WHEN (event_data->>'score')::numeric = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0) as completion_rate,
+        AVG((event_data->>'timeMs')::numeric) / 60000.0 as avg_time,
         COUNT(DISTINCT usuario_id) as users
       FROM userevent
       WHERE event_type = 'game_complete'

@@ -190,6 +190,23 @@ export async function POST(req: NextRequest) {
       )
     }
     console.log('OJO usuario=', usuario)
+    // Find most recent game_start event to calculate elapsed time
+    const gameStartEvent = await db
+      .selectFrom('userevent')
+      .where('usuario_id', '=', usuario.id)
+      .where('event_type', '=', 'game_start')
+      .where(sql`event_data->>'gameType'`, '=', 'crossword')
+      .orderBy('created_at', 'desc')
+      .select(['created_at'])
+      .executeTakeFirst()
+
+    const now = new Date()
+    let timeMs = 0
+    if (gameStartEvent?.created_at) {
+      timeMs = now.getTime() - new Date(gameStartEvent.created_at).getTime()
+      console.log(`Calculated timeMs: ${timeMs}ms from game_start at ${gameStartEvent.created_at}`)
+    }
+
     // Record game completion event
     try {
       await recordEvent({
@@ -197,7 +214,7 @@ export async function POST(req: NextRequest) {
         event_data: {
           gameType: 'crossword',
           score: mistakesInCW.length == 0 ? 1 : 0,
-          timeMs: 0,
+          timeMs: timeMs,
         },
         usuario_id: usuario.id,
       })
