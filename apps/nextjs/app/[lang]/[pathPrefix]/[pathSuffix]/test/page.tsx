@@ -2,7 +2,7 @@
 
 import axios from 'axios'
 import { getCsrfToken, useSession } from 'next-auth/react'
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useState, useRef } from 'react'
 import { useAccount, useConfig, useWriteContract } from 'wagmi'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 
@@ -61,10 +61,14 @@ export default function Page({
   const [flashWarning, setFlashWarning] = useState('')
   const [scholarshipTx, setScholarshipTx] = useState('')
   const [gCsrfToken, setGCsrfToken] = useState('')
-  const [prevRow, setPrevRow] = useState(-1)
-  const [prevCol, setPrevCol] = useState(-1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [gameStartTime, setGameStartTime] = useState<Date | null>(null)
+
+  // New state for robust navigation
+  const [direction, setDirection] = useState<'across' | 'down'>('across')
+  const [activeCell, setActiveCell] = useState({ row: -1, col: -1 })
+  const inputRefs = useRef<Array<Array<HTMLInputElement | null>>>([]);
+
 
   useEffect(() => {
     if (hash) {
@@ -82,7 +86,6 @@ export default function Page({
       waitForTransactionReceipt(wagmiConfig, { hash }).
         then((receipt) => {
           console.log('Transaction receipt', receipt)
-          // Actualizar el estado de la guía localmente para reflejar el pago
           if (myGuide) {
             // @ts-ignore
             myGuide.receivedScholarship = true 
@@ -99,28 +102,29 @@ export default function Page({
   useEffect(() => {
     const loadCrossword = async () => {
       if (course && guideNumber > 0 && address && session) {
-        const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`;
-        const savedStateJSON = localStorage.getItem(storageKey);
+        const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`
+        const savedStateJSON = localStorage.getItem(storageKey)
 
         if (savedStateJSON) {
           try {
-            const savedState = JSON.parse(savedStateJSON);
+            const savedState = JSON.parse(savedStateJSON)
             if (savedState.grid && savedState.placements) {
-              console.log('Restoring crossword from localStorage');
-              setGrid(savedState.grid);
-              setPlacements(savedState.placements);
-              setGameStartTime(new Date(savedState.startTime));
-              setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`);
+              console.log('Restoring crossword from localStorage')
+              setGrid(savedState.grid)
+              setPlacements(savedState.placements)
+              setGameStartTime(new Date(savedState.startTime))
+              setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
               
-              const csrfToken = await getCsrfToken();
-              if (!csrfToken) throw new Error('Could not get CSRF token for restored session');
-              setGCsrfToken(csrfToken);
-
-              return; 
+              const csrfToken = await getCsrfToken()
+              if (!csrfToken) throw new Error('Could not get CSRF token for restored session')
+              setGCsrfToken(csrfToken)
+              
+              inputRefs.current = savedState.grid.map(() => [])
+              return
             }
           } catch (e) {
-            console.error("Failed to parse or use saved crossword state:", e);
-            localStorage.removeItem(storageKey);
+            console.error("Failed to parse or use saved crossword state:", e)
+            localStorage.removeItem(storageKey)
           }
         }
         
@@ -145,19 +149,22 @@ export default function Page({
             throw new Error(response.data.message)
           }
           
-          const startTime = new Date();
+          const startTime = new Date()
           const initialState = {
             grid: response.data.grid,
             placements: response.data.placements,
             startTime: startTime.toISOString()
-          };
-          localStorage.setItem(storageKey, JSON.stringify(initialState));
+          }
+          localStorage.setItem(storageKey, JSON.stringify(initialState))
 
           setGrid(response.data.grid)
           setPlacements(response.data.placements)
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
           console.log('[metrics] Game start tracked server-side')
           setGameStartTime(startTime)
+
+          // Initialize refs for inputs
+          inputRefs.current = response.data.grid.map(() => [])
         } catch (err: any) {
           console.error(err)
           setFlashError(err.message)
@@ -167,67 +174,91 @@ export default function Page({
     loadCrossword()
   }, [course, guideNumber, address, session, lang, pathPrefix, pathSuffix])
 
+  const handleCellClick = (row: number, col: number) => {
+    const newActiveCell = { row, col }
+    if (activeCell.row === row && activeCell.col === col) {
+      const cell = grid[row][col]
+      if (cell.belongsToWords.length > 1) {
+        setDirection(d => d === 'across' ? 'down' : 'across')
+      }
+    } else {
+      const cell = grid[row][col]
+      const words = cell.belongsToWords
+      if (words.length > 0) {
+        const firstWord = placements.find(p => p.number === words[0])
+        if (firstWord) {
+          setDirection(firstWord.direction)
+        }
+      }
+    }
+    setActiveCell(newActiveCell)
+    inputRefs.current[row][col]?.focus()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, row: number, col: number) => {
+    if (e.key === 'Backspace' && grid[row][col].userInput === '') {
+      e.preventDefault()
+      
+      let prevRow = row
+      let prevCol = col
+
+      if (direction === 'across') {
+        prevCol--
+      } else {
+        prevRow--
+      }
+
+      while (prevRow >= 0 && prevCol >= 0 && grid[prevRow]?.[prevCol]?.isBlocked) {
+        if (direction === 'across') {
+          prevCol--
+        } else {
+          prevRow--
+        }
+      }
+
+      if (prevRow >= 0 && prevCol >= 0 && grid[prevRow]?.[prevCol]) {
+        handleCellClick(prevRow, prevCol)
+      }
+    }
+  }
+
   const handleCellInput = (row: number, col: number, value: string) => {
     if (value.length > 1) return
 
-    const newGrid = [...grid]
-    newGrid[row][col] = { ...newGrid[row][col], userInput: value.toUpperCase() }
+    const newGrid = grid.map(r => r.map(c => ({...c})))
+    newGrid[row][col].userInput = value.toUpperCase()
     setGrid(newGrid)
 
     if (course && guideNumber > 0 && address) {
-      const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`;
+      const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`
       const currentState = {
           grid: newGrid,
           placements: placements,
           startTime: gameStartTime?.toISOString()
-      };
-      localStorage.setItem(storageKey, JSON.stringify(currentState));
+      }
+      localStorage.setItem(storageKey, JSON.stringify(currentState))
     }
 
     if (value.length === 1) {
-      let prevDirAcross = true
-      if (prevRow >= 0 && prevCol >= 0 && prevRow === row - 1 && prevCol === col) {
-        prevDirAcross = false
-      }
-      setPrevRow(row)
-      setPrevCol(col)
+      let nextRow = row
+      let nextCol = col
 
-      let dirAcross = prevDirAcross
-      const currentCell = grid[row][col]
-      const wordNumbers = currentCell.belongsToWords
-      if (wordNumbers.length === 1 && Array.isArray(placements)) {
-        const placement = placements.find((p) => p.number === wordNumbers[0])
-        if (placement) {
-          dirAcross = placement.direction === 'across'
-        }
+      if (direction === 'across') {
+        nextCol++
+      } else {
+        nextRow++
       }
 
-      let nextRow = dirAcross ? row : row + 1
-      let nextCol = dirAcross ? col + 1 : col
+      while(grid[nextRow]?.[nextCol]?.isBlocked) {
+        if (direction === 'across') {
+          nextCol++
+        } else {
+          nextRow++
+        }
+      }
 
-      if (
-        nextRow < grid.length &&
-        nextCol < grid[nextRow].length &&
-        !grid[nextRow][nextCol].isBlocked
-      ) {
-        if (grid[nextRow][nextCol].userInput !== '') {
-          const sNextRow = dirAcross ? nextRow : nextRow + 1
-          const sNextCol = dirAcross ? nextCol + 1 : nextCol
-          if (
-            sNextRow < grid.length &&
-            sNextCol < grid[sNextRow].length &&
-            !grid[sNextRow][sNextCol].isBlocked
-          ) {
-            nextRow = sNextRow
-            nextCol = sNextCol
-          }
-        }
-        const nextInput = document.querySelector(
-          `input[data-row="${nextRow}"][data-col="${nextCol}"]`,
-        ) as HTMLInputElement
-        if (nextInput) {
-          nextInput.focus()
-        }
+      if (grid[nextRow]?.[nextCol]) {
+        handleCellClick(nextRow, nextCol)
       }
     }
   }
@@ -273,25 +304,18 @@ export default function Page({
         )
       } else {
         if (course && guideNumber > 0 && address) {
-            const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`;
-            localStorage.removeItem(storageKey);
-            console.log("Crossword completed. Cleared saved state.");
+            const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`
+            localStorage.removeItem(storageKey)
+            console.log("Crossword completed. Cleared saved state.")
         }
-        const wasAlreadyCompleted = myGuide?.completed || false
-
+        
         if (myGuide) {
           // @ts-ignore
           myGuide.completed = true
         }
         setFlashSuccess(response.data.message || '')
 
-        // Track game completion and guide completion
-        const score = 100 // Perfect score since no mistakes
-        const timeMs = gameStartTime ? new Date().getTime() - gameStartTime.getTime() : 0
-
         console.log('[metrics] Game completion tracked server-side')
-
-        // Guide completion tracked server-side in /api/check-crossword
 
         if (response.data.scholarshipResult) {
           setScholarshipTx(response.data.scholarshipResult)
@@ -359,8 +383,7 @@ export default function Page({
       <div className="mt-8 pt-2 dark:bg-gray-100 dark:text-gray-800">
         <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
           <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
-            {locale === 'en' ? 'Course: ' : 'Curso: '}
-            {course.titulo}
+            {locale === 'en' ? 'Course: ' : 'Curso: '}{course.titulo}
           </h3>
         </div>
         <h1 className="py-3 px-16 text-[2rem] font-bold text-left">
@@ -431,36 +454,48 @@ export default function Page({
                   <div className="grid gap-1 p-4 bg-muted rounded-lg overflow-auto">
                     {grid.map((row, rowIndex) => (
                       <div key={rowIndex} className="flex gap-1">
-                        {row.map((cell, colIndex) => (
-                          <div
-                            key={`${rowIndex}-${colIndex}`}
-                            className={cn(
-                              'w-8 h-8 border border-border relative',
-                              !cell || cell.isBlocked ? 'bg-black' : 'bg-white dark:bg-background',
-                            )}
-                          >
-                            {cell && !cell.isBlocked && (
-                              <>
-                                {cell.number && (
-                                  <span className="absolute top-0 left-0 text-xs font-bold leading-none p-0.5">
-                                    {cell.number}
-                                  </span>
-                                )}
-                                <input
-                                  type="text"
-                                  value={cell.userInput}
-                                  onChange={(e) =>
-                                    handleCellInput(rowIndex, colIndex, e.target.value)
-                                  }
-                                  data-row={rowIndex}
-                                  data-col={colIndex}
-                                  className="w-full h-full text-center text-sm font-bold border-none outline-none bg-transparent"
-                                  maxLength={1}
-                                />
-                              </>
-                            )}
-                          </div>
-                        ))}
+                        {row.map((cell, colIndex) => {
+                          const isActive = activeCell.row === rowIndex && activeCell.col === colIndex;
+                          return (
+                            <div
+                              key={`${rowIndex}-${colIndex}`}
+                              className={cn(
+                                'w-8 h-8 border border-border relative',
+                                !cell || cell.isBlocked ? 'bg-black' : 'bg-white dark:bg-background',
+                                { 'outline outline-2 outline-blue-500': isActive }
+                              )}
+                              onClick={() => !cell.isBlocked && handleCellClick(rowIndex, colIndex)}
+                            >
+                              {cell && !cell.isBlocked && (
+                                <>
+                                  {cell.number && (
+                                    <span className="absolute top-0 left-0 text-xs font-bold leading-none p-0.5">
+                                      {cell.number}
+                                    </span>
+                                  )}
+                                  <input
+                                    ref={el => {
+                                      if (inputRefs.current[rowIndex]) {
+                                        inputRefs.current[rowIndex][colIndex] = el;
+                                      }
+                                    }}
+                                    type="text"
+                                    value={cell.userInput}
+                                    onChange={(e) =>
+                                      handleCellInput(rowIndex, colIndex, e.target.value)
+                                    }
+                                    onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
+                                    onClick={() => handleCellClick(rowIndex, colIndex)}
+                                    data-row={rowIndex}
+                                    data-col={colIndex}
+                                    className="w-full h-full text-center text-sm font-bold border-none outline-none bg-transparent"
+                                    maxLength={1}
+                                  />
+                                </>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     ))}
                   </div>
@@ -516,4 +551,3 @@ export default function Page({
     </>
   )
 }
-

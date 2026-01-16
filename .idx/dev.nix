@@ -6,7 +6,7 @@
 
   # Use https://search.nixos.org/packages to find packages
   packages = [
-    pkgs.corepack
+    pkgs.pnpm
     pkgs.postgresql
     pkgs.postgresql.lib
     pkgs.ruby_3_3
