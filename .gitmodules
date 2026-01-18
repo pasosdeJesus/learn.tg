@@ -1,3 +1,3 @@
 [submodule "apps/nextjs/app/api"]
 	path = apps/nextjs/app/api
-	url = https://gitlab.com/vtamara/learn.tg-api.git
+	url = git@gitlab.com:vtamara/learn.tg-api.git

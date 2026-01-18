@@ -11,7 +11,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/cor1440_gen.git
-  revision: 69b9bfd11c2b04e881ca62cadd733db45301a6dd
+  revision: eef68455db3acf66e0e4d3d96c5d9156d108fd48
   branch: main
   specs:
     cor1440_gen (2.3.0.alfa4)
@@ -24,7 +24,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/heb412_gen.git
-  revision: d9516da2585cf1e3973fcc145089f87e8e615ceb
+  revision: de3dda0039dd2aaaf713bedba4d23e29f4703da3
   branch: main
   specs:
     heb412_gen (2.3.0.alfa4)
@@ -35,7 +35,7 @@ GIT
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/mr519_gen.git
-  revision: 14ac9be365c847852261843d7393602c886f4439
+  revision: 2342b429e0c2aa2058f32fac8ba4a5562bbc285a
   branch: main
   specs:
     mr519_gen (2.3.0.alfa4)
@@ -67,29 +67,29 @@ GEM
   specs:
     action_text-trix (2.1.16)
       railties
-    actioncable (8.1.1)
-      actionpack (= 8.1.1)
-      activesupport (= 8.1.1)
+    actioncable (8.1.2)
+      actionpack (= 8.1.2)
+      activesupport (= 8.1.2)
       nio4r (~> 2.0)
       websocket-driver (>= 0.6.1)
       zeitwerk (~> 2.6)
-    actionmailbox (8.1.1)
-      actionpack (= 8.1.1)
-      activejob (= 8.1.1)
-      activerecord (= 8.1.1)
-      activestorage (= 8.1.1)
-      activesupport (= 8.1.1)
+    actionmailbox (8.1.2)
+      actionpack (= 8.1.2)
+      activejob (= 8.1.2)
+      activerecord (= 8.1.2)
+      activestorage (= 8.1.2)
+      activesupport (= 8.1.2)
       mail (>= 2.8.0)
-    actionmailer (8.1.1)
-      actionpack (= 8.1.1)
-      actionview (= 8.1.1)
-      activejob (= 8.1.1)
-      activesupport (= 8.1.1)
+    actionmailer (8.1.2)
+      actionpack (= 8.1.2)
+      actionview (= 8.1.2)
+      activejob (= 8.1.2)
+      activesupport (= 8.1.2)
       mail (>= 2.8.0)
       rails-dom-testing (~> 2.2)
-    actionpack (8.1.1)
-      actionview (= 8.1.1)
-      activesupport (= 8.1.1)
+    actionpack (8.1.2)
+      actionview (= 8.1.2)
+      activesupport (= 8.1.2)
       nokogiri (>= 1.8.5)
       rack (>= 2.2.4)
       rack-session (>= 1.0.1)
@@ -97,36 +97,36 @@ GEM
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
       useragent (~> 0.16)
-    actiontext (8.1.1)
+    actiontext (8.1.2)
       action_text-trix (~> 2.1.15)
-      actionpack (= 8.1.1)
-      activerecord (= 8.1.1)
-      activestorage (= 8.1.1)
-      activesupport (= 8.1.1)
+      actionpack (= 8.1.2)
+      activerecord (= 8.1.2)
+      activestorage (= 8.1.2)
+      activesupport (= 8.1.2)
       globalid (>= 0.6.0)
       nokogiri (>= 1.8.5)
-    actionview (8.1.1)
-      activesupport (= 8.1.1)
+    actionview (8.1.2)
+      activesupport (= 8.1.2)
       builder (~> 3.1)
       erubi (~> 1.11)
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
-    activejob (8.1.1)
-      activesupport (= 8.1.1)
+    activejob (8.1.2)
+      activesupport (= 8.1.2)
       globalid (>= 0.3.6)
-    activemodel (8.1.1)
-      activesupport (= 8.1.1)
-    activerecord (8.1.1)
-      activemodel (= 8.1.1)
-      activesupport (= 8.1.1)
+    activemodel (8.1.2)
+      activesupport (= 8.1.2)
+    activerecord (8.1.2)
+      activemodel (= 8.1.2)
+      activesupport (= 8.1.2)
       timeout (>= 0.4.0)
-    activestorage (8.1.1)
-      actionpack (= 8.1.1)
-      activejob (= 8.1.1)
-      activerecord (= 8.1.1)
-      activesupport (= 8.1.1)
+    activestorage (8.1.2)
+      actionpack (= 8.1.2)
+      activejob (= 8.1.2)
+      activerecord (= 8.1.2)
+      activesupport (= 8.1.2)
       marcel (~> 1.0)
-    activesupport (8.1.1)
+    activesupport (8.1.2)
       base64
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.3.1)
@@ -148,7 +148,7 @@ GEM
     bindex (0.8.1)
     bls12-381 (0.3.0)
       h2c (~> 0.2.0)
-    bootsnap (1.20.1)
+    bootsnap (1.21.1)
       msgpack (~> 1.2)
     brakeman (7.1.2)
       racc
@@ -260,7 +260,7 @@ GEM
     mime-types (3.7.0)
       logger
       mime-types-data (~> 3.2025, >= 3.2025.0507)
-    mime-types-data (3.2025.0924)
+    mime-types-data (3.2026.0113)
     mini_mime (1.1.5)
     mini_portile2 (2.8.9)
     minitest (6.0.1)
@@ -302,7 +302,7 @@ GEM
     openssl (3.3.2)
     orm_adapter (0.5.0)
     parallel (1.27.0)
-    parser (3.3.10.0)
+    parser (3.3.10.1)
       ast (~> 2.4.1)
       racc
     parslet (2.0.0)
@@ -327,7 +327,7 @@ GEM
       prawn (>= 1.0.0)
       rails (>= 3.2)
     prettyprint (0.2.0)
-    prism (1.7.0)
+    prism (1.8.0)
     psych (5.3.1)
       date
       stringio
@@ -344,20 +344,20 @@ GEM
     rackup (1.0.1)
       rack (< 3)
       webrick
-    rails (8.1.1)
-      actioncable (= 8.1.1)
-      actionmailbox (= 8.1.1)
-      actionmailer (= 8.1.1)
-      actionpack (= 8.1.1)
-      actiontext (= 8.1.1)
-      actionview (= 8.1.1)
-      activejob (= 8.1.1)
-      activemodel (= 8.1.1)
-      activerecord (= 8.1.1)
-      activestorage (= 8.1.1)
-      activesupport (= 8.1.1)
+    rails (8.1.2)
+      actioncable (= 8.1.2)
+      actionmailbox (= 8.1.2)
+      actionmailer (= 8.1.2)
+      actionpack (= 8.1.2)
+      actiontext (= 8.1.2)
+      actionview (= 8.1.2)
+      activejob (= 8.1.2)
+      activemodel (= 8.1.2)
+      activerecord (= 8.1.2)
+      activestorage (= 8.1.2)
+      activesupport (= 8.1.2)
       bundler (>= 1.15.0)
-      railties (= 8.1.1)
+      railties (= 8.1.2)
     rails-controller-testing (1.0.5)
       actionpack (>= 5.0.1.rc1)
       actionview (>= 5.0.1.rc1)
@@ -377,9 +377,9 @@ GEM
     rails-i18n (8.1.0)
       i18n (>= 0.7, < 2)
       railties (>= 8.0.0, < 9)
-    railties (8.1.1)
-      actionpack (= 8.1.1)
-      activesupport (= 8.1.1)
+    railties (8.1.2)
+      actionpack (= 8.1.2)
+      activesupport (= 8.1.2)
       irb (~> 1.13)
       rackup (>= 1.0.0)
       rake (>= 12.2)
@@ -393,14 +393,14 @@ GEM
       mini_portile2 (~> 2.8)
       pkg-config (~> 1.5)
       rubyzip (~> 2.3)
-    rdoc (7.0.3)
+    rdoc (7.1.0)
       erb
       psych (>= 4.0.0)
       tsort
     redcarpet (3.6.1)
     redis (5.4.1)
       redis-client (>= 0.22.0)
-    redis-client (0.26.2)
+    redis-client (0.26.3)
       connection_pool
     regexp_parser (2.11.3)
     reline (0.6.3)
@@ -430,7 +430,7 @@ GEM
       lint_roller (~> 1.1)
       rubocop (>= 1.75.0, < 2.0)
       rubocop-ast (>= 1.38.0, < 2.0)
-    rubocop-rails (2.34.2)
+    rubocop-rails (2.34.3)
       activesupport (>= 4.2.0)
       lint_roller (~> 1.1)
       rack (>= 1.1)
@@ -454,7 +454,7 @@ GEM
       ffi-compiler (>= 1.0, < 2.0)
       rake (~> 13)
     securerandom (0.4.1)
-    simple_form (5.4.0)
+    simple_form (5.4.1)
       actionpack (>= 7.0)
       activemodel (>= 7.0)
     simplecov (0.22.0)
@@ -476,13 +476,13 @@ GEM
     stringio (3.2.0)
     terrapin (1.1.1)
       climate_control
-    thor (1.4.0)
-    tilt (2.6.1)
+    thor (1.5.0)
+    tilt (2.7.0)
     timeout (0.6.0)
     tsort (0.2.0)
     ttfunk (1.8.0)
       bigdecimal (~> 3.1)
-    turbo-rails (2.0.20)
+    turbo-rails (2.0.21)
       actionpack (>= 7.1.0)
       railties (>= 7.1.0)
     twitter_cldr (6.14.0)
@@ -595,4 +595,4 @@ RUBY VERSION
   ruby 3.4.1p0
 
 BUNDLED WITH
-  4.0.3
+  4.0.4
