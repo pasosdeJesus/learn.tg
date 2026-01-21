@@ -1,6 +1,3 @@
-
-# Guide 4: Your Bridge to Cash - Using On-Ramps & Off-Ramps
-
 ### **Introduction**
 
 To use your digital UBI in daily life, you need to convert it into your local

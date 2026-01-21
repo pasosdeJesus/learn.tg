@@ -240,7 +240,7 @@ export default function Page() {
               <td>
                 {previousGuidePath ? (
                   <Button asChild>
-                    <Link href={previousGuidePath}>
+                    <Link className="text-primary-foreground!" href={previousGuidePath}>
                       {course.idioma === 'en' ? 'Previous' : 'Anterior'}
                     </Link>
                   </Button>

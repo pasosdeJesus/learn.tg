@@ -1,6 +1,3 @@
-# Guide 2: Your Digital Identity - Setting Up Your Web3 Wallet
-
-
 ### **Introduction**
 
 Your **Web3 wallet** is your personal gateway to the blockchain. It's like a 

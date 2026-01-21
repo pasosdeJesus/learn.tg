@@ -1,5 +1,3 @@
-# Guide 3: Claim Your Daily UBI - GoodDollar and Learn.tg-UBI
-
 ## 1. What are GoodDollar (G$), CELO and Learn.tg-UBI ?
 
 GoodDollar (G$) and CELO are cryptocurrencies that operate on the
