@@ -181,9 +181,9 @@ export default function Page({ params }: PageProps) {
               return (
                 <article
                   key={course.id}
-                  className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
+                  className="flex flex-col bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
                 >
-                  <a href={`/${course.idioma}${course.prefijoRuta}`}>
+                  <a href={`/${course.idioma}${course.prefijoRuta}`} className="flex flex-col flex-grow">
                     <figure className="img-course">
                       {course.imagen && course.imagen.startsWith('/') && (
                         <Image
@@ -203,7 +203,7 @@ export default function Page({ params }: PageProps) {
                         {course.subtitulo}
                       </p>
                     </header>
-                    <footer className="flex justify-between items-center p-4">
+                    <footer className="flex justify-between items-center p-4 mt-auto">
                       <div>
                         {extra && extra.amountPerGuide > 0 && (
                           <div className="p-2">
