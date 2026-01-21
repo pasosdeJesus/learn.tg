@@ -12,6 +12,7 @@
 export function remarkFillInTheBlank(options) {
   return function (tree) {
     console.log(tree)
+    console.log("OJO options=", options)
     let l = tree.children
     let n = []
     globalThis.fillInTheBlank = []
@@ -74,7 +75,7 @@ export function remarkFillInTheBlank(options) {
             },
             {
               type: 'text',
-              value: 'Solve a puzzle',
+              value: options['lang'] == 'es' ? 'Resolver un juego' : 'Solve a puzzle',
               position: { start: l[i].position.start, end: l[i].position.end },
             },
             {
@@ -84,8 +85,9 @@ export function remarkFillInTheBlank(options) {
             },
             {
               type: 'text',
-              value:
-                ' to test your understanding and earn cryptocurrency if eligible',
+              value: options['lang'] == 'es' ? 
+              ' para probar tu comprensión y ganar USDT si eres elegible' :
+              ' to test your understanding and earn cryptocurrency if eligible',
               position: { start: l[i].position.start, end: l[i].position.end },
             },
           ],

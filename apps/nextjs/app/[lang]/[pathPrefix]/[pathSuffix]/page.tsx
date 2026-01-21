@@ -68,7 +68,7 @@ export default function Page() {
       .use(remarkGfm)
       .use(remarkDirective)
       .use(remarkFrontmatter)
-      .use(remarkFillInTheBlank, { url: `${pathSuffix}/test` })
+      .use(remarkFillInTheBlank, { url: `${pathSuffix}/test`, lang: lang})
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeStringify, { allowDangerousHtml: true })
     const html = processor.processSync(processedMd).toString()
