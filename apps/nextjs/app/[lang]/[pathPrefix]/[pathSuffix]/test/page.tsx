@@ -62,7 +62,6 @@ export default function Page({
   const [scholarshipTx, setScholarshipTx] = useState('')
   const [gCsrfToken, setGCsrfToken] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [gameStartTime, setGameStartTime] = useState<Date | null>(null)
 
   // New state for robust navigation
   const [direction, setDirection] = useState<'across' | 'down'>('across')
@@ -112,7 +111,6 @@ export default function Page({
               console.log('Restoring crossword from localStorage')
               setGrid(savedState.grid)
               setPlacements(savedState.placements)
-              setGameStartTime(new Date(savedState.startTime))
               setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
               
               const csrfToken = await getCsrfToken()
@@ -149,11 +147,9 @@ export default function Page({
             throw new Error(response.data.message)
           }
           
-          const startTime = new Date()
           const initialState = {
             grid: response.data.grid,
             placements: response.data.placements,
-            startTime: startTime.toISOString()
           }
           localStorage.setItem(storageKey, JSON.stringify(initialState))
 
@@ -161,7 +157,6 @@ export default function Page({
           setPlacements(response.data.placements)
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
           console.log('[metrics] Game start tracked server-side')
-          setGameStartTime(startTime)
 
           // Initialize refs for inputs
           inputRefs.current = response.data.grid.map(() => [])
@@ -233,7 +228,6 @@ export default function Page({
       const currentState = {
           grid: newGrid,
           placements: placements,
-          startTime: gameStartTime?.toISOString()
       }
       localStorage.setItem(storageKey, JSON.stringify(currentState))
     }
