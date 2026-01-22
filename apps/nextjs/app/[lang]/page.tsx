@@ -174,7 +174,7 @@ export default function Page({ params }: PageProps) {
     <Toast.Provider swipeDirection="right">
       <section aria-label="Courses grid" className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
             {courses.map((course) => {
               const extra = extCourses.get(course.id)
 

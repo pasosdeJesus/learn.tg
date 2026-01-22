@@ -174,6 +174,13 @@ export default function Page({
     loadCrossword()
   }, [course, guideNumber, address, session, lang, pathPrefix, pathSuffix])
 
+  // New useEffect for robust navigation
+  useEffect(() => {
+    if (activeCell.row === -1 || !inputRefs.current[activeCell.row]?.[activeCell.col]) return
+    inputRefs.current[activeCell.row][activeCell.col]?.focus()
+  }, [activeCell, direction]) // Re-run when direction changes too
+
+
   const handleCellClick = (row: number, col: number) => {
     const newActiveCell = { row, col }
     if (activeCell.row === row && activeCell.col === col) {
@@ -192,7 +199,6 @@ export default function Page({
       }
     }
     setActiveCell(newActiveCell)
-    inputRefs.current[row][col]?.focus()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, row: number, col: number) => {
@@ -202,31 +208,24 @@ export default function Page({
       let prevRow = row
       let prevCol = col
 
-      if (direction === 'across') {
-        prevCol--
-      } else {
-        prevRow--
-      }
-
-      while (prevRow >= 0 && prevCol >= 0 && grid[prevRow]?.[prevCol]?.isBlocked) {
+      do {
         if (direction === 'across') {
           prevCol--
         } else {
           prevRow--
         }
-      }
+      } while (prevRow >= 0 && prevCol >= 0 && grid[prevRow]?.[prevCol]?.isBlocked)
 
       if (prevRow >= 0 && prevCol >= 0 && grid[prevRow]?.[prevCol]) {
-        handleCellClick(prevRow, prevCol)
+        setActiveCell({ row: prevRow, col: prevCol })
       }
     }
   }
 
-  const handleCellInput = (row: number, col: number, value: string) => {
-    if (value.length > 1) return
-
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, row: number, col: number) => {
+    const value = e.target.value.toUpperCase();
     const newGrid = grid.map(r => r.map(c => ({...c})))
-    newGrid[row][col].userInput = value.toUpperCase()
+    newGrid[row][col].userInput = value.slice(-1) // Take only the last character
     setGrid(newGrid)
 
     if (course && guideNumber > 0 && address) {
@@ -239,26 +238,20 @@ export default function Page({
       localStorage.setItem(storageKey, JSON.stringify(currentState))
     }
 
-    if (value.length === 1) {
-      let nextRow = row
-      let nextCol = col
-
-      if (direction === 'across') {
-        nextCol++
-      } else {
-        nextRow++
-      }
-
-      while(grid[nextRow]?.[nextCol]?.isBlocked) {
+    if (value.length > 0) {
+      let nextRow = row;
+      let nextCol = col;
+      
+      do {
         if (direction === 'across') {
-          nextCol++
+          nextCol++;
         } else {
-          nextRow++
+          nextRow++;
         }
-      }
+      } while (grid[nextRow]?.[nextCol]?.isBlocked)
 
       if (grid[nextRow]?.[nextCol]) {
-        handleCellClick(nextRow, nextCol)
+        setActiveCell({ row: nextRow, col: nextCol })
       }
     }
   }
@@ -482,7 +475,7 @@ export default function Page({
                                     type="text"
                                     value={cell.userInput}
                                     onChange={(e) =>
-                                      handleCellInput(rowIndex, colIndex, e.target.value)
+                                      handleInputChange(e, rowIndex, colIndex)
                                     }
                                     onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
                                     onClick={() => handleCellClick(rowIndex, colIndex)}
