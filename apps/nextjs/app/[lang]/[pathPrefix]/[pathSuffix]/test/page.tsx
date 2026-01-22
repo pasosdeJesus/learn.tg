@@ -217,33 +217,47 @@ export default function Page({
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, row: number, col: number) => {
-    const value = e.target.value.toUpperCase();
-    const newGrid = grid.map(r => r.map(c => ({...c})))
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    row: number,
+    col: number,
+  ) => {
+    const value = e.target.value.toUpperCase()
+    const newGrid = grid.map((r) => r.map((c) => ({ ...c })))
     newGrid[row][col].userInput = value.slice(-1) // Take only the last character
     setGrid(newGrid)
 
     if (course && guideNumber > 0 && address) {
       const storageKey = `crossword-state-${course.id}-${guideNumber}-${address}`
       const currentState = {
-          grid: newGrid,
-          placements: placements,
+        grid: newGrid,
+        placements: placements,
       }
       localStorage.setItem(storageKey, JSON.stringify(currentState))
     }
 
     if (value.length > 0) {
-      let nextRow = row;
-      let nextCol = col;
-      
+      let nextRow = row
+      let nextCol = col
+
+      // Keep searching for the next available cell
       do {
         if (direction === 'across') {
-          nextCol++;
+          nextCol++
         } else {
-          nextRow++;
+          nextRow++
         }
-      } while (grid[nextRow]?.[nextCol]?.isBlocked)
+        // Stop if we are out of bounds
+        if (!grid[nextRow] || !grid[nextRow][nextCol]) {
+          break
+        }
+      } while (
+        grid[nextRow][nextCol].isBlocked ||
+        (grid[nextRow][nextCol].userInput !== '' &&
+          grid[nextRow][nextCol].userInput !== undefined)
+      )
 
+      // If we found a valid cell within the bounds, activate it
       if (grid[nextRow]?.[nextCol]) {
         setActiveCell({ row: nextRow, col: nextCol })
       }
