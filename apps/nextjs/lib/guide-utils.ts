@@ -9,6 +9,38 @@ import { newKyselyPostgresql } from '@/.config/kysely.config'
 import type { DB } from '@/db/db.d.ts'
 
 /**
+ * Get all guides for a given course, including their answers.
+ *
+ * @param courseId - Course ID (proyectofinanciero_id)
+ * @param db - Kysely DB instance
+ * @returns An array of guide objects, or null if not found
+ */
+export async function getGuidesByCourseId(
+  courseId: number,
+  db: DB,
+): Promise<any[] | null> {
+  try {
+    const guides = await sql<any>`
+      SELECT id, nombrecorto, "sufijoRuta", proyectofinanciero_id, answer_fib
+      FROM cor1440_gen_actividadpf
+      WHERE proyectofinanciero_id = ${courseId}
+      AND "sufijoRuta" IS NOT NULL
+      AND "sufijoRuta" <> ''
+      ORDER BY nombrecorto
+    `.execute(db)
+
+    if (!guides.rows || guides.rows.length === 0) {
+      return null
+    }
+
+    return guides.rows
+  } catch (error) {
+    console.error('Error getting guides by courseId:', error)
+    return null
+  }
+}
+
+/**
  * Get the 1-indexed guideId for a given course and guide suffix
  * The guideId corresponds to the position in the ordered list of guides
  * (ordered by nombrecorto) for the course.
@@ -32,27 +64,20 @@ export async function getGuideIdBySuffix(
       return null
     }
 
-    const guides = await sql<any>`
-      SELECT id, nombrecorto, "sufijoRuta", proyectofinanciero_id
-      FROM cor1440_gen_actividadpf
-      WHERE proyectofinanciero_id = ${courseId}
-      AND "sufijoRuta" IS NOT NULL
-      AND "sufijoRuta" <> ''
-      ORDER BY nombrecorto
-    `.execute(db)
+    const guides = await getGuidesByCourseId(courseId, db)
 
-    console.log('[getGuideIdBySuffix] Found guides:', guides.rows?.length || 0)
+    console.log('[getGuideIdBySuffix] Found guides:', guides?.length || 0)
 
-    if (!guides.rows || guides.rows.length === 0) {
+    if (!guides || guides.length === 0) {
       console.log('[getGuideIdBySuffix] No guides found for courseId:', courseId)
       return null
     }
 
     // Debug: log all suffixes
-    console.log('[getGuideIdBySuffix] Available suffixes:', guides.rows.map((r: any) => r.sufijoRuta))
+    console.log('[getGuideIdBySuffix] Available suffixes:', guides.map((r: any) => r.sufijoRuta))
 
     // Find the index of the guide with matching suffix
-    const index = guides.rows.findIndex((row: any) => row.sufijoRuta === suffix)
+    const index = guides.findIndex((row: any) => row.sufijoRuta === suffix)
 
     console.log('[getGuideIdBySuffix] Match index:', index, 'for suffix:', suffix)
 
@@ -85,24 +110,17 @@ export async function getActividadpfId(
   const db = newKyselyPostgresql()
 
   try {
-    const guides = await sql<any>`
-      SELECT id, nombrecorto, "sufijoRuta", proyectofinanciero_id
-      FROM cor1440_gen_actividadpf
-      WHERE proyectofinanciero_id = ${courseId}
-      AND "sufijoRuta" IS NOT NULL
-      AND "sufijoRuta" <> ''
-      ORDER BY nombrecorto
-    `.execute(db)
+    const guides = await getGuidesByCourseId(courseId, db)
 
-    if (!guides.rows || guides.rows.length === 0) {
+    if (!guides || guides.length === 0) {
       return null
     }
 
-    if (guideId < 1 || guideId > guides.rows.length) {
+    if (guideId < 1 || guideId > guides.length) {
       return null
     }
 
-    return guides.rows[guideId - 1].id
+    return guides[guideId - 1].id
   } catch (error) {
     console.error('Error getting actividadpf_id:', error)
     return null
