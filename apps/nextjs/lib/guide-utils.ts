@@ -4,7 +4,7 @@
  * "Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres" (Colosenses 3:23)
  */
 
-import { sql } from 'kysely'
+import { Kysely, sql } from 'kysely'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
 import type { DB } from '@/db/db.d.ts'
 
@@ -17,7 +17,7 @@ import type { DB } from '@/db/db.d.ts'
  */
 export async function getGuidesByCourseId(
   courseId: number,
-  db: DB,
+  db: Kysely<DB>,
 ): Promise<any[] | null> {
   try {
     const guides = await sql<any>`

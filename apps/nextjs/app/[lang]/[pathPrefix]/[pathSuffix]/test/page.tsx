@@ -514,7 +514,7 @@ export default function Page({
                                     className="w-full h-full text-center text-sm font-bold border-none outline-none bg-transparent"
                                     maxLength={1}
                                   />
-                                <>
+                                </>
                               )}
                             </div>
                           )
