@@ -6,7 +6,6 @@
  */
 'use client'
 
-import { getReferralTag } from '@divvi/referral-sdk'
 import { SessionProvider } from 'next-auth/react'
 
 interface ExtendedWindow extends Window {
@@ -72,14 +71,9 @@ const getSiweMessageOptions: GetSiweMessageOptions = () => {
     (typeof window !== 'undefined' &&
       (window as ExtendedWindow).ethereum?.selectedAddress) ||
     '0x0'
-  const referralTag = getReferralTag({
-    user: selectedAddress as Address,
-    consumer: '0x358643badcc77cccb28a319abd439438a57339a7',
-  })
   const msg = {
     statement:
-      'Sign in to Learn through games with DIVVI tracking. ' +
-      `Referral Tag: ${referralTag}`,
+      'Sign in to Learn through games. '
   }
   console.log('OJO msg=', msg)
   return msg
