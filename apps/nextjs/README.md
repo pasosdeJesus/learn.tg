@@ -116,6 +116,14 @@ make test
 
 This will execute all test files and display a coverage report in the console.
 
+### Type-Checking Tests
+
+To ensure the test files themselves are free of TypeScript errors, run:
+
+```sh
+make type-check-tests
+```
+
 ### Structure
 
 - Tests for a given page, for example `app/[lang]/page.tsx`, are located at `app/[lang]/__tests__/page.test.tsx`.

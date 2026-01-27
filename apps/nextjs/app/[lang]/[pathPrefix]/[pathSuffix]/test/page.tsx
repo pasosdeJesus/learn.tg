@@ -101,90 +101,94 @@ export default function Page({
 
   useEffect(() => {
     const loadCrossword = async () => {
-      if (course && guideNumber > 0 && address && session) {
-        setIsLoading(true)
-        const storageKey = `crossword-state-${address}`
-        const savedStateJSON = localStorage.getItem(storageKey)
+      if (!course || !guideNumber || !address || !session) {
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true)
+      const storageKey = `crossword-state-${address}`
+      const savedStateJSON = localStorage.getItem(storageKey)
 
-        const fetchAndSetNewCrossword = async () => {
-          console.log('Fetching new crossword')
-          try {
-            const csrfToken = await getCsrfToken()
-            if (!csrfToken) throw new Error('Could not get CSRF token')
-            setGCsrfToken(csrfToken)
+      const fetchAndSetNewCrossword = async () => {
+        console.log('Fetching new crossword')
+        try {
+          const csrfToken = await getCsrfToken()
+          if (!csrfToken) throw new Error('Could not get CSRF token')
+          setGCsrfToken(csrfToken)
 
-            let urlc = 
-              `/api/crossword?courseId=${course.id}` +
-              `&lang=${lang}` +
-              `&prefix=${pathPrefix}` +
-              `&guide=${pathSuffix}` +
-              `&guideNumber=${guideNumber}` +
-              `&walletAddress=${address}` +
-              `&token=${csrfToken}`
+          let urlc = 
+            `/api/crossword?courseId=${course.id}` +
+            `&lang=${lang}` +
+            `&prefix=${pathPrefix}` +
+            `&guide=${pathSuffix}` +
+            `&guideNumber=${guideNumber}` +
+            `&walletAddress=${address}` +
+            `&token=${csrfToken}`
 
-            console.log(`Fetching Crossword: ${urlc}`)
-            const response = await axios.get(urlc)
+          console.log(`Fetching Crossword: ${urlc}`)
+          const response = await axios.get(urlc)
 
-            if (response.data.message) {
-              throw new Error(response.data.message)
-            }
-
-            const newState = {
-              grid: response.data.grid,
-              placements: response.data.placements,
-              courseId: course.id,
-              guideId: guideNumber,
-            }
-
-            setGrid(newState.grid)
-            setPlacements(newState.placements)
-            setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
-            localStorage.setItem(storageKey, JSON.stringify(newState))
-            console.log('[metrics] Game start tracked server-side')
-
-            inputRefs.current = response.data.grid.map(() => [])
-          } catch (err: any) {
-            console.error(err)
-            setFlashError(err.message)
-          } finally {
-            setIsLoading(false)
+          if (response.data.message) {
+            throw new Error(response.data.message)
           }
-        }
 
-        if (savedStateJSON) {
-          try {
-            const savedState = JSON.parse(savedStateJSON)
-            if (
-              savedState.grid &&
-              savedState.placements &&
-              savedState.courseId === course.id &&
-              savedState.guideId === guideNumber
-            ) {
-              console.log('Restoring crossword from localStorage')
-              setGrid(savedState.grid)
-              setPlacements(savedState.placements)
-              setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
-
-              const csrfToken = await getCsrfToken()
-              if (!csrfToken) throw new Error('Could not get CSRF token for restored session')
-              setGCsrfToken(csrfToken)
-
-              inputRefs.current = savedState.grid.map(() => [])
-              setIsLoading(false)
-              return
-            } else {
-              console.log('Saved crossword state is for a different puzzle. Fetching new one.')
-              fetchAndSetNewCrossword()
-            }
-          } catch (e) {
-            console.error("Failed to parse or use saved crossword state:", e)
-            localStorage.removeItem(storageKey)
-            fetchAndSetNewCrossword()
+          const newState = {
+            grid: response.data.grid,
+            placements: response.data.placements,
+            courseId: course.id,
+            guideId: guideNumber,
           }
-        } else {
-          fetchAndSetNewCrossword()
+
+          setGrid(newState.grid)
+          setPlacements(newState.placements)
+          setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
+          localStorage.setItem(storageKey, JSON.stringify(newState))
+          console.log('[metrics] Game start tracked server-side')
+
+          inputRefs.current = response.data.grid.map(() => [])
+        } catch (err: any) {
+          console.error(err)
+          setFlashError(err.message)
+        } finally {
+          setIsLoading(false)
         }
       }
+
+      if (savedStateJSON) {
+        try {
+          const savedState = JSON.parse(savedStateJSON)
+          if (
+            savedState.grid &&
+            savedState.placements &&
+            savedState.courseId === course.id &&
+            savedState.guideId === guideNumber
+          ) {
+            console.log('Restoring crossword from localStorage')
+            setGrid(savedState.grid)
+            setPlacements(savedState.placements)
+            setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
+
+            const csrfToken = await getCsrfToken()
+            if (!csrfToken) throw new Error('Could not get CSRF token for restored session')
+            setGCsrfToken(csrfToken)
+
+            inputRefs.current = savedState.grid.map(() => [])
+            setIsLoading(false)
+            return
+          } else {
+            console.log('Saved crossword state is for a different puzzle. Fetching new one.')
+            fetchAndSetNewCrossword()
+          }
+        } catch (e) {
+          console.error("Failed to parse or use saved crossword state:", e)
+          localStorage.removeItem(storageKey)
+          fetchAndSetNewCrossword()
+        }
+      } else {
+        fetchAndSetNewCrossword()
+      }
+    
     }
     loadCrossword()
   }, [course, guideNumber, address, session, lang, pathPrefix, pathSuffix])
