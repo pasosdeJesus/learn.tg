@@ -29,7 +29,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircularProgress } from "@/components/ui/circular-progress";
 import { CompletedProgress } from "@/components/ui/completed-progress";
 import {
   Dialog,
@@ -64,7 +63,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
-import { QrCodeDialog } from "@/components/ui/qr-code-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -214,16 +212,6 @@ export default function TestUiPage() {
       </div>
       
       <div>
-        <h2 className="text-2xl font-semibold mb-4">Circular Progress</h2>
-        <CircularProgress value={60} />
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">Completed Progress</h2>
-        <CompletedProgress value={75} />
-      </div>
-
-      <div>
         <h2 className="text-2xl font-semibold mb-4">Dialog</h2>
         <Dialog>
           <DialogTrigger asChild>
@@ -305,17 +293,6 @@ export default function TestUiPage() {
         <Progress value={33} className="w-[60%]" />
       </div>
       
-      <div>
-          <h2 className="text-2xl font-semibold mb-4">QR Code Dialog</h2>
-          <QrCodeDialog
-            title="Scan QR Code"
-            qrData="https://example.com"
-            triggerButton={
-              <Button variant="outline">Show QR Code</Button>
-            }
-          />
-      </div>
-
       <div>
         <h2 className="text-2xl font-semibold mb-4">Radio Group</h2>
         <RadioGroup defaultValue="comfortable">
