@@ -13,7 +13,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 import LearnTGVaultsAbi from '../abis/LearnTGVaults.json' with { type: 'json' }
 
 
-async function waitForReceiptWithRetry(client, { hash, confirmations = 2, timeout = 30_000, interval = 1_000 }) {
+async function waitForReceiptWithRetry(client, { hash, confirmations = 2, timeout = 10_000, interval = 1_000 }) {
   const start = Date.now();
 
   while (Date.now() - start < timeout) {
