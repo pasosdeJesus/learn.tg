@@ -53,10 +53,11 @@ graph TD
 - **Authentication:** Token-based (receives and validates JWT tokens from the Next.js frontend).
 
 ### 2. **Frontend and minor backend: Next.js (apps/nextjs/)**
-- **Framework:** Next.js (v15.3.6) with React (v19.2.3) + TypeScript
-- **UI Components:** Utilizes **Radix UI** for building a flexible and accessible component library.
+- **Framework:** Next.js with React + TypeScript.
+- **UI Components:** Utilizes Radix UI for building a flexible and accessible component library.
 - **Purpose:** User interface, content delivery, and user authentication.
 - **Authentication:** Implements Sign-In With Ethereum (SIWE). The user connects with a Web3 wallet, and the frontend generates a JWT token for authenticating with the Rails backend.
+- **Note:** For a detailed technical breakdown of the Next.js application, refer to the `README.md` file within the `apps/nextjs` directory.
 
 ### 3. **Smart Contracts: Hardhat (apps/hardhat/)**
 - **Language:** Solidity (^0.8.24)
@@ -72,7 +73,7 @@ graph TD
 1.  **Frontend (Next.js):** A user connects their wallet and signs a message
    (SIWE).
 2.  **Next.js API:** Validates the signature and generates a JWT token.
-  This token is stored and used for subsequent authent icated actions.
+  This token is stored and used for subsequent authenticated actions.
 3.  **Backend Communication:**
     - For fetching course data and content, the frontend sends the
   JWT in the `Authorization` header to the **Rails backend**.
@@ -140,28 +141,12 @@ The frontend displays progress using a three-color arc showing completion and pa
 
 ## Metrics and Analytics System
 
-In line with our principle of **transparency**, we have refactored our metrics system to be a robust, server-side-only process. This ensures data integrity, prevents event manipulation, and provides a single source of truth for user interactions.
+In line with our principle of **transparency**, the project uses a robust, server-side-only metrics system to ensure data integrity and prevent client-side event manipulation.
 
-### Philosophy: Backend-Driven Tracking
+-   **Core Principle**: The backend is the single source of truth. Events are not tracked by the client; they are recorded by the server as a side-effect of API calls being successfully processed. For example, a `guide_view` event is recorded when the `/api/guide` endpoint serves the guide content.
+-   **Implementation**: The logic is handled within the Next.js backend. For detailed implementation, data flow, and the philosophy behind this approach, please refer to the `README.md` file in the `apps/nextjs` directory.
 
-- **The backend is the source of truth.** The client-side application no longer tracks events. Instead, it makes API calls for its core functions (e.g., fetching a guide, checking an answer).
-- **Events are side-effects of API calls.** The server records an event as a direct consequence of a user's action being processed. For example, when a user successfully fetches a guide's content from `/api/guide`, the server records a `guide_view` event.
-
-### Implementation and Data Flow
-
-1.  **User Action**: A user performs an action in the frontend, such as viewing a guide or submitting a crossword.
-2.  **API Request**: The frontend makes a standard API request to the Next.js backend (e.g., `GET /api/guide` or `POST /api/check-crossword`).
-3.  **Backend Logic Execution**: The API endpoint performs its primary function (fetches content, validates the answer, etc.).
-4.  **Event Recording**: After successfully executing the primary logic, the API endpoint itself calls the `recordEvent()` function from `lib/metrics-server.ts`.
-5.  **Database Storage**: The `recordEvent()` function inserts a new entry into the `userevent` table with the relevant event type (`guide_view`, `course_start`, `course_progress`, `game_complete`) and associated data.
-
-### Key Changes Implemented
-
--   **Deleted Endpoint**: The `/api/track-event` endpoint has been completely removed.
--   **No Client-Side Logic**: The `lib/metrics.ts` file and all client-side `trackEvent` calls have been deleted.
--   **Centralized Recording**: All event recording now happens within the API routes in the Next.js backend (`/api/guide`, `/api/check-crossword`), making the system more secure and reliable.
-
-The existing **Metrics Dashboard** (`/metrics`) and its corresponding API (`/api/metrics`) continue to function as before, but they now draw from a more reliable and accurate dataset.
+The existing **Metrics Dashboard** (`/metrics`) visualizes this reliable, server-recorded data.
 
 ---
 
@@ -210,7 +195,7 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 
 ##### `guide_usuario` (per-guide progress)
 - `usuario_id`, `actividadpf_id`: Composite primary key
-- `points`: 1 if guide was answered correctly, 0 otherwise
+- `points`: 1 if the guide was answered correctly, 0 otherwise
 - `amountpaid`: USDT amount rewarded for this guide (0 if not paid)
 - `profilescore`: Snapshot of user's `profilescore` at submission time
 
@@ -240,7 +225,7 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 ## Key Technologies
 
 | Component | Tech | Purpose |
-|-----------|------|----------||
+|-----------|------|----------|
 | Major Backend | Rails + PostgreSQL | Course/user management, admin interface |
 | Smart Contracts | Solidity + Hardhat | USDT reward distribution, vault management |
 | Frontend & API | Next.js + React + TypeScript | UI, content delivery, SIWE auth, answer validation |
@@ -258,4 +243,3 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 - **Testing:** Hound CI, CodeClimate integration
 - **Code Quality:** Automated linting and security checks
 - **Live Deployment:** Running at https://learn.tg
-

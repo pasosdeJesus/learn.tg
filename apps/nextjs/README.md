@@ -26,6 +26,42 @@ The frontend is built with [Next.js](https://nextjs.org/) and uses [Sign-In with
 - **Testing**: [Vitest](https://vitest.dev/) for unit and integration testing, with [React Testing Library](https://testing-library.com/)
 - **Linting & Formatting**: [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/)
 
+## In-Depth Architecture
+
+This section provides a deeper look into the technical implementation of the Next.js application. For a system-wide overview, please see the main `ARCHITECTURE.md` file in the root directory.
+
+### Business Logic and Utilities (lib/)
+This directory contains crucial application logic, decoupled from the UI and API routes, ensuring reusability and testability.
+- **`lib/guide-utils.ts`**: Manages logic related to course and guide progress.
+- **`lib/scores.ts`**: Handles the calculation and updating of user scores (`learningscore`, `profilescore`).
+- **`lib/crypto.ts`**: Contains cryptographic functions for authentication and data integrity.
+- **`lib/metrics-server.ts`**: Provides server-side functions for recording user events.
+
+### UI Components (components/ui)
+The application uses **Radix UI** as a foundation for its UI components. Our library of reusable and custom components is located in `apps/nextjs/components/ui`, providing a consistent look and feel across the platform.
+
+### Database Interaction (db/)
+While the main schema is managed by the Rails backend, the Next.js app interacts directly with the database for performance-critical operations using the Kysely query builder.
+- **Connection**: The database connection is configured in `apps/nextjs/db/database.ts`.
+- **Migrations**: Schema changes and triggers specific to the Next.js application's needs (e.g., for analytics or specific caching logic) are managed via migrations in `apps/nextjs/db/migrations`.
+
+### Testing Strategy
+The project emphasizes code quality and reliability through a comprehensive testing strategy.
+- **Framework**: **Vitest** is used to run unit, integration, and component tests.
+- **Location**: Test files are co-located with the source code in `__tests__` directories (e.g., `apps/nextjs/components/__tests__/`).
+- **Execution**: Tests can be run with the `make test` command from this directory.
+
+### Server-Side Analytics and Metrics
+
+In line with our principle of **transparency**, our metrics system is a robust, server-side-only process to ensure data integrity and provide a single source of truth.
+
+-   **Philosophy**: The backend is the source of truth. The client-side application no longer tracks events. Instead, events are recorded as a direct side-effect of an API call being processed on the server.
+-   **Data Flow**:
+    1.  A user's action triggers a standard API request to the Next.js backend (e.g., `GET /api/guide`).
+    2.  After the API endpoint executes its primary logic, it calls the `recordEvent()` function from `lib/metrics-server.ts`.
+    3.  This function inserts a new entry into the `userevent` table.
+-   **Result**: This approach makes the system more secure and reliable. The existing **Metrics Dashboard** (`/metrics`) and its API (`/api/metrics`) draw from this accurate dataset.
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (>= 18)
@@ -105,39 +141,6 @@ The application uses Next.js's App Router. Here are the main user-facing pages:
 - **`app/metrics/page.tsx`**: An internal dashboard for platform administrators to visualize key metrics, such as user engagement, course completion rates, and user growth. It dynamically loads several chart components to display the data.
 
 - **`app/[lang]/invitegd/[inviter]/page.tsx`**: This page is part of the GoodDollar invitation and rewards system. It allows users to claim rewards for inviting new users to the platform and to get their own invite link.
-
-## Testing
-
-The project uses [Vitest](https://vitest.dev/) for unit and integration testing. You can run the entire test suite with the following command:
-
-```sh
-make test
-```
-
-This will execute all test files and display a coverage report in the console.
-
-### Type-Checking Tests
-
-To ensure the test files themselves are free of TypeScript errors, run:
-
-```sh
-make type-check-tests
-```
-
-### Structure
-
-- Tests for a given page, for example `app/[lang]/page.tsx`, are located at `app/[lang]/__tests__/page.test.tsx`.
-- This co-location strategy keeps tests close to the code, making them easier to find and maintain.
-
-### Mocks
-
-- The tests make extensive use of `vi.mock` to mock external dependencies such as `next/navigation`, `axios`, `next-auth/react`, and `wagmi`. This ensures that tests are hermetic and deterministic.
-
-### Focus
-
-- **Component Rendering**: Tests verify that components render correctly based on different props and application states (e.g., authenticated vs. unauthenticated user).
-- **API Interaction**: Tests simulate API calls using `axios` mocks to ensure that the application handles data fetching, loading states, and errors gracefully.
-- **User Interaction**: While not explicitly shown in the provided files, the testing setup is prepared to handle user interaction testing via React Testing Library's event simulation.
 
 ## Production
 
