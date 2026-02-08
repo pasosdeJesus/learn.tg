@@ -3,11 +3,13 @@ import { callWriteFun } from '../crypto'
 
 // Mock viem modules
 const mockGetTransactionCount = vi.fn()
-const mockWaitForTransactionReceipt = vi.fn()
+const mockGetTransactionReceipt = vi.fn()
+const mockGetBlock = vi.fn()
 
 const mockPublicClient = {
   getTransactionCount: mockGetTransactionCount,
-  waitForTransactionReceipt: mockWaitForTransactionReceipt,
+  getTransactionReceipt: mockGetTransactionReceipt,
+  getBlock: mockGetBlock,
 }
 
 const mockAccount = {
@@ -42,10 +44,12 @@ describe('crypto', () => {
     beforeEach(() => {
       vi.clearAllMocks()
       mockGetTransactionCount.mockResolvedValue(5)
-      mockWaitForTransactionReceipt.mockResolvedValue({
+      mockGetTransactionReceipt.mockResolvedValue({
         status: 'success',
         transactionHash: '0xhash',
+        blockNumber: 12345n,
       })
+      mockGetBlock.mockResolvedValue({ number: 12347n })
       mockContractFun.mockResolvedValue('0xtransactionhash')
     })
 
@@ -60,10 +64,8 @@ describe('crypto', () => {
 
       expect(mockContractFun).toHaveBeenCalledWith(['param1', 'param2'])
       expect(result).toBe('0xtransactionhash')
-      expect(mockWaitForTransactionReceipt).toHaveBeenCalledWith({
+      expect(mockGetTransactionReceipt).toHaveBeenCalledWith({
         hash: '0xtransactionhash',
-        confirmations: 2,
-        timeout: 3000,
       })
     })
 
@@ -95,7 +97,7 @@ describe('crypto', () => {
     })
 
     it('should continue even if waitForTransactionReceipt fails', async () => {
-      mockWaitForTransactionReceipt.mockRejectedValue(new Error('timeout'))
+      mockGetTransactionReceipt.mockRejectedValue(new Error('timeout'))
 
       const result = await callWriteFun(
         mockPublicClient as any,
@@ -106,9 +108,9 @@ describe('crypto', () => {
       )
 
       expect(result).toBe('0xtransactionhash')
-      // waitForTransactionReceipt should still have been called
-      expect(mockWaitForTransactionReceipt).toHaveBeenCalled()
-    })
+      // getTransactionReceipt should still have been called
+      expect(mockGetTransactionReceipt).toHaveBeenCalled()
+    }, 11000)
 
     it('should log with indent when provided', async () => {
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})

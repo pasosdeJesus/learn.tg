@@ -32,6 +32,7 @@ interface CourseExtra {
   canSubmit: boolean
   percentageCompleted: number
   percentagePaid: number
+  profileScore: number
 }
 
 export default function Page({ params }: PageProps) {
@@ -85,7 +86,6 @@ export default function Page({ params }: PageProps) {
             }
             try {
               const response2 = await axios.get(url2)
-              console.log("OJO response2=", response2)
               if (response2.data.message) {
                 console.error(
                   'Error message received:',
@@ -102,12 +102,13 @@ export default function Page({ params }: PageProps) {
                 canSubmit: response2.data.canSubmit,
                 percentageCompleted: response2.data.percentageCompleted,
                 percentagePaid: response2.data.percentagePaid,
+                profileScore: response2.data.profileScore,
               }
 
               setExtCourses((prevMap) =>
                 new Map(prevMap.set(response2.data.courseId, extraData)),
               )
-            } catch (error) { 
+            } catch (error) {
               alert(error)
               console.error(error)
             }
@@ -135,10 +136,10 @@ export default function Page({ params }: PageProps) {
   }
 
   const refreshCourseVault = async (courseId: number) => {
-    if (!session || !address || !session.address || session.address !== address) return
+    if (!session || !address || !session.address || session.address !== address)
+      return
     const csrfToken = await getCsrfToken()
     const url2 = `/api/scholarship?courseId=${courseId}&walletAddress=${session.address}&token=${csrfToken}`
-    console.log("OJO url2=", url2)
 
     try {
       const response2 = await axios.get(url2)
@@ -150,8 +151,8 @@ export default function Page({ params }: PageProps) {
           canSubmit: response2.data.canSubmit,
           percentageCompleted: response2.data.percentageCompleted,
           percentagePaid: response2.data.percentagePaid,
+          profileScore: response2.data.profileScore,
         }
-        console.log("OJO extraData=", extraData)
         setExtCourses((prevMap) =>
           new Map(prevMap.set(response2.data.courseId, extraData)),
         )
@@ -172,7 +173,10 @@ export default function Page({ params }: PageProps) {
 
   return (
     <Toast.Provider swipeDirection="right">
-      <section aria-label="Courses grid" className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
+      <section
+        aria-label="Courses grid"
+        className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6"
+      >
         <div className="max-w-6xl mx-auto">
           <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
             {courses.map((course) => {
@@ -183,7 +187,10 @@ export default function Page({ params }: PageProps) {
                   key={course.id}
                   className="flex flex-col bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
                 >
-                  <a href={`/${course.idioma}${course.prefijoRuta}`} className="flex flex-col flex-grow">
+                  <a
+                    href={`/${course.idioma}${course.prefijoRuta}`}
+                    className="flex flex-col flex-grow"
+                  >
                     <figure className="img-course">
                       {course.imagen && course.imagen.startsWith('/') && (
                         <Image
@@ -205,15 +212,31 @@ export default function Page({ params }: PageProps) {
                     </header>
                     <footer className="flex justify-between items-center p-4 mt-auto">
                       <div>
-                        {extra && extra.amountPerGuide > 0 && (
-                          <div className="p-2">
-                            <span>
-                              {lang === 'es' ? 'Beca de ' : 'Scholarship of '}$
-                              {extra.amountPerGuide} USDT
-                              {lang === 'es' ? ' por guía.' : ' per guide.'}
-                            </span>
-                          </div>
-                        )}
+                        {extra &&
+                          extra.amountPerGuide > 0 &&
+                          (session?.address && extra.profileScore > 0 ? (
+                            <div className="p-2">
+                              <span>
+                                {lang === 'es'
+                                  ? 'Beca de '
+                                  : 'Scholarship of '}$
+                                {(
+                                  (extra.amountPerGuide * 100) /
+                                  extra.profileScore
+                                ).toFixed(2)}{' '}
+                                USDT
+                                {lang === 'es' ? ' por guía.' : ' per guide.'}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="p-2">
+                              <span>
+                                {lang === 'es'
+                                  ? 'Beca de hasta 1 USDT después de que completes tu perfil.'
+                                  : 'Scholarship of up to 1 USDT after you complete your profile.'}
+                              </span>
+                            </div>
+                          ))}
                         {extra &&
                           extra.amountPerGuide > 0 &&
                           session?.address &&
@@ -260,7 +283,9 @@ export default function Page({ params }: PageProps) {
                           onClick={() => handleDonate(course.id)}
                           size="sm"
                         >
-                          {lang === 'es' ? 'Donar a este curso' : 'Donate for this course'}
+                          {lang === 'es'
+                            ? 'Donar a este curso'
+                            : 'Donate for this course'}
                         </Button>
                       )}
                     </div>
@@ -298,4 +323,3 @@ export default function Page({ params }: PageProps) {
     </Toast.Provider>
   )
 }
-

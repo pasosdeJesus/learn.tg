@@ -1,10 +1,9 @@
 import 'dotenv/config'
-import type { Address } from 'viem'
+import type { Address, PublicClient, TransactionReceipt } from 'viem'
 import {
   createPublicClient,
   createWalletClient,
   getContract,
-  getTransactionReceipt,
   http,
   formatUnits,
 } from 'viem'
@@ -13,26 +12,30 @@ import { privateKeyToAccount } from 'viem/accounts'
 import LearnTGVaultsAbi from '../abis/LearnTGVaults.json' with { type: 'json' }
 
 
-async function waitForReceiptWithRetry(client, { hash, confirmations = 2, timeout = 10_000, interval = 1_000 }) {
+async function waitForReceiptWithRetry(
+  client: PublicClient,
+  { hash, confirmations = 2, timeout = 10_000, interval = 1_000 }: {
+    hash: Address,
+    confirmations?: number,
+    timeout?: number,
+    interval?: number
+  }
+): Promise<TransactionReceipt> {
   const start = Date.now();
 
   while (Date.now() - start < timeout) {
-    console.log(Date.now()-start)
     try {
       const receipt = await client.getTransactionReceipt({ hash });
       if (receipt && receipt.blockNumber) {
-        console.log("receipt=", JSON.stringify(receipt))
         // Wait for required confirmations
         const block = await client.getBlock();
-        console.log("block=", JSON.stringify(block))
         const confirmationsDone = Number(block.number - receipt.blockNumber);
-        console.log("confirmationsDone=", JSON.stringify(confirmationsDone))
         if (confirmationsDone >= confirmations) {
           return receipt;
         }
       }
     } catch (error) {
-      // Transaction not mined yet
+      // Transaction not mined yet, or other error.
     }
     await new Promise((resolve) => setTimeout(resolve, interval));
   }
@@ -72,21 +75,13 @@ export async function callWriteFun(
   }
   console.log(sindent, 'tx=', tx)
   try {
-    const receipt = await waitForReceiptWithRetry(publicClient, { hash: tx });
-    /*const receipt = await publicClient.waitForTransactionReceipt({
-hash: tx,
-confirmations: 2, // Optional: number of confirmations to wait for
-timeout: 3_000, // 2 seconds
-}) */
-    console.log(sindent, `Receipt: ${JSON.stringify(receipt, null, 2)}`)
+    await waitForReceiptWithRetry(publicClient, { hash: tx });
   } catch (e) {
     console.log(e)
     console.error(
       sindent,
-      `**No operó waitForReceiptWithRetry de ${tx}, `+
-        `Error: \n${JSON.stringify(e)}`
+      `**No operó waitForReceiptWithRetry de ${tx}, Error: ${e}`
     )
   }
   return tx
 }
-
