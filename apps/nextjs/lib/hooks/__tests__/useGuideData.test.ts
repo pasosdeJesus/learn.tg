@@ -56,7 +56,9 @@ describe('useGuideData', () => {
   }
 
   const mockScholarshipData = {
-    percentageCompleted: '75.5'
+    amountScholarship: 1000000,
+    scholarshipPerGuide: 500000,
+    isEligible: true,
   }
 
   beforeEach(() => {
@@ -95,16 +97,20 @@ describe('useGuideData', () => {
     expect(result.current.loading).toBe(true)
     expect(result.current.course).toBe(null)
     expect(result.current.error).toBe(null)
+    expect(result.current.scholarshipPerGuide).toBe(null)
+    expect(result.current.isEligible).toBe(null)
   })
 
-  it('should fetch course data successfully', async () => {
+  it('should fetch course and scholarship data successfully', async () => {
     axiosGetMock.mockImplementation((url: string) => {
       if (url.includes('/api/guide-status')) {
-        // Mock first guide as completed
         if (url.includes('guideNumber=1')) {
             return Promise.resolve({ data: { completed: true, receivedScholarship: false } })
         }
         return Promise.resolve({ data: { completed: false, receivedScholarship: false } })
+      }
+       if (url.includes('/api/scholarship')) {
+        return Promise.resolve({ data: mockScholarshipData })
       }
       if (url.includes('presenta')) {
         return Promise.resolve({ data: mockCourse })
@@ -124,6 +130,9 @@ describe('useGuideData', () => {
     expect(result.current.course?.id).toBe('course-1')
     expect(result.current.error).toBe(null)
     expect(result.current.percentageCompleted).toBe(50)
+    expect(result.current.amountScholarship).toBe(1000000)
+    expect(result.current.scholarshipPerGuide).toBe(500000)
+    expect(result.current.isEligible).toBe(true)
   })
 
   it('should handle session/address mismatch (early return)', async () => {
@@ -167,7 +176,10 @@ describe('useGuideData', () => {
     expect(result.current.course).toBeTruthy()
     expect(result.current.course?.id).toBe('course-1')
     expect(result.current.error).toBe(null)
-    expect(result.current.percentageCompleted).toBe(null) // No scholarship data without session
+    expect(result.current.percentageCompleted).toBe(null)
+    expect(result.current.amountScholarship).toBe(null)
+    expect(result.current.scholarshipPerGuide).toBe(null)
+    expect(result.current.isEligible).toBe(null)
   })
 
   it('should handle course not found error', async () => {
@@ -237,6 +249,9 @@ describe('useGuideData', () => {
     expect(result.current.course).toBeTruthy()
     expect(result.current.error).toBe(null)
     expect(result.current.percentageCompleted).toBe(null)
+    expect(result.current.amountScholarship).toBe(null)
+    expect(result.current.scholarshipPerGuide).toBe(null)
+    expect(result.current.isEligible).toBe(null)
   })
 
   it('should calculate guide navigation paths when pathSuffix provided', async () => {
@@ -328,4 +343,3 @@ describe('useGuideData', () => {
     expect(result.current.course?.guias[1].completed).toBe(false)
   })
 })
-

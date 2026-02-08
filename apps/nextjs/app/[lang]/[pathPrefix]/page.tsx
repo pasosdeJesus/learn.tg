@@ -6,7 +6,9 @@ import { useAccount } from 'wagmi'
 
 import { useGuideData } from '@/lib/hooks/useGuideData'
 
+import { Button } from '@/components/ui/button'
 import { CompletedProgress } from '@/components/ui/completed-progress'
+import { DonateModal } from '@/components/DonateModal'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -29,8 +31,9 @@ export default function Page({ params }: PageProps) {
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
   const [csrfToken, setCsrfToken] = useState('')
+  const [isDonateModalOpen, setIsDonateModalOpen] = useState(false)
 
-  const { course, loading, error, percentageCompleted, percentagePaid, amountScholarship } = useGuideData({
+  const { course, loading, error, percentageCompleted, percentagePaid, amountScholarship, scholarshipPerGuide, isEligible } = useGuideData({
     lang,
     pathPrefix,
   })
@@ -39,7 +42,6 @@ export default function Page({ params }: PageProps) {
   const [htmlExtended, setHtmlExtended] = useState('')
   const [contentsHtml, setContentsHtml] = useState('')
 
-  // Get CSRF token when address is available
   useEffect(() => {
     if (address) {
       getCsrfToken().then(token => {
@@ -111,76 +113,102 @@ export default function Page({ params }: PageProps) {
   }
 
   return (
-    <div className="container mx-auto my-8 flex flex-col lg:flex-row justify-center gap-6 min-h-screen">
-      <section className="flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 lg:w-1/2 xl:w-3/5 bg-white rounded-2xl shadow">
-        <header className="text-center mb-6">
-          <h1 className="text-2xl lg:text-3xl font-bold mb-2">
-            {course.titulo}
-          </h1>
-          {/* @ts-ignore */}
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-600">
-            {course.subtitulo}
-          </h2>
-          <div className="mt-4 flex items-center justify-center gap-6">
-            <CompletedProgress percentageCompleted={percentageCompleted || 0} percentagePaid={percentagePaid || 0} lang={lang} />
-            <div className="flex flex-col gap-1">
-              <div className="text-sm text-gray-600">
-                {lang === 'es' ? 'Total de guias en el curso: ' : 'Total number of guides in the course: '}
-                {course.guias.length}
-              </div>
-              <div className="text-sm text-gray-600">
-                {lang === 'es' ? 'Total de guías aprobadas: ' : 'Total number of approved guides: '}
-                {course.guias.filter(g => g.completed).length}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">
-                {lang === 'es' ? 'Total en USDT ganado: ' : 'Total USDT earned: '}
-                ${formatUnits(BigInt(amountScholarship || 0), 6)} USDT
+    <>
+      <div className="container mx-auto my-8 flex flex-col lg:flex-row justify-center gap-6 min-h-screen">
+        <section className="flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 lg:w-1/2 xl:w-3/5 bg-white rounded-2xl shadow">
+          <header className="text-center mb-6">
+            <h1 className="text-2xl lg:text-3xl font-bold mb-2">
+              {course.titulo}
+            </h1>
+            {/* @ts-ignore */}
+            <h2 className="text-lg lg:text-xl font-semibold text-gray-600">
+              {course.subtitulo}
+            </h2>
+            <div className="mt-4 flex items-center justify-center gap-6">
+              <CompletedProgress percentageCompleted={percentageCompleted || 0} percentagePaid={percentagePaid || 0} lang={lang} />
+              <div className="flex flex-col gap-1">
+                <div className="text-sm text-gray-600">
+                  {lang === 'es' ? 'Total de guias en el curso: ' : 'Total number of guides in the course: '}
+                  {course.guias.length}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {lang === 'es' ? 'Total de guías aprobadas: ' : 'Total number of approved guides: '}
+                  {course.guias.filter(g => g.completed).length}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">
+                  {lang === 'es' ? 'Beca por guía aprobada: ' : 'Scholarship per approved guide: '}
+                  ${formatUnits(BigInt(scholarshipPerGuide || 0), 6)} USDT
+                </div>
+                <div className="text-sm text-gray-600 font-medium">
+                  {lang === 'es' ? 'Total en USDT ganado: ' : 'Total USDT earned: '}
+                  ${formatUnits(BigInt(amountScholarship || 0), 6)} USDT
+                </div>
+                {address && (
+                  <div className="text-sm text-gray-600 font-medium">
+                    {isEligible ? (
+                      <span className="text-green-500">{lang === 'es' ? 'Eres elegible para la beca' : 'You are eligible for the scholarship'}</span>
+                    ) : (
+                      <span className="text-red-500">{lang === 'es' ? 'No eres elegible para la beca' : 'You are not eligible for the scholarship'}</span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <figure className="my-6">
-          {/* @ts-ignore */}
-          <img
-            src={course.imagen}
-            width="300"
-            alt={course.altImagen}
-            className="mx-auto rounded-lg shadow-md"
-          />
-          <figcaption className="text-sm text-gray-500 mt-3 text-center">
+          <figure className="my-6">
             {/* @ts-ignore */}
-            <a
-              href={course.enlaceImagen}
-              target="_blank"
-              className="underline hover:text-secondary-600"
-            >
-              {course.creditoImagen}
-            </a>
-          </figcaption>
-        </figure>
+            <img
+              src={course.imagen}
+              width="300"
+              alt={course.altImagen}
+              className="mx-auto rounded-lg shadow-md"
+            />
+            <figcaption className="text-sm text-gray-500 mt-3 text-center">
+              {/* @ts-ignore */}
+              <a
+                href={course.enlaceImagen}
+                target="_blank"
+                className="underline hover:text-secondary-600"
+              >
+                {course.creditoImagen}
+              </a>
+            </figcaption>
+          </figure>
 
-        <article
-          className="prose max-w-prose text-justify text-gray-700"
-          dangerouslySetInnerHTML={{ __html: htmlSummary }}
-        />
-      </section>
-
-      <aside className="flex flex-col gap-6 w-full lg:w-2/5">
-        <div className="px-6 py-8 rounded-xl bg-white text-gray-800 shadow">
-          <h2 className="text-2xl lg:text-3xl font-bold mb-6">
-            {course.idioma === 'en' ? 'Course contents' : 'Contenido del curso'}
-          </h2>
-          <div
-            className="list-decimal text-justify space-y-2"
-            dangerouslySetInnerHTML={{ __html: contentsHtml }}
+          <article
+            className="prose max-w-prose text-justify text-gray-700"
+            dangerouslySetInnerHTML={{ __html: htmlSummary }}
           />
-        </div>
+          <div className="mt-8">
+            <Button onClick={() => setIsDonateModalOpen(true)}>
+              {lang === 'es' ? 'Donar a este curso' : 'Donate to this course'}
+            </Button>
+          </div>
+        </section>
 
-        {htmlExtended && (
-          <div dangerouslySetInnerHTML={{ __html: htmlExtended }} />
-        )}
-      </aside>
-    </div>
+        <aside className="flex flex-col gap-6 w-full lg:w-2/5">
+          <div className="px-6 py-8 rounded-xl bg-white text-gray-800 shadow">
+            <h2 className="text-2xl lg:text-3xl font-bold mb-6">
+              {course.idioma === 'en' ? 'Course contents' : 'Contenido del curso'}
+            </h2>
+            <div
+              className="list-decimal text-justify space-y-2"
+              dangerouslySetInnerHTML={{ __html: contentsHtml }}
+            />
+          </div>
+
+          {htmlExtended && (
+            <div dangerouslySetInnerHTML={{ __html: htmlExtended }} />
+          )}
+        </aside>
+      </div>
+      <DonateModal 
+        courseId={parseInt(course.id)} 
+        isOpen={isDonateModalOpen} 
+        onClose={() => setIsDonateModalOpen(false)} 
+        lang={lang}
+      />
+    </>
   )
 }

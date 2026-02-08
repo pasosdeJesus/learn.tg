@@ -58,6 +58,8 @@ export function useGuideData({
   )
   const [percentagePaid, setPercentagePaid] = useState<number | null>(null)
   const [amountScholarship, setAmountScholarship] = useState<number | null>(null)
+  const [scholarshipPerGuide, setScholarshipPerGuide] = useState<number | null>(null)
+  const [isEligible, setIsEligible] = useState<boolean | null>(null)
 
   useEffect(() => {
     const fetchGuideData = async () => {
@@ -132,6 +134,12 @@ export function useGuideData({
             if (scholarshipRes.data.amountScholarship !== null) {
               setAmountScholarship(Number(scholarshipRes.data.amountScholarship))
             }
+            if (scholarshipRes.data.scholarshipPerGuide !== null) {
+              setScholarshipPerGuide(Number(scholarshipRes.data.scholarshipPerGuide))
+            }
+            if (scholarshipRes.data.isEligible !== null) {
+              setIsEligible(scholarshipRes.data.isEligible)
+            }
             
             const completedGuides = guidesWithStatus.filter((g: Guide) => g.completed).length
             const paidGuides = guidesWithStatus.filter((g: Guide) => g.receivedScholarship).length
@@ -204,6 +212,7 @@ export function useGuideData({
     percentageCompleted,
     percentagePaid,
     amountScholarship,
+    scholarshipPerGuide,
+    isEligible,
   }
 }
-
