@@ -6,6 +6,8 @@ import { use, useEffect, useState } from 'react'
 import { useAccount, usePublicClient } from 'wagmi'
 import * as Toast from '@radix-ui/react-toast'
 import Image from 'next/image'
+
+import { CourseStatistics } from '@/components/CourseStatistics'
 import DonateModal from '@/components/DonateModal'
 import { Button } from '@/components/ui/button'
 import { CompletedProgress } from '@/components/ui/completed-progress'
@@ -181,6 +183,7 @@ export default function Page({ params }: PageProps) {
           <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
             {courses.map((course) => {
               const extra = extCourses.get(course.id)
+              console.log("Ojo extra=", extra)
 
               return (
                 <article
@@ -210,66 +213,19 @@ export default function Page({ params }: PageProps) {
                         {course.subtitulo}
                       </p>
                     </header>
-                    <footer className="flex justify-between items-center p-4 mt-auto">
-                      <div>
-                        {extra &&
-                          extra.amountPerGuide > 0 &&
-                          (session?.address && extra.profileScore > 0 ? (
-                            <div className="p-2">
-                              <span>
-                                {lang === 'es'
-                                  ? 'Beca de '
-                                  : 'Scholarship of '}$
-                                {(
-                                  (extra.amountPerGuide * 100) /
-                                  extra.profileScore
-                                ).toFixed(2)}{' '}
-                                USDT
-                                {lang === 'es' ? ' por guía.' : ' per guide.'}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="p-2">
-                              <span>
-                                {lang === 'es'
-                                  ? 'Beca de hasta 1 USDT después de que completes tu perfil.'
-                                  : 'Scholarship of up to 1 USDT after you complete your profile.'}
-                              </span>
-                            </div>
-                          ))}
-                        {extra &&
-                          extra.amountPerGuide > 0 &&
-                          session?.address &&
-                          extra.percentageCompleted < 100 &&
-                          !extra.canSubmit && (
-                            <div className="p-2">
-                              <span className="text-red-500">
-                                {lang === 'es'
-                                  ? 'Aunque estás en etapa de enfriamiento'
-                                  : 'Although you are in cooldown period.'}
-                              </span>
-                            </div>
-                          )}
-                        {extra &&
-                          extra.amountPerGuide > 0 &&
-                          extra.canSubmit &&
-                          extra.percentageCompleted < 100 && (
-                            <div className="p-2 text-green-600">
-                              <span className="text-green-600">
-                                {lang === 'es'
-                                  ? 'Eres elegible.'
-                                  : 'You are eligible.'}
-                              </span>
-                            </div>
-                          )}
-                      </div>
-                      {extra && (
-                        <CompletedProgress
-                          percentageCompleted={extra.percentageCompleted || 0}
-                          percentagePaid={extra.percentagePaid || 0}
-                          lang={lang}
+                    <footer>
+                      {extra && 
+                         <CourseStatistics
+                           lang={lang} 
+                           full={false}
+                           address={session?.address}
+                           profileScore={extra.profileScore}
+                           scholarshipPerGuide={extra.amountPerGuide}
+                           percentagePaid={extra.percentagePaid}
+                           canSubmit={extra.canSubmit}
+                           percentageCompleted={extra.percentageCompleted}
                         />
-                      )}
+                      }
                     </footer>
                   </a>
                   {extra && extra.vaultCreated && (

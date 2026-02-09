@@ -1,14 +1,7 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
-import { useSession, getCsrfToken } from 'next-auth/react'
-import { useAccount } from 'wagmi'
-
-import { useGuideData } from '@/lib/hooks/useGuideData'
-
-import { Button } from '@/components/ui/button'
-import { CompletedProgress } from '@/components/ui/completed-progress'
-import { DonateModal } from '@/components/DonateModal'
+import { getCsrfToken, useSession } from 'next-auth/react'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -17,6 +10,13 @@ import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 import { formatUnits } from 'viem'
+import { useAccount } from 'wagmi'
+
+import { CourseStatistics } from '@/components/CourseStatistics'
+import { DonateModal } from '@/components/DonateModal'
+import { Button } from '@/components/ui/button'
+import { CompletedProgress } from '@/components/ui/completed-progress'
+import { useGuideData } from '@/lib/hooks/useGuideData'
 
 type PageProps = {
   params: Promise<{
@@ -33,10 +33,17 @@ export default function Page({ params }: PageProps) {
   const [csrfToken, setCsrfToken] = useState('')
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false)
 
-  const { course, loading, error, percentageCompleted, percentagePaid, amountScholarship, scholarshipPerGuide, isEligible } = useGuideData({
+  const { course, loading, error, percentageCompleted, percentagePaid, profileScore, scholarshipPaid, scholarshipPerGuide, canSubmit } = useGuideData({
     lang,
     pathPrefix,
   })
+  //useGuideData deberia retornar tambien paidGuides
+  console.log(
+    "OJO course=", course, ", loading=", loading,
+    "error=", error, "percentageCompleted=", percentageCompleted,
+    "percentagePaid=", percentagePaid, "scholarshipPaid=", scholarshipPaid,
+    "scholarshipPerGuide=", scholarshipPerGuide, "canSubmit=", canSubmit
+  )
 
   const [htmlSummary, setHtmlSummary] = useState('')
   const [htmlExtended, setHtmlExtended] = useState('')
@@ -124,36 +131,6 @@ export default function Page({ params }: PageProps) {
             <h2 className="text-lg lg:text-xl font-semibold text-gray-600">
               {course.subtitulo}
             </h2>
-            <div className="mt-4 flex items-center justify-center gap-6">
-              <CompletedProgress percentageCompleted={percentageCompleted || 0} percentagePaid={percentagePaid || 0} lang={lang} />
-              <div className="flex flex-col gap-1">
-                <div className="text-sm text-gray-600">
-                  {lang === 'es' ? 'Total de guias en el curso: ' : 'Total number of guides in the course: '}
-                  {course.guias.length}
-                </div>
-                <div className="text-sm text-gray-600">
-                  {lang === 'es' ? 'Total de guías aprobadas: ' : 'Total number of approved guides: '}
-                  {course.guias.filter(g => g.completed).length}
-                </div>
-                <div className="text-sm text-gray-600 font-medium">
-                  {lang === 'es' ? 'Beca por guía aprobada: ' : 'Scholarship per approved guide: '}
-                  ${formatUnits(BigInt(scholarshipPerGuide || 0), 6)} USDT
-                </div>
-                <div className="text-sm text-gray-600 font-medium">
-                  {lang === 'es' ? 'Total en USDT ganado: ' : 'Total USDT earned: '}
-                  ${formatUnits(BigInt(amountScholarship || 0), 6)} USDT
-                </div>
-                {address && (
-                  <div className="text-sm text-gray-600 font-medium">
-                    {isEligible ? (
-                      <span className="text-green-500">{lang === 'es' ? 'Eres elegible para la beca' : 'You are eligible for the scholarship'}</span>
-                    ) : (
-                      <span className="text-red-500">{lang === 'es' ? 'No eres elegible para la beca' : 'You are not eligible for the scholarship'}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
           </header>
 
           <figure className="my-6">
@@ -201,6 +178,19 @@ export default function Page({ params }: PageProps) {
           {htmlExtended && (
             <div dangerouslySetInnerHTML={{ __html: htmlExtended }} />
           )}
+          <CourseStatistics
+            lang={lang} 
+            full={true}
+            address={session?.address}
+            scholarshipPerGuide={scholarshipPerGuide}
+            percentagePaid={percentagePaid}
+            canSubmit={canSubmit}
+            percentageCompleted={percentageCompleted}
+            totalGuides={course.guias.length}
+            completedGuides={course.guias.filter(g => g.completed).length}
+            scholarshipPaid={scholarshipPaid}
+            profileScore={profileScore}
+          />
         </aside>
       </div>
       <DonateModal 
