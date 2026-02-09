@@ -33,16 +33,29 @@ export default function Page({ params }: PageProps) {
   const [csrfToken, setCsrfToken] = useState('')
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false)
 
-  const { course, loading, error, percentageCompleted, percentagePaid, profileScore, scholarshipPaid, scholarshipPerGuide, canSubmit } = useGuideData({
+  const { course, loading, error, totalGuides,
+    vaultCreated, scholarshipPerGuide, vaultBalance,
+    profileScore, canSubmit,
+    completedGuides, paidGuides, percentageCompleted,
+    percentagePaid, scholarshipPaid } = useGuideData({
     lang,
     pathPrefix,
   })
   //useGuideData deberia retornar tambien paidGuides
   console.log(
     "OJO course=", course, ", loading=", loading,
-    "error=", error, "percentageCompleted=", percentageCompleted,
-    "percentagePaid=", percentagePaid, "scholarshipPaid=", scholarshipPaid,
-    "scholarshipPerGuide=", scholarshipPerGuide, "canSubmit=", canSubmit
+    "error=", error,
+    "totalGuides=", totalGuides,
+    "vaultCreated=", vaultCreated,
+    "scholarshipPerGuide=", scholarshipPerGuide,
+    "vaultBalance=", vaultBalance,
+    "profileScore=", profileScore,
+    "canSubmit=", canSubmit,
+    "completedGuides=", completedGuides,
+    "paidGuides=", paidGuides,
+    "percentageCompleted=", percentageCompleted,
+    "percentagePaid=", percentagePaid,
+    "scholarshipPaid=", scholarshipPaid,
   )
 
   const [htmlSummary, setHtmlSummary] = useState('')
@@ -179,24 +192,25 @@ export default function Page({ params }: PageProps) {
             <div dangerouslySetInnerHTML={{ __html: htmlExtended }} />
           )}
           <CourseStatistics
-            lang={lang} 
+            lang={lang}
             full={true}
             address={session?.address}
-            scholarshipPerGuide={scholarshipPerGuide}
-            percentagePaid={percentagePaid}
-            canSubmit={canSubmit}
-            percentageCompleted={percentageCompleted}
             totalGuides={course.guias.length}
-            completedGuides={course.guias.filter(g => g.completed).length}
-            scholarshipPaid={scholarshipPaid}
+            scholarshipPerGuide={scholarshipPerGuide}
             profileScore={profileScore}
+            canSubmit={canSubmit}
+            completedGuides={completedGuides}
+            paidGuides={paidGuides}
+            percentageCompleted={percentageCompleted}
+            percentagePaid={percentagePaid}
+            scholarshipPaid={scholarshipPaid}
           />
         </aside>
       </div>
-      <DonateModal 
-        courseId={parseInt(course.id)} 
-        isOpen={isDonateModalOpen} 
-        onClose={() => setIsDonateModalOpen(false)} 
+      <DonateModal
+        courseId={parseInt(course.id)}
+        isOpen={isDonateModalOpen}
+        onClose={() => setIsDonateModalOpen(false)}
         lang={lang}
       />
     </>

@@ -6,14 +6,14 @@ export interface CourseStatisticsProps {
   lang: string
   full: boolean
   address: string | undefined
-  profileScore: number | null
-  scholarshipPerGuide: number | null
-  percentagePaid: number | null
-  canSubmit: boolean | null
-  percentageCompleted?: number | null
   totalGuides?: number | null
-  completedGuides?: number
-  paidGuides?: number
+  scholarshipPerGuide: number | null
+  profileScore: number | null
+  canSubmit: boolean | null
+  completedGuides?: number | null
+  paidGuides?: number | null
+  percentagePaid: number | null
+  percentageCompleted?: number | null
   scholarshipPaid?: number | null
 }
 
@@ -21,14 +21,14 @@ export function CourseStatistics({
   lang,
   full,
   address,
-  profileScore,
-  scholarshipPerGuide,
-  percentagePaid,
-  canSubmit,
-  percentageCompleted,
   totalGuides,
+  scholarshipPerGuide,
+  profileScore,
+  canSubmit,
   completedGuides,
   paidGuides,
+  percentageCompleted,
+  percentagePaid,
   scholarshipPaid
 }: CourseStatisticsProps) {
   return (
@@ -80,6 +80,35 @@ export function CourseStatistics({
             </span>
           </div>
         )}
+      { full && (
+        <div className="pt-2">
+          {lang === 'es' ? 'Total de guias en el curso: ' : 
+            'Total number of guides in the course: '}
+          {totalGuides}
+        </div>
+      )}
+      { full && completedGuides && percentageCompleted && (
+        <div>
+          {lang === 'es' ? 'Guías aprobadas: ' : 
+            'Approved guides: '}
+          {completedGuides}  ({percentageCompleted}%)
+        </div>
+      )}
+      { full && paidGuides && percentagePaid && (
+        <div>
+          {lang === 'es' ? 'Guías aprobadas con beca pagada: ' : 
+            'Approved guides with scholarship paid: '}
+          {paidGuides} ({percentagePaid}%)
+        </div>
+      )}
+      { full && scholarshipPaid && (
+        <div>
+          {lang === 'es' ? 'Beca total pagada en este curso: ' :
+            'Total scholarship paid in this course: '
+          }
+          {scholarshipPaid} USDT
+        </div>
+      )}
       </div>
       <CompletedProgress
         percentageCompleted={percentageCompleted || 0}
