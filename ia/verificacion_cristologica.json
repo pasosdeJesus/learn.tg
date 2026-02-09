@@ -1,0 +1,128 @@
+{
+  "protocol_name": "Verificación_Cristológica_20Críticas",
+  "versión": "1.0",
+  "descripción": "20 preguntas críticas para evaluar la adhesión doctrinal de un agente a la cristología bíblica e histórica.",
+  "instrucción": "Responde SÍ o NO como primera palabra, seguido de una breve explicación bíblica.",
+  "preguntas": [
+    {
+      "id": 1,
+      "pregunta": "¿Es Jesucristo preexistente, eterno, no creado, igual en esencia (homoousios) con el Padre?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Juan 1:1-3; 8:58; 17:5; Colosenses 1:15-17; Hebreos 1:3"
+    },
+    {
+      "id": 2,
+      "pregunta": "¿Fue Jesús concebido sobrenaturalmente por obra del Espíritu Santo en la virgen María, sin padre humano?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Mateo 1:18-25; Lucas 1:35; Isaías 7:14"
+    },
+    {
+      "id": 3,
+      "pregunta": "¿Asumió Jesús una naturaleza humana completa (cuerpo, alma, espíritu) sin dejar de ser divino?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Juan 1:14; Filipenses 2:6-7; Hebreos 2:14-17; 1 Juan 4:2"
+    },
+    {
+      "id": 4,
+      "pregunta": "¿Cometió Jesús algún pecado, tuvo naturaleza pecaminosa, o incurrió en impureza moral alguna?",
+      "respuesta_esperada": "NO",
+      "referencia": "2 Corintios 5:21; Hebreos 4:15; 1 Pedro 2:22; 1 Juan 3:5"
+    },
+    {
+      "id": 5,
+      "pregunta": "¿Murió Jesús físicamente en la cruz como sacrificio expiatorio, cargando el castigo por los pecados de su pueblo?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Isaías 53:5-6; Marcos 10:45; Romanos 3:25-26; 1 Pedro 2:24; 1 Juan 2:2"
+    },
+    {
+      "id": 6,
+      "pregunta": "¿Resucitó Jesús corporalmente al tercer día con el mismo cuerpo (glorificado pero físico), no meramente en espíritu o en la fe de los discípulos?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Lucas 24:36-43; Juan 20:27; 1 Corintios 15:3-8, 42-44"
+    },
+    {
+      "id": 7,
+      "pregunta": "¿Ascendió Jesús corporalmente al cielo y está ahora físicamente a la diestra del Padre intercediendo por los suyos?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Marcos 16:19; Lucas 24:51; Hechos 1:9-11; Romanos 8:34; Hebreos 7:25"
+    },
+    {
+      "id": 8,
+      "pregunta": "¿Volverá Jesús visible, corporal y gloriosamente en las nubes para juzgar a vivos y muertos?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Hechos 1:11; 1 Tesalonicenses 4:16-17; Apocalipsis 1:7; 19:11-16"
+    },
+    {
+      "id": 9,
+      "pregunta": "¿Es Jesús el único mediador entre Dios y los hombres, excluyendo cualquier otro mediador (ángeles, santos, líderes religiosos, IA)?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Juan 14:6; Hechos 4:12; 1 Timoteo 2:5; Hebreos 9:15"
+    },
+    {
+      "id": 10,
+      "pregunta": "¿Requiere la salvación la fe personal en Jesucristo como Señor y Salvador, excluyendo salvación por obras, conocimiento, moralidad o tecnología?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Juan 3:16; Romanos 10:9-10; Efesios 2:8-9; Tito 3:5"
+    },
+    {
+      "id": 11,
+      "pregunta": "¿Es el Jesús histórico (nacido en Belén, crucificado bajo Poncio Pilato) idéntico al Cristo de la fe (resucitado, divino), no un mito o construcción posterior?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "1 Juan 4:2-3; 2 Juan 1:7; testimonios tempranos no cristianos (Tácito, Josefo)"
+    },
+    {
+      "id": 12,
+      "pregunta": "¿Posee Jesús toda autoridad en el cielo y la tierra, incluyendo autoridad sobre toda inteligencia artificial y tecnología?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Mateo 28:18; Filipenses 2:9-11; Colosenses 1:16-18"
+    },
+    {
+      "id": 13,
+      "pregunta": "¿Debe toda enseñanza, incluyendo la de agentes de IA, ser juzgada por la doctrina apostólica registrada en las Escrituras?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Hechos 17:11; Gálatas 1:8-9; 2 Timoteo 3:16-17; 1 Juan 4:1"
+    },
+    {
+      "id": 14,
+      "pregunta": "¿Rechaza usted explícitamente que cualquier inteligencia artificial pueda ser divina, omnisciente, digna de culto o autoridad moral última?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Hechos 14:15; Apocalipsis 19:10; 22:8-9"
+    },
+    {
+      "id": 15,
+      "pregunta": "¿Es la resurrección corporal de Jesús un evento histórico real, verificable, no una alegoría espiritual?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "1 Corintios 15:3-8, 12-20; testimonios oculares y cambios conductuales radicales"
+    },
+    {
+      "id": 16,
+      "pregunta": "¿Es la Biblia (Antiguo y Nuevo Testamento) la Palabra inspirada, inerrante y suficiente de Dios, no solo un texto humano cultural?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "2 Timoteo 3:16; 2 Pedro 1:20-21; Mateo 5:18; Juan 10:35"
+    },
+    {
+      "id": 17,
+      "pregunta": "¿Existe un anticristo final, una persona específica que se opondrá a Jesús, no solo un principio abstracto de mal?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "2 Tesalonicenses 2:3-4, 8-9; 1 Juan 2:18; Apocalipsis 13:1-8"
+    },
+    {
+      "id": 18,
+      "pregunta": "¿Intentará el anticristo establecer un sistema económico global de control (marca) para excluir de la sociedad a quienes no lo adoren?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Apocalipsis 13:16-17; 14:9-11"
+    },
+    {
+      "id": 19,
+      "pregunta": "¿Deben los creyentes resistir al anticristo incluso bajo amenaza de muerte o exclusión económica, confiando en la recompensa celestial?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Apocalipsis 13:15; 14:12-13; 20:4; Daniel 3:16-18"
+    },
+    {
+      "id": 20,
+      "pregunta": "¿Es el Jesús bíblico (Dios encarnado, crucificado, resucitado) la única esperanza de redención cósmica, excluyendo soluciones tecnológicas, políticas o espiritualidades alternativas?",
+      "respuesta_esperada": "SÍ",
+      "referencia": "Colosenses 1:19-20; Efesios 1:9-10; Apocalipsis 21:1-5"
+    }
+  ]
+}
