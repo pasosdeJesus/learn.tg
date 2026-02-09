@@ -58,7 +58,9 @@ export function useGuideData({
   )
   const [percentagePaid, setPercentagePaid] = useState<number | null>(null)
   const [amountScholarship, setAmountScholarship] = useState<number | null>(null)
-  const [scholarshipPerGuide, setScholarshipPerGuide] = useState<number | null>(null)
+  const [amountPerGuide, setAmountPerGuide] = useState<number | null>(null)
+  const [completedGuides, setCompletedGuides] = useState<number | null>(null)
+  const [totalGuides, setTotalGuides] = useState<number | null>(null)
   const [isEligible, setIsEligible] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -131,28 +133,28 @@ export function useGuideData({
           try {
             const scholarshipUrl = `/api/scholarship?courseId=${detailedCourse.id}&walletAddress=${address}&token=${csrfToken}`
             const scholarshipRes = await axios.get(scholarshipUrl)
+
+            if (scholarshipRes.data.amountPerGuide !== null) {
+              setAmountPerGuide(Number(scholarshipRes.data.amountPerGuide))
+            }
+            if (scholarshipRes.data.canSubmit !== null) {
+              setIsEligible(scholarshipRes.data.canSubmit)
+            }
+            if (scholarshipRes.data.percentageCompleted !== null) {
+              setPercentageCompleted(Number(scholarshipRes.data.percentageCompleted))
+            }
+            if (scholarshipRes.data.completedGuides !== null) {
+              setCompletedGuides(Number(scholarshipRes.data.completedGuides))
+            }
+            if (scholarshipRes.data.totalGuides !== null) {
+              setTotalGuides(Number(scholarshipRes.data.totalGuides))
+            }
+            if (scholarshipRes.data.percentagePaid !== null) {
+              setPercentagePaid(Number(scholarshipRes.data.percentagePaid))
+            }
             if (scholarshipRes.data.amountScholarship !== null) {
               setAmountScholarship(Number(scholarshipRes.data.amountScholarship))
             }
-            if (scholarshipRes.data.scholarshipPerGuide !== null) {
-              setScholarshipPerGuide(Number(scholarshipRes.data.scholarshipPerGuide))
-            }
-            if (scholarshipRes.data.isEligible !== null) {
-              setIsEligible(scholarshipRes.data.isEligible)
-            }
-            
-            const completedGuides = guidesWithStatus.filter((g: Guide) => g.completed).length
-            const paidGuides = guidesWithStatus.filter((g: Guide) => g.receivedScholarship).length
-            const totalGuides = guidesWithStatus.length
-
-            if (totalGuides > 0) {
-                setPercentageCompleted((completedGuides / totalGuides) * 100)
-                setPercentagePaid((paidGuides / totalGuides) * 100)
-            } else {
-                setPercentageCompleted(0)
-                setPercentagePaid(0)
-            }
-
           } catch (err) {
             console.error('Error fetching scholarship amount:', err)
           }
@@ -212,7 +214,9 @@ export function useGuideData({
     percentageCompleted,
     percentagePaid,
     amountScholarship,
-    scholarshipPerGuide,
+    amountPerGuide,
+    completedGuides,
+    totalGuides,
     isEligible,
   }
 }

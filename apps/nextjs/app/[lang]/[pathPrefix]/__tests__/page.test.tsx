@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest'
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import Page from '../page'
 import React, { Suspense } from 'react'
+import { useGuideData, type Course } from '@/lib/hooks/useGuideData'
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -13,6 +14,10 @@ vi.mock('next/navigation', () => ({
     prefetch: vi.fn(),
   }),
   useSearchParams: () => new URLSearchParams(),
+  useParams: () => ({ 
+    lang: 'en',
+    pathPrefix: 'course-prefix',
+  }),
 }))
 
 // Mock axios
@@ -77,7 +82,7 @@ vi.mock('@/components/ui/button', () => ({
 
 // Render with Suspense
 function renderWithProviders(ui: React.ReactElement) {
-  return render(ui)
+  return render(<Suspense fallback={<div>Loading...</div>}>{ui}</Suspense>)
 }
 
 describe('Course List Page Component', () => {
@@ -121,7 +126,7 @@ describe('Course List Page Component', () => {
     vi.clearAllMocks()
     // Restore default mocks
     useSessionMock.mockReturnValue({
-      data: { address: '0x123', user: { name: 'Test User' } },
+      data: { address: '0x123', user: { name: 'Test User' } } as any,
       status: 'authenticated',
     })
     useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
@@ -135,16 +140,14 @@ describe('Course List Page Component', () => {
 
   it('no carga datos cuando dirección y sesión difieren (partial login)', async () => {
     useSessionMock.mockReturnValue({
-      data: { address: '0xAAA', user: { name: 'Test User' } },
+      data: { address: '0xAAA', user: { name: 'Test User' } } as any,
       status: 'authenticated',
     })
     useAccountMock.mockReturnValue({ address: '0xBBB', isConnected: true })
     
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
-        </Suspense>,
       )
     })
     
@@ -181,9 +184,7 @@ describe('Course List Page Component', () => {
 
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
-        </Suspense>,
       )
     })
 
@@ -234,9 +235,7 @@ describe('Course List Page Component', () => {
 
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
-        </Suspense>,
       )
     })
 
@@ -275,9 +274,7 @@ describe('Course List Page Component', () => {
 
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
-        </Suspense>,
       )
     })
 
@@ -310,14 +307,148 @@ describe('Course List Page Component', () => {
 
     await act(async () => {
       renderWithProviders(
-        <Suspense fallback={<div>Loading...</div>}>
           <Page {...defaultProps} />
-        </Suspense>,
       )
     })
 
     await waitFor(() => {
       expect(screen.getByText(/API error/)).toBeInTheDocument()
+    })
+  })
+})
+
+// --- NEW TEST SUITE ---
+
+// It's necessary to mock the hook used by the new tests
+vi.mock('@/lib/hooks/useGuideData')
+vi.mock('@/components/DonateModal', () => ({
+  DonateModal: ({ isOpen, courseId, lang }: { isOpen: boolean, courseId: number, lang: string }) => {
+    if (!isOpen) return null
+    return (
+      <div data-testid="donate-modal">
+        <h2>{lang === 'es' ? 'Donar al curso' : 'Donate to course'} #{courseId}</h2>
+      </div>
+    )
+  }
+}))
+
+
+describe('Course Introduction Page', () => {
+  const mockParams = Promise.resolve({ lang: 'en', pathPrefix: 'course1' })
+
+  const mockSessionData = {
+    data: {
+      address: '0x1234567890123456789012345678901234567890',
+      user: { id: '1', name: 'Test User', email: 'test@example.com' },
+      expires: new Date(Date.now() + 2 * 86400 * 1000).toISOString(),
+    },
+    status: 'authenticated',
+  }
+
+  const mockAccountData = {
+    address: '0x1234567890123456789012345678901234567890',
+    isConnecting: false,
+    isReconnecting: false,
+    isConnected: true,
+  }
+
+  const mockCourseData: Course = {
+      id: '1',
+      titulo: 'Test Course',
+      subtitulo: 'Test Subtitle',
+      idioma: 'en',
+      prefijoRuta: 'test-course',
+      guias: [],
+      conBilletera: true,
+      sinBilletera: false,
+      creditosMd: '',
+      resumenMd: 'Summary text',
+      ampliaMd: '',
+      imagen: '/test.jpg',
+      altImagen: 'Test image',
+      enlaceImagen: 'https://example.com',
+      creditoImagen: 'Credit'
+  }
+
+  const mockGuideData = {
+    course: mockCourseData,
+    loading: false,
+    error: null,
+    percentageCompleted: 50,
+    percentagePaid: 25,
+    amountScholarship: 1000000, // 1 USDT
+    scholarshipPerGuide: 500000, // 0.5 USDT
+    isEligible: true,
+    myGuide: null, guideNumber: 0, nextGuidePath: '', previousGuidePath: '', coursePath: '/en/course1',
+  }
+  
+  // Cast the mocked hooks to be able to set their return values
+  const useGuideDataMock = useGuideData as vi.Mock
+  const localUseSessionMock = useSession as vi.Mock
+  const localUseAccountMock = useAccount as vi.Mock
+
+  beforeEach(() => {
+    // Reset mocks before each test
+    vi.clearAllMocks()
+
+    // Set the return values for the hooks for this test suite
+    localUseSessionMock.mockReturnValue(mockSessionData)
+    localUseAccountMock.mockReturnValue(mockAccountData)
+    useGuideDataMock.mockReturnValue(mockGuideData)
+  })
+
+  it('should render loading state', async () => {
+    useGuideDataMock.mockReturnValue({ ...mockGuideData, loading: true })
+    renderWithProviders(<Page params={mockParams} />)
+    await waitFor(() => { expect(screen.getByText('Loading...')).toBeInTheDocument() })
+  })
+
+  it('should render error state', async () => {
+    useGuideDataMock.mockReturnValue({ ...mockGuideData, error: 'Test Error' })
+    renderWithProviders(<Page params={mockParams} />)
+    await waitFor(() => { expect(screen.getByText('Error: Test Error')).toBeInTheDocument() })
+  })
+  
+  it('should render course not found', async () => {
+    useGuideDataMock.mockReturnValue({ ...mockGuideData, course: null })
+    renderWithProviders(<Page params={mockParams} />)
+    await waitFor(() => { expect(screen.getByText('Course not found.')).toBeInTheDocument() })
+  })
+
+  it('should display scholarship information when eligible', async () => {
+    renderWithProviders(<Page params={mockParams} />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Scholarship per approved guide/i)).toBeInTheDocument()
+      expect(screen.getByText(/0.5 USDT/i)).toBeInTheDocument()
+      expect(screen.getByText(/Total USDT earned/i)).toBeInTheDocument()
+      expect(screen.getByText(/1 USDT/i)).toBeInTheDocument()
+      expect(screen.getByText(/You are eligible for the scholarship/i)).toBeInTheDocument()
+    })
+  })
+
+  it('should display "not eligible" message when not eligible', async () => {
+    useGuideDataMock.mockReturnValue({ ...mockGuideData, isEligible: false })
+    renderWithProviders(<Page params={mockParams} />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/You are not eligible for the scholarship/i)).toBeInTheDocument()
+    })
+  })
+
+  it('should open DonateModal when donate button is clicked', async () => {
+    renderWithProviders(<Page params={mockParams} />)
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('donate-modal')).not.toBeInTheDocument()
+    })
+
+    const donateButton = await screen.findByRole('button', { name: /Donate to this course/i })
+    fireEvent.click(donateButton)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('donate-modal')).toBeInTheDocument()
+      expect(screen.getByText(/Donate to course #1/i)).toBeInTheDocument()
     })
   })
 })
