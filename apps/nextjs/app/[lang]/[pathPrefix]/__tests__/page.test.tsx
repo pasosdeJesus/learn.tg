@@ -5,6 +5,8 @@ import Page from '../page'
 import React, { Suspense } from 'react'
 import { useGuideData, type Course } from '@/lib/hooks/useGuideData'
 
+vi.mock('@/lib/hooks/useGuideData', () => ({ useGuideData: vi.fn() }))
+
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   usePathname: () => '/en/gooddollar',
@@ -80,6 +82,7 @@ vi.mock('@/components/ui/button', () => ({
   ),
 }))
 
+
 // Render with Suspense
 function renderWithProviders(ui: React.ReactElement) {
   return render(<Suspense fallback={<div>Loading...</div>}>{ui}</Suspense>)
@@ -119,11 +122,37 @@ describe('Course List Page Component', () => {
     ]
   }
 
+  const mockScholarshipData = {
+    vaultCreated: true,
+    vaultBalance: 1000000,
+    amountPerGuide: 500000,
+    canSubmit: true,
+    percentageCompleted: 50,
+    completedGuides: 1,
+    paidGuides: 1,
+    totalGuides: 2,
+    percentagePaid: 50,
+    amountScholarship: 500000,
+    profileScore: 50,
+  }
+
   const API_BUSCA_URL = 'https://fake.local/courses'
   const API_PRESENTA_URL = 'https://fake.local/presenta'
+  let realUseGuideData
+  const useGuideDataMock = vi.mocked(useGuideData)
+
+  beforeAll(async () => {
+    const mod = await vi.importActual('@/lib/hooks/useGuideData')
+    realUseGuideData = mod.useGuideData
+    useGuideDataMock.mockImplementation(realUseGuideData)
+  })
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Restore hook implementation
+    if (realUseGuideData) {
+      useGuideDataMock.mockImplementation(realUseGuideData)
+    }
     // Restore default mocks
     useSessionMock.mockReturnValue({
       data: { address: '0x123', user: { name: 'Test User' } } as any,
@@ -131,6 +160,22 @@ describe('Course List Page Component', () => {
     })
     useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
     axiosGet.mockReset()
+    // Default axios implementation
+    axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
+      if (url.startsWith(API_BUSCA_URL)) {
+        return Promise.resolve({ data: [mockCourse] })
+      }
+      if (url.startsWith(API_PRESENTA_URL)) {
+        return Promise.resolve({ data: mockCourse })
+      }
+      if (url.includes('/api/scholarship')) {
+        return Promise.resolve({ data: mockScholarshipData })
+      }
+      if (url.includes('/api/guide-status')) {
+        return Promise.resolve({ data: { completed: false, receivedScholarship: false } })
+      }
+      return Promise.resolve({ data: [] })
+    })
     // Mock alert to avoid jsdom errors
     global.window.alert = vi.fn()
     // Mock environment variables
@@ -177,7 +222,7 @@ describe('Course List Page Component', () => {
         }
       }
       if (url.includes('/api/scholarship')) {
-        return Promise.resolve({ data: { percentageCompleted: null } })
+        return Promise.resolve({ data: mockScholarshipData })
       }
       return Promise.resolve({ data: [] })
     })
@@ -228,7 +273,7 @@ describe('Course List Page Component', () => {
         }
       }
       if (url.includes('/api/scholarship')) {
-        return Promise.resolve({ data: { percentageCompleted: null } })
+        return Promise.resolve({ data: mockScholarshipData })
       }
       return Promise.resolve({ data: [] })
     })
@@ -267,7 +312,7 @@ describe('Course List Page Component', () => {
             return Promise.resolve({ data: mockCourse })
         }
         if (url.includes('/api/scholarship')) {
-          return Promise.resolve({ data: { percentageCompleted: null } })
+          return Promise.resolve({ data: mockScholarshipData })
         }
         return Promise.resolve({ data: [] })
     })
@@ -300,7 +345,7 @@ describe('Course List Page Component', () => {
         return Promise.reject(new Error('API error'))
       }
       if (url.includes('/api/scholarship')) {
-        return Promise.resolve({ data: { percentageCompleted: null } })
+        return Promise.resolve({ data: mockScholarshipData })
       }
       return Promise.resolve({ data: [] })
     })
@@ -318,9 +363,6 @@ describe('Course List Page Component', () => {
 })
 
 // --- NEW TEST SUITE ---
-
-// It's necessary to mock the hook used by the new tests
-vi.mock('@/lib/hooks/useGuideData')
 vi.mock('@/components/DonateModal', () => ({
   DonateModal: ({ isOpen, courseId, lang }: { isOpen: boolean, courseId: number, lang: string }) => {
     if (!isOpen) return null
@@ -358,7 +400,12 @@ describe('Course Introduction Page', () => {
       subtitulo: 'Test Subtitle',
       idioma: 'en',
       prefijoRuta: 'test-course',
-      guias: [],
+      guias: Array.from({ length: 10 }, (_, i) => ({
+        titulo: `Guide ${i + 1}`,
+        sufijoRuta: `guide${i + 1}`,
+        completed: i < 5, // first 5 completed
+        receivedScholarship: i < 2, // first 2 paid
+      })),
       conBilletera: true,
       sinBilletera: false,
       creditosMd: '',
@@ -374,26 +421,33 @@ describe('Course Introduction Page', () => {
     course: mockCourseData,
     loading: false,
     error: null,
+    totalGuides: 10,
+    vaultCreated: true,
+    scholarshipPerGuide: 500000, // 0.5 USDT
+    vaultBalance: 1000000,
+    profileScore: 50,
+    canSubmit: true,
+    completedGuides: 5,
+    paidGuides: 2,
     percentageCompleted: 50,
     percentagePaid: 25,
-    amountScholarship: 1000000, // 1 USDT
-    scholarshipPerGuide: 500000, // 0.5 USDT
-    isEligible: true,
-    myGuide: null, guideNumber: 0, nextGuidePath: '', previousGuidePath: '', coursePath: '/en/course1',
+    scholarshipPaid: 1000000, // 1 USDT
+    myGuide: null,
+    guideNumber: 0,
+    nextGuidePath: '',
+    previousGuidePath: '',
+    coursePath: '/en/course1',
   }
-  
-  // Cast the mocked hooks to be able to set their return values
-  const useGuideDataMock = useGuideData as vi.Mock
-  const localUseSessionMock = useSession as vi.Mock
-  const localUseAccountMock = useAccount as vi.Mock
+
+  const useGuideDataMock = vi.mocked(useGuideData)
 
   beforeEach(() => {
     // Reset mocks before each test
     vi.clearAllMocks()
 
     // Set the return values for the hooks for this test suite
-    localUseSessionMock.mockReturnValue(mockSessionData)
-    localUseAccountMock.mockReturnValue(mockAccountData)
+    useSessionMock.mockReturnValue(mockSessionData)
+    useAccountMock.mockReturnValue(mockAccountData)
     useGuideDataMock.mockReturnValue(mockGuideData)
   })
 
@@ -419,20 +473,26 @@ describe('Course Introduction Page', () => {
     renderWithProviders(<Page params={mockParams} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/Scholarship per approved guide/i)).toBeInTheDocument()
-      expect(screen.getByText(/0.5 USDT/i)).toBeInTheDocument()
-      expect(screen.getByText(/Total USDT earned/i)).toBeInTheDocument()
-      expect(screen.getByText(/1 USDT/i)).toBeInTheDocument()
-      expect(screen.getByText(/You are eligible for the scholarship/i)).toBeInTheDocument()
+      expect(screen.getByText(/Scholarship of.*USDT per guide/i)).toBeInTheDocument()
+      expect(screen.getByText(/You are eligible/i)).toBeInTheDocument()
+      expect(screen.getByText(/Total number of guides in the course: 10/i)).toBeInTheDocument()
+      expect(screen.getByText(/Approved guides: 5 \(50%\)/i)).toBeInTheDocument()
+      expect(screen.getByText(/Approved guides with scholarship paid: 2 \(25%\)/i)).toBeInTheDocument()
+      expect(screen.getByText(/Total scholarship paid in this course: 1000000 USDT/i)).toBeInTheDocument()
     })
   })
 
   it('should display "not eligible" message when not eligible', async () => {
-    useGuideDataMock.mockReturnValue({ ...mockGuideData, isEligible: false })
+    useGuideDataMock.mockReturnValue({
+      ...mockGuideData,
+      profileScore: null,
+      scholarshipPerGuide: null,
+      canSubmit: false
+    })
     renderWithProviders(<Page params={mockParams} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/You are not eligible for the scholarship/i)).toBeInTheDocument()
+      expect(screen.getByText(/Scholarship of up to 1 USDT after you complete your profile/i)).toBeInTheDocument()
     })
   })
 

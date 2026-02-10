@@ -57,8 +57,17 @@ describe('useGuideData', () => {
 
   const mockScholarshipData = {
     amountScholarship: 1000000,
-    scholarshipPerGuide: 500000,
+    amountPerGuide: 500000,
     isEligible: true,
+    percentageCompleted: 50,
+    vaultCreated: null,
+    vaultBalance: null,
+    canSubmit: null,
+    completedGuides: null,
+    paidGuides: null,
+    totalGuides: null,
+    percentagePaid: null,
+    profileScore: null,
   }
 
   beforeEach(() => {
@@ -98,7 +107,6 @@ describe('useGuideData', () => {
     expect(result.current.course).toBe(null)
     expect(result.current.error).toBe(null)
     expect(result.current.scholarshipPerGuide).toBe(null)
-    expect(result.current.isEligible).toBe(null)
   })
 
   it('should fetch course and scholarship data successfully', async () => {
@@ -130,9 +138,8 @@ describe('useGuideData', () => {
     expect(result.current.course?.id).toBe('course-1')
     expect(result.current.error).toBe(null)
     expect(result.current.percentageCompleted).toBe(50)
-    expect(result.current.amountScholarship).toBe(1000000)
+    expect(result.current.scholarshipPaid).toBe(1000000)
     expect(result.current.scholarshipPerGuide).toBe(500000)
-    expect(result.current.isEligible).toBe(true)
   })
 
   it('should handle session/address mismatch (early return)', async () => {
@@ -177,9 +184,8 @@ describe('useGuideData', () => {
     expect(result.current.course?.id).toBe('course-1')
     expect(result.current.error).toBe(null)
     expect(result.current.percentageCompleted).toBe(null)
-    expect(result.current.amountScholarship).toBe(null)
+    expect(result.current.scholarshipPaid).toBe(null)
     expect(result.current.scholarshipPerGuide).toBe(null)
-    expect(result.current.isEligible).toBe(null)
   })
 
   it('should handle course not found error', async () => {
@@ -249,9 +255,8 @@ describe('useGuideData', () => {
     expect(result.current.course).toBeTruthy()
     expect(result.current.error).toBe(null)
     expect(result.current.percentageCompleted).toBe(null)
-    expect(result.current.amountScholarship).toBe(null)
+    expect(result.current.scholarshipPaid).toBe(null)
     expect(result.current.scholarshipPerGuide).toBe(null)
-    expect(result.current.isEligible).toBe(null)
   })
 
   it('should calculate guide navigation paths when pathSuffix provided', async () => {
