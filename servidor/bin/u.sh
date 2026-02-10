@@ -45,6 +45,7 @@ $DOAS su - ${USUARIO_AP} -c "cd $DIRAP;
     MSIP_TITULO=\"${MSIP_TITULO}\" \
     RUTA_RELATIVA=${RUTA_RELATIVA} \
     MAQ_CLIENTE=${MAQ_CLIENTE} \
+    ORIGEN_CORS=${ORIGEN_CORS} \
     bundle exec /usr/local/bin/unicorn_rails \
     -c $DIRAP/config/unicorn.conf.minimal.rb  -E production -D"
 
