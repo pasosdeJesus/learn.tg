@@ -40,6 +40,12 @@ export interface GameEngagementData {
   users: number
 }
 
+export interface GoodDollarClaimData {
+  date: string
+  claims: number
+  users: number
+}
+
 /**
  * Get completion rate over time
  */
@@ -371,6 +377,44 @@ export async function getGameEngagement(): Promise<GameEngagementData[]> {
   }
 }
 
+/**
+ * Get GoodDollar claim events over time
+ */
+export async function getGoodDollarClaimsOverTime(): Promise<GoodDollarClaimData[]> {
+  try {
+    const db = getDb()
+    const result = await sql<{
+      date: string
+      claims: string // COUNT returns string
+      users: string // COUNT returns string
+    }>`
+      SELECT
+        DATE(created_at) as date,
+        COUNT(*) as claims,
+        COUNT(DISTINCT usuario_id) as users
+      FROM userevent
+      WHERE event_type = 'g$c_claim'
+        AND created_at IS NOT NULL
+      GROUP BY DATE(created_at)
+      ORDER BY date
+    `.execute(db)
+
+    if (result.rows.length === 0) {
+      console.warn('[metrics] No GoodDollar claim data found')
+      return []
+    }
+
+    return result.rows.map(row => ({
+      date: row.date,
+      claims: parseInt(row.claims, 10),
+      users: parseInt(row.users, 10),
+    }))
+  } catch (error) {
+    console.error('[metrics] Error fetching GoodDollar claims over time:', error)
+    return []
+  }
+}
+
 
 /**
  * Get all metrics data in one call
@@ -382,12 +426,14 @@ export async function getAllMetrics() {
     timeBetweenGuides,
     userGrowth,
     gameEngagement,
+    goodDollarClaims,
   ] = await Promise.all([
     getCompletionRate(),
     getRetentionByCooldown(),
     getTimeBetweenGuides(),
     getUserGrowth(),
     getGameEngagement(),
+    getGoodDollarClaimsOverTime(),
   ])
 
   return {
@@ -396,6 +442,7 @@ export async function getAllMetrics() {
     timeBetweenGuides,
     userGrowth,
     gameEngagement,
+    goodDollarClaims,
     lastUpdated: new Date().toISOString(),
   }
 }

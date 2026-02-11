@@ -29,6 +29,11 @@ const GameTypeEngagementChart = dynamic(
   () => import('./components/GameTypeEngagementChart'),
   { loading: () => <div className="h-64 flex items-center justify-center">Loading game engagement data...</div> }
 )
+const GoodDollarClaimsChart = dynamic(
+  () => import('./components/GoodDollarClaimsChart'),
+  { loading: () => <div className="h-64 flex items-center justify-center">Loading GoodDollar claim data...</div> }
+)
+
 
 export default async function MetricsDashboardPage() {
   // Fetch metrics data server-side
@@ -39,6 +44,7 @@ export default async function MetricsDashboardPage() {
     timeBetweenGuides,
     userGrowth,
     gameEngagement,
+    goodDollarClaims,
     lastUpdated
   } = metrics
 
@@ -106,6 +112,18 @@ export default async function MetricsDashboardPage() {
             <GameTypeEngagementChart data={gameEngagement} />
           </Suspense>
         </section>
+
+        {/* GoodDollar Claims Chart */}
+        <section className="bg-white rounded-lg shadow p-6 lg:col-span-2">
+          <h2 className="text-xl font-semibold mb-4">GoodDollar Claims Over Time</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Daily count of GoodDollar UBI claims by users.
+          </p>
+          <Suspense fallback={<div className="h-64 flex items-center justify-center">Loading GoodDollar claim data...</div>}>
+            <GoodDollarClaimsChart data={goodDollarClaims} />
+          </Suspense>
+        </section>
+
       </div>
 
       <footer className="mt-8 pt-6 border-t border-gray-200 text-sm text-gray-500">
