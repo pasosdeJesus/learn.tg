@@ -5,22 +5,19 @@ import GoodDollarClaimButton from '../GoodDollarClaimButton'
 // --- Mocks --- //
 
 // Hoisted mock for controlling the IS_PRODUCTION flag from within tests.
-const { mockConfig, setIsProduction } = vi.hoisted(() => {
-  let isProduction = true // Encapsulated state
+const { mockConfig } = vi.hoisted(() => {
+  const config = {
+    IS_PRODUCTION: true,
+  }
   return {
-    mockConfig: {
-      get IS_PRODUCTION() {
-        return isProduction
-      },
-    },
-    setIsProduction: (val: boolean) => {
-      isProduction = val
-    },
+    mockConfig: config,
   }
 })
 vi.mock('@/lib/config', () => ({
   __esModule: true,
-  ...mockConfig,
+  get IS_PRODUCTION() {
+    return mockConfig.IS_PRODUCTION
+  },
 }))
 
 // Mock de @goodsdks/citizen-sdk
@@ -67,7 +64,7 @@ describe('GoodDollarClaimButton', () => {
   beforeEach(() => {
     // Reset mocks and state before each test
     vi.clearAllMocks()
-    setIsProduction(true) // Default to production environment
+    mockConfig.IS_PRODUCTION = true // Default to production environment
 
     // Default mocks for a successful use case
     mockUseSession.mockReturnValue({
@@ -95,7 +92,7 @@ describe('GoodDollarClaimButton', () => {
 
   afterEach(() => {
     // Ensure mock state is reset after each test
-    setIsProduction(true)
+    mockConfig.IS_PRODUCTION = true
   })
 
   it('renders the button with Spanish text when lang="es"', () => {
@@ -155,7 +152,7 @@ describe('GoodDollarClaimButton', () => {
 
   it('does NOT call claim and shows error if not in production', async () => {
     // Arrange: Simulate non-production environment
-    setIsProduction(false)
+    mockConfig.IS_PRODUCTION = false
 
     // Act
     render(<GoodDollarClaimButton lang="en" />)
