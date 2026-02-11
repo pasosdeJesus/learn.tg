@@ -22,13 +22,13 @@ vi.mock('@/components/DonateModal', () => ({
   DonateModal: () => <div data-testid="donate-modal" />,
 }))
 
-vi.mock('../components/CourseStats', () => ({
-  default: ({ isEligible }: { isEligible: boolean | null }) => {
-    if (isEligible === null) return null // No renderizar si isEligible es null
+vi.mock('@/components/CourseStatistics', () => ({
+  CourseStatistics: ({ lang, full, address, totalGuides, scholarshipPerGuide, profileScore, canSubmit, completedGuides, paidGuides, percentageCompleted, percentagePaid, scholarshipPaid }: any) => {
+    if (canSubmit === null) return null // No renderizar si canSubmit es null
     return (
       <div>
         <h2>Scholarship Stats</h2>
-        <span>{isEligible ? 'Eligible' : 'Not Eligible'}</span>
+        <span>{canSubmit ? 'Eligible' : 'Not Eligible'}</span>
       </div>
     )
   },
