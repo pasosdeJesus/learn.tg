@@ -53,6 +53,13 @@ const viemMocks = vi.hoisted(() => ({
   getContract: vi.fn(),
   encodeFunctionData: vi.fn(() => '0xmockEncodedData'),
   http: vi.fn(),
+  privateKeyToAccount: vi.fn(),
+  formatUnits: vi.fn(),
+}))
+
+const viemChainsMocks = vi.hoisted(() => ({
+  celo: {},
+  celoSepolia: {},
 }))
 
 const metricsServerMocks = vi.hoisted(() => ({
@@ -121,6 +128,7 @@ export function setupApiMocks() {
   vi.mock('@/lib/scores', () => scoresMocks)
   vi.mock('@/lib/guide-utils', () => guideUtilsMocks)
   vi.mock('viem', () => viemMocks)
+  vi.mock('viem/chains', () => viemChainsMocks)
   vi.mock('@/lib/metrics-server', () => metricsServerMocks)
   vi.mock('@/lib/config', () => libConfigMocks)
 }
@@ -151,6 +159,8 @@ export function resetApiMocks() {
   viemMocks.getContract.mockReset()
   viemMocks.encodeFunctionData.mockReset()
   viemMocks.http.mockReset()
+  viemMocks.privateKeyToAccount.mockReset()
+  viemMocks.formatUnits.mockReset()
 
   metricsServerMocks.recordEvent.mockReset()
 }

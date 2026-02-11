@@ -1,31 +1,44 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getGuidesByCourseId, getGuideIdBySuffix, getActividadpfId, getCourseIdByPrefix } from '../guide-utils'
 
-// Mock Kysely and sql similar to other tests
-const mockExecuteTakeFirst = vi.hoisted(() => vi.fn())
-const mockExecute = vi.hoisted(() => vi.fn())
-
-const MockKysely = vi.hoisted(() => {
-  return class MockKysely {
-    selectFrom() { return this }
-    where() { return this }
-    selectAll() { return this }
-    executeTakeFirst() { return mockExecuteTakeFirst() }
-    orderBy() { return this }
-    limit() { return this }
-    select() { return this }
-    insertInto() { return this }
-    values() { return this }
-    returningAll() { return this }
-    execute() { return mockExecute() }
-    executeTakeFirstOrThrow() { return mockExecuteTakeFirst() }
-  }
+// Mock kysely and sql before importing guide-utils
+const { mockSqlExecute, mockSql, MockKysely } = vi.hoisted(() => {
+  const mockSqlExecute = vi.fn()
+  const mockSql = vi.fn(() => ({
+    execute: mockSqlExecute,
+    val: vi.fn((val) => val),
+    as: vi.fn(() => ({})),
+  }))
+  const MockKysely = vi.fn(() => ({
+    selectFrom: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    selectAll: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    groupBy: vi.fn().mockReturnThis(),
+    having: vi.fn().mockReturnThis(),
+    leftJoin: vi.fn().mockReturnThis(),
+    innerJoin: vi.fn().mockReturnThis(),
+    insertInto: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
+    returningAll: vi.fn().mockReturnThis(),
+    updateTable: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+    deleteFrom: vi.fn().mockReturnThis(),
+    with: vi.fn().mockReturnThis(),
+    executeTakeFirst: vi.fn(),
+    executeTakeFirstOrThrow: vi.fn(),
+    execute: vi.fn(),
+    fn: {
+      countAll: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+      sum: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+      avg: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+      max: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+      min: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+    },
+  }))
+  return { mockSqlExecute, mockSql, MockKysely }
 })
-
-const mockSqlExecute = vi.hoisted(() => vi.fn())
-const mockSql = vi.hoisted(() => vi.fn(() => ({
-  execute: mockSqlExecute,
-})))
 
 vi.mock('kysely', () => ({
   Kysely: MockKysely,
@@ -33,22 +46,28 @@ vi.mock('kysely', () => ({
   sql: mockSql,
 }))
 
-vi.mock('pg', () => ({
-  Pool: vi.fn(),
+vi.mock('@/.config/kysely.config', () => ({
+  newKyselyPostgresql: vi.fn(() => new MockKysely()),
 }))
 
-const mockNewKyselyPostgresql = vi.hoisted(() => vi.fn())
-vi.mock('@/.config/kysely.config', () => ({
-  newKyselyPostgresql: mockNewKyselyPostgresql,
-}))
+// Now import the module after mocks are set up
+import { getGuidesByCourseId, getGuideIdBySuffix, getActividadpfId, getCourseIdByPrefix } from '../guide-utils'
+
+const mockDb = new MockKysely()
 
 describe('guide-utils', () => {
-  let mockDb: any
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockDb = new MockKysely()
-    mockNewKyselyPostgresql.mockReturnValue(mockDb)
+    mockSqlExecute.mockReset()
+    mockSql.mockReset()
+
+    // Configure sql mock to support template tag usage
+    mockSql.mockImplementation(() => ({
+      as: vi.fn().mockReturnValue({}),
+      execute: mockSqlExecute,
+      val: vi.fn((val) => val),
+    }))
   })
 
   describe('getGuidesByCourseId', () => {
