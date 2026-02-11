@@ -34,6 +34,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createConfig, http, useAccount, WagmiProvider } from 'wagmi'
 import { celo, celoSepolia } from 'wagmi/chains'
 import { Address } from 'viem'
+import { IS_PRODUCTION } from '@/lib/config';
 
 interface RainbowKitProviderProps {
   children: React.ReactNode
@@ -56,7 +57,7 @@ const connectors = connectorsForWallets(
 const config = createConfig({
   connectors,
   chains:
-    process.env.NEXT_PUBLIC_AUTH_URL == 'https://learn.tg'
+    IS_PRODUCTION
       ? [celo]
       : [celoSepolia],
   transports: {

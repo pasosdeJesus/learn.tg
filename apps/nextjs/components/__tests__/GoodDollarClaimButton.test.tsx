@@ -1,14 +1,37 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import GoodDollarClaimButton from '../GoodDollarClaimButton'
 
-// Mock de @goodsdks/citizen-sdk
-const { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance } = vi.hoisted(() => {
-  const mockUseIdentitySDK = vi.fn()
-  const mockClaimSDKInstance = { claim: vi.fn() }
-  const mockClaimSDK = vi.fn(() => mockClaimSDKInstance)
-  return { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance }
+// --- Mocks --- //
+
+// Hoisted mock for controlling the IS_PRODUCTION flag from within tests.
+const { mockConfig, setIsProduction } = vi.hoisted(() => {
+  let isProduction = true // Encapsulated state
+  return {
+    mockConfig: {
+      get IS_PRODUCTION() {
+        return isProduction
+      },
+    },
+    setIsProduction: (val: boolean) => {
+      isProduction = val
+    },
+  }
 })
+vi.mock('@/lib/config', () => ({
+  __esModule: true,
+  ...mockConfig,
+}))
+
+// Mock de @goodsdks/citizen-sdk
+const { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance } = vi.hoisted(
+  () => {
+    const mockUseIdentitySDK = vi.fn()
+    const mockClaimSDKInstance = { claim: vi.fn() }
+    const mockClaimSDK = vi.fn(() => mockClaimSDKInstance)
+    return { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance }
+  },
+)
 vi.mock('@goodsdks/citizen-sdk', () => ({
   useIdentitySDK: mockUseIdentitySDK,
   ClaimSDK: mockClaimSDK,
@@ -24,25 +47,33 @@ vi.mock('next-auth/react', () => ({
 }))
 
 // Mock de wagmi
-const { mockUseAccount, mockUsePublicClient, mockUseWalletClient } = vi.hoisted(() => {
-  const mockUseAccount = vi.fn()
-  const mockUsePublicClient = vi.fn()
-  const mockUseWalletClient = vi.fn()
-  return { mockUseAccount, mockUsePublicClient, mockUseWalletClient }
-})
+const { mockUseAccount, mockUsePublicClient, mockUseWalletClient } = vi.hoisted(
+  () => {
+    const mockUseAccount = vi.fn()
+    const mockUsePublicClient = vi.fn()
+    const mockUseWalletClient = vi.fn()
+    return { mockUseAccount, mockUsePublicClient, mockUseWalletClient }
+  },
+)
 vi.mock('wagmi', () => ({
   useAccount: mockUseAccount,
   usePublicClient: mockUsePublicClient,
   useWalletClient: mockUseWalletClient,
 }))
 
+// --- Tests --- //
+
 describe('GoodDollarClaimButton', () => {
   beforeEach(() => {
+    // Reset mocks and state before each test
     vi.clearAllMocks()
-    // Configurar mocks por defecto
+    setIsProduction(true) // Default to production environment
+
+    // Default mocks for a successful use case
     mockUseSession.mockReturnValue({
       data: {
         address: '0x1234567890123456789012345678901234567890',
+        user: { token: 'mock-token' },
       },
       status: 'authenticated',
     })
@@ -50,24 +81,33 @@ describe('GoodDollarClaimButton', () => {
       address: '0x1234567890123456789012345678901234567890',
       isConnected: true,
     })
-    mockUsePublicClient.mockReturnValue({})
-    mockUseWalletClient.mockReturnValue({ data: {} })
-    mockUseIdentitySDK.mockReturnValue({})
-    mockClaimSDKInstance.claim.mockResolvedValue(undefined)
-    // Configurar variable de entorno para producción
-    process.env.NEXT_PUBLIC_AUTH_URL = 'https://learn.tg'
-    // Mock de alert para evitar errores de jsdom
+    mockUsePublicClient.mockReturnValue({} as any)
+    mockUseWalletClient.mockReturnValue({ data: {} as any })
+    mockUseIdentitySDK.mockReturnValue({}) // SDK is always initialized
+    mockClaimSDKInstance.claim.mockResolvedValue({ txHash: '0xmocktxhash' })
+
+    // Global mocks
     global.window.alert = vi.fn()
+    global.window.fetch = vi.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as any),
+    )
   })
 
-  it('renderiza el botón con texto en español cuando lang="es"', () => {
+  afterEach(() => {
+    // Ensure mock state is reset after each test
+    setIsProduction(true)
+  })
+
+  it('renders the button with Spanish text when lang="es"', () => {
     render(<GoodDollarClaimButton lang="es" />)
     expect(
-      screen.getByRole('button', { name: /Regístrate con GoodDollar o reclama UBI/i }),
+      screen.getByRole('button', {
+        name: /Regístrate con GoodDollar o reclama UBI/i,
+      }),
     ).toBeInTheDocument()
   })
 
-  it('muestra mensaje de conectar wallet cuando no hay sesión', () => {
+  it('shows connect wallet message when there is no session', () => {
     mockUseSession.mockReturnValue({ data: null, status: 'unauthenticated' })
     mockUseAccount.mockReturnValue({ address: undefined, isConnected: false })
 
@@ -76,86 +116,63 @@ describe('GoodDollarClaimButton', () => {
     expect(
       screen.getByText(/Connect your wallet to claim/i),
     ).toBeInTheDocument()
-    const button = screen.getByRole('button')
-    expect(button).toBeDisabled()
+    expect(screen.getByRole('button')).toBeDisabled()
   })
 
-  it('el botón está deshabilitado cuando no hay wallet conectada', () => {
-    mockUseSession.mockReturnValue({ data: null, status: 'unauthenticated' })
-    mockUseAccount.mockReturnValue({ address: undefined, isConnected: false })
-
+  it('displays loading state while claiming', async () => {
     render(<GoodDollarClaimButton lang="en" />)
+    fireEvent.click(screen.getByRole('button'))
 
-    const button = screen.getByRole('button')
-    expect(button).toBeDisabled()
+    expect(await screen.findByText(/Claiming.../i)).toBeInTheDocument()
+    // Check that the claim function was actually called
+    expect(mockClaimSDKInstance.claim).toHaveBeenCalledTimes(1)
   })
 
-  it('llama a claim SDK cuando se hace clic y todo está configurado', async () => {
+  it('shows alert and resets state on successful claim', async () => {
     render(<GoodDollarClaimButton lang="en" />)
+    fireEvent.click(screen.getByRole('button'))
 
-    const button = screen.getByRole('button')
-    fireEvent.click(button)
-
-    await waitFor(() => {
-      expect(mockClaimSDKInstance.claim).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  it('muestra estado de carga mientras reclama', async () => {
-    // Simular una promesa que no se resuelve inmediatamente
-    let resolveClaim: () => void
-    const claimPromise = new Promise<void>((resolve) => {
-      resolveClaim = () => resolve()
-    })
-    mockClaimSDKInstance.claim.mockReturnValue(claimPromise)
-
-    render(<GoodDollarClaimButton lang="en" />)
-
-    const button = screen.getByRole('button')
-    fireEvent.click(button)
-
-    // Debería mostrar "Claiming..."
-    await waitFor(() => {
-      expect(screen.getByRole('button')).toHaveTextContent(/Claiming.../i)
+    // Wait for the claim to finish and the button to reset
+    const button = await screen.findByRole('button', {
+      name: /Sign up with GoodDollar or Claim UBI/i,
     })
 
-    // Resolver la promesa
-    resolveClaim!()
-    await waitFor(() => {
-      expect(screen.getByRole('button')).toHaveTextContent(/Sign up with GoodDollar or Claim UBI/i)
-    })
-  })
-
-  it('muestra error cuando claim falla', async () => {
-    const errorMessage = 'Network error'
-    mockClaimSDKInstance.claim.mockRejectedValue(new Error(errorMessage))
-
-    render(<GoodDollarClaimButton lang="en" />)
-
-    const button = screen.getByRole('button')
-    fireEvent.click(button)
-
-    await waitFor(() => {
-      expect(screen.getByText(/Claim failed:/i)).toBeInTheDocument()
-    })
-  })
-
-  it('no renderiza identitySDK cuando no es entorno de producción', () => {
-    process.env.NEXT_PUBLIC_AUTH_URL = 'http://localhost:3000'
-    mockUseIdentitySDK.mockReturnValue(null)
-
-    render(<GoodDollarClaimButton lang="en" />)
-
-    const button = screen.getByRole('button')
-    // El botón no está deshabilitado pero la validación en handleClaim mostrará error
+    expect(window.alert).toHaveBeenCalledWith('Claim successful')
     expect(button).not.toBeDisabled()
   })
 
-  it('acepta texto personalizado del botón', () => {
-    render(<GoodDollarClaimButton lang="en" buttonText="Custom button text" />)
+  it('shows an error alert when claim fails', async () => {
+    const error = new Error('Network error')
+    mockClaimSDKInstance.claim.mockRejectedValue(error)
+    render(<GoodDollarClaimButton lang="en" />)
 
+    fireEvent.click(screen.getByRole('button'))
+
+    // Wait for the error message to appear in the DOM
+    expect(await screen.findByText(/Claim failed:/i)).toBeInTheDocument()
+    expect(window.alert).toHaveBeenCalledWith(`Claim failed: ${error.message}`)
+  })
+
+  it('does NOT call claim and shows error if not in production', async () => {
+    // Arrange: Simulate non-production environment
+    setIsProduction(false)
+
+    // Act
+    render(<GoodDollarClaimButton lang="en" />)
+    fireEvent.click(screen.getByRole('button'))
+
+    // Assert: Use findByText to wait for the error message to appear
+    const errorMessage = await screen.findByText(
+      /Works only in mainnet with wallet connected/i,
+    )
+    expect(errorMessage).toBeInTheDocument()
+    expect(mockClaimSDKInstance.claim).not.toHaveBeenCalled()
+  })
+
+  it('accepts custom button text', () => {
+    render(<GoodDollarClaimButton lang="en" buttonText="Custom Text" />)
     expect(
-      screen.getByRole('button', { name: /Custom button text/i }),
+      screen.getByRole('button', { name: /Custom Text/i }),
     ).toBeInTheDocument()
   })
 })

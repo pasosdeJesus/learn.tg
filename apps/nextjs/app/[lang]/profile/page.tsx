@@ -14,6 +14,7 @@ import CircularProgress from '@/components/ui/circular-progress'
 import { QRCodeDialog } from '@/components/ui/qr-code-dialog'
 import { openSelfApp } from '@/lib/deeplink'
 import { useMobileDetection } from '@/lib/mobile-detection'
+import { IS_PRODUCTION } from '@/lib/config'
 
 interface UserProfile {
   country: number | null
@@ -138,14 +139,11 @@ export default function ProfileForm({ params }: PageProps) {
       version: 2,
       appName: 'Learn Through Games',
       scope: 'learn.tg',
-      devMode: process.env.NEXT_PUBLIC_AUTH_URL != 'https://learn.tg',
+      devMode: !IS_PRODUCTION,
       endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}` || 'none',
       logoBase64: 'https://i.postimg.cc/mrmVf9hm/self.png',
       userId,
-      endpointType:
-        process.env.NEXT_PUBLIC_AUTH_URL == 'https://learn.tg'
-          ? 'https'
-          : 'staging_https',
+      endpointType: IS_PRODUCTION ? 'https' : 'staging_https',
       userIdType: 'hex', // 'hex' for EVM address or 'uuid' for uuidv4
       userDefinedData:
         'Information to verify your humanity on Learn Through Games. Continuing means you accept the privacy policy available at https://learn.tg/en/privacy-policy',

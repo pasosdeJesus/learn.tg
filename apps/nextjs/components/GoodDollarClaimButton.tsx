@@ -7,6 +7,7 @@ import { usePublicClient, useWalletClient } from 'wagmi'
 import { useAccount } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
+import { IS_PRODUCTION } from '@/lib/config'
 
 export interface GoodDollarClaimButtonProps {
   /** Current language ('en' or 'es') for button text */
@@ -26,13 +27,20 @@ export function GoodDollarClaimButton({
   const [isClaiming, setIsClaiming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Conditional identity SDK initialization (same as original)
-  const identitySDK =
-    process.env.NEXT_PUBLIC_AUTH_URL === 'https://learn.tg'
-      ? useIdentitySDK('production')
-      : null
+  // RULE OF HOOKS: Hooks must be called unconditionally at the top level.
+  const identitySDK = useIdentitySDK('production')
 
   const handleClaim = async () => {
+    // Conditional logic based on environment should be inside handlers or effects.
+    if (!IS_PRODUCTION) {
+      setError(
+        lang === 'es'
+          ? 'Funciona solo en mainnet con billetera conectada'
+          : 'Works only in mainnet with wallet connected',
+      )
+      return
+    }
+
     if (
       !session ||
       !address ||
@@ -43,8 +51,8 @@ export function GoodDollarClaimButton({
     ) {
       setError(
         lang === 'es'
-          ? 'Funciona solo en mainnet con billetera conectada'
-          : 'Works only in mainnet with wallet connected',
+          ? 'Se requiere sesión y billetera conectada'
+          : 'Session and connected wallet are required',
       )
       return
     }
@@ -64,7 +72,6 @@ export function GoodDollarClaimButton({
       const result = await claimSDK.claim()
       console.log('Claim successful', result)
 
-      // Register the claim event in the backend
       if (session.user && (session.user as any).token) {
         fetch('/api/register-gooddollar-claim', {
           method: 'POST',
@@ -74,7 +81,7 @@ export function GoodDollarClaimButton({
             token: (session.user as any).token,
             tx: (result as any)?.txHash ?? '',
           }),
-        }).catch((e) => console.error("Couldn't register g$c claim", e)) // Log error but don't block user
+        }).catch((e) => console.error("Couldn't register g$c claim", e))
       }
 
       alert(lang === 'es' ? 'Reclamo exitoso' : 'Claim successful')
@@ -93,7 +100,6 @@ export function GoodDollarClaimButton({
     }
   }
 
-  // Determine button text
   const defaultButtonText =
     lang === 'es'
       ? 'Regístrate con GoodDollar o reclama UBI'
