@@ -42,6 +42,27 @@ const guideUtilsMocks = vi.hoisted(() => ({
   getCourseIdByPrefix: vi.fn(() => Promise.resolve(null)),
 }))
 
+const viemMocks = vi.hoisted(() => ({
+  createPublicClient: vi.fn(() => ({
+    getTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success', blockNumber: 12345n }),
+    getBlock: vi.fn().mockResolvedValue({ number: 12347n }),
+  })),
+  createWalletClient: vi.fn(() => ({
+    sendTransaction: vi.fn().mockResolvedValue('0xmocktxhash'),
+  })),
+  getContract: vi.fn(),
+  encodeFunctionData: vi.fn(() => '0xmockEncodedData'),
+  http: vi.fn(),
+}))
+
+const metricsServerMocks = vi.hoisted(() => ({
+  recordEvent: vi.fn(() => Promise.resolve(undefined)),
+}))
+
+const libConfigMocks = vi.hoisted(() => ({
+  IS_PRODUCTION: false,
+}))
+
 /**
  * Mock for lib/metrics/queries module
  */
@@ -71,6 +92,27 @@ export function mockGuideUtils() {
 }
 
 /**
+ * Mock for viem module
+ */
+export function mockViem() {
+  return viemMocks
+}
+
+/**
+ * Mock for lib/metrics-server module
+ */
+export function mockMetricsServer() {
+  return metricsServerMocks
+}
+
+/**
+ * Mock for lib/config module
+ */
+export function mockLibConfig() {
+  return libConfigMocks
+}
+
+/**
  * Setup all module mocks. Call this in your test file's beforeAll.
  */
 export function setupApiMocks() {
@@ -78,6 +120,9 @@ export function setupApiMocks() {
   vi.mock('@/lib/crypto', () => cryptoMocks)
   vi.mock('@/lib/scores', () => scoresMocks)
   vi.mock('@/lib/guide-utils', () => guideUtilsMocks)
+  vi.mock('viem', () => viemMocks)
+  vi.mock('@/lib/metrics-server', () => metricsServerMocks)
+  vi.mock('@/lib/config', () => libConfigMocks)
 }
 
 /**
@@ -100,6 +145,14 @@ export function resetApiMocks() {
   guideUtilsMocks.getGuideIdBySuffix.mockReset()
   guideUtilsMocks.getActividadpfId.mockReset()
   guideUtilsMocks.getCourseIdByPrefix.mockReset()
+
+  viemMocks.createPublicClient.mockReset()
+  viemMocks.createWalletClient.mockReset()
+  viemMocks.getContract.mockReset()
+  viemMocks.encodeFunctionData.mockReset()
+  viemMocks.http.mockReset()
+
+  metricsServerMocks.recordEvent.mockReset()
 }
 
 /**
@@ -139,5 +192,8 @@ export function setupCommonRouteMocks() {
     cryptoMocks,
     scoresMocks,
     guideUtilsMocks,
+    viemMocks,
+    metricsServerMocks,
+    libConfigMocks,
   }
 }

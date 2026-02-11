@@ -66,9 +66,13 @@ export function createAuthMocks(config: AuthMockConfig = {}) {
     }))
 
     // Mock wagmi
-    vi.mock('wagmi', () => ({
-      useAccount: () => mocks.mockUseAccount(),
-    }))
+    vi.mock('wagmi', async () => {
+      const actual = await vi.importActual<typeof import('wagmi')>('wagmi');
+      return {
+        ...actual,
+        useAccount: () => mocks.mockUseAccount(),
+      };
+    })
 
     // Mock axios for API calls
     vi.mock('axios', () => ({
