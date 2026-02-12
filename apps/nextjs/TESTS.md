@@ -119,14 +119,14 @@
 1. ✅ `app/api/update-scores/route.ts` - *Tests created*
 2. ✅ `app/api/sign-refgd-claim/route.ts` - *Tests created*
 3. `app/api/self-verify/route.ts` - Self-verification *No implementado - complejo por dependencia de @selfxyz/core*
-4. `app/api/metrics/health/route.ts` - Health check *No implementado*
+4. ✅ `app/api/metrics/health/route.ts` - Health check *Tests created*
 
 ### **Main Pages (0%)**
-1. `app/layout.tsx` - Root layout
-2. `app/page.tsx` - Home page
+1. ✅ `app/layout.tsx` - Root layout *Tests created*
+2. ✅ `app/page.tsx` - Home page *Tests created*
 3. `app/[lang]/profile/page.tsx` - User profile
-4. `app/[lang]/privacy-policy/page.tsx` - Privacy policy
-5. `app/metrics/page.tsx` - Metrics dashboard
+4. ✅ `app/[lang]/privacy-policy/page.tsx` - Privacy policy *Tests created*
+5. ✅ `app/metrics/page.tsx` - Metrics dashboard *Tests created*
 
 ### **UI Components (shadcn/ui) without tests**
 - `accordion.tsx`, `alert-dialog.tsx`, `alert.tsx`, `avatar.tsx`, `badge.tsx`
@@ -163,8 +163,12 @@
 - ✅ `app/api/update-scores/route.ts` - Tests created (5 tests passing)
 - ✅ `app/api/sign-refgd-claim/route.ts` - Tests created (4 tests passing)
 - ❌ `app/api/self-verify/route.ts` - Pending (complex due to @selfxyz/core dependency)
-- ❌ `app/api/metrics/health/route.ts` - Pending
-- ❌ Main pages (`app/layout.tsx`, `app/page.tsx`, etc.) - Pending
+- ✅ `app/api/metrics/health/route.ts` - Tests created (7 tests passing)
+- ✅ `app/layout.tsx` - Tests created (4 tests passing)
+- ✅ `app/page.tsx` - Tests created (7 tests passing)
+- ✅ `app/[lang]/privacy-policy/page.tsx` - Tests created (4 tests passing)
+- ✅ `app/metrics/page.tsx` - Tests created (2 tests passing)
+- ❌ Main pages (`app/[lang]/profile/page.tsx`) - Pending
 - ❌ UI components without tests - Pending
 - ❌ System and utilities - Pending
 - Use test-utils and mocks (no real database)
