@@ -6,6 +6,7 @@
 
 export * from './db-mocks'
 export * from './auth-mocks'
+export * from './auth-db-mocks'
 export * from './render-utils'
 export * from './api-mocks'
 export * from './crossword-mocks'
