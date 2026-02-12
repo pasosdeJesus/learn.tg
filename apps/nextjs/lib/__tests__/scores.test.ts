@@ -1,7 +1,54 @@
-import { updateUserAndCoursePoints } from '../scores'
-import { vi, describe, beforeEach, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// More granular mocks for each chain
+// Mock kysely and sql before importing scores
+const { mockSqlExecute, mockSql, MockKysely } = vi.hoisted(() => {
+  const mockSqlExecute = vi.fn()
+  const mockSql = vi.fn(() => ({
+    execute: mockSqlExecute,
+    val: vi.fn((val) => val),
+    as: vi.fn(() => ({})),
+  }))
+  const MockKysely = vi.fn(() => ({
+    selectFrom: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    selectAll: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    groupBy: vi.fn().mockReturnThis(),
+    having: vi.fn().mockReturnThis(),
+    leftJoin: vi.fn().mockReturnThis(),
+    innerJoin: vi.fn().mockReturnThis(),
+    insertInto: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
+    returningAll: vi.fn().mockReturnThis(),
+    updateTable: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+    deleteFrom: vi.fn().mockReturnThis(),
+    with: vi.fn().mockReturnThis(),
+    executeTakeFirst: vi.fn(),
+    executeTakeFirstOrThrow: vi.fn(),
+    execute: vi.fn(),
+    sql: vi.fn(() => ({ execute: mockSqlExecute })),
+    fn: {
+      countAll: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+      sum: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+      avg: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+      max: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+      min: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+    },
+  }))
+  return { mockSqlExecute, mockSql, MockKysely }
+})
+
+// Mock the kysely module
+vi.mock('kysely', () => ({
+  Kysely: MockKysely,
+  PostgresDialect: vi.fn(),
+  sql: mockSql,
+}))
+
+// More granular mocks for each chain (keep existing structure)
 const courseUsuarioUpdateMock = {
   set: vi.fn().mockReturnThis(),
   where: vi.fn().mockReturnThis(),
@@ -14,55 +61,76 @@ const usuarioUpdateMock = {
   execute: vi.fn().mockResolvedValue({}),
 }
 
-const mockSql: any = {
-  execute: vi.fn(),
-  as: vi.fn(() => mockSql),
-}
+// Now import the module after mocks are set up
+import { updateUserAndCoursePoints } from '../scores'
 
-const mockFn: any = {
-  countAll: vi.fn(() => ({
-    as: vi.fn(() => mockFn),
-  })),
-  sum: vi.fn(() => ({
-    as: vi.fn(() => mockFn),
-  })),
-}
+// Create custom mock DB that extends MockKysely
+const mockDb = new MockKysely()
 
-// Main DB mock
-const mockDb: any = {
-  selectFrom: vi.fn().mockReturnThis(),
-  where: vi.fn().mockReturnThis(),
-  selectAll: vi.fn().mockReturnThis(),
-  select: vi.fn().mockReturnThis(),
-  execute: vi.fn(),
-  executeTakeFirst: vi.fn(),
-  insertInto: vi.fn().mockReturnThis(),
-  values: vi.fn().mockReturnThis(),
-  returningAll: vi.fn().mockReturnThis(),
-  executeTakeFirstOrThrow: vi.fn(),
-  updateTable: vi.fn((table: string) => {
-    if (table === 'course_usuario') {
-      return courseUsuarioUpdateMock
-    }
-    if (table === 'usuario') {
-      return usuarioUpdateMock
-    }
-    return {
-      set: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      execute: vi.fn().mockResolvedValue({}),
-    }
-  }),
-  fn: mockFn,
-}
-
-vi.mock('kysely', () => ({
-  sql: vi.fn(() => mockSql),
-}))
 
 describe('updateUserAndCoursePoints', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockSqlExecute.mockReset()
+    mockSqlExecute.mockImplementation(() => {
+      console.log('mockSqlExecute called')
+      return { rows: [] }
+    })
+    courseUsuarioUpdateMock.set.mockReset()
+    courseUsuarioUpdateMock.where.mockReset()
+    courseUsuarioUpdateMock.execute.mockReset()
+    usuarioUpdateMock.set.mockReset()
+    usuarioUpdateMock.where.mockReset()
+    usuarioUpdateMock.execute.mockReset()
+
+    // Reset default behaviors for update mocks
+    courseUsuarioUpdateMock.set.mockReturnThis()
+    courseUsuarioUpdateMock.where.mockReturnThis()
+    courseUsuarioUpdateMock.execute.mockResolvedValue({})
+    usuarioUpdateMock.set.mockReturnThis()
+    usuarioUpdateMock.where.mockReturnThis()
+    usuarioUpdateMock.execute.mockResolvedValue({})
+
+    // Reset DB method mocks and set default behaviors
+    mockDb.execute.mockReset()
+    mockDb.execute.mockResolvedValue([]) // default empty array
+    mockDb.executeTakeFirst.mockReset()
+    mockDb.executeTakeFirst.mockResolvedValue(null) // default null
+    mockDb.executeTakeFirstOrThrow.mockReset()
+    mockDb.executeTakeFirstOrThrow.mockResolvedValue(null)
+    mockDb.insertInto.mockReset()
+    mockDb.insertInto.mockReturnThis()
+    mockDb.values.mockReset()
+    mockDb.values.mockReturnThis()
+    mockDb.returningAll.mockReset()
+    mockDb.returningAll.mockReturnThis()
+    mockDb.selectFrom.mockReset()
+    mockDb.selectFrom.mockReturnThis()
+    mockDb.where.mockReset()
+    mockDb.where.mockReturnThis()
+    mockDb.selectAll.mockReset()
+    mockDb.selectAll.mockReturnThis()
+    mockDb.select.mockReset()
+    mockDb.select.mockReturnThis()
+    mockDb.fn.countAll.mockReset()
+    mockDb.fn.countAll.mockReturnValue({ as: vi.fn(() => ({})) })
+    mockDb.fn.sum.mockReset()
+    mockDb.fn.sum.mockReturnValue({ as: vi.fn(() => ({})) })
+    mockDb.updateTable.mockReset()
+    mockDb.updateTable.mockImplementation((table: string) => {
+      if (table === 'course_usuario') {
+        return courseUsuarioUpdateMock
+      } else if (table === 'usuario') {
+        return usuarioUpdateMock
+      }
+      return {
+        set: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        execute: vi.fn().mockResolvedValue({}),
+      }
+    })
+    mockDb.sql.mockReset()
+    mockDb.sql.mockImplementation(() => ({ execute: mockSqlExecute }))
   })
 
   it('should calculate scores and update db for a single user and course', async () => {
@@ -88,7 +156,7 @@ describe('updateUserAndCoursePoints', () => {
     const totalGuidesInCourse = { count: 4 } // 2 completed out of 4
     const totalCoursePoints = { total_points: 0 }
 
-    mockSql.execute.mockResolvedValue(guidesUsuario)
+    mockSqlExecute.mockResolvedValue(guidesUsuario)
     mockDb.execute.mockResolvedValueOnce([]) // Course not found initially
     mockDb.executeTakeFirstOrThrow.mockResolvedValueOnce({ id: 99 }) // Mock the insert
     mockDb.executeTakeFirst
@@ -121,7 +189,7 @@ describe('updateUserAndCoursePoints', () => {
     const user = { id: 2, learningscore: 10, profilescore: 20 }
     const guidesUsuario = { rows: [] }
 
-    mockSql.execute.mockResolvedValue(guidesUsuario)
+    mockSqlExecute.mockResolvedValue(guidesUsuario)
     mockDb.executeTakeFirst
       .mockResolvedValueOnce({ total_points: 0 }) // No guide points
       .mockResolvedValueOnce({ total_points: 0 }) // No course points
@@ -146,7 +214,7 @@ describe('updateUserAndCoursePoints', () => {
       ],
     }
 
-    mockSql.execute.mockResolvedValue(guidesUsuario)
+    mockSqlExecute.mockResolvedValue(guidesUsuario)
     mockDb.execute.mockResolvedValue([]) // No existing course_usuario
     mockDb.executeTakeFirstOrThrow
       .mockResolvedValueOnce({ id: 1 })
@@ -190,7 +258,7 @@ describe('updateUserAndCoursePoints', () => {
     ]
     const totalGuidesInCourse = { count: 4 }
 
-    mockSql.execute.mockResolvedValue(guidesUsuario)
+    mockSqlExecute.mockResolvedValue(guidesUsuario)
     mockDb.execute.mockResolvedValueOnce(existingCourseUser)
     mockDb.executeTakeFirst
       .mockResolvedValueOnce(totalGuidesInCourse)

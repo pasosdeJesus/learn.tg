@@ -1,25 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { recordEvent } from '../metrics-server'
+import { libDbMocks } from '@/test-utils/db-mocks'
 
-// Mock db operations
-const mockExecute = vi.fn().mockResolvedValue(undefined)
-const mockValues = vi.fn().mockReturnThis()
-const mockInsertInto = vi.fn().mockReturnValue({
-  values: mockValues,
-  execute: mockExecute,
-})
-const mockGetDb = vi.fn().mockReturnValue({
-  insertInto: mockInsertInto,
-})
+const { MockKysely, mockExecute } = libDbMocks
+
+// Create mock DB instance
+let mockDb: any
+let mockInsertIntoSpy: any
+let mockValuesSpy: any
+let mockGetDb: any
 
 // Mock dynamic import of '@/db/database' (hoisted)
 vi.mock('@/db/database', () => ({
-  getDb: mockGetDb,
+  getDb: () => mockGetDb(),
 }))
 
 describe('metrics-server', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    libDbMocks.resetMocks()
     // Reset window to undefined (server-side)
     Object.defineProperty(global, 'window', {
       value: undefined,
@@ -27,14 +26,12 @@ describe('metrics-server', () => {
     })
     // Reset mocks to default behavior
     mockExecute.mockResolvedValue(undefined)
-    mockValues.mockReturnThis()
-    mockInsertInto.mockReturnValue({
-      values: mockValues,
-      execute: mockExecute,
-    })
-    mockGetDb.mockReturnValue({
-      insertInto: mockInsertInto,
-    })
+
+    // Create fresh mock DB instance
+    mockDb = new MockKysely()
+    mockInsertIntoSpy = vi.spyOn(mockDb, 'insertInto').mockReturnValue(mockDb)
+    mockValuesSpy = vi.spyOn(mockDb, 'values').mockReturnValue(mockDb)
+    mockGetDb = vi.fn(() => mockDb)
   })
 
   it('should throw error when called client-side (window defined)', async () => {
@@ -65,8 +62,8 @@ describe('metrics-server', () => {
     await recordEvent(event)
 
     expect(mockGetDb).toHaveBeenCalled()
-    expect(mockInsertInto).toHaveBeenCalledWith('userevent')
-    expect(mockValues).toHaveBeenCalledWith({
+    expect(mockInsertIntoSpy).toHaveBeenCalledWith('userevent')
+    expect(mockValuesSpy).toHaveBeenCalledWith({
       event_type: 'test_event',
       event_data: '{"key":"value"}',
       created_at: event.timestamp,
@@ -84,13 +81,13 @@ describe('metrics-server', () => {
 
     await recordEvent(event)
 
-    expect(mockValues).toHaveBeenCalledWith({
+    expect(mockValuesSpy).toHaveBeenCalledWith({
       event_type: 'test_event',
       event_data: null,
       created_at: expect.any(Date),
       // usuario_id should NOT be included
     })
-    expect(mockValues.mock.calls[0][0]).not.toHaveProperty('usuario_id')
+    expect(mockValuesSpy.mock.calls[0][0]).not.toHaveProperty('usuario_id')
   })
 
   it('should record event without usuario_id when undefined', async () => {
@@ -102,13 +99,13 @@ describe('metrics-server', () => {
 
     await recordEvent(event)
 
-    expect(mockValues).toHaveBeenCalledWith({
+    expect(mockValuesSpy).toHaveBeenCalledWith({
       event_type: 'test_event',
       event_data: null,
       created_at: expect.any(Date),
       // usuario_id should NOT be included
     })
-    expect(mockValues.mock.calls[0][0]).not.toHaveProperty('usuario_id')
+    expect(mockValuesSpy.mock.calls[0][0]).not.toHaveProperty('usuario_id')
   })
 
   it('should handle database errors and rethrow', async () => {

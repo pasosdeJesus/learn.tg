@@ -1,34 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
+import { apiAuthMocks } from '@/test-utils/auth-mocks'
 
-// Define mocks before importing the hook
-const useSessionMock = vi.fn()
-const getCsrfTokenMock = vi.fn()
-const useAccountMock = vi.fn()
-const axiosGetMock = vi.fn()
-
-// Mock next-auth/react
-vi.mock('next-auth/react', () => ({
-  useSession: () => useSessionMock(),
-  getCsrfToken: () => getCsrfTokenMock(),
-}))
-
-// Mock wagmi
-vi.mock('wagmi', () => ({
-  useAccount: () => useAccountMock(),
-}))
-
-// Mock axios
-vi.mock('axios', () => ({
-  default: {
-    get: (...args: any[]) => axiosGetMock(...args),
-  },
-}))
+// Use auth-mocks for authentication and API mocking
+const { mocks } = apiAuthMocks
+const useSessionMock = mocks.mockUseSession
+const getCsrfTokenMock = mocks.mockGetCsrfToken
+const useAccountMock = mocks.mockUseAccount
+const axiosGetMock = mocks.mockAxiosGet
 
 // Import hook after mocks
 import { useGuideData } from '../useGuideData'
 
 describe('useGuideData', () => {
+  beforeAll(() => {
+    apiAuthMocks.setupMocks()
+  })
   const mockSession = {
     address: '0x123',
     user: { name: 'Test User' }
@@ -72,6 +59,7 @@ describe('useGuideData', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    apiAuthMocks.resetMocks()
 
     // Default mocks
     useSessionMock.mockReturnValue({ data: mockSession, status: 'authenticated' })
