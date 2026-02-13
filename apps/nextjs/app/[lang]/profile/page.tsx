@@ -272,6 +272,8 @@ export default function ProfileForm({ params }: PageProps) {
 
     if (address && session && session.address && address == session.address) {
       fetchProfile()
+    } else {
+      setLoading(false)
     }
     setUpdateProfile(false)
   }, [address, session, updateProfile])

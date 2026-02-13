@@ -86,6 +86,7 @@ export function setupAllMocks(options: {
   apiDbMocks.mockSql.mockImplementation(() => ({
     as: vi.fn().mockReturnValue({}),
     execute: apiDbMocks.mockSqlExecute,
+    val: vi.fn((val) => val),
   }))
 }
 
