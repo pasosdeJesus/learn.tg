@@ -14,8 +14,10 @@ jobs:
       - name: Check out repository (no submodules)
         uses: actions/checkout@v4
 
-      - name: Setup pnpm (version from package.json)
+      - name: Setup pnpm (explicit version)
         uses: pnpm/action-setup@v4
+        with:
+          version: '10.28.0'
 
       - name: Setup Node.js and Cache
         uses: actions/setup-node@v4
