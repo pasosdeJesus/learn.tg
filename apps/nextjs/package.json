@@ -107,6 +107,7 @@
       "@tailwindcss/oxide": "npm:@tailwindcss/oxide-wasm32-wasi"
     },
     "onlyBuiltDependencies": [
+      "@pasosdejesus/msipn",
       "blake-hash",
       "bufferutil",
       "esbuild",
