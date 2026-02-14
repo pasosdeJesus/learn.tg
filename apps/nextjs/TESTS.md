@@ -202,11 +202,11 @@ beforeEach(() => {
 - ✅ `app/[lang]/privacy-policy/page.tsx` - Tests created (4 tests passing)
 - ✅ `app/metrics/page.tsx` - Tests created (2 tests passing)
 - ✅ `app/[lang]/profile/page.tsx` - Tests created with **all tests passing** (7 tests passing)
-- ⚠️ UI components without tests - **Attempted fixes for Radix UI components**:
+- ⚠️ UI components without tests - **Progress on Radix UI components**:
   - Updated `test-utils/radix-mocks.tsx` to use `React.createElement` for JSX transformation compatibility
   - `menubar.test.tsx`: Still failing due to Portal dependency (`MenubarPrimitive.Portal` not mocked correctly)
   - `popover.test.tsx`: Still failing due to Portal dependency (`PopoverPrimitive.Portal` not mocked correctly)
-  - `scroll-area.test.tsx`: 3 tests skipped (`it.skip`) due to Radix context dependency (`ScrollAreaScrollbar` must be used within `ScrollArea`)
+  - ✅ `scroll-area.test.tsx`: **Fixed** - 3 tests now passing (changed `getByTestId` to `getAllByTestId` and selected appropriate elements)
   - Remaining: `form.tsx` (mocking issues), `sheet.tsx`, `table.tsx`, `tabs.tsx`, `toast.tsx`, `tooltip.tsx`
 - ⚠️ System and utilities - **Started but incomplete**:
   - `db/database.ts`: Attempted to create test but failed due to `db` being `null` in test environment (mock not properly initialized)
