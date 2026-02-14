@@ -10,6 +10,7 @@ export * from './auth-db-mocks'
 export * from './render-utils'
 export * from './api-mocks'
 export * from './crossword-mocks'
+export * from './radix-mocks'
 
 import { vi } from 'vitest'
 import { apiDbMocks } from './db-mocks'
