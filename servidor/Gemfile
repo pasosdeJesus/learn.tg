@@ -41,6 +41,8 @@ gem "prawnto_2", require: "prawnto"
 
 gem "prawn-table"
 
+gem "psych", ">= 5.0.0"
+
 gem "rack", "~> 2"
 
 gem "rack-cors", "~> 2.0"
