@@ -1,0 +1,25 @@
+{
+  "name": "Diligent Records",
+  "short_name": "Diligent",
+  "description": "Financial records based on biblical principles",
+  "start_url": "/en/diligent-records",
+  "scope": "/en/diligent-records",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2B6B4E",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/diligent-records-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/diligent-records-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

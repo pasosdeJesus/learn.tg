@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { DM_Sans, DM_Mono } from 'next/font/google'
+import { usePathname } from 'next/navigation'
 
 import './globals.css'
 
-import Layout from '@/components/Layout'
-import { AppProvider } from '@/providers/AppProvider'
+import RootLayoutClient from './RootLayoutClient'
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -33,9 +33,7 @@ export default function RootLayout({
       className={`${dmSans.variable} ${dmMono.variable} antialiased`}
     >
       <body>
-        <AppProvider>
-          <Layout>{children}</Layout>
-        </AppProvider>
+	<RootLayoutClient>{children}</RootLayoutClient>
       </body>
     </html>
   )
