@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { apiAuthMocks } from '@/test-utils/auth-mocks'
+import { apiAuthMocks } from '@/test-utils/common/rainbowkit-mocks'
 
 // Use auth-mocks for authentication and API mocking
 const { mocks } = apiAuthMocks

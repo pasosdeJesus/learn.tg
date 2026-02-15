@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { libDbMocks } from '@/test-utils/db-mocks'
+import { libDbMocks } from '@/test-utils/common/kysely-mocks'
 
 // Setup mocks using libDbMocks before importing the module
 const { mockSqlExecute, mockSql, MockKysely } = libDbMocks

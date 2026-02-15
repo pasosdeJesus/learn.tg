@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { recordEvent } from '../metrics-server'
-import { libDbMocks } from '@/test-utils/db-mocks'
+import { libDbMocks } from '@/test-utils/common/kysely-mocks'
 
 const { MockKysely, mockExecute } = libDbMocks
 

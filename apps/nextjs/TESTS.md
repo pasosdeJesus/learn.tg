@@ -4,28 +4,37 @@
 
 ---
 
-## 🛠️ Available Utilities (`/test-utils/`)
+## 🛠️ Available Utilities (`/test-utils/`) - **Estructura Organizada**
 
-### **`api-mocks.ts`** - Mocks for specific modules:
-- `mockMetricsQueries()` - lib/metrics/queries
-- `mockCrypto()` - lib/crypto
-- `mockScores()` - lib/scores
-- `mockGuideUtils()` - lib/guide-utils
-- `mockViem()` - viem module (blockchain interactions) - includes `privateKeyToAccount`, `formatUnits`, `viem/chains`
-- `mockMetricsServer()` - lib/metrics-server
-- `mockLibConfig()` - lib/config
-- `createMockNextRequest()` - NextRequest constructor
-- `setupApiMocks()` - Setup all module mocks
-- `setupCommonRouteMocks()` - Unified configuration for APIs
-- `resetApiMocks()` - Reset mock implementations
+**Reorganización completada (2026-02-14)**: Los mocks han sido organizados en dos categorías principales (`common/` y `app/`) para mejorar la mantenibilidad y reutilización.
 
-### **`db-mocks.ts`** - Kysely and PostgreSQL mocks:
-- `createMockKysely()` - Configurable mock instance (includes `mockSql` with `val` property for template tags)
-- `apiDbMocks` / `libDbMocks` - Pre-configured
+### **Estructura de directorios:**
+```
+test-utils/
+├── common/                    # Mocks genéricos reusables
+│   ├── index.ts              # Reexporta todos los mocks genéricos
+│   ├── fs-mocks.ts           # createFsMocks()
+│   ├── kysely-mocks.ts       # createMockKysely(), apiDbMocks, libDbMocks
+│   ├── radix-mocks.tsx       # portalMock, popoverMock, etc.
+│   ├── rainbowkit-mocks.ts   # apiAuthMocks (antes auth-mocks.ts)
+│   └── viem-mocks.ts         # mockViem(), viemMocks, viemChainsMocks
+├── app/                      # Mocks específicos de learn.tg
+│   ├── index.ts              # Reexporta mocks específicos
+│   ├── learn-tg-mocks.ts     # mockMetricsQueries, mockCrypto, setupApiMocks, etc.
+│   └── crossword-mocks.ts    # Funciones de crucigrama
+├── index.ts                  # Índice principal (backward compatibility)
+└── api-mocks.ts              # Índice de re-exportación (backward compatibility)
+```
 
-**Ejemplo de uso:**
+### **Mocks Genéricos (`common/`):**
+
+#### **`kysely-mocks.ts`** - Kysely y PostgreSQL mocks:
+- `createMockKysely()` - Instancia mock configurable (incluye `mockSql` con propiedad `val` para template tags)
+- `apiDbMocks` / `libDbMocks` - Pre-configurados
+
+**Ejemplo de uso actualizado:**
 ```typescript
-import { createMockKysely } from '@/test-utils/db-mocks'
+import { createMockKysely } from '@/test-utils/common/kysely-mocks'
 
 // Crear mocks configurables
 const { MockKysely, mockExecuteTakeFirst, mockExecute, mockSqlExecute, mockSql, setupMocks } =
@@ -53,29 +62,59 @@ beforeEach(() => {
 })
 ```
 
-### **`auth-mocks.ts`** - Authentication mocks:
-- `createAuthMocks()` - Configurable mocks for **SIWE (SiweMessage)**, NextAuth, Wagmi
-- `apiAuthMocks` / `hookAuthMocks` - Pre-configured
-- **Covers**: `mockSiweMessage`, `mockGetCsrfToken`, `mockUseSession`, `mockUseAccount`
+#### **`rainbowkit-mocks.ts`** - Mocks de autenticación (antes `auth-mocks.ts`):
+- `createAuthMocks()` - Mocks configurables para **SIWE (SiweMessage)**, NextAuth, Wagmi
+- `apiAuthMocks` - Pre-configurado para tests de API routes
+- **Cubre**: `mockSiweMessage`, `mockGetCsrfToken`, `mockUseSession`, `mockUseAccount`
 
-### **`auth-db-mocks.ts`** - Combined authentication and database mocks:
-- `createAuthDbMocks()` - Configurable mocks for **auth-options tests** (SIWE + Kysely + PostgreSQL)
-- `authOptionsMocks` - Pre-configured combined mocks
-- **Covers**: `mockSiweMessage`, `mockGetCsrfToken`, `mockExecuteTakeFirst`, `mockExecute`, `mockSqlExecute`, `mockSql`, `mockSelectFrom`, `mockInsertInto`, `mockUpdateTable`
+#### **`viem-mocks.ts`** - Mocks para interacciones blockchain:
+- `mockViem()` - Función que retorna mocks de viem
+- `viemMocks` / `viemChainsMocks` - Objetos mock pre-configurados
+- **Incluye**: `createPublicClient`, `createWalletClient`, `getContract`, `encodeFunctionData`, `privateKeyToAccount`, `formatUnits`
 
-### **`render-utils.tsx`** - Utilities for React components:
-- `renderWithProviders()` - Render with all necessary providers
-- `mockUseRouter()` - Mock of next/navigation
-- `mockUseSession()` - Mock of next-auth/react
+#### **`radix-mocks.tsx`** - Mocks para componentes Radix UI:
+- `portalMock` - Mock para componentes Portal de Radix
+- `popoverMock` - Mock para Popover
+- **Cubre todos los componentes Radix utilizados en la aplicación**
 
-### **`crossword-mocks.ts`** - Mocks for crossword tests:
-- `createFsMocks()` - Mocks for fs/promises and node:fs/promises
-- `createRemarkFillInTheBlankMock()` - Mock for remarkFillInTheBlank
-- `createCrosswordLayoutMock()` - Mock for crossword-layout-generator
-- `crosswordMocks` - Pre-configured
-- `setupCrosswordMocks()` / `resetCrosswordMocks()` - Unified configuration
+#### **`fs-mocks.ts`** - Mocks para sistema de archivos:
+- `createFsMocks()` - Mocks para `fs/promises` y `node:fs/promises`
 
-### **`index.ts`** - Unified export
+### **Mocks Específicos de Learn.tg (`app/`):**
+
+#### **`learn-tg-mocks.ts`** - Mocks para módulos específicos de learn.tg:
+- `mockMetricsQueries()` - lib/metrics/queries
+- `mockCrypto()` - lib/crypto
+- `mockScores()` - lib/scores
+- `mockGuideUtils()` - lib/guide-utils
+- `mockMetricsServer()` - lib/metrics-server
+- `mockLibConfig()` - lib/config
+- `createMockNextRequest()` - Constructor NextRequest
+- `setupApiMocks()` - Configura todos los mocks de módulos
+- `setupCommonRouteMocks()` - Configuración unificada para APIs
+- `resetApiMocks()` - Reinicia implementaciones de mocks
+
+#### **`crossword-mocks.ts`** - Mocks para tests de crucigramas:
+- `createRemarkFillInTheBlankMock()` - Mock para remarkFillInTheBlank
+- `createCrosswordLayoutMock()` - Mock para crossword-layout-generator
+- `crosswordMocks` - Pre-configurado
+- `setupCrosswordMocks()` / `resetCrosswordMocks()` - Configuración unificada
+
+### **Índices y Backward Compatibility:**
+
+#### **`api-mocks.ts`** - Índice de re-exportación:
+```typescript
+export * from './common'
+export * from './app'
+```
+
+#### **`index.ts`** - Índice principal (backward compatibility):
+```typescript
+export * from './common'
+export * from './app'
+```
+
+**Nota**: Para mantener compatibilidad, los imports antiguos como `@/test-utils/api-mocks` siguen funcionando, pero se recomienda usar imports específicos (ej: `@/test-utils/app/learn-tg-mocks`).
 
 **Note:** Mocks will be used, not real database in tests.
 
@@ -161,15 +200,15 @@ beforeEach(() => {
 ### **UI Components (shadcn/ui) without tests**
 - ✅ `accordion.tsx` - Tests created and passing (content hidden by Radix UI behavior handled)
 - ✅ `alert-dialog.tsx`, ✅ `alert.tsx`, ✅ `avatar.tsx`, ✅ `badge.tsx` - Tests created and passing
-- ✅ `dropdown-menu.tsx`, ⚠️ `form.tsx` (tests created but failing due to mocking issues), ✅ `menubar.tsx` (tests created and passing - Portal and ItemIndicator exports added to radix-mocks), ✅ `popover.tsx` (tests created and passing - duplicate portal mock removed)
+- ✅ `dropdown-menu.tsx`, ✅ `form.tsx` - Tests created and passing, ✅ `menubar.tsx` (tests created and passing - Portal and ItemIndicator exports added to radix-mocks), ✅ `popover.tsx` (tests created and passing - duplicate portal mock removed)
 - ✅ `progress.tsx` - Tests created and passing (8 tests, 100% coverage)
-- ⚠️ `scroll-area.tsx` (tests created but failing due to multiple elements with same testid - duplication issue), ✅ `separator.tsx` - Tests created and passing (6 tests, 100% coverage), ❌ `sheet.tsx`
-- ✅ `skeleton.tsx` - Tests created and passing (5 tests, 100% coverage), ❌ `table.tsx`, ❌ `tabs.tsx`, ❌ `toast.tsx`, ❌ `tooltip.tsx`
+- ✅ `scroll-area.tsx` - Tests created and passing, ✅ `separator.tsx` - Tests created and passing (6 tests, 100% coverage), ✅ `sheet.tsx` - Tests created and passing
+- ✅ `skeleton.tsx` - Tests created and passing (5 tests, 100% coverage), ✅ `table.tsx` - Tests created and passing, ✅ `tabs.tsx` - Tests created and passing, ✅ `toast.tsx` - Tests created and passing, ✅ `tooltip.tsx` - Tests created and passing
 
 ### **System and Utilities (0%)**
-1. ⚠️ `db/database.ts` - Kysely configuration (**test attempted but failed - mock initialization issue**)
+1. ✅ `db/database.ts` - Tests created and passing
 2. ✅ `lib/metrics/queries.ts` - Metrics queries (401 lines) - **Tests created: 19 passing, 1 skipped (getAllMetrics)**
-3. ⚠️ `providers/AppProvider.tsx` - Global provider - **Tests created but hoisting issues need fixing**
+3. ✅ `providers/AppProvider.tsx` - Tests created and passing
 4. ❌ `db/migrations/` - Migrations (12 files, low priority)
 5. ❌ Utility scripts (low priority)
 

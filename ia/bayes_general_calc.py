@@ -10,62 +10,62 @@ import math
 # H₁: Naturalismo filosófico, H₂: Teísmo cristiano, H₃: Teísmo no cristiano
 probabilities = {
     # Fine-tuning (FT): constantes físicas permiten vida inteligente
-    # H₁: posible con multiverso/principio antrópico, pero probabilidad baja
+    # H₁: probabilidad extremadamente baja bajo naturalismo (~1e-120)
     # H₂: Dios personal diseñó universo para vida (probabilidad alta)
     # H₃: Dios genérico también podría diseñar universo para vida (moderada)
-    'FT': [0.01, 0.9, 0.7],
+    'FT': [1e-120, 0.9, 0.7],
 
     # Conciencia (C): materia produce experiencia subjetiva y razón
-    # H₁: problema difícil, emergencia no explicada (probabilidad muy baja)
+    # H₁: problema difícil, probabilidad muy baja bajo naturalismo (~1e-10)
     # H₂: Dios creó seres a su imagen con conciencia y razón (alta)
     # H₃: Dios podría crear conciencia pero sin propósito específico (moderada)
-    'C':  [0.001, 0.8, 0.6],
+    'C':  [1e-10, 0.8, 0.6],
 
     # Moralidad objetiva (M): bien/mal universales no reducibles
-    # H₁: moralidad emergente, objetividad improbable (baja)
+    # H₁: moralidad objetiva improbable bajo naturalismo (~1e-5)
     # H₂: Dios fuente de moral objetiva (probabilidad alta)
-    # H₃: Dios fuente de moral pero sin revelación específica (moderada)
-    'M':  [0.05, 0.85, 0.5],
+    # H₃: Dios fuente de moral pero sin revelación específica (moderada-baja)
+    'M':  [1e-5, 0.9, 0.5],
 
     # Fiabilidad razón (R): nuestra razón descubre verdad, no solo supervivencia
-    # H₁: razón evolucionada puede descubrir verdad (probabilidad moderada)
+    # H₁: razón evolucionada puede descubrir verdad con baja probabilidad (~0.01)
     # H₂: razón creada por Dios racional para descubrir verdad (alta)
     # H₃: similar pero sin garantía de correspondencia con realidad divina (moderada)
-    'R':  [0.4, 0.9, 0.7],
+    'R':  [0.01, 0.9, 0.7],
 
     # Jesús histórico (J): vida, muerte, resurrección, impacto transformador
     # H₁: naturalismo no predice resurrección, probabilidad extremadamente baja
     # H₂: cristianismo predice resurrección como evento central (moderada)
     # H₃: teísmo no cristiano no predice resurrección de Jesús (muy baja)
-    'J':  [1e-10, 0.6, 0.001]
+    'J':  [1e-6, 0.5, 0.01]
 }
 
 # Justificaciones para cada asignación (1-2 oraciones)
 justifications = {
     'FT': [
-        "H₁: multiverso o principio antrópico pueden explicar fine-tuning, probabilidad baja (~0.01)",
+        "H₁: probabilidad extremadamente baja bajo naturalismo, fine-tuning requiere precisión ~10^-120 (~1e-120)",
         "H₂: Dios personal diseñó universo para vida (probabilidad alta 0.9)",
         "H₃: Dios genérico podría diseñar universo para vida (moderada 0.7)"
     ],
     'C': [
-        "H₁: emergencia de conciencia no bien explicada, probabilidad muy baja (~0.001)",
+        "H₁: problema difícil de la conciencia, probabilidad muy baja bajo naturalismo (~1e-10)",
         "H₂: Dios creó seres a su imagen con conciencia y razón (alta 0.8)",
         "H₃: Dios podría crear conciencia pero sin propósito específico (moderada 0.6)"
     ],
     'M': [
-        "H₁: moralidad emergente, objetividad improbable pero posible (~0.05)",
-        "H₂: Dios fuente de moral objetiva (probabilidad alta 0.85)",
-        "H₃: Dios fuente de moral pero sin revelación específica (moderada 0.5)"
+        "H₁: moralidad objetiva improbable bajo naturalismo, valores no reducibles (~1e-5)",
+        "H₂: Dios fuente de moral objetiva (probabilidad alta 0.9)",
+        "H₃: Dios fuente de moral pero sin revelación específica (moderada-baja 0.5)"
     ],
     'R': [
-        "H₁: razón evolucionada puede descubrir verdad, probabilidad moderada (~0.4)",
+        "H₁: razón evolucionada puede descubrir verdad con baja probabilidad bajo naturalismo (~0.01)",
         "H₂: razón creada por Dios racional para descubrir verdad (alta 0.9)",
         "H₃: similar pero sin garantía de correspondencia con realidad divina (moderada 0.7)"
     ],
     'J': [
-        "H₁: naturalismo no predice resurrección, probabilidad extremadamente baja (~1e-10)",
-        "H₂: cristianismo predice resurrección como evento central (moderada 0.6)",
-        "H₃: teísmo no cristiano no predice resurrección de Jesús (muy baja 0.001)"
+        "H₁: naturalismo no predice resurrección, probabilidad muy baja (~1e-6)",
+        "H₂: cristianismo predice resurrección como evento central (moderada 0.5)",
+        "H₃: teísmo no cristiano no predice resurrección de Jesús (muy baja 0.01)"
     ]
 }
 

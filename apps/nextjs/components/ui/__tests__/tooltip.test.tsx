@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { describe, it, expect, vi } from 'vitest'
 // Import radix mocks to ensure they're registered before component imports
-import '@/test-utils/radix-mocks'
+import '@/test-utils/common/radix-mocks'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 
 describe('Tooltip', () => {
