@@ -79,7 +79,7 @@ export function GoodDollarClaimButton({
           body: JSON.stringify({
             walletAddress: address,
             token: (session.user as any).token,
-            tx: (result as any)?.txHash ?? '',
+            tx: (result as any)?.blockHash ?? '',
           }),
         }).catch((e) => console.error("Couldn't register g$c claim", e))
       }
