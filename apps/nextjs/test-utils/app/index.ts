@@ -1,8 +1,8 @@
 /**
- * API mocking utilities index (re-exports from organized modules)
+ * Learn.tg specific mocking utilities re-export index
  *
  * "Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres" (Colosenses 3:23)
  */
 
-export * from './common'
-export * from './app'
+export * from './learn-tg-mocks'
+export * from './crossword-mocks'

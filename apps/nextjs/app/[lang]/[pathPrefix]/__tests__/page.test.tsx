@@ -138,12 +138,12 @@ describe('Course List Page Component', () => {
 
   const API_BUSCA_URL = 'https://fake.local/courses'
   const API_PRESENTA_URL = 'https://fake.local/presenta'
-  let realUseGuideData
+  let realUseGuideData: typeof useGuideData
   const useGuideDataMock = vi.mocked(useGuideData)
 
   beforeAll(async () => {
     const mod = await vi.importActual('@/lib/hooks/useGuideData')
-    realUseGuideData = mod.useGuideData
+    realUseGuideData = mod.useGuideData as typeof useGuideData
     useGuideDataMock.mockImplementation(realUseGuideData)
   })
 

@@ -11,7 +11,7 @@ const mockDynamicComponent = vi.fn((loader, options) => {
     // Return a div with a test ID based on the loading text
     const loadingText = options?.loading?.()?.props?.children || 'chart'
     return <div data-testid={`mock-${loadingText.toLowerCase().replace(/\s+/g, '-')}`} />
-  })
+  }) as any
   TestComponent.displayName = 'MockDynamicComponent'
   return TestComponent
 })
@@ -34,7 +34,7 @@ describe('Metrics Dashboard Page', () => {
       gameEngagement: [],
       goodDollarClaims: [],
       lastUpdated: new Date().toISOString(),
-    })
+    } as any)
   })
 
   beforeEach(() => {
@@ -47,7 +47,7 @@ describe('Metrics Dashboard Page', () => {
       gameEngagement: [],
       goodDollarClaims: [],
       lastUpdated: new Date().toISOString(),
-    })
+    } as any)
   })
 
   it('should render without errors', async () => {

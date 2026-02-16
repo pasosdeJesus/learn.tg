@@ -165,7 +165,7 @@ describe('Menubar', () => {
           <MenubarTrigger>Open</MenubarTrigger>
           <MenubarContent>
             <MenubarRadioGroup>
-              <MenubarRadioItem>Radio item</MenubarRadioItem>
+              <MenubarRadioItem value="radio-value">Radio item</MenubarRadioItem>
             </MenubarRadioGroup>
           </MenubarContent>
         </MenubarMenu>

@@ -53,7 +53,7 @@ vi.mock('@/.config/kysely.config', () => ({
 // Now import the module after mocks are set up
 import { getGuidesByCourseId, getGuideIdBySuffix, getActividadpfId, getCourseIdByPrefix } from '../guide-utils'
 
-const mockDb = new MockKysely()
+const mockDb = new MockKysely() as any
 
 describe('guide-utils', () => {
 

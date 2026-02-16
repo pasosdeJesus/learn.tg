@@ -8,7 +8,7 @@ describe('Skeleton', () => {
   it('renders skeleton with default classes', () => {
     const { container } = render(<Skeleton />)
 
-    const skeleton = container.firstChild
+    const skeleton = container.firstElementChild
     expect(skeleton).toBeInTheDocument()
     expect(skeleton).toHaveClass('animate-pulse', 'rounded-md', 'bg-muted')
     expect(skeleton?.tagName).toBe('DIV')
@@ -17,7 +17,7 @@ describe('Skeleton', () => {
   it('applies custom className', () => {
     const { container } = render(<Skeleton className="my-custom-class" />)
 
-    const skeleton = container.firstChild
+    const skeleton = container.firstElementChild
     expect(skeleton).toHaveClass('my-custom-class')
     expect(skeleton).toHaveClass('animate-pulse', 'rounded-md', 'bg-muted')
   })
@@ -27,7 +27,7 @@ describe('Skeleton', () => {
       <Skeleton aria-label="Loading" data-testid="skeleton" />
     )
 
-    const skeleton = container.firstChild
+    const skeleton = container.firstElementChild
     expect(skeleton).toHaveAttribute('aria-label', 'Loading')
     expect(skeleton).toHaveAttribute('data-testid', 'skeleton')
   })
@@ -35,11 +35,11 @@ describe('Skeleton', () => {
   it('renders with children (though not typical)', () => {
     const { container } = render(<Skeleton>Loading content</Skeleton>)
 
-    const skeleton = container.firstChild
+    const skeleton = container.firstElementChild
     expect(skeleton).toHaveTextContent('Loading content')
   })
 
   it('has correct display name', () => {
-    expect(Skeleton.displayName).toBeUndefined() // It's a function component, no display name
+    expect((Skeleton as any).displayName).toBeUndefined() // It's a function component, no display name
   })
 })

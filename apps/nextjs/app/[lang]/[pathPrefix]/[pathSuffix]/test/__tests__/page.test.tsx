@@ -74,9 +74,17 @@ const mockGuideData = {
   coursePath: '/en/course1',
   nextGuidePath: '',
   previousGuidePath: '',
+  totalGuides: null,
+  vaultCreated: null,
+  scholarshipPerGuide: null,
+  vaultBalance: null,
+  profileScore: null,
+  canSubmit: null,
+  completedGuides: null,
+  paidGuides: null,
   percentageCompleted: null,
   percentagePaid: null,
-  amountScholarship: null,
+  scholarshipPaid: null,
 }
 
 const mockCrosswordData = {

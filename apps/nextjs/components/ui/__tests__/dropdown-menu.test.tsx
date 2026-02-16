@@ -114,7 +114,7 @@ describe('DropdownMenu components', () => {
   })
 
   it('renders DropdownMenuRadioItem with children', () => {
-    render(<DropdownMenuRadioItem className="radio-class">Radio Item</DropdownMenuRadioItem>)
+    render(<DropdownMenuRadioItem className="radio-class" value="radio-value">Radio Item</DropdownMenuRadioItem>)
     const radioItem = screen.getByTestId('dropdown-radio-item')
     expect(radioItem).toBeInTheDocument()
     expect(radioItem).toHaveClass('radio-class')

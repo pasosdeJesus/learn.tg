@@ -32,7 +32,9 @@ describe('deeplink', () => {
       value: {
         get location() {
           return {
-            href: mockWindowHref,
+            get href() {
+              return mockWindowHref
+            },
             set href(value: string) {
               mockWindowHref = value
             }

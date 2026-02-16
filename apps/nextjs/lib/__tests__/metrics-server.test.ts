@@ -79,7 +79,7 @@ describe('metrics-server', () => {
       usuario_id: null,
     }
 
-    await recordEvent(event)
+    await recordEvent(event as any)
 
     expect(mockValuesSpy).toHaveBeenCalledWith({
       event_type: 'test_event',

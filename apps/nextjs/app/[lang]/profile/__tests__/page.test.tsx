@@ -79,7 +79,7 @@ describe('Profile Page', () => {
             }
           }
           // Call the original useEffect with wrapped effect
-          return actual.useEffect(wrappedEffect, deps)
+          return (actual as any).useEffect(wrappedEffect, deps)
         },
       }
     })
@@ -101,15 +101,16 @@ describe('Profile Page', () => {
     process.env.NEXT_PUBLIC_SELF_ENDPOINT = 'https://self.example.com'
 
     // Mock global.fetch for all API calls (ProfileForm uses fetch, not axios.get)
-    global.fetch = vi.fn((url: string) => {
+    global.fetch = vi.fn((input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input.toString()
       console.log('fetch called with URL:', url)
 
       // Countries
-      if (url === process.env.NEXT_PUBLIC_API_COUNTRIES) {
+      if (url === process.env.NEXT_PUBLIC_API_COUNTRIES!) {
         return Promise.resolve({
           ok: true,
           json: async () => [{ id: 1, nombre: 'Country1' }, { id: 2, nombre: 'Country2' }],
-        })
+        } as any)
       }
 
       // Religions
@@ -117,11 +118,11 @@ describe('Profile Page', () => {
         return Promise.resolve({
           ok: true,
           json: async () => [{ id: 1, nombre: 'Religion1' }, { id: 2, nombre: 'Religion2' }],
-        })
+        } as any)
       }
 
       // User data (URL includes query parameters)
-      if (url.includes(process.env.NEXT_PUBLIC_API_USERS)) {
+      if (url.includes(process.env.NEXT_PUBLIC_API_USERS!)) {
         return Promise.resolve({
           ok: true,
           json: async () => [
@@ -140,7 +141,7 @@ describe('Profile Page', () => {
               nusuario: 'johndoe',
             },
           ],
-        })
+        } as any)
       }
 
       // Default response
@@ -148,8 +149,8 @@ describe('Profile Page', () => {
         ok: false,
         status: 404,
         json: async () => ({ error: 'Not found' }),
-      })
-    })
+      } as any)
+    }) as any
 
     // Auth mocks (NO scores in session.user)
     mockUseSession.mockImplementation(() => {

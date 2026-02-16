@@ -41,17 +41,17 @@ vi.mock('next/navigation', () => ({
   useParams: () => ({ lang: 'en', pathPrefix: 'gooddollar' }),
 }))
 
-const mockedAxios = axios as vi.Mocked<typeof axios>
-const mockedUseSession = useSession as vi.Mock
-const mockedUseAccount = useAccount as vi.Mock
-const mockedGetCsrfToken = getCsrfToken as vi.Mock
+const mockedAxios = vi.mocked(axios) as any
+const mockedUseSession = vi.mocked(useSession)
+const mockedUseAccount = vi.mocked(useAccount)
+const mockedGetCsrfToken = vi.mocked(getCsrfToken)
 
 function renderWithProviders(ui: React.ReactElement) {
   return render(<Suspense fallback={<div>Loading...</div>}>{ui}</Suspense>)
 }
 
 describe('Course Page (Integration)', () => {
-  const mockParams = { lang: 'en', pathPrefix: 'gooddollar' }
+  const mockParams = Promise.resolve({ lang: 'en', pathPrefix: 'gooddollar' })
   const mockCourse = { id: 'course-1', titulo: 'GoodDollar Course', guias: [{ sufijoRuta: 'guide1' }] }
   const mockScholarship = { canSubmit: true, amountScholarship: 1000, isEligible: true } // isEligible añadido
 
@@ -62,8 +62,23 @@ describe('Course Page (Integration)', () => {
     vi.clearAllMocks()
     mockedGetCsrfToken.mockResolvedValue('mock-csrf-token')
 
-    mockedUseSession.mockReturnValue({ data: { address: '0x123' }, status: 'authenticated' })
-    mockedUseAccount.mockReturnValue({ address: '0x123', isConnected: true })
+    mockedUseSession.mockReturnValue({
+      data: { address: '0x123', expires: new Date().toISOString() },
+      status: 'authenticated',
+      update: vi.fn(),
+    } as any)
+    mockedUseAccount.mockReturnValue({
+      address: '0x123',
+      isConnected: true,
+      isConnecting: false,
+      isDisconnected: false,
+      isReconnecting: false,
+      status: 'connected',
+      addresses: ['0x123'],
+      chain: undefined,
+      chainId: 1,
+      connector: undefined,
+    } as any)
 
     mockedAxios.get.mockImplementation((url: string) => {
       if (url.startsWith(process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL!))
@@ -83,8 +98,23 @@ describe('Course Page (Integration)', () => {
   })
 
   it('shows partial login message when session and wallet addresses differ', async () => {
-    mockedUseSession.mockReturnValue({ data: { address: '0xAAA' }, status: 'authenticated' })
-    mockedUseAccount.mockReturnValue({ address: '0xBBB', isConnected: true })
+    mockedUseSession.mockReturnValue({
+      data: { address: '0xAAA', expires: new Date().toISOString() },
+      status: 'authenticated',
+      update: vi.fn(),
+    } as any)
+    mockedUseAccount.mockReturnValue({
+      address: '0xBBB',
+      isConnected: true,
+      isConnecting: false,
+      isDisconnected: false,
+      isReconnecting: false,
+      status: 'connected',
+      addresses: ['0xBBB'],
+      chain: undefined,
+      chainId: 1,
+      connector: undefined,
+    } as any)
 
     renderWithProviders(<Page params={mockParams} />)
 
@@ -104,8 +134,23 @@ describe('Course Page (Integration)', () => {
   })
 
   it('does not call secure APIs when no session', async () => {
-    mockedUseSession.mockReturnValue({ data: null, status: 'unauthenticated' })
-    mockedUseAccount.mockReturnValue({ address: undefined, isConnected: false })
+    mockedUseSession.mockReturnValue({
+      data: null,
+      status: 'unauthenticated',
+      update: vi.fn(),
+    } as any)
+    mockedUseAccount.mockReturnValue({
+      address: undefined,
+      isConnected: false,
+      isConnecting: false,
+      isDisconnected: true,
+      isReconnecting: false,
+      status: 'disconnected',
+      addresses: undefined,
+      chain: undefined,
+      chainId: undefined,
+      connector: undefined,
+    } as any)
 
     renderWithProviders(<Page params={mockParams} />)
 
