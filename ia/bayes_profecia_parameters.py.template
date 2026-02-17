@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""
+Parámetros para el análisis bayesiano de profecías bíblicas.
+Según ia/alineacion_bayes_profecia_mayor20G.md
+"""
+
+# Priors fijos (base escéptica extrema)
+PRIOR_H1 = 0.999999
+PRIOR_H2 = 0.000001  # 1 en 1 millón
+
+# Umbral objetivo para LR_total
+UMBRAL_OBJETIVO = 1e9
+
+# Lista de profecías con sus parámetros
+# Formato: (texto, clase, P(E|H1), justificación_H1, P(E|H2), justificación_H2, fi_H1, fi_H2)
+# Clase: 'A' (cumplida), 'B' (fallida), 'C' (no evaluable)
+# fi_H1, fi_H2: factores de dependencia (≤ 1)
+
+profecías = [
+    # ========== PROFECÍAS "ESTRELLA" (9) ==========
+    {
+        "texto": "Daniel 9:24-27 (70 semanas, Mesías cortado)",
+        "clase": "A",
+        "P_E_H1": 1e-6,  # Probabilidad bajo H1: muy baja por especificidad
+        "just_H1": "Especificidad alta: tiempo exacto (483 años), evento específico (Mesías 'cortado'). Población Judea ~600k, pretendientes mesiánicos ~20. P_demográfica = 20/600k ≈ 3.3e-5. P_especificidad ≈ 1/100 (tiempo) × 1/50 (evento) = 2e-4. P_transmisión ≈ 0.15. Producto: 3.3e-5 × 2e-4 × 0.15 ≈ 1e-9, ajustado por dependencia.",
+        "P_E_H2": 0.7,   # Probabilidad bajo H2: alta pero con incertidumbre hermenéutica/histórica
+        "just_H2": "Revelación divina posible pero con ruido interpretativo. v=0.01/siglo, t=5 siglos → (1-0.01)^5 ≈ 0.95. P_hermenéutica=0.8, P_histórica=0.9. Producto: 0.95×0.8×0.9 ≈ 0.68 ≈ 0.7.",
+        "fi_H1": 0.3,    # Dependencia moderada: misma tradición apocalíptica
+        "fi_H2": 0.5,    # Dependencia moderada: misma fuente divina
+    },
+    {
+        "texto": "Miqueas 5:2 (Mesías nace en Belén)",
+        "clase": "A",
+        "P_E_H1": 0.00075,  # Documento ejemplo: (1,500/600,000) × 0.3 ≈ 0.00075
+        "just_H1": "P_demográfica: Belén ~1,500 hab / Judea ~600,000 = 0.0025. P_transmisión estimada 0.3. Producto: 0.0025×0.3=0.00075.",
+        "P_E_H2": 0.8,
+        "just_H2": "Claro mensaje geográfico. v=0.005/siglo, t=7 siglos → (0.995)^7≈0.966. P_hermenéutica=0.9, P_histórica=0.9. Producto: 0.966×0.9×0.9≈0.78 ≈ 0.8.",
+        "fi_H1": 1.0,    # Independiente: diferente autor, género
+        "fi_H2": 0.7,    # Dependencia ligera: misma figura mesiánica
+    },
+    {
+        "texto": "Salmo 22:16-18 (clavan manos/pies, sortean ropa)",
+        "clase": "A",
+        "P_E_H1": 0.001,
+        "just_H1": "Descripción de sufrimiento no únicamente aplicable a crucifixión romana. P_especificidad ≈ 1/100 (detalles). P_transmisión ≈ 0.1.",
+        "P_E_H2": 0.6,
+        "just_H2": "Descripción detallada de ejecución futura. v=0.008/siglo, t=10 siglos → (0.992)^10≈0.923. P_hermenéutica=0.7, P_histórica=0.9. Producto: 0.923×0.7×0.9≈0.58 ≈ 0.6.",
+        "fi_H1": 0.5,
+        "fi_H2": 0.5,
+    },
+    {
+        "texto": "Zacarías 11:12-13 (30 monedas de plata, campo alfarero)",
+        "clase": "A",
+        "P_E_H1": 0.0001,
+        "just_H1": "Monto específico (30 piezas) y destino (campo alfarero). P_especificidad ≈ 1/100 (monto) × 1/50 (destino) = 2e-4. P_transmisión ≈ 0.5.",
+        "P_E_H2": 0.7,
+        "just_H2": "Detalles precisos de transacción futura. v=0.006/siglo, t=5 siglos → (0.994)^5≈0.97. P_hermenéutica=0.8, P_histórica=0.9. Producto: 0.97×0.8×0.9≈0.7.",
+        "fi_H1": 0.6,
+        "fi_H2": 0.6,
+    },
+    {
+        "texto": "Isaías 53 (Siervo sufriente, muerte sustitutiva)",
+        "clase": "A",
+        "P_E_H1": 0.0005,
+        "just_H1": "Descripción de figura inocente que sufre por otros. P_especificidad ≈ 1/200. P_transmisión ≈ 0.1.",
+        "P_E_H2": 0.9,
+        "just_H2": "Descripción exacta de misión y muerte de Jesús. v=0.007/siglo, t=7 siglos → (0.993)^7≈0.952. P_hermenéutica=0.95, P_histórica=0.99. Producto: 0.952×0.95×0.99≈0.9.",
+        "fi_H1": 0.4,
+        "fi_H2": 0.5,
+    },
+    # ========== PROFECÍAS "PROBLEMÁTICAS" (4-5) ==========
+    {
+        "texto": "Isaías 7:14 (Virgen dará a luz)",
+        "clase": "B",  # Considerada problemática por ambigüedad
+        "P_E_H1": 0.01,
+        "just_H1": "Término 'almah' puede significar 'joven mujer', no exclusivamente 'virgen'. Probabilidad relativamente alta bajo H1.",
+        "P_E_H2": 0.005,  # DEBE ser ≤ P(E|H1) para clase B
+        "just_H2": "Ambigüedad lingüística reduce probabilidad bajo H2.",
+        "fi_H1": 0.7,
+        "fi_H2": 0.7,
+    },
+    {
+        "texto": "Ezequiel 26 (Tiro destruida, nunca reconstruida)",
+        "clase": "B",
+        "P_E_H1": 0.1,
+        "just_H1": "Predicción de destrucción de ciudad portuaria; Tiro fue destruida pero reconstruida parcialmente.",
+        "P_E_H2": 0.05,  # ≤ P(E|H1)
+        "just_H2": "Profecía no cumplida completamente, penaliza H2.",
+        "fi_H1": 1.0,
+        "fi_H2": 0.8,
+    },
+    {
+        "texto": "Jeremías 34:5 (Sedecías morirá en paz)",
+        "clase": "B",
+        "P_E_H1": 0.2,
+        "just_H1": "Promesa general de muerte pacífica; Sedecías fue cegado y murió en cautiverio.",
+        "P_E_H2": 0.15,  # ≤ P(E|H1)
+        "just_H2": "No cumplida exactamente, penaliza H2.",
+        "fi_H1": 0.8,
+        "fi_H2": 0.6,
+    },
+    # ========== PROFECÍAS "DUDOSAS/ESCANDALOSAS" (3-4) ==========
+    {
+        "texto": "Deuteronomio 21:23 (Maldito el colgado)",
+        "clase": "C",  # No evaluable como profecía mesiánica directa
+        "P_E_H1": 0.0,  # No se usa para LR
+        "just_H1": "Ley general, no profecía específica.",
+        "P_E_H2": 0.0,
+        "just_H2": "Aplicación tipológica posterior, no predicción directa.",
+        "fi_H1": 1.0,
+        "fi_H2": 1.0,
+    },
+    {
+        "texto": "Oseas 11:1 ('De Egipto llamé a mi hijo')",
+        "clase": "C",
+        "P_E_H1": 0.0,
+        "just_H1": "Referencia histórica a Éxodo, no profecía mesiánica.",
+        "P_E_H2": 0.0,
+        "just_H2": "Relectura cristológica, no predicción original.",
+        "fi_H1": 1.0,
+        "fi_H2": 1.0,
+    },
+    # ========== PROFECÍAS ESCATOLÓGICAS (2-3) ==========
+    {
+        "texto": "Daniel 12 (Resurrección de muertos, tiempo del fin)",
+        "clase": "C",
+        "P_E_H1": 0.0,
+        "just_H1": "Profecía escatológica, ventana temporal abierta.",
+        "P_E_H2": 0.0,
+        "just_H2": "Eventos futuros no verificables actualmente.",
+        "fi_H1": 1.0,
+        "fi_H2": 1.0,
+    },
+    {
+        "texto": "Isaías 65 (Nuevos cielos, nueva tierra)",
+        "clase": "C",
+        "P_E_H1": 0.0,
+        "just_H1": "Visión escatológica, no verificable históricamente.",
+        "P_E_H2": 0.0,
+        "just_H2": "Promesa futura, no cumplimiento histórico.",
+        "fi_H1": 1.0,
+        "fi_H2": 1.0,
+    },
+]
+
+# Verificar consistencia
+for i, p in enumerate(profecías):
+    if p["clase"] == "B":
+        if p["P_E_H2"] > p["P_E_H1"]:
+            print(f"ADVERTENCIA: Profecía {i} clase B pero P_E_H2 > P_E_H1")
+    if p["clase"] == "C":
+        # Para clase C, LR = 1, no contribuye
+        pass
+
+print(f"Total profecías cargadas: {len(profecías)}")
+print(f"Priors: P(H1)={PRIOR_H1}, P(H2)={PRIOR_H2}")

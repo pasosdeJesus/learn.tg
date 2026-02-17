@@ -100,3 +100,7 @@ artifacts/
 cache/
 typechain-types/
 apps/nextjs/html-snapshots/
+ia/bayes_general_parameters.py
+ia/bayes_profecia_parameters.py
+ia/bayes_profecia_destinatario_parameters.py
+ia/bayes_profecia_sintetica_parameters.py
