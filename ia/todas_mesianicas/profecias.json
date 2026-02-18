@@ -1,0 +1,2081 @@
+{
+  "metadata": {
+    "nombre": "Corpus completo de profecías mesiánicas con evidencia pre-Jesús",
+    "version": "3.0",
+    "fecha": "2025-03-18",
+    "descripcion": "24 profecías del Antiguo Testamento con evidencia de interpretación mesiánica o arquetipo en textos pre-Jesús (Qumrán, LXX, Pseudopigráficos)",
+    "total_profecias": 24,
+    "criterios_inclusion": [
+      "Manuscrito bíblico más antiguo pre-Jesús (Qumrán u otros)",
+      "Evidencia de interpretación mesiánica en textos pre-cristianos",
+      "Arquetipo mesiánico documentado en literatura del Segundo Templo"
+    ],
+    "referencias": [
+      "Martínez, F.G. & Tigchelaar, E.J.C. (1997). The Dead Sea Scrolls Study Edition",
+      "Charlesworth, J.H. (1983). The Old Testament Pseudepigrapha",
+      "Collins, J.J. (2010). The Scepter and the Star",
+      "Abegg, M., Flint, P., & Ulrich, E. (1999). The Dead Sea Scrolls Bible"
+    ]
+  },
+  
+  "modelo_bayesiano": {
+    "hipotesis": [
+      {
+        "id": "H1",
+        "nombre": "Naturalismo (azar)",
+        "descripcion": "Las coincidencias ocurren por azar en el contexto histórico",
+        "prior": 0.25,
+        "parametros": {
+          "descripcion": "Probabilidad base de que las profecías se cumplan por casualidad"
+        }
+      },
+      {
+        "id": "H2",
+        "nombre": "Revelación divina",
+        "descripcion": "Dios reveló eventos futuros a los profetas",
+        "prior": 0.25,
+        "parametros": {
+          "descripcion": "Las profecías son comunicación divina genuina"
+        }
+      },
+      {
+        "id": "H3",
+        "nombre": "Conocimiento extraordinario humano",
+        "descripcion": "Los autores tuvieron acceso a información especial (no divina)",
+        "prior": 0.25,
+        "parametros": {
+          "descripcion": "Visión, tradición oral, o conocimiento excepcional pero humano"
+        }
+      },
+      {
+        "id": "H4",
+        "nombre": "Construcción posterior",
+        "descripcion": "El texto fue escrito o adaptado después del evento",
+        "prior": 0.25,
+        "parametros": {
+          "descripcion": "Profecías ex eventu (vaticinium ex eventu)"
+        }
+      }
+    ],
+    
+    "factores_dependencia_globales": {
+      "H1": 0.1,
+      "H2": 0.8,
+      "H3": 0.5,
+      "H4": 0.7
+    },
+    
+    "configuracion_montecarlo": {
+      "n_simulaciones": 1000000,
+      "semilla": 42,
+      "metodo_correlacion": "grupos_arquetipo",
+      "intervalo_confianza": 0.95
+    }
+  },
+  
+  "profecias": [
+    {
+      "id": "genesis_49_10",
+      "nombre": "Génesis 49:10",
+      "referencia": "Génesis 49:8-12",
+      "texto": "No será quitado el cetro de Judá, ni el legislador de entre sus pies, hasta que venga Siloh; y a él se congregarán los pueblos.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. Promesa tribal con figura escatológica individual.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q252-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q252-1",
+      
+      "dimensiones_especificidad": {
+        "geografica": {
+          "opciones_posibles": 12,
+          "descripcion": "12 tribus de Israel"
+        },
+        "temporal": {
+          "es_infinito": true,
+          "descripcion": "Límite temporal: 'hasta que venga Siloh'"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Descendiente de Judá",
+            "Gobernante",
+            "Congregación de pueblos"
+          ],
+          "opciones_por_caracteristica": [12, 20, 30],
+          "descripcion": "Características del Siloh"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.95,
+        "precision_historica": 0.9,
+        "independencia_redaccional": 0.8
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.95,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-1 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 8.5,
+        "testigos_independientes": 2,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 4.2,
+        "dimensiones": [
+          {
+            "aspecto": "Congregación de pueblos",
+            "expectativa_previa": "Solo Israel",
+            "contra_expectativas": 0.6
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-1 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "2_samuel_7": 0.8,
+          "isaias_11": 0.7
+        }
+      }
+    },
+    
+    {
+      "id": "numeros_24_17",
+      "nombre": "Números 24:17",
+      "referencia": "Números 24:15-19",
+      "texto": "Saldrá estrella de Jacob, y se levantará cetro de Israel, y herirá las sienes de Moab, y destruirá a todos los hijos de Set.",
+      "arquetipo": "guerrero",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. Antología mesiánica.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q175-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q175-1",
+      
+      "dimensiones_especificidad": {
+        "agente": {
+          "caracteristicas": [
+            "Estrella",
+            "Cetro",
+            "Conquistador de enemigos"
+          ],
+          "opciones_por_caracteristica": [30, 20, 15],
+          "descripcion": "Características del guerrero mesiánico"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.9,
+        "precision_historica": 0.85,
+        "independencia_redaccional": 0.8
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.92,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "100-50 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 7.5,
+        "testigos_independientes": 2,
+        "evidencia_arqueologica": 0.5,
+        "historicidad": "media"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 5.1,
+        "dimensiones": [
+          {
+            "aspecto": "Estrella como gobernante",
+            "expectativa_previa": "Símbolo astronómico",
+            "contra_expectativas": 0.7
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "100-50 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "guerrero",
+        "dependencias": {}
+      }
+    },
+    
+    {
+      "id": "deuteronomio_18_15",
+      "nombre": "Deuteronomio 18:15",
+      "referencia": "Deuteronomio 18:15-19",
+      "texto": "Profeta de en medio de ti, de tus hermanos, como yo, te levantará Jehová tu Dios; a él oiréis.",
+      "arquetipo": "profeta",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. Figura escatológica específica.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q175-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q175-1",
+      
+      "dimensiones_especificidad": {
+        "agente": {
+          "caracteristicas": [
+            "Profeta",
+            "Como Moisés",
+            "Autoridad divina",
+            "De entre los hermanos"
+          ],
+          "opciones_por_caracteristica": [30, 15, 10, 12],
+          "descripcion": "Características del profeta escatológico"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.95,
+        "precision_historica": 0.9,
+        "independencia_redaccional": 0.85
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.96,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "100-50 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 8.0,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 5.5,
+        "dimensiones": [
+          {
+            "aspecto": "Profeta como Moisés",
+            "expectativa_previa": "Profeta ordinario",
+            "contra_expectativas": 0.65
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "100-50 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "profeta",
+        "dependencias": {}
+      }
+    },
+    
+    {
+      "id": "samuel_7_11_16",
+      "nombre": "2 Samuel 7:11-16",
+      "referencia": "2 Samuel 7:11-16",
+      "texto": "Yo estableceré su reino. Él edificará casa a mi nombre, y yo afirmaré su trono para siempre. Yo seré a él padre, y él me será a mí hijo.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. Promesa dinástica con figura escatológica.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q51-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q174-1",
+      
+      "dimensiones_especificidad": {
+        "temporal": {
+          "es_infinito": true,
+          "descripcion": "'Para siempre' vs. dinastías finitas en historia"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Hijo de Dios",
+            "Rey eterno",
+            "Constructor del Templo",
+            "Descendiente de David"
+          ],
+          "opciones_por_caracteristica": [5, 5000, 10, 50],
+          "descripcion": "Características del Mesías davídico"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.98,
+        "precision_historica": 0.95,
+        "independencia_redaccional": 0.9
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.97,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-25 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 9.0,
+        "testigos_independientes": 4,
+        "evidencia_arqueologica": 0.7,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 7.8,
+        "dimensiones": [
+          {
+            "aspecto": "Hijo de Dios",
+            "expectativa_previa": "Rey humano",
+            "contra_expectativas": 0.9
+          },
+          {
+            "aspecto": "Reino eterno",
+            "expectativa_previa": "Dinastías finitas",
+            "contra_expectativas": 0.95
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-25 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "genesis_49_10": 0.8,
+          "isaias_11": 0.9,
+          "jeremias_23": 0.9
+        }
+      }
+    },
+    
+    {
+      "id": "isaias_9_5_6",
+      "nombre": "Isaías 9:5-6",
+      "referencia": "Isaías 9:5-6",
+      "texto": "Porque un niño nos es nacido, hijo nos es dado, y el principado sobre su hombro; y se llamará su nombre Admirable, Consejero, Dios Fuerte, Padre Eterno, Príncipe de Paz.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Aplicación textual clara",
+      "contexto": "Individual futuro. Interpretación escatológica.",
+      "url_texto": "http://dss.collections.imj.org.il/isaiah",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q161-1",
+      
+      "dimensiones_especificidad": {
+        "agente": {
+          "caracteristicas": [
+            "Niño nacido",
+            "Hijo dado",
+            "Príncipe",
+            "Consejero",
+            "Dios Fuerte",
+            "Padre Eterno",
+            "Príncipe de Paz"
+          ],
+          "opciones_por_caracteristica": [20, 20, 15, 10, 5, 5, 15],
+          "descripcion": "Títulos divinos del gobernante"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.9,
+        "precision_historica": 0.8,
+        "independencia_redaccional": 0.7
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.98,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "125-100 a.C.",
+        "evidencia_qumran": 0.8
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": -5,
+        "precision_observada": 8.5,
+        "testigos_independientes": 2,
+        "evidencia_arqueologica": 0.5,
+        "historicidad": "media"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 8.5,
+        "dimensiones": [
+          {
+            "aspecto": "Dios Fuerte",
+            "expectativa_previa": "Rey humano",
+            "contra_expectativas": 0.95
+          },
+          {
+            "aspecto": "Padre Eterno",
+            "expectativa_previa": "Rey mortal",
+            "contra_expectativas": 0.9
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.15,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "125-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "isaias_11": 0.8,
+          "miqueas_5_2": 0.6
+        }
+      }
+    },
+    
+    {
+      "id": "isaias_11_1_10",
+      "nombre": "Isaías 11:1-10",
+      "referencia": "Isaías 11:1-10",
+      "texto": "Saldrá una vara del tronco de Isaí, y un vástago retoñará de sus raíces. Reposará sobre él el Espíritu de Jehová: espíritu de sabiduría y de inteligencia, espíritu de consejo y de poder, espíritu de conocimiento y de temor de Jehová.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. Figura mesiánica con dones del Espíritu.",
+      "url_texto": "http://dss.collections.imj.org.il/isaiah",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q161-1",
+      
+      "dimensiones_especificidad": {
+        "geografica": {
+          "opciones_posibles": 300,
+          "descripcion": "Posibles linajes en Israel"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Descendiente de Isaí",
+            "Vara",
+            "Retoño",
+            "Con Espíritu de sabiduría",
+            "Con Espíritu de inteligencia",
+            "Con Espíritu de consejo",
+            "Con Espíritu de poder",
+            "Con Espíritu de conocimiento",
+            "Juez justo"
+          ],
+          "opciones_por_caracteristica": [50, 20, 20, 10, 10, 10, 10, 10, 20],
+          "descripcion": "Características del gobernante ideal"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.97,
+        "precision_historica": 0.9,
+        "independencia_redaccional": 0.85
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.98,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "125-100 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 8.0,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 6.8,
+        "dimensiones": [
+          {
+            "aspecto": "Múltiples dones del Espíritu",
+            "expectativa_previa": "Rey guerrero",
+            "contra_expectativas": 0.8
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "125-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "isaias_9": 0.8,
+          "samuel_7": 0.9
+        }
+      }
+    },
+    
+    {
+      "id": "isaias_53",
+      "nombre": "Isaías 53",
+      "referencia": "Isaías 52:13-53:12",
+      "texto": "Despreciado y desechado entre los hombres, varón de dolores, experimentado en quebranto... ciertamente llevó él nuestras enfermedades, y sufrió nuestros dolores... herido fue por nuestras rebeliones, molido por nuestros pecados... el castigo de nuestra paz fue sobre él, y por su llaga fuimos nosotros curados.",
+      "arquetipo": "sufriente",
+      "clase": "A",
+      "nivel_evidencia": "Paralelo temático sugerido",
+      "contexto": "Individual futuro. Figura que sufre por el pueblo con funciones expiatorias.",
+      "url_texto": "http://dss.collections.imj.org.il/isaiah",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q541-1",
+      
+      "dimensiones_especificidad": {
+        "temporal": {
+          "valor_especifico": 700,
+          "rango_posible_min": 0,
+          "rango_posible_max": 1000,
+          "precision_años": 50,
+          "unidad": "años",
+          "descripcion": "Profetizado ~700 a.C., cumplido ~30 d.C."
+        },
+        "evento": {
+          "opciones_posibles": 50,
+          "evento_especifico": "Muerte violenta inocente con valor expiatorio",
+          "descripcion": "Tipos de muertes en la antigüedad"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Inocente que sufre voluntariamente por otros",
+            "Rechazado por su propio pueblo",
+            "Despreciado",
+            "Varón de dolores",
+            "Herido por transgresiones ajenas",
+            "Molido por pecados de otros",
+            "Silencioso ante acusadores",
+            "Muerto con criminales",
+            "Sepultado con ricos",
+            "Muerte expiatoria",
+            "Profetizado siglos antes"
+          ],
+          "opciones_por_caracteristica": [1000, 50, 30, 20, 100, 100, 20, 10, 30, 100, 500],
+          "descripcion": "Características únicas del Siervo sufriente"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.85,
+        "precision_historica": 0.8,
+        "independencia_redaccional": 0.7
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.98,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "125-100 a.C.",
+        "evidencia_qumran": 0.8
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 9.5,
+        "testigos_independientes": 4,
+        "evidencia_arqueologica": 0.8,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 9.5,
+        "dimensiones": [
+          {
+            "aspecto": "Mesías sufriente",
+            "expectativa_previa": "Mesías guerrero davídico",
+            "contra_expectativas": 0.98
+          },
+          {
+            "aspecto": "Muerte expiatoria",
+            "expectativa_previa": "Expiación por sacrificios animales",
+            "contra_expectativas": 0.95
+          },
+          {
+            "aspecto": "Silencio ante acusadores",
+            "expectativa_previa": "Rey que defiende su causa",
+            "contra_expectativas": 0.9
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "125-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "sufriente",
+        "dependencias": {
+          "zacarias_12_10": 0.9,
+          "salmo_22": 0.95,
+          "salmo_69": 0.8
+        }
+      }
+    },
+    
+    {
+      "id": "isaias_61_1_3",
+      "nombre": "Isaías 61:1-3",
+      "referencia": "Isaías 61:1-3",
+      "texto": "El Espíritu de Jehová el Señor está sobre mí, porque me ungió Jehová; me ha enviado a predicar buenas nuevas a los pobres, a vendar a los quebrantados de corazón, a publicar libertad a los cautivos, y a los presos apertura de la cárcel.",
+      "arquetipo": "ungido",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. Unción con manifestación escatológica.",
+      "url_texto": "http://dss.collections.imj.org.il/isaiah",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q521-1",
+      
+      "dimensiones_especificidad": {
+        "evento": {
+          "opciones_posibles": 30,
+          "evento_especifico": "Predicar buenas nuevas, libertad a cautivos, vista a ciegos",
+          "descripcion": "Tipos de liberaciones/milagros"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Ungido por Jehová",
+            "Con Espíritu de Jehová",
+            "Predica buenas nuevas a pobres",
+            "Venda quebrantados",
+            "Liberta cautivos",
+            "Abre cárceles"
+          ],
+          "opciones_por_caracteristica": [20, 20, 15, 15, 20, 20],
+          "descripcion": "Misiones del ungido"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.95,
+        "precision_historica": 0.85,
+        "independencia_redaccional": 0.8
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.98,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "125-100 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 8.5,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.7,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 6.5,
+        "dimensiones": [
+          {
+            "aspecto": "Liberación espiritual",
+            "expectativa_previa": "Liberación política",
+            "contra_expectativas": 0.75
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "125-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "ungido",
+        "dependencias": {}
+      }
+    },
+    
+    {
+      "id": "jeremias_23_5_6",
+      "nombre": "Jeremías 23:5-6",
+      "referencia": "Jeremías 23:5-6; 33:14-18",
+      "texto": "He aquí que vienen días, dice Jehová, en que levantaré a David un Renuevo justo, y reinará como Rey, el cual será dichoso, y hará juicio y justicia en la tierra. En sus días será salvo Judá, e Israel habitará confiado; y este será su nombre con el cual le llamarán: Jehová justicia nuestra.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. 'Renuevo' como figura escatológica restauradora.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q70-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q174-1",
+      
+      "dimensiones_especificidad": {
+        "agente": {
+          "caracteristicas": [
+            "Renuevo",
+            "Rey justo",
+            "Hace juicio y justicia",
+            "De la línea de David",
+            "Nombre divino: Jehová justicia nuestra"
+          ],
+          "opciones_por_caracteristica": [30, 20, 15, 50, 10],
+          "descripcion": "Características del Renuevo justo"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.96,
+        "precision_historica": 0.9,
+        "independencia_redaccional": 0.85
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.95,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "200-150 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 8.0,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 7.0,
+        "dimensiones": [
+          {
+            "aspecto": "Nombre divino aplicado al rey",
+            "expectativa_previa": "Rey humano",
+            "contra_expectativas": 0.85
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "200-150 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "samuel_7": 0.9,
+          "isaias_11": 0.8,
+          "zacarias_3": 0.8
+        }
+      }
+    },
+    
+    {
+      "id": "ezequiel_34_23_24",
+      "nombre": "Ezequiel 34:23-24",
+      "referencia": "Ezequiel 34:23-24; 37:24-28",
+      "texto": "Y levantaré sobre ellas a un pastor, y él las apacentará; a mi siervo David, él las apacentará, y él será su pastor. Yo Jehová les seré por Dios, y mi siervo David príncipe en medio de ellos. Yo Jehová he hablado.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Aplicación textual clara",
+      "contexto": "Individual futuro. Pastor davídico escatológico.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q73-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/CD-1",
+      
+      "dimensiones_especificidad": {
+        "agente": {
+          "caracteristicas": [
+            "Pastor",
+            "Siervo David",
+            "Príncipe",
+            "Unificador de Israel y Judá"
+          ],
+          "opciones_por_caracteristica": [15, 50, 20, 20],
+          "descripcion": "Características del pastor escatológico"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.94,
+        "precision_historica": 0.85,
+        "independencia_redaccional": 0.8
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.93,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-1 a.C.",
+        "evidencia_qumran": 0.9
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 7.5,
+        "testigos_independientes": 2,
+        "evidencia_arqueologica": 0.5,
+        "historicidad": "media"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 5.0,
+        "dimensiones": [
+          {
+            "aspecto": "David resucitado como príncipe",
+            "expectativa_previa": "Nuevo rey",
+            "contra_expectativas": 0.6
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-1 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "samuel_7": 0.9,
+          "jeremias_23": 0.8
+        }
+      }
+    },
+    
+    {
+      "id": "daniel_7_13_14",
+      "nombre": "Daniel 7:13-14",
+      "referencia": "Daniel 7:13-14",
+      "texto": "Miraba yo en la visión de la noche, y he aquí con las nubes del cielo venía uno como un hijo de hombre, que vino al Anciano de días, y le hicieron acercarse delante de él. Y le fue dado dominio, gloria y reino, para que todos los pueblos, naciones y lenguas le sirvieran; su dominio es dominio eterno, que nunca pasará, y su reino uno que no será destruido.",
+      "arquetipo": "celestial",
+      "clase": "A",
+      "nivel_evidencia": "Aplicación textual clara",
+      "contexto": "Individual futuro. Figura escatológica con atributos celestiales.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q112-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q246-1",
+      
+      "dimensiones_especificidad": {
+        "agente": {
+          "caracteristicas": [
+            "Hijo de hombre",
+            "Viene con nubes",
+            "Se acerca al Anciano de días",
+            "Recibe dominio eterno",
+            "Recibe gloria",
+            "Recibe reino",
+            "Adorado por todos los pueblos"
+          ],
+          "opciones_por_caracteristica": [10, 8, 10, 15, 10, 10, 20],
+          "descripcion": "Atributos de la figura celestial"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.92,
+        "precision_historica": 0.8,
+        "independencia_redaccional": 0.75
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.95,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "150-100 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 7.0,
+        "testigos_independientes": 2,
+        "evidencia_arqueologica": 0.5,
+        "historicidad": "media"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 8.5,
+        "dimensiones": [
+          {
+            "aspecto": "Figura celestial divina",
+            "expectativa_previa": "Mesías humano",
+            "contra_expectativas": 0.9
+          },
+          {
+            "aspecto": "Viene con nubes",
+            "expectativa_previa": "Viene como rey",
+            "contra_expectativas": 0.85
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "150-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "celestial",
+        "dependencias": {
+          "salmo_110": 0.8,
+          "4Q246": 0.9
+        }
+      }
+    },
+    
+    {
+      "id": "daniel_9_24_27",
+      "nombre": "Daniel 9:24-27",
+      "referencia": "Daniel 9:24-27",
+      "texto": "Setenta semanas están determinadas sobre tu pueblo y sobre tu santa ciudad, para terminar la transgresión, y poner fin al pecado, y expiar la iniquidad, y traer la justicia eterna, y sellar la visión y la profecía, y ungir al Santo de los santos. Sabe, pues, y entiende, que desde la salida de la orden para restaurar y edificar a Jerusalén hasta el Mesías Príncipe, habrá siete semanas, y sesenta y dos semanas... y después de las sesenta y dos semanas se quitará la vida al Mesías, y no tendrá nada.",
+      "arquetipo": "cronologico",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Figura celestial. Cronología aplicada a agente escatológico.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q112-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/11Q13-1",
+      
+      "dimensiones_especificidad": {
+        "temporal": {
+          "valor_especifico": 483,
+          "rango_posible_min": 0,
+          "rango_posible_max": 1000,
+          "precision_años": 1,
+          "unidad": "años",
+          "descripcion": "483 años específicos (7+62 semanas de años)"
+        },
+        "evento": {
+          "opciones_posibles": 50,
+          "evento_especifico": "Mesías 'cortado' (ejecutado)",
+          "descripcion": "Tipos de destino para figura mesiánica"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Mesías Príncipe",
+            "Cortado (muerto)",
+            "Sin descendencia",
+            "Relacionado con expiación"
+          ],
+          "opciones_por_caracteristica": [20, 50, 30, 100],
+          "descripcion": "Características del Mesías cortado"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.88,
+        "precision_historica": 0.75,
+        "independencia_redaccional": 0.7
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.94,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "150-100 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 9.0,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.7,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 9.0,
+        "dimensiones": [
+          {
+            "aspecto": "Mesías muere antes del fin",
+            "expectativa_previa": "Mesías triunfante",
+            "contra_expectativas": 0.95
+          },
+          {
+            "aspecto": "Cronología específica",
+            "expectativa_previa": "Tiempo indefinido",
+            "contra_expectativas": 0.9
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "150-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "cronologico",
+        "dependencias": {}
+      }
+    },
+    
+    {
+      "id": "oseas_3_4_5",
+      "nombre": "Oseas 3:4-5",
+      "referencia": "Oseas 3:4-5",
+      "texto": "Porque muchos días estarán los hijos de Israel sin rey, sin príncipe, sin sacrificio, sin estatua, sin efod y sin terafines. Después volverán los hijos de Israel, y buscarán a Jehová su Dios, y a David su rey; y temerán a Jehová y a su bondad en el fin de los días.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Aplicación textual clara",
+      "contexto": "Individual futuro. Restauración monárquica escatológica.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q79-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q166-1",
+      
+      "dimensiones_especificidad": {
+        "agente": {
+          "caracteristicas": [
+            "David como rey",
+            "Buscado por Israel",
+            "Asociado con el fin de los días"
+          ],
+          "opciones_por_caracteristica": [50, 20, 15],
+          "descripcion": "Características del rey restaurador"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.9,
+        "precision_historica": 0.8,
+        "independencia_redaccional": 0.75
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.92,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "150-100 a.C.",
+        "evidencia_qumran": 0.9
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 6.5,
+        "testigos_independientes": 2,
+        "evidencia_arqueologica": 0.5,
+        "historicidad": "media"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 4.0,
+        "dimensiones": []
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "150-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "samuel_7": 0.7,
+          "ezequiel_34": 0.7
+        }
+      }
+    },
+    
+    {
+      "id": "amos_9_11_15",
+      "nombre": "Amós 9:11-15",
+      "referencia": "Amós 9:11-15",
+      "texto": "En aquel día yo levantaré el tabernáculo caído de David, y cerraré sus portillos, y levantaré sus ruinas, y lo edificaré como en el tiempo pasado; para que aquellos sobre los cuales es invocado mi nombre posean el resto de Edom, y a todas las naciones, dice Jehová que hace esto.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. Restauración del reino davídico.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q78-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q174-1",
+      
+      "dimensiones_especificidad": {
+        "evento": {
+          "opciones_posibles": 25,
+          "evento_especifico": "Restauración del tabernáculo de David",
+          "descripcion": "Tipos de restauraciones políticas"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Restaurador del tabernáculo davídico",
+            "Señor sobre naciones"
+          ],
+          "opciones_por_caracteristica": [20, 30],
+          "descripcion": "Características del restaurador"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.93,
+        "precision_historica": 0.85,
+        "independencia_redaccional": 0.8
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.94,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "150-100 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 6.0,
+        "testigos_independientes": 2,
+        "evidencia_arqueologica": 0.5,
+        "historicidad": "media"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 5.5,
+        "dimensiones": [
+          {
+            "aspecto": "Dominio sobre naciones",
+            "expectativa_previa": "Solo Israel",
+            "contra_expectativas": 0.7
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "150-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "samuel_7": 0.8,
+          "isaias_11": 0.8
+        }
+      }
+    },
+    
+    {
+      "id": "miqueas_5_2",
+      "nombre": "Miqueas 5:2",
+      "referencia": "Miqueas 5:1-4",
+      "texto": "Pero tú, Belén Efrata, aunque eres pequeña entre las familias de Judá, de ti me saldrá el que será Señor en Israel; y sus salidas son desde el principio, desde los días de la eternidad.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Aplicación textual clara",
+      "contexto": "Individual futuro. Origen geográfico escatológico.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q80-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/1Q14-1",
+      
+      "dimensiones_especificidad": {
+        "geografica": {
+          "lugar_especifico": "Belén Efrata",
+          "opciones_posibles": 587,
+          "descripcion": "Ciudades/pueblos en Judea siglo I"
+        },
+        "temporal": {
+          "es_infinito": true,
+          "descripcion": "Origen desde la eternidad"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Señor en Israel",
+            "Origen en Belén",
+            "Salidas desde la eternidad"
+          ],
+          "opciones_por_caracteristica": [20, 587, 5],
+          "descripcion": "Características del gobernante"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.98,
+        "precision_historica": 0.95,
+        "independencia_redaccional": 0.9
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.97,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "100-50 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": -5,
+        "precision_observada": 10.0,
+        "testigos_independientes": 2,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 6.0,
+        "dimensiones": [
+          {
+            "aspecto": "Origen eterno",
+            "expectativa_previa": "Rey humano normal",
+            "contra_expectativas": 0.8
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.05,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "100-50 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "samuel_7": 0.8,
+          "isaias_9": 0.6,
+          "isaias_11": 0.7
+        }
+      }
+    },
+    
+    {
+      "id": "zacarias_3_8_6_12",
+      "nombre": "Zacarías 3:8; 6:12-13",
+      "referencia": "Zacarías 3:8; 6:12-13",
+      "texto": "Escucha pues ahora, Josué sumo sacerdote, tú y tus amigos que se sientan delante de ti, porque son varones simbólicos. He aquí, yo traigo a mi siervo el Renuevo. ... He aquí el varón cuyo nombre es el Renuevo, el cual brotará de sus raíces, y edificará el templo de Jehová, y él llevará gloria, y se sentará y dominará en su trono, y habrá sacerdote a su lado, y consejo de paz entre ambos.",
+      "arquetipo": "davidico_sacerdotal",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. Figura con funciones reales y sacerdotales.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q81-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q161-1",
+      
+      "dimensiones_especificidad": {
+        "agente": {
+          "caracteristicas": [
+            "Siervo llamado Renuevo",
+            "Brota de sus raíces",
+            "Edifica el templo",
+            "Lleva gloria",
+            "Se sienta en trono",
+            "Domina",
+            "Con sacerdote a su lado",
+            "Consejo de paz"
+          ],
+          "opciones_por_caracteristica": [30, 30, 15, 20, 20, 20, 10, 15],
+          "descripcion": "Características del Renuevo real-sacerdotal"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.92,
+        "precision_historica": 0.85,
+        "independencia_redaccional": 0.8
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.93,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "150-100 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 7.0,
+        "testigos_independientes": 2,
+        "evidencia_arqueologica": 0.5,
+        "historicidad": "media"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 8.0,
+        "dimensiones": [
+          {
+            "aspecto": "Rey y sacerdote",
+            "expectativa_previa": "Funciones separadas",
+            "contra_expectativas": 0.9
+          },
+          {
+            "aspecto": "Consejo de paz",
+            "expectativa_previa": "Gobierno unilateral",
+            "contra_expectativas": 0.75
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "150-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico_sacerdotal",
+        "dependencias": {
+          "salmo_110": 0.9,
+          "jeremias_23": 0.7
+        }
+      }
+    },
+    
+    {
+      "id": "zacarias_9_9_10",
+      "nombre": "Zacarías 9:9-10",
+      "referencia": "Zacarías 9:9-10",
+      "texto": "Alégrate mucho, hija de Sión; da voces de júbilo, hija de Jerusalén; he aquí tu rey vendrá a ti, justo y salvador, humilde, y cabalgando sobre un asno, sobre un pollino hijo de asna. Y destruirá los carros de Efraín, y los caballos de Jerusalén, y los arcos de guerra serán quebrados; y hablará paz a las naciones, y su señoreío será de mar a mar, y desde el río hasta los fines de la tierra.",
+      "arquetipo": "humilde",
+      "clase": "A",
+      "nivel_evidencia": "Aplicación textual clara",
+      "contexto": "Individual futuro. Rey humilde y pacífico.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q81-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q163-1",
+      
+      "dimensiones_especificidad": {
+        "evento": {
+          "opciones_posibles": 50,
+          "evento_especifico": "Entrada en Jerusalén montado en asno",
+          "descripcion": "Formas de entrada real en la antigüedad"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Rey",
+            "Justo",
+            "Salvador",
+            "Humilde",
+            "Montado en asno",
+            "Habla paz a naciones",
+            "Señorío universal"
+          ],
+          "opciones_por_caracteristica": [20, 15, 15, 10, 10, 20, 30],
+          "descripcion": "Características del rey de paz"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.96,
+        "precision_historica": 0.9,
+        "independencia_redaccional": 0.85
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.95,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "150-100 a.C.",
+        "evidencia_qumran": 0.9
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 9.0,
+        "testigos_independientes": 4,
+        "evidencia_arqueologica": 0.7,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 8.2,
+        "dimensiones": [
+          {
+            "aspecto": "Rey en asno (no caballo)",
+            "expectativa_previa": "Rey guerrero a caballo",
+            "contra_expectativas": 0.95
+          },
+          {
+            "aspecto": "Paz a naciones",
+            "expectativa_previa": "Conquista militar",
+            "contra_expectativas": 0.85
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "150-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "humilde",
+        "dependencias": {}
+      }
+    },
+    
+    {
+      "id": "zacarias_12_10",
+      "nombre": "Zacarías 12:10",
+      "referencia": "Zacarías 12:10-14",
+      "texto": "Y derramaré sobre la casa de David, y sobre los moradores de Jerusalén, espíritu de gracia y de oración; y mirarán a mí, a quien traspasaron, y llorarán como se llora por hijo unigénito, afligiéndose por él como quien se aflige por primogénito.",
+      "arquetipo": "traspasado",
+      "clase": "A",
+      "nivel_evidencia": "Paralelo temático sugerido",
+      "contexto": "Individual futuro. Figura traspasada y llorada.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q81-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q541-1",
+      
+      "dimensiones_especificidad": {
+        "evento": {
+          "opciones_posibles": 30,
+          "evento_especifico": "Ser traspasado (ejecutado) y luego llorado",
+          "descripcion": "Tipos de muertes violentas"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Traspasado",
+            "Llorado por Israel",
+            "Como hijo unigénito",
+            "Como primogénito",
+            "Identificado con Dios ('a mí')"
+          ],
+          "opciones_por_caracteristica": [20, 30, 15, 15, 10],
+          "descripcion": "Características de la figura traspasada"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.85,
+        "precision_historica": 0.75,
+        "independencia_redaccional": 0.7
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.92,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "150-100 a.C.",
+        "evidencia_qumran": 0.7
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 8.5,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 8.8,
+        "dimensiones": [
+          {
+            "aspecto": "Dios traspasado",
+            "expectativa_previa": "Dios no sufre",
+            "contra_expectativas": 0.96
+          },
+          {
+            "aspecto": "Lamento nacional por el traspasado",
+            "expectativa_previa": "Victoria nacional",
+            "contra_expectativas": 0.85
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "150-100 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "sufriente",
+        "dependencias": {
+          "isaias_53": 0.95,
+          "salmo_22": 0.8
+        }
+      }
+    },
+    
+    {
+      "id": "salmos_2",
+      "nombre": "Salmos 2",
+      "referencia": "Salmos 2:1-12",
+      "texto": "Yo he puesto mi rey sobre Sión, mi santo monte. Yo publicaré el decreto; Jehová me ha dicho: Mi hijo eres tú; yo te engendré hoy. Pídeme, y te daré por herencia las naciones, y por posesión los confines de la tierra.",
+      "arquetipo": "davidico",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Individual futuro. Filiación divina escatológica.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q98g-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q174-1",
+      
+      "dimensiones_especificidad": {
+        "agente": {
+          "caracteristicas": [
+            "Rey en Sión",
+            "Hijo de Dios",
+            "Engendrado por Dios",
+            "Herencia de naciones",
+            "Dominio universal"
+          ],
+          "opciones_por_caracteristica": [15, 5, 5, 30, 30],
+          "descripcion": "Atributos del rey ungido"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.97,
+        "precision_historica": 0.9,
+        "independencia_redaccional": 0.85
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.96,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-25 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 7.5,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 7.5,
+        "dimensiones": [
+          {
+            "aspecto": "Hijo de Dios",
+            "expectativa_previa": "Rey humano",
+            "contra_expectativas": 0.85
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-25 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "davidico",
+        "dependencias": {
+          "samuel_7": 0.9,
+          "4Q246": 0.8
+        }
+      }
+    },
+    
+    {
+      "id": "salmos_110",
+      "nombre": "Salmos 110",
+      "referencia": "Salmos 110:1-7",
+      "texto": "Jehová dijo a mi Señor: Siéntate a mi diestra, hasta que ponga a tus enemigos por estrado de tus pies. Tú eres sacerdote para siempre según el orden de Melquisedec.",
+      "arquetipo": "sacerdotal",
+      "clase": "A",
+      "nivel_evidencia": "Cita directa o aplicación explícita",
+      "contexto": "Figura celestial. Identificado con Melquisedec.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/11Q5-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/11Q13-1",
+      
+      "dimensiones_especificidad": {
+        "temporal": {
+          "es_infinito": true,
+          "descripcion": "'Sacerdote para siempre'"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Señor",
+            "A la diestra de Dios",
+            "Enemigos por estrado",
+            "Sacerdote para siempre",
+            "Según orden de Melquisedec"
+          ],
+          "opciones_por_caracteristica": [10, 10, 15, 5000, 20],
+          "descripcion": "Atributos del sacerdote celestial"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.94,
+        "precision_historica": 0.85,
+        "independencia_redaccional": 0.8
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.95,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-25 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 8.0,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 8.5,
+        "dimensiones": [
+          {
+            "aspecto": "Rey-sacerdote",
+            "expectativa_previa": "Funciones separadas",
+            "contra_expectativas": 0.9
+          },
+          {
+            "aspecto": "Sacerdocio eterno",
+            "expectativa_previa": "Sacerdocio temporal",
+            "contra_expectativas": 0.85
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-25 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "sacerdotal",
+        "dependencias": {
+          "zacarias_3": 0.8,
+          "4Q541": 0.9
+        }
+      }
+    },
+    
+    {
+      "id": "salmos_16",
+      "nombre": "Salmos 16",
+      "referencia": "Salmos 16:8-11",
+      "texto": "Siempre he puesto a Jehová delante de mí; porque está a mi diestra, no seré conmovido. Por tanto se alegró mi corazón, y se gozó mi alma; mi carne también reposará confiadamente; porque no dejarás mi alma en el Seol, ni permitirás que tu santo vea corrupción.",
+      "arquetipo": "resurreccion",
+      "clase": "A",
+      "nivel_evidencia": "Paralelo temático",
+      "contexto": "Era mesiánica. Preservación/resurrección del justo.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q98c-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q521-1",
+      
+      "dimensiones_especificidad": {
+        "evento": {
+          "opciones_posibles": 15,
+          "evento_especifico": "No ver corrupción, resurrección",
+          "descripcion": "Formas de preservación"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Santo",
+            "Alma no dejada en Seol",
+            "No ve corrupción"
+          ],
+          "opciones_por_caracteristica": [20, 15, 15],
+          "descripcion": "Características del resucitado"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.9,
+        "precision_historica": 0.8,
+        "independencia_redaccional": 0.7
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.94,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-25 a.C.",
+        "evidencia_qumran": 0.7
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 8.5,
+        "testigos_independientes": 4,
+        "evidencia_arqueologica": 0.7,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 7.0,
+        "dimensiones": [
+          {
+            "aspecto": "Resurrección individual",
+            "expectativa_previa": "Sheol eterno",
+            "contra_expectativas": 0.8
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-25 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "resurreccion",
+        "dependencias": {
+          "4Q521": 0.8
+        }
+      }
+    },
+    
+    {
+      "id": "salmos_22",
+      "nombre": "Salmos 22",
+      "referencia": "Salmos 22:1-18",
+      "texto": "Dios mío, Dios mío, ¿por qué me has desamparado? ... Me he vuelto un gusano, y no hombre; oprobio de los hombres, y despreciado del pueblo. ... Me han rodeado muchos toros; fuertes toros de Basán me han cercado. Abrieron sobre mí su boca como león rapaz y rugiente. ... Perros me han rodeado; me ha cercado cuadrilla de malignos; horadaron mis manos y mis pies. ... Repartieron entre sí mis vestidos, y sobre mi ropa echaron suertes.",
+      "arquetipo": "sufriente",
+      "clase": "A",
+      "nivel_evidencia": "Paralelo temático sugerido",
+      "contexto": "Lamento individual del justo sufriente.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q98g-1",
+      "url_comentario": null,
+      
+      "dimensiones_especificidad": {
+        "evento": {
+          "opciones_posibles": 50,
+          "evento_especifico": "Manos y pies horadados, ropas sorteadas",
+          "descripcion": "Detalles de ejecución"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Desamparado por Dios",
+            "Despreciado",
+            "Rodeado de enemigos",
+            "Manos y pies horadados",
+            "Ropas sorteadas"
+          ],
+          "opciones_por_caracteristica": [20, 30, 20, 10, 15],
+          "descripcion": "Detalles del sufrimiento"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.95,
+        "precision_historica": 0.85,
+        "independencia_redaccional": 0.8
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.96,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-25 a.C.",
+        "evidencia_qumran": 0.8
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 9.0,
+        "testigos_independientes": 4,
+        "evidencia_arqueologica": 0.8,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 8.0,
+        "dimensiones": [
+          {
+            "aspecto": "Manos horadadas",
+            "expectativa_previa": "Muerte por lapidación",
+            "contra_expectativas": 0.9
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.15,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-25 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "sufriente",
+        "dependencias": {
+          "isaias_53": 0.9,
+          "zacarias_12": 0.8
+        }
+      }
+    },
+    
+    {
+      "id": "salmos_34",
+      "nombre": "Salmos 34",
+      "referencia": "Salmos 34:20-22",
+      "texto": "Guarda todos sus huesos; ni uno de ellos será quebrantado.",
+      "arquetipo": "preservacion",
+      "clase": "A",
+      "nivel_evidencia": "Paralelo temático sugerido",
+      "contexto": "Preservación del justo.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q98-1",
+      "url_comentario": null,
+      
+      "dimensiones_especificidad": {
+        "evento": {
+          "opciones_posibles": 20,
+          "evento_especifico": "Huesos no quebrantados",
+          "descripcion": "Formas de preservación"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.92,
+        "precision_historica": 0.8,
+        "independencia_redaccional": 0.7
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.95,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-25 a.C.",
+        "evidencia_qumran": 0.6
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 7.0,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "media"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 5.0,
+        "dimensiones": []
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-25 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "preservacion",
+        "dependencias": {
+          "salmo_16": 0.6
+        }
+      }
+    },
+    
+    {
+      "id": "salmos_69",
+      "nombre": "Salmos 69",
+      "referencia": "Salmos 69:4-22",
+      "texto": "Me aborrecen sin causa... Me han dado hiel por comida, y en mi sed me dieron a beber vinagre.",
+      "arquetipo": "sufriente",
+      "clase": "A",
+      "nivel_evidencia": "Paralelo temático sugerido",
+      "contexto": "Sufrimiento del justo.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q98g-1",
+      "url_comentario": null,
+      
+      "dimensiones_especificidad": {
+        "evento": {
+          "opciones_posibles": 25,
+          "evento_especifico": "Ofrecido hiel y vinagre",
+          "descripcion": "Formas de tormento"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Aborrecido sin causa",
+            "Ofrecido hiel",
+            "Ofrecido vinagre"
+          ],
+          "opciones_por_caracteristica": [20, 15, 15],
+          "descripcion": "Características del perseguido"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.93,
+        "precision_historica": 0.8,
+        "independencia_redaccional": 0.7
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.95,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-25 a.C.",
+        "evidencia_qumran": 0.6
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 7.5,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.7,
+        "historicidad": "media"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 6.0,
+        "dimensiones": []
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-25 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "sufriente",
+        "dependencias": {
+          "salmo_22": 0.7,
+          "isaias_53": 0.6
+        }
+      }
+    },
+    
+    {
+      "id": "salmos_118",
+      "nombre": "Salmos 118",
+      "referencia": "Salmos 118:22-26",
+      "texto": "La piedra que desecharon los edificadores ha venido a ser cabeza del ángulo. De parte de Jehová es esto, y es cosa maravillosa a nuestros ojos.",
+      "arquetipo": "piedra",
+      "clase": "A",
+      "nivel_evidencia": "Aplicación textual clara",
+      "contexto": "Figura histórica pasada (Maestro de Justicia) o futura.",
+      "url_texto": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/4Q98d-1",
+      "url_comentario": "https://www.deadseascrolls.org.il/explore-the-archive/manuscript/1QpHab-1",
+      
+      "dimensiones_especificidad": {
+        "evento": {
+          "opciones_posibles": 15,
+          "evento_especifico": "Piedra rechazada se vuelve angular",
+          "descripcion": "Metáforas de restauración"
+        },
+        "agente": {
+          "caracteristicas": [
+            "Piedra",
+            "Desechada por edificadores",
+            "Hecha cabeza del ángulo"
+          ],
+          "opciones_por_caracteristica": [20, 15, 15],
+          "descripcion": "Metáfora del líder rechazado"
+        }
+      },
+      
+      "factores_credibilidad": {
+        "claridad_textual": 0.96,
+        "precision_historica": 0.85,
+        "independencia_redaccional": 0.8
+      },
+      
+      "factores_transmision": {
+        "estabilidad_textual": 0.96,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_mas_antiguos": "50-25 a.C.",
+        "evidencia_qumran": 1.0
+      },
+      
+      "cumplimiento": {
+        "tipo": "cumplida_tipo_A",
+        "candidato_principal": "Jesús de Nazaret",
+        "fecha_cumplimiento": 30,
+        "precision_observada": 8.0,
+        "testigos_independientes": 3,
+        "evidencia_arqueologica": 0.6,
+        "historicidad": "alta"
+      },
+      
+      "caracteristicas_contraintuitivas": {
+        "puntaje": 6.5,
+        "dimensiones": [
+          {
+            "aspecto": "Rechazado se vuelve esencial",
+            "expectativa_previa": "Líder aceptado",
+            "contra_expectativas": 0.75
+          }
+        ]
+      },
+      
+      "oportunidad_edicion": {
+        "ventana_edicion": 0,
+        "evidencia_edicion": 0.1,
+        "manuscritos_pre_evento": true,
+        "fecha_manuscritos_pre": "50-25 a.C."
+      },
+      
+      "correlaciones": {
+        "grupo_arquetipo": "piedra",
+        "dependencias": {}
+      }
+    }
+  ]
+}
