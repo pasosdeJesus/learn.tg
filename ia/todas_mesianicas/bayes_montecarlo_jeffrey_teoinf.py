@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Análisis bayesiano de profecías mesiánicas con Monte Carlo y Jeffrey.
-Versión corregida metodológicamente según revisión de Kimi.
+VERSIÓN CON 3 HIPÓTESIS (H₁, H₂, H₃) + H₀ para Monte Carlo.
+H₃ = Construcción posterior (anteriormente H₄).
+Eliminado H₃ original por falta de mecanismos claros.
 """
 
 import json
@@ -34,7 +36,7 @@ class CalculadorEspecificidad:
     def calcular_bits_temporal(self, dim: Dict[str, Any]) -> float:
         """Calcula bits para dimensión temporal."""
         if dim.get('es_infinito', False):
-            return math.log2(5000)  # ~12.3 bits
+            return math.log2(5000)
 
         valor = dim.get('valor_especifico')
         rango_min = dim.get('rango_posible_min')
@@ -50,14 +52,12 @@ class CalculadorEspecificidad:
         return math.log2(N) if N > 0 else 0.0
 
     def calcular_bits_geografica(self, dim: Dict[str, Any]) -> float:
-        """Calcula bits para dimensión geográfica."""
         opciones = dim.get('opciones_posibles')
         if not opciones or opciones <= 0:
             return 0.0
         return math.log2(opciones)
 
     def calcular_bits_cuantitativa(self, dim: Dict[str, Any]) -> float:
-        """Calcula bits para dimensión cuantitativa."""
         valor = dim.get('valor_especifico')
         rango_min = dim.get('rango_min')
         rango_max = dim.get('rango_max')
@@ -71,14 +71,12 @@ class CalculadorEspecificidad:
         return math.log2(rango) if rango > 0 else 0.0
 
     def calcular_bits_evento(self, dim: Dict[str, Any]) -> float:
-        """Calcula bits para dimensión de evento."""
         opciones = dim.get('opciones_posibles')
         if not opciones or opciones <= 0:
             return 0.0
         return math.log2(opciones)
 
     def calcular_bits_agente(self, dim: Dict[str, Any]) -> float:
-        """Calcula bits para dimensión de agente."""
         opciones_lista = dim.get('opciones_por_caracteristica', [])
         if not opciones_lista:
             return 0.0
@@ -92,7 +90,6 @@ class CalculadorEspecificidad:
         return math.log2(producto) if producto > 0 else 0.0
 
     def calcular_bits_totales(self, dimensiones: Dict[str, Any]) -> Tuple[float, List[str], Dict[str, float]]:
-        """Calcula bits totales y retorna desglose por dimensión."""
         bits_totales = 0.0
         self.dimensiones_activas = []
         bits_por_dimension = {}
@@ -138,19 +135,14 @@ class CalculadorEspecificidad:
 # ========== MÓDULO DE VEROSIMILITUDES ==========
 
 class CalculadorVerosimilitudes:
-    """Deriva P(E|H) desde los datos del JSON con metodología corregida."""
+    """Deriva P(E|H) desde los datos del JSON."""
     
     def __init__(self, especificidad: CalculadorEspecificidad):
         self.especificidad = especificidad
 
     def calcular_credibilidad_total(self, profecia: Dict[str, Any]) -> float:
-        """
-        Calcula la credibilidad total como producto de factores.
-        La credibilidad (0-1) representa cuánto confiamos en la especificidad.
-        """
         factores_cred = profecia.get('factores_credibilidad', {})
         
-        # Valores por defecto conservadores
         credibilidad = (
             factores_cred.get('claridad_textual', 0.9) *
             factores_cred.get('precision_historica', 0.9) *
@@ -163,72 +155,50 @@ class CalculadorVerosimilitudes:
         """
         Calcula P(E|H₁) = 2^(-bits_efectivos)
         bits_efectivos = bits_brutos × credibilidad
-        
-        Returns:
-            Tuple[P_E_H1, bits_brutos, bits_efectivos, dimensiones_activas, bits_por_dimension]
         """
-        # Paso 1: Bits brutos desde dimensiones
         dimensiones = profecia.get('dimensiones_especificidad', {})
         bits_brutos, dimensiones_activas, bits_por_dim = self.especificidad.calcular_bits_totales(dimensiones)
         
-        # Paso 2: Calcular credibilidad
         credibilidad = self.calcular_credibilidad_total(profecia)
-        
-        # Paso 3: Bits efectivos
         bits_efectivos = bits_brutos * credibilidad
-        
-        # Paso 4: Probabilidad base
         prob_base = 2 ** (-bits_efectivos) if bits_efectivos > 0 else 1.0
         
-        # Paso 5: Factores de transmisión (ajustan por evidencia textual)
         factores_trans = profecia.get('factores_transmision', {})
         
-        # Manuscritos pre-evento aumentan credibilidad (reducen P)
         if factores_trans.get('manuscritos_pre_evento', False):
             prob_base *= 0.7
         
-        # Estabilidad textual: textos más estables tienen mayor credibilidad
         estabilidad = factores_trans.get('estabilidad_textual', 1.0)
         prob_base *= (1.0 / max(estabilidad, 0.1))
         
-        # Evidencia Qumran
         ev_qumran = factores_trans.get('evidencia_qumran', 0)
-        prob_base *= (1.0 - 0.3 * ev_qumran)  # A menor P, más improbable
+        prob_base *= (1.0 - 0.3 * ev_qumran)
         
         return min(prob_base, 1.0), bits_brutos, bits_efectivos, dimensiones_activas, bits_por_dim
 
     def calcular_P_E_H1(self, profecia: Dict[str, Any]) -> float:
-        """Versión simplificada que solo retorna P(E|H₁)."""
         P, _, _, _, _ = self.calcular_P_E_H1_con_detalle(profecia)
         return P
 
     def calcular_P_E_H2(self, profecia: Dict[str, Any]) -> float:
         """
         P(E|H₂) - Revelación divina.
-        Alta si hay cumplimiento preciso, testigos múltiples y evidencia arqueológica.
         """
         if profecia.get('clase') == 'C':
-            # Profecías pendientes: probabilidad moderada (podrían cumplirse después)
             return 0.3
         
         cumplimiento = profecia.get('cumplimiento', {})
-        
-        # Base: probabilidad de que Dios revele algo específico
         P_base = 0.85
         
-        # Ajustar por precisión observada (0-10)
         precision = cumplimiento.get('precision_observada', 5)
-        P_base *= (precision / 5)  # Normalizado a 5
+        P_base *= (precision / 5)
         
-        # Ajustar por testigos independientes (1-10)
         testigos = cumplimiento.get('testigos_independientes', 1)
         P_base *= (1.0 + 0.1 * min(testigos, 10))
         
-        # Ajustar por evidencia arqueológica (0-1)
         ev_arq = cumplimiento.get('evidencia_arqueologica', 0.5)
-        P_base *= (1.0 + ev_arq) / 1.5  # Normalizado
+        P_base *= (1.0 + ev_arq) / 1.5
         
-        # Ajustar por historicidad
         historicidad = cumplimiento.get('historicidad', 'alta')
         if historicidad == 'baja':
             P_base *= 0.5
@@ -239,53 +209,18 @@ class CalculadorVerosimilitudes:
 
     def calcular_P_E_H3(self, profecia: Dict[str, Any]) -> float:
         """
-        P(E|H₃) - Conocimiento extraordinario humano.
-        Mayor si la profecía es contraintuitiva y tiene patrones complejos.
-        """
-        contraintuitivas = profecia.get('caracteristicas_contraintuitivas', {})
-        puntaje = contraintuitivas.get('puntaje', 0)
-        
-        # Base: probabilidad de conocimiento humano extraordinario (baja)
-        P_base = 0.03
-        
-        # Ajustar por puntaje de contraintuitividad (0-10)
-        if puntaje > 8:
-            P_base *= 4
-        elif puntaje > 6:
-            P_base *= 2.5
-        elif puntaje > 4:
-            P_base *= 1.5
-        
-        # Si hay manuscritos pre-evento, más plausible que sea conocimiento real
-        factores_trans = profecia.get('factores_transmision', {})
-        if factores_trans.get('manuscritos_pre_evento', False):
-            P_base *= 1.3
-        
-        # Complejidad del patrón (bits altos favorecen H₃)
-        dimensiones = profecia.get('dimensiones_especificidad', {})
-        bits_brutos, _, _ = self.especificidad.calcular_bits_totales(dimensiones)
-        if bits_brutos > 15:
-            P_base *= 1.5
-        elif bits_brutos > 10:
-            P_base *= 1.2
-        
-        return min(P_base, 1.0)
-
-    def calcular_P_E_H4(self, profecia: Dict[str, Any]) -> float:
-        """
-        P(E|H₄) - Construcción posterior.
+        P(E|H₃) - Construcción posterior (antes H₄).
         Alta si hay oportunidad de editar después del evento.
         """
         oportunidad = profecia.get('oportunidad_edicion', {})
         
-        # Si hay manuscritos pre-evento, H4 es prácticamente imposible
+        # Si hay manuscritos pre-evento, H₃ es prácticamente imposible
         if oportunidad.get('manuscritos_pre_evento', False):
             return 0.001
         
         P_base = 0.08
-        
-        # Ajustar por ventana de edición (años después del evento)
         ventana = oportunidad.get('ventana_edicion', 0)
+        
         if ventana > 150:
             P_base *= 6
         elif ventana > 100:
@@ -295,11 +230,9 @@ class CalculadorVerosimilitudes:
         elif ventana > 20:
             P_base *= 1.5
         
-        # Evidencia de edición (0-1)
         ev_edicion = oportunidad.get('evidencia_edicion', 0)
         P_base *= (1.0 + ev_edicion * 3)
         
-        # Si la profecía es clase B (no cumplida), es menos probable que sea construcción
         if profecia.get('clase') == 'B':
             P_base *= 0.6
         
@@ -308,17 +241,11 @@ class CalculadorVerosimilitudes:
     def calcular_factor_dependencia(self, profecia: Dict[str, Any],
                                    todas_profecias: List[Dict[str, Any]],
                                    hipotesis: str) -> float:
-        """
-        Calcula factor de dependencia basado en grupos de arquetipo.
-        Retorna un factor ≤ 1 que representa cuánto se reduce la información
-        independiente por dependencias.
-        """
         grupo = profecia.get('correlaciones', {}).get('grupo_arquetipo', '')
         
         if not grupo:
             return 1.0
         
-        # Contar cuántas profecías del mismo grupo hay
         mismo_grupo = [p for p in todas_profecias 
                        if p.get('correlaciones', {}).get('grupo_arquetipo') == grupo]
         
@@ -327,14 +254,11 @@ class CalculadorVerosimilitudes:
         if n_mismo_grupo <= 1:
             return 1.0
         
-        # Factores base por hipótesis (dinámicos según tamaño del grupo)
-        if hipotesis == 'H1':  # Naturalismo: dependencia baja pero existe
+        if hipotesis == 'H1':
             return 1.0 / (1.0 + 0.15 * (n_mismo_grupo - 1))
-        elif hipotesis == 'H2':  # Revelación: alta correlación
+        elif hipotesis == 'H2':
             return 1.0 / (1.0 + 0.5 * (n_mismo_grupo - 1))
-        elif hipotesis == 'H3':  # Conocimiento: correlación media
-            return 1.0 / (1.0 + 0.3 * (n_mismo_grupo - 1))
-        elif hipotesis == 'H4':  # Construcción: alta correlación
+        elif hipotesis == 'H3':
             return 1.0 / (1.0 + 0.4 * (n_mismo_grupo - 1))
         else:
             return 1.0
@@ -355,7 +279,6 @@ class InterpretadorJeffrey:
 
     @classmethod
     def interpretar(cls, BF: float) -> Dict[str, Any]:
-        """Interpreta un factor de Bayes según la escala de Jeffrey."""
         resultado = {
             'BF': BF,
             'log10_BF': math.log10(BF) if BF > 0 else float('-inf'),
@@ -385,23 +308,21 @@ class InterpretadorJeffrey:
 
 
 class MotorBayesiano:
-    """Motor de cálculos bayesianos."""
+    """Motor de cálculos bayesianos con priors personalizables."""
     
     def __init__(self, priors: Dict[str, float]):
+        # Validar que los priors sumen 1.0 (excluyendo H0)
+        priors_sin_h0 = {k: v for k, v in priors.items() if k != 'H0'}
+        total = sum(priors_sin_h0.values())
+        if abs(total - 1.0) > 0.01:
+            print(f"⚠️  Advertencia: Los priors (sin H0) suman {total}, no 1.0. Normalizando...")
+            factor = 1.0 / total
+            for k in priors_sin_h0:
+                priors[k] *= factor
         self.priors = priors
-
-    def calcular_LR(self, P_E_Hi: float, P_E_Hj: float) -> float:
-        """Calcula LR = P(E|Hi) / P(E|Hj) (sin factores de dependencia)."""
-        if P_E_Hi <= 0 or P_E_Hj <= 0:
-            return 1.0
-        return P_E_Hi / P_E_Hj if P_E_Hj > 0 else float('inf')
 
     def calcular_LR_con_dependencia(self, P_E_Hi: float, P_E_Hj: float,
                                     fi: float, fj: float) -> float:
-        """
-        Calcula LR con dependencias: (P_E_Hi^fi) / (P_E_Hj^fj)
-        donde fi, fj son factores de dependencia (0-1).
-        """
         if P_E_Hi <= 0 or P_E_Hj <= 0:
             return 1.0
         num = P_E_Hi ** fi if fi > 0 else 1.0
@@ -421,8 +342,8 @@ class SimuladorMonteCarlo:
     def simular_con_dependencias(self, profecias: List[Dict[str, Any]],
                                  P_individuales: List[float]) -> List[int]:
         """
-        Simula con dependencias usando grupos de arquetipo.
-        Si una profecía de un grupo se cumple, aumenta probabilidad de otras del mismo grupo.
+        Simula bajo H₀ (azar puro) usando las P(E|H₁) de cada profecía.
+        Modela dependencias por grupos de arquetipo.
         """
         resultados = []
         N = len(profecias)
@@ -438,29 +359,22 @@ class SimuladorMonteCarlo:
         for _ in range(self.n_simulaciones):
             exitos = 0
             
-            # Procesar cada grupo
             for grupo, indices in grupos.items():
-                # Si es grupo individual (solo una profecía)
                 if len(indices) == 1:
                     i = indices[0]
                     if random.random() < P_individuales[i]:
                         exitos += 1
                     continue
                 
-                # Para grupos con múltiples profecías, modelar dependencia
-                # Primero, decidir si el grupo se activa (máx probabilidad)
                 P_grupo = max(P_individuales[i] for i in indices)
                 grupo_activo = random.random() < P_grupo
                 
                 if grupo_activo:
-                    # Si el grupo está activo, todas tienen probabilidad aumentada
                     for i in indices:
-                        # Probabilidad aumentada por correlación
                         P_corregida = min(P_individuales[i] * 1.8, 1.0)
                         if random.random() < P_corregida:
                             exitos += 1
                 else:
-                    # Si el grupo no está activo, probabilidad reducida
                     for i in indices:
                         P_corregida = P_individuales[i] * 0.3
                         if random.random() < P_corregida:
@@ -479,7 +393,6 @@ class AsciiHistograma:
     @staticmethod
     def generar(datos: List[int], titulo: str = "Distribución Monte Carlo",
                ancho: int = 60, altura: int = 15) -> str:
-        """Genera histograma ASCII."""
         if not datos:
             return ""
 
@@ -519,7 +432,6 @@ class AsciiHistograma:
 
     @staticmethod
     def linea_progreso(valor: float, max_val: float, ancho: int = 40) -> str:
-        """Genera una barra de progreso."""
         if max_val <= 0:
             return ""
         pos = int(valor / max_val * ancho)
@@ -529,28 +441,21 @@ class AsciiHistograma:
 # ========== ORQUESTADOR PRINCIPAL ==========
 
 class AnalizadorProfecias:
-    """Orquestador principal del análisis con metodología corregida."""
+    """Orquestador principal con 3 hipótesis (H₁, H₂, H₃) + H₀."""
     
-    def __init__(self, archivo_json: str):
+    def __init__(self, archivo_json: str, priors: Dict[str, float]):
         with open(archivo_json, 'r', encoding='utf-8') as f:
             self.data = json.load(f)
 
         self.profecias = self.data.get('profecias', [])
-        self.modelo = self.data.get('modelo_bayesiano', {})
-
+        
         # Componentes
         self.especificidad = CalculadorEspecificidad()
         self.verosimilitudes = CalculadorVerosimilitudes(self.especificidad)
+        self.motor = MotorBayesiano(priors)
 
-        # Priors (deben sumar 1.0)
-        self.priors = {}
-        for h in self.modelo.get('hipotesis', []):
-            self.priors[h['id']] = h.get('prior', 0.25)
-
-        self.motor = MotorBayesiano(self.priors)
-
-        # Config Monte Carlo
-        mc_config = self.modelo.get('configuracion_montecarlo', {})
+        # Config Monte Carlo (del JSON o por defecto)
+        mc_config = self.data.get('modelo_bayesiano', {}).get('configuracion_montecarlo', {})
         self.simulador = SimuladorMonteCarlo(
             n_simulaciones=mc_config.get('n_simulaciones', 1_000_000),
             semilla=mc_config.get('semilla', 42)
@@ -559,10 +464,18 @@ class AnalizadorProfecias:
         self.hist_ascii = AsciiHistograma()
 
     def analizar(self) -> Dict[str, Any]:
-        """Ejecuta análisis completo con metodología corregida."""
         print("\n" + "="*80)
-        print("ANÁLISIS BAYESIANO DE PROFECÍAS MESIÁNICAS (VERSIÓN CORREGIDA)")
+        print("ANÁLISIS BAYESIANO DE PROFECÍAS MESIÁNICAS")
         print("="*80)
+        print("\nHipótesis:")
+        print("  H₀: Azar puro (modelo nulo para Monte Carlo)")
+        print("  H₁: Naturalismo")
+        print("  H₂: Revelación divina")
+        print("  H₃: Construcción posterior")
+        print(f"\nPriors utilizados (deben sumar 1.0 excluyendo H₀):")
+        for h, p in self.motor.priors.items():
+            if h != 'H0':
+                print(f"  {h}: {p:.4f}")
 
         # 1. Calcular P(E|H) para cada profecía
         print("\n📊 1. ANÁLISIS DE ESPECIFICIDAD Y VEROSIMILITUDES")
@@ -581,33 +494,19 @@ class AnalizadorProfecias:
             if clase == 'A':
                 k_observado += 1
 
-            # Calcular P(E|H₁) con detalles
             P_E_H1, bits_brutos, bits_efectivos, dim_activas, bits_por_dim = self.verosimilitudes.calcular_P_E_H1_con_detalle(prof)
 
             P_E_H2 = self.verosimilitudes.calcular_P_E_H2(prof)
             P_E_H3 = self.verosimilitudes.calcular_P_E_H3(prof)
-            P_E_H4 = self.verosimilitudes.calcular_P_E_H4(prof)
 
-            # Factores de dependencia (basados en grupos)
             fi_H1 = self.verosimilitudes.calcular_factor_dependencia(prof, self.profecias, 'H1')
             fi_H2 = self.verosimilitudes.calcular_factor_dependencia(prof, self.profecias, 'H2')
             fi_H3 = self.verosimilitudes.calcular_factor_dependencia(prof, self.profecias, 'H3')
-            fi_H4 = self.verosimilitudes.calcular_factor_dependencia(prof, self.profecias, 'H4')
 
-            # Mostrar resultados
-            print(f"\n  {idx+1:2d}. {pid}: {nombre} (clase {clase})")
-            print(f"     📐 ESPECIFICIDAD:")
-            print(f"        Bits brutos: {bits_brutos:.2f}")
-            print(f"        Bits efectivos: {bits_efectivos:.2f}")
-            
-            if bits_por_dim:
-                dim_str = ", ".join([f"{k}: {v} bits" for k, v in bits_por_dim.items()])
-                print(f"        Dimensiones: {dim_str}")
-            
-            print(f"     📈 VEROSIMILITUDES:")
-            print(f"        P(E|H₁) = {P_E_H1:.2e}")
-            print(f"        P(E|H₂) = {P_E_H2:.3f}, P(E|H₃) = {P_E_H3:.3f}, P(E|H₄) = {P_E_H4:.3f}")
-            print(f"        f(H₁) = {fi_H1:.2f}, f(H₂) = {fi_H2:.2f}, f(H₃) = {fi_H3:.2f}, f(H₄) = {fi_H4:.2f}")
+            if idx < 5 or P_E_H1 < 0.01:
+                print(f"\n  {idx+1:2d}. {pid}: {nombre} (clase {clase})")
+                print(f"     📐 Bits: {bits_brutos:.2f} brutos → {bits_efectivos:.2f} efectivos")
+                print(f"     📈 P(E|H₁) = {P_E_H1:.2e}, P(E|H₂) = {P_E_H2:.3f}, P(E|H₃) = {P_E_H3:.3f}")
 
             resultados_profecias.append({
                 'id': pid,
@@ -618,12 +517,9 @@ class AnalizadorProfecias:
                 'P_E_H1': P_E_H1,
                 'P_E_H2': P_E_H2,
                 'P_E_H3': P_E_H3,
-                'P_E_H4': P_E_H4,
                 'fi_H1': fi_H1,
                 'fi_H2': fi_H2,
-                'fi_H3': fi_H3,
-                'fi_H4': fi_H4,
-                'bits_por_dimension': bits_por_dim
+                'fi_H3': fi_H3
             })
 
             P_E_H1_list.append(P_E_H1)
@@ -632,32 +528,20 @@ class AnalizadorProfecias:
                 'id': pid,
                 'nombre': nombre,
                 'bits_brutos': bits_brutos,
-                'bits_efectivos': bits_efectivos,
-                'dimensiones': bits_por_dim
+                'bits_efectivos': bits_efectivos
             })
 
-        # 2. Resumen de especificidades
-        print("\n\n📐 2. RESUMEN DE ESPECIFICIDADES (TOP 10)")
-        print("-"*70)
-        print(f"{'Profecía':<30} {'Bits brutos':<12} {'Bits efectivos':<14} {'Dimensiones'}")
-        print("-"*70)
-        
-        espec_ordenadas = sorted(especificidades_detalle, key=lambda x: x['bits_brutos'], reverse=True)
-        for e in espec_ordenadas[:10]:
-            dims = ", ".join(e['dimensiones'].keys()) if e['dimensiones'] else "ninguna"
-            print(f"  {e['nombre'][:28]:<28} {e['bits_brutos']:>6.2f}        {e['bits_efectivos']:>6.2f}          {dims}")
-
-        # 3. Calcular LRs totales CON dependencias
-        print("\n\n📈 3. FACTORES DE BAYES TOTALES (CON DEPENDENCIAS)")
+        # 2. Calcular LRs totales
+        print("\n\n📈 2. FACTORES DE BAYES TOTALES")
         print("-"*60)
 
-        LR_total = {'H2': 1.0, 'H3': 1.0, 'H4': 1.0}
+        LR_total = {'H2': 1.0, 'H3': 1.0}
 
         for prof in resultados_profecias:
             if prof['clase'] == 'C':
                 continue
 
-            for h in ['H2', 'H3', 'H4']:
+            for h in ['H2', 'H3']:
                 lr = self.motor.calcular_LR_con_dependencia(
                     prof[f'P_E_{h}'], prof['P_E_H1'],
                     prof[f'fi_{h}'], prof['fi_H1']
@@ -667,14 +551,14 @@ class AnalizadorProfecias:
         for h, lr in LR_total.items():
             print(f"  LR({h}/H₁) = {lr:.3e}")
 
-        # 4. Comparaciones con Jeffrey
-        print("\n\n🎯 4. INTERPRETACIÓN SEGÚN JEFFREY")
+        # 3. Comparaciones con Jeffrey
+        print("\n\n🎯 3. INTERPRETACIÓN SEGÚN JEFFREY")
         print("-"*60)
 
         comparaciones = {
-            'H2/H₁': LR_total['H2'],
-            'H2/H₃': LR_total['H2'] / LR_total['H3'] if LR_total['H3'] > 0 else float('inf'),
-            'H2/H₄': LR_total['H2'] / LR_total['H4'] if LR_total['H4'] > 0 else float('inf')
+            'H₂/H₁': LR_total['H2'],
+            'H₃/H₁': LR_total['H3'],
+            'H₂/H₃': LR_total['H2'] / LR_total['H3'] if LR_total['H3'] > 0 else float('inf')
         }
 
         for comp, bf in comparaciones.items():
@@ -684,21 +568,18 @@ class AnalizadorProfecias:
             print(f"    log₁₀(BF) = {interp['log10_BF']:.3f}")
             print(f"    → {interp['descripcion']}")
 
-        # 5. Simulación Monte Carlo CON DEPENDENCIAS
-        print("\n\n🎲 5. SIMULACIÓN MONTE CARLO CON DEPENDENCIAS")
+        # 4. Simulación Monte Carlo (H₀)
+        print("\n\n🎲 4. SIMULACIÓN MONTE CARLO (H₀: AZAR PURO)")
         print("-"*60)
         print(f"  Simulaciones: {self.simulador.n_simulaciones:,}")
         print(f"  k observado (clase A): {k_observado} de {len(self.profecias)}")
 
-        # Ejecutar simulación con dependencias
         k_simulados = self.simulador.simular_con_dependencias(self.profecias, P_E_H1_list)
 
-        # Calcular P conjunta
         P_conjunta = sum(1 for k in k_simulados if k >= k_observado) / len(k_simulados)
 
         print(f"\n  P(k ≥ {k_observado} | H₀) = {P_conjunta:.6f}")
 
-        # Estadísticas
         k_mean = sum(k_simulados) / len(k_simulados)
         k_std = (sum((k - k_mean)**2 for k in k_simulados) / len(k_simulados))**0.5
         k_sorted = sorted(k_simulados)
@@ -713,34 +594,31 @@ class AnalizadorProfecias:
         print(f"    Percentil 95: {k_p95}")
         print(f"    Percentil 99: {k_p99}")
 
-        # Histograma ASCII
         print("\n" + self.hist_ascii.generar(
             k_simulados,
-            titulo="Distribución de profecías cumplidas por azar (con dependencias)",
+            titulo="Distribución de profecías cumplidas por azar (H₀)",
             ancho=60, altura=15
         ))
 
-        # Línea del k observado
-        print(f"\n  k observado: {k_observado}")
-        print(f"  Umbral 95%:  {self.hist_ascii.linea_progreso(k_observado, k_p95)}")
-        print(f"  Umbral 99%:  {self.hist_ascii.linea_progreso(k_observado, k_p99)}")
-
-        # 6. Probabilidades posteriores
-        print("\n\n📋 6. PROBABILIDADES POSTERIORES")
+        # 5. Probabilidades posteriores (solo H₁, H₂, H₃)
+        print("\n\n📋 5. PROBABILIDADES POSTERIORES")
         print("="*60)
 
         LR_dict = {'H1': 1.0}
         LR_dict.update(LR_total)
 
-        # Calcular posteriores
         numeradores = {}
-        for h, prior in self.priors.items():
+        for h, prior in self.motor.priors.items():
+            if h == 'H0':
+                continue
             numeradores[h] = LR_dict.get(h, 0.0) * prior
 
         denom = sum(numeradores.values())
-        posteriores = {h: num/denom for h, num in numeradores.items()} if denom > 0 else self.priors
+        posteriores = {h: num/denom for h, num in numeradores.items()} if denom > 0 else {
+            'H1': 0.33, 'H2': 0.33, 'H3': 0.34
+        }
 
-        print("\n  Probabilidades posteriores:")
+        print("\n  Probabilidades posteriores (dados los datos):")
         for h, p in posteriores.items():
             barra = self.hist_ascii.linea_progreso(p, max(posteriores.values()), 30)
             print(f"    {h}: {p:.6f} {barra}")
@@ -748,25 +626,15 @@ class AnalizadorProfecias:
         hipotesis_max = max(posteriores, key=posteriores.get)
         print(f"\n  → Hipótesis más probable: {hipotesis_max}")
 
-        # 7. Factor de Bayes medio
-        print("\n\n📊 7. FACTOR DE BAYES MEDIO")
-        print("-"*60)
-        
-        BF_medio = sum(LR_total.values()) / len(LR_total)
-        print(f"  BF medio (H₂,H₃,H₄ vs H₁) = {BF_medio:.3e}")
-        
-        interp_medio = InterpretadorJeffrey.interpretar(BF_medio)
-        print(f"  → {interp_medio['descripcion']}")
-
         # Resultado estructurado
         resultado = {
+            'priors': self.motor.priors,
             'resumen': {
                 'N_total': len(self.profecias),
-                'N_A': sum(1 for p in resultados_profecias if p['clase'] == 'A'),
+                'N_A': k_observado,
                 'N_B': sum(1 for p in resultados_profecias if p['clase'] == 'B'),
                 'N_C': sum(1 for p in resultados_profecias if p['clase'] == 'C')
             },
-            'especificidades': especificidades_detalle,
             'factores_bayes': LR_total,
             'jeffrey': {k: InterpretadorJeffrey.interpretar(v) for k, v in comparaciones.items()},
             'montecarlo': {
@@ -775,22 +643,48 @@ class AnalizadorProfecias:
                 'k_media': k_mean,
                 'k_std': k_std,
                 'k_p95': k_p95,
-                'k_p99': k_p99,
-                'k_max': k_max
+                'k_p99': k_p99
             },
             'posteriores': posteriores,
-            'hipotesis_maxima': hipotesis_max,
-            'bf_medio': BF_medio
+            'hipotesis_maxima': hipotesis_max
         }
 
         return resultado
 
 
+def parsear_priors(priors_str: str) -> Dict[str, float]:
+    """Parsea string de priors en formato 'H1=0.97,H2=0.01,H3=0.02'"""
+    priors = {}
+    try:
+        partes = priors_str.split(',')
+        for parte in partes:
+            if '=' not in parte:
+                continue
+            key, val = parte.split('=')
+            priors[key.strip()] = float(val.strip())
+        
+        # H₀ siempre es 0.0
+        priors['H0'] = 0.0
+        
+        # Verificar que están todas las hipótesis
+        for h in ['H1', 'H2', 'H3']:
+            if h not in priors:
+                raise ValueError(f"Falta prior para {h}")
+        
+        return priors
+    except Exception as e:
+        print(f"Error parseando priors: {e}")
+        print("Formato esperado: H1=0.97,H2=0.01,H3=0.02 (debe sumar 1.0)")
+        sys.exit(1)
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Análisis bayesiano de profecías mesiánicas (versión corregida)")
+    parser = argparse.ArgumentParser(description="Análisis bayesiano de profecías mesiánicas (3 hipótesis)")
     parser.add_argument('--json', type=str, default='profecias.json', help='Archivo JSON de entrada')
     parser.add_argument('--output', type=str, help='Archivo JSON de salida')
     parser.add_argument('--simulaciones', type=int, default=1_000_000, help='Número de simulaciones Monte Carlo')
+    parser.add_argument('--priors', type=str, required=True,
+                       help='Priors en formato "H1=0.97,H2=0.01,H3=0.02" (debe sumar 1.0)')
 
     args = parser.parse_args()
 
@@ -798,11 +692,25 @@ def main():
         print(f"Error: No se encuentra {args.json}")
         sys.exit(1)
 
+    # Parsear priors
+    priors = parsear_priors(args.priors)
+    
+    print("\n" + "="*80)
+    print("CONFIGURACIÓN DEL ANÁLISIS")
+    print("="*80)
+    print(f"Archivo JSON: {args.json}")
+    print(f"Simulaciones Monte Carlo: {args.simulaciones:,}")
+    print("\nPriors (H₀ siempre 0.0):")
+    for h in ['H1', 'H2', 'H3']:
+        print(f"  {h}: {priors[h]:.4f}")
+    print(f"  Total: {priors['H1'] + priors['H2'] + priors['H3']:.4f}")
+    print("-"*80)
+
     # Actualizar configuración
     Config.N_SIMULACIONES = args.simulaciones
 
     # Ejecutar análisis
-    analizador = AnalizadorProfecias(args.json)
+    analizador = AnalizadorProfecias(args.json, priors)
     resultado = analizador.analizar()
 
     # Guardar resultados
