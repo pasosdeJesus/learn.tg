@@ -60,7 +60,7 @@ export function CourseStatistics({
             </div>
           )
         }
-        {scholarshipPerGuide && scholarshipPerGuide > 0 && address &&
+        {scholarshipPerGuide != null && scholarshipPerGuide > 0 && address &&
           percentagePaid && percentagePaid < 100 && !canSubmit && (
             <div className="p-2">
               <span className="text-red-500">
@@ -71,7 +71,7 @@ export function CourseStatistics({
             </div>
           )
         }
-        {scholarshipPerGuide && scholarshipPerGuide > 0 && canSubmit &&
+        {scholarshipPerGuide != null && scholarshipPerGuide > 0 && canSubmit &&
           percentagePaid && percentagePaid < 100 && (
             <div className="p-2 text-green-600">
               <span className="text-green-600">
@@ -80,7 +80,7 @@ export function CourseStatistics({
                   : 'You are eligible.'}
               </span>
             </div>
-          )}
+        )}
         {full && (
           <div className="pt-2">
             {lang === 'es' ? 'Total de guias en el curso: ' :
