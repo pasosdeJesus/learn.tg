@@ -9,13 +9,10 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
-import { formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
 
+import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
-import { DonateModal } from '@/components/DonateModal'
-import { Button } from '@/components/ui/button'
-import { CompletedProgress } from '@/components/ui/completed-progress'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 
 type PageProps = {
@@ -31,32 +28,27 @@ export default function Page({ params }: PageProps) {
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
   const [csrfToken, setCsrfToken] = useState('')
-  const [isDonateModalOpen, setIsDonateModalOpen] = useState(false)
 
-  const { course, loading, error, totalGuides,
-    vaultCreated, scholarshipPerGuide, vaultBalance,
-    profileScore, canSubmit,
-    completedGuides, paidGuides, percentageCompleted,
-    percentagePaid, scholarshipPaid } = useGuideData({
+  const {
+    course,
+    loading,
+    error,
+    totalGuides,
+    vaultCreated,
+    scholarshipPerGuide,
+    vaultBalance,
+    profileScore,
+    canSubmit,
+    completedGuides,
+    paidGuides,
+    percentageCompleted,
+    percentagePaid,
+    scholarshipPaid,
+    refreshCourseData, 
+  } = useGuideData({
     lang,
     pathPrefix,
   })
-  //useGuideData deberia retornar tambien paidGuides
-  console.log(
-    "OJO course=", course, ", loading=", loading,
-    "error=", error,
-    "totalGuides=", totalGuides,
-    "vaultCreated=", vaultCreated,
-    "scholarshipPerGuide=", scholarshipPerGuide,
-    "vaultBalance=", vaultBalance,
-    "profileScore=", profileScore,
-    "canSubmit=", canSubmit,
-    "completedGuides=", completedGuides,
-    "paidGuides=", paidGuides,
-    "percentageCompleted=", percentageCompleted,
-    "percentagePaid=", percentagePaid,
-    "scholarshipPaid=", scholarshipPaid,
-  )
 
   const [htmlSummary, setHtmlSummary] = useState('')
   const [htmlExtended, setHtmlExtended] = useState('')
@@ -64,7 +56,7 @@ export default function Page({ params }: PageProps) {
 
   useEffect(() => {
     if (address) {
-      getCsrfToken().then(token => {
+      getCsrfToken().then((token) => {
         setCsrfToken(token || '')
       })
     } else {
@@ -95,7 +87,8 @@ export default function Page({ params }: PageProps) {
       for (const guia of course.guias) {
         guias += '<li>'
         if (guia.sufijoRuta) {
-          guias += `<a href='/${lang}/${pathPrefix}/${guia.sufijoRuta}' style='text-decoration: underline'>${guia.titulo}</a>`
+          guias +=
+            `<a href='/${lang}/${pathPrefix}/${guia.sufijoRuta}' style='text-decoration: underline'>${guia.titulo}</a>`
           if (guia.completed) guias += ' ✅'
           if (guia.receivedScholarship) guias += ' 💰'
         } else {
@@ -170,17 +163,14 @@ export default function Page({ params }: PageProps) {
             className="prose max-w-prose text-justify text-gray-700"
             dangerouslySetInnerHTML={{ __html: htmlSummary }}
           />
-          <div className="mt-8">
-            <Button onClick={() => setIsDonateModalOpen(true)}>
-              {lang === 'es' ? 'Donar a este curso' : 'Donate to this course'}
-            </Button>
-          </div>
         </section>
 
         <aside className="flex flex-col gap-6 w-full lg:w-2/5">
           <div className="px-6 py-8 rounded-xl bg-white text-gray-800 shadow">
             <h2 className="text-2xl lg:text-3xl font-bold mb-6">
-              {course.idioma === 'en' ? 'Course contents' : 'Contenido del curso'}
+              {course.idioma === 'en'
+                ? 'Course contents'
+                : 'Contenido del curso'}
             </h2>
             <div
               className="list-decimal text-justify space-y-2"
@@ -205,14 +195,17 @@ export default function Page({ params }: PageProps) {
             percentagePaid={percentagePaid}
             scholarshipPaid={scholarshipPaid}
           />
+          {vaultCreated && vaultBalance !== null && (
+            <CourseDonation
+              lang={lang}
+              vaultBalance={vaultBalance}
+              courseId={parseInt(course.id)}
+              isLoggedIn={!!session?.address}
+              onDonationSuccess={() => refreshCourseData()} 
+            />
+          )}
         </aside>
       </div>
-      <DonateModal
-        courseId={parseInt(course.id)}
-        isOpen={isDonateModalOpen}
-        onClose={() => setIsDonateModalOpen(false)}
-        lang={lang}
-      />
     </>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import { useAccount } from 'wagmi'
 import axios from 'axios'
@@ -67,158 +67,158 @@ export function useGuideData({
   const [totalGuides, setTotalGuides] = useState<number | null>(null)
   const [canSubmit, setCanSubmit] = useState<boolean | null>(null)
 
-  useEffect(() => {
-    const fetchGuideData = async () => {
-      if (
-        (session && !address) ||
-        (address && !session) ||
-        (address && session && session.address && address !== session.address)
-      ) {
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      setError(null)
-      setCoursePath(`/${lang}/${pathPrefix}`)
-
-      try {
-        let url =
-          `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
-          `filtro[busprefijoRuta]=/${pathPrefix}&` +
-          `filtro[busidioma]=${lang}`
-
-        const csrfToken = await getCsrfToken()
-
-        if (session && address && session.address === address) {
-          url += `&walletAddress=${session.address}&token=${csrfToken}`
-        }
-
-        const courseListResponse = await axios.get(url)
-
-        if (!courseListResponse.data || courseListResponse.data.length !== 1) {
-          throw new Error('Course not found')
-        }
-        const basicCourse = courseListResponse.data[0]
-
-        if (!process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL) {
-          throw new Error('API presentation URL is not defined')
-        }
-
-        let detailUrl = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL.replace(
-          'curso_id',
-          basicCourse.id,
-        )
-
-        if (session && address && session.address === address) {
-          detailUrl += `&walletAddress=${session.address}&token=${csrfToken}`
-        }
-
-        const detailResponse = await axios.get(detailUrl)
-        const detailedCourse = detailResponse.data
-
-        const guideStatusPromises = detailedCourse.guias.map((_: Guide, index: number) => {
-          if (session && address && detailedCourse.id) {
-            const statusUrl = `/api/guide-status?walletAddress=${address}&courseId=${detailedCourse.id}&guideNumber=${index + 1}`
-            return axios.get(statusUrl)
-          }
-          return Promise.resolve({ data: { completed: false, receivedScholarship: false } })
-        })
-
-        const guideStatuses = await Promise.all(guideStatusPromises)
-
-        const guidesWithStatus = detailedCourse.guias.map((guide: Guide, index: number) => ({
-          ...guide,
-          completed: guideStatuses[index].data.completed,
-          receivedScholarship: guideStatuses[index].data.receivedScholarship,
-        }))
-
-        if (session && address && detailedCourse.id) {
-          try {
-            const scholarshipUrl = `/api/scholarship?courseId=${detailedCourse.id}&walletAddress=${address}&token=${csrfToken}`
-            const scholarshipRes = await axios.get(scholarshipUrl)
-
-            if (scholarshipRes.data.vaultCreated !== null) {
-              setVaultCreated(Boolean(scholarshipRes.data.vaultCreated))
-            }
-
-            if (scholarshipRes.data.vaultBalance !== null) {
-              setVaultBalance(Number(scholarshipRes.data.vaultBalance))
-            }
-            if (scholarshipRes.data.amountPerGuide !== null) {
-              setScholarshipPerGuide(Number(scholarshipRes.data.amountPerGuide))
-            }
-            if (scholarshipRes.data.canSubmit !== null) {
-              setCanSubmit(scholarshipRes.data.canSubmit)
-            }
-            if (scholarshipRes.data.percentageCompleted !== null) {
-              setPercentageCompleted(Number(scholarshipRes.data.percentageCompleted))
-            }
-            if (scholarshipRes.data.completedGuides !== null) {
-              setCompletedGuides(Number(scholarshipRes.data.completedGuides))
-            }
-            if (scholarshipRes.data.paidGuides !== null) {
-              setPaidGuides(Number(scholarshipRes.data.paidGuides))
-            }
-            if (scholarshipRes.data.totalGuides !== null) {
-              setTotalGuides(Number(scholarshipRes.data.totalGuides))
-            }
-            if (scholarshipRes.data.percentagePaid !== null) {
-              setPercentagePaid(Number(scholarshipRes.data.percentagePaid))
-            }
-            if (scholarshipRes.data.amountScholarship !== null) {
-              setScholarshipPaid(Number(scholarshipRes.data.amountScholarship))
-            }
-            if (scholarshipRes.data.profileScore !== null) {
-              setProfileScore(Number(scholarshipRes.data.profileScore))
-            }
-
-          } catch (err) {
-            console.error('Error fetching scholarship amount:', err)
-          }
-        }
-
-        const fullCourse: Course = {
-          ...basicCourse,
-          ...detailedCourse,
-          guias: guidesWithStatus,
-        }
-        setCourse(fullCourse)
-
-        if (pathSuffix) {
-          const currentGuideIndex = fullCourse.guias.findIndex(
-            (g: Guide) => g.sufijoRuta === pathSuffix,
-          )
-
-          if (currentGuideIndex !== -1) {
-            const guideNum = currentGuideIndex + 1
-            setGuideNumber(guideNum)
-            setMyGuide(fullCourse.guias[currentGuideIndex])
-
-            if (currentGuideIndex > 0) {
-              const prevGuide = fullCourse.guias[currentGuideIndex - 1]
-              setPreviousGuidePath(
-                `/${lang}/${pathPrefix}/${prevGuide.sufijoRuta}`,
-              )
-            }
-            if (currentGuideIndex < fullCourse.guias.length - 1) {
-              const nextGuide = fullCourse.guias[currentGuideIndex + 1]
-              setNextGuidePath(
-                `/${lang}/${pathPrefix}/${nextGuide.sufijoRuta}`,
-              )
-            }
-          }
-        }
-      } catch (e: any) {
-        console.error('Failed to fetch guide data:', e)
-        setError(e.message)
-      } finally {
-        setLoading(false)
-      }
+  const fetchGuideData = useCallback(async () => {
+    if (
+      (session && !address) ||
+      (address && !session) ||
+      (address && session && session.address && address !== session.address)
+    ) {
+      setLoading(false)
+      return
     }
 
-    fetchGuideData()
+    setLoading(true)
+    setError(null)
+    setCoursePath(`/${lang}/${pathPrefix}`)
+
+    try {
+      let url =
+        `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
+        `filtro[busprefijoRuta]=/${pathPrefix}&` +
+        `filtro[busidioma]=${lang}`
+
+      const csrfToken = await getCsrfToken()
+
+      if (session && address && session.address === address) {
+        url += `&walletAddress=${session.address}&token=${csrfToken}`
+      }
+
+      const courseListResponse = await axios.get(url)
+
+      if (!courseListResponse.data || courseListResponse.data.length !== 1) {
+        throw new Error('Course not found')
+      }
+      const basicCourse = courseListResponse.data[0]
+
+      if (!process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL) {
+        throw new Error('API presentation URL is not defined')
+      }
+
+      let detailUrl = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL.replace(
+        'curso_id',
+        basicCourse.id,
+      )
+
+      if (session && address && session.address === address) {
+        detailUrl += `&walletAddress=${session.address}&token=${csrfToken}`
+      }
+
+      const detailResponse = await axios.get(detailUrl)
+      const detailedCourse = detailResponse.data
+
+      const guideStatusPromises = detailedCourse.guias.map((_: Guide, index: number) => {
+        if (session && address && detailedCourse.id) {
+          const statusUrl = `/api/guide-status?walletAddress=${address}&courseId=${detailedCourse.id}&guideNumber=${index + 1}`
+          return axios.get(statusUrl)
+        }
+        return Promise.resolve({ data: { completed: false, receivedScholarship: false } })
+      })
+
+      const guideStatuses = await Promise.all(guideStatusPromises)
+
+      const guidesWithStatus = detailedCourse.guias.map((guide: Guide, index: number) => ({
+        ...guide,
+        completed: guideStatuses[index].data.completed,
+        receivedScholarship: guideStatuses[index].data.receivedScholarship,
+      }))
+
+      if (session && address && detailedCourse.id) {
+        try {
+          const scholarshipUrl = `/api/scholarship?courseId=${detailedCourse.id}&walletAddress=${address}&token=${csrfToken}`
+          const scholarshipRes = await axios.get(scholarshipUrl)
+
+          if (scholarshipRes.data.vaultCreated !== null) {
+            setVaultCreated(Boolean(scholarshipRes.data.vaultCreated))
+          }
+
+          if (scholarshipRes.data.vaultBalance !== null) {
+            setVaultBalance(Number(scholarshipRes.data.vaultBalance))
+          }
+          if (scholarshipRes.data.amountPerGuide !== null) {
+            setScholarshipPerGuide(Number(scholarshipRes.data.amountPerGuide))
+          }
+          if (scholarshipRes.data.canSubmit !== null) {
+            setCanSubmit(scholarshipRes.data.canSubmit)
+          }
+          if (scholarshipRes.data.percentageCompleted !== null) {
+            setPercentageCompleted(Number(scholarshipRes.data.percentageCompleted))
+          }
+          if (scholarshipRes.data.completedGuides !== null) {
+            setCompletedGuides(Number(scholarshipRes.data.completedGuides))
+          }
+          if (scholarshipRes.data.paidGuides !== null) {
+            setPaidGuides(Number(scholarshipRes.data.paidGuides))
+          }
+          if (scholarshipRes.data.totalGuides !== null) {
+            setTotalGuides(Number(scholarshipRes.data.totalGuides))
+          }
+          if (scholarshipRes.data.percentagePaid !== null) {
+            setPercentagePaid(Number(scholarshipRes.data.percentagePaid))
+          }
+          if (scholarshipRes.data.amountScholarship !== null) {
+            setScholarshipPaid(Number(scholarshipRes.data.amountScholarship))
+          }
+          if (scholarshipRes.data.profileScore !== null) {
+            setProfileScore(Number(scholarshipRes.data.profileScore))
+          }
+
+        } catch (err) {
+          console.error('Error fetching scholarship amount:', err)
+        }
+      }
+
+      const fullCourse: Course = {
+        ...basicCourse,
+        ...detailedCourse,
+        guias: guidesWithStatus,
+      }
+      setCourse(fullCourse)
+
+      if (pathSuffix) {
+        const currentGuideIndex = fullCourse.guias.findIndex(
+          (g: Guide) => g.sufijoRuta === pathSuffix,
+        )
+
+        if (currentGuideIndex !== -1) {
+          const guideNum = currentGuideIndex + 1
+          setGuideNumber(guideNum)
+          setMyGuide(fullCourse.guias[currentGuideIndex])
+
+          if (currentGuideIndex > 0) {
+            const prevGuide = fullCourse.guias[currentGuideIndex - 1]
+            setPreviousGuidePath(
+              `/${lang}/${pathPrefix}/${prevGuide.sufijoRuta}`,
+            )
+          }
+          if (currentGuideIndex < fullCourse.guias.length - 1) {
+            const nextGuide = fullCourse.guias[currentGuideIndex + 1]
+            setNextGuidePath(
+              `/${lang}/${pathPrefix}/${nextGuide.sufijoRuta}`,
+            )
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error('Failed to fetch guide data:', e)
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
   }, [session, address, lang, pathPrefix, pathSuffix])
+
+  useEffect(() => {
+    fetchGuideData()
+  }, [fetchGuideData])
 
   return {
     course,
@@ -240,5 +240,6 @@ export function useGuideData({
     percentageCompleted,
     percentagePaid,
     scholarshipPaid,
+    refreshCourseData: fetchGuideData,
   }
 }

@@ -1,4 +1,4 @@
-# Learn.tg - Aprender Mediante Juegos / Learn Through Games
+  # Learn.tg - Aprender Mediante Juegos / Learn Through Games
 
 **"Whatever you do, work at it with all your heart, as working for the 
   Lord, not for human masters." (Colossians 3:23)**
