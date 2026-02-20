@@ -41,7 +41,7 @@ export function CourseStatistics({
               <span>
                 {lang === 'es'
                   ? 'Beca de '
-                  : 'Scholarship of '}$
+                  : 'Scholarship of '}
                 {(                
                   (scholarshipPerGuide * 100) /
                   profileScore

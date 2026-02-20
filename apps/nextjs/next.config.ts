@@ -1,7 +1,8 @@
 import type { NextConfig } from 'next'
 import withPWA from 'next-pwa';
+import type { PWAConfig } from 'next-pwa';
 
-const pwaConfig = {
+const pwaConfig: PWAConfig = {
   dest: 'public',
   register: true,
   skipWaiting: true,
@@ -10,7 +11,7 @@ const pwaConfig = {
   runtimeCaching: [
     {
       urlPattern: /^https?:\/\/[^\/]+\/[a-z]{2}\/diligent-accounting/,
-      handler: 'NetworkFirst',
+      handler: 'NetworkFirst' as const,
       options: {
         cacheName: 'diligent-cache',
         expiration: {
@@ -21,7 +22,7 @@ const pwaConfig = {
     },
     {
       urlPattern: /^https?:\/\/[^\/]+\/_next\/static\/.*\.(js|css|png|jpg)$/,
-      handler: 'CacheFirst',
+      handler: 'CacheFirst' as const,
       options: {
         cacheName: 'diligent-static',
         expiration: {
@@ -82,4 +83,5 @@ const nextConfig: NextConfig = {
   },
 }
 
+// @ts-ignore - next-pwa type version mismatch
 export default withPWA(pwaConfig)(nextConfig)

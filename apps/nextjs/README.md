@@ -50,6 +50,7 @@ The project emphasizes code quality and reliability through a comprehensive test
 - **Framework**: **Vitest** is used to run unit, integration, and component tests.
 - **Location**: Test files are co-located with the source code in `__tests__` directories (e.g., `apps/nextjs/components/__tests__/`).
 - **Execution**: Tests can be run with the `make test` command from this directory.
+- **Type Checking for Tests**: Verify TypeScript types in test files with `make type-check-tests`.
 
 ### Server-Side Analytics and Metrics
 
@@ -93,8 +94,14 @@ Then, review and update the `.env` file with the following:
 
 2. **Check syntax and typing errors:**
 
+    The TypeScript verification consists of two parts:
+
     ```sh
+    # 1. Check types in source code
     make type
+
+    # 2. Check types in test files
+    make type-check-tests
     ```
 
 3.  **Run the Development Server:**
