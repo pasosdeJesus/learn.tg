@@ -172,7 +172,7 @@ export default function Page({ params }: PageProps) {
             return (
               <article
                 key={course.id}
-                className="flex flex-col bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transform transition-all duration-300 hover:-translate-y-2 border border-gray-200"
+                className="flex flex-col bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 border border-gray-200"
               >
                 <a
                   href={`/${course.idioma}${course.prefijoRuta}`}
