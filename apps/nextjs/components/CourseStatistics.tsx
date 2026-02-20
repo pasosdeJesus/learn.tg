@@ -35,8 +35,8 @@ export function CourseStatistics({
     <div className="flex justify-between items-center p-4 mt-auto">
       <div>
         {
-          (scholarshipPerGuide && scholarshipPerGuide > 0 && address &&
-            profileScore && profileScore > 0) ? (
+          (+scholarshipPerGuide > 0 && address &&
+            +profileScore > 0) ? (
             <div className="p-2">
               <span>
                 {lang === 'es'
@@ -60,8 +60,8 @@ export function CourseStatistics({
             </div>
           )
         }
-        {scholarshipPerGuide != null && scholarshipPerGuide > 0 && address &&
-          percentagePaid && percentagePaid < 100 && !canSubmit && (
+        {+scholarshipPerGuide > 0 && address &&
+          +percentagePaid < 100 && !canSubmit && (
             <div className="p-2">
               <span className="text-red-500">
                 {lang === 'es'
@@ -72,7 +72,7 @@ export function CourseStatistics({
           )
         }
         {scholarshipPerGuide != null && scholarshipPerGuide > 0 && canSubmit &&
-          percentagePaid && percentagePaid < 100 && (
+          +percentagePaid < 100 && (
             <div className="p-2 text-green-600">
               <span className="text-green-600">
                 {lang === 'es'
