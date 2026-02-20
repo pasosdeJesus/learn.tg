@@ -85,6 +85,7 @@ const mockGuideData = {
   percentageCompleted: null,
   percentagePaid: null,
   scholarshipPaid: null,
+  refreshCourseData: vi.fn(() => Promise.resolve()),
 }
 
 const mockCrosswordData = {

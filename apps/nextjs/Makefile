@@ -3,11 +3,14 @@ all:
 	pnpm i
 	pnpm build
 
-type:
-	pnpm typecheck
+type-source:
+	pnpm tsc --noEmit
 
 type-check-tests:
 	pnpm tsc --noEmit -p tsconfig.test.json
+
+type:
+	pnpm typecheck
 
 format:
 	pnpm format
