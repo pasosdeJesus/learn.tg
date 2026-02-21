@@ -5,6 +5,7 @@ import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import { formatUnits, parseUnits, type Address } from 'viem'
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { Button } from '@/components/ui/button'
+import axios from 'axios';
 
 const erc20Abi = [
   {
@@ -281,6 +282,20 @@ export function DonateModal({
         hash: depositHash,
       })
       if (receipt.status !== 'success') throw new Error('Deposit failed')
+      
+      // R-#111: Registrar la donacion en la base de datos
+      try {
+        await axios.post('/api/donations', {
+            courseId,
+            amount,
+            txHash: depositHash,
+            walletAddress: address,
+        });
+      } catch (error) {
+        console.error("Failed to register donation in DB:", error);
+        // No se considera un error critico, la donacion on-chain fue exitosa
+      }
+
       await loadData()
       // Cerramos modal y delegamos la notificación a la página
       onSuccess && onSuccess()
