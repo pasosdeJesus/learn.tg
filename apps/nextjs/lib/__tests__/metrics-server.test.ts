@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { recordEvent } from '../metrics-server'
-import { libDbMocks } from '@/test-utils/common/kysely-mocks'
+import { libDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
-const { MockKysely, mockExecute } = libDbMocks
+// Setup mocks before using libDbMocks.MockKysely
+libDbMocks.setupMocks()
 
 // Create mock DB instance
 let mockDb: any
@@ -25,10 +26,10 @@ describe('metrics-server', () => {
       writable: true,
     })
     // Reset mocks to default behavior
-    mockExecute.mockResolvedValue(undefined)
+    libDbMocks.mockExecute.mockResolvedValue(undefined)
 
     // Create fresh mock DB instance
-    mockDb = new MockKysely()
+    mockDb = new libDbMocks.MockKysely()
     mockInsertIntoSpy = vi.spyOn(mockDb, 'insertInto').mockReturnValue(mockDb)
     mockValuesSpy = vi.spyOn(mockDb, 'values').mockReturnValue(mockDb)
     mockGetDb = vi.fn(() => mockDb)
@@ -69,7 +70,7 @@ describe('metrics-server', () => {
       created_at: event.timestamp,
       usuario_id: 123,
     })
-    expect(mockExecute).toHaveBeenCalled()
+    expect(libDbMocks.mockExecute).toHaveBeenCalled()
   })
 
   it('should record event without usuario_id when null', async () => {
@@ -110,7 +111,7 @@ describe('metrics-server', () => {
 
   it('should handle database errors and rethrow', async () => {
     const error = new Error('DB failure')
-    mockExecute.mockRejectedValue(error)
+    libDbMocks.mockExecute.mockRejectedValue(error)
 
     const event = { event_type: 'test' }
 

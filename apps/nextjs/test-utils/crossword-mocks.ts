@@ -5,7 +5,7 @@
  */
 
 import { vi } from 'vitest'
-import { createFsMocks } from '../common/fs-mocks'
+import { createFsMocks } from '@pasosdejesus/m/test-utils/fs-mocks'
 
 /**
  * Creates mock for remarkFillInTheBlank module

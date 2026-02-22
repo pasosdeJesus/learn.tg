@@ -2,7 +2,7 @@ import * as React from 'react'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { describe, it, expect, vi } from 'vitest'
-import { popoverMock } from '@/test-utils/common/radix-mocks'
+import { popoverMock } from '@pasosdejesus/m/test-utils/radix-mocks'
 import {
   Popover,
   PopoverTrigger,

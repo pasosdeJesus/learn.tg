@@ -1,22 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { libDbMocks } from '@/test-utils/common/kysely-mocks'
+import { libDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
 // Setup mocks using libDbMocks before importing the module
-const { mockSqlExecute, mockSql, MockKysely } = libDbMocks
-
-// Mock kysely and related modules
+// libDbMocks.setupMocks()
+// Mock kysely module manually to ensure proper hoisting
 vi.mock('kysely', () => ({
-  Kysely: MockKysely,
+  Kysely: libDbMocks.MockKysely,
   PostgresDialect: vi.fn(),
-  sql: mockSql,
+  sql: libDbMocks.mockSql,
 }))
-
-vi.mock('@/.config/kysely.config', () => ({
-  newKyselyPostgresql: vi.fn(() => new MockKysely()),
+vi.mock('pg', () => ({
+  Pool: libDbMocks.mockPgPool,
 }))
 
 // Mock the database module to return our mock db instance
-const mockDb = new MockKysely()
+const mockDb = new libDbMocks.MockKysely()
 vi.mock('@/db/database', () => ({
   getDb: vi.fn(() => mockDb),
 }))
@@ -29,12 +27,12 @@ describe('metrics/queries', () => {
     vi.clearAllMocks()
     libDbMocks.resetMocks()
     // Configure sql mock to support template tag usage
-    mockSql.mockImplementation(() => ({
-      execute: mockSqlExecute,
+    libDbMocks.mockSql.mockImplementation(() => ({
+      execute: libDbMocks.mockSqlExecute,
       val: vi.fn((val) => val),
     }))
     // Default empty response
-    mockSqlExecute.mockResolvedValue({ rows: [] })
+    libDbMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
   })
 
   describe('getCompletionRate', () => {
@@ -53,7 +51,7 @@ describe('metrics/queries', () => {
           completed_guides: 96,
         },
       ]
-      mockSqlExecute.mockResolvedValue({ rows: mockRows })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: mockRows })
 
       const result = await metricsQueries.getCompletionRate()
 
@@ -61,14 +59,14 @@ describe('metrics/queries', () => {
         { date: '2024-01-01', completionRate: 75.5, totalGuides: 100, completedGuides: 75 },
         { date: '2024-01-02', completionRate: 80.0, totalGuides: 120, completedGuides: 96 },
       ])
-      expect(mockSql).toHaveBeenCalled()
+      expect(libDbMocks.mockSql).toHaveBeenCalled()
     })
 
     it('should return overall completion rate when no dated data exists', async () => {
       // First call returns empty rows (no dated data)
-      mockSqlExecute.mockResolvedValueOnce({ rows: [] })
+      libDbMocks.mockSqlExecute.mockResolvedValueOnce({ rows: [] })
       // Second call returns overall data
-      mockSqlExecute.mockResolvedValueOnce({
+      libDbMocks.mockSqlExecute.mockResolvedValueOnce({
         rows: [{ completion_rate: '65.3', total_guides: 200, completed_guides: 130 }],
       })
 
@@ -83,7 +81,7 @@ describe('metrics/queries', () => {
     })
 
     it('should return empty array when no data at all', async () => {
-      mockSqlExecute.mockResolvedValue({ rows: [] })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
 
       const result = await metricsQueries.getCompletionRate()
 
@@ -91,7 +89,7 @@ describe('metrics/queries', () => {
     })
 
     it('should handle database errors and return empty array', async () => {
-      mockSqlExecute.mockRejectedValue(new Error('DB error'))
+      libDbMocks.mockSqlExecute.mockRejectedValue(new Error('DB error'))
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
@@ -110,7 +108,7 @@ describe('metrics/queries', () => {
         { cooldown_type: 'After 24h', retention_rate: 45.5, users: 50 },
         { cooldown_type: 'After 48h', retention_rate: 30.2, users: 33 },
       ]
-      mockSqlExecute.mockResolvedValue({ rows: mockRows })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: mockRows })
 
       const result = await metricsQueries.getRetentionByCooldown()
 
@@ -121,7 +119,7 @@ describe('metrics/queries', () => {
     })
 
     it('should return empty array when no retention data', async () => {
-      mockSqlExecute.mockResolvedValue({ rows: [] })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       const result = await metricsQueries.getRetentionByCooldown()
@@ -132,7 +130,7 @@ describe('metrics/queries', () => {
     })
 
     it('should handle database errors and return empty array', async () => {
-      mockSqlExecute.mockRejectedValue(new Error('DB error'))
+      libDbMocks.mockSqlExecute.mockRejectedValue(new Error('DB error'))
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const result = await metricsQueries.getRetentionByCooldown()
@@ -149,7 +147,7 @@ describe('metrics/queries', () => {
         { time_range: '0-6h', users: 100, percentage: 50.0 },
         { time_range: '6-12h', users: 50, percentage: 25.0 },
       ]
-      mockSqlExecute.mockResolvedValue({ rows: mockRows })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: mockRows })
 
       const result = await metricsQueries.getTimeBetweenGuides()
 
@@ -160,7 +158,7 @@ describe('metrics/queries', () => {
     })
 
     it('should return empty array when no data', async () => {
-      mockSqlExecute.mockResolvedValue({ rows: [] })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       const result = await metricsQueries.getTimeBetweenGuides()
@@ -171,7 +169,7 @@ describe('metrics/queries', () => {
     })
 
     it('should handle database errors', async () => {
-      mockSqlExecute.mockRejectedValue(new Error('DB error'))
+      libDbMocks.mockSqlExecute.mockRejectedValue(new Error('DB error'))
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const result = await metricsQueries.getTimeBetweenGuides()
@@ -188,7 +186,7 @@ describe('metrics/queries', () => {
         { date: '2024-01-01', new_users: 10, total_users: 10, active_users: 8 },
         { date: '2024-01-02', new_users: 5, total_users: 15, active_users: 12 },
       ]
-      mockSqlExecute.mockResolvedValue({ rows: mockRows })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: mockRows })
 
       const result = await metricsQueries.getUserGrowth()
 
@@ -199,7 +197,7 @@ describe('metrics/queries', () => {
     })
 
     it('should return empty array when no data', async () => {
-      mockSqlExecute.mockResolvedValue({ rows: [] })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       const result = await metricsQueries.getUserGrowth()
@@ -210,7 +208,7 @@ describe('metrics/queries', () => {
     })
 
     it('should handle database errors', async () => {
-      mockSqlExecute.mockRejectedValue(new Error('DB error'))
+      libDbMocks.mockSqlExecute.mockRejectedValue(new Error('DB error'))
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const result = await metricsQueries.getUserGrowth()
@@ -227,7 +225,7 @@ describe('metrics/queries', () => {
         { game_type: 'crossword', completion_rate: 85.5, avg_time: 2.5, users: 150 },
         { game_type: 'quiz', completion_rate: 92.0, avg_time: 1.8, users: 120 },
       ]
-      mockSqlExecute.mockResolvedValue({ rows: mockRows })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: mockRows })
 
       const result = await metricsQueries.getGameEngagement()
 
@@ -238,7 +236,7 @@ describe('metrics/queries', () => {
     })
 
     it('should return empty array when no data', async () => {
-      mockSqlExecute.mockResolvedValue({ rows: [] })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       const result = await metricsQueries.getGameEngagement()
@@ -249,7 +247,7 @@ describe('metrics/queries', () => {
     })
 
     it('should handle database errors', async () => {
-      mockSqlExecute.mockRejectedValue(new Error('DB error'))
+      libDbMocks.mockSqlExecute.mockRejectedValue(new Error('DB error'))
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const result = await metricsQueries.getGameEngagement()
@@ -266,10 +264,12 @@ describe('metrics/queries', () => {
         { date: '2024-01-01', claims: '15', users: '10' },
         { date: '2024-01-02', claims: '20', users: '12' },
       ]
-      mockSqlExecute.mockResolvedValue({ rows: mockRows })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: mockRows })
 
       const result = await metricsQueries.getGoodDollarClaimsOverTime()
 
+      expect(libDbMocks.mockSql).toHaveBeenCalled()
+      expect(libDbMocks.mockSqlExecute).toHaveBeenCalled()
       expect(result).toEqual([
         { date: '2024-01-01', claims: 15, users: 10 },
         { date: '2024-01-02', claims: 20, users: 12 },
@@ -277,7 +277,7 @@ describe('metrics/queries', () => {
     })
 
     it('should return empty array when no data', async () => {
-      mockSqlExecute.mockResolvedValue({ rows: [] })
+      libDbMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       const result = await metricsQueries.getGoodDollarClaimsOverTime()
@@ -288,7 +288,7 @@ describe('metrics/queries', () => {
     })
 
     it('should handle database errors', async () => {
-      mockSqlExecute.mockRejectedValue(new Error('DB error'))
+      libDbMocks.mockSqlExecute.mockRejectedValue(new Error('DB error'))
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const result = await metricsQueries.getGoodDollarClaimsOverTime()

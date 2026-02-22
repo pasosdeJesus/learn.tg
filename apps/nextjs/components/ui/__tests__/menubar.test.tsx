@@ -2,7 +2,7 @@ import * as React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { describe, it, expect, vi, beforeAll } from 'vitest'
-import '@/test-utils/common/radix-mocks'
+import '@pasosdejesus/m/test-utils/radix-mocks'
 import {
   Menubar,
   MenubarMenu,

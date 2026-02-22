@@ -38,7 +38,7 @@ describe('Header', () => {
     renderWithProviders(<Header lang="en" />)
     expect(screen.getByAltText('logo')).toBeInTheDocument()
     expect(screen.getByText(/Learn through games/)).toBeInTheDocument()
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/')
+    expect(screen.getAllByRole('link')[0]).toHaveAttribute('href', '/')
   })
 
   it('renders title in Spanish', () => {

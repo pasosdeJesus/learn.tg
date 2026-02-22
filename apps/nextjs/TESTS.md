@@ -32,10 +32,10 @@ This document provides a high-level overview of the testing strategy for the lea
 
 The testing system uses a modular mocking approach organized into two categories:
 
-### **1. Generic Mocking Utilities** (`test-utils/common/`)
-Reusable mocks for common libraries and frameworks. These utilities are designed to be extracted into the `@pasosdejesus/m` package for use across multiple projects.
+### **1. Generic Mocking Utilities** (`@pasosdejesus/m/test-utils`)
+Reusable mocks for common libraries and frameworks. These utilities are now part of the `@pasosdejesus/m` package for use across multiple projects.
 
-**📚 Documentation**: [`test-utils/common/README.md`](test-utils/common/README.md)
+**📚 Documentation**: [`@pasosdejesus/m/test-utils`](../node_modules/@pasosdejesus/m/dist/test-utils/README.md)
 
 **Available Modules:**
 - **`fs-mocks.ts`** – Filesystem mocks (`fs/promises`, `node:fs/promises`)
@@ -44,10 +44,10 @@ Reusable mocks for common libraries and frameworks. These utilities are designed
 - **`rainbowkit-mocks.ts`** – Authentication mocks (RainbowKit, Wagmi, NextAuth, SIWE)
 - **`viem-mocks.ts`** – Blockchain client mocks (Viem)
 
-### **2. Learn.tg-Specific Mocks** (`test-utils/app/`)
+### **2. Learn.tg-Specific Mocks** (`test-utils/`)
 Application-specific mocks for learn.tg internal modules and functionality.
 
-**📚 Documentation**: [`test-utils/app/README.md`](test-utils/app/README.md)
+**📚 Documentation**: [`test-utils/README.md`](test-utils/README.md)
 
 **Available Modules:**
 - **`learn-tg-mocks.ts`** – Mocks for internal libraries (`lib/crypto`, `lib/scores`, `lib/metrics/queries`, etc.)
@@ -59,9 +59,9 @@ Application-specific mocks for learn.tg internal modules and functionality.
 ### **Basic Setup**
 ```typescript
 // Import mocks BEFORE importing modules under test
-import '@/test-utils/common/radix-mocks'
-import { setupApiMocks } from '@/test-utils/app/learn-tg-mocks'
-import { apiDbMocks } from '@/test-utils/common/kysely-mocks'
+import '@pasosdejesus/m/test-utils/radix-mocks'
+import { setupApiMocks } from '@/test-utils/learn-tg-mocks'
+import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
 beforeAll(() => {
   setupApiMocks()
@@ -114,15 +114,15 @@ All Next.js pages have integration tests:
 
 ## 🔄 Migration to @pasosdejesus/m
 
-The generic mocking utilities (`test-utils/common/`) are planned for migration to the `@pasosdejesus/m` package for reuse across multiple "Pasos de Jesús" projects.
+The generic mocking utilities (`test-utils/common/`) have been migrated to the `@pasosdejesus/m/test-utils` package for reuse across multiple "Pasos de Jesús" projects.
 
-**📋 Migration Plan**: [`TEST-MUEVE.md`](TEST-MUEVE.md)
+**📋 Migration Status**: ✅ **Completed** (February 2026)
 
-**Key Objectives:**
-1. Create `@pasosdejesus/m-test-utils` package
-2. Move modules one by one maintaining compatibility
-3. Update imports from `@/test-utils/common` to `@pasosdejesus/m-test-utils`
-4. Maintain all tests passing during transition
+**Completed Objectives:**
+1. ✅ Created `@pasosdejesus/m/test-utils` module
+2. ✅ Moved modules one by one maintaining compatibility
+3. ✅ Updated imports from `@/test-utils/common` to `@pasosdejesus/m/test-utils`
+4. ✅ Maintained all tests passing during transition
 
 
 ## 🧪 Running Tests
@@ -152,9 +152,8 @@ make type-check-tests
 ## 🔗 Related Documentation
 
 ### **Core Documentation**
-- [`test-utils/common/README.md`](test-utils/common/README.md) – Generic mocking utilities
-- [`test-utils/app/README.md`](test-utils/app/README.md) – Learn.tg-specific mocks
-- [`TEST-MUEVE.md`](TEST-MUEVE.md) – Migration plan to `@pasosdejesus/m`
+- [`@pasosdejesus/m/test-utils`](../node_modules/@pasosdejesus/m/dist/test-utils/README.md) – Generic mocking utilities
+- [`test-utils/README.md`](test-utils/README.md) – Learn.tg-specific mocks
 
 ### **External Resources**
 - [Vitest Documentation](https://vitest.dev/guide/)

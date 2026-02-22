@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { mockMetricsQueries } from '@/test-utils/app/learn-tg-mocks'
+import { mockMetricsQueries } from '@/test-utils/learn-tg-mocks'
 import React from 'react'
 
 // Mock next/dynamic to return simple components with test IDs

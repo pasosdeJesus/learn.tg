@@ -1,16 +1,17 @@
-# Test Utilities for Learn.tg Application (`test-utils/app/`)
+# Test Utilities for Learn.tg Application (`test-utils/`)
 
 **"Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres" (Colosenses 3:23)**
 
-This directory contains **Learn.tg-specific mocking utilities** for testing the application. These utilities mock modules and functions that are unique to the Learn.tg platform, complementing the generic mocks available in [`test-utils/common/`](../common/README.md).
+This directory contains **Learn.tg-specific mocking utilities** for testing the application. These utilities mock modules and functions that are unique to the Learn.tg platform, complementing the generic mocks available in [`@pasosdejesus/m/test-utils`](../node_modules/@pasosdejesus/m/dist/test-utils/README.md).
 
 ## 📁 Structure
 
 ```
-test-utils/app/
+test-utils/
 ├── index.ts              # Re-exports all Learn.tg-specific mocks
 ├── learn-tg-mocks.ts     # Mocks for Learn.tg libraries and modules
-└── crossword-mocks.ts    # Mocks for crossword puzzle functionality
+├── crossword-mocks.ts    # Mocks for crossword puzzle functionality
+└── README.md             # This documentation
 ```
 
 ## 🧪 Available Utilities
@@ -32,11 +33,11 @@ test-utils/app/
 
 #### **Internal Mocks (not exported):**
 - `guideUtilsMocks`: Mocks for `@/lib/guide-utils` (used internally by `setupApiMocks`)
-- `viemMocks` and `viemChainsMocks`: Imported from `../common/viem-mocks`
+- `viemMocks` and `viemChainsMocks`: Imported from `@pasosdejesus/m/test-utils/viem-mocks`
 
 #### **Usage Example:**
 ```typescript
-import { setupApiMocks, mockCrypto, mockScores } from '@/test-utils/app/learn-tg-mocks'
+import { setupApiMocks, mockCrypto, mockScores } from '@/test-utils/learn-tg-mocks'
 
 beforeAll(() => {
   setupApiMocks() // Setup all module mocks at once
@@ -70,7 +71,7 @@ beforeEach(() => {
 
 #### **Usage Example:**
 ```typescript
-import { crosswordMocks, setupCrosswordMocks, resetCrosswordMocks } from '@/test-utils/app/crossword-mocks'
+import { crosswordMocks, setupCrosswordMocks, resetCrosswordMocks } from '@/test-utils/crossword-mocks'
 
 beforeAll(() => {
   setupCrosswordMocks()
@@ -90,8 +91,8 @@ Always import and setup mocks **before** importing the modules under test:
 
 ```typescript
 // 1. Import test utilities
-import { setupApiMocks } from '@/test-utils/app/learn-tg-mocks'
-import { setupCrosswordMocks } from '@/test-utils/app/crossword-mocks'
+import { setupApiMocks } from '@/test-utils/learn-tg-mocks'
+import { setupCrosswordMocks } from '@/test-utils/crossword-mocks'
 
 // 2. Setup mocks in beforeAll
 beforeAll(() => {
@@ -113,12 +114,12 @@ beforeAll(async () => {
 - Use `vi.clearAllMocks()` for general cleanup
 
 ### **Combining with Generic Mocks**
-Use together with generic mocks from `test-utils/common`:
+Use together with generic mocks from `@pasosdejesus/m/test-utils`:
 
 ```typescript
-import { apiDbMocks } from '@/test-utils/common/kysely-mocks'
-import { createAuthMocks } from '@/test-utils/common/rainbowkit-mocks'
-import { setupApiMocks } from '@/test-utils/app/learn-tg-mocks'
+import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
+import { createAuthMocks } from '@pasosdejesus/m/test-utils/rainbowkit-mocks'
+import { setupApiMocks } from '@/test-utils/learn-tg-mocks'
 
 beforeAll(() => {
   apiDbMocks.setupMocks()
@@ -129,7 +130,7 @@ beforeAll(() => {
 
 ## 🔗 Related Documentation
 
-- **[`test-utils/common/README.md`](../common/README.md)** – Generic mocking utilities (Kysely, authentication, Radix UI, etc.)
+- **[`@pasosdejesus/m/test-utils`](../node_modules/@pasosdejesus/m/dist/test-utils/README.md)** – Generic mocking utilities (Kysely, authentication, Radix UI, etc.)
 - **[`TESTS.md`](../../TESTS.md)** – Overview of testing strategy in Learn.tg
 - **[`TEST-SIMPLIFICA.md`](../../TEST-SIMPLIFICA.md)** – Recent simplification of test utilities
 

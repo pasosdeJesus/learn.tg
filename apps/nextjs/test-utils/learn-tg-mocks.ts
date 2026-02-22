@@ -5,7 +5,7 @@
  */
 
 import { vi } from 'vitest'
-import { viemMocks, viemChainsMocks } from '../common/viem-mocks'
+import { viemMocks, viemChainsMocks } from '@pasosdejesus/m/test-utils/viem-mocks'
 
 // Mock objects defined with vi.hoisted for proper hoisting
 const metricsQueriesMocks = vi.hoisted(() => ({

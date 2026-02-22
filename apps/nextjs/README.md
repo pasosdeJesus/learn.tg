@@ -51,6 +51,7 @@ The project emphasizes code quality and reliability through a comprehensive test
 - **Location**: Test files are co-located with the source code in `__tests__` directories (e.g., `apps/nextjs/components/__tests__/`).
 - **Execution**: Tests can be run with the `make test` command from this directory.
 - **Type Checking for Tests**: Verify TypeScript types in test files with `make type-source`.
+- **Documentation**: See [TESTS.md](TESTS.md) for detailed documentation on mocking utilities and testing architecture.
 
 ### Server-Side Analytics and Metrics
 
