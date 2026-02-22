@@ -78,7 +78,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "latest",
-    "@pasosdejesus/m": "gitlab.com:pasosdejesus/m",
+    "@pasosdejesus/m": "git+ssh://git@gitlab.com/pasosdejesus/m.git",
     "@tailwindcss/postcss": "^4.2.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -102,6 +102,9 @@
     "vitest": "^1.6.1"
   },
   "pnpm": {
+    "trustedDependencies": [
+      "@pasosdejesus/m"
+    ],
     "overrides": {
       "@parcel/watcher": "npm:@parcel/watcher-wasm",
       "rollup": "npm:@rollup/wasm-node",
