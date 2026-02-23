@@ -126,16 +126,6 @@ export function AppProvider(props: RainbowKitProviderProps) {
     }
   }, [])
 
-  // Monitor wallet connection state
-  const { address, chainId, isConnected, connector } = useAccount()
-  useEffect(() => {
-    console.log('=== WALLET CONNECTION STATE ===')
-    console.log('Address:', address)
-    console.log('Chain ID:', chainId)
-    console.log('Is connected:', isConnected)
-    console.log('Connector:', connector?.name)
-    console.log('Connector ID:', connector?.id)
-  }, [address, chainId, isConnected, connector])
 
   return (
     <WagmiProvider config={config}>

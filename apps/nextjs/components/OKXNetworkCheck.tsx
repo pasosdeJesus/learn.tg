@@ -4,7 +4,7 @@ import { useAccount } from 'wagmi'
 import { useEffect, useState } from 'react'
 
 export default function OKXNetworkCheck() {
-  const { chainId, address } = useAccount()
+  const { chainId, address, isConnected, connector } = useAccount()
   const [isOKXBrowser, setIsOKXBrowser] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
 
@@ -43,7 +43,17 @@ export default function OKXNetworkCheck() {
       console.log('Detection method:', detectionMethod)
       setShowHelp(true)
     }
-  }, [chainId])
+  }, [chainId, address])
+
+  // Monitor wallet connection state
+  useEffect(() => {
+    console.log('=== WALLET CONNECTION STATE ===')
+    console.log('Address:', address)
+    console.log('Chain ID:', chainId)
+    console.log('Is connected:', isConnected)
+    console.log('Connector:', connector?.name)
+    console.log('Connector ID:', connector?.id)
+  }, [address, chainId, isConnected, connector])
 
   if (!showHelp) return null
 
