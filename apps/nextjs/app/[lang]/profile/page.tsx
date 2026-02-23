@@ -282,6 +282,17 @@ export default function ProfileForm({ params }: PageProps) {
     e.preventDefault()
     setSaving(true)
 
+    // DEBUG: Log información crítica
+    console.log('=== PROFILE SAVE DEBUG ===')
+    console.log('1. Session address:', session?.address)
+    console.log('2. Wallet address:', address)
+    console.log('3. Are they equal?', session?.address === address)
+    console.log('4. User Agent:', navigator.userAgent)
+    console.log('5. Is OKX Browser?', navigator.userAgent.includes('OKX'))
+
+    const csrfToken = await getCsrfToken()
+    console.log('6. CSRF Token length:', csrfToken?.length)
+
     try {
       if (!process.env.NEXT_PUBLIC_API_UPDATE_USER) {
         alert('Undefined NEXT_PUBLIC_API_UPDATE_USER')
@@ -294,8 +305,6 @@ export default function ProfileForm({ params }: PageProps) {
         religion_id: profile.religion,
         pais_id: profile.country,
       }
-
-      const csrfToken = await getCsrfToken()
       let url = process.env.NEXT_PUBLIC_API_UPDATE_USER.replace(
         'usuario_id',
         profile.userId,
@@ -312,9 +321,31 @@ export default function ProfileForm({ params }: PageProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to save profile')
+        const errorText = await response.text()
+        console.log('❌ Profile save failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText.substring(0, 500), // Primeros 500 caracteres
+          url: url,
+          is_okx: navigator.userAgent.includes('OKX')
+        })
+        throw new Error(`Failed to save profile: ${response.status} ${response.statusText}`)
       }
 
+      // Intentar parsear respuesta JSON para logging
+      let responseData = null
+      try {
+        responseData = await response.json()
+      } catch (e) {
+        // No es JSON, usar texto plano
+        responseData = await response.text()
+      }
+      console.log('✅ Profile save successful:', {
+        status: response.status,
+        url: url,
+        is_okx: navigator.userAgent.includes('OKX'),
+        response: typeof responseData === 'string' ? responseData.substring(0, 200) : responseData
+      })
       alert('Profile updated successfully')
     } catch (error) {
       alert('Failed to save profile')

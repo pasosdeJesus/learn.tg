@@ -7,6 +7,8 @@
 'use client'
 
 import { SessionProvider } from 'next-auth/react'
+import { useEffect } from 'react'
+import OKXNetworkCheck from '@/components/OKXNetworkCheck'
 
 interface ExtendedWindow extends Window {
   ethereum?: {
@@ -85,6 +87,21 @@ const queryClient = new QueryClient()
 // Taking ideas of
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/providers/web3-providers.tsx
 export function AppProvider(props: RainbowKitProviderProps) {
+  useEffect(() => {
+    console.log('=== OKX DIAGNOSTIC INFO ===')
+    console.log('1. User Agent:', navigator.userAgent)
+    console.log('2. Is OKX Browser?', navigator.userAgent.toLowerCase().includes('okx'))
+    console.log('3. Ethereum provider:', window.ethereum ? 'Present' : 'Absent')
+    if (window.ethereum) {
+      console.log('4. Provider details:', {
+        isOKX: window.ethereum.isOKX,
+        isMetaMask: window.ethereum.isMetaMask,
+        chainId: window.ethereum.chainId,
+        networkVersion: window.ethereum.networkVersion
+      })
+    }
+  }, [])
+
   return (
     <WagmiProvider config={config}>
       <SessionProvider>
@@ -102,6 +119,7 @@ export function AppProvider(props: RainbowKitProviderProps) {
               })}
             >
               {props.children}
+              <OKXNetworkCheck />
             </RainbowKitProvider>
           </RainbowKitSiweNextAuthProvider>
         </QueryClientProvider>
