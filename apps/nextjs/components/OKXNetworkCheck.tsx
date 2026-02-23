@@ -2,49 +2,63 @@
 
 import { useAccount } from 'wagmi'
 import { useEffect, useState } from 'react'
+import { switchToCelo, isOKXWallet } from '@/lib/okx-switch'
 
 export default function OKXNetworkCheck() {
   const { chainId, address, isConnected, connector } = useAccount()
   const [isOKXBrowser, setIsOKXBrowser] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [hasTriedSwitch, setHasTriedSwitch] = useState(false)
+  const [isSwitching, setIsSwitching] = useState(false)
 
   useEffect(() => {
-    const win = window as any
-    // Detectar OKX Wallet (navegador interno o extensión)
-    let isOKX = false
-    let detectionMethod = 'none'
-
-    const ua = navigator.userAgent.toLowerCase()
-    if (ua.includes('okx') || ua.includes('web3wallet')) {
-      isOKX = true
-      detectionMethod = 'userAgent'
-    } else if (win.ethereum?.isOKX) {
-      isOKX = true
-      detectionMethod = 'window.ethereum.isOKX'
-    } else if (win.ethereum?.isOkxWallet) {
-      isOKX = true
-      detectionMethod = 'window.ethereum.isOkxWallet'
-    } else if (win.okxwallet) {
-      isOKX = true
-      detectionMethod = 'window.okxwallet'
-    } else if (win.okex) {
-      isOKX = true
-      detectionMethod = 'window.okex'
-    }
-
-    console.log('OKX Detection:', { isOKX, detectionMethod })
+    // Detectar OKX Wallet usando nuestra función centralizada
+    const isOKX = isOKXWallet()
+    console.log('OKX Detection:', { isOKX })
     setIsOKXBrowser(isOKX)
 
-    // Si es OKX y está en red incorrecta, mostrar ayuda
+    // Si es OKX y está en red incorrecta
     if (isOKX && chainId && chainId !== 42220 && chainId !== 11142220) {
       console.log('OKX on wrong network:', chainId)
       console.log('User Agent:', navigator.userAgent)
       console.log('Address:', address)
-      console.log('Detection method:', detectionMethod)
-      setShowHelp(true)
+
+      // Intentar cambiar automáticamente solo si no lo hemos intentado antes
+      if (!hasTriedSwitch) {
+        console.log('Attempting automatic network switch...')
+        setHasTriedSwitch(true)
+        setIsSwitching(true)
+
+        switchToCelo()
+          .then((success) => {
+            console.log('Automatic switch result:', success)
+            if (success) {
+              // Éxito: no mostrar ayuda
+              console.log('✅ Network switched successfully')
+              setShowHelp(false)
+            } else {
+              // Fallo: mostrar ayuda
+              console.log('❌ Automatic switch failed, showing help modal')
+              setShowHelp(true)
+            }
+          })
+          .catch((error) => {
+            console.error('Error during automatic switch:', error)
+            setShowHelp(true)
+          })
+          .finally(() => {
+            setIsSwitching(false)
+          })
+      } else {
+        // Ya intentamos antes, mostrar ayuda directamente
+        setShowHelp(true)
+      }
+    } else {
+      // No es OKX o está en red correcta: ocultar ayuda
+      setShowHelp(false)
     }
-  }, [chainId, address])
+  }, [chainId, address, hasTriedSwitch])
 
   // Monitor wallet connection state
   useEffect(() => {
@@ -96,7 +110,8 @@ export default function OKXNetworkCheck() {
 
         <div className="space-y-3 mb-4">
           <p className="text-gray-700">
-            Your OKX Wallet is connected to the wrong network. Please switch to <strong>Celo</strong> network.
+            Your OKX Wallet is connected to the wrong network. We tried to switch automatically but failed.
+            {hasTriedSwitch ? ' ' : ' '}Please switch to <strong>Celo</strong> network manually or try auto-switch again.
           </p>
 
           <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
@@ -114,32 +129,65 @@ export default function OKXNetworkCheck() {
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={() => {
-              console.log('User clicked "I\'ve switched"')
-              setShowHelp(false)
-            }}
-            className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-          >
-            I've switched
-          </button>
-          <button
-            onClick={() => {
-              console.log('User clicked "Open in Chrome"')
-              window.open(window.location.href, '_blank')
-            }}
-            className="flex-1 bg-gray-200 py-2 rounded hover:bg-gray-300"
-          >
-            Open in Chrome
-          </button>
-          <button
-            onClick={copyDiagnostics}
-            className="flex-1 bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
-          >
-            {copied ? 'Copied!' : 'Copy Diagnostics'}
-          </button>
-        </div>
+        {isSwitching ? (
+          <div className="text-center py-4">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Switching to Celo network automatically...</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  console.log('User clicked "Try Auto-Switch"')
+                  setIsSwitching(true)
+                  switchToCelo()
+                    .then((success) => {
+                      console.log('Manual retry result:', success)
+                      if (success) {
+                        setShowHelp(false)
+                      }
+                    })
+                    .catch((error) => {
+                      console.error('Retry failed:', error)
+                    })
+                    .finally(() => {
+                      setIsSwitching(false)
+                    })
+                }}
+                className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700"
+              >
+                🔄 Try Auto-Switch
+              </button>
+              <button
+                onClick={() => {
+                  console.log('User clicked "I\'ve switched"')
+                  setShowHelp(false)
+                }}
+                className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+              >
+                I've switched
+              </button>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  console.log('User clicked "Open in Chrome"')
+                  window.open(window.location.href, '_blank')
+                }}
+                className="flex-1 bg-gray-200 py-2 rounded hover:bg-gray-300"
+              >
+                Open in Chrome
+              </button>
+              <button
+                onClick={copyDiagnostics}
+                className="flex-1 bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
+              >
+                {copied ? 'Copied!' : 'Copy Diagnostics'}
+              </button>
+            </div>
+          </div>
+        )}
         {copied && (
           <p className="mt-3 text-sm text-green-600 text-center">
             Diagnostics copied to clipboard. You can paste them in support chats.
