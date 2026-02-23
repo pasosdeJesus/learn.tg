@@ -158,7 +158,7 @@ export async function switchToCelo(): Promise<boolean> {
         // Record add event
         await recordSwitchEvent('added', detectionMethod, expectedChainId)
         return true
-      } catch (addError) {
+      } catch (addError: any) {
         console.error('Failed to add Celo network:', addError)
 
         // Record failure
@@ -184,32 +184,13 @@ async function recordSwitchEvent(
   expectedChainId: string,
   errorMessage?: string
 ): Promise<void> {
-  try {
-    // Lazy import to avoid circular dependencies
-    const { newKyselyPostgresql } = await import('@/.config/kysely.config')
-    const db = newKyselyPostgresql()
-
-    await db
-      .insertInto('userevent')
-      .values({
-        event_type: `okx_switch_${eventType}`,
-        event_data: JSON.stringify({
-          detection_method: detectionMethod,
-          expected_chain_id: expectedChainId,
-          is_production: IS_PRODUCTION,
-          user_agent: navigator.userAgent.substring(0, 200),
-          error_message: errorMessage,
-          timestamp: new Date().toISOString(),
-        }),
-        created_at: new Date(),
-      })
-      .execute()
-
-    console.log(`Event 'okx_switch_${eventType}' recorded`)
-  } catch (error) {
-    console.error('Failed to record switch event:', error)
-    // Don't throw - this is monitoring only
-  }
+  // Log to console only for now
+  console.log(`[OKX Switch] ${eventType}`, {
+    detectionMethod,
+    expectedChainId,
+    errorMessage,
+    timestamp: new Date().toISOString(),
+  })
 }
 
 /**
