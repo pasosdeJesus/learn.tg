@@ -188,6 +188,7 @@ export default function ProfileForm({ params }: PageProps) {
   // Fetch user data from API
   useEffect(() => {
     const fetchProfile = async () => {
+      let url = ''
       try {
         if (process.env.NEXT_PUBLIC_API_USERS == undefined) {
           alert('NEXT_PUBLIC_API_USERS not defined')
@@ -222,7 +223,7 @@ export default function ProfileForm({ params }: PageProps) {
         console.log(data)
         setReligions(data)
 
-        let url = process.env.NEXT_PUBLIC_API_USERS
+        url = process.env.NEXT_PUBLIC_API_USERS!
         url += `?filtro[walletAddress]=${session!.address || ''}`
         const csrfToken = await getCsrfToken()
         url += `&walletAddress=${session!.address || ''}&token=${csrfToken}`
@@ -260,11 +261,26 @@ export default function ProfileForm({ params }: PageProps) {
         console.log('locProfile=', locProfile)
         setProfile(locProfile)
       } catch (error) {
-        alert(
-          'Failed to load profile data: ' +
-            error +
-            '\n If error persis try disconnecting your wallet and connecting again',
-        )
+        console.error('Profile fetch error details:', {
+          error: error instanceof Error ? error.message : String(error),
+          errorType: error instanceof TypeError ? 'TypeError (likely network/fetch)' : 'Other',
+          url,
+          sessionAddress: session?.address,
+          walletAddress: address,
+          isOKX: navigator.userAgent.includes('OKX')
+        })
+
+        let errorMessage = 'Failed to load profile data: '
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+          errorMessage += 'Cannot connect to server. Please check your internet connection and ensure the backend is running.'
+        } else if (error instanceof SyntaxError) {
+          errorMessage += 'Invalid response from server (likely JSON parsing error). This may be a token mismatch - try disconnecting and reconnecting your wallet.'
+        } else {
+          errorMessage += error instanceof Error ? error.message : String(error)
+        }
+        errorMessage += '\n\nIf error persists, try disconnecting your wallet and connecting again.'
+
+        alert(errorMessage)
       } finally {
         setLoading(false)
       }

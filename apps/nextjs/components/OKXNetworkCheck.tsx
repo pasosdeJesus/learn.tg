@@ -3,6 +3,7 @@
 import { useAccount } from 'wagmi'
 import { useEffect, useState } from 'react'
 import { switchToCelo, isOKXWallet } from '@/lib/okx-switch'
+import { IS_PRODUCTION } from '@/lib/config'
 
 export default function OKXNetworkCheck() {
   const { chainId, address, isConnected, connector } = useAccount()
@@ -11,6 +12,13 @@ export default function OKXNetworkCheck() {
   const [copied, setCopied] = useState(false)
   const [hasTriedSwitch, setHasTriedSwitch] = useState(false)
   const [isSwitching, setIsSwitching] = useState(false)
+
+  // Network configuration based on environment
+  const targetChainId = IS_PRODUCTION ? '42220' : '11142220'
+  const targetChainName = IS_PRODUCTION ? 'Celo' : 'Celo Sepolia'
+  const targetRpcUrl = IS_PRODUCTION ? 'https://forno.celo.org' : 'https://sepolia-forno.celo-testnet.org'
+  const targetExplorerUrl = IS_PRODUCTION ? 'https://celoscan.io' : 'https://celo-sepolia.blockscout.com/'
+  const chainlistUrl = IS_PRODUCTION ? 'https://chainlist.org/chain/42220' : 'https://chainlist.org/chain/11142220'
 
   useEffect(() => {
     // Detectar OKX Wallet usando nuestra función centralizada
@@ -111,20 +119,36 @@ export default function OKXNetworkCheck() {
         <div className="space-y-3 mb-4">
           <p className="text-gray-700">
             Your OKX Wallet is connected to the wrong network. We tried to switch automatically but failed.
-            {hasTriedSwitch ? ' ' : ' '}Please switch to <strong>Celo</strong> network manually or try auto-switch again.
+            {hasTriedSwitch ? ' ' : ' '}Please switch to <strong>{IS_PRODUCTION ? 'Celo' : 'Celo Sepolia'}</strong> network manually or try auto-switch again.
           </p>
 
           <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
             <h4 className="font-medium mb-1">How to switch in OKX:</h4>
             <ol className="list-decimal pl-5 space-y-1 text-sm">
               <li>Tap the network name at the top of OKX browser</li>
-              <li>Select <strong>"Celo"</strong> from the list</li>
-              <li>If Celo is not listed, tap "Add Network" and enter:</li>
+              <li>Select <strong>"{targetChainName}"</strong> from the list</li>
+              <li>If {targetChainName} is not listed, tap "Add Network" and enter:</li>
             </ol>
             <div className="mt-2 text-xs bg-gray-100 p-2 rounded">
-              <p>Network: <strong>Celo</strong></p>
-              <p>RPC URL: <strong>https://forno.celo.org</strong></p>
-              <p>Chain ID: <strong>42220</strong></p>
+              <p>Network: <strong>{targetChainName}</strong></p>
+              <p>RPC URL: <strong>{targetRpcUrl}</strong></p>
+              <p>Chain ID: <strong>{targetChainId}</strong></p>
+            </div>
+            <div className="mt-3 pt-3 border-t border-yellow-200">
+              <p className="text-sm text-gray-700 mb-1">
+                If OKX doesn't allow adding the network, use Chainlist:
+              </p>
+              <a
+                href={chainlistUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                🔗 Add {targetChainName} via Chainlist
+              </a>
+              <p className="text-xs text-gray-500 mt-1">
+                Chainlist will automatically add the correct network to your wallet.
+              </p>
             </div>
           </div>
         </div>
