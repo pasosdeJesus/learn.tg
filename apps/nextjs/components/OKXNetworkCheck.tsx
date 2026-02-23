@@ -9,9 +9,30 @@ export default function OKXNetworkCheck() {
   const [showHelp, setShowHelp] = useState(false)
 
   useEffect(() => {
-    // Detectar si es navegador interno de OKX
+    const win = window as any
+    // Detectar OKX Wallet (navegador interno o extensión)
+    let isOKX = false
+    let detectionMethod = 'none'
+
     const ua = navigator.userAgent.toLowerCase()
-    const isOKX = ua.includes('okx') || ua.includes('web3wallet')
+    if (ua.includes('okx') || ua.includes('web3wallet')) {
+      isOKX = true
+      detectionMethod = 'userAgent'
+    } else if (win.ethereum?.isOKX) {
+      isOKX = true
+      detectionMethod = 'window.ethereum.isOKX'
+    } else if (win.ethereum?.isOkxWallet) {
+      isOKX = true
+      detectionMethod = 'window.ethereum.isOkxWallet'
+    } else if (win.okxwallet) {
+      isOKX = true
+      detectionMethod = 'window.okxwallet'
+    } else if (win.okex) {
+      isOKX = true
+      detectionMethod = 'window.okex'
+    }
+
+    console.log('OKX Detection:', { isOKX, detectionMethod })
     setIsOKXBrowser(isOKX)
 
     // Si es OKX y está en red incorrecta, mostrar ayuda
@@ -19,6 +40,7 @@ export default function OKXNetworkCheck() {
       console.log('OKX on wrong network:', chainId)
       console.log('User Agent:', navigator.userAgent)
       console.log('Address:', address)
+      console.log('Detection method:', detectionMethod)
       setShowHelp(true)
     }
   }, [chainId])

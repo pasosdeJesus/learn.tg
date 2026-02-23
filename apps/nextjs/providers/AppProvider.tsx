@@ -13,7 +13,17 @@ import OKXNetworkCheck from '@/components/OKXNetworkCheck'
 interface ExtendedWindow extends Window {
   ethereum?: {
     selectedAddress?: string
+    isOKX?: boolean
+    isOkxWallet?: boolean
+    isMetaMask?: boolean
+    isRabby?: boolean
+    isTrust?: boolean
+    isCoinbaseWallet?: boolean
+    chainId?: string
+    networkVersion?: string
   }
+  okxwallet?: any
+  okex?: any
 }
 import { AppProps } from 'next/app'
 import {
@@ -88,19 +98,44 @@ const queryClient = new QueryClient()
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/providers/web3-providers.tsx
 export function AppProvider(props: RainbowKitProviderProps) {
   useEffect(() => {
+    const win = window as ExtendedWindow
     console.log('=== OKX DIAGNOSTIC INFO ===')
     console.log('1. User Agent:', navigator.userAgent)
     console.log('2. Is OKX Browser?', navigator.userAgent.toLowerCase().includes('okx'))
-    console.log('3. Ethereum provider:', window.ethereum ? 'Present' : 'Absent')
-    if (window.ethereum) {
-      console.log('4. Provider details:', {
-        isOKX: window.ethereum.isOKX,
-        isMetaMask: window.ethereum.isMetaMask,
-        chainId: window.ethereum.chainId,
-        networkVersion: window.ethereum.networkVersion
+    console.log('3. Ethereum provider:', win.ethereum ? 'Present' : 'Absent')
+    console.log('4. window.okxwallet:', win.okxwallet ? 'Present' : 'Absent')
+    console.log('5. window.okex:', win.okex ? 'Present' : 'Absent')
+    if (win.ethereum) {
+      console.log('6. Provider details:', {
+        isOKX: win.ethereum.isOKX,
+        isOkxWallet: win.ethereum.isOkxWallet,
+        isMetaMask: win.ethereum.isMetaMask,
+        isRabby: win.ethereum.isRabby,
+        isTrust: win.ethereum.isTrust,
+        isCoinbaseWallet: win.ethereum.isCoinbaseWallet,
+        chainId: win.ethereum.chainId,
+        networkVersion: win.ethereum.networkVersion
       })
+      // Log all enumerable properties of window.ethereum
+      try {
+        const props = Object.keys(win.ethereum)
+        console.log('7. window.ethereum properties:', props)
+      } catch (e) {
+        console.log('7. Failed to enumerate window.ethereum properties:', e)
+      }
     }
   }, [])
+
+  // Monitor wallet connection state
+  const { address, chainId, isConnected, connector } = useAccount()
+  useEffect(() => {
+    console.log('=== WALLET CONNECTION STATE ===')
+    console.log('Address:', address)
+    console.log('Chain ID:', chainId)
+    console.log('Is connected:', isConnected)
+    console.log('Connector:', connector?.name)
+    console.log('Connector ID:', connector?.id)
+  }, [address, chainId, isConnected, connector])
 
   return (
     <WagmiProvider config={config}>
