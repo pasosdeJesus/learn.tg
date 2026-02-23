@@ -7,6 +7,7 @@ export default function OKXNetworkCheck() {
   const { chainId, address, isConnected, connector } = useAccount()
   const [isOKXBrowser, setIsOKXBrowser] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const win = window as any
@@ -54,6 +55,35 @@ export default function OKXNetworkCheck() {
     console.log('Connector:', connector?.name)
     console.log('Connector ID:', connector?.id)
   }, [address, chainId, isConnected, connector])
+
+  // Reset copied state after 2 seconds
+  useEffect(() => {
+    if (copied) {
+      const timer = setTimeout(() => setCopied(false), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [copied])
+
+  const copyDiagnostics = async () => {
+    const diagnostics = {
+      userAgent: navigator.userAgent,
+      chainId,
+      address,
+      isConnected,
+      connector: connector?.name,
+      connectorId: connector?.id,
+      detectionMethod: isOKXBrowser ? 'OKX detected' : 'Not OKX',
+      timestamp: new Date().toISOString()
+    }
+    const text = `OKX Diagnostics:\n${JSON.stringify(diagnostics, null, 2)}`
+    try {
+      await navigator.clipboard.writeText(text)
+      console.log('Diagnostics copied to clipboard:', diagnostics)
+      setCopied(true)
+    } catch (err) {
+      console.error('Failed to copy diagnostics:', err)
+    }
+  }
 
   if (!showHelp) return null
 
@@ -103,7 +133,18 @@ export default function OKXNetworkCheck() {
           >
             Open in Chrome
           </button>
+          <button
+            onClick={copyDiagnostics}
+            className="flex-1 bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
+          >
+            {copied ? 'Copied!' : 'Copy Diagnostics'}
+          </button>
         </div>
+        {copied && (
+          <p className="mt-3 text-sm text-green-600 text-center">
+            Diagnostics copied to clipboard. You can paste them in support chats.
+          </p>
+        )}
       </div>
     </div>
   )
