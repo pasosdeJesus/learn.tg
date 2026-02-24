@@ -1,9 +1,7 @@
 import '@nomicfoundation/hardhat-toolbox';
 import '@nomicfoundation/hardhat-verify';
 import { config as dotEnvConfig } from 'dotenv';
-import { HardhatUserConfig } from 'hardhat/config';
-import { task } from "hardhat/config";
-import { task } from "hardhat/config";
+import { HardhatUserConfig, task } from 'hardhat/config';
 
 
 dotEnvConfig();
@@ -40,7 +38,11 @@ task("check-transfer", "Check token transfer from tx hash")
 
   for (const log of transferLogs) {
     const parsedLog = tokenContract.interface.parseLog(log);
-    console.log("Amount:", ethers.formatUnits(parsedLog.args.value, decimals));
+    if (parsedLog == null) {
+      console.log("parsedLog is null")
+    } else {
+      console.log("Amount:", ethers.formatUnits(parsedLog.args.value, decimals));
+    }
   }
 });
 
