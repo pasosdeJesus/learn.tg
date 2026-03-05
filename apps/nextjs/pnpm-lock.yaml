@@ -202,8 +202,8 @@ importers:
         specifier: latest
         version: 3.3.3
       '@pasosdejesus/m':
-        specifier: git+ssh://git@gitlab.com/pasosdejesus/m.git
-        version: git+https://gitlab.com/pasosdejesus/m.git#d66de60d962f7c17d0f610af3e512beec421e2f7(@types/node@24.10.13)
+        specifier: gitlab:pasosdejesus/m
+        version: git+https://git@gitlab.com:pasosdejesus/m.git#e47ee2d6ca9eb2411e84b432a57a526ca344633f(@types/node@24.10.13)
       '@tailwindcss/postcss':
         specifier: ^4.2.0
         version: 4.2.0
@@ -1848,8 +1848,8 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/m@git+https://gitlab.com/pasosdejesus/m.git#d66de60d962f7c17d0f610af3e512beec421e2f7':
-    resolution: {commit: d66de60d962f7c17d0f610af3e512beec421e2f7, repo: https://gitlab.com/pasosdejesus/m.git, type: git}
+  '@pasosdejesus/m@git+https://git@gitlab.com:pasosdejesus/m.git#e47ee2d6ca9eb2411e84b432a57a526ca344633f':
+    resolution: {commit: e47ee2d6ca9eb2411e84b432a57a526ca344633f, repo: git@gitlab.com:pasosdejesus/m.git, type: git}
     version: 0.3.1
     hasBin: true
 
@@ -3078,8 +3078,8 @@ packages:
   '@tailwindcss/node@4.2.0':
     resolution: {integrity: sha512-Yv+fn/o2OmL5fh/Ir62VXItdShnUxfpkMA4Y7jdeC8O81WPB8Kf6TT6GSHvnqgSwDzlB5iT7kDpeXxLsUS0T6Q==}
 
-  '@tailwindcss/oxide-wasm32-wasi@4.2.0':
-    resolution: {integrity: sha512-xuDjhAsFdUuFP5W9Ze4k/o4AskUtI8bcAGU4puTYprr89QaYFmhYOPfP+d1pH+k9ets6RoE23BXZM1X1jJqoyw==}
+  '@tailwindcss/oxide-wasm32-wasi@4.2.1':
+    resolution: {integrity: sha512-MGFB5cVPvshR85MTJkEvqDUnuNoysrsRxd6vnk1Lf2tbiqNlXpHYZqkqOQalydienEWOHHFyyuTSYRsLfxFJ2Q==}
     engines: {node: '>=14.0.0'}
     cpu: [wasm32]
     bundledDependencies:
@@ -10438,7 +10438,7 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/m@git+https://gitlab.com/pasosdejesus/m.git#d66de60d962f7c17d0f610af3e512beec421e2f7(@types/node@24.10.13)':
+  '@pasosdejesus/m@git+https://git@gitlab.com:pasosdejesus/m.git#e47ee2d6ca9eb2411e84b432a57a526ca344633f(@types/node@24.10.13)':
     dependencies:
       commander: 12.1.0
       dotenv: 17.3.1
@@ -12203,13 +12203,13 @@ snapshots:
       source-map-js: 1.2.1
       tailwindcss: 4.2.0
 
-  '@tailwindcss/oxide-wasm32-wasi@4.2.0': {}
+  '@tailwindcss/oxide-wasm32-wasi@4.2.1': {}
 
   '@tailwindcss/postcss@4.2.0':
     dependencies:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.2.0
-      '@tailwindcss/oxide': '@tailwindcss/oxide-wasm32-wasi@4.2.0'
+      '@tailwindcss/oxide': '@tailwindcss/oxide-wasm32-wasi@4.2.1'
       postcss: 8.5.6
       tailwindcss: 4.2.0
 

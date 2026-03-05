@@ -9,6 +9,8 @@
 import { SessionProvider } from 'next-auth/react'
 import { useEffect } from 'react'
 import OKXNetworkCheck from '@/components/OKXNetworkCheck'
+import WalletDetectionHint from '@/components/WalletDetectionHint'
+import { isOKXWallet } from '@/lib/okx-switch'
 
 interface ExtendedWindow extends Window {
   ethereum?: {
@@ -68,10 +70,7 @@ const connectors = connectorsForWallets(
 
 const config = createConfig({
   connectors,
-  chains:
-    IS_PRODUCTION
-      ? [celo]
-      : [celoSepolia],
+  chains: [celo, celoSepolia],
   transports: {
     [celo.id]: http(),
     [celoSepolia.id]: http(),
@@ -124,6 +123,9 @@ export function AppProvider(props: RainbowKitProviderProps) {
         console.log('7. Failed to enumerate window.ethereum properties:', e)
       }
     }
+    console.log('8. isOKXWallet() result:', isOKXWallet())
+    console.log('9. Configured wallet types:', ['okxWallet', 'walletConnectWallet', 'metaMaskWallet', 'injectedWallet'])
+    console.log('10. Connectors count:', connectors.length)
   }, [])
 
 
@@ -135,6 +137,7 @@ export function AppProvider(props: RainbowKitProviderProps) {
             getSiweMessageOptions={getSiweMessageOptions}
           >
             <RainbowKitProvider
+              initialChain={IS_PRODUCTION ? celo : celoSepolia}
               theme={lightTheme({
                 accentColor: '#714ba6',
                 accentColorForeground: 'white',
@@ -145,6 +148,7 @@ export function AppProvider(props: RainbowKitProviderProps) {
             >
               {props.children}
               <OKXNetworkCheck />
+              <WalletDetectionHint />
             </RainbowKitProvider>
           </RainbowKitSiweNextAuthProvider>
         </QueryClientProvider>

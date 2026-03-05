@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useSession } from 'next-auth/react';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
@@ -34,8 +34,9 @@ const translations = {
   }
 };
 
-export default function DiligentRecordsPage({ params }: { params: { lang: string } }) {
-  const { lang } = params;
+export default function DiligentRecordsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const resolvedParams = use(params);
+  const { lang } = resolvedParams;
   const t = translations[lang as keyof typeof translations] || translations.en;
   
   const [isInstalled, setIsInstalled] = useState(false);

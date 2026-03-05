@@ -78,7 +78,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "latest",
-    "@pasosdejesus/m": "git+ssh://git@gitlab.com/pasosdejesus/m.git",
+    "@pasosdejesus/m": "gitlab:pasosdejesus/m",
     "@tailwindcss/postcss": "^4.2.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

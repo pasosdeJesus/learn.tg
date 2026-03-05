@@ -1,7 +1,7 @@
 'use client'
 
 import axios from 'axios'
-import type { AxiosResponse } from 'axios'
+import type { AxiosResponse, AxiosError } from 'axios'
 import { Loader2 } from 'lucide-react'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import { use, useEffect, useState } from 'react'
@@ -119,9 +119,28 @@ export default function ProfileForm({ params }: PageProps) {
           setUpdateProfile(true)
         }
       })
-      .catch((error: any) => {
-        console.error(error)
-        alert(error)
+      .catch((error: AxiosError) => {
+        console.error('Update scores error:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+          isTokenMismatch: error.response?.status === 401
+        })
+
+        let errorMessage = 'Failed to update scores: '
+        if (error.response?.status === 401) {
+          errorMessage += 'Authentication failed (token mismatch). '
+          errorMessage += 'Please disconnect your wallet and connect again to refresh your session.'
+          if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
+            errorMessage += `\nServer message: ${error.response.data.message}`
+          }
+        } else if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
+          errorMessage += error.response.data.message
+        } else {
+          errorMessage += error.message
+        }
+        alert(errorMessage)
       })
   }
 

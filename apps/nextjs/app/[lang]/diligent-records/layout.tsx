@@ -4,15 +4,17 @@
 import { useSession } from 'next-auth/react';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 
 export default function DiligentRecordsLayout({
   children,
   params
 }: {
   children: React.ReactNode;
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
+  const resolvedParams = use(params);
+  const { lang } = resolvedParams;
   const [isOnline, setIsOnline] = useState(true);
   const { status } = useSession();
   const { isConnected } = useAccount();
@@ -67,7 +69,7 @@ export default function DiligentRecordsLayout({
               backgroundColor: isOnline ? '#4CAF50' : '#f44336',
               display: 'inline-block'
             }} />
-            <span>{isOnline ? (params.lang === 'es' ? 'En línea' : 'Online') : (params.lang === 'es' ? 'Fuera de línea' : 'Offline')}</span>
+            <span>{isOnline ? (lang === 'es' ? 'En línea' : 'Online') : (lang === 'es' ? 'Fuera de línea' : 'Offline')}</span>
           </div>
           
           {isOnline && !isConnected && (
@@ -86,7 +88,7 @@ export default function DiligentRecordsLayout({
                     fontSize: '14px'
                   }}
                 >
-                  {params.lang === 'es' ? 'Conectar Wallet' : 'Connect Wallet'}
+                  {lang === 'es' ? 'Conectar Wallet' : 'Connect Wallet'}
                 </button>
               )}
             </ConnectButton.Custom>
@@ -105,7 +107,7 @@ export default function DiligentRecordsLayout({
           )}
           
           {status === 'authenticated' && (
-            <span style={{ fontSize: '18px' }} title={params.lang === 'es' ? 'Sesión firmada' : 'Signed session'}>
+            <span style={{ fontSize: '18px' }} title={lang === 'es' ? 'Sesión firmada' : 'Signed session'}>
               🔐
             </span>
           )}
