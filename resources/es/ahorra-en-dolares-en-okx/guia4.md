@@ -1,5 +1,5 @@
 En esta guía verás como intercambiar cripto-activos entre tu cuenta
-del exchange y tu billetera y como votar en rondas de financiación para  
+del exchange y tu billetera 
 learn.tg
 
 ### 1. Pasa Criptoactivos del Exchange a la Billetera WEB3

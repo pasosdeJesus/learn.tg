@@ -6,7 +6,7 @@ Para usar tu IBU digital en la vida diaria, necesitas convertirlo a tu moneda
 local. Dependiendo de tu país, esto se puede hacer de diferentes maneras:
 * Podría haber servicios que se conecten directamente a tu banco para convertir fácilmente
 (como Coinbase en EE. UU.).
-* Podría haber mercados para comprar y vender de persona a persona, o mercados P2P de exchanges como OKX y Binance (ver el curso sobre OKX en https://learn.tg/es/ahorra-en-dolares-en-OKX).
+* Podría haber mercados para comprar y vender de persona a persona, o mercados P2P de exchanges como OKX y Binance (ver el curso sobre OKX en https://learn.tg/es/ahorra-en-dolares-en-okx).
 * Podría haber servicios llamados **rampas de entrada** y **rampas de salida**
     *   **Rampa de Entrada (On-Ramp):** Un servicio que convierte tu moneda local (como USD, EUR o
     SLE) **en** criptomoneda.
