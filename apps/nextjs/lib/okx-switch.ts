@@ -126,7 +126,7 @@ export async function switchToCelo(): Promise<boolean> {
           symbol: 'CELO',
           decimals: 18,
         },
-        rpcUrls: ['https://sepolia-forno.celo-testnet.org'],
+        rpcUrls: ['https://forno.celo-sepolia.celo-testnet.org'],
         blockExplorerUrls: ['https://celo-sepolia.blockscout.com/'],
       }
 

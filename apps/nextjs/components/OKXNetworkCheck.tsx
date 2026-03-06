@@ -16,7 +16,7 @@ export default function OKXNetworkCheck() {
   // Network configuration based on environment
   const targetChainId = IS_PRODUCTION ? '42220' : '11142220'
   const targetChainName = IS_PRODUCTION ? 'Celo' : 'Celo Sepolia'
-  const targetRpcUrl = IS_PRODUCTION ? 'https://forno.celo.org' : 'https://sepolia-forno.celo-testnet.org'
+  const targetRpcUrl = IS_PRODUCTION ? 'https://forno.celo.org' : 'https://forno.celo-sepolia.celo-testnet.org'
   const targetExplorerUrl = IS_PRODUCTION ? 'https://celoscan.io' : 'https://celo-sepolia.blockscout.com/'
   const chainlistUrl = IS_PRODUCTION ? 'https://chainlist.org/chain/42220' : 'https://chainlist.org/chain/11142220'
 
