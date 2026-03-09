@@ -32,7 +32,7 @@ export default function Header({ lang = 'en' }) {
   return (
     <header className="bg-white shadow-md">
       <div className="container mx-auto px-4 py-3">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-y-2">
           <nav aria-label="Primary navigation">
             <div className="flex items-center">
               <Link href="/" className="flex items-center gap-2">
@@ -43,7 +43,7 @@ export default function Header({ lang = 'en' }) {
                   height={32}
                   className="rounded-full"
                 />
-                <span className="text-gray-800 font-semibold text-lg whitespace-nowrap">
+                <span className="text-gray-800 font-semibold text-lg">
                   {lang === 'es'
                     ? 'Aprender mediante juegos'
                     : 'Learn through games'}
@@ -53,7 +53,7 @@ export default function Header({ lang = 'en' }) {
           </nav>
 
           <nav aria-label="User authentication">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-end gap-4">
               {isConnected &&
                 address &&
                 session &&
