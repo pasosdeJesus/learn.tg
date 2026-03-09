@@ -12,6 +12,13 @@ import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import CircularProgress from '@/components/ui/circular-progress'
 import { QRCodeDialog } from '@/components/ui/qr-code-dialog'
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select'
 import { openSelfApp } from '@/lib/deeplink'
 import { useMobileDetection } from '@/lib/mobile-detection'
 import { IS_PRODUCTION } from '@/lib/config'
@@ -521,23 +528,21 @@ export default function ProfileForm({ params }: PageProps) {
                 >
                   {lang === 'es' ? 'Religión' : 'Religion'}
                 </label>
-                <select
-                  id="religion"
-                  value={profile.religion || ''}
-                  onChange={(e) => handleChange('religion', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                <Select
+                  value={profile.religion?.toString() || ''}
+                  onValueChange={(value) => handleChange('religion', value)}
                 >
-                  <option value="">
-                    {lang === 'es'
-                      ? 'Elige tu religión:'
-                      : 'Select your religion'}
-                  </option>
-                  {religions.map((religion) => (
-                    <option key={religion.id} value={religion.id}>
-                      {religion.nombre}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={lang === 'es' ? 'Elige tu religión' : 'Select your religion'} />
+                  </SelectTrigger>
+                  <SelectContent portalled={false}>
+                    {religions.map((religion) => (
+                      <SelectItem key={religion.id} value={religion.id.toString()}>
+                        {religion.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -554,23 +559,21 @@ export default function ProfileForm({ params }: PageProps) {
                     : '❌'}{' '}
                   )
                 </label>
-                <select
-                  id="country"
+                <Select
                   value={profile.country?.toString() || ''}
-                  onChange={(e) => handleChange('country', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  onValueChange={(value) => handleChange('country', value)}
                 >
-                  <option value="">
-                    {lang === 'es'
-                      ? 'Selecciona tu país'
-                      : 'Select your country'}
-                  </option>
-                  {countries.map((country) => (
-                    <option key={country.id} value={country.id}>
-                      {country.nombre}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={lang === 'es' ? 'Selecciona tu país' : 'Select your country'} />
+                  </SelectTrigger>
+                  <SelectContent portalled={false}>
+                    {countries.map((country) => (
+                      <SelectItem key={country.id} value={country.id.toString()}>
+                        {country.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <label
