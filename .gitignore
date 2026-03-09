@@ -106,3 +106,4 @@ ia/bayes_profecia_destinatario_parameters.py
 ia/bayes_profecia_sintetica_parameters.py
 apps/nextjs/scripts/html-snapshots
 .aider*
+__pycache__

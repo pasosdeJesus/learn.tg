@@ -32,8 +32,8 @@ export default function Header({ lang = 'en' }) {
   return (
     <header className="bg-white shadow-md">
       <div className="container mx-auto px-4 py-3">
-        <div className="flex justify-between items-center">
-          <nav aria-label="Primary navigation">
+        <div className="flex justify-between items-center gap-2">
+          <nav aria-label="Primary navigation" className="min-w-0">
             <div className="flex items-center">
               <Link href="/" className="flex items-center gap-2">
                 <Image

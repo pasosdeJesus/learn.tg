@@ -9,19 +9,11 @@
     pkgs.pnpm
     pkgs.postgresql
     pkgs.postgresql.lib
+    pkgs.python3
     pkgs.ruby_3_3
     pkgs.gcc
     pkgs.gnumake
-    pkgs.libxml2.dev
-    pkgs.binutils
-    pkgs.pkg-config
-    pkgs.libyaml.dev
-    pkgs.openssl.dev
-    pkgs.autoconf
-    pkgs.automake
-    pkgs.libtool
-    pkgs.m4
-    pkgs.patch
+    pkgs.yarn
   ];
 
   # Sets environment variables in the workspace
