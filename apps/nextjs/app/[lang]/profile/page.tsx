@@ -369,9 +369,9 @@ export default function ProfileForm({ params }: PageProps) {
           statusText: response.statusText,
           error: errorText.substring(0, 500), // Primeros 500 caracteres
           url: url,
-          is_okx: navigator.userAgent.includes('OKX')
+          is_okx: navigator.userAgent.includes('OKX'),
         })
-        throw new Error(`Failed to save profile: ${response.status} ${response.statusText}`)
+        throw new Error(`[${response.status}] ${response.statusText}`)
       }
 
       // Intentar parsear respuesta JSON para logging
@@ -386,11 +386,40 @@ export default function ProfileForm({ params }: PageProps) {
         status: response.status,
         url: url,
         is_okx: navigator.userAgent.includes('OKX'),
-        response: typeof responseData === 'string' ? responseData.substring(0, 200) : responseData
+        response:
+          typeof responseData === 'string'
+            ? responseData.substring(0, 200)
+            : responseData,
       })
       alert('Profile updated successfully')
     } catch (error) {
-      alert('Failed to save profile')
+      console.error('Profile save error:', error)
+      let alertMessage =
+        lang === 'es'
+          ? 'Fallo al guardar el perfil.'
+          : 'Failed to save profile.'
+
+      if (error instanceof Error) {
+        alertMessage += `\n\n${lang === 'es' ? 'Detalles' : 'Details'}: ${
+          error.message
+        }.`
+
+        if (error.message.includes('401')) {
+          alertMessage +=
+            lang === 'es'
+              ? '\n\nPuede deberse a que la sesión ha expirado. Por favor, intenta desconectar y reconectar tu billetera.'
+              : '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.'
+        } else if (
+          error instanceof TypeError &&
+          error.message.toLowerCase().includes('failed to fetch')
+        ) {
+          alertMessage +=
+            lang === 'es'
+              ? '\n\nPor favor, revisa tu conexión a internet e inténtalo de nuevo.'
+              : '\n\nPlease check your internet connection and try again.'
+        }
+      }
+      alert(alertMessage)
     } finally {
       setSaving(false)
     }
@@ -533,11 +562,20 @@ export default function ProfileForm({ params }: PageProps) {
                   onValueChange={(value) => handleChange('religion', value)}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={lang === 'es' ? 'Elige tu religión' : 'Select your religion'} />
+                    <SelectValue
+                      placeholder={
+                        lang === 'es'
+                          ? 'Elige tu religión'
+                          : 'Select your religion'
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent portalled={false}>
                     {religions.map((religion) => (
-                      <SelectItem key={religion.id} value={religion.id.toString()}>
+                      <SelectItem
+                        key={religion.id}
+                        value={religion.id.toString()}
+                      >
                         {religion.nombre}
                       </SelectItem>
                     ))}
@@ -564,7 +602,13 @@ export default function ProfileForm({ params }: PageProps) {
                   onValueChange={(value) => handleChange('country', value)}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={lang === 'es' ? 'Selecciona tu país' : 'Select your country'} />
+                    <SelectValue
+                      placeholder={
+                        lang === 'es'
+                          ? 'Selecciona tu país'
+                          : 'Select your country'
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent portalled={false}>
                     {countries.map((country) => (
@@ -608,8 +652,8 @@ export default function ProfileForm({ params }: PageProps) {
                     ? 'Guardando'
                     : 'Saving'
                   : lang === 'es'
-                    ? 'Guardar Cambios'
-                    : 'Save Changes'}
+                  ? 'Guardar Cambios'
+                  : 'Save Changes'}
               </Button>
               <Button type="button" onClick={handleSelfVerify}>
                 {lang === 'es' ? 'Verificar con self' : 'Verify with self'}
