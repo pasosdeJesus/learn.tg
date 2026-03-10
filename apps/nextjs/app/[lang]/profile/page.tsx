@@ -23,6 +23,32 @@ import { openSelfApp } from '@/lib/deeplink'
 import { useMobileDetection } from '@/lib/mobile-detection'
 import { IS_PRODUCTION } from '@/lib/config'
 
+// Componente para el logger en pantalla
+const OnScreenLogger = ({ messages }: { messages: any[] }) => (
+  <div
+    style={{
+      position: 'fixed',
+      bottom: '10px',
+      left: '10px',
+      right: '10px',
+      maxHeight: '150px',
+      overflowY: 'auto',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      color: '#0f0',
+      padding: '10px',
+      borderRadius: '5px',
+      zIndex: 9999,
+      fontSize: '12px',
+      fontFamily: 'monospace',
+    }}
+  >
+    {messages.map((msg, index) => (
+      <div key={index}>{typeof msg === 'object' ? JSON.stringify(msg) : msg}</div>
+    ))}
+  </div>
+)
+
+
 interface UserProfile {
   country: number | null
   email: string
@@ -85,6 +111,7 @@ export default function ProfileForm({ params }: PageProps) {
   const [selfApp, setSelfApp] = useState<any | null>(null)
   const [deeplink, setDeeplink] = useState('')
   const [showQRDialog, setShowQRDialog] = useState(false)
+  const [debugMessages, setDebugMessages] = useState<any[]>([])
 
   const { address } = useAccount()
   const { data: session } = useSession()
@@ -92,6 +119,13 @@ export default function ProfileForm({ params }: PageProps) {
 
   const parameters = use(params)
   const { lang } = parameters
+
+  const logger = (...args: any[]) => {
+    console.log(...args)
+    if (process.env.NEXT_PUBLIC_MOSTRAR_LOGGER === 'true') {
+      setDebugMessages(prev => [...prev, ...args])
+    }
+  }
 
   const handleUpdateScores = async () => {
     if (process.env.NEXT_PUBLIC_AUTH_URL === undefined) {
@@ -114,7 +148,7 @@ export default function ProfileForm({ params }: PageProps) {
       token: csrfToken,
     }
     const url = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/update-scores`
-    console.log(`Posting to ${url}`)
+    logger(`Posting to ${url}`)
     axios
       .post(url, data, {
         headers: {
@@ -127,7 +161,7 @@ export default function ProfileForm({ params }: PageProps) {
         }
       })
       .catch((error: AxiosError) => {
-        console.error('Update scores error:', {
+        logger('Update scores error:', {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
@@ -194,7 +228,7 @@ export default function ProfileForm({ params }: PageProps) {
       try {
         window.open(deeplink, '_blank')
       } catch (error) {
-        console.error('Error opening Self app:', error)
+        logger('Error opening Self app:', error)
         const message =
           lang === 'es'
             ? 'Error al abrir la aplicación Self. Por favor, inténtalo de nuevo.'
@@ -206,7 +240,7 @@ export default function ProfileForm({ params }: PageProps) {
   }
 
   const handleQRDialogError = (error: string) => {
-    console.error('QR Dialog error:', error)
+    logger('QR Dialog error:', error)
     const prefix = lang === 'es' ? 'Error: ' : 'Error: '
     alert(`${prefix}${error}`)
   }
@@ -238,7 +272,7 @@ export default function ProfileForm({ params }: PageProps) {
           throw new Error(`Response status in countries: ${response.status}`)
         }
         let data = await response.json()
-        console.log(data)
+        logger(data)
         setCountries(data)
 
         response = await fetch(process.env.NEXT_PUBLIC_API_RELIGIONS)
@@ -246,26 +280,26 @@ export default function ProfileForm({ params }: PageProps) {
           throw new Error(`Response status in religions: ${response.status}`)
         }
         data = await response.json()
-        console.log(data)
+        logger(data)
         setReligions(data)
 
         url = process.env.NEXT_PUBLIC_API_USERS!
         url += `?filtro[walletAddress]=${session!.address || ''}`
         const csrfToken = await getCsrfToken()
         url += `&walletAddress=${session!.address || ''}&token=${csrfToken}`
-        console.log('OJO url=', url)
+        logger('OJO url=', url)
 
         response = await fetch(url)
         if (!response.ok) {
           throw new Error(`Response status: ${response.status}`)
         }
         data = await response.json()
-        console.log(data)
+        logger(data)
         if (data.length != 1) {
           throw new Error(`Expected data.length == 1`)
         }
         const rUser = data[0]
-        console.log('rUser=', rUser)
+        logger('rUser=', rUser)
         const locProfile: UserProfile = {
           country: rUser.pais_id,
           email: rUser.email,
@@ -284,10 +318,10 @@ export default function ProfileForm({ params }: PageProps) {
           uname: rUser.nusuario,
           userId: rUser.id,
         }
-        console.log('locProfile=', locProfile)
+        logger('locProfile=', locProfile)
         setProfile(locProfile)
       } catch (error) {
-        console.error('Profile fetch error details:', {
+        logger('Profile fetch error details:', {
           error: error instanceof Error ? error.message : String(error),
           errorType: error instanceof TypeError ? 'TypeError (likely network/fetch)' : 'Other',
           url,
@@ -323,17 +357,17 @@ export default function ProfileForm({ params }: PageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
+    setDebugMessages([]) // Limpiar mensajes en cada intento
 
-    // DEBUG: Log información crítica
-    console.log('=== PROFILE SAVE DEBUG ===')
-    console.log('1. Session address:', session?.address)
-    console.log('2. Wallet address:', address)
-    console.log('3. Are they equal?', session?.address === address)
-    console.log('4. User Agent:', navigator.userAgent)
-    console.log('5. Is OKX Browser?', navigator.userAgent.includes('OKX'))
+    logger('=== PROFILE SAVE DEBUG ===')
+    logger('1. Session address:', session?.address)
+    logger('2. Wallet address:', address)
+    logger('3. Are they equal?', session?.address === address)
+    logger('4. User Agent:', navigator.userAgent)
+    logger('5. Is OKX Browser?', navigator.userAgent.includes('OKX'))
 
     const csrfToken = await getCsrfToken()
-    console.log('6. CSRF Token length:', csrfToken?.length)
+    logger('6. CSRF Token length:', csrfToken?.length)
 
     try {
       if (!process.env.NEXT_PUBLIC_API_UPDATE_USER) {
@@ -352,7 +386,7 @@ export default function ProfileForm({ params }: PageProps) {
         profile.userId,
       )
       url += `?walletAddress=${session!.address}&token=${csrfToken}`
-      console.log(`Posting ${url}`)
+      logger(`Posting ${url}`)
 
       const response = await fetch(url, {
         method: 'POST',
@@ -364,36 +398,31 @@ export default function ProfileForm({ params }: PageProps) {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.log('❌ Profile save failed:', {
+        logger('❌ Profile save failed:', {
           status: response.status,
           statusText: response.statusText,
-          error: errorText.substring(0, 500), // Primeros 500 caracteres
+          error: errorText.substring(0, 500),
           url: url,
           is_okx: navigator.userAgent.includes('OKX'),
         })
         throw new Error(`[${response.status}] ${response.statusText}`)
       }
 
-      // Intentar parsear respuesta JSON para logging
       let responseData = null
       try {
         responseData = await response.json()
       } catch (e) {
-        // No es JSON, usar texto plano
         responseData = await response.text()
       }
-      console.log('✅ Profile save successful:', {
+      logger('✅ Profile save successful:', {
         status: response.status,
         url: url,
         is_okx: navigator.userAgent.includes('OKX'),
-        response:
-          typeof responseData === 'string'
-            ? responseData.substring(0, 200)
-            : responseData,
+        response: typeof responseData === 'string' ? responseData.substring(0, 200) : responseData,
       })
       alert('Profile updated successfully')
     } catch (error) {
-      console.error('Profile save error:', error)
+      logger('Profile save error:', error)
       let alertMessage =
         lang === 'es'
           ? 'Fallo al guardar el perfil.'
@@ -452,6 +481,7 @@ export default function ProfileForm({ params }: PageProps) {
 
   return (
     <div className="mt-12 max-w-2xl mx-auto p-6">
+      {process.env.NEXT_PUBLIC_MOSTRAR_LOGGER === 'true' && <OnScreenLogger messages={debugMessages} />}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">
