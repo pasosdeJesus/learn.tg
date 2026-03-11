@@ -5,13 +5,61 @@ import type { Insertable, Selectable, Updateable } from 'kysely'
 
 import type { DB, Usuario, CourseUsuario } from '@/db/db.d'
 
+const USD_TO_SLE_RATE = 22;
+const SLE_TO_SCORE_RATIO = 10;
+
 interface CourseData {
   [key: number]: number
 }
 
 /**
+ * Adds a calculated learning score to a user's profile based on a donation amount.
+ *
+ * @param db The Kysely database instance.
+ * @param userId The ID of the user to whom the score will be added.
+ * @param donationAmountUSD The amount of the donation in USD.
+ * @returns The new total learning score.
+ */
+export async function addDonationToLearningScore(
+  db: Kysely<DB>,
+  userId: string,
+  donationAmountUSD: number
+): Promise<number> {
+  const scoreToAdd = (donationAmountUSD * USD_TO_SLE_RATE) / SLE_TO_SCORE_RATIO;
+
+  // Round to 2 decimal places to avoid floating point inaccuracies
+  const roundedScoreToAdd = Math.round(scoreToAdd * 100) / 100;
+
+  const user = await db
+    .selectFrom('usuario')
+    .where('id', '=', userId)
+    .select('learningscore')
+    .executeTakeFirst();
+
+  if (!user) {
+    throw new Error(`User with ID ${userId} not found.`);
+  }
+
+  const currentScore = user.learningscore || 0;
+  const newLearningScore = currentScore + roundedScoreToAdd;
+
+  await db
+    .updateTable('usuario')
+    .set({ 
+      learningscore: newLearningScore,
+      updated_at: new Date(),
+    })
+    .where('id', '=', userId)
+    .execute();
+
+  return newLearningScore;
+}
+
+
+/**
  * Calculates and updates all scores for a user, including global scores
  * and course-specific metrics, within a single database transaction.
+ * This function now preserves the fractional part of the learning score (from donations).
  *
  * @param db - The Kysely database instance.
  * @param user - The user object, as selected from the database.
@@ -22,7 +70,9 @@ export async function updateUserAndCoursePoints(
   user: Selectable<Usuario>,
   courseId: number | null,
 ): Promise<number> {
-  console.log("OJO updateUserAndCoursePoints. user=", user)
+  // Preserve the fractional part of the learning score, which comes from donations.
+  const donationScore = (user.learningscore || 0) % 1;
+
   // Process each guide the user has answered
   const guidesUsuario = await sql<any>`
   SELECT *
@@ -32,13 +82,11 @@ export async function updateUserAndCoursePoints(
   WHERE guide_usuario.usuario_id = ${user.id}
   `.execute(db)
 
-  console.log("OJO guidesUsuario=", guidesUsuario)
   const pointsGuidesCourse: CourseData = {}
   const earnedCourse: CourseData = {}
   const amountGuidesCourse: CourseData = {}
 
   for (const guideUsuario of guidesUsuario.rows) {
-    console.log("  OJO guideUsuario=", guideUsuario)
     const courseId = guideUsuario.proyectofinanciero_id;
     if (pointsGuidesCourse[courseId] == 
         undefined) {
@@ -65,14 +113,12 @@ export async function updateUserAndCoursePoints(
   }
   for (const cId of courseIds) {
     const currentCourseId = Number(cId);
-    console.log("  OJO courseId=", currentCourseId)
     const userCourse = (await db
     .selectFrom('course_usuario')
     .where('usuario_id', '=', user.id)
     .where('proyectofinanciero_id', '=', currentCourseId)
     .selectAll()
     .execute()) || []
-    console.log(" OJO userCourse=", userCourse)
     if (userCourse.length == 0) {
       const cp: Insertable<CourseUsuario> = {
         usuario_id: user.id,
@@ -82,12 +128,11 @@ export async function updateUserAndCoursePoints(
         amountscholarship: 0,
         percentagecompleted: 0,
       }
-      const icp = await db
+      await db
       .insertInto('course_usuario')
       .values(cp)
       .returningAll()
       .executeTakeFirstOrThrow()
-      console.log('After insert icp=', icp)
     }
     const courseGuidesCountResult = await db
     .selectFrom('cor1440_gen_actividadpf')
@@ -95,10 +140,8 @@ export async function updateUserAndCoursePoints(
     .select(db.fn.countAll().as('count'))
     .executeTakeFirst()
     const totalGuidesInCourse = Number(courseGuidesCountResult?.count) || 0
-    console.log("  OJO totalGuidesInCourse=", totalGuidesInCourse)
     const percentd = totalGuidesInCourse > 0 ? 
       ((amountGuidesCourse[currentCourseId] || 0) / totalGuidesInCourse) * 100 : 0
-    console.log("  OJO percentd=", percentd)
 
     const updateCourseUsuario = {
       guidespoints: pointsGuidesCourse[currentCourseId] || 0,
@@ -114,14 +157,13 @@ export async function updateUserAndCoursePoints(
   }
 
 
-  // 3. Calculate global Learning Score
+  // 3. Calculate global Learning Score from courses and guides (the integer part)
   const totalGuidePointsResult = await db
   .selectFrom('guide_usuario')
   .where('usuario_id', '=', user.id)
   .select(db.fn.sum('points').as('total_points'))
   .executeTakeFirst()
   const totalGuidePoints = Number(totalGuidePointsResult?.total_points) || 0
-  console.log("OJO totalGuidePoints=", totalGuidePoints)
 
   const totalCoursePointsResult = await db
   .selectFrom('course_usuario')
@@ -129,14 +171,16 @@ export async function updateUserAndCoursePoints(
   .select(db.fn.sum('points').as('total_points'))
   .executeTakeFirst()
   const totalCoursePoints = Number(totalCoursePointsResult?.total_points) || 0
-  console.log("OJO totalCoursePoints=", totalCoursePoints)
 
-  const learningscore = totalGuidePoints + totalCoursePoints
-  console.log("OJO learningscore=", learningscore)
+  // This is the score from educational activities
+  const baseLearningscore = totalGuidePoints + totalCoursePoints
+
+  // Combine the base score with the preserved donation score
+  const finalLearningscore = baseLearningscore + donationScore;
 
   // 4. Update the main usuario table
   const uUsuario: Updateable<Usuario> = {
-    learningscore: learningscore,
+    learningscore: finalLearningscore,
     updated_at: new Date(),
   }
 
@@ -145,5 +189,5 @@ export async function updateUserAndCoursePoints(
   .set(uUsuario)
   .where('id', '=', user.id).execute()
 
-  return learningscore
+  return finalLearningscore
 }

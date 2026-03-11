@@ -509,7 +509,7 @@ export default function ProfileForm({ params }: PageProps) {
               </h3>
               <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-4xl font-bold text-blue-600">
-                  {profile.learningscore || 0}
+                  {(profile.learningscore || 0).toFixed(2)}
                 </span>
               </div>
             </div>
