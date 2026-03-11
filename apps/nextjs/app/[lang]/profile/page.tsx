@@ -272,7 +272,6 @@ export default function ProfileForm({ params }: PageProps) {
           throw new Error(`Response status in countries: ${response.status}`)
         }
         let data = await response.json()
-        logger(data)
         setCountries(data)
 
         response = await fetch(process.env.NEXT_PUBLIC_API_RELIGIONS)
@@ -280,7 +279,6 @@ export default function ProfileForm({ params }: PageProps) {
           throw new Error(`Response status in religions: ${response.status}`)
         }
         data = await response.json()
-        logger(data)
         setReligions(data)
 
         url = process.env.NEXT_PUBLIC_API_USERS!
@@ -294,7 +292,6 @@ export default function ProfileForm({ params }: PageProps) {
           throw new Error(`Response status: ${response.status}`)
         }
         data = await response.json()
-        logger(data)
         if (data.length != 1) {
           throw new Error(`Expected data.length == 1`)
         }
