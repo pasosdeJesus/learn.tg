@@ -1,8 +1,1 @@
-#!/usr/bin/env node
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-import(join(__dirname, '..', 'node_modules', '@pasosdejesus', 'm', 'dist', 'm.js'));
+../node_modules/.pnpm/@pasosdejesus+m@git+https+++gitlab.com+pasosdejesus+m.git+022af6bcd276b55e7b728570ec7844d19e0be277_@types+node@24.10.13/node_modules/@pasosdejesus/m/dist/m.js

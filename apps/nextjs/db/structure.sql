@@ -4907,10 +4907,21 @@ CREATE TABLE public.usuario (
     passport_nationality integer,
     profilescore integer,
     lastgooddollarverification timestamp without time zone,
-    learningscore integer,
+    learningscore double precision,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
+
+
+--
+-- Name: view_user_scores; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.view_user_scores AS
+ SELECT id AS user_id,
+    learningscore,
+    profilescore
+   FROM public.usuario;
 
 
 --
