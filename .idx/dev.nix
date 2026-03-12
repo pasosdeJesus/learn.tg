@@ -6,6 +6,7 @@
 
   # Use https://search.nixos.org/packages to find packages
   packages = [
+    pkgs.perl
     pkgs.pnpm
     pkgs.postgresql
     pkgs.postgresql.lib

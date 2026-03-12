@@ -5,6 +5,8 @@ import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import { formatUnits, parseUnits, type Address } from 'viem'
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { Button } from '@/components/ui/button'
+import { getCsrfToken } from 'next-auth/react'
+import axios from 'axios'
 
 const erc20Abi = [
   {
@@ -281,6 +283,35 @@ export function DonateModal({
         hash: depositHash,
       })
       if (receipt.status !== 'success') throw new Error('Deposit failed')
+
+      try {
+        const csrfToken = await getCsrfToken();
+        if (csrfToken && address) {
+            const donationAmountUSD = parseFloat(amount);
+            if (donationAmountUSD > 0) {
+                console.log(`Notifying backend of ${donationAmountUSD} USD donation.`)
+                await axios.post('/api/add-donation', {
+                  lang: lang,
+                  walletAddress: address,
+                  token: csrfToken,
+                  donationAmountUSD: donationAmountUSD,
+                }, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                  }
+                });
+                console.log(`Successfully notified backend of ${donationAmountUSD} USD donation.`);
+            }
+        }
+      } catch (apiError) {
+        console.error("Failed to notify backend about the donation:", apiError);
+        const donationAmountUSD = parseFloat(amount);
+        const alertMessage = lang === 'es'
+          ? '¡Gracias por tu donación de ' + donationAmountUSD + ' USD! No pudimos actualizar tus puntos de aprendizaje automáticamente. Por favor, toma un pantallazo de esta transacción y envíalo a soporte para que podamos añadirlos manualmente. ¡Disculpa las molestias!'
+          : 'Thank you for your donation of ' + donationAmountUSD + ' USD! We could not update your learning points automatically. Please take a screenshot of this transaction and send it to support so we can add them manually. We apologize for the inconvenience!';
+        alert(alertMessage);
+      }
+
       await loadData()
       // Cerramos modal y delegamos la notificación a la página
       onSuccess && onSuccess()
