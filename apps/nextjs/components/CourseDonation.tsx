@@ -11,7 +11,7 @@ interface CourseDonationProps {
   vaultBalance: number
   courseId: number
   isLoggedIn: boolean
-  onDonationSuccess: (courseId: number) => void
+  onDonationSuccess: (courseId: number, data: { increment?: number }) => void
 }
 
 export const CourseDonation = ({
@@ -29,9 +29,16 @@ export const CourseDonation = ({
     setIsModalOpen(true)
   }
 
-  const handleDonationResult = () => {
-    onDonationSuccess(courseId)
-    setToastMsg(lang === 'es' ? 'Donación exitosa' : 'Donation successful')
+  const handleDonationResult = (data: { increment?: number }) => {
+    onDonationSuccess(courseId, data)
+    if (data.increment && data.increment > 0) {
+      const message = lang === 'es'
+        ? `¡Tu puntaje de aprendizaje ha incrementado en ${data.increment.toFixed(2)}!`
+        : `Your learning score has increased by ${data.increment.toFixed(2)}!`;
+      setToastMsg(message);
+    } else {
+      setToastMsg(lang === 'es' ? 'Donación exitosa' : 'Donation successful');
+    }
     setIsToastOpen(true)
   }
 

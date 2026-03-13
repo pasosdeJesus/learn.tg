@@ -30,9 +30,14 @@ export async function addDonationToLearningScore(
   // Round to 2 decimal places to avoid floating point inaccuracies
   const roundedScoreToAdd = Math.round(scoreToAdd * 100) / 100;
 
+  const numericUserId = parseInt(userId, 10);
+  if (isNaN(numericUserId)) {
+    throw new Error(`Invalid user ID: ${userId}`);
+  }
+
   const user = await db
     .selectFrom('usuario')
-    .where('id', '=', userId)
+    .where('id', '=', numericUserId as any)
     .select('learningscore')
     .executeTakeFirst();
 
@@ -49,7 +54,7 @@ export async function addDonationToLearningScore(
       learningscore: newLearningScore,
       updated_at: new Date(),
     })
-    .where('id', '=', userId)
+    .where('id', '=', numericUserId as any)
     .execute();
 
   return newLearningScore;

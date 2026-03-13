@@ -597,7 +597,7 @@ export default function ProfileForm({ params }: PageProps) {
                       }
                     />
                   </SelectTrigger>
-                  <SelectContent portalled={false}>
+                  <SelectContent>
                     {religions.map((religion) => (
                       <SelectItem
                         key={religion.id}
@@ -637,7 +637,7 @@ export default function ProfileForm({ params }: PageProps) {
                       }
                     />
                   </SelectTrigger>
-                  <SelectContent portalled={false}>
+                  <SelectContent>
                     {countries.map((country) => (
                       <SelectItem key={country.id} value={country.id.toString()}>
                         {country.nombre}

@@ -7,7 +7,6 @@ import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { Button } from '@/components/ui/button'
 import { getCsrfToken } from 'next-auth/react'
 import axios from 'axios'
-import { useToast } from '@/components/ui/use-toast'
 
 const erc20Abi = [
   {
@@ -50,7 +49,7 @@ export interface DonateModalProps {
   courseId: number | null
   isOpen: boolean
   onClose: () => void
-  onSuccess?: (newVaultBalance?: number) => void
+  onSuccess?: (data: { increment?: number }) => void
   lang?: string
 }
 
@@ -69,7 +68,6 @@ export function DonateModal({
   const { address } = useAccount()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
-  const { toast } = useToast()
 
   const [usdtDecimals, setUsdtDecimals] = useState<number>(
     +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6),
@@ -286,6 +284,7 @@ export function DonateModal({
       })
       if (receipt.status !== 'success') throw new Error('Deposit failed')
 
+      let increment: number | undefined;
       try {
         const csrfToken = await getCsrfToken();
         if (csrfToken && address) {
@@ -303,15 +302,7 @@ export function DonateModal({
                   }
                 });
                 console.log(`Successfully notified backend of ${donationAmountUSD} USD donation.`);
-                if (response.data.increment > 0) {
-                  toast({
-                    title: t('Donation successful!', '¡Donación exitosa!'),
-                    description: t(
-                      `Your learning score has increased by ${response.data.increment.toFixed(2)}!`,
-                      `¡Tu puntaje de aprendizaje ha incrementado en ${response.data.increment.toFixed(2)}!`
-                    ),
-                  })
-                }
+                increment = response.data.increment;
             }
         }
       } catch (apiError) {
@@ -324,8 +315,7 @@ export function DonateModal({
       }
 
       await loadData()
-      // Cerramos modal y delegamos la notificación a la página
-      onSuccess && onSuccess()
+      onSuccess && onSuccess({ increment })
       closeAll()
     } catch (e: any) {
       console.error(e)
