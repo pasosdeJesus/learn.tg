@@ -7,6 +7,7 @@ import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { Button } from '@/components/ui/button'
 import { getCsrfToken } from 'next-auth/react'
 import axios from 'axios'
+import { useToast } from '@/components/ui/use-toast'
 
 const erc20Abi = [
   {
@@ -68,6 +69,7 @@ export function DonateModal({
   const { address } = useAccount()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
+  const { toast } = useToast()
 
   const [usdtDecimals, setUsdtDecimals] = useState<number>(
     +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6),
@@ -290,7 +292,7 @@ export function DonateModal({
             const donationAmountUSD = parseFloat(amount);
             if (donationAmountUSD > 0) {
                 console.log(`Notifying backend of ${donationAmountUSD} USD donation.`)
-                await axios.post('/api/add-donation', {
+                const response = await axios.post('/api/add-donation', {
                   lang: lang,
                   walletAddress: address,
                   token: csrfToken,
@@ -301,6 +303,15 @@ export function DonateModal({
                   }
                 });
                 console.log(`Successfully notified backend of ${donationAmountUSD} USD donation.`);
+                if (response.data.increment > 0) {
+                  toast({
+                    title: t('Donation successful!', '¡Donación exitosa!'),
+                    description: t(
+                      `Your learning score has increased by ${response.data.increment.toFixed(2)}!`,
+                      `¡Tu puntaje de aprendizaje ha incrementado en ${response.data.increment.toFixed(2)}!`
+                    ),
+                  })
+                }
             }
         }
       } catch (apiError) {
