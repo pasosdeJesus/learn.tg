@@ -13,6 +13,7 @@ import { useAccount } from 'wagmi'
 
 import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
+import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 
 type PageProps = {
@@ -28,6 +29,7 @@ export default function Page({ params }: PageProps) {
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
   const [csrfToken, setCsrfToken] = useState('')
+  const [donationIncrement, setDonationIncrement] = useState<number | null>(null)
 
   const {
     course,
@@ -44,7 +46,7 @@ export default function Page({ params }: PageProps) {
     percentageCompleted,
     percentagePaid,
     scholarshipPaid,
-    refreshCourseData, 
+    refreshCourseData,
   } = useGuideData({
     lang,
     pathPrefix,
@@ -113,99 +115,106 @@ export default function Page({ params }: PageProps) {
     )
   }
 
-  if (loading) {
-    return <div className="p-10 mt-10">Loading course...</div>
-  }
-
-  if (error) {
-    return <div className="p-10 mt-10">Error: {error}</div>
-  }
-
-  if (!course) {
-    return <div className="p-10 mt-10">Course not found.</div>
-  }
-
   return (
     <>
-      <div className="container mx-auto my-8 flex flex-col lg:flex-row justify-center gap-6 min-h-screen">
-        <section className="flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 lg:w-1/2 xl:w-3/5 bg-white rounded-2xl shadow">
-          <header className="text-center mb-6">
-            <h1 className="text-2xl lg:text-3xl font-bold mb-2">
-              {course.titulo}
-            </h1>
-            {/* @ts-ignore */}
-            <h2 className="text-lg lg:text-xl font-semibold text-gray-600">
-              {course.subtitulo}
-            </h2>
-          </header>
-
-          <figure className="my-6">
-            {/* @ts-ignore */}
-            <img
-              src={course.imagen}
-              width="300"
-              alt={course.altImagen}
-              className="mx-auto rounded-lg shadow-md"
-            />
-            <figcaption className="text-sm text-gray-500 mt-3 text-center">
+      {donationIncrement && (
+        <DonationSuccessAlert
+          increment={donationIncrement}
+          lang={lang}
+          onClose={() => setDonationIncrement(null)}
+        />
+      )}
+      {loading && <div className="p-10 mt-10">Loading course...</div>}
+      {error && <div className="p-10 mt-10">Error: {error}</div>}
+      {!loading && !error && course && (
+        <div className="container mx-auto my-8 flex flex-col lg:flex-row justify-center gap-6 min-h-screen">
+          <section className="flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 lg:w-1/2 xl:w-3/5 bg-white rounded-2xl shadow">
+            <header className="text-center mb-6">
+              <h1 className="text-2xl lg:text-3xl font-bold mb-2">
+                {course.titulo}
+              </h1>
               {/* @ts-ignore */}
-              <a
-                href={course.enlaceImagen}
-                target="_blank"
-                className="underline hover:text-secondary-600"
-              >
-                {course.creditoImagen}
-              </a>
-            </figcaption>
-          </figure>
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-600">
+                {course.subtitulo}
+              </h2>
+            </header>
 
-          <article
-            className="prose max-w-prose text-justify text-gray-700"
-            dangerouslySetInnerHTML={{ __html: htmlSummary }}
-          />
-        </section>
+            <figure className="my-6">
+              {/* @ts-ignore */}
+              <img
+                src={course.imagen}
+                width="300"
+                alt={course.altImagen}
+                className="mx-auto rounded-lg shadow-md"
+              />
+              <figcaption className="text-sm text-gray-500 mt-3 text-center">
+                {/* @ts-ignore */}
+                <a
+                  href={course.enlaceImagen}
+                  target="_blank"
+                  className="underline hover:text-secondary-600"
+                >
+                  {course.creditoImagen}
+                </a>
+              </figcaption>
+            </figure>
 
-        <aside className="flex flex-col gap-6 w-full lg:w-2/5">
-          <div className="px-6 py-8 rounded-xl bg-white text-gray-800 shadow">
-            <h2 className="text-2xl lg:text-3xl font-bold mb-6">
-              {course.idioma === 'en'
-                ? 'Course contents'
-                : 'Contenido del curso'}
-            </h2>
-            <div
-              className="list-decimal text-justify space-y-2"
-              dangerouslySetInnerHTML={{ __html: contentsHtml }}
+            <article
+              className="prose max-w-prose text-justify text-gray-700"
+              dangerouslySetInnerHTML={{ __html: htmlSummary }}
             />
-          </div>
+          </section>
 
-          {htmlExtended && (
-            <div dangerouslySetInnerHTML={{ __html: htmlExtended }} />
-          )}
-          <CourseStatistics
-            lang={lang}
-            full={true}
-            address={session?.address}
-            totalGuides={course.guias.length}
-            scholarshipPerGuide={scholarshipPerGuide}
-            profileScore={profileScore}
-            canSubmit={canSubmit}
-            completedGuides={completedGuides}
-            paidGuides={paidGuides}
-            percentageCompleted={percentageCompleted}
-            percentagePaid={percentagePaid}
-            scholarshipPaid={scholarshipPaid}
-          />
-          {vaultCreated && vaultBalance !== null && (
-            <CourseDonation
+          <aside className="flex flex-col gap-6 w-full lg:w-2/5">
+            <div className="px-6 py-8 rounded-xl bg-white text-gray-800 shadow">
+              <h2 className="text-2xl lg:text-3xl font-bold mb-6">
+                {course.idioma === 'en'
+                  ? 'Course contents'
+                  : 'Contenido del curso'}
+              </h2>
+              <div
+                className="list-decimal text-justify space-y-2"
+                dangerouslySetInnerHTML={{ __html: contentsHtml }}
+              />
+            </div>
+
+            {htmlExtended && (
+              <div dangerouslySetInnerHTML={{ __html: htmlExtended }} />
+            )}
+            <CourseStatistics
               lang={lang}
-              vaultBalance={vaultBalance}
-              courseId={parseInt(course.id)}
-              isLoggedIn={!!session?.address}
-              onDonationSuccess={() => refreshCourseData()} 
+              full={true}
+              address={session?.address}
+              totalGuides={course.guias.length}
+              scholarshipPerGuide={scholarshipPerGuide}
+              profileScore={profileScore}
+              canSubmit={canSubmit}
+              completedGuides={completedGuides}
+              paidGuides={paidGuides}
+              percentageCompleted={percentageCompleted}
+              percentagePaid={percentagePaid}
+              scholarshipPaid={scholarshipPaid}
             />
-          )}
-        </aside>
-      </div>
+            {vaultCreated && vaultBalance !== null && (
+              <CourseDonation
+                lang={lang}
+                vaultBalance={vaultBalance}
+                courseId={parseInt(course.id)}
+                isLoggedIn={!!session?.address}
+                onDonationSuccess={(courseId, data) => {
+                  refreshCourseData()
+                  if (data.increment) {
+                    setDonationIncrement(data.increment)
+                  }
+                }}
+              />
+            )}
+          </aside>
+        </div>
+      )}
+      {!loading && !error && !course && (
+        <div className="p-10 mt-10">Course not found.</div>
+      )}
     </>
   )
 }

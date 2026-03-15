@@ -8,6 +8,7 @@ import Image from 'next/image'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
+import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 
 type PageProps = {
@@ -43,6 +44,7 @@ export default function Page({ params }: PageProps) {
   const [extCourses, setExtCourses] = useState<Map<number, CourseExtra>>(
     new Map(),
   )
+  const [donationIncrement, setDonationIncrement] = useState<number | null>(null)
 
   const parameters = use(params)
   const { lang } = parameters
@@ -132,7 +134,10 @@ export default function Page({ params }: PageProps) {
     )
   }
 
-  const refreshCourseVault = async (courseId: number) => {
+  const refreshCourseVault = async (courseId: number, data?: { increment?: number }) => {
+    if (data?.increment) {
+      setDonationIncrement(data.increment)
+    }
     if (!session || !address || !session.address || session.address !== address)
       return
     const csrfToken = await getCsrfToken()
@@ -164,6 +169,13 @@ export default function Page({ params }: PageProps) {
       aria-label="Courses grid"
       className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6"
     >
+      {donationIncrement && (
+        <DonationSuccessAlert
+          increment={donationIncrement}
+          lang={lang}
+          onClose={() => setDonationIncrement(null)}
+        />
+      )}
       <div className="max-w-6xl mx-auto">
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
           {courses.map((course) => {
@@ -218,7 +230,7 @@ export default function Page({ params }: PageProps) {
                     vaultBalance={extra.vaultBalance}
                     courseId={course.id}
                     isLoggedIn={!!session?.address}
-                    onDonationSuccess={refreshCourseVault}
+                    onDonationSuccess={(courseId, data) => refreshCourseVault(courseId, data)}
                   />
                 )}
               </article>
