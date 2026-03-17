@@ -3,7 +3,7 @@
 import { Kysely, sql } from 'kysely'
 import type { Insertable, Selectable, Updateable } from 'kysely'
 
-import type { DB, Usuario, CourseUsuario } from '@/db/db.d'
+import type { DB, Usuario, CourseUsuario, GuideUsuario } from '@/db/db.d'
 
 const USD_TO_SLE_RATE = 22;
 const SLE_TO_SCORE_RATIO = 10;
@@ -68,12 +68,15 @@ export async function addDonationToLearningScore(
  *
  * @param db - The Kysely database instance.
  * @param user - The user object, as selected from the database.
+ * @param courseId - The course being updated
+ * @param guide - The guide being updated (optional)
  * @returns An object containing the final learningscore and profilescore.
  */
 export async function updateUserAndCoursePoints(
   db: Kysely<DB>,
   user: Selectable<Usuario>,
   courseId: number | null,
+  guide: Selectable<GuideUsuario> | null
 ): Promise<number> {
   // Preserve the fractional part of the learning score, which comes from donations.
   const donationScore = (user.learningscore || 0) % 1;
@@ -182,6 +185,19 @@ export async function updateUserAndCoursePoints(
 
   // Combine the base score with the preserved donation score
   const finalLearningscore = baseLearningscore + donationScore;
+
+  if (guide) {
+    await db.insertInto('transactions').values({
+        usuario_id: user.id,
+        fecha: new Date(),
+        tipo: 'earn-guide',
+        crypto: 'learningpoints',
+        cantidad: guide.points,
+        impacto_balance: guide.points,
+        metadata: { courseId: courseId, guideId: guide.id }
+    }).execute();
+  }
+
 
   // 4. Update the main usuario table
   const uUsuario: Updateable<Usuario> = {
