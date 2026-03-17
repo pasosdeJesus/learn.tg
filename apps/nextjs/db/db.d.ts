@@ -1254,6 +1254,24 @@ export interface SchemaMigrations {
   version: string;
 }
 
+export interface Transactions {
+  cantidad: Generated<Numeric>;
+  categoria: string | null;
+  crypto: string;
+  descripcion: string | null;
+  fecha: Timestamp;
+  fecha_actualizacion: Generated<Timestamp>;
+  fecha_creacion: Generated<Timestamp>;
+  hash: string | null;
+  id: Generated<number>;
+  impacto_balance: Numeric;
+  metadata: Json | null;
+  sincronizado: Generated<boolean>;
+  subcategoria: string | null;
+  tipo: string;
+  usuario_id: number;
+}
+
 export interface Ubitransactions {
   amount: Numeric;
   date: Timestamp;
@@ -1308,6 +1326,12 @@ export interface Usuario {
   tema_id: number | null;
   unlock_token: string | null;
   updated_at: Timestamp | null;
+}
+
+export interface ViewUserScores {
+  learningscore: number | null;
+  profilescore: number | null;
+  user_id: number | null;
 }
 
 export interface DB {
@@ -1426,7 +1450,9 @@ export interface DB {
   nonce: Nonce;
   religion: Religion;
   schema_migrations: SchemaMigrations;
+  transactions: Transactions;
   ubitransactions: Ubitransactions;
   userevent: Userevent;
   usuario: Usuario;
+  view_user_scores: ViewUserScores;
 }
