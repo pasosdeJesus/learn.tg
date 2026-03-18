@@ -2,7 +2,7 @@ import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable('transactions')
+    .createTable('transaction')
     .addColumn('id', 'serial', (col) => col.primaryKey())
     .addColumn('usuario_id', 'integer', (col) =>
       col.references('usuario.id').onDelete('cascade').notNull()
@@ -28,31 +28,31 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   // Add CHECK constraints using raw SQL for better control
   await sql`
-    ALTER TABLE "transactions"
-    ADD CONSTRAINT "transactions_tipo_check"
+    ALTER TABLE "transaction"
+    ADD CONSTRAINT "transaction_tipo_check"
     CHECK (tipo IN ('earn-guide', 'donation', 'pay-course'));
   `.execute(db);
 
   await sql`
-    ALTER TABLE "transactions"
-    ADD CONSTRAINT "transactions_crypto_check"
+    ALTER TABLE "transaction"
+    ADD CONSTRAINT "transaction_crypto_check"
     CHECK (crypto IN ('learningpoints', 'usdt'));
   `.execute(db);
 
   // Add indexes
   await db.schema
-    .createIndex('transactions_usuario_id_fecha_idx')
-    .on('transactions')
+    .createIndex('transaction_usuario_id_fecha_idx')
+    .on('transaction')
     .columns(['usuario_id', 'fecha'])
     .execute();
 
   await db.schema
-    .createIndex('transactions_tipo_categoria_idx')
-    .on('transactions')
+    .createIndex('transaction_tipo_categoria_idx')
+    .on('transaction')
     .columns(['tipo', 'categoria'])
     .execute();
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  await db.schema.dropTable('transactions').execute()
+  await db.schema.dropTable('transaction').execute()
 }

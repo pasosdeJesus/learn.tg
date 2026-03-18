@@ -187,7 +187,7 @@ export async function updateUserAndCoursePoints(
   const finalLearningscore = baseLearningscore + donationScore;
 
   if (guide) {
-    await db.insertInto('transactions').values({
+    await db.insertInto('transaction').values({
         usuario_id: user.id,
         fecha: new Date(),
         tipo: 'earn-guide',

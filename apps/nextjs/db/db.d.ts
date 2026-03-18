@@ -1254,7 +1254,7 @@ export interface SchemaMigrations {
   version: string;
 }
 
-export interface Transactions {
+export interface Transaction {
   cantidad: Generated<Numeric>;
   categoria: string | null;
   crypto: string;
@@ -1450,7 +1450,7 @@ export interface DB {
   nonce: Nonce;
   religion: Religion;
   schema_migrations: SchemaMigrations;
-  transactions: Transactions;
+  transaction: Transaction;
   ubitransactions: Ubitransactions;
   userevent: Userevent;
   usuario: Usuario;
