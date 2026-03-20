@@ -164,7 +164,7 @@ describe('updateUserAndCoursePoints', () => {
       .mockResolvedValueOnce({ total_points: 15 }) // total guide points
       .mockResolvedValueOnce(totalCoursePoints) // total course points
 
-    await updateUserAndCoursePoints(mockDb as any, user as any, null)
+    await updateUserAndCoursePoints(mockDb as any, user as any, null, null)
 
     expect(mockDb.insertInto).toHaveBeenCalledWith('course_usuario')
     expect(mockDb.values).toHaveBeenCalledWith(expect.any(Object))
@@ -194,7 +194,7 @@ describe('updateUserAndCoursePoints', () => {
       .mockResolvedValueOnce({ total_points: 0 }) // No guide points
       .mockResolvedValueOnce({ total_points: 0 }) // No course points
 
-    await updateUserAndCoursePoints(mockDb as any, user as any, null)
+    await updateUserAndCoursePoints(mockDb as any, user as any, null, null)
 
     expect(mockDb.insertInto).not.toHaveBeenCalled()
 
@@ -225,7 +225,7 @@ describe('updateUserAndCoursePoints', () => {
       .mockResolvedValueOnce({ total_points: 25 })
       .mockResolvedValueOnce({ total_points: 0 })
 
-    await updateUserAndCoursePoints(mockDb as any, user as any, null)
+    await updateUserAndCoursePoints(mockDb as any, user as any, null, null)
 
     expect(courseUsuarioUpdateMock.set).toHaveBeenCalledWith(
       expect.objectContaining({ guidespoints: 20, percentagecompleted: 100 }),
@@ -265,7 +265,7 @@ describe('updateUserAndCoursePoints', () => {
       .mockResolvedValueOnce({ total_points: 30 })
       .mockResolvedValueOnce({ total_points: 0 })
 
-    await updateUserAndCoursePoints(mockDb as any, user as any, null)
+    await updateUserAndCoursePoints(mockDb as any, user as any, null, null)
 
     expect(mockDb.insertInto).not.toHaveBeenCalled()
     expect(mockDb.updateTable).toHaveBeenCalledWith('course_usuario')

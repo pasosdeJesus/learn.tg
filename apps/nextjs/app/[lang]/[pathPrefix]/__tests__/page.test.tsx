@@ -364,7 +364,7 @@ describe('Course List Page Component', () => {
 
 // --- NEW TEST SUITE ---
 vi.mock('@/components/DonateModal', () => ({
-  default: ({ isOpen, courseId, lang }: { isOpen: boolean, courseId: number, lang: string }) => {
+  DonateModal: ({ isOpen, courseId, lang }: { isOpen: boolean, courseId: number, lang: string }) => {
     if (!isOpen) return null
     return (
       <div data-testid="donate-modal">
@@ -504,7 +504,7 @@ describe('Course Introduction Page', () => {
       expect(screen.queryByTestId('donate-modal')).not.toBeInTheDocument()
     })
 
-    const donateButton = await screen.findByRole('button', { name: /Donate for this course/i })
+    const donateButton = await screen.findByRole('button', { name: /Donate to this course/i })
     fireEvent.click(donateButton)
 
     await waitFor(() => {

@@ -224,7 +224,7 @@ describe('Profile Page', () => {
     })
     expect(screen.getByText('Learning Score')).toBeInTheDocument()
     expect(screen.getByText('75')).toBeInTheDocument() // profilescore
-    expect(screen.getByText('100')).toBeInTheDocument() // learningscore
+    expect(screen.getByText('100.00')).toBeInTheDocument() // learningscore
   })
 
   it('should handle profile update', async () => {

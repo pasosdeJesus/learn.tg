@@ -15,6 +15,8 @@ const mockCreateConfig = vi.hoisted(() => vi.fn())
 const mockHttp = vi.hoisted(() => vi.fn())
 const mockCelo = vi.hoisted(() => ({ id: 1 }))
 const mockCeloSepolia = vi.hoisted(() => ({ id: 2 }))
+const mockBase = vi.hoisted(() => ({ id: 3 }))
+const mockBaseSepolia = vi.hoisted(() => ({ id: 4 }))
 const mockInjectedWallet = vi.hoisted(() => vi.fn())
 const mockMetaMaskWallet = vi.hoisted(() => vi.fn())
 const mockOkxWallet = vi.hoisted(() => vi.fn())
@@ -59,6 +61,8 @@ vi.mock('@rainbow-me/rainbowkit/wallets', () => ({
 vi.mock('wagmi/chains', () => ({
   celo: mockCelo,
   celoSepolia: mockCeloSepolia,
+  base: mockBase,
+  baseSepolia: mockBaseSepolia,
 }))
 
 vi.mock('viem', () => ({

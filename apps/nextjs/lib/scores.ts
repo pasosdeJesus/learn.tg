@@ -194,7 +194,7 @@ export async function updateUserAndCoursePoints(
         crypto: 'learningpoints',
         cantidad: guide.points,
         impacto_balance: guide.points,
-        metadata: { courseId: courseId, guideId: guide.id }
+        metadata: { courseId: courseId, guideId: guide.actividadpf_id }
     }).execute();
   }
 

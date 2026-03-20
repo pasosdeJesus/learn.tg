@@ -61,12 +61,17 @@ const config: HardhatUserConfig = {
       accounts: [process.env.PRIVATE_KEY ?? '0x0'],
       url: 'https://sepolia.base.org',
     },
+    base: {
+      accounts: [process.env.PRIVATE_KEY ?? '0x0'],
+      url: 'https://mainnet.base.org',
+    },
   },
   etherscan: {
     apiKey: {
       celoSepolia: process.env.BLOCKSCOUT_API_KEY ?? '',
       celo: process.env.BLOCKSCOUT_API_KEY ?? '',
       'base-sepolia': process.env.BASESCAN_API_KEY ?? '',
+      base: process.env.BASESCAN_API_KEY ?? '',
     },
     customChains: [
       {
@@ -91,6 +96,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api-sepolia.basescan.org/api',
           browserURL: 'https://sepolia.basescan.org/',
+        },
+      },
+      {
+        chainId: 8453,
+        network: 'base',
+        urls: {
+          apiURL: 'https://api.basescan.org/api',
+          browserURL: 'https://basescan.org/',
         },
       },
     ],

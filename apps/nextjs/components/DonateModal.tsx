@@ -260,8 +260,7 @@ export function DonateModal({
       return
     }
     setSubmitting(true)
-    setStatus({ type: 'info', text: 'Submitting transaction(s)...
-' })
+    setStatus({ type: 'info', text: 'Submitting transaction(s)...' })
     try {
       if (needsApproval) {
         const approveHash = await walletClient.writeContract({

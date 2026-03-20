@@ -588,7 +588,7 @@ export default function ProfileForm({ params }: PageProps) {
                   value={profile.religion?.toString() || ''}
                   onValueChange={(value) => handleChange('religion', value)}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id="religion" className="w-full">
                     <SelectValue
                       placeholder={
                         lang === 'es'
@@ -628,7 +628,7 @@ export default function ProfileForm({ params }: PageProps) {
                   value={profile.country?.toString() || ''}
                   onValueChange={(value) => handleChange('country', value)}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id="country" className="w-full">
                     <SelectValue
                       placeholder={
                         lang === 'es'

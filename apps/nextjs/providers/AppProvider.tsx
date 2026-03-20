@@ -46,7 +46,7 @@ import {
 } from '@rainbow-me/rainbowkit-siwe-next-auth'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createConfig, http, useAccount, WagmiProvider } from 'wagmi'
-import { celo, celoSepolia } from 'wagmi/chains'
+import { base, baseSepolia, celo, celoSepolia } from 'wagmi/chains'
 import { Address } from 'viem'
 import { IS_PRODUCTION } from '@/lib/config';
 
@@ -70,10 +70,13 @@ const connectors = connectorsForWallets(
 
 const config = createConfig({
   connectors,
-  chains: [celo, celoSepolia],
+  // Multiple chains required for RainbowKit v2 to show the network selector
+  chains: [celo, celoSepolia, base, baseSepolia],
   transports: {
     [celo.id]: http(),
     [celoSepolia.id]: http(),
+    [base.id]: http(),
+    [baseSepolia.id]: http(),
   },
 })
 
