@@ -2,9 +2,13 @@
 
 ## Overview
 
-Learn.tg is a live, production gamified educational platform making learning engaging and rewarding. Students complete quality content through interactive guides and games, earning cryptocurrency rewards for correct answers. The platform is currently operational at https://learn.tg with multiple courses across different subjects.
+Learn.tg is a live, production gamified educational platform making learning engaging and rewarding. Students complete quality content through interactive guides and crossword puzzles, earning cryptocurrency rewards for correct answers. The platform is currently operational at https://learn.tg with multiple courses across different subjects.
 
 ---
+
+## Current Game Implementation
+
+The platform currently features **crossword puzzles** as the primary interactive assessment method. Each guide concludes with a crossword puzzle that tests the material learned. Future development plans include expanding to additional game types while maintaining the core educational value.
 
 ## System Architecture Diagram
 

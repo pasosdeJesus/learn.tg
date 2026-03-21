@@ -5,8 +5,8 @@
 
 [![Pipeline Status](https://gitlab.com/pasosdeJesus/learn.tg/badges/main/pipeline.svg)](https://gitlab.com/pasosdeJesus/learn.tg/-/pipelines?page=1&scope=all&ref=main) [![Code Climate](https://codeclimate.com/github/pasosdeJesus/learn.tg/badges/gpa.svg)](https://codeclimate.com/github/pasosdeJesus/learn.tg)
 
-**Learn.tg** is a gamified educational platform designed to make learning 
-engaging and rewarding, with a core mission rooted in Christian 
+**Learn.tg** is a gamified educational platform that makes learning
+engaging through crossword puzzles, with a core mission rooted in Christian 
 principles. Our live prototype at [learn.tg](https://learn.tg) allows 
 students to earn cryptocurrency rewards for mastering educational content.
 

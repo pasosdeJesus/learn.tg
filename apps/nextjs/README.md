@@ -9,7 +9,7 @@ The frontend is built with [Next.js](https://nextjs.org/) and uses [Sign-In with
 ## Features
 
 - **Decentralized Authentication**: Securely sign in using your Ethereum wallet (e.g., MetaMask, Rainbow).
-- **Interactive Learning**: Engage with course content through interactive guides and gamified experiences.
+- **Interactive Learning**: Engage with course content through interactive guides and crossword puzzle challenges.
 - **Crypto Rewards**: Earn USDT rewards for completing guides and demonstrating your knowledge.
 - **Responsive Design**: Access the platform on any device with a clean and intuitive user interface.
 - **Internationalization**: Available in multiple languages to serve a global audience.
@@ -138,7 +138,7 @@ The application uses Next.js's App Router. Here are the main user-facing pages:
 
 - **`app/[lang]/[pathPrefix]/[pathSuffix]/page.tsx`**: This page displays the content of a specific guide. It renders the guide's markdown content, including any interactive elements, and provides navigation to the previous and next guides.
 
-- **`app/[lang]/[pathPrefix]/[pathSuffix]/test/page.tsx`**: This is the testing page for a guide, which is where interactive games like the crossword puzzle are implemented. It fetches the game data, handles user input, and communicates with the backend to check the answers and distribute rewards.
+- **`app/[lang]/[pathPrefix]/[pathSuffix]/test/page.tsx`**: This is the testing page for a guide, featuring the crossword puzzle that assesses understanding of the material. It fetches the game data, handles user input, and communicates with the backend to check the answers and distribute rewards.
 
 - **`app/metrics/page.tsx`**: An internal dashboard for platform administrators to visualize key metrics, such as user engagement, course completion rates, and user growth. It dynamically loads several chart components to display the data.
 
