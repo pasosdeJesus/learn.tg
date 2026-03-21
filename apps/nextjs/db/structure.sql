@@ -4790,10 +4790,10 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: transactions; Type: TABLE; Schema: public; Owner: -
+-- Name: transaction; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.transactions (
+CREATE TABLE public.transaction (
     id integer NOT NULL,
     usuario_id integer NOT NULL,
     fecha timestamp without time zone NOT NULL,
@@ -4809,16 +4809,16 @@ CREATE TABLE public.transactions (
     fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
     fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
     sincronizado boolean DEFAULT true NOT NULL,
-    CONSTRAINT transactions_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying])::text[]))),
-    CONSTRAINT transactions_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['earn-guide'::character varying, 'donation'::character varying, 'pay-course'::character varying])::text[])))
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying])::text[]))),
+    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['earn-guide'::character varying, 'donation'::character varying, 'pay-course'::character varying])::text[])))
 );
 
 
 --
--- Name: transactions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: transaction_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.transactions_id_seq
+CREATE SEQUENCE public.transaction_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -4828,10 +4828,10 @@ CREATE SEQUENCE public.transactions_id_seq
 
 
 --
--- Name: transactions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: transaction_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.transactions_id_seq OWNED BY public.transactions.id;
+ALTER SEQUENCE public.transaction_id_seq OWNED BY public.transaction.id;
 
 
 --
@@ -5502,10 +5502,10 @@ ALTER TABLE ONLY public.religion ALTER COLUMN id SET DEFAULT nextval('public.rel
 
 
 --
--- Name: transactions id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: transaction id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions ALTER COLUMN id SET DEFAULT nextval('public.transactions_id_seq'::regclass);
+ALTER TABLE ONLY public.transaction ALTER COLUMN id SET DEFAULT nextval('public.transaction_id_seq'::regclass);
 
 
 --
@@ -6387,19 +6387,19 @@ ALTER TABLE ONLY public.religion
 
 
 --
--- Name: transactions transactions_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: transaction transaction_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_hash_key UNIQUE (hash);
+ALTER TABLE ONLY public.transaction
+    ADD CONSTRAINT transaction_hash_key UNIQUE (hash);
 
 
 --
--- Name: transactions transactions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: transaction transaction_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.transaction
+    ADD CONSTRAINT transaction_pkey PRIMARY KEY (id);
 
 
 --
@@ -6765,17 +6765,17 @@ CREATE INDEX msip_ubicacionpre_vereda_id_idx ON public.msip_ubicacionpre USING b
 
 
 --
--- Name: transactions_tipo_categoria_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: transaction_tipo_categoria_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX transactions_tipo_categoria_idx ON public.transactions USING btree (tipo, categoria);
+CREATE INDEX transaction_tipo_categoria_idx ON public.transaction USING btree (tipo, categoria);
 
 
 --
--- Name: transactions_usuario_id_fecha_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: transaction_usuario_id_fecha_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX transactions_usuario_id_fecha_idx ON public.transactions USING btree (usuario_id, fecha);
+CREATE INDEX transaction_usuario_id_fecha_idx ON public.transaction USING btree (usuario_id, fecha);
 
 
 --
@@ -8178,11 +8178,11 @@ ALTER TABLE ONLY public.msip_persona_trelacion
 
 
 --
--- Name: transactions transactions_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: transaction transaction_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.transaction
+    ADD CONSTRAINT transaction_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
 
 --
