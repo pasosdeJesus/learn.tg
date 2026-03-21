@@ -42,12 +42,12 @@ export const CourseDonation = ({
   const t = (en: string, es: string) => (lang === 'es' ? es : en)
 
   return (
-    <div className="p-6 rounded-2xl bg-white shadow-md text-gray-800">
-      <h2 className="text-2xl font-bold mb-4">
+    <div className="p-4 rounded-2xl bg-white shadow-md text-gray-800">
+      <h2 className="text-base font-bold mb-2">
         {t('Scholarship Fund', 'Beca de Aprendizaje')}
       </h2>
-      <p className="mb-1">{t('Current value', 'Valor actual')}</p>
-      <p className="text-4xl font-bold mb-6">${vaultBalance.toFixed(2)}</p>
+      <p className="mb-1 text-xs">{t('Current value', 'Valor actual')}</p>
+      <p className="text-lg font-bold mb-4">${vaultBalance.toFixed(2)}</p>
 
       <Button onClick={handleDonateClick} className="w-full">
         {t('Donate to this course', 'Donar a este curso')}
