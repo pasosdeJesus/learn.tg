@@ -7,10 +7,10 @@ const pwaConfig: PWAConfig = {
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
-  // Solo cachear diligent-accounting
+  // Solo cachear diligent-records
   runtimeCaching: [
     {
-      urlPattern: /^https?:\/\/[^\/]+\/[a-z]{2}\/diligent-accounting/,
+      urlPattern: /^https?:\/\/[^\/]+\/[a-z]{2}\/diligent-records/,
       handler: 'NetworkFirst' as const,
       options: {
         cacheName: 'diligent-cache',

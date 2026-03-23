@@ -196,7 +196,7 @@ export async function updateUserAndCoursePoints(
     await db.insertInto('transaction').values({
         usuario_id: user.id,
         fecha: new Date(),
-        tipo: 'earn-guide',
+        tipo: 'scholarship',
         crypto: 'learningpoints',
         cantidad: guide.points,
         impacto_balance: guide.points,
