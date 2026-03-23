@@ -1,17 +1,18 @@
 import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
-  // First, update any existing records with tipo = 'earn-guide' to 'scholarship'
+  //  update the constraint to replace 'earn-guide' with 'scholarship'
+  await sql`
+    ALTER TABLE "transaction"
+    DROP CONSTRAINT IF EXISTS "transaction_tipo_check"
+  `.execute(db)
+
+
+  // Update any existing records with tipo = 'earn-guide' to 'scholarship'
   await sql`
     UPDATE "transaction"
     SET tipo = 'scholarship'
     WHERE tipo = 'earn-guide'
-  `.execute(db)
-
-  // Then, update the constraint to replace 'earn-guide' with 'scholarship'
-  await sql`
-    ALTER TABLE "transaction"
-    DROP CONSTRAINT IF EXISTS "transaction_tipo_check"
   `.execute(db)
 
   await sql`
