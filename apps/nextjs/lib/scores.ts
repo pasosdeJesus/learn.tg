@@ -69,6 +69,7 @@ export async function addDonationToLearningScore(
  * @param db - The Kysely database instance.
  * @param user - The user object, as selected from the database.
  * @param courseId - The course being updated
+ * @param wallet - The wallet address associated with this transaction
  * @param guide - The guide being updated (optional)
  * @returns An object containing the final learningscore and profilescore.
  */
@@ -76,6 +77,7 @@ export async function updateUserAndCoursePoints(
   db: Kysely<DB>,
   user: Selectable<Usuario>,
   courseId: number | null,
+  wallet: string,
   guide: Selectable<GuideUsuario> | null
 ): Promise<number> {
   // Preserve the fractional part of the learning score, which comes from donations.
@@ -187,6 +189,10 @@ export async function updateUserAndCoursePoints(
   const finalLearningscore = baseLearningscore + donationScore;
 
   if (guide) {
+    if (!wallet || wallet.trim() === '') {
+      throw new Error(`Wallet address is required for transaction insertion for user ${user.id}`);
+    }
+
     await db.insertInto('transaction').values({
         usuario_id: user.id,
         fecha: new Date(),
@@ -194,6 +200,7 @@ export async function updateUserAndCoursePoints(
         crypto: 'learningpoints',
         cantidad: guide.points,
         impacto_balance: guide.points,
+        wallet: wallet,
         metadata: { courseId: courseId, guideId: guide.actividadpf_id }
     }).execute();
   }
