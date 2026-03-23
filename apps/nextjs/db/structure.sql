@@ -2542,7 +2542,9 @@ CREATE TABLE public.cor1440_gen_proyectofinanciero (
     "sinBilletera" boolean,
     "conBilletera" boolean,
     "creditosMd" character varying(5000),
-    "porPagar" double precision
+    "porPagar" double precision,
+    chain_id integer DEFAULT 42220,
+    contract_address character varying(255)
 );
 
 
@@ -4809,8 +4811,9 @@ CREATE TABLE public.transaction (
     fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
     fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
     sincronizado boolean DEFAULT true NOT NULL,
-    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying])::text[]))),
-    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['earn-guide'::character varying, 'donation'::character varying, 'pay-course'::character varying])::text[])))
+    wallet character varying(42) NOT NULL,
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying])::text[]))),
+    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['earn-guide'::character varying, 'donation'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying])::text[])))
 );
 
 
@@ -6776,6 +6779,13 @@ CREATE INDEX transaction_tipo_categoria_idx ON public.transaction USING btree (t
 --
 
 CREATE INDEX transaction_usuario_id_fecha_idx ON public.transaction USING btree (usuario_id, fecha);
+
+
+--
+-- Name: transaction_wallet_fecha_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX transaction_wallet_fecha_idx ON public.transaction USING btree (wallet, fecha);
 
 
 --

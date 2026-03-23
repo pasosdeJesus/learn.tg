@@ -424,8 +424,10 @@ export interface Cor1440GenProyectofinanciero {
   aporteotrosej: number | null;
   aportepropioej: number | null;
   centrocosto: string | null;
+  chain_id: Generated<number | null>;
   compromisos: string | null;
   conBilletera: boolean | null;
+  contract_address: string | null;
   created_at: Timestamp | null;
   creditoImagen: string | null;
   creditosMd: string | null;
@@ -1270,6 +1272,7 @@ export interface Transaction {
   subcategoria: string | null;
   tipo: string;
   usuario_id: number;
+  wallet: string;
 }
 
 export interface Ubitransactions {
