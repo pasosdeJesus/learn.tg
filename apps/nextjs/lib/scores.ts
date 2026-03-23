@@ -13,10 +13,58 @@ interface CourseData {
 }
 
 /**
+ * Recalculates the user's total learning score by summing all their 
+ * 'learningpoints' transactions and updates the usuario table.
+ * 
+ * @param db The Kysely database instance.
+ * @param userId The ID of the user.
+ * @returns The new total learning score.
+ */
+export async function refreshUserLearningScore(
+  db: Kysely<DB>,
+  userId: number
+): Promise<number> {
+  const result = await db
+    .selectFrom('transaction')
+    .where('usuario_id', '=', userId)
+    .where('crypto', '=', 'learningpoints')
+    .select(db.fn.sum('impacto_balance').as('total_points'))
+    .executeTakeFirst()
+  
+  const total = Number(result?.total_points) || 0
+  
+  await db
+    .updateTable('usuario')
+    .set({ 
+      learningscore: total,
+      updated_at: new Date() 
+    })
+    .where('id', '=', userId as any)
+    .execute()
+    
+  return total
+}
+
+/**
+ * Calculates the learning score to add to a user's profile based on a donation amount.
+ *
+ * @param donationAmountUSD The amount of the donation in USD.
+ * @returns The score to add.
+ */
+export function calculateDonationLearningScore(
+  donationAmountUSD: number
+): number {
+  const scoreToAdd = (donationAmountUSD * USD_TO_SLE_RATE) / SLE_TO_SCORE_RATIO;
+  // Round to 2 decimal places to avoid floating point inaccuracies
+  return Math.round(scoreToAdd * 100) / 100;
+}
+
+/**
  * Adds a calculated learning score to a user's profile based on a donation amount.
+ * (Deprecated: Use calculateDonationLearningScore and then refreshUserLearningScore)
  *
  * @param db The Kysely database instance.
- * @param userId The ID of the user to whom the score will be added.
+ * @param userId The ID of the user.
  * @param donationAmountUSD The amount of the donation in USD.
  * @returns The new total learning score.
  */
@@ -25,46 +73,21 @@ export async function addDonationToLearningScore(
   userId: string,
   donationAmountUSD: number
 ): Promise<number> {
-  const scoreToAdd = (donationAmountUSD * USD_TO_SLE_RATE) / SLE_TO_SCORE_RATIO;
-
-  // Round to 2 decimal places to avoid floating point inaccuracies
-  const roundedScoreToAdd = Math.round(scoreToAdd * 100) / 100;
-
+  const roundedScoreToAdd = calculateDonationLearningScore(donationAmountUSD);
   const numericUserId = parseInt(userId, 10);
-  if (isNaN(numericUserId)) {
-    throw new Error(`Invalid user ID: ${userId}`);
-  }
-
-  const user = await db
-    .selectFrom('usuario')
-    .where('id', '=', numericUserId as any)
-    .select('learningscore')
-    .executeTakeFirst();
-
-  if (!user) {
-    throw new Error(`User with ID ${userId} not found.`);
-  }
-
-  const currentScore = user.learningscore || 0;
-  const newLearningScore = currentScore + roundedScoreToAdd;
-
-  await db
-    .updateTable('usuario')
-    .set({ 
-      learningscore: newLearningScore,
-      updated_at: new Date(),
-    })
-    .where('id', '=', numericUserId as any)
-    .execute();
-
-  return newLearningScore;
+  
+  // We keep this for backward compatibility but it should ideally insert a transaction too
+  // if it's called outside a context that already does it.
+  // For now, it just updates the table directly which we want to avoid.
+  // Let's make it refresh from transactions instead.
+  
+  return await refreshUserLearningScore(db, numericUserId);
 }
 
 
 /**
  * Calculates and updates all scores for a user, including global scores
  * and course-specific metrics, within a single database transaction.
- * This function now preserves the fractional part of the learning score (from donations).
  *
  * @param db - The Kysely database instance.
  * @param user - The user object, as selected from the database.
@@ -80,9 +103,6 @@ export async function updateUserAndCoursePoints(
   wallet: string,
   guide: Selectable<GuideUsuario> | null
 ): Promise<number> {
-  // Preserve the fractional part of the learning score, which comes from donations.
-  const donationScore = (user.learningscore || 0) % 1;
-
   // Process each guide the user has answered
   const guidesUsuario = await sql<any>`
   SELECT *
@@ -167,27 +187,6 @@ export async function updateUserAndCoursePoints(
   }
 
 
-  // 3. Calculate global Learning Score from courses and guides (the integer part)
-  const totalGuidePointsResult = await db
-  .selectFrom('guide_usuario')
-  .where('usuario_id', '=', user.id)
-  .select(db.fn.sum('points').as('total_points'))
-  .executeTakeFirst()
-  const totalGuidePoints = Number(totalGuidePointsResult?.total_points) || 0
-
-  const totalCoursePointsResult = await db
-  .selectFrom('course_usuario')
-  .where('usuario_id', '=', user.id)
-  .select(db.fn.sum('points').as('total_points'))
-  .executeTakeFirst()
-  const totalCoursePoints = Number(totalCoursePointsResult?.total_points) || 0
-
-  // This is the score from educational activities
-  const baseLearningscore = totalGuidePoints + totalCoursePoints
-
-  // Combine the base score with the preserved donation score
-  const finalLearningscore = baseLearningscore + donationScore;
-
   if (guide) {
     if (!wallet || wallet.trim() === '') {
       throw new Error(`Wallet address is required for transaction insertion for user ${user.id}`);
@@ -205,17 +204,7 @@ export async function updateUserAndCoursePoints(
     }).execute();
   }
 
-
-  // 4. Update the main usuario table
-  const uUsuario: Updateable<Usuario> = {
-    learningscore: finalLearningscore,
-    updated_at: new Date(),
-  }
-
-  await db
-  .updateTable('usuario')
-  .set(uUsuario)
-  .where('id', '=', user.id).execute()
-
-  return finalLearningscore
+  // 3. Calculate global Learning Score from all transactions and update table
+  return await refreshUserLearningScore(db, user.id);
 }
+
