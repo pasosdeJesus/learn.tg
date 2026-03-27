@@ -51,9 +51,9 @@ export async function refreshUserLearningScore(
  * @param donationAmountUSD The amount of the donation in USD.
  * @returns The score to add.
  */
-export function calculateDonationLearningScore(
+export async function calculateDonationLearningScore(
   donationAmountUSD: number
-): number {
+): Promise<number> {
   const scoreToAdd = (donationAmountUSD * USD_TO_SLE_RATE) / SLE_TO_SCORE_RATIO;
   // Round to 2 decimal places to avoid floating point inaccuracies
   return Math.round(scoreToAdd * 100) / 100;
@@ -73,7 +73,7 @@ export async function addDonationToLearningScore(
   userId: string,
   donationAmountUSD: number
 ): Promise<number> {
-  const roundedScoreToAdd = calculateDonationLearningScore(donationAmountUSD);
+  const roundedScoreToAdd = await calculateDonationLearningScore(donationAmountUSD);
   const numericUserId = parseInt(userId, 10);
   
   // We keep this for backward compatibility but it should ideally insert a transaction too
