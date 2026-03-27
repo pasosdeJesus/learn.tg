@@ -2535,7 +2535,9 @@ CREATE TABLE public.cor1440_gen_proyectofinanciero (
     "sinBilletera" boolean,
     "conBilletera" boolean,
     "creditosMd" character varying(5000),
-    "porPagar" double precision
+    "porPagar" double precision,
+    chain_id integer DEFAULT 42220,
+    contract_address character varying(255)
 );
 
 
@@ -4783,6 +4785,52 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: transaction; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.transaction (
+    id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    fecha timestamp without time zone NOT NULL,
+    tipo character varying(20) NOT NULL,
+    categoria character varying(50),
+    subcategoria character varying(50),
+    descripcion text,
+    crypto character varying(50) NOT NULL,
+    cantidad numeric(18,2) DEFAULT 1.00 NOT NULL,
+    impacto_balance numeric(18,2) NOT NULL,
+    hash character varying(66),
+    metadata jsonb,
+    fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
+    fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
+    sincronizado boolean DEFAULT true NOT NULL,
+    wallet character varying(42) NOT NULL,
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying])::text[]))),
+    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying])::text[])))
+);
+
+
+--
+-- Name: transaction_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.transaction_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: transaction_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.transaction_id_seq OWNED BY public.transaction.id;
+
+
+--
 -- Name: ubitransactions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4900,10 +4948,21 @@ CREATE TABLE public.usuario (
     passport_nationality integer,
     profilescore integer,
     lastgooddollarverification timestamp without time zone,
-    learningscore integer,
+    learningscore double precision,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
+
+
+--
+-- Name: view_user_scores; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.view_user_scores AS
+ SELECT id AS user_id,
+    learningscore,
+    profilescore
+   FROM public.usuario;
 
 
 --
@@ -5436,6 +5495,13 @@ ALTER TABLE ONLY public.nonce ALTER COLUMN id SET DEFAULT nextval('public.nonce_
 --
 
 ALTER TABLE ONLY public.religion ALTER COLUMN id SET DEFAULT nextval('public.religion_id_seq'::regclass);
+
+
+--
+-- Name: transaction id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.transaction ALTER COLUMN id SET DEFAULT nextval('public.transaction_id_seq'::regclass);
 
 
 --
@@ -6317,6 +6383,22 @@ ALTER TABLE ONLY public.religion
 
 
 --
+-- Name: transaction transaction_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.transaction
+    ADD CONSTRAINT transaction_hash_key UNIQUE (hash);
+
+
+--
+-- Name: transaction transaction_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.transaction
+    ADD CONSTRAINT transaction_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: ubitransactions ubitransactions_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6676,6 +6758,27 @@ CREATE INDEX msip_ubicacionpre_tsitio_id_idx ON public.msip_ubicacionpre USING b
 --
 
 CREATE INDEX msip_ubicacionpre_vereda_id_idx ON public.msip_ubicacionpre USING btree (vereda_id);
+
+
+--
+-- Name: transaction_tipo_categoria_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX transaction_tipo_categoria_idx ON public.transaction USING btree (tipo, categoria);
+
+
+--
+-- Name: transaction_usuario_id_fecha_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX transaction_usuario_id_fecha_idx ON public.transaction USING btree (usuario_id, fecha);
+
+
+--
+-- Name: transaction_wallet_fecha_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX transaction_wallet_fecha_idx ON public.transaction USING btree (wallet, fecha);
 
 
 --
@@ -8075,6 +8178,14 @@ ALTER TABLE ONLY public.msip_persona_trelacion
 
 ALTER TABLE ONLY public.msip_persona_trelacion
     ADD CONSTRAINT persona_trelacion_persona2_fkey FOREIGN KEY (persona2) REFERENCES public.msip_persona(id);
+
+
+--
+-- Name: transaction transaction_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.transaction
+    ADD CONSTRAINT transaction_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
 
 --

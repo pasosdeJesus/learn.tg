@@ -21,7 +21,7 @@ export async function getGuidesByCourseId(
 ): Promise<any[] | null> {
   try {
     const guides = await sql<any>`
-      SELECT id, nombrecorto, "sufijoRuta", proyectofinanciero_id, answer_fib
+      SELECT id, nombrecorto, "sufijoRuta", proyectofinanciero_id
       FROM cor1440_gen_actividadpf
       WHERE proyectofinanciero_id = ${courseId}
       AND "sufijoRuta" IS NOT NULL
