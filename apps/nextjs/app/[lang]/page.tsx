@@ -231,6 +231,7 @@ export default function Page({ params }: PageProps) {
                     courseId={course.id}
                     isLoggedIn={!!session?.address}
                     onDonationSuccess={(courseId, data) => refreshCourseVault(courseId, data)}
+                    showDonateButton={false}
                   />
                 )}
               </article>

@@ -11,6 +11,7 @@ interface CourseDonationProps {
   courseId: number
   isLoggedIn: boolean
   onDonationSuccess: (courseId: number, data: { increment?: number }) => void
+  showDonateButton?: boolean
 }
 
 export const CourseDonation = ({
@@ -19,6 +20,7 @@ export const CourseDonation = ({
   courseId,
   isLoggedIn,
   onDonationSuccess,
+  showDonateButton = true,
 }: CourseDonationProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -43,15 +45,17 @@ export const CourseDonation = ({
 
   return (
     <div className="p-4 rounded-2xl bg-white shadow-md text-gray-800">
-      <h2 className="text-base font-bold mb-2">
+      <h2 className="text-sm font-bold mb-2">
         {t('Scholarship Fund', 'Beca de Aprendizaje')}
       </h2>
       <p className="mb-1 text-xs">{t('Current value', 'Valor actual')}</p>
       <p className="text-lg font-bold mb-4">${vaultBalance.toFixed(2)}</p>
 
-      <Button onClick={handleDonateClick} className="w-full">
-        {t('Donate to this course', 'Donar a este curso')}
-      </Button>
+      {showDonateButton && (
+        <Button onClick={handleDonateClick} className="w-full">
+          {t('Donate to this course', 'Donar a este curso')}
+        </Button>
+      )}
 
       {isModalOpen && (
         <DonateModal
