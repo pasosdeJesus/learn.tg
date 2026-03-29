@@ -34,18 +34,16 @@ export function CourseStatistics({
   return (
     <div className="flex justify-between items-center p-4 mt-auto">
       <div>
-        {
-          (scholarshipPerGuide !== null && profileScore !== null &&
-           +scholarshipPerGuide > 0 && address &&
-            +profileScore > 0) ? (
+        {scholarshipPerGuide !== null && +scholarshipPerGuide > 0 && (
+          (profileScore !== null && address && +profileScore > 0) ? (
             <div className="p-2">
               <span>
                 {lang === 'es'
                   ? 'Beca de '
                   : 'Scholarship of '}
                 {(
-                  (scholarshipPerGuide * 100) /
-                  profileScore
+                  (scholarshipPerGuide * profileScore) /
+                  100
                 ).toFixed(2)}{' '}
                 USDT
                 {lang === 'es' ? ' por guía.' : ' per guide.'}
@@ -55,12 +53,12 @@ export function CourseStatistics({
             <div className="p-2">
               <span>
                 {lang === 'es'
-                  ? 'Beca de hasta 1 USDT después de que completes tu perfil.'
-                  : 'Scholarship of up to 1 USDT after you complete your profile.'}
+                  ? `Beca de hasta ${scholarshipPerGuide} USDT después de que completes tu perfil.`
+                  : `Scholarship of up to ${scholarshipPerGuide} USDT after you complete your profile.`}
               </span>
             </div>
           )
-        }
+        )}
         {scholarshipPerGuide !== null && percentagePaid !== null &&
           +scholarshipPerGuide > 0 && address &&
           +percentagePaid < 100 && !canSubmit && (

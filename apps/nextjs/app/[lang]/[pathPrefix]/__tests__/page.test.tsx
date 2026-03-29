@@ -487,13 +487,13 @@ describe('Course Introduction Page', () => {
     useGuideDataMock.mockReturnValue({
       ...mockGuideData,
       profileScore: null,
-      scholarshipPerGuide: null,
+      scholarshipPerGuide: 0.5,
       canSubmit: false
     })
     renderWithProviders(<Page params={mockParams} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/Scholarship of up to 1 USDT after you complete your profile/i)).toBeInTheDocument()
+      expect(screen.getByText(/Scholarship of up to 0.5 USDT after you complete your profile/i)).toBeInTheDocument()
     })
   })
 
