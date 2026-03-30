@@ -45,9 +45,9 @@ export const CourseDonation = ({
 
   return (
     <div className="p-4 rounded-2xl bg-white shadow-md text-gray-800">
-      <h2 className="text-xs font-bold mb-2">
+      <h4 className="text-xs font-bold mb-2">
         {t('Scholarship Fund', 'Beca de Aprendizaje')}
-      </h2>
+      </h4>
       <p className="mb-1 text-xs">{t('Current value', 'Valor actual')}</p>
       <p className="text-lg font-bold mb-4">${vaultBalance.toFixed(2)}</p>
 
