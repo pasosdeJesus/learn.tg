@@ -1275,6 +1275,7 @@ export interface Transaction {
   wallet: string;
 }
 
+
 export interface Ubitransactions {
   amount: Numeric;
   date: Timestamp;
