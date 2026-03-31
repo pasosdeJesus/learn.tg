@@ -1275,14 +1275,6 @@ export interface Transaction {
   wallet: string;
 }
 
-export interface Ubitransactions {
-  amount: Numeric;
-  date: Timestamp;
-  hash: string;
-  id: Generated<number>;
-  wallet: string;
-}
-
 export interface Userevent {
   created_at: Timestamp;
   event_data: Json | null;
@@ -1454,7 +1446,6 @@ export interface DB {
   religion: Religion;
   schema_migrations: SchemaMigrations;
   transaction: Transaction;
-  ubitransactions: Ubitransactions;
   userevent: Userevent;
   usuario: Usuario;
   view_user_scores: ViewUserScores;
