@@ -2,7 +2,7 @@ import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
   // Final verification: ensure all ubitransactions rows have been migrated
-  const orphanedRows = await sql`
+  const orphanedRows = await sql<{ count: string }>`
     SELECT COUNT(*) as count
     FROM ubitransactions ut
     WHERE NOT EXISTS (

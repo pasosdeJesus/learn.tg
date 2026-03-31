@@ -9,7 +9,8 @@ import path from 'path'
 import { sql } from 'kysely'
 import { refreshUserLearningScore } from '../lib/scores'
 import axios from 'axios'
-import type { Insertable, GuideUsuario, Transaction } from '../db/db.d'
+import type { Insertable } from 'kysely'
+import type { GuideUsuario, Transaction } from '../db/db.d'
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') })
 
@@ -101,7 +102,7 @@ async function main() {
       const updated = await db.updateTable('transaction')
         .set({ impacto_balance: sql`cantidad` })
         .where('crypto', '=', 'learningpoints')
-        .where(eb => eb.or([eb('impacto_balance', 'is', null), eb('impacto_balance', '=', 0)]))
+        .where(eb => eb.or([eb('impacto_balance', 'is', null), eb('impacto_balance', '=', '0')]))
         .executeTakeFirst()
       if (Number(updated.numUpdatedRows) > 0) console.log(`   [FIX] Corregidos ${updated.numUpdatedRows} registros de LP con impacto_balance nulo/cero.`);
     }
