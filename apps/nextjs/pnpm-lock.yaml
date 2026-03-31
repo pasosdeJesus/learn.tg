@@ -202,8 +202,8 @@ importers:
         specifier: latest
         version: 3.3.5
       '@pasosdejesus/m':
-        specifier: https://gitlab.com/pasosdejesus/m
-        version: git+https://git@gitlab.com:pasosdejesus/m.git#521008ba43d16b65d8a4e61a6c61c21763760eb1(@types/node@24.12.0)
+        specifier: gitlab:pasosdejesus/m
+        version: git+https://gitlab.com/pasosdejesus/m.git#521008ba43d16b65d8a4e61a6c61c21763760eb1(@types/node@24.12.0)
       '@tailwindcss/postcss':
         specifier: ^4.2.2
         version: 4.2.2
@@ -1853,8 +1853,8 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/m@git+https://git@gitlab.com:pasosdejesus/m.git#521008ba43d16b65d8a4e61a6c61c21763760eb1':
-    resolution: {commit: 521008ba43d16b65d8a4e61a6c61c21763760eb1, repo: git@gitlab.com:pasosdejesus/m.git, type: git}
+  '@pasosdejesus/m@git+https://gitlab.com/pasosdejesus/m.git#521008ba43d16b65d8a4e61a6c61c21763760eb1':
+    resolution: {commit: 521008ba43d16b65d8a4e61a6c61c21763760eb1, repo: https://gitlab.com/pasosdejesus/m.git, type: git}
     version: 0.3.1
     hasBin: true
 
@@ -10521,7 +10521,7 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/m@git+https://git@gitlab.com:pasosdejesus/m.git#521008ba43d16b65d8a4e61a6c61c21763760eb1(@types/node@24.12.0)':
+  '@pasosdejesus/m@git+https://gitlab.com/pasosdejesus/m.git#521008ba43d16b65d8a4e61a6c61c21763760eb1(@types/node@24.12.0)':
     dependencies:
       commander: 12.1.0
       dotenv: 17.3.1
@@ -17683,7 +17683,7 @@ snapshots:
       '@types/uuid': 10.0.0
       '@types/ws': 8.18.1
       buffer: 6.0.3
-      eventemitter3: 5.0.1
+      eventemitter3: 5.0.4
       uuid: 11.1.0
       ws: 8.20.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
     optionalDependencies:
