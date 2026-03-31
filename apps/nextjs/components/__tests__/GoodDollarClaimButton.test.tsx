@@ -65,6 +65,8 @@ describe('GoodDollarClaimButton', () => {
     // Reset mocks and state before each test
     vi.clearAllMocks()
     mockConfig.IS_PRODUCTION = true // Default to production environment
+    // Set environment variable for CELO network
+    vi.stubEnv('NEXT_PUBLIC_NETWORK', 'celo')
 
     // Default mocks for a successful use case
     mockUseSession.mockReturnValue({
@@ -93,6 +95,7 @@ describe('GoodDollarClaimButton', () => {
   afterEach(() => {
     // Ensure mock state is reset after each test
     mockConfig.IS_PRODUCTION = true
+    vi.unstubAllEnvs()
   })
 
   it('renders the button with Spanish text when lang="es"', () => {
