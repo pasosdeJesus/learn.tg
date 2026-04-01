@@ -6,7 +6,7 @@ import type { LeaderboardQueryParams } from '@/types/leaderboard'
  * Construye la consulta base del leaderboard con filtros y ordenamiento
  * Devuelve la consulta Kysely para que el llamador pueda ejecutarla
  */
-export function buildLeaderboardQuery(
+export async function buildLeaderboardQuery(
   db: Kysely<DB>,
   params: LeaderboardQueryParams
 ) {
@@ -53,7 +53,7 @@ export function buildLeaderboardQuery(
 /**
  * Obtiene la lista de países únicos para el filtro (solo países con código alfa2)
  */
-export function getCountriesQuery(db: Kysely<DB>) {
+export async function getCountriesQuery(db: Kysely<DB>) {
   return db
     .selectFrom('msip_pais as p')
     .innerJoin('usuario as u', 'u.pais_id', 'p.id')
@@ -71,7 +71,7 @@ export async function getLeaderboardData(
   db: Kysely<DB>,
   params: LeaderboardQueryParams
 ) {
-  const query = buildLeaderboardQuery(db, params)
+  const query = await buildLeaderboardQuery(db, params)
   const rows = await query.execute()
 
   const total = rows.length > 0 ? Number(rows[0].total_count) : 0
@@ -79,7 +79,7 @@ export async function getLeaderboardData(
   const page = params.page ?? 1
   const totalPages = Math.ceil(total / limit)
 
-  const countriesQuery = getCountriesQuery(db)
+  const countriesQuery = await getCountriesQuery(db)
   const countries = await countriesQuery.execute()
 
   return {
