@@ -26,8 +26,8 @@ export function CountryFilter({
   disabled = false,
 }: CountryFilterProps) {
   const handleValueChange = (value: string) => {
-    // value will be '' for "all countries" or alfa2 code
-    onCountryChange(value === '' ? null : value)
+    // value will be 'all' for "all countries" or alfa2 code
+    onCountryChange(value === 'all' ? null : value)
   }
 
   // Sort countries by name
@@ -37,7 +37,7 @@ export function CountryFilter({
     <div className={`flex items-center space-x-2 ${className}`}>
       <span className="text-sm text-muted-foreground">Country:</span>
       <Select
-        value={selectedCountry || ''}
+        value={selectedCountry || 'all'}
         onValueChange={handleValueChange}
         disabled={disabled}
       >
@@ -54,7 +54,7 @@ export function CountryFilter({
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">
+          <SelectItem value="all">
             <div className="flex items-center gap-2">
               <span className="w-4">🌍</span>
               <span>All countries</span>
