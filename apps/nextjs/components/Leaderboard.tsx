@@ -116,7 +116,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
 
       <div className="text-sm text-muted-foreground">
         <p>
-          <strong>Learning Points</strong> are earned by completing courses and guides.
+          <strong>Learning Points</strong> are earned by completing crosswords and giving donations.
         </p>
         <p>
           <strong>Scholarship (USDT)</strong> is received as educational grants.
