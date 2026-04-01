@@ -1,5 +1,3 @@
-'use server'
-
 import { Kysely, sql } from 'kysely'
 import type { DB } from '@/db/db.d'
 import type { LeaderboardQueryParams } from '@/types/leaderboard'
