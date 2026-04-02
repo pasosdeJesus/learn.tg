@@ -14,11 +14,45 @@ import type { GuideUsuario, Transaction } from '../db/db.d'
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') })
 
-const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+// Validación de variables de entorno críticas
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL
 const VAULTS_ADDRESS = process.env.NEXT_PUBLIC_DEPLOYED_AT as `0x${string}`
 const CELOUBI_ADDRESS = process.env.NEXT_PUBLIC_CELOUBI_ADDRESS as `0x${string}`
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || ''
+const NETWORK = process.env.NEXT_PUBLIC_NETWORK
+
+if (!RPC_URL) {
+  console.error('❌ ERROR: NEXT_PUBLIC_RPC_URL no está definido en las variables de entorno')
+  process.exit(1)
+}
+if (!VAULTS_ADDRESS) {
+  console.error('❌ ERROR: NEXT_PUBLIC_DEPLOYED_AT no está definido en las variables de entorno')
+  process.exit(1)
+}
+if (!CELOUBI_ADDRESS) {
+  console.error('❌ ERROR: NEXT_PUBLIC_CELOUBI_ADDRESS no está definido en las variables de entorno')
+  process.exit(1)
+}
+if (!ETHERSCAN_API_KEY) {
+  console.warn('⚠️  ADVERTENCIA: ETHERSCAN_API_KEY no está definida. El escaneo via Etherscan no funcionará.')
+}
+if (!NETWORK) {
+  console.error('❌ ERROR: NEXT_PUBLIC_NETWORK no está definido en las variables de entorno. Debe ser "celo" para mainnet o "celoSepolia" para testnet.')
+  process.exit(1)
+}
+
+// Configuración basada en la red
+const NETWORK_CONFIG = {
+  chainId: NETWORK === 'celo' ? '42220' : NETWORK === 'celoSepolia' ? '11142220' : null,
+  viemChain: NETWORK === 'celo' ? celo : NETWORK === 'celoSepolia' ? celoSepolia : null,
+  name: NETWORK === 'celo' ? 'Celo Mainnet' : NETWORK === 'celoSepolia' ? 'Celo Sepolia Testnet' : 'Desconocida'
+}
+
+if (NETWORK_CONFIG.chainId === null || NETWORK_CONFIG.viemChain === null) {
+  console.error(`❌ ERROR: NEXT_PUBLIC_NETWORK tiene un valor inválido: "${NETWORK}". Debe ser "celo" o "celoSepolia".`)
+  process.exit(1)
+}
+
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -49,7 +83,7 @@ async function getLogsInBatches(client: any, options: any) {
 // Método 2: Etherscan V2 API (Rápido y Exhaustivo)
 async function getLogsFromEtherscan(address: string, fromBlock: bigint) {
   const baseUrl = 'https://api.etherscan.io/v2/api'
-  const chainId = IS_PRODUCTION ? '42220' : '11142220'
+  const chainId = NETWORK_CONFIG.chainId
   console.log(`   Consultando Etherscan V2 para ${address} (Chain ${chainId})...`)
   try {
     const response = await axios.get(baseUrl, {
@@ -79,17 +113,52 @@ async function getLogsFromEtherscan(address: string, fromBlock: bigint) {
 
 async function main() {
   const args = process.argv.slice(2)
+
+  // Mostrar ayuda si se solicita
+  if (args.includes('--help')) {
+    console.log(`
+Uso: node scripts/blockchain-sync.ts [OPCIONES]
+
+Opciones:
+  --fix           Ejecutar correcciones automáticas (inserciones en BD)
+  --scan          Escanear transacciones faltantes via RPC (lento)
+  --deep-scan     Auditoría estructural profunda (consulta contrato)
+  --celoscan      Usar Etherscan V2 API en lugar de RPC (rápido)
+  --from-block N  Bloque inicial para escaneo (default: 0)
+  --help          Mostrar esta ayuda
+
+Ejemplos:
+  # Escaneo seguro (solo detectar problemas)
+  node scripts/blockchain-sync.ts --celoscan --from-block 0
+
+  # Escaneo y corrección
+  node scripts/blockchain-sync.ts --celoscan --fix --from-block 0
+
+  # Auditoría completa con correcciones
+  node scripts/blockchain-sync.ts --celoscan --fix --deep-scan --from-block 0
+`)
+    process.exit(0)
+  }
+
   const fix = args.includes('--fix')
   const scanMissing = args.includes('--scan')
   const deepScan = args.includes('--deep-scan')
   const useCeloscan = args.includes('--celoscan')
-  
+
+  // Validación específica para --celoscan
+  if (useCeloscan && !ETHERSCAN_API_KEY) {
+    console.error('❌ ERROR: Se requiere ETHERSCAN_API_KEY cuando se usa --celoscan')
+    process.exit(1)
+  }
+
   const fromBlockArgIndex = args.indexOf('--from-block')
   let manualFromBlock = fromBlockArgIndex !== -1 ? BigInt(args[fromBlockArgIndex + 1]) : 0n
 
-  console.log('>>> INICIANDO AUDITORÍA COMPLETA...'); // Mensaje estático
+  console.log('>>> INICIANDO AUDITORÍA COMPLETA...')
+  console.log(`🌐 Red: ${NETWORK_CONFIG.name} (Chain ID: ${NETWORK_CONFIG.chainId})`)
+  console.log(`📝 Flags: ${fix ? 'FIX ' : ''}${scanMissing ? 'SCAN ' : ''}${deepScan ? 'DEEP-SCAN ' : ''}${useCeloscan ? 'CELOSCAN ' : ''}${manualFromBlock > 0n ? `FROM-BLOCK ${manualFromBlock}` : ''}`.trim())
 
-  const client = createPublicClient({ chain: IS_PRODUCTION ? celo : celoSepolia, transport: http(RPC_URL) })
+  const client = createPublicClient({ chain: NETWORK_CONFIG.viemChain, transport: http(RPC_URL) })
   const db = newKyselyPostgresql()
 
   try {
@@ -181,7 +250,7 @@ async function main() {
                 }
               } catch (e) {}
             }));
-            if (!IS_PRODUCTION) await sleep(150)
+            if (NETWORK === 'celoSepolia') await sleep(150)
           }
         }
       }
