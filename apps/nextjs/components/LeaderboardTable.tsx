@@ -31,6 +31,7 @@ interface LeaderboardTableProps {
   onSortChange: (sortBy: SortField, sortOrder: SortOrder) => void
   onPageChange?: (page: number) => void
   isLoading?: boolean
+  lang?: string
 }
 
 export function LeaderboardTable({
@@ -41,7 +42,11 @@ export function LeaderboardTable({
   onSortChange,
   onPageChange,
   isLoading = false,
+  lang = 'en',
 }: LeaderboardTableProps) {
+  // Translation helper
+  const t = (en: string, es: string) => (lang === 'es' ? es : en)
+
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
       // Toggle order if same field
@@ -79,27 +84,27 @@ export function LeaderboardTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80px]">Rank</TableHead>
-              <TableHead className="min-w-[150px]">User</TableHead>
-              <TableHead className="min-w-[120px]">Country</TableHead>
+              <TableHead className="w-[80px]">{t('Rank', 'Posición')}</TableHead>
+              <TableHead className="min-w-[150px]">{t('User', 'Usuario')}</TableHead>
+              <TableHead className="min-w-[120px]">{t('Country', 'País')}</TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="learningpoints">
-                  Learning Points
+                  {t('Learning Points', 'Puntos de Aprendizaje')}
                 </SortableHeader>
               </TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="scholarship_usdt">
-                  Scholarship (USDT)
+                  {t('Scholarship (USDT)', 'Beca (USDT)')}
                 </SortableHeader>
               </TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="ubi_celo">
-                  UBI (CELO)
+                  {t('UBI (CELO)', 'UBI (CELO)')}
                 </SortableHeader>
               </TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="donations_usdt">
-                  Donations (USDT)
+                  {t('Donations (USDT)', 'Donaciones (USDT)')}
                 </SortableHeader>
               </TableHead>
             </TableRow>
@@ -121,7 +126,7 @@ export function LeaderboardTable({
             ) : data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  No data available
+                  {t('No data available', 'No hay datos disponibles')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -133,7 +138,7 @@ export function LeaderboardTable({
                     <div className="flex items-center gap-2">
                       <CountryFlag alfa2={row.pais_alfa2} />
                       <span className="text-sm text-muted-foreground">
-                        {row.pais_nombre || row.pais_alfa2 || 'Unknown'}
+                        {row.pais_nombre || row.pais_alfa2 || t('Unknown', 'Desconocido')}
                       </span>
                     </div>
                   </TableCell>
@@ -159,7 +164,7 @@ export function LeaderboardTable({
       {pagination && onPageChange && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing {data.length} of {pagination.total} users
+            {t(`Showing ${data.length} of ${pagination.total} users`, `Mostrando ${data.length} de ${pagination.total} usuarios`)}
           </div>
           <div className="flex items-center space-x-2">
             <Button
@@ -168,10 +173,10 @@ export function LeaderboardTable({
               onClick={() => onPageChange(pagination.page - 1)}
               disabled={pagination.page <= 1 || isLoading}
             >
-              Previous
+              {t('Previous', 'Anterior')}
             </Button>
             <span className="text-sm">
-              Page {pagination.page} of {pagination.totalPages}
+              {t(`Page ${pagination.page} of ${pagination.totalPages}`, `Página ${pagination.page} de ${pagination.totalPages}`)}
             </span>
             <Button
               variant="outline"
@@ -179,7 +184,7 @@ export function LeaderboardTable({
               onClick={() => onPageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages || isLoading}
             >
-              Next
+              {t('Next', 'Siguiente')}
             </Button>
           </div>
         </div>

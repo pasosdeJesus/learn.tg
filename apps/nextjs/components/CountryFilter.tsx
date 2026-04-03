@@ -15,6 +15,7 @@ interface CountryFilterProps {
   placeholder?: string
   className?: string
   disabled?: boolean
+  lang?: string
 }
 
 export function CountryFilter({
@@ -24,7 +25,16 @@ export function CountryFilter({
   placeholder = 'All countries',
   className = '',
   disabled = false,
+  lang = 'en',
 }: CountryFilterProps) {
+  // Translation helper
+  const t = (en: string, es: string) => (lang === 'es' ? es : en)
+
+  // Translate default placeholder if not customized
+  const translatedPlaceholder = placeholder === 'All countries'
+    ? t('All countries', 'Todos los países')
+    : placeholder
+
   const handleValueChange = (value: string) => {
     // value will be 'all' for "all countries" or alfa2 code
     onCountryChange(value === 'all' ? null : value)
@@ -35,21 +45,21 @@ export function CountryFilter({
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      <span className="text-sm text-muted-foreground">Country:</span>
+      <span className="text-sm text-muted-foreground">{t('Country:', 'País:')}</span>
       <Select
         value={selectedCountry || 'all'}
         onValueChange={handleValueChange}
         disabled={disabled}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={placeholder}>
+          <SelectValue placeholder={translatedPlaceholder}>
             {selectedCountry ? (
               <div className="flex items-center gap-2">
                 <CountryFlag alfa2={selectedCountry} />
                 <span>{countries.find(c => c.alfa2 === selectedCountry)?.nombre || selectedCountry}</span>
               </div>
             ) : (
-              placeholder
+              translatedPlaceholder
             )}
           </SelectValue>
         </SelectTrigger>
@@ -57,7 +67,7 @@ export function CountryFilter({
           <SelectItem value="all">
             <div className="flex items-center gap-2">
               <span className="w-4">🌍</span>
-              <span>All countries</span>
+              <span>{t('All countries', 'Todos los países')}</span>
             </div>
           </SelectItem>
           {sortedCountries.map(country => (

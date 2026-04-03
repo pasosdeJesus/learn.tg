@@ -24,6 +24,9 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
   const [page, setPage] = useState(1)
   const limit = 50 // Fixed limit as per API default
 
+  // Translation helper
+  const t = (en: string, es: string) => (lang === 'es' ? es : en)
+
   // Fetch leaderboard data
   const fetchLeaderboard = useCallback(async () => {
     setIsLoading(true)
@@ -91,9 +94,11 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Leaderboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t('Leaderboard', 'Tabla de Clasificación')}
+          </h1>
           <p className="text-muted-foreground">
-            Track user contributions and achievements
+            {t('Track user contributions and achievements', 'Sigue las contribuciones y logros de los usuarios')}
           </p>
         </div>
         <CountryFilter
@@ -101,6 +106,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
           selectedCountry={country}
           onCountryChange={handleCountryChange}
           disabled={isLoading}
+          lang={lang}
         />
       </div>
 
@@ -112,20 +118,25 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
         onSortChange={handleSortChange}
         onPageChange={handlePageChange}
         isLoading={isLoading}
+        lang={lang}
       />
 
       <div className="text-sm text-muted-foreground">
         <p>
-          <strong>Learning Points</strong> are earned by completing crosswords and giving donations.
+          <strong>{t('Learning Points', 'Puntos de Aprendizaje')}</strong>{' '}
+          {t('are earned by completing crosswords and giving donations.', 'se ganan completando crucigramas y haciendo donaciones.')}
         </p>
         <p>
-          <strong>Scholarship (USDT)</strong> is received as educational grants.
+          <strong>{t('Scholarship (USDT)', 'Beca (USDT)')}</strong>{' '}
+          {t('is received as educational grants.', 'se recibe como becas educativas.')}
         </p>
         <p>
-          <strong>UBI (CELO)</strong> is received through universal basic income claims.
+          <strong>{t('UBI (CELO)', 'UBI (CELO)')}</strong>{' '}
+          {t('is received through universal basic income claims.', 'se recibe a través de reclamos de ingreso básico universal.')}
         </p>
         <p>
-          <strong>Donations (USDT)</strong> are contributions made to support the platform.
+          <strong>{t('Donations (USDT)', 'Donaciones (USDT)')}</strong>{' '}
+          {t('are contributions made to support the platform.', 'son contribuciones hechas para apoyar la plataforma.')}
         </p>
       </div>
     </div>

@@ -41,16 +41,20 @@ if (!NETWORK) {
   process.exit(1)
 }
 
-// Configuración basada en la red
-const NETWORK_CONFIG = {
-  chainId: NETWORK === 'celo' ? '42220' : NETWORK === 'celoSepolia' ? '11142220' : null,
-  viemChain: NETWORK === 'celo' ? celo : NETWORK === 'celoSepolia' ? celoSepolia : null,
-  name: NETWORK === 'celo' ? 'Celo Mainnet' : NETWORK === 'celoSepolia' ? 'Celo Sepolia Testnet' : 'Desconocida'
-}
-
-if (NETWORK_CONFIG.chainId === null || NETWORK_CONFIG.viemChain === null) {
+// Validar que NETWORK sea uno de los valores esperados
+if (NETWORK !== 'celo' && NETWORK !== 'celoSepolia') {
   console.error(`❌ ERROR: NEXT_PUBLIC_NETWORK tiene un valor inválido: "${NETWORK}". Debe ser "celo" o "celoSepolia".`)
   process.exit(1)
+}
+
+// Ahora TypeScript sabe que NETWORK es 'celo' | 'celoSepolia'
+const network = NETWORK as 'celo' | 'celoSepolia'
+
+// Configuración basada en la red
+const NETWORK_CONFIG = {
+  chainId: network === 'celo' ? '42220' : '11142220',
+  viemChain: network === 'celo' ? celo : celoSepolia,
+  name: network === 'celo' ? 'Celo Mainnet' : 'Celo Sepolia Testnet'
 }
 
 
