@@ -1290,6 +1290,7 @@ export interface Usuario {
   descripcion: string | null;
   email: Generated<string>;
   encrypted_password: Generated<string>;
+  excluir_leaderboard: Generated<boolean | null>;
   failed_attempts: Generated<number | null>;
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;

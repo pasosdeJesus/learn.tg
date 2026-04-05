@@ -30,6 +30,7 @@ export async function buildLeaderboardQuery(
       sql<number>`COUNT(*) OVER()`.as('total_count'),
     ])
     .groupBy(['u.id', 'u.nusuario', 'p.alfa2', 'p.nombre'])
+    .where(sql`u.excluir_leaderboard IS NOT TRUE`)
 
   // Aplicar filtro por país si existe
   if (country) {
@@ -58,6 +59,7 @@ export async function getCountriesQuery(db: Kysely<DB>) {
     .selectFrom('msip_pais as p')
     .innerJoin('usuario as u', 'u.pais_id', 'p.id')
     .where('p.alfa2', 'is not', null)
+    .where('u.excluir_leaderboard', 'is not', true)
     .select(['p.alfa2', 'p.nombre'])
     .distinct()
     .orderBy('p.nombre', 'asc')
