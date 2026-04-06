@@ -30,7 +30,7 @@ export async function buildLeaderboardQuery(
       sql<number>`COUNT(*) OVER()`.as('total_count'),
     ])
     .groupBy(['u.id', 'u.nusuario', 'p.alfa2', 'p.nombre'])
-    .where(sql`u.excluir_leaderboard IS NOT TRUE`)
+    .where('u.excluir_leaderboard', 'is not', true)
 
   // Aplicar filtro por país si existe
   if (country) {
