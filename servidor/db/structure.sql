@@ -4805,7 +4805,7 @@ CREATE TABLE public.transaction (
     fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
     sincronizado boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
-    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying])::text[]))),
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying, 'ccop'::character varying])::text[]))),
     CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying])::text[])))
 );
 
@@ -4828,39 +4828,6 @@ CREATE SEQUENCE public.transaction_id_seq
 --
 
 ALTER SEQUENCE public.transaction_id_seq OWNED BY public.transaction.id;
-
-
---
--- Name: ubitransactions; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.ubitransactions (
-    id integer NOT NULL,
-    wallet character varying(42) NOT NULL,
-    amount numeric(30,18) NOT NULL,
-    hash character varying(66) NOT NULL,
-    date timestamp without time zone NOT NULL
-);
-
-
---
--- Name: ubitransactions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.ubitransactions_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: ubitransactions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.ubitransactions_id_seq OWNED BY public.ubitransactions.id;
 
 
 --
@@ -4949,6 +4916,7 @@ CREATE TABLE public.usuario (
     profilescore integer,
     lastgooddollarverification timestamp without time zone,
     learningscore double precision,
+    excluir_leaderboard boolean DEFAULT false,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
@@ -5502,13 +5470,6 @@ ALTER TABLE ONLY public.religion ALTER COLUMN id SET DEFAULT nextval('public.rel
 --
 
 ALTER TABLE ONLY public.transaction ALTER COLUMN id SET DEFAULT nextval('public.transaction_id_seq'::regclass);
-
-
---
--- Name: ubitransactions id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.ubitransactions ALTER COLUMN id SET DEFAULT nextval('public.ubitransactions_id_seq'::regclass);
 
 
 --
@@ -6396,22 +6357,6 @@ ALTER TABLE ONLY public.transaction
 
 ALTER TABLE ONLY public.transaction
     ADD CONSTRAINT transaction_pkey PRIMARY KEY (id);
-
-
---
--- Name: ubitransactions ubitransactions_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.ubitransactions
-    ADD CONSTRAINT ubitransactions_hash_key UNIQUE (hash);
-
-
---
--- Name: ubitransactions ubitransactions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.ubitransactions
-    ADD CONSTRAINT ubitransactions_pkey PRIMARY KEY (id);
 
 
 --
