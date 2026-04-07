@@ -14,7 +14,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@goodsdks/citizen-sdk": "1.0.1",
+    "@goodsdks/citizen-sdk": "1.2.3",
     "@goodsdks/engagement-sdk": "^1.0.4",
     "@goodsdks/react-hooks": "^1.0.3",
     "@next/swc-wasm-nodejs": "^16.2.2",
@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "latest",
-    "@pasosdejesus/m": "gitlab:pasosdejesus/m",
+    "@pasosdejesus/m": "git+https://gitlab.com/pasosdejesus/m.git",
     "@tailwindcss/postcss": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

@@ -86,23 +86,23 @@ export function LeaderboardTable({
             <TableRow>
               <TableHead className="w-[80px]">{t('Rank', 'Posición')}</TableHead>
               <TableHead className="min-w-[150px]">{t('User', 'Usuario')}</TableHead>
-              <TableHead className="min-w-[120px]">{t('Country', 'País')}</TableHead>
+              <TableHead className="min-w-[80px] md:min-w-[120px]">{t('Country', 'País')}</TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="learningpoints">
                   {t('Learning Points', 'Puntos de Aprendizaje')}
                 </SortableHeader>
               </TableHead>
-              <TableHead className="text-right">
+              <TableHead className="text-right hidden md:table-cell">
                 <SortableHeader field="scholarship_usdt">
                   {t('Scholarship (USDT)', 'Beca (USDT)')}
                 </SortableHeader>
               </TableHead>
-              <TableHead className="text-right">
+              <TableHead className="text-right hidden md:table-cell">
                 <SortableHeader field="ubi_celo">
                   {t('UBI (CELO)', 'UBI (CELO)')}
                 </SortableHeader>
               </TableHead>
-              <TableHead className="text-right">
+              <TableHead className="text-right hidden md:table-cell">
                 <SortableHeader field="donations_usdt">
                   {t('Donations (USDT)', 'Donaciones (USDT)')}
                 </SortableHeader>
@@ -118,9 +118,9 @@ export function LeaderboardTable({
                   <TableCell><div className="h-4 bg-muted rounded w-24"></div></TableCell>
                   <TableCell><div className="h-4 bg-muted rounded w-16"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
-                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
-                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
-                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
+                  <TableCell className="text-right hidden md:table-cell"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
+                  <TableCell className="text-right hidden md:table-cell"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
+                  <TableCell className="text-right hidden md:table-cell"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                 </TableRow>
               ))
             ) : data.length === 0 ? (
@@ -137,7 +137,7 @@ export function LeaderboardTable({
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <CountryFlag alfa2={row.pais_alfa2} />
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-muted-foreground hidden md:inline">
                         {row.pais_nombre || row.pais_alfa2 || t('Unknown', 'Desconocido')}
                       </span>
                     </div>
@@ -145,13 +145,13 @@ export function LeaderboardTable({
                   <TableCell className="text-right font-mono">
                     {formatLearningPoints(row.learningpoints)}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="text-right font-mono hidden md:table-cell">
                     {formatUSDT(row.scholarship_usdt)}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="text-right font-mono hidden md:table-cell">
                     {formatCELO(row.ubi_celo)}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="text-right font-mono hidden md:table-cell">
                     {formatUSDT(row.donations_usdt)}
                   </TableCell>
                 </TableRow>
