@@ -7,6 +7,7 @@ export interface LeaderboardRow {
   scholarship_usdt: number
   ubi_celo: number
   donations_usdt: number
+  religion?: string | null
 }
 
 export interface LeaderboardQueryParams {
@@ -19,6 +20,7 @@ export interface LeaderboardQueryParams {
 
 export interface LeaderboardResponse {
   data: LeaderboardRow[]
+  rules?: Array<{ action: string; subject: string }>
   pagination: {
     page: number
     limit: number

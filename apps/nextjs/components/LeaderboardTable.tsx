@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { PureAbility } from '@casl/ability'
 import {
   Table,
   TableBody,
@@ -32,6 +33,7 @@ interface LeaderboardTableProps {
   onPageChange?: (page: number) => void
   isLoading?: boolean
   lang?: string
+  rules?: Array<{ action: string; subject: string }>
 }
 
 export function LeaderboardTable({
@@ -43,6 +45,7 @@ export function LeaderboardTable({
   onPageChange,
   isLoading = false,
   lang = 'en',
+  rules = [],
 }: LeaderboardTableProps) {
   // Translation helper
   const t = (en: string, es: string) => (lang === 'es' ? es : en)
@@ -78,31 +81,46 @@ export function LeaderboardTable({
   // Calculate rank based on position in data (considering pagination)
   const startRank = pagination ? (pagination.page - 1) * pagination.limit + 1 : 1
 
+  const ability = useMemo(() => {
+    return new PureAbility(rules as any)
+  }, [rules])
+  const canViewReligion = ability.can('view_religion', 'User')
+
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80px]">{t('Rank', 'Posición')}</TableHead>
-              <TableHead className="min-w-[150px]">{t('User', 'Usuario')}</TableHead>
-              <TableHead className="min-w-[80px] md:min-w-[120px]">{t('Country', 'País')}</TableHead>
+              <TableHead className="w-[60px] md:w-[80px]">
+                <span className="md:hidden">#</span>
+                <span className="hidden md:inline">{t('Rank', 'Posición')}</span>
+              </TableHead>
+              <TableHead className="min-w-[120px] md:min-w-[150px]">{t('User', 'Usuario')}</TableHead>
+              <TableHead className="min-w-[70px] md:min-w-[120px]">
+                <span className="md:hidden">{t('Ctry', 'Pais')}</span>
+                <span className="hidden md:inline">{t('Country', 'País')}</span>
+              </TableHead>
+              {canViewReligion && (
+                <TableHead>{t('Religion', 'Religión')}</TableHead>
+              )}
               <TableHead className="text-right">
                 <SortableHeader field="learningpoints">
-                  {t('Learning Points', 'Puntos de Aprendizaje')}
+                  <span className="md:hidden">{t('LP', 'PA')}</span>
+                  <span className="hidden md:inline">{t('Learning Points', 'Puntos de Aprendizaje')}</span>
                 </SortableHeader>
               </TableHead>
-              <TableHead className="text-right hidden md:table-cell">
+              <TableHead className="text-right">
                 <SortableHeader field="scholarship_usdt">
                   {t('Scholarship (USDT)', 'Beca (USDT)')}
                 </SortableHeader>
               </TableHead>
-              <TableHead className="text-right hidden md:table-cell">
+              <TableHead className="text-right">
                 <SortableHeader field="ubi_celo">
                   {t('UBI (CELO)', 'UBI (CELO)')}
                 </SortableHeader>
               </TableHead>
-              <TableHead className="text-right hidden md:table-cell">
+              <TableHead className="text-right">
                 <SortableHeader field="donations_usdt">
                   {t('Donations (USDT)', 'Donaciones (USDT)')}
                 </SortableHeader>
@@ -117,15 +135,18 @@ export function LeaderboardTable({
                   <TableCell><div className="h-4 bg-muted rounded w-8"></div></TableCell>
                   <TableCell><div className="h-4 bg-muted rounded w-24"></div></TableCell>
                   <TableCell><div className="h-4 bg-muted rounded w-16"></div></TableCell>
+                  {canViewReligion && (
+                    <TableCell><div className="h-4 bg-muted rounded w-16"></div></TableCell>
+                  )}
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
-                  <TableCell className="text-right hidden md:table-cell"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
-                  <TableCell className="text-right hidden md:table-cell"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
-                  <TableCell className="text-right hidden md:table-cell"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                 </TableRow>
               ))
             ) : data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={canViewReligion ? 8 : 7} className="text-center py-8 text-muted-foreground">
                   {t('No data available', 'No hay datos disponibles')}
                 </TableCell>
               </TableRow>
@@ -142,16 +163,19 @@ export function LeaderboardTable({
                       </span>
                     </div>
                   </TableCell>
+                  {canViewReligion && (
+                    <TableCell>{row.religion || '-'}</TableCell>
+                  )}
                   <TableCell className="text-right font-mono">
                     {formatLearningPoints(row.learningpoints)}
                   </TableCell>
-                  <TableCell className="text-right font-mono hidden md:table-cell">
+                  <TableCell className="text-right font-mono">
                     {formatUSDT(row.scholarship_usdt)}
                   </TableCell>
-                  <TableCell className="text-right font-mono hidden md:table-cell">
+                  <TableCell className="text-right font-mono">
                     {formatCELO(row.ubi_celo)}
                   </TableCell>
-                  <TableCell className="text-right font-mono hidden md:table-cell">
+                  <TableCell className="text-right font-mono">
                     {formatUSDT(row.donations_usdt)}
                   </TableCell>
                 </TableRow>

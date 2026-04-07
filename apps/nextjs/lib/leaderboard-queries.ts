@@ -8,28 +8,44 @@ import type { LeaderboardQueryParams } from '@/types/leaderboard'
  */
 export async function buildLeaderboardQuery(
   db: Kysely<DB>,
-  params: LeaderboardQueryParams
+  params: LeaderboardQueryParams,
+  includeReligion: boolean = false
 ) {
   const { sortBy = 'learningpoints', sortOrder = 'desc', country, page = 1, limit = 50 } = params
   const offset = (page - 1) * limit
 
   // Construir consulta base
-  let query = db
+  let query: any = db
     .selectFrom('usuario as u')
     .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
     .leftJoin('transaction as t', 'u.id', 't.usuario_id')
-    .select([
-      'u.id as usuario_id',
-      'u.nusuario as username',
-      'p.alfa2 as pais_alfa2',
-      'p.nombre as pais_nombre',
-      sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('learningpoints'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('scholarship_usdt'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('ubi_celo'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('donations_usdt'),
-      sql<number>`COUNT(*) OVER()`.as('total_count'),
-    ])
-    .groupBy(['u.id', 'u.nusuario', 'p.alfa2', 'p.nombre'])
+  
+  if (includeReligion) {
+    query = query.leftJoin('religion as r', 'u.religion_id', 'r.id')
+  }
+
+  let selectFields: any[] = [
+    'u.id as usuario_id',
+    'u.nusuario as username',
+    'p.alfa2 as pais_alfa2',
+    'p.nombre as pais_nombre',
+    sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('learningpoints'),
+    sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('scholarship_usdt'),
+    sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('ubi_celo'),
+    sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('donations_usdt'),
+    sql<number>`COUNT(*) OVER()`.as('total_count'),
+  ]
+
+  let groupFields: any[] = ['u.id', 'u.nusuario', 'p.alfa2', 'p.nombre']
+
+  if (includeReligion) {
+    selectFields.push('r.nombre as religion_nombre')
+    groupFields.push('r.nombre')
+  }
+
+  query = query
+    .select(selectFields)
+    .groupBy(groupFields)
     .where('u.excluir_leaderboard', 'is not', true)
 
   // Aplicar filtro por país si existe
@@ -71,9 +87,10 @@ export async function getCountriesQuery(db: Kysely<DB>) {
  */
 export async function getLeaderboardData(
   db: Kysely<DB>,
-  params: LeaderboardQueryParams
+  params: LeaderboardQueryParams,
+  includeReligion: boolean = false
 ) {
-  const query = await buildLeaderboardQuery(db, params)
+  const query = await buildLeaderboardQuery(db, params, includeReligion)
   const rows = await query.execute()
 
   const total = rows.length > 0 ? Number(rows[0].total_count) : 0
@@ -85,7 +102,7 @@ export async function getLeaderboardData(
   const countries = await countriesQuery.execute()
 
   return {
-    data: rows.map(row => ({
+    data: rows.map((row: any) => ({
       usuario_id: row.usuario_id,
       username: row.username,
       pais_alfa2: row.pais_alfa2,
@@ -94,6 +111,7 @@ export async function getLeaderboardData(
       scholarship_usdt: Number(row.scholarship_usdt),
       ubi_celo: Number(row.ubi_celo),
       donations_usdt: Number(row.donations_usdt),
+      religion: (row as any).religion_nombre,
     })),
     pagination: {
       page,

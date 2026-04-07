@@ -15,6 +15,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
   const [data, setData] = useState<LeaderboardRow[]>(initialData?.data || [])
   const [countries, setCountries] = useState(initialData?.countries || [])
   const [pagination, setPagination] = useState(initialData?.pagination || { page: 1, limit: 50, total: 0, totalPages: 0 })
+  const [rules, setRules] = useState<Array<{ action: string; subject: string }>>(initialData?.rules || [])
   const [isLoading, setIsLoading] = useState(false)
 
   // State for filters/sorting
@@ -47,6 +48,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
       setData(result.data)
       setCountries(result.countries)
       setPagination(result.pagination)
+      setRules(result.rules || [])
     } catch (error) {
       console.error('Failed to fetch leaderboard:', error)
       // Keep existing data
@@ -119,6 +121,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
         onPageChange={handlePageChange}
         isLoading={isLoading}
         lang={lang}
+        rules={rules}
       />
 
       <div className="text-sm text-muted-foreground">
