@@ -14,6 +14,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@casl/ability": "^6.7.3",
     "@casl/react": "^5.0.1",
     "@goodsdks/citizen-sdk": "1.2.3",
     "@goodsdks/engagement-sdk": "^1.0.4",
@@ -79,7 +80,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@casl/ability": "^6.7.3",
     "@eslint/eslintrc": "latest",
     "@pasosdejesus/m": "git+https://gitlab.com/pasosdejesus/m.git",
     "@tailwindcss/postcss": "^4.2.2",
