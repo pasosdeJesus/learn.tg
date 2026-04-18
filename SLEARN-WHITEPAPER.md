@@ -1,5 +1,7 @@
 # SLEARN: Whitepaper
 
+![SLEARN Logo](./resources/img/slearn-logo.svg)
+
 ## A Utility Token for Community-Powered Learning
 
 *Fundamental Disclaimer: SLEARN is a restricted‑access utility token.
