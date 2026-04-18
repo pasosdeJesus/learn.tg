@@ -97,7 +97,8 @@ Pricing]
         D1_2[10%: 1 USDT to Course Vault]
         D1_3[10%: 1 USDT → 22 SLEARN<br>Student Reward]
         D1_4[10%: 1 USDT to Missionary Courses]
-        D1_5[5%: 0.5 USDT to churches registered in learn.tg and verified]
+        D1_5[10%: 1 USDT to UBI and Referrals Fund]
+        D1_6[5%: 0.5 USDT to churches registered in learn.tg and verified]
     end
 ```
 
