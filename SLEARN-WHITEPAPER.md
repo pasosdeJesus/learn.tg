@@ -316,73 +316,83 @@ Transaction monitoring flags unusual patterns for review.
 ```mermaid
 flowchart TB
     %% ==================== DESCUBRIMIENTO ====================
-    A[🌐 Tráfico de Entrada<br/>Iglesias · Redes · SEO · Referidos] --> B{¿Primera vez?}
+    A[Tráfico de Entrada<br/>Iglesias · Redes · SEO · Referidos<br/>Programa Tablets+Internet] --> B{¿Primera vez?}
     B -->|Sí| C[Landing<br/>Aprende · Crea · Multiplica]
-    B -->|No| D[🔐 Login directo]
+    B -->|No| D[Login directo]
     
-    C --> E[📝 Registro gratuito<br/>learn.tg Profile Score]
+    C --> E[Registro gratuito<br/>learn.tg Profile Score]
     
-    %% ==================== ONBOARDING EMOCIONAL ====================
-    subgraph ONBOARDING ["ETAPA 1: BIENVENIDA CON PROPÓSITO"]
+    %% ==================== ONBOARDING ====================
+    subgraph ETAPA1 ["ETAPA 1: BIENVENIDA CON PROPÓSITO"]
         direction TB
-        E --> F[🕊️ Ceremonia de bienvenida<br/>Alguien invirtió en ti]
-        F --> G[📖 Acceso a guías gratuitas<br/>+ 1 SLEARN de bienvenida<br/><i>Evidencia inmutable inicial</i>]
-        G --> H{¿Completó<br/>la primera guía?}
-        H -->|Sí| I[⭐ Recibe SLEARN<br/>como evidencia de logro]
-        H -->|No| J[💬 Re-engagement<br/>Comunidad · Tutoría · Recordatorios]
-        J --> G
+        E --> F[Ceremonia de bienvenida<br/>Alguien invirtió en ti]
+        F --> G{Profile Score<br/>> 50 puntos?}
+        G -->|Sí| H[+1 SLEARN inicial<br/>Evidencia inmutable]
+        G -->|No| I[Completar/verificar<br/>datos personales]
+        I --> G
+        H --> J[Acceso a guías gratuitas<br/>Cursos abiertos]
     end
     
-    %% ==================== SEGMENTACIÓN ====================
-    I --> K{Perfil del<br/>Aprendiz}
-    
-    subgraph BECADOS ["ETAPA 2A: BECA AUTOMÁTICA"]
+    %% ==================== GANAR APRENDIENDO ====================
+    subgraph ETAPA2 ["ETAPA 2: GANA PARA CRESCER"]
         direction TB
-        K -->|Bajo IDH /<br/>Sin recursos| L[🎁 Beca del Course Vault<br/>SLEARN asignados para<br/>curso premium]
-        L --> M[🎓 Cursa premium<br/>sin pago directo]
-    end
-    
-    subgraph PAGADORES ["ETAPA 2B: PAGO CON PROPÓSITO"]
-        direction TB
-        K -->|Puede invertir| N[💳 Precio dinámico<br/>ajustado a país]
-        N --> O[Pago en USDT / CELO]
-        O --> P[🔥 10% cashback en SLEARN<br/><i>Tu pago fundó X becas</i>]
-        P --> Q[🎓 Cursa premium<br/>consciente de su impacto]
-    end
-    
-    subgraph REFERIDOS ["ETAPA 2C: RED DE IMPACTO"]
-        direction TB
-        K -->|Alto engagement| R[🤝 Invitar amigos]
-        R --> S[👥 Ambos reciben SLEARN<br/>+ alerta comunitaria:<br/><i>Tu red financió N becas</i>]
-        S --> Q
-    end
-    
-    %% ==================== GRADUACIÓN ====================
-    M --> T[🏆 Certificación on-chain<br/>Evidencia inmutable de<br/>competencia adquirida]
-    Q --> T
-    
-    %% ==================== POST-CURSO: LA REPLICA ====================
-    T --> U{¿Y ahora qué?}
-    
-    subgraph CICLO ["ETAPA 3: CICLO VIRTUOSO"]
-        direction TB
-        U -->|Seguir aprendiendo| V[📚 Siguiente curso<br/>usando SLEARN acumulado]
-        U -->|Multiplicar impacto| W[💝 Convertirse en donante<br/>Dashboard: Has habilitado<br/>N certificaciones]
-        U -->|Enseñar| X[👨‍🏫 Aplicar como creador<br/>de contenido]
-        U -->|Evangelizar| Y[📢 Compartir evidencia<br/>en redes / iglesia]
+        J --> K[Completa 1 guía]
+        K --> L[+1 SLEARN<br/>+ USDT proporcional<br/>según Profile Score y bóveda]
         
-        W --> Z[🌍 Donación al Vault<br/>→ Genera nuevas becas<br/>→ Vuelve a ETAPA 2A]
-        Y --> A
-        V --> T
+        L --> M{¿Curso terminado?<br/>Tip: 4 guías}
+        M -->|No| N[Siguiente guía]
+        N --> K
+        
+        M -->|Sí| O[SBT de finalización<br/>Cursos gratis + Premium]
+    end
+    
+    %% ==================== PREMIUM ====================
+    subgraph ETAPA3 ["ETAPA 3: ACCESO PREMIUM"]
+        direction TB
+        O --> P{¿Suficiente<br/>SLEARN/USDT?}
+        P -->|Sí| Q[Compra curso Premium<br/>Precio dinámico por IDH]
+        P -->|No| R[Seguir en cursos gratuitos<br/>+ UBI en CELO<br/>+ Programa referidos]
+        R --> K
+        
+        Q --> S[Curso Premium<br/>mismo ciclo de recompensas]
+        S --> T[Completa guías<br/>+SLEARN +USDT]
+        T --> U[Termina curso<br/>+ SBT adicional]
+    end
+    
+    %% ==================== REFERIDOS ====================
+    subgraph REFERIDOS ["CANAL: RED DE IMPACTO"]
+        direction TB
+        V[Invitar amigo] --> W[Amigo se registra]
+        W --> X{Primer curso<br/>ambos completan<br/>guía inicial?}
+        X -->|Sí + fondos disponibles| Y[+ SLEARN para ambos<br/>Evidencia de comunidad]
+        X -->|No| Z[Seguimiento normal]
+        Y --> J
+    end
+    
+    %% ==================== REPLICACIÓN ====================
+    subgraph ETAPA4 ["ETAPA 4: CICLO VIRTUOSO"]
+        direction TB
+        U --> AA{¿Y ahora qué?}
+        AA -->|Seguir aprendiendo| AB[Siguiente curso<br/>usando SLEARN/USDT ganados]
+        AA -->|Multiplicar| AC[Convertirse en donante<br/>Dashboard: Has habilitado N certificaciones]
+        AA -->|Crear| AD[Aplicar como creador<br/>de contenido]
+        AA -->|Evangelizar| AE[Compartir evidencia<br/>Iglesia · Redes · Comunidad]
+        
+        AC --> AF[Donación al Vault<br/>→ Más USDT en bóvedas<br/>→ Más recompensas por guía]
+        AE --> A
+        AB --> K
+        AD --> J
     end
     
     %% ==================== ESTILOS ====================
     style A fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
     style F fill:#fff8e1,stroke:#ff8f00,stroke-width:2px
-    style I fill:#fff9c4,stroke:#f9a825,stroke-width:2px
-    style T fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
-    style W fill:#ffcdd2,stroke:#c62828,stroke-width:2px
-    style Z fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    style H fill:#fff9c4,stroke:#f9a825,stroke-width:2px
+    style O fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style U fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style AC fill:#ffcdd2,stroke:#c62828,stroke-width:2px
+    style AF fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    style Q fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
 ```
 ---
 
