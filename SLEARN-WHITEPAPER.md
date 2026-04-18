@@ -5,7 +5,7 @@
 
 SLEARN is a utility token that transforms learning and donations into scholarships.
 Every 10 USDT donated creates 10 scholarships; every student payment automatically
-funds others' education. It's backed 1:1 by XAUT/USDT reserves and indexed to the 
+funds others' education. It's backed 1:1 by XAUT/USDT/CELO reserves and indexed to the 
 Sierra Leone Leone for stability.
 
 *Fundamental Disclaimer: SLEARN is a restricted-access utility token and a
@@ -133,27 +133,6 @@ pie
     "5% : Fund for churches registered in learn.tg and verified<br/>(0.5 USDT)" : 5
 ```
 
-Concrete result of this transaction:
-
-1.  5.5 USDT (55%) go to the general learn.tg fund. This portion covers
-    operational costs (infrastructure, development) and fairly compensates
-    content creators, encouraging the production of more and better
-    educational material.
-2.  1 USDT (10%) are added to the vault of the specific course the student
-    is paying for. This fund will be used to finance future scholarships
-    (in USDT and SLEARN) for that same course, allowing others to access it.
-3.  1 USDT (10%) is automatically sent to the UBI and Referrals Fund,
-    enabling both daily community rewards and referral incentives while
-    ensuring the core missional content is always financed.
-4.  1 USDT (10%) is converted into 22 SLEARN and awarded as a reward to the
-    student who made the payment. This not only reduces the net cost of their
-    educational investment but also gives them digital credit for future
-    learning within the ecosystem.
-5.  1 USDT (10%) is automatically sent to the free missional courses fund
-    (e.g., “A Relationship with Jesus”), ensuring that the central,
-    transformative content of the platform is always financed.
-6. 0.5 USDT (5%) is sent to the fund for churches registered in learn.tg and verified
-
 This mechanism ensures that every investment in one’s own education directly
 contributes to platform sustainability, personal incentive, scholarship
 creation, and the missional fund, creating a powerful virtuous cycle of
@@ -190,11 +169,9 @@ Limits may evolve based on operational experience, but remain deliberately low.
 
 #### 3.3.2. Cashback in SLEARN
 
-- **Base:** 0.05 SLEARN per USDT sold on stable-sl.pdJ.app.
-- **Bonuses per SBT:** +0.01 SLEARN per USDT for each course certificate (SBT)
-  obtained on learn.tg.
-- **Bonus limit:** The impact of SBTs is limited to the first 5 certificates.
-  A user with 5 or more SBTs receives the maximum bonus of 0.10 SLEARN per USDT.
+For selling crypto in stable-sl.pdJ.app we propose to give some Cashback
+in SLEARN (for example 0.05 SLEARN per USDT with additional Cashback for
+each course certificate obtained limited at 0.1 SLEARN per USDT).
 
 #### 3.3.3. Security and Operating Model
 
@@ -269,12 +246,12 @@ financial dynamics.
 
 ### 5.1. Radical Transparency and On‑Chain Verification
 
-The entire system is built to be audited by anyone. The total issuance of
-SLEARN, as well as all transactions, are immutable and public on the Celo
-blockchain. Critically, the USDT backing that underpins the redeemable value
-of SLEARN is held in an on‑chain reserve vault at
-[https://stable-sl.pdJ.app](https://stable-sl.pdj.app/). Any user can,
-at any time, independently verify that the value in this vault is always
+All policies and thresholds are published on the
+[Transparency Dashboard](https://learn.tg/en/transparency) and subject to
+periodic review.
+
+Reserve auditable on-chain; SLEARN always 1:1 backed by USDT + XAUT.
+Any user can,at any time, independently verify that the value in this vault is always
 greater than or equal to the total value of SLEARN in circulation (calculated
 at the parity of 1 SLEARN = 1 SLE). This cross‑verification creates an open
 and immutable solvency guarantee.
@@ -289,20 +266,11 @@ currencies against the US dollar, with an average variation of approximately
 1% during 2025. This stability facilitates internal calculations, course
 pricing and makes redemption a clear and fair operation.
 
-### 5.3. Primary Utility over Speculation
-
-SLEARN is intrinsically non‑speculative. Its smart contract restricts transfer
-functions, allowing them only between authorised system addresses (such as the
-wallets of learn.tg and stable-sl.pdJ.app) and for burning by users.
-**SLEARN cannot be transferred between users**; they can only be minted by the
-system (as a reward for completing guides) and burned when used to pay for
-premium courses. This technically prevents the token from being listed or
-traded on secondary exchanges, eliminating by design the possibility of it
-being treated as an investment asset. Its sole purpose is to serve as a
-digital tool to access, reward and finance education.
+### 5.3. Non-Speculative by Design
+Restricted transfers; cannot be transferred between users and cannot be 
+traded on exchanges.
 
 ### 5.4. Organic Issuance without Arbitrary Limit
-
 Unlike most tokens, SLEARN has no predefined maximum supply (hard cap) and
 incorporates no artificial deflationary mechanisms. This is a key philosophical
 decision:
@@ -321,35 +289,13 @@ decision:
     community.
 
 ### 5.5. Local Impact with a Global Vision
-
-While the technology and economic model of SLEARN have a global vision,
-a fixed percentage of all revenue (donations and payments) is automatically
-and immutably allocated to fund key missional courses. These courses, available
-in English, Spanish and Krio, form the core of our mission and their perpetual
-funding is secured by the system’s own design, independent of market trends.
+Fixed % of revenue funds missional courses/
 
 ### 5.6. Fair Launch and Migration
-
-There will be no Initial Coin Offering (ICO), private sale or any mechanism
-that favours external investors. The first SLEARN will be minted to migrate
-the “Learning Score” of our existing verified users on a 1:1 basis,
-recognising and respecting their history of prior participation and learning.
-From there, supply will only grow organically with the legitimate use of the
-platform, ensuring that distribution is meritocratic and aligned with our
-purpose.
+No ICO, no private sale. First SLEARN migrated 1:1 from Learning Score.
 
 ### 5.7. Future Governance (Adaptive Model)
-
-While SLEARN launches under direct stewardship by Pasos de Jesús, we are
-committed to developing community governance structures as the platform
-matures. Initial decisions (exchange rates, distribution percentages,
-policy changes) will be made by the core team with transparent communication.
-By Phase 4, we will introduce formalized governance based on
-real-world operational experience, community response and regulatory clarity.
-We want a model that gives voice and vote to people who  **use** SLEARN 
-(by spending it in courses in learn.tg), donors and earners, and that the operator
-retains a technical veto to prevent legally or technically impossible
-decisions.
+Phase 4: Community voting (users, donors, earners) with operator legal and technical veto.
 
 ### 5.8. Regulatory and Compliance Framework
 
@@ -364,9 +310,6 @@ framework is transparent, proportional to risk, and respectful of privacy.
 **AML:** Users attest via checkbox that funds are not from illegal sources.
 Transaction monitoring flags unusual patterns for review.
 
-**Transparency:** All policies and thresholds are published on the
-[Transparency Dashboard](https://learn.tg/en/transparency) and subject to
-periodic review.
 
 ---
 
@@ -403,7 +346,6 @@ This is the future we are building, one transaction at a time.
 To learn more, audit the contract or see live impact:
 
 - [Real‑time Transparency Dashboard](https://learn.tg/en/transparency)
-- [Reserve Vault (stable-sl.pdJ.app)](https://stable-sl.pdj.app/)
 - [Verified SLEARN Contract on CeloScan](https://celoscan.io/address/...) (link
   available after deployment)
 - [Fundamental Principles of learn.tg](https://learn.tg/principles)
