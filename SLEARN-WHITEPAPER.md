@@ -74,7 +74,7 @@ Pricing]
         C1_2[10%: 1 USDT to learn.tg<br>Operations]
         C1_3[10%: 1 USDT → 22 SLEARN<br>Donor Reward]
         C1_4[5%: 0.5 USDT to Missionary Courses]
-        C1_5[5%: 0.5 USDT to UBI Fund (CELO)]
+        C1_5[5%: 0.5 USDT to UBI Fund]
         
         C1_1a[3.5 USDT in Stablecoin] --> C1_1b[Course Destination Vault<br>USDT
 + SLEARN]
