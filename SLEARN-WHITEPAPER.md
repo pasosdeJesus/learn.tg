@@ -321,14 +321,17 @@ Transaction monitoring flags unusual patterns for review.
 - **Phase 2 (June 1, 2026):** Launch on Celo mainnet. 1:1 conversion of
   Learning Points to SLEARN. Activation of SLEARN as a payment method for
   premium courses (burn mechanism).
-- **Phase 3 (Post‑launch, date TBD):** Activation of the SLEARN ↔ SLE swap
-  through stable-sl.pdJ.app. This feature will be introduced after SLEARN
-  has demonstrated its primary utility as a medium of exchange for education.
-- **Phase 4 (Pending Phase 2 and 3 adoption):** Introduction of governance
-  mechanisms based on learnings from Phases 2–3. This may include community
-  councils for policy adjustments, dispute resolution frameworks, and
-  formalization of amendment processes. Governance design will be published
-  for community feedback before implementation.
+- **Phase 3 (SLEARN ↔ SLE swap activation)** (post-education utility)
+  Initially operated via verified human agents with on-chain attestation.
+  Automated Orange Money merchant payout integration will be introduced
+  as regulatory frameworks and API availability permit.
+- **Phase 4 Governance** (Pending Phase 2 and 3 adoption): A two-chamber
+  model adapted to our scale. A Learner House (meritocratic, based on
+  course completion and contribution history) votes on curriculum and
+  scholarship policies. A Donor House (weighted by contribution history)
+  advises on treasury allocation. Both chambers submit proposals;
+  pdJ retains a technical veto for security and legal compliance,
+  publishable on the Transparency Dashboard.
 ---
 
 ## 7. Conclusion: More Than a Token
