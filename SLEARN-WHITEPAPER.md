@@ -346,14 +346,14 @@ flowchart TB
         direction TB
         K -->|Puede invertir| N[💳 Precio dinámico<br/>ajustado a país]
         N --> O[Pago en USDT / CELO]
-        O --> P[🔥 10% cashback en SLEARN<br/><i>"Tu pago fundó X becas"</i>]
+        O --> P[🔥 10% cashback en SLEARN<br/><i>Tu pago fundó X becas</i>]
         P --> Q[🎓 Cursa premium<br/>consciente de su impacto]
     end
     
     subgraph REFERIDOS ["ETAPA 2C: RED DE IMPACTO"]
         direction TB
         K -->|Alto engagement| R[🤝 Invitar amigos]
-        R --> S[👥 Ambos reciben SLEARN<br/>+ alerta comunitaria:<br/><i>"Tu red financió N becas"</i>]
+        R --> S[👥 Ambos reciben SLEARN<br/>+ alerta comunitaria:<br/><i>Tu red financió N becas</i>]
         S --> Q
     end
     
@@ -367,7 +367,7 @@ flowchart TB
     subgraph CICLO ["ETAPA 3: CICLO VIRTUOSO"]
         direction TB
         U -->|Seguir aprendiendo| V[📚 Siguiente curso<br/>usando SLEARN acumulado]
-        U -->|Multiplicar impacto| W[💝 Convertirse en donante<br/>Dashboard: "Has habilitado<br/>N certificaciones"]
+        U -->|Multiplicar impacto| W[💝 Convertirse en donante<br/>Dashboard: Has habilitado<br/>N certificaciones]
         U -->|Enseñar| X[👨‍🏫 Aplicar como creador<br/>de contenido]
         U -->|Evangelizar| Y[📢 Compartir evidencia<br/>en redes / iglesia]
         
