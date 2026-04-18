@@ -5,8 +5,8 @@
 
 SLEARN is a utility token that transforms learning and donations into scholarships.
 Every 10 USDT donated creates 10 scholarships; every student payment automatically
-funds others' education. It's backed 1:1 by USDT reserves and indexed to the Sierra
-Leone Leone for stability.
+funds others' education. It's backed 1:1 by XAUT/USDT reserves and indexed to the 
+Sierra Leone Leone for stability.
 
 *Fundamental Disclaimer: SLEARN is a restricted-access utility token and a
 digital tool for educational access within the pdJ ecosystem ([learn.tg](http://learn.tg),
@@ -241,20 +241,24 @@ eq.]
 
 **Key policies:**
 
-- **Segmentation:** Operational funds (L2/S2), main vaults (L1/S1) and the
-  master reserve (SL0) are physically and logically separated.
-- **Strict thresholds:** Online vaults (L1/S1) never exceed 1,000 USDT.
-  Surplus is transferred to the air‑gapped master vault (SL0).
-- **Backing in a stable asset:** The strategic reserve is kept in XAUT
-  (Tether Gold) to preserve long‑term value.
-- **Transparency:** Reserve vault balances are verifiable on‑chain.
-- **Daily operations:** The hot wallet (L1/S1) holds only the funds needed
-  for daily operations (exchanges, rewards). The bulk of the reserves is
-  kept in the air‑gapped master vault SL0, which is not connected to the
-  internet. Periodically, funds are transferred from the cold vault to the
-  hot wallet through a manual, secure process supervised by the Pasos de
-  Jesús team.
-
+- **Reserve backing:** SLEARN is backed 1:1 by combined USDT (operational 
+  liquidity) and XAUT (strategic reserve) holdings, auditable on-chain.
+  
+- **Custody model:** Three layers:
+  1. **Hot wallets (L2/S2):** 1-2 months operational funds in USDT and CELO
+  2. **Main vaults (L1/S1):** < 1,000 USDT equivalent, holds multiple assets 
+     (USDT, CELO, SLEARN) for operations and exchanges
+  3. **Master vault (SL0):** Air-gapped, XAUT only, > 1,000 USDT equivalent
+  
+- **Asset management:** Pasos de Jesús manages multi-asset operations 
+  (CELO, USDT, SLEARN, GoodDollar, XAUT) through stable-sl.pdJ.app to 
+  maintain liquidity and facilitate redemptions.
+  
+- **Excess reserves:** Holdings exceeding the 1:1 SLEARN backing requirement 
+  fund platform operations, ecosystem development, and educational initiatives. 
+  All usage is transparently reported.
+  
+- **Transparency:** All reserve balances are on-chain and independently verifiable.
 ---
 
 ## 5. Design Pillars and Governance
