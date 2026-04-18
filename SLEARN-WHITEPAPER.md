@@ -313,6 +313,7 @@ framework is transparent, proportional to risk, and respectful of privacy.
 **AML:** Users attest via checkbox that funds are not from illegal sources.
 Transaction monitoring flags unusual patterns for review.
 
+```mermaid
 flowchart TB
     %% ==================== DESCUBRIMIENTO ====================
     A[🌐 Tráfico de Entrada<br/>Iglesias · Redes · SEO · Referidos] --> B{¿Primera vez?}
@@ -382,6 +383,7 @@ flowchart TB
     style T fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
     style W fill:#ffcdd2,stroke:#c62828,stroke-width:2px
     style Z fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+```
 ---
 
 ## 6. Roadmap
