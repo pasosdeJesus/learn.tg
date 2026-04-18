@@ -222,7 +222,7 @@ eq.]
   liquidity) and XAUT (strategic reserve) holdings, auditable on-chain.
   
 - **Custody model:** Three layers:
-  1. **Hot wallets (L2/S2):** 1-2 months operational funds in USDT and CELO
+  1. **Hot wallets (L2/S2):** 1-2 months operational funds in USDT, CELO and SLEARN
   2. **Main vaults (L1/S1):** < 1,000 USDT equivalent, holds multiple assets 
      (USDT, CELO, SLEARN) for operations and exchanges
   3. **Master vault (SL0):** Air-gapped, XAUT only, > 1,000 USDT equivalent
