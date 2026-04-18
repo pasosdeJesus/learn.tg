@@ -74,10 +74,11 @@ Pricing]
     subgraph C1 [Donation Distribution: 10 USDT]
         direction LR
         C1_1[70%: 7 USDT to Destination Vault] --> C1_1a
-        C1_2[10%: 1 USDT to learn.tg<br>Operations]
+        C1_2[5%: 0.5 USDT to learn.tg<br>Operations]
         C1_3[10%: 1 USDT → 22 SLEARN<br>Donor Reward]
         C1_4[5%: 0.5 USDT to Missionary Courses]
         C1_5[5%: 0.5 USDT to UBI Fund]
+        C1_6[5%: 0.5 USDT to churches registered in learn.tg and verified]
         
         C1_1a[3.5 USDT in Stablecoin] --> C1_1b[Course Destination Vault<br>USDT
 + SLEARN]
@@ -86,10 +87,11 @@ Pricing]
     
     subgraph D1 [Premium Payment Distribution: 10 USDT]
         direction LR
-        D1_1[60%: 6 USDT to learn.tg<br>Operations & Creators]
+        D1_1[55%: 6 USDT to learn.tg<br>Operations & Creators]
         D1_2[20%: 2 USDT to Course Vault]
         D1_3[10%: 1 USDT → 22 SLEARN<br>Student Reward]
         D1_4[10%: 1 USDT to Missionary Courses]
+        D1_5[5%: 0.5 USDT to churches registered in learn.tg and verified]
     end
 ```
 
@@ -98,10 +100,11 @@ Pricing]
 1.  7 USDT go to the donated course vault: 3.5 USDT finance 3.5 scholarships
     (1 USDT each) and 3.5 USDT are converted into 77 SLEARN to finance
     77 scholarships (1 SLEARN each).
-2.  1 USDT funds learn.tg operations.
+2.  0.5 USDT funds learn.tg operations.
 3.  0.5 USDT automatically support free missional courses.
 4.  0.5 USDT feed the UBI fund in CELO for daily community rewards.
-5.  The donor receives 22 SLEARN as credit for their own learning.
+5.  0.5 USDT to the fund for churches registered in learn.tg and verified
+6.  The donor receives 22 SLEARN as credit for their own learning.
 
 #### 3.1.2 Example with a Premium Course Payment
 
@@ -116,15 +119,16 @@ Leone)
 ```mermaid
 pie
     title Distribution of a Premium Course Payment (10 USDT)
-    "60% : learn.tg & Creators<br/>(6 USDT)" : 60
+    "55% : learn.tg & Creators<br/>(5.5 USDT)" : 55
     "20% : Course Vault<br/>(2 USDT)" : 20
     "10% : Student Reward<br/>(1 USDT → 22 SLEARN)" : 10
     "10% : Missionary Courses<br/>(1 USDT)" : 10
+    "5% : Fund for churches registered in learn.tg and verified<br/>(0.5 USDT)" : 5
 ```
 
 Concrete result of this transaction:
 
-1.  6 USDT (60%) go to the general learn.tg fund. This portion covers
+1.  5.5 USDT (55%) go to the general learn.tg fund. This portion covers
     operational costs (infrastructure, development) and fairly compensates
     content creators, encouraging the production of more and better
     educational material.
@@ -138,6 +142,7 @@ Concrete result of this transaction:
 4.  1 USDT (10%) is automatically sent to the free missional courses fund
     (e.g., “A Relationship with Jesus”), ensuring that the central,
     transformative content of the platform is always financed.
+5. 0.5 USDT (5%) is sent to the fund for churches registered in learn.tg and verified
 
 This mechanism ensures that every investment in one’s own education directly
 contributes to platform sustainability, personal incentive, scholarship
@@ -322,6 +327,19 @@ From there, supply will only grow organically with the legitimate use of the
 platform, ensuring that distribution is meritocratic and aligned with our
 purpose.
 
+### 5.7. Future Governance (Adaptive Model)
+
+While SLEARN launches under direct stewardship by Pasos de Jesús, we are
+committed to developing community governance structures as the platform
+matures. Initial decisions (exchange rates, distribution percentages,
+policy changes) will be made by the core team with transparent communication.
+By Phase 4, we will introduce formalized governance based on
+real-world operational experience, community response and regulatory clarity.
+We want a model that gives voice and vote to people who  **use** SLEARN 
+(by spending it), donors and earners, and that the operator
+retains a technical veto to prevent legally or technically impossible
+decisions.
+
 ---
 
 ## 6. Roadmap
@@ -335,7 +353,11 @@ purpose.
 - **Phase 3 (Post‑launch, date TBD):** Activation of the SLEARN ↔ SLE swap
   through stable-sl.pdJ.app. This feature will be introduced after SLEARN
   has demonstrated its primary utility as a medium of exchange for education.
-
+- **Phase 4 (Pending Phase 2 and 3 adoption):** Introduction of governance
+  mechanisms based on learnings from Phases 2–3. This may include community
+  councils for policy adjustments, dispute resolution frameworks, and
+  formalization of amendment processes. Governance design will be published
+  for community feedback before implementation.
 ---
 
 ## 7. Conclusion: More Than a Token
