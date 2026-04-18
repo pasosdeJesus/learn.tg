@@ -317,7 +317,7 @@ Transaction monitoring flags unusual patterns for review.
 flowchart TB
     %% ==================== DESCUBRIMIENTO ====================
     A[🌐 Tráfico de Entrada<br/>Iglesias · Redes · SEO · Referidos] --> B{¿Primera vez?}
-    B -->|Sí| C[🎯 Landing<br/>"Aprende · Crea · Multiplica"]
+    B -->|Sí| C[Landing<br/>Aprende · Crea · Multiplica]
     B -->|No| D[🔐 Login directo]
     
     C --> E[📝 Registro gratuito<br/>learn.tg Profile Score]
