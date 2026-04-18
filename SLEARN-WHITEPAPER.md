@@ -293,7 +293,7 @@ decision:
     community.
 
 ### 5.5. Local Impact with a Global Vision
-Fixed % of revenue funds missional courses/
+Fixed percentage of revenue funds missional courses.
 
 ### 5.6. Fair Launch and Migration
 No ICO, no private sale. First SLEARN migrated 1:1 from Learning Score.
