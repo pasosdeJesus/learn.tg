@@ -6,9 +6,10 @@
 
 *Fundamental Disclaimer: SLEARN is a restricted‑access utility token.
 It is not an investment, a security, or a cryptocurrency for speculation.
-It is a digital tool to be used inside the [learn.tg](http://learn.tg)
-ecosystem. Its value is indexed to the Leone (SLE) only for internal
-accounting stability. It cannot be bought or traded on external markets.*
+It is a digital tool to be used inside the pdJ ecosystem ([learn.tg](http://learn.tg),
+[stable-sl.pdJ.app](http://stable-sl.pdJ.app) and [sivel.xyz](http://sivel.xyz)).
+Its value is indexed to the Leone (SLE) only for internal accounting stability. 
+It cannot be bought or traded on external markets.*
 
 ---
 
@@ -36,7 +37,7 @@ heart, and you will find rest for your souls.” (Matthew 11:29)*
 - **Meritocratic** – Earned by learning (completing guides), donating
   (to courses), or investing in yourself (paying for premium courses).
 - **Practical use** – Used to pay for premium courses and, in Sierra Leone,
-  can be exchanged for Leones (SLE) through our partner
+  it will be possible to exchange it for Leones (SLE) through our partner
   [stable-sl.pdJ.app](https://stable-sl.pdj.app/). That platform maintains
   a reserve vault that backs SLEARN; its total value can be checked on‑chain
   and verified to be greater than or equal to the amount issued and reported
