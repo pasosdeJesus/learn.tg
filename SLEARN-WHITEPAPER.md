@@ -93,8 +93,8 @@ Pricing]
     
     subgraph D1 [Premium Payment Distribution: 10 USDT]
         direction LR
-        D1_1[55%: 6 USDT to learn.tg<br>Operations & Creators]
-        D1_2[20%: 2 USDT to Course Vault]
+        D1_1[55%: 5.5 USDT to learn.tg<br>Operations & Creators]
+        D1_2[10%: 1 USDT to Course Vault]
         D1_3[10%: 1 USDT → 22 SLEARN<br>Student Reward]
         D1_4[10%: 1 USDT to Missionary Courses]
         D1_5[5%: 0.5 USDT to churches registered in learn.tg and verified]
