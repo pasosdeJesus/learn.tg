@@ -198,13 +198,13 @@ graph TB
         S2[Hot Wallet S2<br/>For receiving/quick exchange]
     end
 
-    subgraph MAIN_VAULTS_ONLINE[Your Personal Computer<br/>Limit: < 1000 USDT
+    subgraph MAIN_VAULTS_ONLINE[Separate computer<br/>Limit: < 1000 USDT
 each]
         L1[💰 Vault L1 - learn.tg<br/>Balance: < 1000 USDT]
         S1[💰 Vault S1 - stable-sl<br/>Balance: < 1000 USDT]
     end
 
-    subgraph MASTER_VAULT_AIR_GAPPED[Air-Gapped adJ Machine<br/>Strategic
+    subgraph MASTER_VAULT_AIR_GAPPED[Air-Gapped<br/>Strategic
 Reserve]
         SL0[🪙 Master Vault SL0<br/>Reserve in XAUT<br/>Balance: > 1000 USDT
 eq.]
