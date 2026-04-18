@@ -1,7 +1,7 @@
 # SLEARN: Whitepaper
 ## A Utility Token for Community-Powered Learning
 
-![SLEARN Logo](./resources/img/slearn-logo.svg)
+![SLEARN Logo](https://github.com/pasosdeJesus/learn.tg/raw/perm/resources/img/slearn-logo.svg)
 
 SLEARN is a utility token that transforms learning and donations into scholarships.
 Every 10 USDT donated creates 10 scholarships; every student payment automatically
