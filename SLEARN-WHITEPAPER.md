@@ -1,15 +1,21 @@
 # SLEARN: Whitepaper
+## A Utility Token for Community-Powered Learning
 
 ![SLEARN Logo](./resources/img/slearn-logo.svg)
 
-## A Utility Token for Community-Powered Learning
+SLEARN is a utility token that transforms learning and donations into scholarships.
+Every 10 USDT donated creates 10 scholarships; every student payment automatically
+funds others' education. It's backed 1:1 by USDT reserves and indexed to the Sierra
+Leone Leone for stability.
 
-*Fundamental Disclaimer: SLEARN is a restricted‑access utility token.
-It is not an investment, a security, or a cryptocurrency for speculation.
-It is a digital tool to be used inside the pdJ ecosystem ([learn.tg](http://learn.tg),
+*Fundamental Disclaimer: SLEARN is a restricted-access utility token and a
+digital tool for educational access within the pdJ ecosystem ([learn.tg](http://learn.tg),
 [stable-sl.pdJ.app](http://stable-sl.pdJ.app) and [sivel.xyz](http://sivel.xyz)).
-Its value is indexed to the Leone (SLE) only for internal accounting stability. 
-It cannot be bought or traded on external markets.*
+It is not an investment, a security, or a financial instrument regulated by any
+authority. It is not a cryptocurrency for speculation and cannot be bought or
+traded on external markets. Its value is indexed to the Leone (SLE) for internal
+accounting stability. Users accept that cryptocurrency technology carries
+inherent technical risks, which they use at their own discretion.*
 
 ---
 
@@ -77,7 +83,7 @@ Pricing]
         C1_2[5%: 0.5 USDT to learn.tg<br>Operations]
         C1_3[10%: 1 USDT → 22 SLEARN<br>Donor Reward]
         C1_4[5%: 0.5 USDT to Missionary Courses]
-        C1_5[5%: 0.5 USDT to UBI Fund]
+        C1_5[5%: 0.5 USDT to UBI and Referrals Fund]
         C1_6[5%: 0.5 USDT to churches registered in learn.tg and verified]
         
         C1_1a[3.5 USDT in Stablecoin] --> C1_1b[Course Destination Vault<br>USDT
@@ -101,10 +107,11 @@ Pricing]
     (1 USDT each) and 3.5 USDT are converted into 77 SLEARN to finance
     77 scholarships (1 SLEARN each).
 2.  0.5 USDT funds learn.tg operations.
-3.  0.5 USDT automatically support free missional courses.
-4.  0.5 USDT feed the UBI fund in CELO for daily community rewards.
-5.  0.5 USDT to the fund for churches registered in learn.tg and verified
-6.  The donor receives 22 SLEARN as credit for their own learning.
+3.  1 USDT for the donor as 22 SLEARN as credit for their own learning.
+4.  0.5 USDT automatically support free missional courses.
+5.  0.5 USDT feed the UBI (in CELO) and Referrals Fund for daily community rewards.
+6.  0.5 USDT to the fund for churches registered in learn.tg and verified
+
 
 #### 3.1.2 Example with a Premium Course Payment
 
@@ -113,14 +120,14 @@ The price is dynamic, adjusted according to the student’s country development
 index, promoting fairness. A percentage of this payment is converted into
 SLEARN for the paying student and is used to finance more scholarships.
 
-##### Distribution of a 10 USDT premium course payment (example from Sierra
-Leone)
+##### Distribution of a 10 USDT premium course payment (example from Sierra Leone)
 
 ```mermaid
 pie
     title Distribution of a Premium Course Payment (10 USDT)
     "55% : learn.tg & Creators<br/>(5.5 USDT)" : 55
-    "20% : Course Vault<br/>(2 USDT)" : 20
+    "10% : Course Vault<br/>(1 USDT)" : 10
+    "10% : UBI and Referrals Fund<br/>(1 USDT)" : 10
     "10% : Student Reward<br/>(1 USDT → 22 SLEARN)" : 10
     "10% : Missionary Courses<br/>(1 USDT)" : 10
     "5% : Fund for churches registered in learn.tg and verified<br/>(0.5 USDT)" : 5
@@ -132,17 +139,20 @@ Concrete result of this transaction:
     operational costs (infrastructure, development) and fairly compensates
     content creators, encouraging the production of more and better
     educational material.
-2.  2 USDT (20%) are added to the vault of the specific course the student
+2.  1 USDT (10%) are added to the vault of the specific course the student
     is paying for. This fund will be used to finance future scholarships
     (in USDT and SLEARN) for that same course, allowing others to access it.
-3.  1 USDT (10%) is converted into 22 SLEARN and awarded as a reward to the
+3.  1 USDT (10%) is automatically sent to the UBI and Referrals Fund,
+    enabling both daily community rewards and referral incentives while
+    ensuring the core missional content is always financed.
+4.  1 USDT (10%) is converted into 22 SLEARN and awarded as a reward to the
     student who made the payment. This not only reduces the net cost of their
     educational investment but also gives them digital credit for future
     learning within the ecosystem.
-4.  1 USDT (10%) is automatically sent to the free missional courses fund
+5.  1 USDT (10%) is automatically sent to the free missional courses fund
     (e.g., “A Relationship with Jesus”), ensuring that the central,
     transformative content of the platform is always financed.
-5. 0.5 USDT (5%) is sent to the fund for churches registered in learn.tg and verified
+6. 0.5 USDT (5%) is sent to the fund for churches registered in learn.tg and verified
 
 This mechanism ensures that every investment in one’s own education directly
 contributes to platform sustainability, personal incentive, scholarship
@@ -170,16 +180,13 @@ digital assets to the national currency (SLE).
 
 #### 3.3.1. Identity Verification, Access and Operation Limits
 
-1.  Unverified users can transact up to 100 SLE per day.
-2.  Once we have an Orange Money transaction with a name, if the name matches,
-    the limit will be increased to 200 SLE per day. If the name does not
-    match, the user will be blocked until they provide an identity document
-    and an Orange Money number that matches.
-3.  A button will be enabled to verify the name with that of the user holding
-    the same wallet on learn.tg, and daily limits will be increased in
-    proportion to the Profile Score on learn.tg.
-4.  Daily limits will also be increased by the volume of USDT sold and by a
-    history of dispute‑free operations.
+SLEARN uses a tiered KYC approach with progressive limits, detailed in Section 5.8:
+
+1. **Tier 1 (100 SLE/day, ~US$5):** Users confirm funds are not from illegal sources.
+2. **Tier 2 (200 SLE/day, ~US$10):** Orange Money name verification via cross-check.
+3. **Tier 3 (200–400 SLE/day, ~US$20):** Enhanced verification via learn.tg + sivel.xyz ZK proofs of passport details.
+
+Limits may evolve based on operational experience, but remain deliberately low.
 
 #### 3.3.2. Cashback in SLEARN
 
@@ -336,9 +343,26 @@ policy changes) will be made by the core team with transparent communication.
 By Phase 4, we will introduce formalized governance based on
 real-world operational experience, community response and regulatory clarity.
 We want a model that gives voice and vote to people who  **use** SLEARN 
-(by spending it), donors and earners, and that the operator
+(by spending it in courses in learn.tg), donors and earners, and that the operator
 retains a technical veto to prevent legally or technically impossible
 decisions.
+
+### 5.8. Regulatory and Compliance Framework
+
+SLEARN operates in Sierra Leone, where cryptocurrency is unregulated. Our KYC/AML
+framework is transparent, proportional to risk, and respectful of privacy.
+
+**KYC – Tiered Verification:**
+- **Tier 1:** Basic account (100 SLE/day)
+- **Tier 2:** Orange Money name match (200 SLE/day)
+- **Tier 3:** Passport verification via sivel.xyz ZK proofs, integrated with learn.tg Profile Score (400 SLE/day max)
+
+**AML:** Users attest via checkbox that funds are not from illegal sources.
+Transaction monitoring flags unusual patterns for review.
+
+**Transparency:** All policies and thresholds are published on the
+[Transparency Dashboard](https://learn.tg/en/transparency) and subject to
+periodic review.
 
 ---
 
