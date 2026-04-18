@@ -325,7 +325,7 @@ flowchart TB
     %% ==================== ONBOARDING EMOCIONAL ====================
     subgraph ONBOARDING ["ETAPA 1: BIENVENIDA CON PROPÓSITO"]
         direction TB
-        E --> F[🕊️ Ceremonia de bienvenida<br/>"Alguien invirtió en ti"]
+        E --> F[🕊️ Ceremonia de bienvenida<br/>Alguien invirtió en ti]
         F --> G[📖 Acceso a guías gratuitas<br/>+ 1 SLEARN de bienvenida<br/><i>Evidencia inmutable inicial</i>]
         G --> H{¿Completó<br/>la primera guía?}
         H -->|Sí| I[⭐ Recibe SLEARN<br/>como evidencia de logro]
