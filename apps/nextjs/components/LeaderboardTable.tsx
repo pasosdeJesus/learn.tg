@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { PureAbility } from '@casl/ability'
+import { Ability } from '@casl/ability'
 import {
   Table,
   TableBody,
@@ -82,9 +82,11 @@ export function LeaderboardTable({
   const startRank = pagination ? (pagination.page - 1) * pagination.limit + 1 : 1
 
   const ability = useMemo(() => {
-    return new PureAbility(rules as any)
+    return new Ability(rules as any)
   }, [rules])
   const canViewReligion = ability.can('view_religion', 'User')
+  console.log('FRONTEND DEBUG: rules =', rules)
+  console.log('FRONTEND DEBUG: canViewReligion =', canViewReligion)
 
   return (
     <div className="space-y-4">
