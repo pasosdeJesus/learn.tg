@@ -94,9 +94,9 @@ Pricing]
     subgraph D1 [Premium Payment Distribution: 10 USDT]
         direction LR
         D1_1[55%: 5.5 USDT to learn.tg<br>Operations & Creators]
-        D1_2[10%: 1 USDT to Course Vault]
+        D1_2[10%: 1 USDT to Course Vault in USDT and SLEARN]
         D1_3[10%: 1 USDT → 22 SLEARN<br>Student Reward]
-        D1_4[10%: 1 USDT to Missionary Courses]
+        D1_4[5%: 1 USDT to Missionary Courses in USDT and SLEARN]
         D1_5[10%: 1 USDT to UBI and Referrals Fund]
         D1_6[5%: 0.5 USDT to churches registered in learn.tg and verified]
     end
@@ -105,13 +105,14 @@ Pricing]
 #### 3.1.1 Concrete example of a 10 USDT donation (assuming 1 USD = 22 SLE)
 
 1.  7 USDT go to the donated course vault: 3.5 USDT finance 3.5 scholarships
-    (1 USDT each) and 3.5 USDT are converted into 77 SLEARN to finance
-    77 scholarships (1 SLEARN each).
-2.  0.5 USDT funds learn.tg operations.
-3.  1 USDT for the donor as 22 SLEARN as credit for their own learning.
-4.  0.5 USDT automatically support free missional courses.
-5.  0.5 USDT feed the UBI (in CELO) and Referrals Fund for daily community rewards.
-6.  0.5 USDT to the fund for churches registered in learn.tg and verified
+    (1 USDT each) and 3.5 USDT go to the SLEARN reserve to mint 77 SLEARN
+    to finance 77 scholarships (1 SLEARN each).
+3.  0.5 USDT funds learn.tg operations.
+4.  1 USDT to the SLEARN reserve and 22SLEARM minted for the user as credit
+    for their own learning.
+6.  0.5 USDT automatically support free missional courses (USDT and SLEARN).
+7.  0.5 USDT feed the UBI (in CELO) and Referrals Fund for daily community rewards.
+8.  0.5 USDT to the fund for churches registered in learn.tg and verified
 
 
 #### 3.1.2 Example with a Premium Course Payment
@@ -127,10 +128,10 @@ SLEARN for the paying student and is used to finance more scholarships.
 pie
     title Distribution of a Premium Course Payment (10 USDT)
     "55% : learn.tg & Creators<br/>(5.5 USDT)" : 55
-    "10% : Course Vault<br/>(1 USDT)" : 10
+    "10% : Course Vault<br/>(e.g 1 USDT allocated: 0.9 USDT to course vault, 0.1 USDT to SLE reserve; 2.2 SLEARN minted)" : 10
     "10% : UBI and Referrals Fund<br/>(1 USDT)" : 10
-    "10% : Student Reward<br/>(1 USDT → 22 SLEARN)" : 10
-    "10% : Missionary Courses<br/>(1 USDT)" : 10
+    "10% : Student Reward<br/>(1 USDT to reserve → 22 SLEARN to student)" : 10
+    "10% : Missionary Courses<br/>(0.5 USDT in course vault, 11SLEARN=0.5 to SLEARN reserve)" : 10
     "5% : Fund for churches registered in learn.tg and verified<br/>(0.5 USDT)" : 5
 ```
 
@@ -151,6 +152,13 @@ growth.
   Transparency Dashboard).
 - **Sustainability** – The system is circular. SLEARN issued for scholarships
   are burned when used, and the USDT backing is kept in auditable reserves.
+- **Reserve Backing Rule** - Every SLEARN token is minted only when an
+  equivalent or greater value is deposited into the SLE reserve, at a minimum
+  rate of 1/22 USDT per SLEARN. For Premium Courses, a fixed 15% of each payment
+  is allocated directly to the SLE reserve, ensuring that all issued rewards
+  are fully backed at the moment of creation. This rule applies uniformly to
+  all mechanisms that generate SLEARN, guaranteeing systemic solvency at all
+  times.
 
 ### 3.3. The Role of stable-sl.pdJ.app: A Trust Bridge
 
@@ -162,17 +170,23 @@ digital assets to the national currency (SLE).
 
 SLEARN uses a tiered KYC approach with progressive limits, detailed in Section 5.8:
 
-1. **Tier 1 (100 SLE/day, ~US$5):** Users confirm funds are not from illegal sources.
-2. **Tier 2 (200 SLE/day, ~US$10):** Orange Money name verification via cross-check.
-3. **Tier 3 (200–400 SLE/day, ~US$20):** Enhanced verification via learn.tg + sivel.xyz ZK proofs of passport details.
+1. **Tier 1 (100 SLE/day, ~US$5):** Users have at least 1 SBT of a premium course
+   and confirm funds are not from illegal sources.
+3. **Tier 2 (200 SLE/day, ~US$10):** Users have at least 2 SBTs of premium courses
+   and Orange Money name verification via cross-check.
+5. **Tier 3 (200–400 SLE/day, ~US$20):** Users have at least 3 SBTs of premium
+   courses and enhanced verification via learn.tg + sivel.xyz ZK proofs of passport
+   details.
 
 Limits may evolve based on operational experience, but remain deliberately low.
+Redemption is subject to global daily liquidity limits to ensure system stability.
 
 #### 3.3.2. Cashback in SLEARN
 
 For selling crypto in stable-sl.pdJ.app we propose to give some Cashback
-in SLEARN (for example 0.05 SLEARN per USDT with additional Cashback for
-each course certificate obtained limited at 0.1 SLEARN per USDT).
+in SLEARN (for example while the spread allows to send funds to the SLEARN
+reserve, 0.05 SLEARN per USDT with additional Cashback for each premium SBT
+obtained limited at 0.1 SLEARN per USDT). 
 
 #### 3.3.3. Security and Operating Model
 
@@ -261,17 +275,15 @@ SLEARN maintains a dual-reference stability framework. For daily operations
 and user-facing pricing, 1 SLEARN is displayed at parity with 1 Sierra Leone Leone (SLE),
 ensuring local cultural accessibility. However, to protect students and donors
 from currency volatility, the underlying reserve obligation is denominated in
-stable assets (USDT/XAUT).   Should the Leone devalue significantly against the
-US dollar, the reference rate will adjust to preserve the educational purchasing
-power committed to users — always choosing the rate most favorable to the learner.
-The operator publishes the active reference rate transparently on the Dashboard,
-with any adjustment justified by market conditions and applied prospectively,
-never retroactively. Any surplus generated by reserve appreciation is not distributed
-to individual holders, but is redirected by the operator according to the ecosystem's
-priority needs — whether operational expenses of any project of the pdJ ecosystem, 
-scholarship expansion, or strengthening of the UBI and Referrals Fund — always logged
-transparently on the Dashboard. The gold backing protects the system's solvency; the
-yield of that protection is reinvested into the community, not captured privately.
+stable assets (USDT/XAUT).   To avoid devaluation (in case of inflation in Sierra
+Leone or in United States) we propose to use this formula for the value of
+a SLEARN: V_SLEARN​=max(FXSLE/USD​, 1/22​)   (in 2025 1SLE was around 1/22USDT).
+Any surplus generated by reserve appreciation is not distributed to individual holders,
+but is redirected by the operator according to the ecosystem's priority needs — whether
+operational expenses of any project of the pdJ ecosystem, scholarship expansion, 
+or strengthening of the UBI and Referrals Fund — always logged transparently on the
+Dashboard. The gold backing protects the system's solvency; the yield of that 
+protection is reinvested into the community, not captured privately.
 
 ### 5.3. Non-Speculative by Design
 Restricted transfers; cannot be transferred between users and cannot be 
