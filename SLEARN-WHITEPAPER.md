@@ -3,11 +3,6 @@
 
 ![SLEARN Logo](https://github.com/pasosdeJesus/learn.tg/raw/perm/resources/img/slearn-logo.svg)
 
-SLEARN is a utility token that transforms learning and donations into scholarships.
-Every 10 USDT donated creates 10 scholarships; every student payment automatically
-funds others' education. It's backed 1:1 by XAUT/USDT/CELO reserves and indexed to the 
-Sierra Leone Leone for stability.
-
 *Fundamental Disclaimer: SLEARN is a restricted-access utility token and a
 digital tool for educational access within the pdJ ecosystem ([learn.tg](http://learn.tg),
 [stable-sl.pdJ.app](http://stable-sl.pdJ.app) and [sivel.xyz](http://sivel.xyz)).
@@ -41,7 +36,8 @@ heart, and you will find rest for your souls.” (Matthew 11:29)*
 - **Digital utility token** – A unit of account that represents a future
   learning option inside learn.tg, which can be redeemed for Leones (SLE).
 - **Meritocratic** – Earned by learning (completing guides), donating
-  (to courses), or investing in yourself (paying for premium courses).
+  (to courses), using the pdJ ecosystem, or investing in yourself
+  (paying for premium courses).
 - **Practical use** – Used to pay for premium courses and, in Sierra Leone,
   it will be possible to exchange it for Leones (SLE) through our partner
   [stable-sl.pdJ.app](https://stable-sl.pdj.app/). That platform maintains
@@ -56,15 +52,11 @@ heart, and you will find rest for your souls.” (Matthew 11:29)*
 
 ## 3. The Economic Model: Automated Impact
 
-The power of SLEARN lies not in its price, but in the automatic value cycle
-it enables. Every transaction on the platform follows predefined, immutable
-rules that fund education.
+SLEARN enables a circular value cycle through predefined, immutable rules on the blockchain.
 
 ### 3.1. Fund Inflow and Distribution
 
-The system is fed by two main sources: directed donations and premium course
-payments. The diagram below illustrates the complete value flow, showing
-how each dollar multiplies into learning opportunities.
+Capital enters the system via directed donations or premium payments.
 
 ```mermaid
 flowchart TB
@@ -94,9 +86,9 @@ Pricing]
     subgraph D1 [Premium Payment Distribution: 10 USDT]
         direction LR
         D1_1[55%: 5.5 USDT to learn.tg<br>Operations & Creators]
-        D1_2[10%: 1 USDT to Course Vault in USDT and SLEARN]
+        D1_2[10%: 1 USDT to Course Vault]
         D1_3[10%: 1 USDT → 23 SLEARN<br>Student Reward]
-        D1_4[5%: 1 USDT to Missionary Courses in USDT and SLEARN]
+        D1_4[5%: 1 USDT to Missionary Courses]
         D1_5[10%: 1 USDT to UBI and Referrals Fund]
         D1_6[5%: 0.5 USDT to churches registered in learn.tg and verified]
     end
@@ -105,14 +97,15 @@ Pricing]
 #### 3.1.1 Concrete example of a 10 USDT donation (assuming 1 USD = 23 SLE)
 
 1.  7 USDT go to the donated course vault: 3.5 USDT finance 3.5 scholarships
-    (1 USDT each) and 3.5 USDT go to the SLEARN reserve to mint 77 SLEARN
-    to finance 77 scholarships (1 SLEARN each).
+    (1 USDT each) and 3.5 USDT go to the SLEARN reserve to mint 80.5 SLEARN
+    to finance 80+ scholarships (1 SLEARN each).
 3.  0.5 USDT funds learn.tg operations.
 4.  1 USDT to the SLEARN reserve and 23SLEARM minted for the user as credit
     for their own learning.
-6.  0.5 USDT automatically support free missional courses (USDT and SLEARN).
-7.  0.5 USDT feed the UBI (in CELO) and Referrals Fund for daily community rewards.
-8.  0.5 USDT to the fund for churches registered in learn.tg and verified
+6.  0.5 USDT automatically support free missional courses (half USDT and half
+    to SLEARN reserve).
+8.  0.5 USDT feed the UBI (in CELO) and Referrals Fund for daily community rewards.
+9.  0.5 USDT to the fund for churches registered in learn.tg and verified
 
 
 #### 3.1.2 Example with a Premium Course Payment
