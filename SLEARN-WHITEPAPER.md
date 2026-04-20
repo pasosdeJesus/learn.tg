@@ -165,9 +165,9 @@ uses the **Self Protocol (self.xyz)** on Celo.
 
 ### 5.2. Tiered Access and Limits
 Redemption is subject to progressive verification tiers:
-- **Tier 1:** 100 SLE/day (~$5). Requires 1 Premium Course SBT.
-- **Tier 2:** 200 SLE/day (~$10). Requires 2 SBTs and Orange Money name match.
-- **Tier 3:** 400 SLE/day (~$20). Requires 3 SBTs and **Self.xyz** ZK-Passport verification.
+- **Tier 1:** 100 SLE/day (~$4.5). Requires 1 Premium Course SBT (implicitely verification in learn.tg).
+- **Tier 2:** 200 SLE/day (~$9). Requires 2 SBTs and Orange Money name match.
+- **Tier 3:** 400 SLE/day (~$18). Requires 3 SBTs
 
 ### 5.3. Operating Model & Rewards
 The bridge operates as a secure link between digital assets and local liquidity.
@@ -190,7 +190,8 @@ To adapt to market and operational situations, in the first 3 phases of SLEARN, 
 founder and operator pdJ (Pasos de Jesús = Steps of Jesus) will adjust percentages
 and formulas subject to:
 * Transparency: Published on the Transparency Dashboard at least 30 days in advance.
-* Limits: The allocation to the SLEARN Reserve will be above de SLEARN in circulation.
+* Limits: The allocation to the SLEARN Reserve will always exceed the value of
+  SLEARN in circulation.
 * Community Notification: Announced via Telegram/WhatsApp groups.
 
 In Phase 4, the protocol will transition to a two-chamber model:
@@ -215,7 +216,7 @@ unregulated. However, we proactively implement:
 - **Phase 1 (April 2026):** Celo Sepolia deployment and community feedback.
 - **Phase 2 (June 1, 2026):** Mainnet launch. 
   We will not set a maximum supply because value of SLEARN depends on its utility
-  as a learning reward not on scarcity.  There won´t  be ICO, we will convert 1:1
+  as a learning reward not on scarcity.  There won't  be ICO, we will convert 1:1
   Learning Points gained at learn.tg, sivel.xyz and stable-sl.pdJ.app to SLEARN.
 - **Phase 3 (SLEARN ↔ SLE swap activation)** Post-education utility.
   Currently operated via verified human agents with on-chain attestation.
