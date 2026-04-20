@@ -81,13 +81,21 @@ export async function getCountriesQuery(db: Kysely<DB>) {
     .orderBy('p.nombre', 'asc')
 }
 /**
- * Obtiene los totales globales del leaderboard
+ * Obtiene los totales globales del leaderboard, opcionalmente filtrados por país
  */
-export async function getLeaderboardTotals(db: Kysely<DB>) {
-  const result = await db
+export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
+  let query: any = db
     .selectFrom('usuario as u')
     .leftJoin('transaction as t', 'u.id', 't.usuario_id')
     .where('u.excluir_leaderboard', 'is not', true)
+
+  if (country) {
+    query = query
+      .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
+      .where('p.alfa2', '=', country)
+  }
+
+  const result = await query
     .select([
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
       sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('totalLearningPoints'),
@@ -108,7 +116,7 @@ export async function getLeaderboardTotals(db: Kysely<DB>) {
 
 /**
  * Ejecuta la consulta del leaderboard y devuelve los resultados formateados
- * Incluye paginación, lista de países y totales globales
+ * Incluye paginación, lista de países y totales (filtrados por país si aplica)
  */
 export async function getLeaderboardData(
   db: Kysely<DB>,
@@ -126,7 +134,7 @@ export async function getLeaderboardData(
   const countriesQuery = await getCountriesQuery(db)
   const countries = await countriesQuery.execute()
 
-  const totals = await getLeaderboardTotals(db)
+  const totals = await getLeaderboardTotals(db, params.country)
 
   return {
     data: rows.map((row: any) => ({

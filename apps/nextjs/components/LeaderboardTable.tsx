@@ -93,8 +93,6 @@ export function LeaderboardTable({
     return new Ability(rules as any)
   }, [rules])
   const canViewReligion = ability.can('view_religion', 'User')
-  console.log('FRONTEND DEBUG: rules =', rules)
-  console.log('FRONTEND DEBUG: canViewReligion =', canViewReligion)
 
   return (
     <div className="space-y-4">
