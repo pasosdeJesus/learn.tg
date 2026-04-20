@@ -88,7 +88,7 @@ Pricing]
         D1_1[55%: 5.5 USDT to learn.tg<br>Operations & Creators]
         D1_2[10%: 1 USDT to Course Vault]
         D1_3[10%: 1 USDT → 22 SLEARN<br>Student Reward]
-        D1_4[5%: 1 USDT to Missionary Courses]
+        D1_4[10%: 1 USDT to Missionary Courses]
         D1_5[10%: 1 USDT to UBI and Referrals Fund]
         D1_6[5%: 0.5 USDT to churches registered in learn.tg and verified]
     end
@@ -108,14 +108,12 @@ Pricing]
 6.  0.5 USDT to the fund for churches registered in learn.tg and verified
 
 
-#### 3.1.2 Example with a Premium Course Payment
+#### 3.1.2 Example with a 10 USDT Premium Course Payment
 
 The model also activates when a user pays to access an exclusive course.
 The price is dynamic, adjusted according to the student’s country development
 index, promoting fairness. A percentage of this payment is converted into
 SLEARN for the paying student and is used to finance more scholarships.
-
-##### Distribution of a 10 USDT premium course payment (example from Sierra Leone)
 
 ```mermaid
 pie
@@ -138,14 +136,22 @@ growth.
 ## 4. Stability and Reserve Backing
 To protect users from volatility, SLEARN employs a dual-reference stability framework.
 
-1.  **Reserve Backing Rule:** Every SLEARN is minted only when equivalent value (minimum $1/22$ USDT) is deposited into the SLE reserve.
-2.  **Asset Mix:** Backing consists of **USDT** (liquidity), **CELO** (ecosystem), and **XAUT** (strategic gold reserve to hedge against fiat inflation).
-3.  **Stability Formula:** 1 SLEARN is pegged to 1 Sierra Leone Leone (SLE). To protect against devaluation, we apply:
+1.  **Reserve Backing Rule:** Every SLEARN is minted only when equivalent value
+    (minimum $1/22$ USDT) is deposited into the SLE reserve.
+2.  **Asset Mix:** Backing consists of **USDT** (liquidity), **CELO** (ecosystem),
+    and **XAUT** (strategic gold reserve to hedge against fiat inflation).
+3.  **Stability Formula:** 1 SLEARN is pegged to 1 Sierra Leone Leone (SLE). To
+    protect against devaluation, we apply:
 
     $$V_{SLEARN} = \max(FX_{SLE/USD}, 1/22)$$
 
     Where $1/22$ is the historical upper-bound rate from 2025.
-    
+4.  **Reserve Surplus and Ecosystem Reinvestment:** The SLEARN reserve is designed
+    to maintain a 1:1 backing of all tokens in circulation. However, operational
+    efficiency and community growth may generate a surplus. This surplus may be
+    allocated to develop and maintain the pdJ ecosystem and we will inform its
+    usage in the transparency dashboard.
+ 
 ---
 
 ## 5. The Trust Bridge: stable-sl.pdJ.app
@@ -179,6 +185,14 @@ Funds are managed across three layers to minimize attack surfaces:
 - **Master Vault (SL0):** Air-gapped storage for the strategic XAUT (Gold) reserve.
 
 ### 6.2. Adaptive Governance
+
+To adapt to market and operational situations, in the first 3 phases of SLEARN, the
+founder and operator pdJ (Pasos de Jesús = Steps of Jesus) will adjust percentages
+and formulas subject to:
+* Transparency: Published on the Transparency Dashboard at least 30 days in advance.
+* Limits: The allocation to the SLEARN Reserve will be above de SLEARN in circulation.
+* Community Notification: Announced via Telegram/WhatsApp groups.
+
 In Phase 4, the protocol will transition to a two-chamber model:
 1.  **Learner House:** Meritocratic voting based on course completion.
 2.  **Donor House:** Weighted by historical contributions.
@@ -203,7 +217,7 @@ unregulated. However, we proactively implement:
   We will not set a maximum supply because value of SLEARN depends on its utility
   as a learning reward not on scarcity.  There won´t  be ICO, we will convert 1:1
   Learning Points gained at learn.tg, sivel.xyz and stable-sl.pdJ.app to SLEARN.
-- **Phase 3 (SLEARN ↔ SLE swap activation)** (post-education utility)
+- **Phase 3 (SLEARN ↔ SLE swap activation)** Post-education utility.
   Currently operated via verified human agents with on-chain attestation.
   Automated Orange Money merchant payout integration will be introduced
   as regulatory frameworks and API availability permit.
