@@ -142,8 +142,9 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
 2.  **Asset Mix:** Backing consists of **USDT** (liquidity), **CELO** (ecosystem), and **XAUT** (strategic gold reserve to hedge against fiat inflation).
 3.  **Stability Formula:** 1 SLEARN is pegged to 1 Sierra Leone Leone (SLE). To protect against devaluation, we apply:
     $$V_{SLEARN} = \max(FX_{SLE/USD}, 1/23)$$
-    *Where $1/23$ is the historical upper-bound rate from 2025.*
-4.  At launch we will not set a maximum supply because value depends
+
+    Where $1/23$ is the historical upper-bound rate from 2025.
+5.  At launch we will not set a maximum supply because value depends
     on its utility as a learning reward not on scarcity.  There won´t
     be ICO, we will transform 1:1 Learning Points to SLEARN.
     
