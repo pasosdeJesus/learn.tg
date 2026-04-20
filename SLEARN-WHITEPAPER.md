@@ -97,10 +97,10 @@ Pricing]
 #### 3.1.1 Concrete example of a 10 USDT donation (assuming 1 USD = 22 SLE)
 
 1.  7 USDT go to the donated course vault: 3.5 USDT finance 3.5 scholarships
-    (1 USDT each) and 3.5 USDT go to the SLEARN reserve to mint 80.5 SLEARN
-    to finance 80+ scholarships (1 SLEARN each).
+    (1 USDT each) and 3.5 USDT go to the SLEARN reserve to mint 77 SLEARN
+    to finance 77 scholarships (1 SLEARN each).
 3.  0.5 USDT funds learn.tg operations.
-4.  1 USDT to the SLEARN reserve and 22SLEARM minted for the user as credit
+4.  1 USDT to the SLEARN reserve and 22SLEARN minted for the user as credit
     for their own learning.
 6.  0.5 USDT automatically support free missional courses (half USDT and half
     to SLEARN reserve).
