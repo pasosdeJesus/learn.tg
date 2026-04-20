@@ -121,7 +121,7 @@ SLEARN for the paying student and is used to finance more scholarships.
 pie
     title Distribution of a Premium Course Payment (10 USDT)
     "55% : learn.tg & Creators<br/>(5.5 USDT)" : 55
-    "10% : Course Vault<br/>(e.g 1 USDT allocated: 0.9 USDT to course vault, 0.1 USDT to SLE reserve; 2.2 SLEARN minted)" : 10
+    "10% : Course Vault<br/>(e.g 1 USDT allocated: 0.5 USDT to course vault, 0.5 USDT to SLE reserve; 11 SLEARN minted)" : 10
     "10% : UBI and Referrals Fund<br/>(1 USDT)" : 10
     "10% : Student Reward<br/>(1 USDT to reserve → 22 SLEARN to student)" : 10
     "10% : Missionary Courses<br/>(0.5 USDT in course vault, 11SLEARN=0.5 to SLEARN reserve)" : 10
@@ -133,220 +133,80 @@ contributes to platform sustainability, personal incentive, scholarship
 creation, and the missional fund, creating a powerful virtuous cycle of
 growth.
 
-### 3.2. Use, Redemption and Sustainability
+---
 
-- **On‑platform use** – Users **burn** SLEARN to access premium courses.
-- **Local redemption (future)** – In Sierra Leone, SLEARN may be exchanged
-  for Leones (SLE) through our partner stable-sl.pdJ.app. This feature will
-  be introduced **after** the token has established its primary utility as a
-  medium of exchange for education. It is not a speculative “cash‑out” but a
-  conversion to local currency for legitimate educational or personal needs,
-  subject to reasonable limits and identity verification (published on the
-  Transparency Dashboard).
-- **Sustainability** – The system is circular. SLEARN issued for scholarships
-  are burned when used, and the USDT backing is kept in auditable reserves.
-- **Reserve Backing Rule** - Every SLEARN token is minted only when an
-  equivalent or greater value is deposited into the SLE reserve, at a minimum
-  rate of 1/22 USDT per SLEARN. For Premium Courses, a fixed 15% of each payment
-  is allocated directly to the SLE reserve, ensuring that all issued rewards
-  are fully backed at the moment of creation. This rule applies uniformly to
-  all mechanisms that generate SLEARN, guaranteeing systemic solvency at all
-  times.
+## 4. Stability and Reserve Backing
+To protect users from volatility, SLEARN employs a dual-reference stability framework.
 
-### 3.3. The Role of stable-sl.pdJ.app: A Trust Bridge
+1.  **Reserve Backing Rule:** Every SLEARN is minted only when equivalent value (minimum $1/23$ USDT) is deposited into the SLE reserve.
+2.  **Asset Mix:** Backing consists of **USDT** (liquidity), **CELO** (ecosystem), and **XAUT** (strategic gold reserve to hedge against fiat inflation).
+3.  **Stability Formula:** 1 SLEARN is pegged to 1 Sierra Leone Leone (SLE). To protect against devaluation, we apply:
+    $$V_{SLEARN} = \max(FX_{SLE/USD}, 1/23)$$
+    *Where $1/23$ is the historical upper-bound rate from 2025.*
+4.  At launch we will not set a maximum supply because value depends
+    on its utility as a learning reward not on scarcity.  There won´t
+    be ICO, we will transform 1:1 Learning Points to SLEARN.
+    
+---
 
-For SLEARN to fulfil its promise of real‑world utility, it connects with the
-economy of Sierra Leone through stable-sl.pdJ.app, a service that converts
-digital assets to the national currency (SLE).
+## 5. The Trust Bridge: stable-sl.pdJ.app
+For SLEARN to fulfill its promise of real-world utility, it connects with the economy of Sierra Leone through `stable-sl.pdJ.app`.
 
-#### 3.3.1. Identity Verification, Access and Operation Limits
+### 5.1. Identity & Privacy (Self.xyz Integration)
+We prioritize user privacy by utilizing learn.tg verification that in turn
+uses the **Self Protocol (self.xyz)** on Celo.
+- **NFC Verification:** Users verify their identity using their smartphone's NFC reader against their official passport.
+- **ZK Proofs:** Validation is performed via Zero-Knowledge proofs. **learn.tg** only stores the user's name and country, ensuring "privacy by design" while meeting compliance requirements.
 
-SLEARN uses a tiered KYC approach with progressive limits, detailed in Section 5.8:
+### 5.2. Tiered Access and Limits
+Redemption is subject to progressive verification tiers:
+- **Tier 1:** 100 SLE/day (~$5). Requires 1 Premium Course SBT.
+- **Tier 2:** 200 SLE/day (~$10). Requires 2 SBTs and Orange Money name match.
+- **Tier 3:** 400 SLE/day (~$20). Requires 3 SBTs and **Self.xyz** ZK-Passport verification.
 
-1. **Tier 1 (100 SLE/day, ~US$5):** Users have at least 1 SBT of a premium course
-   and confirm funds are not from illegal sources.
-3. **Tier 2 (200 SLE/day, ~US$10):** Users have at least 2 SBTs of premium courses
-   and Orange Money name verification via cross-check.
-5. **Tier 3 (200–400 SLE/day, ~US$20):** Users have at least 3 SBTs of premium
-   courses and enhanced verification via learn.tg + sivel.xyz ZK proofs of passport
-   details.
-
-Limits may evolve based on operational experience, but remain deliberately low.
-Redemption is subject to global daily liquidity limits to ensure system stability.
-
-#### 3.3.2. Cashback in SLEARN
-
-For selling crypto in stable-sl.pdJ.app we propose to give some Cashback
-in SLEARN (for example while the spread allows to send funds to the SLEARN
-reserve, 0.05 SLEARN per USDT with additional Cashback for each premium SBT
-obtained limited at 0.1 SLEARN per USDT). 
-
-#### 3.3.3. Security and Operating Model
-
-- **Escrow for USDT:** A smart contract acts as a neutral custodian, freezing
-  the user’s USDT until the operator confirms receipt of SLE.
-- **Execution with prior confirmation:** The user does not transfer funds until
-  the operator confirms their availability.
-- **Trust network:** The service is operated by a small group of trusted
-  collaborators, aligned with the project’s values and mission.
-- **Transparency:** Order status is recorded and verifiable. The reserve vault
-  backing SLEARN is public and on‑chain.
+### 5.3. Operating Model & Rewards
+The bridge operates as a secure link between digital assets and local liquidity.
+- **Non-Custodial Escrow:** A smart contract acts as a neutral custodian, freezing digital assets until the operator confirms the receipt of SLE. This minimizes counterparty risk.
+- **Cashback Incentive:** To encourage ecosystem growth, users selling crypto through the bridge receive **SLEARN Cashback**. Rewards are proportional to the spread (up to 0.05 SLEARN per USDT), with bonuses for each Premium Course SBT obtained (up to 0.1 SLEARN per USDT).
 
 ---
 
-## 4. Security and Custody Architecture
+## 6. Security and Governance
 
-The integrity of community funds is paramount. We operate under a segmented
-custody model with defined thresholds to minimise risks.
+### 6.1. Segmented Custody Architecture
+Funds are managed across three layers to minimize attack surfaces:
+- **Hot Wallets (L2/S2):** 1-2 months of operational funds for quick exchanges.
+- **Main Vaults (L1/S1):** Online storage limited to < 1,000 USDT.
+- **Master Vault (SL0):** Air-gapped storage for the strategic XAUT (Gold) reserve.
 
-```mermaid
-graph TB
-    subgraph PRODUCTION_APPS
-        L2[Hot Wallet L2<br/>Operational fund 1-2 months]
-        S2[Hot Wallet S2<br/>For receiving/quick exchange]
-    end
-
-    subgraph MAIN_VAULTS_ONLINE[Separate computer<br/>Limit: < 1000 USDT
-each]
-        L1[💰 Vault L1 - learn.tg<br/>Balance: < 1000 USDT]
-        S1[💰 Vault S1 - stable-sl<br/>Balance: < 1000 USDT]
-    end
-
-    subgraph MASTER_VAULT_AIR_GAPPED[Air-Gapped<br/>Strategic
-Reserve]
-        SL0[🪙 Master Vault SL0<br/>Reserve in XAUT<br/>Balance: > 1000 USDT
-eq.]
-    end
-
-    L1 -- Monthly replenishment --> L2
-    S1 -- Back exchanges --> S2
-    L1 -- Transfer surplus --> SL0
-    S1 -- Transfer surplus --> SL0
-```
-
-**Key policies:**
-
-- **Reserve backing:** SLEARN is backed 1:1 by combined USDT (operational 
-  liquidity) and XAUT (strategic reserve) holdings, auditable on-chain.
-  
-- **Custody model:** Three layers:
-  1. **Hot wallets (L2/S2):** 1-2 months operational funds in USDT, CELO and SLEARN
-  2. **Main vaults (L1/S1):** < 1,000 USDT equivalent, holds multiple assets 
-     (USDT, CELO, SLEARN) for operations and exchanges
-  3. **Master vault (SL0):** Air-gapped, XAUT only, > 1,000 USDT equivalent
-  
-- **Asset management:** Pasos de Jesús manages multi-asset operations 
-  (CELO, USDT, SLEARN, GoodDollar, XAUT) through stable-sl.pdJ.app to 
-  maintain liquidity and facilitate redemptions.
-  
-- **Excess reserves:** Holdings exceeding the 1:1 SLEARN backing requirement 
-  fund platform operations, ecosystem development, and educational initiatives. 
-  All usage is transparently reported.
-  
-- **Transparency:** All reserve balances are on-chain and independently verifiable.
----
-
-## 5. Design Pillars and Governance
-
-The design of SLEARN is based on fundamental principles that prioritise its
-utility, transparency and alignment with the mission, above any speculative
-financial dynamics.
-
-### 5.1. Radical Transparency and On‑Chain Verification
-All policies and thresholds are published on the
-[Transparency Dashboard](https://learn.tg/en/transparency) and subject to
-periodic review.
-
-Reserve auditable on-chain; SLEARN always 1:1 backed by USDT + XAUT.
-Any user can,at any time, independently verify that the value in this vault is always
-greater than or equal to the total value of SLEARN in circulation (calculated
-at the parity of 1 SLEARN = 1 SLE). This cross‑verification creates an open
-and immutable solvency guarantee.
-
-### 5.2. Functional Stability
-SLEARN maintains a dual-reference stability framework. For daily operations
-and user-facing pricing, 1 SLEARN is displayed at parity with 1 Sierra Leone Leone (SLE),
-ensuring local cultural accessibility. However, to protect students and donors
-from currency volatility, the underlying reserve obligation is denominated in
-stable assets (USDT/XAUT).   To avoid devaluation (in case of inflation in Sierra
-Leone or in United States) we propose to use this formula for the value of
-a SLEARN: V_SLEARN​=max(FX-SLE/USD​, 1/22​) where FX-SLE/USD is the exchange rate of
-SLE to USD reported the the Bank of Sierra Leone (to be presented in the
-transparency dashboard) and 1/22 is upper bound of the rate in 2025.
-Any surplus generated by reserve appreciation is not distributed to individual holders,
-but is redirected by the operator according to the ecosystem's priority needs — whether
-operational expenses of any project of the pdJ ecosystem, scholarship expansion, 
-or strengthening of the UBI and Referrals Fund — always logged transparently on the
-Dashboard. The gold backing protects the system's solvency; the yield of that 
-protection is reinvested into the community, not captured privately.
-
-### 5.3. Non-Speculative by Design
-Restricted transfers; cannot be transferred between users and cannot be 
-traded on exchanges.
-
-### 5.4. Organic Issuance without Arbitrary Limit
-Unlike most tokens, SLEARN has no predefined maximum supply (hard cap) and
-incorporates no artificial deflationary mechanisms. This is a key philosophical
-decision:
-
-1.  **Value derives from utility, not scarcity:** The “value” of SLEARN is its
-    purchasing power within the ecosystem (1 SLEARN = 1 SLE for redemption),
-    backed by assets, not a market price.
-2.  **Issuance is tied to real value creation:** New SLEARN enter circulation
-    exclusively as a result of actions that add value to the system: learning,
-    donating or paying for a premium course. It is a flow economy.
-3.  **Balance is achieved through use:** SLEARN are destroyed (burned) when used
-    to pay for a course or redeemed for SLE. This cycle of issuance through
-    contribution and burning through use ensures that supply dynamically
-    adjusts to real activity, without the need for artificial limits.
-    A growing and sustainable supply is an indicator of an active and healthy
-    community.
-
-### 5.5. Local Impact with a Global Vision
-Fixed percentage of revenue funds missional courses.
-
-### 5.6. Fair Launch and Migration
-No ICO, no private sale. First SLEARN migrated 1:1 from Learning Score.
-
-### 5.7. Future Governance (Adaptive Model)
-Phase 4: Community voting (users, donors, earners) with operator legal and technical veto.
-
-### 5.8. Regulatory and Compliance Framework
-SLEARN operates in Sierra Leone, where cryptocurrency is unregulated. Our KYC/AML
-framework is transparent, proportional to risk, and respectful of privacy.
-
-**KYC – Tiered Verification:**
-- **Tier 1:** Basic account (100 SLE/day)
-- **Tier 2:** Orange Money name match (200 SLE/day)
-- **Tier 3:** Passport verification via sivel.xyz ZK proofs, integrated with learn.tg Profile Score (400 SLE/day max)
-
-**AML:** Users attest via checkbox that funds are not from illegal sources.
-Transaction monitoring flags unusual patterns for review.
+### 6.2. Adaptive Governance
+In Phase 4, the protocol will transition to a two-chamber model:
+1.  **Learner House:** Meritocratic voting based on course completion.
+2.  **Donor House:** Weighted by historical contributions.
+*Note: Pasos de Jesús retains a technical veto to ensure legal and security compliance.*
 
 ---
 
-## 6. Roadmap
+## 7. Regulatory and Compliance Framework
+SLEARN operates primarily in Sierra Leone, where digital assets remain largely unregulated. However, we proactively implement:
+- **AML/CTF:** Users must attest to the legal source of funds via a mandatory checkbox. Transaction monitoring flags unusual patterns for manual review.
+- **Proportional KYC:** Identity requirements scale with the volume of value exchanged, focusing on ZK-proofs to minimize data exposure.
+- **Transparency:** All reserves and distribution logs are public and audit-ready on the [Transparency Dashboard](https://learn.tg/en/transparency).
 
-- **Phase 1 (April–May 2026):** Contract deployment on Celo Sepolia (testing).
-  Whitepaper and transparency dashboard publication. Community feedback
-  requested on the Celo Forum.
-- **Phase 2 (June 1, 2026):** Launch on Celo mainnet. 1:1 conversion of
-  Learning Points to SLEARN. Activation of SLEARN as a payment method for
-  premium courses (burn mechanism).
+---
+
+## 8. Roadmap
+- **Phase 1 (April 2026):** Celo Sepolia deployment and community feedback.
+- **Phase 2 (June 1, 2026):** Mainnet launch and 1:1 migration of Learning Scores to SLEARN.
 - **Phase 3 (SLEARN ↔ SLE swap activation)** (post-education utility)
-  Initially operated via verified human agents with on-chain attestation.
+  Currently operated via verified human agents with on-chain attestation.
   Automated Orange Money merchant payout integration will be introduced
   as regulatory frameworks and API availability permit.
-- **Phase 4 Governance** (Pending Phase 2 and 3 adoption): A two-chamber
-  model adapted to our scale. A Learner House (meritocratic, based on
-  course completion and contribution history) votes on curriculum and
-  scholarship policies. A Donor House (weighted by contribution history)
-  advises on treasury allocation. Both chambers submit proposals;
-  pdJ retains a technical veto for security and legal compliance,
-  publishable on the Transparency Dashboard.
+- **Phase 4:** Implementation of the two-chamber governance model.
+
 ---
 
-## 7. Conclusion: More Than a Token
+## 9. Conclusion
 
 SLEARN is not the goal. It is the tool.
 
@@ -354,18 +214,12 @@ The goal is a self‑sustaining community where learning flows freely, where
 every donation multiplies into scholarships and where every student,
 regardless of their economic background, has a clear path to grow.
 
-This is the future we are building, one transaction at a time.
-
----
-
-To learn more, audit the contract or see live impact:
-
 - [Real‑time Transparency Dashboard](https://learn.tg/en/transparency)
 - [Verified SLEARN Contract on CeloScan](https://celoscan.io/address/...) (link
   available after deployment)
 - [Fundamental Principles of learn.tg](https://learn.tg/principles)
 
-Contact: vtamara@pasosdeJesus.org
+**Contact:** vtamara@pasosdeJesus.org  
 
 *Last updated: April 17, 2026. This is a living document that may evolve with
 the project.*
