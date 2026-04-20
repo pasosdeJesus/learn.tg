@@ -214,7 +214,35 @@ unregulated. However, we proactively implement:
 
 ---
 
-## 8. Roadmap
+## 8. Risks
+
+Using SLEARN involves several risks inherent to utility
+tokens and blockchain systems, users should consider these
+risks before donating or paying for courses in learn.tg.
+
+- **Smart contract risk**: Even after audits, vulnerabilities
+  in the token, reserve vault, or bridge contract could lead
+  to loss of funds.
+- **Bridge risk**: The initial SLEARN ↔ SLE bridge relies on
+  human operators and smart contract escrow. Delays, errors,
+  or technical issues may occur during redemption.
+- **Reserve volatility**: The backing (USDT, CELO, XAUT) may
+  fluctuate in value, affecting the stability of SLEARN.
+- **Low adoption**: If learn.tg does not grow sufficiently,
+  the utility and demand for SLEARN could remain limited.
+- **Liquidity risk**: SLEARN is a restricted utility token.
+  There is no secondary market, and conversion outside the
+  official bridge is not intended.
+- **Regulatory risk**: Future regulations in Sierra Leone
+  or other jurisdictions could restrict the bridge or the
+  use of SLEARN.
+- **Operational risk**: In early phases, the project depends
+  heavily on Pasos de Jesús (pdJ) for operations and
+  reserve management.
+
+---
+
+## 9. Roadmap
 - **Phase 1 (April 2026):** Celo Sepolia deployment and community feedback.
 - **Phase 2 (June 1, 2026):** Mainnet launch. 
   We will not set a maximum supply because value of SLEARN depends on its utility
@@ -228,7 +256,7 @@ unregulated. However, we proactively implement:
 
 ---
 
-## 9. Conclusion
+## 10. Conclusion
 
 SLEARN is not the goal. It is the tool.
 
