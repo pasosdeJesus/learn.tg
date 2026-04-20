@@ -182,7 +182,7 @@ Funds are managed across three layers to minimize attack surfaces:
 In Phase 4, the protocol will transition to a two-chamber model:
 1.  **Learner House:** Meritocratic voting based on course completion.
 2.  **Donor House:** Weighted by historical contributions.
-*Note: Pasos de Jesús retains a technical veto to ensure legal and security compliance.*
+*Note: pdJ (Pasos de Jesús or Steps of Jesus) retains a technical veto to ensure legal and security compliance.*
 
 ---
 
