@@ -99,13 +99,13 @@ Pricing]
 1.  7 USDT go to the donated course vault: 3.5 USDT finance 3.5 scholarships
     (1 USDT each) and 3.5 USDT go to the SLEARN reserve to mint 77 SLEARN
     to finance 77 scholarships (1 SLEARN each).
-3.  0.5 USDT funds learn.tg operations.
-4.  1 USDT to the SLEARN reserve and 22SLEARN minted for the user as credit
+2.  0.5 USDT funds learn.tg operations.
+3.  1 USDT to the SLEARN reserve and 22SLEARN minted for the user as credit
     for their own learning.
-6.  0.5 USDT automatically support free missional courses (half USDT and half
+4.  0.5 USDT automatically support free missional courses (half USDT and half
     to SLEARN reserve).
-8.  0.5 USDT feed the UBI (in CELO) and Referrals Fund for daily community rewards.
-9.  0.5 USDT to the fund for churches registered in learn.tg and verified
+5.  0.5 USDT feed the UBI (in CELO) and Referrals Fund for daily community rewards.
+6.  0.5 USDT to the fund for churches registered in learn.tg and verified
 
 
 #### 3.1.2 Example with a Premium Course Payment
@@ -141,6 +141,7 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
 1.  **Reserve Backing Rule:** Every SLEARN is minted only when equivalent value (minimum $1/22$ USDT) is deposited into the SLE reserve.
 2.  **Asset Mix:** Backing consists of **USDT** (liquidity), **CELO** (ecosystem), and **XAUT** (strategic gold reserve to hedge against fiat inflation).
 3.  **Stability Formula:** 1 SLEARN is pegged to 1 Sierra Leone Leone (SLE). To protect against devaluation, we apply:
+
     $$V_{SLEARN} = \max(FX_{SLE/USD}, 1/22)$$
 
     Where $1/22$ is the historical upper-bound rate from 2025.
