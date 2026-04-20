@@ -49,6 +49,12 @@ heart, and you will find rest for your souls.” (Matthew 11:29)*
   restricted transfer functions to guarantee its use as a tool, not a
   speculative asset.
 
+### 2.1. Current State and Initial Backing
+
+As of April 2026, learn.tg has **482 users with connected wallets**, of which **143 active users** hold **309 Learning Points** (to be converted 1:1 to SLEARN at launch). The platform has also distributed **$288.36 in scholarships** and **373.76 CELO** as UBI, with **$1.45 in donations** received.
+
+To ensure proper backing from day one, **pdJ (Pasos de Jesús)** will make an initial donation equivalent to the value required to back these 309 SLEARN tokens (minimum $1/22 USDT per SLEARN, as per the Reserve Backing Rule in Section 4). This guarantees that every SLEARN token in circulation at launch is fully reserved.
+
 ---
 
 ## 3. The Economic Model: Automated Impact
@@ -246,9 +252,9 @@ risks before donating or paying for courses in learn.tg.
 - **Phase 1 (April 2026):** Celo Sepolia deployment and community feedback.
 - **Phase 2 (June 1, 2026):** Mainnet launch. 
   We will not set a maximum supply because value of SLEARN depends on its utility
-  as a learning reward not on scarcity.  There won't  be ICO, we will convert 1:1
+  as a learning reward not on scarcity.  There won't  be an ICO, we will convert 1:1
   Learning Points gained at learn.tg, sivel.xyz and stable-sl.pdJ.app to SLEARN.
-- **Phase 3 SLEARN ↔ SLE swap activation** Post-education utility.
+- **Phase 3:** SLEARN ↔ SLE swap activation. Post-education utility.
   Currently operated via verified human agents with on-chain attestation.
   Automated Orange Money merchant payout integration will be introduced
   as regulatory frameworks and API availability permit.
