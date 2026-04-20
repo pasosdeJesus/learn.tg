@@ -103,7 +103,7 @@ Pricing]
 2.  0.5 USDT funds learn.tg operations.
 3.  1 USDT to the SLEARN reserve and 22SLEARN minted for the user as credit
     for their own learning.
-4.  0.5 USDT automatically support free missional courses (half USDT and half
+4.  0.5 USDT automatically support free missional courses (half USDT to vault and half
     to SLEARN reserve).
 5.  0.5 USDT feed the UBI (in CELO) and Referrals Fund for daily community rewards.
 6.  0.5 USDT to the fund for churches registered in learn.tg and verified
@@ -168,8 +168,8 @@ uses the **Self Protocol (self.xyz)** on Celo.
 Redemption is subject to progressive verification tiers:
 - **Tier 1:** 100 SLE/day (~$4.5). Requires 1 Premium Course SBT and learn.tg
   verification via Self.xyz.
-- **Tier 2:** 200 SLE/day (~$9). Requires 2 SBTs and Orange Money name match.
-- **Tier 3:** 400 SLE/day (~$18). Requires 3 SBTs
+- **Tier 2:** 200 SLE/day (~$9). Requires 2 Premium Course SBTs and Orange Money name match.
+- **Tier 3:** 400 SLE/day (~$18). Requires 3 Premium Course SBTs
 
 ### 5.3. Operating Model & Rewards
 The bridge operates as a secure link between digital assets and local liquidity.
