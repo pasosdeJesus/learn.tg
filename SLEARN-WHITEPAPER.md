@@ -165,7 +165,8 @@ uses the **Self Protocol (self.xyz)** on Celo.
 
 ### 5.2. Tiered Access and Limits
 Redemption is subject to progressive verification tiers:
-- **Tier 1:** 100 SLE/day (~$4.5). Requires 1 Premium Course SBT (implicitely verification in learn.tg).
+- **Tier 1:** 100 SLE/day (~$4.5). Requires 1 Premium Course SBT and learn.tg
+  verification via Self.xyz.
 - **Tier 2:** 200 SLE/day (~$9). Requires 2 SBTs and Orange Money name match.
 - **Tier 3:** 400 SLE/day (~$18). Requires 3 SBTs
 
