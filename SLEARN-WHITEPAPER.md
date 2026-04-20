@@ -146,7 +146,8 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
     Where $1/22$ is the historical upper-bound rate from 2025.
 5.  At launch we will not set a maximum supply because value depends
     on its utility as a learning reward not on scarcity.  There won´t
-    be ICO, we will transform 1:1 Learning Points to SLEARN.
+    be ICO, we will convert 1:1 Learning Points of learn.tg users
+    to SLEARN.
     
 ---
 
