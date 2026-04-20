@@ -138,12 +138,12 @@ growth.
 ## 4. Stability and Reserve Backing
 To protect users from volatility, SLEARN employs a dual-reference stability framework.
 
-1.  **Reserve Backing Rule:** Every SLEARN is minted only when equivalent value (minimum $1/23$ USDT) is deposited into the SLE reserve.
+1.  **Reserve Backing Rule:** Every SLEARN is minted only when equivalent value (minimum $1/22$ USDT) is deposited into the SLE reserve.
 2.  **Asset Mix:** Backing consists of **USDT** (liquidity), **CELO** (ecosystem), and **XAUT** (strategic gold reserve to hedge against fiat inflation).
 3.  **Stability Formula:** 1 SLEARN is pegged to 1 Sierra Leone Leone (SLE). To protect against devaluation, we apply:
-    $$V_{SLEARN} = \max(FX_{SLE/USD}, 1/23)$$
+    $$V_{SLEARN} = \max(FX_{SLE/USD}, 1/22)$$
 
-    Where $1/23$ is the historical upper-bound rate from 2025.
+    Where $1/22$ is the historical upper-bound rate from 2025.
 5.  At launch we will not set a maximum supply because value depends
     on its utility as a learning reward not on scarcity.  There won´t
     be ICO, we will transform 1:1 Learning Points to SLEARN.
