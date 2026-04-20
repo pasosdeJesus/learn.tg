@@ -4,15 +4,14 @@
 ![SLEARN Logo](https://github.com/pasosdeJesus/learn.tg/raw/perm/resources/img/slearn-logo.svg)
 
 *Fundamental Disclaimer: SLEARN is a restricted-access utility token and a
-digital tool for educational access within the pdJ ecosystem ([learn.tg](http://learn.tg),
-[stable-sl.pdJ.app](http://stable-sl.pdJ.app) and [sivel.xyz](http://sivel.xyz)).
-It is not an investment, a security, or a financial instrument regulated by any
-authority. It is not a cryptocurrency for speculation and cannot be bought or
-traded on external markets. Its internal accounting unit is the Leone (SLE), 
-with a USD reference rate to protect long-term educational purchasing power. 
-It is not a stablecoin, currency peg, or investment instrument.
-Users accept that cryptocurrency technology carries inherent technical
-risks, which they use at their own discretion.*
+digital tool for educational access within the pdJ ecosystem (learn.tg, 
+stable-sl.pdJ.app and sivel.xyz). It is not an investment, a security, a 
+stablecoin, a currency peg, or a financial instrument regulated by any
+authority. It cannot be bought or traded on external markets. Its internal
+accounting unit is the Leone (SLE), with a USD reference floor to protect
+long-term educational purchasing power. Users accept that cryptocurrency
+technology carries inherent technical risks, which they use at their own
+discretion.*
 
 ---
 
