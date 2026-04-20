@@ -8,9 +8,11 @@ digital tool for educational access within the pdJ ecosystem ([learn.tg](http://
 [stable-sl.pdJ.app](http://stable-sl.pdJ.app) and [sivel.xyz](http://sivel.xyz)).
 It is not an investment, a security, or a financial instrument regulated by any
 authority. It is not a cryptocurrency for speculation and cannot be bought or
-traded on external markets. Its value is indexed to the Leone (SLE) for internal
-accounting stability. Users accept that cryptocurrency technology carries
-inherent technical risks, which they use at their own discretion.*
+traded on external markets. Its internal accounting unit is the Leone (SLE), 
+with a USD reference rate to protect long-term educational purchasing power. 
+It is not a stablecoin, currency peg, or investment instrument.
+Users accept that cryptocurrency technology carries inherent technical
+risks, which they use at their own discretion.*
 
 ---
 
