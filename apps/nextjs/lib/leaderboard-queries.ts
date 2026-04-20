@@ -80,10 +80,35 @@ export async function getCountriesQuery(db: Kysely<DB>) {
     .distinct()
     .orderBy('p.nombre', 'asc')
 }
+/**
+ * Obtiene los totales globales del leaderboard
+ */
+export async function getLeaderboardTotals(db: Kysely<DB>) {
+  const result = await db
+    .selectFrom('usuario as u')
+    .leftJoin('transaction as t', 'u.id', 't.usuario_id')
+    .where('u.excluir_leaderboard', 'is not', true)
+    .select([
+      sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
+      sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('totalLearningPoints'),
+      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalScholarshipUSDT'),
+      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('totalUBICELO'),
+      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalDonationsUSDT'),
+    ])
+    .executeTakeFirst()
+
+  return {
+    totalUsers: Number(result?.totalUsers || 0),
+    totalLearningPoints: Number(result?.totalLearningPoints || 0),
+    totalScholarshipUSDT: Number(result?.totalScholarshipUSDT || 0),
+    totalUBICELO: Number(result?.totalUBICELO || 0),
+    totalDonationsUSDT: Number(result?.totalDonationsUSDT || 0),
+  }
+}
 
 /**
  * Ejecuta la consulta del leaderboard y devuelve los resultados formateados
- * Incluye paginación y lista de países
+ * Incluye paginación, lista de países y totales globales
  */
 export async function getLeaderboardData(
   db: Kysely<DB>,
@@ -101,6 +126,8 @@ export async function getLeaderboardData(
   const countriesQuery = await getCountriesQuery(db)
   const countries = await countriesQuery.execute()
 
+  const totals = await getLeaderboardTotals(db)
+
   return {
     data: rows.map((row: any) => ({
       usuario_id: row.usuario_id,
@@ -111,8 +138,9 @@ export async function getLeaderboardData(
       scholarship_usdt: Number(row.scholarship_usdt),
       ubi_celo: Number(row.ubi_celo),
       donations_usdt: Number(row.donations_usdt),
-      religion: (row as any).religion_nombre,
+      religion: row.religion_nombre,
     })),
+    totals,
     pagination: {
       page,
       limit,

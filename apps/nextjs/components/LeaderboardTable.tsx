@@ -34,6 +34,13 @@ interface LeaderboardTableProps {
   isLoading?: boolean
   lang?: string
   rules?: Array<{ action: string; subject: string }>
+  totals?: {
+    totalUsers: number
+    totalLearningPoints: number
+    totalScholarshipUSDT: number
+    totalUBICELO: number
+    totalDonationsUSDT: number
+  }
 }
 
 export function LeaderboardTable({
@@ -46,6 +53,7 @@ export function LeaderboardTable({
   isLoading = false,
   lang = 'en',
   rules = [],
+  totals,
 }: LeaderboardTableProps) {
   // Translation helper
   const t = (en: string, es: string) => (lang === 'es' ? es : en)
@@ -186,6 +194,31 @@ export function LeaderboardTable({
           </TableBody>
         </Table>
       </div>
+
+      {!isLoading && totals && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+          <div className="p-3 rounded-md border bg-muted/30">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total Users', 'Total Usuarios')}</div>
+            <div className="text-lg font-bold">{totals.totalUsers}</div>
+          </div>
+          <div className="p-3 rounded-md border bg-muted/30">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total LP', 'Total PA')}</div>
+            <div className="text-lg font-bold">{formatLearningPoints(totals.totalLearningPoints)}</div>
+          </div>
+          <div className="p-3 rounded-md border bg-muted/30">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Scholarships', 'Becas')}</div>
+            <div className="text-lg font-bold">{formatUSDT(totals.totalScholarshipUSDT)}</div>
+          </div>
+          <div className="p-3 rounded-md border bg-muted/30">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('UBI (CELO)', 'UBI (CELO)')}</div>
+            <div className="text-lg font-bold">{formatCELO(totals.totalUBICELO)}</div>
+          </div>
+          <div className="p-3 rounded-md border bg-muted/30">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Donations', 'Donaciones')}</div>
+            <div className="text-lg font-bold">{formatUSDT(totals.totalDonationsUSDT)}</div>
+          </div>
+        </div>
+      )}
 
       {pagination && onPageChange && (
         <div className="flex items-center justify-between">

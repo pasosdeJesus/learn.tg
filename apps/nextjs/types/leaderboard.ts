@@ -21,6 +21,13 @@ export interface LeaderboardQueryParams {
 export interface LeaderboardResponse {
   data: LeaderboardRow[]
   rules?: Array<{ action: string; subject: string }>
+  totals?: {
+    totalUsers: number
+    totalLearningPoints: number
+    totalScholarshipUSDT: number
+    totalUBICELO: number
+    totalDonationsUSDT: number
+  }
   pagination: {
     page: number
     limit: number

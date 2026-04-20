@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
 import { LeaderboardTable, type SortField, type SortOrder } from '@/components/LeaderboardTable'
 import { CountryFilter } from '@/components/CountryFilter'
 import type { LeaderboardRow, LeaderboardResponse } from '@/types/leaderboard'
@@ -11,11 +12,13 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
+  const { data: session } = useSession()
   // State for data and loading
   const [data, setData] = useState<LeaderboardRow[]>(initialData?.data || [])
   const [countries, setCountries] = useState(initialData?.countries || [])
   const [pagination, setPagination] = useState(initialData?.pagination || { page: 1, limit: 50, total: 0, totalPages: 0 })
   const [rules, setRules] = useState<Array<{ action: string; subject: string }>>(initialData?.rules || [])
+  const [totals, setTotals] = useState(initialData?.totals)
   const [isLoading, setIsLoading] = useState(false)
 
   // State for filters/sorting
@@ -39,6 +42,14 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
       params.append('page', page.toString())
       params.append('limit', limit.toString())
 
+      if (session?.address) {
+        params.append('wallet', session.address)
+        const token = (session as any).user?.token || (session as any).token
+        if (token) {
+          params.append('token', token)
+        }
+      }
+
       const response = await fetch(`/api/leaderboard?${params.toString()}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -49,13 +60,14 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
       setCountries(result.countries)
       setPagination(result.pagination)
       setRules(result.rules || [])
+      setTotals(result.totals)
     } catch (error) {
       console.error('Failed to fetch leaderboard:', error)
       // Keep existing data
     } finally {
       setIsLoading(false)
     }
-  }, [sortBy, sortOrder, country, page, limit])
+  }, [sortBy, sortOrder, country, page, limit, session])
 
   // Initial fetch if no initialData provided
   useEffect(() => {
@@ -122,6 +134,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
         isLoading={isLoading}
         lang={lang}
         rules={rules}
+        totals={totals}
       />
 
       <div className="text-sm text-muted-foreground">
