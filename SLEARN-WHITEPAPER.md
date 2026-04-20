@@ -145,10 +145,6 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
     $$V_{SLEARN} = \max(FX_{SLE/USD}, 1/22)$$
 
     Where $1/22$ is the historical upper-bound rate from 2025.
-5.  At launch we will not set a maximum supply because value depends
-    on its utility as a learning reward not on scarcity.  There won´t
-    be ICO, we will convert 1:1 Learning Points of learn.tg users
-    to SLEARN.
     
 ---
 
@@ -191,16 +187,22 @@ In Phase 4, the protocol will transition to a two-chamber model:
 ---
 
 ## 7. Regulatory and Compliance Framework
-SLEARN operates primarily in Sierra Leone, where digital assets remain largely unregulated. However, we proactively implement:
-- **AML/CTF:** Users must attest to the legal source of funds via a mandatory checkbox. Transaction monitoring flags unusual patterns for manual review.
-- **Proportional KYC:** Identity requirements scale with the volume of value exchanged, focusing on ZK-proofs to minimize data exposure.
-- **Transparency:** All reserves and distribution logs are public and audit-ready on the [Transparency Dashboard](https://learn.tg/en/transparency).
+SLEARN operates primarily in Sierra Leone, where digital assets remain largely
+unregulated. However, we proactively implement:
+- **AML/CTF:** Users must attest to the legal source of funds via a mandatory checkbox.
+  Transaction monitoring flags unusual patterns for manual review.
+- **Proportional KYC:** Identity requirements scale with the volume of value exchanged.
+- **Transparency:** All reserves and distribution logs are public and audit-ready on
+  the [Transparency Dashboard](https://learn.tg/en/transparency).
 
 ---
 
 ## 8. Roadmap
 - **Phase 1 (April 2026):** Celo Sepolia deployment and community feedback.
-- **Phase 2 (June 1, 2026):** Mainnet launch and 1:1 migration of Learning Scores to SLEARN.
+- **Phase 2 (June 1, 2026):** Mainnet launch. 
+  We will not set a maximum supply because value of SLEARN depends on its utility
+  as a learning reward not on scarcity.  There won´t  be ICO, we will convert 1:1
+  Learning Points gained at learn.tg, sivel.xyz and stable-sl.pdJ.app to SLEARN.
 - **Phase 3 (SLEARN ↔ SLE swap activation)** (post-education utility)
   Currently operated via verified human agents with on-chain attestation.
   Automated Orange Money merchant payout integration will be introduced
