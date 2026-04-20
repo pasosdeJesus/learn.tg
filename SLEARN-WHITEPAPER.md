@@ -219,7 +219,7 @@ unregulated. However, we proactively implement:
   We will not set a maximum supply because value of SLEARN depends on its utility
   as a learning reward not on scarcity.  There won't  be ICO, we will convert 1:1
   Learning Points gained at learn.tg, sivel.xyz and stable-sl.pdJ.app to SLEARN.
-- **Phase 3 (SLEARN ↔ SLE swap activation)** Post-education utility.
+- **Phase 3 SLEARN ↔ SLE swap activation** Post-education utility.
   Currently operated via verified human agents with on-chain attestation.
   Automated Orange Money merchant payout integration will be introduced
   as regulatory frameworks and API availability permit.
