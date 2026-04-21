@@ -28,11 +28,11 @@ export function GoodDollarClaimButton({
   const [isClaiming, setIsClaiming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (process.env.NEXT_PUBLIC_NETWORK != "celo") {
+  /*if (process.env.NEXT_PUBLIC_NETWORK != "celo") {
     return (
       <div>GoodDollar works only in CELO blockchain</div>
     )
-  }
+  }*/
 
   // RULE OF HOOKS: Hooks must be called unconditionally at the top level.
   const sdkEnv = IS_PRODUCTION ? 'production' : 'development'
