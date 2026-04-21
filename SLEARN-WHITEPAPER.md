@@ -52,7 +52,7 @@ heart, and you will find rest for your souls.” (Matthew 11:29)*
 
 ### 2.1. Current State and Initial Backing
 
-It can be checked at https://learn.tg/es/leaderboard, as of April 2026, learn.tg has **482 users with connected wallets**, of which **143 active users** hold **309 Learning Points** (to be converted 1:1 to SLEARN at launch). The platform has also distributed **$288.36 in scholarships** and **373.76 CELO** as UBI, with **$1.45 in donations** received.
+It can be checked at https://learn.tg/en/transparency, as of April 2026, learn.tg has **482 users with connected wallets**, of which **143 active users** hold **309 Learning Points** (to be converted 1:1 to SLEARN at launch). The platform has also distributed **$288.36 in scholarships** and **373.76 CELO** as UBI, with **$1.45 in donations** received.
 
 To ensure proper backing from day one, **pdJ (Pasos de Jesús)** will make an initial donation equivalent to the value required to back the initial SLEARN tokens on 1st June 2026 (minimum $1/22 USDT per SLEARN, as per the Reserve Backing Rule in Section 4). This guarantees that every SLEARN token in circulation at launch is fully reserved.
 
