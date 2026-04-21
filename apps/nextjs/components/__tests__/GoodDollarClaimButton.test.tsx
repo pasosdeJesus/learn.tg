@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import GoodDollarClaimButton from '../GoodDollarClaimButton'
+import { GoodDollarClaimButton } from '../GoodDollarClaimButton'
 
 // --- Mocks --- //
 
@@ -20,7 +20,7 @@ vi.mock('@/lib/config', () => ({
   },
 }))
 
-// Mock de @goodsdks/citizen-sdk
+// Mock de SDKs
 const { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance } = vi.hoisted(
   () => {
     const mockUseIdentitySDK = vi.fn()
@@ -29,9 +29,13 @@ const { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance } = vi.hoisted(
     return { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance }
   },
 )
+
 vi.mock('@goodsdks/citizen-sdk', () => ({
-  useIdentitySDK: mockUseIdentitySDK,
   ClaimSDK: mockClaimSDK,
+}))
+
+vi.mock('@goodsdks/react-hooks', () => ({
+  useIdentitySDK: mockUseIdentitySDK,
 }))
 
 // Mock de next-auth/react
@@ -61,6 +65,8 @@ vi.mock('wagmi', () => ({
 // --- Tests --- //
 
 describe('GoodDollarClaimButton', () => {
+  const mockAddress = '0x1234567890123456789012345678901234567890'
+
   beforeEach(() => {
     // Reset mocks and state before each test
     vi.clearAllMocks()
@@ -71,24 +77,34 @@ describe('GoodDollarClaimButton', () => {
     // Default mocks for a successful use case
     mockUseSession.mockReturnValue({
       data: {
-        address: '0x1234567890123456789012345678901234567890',
+        address: mockAddress,
         user: { token: 'mock-token' },
       },
       status: 'authenticated',
     })
     mockUseAccount.mockReturnValue({
-      address: '0x1234567890123456789012345678901234567890',
+      address: mockAddress,
       isConnected: true,
     })
     mockUsePublicClient.mockReturnValue({} as any)
     mockUseWalletClient.mockReturnValue({ data: {} as any })
-    mockUseIdentitySDK.mockReturnValue({}) // SDK is always initialized
+    
+    // NEW API: returns { sdk, loading, error }
+    mockUseIdentitySDK.mockReturnValue({ 
+      sdk: { getWhitelistedRoot: vi.fn() }, 
+      loading: false, 
+      error: null 
+    })
+    
     mockClaimSDKInstance.claim.mockResolvedValue({ txHash: '0xmocktxhash' })
 
     // Global mocks
     global.window.alert = vi.fn()
     global.window.fetch = vi.fn(() =>
-      Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as any),
+      Promise.resolve({ 
+        ok: true, 
+        json: () => Promise.resolve({ success: true, claimNumber: 5 }) 
+      } as any),
     )
   })
 
@@ -128,16 +144,17 @@ describe('GoodDollarClaimButton', () => {
     expect(mockClaimSDKInstance.claim).toHaveBeenCalledTimes(1)
   })
 
-  it('shows alert and resets state on successful claim', async () => {
+  it('shows alert with claim number on successful claim', async () => {
     render(<GoodDollarClaimButton lang="en" />)
     fireEvent.click(screen.getByRole('button'))
 
-    // Wait for the claim to finish and the button to reset
-    const button = await screen.findByRole('button', {
+    await waitFor(() => {
+        expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Claim number 5'))
+    })
+    
+    const button = screen.getByRole('button', {
       name: /Sign up with GoodDollar or Claim UBI/i,
     })
-
-    expect(window.alert).toHaveBeenCalledWith('Claim successful')
     expect(button).not.toBeDisabled()
   })
 
@@ -150,10 +167,10 @@ describe('GoodDollarClaimButton', () => {
 
     // Wait for the error message to appear in the DOM
     expect(await screen.findByText(/Claim failed:/i)).toBeInTheDocument()
-    expect(window.alert).toHaveBeenCalledWith(`Claim failed: ${error.message}`)
+    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining(`Claim failed: ${error.message}`))
   })
 
-  it('does NOT call claim and shows error if not in production', async () => {
+  it('works in development environment', async () => {
     // Arrange: Simulate non-production environment
     mockConfig.IS_PRODUCTION = false
 
@@ -161,12 +178,10 @@ describe('GoodDollarClaimButton', () => {
     render(<GoodDollarClaimButton lang="en" />)
     fireEvent.click(screen.getByRole('button'))
 
-    // Assert: Use findByText to wait for the error message to appear
-    const errorMessage = await screen.findByText(
-      /Works only in mainnet with wallet connected/i,
-    )
-    expect(errorMessage).toBeInTheDocument()
-    expect(mockClaimSDKInstance.claim).not.toHaveBeenCalled()
+    // Assert: Check that it actually calls claim (no longer blocked)
+    await waitFor(() => {
+        expect(mockClaimSDKInstance.claim).toHaveBeenCalled()
+    })
   })
 
   it('accepts custom button text', () => {

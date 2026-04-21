@@ -5,7 +5,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
-      'lz-string': path.resolve(__dirname, './__mocks__/lz-string.ts'),
     },
   },
   test: {

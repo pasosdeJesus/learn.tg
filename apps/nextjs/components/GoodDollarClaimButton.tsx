@@ -80,20 +80,28 @@ export function GoodDollarClaimButton({
     try {
       const result = await claimSDK.claim()
       console.log('Claim successful', result)
+      const txHash = (result as any)?.transactionHash ?? ''
 
-      if (session.user && (session.user as any).token) {
-        fetch('/api/register-gooddollar-claim', {
+      if (session?.address && (session.user as any)?.token) {
+        const regResponse = await fetch('/api/register-gooddollar-claim', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            walletAddress: address,
+            walletAddress: session.address,
             token: (session.user as any).token,
-            tx: (result as any)?.blockHash ?? '',
+            txHash,
           }),
-        }).catch((e) => console.error("Couldn't register g$c claim", e))
+        })
+        const regData = await regResponse.json()
+        const claimNum = regData.claimNumber || ''
+        alert(
+          lang === 'es'
+            ? `Reclamo exitoso. Reclamo número ${claimNum}`
+            : `Claim successful. Claim number ${claimNum}`,
+        )
+      } else {
+        alert(lang === 'es' ? 'Reclamo exitoso' : 'Claim successful')
       }
-
-      alert(lang === 'es' ? 'Reclamo exitoso' : 'Claim successful')
     } catch (err) {
       console.error('Claim failed:', err)
       const errorMessage =

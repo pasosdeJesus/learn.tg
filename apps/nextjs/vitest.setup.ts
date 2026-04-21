@@ -139,12 +139,24 @@ console.warn = (...args: any[]) => {
   originalWarn(...args);
 };
 
-vi.mock('lz-string', () => ({
-  compressToEncodedURIComponent: vi.fn((input) => input),
-  decompressFromEncodedURIComponent: vi.fn((input) => input),
-}));
+vi.mock('lz-string', () => {
+  const mockCompress = vi.fn((input: string) => input)
+  const mockDecompress = vi.fn((input: string) => input)
+  return {
+    compressToEncodedURIComponent: mockCompress,
+    decompressFromEncodedURIComponent: mockDecompress,
+    default: {
+      compressToEncodedURIComponent: mockCompress,
+      decompressFromEncodedURIComponent: mockDecompress,
+    },
+  }
+});
 
-vi.mock('@goodsdks/citizen-sdk', () => ({
-  ClaimSDK: vi.fn(),
+vi.mock('@goodsdks/citizen-sdk', () => {
+  const ClaimSDK = vi.fn()
+  return { ClaimSDK, useIdentitySDK: vi.fn() }
+});
+
+vi.mock('@goodsdks/react-hooks', () => ({
   useIdentitySDK: vi.fn(),
 }));
