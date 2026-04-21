@@ -1,7 +1,7 @@
 # SLEARN: Whitepaper
 ## A Utility Token for Community-Powered Learning
 
-![SLEARN Logo](https://github.com/pasosdeJesus/learn.tg/raw/perm/resources/img/slearn-logo.svg)
+![SLEARN Logo](https://github.com/pasosdeJesus/learn.tg/raw/main/resources/img/slearn-logo.svg)
 
 *Fundamental Disclaimer: SLEARN is a restricted-access utility token and a
 digital tool for educational access within the pdJ ecosystem (learn.tg, 
