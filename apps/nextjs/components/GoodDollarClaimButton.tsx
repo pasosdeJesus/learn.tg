@@ -1,6 +1,7 @@
 'use client'
 
-import { ClaimSDK, useIdentitySDK } from '@goodsdks/citizen-sdk'
+import { ClaimSDK } from '@goodsdks/citizen-sdk'
+import { useIdentitySDK } from '@goodsdks/react-hooks'
 import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import { usePublicClient, useWalletClient } from 'wagmi'
@@ -34,19 +35,11 @@ export function GoodDollarClaimButton({
   }
 
   // RULE OF HOOKS: Hooks must be called unconditionally at the top level.
-  const identitySDK = useIdentitySDK('production')
+  const sdkEnv = IS_PRODUCTION ? 'production' : 'development'
+  const identitySDK = useIdentitySDK(sdkEnv)
 
   const handleClaim = async () => {
     // Conditional logic based on environment should be inside handlers or effects.
-    if (!IS_PRODUCTION) {
-      setError(
-        lang === 'es'
-          ? 'Funciona solo en mainnet con billetera conectada'
-          : 'Works only in mainnet with wallet connected',
-      )
-      return
-    }
-
     if (
       !session ||
       !address ||
@@ -66,12 +59,22 @@ export function GoodDollarClaimButton({
     setIsClaiming(true)
     setError(null)
 
+    if (!identitySDK.sdk) {
+      setError(
+        lang === 'es'
+          ? 'Error al inicializar el SDK de GoodDollar'
+          : 'Failed to initialize GoodDollar SDK',
+      )
+      setIsClaiming(false)
+      return
+    }
+
     const claimSDK = new ClaimSDK({
       account: session.address,
       publicClient,
       walletClient,
-      identitySDK,
-      env: 'production',
+      identitySDK: identitySDK.sdk,
+      env: sdkEnv,
     })
 
     try {
