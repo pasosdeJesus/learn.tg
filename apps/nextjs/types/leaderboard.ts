@@ -39,3 +39,25 @@ export interface LeaderboardResponse {
     nombre: string
   }>
 }
+
+export interface CountryTotals {
+  alfa2: string
+  nombre: string
+  totalUsers: number
+  totalLearningPoints: number
+  totalScholarshipUSDT: number
+  totalUBICELO: number
+  totalDonationsUSDT: number
+}
+
+export interface TransparencyResponse {
+  data: CountryTotals[]
+  rules?: Array<{ action: string; subject: string }>
+  totals?: {
+    totalUsers: number
+    totalLearningPoints: number
+    totalScholarshipUSDT: number
+    totalUBICELO: number
+    totalDonationsUSDT: number
+  }
+}

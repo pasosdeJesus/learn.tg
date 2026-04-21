@@ -115,6 +115,40 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
 }
 
 /**
+ * Obtiene los totales del leaderboard agrupados por país
+ */
+export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
+  const results = await db
+    .selectFrom('usuario as u')
+    .leftJoin('transaction as t', 'u.id', 't.usuario_id')
+    .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
+    .where('u.excluir_leaderboard', 'is not', true)
+    .where('p.alfa2', 'is not', null)
+    .select([
+      'p.alfa2',
+      'p.nombre',
+      sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
+      sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('totalLearningPoints'),
+      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalScholarshipUSDT'),
+      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('totalUBICELO'),
+      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalDonationsUSDT'),
+    ])
+    .groupBy(['p.alfa2', 'p.nombre'])
+    .orderBy('p.nombre', 'asc')
+    .execute()
+
+  return results.map(row => ({
+    alfa2: row.alfa2!,
+    nombre: row.nombre || row.alfa2!,
+    totalUsers: Number(row.totalUsers || 0),
+    totalLearningPoints: Number(row.totalLearningPoints || 0),
+    totalScholarshipUSDT: Number(row.totalScholarshipUSDT || 0),
+    totalUBICELO: Number(row.totalUBICELO || 0),
+    totalDonationsUSDT: Number(row.totalDonationsUSDT || 0),
+  }))
+}
+
+/**
  * Ejecuta la consulta del leaderboard y devuelve los resultados formateados
  * Incluye paginación, lista de países y totales (filtrados por país si aplica)
  */
