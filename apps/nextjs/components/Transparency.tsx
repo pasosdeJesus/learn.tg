@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { TransparencyTable } from '@/components/TransparencyTable'
 import type { CountryTotals, TransparencyResponse } from '@/types/leaderboard'
 
@@ -61,13 +63,20 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {t('Transparency', 'Transparencia')}
-        </h1>
-        <p className="text-muted-foreground">
-          {t('Platform totals by country', 'Totales de la plataforma por país')}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t('Transparency', 'Transparencia')}
+          </h1>
+          <p className="text-muted-foreground">
+            {t('Platform totals by country', 'Totales de la plataforma por país')}
+          </p>
+        </div>
+        <Link href={`/${lang}/leaderboard`}>
+          <Button variant="outline" size="sm">
+            {t('View Leaderboard', 'Ver Tabla de Clasificación')}
+          </Button>
+        </Link>
       </div>
 
       <TransparencyTable

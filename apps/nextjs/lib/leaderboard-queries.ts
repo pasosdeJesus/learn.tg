@@ -115,7 +115,7 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
 }
 
 /**
- * Obtiene los totales del leaderboard agrupados por país
+ * Obtiene los totales del leaderboard agrupados por país (incluye usuarios sin país)
  */
 export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
   const results = await db
@@ -123,23 +123,22 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
     .leftJoin('transaction as t', 'u.id', 't.usuario_id')
     .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
     .where('u.excluir_leaderboard', 'is not', true)
-    .where('p.alfa2', 'is not', null)
     .select([
-      'p.alfa2',
-      'p.nombre',
+      sql<string>`COALESCE(p.alfa2, 'ZZ')`.as('alfa2'),
+      sql<string>`COALESCE(p.nombre, 'Sin país')`.as('nombre'),
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
       sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('totalLearningPoints'),
       sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalScholarshipUSDT'),
       sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('totalUBICELO'),
       sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalDonationsUSDT'),
     ])
-    .groupBy(['p.alfa2', 'p.nombre'])
-    .orderBy('p.nombre', 'asc')
+    .groupBy([sql`COALESCE(p.alfa2, 'ZZ')`, sql`COALESCE(p.nombre, 'Sin país')`])
+    .orderBy(sql`COALESCE(p.nombre, 'Sin país')`, 'asc')
     .execute()
 
   return results.map(row => ({
-    alfa2: row.alfa2!,
-    nombre: row.nombre || row.alfa2!,
+    alfa2: row.alfa2,
+    nombre: row.nombre,
     totalUsers: Number(row.totalUsers || 0),
     totalLearningPoints: Number(row.totalLearningPoints || 0),
     totalScholarshipUSDT: Number(row.totalScholarshipUSDT || 0),

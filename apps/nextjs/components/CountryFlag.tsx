@@ -13,6 +13,9 @@ interface CountryFlagProps {
 function countryCodeToFlagEmoji(alfa2: string): string {
   if (!alfa2 || alfa2.length !== 2) return '🏳️'
 
+  // Special case for unknown/not applicable country
+  if (alfa2.toUpperCase() === 'ZZ') return '🏳️'
+
   const codePoints = alfa2
     .toUpperCase()
     .split('')
@@ -30,10 +33,12 @@ export function CountryFlag({ alfa2, className = '', showTooltip = true }: Count
   }
 
   const flagEmoji = countryCodeToFlagEmoji(alfa2)
-  const title = showTooltip ? `Country: ${alfa2}` : undefined
+  const isUnknown = alfa2.toUpperCase() === 'ZZ'
+  const title = showTooltip ? (isUnknown ? 'No country' : `Country: ${alfa2}`) : undefined
+  const ariaLabel = isUnknown ? 'No country' : `Flag of ${alfa2}`
 
   return (
-    <span className={className} title={title} role="img" aria-label={`Flag of ${alfa2}`}>
+    <span className={className} title={title} role="img" aria-label={ariaLabel}>
       {flagEmoji}
     </span>
   )
