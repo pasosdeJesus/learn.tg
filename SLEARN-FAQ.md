@@ -23,8 +23,7 @@ SLEARN.
 It can only be used to pay for premium courses inside `learn.tg`.
 
 However, users who have completed premium courses will later be able to 
-exchange SLEARN for Leones (SLE) or other crypto through `stable-sl.pdJ.app` 
-(progressive unlocking).
+exchange SLEARN for Leones (SLE) or other crypto through `stable-sl.pdJ.app`.
 
 ---
 
