@@ -18,7 +18,7 @@ SLEARN.
 
 ### Can SLEARN be transferred to other people or exchanged for other crypto?
 
-**No.** SLEARN is a **utility token**, not a cryptocurrency for speculation.
+**No.** SLEARN is a **utility token**, not a cryptocurrency.
 
 It can only be used to pay for premium courses inside `learn.tg`.
 
