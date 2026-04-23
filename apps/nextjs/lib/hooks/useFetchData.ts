@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 
 interface UseFetchDataOptions<T> {
@@ -19,12 +19,18 @@ export function useFetchData<T>({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
+  // Use refs to avoid unstable references causing infinite re-render loops
+  const fetchFunctionRef = useRef(fetchFunction)
+  fetchFunctionRef.current = fetchFunction
+  const paramsRef = useRef(params)
+  paramsRef.current = params
+
   const fetchData = useCallback(async (customParams?: Record<string, any>) => {
     setIsLoading(true)
     setError(null)
     try {
-      const mergedParams = { ...params, ...customParams }
-      const result = await fetchFunction(session, mergedParams)
+      const mergedParams = { ...paramsRef.current, ...customParams }
+      const result = await fetchFunctionRef.current(session, mergedParams)
       setData(result)
       return result
     } catch (err) {
@@ -35,7 +41,7 @@ export function useFetchData<T>({
     } finally {
       setIsLoading(false)
     }
-  }, [fetchFunction, session, params])
+  }, [session])
 
   // Initial fetch if no initialData provided and autoFetch is true
   useEffect(() => {
