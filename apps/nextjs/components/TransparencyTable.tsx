@@ -16,7 +16,7 @@ import { formatLearningPoints, formatUSDT, formatCELO } from '@/lib/format'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { CountryTotals } from '@/types/leaderboard'
 
-export type SortField = 'totalUsers' | 'totalLearningPoints' | 'totalScholarshipUSDT' | 'totalUBICELO' | 'totalDonationsUSDT'
+export type SortField = 'totalUsers' | 'totalUsersWithLP' | 'totalLearningPoints' | 'totalScholarshipUSDT' | 'totalUBICELO' | 'totalDonationsUSDT'
 export type SortOrder = 'asc' | 'desc'
 
 interface TransparencyTableProps {
@@ -26,6 +26,7 @@ interface TransparencyTableProps {
   rules?: Array<{ action: string; subject: string }>
   totals?: {
     totalUsers: number
+    totalUsersWithLP: number
     totalLearningPoints: number
     totalScholarshipUSDT: number
     totalUBICELO: number
@@ -86,6 +87,10 @@ export function TransparencyTable({
           aVal = a.totalUsers
           bVal = b.totalUsers
           break
+        case 'totalUsersWithLP':
+          aVal = a.totalUsersWithLP
+          bVal = b.totalUsersWithLP
+          break
         case 'totalLearningPoints':
           aVal = a.totalLearningPoints
           bVal = b.totalLearningPoints
@@ -120,10 +125,14 @@ export function TransparencyTable({
   return (
     <div className="space-y-4">
       {!isLoading && totals && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total Users', 'Total Usuarios')}</div>
             <div className="text-lg font-bold">{totals.totalUsers}</div>
+          </div>
+          <div className="p-3 rounded-md border bg-muted/30">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Users with LP', 'Usuarios con PA')}</div>
+            <div className="text-lg font-bold">{totals.totalUsersWithLP}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total LP', 'Total PA')}</div>
@@ -155,6 +164,12 @@ export function TransparencyTable({
               <TableHead className="text-right">
                 <SortableHeader field="totalUsers">
                   {t('Users', 'Usuarios')}
+                </SortableHeader>
+              </TableHead>
+              <TableHead className="text-right">
+                <SortableHeader field="totalUsersWithLP">
+                  <span className="md:hidden">ULP</span>
+                  <span className="hidden md:inline">{t('Users with LP', 'Usuarios con PA')}</span>
                 </SortableHeader>
               </TableHead>
               <TableHead className="text-right">
@@ -194,11 +209,12 @@ export function TransparencyTable({
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                 </TableRow>
               ))
             ) : sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canViewReligion ? 7 : 6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={canViewReligion ? 8 : 7} className="text-center py-8 text-muted-foreground">
                   {t('No data available', 'No hay datos disponibles')}
                 </TableCell>
               </TableRow>
@@ -216,6 +232,9 @@ export function TransparencyTable({
                   )}
                   <TableCell className="text-right font-mono">
                     {row.totalUsers}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {row.totalUsersWithLP}
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {formatLearningPoints(row.totalLearningPoints)}

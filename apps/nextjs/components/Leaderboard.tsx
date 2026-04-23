@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
 import { LeaderboardTable, type SortField, type SortOrder } from '@/components/LeaderboardTable'
 import { CountryFilter } from '@/components/CountryFilter'
+import { MetricsExplanation } from '@/components/MetricsExplanation'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useApiData } from '@/lib/hooks/useApiData'
+import { buildParamsWithSession } from '@/lib/fetchHelpers'
 import type { LeaderboardRow, LeaderboardResponse } from '@/types/leaderboard'
 
 interface LeaderboardProps {
@@ -12,14 +15,24 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
-  const { data: session } = useSession()
   // State for data and loading
-  const [data, setData] = useState<LeaderboardRow[]>(initialData?.data || [])
-  const [countries, setCountries] = useState(initialData?.countries || [])
-  const [pagination, setPagination] = useState(initialData?.pagination || { page: 1, limit: 50, total: 0, totalPages: 0 })
-  const [rules, setRules] = useState<Array<{ action: string; subject: string }>>(initialData?.rules || [])
-  const [totals, setTotals] = useState(initialData?.totals)
-  const [isLoading, setIsLoading] = useState(false)
+  const {
+    data: apiData,
+    isLoading,
+    fetchData,
+    setData: setApiData,
+  } = useApiData<LeaderboardResponse>({
+    endpoint: 'leaderboard',
+    initialData,
+    autoFetch: false, // We'll handle fetching manually
+  })
+
+  // Destructure data from apiData
+  const data = apiData?.data || []
+  const countries = apiData?.countries || []
+  const pagination = apiData?.pagination || { page: 1, limit: 50, total: 0, totalPages: 0 }
+  const rules = apiData?.rules || []
+  const totals = apiData?.totals
 
   // State for filters/sorting
   const [sortBy, setSortBy] = useState<SortField>('learningpoints')
@@ -29,45 +42,25 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
   const limit = 50 // Fixed limit as per API default
 
   // Translation helper
-  const t = (en: string, es: string) => (lang === 'es' ? es : en)
+  const t = useTranslation(lang)
 
   // Fetch leaderboard data
   const fetchLeaderboard = useCallback(async () => {
-    setIsLoading(true)
+    const baseParams: Record<string, string> = {
+      sortBy,
+      sortOrder,
+      page: page.toString(),
+      limit: limit.toString(),
+    }
+    if (country) baseParams.country = country
+
     try {
-      const params = new URLSearchParams()
-      params.append('sortBy', sortBy)
-      params.append('sortOrder', sortOrder)
-      if (country) params.append('country', country)
-      params.append('page', page.toString())
-      params.append('limit', limit.toString())
-
-      if (session?.address) {
-        params.append('wallet', session.address)
-        const token = (session as any).user?.token || (session as any).token
-        if (token) {
-          params.append('token', token)
-        }
-      }
-
-      const response = await fetch(`/api/leaderboard?${params.toString()}`)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const result: LeaderboardResponse = await response.json()
-
-      setData(result.data)
-      setCountries(result.countries)
-      setPagination(result.pagination)
-      setRules(result.rules || [])
-      setTotals(result.totals)
+      await fetchData(baseParams)
     } catch (error) {
       console.error('Failed to fetch leaderboard:', error)
-      // Keep existing data
-    } finally {
-      setIsLoading(false)
+      // Error is already handled by useApiData
     }
-  }, [sortBy, sortOrder, country, page, limit, session])
+  }, [sortBy, sortOrder, country, page, limit, fetchData])
 
   // Initial fetch if no initialData provided
   useEffect(() => {
@@ -137,24 +130,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
         totals={totals}
       />
 
-      <div className="text-sm text-muted-foreground">
-        <p>
-          <strong>{t('Learning Points', 'Puntos de Aprendizaje')}</strong>{' '}
-          {t('are earned by completing crosswords and giving donations.', 'se ganan completando crucigramas y haciendo donaciones.')}
-        </p>
-        <p>
-          <strong>{t('Scholarship (USDT)', 'Beca (USDT)')}</strong>{' '}
-          {t('is received as educational grants.', 'se recibe como becas educativas.')}
-        </p>
-        <p>
-          <strong>{t('UBI (CELO)', 'UBI (CELO)')}</strong>{' '}
-          {t('is received through universal basic income claims.', 'se recibe a través de reclamos de ingreso básico universal.')}
-        </p>
-        <p>
-          <strong>{t('Donations (USDT)', 'Donaciones (USDT)')}</strong>{' '}
-          {t('are contributions made to support the platform.', 'son contribuciones hechas para apoyar la plataforma.')}
-        </p>
-      </div>
+      <MetricsExplanation t={t} />
     </div>
   )
 }

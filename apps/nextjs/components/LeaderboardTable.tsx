@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { Ability } from '@casl/ability'
+import Link from 'next/link'
 import {
   Table,
   TableBody,
@@ -36,6 +37,7 @@ interface LeaderboardTableProps {
   rules?: Array<{ action: string; subject: string }>
   totals?: {
     totalUsers: number
+    totalUsersWithLP: number
     totalLearningPoints: number
     totalScholarshipUSDT: number
     totalUBICELO: number
@@ -162,7 +164,14 @@ export function LeaderboardTable({
               data.map((row, index) => (
                 <TableRow key={row.usuario_id}>
                   <TableCell className="font-medium">{startRank + index}</TableCell>
-                  <TableCell className="font-medium">{row.username}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link 
+                      href={`/${lang}/user-transactions/${row.usuario_id}`}
+                      className="text-primary hover:underline"
+                    >
+                      {row.username}
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <CountryFlag alfa2={row.pais_alfa2} />
@@ -194,10 +203,14 @@ export function LeaderboardTable({
       </div>
 
       {!isLoading && totals && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total Users', 'Total Usuarios')}</div>
             <div className="text-lg font-bold">{totals.totalUsers}</div>
+          </div>
+          <div className="p-3 rounded-md border bg-muted/30">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Users with LP', 'Usuarios con PA')}</div>
+            <div className="text-lg font-bold">{totals.totalUsersWithLP}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total LP', 'Total PA')}</div>

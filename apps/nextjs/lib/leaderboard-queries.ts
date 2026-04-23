@@ -98,6 +98,7 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
   const result = await query
     .select([
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
+      sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithLP'),
       sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('totalLearningPoints'),
       sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalScholarshipUSDT'),
       sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('totalUBICELO'),
@@ -107,6 +108,7 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
 
   return {
     totalUsers: Number(result?.totalUsers || 0),
+    totalUsersWithLP: Number(result?.totalUsersWithLP || 0),
     totalLearningPoints: Number(result?.totalLearningPoints || 0),
     totalScholarshipUSDT: Number(result?.totalScholarshipUSDT || 0),
     totalUBICELO: Number(result?.totalUBICELO || 0),
@@ -127,6 +129,7 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
       sql<string>`COALESCE(p.alfa2, 'ZZ')`.as('alfa2'),
       sql<string>`COALESCE(p.nombre, 'Sin país')`.as('nombre'),
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
+      sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithLP'),
       sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('totalLearningPoints'),
       sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalScholarshipUSDT'),
       sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('totalUBICELO'),
@@ -140,6 +143,7 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
     alfa2: row.alfa2,
     nombre: row.nombre,
     totalUsers: Number(row.totalUsers || 0),
+    totalUsersWithLP: Number(row.totalUsersWithLP || 0),
     totalLearningPoints: Number(row.totalLearningPoints || 0),
     totalScholarshipUSDT: Number(row.totalScholarshipUSDT || 0),
     totalUBICELO: Number(row.totalUBICELO || 0),

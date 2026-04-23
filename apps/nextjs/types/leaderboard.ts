@@ -23,6 +23,7 @@ export interface LeaderboardResponse {
   rules?: Array<{ action: string; subject: string }>
   totals?: {
     totalUsers: number
+    totalUsersWithLP: number
     totalLearningPoints: number
     totalScholarshipUSDT: number
     totalUBICELO: number
@@ -44,6 +45,7 @@ export interface CountryTotals {
   alfa2: string
   nombre: string
   totalUsers: number
+  totalUsersWithLP: number
   totalLearningPoints: number
   totalScholarshipUSDT: number
   totalUBICELO: number
@@ -55,6 +57,7 @@ export interface TransparencyResponse {
   rules?: Array<{ action: string; subject: string }>
   totals?: {
     totalUsers: number
+    totalUsersWithLP: number
     totalLearningPoints: number
     totalScholarshipUSDT: number
     totalUBICELO: number
