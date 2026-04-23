@@ -1,6 +1,6 @@
 # SLEARN FAQ
 
-### How are people going to get SLEARN?
+### How can I earn SLEARN?
 
 Currently, verified users of `learn.tg` earn **Learning Points** by completing 
 crosswords and making donations.
@@ -16,7 +16,7 @@ SLEARN.
 
 ---
 
-### Can SLEARN be transferred to other people or exchanged for other crypto?
+### Is SLEARN transferable or exchangeable?
 
 **No.** SLEARN is a **utility token**, not a cryptocurrency.
 
@@ -27,7 +27,7 @@ exchange SLEARN for Leones (SLE) or other crypto through `stable-sl.pdJ.app`.
 
 ---
 
-### Can the price of SLEARN fluctuate?
+### Does SLEARN have a stable price?
 
 SLEARN is designed to maintain the highest possible value between the Leone 
 (SLE) and the US dollar.
@@ -39,7 +39,7 @@ This protects your educational purchasing power against devaluation.
 
 ---
 
-### Will SLEARN be available to many people?
+### Who can use SLEARN?
 
 Yes, any **verified users** of `learn.tg` can earn and use SLEARN.
 
@@ -51,9 +51,9 @@ SLEARN cannot be used outside the pdJ ecosystem (`learn.tg`,
 
 ---
 
-### Can I know the total supply and how many people are using SLEARN?
+### Where can I see the total supply and adoption metrics?
 
-**Yes.** All metrics are public and updated in real time.
+All metrics are public and updated in real time.
 
 👉 [Transparency Dashboard](https://learn.tg/en/transparency)
 
