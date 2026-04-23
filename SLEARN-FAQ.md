@@ -62,7 +62,7 @@ Now there you can see:
 * Total of verified users (more than 50 in Profile Score) that have learning
   points
 * Total of learning points
-* Total of USDT given in scholarhips
+* Total of USDT given in scholarships
 * Total of CELO given in learn.tg-UBI
 * Total of USDT received in donations
 * Totals by country and link to a leaderboard with details per user
