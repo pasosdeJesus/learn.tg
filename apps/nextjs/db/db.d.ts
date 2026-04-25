@@ -1256,6 +1256,13 @@ export interface SchemaMigrations {
   version: string;
 }
 
+export interface SiteNonces {
+  available_learningpoints: Generated<number>;
+  last_nonce: Generated<number>;
+  site: string;
+  updated_at: Timestamp | null;
+}
+
 export interface Transaction {
   cantidad: Generated<Numeric>;
   categoria: string | null;
@@ -1446,6 +1453,7 @@ export interface DB {
   nonce: Nonce;
   religion: Religion;
   schema_migrations: SchemaMigrations;
+  site_nonces: SiteNonces;
   transaction: Transaction;
   userevent: Userevent;
   usuario: Usuario;
