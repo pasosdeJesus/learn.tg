@@ -6,7 +6,7 @@ Currently, verified users of `learn.tg` earn **Learning Points** by completing
 crosswords and making donations.
 
 Soon, each donation in `sivel.xyz` (minimum 0.02 USDT) will also grant 1 
-Learning Point to verified `learn.tg` users (limited opportunity).
+Learning Point to verified `learn.tg` users (limited opportunity for first 100 donations) .
 
 Later, selling crypto through `stable-sl.pdJ.app` will also grant Learning 
 Points.
@@ -23,13 +23,13 @@ SLEARN.
 It can only be used to pay for premium courses inside `learn.tg`.
 
 However, users who have completed premium courses will later be able to 
-exchange SLEARN for Leones (SLE) or other crypto through `stable-sl.pdJ.app`.
+exchange SLEARN for Leones (SLE) through `stable-sl.pdJ.app`.
 
 ---
 
 ### Does SLEARN have a stable price?
 
-SLEARN is designed to maintain the highest possible value between the Leone 
+It is better than stable, SLEARN is designed to maintain the highest possible value between the Leone 
 (SLE) and the US dollar.
 
 - **Floor value:** 4.5 cents of USD (1/22 USDT)
@@ -43,8 +43,8 @@ This protects your educational purchasing power against devaluation.
 
 Yes, any **verified users** of `learn.tg` can earn and use SLEARN.
 
-Once a user has used SLEARN to pay for premium courses in learn.tg, they may
-exchange it in `stable-sl.pdJ.app`.
+Once a user has used SLEARN to pay for premium courses in learn.tg, if he/she is from Sierra Leone. he/she may
+exchange SLEARN for SLE in `stable-sl.pdJ.app`.
 
 SLEARN cannot be used outside the pdJ ecosystem (`learn.tg`, 
 `stable-sl.pdJ.app`, and `sivel.xyz`).
