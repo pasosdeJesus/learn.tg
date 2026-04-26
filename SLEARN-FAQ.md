@@ -1,73 +1,38 @@
-# SLEARN FAQ
+# SLEARN FAQ (short version)
 
 ### How can I earn SLEARN?
 
-Currently, verified users of `learn.tg` earn **Learning Points** by:
-* Completing crosswords in learn.tg
-* Donating in sivel.xyz (minimum 0.02 USDT) will also grant 1 Learning Point per donation (limited opportunity for first 100 donations)
-* Making donations in learn.tg (learning points proportional to the amount donated)
+Do these things on learn.tg or sivel.xyz before June 1, 2026:
 
-Later, selling crypto through `stable-sl.pdJ.app` will also grant Learning 
-Points.
+- Solve crosswords → 1 Learning Point per guide
+- Donate 0.02 USDT or more on sivel.xyz → 1 Learning Point (first 100 donations only)
+- Donate to courses on learn.tg → points vary by amount
 
-**On June 1, 2026**, all accumulated Learning Points will be converted 1:1 to
-SLEARN.
+On June 1, all your Learning Points turn into SLEARN (1:1).
 
----
+### Can I send SLEARN to someone else? Can I cash it out?
 
-### Is SLEARN transferable or exchangeable?
+No, you cannot send SLEARN to anyone.
 
-**No.** SLEARN is a **utility token**, not a cryptocurrency.
+- Use SLEARN to pay for premium courses on learn.tg (that's what it's for).
+- If you live in Sierra Leone **and** you've already paid for a premium course with SLEARN, you can also exchange SLEARN for Leones (SLE) on stable-sl.pdJ.app.
 
-It can only be used to pay for premium courses inside `learn.tg`.
+No exchanges, no trading, no sending to friends.
 
-However, users who have completed premium courses will later be able to 
-exchange SLEARN for Leones (SLE) through `stable-sl.pdJ.app`.
+### Is SLEARN a stablecoin?
 
----
-
-### Does SLEARN have a stable price?
-
-It is better than stable, SLEARN is designed to maintain the highest possible value between the Leone 
-(SLE) and the US dollar.
-
-- **Floor value:** 4.5 cents of USD (1/22 USDT)
-- **If SLE exceeds 4.5 cents of USD:** SLEARN follows the SLE.
-
-This protects your educational purchasing power against devaluation.
-
----
+Kind of, but better: 1 SLEARN = at least 1 Leone (SLE).
+If the Leone goes up, SLEARN goes up with it. If the Leone drops, SLEARN doesn't drop below 4.5 cents USD.
 
 ### Who can use SLEARN?
 
-Any **verified users** of `learn.tg` can earn and use SLEARN.
+Anyone with a verified learn.tg account.
 
-Once a user has used SLEARN to pay for premium courses in learn.tg, 
-if he/she is from Sierra Leone, he/she 
-will be able to exchange SLEARN for SLE in `stable-sl.pdJ.app`.
+- Outside Sierra Leone: only for paying courses.
+- In Sierra Leone: same as above, plus you can turn SLEARN into Leones (after you've paid for at least one course).
 
-SLEARN cannot be used outside the pdJ ecosystem (`learn.tg`, 
-`stable-sl.pdJ.app`, and `sivel.xyz`).
+### Where can I see how many SLEARN exist, reserves, etc?
 
----
+All live on the Transparency Dashboard: https://learn.tg/en/transparency
 
-### Where can I see the total supply and adoption metrics?
-
-All metrics are public and updated in real time.
-
-👉 [Transparency Dashboard](https://learn.tg/en/transparency)
-
-Now there you can see:
-* Total users of learn.tg
-* Total of users that have learning points
-* Total of learning points
-* Total of USDT given in scholarships
-* Total of CELO given in learn.tg-UBI
-* Total of USDT received in donations
-* Totals by country and link to a leaderboard with details per user
-
-Once the token is launched in that URL you will be able to see:
-- Total SLEARN emitted and in circulation
-- SLEARN burned (used to pay premium courses)
-- XAUT/USDT reserve backing SLEARN
-- Number of active wallets
+Right now it shows users, points, USDT/CELO given. After launch (June 1) it will also show SLEARN supply, burned tokens, and reserve balances.
