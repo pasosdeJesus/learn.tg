@@ -59,8 +59,7 @@ All metrics are public and updated in real time.
 
 Now there you can see:
 * Total users of learn.tg
-* Total of verified users (more than 50 in Profile Score) that have learning
-  points
+* Total of users that have learning points
 * Total of learning points
 * Total of USDT given in scholarships
 * Total of CELO given in learn.tg-UBI
