@@ -54,7 +54,7 @@ heart, and you will find rest for your souls.” (Matthew 11:29)*
 
 It can be checked at https://learn.tg/en/transparency, as of April 2026, learn.tg has **482 users with connected wallets**, of which **143 active users** hold **309 Learning Points** (to be converted 1:1 to SLEARN at launch). The platform has also distributed **$288.36 in scholarships** and **373.76 CELO** as UBI, with **$1.45 in donations** received.
 
-To ensure proper backing from day one, **pdJ (Pasos de Jesús)** will make an initial donation equivalent to the value required to back the initial SLEARN tokens on 1st June 2026 (minimum $1/22 USDT per SLEARN, as per the Reserve Backing Rule in Section 4). This guarantees that every SLEARN token in circulation at launch is fully reserved.
+To ensure proper backing from day one, **pdJ (Pasos de Jesús)** will make an initial donation equivalent to the value required to back the initial SLEARN tokens on 1st June 2026 (minimum 4.5 cents of USDT per SLEARN, as per the Reserve Backing Rule in Section 4). This guarantees that every SLEARN token in circulation at launch is fully reserved.
 
 ---
 
@@ -145,7 +145,7 @@ growth.
 To protect users from volatility, SLEARN employs a dual-reference stability framework.
 
 1.  **Reserve Backing Rule:** Every SLEARN is minted only when equivalent value
-    (minimum $1/22$ USDT) is deposited into the SLE reserve.
+    (minimum $1/22$ USDT that is around 4.5 cents of USD) is deposited into the SLE reserve.
 2.  **Asset Mix:** Backing consists of **USDT** (liquidity), **CELO** (ecosystem),
     and **XAUT** (strategic gold reserve to hedge against fiat inflation).
 3.  **Stability Formula:** 1 SLEARN is pegged to 1 Sierra Leone Leone (SLE). To
