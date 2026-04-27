@@ -166,13 +166,13 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
 For SLEARN to fulfill its promise of real-world utility, it connects with the economy of Sierra Leone through `stable-sl.pdJ.app`.
 
 ### 5.1. Identity & Privacy (Self.xyz Integration)
-We prioritize user privacy by utilizing learn.tg verification that in turn
+We will prioritize user privacy by utilizing learn.tg verification that in turn
 uses the **Self Protocol (self.xyz)** on Celo.
 - **NFC Verification:** Users verify their identity using their smartphone's NFC reader against their official passport.
 - **ZK Proofs:** Validation is performed via Zero-Knowledge proofs. **learn.tg** only stores the user's name and country, ensuring "privacy by design" while meeting compliance requirements.
 
 ### 5.2. Tiered Access and Limits
-Redemption is subject to progressive verification tiers:
+Redemption will be subject to progressive verification tiers:
 - **Tier 1:** 100 SLE/day (~$4.5). Requires 1 Premium Course SBT and learn.tg
   verification via Self.xyz.
 - **Tier 2:** 200 SLE/day (~$9). Requires 2 Premium Course SBTs and Orange Money name match.
@@ -180,8 +180,8 @@ Redemption is subject to progressive verification tiers:
 
 ### 5.3. Operating Model & Rewards
 The bridge operates as a secure link between digital assets and local liquidity.
-- **Non-Custodial Escrow:** A smart contract acts as a neutral custodian, freezing digital assets until the operator confirms the receipt of SLE. This minimizes counterparty risk.
-- **Cashback Incentive:** To encourage ecosystem growth, users selling crypto through the bridge receive **SLEARN Cashback**. Rewards are proportional to the spread (up to 0.05 SLEARN per USDT), with bonuses for each Premium Course SBT obtained (up to 0.1 SLEARN per USDT).
+- **Non-Custodial Escrow:** A smart contract will act as a neutral custodian, freezing digital assets until the operator confirms the receipt of SLE. This minimizes counterparty risk.
+- **Cashback Incentive:** To encourage ecosystem growth, users selling crypto through the bridge will receive **SLEARN Cashback**. Rewards are proportional to the spread (up to 0.05 SLEARN per USDT), with bonuses for each Premium Course SBT obtained (up to 0.1 SLEARN per USDT).
 
 ---
 
