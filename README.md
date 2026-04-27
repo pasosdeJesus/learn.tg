@@ -7,7 +7,7 @@
 
 **Learn.tg** is a gamified educational platform that makes learning
 engaging through crossword puzzles, with a core mission rooted in Christian 
-principles. Our live prototype at [learn.tg](https://learn.tg) allows 
+principles. Our platform at [learn.tg](https://learn.tg) allows 
 students to earn cryptocurrency rewards for mastering educational content.
 
 ## 📜 Foundational Document
