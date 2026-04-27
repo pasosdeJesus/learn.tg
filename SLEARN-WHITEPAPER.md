@@ -234,7 +234,8 @@ risks before donating or paying for courses in learn.tg.
   human operators and smart contract escrow. Delays, errors,
   or technical issues may occur during redemption.
 - **Reserve volatility**: The backing (USDT, CELO, XAUT) may
-  fluctuate in value, affecting the stability of SLEARN.
+  fluctuate in value, affecting the stability of SLEARN. However
+  historically XAUT has grown over USDT.
 - **Low adoption**: If learn.tg does not grow sufficiently,
   the utility and demand for SLEARN could remain limited.
 - **Liquidity risk**: SLEARN is a restricted utility token.
