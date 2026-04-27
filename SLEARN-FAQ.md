@@ -29,7 +29,7 @@ If the Leone goes up, SLEARN goes up with it. If the Leone drops, SLEARN stays a
 Anyone with a verified learn.tg account.
 
 * Outside Sierra Leone: only for paying courses.
-* In Sierra Leone: same as above, plus you can turn SLEARN into Leones (after you've paid for at least one course).
+* In Sierra Leone: same as above, plus in phase 3 you will be able to turn SLEARN into Leones (after you've paid for at least one course).
 
 ***Where can I see how many SLEARN exist, reserves, etc?***
 
