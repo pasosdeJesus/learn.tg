@@ -22,7 +22,7 @@ No, you cannot send SLEARN to anyone.
 ***Is SLEARN a stablecoin?***
 
 Kind of, but better: 1 SLEARN = at least 1 Leone (SLE).
-If the Leone goes up, SLEARN goes up with it. If the Leone drops, SLEARN doesn't drop below 4.5 cents USD.
+If the Leone goes up, SLEARN goes up with it. If the Leone drops, SLEARN stays at 4.5 cents USD.
 
 ***Who can use SLEARN?***
 
