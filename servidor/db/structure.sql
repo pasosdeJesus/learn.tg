@@ -4785,6 +4785,18 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: site_nonces; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.site_nonces (
+    site character varying(100) NOT NULL,
+    available_learningpoints integer DEFAULT 0 NOT NULL,
+    last_nonce integer DEFAULT 0 NOT NULL,
+    updated_at timestamp without time zone
+);
+
+
+--
 -- Name: transaction; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4805,8 +4817,8 @@ CREATE TABLE public.transaction (
     fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
     sincronizado boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
-    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying, 'ccop'::character varying])::text[]))),
-    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying])::text[])))
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY[('learningpoints'::character varying)::text, ('usdt'::character varying)::text, ('celo'::character varying)::text, ('ccop'::character varying)::text]))),
+    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text])))
 );
 
 
@@ -6341,6 +6353,14 @@ ALTER TABLE ONLY public.cor1440_gen_rangoedadac
 
 ALTER TABLE ONLY public.religion
     ADD CONSTRAINT religion_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: site_nonces site_nonces_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.site_nonces
+    ADD CONSTRAINT site_nonces_pkey PRIMARY KEY (site);
 
 
 --

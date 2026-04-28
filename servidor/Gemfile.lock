@@ -1,13 +1,13 @@
 GIT
   remote: https://github.com/kreeti/kt-paperclip.git
-  revision: 04066c387354d7a512a995ac170eecded4f034db
+  revision: 01ceffa3440c9a709e63c2337722931433c2eb48
   specs:
-    kt-paperclip (7.3.0)
+    kt-paperclip (7.4.0)
       activemodel (>= 4.2.0)
       activesupport (>= 4.2.0)
       marcel (>= 1.0.1)
       mime-types
-      terrapin (>= 0.6.0, < 2.0)
+      terrapin (>= 0.6.0)
 
 GIT
   remote: https://gitlab.com/pasosdeJesus/cor1440_gen.git
@@ -597,4 +597,4 @@ RUBY VERSION
   ruby 3.4.1p0
 
 BUNDLED WITH
-  4.0.6
+  4.0.10
