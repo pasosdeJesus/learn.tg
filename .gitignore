@@ -107,3 +107,4 @@ ia/bayes_profecia_sintetica_parameters.py
 apps/nextjs/scripts/html-snapshots
 .aider*
 __pycache__
+contexto.md
