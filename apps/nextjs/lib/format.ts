@@ -1,7 +1,3 @@
-/**
- * Format a number with thousand separators and decimal places
- * Example: 1234567.89 → "1,234,567.89"
- */
 export function formatNumber(
   value: number,
   options?: {
@@ -22,10 +18,6 @@ export function formatNumber(
   })
 }
 
-/**
- * Format a currency amount
- * Example: 1234.56 → "$1,234.56"
- */
 export function formatCurrency(
   value: number,
   currency: 'USD' | 'CELO' = 'USD',
@@ -58,9 +50,6 @@ export function formatCurrency(
   return formatted
 }
 
-/**
- * Format learning points (no currency symbol)
- */
 export function formatLearningPoints(value: number): string {
   return formatNumber(value, {
     minimumFractionDigits: 0,
@@ -68,9 +57,6 @@ export function formatLearningPoints(value: number): string {
   })
 }
 
-/**
- * Format USDT amount for scholarship and donations
- */
 export function formatUSDT(value: number): string {
   return formatCurrency(value, 'USD', {
     minimumFractionDigits: 2,
@@ -79,9 +65,6 @@ export function formatUSDT(value: number): string {
   })
 }
 
-/**
- * Format CELO amount for UBI
- */
 export function formatCELO(value: number): string {
   return formatCurrency(value, 'CELO', {
     minimumFractionDigits: 2,
@@ -90,10 +73,6 @@ export function formatCELO(value: number): string {
   })
 }
 
-/**
- * Simple translation function (placeholder for i18n)
- * In a real implementation, this would use a proper i18n library
- */
 export function t(en: string, es: string, lang?: string): string {
   // Default to English for now
   // In production, lang would come from app/[lang]/...

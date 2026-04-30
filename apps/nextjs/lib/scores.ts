@@ -12,14 +12,6 @@ interface CourseData {
   [key: number]: number
 }
 
-/**
- * Recalculates the user's total learning score by summing all their 
- * 'learningpoints' transactions and updates the usuario table.
- * 
- * @param db The Kysely database instance.
- * @param userId The ID of the user.
- * @returns The new total learning score.
- */
 export async function refreshUserLearningScore(
   db: Kysely<DB>,
   userId: number
@@ -45,12 +37,6 @@ export async function refreshUserLearningScore(
   return total
 }
 
-/**
- * Calculates the learning score to add to a user's profile based on a donation amount.
- *
- * @param donationAmountUSD The amount of the donation in USD.
- * @returns The score to add.
- */
 export async function calculateDonationLearningScore(
   donationAmountUSD: number
 ): Promise<number> {
@@ -59,15 +45,7 @@ export async function calculateDonationLearningScore(
   return Math.round(scoreToAdd * 100) / 100;
 }
 
-/**
- * Adds a calculated learning score to a user's profile based on a donation amount.
- * (Deprecated: Use calculateDonationLearningScore and then refreshUserLearningScore)
- *
- * @param db The Kysely database instance.
- * @param userId The ID of the user.
- * @param donationAmountUSD The amount of the donation in USD.
- * @returns The new total learning score.
- */
+// Deprecated: Use calculateDonationLearningScore and then refreshUserLearningScore
 export async function addDonationToLearningScore(
   db: Kysely<DB>,
   userId: string,
@@ -85,17 +63,6 @@ export async function addDonationToLearningScore(
 }
 
 
-/**
- * Calculates and updates all scores for a user, including global scores
- * and course-specific metrics, within a single database transaction.
- *
- * @param db - The Kysely database instance.
- * @param user - The user object, as selected from the database.
- * @param courseId - The course being updated
- * @param wallet - The wallet address associated with this transaction
- * @param guide - The guide being updated (optional)
- * @returns An object containing the final learningscore and profilescore.
- */
 export async function updateUserAndCoursePoints(
   db: Kysely<DB>,
   user: Selectable<Usuario>,

@@ -5,20 +5,10 @@
 import { isIOSDevice, isAndroidDevice } from './mobile-detection'
 import { getUniversalLink } from '@selfxyz/core'
 
-/**
- * Generates a deeplink URL for the Self application
- * @param config Configuration object for the deeplink
- * @returns string URL for the deeplink
- */
 export function generateSelfDeeplink(selfApp: any): string {
   return getUniversalLink(selfApp)
 }
 
-/**
- * Opens the Self application using a deeplink
- * @param config Configuration object for the deeplink
- * @returns Promise<boolean> indicating if the deeplink was attempted
- */
 export async function openSelfApp(selfApp: any): Promise<boolean> {
   try {
     const deeplinkUrl = generateSelfDeeplink(selfApp)
@@ -54,10 +44,6 @@ export async function openSelfApp(selfApp: any): Promise<boolean> {
   }
 }
 
-/**
- * Checks if the Self app is likely installed by attempting to open it
- * @returns Promise<boolean> indicating if the app appears to be installed
- */
 export async function checkSelfAppInstalled(): Promise<boolean> {
   return new Promise((resolve) => {
     // This is a heuristic approach - not 100% reliable
@@ -75,10 +61,6 @@ export async function checkSelfAppInstalled(): Promise<boolean> {
   })
 }
 
-/**
- * Gets the appropriate app store URL for the current platform
- * @returns string URL to the app store
- */
 export function getSelfAppStoreUrl(): string {
   if (isIOSDevice()) {
     return 'https://apps.apple.com/us/app/self-zk/id6478563710' // Replace with actual App Store ID

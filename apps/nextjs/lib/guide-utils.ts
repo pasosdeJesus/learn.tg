@@ -1,20 +1,14 @@
-/**
- * Helper functions for guide-related operations
- *
- * "Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres" (Colosenses 3:23)
- */
+// Helper functions for guide-related operations
+// "Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres" (Colosenses 3:23)
+
+// The 1-indexed guideId corresponds to position in the ordered list of guides
+// (ordered by nombrecorto) for the course. The actividadpf_id is the actual DB id.
+// prefijoRuta includes leading slash in the database.
 
 import { Kysely, sql } from 'kysely'
 import { newKyselyPostgresql } from '@/.config/kysely.config'
 import type { DB } from '@/db/db.d.ts'
 
-/**
- * Get all guides for a given course, including their answers.
- *
- * @param courseId - Course ID (proyectofinanciero_id)
- * @param db - Kysely DB instance
- * @returns An array of guide objects, or null if not found
- */
 export async function getGuidesByCourseId(
   courseId: number,
   db: Kysely<DB>,
@@ -40,15 +34,6 @@ export async function getGuidesByCourseId(
   }
 }
 
-/**
- * Get the 1-indexed guideId for a given course and guide suffix
- * The guideId corresponds to the position in the ordered list of guides
- * (ordered by nombrecorto) for the course.
- *
- * @param courseId - Course ID (proyectofinanciero_id)
- * @param suffix - Guide suffix (sufijoRuta)
- * @returns The 1-indexed guideId, or null if not found
- */
 export async function getGuideIdBySuffix(
   courseId: number,
   suffix: string
@@ -96,13 +81,6 @@ export async function getGuideIdBySuffix(
   }
 }
 
-/**
- * Get the actividadpf_id for a given guideId and course
- *
- * @param courseId - Course ID (proyectofinanciero_id)
- * @param guideId - 1-indexed guideId
- * @returns The actividadpf_id, or null if not found
- */
 export async function getActividadpfId(
   courseId: number,
   guideId: number
@@ -127,13 +105,6 @@ export async function getActividadpfId(
   }
 }
 
-/**
- * Get course ID by prefix (pathPrefix without leading slash)
- * Maps e.g. 'a-relationship-with-Jesus' to course ID 2
- *
- * @param prefix - Course path prefix (without leading slash)
- * @returns Course ID (proyectofinanciero_id), or null if not found
- */
 export async function getCourseIdByPrefix(
   prefix: string
 ): Promise<number | null> {

@@ -2,10 +2,6 @@ import { Kysely, sql } from 'kysely'
 import type { DB } from '@/db/db.d'
 import type { LeaderboardQueryParams } from '@/types/leaderboard'
 
-/**
- * Construye la consulta base del leaderboard con filtros y ordenamiento
- * Devuelve la consulta Kysely para que el llamador pueda ejecutarla
- */
 export async function buildLeaderboardQuery(
   db: Kysely<DB>,
   params: LeaderboardQueryParams,
@@ -67,9 +63,6 @@ export async function buildLeaderboardQuery(
   return query
 }
 
-/**
- * Obtiene la lista de países únicos para el filtro (solo países con código alfa2)
- */
 export async function getCountriesQuery(db: Kysely<DB>) {
   return db
     .selectFrom('msip_pais as p')
@@ -80,9 +73,6 @@ export async function getCountriesQuery(db: Kysely<DB>) {
     .distinct()
     .orderBy('p.nombre', 'asc')
 }
-/**
- * Obtiene los totales globales del leaderboard, opcionalmente filtrados por país
- */
 export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
   let query: any = db
     .selectFrom('usuario as u')
@@ -116,9 +106,6 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
   }
 }
 
-/**
- * Obtiene los totales del leaderboard agrupados por país (incluye usuarios sin país)
- */
 export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
   const results = await db
     .selectFrom('usuario as u')
@@ -151,10 +138,6 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
   }))
 }
 
-/**
- * Ejecuta la consulta del leaderboard y devuelve los resultados formateados
- * Incluye paginación, lista de países y totales (filtrados por país si aplica)
- */
 export async function getLeaderboardData(
   db: Kysely<DB>,
   params: LeaderboardQueryParams,

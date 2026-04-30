@@ -1,3 +1,8 @@
+// Why nonce retry: when multiple transactions are submitted rapidly (e.g.,
+// concurrent crossword submissions), the default nonce may be for an already-
+// pending tx. We retry with the next nonce from the pending pool.
+// waitForReceiptWithRetry polls for confirmations with timeout — we don't
+// return until the tx is confirmed on-chain.
 import 'dotenv/config'
 import type { Address, PublicClient, TransactionReceipt } from 'viem'
 import {

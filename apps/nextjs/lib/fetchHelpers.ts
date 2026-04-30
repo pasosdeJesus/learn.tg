@@ -1,8 +1,5 @@
 import type { Session } from 'next-auth'
 
-/**
- * Helper to build URLSearchParams with wallet and token from session if available
- */
 export function buildParamsWithSession(
   session: Session | null,
   baseParams?: Record<string, string>
@@ -28,9 +25,6 @@ export function buildParamsWithSession(
   return params
 }
 
-/**
- * Helper to create a fetch function with session handling
- */
 export function createFetchFunction<T>(
   endpoint: string,
   buildParams?: (session: Session | null) => Record<string, string>

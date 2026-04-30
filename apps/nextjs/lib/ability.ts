@@ -7,10 +7,6 @@ export type Subjects = 'User' | 'all'
 export type AppAbility = PureAbility<[Actions, Subjects]>
 export const AppAbility = PureAbility as AbilityClass<AppAbility>
 
-/**
- * Define las habilidades basadas en el usuario.
- * Esta función es el ÚNICO lugar donde se definen los permisos del sistema.
- */
 export function defineAbilitiesFor(user: { rol: number | null } | null | undefined) {
   const { can, rules, build } = new AbilityBuilder(AppAbility)
 

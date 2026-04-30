@@ -1,11 +1,5 @@
-/**
- * Mobile detection utility for determining if the user is on a mobile device
- */
+// Mobile detection utility for determining if the user is on a mobile device
 
-/**
- * Detects if the current device is a mobile device based on user agent
- * @returns boolean indicating if the device is mobile
- */
 export function isMobileDevice(): boolean {
   // Check if we're in a browser environment
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
@@ -21,10 +15,6 @@ export function isMobileDevice(): boolean {
   return mobileRegex.test(userAgent)
 }
 
-/**
- * Detects if the current device is specifically an iOS device
- * @returns boolean indicating if the device is iOS
- */
 export function isIOSDevice(): boolean {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
     return false
@@ -35,10 +25,6 @@ export function isIOSDevice(): boolean {
   return /iphone|ipad|ipod/i.test(userAgent)
 }
 
-/**
- * Detects if the current device is specifically an Android device
- * @returns boolean indicating if the device is Android
- */
 export function isAndroidDevice(): boolean {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
     return false
@@ -49,10 +35,6 @@ export function isAndroidDevice(): boolean {
   return /android/i.test(userAgent)
 }
 
-/**
- * Gets detailed device information
- * @returns object with device type information
- */
 export function getDeviceInfo() {
   return {
     isMobile: isMobileDevice(),
@@ -62,10 +44,6 @@ export function getDeviceInfo() {
   }
 }
 
-/**
- * Hook for React components to detect mobile devices with SSR safety
- * @returns boolean indicating if the device is mobile (false during SSR)
- */
 export function useMobileDetection() {
   const [isMobile, setIsMobile] = React.useState(false)
 

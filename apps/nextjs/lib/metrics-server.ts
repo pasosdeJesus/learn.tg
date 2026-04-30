@@ -13,10 +13,6 @@ export interface BaseEvent {
   timestamp?: Date
 }
 
-/**
- * Record an event directly from server-side code
- * Inserts event into the database
- */
 export async function recordEvent(event: BaseEvent): Promise<void> {
   // This function should only be called server-side
   if (typeof window !== 'undefined') {

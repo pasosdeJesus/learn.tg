@@ -21,6 +21,9 @@ See instructions in [servidor/README.md](servidor/README.md)
 ### Frontend (Next.js App)
 See instructions in [apps/nextjs/README.md](apps/nextjs/README.md)
 
+### Documentation & Testing Policies
+For detailed documentation and testing policies for the Next.js app, see [apps/nextjs/CONTRIBUTING.md](apps/nextjs/CONTRIBUTING.md).
+
 ## 🔄 Contributing Process
 
 1. **Fork** the repository
