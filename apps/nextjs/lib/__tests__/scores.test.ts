@@ -49,12 +49,6 @@ vi.mock('kysely', () => ({
 }))
 
 // More granular mocks for each chain (keep existing structure)
-const courseUsuarioUpdateMock = {
-  set: vi.fn().mockReturnThis(),
-  where: vi.fn().mockReturnThis(),
-  execute: vi.fn().mockResolvedValue({}),
-}
-
 const usuarioUpdateMock = {
   set: vi.fn().mockReturnThis(),
   where: vi.fn().mockReturnThis(),
@@ -76,17 +70,11 @@ describe('updateUserAndCoursePoints', () => {
       console.log('mockSqlExecute called')
       return { rows: [] }
     })
-    courseUsuarioUpdateMock.set.mockReset()
-    courseUsuarioUpdateMock.where.mockReset()
-    courseUsuarioUpdateMock.execute.mockReset()
     usuarioUpdateMock.set.mockReset()
     usuarioUpdateMock.where.mockReset()
     usuarioUpdateMock.execute.mockReset()
 
     // Reset default behaviors for update mocks
-    courseUsuarioUpdateMock.set.mockReturnThis()
-    courseUsuarioUpdateMock.where.mockReturnThis()
-    courseUsuarioUpdateMock.execute.mockResolvedValue({})
     usuarioUpdateMock.set.mockReturnThis()
     usuarioUpdateMock.where.mockReturnThis()
     usuarioUpdateMock.execute.mockResolvedValue({})
@@ -118,9 +106,7 @@ describe('updateUserAndCoursePoints', () => {
     mockDb.fn.sum.mockReturnValue({ as: vi.fn(() => ({})) })
     mockDb.updateTable.mockReset()
     mockDb.updateTable.mockImplementation((table: string) => {
-      if (table === 'course_usuario') {
-        return courseUsuarioUpdateMock
-      } else if (table === 'usuario') {
+      if (table === 'usuario') {
         return usuarioUpdateMock
       }
       return {
@@ -157,27 +143,12 @@ describe('updateUserAndCoursePoints', () => {
     const totalCoursePoints = { total_points: 0 }
 
     mockSqlExecute.mockResolvedValue(guidesUsuario)
-    mockDb.execute.mockResolvedValueOnce([]) // Course not found initially
-    mockDb.executeTakeFirstOrThrow.mockResolvedValueOnce({ id: 99 }) // Mock the insert
+    mockDb.execute.mockResolvedValueOnce([])
     mockDb.executeTakeFirst
-      .mockResolvedValueOnce(totalGuidesInCourse) // total guides
-      .mockResolvedValueOnce({ total_points: 15 }) // total guide points
-      .mockResolvedValueOnce(totalCoursePoints) // total course points
+      .mockResolvedValueOnce({ total_points: 15 })
+      .mockResolvedValueOnce(totalCoursePoints)
 
     await updateUserAndCoursePoints(mockDb as any, user as any, null, '', null)
-
-    expect(mockDb.insertInto).toHaveBeenCalledWith('course_usuario')
-    expect(mockDb.values).toHaveBeenCalledWith(expect.any(Object))
-    expect(mockDb.executeTakeFirstOrThrow).toHaveBeenCalled()
-
-    expect(mockDb.updateTable).toHaveBeenCalledWith('course_usuario')
-    expect(courseUsuarioUpdateMock.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        guidespoints: 15,
-        amountscholarship: 1.5,
-        percentagecompleted: 50,
-      }),
-    )
 
     expect(mockDb.updateTable).toHaveBeenCalledWith('usuario')
     expect(usuarioUpdateMock.set).toHaveBeenCalledWith(
@@ -215,74 +186,14 @@ describe('updateUserAndCoursePoints', () => {
     }
 
     mockSqlExecute.mockResolvedValue(guidesUsuario)
-    mockDb.execute.mockResolvedValue([]) // No existing course_usuario
-    mockDb.executeTakeFirstOrThrow
-      .mockResolvedValueOnce({ id: 1 })
-      .mockResolvedValueOnce({ id: 2 })
     mockDb.executeTakeFirst
-      .mockResolvedValueOnce({ count: 2 })
-      .mockResolvedValueOnce({ count: 1 })
       .mockResolvedValueOnce({ total_points: 25 })
       .mockResolvedValueOnce({ total_points: 0 })
 
     await updateUserAndCoursePoints(mockDb as any, user as any, null, '', null)
 
-    expect(courseUsuarioUpdateMock.set).toHaveBeenCalledWith(
-      expect.objectContaining({ guidespoints: 20, percentagecompleted: 100 }),
-    )
-    expect(courseUsuarioUpdateMock.set).toHaveBeenCalledWith(
-      expect.objectContaining({ guidespoints: 5, percentagecompleted: 100 }),
-    )
     expect(usuarioUpdateMock.set).toHaveBeenCalledWith(
       expect.objectContaining({ learningscore: 25 }),
     )
-  })
-
-  it('should update existing course_usuario record if it exists', async () => {
-    const user = { id: 1, learningscore: 0, profilescore: 50 }
-    const guidesUsuario = {
-      rows: [
-        { usuario_id: 1, proyectofinanciero_id: 100, points: 20, amountpaid: 2 },
-        { usuario_id: 1, proyectofinanciero_id: 100, points: 10, amountpaid: 1 },
-      ],
-    }
-    const existingCourseUser = [
-      {
-        id: 5,
-        proyectofinanciero_id: 100,
-        usuario_id: 1,
-        guidespoints: 15,
-        amountscholarship: 1.5,
-        percentagecompleted: 50,
-      },
-    ]
-    const totalGuidesInCourse = { count: 4 }
-
-    mockSqlExecute.mockResolvedValue(guidesUsuario)
-    mockDb.execute.mockResolvedValueOnce(existingCourseUser)
-    mockDb.executeTakeFirst
-      .mockResolvedValueOnce(totalGuidesInCourse)
-      .mockResolvedValueOnce({ total_points: 30 })
-      .mockResolvedValueOnce({ total_points: 0 })
-
-    await updateUserAndCoursePoints(mockDb as any, user as any, null, '', null)
-
-    expect(mockDb.insertInto).not.toHaveBeenCalled()
-    expect(mockDb.updateTable).toHaveBeenCalledWith('course_usuario')
-    expect(courseUsuarioUpdateMock.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        guidespoints: 30,
-        amountscholarship: 3,
-        percentagecompleted: 50,
-      }),
-    )
-    expect(courseUsuarioUpdateMock.where).toHaveBeenNthCalledWith(1, 'usuario_id', '=', 1)
-    expect(courseUsuarioUpdateMock.where).toHaveBeenNthCalledWith(2, 'proyectofinanciero_id', '=', 100)
-
-    expect(mockDb.updateTable).toHaveBeenCalledWith('usuario')
-    expect(usuarioUpdateMock.set).toHaveBeenCalledWith(
-      expect.objectContaining({ learningscore: 30 }),
-    )
-    expect(usuarioUpdateMock.where).toHaveBeenCalledWith('id', '=', 1)
   })
 })

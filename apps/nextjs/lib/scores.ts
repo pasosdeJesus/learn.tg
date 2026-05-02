@@ -3,7 +3,7 @@
 import { Kysely, sql } from 'kysely'
 import type { Insertable, Selectable, Updateable } from 'kysely'
 
-import type { DB, Usuario, CourseUsuario, GuideUsuario } from '@/db/db.d'
+import type { DB, Usuario, GuideUsuario } from '@/db/db.d'
 
 const USD_TO_SLE_RATE = 22;
 const SLE_TO_SCORE_RATIO = 10;
@@ -104,55 +104,6 @@ export async function updateUserAndCoursePoints(
     earnedCourse[courseId] += 
       guideUsuario.amountpaid
   }
-  const courseIds = Object.keys(pointsGuidesCourse);
-  if (courseId && !courseIds.includes(courseId.toString())) {
-    courseIds.push(courseId.toString());
-  }
-  for (const cId of courseIds) {
-    const currentCourseId = Number(cId);
-    const userCourse = (await db
-    .selectFrom('course_usuario')
-    .where('usuario_id', '=', user.id)
-    .where('proyectofinanciero_id', '=', currentCourseId)
-    .selectAll()
-    .execute()) || []
-    if (userCourse.length == 0) {
-      const cp: Insertable<CourseUsuario> = {
-        usuario_id: user.id,
-        proyectofinanciero_id: currentCourseId,
-        points: 0,
-        guidespoints: 0,
-        amountscholarship: 0,
-        percentagecompleted: 0,
-      }
-      await db
-      .insertInto('course_usuario')
-      .values(cp)
-      .returningAll()
-      .executeTakeFirstOrThrow()
-    }
-    const courseGuidesCountResult = await db
-    .selectFrom('cor1440_gen_actividadpf')
-    .where('proyectofinanciero_id', '=', currentCourseId)
-    .select(db.fn.countAll().as('count'))
-    .executeTakeFirst()
-    const totalGuidesInCourse = Number(courseGuidesCountResult?.count) || 0
-    const percentd = totalGuidesInCourse > 0 ? 
-      ((amountGuidesCourse[currentCourseId] || 0) / totalGuidesInCourse) * 100 : 0
-
-    const updateCourseUsuario = {
-      guidespoints: pointsGuidesCourse[currentCourseId] || 0,
-      amountscholarship: earnedCourse[currentCourseId] || 0,
-      percentagecompleted: Math.round(percentd),
-    }
-    await db
-    .updateTable('course_usuario')
-    .set(updateCourseUsuario as any)
-    .where('usuario_id', '=', user.id)
-    .where('proyectofinanciero_id', '=', currentCourseId)
-    .execute()
-  }
-
 
   if (guide) {
     if (!wallet || wallet.trim() === '') {

@@ -2,8 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 17.5
--- Dumped by pg_dump version 17.5
+\restrict uQPhfShVxdA2dyVnYCRegaxwl2y7HMMgCvzxciPdr3P47bzvDnoFoD8xkfK8C1W
+
+-- Dumped from database version 17.9
+-- Dumped by pg_dump version 17.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -198,35 +200,6 @@ CREATE PROCEDURE public.cor1440_gen_recalcular_poblacion_actividad(IN par_activi
           RETURN;
         END;
         $$;
-
-
---
--- Name: course_usuario_timestamps(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.course_usuario_timestamps() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-    -- Para inserciones (INSERT)
-    IF TG_OP = 'INSERT' THEN
-        -- Si created_at no fue proporcionado, establecer a ahora
-        IF NEW.created_at IS NULL THEN
-            NEW.created_at = NOW();
-        END IF;
-        -- Siempre establecer updated_at a ahora en inserción
-        NEW.updated_at = NOW();
-
-    -- Para actualizaciones (UPDATE)
-    ELSIF TG_OP = 'UPDATE' THEN
-        -- Nunca modificar created_at en actualizaciones
-        -- Solo actualizar updated_at
-        NEW.updated_at = NOW();
-    END IF;
-
-    RETURN NEW;
-END;
-$$;
 
 
 --
@@ -2783,22 +2756,6 @@ ALTER SEQUENCE public.cor1440_gen_tipomoneda_id_seq OWNED BY public.cor1440_gen_
 
 
 --
--- Name: course_usuario; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.course_usuario (
-    usuario_id integer NOT NULL,
-    proyectofinanciero_id integer NOT NULL,
-    points integer NOT NULL,
-    guidespoints numeric,
-    amountscholarship numeric,
-    percentagecompleted numeric,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
-);
-
-
---
 -- Name: guide_usuario; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4825,7 +4782,7 @@ CREATE TABLE public.transaction (
     sincronizado boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
     CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying, 'ccop'::character varying])::text[]))),
-    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying])::text[])))
+    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text])))
 );
 
 
@@ -6789,13 +6746,6 @@ CREATE TRIGGER cor1440_gen_recalcular_tras_cambiar_persona AFTER UPDATE ON publi
 
 
 --
--- Name: course_usuario course_usuario_timestamps_trigger; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER course_usuario_timestamps_trigger BEFORE INSERT OR UPDATE ON public.course_usuario FOR EACH ROW EXECUTE FUNCTION public.course_usuario_timestamps();
-
-
---
 -- Name: guide_usuario guide_usuario_timestamps_trigger; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -8187,4 +8137,6 @@ ALTER TABLE ONLY public.usuario
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict uQPhfShVxdA2dyVnYCRegaxwl2y7HMMgCvzxciPdr3P47bzvDnoFoD8xkfK8C1W
 
