@@ -43,6 +43,16 @@ const nextConfig: NextConfig = {
   },
   allowedDevOrigins: ['learn.tg', '127.0.0.1'],
   poweredByHeader: false,
+  async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL
+    if (!apiUrl) return []
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${apiUrl}/:path*`,
+      },
+    ]
+  },
   headers: async () => [
     {
       source: '/:path*',
