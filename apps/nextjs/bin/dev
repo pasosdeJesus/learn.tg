@@ -1,5 +1,16 @@
 #!/bin/sh
 
+limit=$(ulimit -d 2>/dev/null)
+if [ -n "$limit" ] && [ "$limit" != "unlimited" ]; then
+  limit_gb=$(( limit / 1024 / 1024 ))
+  if [ "$limit" -lt 7340032 ]; then
+    echo "ERROR: ulimit -d is ${limit_gb}G (${limit} KB). Need at least 7G (7340032 KB)."
+    echo "  Try: ulimit -d unlimited"
+    echo "  Or in the chroot config, set: data-limit = 8388608"
+    exit 1
+  fi
+fi
+
 pnpm install
 . ./.env
 cmd="node_modules/next/dist/bin/next dev -p${PORT} ${OPDEV}"
