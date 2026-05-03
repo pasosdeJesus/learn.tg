@@ -10,7 +10,6 @@ import { SessionProvider } from 'next-auth/react'
 import { useEffect } from 'react'
 import OKXNetworkCheck from '@/components/OKXNetworkCheck'
 import WalletDetectionHint from '@/components/WalletDetectionHint'
-import { isOKXWallet } from '@/lib/okx-switch'
 
 interface ExtendedWindow extends Window {
   ethereum?: {
@@ -101,34 +100,6 @@ const queryClient = new QueryClient()
 export function AppProvider(props: RainbowKitProviderProps) {
   useEffect(() => {
     const win = window as ExtendedWindow
-    console.log('=== OKX DIAGNOSTIC INFO ===')
-    console.log('1. User Agent:', navigator.userAgent)
-    console.log('2. Is OKX Browser?', navigator.userAgent.toLowerCase().includes('okx'))
-    console.log('3. Ethereum provider:', win.ethereum ? 'Present' : 'Absent')
-    console.log('4. window.okxwallet:', win.okxwallet ? 'Present' : 'Absent')
-    console.log('5. window.okex:', win.okex ? 'Present' : 'Absent')
-    if (win.ethereum) {
-      console.log('6. Provider details:', {
-        isOKX: win.ethereum.isOKX,
-        isOkxWallet: win.ethereum.isOkxWallet,
-        isMetaMask: win.ethereum.isMetaMask,
-        isRabby: win.ethereum.isRabby,
-        isTrust: win.ethereum.isTrust,
-        isCoinbaseWallet: win.ethereum.isCoinbaseWallet,
-        chainId: win.ethereum.chainId,
-        networkVersion: win.ethereum.networkVersion
-      })
-      // Log all enumerable properties of window.ethereum
-      try {
-        const props = Object.keys(win.ethereum)
-        console.log('7. window.ethereum properties:', props)
-      } catch (e) {
-        console.log('7. Failed to enumerate window.ethereum properties:', e)
-      }
-    }
-    console.log('8. isOKXWallet() result:', isOKXWallet())
-    console.log('9. Configured wallet types:', ['okxWallet', 'walletConnectWallet', 'metaMaskWallet', 'injectedWallet'])
-    console.log('10. Connectors count:', connectors.length)
   }, [])
 
 

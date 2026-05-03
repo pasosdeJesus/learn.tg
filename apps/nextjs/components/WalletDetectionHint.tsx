@@ -32,18 +32,7 @@ export default function WalletDetectionHint() {
 
     setDetectionDetails(details)
 
-    console.log('=== WALLET DETECTION HINT DEBUG ===')
-    console.log('Details:', details)
-    console.log('Is connected:', isConnected)
-    console.log('Address:', address)
-    console.log('Connector:', connector?.name)
-
-    // Mostrar hint si:
-    // 1. No está conectado
-    // 2. Es OKX (detectado por user agent o provider)
-    // 3. No hay provider ethereum detectado (o hay pero no conecta)
     if (!isConnected && (isOKX || userAgent.toLowerCase().includes('okx'))) {
-      console.log('Showing wallet detection hint for OKX user')
       setShowHint(true)
     } else {
       setShowHint(false)
@@ -87,7 +76,6 @@ export default function WalletDetectionHint() {
         <div className="flex gap-2 mt-3">
           <button
             onClick={() => {
-              console.log('User clicked "Refresh"')
               window.location.reload()
             }}
             className="flex-1 bg-amber-600 text-white py-2 rounded hover:bg-amber-700 text-sm"
@@ -96,7 +84,6 @@ export default function WalletDetectionHint() {
           </button>
           <button
             onClick={() => {
-              console.log('User clicked "Open in Chrome"')
               window.open(window.location.href, '_blank')
             }}
             className="flex-1 bg-gray-200 py-2 rounded hover:bg-gray-300 text-sm"

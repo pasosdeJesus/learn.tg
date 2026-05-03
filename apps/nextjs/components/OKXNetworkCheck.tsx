@@ -21,62 +21,35 @@ export default function OKXNetworkCheck() {
   const chainlistUrl = IS_PRODUCTION ? 'https://chainlist.org/chain/42220' : 'https://chainlist.org/chain/11142220'
 
   useEffect(() => {
-    // Detectar OKX Wallet usando nuestra función centralizada
     const isOKX = isOKXWallet()
-    console.log('OKX Detection:', { isOKX })
     setIsOKXBrowser(isOKX)
 
-    // Si es OKX y está en red incorrecta
     if (isOKX && chainId && chainId !== 42220 && chainId !== 11142220) {
-      console.log('OKX on wrong network:', chainId)
-      console.log('User Agent:', navigator.userAgent)
-      console.log('Address:', address)
-
-      // Intentar cambiar automáticamente solo si no lo hemos intentado antes
       if (!hasTriedSwitch) {
-        console.log('Attempting automatic network switch...')
         setHasTriedSwitch(true)
         setIsSwitching(true)
 
         switchToCelo()
           .then((success) => {
-            console.log('Automatic switch result:', success)
             if (success) {
-              // Éxito: no mostrar ayuda
-              console.log('✅ Network switched successfully')
               setShowHelp(false)
             } else {
-              // Fallo: mostrar ayuda
-              console.log('❌ Automatic switch failed, showing help modal')
               setShowHelp(true)
             }
           })
-          .catch((error) => {
-            console.error('Error during automatic switch:', error)
+          .catch(() => {
             setShowHelp(true)
           })
           .finally(() => {
             setIsSwitching(false)
           })
       } else {
-        // Ya intentamos antes, mostrar ayuda directamente
         setShowHelp(true)
       }
     } else {
-      // No es OKX o está en red correcta: ocultar ayuda
       setShowHelp(false)
     }
   }, [chainId, address, hasTriedSwitch])
-
-  // Monitor wallet connection state
-  useEffect(() => {
-    console.log('=== WALLET CONNECTION STATE ===')
-    console.log('Address:', address)
-    console.log('Chain ID:', chainId)
-    console.log('Is connected:', isConnected)
-    console.log('Connector:', connector?.name)
-    console.log('Connector ID:', connector?.id)
-  }, [address, chainId, isConnected, connector])
 
   // Reset copied state after 2 seconds
   useEffect(() => {
@@ -100,7 +73,6 @@ export default function OKXNetworkCheck() {
     const text = `OKX Diagnostics:\n${JSON.stringify(diagnostics, null, 2)}`
     try {
       await navigator.clipboard.writeText(text)
-      console.log('Diagnostics copied to clipboard:', diagnostics)
       setCopied(true)
     } catch (err) {
       console.error('Failed to copy diagnostics:', err)
@@ -163,17 +135,15 @@ export default function OKXNetworkCheck() {
             <div className="flex gap-3">
               <button
                 onClick={() => {
-                  console.log('User clicked "Try Auto-Switch"')
                   setIsSwitching(true)
                   switchToCelo()
                     .then((success) => {
-                      console.log('Manual retry result:', success)
                       if (success) {
                         setShowHelp(false)
                       }
                     })
-                    .catch((error) => {
-                      console.error('Retry failed:', error)
+                    .catch(() => {
+                      console.error('Retry failed')
                     })
                     .finally(() => {
                       setIsSwitching(false)
@@ -185,7 +155,6 @@ export default function OKXNetworkCheck() {
               </button>
               <button
                 onClick={() => {
-                  console.log('User clicked "I\'ve switched"')
                   setShowHelp(false)
                 }}
                 className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
@@ -196,7 +165,6 @@ export default function OKXNetworkCheck() {
             <div className="flex gap-3">
               <button
                 onClick={() => {
-                  console.log('User clicked "Open in Chrome"')
                   window.open(window.location.href, '_blank')
                 }}
                 className="flex-1 bg-gray-200 py-2 rounded hover:bg-gray-300"
