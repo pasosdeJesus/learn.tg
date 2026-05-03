@@ -2,6 +2,23 @@
 
 This directory contains the Next.js frontend for the Learn.tg platform. It is the primary user-facing application, responsible for content delivery, user interaction, and authentication via crypto wallets.
 
+## Quick Start (for frontend developers)
+
+```sh
+git clone <this-repo>
+cd apps/nextjs
+cp .env.template .env
+# Edit .env: set NEXT_PUBLIC_API_URL=https://learn.tg:9001/api
+# Edit .env: set NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin
+# Edit .env: set NEXTAUTH_SECRET=<any-random-string>
+pnpm install
+bin/dev    # starts on port 4000
+```
+
+Open [http://localhost:4000](http://localhost:4000). No database, no API submodule required.
+
+---
+
 ## Overview
 
 The frontend is built with [Next.js](https://nextjs.org/) and uses [Sign-In with Ethereum (SIWE)](https://login.xyz/) for passwordless authentication, allowing users to connect with their Ethereum-based wallets. It interacts with the Rails backend to fetch course content and user data.
@@ -24,6 +41,7 @@ The frontend is built with [Next.js](https://nextjs.org/) and uses [Sign-In with
 - **Wallet Integration**: [RainbowKit](https://www.rainbowkit.com/) and [Wagmi](https://wagmi.sh/)
 - **State Management**: [React Query](https://tanstack.com/query) for server state and React Context for global UI state
 - **Testing**: [Vitest](https://vitest.dev/) for unit and integration testing, with [React Testing Library](https://testing-library.com/)
+- **Quick dev**: `bin/dev` starts the frontend on port 4000 without any backend setup
 - **Linting & Formatting**: [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/)
 
 ## In-Depth Architecture
@@ -77,13 +95,22 @@ Before running the application, you need to set up your environment variables. C
 cp .env.template .env
 ```
 
-Then, review and update the `.env` file with the following:
+Then, review and update the `.env` file with these variables:
 
-- `NEXT_PUBLIC_URL`: The public URL of the application (e.g., `http://localhost:4300` for development).
-- `NEXT_PUBLIC_API_URL`: The URL of the Ruby on Rails backend server (e.g., `http://127.0.0.1:3000`).
-- `PORT`: The port on which to run the Next.js server (e.g., `4300`).
-- `NEXTAUTH_URL`: The full URL of the Next.js app, required by NextAuth.
-- `NEXTAUTH_SECRET`: A secret string used to sign session cookies. You can generate one with `openssl rand -hex 32`.
+### `NEXT_PUBLIC_API_URL`
+**Required for development without local API.** Set to `https://learn.tg:9001/api` to proxy all `/api/*` requests to the live server. If empty, the private API submodule at `app/api/` is used instead (requires database and submodule access).
+
+### Other variables
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | **Required for frontend-only dev.** Set to `https://learn.tg:9001/api` to proxy all `/api/*` requests to the live Next.js API. |
+| `NEXT_PUBLIC_API_BASE` | Rails API base. Set to `https://learn.tg:3500/learntg-admin` for course data when using the remote API. |
+| `PORT` | Dev server port (default: `4000`) |
+| `NEXTAUTH_URL` | Full URL of the Next.js app, required by NextAuth |
+| `NEXTAUTH_SECRET` | Secret for session cookies. Generate with `openssl rand -hex 32` |
+
+> **Note:** After changing `.env`, delete `.next` and restart: `rm -rf .next && pnpm dev`.
 
 ## Local Development
 

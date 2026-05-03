@@ -15,6 +15,11 @@ By participating in this project, you agree to maintain a respectful and collabo
 
 ## 🚀 Development Setup
 
+### Frontend Only (quickest — no backend required)
+
+See [apps/nextjs/README.md](apps/nextjs/README.md) for the quick start.
+Requires only Node.js, pnpm, and a web3 wallet. No database or Rails setup.
+
 ### Backend (Rails Server)
 See instructions in [servidor/README.md](servidor/README.md)
 

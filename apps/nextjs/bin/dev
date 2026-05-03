@@ -6,7 +6,7 @@ if [ -n "$limit" ] && [ "$limit" != "unlimited" ]; then
   if [ "$limit" -lt 7340032 ]; then
     echo "ERROR: ulimit -d is ${limit_gb}G (${limit} KB). Need at least 7G (7340032 KB)."
     echo "  Try: ulimit -d unlimited"
-    echo "  Or in the chroot config, set: data-limit = 8388608"
+    echo "  Or in the chroot config, set: data-limit = 7340032"
     exit 1
   fi
 fi

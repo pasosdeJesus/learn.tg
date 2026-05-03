@@ -50,8 +50,29 @@ For a detailed technical overview, please see
 
 ## 🏃 Getting Started
 
-To start developing, please review our **[Contributing Guide 
-(CONTRIBUTING.md)](CONTRIBUTING.md)**.
+### Quick frontend-only development (no backend setup)
+
+```sh
+git clone <repo-url>
+cd apps/nextjs
+cp .env.template .env
+# Edit .env:
+#   NEXT_PUBLIC_API_URL=https://learn.tg:9001/api
+#   NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin
+#   NEXTAUTH_SECRET=<any-random-string>
+pnpm install
+bin/dev
+```
+
+Open [http://localhost:4000](http://localhost:4000). No database or Rails setup needed.
+All API requests are proxied to the live server.
+
+### Full development
+
+To set up the Rails backend and smart contracts as well, see:
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [servidor/README.md](servidor/README.md)
+- [apps/hardhat/README.md](apps/hardhat/README.md)
 
 ## 🤖 For AI Agents
 

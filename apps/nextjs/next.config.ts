@@ -45,13 +45,17 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
+    console.log('**[next.config] rewrites() called, apiUrl:', apiUrl)
     if (!apiUrl) return []
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${apiUrl}/:path*`,
-      },
-    ]
+    console.log('**[next.config] rewrite active:', `/api/:path* -> ${apiUrl}/:path*`)
+    return {
+      beforeFiles: [
+        {
+          source: '/api/:path*',
+          destination: `${apiUrl}/:path*`,
+        },
+      ],
+    }
   },
   headers: async () => [
     {
