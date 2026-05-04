@@ -194,35 +194,6 @@ CREATE PROCEDURE public.cor1440_gen_recalcular_poblacion_actividad(IN par_activi
 
 
 --
--- Name: course_usuario_timestamps(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.course_usuario_timestamps() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-    -- Para inserciones (INSERT)
-    IF TG_OP = 'INSERT' THEN
-        -- Si created_at no fue proporcionado, establecer a ahora
-        IF NEW.created_at IS NULL THEN
-            NEW.created_at = NOW();
-        END IF;
-        -- Siempre establecer updated_at a ahora en inserción
-        NEW.updated_at = NOW();
-
-    -- Para actualizaciones (UPDATE)
-    ELSIF TG_OP = 'UPDATE' THEN
-        -- Nunca modificar created_at en actualizaciones
-        -- Solo actualizar updated_at
-        NEW.updated_at = NOW();
-    END IF;
-
-    RETURN NEW;
-END;
-$$;
-
-
---
 -- Name: f_unaccent(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2773,22 +2744,6 @@ CREATE SEQUENCE public.cor1440_gen_tipomoneda_id_seq
 --
 
 ALTER SEQUENCE public.cor1440_gen_tipomoneda_id_seq OWNED BY public.cor1440_gen_tipomoneda.id;
-
-
---
--- Name: course_usuario; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.course_usuario (
-    usuario_id integer NOT NULL,
-    proyectofinanciero_id integer NOT NULL,
-    points integer NOT NULL,
-    guidespoints numeric,
-    amountscholarship numeric,
-    percentagecompleted numeric,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
-);
 
 
 --
@@ -6779,13 +6734,6 @@ CREATE TRIGGER cor1440_gen_recalcular_tras_cambiar_asistencia AFTER INSERT OR DE
 --
 
 CREATE TRIGGER cor1440_gen_recalcular_tras_cambiar_persona AFTER UPDATE ON public.msip_persona FOR EACH ROW EXECUTE FUNCTION public.cor1440_gen_persona_cambiada();
-
-
---
--- Name: course_usuario course_usuario_timestamps_trigger; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER course_usuario_timestamps_trigger BEFORE INSERT OR UPDATE ON public.course_usuario FOR EACH ROW EXECUTE FUNCTION public.course_usuario_timestamps();
 
 
 --
