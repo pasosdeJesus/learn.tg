@@ -108,14 +108,14 @@ describe('guide-utils', () => {
 
   describe('getGuideIdBySuffix', () => {
     it('should return null for invalid courseId', async () => {
-      const result = await getGuideIdBySuffix(0, 'guide1')
+      const result = await getGuideIdBySuffix(0, 'guide1', mockDb)
       expect(result).toBeNull()
     })
 
     it('should return null when no guides found', async () => {
       mockSqlExecute.mockResolvedValue({ rows: [] })
 
-      const result = await getGuideIdBySuffix(1, 'guide1')
+      const result = await getGuideIdBySuffix(1, 'guide1', mockDb)
 
       expect(result).toBeNull()
     })
@@ -127,7 +127,7 @@ describe('guide-utils', () => {
       ]
       mockSqlExecute.mockResolvedValue({ rows: mockGuides })
 
-      const result = await getGuideIdBySuffix(1, 'guide2')
+      const result = await getGuideIdBySuffix(1, 'guide2', mockDb)
 
       expect(result).toBe(2) // 1-indexed, guide2 is second in array
     })
@@ -138,7 +138,7 @@ describe('guide-utils', () => {
       ]
       mockSqlExecute.mockResolvedValue({ rows: mockGuides })
 
-      const result = await getGuideIdBySuffix(1, 'nonexistent')
+      const result = await getGuideIdBySuffix(1, 'nonexistent', mockDb)
 
       expect(result).toBeNull()
     })
@@ -147,7 +147,7 @@ describe('guide-utils', () => {
       mockSqlExecute.mockRejectedValue(new Error('DB error'))
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-      const result = await getGuideIdBySuffix(1, 'guide1')
+      const result = await getGuideIdBySuffix(1, 'guide1', mockDb)
 
       expect(result).toBeNull()
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error getting guides by courseId:', expect.any(Error))
@@ -163,7 +163,7 @@ describe('guide-utils', () => {
       ]
       mockSqlExecute.mockResolvedValue({ rows: mockGuides })
 
-      const result = await getActividadpfId(1, 2) // guideId 2 -> second guide
+      const result = await getActividadpfId(1, 2, mockDb) // guideId 2 -> second guide
 
       expect(result).toBe(102)
     })
@@ -182,7 +182,7 @@ describe('guide-utils', () => {
       ]
       mockSqlExecute.mockResolvedValue({ rows: mockGuides })
 
-      const result = await getActividadpfId(1, 5) // guideId 5 > total guides
+      const result = await getActividadpfId(1, 5, mockDb) // guideId 5 > total guides
 
       expect(result).toBeNull()
     })
@@ -191,7 +191,7 @@ describe('guide-utils', () => {
       mockSqlExecute.mockRejectedValue(new Error('DB error'))
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-      const result = await getActividadpfId(1, 1)
+      const result = await getActividadpfId(1, 1, mockDb)
 
       expect(result).toBeNull()
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error getting guides by courseId:', expect.any(Error))
@@ -201,19 +201,19 @@ describe('guide-utils', () => {
 
   describe('getCourseIdByPrefix', () => {
     it('should return null for empty prefix', async () => {
-      const result = await getCourseIdByPrefix('')
+      const result = await getCourseIdByPrefix('', mockDb)
       expect(result).toBeNull()
     })
 
     it('should return null for whitespace-only prefix', async () => {
-      const result = await getCourseIdByPrefix('   ')
+      const result = await getCourseIdByPrefix('   ', mockDb)
       expect(result).toBeNull()
     })
 
     it('should return courseId when prefix matches', async () => {
       mockSqlExecute.mockResolvedValue({ rows: [{ id: 2 }] })
 
-      const result = await getCourseIdByPrefix('a-relationship-with-Jesus')
+      const result = await getCourseIdByPrefix('a-relationship-with-Jesus', mockDb)
 
       expect(result).toBe(2)
       expect(mockSql).toHaveBeenCalledWith(expect.arrayContaining([expect.stringContaining('cor1440_gen_proyectofinanciero')]), '/a-relationship-with-Jesus')
@@ -222,7 +222,7 @@ describe('guide-utils', () => {
     it('should return null when prefix not found', async () => {
       mockSqlExecute.mockResolvedValue({ rows: [] })
 
-      const result = await getCourseIdByPrefix('nonexistent')
+      const result = await getCourseIdByPrefix('nonexistent', mockDb)
 
       expect(result).toBeNull()
     })
@@ -231,7 +231,7 @@ describe('guide-utils', () => {
       mockSqlExecute.mockRejectedValue(new Error('DB error'))
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-      const result = await getCourseIdByPrefix('test')
+      const result = await getCourseIdByPrefix('test', mockDb)
 
       expect(result).toBeNull()
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error getting courseId by prefix:', expect.any(Error))
@@ -241,7 +241,7 @@ describe('guide-utils', () => {
     it('should add leading slash to prefix when querying', async () => {
       mockSqlExecute.mockResolvedValue({ rows: [{ id: 2 }] })
 
-      await getCourseIdByPrefix('test-prefix')
+      await getCourseIdByPrefix('test-prefix', mockDb)
 
       // Verify the SQL was called with prefixed path
       // Note: The actual SQL string includes the prefix with leading slash

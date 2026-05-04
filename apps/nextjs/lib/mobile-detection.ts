@@ -35,15 +35,6 @@ export function isAndroidDevice(): boolean {
   return /android/i.test(userAgent)
 }
 
-export function getDeviceInfo() {
-  return {
-    isMobile: isMobileDevice(),
-    isIOS: isIOSDevice(),
-    isAndroid: isAndroidDevice(),
-    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-  }
-}
-
 export function useMobileDetection() {
   const [isMobile, setIsMobile] = React.useState(false)
 

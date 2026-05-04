@@ -43,33 +43,3 @@ export async function openSelfApp(selfApp: any): Promise<boolean> {
     return false
   }
 }
-
-export async function checkSelfAppInstalled(): Promise<boolean> {
-  return new Promise((resolve) => {
-    // This is a heuristic approach - not 100% reliable
-    const startTime = Date.now()
-
-    // Try to open the app
-    window.location.href = 'self://check'
-
-    // If the user returns to the browser quickly, the app is likely not installed
-    setTimeout(() => {
-      const timeElapsed = Date.now() - startTime
-      // If less than 2 seconds elapsed, app is likely not installed
-      resolve(timeElapsed > 2000)
-    }, 2500)
-  })
-}
-
-export function getSelfAppStoreUrl(): string {
-  if (isIOSDevice()) {
-    return 'https://apps.apple.com/us/app/self-zk/id6478563710' // Replace with actual App Store ID
-  }
-
-  if (isAndroidDevice()) {
-    return 'https://play.google.com/store/apps/details?id=com.proofofpassportapp&pli=1'
-  }
-
-  // Default to website or general download page
-  return 'https://self.xyz/download'
-}

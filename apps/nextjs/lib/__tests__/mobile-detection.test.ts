@@ -4,7 +4,6 @@ import {
   isMobileDevice,
   isIOSDevice,
   isAndroidDevice,
-  getDeviceInfo,
   useMobileDetection,
 } from '@/lib/mobile-detection'
 
@@ -158,59 +157,6 @@ describe('Mobile Detection', () => {
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       })
       expect(isAndroidDevice()).toBe(false)
-    })
-  })
-
-  describe('getDeviceInfo', () => {
-    it('returns correct device info for iPhone', () => {
-      const userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)'
-      vi.stubGlobal('navigator', { userAgent })
-
-      const info = getDeviceInfo()
-      expect(info).toEqual({
-        isMobile: true,
-        isIOS: true,
-        isAndroid: false,
-        userAgent,
-      })
-    })
-
-    it('returns correct device info for Android', () => {
-      const userAgent = 'Mozilla/5.0 (Linux; Android 10; SM-G975F)'
-      vi.stubGlobal('navigator', { userAgent })
-
-      const info = getDeviceInfo()
-      expect(info).toEqual({
-        isMobile: true,
-        isIOS: false,
-        isAndroid: true,
-        userAgent,
-      })
-    })
-
-    it('returns correct device info for desktop', () => {
-      const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-      vi.stubGlobal('navigator', { userAgent })
-
-      const info = getDeviceInfo()
-      expect(info).toEqual({
-        isMobile: false,
-        isIOS: false,
-        isAndroid: false,
-        userAgent,
-      })
-    })
-
-    it('handles undefined navigator gracefully', () => {
-      vi.stubGlobal('navigator', undefined)
-
-      const info = getDeviceInfo()
-      expect(info).toEqual({
-        isMobile: false,
-        isIOS: false,
-        isAndroid: false,
-        userAgent: '',
-      })
     })
   })
 
