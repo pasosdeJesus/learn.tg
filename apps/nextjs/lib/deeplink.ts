@@ -25,12 +25,22 @@ export async function openSelfApp(selfApp: any): Promise<boolean> {
       window.location.href = deeplinkUrl
 
       // Fallback to Play Store if app is not installed (after a delay)
-      setTimeout(() => {
-        // This will only execute if the user is still on the page (app didn't open)
+      const fallbackTimer = setTimeout(() => {
         const playStoreUrl =
           'https://play.google.com/store/apps/details?id=com.proofofpassportapp&pli=1'
         window.open(playStoreUrl, '_blank')
       }, 2500)
+
+      // If the app opens, the page loses visibility — cancel the fallback
+      const handleVisibility = () => {
+        if (document.hidden || document.webkitHidden) {
+          clearTimeout(fallbackTimer)
+          document.removeEventListener('visibilitychange', handleVisibility)
+          document.removeEventListener('webkitvisibilitychange', handleVisibility)
+        }
+      }
+      document.addEventListener('visibilitychange', handleVisibility)
+      document.addEventListener('webkitvisibilitychange', handleVisibility)
 
       return true
     }
@@ -42,4 +52,25 @@ export async function openSelfApp(selfApp: any): Promise<boolean> {
     console.error('Error opening Self app:', error)
     return false
   }
+}
+
+export async function checkSelfAppInstalled(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const startTime = Date.now()
+    window.location.href = 'self://check'
+    setTimeout(() => {
+      const timeElapsed = Date.now() - startTime
+      resolve(timeElapsed > 2000)
+    }, 2500)
+  })
+}
+
+export function getSelfAppStoreUrl(): string {
+  if (isIOSDevice()) {
+    return 'https://apps.apple.com/us/app/self-zk/id6478563710'
+  }
+  if (isAndroidDevice()) {
+    return 'https://play.google.com/store/apps/details?id=com.proofofpassportapp&pli=1'
+  }
+  return 'https://self.xyz/download'
 }
