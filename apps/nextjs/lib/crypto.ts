@@ -17,7 +17,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 import LearnTGVaultsAbi from '../abis/LearnTGVaults.json' with { type: 'json' }
 
 
-async function waitForReceiptWithRetry(
+export async function waitForReceiptWithRetry(
   client: PublicClient,
   { hash, confirmations = 2, timeout = 10_000, interval = 1_000 }: {
     hash: Address,
@@ -55,36 +55,22 @@ export async function callWriteFun(
   account: any,
   contractFun: any,
   contractParams: any,
-  indent: any,
 ) {
-  const sindent = indent > 0 ? ' '.repeat(indent - 1) : ''
-  console.log(
-    sindent,
-    'Calling function',
-    contractFun.name,
-    'with params',
-    contractParams,
-  )
   let tx: Address = '0x0'
   try {
     tx = await contractFun(contractParams)
   } catch (e) {
-    console.log(sindent, '* Reintentando con nonce')
     const nonce = await publicClient.getTransactionCount({
       address: account.address,
-      blockTag: 'pending', // includes pending transactions
+      blockTag: 'pending',
     })
     const nextNonce = nonce + 1
-    console.log(sindent, 'OJO  nextNonce=', nextNonce)
     tx = await contractFun(contractParams, { account, nonce: nextNonce })
   }
-  console.log(sindent, 'tx=', tx)
   try {
     await waitForReceiptWithRetry(publicClient, { hash: tx });
   } catch (e) {
-    console.log(e)
     console.error(
-      sindent,
       `**No operó waitForReceiptWithRetry de ${tx}, Error: ${e}`
     )
   }

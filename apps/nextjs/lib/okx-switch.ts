@@ -132,66 +132,33 @@ export async function switchToCelo(): Promise<boolean> {
 
   // 5. Try to switch network
   try {
-    console.log('Attempting to switch to Celo network...')
     await provider.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: expectedChainId }],
     })
-    console.log('✅ Successfully switched to Celo network')
-
-    // Record success event
-    await recordSwitchEvent('success', detectionMethod, expectedChainId)
     return true
   } catch (switchError: any) {
-    console.log('Switch error:', switchError)
 
-    // 6. If network not added (error 4902), add it
+    // If network not added (error 4902), add it
     if (switchError.code === 4902) {
-      console.log('Celo network not found in wallet, adding it...')
       try {
         await provider.request({
           method: 'wallet_addEthereumChain',
           params: [networkConfig],
         })
-        console.log('✅ Successfully added Celo network')
-
-        // Record add event
-        await recordSwitchEvent('added', detectionMethod, expectedChainId)
         return true
       } catch (addError: any) {
         console.error('Failed to add Celo network:', addError)
-
-        // Record failure
-        await recordSwitchEvent('add_failed', detectionMethod, expectedChainId, addError.message)
         return false
       }
     } else {
       console.error('Failed to switch network:', switchError)
-
-      // Record failure
-      await recordSwitchEvent('switch_failed', detectionMethod, expectedChainId, switchError.message)
       return false
     }
   }
 }
 
-/**
- * Record switch event to userevent table for monitoring
- */
-async function recordSwitchEvent(
-  eventType: 'success' | 'added' | 'switch_failed' | 'add_failed',
-  detectionMethod: string,
-  expectedChainId: string,
-  errorMessage?: string
-): Promise<void> {
-  // Log to console only for now
-  console.log(`[OKX Switch] ${eventType}`, {
-    detectionMethod,
-    expectedChainId,
-    errorMessage,
-    timestamp: new Date().toISOString(),
-  })
-}
+
 
 /**
  * Check if user is on OKX Wallet (any version)

@@ -59,7 +59,6 @@ describe('crypto', () => {
         mockAccount as any,
         mockContractFun as any,
         ['param1', 'param2'],
-        0
       )
 
       expect(mockContractFun).toHaveBeenCalledWith(['param1', 'param2'])
@@ -79,7 +78,6 @@ describe('crypto', () => {
         mockAccount as any,
         mockContractFun as any,
         ['param1'],
-        0
       )
 
       // First call fails
@@ -104,34 +102,11 @@ describe('crypto', () => {
         mockAccount as any,
         mockContractFun as any,
         [],
-        0
       )
 
       expect(result).toBe('0xtransactionhash')
       // getTransactionReceipt should still have been called
       expect(mockGetTransactionReceipt).toHaveBeenCalled()
     }, 11000)
-
-    it('should log with indent when provided', async () => {
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-
-      await callWriteFun(
-        mockPublicClient as any,
-        mockAccount as any,
-        mockContractFun as any,
-        ['test'],
-        2
-      )
-
-      expect(consoleLogSpy).toHaveBeenNthCalledWith(1,
-        ' ',
-        'Calling function',
-        'spy',
-        'with params',
-        ['test']
-      )
-
-      consoleLogSpy.mockRestore()
-    })
   })
 })

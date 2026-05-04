@@ -171,7 +171,7 @@ describe('guide-utils', () => {
     it('should return null when no guides found', async () => {
       mockSqlExecute.mockResolvedValue({ rows: [] })
 
-      const result = await getActividadpfId(1, 1)
+      const result = await getActividadpfId(1, 1, mockDb)
 
       expect(result).toBeNull()
     })
