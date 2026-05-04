@@ -9,8 +9,25 @@ export function generateSelfDeeplink(selfApp: any): string {
   return getUniversalLink(selfApp)
 }
 
+export function isWalletBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent.toLowerCase()
+  // Known web3 wallet browser identifiers
+  const walletPatterns = ['okx', 'onekey', 'metamask', 'trust wallet', 'walletconnect', 'rainbow']
+  return walletPatterns.some(p => ua.includes(p))
+}
+
 export async function openSelfApp(selfApp: any): Promise<boolean> {
   try {
+    // Web3 wallet browsers (OKX, OneKey, MetaMask, etc.) block deeplinks
+    if (isWalletBrowser()) {
+      const msg = 'Self app cannot open from within a wallet browser. ' +
+        'Please use Safari/Chrome or scan the QR code.'
+      console.warn(msg)
+      alert(msg)
+      return false
+    }
+
     const deeplinkUrl = generateSelfDeeplink(selfApp)
 
     // For iOS devices, try to open the deeplink directly

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 import { DonateModal } from './DonateModal'
 import { Button } from '@/components/ui/button'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 
 interface CourseDonationProps {
   lang: string
@@ -23,14 +24,26 @@ export const CourseDonation = ({
   showDonateButton = true,
 }: CourseDonationProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const t = useMemo(() => createComponentT(lang, {
+    en: {
+      loginToDonate: 'You must be logged in to donate',
+      scholarshipFund: 'Scholarship Fund',
+      donate: 'Donate',
+      vaultBalance: 'Vault Balance:',
+      usdt: 'USDT',
+    },
+    es: {
+      loginToDonate: 'Debes iniciar sesión para donar',
+      scholarshipFund: 'Beca de Aprendizaje',
+      donate: 'Donar',
+      vaultBalance: 'Saldo de la Beca:',
+      usdt: 'USDT',
+    },
+  }), [lang])
 
   const handleDonateClick = () => {
     if (!isLoggedIn) {
-      alert(
-        lang === 'es'
-          ? 'Debes iniciar sesión para donar'
-          : 'You must be logged in to donate',
-      )
+      alert(t('loginToDonate'))
       return
     }
     setIsModalOpen(true)
@@ -40,8 +53,6 @@ export const CourseDonation = ({
     onDonationSuccess(courseId, data)
     setIsModalOpen(false)
   }
-
-  const t = (en: string, es: string) => (lang === 'es' ? es : en)
 
   return (
     <div className="p-4 rounded-2xl bg-white shadow-md text-gray-800">

@@ -108,3 +108,6 @@ apps/nextjs/scripts/html-snapshots
 .aider*
 __pycache__
 contexto.md
+.agents
+.claude
+.qwen
