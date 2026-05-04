@@ -6,7 +6,6 @@
 // prefijoRuta includes leading slash in the database.
 
 import { Kysely, sql } from 'kysely'
-import { newKyselyPostgresql } from '@/.config/kysely.config'
 import type { DB } from '@/db/db.d.ts'
 
 export async function getGuidesByCourseId(
@@ -36,45 +35,31 @@ export async function getGuidesByCourseId(
 
 export async function getGuideIdBySuffix(
   courseId: number,
-  suffix: string
+  suffix: string,
+  db: Kysely<DB>
 ): Promise<number | null> {
-  const db = newKyselyPostgresql()
 
   try {
-    console.log('[getGuideIdBySuffix] Input:', { courseId, suffix })
-
     // Validate courseId is a positive integer
     if (!Number.isFinite(courseId) || courseId <= 0) {
-      console.log('[getGuideIdBySuffix] Invalid courseId:', courseId)
       return null
     }
 
     const guides = await getGuidesByCourseId(courseId, db)
 
-    console.log('[getGuideIdBySuffix] Found guides:', guides?.length || 0)
-
     if (!guides || guides.length === 0) {
-      console.log('[getGuideIdBySuffix] No guides found for courseId:', courseId)
       return null
     }
-
-    // Debug: log all suffixes
-    console.log('[getGuideIdBySuffix] Available suffixes:', guides.map((r: any) => r.sufijoRuta))
 
     // Find the index of the guide with matching suffix
     const index = guides.findIndex((row: any) => row.sufijoRuta === suffix)
 
-    console.log('[getGuideIdBySuffix] Match index:', index, 'for suffix:', suffix)
-
     if (index === -1) {
-      console.log('[getGuideIdBySuffix] No matching suffix found')
       return null
     }
 
     // Return 1-indexed guideId
-    const guideId = index + 1
-    console.log('[getGuideIdBySuffix] Returning guideId:', guideId)
-    return guideId
+    return index + 1
   } catch (error) {
     console.error('Error getting guideId by suffix:', error)
     return null
@@ -83,10 +68,9 @@ export async function getGuideIdBySuffix(
 
 export async function getActividadpfId(
   courseId: number,
-  guideId: number
+  guideId: number,
+  db: Kysely<DB>
 ): Promise<number | null> {
-  const db = newKyselyPostgresql()
-
   try {
     const guides = await getGuidesByCourseId(courseId, db)
 
@@ -106,16 +90,12 @@ export async function getActividadpfId(
 }
 
 export async function getCourseIdByPrefix(
-  prefix: string
+  prefix: string,
+  db: Kysely<DB>
 ): Promise<number | null> {
-  const db = newKyselyPostgresql()
-
   try {
-    console.log('[getCourseIdByPrefix] Input:', { prefix })
-
     // Validate prefix is not empty
     if (!prefix || prefix.trim() === '') {
-      console.log('[getCourseIdByPrefix] Invalid prefix:', prefix)
       return null
     }
 
@@ -130,13 +110,10 @@ export async function getCourseIdByPrefix(
     `.execute(db)
 
     if (!result.rows || result.rows.length === 0) {
-      console.log('[getCourseIdByPrefix] No course found for prefix:', prefix)
       return null
     }
 
-    const courseId = result.rows[0].id
-    console.log('[getCourseIdByPrefix] Found courseId:', courseId, 'for prefix:', prefix)
-    return courseId
+    return result.rows[0].id
   } catch (error) {
     console.error('Error getting courseId by prefix:', error)
     return null

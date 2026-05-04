@@ -2,6 +2,13 @@
 
 This directory contains the Next.js frontend for the Learn.tg platform. It is the primary user-facing application, responsible for content delivery, user interaction, and authentication via crypto wallets.
 
+## Developer Wallet Whitelist
+
+To prevent abuse, write operations (scholarship, crossword submissions, learning points)
+require your wallet to be whitelisted. Submit yours in
+[GitHub Discussion #142](https://github.com/pasosdeJesus/learn.tg/discussions/142).
+Read-only operations (courses, guides, leaderboard, metrics) work without it.
+
 ## Quick Start (for frontend developers)
 
 ```sh
