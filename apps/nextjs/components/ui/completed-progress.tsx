@@ -1,5 +1,7 @@
 'use client'
 import * as React from 'react'
+import { useMemo } from 'react'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 
 type CombinedCircularProgressProps = {
   percentageCompleted: number
@@ -16,6 +18,10 @@ const CombinedCircularProgress = ({
   strokeWidth = 7,
   lang = 'en',
 }: CombinedCircularProgressProps) => {
+  const t = useMemo(() => createComponentT(lang, {
+    en: { progress: 'Progress' },
+    es: { progress: 'Avance' },
+  }), [lang])
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
 
@@ -100,7 +106,7 @@ const CombinedCircularProgress = ({
               clampedCompleted,
             )}%`}</span>
             <span className="text-xs text-gray-500">
-              {lang === 'es' ? 'Avance' : 'Progress'}
+              {t('progress')}
             </span>
           </>
         )}

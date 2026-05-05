@@ -3,17 +3,16 @@
 import { ClaimSDK } from '@goodsdks/citizen-sdk'
 import { useIdentitySDK } from '@goodsdks/react-hooks'
 import { useSession } from 'next-auth/react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { usePublicClient, useWalletClient } from 'wagmi'
 import { useAccount } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
 import { IS_PRODUCTION } from '@/lib/config'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 
 export interface GoodDollarClaimButtonProps {
-  /** Current language ('en' or 'es') for button text */
   lang?: string
-  /** Text to display on the button */
   buttonText?: string
 }
 
@@ -28,31 +27,33 @@ export function GoodDollarClaimButton({
   const [isClaiming, setIsClaiming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  /*if (process.env.NEXT_PUBLIC_NETWORK != "celo") {
-    return (
-      <div>GoodDollar works only in CELO blockchain</div>
-    )
-  }*/
-
-  // RULE OF HOOKS: Hooks must be called unconditionally at the top level.
   const sdkEnv = IS_PRODUCTION ? 'production' : 'development'
   const identitySDK = useIdentitySDK(sdkEnv)
 
+  const t = useMemo(() => createComponentT(lang, {
+    en: {
+      sessionRequired: 'Session and connected wallet are required',
+      sdkInitError: 'Failed to initialize GoodDollar SDK',
+      claimSuccess: 'Claim successful. Claim number {{0}}',
+      claimFailed: 'Claim failed: {{0}}',
+      signUp: 'Sign up with GoodDollar or Claim UBI',
+      claiming: 'Claiming...',
+      connectPrompt: 'Connect your wallet to claim',
+    },
+    es: {
+      sessionRequired: 'Se requiere sesión y billetera conectada',
+      sdkInitError: 'Error al inicializar el SDK de GoodDollar',
+      claimSuccess: 'Reclamo exitoso. Reclamo número {{0}}',
+      claimFailed: 'Reclamo fallido: {{0}}',
+      signUp: 'Regístrate con GoodDollar o reclama UBI',
+      claiming: 'Reclamando...',
+      connectPrompt: 'Conecta tu billetera para reclamar',
+    },
+  }), [lang])
+
   const handleClaim = async () => {
-    // Conditional logic based on environment should be inside handlers or effects.
-    if (
-      !session ||
-      !address ||
-      session.address !== address ||
-      !publicClient ||
-      !walletClient ||
-      !identitySDK
-    ) {
-      setError(
-        lang === 'es'
-          ? 'Se requiere sesión y billetera conectada'
-          : 'Session and connected wallet are required',
-      )
+    if (!session || !address || session.address !== address || !publicClient || !walletClient || !identitySDK) {
+      setError(t('sessionRequired'))
       return
     }
 
@@ -60,11 +61,7 @@ export function GoodDollarClaimButton({
     setError(null)
 
     if (!identitySDK.sdk) {
-      setError(
-        lang === 'es'
-          ? 'Error al inicializar el SDK de GoodDollar'
-          : 'Failed to initialize GoodDollar SDK',
-      )
+      setError(t('sdkInitError'))
       setIsClaiming(false)
       return
     }
@@ -79,7 +76,6 @@ export function GoodDollarClaimButton({
 
     try {
       const result = await claimSDK.claim()
-      console.log('Claim successful', result)
       const txHash = (result as any)?.transactionHash ?? ''
 
       if (session?.address && (session.user as any)?.token) {
@@ -94,33 +90,20 @@ export function GoodDollarClaimButton({
         })
         const regData = await regResponse.json()
         const claimNum = regData.claimNumber || ''
-        alert(
-          lang === 'es'
-            ? `Reclamo exitoso. Reclamo número ${claimNum}`
-            : `Claim successful. Claim number ${claimNum}`,
-        )
+        alert(t('claimSuccess', claimNum))
       } else {
-        alert(lang === 'es' ? 'Reclamo exitoso' : 'Claim successful')
+        alert(t('claimSuccess', ''))
       }
     } catch (err) {
-      console.error('Claim failed:', err)
-      const errorMessage =
-        err instanceof Error ? err.message : JSON.stringify(err, null, 2)
-      setError(
-        `${lang === 'es' ? 'Reclamo fallido:' : 'Claim failed:'} ${errorMessage}`,
-      )
-      alert(
-        `${lang === 'es' ? 'Reclamo fallido:' : 'Claim failed:'} ${errorMessage}`,
-      )
+      const errorMessage = err instanceof Error ? err.message : JSON.stringify(err, null, 2)
+      setError(t('claimFailed', errorMessage))
+      alert(t('claimFailed', errorMessage))
     } finally {
       setIsClaiming(false)
     }
   }
 
-  const defaultButtonText =
-    lang === 'es'
-      ? 'Regístrate con GoodDollar o reclama UBI'
-      : 'Sign up with GoodDollar or Claim UBI'
+  const defaultButtonText = t('signUp')
   const finalButtonText = buttonText || defaultButtonText
 
   return (
@@ -130,20 +113,14 @@ export function GoodDollarClaimButton({
         size="lg"
         disabled={isClaiming || !session || !address}
       >
-        {isClaiming
-          ? lang === 'es'
-            ? 'Reclamando...'
-            : 'Claiming...'
-          : finalButtonText}
+        {isClaiming ? t('claiming') : finalButtonText}
       </Button>
       {error && (
         <div className="text-sm text-red-600 mt-2 text-center">{error}</div>
       )}
       {(!session || !address) && (
         <div className="text-sm text-gray-500 mt-2 text-center">
-          {lang === 'es'
-            ? 'Conecta tu billetera para reclamar'
-            : 'Connect your wallet to claim'}
+          {t('connectPrompt')}
         </div>
       )}
     </div>

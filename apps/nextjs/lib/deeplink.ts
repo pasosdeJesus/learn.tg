@@ -50,7 +50,7 @@ export async function openSelfApp(selfApp: any): Promise<boolean> {
 
       // If the app opens, the page loses visibility — cancel the fallback
       const handleVisibility = () => {
-        if (document.hidden || document.webkitHidden) {
+        if (document.hidden || (document as any).webkitHidden) {
           clearTimeout(fallbackTimer)
           document.removeEventListener('visibilitychange', handleVisibility)
           document.removeEventListener('webkitvisibilitychange', handleVisibility)

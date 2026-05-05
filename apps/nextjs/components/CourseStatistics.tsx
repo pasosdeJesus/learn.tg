@@ -1,6 +1,8 @@
 'use client'
 
+import { useMemo } from 'react'
 import { CompletedProgress } from '@/components/ui/completed-progress'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 
 export interface CourseStatisticsProps {
   lang: string
@@ -31,6 +33,31 @@ export function CourseStatistics({
   percentagePaid,
   scholarshipPaid
 }: CourseStatisticsProps) {
+  const t = useMemo(() => createComponentT(lang, {
+    en: {
+      scholarshipOf: 'Scholarship of ',
+      perGuide: ' per guide.',
+      scholarshipUpTo: `Scholarship of up to {{0}} USDT after you complete your profile.`,
+      cooldown: 'Although you are in cooldown period.',
+      eligible: 'You are eligible.',
+      totalGuides: 'Total number of guides in the course: ',
+      approvedGuides: 'Approved guides: ',
+      paidGuides: 'Approved guides with scholarship paid: ',
+      totalScholarship: 'Total scholarship paid in this course: ',
+    },
+    es: {
+      scholarshipOf: 'Beca de ',
+      perGuide: ' por guía.',
+      scholarshipUpTo: 'Beca de hasta {{0}} USDT después de que completes tu perfil.',
+      cooldown: 'Aunque estás en etapa de enfriamiento',
+      eligible: 'Eres elegible.',
+      totalGuides: 'Total de guias en el curso: ',
+      approvedGuides: 'Guías aprobadas: ',
+      paidGuides: 'Guías aprobadas con beca pagada: ',
+      totalScholarship: 'Beca total pagada en este curso: ',
+    },
+  }), [lang])
+
   return (
     <div className="flex justify-between items-center p-4 mt-auto">
       <div>
@@ -38,23 +65,19 @@ export function CourseStatistics({
           (profileScore !== null && address && +profileScore > 0) ? (
             <div className="p-2">
               <span>
-                {lang === 'es'
-                  ? 'Beca de '
-                  : 'Scholarship of '}
+                {t('scholarshipOf')}
                 {(
                   (scholarshipPerGuide * profileScore) /
                   100
                 ).toFixed(2)}{' '}
                 USDT
-                {lang === 'es' ? ' por guía.' : ' per guide.'}
+                {t('perGuide')}
               </span>
             </div>
           ) : (
             <div className="p-2">
               <span>
-                {lang === 'es'
-                  ? `Beca de hasta ${scholarshipPerGuide} USDT después de que completes tu perfil.`
-                  : `Scholarship of up to ${scholarshipPerGuide} USDT after you complete your profile.`}
+                {t('scholarshipUpTo', String(scholarshipPerGuide))}
               </span>
             </div>
           )
@@ -64,9 +87,7 @@ export function CourseStatistics({
           +percentagePaid < 100 && !canSubmit && (
             <div className="p-2">
               <span className="text-red-500">
-                {lang === 'es'
-                  ? 'Aunque estás en etapa de enfriamiento'
-                  : 'Although you are in cooldown period.'}
+                {t('cooldown')}
               </span>
             </div>
           )
@@ -76,38 +97,31 @@ export function CourseStatistics({
           +percentagePaid < 100 && (
             <div className="p-2 text-green-600">
               <span className="text-green-600">
-                {lang === 'es'
-                  ? 'Eres elegible.'
-                  : 'You are eligible.'}
+                {t('eligible')}
               </span>
             </div>
         )}
         {full && (
           <div className="pt-2">
-            {lang === 'es' ? 'Total de guias en el curso: ' :
-              'Total number of guides in the course: '}
+            {t('totalGuides')}
             {totalGuides}
           </div>
         )}
         {full && typeof completedGuides === 'number' && typeof percentageCompleted === 'number' && (
           <div>
-            {lang === 'es' ? 'Guías aprobadas: ' :
-              'Approved guides: '}
+            {t('approvedGuides')}
             {completedGuides}  ({percentageCompleted}%)
           </div>
         )}
         {full && typeof paidGuides === 'number' && typeof percentagePaid === 'number' && (
           <div>
-            {lang === 'es' ? 'Guías aprobadas con beca pagada: ' :
-              'Approved guides with scholarship paid: '}
+            {t('paidGuides')}
             {paidGuides} ({percentagePaid}%)
           </div>
         )}
         {full && typeof scholarshipPaid === 'number' && (
           <div>
-            {lang === 'es' ? 'Beca total pagada en este curso: ' :
-              'Total scholarship paid in this course: ' 
-            }
+            {t('totalScholarship')}
             {scholarshipPaid.toFixed(2)} USDT
           </div>
         )}

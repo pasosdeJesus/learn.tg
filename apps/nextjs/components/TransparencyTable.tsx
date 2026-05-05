@@ -1,5 +1,6 @@
 'use client'
 
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useState, useMemo } from 'react'
 import { Ability } from '@casl/ability'
 import {
@@ -42,7 +43,10 @@ export function TransparencyTable({
   totals,
 }: TransparencyTableProps) {
   // Translation helper
-  const t = (en: string, es: string) => (lang === 'es' ? es : en)
+  const t = useMemo(() => createComponentT(lang, {
+    en: { totalUsers: 'Total Users', totalUsersWithLP: 'Users with LP', totalLP: 'Total LP', totalScholarship: 'Scholarship', totalUBI: 'UBI (CELO)', totalDonations: 'Donations', noData: 'No data available', previous: 'Previous', pageOf: 'Page {0} of {1}', next: 'Next' },
+    es: { totalUsers: 'Total Usuarios', totalUsersWithLP: 'Usuarios con PA', totalLP: 'Total PA', totalScholarship: 'Becas', totalUBI: 'UBI (CELO)', totalDonations: 'Donaciones', noData: 'No hay datos disponibles', previous: 'Anterior', pageOf: 'Pagina {0} de {1}', next: 'Siguiente' },
+  }), [lang])
 
   // Sorting state
   const [sortBy, setSortBy] = useState<SortField>('totalUsers')
@@ -127,15 +131,15 @@ export function TransparencyTable({
       {!isLoading && totals && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total Users', 'Total Usuarios')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalUsers')}</div>
             <div className="text-lg font-bold">{totals.totalUsers}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Users with LP', 'Usuarios con PA')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalUsersWithLP')}</div>
             <div className="text-lg font-bold">{totals.totalUsersWithLP}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total LP', 'Total PA')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalLP')}</div>
             <div className="text-lg font-bold">{formatLearningPoints(totals.totalLearningPoints)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
@@ -143,11 +147,11 @@ export function TransparencyTable({
             <div className="text-lg font-bold">{formatUSDT(totals.totalScholarshipUSDT)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('UBI (CELO)', 'UBI (CELO)')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalUBI')}</div>
             <div className="text-lg font-bold">{formatCELO(totals.totalUBICELO)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Donations', 'Donaciones')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalDonations')}</div>
             <div className="text-lg font-bold">{formatUSDT(totals.totalDonationsUSDT)}</div>
           </div>
         </div>
@@ -215,7 +219,7 @@ export function TransparencyTable({
             ) : sortedData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={canViewReligion ? 8 : 7} className="text-center py-8 text-muted-foreground">
-                  {t('No data available', 'No hay datos disponibles')}
+                  {t('noData')}
                 </TableCell>
               </TableRow>
             ) : (

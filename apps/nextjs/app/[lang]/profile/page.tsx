@@ -4,7 +4,8 @@ import axios from 'axios'
 import type { AxiosResponse, AxiosError } from 'axios'
 import { Loader2 } from 'lucide-react'
 import { useSession, getCsrfToken } from 'next-auth/react'
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useState, useMemo } from 'react'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import { getUniversalLink } from '@selfxyz/core'
 import { SelfAppBuilder } from '@selfxyz/qrcode'
 import { useAccount } from 'wagmi'
@@ -120,6 +121,10 @@ export default function ProfileForm({ params }: PageProps) {
   const parameters = use(params)
   const { lang } = parameters
 
+  const t = useMemo(() => createComponentT(lang, {
+    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', learningScore: 'Learning Score', displayName: 'Display name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country ( Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniquenes with GoodDollar ( Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below' },
+    es: { editProfile: 'Edicion del Perfil', profileScore: 'Puntaje de Perfil', learningScore: 'Puntaje de Aprendizaje', displayName: 'Nombre por presentar', religion: 'Religion', selectReligion: 'Elige tu religion', countryVerified: 'Pais (Verificado:', selectCountry: 'Selecciona tu pais', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion' },
+  }), [lang])
   const logger = (...args: any[]) => {
     console.log(...args)
     if (process.env.NEXT_PUBLIC_MOSTRAR_LOGGER === 'true') {
@@ -482,7 +487,7 @@ export default function ProfileForm({ params }: PageProps) {
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">
-            {lang === 'es' ? 'Edición del Perfil' : 'Edit Profile'}
+            {t('editProfile')}
           </h2>
           <p className="text-gray-600 mt-1">
             {lang === 'es'
@@ -494,7 +499,7 @@ export default function ProfileForm({ params }: PageProps) {
           <div className="flex justify-around items-center mb-8">
             <div className="flex flex-col items-center">
               <h3 className="text-lg font-medium text-gray-700 mb-2">
-                {lang === 'es' ? 'Puntaje de Perfil' : 'Profile Score'}
+                {t('profileScore')}
               </h3>
               <CircularProgress progress={profile.profilescore || 0} />
               <p className="text-sm text-gray-500 mt-2">
@@ -505,7 +510,7 @@ export default function ProfileForm({ params }: PageProps) {
             </div>
             <div className="flex flex-col items-center">
               <h3 className="text-lg font-medium text-gray-700 mb-2">
-                {lang === 'es' ? 'Puntaje de Aprendizaje' : 'Learning Score'}
+                {t('learningScore')}
               </h3>
               <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-4xl font-bold text-blue-600">
@@ -522,7 +527,7 @@ export default function ProfileForm({ params }: PageProps) {
                   htmlFor="uname"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  {lang === 'es' ? 'Nombre por presentar' : 'Display name'}
+                  {t('displayName')}
                 </label>
                 <input
                   id="uname"
@@ -582,7 +587,7 @@ export default function ProfileForm({ params }: PageProps) {
                   htmlFor="religion"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  {lang === 'es' ? 'Religión' : 'Religion'}
+                  {t('religion')}
                 </label>
                 <Select
                   value={profile.religion?.toString() || ''}
@@ -617,7 +622,7 @@ export default function ProfileForm({ params }: PageProps) {
                   htmlFor="country"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  {lang === 'es' ? 'País (Verificado:' : 'Country ( Verified:'}
+                  {t('countryVerified')}
                   {profile.country != null &&
                   profile.country == profile.passport_nationality
                     ? '✅'
@@ -683,10 +688,10 @@ export default function ProfileForm({ params }: PageProps) {
                   : 'Save Changes'}
               </Button>
               <Button type="button" onClick={handleSelfVerify}>
-                {lang === 'es' ? 'Verificar con self' : 'Verify with self'}
+                {t('verifySelf')}
               </Button>
               <Button type="button" onClick={handleUpdateScores}>
-                {lang === 'es' ? 'Actualizar puntajes' : 'Update scores'}
+                {t('updateScores')}
               </Button>
             </div>
           </form>

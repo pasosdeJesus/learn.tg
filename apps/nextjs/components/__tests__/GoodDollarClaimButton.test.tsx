@@ -20,6 +20,17 @@ vi.mock('@/lib/config', () => ({
   },
 }))
 
+vi.mock('@/lib/hooks/useTranslation', () => ({
+  createComponentT: (lang: string, translations: Record<string, Record<string, string>>) => {
+    const dict = translations[lang] || translations.en || {}
+    return (key: string, ...args: string[]) => {
+      let val = dict[key] || key
+      args.forEach((arg, i) => { val = val.replace(`{{${i}}}`, arg) })
+      return val
+    }
+  },
+}))
+
 // Mock de SDKs
 const { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance } = vi.hoisted(
   () => {

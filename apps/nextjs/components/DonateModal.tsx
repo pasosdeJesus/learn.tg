@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import { formatUnits, parseUnits, type Address } from 'viem'
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
@@ -328,7 +329,10 @@ export function DonateModal({
   }
 
   if (!isOpen || courseId === null) return null
-  const t = (en: string, es: string) => (lang === 'es' ? es : en)
+  const t = useMemo(() => createComponentT(lang || 'en', {
+    en: { donateToCourse: 'Donate to course', connectSign: 'Connect and sign with your wallet to donate', yourBalance: 'Your USDT Balance', yourCelo: 'Your CELO (gas)' },
+    es: { donateToCourse: 'Donar al curso', connectSign: 'Conecta y firma con tu billetera para donar', yourBalance: 'Tu saldo USDT', yourCelo: 'Tu CELO (gas)' },
+  }), [lang])
   const usdtBalFmt = formatDisplay(usdtBalance, usdtDecimals)
   const celoBalFmt = formatDisplay(celoBalance, 18)
   const amountNum = safeParseFloat(amount)
@@ -351,7 +355,7 @@ export function DonateModal({
           ✕
         </Button>
         <h2 className="text-xl font-semibold mb-4">
-          {t('Donate to course', 'Donar al curso')} #{courseId}
+          {t('donateToCourse')} #{courseId}
         </h2>
         {(!address || !walletClient) && (
           <div className="text-sm text-red-600 mb-4">
@@ -368,11 +372,11 @@ export function DonateModal({
         )}
         <div className="space-y-2 text-sm">
           <div>
-            {t('Your USDT Balance', 'Tu saldo USDT')}:{' '}
+            {t('yourBalance')}:{' '}
             <span className="font-mono">{usdtBalFmt}</span>
           </div>
           <div>
-            {t('Your CELO (gas)', 'Tu CELO (gas)')}:{' '}
+            {t('yourCelo')}:{' '}
             <span className="font-mono">{celoBalFmt}</span>
           </div>
           {amountNum > 0 && (

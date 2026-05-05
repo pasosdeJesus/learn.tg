@@ -13,6 +13,17 @@ const mockGetCsrfToken = vi.hoisted(() => vi.fn())
 const mockUseSession = vi.hoisted(() => vi.fn())
 const mockUseAccount = vi.hoisted(() => vi.fn())
 
+vi.mock('@/lib/hooks/useTranslation', () => ({
+  createComponentT: (l, tr) => {
+    const d = (tr && tr.en) || {}
+    return (k, ...args) => {
+      let v = d[k] || k
+      args.forEach((a, i) => { v = v.replace(`{{${i}}}`, a) })
+      return v
+    }
+  },
+}))
+
 describe('Profile Page', () => {
   beforeAll(async () => {
     // Reset modules to ensure mocks are applied

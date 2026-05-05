@@ -1,5 +1,6 @@
 'use client'
 
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useState, useMemo } from 'react'
 import { Ability } from '@casl/ability'
 import Link from 'next/link'
@@ -58,7 +59,10 @@ export function LeaderboardTable({
   totals,
 }: LeaderboardTableProps) {
   // Translation helper
-  const t = (en: string, es: string) => (lang === 'es' ? es : en)
+  const t = useMemo(() => createComponentT(lang, {
+    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', lp: 'LP', learningPoints: 'Learning Points', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithLP: 'Users with LP', totalLP: 'Total LP', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {0} of {1} users', previous: 'Previous', pageOf: 'Page {0} of {1}', next: 'Next' },
+    es: { rank: 'Posicion', user: 'Usuario', ctry: 'Pais', country: 'Pais', religion: 'Religion', lp: 'PA', learningPoints: 'Puntos de Aprendizaje', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithLP: 'Usuarios con PA', totalLP: 'Total PA', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {0} de {1} usuarios', previous: 'Anterior', pageOf: 'Pagina {0} de {1}', next: 'Siguiente' },
+  }), [lang])
 
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
@@ -104,35 +108,35 @@ export function LeaderboardTable({
             <TableRow>
               <TableHead className="w-[60px] md:w-[80px]">
                 <span className="md:hidden">#</span>
-                <span className="hidden md:inline">{t('Rank', 'Posición')}</span>
+                <span className="hidden md:inline">{t('rank')}</span>
               </TableHead>
-              <TableHead className="min-w-[120px] md:min-w-[150px]">{t('User', 'Usuario')}</TableHead>
+              <TableHead className="min-w-[120px] md:min-w-[150px]">{t('user')}</TableHead>
               <TableHead className="min-w-[70px] md:min-w-[120px]">
-                <span className="md:hidden">{t('Ctry', 'Pais')}</span>
-                <span className="hidden md:inline">{t('Country', 'País')}</span>
+                <span className="md:hidden">{t('ctry')}</span>
+                <span className="hidden md:inline">{t('country')}</span>
               </TableHead>
               {canViewReligion && (
-                <TableHead>{t('Religion', 'Religión')}</TableHead>
+                <TableHead>{t('religion')}</TableHead>
               )}
               <TableHead className="text-right">
                 <SortableHeader field="learningpoints">
-                  <span className="md:hidden">{t('LP', 'PA')}</span>
-                  <span className="hidden md:inline">{t('Learning Points', 'Puntos de Aprendizaje')}</span>
+                  <span className="md:hidden">{t('lp')}</span>
+                  <span className="hidden md:inline">{t('learningPoints')}</span>
                 </SortableHeader>
               </TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="scholarship_usdt">
-                  {t('Scholarship (USDT)', 'Beca (USDT)')}
+                  {t('scholarship')}
                 </SortableHeader>
               </TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="ubi_celo">
-                  {t('UBI (CELO)', 'UBI (CELO)')}
+                  {t('ubi')}
                 </SortableHeader>
               </TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="donations_usdt">
-                  {t('Donations (USDT)', 'Donaciones (USDT)')}
+                  {t('donations')}
                 </SortableHeader>
               </TableHead>
             </TableRow>
@@ -157,7 +161,7 @@ export function LeaderboardTable({
             ) : data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={canViewReligion ? 8 : 7} className="text-center py-8 text-muted-foreground">
-                  {t('No data available', 'No hay datos disponibles')}
+                  {t('noData')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -176,7 +180,7 @@ export function LeaderboardTable({
                     <div className="flex items-center gap-2">
                       <CountryFlag alfa2={row.pais_alfa2} />
                       <span className="text-sm text-muted-foreground hidden md:inline">
-                        {row.pais_nombre || row.pais_alfa2 || t('Unknown', 'Desconocido')}
+                        {row.pais_nombre || row.pais_alfa2 || t('unknown')}
                       </span>
                     </div>
                   </TableCell>
@@ -205,19 +209,19 @@ export function LeaderboardTable({
       {!isLoading && totals && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total Users', 'Total Usuarios')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalUsers')}</div>
             <div className="text-lg font-bold">{totals.totalUsers}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Users with LP', 'Usuarios con PA')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('usersWithLP')}</div>
             <div className="text-lg font-bold">{totals.totalUsersWithLP}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Total LP', 'Total PA')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalLP')}</div>
             <div className="text-lg font-bold">{formatLearningPoints(totals.totalLearningPoints)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Scholarships', 'Becas')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('scholarships')}</div>
             <div className="text-lg font-bold">{formatUSDT(totals.totalScholarshipUSDT)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
@@ -225,7 +229,7 @@ export function LeaderboardTable({
             <div className="text-lg font-bold">{formatCELO(totals.totalUBICELO)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Donations', 'Donaciones')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('donationsLabel')}</div>
             <div className="text-lg font-bold">{formatUSDT(totals.totalDonationsUSDT)}</div>
           </div>
         </div>
@@ -243,7 +247,7 @@ export function LeaderboardTable({
               onClick={() => onPageChange(pagination.page - 1)}
               disabled={pagination.page <= 1 || isLoading}
             >
-              {t('Previous', 'Anterior')}
+              {t('previous')}
             </Button>
             <span className="text-sm">
               {t(`Page ${pagination.page} of ${pagination.totalPages}`, `Página ${pagination.page} de ${pagination.totalPages}`)}
@@ -254,7 +258,7 @@ export function LeaderboardTable({
               onClick={() => onPageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages || isLoading}
             >
-              {t('Next', 'Siguiente')}
+              {t('next')}
             </Button>
           </div>
         </div>

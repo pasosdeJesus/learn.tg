@@ -1,7 +1,14 @@
 import * as React from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 
 export default function Footer({ lang = 'en' }) {
+  const t = useMemo(() => createComponentT(lang, {
+    en: { telegram: 'Telegram group', followUs: 'Follow us', letGazaLive: 'Let Gaza Live' },
+    es: { telegram: 'Grupo en Telegram', followUs: 'Síguenos', letGazaLive: 'Let Gaza Live' },
+  }), [lang])
+
   return (
     <footer className="bg-gray-800 text-white py-8 relative">
       <div className="container mx-auto px-4">
@@ -17,35 +24,23 @@ export default function Footer({ lang = 'en' }) {
               boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
             }}
           >
-            Let Gaza Live
+            {t('letGazaLive')}
           </div>
 
           <div className="justify-self-start">
-            {lang == 'es' && (
-              <div className="pt-4">
-                <a
-                  href="https://t.me/learn_t_g"
-                  className="hover:underline !text-white font-bold"
-                >
-                  Grupo en Telegram
-                </a>
-              </div>
-            )}
-            {lang != 'es' && (
-              <div className="pt-4">
-                <a
-                  href="https://t.me/learn_t_g"
-                  className="hover:underline !text-white font-bold"
-                >
-                  Telegram group
-                </a>
-              </div>
-            )}
+            <div className="pt-4">
+              <a
+                href="https://t.me/learn_t_g"
+                className="hover:underline !text-white font-bold"
+              >
+                {t('telegram')}
+              </a>
+            </div>
           </div>
 
           <div className="w-full md:w-1/3">
             <h3 className="text-lg !text-accent font-semibold mb-2">
-              {lang === 'es' ? 'Síguenos' : 'Follow us'}
+              {t('followUs')}
             </h3>
             <nav aria-label="Social media links">
               <div className="flex space-x-4">

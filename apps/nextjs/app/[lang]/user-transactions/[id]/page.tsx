@@ -1,5 +1,7 @@
 'use client'
 
+import { useMemo } from 'react'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useState, useEffect, use } from 'react'
 import {
   Table,
@@ -36,7 +38,10 @@ export default function UserTransactionsPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const t = (en: string, es: string) => (lang === 'es' ? es : en)
+  const t = useMemo(() => createComponentT(lang, {
+    en: { txHistory: 'Transaction History', type: 'Type', amount: 'Amount', date: 'Date', hash: 'Hash', noTx: 'No transactions found', scholarship: 'Scholarship', donation: 'Donation', claim: 'Claim', ubiClaim: 'UBI Claim', learningPoints: 'Learning Points', points: 'Points' },
+    es: { txHistory: 'Historial de Transacciones', type: 'Tipo', amount: 'Cantidad', date: 'Fecha', hash: 'Hash', noTx: 'No se encontraron transacciones', scholarship: 'Beca', donation: 'Donacion', claim: 'Reclamo', ubiClaim: 'Reclamo UBI', learningPoints: 'Puntos de Aprendizaje', points: 'Puntos' },
+  }), [lang])
 
   useEffect(() => {
     async function fetchTransactions() {
@@ -70,10 +75,10 @@ export default function UserTransactionsPage({ params }: PageProps) {
 
   const getTypeName = (tipo: string) => {
     switch (tipo) {
-      case 'scholarship': return t('Scholarship', 'Beca')
+      case 'scholarship': return t('scholarship')
       case 'ubi-claim': return t('UBI Claim', 'Reclamo de UBI')
-      case 'donation': return t('Donation', 'Donación')
-      case 'learningpoint': return t('Learning Points', 'Puntos de Aprendizaje')
+      case 'donation': return t('donation')
+      case 'learningpoint': return t('learningPoints')
       default: return tipo
     }
   }
@@ -107,10 +112,10 @@ export default function UserTransactionsPage({ params }: PageProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('Date', 'Fecha')}</TableHead>
-              <TableHead>{t('Type', 'Tipo')}</TableHead>
+              <TableHead>{t('date')}</TableHead>
+              <TableHead>{t('type')}</TableHead>
               <TableHead>{t('Asset', 'Moneda')}</TableHead>
-              <TableHead className="text-right">{t('Amount', 'Cantidad')}</TableHead>
+              <TableHead className="text-right">{t('amount')}</TableHead>
               <TableHead>{t('Description', 'Descripción')}</TableHead>
               <TableHead className="text-center">{t('Transaction', 'Transacción')}</TableHead>
             </TableRow>
@@ -119,7 +124,7 @@ export default function UserTransactionsPage({ params }: PageProps) {
             {data.transactions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  {t('No transactions found', 'No se encontraron transacciones')}
+                  {t('noTx')}
                 </TableCell>
               </TableRow>
             ) : (

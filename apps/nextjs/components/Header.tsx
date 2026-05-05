@@ -5,12 +5,13 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import * as React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useConnect } from 'wagmi'
 import { injected } from 'wagmi/connectors'
 
 import { Button } from '@/components/ui/button'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 
 interface ExtendedSession extends Session {
   address?: string
@@ -21,6 +22,10 @@ export default function Header({ lang = 'en' }) {
   const { connect } = useConnect()
   const { address, isConnected } = useAccount()
   const { data: session } = useSession() as { data: ExtendedSession | null }
+  const t = useMemo(() => createComponentT(lang, {
+    en: { title: 'Learn through games', profile: 'Profile' },
+    es: { title: 'Aprender mediante juegos', profile: 'Perfil' },
+  }), [lang])
 
   useEffect(() => {
     if (window.ethereum && window.ethereum.isMiniPay) {
@@ -44,9 +49,7 @@ export default function Header({ lang = 'en' }) {
                   className="rounded-full"
                 />
                 <span className="text-gray-800 font-semibold text-lg">
-                  {lang === 'es'
-                    ? 'Aprender mediante juegos'
-                    : 'Learn through games'}
+                  {t('title')}
                 </span>
               </Link>
             </div>
@@ -61,7 +64,7 @@ export default function Header({ lang = 'en' }) {
                 session.address == address && (
                   <Button asChild variant="ghost">
                     <Link href={`/${lang ? lang : 'es'}/profile`}>
-                      {lang === 'en' ? 'Profile' : 'Perfil'}
+                      {t('profile')}
                     </Link>
                   </Button>
                 )}

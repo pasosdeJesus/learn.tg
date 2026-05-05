@@ -4,7 +4,8 @@
 import { useSession } from 'next-auth/react';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useMemo } from 'react';
+import { createComponentT } from '@/lib/hooks/useTranslation';
 
 export default function DiligentRecordsLayout({
   children,
@@ -18,6 +19,10 @@ export default function DiligentRecordsLayout({
   const [isOnline, setIsOnline] = useState(true);
   const { status } = useSession();
   const { isConnected } = useAccount();
+  const t = useMemo(() => createComponentT(lang, {
+    en: { online: 'Online', offline: 'Offline', connectWallet: 'Connect Wallet', signedSession: 'Signed session' },
+    es: { online: 'En línea', offline: 'Fuera de línea', connectWallet: 'Conectar Wallet', signedSession: 'Sesión firmada' },
+  }), [lang]);
   
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -69,7 +74,7 @@ export default function DiligentRecordsLayout({
               backgroundColor: isOnline ? '#4CAF50' : '#f44336',
               display: 'inline-block'
             }} />
-            <span>{isOnline ? (lang === 'es' ? 'En línea' : 'Online') : (lang === 'es' ? 'Fuera de línea' : 'Offline')}</span>
+            <span>{isOnline ? t('online') : t('offline')}</span>
           </div>
           
           {isOnline && !isConnected && (
@@ -88,7 +93,7 @@ export default function DiligentRecordsLayout({
                     fontSize: '14px'
                   }}
                 >
-                  {lang === 'es' ? 'Conectar Wallet' : 'Connect Wallet'}
+                  {t('connectWallet')}
                 </button>
               )}
             </ConnectButton.Custom>
@@ -107,7 +112,7 @@ export default function DiligentRecordsLayout({
           )}
           
           {status === 'authenticated' && (
-            <span style={{ fontSize: '18px' }} title={lang === 'es' ? 'Sesión firmada' : 'Signed session'}>
+            <span style={{ fontSize: '18px' }} title={t('signedSession')}>
               🔐
             </span>
           )}
