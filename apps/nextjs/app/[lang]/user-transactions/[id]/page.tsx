@@ -99,7 +99,7 @@ export default function UserTransactionsPage({ params }: PageProps) {
           </Button>
         </Link>
         <h1 className="text-2xl font-bold">
-          {t('Transaction History for', 'Historial de Transacciones de')} {data.user.nombre || data.user.nusuario}
+          {t('Transaction History for', 'Historial de Transacciones de')} {data.user.nusuario}
         </h1>
       </div>
 

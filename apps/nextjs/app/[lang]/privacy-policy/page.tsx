@@ -6,7 +6,13 @@ export default function Page() {
       <h1>Privacy Policy</h1>
       <ul>
         <li>
-          We will not sell neither share the personal information you provide
+          We will not sell neither share the personal information you provide.
+        </li>
+        <li>
+          Your wallet address, your login name, your blockchain
+          transactions and your actions in the platform are considered public.
+          The rest of the information in your profile is private and we
+          will not present it to the public.
         </li>
         <li>
           To remove your personal information as presented by this app, please
