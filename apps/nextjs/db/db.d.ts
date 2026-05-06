@@ -540,18 +540,6 @@ export interface Cor1440GenTipomoneda {
   updated_at: Timestamp;
 }
 
-/** @deprecated Table removed in migration 20260502015026_drop_course_usuario */
-export interface CourseUsuario {
-  amountscholarship: number | null
-  created_at: Timestamp | null
-  guidespoints: number | null
-  percentagecompleted: number | null
-  points: number
-  proyectofinanciero_id: number
-  updated_at: Timestamp | null
-  usuario_id: number
-}
-
 export interface GuideUsuario {
   actividadpf_id: number;
   amountpaid: number;
@@ -1391,8 +1379,6 @@ export interface DB {
   cor1440_gen_sectorapc: Cor1440GenSectorapc;
   cor1440_gen_tipoindicador: Cor1440GenTipoindicador;
   cor1440_gen_tipomoneda: Cor1440GenTipomoneda;
-  /** @deprecated Table removed in migration 20260502015026_drop_course_usuario */
-  course_usuario: CourseUsuario;
   guide_usuario: GuideUsuario;
   heb412_gen_campohc: Heb412GenCampohc;
   heb412_gen_campoplantillahcm: Heb412GenCampoplantillahcm;
