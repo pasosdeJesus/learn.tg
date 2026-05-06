@@ -1,6 +1,55 @@
 'use client'
 
+import { useMemo, useState, useEffect } from 'react'
+import { createComponentT } from '@/lib/hooks/useTranslation'
+
 export default function Home() {
+  const [browserLang, setBrowserLang] = useState('en')
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      setBrowserLang(navigator.language?.startsWith('es') ? 'es' : 'en')
+    }
+  }, [])
+
+  const t = useMemo(() => createComponentT(browserLang, {
+    en: {
+      title: 'Learn Through Games',
+      desc: 'Blockchain-powered education with real rewards. Study by solving crossword puzzles and earn scholarships as you learn. More game types coming soon!',
+      web3: 'Web3 Enabled',
+      usdtRewards: 'USDT Rewards',
+      freeStart: 'Free to Start',
+      chooseLang: 'Choose Your Language',
+      english: 'English',
+      englishDesc: 'Education & scholarships',
+      spanish: 'Espa\u00f1ol',
+      spanishDesc: 'Educaci\u00f3n y becas',
+      courses: 'Interactive Courses',
+      coursesDesc: 'Engaging content through crossword puzzle challenges',
+      earn: 'Earn Rewards',
+      earnDesc: 'Get paid in USDT for completing educational guides',
+      secured: 'Blockchain Secured',
+      securedDesc: 'Transparent scholarships on Celo blockchain',
+    },
+    es: {
+      title: 'Aprende Mediante Juegos',
+      desc: 'Educaci\u00f3n impulsada por blockchain con recompensas reales. Estudia resolviendo crucigramas y gana becas mientras aprendes. \u00a1M\u00e1s tipos de juegos pr\u00f3ximamente!',
+      web3: 'Habilitado Web3',
+      usdtRewards: 'Recompensas USDT',
+      freeStart: 'Comienza Gratis',
+      chooseLang: 'Elige tu Idioma',
+      english: 'English',
+      englishDesc: 'Educaci\u00f3n y becas',
+      spanish: 'Espa\u00f1ol',
+      spanishDesc: 'Educaci\u00f3n y becas',
+      courses: 'Cursos Interactivos',
+      coursesDesc: 'Contenido atractivo a trav\u00e9s de crucigramas',
+      earn: 'Gana Recompensas',
+      earnDesc: 'Recibe USDT por completar gu\u00edas educativas',
+      secured: 'Asegurado con Blockchain',
+      securedDesc: 'Becas transparentes en la blockchain de Celo',
+    },
+  }), [browserLang])
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
       <div className="relative overflow-hidden">
@@ -11,29 +60,27 @@ export default function Home() {
             <section aria-label="Hero section">
               <div className="space-y-4">
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-primary-300 via-primary-200 to-secondary-100 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                  Learn Through Games
+                  {t('title')}
                 </h1>
                 <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
-                  Blockchain-powered education with real rewards. Study by
-                  solving crossword puzzles and earn scholarships as you learn.
-                  More game types coming soon!
+                  {t('desc')}
                 </p>
               </div>
 
               <div className="flex items-center justify-center gap-4 text-sm text-gray-500 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>Web3 Enabled</span>
+                  <span>{t('web3')}</span>
                 </div>
                 <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span>USDT Rewards</span>
+                  <span>{t('usdtRewards')}</span>
                 </div>
                 <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  <span>Free to Start</span>
+                  <span>{t('freeStart')}</span>
                 </div>
               </div>
             </section>
@@ -41,7 +88,7 @@ export default function Home() {
             <section aria-label="Language selection">
               <div className="pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
                 <h2 className="text-2xl font-semibold text-gray-700 mb-8">
-                  Choose Your Language
+                  {t('chooseLang')}
                 </h2>
                 <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
                   <a
@@ -54,10 +101,10 @@ export default function Home() {
                         🇬🇧
                       </div>
                       <h3 className="text-3xl font-bold text-gray-800 group-hover:text-primary-300 transition-colors duration-300">
-                        English
+                        {t('english')}
                       </h3>
                       <p className="text-sm text-gray-500 text-center">
-                        Education & scholarships
+                        {t('englishDesc')}
                       </p>
                       <div className="absolute bottom-4 right-4 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
                         <span className="text-white text-xl">→</span>
@@ -75,10 +122,10 @@ export default function Home() {
                         🇪🇸
                       </div>
                       <h3 className="text-3xl font-bold text-gray-800 group-hover:text-secondary-100 transition-colors duration-300">
-                        Español
+                        {t('spanish')}
                       </h3>
                       <p className="text-sm text-gray-500 text-center">
-                        Educación y becas
+                        {t('spanishDesc')}
                       </p>
                       <div className="absolute bottom-4 right-4 w-8 h-8 rounded-full bg-secondary-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
                         <span className="text-white text-xl">→</span>
@@ -94,30 +141,30 @@ export default function Home() {
                 <article className="text-center space-y-3 p-6 rounded-2xl bg-white/50 backdrop-blur-sm border border-gray-100 hover:border-primary-100 transition-all duration-300 hover:shadow-lg">
                   <div className="text-4xl">🎓</div>
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Interactive Courses
+                    {t('courses')}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Engaging content through crossword puzzle challenges
+                    {t('coursesDesc')}
                   </p>
                 </article>
 
                 <article className="text-center space-y-3 p-6 rounded-2xl bg-white/50 backdrop-blur-sm border border-gray-100 hover:border-primary-100 transition-all duration-300 hover:shadow-lg">
                   <div className="text-4xl">💰</div>
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Earn Rewards
+                    {t('earn')}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Get paid in USDT for completing educational guides
+                    {t('earnDesc')}
                   </p>
                 </article>
 
                 <article className="text-center space-y-3 p-6 rounded-2xl bg-white/50 backdrop-blur-sm border border-gray-100 hover:border-primary-100 transition-all duration-300 hover:shadow-lg">
                   <div className="text-4xl">🔒</div>
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Blockchain Secured
+                    {t('secured')}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Transparent scholarships on Celo blockchain
+                    {t('securedDesc')}
                   </p>
                 </article>
               </div>
