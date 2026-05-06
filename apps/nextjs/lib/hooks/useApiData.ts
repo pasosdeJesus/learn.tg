@@ -6,6 +6,7 @@ interface UseApiDataOptions<T> {
   params?: Record<string, string>
   initialData?: T
   autoFetch?: boolean
+  deps?: any[]
 }
 
 export function useApiData<T>({
@@ -13,6 +14,7 @@ export function useApiData<T>({
   params = {},
   initialData,
   autoFetch = true,
+  deps = [],
 }: UseApiDataOptions<T>) {
   const fetchFunction = async (session: any, mergedParams?: Record<string, any>) => {
     // mergedParams includes both the hook's params and any custom params passed to fetchData
@@ -30,5 +32,6 @@ export function useApiData<T>({
     fetchFunction,
     params,
     autoFetch,
+    deps,
   })
 }

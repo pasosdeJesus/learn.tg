@@ -2,6 +2,17 @@ import { Kysely, sql } from 'kysely'
 import type { DB } from '@/db/db.d'
 import type { LeaderboardQueryParams } from '@/types/leaderboard'
 
+// Shared SQL field definitions used across leaderboard queries
+const LP_FIELD = sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('learningpoints')
+const LP_WHERE = sql<string>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`
+const SCHOLARSHIP_FIELD = sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('scholarship_usdt')
+const SCHOLARSHIP_WHERE = sql<string>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`
+const UBI_FIELD = sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('ubi_celo')
+const UBI_WHERE = sql<string>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`
+const DONATIONS_FIELD = sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('donations_usdt')
+const DONATIONS_WHERE = sql<string>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`
+const LP_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithLP')
+
 export async function buildLeaderboardQuery(
   db: Kysely<DB>,
   params: LeaderboardQueryParams,
@@ -10,12 +21,11 @@ export async function buildLeaderboardQuery(
   const { sortBy = 'learningpoints', sortOrder = 'desc', country, page = 1, limit = 50 } = params
   const offset = (page - 1) * limit
 
-  // Construir consulta base
   let query: any = db
     .selectFrom('usuario as u')
     .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
     .leftJoin('transaction as t', 'u.id', 't.usuario_id')
-  
+
   if (includeReligion) {
     query = query.leftJoin('religion as r', 'u.religion_id', 'r.id')
   }
@@ -25,10 +35,10 @@ export async function buildLeaderboardQuery(
     'u.nusuario as username',
     'p.alfa2 as pais_alfa2',
     'p.nombre as pais_nombre',
-    sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('learningpoints'),
-    sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('scholarship_usdt'),
-    sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('ubi_celo'),
-    sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('donations_usdt'),
+    LP_FIELD,
+    SCHOLARSHIP_FIELD,
+    UBI_FIELD,
+    DONATIONS_FIELD,
     sql<number>`COUNT(*) OVER()`.as('total_count'),
   ]
 
@@ -44,20 +54,16 @@ export async function buildLeaderboardQuery(
     .groupBy(groupFields)
     .where('u.excluir_leaderboard', 'is not', true)
 
-  // Aplicar filtro por país si existe
   if (country) {
     query = query.where('p.alfa2', '=', country)
   }
 
-  // Ordenamiento
   const orderByField = sortBy === 'learningpoints' ? sql`learningpoints` :
                       sortBy === 'scholarship_usdt' ? sql`scholarship_usdt` :
                       sortBy === 'ubi_celo' ? sql`ubi_celo` :
                       sql`donations_usdt`
 
   query = query.orderBy(orderByField, sortOrder)
-
-  // Paginación
   query = query.limit(limit).offset(offset)
 
   return query
@@ -73,6 +79,7 @@ export async function getCountriesQuery(db: Kysely<DB>) {
     .distinct()
     .orderBy('p.nombre', 'asc')
 }
+
 export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
   let query: any = db
     .selectFrom('usuario as u')
@@ -88,11 +95,11 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
   const result = await query
     .select([
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
-      sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithLP'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('totalLearningPoints'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalScholarshipUSDT'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('totalUBICELO'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalDonationsUSDT'),
+      LP_USER_COUNT,
+      LP_WHERE.as('totalLearningPoints'),
+      SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
+      UBI_WHERE.as('totalUBICELO'),
+      DONATIONS_WHERE.as('totalDonationsUSDT'),
     ])
     .executeTakeFirst()
 
@@ -114,16 +121,16 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
     .where('u.excluir_leaderboard', 'is not', true)
     .select([
       sql<string>`COALESCE(p.alfa2, 'ZZ')`.as('alfa2'),
-      sql<string>`COALESCE(p.nombre, 'Sin país')`.as('nombre'),
+      sql<string>`COALESCE(p.nombre, 'Sin pa\u00eds')`.as('nombre'),
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
-      sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithLP'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('totalLearningPoints'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalScholarshipUSDT'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('totalUBICELO'),
-      sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('totalDonationsUSDT'),
+      LP_USER_COUNT,
+      LP_WHERE.as('totalLearningPoints'),
+      SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
+      UBI_WHERE.as('totalUBICELO'),
+      DONATIONS_WHERE.as('totalDonationsUSDT'),
     ])
-    .groupBy([sql`COALESCE(p.alfa2, 'ZZ')`, sql`COALESCE(p.nombre, 'Sin país')`])
-    .orderBy(sql`COALESCE(p.nombre, 'Sin país')`, 'asc')
+    .groupBy([sql`COALESCE(p.alfa2, 'ZZ')`, sql`COALESCE(p.nombre, 'Sin pa\u00eds')`])
+    .orderBy(sql`COALESCE(p.nombre, 'Sin pa\u00eds')`, 'asc')
     .execute()
 
   return results.map(row => ({

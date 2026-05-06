@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { TransparencyTable } from '@/components/TransparencyTable'
 import { MetricsExplanation } from '@/components/MetricsExplanation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { useApiData } from '@/lib/hooks/useApiData'
-import { buildParamsWithSession } from '@/lib/fetchHelpers'
 import type { CountryTotals, TransparencyResponse } from '@/types/leaderboard'
 
 interface TransparencyProps {
@@ -25,7 +24,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
   } = useApiData<TransparencyResponse>({
     endpoint: 'transparency',
     initialData,
-    autoFetch: false, // We'll handle fetching manually
+    autoFetch: !initialData,
   })
 
   // Destructure data from apiData

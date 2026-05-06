@@ -7,7 +7,6 @@
 'use client'
 
 import { SessionProvider } from 'next-auth/react'
-import { useEffect } from 'react'
 import OKXNetworkCheck from '@/components/OKXNetworkCheck'
 import WalletDetectionHint from '@/components/WalletDetectionHint'
 
@@ -98,9 +97,6 @@ const queryClient = new QueryClient()
 // Taking ideas of
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/providers/web3-providers.tsx
 export function AppProvider(props: RainbowKitProviderProps) {
-  useEffect(() => {
-    const win = window as ExtendedWindow
-  }, [])
 
 
   return (

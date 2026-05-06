@@ -181,7 +181,8 @@ describe('useApiData', () => {
         initialData,
         fetchFunction: expect.any(Function),
         params,
-        autoFetch
+        autoFetch,
+        deps: [],
       })
     })
 

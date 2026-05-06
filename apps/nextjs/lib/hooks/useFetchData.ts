@@ -6,6 +6,8 @@ interface UseFetchDataOptions<T> {
   fetchFunction: (session: any, params?: Record<string, any>) => Promise<T>
   params?: Record<string, any>
   autoFetch?: boolean
+  /** Dependencies that trigger a re-fetch when changed (e.g., [sortBy, page, country]) */
+  deps?: any[]
 }
 
 export function useFetchData<T>({
@@ -13,6 +15,7 @@ export function useFetchData<T>({
   fetchFunction,
   params = {},
   autoFetch = true,
+  deps = [],
 }: UseFetchDataOptions<T>) {
   const { data: session } = useSession()
   const [data, setData] = useState<T | undefined>(initialData)
@@ -48,7 +51,8 @@ export function useFetchData<T>({
     if (!initialData && autoFetch) {
       fetchData()
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
 
   return {
     data,

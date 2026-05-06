@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { LeaderboardTable, type SortField, type SortOrder } from '@/components/LeaderboardTable'
 import { CountryFilter } from '@/components/CountryFilter'
 import { MetricsExplanation } from '@/components/MetricsExplanation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { useApiData } from '@/lib/hooks/useApiData'
-import { buildParamsWithSession } from '@/lib/fetchHelpers'
 import type { LeaderboardRow, LeaderboardResponse } from '@/types/leaderboard'
 
 interface LeaderboardProps {
@@ -15,7 +14,6 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
-  // State for data and loading
   const {
     data: apiData,
     isLoading,
@@ -24,7 +22,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
   } = useApiData<LeaderboardResponse>({
     endpoint: 'leaderboard',
     initialData,
-    autoFetch: false, // We'll handle fetching manually
+    autoFetch: !initialData,
   })
 
   // Destructure data from apiData
@@ -44,45 +42,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
   // Translation helper
   const t = useTranslation(lang)
 
-  // Fetch leaderboard data
-  const fetchLeaderboard = useCallback(async () => {
-    const baseParams: Record<string, string> = {
-      sortBy,
-      sortOrder,
-      page: page.toString(),
-      limit: limit.toString(),
-    }
-    if (country) baseParams.country = country
-
-    try {
-      await fetchData(baseParams)
-    } catch (error) {
-      console.error('Failed to fetch leaderboard:', error)
-      // Error is already handled by useApiData
-    }
-  }, [sortBy, sortOrder, country, page, limit, fetchData])
-
-  // Initial fetch if no initialData provided
-  useEffect(() => {
-    if (!initialData) {
-      fetchLeaderboard()
-    }
-  }, [])
-
-  // Fetch when filters change
-  useEffect(() => {
-    if (initialData) {
-      // If we had initialData, we need to fetch fresh data when filters change
-      fetchLeaderboard()
-    } else {
-      // Otherwise, fetchLeaderboard already runs on mount
-      // We need to run it on filter changes too
-      const timeoutId = setTimeout(fetchLeaderboard, 300) // debounce
-      return () => clearTimeout(timeoutId)
-    }
-  }, [sortBy, sortOrder, country, page, fetchLeaderboard])
-
-  const handleSortChange = (newSortBy: SortField, newSortOrder: SortOrder) => {
+    const handleSortChange = (newSortBy: SortField, newSortOrder: SortOrder) => {
     setSortBy(newSortBy)
     setSortOrder(newSortOrder)
     setPage(1) // Reset to first page when sorting changes
