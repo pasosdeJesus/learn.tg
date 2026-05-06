@@ -195,3 +195,45 @@ The application uses Next.js's App Router. Here are the main user-facing pages:
     ```
 
     It is recommended to run this behind a reverse proxy like Nginx for handling SSL and routing traffic correctly.
+
+## Internationalization (i18n)
+
+This project uses `@pasosdejesus/m/i18n` for translations with key-based lookups.
+
+### Usage
+
+```tsx
+import { useMemo } from 'react'
+import { createComponentT } from '@/lib/hooks/useTranslation'
+
+const t = useMemo(() => createComponentT(lang, {
+  en: { hello: 'Hello', greeting: 'Hello {{0}}' },
+  es: { hello: 'Hola', greeting: 'Hola {{0}}' },
+}), [lang])
+
+t('hello')              // 'Hello' or 'Hola'
+t('greeting', 'World')  // 'Hello World' or 'Hola Mundo'
+```
+
+### Rules
+
+1. **Use `createComponentT`** with key-based objects. No `t(en, es)` positional calls.
+2. **English is the source language** — translate from English to Spanish.
+3. **`{{0}}`, `{{1}}`** for dynamic values.
+4. **Add `lang` prop** to components with user-facing text.
+5. **Common terms** → `lib/i18n/common.ts`. **Component terms** → inline.
+
+### Testing
+
+```ts
+vi.mock('@/lib/hooks/useTranslation', () => ({
+  createComponentT: (lang, translations) => {
+    const dict = (translations && translations.en) || {}
+    return (key, ...args) => {
+      let val = dict[key] || key
+      args.forEach((arg, i) => { val = val.replace(`{{${i}}}`, arg) })
+      return val
+    }
+  },
+}))
+```

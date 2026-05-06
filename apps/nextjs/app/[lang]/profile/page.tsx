@@ -122,8 +122,16 @@ export default function ProfileForm({ params }: PageProps) {
   const { lang } = parameters
 
   const t = useMemo(() => createComponentT(lang, {
-    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', learningScore: 'Learning Score', displayName: 'Display name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country ( Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniquenes with GoodDollar ( Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below' },
-    es: { editProfile: 'Edicion del Perfil', profileScore: 'Puntaje de Perfil', learningScore: 'Puntaje de Aprendizaje', displayName: 'Nombre por presentar', religion: 'Religion', selectReligion: 'Elige tu religion', countryVerified: 'Pais (Verificado:', selectCountry: 'Selecciona tu pais', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion' },
+    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', learningScore: 'Learning Score', displayName: 'Display name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country ( Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniquenes with GoodDollar ( Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
+      saveFailed: 'Failed to save profile.',
+      expiredSession: '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.',
+      connectionIssue: '\n\nPlease check your internet connection and try again.',
+      errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below' },
+    es: { editProfile: 'Edicion del Perfil', profileScore: 'Puntaje de Perfil', learningScore: 'Puntaje de Aprendizaje', displayName: 'Nombre por presentar', religion: 'Religion', selectReligion: 'Elige tu religion', countryVerified: 'Pais (Verificado:', selectCountry: 'Selecciona tu pais', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
+      saveFailed: 'Fallo al guardar el perfil.',
+      expiredSession: '\n\nPuede deberse a que la sesi\u00f3n ha expirado. Por favor, intenta desconectar y reconectar tu billetera.',
+      connectionIssue: '\n\nPor favor, revisa tu conexi\u00f3n a internet e int\u00e9ntalo de nuevo.',
+      errorLabel: 'Error: ', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion' },
   }), [lang])
   const logger = (...args: any[]) => {
     console.log(...args)
@@ -235,9 +243,7 @@ export default function ProfileForm({ params }: PageProps) {
       } catch (error) {
         logger('Error opening Self app:', error)
         const message =
-          lang === 'es'
-            ? 'Error al abrir la aplicación Self. Por favor, inténtalo de nuevo.'
-            : 'Error opening Self app. Please try again.'
+          t('selfError')
         alert(message)
         throw error // Re-throw to be caught by dialog error handler
       }
@@ -246,7 +252,7 @@ export default function ProfileForm({ params }: PageProps) {
 
   const handleQRDialogError = (error: string) => {
     logger('QR Dialog error:', error)
-    const prefix = lang === 'es' ? 'Error: ' : 'Error: '
+    const prefix = t('errorLabel')
     alert(`${prefix}${error}`)
   }
 
@@ -426,28 +432,22 @@ export default function ProfileForm({ params }: PageProps) {
     } catch (error) {
       logger('Profile save error:', error)
       let alertMessage =
-        lang === 'es'
-          ? 'Fallo al guardar el perfil.'
-          : 'Failed to save profile.'
+        t('saveFailed')
 
       if (error instanceof Error) {
-        alertMessage += `\n\n${lang === 'es' ? 'Detalles' : 'Details'}: ${
+        alertMessage += `\n\n${t('details')}: ${
           error.message
         }.`
 
         if (error.message.includes('401')) {
           alertMessage +=
-            lang === 'es'
-              ? '\n\nPuede deberse a que la sesión ha expirado. Por favor, intenta desconectar y reconectar tu billetera.'
-              : '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.'
+            t('expiredSession')
         } else if (
           error instanceof TypeError &&
           error.message.toLowerCase().includes('failed to fetch')
         ) {
           alertMessage +=
-            lang === 'es'
-              ? '\n\nPor favor, revisa tu conexión a internet e inténtalo de nuevo.'
-              : '\n\nPlease check your internet connection and try again.'
+            t('connectionIssue')
         }
       }
       alert(alertMessage)
@@ -490,9 +490,7 @@ export default function ProfileForm({ params }: PageProps) {
             {t('editProfile')}
           </h2>
           <p className="text-gray-600 mt-1">
-            {lang === 'es'
-              ? 'Actualiza la información de tu perfil a continuación'
-              : 'Update your profile information below'}
+            {t('updateInfo')}
           </p>
         </div>
         <div className="p-6">
@@ -503,9 +501,7 @@ export default function ProfileForm({ params }: PageProps) {
               </h3>
               <CircularProgress progress={profile.profilescore || 0} />
               <p className="text-sm text-gray-500 mt-2">
-                {lang === 'es'
-                  ? 'Requiere 50+ para becas'
-                  : '50+ required for scholarships'}
+                {t('scoreRequired')}
               </p>
             </div>
             <div className="flex flex-col items-center">
@@ -544,9 +540,7 @@ export default function ProfileForm({ params }: PageProps) {
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  {lang === 'es'
-                    ? 'Nombre completo ( Verificado:'
-                    : 'Full Name ( Verified:'}
+                  {t('fullNameVerified')}
                   {profile.name != '' && profile.name == profile.passport_name
                     ? '✅'
                     : '❌'}{' '}
@@ -596,9 +590,7 @@ export default function ProfileForm({ params }: PageProps) {
                   <SelectTrigger id="religion" className="w-full">
                     <SelectValue
                       placeholder={
-                        lang === 'es'
-                          ? 'Elige tu religión'
-                          : 'Select your religion'
+                        t('selectReligion')
                       }
                     />
                   </SelectTrigger>
@@ -636,9 +628,7 @@ export default function ProfileForm({ params }: PageProps) {
                   <SelectTrigger id="country" className="w-full">
                     <SelectValue
                       placeholder={
-                        lang === 'es'
-                          ? 'Selecciona tu país'
-                          : 'Select your country'
+                        t('selectCountry')
                       }
                     />
                   </SelectTrigger>
@@ -656,9 +646,7 @@ export default function ProfileForm({ params }: PageProps) {
                   htmlFor="lastgooddollarverification"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  {lang === 'es'
-                    ? 'Unicidad con GoodDollar ( Verificada:'
-                    : 'Uniquenes with GoodDollar ( Verified:'}
+                  {t('uniquenessGoodDollar')}
                   {profile.lastgooddollarverification != null ? '✅' : '❌'}{' '}
                   {')'}
                 </label>
@@ -680,12 +668,8 @@ export default function ProfileForm({ params }: PageProps) {
               <Button type="submit" disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {saving
-                  ? lang === 'es'
-                    ? 'Guardando'
-                    : 'Saving'
-                  : lang === 'es'
-                  ? 'Guardar Cambios'
-                  : 'Save Changes'}
+                  ? t('saving')
+                  : t('saveChanges')}
               </Button>
               <Button type="button" onClick={handleSelfVerify}>
                 {t('verifySelf')}

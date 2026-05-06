@@ -4,6 +4,8 @@ import axios from 'axios'
 import { getCsrfToken, useSession } from 'next-auth/react'
 import { use, useEffect, useState, useRef } from 'react'
 import { useAccount, useConfig, useWriteContract } from 'wagmi'
+import { useMemo } from 'react'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 
 import { useGuideData } from '@/lib/hooks/useGuideData'
@@ -44,6 +46,7 @@ export default function Page({
   const wagmiConfig = useConfig()
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
+  const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading test...","error":"Error: ","notFound":"Test not found."},"es":{"loading":"Cargando prueba...","error":"Error: ","notFound":"Prueba no encontrada."}}), [lang])
 
   const {
     course,
@@ -381,15 +384,15 @@ export default function Page({
   }
 
   if (loading || isLoading) {
-    return <div className="p-10 mt-10">Loading test...</div>
+    return <div className="p-10 mt-10">{t('loading')}</div>
   }
 
   if (error) {
-    return <div className="p-10 mt-10">Error: {error}</div>
+    return <div className="p-10 mt-10">{t('error')}{error}</div>
   }
 
   if (!course || !myGuide) {
-    return <div className="p-10 mt-10">Test not found.</div>
+    return <div className="p-10 mt-10">{t('notFound')}</div>
   }
 
   if (

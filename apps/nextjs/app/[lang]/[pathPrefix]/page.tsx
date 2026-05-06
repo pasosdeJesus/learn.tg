@@ -10,6 +10,8 @@ import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 import { useAccount } from 'wagmi'
+import { useMemo } from 'react'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 
 import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
@@ -28,6 +30,7 @@ export default function Page({ params }: PageProps) {
   const { data: session } = useSession()
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
+  const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading course...","error":"Error: ","notFound":"Course not found."},"es":{"loading":"Cargando curso...","error":"Error: ","notFound":"Curso no encontrado."}}), [lang])
   const [csrfToken, setCsrfToken] = useState('')
   const [donationIncrement, setDonationIncrement] = useState<number | null>(null)
 
@@ -124,8 +127,8 @@ export default function Page({ params }: PageProps) {
           onClose={() => setDonationIncrement(null)}
         />
       )}
-      {loading && <div className="p-10 mt-10">Loading course...</div>}
-      {error && <div className="p-10 mt-10">Error: {error}</div>}
+      {loading && <div className="p-10 mt-10">{t('loading')}</div>}
+      {error && <div className="p-10 mt-10">{t('error')}{error}</div>}
       {!loading && !error && course && (
         <div className="container mx-auto my-8 flex flex-col lg:flex-row justify-center gap-6 min-h-screen">
           <section className="flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 lg:w-1/2 xl:w-3/5 bg-white rounded-2xl shadow">
@@ -213,7 +216,7 @@ export default function Page({ params }: PageProps) {
         </div>
       )}
       {!loading && !error && !course && (
-        <div className="p-10 mt-10">Course not found.</div>
+        <div className="p-10 mt-10">{t('notFound')}</div>
       )}
     </>
   )

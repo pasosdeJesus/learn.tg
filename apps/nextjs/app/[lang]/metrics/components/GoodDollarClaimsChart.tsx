@@ -14,6 +14,7 @@ import type { GoodDollarClaimData } from '@/lib/metrics/queries'
 
 
 interface GoodDollarClaimsChartProps {
+  lang?: string
   data: GoodDollarClaimData[]
 }
 

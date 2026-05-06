@@ -14,10 +14,10 @@ const mockUseSession = vi.hoisted(() => vi.fn())
 const mockUseAccount = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/hooks/useTranslation', () => ({
-  createComponentT: (l, tr) => {
+  createComponentT: (l: string, tr: any) => {
     const d = (tr && tr.en) || {}
-    return (k, ...args) => {
-      let v = d[k] || k
+    return (k: string, ...args: string[]) => {
+      let v: string = d[k] || k
       args.forEach((a, i) => { v = v.replace(`{{${i}}}`, a) })
       return v
     }
@@ -192,7 +192,7 @@ describe('Profile Page', () => {
     mockGetCsrfToken.mockResolvedValue('mock-csrf-token')
 
     // Axios mock only for post (update scores)
-    mockAxiosPost.mockImplementation((...args) => {
+    mockAxiosPost.mockImplementation((...args: string[]) => {
       console.log('mockAxiosPost called with', args.length, 'arguments:')
       args.forEach((arg, i) => {
         console.log(`  arg[${i}]:`, typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg)

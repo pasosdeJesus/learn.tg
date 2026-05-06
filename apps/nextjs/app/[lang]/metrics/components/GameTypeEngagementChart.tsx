@@ -9,15 +9,19 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Cell,
 } from 'recharts'
-import type { TimeBetweenGuidesData } from '@/lib/metrics/queries'
+import type { GameEngagementData } from '@/lib/metrics/queries'
 
 
-interface TimeBetweenGuidesHistogramProps {
-  data: TimeBetweenGuidesData[]
+const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+
+interface GameTypeEngagementChartProps {
+  lang?: string
+  data: GameEngagementData[]
 }
 
-export default function TimeBetweenGuidesHistogram({ data }: TimeBetweenGuidesHistogramProps) {
+export default function GameTypeEngagementChart({ data }: GameTypeEngagementChartProps) {
   // Handle empty data
   if (data.length === 0) {
     return (
@@ -29,59 +33,69 @@ export default function TimeBetweenGuidesHistogram({ data }: TimeBetweenGuidesHi
     )
   }
 
+  // Add colors to data for consistent coloring
+  const chartData = data.map((item, index) => ({
+    ...item,
+    color: colors[index % colors.length]
+  }))
+
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={data}
+          data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
-            dataKey="timeRange"
+            dataKey="gameType"
             tick={{ fontSize: 12 }}
-            label={{ value: 'Time Between Guides', position: 'insideBottom', offset: -10 }}
+            label={{ value: 'Game Type', position: 'insideBottom', offset: -10 }}
           />
           <YAxis
             yAxisId="left"
             tick={{ fontSize: 12 }}
-            label={{ value: 'Users', angle: -90, position: 'insideLeft', offset: -10 }}
+            domain={[0, 100]}
+            tickFormatter={(value) => `${value}%`}
+            label={{ value: 'Completion %', angle: -90, position: 'insideLeft', offset: -10 }}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
             tick={{ fontSize: 12 }}
-            domain={[0, 100]}
-            tickFormatter={(value) => `${value}%`}
-            label={{ value: 'Percentage', angle: 90, position: 'insideRight', offset: -10 }}
+            label={{ value: 'Avg Time (min)', angle: 90, position: 'insideRight', offset: -10 }}
           />
           <Tooltip
             formatter={(value: number, name: string) => {
+              if (name === 'completionRate') return [`${value}%`, 'Completion Rate']
+              if (name === 'avgTime') return [`${value} min`, 'Average Time']
               if (name === 'users') return [value, 'Users']
-              if (name === 'percentage') return [`${value}%`, 'Percentage']
               return [value, name]
             }}
-            labelFormatter={(label) => `Time Range: ${label}`}
+            labelFormatter={(label) => `Game: ${label}`}
           />
           <Legend />
           <Bar
             yAxisId="left"
-            dataKey="users"
-            name="Users"
-            fill="#3b82f6"
+            dataKey="completionRate"
+            name="Completion Rate"
             radius={[4, 4, 0, 0]}
-          />
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Bar>
           <Bar
             yAxisId="right"
-            dataKey="percentage"
-            name="Percentage"
-            fill="#10b981"
+            dataKey="avgTime"
+            name="Average Time (min)"
             radius={[4, 4, 0, 0]}
+            fill="#9ca3af"
           />
         </BarChart>
       </ResponsiveContainer>
       <div className="text-xs text-gray-500 mt-2 text-center">
-        Distribution of time users take between completing consecutive guides (based on guide_usuario.created_at)
+        Engagement metrics by game type (currently only crossword available, others planned)
       </div>
     </div>
   )

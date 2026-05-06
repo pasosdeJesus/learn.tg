@@ -14,6 +14,7 @@ import type { UserGrowthData } from '@/lib/metrics/queries'
 
 
 interface UserGrowthTimelineProps {
+  lang?: string
   data: UserGrowthData[]
 }
 

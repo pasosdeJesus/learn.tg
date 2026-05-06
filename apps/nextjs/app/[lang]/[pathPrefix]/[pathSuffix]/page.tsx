@@ -14,6 +14,8 @@ import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 import type { Processor } from 'unified'
 import { useAccount } from 'wagmi'
+import { useMemo } from 'react'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 
 import CeloUbiButton from '@/components/CeloUbiButton'
 import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
@@ -26,6 +28,7 @@ export default function Page() {
   const { address } = useAccount()
   const { data: session } = useSession()
   const { lang, pathPrefix, pathSuffix } = params as { lang: string; pathPrefix: string; pathSuffix: string }
+  const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading guide...","error":"Error: ","notFound":"Guide not found."},"es":{"loading":"Cargando guía...","error":"Error: ","notFound":"Guía no encontrada."}}), [lang])
 
   const { 
     course, 
@@ -170,15 +173,15 @@ export default function Page() {
 
 
   if (loading) {
-    return <div className="p-10 mt-10">Loading guide...</div>
+    return <div className="p-10 mt-10">{t('loading')}</div>
   }
 
   if (error) {
-    return <div className="p-10 mt-10">Error: {error}</div>
+    return <div className="p-10 mt-10">{t('error')}{error}</div>
   }
 
   if (!course || !myGuide) {
-    return <div className="p-10 mt-10">Guide not found.</div>
+    return <div className="p-10 mt-10">{t('notFound')}</div>
   }
 
   if (

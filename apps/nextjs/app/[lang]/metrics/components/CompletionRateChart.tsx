@@ -13,6 +13,7 @@ import {
 import type { CompletionRateData } from '@/lib/metrics/queries'
 
 interface CompletionRateChartProps {
+  lang?: string
   data: CompletionRateData[]
 }
 
