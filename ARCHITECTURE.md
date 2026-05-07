@@ -123,11 +123,6 @@ The platform tracks user progress and scores through two main database tables:
 - `amountpaid`: USDT amount rewarded for this guide (0 if not yet paid)
 - `profilescore`: User's profile score at the time of submission
 
-### `course_usuario` (per-course progress)
-- `guidespoints`: Sum of `points` for all guides in the course
-- `amountscholarship`: Total USDT received for the course
-- `percentagecompleted`: Percentage of guides completed (with points > 0)
-
 ### Global user scores (in `usuario` table)
 - `learningscore`: Total points across all guides and courses
 - `profilescore`: Metric of user engagement (≥50 required for rewards)
@@ -135,9 +130,8 @@ The platform tracks user progress and scores through two main database tables:
 ### Progress calculation
 When a user answers a guide correctly:
 1. `guide_usuario.points` is set to 1
-2. `updateUserAndCoursePoints()` recalculates all course metrics
-3. `learningscore` is updated as the sum of all guide and course points
-4. Progress percentages are recomputed based on completed vs total guides
+2. `updateUserAndCoursePoints()` recalculates the user's total `learningscore`
+3. Progress percentages are recomputed based on completed vs total guides
 
 The frontend displays progress using a three-color arc showing completion and payment percentages.
 
@@ -203,12 +197,6 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 - `amountpaid`: USDT amount rewarded for this guide (0 if not paid)
 - `profilescore`: Snapshot of user's `profilescore` at submission time
 
-##### `course_usuario` (per-course progress)
-- `usuario_id`, `proyectofinanciero_id`: Composite primary key
-- `guidespoints`: Sum of `points` for all guides in the course
-- `amountscholarship`: Total USDT received for the course
-- `percentagecompleted`: Percentage of guides completed (points > 0)
-
 ##### `userevent` (user events)
 - `id`: Primary key
 - `usuario_id`: Optional foreign key to `usuario`
@@ -220,8 +208,8 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 1. User wallet connection creates/updates `billetera_usuario` with a signed token
 2. Course and guide data is fetched from Rails APIs (which query the above tables)
 3. Crossword answers are validated against `billetera_usuario.answer_fib`
-4. Progress is tracked in `guide_usuario` and aggregated in `course_usuario`
-5. Blockchain rewards update `guide_usuario.amountpaid` and `course_usuario.amountscholarship`
+4. Progress is tracked in `guide_usuario`
+5. Blockchain rewards update `guide_usuario.amountpaid`
 6. User events (guide views, game completions, etc.) are recorded in `userevent` via the metrics tracking system
 
 ---

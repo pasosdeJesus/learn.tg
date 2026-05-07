@@ -49,7 +49,7 @@
     "axios": "^1.16.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "crossword-layout-generator-with-isolated": "github:vtamara/crossword-layout-generator#f2f1c397776e3fd81a79f507e4fdd10c32605b67",
+    "crossword-layout-generator-with-isolated": "github:vtamara/crossword-layout-generator",
     "dotenv": "^17.4.2",
     "ethers": "^6.16.0",
     "kysely": "^0.28.17",
@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "latest",
-    "@pasosdejesus/m": "gitlab:pasosdejesus/m",
+    "@pasosdejesus/m": "https://gitlab.com/pasosdejesus/m",
     "@tailwindcss/postcss": "^4.2.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

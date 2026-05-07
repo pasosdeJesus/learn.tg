@@ -130,9 +130,7 @@ beforeAll(() => {
 
 ## 🔗 Related Documentation
 
-- **[`@pasosdejesus/m/test-utils`](../node_modules/@pasosdejesus/m/dist/test-utils/README.md)** – Generic mocking utilities (Kysely, authentication, Radix UI, etc.)
-- **[`TESTS.md`](../../TESTS.md)** – Overview of testing strategy in Learn.tg
-- **[`TEST-SIMPLIFICA.md`](../../TEST-SIMPLIFICA.md)** – Recent simplification of test utilities
+- **[`@pasosdejesus/m/test-utils`](../node_modules/@pasosdejesus/m/src/test-utils/README.md)** – Generic mocking utilities (Kysely, authentication, Radix UI, etc.)
 
 ## 📝 Recent Changes (2026-02-15)
 

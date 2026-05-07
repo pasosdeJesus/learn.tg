@@ -76,7 +76,7 @@ The project emphasizes code quality and reliability through a comprehensive test
 - **Location**: Test files are co-located with the source code in `__tests__` directories (e.g., `apps/nextjs/components/__tests__/`).
 - **Execution**: Tests can be run with the `make test` command from this directory.
 - **Type Checking for Tests**: Verify TypeScript types in test files with `make type-source`.
-- **Documentation**: See [TESTS.md](TESTS.md) for detailed documentation on mocking utilities and testing architecture.
+- **Documentation**: See [test-utils/README.md](test-utils/README.md) for mocking utilities and testing architecture.
 
 ### Server-Side Analytics and Metrics
 
@@ -141,7 +141,7 @@ Then, review and update the `.env` file with these variables:
     bin/dev
     ```
 
-    The application will be available at [https://localhost:4300](https://localhost:4300) (or the port you specified).
+    The application will be available at [http://localhost:4000](http://localhost:4000) (or the `$PORT` you set in `.env`).
 
 ## Available Scripts
 

@@ -15,7 +15,13 @@ import { celo, celoSepolia, base } from 'viem/chains'
 import ScholarshipVaultsAbi from '../../abis/ScholarshipVaults.json' with { type: 'json' }
 import Erc20Abi from '../../abis/IERC20.json' with { type: 'json' }
 import LearnTGVaultsAbi from '../../abis/LearnTGVaults.json' with { type: 'json' }
-import type { GuideUsuario, CourseUsuario } from '../../db/db.d.ts'
+import type { GuideUsuario } from '../../db/db.d.ts'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface CourseUsuario {
+  usuario_id: number
+  proyectofinanciero_id: number
+  points: number
+}
 
 async function callWriteFun(
   publicClient: any,

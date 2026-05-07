@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
-import { type Address } from 'viem'
+import { type Address, formatUnits } from 'viem'
 import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { Button } from '@/components/ui/button'
 import { getCsrfToken } from 'next-auth/react'
@@ -201,7 +201,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
                 className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400"
                 value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={t('enterAmount')} />
               <div className="flex justify-end mt-1 space-x-2 text-xs">
-                <Button onClick={() => setAmount(formatDisplay(usdtBalance, usdtDecimals))} variant="link" size="sm" className="h-auto p-0">{t('max')}</Button>
+                <Button onClick={() => setAmount(Number(formatUnits(usdtBalance, usdtDecimals)).toString())} variant="link" size="sm" className="h-auto p-0">{t('max')}</Button>
                 <Button onClick={() => setAmount('')} variant="link" size="sm" className="h-auto p-0">{t('clear')}</Button>
               </div>
             </div>

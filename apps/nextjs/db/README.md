@@ -7,7 +7,7 @@ The Next.js app accesses PostgreSQL directly via Kysely ORM for performance-crit
 | `database.ts` | Kysely connection factory (`getDb()`) with test spy support |
 | `db.d.ts` | TypeScript types for all tables (`DB`, `Usuario`, `GuideUsuario`, etc.) |
 | `structure.sql` | Full database schema dump |
-| `migrations/` | 25 Kysely migrations (deployed after Rails schema changes) |
+| `migrations/` | Kysely migrations (deployed after Rails schema changes) |
 
 ### Migration naming: `YYYYMMDDHHMMSS_description.ts`
 

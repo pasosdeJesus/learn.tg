@@ -34,6 +34,8 @@ const cryptoMocks = vi.hoisted(() => ({
 
 const scoresMocks = vi.hoisted(() => ({
   updateUserAndCoursePoints: vi.fn(() => Promise.resolve(undefined)),
+  calculateDonationLearningScore: vi.fn(() => Promise.resolve(10)),
+  refreshUserLearningScore: vi.fn(() => Promise.resolve(100)),
 }))
 
 const guideUtilsMocks = vi.hoisted(() => ({

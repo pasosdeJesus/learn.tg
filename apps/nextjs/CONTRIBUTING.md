@@ -69,7 +69,7 @@ This document defines the documentation and testing policies for the Next.js app
 ### Tools
 
 - **Vitest** with `--coverage` (v8 provider).
-- **`@pasosdejesus/m/test-utils`** for reusable mocks (database, viem, rainbowkit, radix, fs). See [`@pasosdejesus/m/test-utils`](../node_modules/@pasosdejesus/m/dist/test-utils/README.md).
+- **`@pasosdejesus/m/test-utils`** for reusable mocks (database, viem, rainbowkit, radix, fs). See `node_modules/@pasosdejesus/m/src/test-utils/README.md`.
 - **`test-utils/`** for learn.tg-specific mocks: `learn-tg-mocks.ts`, `crossword-mocks.ts`. See [`test-utils/README.md`](test-utils/README.md).
 - **`vi.mock`** for module mocking.
 - **`// @vitest-environment jsdom`** pragma for React hook tests.
@@ -92,14 +92,26 @@ beforeAll(() => {
 
 **Mock lifecycle:** `setup*Mocks()` in `beforeAll` · `reset*Mocks()` in `beforeEach` · `vi.clearAllMocks()` in `afterEach`
 
-### Coverage Status (Verified)
+### Coverage Status (Current)
 
-| Layer | Status |
-|-------|--------|
-| API Routes | ✅ 100% — auth, content, rewards, metrics, users |
-| Libraries (`lib/`) | ✅ 100% — crypto, scores, guide-utils, metrics-server, deeplink |
-| UI Components | ✅ 100% — Layout, headers, modals, buttons, pages |
-| Pages | ✅ 100% — landing, course, guide, profile, metrics |
+| Layer | Statements | Notes |
+|-------|-----------|-------|
+| Core lib/ (crypto, scores, guide-utils, etc.) | 88-100% | Excellent. Edge cases: nonces, retries, errors |
+| API Routes (check-crossword, update-scores, scholarship, etc.) | 12 routes tested | Missing: `transparency`, `user-transactions/[id]` |
+| Hooks (useFetchData, useApiData, useGuideData, useSort, etc.) | 75-100% | Newer hooks (useScholarshipData, useGuideNavigation) now tested |
+| UI Components (shadcn) | 96-100% | Structural tests: render, props, className, refs |
+| Custom components (Header, Footer, DonateModal, etc.) | 90-100% | Complex modals and wallet flows covered |
+| **Overall project** | **~55% statements** | Weighted down by untested scripts/ (0%) and migrations/ (0%) |
+
+### Untested Code (Low Priority)
+
+| File | Lines | Reason |
+|------|-------|--------|
+| `scripts/` | ~2,500 | CLI maintenance scripts — impractical to test |
+| `db/migrations/` | ~1,100 | One-shot schema migrations |
+| `lib/leaderboard-queries.ts` | ~190 | Complex SQL — needs DB integration test |
+| `lib/ability.ts` | ~24 | Static CASL rules — low risk |
+| `lib/user-transactions.ts` | ~43 | Simple query passthrough |
 
 ### Running Tests
 
