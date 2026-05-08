@@ -1,0 +1,33 @@
+#!/bin/sh
+# fix-pnpm-store-path
+# Reemplaza %2F por _ en directorios del store de pnpm y actualiza symlinks
+# para evitar ERR_INVALID_MODULE_SPECIFIER en Node.js/vite-node
+#
+# "Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres" (Colosenses 3:23)
+
+cd "$(dirname "$0")/.." || exit 1
+PNPM_DIR="node_modules/.pnpm"
+
+# Rename directories with %2F to use _ instead
+find "$PNPM_DIR" -maxdepth 1 -type d -name '*%2F*' 2>/dev/null | while read -r old; do
+  new="$(echo "$old" | sed 's/%2F/_/g')"
+  if [ "$old" != "$new" ]; then
+    if [ -e "$new" ]; then
+      rm -rf "$old"
+      echo "fix-pnpm-store: Removed $old (clean path already exists)"
+    else
+      mv "$old" "$new"
+      echo "fix-pnpm-store: Renamed $old -> $new"
+    fi
+  fi
+done
+
+# Update dangling symlinks in node_modules top-level
+find node_modules -maxdepth 2 -type l 2>/dev/null | while read -r link; do
+  target="$(readlink "$link")"
+  newtarget="$(echo "$target" | sed 's/%2F/_/g')"
+  if [ "$target" != "$newtarget" ]; then
+    ln -snf "$newtarget" "$link"
+    echo "fix-pnpm-store: Updated symlink $link -> $newtarget"
+  fi
+done

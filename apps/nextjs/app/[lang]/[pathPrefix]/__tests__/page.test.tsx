@@ -4,8 +4,25 @@ import '@testing-library/jest-dom'
 import Page from '../page'
 import React, { Suspense } from 'react'
 import { useGuideData, type Course } from '@/lib/hooks/useGuideData'
+import { useScholarshipData } from '@/lib/hooks/useScholarshipData'
 
 vi.mock('@/lib/hooks/useGuideData', () => ({ useGuideData: vi.fn() }))
+vi.mock('@/lib/hooks/useScholarshipData', () => ({
+  useScholarshipData: vi.fn(() => ({
+    vaultCreated: true,
+    vaultBalance: 5000,
+    scholarshipPerGuide: 1,
+    canSubmit: true,
+    percentageCompleted: 50,
+    completedGuides: 5,
+    paidGuides: 2,
+    totalGuides: 10,
+    percentagePaid: 25,
+    scholarshipPaid: 1000000,
+    profileScore: 100,
+    fetchScholarship: vi.fn(),
+  })),
+}))
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -441,6 +458,23 @@ describe('Course Introduction Page', () => {
   }
 
   const useGuideDataMock = vi.mocked(useGuideData)
+  const useScholarshipDataMock = vi.mocked(useScholarshipData)
+
+  // Default scholarship data for useScholarshipData mock
+  const defaultScholarshipData = {
+    vaultCreated: true,
+    vaultBalance: 5000,
+    scholarshipPerGuide: 1,
+    canSubmit: true,
+    percentageCompleted: 50,
+    completedGuides: 5,
+    paidGuides: 2,
+    totalGuides: 10,
+    percentagePaid: 25,
+    scholarshipPaid: 1000000,
+    profileScore: 100,
+    fetchScholarship: vi.fn(),
+  }
 
   beforeEach(() => {
     // Reset mocks before each test
@@ -450,6 +484,7 @@ describe('Course Introduction Page', () => {
     useSessionMock.mockReturnValue(mockSessionData)
     useAccountMock.mockReturnValue(mockAccountData)
     useGuideDataMock.mockReturnValue(mockGuideData)
+    useScholarshipDataMock.mockReturnValue(defaultScholarshipData)
   })
 
   it('should render loading state', async () => {
@@ -484,11 +519,11 @@ describe('Course Introduction Page', () => {
   })
 
   it('should display "not eligible" message when not eligible', async () => {
-    useGuideDataMock.mockReturnValue({
-      ...mockGuideData,
+    useScholarshipDataMock.mockReturnValue({
+      ...defaultScholarshipData,
       profileScore: null,
       scholarshipPerGuide: 0.5,
-      canSubmit: false
+      canSubmit: false,
     })
     renderWithProviders(<Page params={mockParams} />)
 

@@ -10,12 +10,10 @@
  * 2. end with " (answer)"  (the space and the parenthesis are needed)
  */
 export function remarkFillInTheBlank(options) {
-  return function (tree) {
-    console.log(tree)
-    console.log("OJO options=", options)
+  return function (tree, vfile) {
     let l = tree.children
     let n = []
-    globalThis.fillInTheBlank = []
+    vfile.data.fillInTheBlank = []
     for (let i = 0; i < l.length; i++) {
       const re = /^(.*___.*)\s+\((.*)\)\s*$/s
       let rm = ''
@@ -30,16 +28,8 @@ export function remarkFillInTheBlank(options) {
         l[i].children[0].children[0].children[0].type == 'text' &&
         (rm = l[i].children[0].children[0].children[0].value.match(re))
       ) {
-        console.log('** skippping')
-        console.log(rm)
         let list = l[i].children
-        console.log('list.length=', list.length)
         for (let j = 0; j < list.length; j++) {
-          console.log('list[j]=', list[j])
-          console.log(
-            'list[j].children[0].children[0]=',
-            list[j].children[0].children[0],
-          )
           if (
             list[j].type == 'listItem' &&
             list[j].children.length > 0 &&
@@ -48,9 +38,8 @@ export function remarkFillInTheBlank(options) {
             list[j].children[0].children[0].type == 'text'
           ) {
             rm = list[j].children[0].children[0].value.match(re)
-            console.log('rm=', rm)
             if (rm) {
-              globalThis.fillInTheBlank.push({
+              vfile.data.fillInTheBlank.push({
                 clue: rm[1],
                 answer: rm[2],
               })
@@ -92,17 +81,10 @@ export function remarkFillInTheBlank(options) {
             },
           ],
         })
-        console.log('globalThis.fillInTheBlank=', globalThis.fillInTheBlank)
       } else {
-        console.log('** pushing ', l[i].type)
-
-        if (l[i].type == 'paragraph') {
-          console.log('<p> children', l[i].children)
-        }
         n.push(l[i])
       }
     }
-    console.log(n)
     tree.children = n
     return tree
   }

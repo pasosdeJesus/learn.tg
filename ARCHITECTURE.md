@@ -231,7 +231,7 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 ## Development & Deployment
 
 - **Start order:** Rails backend first, then Next.js frontend
-- **Environment:** adJ 7.6 recommended (includes all dependencies)
+- **Environment:** adJ 7.8 recommended (includes all dependencies)
 - **Testing:** Hound CI, CodeClimate integration
 - **Code Quality:** Automated linting and security checks
 - **Live Deployment:** Running at https://learn.tg

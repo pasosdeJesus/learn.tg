@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { db, getDb } from '../database'
 
 describe('database', () => {
-  // Note: In test environment, db is null because testDb is null
-  // but getDb returns a mock Kysely instance (from global mocks)
-  it('db is null in test environment', () => {
-    expect(db).toBeNull()
+  it('db is a MockKysely instance in test environment', () => {
+    expect(db).toBeDefined()
+    expect(db).not.toBeNull()
+    expect(typeof db.selectFrom).toBe('function')
   })
 
   it('getDb returns a Kysely-like object in test environment', () => {

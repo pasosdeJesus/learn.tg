@@ -17,6 +17,7 @@ import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
 import { useGuideData } from '@/lib/hooks/useGuideData'
+import { useScholarshipData } from '@/lib/hooks/useScholarshipData'
 
 type PageProps = {
   params: Promise<{
@@ -38,22 +39,23 @@ export default function Page({ params }: PageProps) {
     course,
     loading,
     error,
-    totalGuides,
-    vaultCreated,
-    scholarshipPerGuide,
-    vaultBalance,
-    profileScore,
-    canSubmit,
-    completedGuides,
-    paidGuides,
-    percentageCompleted,
-    percentagePaid,
-    scholarshipPaid,
-    refreshCourseData,
   } = useGuideData({
     lang,
     pathPrefix,
   })
+
+  const sData = useScholarshipData({
+    courseId: course?.id,
+    address,
+  })
+  const { fetchScholarship } = sData
+
+  // Fetch scholarship when course is available
+  useEffect(() => {
+    if (course?.id && address) {
+      fetchScholarship()
+    }
+  }, [course?.id, address, fetchScholarship])
 
   const [htmlSummary, setHtmlSummary] = useState('')
   const [htmlExtended, setHtmlExtended] = useState('')
@@ -189,23 +191,23 @@ export default function Page({ params }: PageProps) {
               full={true}
               address={session?.address}
               totalGuides={course.guias.length}
-              scholarshipPerGuide={scholarshipPerGuide}
-              profileScore={profileScore}
-              canSubmit={canSubmit}
-              completedGuides={completedGuides}
-              paidGuides={paidGuides}
-              percentageCompleted={percentageCompleted}
-              percentagePaid={percentagePaid}
-              scholarshipPaid={scholarshipPaid}
+              scholarshipPerGuide={sData.scholarshipPerGuide}
+              profileScore={sData.profileScore}
+              canSubmit={sData.canSubmit}
+              completedGuides={sData.completedGuides}
+              paidGuides={sData.paidGuides}
+              percentageCompleted={sData.percentageCompleted}
+              percentagePaid={sData.percentagePaid}
+              scholarshipPaid={sData.scholarshipPaid}
             />
-            {vaultCreated && vaultBalance !== null && (
+            {sData.vaultCreated && sData.vaultBalance !== null && (
               <CourseDonation
                 lang={lang}
-                vaultBalance={vaultBalance}
+                vaultBalance={sData.vaultBalance}
                 courseId={parseInt(course.id)}
                 isLoggedIn={!!session?.address}
                 onDonationSuccess={(courseId, data) => {
-                  refreshCourseData()
+                  fetchScholarship()
                   if (data.increment) {
                     setDonationIncrement(data.increment)
                   }

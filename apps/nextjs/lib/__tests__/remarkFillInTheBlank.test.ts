@@ -9,12 +9,6 @@ describe('remarkFillInTheBlank', () => {
   }
 
   beforeEach(() => {
-    // Clear global state before each test
-    if ((globalThis as any).fillInTheBlank) {
-      (globalThis as any).fillInTheBlank.length = 0
-    } else {
-      (globalThis as any).fillInTheBlank = []
-    }
     vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
@@ -31,11 +25,12 @@ describe('remarkFillInTheBlank', () => {
     expect(typeof transformer).toBe('function')
   })
 
-  it('should populate (globalThis as any).fillInTheBlank with clues and answers', () => {
+  it('should populate vfile.data.fillInTheBlank with clues and answers', () => {
     const transformer = remarkFillInTheBlank({})
+    const vfile = { data: {} }
 
     // Create a mock AST tree that matches the expected structure
-    const mockTree = {
+    const mockTree: any = {
       children: [
         {
           type: 'list',
@@ -75,14 +70,14 @@ describe('remarkFillInTheBlank', () => {
       ]
     }
 
-    transformer(mockTree)
+    transformer(mockTree, vfile)
 
-    expect((globalThis as any).fillInTheBlank).toHaveLength(2)
-    expect((globalThis as any).fillInTheBlank[0]).toEqual({
+    expect((vfile.data as any).fillInTheBlank).toHaveLength(2)
+    expect((vfile.data as any).fillInTheBlank[0]).toEqual({
       clue: 'A landscape mentioned in this reading is ___',
       answer: 'mountain'
     })
-    expect((globalThis as any).fillInTheBlank[1]).toEqual({
+    expect((vfile.data as any).fillInTheBlank[1]).toEqual({
       clue: 'Jesus had sent His disciples to ____',
       answer: 'Bethsaida'
     })
@@ -90,8 +85,9 @@ describe('remarkFillInTheBlank', () => {
 
   it('should handle text with extra spaces and parentheses', () => {
     const transformer = remarkFillInTheBlank({})
+    const vfile = { data: {} }
 
-    const mockTree = {
+    const mockTree: any = {
       children: [
         {
           type: 'list',
@@ -117,10 +113,10 @@ describe('remarkFillInTheBlank', () => {
       ]
     }
 
-    transformer(mockTree)
+    transformer(mockTree, vfile)
 
-    expect((globalThis as any).fillInTheBlank).toHaveLength(1)
-    expect((globalThis as any).fillInTheBlank[0]).toEqual({
+    expect((vfile.data as any).fillInTheBlank).toHaveLength(1)
+    expect((vfile.data as any).fillInTheBlank[0]).toEqual({
       clue: 'Test ___',
       answer: 'answer'
     })
@@ -128,8 +124,9 @@ describe('remarkFillInTheBlank', () => {
 
   it('should ignore non-matching lists', () => {
     const transformer = remarkFillInTheBlank({})
+    const vfile = { data: {} }
 
-    const mockTree = {
+    const mockTree: any = {
       children: [
         {
           type: 'list',
@@ -161,16 +158,17 @@ describe('remarkFillInTheBlank', () => {
       ]
     }
 
-    transformer(mockTree)
+    transformer(mockTree, vfile)
 
-    // Should not populate (globalThis as any).fillInTheBlank because no blanks
-    expect((globalThis as any).fillInTheBlank).toHaveLength(0)
+    // Should not populate fillInTheBlank because no blanks
+    expect((vfile.data as any).fillInTheBlank).toHaveLength(0)
   })
 
   it('should add button with url from options', () => {
     const transformer = remarkFillInTheBlank({ url: '/test-url' })
+    const vfile = { data: {} }
 
-    const mockTree = {
+    const mockTree: any = {
       children: [
         {
           type: 'list',
@@ -196,7 +194,7 @@ describe('remarkFillInTheBlank', () => {
       ]
     }
 
-    transformer(mockTree)
+    transformer(mockTree, vfile)
 
     // Check that tree was modified (list replaced with paragraph containing button)
     expect(mockTree.children[0].type).toBe('paragraph')
@@ -206,8 +204,9 @@ describe('remarkFillInTheBlank', () => {
 
   it('should handle empty options object', () => {
     const transformer = remarkFillInTheBlank({})
+    const vfile = { data: {} }
 
-    const mockTree = {
+    const mockTree: any = {
       children: [
         {
           type: 'list',
@@ -233,7 +232,7 @@ describe('remarkFillInTheBlank', () => {
       ]
     }
 
-    transformer(mockTree)
+    transformer(mockTree, vfile)
 
     // Button should have empty href if no url in options
     expect((mockTree.children[0].children[0] as any).value).toContain('href=""')
@@ -241,8 +240,9 @@ describe('remarkFillInTheBlank', () => {
 
   it('should handle multiple blanks in same list', () => {
     const transformer = remarkFillInTheBlank({})
+    const vfile = { data: {} }
 
-    const mockTree = {
+    const mockTree: any = {
       children: [
         {
           type: 'list',
@@ -296,10 +296,10 @@ describe('remarkFillInTheBlank', () => {
       ]
     }
 
-    transformer(mockTree)
+    transformer(mockTree, vfile)
 
-    expect((globalThis as any).fillInTheBlank).toHaveLength(3)
-    expect((globalThis as any).fillInTheBlank[2]).toEqual({
+    expect((vfile.data as any).fillInTheBlank).toHaveLength(3)
+    expect((vfile.data as any).fillInTheBlank[2]).toEqual({
       clue: 'Third ___',
       answer: 'three'
     })

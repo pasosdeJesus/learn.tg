@@ -120,8 +120,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       crossword-layout-generator-with-isolated:
-        specifier: github:vtamara/crossword-layout-generator
-        version: https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/ff5ff36b223da58ca0d039c06ab29a8b91b32a94
+        specifier: github:vtamara/crossword-layout-generator#withIsolated
+        version: https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/0c5c2ff07eb38afdd3f555a9073e083f2cddbf28
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -205,8 +205,8 @@ importers:
         specifier: latest
         version: 3.3.5
       '@pasosdejesus/m':
-        specifier: https://gitlab.com/pasosdejesus/m
-        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=fb98f43e36c1403b115d00c94732a5702d3f9fe5(@types/node@24.12.2)
+        specifier: gitlab:pasosdejesus/m
+        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=7ec2ad7c60bdf68482cb8973140ddfbd3086b888(@types/node@24.12.2)
       '@tailwindcss/postcss':
         specifier: ^4.2.4
         version: 4.2.4
@@ -1897,9 +1897,9 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=fb98f43e36c1403b115d00c94732a5702d3f9fe5':
-    resolution: {tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=fb98f43e36c1403b115d00c94732a5702d3f9fe5}
-    version: 0.3.22
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=7ec2ad7c60bdf68482cb8973140ddfbd3086b888':
+    resolution: {tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=7ec2ad7c60bdf68482cb8973140ddfbd3086b888}
+    version: 0.3.23
     hasBin: true
 
   '@paulmillr/qr@0.2.1':
@@ -4313,9 +4313,9 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
-  crossword-layout-generator-with-isolated@https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/ff5ff36b223da58ca0d039c06ab29a8b91b32a94:
-    resolution: {tarball: https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/ff5ff36b223da58ca0d039c06ab29a8b91b32a94}
-    version: 0.0.0
+  crossword-layout-generator-with-isolated@https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/0c5c2ff07eb38afdd3f555a9073e083f2cddbf28:
+    resolution: {tarball: https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/0c5c2ff07eb38afdd3f555a9073e083f2cddbf28}
+    version: 0.1.2
 
   crossws@0.3.5:
     resolution: {integrity: sha512-ojKiDvcmByhwa8YYqbQI/hg7MEU0NC03+pSdEq4ZUnZR9xXpwk7E43SMNGkn+JxJGPFtNvQ48+vV2p+P1ml5PA==}
@@ -10372,7 +10372,7 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=fb98f43e36c1403b115d00c94732a5702d3f9fe5(@types/node@24.12.2)':
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=7ec2ad7c60bdf68482cb8973140ddfbd3086b888(@types/node@24.12.2)':
     dependencies:
       dotenv: 17.4.2
       execa: 9.6.1
@@ -13901,7 +13901,7 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  crossword-layout-generator-with-isolated@https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/ff5ff36b223da58ca0d039c06ab29a8b91b32a94: {}
+  crossword-layout-generator-with-isolated@https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/0c5c2ff07eb38afdd3f555a9073e083f2cddbf28: {}
 
   crossws@0.3.5:
     dependencies:

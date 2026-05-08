@@ -53,19 +53,6 @@ export function useGuideData({
   const [nextGuidePath, setNextGuidePath] = useState('')
   const [previousGuidePath, setPreviousGuidePath] = useState('')
   const [coursePath, setCoursePath] = useState('')
-  const [percentageCompleted, setPercentageCompleted] = useState<number | null>(
-    null,
-  )
-  const [vaultCreated, setVaultCreated] = useState<boolean | null>(null)
-  const [vaultBalance, setVaultBalance] = useState<number | null>(null)
-  const [percentagePaid, setPercentagePaid] = useState<number | null>(null)
-  const [profileScore, setProfileScore] = useState<number | null>(null)
-  const [scholarshipPaid, setScholarshipPaid] = useState<number | null>(null)
-  const [scholarshipPerGuide, setScholarshipPerGuide] = useState<number | null>(null)
-  const [completedGuides, setCompletedGuides] = useState<number | null>(null)
-  const [paidGuides, setPaidGuides] = useState<number | null>(null)
-  const [totalGuides, setTotalGuides] = useState<number | null>(null)
-  const [canSubmit, setCanSubmit] = useState<boolean | null>(null)
 
   const fetchGuideData = useCallback(async () => {
     if (
@@ -132,51 +119,6 @@ export function useGuideData({
         receivedScholarship: guideStatuses[index].data.receivedScholarship,
       }))
 
-      if (session && address && detailedCourse.id) {
-        try {
-          const scholarshipUrl = `/api/scholarship?courseId=${detailedCourse.id}&walletAddress=${address}&token=${csrfToken}`
-          const scholarshipRes = await axios.get(scholarshipUrl)
-
-          if (scholarshipRes.data.vaultCreated !== null) {
-            setVaultCreated(Boolean(scholarshipRes.data.vaultCreated))
-          }
-
-          if (scholarshipRes.data.vaultBalance !== null) {
-            setVaultBalance(Number(scholarshipRes.data.vaultBalance))
-          }
-          if (scholarshipRes.data.amountPerGuide !== null) {
-            setScholarshipPerGuide(Number(scholarshipRes.data.amountPerGuide))
-          }
-          if (scholarshipRes.data.canSubmit !== null) {
-            setCanSubmit(scholarshipRes.data.canSubmit)
-          }
-          if (scholarshipRes.data.percentageCompleted !== null) {
-            setPercentageCompleted(Number(scholarshipRes.data.percentageCompleted))
-          }
-          if (scholarshipRes.data.completedGuides !== null) {
-            setCompletedGuides(Number(scholarshipRes.data.completedGuides))
-          }
-          if (scholarshipRes.data.paidGuides !== null) {
-            setPaidGuides(Number(scholarshipRes.data.paidGuides))
-          }
-          if (scholarshipRes.data.totalGuides !== null) {
-            setTotalGuides(Number(scholarshipRes.data.totalGuides))
-          }
-          if (scholarshipRes.data.percentagePaid !== null) {
-            setPercentagePaid(Number(scholarshipRes.data.percentagePaid))
-          }
-          if (scholarshipRes.data.amountScholarship !== null) {
-            setScholarshipPaid(Number(scholarshipRes.data.amountScholarship))
-          }
-          if (scholarshipRes.data.profileScore !== null) {
-            setProfileScore(Number(scholarshipRes.data.profileScore))
-          }
-
-        } catch (err) {
-          console.error('Error fetching scholarship amount:', err)
-        }
-      }
-
       const fullCourse: Course = {
         ...basicCourse,
         ...detailedCourse,
@@ -229,17 +171,5 @@ export function useGuideData({
     nextGuidePath,
     previousGuidePath,
     coursePath,
-    totalGuides,
-    vaultCreated,
-    scholarshipPerGuide,
-    vaultBalance,
-    profileScore,
-    canSubmit,
-    completedGuides,
-    paidGuides,
-    percentageCompleted,
-    percentagePaid,
-    scholarshipPaid,
-    refreshCourseData: fetchGuideData,
   }
 }

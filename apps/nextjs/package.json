@@ -11,7 +11,8 @@
     "test": "vitest run --coverage",
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "postinstall": "bin/fix-pnpm-store-path"
   },
   "dependencies": {
     "@casl/ability": "^6.8.1",
@@ -49,7 +50,7 @@
     "axios": "^1.16.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "crossword-layout-generator-with-isolated": "github:vtamara/crossword-layout-generator",
+    "crossword-layout-generator-with-isolated": "github:vtamara/crossword-layout-generator#withIsolated",
     "dotenv": "^17.4.2",
     "ethers": "^6.16.0",
     "kysely": "^0.28.17",
@@ -79,7 +80,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "latest",
-    "@pasosdejesus/m": "https://gitlab.com/pasosdejesus/m",
+    "@pasosdejesus/m": "gitlab:pasosdejesus/m",
     "@tailwindcss/postcss": "^4.2.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
