@@ -1,10 +1,12 @@
 # MockUSDT Token
 
-This is a simple mock implementation of USDT token for testing purposes on the Alfajores testnet.
+This is a simple mock implementation of USDT token for testing purposes on the 
+Sepolia testnet.
 
 ## Deployment
 
-The MockUSDT token has been deployed to Alfajores at: `0xBB882992470E9D25005318116f7f82A3cDFAB72b`
+The MockUSDT token has been deployed to Sepolia at:
+`0x0d130F97fB5349656F95ad3Ab46BC0b34a8556a6`
 
 The owner (deployer) has 1,000,000 tokens with 6 decimals.
 

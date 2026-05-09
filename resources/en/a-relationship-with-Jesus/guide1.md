@@ -6,7 +6,7 @@
    He was alone on the land.
    **48** Seeing them distressed in rowing, for the wind was contrary to them,
    about the fourth watch of the night he came to them, walking on the sea, and
-   He would have passed by them, **49 **but they, when they saw Him walking on
+   He would have passed by them, **49** but they, when they saw Him walking on
    the sea, supposed that it was a ghost, and cried out;
    **50** for they all saw Him, and were troubled. But He immediately spoke with
    them, and said to them, “Cheer up! It is I! Don’t be afraid.”
