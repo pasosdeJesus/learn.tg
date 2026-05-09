@@ -93,6 +93,10 @@ const nextConfig: NextConfig = {
       ...config.resolve.alias,
       '@react-native-async-storage/async-storage': false,
     }
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      '#async_hooks': false,
+    }
     return config
   },
 }

@@ -2,4 +2,4 @@
 // desde app/api/.../__tests__ apunten aquí y puedan mockear el objeto db
 // Re-exporta realmente el módulo raíz ../../db/database
 export * from '../../db/database'
-export { db } from '../../db/database'
+export { testDb as db } from '../../db/test-db'

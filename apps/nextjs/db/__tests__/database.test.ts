@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { db, getDb } from '../database'
+import { getDb } from '../database'
+import { testDb } from '../test-db'
 
 describe('database', () => {
-  it('db is a MockKysely instance in test environment', () => {
-    expect(db).toBeDefined()
-    expect(db).not.toBeNull()
-    expect(typeof db.selectFrom).toBe('function')
+  it('testDb is a MockKysely instance', () => {
+    expect(testDb).toBeDefined()
+    expect(testDb).not.toBeNull()
+    expect(typeof testDb.selectFrom).toBe('function')
   })
 
   it('getDb returns a Kysely-like object in test environment', () => {
