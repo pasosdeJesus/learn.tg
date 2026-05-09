@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { TransparencyTable } from '@/components/TransparencyTable'
 import { MetricsExplanation } from '@/components/MetricsExplanation'
-import { useTranslation } from '@/lib/hooks/useTranslation'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useApiData } from '@/lib/hooks/useApiData'
 import type { CountryTotals, TransparencyResponse } from '@/types/leaderboard'
 
@@ -33,7 +33,18 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
   const rules = apiData?.rules || []
 
   // Translation helper
-  const t = useTranslation(lang)
+  const t = useMemo(() => createComponentT(lang, {
+    en: {
+      transparency: 'Transparency',
+      transparencyDesc: 'Platform totals by country',
+      viewLeaderboard: 'View Leaderboard',
+    },
+    es: {
+      transparency: 'Transparencia',
+      transparencyDesc: 'Totales de la plataforma por país',
+      viewLeaderboard: 'Ver Tabla de Clasificación',
+    },
+  }), [lang])
 
   // Fetch transparency data
   const fetchTransparency = useCallback(async () => {
@@ -57,15 +68,15 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {t('Transparency', 'Transparencia')}
+            {t('transparency')}
           </h1>
           <p className="text-muted-foreground">
-            {t('Platform totals by country', 'Totales de la plataforma por país')}
+            {t('transparencyDesc')}
           </p>
         </div>
         <Link href={`/${lang}/leaderboard`}>
           <Button variant="outline" size="sm">
-            {t('View Leaderboard', 'Ver Tabla de Clasificación')}
+            {t('viewLeaderboard')}
           </Button>
         </Link>
       </div>
@@ -78,7 +89,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
         totals={totals}
       />
 
-      <MetricsExplanation t={t} />
+      <MetricsExplanation lang={lang} />
     </div>
   )
 }

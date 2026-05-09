@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@pasosdejesus/m/shadcn-components/ui/alert'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 interface DonationSuccessAlertProps {

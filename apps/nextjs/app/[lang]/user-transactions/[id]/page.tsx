@@ -10,12 +10,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@pasosdejesus/m/shadcn-components/ui/table'
 import { formatLearningPoints, formatUSDT, formatCELO } from '@/lib/format'
 import type { UserTransaction } from '@/lib/user-transactions'
 import { ExternalLink, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 
 type PageProps = {
   params: Promise<{

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { LeaderboardTable, type SortField, type SortOrder } from '@/components/LeaderboardTable'
 import { CountryFilter } from '@/components/CountryFilter'
 import { MetricsExplanation } from '@/components/MetricsExplanation'
-import { useTranslation } from '@/lib/hooks/useTranslation'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useApiData } from '@/lib/hooks/useApiData'
 import type { LeaderboardRow, LeaderboardResponse } from '@/types/leaderboard'
 
@@ -40,7 +40,16 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
   const limit = 50 // Fixed limit as per API default
 
   // Translation helper
-  const t = useTranslation(lang)
+  const t = useMemo(() => createComponentT(lang, {
+    en: {
+      leaderboard: 'Leaderboard',
+      leaderboardDesc: 'Track user contributions and achievements',
+    },
+    es: {
+      leaderboard: 'Tabla de Clasificación',
+      leaderboardDesc: 'Sigue las contribuciones y logros de los usuarios',
+    },
+  }), [lang])
 
     const handleSortChange = (newSortBy: SortField, newSortOrder: SortOrder) => {
     setSortBy(newSortBy)
@@ -62,10 +71,10 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {t('Leaderboard', 'Tabla de Clasificación')}
+            {t('leaderboard')}
           </h1>
           <p className="text-muted-foreground">
-            {t('Track user contributions and achievements', 'Sigue las contribuciones y logros de los usuarios')}
+            {t('leaderboardDesc')}
           </p>
         </div>
         <CountryFilter
@@ -90,7 +99,7 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
         totals={totals}
       />
 
-      <MetricsExplanation t={t} />
+      <MetricsExplanation lang={lang} />
     </div>
   )
 }

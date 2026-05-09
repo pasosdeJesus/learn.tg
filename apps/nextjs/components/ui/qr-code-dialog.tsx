@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { useMemo } from 'react'
 import { SelfQRcodeWrapper } from '@selfxyz/qrcode'
-import { Button } from '@/components/ui/button'
+import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@pasosdejesus/m/shadcn-components/ui/dialog'
 
 interface QRCodeDialogProps {
   open: boolean
@@ -87,7 +87,7 @@ export function QRCodeDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {t('Verify with Self', 'Verificar con Self')}
+            {t('verifyWithSelf')}
           </DialogTitle>
           <DialogDescription>
             {isWalletBrowser
@@ -123,7 +123,7 @@ export function QRCodeDialog({
                     console.error('QR code verification error:', error)
                     const errorMessage =
                       error?.reason ||
-                      t('Verification failed', 'Falló la verificación')
+                      t('verificationFailed')
                     onError(errorMessage)
                   }}
                 />
@@ -138,7 +138,7 @@ export function QRCodeDialog({
             onClick={handleCancel}
             className="w-full sm:w-auto"
           >
-            {t('Cancel', 'Cancelar')}
+            {t('cancel')}
           </Button>
         </DialogFooter>
       </DialogContent>

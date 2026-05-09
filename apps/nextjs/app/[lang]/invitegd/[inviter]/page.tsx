@@ -17,8 +17,8 @@ import { useAccount } from "wagmi"
 
 import type { Address} from "viem"
 
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Button } from "@pasosdejesus/m/shadcn-components/ui/button"
+import { Card } from "@pasosdejesus/m/shadcn-components/ui/card"
 
 type PageProps = {
   params: Promise<{

@@ -3,11 +3,18 @@ import { SessionProvider } from 'next-auth/react'
 import * as React from 'react'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import Header from '../Header'
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { mainnet } from 'wagmi/chains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+vi.mock('next-auth/react', () => ({
+  SessionProvider: ({ children }: { children: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
+  useSession: () => ({ data: null, status: 'unauthenticated' }),
+  getCsrfToken: () => Promise.resolve('mock-csrf-token'),
+}))
 
 const config = createConfig({
   chains: [mainnet],

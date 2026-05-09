@@ -28,6 +28,7 @@ describe('metrics/queries', () => {
     libDbMocks.resetMocks()
     // Configure sql mock to support template tag usage
     libDbMocks.mockSql.mockImplementation(() => ({
+      as: vi.fn().mockReturnValue({}),
       execute: libDbMocks.mockSqlExecute,
       val: vi.fn((val) => val),
     }))

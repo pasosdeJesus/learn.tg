@@ -5,7 +5,7 @@ import DonateModal from '../DonateModal'
 import { parseUserAmount, formatDisplay } from '@/lib/donate-utils'
 
 // Mock @/components/ui/button
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@pasosdejesus/m/shadcn-components/ui/button', () => ({
   Button: React.forwardRef(({ children, onClick, disabled, variant, size, className, ...props }: any, ref: any) => (
     <button
       ref={ref}

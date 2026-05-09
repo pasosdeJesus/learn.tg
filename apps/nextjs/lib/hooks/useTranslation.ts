@@ -1,21 +1,5 @@
-import { useMemo } from 'react'
 import { createTranslator } from '@pasosdejesus/m/i18n'
 import commonTranslations from '@/lib/i18n/common'
-
-/**
- * Hook for bilingual (en/es) translations with common fallback.
- * Built on `createTranslator` from @pasosdejesus/m/i18n.
- *
- * Usage: const t = useTranslation(lang)
- *        t('English text', 'Spanish text')
- */
-export function useTranslation(lang: string = 'en') {
-  const t = useMemo(() => {
-    return (en: string, es: string) => lang === 'es' ? es : en
-  }, [lang])
-
-  return t
-}
 
 /**
  * Creates a keyed translator for a component with local translations.

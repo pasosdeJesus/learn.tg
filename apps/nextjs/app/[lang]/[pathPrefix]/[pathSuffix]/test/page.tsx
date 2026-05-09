@@ -9,9 +9,9 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 import { waitForTransactionReceipt } from 'wagmi/actions'
 
 import { useGuideData } from '@/lib/hooks/useGuideData'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@pasosdejesus/m/shadcn-components/ui/card'
+import { cn } from '@pasosdejesus/m/shadcn-components/cn'
 
 interface WordPlacement {
   word: string

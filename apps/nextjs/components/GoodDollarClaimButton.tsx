@@ -7,7 +7,7 @@ import { useState, useMemo } from 'react'
 import { usePublicClient, useWalletClient } from 'wagmi'
 import { useAccount } from 'wagmi'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { IS_PRODUCTION } from '@/lib/config'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 

@@ -1,6 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
+
+// Mock shadcn dialog to avoid React version mismatches
+vi.mock('@pasosdejesus/m/shadcn-components/ui/dialog', () => {
+  const D = ({ open, children }: any) => (open ? children : null)
+  const Frag = ({ children }: any) => children
+  return { Dialog: D, DialogContent: Frag, DialogDescription: Frag, DialogFooter: Frag, DialogHeader: Frag, DialogTitle: Frag }
+})
+vi.mock('@pasosdejesus/m/shadcn-components/ui/button', () => ({
+  Button: ({ children, onClick, type }: any) =>
+    React.createElement('button', { onClick, type }, children),
+  buttonVariants: () => '',
+}))
+
+import React from 'react'
 import { QRCodeDialog } from '@/components/ui/qr-code-dialog'
 
 // Mock the SelfQRcodeWrapper component to cover all cases
@@ -32,12 +46,10 @@ describe('QRCodeDialog', () => {
   })
 
   it('renders dialog when open', () => {
-    render(<QRCodeDialog {...defaultProps} />)
+    const { container } = render(<QRCodeDialog {...defaultProps} />)
 
-    expect(screen.getByText('Verify with Self')).toBeInTheDocument()
-    expect(
-      screen.getByText(/Open the Self application on your phone/),
-    ).toBeInTheDocument()
+    expect(container.textContent).toContain('Verify with Self')
+    expect(container.textContent).toContain('Open the Self application on your phone')
   })
 
   it('does not render when closed', () => {

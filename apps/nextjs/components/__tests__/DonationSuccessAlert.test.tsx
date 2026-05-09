@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { DonationSuccessAlert } from '../DonationSuccessAlert'
 
 // Mock de los componentes de UI para simplificar pruebas
-vi.mock('@/components/ui/alert', () => ({
+vi.mock('@pasosdejesus/m/shadcn-components/ui/alert', () => ({
   Alert: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div data-testid="alert" className={className}>
       {children}
@@ -58,9 +58,9 @@ describe('DonationSuccessAlert', () => {
 
   it('applies correct CSS classes', () => {
     const mockOnClose = vi.fn()
-    render(<DonationSuccessAlert increment={100} onClose={mockOnClose} lang="en" />)
+    const { container } = render(<DonationSuccessAlert increment={100} onClose={mockOnClose} lang="en" />)
 
-    const alert = screen.getByTestId('alert')
+    const alert = container.firstChild as HTMLElement
     expect(alert).toHaveClass('fixed')
     expect(alert).toHaveClass('top-5')
     expect(alert).toHaveClass('right-5')

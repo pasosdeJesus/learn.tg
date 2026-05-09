@@ -11,8 +11,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
+} from '@pasosdejesus/m/shadcn-components/ui/table'
+import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { CountryFlag } from '@/components/CountryFlag'
 import { formatLearningPoints, formatUSDT, formatCELO } from '@/lib/format'
 import { ChevronUp, ChevronDown } from 'lucide-react'

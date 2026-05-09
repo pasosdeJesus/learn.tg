@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 
 import { DonateModal } from './DonateModal'
-import { Button } from '@/components/ui/button'
+import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 interface CourseDonationProps {

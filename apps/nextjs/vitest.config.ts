@@ -6,13 +6,14 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './'),
     },
+    dedupe: ['react', 'react-dom'],
   },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     deps: {
-      inline: ['lz-string'],
+      inline: ['lz-string', '@pasosdejesus/m'],
     },
     coverage: {
       reporter: ['text', 'json', 'html'],

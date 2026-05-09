@@ -19,7 +19,7 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 
 import CeloUbiButton from '@/components/CeloUbiButton'
 import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
-import { Button } from '@/components/ui/button'
+import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 

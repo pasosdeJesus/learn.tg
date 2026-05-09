@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@pasosdejesus/m/shadcn-components/ui/select'
 import { CountryFlag } from '@/components/CountryFlag'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
