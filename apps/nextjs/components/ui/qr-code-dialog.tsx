@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useMemo, useEffect, useRef } from 'react'
+import { useMemo, useEffect, useRef, useState } from 'react'
 import { SelfQRcodeWrapper } from '@selfxyz/qrcode'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
@@ -37,6 +37,7 @@ export function QRCodeDialog({
   lang = 'en',
 }: QRCodeDialogProps) {
   const prevOpenRef = useRef(open)
+  const [selfError, setSelfError] = useState<string | null>(null)
 
   const isWalletBrowser = typeof navigator !== 'undefined' &&
     ['okx', 'onekey', 'metamask', 'trust wallet'].some(p =>
@@ -141,24 +142,32 @@ export function QRCodeDialog({
               </Button>
             </div>
           ) : (
-            selfApp && (
+            selfApp && !selfError ? (
               <div className="w-full max-w-sm">
-                <SelfQRcodeWrapper
-                  selfApp={selfApp}
-                  onSuccess={() => {
-                    logger.info('SelfQRcodeWrapper onSuccess fired - verification completed', 'SelfVerify')
-                    onSuccess()
-                  }}
-                  onError={(error) => {
-                    logger.error('SelfQRcodeWrapper error: ' + JSON.stringify(error), 'SelfVerify')
-                    const errorMessage =
-                      error?.reason ||
-                      t('verificationFailed')
-                    onError(errorMessage)
-                  }}
-                />
+                <React.Suspense fallback={<div className="text-center py-4 text-muted-foreground">Loading QR code...</div>}>
+                  <SelfQRcodeWrapper
+                    selfApp={selfApp}
+                    onSuccess={() => {
+                      logger.info('SelfQRcodeWrapper onSuccess fired - verification completed', 'SelfVerify')
+                      onSuccess()
+                    }}
+                    onError={(error: any) => {
+                      const errorStr = error?.message || error?.reason || (error ? String(error) : null)
+                      const finalError = errorStr || t('verificationFailed')
+                      logger.error('SelfQRcodeWrapper error: ' + finalError, 'SelfVerify')
+                      if (finalError.includes('slice') || error?.stack?.includes('slice')) {
+                        logger.error('d.slice error detected in Self SDK - possible data format mismatch', 'SelfVerify')
+                      }
+                      onError(finalError)
+                    }}
+                  />
+                </React.Suspense>
               </div>
-            )
+            ) : selfError ? (
+              <div className="text-center py-4 text-red-500">
+                <p>Verification error: {selfError}</p>
+              </div>
+            ) : null
           )}
         </div>
 

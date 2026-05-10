@@ -64,6 +64,13 @@ type PageProps = {
 }
 
 export default function ProfileForm({ params }: PageProps) {
+  // Forzar habilitación de DebugConsole si env var está activa
+  // (Logger singleton omite la verificación durante SSR)
+  if (typeof window !== 'undefined') {
+    if (process.env.NEXT_PUBLIC_M_DEBUGGER_CONSOLE === '1') {
+      (logger as any).floatingConsoleEnabled = true
+    }
+  }
   const [profile, setProfile] = useState<UserProfile>({
     country: null,
     email: '',
@@ -185,32 +192,36 @@ export default function ProfileForm({ params }: PageProps) {
     logger.info('endpoint: ' + (process.env.NEXT_PUBLIC_SELF_ENDPOINT || 'none'), 'SelfVerify')
     logger.info('userId: ' + userId, 'SelfVerify')
     logger.info('isProduction: ' + IS_PRODUCTION, 'SelfVerify')
-    const app = new SelfAppBuilder({
-      version: 2,
-      appName: 'Learn Through Games',
-      scope: 'learn.tg',
-      devMode: !IS_PRODUCTION,
-      endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}` || 'none',
-      logoBase64: 'https://i.postimg.cc/mrmVf9hm/self.png',
-      userId,
-      endpointType: IS_PRODUCTION ? 'https' : 'staging_https',
-      userIdType: 'hex', // 'hex' for EVM address or 'uuid' for uuidv4
-      userDefinedData:
-        'Information to verify your humanity on Learn Through Games. Continuing means you accept the privacy policy available at https://learn.tg/en/privacy-policy',
-      disclosures: {
-        // What you want to verify from the user's identity
-        excludedCountries: [],
-        ofac: false, // See https://t.me/localismfund/1/435
-
-        // What you want users to disclose
-        name: true,
-        nationality: true,
-      },
-    }).build()
-
-    setSelfApp(app)
-    setDeeplink(getUniversalLink(app))
-    setShowQRDialog(true)
+    try {
+      const app = new SelfAppBuilder({
+        version: 2,
+        appName: 'Learn Through Games',
+        scope: 'learn.tg',
+        devMode: !IS_PRODUCTION,
+        endpoint: `${process.env.NEXT_PUBLIC_SELF_ENDPOINT}` || 'none',
+        logoBase64: 'https://i.postimg.cc/mrmVf9hm/self.png',
+        userId,
+        endpointType: IS_PRODUCTION ? 'https' : 'staging_https',
+        userIdType: 'hex',
+        userDefinedData:
+          'Information to verify your humanity on Learn Through Games. Continuing means you accept the privacy policy available at https://learn.tg/en/privacy-policy',
+        disclosures: {
+          excludedCountries: [],
+          ofac: false,
+          name: true,
+          nationality: true,
+        },
+      }).build()
+      logger.info('SelfApp built successfully', 'SelfVerify')
+      logger.info('deeplink: ' + getUniversalLink(app), 'SelfVerify')
+      setSelfApp(app)
+      setDeeplink(getUniversalLink(app))
+      setShowQRDialog(true)
+    } catch (error) {
+      logger.error('Error building SelfApp: ' + String(error), 'SelfVerify')
+      logger.error('Stack: ' + (error instanceof Error ? error.stack : ''), 'SelfVerify')
+      alert('Error setting up Self verification: ' + String(error))
+    }
   }
 
   const handleMobileVerify = async () => {
