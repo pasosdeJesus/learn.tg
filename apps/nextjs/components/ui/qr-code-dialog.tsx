@@ -1,10 +1,11 @@
 'use client'
 
 import * as React from 'react'
-import { useMemo } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { SelfQRcodeWrapper } from '@selfxyz/qrcode'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { logger } from '@pasosdejesus/m/debug'
 import {
   Dialog,
   DialogContent,
@@ -35,7 +36,36 @@ export function QRCodeDialog({
   onMobileVerify,
   lang = 'en',
 }: QRCodeDialogProps) {
+  const prevOpenRef = useRef(open)
+
+  const isWalletBrowser = typeof navigator !== 'undefined' &&
+    ['okx', 'onekey', 'metamask', 'trust wallet'].some(p =>
+      navigator.userAgent.toLowerCase().includes(p))
+
+  useEffect(() => {
+    if (open !== prevOpenRef.current) {
+      logger.info('QR dialog open state changed: ' + open, 'SelfVerify')
+      if (open) {
+        logger.info('isMobile: ' + isMobile + ', isWalletBrowser: ' + isWalletBrowser, 'SelfVerify')
+        logger.info('selfApp configured: ' + !!selfApp, 'SelfVerify')
+        logger.info('endpoint: ' + (selfApp?.endpoint || 'unknown'), 'SelfVerify')
+      }
+      prevOpenRef.current = open
+    }
+  }, [open, isMobile, isWalletBrowser, selfApp])
+
+  // Detectar cuando el usuario vuelve de la app Self (focus gain)
+  useEffect(() => {
+    if (!open) return
+    const onFocus = () => {
+      logger.info('Window regained focus - user may have returned from Self app', 'SelfVerify')
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [open])
+
   const handleCancel = () => {
+    logger.info('QR dialog cancelled by user', 'SelfVerify')
     onOpenChange(false)
   }
 
@@ -65,13 +95,10 @@ export function QRCodeDialog({
     },
   }), [lang])
 
-  const isWalletBrowser = typeof navigator !== 'undefined' &&
-    ['okx', 'onekey', 'metamask', 'trust wallet'].some(p =>
-      navigator.userAgent.toLowerCase().includes(p))
-
   const handleMobileVerify = async () => {
     if (onMobileVerify) {
       try {
+        logger.info('onMobileVerify called - opening Self app via deep link', 'SelfVerify')
         onMobileVerify()
       } catch (error) {
         const message = t('mobileVerificationFailed', String(error))
@@ -118,9 +145,12 @@ export function QRCodeDialog({
               <div className="w-full max-w-sm">
                 <SelfQRcodeWrapper
                   selfApp={selfApp}
-                  onSuccess={onSuccess}
+                  onSuccess={() => {
+                    logger.info('SelfQRcodeWrapper onSuccess fired - verification completed', 'SelfVerify')
+                    onSuccess()
+                  }}
                   onError={(error) => {
-                    console.error('QR code verification error:', error)
+                    logger.error('SelfQRcodeWrapper error: ' + JSON.stringify(error), 'SelfVerify')
                     const errorMessage =
                       error?.reason ||
                       t('verificationFailed')

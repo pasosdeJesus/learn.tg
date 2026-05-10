@@ -23,31 +23,9 @@ import {
 import { openSelfApp } from '@/lib/deeplink'
 import { useMobileDetection } from '@/lib/mobile-detection'
 import { IS_PRODUCTION } from '@/lib/config'
+import { logger, DebugConsole, safeStringify } from '@pasosdejesus/m/debug'
 
-// Componente para el logger en pantalla
-const OnScreenLogger = ({ messages }: { messages: any[] }) => (
-  <div
-    style={{
-      position: 'fixed',
-      bottom: '10px',
-      left: '10px',
-      right: '10px',
-      maxHeight: '150px',
-      overflowY: 'auto',
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      color: '#0f0',
-      padding: '10px',
-      borderRadius: '5px',
-      zIndex: 9999,
-      fontSize: '12px',
-      fontFamily: 'monospace',
-    }}
-  >
-    {messages.map((msg, index) => (
-      <div key={index}>{typeof msg === 'object' ? JSON.stringify(msg) : msg}</div>
-    ))}
-  </div>
-)
+
 
 
 interface UserProfile {
@@ -112,7 +90,6 @@ export default function ProfileForm({ params }: PageProps) {
   const [selfApp, setSelfApp] = useState<any | null>(null)
   const [deeplink, setDeeplink] = useState('')
   const [showQRDialog, setShowQRDialog] = useState(false)
-  const [debugMessages, setDebugMessages] = useState<any[]>([])
 
   const { address } = useAccount()
   const { data: session } = useSession()
@@ -133,12 +110,6 @@ export default function ProfileForm({ params }: PageProps) {
       connectionIssue: '\n\nPor favor, revisa tu conexi\u00f3n a internet e int\u00e9ntalo de nuevo.',
       errorLabel: 'Error: ', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion' },
   }), [lang])
-  const logger = (...args: any[]) => {
-    console.log(...args)
-    if (process.env.NEXT_PUBLIC_MOSTRAR_LOGGER === 'true') {
-      setDebugMessages(prev => [...prev, ...args])
-    }
-  }
 
   const handleUpdateScores = async () => {
     if (process.env.NEXT_PUBLIC_AUTH_URL === undefined) {
@@ -161,7 +132,7 @@ export default function ProfileForm({ params }: PageProps) {
       token: csrfToken,
     }
     const url = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/update-scores`
-    logger(`Posting to ${url}`)
+    logger.info(`Posting to ${url}`, 'Profile')
     axios
       .post(url, data, {
         headers: {
@@ -174,13 +145,13 @@ export default function ProfileForm({ params }: PageProps) {
         }
       })
       .catch((error: AxiosError) => {
-        logger('Update scores error:', {
+        logger.error('Update scores error: ' + JSON.stringify({
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
           message: error.message,
           isTokenMismatch: error.response?.status === 401
-        })
+        }), 'Profile')
 
         let errorMessage = 'Failed to update scores: '
         if (error.response?.status === 401) {
@@ -199,6 +170,8 @@ export default function ProfileForm({ params }: PageProps) {
   }
 
   const handleSuccessfulSelfVerification = () => {
+    logger.info('Self verification successful - calling onSuccess callback', 'SelfVerify')
+    logger.info('Previous selfApp state: ' + !!selfApp, 'SelfVerify')
     // Persist the attestation / session result to your backend, then gate content
     setSelfApp(null)
     setShowQRDialog(false)
@@ -208,6 +181,10 @@ export default function ProfileForm({ params }: PageProps) {
 
   const handleSelfVerify = () => {
     const userId = session!.address
+    logger.info('handleSelfVerify called', 'SelfVerify')
+    logger.info('endpoint: ' + (process.env.NEXT_PUBLIC_SELF_ENDPOINT || 'none'), 'SelfVerify')
+    logger.info('userId: ' + userId, 'SelfVerify')
+    logger.info('isProduction: ' + IS_PRODUCTION, 'SelfVerify')
     const app = new SelfAppBuilder({
       version: 2,
       appName: 'Learn Through Games',
@@ -241,7 +218,7 @@ export default function ProfileForm({ params }: PageProps) {
       try {
         window.open(deeplink, '_blank')
       } catch (error) {
-        logger('Error opening Self app:', error)
+        logger.error('Error opening Self app: ' + String(error), 'Profile')
         const message =
           t('selfError')
         alert(message)
@@ -251,7 +228,8 @@ export default function ProfileForm({ params }: PageProps) {
   }
 
   const handleQRDialogError = (error: string) => {
-    logger('QR Dialog error:', error)
+    logger.error('QR Dialog error: ' + error, 'SelfVerify')
+    logger.error('Dialog open state: ' + showQRDialog, 'SelfVerify')
     const prefix = t('errorLabel')
     alert(`${prefix}${error}`)
   }
@@ -296,7 +274,7 @@ export default function ProfileForm({ params }: PageProps) {
         url += `?filtro[walletAddress]=${session!.address || ''}`
         const csrfToken = await getCsrfToken()
         url += `&walletAddress=${session!.address || ''}&token=${csrfToken}`
-        logger('OJO url=', url)
+        logger.info('OJO url=' + url, 'Profile')
 
         response = await fetch(url)
         if (!response.ok) {
@@ -307,7 +285,7 @@ export default function ProfileForm({ params }: PageProps) {
           throw new Error(`Expected data.length == 1`)
         }
         const rUser = data[0]
-        logger('rUser=', rUser)
+        logger.info('rUser=' + safeStringify(rUser), 'Profile')
         const locProfile: UserProfile = {
           country: rUser.pais_id,
           email: rUser.email,
@@ -326,17 +304,17 @@ export default function ProfileForm({ params }: PageProps) {
           uname: rUser.nusuario,
           userId: rUser.id,
         }
-        logger('locProfile=', locProfile)
+        logger.info('locProfile=' + safeStringify(locProfile), 'Profile')
         setProfile(locProfile)
       } catch (error) {
-        logger('Profile fetch error details:', {
+        logger.error('Profile fetch error details: ' + JSON.stringify({
           error: error instanceof Error ? error.message : String(error),
           errorType: error instanceof TypeError ? 'TypeError (likely network/fetch)' : 'Other',
           url,
           sessionAddress: session?.address,
           walletAddress: address,
           isOKX: navigator.userAgent.includes('OKX')
-        })
+        }), 'Profile')
 
         let errorMessage = 'Failed to load profile data: '
         if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
@@ -365,17 +343,16 @@ export default function ProfileForm({ params }: PageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    setDebugMessages([]) // Limpiar mensajes en cada intento
 
-    logger('=== PROFILE SAVE DEBUG ===')
-    logger('1. Session address:', session?.address)
-    logger('2. Wallet address:', address)
-    logger('3. Are they equal?', session?.address === address)
-    logger('4. User Agent:', navigator.userAgent)
-    logger('5. Is OKX Browser?', navigator.userAgent.includes('OKX'))
+    logger.info('=== PROFILE SAVE DEBUG ===', 'Profile')
+    logger.info('1. Session address: ' + session?.address, 'Profile')
+    logger.info('2. Wallet address: ' + address, 'Profile')
+    logger.info('3. Are they equal? ' + (session?.address === address), 'Profile')
+    logger.info('4. User Agent: ' + navigator.userAgent, 'Profile')
+    logger.info('5. Is OKX Browser? ' + navigator.userAgent.includes('OKX'), 'Profile')
 
     const csrfToken = await getCsrfToken()
-    logger('6. CSRF Token length:', csrfToken?.length)
+    logger.info('6. CSRF Token length: ' + csrfToken?.length, 'Profile')
 
     try {
       if (!process.env.NEXT_PUBLIC_API_UPDATE_USER) {
@@ -394,7 +371,7 @@ export default function ProfileForm({ params }: PageProps) {
         profile.userId,
       )
       url += `?walletAddress=${session!.address}&token=${csrfToken}`
-      logger(`Posting ${url}`)
+      logger.info(`Posting ${url}`, 'Profile')
 
       const response = await fetch(url, {
         method: 'POST',
@@ -406,13 +383,13 @@ export default function ProfileForm({ params }: PageProps) {
 
       if (!response.ok) {
         const errorText = await response.text()
-        logger('❌ Profile save failed:', {
+        logger.error('Profile save failed: ' + JSON.stringify({
           status: response.status,
           statusText: response.statusText,
           error: errorText.substring(0, 500),
           url: url,
           is_okx: navigator.userAgent.includes('OKX'),
-        })
+        }), 'Profile')
         throw new Error(`[${response.status}] ${response.statusText}`)
       }
 
@@ -422,15 +399,15 @@ export default function ProfileForm({ params }: PageProps) {
       } catch (e) {
         responseData = await response.text()
       }
-      logger('✅ Profile save successful:', {
+      logger.info('Profile save successful: ' + JSON.stringify({
         status: response.status,
         url: url,
         is_okx: navigator.userAgent.includes('OKX'),
         response: typeof responseData === 'string' ? responseData.substring(0, 200) : responseData,
-      })
+      }), 'Profile')
       alert('Profile updated successfully')
     } catch (error) {
-      logger('Profile save error:', error)
+      logger.error('Profile save error: ' + String(error), 'Profile')
       let alertMessage =
         t('saveFailed')
 
@@ -483,7 +460,7 @@ export default function ProfileForm({ params }: PageProps) {
 
   return (
     <div className="mt-12 max-w-2xl mx-auto p-6">
-      {process.env.NEXT_PUBLIC_MOSTRAR_LOGGER === 'true' && <OnScreenLogger messages={debugMessages} />}
+      <DebugConsole />
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">
