@@ -471,6 +471,14 @@ export default function ProfileForm({ params }: PageProps) {
 
   return (
     <div className="mt-12 max-w-2xl mx-auto p-6">
+      <style>{`
+        div.fixed.bottom-4.right-4.z-50 {
+          background: rgb(0,0,0) !important;
+        }
+        div.fixed.bottom-4.right-4.z-50 > div:first-child {
+          background: rgb(31,41,55) !important;
+        }
+      `}</style>
       <DebugConsole />
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
