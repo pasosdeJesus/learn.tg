@@ -25,7 +25,7 @@ export default function PrivacyPolicyPage({ params }: { params: Promise<{ lang: 
   return (
     <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6">
       <h1>{t('title')}</h1>
-      <ul>
+      <ul className="list-disc list-inside space-y-2">
         <li>{t('item1')}</li>
         <li>{t('item2')}</li>
         <li>{t('item3')}</li>
