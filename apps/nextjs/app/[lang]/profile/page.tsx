@@ -207,7 +207,6 @@ export default function ProfileForm({ params }: PageProps) {
         userId,
         endpointType: IS_PRODUCTION ? 'https' : 'staging_https',
         userIdType: 'hex',
-        deeplinkCallback: typeof window !== 'undefined' ? window.location.href : undefined,
         userDefinedData:
           'Information to verify your humanity on Learn Through Games. Continuing means you accept the privacy policy available at https://learn.tg/en/privacy-policy',
         disclosures: {
