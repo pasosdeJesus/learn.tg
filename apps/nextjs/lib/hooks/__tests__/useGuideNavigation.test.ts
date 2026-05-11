@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useGuideNavigation } from '../useGuideNavigation'
-import type { Guide } from '../useGuideData'
+import type { Guide } from '../guideTypes'
 
 const mockGuides: Guide[] = [
   { titulo: 'Guide 1', sufijoRuta: 'guide1' },

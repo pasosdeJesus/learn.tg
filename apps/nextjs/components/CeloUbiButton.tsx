@@ -34,28 +34,32 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [claimResult, setClaimResult] = useState<ClaimResult | null>(null)
 
-  const t = (key: string, params?: { amount?: string }) => {
-    const translations: { [key: string]: { [lang: string]: string } } = {
-      claimButton: { es: 'Reclamar Learn.tg-IBU', en: 'Claim Learn.tg-UBI' },
-      loading: { es: 'Cargando...', en: 'Loading...' },
-      claiming: { es: 'Reclamando...', en: 'Claiming...' },
-      mustLogin: { es: 'Debes iniciar sesión para reclamar', en: 'You must be logged in to claim' },
-      error: { es: 'Error', en: 'Error' },
-      close: { es: 'Cerrar', en: 'Close' },
-      successTitle: { es: 'Reclamo Exitoso', en: 'Claim Successful' },
-      claimErrorTitle: { es: 'Error en el Reclamo', en: 'Claim Error' },
-      viewTransaction: { es: 'Ver transacción', en: 'View Transaction' },
-      successMessage: {
-        es: `¡Reclamo exitoso! Has recibido {amount} Celo de Learn.tg-IBU.`,
-        en: `Claim successful! You have received {amount} Celo of Learn.tg-UBI.`,
-      },
-    }
-    let message = translations[key]?.[lang] || key;
-    if (params?.amount) {
-      message = message.replace('{amount}', params.amount);
-    }
-    return message;
-  }
+  const t = useMemo(() => createComponentT(lang, {
+    en: {
+      claimButton: 'Claim Learn.tg-UBI',
+      loading: 'Loading...',
+      claiming: 'Claiming...',
+      mustLogin: 'You must be logged in to claim',
+      error: 'Error',
+      close: 'Close',
+      successTitle: 'Claim Successful',
+      claimErrorTitle: 'Claim Error',
+      viewTransaction: 'View Transaction',
+      successMessage: 'Claim successful! You have received {{0}} Celo of Learn.tg-UBI.',
+    },
+    es: {
+      claimButton: 'Reclamar Learn.tg-IBU',
+      loading: 'Cargando...',
+      claiming: 'Reclamando...',
+      mustLogin: 'Debes iniciar sesión para reclamar',
+      error: 'Error',
+      close: 'Cerrar',
+      successTitle: 'Reclamo Exitoso',
+      claimErrorTitle: 'Error en el Reclamo',
+      viewTransaction: 'Ver transacción',
+      successMessage: '¡Reclamo exitoso! Has recibido {{0}} Celo de Learn.tg-IBU.',
+    },
+  }), [lang])
 
   const handleClaimClick = async () => {
     if (!session?.address) {

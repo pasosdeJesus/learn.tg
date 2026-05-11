@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import type { Guide } from './useGuideData'
+import type { Guide } from './guideTypes'
 
 interface UseGuideNavigationProps {
   guides: Guide[]

@@ -4,11 +4,12 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import { type Address, formatUnits } from 'viem'
-import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
-import { getCsrfToken } from 'next-auth/react'
 import axios from 'axios'
 import { erc20Abi, parseUserAmount, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@/lib/donate-utils'
+import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
+import { useContractPayment } from '@/lib/hooks/useContractPayment'
+import { TransactionStatus } from '@/components/ui/TransactionStatus'
 
 export interface DonateModalProps {
   courseId: number | null
@@ -16,58 +17,6 @@ export interface DonateModalProps {
   onClose: () => void
   onSuccess?: (data: { increment?: number }) => void
   lang?: string
-}
-
-interface StatusMsg { type: 'info' | 'error' | 'success'; text: string }
-
-function useGasEstimation(
-  amount: string,
-  usdtDecimals: number,
-  needsApproval: boolean,
-  address: Address | undefined,
-  walletClient: any,
-  publicClient: any,
-  vaultAddress: Address | undefined,
-  usdtAddress: Address | undefined,
-  courseId: number | null,
-  celoBalance: bigint,
-) {
-  const [gasState, setGasState] = useState<'idle' | 'ok' | 'no-gas' | 'warn'>('idle')
-  const [estimating, setEstimating] = useState(false)
-
-  useEffect(() => {
-    const estimate = async () => {
-      if (!amount || safeParseFloat(amount) <= 0) { setGasState('idle'); return }
-      if (!address || !walletClient || !publicClient || !vaultAddress || !courseId) {
-        setGasState('no-gas'); return
-      }
-      try {
-        setEstimating(true)
-        const value = parseUserAmount(amount, usdtDecimals)
-        if (value <= 0n) { setGasState('idle'); return }
-        const gasPrice = await publicClient.getGasPrice()
-        let totalGas = 0n
-        if (needsApproval && usdtAddress) {
-          const approveGas = await publicClient.estimateContractGas({
-            address: usdtAddress, abi: erc20Abi, functionName: 'approve',
-            account: address, args: [vaultAddress, value],
-          })
-          totalGas += approveGas
-        }
-        const depositGas = await publicClient.estimateContractGas({
-          address: vaultAddress, abi: LearnTGVaultsAbi as any,
-          functionName: 'deposit', account: address, args: [BigInt(courseId), value],
-        })
-        totalGas += depositGas
-        setGasState(celoBalance > totalGas * gasPrice ? 'ok' : 'no-gas')
-      } catch {
-        setGasState('warn')
-      } finally { setEstimating(false) }
-    }
-    estimate()
-  }, [amount, address, walletClient, publicClient, vaultAddress, courseId, usdtAddress, needsApproval, celoBalance, usdtDecimals])
-
-  return { gasState, estimating }
 }
 
 export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: DonateModalProps) {
@@ -78,17 +27,49 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
   const [usdtBalance, setUsdtBalance] = useState<bigint>(0n)
   const [celoBalance, setCeloBalance] = useState<bigint>(0n)
   const [amount, setAmount] = useState('')
-  const [needsApproval, setNeedsApproval] = useState(true)
   const [allowance, setAllowance] = useState<bigint>(0n)
-  const [submitting, setSubmitting] = useState(false)
-  const [status, setStatus] = useState<StatusMsg | null>(null)
 
   const vaultAddress = process.env.NEXT_PUBLIC_DEPLOYED_AT as Address | undefined
   const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as Address | undefined
-  const { gasState, estimating } = useGasEstimation(amount, usdtDecimals, needsApproval, address, walletClient, publicClient, vaultAddress, usdtAddress, courseId, celoBalance)
 
-  const reset = () => { setAmount(''); setStatus(null); setNeedsApproval(true); setAllowance(0n) }
-  const closeAll = () => { reset(); onClose() }
+  const { gasState, estimating } = useGasEstimation({
+    amount, usdtDecimals,
+    needsApproval: (() => {
+      if (!amount) return true
+      try { return parseUserAmount(amount, usdtDecimals) > allowance }
+      catch { return true }
+    })(),
+    address, walletClient, publicClient, vaultAddress, usdtAddress, courseId, celoBalance,
+  })
+
+  const {
+    state: paymentState,
+    error: paymentError,
+    needsApproval,
+    execute: executePayment,
+    reset: resetPayment,
+  } = useContractPayment({
+    amount, usdtDecimals, address, walletClient, publicClient,
+    vaultAddress, usdtAddress, courseId, allowance, usdtBalance, lang,
+    onBackendCallback: async ({ walletAddress, token, donationAmountUSD, depositHash, courseId: cId }) => {
+      const { data } = await axios.post('/api/add-donation', {
+        lang, walletAddress, token, donationAmountUSD, depositHash, courseId: cId,
+      })
+      return data
+    },
+    onSuccess,
+  })
+
+  const reset = useCallback(() => {
+    setAmount('')
+    setAllowance(0n)
+    resetPayment()
+  }, [resetPayment])
+
+  const closeAll = useCallback(() => {
+    reset()
+    onClose()
+  }, [reset, onClose])
 
   const loadData = useCallback(async () => {
     if (!isOpen || !address || !publicClient || !courseId || !usdtAddress || !vaultAddress) return
@@ -100,74 +81,31 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
         publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'allowance', args: [address, vaultAddress] }) as Promise<bigint>,
       ])
       setUsdtDecimals(Number(dec)); setUsdtBalance(bal); setCeloBalance(nativeBal); setAllowance(al)
-    } catch { setStatus({ type: 'error', text: 'Error loading balances' }) }
+    } catch {
+      // Silently fail; balances will show as 0
+    }
   }, [isOpen, address, publicClient, courseId, usdtAddress, vaultAddress, usdtDecimals])
 
   useEffect(() => { loadData() }, [loadData])
-  useEffect(() => {
-    if (!amount) { setNeedsApproval(true); return }
-    try { setNeedsApproval(parseUserAmount(amount, usdtDecimals) > allowance) }
-    catch { setNeedsApproval(true) }
-  }, [amount, allowance, usdtDecimals])
-
-  const donate = async () => {
-    if (!walletClient || !publicClient || !address || !vaultAddress || !usdtAddress || !courseId) return
-    let parsed: bigint
-    try { parsed = parseUserAmount(amount, usdtDecimals) } catch { setStatus({ type: 'error', text: 'Invalid amount' }); return }
-    if (parsed <= 0n || parsed > usdtBalance) { setStatus({ type: 'error', text: 'Amount out of range' }); return }
-    setSubmitting(true)
-    setStatus({ type: 'info', text: 'Submitting transaction(s)...' })
-    try {
-      if (needsApproval) {
-        const approveHash = await walletClient.writeContract({ address: usdtAddress, abi: erc20Abi, functionName: 'approve', args: [vaultAddress, parsed] })
-        await publicClient.waitForTransactionReceipt({ hash: approveHash })
-      }
-      const depositHash = await walletClient.writeContract({ address: vaultAddress, abi: LearnTGVaultsAbi as any, functionName: 'deposit', args: [BigInt(courseId), parsed] })
-      const { status: txStatus } = await publicClient.waitForTransactionReceipt({ hash: depositHash })
-      if (txStatus !== 'success') throw new Error('Deposit failed')
-
-      let increment: number | undefined
-      try {
-        const csrfToken = await getCsrfToken()
-        if (csrfToken && address) {
-          const donationAmountUSD = safeParseFloat(amount)
-          if (donationAmountUSD > 0) {
-            const { data } = await axios.post('/api/add-donation', {
-              lang, walletAddress: address, token: csrfToken, donationAmountUSD,
-              depositHash, courseId,
-            })
-            increment = data.increment
-          }
-        }
-      } catch {
-        const donationAmountUSD = safeParseFloat(amount)
-        alert(lang === 'es'
-          ? 'Gracias por tu donacion de ' + donationAmountUSD + ' USD! No pudimos actualizar tus puntos automaticamente. Toma un pantallazo y envialo a soporte.'
-          : 'Thank you for your donation of ' + donationAmountUSD + ' USD! We could not update your points automatically. Please screenshot and contact support.')
-      }
-      await loadData()
-      onSuccess?.({ increment })
-      closeAll()
-    } catch (e: any) {
-      setStatus({ type: 'error', text: e.message || 'Transaction failed' })
-    } finally { setSubmitting(false) }
-  }
 
   if (!isOpen || courseId === null) return null
+
   const t = createComponentT(lang || 'en', {
     en: { donateToCourse: 'Donate to course', connectSign: 'Connect and sign with your wallet to donate', yourBalance: 'Your USDT Balance', yourCelo: 'Your CELO (gas)', enoughGas: 'Enough gas estimated', noGas: 'Not enough gas for transaction', gasWarn: 'Gas estimation failed, proceed at your own risk', estimating: 'estimating...', donateSplit: '80% of your donation increases the scholarship vault and 20% helps sustain learn.tg operations', amountLabel: 'Amount (USDT)', enterAmount: 'Enter amount', max: 'Max', clear: 'Clear', cancel: 'Cancel', processing: 'Processing...', approveDonate: 'Approve & Donate', donate: 'Donate', missingContract: 'Missing contract env vars' },
     es: { donateToCourse: 'Donar al curso', connectSign: 'Conecta y firma con tu billetera para donar', yourBalance: 'Tu saldo USDT', yourCelo: 'Tu CELO (gas)', enoughGas: 'Gas suficiente estimado', noGas: 'Gas insuficiente para la transaccion', gasWarn: 'Fallo al estimar gas, continue bajo su propio riesgo', estimating: 'estimando...', donateSplit: '80% de tu donacion aumenta el fondo de becas y 20% ayuda a sostener learn.tg', amountLabel: 'Monto (USDT)', enterAmount: 'Ingresa monto', max: 'Todo', clear: 'Limpiar', cancel: 'Cancelar', processing: 'Procesando...', approveDonate: 'Aprobar y Donar', donate: 'Donar', missingContract: 'Faltan variables de entorno del contrato' },
   })
+
   const usdtBalFmt = formatDisplay(usdtBalance, usdtDecimals)
   const celoBalFmt = formatDisplay(celoBalance, 18)
   const amountNum = safeParseFloat(amount)
-  const donateDisabled = submitting || !amount || amountNum <= 0 ||
+  const isSubmitting = paymentState === 'approving' || paymentState === 'paying' || paymentState === 'confirming'
+  const donateDisabled = isSubmitting || !amount || amountNum <= 0 ||
     parseUserAmountSafe(amount, usdtDecimals) > usdtBalance || (amountNum > 0 && gasState === 'no-gas')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
-        <Button onClick={closeAll} variant="ghost" size="icon" className="absolute top-2 right-2">✕</Button>
+        <button onClick={closeAll} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
         <h2 className="text-xl font-semibold mb-4">{t('donateToCourse')} #{courseId}</h2>
 
         {(!address || !walletClient) && (
@@ -201,20 +139,30 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
                 className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400"
                 value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={t('enterAmount')} />
               <div className="flex justify-end mt-1 space-x-2 text-xs">
-                <Button onClick={() => setAmount(Number(formatUnits(usdtBalance, usdtDecimals)).toString())} variant="link" size="sm" className="h-auto p-0">{t('max')}</Button>
-                <Button onClick={() => setAmount('')} variant="link" size="sm" className="h-auto p-0">{t('clear')}</Button>
+                <button onClick={() => setAmount(Number(formatUnits(usdtBalance, usdtDecimals)).toString())} className="text-blue-600 hover:underline">{t('max')}</button>
+                <button onClick={() => setAmount('')} className="text-gray-500 hover:underline">{t('clear')}</button>
               </div>
             </div>
           </>
         )}
 
-        {status && <div className={`mt-3 text-xs rounded p-2 border ${status.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : status.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>{status.text}</div>}
+        <TransactionStatus
+          state={paymentState}
+          error={paymentError}
+          onRetry={executePayment}
+          onDismiss={resetPayment}
+          lang={lang}
+        />
 
         <div className="mt-6 flex justify-end space-x-3">
-          <Button onClick={closeAll} variant="outline" size="sm">{t('cancel')}</Button>
-          <Button disabled={donateDisabled} onClick={donate} size="sm">
-            {submitting ? t('processing') : needsApproval ? t('approveDonate') : t('donate')}
-          </Button>
+          <button onClick={closeAll} className="px-4 py-2 text-sm border rounded-md hover:bg-gray-50">{t('cancel')}</button>
+          <button
+            disabled={donateDisabled}
+            onClick={executePayment}
+            className={`px-4 py-2 text-sm rounded-md text-white ${donateDisabled ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+          >
+            {isSubmitting ? t('processing') : needsApproval ? t('approveDonate') : t('donate')}
+          </button>
         </div>
       </div>
     </div>

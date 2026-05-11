@@ -16,7 +16,7 @@ format:
 	pnpm format
 
 test:
-	pnpm test
+	pnpm coverage
 
 dev:
 	./bin/dev
