@@ -56,14 +56,24 @@ export function QRCodeDialog({
   }, [open, isMobile, isWalletBrowser, selfApp])
 
   // Detectar cuando el usuario vuelve de la app Self (focus gain)
+  // En mobile sin SelfQRcodeWrapper, el onSuccess no se dispara automáticamente
+  const focusReturnRef = useRef(false)
   useEffect(() => {
     if (!open) return
+    focusReturnRef.current = false
     const onFocus = () => {
       logger.info('Window regained focus - user may have returned from Self app', 'SelfVerify')
+      // En mobile path (sin SelfQRcodeWrapper), asumimos que Self completó
+      // y llamamos onSuccess para cerrar el diálogo y recargar perfil
+      if (isMobile && !isWalletBrowser && !focusReturnRef.current) {
+        focusReturnRef.current = true
+        logger.info('Mobile path: calling onSuccess after focus return', 'SelfVerify')
+        onSuccess()
+      }
     }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
-  }, [open])
+  }, [open, isMobile, isWalletBrowser, onSuccess])
 
   const handleCancel = () => {
     logger.info('QR dialog cancelled by user', 'SelfVerify')
