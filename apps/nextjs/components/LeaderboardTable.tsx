@@ -61,7 +61,7 @@ export function LeaderboardTable({
   // Translation helper
   const t = useMemo(() => createComponentT(lang, {
     en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', lp: 'LP', learningPoints: 'Learning Points', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithLP: 'Users with LP', totalLP: 'Total LP', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {0} of {1} users', previous: 'Previous', pageOf: 'Page {0} of {1}', next: 'Next' },
-    es: { rank: 'Posicion', user: 'Usuario', ctry: 'Pais', country: 'Pais', religion: 'Religion', lp: 'PA', learningPoints: 'Puntos de Aprendizaje', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithLP: 'Usuarios con PA', totalLP: 'Total PA', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {0} de {1} usuarios', previous: 'Anterior', pageOf: 'Pagina {0} de {1}', next: 'Siguiente' },
+    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', lp: 'PA', learningPoints: 'Puntos de Aprendizaje', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithLP: 'Usuarios con PA', totalLP: 'Total PA', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {0} de {1} usuarios', previous: 'Anterior', pageOf: 'Página {0} de {1}', next: 'Siguiente' },
   }), [lang])
 
   const handleSort = (field: SortField) => {
@@ -225,7 +225,7 @@ export function LeaderboardTable({
             <div className="text-lg font-bold">{formatUSDT(totals.totalScholarshipUSDT)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('UBI (CELO)', 'UBI (CELO)')}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('ubi')}</div>
             <div className="text-lg font-bold">{formatCELO(totals.totalUBICELO)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
@@ -238,7 +238,7 @@ export function LeaderboardTable({
       {pagination && onPageChange && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            {t(`Showing ${data.length} of ${pagination.total} users`, `Mostrando ${data.length} de ${pagination.total} usuarios`)}
+            {t('showing', String(data.length), String(pagination.total))}
           </div>
           <div className="flex items-center space-x-2">
             <Button
