@@ -13,7 +13,7 @@ export function isWalletBrowser(): boolean {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent.toLowerCase()
   // Known web3 wallet browser identifiers
-  const walletPatterns = ['okx', 'onekey', 'metamask', 'trust wallet', 'walletconnect', 'rainbow']
+  const walletPatterns = ['okx', 'onekey', 'trust wallet', 'walletconnect', 'rainbow']
   return walletPatterns.some(p => ua.includes(p))
 }
 

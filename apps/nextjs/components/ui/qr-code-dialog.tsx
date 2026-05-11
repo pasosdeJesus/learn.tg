@@ -40,7 +40,7 @@ export function QRCodeDialog({
   const [selfError, setSelfError] = useState<string | null>(null)
 
   const isWalletBrowser = typeof navigator !== 'undefined' &&
-    ['okx', 'onekey', 'metamask', 'trust wallet'].some(p =>
+    ['okx', 'onekey', 'trust wallet'].some(p =>
       navigator.userAgent.toLowerCase().includes(p))
 
   useEffect(() => {

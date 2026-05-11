@@ -192,6 +192,10 @@ export default function ProfileForm({ params }: PageProps) {
     logger.info('endpoint: ' + (process.env.NEXT_PUBLIC_SELF_ENDPOINT || 'none'), 'SelfVerify')
     logger.info('userId: ' + userId, 'SelfVerify')
     logger.info('isProduction: ' + IS_PRODUCTION, 'SelfVerify')
+    logger.info('User-Agent: ' + navigator.userAgent, 'SelfVerify')
+    logger.info('Android: ' + (/Android\s([\d.]+)/.test(navigator.userAgent) ? navigator.userAgent.match(/Android\s([\d.]+)/)![1] : 'N/A'), 'SelfVerify')
+    logger.info('Browser: ' + (navigator.userAgent.match(/(Chrome|Firefox|Safari|Edg|OPR|Brave)\/([\d.]+)/)?.[0] || 'N/A'), 'SelfVerify')
+    logger.info('Wallet: ' + (['okx', 'onekey', 'trust wallet', 'brave'].find(w => navigator.userAgent.toLowerCase().includes(w)) || (typeof (window as any).ethereum?.isMiniPay !== 'undefined' ? 'miniPay' : 'unknown')), 'SelfVerify')
     try {
       const app = new SelfAppBuilder({
         version: 2,
@@ -203,6 +207,7 @@ export default function ProfileForm({ params }: PageProps) {
         userId,
         endpointType: IS_PRODUCTION ? 'https' : 'staging_https',
         userIdType: 'hex',
+        deeplinkCallback: typeof window !== 'undefined' ? window.location.href : undefined,
         userDefinedData:
           'Information to verify your humanity on Learn Through Games. Continuing means you accept the privacy policy available at https://learn.tg/en/privacy-policy',
         disclosures: {
