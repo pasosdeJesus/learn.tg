@@ -53,10 +53,16 @@ export function QRCodeDialog({
       if (open) {
         logger.info('selfApp configured: ' + !!selfApp, 'SelfVerify')
         logger.info('endpoint: ' + (selfApp?.endpoint || 'unknown'), 'SelfVerify')
+        // Diagnóstico de detección
+        logger.info('DIAG: isMobile=' + isMobile + ' ua="' + ua + '"', 'SelfVerify')
+        logger.info('DIAG: uaIncludesBrave=' + ua.includes('brave') + ' navigator.brave=' + typeof (navigator as any).brave, 'SelfVerify')
+        logger.info('DIAG: uaIncludesWv=' + ua.includes('; wv') + ' uaIncludesMetaMask=' + ua.includes('metamask') + ' uaIncludesOneKey=' + ua.includes('onekey') + ' uaIncludesOKX=' + ua.includes('okx'), 'SelfVerify')
+        logger.info('DIAG: ethereum.isMetaMask=' + ((window as any).ethereum?.isMetaMask) + ' ethereum.isOneKey=' + ((window as any).ethereum?.isOneKey) + ' ethereum.isOkxWallet=' + ((window as any).ethereum?.isOkxWallet), 'SelfVerify')
+        logger.info('DIAG: isWalletBrowser=' + isWalletBrowser, 'SelfVerify')
       }
       prevOpenRef.current = open
     }
-  }, [open, selfApp])
+  }, [open, selfApp, isMobile, isWalletBrowser, ua])
 
   const handleCancel = () => {
     logger.info('QR dialog cancelled by user', 'SelfVerify')
