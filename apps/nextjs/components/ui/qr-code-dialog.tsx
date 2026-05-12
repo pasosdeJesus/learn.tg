@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { useMemo, useEffect, useRef } from 'react'
 import { SelfQRcodeWrapper } from '@selfxyz/qrcode'
+import { getUniversalLink } from '@selfxyz/core'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { logger } from '@pasosdejesus/m/debug'
@@ -53,17 +54,28 @@ export function QRCodeDialog({
   const t = useMemo(() => createComponentT(lang, {
     en: {
       verifyWithSelf: 'Verify with Self',
-      desc: 'Open the Self application on your phone and scan the QR code, or tap the link on mobile to verify your identity.',
+      desc: 'Scan the QR code with the Self app, or tap the button below to open Self directly.',
+      openSelf: 'Open Self App',
+      selfNotInstalled: 'If Self does not open, make sure it is installed on your device.',
       cancel: 'Cancel',
       verificationFailed: 'Verification failed',
     },
     es: {
       verifyWithSelf: 'Verificar con Self',
-      desc: 'Abre la aplicación Self en tu teléfono y escanea el código QR, o toca el enlace en tu móvil para verificar tu identidad.',
+      desc: 'Escanea el código QR con la app Self, o toca el botón de abajo para abrir Self directamente.',
+      openSelf: 'Abrir App Self',
+      selfNotInstalled: 'Si Self no se abre, asegúrate de tenerla instalada en tu dispositivo.',
       cancel: 'Cancelar',
       verificationFailed: 'Falló la verificación',
     },
   }), [lang])
+
+  const handleOpenSelf = () => {
+    if (!selfApp) return
+    const link = getUniversalLink(selfApp)
+    logger.info('Opening Self deeplink: ' + link, 'SelfVerify')
+    window.location.href = link
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -79,7 +91,7 @@ export function QRCodeDialog({
 
         <div className="flex flex-col items-center justify-center py-6">
           {selfApp ? (
-            <div className="w-full max-w-sm">
+            <div className="w-full max-w-sm space-y-4">
               <React.Suspense fallback={<div className="text-center py-4 text-muted-foreground">Loading QR code...</div>}>
                 <SelfQRcodeWrapper
                   selfApp={selfApp}
@@ -95,6 +107,12 @@ export function QRCodeDialog({
                   }}
                 />
               </React.Suspense>
+              <Button onClick={handleOpenSelf} type="button" className="w-full" size="lg">
+                {t('openSelf')}
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                {t('selfNotInstalled')}
+              </p>
             </div>
           ) : (
             <div className="text-center py-4 text-muted-foreground">
