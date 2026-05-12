@@ -34,6 +34,9 @@ export function QRCodeDialog({
   lang = 'en',
 }: QRCodeDialogProps) {
   const prevOpenRef = useRef(open)
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
+  const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
+  const isWalletBrowser = ['okx', 'onekey', 'trust wallet'].some(p => ua.includes(p))
 
   useEffect(() => {
     if (open !== prevOpenRef.current) {
@@ -54,27 +57,41 @@ export function QRCodeDialog({
   const t = useMemo(() => createComponentT(lang, {
     en: {
       verifyWithSelf: 'Verify with Self',
-      desc: 'Scan the QR code with the Self app, or tap the button below to open Self directly.',
       openSelf: 'Open Self App',
-      selfNotInstalled: 'If Self does not open, make sure it is installed on your device.',
+      walletDesc: 'Copy the link to the clipboard, then open the Self app, tap the paste icon to load the link and continue the verification there.',
+      copyLink: 'Copy deferred link',
+      linkCopied: 'Link copied!',
       cancel: 'Cancel',
       verificationFailed: 'Verification failed',
     },
     es: {
       verifyWithSelf: 'Verificar con Self',
-      desc: 'Escanea el código QR con la app Self, o toca el botón de abajo para abrir Self directamente.',
       openSelf: 'Abrir App Self',
-      selfNotInstalled: 'Si Self no se abre, asegúrate de tenerla instalada en tu dispositivo.',
+      walletDesc: 'Copia el enlace al portapapeles, luego abre la aplicación Self, toca el icono de pegar para cargar el enlace y continuar la verificación allí.',
+      copyLink: 'Copiar enlace',
+      linkCopied: '¡Enlace copiado!',
       cancel: 'Cancelar',
       verificationFailed: 'Falló la verificación',
     },
   }), [lang])
 
+  const [linkCopied, setLinkCopied] = React.useState(false)
   const handleOpenSelf = () => {
     if (!selfApp) return
     const link = getUniversalLink(selfApp)
     logger.info('Opening Self deeplink: ' + link, 'SelfVerify')
     window.location.href = link
+  }
+  const handleCopyLink = () => {
+    if (!selfApp) return
+    const link = getUniversalLink(selfApp)
+    navigator.clipboard.writeText(link).then(() => {
+      setLinkCopied(true)
+      logger.info('Self link copied to clipboard', 'SelfVerify')
+      setTimeout(() => setLinkCopied(false), 3000)
+    }).catch((err) => {
+      logger.error('Failed to copy link: ' + err, 'SelfVerify')
+    })
   }
 
   return (
@@ -84,35 +101,59 @@ export function QRCodeDialog({
           <DialogTitle>
             {t('verifyWithSelf')}
           </DialogTitle>
-          <DialogDescription>
-            {t('desc')}
-          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col items-center justify-center py-6">
           {selfApp ? (
             <div className="w-full max-w-sm space-y-4">
-              <React.Suspense fallback={<div className="text-center py-4 text-muted-foreground">Loading QR code...</div>}>
-                <SelfQRcodeWrapper
-                  selfApp={selfApp}
-                  onSuccess={() => {
-                    logger.info('SelfQRcodeWrapper onSuccess fired - verification completed', 'SelfVerify')
-                    onSuccess()
-                  }}
-                  onError={(error: any) => {
-                    const errorStr = error?.message || error?.reason || (error ? String(error) : null)
-                    const finalError = errorStr || t('verificationFailed')
-                    logger.error('SelfQRcodeWrapper error: ' + finalError, 'SelfVerify')
-                    onError(finalError)
-                  }}
-                />
-              </React.Suspense>
-              <Button onClick={handleOpenSelf} type="button" className="w-full" size="lg">
-                {t('openSelf')}
-              </Button>
-              <p className="text-xs text-center text-muted-foreground">
-                {t('selfNotInstalled')}
-              </p>
+              {!isMobile && (
+                <React.Suspense fallback={<div className="text-center py-4 text-muted-foreground">Loading QR code...</div>}>
+                  <SelfQRcodeWrapper
+                    selfApp={selfApp}
+                    onSuccess={() => {
+                      logger.info('SelfQRcodeWrapper onSuccess fired - verification completed', 'SelfVerify')
+                      onSuccess()
+                    }}
+                    onError={(error: any) => {
+                      const errorStr = error?.message || error?.reason || (error ? String(error) : null)
+                      const finalError = errorStr || t('verificationFailed')
+                      logger.error('SelfQRcodeWrapper error: ' + finalError, 'SelfVerify')
+                      onError(finalError)
+                    }}
+                  />
+                </React.Suspense>
+              )}
+
+              {isMobile && !isWalletBrowser && (
+                <div className="space-y-2">
+                  <Button onClick={handleOpenSelf} type="button" className="w-full" size="lg">
+                    {t('openSelf')}
+                  </Button>
+                </div>
+              )}
+
+              {isMobile && isWalletBrowser && (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground text-center">
+                    {t('walletDesc')}
+                  </p>
+                  <Button
+                    onClick={handleCopyLink}
+                    type="button"
+                    className="w-full"
+                    size="lg"
+                    variant="outline"
+                  >
+                    {linkCopied ? t('linkCopied') + ' ✓' : t('copyLink')}
+                  </Button>
+                </div>
+              )}
+
+              {!isMobile && (
+                <Button onClick={handleOpenSelf} type="button" className="w-full" size="lg">
+                  {t('openSelf')}
+                </Button>
+              )}
             </div>
           ) : (
             <div className="text-center py-4 text-muted-foreground">
