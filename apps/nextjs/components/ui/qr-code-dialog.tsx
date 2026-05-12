@@ -36,7 +36,7 @@ export function QRCodeDialog({
   const prevOpenRef = useRef(open)
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
   const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
-  const isWalletBrowser = ['okx', 'onekey', 'trust wallet'].some(p => ua.includes(p))
+  const isWalletBrowser = ['okx', 'onekey', 'metamask', 'trust wallet'].some(p => ua.includes(p))
 
   useEffect(() => {
     if (open !== prevOpenRef.current) {
@@ -123,15 +123,11 @@ export function QRCodeDialog({
                   />
                 </React.Suspense>
               )}
-
               {isMobile && !isWalletBrowser && (
-                <div className="space-y-2">
-                  <Button onClick={handleOpenSelf} type="button" className="w-full" size="lg">
-                    {t('openSelf')}
-                  </Button>
-                </div>
+                <Button onClick={handleOpenSelf} type="button" className="w-full" size="lg">
+                  {t('openSelf')}
+                </Button>
               )}
-
               {isMobile && isWalletBrowser && (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground text-center">
@@ -147,12 +143,6 @@ export function QRCodeDialog({
                     {linkCopied ? t('linkCopied') + ' ✓' : t('copyLink')}
                   </Button>
                 </div>
-              )}
-
-              {!isMobile && (
-                <Button onClick={handleOpenSelf} type="button" className="w-full" size="lg">
-                  {t('openSelf')}
-                </Button>
               )}
             </div>
           ) : (

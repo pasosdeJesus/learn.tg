@@ -54,10 +54,9 @@ describe('QRCodeDialog', () => {
     expect(screen.queryByText('Verify with Self')).not.toBeInTheDocument()
   })
 
-  it('shows QR code wrapper + Open Self button on desktop (not mobile)', () => {
+  it('shows QR code wrapper on desktop (not mobile)', () => {
     render(<QRCodeDialog {...defaultProps} />)
     expect(screen.getByTestId('mock-qr-wrapper')).toBeInTheDocument()
-    expect(screen.getByText('Open Self App')).toBeInTheDocument()
   })
 
   it('calls onOpenChange when cancel button is clicked', () => {
