@@ -13,8 +13,11 @@ export function isWalletBrowser(): boolean {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent.toLowerCase()
   // Known web3 wallet browser identifiers
-  const walletPatterns = ['okx', 'onekey', 'trust wallet', 'walletconnect', 'rainbow']
-  return walletPatterns.some(p => ua.includes(p))
+  const walletPatterns = ['okx', 'onekey', 'trust wallet', 'metamask', 'walletconnect', 'rainbow']
+  if (walletPatterns.some(p => ua.includes(p))) return true
+  // Also detect WebView (used by OneKey, MetaMask, OKX in-app browsers)
+  if (ua.includes('; wv')) return true
+  return false
 }
 
 export async function openSelfApp(selfApp: any): Promise<boolean> {

@@ -192,7 +192,13 @@ export default function ProfileForm({ params }: PageProps) {
     logger.info('User-Agent: ' + navigator.userAgent, 'SelfVerify')
     logger.info('Android: ' + (/Android\s([\d.]+)/.test(navigator.userAgent) ? navigator.userAgent.match(/Android\s([\d.]+)/)![1] : 'N/A'), 'SelfVerify')
     logger.info('Browser: ' + (navigator.userAgent.match(/(Chrome|Firefox|Safari|Edg|OPR|Brave)\/([\d.]+)/)?.[0] || 'N/A'), 'SelfVerify')
-    logger.info('Wallet: ' + (['okx', 'onekey', 'trust wallet', 'brave'].find(w => navigator.userAgent.toLowerCase().includes(w)) || (typeof (window as any).ethereum?.isMiniPay !== 'undefined' ? 'miniPay' : 'unknown')), 'SelfVerify')
+    const walletName = ['okx', 'onekey', 'metamask', 'trust wallet', 'brave'].find(w => navigator.userAgent.toLowerCase().includes(w))
+      || ((window as any).ethereum?.isOneKey === true ? 'oneKey(eth)' : '')
+      || ((window as any).ethereum?.isMiniPay === true ? 'miniPay' : '')
+      || ((window as any).ethereum?.isMetaMask === true ? 'metamask(eth)' : '')
+      || ((window as any).ethereum?.isOkxWallet === true ? 'okx(eth)' : '')
+      || 'unknown'
+    logger.info('Wallet: ' + walletName, 'SelfVerify')
     try {
       const app = new SelfAppBuilder({
         version: 2,

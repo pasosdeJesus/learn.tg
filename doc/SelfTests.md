@@ -1,19 +1,13 @@
 # Self Verification — Test Report
 
-> Documentación de pruebas de verificación de identidad con Self.xyz en learn.tg
-> Repositorio: `pasosdeJesus/learn.tg`
-> Rama: `main`
-> Commit: `2681fa9` — Trying to close dialog after self verif. #143
-> Fecha: 11 de Mayo de 2026
-
-## Última prueba — 11 de Mayo 2026
-
 ### Entorno
 
-| Parámetro | Valor |
-|-----------|-------|
-| Dispositivo | Android 16 |
-| Navegador | Brave 1.89.145 |
+| Fecha | Dispositivo | Navegador | Wallet | Opera | Comentarios | 
+|-----------|-------|---|---|---|
+| 2026-05-11 | Androdi 16 | Brave 1.89.145 | Nativa de Brave | Si | Abre self |
+| 2026-05-12 | Desktop | Chromium 141.0.7390.54 | One Key | Si | Debe usarse
+telefono para escanear |
+| 2026-05-12 | Android 16 | Incorporado en Wallet | OneKey | 
 | Wallet | Billetera nativa de Brave |
 | Red | Celo Mainnet |
 

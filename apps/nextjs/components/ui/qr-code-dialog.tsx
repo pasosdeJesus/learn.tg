@@ -36,7 +36,14 @@ export function QRCodeDialog({
   const prevOpenRef = useRef(open)
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
   const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
-  const isWalletBrowser = ['okx', 'onekey', 'metamask', 'trust wallet'].some(p => ua.includes(p))
+  // Detección de wallet browsers: nombre en user-agent, inyección de ethereum, o WebView
+  const isWalletBrowser = typeof window !== 'undefined' && (
+    ['okx', 'onekey', 'metamask', 'trust wallet'].some(p => ua.includes(p)) ||
+    (window as any).ethereum?.isOneKey === true ||
+    (window as any).ethereum?.isOkxWallet === true ||
+    (window as any).ethereum?.isMetaMask === true ||
+    ua.includes('; wv') // WebView (OneKey, OKX, MetaMask in-app browser)
+  )
 
   useEffect(() => {
     if (open !== prevOpenRef.current) {
