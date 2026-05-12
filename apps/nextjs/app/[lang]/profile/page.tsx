@@ -20,10 +20,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select'
-import { openSelfApp } from '@/lib/deeplink'
-import { useMobileDetection } from '@/lib/mobile-detection'
 import { IS_PRODUCTION } from '@/lib/config'
-import { logger, DebugConsole, safeStringify } from '@pasosdejesus/m/debug'
+import { logger, DebugConsole } from '@pasosdejesus/m/debug'
 
 
 
@@ -100,7 +98,6 @@ export default function ProfileForm({ params }: PageProps) {
 
   const { address } = useAccount()
   const { data: session } = useSession()
-  const isMobile = useMobileDetection()
 
   const parameters = use(params)
   const { lang } = parameters
@@ -300,7 +297,7 @@ export default function ProfileForm({ params }: PageProps) {
           throw new Error(`Expected data.length == 1`)
         }
         const rUser = data[0]
-        logger.info('rUser=' + safeStringify(rUser), 'Profile')
+        logger.info('rUser=' + JSON.stringify(rUser), 'Profile')
         const locProfile: UserProfile = {
           country: rUser.pais_id,
           email: rUser.email,
@@ -319,7 +316,7 @@ export default function ProfileForm({ params }: PageProps) {
           uname: rUser.nusuario,
           userId: rUser.id,
         }
-        logger.info('locProfile=' + safeStringify(locProfile), 'Profile')
+        logger.info('locProfile=' + JSON.stringify(locProfile), 'Profile')
         setProfile(locProfile)
       } catch (error) {
         logger.error('Profile fetch error details: ' + JSON.stringify({
@@ -659,8 +656,6 @@ export default function ProfileForm({ params }: PageProps) {
               selfApp={selfApp}
               onSuccess={handleSuccessfulSelfVerification}
               onError={handleQRDialogError}
-              isMobile={isMobile}
-              onMobileVerify={handleMobileVerify}
               lang={lang}
             />
 

@@ -3,14 +3,14 @@ import type { DB } from '@/db/db.d'
 import type { LeaderboardQueryParams } from '@/types/leaderboard'
 
 // Shared SQL field definitions used across leaderboard queries
-const LP_FIELD = sql<number>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`.as('learningpoints')
-const LP_WHERE = sql<string>`COALESCE(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 0)`
-const SCHOLARSHIP_FIELD = sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('scholarship_usdt')
-const SCHOLARSHIP_WHERE = sql<string>`COALESCE(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`
-const UBI_FIELD = sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`.as('ubi_celo')
-const UBI_WHERE = sql<string>`COALESCE(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 0)`
-const DONATIONS_FIELD = sql<number>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`.as('donations_usdt')
-const DONATIONS_WHERE = sql<string>`COALESCE(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 0)`
+const LP_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 2), 0)`.as('learningpoints')
+const LP_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.impacto_balance ELSE 0 END), 2), 0)`
+const SCHOLARSHIP_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`.as('scholarship_usdt')
+const SCHOLARSHIP_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'scholarship' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`
+const UBI_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 2), 0)`.as('ubi_celo')
+const UBI_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 2), 0)`
+const DONATIONS_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`.as('donations_usdt')
+const DONATIONS_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`
 const LP_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithLP')
 
 export async function buildLeaderboardQuery(

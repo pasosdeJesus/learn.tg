@@ -37,8 +37,6 @@ describe('QRCodeDialog', () => {
     selfApp: { mockApp: true },
     onSuccess: vi.fn(),
     onError: vi.fn(),
-    isMobile: false,
-    onMobileVerify: vi.fn(),
   }
 
   beforeEach(() => {
@@ -49,7 +47,6 @@ describe('QRCodeDialog', () => {
     const { container } = render(<QRCodeDialog {...defaultProps} />)
 
     expect(container.textContent).toContain('Verify with Self')
-    expect(container.textContent).toContain('Open the Self application on your phone')
   })
 
   it('does not render when closed', () => {
@@ -58,35 +55,10 @@ describe('QRCodeDialog', () => {
     expect(screen.queryByText('Verify with Self')).not.toBeInTheDocument()
   })
 
-  it('shows QR code wrapper for desktop', () => {
-    render(<QRCodeDialog {...defaultProps} isMobile={false} />)
+  it('shows QR code wrapper when selfApp is provided', () => {
+    render(<QRCodeDialog {...defaultProps} />)
 
     expect(screen.getByTestId('mock-qr-wrapper')).toBeInTheDocument()
-    expect(screen.queryByText('Open Self App')).not.toBeInTheDocument()
-  })
-
-  it('shows mobile button for mobile devices', () => {
-    render(<QRCodeDialog {...defaultProps} isMobile={true} />)
-
-    expect(screen.getByText('Open Self App')).toBeInTheDocument()
-    expect(screen.queryByTestId('mock-qr-wrapper')).not.toBeInTheDocument()
-  })
-
-  it('shows correct instructions for mobile', () => {
-    render(<QRCodeDialog {...defaultProps} isMobile={true} />)
-
-    expect(
-      screen.getByText(/Tap the button below to open the Self application/),
-    ).toBeInTheDocument()
-  })
-
-  it('calls onMobileVerify when mobile button is clicked', () => {
-    render(<QRCodeDialog {...defaultProps} isMobile={true} />)
-
-    const mobileButton = screen.getByText('Open Self App')
-    fireEvent.click(mobileButton)
-
-    expect(defaultProps.onMobileVerify).toHaveBeenCalledTimes(1)
   })
 
   it('calls onOpenChange when cancel button is clicked', () => {
@@ -99,7 +71,7 @@ describe('QRCodeDialog', () => {
   })
 
   it('handles QR wrapper success', () => {
-    render(<QRCodeDialog {...defaultProps} isMobile={false} />)
+    render(<QRCodeDialog {...defaultProps} />)
 
     const successButton = screen.getByText('Mock Success')
     fireEvent.click(successButton)
@@ -108,7 +80,7 @@ describe('QRCodeDialog', () => {
   })
 
   it('handles QR wrapper error with reason', () => {
-    render(<QRCodeDialog {...defaultProps} isMobile={false} />)
+    render(<QRCodeDialog {...defaultProps} />)
 
     const errorButton = screen.getByText('Mock Error With Reason')
     fireEvent.click(errorButton)
@@ -117,7 +89,7 @@ describe('QRCodeDialog', () => {
   })
 
   it('handles QR wrapper error without reason', () => {
-    render(<QRCodeDialog {...defaultProps} isMobile={false} />)
+    render(<QRCodeDialog {...defaultProps} />)
 
     const errorButton = screen.getByText('Mock Error Without Reason')
     fireEvent.click(errorButton)
@@ -126,7 +98,7 @@ describe('QRCodeDialog', () => {
   })
 
   it('does not render QR wrapper when selfApp is null', () => {
-    render(<QRCodeDialog {...defaultProps} selfApp={null} isMobile={false} />)
+    render(<QRCodeDialog {...defaultProps} selfApp={null} />)
 
     expect(screen.queryByTestId('mock-qr-wrapper')).not.toBeInTheDocument()
   })
