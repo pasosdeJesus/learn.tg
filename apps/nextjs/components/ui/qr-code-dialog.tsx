@@ -42,7 +42,8 @@ export function QRCodeDialog({
     (window as any).ethereum?.isOneKey === true ||
     (window as any).ethereum?.isOkxWallet === true ||
     (window as any).ethereum?.isMetaMask === true ||
-    ua.includes('; wv') // WebView (OneKey, OKX, MetaMask in-app browser)
+    // WebView en Android, pero excluir Brave (funciona con deep link)
+    (!ua.includes('brave') && ua.includes('; wv'))
   )
 
   useEffect(() => {
@@ -137,6 +138,21 @@ export function QRCodeDialog({
               )}
               {isMobile && isWalletBrowser && (
                 <div className="space-y-3">
+                  <React.Suspense fallback={<div className="text-center py-4 text-muted-foreground">Loading QR code...</div>}>
+                    <SelfQRcodeWrapper
+                      selfApp={selfApp}
+                      onSuccess={() => {
+                        logger.info('SelfQRcodeWrapper onSuccess fired - verification completed', 'SelfVerify')
+                        onSuccess()
+                      }}
+                      onError={(error: any) => {
+                        const errorStr = error?.message || error?.reason || (error ? String(error) : null)
+                        const finalError = errorStr || t('verificationFailed')
+                        logger.error('SelfQRcodeWrapper error: ' + finalError, 'SelfVerify')
+                        onError(finalError)
+                      }}
+                    />
+                  </React.Suspense>
                   <p className="text-sm text-muted-foreground text-center">
                     {t('walletDesc')}
                   </p>
