@@ -15,8 +15,9 @@ export function isWalletBrowser(): boolean {
   // Known web3 wallet browser identifiers
   const walletPatterns = ['okx', 'onekey', 'trust wallet', 'metamask', 'walletconnect', 'rainbow']
   if (walletPatterns.some(p => ua.includes(p))) return true
-  // Also detect WebView (used by OneKey, MetaMask, OKX in-app browsers) but exclude Brave
-  if (!ua.includes('brave') && ua.includes('; wv')) return true
+  // Also detect WebView (OneKey, MetaMask, OKX) but exclude Brave
+  const isBrave = ua.includes('brave') || typeof (navigator as any).brave !== 'undefined'
+  if (!isBrave && ua.includes('; wv')) return true
   return false
 }
 

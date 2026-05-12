@@ -42,8 +42,9 @@ export function QRCodeDialog({
     (window as any).ethereum?.isOneKey === true ||
     (window as any).ethereum?.isOkxWallet === true ||
     (window as any).ethereum?.isMetaMask === true ||
-    // WebView en Android, pero excluir Brave (funciona con deep link)
-    (!ua.includes('brave') && ua.includes('; wv'))
+    // WebView en Android, excluir Brave (usa navigator.brave o user-agent)
+    !(ua.includes('brave') || typeof (navigator as any).brave !== 'undefined') &&
+    ua.includes('; wv')
   )
 
   useEffect(() => {
@@ -66,18 +67,18 @@ export function QRCodeDialog({
     en: {
       verifyWithSelf: 'Verify with Self',
       openSelf: 'Open Self App',
-      walletDesc: 'Copy the link to the clipboard, then open the Self app, tap the paste icon to load the link and continue the verification there.',
-      copyLink: 'Copy deferred link',
-      linkCopied: 'Link copied!',
+      walletDesc: 'Scan the QR code with another device\'s camera to verify, or copy the link to open in a browser.',
+      copyLink: 'Copy link',
+      linkCopied: 'Copied!',
       cancel: 'Cancel',
       verificationFailed: 'Verification failed',
     },
     es: {
       verifyWithSelf: 'Verificar con Self',
       openSelf: 'Abrir App Self',
-      walletDesc: 'Copia el enlace al portapapeles, luego abre la aplicación Self, toca el icono de pegar para cargar el enlace y continuar la verificación allí.',
+      walletDesc: 'Escanea el código QR con la cámara de otro dispositivo para verificar, o copia el enlace para abrirlo en un navegador.',
       copyLink: 'Copiar enlace',
-      linkCopied: '¡Enlace copiado!',
+      linkCopied: '¡Copiado!',
       cancel: 'Cancelar',
       verificationFailed: 'Falló la verificación',
     },
@@ -93,12 +94,29 @@ export function QRCodeDialog({
   const handleCopyLink = () => {
     if (!selfApp) return
     const link = getUniversalLink(selfApp)
+    // Intentar clipboard API moderna
     navigator.clipboard.writeText(link).then(() => {
       setLinkCopied(true)
       logger.info('Self link copied to clipboard', 'SelfVerify')
       setTimeout(() => setLinkCopied(false), 3000)
-    }).catch((err) => {
-      logger.error('Failed to copy link: ' + err, 'SelfVerify')
+    }).catch(() => {
+      // Fallback: textarea oculto + execCommand (funciona en más WebViews)
+      const ta = document.createElement('textarea')
+      ta.value = link
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      try {
+        document.execCommand('copy')
+        setLinkCopied(true)
+        logger.info('Self link copied via fallback', 'SelfVerify')
+        setTimeout(() => setLinkCopied(false), 3000)
+      } catch {
+        logger.error('Failed to copy link', 'SelfVerify')
+        alert('Could not copy. Long-press the QR code and open the link in your browser.')
+      }
+      document.body.removeChild(ta)
     })
   }
 
