@@ -86,7 +86,7 @@ function generateSbtImage(courseId, imagePath, courseName, isPremium) {
       `-gravity northwest -annotate +10+8 "${badge}"`,
       `-fill "rgba(0,0,0,0.5)" -draw "rectangle 0,${SBT_SIZE - 40},${SBT_SIZE},${SBT_SIZE}"`,
       `-fill white -font DejaVu-Sans -pointsize 14`,
-      `-gravity southwest -annotate +10+${SBT_SIZE - 12} "${courseName}"`,
+      `-gravity south -annotate +0+10 "${courseName}"`,
       `"${outPath}"`,
     ].join(' ')
 
