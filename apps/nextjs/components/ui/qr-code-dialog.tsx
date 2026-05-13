@@ -36,14 +36,13 @@ export function QRCodeDialog({
   const prevOpenRef = useRef(open)
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
   const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
-  // Detección de wallet browsers: nombre en user-agent, inyección de ethereum, o WebView
-  const isWalletBrowser = typeof window !== 'undefined' && (
+  // Brave se detecta primero porque su wallet inyecta isMetaMask=true por compatibilidad
+  const isBrave = ua.includes('brave') || typeof (navigator as any).brave !== 'undefined'
+  const isWalletBrowser = !isBrave && typeof window !== 'undefined' && (
     ['okx', 'onekey', 'metamask', 'trust wallet'].some(p => ua.includes(p)) ||
     (window as any).ethereum?.isOneKey === true ||
     (window as any).ethereum?.isOkxWallet === true ||
     (window as any).ethereum?.isMetaMask === true ||
-    // WebView en Android, excluir Brave (usa navigator.brave o user-agent)
-    !(ua.includes('brave') || typeof (navigator as any).brave !== 'undefined') &&
     ua.includes('; wv')
   )
 

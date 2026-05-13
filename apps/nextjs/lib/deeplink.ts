@@ -12,12 +12,13 @@ export function generateSelfDeeplink(selfApp: any): string {
 export function isWalletBrowser(): boolean {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent.toLowerCase()
+  // Brave se excluye primero porque su wallet inyecta isMetaMask=true
+  if (ua.includes('brave') || typeof (navigator as any).brave !== 'undefined') return false
   // Known web3 wallet browser identifiers
   const walletPatterns = ['okx', 'onekey', 'trust wallet', 'metamask', 'walletconnect', 'rainbow']
   if (walletPatterns.some(p => ua.includes(p))) return true
-  // Also detect WebView (OneKey, MetaMask, OKX) but exclude Brave
-  const isBrave = ua.includes('brave') || typeof (navigator as any).brave !== 'undefined'
-  if (!isBrave && ua.includes('; wv')) return true
+  // Also detect WebView (OneKey, MetaMask, OKX)
+  if (ua.includes('; wv')) return true
   return false
 }
 
