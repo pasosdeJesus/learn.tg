@@ -65,7 +65,7 @@ async function listCourses() {
 }
 
 function generateSbtImage(courseId, imagePath, courseName, isPremium) {
-  const srcPath = join(PUBLIC_DIR, 'img', imagePath)
+  const srcPath = join(PUBLIC_DIR, imagePath)
   const outPath = join(SBT_DIR, `${courseId}.png`)
 
   if (!existsSync(srcPath)) {
