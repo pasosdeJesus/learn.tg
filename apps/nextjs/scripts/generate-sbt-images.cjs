@@ -36,14 +36,14 @@ function query(sql, params) {
 
 function getCourse(courseId) {
   return query(
-    'SELECT id, imagen, titulo, "prefijoRuta", idioma FROM cor1440_gen_proyectofinanciero WHERE id = $1',
+    'SELECT id, imagen, titulo, "prefijoRuta", "porPagar", idioma FROM cor1440_gen_proyectofinanciero WHERE id = $1',
     [courseId]
   ).then(rows => rows[0] || null)
 }
 
 function listCourses() {
   return query(
-    'SELECT id, imagen, titulo, "prefijoRuta", idioma FROM cor1440_gen_proyectofinanciero ORDER BY id'
+    'SELECT id, imagen, titulo, "prefijoRuta", "porPagar", idioma FROM cor1440_gen_proyectofinanciero ORDER BY id'
   )
 }
 
@@ -96,7 +96,7 @@ async function main() {
       const course = await getCourse(courseId)
       if (!course) { console.error('\u274c Curso no encontrado: ' + courseId); continue }
       if (!course.imagen) { console.error('\u274c El curso ' + courseId + ' no tiene imagen'); continue }
-      const isPremium = course.prefijoRuta && course.prefijoRuta.includes('premium') || false
+      const isPremium = course.porPagar !== null && Number(course.porPagar) > 0
       generateSbtImage(course.id, course.imagen, course.titulo, isPremium)
     }
   } else {

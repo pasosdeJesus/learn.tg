@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict fvHzabNLDoKLMXC4gCx7nWYgvZtLFQKyWoVaIGkh9P624DDwZQuBOmqZAqwQhTL
+\restrict 02K6Z6EkKSTjONcVWQintR05AnmymzM1qvZLEO37z53nOlWiaJwXfHQTmlyFTDA
 
 -- Dumped from database version 17.9
 -- Dumped by pg_dump version 17.9
@@ -4781,8 +4781,8 @@ CREATE TABLE public.transaction (
     fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
     sincronizado boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
-    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying, 'ccop'::character varying])::text[]))),
-    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying])::text[])))
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY[('learningpoints'::character varying)::text, ('usdt'::character varying)::text, ('celo'::character varying)::text, ('ccop'::character varying)::text]))),
+    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text])))
 );
 
 
@@ -8138,5 +8138,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict fvHzabNLDoKLMXC4gCx7nWYgvZtLFQKyWoVaIGkh9P624DDwZQuBOmqZAqwQhTL
+\unrestrict 02K6Z6EkKSTjONcVWQintR05AnmymzM1qvZLEO37z53nOlWiaJwXfHQTmlyFTDA
 
