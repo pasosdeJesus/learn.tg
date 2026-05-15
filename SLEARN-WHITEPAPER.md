@@ -164,10 +164,7 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
     and **XAUT** (strategic gold reserve to hedge against fiat inflation).
 3.  **Stability Formula:**  SLEARN is pegged to the Sierra Leonean Leone (SLE) at a 1:1 ratio,
     with a USD floor of 1/22 USDT (~$0.045 was historical upper-bound rate from 2025) to protect
-    against SLE devaluation:
-    $$V_{SLEARN} = \max(FX_{SLE/USD}, 1/22)$$
-    This guarantees that the educational purchasing power of SLEARN never falls below $0.045
-    per token, even if the SLE devalues.
+    against SLE devaluation.
     When a user redeems SLEARN for SLE (Sierra Leone Leone) through stable-sl, the payout in SLE
     is calculated as:
     $$SLE_payout = amount_SLEARN × max(FX_SLE_USD / 22, 1)$$
@@ -209,7 +206,7 @@ The bridge operates as a secure link between digital assets and local liquidity.
 Funds are managed across three layers to minimize attack surfaces:
 - **Hot Wallets (L2/S2):** 1-2 months of operational funds for quick exchanges.
 - **Main Vaults (L1/S1):** Online storage limited to < 1,000 USDT.
-- **Master Vault (SL0):** Air-gapped storage for the strategic XAUT (Gold) reserve.
+- **Master Vault (SL0):** Air-gapped storage for the strategic XAUT (Gold), USDT, CELO reserve.
 
 ### 6.2. Adaptive Governance
 
