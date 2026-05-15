@@ -160,9 +160,9 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
 
 1.  **Reserve Backing Rule:** The reserve must always have a total USD value greater
     than or equal to
-    $$
-    \text{Reserve(USD)} = \text{totalSLEARN} \times \max\left(\frac{1}{22},\ \frac{1}{\text{FX}_{SLE/USD}}\right)
-    $$
+    
+    $$Reserve(USD) = totalSLEARN \times \max\left(\frac{1}{22},\ \frac{1}{FX_{SLE/USD}}\right)$$
+    
     Where $\text{FX}_{SLE/USD}$ is the market exchange rate (SLE per 1 USD).
 3.  **Asset Mix:** The reserve may consist of a mix of assets (USDT, CELO, XAUT, etc.)
     at pdJ's discretion, as long as the total USD value (using market prices) meets
