@@ -175,7 +175,8 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
     is calculated as:
     
     $$\text{SLE}_{payout} = \text{amount}_{SLEARN} \times \max\left(\frac{\text{FX}_{SLE/USD}}{22},\ 1\right)$$
-        
+
+    $$\text{Reserve(USD)} = \text{totalSLEARN} \times \max\left(\frac{1}{22},\ \frac{1}{\text{FX}_{SLE/USD}}\right)$$
 5.  **Reserve Surplus and Ecosystem Reinvestment:** The SLEARN reserve is designed
     to maintain a 1:1 backing of all tokens in circulation. However, operational
     efficiency and community growth may generate a surplus. This surplus may be
