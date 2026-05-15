@@ -169,7 +169,7 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
     the requirement above. The Transparency Dashboard shows SLEARN in circulation,
     the current reserve composition and the coverage ratio.
 3.  **Stability Formula:**  SLEARN is pegged to the Sierra Leonean Leone (SLE) at a 1:1 ratio,
-    with a USD floor of $$\frac{1}{22}\ \text{USDT} \approx \$0.04545
+    with a USD floor of $$\frac{1}{22}\ \text{USDT} \approx \$0.04545$$
     (~$0.045 was historical upper-bound rate from 2025) to protect
     against SLE devaluation.
     When a user redeems SLEARN for SLE (Sierra Leone Leone) through stable-sl, the payout in SLE
