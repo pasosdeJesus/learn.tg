@@ -161,9 +161,9 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
 1.  **Reserve Backing Rule:** The reserve must always have a total USD value greater
     than or equal to
     
-    $$\text{Reserve(USD)} = \text{totalSLEARN} \times \max\left(\frac{1}{22},\ \frac{1}{\text{FX}_{SLE/USD}}\right)$$
+    $$\text{Reserve(USD)} = \text{totalSLEARN} \times \max\left(\frac{1}{22},\ \frac{1}{\text{FxSLE/USD}}\right)$$
     
-    Where $\text{FX}_{SLE/USD}$ is the market exchange rate (SLE per 1 USD).
+    Where $\text{FxSLE/USD}$ is the market exchange rate (SLE per 1 USD).
 2.  **Asset Mix:** The reserve may consist of a mix of assets (USDT, CELO, XAUT, etc.)
     at pdJ's discretion, as long as the total USD value (using market prices) meets
     the requirement above. The Transparency Dashboard shows SLEARN in circulation,
@@ -173,10 +173,8 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
     from 2025) to protect against SLE devaluation.
     When a user redeems SLEARN for SLE (Sierra Leone Leone) through stable-sl, the payout in SLE
     is calculated as:
-    
-    $$\text{SLE}_{payout} = \text{amount}_{SLEARN} \times \max\left(\frac{}{22},\ 1\right)$$
 
-    $$\text{SLEpayout} = \text{amountSLEARN} \times \max\left(\frac{\text{FXxSLE/USD}}{22},\ 1\right)$$
+    $$\text{SLEpayout} = \text{amountSLEARN} \times \max\left(\frac{\text{FxSLE/USD}}{22},\ 1\right)$$
 5.  **Reserve Surplus and Ecosystem Reinvestment:** The SLEARN reserve is designed
     to maintain a 1:1 backing of all tokens in circulation. However, operational
     efficiency and community growth may generate a surplus. This surplus may be
