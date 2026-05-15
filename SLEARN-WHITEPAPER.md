@@ -158,17 +158,20 @@ growth.
 ## 4. Stability and Reserve Backing
 To protect users from volatility, SLEARN employs a dual-reference stability framework.
 
-1.  **Reserve Backing Rule:** Every SLEARN is minted only when equivalent value
-    (minimum $1/22$ USDT that is around 4.5 cents of USD) is deposited into the SLE reserve.
-2.  **Asset Mix:** Backing consists of **USDT** (liquidity), **CELO** (ecosystem),
-    and **XAUT** (strategic gold reserve to hedge against fiat inflation).
+1.  **Reserve Backing Rule:** The reserve must always have a total USD value greater
+    than or equal to:
+    $$total_{SLEARN_in_circulation} × max(1/22, 1/FX_{SLE_USD})$$
+    Where FX_SLE_USD is the current market exchange rate (SLE per 1 USD).
+2.  **Asset Mix:** The reserve may consist of a mix of assets (USDT, CELO, XAUT, etc.)
+    at pdJ's discretion, as long as the total USD value (using market prices) meets
+    the requirement above. The Transparency Dashboard shows SLEARN in circulation,
+    the current reserve composition and the coverage ratio.
 3.  **Stability Formula:**  SLEARN is pegged to the Sierra Leonean Leone (SLE) at a 1:1 ratio,
     with a USD floor of 1/22 USDT (~$0.045 was historical upper-bound rate from 2025) to protect
     against SLE devaluation.
     When a user redeems SLEARN for SLE (Sierra Leone Leone) through stable-sl, the payout in SLE
     is calculated as:
-    $$SLE_payout = amount_SLEARN × max(FX_SLE_USD / 22, 1)$$
-    Where FX_SLE_USD is the current market exchange rate (SLE per 1 USD).
+    $$SLE_{payout} = amount_{SLEARN} × max(FX_{SLE_USD} / 22, 1)$$    
 4.  **Reserve Surplus and Ecosystem Reinvestment:** The SLEARN reserve is designed
     to maintain a 1:1 backing of all tokens in circulation. However, operational
     efficiency and community growth may generate a surplus. This surplus may be
