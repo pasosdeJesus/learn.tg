@@ -52,9 +52,23 @@ heart, and you will find rest for your souls.” (Matthew 11:29)*
 
 ### 2.1. Current State and Initial Backing
 
-It can be checked at https://learn.tg/en/transparency, as of April 2026, learn.tg has **482 users with connected wallets**, of which **143 active users** hold **309 Learning Points** (to be converted 1:1 to SLEARN at launch). The platform has also distributed **$288.36 in scholarships** and **373.76 CELO** as UBI, with **$1.45 in donations** received.
+It can be checked at https://learn.tg/en/transparency, as of May 2026, learn.tg
+has **486 users with connected wallets**, of which **145 active users** hold
+**315 Learning Points** (to be converted 1:1 to SLEARN at launch). The platform 
+has also distributed **$290.4 in scholarships** and **396 CELO** as UBI, 
+with **$2.17 in donations** received.
 
-To ensure proper backing from day one, **pdJ (Pasos de Jesús)** will make an initial donation equivalent to the value required to back the initial SLEARN tokens on 1st June 2026 (minimum 4.5 cents of USDT per SLEARN, as per the Reserve Backing Rule in Section 4). This guarantees that every SLEARN token in circulation at launch is fully reserved.
+To ensure proper backing from day one, **pdJ (Pasos de Jesús)** will make an
+initial donation equivalent to the value required to back the initial SLEARN
+tokens on 1st June 2026 (minimum 4.5 cents of USDT per SLEARN, as per the Reserve
+Backing Rule in Section 4). This guarantees that every SLEARN token in circulation
+at launch is fully reserved.
+
+### 2.2 Future Utility: Goods and Services in the pdJ Ecosystem
+
+In later phases, SLEARN will be usable for additional digital goods
+and services within the pdJ ecosystem (e.g., NFTs, hosting, 
+specialized software). Details will be announced before activation.
 
 ---
 
@@ -148,12 +162,16 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
     (minimum $1/22$ USDT that is around 4.5 cents of USD) is deposited into the SLE reserve.
 2.  **Asset Mix:** Backing consists of **USDT** (liquidity), **CELO** (ecosystem),
     and **XAUT** (strategic gold reserve to hedge against fiat inflation).
-3.  **Stability Formula:** 1 SLEARN is pegged to 1 Sierra Leone Leone (SLE). To
-    protect against devaluation, we apply:
-
+3.  **Stability Formula:**  SLEARN is pegged to the Sierra Leonean Leone (SLE) at a 1:1 ratio,
+    with a USD floor of 1/22 USDT (~$0.045 was historical upper-bound rate from 2025) to protect
+    against SLE devaluation:
     $$V_{SLEARN} = \max(FX_{SLE/USD}, 1/22)$$
-
-    Where $1/22$ is the historical upper-bound rate from 2025.
+    This guarantees that the educational purchasing power of SLEARN never falls below $0.045
+    per token, even if the SLE devalues.
+    When a user redeems SLEARN for SLE (Sierra Leone Leone) through stable-sl, the payout in SLE
+    is calculated as:
+    $$SLE_payout = amount_SLEARN × max(FX_SLE_USD / 22, 1)$$
+    Where FX_SLE_USD is the current market exchange rate (SLE per 1 USD).
 4.  **Reserve Surplus and Ecosystem Reinvestment:** The SLEARN reserve is designed
     to maintain a 1:1 backing of all tokens in circulation. However, operational
     efficiency and community growth may generate a surplus. This surplus may be
