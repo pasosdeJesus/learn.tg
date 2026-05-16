@@ -178,8 +178,8 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
 5.  **Reserve Surplus and Ecosystem Reinvestment:** The SLEARN reserve is designed
     to maintain a 1:1 backing of all tokens in circulation. However, operational
     efficiency and community growth may generate a surplus. This surplus may be
-    allocated to develop and maintain the pdJ ecosystem and we will inform its
-    usage in the transparency dashboard.
+    sent to de pdJ treasury to develop and maintain the pdJ ecosystem. We will keep record
+    of these allocations in the transparency dashboard.
  
 ---
 
