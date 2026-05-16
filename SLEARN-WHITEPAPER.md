@@ -121,7 +121,7 @@ Pricing]
 1.  7 USDT go to the donated course vault: 3.5 USDT finance 3.5 scholarships
     (1 USDT each) and 3.5 USDT go to the SLEARN reserve to mint 77 SLEARN
     to finance 77 scholarships (1 SLEARN each).
-2.  0.5 USDT funds pdJ/learn.tg operations.
+2.  0.5 USDT goes to the pdJ treasury (which funds learn.tg operations and ecosystem development).
 3.  1 USDT to the SLEARN reserve and 22SLEARN minted for the user as credit
     for their own learning.
 4.  0.5 USDT automatically support free missional courses (half USDT to vault and half
