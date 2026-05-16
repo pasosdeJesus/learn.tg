@@ -94,7 +94,7 @@ Pricing]
     subgraph C1 [Donation Distribution: 10 USDT]
         direction LR
         C1_1[70%: 7 USDT to Destination Vault] --> C1_1a
-        C1_2[5%: 0.5 USDT to learn.tg<br>Operations]
+        C1_2[5%: 0.5 USDT to pdJ treasury<br>Operations]
         C1_3[10%: 1 USDT → 22 SLEARN<br>Donor Reward]
         C1_4[5%: 0.5 USDT to Missionary Courses]
         C1_5[5%: 0.5 USDT to UBI and Referrals Fund]
@@ -107,7 +107,7 @@ Pricing]
     
     subgraph D1 [Premium Payment Distribution: 10 USDT]
         direction LR
-        D1_1[55%: 5.5 USDT to learn.tg<br>Operations & Creators]
+        D1_1[55%: 5.5 USDT to pdJ treasury<br>Operations & Creators]
         D1_2[10%: 1 USDT to Course Vault]
         D1_3[10%: 1 USDT → 22 SLEARN<br>Student Reward]
         D1_4[10%: 1 USDT to Missionary Courses]
@@ -121,7 +121,7 @@ Pricing]
 1.  7 USDT go to the donated course vault: 3.5 USDT finance 3.5 scholarships
     (1 USDT each) and 3.5 USDT go to the SLEARN reserve to mint 77 SLEARN
     to finance 77 scholarships (1 SLEARN each).
-2.  0.5 USDT funds learn.tg operations.
+2.  0.5 USDT funds pdJ/learn.tg operations.
 3.  1 USDT to the SLEARN reserve and 22SLEARN minted for the user as credit
     for their own learning.
 4.  0.5 USDT automatically support free missional courses (half USDT to vault and half
@@ -140,7 +140,7 @@ SLEARN for the paying student and is used to finance more scholarships.
 ```mermaid
 pie
     title Distribution of a Premium Course Payment (10 USDT)
-    "55% : learn.tg & Creators<br/>(5.5 USDT)" : 55
+    "55% : pdJ treasury - learn.tg & Creators<br/>(5.5 USDT)" : 55
     "10% : Course Vault<br/>(e.g 1 USDT allocated: 0.5 USDT to course vault, 0.5 USDT to SLE reserve; 11 SLEARN minted)" : 10
     "10% : UBI and Referrals Fund<br/>(1 USDT)" : 10
     "10% : Student Reward<br/>(1 USDT to reserve → 22 SLEARN to student)" : 10
