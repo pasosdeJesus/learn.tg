@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict 02K6Z6EkKSTjONcVWQintR05AnmymzM1qvZLEO37z53nOlWiaJwXfHQTmlyFTDA
+\restrict 5rvVYe9lsphJMKoQHV7sWYBjFrt3JaA6EumOpuGIBT1skYsmzXXIaJiFtOEbUOz
 
 -- Dumped from database version 17.9
--- Dumped by pg_dump version 17.9
+-- Dumped by pg_dump version 17.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2756,6 +2756,59 @@ ALTER SEQUENCE public.cor1440_gen_tipomoneda_id_seq OWNED BY public.cor1440_gen_
 
 
 --
+-- Name: credential_emission; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.credential_emission (
+    id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    course_id integer NOT NULL,
+    token_id integer NOT NULL,
+    chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
+    is_premium boolean DEFAULT false NOT NULL,
+    hash character varying(66),
+    emitted_at timestamp without time zone DEFAULT '2026-05-20 12:07:41.342877'::timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: credential_emission_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.credential_emission_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: credential_emission_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.credential_emission_id_seq OWNED BY public.credential_emission.id;
+
+
+--
+-- Name: credential_metadata; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.credential_metadata (
+    token_id integer NOT NULL,
+    chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
+    name character varying(255) NOT NULL,
+    type character varying(50) NOT NULL,
+    site character varying(50) NOT NULL,
+    is_premium boolean DEFAULT false,
+    is_soulbound boolean DEFAULT true,
+    image_url text NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-20 12:07:41.342877'::timestamp without time zone NOT NULL
+);
+
+
+--
 -- Name: guide_usuario; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5141,6 +5194,13 @@ ALTER TABLE ONLY public.cor1440_gen_tipomoneda ALTER COLUMN id SET DEFAULT nextv
 
 
 --
+-- Name: credential_emission id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission ALTER COLUMN id SET DEFAULT nextval('public.credential_emission_id_seq'::regclass);
+
+
+--
 -- Name: heb412_gen_campohc id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -5757,6 +5817,30 @@ ALTER TABLE ONLY public.cor1440_gen_tipoindicador
 
 ALTER TABLE ONLY public.cor1440_gen_tipomoneda
     ADD CONSTRAINT cor1440_gen_tipomoneda_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: credential_emission credential_emission_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission
+    ADD CONSTRAINT credential_emission_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: credential_emission credential_emission_user_course_chain; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission
+    ADD CONSTRAINT credential_emission_user_course_chain UNIQUE (usuario_id, course_id, chain_id);
+
+
+--
+-- Name: credential_metadata credential_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_metadata
+    ADD CONSTRAINT credential_metadata_pkey PRIMARY KEY (token_id, chain_id);
 
 
 --
@@ -6417,6 +6501,13 @@ CREATE UNIQUE INDEX cor1440_gen_datointermedioti_pmindicadorpf_llaves_idx ON pub
 
 
 --
+-- Name: credential_emission_usuario_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX credential_emission_usuario_idx ON public.credential_emission USING btree (usuario_id);
+
+
+--
 -- Name: index_billetera_usuario_on_billetera; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6900,6 +6991,22 @@ ALTER TABLE ONLY public.cor1440_gen_actividad_actividadtipo
 
 ALTER TABLE ONLY public.cor1440_gen_actividad_actividadtipo
     ADD CONSTRAINT cor1440_gen_actividadtipo_actividad_actividadtipo_id_fkey FOREIGN KEY (actividadtipo_id) REFERENCES public.cor1440_gen_actividadtipo(id);
+
+
+--
+-- Name: credential_emission credential_emission_course_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission
+    ADD CONSTRAINT credential_emission_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.cor1440_gen_proyectofinanciero(id) ON DELETE CASCADE;
+
+
+--
+-- Name: credential_emission credential_emission_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission
+    ADD CONSTRAINT credential_emission_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
 
 --
@@ -8138,5 +8245,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 02K6Z6EkKSTjONcVWQintR05AnmymzM1qvZLEO37z53nOlWiaJwXfHQTmlyFTDA
+\unrestrict 5rvVYe9lsphJMKoQHV7sWYBjFrt3JaA6EumOpuGIBT1skYsmzXXIaJiFtOEbUOz
 
