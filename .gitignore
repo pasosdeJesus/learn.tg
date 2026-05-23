@@ -114,3 +114,7 @@ contexto.md
 most-recent-question.json
 apps/nextjs/db/backups/
 apps/hardhat/deployments/
+# next-pwa generated service worker 
+public/sw.js 
+public/workbox-*.js
+
