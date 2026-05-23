@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5rvVYe9lsphJMKoQHV7sWYBjFrt3JaA6EumOpuGIBT1skYsmzXXIaJiFtOEbUOz
+\restrict 0Ds3mBOcv2nHmkRcB6lEupLmSsCnVOmRdvcpacRPvEJa65jeVNR8Y5gePwiJc8Y
 
 -- Dumped from database version 17.9
--- Dumped by pg_dump version 17.6
+-- Dumped by pg_dump version 17.9
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -38,6 +38,20 @@ CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
 --
 
 COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
+
+
+--
+-- Name: billetera_usuario_lowercase_billetera_fn(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.billetera_usuario_lowercase_billetera_fn() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        NEW."billetera" := LOWER(NEW."billetera");
+        RETURN NEW;
+      END;
+      $$;
 
 
 --
@@ -1322,6 +1336,20 @@ CREATE FUNCTION public.soundexespm(entrada text) RETURNS text
 
       	RETURN soundex;	
       END;	
+      $$;
+
+
+--
+-- Name: transaction_lowercase_wallet_fn(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.transaction_lowercase_wallet_fn() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        NEW."wallet" := LOWER(NEW."wallet");
+        RETURN NEW;
+      END;
       $$;
 
 
@@ -2767,7 +2795,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-20 12:07:41.342877'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
 );
 
 
@@ -2804,7 +2832,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-20 12:07:41.342877'::timestamp without time zone NOT NULL
+    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
 );
 
 
@@ -4834,8 +4862,8 @@ CREATE TABLE public.transaction (
     fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
     sincronizado boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
-    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY[('learningpoints'::character varying)::text, ('usdt'::character varying)::text, ('celo'::character varying)::text, ('ccop'::character varying)::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text])))
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying, 'ccop'::character varying])::text[]))),
+    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying])::text[])))
 );
 
 
@@ -6816,6 +6844,13 @@ CREATE UNIQUE INDEX usuario_nusuario ON public.usuario USING btree (nusuario);
 
 
 --
+-- Name: billetera_usuario billetera_usuario_lowercase_billetera_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billetera_usuario_lowercase_billetera_trigger BEFORE INSERT OR UPDATE OF billetera ON public.billetera_usuario FOR EACH ROW EXECUTE FUNCTION public.billetera_usuario_lowercase_billetera_fn();
+
+
+--
 -- Name: cor1440_gen_actividad cor1440_gen_recalcular_tras_cambiar_actividad; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -6960,6 +6995,13 @@ CREATE TRIGGER msip_tras_crear_pais AFTER INSERT ON public.msip_pais FOR EACH RO
 --
 
 CREATE TRIGGER msip_tras_crear_vereda AFTER INSERT ON public.msip_vereda FOR EACH ROW EXECUTE FUNCTION public.msip_ubicacionpre_tras_crear_vereda();
+
+
+--
+-- Name: transaction transaction_lowercase_wallet_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER transaction_lowercase_wallet_trigger BEFORE INSERT OR UPDATE OF wallet ON public.transaction FOR EACH ROW EXECUTE FUNCTION public.transaction_lowercase_wallet_fn();
 
 
 --
@@ -8245,5 +8287,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5rvVYe9lsphJMKoQHV7sWYBjFrt3JaA6EumOpuGIBT1skYsmzXXIaJiFtOEbUOz
+\unrestrict 0Ds3mBOcv2nHmkRcB6lEupLmSsCnVOmRdvcpacRPvEJa65jeVNR8Y5gePwiJc8Y
 

@@ -28,26 +28,26 @@ export type Numeric = ColumnType<string, number | string, number | string>;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface ArInternalMetadata {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   key: string;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
   value: string | null;
 }
 
 export interface BilleteraUsuario {
-  answerFib: string | null;
+  answer_fib: string | null;
   billetera: string;
-  createdAt: Timestamp;
+  created_at: Timestamp;
   id: Generated<Int8>;
   nonce: string | null;
-  nonceExpiresAt: Timestamp | null;
+  nonce_expires_at: Timestamp | null;
   token: string | null;
-  updatedAt: Timestamp;
-  usuarioId: number;
+  updated_at: Timestamp;
+  usuario_id: number;
 }
 
 export interface Cor1440GenActividad {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fecha: Timestamp;
   id: Generated<number>;
   lugar: string | null;
@@ -55,184 +55,184 @@ export interface Cor1440GenActividad {
   nombre: string | null;
   objetivo: string | null;
   observaciones: string | null;
-  oficinaId: number;
+  oficina_id: number;
   resultado: string | null;
-  updatedAt: Timestamp | null;
-  usuarioId: number;
+  updated_at: Timestamp | null;
+  usuario_id: number;
 }
 
 export interface Cor1440GenActividadActividadpf {
-  actividadId: number;
-  actividadpfId: number;
+  actividad_id: number;
+  actividadpf_id: number;
 }
 
 export interface Cor1440GenActividadActividadtipo {
-  actividadId: number | null;
-  actividadtipoId: number | null;
+  actividad_id: number | null;
+  actividadtipo_id: number | null;
 }
 
 export interface Cor1440GenActividadAnexo {
-  actividadId: number;
-  anexoId: number;
+  actividad_id: number;
+  anexo_id: number;
   id: Generated<number>;
 }
 
 export interface Cor1440GenActividadarea {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacreacion: Generated<Timestamp | null>;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   nombre: string | null;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface Cor1440GenActividadareasActividad {
-  actividadareaId: number | null;
-  actividadId: number | null;
-  createdAt: Timestamp | null;
+  actividad_id: number | null;
+  actividadarea_id: number | null;
+  created_at: Timestamp | null;
   id: Generated<number>;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface Cor1440GenActividadOrgsocial {
-  actividadId: Int8;
-  orgsocialId: Int8;
+  actividad_id: Int8;
+  orgsocial_id: Int8;
 }
 
 export interface Cor1440GenActividadpf {
-  actividadtipoId: number | null;
+  actividadtipo_id: number | null;
   descripcion: string | null;
-  formularioId: number | null;
-  heredadeId: number | null;
+  formulario_id: number | null;
+  heredade_id: number | null;
   id: Generated<number>;
   nombrecorto: string | null;
-  proyectofinancieroId: number | null;
-  resultadopfId: number | null;
+  proyectofinanciero_id: number | null;
+  resultadopf_id: number | null;
   sufijoRuta: string | null;
   titulo: string | null;
 }
 
 export interface Cor1440GenActividadpfMindicadorpf {
-  actividadpfId: number | null;
-  mindicadorpfId: number | null;
+  actividadpf_id: number | null;
+  mindicadorpf_id: number | null;
 }
 
 export interface Cor1440GenActividadProyecto {
-  actividadId: number | null;
+  actividad_id: number | null;
   id: Generated<number>;
-  proyectoId: number | null;
+  proyecto_id: number | null;
 }
 
 export interface Cor1440GenActividadProyectofinanciero {
-  actividadId: number;
+  actividad_id: number;
   id: Generated<number>;
-  proyectofinancieroId: number;
+  proyectofinanciero_id: number;
 }
 
 export interface Cor1440GenActividadRangoedadac {
-  actividadId: number | null;
-  createdAt: Timestamp | null;
+  actividad_id: number | null;
+  created_at: Timestamp | null;
   fl: number | null;
   fr: number | null;
   id: Generated<number>;
   ml: number | null;
   mr: number | null;
-  rangoedadacId: number | null;
+  rangoedadac_id: number | null;
   s: number | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface Cor1440GenActividadRespuestafor {
-  actividadId: number;
-  respuestaforId: number;
+  actividad_id: number;
+  respuestafor_id: number;
 }
 
 export interface Cor1440GenActividadtipo {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   listadoasistencia: boolean | null;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface Cor1440GenActividadtipoFormulario {
-  actividadtipoId: number;
-  formularioId: number;
+  actividadtipo_id: number;
+  formulario_id: number;
 }
 
 export interface Cor1440GenActividadUsuario {
-  actividadId: number;
-  usuarioId: number;
+  actividad_id: number;
+  usuario_id: number;
 }
 
 export interface Cor1440GenAnexoEfecto {
-  anexoId: number | null;
-  efectoId: number | null;
+  anexo_id: number | null;
+  efecto_id: number | null;
   id: Generated<Int8>;
 }
 
 export interface Cor1440GenAnexoProyectofinanciero {
-  anexoId: number | null;
+  anexo_id: number | null;
   id: Generated<Int8>;
-  proyectofinancieroId: number | null;
+  proyectofinanciero_id: number | null;
 }
 
 export interface Cor1440GenAsistencia {
-  actividadId: number;
+  actividad_id: number;
   externo: boolean | null;
   id: Generated<Int8>;
-  orgsocialId: number | null;
-  perfilorgsocialId: number | null;
-  personaId: number;
-  rangoedadacId: number | null;
+  orgsocial_id: number | null;
+  perfilorgsocial_id: number | null;
+  persona_id: number;
+  rangoedadac_id: number | null;
 }
 
 export interface Cor1440GenBeneficiariopf {
-  personaId: number | null;
-  proyectofinancieroId: number | null;
+  persona_id: number | null;
+  proyectofinanciero_id: number | null;
 }
 
 export interface Cor1440GenCaracterizacionpersona {
   id: Generated<Int8>;
-  personaId: number;
-  respuestaforId: number;
-  ulteditorId: number;
+  persona_id: number;
+  respuestafor_id: number;
+  ulteditor_id: number;
 }
 
 export interface Cor1440GenCaracterizacionpf {
-  formularioId: number | null;
-  proyectofinancieroId: number | null;
+  formulario_id: number | null;
+  proyectofinanciero_id: number | null;
 }
 
 export interface Cor1440GenDatointermedioti {
   filtro: string | null;
   funcion: string | null;
   id: Generated<Int8>;
-  mindicadorpfId: number | null;
+  mindicadorpf_id: number | null;
   nombre: string;
   nombreinterno: string | null;
-  tipoindicadorId: number | null;
+  tipoindicador_id: number | null;
 }
 
 export interface Cor1440GenDatointermediotiPmindicadorpf {
-  datointermediotiId: number;
+  datointermedioti_id: number;
   id: Generated<Int8>;
-  pmindicadorpfId: number;
+  pmindicadorpf_id: number;
   rutaevidencia: string | null;
   valor: number | null;
 }
 
 export interface Cor1440GenDesembolso {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   detalle: string | null;
   fecha: Timestamp | null;
   id: Generated<Int8>;
-  proyectofinancieroId: number;
-  updatedAt: Timestamp;
+  proyectofinanciero_id: number;
+  updated_at: Timestamp;
   valorpesos: Numeric | null;
 }
 
@@ -240,54 +240,54 @@ export interface Cor1440GenEfecto {
   descripcion: string | null;
   fecha: Timestamp | null;
   id: Generated<Int8>;
-  indicadorpfId: number | null;
+  indicadorpf_id: number | null;
   nombre: string | null;
-  registradoporId: number | null;
+  registradopor_id: number | null;
 }
 
 export interface Cor1440GenEfectoOrgsocial {
-  efectoId: number | null;
-  orgsocialId: number | null;
+  efecto_id: number | null;
+  orgsocial_id: number | null;
 }
 
 export interface Cor1440GenEfectoRespuestafor {
-  efectoId: number | null;
-  respuestaforId: number | null;
+  efecto_id: number | null;
+  respuestafor_id: number | null;
 }
 
 export interface Cor1440GenFinanciador {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacreacion: Timestamp | null;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   nombre: string | null;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface Cor1440GenFinanciadorProyectofinanciero {
-  financiadorId: number;
-  proyectofinancieroId: number;
+  financiador_id: number;
+  proyectofinanciero_id: number;
 }
 
 export interface Cor1440GenFormularioMindicadorpf {
-  formularioId: Int8;
-  mindicadorpfId: Int8;
+  formulario_id: Int8;
+  mindicadorpf_id: Int8;
 }
 
 export interface Cor1440GenFormularioTipoindicador {
-  formularioId: number;
-  tipoindicadorId: number;
+  formulario_id: number;
+  tipoindicador_id: number;
 }
 
 export interface Cor1440GenIndicadorpf {
   id: Generated<Int8>;
   indicador: string;
   numero: string;
-  objetivopfId: number | null;
-  proyectofinancieroId: number | null;
-  resultadopfId: number | null;
-  tipoindicadorId: number | null;
+  objetivopf_id: number | null;
+  proyectofinanciero_id: number | null;
+  resultadopf_id: number | null;
+  tipoindicador_id: number | null;
 }
 
 export interface Cor1440GenInforme {
@@ -301,7 +301,7 @@ export interface Cor1440GenInforme {
   columnatipo: boolean | null;
   contextoexterno: string | null;
   contextointerno: string | null;
-  createdAt: Timestamp;
+  created_at: Timestamp;
   dificultades: string | null;
   filtroactividadarea: number | null;
   filtrofechafin: Timestamp;
@@ -315,44 +315,44 @@ export interface Cor1440GenInforme {
   logros: string | null;
   recomendaciones: string | null;
   titulo: string;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface Cor1440GenInformeauditoria {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   detalle: string | null;
   devoluciones: boolean | null;
   fecha: Timestamp | null;
   id: Generated<Int8>;
-  proyectofinancieroId: number;
+  proyectofinanciero_id: number;
   seguimiento: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface Cor1440GenInformefinanciero {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   detalle: string | null;
   devoluciones: boolean | null;
   fecha: Timestamp | null;
   id: Generated<Int8>;
-  proyectofinancieroId: number;
+  proyectofinanciero_id: number;
   seguimiento: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface Cor1440GenInformenarrativo {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   detalle: string | null;
   devoluciones: boolean | null;
   fecha: Timestamp | null;
   id: Generated<Int8>;
-  proyectofinancieroId: number;
+  proyectofinanciero_id: number;
   seguimiento: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface Cor1440GenMindicadorpf {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   descd1: string | null;
   descd2: string | null;
   descd3: string | null;
@@ -360,29 +360,29 @@ export interface Cor1440GenMindicadorpf {
   frecuenciaanual: string | null;
   funcionresultado: string | null;
   id: Generated<Int8>;
-  indicadorpfId: number;
+  indicadorpf_id: number;
   medircon: number | null;
   meta: number | null;
-  proyectofinancieroId: number;
-  updatedAt: Timestamp;
+  proyectofinanciero_id: number;
+  updated_at: Timestamp;
 }
 
 export interface Cor1440GenObjetivopf {
   id: Generated<Int8>;
   numero: string;
   objetivo: string;
-  proyectofinancieroId: number | null;
+  proyectofinanciero_id: number | null;
 }
 
 export interface Cor1440GenPlantillahcmProyectofinanciero {
-  plantillahcmId: number | null;
-  proyectofinancieroId: number | null;
+  plantillahcm_id: number | null;
+  proyectofinanciero_id: number | null;
 }
 
 export interface Cor1440GenPmindicadorpf {
   acciones: string | null;
   analisis: string | null;
-  createdAt: Timestamp;
+  created_at: Timestamp;
   datosmedicion: Json | null;
   dmed1: number | null;
   dmed2: number | null;
@@ -392,7 +392,7 @@ export interface Cor1440GenPmindicadorpf {
   finicio: Timestamp | null;
   id: Generated<Int8>;
   meta: number | null;
-  mindicadorpfId: number;
+  mindicadorpf_id: number;
   plazo: string | null;
   porcump: number | null;
   resind: number | null;
@@ -400,14 +400,14 @@ export interface Cor1440GenPmindicadorpf {
   responsables: string | null;
   restiempo: string | null;
   rutaevidencia: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
   urlev1: string | null;
   urlev2: string | null;
   urlev3: string | null;
 }
 
 export interface Cor1440GenProyecto {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacierre: Timestamp | null;
   fechacreacion: Timestamp | null;
   fechadeshabilitacion: Timestamp | null;
@@ -416,7 +416,7 @@ export interface Cor1440GenProyecto {
   nombre: string | null;
   observaciones: string | null;
   resultados: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface Cor1440GenProyectofinanciero {
@@ -424,11 +424,11 @@ export interface Cor1440GenProyectofinanciero {
   aporteotrosej: number | null;
   aportepropioej: number | null;
   centrocosto: string | null;
-  chainId: Generated<number | null>;
+  chain_id: Generated<number | null>;
   compromisos: string | null;
   conBilletera: boolean | null;
-  contractAddress: string | null;
-  createdAt: Timestamp | null;
+  contract_address: string | null;
+  created_at: Timestamp | null;
   creditoImagen: string | null;
   creditosMd: string | null;
   dificultad: Generated<string | null>;
@@ -452,33 +452,33 @@ export interface Cor1440GenProyectofinanciero {
   porPagar: number | null;
   prefijoRuta: string | null;
   presupuestototalej: number | null;
-  responsableId: number | null;
+  responsable_id: number | null;
   resumenMd: string | null;
   saldoaejecutarp: Numeric | null;
-  sectorapcId: number | null;
+  sectorapc_id: number | null;
   sinBilletera: boolean | null;
   subtitulo: string | null;
   tasaej: number | null;
-  tipomonedaId: number | null;
+  tipomoneda_id: number | null;
   titulo: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface Cor1440GenProyectofinancieroUsuario {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   id: Generated<Int8>;
-  proyectofinancieroId: number;
-  updatedAt: Timestamp;
-  usuarioId: number | null;
+  proyectofinanciero_id: number;
+  updated_at: Timestamp;
+  usuario_id: number | null;
 }
 
 export interface Cor1440GenProyectoProyectofinanciero {
-  proyectofinancieroId: number;
-  proyectoId: number;
+  proyecto_id: number;
+  proyectofinanciero_id: number;
 }
 
 export interface Cor1440GenRangoedadac {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacreacion: Timestamp | null;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
@@ -486,29 +486,29 @@ export interface Cor1440GenRangoedadac {
   limitesuperior: number | null;
   nombre: string | null;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface Cor1440GenResultadopf {
   id: Generated<Int8>;
   numero: string;
-  objetivopfId: number | null;
-  proyectofinancieroId: number | null;
+  objetivopf_id: number | null;
+  proyectofinanciero_id: number | null;
   resultado: string;
 }
 
 export interface Cor1440GenSectorapc {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface Cor1440GenTipoindicador {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   descd1: string | null;
   descd2: string | null;
   descd3: string | null;
@@ -524,58 +524,58 @@ export interface Cor1440GenTipoindicador {
   medircon: number | null;
   nombre: string | null;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface Cor1440GenTipomoneda {
   codiso4217: string;
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   nombre: string;
   observaciones: string | null;
-  paisId: number | null;
+  pais_id: number | null;
   simbolo: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface CredentialEmission {
-  chainId: Generated<string>;
-  courseId: number;
-  emittedAt: Generated<Timestamp>;
+  chain_id: Generated<string>;
+  course_id: number;
+  emitted_at: Generated<Timestamp>;
   hash: string | null;
   id: Generated<number>;
-  isPremium: Generated<boolean>;
-  tokenId: number;
-  usuarioId: number;
+  is_premium: Generated<boolean>;
+  token_id: number;
+  usuario_id: number;
 }
 
 export interface CredentialMetadata {
-  chainId: Generated<string>;
-  imageUrl: string;
-  isPremium: Generated<boolean | null>;
-  isSoulbound: Generated<boolean | null>;
+  chain_id: Generated<string>;
+  image_url: string;
+  is_premium: Generated<boolean | null>;
+  is_soulbound: Generated<boolean | null>;
   name: string;
   site: string;
-  tokenId: number;
+  token_id: number;
   type: string;
-  updatedAt: Generated<Timestamp>;
+  updated_at: Generated<Timestamp>;
 }
 
 export interface GuideUsuario {
-  actividadpfId: number;
+  actividadpf_id: number;
   amountpaid: number;
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   points: number;
   profilescore: number;
-  updatedAt: Timestamp | null;
-  usuarioId: number;
+  updated_at: Timestamp | null;
+  usuario_id: number;
 }
 
 export interface Heb412GenCampohc {
   columna: string;
-  docId: number;
+  doc_id: number;
   fila: number | null;
   id: Generated<number>;
   nombrecampo: string;
@@ -585,7 +585,7 @@ export interface Heb412GenCampoplantillahcm {
   columna: string | null;
   id: Generated<number>;
   nombrecampo: string | null;
-  plantillahcmId: number | null;
+  plantillahcm_id: number | null;
 }
 
 export interface Heb412GenCampoplantillahcr {
@@ -593,23 +593,23 @@ export interface Heb412GenCampoplantillahcr {
   fila: number | null;
   id: Generated<Int8>;
   nombrecampo: string | null;
-  plantillahcrId: number | null;
+  plantillahcr_id: number | null;
 }
 
 export interface Heb412GenCarpetaexclusiva {
   carpeta: string | null;
-  createdAt: Timestamp;
-  grupoId: number | null;
+  created_at: Timestamp;
+  grupo_id: number | null;
   id: Generated<Int8>;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface Heb412GenDoc {
-  adjuntoContentType: string | null;
-  adjuntoFileName: string | null;
-  adjuntoFileSize: number | null;
-  adjuntoUpdatedAt: Timestamp | null;
-  createdAt: Timestamp;
+  adjunto_content_type: string | null;
+  adjunto_file_name: string | null;
+  adjunto_file_size: number | null;
+  adjunto_updated_at: Timestamp | null;
+  created_at: Timestamp;
   descripcion: string | null;
   dirpapa: number | null;
   filainicial: number | null;
@@ -619,23 +619,23 @@ export interface Heb412GenDoc {
   nombre: string | null;
   nombremenu: string | null;
   ruta: string | null;
-  tdocId: number | null;
-  tdocType: string | null;
+  tdoc_id: number | null;
+  tdoc_type: string | null;
   tipodoc: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
   url: string | null;
   vista: string | null;
 }
 
 export interface Heb412GenFormularioPlantillahcm {
-  formularioId: number | null;
-  plantillahcmId: number | null;
+  formulario_id: number | null;
+  plantillahcm_id: number | null;
 }
 
 export interface Heb412GenFormularioPlantillahcr {
-  formularioId: number | null;
+  formulario_id: number | null;
   id: Generated<Int8>;
-  plantillahcrId: number | null;
+  plantillahcr_id: number | null;
 }
 
 export interface Heb412GenPlantilladoc {
@@ -671,7 +671,7 @@ export interface Mr519GenCampo {
   ayudauso: string | null;
   columna: number | null;
   fila: number | null;
-  formularioId: number;
+  formulario_id: number;
   id: Generated<Int8>;
   nombre: string;
   nombreinterno: string | null;
@@ -684,9 +684,9 @@ export interface Mr519GenEncuestapersona {
   adurl: string | null;
   fecha: Timestamp | null;
   id: Generated<Int8>;
-  personaId: number | null;
-  planencuestaId: number | null;
-  respuestaforId: number | null;
+  persona_id: number | null;
+  planencuesta_id: number | null;
+  respuestafor_id: number | null;
 }
 
 export interface Mr519GenEncuestausuario {
@@ -694,8 +694,8 @@ export interface Mr519GenEncuestausuario {
   fechafin: Timestamp | null;
   fechainicio: Timestamp;
   id: Generated<Int8>;
-  respuestaforId: number | null;
-  usuarioId: number;
+  respuestafor_id: number | null;
+  usuario_id: number;
 }
 
 export interface Mr519GenFormulario {
@@ -705,7 +705,7 @@ export interface Mr519GenFormulario {
 }
 
 export interface Mr519GenOpcioncs {
-  campoId: number;
+  campo_id: number;
   id: Generated<Int8>;
   nombre: string;
   valor: string;
@@ -713,65 +713,65 @@ export interface Mr519GenOpcioncs {
 
 export interface Mr519GenPlanencuesta {
   adurl: string | null;
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechafin: Timestamp | null;
   fechaini: Timestamp | null;
-  formularioId: number | null;
+  formulario_id: number | null;
   id: Generated<Int8>;
-  plantillacorreoinvId: number | null;
-  updatedAt: Timestamp;
+  plantillacorreoinv_id: number | null;
+  updated_at: Timestamp;
 }
 
 export interface Mr519GenRespuestafor {
   fechacambio: Timestamp;
   fechaini: Timestamp;
-  formularioId: number | null;
+  formulario_id: number | null;
   id: Generated<Int8>;
 }
 
 export interface Mr519GenValorcampo {
-  campoId: number;
+  campo_id: number;
   id: Generated<Int8>;
-  respuestaforId: number;
+  respuestafor_id: number;
   valor: string | null;
   valorjson: Json | null;
 }
 
 export interface MsipAnexo {
-  adjuntoContentType: string;
-  adjuntoFileName: string;
-  adjuntoFileSize: number;
-  adjuntoUpdatedAt: Timestamp | null;
-  createdAt: Timestamp | null;
+  adjunto_content_type: string;
+  adjunto_file_name: string;
+  adjunto_file_size: number;
+  adjunto_updated_at: Timestamp | null;
+  created_at: Timestamp | null;
   descripcion: string | null;
   id: Generated<number>;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipBitacora {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   detalle: Json | null;
   fecha: Timestamp;
   id: Generated<Int8>;
   ip: string | null;
   modelo: string | null;
-  modeloId: number | null;
+  modelo_id: number | null;
   operacion: string | null;
   params: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
   url: string | null;
-  usuarioId: number | null;
+  usuario_id: number | null;
 }
 
 export interface MsipCentropoblado {
-  cplocalCod: number | null;
-  createdAt: Timestamp | null;
+  cplocal_cod: number | null;
+  created_at: Timestamp | null;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   latitud: number | null;
   longitud: number | null;
-  municipioId: number | null;
+  municipio_id: number | null;
   nombre: string;
   observaciones: string | null;
   svgcdalto: number | null;
@@ -781,19 +781,19 @@ export interface MsipCentropoblado {
   svgrotx: number | null;
   svgroty: number | null;
   svgruta: string | null;
-  tcentropobladoId: Generated<string>;
+  tcentropoblado_id: Generated<string>;
   ultvigenciafin: Timestamp | null;
   ultvigenciaini: Timestamp | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipCentropobladoHistvigencia {
-  centropobladoId: number | null;
-  cplocalCod: number | null;
+  centropoblado_id: number | null;
+  cplocal_cod: number | null;
   id: Generated<Int8>;
   nombre: string | null;
   observaciones: string | null;
-  tcentropobladoId: string | null;
+  tcentropoblado_id: string | null;
   vigenciafin: Timestamp;
   vigenciaini: Timestamp | null;
 }
@@ -802,8 +802,8 @@ export interface MsipDepartamento {
   catiso: string | null;
   codiso: string | null;
   codreg: number | null;
-  createdAt: Timestamp | null;
-  deplocalCod: number | null;
+  created_at: Timestamp | null;
+  deplocal_cod: number | null;
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
@@ -811,7 +811,7 @@ export interface MsipDepartamento {
   longitud: number | null;
   nombre: string;
   observaciones: string | null;
-  paisId: Generated<number>;
+  pais_id: Generated<number>;
   svgcdalto: number | null;
   svgcdancho: number | null;
   svgcdx: number | null;
@@ -821,15 +821,15 @@ export interface MsipDepartamento {
   svgruta: string | null;
   ultvigenciafin: Timestamp | null;
   ultvigenciaini: Timestamp | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipDepartamentoHistvigencia {
   catiso: number | null;
   codiso: number | null;
   codreg: number | null;
-  departamentoId: number | null;
-  deplocalCod: number | null;
+  departamento_id: number | null;
+  deplocal_cod: number | null;
   id: Generated<Int8>;
   nombre: string | null;
   observaciones: string | null;
@@ -838,70 +838,70 @@ export interface MsipDepartamentoHistvigencia {
 }
 
 export interface MsipEstadosol {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface MsipEtiqueta {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipEtiquetaMunicipio {
-  etiquetaId: Int8;
-  municipioId: Int8;
+  etiqueta_id: Int8;
+  municipio_id: Int8;
 }
 
 export interface MsipEtiquetaPersona {
-  createdAt: Timestamp;
-  etiquetaId: number;
+  created_at: Timestamp;
+  etiqueta_id: number;
   fecha: Timestamp;
   id: Generated<Int8>;
   observaciones: string | null;
-  personaId: number;
-  updatedAt: Timestamp;
-  usuarioId: number;
+  persona_id: number;
+  updated_at: Timestamp;
+  usuario_id: number;
 }
 
 export interface MsipEtnia {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   descripcion: string | null;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface MsipFuenteprensa {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp | null;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   nombre: string | null;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipGrupo {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface MsipGrupoper {
@@ -911,8 +911,8 @@ export interface MsipGrupoper {
 }
 
 export interface MsipGrupoUsuario {
-  grupoId: Int8;
-  usuarioId: Int8;
+  grupo_id: Int8;
+  usuario_id: Int8;
 }
 
 export interface MsipMundepSinorden {
@@ -922,14 +922,14 @@ export interface MsipMundepSinorden {
 
 export interface MsipMunicipio {
   codreg: number | null;
-  createdAt: Timestamp | null;
-  departamentoId: number | null;
+  created_at: Timestamp | null;
+  departamento_id: number | null;
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   latitud: number | null;
   longitud: number | null;
-  munlocalCod: number | null;
+  munlocal_cod: number | null;
   nombre: string;
   observaciones: string | null;
   svgcdalto: number | null;
@@ -942,14 +942,14 @@ export interface MsipMunicipio {
   tipomun: string | null;
   ultvigenciafin: Timestamp | null;
   ultvigenciaini: Timestamp | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipMunicipioHistvigencia {
   codreg: number | null;
   id: Generated<Int8>;
-  municipioId: number | null;
-  munlocalCod: number | null;
+  municipio_id: number | null;
+  munlocal_cod: number | null;
   nombre: string | null;
   observaciones: string | null;
   vigenciafin: Timestamp;
@@ -957,50 +957,50 @@ export interface MsipMunicipioHistvigencia {
 }
 
 export interface MsipOficina {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipOrgsocial {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   direccion: string | null;
   fax: string | null;
   fechadeshabilitacion: Timestamp | null;
-  grupoperId: number;
+  grupoper_id: number;
   id: Generated<Int8>;
-  paisId: number | null;
+  pais_id: number | null;
   telefono: string | null;
-  tipoorgId: Generated<number>;
-  updatedAt: Timestamp;
+  tipoorg_id: Generated<number>;
+  updated_at: Timestamp;
   web: string | null;
 }
 
 export interface MsipOrgsocialPersona {
   cargo: string | null;
   correo: string | null;
-  createdAt: Timestamp;
+  created_at: Timestamp;
   id: Generated<Int8>;
-  orgsocialId: number | null;
-  perfilorgsocialId: number | null;
-  personaId: number;
-  updatedAt: Timestamp;
+  orgsocial_id: number | null;
+  perfilorgsocial_id: number | null;
+  persona_id: number;
+  updated_at: Timestamp;
 }
 
 export interface MsipOrgsocialSectororgsocial {
-  orgsocialId: number | null;
-  sectororgsocialId: number | null;
+  orgsocial_id: number | null;
+  sectororgsocial_id: number | null;
 }
 
 export interface MsipPais {
   alfa2: string | null;
   alfa3: string | null;
   codiso: number | null;
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   div1: string | null;
   div2: string | null;
   div3: string | null;
@@ -1010,9 +1010,9 @@ export interface MsipPais {
   latitud: number | null;
   longitud: number | null;
   nombre: string;
-  nombreisoEspanol: string;
-  nombreisoFrances: string | null;
-  nombreisoIngles: string | null;
+  nombreiso_espanol: string;
+  nombreiso_frances: string | null;
+  nombreiso_ingles: string | null;
   observaciones: string | null;
   svgcdalto: number | null;
   svgcdancho: number | null;
@@ -1023,7 +1023,7 @@ export interface MsipPais {
   svgruta: string | null;
   ultvigenciafin: Timestamp | null;
   ultvigenciaini: Timestamp | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipPaisHistvigencia {
@@ -1032,89 +1032,89 @@ export interface MsipPaisHistvigencia {
   codcambio: string | null;
   codiso: number | null;
   id: Generated<Int8>;
-  paisId: number | null;
+  pais_id: number | null;
   vigenciafin: Timestamp;
   vigenciaini: Timestamp | null;
 }
 
 export interface MsipPerfilorgsocial {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface MsipPersona {
   anionac: number | null;
   apellidos: string;
-  centropobladoId: number | null;
-  createdAt: Timestamp | null;
-  departamentoId: number | null;
+  centropoblado_id: number | null;
+  created_at: Timestamp | null;
+  departamento_id: number | null;
   dianac: number | null;
-  etniaId: Generated<number>;
+  etnia_id: Generated<number>;
   id: Generated<number>;
   mesnac: number | null;
-  municipioId: number | null;
+  municipio_id: number | null;
   nacionalde: number | null;
   nombres: string;
   numerodocumento: string | null;
-  paisId: number | null;
+  pais_id: number | null;
   sexo: Generated<string>;
-  tdocumentoId: number | null;
-  updatedAt: Timestamp | null;
+  tdocumento_id: number | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipPersonaTrelacion {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   id: Generated<number>;
   observaciones: string | null;
   persona1: number;
   persona2: number;
-  trelacionId: Generated<string>;
-  updatedAt: Timestamp | null;
+  trelacion_id: Generated<string>;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipSectororgsocial {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface MsipSolicitud {
-  createdAt: Timestamp;
-  estadosolId: number | null;
+  created_at: Timestamp;
+  estadosol_id: number | null;
   fecha: Timestamp;
   id: Generated<Int8>;
   solicitud: string | null;
-  updatedAt: Timestamp;
-  usuarioId: number;
+  updated_at: Timestamp;
+  usuario_id: number;
 }
 
 export interface MsipSolicitudUsuarionotificar {
-  solicitudId: number | null;
-  usuarionotificarId: number | null;
+  solicitud_id: number | null;
+  usuarionotificar_id: number | null;
 }
 
 export interface MsipTcentropoblado {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: string;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipTdocumento {
   ayuda: string | null;
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   formatoregex: string | null;
@@ -1122,146 +1122,146 @@ export interface MsipTdocumento {
   nombre: string;
   observaciones: string | null;
   sigla: string;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipTema {
-  alertaExitoFondo: string | null;
-  alertaExitoFuente: string | null;
-  alertaProblemaFondo: string | null;
-  alertaProblemaFuente: string | null;
-  btnAccionFondoFin: string | null;
-  btnAccionFondoIni: string | null;
-  btnAccionFuente: string | null;
-  btnPeligroFondoFin: string | null;
-  btnPeligroFondoIni: string | null;
-  btnPeligroFuente: string | null;
-  btnPrimarioFondoFin: string | null;
-  btnPrimarioFondoIni: string | null;
-  btnPrimarioFuente: string | null;
-  colorFlotaSubitemFondo: string | null;
-  colorFlotaSubitemFuente: string | null;
-  colorFuente: string | null;
-  createdAt: Timestamp;
+  alerta_exito_fondo: string | null;
+  alerta_exito_fuente: string | null;
+  alerta_problema_fondo: string | null;
+  alerta_problema_fuente: string | null;
+  btn_accion_fondo_fin: string | null;
+  btn_accion_fondo_ini: string | null;
+  btn_accion_fuente: string | null;
+  btn_peligro_fondo_fin: string | null;
+  btn_peligro_fondo_ini: string | null;
+  btn_peligro_fuente: string | null;
+  btn_primario_fondo_fin: string | null;
+  btn_primario_fondo_ini: string | null;
+  btn_primario_fuente: string | null;
+  color_flota_subitem_fondo: string | null;
+  color_flota_subitem_fuente: string | null;
+  color_fuente: string | null;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   fondo: string | null;
-  fondoLista: string | null;
+  fondo_lista: string | null;
   id: Generated<Int8>;
-  navFin: string | null;
-  navFuente: string | null;
-  navIni: string | null;
+  nav_fin: string | null;
+  nav_fuente: string | null;
+  nav_ini: string | null;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface MsipTipoorg {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface MsipTrelacion {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: string;
   inverso: string | null;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipTrivalente {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface MsipTsitio {
-  createdAt: Timestamp | null;
+  created_at: Timestamp | null;
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipUbicacion {
-  centropobladoId: number | null;
-  createdAt: Timestamp | null;
-  departamentoId: number | null;
+  centropoblado_id: number | null;
+  created_at: Timestamp | null;
+  departamento_id: number | null;
   id: Generated<number>;
   latitud: number | null;
   longitud: number | null;
   lugar: string | null;
-  municipioId: number | null;
-  paisId: Generated<number | null>;
+  municipio_id: number | null;
+  pais_id: Generated<number | null>;
   sitio: string | null;
-  tsitioId: Generated<number>;
-  updatedAt: Timestamp | null;
+  tsitio_id: Generated<number>;
+  updated_at: Timestamp | null;
 }
 
 export interface MsipUbicacionpre {
-  centropobladoId: number | null;
-  createdAt: Timestamp;
-  departamentoId: number | null;
+  centropoblado_id: number | null;
+  created_at: Timestamp;
+  departamento_id: number | null;
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   latitud: number | null;
   longitud: number | null;
   lugar: string | null;
-  municipioId: number | null;
+  municipio_id: number | null;
   nombre: string;
-  nombreSinPais: string | null;
+  nombre_sin_pais: string | null;
   observaciones: string | null;
-  paisId: number;
+  pais_id: number;
   sitio: string | null;
-  tsitioId: number | null;
-  updatedAt: Timestamp;
-  veredaId: number | null;
+  tsitio_id: number | null;
+  updated_at: Timestamp;
+  vereda_id: number | null;
 }
 
 export interface MsipVereda {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   latitud: number | null;
   longitud: number | null;
-  municipioId: number | null;
+  municipio_id: number | null;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
-  verlocalCod: number | null;
+  updated_at: Timestamp;
+  verlocal_cod: number | null;
 }
 
 export interface Nonce {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   id: Generated<Int8>;
   nonce: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface Religion {
-  createdAt: Timestamp;
+  created_at: Timestamp;
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
   nombre: string;
   observaciones: string | null;
-  updatedAt: Timestamp;
+  updated_at: Timestamp;
 }
 
 export interface SchemaMigrations {
@@ -1269,10 +1269,10 @@ export interface SchemaMigrations {
 }
 
 export interface SiteNonces {
-  availableLearningpoints: Generated<number>;
-  lastNonce: Generated<number>;
+  available_learningpoints: Generated<number>;
+  last_nonce: Generated<number>;
   site: string;
-  updatedAt: Timestamp | null;
+  updated_at: Timestamp | null;
 }
 
 export interface Transaction {
@@ -1281,194 +1281,194 @@ export interface Transaction {
   crypto: string;
   descripcion: string | null;
   fecha: Timestamp;
-  fechaActualizacion: Generated<Timestamp>;
-  fechaCreacion: Generated<Timestamp>;
+  fecha_actualizacion: Generated<Timestamp>;
+  fecha_creacion: Generated<Timestamp>;
   hash: string | null;
   id: Generated<number>;
-  impactoBalance: Numeric;
+  impacto_balance: Numeric;
   metadata: Json | null;
   sincronizado: Generated<boolean>;
   subcategoria: string | null;
   tipo: string;
-  usuarioId: number;
+  usuario_id: number;
   wallet: string;
 }
 
 export interface Userevent {
-  createdAt: Timestamp;
-  eventData: Json | null;
-  eventType: string;
+  created_at: Timestamp;
+  event_data: Json | null;
+  event_type: string;
   id: Generated<Int8>;
-  usuarioId: number | null;
+  usuario_id: number | null;
 }
 
 export interface Usuario {
-  createdAt: Timestamp | null;
-  currentSignInAt: Timestamp | null;
-  currentSignInIp: string | null;
+  created_at: Timestamp | null;
+  current_sign_in_at: Timestamp | null;
+  current_sign_in_ip: string | null;
   descripcion: string | null;
   email: Generated<string>;
-  encryptedPassword: Generated<string>;
-  excluirLeaderboard: Generated<boolean | null>;
-  failedAttempts: Generated<number | null>;
+  encrypted_password: Generated<string>;
+  excluir_leaderboard: Generated<boolean | null>;
+  failed_attempts: Generated<number | null>;
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;
-  fotoContentType: string | null;
-  fotoFileName: string | null;
-  fotoFileSize: Int8 | null;
-  fotoUpdatedAt: Timestamp | null;
+  foto_content_type: string | null;
+  foto_file_name: string | null;
+  foto_file_size: Int8 | null;
+  foto_updated_at: Timestamp | null;
   id: Generated<number>;
   idioma: Generated<string>;
+  last_sign_in_at: Timestamp | null;
+  last_sign_in_ip: string | null;
   lastgooddollarverification: Timestamp | null;
-  lastSignInAt: Timestamp | null;
-  lastSignInIp: string | null;
   learningscore: number | null;
-  lockedAt: Timestamp | null;
+  locked_at: Timestamp | null;
   nombre: string | null;
   nusuario: string;
-  oficinaId: number | null;
-  paisId: number | null;
-  passportName: string | null;
-  passportNationality: number | null;
+  oficina_id: number | null;
+  pais_id: number | null;
+  passport_name: string | null;
+  passport_nationality: number | null;
   password: Generated<string>;
   profilescore: number | null;
-  religionId: number | null;
-  rememberCreatedAt: Timestamp | null;
-  resetPasswordSentAt: Timestamp | null;
-  resetPasswordToken: string | null;
+  religion_id: number | null;
+  remember_created_at: Timestamp | null;
+  reset_password_sent_at: Timestamp | null;
+  reset_password_token: string | null;
   rol: Generated<number | null>;
-  signInCount: Generated<number>;
-  temaId: number | null;
-  unlockToken: string | null;
-  updatedAt: Timestamp | null;
+  sign_in_count: Generated<number>;
+  tema_id: number | null;
+  unlock_token: string | null;
+  updated_at: Timestamp | null;
 }
 
 export interface ViewUserScores {
   learningscore: number | null;
   profilescore: number | null;
-  userId: number | null;
+  user_id: number | null;
 }
 
 export interface DB {
-  arInternalMetadata: ArInternalMetadata;
-  billeteraUsuario: BilleteraUsuario;
-  cor1440GenActividad: Cor1440GenActividad;
-  cor1440GenActividadActividadpf: Cor1440GenActividadActividadpf;
-  cor1440GenActividadActividadtipo: Cor1440GenActividadActividadtipo;
-  cor1440GenActividadAnexo: Cor1440GenActividadAnexo;
-  cor1440GenActividadarea: Cor1440GenActividadarea;
-  cor1440GenActividadareasActividad: Cor1440GenActividadareasActividad;
-  cor1440GenActividadOrgsocial: Cor1440GenActividadOrgsocial;
-  cor1440GenActividadpf: Cor1440GenActividadpf;
-  cor1440GenActividadpfMindicadorpf: Cor1440GenActividadpfMindicadorpf;
-  cor1440GenActividadProyecto: Cor1440GenActividadProyecto;
-  cor1440GenActividadProyectofinanciero: Cor1440GenActividadProyectofinanciero;
-  cor1440GenActividadRangoedadac: Cor1440GenActividadRangoedadac;
-  cor1440GenActividadRespuestafor: Cor1440GenActividadRespuestafor;
-  cor1440GenActividadtipo: Cor1440GenActividadtipo;
-  cor1440GenActividadtipoFormulario: Cor1440GenActividadtipoFormulario;
-  cor1440GenActividadUsuario: Cor1440GenActividadUsuario;
-  cor1440GenAnexoEfecto: Cor1440GenAnexoEfecto;
-  cor1440GenAnexoProyectofinanciero: Cor1440GenAnexoProyectofinanciero;
-  cor1440GenAsistencia: Cor1440GenAsistencia;
-  cor1440GenBeneficiariopf: Cor1440GenBeneficiariopf;
-  cor1440GenCaracterizacionpersona: Cor1440GenCaracterizacionpersona;
-  cor1440GenCaracterizacionpf: Cor1440GenCaracterizacionpf;
-  cor1440GenDatointermedioti: Cor1440GenDatointermedioti;
-  cor1440GenDatointermediotiPmindicadorpf: Cor1440GenDatointermediotiPmindicadorpf;
-  cor1440GenDesembolso: Cor1440GenDesembolso;
-  cor1440GenEfecto: Cor1440GenEfecto;
-  cor1440GenEfectoOrgsocial: Cor1440GenEfectoOrgsocial;
-  cor1440GenEfectoRespuestafor: Cor1440GenEfectoRespuestafor;
-  cor1440GenFinanciador: Cor1440GenFinanciador;
-  cor1440GenFinanciadorProyectofinanciero: Cor1440GenFinanciadorProyectofinanciero;
-  cor1440GenFormularioMindicadorpf: Cor1440GenFormularioMindicadorpf;
-  cor1440GenFormularioTipoindicador: Cor1440GenFormularioTipoindicador;
-  cor1440GenIndicadorpf: Cor1440GenIndicadorpf;
-  cor1440GenInforme: Cor1440GenInforme;
-  cor1440GenInformeauditoria: Cor1440GenInformeauditoria;
-  cor1440GenInformefinanciero: Cor1440GenInformefinanciero;
-  cor1440GenInformenarrativo: Cor1440GenInformenarrativo;
-  cor1440GenMindicadorpf: Cor1440GenMindicadorpf;
-  cor1440GenObjetivopf: Cor1440GenObjetivopf;
-  cor1440GenPlantillahcmProyectofinanciero: Cor1440GenPlantillahcmProyectofinanciero;
-  cor1440GenPmindicadorpf: Cor1440GenPmindicadorpf;
-  cor1440GenProyecto: Cor1440GenProyecto;
-  cor1440GenProyectofinanciero: Cor1440GenProyectofinanciero;
-  cor1440GenProyectofinancieroUsuario: Cor1440GenProyectofinancieroUsuario;
-  cor1440GenProyectoProyectofinanciero: Cor1440GenProyectoProyectofinanciero;
-  cor1440GenRangoedadac: Cor1440GenRangoedadac;
-  cor1440GenResultadopf: Cor1440GenResultadopf;
-  cor1440GenSectorapc: Cor1440GenSectorapc;
-  cor1440GenTipoindicador: Cor1440GenTipoindicador;
-  cor1440GenTipomoneda: Cor1440GenTipomoneda;
-  credentialEmission: CredentialEmission;
-  credentialMetadata: CredentialMetadata;
-  guideUsuario: GuideUsuario;
-  heb412GenCampohc: Heb412GenCampohc;
-  heb412GenCampoplantillahcm: Heb412GenCampoplantillahcm;
-  heb412GenCampoplantillahcr: Heb412GenCampoplantillahcr;
-  heb412GenCarpetaexclusiva: Heb412GenCarpetaexclusiva;
-  heb412GenDoc: Heb412GenDoc;
-  heb412GenFormularioPlantillahcm: Heb412GenFormularioPlantillahcm;
-  heb412GenFormularioPlantillahcr: Heb412GenFormularioPlantillahcr;
-  heb412GenPlantilladoc: Heb412GenPlantilladoc;
-  heb412GenPlantillahcm: Heb412GenPlantillahcm;
-  heb412GenPlantillahcr: Heb412GenPlantillahcr;
-  mr519GenCampo: Mr519GenCampo;
-  mr519GenEncuestapersona: Mr519GenEncuestapersona;
-  mr519GenEncuestausuario: Mr519GenEncuestausuario;
-  mr519GenFormulario: Mr519GenFormulario;
-  mr519GenOpcioncs: Mr519GenOpcioncs;
-  mr519GenPlanencuesta: Mr519GenPlanencuesta;
-  mr519GenRespuestafor: Mr519GenRespuestafor;
-  mr519GenValorcampo: Mr519GenValorcampo;
-  msipAnexo: MsipAnexo;
-  msipBitacora: MsipBitacora;
-  msipCentropoblado: MsipCentropoblado;
-  msipCentropobladoHistvigencia: MsipCentropobladoHistvigencia;
-  msipDepartamento: MsipDepartamento;
-  msipDepartamentoHistvigencia: MsipDepartamentoHistvigencia;
-  msipEstadosol: MsipEstadosol;
-  msipEtiqueta: MsipEtiqueta;
-  msipEtiquetaMunicipio: MsipEtiquetaMunicipio;
-  msipEtiquetaPersona: MsipEtiquetaPersona;
-  msipEtnia: MsipEtnia;
-  msipFuenteprensa: MsipFuenteprensa;
-  msipGrupo: MsipGrupo;
-  msipGrupoper: MsipGrupoper;
-  msipGrupoUsuario: MsipGrupoUsuario;
-  msipMundepSinorden: MsipMundepSinorden;
-  msipMunicipio: MsipMunicipio;
-  msipMunicipioHistvigencia: MsipMunicipioHistvigencia;
-  msipOficina: MsipOficina;
-  msipOrgsocial: MsipOrgsocial;
-  msipOrgsocialPersona: MsipOrgsocialPersona;
-  msipOrgsocialSectororgsocial: MsipOrgsocialSectororgsocial;
-  msipPais: MsipPais;
-  msipPaisHistvigencia: MsipPaisHistvigencia;
-  msipPerfilorgsocial: MsipPerfilorgsocial;
-  msipPersona: MsipPersona;
-  msipPersonaTrelacion: MsipPersonaTrelacion;
-  msipSectororgsocial: MsipSectororgsocial;
-  msipSolicitud: MsipSolicitud;
-  msipSolicitudUsuarionotificar: MsipSolicitudUsuarionotificar;
-  msipTcentropoblado: MsipTcentropoblado;
-  msipTdocumento: MsipTdocumento;
-  msipTema: MsipTema;
-  msipTipoorg: MsipTipoorg;
-  msipTrelacion: MsipTrelacion;
-  msipTrivalente: MsipTrivalente;
-  msipTsitio: MsipTsitio;
-  msipUbicacion: MsipUbicacion;
-  msipUbicacionpre: MsipUbicacionpre;
-  msipVereda: MsipVereda;
+  ar_internal_metadata: ArInternalMetadata;
+  billetera_usuario: BilleteraUsuario;
+  cor1440_gen_actividad: Cor1440GenActividad;
+  cor1440_gen_actividad_actividadpf: Cor1440GenActividadActividadpf;
+  cor1440_gen_actividad_actividadtipo: Cor1440GenActividadActividadtipo;
+  cor1440_gen_actividad_anexo: Cor1440GenActividadAnexo;
+  cor1440_gen_actividad_orgsocial: Cor1440GenActividadOrgsocial;
+  cor1440_gen_actividad_proyecto: Cor1440GenActividadProyecto;
+  cor1440_gen_actividad_proyectofinanciero: Cor1440GenActividadProyectofinanciero;
+  cor1440_gen_actividad_rangoedadac: Cor1440GenActividadRangoedadac;
+  cor1440_gen_actividad_respuestafor: Cor1440GenActividadRespuestafor;
+  cor1440_gen_actividad_usuario: Cor1440GenActividadUsuario;
+  cor1440_gen_actividadarea: Cor1440GenActividadarea;
+  cor1440_gen_actividadareas_actividad: Cor1440GenActividadareasActividad;
+  cor1440_gen_actividadpf: Cor1440GenActividadpf;
+  cor1440_gen_actividadpf_mindicadorpf: Cor1440GenActividadpfMindicadorpf;
+  cor1440_gen_actividadtipo: Cor1440GenActividadtipo;
+  cor1440_gen_actividadtipo_formulario: Cor1440GenActividadtipoFormulario;
+  cor1440_gen_anexo_efecto: Cor1440GenAnexoEfecto;
+  cor1440_gen_anexo_proyectofinanciero: Cor1440GenAnexoProyectofinanciero;
+  cor1440_gen_asistencia: Cor1440GenAsistencia;
+  cor1440_gen_beneficiariopf: Cor1440GenBeneficiariopf;
+  cor1440_gen_caracterizacionpersona: Cor1440GenCaracterizacionpersona;
+  cor1440_gen_caracterizacionpf: Cor1440GenCaracterizacionpf;
+  cor1440_gen_datointermedioti: Cor1440GenDatointermedioti;
+  cor1440_gen_datointermedioti_pmindicadorpf: Cor1440GenDatointermediotiPmindicadorpf;
+  cor1440_gen_desembolso: Cor1440GenDesembolso;
+  cor1440_gen_efecto: Cor1440GenEfecto;
+  cor1440_gen_efecto_orgsocial: Cor1440GenEfectoOrgsocial;
+  cor1440_gen_efecto_respuestafor: Cor1440GenEfectoRespuestafor;
+  cor1440_gen_financiador: Cor1440GenFinanciador;
+  cor1440_gen_financiador_proyectofinanciero: Cor1440GenFinanciadorProyectofinanciero;
+  cor1440_gen_formulario_mindicadorpf: Cor1440GenFormularioMindicadorpf;
+  cor1440_gen_formulario_tipoindicador: Cor1440GenFormularioTipoindicador;
+  cor1440_gen_indicadorpf: Cor1440GenIndicadorpf;
+  cor1440_gen_informe: Cor1440GenInforme;
+  cor1440_gen_informeauditoria: Cor1440GenInformeauditoria;
+  cor1440_gen_informefinanciero: Cor1440GenInformefinanciero;
+  cor1440_gen_informenarrativo: Cor1440GenInformenarrativo;
+  cor1440_gen_mindicadorpf: Cor1440GenMindicadorpf;
+  cor1440_gen_objetivopf: Cor1440GenObjetivopf;
+  cor1440_gen_plantillahcm_proyectofinanciero: Cor1440GenPlantillahcmProyectofinanciero;
+  cor1440_gen_pmindicadorpf: Cor1440GenPmindicadorpf;
+  cor1440_gen_proyecto: Cor1440GenProyecto;
+  cor1440_gen_proyecto_proyectofinanciero: Cor1440GenProyectoProyectofinanciero;
+  cor1440_gen_proyectofinanciero: Cor1440GenProyectofinanciero;
+  cor1440_gen_proyectofinanciero_usuario: Cor1440GenProyectofinancieroUsuario;
+  cor1440_gen_rangoedadac: Cor1440GenRangoedadac;
+  cor1440_gen_resultadopf: Cor1440GenResultadopf;
+  cor1440_gen_sectorapc: Cor1440GenSectorapc;
+  cor1440_gen_tipoindicador: Cor1440GenTipoindicador;
+  cor1440_gen_tipomoneda: Cor1440GenTipomoneda;
+  credential_emission: CredentialEmission;
+  credential_metadata: CredentialMetadata;
+  guide_usuario: GuideUsuario;
+  heb412_gen_campohc: Heb412GenCampohc;
+  heb412_gen_campoplantillahcm: Heb412GenCampoplantillahcm;
+  heb412_gen_campoplantillahcr: Heb412GenCampoplantillahcr;
+  heb412_gen_carpetaexclusiva: Heb412GenCarpetaexclusiva;
+  heb412_gen_doc: Heb412GenDoc;
+  heb412_gen_formulario_plantillahcm: Heb412GenFormularioPlantillahcm;
+  heb412_gen_formulario_plantillahcr: Heb412GenFormularioPlantillahcr;
+  heb412_gen_plantilladoc: Heb412GenPlantilladoc;
+  heb412_gen_plantillahcm: Heb412GenPlantillahcm;
+  heb412_gen_plantillahcr: Heb412GenPlantillahcr;
+  mr519_gen_campo: Mr519GenCampo;
+  mr519_gen_encuestapersona: Mr519GenEncuestapersona;
+  mr519_gen_encuestausuario: Mr519GenEncuestausuario;
+  mr519_gen_formulario: Mr519GenFormulario;
+  mr519_gen_opcioncs: Mr519GenOpcioncs;
+  mr519_gen_planencuesta: Mr519GenPlanencuesta;
+  mr519_gen_respuestafor: Mr519GenRespuestafor;
+  mr519_gen_valorcampo: Mr519GenValorcampo;
+  msip_anexo: MsipAnexo;
+  msip_bitacora: MsipBitacora;
+  msip_centropoblado: MsipCentropoblado;
+  msip_centropoblado_histvigencia: MsipCentropobladoHistvigencia;
+  msip_departamento: MsipDepartamento;
+  msip_departamento_histvigencia: MsipDepartamentoHistvigencia;
+  msip_estadosol: MsipEstadosol;
+  msip_etiqueta: MsipEtiqueta;
+  msip_etiqueta_municipio: MsipEtiquetaMunicipio;
+  msip_etiqueta_persona: MsipEtiquetaPersona;
+  msip_etnia: MsipEtnia;
+  msip_fuenteprensa: MsipFuenteprensa;
+  msip_grupo: MsipGrupo;
+  msip_grupo_usuario: MsipGrupoUsuario;
+  msip_grupoper: MsipGrupoper;
+  msip_mundep_sinorden: MsipMundepSinorden;
+  msip_municipio: MsipMunicipio;
+  msip_municipio_histvigencia: MsipMunicipioHistvigencia;
+  msip_oficina: MsipOficina;
+  msip_orgsocial: MsipOrgsocial;
+  msip_orgsocial_persona: MsipOrgsocialPersona;
+  msip_orgsocial_sectororgsocial: MsipOrgsocialSectororgsocial;
+  msip_pais: MsipPais;
+  msip_pais_histvigencia: MsipPaisHistvigencia;
+  msip_perfilorgsocial: MsipPerfilorgsocial;
+  msip_persona: MsipPersona;
+  msip_persona_trelacion: MsipPersonaTrelacion;
+  msip_sectororgsocial: MsipSectororgsocial;
+  msip_solicitud: MsipSolicitud;
+  msip_solicitud_usuarionotificar: MsipSolicitudUsuarionotificar;
+  msip_tcentropoblado: MsipTcentropoblado;
+  msip_tdocumento: MsipTdocumento;
+  msip_tema: MsipTema;
+  msip_tipoorg: MsipTipoorg;
+  msip_trelacion: MsipTrelacion;
+  msip_trivalente: MsipTrivalente;
+  msip_tsitio: MsipTsitio;
+  msip_ubicacion: MsipUbicacion;
+  msip_ubicacionpre: MsipUbicacionpre;
+  msip_vereda: MsipVereda;
   nonce: Nonce;
   religion: Religion;
-  schemaMigrations: SchemaMigrations;
-  siteNonces: SiteNonces;
+  schema_migrations: SchemaMigrations;
+  site_nonces: SiteNonces;
   transaction: Transaction;
   userevent: Userevent;
   usuario: Usuario;
-  viewUserScores: ViewUserScores;
+  view_user_scores: ViewUserScores;
 }
