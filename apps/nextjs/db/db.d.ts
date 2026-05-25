@@ -553,6 +553,7 @@ export interface CredentialEmission {
 
 export interface CredentialMetadata {
   chain_id: Generated<string>;
+  course_id: number | null;
   image_url: string;
   is_premium: Generated<boolean | null>;
   is_soulbound: Generated<boolean | null>;
