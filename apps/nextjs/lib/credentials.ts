@@ -14,7 +14,7 @@ import {
   getTokenIdByCourseId,
   hasCredentialOnChain,
   getCeloCredentialsAddress,
-  mintCredentialWithRetry,
+  mintCourseWithRetry,
 } from '@pasosdejesus/m/blockchain'
 import path from 'path'
 import { IS_PRODUCTION } from '@/lib/config'
@@ -83,6 +83,10 @@ export async function mintCourseCredential(
     contractAddress,
     courseId,
   )
+  if (tokenId === 0) {
+    console.warn(`mintCourseCredential: courseId ${courseId} not registered on contract`)
+    return null
+  }
 
   // 3. On-chain duplicate check
   const alreadyHas = await hasCredentialOnChain(
@@ -115,13 +119,13 @@ export async function mintCourseCredential(
 
   // 5. Mint with retry
   const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
-  const hash = await mintCredentialWithRetry({
+  const hash = await mintCourseWithRetry({
     account,
     rpcUrl: getRpcUrl(),
     chain: getChain(),
     contractAddress,
     userAddress: walletAddress as `0x${string}`,
-    tokenId: Number(tokenId),
+    courseId,
   })
 
   // 6. Wait for confirmation

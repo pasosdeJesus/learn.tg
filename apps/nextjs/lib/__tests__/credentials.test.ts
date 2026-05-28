@@ -11,19 +11,19 @@ const {
   mockGetTokenIdByCourseId,
   mockHasCredentialOnChain,
   mockGetCeloCredentialsAddress,
-  mockMintCredentialWithRetry,
+  mockMintCourseWithRetry,
 } = vi.hoisted(() => ({
   mockGetTokenIdByCourseId: vi.fn(),
   mockHasCredentialOnChain: vi.fn(),
   mockGetCeloCredentialsAddress: vi.fn(),
-  mockMintCredentialWithRetry: vi.fn(),
+  mockMintCourseWithRetry: vi.fn(),
 }))
 
 vi.mock('@pasosdejesus/m/blockchain', () => ({
   getTokenIdByCourseId: mockGetTokenIdByCourseId,
   hasCredentialOnChain: mockHasCredentialOnChain,
   getCeloCredentialsAddress: mockGetCeloCredentialsAddress,
-  mintCredentialWithRetry: mockMintCredentialWithRetry,
+  mintCourseWithRetry: mockMintCourseWithRetry,
 }))
 
 const mockWaitForTxReceipt = vi.fn().mockResolvedValue({ status: 'success' })
@@ -74,7 +74,7 @@ describe('mintCourseCredential', () => {
     mockGetCeloCredentialsAddress.mockReturnValue('0x593f4486Fc7F3403e01a9c71E90ceE5DaD84A439')
     mockGetTokenIdByCourseId.mockResolvedValue(3)
     mockHasCredentialOnChain.mockResolvedValue(false)
-    mockMintCredentialWithRetry.mockResolvedValue('0xabctransactionhash123')
+    mockMintCourseWithRetry.mockResolvedValue('0xabctransactionhash123')
   })
   afterEach(() => { process.env = { ...originalEnv } })
 
@@ -84,7 +84,7 @@ describe('mintCourseCredential', () => {
     const result = await mintCourseCredential(1, 3, '0x123')
 
     expect(result).toBeNull()
-    expect(mockMintCredentialWithRetry).not.toHaveBeenCalled()
+    expect(mockMintCourseWithRetry).not.toHaveBeenCalled()
   })
 
   it('returns null when already on-chain (backfills cache)', async () => {
@@ -95,7 +95,7 @@ describe('mintCourseCredential', () => {
 
     expect(result).toBeNull()
     expect(sharedDb._insertInto).toBe('credential_emission')
-    expect(mockMintCredentialWithRetry).not.toHaveBeenCalled()
+    expect(mockMintCourseWithRetry).not.toHaveBeenCalled()
   })
 
   it('mints a new credential and records emission', async () => {
@@ -107,9 +107,9 @@ describe('mintCourseCredential', () => {
     expect(result!.tokenId).toBe(3)
     expect(result!.txHash).toBe('0xabctransactionhash123')
     expect(result!.isPremium).toBe(false)
-    expect(mockMintCredentialWithRetry).toHaveBeenCalledTimes(1)
-    expect(mockMintCredentialWithRetry).toHaveBeenCalledWith(
-      expect.objectContaining({ tokenId: 3, userAddress: '0x123' })
+    expect(mockMintCourseWithRetry).toHaveBeenCalledTimes(1)
+    expect(mockMintCourseWithRetry).toHaveBeenCalledWith(
+      expect.objectContaining({ courseId: 3, userAddress: '0x123' })
     )
     expect(mockWaitForTxReceipt).toHaveBeenCalled()
     expect(sharedDb._insertInto).toBe('credential_emission')
@@ -124,9 +124,9 @@ describe('mintCourseCredential', () => {
     expect(result!.isPremium).toBe(true)
   })
 
-  it('throws when mintCredentialWithRetry fails', async () => {
+  it('throws when mintCourseWithRetry fails', async () => {
     sharedDb = createMockDb([null])
-    mockMintCredentialWithRetry.mockRejectedValue(new Error('tx failed after retries'))
+    mockMintCourseWithRetry.mockRejectedValue(new Error('tx failed after retries'))
 
     await expect(mintCourseCredential(1, 3, '0x123')).rejects.toThrow('tx failed after retries')
   })
@@ -143,7 +143,7 @@ describe('mintCourseCredential', () => {
 
     await mintCourseCredential(2, 102, '0x789')
 
-    expect(mockMintCredentialWithRetry).toHaveBeenCalledWith(
+    expect(mockMintCourseWithRetry).toHaveBeenCalledWith(
       expect.objectContaining({ chain: { id: 11142220 } })
     )
   })
