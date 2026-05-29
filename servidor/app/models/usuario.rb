@@ -31,7 +31,7 @@ class Usuario < ActiveRecord::Base
   scope :filtrar_alterno, lambda { |otros_params|
     uid = []
     if otros_params["walletAddress"]
-      uid = BilleteraUsuario.where(billetera: otros_params["walletAddress"])
+      uid = BilleteraUsuario.where('LOWER(billetera) = ?', otros_params["walletAddress"].downcase)
         .pluck(:usuario_id)
     end
     where(id: uid)

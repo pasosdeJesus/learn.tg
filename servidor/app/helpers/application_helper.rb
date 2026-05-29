@@ -8,7 +8,7 @@ module ApplicationHelper
         merr << "No token"
         return
       end
-      b = BilleteraUsuario.where(billetera: request[:walletAddress])
+      b = BilleteraUsuario.where('LOWER(billetera) = ?', request[:walletAddress].downcase)
       if b.count == 0
         merr << "No BilleteraUsuario for #{request[:walletAddress]}"
         return
@@ -29,7 +29,7 @@ module ApplicationHelper
         merr << "No token"
         return false
       end
-      b = BilleteraUsuario.where(billetera: request[:walletAddress])
+      b = BilleteraUsuario.where('LOWER(billetera) = ?', request[:walletAddress].downcase)
       if b.count == 0
         merr << "No BilleteraUsuario for #{request[:walletAddress]}"
         return false
