@@ -61,7 +61,7 @@ export default function Header({ lang = 'en' }) {
                 address &&
                 session &&
                 session.address &&
-                session.address == address && (
+                session.address.toLowerCase() === address.toLowerCase() && (
                   <Button asChild variant="ghost">
                     <Link href={`/${lang ? lang : 'es'}/profile`}>
                       {t('profile')}

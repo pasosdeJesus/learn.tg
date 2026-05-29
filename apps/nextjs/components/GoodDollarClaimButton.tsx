@@ -52,7 +52,7 @@ export function GoodDollarClaimButton({
   }), [lang])
 
   const handleClaim = async () => {
-    if (!session || !address || session.address !== address || !publicClient || !walletClient || !identitySDK) {
+    if (!session || !address || session.address?.toLowerCase() !== address.toLowerCase() || !publicClient || !walletClient || !identitySDK) {
       setError(t('sessionRequired'))
       return
     }
@@ -67,7 +67,7 @@ export function GoodDollarClaimButton({
     }
 
     const claimSDK = new ClaimSDK({
-      account: session.address,
+      account: session.address as `0x${string}`,
       publicClient,
       walletClient,
       identitySDK: identitySDK.sdk,
