@@ -46,7 +46,7 @@ export default function Page({
   const wagmiConfig = useConfig()
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
-  const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading test...","error":"Error: ","notFound":"Test not found."},"es":{"loading":"Cargando prueba...","error":"Error: ","notFound":"Prueba no encontrada."}}), [lang])
+  const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading test...","error":"Error: ","notFound":"Test not found.","credentialEarned":"Course credential earned! View it on your public profile."},"es":{"loading":"Cargando prueba...","error":"Error: ","notFound":"Prueba no encontrada.","credentialEarned":"¡Credencial del curso obtenida! Mírala en tu perfil público."}}), [lang])
 
   const {
     course,
@@ -64,6 +64,7 @@ export default function Page({
   const [flashSuccess, setFlashSuccess] = useState('')
   const [flashWarning, setFlashWarning] = useState('')
   const [scholarshipTx, setScholarshipTx] = useState('')
+  const [credentialEarned, setCredentialEarned] = useState(false)
   const [gCsrfToken, setGCsrfToken] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -350,6 +351,9 @@ export default function Page({
         if (response.data.scholarshipResult) {
           setScholarshipTx(response.data.scholarshipResult)
         }
+        if (response.data.credentialMinted) {
+          setCredentialEarned(true)
+        }
       }
     } catch (error: any) {
       console.error(error)
@@ -465,6 +469,16 @@ export default function Page({
                       onClick={() => setFlashSuccess('')}
                     >
                       {flashSuccess}
+                    </div>
+                  )}
+                  {credentialEarned && (
+                    <div className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800">
+                      🎓 {t('credentialEarned')}
+                    </div>
+                  )}
+                  {credentialEarned && (
+                    <div className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800">
+                      🎓 {t('credentialEarned')}
                     </div>
                   )}
                   {scholarshipTx && (
