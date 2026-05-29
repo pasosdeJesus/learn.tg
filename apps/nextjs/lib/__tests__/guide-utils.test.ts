@@ -46,7 +46,7 @@ vi.mock('kysely', () => ({
   sql: mockSql,
 }))
 
-vi.mock('@/.config/kysely.config', () => ({
+vi.mock('@/.config/kysely-db', () => ({
   newKyselyPostgresql: vi.fn(() => new MockKysely()),
 }))
 

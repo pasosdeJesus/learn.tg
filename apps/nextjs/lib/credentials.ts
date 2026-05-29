@@ -9,7 +9,7 @@ import {
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
-import { newKyselyPostgresql } from '@/.config/kysely.config'
+import { newKyselyPostgresql } from '@/.config/kysely-db'
 import {
   getTokenIdByCourseId,
   hasCredentialOnChain,

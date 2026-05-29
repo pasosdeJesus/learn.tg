@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 let sharedDb: any
 
 vi.mock('kysely', () => ({ Kysely: vi.fn(), PostgresDialect: vi.fn() }))
-vi.mock('@/.config/kysely.config', () => ({
+vi.mock('@/.config/kysely-db', () => ({
   newKyselyPostgresql: vi.fn(() => sharedDb),
 }))
 
