@@ -147,4 +147,14 @@ describe('mintCourseCredential', () => {
       expect.objectContaining({ chain: { id: 11142220 } })
     )
   })
+
+  it('returns null when courseId not registered (tokenId is 0)', async () => {
+    sharedDb = createMockDb([null])
+    mockGetTokenIdByCourseId.mockResolvedValue(0)
+
+    const result = await mintCourseCredential(1, 999, '0x123')
+
+    expect(result).toBeNull()
+    expect(mockMintCourseWithRetry).not.toHaveBeenCalled()
+  })
 })
