@@ -187,7 +187,7 @@ export default function Page() {
   if (
     (session && !address) ||
     (address && !session) ||
-    (address && session && session.address && address !== session.address)
+    (address && session && session.address && address.toLowerCase() !== session.address.toLowerCase())
   ) {
     return (
       <div className="p-10 mt-10">
@@ -199,7 +199,7 @@ export default function Page() {
   if (
     !course.sinBilletera &&
     course.conBilletera &&
-    (!session || !address || !session.address || session.address !== address)
+    (!session || !address || !session.address || session.address.toLowerCase() !== address.toLowerCase())
   ) {
     return <div className="mt-40">Connect Wallet</div>
   }

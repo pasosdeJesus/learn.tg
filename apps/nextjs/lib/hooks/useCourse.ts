@@ -23,7 +23,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
     if (
       (session && !address) ||
       (address && !session) ||
-      (address && session && session.address && address !== session.address)
+      (address && session && session.address && address.toLowerCase() !== session.address.toLowerCase())
     ) {
       setLoading(false)
       return
@@ -40,7 +40,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
 
       const csrfToken = await getCsrfToken()
 
-      if (session && address && session.address === address) {
+      if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
         url += `&walletAddress=${session.address}&token=${csrfToken}`
       }
 
@@ -60,7 +60,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
         basicCourse.id,
       )
 
-      if (session && address && session.address === address) {
+      if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
         detailUrl += `&walletAddress=${session.address}&token=${csrfToken}`
       }
 

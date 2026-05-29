@@ -124,7 +124,7 @@ export default function ProfileForm({ params }: PageProps) {
       !session ||
       !address ||
       !session.address ||
-      session.address != address
+      session.address.toLowerCase() !== address.toLowerCase()
     ) {
       alert('Problem with session, disconnect and connect again')
       return
@@ -350,7 +350,7 @@ export default function ProfileForm({ params }: PageProps) {
       }
     }
 
-    if (address && session && session.address && address == session.address) {
+    if (address && session && session.address && address.toLowerCase() === session.address.toLowerCase()) {
       fetchProfile()
     } else {
       setLoading(false)
@@ -468,7 +468,7 @@ export default function ProfileForm({ params }: PageProps) {
     )
   }
 
-  if (!(address && session && session.address && address == session.address)) {
+  if (!(address && session && session.address && address.toLowerCase() === session.address.toLowerCase())) {
     return (
       <div className="p-10 mt-10">
         Partial login. Please disconnect your wallet and connect and sign again.

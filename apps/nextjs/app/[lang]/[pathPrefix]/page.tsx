@@ -111,7 +111,7 @@ export default function Page({ params }: PageProps) {
   if (
     (session && !address) ||
     (address && !session) ||
-    (address && session && session.address && address !== session.address)
+    (address && session && session.address && address.toLowerCase() !== session.address.toLowerCase())
   ) {
     return (
       <div className="p-10 mt-10">

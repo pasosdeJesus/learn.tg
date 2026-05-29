@@ -53,7 +53,7 @@ export default function Page({ params }: PageProps) {
     if (
       (session && !address) ||
       (address && !session) ||
-      (address && session && session.address && address !== session.address)
+      (address && session && session.address && address.toLowerCase() !== session.address.toLowerCase())
     ) {
       return
     }
@@ -67,7 +67,7 @@ export default function Page({ params }: PageProps) {
       let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?filtro[busidioma]=${lang}`
       let csrfToken = null
 
-      if (session && address && session.address === address) {
+      if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
         csrfToken = await getCsrfToken()
         url += `&filtro[busconBilletera]=true&walletAddress=${session.address}&token=${csrfToken}`
       }
@@ -125,7 +125,7 @@ export default function Page({ params }: PageProps) {
   if (
     (session && !address) ||
     (address && !session) ||
-    (address && session && session.address && address !== session.address)
+    (address && session && session.address && address.toLowerCase() !== session.address.toLowerCase())
   ) {
     return (
       <div className="p-10 mt-10">
@@ -138,7 +138,7 @@ export default function Page({ params }: PageProps) {
     if (data?.increment) {
       setDonationIncrement(data.increment)
     }
-    if (!session || !address || !session.address || session.address !== address)
+    if (!session || !address || !session.address || session.address.toLowerCase() !== address.toLowerCase())
       return
     const csrfToken = await getCsrfToken()
     const url2 = `/api/scholarship?courseId=${courseId}&walletAddress=${session.address}&token=${csrfToken}`
