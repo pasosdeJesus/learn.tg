@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Loader2, Lock, Star, ExternalLink, Share2, Trophy } from 'lucide-react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { IS_PRODUCTION } from '@/lib/config'
 
 type PageProps = {
   params: Promise<{ lang: string; id: string }>
@@ -161,7 +162,7 @@ export default function PublicProfilePage({ params }: PageProps) {
     }
   }
 
-  const totalEarned = Number(profile.transactions.totalEarned).toFixed(2)
+  const explorerBase = IS_PRODUCTION ? 'https://celoscan.io' : 'https://sepolia.celoscan.io'
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -213,7 +214,7 @@ export default function PublicProfilePage({ params }: PageProps) {
             <div key={i} className="bg-white rounded-lg border p-3 flex items-center justify-between">
               <code className="text-sm text-gray-700 font-mono">{w.address}</code>
               <a
-                href={`https://celoscan.io/address/${w.address}`}
+                href={`${explorerBase}/address/${w.address}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
@@ -254,7 +255,7 @@ export default function PublicProfilePage({ params }: PageProps) {
                   </p>
                   {c.hash && (
                     <a
-                      href={`https://celoscan.io/tx/${c.hash}`}
+                      href={`${explorerBase}/tx/${c.hash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1"
@@ -282,8 +283,7 @@ export default function PublicProfilePage({ params }: PageProps) {
         </div>
         {profile.transactions.totalCount > 0 && (
           <p className="text-sm text-gray-600 mb-3">
-            {t('totalEarned')}: <span className="font-semibold text-green-600">{totalEarned} SLE</span>
-            {' · '}{profile.transactions.totalCount} tx
+            {profile.transactions.totalCount} tx
           </p>
         )}
         {profile.transactions.recent.length === 0 ? (
@@ -311,7 +311,7 @@ export default function PublicProfilePage({ params }: PageProps) {
                       {formatDate(tx.date)}
                       {tx.hash && (
                         <a
-                          href={`https://celoscan.io/tx/${tx.hash}`}
+                          href={`${explorerBase}/tx/${tx.hash}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="ml-2 text-blue-600 hover:text-blue-800"
