@@ -3,6 +3,7 @@
 import axios from 'axios'
 import type { AxiosResponse, AxiosError } from 'axios'
 import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import { use, useEffect, useState, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
@@ -104,11 +105,13 @@ export default function ProfileForm({ params }: PageProps) {
 
   const t = useMemo(() => createComponentT(lang, {
     en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', learningScore: 'Learning Score', displayName: 'Display name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country ( Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniquenes with GoodDollar ( Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
+      viewCredentials: 'View my public credentials',
       saveFailed: 'Failed to save profile.',
       expiredSession: '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.',
       connectionIssue: '\n\nPlease check your internet connection and try again.',
       errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below' },
     es: { editProfile: 'Edicion del Perfil', profileScore: 'Puntaje de Perfil', learningScore: 'Puntaje de Aprendizaje', displayName: 'Nombre por presentar', religion: 'Religion', selectReligion: 'Elige tu religion', countryVerified: 'Pais (Verificado:', selectCountry: 'Selecciona tu pais', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
+      viewCredentials: 'Ver mis credenciales públicas',
       saveFailed: 'Fallo al guardar el perfil.',
       expiredSession: '\n\nPuede deberse a que la sesi\u00f3n ha expirado. Por favor, intenta desconectar y reconectar tu billetera.',
       connectionIssue: '\n\nPor favor, revisa tu conexi\u00f3n a internet e int\u00e9ntalo de nuevo.',
@@ -518,6 +521,16 @@ export default function ProfileForm({ params }: PageProps) {
               </div>
             </div>
           </div>
+
+          {profile.userId && (
+          <div className="flex justify-center mb-8">
+            <Button asChild variant="outline">
+              <Link href={`/${lang}/user/${profile.userId}`}>
+                {t('viewCredentials')}
+              </Link>
+            </Button>
+          </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

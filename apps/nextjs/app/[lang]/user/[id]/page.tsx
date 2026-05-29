@@ -23,6 +23,7 @@ interface ProfileData {
     earnedAt: string
     isPremium: boolean
     hash: string
+    imageUrl: string
   }[]
   transactions: {
     totalCount: number
@@ -234,7 +235,7 @@ export default function PublicProfilePage({ params }: PageProps) {
             {profile.credentials.map((c, i) => (
               <div key={i} className="bg-white rounded-lg border p-4 flex items-start gap-3">
                 <img
-                  src={`/img/credential/${c.tokenId}.png`}
+                  src={`/${c.imageUrl}`}
                   alt={c.courseName}
                   className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
