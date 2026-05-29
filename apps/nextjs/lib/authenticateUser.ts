@@ -16,15 +16,25 @@ export async function authenticateUser(
   walletAddress?: string,
   token?: string
 ): Promise<AuthenticatedUser | null> {
+  console.log('**[authenticateUser] wallet:', walletAddress?.slice(0, 10) + '...',
+    'token:', token?.slice(0, 10) + '...')
   if (!walletAddress || !token) return null
 
   const billetera = await db
     .selectFrom('billetera_usuario')
-    .where('billetera', '=', walletAddress)
+    .where('billetera', '=', walletAddress.toLowerCase())
     .selectAll()
     .executeTakeFirst()
 
-  if (!billetera || billetera.token !== token) return null
+  if (!billetera) {
+    console.log('**[authenticateUser] billetera not found for wallet:', walletAddress)
+    return null
+  }
+  if (billetera.token !== token) {
+    console.log('**[authenticateUser] token mismatch. DB token:', (billetera.token || '').slice(0, 10) + '...',
+      'request token:', token.slice(0, 10) + '...')
+    return null
+  }
 
   const usuario = await db
     .selectFrom('usuario')
