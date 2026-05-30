@@ -11,6 +11,7 @@ if [ -n "$limit" ] && [ "$limit" != "unlimited" ]; then
   fi
 fi
 
+rm -rf .next
 pnpm install
 . ./.env
 cmd="node_modules/next/dist/bin/next dev -p${PORT} ${OPDEV}"

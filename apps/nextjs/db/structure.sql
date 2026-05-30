@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict eDaxbUkdQhng9AlH6T7gJKILMcanFM9kZfxgJCGew6IjtVSlX8a8rq6iKFNUxuN
+\restrict fvOrmBH3EAuocP5PkhShxQbG87iLNF0Ui0CS7FEL4GJxdkRedhdIXuAvKKSGRNT
 
 -- Dumped from database version 17.9
--- Dumped by pg_dump version 17.6
+-- Dumped by pg_dump version 17.9
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2795,7 +2795,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-20 12:07:41.342877'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
 );
 
 
@@ -2832,7 +2832,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-20 12:07:41.342877'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -4863,8 +4863,8 @@ CREATE TABLE public.transaction (
     fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
     sincronizado boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
-    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY[('learningpoints'::character varying)::text, ('usdt'::character varying)::text, ('celo'::character varying)::text, ('ccop'::character varying)::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text])))
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying, 'ccop'::character varying])::text[]))),
+    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying])::text[])))
 );
 
 
@@ -8296,5 +8296,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict eDaxbUkdQhng9AlH6T7gJKILMcanFM9kZfxgJCGew6IjtVSlX8a8rq6iKFNUxuN
+\unrestrict fvOrmBH3EAuocP5PkhShxQbG87iLNF0Ui0CS7FEL4GJxdkRedhdIXuAvKKSGRNT
 

@@ -32,6 +32,20 @@ COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
 
 
 --
+-- Name: billetera_usuario_lowercase_billetera_fn(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.billetera_usuario_lowercase_billetera_fn() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        NEW."billetera" := LOWER(NEW."billetera");
+        RETURN NEW;
+      END;
+      $$;
+
+
+--
 -- Name: completa_obs(character varying, character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1313,6 +1327,20 @@ CREATE FUNCTION public.soundexespm(entrada text) RETURNS text
 
       	RETURN soundex;	
       END;	
+      $$;
+
+
+--
+-- Name: transaction_lowercase_wallet_fn(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.transaction_lowercase_wallet_fn() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        NEW."wallet" := LOWER(NEW."wallet");
+        RETURN NEW;
+      END;
       $$;
 
 
@@ -2744,6 +2772,60 @@ CREATE SEQUENCE public.cor1440_gen_tipomoneda_id_seq
 --
 
 ALTER SEQUENCE public.cor1440_gen_tipomoneda_id_seq OWNED BY public.cor1440_gen_tipomoneda.id;
+
+
+--
+-- Name: credential_emission; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.credential_emission (
+    id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    course_id integer NOT NULL,
+    token_id integer NOT NULL,
+    chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
+    is_premium boolean DEFAULT false NOT NULL,
+    hash character varying(66),
+    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: credential_emission_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.credential_emission_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: credential_emission_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.credential_emission_id_seq OWNED BY public.credential_emission.id;
+
+
+--
+-- Name: credential_metadata; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.credential_metadata (
+    token_id integer NOT NULL,
+    chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
+    name character varying(255) NOT NULL,
+    type character varying(50) NOT NULL,
+    site character varying(50) NOT NULL,
+    is_premium boolean DEFAULT false,
+    is_soulbound boolean DEFAULT true,
+    image_url text NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    course_id integer
+);
 
 
 --
@@ -5132,6 +5214,13 @@ ALTER TABLE ONLY public.cor1440_gen_tipomoneda ALTER COLUMN id SET DEFAULT nextv
 
 
 --
+-- Name: credential_emission id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission ALTER COLUMN id SET DEFAULT nextval('public.credential_emission_id_seq'::regclass);
+
+
+--
 -- Name: heb412_gen_campohc id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -5748,6 +5837,30 @@ ALTER TABLE ONLY public.cor1440_gen_tipoindicador
 
 ALTER TABLE ONLY public.cor1440_gen_tipomoneda
     ADD CONSTRAINT cor1440_gen_tipomoneda_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: credential_emission credential_emission_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission
+    ADD CONSTRAINT credential_emission_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: credential_emission credential_emission_user_course_chain; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission
+    ADD CONSTRAINT credential_emission_user_course_chain UNIQUE (usuario_id, course_id, chain_id);
+
+
+--
+-- Name: credential_metadata credential_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_metadata
+    ADD CONSTRAINT credential_metadata_pkey PRIMARY KEY (token_id, chain_id);
 
 
 --
@@ -6408,6 +6521,13 @@ CREATE UNIQUE INDEX cor1440_gen_datointermedioti_pmindicadorpf_llaves_idx ON pub
 
 
 --
+-- Name: credential_emission_usuario_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX credential_emission_usuario_idx ON public.credential_emission USING btree (usuario_id);
+
+
+--
 -- Name: index_billetera_usuario_on_billetera; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6716,6 +6836,13 @@ CREATE UNIQUE INDEX usuario_nusuario ON public.usuario USING btree (nusuario);
 
 
 --
+-- Name: billetera_usuario billetera_usuario_lowercase_billetera_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billetera_usuario_lowercase_billetera_trigger BEFORE INSERT OR UPDATE OF billetera ON public.billetera_usuario FOR EACH ROW EXECUTE FUNCTION public.billetera_usuario_lowercase_billetera_fn();
+
+
+--
 -- Name: cor1440_gen_actividad cor1440_gen_recalcular_tras_cambiar_actividad; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -6863,6 +6990,13 @@ CREATE TRIGGER msip_tras_crear_vereda AFTER INSERT ON public.msip_vereda FOR EAC
 
 
 --
+-- Name: transaction transaction_lowercase_wallet_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER transaction_lowercase_wallet_trigger BEFORE INSERT OR UPDATE OF wallet ON public.transaction FOR EACH ROW EXECUTE FUNCTION public.transaction_lowercase_wallet_fn();
+
+
+--
 -- Name: msip_ubicacionpre tras_crear_o_actualizar_ubicacionpre; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -6891,6 +7025,30 @@ ALTER TABLE ONLY public.cor1440_gen_actividad_actividadtipo
 
 ALTER TABLE ONLY public.cor1440_gen_actividad_actividadtipo
     ADD CONSTRAINT cor1440_gen_actividadtipo_actividad_actividadtipo_id_fkey FOREIGN KEY (actividadtipo_id) REFERENCES public.cor1440_gen_actividadtipo(id);
+
+
+--
+-- Name: credential_emission credential_emission_course_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission
+    ADD CONSTRAINT credential_emission_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.cor1440_gen_proyectofinanciero(id) ON DELETE CASCADE;
+
+
+--
+-- Name: credential_emission credential_emission_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_emission
+    ADD CONSTRAINT credential_emission_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
+
+
+--
+-- Name: credential_metadata credential_metadata_course_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential_metadata
+    ADD CONSTRAINT credential_metadata_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.cor1440_gen_proyectofinanciero(id) ON DELETE CASCADE;
 
 
 --
