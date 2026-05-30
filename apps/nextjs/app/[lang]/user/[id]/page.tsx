@@ -69,7 +69,7 @@ export default function PublicProfilePage({ params }: PageProps) {
       txType: 'Type',
       txAmount: 'Amount',
       txDate: 'Date',
-      celoScan: 'CeloScan',
+      celoScan: 'Explorer',
     },
     es: {
       loading: 'Cargando perfil...',
@@ -95,7 +95,7 @@ export default function PublicProfilePage({ params }: PageProps) {
       txType: 'Tipo',
       txAmount: 'Monto',
       txDate: 'Fecha',
-      celoScan: 'CeloScan',
+      celoScan: 'Explorer',
     },
   }), [locale])
 
@@ -162,7 +162,7 @@ export default function PublicProfilePage({ params }: PageProps) {
     }
   }
 
-  const explorerBase = IS_PRODUCTION ? 'https://celoscan.io' : 'https://sepolia.celoscan.io'
+  const explorerBase = IS_PRODUCTION ? 'https://celo.blockscout.com' : 'https://celo-sepolia.blockscout.com'
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
