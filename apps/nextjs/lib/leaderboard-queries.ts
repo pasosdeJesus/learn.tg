@@ -11,6 +11,7 @@ const UBI_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'ubi-claim' 
 const UBI_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 2), 0)`
 const DONATIONS_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`.as('donations_usdt')
 const DONATIONS_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`
+const SBT_FIELD = sql<number>`COALESCE((SELECT COUNT(*) FROM credential_emission WHERE usuario_id = u.id), 0)`.as('sbt_count')
 const LP_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithLP')
 
 export async function buildLeaderboardQuery(
@@ -39,6 +40,7 @@ export async function buildLeaderboardQuery(
     SCHOLARSHIP_FIELD,
     UBI_FIELD,
     DONATIONS_FIELD,
+    SBT_FIELD,
     sql<number>`COUNT(*) OVER()`.as('total_count'),
   ]
 
@@ -61,6 +63,7 @@ export async function buildLeaderboardQuery(
   const orderByField = sortBy === 'learningpoints' ? sql`learningpoints` :
                       sortBy === 'scholarship_usdt' ? sql`scholarship_usdt` :
                       sortBy === 'ubi_celo' ? sql`ubi_celo` :
+                      sortBy === 'sbt_count' ? sql`sbt_count` :
                       sql`donations_usdt`
 
   query = query.orderBy(orderByField, sortOrder)

@@ -18,7 +18,7 @@ import { formatLearningPoints, formatUSDT, formatCELO } from '@/lib/format'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { LeaderboardRow } from '@/types/leaderboard'
 
-export type SortField = 'learningpoints' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt'
+export type SortField = 'learningpoints' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
 export type SortOrder = 'asc' | 'desc'
 
 interface LeaderboardTableProps {
@@ -60,8 +60,8 @@ export function LeaderboardTable({
 }: LeaderboardTableProps) {
   // Translation helper
   const t = useMemo(() => createComponentT(lang, {
-    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', lp: 'LP', learningPoints: 'Learning Points', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithLP: 'Users with LP', totalLP: 'Total LP', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {0} of {1} users', previous: 'Previous', pageOf: 'Page {0} of {1}', next: 'Next' },
-    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', lp: 'PA', learningPoints: 'Puntos de Aprendizaje', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithLP: 'Usuarios con PA', totalLP: 'Total PA', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {0} de {1} usuarios', previous: 'Anterior', pageOf: 'Página {0} de {1}', next: 'Siguiente' },
+    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', lp: 'LP', learningPoints: 'Learning Points', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', sbt: 'SBTs', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithLP: 'Users with LP', totalLP: 'Total LP', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {0} of {1} users', previous: 'Previous', pageOf: 'Page {0} of {1}', next: 'Next' },
+    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', lp: 'PA', learningPoints: 'Puntos de Aprendizaje', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', sbt: 'SBTs', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithLP: 'Usuarios con PA', totalLP: 'Total PA', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {0} de {1} usuarios', previous: 'Anterior', pageOf: 'Página {0} de {1}', next: 'Siguiente' },
   }), [lang])
 
   const handleSort = (field: SortField) => {
@@ -139,6 +139,11 @@ export function LeaderboardTable({
                   {t('donations')}
                 </SortableHeader>
               </TableHead>
+              <TableHead className="text-right">
+                <SortableHeader field="sbt_count">
+                  {t('sbt')}
+                </SortableHeader>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -156,6 +161,7 @@ export function LeaderboardTable({
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
                 </TableRow>
               ))
             ) : data.length === 0 ? (
@@ -170,7 +176,7 @@ export function LeaderboardTable({
                   <TableCell className="font-medium">{startRank + index}</TableCell>
                   <TableCell className="font-medium">
                     <Link 
-                      href={`/${lang}/user-transactions/${row.usuario_id}`}
+                      href={`/${lang}/user/${row.usuario_id}`}
                       className="text-primary hover:underline"
                     >
                       {row.username}
@@ -198,6 +204,9 @@ export function LeaderboardTable({
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {formatUSDT(row.donations_usdt)}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {row.sbt_count ?? 0}
                   </TableCell>
                 </TableRow>
               ))

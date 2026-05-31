@@ -7,11 +7,12 @@ export interface LeaderboardRow {
   scholarship_usdt: number
   ubi_celo: number
   donations_usdt: number
+  sbt_count?: number
   religion?: string | null
 }
 
 export interface LeaderboardQueryParams {
-  sortBy?: 'learningpoints' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt'
+  sortBy?: 'learningpoints' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
   sortOrder?: 'asc' | 'desc'
   country?: string
   page?: number
