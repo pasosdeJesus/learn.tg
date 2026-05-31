@@ -209,7 +209,7 @@ importers:
         version: 3.3.5
       '@pasosdejesus/m':
         specifier: gitlab:pasosdejesus/m
-        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=6f234189027fa3636946e0b0ecd231fc394d7320
+        version: git+https://git@gitlab.com:pasosdejesus/m.git#69ef8304aca7a3eceea4508f432955bd0e9de44b
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0
@@ -2046,8 +2046,8 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=6f234189027fa3636946e0b0ecd231fc394d7320':
-    resolution: {tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=6f234189027fa3636946e0b0ecd231fc394d7320}
+  '@pasosdejesus/m@git+https://git@gitlab.com:pasosdejesus/m.git#69ef8304aca7a3eceea4508f432955bd0e9de44b':
+    resolution: {commit: 69ef8304aca7a3eceea4508f432955bd0e9de44b, repo: git@gitlab.com:pasosdejesus/m.git, type: git}
     version: 0.6.2
     hasBin: true
 
@@ -4756,6 +4756,10 @@ packages:
 
   enhanced-resolve@5.22.0:
     resolution: {integrity: sha512-xYcDWrpELkFzz9SpZ3PlI6Eu6eD93Yf0WLDRxikGhWJ3MAir2SNZTIVCVZqZ/NUyx8AdMc2gT9C0gPiw18kG+A==}
+    engines: {node: '>=10.13.0'}
+
+  enhanced-resolve@5.22.1:
+    resolution: {integrity: sha512-6QEuw3zoX1SJQc7b87aBXke/no+mG2bTBgw29gWMQonLmpEkWoCAVkl+M49e48AZlWzxiDzDZzYdp6kobcyLww==}
     engines: {node: '>=10.13.0'}
 
   entities@8.0.0:
@@ -9950,7 +9954,7 @@ snapshots:
   '@iden3/binfileutils@0.0.11':
     dependencies:
       fastfile: 0.0.20
-      ffjavascript: 0.2.63
+      ffjavascript: 0.2.56
 
   '@iden3/binfileutils@0.0.12':
     dependencies:
@@ -10411,7 +10415,7 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=6f234189027fa3636946e0b0ecd231fc394d7320':
+  '@pasosdejesus/m@git+https://git@gitlab.com:pasosdejesus/m.git#69ef8304aca7a3eceea4508f432955bd0e9de44b':
     dependencies:
       dotenv: 17.4.2
       execa: 9.6.1
@@ -14208,6 +14212,11 @@ snapshots:
   engine.io-parser@5.2.3: {}
 
   enhanced-resolve@5.22.0:
+    dependencies:
+      graceful-fs: 4.2.11
+      tapable: 2.3.3
+
+  enhanced-resolve@5.22.1:
     dependencies:
       graceful-fs: 4.2.11
       tapable: 2.3.3
@@ -18331,7 +18340,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.16.0)
       browserslist: 4.28.2
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.22.0
+      enhanced-resolve: 5.22.1
       es-module-lexer: 2.1.0
       eslint-scope: 5.1.1
       events: 3.3.0
