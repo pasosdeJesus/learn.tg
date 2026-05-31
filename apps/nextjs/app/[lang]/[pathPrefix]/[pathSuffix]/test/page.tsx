@@ -3,6 +3,7 @@
 import axios from 'axios'
 import { getCsrfToken, useSession } from 'next-auth/react'
 import { use, useEffect, useState, useRef } from 'react'
+import Link from 'next/link'
 import { useAccount, useConfig, useWriteContract } from 'wagmi'
 import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
@@ -46,7 +47,7 @@ export default function Page({
   const wagmiConfig = useConfig()
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
-  const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading test...","error":"Error: ","notFound":"Test not found.","credentialEarned":"Course credential earned! View it on your public profile."},"es":{"loading":"Cargando prueba...","error":"Error: ","notFound":"Prueba no encontrada.","credentialEarned":"¡Credencial del curso obtenida! Mírala en tu perfil público."}}), [lang])
+  const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading test...","error":"Error: ","notFound":"Test not found.","credentialEarnedPrefix":"Course credential earned! View it on your","credentialEarnedLink":"public profile"},"es":{"loading":"Cargando prueba...","error":"Error: ","notFound":"Prueba no encontrada.","credentialEarnedPrefix":"¡Credencial del curso obtenida! Mírala en tu","credentialEarnedLink":"perfil público"}}), [lang])
 
   const {
     course,
@@ -65,6 +66,7 @@ export default function Page({
   const [flashWarning, setFlashWarning] = useState('')
   const [scholarshipTx, setScholarshipTx] = useState('')
   const [credentialEarned, setCredentialEarned] = useState(false)
+  const [credentialUserId, setCredentialUserId] = useState<number | null>(null)
   const [gCsrfToken, setGCsrfToken] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -308,6 +310,8 @@ export default function Page({
     setFlashError('')
     setFlashWarning('')
     setScholarshipTx('')
+    setCredentialEarned(false)
+    setCredentialUserId(null)
 
     try {
       const response = await axios.post('/api/check-crossword', {
@@ -353,6 +357,7 @@ export default function Page({
         }
         if (response.data.credentialMinted) {
           setCredentialEarned(true)
+          setCredentialUserId(response.data.credentialUserId)
         }
       }
     } catch (error: any) {
@@ -473,7 +478,10 @@ export default function Page({
                   )}
                   {credentialEarned && (
                     <div className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800">
-                      🎓 {t('credentialEarned')}
+                      🎓 {t('credentialEarnedPrefix')}{' '}
+                      <Link href={`/${lang}/user/${credentialUserId}`} className="underline font-semibold hover:text-blue-900">
+                        {t('credentialEarnedLink')}
+                      </Link>
                     </div>
                   )}
                   {scholarshipTx && (
