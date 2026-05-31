@@ -11,7 +11,7 @@ const UBI_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'ubi-claim' 
 const UBI_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'ubi-claim' AND t.crypto = 'celo' THEN t.cantidad ELSE 0 END), 2), 0)`
 const DONATIONS_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`.as('donations_usdt')
 const DONATIONS_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`
-const SBT_FIELD = sql<number>`COALESCE((SELECT COUNT(*) FROM credential_emission WHERE usuario_id = u.id), 0)`.as('sbt_count')
+const SBT_FIELD = sql<number>`COALESCE(ce_counts.cnt, 0)`.as('sbt_count')
 const LP_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithLP')
 
 export async function buildLeaderboardQuery(
@@ -26,6 +26,13 @@ export async function buildLeaderboardQuery(
     .selectFrom('usuario as u')
     .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
     .leftJoin('transaction as t', 'u.id', 't.usuario_id')
+    .leftJoin(
+      (eb) => eb.selectFrom('credential_emission')
+        .select(['usuario_id', eb.fn.countAll<number>().as('cnt')])
+        .groupBy('usuario_id')
+        .as('ce_counts'),
+      (join) => join.onRef('ce_counts.usuario_id', '=', 'u.id')
+    )
 
   if (includeReligion) {
     query = query.leftJoin('religion as r', 'u.religion_id', 'r.id')
