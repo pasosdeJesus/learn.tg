@@ -51,7 +51,7 @@ export async function buildLeaderboardQuery(
     sql<number>`COUNT(*) OVER()`.as('total_count'),
   ]
 
-  let groupFields: any[] = ['u.id', 'u.nusuario', 'p.alfa2', 'p.nombre']
+  let groupFields: any[] = ['u.id', 'u.nusuario', 'p.alfa2', 'p.nombre', 'ce_counts.cnt']
 
   if (includeReligion) {
     selectFields.push('r.nombre as religion_nombre')
@@ -183,6 +183,7 @@ export async function getLeaderboardData(
       scholarship_usdt: Number(row.scholarship_usdt),
       ubi_celo: Number(row.ubi_celo),
       donations_usdt: Number(row.donations_usdt),
+      sbt_count: Number(row.sbt_count),
       religion: row.religion_nombre,
     })),
     totals,
