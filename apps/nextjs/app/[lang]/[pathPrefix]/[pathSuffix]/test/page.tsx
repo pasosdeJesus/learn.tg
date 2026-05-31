@@ -479,9 +479,13 @@ export default function Page({
                   {credentialEarned && (
                     <div className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800">
                       🎓 {t('credentialEarnedPrefix')}{' '}
-                      <Link href={`/${lang}/user/${credentialUserId}`} className="underline font-semibold hover:text-blue-900">
-                        {t('credentialEarnedLink')}
-                      </Link>
+                      {credentialUserId ? (
+                        <Link href={`/${lang}/user/${credentialUserId}`} className="underline font-semibold hover:text-blue-900">
+                          {t('credentialEarnedLink')}
+                        </Link>
+                      ) : (
+                        t('credentialEarnedLink')
+                      )}
                     </div>
                   )}
                   {scholarshipTx && (
