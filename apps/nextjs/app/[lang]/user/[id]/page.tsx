@@ -29,7 +29,7 @@ interface ProfileData {
   transactions: {
     totalCount: number
     totalEarned: string
-    recent: { hash: string; amount: string; date: string; type: string }[]
+    recent: { hash: string; amount: string; date: string; type: string; crypto: string }[]
   }
   leaderboardRank: number | null
 }
@@ -161,6 +161,8 @@ export default function PublicProfilePage({ params }: PageProps) {
       setTimeout(() => setCopied(false), 2000)
     }
   }
+
+  const cryptoLabel = (c: string) => c === 'learningpoints' ? 'SLE' : c === 'usdt' ? 'USDT' : c === 'celo' ? 'CELO' : c.toUpperCase()
 
   const explorerBase = IS_PRODUCTION ? 'https://celo.blockscout.com' : 'https://celo-sepolia.blockscout.com'
 
@@ -304,7 +306,7 @@ export default function PublicProfilePage({ params }: PageProps) {
                     <td className="px-4 py-2.5 text-gray-700">{tx.type}</td>
                     <td className="px-4 py-2.5 font-mono text-xs">
                       <span className={Number(tx.amount) >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        {Number(tx.amount).toFixed(2)} SLE
+                        {Number(tx.amount).toFixed(2)} {cryptoLabel(tx.crypto)}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-gray-500 hidden sm:table-cell">
