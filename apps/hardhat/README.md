@@ -1,127 +1,98 @@
-# Learn.tg - Smart Contracts
+# Learn.tg — Smart Contracts
 
-This directory contains the Solidity smart contracts for the Learn.tg
-platform, managed with Hardhat. These contracts handle the creation of
-scholarship vaults and the secure, transparent distribution of USDT
-rewards to students on the Celo network.
+Solidity contracts for the Learn.tg platform, managed with Hardhat.
+Deployed on Celo.
 
-## Overview
+## Contracts
 
-- **`LearnTGVaults.sol`**: The core contract that allows teachers or
-  sponsors to create educational vaults. Students can earn rewards from
-  these vaults by successfully completing course activities.
-- **`MockUSDT.sol`**: A mock USDT contract for testing purposes in a
-  local or testnet environment.
+| Contract | File | Purpose |
+|---|---|---|
+| **SLEARN** | `SLEARN.sol` | ERC-20 utility token, mixed payments, 3-tier reserve backing |
+| **LearnTGVaultsV3** | `LearnTGVaultsV3.sol` | Scholarship vaults (USDT + SLEARN), `guideId` = `actividadpf_id` |
+| **LearnTGVaults** | `LearnTGVaults.sol` | Legacy V2 — being migrated to V3 |
+| **CeloUbi** | `CeloUbi.sol` | Universal Basic Income claims in CELO |
+| **MockUSDT** | `MockUSDT.sol` | Mock USDT for testnet |
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (>= 18)
-- [Yarn](https://yarnpkg.com/)
-- A Celo-compatible wallet with test funds. You can get Sepolia Celo
-  tokens from the [Celo Faucet](https://faucet.celo.org/celo-sepolia).
-  To get test cCop use https://app.mento.org/
+- Node.js >= 18
+- Yarn
+- Celo wallet with funds (CELO for gas)
 
-## 1. Environment Configuration
+## Setup
 
-First, create your environment file by copying the template:
+Environment is configured via the shared `apps/.env` (see `apps/.env.example`).
+The Hardhat config loads it automatically.
 
 ```sh
+cd apps
 cp .env.example .env
-```
-
-Next, edit the `.env` file with the following information:
-
-- `NETWORK`: The network to deploy to. Use `celoSepolia` for the testnet
-  or `celo` for mainnet.
-- `PRIVATE_KEY`: The private key of the wallet you will use for deployment.
-- `BLOCKSCOUT_API_KEY`: Your API key from Blockscout for contract
-  verification. You can generate one in your account settings on the
-  [Celo Blockscout explorer](https://explorer.celo.org/).
-- `DEPLOYED_AT`: This will hold the contract address after deployment.
-  Leave it blank for now.
-
-**⚠️ Security Warning:** Never use a wallet containing real funds for
-  development. Always generate and use a separate, dedicated wallet
-  for testing.
-
-## 2. Platform-Specific Setup (adJ / OpenBSD)
-
-Due to compatibility issues, Hardhat v3 does not work on adJ/OpenBSD 
-as of 2025. This project is configured to use Hardhat v2. If you are on 
-this platform, you must first run the following script to prepare the 
-environment:
-
-```sh
-bin/prepadJ.sh
-```
-
-## 3. Development Workflow
-
-Follow these steps to compile, deploy, and verify your contracts.
-
-### Step 3.1: Install Dependencies
-
-```sh
+# Edit .env: PRIVATE_KEY, BLOCKSCOUT_API_KEY, etc.
+cd hardhat
 yarn install
 ```
 
-### Step 3.2: Compile Contracts
-
-This command compiles the Solidity contracts and automatically syncs the 
-ABIs with the Next.js frontend.
+## Build
 
 ```sh
-yarn build
+yarn build       # compile + sync ABIs to nextjs
+make             # same
 ```
 
-### Step 3.3: Deploy the Contract
+## Deploy & Verify
 
-Make sure your deployment wallet is funded. Then, run the deployment 
-script:
+All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC_NETWORK` in `apps/.env`.
+
+| Command | Purpose |
+|---|---|
+| `bin/deploySLEARN` | Deploy SLEARN token |
+| `bin/deployLearnTGVaultsV3` | Deploy V3 vaults (reads SLEARN from deployments) |
+| `bin/deployMockUSDT` | Deploy MockUSDT (testnet only) |
+| `bin/deployCeloUbi` | Deploy CeloUBI |
+
+### Source verification (Blockscout)
+
+| Command | Purpose |
+|---|---|
+| `bin/contractVerificationSLEARN` | Verify SLEARN source code |
+| `bin/contractVerificationLearnTGVaultsV3` | Verify V3 source code |
+| `bin/contractVerificationCeloUbi` | Verify CeloUBI source code |
+| `bin/contractVerificationMusdt` | Verify MockUSDT source code |
+
+### Smoke tests (functional check on deployed contract)
+
+| Command | Purpose |
+|---|---|
+| `bin/verifySLEARN` | Check SLEARN: name, rate, supply, paused |
+| `bin/verifyLearnTGVaultsV3` | Check V3: VERSION, owner, balances |
+| `bin/verifyCeloUbi` | Check CeloUBI: owner, backendAddress |
+| `bin/verifyMockUSDT` | Check MockUSDT |
+
+### Mainnet override
 
 ```sh
-bin/deployLearnTGVaults
+NEXT_PUBLIC_NETWORK=celo \
+NEXT_PUBLIC_USDT_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e \
+bin/deploySLEARN
 ```
 
-The script will output the contract address to the console. **Copy 
-this address.**
+## Deployment Addresses
 
-### Step 3.4: Update Environment File
+After deploy, addresses are saved to `deployments/{Contract}/{network}.json`.
+V3 addresses are also available via `lib/deployments.ts` in the Next.js app.
 
-Paste the copied contract address into the `DEPLOYED_AT` variable in 
-your `.env` file.
-
-### Step 3.5: Verify Contract on Blockscout
-
-This step publishes and verifies the contract's source code on the 
-blockchain explorer, which is a crucial trust and security signal.
-
-```sh
-bin/contractVerification
-```
-
-## 4. Testing
-
-The project uses Hardhat's built-in testing framework with Chai matchers. 
-The tests are located in the `test/` directory.
-
-To run the entire test suite, execute the following command:
+## Testing
 
 ```sh
 yarn test
 ```
 
-This will compile your contracts, run the tests in an in-memory Hardhat 
-Network, and report the results in the console.
+## ABI Sync
 
-## ABI Synchronization
+ABIs are auto-synced to `../nextjs/abis/` on `yarn build`.
+To sync manually: `yarn sync:abis`.
 
-The contract ABIs (Application Binary Interfaces) are essential for the 
-frontend to interact with the smart contracts. This project is configured 
-to sync them automatically.
+## OpenBSD / adJ
 
-- **Automatic Sync:** ABIs are synced to `../nextjs/abis/` every time you 
-  run `yarn build` (or `yarn compile`).
-- **Manual Sync:** To sync the ABIs without recompiling, run 
-  `yarn sync:abis`.
-
+Hardhat v3 is not supported. This project uses Hardhat v2.
+Run `bin/prepadJ.sh` before first use.
