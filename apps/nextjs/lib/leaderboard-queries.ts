@@ -12,6 +12,9 @@ const UBI_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'ubi-claim' 
 const DONATIONS_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`.as('donations_usdt')
 const DONATIONS_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.tipo = 'donation' AND t.crypto = 'usdt' THEN t.cantidad ELSE 0 END), 2), 0)`
 const SBT_FIELD = sql<number>`COALESCE(ce_counts.cnt, 0)`.as('sbt_count')
+const SLEARN_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.impacto_balance ELSE 0 END), 2), 0)`.as('slearn_balance')
+const SLEARN_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.impacto_balance ELSE 0 END), 2), 0)`
+const SLEARN_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'slearn' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithSLEARN')
 const LP_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.impacto_balance > 0 THEN u.id END)`.as('totalUsersWithLP')
 
 export async function buildLeaderboardQuery(
@@ -44,6 +47,7 @@ export async function buildLeaderboardQuery(
     'p.alfa2 as pais_alfa2',
     'p.nombre as pais_nombre',
     LP_FIELD,
+    SLEARN_FIELD,
     SCHOLARSHIP_FIELD,
     UBI_FIELD,
     DONATIONS_FIELD,
@@ -68,6 +72,7 @@ export async function buildLeaderboardQuery(
   }
 
   const orderByField = sortBy === 'learningpoints' ? sql`learningpoints` :
+                      sortBy === 'slearn_balance' ? sql`slearn_balance` :
                       sortBy === 'scholarship_usdt' ? sql`scholarship_usdt` :
                       sortBy === 'ubi_celo' ? sql`ubi_celo` :
                       sortBy === 'sbt_count' ? sql`sbt_count` :
@@ -116,7 +121,9 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
   return {
     totalUsers: Number(result?.totalUsers || 0),
     totalUsersWithLP: Number(result?.totalUsersWithLP || 0),
+    totalUsersWithSLEARN: Number(result?.totalUsersWithSLEARN || 0),
     totalLearningPoints: Number(result?.totalLearningPoints || 0),
+    totalSLEARNBalance: Number(result?.totalSLEARNBalance || 0),
     totalScholarshipUSDT: Number(result?.totalScholarshipUSDT || 0),
     totalUBICELO: Number(result?.totalUBICELO || 0),
     totalDonationsUSDT: Number(result?.totalDonationsUSDT || 0),
@@ -134,7 +141,9 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
       sql<string>`COALESCE(p.nombre, 'Sin pa\u00eds')`.as('nombre'),
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
       LP_USER_COUNT,
+      SLEARN_USER_COUNT,
       LP_WHERE.as('totalLearningPoints'),
+      SLEARN_WHERE.as('totalSLEARNBalance'),
       SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
       UBI_WHERE.as('totalUBICELO'),
       DONATIONS_WHERE.as('totalDonationsUSDT'),
@@ -148,7 +157,9 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
     nombre: row.nombre,
     totalUsers: Number(row.totalUsers || 0),
     totalUsersWithLP: Number(row.totalUsersWithLP || 0),
+    totalUsersWithSLEARN: Number(row.totalUsersWithSLEARN || 0),
     totalLearningPoints: Number(row.totalLearningPoints || 0),
+    totalSLEARNBalance: Number(row.totalSLEARNBalance || 0),
     totalScholarshipUSDT: Number(row.totalScholarshipUSDT || 0),
     totalUBICELO: Number(row.totalUBICELO || 0),
     totalDonationsUSDT: Number(row.totalDonationsUSDT || 0),
@@ -180,6 +191,7 @@ export async function getLeaderboardData(
       pais_alfa2: row.pais_alfa2,
       pais_nombre: row.pais_nombre,
       learningpoints: Number(row.learningpoints),
+      slearn_balance: Number(row.slearn_balance),
       scholarship_usdt: Number(row.scholarship_usdt),
       ubi_celo: Number(row.ubi_celo),
       donations_usdt: Number(row.donations_usdt),

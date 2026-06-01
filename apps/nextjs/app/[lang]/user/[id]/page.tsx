@@ -14,6 +14,7 @@ interface ProfileData {
   id: number
   name: string
   learningscore: number | null
+  slearn_balance: number | null
   profilescore: number | null
   memberSince: string
   wallets: { address: string; addedAt: string }[]
@@ -51,6 +52,7 @@ export default function PublicProfilePage({ params }: PageProps) {
       notFound: 'User not found',
       memberSince: 'Member since',
       learningScore: 'Learning Score',
+      slearnBalance: 'SLEARN Balance',
       profileScore: 'Profile Score',
       wallets: 'Wallets',
       credentials: 'Course Credentials',
@@ -77,6 +79,7 @@ export default function PublicProfilePage({ params }: PageProps) {
       notFound: 'Usuario no encontrado',
       memberSince: 'Miembro desde',
       learningScore: 'Puntaje de Aprendizaje',
+      slearnBalance: 'Saldo SLEARN',
       profileScore: 'Puntaje de Perfil',
       wallets: 'Billeteras',
       credentials: 'Credenciales de Cursos',
@@ -192,6 +195,10 @@ export default function PublicProfilePage({ params }: PageProps) {
         <div className="bg-white rounded-xl border p-4 text-center">
           <p className="text-2xl font-bold text-blue-600">{profile.learningscore ?? 0}</p>
           <p className="text-xs text-gray-500 mt-1">{t('learningScore')}</p>
+        </div>
+        <div className="bg-white rounded-xl border p-4 text-center">
+          <p className="text-2xl font-bold text-emerald-600">{profile.slearn_balance ?? 0}</p>
+          <p className="text-xs text-gray-500 mt-1">{t('slearnBalance')}</p>
         </div>
         <div className="bg-white rounded-xl border p-4 text-center">
           <p className="text-2xl font-bold text-purple-600">{profile.profilescore ?? 0}</p>

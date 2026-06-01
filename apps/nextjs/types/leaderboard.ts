@@ -4,6 +4,7 @@ export interface LeaderboardRow {
   pais_alfa2: string | null
   pais_nombre: string | null
   learningpoints: number
+  slearn_balance: number
   scholarship_usdt: number
   ubi_celo: number
   donations_usdt: number
@@ -12,7 +13,7 @@ export interface LeaderboardRow {
 }
 
 export interface LeaderboardQueryParams {
-  sortBy?: 'learningpoints' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
+  sortBy?: 'learningpoints' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
   sortOrder?: 'asc' | 'desc'
   country?: string
   page?: number
@@ -25,7 +26,9 @@ export interface LeaderboardResponse {
   totals?: {
     totalUsers: number
     totalUsersWithLP: number
+    totalUsersWithSLEARN: number
     totalLearningPoints: number
+    totalSLEARNBalance: number
     totalScholarshipUSDT: number
     totalUBICELO: number
     totalDonationsUSDT: number
@@ -47,7 +50,9 @@ export interface CountryTotals {
   nombre: string
   totalUsers: number
   totalUsersWithLP: number
+  totalUsersWithSLEARN: number
   totalLearningPoints: number
+  totalSLEARNBalance: number
   totalScholarshipUSDT: number
   totalUBICELO: number
   totalDonationsUSDT: number
@@ -59,7 +64,9 @@ export interface TransparencyResponse {
   totals?: {
     totalUsers: number
     totalUsersWithLP: number
+    totalUsersWithSLEARN: number
     totalLearningPoints: number
+    totalSLEARNBalance: number
     totalScholarshipUSDT: number
     totalUBICELO: number
     totalDonationsUSDT: number
