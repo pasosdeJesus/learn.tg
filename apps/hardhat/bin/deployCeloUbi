@@ -1,5 +1,3 @@
 #!/bin/sh
-set -a
 . ../.env
-set +a
 node_modules/.bin/hardhat run scripts/deployCeloUbi.ts --network $NEXT_PUBLIC_NETWORK

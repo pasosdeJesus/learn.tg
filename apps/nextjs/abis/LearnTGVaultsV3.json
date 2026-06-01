@@ -19,6 +19,31 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amountUsdt",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amountSlearn",
+        "type": "uint256"
+      }
+    ],
+    "name": "AmountPerGuideSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "uint256",
         "name": "courseId",
@@ -532,6 +557,29 @@
       }
     ],
     "name": "recordCourseFunds",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "courseId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountUsdt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountSlearn",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAmountPerGuide",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
