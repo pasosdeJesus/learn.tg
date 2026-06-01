@@ -77,6 +77,7 @@ contract LearnTGVaultsV3 is ReentrancyGuard {
     event EmergencyWithdrawal(address indexed token, uint256 amount);
     event GuidePaidSet(uint256 courseId, uint256 guideId, address student, uint256 usdtAmount, uint256 slearnAmount);
     event VaultBalanceSet(uint256 courseId, uint256 balanceUsdt, uint256 balanceSlearn);
+    event AmountPerGuideSet(uint256 courseId, uint256 amountUsdt, uint256 amountSlearn);
     event SlearmContractRoleSet(address indexed addr, bool authorized);
 
     modifier onlyOwner() {
@@ -145,7 +146,8 @@ contract LearnTGVaultsV3 is ReentrancyGuard {
     // ============ SCHOLARSHIP PAYMENT ============
 
     /**
-     * @dev Pay scholarship to student. Tries USDT first; if insufficient, falls back to SLEARN.
+     * @dev Pay scholarship to student. Pays both USDT and SLEARN — whatever is available,
+     *      up to the per-guide amount scaled by profileScore.
      *      guideId = actividadpf_id (DB primary key), not sequential guide number.
      */
     function payScholarship(
@@ -181,32 +183,35 @@ contract LearnTGVaultsV3 is ReentrancyGuard {
         uint256 actualUSDT = (fullUSDT * profileScore) / 100;
         uint256 actualSlearn = (fullSlearn * profileScore) / 100;
 
-        // Try USDT first
-        if (vault.balanceUsdt >= actualUSDT && actualUSDT > 0) {
-            vault.balanceUsdt -= actualUSDT;
-            guidePaidUSDT[courseId][guideId][student] = actualUSDT;
-            studentCooldowns[courseId][student] = block.timestamp;
-            require(usdtToken.transfer(student, actualUSDT), "USDT transfer failed");
-            emit ScholarshipPaid(courseId, guideId, student, actualUSDT, 0, profileScore);
-            return;
+        uint256 paidUSDT = 0;
+        uint256 paidSlearn = 0;
+
+        // Pay USDT: whatever is available, up to actualUSDT
+        if (actualUSDT > 0 && vault.balanceUsdt > 0) {
+            paidUSDT = vault.balanceUsdt >= actualUSDT ? actualUSDT : vault.balanceUsdt;
+            vault.balanceUsdt -= paidUSDT;
+            guidePaidUSDT[courseId][guideId][student] = paidUSDT;
+            require(usdtToken.transfer(student, paidUSDT), "USDT transfer failed");
         }
 
-        // Fallback to SLEARN
-        if (vault.balanceSlearn >= actualSlearn && actualSlearn > 0) {
-            vault.balanceSlearn -= actualSlearn;
-            guidePaidSLEARN[courseId][guideId][student] = actualSlearn;
-            studentCooldowns[courseId][student] = block.timestamp;
-            require(slearnToken.transfer(student, actualSlearn), "SLEARN transfer failed");
-            emit ScholarshipPaid(courseId, guideId, student, 0, actualSlearn, profileScore);
-            return;
+        // Pay SLEARN: whatever is available, up to actualSlearn
+        if (actualSlearn > 0 && vault.balanceSlearn > 0) {
+            paidSlearn = vault.balanceSlearn >= actualSlearn ? actualSlearn : vault.balanceSlearn;
+            vault.balanceSlearn -= paidSlearn;
+            guidePaidSLEARN[courseId][guideId][student] = paidSlearn;
+            require(slearnToken.transfer(student, paidSlearn), "SLEARN transfer failed");
         }
 
-        // Neither available
-        emit ScholarshipInsufficientFunds(
-            courseId, guideId, student,
-            actualUSDT, vault.balanceUsdt,
-            actualSlearn, vault.balanceSlearn
-        );
+        if (paidUSDT > 0 || paidSlearn > 0) {
+            studentCooldowns[courseId][student] = block.timestamp;
+            emit ScholarshipPaid(courseId, guideId, student, paidUSDT, paidSlearn, profileScore);
+        } else {
+            emit ScholarshipInsufficientFunds(
+                courseId, guideId, student,
+                actualUSDT, vault.balanceUsdt,
+                actualSlearn, vault.balanceSlearn
+            );
+        }
     }
 
     function studentCanSubmit(uint256 courseId, address student) public view returns (bool) {
@@ -237,6 +242,14 @@ contract LearnTGVaultsV3 is ReentrancyGuard {
         vaults[courseId].balanceUsdt = balanceUsdt;
         vaults[courseId].balanceSlearn = balanceSlearn;
         emit VaultBalanceSet(courseId, balanceUsdt, balanceSlearn);
+    }
+
+    function setAmountPerGuide(uint256 courseId, uint256 amountUsdt, uint256 amountSlearn)
+        external onlyOwner vaultExists(courseId)
+    {
+        vaults[courseId].amountPerGuideUsdt = amountUsdt;
+        vaults[courseId].amountPerGuideSlearn = amountSlearn;
+        emit AmountPerGuideSet(courseId, amountUsdt, amountSlearn);
     }
 
     // ============ EMERGENCY ============
