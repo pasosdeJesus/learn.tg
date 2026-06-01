@@ -2,9 +2,10 @@ import '@nomicfoundation/hardhat-toolbox';
 import '@nomicfoundation/hardhat-verify';
 import { config as dotEnvConfig } from 'dotenv';
 import { HardhatUserConfig, task } from 'hardhat/config';
+import path from 'path';
 
-
-dotEnvConfig();
+// Load the centralized .env file from the parent directory.
+dotEnvConfig({ path: path.resolve(__dirname, '../.env') });
 
 
 task("check-transfer", "Check token transfer from tx hash")
