@@ -16,6 +16,7 @@ import LearnTGVaultsAbi from '../../abis/LearnTGVaults.json' with { type: 'json'
 import LearnTGVaultsV3Abi from '../../abis/LearnTGVaultsV3.json' with { type: 'json' }
 import Erc20Abi from '../../abis/IERC20.json' with { type: 'json' }
 import type { GuideUsuario } from '../../db/db.d.ts'
+import { getV3Address } from '../../lib/deployments'
 
 async function callWriteFun(
   publicClient: any,
@@ -67,7 +68,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL!
   const PRIVATE_KEY = process.env.PRIVATE_KEY! as `0x${string}`
   const DEPLOYED_AT_V2 = process.env.NEXT_PUBLIC_DEPLOYED_AT_V2! as `0x${string}`
-  const DEPLOYED_AT_V3 = process.env.NEXT_PUBLIC_DEPLOYED_AT! as `0x${string}`
+  const DEPLOYED_AT_V3 = getV3Address()
   const USDT_ADDRESS = process.env.NEXT_PUBLIC_USDT_ADDRESS!
   const NETWORK = process.env.NEXT_PUBLIC_NETWORK!
 
