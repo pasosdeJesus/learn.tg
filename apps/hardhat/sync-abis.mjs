@@ -40,17 +40,26 @@ try {
   // Find all artifact JSON files
   const artifactFiles = walkDir(HARDHAT_ARTIFACTS_PATH)
 
+  // Group by contract name; prefer the artifact from the contract's own directory
+  const abis = {}
   artifactFiles.forEach(filepath => {
-    // Read and parse the artifact file
     const artifact = JSON.parse(fs.readFileSync(filepath, 'utf8'))
     const filename = path.basename(filepath)
     const contractName = filename.replace('.json', '')
+    const dirName = path.basename(path.dirname(filepath))
 
-    // Extract and save just the ABI
-    const abiPath = path.join(NEXTJS_ABI_PATH, `${contractName}.json`)
-    fs.writeFileSync(abiPath, JSON.stringify(artifact.abi, null, 2))
-    console.log(`Copied ABI for ${contractName}`)
+    // If contract has its own .sol file, prefer that version (full ABI over interface)
+    if (!abis[contractName] || contractName === dirName) {
+      abis[contractName] = artifact.abi
+    }
   })
+
+  // Write ABIs
+  for (const [contractName, abi] of Object.entries(abis)) {
+    const abiPath = path.join(NEXTJS_ABI_PATH, `${contractName}.json`)
+    fs.writeFileSync(abiPath, JSON.stringify(abi, null, 2))
+    console.log(`Copied ABI for ${contractName}`)
+  }
 
   console.log("✅ ABI sync complete!")
 } catch (error) {
