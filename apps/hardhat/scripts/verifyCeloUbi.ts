@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 async function main() {
   // Get the deployed contract address from environment variables

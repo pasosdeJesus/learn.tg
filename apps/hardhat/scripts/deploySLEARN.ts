@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 async function main() {
   const SLEARN = await ethers.getContractFactory("SLEARN");
@@ -10,7 +10,7 @@ async function main() {
   const usdtAddress = process.env.USDT_ADDRESS;
   if (!usdtAddress) throw new Error("USDT_ADDRESS not found in env");
 
-  const network = process.env.NETWORK || "celoSepolia";
+  const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia";
   console.log(`Deploying SLEARN to ${network} with USDT: ${usdtAddress}`);
 
   const slearn = await SLEARN.deploy(usdtAddress);

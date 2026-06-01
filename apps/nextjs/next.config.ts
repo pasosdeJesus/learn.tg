@@ -1,4 +1,10 @@
 import type { NextConfig } from 'next'
+import dotenv from 'dotenv'
+import path from 'path'
+
+// Load shared .env from apps/.env
+dotenv.config({ path: path.resolve(__dirname, '../.env') })
+
 import withPWA from 'next-pwa';
 import type { PWAConfig } from 'next-pwa';
 

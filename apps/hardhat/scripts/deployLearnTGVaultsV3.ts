@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 async function main() {
   const LearnTGVaultsV3 = await ethers.getContractFactory("contracts/LearnTGVaultsV3.sol:LearnTGVaultsV3");
@@ -11,7 +11,7 @@ async function main() {
   if (!usdtAddress) throw new Error("USDT_ADDRESS not found in env");
 
   // Read SLEARN address from deployment
-  const network = process.env.NETWORK || "celoSepolia";
+  const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia";
   const slearnFile = path.join(__dirname, "..", "deployments", "SLEARN", `${network}.json`);
   if (!fs.existsSync(slearnFile)) {
     throw new Error(`SLEARN deployment not found at ${slearnFile}. Deploy SLEARN first.`);

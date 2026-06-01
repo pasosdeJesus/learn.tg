@@ -1,4 +1,5 @@
 #!/bin/sh
-
-. ./.env
-npx hardhat run scripts/verifyMockUSDT.ts --network $NETWORK
+set -a
+. ../.env
+set +a
+node_modules/.bin/hardhat run scripts/verifyMockUSDT.ts --network $NEXT_PUBLIC_NETWORK

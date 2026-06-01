@@ -1,1 +1,5 @@
-../scripts/deploySLEARN.ts
+#!/bin/sh
+set -a
+. ../.env
+set +a
+node_modules/.bin/hardhat run scripts/deploySLEARN.ts --network $NEXT_PUBLIC_NETWORK
