@@ -109,6 +109,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   })
 
   // ========= 1. DRAIN V2 CONTRACT =========
+  // USDT
   const oldBalance =
     ((await oldContract.read.getContractUSDTBalance([])) as bigint) || 0n
 
@@ -135,6 +136,38 @@ export async function up(db: Kysely<any>): Promise<void> {
     console.log('USDT transferred to V3')
   } else {
     console.log('V2 contract has no USDT balance, skipping drain')
+  }
+
+  // cCOP
+  const cCopAddress = process.env.NEXT_PUBLIC_CCOP_ADDRESS as Address
+  if (cCopAddress) {
+    const cCopContract = getContract({
+      address: cCopAddress,
+      abi: Erc20Abi as any,
+      client: { public: publicClient, wallet: walletClient },
+    })
+    const cCopBalance = (await oldContract.read.getContractCcopBalance([])) as bigint || 0n
+    if (cCopBalance > 0n) {
+      console.log(`Draining ${formatUnits(cCopBalance, 18)} cCOP from V2...`)
+      await callWriteFun(publicClient, account, oldContract.write.emergencyWithdrawCcop, [cCopBalance], 0)
+      await callWriteFun(publicClient, account, cCopContract.write.transfer, [DEPLOYED_AT_V3, cCopBalance], 0)
+    }
+  }
+
+  // GoodDollar
+  const goodDollarAddress = process.env.NEXT_PUBLIC_GOODDOLLAR_ADDRESS as Address
+  if (goodDollarAddress) {
+    const gdContract = getContract({
+      address: goodDollarAddress,
+      abi: Erc20Abi as any,
+      client: { public: publicClient, wallet: walletClient },
+    })
+    const gdBalance = (await oldContract.read.getContractGooddollarBalance([])) as bigint || 0n
+    if (gdBalance > 0n) {
+      console.log(`Draining ${formatUnits(gdBalance, 18)} GoodDollar from V2...`)
+      await callWriteFun(publicClient, account, oldContract.write.emergencyWithdrawGooddollar, [gdBalance], 0)
+      await callWriteFun(publicClient, account, gdContract.write.transfer, [DEPLOYED_AT_V3, gdBalance], 0)
+    }
   }
 
   // ========= 2. MIGRATE VAULTS AND GUIDE PAID RECORDS =========

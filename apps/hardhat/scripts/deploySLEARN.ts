@@ -7,8 +7,8 @@ dotenv.config({ path: "../.env" });
 async function main() {
   const SLEARN = await ethers.getContractFactory("SLEARN");
 
-  const usdtAddress = process.env.USDT_ADDRESS;
-  if (!usdtAddress) throw new Error("USDT_ADDRESS not found in env");
+  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS;
+  if (!usdtAddress) throw new Error("NEXT_PUBLIC_USDT_ADDRESS not found in env");
 
   const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia";
   console.log(`Deploying SLEARN to ${network} with USDT: ${usdtAddress}`);

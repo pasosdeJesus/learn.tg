@@ -13,11 +13,10 @@ Read-only operations (courses, guides, leaderboard, metrics) work without it.
 
 ```sh
 git clone <this-repo>
-cd apps/nextjs
-cp .env.template .env
-# Edit .env: set NEXT_PUBLIC_API_URL=https://learn.tg:9001/api
-# Edit .env: set NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin
-# Edit .env: set NEXTAUTH_SECRET=<any-random-string>
+cd apps
+cp .env.example .env
+# Edit .env: set PRIVATE_KEY, NEXTAUTH_SECRET, DB_PASSWORD
+cd nextjs
 pnpm install
 bin/dev    # starts on port 4000
 ```
@@ -96,26 +95,23 @@ In line with our principle of **transparency**, our metrics system is a robust, 
 
 ## Environment Variables
 
-Before running the application, you need to set up your environment variables. Copy the template file:
+Environment is configured via a single shared `apps/.env` file. Copy the example:
 
 ```sh
-cp .env.template .env
+cd apps
+cp .env.example .env
 ```
 
-Then, review and update the `.env` file with these variables:
-
-### `NEXT_PUBLIC_API_URL`
-**Required for development without local API.** Set to `https://learn.tg:9001/api` to proxy all `/api/*` requests to the live server. If empty, the private API submodule at `app/api/` is used instead (requires database and submodule access).
-
-### Other variables
+Then edit `.env` with your values. Key variables:
 
 | Variable | Description |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | **Required for frontend-only dev.** Set to `https://learn.tg:9001/api` to proxy all `/api/*` requests to the live Next.js API. |
-| `NEXT_PUBLIC_API_BASE` | Rails API base. Set to `https://learn.tg:3500/learntg-admin` for course data when using the remote API. |
-| `PORT` | Dev server port (default: `4000`) |
-| `NEXTAUTH_URL` | Full URL of the Next.js app, required by NextAuth |
-| `NEXTAUTH_SECRET` | Secret for session cookies. Generate with `openssl rand -hex 32` |
+| `PRIVATE_KEY` | Backend wallet private key (used for blockchain transactions) |
+| `NEXT_PUBLIC_ADDRESS` | Backend wallet address |
+| `NEXT_PUBLIC_RPC_URL` | Celo RPC endpoint |
+| `NEXTAUTH_SECRET` | Session secret. Generate with `openssl rand -hex 32` |
+| `DB_PASSWORD` / `PGPASSWORD` | PostgreSQL password |
+| `NEXT_PUBLIC_NETWORK` | `celoSepolia` (testnet) or `celo` (mainnet) |
 
 > **Note:** After changing `.env`, delete `.next` and restart: `rm -rf .next && pnpm dev`.
 

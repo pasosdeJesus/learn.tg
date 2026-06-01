@@ -50,20 +50,20 @@ const config: HardhatUserConfig = {
   networks: {
     celo: {
       accounts: [process.env.PRIVATE_KEY ?? '0x0'],
-      url: 'https://forno.celo.org',
+      url: process.env.NEXT_PUBLIC_RPC_URL || 'https://forno.celo.org',
     },
     celoSepolia: {
       accounts: [process.env.PRIVATE_KEY ?? '0x0'],
-      url: 'https://forno.celo-sepolia.celo-testnet.org/',
+      url: process.env.NEXT_PUBLIC_RPC_URL || 'https://forno.celo-sepolia.celo-testnet.org/',
     },
 
     'base-sepolia': {
       accounts: [process.env.PRIVATE_KEY ?? '0x0'],
-      url: 'https://sepolia.base.org',
+      url: process.env.NEXT_PUBLIC_RPC_URL || 'https://sepolia.base.org',
     },
     base: {
       accounts: [process.env.PRIVATE_KEY ?? '0x0'],
-      url: 'https://mainnet.base.org',
+      url: process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.base.org',
     },
   },
   etherscan: {
