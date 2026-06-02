@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict DpUD1XlKGrq6Ac5996AXJKsENq556ztoffWU84S5YaxjocQzhsWLYmv2YBbfskc
+\restrict bDdo2HByfZLuVcOruaRP9dmwtN3svFYa3de9GAbnhh2d41YnC7n0Tru5J3UKNwd
 
 -- Dumped from database version 17.9
 -- Dumped by pg_dump version 17.9
@@ -2795,7 +2795,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
 );
 
 
@@ -2832,7 +2832,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -4863,7 +4863,7 @@ CREATE TABLE public.transaction (
     fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
     sincronizado boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
-    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['learningpoints'::character varying, 'usdt'::character varying, 'celo'::character varying, 'ccop'::character varying])::text[]))),
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY ((ARRAY['usdt'::character varying, 'celo'::character varying, 'learningpoints'::character varying, 'slearn'::character varying])::text[]))),
     CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying])::text[])))
 );
 
@@ -8296,5 +8296,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DpUD1XlKGrq6Ac5996AXJKsENq556ztoffWU84S5YaxjocQzhsWLYmv2YBbfskc
+\unrestrict bDdo2HByfZLuVcOruaRP9dmwtN3svFYa3de9GAbnhh2d41YnC7n0Tru5J3UKNwd
 
