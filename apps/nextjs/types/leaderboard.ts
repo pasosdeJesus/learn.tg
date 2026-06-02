@@ -73,6 +73,7 @@ export interface TransparencyResponse {
   }
   reserves?: {
     slearnTotalSupply: number
+    slearnExplorerUrl: string
     learnTgReserveUSDT: number
     stableSlReserveUSDT: number
     reserveMultisigUSDT: number

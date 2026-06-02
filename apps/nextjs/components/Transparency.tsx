@@ -6,6 +6,7 @@ import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { TransparencyTable } from '@/components/TransparencyTable'
 import { MetricsExplanation } from '@/components/MetricsExplanation'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { ExternalLink } from 'lucide-react'
 import { useApiData } from '@/lib/hooks/useApiData'
 import type { CountryTotals, TransparencyResponse } from '@/types/leaderboard'
 
@@ -61,6 +62,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
       reserveMultisig: 'Reserva Maestra (SL0)',
       referralWallet: 'Billetera de Referidos',
       churchesWallet: 'Billetera de Iglesias',
+      explorer: 'Explorador',
       coverage: 'Cobertura',
       coverageTarget: 'Meta: 120%',
       viewLeaderboard: 'Ver Tabla de Clasificación',
@@ -104,7 +106,14 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
 
       {reserves && (
         <div className="rounded-xl border bg-card p-6">
-          <h2 className="text-lg font-semibold mb-4">{t('reserves')}</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {t('reserves')}
+            {reserves.slearnExplorerUrl && (
+              <a href={reserves.slearnExplorerUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center ml-2 text-xs text-primary hover:underline gap-1">
+                {t('explorer')} <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </h2>
           <div className="flex items-center gap-4 mb-4 p-4 rounded-lg bg-muted/50">
             <div>
               <div className="text-sm text-muted-foreground">{t('coverage')}</div>
