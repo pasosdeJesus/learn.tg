@@ -18,19 +18,16 @@ import {
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
 import SLEARNAbi from '../abis/SLEARN.json' with { type: 'json' }
+import { getSlearnAddress } from '../lib/deployments'
 
 const CONVERSION_EVENT_TYPE = 'learningpoints_to_slearn'
 
 async function main() {
-  const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL!
-  const PRIVATE_KEY = process.env.PRIVATE_KEY! as `0x${string}`
-  const SLEARN_ADDRESS = process.env.NEXT_PUBLIC_SLEARN_ADDRESS! as `0x${string}`
-  const NETWORK = process.env.NEXT_PUBLIC_NETWORK!
-
-  if (!SLEARN_ADDRESS) {
-    console.error('NEXT_PUBLIC_SLEARN_ADDRESS not set in .env')
-    process.exit(1)
-  }
+  const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://forno.celo-sepolia.celo-testnet.org'
+  const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}` | undefined
+  if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY not set in apps/.env')
+  const SLEARN_ADDRESS = getSlearnAddress()
+  const NETWORK = process.env.NEXT_PUBLIC_NETWORK || 'celoSepolia'
 
   const chain = NETWORK === 'celo' ? celo : celoSepolia
 
