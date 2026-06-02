@@ -38,6 +38,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
     en: {
       transparency: 'Transparency',
       transparencyDesc: 'Platform totals by country',
+      transparencyNote: 'Total SLEARN includes admin and test wallets. Users excluded from the leaderboard are not shown in country breakdowns.',
       reserves: 'SLEARN Reserves',
       slearnSupply: 'Total SLEARN',
       learnTgReserve: 'Hot Reserve (L2)',
@@ -52,6 +53,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
     es: {
       transparency: 'Transparencia',
       transparencyDesc: 'Totales de la plataforma por país',
+      transparencyNote: 'El total de SLEARN incluye billeteras de administración y pruebas. Los usuarios excluidos del leaderboard no aparecen en los desgloses por país.',
       reserves: 'Reservas SLEARN',
       slearnSupply: 'Total SLEARN',
       learnTgReserve: 'Reserva Caliente (L2)',
@@ -140,6 +142,8 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
           </div>
         </div>
       )}
+
+      <p className="text-xs text-muted-foreground">{t('transparencyNote')}</p>
 
       <TransparencyTable
         data={data}

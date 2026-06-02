@@ -149,8 +149,15 @@ NEXT_PUBLIC_NETWORK=celo bin/configSLEARN
 ```
 
 This sets all addresses, grants MINTER_ROLE and BURNER_ROLE, and sets slearnContractRole on V3.
-It uses the production addresses from `apps/.env`. If you need different addresses per role,
-edit `apps/.env` before running or configure manually via Blockscout.
+It also grants `DEFAULT_ADMIN_ROLE` to the deployer. After configuration, **transfer admin to a cold wallet**:
+
+```
+SLEARN.grantRole(DEFAULT_ADMIN_ROLE, <cold_wallet>)
+SLEARN.renounceRole(DEFAULT_ADMIN_ROLE, <deployer>)
+```
+
+The backend only needs `MINTER_ROLE` + `BURNER_ROLE`. The cold wallet holds `DEFAULT_ADMIN_ROLE` for
+pause, rate changes, and address updates — operations done rarely and with deliberation.
 
 ### Manual steps (if needed)
 
@@ -183,6 +190,18 @@ Per `doc/runbook.md` §2:
 | `stableSlReserve` (S2) | SLEARN | USDT | `USDT.approve(SLEARN, max)` |
 
 > ⚠️ If any allowance is revoked, `processPayment` or `redeemForSLE` will fail.
+
+
+ % bin/m wallet:approve --name learntgreserve --token
+0x27fd41Bea85C39254f2B12789eB37a1543152CC1 --spender
+0x27fd41Bea85C39254f2B12789eB37a1543152CC1 --amount 1000 --network celo
+✅ Approved 1000 tokens for spender 0x27fd41Bea85C39254f2B12789eB37a1543152CC1
+   TX: 0x3684e3b9ba6df5035a65a1ef8c9b7c4835282b57d5fe4f714427a8e3aaaf485c
+vtamara@piedraangular:reserve % bin/m wallet:approve --name stableslreserve
+--token 0x27fd41Bea85C39254f2B12789eB37a1543152CC1 --spender
+0x27fd41Bea85C39254f2B12789eB37a1543152CC1 --amount 1000 --network celo
+✅ Approved 1000 tokens for spender 0x27fd41Bea85C39254f2B12789eB37a1543152CC1
+   TX: 0xe92ea05b96d0194740cd2493b0059ab5d26ee495c48c5553df9db43fff8cd8f6
 
 ---
 

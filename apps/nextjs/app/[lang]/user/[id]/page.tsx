@@ -191,11 +191,7 @@ export default function PublicProfilePage({ params }: PageProps) {
       </div>
 
       {/* Scores */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl border p-4 text-center">
-          <p className="text-2xl font-bold text-blue-600">{profile.learningscore ?? 0}</p>
-          <p className="text-xs text-gray-500 mt-1">{t('learningScore')}</p>
-        </div>
+      <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="bg-white rounded-xl border p-4 text-center">
           <p className="text-2xl font-bold text-emerald-600">{profile.slearn_balance ?? 0}</p>
           <p className="text-xs text-gray-500 mt-1">{t('slearnBalance')}</p>
