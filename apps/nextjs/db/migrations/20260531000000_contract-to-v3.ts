@@ -66,12 +66,26 @@ async function callWriteFun(
 
 export async function up(db: Kysely<any>): Promise<void> {
   // ========= CONFIGURATION =========
-  const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL!
-  const PRIVATE_KEY = process.env.PRIVATE_KEY! as `0x${string}`
-  const DEPLOYED_AT_V2 = process.env.NEXT_PUBLIC_DEPLOYED_AT_V2! as `0x${string}`
-  const DEPLOYED_AT_V3 = getV3Address()
+  const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL
+  const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}` | undefined
+  const DEPLOYED_AT_V2 = process.env.NEXT_PUBLIC_DEPLOYED_AT_V2 as `0x${string}` | undefined
   const USDT_ADDRESS = process.env.NEXT_PUBLIC_USDT_ADDRESS!
-  const NETWORK = process.env.NEXT_PUBLIC_NETWORK!
+  const NETWORK = process.env.NEXT_PUBLIC_NETWORK
+
+  // Validate required env vars
+  const missing: string[] = []
+  if (!RPC_URL) missing.push('NEXT_PUBLIC_RPC_URL')
+  if (!PRIVATE_KEY) missing.push('PRIVATE_KEY')
+  if (!DEPLOYED_AT_V2) missing.push('NEXT_PUBLIC_DEPLOYED_AT_V2')
+  if (!USDT_ADDRESS) missing.push('NEXT_PUBLIC_USDT_ADDRESS')
+  if (!NETWORK) missing.push('NEXT_PUBLIC_NETWORK')
+  if (missing.length > 0) {
+    console.error('Missing required env vars:', missing.join(', '))
+    console.error('Make sure apps/.env is configured correctly.')
+    throw new Error(`Missing: ${missing.join(', ')}`)
+  }
+
+  const DEPLOYED_AT_V3 = getV3Address()
 
   const chain = NETWORK === 'celo' ? celo : celoSepolia
 
