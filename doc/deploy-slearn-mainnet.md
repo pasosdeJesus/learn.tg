@@ -81,8 +81,6 @@ bin/configSLEARN
 ### 1.7 Run E2E tests
 
 ```bash
-NETWORK=celoSepolia \
-```bash
 bin/testSLEARN
 ```
 
