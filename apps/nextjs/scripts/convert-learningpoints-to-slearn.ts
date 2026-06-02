@@ -134,7 +134,7 @@ async function main() {
           usuario_id: u.user_id,
           event_data: JSON.stringify({
             learningscore,
-            slearn_minted: toMint,
+            slearn_minted: Number(toMint),
             tx_hash: tx,
           }),
           created_at: new Date(),
