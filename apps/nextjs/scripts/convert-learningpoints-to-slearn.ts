@@ -89,12 +89,15 @@ async function main() {
       continue
     }
 
+    // SLEARN has 2 decimals — convert learningscore to base units
+    const lpBaseUnits = BigInt(Math.round(learningscore * 100))
+
     // Check on-chain balance to detect partial/manual conversions
     const onChainBalance: bigint =
       ((await slearnContract.read.balanceOf([u.billetera])) as bigint) || 0n
     console.log(`  On-chain SLEARN balance: ${onChainBalance}`)
 
-    if (onChainBalance >= BigInt(learningscore)) {
+    if (onChainBalance >= lpBaseUnits) {
       console.log('  On-chain balance >= learningscore, recording event only (no mint)')
       await db
         .insertInto('userevent')
@@ -113,11 +116,11 @@ async function main() {
       continue
     }
 
-    const toMint = learningscore - Number(onChainBalance)
-    console.log(`  Minting ${toMint} SLEARN to ${u.billetera}...`)
+    const toMint = lpBaseUnits - onChainBalance
+    console.log(`  Minting ${toMint} SLEARN base units (=${Number(toMint)/100} SLEARN) to ${u.billetera}...`)
 
     try {
-      const tx = await slearnContract.write.mint([u.billetera, BigInt(toMint)])
+      const tx = await slearnContract.write.mint([u.billetera, toMint])
       console.log(`  tx: ${tx}`)
 
       // Record conversion event
