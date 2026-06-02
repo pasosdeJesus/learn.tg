@@ -52,7 +52,7 @@ async function callWriteFun(
     const receipt = await publicClient.waitForTransactionReceipt({
       hash: tx,
       confirmations: 2,
-      timeout: 3_000,
+      timeout: 30_000,
     })
     console.log(sindent, `Receipt: ${receipt.status}`)
   } catch (e) {
@@ -66,7 +66,7 @@ async function callWriteFun(
 
 export async function up(db: Kysely<any>): Promise<void> {
   // ========= CONFIGURATION =========
-  const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL
+  const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://forno.celo-sepolia.celo-testnet.org'
   const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}` | undefined
   const DEPLOYED_AT_V2 = process.env.NEXT_PUBLIC_DEPLOYED_AT_V2 as `0x${string}` | undefined
   const USDT_ADDRESS = process.env.NEXT_PUBLIC_USDT_ADDRESS!
@@ -86,6 +86,9 @@ export async function up(db: Kysely<any>): Promise<void> {
   }
 
   const DEPLOYED_AT_V3 = getV3Address()
+  if (!DEPLOYED_AT_V3) {
+    throw new Error('V3 address not found. Deploy LearnTGVaultsV3 first (bin/deployLearnTGVaultsV3).')
+  }
 
   const chain = NETWORK === 'celo' ? celo : celoSepolia
 
@@ -139,8 +142,11 @@ export async function up(db: Kysely<any>): Promise<void> {
       [oldBalance],
       0,
     )
+  }
 
-    console.log('Transferring drained USDT to V3 contract...')
+  // Transfer exactly what was in V2 from deployer to V3 (not the whole wallet)
+  if (oldBalance > 0n) {
+    console.log(`Transferring ${formatUnits(oldBalance, 6)} USDT to V3...`)
     await callWriteFun(
       publicClient,
       account,
@@ -150,7 +156,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     )
     console.log('USDT transferred to V3')
   } else {
-    console.log('V2 contract has no USDT balance, skipping drain')
+    console.log('V2 has no USDT, skipping transfer')
   }
 
   // cCOP
