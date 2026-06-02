@@ -180,6 +180,25 @@ To protect users from volatility, SLEARN employs a dual-reference stability fram
     efficiency and community growth may generate a surplus. This surplus may be
     transferred to de pdJ treasury to develop and maintain the pdJ ecosystem. We will keep record
     of these allocations in the transparency dashboard.
+5.  **Conversion Rate Limits:** The `usdtToSlearnRate` (1 USDT = N SLEARN) is adjustable
+    by the admin within the range **[10, 22]** enforced by the smart contract:
+    - **Upper bound (22):** The USD floor from point 3 — if the SLE depreciates beyond
+      22 per USD, SLEARN remains backed at this minimum, preventing dilution of reserves.
+    - **Lower bound (10):** Caps appreciation exposure at 120% (1 USD = 10 SLE). A rate
+      below 10 would mean the Leone more than doubled in value against the dollar — a
+      scenario with no historical precedent for any African currency.
+    
+    This range ensures the reserve can always meet its obligations without requiring
+    the admin to respond to impossible exchange rate movements.
+6.  **Coverage Target (120%):** pdJ aims to maintain a reserve coverage ratio of at
+    least 120% of the minimum required by the Reserve Backing Rule (point 1). This
+    buffer, funded by the initial overcollateralization at launch and the long-term
+    appreciation of gold-backed assets (XAUT), provides additional safety against
+    exchange rate volatility. Given the historical stability of the Sierra Leonean
+    Leone — which has never appreciated more than 50% against the USD in any 5-year
+    window — a 120% target is conservative and operationally viable. Achieving and
+    sustaining this ratio depends on market conditions and is not a contractual
+    guarantee.
  
 ---
 

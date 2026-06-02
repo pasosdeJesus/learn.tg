@@ -49,6 +49,7 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 | `bin/deployLearnTGVaultsV3` | Deploy V3 vaults (reads SLEARN from deployments) |
 | `bin/deployMockUSDT` | Deploy MockUSDT (testnet only) |
 | `bin/deployCeloUbi` | Deploy CeloUBI |
+| `bin/configSLEARN` | Configure SLEARN after deploy (addresses + roles) |
 
 ### Source verification (Blockscout)
 

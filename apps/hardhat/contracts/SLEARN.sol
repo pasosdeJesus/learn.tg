@@ -112,7 +112,7 @@ contract SLEARN is ERC20, AccessControl, Pausable, ReentrancyGuard {
     }
 
     function setUsdtToSlearnRate(uint256 newRate) external onlyAdmin {
-        require(newRate > 0, "SLEARN: rate must be positive");
+        require(newRate >= 10 && newRate <= 22, "SLEARN: rate must be 10-22");
         emit RateUpdated(usdtToSlearnRate, newRate);
         usdtToSlearnRate = newRate;
     }
@@ -387,7 +387,8 @@ contract SLEARN is ERC20, AccessControl, Pausable, ReentrancyGuard {
         uint256 perUSDT = halfUSDT / activeCount;
         uint256 perSlearn = halfSlearn / activeCount;
 
-        for (uint256 i = 0; i < missionalCourses.length; i++) {
+        uint256 length = missionalCourses.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 cid = missionalCourses[i];
             if (!isMissionalCourse[cid]) continue;
             uint256 mslearn = 0;
