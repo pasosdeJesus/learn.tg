@@ -1,4 +1,5 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
+dotenv.config({ path: '../.env' })
 import { Kysely, sql } from 'kysely'
 import type { Insertable } from 'kysely'
 import type { Address } from 'viem'

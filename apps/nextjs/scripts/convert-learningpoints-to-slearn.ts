@@ -5,7 +5,8 @@
  *
  * Idempotent — checks userevent to skip already-converted users.
  */
-import 'dotenv/config'
+import dotenv from 'dotenv'
+dotenv.config({ path: '../.env' })
 import { newKyselyPostgresql } from '../.config/kysely.config'
 import type { Address } from 'viem'
 import {
