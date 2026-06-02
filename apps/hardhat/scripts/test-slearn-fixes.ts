@@ -13,8 +13,8 @@ dotenv.config({ path: '../.env' })
 
 const network = process.env.NEXT_PUBLIC_NETWORK || 'celoSepolia'
 const chain = network === 'celo' ? celo : celoSepolia
-const slearnFile = path.join(__dirname, '..', '..', 'deployments', 'SLEARN', `${network}.json`)
-const vaultFile = path.join(__dirname, '..', '..', 'deployments', 'LearnTGVaults', 'V3', `${network}.json`)
+const slearnFile = path.join(__dirname, '..', 'deployments', 'SLEARN', `${network}.json`)
+const vaultFile = path.join(__dirname, '..', 'deployments', 'LearnTGVaults', 'V3', `${network}.json`)
 
 const SLEARN_ADDR = JSON.parse(fs.readFileSync(slearnFile, 'utf8')).address as `0x${string}`
 const VAULT_ADDR = JSON.parse(fs.readFileSync(vaultFile, 'utf8')).address as `0x${string}`
