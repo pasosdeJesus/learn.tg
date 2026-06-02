@@ -122,6 +122,9 @@ async function main() {
     try {
       const tx = await slearnContract.write.mint([u.billetera, toMint])
       console.log(`  tx: ${tx}`)
+      // Wait for confirmation before next mint to avoid nonce issues
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: tx, timeout: 60_000 })
+      console.log(`  confirmed in block ${receipt.blockNumber}`)
 
       // Record conversion event
       await db
