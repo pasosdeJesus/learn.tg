@@ -209,7 +209,7 @@ importers:
         version: 3.3.5
       '@pasosdejesus/m':
         specifier: gitlab:pasosdejesus/m
-        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=4e4f1d05c4ac1c6c6e60dbfae831c85253d99bb4
+        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=fff20d9cbab2847d5208d063b3685b4dc3871b7d
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0
@@ -2046,8 +2046,8 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=4e4f1d05c4ac1c6c6e60dbfae831c85253d99bb4':
-    resolution: {tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=4e4f1d05c4ac1c6c6e60dbfae831c85253d99bb4}
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=fff20d9cbab2847d5208d063b3685b4dc3871b7d':
+    resolution: {tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=fff20d9cbab2847d5208d063b3685b4dc3871b7d}
     version: 0.6.2
     hasBin: true
 
@@ -10269,7 +10269,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
       '@types/debug': 4.1.13
-      debug: 4.4.3
+      debug: 4.3.4
       pony-cause: 2.1.11
       semver: 7.8.1
       uuid: 9.0.1
@@ -10412,7 +10412,7 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=4e4f1d05c4ac1c6c6e60dbfae831c85253d99bb4':
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=fff20d9cbab2847d5208d063b3685b4dc3871b7d':
     dependencies:
       dotenv: 17.4.2
       execa: 9.6.1
