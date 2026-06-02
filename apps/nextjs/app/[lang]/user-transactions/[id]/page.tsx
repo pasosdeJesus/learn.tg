@@ -68,6 +68,7 @@ export default function UserTransactionsPage({ params }: PageProps) {
 
   const formatAmount = (tx: UserTransaction) => {
     if (tx.crypto === 'learningpoints') return formatLearningPoints(tx.cantidad)
+    if (tx.crypto === 'slearn') return `${Number(tx.cantidad).toFixed(2)} SLEARN`
     if (tx.crypto === 'usdt') return formatUSDT(tx.cantidad)
     if (tx.crypto === 'celo') return formatCELO(tx.cantidad)
     return tx.cantidad.toString()
@@ -78,6 +79,7 @@ export default function UserTransactionsPage({ params }: PageProps) {
       case 'scholarship': return t('scholarship')
       case 'ubi-claim': return t('UBI Claim', 'Reclamo de UBI')
       case 'donation': return t('donation')
+      case 'conversion': return lang === 'es' ? 'Conversión LP→SLEARN' : 'LP→SLEARN Conversion'
       case 'learningpoint': return t('learningPoints')
       default: return tipo
     }

@@ -76,14 +76,15 @@ async function main() {
 
     console.log(`\nUser ${u.user_id}: ${u.billetera} — learningscore=${learningscore}`)
 
-    // Check if already converted
-    const existing = await db
-      .selectFrom('userevent')
+    // Check if already converted (use permanent transaction table, not userevent)
+    const alreadyConverted = await db
+      .selectFrom('transaction')
       .where('usuario_id', '=', u.user_id)
-      .where('event_type', '=', CONVERSION_EVENT_TYPE)
+      .where('tipo', '=', 'conversion')
+      .where('crypto', '=', 'slearn')
       .executeTakeFirst()
 
-    if (existing) {
+    if (alreadyConverted) {
       console.log('  Already converted, skipping')
       skipped++
       continue
@@ -98,18 +99,18 @@ async function main() {
     console.log(`  On-chain SLEARN balance: ${onChainBalance}`)
 
     if (onChainBalance >= lpBaseUnits) {
-      console.log('  On-chain balance >= learningscore, recording event only (no mint)')
+      console.log('  On-chain balance >= learningscore, recording conversion (no mint needed)')
       await db
-        .insertInto('userevent')
+        .insertInto('transaction')
         .values({
-          event_type: CONVERSION_EVENT_TYPE,
           usuario_id: u.user_id,
-          event_data: JSON.stringify({
-            learningscore,
-            slearn_minted: 0,
-            reason: 'already_has_sufficient_balance',
-          }),
-          created_at: new Date(),
+          fecha: new Date(),
+          tipo: 'conversion',
+          crypto: 'slearn',
+          cantidad: Number(onChainBalance) / 100,
+          impacto_balance: Number(onChainBalance) / 100,
+          wallet: u.billetera,
+          metadata: { learningscore, reason: 'already_had_sufficient_balance' },
         })
         .execute()
       skipped++
@@ -126,18 +127,19 @@ async function main() {
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx, timeout: 60_000 })
       console.log(`  confirmed in block ${receipt.blockNumber}`)
 
-      // Record conversion event
+      // Record conversion in transaction table (permanent, used by leaderboard)
       await db
-        .insertInto('userevent')
+        .insertInto('transaction')
         .values({
-          event_type: CONVERSION_EVENT_TYPE,
           usuario_id: u.user_id,
-          event_data: JSON.stringify({
-            learningscore,
-            slearn_minted: Number(toMint),
-            tx_hash: tx,
-          }),
-          created_at: new Date(),
+          fecha: new Date(),
+          tipo: 'conversion',
+          crypto: 'slearn',
+          cantidad: Number(toMint) / 100,
+          impacto_balance: Number(toMint) / 100,
+          hash: tx,
+          wallet: u.billetera,
+          metadata: { learningscore },
         })
         .execute()
 
