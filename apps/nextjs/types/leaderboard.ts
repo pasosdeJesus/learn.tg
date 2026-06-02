@@ -71,4 +71,14 @@ export interface TransparencyResponse {
     totalUBICELO: number
     totalDonationsUSDT: number
   }
+  reserves?: {
+    slearnTotalSupply: number
+    learnTgReserveUSDT: number
+    stableSlReserveUSDT: number
+    reserveMultisigUSDT: number
+    referralWalletUSDT: number
+    churchesWalletUSDT: number
+    coverageRatio: number
+    coverageTarget: number
+  }
 }

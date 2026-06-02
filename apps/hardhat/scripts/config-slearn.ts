@@ -15,22 +15,22 @@ async function main() {
   const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia"
 
   // Wallet addresses — all required, set individually in apps/.env
-  const pdJTreasury     = process.env.PDJ_TREASURY_ADDRESS!
-  const ubiWallet       = process.env.UBI_WALLET_ADDRESS!
-  const referralWallet  = process.env.REFERRAL_WALLET_ADDRESS!
-  const churchesWallet  = process.env.CHURCHES_WALLET_ADDRESS!
-  const reserveMultisig = process.env.RESERVE_MULTISIG_ADDRESS!
-  const learnTgReserve  = process.env.LEARN_TG_RESERVE_ADDRESS!
-  const stableSlReserve = process.env.STABLE_SL_RESERVE_ADDRESS!
+  const pdJTreasury     = process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS!
+  const ubiWallet       = process.env.NEXT_PUBLIC_UBI_WALLET_ADDRESS!
+  const referralWallet  = process.env.NEXT_PUBLIC_REFERRAL_WALLET_ADDRESS!
+  const churchesWallet  = process.env.NEXT_PUBLIC_CHURCHES_WALLET_ADDRESS!
+  const reserveMultisig = process.env.NEXT_PUBLIC_RESERVE_MULTISIG_ADDRESS!
+  const learnTgReserve  = process.env.NEXT_PUBLIC_LEARN_TG_RESERVE_ADDRESS!
+  const stableSlReserve = process.env.NEXT_PUBLIC_STABLE_SL_RESERVE_ADDRESS!
 
   const missing = []
-  if (!pdJTreasury) missing.push("PDJ_TREASURY_ADDRESS")
-  if (!ubiWallet) missing.push("UBI_WALLET_ADDRESS")
-  if (!referralWallet) missing.push("REFERRAL_WALLET_ADDRESS")
-  if (!churchesWallet) missing.push("CHURCHES_WALLET_ADDRESS")
-  if (!reserveMultisig) missing.push("RESERVE_MULTISIG_ADDRESS")
-  if (!learnTgReserve) missing.push("LEARN_TG_RESERVE_ADDRESS")
-  if (!stableSlReserve) missing.push("STABLE_SL_RESERVE_ADDRESS")
+  if (!pdJTreasury) missing.push("NEXT_PUBLIC_PDJ_TREASURY_ADDRESS")
+  if (!ubiWallet) missing.push("NEXT_PUBLIC_UBI_WALLET_ADDRESS")
+  if (!referralWallet) missing.push("NEXT_PUBLIC_REFERRAL_WALLET_ADDRESS")
+  if (!churchesWallet) missing.push("NEXT_PUBLIC_CHURCHES_WALLET_ADDRESS")
+  if (!reserveMultisig) missing.push("NEXT_PUBLIC_RESERVE_MULTISIG_ADDRESS")
+  if (!learnTgReserve) missing.push("NEXT_PUBLIC_LEARN_TG_RESERVE_ADDRESS")
+  if (!stableSlReserve) missing.push("NEXT_PUBLIC_STABLE_SL_RESERVE_ADDRESS")
   if (missing.length > 0) throw new Error(`Missing env vars: ${missing.join(", ")}`)
 
   // Read deployed addresses
@@ -114,7 +114,7 @@ async function main() {
   // Approve SLEARN contract to spend backend's USDT and SLEARN
   const maxUint = ethers.MaxUint256
   const usdtAddr = process.env.NEXT_PUBLIC_USDT_ADDRESS!
-  const usdt = await ethers.getContractAt("IERC20", usdtAddr)
+  const usdt = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdtAddr)
 
   console.log(`  USDT.approve(SLEARN, max) from backend...`)
   const t1 = await usdt.approve(slearnAddr, maxUint)
