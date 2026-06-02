@@ -51,9 +51,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
-    console.log('**[next.config] rewrites() called, apiUrl:', apiUrl)
+    console.log('**[next.config] NEXT_PUBLIC_API_URL:', apiUrl || '(empty, API served locally)')
     if (!apiUrl) return []
-    console.log('**[next.config] rewrite active:', `/api/:path* -> ${apiUrl}/:path*`)
+    console.log('**[next.config] proxying /api/* →', apiUrl)
     return {
       beforeFiles: [
         {

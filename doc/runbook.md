@@ -2,6 +2,13 @@
 
 Operational procedures for the SLEARN token and related contracts on Celo mainnet.
 
+> **Prerequisite:** Wallets must be imported first:
+> ```bash
+> bin/m wallet:import --name admin --private-key <ADMIN_KEY>
+> bin/m wallet:import --name minter --private-key <MINTER_KEY>
+> ```
+> All commands use `--network celo` for mainnet. For testnet, use `--network celoAlfajores`.
+
 ---
 
 ## 1. Key Addresses & Roles
@@ -56,12 +63,16 @@ These `approve` calls must be made after contract deployment and after any key r
 ### Monitoring
 
 ```bash
-# Check L2 balance
-cast call <SLEARN_ADDRESS> "usdt()(address)" --rpc-url <RPC>
-cast balance --erc20 <USDT_ADDRESS> <learnTgReserve_ADDRESS> --rpc-url <RPC>
+# Check USDT address used by SLEARN
+bin/m wallet:call --name admin --to <SLEARN_ADDRESS> --function "usdt()" --network celo
+
+# Check L2 USDT balance
+bin/m wallet:balance --name admin --token <USDT_ADDRESS> --network celo
+# (checks admin's balance; for any address use wallet:call)
+bin/m wallet:call --name admin --to <USDT_ADDRESS> --function "balanceOf(address)" --args "<learnTgReserve>" --network celo
 
 # Check SLEARN supply
-cast call <SLEARN_ADDRESS> "totalSupply()(uint256)" --rpc-url <RPC>
+bin/m wallet:call --name admin --to <SLEARN_ADDRESS> --function "totalSupply()" --network celo
 
 # Check coverage
 # (total reserve USD) / (totalSLEARN / 22) >= 1
@@ -71,10 +82,19 @@ cast call <SLEARN_ADDRESS> "totalSupply()(uint256)" --rpc-url <RPC>
 
 ## 4. Emergency Procedures
 
+> **Calldata reference:**
+> ```bash
+> # Compute calldata for any function (one-time, or keep the hex values below)
+> cast calldata "pause()"                        # → 0x8456cb59
+> cast calldata "unpause()"                      # → 0x3f4ba83a
+> cast calldata "emergencyWithdrawUSDT(uint256)" # → 0x...
+> cast calldata "emergencyWithdrawSLEARN(uint256)" # → 0x...
+> ```
+
 ### Pause All Operations
 
 ```bash
-cast send <SLEARN_ADDRESS> "pause()" --private-key <ADMIN_KEY> --rpc-url <RPC>
+bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --data 0x8456cb59 --network celo
 ```
 
 This disables: `processPayment`, `mint`, `mintAndReserve`, `redeemForSLE`, `transfer`, `transferFrom`, `burn`.
@@ -82,17 +102,17 @@ This disables: `processPayment`, `mint`, `mintAndReserve`, `redeemForSLE`, `tran
 ### Unpause
 
 ```bash
-cast send <SLEARN_ADDRESS> "unpause()" --private-key <ADMIN_KEY> --rpc-url <RPC>
+bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --data 0x3f4ba83a --network celo
 ```
 
 ### Emergency Withdraw from Vault
 
 ```bash
 # USDT
-cast send <VAULT_ADDRESS> "emergencyWithdrawUSDT(uint256)" <amount> --private-key <OWNER_KEY> --rpc-url <RPC>
+bin/m wallet:send --name admin --to <VAULT_ADDRESS> --data <calldata> --network celo
 
 # SLEARN
-cast send <VAULT_ADDRESS> "emergencyWithdrawSLEARN(uint256)" <amount> --private-key <OWNER_KEY> --rpc-url <RPC>
+bin/m wallet:send --name admin --to <VAULT_ADDRESS> --data <calldata> --network celo
 ```
 
 ---
@@ -102,30 +122,29 @@ cast send <VAULT_ADDRESS> "emergencyWithdrawSLEARN(uint256)" <amount> --private-
 ### Register a New Course Vault
 
 ```bash
-cast send <VAULT_ADDRESS> "createVault(uint256,uint256,uint256)" \
-  <courseId> <amountPerGuideUSDT> <amountPerGuideSLEARN> \
-  --private-key <OWNER_KEY> --rpc-url <RPC>
+# Compute: cast calldata "createVault(uint256,uint256,uint256)" <courseId> <amountUSDT> <amountSLEARN>
+bin/m wallet:send --name admin --to <VAULT_ADDRESS> --data <calldata> --network celo
 ```
 
 ### Register a Missional Course
 
 ```bash
-cast send <SLEARN_ADDRESS> "addMissionalCourse(uint256)" <courseId> \
-  --private-key <MINTER_KEY> --rpc-url <RPC>
+# Compute: cast calldata "addMissionalCourse(uint256)" <courseId>
+bin/m wallet:send --name minter --to <SLEARN_ADDRESS> --data <calldata> --network celo
 ```
 
 ### Remove a Missional Course
 
 ```bash
-cast send <SLEARN_ADDRESS> "removeMissionalCourse(uint256)" <courseId> \
-  --private-key <MINTER_KEY> --rpc-url <RPC>
+# Compute: cast calldata "removeMissionalCourse(uint256)" <courseId>
+bin/m wallet:send --name minter --to <SLEARN_ADDRESS> --data <calldata> --network celo
 ```
 
 ### Adjust Conversion Rate
 
 ```bash
-cast send <SLEARN_ADDRESS> "setUsdtToSlearnRate(uint256)" <newRate> \
-  --private-key <ADMIN_KEY> --rpc-url <RPC>
+# Compute: cast calldata "setUsdtToSlearnRate(uint256)" <newRate>
+bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --data <calldata> --network celo
 ```
 
 ⚠️ Changing the rate affects all future distributions and redemptions. Coordinate with stable-sl before changing.
@@ -134,13 +153,15 @@ cast send <SLEARN_ADDRESS> "setUsdtToSlearnRate(uint256)" <newRate> \
 
 ```bash
 # Grant MINTER_ROLE to new wallet
-cast send <SLEARN_ADDRESS> "grantRole(bytes32,address)" \
-  <MINTER_ROLE_HASH> <new_wallet> --private-key <ADMIN_KEY>
+# Compute: cast calldata "grantRole(bytes32,address)" <MINTER_ROLE_HASH> <new_wallet>
+bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --data <calldata> --network celo
 
 # Setup new allowances (see §2)
+bin/m wallet:approve --name <new_backend> --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
+
 # Revoke old wallet
-cast send <SLEARN_ADDRESS> "revokeRole(bytes32,address)" \
-  <MINTER_ROLE_HASH> <old_wallet> --private-key <ADMIN_KEY>
+# Compute: cast calldata "revokeRole(bytes32,address)" <MINTER_ROLE_HASH> <old_wallet>
+bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --data <calldata> --network celo
 ```
 
 Granting `MINTER_ROLE` automatically adds the address to `authorizedTransfers`, allowing users to send SLEARN to it.
@@ -154,17 +175,23 @@ Granting `MINTER_ROLE` automatically adds the address to `authorizedTransfers`, 
 If `learnTgReserve` or `stableSlReserve` allowance is revoked:
 
 1. Identify which allowance was revoked
-2. Re-approve: `cast send <USDT_ADDRESS> "approve(address,uint256)" <SLEARN_ADDRESS> <max_uint256> --private-key <RESERVE_KEY>`
-3. Verify: `cast call <USDT_ADDRESS> "allowance(address,address)" <RESERVE> <SLEARN_ADDRESS>`
+2. Re-approve:
+   ```bash
+   bin/m wallet:approve --name <reserve_wallet> --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
+   ```
+3. Verify:
+   ```bash
+   bin/m wallet:call --name admin --to <USDT_ADDRESS> --function "allowance(address,address)" --args "<RESERVE>,<SLEARN_ADDRESS>" --network celo
+   ```
 
 ### Contract Compromised
 
-1. `pause()` both SLEARN and LearnTGVaultsV3
+1. `pause()` both SLEARN and LearnTGVaultsV3 (see §4)
 2. Deploy new contracts
-3. `emergencyWithdraw` all funds from old contracts
+3. `emergencyWithdraw` all funds from old contracts (see §4)
 4. Migrate to new contracts following V2→V3 migration pattern
 5. Update backend `.env` with new addresses
-6. `unpause()` new contracts
+6. `unpause()` new contracts (see §4)
 
 ---
 
@@ -172,9 +199,9 @@ If `learnTgReserve` or `stableSlReserve` allowance is revoked:
 
 When migrating to a new vault version:
 
-1. `emergencyWithdrawUSDT` all USDT from old vault
-2. `emergencyWithdrawSLEARN` all SLEARN from old vault
+1. `emergencyWithdrawUSDT` all USDT from old vault (see §4)
+2. `emergencyWithdrawSLEARN` all SLEARN from old vault (see §4)
 3. Transfer to new vault contract
-4. Recreate vaults in new contract with same parameters
+4. Recreate vaults in new contract with same parameters (see §5)
 5. Migrate `guidePaid` records (use migration script pattern from `contract-to-v2.ts`)
 6. Update backend `NEXT_PUBLIC_DEPLOYED_AT` to new address

@@ -111,7 +111,9 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
     .select([
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
       LP_USER_COUNT,
+      SLEARN_USER_COUNT,
       LP_WHERE.as('totalLearningPoints'),
+      SLEARN_WHERE.as('totalSLEARNBalance'),
       SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
       UBI_WHERE.as('totalUBICELO'),
       DONATIONS_WHERE.as('totalDonationsUSDT'),

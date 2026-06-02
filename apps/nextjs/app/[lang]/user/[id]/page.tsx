@@ -165,7 +165,7 @@ export default function PublicProfilePage({ params }: PageProps) {
     }
   }
 
-  const cryptoLabel = (c: string) => c === 'learningpoints' ? 'SLE' : c === 'usdt' ? 'USDT' : c === 'celo' ? 'CELO' : c.toUpperCase()
+  const cryptoLabel = (c: string) => c === 'learningpoints' ? 'LP' : c === 'slearn' ? 'SLEARN' : c === 'usdt' ? 'USDT' : c === 'celo' ? 'CELO' : c.toUpperCase()
 
   const explorerBase = IS_PRODUCTION ? 'https://celo.blockscout.com' : 'https://celo-sepolia.blockscout.com'
 
