@@ -109,6 +109,10 @@ async function main() {
   }
 
   console.log("\n✅ Configuration complete")
+  console.log("\nSetting up token metadata...")
+  const baseUrl = network === 'celo' ? 'https://learn.tg' : 'https://learn.tg:9001'
+  await tx("tokenURI", () => slearn.setTokenURI(`${baseUrl}/api/slearn/metadata`))
+
   console.log("\nSetting up one-time allowances...")
 
   // Approve SLEARN contract to spend backend's USDT and SLEARN

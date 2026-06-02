@@ -26,6 +26,7 @@ async function main() {
   console.log(`  usdt: ${await slearn.usdt()}`)
   console.log(`  learnTGVault: ${await slearn.learnTGVault()}`)
   console.log(`  paused: ${await slearn.paused()}`)
+  console.log(`  tokenURI: ${await slearn.tokenURI()}`)
 
   console.log("\n✅ SLEARN smoke test passed")
 }

@@ -35,6 +35,9 @@ contract SLEARN is ERC20, AccessControl, Pausable, ReentrancyGuard {
     // ============ CONVERSION RATE ============
     uint256 public usdtToSlearnRate = 22;  // 1 USDT = 22 SLEARN
 
+    // ============ TOKEN METADATA (ERC-1046) ============
+    string public tokenURI;                // URL to token metadata JSON, updatable for IPFS migration
+
     // ============ KEY ADDRESSES ============
     address public pdJTreasury;
     address public ubiWallet;
@@ -57,6 +60,7 @@ contract SLEARN is ERC20, AccessControl, Pausable, ReentrancyGuard {
     event AuthorizedTransferAdded(address indexed addr);
     event AuthorizedTransferRemoved(address indexed addr);
     event RateUpdated(uint256 oldRate, uint256 newRate);
+    event TokenURIUpdated(string oldURI, string newURI);
     event PdJTreasuryUpdated(address indexed newTreasury);
     event UbiWalletUpdated(address indexed newWallet);
     event LearnTGVaultUpdated(address indexed newVault);
@@ -115,6 +119,11 @@ contract SLEARN is ERC20, AccessControl, Pausable, ReentrancyGuard {
         require(newRate >= 10 && newRate <= 22, "SLEARN: rate must be 10-22");
         emit RateUpdated(usdtToSlearnRate, newRate);
         usdtToSlearnRate = newRate;
+    }
+
+    function setTokenURI(string memory _tokenURI) external onlyAdmin {
+        emit TokenURIUpdated(tokenURI, _tokenURI);
+        tokenURI = _tokenURI;
     }
 
     // ============ ADDRESS SETTERS ============
