@@ -27,6 +27,7 @@ async function main() {
   const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}` | undefined
   if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY not set in apps/.env')
   const SLEARN_ADDRESS = getSlearnAddress()
+  if (!SLEARN_ADDRESS) throw new Error('SLEARN deployment not found. Run bin/deploySLEARN first.')
   const NETWORK = process.env.NEXT_PUBLIC_NETWORK || 'celoSepolia'
 
   const chain = NETWORK === 'celo' ? celo : celoSepolia
