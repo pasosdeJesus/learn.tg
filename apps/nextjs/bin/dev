@@ -13,7 +13,7 @@ fi
 
 rm -rf .next
 pnpm install
-. ./.env
+. ../.env
 cmd="node_modules/next/dist/bin/next dev -p${PORT} ${OPDEV}"
 echo $cmd
 eval $cmd
