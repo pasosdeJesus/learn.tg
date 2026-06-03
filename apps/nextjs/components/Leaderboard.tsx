@@ -14,6 +14,13 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
+  // State for filters/sorting
+  const [sortBy, setSortBy] = useState<SortField>('learningpoints')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [country, setCountry] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const limit = 50
+
   const {
     data: apiData,
     isLoading,
@@ -21,8 +28,10 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
     setData: setApiData,
   } = useApiData<LeaderboardResponse>({
     endpoint: 'leaderboard',
+    params: country ? { country, sortBy, sortOrder, page: String(page), limit: String(limit) } : { sortBy, sortOrder, page: String(page), limit: String(limit) },
     initialData,
     autoFetch: !initialData,
+    deps: [country, sortBy, sortOrder, page],
   })
 
   // Destructure data from apiData
@@ -31,13 +40,6 @@ export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
   const pagination = apiData?.pagination || { page: 1, limit: 50, total: 0, totalPages: 0 }
   const rules = apiData?.rules || []
   const totals = apiData?.totals
-
-  // State for filters/sorting
-  const [sortBy, setSortBy] = useState<SortField>('learningpoints')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [country, setCountry] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const limit = 50 // Fixed limit as per API default
 
   // Translation helper
   const t = useMemo(() => createComponentT(lang, {
