@@ -136,8 +136,7 @@ Expected: SLEARN shows name/symbol/rate/supply, V3 shows VERSION=3/owner/balance
 
 ```bash
 # Before configuring, pause to prevent any interaction.
-# Use Blockscout "Write" tab or cast:
-#   cast send $SLEARN_ADDR "pause()" --private-key $PRIVATE_KEY --rpc-url $NEXT_PUBLIC_RPC_URL
+bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --function "pause()" --network celo
 ```
 
 ---
@@ -149,15 +148,7 @@ NEXT_PUBLIC_NETWORK=celo bin/configSLEARN
 ```
 
 This sets all addresses, grants MINTER_ROLE and BURNER_ROLE, and sets slearnContractRole on V3.
-It also grants `DEFAULT_ADMIN_ROLE` to the deployer. After configuration, **transfer admin to a cold wallet**:
-
-```
-SLEARN.grantRole(DEFAULT_ADMIN_ROLE, <cold_wallet>)
-SLEARN.renounceRole(DEFAULT_ADMIN_ROLE, <deployer>)
-```
-
-The backend only needs `MINTER_ROLE` + `BURNER_ROLE`. The cold wallet holds `DEFAULT_ADMIN_ROLE` for
-pause, rate changes, and address updates — operations done rarely and with deliberation.
+The `DEFAULT_ADMIN_ROLE` stays with the deployer temporarily until Phase 5.
 
 ### Manual steps (if needed)
 
@@ -182,26 +173,16 @@ LearnTGVaultsV3.setSlearnContractRole(<SLEARN address>, true)
 
 Per `doc/runbook.md` §2:
 
-| From | To | Token | Command |
-|---|---|---|---|
-| Backend wallet | SLEARN | USDT | `USDT.approve(SLEARN, max)` |
-| Backend wallet | SLEARN | SLEARN | `SLEARN.approve(SLEARN, max)` |
-| `learnTgReserve` (L2) | SLEARN | USDT | `USDT.approve(SLEARN, max)` |
-| `stableSlReserve` (S2) | SLEARN | USDT | `USDT.approve(SLEARN, max)` |
+```bash
+# Backend wallet
+bin/m wallet:approve --name backend --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
 
-> ⚠️ If any allowance is revoked, `processPayment` or `redeemForSLE` will fail.
+# learnTgReserve (L2)
+bin/m wallet:approve --name learntgreserve --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
 
-
- % bin/m wallet:approve --name learntgreserve --token
-0x27fd41Bea85C39254f2B12789eB37a1543152CC1 --spender
-0x27fd41Bea85C39254f2B12789eB37a1543152CC1 --amount 1000 --network celo
-✅ Approved 1000 tokens for spender 0x27fd41Bea85C39254f2B12789eB37a1543152CC1
-   TX: 0x3684e3b9ba6df5035a65a1ef8c9b7c4835282b57d5fe4f714427a8e3aaaf485c
-vtamara@piedraangular:reserve % bin/m wallet:approve --name stableslreserve
---token 0x27fd41Bea85C39254f2B12789eB37a1543152CC1 --spender
-0x27fd41Bea85C39254f2B12789eB37a1543152CC1 --amount 1000 --network celo
-✅ Approved 1000 tokens for spender 0x27fd41Bea85C39254f2B12789eB37a1543152CC1
-   TX: 0xe92ea05b96d0194740cd2493b0059ab5d26ee495c48c5553df9db43fff8cd8f6
+# stableSlReserve (S2)
+bin/m wallet:approve --name stableslreserve --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
+```
 
 ---
 
@@ -209,22 +190,13 @@ vtamara@piedraangular:reserve % bin/m wallet:approve --name stableslreserve
 
 ### 5.1 Update Next.js `.env`
 
-Contract addresses live in the deployments directory after each deploy step.
-Copy them to `.env`:
+Set mainnet config. V3 and SLEARN addresses come from `lib/deployments.ts` automatically.
 
 ```
-# From deployments/LearnTGVaults/V3/celo.json → address
-NEXT_PUBLIC_DEPLOYED_AT=<V3 address>
-# From deployments/SLEARN/celo.json → address
-NEXT_PUBLIC_SLEARN_ADDRESS=<SLEARN address>
-# Current V2 contract on mainnet
-NEXT_PUBLIC_DEPLOYED_AT_V2=<current V2 address>
-# Mainnet config
 NEXT_PUBLIC_NETWORK=celo
-NEXT_PUBLIC_NEXT_PUBLIC_USDT_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e
+NEXT_PUBLIC_USDT_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e
+NEXT_PUBLIC_DEPLOYED_AT_V2=<current V2 address>
 ```
-
-> The deployment files are the single source of truth. Never guess addresses — always read from `deployments/{Contract}/celo.json`.
 
 ### 5.2 Run V2→V3 migration
 
@@ -248,13 +220,30 @@ npx tsx scripts/convert-learningpoints-to-slearn.ts
 
 > Idempotent — safe to re-run.
 
+### 5.4 Transfer Admin to Cold Wallet
+
+After conversion, transfer `DEFAULT_ADMIN_ROLE` to a cold wallet. The backend keeps only
+`MINTER_ROLE` + `BURNER_ROLE`. See `doc/runbook.md` §5.
+
+> **Prerequisite:** Import wallets via `bin/m wallet:import --name admin --private-key <ADMIN_KEY>`
+
+```bash
+# Grant DEFAULT_ADMIN_ROLE to cold wallet
+bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --function "grantRole(bytes32,address)" --args "<DEFAULT_ADMIN_ROLE>,<COLD_WALLET>" --network celo
+
+# Renounce DEFAULT_ADMIN_ROLE from backend
+bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --function "renounceRole(bytes32,address)" --args "<DEFAULT_ADMIN_ROLE>,<BACKEND_WALLET>" --network celo
+```
+
+> Replace `0x000...000` with the actual `DEFAULT_ADMIN_ROLE` hash from Blockscout → Read Contract.
+
 ---
 
-## Phase 6: `unpause()` and Go Live
+## Phase 6: Go Live
 
-```
-SLEARN.unpause()
-LearnTGVaultsV3 (no pause function — just verify setSlearnContractRole)
+```bash
+# Unpause SLEARN
+bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --function "unpause()" --network celo
 ```
 
 ### Then monitor:
