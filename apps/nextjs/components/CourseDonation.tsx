@@ -9,6 +9,7 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 interface CourseDonationProps {
   lang: string
   vaultBalance: number
+  vaultBalanceSlearn?: number | null
   courseId: number
   isLoggedIn: boolean
   onDonationSuccess: (courseId: number, data: { increment?: number }) => void
@@ -18,6 +19,7 @@ interface CourseDonationProps {
 export const CourseDonation = ({
   lang,
   vaultBalance,
+  vaultBalanceSlearn,
   courseId,
   isLoggedIn,
   onDonationSuccess,
@@ -33,6 +35,7 @@ export const CourseDonation = ({
       donate: 'Donate',
       vaultBalance: 'Vault Balance:',
       usdt: 'USDT',
+      slearn: 'SLEARN',
     },
     es: {
       loginToDonate: 'Debes iniciar sesi\u00f3n para donar',
@@ -40,8 +43,9 @@ export const CourseDonation = ({
       currentValue: 'Valor actual',
       donateToCourse: 'Donar a este curso',
       donate: 'Donar',
-      vaultBalance: 'Saldo de la Beca:',
+      vaultBalance: 'Beca:',
       usdt: 'USDT',
+      slearn: 'SLEARN',
     },
   }), [lang])
 
@@ -64,7 +68,12 @@ export const CourseDonation = ({
         {t('scholarshipFund')}
       </h4>
       <p className="mb-1 text-xs">{t('currentValue')}</p>
-      <p className="text-lg font-bold mb-4">${vaultBalance.toFixed(2)}</p>
+      <p className="text-lg font-bold mb-4">
+        ${vaultBalance.toFixed(2)}
+        {vaultBalanceSlearn != null && vaultBalanceSlearn > 0 && (
+          <> + {vaultBalanceSlearn.toFixed(2)} SLEARN</>
+        )}
+      </p>
 
       {showDonateButton && (
         <Button onClick={handleDonateClick} className="w-full">

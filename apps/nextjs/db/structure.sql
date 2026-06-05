@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict zSJWeepc1Ja4vIF2DfUFs9wUMooPB8HE3SusVdv82yGKjKtLMQIPaviXeS9f4wb
+\restrict aBDhcatEWOr8EuOP9En06ShK4dYcV2uIlkfNAXq0ppVUHS8a4EWGrtSxGpWCWBz
 
 -- Dumped from database version 17.9
--- Dumped by pg_dump version 17.9
+-- Dumped by pg_dump version 17.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2795,7 +2795,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL
 );
 
 
@@ -2832,7 +2832,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -8296,5 +8296,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict zSJWeepc1Ja4vIF2DfUFs9wUMooPB8HE3SusVdv82yGKjKtLMQIPaviXeS9f4wb
+\unrestrict aBDhcatEWOr8EuOP9En06ShK4dYcV2uIlkfNAXq0ppVUHS8a4EWGrtSxGpWCWBz
 

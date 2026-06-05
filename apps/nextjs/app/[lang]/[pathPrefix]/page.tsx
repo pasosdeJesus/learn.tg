@@ -207,6 +207,7 @@ export default function Page({ params }: PageProps) {
               <CourseDonation
                 lang={lang}
                 vaultBalance={sData.vaultBalance}
+                vaultBalanceSlearn={sData.vaultBalanceSlearn}
                 courseId={parseInt(course.id)}
                 isLoggedIn={!!session?.address}
                 onDonationSuccess={(courseId, data) => {

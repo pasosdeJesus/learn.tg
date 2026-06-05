@@ -43,7 +43,8 @@ export function CourseStatistics({
     en: {
       scholarshipOf: 'Scholarship of ',
       perGuide: ' per guide.',
-      scholarshipUpTo: `Scholarship of up to {{0}} USDT after you complete your profile.`,
+      scholarshipOfSlearn: ' + {{0}} SLEARN per guide.',
+      scholarshipUpTo: `Scholarship of up to {{0}} USDT{{1}} after you complete your profile.`,
       cooldown: 'Although you are in cooldown period.',
       eligible: 'You are eligible.',
       totalGuides: 'Total number of guides in the course: ',
@@ -57,7 +58,8 @@ export function CourseStatistics({
     es: {
       scholarshipOf: 'Beca de ',
       perGuide: ' por guía.',
-      scholarshipUpTo: 'Beca de hasta {{0}} USDT después de que completes tu perfil.',
+      scholarshipOfSlearn: ' + {{0}} SLEARN por guía.',
+      scholarshipUpTo: 'Beca de hasta {{0}} USDT{{1}} después de que completes tu perfil.',
       cooldown: 'Aunque estás en etapa de enfriamiento',
       eligible: 'Eres elegible.',
       totalGuides: 'Total de guias en el curso: ',
@@ -83,13 +85,22 @@ export function CourseStatistics({
                   100
                 ).toFixed(2)}{' '}
                 USDT
+                {scholarshipPerGuideSlearn != null && scholarshipPerGuideSlearn > 0 && (
+                  t('scholarshipOfSlearn',
+                    ((scholarshipPerGuideSlearn * profileScore) / 100).toFixed(2)
+                  )
+                )}
                 {t('perGuide')}
               </span>
             </div>
           ) : (
             <div className="p-2">
               <span>
-                {t('scholarshipUpTo', String(scholarshipPerGuide))}
+                {t('scholarshipUpTo', String(scholarshipPerGuide),
+                  scholarshipPerGuideSlearn != null && scholarshipPerGuideSlearn > 0
+                    ? ` + ${scholarshipPerGuideSlearn} SLEARN`
+                    : ''
+                )}
               </span>
             </div>
           )

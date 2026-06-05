@@ -511,7 +511,7 @@ describe('Course Introduction Page', () => {
     renderWithProviders(<Page params={mockParams} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/Scholarship of.*USDT per guide/i)).toBeInTheDocument()
+      expect(screen.getByText(/Scholarship of.*USDT.*per guide/i)).toBeInTheDocument()
       expect(screen.getByText(/You are eligible/i)).toBeInTheDocument()
       expect(screen.getByText(/Total number of guides in the course: 10/i)).toBeInTheDocument()
       expect(screen.getByText(/Approved guides: 5 \(50%\)/i)).toBeInTheDocument()
@@ -530,7 +530,7 @@ describe('Course Introduction Page', () => {
     renderWithProviders(<Page params={mockParams} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/Scholarship of up to 0.5 USDT after you complete your profile/i)).toBeInTheDocument()
+      expect(screen.getByText(/Scholarship of up to 0.5 USDT.*after you complete your profile/i)).toBeInTheDocument()
     })
   })
 
