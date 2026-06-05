@@ -3,10 +3,10 @@ import type { DB } from '@/db/db.d'
 
 export interface UserTransaction {
   id: number
-  tipo: string
+  type: string
   crypto: string
-  cantidad: number
-  fecha: Date | string
+  amount: number
+  date: Date | string
   hash: string | null
   descripcion: string | null
 }
@@ -17,20 +17,20 @@ export async function getUserTransactions(db: Kysely<DB>, usuarioId: number) {
     .where('usuario_id', '=', usuarioId)
     .select([
       'id',
-      'tipo',
+      'type',
       'crypto',
-      'cantidad',
-      'fecha',
+      'amount',
+      'date',
       'hash',
       'descripcion'
     ])
-    .orderBy('fecha', 'desc')
+    .orderBy('date', 'desc')
     .execute()
 
   return transactions.map(t => ({
     ...t,
-    cantidad: Number(t.cantidad),
-    fecha: t.fecha
+    amount: Number(t.amount),
+  date: t.date
   }))
 }
 

@@ -8,11 +8,11 @@ export async function up(db: Kysely<any>): Promise<void> {
   `.execute(db)
 
 
-  // Update any existing records with tipo = 'earn-guide' to 'scholarship'
+  // Update any existing records with type = 'earn-guide' to 'scholarship'
   await sql`
     UPDATE "transaction"
-    SET tipo = 'scholarship'
-    WHERE tipo = 'earn-guide'
+    SET type = 'scholarship'
+    WHERE type = 'earn-guide'
   `.execute(db)
 
   await sql`
@@ -38,7 +38,7 @@ export async function down(db: Kysely<any>): Promise<void> {
   // Then, revert any records that were updated
   await sql`
     UPDATE "transaction"
-    SET tipo = 'earn-guide'
-    WHERE tipo = 'scholarship'
+    SET type = 'earn-guide'
+    WHERE type = 'scholarship'
   `.execute(db)
 }

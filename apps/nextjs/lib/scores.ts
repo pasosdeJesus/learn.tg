@@ -20,7 +20,7 @@ export async function refreshUserLearningScore(
     .selectFrom('transaction')
     .where('usuario_id', '=', userId)
     .where('crypto', '=', 'learningpoints')
-    .select(db.fn.sum('impacto_balance').as('total_points'))
+    .select(db.fn.sum('balance_impact').as('total_points'))
     .executeTakeFirst()
   
   const total = Number(result?.total_points) || 0
@@ -112,11 +112,11 @@ export async function updateUserAndCoursePoints(
 
     await db.insertInto('transaction').values({
         usuario_id: user.id,
-        fecha: new Date(),
-        tipo: 'scholarship',
+  date: new Date(),
+        type: 'scholarship',
         crypto: 'learningpoints',
-        cantidad: guide.points,
-        impacto_balance: guide.points,
+        amount: guide.points,
+        balance_impact: guide.points,
         wallet: wallet,
         metadata: { courseId: courseId, guideId: guide.actividadpf_id }
     }).execute();

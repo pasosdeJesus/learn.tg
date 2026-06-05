@@ -67,11 +67,11 @@ export default function UserTransactionsPage({ params }: PageProps) {
   }
 
   const formatAmount = (tx: UserTransaction) => {
-    if (tx.crypto === 'learningpoints') return formatLearningPoints(tx.cantidad)
-    if (tx.crypto === 'slearn') return `${Number(tx.cantidad).toFixed(2)} SLEARN`
-    if (tx.crypto === 'usdt') return formatUSDT(tx.cantidad)
-    if (tx.crypto === 'celo') return formatCELO(tx.cantidad)
-    return tx.cantidad.toString()
+    if (tx.crypto === 'learningpoints') return formatLearningPoints(tx.amount)
+    if (tx.crypto === 'slearn') return `${Number(tx.amount).toFixed(2)} SLEARN`
+    if (tx.crypto === 'usdt') return formatUSDT(tx.amount)
+    if (tx.crypto === 'celo') return formatCELO(tx.amount)
+    return tx.amount.toString()
   }
 
   const getTypeName = (tipo: string) => {
@@ -133,7 +133,7 @@ export default function UserTransactionsPage({ params }: PageProps) {
               data.transactions.map((tx) => (
                 <TableRow key={tx.id}>
                   <TableCell className="whitespace-nowrap">
-                    {new Date(tx.fecha).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', {
+                    {new Date(tx.date).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
@@ -141,7 +141,7 @@ export default function UserTransactionsPage({ params }: PageProps) {
                       minute: '2-digit'
                     })}
                   </TableCell>
-                  <TableCell>{getTypeName(tx.tipo)}</TableCell>
+                  <TableCell>{getTypeName(tx.type)}</TableCell>
                   <TableCell className="uppercase">{tx.crypto}</TableCell>
                   <TableCell className="text-right font-mono font-medium">
                     {formatAmount(tx)}

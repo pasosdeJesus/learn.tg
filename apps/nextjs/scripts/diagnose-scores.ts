@@ -24,8 +24,8 @@ async function diagnoseUser(userId: number) {
     // 3. Calcular dAmt: suma de cantidad de transacciones tipo 'donation'
     const dAmtResult = await db.selectFrom('transaction')
       .where('usuario_id', '=', userId as any)
-      .where('tipo', '=', 'donation')
-      .select(db.fn.sum('cantidad').as('total'))
+      .where('type', '=', 'donation')
+      .select(db.fn.sum('amount').as('total'))
       .executeTakeFirst()
     const dAmt = Number(dAmtResult?.total) || 0
     console.log(`Total donaciones (cantidad): ${dAmt}`)
@@ -42,7 +42,7 @@ async function diagnoseUser(userId: number) {
     const lpResult = await db.selectFrom('transaction')
       .where('usuario_id', '=', userId as any)
       .where('crypto', '=', 'learningpoints')
-      .select(db.fn.sum('impacto_balance').as('total'))
+      .select(db.fn.sum('balance_impact').as('total'))
       .executeTakeFirst()
     const lpTotal = Number(lpResult?.total) || 0
     console.log(`Suma de impacto_balance (learningpoints): ${lpTotal}`)
@@ -51,24 +51,24 @@ async function diagnoseUser(userId: number) {
     const lpTransactions = await db.selectFrom('transaction')
       .where('usuario_id', '=', userId as any)
       .where('crypto', '=', 'learningpoints')
-      .select(['id', 'cantidad', 'impacto_balance', 'tipo', 'metadata'])
+      .select(['id', 'amount', 'balance_impact', 'type', 'metadata'])
       .execute()
 
     console.log(`\nTransacciones learningpoints (${lpTransactions.length}):`)
     lpTransactions.forEach((tx, i) => {
-      console.log(`  ${i+1}. ID: ${tx.id}, cantidad: ${tx.cantidad}, impacto: ${tx.impacto_balance}, tipo: ${tx.tipo}, metadata: ${JSON.stringify(tx.metadata)}`)
+      console.log(`  ${i+1}. ID: ${tx.id}, amount: ${tx.amount}, impacto: ${tx.balance_impact}, type: ${tx.type}, metadata: ${JSON.stringify(tx.metadata)}`)
     })
 
     // 8. Listar transacciones donation
     const donationTransactions = await db.selectFrom('transaction')
       .where('usuario_id', '=', userId as any)
-      .where('tipo', '=', 'donation')
-      .select(['id', 'cantidad', 'crypto', 'hash', 'metadata'])
+      .where('type', '=', 'donation')
+      .select(['id', 'amount', 'crypto', 'hash', 'metadata'])
       .execute()
 
     console.log(`\nTransacciones donation (${donationTransactions.length}):`)
     donationTransactions.forEach((tx, i) => {
-      console.log(`  ${i+1}. ID: ${tx.id}, cantidad: ${tx.cantidad}, crypto: ${tx.crypto}, hash: ${tx.hash}`)
+      console.log(`  ${i+1}. ID: ${tx.id}, amount: ${tx.amount}, crypto: ${tx.crypto}, hash: ${tx.hash}`)
     })
 
     // 9. Listar guide_usuario entries

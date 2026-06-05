@@ -8,22 +8,22 @@ export async function up(db: Kysely<any>): Promise<void> {
       col.references('usuario.id').onDelete('cascade').notNull()
     )
     .addColumn('fecha', 'timestamp', (col) => col.notNull())
-    .addColumn('tipo', 'varchar(20)', (col) => col.notNull())
+    .addColumn('type', 'varchar(20)', (col) => col.notNull())
     .addColumn('categoria', 'varchar(50)')
     .addColumn('subcategoria', 'varchar(50)')
     .addColumn('descripcion', 'text')
     .addColumn('crypto', 'varchar(50)', (col) => col.notNull())
-    .addColumn('cantidad', 'decimal(18, 2)', (col) => col.defaultTo('1.00').notNull())
-    .addColumn('impacto_balance', 'decimal(18, 2)', (col) => col.notNull())
+    .addColumn('amount', 'decimal(18, 2)', (col) => col.defaultTo('1.00').notNull())
+    .addColumn('balance_impact', 'decimal(18, 2)', (col) => col.notNull())
     .addColumn('hash', 'varchar(66)', (col) => col.unique())
     .addColumn('metadata', 'jsonb')
-    .addColumn('fecha_creacion', 'timestamp', (col) =>
+    .addColumn('created_at', 'timestamp', (col) =>
       col.defaultTo(sql`now()`).notNull()
     )
-    .addColumn('fecha_actualizacion', 'timestamp', (col) =>
+    .addColumn('updated_at', 'timestamp', (col) =>
       col.defaultTo(sql`now()`).notNull()
     )
-    .addColumn('sincronizado', 'boolean', (col) => col.defaultTo(true).notNull())
+    .addColumn('synced', 'boolean', (col) => col.defaultTo(true).notNull())
     .execute();
 
   // Add CHECK constraints using raw SQL for better control
@@ -49,7 +49,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createIndex('transaction_tipo_categoria_idx')
     .on('transaction')
-    .columns(['tipo', 'categoria'])
+    .columns(['type', 'categoria'])
     .execute();
 }
 

@@ -175,9 +175,9 @@ Ejemplos:
     if (fix) {
       console.log('--- FASE 0: Sanidad de Datos ---');
       const updated = await db.updateTable('transaction')
-        .set({ impacto_balance: sql`cantidad` })
+        .set({ balance_impact: sql`cantidad` })
         .where('crypto', '=', 'learningpoints')
-        .where(eb => eb.or([eb('impacto_balance', 'is', null), eb('impacto_balance', '=', '0')]))
+        .where(eb => eb.or([eb('balance_impact', 'is', null), eb('balance_impact', '=', '0')]))
         .executeTakeFirst()
       if (Number(updated.numUpdatedRows) > 0) console.log(`   [FIX] Corregidos ${updated.numUpdatedRows} registros de LP con impacto_balance nulo/cero.`);
     }
@@ -241,7 +241,7 @@ Ejemplos:
                   const tx = await db.selectFrom('transaction').where('usuario_id', '=', uw.usuario_id).where('crypto', '=', 'usdt').where(sql`metadata->>'guideId'`, '=', guide.id.toString()).executeTakeFirst()
                   if (!tx && fix) {
                     const amount = Number(formatUnits(status[0], 6))
-                    await db.insertInto('transaction').values({ usuario_id: uw.usuario_id, fecha: new Date(), tipo: 'scholarship', crypto: 'usdt', cantidad: amount, impacto_balance: amount, wallet: uw.billetera, metadata: { source: 'deep-scan', courseId: course.id, guideId: guide.id } }).execute()
+                    await db.insertInto('transaction').values({ usuario_id: uw.usuario_id, date: new Date(), type: 'scholarship', crypto: 'usdt', amount: amount, balance_impact: amount, wallet: uw.billetera, metadata: { source: 'deep-scan', courseId: course.id, guideId: guide.id } }).execute()
                     console.log(`   [FIX] Beca USDT faltante insertada para usuario ${uw.usuario_id}`)
                   }
                 }
@@ -250,7 +250,7 @@ Ejemplos:
                 if (guideUser && Number(guideUser.points) > 0) {
                   const lpTx = await db.selectFrom('transaction').where('usuario_id', '=', uw.usuario_id).where('crypto', '=', 'learningpoints').where(sql`metadata->>'guideId'`, '=', guide.id.toString()).executeTakeFirst()
                   if (!lpTx && fix) {
-                    await db.insertInto('transaction').values({ usuario_id: uw.usuario_id, fecha: new Date(), tipo: 'scholarship', crypto: 'learningpoints', cantidad: guideUser.points, impacto_balance: guideUser.points, wallet: uw.billetera, metadata: { source: 'deep-scan', guideId: guide.id } }).execute()
+                    await db.insertInto('transaction').values({ usuario_id: uw.usuario_id, date: new Date(), type: 'scholarship', crypto: 'learningpoints', amount: guideUser.points, balance_impact: guideUser.points, wallet: uw.billetera, metadata: { source: 'deep-scan', guideId: guide.id } }).execute()
                     console.log(`   [FIX] Recompensa LP faltante insertada para usuario ${uw.usuario_id}`)
                   }
                 }
@@ -264,7 +264,7 @@ Ejemplos:
 
     // --- FASE 5: Consistencia Donación -> Recompensa LP ---
     console.log(' --- FASE 5: Consistencia Donación -> Recompensa LP ---');
-    const donations = await db.selectFrom('transaction').where('tipo', '=', 'donation').selectAll().execute()
+    const donations = await db.selectFrom('transaction').where('type', '=', 'donation').selectAll().execute()
     let missingRewards = 0
     for (const d of donations) {
       const reward = await db.selectFrom('transaction').where('usuario_id', '=', d.usuario_id).where('crypto', '=', 'learningpoints')
@@ -273,8 +273,8 @@ Ejemplos:
         console.log(`[ALERT] Donación sin puntos: Usuario ${d.usuario_id}, ID ${d.id}`)
         missingRewards++
         if (fix && d.hash) {
-          const lp = (Number(d.cantidad) * 22) / 10
-          await db.insertInto('transaction').values({ usuario_id: d.usuario_id, fecha: new Date(), tipo: 'scholarship', crypto: 'learningpoints', cantidad: lp, impacto_balance: lp, wallet: d.wallet, metadata: { source: 'sync-lp-reward-fix', donationHash: d.hash, donationId: d.id } }).execute()
+          const lp = (Number(d.amount) * 22) / 10
+          await db.insertInto('transaction').values({ usuario_id: d.usuario_id, date: new Date(), type: 'scholarship', crypto: 'learningpoints', amount: lp, balance_impact: lp, wallet: d.wallet, metadata: { source: 'sync-lp-reward-fix', donationHash: d.hash, donationId: d.id } }).execute()
           console.log(`   [FIX] Recompensa de ${lp} LP insertada.`)
         }
       }
@@ -286,7 +286,7 @@ Ejemplos:
     let scoreAlerts = 0
     for (const user of users) {
       const gPoints = await db.selectFrom('guide_usuario').where('usuario_id', '=', user.id).select(db.fn.sum('points').as('t')).executeTakeFirst().then(r => Number(r?.t) || 0)
-      const dAmt = await db.selectFrom('transaction').where('usuario_id', '=', user.id).where('tipo', '=', 'donation').select(db.fn.sum('cantidad').as('t')).executeTakeFirst().then(r => Number(r?.t) || 0)
+      const dAmt = await db.selectFrom('transaction').where('usuario_id', '=', user.id).where('type', '=', 'donation').select(db.fn.sum('amount').as('t')).executeTakeFirst().then(r => Number(r?.t) || 0)
       const justified = gPoints + ((dAmt * 22) / 10), actual = Number(user.learningscore)
       if (Math.abs(actual - justified) > 0.01) {
         console.log(`[ALERT] Usuario ${user.id}: Score ${actual} vs Justificado ${justified.toFixed(2)}`)
@@ -309,7 +309,7 @@ async function handleMissingTransaction(db: any, log: Log, event: any, walletToU
     const { student, actualAmount, courseId, guideNumber } = event.args
     const uid = walletToUserMap.get(student.toLowerCase()), amt = Number(formatUnits(actualAmount, 6))
     if (uid) {
-      await db.insertInto('transaction').values({ usuario_id: uid, fecha: new Date(), tipo: 'scholarship', crypto: 'usdt', cantidad: amt, impacto_balance: amt, hash: txHash, wallet: student.toLowerCase(), metadata: { source: 'sync', courseId: Number(courseId), guideNum: Number(guideNumber) } }).execute()
+      await db.insertInto('transaction').values({ usuario_id: uid, date: new Date(), type: 'scholarship', crypto: 'usdt', amount: amt, balance_impact: amt, hash: txHash, wallet: student.toLowerCase(), metadata: { source: 'sync', courseId: Number(courseId), guideNum: Number(guideNumber) } }).execute()
       
       const guides = await db.selectFrom('cor1440_gen_actividadpf').where('proyectofinanciero_id', '=', Number(courseId)).where('sufijoRuta', 'is not', null).select(['id']).orderBy('nombrecorto', 'asc').execute()
       const guideId = guides[Number(guideNumber) - 1]?.id
@@ -323,7 +323,7 @@ async function handleMissingTransaction(db: any, log: Log, event: any, walletToU
 
         const lpExists = await db.selectFrom('transaction').where('usuario_id', '=', uid).where('crypto', '=', 'learningpoints').where(sql`metadata->>'guideId'`, '=', guideId.toString()).executeTakeFirst()
         if (!lpExists) {
-          await db.insertInto('transaction').values({ usuario_id: uid, fecha: new Date(), tipo: 'scholarship', crypto: 'learningpoints', cantidad: guideUser.points, impacto_balance: guideUser.points, wallet: student.toLowerCase(), metadata: { source: 'sync-lp-from-usdt', guideId: guideId } }).execute()
+          await db.insertInto('transaction').values({ usuario_id: uid, date: new Date(), type: 'scholarship', crypto: 'learningpoints', amount: guideUser.points, balance_impact: guideUser.points, wallet: student.toLowerCase(), metadata: { source: 'sync-lp-from-usdt', guideId: guideId } }).execute()
           console.log(`   [FIX] Beca USDT y punto de score insertados para usuario ${uid}`)
         } else {
           console.log(`   [FIX] Beca USDT insertada para usuario ${uid}`)
@@ -334,7 +334,7 @@ async function handleMissingTransaction(db: any, log: Log, event: any, walletToU
     const { recipient, amount } = event.args
     const uid = walletToUserMap.get(recipient.toLowerCase()), amt = Number(formatUnits(amount, 18))
     if (uid) {
-      await db.insertInto('transaction').values({ usuario_id: uid, fecha: new Date(), tipo: 'ubi-claim', crypto: 'celo', cantidad: amt, impacto_balance: amt, hash: txHash, wallet: recipient.toLowerCase(), metadata: { source: 'sync' } }).execute()
+      await db.insertInto('transaction').values({ usuario_id: uid, date: new Date(), type: 'ubi-claim', crypto: 'celo', amount: amt, balance_impact: amt, hash: txHash, wallet: recipient.toLowerCase(), metadata: { source: 'sync' } }).execute()
       console.log(`   [FIX] Reclamo UBI insertado para usuario ${uid}`)
     }
   } else if (event.eventName === 'Deposit' || event.eventName === 'DepositCcop') {
@@ -342,9 +342,9 @@ async function handleMissingTransaction(db: any, log: Log, event: any, walletToU
     const crypto = event.eventName === 'Deposit' ? 'usdt' : 'ccop'
     const amt = Number(formatUnits(amount, crypto === 'usdt' ? 6 : 18)), uid = walletToUserMap.get(sender)
     if (uid) {
-      await db.insertInto('transaction').values({ usuario_id: uid, fecha: new Date(), tipo: 'donation', crypto, cantidad: amt, impacto_balance: amt, hash: txHash, wallet: sender, metadata: { source: 'sync', courseId: Number(courseId) } }).execute()
+      await db.insertInto('transaction').values({ usuario_id: uid, date: new Date(), type: 'donation', crypto, amount: amt, balance_impact: amt, hash: txHash, wallet: sender, metadata: { source: 'sync', courseId: Number(courseId) } }).execute()
       const lp = (amt * 22) / 10
-      await db.insertInto('transaction').values({ usuario_id: uid, fecha: new Date(), tipo: 'scholarship', crypto: 'learningpoints', cantidad: lp, impacto_balance: lp, hash: `${txHash}-lp`, wallet: sender, metadata: { source: 'sync-lp-reward', donationHash: txHash } }).execute()
+      await db.insertInto('transaction').values({ usuario_id: uid, date: new Date(), type: 'scholarship', crypto: 'learningpoints', amount: lp, balance_impact: lp, hash: `${txHash}-lp`, wallet: sender, metadata: { source: 'sync-lp-reward', donationHash: txHash } }).execute()
       console.log(`   [FIX] Donación y LP insertados para usuario ${uid}`)
     }
   }

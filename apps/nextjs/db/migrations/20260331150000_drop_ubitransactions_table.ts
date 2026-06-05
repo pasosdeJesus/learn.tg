@@ -38,7 +38,7 @@ export async function down(db: Kysely<any>): Promise<void> {
     INSERT INTO ubitransactions (wallet, amount, hash, date)
     SELECT wallet, cantidad, hash, fecha
     FROM transaction
-    WHERE tipo = 'ubi-claim' AND crypto = 'celo'
+    WHERE type = 'ubi-claim' AND crypto = 'celo'
       AND hash IS NOT NULL
   `.execute(db)
 

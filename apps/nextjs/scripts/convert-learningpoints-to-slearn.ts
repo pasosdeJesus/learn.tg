@@ -80,7 +80,7 @@ async function main() {
     const alreadyConverted = await db
       .selectFrom('transaction')
       .where('usuario_id', '=', u.user_id)
-      .where('tipo', '=', 'conversion')
+      .where('type', '=', 'conversion')
       .where('crypto', '=', 'slearn')
       .executeTakeFirst()
 
@@ -104,11 +104,11 @@ async function main() {
         .insertInto('transaction')
         .values({
           usuario_id: u.user_id,
-          fecha: new Date(),
-          tipo: 'conversion',
+  date: new Date(),
+          type: 'conversion',
           crypto: 'slearn',
-          cantidad: Number(onChainBalance) / 100,
-          impacto_balance: Number(onChainBalance) / 100,
+          amount: Number(onChainBalance) / 100,
+          balance_impact: Number(onChainBalance) / 100,
           wallet: u.billetera,
           metadata: { learningscore, reason: 'already_had_sufficient_balance' },
         })
@@ -132,11 +132,11 @@ async function main() {
         .insertInto('transaction')
         .values({
           usuario_id: u.user_id,
-          fecha: new Date(),
-          tipo: 'conversion',
+  date: new Date(),
+          type: 'conversion',
           crypto: 'slearn',
-          cantidad: Number(toMint) / 100,
-          impacto_balance: Number(toMint) / 100,
+          amount: Number(toMint) / 100,
+          balance_impact: Number(toMint) / 100,
           hash: tx,
           wallet: u.billetera,
           metadata: { learningscore },
