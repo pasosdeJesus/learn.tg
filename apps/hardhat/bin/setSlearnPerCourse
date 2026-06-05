@@ -5,7 +5,7 @@ set -e
 . ../.env
 
 COURSE_IDS=$(PGPASSWORD="$PGPASSWORD" psql -t -A -h "$PGHOST" -d "$PGDATABASE" -U "$PGUSER" -c \
-  "SELECT id FROM cor1440_gen_proyectofinanciero ORDER BY id" | paste -sd ' ' -)
+  "SELECT id FROM cor1440_gen_proyectofinanciero ORDER BY id" | grep -v '^Time:' | paste -sd ' ' -)
 
 if [ -z "$COURSE_IDS" ]; then
   echo "No courses found in DB"
