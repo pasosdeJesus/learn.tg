@@ -75,10 +75,12 @@ export default function Page({ params }: PageProps) {
       try {
         const response = await axios.get<Course[]>(url)
         if (response.data) {
-          const courseInfo = response.data
+          const courseInfo = Array.isArray(response.data) ? response.data : (response.data as any).proyectosfinancieros || (response.data as any).data || []
           setCourses(courseInfo)
 
-          courseInfo.forEach(async (course) => {
+          if (!Array.isArray(courseInfo) || courseInfo.length === 0) return
+
+          courseInfo.forEach(async (course: Course) => {
             let url2 = `/api/scholarship?courseId=${course.id}`
             if (csrfToken) {
               url2 += `&walletAddress=${session!.address}&token=${csrfToken}`
