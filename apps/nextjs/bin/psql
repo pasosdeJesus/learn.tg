@@ -1,7 +1,0 @@
-
-#!/bin/sh
-
-. ./.env
-cmd="psql -h $PGHOST -U $PGUSER $PGDATABASE"
-echo $cmd
-eval $cmd

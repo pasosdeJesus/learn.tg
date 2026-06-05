@@ -1,5 +1,6 @@
 
 all:
+	rm -rf .next
 	pnpm i
 	pnpm build
 
