@@ -53,7 +53,7 @@ export function formatCurrency(
 export function formatLearningPoints(value: number): string {
   return formatNumber(value, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   })
 }
 
