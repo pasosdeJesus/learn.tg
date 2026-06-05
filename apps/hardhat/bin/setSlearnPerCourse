@@ -12,7 +12,9 @@ if [ -z "$COURSE_IDS" ]; then
   exit 1
 fi
 
-echo "Courses: $COURSE_IDS"
-export COURSE_IDS
+echo "Courses found: $COURSE_IDS"
+echo "[ENTER] para continuar"
+read
 
+export COURSE_IDS
 node_modules/.bin/hardhat run scripts/set-slearn-per-course.ts --network "$NEXT_PUBLIC_NETWORK"

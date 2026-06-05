@@ -48,7 +48,7 @@ export interface BilleteraUsuario {
 
 export interface Cor1440GenActividad {
   created_at: Timestamp | null;
-  date: Timestamp;
+  fecha: Timestamp;
   id: Generated<number>;
   lugar: string | null;
   minutos: number | null;
@@ -229,7 +229,7 @@ export interface Cor1440GenDatointermediotiPmindicadorpf {
 export interface Cor1440GenDesembolso {
   created_at: Timestamp;
   detalle: string | null;
-  date: Timestamp | null;
+  fecha: Timestamp | null;
   id: Generated<Int8>;
   proyectofinanciero_id: number;
   updated_at: Timestamp;
@@ -238,7 +238,7 @@ export interface Cor1440GenDesembolso {
 
 export interface Cor1440GenEfecto {
   descripcion: string | null;
-  date: Timestamp | null;
+  fecha: Timestamp | null;
   id: Generated<Int8>;
   indicadorpf_id: number | null;
   nombre: string | null;
@@ -292,13 +292,13 @@ export interface Cor1440GenIndicadorpf {
 
 export interface Cor1440GenInforme {
   avances: string | null;
-  columnadate: boolean | null;
+  columnafecha: boolean | null;
   columnanombre: boolean | null;
   columnaobjetivo: boolean | null;
   columnapoblacion: boolean | null;
   columnaproyecto: boolean | null;
   columnaresponsable: boolean | null;
-  columnatype: boolean | null;
+  columnatipo: boolean | null;
   contextoexterno: string | null;
   contextointerno: string | null;
   created_at: Timestamp;
@@ -322,7 +322,7 @@ export interface Cor1440GenInformeauditoria {
   created_at: Timestamp;
   detalle: string | null;
   devoluciones: boolean | null;
-  date: Timestamp | null;
+  fecha: Timestamp | null;
   id: Generated<Int8>;
   proyectofinanciero_id: number;
   seguimiento: string | null;
@@ -333,7 +333,7 @@ export interface Cor1440GenInformefinanciero {
   created_at: Timestamp;
   detalle: string | null;
   devoluciones: boolean | null;
-  date: Timestamp | null;
+  fecha: Timestamp | null;
   id: Generated<Int8>;
   proyectofinanciero_id: number;
   seguimiento: string | null;
@@ -344,7 +344,7 @@ export interface Cor1440GenInformenarrativo {
   created_at: Timestamp;
   detalle: string | null;
   devoluciones: boolean | null;
-  date: Timestamp | null;
+  fecha: Timestamp | null;
   id: Generated<Int8>;
   proyectofinanciero_id: number;
   seguimiento: string | null;
@@ -387,7 +387,7 @@ export interface Cor1440GenPmindicadorpf {
   dmed1: number | null;
   dmed2: number | null;
   dmed3: number | null;
-  date: Timestamp | null;
+  fecha: Timestamp | null;
   ffin: Timestamp | null;
   finicio: Timestamp | null;
   id: Generated<Int8>;
@@ -678,12 +678,12 @@ export interface Mr519GenCampo {
   nombreinterno: string | null;
   obligatorio: boolean | null;
   tablabasica: string | null;
-  type: Generated<number>;
+  tipo: Generated<number>;
 }
 
 export interface Mr519GenEncuestapersona {
   adurl: string | null;
-  date: Timestamp | null;
+  fecha: Timestamp | null;
   id: Generated<Int8>;
   persona_id: number | null;
   planencuesta_id: number | null;
@@ -691,7 +691,7 @@ export interface Mr519GenEncuestapersona {
 }
 
 export interface Mr519GenEncuestausuario {
-  date: Timestamp | null;
+  fecha: Timestamp | null;
   fechafin: Timestamp | null;
   fechainicio: Timestamp;
   id: Generated<Int8>;
@@ -752,7 +752,7 @@ export interface MsipAnexo {
 export interface MsipBitacora {
   created_at: Timestamp;
   detalle: Json | null;
-  date: Timestamp;
+  fecha: Timestamp;
   id: Generated<Int8>;
   ip: string | null;
   modelo: string | null;
@@ -866,7 +866,7 @@ export interface MsipEtiquetaMunicipio {
 export interface MsipEtiquetaPersona {
   created_at: Timestamp;
   etiqueta_id: number;
-  date: Timestamp;
+  fecha: Timestamp;
   id: Generated<Int8>;
   observaciones: string | null;
   persona_id: number;
@@ -1091,7 +1091,7 @@ export interface MsipSectororgsocial {
 export interface MsipSolicitud {
   created_at: Timestamp;
   estadosol_id: number | null;
-  date: Timestamp;
+  fecha: Timestamp;
   id: Generated<Int8>;
   solicitud: string | null;
   updated_at: Timestamp;
@@ -1278,19 +1278,19 @@ export interface SiteNonces {
 
 export interface Transaction {
   amount: Generated<Numeric>;
+  balance_impact: Numeric;
   categoria: string | null;
-  crypto: string;
-  descripcion: string | null;
-  date: Timestamp;
-  updated_at: Generated<Timestamp>;
   created_at: Generated<Timestamp>;
+  crypto: string;
+  date: Timestamp;
+  descripcion: string | null;
   hash: string | null;
   id: Generated<number>;
-  balance_impact: Numeric;
   metadata: Json | null;
-  synced: Generated<boolean>;
   subcategoria: string | null;
+  synced: Generated<boolean>;
   type: string;
+  updated_at: Generated<Timestamp>;
   usuario_id: number;
   wallet: string;
 }
@@ -1355,7 +1355,7 @@ export interface DB {
   billetera_usuario: BilleteraUsuario;
   cor1440_gen_actividad: Cor1440GenActividad;
   cor1440_gen_actividad_actividadpf: Cor1440GenActividadActividadpf;
-  cor1440_gen_actividad_actividadtype: Cor1440GenActividadActividadtipo;
+  cor1440_gen_actividad_actividadtipo: Cor1440GenActividadActividadtipo;
   cor1440_gen_actividad_anexo: Cor1440GenActividadAnexo;
   cor1440_gen_actividad_orgsocial: Cor1440GenActividadOrgsocial;
   cor1440_gen_actividad_proyecto: Cor1440GenActividadProyecto;
@@ -1367,7 +1367,7 @@ export interface DB {
   cor1440_gen_actividadareas_actividad: Cor1440GenActividadareasActividad;
   cor1440_gen_actividadpf: Cor1440GenActividadpf;
   cor1440_gen_actividadpf_mindicadorpf: Cor1440GenActividadpfMindicadorpf;
-  cor1440_gen_actividadtype: Cor1440GenActividadtipo;
+  cor1440_gen_actividadtipo: Cor1440GenActividadtipo;
   cor1440_gen_actividadtipo_formulario: Cor1440GenActividadtipoFormulario;
   cor1440_gen_anexo_efecto: Cor1440GenAnexoEfecto;
   cor1440_gen_anexo_proyectofinanciero: Cor1440GenAnexoProyectofinanciero;
