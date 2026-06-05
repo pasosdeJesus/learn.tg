@@ -3,6 +3,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import DonateModal from '../DonateModal'
 
+vi.mock('@/lib/deployments', () => ({
+  getV3Address: vi.fn().mockReturnValue('0xVAULT12345678901234567890123456789012345678'),
+  getSlearnAddress: vi.fn().mockReturnValue('0xSLEARN123456789012345678901234567890123456'),
+  getV2Address: vi.fn().mockReturnValue('0xV212345678901234567890123456789012345678'),
+}))
+
+const BACKEND_WALLET = '0xBACKEND123456789012345678901234567890123456'
+
 // Mocks mínimos de wagmi para no cargar lógica real
 const readContractMock = vi.fn().mockImplementation((opts: any) => {
   switch (opts.functionName) {
@@ -10,8 +18,6 @@ const readContractMock = vi.fn().mockImplementation((opts: any) => {
       return Promise.resolve(6)
     case 'balanceOf':
       return Promise.resolve(1_000_000_000n) // 1000 USDT con 6 dec
-    case 'allowance':
-      return Promise.resolve(0n)
     default:
       return Promise.resolve(0n)
   }
@@ -33,8 +39,7 @@ vi.mock('wagmi', () => ({
 describe('DonateModal (light)', () => {
   beforeEach(() => {
     // Variables de entorno mínimas
-    ;(process as any).env.NEXT_PUBLIC_DEPLOYED_AT =
-      '0x0000000000000000000000000000000000000001'
+    ;(process as any).env.NEXT_PUBLIC_ADDRESS = BACKEND_WALLET
     ;(process as any).env.NEXT_PUBLIC_USDT_ADDRESS =
       '0x0000000000000000000000000000000000000002'
     ;(process as any).env.NEXT_PUBLIC_USDT_DECIMALS = '6'
@@ -63,7 +68,7 @@ describe('DonateModal (light)', () => {
 
   it('deshabilita botón donate sin monto', () => {
     renderModal()
-    const btn = screen.getByRole('button', { name: /Approve & Donate|Donate/i })
+    const btn = screen.getByRole('button', { name: /Donate/i })
     expect(btn).toBeDisabled()
   })
 
@@ -73,7 +78,7 @@ describe('DonateModal (light)', () => {
     fireEvent.change(input, { target: { value: '1' } })
     await waitFor(() => {
       const btn = screen.getByRole('button', {
-        name: /Approve & Donate|Donate/i,
+        name: /Donate/i,
       })
       expect(btn).not.toBeDisabled()
     })

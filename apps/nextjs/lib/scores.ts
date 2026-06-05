@@ -4,9 +4,11 @@ import { Kysely, sql } from 'kysely'
 import type { Insertable, Selectable, Updateable } from 'kysely'
 
 import type { DB, Usuario, GuideUsuario } from '@/db/db.d'
+import { getSLEUSDRate } from '@/lib/sle-rate'
 
 const USD_TO_SLE_RATE = 22;
 const SLE_TO_SCORE_RATIO = 10;
+const DONATION_REWARD_PCT = 0.10;
 
 interface CourseData {
   [key: number]: number
@@ -43,6 +45,14 @@ export async function calculateDonationLearningScore(
   const scoreToAdd = (donationAmountUSD * USD_TO_SLE_RATE) / SLE_TO_SCORE_RATIO;
   // Round to 2 decimal places to avoid floating point inaccuracies
   return Math.round(scoreToAdd * 100) / 100;
+}
+
+export async function calculateDonationSLEARN(
+  donationAmountUSD: number
+): Promise<number> {
+  const rate = await getSLEUSDRate();
+  const slearnAmount = donationAmountUSD * DONATION_REWARD_PCT * rate;
+  return Math.round(slearnAmount * 100) / 100;
 }
 
 // Deprecated: Use calculateDonationLearningScore and then refreshUserLearningScore

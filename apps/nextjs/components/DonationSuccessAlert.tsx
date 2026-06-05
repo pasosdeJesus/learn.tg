@@ -18,11 +18,11 @@ export function DonationSuccessAlert({
   const t = useMemo(() => createComponentT(lang, {
     en: {
       title: 'Donation Successful!',
-      desc: 'You have earned {{0}} learning points.',
+      desc: 'You have earned {{0}} SLEARN.',
     },
     es: {
       title: '¡Donación Exitosa!',
-      desc: 'Has ganado {{0}} puntos de aprendizaje.',
+      desc: 'Has ganado {{0}} SLEARN.',
     },
   }), [lang])
 

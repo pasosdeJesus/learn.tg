@@ -4,6 +4,12 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import DonateModal from '../DonateModal'
 import { parseUserAmount, formatDisplay } from '@/lib/donate-utils'
 
+vi.mock('@/lib/deployments', () => ({
+  getV3Address: vi.fn().mockReturnValue('0xVAULT12345678901234567890123456789012345678'),
+  getSlearnAddress: vi.fn().mockReturnValue('0xSLEARN123456789012345678901234567890123456'),
+  getV2Address: vi.fn().mockReturnValue('0xV212345678901234567890123456789012345678'),
+}))
+
 // Mock @/components/ui/button
 vi.mock('@pasosdejesus/m/shadcn-components/ui/button', () => ({
   Button: React.forwardRef(({ children, onClick, disabled, variant, size, className, ...props }: any, ref: any) => (
@@ -43,9 +49,11 @@ vi.mock('wagmi', () => ({
   useWalletClient: () => mockUseWalletClient(),
 }))
 
+const BACKEND_WALLET = '0xBACKEND123456789012345678901234567890123456'
+
 describe('DonateModal', () => {
   const defaultEnv = {
-    NEXT_PUBLIC_DEPLOYED_AT: '0x0000000000000000000000000000000000000001',
+    NEXT_PUBLIC_ADDRESS: BACKEND_WALLET,
     NEXT_PUBLIC_USDT_ADDRESS: '0x0000000000000000000000000000000000000002',
     NEXT_PUBLIC_USDT_DECIMALS: '6',
   }
@@ -80,9 +88,10 @@ describe('DonateModal', () => {
         case 'decimals':
           return Promise.resolve(6n)
         case 'balanceOf':
+          if (opts.address === '0xSLEARN123456789012345678901234567890123456') {
+            return Promise.resolve(1_000_00n) // 1000 SLEARN with 2 decimals
+          }
           return Promise.resolve(1_000_000_000n) // 1000 USDT with 6 decimals
-        case 'allowance':
-          return Promise.resolve(0n)
         default:
           return Promise.resolve(0n)
       }
@@ -158,8 +167,8 @@ describe('DonateModal', () => {
   })
 
   describe('Environment variables validation', () => {
-    it('shows missing contract env vars when vault address is missing', async () => {
-      delete (process.env as any).NEXT_PUBLIC_DEPLOYED_AT
+    it('shows missing contract env vars when backend wallet is missing', async () => {
+      delete (process.env as any).NEXT_PUBLIC_ADDRESS
       await waitFor(() => {
         renderModal()
         expect(screen.getByText(/Missing contract env vars/i)).toBeInTheDocument()
@@ -185,7 +194,6 @@ describe('DonateModal', () => {
       })
       await waitFor(() => {
         renderModal()
-        // The balance is formatted and displayed
         expect(screen.getByText(/Your USDT Balance/i)).toBeInTheDocument()
       })
     })
@@ -204,12 +212,11 @@ describe('DonateModal', () => {
       await waitFor(() => {
         renderModal()
       })
-      const maxButton = screen.getByRole('button', { name: /Max/i })
-      expect(maxButton).toBeInTheDocument()
+      const maxButtons = screen.getAllByRole('button', { name: /Max/i })
+      expect(maxButtons.length).toBeGreaterThanOrEqual(1)
 
-      fireEvent.click(maxButton)
+      fireEvent.click(maxButtons[0])
       const input = screen.getByLabelText(/Amount \(USDT\)/i) as HTMLInputElement
-      // Should be set to 1000 (balance of 1,000,000,000 with 6 decimals)
       expect(input.value).toBe('1000')
     })
 
@@ -221,8 +228,8 @@ describe('DonateModal', () => {
       fireEvent.change(input, { target: { value: '50' } })
       expect((input as HTMLInputElement).value).toBe('50')
 
-      const clearButton = screen.getByRole('button', { name: /Clear/i })
-      fireEvent.click(clearButton)
+      const clearButtons = screen.getAllByRole('button', { name: /Clear/i })
+      fireEvent.click(clearButtons[0])
       expect((input as HTMLInputElement).value).toBe('')
     })
 
@@ -230,7 +237,7 @@ describe('DonateModal', () => {
       await waitFor(() => {
         renderModal()
       })
-      const donateButton = screen.getByRole('button', { name: /Approve & Donate|Donate/i })
+      const donateButton = screen.getByRole('button', { name: /Donate/i })
       expect(donateButton).toBeDisabled()
     })
 
@@ -242,7 +249,7 @@ describe('DonateModal', () => {
       fireEvent.change(input, { target: { value: '1' } })
 
       await waitFor(() => {
-        const donateButton = screen.getByRole('button', { name: /Approve & Donate|Donate/i })
+        const donateButton = screen.getByRole('button', { name: /Donate/i })
         expect(donateButton).not.toBeDisabled()
       })
     })
@@ -289,47 +296,20 @@ describe('DonateModal', () => {
     })
   })
 
-  describe('Approval flow', () => {
-    it('shows "Approve & Donate" when allowance is insufficient', async () => {
-      mockReadContract.mockImplementation((opts: any) => {
-        if (opts.functionName === 'allowance') {
-          return Promise.resolve(0n) // No allowance
-        }
-        return Promise.resolve(6n)
-      })
-      await waitFor(() => {
-        renderModal()
-      })
-      const input = screen.getByLabelText(/Amount \(USDT\)/i)
-      fireEvent.change(input, { target: { value: '100' } })
-
-      await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Approve & Donate/i })
-        expect(button).toBeInTheDocument()
-      })
-    })
-
-    it('shows "Donate" when allowance is sufficient', async () => {
-      mockReadContract.mockImplementation((opts: any) => {
-        if (opts.functionName === 'allowance') {
-          return Promise.resolve(parseUserAmount('1000', 6)) // Allowance for full balance
-        }
-        return Promise.resolve(6n)
-      })
-      await waitFor(() => {
-        renderModal()
-      })
-      const input = screen.getByLabelText(/Amount \(USDT\)/i)
-      fireEvent.change(input, { target: { value: '100' } })
-
-      await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Donate/i })
-        expect(button).toBeInTheDocument()
-      })
-    })
-  })
-
   describe('Donation flow', () => {
+    it('shows "Donate" button (transfers, no approval needed)', async () => {
+      await waitFor(() => {
+        renderModal()
+      })
+      const input = screen.getByLabelText(/Amount \(USDT\)/i)
+      fireEvent.change(input, { target: { value: '100' } })
+
+      await waitFor(() => {
+        const button = screen.getByRole('button', { name: /^Donate$/i })
+        expect(button).toBeInTheDocument()
+      })
+    })
+
     it('calls onSuccess when donation succeeds', async () => {
       await waitFor(() => {
         renderModal()
@@ -338,11 +318,11 @@ describe('DonateModal', () => {
       fireEvent.change(input, { target: { value: '10' } })
 
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Approve & Donate/i })
+        const button = screen.getByRole('button', { name: /^Donate$/i })
         expect(button).not.toBeDisabled()
       })
 
-      const donateButton = screen.getByRole('button', { name: /Approve & Donate/i })
+      const donateButton = screen.getByRole('button', { name: /^Donate$/i })
       await act(async () => {
         fireEvent.click(donateButton)
       })
@@ -370,11 +350,11 @@ describe('DonateModal', () => {
       fireEvent.change(input, { target: { value: '10' } })
 
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Approve & Donate/i })
+        const button = screen.getByRole('button', { name: /^Donate$/i })
         expect(button).not.toBeDisabled()
       })
 
-      const donateButton = screen.getByRole('button', { name: /Approve & Donate/i })
+      const donateButton = screen.getByRole('button', { name: /^Donate$/i })
       await act(async () => {
         fireEvent.click(donateButton)
       })

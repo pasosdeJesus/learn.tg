@@ -25,7 +25,7 @@ describe('DonationSuccessAlert', () => {
     expect(screen.getByTestId('alert')).toBeInTheDocument()
     expect(screen.getByTestId('alert-title')).toHaveTextContent('¡Donación Exitosa!')
     expect(screen.getByTestId('alert-description')).toHaveTextContent(
-      'Has ganado 100 puntos de aprendizaje.',
+      'Has ganado 100 SLEARN.',
     )
   })
 
@@ -35,7 +35,7 @@ describe('DonationSuccessAlert', () => {
 
     expect(screen.getByTestId('alert-title')).toHaveTextContent('Donation Successful!')
     expect(screen.getByTestId('alert-description')).toHaveTextContent(
-      'You have earned 50 learning points.',
+      'You have earned 50 SLEARN.',
     )
   })
 

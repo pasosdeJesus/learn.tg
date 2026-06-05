@@ -2,33 +2,34 @@
 
 import { useEffect, useState } from 'react'
 import { type Address } from 'viem'
-import LearnTGVaultsAbi from '@/abis/LearnTGVaults.json'
 import { erc20Abi, parseUserAmount, safeParseFloat } from '@/lib/donate-utils'
 
 export type GasState = 'idle' | 'ok' | 'no-gas' | 'warn'
 
 interface UseGasEstimationOptions {
   amount: string
+  slearnAmount: string
   usdtDecimals: number
-  needsApproval: boolean
   address: Address | undefined
   walletClient: any
   publicClient: any
-  vaultAddress: Address | undefined
+  backendWalletAddress: Address | undefined
   usdtAddress: Address | undefined
+  slearnAddress: Address | undefined
   courseId: number | null
   celoBalance: bigint
 }
 
 export function useGasEstimation({
   amount,
+  slearnAmount,
   usdtDecimals,
-  needsApproval,
   address,
   walletClient,
   publicClient,
-  vaultAddress,
+  backendWalletAddress,
   usdtAddress,
+  slearnAddress,
   courseId,
   celoBalance,
 }: UseGasEstimationOptions) {
@@ -37,35 +38,47 @@ export function useGasEstimation({
 
   useEffect(() => {
     const estimate = async () => {
-      if (!amount || safeParseFloat(amount) <= 0) { setGasState('idle'); return }
-      if (!address || !walletClient || !publicClient || !vaultAddress || !courseId) {
+      const hasUsdt = amount && safeParseFloat(amount) > 0
+      const hasSlearn = slearnAmount && safeParseFloat(slearnAmount) > 0
+      if (!hasUsdt && !hasSlearn) { setGasState('idle'); return }
+      if (!address || !walletClient || !publicClient || !backendWalletAddress || !courseId) {
         setGasState('no-gas'); return
       }
       try {
         setEstimating(true)
-        const value = parseUserAmount(amount, usdtDecimals)
-        if (value <= 0n) { setGasState('idle'); return }
         const gasPrice = await publicClient.getGasPrice()
         let totalGas = 0n
-        if (needsApproval && usdtAddress) {
-          const approveGas = await publicClient.estimateContractGas({
-            address: usdtAddress, abi: erc20Abi, functionName: 'approve',
-            account: address, args: [vaultAddress, value],
-          })
-          totalGas += approveGas
+
+        if (hasUsdt && usdtAddress) {
+          const value = parseUserAmount(amount, usdtDecimals)
+          if (value > 0n) {
+            const transferGas = await publicClient.estimateContractGas({
+              address: usdtAddress, abi: erc20Abi, functionName: 'transfer',
+              account: address, args: [backendWalletAddress, value],
+            })
+            totalGas += transferGas
+          }
         }
-        const depositGas = await publicClient.estimateContractGas({
-          address: vaultAddress, abi: LearnTGVaultsAbi as any,
-          functionName: 'deposit', account: address, args: [BigInt(courseId), value],
-        })
-        totalGas += depositGas
+
+        if (hasSlearn && slearnAddress) {
+          const value = parseUserAmount(slearnAmount, 2)
+          if (value > 0n) {
+            const transferGas = await publicClient.estimateContractGas({
+              address: slearnAddress, abi: erc20Abi, functionName: 'transfer',
+              account: address, args: [backendWalletAddress, value],
+            })
+            totalGas += transferGas
+          }
+        }
+
+        if (totalGas === 0n) { setGasState('idle'); return }
         setGasState(celoBalance > totalGas * gasPrice ? 'ok' : 'no-gas')
       } catch {
         setGasState('warn')
       } finally { setEstimating(false) }
     }
     estimate()
-  }, [amount, address, walletClient, publicClient, vaultAddress, courseId, usdtAddress, needsApproval, celoBalance, usdtDecimals])
+  }, [amount, slearnAmount, address, walletClient, publicClient, backendWalletAddress, usdtAddress, slearnAddress, courseId, celoBalance, usdtDecimals])
 
   return { gasState, estimating }
 }
