@@ -10,6 +10,9 @@ export interface CourseStatisticsProps {
   address: string | undefined
   totalGuides?: number | null
   scholarshipPerGuide: number | null
+  scholarshipPerGuideSlearn?: number | null
+  vaultBalance: number | null
+  vaultBalanceSlearn?: number | null
   profileScore: number | null
   canSubmit: boolean | null
   completedGuides?: number | null
@@ -25,6 +28,9 @@ export function CourseStatistics({
   address,
   totalGuides,
   scholarshipPerGuide,
+  scholarshipPerGuideSlearn,
+  vaultBalance,
+  vaultBalanceSlearn,
   profileScore,
   canSubmit,
   completedGuides,
@@ -44,6 +50,9 @@ export function CourseStatistics({
       approvedGuides: 'Approved guides: ',
       paidGuides: 'Approved guides with scholarship paid: ',
       totalScholarship: 'Total scholarship paid in this course: ',
+      vaultBalance: 'Course vault: {{0}} USDT',
+      vaultBalanceWithSlearn: 'Course vault: {{0}} USDT + {{1}} SLEARN',
+      perGuideSlearn: '{{0}} SLEARN per guide.',
     },
     es: {
       scholarshipOf: 'Beca de ',
@@ -55,6 +64,9 @@ export function CourseStatistics({
       approvedGuides: 'Guías aprobadas: ',
       paidGuides: 'Guías aprobadas con beca pagada: ',
       totalScholarship: 'Beca total pagada en este curso: ',
+      vaultBalance: 'Bóveda del curso: {{0}} USDT',
+      vaultBalanceWithSlearn: 'Bóveda del curso: {{0}} USDT + {{1}} SLEARN',
+      perGuideSlearn: '{{0}} SLEARN por guía.',
     },
   }), [lang])
 
@@ -101,6 +113,15 @@ export function CourseStatistics({
               </span>
             </div>
         )}
+        {vaultBalance !== null && +vaultBalance > 0 && (
+          <div className="pt-2">
+            {vaultBalanceSlearn !== null && +vaultBalanceSlearn > 0 ? (
+              <span>{t('vaultBalanceWithSlearn', vaultBalance.toFixed(2), vaultBalanceSlearn.toFixed(2))}</span>
+            ) : (
+              <span>{t('vaultBalance', vaultBalance.toFixed(2))}</span>
+            )}
+          </div>
+        )}
         {full && (
           <div className="pt-2">
             {t('totalGuides')}
@@ -123,6 +144,11 @@ export function CourseStatistics({
           <div>
             {t('totalScholarship')}
             {scholarshipPaid.toFixed(2)} USDT
+          </div>
+        )}
+        {full && scholarshipPerGuideSlearn !== null && scholarshipPerGuideSlearn > 0 && (
+          <div>
+            {t('perGuideSlearn', String(scholarshipPerGuideSlearn))}
           </div>
         )}
       </div>

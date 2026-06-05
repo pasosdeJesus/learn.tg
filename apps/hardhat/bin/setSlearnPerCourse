@@ -1,0 +1,19 @@
+#!/bin/sh
+# Set SLEARN amount per guide (1 SLEARN) for all courses that have a vault.
+# Reads DB connection from apps/.env, queries course IDs, calls V3 contract.
+set -e
+. ../.env
+
+echo "Querying courses from DB..."
+COURSE_IDS=$(psql -t -A -h "$PGHOST" -d "$PGDATABASE" -U "$PGUSER" -c \
+  "SELECT id FROM cor1440_gen_proyectofinanciero ORDER BY id")
+
+if [ -z "$COURSE_IDS" ]; then
+  echo "No courses found in DB"
+  exit 1
+fi
+
+echo "Courses found: $COURSE_IDS"
+echo ""
+
+node_modules/.bin/hardhat run scripts/set-slearn-per-course.ts --network "$NEXT_PUBLIC_NETWORK" -- $COURSE_IDS

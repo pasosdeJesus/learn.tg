@@ -464,7 +464,9 @@ describe('Course Introduction Page', () => {
   const defaultScholarshipData = {
     vaultCreated: true,
     vaultBalance: 5000,
+    vaultBalanceSlearn: 1000,
     scholarshipPerGuide: 1,
+    scholarshipPerGuideSlearn: 5,
     canSubmit: true,
     percentageCompleted: 50,
     completedGuides: 5,

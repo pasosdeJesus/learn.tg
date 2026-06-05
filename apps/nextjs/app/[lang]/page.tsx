@@ -29,7 +29,9 @@ interface Course {
 interface CourseExtra {
   vaultCreated: boolean
   vaultBalance: number
+  vaultBalanceSlearn: number
   amountPerGuide: number
+  amountPerGuideSlearn: number
   canSubmit: boolean
   percentageCompleted: number
   percentagePaid: number
@@ -100,7 +102,9 @@ export default function Page({ params }: PageProps) {
               const extraData: CourseExtra = {
                 vaultCreated: response2.data.vaultCreated,
                 vaultBalance: +response2.data.vaultBalance,
+                vaultBalanceSlearn: +response2.data.vaultBalanceSlearn,
                 amountPerGuide: +response2.data.amountPerGuide,
+                amountPerGuideSlearn: +response2.data.amountPerGuideSlearn,
                 canSubmit: response2.data.canSubmit,
                 percentageCompleted: response2.data.percentageCompleted,
                 percentagePaid: response2.data.percentagePaid,
@@ -152,7 +156,9 @@ export default function Page({ params }: PageProps) {
         const extraData: CourseExtra = {
           vaultCreated: response2.data.vaultCreated,
           vaultBalance: +response2.data.vaultBalance,
+          vaultBalanceSlearn: +response2.data.vaultBalanceSlearn,
           amountPerGuide: +response2.data.amountPerGuide,
+          amountPerGuideSlearn: +response2.data.amountPerGuideSlearn,
           canSubmit: response2.data.canSubmit,
           percentageCompleted: response2.data.percentageCompleted,
           percentagePaid: response2.data.percentagePaid,
@@ -220,6 +226,9 @@ export default function Page({ params }: PageProps) {
                          address={session?.address}
                          profileScore={extra.profileScore}
                          scholarshipPerGuide={extra.amountPerGuide}
+                         scholarshipPerGuideSlearn={extra.amountPerGuideSlearn}
+                         vaultBalance={extra.vaultBalance}
+                         vaultBalanceSlearn={extra.vaultBalanceSlearn}
                          percentagePaid={extra.percentagePaid}
                          canSubmit={extra.canSubmit}
                          percentageCompleted={extra.percentageCompleted}

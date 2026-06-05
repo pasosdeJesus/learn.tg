@@ -211,7 +211,18 @@ This script:
 3. Creates vaults in V3 (`createVault` with SLEARN=0 initially)
 4. Migrates `guidePaid` records (maps `numGuia` → `actividadpf_id`)
 
-### 5.3 Run Learning Points → SLEARN conversion
+### 5.3 Set SLEARN per guide for all courses
+
+After migration, each course vault exists with `amountPerGuideSlearn=0`. Set 1 SLEARN per guide:
+
+```bash
+cd apps/hardhat
+bin/setSlearnPerCourse
+```
+
+> Keeps current USDT amount per guide. Skips courses with no vault or already configured.
+
+### 5.4 Run Learning Points → SLEARN conversion
 
 ```bash
 cd apps/nextjs
@@ -220,10 +231,12 @@ npx tsx scripts/convert-learningpoints-to-slearn.ts
 
 > Idempotent — safe to re-run.
 
-### 5.4 Transfer Admin to Cold Wallet
+### 5.5 Transfer Admin to Cold Wallet
 
 After conversion, transfer `DEFAULT_ADMIN_ROLE` to a cold wallet. The backend keeps only
 `MINTER_ROLE` + `BURNER_ROLE`. See `doc/runbook.md` §5.
+
+> **Prerequisite:** Import wallets via `bin/m wallet:import --name admin --private-key <ADMIN_KEY>`
 
 > **Prerequisite:** Import wallets via `bin/m wallet:import --name admin --private-key <ADMIN_KEY>`
 

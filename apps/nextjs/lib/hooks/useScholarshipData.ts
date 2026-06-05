@@ -7,7 +7,9 @@ import { getCsrfToken } from 'next-auth/react'
 export interface ScholarshipData {
   vaultCreated: boolean | null
   vaultBalance: number | null
+  vaultBalanceSlearn: number | null
   scholarshipPerGuide: number | null
+  scholarshipPerGuideSlearn: number | null
   canSubmit: boolean | null
   percentageCompleted: number | null
   completedGuides: number | null
@@ -25,7 +27,8 @@ interface UseScholarshipDataProps {
 
 export function useScholarshipData({ courseId, address }: UseScholarshipDataProps) {
   const [data, setData] = useState<ScholarshipData>({
-    vaultCreated: null, vaultBalance: null, scholarshipPerGuide: null,
+    vaultCreated: null, vaultBalance: null, vaultBalanceSlearn: null,
+    scholarshipPerGuide: null, scholarshipPerGuideSlearn: null,
     canSubmit: null, percentageCompleted: null, completedGuides: null,
     paidGuides: null, totalGuides: null, percentagePaid: null,
     scholarshipPaid: null, profileScore: null,
@@ -42,7 +45,9 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
       setData({
         vaultCreated: res.vaultCreated != null ? Boolean(res.vaultCreated) : null,
         vaultBalance: res.vaultBalance != null ? Number(res.vaultBalance) : null,
+        vaultBalanceSlearn: res.vaultBalanceSlearn != null ? Number(res.vaultBalanceSlearn) : null,
         scholarshipPerGuide: res.amountPerGuide != null ? Number(res.amountPerGuide) : null,
+        scholarshipPerGuideSlearn: res.amountPerGuideSlearn != null ? Number(res.amountPerGuideSlearn) : null,
         canSubmit: res.canSubmit != null ? res.canSubmit : null,
         percentageCompleted: res.percentageCompleted != null ? Number(res.percentageCompleted) : null,
         completedGuides: res.completedGuides != null ? Number(res.completedGuides) : null,

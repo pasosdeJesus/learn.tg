@@ -192,6 +192,9 @@ export default function Page({ params }: PageProps) {
               address={session?.address}
               totalGuides={course.guias.length}
               scholarshipPerGuide={sData.scholarshipPerGuide}
+              scholarshipPerGuideSlearn={sData.scholarshipPerGuideSlearn}
+              vaultBalance={sData.vaultBalance}
+              vaultBalanceSlearn={sData.vaultBalanceSlearn}
               profileScore={sData.profileScore}
               canSubmit={sData.canSubmit}
               completedGuides={sData.completedGuides}
