@@ -4,16 +4,15 @@
 set -e
 . ../.env
 
-echo "Querying courses from DB..."
-COURSE_IDS=$(psql -t -A -h "$PGHOST" -d "$PGDATABASE" -U "$PGUSER" -c \
-  "SELECT id FROM cor1440_gen_proyectofinanciero ORDER BY id")
+COURSE_IDS=$(PGPASSWORD="$PGPASSWORD" psql -t -A -h "$PGHOST" -d "$PGDATABASE" -U "$PGUSER" -c \
+  "SELECT id FROM cor1440_gen_proyectofinanciero ORDER BY id" | paste -sd ' ' -)
 
 if [ -z "$COURSE_IDS" ]; then
   echo "No courses found in DB"
   exit 1
 fi
 
-echo "Courses found: $COURSE_IDS"
-echo ""
+echo "Courses: $COURSE_IDS"
+export COURSE_IDS
 
-node_modules/.bin/hardhat run scripts/set-slearn-per-course.ts --network "$NEXT_PUBLIC_NETWORK" -- $COURSE_IDS
+node_modules/.bin/hardhat run scripts/set-slearn-per-course.ts --network "$NEXT_PUBLIC_NETWORK"

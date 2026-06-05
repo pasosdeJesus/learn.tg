@@ -2,8 +2,8 @@
  * Set SLEARN amount per guide for specified courses.
  * Keeps current USDT amountPerGuide, sets SLEARN to 1 per guide.
  *
- * Usage: npx hardhat run scripts/set-slearn-per-course.ts --network $NETWORK -- courseId1 courseId2 ...
- *        bin/setSlearnPerCourse  (sets all courses from DB)
+ * Usage: hardhat run ... --network $NETWORK
+ *        Reads COURSE_IDS env var (space-separated).
  */
 import { ethers } from "hardhat"
 import dotenv from "dotenv"
@@ -13,15 +13,13 @@ dotenv.config({ path: "../.env" })
 
 async function main() {
   const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia"
-
-  // Course IDs from command line (after -- separator)
-  const args = process.argv.slice(process.argv.indexOf("--") + 1)
-  if (args.length === 0) {
-    console.error("Usage: hardhat run ... --network $NET -- <courseId1> [courseId2 ...]")
+  const idsEnv = process.env.COURSE_IDS || ""
+  const ids = idsEnv.split(/\s+/).filter(Boolean)
+  if (ids.length === 0) {
+    console.error("Usage: COURSE_IDS='1 2 3' hardhat run ... --network $NETWORK")
     process.exit(1)
   }
 
-  // Read V3 address
   const v3File = path.join(__dirname, "..", "deployments", "LearnTGVaults", "V3", `${network}.json`)
   if (!fs.existsSync(v3File)) throw new Error(`LearnTGVaultsV3 not deployed. Run bin/deployLearnTGVaultsV3 first.`)
   const { address: vaultAddr } = JSON.parse(fs.readFileSync(v3File, "utf8"))
@@ -31,12 +29,11 @@ async function main() {
 
   const vault = await ethers.getContractAt("contracts/LearnTGVaultsV3.sol:LearnTGVaultsV3", vaultAddr)
 
-  // 1 SLEARN with 2 decimals = 100
   const oneSlearn = ethers.parseUnits("1", 2)
 
-  console.log(`\nProcessing ${args.length} course(s)\n`)
+  console.log(`\nProcessing ${ids.length} course(s)\n`)
 
-  for (const idStr of args) {
+  for (const idStr of ids) {
     const courseId = BigInt(idStr)
 
     try {
