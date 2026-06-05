@@ -65,6 +65,7 @@ export default function Page({ params }: PageProps) {
       }
 
       let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?filtro[busidioma]=${lang}`
+      console.log('[courses] fetching:', url)
       let csrfToken = null
 
       if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
@@ -116,8 +117,8 @@ export default function Page({ params }: PageProps) {
           })
         }
       } catch (error) {
-        alert(error)
-        console.error(error)
+        console.error('[courses] failed to fetch from:', url, error)
+        alert('Failed to load courses. Check console.')
       }
     }
 
