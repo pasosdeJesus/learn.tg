@@ -89,6 +89,77 @@ is fully backed by USDT in the reserve (Whitepaper §4).
 - **USDT goes to the global reserve,** not to the user. The user receives SLEARN. The USDT stays in `learnTgReserve` backing the token.
 - **Rate is adjustable.** Admin can change `usdtToSlearnRate` (range 10-22). Always call `usdtToSLEARN(usdtAmount)` on-chain if you need the exact SLEARN amount before minting.
 
+### 3.1 Two-step atomicity
+
+`mintAndReserve` reads USDT from the **contract's balance**, not from `msg.sender`.
+This means the contract has a shared USDT pool across all minters.
+
+The two-step flow (transfer → mint) is **not atomic** on-chain. Between steps 1 and 2,
+another minter could consume part of the shared balance, causing `mintAndReserve` to revert
+with `"insufficient USDT balance"`.
+
+**This is not a security vulnerability** (any wallet with `MINTER_ROLE` can call `mint()`
+directly — shared pool can't be drained for profit), but it requires **proper retry logic**
+to handle the occasional collision.
+
+**Recommended pattern — retry on `insufficient USDT balance`:**
+
+```typescript
+async function mintWithRetry(
+  donor: `0x${string}`,
+  usdtAmount: bigint,
+  maxRetries = 3,
+): Promise<`0x${string}`> {
+  const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
+  const client = createWalletClient({ chain: celo, transport: http(), account })
+  const slearn = process.env.NEXT_PUBLIC_SLEARN_ADDRESS as `0x${string}`
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    // Step 1: Transfer USDT to SLEARN contract (adds to shared pool)
+    const transferHash = await client.writeContract({
+      address: usdt, abi: USDT_ABI,
+      functionName: 'transfer',
+      args: [slearn, usdtAmount],
+      chain: celo, account,
+    })
+    await client.waitForTransactionReceipt({ hash: transferHash })
+
+    // Step 2: Mint SLEARN (consumes from shared pool)
+    try {
+      const hash = await client.writeContract({
+        address: slearn, abi: SLEARN_ABI,
+        functionName: 'mintAndReserve',
+        args: [donor, usdtAmount],
+        chain: celo, account,
+      })
+      await client.waitForTransactionReceipt({ hash })
+      return hash
+    } catch (err: any) {
+      if (err.message?.includes('insufficient USDT balance') && attempt < maxRetries - 1) {
+        // Another minter consumed our USDT before we could mint.
+        // Re-transfer and retry (previous transfer already contributed to pool).
+        console.warn(`[slearn] Collision, retrying (${attempt + 1}/${maxRetries})...`)
+        await new Promise(r => setTimeout(r, 1000))
+        continue
+      }
+      throw err
+    }
+  }
+  throw new Error(`mintAndReserve failed after ${maxRetries} retries`)
+}
+```
+
+**Why this works:**
+- If the first transfer added 10 USDT to the shared pool but another minter consumed it,
+  the retry adds another 10 USDT and tries again
+- The donor still gets the correct SLEARN amount
+- The total USDT in reserve is correct (multiple transfers, one successful mint per attempt)
+
+**To minimize collision window** between steps 1 and 2:
+- Use consecutive nonces (transfer at nonce N, mint at nonce N+1)
+- Set a high `gasPrice` so both transactions land in the same or adjacent blocks
+- Keep the backend single-threaded for mint operations (no parallel donations)
+
 **TypeScript example (Viem, 2-step flow):**
 
 ```typescript
