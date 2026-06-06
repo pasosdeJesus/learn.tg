@@ -72,7 +72,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
           const statusUrl = `/api/guide-status?walletAddress=${address}&courseId=${detailedCourse.id}&guideNumber=${index + 1}`
           return axios.get(statusUrl)
         }
-        return Promise.resolve({ data: { completed: false, receivedScholarship: false } })
+        return Promise.resolve({ data: { completed: false, receivedScholarship: false, receivedSlearnScholarship: false } })
       })
 
       const guideStatuses = await Promise.all(guideStatusPromises)
@@ -81,6 +81,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
         ...guide,
         completed: guideStatuses[index].data.completed,
         receivedScholarship: guideStatuses[index].data.receivedScholarship,
+        receivedSlearnScholarship: guideStatuses[index].data.receivedSlearnScholarship,
       }))
 
       const fullCourse: Course = {

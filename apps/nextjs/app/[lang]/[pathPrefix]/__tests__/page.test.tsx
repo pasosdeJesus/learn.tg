@@ -271,8 +271,8 @@ describe('Course List Page Component', () => {
   })
 
   it('includes completion indicators in guide list HTML', async () => {
-    const mockGuideStatus1 = { completed: true, receivedScholarship: true }
-    const mockGuideStatus2 = { completed: false, receivedScholarship: false }
+    const mockGuideStatus1 = { completed: true, receivedScholarship: true, receivedSlearnScholarship: true }
+    const mockGuideStatus2 = { completed: false, receivedScholarship: false, receivedSlearnScholarship: false }
 
     axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
       if (url.startsWith(API_BUSCA_URL)) {
@@ -308,13 +308,14 @@ describe('Course List Page Component', () => {
     const guide1Element = screen.getByText(/Guide 1/)
     expect(guide1Element).toBeInTheDocument()
     const parent1 = guide1Element.parentElement
-    expect(parent1?.textContent).toMatch(/Guide 1 ✅\s*💰/)
+    expect(parent1?.textContent).toMatch(/Guide 1 ✅\s*💵\s*⚡/)
 
     const guide2Element = screen.getByText(/Guide 2/)
     expect(guide2Element).toBeInTheDocument()
     const parent2 = guide2Element.parentElement
     expect(parent2?.textContent).not.toMatch(/✅/)
-    expect(parent2?.textContent).not.toMatch(/💰/)
+    expect(parent2?.textContent).not.toMatch(/💵/)
+    expect(parent2?.textContent).not.toMatch(/⚡/)
   })
 
   it('does not call guide-status API when no session', async () => {

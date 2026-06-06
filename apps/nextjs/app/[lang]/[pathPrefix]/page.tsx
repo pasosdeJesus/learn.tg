@@ -97,7 +97,8 @@ export default function Page({ params }: PageProps) {
           guias +=
             `<a href='/${lang}/${pathPrefix}/${guia.sufijoRuta}' style='text-decoration: underline'>${guia.titulo}</a>`
           if (guia.completed) guias += ' ✅'
-          if (guia.receivedScholarship) guias += ' 💰'
+          if (guia.receivedScholarship) guias += ' 💵'
+          if (guia.receivedSlearnScholarship) guias += ' ⚡'
         } else {
           guias += guia.titulo
         }

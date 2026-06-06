@@ -157,11 +157,6 @@ export function CourseStatistics({
             {scholarshipPaid.toFixed(2)} USDT
           </div>
         )}
-        {full && scholarshipPerGuideSlearn != null && scholarshipPerGuideSlearn > 0 && (
-          <div>
-            {t('perGuideSlearn', String(scholarshipPerGuideSlearn))}
-          </div>
-        )}
       </div>
       <CompletedProgress
         percentageCompleted={percentageCompleted || 0}

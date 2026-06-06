@@ -217,7 +217,8 @@ export default function Page() {
           &nbsp;
           <span>{guideNumber}</span>: {myGuide.titulo}
           {myGuide.completed ? ' ✅' : ''}
-          {myGuide.receivedScholarship ? ' 💰' : ''}
+          {myGuide.receivedScholarship ? ' 💵' : ''}
+          {myGuide.receivedSlearnScholarship ? ' ⚡' : ''}
         </h1>
         <section
           className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside"

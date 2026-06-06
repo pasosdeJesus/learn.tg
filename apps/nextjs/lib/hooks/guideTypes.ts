@@ -6,6 +6,7 @@ export interface Guide {
   sufijoRuta: string
   completed?: boolean
   receivedScholarship?: boolean
+  receivedSlearnScholarship?: boolean
 }
 
 export interface Course {

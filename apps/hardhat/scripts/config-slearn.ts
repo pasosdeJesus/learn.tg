@@ -130,6 +130,13 @@ async function main() {
   await t2.wait()
   console.log(`    ✅ ${t2.hash}`)
 
+  // Self-approval needed: SLEARN._pullTokens() calls transferFrom(msg.sender, ...)
+  // which in OZ v5 requires allowance(backend, backend) even for own tokens
+  console.log(`  SLEARN.approve(backend, max) self-approval...`)
+  const t3 = await slearn.approve(backend, maxUint)
+  await t3.wait()
+  console.log(`    ✅ ${t3.hash}`)
+
   console.log("\n✅ All configured. Remaining manual approvals (see doc/runbook.md §2):")
 }
 
