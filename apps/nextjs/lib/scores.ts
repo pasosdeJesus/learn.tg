@@ -21,7 +21,7 @@ export async function refreshUserLearningScore(
   const result = await db
     .selectFrom('transaction')
     .where('usuario_id', '=', userId)
-    .where('crypto', '=', 'learningpoints')
+    .where('crypto', '=', 'slearn')
     .select(db.fn.sum('balance_impact').as('total_points'))
     .executeTakeFirst()
   
@@ -116,20 +116,8 @@ export async function updateUserAndCoursePoints(
   }
 
   if (guide) {
-    if (!wallet || wallet.trim() === '') {
-      throw new Error(`Wallet address is required for transaction insertion for user ${user.id}`);
-    }
-
-    await db.insertInto('transaction').values({
-        usuario_id: user.id,
-  date: new Date(),
-        type: 'scholarship',
-        crypto: 'learningpoints',
-        amount: guide.points,
-        balance_impact: guide.points,
-        wallet: wallet,
-        metadata: { courseId: courseId, guideId: guide.actividadpf_id }
-    }).execute();
+    // El pago real de SLEARN + USDT ya se registra en check-crossword/route.ts
+    // vía payScholarship() on-chain. Aquí no duplicamos.
   }
 
   // 3. Calculate global Learning Score from all transactions and update table
