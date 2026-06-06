@@ -1,3 +1,7 @@
+import 'server-only'
+
+import * as fs from 'fs'
+import * as path from 'path'
 import { getContractAddress } from '@pasosdejesus/m/blockchain/deployments'
 
 function getNetwork(): string {
@@ -5,11 +9,8 @@ function getNetwork(): string {
 }
 
 function readAddr(relativePath: string): `0x${string}` {
-  // Server-side only — uses fs
-  const fs = require('fs')
-  const path = require('path')
-  const deploymentsDir = path.join(process.cwd(), '..', 'hardhat', 'deployments')
   const net = getNetwork()
+  const deploymentsDir = path.join(process.cwd(), '..', 'hardhat', 'deployments')
   const file = path.join(deploymentsDir, ...relativePath.split('/'), `${net}.json`)
   if (!fs.existsSync(file)) {
     throw new Error(`Deployment not found: ${file}`)
@@ -18,7 +19,6 @@ function readAddr(relativePath: string): `0x${string}` {
 }
 
 function getDeploymentsDir(): string {
-  const path = require('path')
   return path.join(process.cwd(), '..', 'hardhat', 'deployments')
 }
 

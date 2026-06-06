@@ -9,7 +9,6 @@ import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@/
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { TransactionStatus } from '@/components/ui/TransactionStatus'
-import { getSlearnAddress } from '@/lib/deployments'
 
 const SLEARN_DECIMALS = 2
 const SLEARN_RATE = 22 // 1 USDT = 22 SLEARN
@@ -36,7 +35,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
 
   const backendWalletAddress = (process.env.NEXT_PUBLIC_ADDRESS as Address) || undefined
   const usdtAddress = (process.env.NEXT_PUBLIC_USDT_ADDRESS as Address) || undefined
-  const slearnAddress = (() => { try { return getSlearnAddress() } catch { return undefined } })()
+  const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address) || undefined
 
   const usdtNum = safeParseFloat(amount)
   const slearnNum = safeParseFloat(slearnAmount)
