@@ -126,7 +126,7 @@ export function CourseStatistics({
         )}
         {vaultBalance !== null && +vaultBalance > 0 && (
           <div className="pt-2">
-            {vaultBalanceSlearn !== null && +vaultBalanceSlearn > 0 ? (
+            {vaultBalanceSlearn != null && +vaultBalanceSlearn > 0 ? (
               <span>{t('vaultBalanceWithSlearn', vaultBalance.toFixed(2), vaultBalanceSlearn.toFixed(2))}</span>
             ) : (
               <span>{t('vaultBalance', vaultBalance.toFixed(2))}</span>
@@ -157,7 +157,7 @@ export function CourseStatistics({
             {scholarshipPaid.toFixed(2)} USDT
           </div>
         )}
-        {full && scholarshipPerGuideSlearn !== null && scholarshipPerGuideSlearn > 0 && (
+        {full && scholarshipPerGuideSlearn != null && scholarshipPerGuideSlearn > 0 && (
           <div>
             {t('perGuideSlearn', String(scholarshipPerGuideSlearn))}
           </div>

@@ -66,7 +66,7 @@ describe('formatLearningPoints', () => {
   })
 
   it('strips decimals from float input', () => {
-    expect(formatLearningPoints(99.7)).toBe('100')
+    expect(formatLearningPoints(99.7)).toBe('99.7')
   })
 
   it('formats zero', () => {

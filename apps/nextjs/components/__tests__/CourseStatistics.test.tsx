@@ -18,6 +18,7 @@ describe('CourseStatistics', () => {
     percentagePaid: 0,
     percentageCompleted: 0,
     scholarshipPaid: 0,
+    vaultBalance: null,
   }
 
   it('calculates scholarship correctly for profile score 68 and base 1 USDT', () => {
