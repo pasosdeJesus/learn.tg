@@ -14,9 +14,12 @@ export interface ScholarshipData {
   percentageCompleted: number | null
   completedGuides: number | null
   paidGuides: number | null
+  paidGuidesUSDT: number | null
+  paidGuidesSLEARN: number | null
   totalGuides: number | null
   percentagePaid: number | null
   scholarshipPaid: number | null
+  scholarshipPaidSlearn: number | null
   profileScore: number | null
 }
 
@@ -30,8 +33,8 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
     vaultCreated: null, vaultBalance: null, vaultBalanceSlearn: null,
     scholarshipPerGuide: null, scholarshipPerGuideSlearn: null,
     canSubmit: null, percentageCompleted: null, completedGuides: null,
-    paidGuides: null, totalGuides: null, percentagePaid: null,
-    scholarshipPaid: null, profileScore: null,
+    paidGuides: null, paidGuidesUSDT: null, paidGuidesSLEARN: null, totalGuides: null, percentagePaid: null,
+    scholarshipPaid: null, scholarshipPaidSlearn: null, profileScore: null,
   })
 
   const fetchScholarship = useCallback(async () => {
@@ -52,9 +55,12 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
         percentageCompleted: res.percentageCompleted != null ? Number(res.percentageCompleted) : null,
         completedGuides: res.completedGuides != null ? Number(res.completedGuides) : null,
         paidGuides: res.paidGuides != null ? Number(res.paidGuides) : null,
+        paidGuidesUSDT: res.paidGuidesUSDT != null ? Number(res.paidGuidesUSDT) : null,
+        paidGuidesSLEARN: res.paidGuidesSLEARN != null ? Number(res.paidGuidesSLEARN) : null,
         totalGuides: res.totalGuides != null ? Number(res.totalGuides) : null,
         percentagePaid: res.percentagePaid != null ? Number(res.percentagePaid) : null,
         scholarshipPaid: res.amountScholarship != null ? Number(res.amountScholarship) : null,
+        scholarshipPaidSlearn: res.amountScholarshipSlearn != null ? Number(res.amountScholarshipSlearn) : null,
         profileScore: res.profileScore != null ? Number(res.profileScore) : null,
       })
     } catch (e) {

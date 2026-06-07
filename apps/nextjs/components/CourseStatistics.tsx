@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CompletedProgress } from '@/components/ui/completed-progress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 export interface CourseStatisticsProps {
@@ -17,9 +16,12 @@ export interface CourseStatisticsProps {
   canSubmit: boolean | null
   completedGuides?: number | null
   paidGuides?: number | null
+  paidGuidesUSDT?: number | null
+  paidGuidesSLEARN?: number | null
   percentagePaid: number | null
   percentageCompleted?: number | null
   scholarshipPaid?: number | null
+  scholarshipPaidSlearn?: number | null
 }
 
 export function CourseStatistics({
@@ -35,15 +37,18 @@ export function CourseStatistics({
   canSubmit,
   completedGuides,
   paidGuides,
+  paidGuidesUSDT,
+  paidGuidesSLEARN,
   percentageCompleted,
   percentagePaid,
-  scholarshipPaid
+  scholarshipPaid,
+  scholarshipPaidSlearn
 }: CourseStatisticsProps) {
   const t = useMemo(() => createComponentT(lang, {
     en: {
       scholarshipOf: 'Scholarship of ',
       perGuide: ' per guide.',
-      scholarshipOfSlearn: ' + {{0}} SLEARN per guide.',
+      scholarshipOfSlearn: ' + {{0}} SLEARN',
       scholarshipUpTo: `Scholarship of up to {{0}} USDT{{1}} after you complete your profile.`,
       cooldown: 'Although you are in cooldown period.',
       eligible: 'You are eligible.',
@@ -58,7 +63,7 @@ export function CourseStatistics({
     es: {
       scholarshipOf: 'Beca de ',
       perGuide: ' por guía.',
-      scholarshipOfSlearn: ' + {{0}} SLEARN por guía.',
+      scholarshipOfSlearn: ' + {{0}} SLEARN',
       scholarshipUpTo: 'Beca de hasta {{0}} USDT{{1}} después de que completes tu perfil.',
       cooldown: 'Aunque estás en etapa de enfriamiento',
       eligible: 'Eres elegible.',
@@ -133,36 +138,54 @@ export function CourseStatistics({
             )}
           </div>
         )}
-        {full && (
-          <div className="pt-2">
-            {t('totalGuides')}
-            {totalGuides}
-          </div>
-        )}
-        {full && typeof completedGuides === 'number' && typeof percentageCompleted === 'number' && (
-          <div>
-            {t('approvedGuides')}
-            {completedGuides}  ({percentageCompleted}%)
-          </div>
-        )}
-        {full && typeof paidGuides === 'number' && typeof percentagePaid === 'number' && (
-          <div>
-            {t('paidGuides')}
-            {paidGuides} ({percentagePaid}%)
+        {full && typeof completedGuides === 'number' && typeof totalGuides === 'number' && totalGuides > 0 && (
+          <div className="pt-2 space-y-2 w-full max-w-xs">
+            <ProgressBar
+              label="✅"
+              value={completedGuides}
+              total={totalGuides}
+              color="bg-green-500"
+              lang={lang}
+            />
+            <ProgressBar
+              label="💵"
+              value={paidGuidesUSDT ?? 0}
+              total={totalGuides}
+              color="bg-yellow-500"
+              lang={lang}
+            />
+            <ProgressBar
+              label="⚡"
+              value={paidGuidesSLEARN ?? 0}
+              total={totalGuides}
+              color="bg-purple-500"
+              lang={lang}
+            />
           </div>
         )}
         {full && typeof scholarshipPaid === 'number' && (
           <div>
             {t('totalScholarship')}
             {scholarshipPaid.toFixed(2)} USDT
+            {scholarshipPaidSlearn != null && scholarshipPaidSlearn > 0 && (
+              <> + {scholarshipPaidSlearn.toFixed(2)} SLEARN</>
+            )}
           </div>
         )}
       </div>
-      <CompletedProgress
-        percentageCompleted={percentageCompleted || 0}
-        percentagePaid={percentagePaid || 0}
-        lang={lang}
-      />
+    </div>
+  )
+}
+
+function ProgressBar({ label, value, total, color }: { label: string; value: number; total: number; color: string; lang?: string }) {
+  const pct = Math.min(100, Math.round((value / total) * 100))
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <span className="w-5 text-center">{label}</span>
+      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+        <div className={`h-full ${color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="w-16 text-right text-xs tabular-nums">{value}/{total} ({pct}%)</span>
     </div>
   )
 }

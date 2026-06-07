@@ -200,9 +200,12 @@ export default function Page({ params }: PageProps) {
               canSubmit={sData.canSubmit}
               completedGuides={sData.completedGuides}
               paidGuides={sData.paidGuides}
+          paidGuidesUSDT={sData.paidGuidesUSDT}
+          paidGuidesSLEARN={sData.paidGuidesSLEARN}
               percentageCompleted={sData.percentageCompleted}
               percentagePaid={sData.percentagePaid}
               scholarshipPaid={sData.scholarshipPaid}
+          scholarshipPaidSlearn={sData.scholarshipPaidSlearn}
             />
             {sData.vaultCreated && sData.vaultBalance !== null && (
               <CourseDonation

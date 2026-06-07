@@ -514,9 +514,6 @@ describe('Course Introduction Page', () => {
     await waitFor(() => {
       expect(screen.getByText(/Scholarship of.*USDT.*per guide/i)).toBeInTheDocument()
       expect(screen.getByText(/You are eligible/i)).toBeInTheDocument()
-      expect(screen.getByText(/Total number of guides in the course: 10/i)).toBeInTheDocument()
-      expect(screen.getByText(/Approved guides: 5 \(50%\)/i)).toBeInTheDocument()
-      expect(screen.getByText(/Approved guides with scholarship paid: 2 \(25%\)/i)).toBeInTheDocument()
       expect(screen.getByText(/Total scholarship paid in this course: 1000000(?:\.00)? USDT/i)).toBeInTheDocument()
     })
   })
