@@ -209,7 +209,7 @@ importers:
         version: 3.3.5
       '@pasosdejesus/m':
         specifier: gitlab:pasosdejesus/m
-        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=f0c1d2e6933301c4b294265bf9c318a4d826f874
+        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=eb6a00a1e8b21421fa66b4eb3887d22b13939558
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0
@@ -2046,8 +2046,8 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=f0c1d2e6933301c4b294265bf9c318a4d826f874':
-    resolution: {tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=f0c1d2e6933301c4b294265bf9c318a4d826f874}
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=eb6a00a1e8b21421fa66b4eb3887d22b13939558':
+    resolution: {gitHosted: true, tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=eb6a00a1e8b21421fa66b4eb3887d22b13939558}
     version: 0.7.0
     hasBin: true
 
@@ -4433,7 +4433,7 @@ packages:
     engines: {node: '>= 8'}
 
   crossword-layout-generator-with-isolated@https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/0c5c2ff07eb38afdd3f555a9073e083f2cddbf28:
-    resolution: {tarball: https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/0c5c2ff07eb38afdd3f555a9073e083f2cddbf28}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/vtamara/crossword-layout-generator/tar.gz/0c5c2ff07eb38afdd3f555a9073e083f2cddbf28}
     version: 0.1.2
 
   crossws@0.3.5:
@@ -6360,7 +6360,7 @@ packages:
     engines: {node: '>= 6.13.0'}
 
   node-forge@https://codeload.github.com/remicolin/forge/tar.gz/17a11a632dd0e50343b3b8393245a2696f78afbb:
-    resolution: {tarball: https://codeload.github.com/remicolin/forge/tar.gz/17a11a632dd0e50343b3b8393245a2696f78afbb}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/remicolin/forge/tar.gz/17a11a632dd0e50343b3b8393245a2696f78afbb}
     version: 1.3.2-0
     engines: {node: '>= 6.13.0'}
 
@@ -7293,7 +7293,7 @@ packages:
     hasBin: true
 
   snarkjs@https://codeload.github.com/sampritipanda/snarkjs/tar.gz/fef81fc51d17a734637555c6edbd585ecda02d9e:
-    resolution: {tarball: https://codeload.github.com/sampritipanda/snarkjs/tar.gz/fef81fc51d17a734637555c6edbd585ecda02d9e}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/sampritipanda/snarkjs/tar.gz/fef81fc51d17a734637555c6edbd585ecda02d9e}
     version: 0.5.0
     hasBin: true
 
@@ -10417,7 +10417,7 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=f0c1d2e6933301c4b294265bf9c318a4d826f874':
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=eb6a00a1e8b21421fa66b4eb3887d22b13939558':
     dependencies:
       dotenv: 17.4.2
       execa: 9.6.1
