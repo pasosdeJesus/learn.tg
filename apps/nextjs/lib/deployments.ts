@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 
 import * as fs from 'fs'
 import * as path from 'path'

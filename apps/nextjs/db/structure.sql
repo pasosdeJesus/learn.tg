@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict aBDhcatEWOr8EuOP9En06ShK4dYcV2uIlkfNAXq0ppVUHS8a4EWGrtSxGpWCWBz
+\restrict 6IQv1Nn6t4faac8FtjFg11zlbbp9BcExjZn2BU27EYp7EZH1vbqWa04jvdmBQsd
 
 -- Dumped from database version 17.9
--- Dumped by pg_dump version 17.6
+-- Dumped by pg_dump version 17.9
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2795,7 +2795,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
 );
 
 
@@ -2832,7 +2832,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -4864,7 +4864,7 @@ CREATE TABLE public.transaction (
     synced boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
     CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY (ARRAY['scholarship'::text, 'donation'::text, 'pay-course'::text, 'ubi-claim'::text, 'conversion'::text])))
+    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY (ARRAY['scholarship'::text, 'donation'::text, 'donation_reward'::text, 'pay-course'::text, 'ubi-claim'::text, 'conversion'::text])))
 );
 
 
@@ -8296,5 +8296,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict aBDhcatEWOr8EuOP9En06ShK4dYcV2uIlkfNAXq0ppVUHS8a4EWGrtSxGpWCWBz
+\unrestrict 6IQv1Nn6t4faac8FtjFg11zlbbp9BcExjZn2BU27EYp7EZH1vbqWa04jvdmBQsd
 

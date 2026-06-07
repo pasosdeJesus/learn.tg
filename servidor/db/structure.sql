@@ -4840,22 +4840,22 @@ CREATE TABLE public.site_nonces (
 CREATE TABLE public.transaction (
     id integer NOT NULL,
     usuario_id integer NOT NULL,
-    fecha timestamp without time zone NOT NULL,
-    tipo character varying(20) NOT NULL,
+    date timestamp without time zone NOT NULL,
+    type character varying(20) NOT NULL,
     categoria character varying(50),
     subcategoria character varying(50),
     descripcion text,
     crypto character varying(50) NOT NULL,
-    cantidad numeric(18,2) DEFAULT 1.00 NOT NULL,
-    impacto_balance numeric(18,2) NOT NULL,
+    amount numeric(18,2) DEFAULT 1.00 NOT NULL,
+    balance_impact numeric(18,2) NOT NULL,
     hash character varying(66),
     metadata jsonb,
-    fecha_creacion timestamp without time zone DEFAULT now() NOT NULL,
-    fecha_actualizacion timestamp without time zone DEFAULT now() NOT NULL,
-    sincronizado boolean DEFAULT true NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    synced boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
     CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((tipo)::text = ANY (ARRAY['scholarship'::text, 'donation'::text, 'pay-course'::text, 'ubi-claim'::text, 'conversion'::text])))
+    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY (ARRAY['scholarship'::text, 'donation'::text, 'pay-course'::text, 'ubi-claim'::text, 'conversion'::text])))
 );
 
 
@@ -6804,21 +6804,21 @@ CREATE INDEX msip_ubicacionpre_vereda_id_idx ON public.msip_ubicacionpre USING b
 -- Name: transaction_tipo_categoria_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX transaction_tipo_categoria_idx ON public.transaction USING btree (tipo, categoria);
+CREATE INDEX transaction_tipo_categoria_idx ON public.transaction USING btree (type, categoria);
 
 
 --
 -- Name: transaction_usuario_id_fecha_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX transaction_usuario_id_fecha_idx ON public.transaction USING btree (usuario_id, fecha);
+CREATE INDEX transaction_usuario_id_fecha_idx ON public.transaction USING btree (usuario_id, date);
 
 
 --
 -- Name: transaction_wallet_fecha_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX transaction_wallet_fecha_idx ON public.transaction USING btree (wallet, fecha);
+CREATE INDEX transaction_wallet_fecha_idx ON public.transaction USING btree (wallet, date);
 
 
 --
