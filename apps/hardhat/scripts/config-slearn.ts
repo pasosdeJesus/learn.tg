@@ -83,6 +83,14 @@ async function main() {
   await tx("learnTGVault", () => slearn.setLearnTGVault(vaultAddr))
   await tx("learnTGVaultSLEARN", () => slearn.setLearnTGVaultSLEARN(vaultAddr))
 
+  // Verify both vault addresses are the same (required by design)
+  const vaultCheck = await slearn.learnTGVault()
+  const vaultSlearnCheck = await slearn.learnTGVaultSLEARN()
+  if (vaultCheck.toLowerCase() !== vaultSlearnCheck.toLowerCase()) {
+    throw new Error(`Vault address mismatch: learnTGVault=${vaultCheck} learnTGVaultSLEARN=${vaultSlearnCheck}`)
+  }
+  console.log(`  ✅ Vault addresses match: ${vaultCheck}`)
+
   // Grant roles
   console.log("\nGranting roles...")
   const hasMinter = await slearn.hasRole(MINTER_ROLE, backend)
