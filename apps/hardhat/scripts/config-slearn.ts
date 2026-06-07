@@ -180,6 +180,25 @@ async function main() {
   await t3.wait()
   console.log(`    ✅ ${t3.hash}`)
 
+  // learnTgReserve must approve SLEARN for USDT — processPayment pulls USDT
+  // from learnTgReserve when user pays with SLEARN (burn → release reserve)
+  if (learnTgReserve.toLowerCase() !== backend.toLowerCase()) {
+    console.log(`  USDT.approve(SLEARN, max) from learnTgReserve...`)
+    // Use backend wallet to sign, but approve for learnTgReserve address
+    // We need the learnTgReserve wallet to sign this. If it's the same as backend, skip.
+    console.log(`    ⚠️ learnTgReserve differs from backend — approve manually:`)
+    console.log(`       bin/m wallet:approve --name learntgreserve --token ${usdtAddr} --spender ${slearnAddr} --amount max`)
+  } else {
+    console.log(`  learnTgReserve is backend — already approved`)
+  }
+
+  // stableSlReserve must approve SLEARN for USDT — redeemForSLE pulls USDT
+  // from stableSlReserve when user redeems SLEARN for Leone
+  if (stableSlReserve.toLowerCase() !== backend.toLowerCase()) {
+    console.log(`\n⚠️ stableSlReserve differs from backend — approve manually:`)
+    console.log(`       bin/m wallet:approve --name stableslreserve --token ${usdtAddr} --spender ${slearnAddr} --amount max`)
+  }
+
   console.log("\n✅ All configured. Remaining manual approvals (see doc/runbook.md §2):")
 }
 
