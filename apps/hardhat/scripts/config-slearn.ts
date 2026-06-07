@@ -142,6 +142,15 @@ async function main() {
     console.log("  slearnContractRole already set")
   }
 
+  // V3 needs to send SLEARN to students via payScholarship.
+  // SLEARN.transfer() requires authorizedTransfers[sender] || authorizedTransfers[to].
+  const vaultAuthorized = await slearn.authorizedTransfers(vaultAddr)
+  if (!vaultAuthorized) {
+    await tx("authorizedTransfers (V3)", () => slearn.addAuthorizedTransfer(vaultAddr))
+  } else {
+    console.log("  V3 already authorized for transfers")
+  }
+
   console.log("\n✅ Configuration complete")
   console.log("\nSetting up token metadata...")
   const baseUrl = network === 'celo' ? 'https://learn.tg' : 'https://learn.tg:9001'
