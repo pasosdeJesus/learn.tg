@@ -209,7 +209,7 @@ importers:
         version: 3.3.5
       '@pasosdejesus/m':
         specifier: gitlab:pasosdejesus/m
-        version: git+https://git@gitlab.com:pasosdejesus/m.git#be2154e59403386f6147dc62234f1f16bf1ab0f0
+        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=f0c1d2e6933301c4b294265bf9c318a4d826f874
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0
@@ -2046,9 +2046,9 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/m@git+https://git@gitlab.com:pasosdejesus/m.git#be2154e59403386f6147dc62234f1f16bf1ab0f0':
-    resolution: {commit: be2154e59403386f6147dc62234f1f16bf1ab0f0, repo: git@gitlab.com:pasosdejesus/m.git, type: git}
-    version: 0.6.2
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=f0c1d2e6933301c4b294265bf9c318a4d826f874':
+    resolution: {tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=f0c1d2e6933301c4b294265bf9c318a4d826f874}
+    version: 0.7.0
     hasBin: true
 
   '@paulmillr/qr@0.2.1':
@@ -10417,7 +10417,7 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/m@git+https://git@gitlab.com:pasosdejesus/m.git#be2154e59403386f6147dc62234f1f16bf1ab0f0':
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=f0c1d2e6933301c4b294265bf9c318a4d826f874':
     dependencies:
       dotenv: 17.4.2
       execa: 9.6.1
@@ -16502,10 +16502,10 @@ snapshots:
   ox@0.6.7(typescript@5.9.3)(zod@4.4.3):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
-      '@noble/curves': 1.9.7
-      '@noble/hashes': 1.8.0
-      '@scure/bip32': 1.7.0
-      '@scure/bip39': 1.6.0
+      '@noble/curves': 1.8.1
+      '@noble/hashes': 1.7.1
+      '@scure/bip32': 1.6.2
+      '@scure/bip39': 1.5.4
       abitype: 1.2.4(typescript@5.9.3)(zod@4.4.3)
       eventemitter3: 5.0.1
     optionalDependencies:
