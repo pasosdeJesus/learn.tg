@@ -160,6 +160,7 @@ export function CourseStatistics({
               total={totalGuides}
               color="bg-purple-500"
               lang={lang}
+              icon={<img src="/img/slearn-icon.svg" alt="SLEARN" className="w-4 h-4" />}
             />
           </div>
         )}
@@ -177,11 +178,11 @@ export function CourseStatistics({
   )
 }
 
-function ProgressBar({ label, value, total, color }: { label: string; value: number; total: number; color: string; lang?: string }) {
+function ProgressBar({ label, value, total, color, icon }: { label: string; value: number; total: number; color: string; lang?: string; icon?: React.ReactNode }) {
   const pct = Math.min(100, Math.round((value / total) * 100))
   return (
     <div className="flex items-center gap-2 text-sm">
-      <span className="w-5 text-center">{label}</span>
+      <span className="w-5 text-center flex justify-center">{icon || label}</span>
       <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
         <div className={`h-full ${color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
       </div>

@@ -87,9 +87,35 @@ async function main() {
   console.log("\nGranting roles...")
   const hasMinter = await slearn.hasRole(MINTER_ROLE, backend)
   if (!hasMinter) {
-    await tx("MINTER_ROLE", () => slearn.grantRole(MINTER_ROLE, backend))
+    await tx("MINTER_ROLE (backend)", () => slearn.grantRole(MINTER_ROLE, backend))
   } else {
-    console.log("  MINTER_ROLE already granted")
+    console.log("  MINTER_ROLE (backend) already granted")
+  }
+
+  // Grant MINTER_ROLE to sivel.xyz for SLEARN cashback via mintAndReserve
+  const sivelAddress = process.env.SIVEL_ADDRESS
+  if (sivelAddress) {
+    const hasSivelMinter = await slearn.hasRole(MINTER_ROLE, sivelAddress)
+    if (!hasSivelMinter) {
+      await tx("MINTER_ROLE (sivel.xyz)", () => slearn.grantRole(MINTER_ROLE, sivelAddress))
+    } else {
+      console.log("  MINTER_ROLE (sivel.xyz) already granted")
+    }
+  } else {
+    console.log("  SIVEL_ADDRESS not set — skipping sivel.xyz MINTER_ROLE")
+  }
+
+  // Grant MINTER_ROLE to stable-sl for SLEARN→SLE redemption via redeemForSLE
+  const stableSlAddress = process.env.STABLESL_ADDRESS
+  if (stableSlAddress) {
+    const hasStableSlMinter = await slearn.hasRole(MINTER_ROLE, stableSlAddress)
+    if (!hasStableSlMinter) {
+      await tx("MINTER_ROLE (stable-sl)", () => slearn.grantRole(MINTER_ROLE, stableSlAddress))
+    } else {
+      console.log("  MINTER_ROLE (stable-sl) already granted")
+    }
+  } else {
+    console.log("  STABLESL_ADDRESS not set — skipping stable-sl MINTER_ROLE")
   }
 
   const hasBurner = await slearn.hasRole(BURNER_ROLE, backend)
