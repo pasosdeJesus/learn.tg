@@ -26,7 +26,7 @@ async function main() {
   const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://forno.celo-sepolia.celo-testnet.org'
   const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}` | undefined
   if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY not set in apps/.env')
-  const SLEARN_ADDRESS = getSlearnAddress()
+  const SLEARN_ADDRESS = await getSlearnAddress()
   if (!SLEARN_ADDRESS) throw new Error('SLEARN deployment not found. Run bin/deploySLEARN first.')
   const NETWORK = process.env.NEXT_PUBLIC_NETWORK || 'celoSepolia'
 

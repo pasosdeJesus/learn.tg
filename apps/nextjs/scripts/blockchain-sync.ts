@@ -18,7 +18,7 @@ import { getV3Address } from '../lib/deployments'
 
 // Validación de variables de entorno críticas
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL
-const VAULTS_ADDRESS = getV3Address()
+const VAULTS_ADDRESS = await getV3Address()
 const CELOUBI_ADDRESS = process.env.NEXT_PUBLIC_CELOUBI_ADDRESS as `0x${string}`
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || ''
 const NETWORK = process.env.NEXT_PUBLIC_NETWORK

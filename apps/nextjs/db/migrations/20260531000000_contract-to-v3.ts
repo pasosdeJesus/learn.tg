@@ -85,7 +85,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     throw new Error(`Missing: ${missing.join(', ')}`)
   }
 
-  const DEPLOYED_AT_V3 = getV3Address()
+  const DEPLOYED_AT_V3 = await getV3Address()
   if (!DEPLOYED_AT_V3) {
     throw new Error('V3 address not found. Deploy LearnTGVaultsV3 first (bin/deployLearnTGVaultsV3).')
   }
