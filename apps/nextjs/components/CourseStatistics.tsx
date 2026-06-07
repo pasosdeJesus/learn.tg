@@ -52,6 +52,7 @@ export function CourseStatistics({
       scholarshipUpTo: `Scholarship of up to {{0}} USDT{{1}} after you complete your profile.`,
       cooldown: 'Although you are in cooldown period.',
       eligible: 'You are eligible.',
+      profileTooLow: 'You need at least 50 profile score to be eligible for scholarship.',
       totalGuides: 'Total number of guides in the course: ',
       approvedGuides: 'Approved guides: ',
       paidGuides: 'Approved guides with scholarship paid: ',
@@ -67,6 +68,7 @@ export function CourseStatistics({
       scholarshipUpTo: 'Beca de hasta {{0}} USDT{{1}} después de que completes tu perfil.',
       cooldown: 'Aunque estás en etapa de enfriamiento',
       eligible: 'Eres elegible.',
+      profileTooLow: 'Para ser elegible para beca debes tener más de 50 puntos de perfil.',
       totalGuides: 'Total de guias en el curso: ',
       approvedGuides: 'Guías aprobadas: ',
       paidGuides: 'Guías aprobadas con beca pagada: ',
@@ -123,10 +125,12 @@ export function CourseStatistics({
         {scholarshipPerGuide != null && percentagePaid !== null &&
           scholarshipPerGuide > 0 && canSubmit &&
           +percentagePaid < 100 && (
-            <div className="p-2 text-green-600">
-              <span className="text-green-600">
-                {t('eligible')}
-              </span>
+            <div className="p-2">
+              {profileScore != null && profileScore >= 50 ? (
+                <span className="text-green-600">{t('eligible')}</span>
+              ) : (
+                <span className="text-yellow-600">{t('profileTooLow')}</span>
+              )}
             </div>
         )}
         {vaultBalance !== null && +vaultBalance > 0 && (
