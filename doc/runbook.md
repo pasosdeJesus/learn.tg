@@ -31,8 +31,8 @@ bin/m wallet:approve --name backend --token <SLEARN> --spender <SLEARN> --amount
 bin/m wallet:approve --name backend --token <SLEARN> --spender <BACKEND> --amount max
 # learnTgReserve → SLEARN (USDT, for processPayment burn release)
 bin/m wallet:approve --name learntgreserve --token <USDT> --spender <SLEARN> --amount max
-# V3 → SLEARN authorizedTransfers (for payScholarship SLEARN transfer)
-bin/m wallet:send --name admin --to <SLEARN> --function "addAuthorizedTransfer(address)" --args "<V3>"
+# Vault → SLEARN authorizedTransfers (for payScholarship SLEARN transfer)
+bin/m wallet:send --name admin --to <SLEARN> --function "addAuthorizedTransfer(address)" --args "<VAULT>"
 ```
 
 ## 3. Emergency
@@ -41,6 +41,7 @@ bin/m wallet:send --name admin --to <SLEARN> --function "addAuthorizedTransfer(a
 bin/m wallet:send --name admin --to <SLEARN> --function "pause()"
 bin/m wallet:send --name admin --to <SLEARN> --function "unpause()"
 bin/m wallet:send --name admin --to <VAULT> --function "emergencyWithdrawUSDT(uint256)" --args "<amount>"
+bin/m wallet:send --name admin --to <VAULT> --function "emergencyWithdrawSLEARN(uint256)" --args "<amount>"
 ```
 
 ## 4. Routine
@@ -51,6 +52,9 @@ bin/m wallet:send --name admin --to <VAULT> --function "createVault(uint256,uint
 
 # Missional
 bin/m wallet:send --name minter --to <SLEARN> --function "addMissionalCourse(uint256)" --args "<id>"
+bin/m wallet:send --name minter --to <SLEARN> --function "removeMissionalCourse(uint256)" --args "<id>"
+# Verify no orphan missional courses (must have a vault):
+bin/m wallet:call --name admin --to <SLEARN> --function "getMissionalCourses()"
 
 # Rate
 bin/m wallet:send --name admin --to <SLEARN> --function "setUsdtToSlearnRate(uint256)" --args "<rate>"

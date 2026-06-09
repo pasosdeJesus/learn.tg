@@ -165,11 +165,16 @@ export function useContractPayment({
             }
           }
         } catch {
-          const donationAmountUSD = safeParseFloat(amount)
-          const slearnDonationAmount = safeParseFloat(slearnAmount)
+          const now = new Date().toISOString()
+          const info = [
+            `Time: ${now}`,
+            usdtHash && `USDT tx: ${usdtHash}`,
+            slearnHash && `SLEARN tx: ${slearnHash}`,
+            `Course: ${courseId}`,
+          ].filter(Boolean).join('\n')
           alert(lang === 'es'
-            ? '¡Gracias por tu donación! No pudimos mintear tu SLEARN automáticamente. Toma un pantallazo y envíalo a soporte.'
-            : 'Thank you for your donation! We could not mint your SLEARN automatically. Please screenshot and contact support.')
+            ? `¡Gracias por tu donación! No pudimos procesarla automáticamente.\n\n${info}\n\nToma un pantallazo y envíalo a soporte.`
+            : `Thank you for your donation! We could not process it automatically.\n\n${info}\n\nPlease screenshot and contact support.`)
         }
       }
 
