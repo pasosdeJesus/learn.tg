@@ -137,8 +137,11 @@ export function CourseStatistics({
           <div className="pt-2 space-y-1.5 w-full max-w-xs">
             <ProgressBar
               label="✅"
-              value={completedGuides}
+              value={completedGuides ?? 0}
               total={totalGuides}
+              available={typeof completedGuides === 'number' && totalGuides > 0
+                ? totalGuides - completedGuides
+                : 0}
               color="bg-green-500"
             />
             <ProgressBar
