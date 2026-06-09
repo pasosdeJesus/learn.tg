@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict 6IQv1Nn6t4faac8FtjFg11zlbbp9BcExjZn2BU27EYp7EZH1vbqWa04jvdmBQsd
+\restrict rj4Zl29rsg17XA0OaZXy3FCaBObBs20z6rpcwwPuWhPOLUSYluW4rq2DyiOYBx9
 
 -- Dumped from database version 17.9
--- Dumped by pg_dump version 17.9
+-- Dumped by pg_dump version 17.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2795,7 +2795,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL
 );
 
 
@@ -2832,7 +2832,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -6441,11 +6441,11 @@ ALTER TABLE ONLY public.site_nonces
 
 
 --
--- Name: transaction transaction_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: transaction transaction_crypto_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.transaction
-    ADD CONSTRAINT transaction_hash_key UNIQUE (hash);
+    ADD CONSTRAINT transaction_crypto_hash_key UNIQUE (crypto, hash);
 
 
 --
@@ -8296,5 +8296,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 6IQv1Nn6t4faac8FtjFg11zlbbp9BcExjZn2BU27EYp7EZH1vbqWa04jvdmBQsd
+\unrestrict rj4Zl29rsg17XA0OaZXy3FCaBObBs20z6rpcwwPuWhPOLUSYluW4rq2DyiOYBx9
 

@@ -36,6 +36,13 @@ export async function getSlearnAddress(): Promise<`0x${string}`> {
   return readAddr('SLEARN')
 }
 
+export async function getV4Address(): Promise<`0x${string}`> {
+  return getContractAddress(getNetwork(), 'NEXT_PUBLIC_DEPLOYED_AT', getDeploymentsDir(), {
+    contract: 'LearnTGVaults',
+    version: 'V4',
+  }) as `0x${string}`
+}
+
 export async function getV2Address(): Promise<`0x${string}`> {
   return process.env.NEXT_PUBLIC_DEPLOYED_AT_V2 as `0x${string}`
 }

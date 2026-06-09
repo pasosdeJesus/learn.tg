@@ -377,6 +377,7 @@ export default function Page({
       down: 'Vertical',
       returnGuide: 'Regresar a la guía',
       scholarshipPaid: 'La beca para este crucigrama ya ha sido pagada. Puedes resolverlo de nuevo, pero no recibirás otro pago.',
+      scholarshipPaidPartial: 'Ya recibiste parte de la beca. Aún puedes recibir el resto.',
       sending: 'Enviando...',
       submit: 'Enviar respuesta',
     },
@@ -387,6 +388,7 @@ export default function Page({
       down: 'Down',
       returnGuide: 'Return to guide',
       scholarshipPaid: 'The scholarship for this crossword has already been paid. You can solve it again, but you will not receive another payment.',
+      scholarshipPaidPartial: 'Partial scholarship received. You can still earn the rest.',
       sending: 'Sending...',
       submit: 'Submit answer',
     },
@@ -430,7 +432,8 @@ export default function Page({
           &nbsp;
           <span>{guideNumber}</span>: {myGuide.titulo}
           {myGuide.completed ? ' ✅' : ''}
-          {myGuide.receivedScholarship ? ' 💰' : ''}
+          {myGuide.receivedScholarship ? ' 💵' : ''}
+          {myGuide.receivedSlearnScholarship ? ' ⚡' : ''}
         </h1>
         <div className="space-y-6">
           <div className="grid lg:grid-cols-3 gap-6">
@@ -441,14 +444,19 @@ export default function Page({
                     <div>{uiMsg[locale].crossword}</div>
                     <Button
                       onClick={handleSubmit}
-                      disabled={isSubmitting || !isPuzzleCompleted() || myGuide.receivedScholarship}
+                      disabled={isSubmitting || !isPuzzleCompleted() || (myGuide.receivedScholarship && myGuide.receivedSlearnScholarship)}
                     >
                       {isSubmitting ? uiMsg[locale].sending : uiMsg[locale].submit}
                     </Button>
                   </CardTitle>
-                  {myGuide.receivedScholarship && (
+                  {myGuide.receivedScholarship && myGuide.receivedSlearnScholarship && (
                     <div className="p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800">
                       {uiMsg[locale].scholarshipPaid}
+                    </div>
+                  )}
+                  {((myGuide.receivedScholarship && !myGuide.receivedSlearnScholarship) || (!myGuide.receivedScholarship && myGuide.receivedSlearnScholarship)) && (
+                    <div className="p-4 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg dark:bg-yellow-200 dark:text-yellow-800">
+                      {uiMsg[locale].scholarshipPaidPartial || 'Partial scholarship received. You can still earn more.'}
                     </div>
                   )}
 

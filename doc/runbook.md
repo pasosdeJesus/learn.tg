@@ -20,9 +20,19 @@ bin/m wallet:call --name admin --to <USDT> --function "allowance(address,address
 
 ## 2. Allowances (One-Time)
 
+Run `bin/configSLEARN` to set all allowances automatically. Manual equivalents:
+
 ```bash
-bin/m wallet:approve --name backend --token <USDT> --spender <SLEARN> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935
-bin/m wallet:approve --name learntgreserve --token <USDT> --spender <SLEARN> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935
+# Backend → SLEARN (USDT)
+bin/m wallet:approve --name backend --token <USDT> --spender <SLEARN> --amount max
+# Backend → SLEARN (SLEARN)
+bin/m wallet:approve --name backend --token <SLEARN> --spender <SLEARN> --amount max
+# Backend → backend (self-approval for OZ v5 transferFrom)
+bin/m wallet:approve --name backend --token <SLEARN> --spender <BACKEND> --amount max
+# learnTgReserve → SLEARN (USDT, for processPayment burn release)
+bin/m wallet:approve --name learntgreserve --token <USDT> --spender <SLEARN> --amount max
+# V3 → SLEARN authorizedTransfers (for payScholarship SLEARN transfer)
+bin/m wallet:send --name admin --to <SLEARN> --function "addAuthorizedTransfer(address)" --args "<V3>"
 ```
 
 ## 3. Emergency

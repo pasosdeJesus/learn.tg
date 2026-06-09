@@ -1,0 +1,4 @@
+#!/bin/sh
+. ../.env 2>/dev/null || true
+cd "$(dirname "$0")/.." || exit 1
+node_modules/.bin/hardhat run scripts/verifyLearnTGVaultsV4.ts --network ${NEXT_PUBLIC_NETWORK:-celoSepolia}

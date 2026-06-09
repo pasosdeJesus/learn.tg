@@ -1,0 +1,5 @@
+#!/bin/sh
+. ../.env 2>/dev/null || true
+cd "$(dirname "$0")/.." || exit 1
+echo "Deploying LearnTGVaultsV4 to ${NEXT_PUBLIC_NETWORK:-celoSepolia}..."
+node_modules/.bin/hardhat run scripts/deployLearnTGVaultsV4.ts --network ${NEXT_PUBLIC_NETWORK:-celoSepolia}
