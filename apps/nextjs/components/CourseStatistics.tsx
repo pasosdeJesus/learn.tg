@@ -44,6 +44,9 @@ export function CourseStatistics({
   scholarshipPaid,
   scholarshipPaidSlearn
 }: CourseStatisticsProps) {
+  console.log('[DIAG CourseStats] scholarshipPerGuideSlearn:', scholarshipPerGuideSlearn)
+  console.log('[DIAG CourseStats] vaultBalanceSlearn:', vaultBalanceSlearn)
+  console.log('[DIAG CourseStats] paidGuidesSLEARN:', paidGuidesSLEARN)
   const t = useMemo(() => createComponentT(lang, {
     en: {
       scholarshipOf: 'Scholarship of ',
