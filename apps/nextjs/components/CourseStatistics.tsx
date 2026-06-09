@@ -133,15 +133,6 @@ export function CourseStatistics({
               )}
             </div>
         )}
-        {vaultBalance !== null && +vaultBalance > 0 && (
-          <div className="pt-2">
-            {vaultBalanceSlearn != null && +vaultBalanceSlearn > 0 ? (
-              <span>{t('vaultBalanceWithSlearn', vaultBalance.toFixed(2), vaultBalanceSlearn.toFixed(2))}</span>
-            ) : (
-              <span>{t('vaultBalance', vaultBalance.toFixed(2))}</span>
-            )}
-          </div>
-        )}
         {typeof completedGuides === 'number' && typeof totalGuides === 'number' && totalGuides > 0 && (
           <div className="pt-2 space-y-1.5 w-full max-w-xs">
             <ProgressBar
