@@ -36,6 +36,11 @@ interface CourseExtra {
   percentageCompleted: number
   percentagePaid: number
   profileScore: number
+  totalGuides: number
+  completedGuides: number
+  paidGuidesUSDT: number
+  paidGuidesSLEARN: number
+  scholarshipPaidSlearn: number
 }
 
 export default function Page({ params }: PageProps) {
@@ -109,6 +114,11 @@ export default function Page({ params }: PageProps) {
                 percentageCompleted: response2.data.percentageCompleted,
                 percentagePaid: response2.data.percentagePaid,
                 profileScore: response2.data.profileScore,
+                totalGuides: response2.data.totalGuides,
+                completedGuides: response2.data.completedGuides,
+                paidGuidesUSDT: response2.data.paidGuidesUSDT ?? 0,
+                paidGuidesSLEARN: response2.data.paidGuidesSLEARN ?? 0,
+                scholarshipPaidSlearn: response2.data.amountScholarshipSlearn ?? 0,
               }
 
               setExtCourses((prevMap) =>
@@ -163,6 +173,11 @@ export default function Page({ params }: PageProps) {
           percentageCompleted: response2.data.percentageCompleted,
           percentagePaid: response2.data.percentagePaid,
           profileScore: response2.data.profileScore,
+          totalGuides: response2.data.totalGuides,
+          completedGuides: response2.data.completedGuides,
+          paidGuidesUSDT: response2.data.paidGuidesUSDT ?? 0,
+          paidGuidesSLEARN: response2.data.paidGuidesSLEARN ?? 0,
+          scholarshipPaidSlearn: response2.data.amountScholarshipSlearn ?? 0,
         }
         setExtCourses((prevMap) =>
           new Map(prevMap.set(response2.data.courseId, extraData)),
@@ -232,6 +247,11 @@ export default function Page({ params }: PageProps) {
                          percentagePaid={extra.percentagePaid}
                          canSubmit={extra.canSubmit}
                          percentageCompleted={extra.percentageCompleted}
+                         totalGuides={extra.totalGuides}
+                         completedGuides={extra.completedGuides}
+                         paidGuidesUSDT={extra.paidGuidesUSDT}
+                         paidGuidesSLEARN={extra.paidGuidesSLEARN}
+                         scholarshipPaidSlearn={extra.scholarshipPaidSlearn}
                       />
                     }
                   </footer>

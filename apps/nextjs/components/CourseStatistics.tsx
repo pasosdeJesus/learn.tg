@@ -142,28 +142,31 @@ export function CourseStatistics({
             )}
           </div>
         )}
-        {full && typeof completedGuides === 'number' && typeof totalGuides === 'number' && totalGuides > 0 && (
-          <div className="pt-2 space-y-2 w-full max-w-xs">
+        {typeof completedGuides === 'number' && typeof totalGuides === 'number' && totalGuides > 0 && (
+          <div className="pt-2 space-y-1.5 w-full max-w-xs">
             <ProgressBar
               label="✅"
               value={completedGuides}
               total={totalGuides}
               color="bg-green-500"
-              lang={lang}
             />
             <ProgressBar
               label="💵"
               value={paidGuidesUSDT ?? 0}
               total={totalGuides}
-              color="bg-yellow-500"
-              lang={lang}
+              available={vaultBalance != null && scholarshipPerGuide != null && scholarshipPerGuide > 0
+                ? Math.min(Math.floor(vaultBalance / scholarshipPerGuide), totalGuides - (paidGuidesUSDT ?? 0))
+                : 0}
+              color="bg-green-500"
             />
             <ProgressBar
               label="⚡"
               value={paidGuidesSLEARN ?? 0}
               total={totalGuides}
-              color="bg-purple-500"
-              lang={lang}
+              available={vaultBalanceSlearn != null && scholarshipPerGuideSlearn != null && scholarshipPerGuideSlearn > 0
+                ? Math.min(Math.floor(vaultBalanceSlearn / scholarshipPerGuideSlearn), totalGuides - (paidGuidesSLEARN ?? 0))
+                : 0}
+              color="bg-green-500"
               icon={<img src="/img/slearn-icon.svg" alt="SLEARN" className="w-4 h-4" />}
             />
           </div>
@@ -182,13 +185,26 @@ export function CourseStatistics({
   )
 }
 
-function ProgressBar({ label, value, total, color, icon }: { label: string; value: number; total: number; color: string; lang?: string; icon?: React.ReactNode }) {
+function ProgressBar({ label, value, total, available, color, icon }: {
+  label: string
+  value: number
+  total: number
+  available?: number
+  color: string
+  lang?: string
+  icon?: React.ReactNode
+}) {
   const pct = Math.min(100, Math.round((value / total) * 100))
+  const availPct = available != null ? Math.min(100 - pct, Math.round((available / total) * 100)) : (100 - pct)
+  const restPct = 100 - pct - availPct
   return (
     <div className="flex items-center gap-2 text-sm">
       <span className="w-5 text-center flex justify-center">{icon || label}</span>
-      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full ${color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden flex">
+        <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${pct}%` }} />
+        {available != null && availPct > 0 && (
+          <div className="h-full bg-yellow-300 transition-all duration-500" style={{ width: `${availPct}%` }} />
+        )}
       </div>
       <span className="w-16 text-right text-xs tabular-nums">{value}/{total} ({pct}%)</span>
     </div>
