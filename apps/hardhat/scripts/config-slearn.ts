@@ -35,20 +35,22 @@ async function main() {
 
   // Read deployed addresses
   const slearnFile = path.join(__dirname, "..", "deployments", "SLEARN", `${network}.json`)
-  const v3File = path.join(__dirname, "..", "deployments", "LearnTGVaults", "V3", `${network}.json`)
+  const v4File = path.join(__dirname, "..", "deployments", "LearnTGVaults", "V4", `${network}.json`)
 
   if (!fs.existsSync(slearnFile)) throw new Error(`SLEARN not deployed. Run bin/deploySLEARN first.`)
-  if (!fs.existsSync(v3File)) throw new Error(`LearnTGVaultsV3 not deployed. Run bin/deployLearnTGVaultsV3 first.`)
+  const vaultFile = v4File
+  if (!fs.existsSync(vaultFile)) throw new Error(`LearnTGVaultsV4 not deployed. Run bin/deployLearnTGVaultsV4 first.`)
 
   const { address: slearnAddr } = JSON.parse(fs.readFileSync(slearnFile, "utf8"))
-  const { address: vaultAddr } = JSON.parse(fs.readFileSync(v3File, "utf8"))
+  const { address: vaultAddr } = JSON.parse(fs.readFileSync(vaultFile, "utf8"))
+  const vaultVersion = "V4"
 
   const backend = process.env.NEXT_PUBLIC_ADDRESS!
   if (!backend) throw new Error("NEXT_PUBLIC_ADDRESS not set")
 
   console.log(`Configuring SLEARN on ${network}`)
   console.log(`  SLEARN: ${slearnAddr}`)
-  console.log(`  V3: ${vaultAddr}`)
+  console.log(`  Vault (${vaultVersion}): ${vaultAddr}`)
   console.log(`  Backend (MINTER/BURNER): ${backend}`)
   console.log(`  pdJTreasury: ${pdJTreasury}`)
   console.log(`  ubiWallet: ${ubiWallet}`)
@@ -146,7 +148,7 @@ async function main() {
   // SLEARN.transfer() requires authorizedTransfers[sender] || authorizedTransfers[to].
   const vaultAuthorized = await slearn.authorizedTransfers(vaultAddr)
   if (!vaultAuthorized) {
-    await tx("authorizedTransfers (V3)", () => slearn.addAuthorizedTransfer(vaultAddr))
+    await tx(`authorizedTransfers (${vaultVersion})`, () => slearn.addAuthorizedTransfer(vaultAddr))
   } else {
     console.log("  V3 already authorized for transfers")
   }
