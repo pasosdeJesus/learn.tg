@@ -44,10 +44,6 @@ export function CourseStatistics({
   scholarshipPaid,
   scholarshipPaidSlearn
 }: CourseStatisticsProps) {
-  console.log('[DIAG CourseStats] full:', full, 'totalGuides:', totalGuides, 'completedGuides:', completedGuides,
-    'paidGuidesUSDT:', paidGuidesUSDT, 'paidGuidesSLEARN:', paidGuidesSLEARN,
-    'vaultBalance:', vaultBalance, 'vaultBalanceSlearn:', vaultBalanceSlearn,
-    'scholarshipPerGuide:', scholarshipPerGuide, 'scholarshipPerGuideSlearn:', scholarshipPerGuideSlearn)
   const t = useMemo(() => createComponentT(lang, {
     en: {
       scholarshipOf: 'Scholarship of ',
@@ -137,11 +133,8 @@ export function CourseStatistics({
               )}
             </div>
         )}
-        {(() => {
-          if (typeof completedGuides === 'number' && typeof totalGuides === 'number' && totalGuides > 0) {
-            console.log('[DIAG CourseStats] rendering bars for full:', full)
-            return (
-          <div className="pt-2 space-y-1.5 w-full max-w-xs">
+        {typeof completedGuides === 'number' && typeof totalGuides === 'number' && totalGuides > 0 && (
+          <div className="pt-2 space-y-1.5 w-full max-w-xs border-2 border-green-500">
             <ProgressBar
               label="✅"
               value={completedGuides ?? 0}
@@ -171,11 +164,7 @@ export function CourseStatistics({
               icon={<img src="/img/slearn-icon.svg" alt="SLEARN" className="w-4 h-4" />}
             />
           </div>
-            )
-          }
-          console.log('[DIAG CourseStats] NOT rendering bars. completedGuides type:', typeof completedGuides, 'totalGuides type:', typeof totalGuides, 'totalGuides val:', totalGuides)
-          return null
-        })()}
+        )}
         {full && typeof scholarshipPaid === 'number' && (
           <div>
             {t('totalScholarship')}
@@ -203,9 +192,9 @@ function ProgressBar({ label, value, total, available, color, icon }: {
   const availPct = available != null ? Math.min(100 - pct, Math.round((available / total) * 100)) : (100 - pct)
   const restPct = 100 - pct - availPct
   return (
-    <div className="flex items-center gap-2 text-sm">
+    <div className="flex items-center gap-2 text-sm border border-blue-500">
       <span className="w-5 text-center flex justify-center">{icon || label}</span>
-      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden flex">
+      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden flex border-2 border-red-500">
         <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${pct}%` }} />
         {available != null && availPct > 0 && (
           <div className="h-full bg-yellow-300 transition-all duration-500" style={{ width: `${availPct}%` }} />
