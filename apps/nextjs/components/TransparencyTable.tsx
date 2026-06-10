@@ -149,7 +149,7 @@ export function TransparencyTable({
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalSLEARN')}</div>
-            <div className="text-lg font-bold">{totals.totalSLEARNBalance.toLocaleString()}</div>
+            <div className="text-lg font-bold">{totals.totalSLEARNBalance.toFixed(2)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Scholarships', 'Becas')}</div>
@@ -258,7 +258,7 @@ export function TransparencyTable({
                     {formatLearningPoints(row.totalLearningPoints)}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {row.totalSLEARNBalance.toLocaleString()}
+                    {row.totalSLEARNBalance.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {formatUSDT(row.totalScholarshipUSDT)}

@@ -39,7 +39,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
     en: {
       transparency: 'Transparency',
       transparencyDesc: 'Platform totals by country',
-      transparencyNote: 'Total SLEARN includes {0} SLEARN in admin and test wallets excluded from the leaderboard and from the country breakdowns.',
+      transparencyNote: 'Total SLEARN includes {{0}} SLEARN in admin/test wallets and {{1}} SLEARN in course vaults, excluded from the leaderboard and country breakdowns.',
       reserves: 'SLEARN Reserves',
       slearnSupply: 'Total SLEARN',
       learnTgReserve: 'Hot Reserve (L2)',
@@ -54,7 +54,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
     es: {
       transparency: 'Transparencia',
       transparencyDesc: 'Totales de la plataforma por país',
-      transparencyNote: 'El total de SLEARN incluye {0} SLEARN en billeteras de administración y pruebas excluidas de la Tabla de clasificación y del desglose por país.',
+      transparencyNote: 'El total de SLEARN incluye {{0}} SLEARN en billeteras admin/test y {{1}} SLEARN en bóvedas de cursos, excluidos de la tabla de clasificación y del desglose por país.',
       reserves: 'Reservas SLEARN',
       slearnSupply: 'Total SLEARN',
       learnTgReserve: 'Reserva Caliente (L2)',
@@ -153,7 +153,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground">{t('transparencyNote', (reserves?.adminTestSLEARN ?? 0).toLocaleString())}</p>
+      <p className="text-xs text-muted-foreground">{t('transparencyNote', (reserves?.adminTestSLEARN ?? 0).toFixed(2), (reserves?.vaultSLEARN ?? 0).toFixed(2))}</p>
 
       <TransparencyTable
         data={data}

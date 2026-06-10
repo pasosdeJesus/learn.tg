@@ -82,5 +82,6 @@ export interface TransparencyResponse {
     coverageRatio: number
     coverageTarget: number
     adminTestSLEARN: number
+    vaultSLEARN: number
   }
 }
