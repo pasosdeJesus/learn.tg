@@ -51,19 +51,27 @@ heart, and you will find rest for your souls.” (Matthew 11:29)*
   speculative asset.
 - [Verified SLEARN Contract on Celo Blockscout](https://celo.blockscout.com/address/0x27fd41bea85c39254f2b12789eb37a1543152cc1)
 
-### 2.1. Current State and Initial Backing
+### 2.1. Current State After Launch
 
-It can be checked at https://learn.tg/en/transparency, as of May 2026, learn.tg
-has **486 users with connected wallets**, of which **145 active users** hold
-**315 Learning Points** (to be converted 1:1 to SLEARN at launch). The platform 
-has also distributed **$290.4 in scholarships** and **396 CELO** as UBI, 
-with **$2.17 in donations** received.
+As of June 2026, learn.tg has:
 
-To ensure proper backing from day one, **pdJ (Pasos de Jesús)** will make an
-initial donation equivalent to the value required to back the initial SLEARN
-tokens on 1st June 2026 (minimum 4.5 cents of USDT per SLEARN, as per the Reserve
-Backing Rule in Section 4). This guarantees that every SLEARN token in circulation
-at launch is fully reserved.
+- **Total SLEARN minted:** 779.63
+- **SLEARN in user wallets (leaderboard):** 315.77
+- **SLEARN in course vaults (scholarships):** 212.70
+- **SLEARN in admin/test wallets:** 251.16
+
+The platform has distributed **$291.08 in USDT scholarships**, **415.56 CELO as UBI**, and received **$2.17 in donations**.
+
+#### Reserve Backing
+
+All SLEARN tokens in circulation are fully backed by reserves. The initial reserve was funded exclusively by **Pasos de Jesús (pdJ)** as a donation to the ecosystem. No user funds, ICO, or external investment was used to back the token. The reserve composition is:
+
+- **Hot Reserve (L2):** $24.25 USDT
+- **Stable-sl Reserve (S2):** $21.00 USDT
+- **Master Reserve (SL0):** $21.00 USDT
+
+Total reserve value is **$66.25 USD**, providing a **187% coverage ratio** against the minimum required backing (4.5¢ per SLEARN). The 120% target is exceeded.
+It can be checked at https://learn.tg/en/transparency
 
 ### 2.2 Future Utility: Goods and Services in the pdJ Ecosystem
 
