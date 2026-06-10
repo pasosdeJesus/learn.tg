@@ -39,7 +39,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
     en: {
       transparency: 'Transparency',
       transparencyDesc: 'Platform totals by country',
-      transparencyNote: 'Total SLEARN includes admin and test wallets excluded from the leaderboard and from the country breakdowns.',
+      transparencyNote: 'Total SLEARN includes {0} SLEARN in admin and test wallets excluded from the leaderboard and from the country breakdowns.',
       reserves: 'SLEARN Reserves',
       slearnSupply: 'Total SLEARN',
       learnTgReserve: 'Hot Reserve (L2)',
@@ -54,7 +54,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
     es: {
       transparency: 'Transparencia',
       transparencyDesc: 'Totales de la plataforma por país',
-      transparencyNote: 'El total de SLEARN incluye billeteras de administración y pruebas excluidas de la Tabla de clasificación y del desglose por país.',
+      transparencyNote: 'El total de SLEARN incluye {0} SLEARN en billeteras de administración y pruebas excluidas de la Tabla de clasificación y del desglose por país.',
       reserves: 'Reservas SLEARN',
       slearnSupply: 'Total SLEARN',
       learnTgReserve: 'Reserva Caliente (L2)',
@@ -106,10 +106,11 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
 
       {reserves && (
         <div className="rounded-xl border bg-card p-6">
-          <h2 className="text-lg font-semibold mb-4">
-            {t('reserves')}
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-3">
+            <span>{t('reserves')}</span>
+            <img src="/img/slearn-icon.svg" alt="SLEARN" className="w-[100px] h-[100px]" />
             {reserves.slearnExplorerUrl && (
-              <a href={reserves.slearnExplorerUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center ml-2 text-xs text-primary hover:underline gap-1">
+              <a href={reserves.slearnExplorerUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center ml-auto text-xs text-primary hover:underline gap-1">
                 {t('explorer')} <ExternalLink className="h-3 w-3" />
               </a>
             )}
@@ -152,7 +153,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground">{t('transparencyNote')}</p>
+      <p className="text-xs text-muted-foreground">{t('transparencyNote', (reserves?.adminTestSLEARN ?? 0).toLocaleString())}</p>
 
       <TransparencyTable
         data={data}

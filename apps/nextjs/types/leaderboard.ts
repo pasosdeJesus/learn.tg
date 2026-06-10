@@ -81,5 +81,6 @@ export interface TransparencyResponse {
     churchesWalletUSDT: number
     coverageRatio: number
     coverageTarget: number
+    adminTestSLEARN: number
   }
 }
