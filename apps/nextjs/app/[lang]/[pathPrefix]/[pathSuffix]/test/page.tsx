@@ -433,7 +433,7 @@ export default function Page({
           <span>{guideNumber}</span>: {myGuide.titulo}
           {myGuide.completed ? ' ✅' : ''}
           {myGuide.receivedScholarship ? ' 💵' : ''}
-          {myGuide.receivedSlearnScholarship ? <img src="/img/slearn-icon.svg" alt="SLEARN" className="w-5 h-5 inline align-middle" /> : ''}
+          {myGuide.receivedSlearnScholarship ? <img src="/img/slearn-icon.svg" alt="SLEARN" className="w-15 h-15 inline align-middle" /> : ''}
         </h1>
         <div className="space-y-6">
           <div className="grid lg:grid-cols-3 gap-6">

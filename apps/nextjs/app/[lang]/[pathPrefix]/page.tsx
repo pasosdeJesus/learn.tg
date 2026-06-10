@@ -120,7 +120,7 @@ export default function Page({ params }: PageProps) {
             `<a href='/${lang}/${pathPrefix}/${guia.sufijoRuta}' style='text-decoration: underline'>${guia.titulo}</a>`
           if (guia.completed) guias += ' ✅'
           if (guia.receivedScholarship) guias += ' 💵'
-          if (guia.receivedSlearnScholarship) guias += ` <img src="/img/slearn-icon.svg" alt="SLEARN" style="width:1em;height:1em;display:inline;vertical-align:middle" />`
+          if (guia.receivedSlearnScholarship) guias += ` <img src="/img/slearn-icon.svg" alt="SLEARN" style="width:20px;height:20px;display:inline;vertical-align:middle" />`
         } else {
           guias += guia.titulo
         }
