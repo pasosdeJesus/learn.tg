@@ -116,25 +116,78 @@ export async function up(db: Kysely<any>): Promise<void> {
     } catch {}
   }
 
-  // 5. Migrate guidePaid records
-  console.log('  Migrating guidePaid...')
-  const guideUsers = await db.selectFrom('guide_usuario').selectAll().execute()
-  let migrated = 0
-  for (const gu of guideUsers) {
+  // 5. Migrate guidePaid records (idempotent — reads DB transactions, not guide_usuario)
+  console.log('  Migrating guidePaid from transaction table...')
+  const txs = await db.selectFrom('transaction')
+    .select(['usuario_id', 'crypto', 'amount', 'metadata'])
+    .where('type', '=', 'scholarship')
+    .where(eb => eb('crypto', '=', 'usdt').or('crypto', '=', 'slearn'))
+    .execute()
+
+  // Aggregate by (usuario_id, guideId) to get total paid per token per guide
+  const paidMap = new Map<string, { usdt: bigint; slearn: bigint; courseId: number | null }>()
+  const usdtDecimals = 6
+  const slearnDecimals = 2
+
+  for (const tx of txs) {
     try {
-      const bw = await db.selectFrom('billetera_usuario').select('billetera').where('usuario_id', '=', gu.usuario_id).executeTakeFirst()
-      const act = await db.selectFrom('cor1440_gen_actividadpf').select('proyectofinanciero_id').where('id', '=', gu.actividadpf_id).executeTakeFirst()
-      if (!bw || !act) continue
-      const status: any = await pub.readContract({ address: V3, abi: LearnTGVaultsV3Abi as any, functionName: 'getStudentGuideStatus', args: [BigInt(act.proyectofinanciero_id), BigInt(gu.actividadpf_id), bw.billetera as Address] })
-      const pU = status[0] as bigint
-      const pS = status[1] as bigint
-      if (pU > 0n || pS > 0n) {
-        await wallet.writeContract({ address: V4, abi: LearnTGVaultsV3Abi as any, functionName: 'setGuidePaid', args: [BigInt(act.proyectofinanciero_id), BigInt(gu.actividadpf_id), bw.billetera as Address, pU, pS], account, chain })
-        migrated++
+      const meta = typeof tx.metadata === 'string' ? JSON.parse(tx.metadata) : (tx.metadata as any || {})
+      const guideId = meta?.guideId
+      const courseId = meta?.courseId
+      if (!guideId || !courseId) continue
+      const key = `${tx.usuario_id}:${guideId}`
+      let entry = paidMap.get(key)
+      if (!entry) {
+        entry = { usdt: 0n, slearn: 0n, courseId: Number(courseId) }
+        paidMap.set(key, entry)
       }
+      const raw = parseUnits(String(Number(tx.amount)), tx.crypto === 'usdt' ? usdtDecimals : slearnDecimals)
+      if (tx.crypto === 'usdt') entry.usdt += raw
+      else entry.slearn += raw
     } catch {}
   }
-  console.log(`  guidePaid migrated: ${migrated}`)
+
+  console.log(`  Found ${paidMap.size} unique (user, guide) pairs in transaction table`)
+
+  let migrated = 0
+  let skipped = 0
+  for (const [key, entry] of paidMap) {
+    const [usuarioIdStr, guideIdStr] = key.split(':')
+    const usuarioId = Number(usuarioIdStr)
+    const guideId = Number(guideIdStr)
+    try {
+      const bw = await db.selectFrom('billetera_usuario')
+        .select('billetera')
+        .where('usuario_id', '=', usuarioId)
+        .executeTakeFirst()
+      if (!bw) { skipped++; continue }
+
+      // Idempotent: check V4 first
+      const v4Status: any = await pub.readContract({
+        address: V4, abi: LearnTGVaultsV3Abi as any, functionName: 'getStudentGuideStatus',
+        args: [BigInt(entry.courseId!), BigInt(guideId), bw.billetera as Address]
+      })
+      const v4USDT = v4Status[0] as bigint
+      const v4SLEARN = v4Status[1] as bigint
+
+      // Only set if V4 has less than DB total
+      if (entry.usdt > v4USDT || entry.slearn > v4SLEARN) {
+        console.log(`  setGuidePaid user=${usuarioId} guide=${guideId} USDT=${formatUnits(entry.usdt, usdtDecimals)} SLEARN=${formatUnits(entry.slearn, slearnDecimals)}`)
+        const h = await wallet.writeContract({
+          address: V4, abi: LearnTGVaultsV3Abi as any, functionName: 'setGuidePaid',
+          args: [BigInt(entry.courseId!), BigInt(guideId), bw.billetera as Address, entry.usdt, entry.slearn],
+          account, chain
+        })
+        await pub.waitForTransactionReceipt({ hash: h })
+        migrated++
+      } else {
+        skipped++
+      }
+    } catch (e: any) {
+      console.error(`  ⚠️ Failed guide=${guideId} user=${usuarioId}: ${e?.message || e}`)
+    }
+  }
+  console.log(`  guidePaid migrated: ${migrated}, skipped: ${skipped}`)
 
   console.log(`\n✅ Migration complete`)
   console.log(`Update apps/.env:`)
