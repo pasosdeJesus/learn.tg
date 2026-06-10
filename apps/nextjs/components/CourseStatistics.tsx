@@ -161,7 +161,7 @@ export function CourseStatistics({
                 ? Math.min(Math.floor(vaultBalanceSlearn / scholarshipPerGuideSlearn), totalGuides - (paidGuidesSLEARN ?? 0))
                 : 0}
               color="bg-green-500"
-              icon={<img src="/img/slearn-icon.svg" alt="SLEARN" className="w-4 h-4" />}
+              icon={<img src="/img/slearn-icon.svg" alt="SLEARN" className="w-5 h-5" />}
             />
           </div>
         )}
