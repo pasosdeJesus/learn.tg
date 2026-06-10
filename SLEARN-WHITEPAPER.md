@@ -323,7 +323,7 @@ regardless of their economic background, has a clear path to grow.
 
 - [Real‑time Transparency Dashboard](https://learn.tg/en/transparency)
 - [Verified SLEARN Contract on Celo Blockscout](https://celo.blockscout.com/address/0x27fd41bea85c39254f2b12789eb37a1543152cc1)
-- [Fundamental Principles of learn.tg](https://learn.tg/principles)
+- [Fundamental Principles of learn.tg]([https://learn.tg/principles](https://github.com/pasosdeJesus/learn.tg/blob/main/PRINCIPLES.md))
 
 **Contact:** vtamara@pasosdeJesus.org  
 
