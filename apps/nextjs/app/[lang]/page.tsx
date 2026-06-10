@@ -2,7 +2,7 @@
 
 import axios from 'axios'
 import { useSession, getCsrfToken } from 'next-auth/react'
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useState, useRef } from 'react'
 import { useAccount } from 'wagmi'
 import Image from 'next/image'
 
@@ -52,6 +52,31 @@ export default function Page({ params }: PageProps) {
     new Map(),
   )
   const [donationIncrement, setDonationIncrement] = useState<number | null>(null)
+  const [countdown, setCountdown] = useState(0)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const countdownCourseRef = useRef(0)
+
+  const startCountdownRefresh = (courseId: number) => {
+    setCountdown(6)
+    countdownCourseRef.current = courseId
+    let n = 6
+    if (countdownRef.current) clearInterval(countdownRef.current)
+    countdownRef.current = setInterval(() => {
+      n--
+      if (n <= 0) {
+        if (countdownRef.current) clearInterval(countdownRef.current)
+        countdownRef.current = null
+        setCountdown(0)
+        refreshCourseVault(countdownCourseRef.current)
+      } else {
+        setCountdown(n)
+      }
+    }, 1000)
+  }
+
+  useEffect(() => {
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
+  }, [])
 
   const parameters = use(params)
   const { lang } = parameters
@@ -200,6 +225,11 @@ export default function Page({ params }: PageProps) {
           onClose={() => setDonationIncrement(null)}
         />
       )}
+      {countdown > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 shadow-lg rounded-lg px-6 py-3 text-sm text-gray-700 animate-pulse">
+          {lang === 'es' ? `Actualizando en ${countdown}…` : `Refreshing in ${countdown}…`}
+        </div>
+      )}
       <div className="max-w-6xl mx-auto">
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
           {courses.map((course) => {
@@ -263,7 +293,7 @@ export default function Page({ params }: PageProps) {
                     vaultBalanceSlearn={extra.vaultBalanceSlearn}
                     courseId={course.id}
                     isLoggedIn={!!session?.address}
-                    onDonationSuccess={(courseId, data) => { refreshCourseVault(courseId, data); setTimeout(() => refreshCourseVault(courseId), 8000) }}
+                    onDonationSuccess={(courseId, data) => { refreshCourseVault(courseId, data); startCountdownRefresh(courseId) }}
                     showDonateButton={false}
                   />
                 )}

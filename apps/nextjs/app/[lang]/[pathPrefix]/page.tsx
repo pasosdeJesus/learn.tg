@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useState, useRef, useCallback } from 'react'
 import { getCsrfToken, useSession } from 'next-auth/react'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -34,6 +34,8 @@ export default function Page({ params }: PageProps) {
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading course...","error":"Error: ","notFound":"Course not found."},"es":{"loading":"Cargando curso...","error":"Error: ","notFound":"Curso no encontrado."}}), [lang])
   const [csrfToken, setCsrfToken] = useState('')
   const [donationIncrement, setDonationIncrement] = useState<number | null>(null)
+  const [countdown, setCountdown] = useState(0)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const {
     course,
@@ -50,7 +52,27 @@ export default function Page({ params }: PageProps) {
   })
   const { fetchScholarship } = sData
 
-  // Fetch scholarship when course is available
+  const startCountdownRefresh = useCallback(() => {
+    setCountdown(6)
+    let n = 6
+    if (countdownRef.current) clearInterval(countdownRef.current)
+    countdownRef.current = setInterval(() => {
+      n--
+      if (n <= 0) {
+        if (countdownRef.current) clearInterval(countdownRef.current)
+        countdownRef.current = null
+        setCountdown(0)
+        fetchScholarship()
+      } else {
+        setCountdown(n)
+      }
+    }, 1000)
+  }, [fetchScholarship])
+
+  useEffect(() => {
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
+  }, [])
+
   useEffect(() => {
     if (course?.id && address) {
       fetchScholarship()
@@ -129,6 +151,11 @@ export default function Page({ params }: PageProps) {
           lang={lang}
           onClose={() => setDonationIncrement(null)}
         />
+      )}
+      {countdown > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 shadow-lg rounded-lg px-6 py-3 text-sm text-gray-700 animate-pulse">
+          {lang === 'es' ? `Actualizando en ${countdown}…` : `Refreshing in ${countdown}…`}
+        </div>
       )}
       {loading && <div className="p-10 mt-10">{t('loading')}</div>}
       {error && <div className="p-10 mt-10">{t('error')}{error}</div>}
@@ -216,7 +243,7 @@ export default function Page({ params }: PageProps) {
                 isLoggedIn={!!session?.address}
                 onDonationSuccess={(courseId, data) => {
                   fetchScholarship()
-                  setTimeout(() => fetchScholarship(), 8000)
+                  startCountdownRefresh()
                   if (data.increment) {
                     setDonationIncrement(data.increment)
                   }
