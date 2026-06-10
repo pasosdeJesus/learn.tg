@@ -263,7 +263,7 @@ export default function Page({ params }: PageProps) {
                     vaultBalanceSlearn={extra.vaultBalanceSlearn}
                     courseId={course.id}
                     isLoggedIn={!!session?.address}
-                    onDonationSuccess={(courseId, data) => refreshCourseVault(courseId, data)}
+                    onDonationSuccess={(courseId, data) => { refreshCourseVault(courseId, data); setTimeout(() => refreshCourseVault(courseId), 8000) }}
                     showDonateButton={false}
                   />
                 )}

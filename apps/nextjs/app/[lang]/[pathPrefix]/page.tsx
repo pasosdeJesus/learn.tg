@@ -216,6 +216,7 @@ export default function Page({ params }: PageProps) {
                 isLoggedIn={!!session?.address}
                 onDonationSuccess={(courseId, data) => {
                   fetchScholarship()
+                  setTimeout(() => fetchScholarship(), 8000)
                   if (data.increment) {
                     setDonationIncrement(data.increment)
                   }
