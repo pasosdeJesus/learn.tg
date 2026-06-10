@@ -70,8 +70,7 @@ All SLEARN tokens in circulation are fully backed by reserves. The initial reser
 - **Stable-sl Reserve (S2):** $21.00 USDT
 - **Master Reserve (SL0):** $21.00 USDT
 
-Total reserve value is **$66.25 USD**, providing a **187% coverage ratio** against the minimum required backing (4.5¢ per SLEARN). The 120% target is exceeded.
-It can be checked at https://learn.tg/en/transparency
+Total reserve value is **$66.25 USD**, providing a **187% coverage ratio** against the minimum required backing (4.5¢ per SLEARN), exceeding the 120% target. All figures can be verified live on the [Transparency Dashboard](https://learn.tg/en/transparency).
 
 ### 2.2 Future Utility: Goods and Services in the pdJ Ecosystem
 
