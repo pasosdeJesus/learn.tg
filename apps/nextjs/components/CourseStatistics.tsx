@@ -81,7 +81,7 @@ export function CourseStatistics({
 
   return (
     <div className="flex justify-between items-center p-4 mt-auto">
-      <div>
+      <div className="w-full">
         {scholarshipPerGuide !== null && +scholarshipPerGuide > 0 && (
           (profileScore !== null && address && +profileScore > 0) ? (
             <div className="p-2">
@@ -134,7 +134,7 @@ export function CourseStatistics({
             </div>
         )}
         {typeof completedGuides === 'number' && typeof totalGuides === 'number' && totalGuides > 0 && (
-          <div className="pt-2 space-y-1.5 w-full max-w-xs border-2 border-green-500">
+          <div className="pt-2 space-y-1.5 w-full max-w-xs">
             <ProgressBar
               label="✅"
               value={completedGuides ?? 0}
@@ -192,9 +192,9 @@ function ProgressBar({ label, value, total, available, color, icon }: {
   const availPct = available != null ? Math.min(100 - pct, Math.round((available / total) * 100)) : (100 - pct)
   const restPct = 100 - pct - availPct
   return (
-    <div className="flex items-center gap-2 text-sm border border-blue-500">
+    <div className="flex items-center gap-2 text-sm">
       <span className="w-5 text-center flex justify-center">{icon || label}</span>
-      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden flex border-2 border-red-500">
+      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden flex">
         <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${pct}%` }} />
         {available != null && availPct > 0 && (
           <div className="h-full bg-yellow-300 transition-all duration-500" style={{ width: `${availPct}%` }} />
