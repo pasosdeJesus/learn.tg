@@ -121,6 +121,7 @@ export default function Page({ params }: PageProps) {
                 scholarshipPaidSlearn: response2.data.amountScholarshipSlearn ?? 0,
               }
 
+              console.log('[DIAG home] course', course.id, course.titulo, '→ totalGuides:', extraData.totalGuides, 'completedGuides:', extraData.completedGuides, 'paidGuidesUSDT:', extraData.paidGuidesUSDT, 'paidGuidesSLEARN:', extraData.paidGuidesSLEARN)
               setExtCourses((prevMap) =>
                 new Map(prevMap.set(response2.data.courseId, extraData)),
               )

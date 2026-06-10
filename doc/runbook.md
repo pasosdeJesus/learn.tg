@@ -47,8 +47,12 @@ bin/m wallet:send --name admin --to <VAULT> --function "emergencyWithdrawSLEARN(
 ## 4. Routine
 
 ```bash
-# Course vault
-bin/m wallet:send --name admin --to <VAULT> --function "createVault(uint256,uint256,uint256)" --args "<id>,<usdt>,<slearn>"
+# Course vault (amounts in smallest units: USDT 6 decimals, SLEARN 2 decimals)
+bin/m wallet:send --name admin --to <VAULT> --function "createVault(uint256,uint256,uint256)" --args "<id>,<usdtAmount>,<slearnAmount>"
+
+# Update per-guide amounts (e.g. add SLEARN to existing vault)
+# Example: 1.0 USDT + 1.0 SLEARN per guide for course 2
+bin/m wallet:send --name admin --to <VAULT> --function "setAmountPerGuide(uint256,uint256,uint256)" --args "2,1000000,100"
 
 # Missional
 bin/m wallet:send --name minter --to <SLEARN> --function "addMissionalCourse(uint256)" --args "<id>"

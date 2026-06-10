@@ -45,7 +45,6 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
       const { data: res } = await axios.get(
         `/api/scholarship?courseId=${courseId}&walletAddress=${address}&token=${csrfToken}`
       )
-      console.log('[DIAG useScholarshipData] API response:', JSON.stringify(res))
       setData({
         vaultCreated: res.vaultCreated != null ? Boolean(res.vaultCreated) : null,
         vaultBalance: res.vaultBalance != null ? Number(res.vaultBalance) : null,

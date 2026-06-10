@@ -44,9 +44,10 @@ export function CourseStatistics({
   scholarshipPaid,
   scholarshipPaidSlearn
 }: CourseStatisticsProps) {
-  console.log('[DIAG CourseStats] scholarshipPerGuideSlearn:', scholarshipPerGuideSlearn)
-  console.log('[DIAG CourseStats] vaultBalanceSlearn:', vaultBalanceSlearn)
-  console.log('[DIAG CourseStats] paidGuidesSLEARN:', paidGuidesSLEARN)
+  console.log('[DIAG CourseStats] full:', full, 'totalGuides:', totalGuides, 'completedGuides:', completedGuides,
+    'paidGuidesUSDT:', paidGuidesUSDT, 'paidGuidesSLEARN:', paidGuidesSLEARN,
+    'vaultBalance:', vaultBalance, 'vaultBalanceSlearn:', vaultBalanceSlearn,
+    'scholarshipPerGuide:', scholarshipPerGuide, 'scholarshipPerGuideSlearn:', scholarshipPerGuideSlearn)
   const t = useMemo(() => createComponentT(lang, {
     en: {
       scholarshipOf: 'Scholarship of ',
@@ -136,7 +137,10 @@ export function CourseStatistics({
               )}
             </div>
         )}
-        {typeof completedGuides === 'number' && typeof totalGuides === 'number' && totalGuides > 0 && (
+        {(() => {
+          if (typeof completedGuides === 'number' && typeof totalGuides === 'number' && totalGuides > 0) {
+            console.log('[DIAG CourseStats] rendering bars for full:', full)
+            return (
           <div className="pt-2 space-y-1.5 w-full max-w-xs">
             <ProgressBar
               label="✅"
@@ -167,7 +171,11 @@ export function CourseStatistics({
               icon={<img src="/img/slearn-icon.svg" alt="SLEARN" className="w-4 h-4" />}
             />
           </div>
-        )}
+            )
+          }
+          console.log('[DIAG CourseStats] NOT rendering bars. completedGuides type:', typeof completedGuides, 'totalGuides type:', typeof totalGuides, 'totalGuides val:', totalGuides)
+          return null
+        })()}
         {full && typeof scholarshipPaid === 'number' && (
           <div>
             {t('totalScholarship')}
