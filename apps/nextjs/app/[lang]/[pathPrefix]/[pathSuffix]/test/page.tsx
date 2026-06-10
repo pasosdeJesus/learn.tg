@@ -377,7 +377,7 @@ export default function Page({
       down: 'Vertical',
       returnGuide: 'Regresar a la guía',
       scholarshipPaid: 'La beca para este crucigrama ya ha sido pagada. Puedes resolverlo de nuevo, pero no recibirás otro pago.',
-      scholarshipPaidPartial: 'Ya recibiste parte de la beca. Aún puedes recibir el resto.',
+      scholarshipPaidPartial: 'Recibiste una beca. Aún puedes recibir la segunda.',
       sending: 'Enviando...',
       submit: 'Enviar respuesta',
     },
@@ -388,7 +388,7 @@ export default function Page({
       down: 'Down',
       returnGuide: 'Return to guide',
       scholarshipPaid: 'The scholarship for this crossword has already been paid. You can solve it again, but you will not receive another payment.',
-      scholarshipPaidPartial: 'Partial scholarship received. You can still earn the rest.',
+      scholarshipPaidPartial: 'Received one scholarship but you can receive a second one.',
       sending: 'Sending...',
       submit: 'Submit answer',
     },
@@ -456,7 +456,7 @@ export default function Page({
                   )}
                   {((myGuide.receivedScholarship && !myGuide.receivedSlearnScholarship) || (!myGuide.receivedScholarship && myGuide.receivedSlearnScholarship)) && (
                     <div className="p-4 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg dark:bg-yellow-200 dark:text-yellow-800">
-                      {uiMsg[locale].scholarshipPaidPartial || 'Partial scholarship received. You can still earn more.'}
+                      {uiMsg[locale].scholarshipPaidPartial || 'Received one scholarship but you can receive a second one.'}
                     </div>
                   )}
 
