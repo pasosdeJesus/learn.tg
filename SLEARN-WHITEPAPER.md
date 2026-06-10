@@ -49,6 +49,7 @@ heart, and you will find rest for your souls.” (Matthew 11:29)*
 - **Technical** – An ERC‑20 token on the Celo network, with 2 decimals and
   restricted transfer functions to guarantee its use as a tool, not a
   speculative asset.
+- [Verified SLEARN Contract on Celo Blockscout](https://celo.blockscout.com/address/0x27fd41bea85c39254f2b12789eb37a1543152cc1)
 
 ### 2.1. Current State and Initial Backing
 
@@ -313,8 +314,7 @@ every donation multiplies into scholarships and where every student,
 regardless of their economic background, has a clear path to grow.
 
 - [Real‑time Transparency Dashboard](https://learn.tg/en/transparency)
-- [Verified SLEARN Contract on CeloScan](https://celoscan.io/address/...) (link
-  available after deployment)
+- [Verified SLEARN Contract on Celo Blockscout](https://celo.blockscout.com/address/0x27fd41bea85c39254f2b12789eb37a1543152cc1)
 - [Fundamental Principles of learn.tg](https://learn.tg/principles)
 
 **Contact:** vtamara@pasosdeJesus.org  
