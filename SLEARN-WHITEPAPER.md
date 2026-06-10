@@ -327,5 +327,5 @@ regardless of their economic background, has a clear path to grow.
 
 **Contact:** vtamara@pasosdeJesus.org  
 
-*Last updated: April 20 2026. This is a living document that may evolve with
+*Last updated: June 10 2026. This is a living document that may evolve with
 the project.*
