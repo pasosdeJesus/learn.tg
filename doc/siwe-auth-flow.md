@@ -38,6 +38,42 @@ User Wallet                Frontend                   NextAuth API Route        
     |                         |    session.address = sub     |                            |
 ```
 
+### authorize() step by step
+
+1. Validate hostname (`learn.tg`, `learntg.pdj.app`, or `:9001` for local dev)
+2. Parse SIWE message
+3. Verify chainId = 42220 (Celo mainnet) or 11142220 (Celo Sepolia) — reject if wrong network
+4. `siwe.verify()` — checks signature against address, domain, nonce
+5. Look up `billetera_usuario WHERE LOWER(billetera) = LOWER(siwe.address)`
+6. New user → INSERT `usuario` + `billetera_usuario` (username = truncated address)
+7. Existing user → UPDATE `billetera_usuario.token`, UPDATE `usuario` (sign-in IPs, timestamps)
+8. Return `{ id: siwe.address }` → NextAuth creates JWT session
+
+### Hostname Validation
+
+Only these domains can authenticate:
+- `learn.tg`
+- `learntg.pdj.app`
+- With ports `:9001` for local dev
+
+### OKX Browser Detection
+
+Multi-pattern UA check (`okx`, `okex`, `web3wallet`, `okxwallet`) to handle
+OKX Wallet's embedded browser which uses multiple user-agent formats.
+
+### Events Recorded
+
+| Event | When | Purpose |
+|-------|------|---------|
+| `siwe_auth_attempt` | Before verification | Correlate login attempts |
+| `siwe_wrong_network` | ChainId mismatch | Track wrong-network errors |
+| `siwe_auth_success` | After successful auth | Track successful logins |
+
+### Session
+
+JWT-based (`strategy: 'jwt'`). Token contains `sub` = wallet address.
+No server-side session store needed.
+
 ## Key Design Decisions
 
 ### 1. CSRF token = API auth token

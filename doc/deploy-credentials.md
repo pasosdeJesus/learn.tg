@@ -1,72 +1,72 @@
-# Despliegue de Credenciales (SBTs) en learn.tg
+# Credential Deployment (SBTs) on learn.tg
 
 > "Whatever you do, work at it with all your heart, as working for the Lord,
 > not for human masters." (Colossians 3:23)
 
-## Requisitos previos
+## Prerequisites
 
-1. Contrato `PasosDeJesusCredentials` desplegado y verificado en Celo/Celo Sepolia
-   (ver [R-#26](https://github.com/pasosdeJesus/sivel3/issues/26)).
-2. Archivos de despliegue en `apps/hardhat/deployments/PasosDeJesusCredentials/`
+1. `PasosDeJesusCredentials` contract deployed and verified on Celo / Celo Sepolia
+   (see [R-#26](https://github.com/pasosdeJesus/sivel3/issues/26)).
+2. Deployment files in `apps/hardhat/deployments/PasosDeJesusCredentials/`
    (`celo.json`, `celoSepolia.json`, etc.).
-3. `@pasosdejesus/m` >= 0.5.3 instalado (`apps/nextjs/node_modules/@pasosdejesus/m`).
-4. Wallet con `MINTER_ROLE` en el contrato para `credentials:register-type`
-   (la variable `PRIVATE_KEY` en `.env`).
+3. `@pasosdejesus/m` >= 0.5.3 installed (`apps/nextjs/node_modules/@pasosdejesus/m`).
+4. Wallet with `MINTER_ROLE` on the contract for `credentials:register-type`
+   (the `PRIVATE_KEY` env variable in `.env`).
 
 ---
 
-## 1. Preparar íconos SVG de cursos
+## 1. Prepare SVG Course Icons
 
-### 1.1 Crear directorio fuente
+### 1.1 Create source directory
 
 ```bash
 mkdir -p apps/nextjs/public/img/credential/source
 ```
 
-### 1.2 Cursos actuales y sus imágenes
+### 1.2 Current courses and their images
 
-| id  | Curso                       | Imagen actual                          | Tamaño   | Ubicación |
+| id  | Course                       | Current image                          | Size   | Location |
 |-----|-----------------------------|----------------------------------------|----------|-----------|
 | 1   | Una relación con Jesús      | `/img/Jn6_col.jpg`                     | 59 KB    | `public/img/Jn6_col.jpg` |
-| 2   | A relationship with Jesus   | `/img/Jn6_col.jpg`                     | 59 KB    | misma imagen de id=1 |
-| 102 | goodDollar                  | `/en/gooddollar/gooddollar-darkblue.png`| —      | no existe en disco local |
+| 2   | A relationship with Jesus   | `/img/Jn6_col.jpg`                     | 59 KB    | same image as id=1 |
+| 102 | goodDollar                  | `/en/gooddollar/gooddollar-darkblue.png`| —      | not on local disk |
 | 103 | Web3 & UBI                  | `/img/2025/web3_ubi.png`              | 48 KB    | `public/img/2025/web3_ubi.png` |
 | 104 | Ahorra en dólares en OKX    | `/img/OKX_Logo.svg`                   | 3.5 KB   | `public/img/OKX_Logo.svg` |
 
-### 1.3 Convertir a SVG 512×512 y usarlos también como portadas
+### 1.3 Convert to 512×512 SVG and use as course covers
 
-Cada ícono SVG de 512×512 servirá para **dos propósitos**:
+Each 512×512 SVG icon will serve **two purposes**:
 
-1. **Imagen del SBT** — compuesta por `composeCredentialImage()` con borde, logo, candado, estrella
-2. **Portada del curso en `/[lang]/[pathPrefix]`** — reemplazando el JPG/PNG actual en la página del curso
+1. **SBT image** — composed by `composeCredentialImage()` with border, logo, lock, star
+2. **Course cover on `/[lang]/[pathPrefix]`** — replacing the current JPG/PNG on the course page
 
-Para el propósito 2, basta con actualizar el campo `imagen` en `cor1440_gen_proyectofinanciero` para que apunte al SVG:
+For purpose 2, just update the `imagen` field in `cor1440_gen_proyectofinanciero` to point to the SVG:
 
-- **Formato:** SVG con `viewBox="0 0 512 512"`
-- **Sin** `<script>`, `foreignObject`, URLs externas, `data:image/svg+xml`
-- Contenido entre 50 y 50000 caracteres
+- **Format:** SVG with `viewBox="0 0 512 512"`
+- **No** `<script>`, `foreignObject`, external URLs, `data:image/svg+xml`
+- Content between 50 and 50000 characters
 
-| Archivo SVG a crear                                  | Desde                                        |
+| SVG file to create                                    | From                                        |
 |------------------------------------------------------|----------------------------------------------|
 | `public/img/credential/source/relacion-con-jesus.svg`| `public/img/Jn6_col.jpg`                     |
-| `public/img/credential/source/gooddollar.svg`        | descargar de `https://learn.tg/en/gooddollar/gooddollar-darkblue.png` |
+| `public/img/credential/source/gooddollar.svg`        | download from `https://learn.tg/en/gooddollar/gooddollar-darkblue.png` |
 | `public/img/credential/source/web3-and-ubi.svg`      | `public/img/2025/web3_ubi.png`              |
 | `public/img/credential/source/ahorra-en-okx.svg`     | `public/img/OKX_Logo.svg`                   |
 
-#### Métodos de conversión
+#### Conversion methods
 
-**Con Inkscape (recomendado):**
+**With Inkscape (recommended):**
 
 ```bash
-# Para JPG/PNG
+# For JPG/PNG
 inkscape public/img/Jn6_col.jpg \
   --export-plain-svg \
   --export-filename=public/img/credential/source/relacion-con-jesus.svg
 
-# Luego editar el SVG para asegurar viewBox="0 0 512 512"
+# Then edit SVG to ensure viewBox="0 0 512 512"
 ```
 
-**Con ImageMagick (siluetas básicas):**
+**With ImageMagick (basic silhouettes):**
 
 ```bash
 convert public/img/Jn6_col.jpg \
@@ -74,62 +74,61 @@ convert public/img/Jn6_col.jpg \
   public/img/credential/source/relacion-con-jesus.svg
 ```
 
-**Para OKX_Logo.svg (redimensionar):**
+**For OKX_Logo.svg (resize):**
 
-El archivo actual tiene `viewBox="0 0 84 84"`. Envolver en un SVG 512×512:
+The current file has `viewBox="0 0 84 84"`. Wrap in a 512×512 SVG:
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <g transform="translate(214,214) scale(1)">
-    <!-- contenido original de OKX_Logo.svg -->
+    <!-- original OKX_Logo.svg content -->
   </g>
 </svg>
 ```
 
-### 1.4 Actualizar portadas de cursos
+### 1.4 Update course covers
 
-Una vez creados los SVGs, actualizar el campo `imagen` en la base de datos
-para que `/[lang]/` muestre las nuevas imágenes vectoriales en lugar de los
-JPG/PNG actuales:
+Once the SVGs are created, update the `imagen` field in the database so
+`/[lang]/` shows the new vector images instead of the current JPG/PNG:
 
 ```sql
--- Curso 1/2: Una relación con Jesús
+-- Course 1/2: Una relación con Jesús
 UPDATE cor1440_gen_proyectofinanciero
 SET imagen = '/img/credential/source/relacion-con-jesus.svg'
 WHERE id IN (1, 2);
 
--- Curso 103: Web3 & UBI
+-- Course 103: Web3 & UBI
 UPDATE cor1440_gen_proyectofinanciero
 SET imagen = '/img/credential/source/web3-and-ubi.svg'
 WHERE id = 103;
 
--- Curso 104: Ahorra en dólares en OKX
+-- Course 104: Ahorra en dólares en OKX
 UPDATE cor1440_gen_proyectofinanciero
 SET imagen = '/img/credential/source/ahorra-en-okx.svg'
 WHERE id = 104;
 
--- Curso 102: goodDollar
+-- Course 102: goodDollar
 UPDATE cor1440_gen_proyectofinanciero
 SET imagen = '/img/credential/source/gooddollar.svg'
 WHERE id = 102;
 ```
 
-**Ventajas de usar SVGs como portadas:**
-- ~10× más ligeros que JPG/PNG (2-5 KB vs 48-59 KB)
-- Nítidos a cualquier resolución (el `object-cover` del `<Image>` escala sin pérdida)
-- Mismos archivos fuente que los SBT — un solo mantenimiento
+**Advantages of using SVGs as covers:**
+- ~10× lighter than JPG/PNG (2-5 KB vs 48-59 KB)
+- Sharp at any resolution (`object-cover` on `<Image>` scales without loss)
+- Same source files as SBTs — single maintenance point
 
 ---
 
-## 2. Registrar tipos de credencial en el contrato
+## 2. Register Credential Types on the Contract
 
-Cada curso premium que emita credenciales debe registrarse una sola vez.
-El `tokenId` se asigna secuencialmente por el contrato.
+Each premium course that issues credentials must be registered exactly once.
+`tokenId` is assigned sequentially by the contract.
 
 ```bash
 cd apps/nextjs
 
-# Curso 1 — Una relación con Jesús (gratis)
+# Course 1 — Una relación con Jesús (free)
 bin/m credentials:register-type \
   --network celoSepolia \
   --site learn.tg \
@@ -139,7 +138,7 @@ bin/m credentials:register-type \
   --course-id 1 \
   --icon public/img/credential/source/relacion-con-jesus.svg
 
-# Curso 103 — Web3 & UBI (gratis)
+# Course 103 — Web3 & UBI (free)
 bin/m credentials:register-type \
   --network celoSepolia \
   --site learn.tg \
@@ -149,7 +148,7 @@ bin/m credentials:register-type \
   --course-id 103 \
   --icon public/img/credential/source/web3-and-ubi.svg
 
-# Curso 104 — Ahorra en dólares en OKX (gratis)
+# Course 104 — Ahorra en dólares en OKX (free)
 bin/m credentials:register-type \
   --network celoSepolia \
   --site learn.tg \
@@ -160,36 +159,36 @@ bin/m credentials:register-type \
   --icon public/img/credential/source/ahorra-en-okx.svg
 ```
 
-**Notas:**
+**Notes:**
 
-- `--course-id` debe coincidir con el `id` de `cor1440_gen_proyectofinanciero`.
-- `--premium` se omite para cursos gratuitos. Agregar `--premium` si `porPagar > 0`.
-- `--icon` dispara `composeCredentialImage()` que genera el SVG compuesto y
-  el PNG en `public/img/credential/{tokenId}.png`.
-- El logo del sitio (`logo-learntg.svg`) y el badge PdJ vienen incluidos
-  en `@pasosdejesus/m` como fallback.
-- Si la wallet no tiene `MINTER_ROLE`, el registro fallará con
+- `--course-id` must match the `id` from `cor1440_gen_proyectofinanciero`.
+- `--premium` is omitted for free courses. Add `--premium` if `porPagar > 0`.
+- `--icon` triggers `composeCredentialImage()` which generates the composite SVG and
+  PNG at `public/img/credential/{tokenId}.png`.
+- The site logo (`logo-learntg.svg`) and PdJ badge are included
+  in `@pasosdejesus/m` as fallback.
+- If the wallet lacks `MINTER_ROLE`, registration will fail with
   `AccessControlUnauthorizedAccount`.
 
 ---
 
-## 3. Sincronizar caché de metadatos
+## 3. Sync Metadata Cache
 
-Después de registrar tipos, sincronizar la tabla `credential_metadata`:
+After registering types, sync the `credential_metadata` table:
 
 ```bash
 cd apps/nextjs
 bin/m credentials:sync-cache --network celoSepolia
 ```
 
-Esto lee el contrato y actualiza `credential_metadata` con `name`, `type`,
-`site`, `is_premium`, `is_soulbound` e `image_url` para cada `tokenId`.
+This reads the contract and updates `credential_metadata` with `name`, `type`,
+`site`, `is_premium`, `is_soulbound`, and `image_url` for each `tokenId`.
 
 ---
 
-## 4. Establecer URI base del sitio
+## 4. Set Site Base URI
 
-Para que wallets y explorers resuelvan la metadata:
+So wallets and explorers can resolve metadata:
 
 ```bash
 bin/m credentials:set-site-uri \
@@ -198,60 +197,60 @@ bin/m credentials:set-site-uri \
   --uri "https://learn.tg/api/credential"
 ```
 
-> Requiere `DEFAULT_ADMIN_ROLE` en el contrato (solo el deployer).
+> Requires `DEFAULT_ADMIN_ROLE` on the contract (deployer only).
 
 ---
 
-## 5. Verificar
+## 5. Verify
 
 ```bash
-# Listar tipos registrados
+# List registered types
 bin/m credentials:list-types --network celoSepolia
 
-# Verificar endpoint de metadata
+# Verify metadata endpoint
 curl https://learn.tg/api/credential/14.json
-# (reemplazar 14 por el tokenId asignado)
+# (replace 14 with the assigned tokenId)
 
-# Verificar endpoint de wallet
+# Verify wallet endpoint
 curl https://learn.tg/api/credential/wallet/0x...
 ```
 
 ---
 
-## 6. Minteo automático
+## 6. Automatic Minting
 
-El minting ocurre automáticamente en `app/api/check-crossword/route.ts` cuando
-un estudiante completa el 100% de las guías de un curso. El flujo:
+Minting happens automatically in `app/api/check-crossword/route.ts` when
+a student completes 100% of a course's guides. The flow:
 
-1. Detecta `percentagecompleted >= 100`
-2. Verifica `credential_emission` (off-chain) para evitar duplicados
-3. Llama `mintCourseSBT()` de `@pasosdejesus/m/blockchain`
-4. Registra en `credential_emission` con `usuario_id`, `course_id`,
+1. Detects `percentagecompleted >= 100`
+2. Checks `credential_emission` (off-chain) to prevent duplicates
+3. Calls `mintCourseSBT()` from `@pasosdejesus/m/blockchain`
+4. Records in `credential_emission` with `usuario_id`, `course_id`,
    `token_id`, `chain_id`, `is_premium`, `hash`
 
 ---
 
-## 7. Comandos adicionales
+## 7. Additional Commands
 
 ```bash
-# Recomponer imagen de un token existente
+# Recompose image for an existing token
 bin/m credentials:recompose-image \
   --token-id 14 \
   --network celoSepolia \
-  --icon public/img/credential/source/nuevo-icono.svg
+  --icon public/img/credential/source/new-icon.svg
 
-# Otorgar MINTER_ROLE a una wallet (requiere DEFAULT_ADMIN_ROLE)
+# Grant MINTER_ROLE to a wallet (requires DEFAULT_ADMIN_ROLE)
 bin/m credentials:grant-minter \
   --network celoSepolia \
   --address 0x...
 
-# Revocar credencial
+# Revoke credential
 bin/m credentials:revoke-credential \
   --network celoSepolia \
   --token-id 14 \
   --address 0x...
 
-# Establecer suministro máximo
+# Set max supply
 bin/m credentials:set-max-supply \
   --network celoSepolia \
   --token-id 14 \
@@ -260,9 +259,9 @@ bin/m credentials:set-max-supply \
 
 ---
 
-## Referencias
+## References
 
-- [I130.md](../I130.md) — Issue de integración de credenciales
-- [R-#26](https://github.com/pasosdeJesus/sivel3/issues/26) — Contrato PasosDeJesusCredentials
-- [R-#33](https://github.com/pasosdeJesus/sivel3/issues/33) — Biblioteca `@pasosdejesus/m/blockchain`
+- [I130.md](../I130.md) — Credential integration issue
+- [R-#26](https://github.com/pasosdeJesus/sivel3/issues/26) — PasosDeJesusCredentials contract
+- [R-#33](https://github.com/pasosdeJesus/sivel3/issues/33) — `@pasosdejesus/m/blockchain` library
 - [`@pasosdejesus/m/src/blockchain/README.md`](../apps/nextjs/node_modules/@pasosdejesus/m/src/blockchain/README.md)
