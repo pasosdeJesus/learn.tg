@@ -49,6 +49,7 @@ interface UserProfile {
 interface Religion {
   id: number
   nombre: string
+  name_english: string | null
 }
 
 interface Country {
@@ -104,13 +105,13 @@ export default function ProfileForm({ params }: PageProps) {
   const { lang } = parameters
 
   const t = useMemo(() => createComponentT(lang, {
-    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', learningScore: 'Learning Score', displayName: 'Display name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country ( Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniquenes with GoodDollar ( Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
+    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', learningScore: 'Learning Score', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
       viewCredentials: 'View my public credentials',
       saveFailed: 'Failed to save profile.',
       expiredSession: '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.',
       connectionIssue: '\n\nPlease check your internet connection and try again.',
       errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below' },
-    es: { editProfile: 'Edicion del Perfil', profileScore: 'Puntaje de Perfil', learningScore: 'Puntaje de Aprendizaje', displayName: 'Nombre por presentar', religion: 'Religion', selectReligion: 'Elige tu religion', countryVerified: 'Pais (Verificado:', selectCountry: 'Selecciona tu pais', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
+    es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', learningScore: 'Puntaje de Aprendizaje', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
       viewCredentials: 'Ver mis credenciales públicas',
       saveFailed: 'Fallo al guardar el perfil.',
       expiredSession: '\n\nPuede deberse a que la sesi\u00f3n ha expirado. Por favor, intenta desconectar y reconectar tu billetera.',
@@ -268,10 +269,6 @@ export default function ProfileForm({ params }: PageProps) {
           alert('NEXT_PUBLIC_API_SHOW_USER not defined')
           return
         }
-        if (process.env.NEXT_PUBLIC_API_RELIGIONS == undefined) {
-          alert('NEXT_PUBLIC_API_RELIGIONS not defined')
-          return
-        }
         if (process.env.NEXT_PUBLIC_API_COUNTRIES == undefined) {
           alert('NEXT_PUBLIC_API_COUNTRIES not defined')
           return
@@ -284,7 +281,7 @@ export default function ProfileForm({ params }: PageProps) {
         let data = await response.json()
         setCountries(data)
 
-        response = await fetch(process.env.NEXT_PUBLIC_API_RELIGIONS)
+        response = await fetch('/api/religions')
         if (!response.ok) {
           throw new Error(`Response status in religions: ${response.status}`)
         }
@@ -616,7 +613,7 @@ export default function ProfileForm({ params }: PageProps) {
                         key={religion.id}
                         value={religion.id.toString()}
                       >
-                        {religion.nombre}
+                        {lang === 'en' && religion.name_english ? religion.name_english : religion.nombre}
                       </SelectItem>
                     ))}
                   </SelectContent>
