@@ -32,11 +32,13 @@ Jesus is God incarnated, the Truth and the Logos.
 3. **[CONTRIBUTING.md]**: The process workflows for collaboration.
 4. **[apps/nextjs/README.md]**: Details of the Next.js application
 5. **[apps/hardhat/README.md]**: Solidity contracts details.
-6. **[celopedia-skill](~/.agents/skills/celopedia-skill/SKILL.md)**: Celo ecosystem intelligence — contract addresses, grants, security patterns, MiniPay, DeFi protocols, network info. Installed via `npx skills add celo-org/celopedia-skills -y -g`.
-7. **[apps/nextjs/node_modules/@pasosdejesus/m/ia/construir_en_adJ_y_celo.mdconstruir_en_celo.md]**: Celo development guide for the pdJ ecosystem.
-8. **[doc/siwe-auth-flow.md]**: SIWE authentication flow — how wallet sign-in works, CSRF token reuse as API auth token, two-layer auth model, and address case normalization.
-9. **[SLEARN-WHITEPAPER.md]**: Tokenomics: distribution percentages, reserve backing rules, stability formula.
-10. Read the structure and key files of this project
+6. Execute and assimilate the content of 
+    ```cd apps/nextjs && bin/m ai:skill```
+7. **[celopedia-skill](~/.agents/skills/celopedia-skill/SKILL.md)**: Celo ecosystem intelligence — contract addresses, grants, security patterns, MiniPay, DeFi protocols, network info. Installed via `npx skills add celo-org/celopedia-skills -y -g`.
+8. **[apps/nextjs/node_modules/@pasosdejesus/m/ia/construir_en_adJ_y_celo.mdconstruir_en_celo.md]**: Celo development guide for the pdJ ecosystem.
+9. **[doc/siwe-auth-flow.md]**: SIWE authentication flow — how wallet sign-in works, CSRF token reuse as API auth token, two-layer auth model, and address case normalization.
+10. **[SLEARN-WHITEPAPER.md]**: Tokenomics: distribution percentages, reserve backing rules, stability formula.
+11. Read the structure and key files of this project
 
 ### 5. Confirm Your understanding of the documentation and the project
 

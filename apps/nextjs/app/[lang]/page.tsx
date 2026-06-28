@@ -8,7 +8,8 @@ import Image from 'next/image'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
-import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
+import { SlearnInfo } from '@pasosdejesus/m/blockchain'
+import { AddSlearnButton } from '@/components/AddSlearnButton'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 
 type PageProps = {
@@ -300,6 +301,15 @@ export default function Page({ params }: PageProps) {
               </article>
             )
           })}
+        </div>
+        <div className="mt-8 max-w-3xl mx-auto space-y-3">
+          <SlearnInfo locale={lang} isVerified={!!session?.address} />
+          <p className="text-sm text-gray-500 text-center">
+            {lang === 'es'
+              ? '💡 En learn.tg también ganas USDT + SLEARN al completar crucigramas con becas.'
+              : '💡 On learn.tg you also earn USDT + SLEARN by completing crosswords with scholarships.'}
+          </p>
+          <AddSlearnButton lang={lang} />
         </div>
       </div>
     </section>
