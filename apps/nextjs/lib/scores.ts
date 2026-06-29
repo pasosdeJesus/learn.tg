@@ -6,8 +6,7 @@ import type { Insertable, Selectable, Updateable } from 'kysely'
 import type { DB, Usuario, GuideUsuario } from '@/db/db.d'
 import { getSLEUSDRate } from '@/lib/sle-rate'
 
-const USD_TO_SLE_RATE = 22;
-const SLE_TO_SCORE_RATIO = 10;
+const USD_TO_SLE_RATE = 22
 const DONATION_REWARD_PCT = 0.10;
 
 interface CourseData {
@@ -30,7 +29,7 @@ export async function refreshUserLearningScore(
   await db
     .updateTable('usuario')
     .set({ 
-      learningscore: total,
+      learningscore_deprecated: total,
       updated_at: new Date() 
     })
     .where('id', '=', userId as any)
@@ -39,37 +38,12 @@ export async function refreshUserLearningScore(
   return total
 }
 
-export async function calculateDonationLearningScore(
-  donationAmountUSD: number
-): Promise<number> {
-  const scoreToAdd = (donationAmountUSD * USD_TO_SLE_RATE) / SLE_TO_SCORE_RATIO;
-  // Round to 2 decimal places to avoid floating point inaccuracies
-  return Math.round(scoreToAdd * 100) / 100;
-}
-
 export async function calculateDonationSLEARN(
   donationAmountUSD: number
 ): Promise<number> {
   const rate = await getSLEUSDRate();
   const slearnAmount = donationAmountUSD * DONATION_REWARD_PCT * rate;
   return Math.round(slearnAmount * 100) / 100;
-}
-
-// Deprecated: Use calculateDonationLearningScore and then refreshUserLearningScore
-export async function addDonationToLearningScore(
-  db: Kysely<DB>,
-  userId: string,
-  donationAmountUSD: number
-): Promise<number> {
-  const roundedScoreToAdd = await calculateDonationLearningScore(donationAmountUSD);
-  const numericUserId = parseInt(userId, 10);
-  
-  // We keep this for backward compatibility but it should ideally insert a transaction too
-  // if it's called outside a context that already does it.
-  // For now, it just updates the table directly which we want to avoid.
-  // Let's make it refresh from transactions instead.
-  
-  return await refreshUserLearningScore(db, numericUserId);
 }
 
 

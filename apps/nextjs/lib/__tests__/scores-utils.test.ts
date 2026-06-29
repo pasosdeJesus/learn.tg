@@ -33,25 +33,9 @@ vi.mock('kysely', () => ({
   sql: mockSql,
 }))
 
-import { 
-  calculateDonationLearningScore, 
-  addDonationToLearningScore,
-  refreshUserLearningScore
-} from '../scores'
+import { refreshUserLearningScore } from '../scores'
 
 const mockDb = new MockKysely()
-
-describe('calculateDonationLearningScore', () => {
-  it('should correctly calculate score for a donation', async () => {
-    const score = await calculateDonationLearningScore(10)
-    expect(score).toBe(22)
-  })
-
-  it('should round score to 2 decimal places', async () => {
-    const score = await calculateDonationLearningScore(10.123)
-    expect(score).toBe(22.27)
-  })
-})
 
 describe('refreshUserLearningScore', () => {
   it('should sum transaction points and update user', async () => {
@@ -69,26 +53,8 @@ describe('refreshUserLearningScore', () => {
     expect(mockDb.selectFrom).toHaveBeenCalledWith('transaction')
     expect(mockDb.updateTable).toHaveBeenCalledWith('usuario')
     expect(usuarioUpdateMock.set).toHaveBeenCalledWith(
-      expect.objectContaining({ learningscore: 100 })
+      expect.objectContaining({ learningscore_deprecated: 100 })
     )
     expect(result).toBe(100)
-  })
-})
-
-describe('addDonationToLearningScore', () => {
-  it('should call refreshUserLearningScore', async () => {
-    mockDb.executeTakeFirst.mockResolvedValueOnce({ total_points: 50 })
-    
-    const usuarioUpdateMock = {
-      set: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      execute: vi.fn().mockResolvedValue({}),
-    }
-    mockDb.updateTable.mockReturnValueOnce(usuarioUpdateMock)
-    
-    const result = await addDonationToLearningScore(mockDb as any, '1', 10)
-    
-    expect(mockDb.selectFrom).toHaveBeenCalledWith('transaction')
-    expect(result).toBe(50)
   })
 })
