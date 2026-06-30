@@ -285,6 +285,51 @@ If multiple triggers fire on the same event, they execute in alphabetical order 
 
 ---
 
+## Data Privacy Policy
+
+Communications between users, and between pdJ and users, are **confidential by default**.
+
+### Rules
+
+1. **Communications are not stored in the database** unless explicitly required by a REQ.
+2. **If stored, they must be encrypted** using the pattern defined in R-#153 (AES-256-GCM with wallet-derived DEK for users, ECIES for pdJ access).
+3. **API responses never include message content** — only metadata (timestamps, status, participant IDs).
+4. **Private notes and internal communications** use the messaging system (R-#162), not free-text columns on entity tables.
+5. **User-facing text fields** (cluster names, course descriptions, public profiles) may be plaintext — they are intentionally public.
+
+### Sensitive data that MUST be encrypted or excluded
+
+| Data | Handling |
+|------|----------|
+| Pastor names, WhatsApp, ID documents | Encrypted (R-#153) |
+| Church locations in persecution contexts | Encrypted or stored as country-only |
+| GD contact notes, internal pdJ notes | R-#162 messaging (Phase 2), not in entity tables |
+| Private messages between users | R-#162 encrypted messages |
+| Donor identities (if anonymous) | Wallet address only, no personal data |
+
+### What API endpoints expose
+
+```typescript
+// ✅ Public — metadata only
+GET /api/gd/contact/:clusterId
+→ { cluster_sent_at, pdj_sent_at, gd_responded_at, released_at, status }
+
+// ❌ Never — message content or notes
+// Use R-#162 messaging endpoints instead
+```
+
+### Quantum Readiness
+
+| Layer | Algorithm | Quantum resistance |
+|-------|-----------|-------------------|
+| Data at rest | AES-256-GCM | ✅ Grover's reduces to ~128-bit effective — still infeasible |
+| User DEK derivation | ECDSA (secp256k1) via `personal_sign` | ❌ Shor's can recover private key → reconstruct DEK |
+| pdJ DEK encryption | ECIES over secp256k1 | ❌ Shor's breaks ECC → DEK exposed |
+
+**Impact:** If a cryptographically relevant quantum computer emerges (~4000+ logical qubits), all secp256k1-based operations are compromised. This is not specific to learn.tg — it would break **all Ethereum wallets, all smart contracts, and the entire Celo network simultaneously**. The mitigation path is two-fold: (1) Ethereum's migration to post-quantum signatures for on-chain operations, and (2) R-#166 introduces SPHINCS+ (NIST-standardized, hash-based) at the off-chain encryption layer for learn.tg, which is independent of Ethereum's timeline. A CRQC is widely estimated at 10-20+ years out by NIST, NSA, and academic consensus.
+
+---
+
 ## Key Technologies
 
 | Component | Tech | Purpose |
