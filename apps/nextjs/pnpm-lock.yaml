@@ -210,7 +210,7 @@ importers:
         version: 3.3.5
       '@pasosdejesus/m':
         specifier: gitlab:pasosdejesus/m
-        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=13e4eaaf8840237207d3e342080070b25b5bc5fe
+        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=676e33895d740664e40673a2cf40634162eaaeb7
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0
@@ -2047,8 +2047,8 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=13e4eaaf8840237207d3e342080070b25b5bc5fe':
-    resolution: {gitHosted: true, integrity: sha512-hw8d4WpXQj5M76qJ6O9X+SPn2ODSTf2+aQgrZcEo19eJvIpD2JTBhADkEpxsfwL8xpK/AVi5e8CIkVJ6kO3afw==, tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=13e4eaaf8840237207d3e342080070b25b5bc5fe}
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=676e33895d740664e40673a2cf40634162eaaeb7':
+    resolution: {gitHosted: true, integrity: sha512-uIhGrZeLNTnaWz4pZoMDJW9HVq6YyI7ez/au4+a0XcPrHfdeCRlPBFd74hdhDEc4rnMM+HUhHvas0F73tP0HFQ==, tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=676e33895d740664e40673a2cf40634162eaaeb7}
     version: 0.9.0
     hasBin: true
 
@@ -9969,7 +9969,7 @@ snapshots:
   '@iden3/binfileutils@0.0.11':
     dependencies:
       fastfile: 0.0.20
-      ffjavascript: 0.2.63
+      ffjavascript: 0.2.56
 
   '@iden3/binfileutils@0.0.12':
     dependencies:
@@ -10430,7 +10430,7 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=13e4eaaf8840237207d3e342080070b25b5bc5fe':
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=676e33895d740664e40673a2cf40634162eaaeb7':
     dependencies:
       dotenv: 17.4.2
       execa: 9.6.1
@@ -16521,10 +16521,10 @@ snapshots:
   ox@0.6.7(typescript@5.9.3)(zod@4.4.3):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
-      '@noble/curves': 1.9.7
-      '@noble/hashes': 1.8.0
-      '@scure/bip32': 1.7.0
-      '@scure/bip39': 1.6.0
+      '@noble/curves': 1.8.1
+      '@noble/hashes': 1.7.1
+      '@scure/bip32': 1.6.2
+      '@scure/bip39': 1.5.4
       abitype: 1.2.4(typescript@5.9.3)(zod@4.4.3)
       eventemitter3: 5.0.1
     optionalDependencies:
