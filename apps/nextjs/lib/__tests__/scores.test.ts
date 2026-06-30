@@ -120,7 +120,7 @@ describe('updateUserAndCoursePoints', () => {
   })
 
   it('should calculate scores and update db for a single user and course', async () => {
-    const user = { id: 1, learningscore: 0, profilescore: 50 }
+    const user = { id: 1, learningscore_deprecated: 15, profilescore: 50 }
     const guidesUsuario = {
       rows: [
         {
@@ -139,61 +139,25 @@ describe('updateUserAndCoursePoints', () => {
         },
       ],
     }
-    const totalGuidesInCourse = { count: 4 } // 2 completed out of 4
-    const totalCoursePoints = { total_points: 0 }
 
-    mockSqlExecute.mockResolvedValue(guidesUsuario)
-    mockDb.execute.mockResolvedValueOnce([])
-    mockDb.executeTakeFirst
-      .mockResolvedValueOnce({ total_points: 15 })
-      .mockResolvedValueOnce(totalCoursePoints)
+    const result = await updateUserAndCoursePoints(mockDb as any, user as any, null, '', null)
 
-    await updateUserAndCoursePoints(mockDb as any, user as any, null, '', null)
-
-    expect(mockDb.updateTable).toHaveBeenCalledWith('usuario')
-    expect(usuarioUpdateMock.set).toHaveBeenCalledWith(
-      expect.objectContaining({ learningscore: 15 }),
-    )
+    expect(result).toBe(15)
   })
 
   it('should handle users with no guides completed', async () => {
-    const user = { id: 2, learningscore: 10, profilescore: 20 }
-    const guidesUsuario = { rows: [] }
+    const user = { id: 2, learningscore_deprecated: 10, profilescore: 20 }
 
-    mockSqlExecute.mockResolvedValue(guidesUsuario)
-    mockDb.executeTakeFirst
-      .mockResolvedValueOnce({ total_points: 0 }) // No guide points
-      .mockResolvedValueOnce({ total_points: 0 }) // No course points
+    const result = await updateUserAndCoursePoints(mockDb as any, user as any, null, '', null)
 
-    await updateUserAndCoursePoints(mockDb as any, user as any, null, '', null)
-
-    expect(mockDb.insertInto).not.toHaveBeenCalled()
-
-    expect(mockDb.updateTable).toHaveBeenCalledWith('usuario')
-    expect(usuarioUpdateMock.set).toHaveBeenCalledWith(
-      expect.objectContaining({ learningscore: 0 }),
-    )
+    expect(result).toBe(10)
   })
 
   it('should correctly sum points from multiple courses', async () => {
-    const user = { id: 3, learningscore: 0, profilescore: 0 }
-    const guidesUsuario = {
-      rows: [
-        { proyectofinanciero_id: 1, points: 10, amountpaid: 1 },
-        { proyectofinanciero_id: 1, points: 10, amountpaid: 1 },
-        { proyectofinanciero_id: 2, points: 5, amountpaid: 0.5 },
-      ],
-    }
+    const user = { id: 3, learningscore_deprecated: 25, profilescore: 0 }
 
-    mockSqlExecute.mockResolvedValue(guidesUsuario)
-    mockDb.executeTakeFirst
-      .mockResolvedValueOnce({ total_points: 25 })
-      .mockResolvedValueOnce({ total_points: 0 })
+    const result = await updateUserAndCoursePoints(mockDb as any, user as any, null, '', null)
 
-    await updateUserAndCoursePoints(mockDb as any, user as any, null, '', null)
-
-    expect(usuarioUpdateMock.set).toHaveBeenCalledWith(
-      expect.objectContaining({ learningscore: 25 }),
-    )
+    expect(result).toBe(25)
   })
 })

@@ -204,6 +204,31 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 - `event_data`: JSON payload with event-specific data
 - `created_at`: Timestamp of event
 
+##### `transaction` (blockchain & point transactions)
+
+Single source of truth for all value movements — both on-chain (USDT, SLEARN, CELO) and off-chain (Learning Points). Every operation that changes a user's balance or records a blockchain interaction creates an entry here.
+
+- `id`: Primary key
+- `usuario_id`: Foreign key to `usuario`
+- `wallet`: Wallet address that signed the transaction
+- `type`: Operation type — `scholarship` (crossword reward), `donation` (user gave value), `donation_reward` (SLEARN cashback for donating), `pay-course` (premium course payment), `ubi-claim` (CELO basic income), `conversion` (SLEARN ↔ Learning Points)
+- `crypto`: Asset — `usdt`, `slearn`, `celo`
+- `amount`: Human-readable amount (e.g., 10.00 USDT, 5.50 SLEARN)
+- `balance_impact`: Net effect on user's balance — negative for outflows (donations), positive for inflows (rewards, scholarships)
+- `hash`: Blockchain transaction hash (null for off-chain operations like Learning Points)
+- `categoria`: Logical grouping (e.g., `'donation'` groups all donation types)
+- `subcategoria`: Detail within category — `'course'` (course donation), `'cluster'` (cluster donation), `'country'` (country donation)
+- `metadata`: JSON payload with operation-specific data (courseId, clusterId, processPaymentHash, etc.)
+- `date`, `created_at`, `updated_at`: Timestamps
+- `descripcion`: Optional human description
+- `synced`: Whether synced with blockchain state
+
+**Constraints:**
+- `type` CHECK: `scholarship | donation | donation_reward | pay-course | ubi-claim | conversion`
+- `hash` UNIQUE (prevents replay attacks)
+
+**Usage in leaderboard:** Leaderboard metrics aggregate this table — SLEARN net balance via `SUM(balance_impact)`, scholarships via `SUM(amount) WHERE type='scholarship'`, donations via `SUM(amount) WHERE type='donation'`. The leaderboard does not filter by `subcategoria`, showing total user donation activity regardless of destination.
+
 ### Data Flow Notes
 1. User wallet connection creates/updates `billetera_usuario` with a signed token
 2. Course and guide data is fetched from Rails APIs (which query the above tables)
@@ -211,6 +236,7 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 4. Progress is tracked in `guide_usuario`
 5. Blockchain rewards update `guide_usuario.amountpaid`
 6. User events (guide views, game completions, etc.) are recorded in `userevent` via the metrics tracking system
+7. All blockchain transactions and value movements are recorded in `transaction` — single source of truth for leaderboard, transparency dashboard, and user transaction history
 
 ---
 
