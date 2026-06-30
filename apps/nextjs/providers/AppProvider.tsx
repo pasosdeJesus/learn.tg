@@ -104,7 +104,7 @@ export function AppProvider(props: RainbowKitProviderProps) {
   const queryClient = useMemo(() => new QueryClient(), [])
 
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={config} reconnectOnMount={false}>
       <SessionProvider>
         <QueryClientProvider client={queryClient}>
           <RainbowKitSiweNextAuthProvider
