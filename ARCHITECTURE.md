@@ -60,7 +60,7 @@ graph TD
 - **Framework:** Next.js with React + TypeScript.
 - **UI Components:** Utilizes Radix UI for building a flexible and accessible component library.
 - **Purpose:** User interface, content delivery, and user authentication.
-- **Authentication:** Implements Sign-In With Ethereum (SIWE). The user connects with a Web3 wallet, and the frontend generates a JWT token for authenticating with the Rails backend.
+- **Authentication:** Implements Sign-In With Ethereum (SIWE). The user connects with a Web3 wallet, and the frontend generates a JWT token for authenticating with the Rails backend. See [SIWE Auth Flow](doc/siwe-auth-flow.md) for the full protocol.
 - **Note:** For a detailed technical breakdown of the Next.js application, refer to the `README.md` file within the `apps/nextjs` directory.
 
 ### 3. **Smart Contracts: Hardhat (apps/hardhat/)**

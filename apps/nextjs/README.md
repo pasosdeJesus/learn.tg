@@ -43,7 +43,7 @@ The frontend is built with [Next.js](https://nextjs.org/) and uses [Sign-In with
 - **Language**: [TypeScript](https://www.typescriptlang.org/) (v5)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) (v4) with PostCSS
 - **UI Components**: [Radix UI](https://www.radix-ui.com/) and [shadcn/ui](https://ui.shadcn.com/)
-- **Authentication**: [NextAuth.js](https://next-auth.js.org/) (v4) with [SIWE](https://login.xyz/)
+- **Authentication**: [NextAuth.js](https://next-auth.js.org/) (v4) with [SIWE](https://login.xyz/) — [auth flow docs](../../doc/siwe-auth-flow.md)
 - **Wallet Integration**: [RainbowKit](https://www.rainbowkit.com/) and [Wagmi](https://wagmi.sh/)
 - **State Management**: [React Query](https://tanstack.com/query) for server state and React Context for global UI state
 - **Testing**: [Vitest](https://vitest.dev/) for unit and integration testing, with [React Testing Library](https://testing-library.com/)
