@@ -21,9 +21,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
 
   const fetchCourse = useCallback(async () => {
     if (
-      (session && !address) ||
-      (address && !session) ||
-      (address && session && session.address && address.toLowerCase() !== session.address.toLowerCase())
+      address && session && session.address && address.toLowerCase() !== session.address.toLowerCase()
     ) {
       setLoading(false)
       return

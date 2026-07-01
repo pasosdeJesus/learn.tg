@@ -107,7 +107,7 @@ export default function Page({
 
   useEffect(() => {
     const loadCrossword = async () => {
-      if (!course || !guideNumber || !address || !session) {
+      if (!course || !guideNumber || !address) {
         setIsLoading(false);
         return;
       }
@@ -409,7 +409,7 @@ export default function Page({
   if (
     !course.sinBilletera &&
     course.conBilletera &&
-    (!session || !address || !session.address || session.address.toLowerCase() !== address.toLowerCase())
+    (!address || (session && session.address && session.address.toLowerCase() !== address.toLowerCase()))
   ) {
     return <div className="mt-40">{uiMsg[locale].connectWallet}</div>
   }

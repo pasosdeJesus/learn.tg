@@ -35,6 +35,10 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
 2. **Create a branch** from `main`: `git checkout -b feature/my-feature`
 3. **Make your changes** following the style guides
 4. **Run tests in directory `apps/nextjs`**: `make type` and `make test`
+   - `make test` runs 6 sub-targets in sequence (parallel-safe, sin coverage)
+   - `make coverage` runs all tests with coverage (lento, usa más memoria)
+   - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.
+   - See [apps/nextjs/CONTRIBUTING.md](apps/nextjs/CONTRIBUTING.md) for details
 5. **Commit** with clear messages: `git commit -m "feat: add feature X"`
 6. **Push** and create a **Pull Request**
 

@@ -66,6 +66,31 @@ This document defines the documentation and testing policies for the Next.js app
 3. **Edge cases** — nonce out of order, retries, insufficient balance, invalid signatures, network timeouts.
 4. **Error handling** — wallet errors, backend errors, user-friendly messages.
 
+### E2E Tests (Puppeteer)
+
+Browser-level end-to-end tests live in `test/puppeteer/`. They validate full user
+flows against production (`https://learn.tg`) — SIWE authentication, session
+persistence across navigation, and "Partial login" guard behavior.
+
+- **Dependencies:** `puppeteer-core` (solo core funciona en OpenBSD). 
+  Instalar con `cd test/puppeteer && npm install`.
+- **SIWE/viene resuelto** vía `NODE_PATH=../../node_modules`.
+- **Ejecución:** 
+  ```bash
+  cd apps/nextjs/test/puppeteer
+  NODE_PATH=../../node_modules CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg node session-persistence.mjs
+  ```
+- **OpenBSD:** Requiere `--ozone-platform=headless` para Chrome 141+.
+  Limpiar `/tmp/puppeteer*` entre ejecuciones si Chrome se cuelga.
+
+| Test | Qué valida |
+|------|-----------|
+| Test 1 | `/en` sin auth → NO muestra "Partial login" |
+| Test 2 | SIWE → navegación `/en` → curso → guía → `/en` → sin "Partial login" |
+| Test 3 | `/en/profile` sin SIWE → SÍ muestra "Partial login" (guard estricto) |
+
+Exit code > 0 si algún test falla (compatible con CI).
+
 ### Tools
 
 - **Vitest** with `--coverage` (v8 provider).
@@ -117,8 +142,27 @@ beforeAll(() => {
 
 ```bash
 # From apps/nextjs/
-make test           # Run all tests
-make type           # TypeScript check (source only)
-pnpm coverage       # With coverage report
+
+# ── Fast (no coverage, parallel-safe sub-targets) ──
+make test           # Run all tests (6 sub-targets in sequence)
+make test-lib       # Only lib/__tests__
+make test-hooks     # Only lib/hooks/__tests__
+make test-api       # Only app/api
+make test-components # Only components/__tests__ + components/ui/__tests__ + providers/__tests__
+make test-pages     # Only app/__tests__ + app/[lang]/**/__tests__
+make test-db        # Only db/__tests__
+
+# ── Type checking ──
+make type           # TypeScript check (source + test files)
+
+# ── Coverage (slow, runs all tests at once) ──
+make coverage       # pnpm coverage with v8 provider
+
+# ── Interactive ──
 pnpm test:ui        # Interactive Vitest UI
 ```
+
+**Why sub-targets?** On OpenBSD, running all tests at once via `pnpm coverage`
+can hit esbuild memory limits. The sub-targets run isolated Vitest processes
+that stay within safe memory bounds. They also complete faster since they
+don't generate coverage reports.
