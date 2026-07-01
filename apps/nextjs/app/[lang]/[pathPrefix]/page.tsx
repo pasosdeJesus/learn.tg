@@ -136,9 +136,8 @@ export default function Page({ params }: PageProps) {
   }
 
   if (
-    (session && !address) ||
-    (address && !session) ||
-    (address && session && session.address && address.toLowerCase() !== session.address.toLowerCase())
+    !address ||
+    (session && session.address && address.toLowerCase() !== session.address.toLowerCase())
   ) {
     console.log('[course] PARTIAL LOGIN — session:', !!session, 'address:', !!address, 'session.addr:', session?.address?.slice(0,10), 'wagmi.addr:', address?.slice(0,10))
     return (
