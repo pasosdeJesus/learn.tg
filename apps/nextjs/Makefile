@@ -56,3 +56,17 @@ dev:
 prod:
 	pnpm build
 	./bin/start > prod.log 2>&1 &
+
+# ── E2E Tests ───────────────────────────────────────────────────────────
+
+# Smoke tests (HTTP, fast, no Chrome needed)
+test-smoke:
+	./bin/m test:e2e --smoke
+
+# Full E2E tests (Puppeteer + Chrome, requires CHROME_PATH)
+test-e2e:
+	./bin/m test:e2e
+
+# Run a specific E2E spec
+test-e2e-%:
+	./bin/m test:e2e $*
