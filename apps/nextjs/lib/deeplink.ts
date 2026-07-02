@@ -29,7 +29,6 @@ export async function openSelfApp(selfApp: any): Promise<boolean> {
       const msg = 'Self app cannot open from within a wallet browser. ' +
         'Please use Safari/Chrome or scan the QR code.'
       console.warn(msg)
-      alert(msg)
       return false
     }
 

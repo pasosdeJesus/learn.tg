@@ -8,6 +8,7 @@ import { usePublicClient, useWalletClient } from 'wagmi'
 import { useAccount } from 'wagmi'
 
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { IS_PRODUCTION } from '@/lib/config'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
@@ -24,6 +25,7 @@ export function GoodDollarClaimButton({
   const { data: session } = useSession()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
+  const { toast } = useToast()
   const [isClaiming, setIsClaiming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -90,14 +92,14 @@ export function GoodDollarClaimButton({
         })
         const regData = await regResponse.json()
         const claimNum = regData.claimNumber || ''
-        alert(t('claimSuccess', claimNum))
+        toast({ title: t('claimSuccess', claimNum) })
       } else {
-        alert(t('claimSuccess', ''))
+        toast({ title: t('claimSuccess', '') })
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : JSON.stringify(err, null, 2)
       setError(t('claimFailed', errorMessage))
-      alert(t('claimFailed', errorMessage))
+      toast({ title: t('claimFailed', errorMessage), variant: 'destructive' })
     } finally {
       setIsClaiming(false)
     }

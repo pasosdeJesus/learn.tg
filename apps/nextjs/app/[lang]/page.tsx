@@ -5,6 +5,7 @@ import { useSession, getCsrfToken } from 'next-auth/react'
 import { use, useEffect, useState, useRef } from 'react'
 import { useAccount } from 'wagmi'
 import Image from 'next/image'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
@@ -47,6 +48,7 @@ interface CourseExtra {
 export default function Page({ params }: PageProps) {
   const { address } = useAccount()
   const { data: session, status: sessionStatus } = useSession()
+  const { toast } = useToast()
 
   const [courses, setCourses] = useState<Course[]>([])
   const [extCourses, setExtCourses] = useState<Map<number, CourseExtra>>(
@@ -91,7 +93,7 @@ export default function Page({ params }: PageProps) {
 
     const configure = async () => {
       if (!process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL) {
-        alert('NEXT_PUBLIC_API_BUSCA_CURSOS_URL not defined')
+        toast({ title: 'NEXT_PUBLIC_API_BUSCA_CURSOS_URL not defined', variant: 'destructive' })
         return
       }
 
@@ -124,7 +126,7 @@ export default function Page({ params }: PageProps) {
                   'Error message received:',
                   response2.data.message,
                 )
-                alert(response2.data.message)
+                toast({ title: response2.data.message, variant: 'destructive' })
                 return
               }
 
@@ -149,14 +151,14 @@ export default function Page({ params }: PageProps) {
                 new Map(prevMap.set(response2.data.courseId, extraData)),
               )
             } catch (error) {
-              alert(error)
+              toast({ title: String(error), variant: 'destructive' })
               console.error(error)
             }
           })
         }
       } catch (error) {
         console.error('[courses] failed to fetch from:', url, error)
-        alert('Failed to load courses. Check console.')
+        toast({ title: 'Failed to load courses. Check console.', variant: 'destructive' })
       }
     }
 

@@ -123,7 +123,7 @@ export default function ProfileForm({ params }: PageProps) {
 
   const handleUpdateScores = async () => {
     if (process.env.NEXT_PUBLIC_AUTH_URL === undefined) {
-      alert('process.env.NEXT_PUBLIC_AUTH_URL is undefined')
+      toast({ title: 'process.env.NEXT_PUBLIC_AUTH_URL is undefined', variant: 'destructive' })
       return
     }
     if (
@@ -132,7 +132,7 @@ export default function ProfileForm({ params }: PageProps) {
       !session.address ||
       session.address.toLowerCase() !== address.toLowerCase()
     ) {
-      alert('Problem with session, disconnect and connect again')
+      toast({ title: 'Problem with session, disconnect and connect again', variant: 'destructive' })
       return
     }
     const csrfToken = await getCsrfToken()
@@ -175,7 +175,7 @@ export default function ProfileForm({ params }: PageProps) {
         } else {
           errorMessage += error.message
         }
-        alert(errorMessage)
+        toast({ title: errorMessage, variant: 'destructive' })
       })
   }
 
@@ -186,7 +186,7 @@ export default function ProfileForm({ params }: PageProps) {
     setSelfApp(null)
     setShowQRDialog(false)
     setUpdateProfile(true)
-    alert('Verified, information stored')
+    toast({ title: 'Verified, information stored' })
   }
 
   const handleSelfVerify = () => {
@@ -233,7 +233,7 @@ export default function ProfileForm({ params }: PageProps) {
     } catch (error) {
       logger.error('Error building SelfApp: ' + String(error), 'SelfVerify')
       logger.error('Stack: ' + (error instanceof Error ? error.stack : ''), 'SelfVerify')
-      alert('Error setting up Self verification: ' + String(error))
+      toast({ title: 'Error setting up Self verification: ' + String(error), variant: 'destructive' })
     }
   }
 
@@ -245,7 +245,7 @@ export default function ProfileForm({ params }: PageProps) {
         logger.error('Error opening Self app: ' + String(error), 'Profile')
         const message =
           t('selfError')
-        alert(message)
+        toast({ title: message, variant: 'destructive' })
         throw error // Re-throw to be caught by dialog error handler
       }
     }
@@ -255,7 +255,7 @@ export default function ProfileForm({ params }: PageProps) {
     logger.error('QR Dialog error: ' + error, 'SelfVerify')
     logger.error('Dialog open state: ' + showQRDialog, 'SelfVerify')
     const prefix = t('errorLabel')
-    alert(`${prefix}${error}`)
+    toast({ title: `${prefix}${error}`, variant: 'destructive' })
   }
 
   // Fetch user data from API
@@ -264,15 +264,15 @@ export default function ProfileForm({ params }: PageProps) {
       let url = ''
       try {
         if (process.env.NEXT_PUBLIC_API_USERS == undefined) {
-          alert('NEXT_PUBLIC_API_USERS not defined')
+          toast({ title: 'NEXT_PUBLIC_API_USERS not defined', variant: 'destructive' })
           return
         }
         if (process.env.NEXT_PUBLIC_API_SHOW_USER == undefined) {
-          alert('NEXT_PUBLIC_API_SHOW_USER not defined')
+          toast({ title: 'NEXT_PUBLIC_API_SHOW_USER not defined', variant: 'destructive' })
           return
         }
         if (process.env.NEXT_PUBLIC_API_COUNTRIES == undefined) {
-          alert('NEXT_PUBLIC_API_COUNTRIES not defined')
+          toast({ title: 'NEXT_PUBLIC_API_COUNTRIES not defined', variant: 'destructive' })
           return
         }
 
@@ -345,7 +345,7 @@ export default function ProfileForm({ params }: PageProps) {
         }
         errorMessage += '\n\nIf error persists, try disconnecting your wallet and connecting again.'
 
-        alert(errorMessage)
+        toast({ title: errorMessage, variant: 'destructive' })
       } finally {
         setLoading(false)
       }
@@ -375,7 +375,7 @@ export default function ProfileForm({ params }: PageProps) {
 
     try {
       if (!process.env.NEXT_PUBLIC_API_UPDATE_USER) {
-        alert('Undefined NEXT_PUBLIC_API_UPDATE_USER')
+        toast({ title: 'Undefined NEXT_PUBLIC_API_UPDATE_USER', variant: 'destructive' })
         return
       }
       const reg = {

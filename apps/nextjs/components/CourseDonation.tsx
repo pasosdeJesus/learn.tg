@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 
 import { DonateModal } from './DonateModal'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 interface CourseDonationProps {
@@ -26,6 +27,7 @@ export const CourseDonation = ({
   showDonateButton = true,
 }: CourseDonationProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { toast } = useToast()
   const t = useMemo(() => createComponentT(lang, {
     en: {
       loginToDonate: 'You must be logged in to donate',
@@ -51,7 +53,7 @@ export const CourseDonation = ({
 
   const handleDonateClick = () => {
     if (!isLoggedIn) {
-      alert(t('loginToDonate'))
+      toast({ title: t('loginToDonate'), variant: 'destructive' })
       return
     }
     setIsModalOpen(true)

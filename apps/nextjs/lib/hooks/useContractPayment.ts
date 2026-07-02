@@ -5,6 +5,7 @@ import { type Address } from 'viem'
 import { erc20Abi, parseUserAmount, safeParseFloat } from '@/lib/donate-utils'
 import { getCsrfToken } from 'next-auth/react'
 import axios from 'axios'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 
 export type PaymentState =
   | 'idle'
@@ -69,6 +70,7 @@ export function useContractPayment({
 }: UseContractPaymentOptions): UseContractPaymentReturn {
   const [state, setState] = useState<PaymentState>('idle')
   const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
   // Transfers don't need approval — always false for new flow
   const needsApproval = false
@@ -172,9 +174,9 @@ export function useContractPayment({
             slearnHash && `SLEARN tx: ${slearnHash}`,
             `Course: ${courseId}`,
           ].filter(Boolean).join('\n')
-          alert(lang === 'es'
+          toast({ title: lang === 'es'
             ? `¡Gracias por tu donación! No pudimos procesarla automáticamente.\n\n${info}\n\nToma un pantallazo y envíalo a soporte.`
-            : `Thank you for your donation! We could not process it automatically.\n\n${info}\n\nPlease screenshot and contact support.`)
+            : `Thank you for your donation! We could not process it automatically.\n\n${info}\n\nPlease screenshot and contact support.`, variant: 'destructive' })
         }
       }
 

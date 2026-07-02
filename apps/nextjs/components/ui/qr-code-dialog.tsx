@@ -5,6 +5,7 @@ import { useMemo, useEffect, useRef } from 'react'
 import { SelfQRcodeWrapper } from '@selfxyz/qrcode'
 import { getUniversalLink } from '@selfxyz/core'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { logger } from '@pasosdejesus/m/debug'
 import {
@@ -34,6 +35,7 @@ export function QRCodeDialog({
   lang = 'en',
 }: QRCodeDialogProps) {
   const prevOpenRef = useRef(open)
+  const { toast } = useToast()
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
   const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
   // Brave se detecta primero porque su wallet inyecta isMetaMask=true por compatibilidad
@@ -119,7 +121,7 @@ export function QRCodeDialog({
         setTimeout(() => setLinkCopied(false), 3000)
       } catch {
         logger.error('Failed to copy link', 'SelfVerify')
-        alert('Could not copy. Long-press the QR code and open the link in your browser.')
+        toast({ title: 'Could not copy. Long-press the QR code and open the link in your browser.', variant: 'destructive' })
       }
       document.body.removeChild(ta)
     })
