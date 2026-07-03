@@ -31,6 +31,18 @@ vi.mock('@/lib/hooks/useTranslation', () => ({
   },
 }))
 
+// Mock de useToast
+const { mockUseToast, mockToastFn } = vi.hoisted(() => {
+  const mockToastFn = vi.fn()
+  const mockUseToast = vi.fn(() => ({
+    toast: mockToastFn,
+  }))
+  return { mockUseToast, mockToastFn }
+})
+vi.mock('@pasosdejesus/m/shadcn-components/ui/use-toast', () => ({
+  useToast: mockUseToast,
+}))
+
 // Mock de SDKs
 const { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance } = vi.hoisted(
   () => {
@@ -109,8 +121,7 @@ describe('GoodDollarClaimButton', () => {
     
     mockClaimSDKInstance.claim.mockResolvedValue({ txHash: '0xmocktxhash' })
 
-    // Global mocks
-    global.window.alert = vi.fn()
+    // Global mocks — fetch still needed for API call
     global.window.fetch = vi.fn(() =>
       Promise.resolve({ 
         ok: true, 
@@ -155,12 +166,14 @@ describe('GoodDollarClaimButton', () => {
     expect(mockClaimSDKInstance.claim).toHaveBeenCalledTimes(1)
   })
 
-  it('shows alert with claim number on successful claim', async () => {
+  it('shows toast with claim number on successful claim', async () => {
     render(<GoodDollarClaimButton lang="en" />)
     fireEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
-        expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Claim number 5'))
+      expect(mockToastFn).toHaveBeenCalledWith({
+        title: expect.stringContaining('Claim number 5'),
+      })
     })
     
     const button = screen.getByRole('button', {
@@ -169,7 +182,7 @@ describe('GoodDollarClaimButton', () => {
     expect(button).not.toBeDisabled()
   })
 
-  it('shows an error alert when claim fails', async () => {
+  it('shows an error toast when claim fails', async () => {
     const error = new Error('Network error')
     mockClaimSDKInstance.claim.mockRejectedValue(error)
     render(<GoodDollarClaimButton lang="en" />)
@@ -178,7 +191,10 @@ describe('GoodDollarClaimButton', () => {
 
     // Wait for the error message to appear in the DOM
     expect(await screen.findByText(/Claim failed:/i)).toBeInTheDocument()
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining(`Claim failed: ${error.message}`))
+    expect(mockToastFn).toHaveBeenCalledWith({
+      title: expect.stringContaining(`Claim failed: ${error.message}`),
+      variant: 'destructive',
+    })
   })
 
   it('works in development environment', async () => {

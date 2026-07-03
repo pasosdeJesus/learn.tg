@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import * as React from 'react'
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useConnect } from 'wagmi'
 import { injected } from 'wagmi/connectors'
@@ -17,13 +18,15 @@ interface ExtendedSession extends Session {
   address?: string
 }
 
-export default function Header({ lang = 'en' }) {
+export default function Header({ lang: langProp = 'en' }) {
   const [hideConnectBtn, setHideConnectBtn] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const { connect } = useConnect()
   const { address, isConnected } = useAccount()
   const { data: session } = useSession() as { data: ExtendedSession | null }
+  const params = useParams()
+  const lang = (params?.lang as string) || langProp
 
   // Local translations (title + menu icon)
   const t = useMemo(() => createComponentT(lang, {
