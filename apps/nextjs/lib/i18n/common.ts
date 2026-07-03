@@ -28,6 +28,13 @@ const common: TranslationSet = {
     cancel: 'Cancel',
     close: 'Close',
     confirm: 'Confirm',
+    // R-#180: Navigation & Footer
+    navProfile: 'Profile',
+    navLeaderboard: 'Leaderboard',
+    navTransparency: 'Transparency',
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
+    churchDirectory: 'Church Directory',
   },
   es: {
     leaderboard: 'Tabla de Clasificación',
@@ -56,6 +63,13 @@ const common: TranslationSet = {
     cancel: 'Cancelar',
     close: 'Cerrar',
     confirm: 'Confirmar',
+    // R-#180: Navigation & Footer
+    navProfile: 'Perfil',
+    navLeaderboard: 'Tabla de Líderes',
+    navTransparency: 'Transparencia',
+    privacyPolicy: 'Política de Privacidad',
+    termsOfService: 'Términos de Servicio',
+    churchDirectory: 'Directorio de Iglesias',
   },
 }
 

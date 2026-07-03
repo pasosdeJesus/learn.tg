@@ -4,10 +4,14 @@ import Link from 'next/link'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 export default function Footer({ lang = 'en' }) {
+  // Local translations (telegram, followUs, letGazaLive)
   const t = useMemo(() => createComponentT(lang, {
     en: { telegram: 'Telegram group', followUs: 'Follow us', letGazaLive: 'Let Gaza Live' },
     es: { telegram: 'Grupo en Telegram', followUs: 'Síguenos', letGazaLive: 'Let Gaza Live' },
   }), [lang])
+
+  // Common translations (privacyPolicy, termsOfService — from common.ts)
+  const tCommon = useMemo(() => createComponentT(lang, {}), [lang])
 
   return (
     <footer className="bg-gray-800 text-white py-8 relative">
@@ -96,6 +100,25 @@ export default function Footer({ lang = 'en' }) {
               </div>
             </nav>
           </div>
+        </div>
+
+        {/* Legal links row — R-#180 */}
+        <div className="mt-6 pt-4 border-t border-gray-700 text-sm text-gray-400">
+          <nav aria-label="Legal links" className="flex flex-wrap gap-4 justify-center md:justify-start">
+            <Link
+              href={`/${lang}/privacy-policy`}
+              className="hover:text-white transition-colors"
+            >
+              {tCommon('privacyPolicy')}
+            </Link>
+            <span className="text-gray-600">|</span>
+            <Link
+              href={`/${lang}/terms-of-service`}
+              className="hover:text-white transition-colors"
+            >
+              {tCommon('termsOfService')}
+            </Link>
+          </nav>
         </div>
       </div>
     </footer>
