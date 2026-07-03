@@ -26,7 +26,7 @@ export default function Header({ lang: langProp = 'en' }) {
   const { address, isConnected } = useAccount()
   const { data: session } = useSession() as { data: ExtendedSession | null }
   const params = useParams()
-  const lang = (params?.lang as string) || langProp
+  const lang = (params?.lang as string) || langProp || 'en'
 
   // Local translations (title + menu icon)
   const t = useMemo(() => createComponentT(lang, {
