@@ -8,7 +8,7 @@ import Image from 'next/image'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
-import { SlearnInfo } from '@pasosdejesus/m/blockchain'
+import { SlearnInfo } from '@pasosdejesus/m/blockchain/SlearnInfo'
 import { AddSlearnButton } from '@/components/AddSlearnButton'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 
