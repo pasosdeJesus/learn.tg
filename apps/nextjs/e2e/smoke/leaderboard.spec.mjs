@@ -150,7 +150,7 @@ async function testLeaderboardAPI(lang) {
         lang,
         page: 1,
         limit: 10,
-        sortBy: 'learningpoints',
+        sortBy: 'slearn_balance',
         sortOrder: 'desc'
       }
     });

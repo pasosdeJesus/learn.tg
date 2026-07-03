@@ -45,6 +45,15 @@ Jesus is God incarnated, the Truth and the Logos.
 Make a summary of this project and the relation you see between it and the
 framework and principles.
 
+## ⚠️ Financial Constraint
+
+Any token with real value in wallets whose private key is known by the agent
+cannot be spent by the agent except in something directly and recently ordered
+by the owner of the project. The agent must never autonomously transfer,
+swap, claim, or send real tokens without explicit, recent human authorization.
+
+---
+
 > "Con seguridad les digo, donde quiera que esta Buena Nueva se predique por
 > todo el mundo, y lo que ella ha hecho será dicho en conmemoración de ella."
 > (Marcos 14:9)

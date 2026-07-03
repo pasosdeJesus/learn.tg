@@ -696,6 +696,11 @@ async function getUserProfile(walletAddress, csrfToken) {
       throw new Error(`Respuesta inesperada: ${JSON.stringify(response.data)}`);
     }
   } catch (error) {
+    // 302 means no user profile exists for this wallet — expected for new wallets
+    if (error.response?.status === 302) {
+      console.log(`   ⚠️  Wallet has no profile (302 redirect) — expected for new wallets`)
+      return null
+    }
     console.error(`   Error obteniendo perfil: ${error.message}`);
     if (error.response) {
       console.error(`   Status: ${error.response.status}`);
