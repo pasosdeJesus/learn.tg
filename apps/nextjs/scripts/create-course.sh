@@ -111,69 +111,85 @@ EOF
   fi
 done
 
-# ── Step 2: Generate SQL for DB records ──
+# ── Step 2: Generate Kysely migration for DB records ──
 
 COURSE_ID=$2
 TODAY=$(date +%Y-%m-%d)
-TMP_DIR="$PROJECT_DIR/../../tmp"
-SQL_FILE="$TMP_DIR/create-course-$COURSE_ID.sql"
-mkdir -p "$TMP_DIR"
+MIGRATION_TIMESTAMP=$(date +%Y%m%d%H%M%S)
+MIGRATIONS_DIR="$PROJECT_DIR/db/migrations"
+MIGRATION_NAME="${MIGRATION_TIMESTAMP}_create_course_${COURSE_ID}"
+MIGRATION_FILE="$MIGRATIONS_DIR/${MIGRATION_NAME}.ts"
 
 echo ""
-echo "[2/5] Generating SQL records → tmp/create-course-$COURSE_ID.sql"
+echo "[2/5] Generating Kysely migration → db/migrations/${MIGRATION_NAME}.ts"
 
-cat > "$SQL_FILE" <<SQLEOF
--- Course: $COURSE_NAME (ID: $COURSE_ID, prefix: $PREFIX, $NUM_GUIDES guides)
--- Generated: $TODAY
+cat > "$MIGRATION_FILE" <<MIGEOF
+import { Kysely, sql } from 'kysely'
 
-BEGIN;
+export async function up(db: Kysely<any>): Promise<void> {
+  await sql\`
+    INSERT INTO cor1440_gen_proyectofinanciero (
+      id, nombre, titulo, subtitulo, idioma, "prefijoRuta",
+      fechainicio, fechaformulacion, responsable_id, estado, dificultad,
+      monto, tasaej, montoej, aportepropioej, aporteotrosej, presupuestototalej,
+      "sinBilletera", "conBilletera", chain_id,
+      creditosMd, resumenMd,
+      created_at, updated_at
+    ) VALUES (
+      $COURSE_ID, '$COURSE_NAME', '$COURSE_NAME', '$COURSE_NAME',
+      'en', '/$PREFIX',
+      '$TODAY', '$TODAY', 1, 'E', 'N',
+      1.0, 1, 0, 0, 0, 0,
+      true, true, 42220,
+      'Prepared by Pasos de Jesús. Open content with license CC-BY Internacional 4.0.',
+      '$COURSE_NAME',
+      NOW(), NOW()
+    ) ON CONFLICT (id) DO NOTHING
+  \`.execute(db)
 
--- ── Course ──
-INSERT INTO cor1440_gen_proyectofinanciero (
-  id, nombre, titulo, subtitulo, idioma, "prefijoRuta",
-  fechainicio, fechaformulacion, responsable_id, estado, dificultad,
-  monto, tasaej, montoej, aportepropioej, aporteotrosej, presupuestototalej,
-  "sinBilletera", "conBilletera", chain_id,
-  creditosMd, resumenMd,
-  created_at, updated_at
-) VALUES (
-  $COURSE_ID, '$COURSE_NAME', '$COURSE_NAME', '$COURSE_NAME',
-  'en', '/$PREFIX',
-  '$TODAY', '$TODAY', 1, 'E', 'N',
-  1.0, 1, 0, 0, 0, 0,
-  true, true, 42220,
-  'Prepared by Pasos de Jesús. Open content with license CC-BY Internacional 4.0.',
-  '$COURSE_NAME',
-  NOW(), NOW()
-) ON CONFLICT (id) DO NOTHING;
+MIGEOF
 
-SQLEOF
-
-# ── Guides ──
 for i in $(seq 1 "$NUM_GUIDES"); do
   GUIDE_NUM=$(printf "G%d" "$i")
-  cat >> "$SQL_FILE" <<SQLEOF
-INSERT INTO cor1440_gen_actividadpf (
-  id, nombre, titulo, "nombrecorto", "sufijoRuta",
-  proyectofinanciero_id, fecha, oficina_id,
-  created_at, updated_at
-) VALUES (
-  $(($COURSE_ID * 100 + $i)), '$COURSE_NAME Guide $i', '$COURSE_NAME — Guide $i',
-  '$GUIDE_NUM', 'guide$i',
-  $COURSE_ID, '$TODAY', 1,
-  NOW(), NOW()
-) ON CONFLICT (id) DO NOTHING;
+  GUIDE_ID=$(($COURSE_ID * 100 + $i))
+  cat >> "$MIGRATION_FILE" <<MIGEOF
+  await sql\`
+    INSERT INTO cor1440_gen_actividadpf (
+      id, nombre, titulo, "nombrecorto", "sufijoRuta",
+      proyectofinanciero_id, fecha, oficina_id,
+      created_at, updated_at
+    ) VALUES (
+      $GUIDE_ID, '$COURSE_NAME Guide $i', '$COURSE_NAME — Guide $i',
+      '$GUIDE_NUM', 'guide$i',
+      $COURSE_ID, '$TODAY', 1,
+      NOW(), NOW()
+    ) ON CONFLICT (id) DO NOTHING
+  \`.execute(db)
 
-SQLEOF
+MIGEOF
 done
 
-cat >> "$SQL_FILE" <<SQLEOF
-COMMIT;
-SQLEOF
+cat >> "$MIGRATION_FILE" <<MIGEOF
+}
+
+export async function down(db: Kysely<any>): Promise<void> {
+MIGEOF
+
+for i in $(seq 1 "$NUM_GUIDES"); do
+  GUIDE_ID=$(($COURSE_ID * 100 + $i))
+  cat >> "$MIGRATION_FILE" <<MIGEOF
+  await sql\`DELETE FROM cor1440_gen_actividadpf WHERE id = $GUIDE_ID\`.execute(db)
+MIGEOF
+done
+
+cat >> "$MIGRATION_FILE" <<MIGEOF
+  await sql\`DELETE FROM cor1440_gen_proyectofinanciero WHERE id = $COURSE_ID\`.execute(db)
+}
+MIGEOF
 
 echo ""
-echo "  Review the generated SQL, then execute:"
-echo "    bin/m db:console < tmp/create-course-$COURSE_ID.sql"
+echo "  Review the generated migration, then execute:"
+echo "    bin/m db:migrate"
 echo ""
 echo "  Or manually in Rails admin:"
 echo "    → https://learn.tg/admin"
@@ -205,7 +221,7 @@ fi
 # ── Step 4: Sync ──
 
 echo ""
-echo "[5/5] Sync metadata (run manually in apps/nextjs):"
+echo "[4/5] Sync metadata (run manually in apps/nextjs):"
 echo "  bin/m credentials:sync-cache --network $NETWORK"
 
 echo ""
@@ -213,8 +229,8 @@ echo "========================================"
 echo "  ✅ Course scaffold complete!"
 echo ""
 echo "  Next steps:"
-echo "    1. Review SQL: cat tmp/create-course-$COURSE_ID.sql"
-echo "    2. Execute SQL: bin/m db:console < tmp/create-course-$COURSE_ID.sql"
+echo "    1. Review migration: cat db/migrations/${MIGRATION_NAME}.ts"
+echo "    2. Run migrations:  bin/m db:migrate"
 echo "    3. Run the vault + credential commands above"
 echo "    4. Write actual guide content in resources/{en,es}/$PREFIX/"
 echo "    5. Verify: bin/m credentials:list-types --network $NETWORK"

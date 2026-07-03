@@ -1,0 +1,29 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#005A8D" />
+      <stop offset="100%" style="stop-color:#003554" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo circular -->
+  <circle cx="256" cy="256" r="230" fill="#F4F6F7" stroke="#005A8D" stroke-width="12"/>
+  
+  <!-- Red de conexión (3 nodos) -->
+  <circle cx="256" cy="180" r="40" fill="url(#grad)" />
+  <circle cx="190" cy="300" r="40" fill="url(#grad)" />
+  <circle cx="322" cy="300" r="40" fill="url(#grad)" />
+  
+  <!-- Líneas de conexión (Clúster) -->
+  <line x1="256" y1="220" x2="256" y2="256" stroke="#E67E22" stroke-width="10" stroke-linecap="round"/>
+  <line x1="220" y1="280" x2="256" y2="256" stroke="#E67E22" stroke-width="10" stroke-linecap="round"/>
+  <line x1="292" y1="280" x2="256" y2="256" stroke="#E67E22" stroke-width="10" stroke-linecap="round"/>
+  
+  <!-- Nodo central -->
+  <circle cx="256" cy="256" r="15" fill="#E67E22" />
+  
+  <!-- Cruz cristiana en el nodo central (Barra horizontal subida) -->
+  <rect x="253" y="245" width="6" height="22" fill="white" rx="1" ry="1"/> <!-- Barra vertical centrada y ligeramente más larga para el ajuste -->
+  <rect x="248" y="250" width="16" height="6" fill="white" rx="1" ry="1"/> <!-- Barra horizontal subida (antes estaba en 253) -->
+</svg>
+

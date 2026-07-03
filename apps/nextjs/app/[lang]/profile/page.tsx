@@ -29,6 +29,7 @@ import { logger, DebugConsole } from '@pasosdejesus/m/debug'
 
 
 interface UserProfile {
+  church_relationship: string | null
   country: number | null
   email: string
   groups: string
@@ -72,6 +73,7 @@ export default function ProfileForm({ params }: PageProps) {
     }
   }
   const [profile, setProfile] = useState<UserProfile>({
+    church_relationship: null,
     country: null,
     email: '',
     groups: '',
@@ -320,6 +322,7 @@ export default function ProfileForm({ params }: PageProps) {
           picture: rUser.foto_file_name,
           profilescore: rUser.profilescore,
           religion: rUser.religion_id,
+          church_relationship: rUser.church_relationship || null,
           uname: rUser.nusuario,
           userId: rUser.id,
         }
@@ -384,6 +387,7 @@ export default function ProfileForm({ params }: PageProps) {
         nusuario: profile.uname,
         religion_id: profile.religion,
         pais_id: profile.country,
+        church_relationship: profile.church_relationship,
       }
       let url = process.env.NEXT_PUBLIC_API_UPDATE_USER.replace(
         'usuario_id',
@@ -620,6 +624,27 @@ export default function ProfileForm({ params }: PageProps) {
                         {lang === 'en' && religion.name_english ? religion.name_english : religion.nombre}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="churchRelationship"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  {t('churchRelationship')}
+                </label>
+                <Select
+                  value={profile.church_relationship || ''}
+                  onValueChange={(value) => handleChange('church_relationship', value)}
+                >
+                  <SelectTrigger id="churchRelationship" className="w-full">
+                    <SelectValue placeholder={t('selectChurchRelationship')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pastor">{t('churchRelationshipPastor')}</SelectItem>
+                    <SelectItem value="lider">{t('churchRelationshipLeader')}</SelectItem>
+                    <SelectItem value="miembro">{t('churchRelationshipMember')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

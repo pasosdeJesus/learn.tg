@@ -46,6 +46,46 @@ export interface BilleteraUsuario {
   usuario_id: number;
 }
 
+export interface Church {
+  city: string | null;
+  cluster_wallet: string | null;
+  country_id: number;
+  created_at: Generated<Timestamp | null>;
+  created_by: number;
+  id: Generated<number>;
+  name: string;
+  pastor_name: string | null;
+  pastor_whatsapp: string | null;
+  updated_at: Generated<Timestamp | null>;
+}
+
+export interface ChurchClustergd {
+  church_id: number;
+  clustergd_id: number;
+  id: Generated<number>;
+  joined_at: Generated<Timestamp | null>;
+  left_at: Timestamp | null;
+}
+
+export interface Clustergd {
+  code: string;
+  country_id: number;
+  created_at: Generated<Timestamp | null>;
+  id: Generated<number>;
+  name: string;
+  updated_at: Generated<Timestamp | null>;
+}
+
+export interface ClustergdHistory {
+  changed_by: number | null;
+  clustergd_id: number;
+  created_at: Generated<Timestamp | null>;
+  event_type: string;
+  id: Generated<number>;
+  new_value: string | null;
+  old_value: string | null;
+}
+
 export interface Cor1440GenActividad {
   created_at: Timestamp | null;
   fecha: Timestamp;
@@ -1270,7 +1310,6 @@ export interface SchemaMigrations {
   version: string;
 }
 
-
 export interface Transaction {
   amount: Generated<Numeric>;
   balance_impact: Numeric;
@@ -1299,6 +1338,7 @@ export interface Userevent {
 }
 
 export interface Usuario {
+  church_relationship: string | null;
   created_at: Timestamp | null;
   current_sign_in_at: Timestamp | null;
   current_sign_in_ip: string | null;
@@ -1340,7 +1380,7 @@ export interface Usuario {
 }
 
 export interface ViewUserScores {
-  learningscore_deprecated: number | null;
+  learningscore: number | null;
   profilescore: number | null;
   user_id: number | null;
 }
@@ -1348,6 +1388,10 @@ export interface ViewUserScores {
 export interface DB {
   ar_internal_metadata: ArInternalMetadata;
   billetera_usuario: BilleteraUsuario;
+  church: Church;
+  church_clustergd: ChurchClustergd;
+  clustergd: Clustergd;
+  clustergd_history: ClustergdHistory;
   cor1440_gen_actividad: Cor1440GenActividad;
   cor1440_gen_actividad_actividadpf: Cor1440GenActividadActividadpf;
   cor1440_gen_actividad_actividadtipo: Cor1440GenActividadActividadtipo;

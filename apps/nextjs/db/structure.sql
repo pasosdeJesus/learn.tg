@@ -1399,6 +1399,146 @@ ALTER SEQUENCE public.billetera_usuario_id_seq OWNED BY public.billetera_usuario
 
 
 --
+-- Name: church; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.church (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    country_id integer NOT NULL,
+    city character varying(255),
+    pastor_name text,
+    pastor_whatsapp text,
+    cluster_wallet character varying(42),
+    created_by integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: church_clustergd; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.church_clustergd (
+    id integer NOT NULL,
+    church_id integer NOT NULL,
+    clustergd_id integer NOT NULL,
+    joined_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    left_at timestamp without time zone
+);
+
+
+--
+-- Name: church_clustergd_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.church_clustergd_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: church_clustergd_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.church_clustergd_id_seq OWNED BY public.church_clustergd.id;
+
+
+--
+-- Name: church_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.church_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: church_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.church_id_seq OWNED BY public.church.id;
+
+
+--
+-- Name: clustergd; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.clustergd (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    code character varying(6) NOT NULL,
+    country_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: clustergd_history; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.clustergd_history (
+    id integer NOT NULL,
+    clustergd_id integer NOT NULL,
+    event_type character varying(20) NOT NULL,
+    old_value text,
+    new_value text,
+    changed_by integer,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: clustergd_history_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.clustergd_history_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: clustergd_history_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.clustergd_history_id_seq OWNED BY public.clustergd_history.id;
+
+
+--
+-- Name: clustergd_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.clustergd_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: clustergd_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.clustergd_id_seq OWNED BY public.clustergd.id;
+
+
+--
 -- Name: cor1440_gen_actividad; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4825,18 +4965,6 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: site_nonces; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.site_nonces (
-    site character varying(100) NOT NULL,
-    available_learningpoints integer DEFAULT 0 NOT NULL,
-    last_nonce integer DEFAULT 0 NOT NULL,
-    updated_at timestamp without time zone
-);
-
-
---
 -- Name: transaction; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4969,6 +5097,7 @@ CREATE TABLE public.usuario (
     lastgooddollarverification timestamp without time zone,
     learningscore_deprecated double precision,
     excluir_leaderboard boolean DEFAULT false,
+    church_relationship character varying(10),
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
@@ -4990,6 +5119,34 @@ CREATE VIEW public.view_user_scores AS
 --
 
 ALTER TABLE ONLY public.billetera_usuario ALTER COLUMN id SET DEFAULT nextval('public.billetera_usuario_id_seq'::regclass);
+
+
+--
+-- Name: church id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church ALTER COLUMN id SET DEFAULT nextval('public.church_id_seq'::regclass);
+
+
+--
+-- Name: church_clustergd id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church_clustergd ALTER COLUMN id SET DEFAULT nextval('public.church_clustergd_id_seq'::regclass);
+
+
+--
+-- Name: clustergd id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd ALTER COLUMN id SET DEFAULT nextval('public.clustergd_id_seq'::regclass);
+
+
+--
+-- Name: clustergd_history id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd_history ALTER COLUMN id SET DEFAULT nextval('public.clustergd_history_id_seq'::regclass);
 
 
 --
@@ -5576,6 +5733,46 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 ALTER TABLE ONLY public.billetera_usuario
     ADD CONSTRAINT billetera_usuario_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: church_clustergd church_clustergd_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church_clustergd
+    ADD CONSTRAINT church_clustergd_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: church church_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church
+    ADD CONSTRAINT church_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: clustergd clustergd_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd
+    ADD CONSTRAINT clustergd_code_key UNIQUE (code);
+
+
+--
+-- Name: clustergd_history clustergd_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd_history
+    ADD CONSTRAINT clustergd_history_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: clustergd clustergd_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd
+    ADD CONSTRAINT clustergd_pkey PRIMARY KEY (id);
 
 
 --
@@ -6427,14 +6624,6 @@ ALTER TABLE ONLY public.religion
 
 
 --
--- Name: site_nonces site_nonces_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.site_nonces
-    ADD CONSTRAINT site_nonces_pkey PRIMARY KEY (site);
-
-
---
 -- Name: transaction transaction_crypto_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6448,6 +6637,14 @@ ALTER TABLE ONLY public.transaction
 
 ALTER TABLE ONLY public.transaction
     ADD CONSTRAINT transaction_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: clustergd unique_cluster_name_per_country; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd
+    ADD CONSTRAINT unique_cluster_name_per_country UNIQUE (name, country_id);
 
 
 --
@@ -7012,6 +7209,46 @@ CREATE TRIGGER tras_crear_o_actualizar_ubicacionpre BEFORE INSERT OR UPDATE OF p
 
 ALTER TABLE ONLY public.cor1440_gen_actividad
     ADD CONSTRAINT actividad_regionsjr_id_fkey FOREIGN KEY (oficina_id) REFERENCES public.msip_oficina(id);
+
+
+--
+-- Name: church_clustergd church_clustergd_church_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church_clustergd
+    ADD CONSTRAINT church_clustergd_church_id_fkey FOREIGN KEY (church_id) REFERENCES public.church(id);
+
+
+--
+-- Name: church_clustergd church_clustergd_clustergd_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church_clustergd
+    ADD CONSTRAINT church_clustergd_clustergd_id_fkey FOREIGN KEY (clustergd_id) REFERENCES public.clustergd(id);
+
+
+--
+-- Name: church church_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church
+    ADD CONSTRAINT church_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.usuario(id);
+
+
+--
+-- Name: clustergd_history clustergd_history_changed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd_history
+    ADD CONSTRAINT clustergd_history_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES public.usuario(id);
+
+
+--
+-- Name: clustergd_history clustergd_history_clustergd_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd_history
+    ADD CONSTRAINT clustergd_history_clustergd_id_fkey FOREIGN KEY (clustergd_id) REFERENCES public.clustergd(id);
 
 
 --
