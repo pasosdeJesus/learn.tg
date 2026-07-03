@@ -10,6 +10,7 @@ import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
 import { SlearnInfo } from '@pasosdejesus/m/blockchain/slearn-info'
 import { AddSlearnButton } from '@/components/AddSlearnButton'
+import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 
 type PageProps = {

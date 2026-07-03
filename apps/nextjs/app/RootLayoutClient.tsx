@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { AppProvider } from '@/providers/AppProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function RootLayoutClient({
   children,
@@ -15,6 +16,7 @@ export default function RootLayoutClient({
   const isDiligentRecords = pathname?.includes('/diligent-records') || false;
   
   return (
+    <ErrorBoundary>
     <AppProvider>
       {isDiligentRecords ? (
         // Para diligent-records: SOLO AppProvider, sin Layout
@@ -26,5 +28,6 @@ export default function RootLayoutClient({
         <Layout>{children}</Layout>
       )}
     </AppProvider>
+    </ErrorBoundary>
   );
 }

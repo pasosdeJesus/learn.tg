@@ -6,6 +6,7 @@
  */
 'use client'
 
+import { useMemo } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import OKXNetworkCheck from '@/components/OKXNetworkCheck'
 import WalletDetectionHint from '@/components/WalletDetectionHint'
@@ -53,30 +54,33 @@ interface RainbowKitProviderProps {
   autoConnect?: boolean
 }
 
-const connectors = connectorsForWallets(
-  [
+function getConnectors() {
+  return connectorsForWallets(
+    [
+      {
+        groupName: 'Recommended',
+        wallets: [okxWallet, walletConnectWallet, metaMaskWallet, injectedWallet],
+      },
+    ],
     {
-      groupName: 'Recommended',
-      wallets: [okxWallet, walletConnectWallet, metaMaskWallet, injectedWallet],
+      appName: process.env.NEXT_PUBLIC_APPNAME ?? 'Learn Through Games',
+      projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? '0123',
     },
-  ],
-  {
-    appName: process.env.NEXT_PUBLIC_APPNAME ?? 'Learn Through Games',
-    projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? '0123',
-  },
-)
+  )
+}
 
-const config = createConfig({
-  connectors,
-  // Multiple chains required for RainbowKit v2 to show the network selector
-  chains: [celo, celoSepolia, base, baseSepolia],
-  transports: {
-    [celo.id]: http(),
-    [celoSepolia.id]: http(),
-    [base.id]: http(),
-    [baseSepolia.id]: http(),
-  },
-})
+function getConfig() {
+  return createConfig({
+    connectors: getConnectors(),
+    chains: [celo, celoSepolia, base, baseSepolia],
+    transports: {
+      [celo.id]: http(),
+      [celoSepolia.id]: http(),
+      [base.id]: http(),
+      [baseSepolia.id]: http(),
+    },
+  })
+}
 
 const getSiweMessageOptions: GetSiweMessageOptions = () => {
   // Check if ethereum is available in window object
@@ -92,12 +96,12 @@ const getSiweMessageOptions: GetSiweMessageOptions = () => {
   return msg
 }
 
-const queryClient = new QueryClient()
-
 // Taking ideas of
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/providers/web3-providers.tsx
 export function AppProvider(props: RainbowKitProviderProps) {
 
+  const config = useMemo(() => getConfig(), [])
+  const queryClient = useMemo(() => new QueryClient(), [])
 
   return (
     <WagmiProvider config={config}>

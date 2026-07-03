@@ -31,7 +31,7 @@ export async function refreshUserLearningScore(
     .set({ 
       learningscore_deprecated: total,
       updated_at: new Date() 
-    })
+    } as any)
     .where('id', '=', userId as any)
     .execute()
     
