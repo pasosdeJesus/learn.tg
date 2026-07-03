@@ -22,8 +22,10 @@ const {
 vi.mock('@pasosdejesus/m/blockchain', () => ({
   getTokenIdByCourseId: mockGetTokenIdByCourseId,
   hasCredentialOnChain: mockHasCredentialOnChain,
-  getCeloCredentialsAddress: mockGetCeloCredentialsAddress,
   mintCourseWithRetry: mockMintCourseWithRetry,
+}))
+vi.mock('@pasosdejesus/m/blockchain/deployments', () => ({
+  getCeloCredentialsAddress: mockGetCeloCredentialsAddress,
 }))
 
 const mockWaitForTxReceipt = vi.fn().mockResolvedValue({ status: 'success' })

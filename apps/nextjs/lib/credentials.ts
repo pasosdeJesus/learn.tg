@@ -13,9 +13,9 @@ import { newKyselyPostgresql } from '@/.config/kysely-db'
 import {
   getTokenIdByCourseId,
   hasCredentialOnChain,
-  getCeloCredentialsAddress,
   mintCourseWithRetry,
 } from '@pasosdejesus/m/blockchain'
+import { getCeloCredentialsAddress } from '@pasosdejesus/m/blockchain/deployments'
 import path from 'path'
 import { IS_PRODUCTION } from '@/lib/config'
 
