@@ -68,17 +68,23 @@ This document defines the documentation and testing policies for the Next.js app
 
 ### E2E Tests (Puppeteer)
 
-Browser-level end-to-end tests live in `test/puppeteer/`. They validate full user
-flows against production (`https://learn.tg`) — SIWE authentication, session
-persistence across navigation, and "Partial login" guard behavior.
+Browser-level end-to-end tests live in `e2e/specs/` (Puppeteer + Chrome) and
+`e2e/smoke/` (HTTP-only). They validate full user flows — SIWE authentication,
+session persistence, UBI claims, crossword puzzles.
 
-- **Dependencies:** `puppeteer-core` (solo core funciona en OpenBSD). 
-  Instalar con `cd test/puppeteer && npm install`.
-- **SIWE/viene resuelto** vía `NODE_PATH=../../node_modules`.
-- **Ejecución:** 
+- **Dependencies:** `puppeteer-core` (devDependency in `apps/nextjs/package.json`).
+  No separate install needed — just `pnpm install`.
+- **Helpers:** `@pasosdejesus/m/e2e` provides `launchBrowser`, `simulateSIWE`, etc.
+- **Ejecución:**
   ```bash
-  cd apps/nextjs/test/puppeteer
-  NODE_PATH=../../node_modules CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg node session-persistence.mjs
+  # Smoke (HTTP, fast, no Chrome)
+  make test-smoke
+
+  # Full E2E (Puppeteer + Chrome)
+  CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg make test-e2e
+
+  # Single spec
+  CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg node e2e/specs/auth-session.spec.mjs
   ```
 - **OpenBSD:** Requiere `--ozone-platform=headless` para Chrome 141+.
   Limpiar `/tmp/puppeteer*` entre ejecuciones si Chrome se cuelga.
