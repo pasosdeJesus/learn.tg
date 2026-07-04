@@ -8,17 +8,19 @@ export default function PrivacyPolicyPage({ params }: { params: Promise<{ lang: 
   const t = createComponentT(lang, {
     en: {
       title: 'Privacy Policy',
-      item1: 'We will not sell neither share the personal information you provide.',
-      item2: 'Your wallet address, your login name, your blockchain transactions and your actions in the platform are considered public. The rest of the information in your profile is private and we will not present it to the public.',
-      item3: 'To remove your personal information as presented by this app, please go to the profile page and fill the fields with non-personal information (any sequence of letters or numbers will work).',
-      item4: 'We cannot remove from our internal records neither from logs your onchain transaction neither your personal information.',
+      item1: 'We do not sell or share the personal information you provide.',
+      item2: 'Your wallet address, username, blockchain transactions, and platform actions (course progress, scholarships received, donations) are public. When you declare a church or join a cluster, church name, city, and pastor name also become publicly visible.',
+      item3: 'To remove your personal information from public view, go to your profile page and replace it with non-personal information (any sequence of letters or numbers will work).',
+      item4: 'To delete verified data, click the "Delete Verified Data" button on your profile page. This immediately removes all verified fields (name, location, WhatsApp/Telegram, place of worship) and resets your profile score. This action cannot be undone.',
+      item5: 'We cannot remove on-chain transactions or blockchain records — they are permanent and immutable. Internal logs may retain data for security and auditing for up to 90 days.',
     },
     es: {
       title: 'Política de Privacidad',
-      item1: 'No venderemos ni compartiremos la información personal que proporciones.',
-      item2: 'Tu dirección de billetera, tu nombre de usuario, tus transacciones en la blockchain y tus acciones en la plataforma se consideran públicos. El resto de la información en tu perfil es privada y no la presentaremos al público.',
-      item3: 'Para eliminar tu información personal presentada en esta aplicación, ve a la página de perfil y llena los campos con información no personal (cualquier secuencia de letras o números funcionará).',
-      item4: 'No podemos eliminar de nuestros registros internos ni de los registros tu transacción en la blockchain ni tu información personal.',
+      item1: 'No vendemos ni compartimos la información personal que proporciones.',
+      item2: 'Tu dirección de billetera, nombre de usuario, transacciones en blockchain y acciones en la plataforma (progreso de cursos, becas recibidas, donaciones) son públicos. Cuando declaras una iglesia o te unes a un clúster, el nombre de la iglesia, la ciudad y el nombre del pastor también se vuelven visibles públicamente.',
+      item3: 'Para eliminar tu información personal de la vista pública, ve a tu página de perfil y reemplázala con información no personal (cualquier secuencia de letras o números funcionará).',
+      item4: 'Para eliminar datos verificados, haz clic en el botón "Eliminar Información Verificada" en tu página de perfil. Esto elimina inmediatamente todos los campos verificados (nombre, ubicación, WhatsApp/Telegram, lugar de culto) y restablece tu puntaje de perfil. Esta acción no se puede deshacer.',
+      item5: 'No podemos eliminar transacciones en blockchain ni registros en la cadena — son permanentes e inmutables. Los registros internos pueden conservar datos por razones de seguridad y auditoría hasta 90 días.',
     },
   })
 
@@ -30,6 +32,7 @@ export default function PrivacyPolicyPage({ params }: { params: Promise<{ lang: 
         <li>{t('item2')}</li>
         <li>{t('item3')}</li>
         <li>{t('item4')}</li>
+        <li>{t('item5')}</li>
       </ul>
     </div>
   )
