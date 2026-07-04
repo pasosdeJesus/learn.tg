@@ -2,9 +2,9 @@
 -- PostgreSQL database dump
 --
 
-\restrict rj4Zl29rsg17XA0OaZXy3FCaBObBs20z6rpcwwPuWhPOLUSYluW4rq2DyiOYBx9
+\restrict
 
--- Dumped from database version 17.9
+-- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
 
 SET statement_timeout = 0;
@@ -31,13 +31,6 @@ CREATE COLLATION public.es_co_utf_8 (provider = libc, locale = 'es_CO.UTF-8');
 --
 
 CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
-
-
---
--- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
 
 
 --
@@ -4798,7 +4791,8 @@ CREATE TABLE public.religion (
     fechacreacion date NOT NULL,
     fechadeshabilitacion date,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    name_english character varying(500)
 );
 
 
@@ -4973,7 +4967,7 @@ CREATE TABLE public.usuario (
     passport_nationality integer,
     profilescore integer,
     lastgooddollarverification timestamp without time zone,
-    learningscore double precision,
+    learningscore_deprecated double precision,
     excluir_leaderboard boolean DEFAULT false,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
@@ -4986,7 +4980,7 @@ CREATE TABLE public.usuario (
 
 CREATE VIEW public.view_user_scores AS
  SELECT id AS user_id,
-    learningscore,
+    learningscore_deprecated AS learningscore,
     profilescore
    FROM public.usuario;
 
@@ -8296,5 +8290,5 @@ ALTER TABLE ONLY public.usuario
 -- PostgreSQL database dump complete
 --
 
-\unrestrict rj4Zl29rsg17XA0OaZXy3FCaBObBs20z6rpcwwPuWhPOLUSYluW4rq2DyiOYBx9
+\unrestrict
 

@@ -1,18 +1,32 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useWalletClient } from 'wagmi'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { PlusCircle, CheckCircle, AlertCircle } from 'lucide-react'
+import { SLEARN_ADDRESSES, resolveNetwork } from '@pasosdejesus/m/blockchain/ecosystem-addresses'
 
 interface AddSlearnButtonProps {
   lang: string
+}
+
+// Fallback addresses for when env is not available
+const FALLBACK_SLEARN = {
+  celo: '0x27fd41Bea85C39254f2B12789eB37a1543152CC1',
+  celoSepolia: '0x9fBa3A2Ca0275c4D7A3eA341923f8c531e913BFA',
 }
 
 export function AddSlearnButton({ lang }: AddSlearnButtonProps) {
   const { data: walletClient } = useWalletClient()
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [isMiniPay, setIsMiniPay] = useState(false)
+
+  const slearnAddr = useMemo(() => {
+    const network = resolveNetwork()
+    return SLEARN_ADDRESSES[network] || FALLBACK_SLEARN[network] || FALLBACK_SLEARN.celo
+  }, [])
+
+  const shortAddr = slearnAddr?.slice(0, 6) + '…' + slearnAddr?.slice(-4)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).ethereum?.isMiniPay) {
@@ -29,7 +43,7 @@ export function AddSlearnButton({ lang }: AddSlearnButtonProps) {
         params: {
           type: 'ERC20',
           options: {
-            address: '0x27fd41Bea85C39254f2B12789eB37a1543152CC1',
+            address: slearnAddr,
             symbol: 'SLEARN',
             decimals: 2,
             image: 'https://learn.tg/img/slearn-icon.svg',
@@ -47,8 +61,8 @@ export function AddSlearnButton({ lang }: AddSlearnButtonProps) {
       {isMiniPay ? (
         <span className="text-xs text-gray-400">
           {lang === 'es'
-            ? 'SLEARN: 0x27fd41Bea85C39254f2B12789eB37a1543152CC1 — 2 decimales'
-            : 'SLEARN: 0x27fd41Bea85C39254f2B12789eB37a1543152CC1 — 2 decimals'}
+            ? `SLEARN: ${slearnAddr} — 2 decimales`
+            : `SLEARN: ${slearnAddr} — 2 decimals`}
         </span>
       ) : state === 'success' ? (
         <span className="text-xs text-emerald-600 flex items-center justify-center gap-1">
@@ -59,8 +73,8 @@ export function AddSlearnButton({ lang }: AddSlearnButtonProps) {
         <span className="text-xs text-red-500 flex items-center justify-center gap-1">
           <AlertCircle className="h-3 w-3" />
           {lang === 'es'
-            ? 'Agrega manualmente: 0x27fd…CC1, 2 decimales'
-            : 'Add manually: 0x27fd…CC1, 2 decimals'}
+            ? `Agrega manualmente: ${shortAddr}, 2 decimales`
+            : `Add manually: ${shortAddr}, 2 decimals`}
         </span>
       ) : (
         <Button

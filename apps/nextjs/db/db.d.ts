@@ -1260,6 +1260,7 @@ export interface Religion {
   fechacreacion: Timestamp;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<Int8>;
+  name_english: string | null;
   nombre: string;
   observaciones: string | null;
   updated_at: Timestamp;
@@ -1323,7 +1324,7 @@ export interface Usuario {
   last_sign_in_at: Timestamp | null;
   last_sign_in_ip: string | null;
   lastgooddollarverification: Timestamp | null;
-  learningscore: number | null;
+  learningscore_deprecated: number | null;
   locked_at: Timestamp | null;
   nombre: string | null;
   nusuario: string;
