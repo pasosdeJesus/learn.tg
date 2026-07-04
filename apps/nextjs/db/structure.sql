@@ -1406,10 +1406,20 @@ CREATE TABLE public.church (
     id integer NOT NULL,
     name character varying(255) NOT NULL,
     country_id integer NOT NULL,
-    city character varying(255),
-    pastor_name text,
-    pastor_whatsapp text,
+    department_id integer,
+    municipality_id integer,
+    city_id integer,
+    city_name text,
+    address text,
+    pastor_name character varying(100) NOT NULL,
+    pastor_whatsapp character varying(20) NOT NULL,
+    pastor_telegram character varying(50),
+    pastor_id integer,
     cluster_wallet character varying(42),
+    denomination character varying(100),
+    government_registration character varying(50),
+    registration_photo text,
+    registration_verified boolean DEFAULT false,
     created_by integer NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
@@ -5098,6 +5108,23 @@ CREATE TABLE public.usuario (
     learningscore_deprecated double precision,
     excluir_leaderboard boolean DEFAULT false,
     church_relationship character varying(10),
+    whatsapp character varying(20),
+    telegram character varying(50),
+    country_id integer,
+    department_id integer,
+    municipality_id integer,
+    city_id integer,
+    place_of_worship character varying(100),
+    church_id integer,
+    id_photo_front text,
+    id_photo_back text,
+    verified_whatsapp character varying(20),
+    verified_telegram character varying(50),
+    verified_department_id integer,
+    verified_municipality_id integer,
+    verified_city_id integer,
+    verified_place_of_worship character varying(100),
+    id_photo_verified boolean DEFAULT false,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
@@ -7228,11 +7255,27 @@ ALTER TABLE ONLY public.church_clustergd
 
 
 --
+-- Name: church church_country_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church
+    ADD CONSTRAINT church_country_id_fkey FOREIGN KEY (country_id) REFERENCES public.msip_pais(id);
+
+
+--
 -- Name: church church_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.church
     ADD CONSTRAINT church_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.usuario(id);
+
+
+--
+-- Name: church church_pastor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church
+    ADD CONSTRAINT church_pastor_id_fkey FOREIGN KEY (pastor_id) REFERENCES public.usuario(id);
 
 
 --
@@ -8513,6 +8556,14 @@ ALTER TABLE ONLY public.msip_ubicacion
 
 ALTER TABLE ONLY public.msip_ubicacion
     ADD CONSTRAINT ubicacion_id_tsitio_fkey FOREIGN KEY (tsitio_id) REFERENCES public.msip_tsitio(id);
+
+
+--
+-- Name: usuario usuario_country_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario
+    ADD CONSTRAINT usuario_country_id_fkey FOREIGN KEY (country_id) REFERENCES public.msip_pais(id);
 
 
 --

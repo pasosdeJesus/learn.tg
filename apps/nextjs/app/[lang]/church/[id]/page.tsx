@@ -40,7 +40,7 @@ interface ChurchData {
   id: number
   name: string
   country_id: number
-  city: string | null
+  city_name: string | null
   pastor_name: string | null
   cluster_wallet: string | null
   created_at: string
@@ -99,8 +99,8 @@ export default function ChurchPage({ params }: PageProps) {
 
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{church.name}</h1>
-        {church.city && (
-          <p className="text-gray-500 mb-4">{church.city}</p>
+        {church.city_name && (
+          <p className="text-gray-500 mb-4">{church.city_name}</p>
         )}
 
         {church.pastor_name && (

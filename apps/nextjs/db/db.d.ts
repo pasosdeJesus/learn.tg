@@ -47,15 +47,25 @@ export interface BilleteraUsuario {
 }
 
 export interface Church {
-  city: string | null;
+  address: string | null;
+  city_id: number | null;
+  city_name: string | null;
   cluster_wallet: string | null;
   country_id: number;
   created_at: Generated<Timestamp | null>;
   created_by: number;
+  denomination: string | null;
+  department_id: number | null;
+  government_registration: string | null;
   id: Generated<number>;
+  municipality_id: number | null;
   name: string;
-  pastor_name: string | null;
-  pastor_whatsapp: string | null;
+  pastor_id: number | null;
+  pastor_name: string;
+  pastor_telegram: string | null;
+  pastor_whatsapp: string;
+  registration_photo: string | null;
+  registration_verified: Generated<boolean | null>;
   updated_at: Generated<Timestamp | null>;
 }
 
@@ -1338,10 +1348,14 @@ export interface Userevent {
 }
 
 export interface Usuario {
+  church_id: number | null;
   church_relationship: string | null;
+  city_id: number | null;
+  country_id: number | null;
   created_at: Timestamp | null;
   current_sign_in_at: Timestamp | null;
   current_sign_in_ip: string | null;
+  department_id: number | null;
   descripcion: string | null;
   email: Generated<string>;
   encrypted_password: Generated<string>;
@@ -1354,12 +1368,16 @@ export interface Usuario {
   foto_file_size: Int8 | null;
   foto_updated_at: Timestamp | null;
   id: Generated<number>;
+  id_photo_back: string | null;
+  id_photo_front: string | null;
+  id_photo_verified: Generated<boolean | null>;
   idioma: Generated<string>;
   last_sign_in_at: Timestamp | null;
   last_sign_in_ip: string | null;
   lastgooddollarverification: Timestamp | null;
   learningscore_deprecated: number | null;
   locked_at: Timestamp | null;
+  municipality_id: number | null;
   nombre: string | null;
   nusuario: string;
   oficina_id: number | null;
@@ -1367,6 +1385,7 @@ export interface Usuario {
   passport_name: string | null;
   passport_nationality: number | null;
   password: Generated<string>;
+  place_of_worship: string | null;
   profilescore: number | null;
   religion_id: number | null;
   remember_created_at: Timestamp | null;
@@ -1374,9 +1393,17 @@ export interface Usuario {
   reset_password_token: string | null;
   rol: Generated<number | null>;
   sign_in_count: Generated<number>;
+  telegram: string | null;
   tema_id: number | null;
   unlock_token: string | null;
   updated_at: Timestamp | null;
+  verified_city_id: number | null;
+  verified_department_id: number | null;
+  verified_municipality_id: number | null;
+  verified_place_of_worship: string | null;
+  verified_telegram: string | null;
+  verified_whatsapp: string | null;
+  whatsapp: string | null;
 }
 
 export interface ViewUserScores {

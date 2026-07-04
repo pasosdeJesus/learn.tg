@@ -6,10 +6,20 @@ export interface Church {
   id: number
   name: string
   country_id: number
-  city: string | null
-  pastor_name: string | null
-  pastor_whatsapp: string | null
+  department_id: number | null
+  municipality_id: number | null
+  city_id: number | null
+  city_name: string | null
+  address: string | null
+  pastor_name: string
+  pastor_whatsapp: string
+  pastor_telegram: string | null
+  pastor_id: number | null
   cluster_wallet: string | null
+  denomination: string | null
+  government_registration: string | null
+  registration_photo: string | null
+  registration_verified: boolean
   created_by: number
   created_at: Date
   updated_at: Date
@@ -151,4 +161,72 @@ export async function updateProfileScore(
     }))
     .where('id', '=', userId)
     .execute()
+}
+
+/**
+ * Calculates profile score based on verified fields (REQ §5):
+ * - Name + country: 68 pts (basic — country_id IS NOT NULL)
+ * - WhatsApp or Telegram verified: 12 pts
+ * - Location verified: 10 pts (dept + municipality + city match)
+ * - Place of worship verified: 10 pts
+ * Total: 100
+ */
+export async function recalculateProfileScore(
+  db: Kysely<DB>,
+  userId: number
+): Promise<number> {
+  const user = await db
+    .selectFrom('usuario')
+    .select([
+      'country_id',
+      'whatsapp',
+      'telegram',
+      'verified_whatsapp',
+      'verified_telegram',
+      'department_id',
+      'municipality_id',
+      'city_id',
+      'verified_department_id',
+      'verified_municipality_id',
+      'verified_city_id',
+      'place_of_worship',
+      'verified_place_of_worship',
+    ])
+    .where('id', '=', userId)
+    .executeTakeFirst()
+
+  if (!user) return 0
+
+  let score = 0
+
+  // Name + country: 68 pts
+  if (user.country_id != null) score += 68
+
+  // WhatsApp or Telegram verified: 12 pts (max 12, not 24)
+  if ((user.whatsapp && user.verified_whatsapp && user.whatsapp === user.verified_whatsapp) ||
+      (user.telegram && user.verified_telegram && user.telegram === user.verified_telegram)) {
+    score += 12
+  }
+
+  // Location verified: 10 pts
+  if (user.department_id != null &&
+      user.verified_department_id === user.department_id &&
+      user.verified_municipality_id === user.municipality_id &&
+      user.verified_city_id === user.city_id) {
+    score += 10
+  }
+
+  // Place of worship verified: 10 pts
+  if (user.place_of_worship && user.verified_place_of_worship &&
+      user.place_of_worship === user.verified_place_of_worship) {
+    score += 10
+  }
+
+  await db
+    .updateTable('usuario')
+    .set({ profilescore: score, updated_at: new Date() })
+    .where('id', '=', userId)
+    .execute()
+
+  return score
 }

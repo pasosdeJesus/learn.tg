@@ -43,8 +43,10 @@ interface UserProfile {
   picture: string
   profilescore: number | null
   religion: number
+  telegram: string
   uname: string
   userId: string
+  whatsapp: string
 }
 
 interface Religion {
@@ -87,8 +89,10 @@ export default function ProfileForm({ params }: PageProps) {
     picture: '',
     profilescore: null,
     religion: 1,
+    telegram: '',
     uname: '',
     userId: '',
+    whatsapp: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -98,6 +102,11 @@ export default function ProfileForm({ params }: PageProps) {
   const [selfApp, setSelfApp] = useState<any | null>(null)
   const [deeplink, setDeeplink] = useState('')
   const [showQRDialog, setShowQRDialog] = useState(false)
+  const [citySearch, setCitySearch] = useState('')
+  const [citySuggestions, setCitySuggestions] = useState<{ city: string; country_code: string }[]>([])
+  const [churches, setChurches] = useState<{ id: number; name: string; city_name: string | null }[]>([])
+  const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
+  const [newChurchName, setNewChurchName] = useState('')
 
   const { address } = useAccount()
   const { data: session, status: sessionStatus } = useSession()
@@ -107,14 +116,14 @@ export default function ProfileForm({ params }: PageProps) {
   const { lang } = parameters
 
   const t = useMemo(() => createComponentT(lang, {
-    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
+    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', churchRelationship: 'Church Relationship', selectChurchRelationship: 'Select your role', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Leader/Elder', churchRelationshipMember: 'Member', city: 'City', searchCity: 'Type to search city...', church: 'Church', selectChurch: 'Select your church', newChurch: '+ New church', newChurchName: 'New church name', contactNotice: 'We may occasionally send announcements about the platform to your email, WhatsApp, or Telegram. If you prefer not to receive them, do not provide that information.', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
       viewCredentials: 'View my public credentials',
       saveFailed: 'Failed to save profile.',
       expiredSession: '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.',
       connectionIssue: '\n\nPlease check your internet connection and try again.',
       errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below',
       verificationWarning: 'To maintain your verification, keep the name and country from your passport' },
-    es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
+    es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', churchRelationship: 'Relación con la Iglesia', selectChurchRelationship: 'Selecciona tu rol', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Líder/Anciano', churchRelationshipMember: 'Miembro', city: 'Ciudad', searchCity: 'Escribe para buscar ciudad...', church: 'Iglesia', selectChurch: 'Selecciona tu iglesia', newChurch: '+ Nueva iglesia', newChurchName: 'Nombre de nueva iglesia', contactNotice: 'Ocasionalmente enviaremos anuncios sobre la plataforma a tu correo, WhatsApp o Telegram. Si no deseas recibirlos, no suministres esa información.', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
       viewCredentials: 'Ver mis credenciales públicas',
       saveFailed: 'Fallo al guardar el perfil.',
       expiredSession: '\n\nPuede deberse a que la sesi\u00f3n ha expirado. Por favor, intenta desconectar y reconectar tu billetera.',
@@ -323,8 +332,10 @@ export default function ProfileForm({ params }: PageProps) {
           profilescore: rUser.profilescore,
           religion: rUser.religion_id,
           church_relationship: rUser.church_relationship || null,
+          telegram: rUser.telegram || '',
           uname: rUser.nusuario,
           userId: rUser.id,
+          whatsapp: rUser.whatsapp || '',
         }
         logger.info('locProfile=' + JSON.stringify(locProfile), 'Profile')
         setProfile(locProfile)
@@ -388,6 +399,8 @@ export default function ProfileForm({ params }: PageProps) {
         religion_id: profile.religion,
         pais_id: profile.country,
         church_relationship: profile.church_relationship,
+        whatsapp: profile.whatsapp,
+        telegram: profile.telegram,
       }
       let url = process.env.NEXT_PUBLIC_API_UPDATE_USER.replace(
         'usuario_id',
@@ -414,6 +427,48 @@ export default function ProfileForm({ params }: PageProps) {
           is_okx: navigator.userAgent.includes('OKX'),
         }), 'Profile')
         throw new Error(`[${response.status}] ${response.statusText}`)
+      }
+
+      // If creating a new church with city selected, call POST /api/church
+      if (profile.religion === 2 && citySearch && newChurchName && !selectedChurchId) {
+        const churchRes = await fetch('/api/church', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            walletAddress: address,
+            token: csrfToken,
+            name: newChurchName,
+            countryId: profile.country,
+            cityName: citySearch,
+            pastorName: profile.name,
+            pastorWhatsapp: profile.whatsapp || profile.phone || '',
+          }),
+        })
+        if (!churchRes.ok) {
+          const churchErr = await churchRes.json()
+          logger.error('Church creation failed: ' + JSON.stringify(churchErr), 'Profile')
+        }
+      }
+
+      // If creating a new church with city selected, call POST /api/church
+      if (profile.religion === 2 && citySearch && newChurchName && !selectedChurchId) {
+        const churchRes = await fetch('/api/church', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            walletAddress: address,
+            token: csrfToken,
+            name: newChurchName,
+            countryId: profile.country,
+            cityName: citySearch,
+            pastorName: profile.name,
+            pastorWhatsapp: profile.phone || '',
+          }),
+        })
+        if (!churchRes.ok) {
+          const churchErr = await churchRes.json()
+          logger.error('Church creation failed: ' + JSON.stringify(churchErr), 'Profile')
+        }
       }
 
       let responseData = null
@@ -462,6 +517,48 @@ export default function ProfileForm({ params }: PageProps) {
       ...prev,
       [field]: value,
     }))
+  }
+
+  const handleCitySearch = async (query: string) => {
+    setCitySearch(query)
+    if (query.length < 2) {
+      setCitySuggestions([])
+      return
+    }
+    const countryCode = countries.find((c) => c.id === profile.country)?.nombre || ''
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}&country=${encodeURIComponent(countryCode)}`)
+      const data = await res.json()
+      setCitySuggestions(data.results || [])
+    } catch {
+      setCitySuggestions([])
+    }
+  }
+
+  const handleSelectCity = async (city: string) => {
+    setCitySearch(city)
+    setCitySuggestions([])
+    setChurches([])
+    setSelectedChurchId(null)
+    setNewChurchName('')
+    if (!profile.country) return
+    try {
+      const res = await fetch(`/api/churches/search?q=&country=${profile.country}`)
+      const data = await res.json()
+      setChurches(data.churches || [])
+    } catch {
+      setChurches([])
+    }
+  }
+
+  const handleSelectChurch = (churchId: string) => {
+    if (churchId === '__new__') {
+      setSelectedChurchId(null)
+      setNewChurchName('')
+      return
+    }
+    setSelectedChurchId(parseInt(churchId, 10))
+    setNewChurchName('')
   }
 
   if (loading) {
@@ -599,6 +696,48 @@ export default function ProfileForm({ params }: PageProps) {
               </div>
               <div className="space-y-2">
                 <label
+                  htmlFor="whatsapp"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  WhatsApp
+                </label>
+                <input
+                  id="whatsapp"
+                  type="text"
+                  value={profile.whatsapp}
+                  onChange={(e) => handleChange('whatsapp', e.target.value)}
+                  placeholder="+1234567890"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="telegram"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Telegram
+                </label>
+                <input
+                  id="telegram"
+                  type="text"
+                  value={profile.telegram}
+                  onChange={(e) => handleChange('telegram', e.target.value)}
+                  placeholder="@username"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 italic mt-1">
+              {t('contactNotice')}
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <label
                   htmlFor="religion"
                   className="block text-sm font-medium text-gray-700"
                 >
@@ -627,6 +766,7 @@ export default function ProfileForm({ params }: PageProps) {
                   </SelectContent>
                 </Select>
               </div>
+              {profile.religion === 2 && (
               <div className="space-y-2">
                 <label
                   htmlFor="churchRelationship"
@@ -643,12 +783,77 @@ export default function ProfileForm({ params }: PageProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pastor">{t('churchRelationshipPastor')}</SelectItem>
-                    <SelectItem value="lider">{t('churchRelationshipLeader')}</SelectItem>
-                    <SelectItem value="miembro">{t('churchRelationshipMember')}</SelectItem>
+                    <SelectItem value="leader">{t('churchRelationshipLeader')}</SelectItem>
+                    <SelectItem value="member">{t('churchRelationshipMember')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              )}
             </div>
+
+            {profile.religion === 2 && profile.country && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <label htmlFor="citySearch" className="block text-sm font-medium text-gray-700">
+                  {t('city')}
+                </label>
+                <div className="relative">
+                  <input
+                    id="citySearch"
+                    type="text"
+                    value={citySearch}
+                    onChange={(e) => handleCitySearch(e.target.value)}
+                    placeholder={t('searchCity')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  {citySuggestions.length > 0 && (
+                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-auto">
+                      {citySuggestions.map((s, i) => (
+                        <li
+                          key={i}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          onClick={() => handleSelectCity(s.city)}
+                        >
+                          {s.city}{s.country_code ? `, ${s.country_code}` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="churchSelect" className="block text-sm font-medium text-gray-700">
+                  {t('church')}
+                </label>
+                <Select
+                  value={selectedChurchId?.toString() || (newChurchName ? '__new__' : '')}
+                  onValueChange={handleSelectChurch}
+                  disabled={!citySearch}
+                >
+                  <SelectTrigger id="churchSelect" className="w-full">
+                    <SelectValue placeholder={t('selectChurch')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {churches.map((ch) => (
+                      <SelectItem key={ch.id} value={ch.id.toString()}>
+                        {ch.name}{ch.city_name ? ` — ${ch.city_name}` : ''}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="__new__">{t('newChurch')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(!selectedChurchId && newChurchName !== undefined) && (
+                  <input
+                    type="text"
+                    value={newChurchName}
+                    onChange={(e) => setNewChurchName(e.target.value)}
+                    placeholder={t('newChurchName')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mt-2"
+                  />
+                )}
+              </div>
+            </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
