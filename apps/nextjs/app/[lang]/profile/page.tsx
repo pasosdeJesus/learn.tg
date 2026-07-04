@@ -103,7 +103,7 @@ export default function ProfileForm({ params }: PageProps) {
   const [deeplink, setDeeplink] = useState('')
   const [showQRDialog, setShowQRDialog] = useState(false)
   const [citySearch, setCitySearch] = useState('')
-  const [citySuggestions, setCitySuggestions] = useState<{ city: string; country_code: string }[]>([])
+  const [citySuggestions, setCitySuggestions] = useState<{ city: string; state: string; county: string; country_code: string; lat: number; lng: number }[]>([])
   const [churches, setChurches] = useState<{ id: number; name: string; city_name: string | null }[]>([])
   const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
   const [newChurchName, setNewChurchName] = useState('')
@@ -535,13 +535,32 @@ export default function ProfileForm({ params }: PageProps) {
     }
   }
 
-  const handleSelectCity = async (city: string) => {
+  const handleSelectCity = async (city: string, suggestion?: { state: string; county: string; lat: number; lng: number }) => {
     setCitySearch(city)
     setCitySuggestions([])
     setChurches([])
     setSelectedChurchId(null)
     setNewChurchName('')
     if (!profile.country) return
+
+    // Upsert location into msip_* tables
+    if (suggestion) {
+      try {
+        await fetch('/api/geocode/select', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            countryId: profile.country,
+            state: suggestion.state,
+            county: suggestion.county,
+            city,
+            lat: suggestion.lat,
+            lng: suggestion.lng,
+          }),
+        })
+      } catch { /* non-blocking */ }
+    }
+
     try {
       const res = await fetch(`/api/churches/search?q=&country=${profile.country}`)
       const data = await res.json()
@@ -812,7 +831,7 @@ export default function ProfileForm({ params }: PageProps) {
                         <li
                           key={i}
                           className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                          onClick={() => handleSelectCity(s.city)}
+                          onClick={() => handleSelectCity(s.city, s)}
                         >
                           {s.city}{s.country_code ? `, ${s.country_code}` : ''}
                         </li>
