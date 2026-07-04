@@ -35,6 +35,16 @@ const common: TranslationSet = {
     privacyPolicy: 'Privacy Policy',
     termsOfService: 'Terms of Service',
     churchDirectory: 'Church Directory',
+    // R-#181: Delete Verified Data
+    verifiedData: 'Verified Data',
+    verifiedDataDescription: 'Your verified data (name, location, WhatsApp/Telegram, place of worship) is used to calculate your profile score. Deleting it will reset your score to 0.',
+    deleteVerifiedData: 'Delete Verified Data',
+    deleteVerifiedDataTitle: 'Delete Verified Data?',
+    deleteVerifiedDataDescription: 'This will permanently remove all verified fields from your account and reset your profile score to 0. This action CANNOT be undone.',
+    deleteVerifiedDataConfirm: 'Type "DELETE" to confirm',
+    deleteVerifiedDataConfirmLabel: 'DELETE',
+    deleteVerifiedDataSuccess: 'Verified data deleted successfully',
+    deleteVerifiedDataError: 'Failed to delete verified data',
   },
   es: {
     leaderboard: 'Tabla de Clasificación',
@@ -70,6 +80,16 @@ const common: TranslationSet = {
     privacyPolicy: 'Política de Privacidad',
     termsOfService: 'Términos de Servicio',
     churchDirectory: 'Directorio de Iglesias',
+    // R-#181: Delete Verified Data
+    verifiedData: 'Datos Verificados',
+    verifiedDataDescription: 'Tus datos verificados (nombre, ubicación, WhatsApp/Telegram, lugar de culto) se usan para calcular tu puntaje de perfil. Eliminarlos reiniciará tu puntaje a 0.',
+    deleteVerifiedData: 'Eliminar Información Verificada',
+    deleteVerifiedDataTitle: '¿Eliminar Datos Verificados?',
+    deleteVerifiedDataDescription: 'Esto eliminará permanentemente todos los campos verificados de tu cuenta y reiniciará tu puntaje de perfil a 0. Esta acción NO se puede deshacer.',
+    deleteVerifiedDataConfirm: 'Escribe "ELIMINAR" para confirmar',
+    deleteVerifiedDataConfirmLabel: 'ELIMINAR',
+    deleteVerifiedDataSuccess: 'Datos verificados eliminados correctamente',
+    deleteVerifiedDataError: 'Error al eliminar datos verificados',
   },
 }
 

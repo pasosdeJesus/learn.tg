@@ -22,6 +22,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select'
+import DeleteVerifiedDataDialog from '@/components/DeleteVerifiedDataDialog'
 import { IS_PRODUCTION } from '@/lib/config'
 import { logger, DebugConsole } from '@pasosdejesus/m/debug'
 
@@ -638,6 +639,20 @@ export default function ProfileForm({ params }: PageProps) {
                 {t('scoreRequired')}
               </p>
             </div>
+          </div>
+
+          {/* Verified Data Management — R-#181 */}
+          <div className="mb-8 p-4 border border-red-200 rounded-lg bg-red-50">
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">
+              {t('verifiedData')}
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {t('verifiedDataDescription')}
+            </p>
+            <DeleteVerifiedDataDialog
+              lang={lang}
+              onSuccess={() => setUpdateProfile(true)}
+            />
           </div>
 
           {profile.userId && (
