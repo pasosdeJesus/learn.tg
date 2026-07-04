@@ -107,7 +107,7 @@ export default function Header({ lang: langProp = 'en' }) {
 
                   {/* Dropdown menu */}
                   {isMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="absolute left-0 mt-2 w-56 max-w-[calc(100vw-3rem)] bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
                       {menuItems.map((item) => (
                         <Link
                           key={item.key}

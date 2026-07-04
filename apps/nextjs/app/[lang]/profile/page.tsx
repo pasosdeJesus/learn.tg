@@ -35,6 +35,8 @@ interface UserProfile {
   email: string
   groups: string
   id: string
+  id_photo_front: string | null
+  id_photo_back: string | null
   language: string
   lastgooddollarverification: number | null
   name: string
@@ -81,6 +83,8 @@ export default function ProfileForm({ params }: PageProps) {
     email: '',
     groups: '',
     id: '',
+    id_photo_front: null,
+    id_photo_back: null,
     language: '',
     lastgooddollarverification: null,
     name: '',
@@ -108,6 +112,7 @@ export default function ProfileForm({ params }: PageProps) {
   const [churches, setChurches] = useState<{ id: number; name: string; city_name: string | null }[]>([])
   const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
   const [newChurchName, setNewChurchName] = useState('')
+  const [uploadingPhoto, setUploadingPhoto] = useState<'front' | 'back' | null>(null)
 
   const { address } = useAccount()
   const { data: session, status: sessionStatus } = useSession()
@@ -117,20 +122,20 @@ export default function ProfileForm({ params }: PageProps) {
   const { lang } = parameters
 
   const t = useMemo(() => createComponentT(lang, {
-    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', churchRelationship: 'Church Relationship', selectChurchRelationship: 'Select your role', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Leader/Elder', churchRelationshipMember: 'Member', city: 'City', searchCity: 'Type to search city...', church: 'Church', selectChurch: 'Select your church', newChurch: '+ New church', newChurchName: 'New church name', contactNotice: 'We may occasionally send announcements about the platform to your email, WhatsApp, or Telegram. If you prefer not to receive them, do not provide that information.', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
+    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', churchRelationship: 'Church Relationship', selectChurchRelationship: 'Select your role', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Leader/Elder', churchRelationshipMember: 'Member', placeOfWorshipAddress: 'Address of your place of worship', searchPlace: 'Type to search place...', placeOfWorshipName: 'Name of your place of worship', placeOfWorshipNamePlaceholder: 'Name or church', contactNotice: 'We may occasionally send announcements about the platform to your email, WhatsApp, or Telegram. If you prefer not to receive them, do not provide that information.', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores', deleteVerifiedData: 'Delete Verified Data',
       viewCredentials: 'View my public credentials',
       saveFailed: 'Failed to save profile.',
       expiredSession: '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.',
       connectionIssue: '\n\nPlease check your internet connection and try again.',
       errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below',
-      verificationWarning: 'To maintain your verification, keep the name and country from your passport' },
-    es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', churchRelationship: 'Relación con la Iglesia', selectChurchRelationship: 'Selecciona tu rol', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Líder/Anciano', churchRelationshipMember: 'Miembro', city: 'Ciudad', searchCity: 'Escribe para buscar ciudad...', church: 'Iglesia', selectChurch: 'Selecciona tu iglesia', newChurch: '+ Nueva iglesia', newChurchName: 'Nombre de nueva iglesia', contactNotice: 'Ocasionalmente enviaremos anuncios sobre la plataforma a tu correo, WhatsApp o Telegram. Si no deseas recibirlos, no suministres esa información.', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
+      verificationWarning: 'To maintain your verification and profile score, keep the information already verified as you provided during verification' },
+    es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', churchRelationship: 'Relación con la Iglesia', selectChurchRelationship: 'Selecciona tu rol', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Líder/Anciano', churchRelationshipMember: 'Miembro', placeOfWorshipAddress: 'Dirección de tu lugar de culto', searchPlace: 'Escribe para buscar lugar...', placeOfWorshipName: 'Nombre de tu lugar de culto', placeOfWorshipNamePlaceholder: 'Nombre o iglesia', contactNotice: 'Ocasionalmente enviaremos anuncios sobre la plataforma a tu correo, WhatsApp o Telegram. Si no deseas recibirlos, no suministres esa información.', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes', deleteVerifiedData: 'Eliminar Datos Verificados',
       viewCredentials: 'Ver mis credenciales públicas',
       saveFailed: 'Fallo al guardar el perfil.',
       expiredSession: '\n\nPuede deberse a que la sesi\u00f3n ha expirado. Por favor, intenta desconectar y reconectar tu billetera.',
       connectionIssue: '\n\nPor favor, revisa tu conexi\u00f3n a internet e int\u00e9ntalo de nuevo.',
       errorLabel: 'Error: ', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion',
-      verificationWarning: 'Para mantener tu verificación, conserva el nombre y país de tu pasaporte' },
+      verificationWarning: 'Para mantener tu verificación y puntaje de perfil, conserva la información ya verificada como la suministraste durante la verificación' },
   }), [lang])
 
   const handleUpdateScores = async () => {
@@ -333,6 +338,8 @@ export default function ProfileForm({ params }: PageProps) {
           profilescore: rUser.profilescore,
           religion: rUser.religion_id,
           church_relationship: rUser.church_relationship || null,
+          id_photo_front: rUser.id_photo_front || null,
+          id_photo_back: rUser.id_photo_back || null,
           telegram: rUser.telegram || '',
           uname: rUser.nusuario,
           userId: rUser.id,
@@ -581,6 +588,41 @@ export default function ProfileForm({ params }: PageProps) {
     setNewChurchName('')
   }
 
+  const handlePhotoUpload = async (side: 'front' | 'back', file: File) => {
+    setUploadingPhoto(side)
+    try {
+      const csrfToken = await getCsrfToken()
+      const formData = new FormData()
+      formData.append('photo', file)
+      formData.append('side', side)
+      formData.append('walletAddress', address || '')
+      formData.append('token', csrfToken || '')
+      const res = await fetch('/api/user/id-photo', { method: 'POST', body: formData })
+      if (!res.ok) throw new Error('Upload failed')
+      const data = await res.json()
+      setProfile((prev) => ({ ...prev, [side === 'front' ? 'id_photo_front' : 'id_photo_back']: data.path }))
+    } catch {
+      toast({ title: lang === 'es' ? 'Error al subir foto' : 'Photo upload failed', variant: 'destructive' })
+    } finally {
+      setUploadingPhoto(null)
+    }
+  }
+
+  const handlePhotoDelete = async (side: 'front' | 'back') => {
+    try {
+      const csrfToken = await getCsrfToken()
+      const res = await fetch('/api/user/id-photo', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: address, token: csrfToken, side }),
+      })
+      if (!res.ok) throw new Error('Delete failed')
+      setProfile((prev) => ({ ...prev, [side === 'front' ? 'id_photo_front' : 'id_photo_back']: null }))
+    } catch {
+      toast({ title: lang === 'es' ? 'Error al eliminar foto' : 'Photo delete failed', variant: 'destructive' })
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -763,6 +805,16 @@ export default function ProfileForm({ params }: PageProps) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="lastgooddollarverification"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  {t('uniquenessGoodDollar')}
+                  {profile.lastgooddollarverification != null ? '✅' : '❌'}{' '}
+                  {')'}
+                </label>
+              </div>
             </div>
 
             <p className="text-xs text-gray-500 italic mt-1">
@@ -770,126 +822,6 @@ export default function ProfileForm({ params }: PageProps) {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <label
-                  htmlFor="religion"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  {t('religion')}
-                </label>
-                <Select
-                  value={profile.religion?.toString() || ''}
-                  onValueChange={(value) => handleChange('religion', value)}
-                >
-                  <SelectTrigger id="religion" className="w-full">
-                    <SelectValue
-                      placeholder={
-                        t('selectReligion')
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {religions.map((religion) => (
-                      <SelectItem
-                        key={religion.id}
-                        value={religion.id.toString()}
-                      >
-                        {lang === 'en' && religion.name_english ? religion.name_english : religion.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {profile.religion === 2 && (
-              <div className="space-y-2">
-                <label
-                  htmlFor="churchRelationship"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  {t('churchRelationship')}
-                </label>
-                <Select
-                  value={profile.church_relationship || ''}
-                  onValueChange={(value) => handleChange('church_relationship', value)}
-                >
-                  <SelectTrigger id="churchRelationship" className="w-full">
-                    <SelectValue placeholder={t('selectChurchRelationship')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pastor">{t('churchRelationshipPastor')}</SelectItem>
-                    <SelectItem value="leader">{t('churchRelationshipLeader')}</SelectItem>
-                    <SelectItem value="member">{t('churchRelationshipMember')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              )}
-            </div>
-
-            {profile.religion === 2 && profile.country && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <label htmlFor="citySearch" className="block text-sm font-medium text-gray-700">
-                  {t('city')}
-                </label>
-                <div className="relative">
-                  <input
-                    id="citySearch"
-                    type="text"
-                    value={citySearch}
-                    onChange={(e) => handleCitySearch(e.target.value)}
-                    placeholder={t('searchCity')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  {citySuggestions.length > 0 && (
-                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-auto">
-                      {citySuggestions.map((s, i) => (
-                        <li
-                          key={i}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                          onClick={() => handleSelectCity(s.city, s)}
-                        >
-                          {s.city}{s.country_code ? `, ${s.country_code}` : ''}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="churchSelect" className="block text-sm font-medium text-gray-700">
-                  {t('church')}
-                </label>
-                <Select
-                  value={selectedChurchId?.toString() || (newChurchName ? '__new__' : '')}
-                  onValueChange={handleSelectChurch}
-                  disabled={!citySearch}
-                >
-                  <SelectTrigger id="churchSelect" className="w-full">
-                    <SelectValue placeholder={t('selectChurch')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {churches.map((ch) => (
-                      <SelectItem key={ch.id} value={ch.id.toString()}>
-                        {ch.name}{ch.city_name ? ` — ${ch.city_name}` : ''}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="__new__">{t('newChurch')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                {(!selectedChurchId && newChurchName !== undefined) && (
-                  <input
-                    type="text"
-                    value={newChurchName}
-                    onChange={(e) => setNewChurchName(e.target.value)}
-                    placeholder={t('newChurchName')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mt-2"
-                  />
-                )}
-              </div>
-            </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label
                   htmlFor="country"
@@ -924,15 +856,180 @@ export default function ProfileForm({ params }: PageProps) {
               </div>
               <div className="space-y-2">
                 <label
-                  htmlFor="lastgooddollarverification"
+                  htmlFor="religion"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  {t('uniquenessGoodDollar')}
-                  {profile.lastgooddollarverification != null ? '✅' : '❌'}{' '}
-                  {')'}
+                  {t('religion')}
                 </label>
+                <Select
+                  value={profile.religion?.toString() || ''}
+                  onValueChange={(value) => handleChange('religion', value)}
+                >
+                  <SelectTrigger id="religion" className="w-full">
+                    <SelectValue
+                      placeholder={
+                        t('selectReligion')
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {religions.map((religion) => (
+                      <SelectItem
+                        key={religion.id}
+                        value={religion.id.toString()}
+                      >
+                        {lang === 'en' && religion.name_english ? religion.name_english : religion.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+
+            {profile.country === 694 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  {lang === 'es' ? 'Foto frontal de documento de identidad' : 'ID Photo — Front'}
+                </label>
+                {profile.id_photo_front ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
+                    <button type="button" onClick={() => handlePhotoDelete('front')} className="text-xs text-red-600 hover:underline">
+                      {lang === 'es' ? 'Eliminar' : 'Delete'}
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoUpload('front', f) }}
+                    disabled={uploadingPhoto === 'front'}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  {lang === 'es' ? 'Foto reversa de documento de identidad' : 'ID Photo — Back'}
+                </label>
+                {profile.id_photo_back ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
+                    <button type="button" onClick={() => handlePhotoDelete('back')} className="text-xs text-red-600 hover:underline">
+                      {lang === 'es' ? 'Eliminar' : 'Delete'}
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoUpload('back', f) }}
+                    disabled={uploadingPhoto === 'back'}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                )}
+              </div>
+            </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <label htmlFor="citySearch" className="block text-sm font-medium text-gray-700">
+                  {t('placeOfWorshipAddress')}
+                </label>
+                <div className="relative">
+                  <input
+                    id="citySearch"
+                    type="text"
+                    value={citySearch}
+                    onChange={(e) => handleCitySearch(e.target.value)}
+                    placeholder={t('searchPlace')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  {citySuggestions.length > 0 && (
+                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-auto">
+                      {citySuggestions.map((s, i) => (
+                        <li
+                          key={i}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          onClick={() => handleSelectCity(s.city, s)}
+                        >
+                          {s.city}{s.country_code ? `, ${s.country_code}` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="placeOfWorshipName" className="block text-sm font-medium text-gray-700">
+                  {t('placeOfWorshipName')}
+                </label>
+                {profile.religion === 2 ? (
+                  <>
+                    <Select
+                      value={selectedChurchId?.toString() || (newChurchName ? '__new__' : '')}
+                      onValueChange={handleSelectChurch}
+                    >
+                      <SelectTrigger id="placeOfWorshipName" className="w-full">
+                        <SelectValue placeholder={t('placeOfWorshipNamePlaceholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {churches.map((ch) => (
+                          <SelectItem key={ch.id} value={ch.id.toString()}>
+                            {ch.name}{ch.city_name ? ` — ${ch.city_name}` : ''}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__new__">{lang === 'es' ? '+ Nueva iglesia' : '+ New church'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {(!selectedChurchId && newChurchName !== undefined) && (
+                      <input
+                        type="text"
+                        value={newChurchName}
+                        onChange={(e) => setNewChurchName(e.target.value)}
+                        placeholder={lang === 'es' ? 'Nombre de nueva iglesia' : 'New church name'}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mt-2"
+                      />
+                    )}
+                  </>
+                ) : (
+                  <input
+                    id="placeOfWorshipName"
+                    type="text"
+                    placeholder={t('placeOfWorshipNamePlaceholder')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                )}
+              </div>
+            </div>
+
+            {profile.religion === 2 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="churchRelationship"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  {t('churchRelationship')}
+                </label>
+                <Select
+                  value={profile.church_relationship || ''}
+                  onValueChange={(value) => handleChange('church_relationship', value)}
+                >
+                  <SelectTrigger id="churchRelationship" className="w-full">
+                    <SelectValue placeholder={t('selectChurchRelationship')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pastor">{t('churchRelationshipPastor')}</SelectItem>
+                    <SelectItem value="leader">{t('churchRelationshipLeader')}</SelectItem>
+                    <SelectItem value="member">{t('churchRelationshipMember')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            )}
 
             <QRCodeDialog
               open={showQRDialog}
@@ -956,19 +1053,12 @@ export default function ProfileForm({ params }: PageProps) {
               <Button type="button" onClick={handleUpdateScores}>
                 {t('updateScores')}
               </Button>
+              <DeleteVerifiedDataDialog
+                lang={lang}
+                onSuccess={() => setUpdateProfile(true)}
+              />
             </div>
           </form>
-
-          {/* Verified Data Management — R-#181 */}
-          <div className="mt-8 border-t pt-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              {t('verifiedData') || 'Verified Data'}
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              {t('verifiedDataDescription') || 'Your verified data is used to calculate your profile score. Deleting it will reset your score.'}
-            </p>
-            <DeleteVerifiedDataDialog lang={lang} />
-          </div>
         </div>
       </div>
     </div>
