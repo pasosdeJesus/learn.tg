@@ -282,12 +282,12 @@ Ejemplos:
 
     // --- FASE 3: Auditoría de Score ---
     console.log(' --- FASE 3: Auditoría de learningscore ---');
-    const users = await db.selectFrom('usuario').select(['id', 'learningscore']).execute()
+    const users = await db.selectFrom('usuario').select(['id', 'learningscore_deprecated']).execute()
     let scoreAlerts = 0
     for (const user of users) {
       const gPoints = await db.selectFrom('guide_usuario').where('usuario_id', '=', user.id).select(db.fn.sum('points').as('t')).executeTakeFirst().then(r => Number(r?.t) || 0)
       const dAmt = await db.selectFrom('transaction').where('usuario_id', '=', user.id).where('type', '=', 'donation').select(db.fn.sum('amount').as('t')).executeTakeFirst().then(r => Number(r?.t) || 0)
-      const justified = gPoints + ((dAmt * 22) / 10), actual = Number(user.learningscore)
+      const justified = gPoints + ((dAmt * 22) / 10), actual = Number(user.learningscore_deprecated)
       if (Math.abs(actual - justified) > 0.01) {
         console.log(`[ALERT] Usuario ${user.id}: Score ${actual} vs Justificado ${justified.toFixed(2)}`)
         scoreAlerts++

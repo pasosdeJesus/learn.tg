@@ -3,8 +3,6 @@ import type { DB } from '@/db/db.d'
 import type { LeaderboardQueryParams } from '@/types/leaderboard'
 
 // Shared SQL field definitions used across leaderboard queries
-const LP_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.balance_impact ELSE 0 END), 2), 0)`.as('learningpoints')
-const LP_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'learningpoints' THEN t.balance_impact ELSE 0 END), 2), 0)`
 const SCHOLARSHIP_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'scholarship' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`.as('scholarship_usdt')
 const SCHOLARSHIP_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'scholarship' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`
 const UBI_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'ubi-claim' AND t.crypto = 'celo' THEN t.amount ELSE 0 END), 2), 0)`.as('ubi_celo')
@@ -15,14 +13,13 @@ const SBT_FIELD = sql<number>`COALESCE(ce_counts.cnt, 0)`.as('sbt_count')
 const SLEARN_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.balance_impact ELSE 0 END), 2), 0)`.as('slearn_balance')
 const SLEARN_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.balance_impact ELSE 0 END), 2), 0)`
 const SLEARN_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'slearn' AND t.balance_impact > 0 THEN u.id END)`.as('totalUsersWithSLEARN')
-const LP_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'learningpoints' AND t.balance_impact > 0 THEN u.id END)`.as('totalUsersWithLP')
 
 export async function buildLeaderboardQuery(
   db: Kysely<DB>,
   params: LeaderboardQueryParams,
   includeReligion: boolean = false
 ) {
-  const { sortBy = 'learningpoints', sortOrder = 'desc', country, page = 1, limit = 50 } = params
+  const { sortBy = 'slearn_balance', sortOrder = 'desc', country, page = 1, limit = 50 } = params
   const offset = (page - 1) * limit
 
   let query: any = db
@@ -46,7 +43,6 @@ export async function buildLeaderboardQuery(
     'u.nusuario as username',
     'p.alfa2 as pais_alfa2',
     'p.nombre as pais_nombre',
-    LP_FIELD,
     SLEARN_FIELD,
     SCHOLARSHIP_FIELD,
     UBI_FIELD,
@@ -71,8 +67,7 @@ export async function buildLeaderboardQuery(
     query = query.where('p.alfa2', '=', country)
   }
 
-  const orderByField = sortBy === 'learningpoints' ? sql`learningpoints` :
-                      sortBy === 'slearn_balance' ? sql`slearn_balance` :
+  const orderByField = sortBy === 'slearn_balance' ? sql`slearn_balance` :
                       sortBy === 'scholarship_usdt' ? sql`scholarship_usdt` :
                       sortBy === 'ubi_celo' ? sql`ubi_celo` :
                       sortBy === 'sbt_count' ? sql`sbt_count` :
@@ -110,9 +105,7 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
   const result = await query
     .select([
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
-      LP_USER_COUNT,
       SLEARN_USER_COUNT,
-      LP_WHERE.as('totalLearningPoints'),
       SLEARN_WHERE.as('totalSLEARNBalance'),
       SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
       UBI_WHERE.as('totalUBICELO'),
@@ -122,9 +115,7 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
 
   return {
     totalUsers: Number(result?.totalUsers || 0),
-    totalUsersWithLP: Number(result?.totalUsersWithLP || 0),
     totalUsersWithSLEARN: Number(result?.totalUsersWithSLEARN || 0),
-    totalLearningPoints: Number(result?.totalLearningPoints || 0),
     totalSLEARNBalance: Number(result?.totalSLEARNBalance || 0),
     totalScholarshipUSDT: Number(result?.totalScholarshipUSDT || 0),
     totalUBICELO: Number(result?.totalUBICELO || 0),
@@ -142,9 +133,7 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
       sql<string>`COALESCE(p.alfa2, 'ZZ')`.as('alfa2'),
       sql<string>`COALESCE(p.nombre, 'Sin pa\u00eds')`.as('nombre'),
       sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
-      LP_USER_COUNT,
       SLEARN_USER_COUNT,
-      LP_WHERE.as('totalLearningPoints'),
       SLEARN_WHERE.as('totalSLEARNBalance'),
       SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
       UBI_WHERE.as('totalUBICELO'),
@@ -158,9 +147,7 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
     alfa2: row.alfa2,
     nombre: row.nombre,
     totalUsers: Number(row.totalUsers || 0),
-    totalUsersWithLP: Number(row.totalUsersWithLP || 0),
     totalUsersWithSLEARN: Number(row.totalUsersWithSLEARN || 0),
-    totalLearningPoints: Number(row.totalLearningPoints || 0),
     totalSLEARNBalance: Number(row.totalSLEARNBalance || 0),
     totalScholarshipUSDT: Number(row.totalScholarshipUSDT || 0),
     totalUBICELO: Number(row.totalUBICELO || 0),
@@ -192,7 +179,6 @@ export async function getLeaderboardData(
       username: row.username,
       pais_alfa2: row.pais_alfa2,
       pais_nombre: row.pais_nombre,
-      learningpoints: Number(row.learningpoints),
       slearn_balance: Number(row.slearn_balance),
       scholarship_usdt: Number(row.scholarship_usdt),
       ubi_celo: Number(row.ubi_celo),

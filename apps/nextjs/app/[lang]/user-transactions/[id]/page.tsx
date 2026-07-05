@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@pasosdejesus/m/shadcn-components/ui/table'
-import { formatLearningPoints, formatUSDT, formatCELO } from '@/lib/format'
+import { formatUSDT, formatCELO } from '@/lib/format'
 import type { UserTransaction } from '@/lib/user-transactions'
 import { ExternalLink, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -39,8 +39,8 @@ export default function UserTransactionsPage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null)
 
   const t = useMemo(() => createComponentT(lang, {
-    en: { txHistory: 'Transaction History', type: 'Type', amount: 'Amount', date: 'Date', hash: 'Hash', noTx: 'No transactions found', scholarship: 'Scholarship', donation: 'Donation', claim: 'Claim', ubiClaim: 'UBI Claim', learningPoints: 'Learning Points', points: 'Points' },
-    es: { txHistory: 'Historial de Transacciones', type: 'Tipo', amount: 'Cantidad', date: 'Fecha', hash: 'Hash', noTx: 'No se encontraron transacciones', scholarship: 'Beca', donation: 'Donacion', claim: 'Reclamo', ubiClaim: 'Reclamo UBI', learningPoints: 'Puntos de Aprendizaje', points: 'Puntos' },
+    en: { txHistory: 'Transaction History', type: 'Type', amount: 'Amount', date: 'Date', hash: 'Hash', noTx: 'No transactions found', scholarship: 'Scholarship', donation: 'Donation', claim: 'Claim', ubiClaim: 'UBI Claim', points: 'Points' },
+    es: { txHistory: 'Historial de Transacciones', type: 'Tipo', amount: 'Cantidad', date: 'Fecha', hash: 'Hash', noTx: 'No se encontraron transacciones', scholarship: 'Beca', donation: 'Donacion', claim: 'Reclamo', ubiClaim: 'Reclamo UBI', points: 'Puntos' },
   }), [lang])
 
   useEffect(() => {
@@ -67,7 +67,6 @@ export default function UserTransactionsPage({ params }: PageProps) {
   }
 
   const formatAmount = (tx: UserTransaction) => {
-    if (tx.crypto === 'learningpoints') return formatLearningPoints(tx.amount)
     if (tx.crypto === 'slearn') return `${Number(tx.amount).toFixed(2)} SLEARN`
     if (tx.crypto === 'usdt') return formatUSDT(tx.amount)
     if (tx.crypto === 'celo') return formatCELO(tx.amount)
@@ -80,7 +79,6 @@ export default function UserTransactionsPage({ params }: PageProps) {
       case 'ubi-claim': return t('UBI Claim', 'Reclamo de UBI')
       case 'donation': return t('donation')
       case 'conversion': return lang === 'es' ? 'Conversión LP→SLEARN' : 'LP→SLEARN Conversion'
-      case 'learningpoint': return t('learningPoints')
       default: return tipo
     }
   }

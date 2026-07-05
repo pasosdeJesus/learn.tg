@@ -105,18 +105,20 @@ export default function ProfileForm({ params }: PageProps) {
   const { lang } = parameters
 
   const t = useMemo(() => createComponentT(lang, {
-    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', learningScore: 'Learning Score', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
+    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', learningScore: 'Learning Score (Deprecated — see SLEARN)', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
       viewCredentials: 'View my public credentials',
       saveFailed: 'Failed to save profile.',
       expiredSession: '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.',
       connectionIssue: '\n\nPlease check your internet connection and try again.',
-      errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below' },
-    es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', learningScore: 'Puntaje de Aprendizaje', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
+      errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below',
+      verificationWarning: 'To maintain your verification, keep the name and country from your passport' },
+    es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', learningScore: 'Puntaje de Aprendizaje (Obsoleto — ver SLEARN)', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
       viewCredentials: 'Ver mis credenciales públicas',
       saveFailed: 'Fallo al guardar el perfil.',
       expiredSession: '\n\nPuede deberse a que la sesi\u00f3n ha expirado. Por favor, intenta desconectar y reconectar tu billetera.',
       connectionIssue: '\n\nPor favor, revisa tu conexi\u00f3n a internet e int\u00e9ntalo de nuevo.',
-      errorLabel: 'Error: ', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion' },
+      errorLabel: 'Error: ', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion',
+      verificationWarning: 'Para mantener tu verificación, conserva el nombre y país de tu pasaporte' },
   }), [lang])
 
   const handleUpdateScores = async () => {
@@ -530,6 +532,9 @@ export default function ProfileForm({ params }: PageProps) {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-3">
+              {t('verificationWarning')}
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label

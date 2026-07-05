@@ -13,11 +13,11 @@ import {
 } from '@pasosdejesus/m/shadcn-components/ui/table'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { CountryFlag } from '@/components/CountryFlag'
-import { formatLearningPoints, formatUSDT, formatCELO } from '@/lib/format'
+import { formatUSDT, formatCELO } from '@/lib/format'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { CountryTotals } from '@/types/leaderboard'
 
-export type SortField = 'totalUsers' | 'totalUsersWithLP' | 'totalLearningPoints' | 'totalSLEARNBalance' | 'totalScholarshipUSDT' | 'totalUBICELO' | 'totalDonationsUSDT'
+export type SortField = 'totalUsers' | 'totalSLEARNBalance' | 'totalScholarshipUSDT' | 'totalUBICELO' | 'totalDonationsUSDT'
 export type SortOrder = 'asc' | 'desc'
 
 interface TransparencyTableProps {
@@ -27,8 +27,6 @@ interface TransparencyTableProps {
   rules?: Array<{ action: string; subject: string }>
   totals?: {
     totalUsers: number
-    totalUsersWithLP: number
-    totalLearningPoints: number
     totalSLEARNBalance: number
     totalScholarshipUSDT: number
     totalUBICELO: number
@@ -45,8 +43,8 @@ export function TransparencyTable({
 }: TransparencyTableProps) {
   // Translation helper
   const t = useMemo(() => createComponentT(lang, {
-    en: { totalUsers: 'Total Users', totalUsersWithLP: 'Users with LP', totalLP: 'Total LP', totalSLEARN: 'SLEARN', totalScholarship: 'Scholarship', totalUBI: 'UBI (CELO)', totalDonations: 'Donations', noData: 'No data available', previous: 'Previous', pageOf: 'Page {0} of {1}', next: 'Next' },
-    es: { totalUsers: 'Total Usuarios', totalUsersWithLP: 'Usuarios con PA', totalLP: 'Total PA', totalSLEARN: 'SLEARN', totalScholarship: 'Becas', totalUBI: 'UBI (CELO)', totalDonations: 'Donaciones', noData: 'No hay datos disponibles', previous: 'Anterior', pageOf: 'Pagina {0} de {1}', next: 'Siguiente' },
+    en: { totalUsers: 'Total Users', totalSLEARN: 'SLEARN', totalScholarship: 'Scholarship', totalUBI: 'UBI (CELO)', totalDonations: 'Donations', noData: 'No data available', previous: 'Previous', pageOf: 'Page {{0}} of {{1}}', next: 'Next' },
+    es: { totalUsers: 'Total Usuarios', totalSLEARN: 'SLEARN', totalScholarship: 'Becas', totalUBI: 'UBI (CELO)', totalDonations: 'Donaciones', noData: 'No hay datos disponibles', previous: 'Anterior', pageOf: 'Página {{0}} de {{1}}', next: 'Siguiente' },
   }), [lang])
 
   // Sorting state
@@ -92,14 +90,6 @@ export function TransparencyTable({
           aVal = a.totalUsers
           bVal = b.totalUsers
           break
-        case 'totalUsersWithLP':
-          aVal = a.totalUsersWithLP
-          bVal = b.totalUsersWithLP
-          break
-        case 'totalLearningPoints':
-          aVal = a.totalLearningPoints
-          bVal = b.totalLearningPoints
-          break
         case 'totalSLEARNBalance':
           aVal = a.totalSLEARNBalance
           bVal = b.totalSLEARNBalance
@@ -140,14 +130,6 @@ export function TransparencyTable({
             <div className="text-lg font-bold">{totals.totalUsers}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalUsersWithLP')}</div>
-            <div className="text-lg font-bold">{totals.totalUsersWithLP}</div>
-          </div>
-          <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalLP')}</div>
-            <div className="text-lg font-bold">{formatLearningPoints(totals.totalLearningPoints)}</div>
-          </div>
-          <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalSLEARN')}</div>
             <div className="text-lg font-bold">{totals.totalSLEARNBalance.toFixed(2)}</div>
           </div>
@@ -177,18 +159,6 @@ export function TransparencyTable({
               <TableHead className="text-right">
                 <SortableHeader field="totalUsers">
                   {t('Users', 'Usuarios')}
-                </SortableHeader>
-              </TableHead>
-              <TableHead className="text-right">
-                <SortableHeader field="totalUsersWithLP">
-                  <span className="md:hidden">ULP</span>
-                  <span className="hidden md:inline">{t('Users with LP', 'Usuarios con PA')}</span>
-                </SortableHeader>
-              </TableHead>
-              <TableHead className="text-right">
-                <SortableHeader field="totalLearningPoints">
-                  <span className="md:hidden">{t('LP', 'PA')}</span>
-                  <span className="hidden md:inline">{t('Learning Points', 'Puntos de Aprendizaje')}</span>
                 </SortableHeader>
               </TableHead>
               <TableHead className="text-right">
@@ -226,13 +196,11 @@ export function TransparencyTable({
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
-                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
-                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                 </TableRow>
               ))
             ) : sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canViewReligion ? 9 : 8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   {t('noData')}
                 </TableCell>
               </TableRow>
@@ -250,12 +218,6 @@ export function TransparencyTable({
                   )}
                   <TableCell className="text-right font-mono">
                     {row.totalUsers}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {row.totalUsersWithLP}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatLearningPoints(row.totalLearningPoints)}
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {row.totalSLEARNBalance.toFixed(2)}

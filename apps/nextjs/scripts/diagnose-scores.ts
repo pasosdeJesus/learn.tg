@@ -7,11 +7,11 @@ async function diagnoseUser(userId: number) {
     // 1. Obtener usuario y su learningscore actual
     const user = await db.selectFrom('usuario')
       .where('id', '=', userId as any)
-      .select(['id', 'learningscore'])
+      .select(['id', 'learningscore_deprecated'])
       .executeTakeFirst()
 
     console.log(`\n=== DIAGNÓSTICO USUARIO ${userId} ===`)
-    console.log(`Learningscore actual: ${user?.learningscore}`)
+    console.log(`Learningscore actual: ${user?.learningscore_deprecated}`)
 
     // 2. Calcular gPoints: suma de points de guide_usuario
     const gPointsResult = await db.selectFrom('guide_usuario')
@@ -84,8 +84,8 @@ async function diagnoseUser(userId: number) {
 
     // 10. Diferencia entre lpTotal y justified
     console.log(`\nDiferencias:`)
-    console.log(`  learningscore - justified: ${Number(user?.learningscore) - justified}`)
-    console.log(`  learningscore - lpTotal: ${Number(user?.learningscore) - lpTotal}`)
+    console.log(`  learningscore - justified: ${Number(user?.learningscore_deprecated) - justified}`)
+    console.log(`  learningscore - lpTotal: ${Number(user?.learningscore_deprecated) - lpTotal}`)
     console.log(`  lpTotal - justified: ${lpTotal - justified}`)
 
   } finally {

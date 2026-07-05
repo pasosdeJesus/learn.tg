@@ -56,10 +56,10 @@ async function main() {
   const users = await db
     .selectFrom('usuario')
     .innerJoin('billetera_usuario', 'billetera_usuario.usuario_id', 'usuario.id')
-    .where('usuario.learningscore', '>', 0)
+    .where('usuario.learningscore_deprecated', '>', 0)
     .select([
       'usuario.id as user_id',
-      'usuario.learningscore',
+      'usuario.learningscore_deprecated',
       'billetera_usuario.billetera',
     ])
     .execute()
@@ -71,7 +71,7 @@ async function main() {
   let errors = 0
 
   for (const u of users) {
-    const learningscore = Number(u.learningscore) || 0
+    const learningscore = Number(u.learningscore_deprecated) || 0
     if (learningscore <= 0) continue
 
     console.log(`\nUser ${u.user_id}: ${u.billetera} — learningscore=${learningscore}`)

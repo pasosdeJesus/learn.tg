@@ -14,11 +14,11 @@ import {
 } from '@pasosdejesus/m/shadcn-components/ui/table'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { CountryFlag } from '@/components/CountryFlag'
-import { formatLearningPoints, formatUSDT, formatCELO } from '@/lib/format'
+import { formatUSDT, formatCELO } from '@/lib/format'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { LeaderboardRow } from '@/types/leaderboard'
 
-export type SortField = 'learningpoints' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
+export type SortField = 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
 export type SortOrder = 'asc' | 'desc'
 
 interface LeaderboardTableProps {
@@ -38,9 +38,7 @@ interface LeaderboardTableProps {
   rules?: Array<{ action: string; subject: string }>
   totals?: {
     totalUsers: number
-    totalUsersWithLP: number
     totalUsersWithSLEARN: number
-    totalLearningPoints: number
     totalSLEARNBalance: number
     totalScholarshipUSDT: number
     totalUBICELO: number
@@ -62,8 +60,8 @@ export function LeaderboardTable({
 }: LeaderboardTableProps) {
   // Translation helper
   const t = useMemo(() => createComponentT(lang, {
-    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', lp: 'LP', slearn: 'SLEARN', learningPoints: 'Learning Points', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', sbt: 'SBTs', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithLP: 'Users with LP', usersWithSLEARN: 'Users with SLEARN', totalLP: 'Total LP', totalSLEARN: 'Total SLEARN', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {{0}} of {{1}} users', previous: 'Previous', pageOf: 'Page {{0}} of {{1}}', next: 'Next' },
-    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', lp: 'PA', slearn: 'SLEARN', learningPoints: 'Puntos de Aprendizaje', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', sbt: 'SBTs', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithLP: 'Usuarios con PA', usersWithSLEARN: 'Usuarios con SLEARN', totalLP: 'Total PA', totalSLEARN: 'Total SLEARN', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {{0}} de {{1}} usuarios', previous: 'Anterior', pageOf: 'Página {{0}} de {{1}}', next: 'Siguiente' },
+    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', slearn: 'SLEARN', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', sbt: 'SBTs', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithSLEARN: 'Users with SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {{0}} of {{1}} users', previous: 'Previous', pageOf: 'Page {{0}} of {{1}}', next: 'Next' },
+    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', slearn: 'SLEARN', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', sbt: 'SBTs', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithSLEARN: 'Usuarios con SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {{0}} de {{1}} usuarios', previous: 'Anterior', pageOf: 'Página {{0}} de {{1}}', next: 'Siguiente' },
   }), [lang])
 
   const handleSort = (field: SortField) => {
@@ -121,12 +119,6 @@ export function LeaderboardTable({
                 <TableHead>{t('religion')}</TableHead>
               )}
               <TableHead className="text-right">
-                <SortableHeader field="learningpoints">
-                  <span className="md:hidden">{t('lp')}</span>
-                  <span className="hidden md:inline">{t('learningPoints')}</span>
-                </SortableHeader>
-              </TableHead>
-              <TableHead className="text-right">
                 <SortableHeader field="slearn_balance">
                   <span className="md:hidden">{t('slearn')}</span>
                   <span className="hidden md:inline">{t('slearn')}</span>
@@ -174,7 +166,7 @@ export function LeaderboardTable({
               ))
             ) : data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canViewReligion ? 8 : 7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   {t('noData')}
                 </TableCell>
               </TableRow>
@@ -201,9 +193,6 @@ export function LeaderboardTable({
                   {canViewReligion && (
                     <TableCell>{row.religion || '-'}</TableCell>
                   )}
-                  <TableCell className="text-right font-mono">
-                    {formatLearningPoints(row.learningpoints)}
-                  </TableCell>
                   <TableCell className="text-right font-mono text-emerald-600">
                     {row.slearn_balance?.toFixed(2) ?? '0.00'}
                   </TableCell>
@@ -231,14 +220,6 @@ export function LeaderboardTable({
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalUsers')}</div>
             <div className="text-lg font-bold">{totals.totalUsers}</div>
-          </div>
-          <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('usersWithLP')}</div>
-            <div className="text-lg font-bold">{totals.totalUsersWithLP}</div>
-          </div>
-          <div className="p-3 rounded-md border bg-muted/30">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalLP')}</div>
-            <div className="text-lg font-bold">{formatLearningPoints(totals.totalLearningPoints)}</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('usersWithSLEARN')}</div>
