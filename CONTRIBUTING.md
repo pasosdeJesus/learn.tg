@@ -50,6 +50,14 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
 - **Commits**: Use [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`
 - **Type checking**: Code at `apps/nextjs` must pass `make type` without errors
 
+## 📋 Requirements (REQ/)
+
+Requirements that correspond to GitHub/GitLab issues must be written in **English**. Use:
+
+```bash
+./bin/m req:create "Title in English"
+```
+
 ## 🐛 Reporting Bugs
 
 1. Check that no similar issue exists

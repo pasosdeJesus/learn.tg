@@ -109,7 +109,8 @@
       "@parcel/watcher": "npm:@parcel/watcher-wasm",
       "rollup": "npm:@rollup/wasm-node",
       "lightningcss": "npm:lightningcss-wasm",
-      "@tailwindcss/oxide": "npm:@tailwindcss/oxide-wasm32-wasi"
+      "@tailwindcss/oxide": "npm:@tailwindcss/oxide-wasm32-wasi",
+      "qr": "0.5.5"
     },
     "onlyBuiltDependencies": [
       "@pasosdejesus/m",

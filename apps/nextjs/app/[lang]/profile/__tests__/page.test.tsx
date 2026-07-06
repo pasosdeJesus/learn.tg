@@ -233,9 +233,7 @@ describe('Profile Page', () => {
     await waitFor(() => {
       expect(screen.getByText('Profile Score')).toBeInTheDocument()
     })
-    expect(screen.getByText('Learning Score (Deprecated — see SLEARN)')).toBeInTheDocument()
     expect(screen.getByText('75')).toBeInTheDocument() // profilescore
-    expect(screen.getByText('100.00')).toBeInTheDocument() // learningscore
   })
 
   it('should handle profile update', async () => {

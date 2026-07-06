@@ -509,16 +509,6 @@ export default function ProfileForm({ params }: PageProps) {
                 {t('scoreRequired')}
               </p>
             </div>
-            <div className="flex flex-col items-center">
-              <h3 className="text-lg font-medium text-gray-700 mb-2">
-                {t('learningScore')}
-              </h3>
-              <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-4xl font-bold text-blue-600">
-                  {(profile.learningscore || 0).toFixed(2)}
-                </span>
-              </div>
-            </div>
           </div>
 
           {profile.userId && (
