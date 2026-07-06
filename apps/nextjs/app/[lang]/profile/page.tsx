@@ -958,6 +958,17 @@ export default function ProfileForm({ params }: PageProps) {
               </Button>
             </div>
           </form>
+
+          {/* Verified Data Management — R-#181 */}
+          <div className="mt-8 border-t pt-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {t('verifiedData') || 'Verified Data'}
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {t('verifiedDataDescription') || 'Your verified data is used to calculate your profile score. Deleting it will reset your score.'}
+            </p>
+            <DeleteVerifiedDataDialog lang={lang} />
+          </div>
         </div>
       </div>
     </div>
