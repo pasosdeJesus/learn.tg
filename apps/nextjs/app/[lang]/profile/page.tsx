@@ -110,7 +110,7 @@ export default function ProfileForm({ params }: PageProps) {
       connectionIssue: '\n\nPlease check your internet connection and try again.',
       errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below',
       verificationWarning: 'To maintain your verification, keep the name and country from your passport' },
-    es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', learningScore: 'Puntaje de Aprendizaje (Obsoleto — ver SLEARN)', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
+    es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes',
       viewCredentials: 'Ver mis credenciales públicas',
       saveFailed: 'Fallo al guardar el perfil.',
       expiredSession: '\n\nPuede deberse a que la sesi\u00f3n ha expirado. Por favor, intenta desconectar y reconectar tu billetera.',
