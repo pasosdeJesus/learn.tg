@@ -8,8 +8,7 @@ import Image from 'next/image'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
-import { SlearnInfo } from '@/components/SlearnInfoLocal'
-import { AddSlearnButton } from '@/components/AddSlearnButton'
+import { SlearnInfo, AddSlearnButton } from '@pasosdejesus/m/blockchain'
 import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 
@@ -304,7 +303,28 @@ export default function Page({ params }: PageProps) {
           })}
         </div>
         <div className="mt-8 max-w-3xl mx-auto space-y-3">
-          <SlearnInfo locale={lang} isVerified={!!session?.address} />
+          <SlearnInfo locale={lang} isVerified={!!session?.address}
+            description={lang === 'es'
+              ? 'Ganas becas en USDT + SLEARN al completar crucigramas, y 10% de vuelta en SLEARN al donar a cursos.'
+              : 'You earn USDT + SLEARN scholarships by completing crosswords, and 10% back in SLEARN when you donate to courses.'}
+            steps={lang === 'es'
+              ? [
+                  { title: '1. Aprendes', desc: 'Completa crucigramas en learn.tg — recibe becas en USDT + SLEARN', icon: 'earn' as const },
+                  { title: '2. Donas', desc: 'Dona a la bóveda de un curso — recibe 10% de vuelta en SLEARN', icon: 'donate' as const },
+                  { title: '3. Tomas cursos', desc: 'Usa SLEARN para pagar cursos premium en learn.tg', icon: 'course' as const },
+                  { title: '4. Canjeas', desc: 'Completa un curso premium → obtén SBT → canjea SLEARN en stable-sl.pdJ.app por Leones (Sierra Leona) o USDT (todo el mundo)', icon: 'redeem' as const },
+                ]
+              : [
+                  { title: '1. Learn', desc: 'Complete crosswords on learn.tg — get scholarships in USDT + SLEARN', icon: 'earn' as const },
+                  { title: '2. Donate', desc: 'Donate to a course vault — earn 10% back in SLEARN', icon: 'donate' as const },
+                  { title: '3. Take courses', desc: 'Use SLEARN to pay for premium courses on learn.tg', icon: 'course' as const },
+                  { title: '4. Redeem', desc: 'Complete a premium course → get SBT → redeem SLEARN on stable-sl.pdJ.app for Leones (Sierra Leone) or USDT (worldwide)', icon: 'redeem' as const },
+                ]}
+            links={[
+              { label: lang === 'es' ? 'Cursos en learn.tg' : 'Courses on learn.tg', href: process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'https://learn.tg' : 'https://learn.tg:9001' },
+              { label: lang === 'es' ? 'Canjear en stable-sl' : 'Redeem on stable-sl', href: 'https://stable-sl.pdJ.app' },
+            ]}
+          />
           <p className="text-sm text-gray-500 text-center">
             {lang === 'es'
               ? '💡 En learn.tg también ganas USDT + SLEARN al completar crucigramas con becas.'

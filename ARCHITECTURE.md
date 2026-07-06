@@ -240,6 +240,51 @@ Single source of truth for all value movements — both on-chain (USDT, SLEARN, 
 
 ---
 
+## Cache Update Triggers
+
+**Policy:** Derived/cached data (scores, aggregates, rankings) must be kept fresh via **database triggers**, not periodic cron jobs or application-level timers. A cache row is stale only between the start and commit of the triggering transaction — never longer.
+
+### Design Rules
+
+1. **Triggers fire on data change, not on a clock.** Every INSERT/UPDATE/DELETE on source tables recalculates affected caches immediately.
+2. **Triggers are PostgreSQL functions** defined in migrations alongside the tables they observe.
+3. **Application code never writes to cache tables directly** — only triggers do.
+4. **Cache tables are read-only from the application layer.**
+
+### Example: Cluster Score Cache (R-#154)
+
+```sql
+-- Trigger on transaction table: recalculate cluster score when SLEARN/USDT changes
+CREATE OR REPLACE FUNCTION update_cluster_score_from_transaction()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Recalculate affected cluster score cache
+  PERFORM refresh_cluster_score(NEW.usuario_id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_transaction_cluster_score
+  AFTER INSERT OR UPDATE ON transaction
+  FOR EACH ROW
+  EXECUTE FUNCTION update_cluster_score_from_transaction();
+```
+
+### When to use triggers vs application code
+
+| Scenario | Use |
+|----------|-----|
+| Aggregate score/rank from multiple tables | Trigger |
+| Single-row derived value (e.g., `balance = SUM(...)`) | Trigger |
+| Complex multi-step business logic with external APIs | Application code (call trigger-compatible functions) |
+| Real-time notifications (WebSocket, push) | Application code after DB commit |
+
+### Trigger ordering
+
+If multiple triggers fire on the same event, they execute in alphabetical order by trigger name. Prefix triggers with a sequence number when order matters: `trg_01_...`, `trg_02_...`.
+
+---
+
 ## Key Technologies
 
 | Component | Tech | Purpose |
