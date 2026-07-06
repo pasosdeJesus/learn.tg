@@ -13,7 +13,6 @@ type PageProps = {
 interface ProfileData {
   id: number
   name: string
-  learningscore: number | null
   slearn_balance: number | null
   profilescore: number | null
   memberSince: string
@@ -78,7 +77,6 @@ export default function PublicProfilePage({ params }: PageProps) {
       error: 'Error: ',
       notFound: 'Usuario no encontrado',
       memberSince: 'Miembro desde',
-      learningScore: 'Puntaje de Aprendizaje',
       slearnBalance: 'Saldo SLEARN',
       profileScore: 'Puntaje de Perfil',
       wallets: 'Billeteras',

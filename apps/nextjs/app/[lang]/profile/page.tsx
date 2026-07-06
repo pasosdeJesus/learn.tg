@@ -34,7 +34,6 @@ interface UserProfile {
   id: string
   language: string
   lastgooddollarverification: number | null
-  learningscore: number | null
   name: string
   passport_name: string
   passport_nationality: number | null
@@ -78,7 +77,6 @@ export default function ProfileForm({ params }: PageProps) {
     id: '',
     language: '',
     lastgooddollarverification: null,
-    learningscore: null,
     name: '',
     passport_name: '',
     passport_nationality: null,
@@ -105,7 +103,7 @@ export default function ProfileForm({ params }: PageProps) {
   const { lang } = parameters
 
   const t = useMemo(() => createComponentT(lang, {
-    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', learningScore: 'Learning Score (Deprecated — see SLEARN)', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
+    en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores',
       viewCredentials: 'View my public credentials',
       saveFailed: 'Failed to save profile.',
       expiredSession: '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.',
@@ -313,7 +311,6 @@ export default function ProfileForm({ params }: PageProps) {
           id: '',
           language: '',
           lastgooddollarverification: rUser.lastgooddollarverification,
-          learningscore: rUser.learningscore,
           name: rUser.nombre,
           passport_name: rUser.passport_name,
           passport_nationality: rUser.passport_nationality,

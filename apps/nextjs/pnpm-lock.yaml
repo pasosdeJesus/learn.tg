@@ -9,6 +9,7 @@ overrides:
   rollup: npm:@rollup/wasm-node
   lightningcss: npm:lightningcss-wasm
   '@tailwindcss/oxide': npm:@tailwindcss/oxide-wasm32-wasi
+  qr: 0.5.5
 
 importers:
 
@@ -6903,8 +6904,8 @@ packages:
     resolution: {integrity: sha512-KTqnxsgGiQ6ZAzZCVlJH5eOjSnvlyEgx1m8bkRJfOhmGRqfo5KLvmAlACQkrjEtOQ4B7wF9TdSLIs9O90MX9xA==}
     engines: {node: '>=16.0.0'}
 
-  qr@0.6.0:
-    resolution: {integrity: sha512-P23VoX7SipHALdiIYG+D+LT/6n22dNKwV92FAb3d+Nlki/5WisSsfLt0UDFz2XEBtuwrECTznvu+chKKFCSYhA==}
+  qr@0.5.5:
+    resolution: {integrity: sha512-iQBvKj7MRKO+co+MY0IZpyLO+ezvttxsmV86WywrgPuAmgBkv0pytyi03wourniSoPgzffeBW6cBgIkpqcvjTg==}
     engines: {node: '>= 20.19.0'}
 
   qrcode.react@4.2.0:
@@ -9968,7 +9969,7 @@ snapshots:
   '@iden3/binfileutils@0.0.11':
     dependencies:
       fastfile: 0.0.20
-      ffjavascript: 0.2.56
+      ffjavascript: 0.2.63
 
   '@iden3/binfileutils@0.0.12':
     dependencies:
@@ -13968,7 +13969,7 @@ snapshots:
 
   cuer@0.0.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3):
     dependencies:
-      qr: 0.6.0
+      qr: 0.5.5
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
     optionalDependencies:
@@ -16520,10 +16521,10 @@ snapshots:
   ox@0.6.7(typescript@5.9.3)(zod@4.4.3):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
-      '@noble/curves': 1.8.1
-      '@noble/hashes': 1.7.1
-      '@scure/bip32': 1.6.2
-      '@scure/bip39': 1.5.4
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
       abitype: 1.2.4(typescript@5.9.3)(zod@4.4.3)
       eventemitter3: 5.0.1
     optionalDependencies:
@@ -16904,7 +16905,7 @@ snapshots:
 
   pvutils@1.1.5: {}
 
-  qr@0.6.0: {}
+  qr@0.5.5: {}
 
   qrcode.react@4.2.0(react@19.2.6):
     dependencies:
