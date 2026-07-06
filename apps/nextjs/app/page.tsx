@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 export default function Home() {
@@ -91,7 +92,7 @@ export default function Home() {
                   {t('chooseLang')}
                 </h2>
                 <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
-                  <a
+                  <Link
                     href="/en"
                     className="group relative w-80 h-56 rounded-3xl bg-gradient-to-br from-white to-gray-50 shadow-lg hover:shadow-2xl border border-gray-200 hover:border-primary-200 transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 overflow-hidden"
                   >
@@ -110,9 +111,9 @@ export default function Home() {
                         <span className="text-white text-xl">→</span>
                       </div>
                     </div>
-                  </a>
+                  </Link>
 
-                  <a
+                  <Link
                     href="/es"
                     className="group relative w-80 h-56 rounded-3xl bg-gradient-to-br from-white to-gray-50 shadow-lg hover:shadow-2xl border border-gray-200 hover:border-secondary-100 transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 overflow-hidden"
                   >
@@ -131,7 +132,7 @@ export default function Home() {
                         <span className="text-white text-xl">→</span>
                       </div>
                     </div>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </section>
