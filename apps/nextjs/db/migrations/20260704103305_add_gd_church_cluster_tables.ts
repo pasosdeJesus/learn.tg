@@ -38,7 +38,7 @@ export async function up(db: Kysely<any>): Promise<void> {
       pastor_id INTEGER REFERENCES usuario(id),
       cluster_wallet VARCHAR(42),
       denomination VARCHAR(100),
-      registration VARCHAR(50),
+      government_registration VARCHAR(50),
       registration_photo TEXT,
       registration_verified BOOLEAN DEFAULT FALSE,
       created_by INTEGER REFERENCES usuario(id) NOT NULL,

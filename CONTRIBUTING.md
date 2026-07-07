@@ -50,6 +50,10 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
 - **SQL**:
   - Use singular for table names
   - Reserve _ in table name for join tables
+- **Migrations**: 
+  - Never modify a migration that has already been applied to any environment (dev, staging, production)
+  - Schema changes always go in new migrations
+  - The only exception is before the first deploy to production, and only with explicit authorization
 - **Tests**: Try to include tests for new functionality
 - **Commits**: Use [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`
 - **Type checking**: Code at `apps/nextjs` must pass `make type` without errors

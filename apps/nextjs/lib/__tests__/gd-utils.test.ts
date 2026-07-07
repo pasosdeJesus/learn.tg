@@ -21,6 +21,7 @@ import {
   getClusterHistory,
   addClusterHistory,
   updateProfileScore,
+  recalculateProfileScore,
 } from '../gd-utils'
 
 describe('generateClusterCode', () => {
@@ -249,5 +250,73 @@ describe('updateProfileScore', () => {
 
     expect(mockDb.updateTable).toHaveBeenCalledWith('usuario')
     expect(mockSet).toHaveBeenCalled()
+  })
+})
+
+describe('recalculateProfileScore', () => {
+  it('returns 68 when country_id is set', async () => {
+    const mockDb = {
+      selectFrom: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      executeTakeFirst: vi.fn().mockResolvedValue({
+        country_id: 1,
+        whatsapp: null, telegram: null,
+        verified_whatsapp: null, verified_telegram: null,
+        department_id: null, municipality_id: null, city_id: null,
+        verified_department_id: null, verified_municipality_id: null, verified_city_id: null,
+        place_of_worship: null, verified_place_of_worship: null,
+      }),
+      updateTable: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      execute: vi.fn().mockResolvedValue(undefined),
+    } as any
+
+    const score = await recalculateProfileScore(mockDb, 1)
+    expect(score).toBe(68)
+  })
+
+  it('returns 80 when country_id + verified whatsapp match', async () => {
+    const mockDb = {
+      selectFrom: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      executeTakeFirst: vi.fn().mockResolvedValue({
+        country_id: 1,
+        whatsapp: '+123', telegram: null,
+        verified_whatsapp: '+123', verified_telegram: null,
+        department_id: null, municipality_id: null, city_id: null,
+        verified_department_id: null, verified_municipality_id: null, verified_city_id: null,
+        place_of_worship: null, verified_place_of_worship: null,
+      }),
+      updateTable: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      execute: vi.fn().mockResolvedValue(undefined),
+    } as any
+
+    const score = await recalculateProfileScore(mockDb, 1)
+    expect(score).toBe(80)
+  })
+
+  it('returns 100 when all verified fields match', async () => {
+    const mockDb = {
+      selectFrom: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      executeTakeFirst: vi.fn().mockResolvedValue({
+        country_id: 1,
+        whatsapp: '+123', telegram: null,
+        verified_whatsapp: '+123', verified_telegram: null,
+        department_id: 5, municipality_id: 10, city_id: 15,
+        verified_department_id: 5, verified_municipality_id: 10, verified_city_id: 15,
+        place_of_worship: 'My Church', verified_place_of_worship: 'My Church',
+      }),
+      updateTable: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      execute: vi.fn().mockResolvedValue(undefined),
+    } as any
+
+    const score = await recalculateProfileScore(mockDb, 1)
+    expect(score).toBe(100)
   })
 })
