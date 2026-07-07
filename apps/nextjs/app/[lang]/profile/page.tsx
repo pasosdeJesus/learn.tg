@@ -23,6 +23,7 @@ import {
   SelectValue 
 } from '@/components/ui/select'
 import DeleteVerifiedDataDialog from '@/components/DeleteVerifiedDataDialog'
+import { NewChurchDialog } from '@/components/NewChurchDialog'
 import { IS_PRODUCTION } from '@/lib/config'
 import { logger, DebugConsole } from '@pasosdejesus/m/debug'
 
@@ -113,6 +114,7 @@ export default function ProfileForm({ params }: PageProps) {
   const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
   const [newChurchName, setNewChurchName] = useState('')
   const [uploadingPhoto, setUploadingPhoto] = useState<'front' | 'back' | null>(null)
+  const [showChurchDialog, setShowChurchDialog] = useState(false)
 
   const { address } = useAccount()
   const { data: session, status: sessionStatus } = useSession()
@@ -591,7 +593,7 @@ export default function ProfileForm({ params }: PageProps) {
   const handleSelectChurch = (churchId: string) => {
     if (churchId === '__new__') {
       setSelectedChurchId(null)
-      setNewChurchName('')
+      setShowChurchDialog(true)
       return
     }
     setSelectedChurchId(parseInt(churchId, 10))
@@ -1055,6 +1057,16 @@ export default function ProfileForm({ params }: PageProps) {
               />
             </div>
           </form>
+          <NewChurchDialog
+            open={showChurchDialog}
+            onOpenChange={setShowChurchDialog}
+            onSuccess={() => setUpdateProfile(true)}
+            countryId={profile.country}
+            cityName={citySearch}
+            churchName={newChurchName}
+            churchRelationship={profile.church_relationship}
+            lang={lang}
+          />
         </div>
       </div>
     </div>
