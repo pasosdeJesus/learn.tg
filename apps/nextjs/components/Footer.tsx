@@ -31,17 +31,6 @@ export default function Footer({ lang = 'en' }) {
             {t('letGazaLive')}
           </div>
 
-          <div className="justify-self-start">
-            <div className="pt-4">
-              <a
-                href="https://t.me/learn_t_g"
-                className="hover:underline !text-white font-bold"
-              >
-                {t('telegram')}
-              </a>
-            </div>
-          </div>
-
           <div className="w-full md:w-1/3">
             <h3 className="text-lg !text-accent font-semibold mb-2">
               {t('followUs')}
@@ -118,6 +107,13 @@ export default function Footer({ lang = 'en' }) {
             >
               {tCommon('termsOfService')}
             </Link>
+            <span className="text-gray-600">|</span>
+            <a
+              href="https://t.me/learn_t_g"
+              className="hover:text-white transition-colors"
+            >
+              {t('telegram')}
+            </a>
           </nav>
         </div>
       </div>

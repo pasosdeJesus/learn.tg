@@ -39,7 +39,7 @@ export function NewChurchDialog({
   const [name, setName] = useState(churchName)
   const [pastorName, setPastorName] = useState('')
   const [pastorWhatsapp, setPastorWhatsapp] = useState('')
-  const [govRegistration, setGovRegistration] = useState('')
+  const [registration, setRegistration] = useState('')
   const [registrationPhoto, setRegistrationPhoto] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -52,7 +52,7 @@ export function NewChurchDialog({
       churchName: 'Church name',
       pastorName: 'Pastor name',
       pastorWhatsapp: 'Pastor WhatsApp',
-      govRegistration: 'Government registration number',
+      registration: 'Registration number',
       registrationPhoto: 'Registration document',
       required: 'required for pastors',
       cancel: 'Cancel',
@@ -67,7 +67,7 @@ export function NewChurchDialog({
       churchName: 'Nombre de la iglesia',
       pastorName: 'Nombre del pastor',
       pastorWhatsapp: 'WhatsApp del pastor',
-      govRegistration: 'Número de registro gubernamental',
+      registration: 'Número de registro',
       registrationPhoto: 'Documento de registro',
       required: 'requerido para pastores',
       cancel: 'Cancelar',
@@ -86,8 +86,8 @@ export function NewChurchDialog({
       toast({ title: t('fillRequired'), variant: 'destructive' })
       return
     }
-    if (isPastor && (!govRegistration || !registrationPhoto)) {
-      toast({ title: lang === 'es' ? 'Registro gubernamental y foto requeridos para pastores' : 'Government registration and photo required for pastors', variant: 'destructive' })
+    if (isPastor && (!registration || !registrationPhoto)) {
+      toast({ title: lang === 'es' ? 'Número de registro y foto requeridos para pastores' : 'Registration number and photo required for pastors', variant: 'destructive' })
       return
     }
 
@@ -129,7 +129,7 @@ export function NewChurchDialog({
           cityName,
           pastorName,
           pastorWhatsapp,
-          governmentRegistration: isPastor ? govRegistration : undefined,
+          registration: isPastor ? registration : undefined,
           registrationPhoto: isPastor ? photoPath : undefined,
         }),
       })
@@ -176,9 +176,9 @@ export function NewChurchDialog({
             <>
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  {t('govRegistration')} <span className="text-red-500 text-xs">({t('required')})</span>
+                  {t('registration')} <span className="text-red-500 text-xs">({t('required')})</span>
                 </label>
-                <Input value={govRegistration} onChange={(e) => setGovRegistration(e.target.value)} placeholder="REG-12345" />
+                <Input value={registration} onChange={(e) => setRegistration(e.target.value)} placeholder="REG-12345" />
               </div>
 
               <div className="space-y-2">

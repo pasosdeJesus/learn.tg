@@ -17,7 +17,7 @@ export interface Church {
   pastor_id: number | null
   cluster_wallet: string | null
   denomination: string | null
-  government_registration: string | null
+  registration: string | null
   registration_photo: string | null
   registration_verified: boolean
   created_by: number

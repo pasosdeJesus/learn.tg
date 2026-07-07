@@ -1417,7 +1417,7 @@ CREATE TABLE public.church (
     pastor_id integer,
     cluster_wallet character varying(42),
     denomination character varying(100),
-    government_registration character varying(50),
+    registration character varying(50),
     registration_photo text,
     registration_verified boolean DEFAULT false,
     created_by integer NOT NULL,

@@ -56,7 +56,6 @@ export interface Church {
   created_by: number;
   denomination: string | null;
   department_id: number | null;
-  government_registration: string | null;
   id: Generated<number>;
   municipality_id: number | null;
   name: string;
@@ -64,6 +63,7 @@ export interface Church {
   pastor_name: string;
   pastor_telegram: string | null;
   pastor_whatsapp: string;
+  registration: string | null;
   registration_photo: string | null;
   registration_verified: Generated<boolean | null>;
   updated_at: Generated<Timestamp | null>;
