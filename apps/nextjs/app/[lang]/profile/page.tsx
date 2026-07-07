@@ -492,6 +492,16 @@ export default function ProfileForm({ params }: PageProps) {
         response: typeof responseData === 'string' ? responseData.substring(0, 200) : responseData,
       }), 'Profile')
       toast({ title: lang === 'es' ? 'Perfil actualizado' : 'Profile updated' })
+      // Recalculate profile score after save
+      try {
+        const csrfToken2 = await getCsrfToken()
+        await fetch('/api/update-scores', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lang, walletAddress: address, token: csrfToken2 }),
+        })
+      } catch { /* non-blocking */ }
+      setUpdateProfile(true)
     } catch (error) {
       logger.error('Profile save error: ' + String(error), 'Profile')
       let alertMessage =
@@ -535,7 +545,7 @@ export default function ProfileForm({ params }: PageProps) {
     }
     const countryCode = countries.find((c) => c.id === profile.country)?.nombre || ''
     try {
-      const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}&country=${encodeURIComponent(countryCode)}`)
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}&country=${profile.country}`)
       const data = await res.json()
       setCitySuggestions(data.results || [])
     } catch {
@@ -681,20 +691,6 @@ export default function ProfileForm({ params }: PageProps) {
                 {t('scoreRequired')}
               </p>
             </div>
-          </div>
-
-          {/* Verified Data Management — R-#181 */}
-          <div className="mb-8 p-4 border border-red-200 rounded-lg bg-red-50">
-            <h3 className="text-lg font-semibold text-gray-800 mb-1">
-              {t('verifiedData')}
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              {t('verifiedDataDescription')}
-            </p>
-            <DeleteVerifiedDataDialog
-              lang={lang}
-              onSuccess={() => setUpdateProfile(true)}
-            />
           </div>
 
           {profile.userId && (
@@ -984,7 +980,7 @@ export default function ProfileForm({ params }: PageProps) {
                         <SelectItem value="__new__">{lang === 'es' ? '+ Nueva iglesia' : '+ New church'}</SelectItem>
                       </SelectContent>
                     </Select>
-                    {(!selectedChurchId && newChurchName !== undefined) && (
+                    {!selectedChurchId && newChurchName !== '' && (
                       <input
                         type="text"
                         value={newChurchName}
