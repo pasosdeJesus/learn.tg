@@ -468,6 +468,7 @@ export default function ProfileForm({ params }: PageProps) {
   }
 
   if (!(address && session && session.address && address.toLowerCase() === session.address.toLowerCase())) {
+    console.log('[profile] PARTIAL LOGIN — session:', !!session, 'address:', !!address, 'session.addr:', session?.address?.slice(0,10), 'wagmi.addr:', address?.slice(0,10), 'NEXTAUTH_URL:', process.env.NEXT_PUBLIC_AUTH_URL)
     return (
       <div className="p-10 mt-10">
         Partial login. Please disconnect your wallet and connect and sign again.
