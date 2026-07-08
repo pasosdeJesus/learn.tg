@@ -304,6 +304,17 @@ export default function ProfileForm({ params }: PageProps) {
         if (rUser.department_id != null) setDepartmentId(rUser.department_id)
         if (rUser.municipality_id != null) setMunicipalityId(rUser.municipality_id)
         if (rUser.city_id != null) setCityId(rUser.city_id)
+
+        // Fetch saved church by ID so it appears in the selector
+        if (rUser.church_id) {
+          try {
+            const churchRes = await fetch(`/api/church/${rUser.church_id}`)
+            if (churchRes.ok) {
+              const churchData = await churchRes.json()
+              setChurches([{ id: churchData.id, name: churchData.name, city_name: churchData.city_name }])
+            }
+          } catch {}
+        }
       } catch (error) {
         logger.error('Profile fetch error details: ' + JSON.stringify({
           error: error instanceof Error ? error.message : String(error),
