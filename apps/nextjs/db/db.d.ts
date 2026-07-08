@@ -1386,6 +1386,7 @@ export interface Usuario {
   passport_nationality: number | null;
   password: Generated<string>;
   place_of_worship: string | null;
+  place_of_worship_location: string | null;
   profilescore: number | null;
   religion_id: number | null;
   remember_created_at: Timestamp | null;

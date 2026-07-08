@@ -45,6 +45,7 @@ interface UserProfile {
   passport_nationality: number | null
   phone: string
   picture: string
+  place_of_worship_location: string | null
   profilescore: number | null
   religion: number
   telegram: string
@@ -93,6 +94,7 @@ export default function ProfileForm({ params }: PageProps) {
     passport_nationality: null,
     phone: '',
     picture: '',
+    place_of_worship_location: null,
     profilescore: null,
     religion: 1,
     telegram: '',
@@ -119,6 +121,10 @@ export default function ProfileForm({ params }: PageProps) {
   const [departmentId, setDepartmentId] = useState<number | null>(null)
   const [municipalityId, setMunicipalityId] = useState<number | null>(null)
   const [cityId, setCityId] = useState<number | null>(null)
+  const [placeOfWorshipLocation, setPlaceOfWorshipLocation] = useState('')
+  const [departmentName, setDepartmentName] = useState('')
+  const [municipalityName, setMunicipalityName] = useState('')
+  const [cityDisplayName, setCityDisplayName] = useState('')
 
   const { address } = useAccount()
   const { data: session, status: sessionStatus } = useSession()
@@ -289,6 +295,7 @@ export default function ProfileForm({ params }: PageProps) {
           passport_nationality: rUser.passport_nationality,
           phone: '',
           picture: rUser.foto_file_name,
+          place_of_worship_location: rUser.place_of_worship_location || null,
           profilescore: rUser.profilescore,
           religion: rUser.religion_id,
           id_photo_front: rUser.id_photo_front || null,
@@ -304,6 +311,7 @@ export default function ProfileForm({ params }: PageProps) {
         if (rUser.department_id != null) setDepartmentId(rUser.department_id)
         if (rUser.municipality_id != null) setMunicipalityId(rUser.municipality_id)
         if (rUser.city_id != null) setCityId(rUser.city_id)
+        if (rUser.place_of_worship_location) setPlaceOfWorshipLocation(rUser.place_of_worship_location)
 
         // Fetch saved church by ID so it appears in the selector
         if (rUser.church_id) {
@@ -374,6 +382,7 @@ export default function ProfileForm({ params }: PageProps) {
         whatsapp: profile.whatsapp,
         telegram: profile.telegram,
         place_of_worship: selectedChurchId ? churches.find(c => c.id === selectedChurchId)?.name || newChurchName : citySearch,
+        place_of_worship_location: placeOfWorshipLocation || citySearch,
         church_id: selectedChurchId || null,
         department_id: departmentId,
         municipality_id: municipalityId,
@@ -415,27 +424,6 @@ export default function ProfileForm({ params }: PageProps) {
             cityName: citySearch,
             pastorName: profile.name,
             pastorWhatsapp: profile.whatsapp || profile.phone || '',
-          }),
-        })
-        if (!churchRes.ok) {
-          const churchErr = await churchRes.json()
-          logger.error('Church creation failed: ' + JSON.stringify(churchErr), 'Profile')
-        }
-      }
-
-      // If creating a new church with city selected, call POST /api/church
-      if (profile.religion === 2 && citySearch && newChurchName && !selectedChurchId) {
-        const churchRes = await fetch('/api/church', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            walletAddress: address,
-            token: csrfToken,
-            name: newChurchName,
-            countryId: profile.country,
-            cityName: citySearch,
-            pastorName: profile.name,
-            pastorWhatsapp: profile.phone || '',
           }),
         })
         if (!churchRes.ok) {
@@ -525,6 +513,10 @@ export default function ProfileForm({ params }: PageProps) {
   }
 
   const handleSelectCity = async (city: string, suggestion?: { state: string; county: string; lat: number; lng: number }) => {
+    setPlaceOfWorshipLocation(citySearch)
+    setDepartmentName(suggestion?.state || '')
+    setMunicipalityName(suggestion?.county || '')
+    setCityDisplayName(city)
     setCitySearch(city)
     setCitySuggestions([])
     setChurches([])
@@ -990,6 +982,16 @@ export default function ProfileForm({ params }: PageProps) {
                   <p className="text-xs text-green-600 mt-1">
                     ✅ {lang === 'es' ? 'Ubicación registrada' : 'Location registered'}
                     {cityId ? ` (${lang === 'es' ? 'ciudad' : 'city'} #${cityId})` : ''}
+                  </p>
+                )}
+                {(profile.country || departmentName || municipalityName || cityDisplayName) && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {[
+                      countries.find(c => c.id === profile.country)?.nombre,
+                      departmentName,
+                      municipalityName,
+                      cityDisplayName,
+                    ].filter(Boolean).join(' / ')}
                   </p>
                 )}
               </div>
