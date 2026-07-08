@@ -116,6 +116,9 @@ export default function ProfileForm({ params }: PageProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState<'front' | 'back' | null>(null)
   const [showChurchDialog, setShowChurchDialog] = useState(false)
   const [updatingScores, setUpdatingScores] = useState(false)
+  const [departmentId, setDepartmentId] = useState<number | null>(null)
+  const [municipalityId, setMunicipalityId] = useState<number | null>(null)
+  const [cityId, setCityId] = useState<number | null>(null)
 
   const { address } = useAccount()
   const { data: session, status: sessionStatus } = useSession()
@@ -297,6 +300,10 @@ export default function ProfileForm({ params }: PageProps) {
         }
         logger.info('locProfile=' + JSON.stringify(locProfile), 'Profile')
         setProfile(locProfile)
+        if (rUser.church_id) setSelectedChurchId(rUser.church_id)
+        if (rUser.department_id != null) setDepartmentId(rUser.department_id)
+        if (rUser.municipality_id != null) setMunicipalityId(rUser.municipality_id)
+        if (rUser.city_id != null) setCityId(rUser.city_id)
       } catch (error) {
         logger.error('Profile fetch error details: ' + JSON.stringify({
           error: error instanceof Error ? error.message : String(error),
@@ -357,6 +364,9 @@ export default function ProfileForm({ params }: PageProps) {
         telegram: profile.telegram,
         place_of_worship: selectedChurchId ? churches.find(c => c.id === selectedChurchId)?.name || newChurchName : citySearch,
         church_id: selectedChurchId || null,
+        department_id: departmentId,
+        municipality_id: municipalityId,
+        city_id: cityId,
       }
       const url = `/api/profile?walletAddress=${session!.address}&token=${csrfToken}`
       logger.info(`Patching ${url}`, 'Profile')
@@ -496,6 +506,7 @@ export default function ProfileForm({ params }: PageProps) {
     try {
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}&country=${profile.country}`)
       const data = await res.json()
+      console.log('[profile] geocode results for', query, ':', data.results?.length || 0, 'results')
       setCitySuggestions(data.results || [])
     } catch {
       setCitySuggestions([])
@@ -513,7 +524,7 @@ export default function ProfileForm({ params }: PageProps) {
     // Upsert location into msip_* tables
     if (suggestion) {
       try {
-        await fetch('/api/geocode/select', {
+        const locRes = await fetch('/api/geocode/select', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -525,6 +536,13 @@ export default function ProfileForm({ params }: PageProps) {
             lng: suggestion.lng,
           }),
         })
+        if (locRes.ok) {
+          const locData = await locRes.json()
+          setDepartmentId(locData.departmentId)
+          setMunicipalityId(locData.municipalityId)
+          setCityId(locData.cityId)
+          console.log('[profile] location saved:', locData)
+        }
       } catch { /* non-blocking */ }
     }
 
@@ -957,6 +975,12 @@ export default function ProfileForm({ params }: PageProps) {
                     </ul>
                   )}
                 </div>
+                {(departmentId || municipalityId || cityId) && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✅ {lang === 'es' ? 'Ubicación registrada' : 'Location registered'}
+                    {cityId ? ` (${lang === 'es' ? 'ciudad' : 'city'} #${cityId})` : ''}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <label htmlFor="placeOfWorshipName" className="block text-sm font-medium text-gray-700">
