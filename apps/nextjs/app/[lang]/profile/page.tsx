@@ -600,6 +600,18 @@ export default function ProfileForm({ params }: PageProps) {
     setNewChurchName('')
   }
 
+  const placeOfWorshipLabels = (religionId: number | null): { name: string; address: string } => {
+    const isEs = lang === 'es'
+    switch (religionId) {
+      case 2: return { name: isEs ? 'Iglesia' : 'Church', address: isEs ? 'Dirección de iglesia' : 'Address of church' }
+      case 3: return { name: isEs ? 'Mezquita' : 'Mosque', address: isEs ? 'Dirección de mezquita' : 'Address of mosque' }
+      case 6: return { name: isEs ? 'Sinagoga' : 'Synagogue', address: isEs ? 'Dirección de sinagoga' : 'Address of synagogue' }
+      case 4:
+      case 5: return { name: isEs ? 'Templo' : 'Temple', address: isEs ? 'Dirección de templo' : 'Address of temple' }
+      default: return { name: isEs ? 'Lugar de culto' : 'Place of worship', address: isEs ? 'Dirección de lugar de culto' : 'Address of place of worship' }
+    }
+  }
+
   const handlePhotoUpload = async (side: 'front' | 'back', file: File) => {
     setUploadingPhoto(side)
     try {
@@ -780,7 +792,7 @@ export default function ProfileForm({ params }: PageProps) {
                   type="text"
                   value={profile.whatsapp}
                   onChange={(e) => handleChange('whatsapp', e.target.value)}
-                  placeholder="+1234567890"
+                  placeholder="+232 12345678"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -897,6 +909,8 @@ export default function ProfileForm({ params }: PageProps) {
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
                     </button>
                   </div>
+                ) : uploadingPhoto ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                 ) : (
                   <input
                     type="file"
@@ -918,6 +932,8 @@ export default function ProfileForm({ params }: PageProps) {
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
                     </button>
                   </div>
+                ) : uploadingPhoto ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                 ) : (
                   <input
                     type="file"
@@ -934,7 +950,7 @@ export default function ProfileForm({ params }: PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="space-y-2">
                 <label htmlFor="citySearch" className="block text-sm font-medium text-gray-700">
-                  {t('placeOfWorshipAddress')}
+                  {placeOfWorshipLabels(profile.religion).address}
                 </label>
                 <div className="relative">
                   <input
@@ -962,7 +978,7 @@ export default function ProfileForm({ params }: PageProps) {
               </div>
               <div className="space-y-2">
                 <label htmlFor="placeOfWorshipName" className="block text-sm font-medium text-gray-700">
-                  {t('placeOfWorshipName')}
+                  {placeOfWorshipLabels(profile.religion).name}
                 </label>
                 {profile.religion === 2 ? (
                   <>
@@ -996,7 +1012,7 @@ export default function ProfileForm({ params }: PageProps) {
                   <input
                     id="placeOfWorshipName"
                     type="text"
-                    placeholder={t('placeOfWorshipNamePlaceholder')}
+                    placeholder={placeOfWorshipLabels(profile.religion).name}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 )}
@@ -1060,7 +1076,16 @@ export default function ProfileForm({ params }: PageProps) {
           <NewChurchDialog
             open={showChurchDialog}
             onOpenChange={setShowChurchDialog}
-            onSuccess={() => setUpdateProfile(true)}
+            onSuccess={() => {
+              setUpdateProfile(true)
+              // Refresh church list
+              if (profile.country) {
+                fetch(`/api/churches/search?q=&country=${profile.country}`)
+                  .then(r => r.json())
+                  .then(data => setChurches(data.churches || []))
+                  .catch(() => {})
+              }
+            }}
             countryId={profile.country}
             cityName={citySearch}
             churchName={newChurchName}

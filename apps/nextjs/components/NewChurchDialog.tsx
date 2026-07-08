@@ -141,6 +141,12 @@ export function NewChurchDialog({
 
       toast({ title: t('success') })
       onOpenChange(false)
+      // Clear form state
+      setName('')
+      setPastorName('')
+      setPastorWhatsapp('')
+      setRegistration('')
+      setRegistrationPhoto(null)
       onSuccess?.()
     } catch (error) {
       toast({ title: t('error'), description: error instanceof Error ? error.message : '', variant: 'destructive' })
@@ -169,7 +175,7 @@ export function NewChurchDialog({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">{t('pastorWhatsapp')} *</label>
-            <Input value={pastorWhatsapp} onChange={(e) => setPastorWhatsapp(e.target.value)} placeholder="+1234567890" />
+            <Input value={pastorWhatsapp} onChange={(e) => setPastorWhatsapp(e.target.value)} placeholder="+232 12345678" />
           </div>
 
           {isPastor && (

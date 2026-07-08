@@ -328,11 +328,6 @@ export default function Page({ params }: PageProps) {
               { label: lang === 'es' ? 'Canjear en stable-sl' : 'Redeem on stable-sl', href: 'https://stable-sl.pdJ.app' },
             ]}
           />
-          <p className="text-sm text-gray-500 text-center">
-            {lang === 'es'
-              ? '💡 En learn.tg también ganas USDT + SLEARN al completar crucigramas con becas.'
-              : '💡 On learn.tg you also earn USDT + SLEARN by completing crosswords with scholarships.'}
-          </p>
           <AddSlearnButton lang={lang} />
         </div>
       </div>
