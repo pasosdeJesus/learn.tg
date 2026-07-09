@@ -535,7 +535,7 @@ export default function ProfileForm({ params }: PageProps) {
   const handleChange = (field: keyof UserProfile, value: string) => {
     setProfile((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: field === 'religion' || field === 'country' ? Number(value) : value,
     }))
   }
 

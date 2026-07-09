@@ -30,6 +30,7 @@ export default function RootLayoutClient({
       )}
     </AppProvider>
     <Toaster />
+    <style>{`[data-slot=\"toast-viewport\"], ol.fixed.top-0 { max-width: 380px !important; width: auto !important; }`}</style>
     </ErrorBoundary>
   );
 }
