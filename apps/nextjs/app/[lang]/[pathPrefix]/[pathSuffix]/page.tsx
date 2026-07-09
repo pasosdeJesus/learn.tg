@@ -26,7 +26,7 @@ import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 export default function Page() {
   const params = useParams()
   const { address } = useAccount()
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
   const { lang, pathPrefix, pathSuffix } = params as { lang: string; pathPrefix: string; pathSuffix: string }
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading guide...","error":"Error: ","notFound":"Guide not found."},"es":{"loading":"Cargando guía...","error":"Error: ","notFound":"Guía no encontrada."}}), [lang])
 
@@ -182,6 +182,10 @@ export default function Page() {
 
   if (!course || !myGuide) {
     return <div className="p-10 mt-10">{t('notFound')}</div>
+  }
+
+  if (sessionStatus === 'loading') {
+    return <div className="p-10 mt-10 text-center">Loading...</div>
   }
 
   if (

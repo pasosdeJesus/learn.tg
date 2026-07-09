@@ -5,6 +5,7 @@ import type { AxiosResponse, AxiosError } from 'axios'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useSession, getCsrfToken } from 'next-auth/react'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { use, useEffect, useState, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { getUniversalLink } from '@selfxyz/core'
@@ -97,7 +98,8 @@ export default function ProfileForm({ params }: PageProps) {
   const [showQRDialog, setShowQRDialog] = useState(false)
 
   const { address } = useAccount()
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
+  const { toast } = useToast()
 
   const parameters = use(params)
   const { lang } = parameters
@@ -422,7 +424,7 @@ export default function ProfileForm({ params }: PageProps) {
         is_okx: navigator.userAgent.includes('OKX'),
         response: typeof responseData === 'string' ? responseData.substring(0, 200) : responseData,
       }), 'Profile')
-      alert('Profile updated successfully')
+      toast({ title: lang === 'es' ? 'Perfil actualizado' : 'Profile updated' })
     } catch (error) {
       logger.error('Profile save error: ' + String(error), 'Profile')
       let alertMessage =
@@ -444,7 +446,7 @@ export default function ProfileForm({ params }: PageProps) {
             t('connectionIssue')
         }
       }
-      alert(alertMessage)
+      toast({ title: lang === 'es' ? 'Error al guardar' : 'Save failed', description: alertMessage, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -463,6 +465,15 @@ export default function ProfileForm({ params }: PageProps) {
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin" />
         <span className="ml-2">Loading profile...</span>
+      </div>
+    )
+  }
+
+  if (sessionStatus === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading session...</span>
       </div>
     )
   }

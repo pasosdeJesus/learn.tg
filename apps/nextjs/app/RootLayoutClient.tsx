@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { AppProvider } from '@/providers/AppProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Toaster } from '@pasosdejesus/m/shadcn-components/ui/toaster'
 
 export default function RootLayoutClient({
   children,
@@ -28,6 +29,7 @@ export default function RootLayoutClient({
         <Layout>{children}</Layout>
       )}
     </AppProvider>
+    <Toaster />
     </ErrorBoundary>
   );
 }

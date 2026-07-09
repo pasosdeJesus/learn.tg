@@ -46,7 +46,7 @@ interface CourseExtra {
 
 export default function Page({ params }: PageProps) {
   const { address } = useAccount()
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
 
   const [courses, setCourses] = useState<Course[]>([])
   const [extCourses, setExtCourses] = useState<Map<number, CourseExtra>>(
@@ -164,6 +164,10 @@ export default function Page({ params }: PageProps) {
 
     configure()
   }, [session, address, lang])
+
+  if (sessionStatus === 'loading') {
+    return <div className="p-10 mt-10 text-center">Loading...</div>
+  }
 
   if (
     (session && !address) ||

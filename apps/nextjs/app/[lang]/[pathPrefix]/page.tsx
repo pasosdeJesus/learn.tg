@@ -28,7 +28,7 @@ type PageProps = {
 
 export default function Page({ params }: PageProps) {
   const { address } = useAccount()
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading course...","error":"Error: ","notFound":"Course not found."},"es":{"loading":"Cargando curso...","error":"Error: ","notFound":"Curso no encontrado."}}), [lang])
@@ -130,6 +130,10 @@ export default function Page({ params }: PageProps) {
       setContentsHtml(guias)
     }
   }, [course, lang, pathPrefix])
+
+  if (sessionStatus === 'loading') {
+    return <div className="p-10 mt-10 text-center">Loading...</div>
+  }
 
   if (
     (session && !address) ||
