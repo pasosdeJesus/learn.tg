@@ -497,13 +497,18 @@ export default function ProfileForm({ params }: PageProps) {
       // Recalculate profile score after save
       try {
         const csrfToken2 = await getCsrfToken()
-        await fetch('/api/update-scores', {
+        const scoresRes = await fetch('/api/update-scores', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ lang, walletAddress: address, token: csrfToken2 }),
         })
+        if (scoresRes.ok) {
+          const scoresData = await scoresRes.json()
+          if (scoresData.profilescore != null) {
+            setProfile((prev) => ({ ...prev, profilescore: scoresData.profilescore }))
+          }
+        }
       } catch { /* non-blocking */ }
-      setUpdateProfile(true)
     } catch (error) {
       logger.error('Profile save error: ' + String(error), 'Profile')
       let alertMessage =
@@ -603,12 +608,12 @@ export default function ProfileForm({ params }: PageProps) {
   const placeOfWorshipLabels = (religionId: number | null): { name: string; address: string } => {
     const isEs = lang === 'es'
     switch (religionId) {
-      case 2: return { name: isEs ? 'Iglesia' : 'Church', address: isEs ? 'Dirección de iglesia' : 'Address of church' }
-      case 3: return { name: isEs ? 'Mezquita' : 'Mosque', address: isEs ? 'Dirección de mezquita' : 'Address of mosque' }
-      case 6: return { name: isEs ? 'Sinagoga' : 'Synagogue', address: isEs ? 'Dirección de sinagoga' : 'Address of synagogue' }
+      case 2: return { name: isEs ? 'Iglesia' : 'Church', address: isEs ? 'Ubicación de iglesia' : 'Location of church' }
+      case 3: return { name: isEs ? 'Mezquita' : 'Mosque', address: isEs ? 'Ubicación de mezquita' : 'Location of mosque' }
+      case 6: return { name: isEs ? 'Sinagoga' : 'Synagogue', address: isEs ? 'Ubicación de sinagoga' : 'Location of synagogue' }
       case 4:
-      case 5: return { name: isEs ? 'Templo' : 'Temple', address: isEs ? 'Dirección de templo' : 'Address of temple' }
-      default: return { name: isEs ? 'Lugar de culto' : 'Place of worship', address: isEs ? 'Dirección de lugar de culto' : 'Address of place of worship' }
+      case 5: return { name: isEs ? 'Templo' : 'Temple', address: isEs ? 'Ubicación de templo' : 'Location of temple' }
+      default: return { name: isEs ? 'Lugar de culto' : 'Place of worship', address: isEs ? 'Ubicación de lugar de culto' : 'Location of place of worship' }
     }
   }
 
@@ -912,14 +917,14 @@ export default function ProfileForm({ params }: PageProps) {
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
                     </button>
                   </div>
-                ) : uploadingPhoto ? (
+                ) : uploadingPhoto === 'front' ? (
                   <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                 ) : (
                   <input
                     type="file"
                     accept="image/jpeg,image/png"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoUpload('front', f) }}
-                    disabled={uploadingPhoto === 'front'}
+                    disabled={uploadingPhoto != null}
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                 )}
@@ -938,14 +943,14 @@ export default function ProfileForm({ params }: PageProps) {
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
                     </button>
                   </div>
-                ) : uploadingPhoto ? (
+                ) : uploadingPhoto === 'back' ? (
                   <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                 ) : (
                   <input
                     type="file"
                     accept="image/jpeg,image/png"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoUpload('back', f) }}
-                    disabled={uploadingPhoto === 'back'}
+                    disabled={uploadingPhoto != null}
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                 )}
@@ -1082,8 +1087,12 @@ export default function ProfileForm({ params }: PageProps) {
           <NewChurchDialog
             open={showChurchDialog}
             onOpenChange={setShowChurchDialog}
-            onSuccess={() => {
+            onSuccess={(churchId) => {
               setUpdateProfile(true)
+              if (churchId) {
+                setSelectedChurchId(churchId)
+                setNewChurchName('')
+              }
               // Refresh church list
               if (profile.country) {
                 fetch(`/api/churches/search?q=&country=${profile.country}`)

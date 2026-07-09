@@ -18,7 +18,7 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess?: () => void
+  onSuccess?: (churchId: number) => void
   countryId: number | null
   cityName: string
   churchName: string
@@ -61,7 +61,7 @@ export function NewChurchDialog({
       error: 'Failed to register church',
       noAuth: 'You must be connected to register a church',
       fillRequired: 'Please fill all required fields',
-      pastorNote: 'Please inform your pastor that to confirm your membership we may contact them via WhatsApp. We encourage you to invite them to learn.tg.',
+      pastorNote: 'Please inform your pastor that to confirm your membership we may contact him via WhatsApp. We encourage you to invite him to learn.tg.',
     },
     es: {
       title: 'Registrar Nueva Iglesia',
@@ -141,6 +141,7 @@ export function NewChurchDialog({
         throw new Error(data.error || t('error'))
       }
 
+      const data = await res.json()
       toast({ title: t('success') })
       onOpenChange(false)
       // Clear form state
@@ -149,7 +150,7 @@ export function NewChurchDialog({
       setPastorWhatsapp('')
       setRegistration('')
       setRegistrationPhoto(null)
-      onSuccess?.()
+      onSuccess?.(data.church?.id)
     } catch (error) {
       toast({ title: t('error'), description: error instanceof Error ? error.message : '', variant: 'destructive' })
     } finally {
