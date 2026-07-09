@@ -111,7 +111,7 @@ export default function ProfileForm({ params }: PageProps) {
   const [deeplink, setDeeplink] = useState('')
   const [showQRDialog, setShowQRDialog] = useState(false)
   const [citySearch, setCitySearch] = useState('')
-  const [citySuggestions, setCitySuggestions] = useState<{ city: string; state: string; county: string; country_code: string; lat: number; lng: number }[]>([])
+  const [citySuggestions, setCitySuggestions] = useState<{ city: string; formatted: string; state: string; county: string; country_code: string; lat: number; lng: number }[]>([])
   const [churches, setChurches] = useState<{ id: number; name: string; city_name: string | null }[]>([])
   const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
   const [newChurchName, setNewChurchName] = useState('')
@@ -122,6 +122,7 @@ export default function ProfileForm({ params }: PageProps) {
   const [municipalityId, setMunicipalityId] = useState<number | null>(null)
   const [cityId, setCityId] = useState<number | null>(null)
   const [placeOfWorshipLocation, setPlaceOfWorshipLocation] = useState('')
+  const [placeOfWorshipName, setPlaceOfWorshipName] = useState('')
   const [departmentName, setDepartmentName] = useState('')
   const [municipalityName, setMunicipalityName] = useState('')
   const [cityDisplayName, setCityDisplayName] = useState('')
@@ -308,10 +309,23 @@ export default function ProfileForm({ params }: PageProps) {
         logger.info('locProfile=' + JSON.stringify(locProfile), 'Profile')
         setProfile(locProfile)
         if (rUser.church_id) setSelectedChurchId(rUser.church_id)
-        if (rUser.department_id != null) setDepartmentId(rUser.department_id)
-        if (rUser.municipality_id != null) setMunicipalityId(rUser.municipality_id)
-        if (rUser.city_id != null) setCityId(rUser.city_id)
-        if (rUser.place_of_worship_location) setPlaceOfWorshipLocation(rUser.place_of_worship_location)
+        if (rUser.department_id != null) {
+          setDepartmentId(rUser.department_id)
+          if (rUser.department_name) setDepartmentName(rUser.department_name)
+        }
+        if (rUser.municipality_id != null) {
+          setMunicipalityId(rUser.municipality_id)
+          if (rUser.municipality_name) setMunicipalityName(rUser.municipality_name)
+        }
+        if (rUser.city_id != null) {
+          setCityId(rUser.city_id)
+          if (rUser.city_name) setCityDisplayName(rUser.city_name)
+        }
+        if (rUser.place_of_worship_location) {
+          setPlaceOfWorshipLocation(rUser.place_of_worship_location)
+          setCitySearch(rUser.city_name || rUser.place_of_worship_location)
+        }
+        if (rUser.place_of_worship && !rUser.church_id) setPlaceOfWorshipName(rUser.place_of_worship)
 
         // Fetch saved church by ID so it appears in the selector
         if (rUser.church_id) {
@@ -381,7 +395,7 @@ export default function ProfileForm({ params }: PageProps) {
         church_relationship: profile.church_relationship,
         whatsapp: profile.whatsapp,
         telegram: profile.telegram,
-        place_of_worship: selectedChurchId ? churches.find(c => c.id === selectedChurchId)?.name || newChurchName : citySearch,
+        place_of_worship: selectedChurchId ? churches.find(c => c.id === selectedChurchId)?.name || '' : placeOfWorshipName || null,
         place_of_worship_location: placeOfWorshipLocation || citySearch,
         church_id: selectedChurchId || null,
         department_id: departmentId,
@@ -411,26 +425,7 @@ export default function ProfileForm({ params }: PageProps) {
         throw new Error(`[${response.status}] ${response.statusText}`)
       }
 
-      // If creating a new church with city selected, call POST /api/church
-      if (profile.religion === 2 && citySearch && newChurchName && !selectedChurchId) {
-        const churchRes = await fetch('/api/church', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            walletAddress: address,
-            token: csrfToken,
-            name: newChurchName,
-            countryId: profile.country,
-            cityName: citySearch,
-            pastorName: profile.name,
-            pastorWhatsapp: profile.whatsapp || profile.phone || '',
-          }),
-        })
-        if (!churchRes.ok) {
-          const churchErr = await churchRes.json()
-          logger.error('Church creation failed: ' + JSON.stringify(churchErr), 'Profile')
-        }
-      }
+
 
       let responseData = null
       try {
@@ -512,8 +507,8 @@ export default function ProfileForm({ params }: PageProps) {
     }
   }
 
-  const handleSelectCity = async (city: string, suggestion?: { state: string; county: string; lat: number; lng: number }) => {
-    setPlaceOfWorshipLocation(citySearch)
+  const handleSelectCity = async (city: string, suggestion?: { formatted: string; state: string; county: string; lat: number; lng: number }) => {
+    setPlaceOfWorshipLocation(suggestion?.formatted || citySearch)
     setDepartmentName(suggestion?.state || '')
     setMunicipalityName(suggestion?.county || '')
     setCityDisplayName(city)
@@ -1000,38 +995,29 @@ export default function ProfileForm({ params }: PageProps) {
                   {placeOfWorshipLabels(profile.religion).name}
                 </label>
                 {profile.religion === 2 ? (
-                  <>
-                    <Select
-                      value={selectedChurchId?.toString() || (newChurchName ? '__new__' : '')}
-                      onValueChange={handleSelectChurch}
-                      disabled={!citySearch}
-                    >
-                      <SelectTrigger id="placeOfWorshipName" className="w-full">
-                        <SelectValue placeholder={churches.length === 0 && citySearch ? '...' : t('placeOfWorshipNamePlaceholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {churches.map((ch) => (
-                          <SelectItem key={ch.id} value={ch.id.toString()}>
-                            {ch.name}{ch.city_name ? ` — ${ch.city_name}` : ''}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="__new__">{lang === 'es' ? '+ Nueva iglesia' : '+ New church'}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {!selectedChurchId && newChurchName !== '' && (
-                      <input
-                        type="text"
-                        value={newChurchName}
-                        onChange={(e) => setNewChurchName(e.target.value)}
-                        placeholder={lang === 'es' ? 'Nombre de nueva iglesia' : 'New church name'}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mt-2"
-                      />
-                    )}
-                  </>
+                  <Select
+                    value={selectedChurchId?.toString() || ''}
+                    onValueChange={handleSelectChurch}
+                    disabled={!citySearch}
+                  >
+                    <SelectTrigger id="placeOfWorshipName" className="w-full">
+                      <SelectValue placeholder={churches.length === 0 && citySearch ? '...' : t('placeOfWorshipNamePlaceholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {churches.map((ch) => (
+                        <SelectItem key={ch.id} value={ch.id.toString()}>
+                          {ch.name}{ch.city_name ? ` — ${ch.city_name}` : ''}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="__new__">{lang === 'es' ? '+ Nueva iglesia' : '+ New church'}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 ) : (
                   <input
                     id="placeOfWorshipName"
                     type="text"
+                    value={placeOfWorshipName}
+                    onChange={(e) => setPlaceOfWorshipName(e.target.value)}
                     placeholder={placeOfWorshipLabels(profile.religion).name}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
