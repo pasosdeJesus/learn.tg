@@ -905,6 +905,9 @@ export default function ProfileForm({ params }: PageProps) {
                 {profile.id_photo_front ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
+                    <a href={`/api/user/id-photo/${profile.userId}?side=front`} target="_blank" className="text-xs text-blue-600 hover:underline">
+                      {lang === 'es' ? 'Ver' : 'View'}
+                    </a>
                     <button type="button" onClick={() => handlePhotoDelete('front')} className="text-xs text-red-600 hover:underline">
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
                     </button>
@@ -928,6 +931,9 @@ export default function ProfileForm({ params }: PageProps) {
                 {profile.id_photo_back ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
+                    <a href={`/api/user/id-photo/${profile.userId}?side=back`} target="_blank" className="text-xs text-blue-600 hover:underline">
+                      {lang === 'es' ? 'Ver' : 'View'}
+                    </a>
                     <button type="button" onClick={() => handlePhotoDelete('back')} className="text-xs text-red-600 hover:underline">
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
                     </button>
@@ -943,6 +949,32 @@ export default function ProfileForm({ params }: PageProps) {
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                 )}
+              </div>
+            </div>
+            )}
+
+            {profile.religion === 2 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="churchRelationship"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  {t('churchRelationship')}
+                </label>
+                <Select
+                  value={profile.church_relationship || ''}
+                  onValueChange={(value) => handleChange('church_relationship', value)}
+                >
+                  <SelectTrigger id="churchRelationship" className="w-full">
+                    <SelectValue placeholder={t('selectChurchRelationship')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pastor">{t('churchRelationshipPastor')}</SelectItem>
+                    <SelectItem value="leader">{t('churchRelationshipLeader')}</SelectItem>
+                    <SelectItem value="member">{t('churchRelationshipMember')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             )}
@@ -1018,32 +1050,6 @@ export default function ProfileForm({ params }: PageProps) {
                 )}
               </div>
             </div>
-
-            {profile.religion === 2 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <label
-                  htmlFor="churchRelationship"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  {t('churchRelationship')}
-                </label>
-                <Select
-                  value={profile.church_relationship || ''}
-                  onValueChange={(value) => handleChange('church_relationship', value)}
-                >
-                  <SelectTrigger id="churchRelationship" className="w-full">
-                    <SelectValue placeholder={t('selectChurchRelationship')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pastor">{t('churchRelationshipPastor')}</SelectItem>
-                    <SelectItem value="leader">{t('churchRelationshipLeader')}</SelectItem>
-                    <SelectItem value="member">{t('churchRelationshipMember')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            )}
 
             <QRCodeDialog
               open={showQRDialog}

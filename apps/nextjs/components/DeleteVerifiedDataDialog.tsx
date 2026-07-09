@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, getCsrfToken } from 'next-auth/react'
 import { useAccount } from 'wagmi'
 import {
   Dialog,
@@ -67,7 +67,7 @@ export function DeleteVerifiedDataDialog({ lang = 'en', onSuccess }: Props) {
 
     setIsLoading(true)
     try {
-      const token = (session.user as any)?.token
+      const token = await getCsrfToken()
       if (!token) {
         toast({ title: t('unauthorized'), variant: 'destructive' })
         return

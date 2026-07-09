@@ -61,6 +61,7 @@ export function NewChurchDialog({
       error: 'Failed to register church',
       noAuth: 'You must be connected to register a church',
       fillRequired: 'Please fill all required fields',
+      pastorNote: 'Please inform your pastor that to confirm your membership we may contact them via WhatsApp. We encourage you to invite them to learn.tg.',
     },
     es: {
       title: 'Registrar Nueva Iglesia',
@@ -76,6 +77,7 @@ export function NewChurchDialog({
       error: 'Error al registrar iglesia',
       noAuth: 'Debes estar conectado para registrar una iglesia',
       fillRequired: 'Por favor llena todos los campos requeridos',
+      pastorNote: 'Por favor infórmale a tu pastor que para confirmar tu membresía posiblemente nos comunicaremos con él por WhatsApp. Te motivamos a invitarlo a learn.tg.',
     },
   })
 
@@ -167,6 +169,10 @@ export function NewChurchDialog({
             <label className="text-sm font-medium">{t('churchName')}</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('churchName')} />
           </div>
+
+          <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2">
+            {t('pastorNote')}
+          </p>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">{t('pastorName')} *</label>
