@@ -379,10 +379,6 @@ export default function ProfileForm({ params }: PageProps) {
     logger.info('6. CSRF Token length: ' + csrfToken?.length, 'Profile')
 
     try {
-      if (!process.env.NEXT_PUBLIC_API_UPDATE_USER) {
-        toast({ title: 'Undefined NEXT_PUBLIC_API_UPDATE_USER', variant: 'destructive' })
-        return
-      }
       const reg = {
         nombre: profile.name,
         email: profile.email,
@@ -887,8 +883,8 @@ export default function ProfileForm({ params }: PageProps) {
                 {profile.id_photo_front ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
-                    <a href={`/api/user/id-photo/${profile.userId}?side=front`} target="_blank" className="text-xs text-blue-600 hover:underline">
-                      {lang === 'es' ? 'Ver' : 'View'}
+                    <a href={`/api/user/id-photo/${profile.userId}?side=front`} download className="text-xs text-blue-600 hover:underline">
+                      {lang === 'es' ? 'Descargar' : 'Download'}
                     </a>
                     <button type="button" onClick={() => handlePhotoDelete('front')} className="text-xs text-red-600 hover:underline">
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
