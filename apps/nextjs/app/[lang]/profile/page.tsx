@@ -282,20 +282,7 @@ export default function ProfileForm({ params }: PageProps) {
     const fetchProfile = async () => {
       let url = ''
       try {
-        if (process.env.NEXT_PUBLIC_API_USERS == undefined) {
-          toast({ title: 'NEXT_PUBLIC_API_USERS not defined', variant: 'destructive' })
-          return
-        }
-        if (process.env.NEXT_PUBLIC_API_SHOW_USER == undefined) {
-          toast({ title: 'NEXT_PUBLIC_API_SHOW_USER not defined', variant: 'destructive' })
-          return
-        }
-        if (process.env.NEXT_PUBLIC_API_COUNTRIES == undefined) {
-          toast({ title: 'NEXT_PUBLIC_API_COUNTRIES not defined', variant: 'destructive' })
-          return
-        }
-
-        let response = await fetch(process.env.NEXT_PUBLIC_API_COUNTRIES)
+        let response = await fetch('/api/countries')
         if (!response.ok) {
           throw new Error(`Response status in countries: ${response.status}`)
         }
@@ -309,23 +296,18 @@ export default function ProfileForm({ params }: PageProps) {
         data = await response.json()
         setReligions(data)
 
-        url = process.env.NEXT_PUBLIC_API_USERS!
-        url += `?filtro[walletAddress]=${session!.address || ''}`
         const csrfToken = await getCsrfToken()
-        url += `&walletAddress=${session!.address || ''}&token=${csrfToken}`
+        url = `/api/profile?walletAddress=${session!.address || ''}&token=${csrfToken}`
         logger.info('OJO url=' + url, 'Profile')
 
         response = await fetch(url)
         if (!response.ok) {
           throw new Error(`Response status: ${response.status}`)
         }
-        data = await response.json()
-        if (data.length != 1) {
-          throw new Error(`Expected data.length == 1`)
-        }
-        const rUser = data[0]
+        const rUser = await response.json()
         logger.info('rUser=' + JSON.stringify(rUser), 'Profile')
         const locProfile: UserProfile = {
+          church_relationship: rUser.church_relationship || null,
           country: rUser.pais_id,
           email: rUser.email,
           groups: '',
@@ -339,7 +321,6 @@ export default function ProfileForm({ params }: PageProps) {
           picture: rUser.foto_file_name,
           profilescore: rUser.profilescore,
           religion: rUser.religion_id,
-          church_relationship: rUser.church_relationship || null,
           id_photo_front: rUser.id_photo_front || null,
           id_photo_back: rUser.id_photo_back || null,
           telegram: rUser.telegram || '',
@@ -412,15 +393,11 @@ export default function ProfileForm({ params }: PageProps) {
         whatsapp: profile.whatsapp,
         telegram: profile.telegram,
       }
-      let url = process.env.NEXT_PUBLIC_API_UPDATE_USER.replace(
-        'usuario_id',
-        profile.userId,
-      )
-      url += `?walletAddress=${session!.address}&token=${csrfToken}`
-      logger.info(`Posting ${url}`, 'Profile')
+      const url = `/api/profile?walletAddress=${session!.address}&token=${csrfToken}`
+      logger.info(`Patching ${url}`, 'Profile')
 
       const response = await fetch(url, {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
