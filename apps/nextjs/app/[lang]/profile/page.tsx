@@ -909,8 +909,8 @@ export default function ProfileForm({ params }: PageProps) {
                 {profile.id_photo_back ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
-                    <a href={`/api/user/id-photo/${profile.userId}?side=back`} target="_blank" className="text-xs text-blue-600 hover:underline">
-                      {lang === 'es' ? 'Ver' : 'View'}
+                    <a href={`/api/user/id-photo/${profile.userId}?side=back`} download className="text-xs text-blue-600 hover:underline">
+                      {lang === 'es' ? 'Descargar' : 'Download'}
                     </a>
                     <button type="button" onClick={() => handlePhotoDelete('back')} className="text-xs text-red-600 hover:underline">
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
@@ -1061,7 +1061,6 @@ export default function ProfileForm({ params }: PageProps) {
             open={showChurchDialog}
             onOpenChange={setShowChurchDialog}
             onSuccess={(churchId) => {
-              setUpdateProfile(true)
               if (churchId) {
                 setSelectedChurchId(churchId)
                 setNewChurchName('')
