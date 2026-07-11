@@ -388,6 +388,8 @@ export default function ProfileForm({ params }: PageProps) {
         church_relationship: profile.church_relationship,
         whatsapp: profile.whatsapp,
         telegram: profile.telegram,
+        place_of_worship: selectedChurchId ? churches.find(c => c.id === selectedChurchId)?.name || newChurchName : citySearch,
+        church_id: selectedChurchId || null,
       }
       const url = `/api/profile?walletAddress=${session!.address}&token=${csrfToken}`
       logger.info(`Patching ${url}`, 'Profile')
@@ -883,8 +885,8 @@ export default function ProfileForm({ params }: PageProps) {
                 {profile.id_photo_front ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
-                    <a href={`/api/user/id-photo/${profile.userId}?side=front`} download className="text-xs text-blue-600 hover:underline">
-                      {lang === 'es' ? 'Descargar' : 'Download'}
+                    <a href={`/api/user/id-photo/${profile.userId}?side=front`} target="_blank" className="text-xs text-blue-600 hover:underline">
+                      {lang === 'es' ? 'Ver' : 'View'}
                     </a>
                     <button type="button" onClick={() => handlePhotoDelete('front')} className="text-xs text-red-600 hover:underline">
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
@@ -909,8 +911,8 @@ export default function ProfileForm({ params }: PageProps) {
                 {profile.id_photo_back ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
-                    <a href={`/api/user/id-photo/${profile.userId}?side=back`} download className="text-xs text-blue-600 hover:underline">
-                      {lang === 'es' ? 'Descargar' : 'Download'}
+                    <a href={`/api/user/id-photo/${profile.userId}?side=back`} target="_blank" className="text-xs text-blue-600 hover:underline">
+                      {lang === 'es' ? 'Ver' : 'View'}
                     </a>
                     <button type="button" onClick={() => handlePhotoDelete('back')} className="text-xs text-red-600 hover:underline">
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
