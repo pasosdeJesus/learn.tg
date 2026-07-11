@@ -602,11 +602,14 @@ export default function ProfileForm({ params }: PageProps) {
       formData.append('walletAddress', address || '')
       formData.append('token', csrfToken || '')
       const res = await fetch('/api/user/id-photo', { method: 'POST', body: formData })
-      if (!res.ok) throw new Error('Upload failed')
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Upload failed')
+      }
       const data = await res.json()
       setProfile((prev) => ({ ...prev, [side === 'front' ? 'id_photo_front' : 'id_photo_back']: data.path }))
-    } catch {
-      toast({ title: lang === 'es' ? 'Error al subir foto' : 'Photo upload failed', variant: 'destructive' })
+    } catch (e: any) {
+      toast({ title: e?.message || (lang === 'es' ? 'Error al subir foto' : 'Photo upload failed'), variant: 'destructive' })
     } finally {
       setUploadingPhoto(null)
     }
