@@ -210,7 +210,7 @@ importers:
         version: 3.3.5
       '@pasosdejesus/m':
         specifier: gitlab:pasosdejesus/m
-        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=6bd5f3c535479e942c70edc321c398101c747765
+        version: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=a234336671ba6f8b1d4394ac5b7c4cf85aa45ad2
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0
@@ -2104,8 +2104,8 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=6bd5f3c535479e942c70edc321c398101c747765':
-    resolution: {gitHosted: true, integrity: sha512-rnJQy/QWdUkaLyu/bSdTsvrdYS+ufheDtT64aLZZ5Xl9qR3K2HDmO4f3HcNKmttgCapwOs5N8UakPbUofOTdsQ==, tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=6bd5f3c535479e942c70edc321c398101c747765}
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=a234336671ba6f8b1d4394ac5b7c4cf85aa45ad2':
+    resolution: {gitHosted: true, integrity: sha512-VcfgymoBfSiWNCqIdCVwwhF0a09I6O1C4TxqStwZQmjjLJMLiwC7dbwIkpcmysLjImnc47r2JbAli6NDLtgXGw==, tarball: https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=a234336671ba6f8b1d4394ac5b7c4cf85aa45ad2}
     version: 0.10.0
     hasBin: true
 
@@ -4931,8 +4931,8 @@ packages:
     resolution: {integrity: sha512-xYcDWrpELkFzz9SpZ3PlI6Eu6eD93Yf0WLDRxikGhWJ3MAir2SNZTIVCVZqZ/NUyx8AdMc2gT9C0gPiw18kG+A==}
     engines: {node: '>=10.13.0'}
 
-  enhanced-resolve@5.24.1:
-    resolution: {integrity: sha512-7DdUaTjmNwMcH2gLr1qycesKII3BK4RLy/mdAb7x10Lq7bR4aNKHt1BR1ZALSv0rPM/hF5wYF0PhGop/rJm8vw==}
+  enhanced-resolve@5.24.2:
+    resolution: {integrity: sha512-rpsZEGT1jFuve6QlpyRp9ckQ+kN61hvF9BzCPyMdaKTm8UJce96KBn3sorXOFXlzjPrs3Vc4T1NsSroZ3PxlFw==}
     engines: {node: '>=10.13.0'}
 
   entities@8.0.0:
@@ -5615,8 +5615,8 @@ packages:
     resolution: {integrity: sha512-nXHJZYtNrfsi1UQbyRqm3Gou431elgLjKl//CYlnBGt5aTWdRPH1PiS2T/p/n8Q8LnqYqzQJik3Q7mkwvLokeg==}
     engines: {node: '>= 12'}
 
-  iconv-lite@0.7.2:
-    resolution: {integrity: sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==}
+  iconv-lite@0.7.3:
+    resolution: {integrity: sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ==}
     engines: {node: '>=0.10.0'}
 
   idb-keyval@6.2.1:
@@ -6130,8 +6130,8 @@ packages:
   libbase64@1.3.0:
     resolution: {integrity: sha512-GgOXd0Eo6phYgh0DJtjQ2tO8dc0IVINtZJeARPeiIJqge+HdsWSuaDTe8ztQ7j/cONByDZ3zeB325AHiv5O0dg==}
 
-  libmime@5.4.0:
-    resolution: {integrity: sha512-MAWyU2qYtCsrZ6GClgukz2jx73NQrzA6ASo9qzThuTG+A7+H3lWQuBsjoy9lls+v6q/epAeBdEMJ3T0f4b+uRw==}
+  libmime@5.4.1:
+    resolution: {integrity: sha512-0wHGhsofo9IdQPenr3BBHXuxcwMq4atFUTsZ9Ogc1OvI5h4rUdDIrBQEN9JHjCXfDMrE59LUMJWsTD82wTYk8A==}
 
   libqp@2.1.1:
     resolution: {integrity: sha512-0Wd+GPz1O134cP62YU2GTOPNA7Qgl09XwCqM5zpBv87ERCXdfDtyKXvV7c9U22yWJh44QZqBocFnXN11K96qow==}
@@ -8511,8 +8511,8 @@ packages:
   webpack-sources@1.4.3:
     resolution: {integrity: sha512-lgTS3Xhv1lCOKo7SA5TjKXMjpSM4sBjNV5+q2bqesbSPs5FjGmU6jjtBSkX9b4qW87vDIsCIlUPOEhbZrMdjeQ==}
 
-  webpack-sources@3.5.0:
-    resolution: {integrity: sha512-HPuy+uuoTCaaoEoI1LQ3JN9+vrPBvEesnnX1jADHy728cHSMlq4wUc4afYqahq2B1mhQVZxCXOkNTnXltr+2vQ==}
+  webpack-sources@3.5.1:
+    resolution: {integrity: sha512-jyuiGJdtvY434z5bUZrjz67v76/ePNvFZTp9Mdz29IlH4+GPsgyGjiv0fKI+M7BdkU6ADjulUcKAd3tUK3WlEw==}
     engines: {node: '>=10.13.0'}
 
   webpack@5.106.2:
@@ -10905,7 +10905,7 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=6bd5f3c535479e942c70edc321c398101c747765':
+  '@pasosdejesus/m@https://gitlab.com/api/v4/projects/pasosdejesus%2Fm/repository/archive.tar.gz?sha=a234336671ba6f8b1d4394ac5b7c4cf85aa45ad2':
     dependencies:
       '@ethereumjs/common': 10.1.2
       '@ethereumjs/evm': 10.1.2
@@ -13785,7 +13785,7 @@ snapshots:
       addressparser: 1.0.1
       atob: 2.1.2
       circomlibjs: 0.1.7(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      libmime: 5.4.0
+      libmime: 5.4.1
       localforage: 1.10.0
       node-forge: 1.4.0
       pako: 2.2.0
@@ -14819,7 +14819,7 @@ snapshots:
       graceful-fs: 4.2.11
       tapable: 2.3.3
 
-  enhanced-resolve@5.24.1:
+  enhanced-resolve@5.24.2:
     dependencies:
       graceful-fs: 4.2.11
       tapable: 2.3.3
@@ -15835,7 +15835,7 @@ snapshots:
     dependencies:
       diacritics: 1.3.0
 
-  iconv-lite@0.7.2:
+  iconv-lite@0.7.3:
     dependencies:
       safer-buffer: 2.1.2
 
@@ -16310,10 +16310,10 @@ snapshots:
 
   libbase64@1.3.0: {}
 
-  libmime@5.4.0:
+  libmime@5.4.1:
     dependencies:
       encoding-japanese: 2.2.0
-      iconv-lite: 0.7.2
+      iconv-lite: 0.7.3
       libbase64: 1.3.0
       libqp: 2.1.1
 
@@ -19184,7 +19184,7 @@ snapshots:
       source-list-map: 2.0.1
       source-map: 0.6.1
 
-  webpack-sources@3.5.0: {}
+  webpack-sources@3.5.1: {}
 
   webpack@5.106.2(esbuild@0.27.7)(postcss@8.5.15):
     dependencies:
@@ -19198,7 +19198,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.17.0)
       browserslist: 4.28.2
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.24.1
+      enhanced-resolve: 5.24.2
       es-module-lexer: 2.3.0
       eslint-scope: 5.1.1
       events: 3.3.0
@@ -19211,7 +19211,7 @@ snapshots:
       tapable: 2.3.3
       terser-webpack-plugin: 5.6.1(esbuild@0.27.7)(postcss@8.5.15)(webpack@5.106.2(esbuild@0.27.7)(postcss@8.5.15))
       watchpack: 2.5.2
-      webpack-sources: 3.5.0
+      webpack-sources: 3.5.1
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'

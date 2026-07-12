@@ -5125,6 +5125,7 @@ CREATE TABLE public.usuario (
     verified_city_id integer,
     verified_place_of_worship character varying(100),
     id_photo_verified boolean DEFAULT false,
+    verified_email character varying(255),
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );

@@ -17,8 +17,12 @@ export async function authenticateUser(
   token?: string
 ): Promise<AuthenticatedUser | null> {
   console.log('**[authenticateUser] wallet:', walletAddress?.slice(0, 10) + '...',
-    'token:', token?.slice(0, 10) + '...')
-  if (!walletAddress || !token) return null
+    'token:', token?.slice(0, 10) + '...',
+    'tokenLen:', token?.length)
+  if (!walletAddress || !token) {
+    console.log('**[authenticateUser] missing wallet or token')
+    return null
+  }
 
   const billetera = await db
     .selectFrom('billetera_usuario')
@@ -27,12 +31,13 @@ export async function authenticateUser(
     .executeTakeFirst()
 
   if (!billetera) {
-    console.log('**[authenticateUser] billetera not found for wallet:', walletAddress)
+    console.log('**[authenticateUser] billetera not found for wallet:', walletAddress.toLowerCase())
     return null
   }
   if (billetera.token !== token) {
-    console.log('**[authenticateUser] token mismatch. DB token:', (billetera.token || '').slice(0, 10) + '...',
-      'request token:', token.slice(0, 10) + '...')
+    console.log('**[authenticateUser] token mismatch. DB token (first 10):', (billetera.token || '').slice(0, 10) + '...',
+      'req token (first 10):', token.slice(0, 10) + '...',
+      'len DB:', billetera.token?.length, 'len req:', token.length)
     return null
   }
 

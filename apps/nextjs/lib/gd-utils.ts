@@ -164,10 +164,13 @@ export async function updateProfileScore(
 }
 
 /**
- * Calculates profile score based on verified fields (REQ §5):
- * - Name + country: 68 pts (basic — country_id IS NOT NULL)
- * - WhatsApp or Telegram verified: 12 pts
- * - Location verified: 10 pts (dept + municipality + city match)
+ * Calculates profile score based on verified fields:
+ * - Name verified (nombre = passport_name): 26 pts
+ * - Country verified (pais_id = passport_nationality): 26 pts
+ * - Email verified (email = verified_email): 10 pts
+ * - WhatsApp or Telegram verified: 10 pts
+ * - GoodDollar verified (lastgooddollarverification IS NOT NULL): 8 pts
+ * - Location verified (dept + municipality + city match): 10 pts
  * - Place of worship verified: 10 pts
  * Total: 100
  */
@@ -178,11 +181,17 @@ export async function recalculateProfileScore(
   const user = await db
     .selectFrom('usuario')
     .select([
-      'country_id',
+      'nombre',
+      'passport_name',
+      'pais_id',
+      'passport_nationality',
+      'email',
+      'verified_email',
       'whatsapp',
       'telegram',
       'verified_whatsapp',
       'verified_telegram',
+      'lastgooddollarverification',
       'department_id',
       'municipality_id',
       'city_id',
@@ -199,13 +208,30 @@ export async function recalculateProfileScore(
 
   let score = 0
 
-  // Name + country: 68 pts
-  if (user.country_id != null) score += 68
+  // Name verified: 26 pts
+  if (user.nombre && user.passport_name && user.nombre === user.passport_name) {
+    score += 26
+  }
 
-  // WhatsApp or Telegram verified: 12 pts (max 12, not 24)
+  // Country verified: 26 pts
+  if (user.pais_id != null && user.passport_nationality != null && user.pais_id === user.passport_nationality) {
+    score += 26
+  }
+
+  // Email verified: 10 pts
+  if (user.email && user.verified_email && user.email === user.verified_email) {
+    score += 10
+  }
+
+  // WhatsApp or Telegram verified: 10 pts (max 10, not 20)
   if ((user.whatsapp && user.verified_whatsapp && user.whatsapp === user.verified_whatsapp) ||
       (user.telegram && user.verified_telegram && user.telegram === user.verified_telegram)) {
-    score += 12
+    score += 10
+  }
+
+  // GoodDollar verified: 8 pts
+  if (user.lastgooddollarverification != null) {
+    score += 8
   }
 
   // Location verified: 10 pts

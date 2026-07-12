@@ -1399,6 +1399,7 @@ export interface Usuario {
   updated_at: Timestamp | null;
   verified_city_id: number | null;
   verified_department_id: number | null;
+  verified_email: string | null;
   verified_municipality_id: number | null;
   verified_place_of_worship: string | null;
   verified_telegram: string | null;

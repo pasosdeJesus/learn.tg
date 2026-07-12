@@ -45,7 +45,7 @@ export default function Footer({ lang = 'en' }) {
           </nav>
 
           {/* Social — right */}
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex flex-col items-end gap-1 pr-28">
             <span className="font-semibold text-accent">{t('followUs')}</span>
             <div className="flex gap-3">
             <a href="https://twitter.com/pasosdeJesus" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white">

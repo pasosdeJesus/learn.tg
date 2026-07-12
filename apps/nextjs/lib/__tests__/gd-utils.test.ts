@@ -254,15 +254,16 @@ describe('updateProfileScore', () => {
 })
 
 describe('recalculateProfileScore', () => {
-  it('returns 68 when country_id is set', async () => {
+  it('returns 26 when nombre === passport_name', async () => {
     const mockDb = {
       selectFrom: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       executeTakeFirst: vi.fn().mockResolvedValue({
-        country_id: 1,
-        whatsapp: null, telegram: null,
-        verified_whatsapp: null, verified_telegram: null,
+        nombre: 'Test', passport_name: 'Test',
+        pais_id: null, passport_nationality: null,
+        email: null, verified_email: null,
+        lastgooddollarverification: null,
         department_id: null, municipality_id: null, city_id: null,
         verified_department_id: null, verified_municipality_id: null, verified_city_id: null,
         place_of_worship: null, verified_place_of_worship: null,
@@ -273,18 +274,19 @@ describe('recalculateProfileScore', () => {
     } as any
 
     const score = await recalculateProfileScore(mockDb, 1)
-    expect(score).toBe(68)
+    expect(score).toBe(26)
   })
 
-  it('returns 80 when country_id + verified whatsapp match', async () => {
+  it('returns 52 when name + country verified', async () => {
     const mockDb = {
       selectFrom: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       executeTakeFirst: vi.fn().mockResolvedValue({
-        country_id: 1,
-        whatsapp: '+123', telegram: null,
-        verified_whatsapp: '+123', verified_telegram: null,
+        nombre: 'Test', passport_name: 'Test',
+        pais_id: 1, passport_nationality: 1,
+        email: null, verified_email: null,
+        lastgooddollarverification: null,
         department_id: null, municipality_id: null, city_id: null,
         verified_department_id: null, verified_municipality_id: null, verified_city_id: null,
         place_of_worship: null, verified_place_of_worship: null,
@@ -295,21 +297,24 @@ describe('recalculateProfileScore', () => {
     } as any
 
     const score = await recalculateProfileScore(mockDb, 1)
-    expect(score).toBe(80)
+    expect(score).toBe(52)
   })
 
-  it('returns 100 when all verified fields match', async () => {
+  it('returns 100 when all fields verified', async () => {
     const mockDb = {
       selectFrom: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       executeTakeFirst: vi.fn().mockResolvedValue({
-        country_id: 1,
+        nombre: 'Test', passport_name: 'Test',
+        pais_id: 1, passport_nationality: 1,
+        email: 'a@b.com', verified_email: 'a@b.com',
         whatsapp: '+123', telegram: null,
         verified_whatsapp: '+123', verified_telegram: null,
+        lastgooddollarverification: new Date(),
         department_id: 5, municipality_id: 10, city_id: 15,
         verified_department_id: 5, verified_municipality_id: 10, verified_city_id: 15,
-        place_of_worship: 'My Church', verified_place_of_worship: 'My Church',
+        place_of_worship: 'Church', verified_place_of_worship: 'Church',
       }),
       updateTable: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
