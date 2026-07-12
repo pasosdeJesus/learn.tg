@@ -115,6 +115,7 @@ export default function ProfileForm({ params }: PageProps) {
   const [newChurchName, setNewChurchName] = useState('')
   const [uploadingPhoto, setUploadingPhoto] = useState<'front' | 'back' | null>(null)
   const [showChurchDialog, setShowChurchDialog] = useState(false)
+  const [updatingScores, setUpdatingScores] = useState(false)
 
   const { address } = useAccount()
   const { data: session, status: sessionStatus } = useSession()
@@ -141,61 +142,27 @@ export default function ProfileForm({ params }: PageProps) {
   }), [lang])
 
   const handleUpdateScores = async () => {
-    if (process.env.NEXT_PUBLIC_AUTH_URL === undefined) {
-      toast({ title: 'process.env.NEXT_PUBLIC_AUTH_URL is undefined', variant: 'destructive' })
-      return
-    }
-    if (
-      !session ||
-      !address ||
-      !session.address ||
-      session.address.toLowerCase() !== address.toLowerCase()
-    ) {
+    if (!session || !address || !session.address || session.address.toLowerCase() !== address.toLowerCase()) {
       toast({ title: 'Problem with session, disconnect and connect again', variant: 'destructive' })
       return
     }
-    const csrfToken = await getCsrfToken()
-    const data = {
-      lang: lang,
-      walletAddress: session.address,
-      token: csrfToken,
+    setUpdatingScores(true)
+    try {
+      const csrfToken = await getCsrfToken()
+      const res = await fetch('/api/update-scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lang, walletAddress: address, token: csrfToken }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      const data = await res.json()
+      setProfile((prev) => ({ ...prev, profilescore: data.profilescore ?? prev.profilescore }))
+      toast({ title: `${lang === 'es' ? 'Puntaje actualizado' : 'Score updated'}: ${data.profilescore ?? '0'}` })
+    } catch {
+      toast({ title: lang === 'es' ? 'Error al actualizar puntaje' : 'Failed to update scores', variant: 'destructive' })
+    } finally {
+      setUpdatingScores(false)
     }
-    const url = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/update-scores`
-    logger.info(`Posting to ${url}`, 'Profile')
-    axios
-      .post(url, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      .then((response: AxiosResponse) => {
-        if (response.data) {
-          setUpdateProfile(true)
-        }
-      })
-      .catch((error: AxiosError) => {
-        logger.error('Update scores error: ' + JSON.stringify({
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          message: error.message,
-          isTokenMismatch: error.response?.status === 401
-        }), 'Profile')
-
-        let errorMessage = 'Failed to update scores: '
-        if (error.response?.status === 401) {
-          errorMessage += 'Authentication failed (token mismatch). '
-          errorMessage += 'Please disconnect your wallet and connect again to refresh your session.'
-          if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
-            errorMessage += `\nServer message: ${error.response.data.message}`
-          }
-        } else if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
-          errorMessage += error.response.data.message
-        } else {
-          errorMessage += error.message
-        }
-        toast({ title: errorMessage, variant: 'destructive' })
-      })
   }
 
   const handleSuccessfulSelfVerification = () => {
@@ -1000,9 +967,10 @@ export default function ProfileForm({ params }: PageProps) {
                     <Select
                       value={selectedChurchId?.toString() || (newChurchName ? '__new__' : '')}
                       onValueChange={handleSelectChurch}
+                      disabled={!citySearch}
                     >
                       <SelectTrigger id="placeOfWorshipName" className="w-full">
-                        <SelectValue placeholder={t('placeOfWorshipNamePlaceholder')} />
+                        <SelectValue placeholder={churches.length === 0 && citySearch ? '...' : t('placeOfWorshipNamePlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {churches.map((ch) => (
@@ -1053,7 +1021,8 @@ export default function ProfileForm({ params }: PageProps) {
               <Button type="button" onClick={handleSelfVerify}>
                 {t('verifySelf')}
               </Button>
-              <Button type="button" onClick={handleUpdateScores}>
+              <Button type="button" onClick={handleUpdateScores} disabled={updatingScores}>
+                {updatingScores && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {t('updateScores')}
               </Button>
               <DeleteVerifiedDataDialog
@@ -1066,15 +1035,17 @@ export default function ProfileForm({ params }: PageProps) {
             open={showChurchDialog}
             onOpenChange={setShowChurchDialog}
             onSuccess={(churchId) => {
-              if (churchId) {
-                setSelectedChurchId(churchId)
-                setNewChurchName('')
-              }
-              // Refresh church list
+              // Refresh church list, then select the new church
               if (profile.country) {
                 fetch(`/api/churches/search?q=&country=${profile.country}`)
                   .then(r => r.json())
-                  .then(data => setChurches(data.churches || []))
+                  .then(data => {
+                    setChurches(data.churches || [])
+                    if (churchId) {
+                      setSelectedChurchId(churchId)
+                      setNewChurchName('')
+                    }
+                  })
                   .catch(() => {})
               }
             }}
