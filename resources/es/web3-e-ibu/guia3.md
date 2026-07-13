@@ -24,7 +24,7 @@ sistemas de IBU utilizan **mecanismos anti-sybil**:
 *   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 Nuevos Leones). Puedes ahorrar durante varios días antes de convertir.
 *   **IBU de CELO:** Hasta 1 CELO diario, dependiendo de tu puntuación de perfil. Con 52 puntos, recibes 0.52 CELO.
 
-**💡 Consejo:** Varios adultos en un hogar pueden reclamar, cada uno con su propia billetera, todo gestionable desde **una única aplicación OKX**.
+**💡 Consejo:** Varios adultos en un hogar pueden reclamar, cada uno con su propia billetera, todo gestionable desde **una única aplicación OneKey**.
 
 ### Una Estrategia para Tu IBU: Ahorra y Crece
 
@@ -48,7 +48,7 @@ La **verificación facial** asegura que tu billetera pertenece a un **adulto rea
 **Requisitos del proceso:**
 *   **Tiempo:** Unos 10 minutos. Se hace **una vez** (luego cada 6 meses).
 *   **Ubicación:** Buena iluminación.
-*   **Nota:** Con la Billetera OKX, es posible que necesites permitir el acceso a la cámara varias veces (alrededor de 5) al principio.
+*   **Nota:** Con la Billetera OneKey, es posible que necesites permitir el acceso a la cámara varias veces (alrededor de 5) al principio.
 
 **Video de referencia:**
 
@@ -61,7 +61,7 @@ La **verificación facial** asegura que tu billetera pertenece a un **adulto rea
 
 ## 3. Paso 2: Reclama Tu IBU Diario
 
-Una vez verificado, puedes reclamar diariamente a través de tu **billetera Web3** (como OKX, que configuraste en la Guía 2).
+Una vez verificado, puedes reclamar diariamente a través de tu **billetera Web3** (como OneKey, que configuraste en la Guía 2).
 
 *   **GoodDollar (G$):** Puedes reclamar en <https://learn.tg> o en la aplicación oficial en <https://gooddapp.org>.
 *   **IBU de CELO:** Solo puedes reclamarlo en **este sitio (learn.tg)**.
@@ -88,7 +88,7 @@ En la **Guía 4** aprenderás a **convertir tus G$ o CELO en Leones** a través 
 1. ___ es una criptomoneda y un protocolo que te permite reclamar diariamente un poco de dinero gratis. (GoodDollar)
 2. Para demostrar que eres una persona única para GoodDollar, necesitas hacer una ___ facial cada 6 meses. (verificación)
 3. Suponiendo que los tipos de cambio se mantengan constantes como se presenta en esta guía, necesitarías reclamar el IBU de GoodDollar durante al menos ___ días para tener 1 SLE. (cuatro)
-4. Es posible reclamar el IBU de varios ___ en tu hogar desde una única aplicación OKX, lo que facilita transferir los fondos a una sola cuenta. (adultos)
+4. Es posible reclamar el IBU de varios ___ en tu hogar desde una única aplicación OneKey, lo que facilita transferir los fondos a una sola cuenta. (adultos)
 
 
 

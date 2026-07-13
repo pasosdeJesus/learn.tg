@@ -22,7 +22,7 @@ UBI systems use **anti-sybil mechanisms**:
 *   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 New Leones). You can save up over several days before converting.
 *   **CELO UBI:** Up to 1 CELO daily, depending on your profile score. With 52 points, you receive 0.52 CELO.
 
-**💡 Tip:** Multiple adults in a household can claim, each with their own wallet, all manageable from **a single OKX app**.
+**💡 Tip:** Multiple adults in a household can claim, each with their own wallet, all manageable from **a single OneKey app**.
 
 ### A Strategy for Your UBI: Save and Grow
 
@@ -46,7 +46,7 @@ To accelerate your savings, you can **combine your UBI with other earnings** on 
 **Process requirements:**
 *   **Time:** About 10 minutes. Done **once** (then every 6 months).
 *   **Location:** Good lighting.
-*   **Note:** With OKX Wallet, you may need to allow camera access several times (around 5) at the beginning.
+*   **Note:** With OneKey Wallet, you may need to allow camera access several times (around 5) at the beginning.
 
 **Reference video:**
 
@@ -59,7 +59,7 @@ To accelerate your savings, you can **combine your UBI with other earnings** on 
 
 ## 3. Step 2: Claim Your Daily UBI
 
-Once verified, you can claim daily through your **Web3 wallet** (like OKX, which you set up in Guide 2).
+Once verified, you can claim daily through your **Web3 wallet** (like OneKey, which you set up in Guide 2).
 
 *   **GoodDollar (G$):** You can claim on <https://learn.tg> or the official app at <https://gooddapp.org>.
 *   **CELO UBI:** You can only claim it on **this site (learn.tg)**.
@@ -86,7 +86,7 @@ In **Guide 4** you will learn how to **convert your G$ or CELO into Leones** thr
 1. ___ is a cryptocurrency and a protocol that allows you to claim daily a little of free money daily. (GoodDollar)
 2. To prove that your are a unique person for GoodDollar, you need to do facial ___ every 6 months. (verification)
 3. Assuming the exchange rates remain constant as presented in this guide, you would need to claim GoodDollar UBI for at least ___ days to have 1 SLE. (four)
-4. It is possible to claim the UBI of multiple ___ in your household from a single OKX app which makes it easier to transfer funds only one account. (adults)
+4. It is possible to claim the UBI of multiple ___ in your household from a single OneKey app which makes it easier to transfer funds only one account. (adults)
 
 
 

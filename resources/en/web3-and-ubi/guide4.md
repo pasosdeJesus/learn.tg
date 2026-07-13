@@ -27,7 +27,7 @@ money. Before  you start watch a short video of the process:
 #### **Step-by-Step Guide to change crypto for SLE:**
 
 **Step 1: Connect your wallet**
-1. Open the OKX web3 wallet (if you are in the exchange remember to push Web3 at the top)
+1. Open the OneKey wallet (if you are in the exchange remember to push Web3 at the top)
 2. Using the search function of the web3 wallet go to **[stable-sl.pdJ.app](https://stable-sl.pdj.app/)**.
 
 **Step 2: Send Your UBI Tokens**

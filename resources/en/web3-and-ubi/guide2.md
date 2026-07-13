@@ -4,7 +4,7 @@ Your **Web3 wallet** is your personal gateway to the blockchain. It's like a
 digital passport and bank account in one, allowing you to securely receive, 
 store, and manage your digital UBI and your identification.
 
-For this course, we recommend the **OKX Web3 Wallet** or MetaMask. 
+For this course, we recommend the **OneKey Wallet** or MetaMask. 
 They are user-friendly, support the Celo network (which powers our UBI projects),
 and they have helpful built-in tools for beginners.
 
@@ -14,16 +14,16 @@ possesses it has full control.
 
 ---
 
-### **Step-by-Step: Installing the OKX Web3 Wallet**
+### **Step-by-Step: Installing the OneKey Wallet**
 
 #### **Step 1: Install the Wallet**
-*  On your smartphone install the OKX wallet (its icon is black and green) 
-   or the OKX application (its icon is white and black). If you install the OKX
+*  On your smartphone install the OneKey wallet (its icon is black and green) 
+   or the OneKey application (its icon is white and black). If you install the OneKey
    application, choose "Web3" at the top to switch from the Exchange to the
    web3 wallet.
 
 #### **Step 2: Create a New Wallet**
-*   Open the OKX Wallet and tap **"Create Wallet"**.
+*   Open the OneKey Wallet and tap **"Create Wallet"**.
 *   You will be prompted to set a strong password or biometric method
     for daily access to this device.
 
@@ -38,7 +38,7 @@ possesses it has full control.
 
 The procedure is presented in this video:
 
-[![Video showing how to create a web3 wallet with OKX](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
+[![Video showing how to create a web3 wallet with OneKey](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
 
 
 #### **Step 4: Access Your Wallet**
@@ -52,7 +52,7 @@ The procedure is presented in this video:
 ### **Connecting to the Celo Network**
 To interact with GoodDollar and learn.tg, your wallet needs to be connected to the Celo network.
 
-1.  In your OKX Wallet, look for the network selector (often at the top right).
+1.  In your OneKey Wallet, look for the network selector (often at the top right).
 2.  Search for and select CELO
 3.  Close the selector
 

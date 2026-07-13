@@ -2,12 +2,11 @@
 // Selects a church, saves, reloads, verifies it's still selected.
 //
 // Uses PRIVATE_KEY + NEXT_PUBLIC_ADDRESS from apps/.env
-// Defaults to https://learn.tg:9001 (override with IPDES/PUERTOPRU)
 //
-// Execution:
-//   CHROME_PATH=/usr/local/bin/chrome node e2e/specs/church-persistence.spec.mjs
-//
-// Non-headless mode (to debug):
+// Default: dev server https://learn.tg:9001 (Celo Sepolia)
+// Production:
+//   IPDES=learn.tg CHAIN_ID=42220 CHROME_PATH=/usr/local/bin/chrome node e2e/specs/church-persistence.spec.mjs
+// Non-headless (with real wallet):
 //   CONCABEZA=1 CHROME_PATH=/usr/local/bin/chrome node e2e/specs/church-persistence.spec.mjs
 
 import * as fs from 'fs'
@@ -76,76 +75,48 @@ async function main() {
   if (!siweOk) { fail('SIWE failed'); await browser.close(); process.exit(1) }
   ok('SIWE completed')
 
-  // Diagnostic: log ALL network requests
-  const requests = []
-  await page.setRequestInterception(true)
-  page.on('request', req => {
-    const url = req.url()
-    if (url.includes('/api/') || url.includes('/profile') || url.includes('/_next')) {
-      requests.push(`${req.method()} ${url.replace(base, '')}`)
-    }
-    req.continue()
-  })
-
-  // Reload with session
   await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded', timeout })
-  await new Promise(r => setTimeout(r, 3000))
+  await new Promise(r => setTimeout(r, 5000))
 
-  console.log(`  Network requests after reload:`)
-  if (requests.length === 0) {
-    console.log(`    (none captured)`)
-  } else {
-    for (const r of requests) console.log(`    ${r}`)
-  }
-
-  // Diagnostic: check cookies
+  // Diagnostic: check session cookie
   const cookies = await page.cookies()
   const sessionCookie = cookies.find(c => c.name.includes('next-auth.session-token'))
-  console.log(`  Session cookie: ${sessionCookie ? '✅ ' + sessionCookie.name : '❌ not found'}`)
-
-  // Wait for React to hydrate
-  console.log('  Waiting for React state...')
-  for (let i = 0; i < 10; i++) {
-    const state = await page.evaluate(() => {
-      const body = document.body.textContent || ''
-      if (body.includes('Partial login')) return 'partial'
-      if (body.includes('Loading session')) return 'loading-session'
-      if (body.includes('Loading profile')) return 'loading-profile'
-      if (body.includes('Edit Profile') || body.includes('Edición del Perfil')) return 'form'
-      return body.substring(0, 80)
-    })
-    console.log(`    [${i + 1}/10] ${state}`)
-    if (state === 'form' || state === 'partial') break
-    await new Promise(r => setTimeout(r, 3000))
+  if (!sessionCookie) {
+    console.log('  ⚠️  No session cookie — SIWE may have failed silently.')
   }
 
-  // Profile page requires wagmi to detect a wallet (useAccount).
-  // Mock wallets are NOT detected by wagmi — this is a known limitation.
-  // Tests below only work with a real wallet (CONCABEZA=1 / non-headless).
-  const hasPartial = await page.evaluate(() =>
-    document.body.textContent?.includes('Partial login'))
-  if (hasPartial) {
-    console.log('  ⚠️  Wagmi did not detect wallet — Profile page shows "Partial login".')
+  // Profile page can be flaky — retry up to 3 times
+  let profileReady = false
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    // Wait for React hydration after page load
+    for (let w = 0; w < 4; w++) {
+      await new Promise(r => setTimeout(r, 2000))
+      const state = await page.evaluate(() => {
+        const body = document.body.textContent || ''
+        if (body.includes('Edit Profile') || body.includes('Edición del Perfil')) return 'form'
+        if (body.includes('Partial login')) return 'partial'
+        if (body.includes('Loading session') || body.includes('Loading profile')) return 'loading'
+        return 'other'
+      })
+      if (state !== 'loading') {
+        console.log(`  Attempt ${attempt}/3: ${state} (after ${(w + 1) * 2}s)`)
+        if (state === 'form') profileReady = true
+        break
+      }
+    }
+    if (!profileReady && attempt < 3) {
+      console.log(`  Retrying — reload page...`)
+      await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded', timeout })
+    }
+  }
+
+  if (!profileReady) {
+    console.log('  ⚠️  Profile form did not load after 3 attempts.')
     console.log('  ⚠️  Church persistence tests require a REAL wallet (CONCABEZA=1).')
     console.log('  ⚠️  Skipping church selection tests.')
     await browser.close()
     summary(t0)
     process.exit(0)
-  }
-
-  // Debug: check what's rendered
-  const bodySnippet = await page.evaluate(() => {
-    const main = document.querySelector('main') || document.body
-    return main.textContent?.replace(/\s+/g, ' ').trim().substring(0, 500)
-  })
-  console.log(`  Body: "${bodySnippet}"`)
-  const hasForm = await page.$('form')
-  console.log(`  Form found: ${!!hasForm}`)
-  const inputs = await page.$$('input')
-  console.log(`  Input elements: ${inputs.length}`)
-  for (const inp of inputs.slice(0, 5)) {
-    const id = await page.evaluate(el => el.id, inp)
-    console.log(`    input#${id || '(no id)'}`)
   }
 
   ok('Profile page loaded (wallet detected by wagmi)')

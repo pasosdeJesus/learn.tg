@@ -7,7 +7,7 @@ Tu **billetera Web3** es tu puerta de entrada personal a la blockchain. Es como 
 pasaporte digital y una cuenta bancaria en uno, permitiéndote recibir, 
 almacenar y gestionar de forma segura tu IBU digital y tu identificación.
 
-Para este curso, recomendamos la **Billetera Web3 OKX** o MetaMask. 
+Para este curso, recomendamos la **Billetera OneKey** o MetaMask. 
 Son fáciles de usar, soportan la red Celo (que impulsa nuestros proyectos de IBU)
  y tienen herramientas integradas muy útiles para principiantes.
 
@@ -17,16 +17,16 @@ posea tiene el control total.
 
 ---
 
-### **Paso a Paso: Instalando la Billetera Web3 OKX**
+### **Paso a Paso: Instalando la Billetera OneKey**
 
 #### **Paso 1: Instala la Billetera**
-*  En tu smartphone, instala la billetera OKX (su ícono es negro y verde) 
-   o la aplicación OKX (su ícono es blanco y negro). Si instalas la aplicación OKX,
+*  En tu smartphone, instala la billetera OneKey (su ícono es negro y verde) 
+   o la aplicación OneKey (su ícono es blanco y negro). Si instalas la aplicación OneKey,
    elige "Web3" en la parte superior para cambiar del Exchange a la
    billetera web3.
 
 #### **Paso 2: Crea una Nueva Billetera**
-*   Abre la Billetera OKX y pulsa **"Crear Billetera"**.
+*   Abre la Billetera OneKey y pulsa **"Crear Billetera"**.
 *   Se te pedirá que establezcas una contraseña segura o un método biométrico
     para el acceso diario en este dispositivo.
 
@@ -41,7 +41,7 @@ posea tiene el control total.
 
 El procedimiento se presenta en este video:
 
-[![Video que muestra cómo crear una billetera web3 con OKX](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
+[![Video que muestra cómo crear una billetera web3 con OneKey](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
 
 
 #### **Paso 4: Accede a Tu Billetera**
@@ -55,7 +55,7 @@ El procedimiento se presenta en este video:
 ### **Conectándose a la Red Celo**
 Para interactuar con GoodDollar y learn.tg, tu billetera necesita estar conectada a la red Celo.
 
-1.  En tu Billetera OKX, busca el selector de red (a menudo en la parte superior derecha).
+1.  En tu Billetera OneKey, busca el selector de red (a menudo en la parte superior derecha).
 2.  Busca y selecciona CELO
 3.  Cierra el selector
 

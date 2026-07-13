@@ -28,7 +28,7 @@ Este servicio está diseñado para funcionar directamente con Leones de Sierra L
 #### **Guía Paso a Paso para cambiar cripto por SLE:**
 
 **Paso 1: Conecta tu billetera**
-1. Abre la billetera web3 de OKX (si estás en el exchange, recuerda presionar Web3 en la parte superior)
+1. Abre la billetera de OneKey (si estás en el exchange, recuerda presionar Web3 en la parte superior)
 2. Usando la función de búsqueda de la billetera web3, ve a **[stable-sl.pdJ.app](https://stable-sl.pdj.app/)**.
 
 **Paso 2: Envía Tus Tokens de IBU**
