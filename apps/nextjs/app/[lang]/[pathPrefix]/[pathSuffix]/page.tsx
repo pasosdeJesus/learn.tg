@@ -13,9 +13,9 @@ import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
 import type { Processor } from 'unified'
-import { useAccount } from 'wagmi'
 import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import CeloUbiButton from '@/components/CeloUbiButton'
 import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
@@ -25,7 +25,7 @@ import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 export default function Page() {
   const params = useParams()
-  const { address } = useAccount()
+  const { address } = useAuthAddress()
   const { data: session, status: sessionStatus } = useSession()
   const { lang, pathPrefix, pathSuffix } = params as { lang: string; pathPrefix: string; pathSuffix: string }
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading guide...","error":"Error: ","notFound":"Guide not found."},"es":{"loading":"Cargando guía...","error":"Error: ","notFound":"Guía no encontrada."}}), [lang])

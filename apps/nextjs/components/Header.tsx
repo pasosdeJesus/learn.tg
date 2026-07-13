@@ -8,11 +8,12 @@ import * as React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useAccount, useConnect } from 'wagmi'
+import { useConnect } from 'wagmi'
 import { injected } from 'wagmi/connectors'
 
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 interface ExtendedSession extends Session {
   address?: string
@@ -23,7 +24,7 @@ export default function Header({ lang: langProp = 'en' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const { connect } = useConnect()
-  const { address, isConnected } = useAccount()
+  const { isConnected, isWalletConnected, isAuthenticated } = useAuthAddress()
   const { data: session } = useSession() as { data: ExtendedSession | null }
   const params = useParams()
   const lang = (params?.lang as string) || langProp || 'en'
@@ -56,17 +57,6 @@ export default function Header({ lang: langProp = 'en' }) {
     }
   }, [connect])
 
-  // Check if wallet is connected and session matches
-  const isWalletConnected = isConnected &&
-    address &&
-    session &&
-    session.address &&
-    session.address.toLowerCase() === address.toLowerCase()
-
-  // Session may persist even when wagmi loses connection on navigation
-  // (known NextAuth bug #5719). Show menu when session address is available.
-  const hasSession = session && session.address
-
   // Menu items configuration
   const menuItems = [
     { key: 'navProfile', href: `/${lang}/profile`, emoji: '👤' },
@@ -97,8 +87,8 @@ export default function Header({ lang: langProp = 'en' }) {
 
           <nav aria-label="User authentication">
             <div className="flex items-center justify-end gap-4">
-              {/* Hamburger Menu — visible when wallet or session available */}
-              {(isWalletConnected || hasSession) && (
+              {/* Hamburger Menu — visible when authenticated */}
+              {isAuthenticated && (
                 <div className="relative" ref={menuRef}>
                   <Button
                     variant="ghost"
@@ -135,7 +125,7 @@ export default function Header({ lang: langProp = 'en' }) {
               )}
 
               {/* Show session address when wagmi disconnected (common after navigation) */}
-              {!isConnected && hasSession && (
+              {!isConnected && isAuthenticated && session?.address && (
                 <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full max-w-[140px] truncate" title={session!.address}>
                   {session!.address!.slice(0, 6)}...{session!.address!.slice(-4)}
                 </span>

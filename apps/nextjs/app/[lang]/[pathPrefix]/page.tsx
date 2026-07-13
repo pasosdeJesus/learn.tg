@@ -9,9 +9,9 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { unified } from 'unified'
-import { useAccount } from 'wagmi'
 import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
@@ -27,7 +27,7 @@ type PageProps = {
 }
 
 export default function Page({ params }: PageProps) {
-  const { address } = useAccount()
+  const { address } = useAuthAddress()
   const { data: session, status: sessionStatus } = useSession()
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
@@ -48,7 +48,7 @@ export default function Page({ params }: PageProps) {
 
   const sData = useScholarshipData({
     courseId: course?.id,
-    address,
+    address: address || session?.address,
   })
   const { fetchScholarship } = sData
 

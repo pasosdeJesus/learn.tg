@@ -3,9 +3,9 @@
 import axios from 'axios'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import { use, useEffect, useState, useRef } from 'react'
-import { useAccount } from 'wagmi'
 import Image from 'next/image'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
@@ -46,7 +46,7 @@ interface CourseExtra {
 }
 
 export default function Page({ params }: PageProps) {
-  const { address } = useAccount()
+  const { address } = useAuthAddress()
   const { data: session, status: sessionStatus } = useSession()
   const { toast } = useToast()
 
