@@ -61,6 +61,23 @@ Para interactuar con GoodDollar y learn.tg, tu billetera necesita estar conectad
 
 ---
 
+### **Siguiente Paso: Continúa con Tu Billetera**
+
+Ahora que tu billetera está configurada, para continuar este curso y reclamar
+IBU o becas de crucigramas debes usar el navegador integrado de tu billetera:
+
+1.  Abre tu **billetera OneKey** en tu smartphone.
+2.  Usa el navegador de la billetera (busca "Discover" o "Navegador" en el menú).
+3.  Ve a **[learn.tg](https://learn.tg)** y conecta tu billetera.
+4.  Firma el mensaje cuando se te solicite — esto verifica que eres dueño de la billetera.
+5.  Una vez conectado, continúa a la siguiente guía para verificar tu identidad y
+    comenzar a reclamar tu IBU.
+
+> **¿Por qué?** Solo el navegador de tu billetera puede firmar transacciones. Sin él,
+> no puedes reclamar IBU ni recibir recompensas por completar crucigramas.
+
+---
+
 ### **Preguntas de Comprensión**
 
 1. Nunca debes ___ tu Frase de Recuperación Secreta. (compartir)
@@ -72,3 +89,5 @@ Para interactuar con GoodDollar y learn.tg, tu billetera necesita estar conectad
    compartir para recibir fondos y (2) tu dirección privada asociada con una
    frase de recuperación secreta que no puedes compartir porque quien controla la 
    frase de recuperación secreta tiene el control ___ de los activos en tu billetera. (total)
+5. La Frase de Recuperación Secreta tiene ___ palabras que debes escribir en orden. (doce)
+6. Debes escribir tu Frase de Recuperación Secreta en ___ y guardarla en un lugar seguro. (papel)

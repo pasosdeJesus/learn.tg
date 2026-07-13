@@ -58,6 +58,23 @@ To interact with GoodDollar and learn.tg, your wallet needs to be connected to t
 
 ---
 
+### **Next Step: Continue with Your Wallet**
+
+Now that your wallet is set up, to continue this course and claim UBI or
+crossword rewards you must use your wallet's built-in browser:
+
+1.  Open your **OneKey wallet** on your smartphone.
+2.  Use the wallet's browser (look for "Discover" or "Browser" in the menu).
+3.  Go to **[learn.tg](https://learn.tg)** and connect your wallet.
+4.  Sign the message when prompted — this verifies you own the wallet.
+5.  Once connected, continue to the next guide to verify your identity and
+    start claiming your UBI.
+
+> **Why?** Only your wallet's browser can sign transactions. Without it,
+> you cannot claim UBI or receive rewards for completing crossword puzzles.
+
+---
+
 ### **Comprehension Questions**
 
 1. You must never ___ your Secret Recovery Phrase. (share)
@@ -69,3 +86,5 @@ To interact with GoodDollar and learn.tg, your wallet needs to be connected to t
    can share to receive funds and (2) your private address associated with a
    secret recovery phrase that you cannot share because whoever controls the 
    secret recovery phrase has ___ control of the assets in your wallet. (full)
+5. The Secret Recovery Phrase has ___ words that you must write down in order. (twelve)
+6. You should write your Secret Recovery Phrase on ___ and keep it in a safe place. (paper)

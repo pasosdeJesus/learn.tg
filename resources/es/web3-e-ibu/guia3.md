@@ -89,9 +89,21 @@ En la **Guía 4** aprenderás a **convertir tus G$ o CELO en Leones** a través 
 2. Para demostrar que eres una persona única para GoodDollar, necesitas hacer una ___ facial cada 6 meses. (verificación)
 3. Suponiendo que los tipos de cambio se mantengan constantes como se presenta en esta guía, necesitarías reclamar el IBU de GoodDollar durante al menos ___ días para tener 1 SLE. (cuatro)
 4. Es posible reclamar el IBU de varios ___ en tu hogar desde una única aplicación OneKey, lo que facilita transferir los fondos a una sola cuenta. (adultos)
+5. Para reclamar el IBU de CELO en learn.tg necesitas al menos ___ puntos en tu puntuación de perfil. (cincuenta)
+6. Puedes reclamar el IBU de GoodDollar y de learn.tg una vez al ___ . (día)
 
 
 
 {CeloUbiButton}
 
 {GoodDollarButton}
+
+---
+
+### **¿Ya reclamaste tu IBU? ¡Ahora haz el crucigrama!**
+
+Ahora que tu billetera está conectada y has aprendido a reclamar IBU, regresa a
+la **Guía 1** y completa el crucigrama. Pondrá a prueba tu conocimiento
+de las tres guías — y ganarás una **beca de 1 USDT** si lo resuelves perfecto.
+
+**[← Volver a la Guía 1](../guia1)**

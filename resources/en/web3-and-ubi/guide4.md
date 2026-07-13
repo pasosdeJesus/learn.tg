@@ -78,4 +78,6 @@ money. Before  you start watch a short video of the process:
    Sierra Leone. (service)
 4. It is also possible to buy and sell crypto for fiat using the P2P market
    of ___ like OKX and Binance. (exchanges)
+5. To pay transaction fees on the Celo network you need to have ___ in your wallet. (CELO)
+6. After confirming a transaction on stable-sl.pdJ.app, you should take a ___ of the details. (screenshot)
 

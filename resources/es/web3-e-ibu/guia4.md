@@ -79,3 +79,5 @@ Este servicio está diseñado para funcionar directamente con Leones de Sierra L
    Sierra Leona. (servicio)
 4. También es posible comprar y vender cripto por dinero fiduciario usando el mercado P2P
    de ___ como OKX y Binance. (exchanges)
+5. Para pagar comisiones de transacción en la red Celo necesitas tener ___ en tu billetera. (CELO)
+6. Después de confirmar una transacción en stable-sl.pdJ.app, debes tomar una ___ de los detalles. (captura)

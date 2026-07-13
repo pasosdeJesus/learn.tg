@@ -87,10 +87,22 @@ In **Guide 4** you will learn how to **convert your G$ or CELO into Leones** thr
 2. To prove that your are a unique person for GoodDollar, you need to do facial ___ every 6 months. (verification)
 3. Assuming the exchange rates remain constant as presented in this guide, you would need to claim GoodDollar UBI for at least ___ days to have 1 SLE. (four)
 4. It is possible to claim the UBI of multiple ___ in your household from a single OneKey app which makes it easier to transfer funds only one account. (adults)
+5. To claim learn.tg CELO UBI you need at least ___ points in your profile score. (fifty)
+6. You can claim GoodDollar and learn.tg UBI once per ___ . (day)
 
 
 
 {CeloUbiButton}
 
 {GoodDollarButton}
+
+---
+
+### **Did you claim your UBI? Now take the crossword!**
+
+Now that your wallet is connected and you've learned how to claim UBI, go back
+to **Guide 1** and complete the crossword puzzle. It will test your knowledge
+of all three guides — and you'll earn a **1 USDT scholarship** for a perfect score.
+
+**[← Back to Guide 1](../guide1)**
 
