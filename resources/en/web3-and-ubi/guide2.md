@@ -8,7 +8,9 @@ For this course, we recommend the **OneKey Wallet** or MetaMask.
 They are user-friendly, support the Celo network (which powers our UBI projects),
 and they have helpful built-in tools for beginners.
 
-Install OneKey: [Google Play](https://play.google.com/store/apps/details?id=so.onekey.app.wallet&pli=1) · [App Store](https://apps.apple.com/app/onekey-open-source-wallet/id1609559473)
+Install OneKey:
+<a href="https://play.google.com/store/apps/details?id=so.onekey.app.wallet&pli=1" target="_blank">Google Play</a> ·
+<a href="https://apps.apple.com/app/onekey-open-source-wallet/id1609559473" target="_blank">App Store</a>
 
 Your wallet’s security depends entirely on one thing: your 
 **Secret Recovery Phrase**. As the master key to your digital assets, whoever 
