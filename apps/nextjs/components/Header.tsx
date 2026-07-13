@@ -63,6 +63,10 @@ export default function Header({ lang: langProp = 'en' }) {
     session.address &&
     session.address.toLowerCase() === address.toLowerCase()
 
+  // Session may persist even when wagmi loses connection on navigation
+  // (known NextAuth bug #5719). Show menu when session address is available.
+  const hasSession = session && session.address
+
   // Menu items configuration
   const menuItems = [
     { key: 'navProfile', href: `/${lang}/profile`, emoji: '👤' },
@@ -93,8 +97,8 @@ export default function Header({ lang: langProp = 'en' }) {
 
           <nav aria-label="User authentication">
             <div className="flex items-center justify-end gap-4">
-              {/* Hamburger Menu — only visible when wallet connected */}
-              {isWalletConnected && (
+              {/* Hamburger Menu — visible when wallet or session available */}
+              {(isWalletConnected || hasSession) && (
                 <div className="relative" ref={menuRef}>
                   <Button
                     variant="ghost"
@@ -128,6 +132,13 @@ export default function Header({ lang: langProp = 'en' }) {
                 <ConnectButton
                   showBalance={{ smallScreen: false, largeScreen: false }}
                 />
+              )}
+
+              {/* Show session address when wagmi disconnected (common after navigation) */}
+              {!isConnected && hasSession && (
+                <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full max-w-[140px] truncate" title={session!.address}>
+                  {session!.address!.slice(0, 6)}...{session!.address!.slice(-4)}
+                </span>
               )}
             </div>
           </nav>
