@@ -11,6 +11,8 @@ Para este curso, recomendamos la **Billetera OneKey** o MetaMask.
 Son fáciles de usar, soportan la red Celo (que impulsa nuestros proyectos de IBU)
  y tienen herramientas integradas muy útiles para principiantes.
 
+Instalar OneKey: [Google Play](https://play.google.com/store/apps/details?id=so.onekey.app.wallet&pli=1) · [App Store](https://apps.apple.com/app/onekey-open-source-wallet/id1609559473)
+
 La seguridad de tu billetera depende enteramente de una cosa: tu 
 **Frase de Recuperación Secreta**. Como la llave maestra de tus activos digitales, quien la 
 posea tiene el control total.
