@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { SiweMessage } from 'siwe'
+import { getAddress } from 'viem'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -32,7 +33,20 @@ export function ConnectWalletButton() {
   const [error, setError] = useState('')
   const [hidden, setHidden] = useState(false)
 
-  const sessionAddress = session?.address
+  // NextAuth's useSession() sometimes returns null after client-side navigation
+  // (known bug #5719) even with a valid cookie. Fall back to localStorage.
+  const sessionAddress = session?.address || (
+    typeof window !== 'undefined'
+      ? localStorage.getItem('learn.tg.sessionAddress') || undefined
+      : undefined
+  )
+
+  // Persist session address to localStorage whenever it changes
+  useEffect(() => {
+    if (session?.address) {
+      localStorage.setItem('learn.tg.sessionAddress', session.address)
+    }
+  }, [session?.address])
 
   // Auto-connect for MiniPay
   useEffect(() => {
@@ -58,6 +72,7 @@ export function ConnectWalletButton() {
         method: 'eth_requestAccounts',
       })
       const address: string = accounts[0]
+      const checksummedAddress = getAddress(address)
 
       // 2. Get chain ID
       const chainIdHex: string = await window.ethereum.request({
@@ -75,7 +90,7 @@ export function ConnectWalletButton() {
       const origin = window.location.origin
       const msg = new SiweMessage({
         domain,
-        address,
+        address: checksummedAddress,
         statement: 'Sign in to Learn through games.',
         uri: origin,
         version: '1',
@@ -122,7 +137,7 @@ export function ConnectWalletButton() {
   }
 
   async function handleDisconnect() {
-    // NextAuth session is JWT-based — just sign out via NextAuth
+    localStorage.removeItem('learn.tg.sessionAddress')
     await fetch('/api/auth/signout', { method: 'POST' })
     await update()
   }

@@ -19,6 +19,7 @@ export default function Header({ lang: langProp = 'en' }) {
   const lang = (params?.lang as string) || langProp || 'en'
 
   const sessionAddress = (session as any)?.address as string | undefined
+    || (typeof window !== 'undefined' ? localStorage.getItem('learn.tg.sessionAddress') || undefined : undefined)
   const isAuthenticated = !!sessionAddress
 
   // Local translations (title + menu icon)
