@@ -46,6 +46,8 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       noWallet: 'No wallet detected. Please install OneKey or MetaMask.',
       cancelled: 'Connection cancelled. Please try again.',
       failed: 'Connection failed. Please try again.',
+      addChainFailed: 'Could not add Celo network. Please add it manually via chainlist.org.',
+      switchChainFailed: 'Please switch to Celo network in your wallet.',
     },
     es: {
       connect: 'Conectar Billetera',
@@ -53,6 +55,8 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       noWallet: 'No se detectó billetera. Instala OneKey o MetaMask.',
       cancelled: 'Conexión cancelada. Intenta de nuevo.',
       failed: 'Conexión fallida. Intenta de nuevo.',
+      addChainFailed: 'No se pudo agregar la red Celo. Agrégala manualmente vía chainlist.org.',
+      switchChainFailed: 'Cambia a la red Celo en tu billetera.',
     },
   })
 
@@ -98,7 +102,6 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
 
       // 2. Ensure we're on the correct chain (Celo / Celo Sepolia)
       const expectedChainId = IS_PRODUCTION ? '0xa4ec' : '0xaef2' // 42220 / 11142220
-      const expectedChainIdDec = IS_PRODUCTION ? 42220 : 11142220
       const chainName = IS_PRODUCTION ? 'Celo' : 'Celo Sepolia'
       const rpcUrl = IS_PRODUCTION
         ? 'https://forno.celo.org'
@@ -108,20 +111,21 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         : 'https://celo-sepolia.blockscout.com'
       const currencySymbol = 'CELO'
 
+      // 2. Get current chain
       const currentChainId: string = await window.ethereum.request({
         method: 'eth_chainId',
       })
 
+      // 3. Ensure we're on the correct chain
       if (currentChainId !== expectedChainId) {
         try {
-          // Try switching to the correct chain
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: expectedChainId }],
           })
         } catch (switchError: any) {
-          // Chain not added to wallet — add it
-          if (switchError.code === 4902 || switchError.message?.includes('Unrecognized chain')) {
+          // 4902 = chain not found in wallet → try to add it
+          if (switchError.code === 4902) {
             try {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
@@ -133,26 +137,33 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
                   blockExplorerUrls: [blockExplorer],
                 }],
               })
-            } catch (addError: any) {
-              console.error('Failed to add chain:', addError)
-              setError(`Please add ${chainName} network to your wallet manually.`)
+              // After adding, switch again
+              await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: expectedChainId }],
+              })
+            } catch {
+              setError(t('addChainFailed'))
               return
             }
+          } else if (switchError.code === 4001) {
+            setError(t('cancelled'))
+            return
           } else {
-            console.error('Failed to switch chain:', switchError)
-            setError(`Please switch to ${chainName} network in your wallet.`)
+            console.error('Switch chain error:', switchError)
+            setError(t('switchChainFailed'))
             return
           }
         }
       }
 
-      // Read chain ID again (may have changed after switch/add)
+      // Read final chain ID after potential switch
       const chainIdHex: string = await window.ethereum.request({
         method: 'eth_chainId',
       })
       const chainId = parseInt(chainIdHex, 16)
 
-      // 3. Get CSRF token (nonce) from NextAuth
+      // 4. Get CSRF token (nonce) from NextAuth
       const csrfRes = await fetch('/api/auth/csrf')
       const { csrfToken } = await csrfRes.json()
       if (!csrfToken) throw new Error('Could not get CSRF token')

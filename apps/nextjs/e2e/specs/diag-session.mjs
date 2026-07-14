@@ -40,7 +40,7 @@ async function main() {
   console.log(`initTestEnv addr: ${env.account.address}`)
   console.log(`Base: ${base}\n`)
 
-  const browser = await launchBrowser(false) // headed for debugging
+  const browser = await launchBrowser(true)
   const page = await browser.newPage()
 
   // Capture ALL console messages
@@ -56,14 +56,15 @@ async function main() {
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
   await new Promise(r => setTimeout(r, 5000))
 
-  const connectBtn = await page.evaluateHandle(() =>
-    [...document.querySelectorAll('button')].find(b =>
+  // Click Connect via evaluate + click JS
+  const btnFound = await page.evaluate(() => {
+    const btn = [...document.querySelectorAll('button')].find(b =>
       (b.textContent || '').includes('Connect') || (b.textContent || '').includes('Conectar'))
-  )
-  if (connectBtn.asElement()) {
-    console.log('2. Clicking Connect...')
-    await connectBtn.asElement().click()
-  }
+    if (btn) { btn.click(); return true }
+    return false
+  })
+  if (btnFound) console.log('2. Clicking Connect...')
+  else console.log('2. No Connect button found')
 
   // Wait for SIWE
   for (let i = 0; i < 20; i++) {
