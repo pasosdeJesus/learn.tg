@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useSession, getCsrfToken } from 'next-auth/react'
-import { useAccount } from 'wagmi'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import axios from 'axios'
 import type { Course, Guide } from './guideTypes'
 
@@ -12,7 +12,7 @@ interface UseCourseProps {
 }
 
 export function useCourse({ lang, pathPrefix }: UseCourseProps) {
-  const { address } = useAccount()
+  const { address } = useAuthAddress()
   const { data: session } = useSession()
 
   const [course, setCourse] = useState<Course | null>(null)
