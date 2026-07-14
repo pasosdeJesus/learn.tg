@@ -9,8 +9,8 @@ import * as path from 'path'
 import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
+  setupSIWEMock,
 } from '@pasosdejesus/m/e2e'
-import { setupSIWEMock } from '../helpers/siwe-wallet-mock.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [

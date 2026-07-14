@@ -7,6 +7,7 @@ import { getAddress } from 'viem'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { IS_PRODUCTION } from '@/lib/config'
 
 interface ExtendedSession {
   address?: string
@@ -95,7 +96,57 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       const address: string = accounts[0]
       const checksummedAddress = getAddress(address)
 
-      // 2. Get chain ID
+      // 2. Ensure we're on the correct chain (Celo / Celo Sepolia)
+      const expectedChainId = IS_PRODUCTION ? '0xa4ec' : '0xaef2' // 42220 / 11142220
+      const expectedChainIdDec = IS_PRODUCTION ? 42220 : 11142220
+      const chainName = IS_PRODUCTION ? 'Celo' : 'Celo Sepolia'
+      const rpcUrl = IS_PRODUCTION
+        ? 'https://forno.celo.org'
+        : 'https://forno.celo-sepolia.celo-testnet.org'
+      const blockExplorer = IS_PRODUCTION
+        ? 'https://celoscan.io'
+        : 'https://celo-sepolia.blockscout.com'
+      const currencySymbol = 'CELO'
+
+      const currentChainId: string = await window.ethereum.request({
+        method: 'eth_chainId',
+      })
+
+      if (currentChainId !== expectedChainId) {
+        try {
+          // Try switching to the correct chain
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: expectedChainId }],
+          })
+        } catch (switchError: any) {
+          // Chain not added to wallet — add it
+          if (switchError.code === 4902 || switchError.message?.includes('Unrecognized chain')) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: expectedChainId,
+                  chainName,
+                  nativeCurrency: { name: currencySymbol, symbol: currencySymbol, decimals: 18 },
+                  rpcUrls: [rpcUrl],
+                  blockExplorerUrls: [blockExplorer],
+                }],
+              })
+            } catch (addError: any) {
+              console.error('Failed to add chain:', addError)
+              setError(`Please add ${chainName} network to your wallet manually.`)
+              return
+            }
+          } else {
+            console.error('Failed to switch chain:', switchError)
+            setError(`Please switch to ${chainName} network in your wallet.`)
+            return
+          }
+        }
+      }
+
+      // Read chain ID again (may have changed after switch/add)
       const chainIdHex: string = await window.ethereum.request({
         method: 'eth_chainId',
       })
