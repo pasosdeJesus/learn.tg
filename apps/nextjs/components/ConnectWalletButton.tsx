@@ -119,11 +119,23 @@ export function ConnectWalletButton() {
 
       if (!cbRes.ok) {
         const text = await cbRes.text()
-        throw new Error(`Authentication failed (${cbRes.status}): ${text.slice(0, 100)}`)
+        console.error('[ConnectWallet] callback failed:', cbRes.status, text.slice(0, 200))
+        throw new Error(`Authentication failed (${cbRes.status})`)
       }
 
-      // 6. Refresh NextAuth session so useSession() picks up the new address
-      await update()
+      // Set localStorage immediately — don't wait for useEffect
+      localStorage.setItem('learn.tg.sessionAddress', checksummedAddress)
+
+      // Refresh NextAuth session — may require page reload if update() doesn't work
+      const updated = await update()
+      console.log('[ConnectWallet] connected:', checksummedAddress.slice(0, 10) + '...',
+        'session after update:', updated?.address?.slice(0, 10) || 'null')
+
+      if (!updated?.address) {
+        // NextAuth update() failed to return session — reload page as fallback
+        console.log('[ConnectWallet] update() returned no address, reloading page')
+        window.location.reload()
+      }
     } catch (err: any) {
       console.error('ConnectWalletButton error:', err)
       const msg =
