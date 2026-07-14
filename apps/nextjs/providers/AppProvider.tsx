@@ -8,8 +8,6 @@
 
 import { useMemo } from 'react'
 import { SessionProvider } from 'next-auth/react'
-import OKXNetworkCheck from '@/components/OKXNetworkCheck'
-import WalletDetectionHint from '@/components/WalletDetectionHint'
 
 interface ExtendedWindow extends Window {
   ethereum?: {
@@ -121,8 +119,6 @@ export function AppProvider(props: RainbowKitProviderProps) {
               })}
             >
               {props.children}
-              <OKXNetworkCheck />
-              <WalletDetectionHint />
             </RainbowKitProvider>
           </RainbowKitSiweNextAuthProvider>
         </QueryClientProvider>
