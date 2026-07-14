@@ -103,7 +103,7 @@ export default function Header({ lang: langProp = 'en' }) {
                 </div>
               )}
 
-              <ConnectWalletButton />
+              <ConnectWalletButton lang={lang} />
             </div>
           </nav>
         </div>

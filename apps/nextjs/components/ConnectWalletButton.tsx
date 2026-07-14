@@ -6,11 +6,16 @@ import { SiweMessage } from 'siwe'
 import { getAddress } from 'viem'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 
 interface ExtendedSession {
   address?: string
   expires?: string
   user?: { name?: string }
+}
+
+interface ConnectWalletButtonProps {
+  lang?: string
 }
 
 /**
@@ -24,14 +29,30 @@ interface ExtendedSession {
  * After SIWE, NextAuth session JWT handles identity.
  * The session persists across navigation — no reconnect needed.
  */
-export function ConnectWalletButton() {
-  const { data: session, update } = useSession() as {
+export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
+  const { data: session } = useSession() as {
     data: ExtendedSession | null
-    update: () => Promise<ExtendedSession | null>
   }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hidden, setHidden] = useState(false)
+
+  const t = createComponentT(lang, {
+    en: {
+      connect: 'Connect Wallet',
+      disconnect: 'Disconnect',
+      noWallet: 'No wallet detected. Please install OneKey or MetaMask.',
+      cancelled: 'Connection cancelled. Please try again.',
+      failed: 'Connection failed. Please try again.',
+    },
+    es: {
+      connect: 'Conectar Billetera',
+      disconnect: 'Desconectar',
+      noWallet: 'No se detectó billetera. Instala OneKey o MetaMask.',
+      cancelled: 'Conexión cancelada. Intenta de nuevo.',
+      failed: 'Conexión fallida. Intenta de nuevo.',
+    },
+  })
 
   // NextAuth's useSession() sometimes returns null after client-side navigation
   // (known bug #5719) even with a valid cookie. Fall back to localStorage.
@@ -63,7 +84,7 @@ export function ConnectWalletButton() {
 
     try {
       if (typeof window === 'undefined' || !window.ethereum) {
-        setError('No wallet detected. Please install OneKey or MetaMask.')
+        setError(t('noWallet'))
         return
       }
 
@@ -123,25 +144,15 @@ export function ConnectWalletButton() {
         throw new Error(`Authentication failed (${cbRes.status})`)
       }
 
-      // Set localStorage immediately — don't wait for useEffect
+      // Set localStorage — survives NextAuth's useSession() glitch (#5719)
       localStorage.setItem('learn.tg.sessionAddress', checksummedAddress)
 
-      // Refresh NextAuth session — may require page reload if update() doesn't work
-      const updated = await update()
-      console.log('[ConnectWallet] connected:', checksummedAddress.slice(0, 10) + '...',
-        'session after update:', updated?.address?.slice(0, 10) || 'null')
-
-      if (!updated?.address) {
-        // NextAuth update() failed to return session — reload page as fallback
-        console.log('[ConnectWallet] update() returned no address, reloading page')
-        window.location.reload()
-      }
+      // Reload page so NextAuth reads the session cookie on mount.
+      // update() from useSession() is unreliable after SIWE callback.
+      window.location.reload()
     } catch (err: any) {
       console.error('ConnectWalletButton error:', err)
-      const msg =
-        err?.code === 4001
-          ? 'Connection cancelled. Please try again.'
-          : err?.message || 'Connection failed. Please try again.'
+      const msg = err?.code === 4001 ? t('cancelled') : t('failed')
       setError(msg)
     } finally {
       setLoading(false)
@@ -151,7 +162,7 @@ export function ConnectWalletButton() {
   async function handleDisconnect() {
     localStorage.removeItem('learn.tg.sessionAddress')
     await fetch('/api/auth/signout', { method: 'POST' })
-    await update()
+    window.location.reload()
   }
 
   // MiniPay: hide the button completely
@@ -172,6 +183,7 @@ export function ConnectWalletButton() {
           size="sm"
           className="text-xs text-gray-500 hover:text-red-600"
           onClick={handleDisconnect}
+          title={t('disconnect')}
         >
           ✕
         </Button>
@@ -190,7 +202,7 @@ export function ConnectWalletButton() {
         className="text-sm"
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Connect Wallet
+        {t('connect')}
       </Button>
       {error && (
         <span className="text-xs text-red-600 max-w-[200px] truncate" title={error}>

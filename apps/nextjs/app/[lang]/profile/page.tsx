@@ -10,7 +10,7 @@ import { use, useEffect, useState, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { getUniversalLink } from '@selfxyz/core'
 import { SelfAppBuilder } from '@selfxyz/qrcode'
-import { useAccount } from 'wagmi'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import { Button } from '@/components/ui/button'
 import CircularProgress from '@/components/ui/circular-progress'
@@ -127,7 +127,7 @@ export default function ProfileForm({ params }: PageProps) {
   const [municipalityName, setMunicipalityName] = useState('')
   const [cityDisplayName, setCityDisplayName] = useState('')
 
-  const { address } = useAccount()
+  const { address } = useAuthAddress()
   const { data: session, status: sessionStatus } = useSession()
   const { toast } = useToast()
 
