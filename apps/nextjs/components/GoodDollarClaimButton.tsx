@@ -5,7 +5,7 @@ import { useIdentitySDK } from '@goodsdks/react-hooks'
 import { useSession } from 'next-auth/react'
 import { useState, useMemo } from 'react'
 import { usePublicClient, useWalletClient } from 'wagmi'
-import { useAccount } from 'wagmi'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
@@ -21,7 +21,7 @@ export function GoodDollarClaimButton({
   lang = 'en',
   buttonText,
 }: GoodDollarClaimButtonProps) {
-  const { address } = useAccount()
+  const { address } = useAuthAddress()
   const { data: session } = useSession()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()

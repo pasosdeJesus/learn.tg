@@ -8,6 +8,7 @@
 
 import { useMemo } from 'react'
 import { SessionProvider } from 'next-auth/react'
+import { WalletEventListener } from '@/components/WalletEventListener'
 
 interface ExtendedWindow extends Window {
   ethereum?: {
@@ -104,6 +105,7 @@ export function AppProvider(props: RainbowKitProviderProps) {
   return (
     <WagmiProvider config={config}>
       <SessionProvider>
+        <WalletEventListener />
         <QueryClientProvider client={queryClient}>
           <RainbowKitSiweNextAuthProvider
             getSiweMessageOptions={getSiweMessageOptions}
