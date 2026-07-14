@@ -1,33 +1,25 @@
 'use client'
 
-import { Session } from 'next-auth'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import * as React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useConnect } from 'wagmi'
-import { injected } from 'wagmi/connectors'
 
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
-
-interface ExtendedSession extends Session {
-  address?: string
-}
+import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 
 export default function Header({ lang: langProp = 'en' }) {
-  const [hideConnectBtn, setHideConnectBtn] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const { connect } = useConnect()
-  const { isConnected, isWalletConnected, isAuthenticated } = useAuthAddress()
-  const { data: session } = useSession() as { data: ExtendedSession | null }
+  const { data: session } = useSession()
   const params = useParams()
   const lang = (params?.lang as string) || langProp || 'en'
+
+  const sessionAddress = (session as any)?.address as string | undefined
+  const isAuthenticated = !!sessionAddress
 
   // Local translations (title + menu icon)
   const t = useMemo(() => createComponentT(lang, {
@@ -48,14 +40,6 @@ export default function Header({ lang: langProp = 'en' }) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-
-  // Auto-connect for MiniPay
-  useEffect(() => {
-    if (window.ethereum && window.ethereum.isMiniPay) {
-      setHideConnectBtn(true)
-      connect({ connector: injected({ target: 'metaMask' }) })
-    }
-  }, [connect])
 
   // Menu items configuration
   const menuItems = [
@@ -118,18 +102,7 @@ export default function Header({ lang: langProp = 'en' }) {
                 </div>
               )}
 
-              {!hideConnectBtn && (
-                <ConnectButton
-                  showBalance={{ smallScreen: false, largeScreen: false }}
-                />
-              )}
-
-              {/* Show session address when wagmi disconnected (common after navigation) */}
-              {!isConnected && isAuthenticated && session?.address && (
-                <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full max-w-[140px] truncate" title={session!.address}>
-                  {session!.address!.slice(0, 6)}...{session!.address!.slice(-4)}
-                </span>
-              )}
+              <ConnectWalletButton />
             </div>
           </nav>
         </div>
