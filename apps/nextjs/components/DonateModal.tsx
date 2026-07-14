@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
+import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { type Address, formatUnits } from 'viem'
 import axios from 'axios'
 import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@/lib/donate-utils'
@@ -23,7 +24,8 @@ export interface DonateModalProps {
 }
 
 export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: DonateModalProps) {
-  const { address } = useAccount()
+  const { address: rawAddress } = useAuthAddress()
+  const address = rawAddress as Address | undefined
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const [usdtDecimals, setUsdtDecimals] = useState<number>(+(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6))

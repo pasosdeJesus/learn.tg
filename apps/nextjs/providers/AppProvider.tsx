@@ -9,122 +9,24 @@
 import { useMemo } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import { WalletEventListener } from '@/components/WalletEventListener'
-
-interface ExtendedWindow extends Window {
-  ethereum?: {
-    selectedAddress?: string
-    isOKX?: boolean
-    isOkxWallet?: boolean
-    isMetaMask?: boolean
-    isRabby?: boolean
-    isTrust?: boolean
-    isCoinbaseWallet?: boolean
-    chainId?: string
-    networkVersion?: string
-  }
-  okxwallet?: any
-  okex?: any
-}
-import { AppProps } from 'next/app'
-import {
-  connectorsForWallets,
-  lightTheme,
-  RainbowKitProvider,
-} from '@rainbow-me/rainbowkit'
-import '@rainbow-me/rainbowkit/styles.css'
-import {
-  injectedWallet,
-  metaMaskWallet,
-  okxWallet,
-  walletConnectWallet,
-} from '@rainbow-me/rainbowkit/wallets'
-import {
-  RainbowKitSiweNextAuthProvider,
-  type GetSiweMessageOptions,
-} from '@rainbow-me/rainbowkit-siwe-next-auth'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createConfig, http, useAccount, WagmiProvider } from 'wagmi'
-import { base, baseSepolia, celo, celoSepolia } from 'wagmi/chains'
-import { Address } from 'viem'
-import { IS_PRODUCTION } from '@/lib/config';
 
-interface RainbowKitProviderProps {
+interface AppProviderProps {
   children: React.ReactNode
-  autoConnect?: boolean
-}
-
-function getConnectors() {
-  return connectorsForWallets(
-    [
-      {
-        groupName: 'Recommended',
-        wallets: [okxWallet, walletConnectWallet, metaMaskWallet, injectedWallet],
-      },
-    ],
-    {
-      appName: process.env.NEXT_PUBLIC_APPNAME ?? 'Learn Through Games',
-      projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? '0123',
-    },
-  )
-}
-
-function getConfig() {
-  return createConfig({
-    connectors: getConnectors(),
-    chains: [celo, celoSepolia, base, baseSepolia],
-    transports: {
-      [celo.id]: http(),
-      [celoSepolia.id]: http(),
-      [base.id]: http(),
-      [baseSepolia.id]: http(),
-    },
-  })
-}
-
-const getSiweMessageOptions: GetSiweMessageOptions = () => {
-  // Check if ethereum is available in window object
-  const selectedAddress =
-    (typeof window !== 'undefined' &&
-      (window as ExtendedWindow).ethereum?.selectedAddress) ||
-    '0x0'
-  const msg = {
-    statement:
-      'Sign in to Learn through games. '
-  }
-  console.log('OJO msg=', msg)
-  return msg
 }
 
 // Taking ideas of
 // https://github.com/0xRowdy/nextauth-siwe-route-handlers/blob/main/src/app/providers/web3-providers.tsx
-export function AppProvider(props: RainbowKitProviderProps) {
+export function AppProvider(props: AppProviderProps) {
 
-  const config = useMemo(() => getConfig(), [])
   const queryClient = useMemo(() => new QueryClient(), [])
 
   return (
-    <WagmiProvider config={config}>
-      <SessionProvider>
-        <WalletEventListener />
-        <QueryClientProvider client={queryClient}>
-          <RainbowKitSiweNextAuthProvider
-            getSiweMessageOptions={getSiweMessageOptions}
-          >
-            <RainbowKitProvider
-              initialChain={IS_PRODUCTION ? celo : celoSepolia}
-              theme={lightTheme({
-                accentColor: '#714ba6',
-                accentColorForeground: 'white',
-                borderRadius: 'small',
-                fontStack: 'system',
-                overlayBlur: 'none',
-              })}
-            >
-              {props.children}
-            </RainbowKitProvider>
-          </RainbowKitSiweNextAuthProvider>
-        </QueryClientProvider>
-      </SessionProvider>
-    </WagmiProvider>
+    <SessionProvider>
+      <WalletEventListener />
+      <QueryClientProvider client={queryClient}>
+        {props.children}
+      </QueryClientProvider>
+    </SessionProvider>
   )
 }

@@ -4,10 +4,11 @@ import axios from 'axios'
 import { getCsrfToken, useSession } from 'next-auth/react'
 import { use, useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
-import { useAccount, useConfig, useWriteContract } from 'wagmi'
 import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-import { waitForTransactionReceipt } from 'wagmi/actions'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { usePublicClient } from '@/lib/hooks/useWallet'
+import { useWriteContract } from '@/lib/hooks/useWriteContract'
 
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
@@ -41,10 +42,10 @@ export default function Page({
   }>
 }) {
   const [isLoading, setIsLoading] = useState(true)
-  const { address } = useAccount()
+  const { address } = useAuthAddress()
   const { data: session } = useSession()
   const { data: hash, writeContract } = useWriteContract()
-  const wagmiConfig = useConfig()
+  const publicClient = usePublicClient()
   const parameters = use(params)
   const { lang, pathPrefix, pathSuffix } = parameters
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading test...","error":"Error: ","notFound":"Test not found.","credentialEarnedPrefix":"Course credential earned! View it on your","credentialEarnedLink":"public profile"},"es":{"loading":"Cargando prueba...","error":"Error: ","notFound":"Prueba no encontrada.","credentialEarnedPrefix":"¡Credencial del curso obtenida! Mírala en tu","credentialEarnedLink":"perfil público"}}), [lang])
@@ -89,7 +90,7 @@ export default function Page({
       }
       setFlashWarning(uiMsg[locale].txProcessing)
 
-      waitForTransactionReceipt(wagmiConfig, { hash }).
+      publicClient?.waitForTransactionReceipt({ hash }).
         then((receipt) => {
           console.log('Transaction receipt', receipt)
           if (myGuide) {
@@ -103,7 +104,7 @@ export default function Page({
         setFlashWarning('')
       })
     }
-  }, [hash, wagmiConfig, lang, myGuide])
+  }, [hash, publicClient, lang, myGuide])
 
   useEffect(() => {
     const loadCrossword = async () => {

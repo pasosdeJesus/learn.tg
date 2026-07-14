@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSession, getCsrfToken } from 'next-auth/react'
-import { useAccount } from 'wagmi'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import {
   Dialog,
   DialogContent,
@@ -44,7 +44,7 @@ export function NewChurchDialog({
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const { data: session } = useSession()
-  const { address } = useAccount()
+  const { address } = useAuthAddress()
 
   const t = createComponentT(lang, {
     en: {

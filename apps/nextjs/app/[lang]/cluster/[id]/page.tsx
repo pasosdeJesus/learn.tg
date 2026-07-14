@@ -3,7 +3,7 @@
 import { use, useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession, getCsrfToken } from 'next-auth/react'
-import { useAccount } from 'wagmi'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { Button } from '@/components/ui/button'
@@ -99,7 +99,7 @@ export default function ClusterPage({ params }: PageProps) {
   const t = createComponentT(lang, translations)
   const { toast } = useToast()
   const { data: session } = useSession()
-  const { address } = useAccount()
+  const { address } = useAuthAddress()
   const [cluster, setCluster] = useState<ClusterData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

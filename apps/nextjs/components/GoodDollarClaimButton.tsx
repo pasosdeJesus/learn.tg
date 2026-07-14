@@ -4,7 +4,7 @@ import { ClaimSDK } from '@goodsdks/citizen-sdk'
 import { useIdentitySDK } from '@goodsdks/react-hooks'
 import { useSession } from 'next-auth/react'
 import { useState, useMemo } from 'react'
-import { usePublicClient, useWalletClient } from 'wagmi'
+import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
@@ -70,8 +70,8 @@ export function GoodDollarClaimButton({
 
     const claimSDK = new ClaimSDK({
       account: session.address as `0x${string}`,
-      publicClient,
-      walletClient,
+      publicClient: publicClient as any,
+      walletClient: walletClient as any,
       identitySDK: identitySDK.sdk,
       env: sdkEnv,
     })
