@@ -55,10 +55,6 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     },
   })
 
-  // NextAuth's useSession() sometimes returns null after client-side navigation
-  // (known bug #5719) even with a valid cookie. Fall back to localStorage.
-  }, [session?.address])
-
   const sessionAddress = session?.address || localAddr || undefined
 
   // Load localStorage address on mount (avoids SSR hydration mismatch)
