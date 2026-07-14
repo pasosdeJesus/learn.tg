@@ -36,6 +36,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hidden, setHidden] = useState(false)
+  const [localAddr, setLocalAddr] = useState<string | null>(null)
 
   const t = createComponentT(lang, {
     en: {
@@ -56,11 +57,14 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
 
   // NextAuth's useSession() sometimes returns null after client-side navigation
   // (known bug #5719) even with a valid cookie. Fall back to localStorage.
-  const sessionAddress = session?.address || (
-    typeof window !== 'undefined'
-      ? localStorage.getItem('learn.tg.sessionAddress') || undefined
-      : undefined
-  )
+  }, [session?.address])
+
+  const sessionAddress = session?.address || localAddr || undefined
+
+  // Load localStorage address on mount (avoids SSR hydration mismatch)
+  useEffect(() => {
+    setLocalAddr(localStorage.getItem('learn.tg.sessionAddress'))
+  }, [])
 
   // Persist session address to localStorage whenever it changes
   useEffect(() => {
@@ -161,8 +165,11 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
 
   async function handleDisconnect() {
     localStorage.removeItem('learn.tg.sessionAddress')
-    await fetch('/api/auth/signout', { method: 'POST' })
-    window.location.reload()
+    setLocalAddr(null)
+    // Use NextAuth's signOut which properly clears cookies + redirects
+    const { signOut } = await import('next-auth/react')
+    await signOut({ redirect: false })
+    window.location.href = '/'
   }
 
   // MiniPay: hide the button completely

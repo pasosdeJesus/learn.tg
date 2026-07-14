@@ -1,30 +1,26 @@
 // SIWE-capable wallet mock for Puppeteer E2E tests.
 //
-// Unlike the basic mock in @pasosdejesus/m/e2e, this one signs
-// personal_sign messages with a REAL private key using viem in Node.js.
-// The browser mock calls back to Node via page.exposeFunction.
+// Injects via evaluateOnNewDocument so it survives page reloads.
+// Uses page.exposeFunction to bridge browser → Node.js for real signing.
 //
-// Usage in spec:
-//   import { injectSIWEWallet } from '../../e2e/helpers/siwe-wallet-mock.mjs'
-//   await injectSIWEWallet(page, account.address, accountPrivateKey, chainId)
+// Usage:
+//   const page = await browser.newPage()
+//   await setupSIWEMock(page, address, privateKey, chainId)
+//   await page.goto(url)  // mock is ready before any page script runs
 
-/**
- * Injects a window.ethereum mock that signs personal_sign messages
- * with a real private key. Uses page.exposeFunction to bridge
- * browser → Node.js for signing.
- */
-export async function injectSIWEWallet(page, address, privateKey, chainId = 11142220) {
+export async function setupSIWEMock(page, address, privateKey, chainId = 11142220) {
   const hexChainId = '0x' + chainId.toString(16)
 
-  // Expose signing function to the browser
-  await page.exposeFunction('__signMessage', async (message) => {
+  // Set up signing bridge BEFORE page loads
+  await page.exposeFunction('__signSiwe', async (message) => {
     const { privateKeyToAccount } = await import('viem/accounts')
     const account = privateKeyToAccount(privateKey)
     const sig = await account.signMessage({ message })
     return sig.signature || sig
   })
 
-  // Inject wallet mock that calls the exposed signing function
+  // Inject full wallet mock BEFORE any page script runs
+  // This survives page reloads (evaluateOnNewDocument)
   await page.evaluateOnNewDocument((addr, cid) => {
     window.ethereum = {
       isMetaMask: true,
@@ -35,9 +31,8 @@ export async function injectSIWEWallet(page, address, privateKey, chainId = 1114
         if (method === 'eth_accounts') return [addr]
         if (method === 'eth_requestAccounts') return [addr]
         if (method === 'personal_sign') {
-          const message = params[0]
-          // Call back to Node.js for real signing
-          return window.__signMessage(message)
+          // Call back to Node.js for real ECDSA signing
+          return window.__signSiwe(params[0])
         }
         if (method === 'wallet_switchEthereumChain') return null
         if (method === 'eth_sendTransaction') return '0x' + 'cd'.repeat(32)

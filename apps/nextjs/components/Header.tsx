@@ -18,8 +18,13 @@ export default function Header({ lang: langProp = 'en' }) {
   const params = useParams()
   const lang = (params?.lang as string) || langProp || 'en'
 
-  const sessionAddress = (session as any)?.address as string | undefined
-    || (typeof window !== 'undefined' ? localStorage.getItem('learn.tg.sessionAddress') || undefined : undefined)
+  // Defer localStorage read to client-side to avoid hydration mismatch
+  const [localAddr, setLocalAddr] = useState<string | null>(null)
+  useEffect(() => {
+    setLocalAddr(localStorage.getItem('learn.tg.sessionAddress'))
+  }, [])
+
+  const sessionAddress = (session as any)?.address as string | undefined || localAddr || undefined
   const isAuthenticated = !!sessionAddress
 
   // Local translations (title + menu icon)
