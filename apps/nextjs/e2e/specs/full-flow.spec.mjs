@@ -184,7 +184,21 @@ async function main() {
   if (!profileOk) { fail('Profile page did not render') }
   else {
     ok('Profile loaded')
-    await new Promise(r => setTimeout(r, 4000))
+
+    // Debug: check localStorage auth state
+    const lsToken = await page.evaluate(() => localStorage.getItem('learn.tg.authToken'))
+    const lsAddr = await page.evaluate(() => localStorage.getItem('learn.tg.sessionAddress'))
+    console.log(`  localStorage: token=${lsToken ? lsToken.slice(0,8)+'...' : 'NONE'} addr=${lsAddr ? lsAddr.slice(0,10)+'...' : 'NONE'}`)
+
+    // Wait longer for profile API call to complete (fetches from port 3500)
+    for (let w = 0; w < 6; w++) {
+      await new Promise(r => setTimeout(r, 2000))
+      const hasScore = await page.evaluate(() =>
+        document.body.textContent?.includes('Profile Score') ||
+        document.body.textContent?.includes('Puntaje de Perfil'))
+      if (hasScore) break
+      if (w === 5) console.log('  ⚠️  Profile data still loading...')
+    }
 
     // Verify "Profile Score" / "Puntaje de Perfil" section
     const hasScoreLabel = await page.evaluate(() =>
