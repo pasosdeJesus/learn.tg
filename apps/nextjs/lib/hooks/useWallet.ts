@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { createPublicClient, createWalletClient, custom } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 import { IS_PRODUCTION } from '@/lib/config'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 const chain = IS_PRODUCTION ? celo : celoSepolia
 
@@ -24,15 +25,19 @@ export function usePublicClient() {
 /**
  * Replacement for wagmi's useWalletClient.
  * Uses window.ethereum as the transport — no wagmi dependency.
+ * Sets the account from NextAuth session so writeContract works.
  */
 export function useWalletClient() {
-  const { data } = useMemo(() => {
-    if (typeof window === 'undefined' || !window.ethereum) return { data: null }
-    const client = createWalletClient({
+  const { address } = useAuthAddress()
+
+  const data = useMemo(() => {
+    if (typeof window === 'undefined' || !window.ethereum || !address) return null
+    return createWalletClient({
+      account: address as `0x${string}`,
       chain,
       transport: custom(window.ethereum),
     })
-    return { data: client }
-  }, [])
+  }, [address])
+
   return { data }
 }
