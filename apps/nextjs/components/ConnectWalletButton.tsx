@@ -101,7 +101,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       const checksummedAddress = getAddress(address)
 
       // 2. Ensure we're on the correct chain (Celo / Celo Sepolia)
-      const expectedChainId = IS_PRODUCTION ? '0xa4ec' : '0xaef2' // 42220 / 11142220
+      const expectedChainId = IS_PRODUCTION ? '0xa4ec' : '0xaa044c' // 42220 / 11142220
       const chainName = IS_PRODUCTION ? 'Celo' : 'Celo Sepolia'
       const rpcUrl = IS_PRODUCTION
         ? 'https://forno.celo.org'
@@ -208,6 +208,9 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
 
       // Set localStorage — survives NextAuth's useSession() glitch (#5719)
       localStorage.setItem('learn.tg.sessionAddress', checksummedAddress)
+      // Store auth token so profile/crossword/UBI API calls can authenticate
+      // without relying on a new getCsrfToken() which returns a different nonce
+      localStorage.setItem('learn.tg.authToken', csrfToken)
 
       // Reload page so NextAuth reads the session cookie on mount.
       // update() from useSession() is unreliable after SIWE callback.
