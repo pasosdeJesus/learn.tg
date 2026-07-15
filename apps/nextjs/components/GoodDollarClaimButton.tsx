@@ -49,6 +49,7 @@ export default function GoodDollarClaimButton({
       signUp: 'Sign up with GoodDollar or Claim UBI',
       claiming: 'Claiming...',
       connectPrompt: 'Connect your wallet to claim',
+      testnetUnavailable: 'Not available on testnet',
     },
     es: {
       claimSuccess: 'Reclamo exitoso',
@@ -56,6 +57,7 @@ export default function GoodDollarClaimButton({
       signUp: 'Regístrate con GoodDollar o reclama UBI',
       claiming: 'Reclamando...',
       connectPrompt: 'Conecta tu billetera para reclamar',
+      testnetUnavailable: 'No opera en testnet',
     },
   }), [lang])
 
@@ -85,18 +87,26 @@ export default function GoodDollarClaimButton({
     }
   }
 
-  const hasWallet = !!(session && address && identitySDK)
+  const hasWallet = !!(session && address)
+  const isReady = hasWallet && !!identitySDK
+
+  // Wallet connected but SDK unavailable → likely testnet
+  const hintText = !hasWallet
+    ? t('connectPrompt')
+    : !identitySDK
+      ? t('testnetUnavailable')
+      : ''
 
   return (
     <Button
       onClick={handleClaim}
-      disabled={isClaiming || !hasWallet}
+      disabled={isClaiming || !isReady}
       variant="default"
       size="sm"
     >
       {isClaiming ? t('claiming') : buttonText || t('signUp')}
-      {!hasWallet && (
-        <span className="block text-xs text-gray-500 mt-1">{t('connectPrompt')}</span>
+      {hintText && (
+        <span className="block text-xs text-gray-500 mt-1">{hintText}</span>
       )}
     </Button>
   )
