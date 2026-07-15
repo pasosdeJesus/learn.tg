@@ -2,6 +2,10 @@
 
 How wallet-based authentication works in learn.tg — from wallet connection to API authorization.
 
+> **See also:** [wallet-auth.md](wallet-auth.md) for the UI components and hooks
+> (`ConnectWalletButton`, `useAuthAddress`, `useWriteContract`) that replaced
+> RainbowKit + wagmi (R-#186).
+
 ## Overview
 
 The platform uses **Sign-In With Ethereum (SIWE)** for passwordless authentication, but with a non-standard twist: the SIWE nonce (NextAuth CSRF token) doubles as the API authentication token stored in the database. NextAuth's JWT session only carries the user address for UI-level checks; actual API authorization is done by validating the token against the `billetera_usuario` table.
@@ -110,7 +114,7 @@ All wallet addresses are stored and compared in **lowercase**:
 - DB lookups use `LOWER(billetera) = LOWER(?)` (case-insensitive)
 - `authenticateUser()` lowercases the incoming address before querying
 - `session.address` is lowercased in the session callback
-- Frontend address comparisons use `.toLowerCase()` on both sides (wagmi returns checksummed addresses)
+- Frontend address comparisons use `.toLowerCase()` on both sides
 
 ## Code References
 
