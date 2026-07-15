@@ -19,6 +19,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import CeloUbiButton from '@/components/CeloUbiButton'
 import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
+import { SafeRender } from '@/components/SafeRender'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
@@ -230,9 +231,17 @@ export default function Page() {
         />
         <aside className="flex space-x-4 items-center justify-center" aria-label="Interactive buttons">
           {isClient && showGoodDollarButton && (
-            <GoodDollarClaimButton
-            lang={course.idioma}
-            />
+            <SafeRender fallback={
+              <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded">
+                {course.idioma === 'es'
+                  ? 'GoodDollar no disponible — estamos migrando a viem'
+                  : 'GoodDollar unavailable — migrating to viem'}
+              </span>
+            }>
+              <GoodDollarClaimButton
+              lang={course.idioma}
+              />
+            </SafeRender>
           )}
           {isClient && showCeloUbiButton && 
             <CeloUbiButton 

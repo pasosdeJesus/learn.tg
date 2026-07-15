@@ -1,7 +1,6 @@
 'use client'
 
-import { ClaimSDK } from '@goodsdks/citizen-sdk'
-import { useIdentitySDK } from '@goodsdks/react-hooks'
+import { ClaimSDK, IdentitySDK } from '@goodsdks/citizen-sdk'
 import { useSession } from 'next-auth/react'
 import { useState, useMemo } from 'react'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
@@ -17,7 +16,7 @@ export interface GoodDollarClaimButtonProps {
   buttonText?: string
 }
 
-export function GoodDollarClaimButton({
+export default function GoodDollarClaimButton({
   lang = 'en',
   buttonText,
 }: GoodDollarClaimButtonProps) {
@@ -27,25 +26,32 @@ export function GoodDollarClaimButton({
   const { data: walletClient } = useWalletClient()
   const { toast } = useToast()
   const [isClaiming, setIsClaiming] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const sdkEnv = IS_PRODUCTION ? 'production' : 'development'
-  const identitySDK = useIdentitySDK(sdkEnv)
+
+  const identitySDK = useMemo(() => {
+    if (typeof window === 'undefined' || !publicClient || !walletClient || !address) return null
+    try {
+      return new IdentitySDK({
+        publicClient: publicClient as any,
+        walletClient: walletClient as any,
+        env: sdkEnv as any,
+      })
+    } catch {
+      return null
+    }
+  }, [publicClient, walletClient, address, sdkEnv])
 
   const t = useMemo(() => createComponentT(lang, {
     en: {
-      sessionRequired: 'Session and connected wallet are required',
-      sdkInitError: 'Failed to initialize GoodDollar SDK',
-      claimSuccess: 'Claim successful. Claim number {{0}}',
+      claimSuccess: 'Claim successful',
       claimFailed: 'Claim failed: {{0}}',
       signUp: 'Sign up with GoodDollar or Claim UBI',
       claiming: 'Claiming...',
       connectPrompt: 'Connect your wallet to claim',
     },
     es: {
-      sessionRequired: 'Se requiere sesión y billetera conectada',
-      sdkInitError: 'Error al inicializar el SDK de GoodDollar',
-      claimSuccess: 'Reclamo exitoso. Reclamo número {{0}}',
+      claimSuccess: 'Reclamo exitoso',
       claimFailed: 'Reclamo fallido: {{0}}',
       signUp: 'Regístrate con GoodDollar o reclama UBI',
       claiming: 'Reclamando...',
@@ -54,79 +60,44 @@ export function GoodDollarClaimButton({
   }), [lang])
 
   const handleClaim = async () => {
-    if (!session || !address || session.address?.toLowerCase() !== address.toLowerCase() || !publicClient || !walletClient || !identitySDK) {
-      setError(t('sessionRequired'))
+    if (!session?.address || !publicClient || !walletClient || !identitySDK) {
+      toast({ title: t('connectPrompt'), variant: 'destructive' })
       return
     }
 
     setIsClaiming(true)
-    setError(null)
-
-    if (!identitySDK.sdk) {
-      setError(t('sdkInitError'))
-      setIsClaiming(false)
-      return
-    }
-
-    const claimSDK = new ClaimSDK({
-      account: session.address as `0x${string}`,
-      publicClient: publicClient as any,
-      walletClient: walletClient as any,
-      identitySDK: identitySDK.sdk,
-      env: sdkEnv,
-    })
-
     try {
-      const result = await claimSDK.claim()
-      const txHash = (result as any)?.transactionHash ?? ''
+      const claimSDK = new ClaimSDK({
+        account: session.address as `0x${string}`,
+        publicClient: publicClient as any,
+        walletClient: walletClient as any,
+        identitySDK,
+        env: sdkEnv,
+      })
 
-      if (session?.address && (session.user as any)?.token) {
-        const regResponse = await fetch('/api/register-gooddollar-claim', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            walletAddress: session.address,
-            token: (session.user as any).token,
-            txHash,
-          }),
-        })
-        const regData = await regResponse.json()
-        const claimNum = regData.claimNumber || ''
-        toast({ title: t('claimSuccess', claimNum) })
-      } else {
-        toast({ title: t('claimSuccess', '') })
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : JSON.stringify(err, null, 2)
-      setError(t('claimFailed', errorMessage))
-      toast({ title: t('claimFailed', errorMessage), variant: 'destructive' })
+      await (claimSDK as any).claim()
+      toast({ title: t('claimSuccess') })
+    } catch (e: any) {
+      console.error('GoodDollar claim error:', e)
+      toast({ title: t('claimFailed', e?.message || 'Unknown error'), variant: 'destructive' })
     } finally {
       setIsClaiming(false)
     }
   }
 
-  const defaultButtonText = t('signUp')
-  const finalButtonText = buttonText || defaultButtonText
+  const hasWallet = !!(session && address && identitySDK)
 
   return (
-    <div className="flex flex-col items-center justify-center gap-2">
-      <Button
-        onClick={handleClaim}
-        size="lg"
-        disabled={isClaiming || !session || !address}
-      >
-        {isClaiming ? t('claiming') : finalButtonText}
-      </Button>
-      {error && (
-        <div className="text-sm text-red-600 mt-2 text-center">{error}</div>
+    <Button
+      onClick={handleClaim}
+      disabled={isClaiming || !hasWallet}
+      variant="default"
+      size="sm"
+    >
+      {isClaiming ? t('claiming') : buttonText || t('signUp')}
+      {!hasWallet && (
+        <span className="block text-xs text-gray-500 mt-1">{t('connectPrompt')}</span>
       )}
-      {(!session || !address) && (
-        <div className="text-sm text-gray-500 mt-2 text-center">
-          {t('connectPrompt')}
-        </div>
-      )}
-    </div>
+    </Button>
   )
 }
-
-export default GoodDollarClaimButton
