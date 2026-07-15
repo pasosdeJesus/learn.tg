@@ -14,6 +14,14 @@ import { signOut } from 'next-auth/react'
 export function WalletEventListener() {
   const { data: session } = useSession()
 
+  // Clear auth token whenever session becomes null (expired, signed out, etc.)
+  useEffect(() => {
+    if (!session?.address) {
+      localStorage.removeItem('learn.tg.sessionAddress')
+      localStorage.removeItem('learn.tg.authToken')
+    }
+  }, [session?.address])
+
   useEffect(() => {
     if (typeof window === 'undefined' || !window.ethereum) return
 
@@ -21,12 +29,14 @@ export function WalletEventListener() {
       if (!accounts || accounts.length === 0) {
         // User disconnected from wallet
         localStorage.removeItem('learn.tg.sessionAddress')
+        localStorage.removeItem('learn.tg.authToken')
         signOut({ redirect: true, callbackUrl: '/' })
       }
     }
 
     function handleDisconnect() {
       localStorage.removeItem('learn.tg.sessionAddress')
+      localStorage.removeItem('learn.tg.authToken')
       signOut({ redirect: true, callbackUrl: '/' })
     }
 

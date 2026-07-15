@@ -74,7 +74,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
     setClaimResult(null)
 
     try {
-      const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+      const csrfToken = await getCsrfToken() || localStorage.getItem("learn.tg.authToken")
       const response = await axios.post('/api/claim-celo-ubi', {
         walletAddress: session.address,
         token: csrfToken,

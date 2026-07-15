@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import { useSession } from 'next-auth/react';
-import { useAccount } from 'wagmi';
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress';
 import Link from 'next/link';
 
 const translations = {
@@ -45,7 +45,7 @@ export default function DiligentRecordsPage({ params }: { params: Promise<{ lang
   
   // Usar sesión (requiere haber firmado)
   const { data: session, status } = useSession();
-  const { address } = useAccount();
+  const { address } = useAuthAddress();
 
   useEffect(() => {
     // Detectar si está instalada como PWA

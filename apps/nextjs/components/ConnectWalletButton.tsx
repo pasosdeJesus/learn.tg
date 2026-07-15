@@ -226,6 +226,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
 
   async function handleDisconnect() {
     localStorage.removeItem('learn.tg.sessionAddress')
+    localStorage.removeItem('learn.tg.authToken')
     setLocalAddr(null)
     // Use NextAuth's signOut which properly clears cookies + redirects
     const { signOut } = await import('next-auth/react')

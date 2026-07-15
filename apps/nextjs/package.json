@@ -19,7 +19,6 @@
     "@casl/react": "^5.0.1",
     "@goodsdks/citizen-sdk": "1.2.3",
     "@goodsdks/engagement-sdk": "^1.0.4",
-    "@goodsdks/react-hooks": "^1.0.3",
     "@next/swc-wasm-nodejs": "^16.2.6",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -41,8 +40,6 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.15",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@rainbow-me/rainbowkit": "^2.2.11",
-    "@rainbow-me/rainbowkit-siwe-next-auth": "^0.5.0",
     "@selfxyz/core": "1.1.0-beta.7",
     "@selfxyz/qrcode": "^1.0.22",
     "@swc/helpers": "^0.5.21",
@@ -76,7 +73,6 @@
     "tsx": "^4.21.0",
     "unified": "^11.0.5",
     "viem": "^2.48.11",
-    "wagmi": "^2.19.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {

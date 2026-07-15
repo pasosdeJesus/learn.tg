@@ -2,8 +2,8 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { useState, useEffect, use, useMemo } from 'react';
 import { createComponentT } from '@/lib/hooks/useTranslation';
 
@@ -18,7 +18,7 @@ export default function DiligentRecordsLayout({
   const { lang } = resolvedParams;
   const [isOnline, setIsOnline] = useState(true);
   const { status } = useSession();
-  const { isConnected } = useAccount();
+  const { address, isAuthenticated } = useAuthAddress();
   const t = useMemo(() => createComponentT(lang, {
     en: { online: 'Online', offline: 'Offline', connectWallet: 'Connect Wallet', signedSession: 'Signed session' },
     es: { online: 'En línea', offline: 'Fuera de línea', connectWallet: 'Conectar Wallet', signedSession: 'Sesión firmada' },
@@ -77,29 +77,11 @@ export default function DiligentRecordsLayout({
             <span>{isOnline ? t('online') : t('offline')}</span>
           </div>
           
-          {isOnline && !isConnected && (
-            <ConnectButton.Custom>
-              {({ openConnectModal }) => (
-                <button
-                  onClick={openConnectModal}
-                  style={{
-                    backgroundColor: 'white',
-                    color: '#2B6B4E',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  {t('connectWallet')}
-                </button>
-              )}
-            </ConnectButton.Custom>
+          {isOnline && !isAuthenticated && (
+            <ConnectWalletButton lang={lang} />
           )}
           
-          {isConnected && (
+          {isAuthenticated && address && (
             <div style={{
               backgroundColor: 'rgba(255,255,255,0.2)',
               padding: '4px 12px',
@@ -107,7 +89,7 @@ export default function DiligentRecordsLayout({
               fontSize: '14px',
               fontFamily: 'monospace'
             }}>
-              {useAccount().address?.slice(0,6)}...{useAccount().address?.slice(-4)}
+              {address.slice(0,6)}...{address.slice(-4)}
             </div>
           )}
           
