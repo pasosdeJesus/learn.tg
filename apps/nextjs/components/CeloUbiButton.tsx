@@ -29,6 +29,7 @@ interface ClaimResult {
 
 export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
   const { data: session } = useSession()
+  const sessionAddress = session?.address || (typeof window !== "undefined" ? localStorage.getItem("learn.tg.sessionAddress") : null)
 
   const [claimState, setClaimState] = useState<ClaimStatus>('idle')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -62,7 +63,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
   }), [lang])
 
   const handleClaimClick = async () => {
-    if (!session?.address) {
+    if (!sessionAddress) {
       setClaimResult({ message: t('mustLogin') })
       setClaimState('error')
       setDialogOpen(true)
@@ -76,7 +77,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
     try {
       const csrfToken = await getCsrfToken() || localStorage.getItem("learn.tg.authToken")
       const response = await axios.post('/api/claim-celo-ubi', {
-        walletAddress: session.address,
+        walletAddress: sessionAddress,
         token: csrfToken,
       })
       

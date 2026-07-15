@@ -39,7 +39,8 @@ Jesus is God incarnated, the Truth and the Logos.
 9. **[doc/siwe-auth-flow.md]**: SIWE authentication flow — how wallet sign-in works, CSRF token reuse as API auth token, two-layer auth model, and address case normalization.
 10. **[doc/wallet-auth.md]**: Custom wallet-auth implementation — `ConnectWalletButton`, `useAuthAddress`, `useWriteContract`, and disconnect detection. Replaced RainbowKit + wagmi (R-#186).
 11. **[SLEARN-WHITEPAPER.md]**: Tokenomics: distribution percentages, reserve backing rules, stability formula.
-12. Read the structure and key files of this project
+12. **[doc/e2e-testing.md]**: E2E testing — smoke tests (HTTP), Puppeteer browser specs, SIWE mock, CI setup.
+13. Read the structure and key files of this project
 
 ### 5. Confirm Your understanding of the documentation and the project
 

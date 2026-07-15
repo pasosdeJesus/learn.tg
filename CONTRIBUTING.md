@@ -38,6 +38,7 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
    - `make test` runs 6 sub-targets in sequence (parallel-safe, sin coverage)
    - `make coverage` runs all tests with coverage (lento, usa más memoria)
    - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.
+   - E2E tests: `make test-smoke` (HTTP) or `bin/m test:e2e` (Puppeteer). See [doc/e2e-testing.md](doc/e2e-testing.md)
    - See [apps/nextjs/CONTRIBUTING.md](apps/nextjs/CONTRIBUTING.md) for details
 5. **Commit** with clear messages: `git commit -m "feat: add feature X"`
 6. **Push** and create a **Pull Request**
