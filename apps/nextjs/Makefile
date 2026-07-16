@@ -2,7 +2,7 @@
 all:
 	rm -rf .next
 	pnpm i
-	pnpm build
+	NODE_OPTIONS="--max-old-space-size=8192" pnpm build
 
 type-source:
 	pnpm tsc --noEmit
@@ -54,7 +54,7 @@ dev:
 	./bin/dev
 
 prod:
-	pnpm build
+	NODE_OPTIONS="--max-old-space-size=8192" pnpm build
 	./bin/start > prod.log 2>&1 &
 
 # ── E2E Tests ───────────────────────────────────────────────────────────
