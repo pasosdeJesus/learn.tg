@@ -182,7 +182,16 @@ export function NewChurchDialog({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">{t('pastorWhatsapp')} *</label>
-            <Input value={pastorWhatsapp} onChange={(e) => setPastorWhatsapp(e.target.value)} placeholder="+232 12345678" />
+            <div className="flex items-center">
+              <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-gray-500 text-sm">
+                +232
+              </span>
+              <Input
+                value={pastorWhatsapp}
+                onChange={(e) => setPastorWhatsapp(e.target.value)}
+                className="rounded-l-none"
+              />
+            </div>
           </div>
 
           {isPastor && (

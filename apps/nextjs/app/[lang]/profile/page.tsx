@@ -753,14 +753,18 @@ export default function ProfileForm({ params }: PageProps) {
                 >
                   WhatsApp
                 </label>
-                <input
-                  id="whatsapp"
-                  type="text"
-                  value={profile.whatsapp}
-                  onChange={(e) => handleChange('whatsapp', e.target.value)}
-                  placeholder="+232 12345678"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                <div className="flex items-center">
+                  <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-gray-500 text-sm">
+                    +232
+                  </span>
+                  <input
+                    id="whatsapp"
+                    type="text"
+                    value={profile.whatsapp}
+                    onChange={(e) => handleChange('whatsapp', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1058,17 +1062,31 @@ export default function ProfileForm({ params }: PageProps) {
             open={showChurchDialog}
             onOpenChange={setShowChurchDialog}
             onSuccess={(churchId) => {
-              // Refresh church list, then select the new church
+              // Refresh church list, then select the new church.
+              // Also fetch the individual church to ensure it's in the list
+              // immediately (search may not return it right away).
+              const addChurch = (list: any[]) => {
+                fetch(`/api/church/${churchId}`)
+                  .then(r => r.json())
+                  .then(church => {
+                    const exists = list.some((c: any) => c.id === churchId)
+                    if (!exists && church.id) {
+                      list.unshift({ id: church.id, name: church.name, city_name: church.city_name })
+                    }
+                    setChurches(list)
+                    setSelectedChurchId(churchId)
+                    setNewChurchName('')
+                  })
+                  .catch(() => {
+                    setChurches(list)
+                    setSelectedChurchId(churchId)
+                    setNewChurchName('')
+                  })
+              }
               if (profile.country) {
                 fetch(`/api/churches/search?q=&country=${profile.country}`)
                   .then(r => r.json())
-                  .then(data => {
-                    setChurches(data.churches || [])
-                    if (churchId) {
-                      setSelectedChurchId(churchId)
-                      setNewChurchName('')
-                    }
-                  })
+                  .then(data => addChurch(data.churches || []))
                   .catch(() => {})
               }
             }}

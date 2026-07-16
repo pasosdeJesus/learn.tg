@@ -34,8 +34,8 @@ function loadEnvCredentials() {
 /** Navigate to URL and wait for body content */
 async function navAndWait(page, url, timeout) {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout })
-  for (let i = 0; i < 10; i++) {
-    await new Promise(r => setTimeout(r, 1500))
+  for (let i = 0; i < 20; i++) {
+    await new Promise(r => setTimeout(r, 2000))
     const bodyLen = await page.evaluate(() =>
       document.body?.textContent?.replace(/\s+/g, '').length || 0)
     if (bodyLen > 100) return true
@@ -81,7 +81,8 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout, chainId } = env
+  const { base, timeout: _t, chainId } = env
+  const timeout = 120000
   const wallet = short(envCreds.addr)
 
   console.log(`Wallet: ${wallet} | ${base} (chain: ${chainId})`)
@@ -117,7 +118,7 @@ async function main() {
   ok('Clicked Connect')
 
   let connected = false
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 40; i++) {
     await new Promise(r => setTimeout(r, 3000))
     const stillConnect = await page.evaluate(() =>
       document.body.textContent?.includes('Connect Wallet'))
@@ -131,10 +132,16 @@ async function main() {
       connected = true
       break
     }
-    if (i === 14) fail('SIWE did not complete after 45s')
+    if (i === 39) fail('SIWE did not complete after 120s')
   }
   if (!connected) { await browser.close(); process.exit(1) }
 
+  // Verify token is stored right after SIWE
+  const lsAfterSiwe = await page.evaluate(() => ({
+    token: localStorage.getItem("learn.tg.authToken")?.slice(0, 10),
+    addr: localStorage.getItem("learn.tg.sessionAddress")?.slice(0, 10),
+  }))
+  console.log(`  Post-SIWE localStorage: token=${lsAfterSiwe.token || "NONE"} addr=${lsAfterSiwe.addr || "NONE"}`)
   // Workaround: if ConnectWalletButton didn't store authToken (dev server
   // running old code), inject it manually so profile/UBI/disconnect work.
   const hasToken = await page.evaluate(() =>

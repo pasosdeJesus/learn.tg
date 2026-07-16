@@ -20,7 +20,7 @@ export default function Footer({ lang = 'en' }) {
             backgroundColor: '#90EE90',
             transform: 'rotate(-45deg)',
             transformOrigin: 'center',
-            zIndex: 50,
+            zIndex: 10,
             border: '2px solid #228B22',
             boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
           }}

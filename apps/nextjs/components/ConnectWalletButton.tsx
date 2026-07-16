@@ -93,14 +93,9 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         return
       }
 
-      // 1. Request accounts — opens wallet if not already connected
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      })
-      const address: string = accounts[0]
-      const checksummedAddress = getAddress(address)
-
-      // 2. Ensure we're on the correct chain (Celo / Celo Sepolia)
+      // 1. Ensure we're on the correct chain before requesting accounts
+      //    This avoids the confusing "Ethereum" prompt when the wallet defaults
+      //    to mainnet — we switch to Celo first, then connect.
       const expectedChainId = IS_PRODUCTION ? '0xa4ec' : '0xaa044c' // 42220 / 11142220
       const chainName = IS_PRODUCTION ? 'Celo' : 'Celo Sepolia'
       const rpcUrl = IS_PRODUCTION
@@ -111,12 +106,18 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         : 'https://celo-sepolia.blockscout.com'
       const currencySymbol = 'CELO'
 
-      // 2. Get current chain
-      const currentChainId: string = await window.ethereum.request({
-        method: 'eth_chainId',
-      })
+      // Get current chain (read-only, no prompt)
+      let currentChainId: string
+      try {
+        currentChainId = await window.ethereum.request({
+          method: 'eth_chainId',
+        })
+      } catch {
+        // Wallet may not support eth_chainId without connection
+        currentChainId = expectedChainId
+      }
 
-      // 3. Ensure we're on the correct chain
+      // Switch to correct chain if needed
       if (currentChainId !== expectedChainId) {
         try {
           await window.ethereum.request({
@@ -124,7 +125,6 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
             params: [{ chainId: expectedChainId }],
           })
         } catch (switchError: any) {
-          // 4902 = chain not found in wallet → try to add it
           if (switchError.code === 4902) {
             try {
               await window.ethereum.request({
@@ -136,11 +136,6 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
                   rpcUrls: [rpcUrl],
                   blockExplorerUrls: [blockExplorer],
                 }],
-              })
-              // After adding, switch again
-              await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: expectedChainId }],
               })
             } catch {
               setError(t('addChainFailed'))
@@ -156,6 +151,13 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
           }
         }
       }
+
+      // 2. Request accounts — opens wallet (now on Celo chain)
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      })
+      const address: string = accounts[0]
+      const checksummedAddress = getAddress(address)
 
       // Read final chain ID after potential switch
       const chainIdHex: string = await window.ethereum.request({
@@ -211,7 +213,6 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       // Store auth token so profile/crossword/UBI API calls can authenticate
       // without relying on a new getCsrfToken() which returns a different nonce
       localStorage.setItem('learn.tg.authToken', csrfToken)
-
       // Reload page so NextAuth reads the session cookie on mount.
       // update() from useSession() is unreliable after SIWE callback.
       window.location.reload()
