@@ -121,6 +121,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
       yourCelo: 'Your CELO (gas)',
       enoughGas: 'Enough gas estimated',
       noGas: 'Not enough gas for transaction',
+      noGasHint: 'From guide 3 of the Web3 & UBI course you can request Learn.tg-UBI paid in CELO to cover gas costs.',
       gasWarn: 'Gas estimation failed, proceed at your own risk',
       estimating: 'estimating...',
       donateSplit: '70% goes to course scholarships, 10% back as SLEARN reward, 20% sustains operations and missions.',
@@ -144,6 +145,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
       yourCelo: 'Tu CELO (gas)',
       enoughGas: 'Gas suficiente estimado',
       noGas: 'Gas insuficiente para la transaccion',
+      noGasHint: 'Desde la guia 3 del curso Web3 & UBI puedes pedir Learn.tg-UBI que se paga en CELO y te permite cubrir costos de gas.',
       gasWarn: 'Fallo al estimar gas, continue bajo su propio riesgo',
       estimating: 'estimando...',
       donateSplit: '70% va a becas del curso, 10% vuelve como SLEARN de recompensa, 20% sostiene operaciones y misiones.',
@@ -191,12 +193,19 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
           )}
           <div>{t('yourCelo')}: <span className="font-mono">{celoBalFmt}</span></div>
           {hasAnyAmount && (
-            <div className={gasState === 'ok' ? 'text-green-600' : gasState === 'no-gas' ? 'text-red-600' : gasState === 'warn' ? 'text-yellow-600' : 'text-gray-500'}>
-              {gasState === 'ok' && t('enoughGas')}
-              {gasState === 'no-gas' && t('noGas')}
-              {gasState === 'warn' && t('gasWarn')}
-              {estimating && <span className="ml-2 animate-pulse">{t('estimating')}</span>}
-            </div>
+            <>
+              <div className={gasState === 'ok' ? 'text-green-600' : gasState === 'no-gas' ? 'text-red-600' : gasState === 'warn' ? 'text-yellow-600' : 'text-gray-500'}>
+                {gasState === 'ok' && t('enoughGas')}
+                {gasState === 'no-gas' && t('noGas')}
+                {gasState === 'warn' && t('gasWarn')}
+                {estimating && <span className="ml-2 animate-pulse">{t('estimating')}</span>}
+              </div>
+              {gasState === 'no-gas' && (
+                <div className="mt-2 text-xs bg-blue-50 border border-blue-200 rounded p-2">
+                  {t('noGasHint')}
+                </div>
+              )}
+            </>
           )}
         </div>
 
