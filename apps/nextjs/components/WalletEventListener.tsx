@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { signOut } from 'next-auth/react'
 
@@ -13,12 +13,18 @@ import { signOut } from 'next-auth/react'
  */
 export function WalletEventListener() {
   const { data: session } = useSession()
+  const wasAuthenticated = useRef(false)
 
-  // Clear auth token whenever session becomes null (expired, signed out, etc.)
+  // Clear auth token when session transitions from authenticated to null.
+  // Don't clear on initial mount (session loads async — would wipe token).
   useEffect(() => {
-    if (!session?.address) {
+    if (session?.address) {
+      wasAuthenticated.current = true
+    } else if (wasAuthenticated.current) {
+      // Session was valid, now it's gone — user signed out or expired
       localStorage.removeItem('learn.tg.sessionAddress')
       localStorage.removeItem('learn.tg.authToken')
+      wasAuthenticated.current = false
     }
   }, [session?.address])
 

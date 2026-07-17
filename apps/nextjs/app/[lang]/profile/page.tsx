@@ -158,7 +158,7 @@ export default function ProfileForm({ params }: PageProps) {
     }
     setUpdatingScores(true)
     try {
-      const csrfToken = await getCsrfToken() || localStorage.getItem("learn.tg.authToken")
+      const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
       const res = await fetch('/api/update-scores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -273,7 +273,7 @@ export default function ProfileForm({ params }: PageProps) {
         data = await response.json()
         setReligions(data)
 
-        const csrfToken = await getCsrfToken() || localStorage.getItem("learn.tg.authToken")
+        const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
         url = `/api/profile?walletAddress=${session!.address || ''}&token=${csrfToken}`
         logger.info('OJO url=' + url, 'Profile')
 
@@ -382,7 +382,7 @@ export default function ProfileForm({ params }: PageProps) {
     logger.info('4. User Agent: ' + navigator.userAgent, 'Profile')
     logger.info('5. Is OKX Browser? ' + navigator.userAgent.includes('OKX'), 'Profile')
 
-    const csrfToken = await getCsrfToken() || localStorage.getItem("learn.tg.authToken")
+    const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
     logger.info('6. CSRF Token length: ' + csrfToken?.length, 'Profile')
 
     try {
@@ -578,7 +578,7 @@ export default function ProfileForm({ params }: PageProps) {
   const handlePhotoUpload = async (side: 'front' | 'back', file: File) => {
     setUploadingPhoto(side)
     try {
-      const csrfToken = await getCsrfToken() || localStorage.getItem("learn.tg.authToken")
+      const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
       const formData = new FormData()
       formData.append('photo', file)
       formData.append('side', side)
@@ -600,7 +600,7 @@ export default function ProfileForm({ params }: PageProps) {
 
   const handlePhotoDelete = async (side: 'front' | 'back') => {
     try {
-      const csrfToken = await getCsrfToken() || localStorage.getItem("learn.tg.authToken")
+      const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
       const res = await fetch('/api/user/id-photo', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
