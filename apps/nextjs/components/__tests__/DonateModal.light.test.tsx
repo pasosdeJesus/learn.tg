@@ -11,7 +11,7 @@ vi.mock('@/lib/deployments', () => ({
 
 const BACKEND_WALLET = '0xBACKEND123456789012345678901234567890123456'
 
-// Mocks mínimos de wagmi para no cargar lógica real
+// Mock auth and wallet hooks (replaced wagmi after R-#186)
 const readContractMock = vi.fn().mockImplementation((opts: any) => {
   switch (opts.functionName) {
     case 'decimals':
@@ -22,8 +22,10 @@ const readContractMock = vi.fn().mockImplementation((opts: any) => {
       return Promise.resolve(0n)
   }
 })
-vi.mock('wagmi', () => ({
-  useAccount: () => ({ address: '0xabc0000000000000000000000000000000000000' }),
+vi.mock('@/lib/hooks/useAuthAddress', () => ({
+  useAuthAddress: () => ({ address: '0xabc0000000000000000000000000000000000000' }),
+}))
+vi.mock('@/lib/hooks/useWallet', () => ({
   usePublicClient: () => ({
     readContract: readContractMock,
     getBalance: vi.fn().mockResolvedValue(10_000_000_000_000_000n), // 0.01 CELO

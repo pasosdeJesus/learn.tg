@@ -39,12 +39,15 @@ const mockEstimateContractGas = vi.fn()
 const mockWaitForTransactionReceipt = vi.fn()
 const mockWriteContract = vi.fn()
 
+// Mock auth and wallet hooks (replaced wagmi after R-#186)
 const mockUseAccount = vi.fn()
 const mockUsePublicClient = vi.fn()
 const mockUseWalletClient = vi.fn()
 
-vi.mock('wagmi', () => ({
-  useAccount: () => mockUseAccount(),
+vi.mock('@/lib/hooks/useAuthAddress', () => ({
+  useAuthAddress: () => mockUseAccount(),
+}))
+vi.mock('@/lib/hooks/useWallet', () => ({
   usePublicClient: () => mockUsePublicClient(),
   useWalletClient: () => mockUseWalletClient(),
 }))

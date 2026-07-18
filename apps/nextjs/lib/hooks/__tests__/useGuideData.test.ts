@@ -6,11 +6,16 @@ import { apiAuthMocks } from '@pasosdejesus/m/test-utils/rainbowkit-mocks'
 const { mocks } = apiAuthMocks
 const useSessionMock = mocks.mockUseSession
 const getCsrfTokenMock = mocks.mockGetCsrfToken
-const useAccountMock = mocks.mockUseAccount
 const axiosGetMock = mocks.mockAxiosGet
 
 // Setup mocks before importing the hook
 apiAuthMocks.setupMocks()
+
+// Mock useAuthAddress (replaces wagmi's useAccount after R-#186)
+vi.mock('@/lib/hooks/useAuthAddress', () => ({
+  useAuthAddress: vi.fn()
+}))
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 // Import hook after mocks
 import { useGuideData } from '../useGuideData'
@@ -64,7 +69,7 @@ describe('useGuideData', () => {
 
     // Default mocks
     useSessionMock.mockReturnValue({ data: mockSession, status: 'authenticated' })
-    useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
+    vi.mocked(useAuthAddress).mockReturnValue({ address: '0x123', sessionAddress: '0x123', isAuthenticated: true })
     getCsrfTokenMock.mockResolvedValue('mock-csrf-token')
 
     // Default axios.get implementation
@@ -128,12 +133,12 @@ describe('useGuideData', () => {
   })
 
   it('should handle session/address mismatch (early return)', async () => {
-    // Session address different from wallet address
+    // Session address different from wallet address (useAuthAddress)
     useSessionMock.mockReturnValue({
       data: { ...mockSession, address: '0xAAA' },
       status: 'authenticated'
     })
-    useAccountMock.mockReturnValue({ address: '0xBBB', isConnected: true })
+    vi.mocked(useAuthAddress).mockReturnValue({ address: '0xBBB', sessionAddress: undefined, isAuthenticated: true })
 
     const { result } = renderHook(() =>
       useGuideData({ lang: 'en', pathPrefix: 'test' })
@@ -154,7 +159,7 @@ describe('useGuideData', () => {
       data: null,
       status: 'unauthenticated'
     })
-    useAccountMock.mockReturnValue({ address: undefined, isConnected: false })
+    vi.mocked(useAuthAddress).mockReturnValue({ address: undefined, sessionAddress: undefined, isAuthenticated: false })
 
     const { result } = renderHook(() =>
       useGuideData({ lang: 'en', pathPrefix: 'test' })
@@ -300,7 +305,7 @@ describe('useGuideData', () => {
 
   it('should not fetch guide status when no session', async () => {
     useSessionMock.mockReturnValue({ data: null, status: 'unauthenticated' })
-    useAccountMock.mockReturnValue({ address: undefined, isConnected: false })
+    vi.mocked(useAuthAddress).mockReturnValue({ address: undefined, sessionAddress: undefined, isAuthenticated: false })
 
     let guideStatusCalled = false
     axiosGetMock.mockImplementation((url: string) => {

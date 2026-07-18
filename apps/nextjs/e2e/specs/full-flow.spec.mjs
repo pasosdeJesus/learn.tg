@@ -136,29 +136,15 @@ async function main() {
   }
   if (!connected) { await browser.close(); process.exit(1) }
 
-  // Verify token is stored right after SIWE
+  // Verify token is stored right after SIWE (WalletEventListener fix ensures persistence)
   const lsAfterSiwe = await page.evaluate(() => ({
     token: localStorage.getItem("learn.tg.authToken")?.slice(0, 10),
     addr: localStorage.getItem("learn.tg.sessionAddress")?.slice(0, 10),
   }))
-  console.log(`  Post-SIWE localStorage: token=${lsAfterSiwe.token || "NONE"} addr=${lsAfterSiwe.addr || "NONE"}`)
-  // Workaround: if ConnectWalletButton didn't store authToken (dev server
-  // running old code), inject it manually so profile/UBI/disconnect work.
-  const hasToken = await page.evaluate(() =>
-    !!localStorage.getItem('learn.tg.authToken'))
-  if (!hasToken) {
-    // The token IS the CSRF nonce from the SIWE message.
-    // Fetch current CSRF token — if the server rotated it after SIWE,
-    // this won't match billetera_usuario.token, but it's the best we have.
-    const token = await page.evaluate(async () => {
-      const r = await fetch('/api/auth/csrf')
-      const j = await r.json()
-      return j.csrfToken
-    })
-    if (token) {
-      await page.evaluate(t => localStorage.setItem('learn.tg.authToken', t), token)
-      console.log(`  🔧 Injected authToken fallback: ${token.slice(0,8)}...`)
-    }
+  if (lsAfterSiwe.token && lsAfterSiwe.addr) {
+    ok(`Token persisted: ${lsAfterSiwe.token}... / ${lsAfterSiwe.addr}...`)
+  } else {
+    fail(`Token missing after SIWE: token=${lsAfterSiwe.token || 'NONE'} addr=${lsAfterSiwe.addr || 'NONE'}`)
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -241,17 +227,11 @@ async function main() {
   // Step 6: Profile — verify score, verified status
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 6: Profile — score & verified ──')
-  const hasSession6 = await ensureSessionAlive(page)
-  if (!hasSession6) console.log('  ⚠️  Session may be stale — continuing with localStorage fallback')
+  await ensureSessionAlive(page)
   const profileOk = await navAndWait(page, `${base}/en/profile`, timeout)
   if (!profileOk) { fail('Profile page did not render') }
   else {
     ok('Profile loaded')
-
-    // Debug: check localStorage auth state
-    const lsToken = await page.evaluate(() => localStorage.getItem('learn.tg.authToken'))
-    const lsAddr = await page.evaluate(() => localStorage.getItem('learn.tg.sessionAddress'))
-    console.log(`  localStorage: token=${lsToken ? lsToken.slice(0,8)+'...' : 'NONE'} addr=${lsAddr ? lsAddr.slice(0,10)+'...' : 'NONE'}`)
 
     // Wait longer for profile API call to complete (fetches from port 3500)
     for (let w = 0; w < 6; w++) {
@@ -396,24 +376,11 @@ async function main() {
   // Step 9: UBI Claim — actually claim
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 9: UBI Claim ──')
-  const hasSession9 = await ensureSessionAlive(page)
-  if (!hasSession9) console.log('  ⚠️  Session may be stale — Claim button may not appear')
+  await ensureSessionAlive(page)
   const ubiPath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide3'
   const ubiOk = await navAndWait(page, `${base}${ubiPath}`, timeout)
   if (ubiOk) {
     ok(`UBI guide: ${ubiPath}`)
-
-    // Diagnostic: check what the page is showing
-    const diag = await page.evaluate(() => {
-      const body = document.body.textContent || ''
-      const hasLoading = body.includes('Loading...')
-      const hasPartial = body.includes('Partial login')
-      const hasConnect = body.includes('Connect Wallet')
-      const buttons = [...document.querySelectorAll('button')].map(b => b.textContent?.trim().slice(0, 50))
-      const hasCeloUbi = body.includes('Claim') || body.includes('Reclamar') || body.includes('CeloUbi')
-      return { hasLoading, hasPartial, hasConnect, buttons, hasCeloUbi, bodyLen: body.length }
-    })
-    console.log(`  Diag: loading=${diag.hasLoading} partial=${diag.hasPartial} connect=${diag.hasConnect} celoUbi=${diag.hasCeloUbi} btns=${diag.buttons.join('|')} bodyLen=${diag.bodyLen}`)
 
     // Guide content loads from course server (port 3500) — can be slow.
     // Wait for either: content loaded, or timeout.
@@ -463,10 +430,10 @@ async function main() {
         if (i === 14) console.log('  ⚠️  UBI dialog still pending')
       }
     } else {
-      console.log('  ⚠️  Claim button not found — course server may be slow or session lost')
+      fail('Claim button not found — session token should persist with WalletEventListener fix')
     }
   } else {
-    console.log('  ⚠️  UBI guide not found — course server may be down')
+    fail('UBI guide not found')
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -474,8 +441,7 @@ async function main() {
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 10: Disconnect ✕ ──')
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
-  const sessOK = await ensureSessionAlive(page)
-  if (!sessOK) console.log('  ⚠️  Session lost — ✕ button may not be present')
+  await ensureSessionAlive(page)
   await new Promise(r => setTimeout(r, 3000))
 
   const disconnectBtn = await page.evaluateHandle(() =>
@@ -494,16 +460,7 @@ async function main() {
       if (i === 7) fail('Connect Wallet did NOT return')
     }
   } else {
-    // ✕ only appears when session is active. If session was lost,
-    // Connect Wallet should already be visible.
-    const alreadyDisconnected = await page.evaluate(() =>
-      document.body.textContent?.includes('Connect Wallet') ||
-      document.body.textContent?.includes('Conectar Billetera'))
-    if (alreadyDisconnected) {
-      ok('Already disconnected (session lost during navigation)')
-    } else {
-      console.log('  ⚠️  ✕ button not found — session may be lost')
-    }
+    fail('✕ button not found — session should be active')
   }
 
   await browser.close()

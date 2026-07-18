@@ -1,12 +1,8 @@
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { SessionProvider } from 'next-auth/react'
 import * as React from 'react'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { describe, it, expect, vi } from 'vitest'
-import Header from '../Header'
-import { WagmiProvider, createConfig, http } from 'wagmi'
-import { mainnet } from 'wagmi/chains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 vi.mock('next-auth/react', () => ({
@@ -16,25 +12,25 @@ vi.mock('next-auth/react', () => ({
   getCsrfToken: () => Promise.resolve('mock-csrf-token'),
 }))
 
-const config = createConfig({
-  chains: [mainnet],
-  transports: {
-    [mainnet.id]: http(),
-  },
-})
+// ConnectWalletButton is client-only with window.ethereum — mock it
+vi.mock('@/components/ConnectWalletButton', () => ({
+  ConnectWalletButton: ({ lang }: { lang?: string }) =>
+    React.createElement('span', { 'data-testid': 'connect-wallet-btn' }, 'Connect'),
+}))
+
+import Header from '../Header'
+
 const queryClient = new QueryClient()
 function renderWithProviders(ui: React.ReactElement) {
   const mockSession = {
     data: { user: { name: 'Test User' }, address: '0x123' },
     status: 'authenticated',
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   }
   return render(
     <SessionProvider session={mockSession}>
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={config}>
-          <RainbowKitProvider>{ui}</RainbowKitProvider>
-        </WagmiProvider>
+        {ui}
       </QueryClientProvider>
     </SessionProvider>,
   )
@@ -48,19 +44,9 @@ describe('Header', () => {
     expect(screen.getAllByRole('link')[0]).toHaveAttribute('href', '/')
   })
 
-  it('renders title in Spanish', () => {
+  it('renders logo and title in Spanish', () => {
     renderWithProviders(<Header lang="es" />)
+    expect(screen.getByAltText('logo')).toBeInTheDocument()
     expect(screen.getByText(/Aprender mediante juegos/)).toBeInTheDocument()
-  })
-
-  it('shows ConnectButton when MiniPay is not present', () => {
-    renderWithProviders(<Header lang="en" />)
-    expect(screen.getByText(/Connect/)).toBeInTheDocument()
-  })
-
-  it('hides ConnectButton when MiniPay is present', () => {
-    window.ethereum = { isMiniPay: true }
-    renderWithProviders(<Header lang="en" />)
-    expect(screen.queryByText(/Connect/)).not.toBeInTheDocument()
   })
 })

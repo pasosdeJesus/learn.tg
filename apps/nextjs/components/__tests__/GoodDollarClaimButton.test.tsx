@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { GoodDollarClaimButton } from '../GoodDollarClaimButton'
+import GoodDollarClaimButton from '../GoodDollarClaimButton'
 
 // --- Mocks --- //
 
@@ -55,6 +55,7 @@ const { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance } = vi.hoisted(
 
 vi.mock('@goodsdks/citizen-sdk', () => ({
   ClaimSDK: mockClaimSDK,
+  IdentitySDK: vi.fn(),
 }))
 
 vi.mock('@goodsdks/react-hooks', () => ({
@@ -79,8 +80,10 @@ const { mockUseAccount, mockUsePublicClient, mockUseWalletClient } = vi.hoisted(
     return { mockUseAccount, mockUsePublicClient, mockUseWalletClient }
   },
 )
-vi.mock('wagmi', () => ({
-  useAccount: mockUseAccount,
+vi.mock('@/lib/hooks/useAuthAddress', () => ({
+  useAuthAddress: mockUseAccount,
+}))
+vi.mock('@/lib/hooks/useWallet', () => ({
   usePublicClient: mockUsePublicClient,
   useWalletClient: mockUseWalletClient,
 }))

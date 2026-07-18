@@ -98,11 +98,9 @@ const r3 = await apiClient.get(`${SITE}/`, { headers: { 'Accept': 'text/html', C
 const html3 = r3.data
 console.log(`   Status: ${r3.status}, Size: ${html3.length} bytes`)
 
-const noConnectWallet = !html3.includes('Connect Wallet') && !html3.includes('connect wallet')
-const hasAddress = html3.toLowerCase().includes(wallet.toLowerCase().slice(2, 10))
+// Note: "Connect Wallet" and wallet address are client-rendered by ConnectWalletButton.
+// They won't appear in server-side HTML. Browser E2E specs verify these instead.
 const hasNetwork = html3.includes('Celo Sepolia') || html3.includes('celoSepolia') || html3.includes('Celo')
-console.log(`   "Connect Wallet" absent: ${noConnectWallet ? '✅' : '❌'}`)
-console.log(`   Wallet address visible: ${hasAddress ? '✅' : '❌'}`)
 console.log(`   "Celo Sepolia" visible: ${hasNetwork ? '✅' : '❌'}`)
 
 // ============ PASO 4: Página en inglés ============
@@ -134,8 +132,7 @@ const report = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>E2E Auth
 </ul>
 <h2>Step 3 — Authenticated landing page</h2>
 <ul>
-<li>No Connect Wallet: <span class="${noConnectWallet?'pass':'fail'}">${noConnectWallet?'✅':'❌'}</span></li>
-<li>Wallet visible: <span class="${hasAddress?'pass':'fail'}">${hasAddress?'✅':'❌'}</span></li>
+<li>Connect Wallet / address: verified by browser E2E specs (client-rendered)</li>
 <li>Celo Sepolia badge: <span class="${hasNetwork?'pass':'fail'}">${hasNetwork?'✅':'❌'}</span></li>
 </ul>
 <h2>Step 4 — English page</h2>

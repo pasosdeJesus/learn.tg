@@ -1000,9 +1000,12 @@ async function runTest() {
 
     const { scholarshipResult: txHash, message: msg } = checkResponse.data;
     if (!txHash) {
-      if (msg.includes('You need at least 50 points') || msg.includes('need at least 50 points')) {
+      if (msg.includes('need at least 50 points')) {
         console.warn(`⚠️  Puntaje insuficiente para enviar transacción. Continuando con pruebas de métricas. Mensaje: ${msg.split('\n')[0]}`);
         // Continuar sin txHash, no lanzar error
+      } else if (msg.includes('already paid') || msg.includes('cooldown') || msg.includes('24 hours')) {
+        console.log(`ℹ️  Scholarship already claimed or in cooldown. Expected. Message: ${msg.split('\n')[0]}`);
+        // Not a failure — safety net or cooldown is working correctly
       } else {
         throw new Error(`Submission failed. Message: ${msg}`);
       }
