@@ -13,7 +13,9 @@ import { useGuideData, Course, Guide } from '@/lib/hooks/useGuideData'
 
 // Mock dependencies
 vi.mock('next-auth/react')
-vi.mock('wagmi')
+vi.mock('@/lib/hooks/useAuthAddress')
+vi.mock('@/lib/hooks/useWallet')
+vi.mock('@/lib/hooks/useWriteContract')
 vi.mock('@/lib/hooks/useGuideData')
 vi.mock('axios')
 vi.mock('next/navigation', () => ({
@@ -135,9 +137,9 @@ describe('Crossword Page', () => {
     // Assign mocks to the mocked functions
     vi.mocked(useSession).mockReturnValue(mockSession as any)
     vi.mocked(getCsrfToken).mockResolvedValue('mock-csrf-token');
-    vi.mocked(useAccount).mockReturnValue(mockAccount as any)
+    vi.mocked(useAuthAddress).mockReturnValue(mockAccount as any)
     vi.mocked(useGuideData).mockReturnValue(mockGuideData as any)
-    vi.mocked(useConfig).mockReturnValue({} as any)
+    vi.mocked(usePublicClient).mockReturnValue({} as any)
     vi.mocked(useWriteContract).mockReturnValue({ data: null, writeContract: vi.fn() } as any)
     vi.mocked(axios.get).mockResolvedValue({ data: mockCrosswordData })
     vi.mocked(axios.post).mockResolvedValue({ data: {} })

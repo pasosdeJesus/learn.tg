@@ -5,7 +5,7 @@ import Page from '../page'
 import React, { Suspense } from 'react'
 import axios from 'axios'
 import { useSession, getCsrfToken } from 'next-auth/react'
-import { useAccount } from 'wagmi'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 // --- Mocks ---
 
@@ -43,7 +43,7 @@ vi.mock('next/navigation', () => ({
 
 const mockedAxios = vi.mocked(axios) as any
 const mockedUseSession = vi.mocked(useSession)
-const mockedUseAccount = vi.mocked(useAccount)
+const mockedUseAuthAddress = vi.mocked(useAuthAddress)
 const mockedGetCsrfToken = vi.mocked(getCsrfToken)
 
 function renderWithProviders(ui: React.ReactElement) {
@@ -67,17 +67,10 @@ describe('Course Page (Integration)', () => {
       status: 'authenticated',
       update: vi.fn(),
     } as any)
-    mockedUseAccount.mockReturnValue({
+    mockedUseAuthAddress.mockReturnValue({
       address: '0x123',
-      isConnected: true,
-      isConnecting: false,
-      isDisconnected: false,
-      isReconnecting: false,
-      status: 'connected',
-      addresses: ['0x123'],
-      chain: undefined,
-      chainId: 1,
-      connector: undefined,
+      sessionAddress: '0x123',
+      isAuthenticated: true,
     } as any)
 
     mockedAxios.get.mockImplementation((url: string) => {
@@ -103,17 +96,10 @@ describe('Course Page (Integration)', () => {
       status: 'authenticated',
       update: vi.fn(),
     } as any)
-    mockedUseAccount.mockReturnValue({
+    mockedUseAuthAddress.mockReturnValue({
       address: '0xBBB',
-      isConnected: true,
-      isConnecting: false,
-      isDisconnected: false,
-      isReconnecting: false,
-      status: 'connected',
-      addresses: ['0xBBB'],
-      chain: undefined,
-      chainId: 1,
-      connector: undefined,
+      sessionAddress: undefined,
+      isAuthenticated: false,
     } as any)
 
     renderWithProviders(<Page params={mockParams} />)
@@ -139,17 +125,10 @@ describe('Course Page (Integration)', () => {
       status: 'unauthenticated',
       update: vi.fn(),
     } as any)
-    mockedUseAccount.mockReturnValue({
+    mockedUseAuthAddress.mockReturnValue({
       address: undefined,
-      isConnected: false,
-      isConnecting: false,
-      isDisconnected: true,
-      isReconnecting: false,
-      status: 'disconnected',
-      addresses: undefined,
-      chain: undefined,
-      chainId: undefined,
-      connector: undefined,
+      sessionAddress: undefined,
+      isAuthenticated: false,
     } as any)
 
     renderWithProviders(<Page params={mockParams} />)
