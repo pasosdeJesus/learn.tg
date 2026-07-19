@@ -146,11 +146,9 @@ vi.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: () => React.createElement('button', null, 'Connect Wallet'),
 }));
 
-vi.mock('wagmi', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('wagmi')>();
+vi.mock('wagmi', () => {
   const { mocks } = apiAuthMocks;
   return {
-    ...actual,
     useConfig: () => ({
       config: { chains: [], connectors: [] },
       connectors: [],

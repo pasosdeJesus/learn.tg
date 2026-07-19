@@ -1,7 +1,7 @@
 /**
- * renderWithProviders — test helper that wraps components with all mocked providers.
+ * renderWithProviders — test helper that wraps components with mocked providers.
  *
- * Uses the mocks from vitest.setup.ts (wagmi, next-auth, rainbowkit, tanstack query).
+ * Uses the mocks from vitest.setup.ts (next-auth, tanstack query).
  * For customization, pass a custom `wrapper` or configure mocks before calling.
  *
  * Usage:
@@ -17,15 +17,7 @@
 import React from 'react'
 import { render, type RenderResult } from '@testing-library/react'
 import { SessionProvider } from 'next-auth/react'
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider, createConfig, http } from 'wagmi'
-import { mainnet } from 'wagmi/chains'
-
-const config = createConfig({
-  chains: [mainnet],
-  transports: { [mainnet.id]: http() },
-})
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
@@ -40,11 +32,7 @@ function Providers({ children, session }: ProvidersProps) {
   return (
     <SessionProvider session={session ?? null}>
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={config}>
-          <RainbowKitProvider>
-            {children}
-          </RainbowKitProvider>
-        </WagmiProvider>
+        {children}
       </QueryClientProvider>
     </SessionProvider>
   )
@@ -54,10 +42,9 @@ export function renderWithProviders(
   ui: React.ReactElement,
   options?: { session?: any }
 ): RenderResult {
-  const { session } = options ?? {}
   return render(ui, {
-    wrapper: ({ children }) => (
-      <Providers session={session}>{children}</Providers>
+    wrapper: ({ children }: { children: React.ReactNode }) => (
+      <Providers session={options?.session}>{children}</Providers>
     ),
   })
 }

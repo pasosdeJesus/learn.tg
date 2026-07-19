@@ -203,7 +203,7 @@ export default function Page() {
   if (
     !course.sinBilletera &&
     course.conBilletera &&
-    ((!session && !address) || (session.address && address && session.address.toLowerCase() !== address.toLowerCase()))
+    ((!session && !address) || (session?.address && address && session.address.toLowerCase() !== address.toLowerCase()))
   ) {
     return <div className="mt-40">Connect Wallet</div>
   }

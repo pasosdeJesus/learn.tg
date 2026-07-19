@@ -525,83 +525,6 @@ export default function ProfileForm({ params }: PageProps) {
     }
   }, [municipalityId, profile.country])
 
-  // Extracted to avoid SWC ternary compilation issues
-  function LocationSelectors() {
-    return (
-      <>
-        <Select
-          value={departmentId?.toString() || ''}
-          onValueChange={(v) => {
-            const id = parseInt(v, 10)
-            setDepartmentId(id)
-            setDepartmentName(departments.find(d => d.id === id)?.nombre || '')
-            setMunicipalityId(null)
-            setMunicipalityName('')
-            setCityId(null)
-            setCityDisplayName('')
-            setSelectedChurchId(null)
-            setChurches([])
-          }}
-          disabled={!profile.country}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={lang === 'es' ? 'Departamento...' : 'Department...'} />
-          </SelectTrigger>
-          <SelectContent>
-            {departments.map(d => (
-              <SelectItem key={d.id} value={d.id.toString()}>{d.nombre}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={municipalityId?.toString() || ''}
-          onValueChange={(v) => {
-            const id = parseInt(v, 10)
-            setMunicipalityId(id)
-            setMunicipalityName(municipalities.find(m => m.id === id)?.nombre || '')
-            setCityId(null)
-            setCityDisplayName('')
-            setSelectedChurchId(null)
-            setChurches([])
-          }}
-          disabled={!departmentId || municipalities.length === 0}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={lang === 'es' ? 'Municipio...' : 'Municipality...'} />
-          </SelectTrigger>
-          <SelectContent>
-            {municipalities.map(m => (
-              <SelectItem key={m.id} value={m.id.toString()}>{m.nombre}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={cityId?.toString() || ''}
-          onValueChange={(v) => {
-            const id = parseInt(v, 10)
-            setCityId(id)
-            setPlaceOfWorshipLocation(towns.find(t => t.id === id)?.nombre || '')
-            setCityDisplayName(towns.find(t => t.id === id)?.nombre || '')
-            setCitySearch(towns.find(t => t.id === id)?.nombre || '')
-            setSelectedChurchId(null)
-          }}
-          disabled={!municipalityId || towns.length === 0}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={lang === 'es' ? 'Población...' : 'Town...'} />
-          </SelectTrigger>
-          <SelectContent>
-            {towns.map(t => (
-              <SelectItem key={t.id} value={t.id.toString()}>{t.nombre}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </>
-    )
-  }
-
   const handleSelectChurch = (churchId: string) => {
     if (churchId === '__new__') {
       setSelectedChurchId(null)
@@ -1004,10 +927,74 @@ export default function ProfileForm({ params }: PageProps) {
                   {placeOfWorshipLabels(profile.religion).address}
                 </label>
 
-                {/* Department selector (or free text for countries without DB data) */}
                 {departments.length > 0 ? (
-                  <LocationSelectors />
-                ) : (
+                  <div className="space-y-2">
+                    <Select
+                      value={departmentId?.toString() || ''}
+                      onValueChange={(v) => {
+                        const id = parseInt(v, 10)
+                        setDepartmentId(id)
+                        setDepartmentName(departments.find(d => d.id === id)?.nombre || '')
+                        setMunicipalityId(null); setMunicipalityName('')
+                        setCityId(null); setCityDisplayName('')
+                        setSelectedChurchId(null); setChurches([])
+                      }}
+                      disabled={!profile.country}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={lang === 'es' ? 'Departamento...' : 'Department...'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map(d => (
+                          <SelectItem key={d.id} value={d.id.toString()}>{d.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={municipalityId?.toString() || ''}
+                      onValueChange={(v) => {
+                        const id = parseInt(v, 10)
+                        setMunicipalityId(id)
+                        setMunicipalityName(municipalities.find(m => m.id === id)?.nombre || '')
+                        setCityId(null); setCityDisplayName('')
+                        setSelectedChurchId(null); setChurches([])
+                      }}
+                      disabled={!departmentId || municipalities.length === 0}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={lang === 'es' ? 'Municipio...' : 'Municipality...'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {municipalities.map(m => (
+                          <SelectItem key={m.id} value={m.id.toString()}>{m.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={cityId?.toString() || ''}
+                      onValueChange={(v) => {
+                        const id = parseInt(v, 10)
+                        setCityId(id)
+                        const name = towns.find(t => t.id === id)?.nombre || ''
+                        setPlaceOfWorshipLocation(name)
+                        setCityDisplayName(name)
+                        setCitySearch(name)
+                        setSelectedChurchId(null)
+                      }}
+                      disabled={!municipalityId || towns.length === 0}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={lang === 'es' ? 'Población...' : 'Town...'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {towns.map(t => (
+                          <SelectItem key={t.id} value={t.id.toString()}>{t.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 ) : (
                   <input
                     id="citySearch"
@@ -1016,28 +1003,20 @@ export default function ProfileForm({ params }: PageProps) {
                     onChange={(e) => {
                       setCitySearch(e.target.value)
                       setPlaceOfWorshipLocation(e.target.value)
-                      setCityId(null)
-                      setDepartmentId(null)
-                      setMunicipalityId(null)
+                      setCityId(null); setDepartmentId(null); setMunicipalityId(null)
                     }}
                     placeholder={lang === 'es' ? 'Población...' : 'Town...'}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 )}
-              </div>
                 {(departmentId || municipalityId || cityId || citySearch) && (
                   <p className="text-xs text-green-600 mt-1">
                     ✅ {lang === 'es' ? 'Ubicación registrada' : 'Location registered'}
                   </p>
                 )}
-                {(profile.country || departmentName || municipalityName || cityDisplayName || (!departmentId && citySearch)) && (
+                {(profile.country || departmentName || municipalityName || cityDisplayName || citySearch) && (
                   <p className="text-xs text-gray-500 mt-1">
-                    {[
-                      countries.find(c => c.id === profile.country)?.nombre,
-                      departmentName,
-                      municipalityName,
-                      cityDisplayName || citySearch,
-                    ].filter(Boolean).join(' / ')}
+                    {[countries.find(c => c.id === profile.country)?.nombre, departmentName, municipalityName, cityDisplayName || citySearch].filter(Boolean).join(' / ')}
                   </p>
                 )}
               </div>

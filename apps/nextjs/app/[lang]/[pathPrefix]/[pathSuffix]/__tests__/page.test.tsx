@@ -9,7 +9,7 @@ import type { Processor } from 'unified'
 import React from 'react'
 import { SessionProvider } from 'next-auth/react'
 import type { Session } from 'next-auth'
-import { WagmiProvider, createConfig, http } from 'wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { celo } from 'viem/chains'
 import { useParams } from 'next/navigation'
 
@@ -54,13 +54,7 @@ vi.mock('wagmi', async (importOriginal) => {
   }
 })
 
-// Setup Wagmi config for testing
-const config = createConfig({
-  chains: [celo],
-  transports: {
-    [celo.id]: http(),
-  },
-})
+const queryClient = new QueryClient()
 
 describe('Page', () => {
   const mockAxios = axios as Mocked<typeof axios>
@@ -105,11 +99,11 @@ describe('Page', () => {
 
     await act(async () => {
       render(
-        <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
           <SessionProvider session={mockSession as any}>
             <Page />
           </SessionProvider>
-        </WagmiProvider>
+        </QueryClientProvider>
       )
     })
     

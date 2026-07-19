@@ -2,7 +2,9 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getCsrfToken, useSession } from 'next-auth/react'
-import { useAccount, useConfig, useWriteContract } from 'wagmi'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
+import { useWriteContract } from '@/lib/hooks/useWriteContract'
 import axios from 'axios'
 import { Suspense } from 'react';
 

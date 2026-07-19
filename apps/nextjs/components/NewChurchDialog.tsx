@@ -37,7 +37,7 @@ export function NewChurchDialog({
   lang = 'en',
 }: Props) {
   const [name, setName] = useState(churchName)
-  const [address, setAddress] = useState('')
+  const [churchAddress, setChurchAddress] = useState('')
   const [pastorName, setPastorName] = useState('')
   const [pastorWhatsapp, setPastorWhatsapp] = useState('')
   const [registration, setRegistration] = useState('')
@@ -130,7 +130,7 @@ export function NewChurchDialog({
           walletAddress: address,
           token: csrfToken || '',
           name,
-          address: address || undefined,
+          address: churchAddress || undefined,
           countryId,
           cityName,
           pastorName,
@@ -150,7 +150,7 @@ export function NewChurchDialog({
       onOpenChange(false)
       // Clear form state
       setName('')
-      setAddress('')
+      setChurchAddress('')
       setPastorName('')
       setPastorWhatsapp('')
       setRegistration('')
@@ -178,7 +178,7 @@ export function NewChurchDialog({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">{t('churchAddress')}</label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t('churchAddress')} />
+            <Input value={churchAddress} onChange={(e) => setChurchAddress(e.target.value)} placeholder={t('churchAddress')} />
           </div>
 
           <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2">
