@@ -37,6 +37,7 @@ export function NewChurchDialog({
   lang = 'en',
 }: Props) {
   const [name, setName] = useState(churchName)
+  const [address, setAddress] = useState('')
   const [pastorName, setPastorName] = useState('')
   const [pastorWhatsapp, setPastorWhatsapp] = useState('')
   const [registration, setRegistration] = useState('')
@@ -50,6 +51,7 @@ export function NewChurchDialog({
     en: {
       title: 'Register New Church',
       churchName: 'Church name',
+      churchAddress: 'Address',
       pastorName: 'Pastor name',
       pastorWhatsapp: 'Pastor WhatsApp',
       registration: 'Registration number',
@@ -66,6 +68,7 @@ export function NewChurchDialog({
     es: {
       title: 'Registrar Nueva Iglesia',
       churchName: 'Nombre de la iglesia',
+      churchAddress: 'Dirección',
       pastorName: 'Nombre del pastor',
       pastorWhatsapp: 'WhatsApp del pastor',
       registration: 'Número de registro',
@@ -127,6 +130,7 @@ export function NewChurchDialog({
           walletAddress: address,
           token: csrfToken || '',
           name,
+          address: address || undefined,
           countryId,
           cityName,
           pastorName,
@@ -146,6 +150,7 @@ export function NewChurchDialog({
       onOpenChange(false)
       // Clear form state
       setName('')
+      setAddress('')
       setPastorName('')
       setPastorWhatsapp('')
       setRegistration('')
@@ -169,6 +174,11 @@ export function NewChurchDialog({
           <div className="space-y-2">
             <label className="text-sm font-medium">{t('churchName')}</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('churchName')} />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t('churchAddress')}</label>
+            <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t('churchAddress')} />
           </div>
 
           <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2">

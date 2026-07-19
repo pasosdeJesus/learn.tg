@@ -111,7 +111,9 @@ export default function ProfileForm({ params }: PageProps) {
   const [deeplink, setDeeplink] = useState('')
   const [showQRDialog, setShowQRDialog] = useState(false)
   const [citySearch, setCitySearch] = useState('')
-  const [citySuggestions, setCitySuggestions] = useState<{ city: string; formatted: string; state: string; county: string; country_code: string; lat: number; lng: number }[]>([])
+  const [departments, setDepartments] = useState<{ id: number; nombre: string }[]>([])
+  const [municipalities, setMunicipalities] = useState<{ id: number; nombre: string }[]>([])
+  const [towns, setTowns] = useState<{ id: number; nombre: string }[]>([])
   const [churches, setChurches] = useState<{ id: number; name: string; city_name: string | null }[]>([])
   const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
   const [newChurchName, setNewChurchName] = useState('')
@@ -490,68 +492,38 @@ export default function ProfileForm({ params }: PageProps) {
     }))
   }
 
-  const handleCitySearch = async (query: string) => {
-    setCitySearch(query)
-    if (query.length < 2) {
-      setCitySuggestions([])
-      return
-    }
-    const countryCode = countries.find((c) => c.id === profile.country)?.nombre || ''
-    try {
-      const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}&country=${profile.country}`)
-      const data = await res.json()
-      console.log('[profile] geocode results for', query, ':', data.results?.length || 0, 'results')
-      setCitySuggestions(data.results || [])
-    } catch {
-      setCitySuggestions([])
-    }
-  }
+  // Fetch departments when country changes
+  useEffect(() => {
+    if (!profile.country) { setDepartments([]); return }
+    fetch(`/api/departments?country=${profile.country}`)
+      .then(r => r.json())
+      .then(data => setDepartments(data || []))
+      .catch(() => setDepartments([]))
+  }, [profile.country])
 
-  const handleSelectCity = async (city: string, suggestion?: { formatted: string; state: string; county: string; lat: number; lng: number }) => {
-    setPlaceOfWorshipLocation(suggestion?.formatted || citySearch)
-    setDepartmentName(suggestion?.state || '')
-    setMunicipalityName(suggestion?.county || '')
-    setCityDisplayName(city)
-    setCitySearch(city)
-    setCitySuggestions([])
-    setChurches([])
-    setSelectedChurchId(null)
-    setNewChurchName('')
-    if (!profile.country) return
+  // Fetch municipalities when department changes
+  useEffect(() => {
+    if (!departmentId) { setMunicipalities([]); return }
+    fetch(`/api/municipalities?department=${departmentId}`)
+      .then(r => r.json())
+      .then(data => setMunicipalities(data || []))
+      .catch(() => setMunicipalities([]))
+  }, [departmentId])
 
-    // Upsert location into msip_* tables
-    if (suggestion) {
-      try {
-        const locRes = await fetch('/api/geocode/select', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            countryId: profile.country,
-            state: suggestion.state,
-            county: suggestion.county,
-            city,
-            lat: suggestion.lat,
-            lng: suggestion.lng,
-          }),
-        })
-        if (locRes.ok) {
-          const locData = await locRes.json()
-          setDepartmentId(locData.departmentId)
-          setMunicipalityId(locData.municipalityId)
-          setCityId(locData.cityId)
-          console.log('[profile] location saved:', locData)
-        }
-      } catch { /* non-blocking */ }
+  // Fetch towns and churches when municipality changes
+  useEffect(() => {
+    if (!municipalityId) { setTowns([]); setChurches([]); return }
+    fetch(`/api/towns?municipality=${municipalityId}`)
+      .then(r => r.json())
+      .then(data => setTowns(data || []))
+      .catch(() => setTowns([]))
+    if (profile.country) {
+      fetch(`/api/churches/search?q=&country=${profile.country}&municipality=${municipalityId}`)
+        .then(r => r.json())
+        .then(data => setChurches(data.churches || []))
+        .catch(() => {})
     }
-
-    try {
-      const res = await fetch(`/api/churches/search?q=&country=${profile.country}`)
-      const data = await res.json()
-      setChurches(data.churches || [])
-    } catch {
-      setChurches([])
-    }
-  }
+  }, [municipalityId, profile.country])
 
   const handleSelectChurch = (churchId: string) => {
     if (churchId === '__new__') {
@@ -566,12 +538,12 @@ export default function ProfileForm({ params }: PageProps) {
   const placeOfWorshipLabels = (religionId: number | null): { name: string; address: string } => {
     const isEs = lang === 'es'
     switch (religionId) {
-      case 2: return { name: isEs ? 'Iglesia' : 'Church', address: isEs ? 'Ubicación de iglesia' : 'Location of church' }
-      case 3: return { name: isEs ? 'Mezquita' : 'Mosque', address: isEs ? 'Ubicación de mezquita' : 'Location of mosque' }
-      case 6: return { name: isEs ? 'Sinagoga' : 'Synagogue', address: isEs ? 'Ubicación de sinagoga' : 'Location of synagogue' }
+      case 2: return { name: isEs ? 'Iglesia' : 'Church', address: isEs ? 'Población de la iglesia' : 'Town of church' }
+      case 3: return { name: isEs ? 'Mezquita' : 'Mosque', address: isEs ? 'Población de la mezquita' : 'Town of mosque' }
+      case 6: return { name: isEs ? 'Sinagoga' : 'Synagogue', address: isEs ? 'Población de la sinagoga' : 'Town of synagogue' }
       case 4:
-      case 5: return { name: isEs ? 'Templo' : 'Temple', address: isEs ? 'Ubicación de templo' : 'Location of temple' }
-      default: return { name: isEs ? 'Lugar de culto' : 'Place of worship', address: isEs ? 'Ubicación de lugar de culto' : 'Location of place of worship' }
+      case 5: return { name: isEs ? 'Templo' : 'Temple', address: isEs ? 'Población del templo' : 'Town of temple' }
+      default: return { name: isEs ? 'Lugar de culto' : 'Place of worship', address: isEs ? 'Población del lugar de culto' : 'Town of place of worship' }
     }
   }
 
@@ -954,42 +926,109 @@ export default function ProfileForm({ params }: PageProps) {
                 <label htmlFor="citySearch" className="block text-sm font-medium text-gray-700">
                   {placeOfWorshipLabels(profile.religion).address}
                 </label>
-                <div className="relative">
+
+                {/* Department selector (or free text for countries without DB data) */}
+                {departments.length > 0 ? (
+                  <>
+                    <Select
+                      value={departmentId?.toString() || ''}
+                      onValueChange={(v) => {
+                        const id = parseInt(v, 10)
+                        setDepartmentId(id)
+                        setDepartmentName(departments.find(d => d.id === id)?.nombre || '')
+                        setMunicipalityId(null)
+                        setMunicipalityName('')
+                        setCityId(null)
+                        setCityDisplayName('')
+                        setSelectedChurchId(null)
+                        setChurches([])
+                      }}
+                      disabled={!profile.country}
+                    >
+                      <SelectTrigger id="citySearch" className="w-full">
+                        <SelectValue placeholder={lang === 'es' ? 'Departamento...' : 'Department...'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map(d => (
+                          <SelectItem key={d.id} value={d.id.toString()}>{d.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={municipalityId?.toString() || ''}
+                      onValueChange={(v) => {
+                        const id = parseInt(v, 10)
+                        setMunicipalityId(id)
+                        setMunicipalityName(municipalities.find(m => m.id === id)?.nombre || '')
+                        setCityId(null)
+                        setCityDisplayName('')
+                        setSelectedChurchId(null)
+                        setChurches([])
+                      }}
+                      disabled={!departmentId || municipalities.length === 0}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={lang === 'es' ? 'Municipio...' : 'Municipality...'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {municipalities.map(m => (
+                          <SelectItem key={m.id} value={m.id.toString()}>{m.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={cityId?.toString() || ''}
+                      onValueChange={(v) => {
+                        const id = parseInt(v, 10)
+                        setCityId(id)
+                        setPlaceOfWorshipLocation(towns.find(t => t.id === id)?.nombre || '')
+                        setCityDisplayName(towns.find(t => t.id === id)?.nombre || '')
+                        setCitySearch(towns.find(t => t.id === id)?.nombre || '')
+                        setSelectedChurchId(null)
+                      }}
+                      disabled={!municipalityId || towns.length === 0}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={lang === 'es' ? 'Población...' : 'Town...'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {towns.map(t => (
+                          <SelectItem key={t.id} value={t.id.toString()}>{t.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                ) : (
                   <input
                     id="citySearch"
                     type="text"
                     value={citySearch}
-                    onChange={(e) => handleCitySearch(e.target.value)}
-                    placeholder={t('searchPlace')}
+                    onChange={(e) => {
+                      setCitySearch(e.target.value)
+                      setPlaceOfWorshipLocation(e.target.value)
+                      setCityId(null)
+                      setDepartmentId(null)
+                      setMunicipalityId(null)
+                    }}
+                    placeholder={lang === 'es' ? 'Población...' : 'Town...'}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  {citySuggestions.length > 0 && (
-                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-auto">
-                      {citySuggestions.map((s, i) => (
-                        <li
-                          key={i}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                          onClick={() => handleSelectCity(s.city, s)}
-                        >
-                          {s.city}{s.country_code ? `, ${s.country_code}` : ''}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                {(departmentId || municipalityId || cityId) && (
+                )}
+              </div>
+                {(departmentId || municipalityId || cityId || citySearch) && (
                   <p className="text-xs text-green-600 mt-1">
                     ✅ {lang === 'es' ? 'Ubicación registrada' : 'Location registered'}
-                    {cityId ? ` (${lang === 'es' ? 'ciudad' : 'city'} #${cityId})` : ''}
                   </p>
                 )}
-                {(profile.country || departmentName || municipalityName || cityDisplayName) && (
+                {(profile.country || departmentName || municipalityName || cityDisplayName || (!departmentId && citySearch)) && (
                   <p className="text-xs text-gray-500 mt-1">
                     {[
                       countries.find(c => c.id === profile.country)?.nombre,
                       departmentName,
                       municipalityName,
-                      cityDisplayName,
+                      cityDisplayName || citySearch,
                     ].filter(Boolean).join(' / ')}
                   </p>
                 )}
@@ -1002,10 +1041,10 @@ export default function ProfileForm({ params }: PageProps) {
                   <Select
                     value={selectedChurchId?.toString() || ''}
                     onValueChange={handleSelectChurch}
-                    disabled={!citySearch}
+                    disabled={!(cityId || (departments.length === 0 && citySearch))}
                   >
                     <SelectTrigger id="placeOfWorshipName" className="w-full">
-                      <SelectValue placeholder={churches.length === 0 && citySearch ? '...' : t('placeOfWorshipNamePlaceholder')} />
+                      <SelectValue placeholder={churches.length === 0 && (cityId || citySearch) ? '...' : t('placeOfWorshipNamePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {churches.map((ch) => (
