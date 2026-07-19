@@ -63,6 +63,7 @@ interface Religion {
 interface Country {
   id: number
   nombre: string
+  indicativo?: string | null
 }
 
 type PageProps = {
@@ -111,9 +112,8 @@ export default function ProfileForm({ params }: PageProps) {
   const [deeplink, setDeeplink] = useState('')
   const [showQRDialog, setShowQRDialog] = useState(false)
   const [citySearch, setCitySearch] = useState('')
-  const [departments, setDepartments] = useState<{ id: number; nombre: string }[]>([])
-  const [municipalities, setMunicipalities] = useState<{ id: number; nombre: string }[]>([])
-  const [towns, setTowns] = useState<{ id: number; nombre: string }[]>([])
+  const [townSuggestions, setTownSuggestions] = useState<{ id: number; town: string; municipio: string; departamento: string }[]>([])
+  const [townSearchTimer, setTownSearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [churches, setChurches] = useState<{ id: number; name: string; city_name: string | null }[]>([])
   const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
   const [newChurchName, setNewChurchName] = useState('')
@@ -492,38 +492,55 @@ export default function ProfileForm({ params }: PageProps) {
     }))
   }
 
-  // Fetch departments when country changes
-  useEffect(() => {
-    if (!profile.country) { setDepartments([]); return }
-    fetch(`/api/departments?country=${profile.country}`)
-      .then(r => r.json())
-      .then(data => setDepartments(data || []))
-      .catch(() => setDepartments([]))
-  }, [profile.country])
+  // Town autocomplete search
+  const handleTownSearch = (query: string) => {
+    setCitySearch(query)
+    if (townSearchTimer) clearTimeout(townSearchTimer)
+    if (query.length < 2 || !profile.country) {
+      setTownSuggestions([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/towns/search?country=${profile.country}&q=${encodeURIComponent(query)}`)
+        const data = await res.json()
+        setTownSuggestions(data || [])
+      } catch { setTownSuggestions([]) }
+    }, 300)
+    setTownSearchTimer(timer)
+  }
 
-  // Fetch municipalities when department changes
-  useEffect(() => {
-    if (!departmentId) { setMunicipalities([]); return }
-    fetch(`/api/municipalities?department=${departmentId}`)
-      .then(r => r.json())
-      .then(data => setMunicipalities(data || []))
-      .catch(() => setMunicipalities([]))
-  }, [departmentId])
-
-  // Fetch towns and churches when municipality changes
-  useEffect(() => {
-    if (!municipalityId) { setTowns([]); setChurches([]); return }
-    fetch(`/api/towns?municipality=${municipalityId}`)
-      .then(r => r.json())
-      .then(data => setTowns(data || []))
-      .catch(() => setTowns([]))
+  // Select a town from autocomplete
+  const handleSelectTown = (town: { id: number; town: string; municipio: string; departamento: string }) => {
+    setCityId(town.id)
+    setCitySearch(town.town)
+    setPlaceOfWorshipLocation(town.town)
+    setCityDisplayName(town.town)
+    setDepartmentName(town.departamento)
+    setMunicipalityName(town.municipio)
+    setTownSuggestions([])
+    setSelectedChurchId(null)
+    // Fetch churches for this town
     if (profile.country) {
-      fetch(`/api/churches/search?q=&country=${profile.country}&municipality=${municipalityId}`)
+      fetch(`/api/churches/search?q=&country=${profile.country}&cityId=${town.id}`)
         .then(r => r.json())
         .then(data => setChurches(data.churches || []))
         .catch(() => {})
     }
-  }, [municipalityId, profile.country])
+  }
+
+  // Free-text town (no match selected)
+  const handleTownFreeText = (text: string) => {
+    setCityId(null)
+    setCitySearch(text)
+    setPlaceOfWorshipLocation(text)
+    setCityDisplayName('')
+    setDepartmentName('')
+    setMunicipalityName('')
+    setTownSuggestions([])
+    setSelectedChurchId(null)
+    setChurches([])
+  }
 
   const handleSelectChurch = (churchId: string) => {
     if (churchId === '__new__') {
@@ -718,60 +735,7 @@ export default function ProfileForm({ params }: PageProps) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              <div className="space-y-2">
-                <label
-                  htmlFor="whatsapp"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  WhatsApp
-                </label>
-                <div className="flex items-center">
-                  <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-gray-500 text-sm">
-                    +232
-                  </span>
-                  <input
-                    id="whatsapp"
-                    type="text"
-                    value={profile.whatsapp}
-                    onChange={(e) => handleChange('whatsapp', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label
-                  htmlFor="telegram"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Telegram
-                </label>
-                <input
-                  id="telegram"
-                  type="text"
-                  value={profile.telegram}
-                  onChange={(e) => handleChange('telegram', e.target.value)}
-                  placeholder="@username"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <label
-                  htmlFor="lastgooddollarverification"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  {t('uniquenessGoodDollar')}
-                  {profile.lastgooddollarverification != null ? '✅' : '❌'}{' '}
-                  {')'}
-                </label>
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-500 italic mt-1">
-              {t('contactNotice')}
-            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="space-y-2">
@@ -791,11 +755,7 @@ export default function ProfileForm({ params }: PageProps) {
                   onValueChange={(value) => handleChange('country', value)}
                 >
                   <SelectTrigger id="country" className="w-full">
-                    <SelectValue
-                      placeholder={
-                        t('selectCountry')
-                      }
-                    />
+                    <SelectValue placeholder={t('selectCountry')} />
                   </SelectTrigger>
                   <SelectContent>
                     {countries.map((country) => (
@@ -818,18 +778,11 @@ export default function ProfileForm({ params }: PageProps) {
                   onValueChange={(value) => handleChange('religion', value)}
                 >
                   <SelectTrigger id="religion" className="w-full">
-                    <SelectValue
-                      placeholder={
-                        t('selectReligion')
-                      }
-                    />
+                    <SelectValue placeholder={t('selectReligion')} />
                   </SelectTrigger>
                   <SelectContent>
                     {religions.map((religion) => (
-                      <SelectItem
-                        key={religion.id}
-                        value={religion.id.toString()}
-                      >
+                      <SelectItem key={religion.id} value={religion.id.toString()}>
                         {lang === 'en' && religion.name_english ? religion.name_english : religion.nombre}
                       </SelectItem>
                     ))}
@@ -837,6 +790,62 @@ export default function ProfileForm({ params }: PageProps) {
                 </Select>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="whatsapp"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  WhatsApp
+                </label>
+                <div className="flex items-center">
+                  <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-gray-500 text-sm">
+                    {countries.find(c => c.id === profile.country)?.indicativo || '+232'}
+                  </span>
+                  <input
+                    id="whatsapp"
+                    type="text"
+                    value={profile.whatsapp}
+                    onChange={(e) => handleChange('whatsapp', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="telegram"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Telegram
+                </label>
+                <input
+                  id="telegram"
+                  type="text"
+                  value={profile.telegram}
+                  onChange={(e) => handleChange('telegram', e.target.value)}
+                  placeholder="@username"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="lastgooddollarverification"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  {t('uniquenessGoodDollar')}
+                  {profile.lastgooddollarverification != null ? '✅' : '❌'}{' '}
+                  {')'}
+                </label>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 italic mt-1">
+              {t('contactNotice')}
+            </p>
 
             {profile.country === 694 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -927,96 +936,38 @@ export default function ProfileForm({ params }: PageProps) {
                   {placeOfWorshipLabels(profile.religion).address}
                 </label>
 
-                {departments.length > 0 ? (
-                  <div className="space-y-2">
-                    <Select
-                      value={departmentId?.toString() || ''}
-                      onValueChange={(v) => {
-                        const id = parseInt(v, 10)
-                        setDepartmentId(id)
-                        setDepartmentName(departments.find(d => d.id === id)?.nombre || '')
-                        setMunicipalityId(null); setMunicipalityName('')
-                        setCityId(null); setCityDisplayName('')
-                        setSelectedChurchId(null); setChurches([])
-                      }}
-                      disabled={!profile.country}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={lang === 'es' ? 'Departamento...' : 'Department...'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departments.map(d => (
-                          <SelectItem key={d.id} value={d.id.toString()}>{d.nombre}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={municipalityId?.toString() || ''}
-                      onValueChange={(v) => {
-                        const id = parseInt(v, 10)
-                        setMunicipalityId(id)
-                        setMunicipalityName(municipalities.find(m => m.id === id)?.nombre || '')
-                        setCityId(null); setCityDisplayName('')
-                        setSelectedChurchId(null); setChurches([])
-                      }}
-                      disabled={!departmentId || municipalities.length === 0}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={lang === 'es' ? 'Municipio...' : 'Municipality...'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {municipalities.map(m => (
-                          <SelectItem key={m.id} value={m.id.toString()}>{m.nombre}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={cityId?.toString() || ''}
-                      onValueChange={(v) => {
-                        const id = parseInt(v, 10)
-                        setCityId(id)
-                        const name = towns.find(t => t.id === id)?.nombre || ''
-                        setPlaceOfWorshipLocation(name)
-                        setCityDisplayName(name)
-                        setCitySearch(name)
-                        setSelectedChurchId(null)
-                      }}
-                      disabled={!municipalityId || towns.length === 0}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={lang === 'es' ? 'Población...' : 'Town...'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {towns.map(t => (
-                          <SelectItem key={t.id} value={t.id.toString()}>{t.nombre}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
+                                <div className="relative">
                   <input
                     id="citySearch"
                     type="text"
                     value={citySearch}
-                    onChange={(e) => {
-                      setCitySearch(e.target.value)
-                      setPlaceOfWorshipLocation(e.target.value)
-                      setCityId(null); setDepartmentId(null); setMunicipalityId(null)
-                    }}
+                    onChange={(e) => handleTownSearch(e.target.value)}
+                    onBlur={() => { if (townSuggestions.length === 0 && citySearch && !cityId) handleTownFreeText(citySearch) }}
                     placeholder={lang === 'es' ? 'Población...' : 'Town...'}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                )}
-                {(departmentId || municipalityId || cityId || citySearch) && (
+                  {townSuggestions.length > 0 && (
+                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-auto">
+                      {townSuggestions.map((s) => (
+                        <li
+                          key={s.id}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          onMouseDown={() => handleSelectTown(s)}
+                        >
+                          {s.town}, {s.municipio}, {s.departamento}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {(cityId || citySearch) && (
                   <p className="text-xs text-green-600 mt-1">
                     ✅ {lang === 'es' ? 'Ubicación registrada' : 'Location registered'}
                   </p>
                 )}
-                {(profile.country || departmentName || municipalityName || cityDisplayName || citySearch) && (
+                {(departmentName || municipalityName || cityDisplayName || citySearch) && (
                   <p className="text-xs text-gray-500 mt-1">
-                    {[countries.find(c => c.id === profile.country)?.nombre, departmentName, municipalityName, cityDisplayName || citySearch].filter(Boolean).join(' / ')}
+                    {[cityDisplayName || citySearch, municipalityName, departmentName].filter(Boolean).join(', ')}
                   </p>
                 )}
               </div>
@@ -1028,10 +979,10 @@ export default function ProfileForm({ params }: PageProps) {
                   <Select
                     value={selectedChurchId?.toString() || ''}
                     onValueChange={handleSelectChurch}
-                    disabled={!(cityId || (departments.length === 0 && citySearch))}
+                    disabled={!citySearch}
                   >
                     <SelectTrigger id="placeOfWorshipName" className="w-full">
-                      <SelectValue placeholder={churches.length === 0 && (cityId || citySearch) ? '...' : t('placeOfWorshipNamePlaceholder')} />
+                      <SelectValue placeholder={churches.length === 0 && citySearch ? '...' : t('placeOfWorshipNamePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {churches.map((ch) => (

@@ -1058,6 +1058,7 @@ export interface MsipPais {
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
+  indicativo: string | null;
   latitud: number | null;
   longitud: number | null;
   nombre: string;

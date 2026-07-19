@@ -4326,6 +4326,7 @@ CREATE TABLE public.msip_pais (
     svgcdalto integer,
     svgrotx double precision,
     svgroty double precision,
+    indicativo character varying(10),
     CONSTRAINT pais_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion)))
 );
 

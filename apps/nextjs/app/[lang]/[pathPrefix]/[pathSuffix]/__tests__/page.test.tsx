@@ -46,13 +46,16 @@ vi.mock('next/navigation', async (importOriginal) => {
 })
 
 // Mock useAccount to provide a consistent address
-vi.mock('wagmi', async (importOriginal) => {
-  const actualWagmi = await importOriginal<typeof import('wagmi')>()
-  return {
-    ...actualWagmi,
-    useAccount: vi.fn(() => ({ address: '0x123' })),
-  }
-})
+vi.mock('@/lib/hooks/useAuthAddress', () => ({
+  useAuthAddress: vi.fn(() => ({ address: '0x123' })),
+}))
+vi.mock('@/lib/hooks/useWallet', () => ({
+  usePublicClient: vi.fn(() => ({})),
+  useWalletClient: vi.fn(() => ({ data: undefined })),
+}))
+vi.mock('@/lib/hooks/useWriteContract', () => ({
+  useWriteContract: vi.fn(() => ({ data: undefined, writeContract: vi.fn() })),
+}))
 
 const queryClient = new QueryClient()
 
