@@ -200,6 +200,7 @@ export async function recalculateProfileScore(
       'verified_city_id',
       'place_of_worship',
       'verified_place_of_worship',
+      'date_of_interview',
     ])
     .where('id', '=', userId)
     .executeTakeFirst()
@@ -208,44 +209,49 @@ export async function recalculateProfileScore(
 
   let score = 0
 
-  // Name verified: 26 pts
+  // Name verified: 25 pts
   if (user.nombre && user.passport_name && user.nombre === user.passport_name) {
-    score += 26
+    score += 25
   }
 
-  // Country verified: 26 pts
+  // Country verified: 25 pts
   if (user.pais_id != null && user.passport_nationality != null && user.pais_id === user.passport_nationality) {
-    score += 26
+    score += 25
   }
 
-  // Email verified: 10 pts
+  // Email verified: 9 pts
   if (user.email && user.verified_email && user.email === user.verified_email) {
-    score += 10
+    score += 9
   }
 
-  // WhatsApp or Telegram verified: 10 pts (max 10, not 20)
+  // WhatsApp or Telegram verified: 9 pts (max 9, not 18)
   if ((user.whatsapp && user.verified_whatsapp && user.whatsapp === user.verified_whatsapp) ||
       (user.telegram && user.verified_telegram && user.telegram === user.verified_telegram)) {
-    score += 10
+    score += 9
   }
 
-  // GoodDollar verified: 8 pts
+  // GoodDollar verified: 7 pts
   if (user.lastgooddollarverification != null) {
-    score += 8
+    score += 7
   }
 
-  // Location verified: 10 pts
+  // Location verified: 9 pts
   if (user.department_id != null &&
       user.verified_department_id === user.department_id &&
       user.verified_municipality_id === user.municipality_id &&
       user.verified_city_id === user.city_id) {
-    score += 10
+    score += 9
   }
 
-  // Place of worship verified: 10 pts
+  // Place of worship verified: 9 pts
   if (user.place_of_worship && user.verified_place_of_worship &&
       user.place_of_worship === user.verified_place_of_worship) {
-    score += 10
+    score += 9
+  }
+
+  // Interview with verifier: 7 pts
+  if (user.date_of_interview != null) {
+    score += 7
   }
 
   await db

@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import DeleteVerifiedDataDialog from '@/components/DeleteVerifiedDataDialog'
 import { NewChurchDialog } from '@/components/NewChurchDialog'
+import { VerificationScheduler } from '@/components/VerificationScheduler'
 import { IS_PRODUCTION } from '@/lib/config'
 import { logger, DebugConsole } from '@pasosdejesus/m/debug'
 
@@ -1035,6 +1036,16 @@ export default function ProfileForm({ params }: PageProps) {
                 onSuccess={() => setUpdateProfile(true)}
               />
             </div>
+
+            {profile.profilescore != null && profile.profilescore < 100 && (
+              <div className="mt-8 border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  {lang === 'es' ? 'Entrevista de Verificación' : 'Verification Interview'}
+                </h3>
+                <VerificationScheduler lang={lang} onBooked={() => setUpdateProfile(true)} />
+              </div>
+            )}
+
           </form>
           <NewChurchDialog
             open={showChurchDialog}

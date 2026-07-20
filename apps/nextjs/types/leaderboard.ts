@@ -3,6 +3,7 @@ export interface LeaderboardRow {
   username: string
   pais_alfa2: string | null
   pais_nombre: string | null
+  profilescore: number | null
   slearn_balance: number
   scholarship_usdt: number
   ubi_celo: number
@@ -12,7 +13,7 @@ export interface LeaderboardRow {
 }
 
 export interface LeaderboardQueryParams {
-  sortBy?: 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
+  sortBy?: 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
   sortOrder?: 'asc' | 'desc'
   country?: string
   page?: number

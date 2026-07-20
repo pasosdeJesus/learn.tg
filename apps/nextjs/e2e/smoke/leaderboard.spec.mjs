@@ -23,13 +23,13 @@ const EXPECTED_SPANISH = {
     rank: 'Posición',
     user: 'Usuario',
     country: 'País',
-    learningPoints: 'Puntos de Aprendizaje',
+    profileScore: 'Puntaje de Perfil',
     scholarship: 'Beca (USDT)',
     ubi: 'UBI (CELO)',
     donations: 'Donaciones (USDT)'
   },
   explanations: {
-    learningPoints: 'Puntos de Aprendizaje se ganan completando crucigramas y haciendo donaciones.',
+    profileScore: 'El Puntaje de Perfil refleja que tan completo esta tu perfil. El maximo es 100.',
     scholarship: 'Beca (USDT) se recibe como becas educativas.',
     ubi: 'UBI (CELO) se recibe a través de reclamos de ingreso básico universal.',
     donations: 'Donaciones (USDT) son contribuciones hechas para apoyar la plataforma.'
@@ -46,13 +46,13 @@ const EXPECTED_ENGLISH = {
     rank: 'Rank',
     user: 'User',
     country: 'Country',
-    learningPoints: 'Learning Points',
+    profileScore: 'Profile Score',
     scholarship: 'Scholarship (USDT)',
     ubi: 'UBI (CELO)',
     donations: 'Donations (USDT)'
   },
   explanations: {
-    learningPoints: 'Learning Points are earned by completing crosswords and giving donations.',
+    profileScore: 'Profile Score reflects how complete your profile is. Maximum is 100.',
     scholarship: 'Scholarship (USDT) is received as educational grants.',
     ubi: 'UBI (CELO) is received through universal basic income claims.',
     donations: 'Donations (USDT) are contributions made to support the platform.'

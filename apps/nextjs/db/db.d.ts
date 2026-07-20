@@ -1356,6 +1356,7 @@ export interface Usuario {
   created_at: Timestamp | null;
   current_sign_in_at: Timestamp | null;
   current_sign_in_ip: string | null;
+  date_of_interview: Timestamp | null;
   department_id: number | null;
   descripcion: string | null;
   email: Generated<string>;

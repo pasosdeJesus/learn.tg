@@ -19,7 +19,7 @@ export async function buildLeaderboardQuery(
   params: LeaderboardQueryParams,
   includeReligion: boolean = false
 ) {
-  const { sortBy = 'slearn_balance', sortOrder = 'desc', country, page = 1, limit = 50 } = params
+  const { sortBy = 'profilescore', sortOrder = 'desc', country, page = 1, limit = 50 } = params
   const offset = (page - 1) * limit
 
   let query: any = db
@@ -43,6 +43,7 @@ export async function buildLeaderboardQuery(
     'u.nusuario as username',
     'p.alfa2 as pais_alfa2',
     'p.nombre as pais_nombre',
+    'u.profilescore',
     SLEARN_FIELD,
     SCHOLARSHIP_FIELD,
     UBI_FIELD,
@@ -51,7 +52,7 @@ export async function buildLeaderboardQuery(
     sql<number>`COUNT(*) OVER()`.as('total_count'),
   ]
 
-  let groupFields: any[] = ['u.id', 'u.nusuario', 'p.alfa2', 'p.nombre', 'ce_counts.cnt']
+  let groupFields: any[] = ['u.id', 'u.nusuario', 'p.alfa2', 'p.nombre', 'u.profilescore', 'ce_counts.cnt']
 
   if (includeReligion) {
     selectFields.push('r.nombre as religion_nombre')
@@ -67,7 +68,8 @@ export async function buildLeaderboardQuery(
     query = query.where('p.alfa2', '=', country)
   }
 
-  const orderByField = sortBy === 'slearn_balance' ? sql`slearn_balance` :
+  const orderByField = sortBy === 'profilescore' ? sql`profilescore` :
+                      sortBy === 'slearn_balance' ? sql`slearn_balance` :
                       sortBy === 'scholarship_usdt' ? sql`scholarship_usdt` :
                       sortBy === 'ubi_celo' ? sql`ubi_celo` :
                       sortBy === 'sbt_count' ? sql`sbt_count` :
@@ -179,6 +181,7 @@ export async function getLeaderboardData(
       username: row.username,
       pais_alfa2: row.pais_alfa2,
       pais_nombre: row.pais_nombre,
+      profilescore: row.profilescore != null ? Number(row.profilescore) : null,
       slearn_balance: Number(row.slearn_balance),
       scholarship_usdt: Number(row.scholarship_usdt),
       ubi_celo: Number(row.ubi_celo),

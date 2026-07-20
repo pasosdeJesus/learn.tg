@@ -5128,6 +5128,7 @@ CREATE TABLE public.usuario (
     id_photo_verified boolean DEFAULT false,
     verified_email character varying(255),
     place_of_worship_location character varying(200),
+    date_of_interview date,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
