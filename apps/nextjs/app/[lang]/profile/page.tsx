@@ -63,6 +63,7 @@ interface Religion {
 interface Country {
   id: number
   nombre: string
+  nombreiso_ingles?: string | null
   indicativo?: string | null
 }
 
@@ -760,7 +761,7 @@ export default function ProfileForm({ params }: PageProps) {
                   <SelectContent>
                     {countries.map((country) => (
                       <SelectItem key={country.id} value={country.id.toString()}>
-                        {country.nombre}
+                        {lang === 'en' && country.nombreiso_ingles ? country.nombreiso_ingles : country.nombre}
                       </SelectItem>
                     ))}
                   </SelectContent>

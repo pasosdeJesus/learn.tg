@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import {
@@ -40,6 +40,7 @@ export function NewChurchDialog({
   const [churchAddress, setChurchAddress] = useState('')
   const [pastorName, setPastorName] = useState('')
   const [pastorWhatsapp, setPastorWhatsapp] = useState('')
+  const [indicativo, setIndicativo] = useState('+232')
   const [registration, setRegistration] = useState('')
   const [registrationPhoto, setRegistrationPhoto] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -83,6 +84,19 @@ export function NewChurchDialog({
       pastorNote: 'Por favor infórmale a tu pastor que para confirmar tu membresía posiblemente nos comunicaremos con él por WhatsApp. Te motivamos a invitarlo a learn.tg.',
     },
   })
+
+  // Fetch country indicativo when countryId changes
+  useEffect(() => {
+    if (!countryId) { setIndicativo('+232'); return }
+    fetch(`/api/countries`)
+      .then(r => r.json())
+      .then(data => {
+        const c = (data || []).find((x: any) => x.id === countryId)
+        if (c?.indicativo) setIndicativo(c.indicativo)
+        else setIndicativo('+232')
+      })
+      .catch(() => setIndicativo('+232'))
+  }, [countryId])
 
   const isPastor = churchRelationship === 'pastor'
 
@@ -194,7 +208,7 @@ export function NewChurchDialog({
             <label className="text-sm font-medium">{t('pastorWhatsapp')} *</label>
             <div className="flex items-center">
               <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-gray-500 text-sm">
-                +232
+                {indicativo}
               </span>
               <Input
                 value={pastorWhatsapp}
