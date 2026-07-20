@@ -2,2665 +2,1330 @@ import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
   await sql`
-    INSERT INTO msip_centropoblado (nombre, municipio_id, latitud, longitud, fechacreacion, created_at, updated_at)
-    SELECT
-      t.town,
-      m.id,
-      t.lat,
-      t.lon,
-      NOW(),
-      NOW(),
-      NOW()
-    FROM (
-      SELECT 'Baiwalla' AS town, 'Dea' AS chiefdom, 'Kailahun' AS district, 7.98039328 AS lat, -10.63604148 AS lon
-      UNION ALL
-      SELECT 'Dodo' AS town, 'Dea' AS chiefdom, 'Kailahun' AS district, 7.9486324 AS lat, -10.67087367 AS lon
-      UNION ALL
-      SELECT 'Sakiema' AS town, 'Dea' AS chiefdom, 'Kailahun' AS district, 8.00757173 AS lat, -10.68176221 AS lon
-      UNION ALL
-      SELECT 'Sienga' AS town, 'Dea' AS chiefdom, 'Kailahun' AS district, 7.91063203 AS lat, -10.63879056 AS lon
-      UNION ALL
-      SELECT 'Bobor' AS town, 'Jawie' AS chiefdom, 'Kailahun' AS district, 7.9203002 AS lat, -10.90929788 AS lon
-      UNION ALL
-      SELECT 'Kaio' AS town, 'Jawie' AS chiefdom, 'Kailahun' AS district, 7.94538913 AS lat, -10.86766264 AS lon
-      UNION ALL
-      SELECT 'Lower Giebu' AS town, 'Jawie' AS chiefdom, 'Kailahun' AS district, 7.82206797 AS lat, -10.90731483 AS lon
-      UNION ALL
-      SELECT 'Lower Luyengeh' AS town, 'Jawie' AS chiefdom, 'Kailahun' AS district, 7.84690333 AS lat, -10.99588921 AS lon
-      UNION ALL
-      SELECT 'Mano' AS town, 'Jawie' AS chiefdom, 'Kailahun' AS district, 7.91109369 AS lat, -10.84265768 AS lon
-      UNION ALL
-      SELECT 'Sowa' AS town, 'Jawie' AS chiefdom, 'Kailahun' AS district, 7.98301261 AS lat, -10.82294552 AS lon
-      UNION ALL
-      SELECT 'Upper Giebu' AS town, 'Jawie' AS chiefdom, 'Kailahun' AS district, 7.86267628 AS lat, -10.89365132 AS lon
-      UNION ALL
-      SELECT 'Upper Luyengeh' AS town, 'Jawie' AS chiefdom, 'Kailahun' AS district, 7.8622429 AS lat, -10.95031394 AS lon
-      UNION ALL
-      SELECT 'Dakaleley' AS town, 'Kissi Kama' AS chiefdom, 'Kailahun' AS district, 8.46483866 AS lat, -10.37693348 AS lon
-      UNION ALL
-      SELECT 'Kama Teng' AS town, 'Kissi Kama' AS chiefdom, 'Kailahun' AS district, 8.40958283 AS lat, -10.40377859 AS lon
-      UNION ALL
-      SELECT 'Kama Toh' AS town, 'Kissi Kama' AS chiefdom, 'Kailahun' AS district, 8.36873317 AS lat, -10.42165224 AS lon
-      UNION ALL
-      SELECT 'Bumasadu' AS town, 'Kissi Teng' AS chiefdom, 'Kailahun' AS district, 8.34304419 AS lat, -10.37665553 AS lon
-      UNION ALL
-      SELECT 'Konio' AS town, 'Kissi Teng' AS chiefdom, 'Kailahun' AS district, 8.46539895 AS lat, -10.3163184 AS lon
-      UNION ALL
-      SELECT 'Kundu' AS town, 'Kissi Teng' AS chiefdom, 'Kailahun' AS district, 8.46476732 AS lat, -10.29710068 AS lon
-      UNION ALL
-      SELECT 'Lela' AS town, 'Kissi Teng' AS chiefdom, 'Kailahun' AS district, 8.37472169 AS lat, -10.37853232 AS lon
-      UNION ALL
-      SELECT 'Torli' AS town, 'Kissi Teng' AS chiefdom, 'Kailahun' AS district, 8.4610302 AS lat, -10.34350208 AS lon
-      UNION ALL
-      SELECT 'Bende Bengu' AS town, 'Kissi Tongi' AS chiefdom, 'Kailahun' AS district, 8.39268673 AS lat, -10.29981306 AS lon
-      UNION ALL
-      SELECT 'Konio' AS town, 'Kissi Tongi' AS chiefdom, 'Kailahun' AS district, 8.36306663 AS lat, -10.33454414 AS lon
-      UNION ALL
-      SELECT 'Pokorli' AS town, 'Kissi Tongi' AS chiefdom, 'Kailahun' AS district, 8.32635813 AS lat, -10.31627093 AS lon
-      UNION ALL
-      SELECT 'Tongi Tingi' AS town, 'Kissi Tongi' AS chiefdom, 'Kailahun' AS district, 8.21223903 AS lat, -10.35868993 AS lon
-      UNION ALL
-      SELECT 'Bongre' AS town, 'Kpeje Bongre' AS chiefdom, 'Kailahun' AS district, 8.06516359 AS lat, -10.80036156 AS lon
-      UNION ALL
-      SELECT 'Borkou' AS town, 'Kpeje Bongre' AS chiefdom, 'Kailahun' AS district, 8.17566274 AS lat, -10.73236756 AS lon
-      UNION ALL
-      SELECT 'Falloh' AS town, 'Kpeje Bongre' AS chiefdom, 'Kailahun' AS district, 8.17644019 AS lat, -10.7859282 AS lon
-      UNION ALL
-      SELECT 'Jorwu' AS town, 'Kpeje Bongre' AS chiefdom, 'Kailahun' AS district, 8.09872595 AS lat, -10.84327356 AS lon
-      UNION ALL
-      SELECT 'Manowa' AS town, 'Kpeje Bongre' AS chiefdom, 'Kailahun' AS district, 8.17907908 AS lat, -10.7471824 AS lon
-      UNION ALL
-      SELECT 'Marwei' AS town, 'Kpeje Bongre' AS chiefdom, 'Kailahun' AS district, 8.11871211 AS lat, -10.77932462 AS lon
-      UNION ALL
-      SELECT 'Seimaya' AS town, 'Kpeje Bongre' AS chiefdom, 'Kailahun' AS district, 8.22754735 AS lat, -10.72227592 AS lon
-      UNION ALL
-      SELECT 'Bunumbu' AS town, 'Kpeje West' AS chiefdom, 'Kailahun' AS district, 8.16751234 AS lat, -10.85011239 AS lon
-      UNION ALL
-      SELECT 'Golama' AS town, 'Kpeje West' AS chiefdom, 'Kailahun' AS district, 8.22911594 AS lat, -10.79402145 AS lon
-      UNION ALL
-      SELECT 'Kpaewa' AS town, 'Kpeje West' AS chiefdom, 'Kailahun' AS district, 8.21979075 AS lat, -10.85194553 AS lon
-      UNION ALL
-      SELECT 'Kpindima' AS town, 'Kpeje West' AS chiefdom, 'Kailahun' AS district, 8.13771103 AS lat, -10.82678469 AS lon
-      UNION ALL
-      SELECT 'Baoma' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.27653263 AS lat, -10.6605757 AS lon
-      UNION ALL
-      SELECT 'Gao' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.09728842 AS lat, -10.58160782 AS lon
-      UNION ALL
-      SELECT 'Gbela' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.26474254 AS lat, -10.45824001 AS lon
-      UNION ALL
-      SELECT 'Giehun' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.19781293 AS lat, -10.63511897 AS lon
-      UNION ALL
-      SELECT 'Lower Kpombali' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.17480962 AS lat, -10.55922064 AS lon
-      UNION ALL
-      SELECT 'Luawa Foguiya' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.24656848 AS lat, -10.56757575 AS lon
-      UNION ALL
-      SELECT 'Mano-Sewallu' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.33658552 AS lat, -10.4754342 AS lon
-      UNION ALL
-      SELECT 'Mende Buima' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.19965892 AS lat, -10.69004423 AS lon
-      UNION ALL
-      SELECT 'Mofindor' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.31683029 AS lat, -10.61862897 AS lon
-      UNION ALL
-      SELECT 'Upper Kpombali' AS town, 'Luawa' AS chiefdom, 'Kailahun' AS district, 8.19780805 AS lat, -10.48228715 AS lon
-      UNION ALL
-      SELECT 'Bamburu' AS town, 'Malema' AS chiefdom, 'Kailahun' AS district, 7.79516764 AS lat, -10.67267945 AS lon
-      UNION ALL
-      SELECT 'Lower Sami' AS town, 'Malema' AS chiefdom, 'Kailahun' AS district, 7.73824062 AS lat, -10.87731136 AS lon
-      UNION ALL
-      SELECT 'Njagbla' AS town, 'Malema' AS chiefdom, 'Kailahun' AS district, 7.88924713 AS lat, -10.74166813 AS lon
-      UNION ALL
-      SELECT 'Pelegbambeima' AS town, 'Malema' AS chiefdom, 'Kailahun' AS district, 7.74467174 AS lat, -10.80300338 AS lon
-      UNION ALL
-      SELECT 'Upper Sami' AS town, 'Malema' AS chiefdom, 'Kailahun' AS district, 7.88872135 AS lat, -10.79609763 AS lon
-      UNION ALL
-      SELECT 'Gbongre' AS town, 'Mandu' AS chiefdom, 'Kailahun' AS district, 8.04444464 AS lat, -10.77627653 AS lon
-      UNION ALL
-      SELECT 'Levuma Jeigbla' AS town, 'Mandu' AS chiefdom, 'Kailahun' AS district, 8.04150964 AS lat, -10.73322908 AS lon
-      UNION ALL
-      SELECT 'Lower Kuiva' AS town, 'Mandu' AS chiefdom, 'Kailahun' AS district, 7.92704394 AS lat, -10.7881914 AS lon
-      UNION ALL
-      SELECT 'Upper Kuiva' AS town, 'Mandu' AS chiefdom, 'Kailahun' AS district, 7.94794155 AS lat, -10.71878913 AS lon
-      UNION ALL
-      SELECT 'Bombowa' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 8.11409592 AS lat, -10.90953507 AS lon
-      UNION ALL
-      SELECT 'Dan Sei' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 8.02910427 AS lat, -10.89307753 AS lon
-      UNION ALL
-      SELECT 'Falley' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 8.06121098 AS lat, -10.87966627 AS lon
-      UNION ALL
-      SELECT 'Fauya' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 7.90839254 AS lat, -11.00351959 AS lon
-      UNION ALL
-      SELECT 'Gboo' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 8.03704659 AS lat, -10.93502961 AS lon
-      UNION ALL
-      SELECT 'Jonga' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 8.0407185 AS lat, -10.83113317 AS lon
-      UNION ALL
-      SELECT 'Kargbu' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 7.93283171 AS lat, -10.95713281 AS lon
-      UNION ALL
-      SELECT 'Keimaya' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 7.96752826 AS lat, -10.91045809 AS lon
-      UNION ALL
-      SELECT 'Lower Nyawa' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 7.96434103 AS lat, -10.98389236 AS lon
-      UNION ALL
-      SELECT 'Sei I' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 8.00820533 AS lat, -10.95520104 AS lon
-      UNION ALL
-      SELECT 'Sei II' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 8.06887822 AS lat, -10.93744039 AS lon
-      UNION ALL
-      SELECT 'Upper Nyawa' AS town, 'Njaluahun' AS chiefdom, 'Kailahun' AS district, 7.98868837 AS lat, -10.86834439 AS lon
-      UNION ALL
-      SELECT 'Bulima' AS town, 'Penguia' AS chiefdom, 'Kailahun' AS district, 8.28717624 AS lat, -10.73253113 AS lon
-      UNION ALL
-      SELECT 'Jagor' AS town, 'Penguia' AS chiefdom, 'Kailahun' AS district, 8.42340768 AS lat, -10.65397422 AS lon
-      UNION ALL
-      SELECT 'Kumatandu' AS town, 'Penguia' AS chiefdom, 'Kailahun' AS district, 8.35497464 AS lat, -10.70001553 AS lon
-      UNION ALL
-      SELECT 'Lombama' AS town, 'Penguia' AS chiefdom, 'Kailahun' AS district, 8.420033 AS lat, -10.68422042 AS lon
-      UNION ALL
-      SELECT 'Nimima' AS town, 'Penguia' AS chiefdom, 'Kailahun' AS district, 8.37623047 AS lat, -10.74179869 AS lon
-      UNION ALL
-      SELECT 'Bambara' AS town, 'Upper Bambara' AS chiefdom, 'Kailahun' AS district, 8.05835544 AS lat, -10.65586042 AS lon
-      UNION ALL
-      SELECT 'Bomaru-guma' AS town, 'Upper Bambara' AS chiefdom, 'Kailahun' AS district, 8.02272915 AS lat, -10.63012805 AS lon
-      UNION ALL
-      SELECT 'Goleiwoma' AS town, 'Upper Bambara' AS chiefdom, 'Kailahun' AS district, 8.12663923 AS lat, -10.72811193 AS lon
-      UNION ALL
-      SELECT 'Golu' AS town, 'Upper Bambara' AS chiefdom, 'Kailahun' AS district, 8.10753848 AS lat, -10.64045362 AS lon
-      UNION ALL
-      SELECT 'Korbu' AS town, 'Upper Bambara' AS chiefdom, 'Kailahun' AS district, 8.07887984 AS lat, -10.70995515 AS lon
-      UNION ALL
-      SELECT 'Naiahun' AS town, 'Upper Bambara' AS chiefdom, 'Kailahun' AS district, 8.13043386 AS lat, -10.67991569 AS lon
-      UNION ALL
-      SELECT 'Bendu' AS town, 'Yawei' AS chiefdom, 'Kailahun' AS district, 8.32428067 AS lat, -10.79236817 AS lon
-      UNION ALL
-      SELECT 'Kuiva Buima' AS town, 'Yawei' AS chiefdom, 'Kailahun' AS district, 8.26277316 AS lat, -10.80471309 AS lon
-      UNION ALL
-      SELECT 'Kuiva Jagor' AS town, 'Yawei' AS chiefdom, 'Kailahun' AS district, 8.35787253 AS lat, -10.83043515 AS lon
-      UNION ALL
-      SELECT 'Kuivawa' AS town, 'Yawei' AS chiefdom, 'Kailahun' AS district, 8.32675622 AS lat, -10.85368334 AS lon
-      UNION ALL
-      SELECT 'Dakowa' AS town, 'Dama' AS chiefdom, 'Kenema' AS district, 7.76457121 AS lat, -11.10388829 AS lon
-      UNION ALL
-      SELECT 'Danyadejo' AS town, 'Dama' AS chiefdom, 'Kenema' AS district, 7.76457121 AS lat, -11.15508842 AS lon
-      UNION ALL
-      SELECT 'Dassama' AS town, 'Dama' AS chiefdom, 'Kenema' AS district, 7.83946937 AS lat, -11.10438489 AS lon
-      UNION ALL
-      SELECT 'Fowai' AS town, 'Dama' AS chiefdom, 'Kenema' AS district, 7.74079979 AS lat, -11.1962585 AS lon
-      UNION ALL
-      SELECT 'Klajie' AS town, 'Dama' AS chiefdom, 'Kenema' AS district, 7.81173667 AS lat, -11.07427897 AS lon
-      UNION ALL
-      SELECT 'Lower Dabor' AS town, 'Dama' AS chiefdom, 'Kenema' AS district, 7.68292382 AS lat, -11.21236267 AS lon
-      UNION ALL
-      SELECT 'Upper Dabor' AS town, 'Dama' AS chiefdom, 'Kenema' AS district, 7.83679627 AS lat, -11.02502301 AS lon
-      UNION ALL
-      SELECT 'Bambara' AS town, 'Dodo' AS chiefdom, 'Kenema' AS district, 8.22380235 AS lat, -11.19949568 AS lon
-      UNION ALL
-      SELECT 'Bonya' AS town, 'Dodo' AS chiefdom, 'Kenema' AS district, 8.16819122 AS lat, -11.16216025 AS lon
-      UNION ALL
-      SELECT 'Bundoryama' AS town, 'Dodo' AS chiefdom, 'Kenema' AS district, 8.20492921 AS lat, -11.23179056 AS lon
-      UNION ALL
-      SELECT 'Gorama' AS town, 'Dodo' AS chiefdom, 'Kenema' AS district, 8.31218755 AS lat, -11.20648664 AS lon
-      UNION ALL
-      SELECT 'Karteh' AS town, 'Dodo' AS chiefdom, 'Kenema' AS district, 8.24820796 AS lat, -11.16668691 AS lon
-      UNION ALL
-      SELECT 'Korgay' AS town, 'Dodo' AS chiefdom, 'Kenema' AS district, 8.09351655 AS lat, -11.22332865 AS lon
-      UNION ALL
-      SELECT 'Seiwor' AS town, 'Dodo' AS chiefdom, 'Kenema' AS district, 8.12280724 AS lat, -11.18950364 AS lon
-      UNION ALL
-      SELECT 'Giebu' AS town, 'Gaura' AS chiefdom, 'Kenema' AS district, 7.66588783 AS lat, -11.12998863 AS lon
-      UNION ALL
-      SELECT 'Joru' AS town, 'Gaura' AS chiefdom, 'Kenema' AS district, 7.6748927 AS lat, -11.03410075 AS lon
-      UNION ALL
-      SELECT 'Kokoru' AS town, 'Gaura' AS chiefdom, 'Kenema' AS district, 7.63958016 AS lat, -11.10143166 AS lon
-      UNION ALL
-      SELECT 'Mendekelema' AS town, 'Gaura' AS chiefdom, 'Kenema' AS district, 7.77938829 AS lat, -10.97101714 AS lon
-      UNION ALL
-      SELECT 'Sandaru' AS town, 'Gaura' AS chiefdom, 'Kenema' AS district, 7.7536592 AS lat, -11.03032265 AS lon
-      UNION ALL
-      SELECT 'Sembehun' AS town, 'Gaura' AS chiefdom, 'Kenema' AS district, 7.68394632 AS lat, -10.96336736 AS lon
-      UNION ALL
-      SELECT 'Biatong' AS town, 'Gorama Mende' AS chiefdom, 'Kenema' AS district, 8.49247771 AS lat, -11.40568411 AS lon
-      UNION ALL
-      SELECT 'Famanjo' AS town, 'Gorama Mende' AS chiefdom, 'Kenema' AS district, 8.44729003 AS lat, -11.27909426 AS lon
-      UNION ALL
-      SELECT 'Kaklawa' AS town, 'Gorama Mende' AS chiefdom, 'Kenema' AS district, 8.41764239 AS lat, -11.3842286 AS lon
-      UNION ALL
-      SELECT 'Kualley' AS town, 'Gorama Mende' AS chiefdom, 'Kenema' AS district, 8.43173879 AS lat, -11.49328312 AS lon
-      UNION ALL
-      SELECT 'Borley' AS town, 'Kandu Leppiama' AS chiefdom, 'Kenema' AS district, 7.99832528 AS lat, -11.35657583 AS lon
-      UNION ALL
-      SELECT 'Gboro-Lokoma' AS town, 'Kandu Leppiama' AS chiefdom, 'Kenema' AS district, 8.07236266 AS lat, -11.30150488 AS lon
-      UNION ALL
-      SELECT 'Karga' AS town, 'Kandu Leppiama' AS chiefdom, 'Kenema' AS district, 7.98612383 AS lat, -11.32140378 AS lon
-      UNION ALL
-      SELECT 'Sonnie' AS town, 'Kandu Leppiama' AS chiefdom, 'Kenema' AS district, 8.01591104 AS lat, -11.25587423 AS lon
-      UNION ALL
-      SELECT 'Joi' AS town, 'Koya' AS chiefdom, 'Kenema' AS district, 7.71085145 AS lat, -11.27467054 AS lon
-      UNION ALL
-      SELECT 'Koya Gbundohun' AS town, 'Koya' AS chiefdom, 'Kenema' AS district, 7.53175402 AS lat, -11.3047023 AS lon
-      UNION ALL
-      SELECT 'Menima' AS town, 'Koya' AS chiefdom, 'Kenema' AS district, 7.68844372 AS lat, -11.30935649 AS lon
-      UNION ALL
-      SELECT 'Serabu' AS town, 'Koya' AS chiefdom, 'Kenema' AS district, 7.62738512 AS lat, -11.34437508 AS lon
-      UNION ALL
-      SELECT 'Upper Koya' AS town, 'Koya' AS chiefdom, 'Kenema' AS district, 7.60646903 AS lat, -11.26044867 AS lon
-      UNION ALL
-      SELECT 'Korjei' AS town, 'Langrama' AS chiefdom, 'Kenema' AS district, 7.65942287 AS lat, -11.45806774 AS lon
-      UNION ALL
-      SELECT 'Njeiwoma' AS town, 'Langrama' AS chiefdom, 'Kenema' AS district, 7.67461161 AS lat, -11.48133818 AS lon
-      UNION ALL
-      SELECT 'Bonya' AS town, 'Lower Bambara' AS chiefdom, 'Kenema' AS district, 8.27139837 AS lat, -11.10193036 AS lon
-      UNION ALL
-      SELECT 'Fallay' AS town, 'Lower Bambara' AS chiefdom, 'Kenema' AS district, 8.17101794 AS lat, -11.02032963 AS lon
-      UNION ALL
-      SELECT 'Gboro' AS town, 'Lower Bambara' AS chiefdom, 'Kenema' AS district, 8.10765455 AS lat, -11.01848962 AS lon
-      UNION ALL
-      SELECT 'Korjei Buima' AS town, 'Lower Bambara' AS chiefdom, 'Kenema' AS district, 8.10668645 AS lat, -11.06495467 AS lon
-      UNION ALL
-      SELECT 'Korjei Ngieya' AS town, 'Lower Bambara' AS chiefdom, 'Kenema' AS district, 8.11617286 AS lat, -11.11799917 AS lon
-      UNION ALL
-      SELECT 'Nyawa' AS town, 'Lower Bambara' AS chiefdom, 'Kenema' AS district, 8.23148181 AS lat, -11.05216507 AS lon
-      UNION ALL
-      SELECT 'Sei' AS town, 'Lower Bambara' AS chiefdom, 'Kenema' AS district, 8.23644028 AS lat, -10.97025046 AS lon
-      UNION ALL
-      SELECT 'Hulorhun Njagbudor' AS town, 'Malegohun' AS chiefdom, 'Kenema' AS district, 8.17211802 AS lat, -10.91149754 AS lon
-      UNION ALL
-      SELECT 'Hulorhun Njeigor' AS town, 'Malegohun' AS chiefdom, 'Kenema' AS district, 8.21192404 AS lat, -10.91011502 AS lon
-      UNION ALL
-      SELECT 'Konjo Buiima' AS town, 'Malegohun' AS chiefdom, 'Kenema' AS district, 8.26246469 AS lat, -10.8993535 AS lon
-      UNION ALL
-      SELECT 'Konjo Njeigor' AS town, 'Malegohun' AS chiefdom, 'Kenema' AS district, 8.36650242 AS lat, -10.89947964 AS lon
-      UNION ALL
-      SELECT 'Konjo Yematanga' AS town, 'Malegohun' AS chiefdom, 'Kenema' AS district, 8.31792407 AS lat, -10.91901235 AS lon
-      UNION ALL
-      SELECT 'Lower Torgboma' AS town, 'Malegohun' AS chiefdom, 'Kenema' AS district, 8.10089924 AS lat, -10.97288311 AS lon
-      UNION ALL
-      SELECT 'Upper Torgboma' AS town, 'Malegohun' AS chiefdom, 'Kenema' AS district, 8.13082765 AS lat, -10.95017803 AS lon
-      UNION ALL
-      SELECT 'Bandawor' AS town, 'Niawa' AS chiefdom, 'Kenema' AS district, 7.75590392 AS lat, -11.3533639 AS lon
-      UNION ALL
-      SELECT 'Kpatawa' AS town, 'Niawa' AS chiefdom, 'Kenema' AS district, 7.56807083 AS lat, -11.47403202 AS lon
-      UNION ALL
-      SELECT 'Mabondor' AS town, 'Niawa' AS chiefdom, 'Kenema' AS district, 7.61425794 AS lat, -11.44802929 AS lon
-      UNION ALL
-      SELECT 'Niawa' AS town, 'Niawa' AS chiefdom, 'Kenema' AS district, 7.71511988 AS lat, -11.36690123 AS lon
-      UNION ALL
-      SELECT 'Vaama' AS town, 'Niawa' AS chiefdom, 'Kenema' AS district, 7.66745089 AS lat, -11.41200769 AS lon
-      UNION ALL
-      SELECT 'Faama' AS town, 'Nomo' AS chiefdom, 'Kenema' AS district, 7.50467159 AS lat, -10.99385251 AS lon
-      UNION ALL
-      SELECT 'Ngiebu' AS town, 'Nomo' AS chiefdom, 'Kenema' AS district, 7.58868648 AS lat, -10.97326999 AS lon
-      UNION ALL
-      SELECT 'Ngiewoma-Njeigor' AS town, 'Nomo' AS chiefdom, 'Kenema' AS district, 7.57116936 AS lat, -10.87972092 AS lon
-      UNION ALL
-      SELECT 'Dagbanya' AS town, 'Nongowa' AS chiefdom, 'Kenema' AS district, 7.92189416 AS lat, -11.08651154 AS lon
-      UNION ALL
-      SELECT 'Dakpana' AS town, 'Nongowa' AS chiefdom, 'Kenema' AS district, 8.03184122 AS lat, -11.04469587 AS lon
-      UNION ALL
-      SELECT 'Gbo Kakajama B' AS town, 'Nongowa' AS chiefdom, 'Kenema' AS district, 7.8591105 AS lat, -11.15650769 AS lon
-      UNION ALL
-      SELECT 'Gbo Lambayama B' AS town, 'Nongowa' AS chiefdom, 'Kenema' AS district, 7.90934751 AS lat, -11.22338367 AS lon
-      UNION ALL
-      SELECT 'Kagbado Kamboima' AS town, 'Nongowa' AS chiefdom, 'Kenema' AS district, 7.95102364 AS lat, -11.13283439 AS lon
-      UNION ALL
-      SELECT 'Kagbado Njeigbla' AS town, 'Nongowa' AS chiefdom, 'Kenema' AS district, 7.90015388 AS lat, -11.05097577 AS lon
-      UNION ALL
-      SELECT 'Kona Foiya' AS town, 'Nongowa' AS chiefdom, 'Kenema' AS district, 7.9932794 AS lat, -11.02336109 AS lon
-      UNION ALL
-      SELECT 'Kona Kpindibu' AS town, 'Nongowa' AS chiefdom, 'Kenema' AS district, 8.02998489 AS lat, -11.14402346 AS lon
-      UNION ALL
-      SELECT 'Bundoryama' AS town, 'Simbaru' AS chiefdom, 'Kenema' AS district, 8.15439366 AS lat, -11.28608523 AS lon
-      UNION ALL
-      SELECT 'Fallay' AS town, 'Simbaru' AS chiefdom, 'Kenema' AS district, 8.1485357 AS lat, -11.3693258 AS lon
-      UNION ALL
-      SELECT 'Fonde' AS town, 'Simbaru' AS chiefdom, 'Kenema' AS district, 8.25772818 AS lat, -11.29091795 AS lon
-      UNION ALL
-      SELECT 'Yalenga' AS town, 'Simbaru' AS chiefdom, 'Kenema' AS district, 8.19519785 AS lat, -11.3415121 AS lon
-      UNION ALL
-      SELECT 'Fallay' AS town, 'Small Bo' AS chiefdom, 'Kenema' AS district, 7.86671397 AS lat, -11.34834605 AS lon
-      UNION ALL
-      SELECT 'Gorama' AS town, 'Small Bo' AS chiefdom, 'Kenema' AS district, 7.81096057 AS lat, -11.37812749 AS lon
-      UNION ALL
-      SELECT 'Kamboma' AS town, 'Small Bo' AS chiefdom, 'Kenema' AS district, 7.82047096 AS lat, -11.28952643 AS lon
-      UNION ALL
-      SELECT 'Niawa' AS town, 'Small Bo' AS chiefdom, 'Kenema' AS district, 7.92914694 AS lat, -11.32033912 AS lon
-      UNION ALL
-      SELECT 'Sowa' AS town, 'Small Bo' AS chiefdom, 'Kenema' AS district, 7.86088052 AS lat, -11.42326319 AS lon
-      UNION ALL
-      SELECT 'Daru' AS town, 'Tunkia' AS chiefdom, 'Kenema' AS district, 7.45432697 AS lat, -11.10328031 AS lon
-      UNION ALL
-      SELECT 'Gegbwema' AS town, 'Tunkia' AS chiefdom, 'Kenema' AS district, 7.57717845 AS lat, -11.09985897 AS lon
-      UNION ALL
-      SELECT 'Giewoma' AS town, 'Tunkia' AS chiefdom, 'Kenema' AS district, 7.60247237 AS lat, -11.19766631 AS lon
-      UNION ALL
-      SELECT 'Gorahun' AS town, 'Tunkia' AS chiefdom, 'Kenema' AS district, 7.44231539 AS lat, -11.25975925 AS lon
-      UNION ALL
-      SELECT 'Jewahun' AS town, 'Tunkia' AS chiefdom, 'Kenema' AS district, 7.59962847 AS lat, -11.12757654 AS lon
-      UNION ALL
-      SELECT 'Kuawuma' AS town, 'Tunkia' AS chiefdom, 'Kenema' AS district, 7.52881657 AS lat, -11.10462021 AS lon
-      UNION ALL
-      SELECT 'Taninahun' AS town, 'Tunkia' AS chiefdom, 'Kenema' AS district, 7.53836076 AS lat, -11.19294442 AS lon
-      UNION ALL
-      SELECT 'Boryongor' AS town, 'Wandor' AS chiefdom, 'Kenema' AS district, 8.28260999 AS lat, -11.43784768 AS lon
-      UNION ALL
-      SELECT 'Gbogbeima' AS town, 'Wandor' AS chiefdom, 'Kenema' AS district, 8.33449535 AS lat, -11.2639204 AS lon
-      UNION ALL
-      SELECT 'Kemoh' AS town, 'Wandor' AS chiefdom, 'Kenema' AS district, 8.35538611 AS lat, -11.32206372 AS lon
-      UNION ALL
-      SELECT 'Niawa' AS town, 'Wandor' AS chiefdom, 'Kenema' AS district, 8.28363298 AS lat, -11.3226802 AS lon
-      UNION ALL
-      SELECT 'Songhai' AS town, 'Wandor' AS chiefdom, 'Kenema' AS district, 8.2744942 AS lat, -11.37988389 AS lon
-      UNION ALL
-      SELECT 'Tongorwa' AS town, 'Wandor' AS chiefdom, 'Kenema' AS district, 8.35006986 AS lat, -11.41102598 AS lon
-      UNION ALL
-      SELECT 'Airfield' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.89893837 AS lat, -11.17333705 AS lon
-      UNION ALL
-      SELECT 'Gbo Kakajama A-Bur' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.89342482 AS lat, -11.17056281 AS lon
-      UNION ALL
-      SELECT 'Gbo Kakajama A-Lum' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.88251144 AS lat, -11.17103211 AS lon
-      UNION ALL
-      SELECT 'Gbo Lambayama A-Le' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.89167532 AS lat, -11.18413334 AS lon
-      UNION ALL
-      SELECT 'Gbo Lambayama A-Re' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.88362596 AS lat, -11.19469445 AS lon
-      UNION ALL
-      SELECT 'Gbo Kakajama A-Tec' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.88043528 AS lat, -11.17958522 AS lon
-      UNION ALL
-      SELECT 'Gbo Kakajama A-Nja' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.87253105 AS lat, -11.18732574 AS lon
-      UNION ALL
-      SELECT 'Gbo Kakajama A-Kpa' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.87108373 AS lat, -11.17755254 AS lon
-      UNION ALL
-      SELECT 'Gbo Kakajama A-Kis' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.86140121 AS lat, -11.18018506 AS lon
-      UNION ALL
-      SELECT 'Gbo Kakajama A-Shi' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.86256991 AS lat, -11.19184624 AS lon
-      UNION ALL
-      SELECT 'Gbo Lambayama A-Ny' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.87112032 AS lat, -11.20171951 AS lon
-      UNION ALL
-      SELECT 'Gbo Lambayama A-Nd' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.86700375 AS lat, -11.1949068 AS lon
-      UNION ALL
-      SELECT 'Gbo Lambayama A-Fo' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.86221366 AS lat, -11.20614573 AS lon
-      UNION ALL
-      SELECT 'Gbo Kakajama A-Lam' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.854154 AS lat, -11.20167127 AS lon
-      UNION ALL
-      SELECT 'Gbo Lambayama A-Go' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.90811099 AS lat, -11.17385295 AS lon
-      UNION ALL
-      SELECT 'Gbo Lambayama A-RT' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.91327389 AS lat, -11.17144425 AS lon
-      UNION ALL
-      SELECT 'Gbo Lambayama A-Ko' AS town, 'Kenema Town' AS chiefdom, 'Kenema' AS district, 7.89893481 AS lat, -11.18113392 AS lon
-      UNION ALL
-      SELECT 'Dumbia' AS town, 'Fiama' AS chiefdom, 'Kono' AS district, 8.57986847 AS lat, -10.87395653 AS lon
-      UNION ALL
-      SELECT 'Fiama' AS town, 'Fiama' AS chiefdom, 'Kono' AS district, 8.63524459 AS lat, -10.82334236 AS lon
-      UNION ALL
-      SELECT 'Kokar' AS town, 'Fiama' AS chiefdom, 'Kono' AS district, 8.59904449 AS lat, -10.80447724 AS lon
-      UNION ALL
-      SELECT 'Kooma' AS town, 'Fiama' AS chiefdom, 'Kono' AS district, 8.71079269 AS lat, -10.81366827 AS lon
-      UNION ALL
-      SELECT 'Yorkor' AS town, 'Fiama' AS chiefdom, 'Kono' AS district, 8.65333728 AS lat, -10.88836775 AS lon
-      UNION ALL
-      SELECT 'Gbane Yemao' AS town, 'Gbane' AS chiefdom, 'Kono' AS district, 8.45748833 AS lat, -10.76051115 AS lon
-      UNION ALL
-      SELECT 'Gbikidakor' AS town, 'Gbane' AS chiefdom, 'Kono' AS district, 8.51526234 AS lat, -10.89515871 AS lon
-      UNION ALL
-      SELECT 'Kamara' AS town, 'Gbane' AS chiefdom, 'Kono' AS district, 8.48134005 AS lat, -10.8987113 AS lon
-      UNION ALL
-      SELECT 'Maikandor' AS town, 'Gbane' AS chiefdom, 'Kono' AS district, 8.54220945 AS lat, -10.82823519 AS lon
-      UNION ALL
-      SELECT 'Mongo' AS town, 'Gbane' AS chiefdom, 'Kono' AS district, 8.44572256 AS lat, -10.83588087 AS lon
-      UNION ALL
-      SELECT 'Gbane Kandor' AS town, 'Gbane Kandor' AS chiefdom, 'Kono' AS district, 8.67227083 AS lat, -10.56551463 AS lon
-      UNION ALL
-      SELECT 'Gbane Kour' AS town, 'Gbane Kandor' AS chiefdom, 'Kono' AS district, 8.57134724 AS lat, -10.59381561 AS lon
-      UNION ALL
-      SELECT 'Gbane Tetema' AS town, 'Gbane Kandor' AS chiefdom, 'Kono' AS district, 8.61214657 AS lat, -10.58359612 AS lon
-      UNION ALL
-      SELECT 'Gbendekor' AS town, 'Gbane Kandor' AS chiefdom, 'Kono' AS district, 8.61302675 AS lat, -10.55562533 AS lon
-      UNION ALL
-      SELECT 'Yanbidu' AS town, 'Gbane Kandor' AS chiefdom, 'Kono' AS district, 8.62235424 AS lat, -10.53372683 AS lon
-      UNION ALL
-      SELECT 'Banfinfeh' AS town, 'Gbense' AS chiefdom, 'Kono' AS district, 8.77194297 AS lat, -10.87911481 AS lon
-      UNION ALL
-      SELECT 'Banyafeh' AS town, 'Gbense' AS chiefdom, 'Kono' AS district, 8.71625516 AS lat, -10.92081572 AS lon
-      UNION ALL
-      SELECT 'Banyakor' AS town, 'Gbense' AS chiefdom, 'Kono' AS district, 8.76834275 AS lat, -10.95811069 AS lon
-      UNION ALL
-      SELECT 'Moindefeh' AS town, 'Gbense' AS chiefdom, 'Kono' AS district, 8.66759 AS lat, -10.93562878 AS lon
-      UNION ALL
-      SELECT 'Moindekor' AS town, 'Gbense' AS chiefdom, 'Kono' AS district, 8.68020036 AS lat, -10.98123778 AS lon
-      UNION ALL
-      SELECT 'Bunabu' AS town, 'Gorama Kono' AS chiefdom, 'Kono' AS district, 8.39407191 AS lat, -11.18545939 AS lon
-      UNION ALL
-      SELECT 'Kangama' AS town, 'Gorama Kono' AS chiefdom, 'Kono' AS district, 8.38593794 AS lat, -11.06626491 AS lon
-      UNION ALL
-      SELECT 'Selokoma' AS town, 'Gorama Kono' AS chiefdom, 'Kono' AS district, 8.40225365 AS lat, -10.95989934 AS lon
-      UNION ALL
-      SELECT 'Dangbaidu' AS town, 'Kamara' AS chiefdom, 'Kono' AS district, 8.72320192 AS lat, -10.97680941 AS lon
-      UNION ALL
-      SELECT 'Gbondu' AS town, 'Kamara' AS chiefdom, 'Kono' AS district, 8.73859229 AS lat, -11.05777189 AS lon
-      UNION ALL
-      SELECT 'Kongofinja' AS town, 'Kamara' AS chiefdom, 'Kono' AS district, 8.68541666 AS lat, -11.03301644 AS lon
-      UNION ALL
-      SELECT 'Sukudu' AS town, 'Kamara' AS chiefdom, 'Kono' AS district, 8.74313586 AS lat, -11.01308302 AS lon
-      UNION ALL
-      SELECT 'Dia' AS town, 'Lei' AS chiefdom, 'Kono' AS district, 8.90808288 AS lat, -10.62216042 AS lon
-      UNION ALL
-      SELECT 'Kamara' AS town, 'Lei' AS chiefdom, 'Kono' AS district, 8.81325862 AS lat, -10.57589808 AS lon
-      UNION ALL
-      SELECT 'Kensay' AS town, 'Lei' AS chiefdom, 'Kono' AS district, 8.76169165 AS lat, -10.56216659 AS lon
-      UNION ALL
-      SELECT 'Koaro' AS town, 'Lei' AS chiefdom, 'Kono' AS district, 8.89476014 AS lat, -10.70655542 AS lon
-      UNION ALL
-      SELECT 'Lei' AS town, 'Lei' AS chiefdom, 'Kono' AS district, 8.80930236 AS lat, -10.62835835 AS lon
-      UNION ALL
-      SELECT 'Sangbada' AS town, 'Lei' AS chiefdom, 'Kono' AS district, 8.7483192 AS lat, -10.64840035 AS lon
-      UNION ALL
-      SELECT 'Tankoro' AS town, 'Lei' AS chiefdom, 'Kono' AS district, 8.76789171 AS lat, -10.75074783 AS lon
-      UNION ALL
-      SELECT 'Tingi-Kor' AS town, 'Lei' AS chiefdom, 'Kono' AS district, 8.8360726 AS lat, -10.77070498 AS lon
-      UNION ALL
-      SELECT 'Yawai' AS town, 'Lei' AS chiefdom, 'Kono' AS district, 8.8562982 AS lat, -10.6055429 AS lon
-      UNION ALL
-      SELECT 'Kamiendor' AS town, 'Mafindor' AS chiefdom, 'Kono' AS district, 8.67377143 AS lat, -10.52236154 AS lon
-      UNION ALL
-      SELECT 'Kutey' AS town, 'Mafindor' AS chiefdom, 'Kono' AS district, 8.65490337 AS lat, -10.49943577 AS lon
-      UNION ALL
-      SELECT 'Mafindor' AS town, 'Mafindor' AS chiefdom, 'Kono' AS district, 8.72268375 AS lat, -10.52009484 AS lon
-      UNION ALL
-      SELECT 'Bafinfeh' AS town, 'Nimikoro' AS chiefdom, 'Kono' AS district, 8.68880663 AS lat, -11.08441583 AS lon
-      UNION ALL
-      SELECT 'Bandafafeh' AS town, 'Nimikoro' AS chiefdom, 'Kono' AS district, 8.59266144 AS lat, -11.02628439 AS lon
-      UNION ALL
-      SELECT 'Gbogboafeh' AS town, 'Nimikoro' AS chiefdom, 'Kono' AS district, 8.63170335 AS lat, -11.13116566 AS lon
-      UNION ALL
-      SELECT 'Jaiama' AS town, 'Nimikoro' AS chiefdom, 'Kono' AS district, 8.53642212 AS lat, -11.10536731 AS lon
-      UNION ALL
-      SELECT 'Masayiefeh' AS town, 'Nimikoro' AS chiefdom, 'Kono' AS district, 8.45344107 AS lat, -11.06551021 AS lon
-      UNION ALL
-      SELECT 'Bafinfeh' AS town, 'Nimiyama' AS chiefdom, 'Kono' AS district, 8.65021948 AS lat, -11.22396817 AS lon
-      UNION ALL
-      SELECT 'Njagbakahun' AS town, 'Nimiyama' AS chiefdom, 'Kono' AS district, 8.56690046 AS lat, -11.30071288 AS lon
-      UNION ALL
-      SELECT 'Njaifeh' AS town, 'Nimiyama' AS chiefdom, 'Kono' AS district, 8.56208568 AS lat, -11.2337338 AS lon
-      UNION ALL
-      SELECT 'Peyifeh' AS town, 'Nimiyama' AS chiefdom, 'Kono' AS district, 8.48622126 AS lat, -11.21976211 AS lon
-      UNION ALL
-      SELECT 'Tama' AS town, 'Nimiyama' AS chiefdom, 'Kono' AS district, 8.64373036 AS lat, -11.30699271 AS lon
-      UNION ALL
-      SELECT 'Bafinfeh' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 8.76503835 AS lat, -11.11159326 AS lon
-      UNION ALL
-      SELECT 'Dangbaidu' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 8.73263652 AS lat, -11.23076367 AS lon
-      UNION ALL
-      SELECT 'Fakongofeh' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 8.86650712 AS lat, -10.84623101 AS lon
-      UNION ALL
-      SELECT 'Kawafeh' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 8.97574733 AS lat, -10.97221244 AS lon
-      UNION ALL
-      SELECT 'Njeikor' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 8.85073998 AS lat, -10.97650364 AS lon
-      UNION ALL
-      SELECT 'Samgbafeh' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 8.88911888 AS lat, -10.92026074 AS lon
-      UNION ALL
-      SELECT 'Sinkongofeh' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 9.01169349 AS lat, -11.0487504 AS lon
-      UNION ALL
-      SELECT 'Sumunjifeh' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 8.94159615 AS lat, -11.06673139 AS lon
-      UNION ALL
-      SELECT 'Tharma Forest' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 8.77336237 AS lat, -11.2969574 AS lon
-      UNION ALL
-      SELECT 'Yawatanda' AS town, 'Sandor' AS chiefdom, 'Kono' AS district, 8.86311647 AS lat, -11.14962929 AS lon
-      UNION ALL
-      SELECT 'Foidu Mongor' AS town, 'Soa' AS chiefdom, 'Kono' AS district, 8.5389194 AS lat, -10.6534721 AS lon
-      UNION ALL
-      SELECT 'Kokongokuma' AS town, 'Soa' AS chiefdom, 'Kono' AS district, 8.65162479 AS lat, -10.72374177 AS lon
-      UNION ALL
-      SELECT 'Maindu' AS town, 'Soa' AS chiefdom, 'Kono' AS district, 8.54995085 AS lat, -10.73468836 AS lon
-      UNION ALL
-      SELECT 'Mofinkor' AS town, 'Soa' AS chiefdom, 'Kono' AS district, 8.66471688 AS lat, -10.63856998 AS lon
-      UNION ALL
-      SELECT 'Sawa Buma' AS town, 'Soa' AS chiefdom, 'Kono' AS district, 8.50784765 AS lat, -10.74491167 AS lon
-      UNION ALL
-      SELECT 'Sawa Fiama' AS town, 'Soa' AS chiefdom, 'Kono' AS district, 8.49629864 AS lat, -10.66884651 AS lon
-      UNION ALL
-      SELECT 'Tensekor' AS town, 'Soa' AS chiefdom, 'Kono' AS district, 8.59222179 AS lat, -10.63293106 AS lon
-      UNION ALL
-      SELECT 'Tensendakor' AS town, 'Soa' AS chiefdom, 'Kono' AS district, 8.56069709 AS lat, -10.62542041 AS lon
-      UNION ALL
-      SELECT 'Njama' AS town, 'Tankoro' AS chiefdom, 'Kono' AS district, 8.49224215 AS lat, -10.98651623 AS lon
-      UNION ALL
-      SELECT 'Tankoro' AS town, 'Tankoro' AS chiefdom, 'Kono' AS district, 8.59846195 AS lat, -10.92689921 AS lon
-      UNION ALL
-      SELECT 'Woafeh' AS town, 'Tankoro' AS chiefdom, 'Kono' AS district, 8.57907099 AS lat, -10.99257601 AS lon
-      UNION ALL
-      SELECT 'Bawadu' AS town, 'Toli' AS chiefdom, 'Kono' AS district, 8.97196401 AS lat, -10.59750181 AS lon
-      UNION ALL
-      SELECT 'Komadu' AS town, 'Toli' AS chiefdom, 'Kono' AS district, 8.97762668 AS lat, -10.64712059 AS lon
-      UNION ALL
-      SELECT 'Kwidu' AS town, 'Toli' AS chiefdom, 'Kono' AS district, 9.02045335 AS lat, -10.62374882 AS lon
-      UNION ALL
-      SELECT 'Gbense-Sina Town' AS town, 'Koidu Town' AS chiefdom, 'Kono' AS district, 8.65043137 AS lat, -10.97720606 AS lon
-      UNION ALL
-      SELECT 'Gbense-Moindekor' AS town, 'Koidu Town' AS chiefdom, 'Kono' AS district, 8.64997977 AS lat, -10.96589158 AS lon
-      UNION ALL
-      SELECT 'Gbense-Moindefeh' AS town, 'Koidu Town' AS chiefdom, 'Kono' AS district, 8.64899549 AS lat, -10.9501099 AS lon
-      UNION ALL
-      SELECT 'Tankoro-Kinsey' AS town, 'Koidu Town' AS chiefdom, 'Kono' AS district, 8.64563755 AS lat, -10.98543328 AS lon
-      UNION ALL
-      SELECT 'Tankoro-New Sembeh' AS town, 'Koidu Town' AS chiefdom, 'Kono' AS district, 8.63842584 AS lat, -10.96829587 AS lon
-      UNION ALL
-      SELECT 'Tankoro-Lebanon' AS town, 'Koidu Town' AS chiefdom, 'Kono' AS district, 8.63627352 AS lat, -10.99267297 AS lon
-      UNION ALL
-      SELECT 'Tankoro-Kwaquima' AS town, 'Koidu Town' AS chiefdom, 'Kono' AS district, 8.62173022 AS lat, -10.99137064 AS lon
-      UNION ALL
-      SELECT 'Bumban' AS town, 'Biriwa' AS chiefdom, 'Bombali' AS district, 9.1466965 AS lat, -11.89697071 AS lon
-      UNION ALL
-      SELECT 'Bumbandain' AS town, 'Biriwa' AS chiefdom, 'Bombali' AS district, 9.09851143 AS lat, -11.99624546 AS lon
-      UNION ALL
-      SELECT 'Kabakeh/Balandugu' AS town, 'Biriwa' AS chiefdom, 'Bombali' AS district, 9.27826172 AS lat, -11.94111738 AS lon
-      UNION ALL
-      SELECT 'Kagbankuna' AS town, 'Biriwa' AS chiefdom, 'Bombali' AS district, 9.44507814 AS lat, -11.91413566 AS lon
-      UNION ALL
-      SELECT 'Kamabai' AS town, 'Biriwa' AS chiefdom, 'Bombali' AS district, 9.1034812 AS lat, -11.94763289 AS lon
-      UNION ALL
-      SELECT 'Karassa' AS town, 'Biriwa' AS chiefdom, 'Bombali' AS district, 9.34374598 AS lat, -11.84624735 AS lon
-      UNION ALL
-      SELECT 'Karina' AS town, 'Biriwa' AS chiefdom, 'Bombali' AS district, 9.22995772 AS lat, -11.98596584 AS lon
-      UNION ALL
-      SELECT 'Kayonkoro' AS town, 'Biriwa' AS chiefdom, 'Bombali' AS district, 9.24474615 AS lat, -11.90060158 AS lon
-      UNION ALL
-      SELECT 'Kafala' AS town, 'Bombali Sebora' AS chiefdom, 'Bombali' AS district, 8.77327489 AS lat, -12.14273888 AS lon
-      UNION ALL
-      SELECT 'Kagbaran Dokom B' AS town, 'Bombali Sebora' AS chiefdom, 'Bombali' AS district, 8.84912489 AS lat, -12.0462177 AS lon
-      UNION ALL
-      SELECT 'Konta' AS town, 'Bombali Sebora' AS chiefdom, 'Bombali' AS district, 8.75472508 AS lat, -12.02982758 AS lon
-      UNION ALL
-      SELECT 'Matotoka' AS town, 'Bombali Sebora' AS chiefdom, 'Bombali' AS district, 8.73291895 AS lat, -12.11264967 AS lon
-      UNION ALL
-      SELECT 'Gbenkfay' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.30351964 AS lat, -12.26976328 AS lon
-      UNION ALL
-      SELECT 'Gbonkobana' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.24952423 AS lat, -12.31980739 AS lon
-      UNION ALL
-      SELECT 'Kamaranka' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.28896426 AS lat, -12.19680542 AS lon
-      UNION ALL
-      SELECT 'Kambia' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.34059278 AS lat, -12.32533745 AS lon
-      UNION ALL
-      SELECT 'Kayourgbor' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.24795655 AS lat, -12.38979878 AS lon
-      UNION ALL
-      SELECT 'Laminaya' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.31976166 AS lat, -12.38222675 AS lon
-      UNION ALL
-      SELECT 'Makulon' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.31026437 AS lat, -12.31732691 AS lon
-      UNION ALL
-      SELECT 'Makumray A' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.2468398 AS lat, -12.25710866 AS lon
-      UNION ALL
-      SELECT 'Makumray B' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.24802447 AS lat, -12.29587217 AS lon
-      UNION ALL
-      SELECT 'Rogberay' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.27660317 AS lat, -12.37218028 AS lon
-      UNION ALL
-      SELECT 'Romaneh' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.30885888 AS lat, -12.18277233 AS lon
-      UNION ALL
-      SELECT 'Royeama A' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.25837091 AS lat, -12.16424291 AS lon
-      UNION ALL
-      SELECT 'Royeama B' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.28797976 AS lat, -12.16378815 AS lon
-      UNION ALL
-      SELECT 'Sakuma A' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.26869183 AS lat, -12.20392527 AS lon
-      UNION ALL
-      SELECT 'Sakuma B' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.26566741 AS lat, -12.23411039 AS lon
-      UNION ALL
-      SELECT 'Sendugu A' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.34499047 AS lat, -12.2180422 AS lon
-      UNION ALL
-      SELECT 'Sendugu B' AS town, 'Gbanti Kamarank' AS chiefdom, 'Bombali' AS district, 9.33134428 AS lat, -12.24330086 AS lon
-      UNION ALL
-      SELECT 'Garanganwa' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 8.96586745 AS lat, -12.26150809 AS lon
-      UNION ALL
-      SELECT 'Gbendembu' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.08244414 AS lat, -12.20663825 AS lon
-      UNION ALL
-      SELECT 'Kalangba' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.00034685 AS lat, -12.16927595 AS lon
-      UNION ALL
-      SELECT 'Kania' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.07368987 AS lat, -12.13395724 AS lon
-      UNION ALL
-      SELECT 'Lobanga' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.19978371 AS lat, -12.04910834 AS lon
-      UNION ALL
-      SELECT 'Lohindie' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.14175652 AS lat, -12.11027019 AS lon
-      UNION ALL
-      SELECT 'Loko-Madina' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.11621191 AS lat, -12.04987496 AS lon
-      UNION ALL
-      SELECT 'Makai' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.13653429 AS lat, -12.18892458 AS lon
-      UNION ALL
-      SELECT 'Makarihiteh' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.02694871 AS lat, -12.10988922 AS lon
-      UNION ALL
-      SELECT 'Makeregbohun' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 8.99777926 AS lat, -12.07795382 AS lon
-      UNION ALL
-      SELECT 'Makump' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.05095604 AS lat, -12.07176074 AS lon
-      UNION ALL
-      SELECT 'Mamaka' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.04606133 AS lat, -12.31567758 AS lon
-      UNION ALL
-      SELECT 'Mamukay' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.01859812 AS lat, -12.22782685 AS lon
-      UNION ALL
-      SELECT 'Masongbo' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 8.95498867 AS lat, -12.19222478 AS lon
-      UNION ALL
-      SELECT 'Matehun' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.05354706 AS lat, -12.17048186 AS lon
-      UNION ALL
-      SELECT 'Mayorthan' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.10570749 AS lat, -12.24525161 AS lon
-      UNION ALL
-      SELECT 'Sahun' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.10985827 AS lat, -12.07333632 AS lon
-      UNION ALL
-      SELECT 'Tambiama' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 8.98450702 AS lat, -12.1009576 AS lon
-      UNION ALL
-      SELECT 'Tanyehun' AS town, 'Gbendembu Ngowa' AS chiefdom, 'Bombali' AS district, 9.1988879 AS lat, -12.09897805 AS lon
-      UNION ALL
-      SELECT 'Hunduwa' AS town, 'Magbaimba Ndorh' AS chiefdom, 'Bombali' AS district, 9.26082666 AS lat, -12.03697712 AS lon
-      UNION ALL
-      SELECT 'Kababala' AS town, 'Magbaimba Ndorh' AS chiefdom, 'Bombali' AS district, 9.18601672 AS lat, -12.1659818 AS lon
-      UNION ALL
-      SELECT 'Kagberay' AS town, 'Magbaimba Ndorh' AS chiefdom, 'Bombali' AS district, 9.21303737 AS lat, -12.1306152 AS lon
-      UNION ALL
-      SELECT 'Kawungulu' AS town, 'Magbaimba Ndorh' AS chiefdom, 'Bombali' AS district, 9.34178153 AS lat, -11.96427541 AS lon
-      UNION ALL
-      SELECT 'Makendema' AS town, 'Magbaimba Ndorh' AS chiefdom, 'Bombali' AS district, 9.31482782 AS lat, -12.01497653 AS lon
-      UNION ALL
-      SELECT 'Mambiama' AS town, 'Magbaimba Ndorh' AS chiefdom, 'Bombali' AS district, 9.31391409 AS lat, -12.09161092 AS lon
-      UNION ALL
-      SELECT 'Manjahagha' AS town, 'Magbaimba Ndorh' AS chiefdom, 'Bombali' AS district, 9.24635566 AS lat, -12.00514132 AS lon
-      UNION ALL
-      SELECT 'Sokudala' AS town, 'Magbaimba Ndorh' AS chiefdom, 'Bombali' AS district, 9.36994829 AS lat, -11.96560837 AS lon
-      UNION ALL
-      SELECT 'Yana' AS town, 'Magbaimba Ndorh' AS chiefdom, 'Bombali' AS district, 9.36320956 AS lat, -11.99609863 AS lon
-      UNION ALL
-      SELECT 'Gborbana' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.94408999 AS lat, -12.04453214 AS lon
-      UNION ALL
-      SELECT 'Mabanta' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.92856514 AS lat, -12.07046419 AS lon
-      UNION ALL
-      SELECT 'Magbenteh' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.88342268 AS lat, -12.08014877 AS lon
-      UNION ALL
-      SELECT 'Mangay' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.91977803 AS lat, -12.10431742 AS lon
-      UNION ALL
-      SELECT 'Mankene' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.83137241 AS lat, -12.13961816 AS lon
-      UNION ALL
-      SELECT 'Masongbo A' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.87594092 AS lat, -12.10701676 AS lon
-      UNION ALL
-      SELECT 'Masongbo B' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.84375179 AS lat, -12.30624874 AS lon
-      UNION ALL
-      SELECT 'Punthun' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.93829853 AS lat, -12.13950933 AS lon
-      UNION ALL
-      SELECT 'Rosint' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.89063041 AS lat, -12.01362456 AS lon
-      UNION ALL
-      SELECT 'Tonkoba' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.88309209 AS lat, -12.29494415 AS lon
-      UNION ALL
-      SELECT 'Yainkassa' AS town, 'Makari Gbanti' AS chiefdom, 'Bombali' AS district, 8.76859216 AS lat, -12.27176154 AS lon
-      UNION ALL
-      SELECT 'Kathanthan' AS town, 'Paki Masabong' AS chiefdom, 'Bombali' AS district, 8.87953856 AS lat, -11.92799958 AS lon
-      UNION ALL
-      SELECT 'Kathegeya' AS town, 'Paki Masabong' AS chiefdom, 'Bombali' AS district, 8.86691678 AS lat, -11.88723913 AS lon
-      UNION ALL
-      SELECT 'Mapaki' AS town, 'Paki Masabong' AS chiefdom, 'Bombali' AS district, 8.80043553 AS lat, -11.91024436 AS lon
-      UNION ALL
-      SELECT 'Masabong' AS town, 'Paki Masabong' AS chiefdom, 'Bombali' AS district, 8.72089588 AS lat, -11.99946205 AS lon
-      UNION ALL
-      SELECT 'Mayagba' AS town, 'Paki Masabong' AS chiefdom, 'Bombali' AS district, 8.75382632 AS lat, -11.95638163 AS lon
-      UNION ALL
-      SELECT 'Rosanda' AS town, 'Paki Masabong' AS chiefdom, 'Bombali' AS district, 8.82791899 AS lat, -11.97266486 AS lon
-      UNION ALL
-      SELECT 'Binkolo' AS town, 'Safroko Limba' AS chiefdom, 'Bombali' AS district, 8.94023128 AS lat, -11.97160784 AS lon
-      UNION ALL
-      SELECT 'Bombali Bana' AS town, 'Safroko Limba' AS chiefdom, 'Bombali' AS district, 9.00694512 AS lat, -12.00970328 AS lon
-      UNION ALL
-      SELECT 'Kabonka' AS town, 'Safroko Limba' AS chiefdom, 'Bombali' AS district, 9.00729453 AS lat, -11.90686309 AS lon
-      UNION ALL
-      SELECT 'Kasengbeh' AS town, 'Safroko Limba' AS chiefdom, 'Bombali' AS district, 9.09645804 AS lat, -11.84789778 AS lon
-      UNION ALL
-      SELECT 'Kayassi' AS town, 'Safroko Limba' AS chiefdom, 'Bombali' AS district, 9.0267451 AS lat, -11.84924607 AS lon
-      UNION ALL
-      SELECT 'Mabamba' AS town, 'Safroko Limba' AS chiefdom, 'Bombali' AS district, 8.9553606 AS lat, -11.9026386 AS lon
-      UNION ALL
-      SELECT 'Masapi' AS town, 'Safroko Limba' AS chiefdom, 'Bombali' AS district, 9.04552134 AS lat, -11.78559014 AS lon
-      UNION ALL
-      SELECT 'Bombali Sebora - B' AS town, 'Makeni Town' AS chiefdom, 'Bombali' AS district, 8.88237938 AS lat, -12.04226489 AS lon
-      UNION ALL
-      SELECT 'Bombali Sebora - K' AS town, 'Makeni Town' AS chiefdom, 'Bombali' AS district, 8.86957413 AS lat, -12.03312871 AS lon
-      UNION ALL
-      SELECT 'Bombali Sebora - Makeni' AS town, 'Makeni Town' AS chiefdom, 'Bombali' AS district, 8.88132064 AS lat, -12.05412908 AS lon
-      UNION ALL
-      SELECT 'Bombali Sebora - R' AS town, 'Makeni Town' AS chiefdom, 'Bombali' AS district, 8.89806883 AS lat, -12.042882 AS lon
-      UNION ALL
-      SELECT 'Bombali Sebora - T' AS town, 'Makeni Town' AS chiefdom, 'Bombali' AS district, 8.88391752 AS lat, -12.03481164 AS lon
-      UNION ALL
-      SELECT 'Bombali Sebora - W' AS town, 'Makeni Town' AS chiefdom, 'Bombali' AS district, 8.8922452 AS lat, -12.04864542 AS lon
-      UNION ALL
-      SELECT 'Makari Gbanti - Mi' AS town, 'Makeni Town' AS chiefdom, 'Bombali' AS district, 8.890943 AS lat, -12.05871954 AS lon
-      UNION ALL
-      SELECT 'Makari Gbanti -Mas' AS town, 'Makeni Town' AS chiefdom, 'Bombali' AS district, 8.89467737 AS lat, -12.03183663 AS lon
-      UNION ALL
-      SELECT 'Darakuru' AS town, 'Diang' AS chiefdom, 'Koinadugu' AS district, 9.21506406 AS lat, -11.46088153 AS lon
-      UNION ALL
-      SELECT 'Gbenekoro' AS town, 'Diang' AS chiefdom, 'Koinadugu' AS district, 9.25524971 AS lat, -11.60875506 AS lon
-      UNION ALL
-      SELECT 'Kania' AS town, 'Diang' AS chiefdom, 'Koinadugu' AS district, 9.14573767 AS lat, -11.63769173 AS lon
-      UNION ALL
-      SELECT 'Kondembaia' AS town, 'Diang' AS chiefdom, 'Koinadugu' AS district, 9.38090196 AS lat, -11.63678075 AS lon
-      UNION ALL
-      SELECT 'Lengekoro' AS town, 'Diang' AS chiefdom, 'Koinadugu' AS district, 9.44960711 AS lat, -11.63746281 AS lon
-      UNION ALL
-      SELECT 'Sokurala' AS town, 'Diang' AS chiefdom, 'Koinadugu' AS district, 9.31986373 AS lat, -11.49828012 AS lon
-      UNION ALL
-      SELECT 'Gbonkobor' AS town, 'Kasunko' AS chiefdom, 'Koinadugu' AS district, 9.51351736 AS lat, -11.81617929 AS lon
-      UNION ALL
-      SELECT 'Kakallain' AS town, 'Kasunko' AS chiefdom, 'Koinadugu' AS district, 9.30450656 AS lat, -11.80776352 AS lon
-      UNION ALL
-      SELECT 'Kasunko' AS town, 'Kasunko' AS chiefdom, 'Koinadugu' AS district, 9.33532015 AS lat, -11.73278042 AS lon
-      UNION ALL
-      SELECT 'Kayaka' AS town, 'Kasunko' AS chiefdom, 'Koinadugu' AS district, 9.4841788 AS lat, -11.7346467 AS lon
-      UNION ALL
-      SELECT 'Tamiso I' AS town, 'Kasunko' AS chiefdom, 'Koinadugu' AS district, 9.60415055 AS lat, -12.05741627 AS lon
-      UNION ALL
-      SELECT 'Tamiso II' AS town, 'Kasunko' AS chiefdom, 'Koinadugu' AS district, 9.59195034 AS lat, -11.92497849 AS lon
-      UNION ALL
-      SELECT 'Barawa' AS town, 'Nieni' AS chiefdom, 'Koinadugu' AS district, 9.31403668 AS lat, -11.34919176 AS lon
-      UNION ALL
-      SELECT 'Kalian' AS town, 'Nieni' AS chiefdom, 'Koinadugu' AS district, 9.01386192 AS lat, -11.36394986 AS lon
-      UNION ALL
-      SELECT 'Sumbaria' AS town, 'Nieni' AS chiefdom, 'Koinadugu' AS district, 8.78782094 AS lat, -11.36702476 AS lon
-      UNION ALL
-      SELECT 'Wollay' AS town, 'Nieni' AS chiefdom, 'Koinadugu' AS district, 9.2008571 AS lat, -11.15926771 AS lon
-      UNION ALL
-      SELECT 'Yiffin' AS town, 'Nieni' AS chiefdom, 'Koinadugu' AS district, 9.06194134 AS lat, -11.23454618 AS lon
-      UNION ALL
-      SELECT 'Bendugu' AS town, 'Sengbe' AS chiefdom, 'Koinadugu' AS district, 9.57875363 AS lat, -11.50697129 AS lon
-      UNION ALL
-      SELECT 'Heremakono' AS town, 'Sengbe' AS chiefdom, 'Koinadugu' AS district, 9.60727593 AS lat, -11.41526131 AS lon
-      UNION ALL
-      SELECT 'Koinadugu' AS town, 'Sengbe' AS chiefdom, 'Koinadugu' AS district, 9.52766487 AS lat, -11.38754247 AS lon
-      UNION ALL
-      SELECT 'Yogomaia' AS town, 'Sengbe' AS chiefdom, 'Koinadugu' AS district, 9.59362321 AS lat, -11.55351188 AS lon
-      UNION ALL
-      SELECT 'Bilimaia' AS town, 'Sengbe' AS chiefdom, 'Koinadugu' AS district, 9.59578405 AS lat, -11.54575733 AS lon
-      UNION ALL
-      SELECT 'Bafodia' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.72403898 AS lat, -11.73388707 AS lon
-      UNION ALL
-      SELECT 'Kadanso' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.59693055 AS lat, -11.7505448 AS lon
-      UNION ALL
-      SELECT 'Kakoya' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.69521068 AS lat, -11.6691676 AS lon
-      UNION ALL
-      SELECT 'Kamanikie' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.6767762 AS lat, -11.81357242 AS lon
-      UNION ALL
-      SELECT 'Kamayortortor' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.66517893 AS lat, -11.85794785 AS lon
-      UNION ALL
-      SELECT 'Kambalia' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.85457148 AS lat, -11.81183087 AS lon
-      UNION ALL
-      SELECT 'Kambia' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.84660649 AS lat, -11.88066608 AS lon
-      UNION ALL
-      SELECT 'Kaponpon' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.60591355 AS lat, -11.70044234 AS lon
-      UNION ALL
-      SELECT 'Pampakoh' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.7659237 AS lat, -11.85470063 AS lon
-      UNION ALL
-      SELECT 'Semamaia' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.62570905 AS lat, -11.67034828 AS lon
-      UNION ALL
-      SELECT 'Taelia' AS town, 'Wara Wara Bafod' AS chiefdom, 'Koinadugu' AS district, 9.9452592 AS lat, -11.865642 AS lon
-      UNION ALL
-      SELECT 'Zone 1' AS town, 'Wara Wara Yagal' AS chiefdom, 'Koinadugu' AS district, 9.63145297 AS lat, -11.55373072 AS lon
-      UNION ALL
-      SELECT 'Zone 2' AS town, 'Wara Wara Yagal' AS chiefdom, 'Koinadugu' AS district, 9.60575802 AS lat, -11.6099153 AS lon
-      UNION ALL
-      SELECT 'Zone 3' AS town, 'Wara Wara Yagal' AS chiefdom, 'Koinadugu' AS district, 9.58299057 AS lat, -11.55432668 AS lon
-      UNION ALL
-      SELECT 'Zone 4' AS town, 'Wara Wara Yagal' AS chiefdom, 'Koinadugu' AS district, 9.5592478 AS lat, -11.58502313 AS lon
-      UNION ALL
-      SELECT 'Zone 5' AS town, 'Wara Wara Yagal' AS chiefdom, 'Koinadugu' AS district, 9.52561159 AS lat, -11.57847777 AS lon
-      UNION ALL
-      SELECT 'Zone 6' AS town, 'Wara Wara Yagal' AS chiefdom, 'Koinadugu' AS district, 9.51325583 AS lat, -11.68691622 AS lon
-      UNION ALL
-      SELECT 'Zone 7' AS town, 'Wara Wara Yagal' AS chiefdom, 'Koinadugu' AS district, 9.50225258 AS lat, -11.6131766 AS lon
-      UNION ALL
-      SELECT 'Lower Massakong' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.45120933 AS lat, -12.00440136 AS lon
-      UNION ALL
-      SELECT 'Lower Polie' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.52652396 AS lat, -11.98458469 AS lon
-      UNION ALL
-      SELECT 'Mayeppoh' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.52816973 AS lat, -11.77843387 AS lon
-      UNION ALL
-      SELECT 'Petifu Mayawa A' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.43162094 AS lat, -11.7835785 AS lon
-      UNION ALL
-      SELECT 'Petifu Mayawa B' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.38328801 AS lat, -11.81863606 AS lon
-      UNION ALL
-      SELECT 'Petifu Mayeppoh' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.54197566 AS lat, -11.85827616 AS lon
-      UNION ALL
-      SELECT 'Upper Massakong' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.45096675 AS lat, -11.9023699 AS lon
-      UNION ALL
-      SELECT 'Upper Polie' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.52334283 AS lat, -11.92343273 AS lon
-      UNION ALL
-      SELECT 'Yele Manowo' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.40680695 AS lat, -11.85660347 AS lon
-      UNION ALL
-      SELECT 'Yiben' AS town, 'Gbonkolenken' AS chiefdom, 'Tonkolili' AS district, 8.39217737 AS lat, -11.93974416 AS lon
-      UNION ALL
-      SELECT 'Kabaia' AS town, 'Kafe Simiria' AS chiefdom, 'Tonkolili' AS district, 8.80513989 AS lat, -11.6101419 AS lon
-      UNION ALL
-      SELECT 'Kamarugu' AS town, 'Kafe Simiria' AS chiefdom, 'Tonkolili' AS district, 8.79503635 AS lat, -11.68908498 AS lon
-      UNION ALL
-      SELECT 'Mabonto' AS town, 'Kafe Simiria' AS chiefdom, 'Tonkolili' AS district, 8.86203518 AS lat, -11.81677843 AS lon
-      UNION ALL
-      SELECT 'Makelfa' AS town, 'Kafe Simiria' AS chiefdom, 'Tonkolili' AS district, 8.87264056 AS lat, -11.74583799 AS lon
-      UNION ALL
-      SELECT 'Makontande' AS town, 'Kafe Simiria' AS chiefdom, 'Tonkolili' AS district, 8.95838836 AS lat, -11.79463553 AS lon
-      UNION ALL
-      SELECT 'Mayaso' AS town, 'Kafe Simiria' AS chiefdom, 'Tonkolili' AS district, 8.95384694 AS lat, -11.84682329 AS lon
-      UNION ALL
-      SELECT 'Simiria' AS town, 'Kafe Simiria' AS chiefdom, 'Tonkolili' AS district, 8.87853897 AS lat, -11.85640465 AS lon
-      UNION ALL
-      SELECT 'Fuladugu' AS town, 'Kalansogoia' AS chiefdom, 'Tonkolili' AS district, 9.2146404 AS lat, -11.73021139 AS lon
-      UNION ALL
-      SELECT 'Kakallain' AS town, 'Kalansogoia' AS chiefdom, 'Tonkolili' AS district, 9.20079836 AS lat, -11.78628869 AS lon
-      UNION ALL
-      SELECT 'Kamakathie' AS town, 'Kalansogoia' AS chiefdom, 'Tonkolili' AS district, 9.09729819 AS lat, -11.7761301 AS lon
-      UNION ALL
-      SELECT 'Kamakilla' AS town, 'Kalansogoia' AS chiefdom, 'Tonkolili' AS district, 9.1196642 AS lat, -11.80880937 AS lon
-      UNION ALL
-      SELECT 'Kasokira' AS town, 'Kalansogoia' AS chiefdom, 'Tonkolili' AS district, 9.11231898 AS lat, -11.73488798 AS lon
-      UNION ALL
-      SELECT 'Lower Section' AS town, 'Kalansogoia' AS chiefdom, 'Tonkolili' AS district, 8.98415322 AS lat, -11.75631161 AS lon
-      UNION ALL
-      SELECT 'Upper Section' AS town, 'Kalansogoia' AS chiefdom, 'Tonkolili' AS district, 9.01679076 AS lat, -11.68552872 AS lon
-      UNION ALL
-      SELECT 'Kumrabai' AS town, 'Kholifa Mabang' AS chiefdom, 'Tonkolili' AS district, 8.52422996 AS lat, -12.10587123 AS lon
-      UNION ALL
-      SELECT 'Mabang' AS town, 'Kholifa Mabang' AS chiefdom, 'Tonkolili' AS district, 8.5499993 AS lat, -12.1494296 AS lon
-      UNION ALL
-      SELECT 'Marunia Koray' AS town, 'Kholifa Mabang' AS chiefdom, 'Tonkolili' AS district, 8.58511663 AS lat, -12.25003241 AS lon
-      UNION ALL
-      SELECT 'Marunia Sakie' AS town, 'Kholifa Mabang' AS chiefdom, 'Tonkolili' AS district, 8.52893201 AS lat, -12.22050278 AS lon
-      UNION ALL
-      SELECT 'Bo Road' AS town, 'Kholifa Rowala' AS chiefdom, 'Tonkolili' AS district, 8.71904344 AS lat, -11.93907102 AS lon
-      UNION ALL
-      SELECT 'Lal-Lenken' AS town, 'Kholifa Rowala' AS chiefdom, 'Tonkolili' AS district, 8.75986565 AS lat, -11.86551662 AS lon
-      UNION ALL
-      SELECT 'Makump' AS town, 'Kholifa Rowala' AS chiefdom, 'Tonkolili' AS district, 8.68275475 AS lat, -11.92269822 AS lon
-      UNION ALL
-      SELECT 'Mamuntha' AS town, 'Kholifa Rowala' AS chiefdom, 'Tonkolili' AS district, 8.64639084 AS lat, -12.06189301 AS lon
-      UNION ALL
-      SELECT 'Mayatha' AS town, 'Kholifa Rowala' AS chiefdom, 'Tonkolili' AS district, 8.66493693 AS lat, -11.98923315 AS lon
-      UNION ALL
-      SELECT 'Mayossoh' AS town, 'Kholifa Rowala' AS chiefdom, 'Tonkolili' AS district, 8.56269089 AS lat, -12.0238287 AS lon
-      UNION ALL
-      SELECT 'Old Magburaka' AS town, 'Kholifa Rowala' AS chiefdom, 'Tonkolili' AS district, 8.72001304 AS lat, -11.95946003 AS lon
-      UNION ALL
-      SELECT 'Makali' AS town, 'Kunike Barina' AS chiefdom, 'Tonkolili' AS district, 8.64830484 AS lat, -11.55436314 AS lon
-      UNION ALL
-      SELECT 'Makong' AS town, 'Kunike Barina' AS chiefdom, 'Tonkolili' AS district, 8.53475139 AS lat, -11.70779872 AS lon
-      UNION ALL
-      SELECT 'Mamurie' AS town, 'Kunike Barina' AS chiefdom, 'Tonkolili' AS district, 8.64060016 AS lat, -11.71196833 AS lon
-      UNION ALL
-      SELECT 'Masaba' AS town, 'Kunike Barina' AS chiefdom, 'Tonkolili' AS district, 8.52781139 AS lat, -11.62455857 AS lon
-      UNION ALL
-      SELECT 'Mathonkara' AS town, 'Kunike Barina' AS chiefdom, 'Tonkolili' AS district, 8.61464909 AS lat, -11.57805711 AS lon
-      UNION ALL
-      SELECT 'Wonkibor' AS town, 'Kunike Barina' AS chiefdom, 'Tonkolili' AS district, 8.56380236 AS lat, -11.59030387 AS lon
-      UNION ALL
-      SELECT 'Masingbi' AS town, 'Kunike' AS chiefdom, 'Tonkolili' AS district, 8.63712168 AS lat, -11.46694013 AS lon
-      UNION ALL
-      SELECT 'Rolal' AS town, 'Kunike' AS chiefdom, 'Tonkolili' AS district, 8.71802974 AS lat, -11.5512989 AS lon
-      UNION ALL
-      SELECT 'Sanda' AS town, 'Kunike' AS chiefdom, 'Tonkolili' AS district, 8.59711613 AS lat, -11.50471779 AS lon
-      UNION ALL
-      SELECT 'Semorkanie' AS town, 'Kunike' AS chiefdom, 'Tonkolili' AS district, 8.69651091 AS lat, -11.62322328 AS lon
-      UNION ALL
-      SELECT 'Thamah' AS town, 'Kunike' AS chiefdom, 'Tonkolili' AS district, 8.59408314 AS lat, -11.39836799 AS lon
-      UNION ALL
-      SELECT 'Thambaya' AS town, 'Kunike' AS chiefdom, 'Tonkolili' AS district, 8.77493985 AS lat, -11.44771195 AS lon
-      UNION ALL
-      SELECT 'Wana' AS town, 'Kunike' AS chiefdom, 'Tonkolili' AS district, 8.80513989 AS lat, -11.51886206 AS lon
-      UNION ALL
-      SELECT 'Yenkeh' AS town, 'Kunike' AS chiefdom, 'Tonkolili' AS district, 8.6861247 AS lat, -11.45151036 AS lon
-      UNION ALL
-      SELECT 'Kiamp Kakolo' AS town, 'Malal Mara' AS chiefdom, 'Tonkolili' AS district, 8.64178995 AS lat, -12.20429957 AS lon
-      UNION ALL
-      SELECT 'Mabilafu' AS town, 'Malal Mara' AS chiefdom, 'Tonkolili' AS district, 8.71401595 AS lat, -12.2052309 AS lon
-      UNION ALL
-      SELECT 'Makoba' AS town, 'Malal Mara' AS chiefdom, 'Tonkolili' AS district, 8.6170509 AS lat, -12.31122613 AS lon
-      UNION ALL
-      SELECT 'Malal' AS town, 'Malal Mara' AS chiefdom, 'Tonkolili' AS district, 8.713246 AS lat, -12.29733623 AS lon
-      UNION ALL
-      SELECT 'Manewa' AS town, 'Malal Mara' AS chiefdom, 'Tonkolili' AS district, 8.67838606 AS lat, -12.15224953 AS lon
-      UNION ALL
-      SELECT 'Mara' AS town, 'Malal Mara' AS chiefdom, 'Tonkolili' AS district, 8.66863027 AS lat, -12.22901465 AS lon
-      UNION ALL
-      SELECT 'Matanka' AS town, 'Malal Mara' AS chiefdom, 'Tonkolili' AS district, 8.67505481 AS lat, -12.36031302 AS lon
-      UNION ALL
-      SELECT 'Rochen' AS town, 'Malal Mara' AS chiefdom, 'Tonkolili' AS district, 8.6548294 AS lat, -12.28751487 AS lon
-      UNION ALL
-      SELECT 'Borowah' AS town, 'Sambaya' AS chiefdom, 'Tonkolili' AS district, 9.13907503 AS lat, -11.50632282 AS lon
-      UNION ALL
-      SELECT 'Buyan' AS town, 'Sambaya' AS chiefdom, 'Tonkolili' AS district, 8.93582026 AS lat, -11.55348924 AS lon
-      UNION ALL
-      SELECT 'Dayie' AS town, 'Sambaya' AS chiefdom, 'Tonkolili' AS district, 9.00132933 AS lat, -11.62229509 AS lon
-      UNION ALL
-      SELECT 'Sambaya' AS town, 'Sambaya' AS chiefdom, 'Tonkolili' AS district, 9.03688797 AS lat, -11.48969743 AS lon
-      UNION ALL
-      SELECT 'Maboboh Koray' AS town, 'Tane' AS chiefdom, 'Tonkolili' AS district, 8.71633803 AS lat, -11.74843129 AS lon
-      UNION ALL
-      SELECT 'Makrugbeh' AS town, 'Tane' AS chiefdom, 'Tonkolili' AS district, 8.60840609 AS lat, -11.77717471 AS lon
-      UNION ALL
-      SELECT 'Mange-bana' AS town, 'Tane' AS chiefdom, 'Tonkolili' AS district, 8.58469871 AS lat, -11.92746158 AS lon
-      UNION ALL
-      SELECT 'Mapakie' AS town, 'Tane' AS chiefdom, 'Tonkolili' AS district, 8.61728675 AS lat, -11.90010584 AS lon
-      UNION ALL
-      SELECT 'Mathunkara' AS town, 'Tane' AS chiefdom, 'Tonkolili' AS district, 8.76397999 AS lat, -11.77523423 AS lon
-      UNION ALL
-      SELECT 'Matotoka' AS town, 'Tane' AS chiefdom, 'Tonkolili' AS district, 8.66030247 AS lat, -11.8377648 AS lon
-      UNION ALL
-      SELECT 'Foindu' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.35665394 AS lat, -12.07818868 AS lon
-      UNION ALL
-      SELECT 'Gaindema' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.41289672 AS lat, -12.1555864 AS lon
-      UNION ALL
-      SELECT 'Macrogba' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.40064133 AS lat, -12.35089251 AS lon
-      UNION ALL
-      SELECT 'Makeni Rokefula' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.41086447 AS lat, -12.55426349 AS lon
-      UNION ALL
-      SELECT 'Malanchor' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.35233579 AS lat, -12.59084462 AS lon
-      UNION ALL
-      SELECT 'Malompor' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.42613575 AS lat, -12.10417732 AS lon
-      UNION ALL
-      SELECT 'Mamaka' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.51051686 AS lat, -12.32277784 AS lon
-      UNION ALL
-      SELECT 'Masengbe' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.31454445 AS lat, -12.11144579 AS lon
-      UNION ALL
-      SELECT 'Mayira' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.41333793 AS lat, -12.41622379 AS lon
-      UNION ALL
-      SELECT 'Petifu Upper' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.39417764 AS lat, -12.28376974 AS lon
-      UNION ALL
-      SELECT 'Petifu-Lower' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.35977197 AS lat, -12.41800244 AS lon
-      UNION ALL
-      SELECT 'Ronietta' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.38342447 AS lat, -12.46565295 AS lon
-      UNION ALL
-      SELECT 'Yoni' AS town, 'Yoni' AS chiefdom, 'Tonkolili' AS district, 8.43289884 AS lat, -12.23017351 AS lon
-      UNION ALL
-      SELECT 'Kunbulun 1' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.91432178 AS lat, -11.47460063 AS lon
-      UNION ALL
-      SELECT 'Kunbulun 2' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.8508755 AS lat, -11.50887264 AS lon
-      UNION ALL
-      SELECT 'Manan' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.74890356 AS lat, -11.48143166 AS lon
-      UNION ALL
-      SELECT 'Mawundea' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.95339125 AS lat, -11.46083576 AS lon
-      UNION ALL
-      SELECT 'Numula 1' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.89255744 AS lat, -11.50043223 AS lon
-      UNION ALL
-      SELECT 'Numula 2' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.90654768 AS lat, -11.41623736 AS lon
-      UNION ALL
-      SELECT 'Numula 3' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.80719163 AS lat, -11.5145926 AS lon
-      UNION ALL
-      SELECT 'Numula 4' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.74580951 AS lat, -11.51165144 AS lon
-      UNION ALL
-      SELECT 'Numula 5' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.76318667 AS lat, -11.45315851 AS lon
-      UNION ALL
-      SELECT 'Sinkunia' AS town, 'Dembelia - Sink' AS chiefdom, 'Fabala' AS district, 9.84635736 AS lat, -11.43365219 AS lon
-      UNION ALL
-      SELECT 'Balandugu' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.66350418 AS lat, -11.55874196 AS lon
-      UNION ALL
-      SELECT 'Dogoloya' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.69951203 AS lat, -11.55349998 AS lon
-      UNION ALL
-      SELECT 'Fissaya I' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.97371659 AS lat, -11.6254188 AS lon
-      UNION ALL
-      SELECT 'Fissaya II' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.97294932 AS lat, -11.69321016 AS lon
-      UNION ALL
-      SELECT 'Gbentu III' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.92505382 AS lat, -11.60636831 AS lon
-      UNION ALL
-      SELECT 'Herekor' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.80519254 AS lat, -11.56905742 AS lon
-      UNION ALL
-      SELECT 'Kalia' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.93072131 AS lat, -11.69549784 AS lon
-      UNION ALL
-      SELECT 'Kamba' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.83019882 AS lat, -11.67681534 AS lon
-      UNION ALL
-      SELECT 'Lagor' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.7160179 AS lat, -11.61581699 AS lon
-      UNION ALL
-      SELECT 'Musaia' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.71101753 AS lat, -11.52205783 AS lon
-      UNION ALL
-      SELECT 'Sankan I' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.84488905 AS lat, -11.56393517 AS lon
-      UNION ALL
-      SELECT 'Sankan II' AS town, 'Folosaba Dembel' AS chiefdom, 'Fabala' AS district, 9.90349267 AS lat, -11.55639431 AS lon
-      UNION ALL
-      SELECT 'Benadugu' AS town, 'Mongo' AS chiefdom, 'Fabala' AS district, 9.33654379 AS lat, -10.9530197 AS lon
-      UNION ALL
-      SELECT 'Deldugu' AS town, 'Mongo' AS chiefdom, 'Fabala' AS district, 9.27192052 AS lat, -10.7252149 AS lon
-      UNION ALL
-      SELECT 'Mankalia' AS town, 'Mongo' AS chiefdom, 'Fabala' AS district, 9.37717404 AS lat, -10.81243182 AS lon
-      UNION ALL
-      SELECT 'Mongo I' AS town, 'Mongo' AS chiefdom, 'Fabala' AS district, 9.48068779 AS lat, -10.93294897 AS lon
-      UNION ALL
-      SELECT 'Mongo II' AS town, 'Mongo' AS chiefdom, 'Fabala' AS district, 9.6265306 AS lat, -10.99407128 AS lon
-      UNION ALL
-      SELECT 'Morifindugu' AS town, 'Mongo' AS chiefdom, 'Fabala' AS district, 9.51725535 AS lat, -11.11011722 AS lon
-      UNION ALL
-      SELECT 'Kulor' AS town, 'Neya' AS chiefdom, 'Fabala' AS district, 9.05181601 AS lat, -10.62725296 AS lon
-      UNION ALL
-      SELECT 'Neya I' AS town, 'Neya' AS chiefdom, 'Fabala' AS district, 9.18836099 AS lat, -10.82268037 AS lon
-      UNION ALL
-      SELECT 'Neya II' AS town, 'Neya' AS chiefdom, 'Fabala' AS district, 9.08582038 AS lat, -10.90862515 AS lon
-      UNION ALL
-      SELECT 'Nyedu' AS town, 'Neya' AS chiefdom, 'Fabala' AS district, 9.16056339 AS lat, -11.05254512 AS lon
-      UNION ALL
-      SELECT 'Saradu' AS town, 'Neya' AS chiefdom, 'Fabala' AS district, 9.06563898 AS lat, -10.75526853 AS lon
-      UNION ALL
-      SELECT 'Lower Kamadugu' AS town, 'Mongo' AS chiefdom, 'Fabala' AS district, 9.45616852 AS lat, -11.44897053 AS lon
-      UNION ALL
-      SELECT 'Upper Kamadugu' AS town, 'Mongo' AS chiefdom, 'Fabala' AS district, 9.56928046 AS lat, -11.27026146 AS lon
-      UNION ALL
-      SELECT 'Yiraia' AS town, 'Mongo' AS chiefdom, 'Fabala' AS district, 9.40814214 AS lat, -11.20056598 AS lon
-      UNION ALL
-      SELECT 'Biribaia' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.7955297 AS lat, -11.2483866 AS lon
-      UNION ALL
-      SELECT 'Dara' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.85632049 AS lat, -11.25236383 AS lon
-      UNION ALL
-      SELECT 'Falaba' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.83539315 AS lat, -11.31456304 AS lon
-      UNION ALL
-      SELECT 'Fudea' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.68696804 AS lat, -11.39089919 AS lon
-      UNION ALL
-      SELECT 'Ganya' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.93536382 AS lat, -11.28720341 AS lon
-      UNION ALL
-      SELECT 'Gberia Fotombu' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.88284915 AS lat, -11.20082322 AS lon
-      UNION ALL
-      SELECT 'Gberia-Timbako' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.74661302 AS lat, -11.18422469 AS lon
-      UNION ALL
-      SELECT 'Kaliyereh' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.94760318 AS lat, -11.20686685 AS lon
-      UNION ALL
-      SELECT 'Koindu-Kura' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.88296973 AS lat, -11.16421864 AS lon
-      UNION ALL
-      SELECT 'Laylay' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.85740576 AS lat, -11.23256112 AS lon
-      UNION ALL
-      SELECT 'Nomokoya' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.95345769 AS lat, -11.37400259 AS lon
-      UNION ALL
-      SELECT 'Sonkoya' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.76848653 AS lat, -11.41280672 AS lon
-      UNION ALL
-      SELECT 'Damai' AS town, 'Badjia' AS chiefdom, 'Bo' AS district, 8.07728211 AS lat, -11.4212108 AS lon
-      UNION ALL
-      SELECT 'Fallay' AS town, 'Badjia' AS chiefdom, 'Bo' AS district, 8.11724066 AS lat, -11.36603713 AS lon
-      UNION ALL
-      SELECT 'Kpallay' AS town, 'Badjia' AS chiefdom, 'Bo' AS district, 8.04854915 AS lat, -11.46927508 AS lon
-      UNION ALL
-      SELECT 'Njargbahun' AS town, 'Badjia' AS chiefdom, 'Bo' AS district, 8.11632823 AS lat, -11.45719457 AS lon
-      UNION ALL
-      SELECT 'Sei' AS town, 'Badjia' AS chiefdom, 'Bo' AS district, 8.07248904 AS lat, -11.37034501 AS lon
-      UNION ALL
-      SELECT 'Bum' AS town, 'Bagbo' AS chiefdom, 'Bo' AS district, 7.50802665 AS lat, -11.8693571 AS lon
-      UNION ALL
-      SELECT 'Gorapon' AS town, 'Bagbo' AS chiefdom, 'Bo' AS district, 7.54304041 AS lat, -11.92161494 AS lon
-      UNION ALL
-      SELECT 'Jimmi' AS town, 'Bagbo' AS chiefdom, 'Bo' AS district, 7.6400944 AS lat, -11.81791029 AS lon
-      UNION ALL
-      SELECT 'Kpangbalia' AS town, 'Bagbo' AS chiefdom, 'Bo' AS district, 7.59171962 AS lat, -11.89038873 AS lon
-      UNION ALL
-      SELECT 'Mano' AS town, 'Bagbo' AS chiefdom, 'Bo' AS district, 7.5623378 AS lat, -11.86200798 AS lon
-      UNION ALL
-      SELECT 'Niagorehun' AS town, 'Bagbo' AS chiefdom, 'Bo' AS district, 7.67440673 AS lat, -11.76221987 AS lon
-      UNION ALL
-      SELECT 'Tissana' AS town, 'Bagbo' AS chiefdom, 'Bo' AS district, 7.58137066 AS lat, -11.94739807 AS lon
-      UNION ALL
-      SELECT 'Jongo' AS town, 'Bagbwe(Bagbe)' AS chiefdom, 'Bo' AS district, 8.062855 AS lat, -11.51967277 AS lon
-      UNION ALL
-      SELECT 'Kemoh' AS town, 'Bagbwe(Bagbe)' AS chiefdom, 'Bo' AS district, 8.0211421 AS lat, -11.50089463 AS lon
-      UNION ALL
-      SELECT 'Niawa' AS town, 'Bagbwe(Bagbe)' AS chiefdom, 'Bo' AS district, 8.03124667 AS lat, -11.57353076 AS lon
-      UNION ALL
-      SELECT 'Nyallay' AS town, 'Bagbwe(Bagbe)' AS chiefdom, 'Bo' AS district, 8.09787378 AS lat, -11.56766273 AS lon
-      UNION ALL
-      SELECT 'Samawa' AS town, 'Bagbwe(Bagbe)' AS chiefdom, 'Bo' AS district, 8.13426874 AS lat, -11.5083487 AS lon
-      UNION ALL
-      SELECT 'Bambawo' AS town, 'Boama' AS chiefdom, 'Bo' AS district, 7.92903002 AS lat, -11.56142134 AS lon
-      UNION ALL
-      SELECT 'Fallay' AS town, 'Boama' AS chiefdom, 'Bo' AS district, 7.94364422 AS lat, -11.43756111 AS lon
-      UNION ALL
-      SELECT 'Kimaya' AS town, 'Boama' AS chiefdom, 'Bo' AS district, 7.97539569 AS lat, -11.48714347 AS lon
-      UNION ALL
-      SELECT 'Lower Pataloo' AS town, 'Boama' AS chiefdom, 'Bo' AS district, 7.92511362 AS lat, -11.50108171 AS lon
-      UNION ALL
-      SELECT 'Mawojeh' AS town, 'Boama' AS chiefdom, 'Bo' AS district, 7.87603453 AS lat, -11.48162406 AS lon
-      UNION ALL
-      SELECT 'Njeima' AS town, 'Boama' AS chiefdom, 'Bo' AS district, 7.9524727 AS lat, -11.38508461 AS lon
-      UNION ALL
-      SELECT 'Sonnah' AS town, 'Boama' AS chiefdom, 'Bo' AS district, 7.86091063 AS lat, -11.54030023 AS lon
-      UNION ALL
-      SELECT 'Upper Pataloo' AS town, 'Boama' AS chiefdom, 'Bo' AS district, 8.01431 AS lat, -11.42083221 AS lon
-      UNION ALL
-      SELECT 'Bongo' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.76813953 AS lat, -11.98856287 AS lon
-      UNION ALL
-      SELECT 'Bumpe' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.90853078 AS lat, -11.9252515 AS lon
-      UNION ALL
-      SELECT 'Foya' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.96121051 AS lat, -11.88414238 AS lon
-      UNION ALL
-      SELECT 'Kpetema' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.85615558 AS lat, -11.98743592 AS lon
-      UNION ALL
-      SELECT 'Sahn' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.71570186 AS lat, -12.050141 AS lon
-      UNION ALL
-      SELECT 'Serabu' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.81650313 AS lat, -12.06484444 AS lon
-      UNION ALL
-      SELECT 'Sewama' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.71288969 AS lat, -11.97177467 AS lon
-      UNION ALL
-      SELECT 'Taninahun' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.89767843 AS lat, -12.08597912 AS lon
-      UNION ALL
-      SELECT 'Walihun' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.76688767 AS lat, -12.0899193 AS lon
-      UNION ALL
-      SELECT 'Yengema' AS town, 'Bumpe Ngao' AS chiefdom, 'Bo' AS district, 7.85030437 AS lat, -12.01826511 AS lon
-      UNION ALL
-      SELECT 'Gbo' AS town, 'Gbo' AS chiefdom, 'Bo' AS district, 8.07594203 AS lat, -11.85065161 AS lon
-      UNION ALL
-      SELECT 'Maryu' AS town, 'Gbo' AS chiefdom, 'Bo' AS district, 8.05329174 AS lat, -11.88639435 AS lon
-      UNION ALL
-      SELECT 'Nyawa' AS town, 'Gbo' AS chiefdom, 'Bo' AS district, 8.0994189 AS lat, -11.80127737 AS lon
-      UNION ALL
-      SELECT 'Lower Baimba' AS town, 'Jaiama Bongor' AS chiefdom, 'Bo' AS district, 7.73575606 AS lat, -11.70278309 AS lon
-      UNION ALL
-      SELECT 'Lower Kama' AS town, 'Jaiama Bongor' AS chiefdom, 'Bo' AS district, 7.72042382 AS lat, -11.6710813 AS lon
-      UNION ALL
-      SELECT 'Lower Niawa' AS town, 'Jaiama Bongor' AS chiefdom, 'Bo' AS district, 7.69508912 AS lat, -11.62726368 AS lon
-      UNION ALL
-      SELECT 'Nekpondo' AS town, 'Jaiama Bongor' AS chiefdom, 'Bo' AS district, 7.86236194 AS lat, -11.58543911 AS lon
-      UNION ALL
-      SELECT 'Tongowa' AS town, 'Jaiama Bongor' AS chiefdom, 'Bo' AS district, 7.83036724 AS lat, -11.64730619 AS lon
-      UNION ALL
-      SELECT 'Upper Baimba' AS town, 'Jaiama Bongor' AS chiefdom, 'Bo' AS district, 7.78955899 AS lat, -11.67747943 AS lon
-      UNION ALL
-      SELECT 'Upper Kama' AS town, 'Jaiama Bongor' AS chiefdom, 'Bo' AS district, 7.79475789 AS lat, -11.59154074 AS lon
-      UNION ALL
-      SELECT 'Upper Niawa' AS town, 'Jaiama Bongor' AS chiefdom, 'Bo' AS district, 7.78340321 AS lat, -11.53318091 AS lon
-      UNION ALL
-      SELECT 'Korjeh' AS town, 'Kakua' AS chiefdom, 'Bo' AS district, 7.93661595 AS lat, -11.59578531 AS lon
-      UNION ALL
-      SELECT 'Kpandobu' AS town, 'Kakua' AS chiefdom, 'Bo' AS district, 8.00362718 AS lat, -11.67070554 AS lon
-      UNION ALL
-      SELECT 'Nguabu' AS town, 'Kakua' AS chiefdom, 'Bo' AS district, 8.02428757 AS lat, -11.70674421 AS lon
-      UNION ALL
-      SELECT 'Nyallay' AS town, 'Kakua' AS chiefdom, 'Bo' AS district, 7.93628531 AS lat, -11.63741207 AS lon
-      UNION ALL
-      SELECT 'Nyawa' AS town, 'Kakua' AS chiefdom, 'Bo' AS district, 7.97993463 AS lat, -11.58017175 AS lon
-      UNION ALL
-      SELECT 'Samamie' AS town, 'Kakua' AS chiefdom, 'Bo' AS district, 7.99579229 AS lat, -11.75583011 AS lon
-      UNION ALL
-      SELECT 'Sewa' AS town, 'Kakua' AS chiefdom, 'Bo' AS district, 7.92142608 AS lat, -11.67758451 AS lon
-      UNION ALL
-      SELECT 'Sindeh' AS town, 'Kakua' AS chiefdom, 'Bo' AS district, 8.00496363 AS lat, -11.6061123 AS lon
-      UNION ALL
-      SELECT 'Keisua' AS town, 'Komboya' AS chiefdom, 'Bo' AS district, 8.21323207 AS lat, -11.50557155 AS lon
-      UNION ALL
-      SELECT 'Kemoh' AS town, 'Komboya' AS chiefdom, 'Bo' AS district, 8.19493996 AS lat, -11.41337058 AS lon
-      UNION ALL
-      SELECT 'Mangaru' AS town, 'Komboya' AS chiefdom, 'Bo' AS district, 8.30574942 AS lat, -11.51586217 AS lon
-      UNION ALL
-      SELECT 'Sei' AS town, 'Komboya' AS chiefdom, 'Bo' AS district, 8.21063233 AS lat, -11.45797827 AS lon
-      UNION ALL
-      SELECT 'Tongowa' AS town, 'Komboya' AS chiefdom, 'Bo' AS district, 8.26896055 AS lat, -11.55393626 AS lon
-      UNION ALL
-      SELECT 'Gao' AS town, 'Lugbu' AS chiefdom, 'Bo' AS district, 7.68691569 AS lat, -11.83334815 AS lon
-      UNION ALL
-      SELECT 'Kamba' AS town, 'Lugbu' AS chiefdom, 'Bo' AS district, 7.66490561 AS lat, -11.91114826 AS lon
-      UNION ALL
-      SELECT 'Kargbevu' AS town, 'Lugbu' AS chiefdom, 'Bo' AS district, 7.63434781 AS lat, -11.95881257 AS lon
-      UNION ALL
-      SELECT 'Kemoh' AS town, 'Lugbu' AS chiefdom, 'Bo' AS district, 7.69159441 AS lat, -11.89131458 AS lon
-      UNION ALL
-      SELECT 'Magbao' AS town, 'Lugbu' AS chiefdom, 'Bo' AS district, 7.74443957 AS lat, -11.89932772 AS lon
-      UNION ALL
-      SELECT 'Yorma' AS town, 'Lugbu' AS chiefdom, 'Bo' AS district, 7.73024538 AS lat, -11.80854951 AS lon
-      UNION ALL
-      SELECT 'Baimba' AS town, 'Niawa Lenga' AS chiefdom, 'Bo' AS district, 8.07054195 AS lat, -11.67476892 AS lon
-      UNION ALL
-      SELECT 'Lower Niawa' AS town, 'Niawa Lenga' AS chiefdom, 'Bo' AS district, 8.11413902 AS lat, -11.63284061 AS lon
-      UNION ALL
-      SELECT 'Upper Niawa' AS town, 'Niawa Lenga' AS chiefdom, 'Bo' AS district, 8.21344346 AS lat, -11.55466345 AS lon
-      UNION ALL
-      SELECT 'Yalenga' AS town, 'Niawa Lenga' AS chiefdom, 'Bo' AS district, 8.16975595 AS lat, -11.62945962 AS lon
-      UNION ALL
-      SELECT 'Kaduawo' AS town, 'Selenga' AS chiefdom, 'Bo' AS district, 8.10501412 AS lat, -11.76816296 AS lon
-      UNION ALL
-      SELECT 'Mokpendeh' AS town, 'Selenga' AS chiefdom, 'Bo' AS district, 8.12876197 AS lat, -11.72542262 AS lon
-      UNION ALL
-      SELECT 'Old Town' AS town, 'Selenga' AS chiefdom, 'Bo' AS district, 8.09872861 AS lat, -11.73360495 AS lon
-      UNION ALL
-      SELECT 'Bainyawa' AS town, 'Tikonko' AS chiefdom, 'Bo' AS district, 7.70836163 AS lat, -11.74830973 AS lon
-      UNION ALL
-      SELECT 'Mambawa' AS town, 'Tikonko' AS chiefdom, 'Bo' AS district, 7.78534671 AS lat, -11.83046832 AS lon
-      UNION ALL
-      SELECT 'Morku' AS town, 'Tikonko' AS chiefdom, 'Bo' AS district, 7.77546465 AS lat, -11.86354945 AS lon
-      UNION ALL
-      SELECT 'Ngolamajie' AS town, 'Tikonko' AS chiefdom, 'Bo' AS district, 7.99038328 AS lat, -11.82026421 AS lon
-      UNION ALL
-      SELECT 'Njagbla I' AS town, 'Tikonko' AS chiefdom, 'Bo' AS district, 7.78321734 AS lat, -11.79452071 AS lon
-      UNION ALL
-      SELECT 'Njagbla II' AS town, 'Tikonko' AS chiefdom, 'Bo' AS district, 7.81340217 AS lat, -11.75849047 AS lon
-      UNION ALL
-      SELECT 'Seiwa' AS town, 'Tikonko' AS chiefdom, 'Bo' AS district, 7.86117413 AS lat, -11.78793749 AS lon
-      UNION ALL
-      SELECT 'Sendeh' AS town, 'Tikonko' AS chiefdom, 'Bo' AS district, 7.77631022 AS lat, -11.73105192 AS lon
-      UNION ALL
-      SELECT 'Deilenga' AS town, 'Valunia' AS chiefdom, 'Bo' AS district, 8.39370492 AS lat, -11.62496203 AS lon
-      UNION ALL
-      SELECT 'Kendebu' AS town, 'Valunia' AS chiefdom, 'Bo' AS district, 8.24496101 AS lat, -11.77100395 AS lon
-      UNION ALL
-      SELECT 'Lunia' AS town, 'Valunia' AS chiefdom, 'Bo' AS district, 8.35098164 AS lat, -11.74276078 AS lon
-      UNION ALL
-      SELECT 'Ngovo' AS town, 'Valunia' AS chiefdom, 'Bo' AS district, 8.17390653 AS lat, -11.77170009 AS lon
-      UNION ALL
-      SELECT 'Seilenga' AS town, 'Valunia' AS chiefdom, 'Bo' AS district, 8.30118542 AS lat, -11.64626588 AS lon
-      UNION ALL
-      SELECT 'Vanjelu' AS town, 'Valunia' AS chiefdom, 'Bo' AS district, 8.18834589 AS lat, -11.70399096 AS lon
-      UNION ALL
-      SELECT 'Yarlenga' AS town, 'Valunia' AS chiefdom, 'Bo' AS district, 8.22863672 AS lat, -11.63407034 AS lon
-      UNION ALL
-      SELECT 'Central Kargoi' AS town, 'Wonde' AS chiefdom, 'Bo' AS district, 7.73733062 AS lat, -11.44321113 AS lon
-      UNION ALL
-      SELECT 'Lower Kargoi' AS town, 'Wonde' AS chiefdom, 'Bo' AS district, 7.61113773 AS lat, -11.70724425 AS lon
-      UNION ALL
-      SELECT 'Manyeh' AS town, 'Wonde' AS chiefdom, 'Bo' AS district, 7.69792955 AS lat, -11.53119928 AS lon
-      UNION ALL
-      SELECT 'Upper Kargoi' AS town, 'Wonde' AS chiefdom, 'Bo' AS district, 7.782229 AS lat, -11.43749094 AS lon
-      UNION ALL
-      SELECT 'East Ward-Batiema' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.96510164 AS lat, -11.71394127 AS lon
-      UNION ALL
-      SELECT 'East Ward-Bumpeh-W' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.95437592 AS lat, -11.71454326 AS lon
-      UNION ALL
-      SELECT 'East Ward-Gbondo T' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.94282965 AS lat, -11.72082937 AS lon
-      UNION ALL
-      SELECT 'East Ward-Kindia T' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.96112168 AS lat, -11.72385562 AS lon
-      UNION ALL
-      SELECT 'East Ward-Lower Sa' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.96642187 AS lat, -11.7273171 AS lon
-      UNION ALL
-      SELECT 'East Ward-Manjama' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.94080676 AS lat, -11.72875202 AS lon
-      UNION ALL
-      SELECT 'East Ward-Messima' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.95129652 AS lat, -11.72418524 AS lon
-      UNION ALL
-      SELECT 'East Ward-Moriba T' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.96170791 AS lat, -11.73463462 AS lon
-      UNION ALL
-      SELECT 'North Ward-Bo Numb' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.97602553 AS lat, -11.72710852 AS lon
-      UNION ALL
-      SELECT 'North Ward-Kissy Town' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.96994312 AS lat, -11.73748364 AS lon
-      UNION ALL
-      SELECT 'North Ward-Njai To' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.9788139 AS lat, -11.73599531 AS lon
-      UNION ALL
-      SELECT 'North Ward-Reservation' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.97342 AS lat, -11.7520081 AS lon
-      UNION ALL
-      SELECT 'West Ward-Kandeh T' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.94453243 AS lat, -11.75149434 AS lon
-      UNION ALL
-      SELECT 'West Ward-Lewabu -' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.94123902 AS lat, -11.73918691 AS lon
-      UNION ALL
-      SELECT 'West Ward-Moriba T' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.95119138 AS lat, -11.73604381 AS lon
-      UNION ALL
-      SELECT 'West Ward-Nikibu -' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.96045109 AS lat, -11.74790957 AS lon
-      UNION ALL
-      SELECT 'West Ward-Njagboim' AS town, 'Bo Town' AS chiefdom, 'Bo' AS district, 7.95350859 AS lat, -11.74551708 AS lon
-      UNION ALL
-      SELECT 'Gba-Cha' AS town, 'Bendu-Cha' AS chiefdom, 'Bonthe' AS district, 7.44311458 AS lat, -12.40987803 AS lon
-      UNION ALL
-      SELECT 'Sokenteh' AS town, 'Bendu-Cha' AS chiefdom, 'Bonthe' AS district, 7.4692395 AS lat, -12.42783951 AS lon
-      UNION ALL
-      SELECT 'Tissagbe' AS town, 'Bendu-Cha' AS chiefdom, 'Bonthe' AS district, 7.42461768 AS lat, -12.3479385 AS lon
-      UNION ALL
-      SELECT 'Yallan-gbokie' AS town, 'Bendu-Cha' AS chiefdom, 'Bonthe' AS district, 7.4973224 AS lat, -12.3537459 AS lon
-      UNION ALL
-      SELECT 'Fikie' AS town, 'Bum' AS chiefdom, 'Bonthe' AS district, 7.41246727 AS lat, -11.96615067 AS lon
-      UNION ALL
-      SELECT 'Gbengain' AS town, 'Bum' AS chiefdom, 'Bonthe' AS district, 7.39304893 AS lat, -11.89565831 AS lon
-      UNION ALL
-      SELECT 'Gbondubum' AS town, 'Bum' AS chiefdom, 'Bonthe' AS district, 7.44846677 AS lat, -11.93127875 AS lon
-      UNION ALL
-      SELECT 'Koimato' AS town, 'Bum' AS chiefdom, 'Bonthe' AS district, 7.48830197 AS lat, -12.0189307 AS lon
-      UNION ALL
-      SELECT 'Lanje' AS town, 'Bum' AS chiefdom, 'Bonthe' AS district, 7.50431835 AS lat, -11.91992672 AS lon
-      UNION ALL
-      SELECT 'Tamba' AS town, 'Bum' AS chiefdom, 'Bonthe' AS district, 7.36272476 AS lat, -11.98627835 AS lon
-      UNION ALL
-      SELECT 'Torma' AS town, 'Bum' AS chiefdom, 'Bonthe' AS district, 7.41732525 AS lat, -12.01330713 AS lon
-      UNION ALL
-      SELECT 'Yargbe' AS town, 'Bum' AS chiefdom, 'Bonthe' AS district, 7.372001 AS lat, -11.92872105 AS lon
-      UNION ALL
-      SELECT 'Yawma' AS town, 'Bum' AS chiefdom, 'Bonthe' AS district, 7.4756471 AS lat, -11.93776413 AS lon
-      UNION ALL
-      SELECT 'Chepo' AS town, 'Dema' AS chiefdom, 'Bonthe' AS district, 7.5692322 AS lat, -12.92430411 AS lon
-      UNION ALL
-      SELECT 'Dema' AS town, 'Dema' AS chiefdom, 'Bonthe' AS district, 7.5937327 AS lat, -12.89383667 AS lon
-      UNION ALL
-      SELECT 'Turtle Islands' AS town, 'Dema' AS chiefdom, 'Bonthe' AS district, 7.578743 AS lat, -12.97652606 AS lon
-      UNION ALL
-      SELECT 'Yoh' AS town, 'Dema' AS chiefdom, 'Bonthe' AS district, 7.58834077 AS lat, -12.83055899 AS lon
-      UNION ALL
-      SELECT 'Babum' AS town, 'Imperri' AS chiefdom, 'Bonthe' AS district, 7.77055464 AS lat, -12.3432617 AS lon
-      UNION ALL
-      SELECT 'Bapus' AS town, 'Imperri' AS chiefdom, 'Bonthe' AS district, 7.6940445 AS lat, -12.44605653 AS lon
-      UNION ALL
-      SELECT 'Bigo' AS town, 'Imperri' AS chiefdom, 'Bonthe' AS district, 7.69790793 AS lat, -12.28970051 AS lon
-      UNION ALL
-      SELECT 'Kahekay' AS town, 'Imperri' AS chiefdom, 'Bonthe' AS district, 7.72539416 AS lat, -12.35442259 AS lon
-      UNION ALL
-      SELECT 'Moimaligie' AS town, 'Imperri' AS chiefdom, 'Bonthe' AS district, 7.60965144 AS lat, -12.34920791 AS lon
-      UNION ALL
-      SELECT 'Sokrapan' AS town, 'Imperri' AS chiefdom, 'Bonthe' AS district, 7.61673509 AS lat, -12.43829325 AS lon
-      UNION ALL
-      SELECT 'Basiaka' AS town, 'Jong' AS chiefdom, 'Bonthe' AS district, 7.49033543 AS lat, -12.24729691 AS lon
-      UNION ALL
-      SELECT 'Bayengbe' AS town, 'Jong' AS chiefdom, 'Bonthe' AS district, 7.60658654 AS lat, -12.165573 AS lon
-      UNION ALL
-      SELECT 'Beyinga' AS town, 'Jong' AS chiefdom, 'Bonthe' AS district, 7.53952722 AS lat, -12.16042662 AS lon
-      UNION ALL
-      SELECT 'Falewuja' AS town, 'Jong' AS chiefdom, 'Bonthe' AS district, 7.62927008 AS lat, -12.11643155 AS lon
-      UNION ALL
-      SELECT 'Kumabeh-Kwe' AS town, 'Jong' AS chiefdom, 'Bonthe' AS district, 7.63865758 AS lat, -12.16747785 AS lon
-      UNION ALL
-      SELECT 'Landi-Ngere' AS town, 'Jong' AS chiefdom, 'Bonthe' AS district, 7.62876329 AS lat, -12.24807817 AS lon
-      UNION ALL
-      SELECT 'Sopan-Cleveland' AS town, 'Jong' AS chiefdom, 'Bonthe' AS district, 7.56673544 AS lat, -12.21193919 AS lon
-      UNION ALL
-      SELECT 'Tucker-Nyambe' AS town, 'Jong' AS chiefdom, 'Bonthe' AS district, 7.52945206 AS lat, -12.25506654 AS lon
-      UNION ALL
-      SELECT 'Ba-Kobotu' AS town, 'Kpanda Kemo' AS chiefdom, 'Bonthe' AS district, 7.62954793 AS lat, -12.01817498 AS lon
-      UNION ALL
-      SELECT 'Bewoni' AS town, 'Kpanda Kemo' AS chiefdom, 'Bonthe' AS district, 7.56451961 AS lat, -11.99924887 AS lon
-      UNION ALL
-      SELECT 'Gbonge' AS town, 'Kpanda Kemo' AS chiefdom, 'Bonthe' AS district, 7.65123315 AS lat, -12.05543196 AS lon
-      UNION ALL
-      SELECT 'Senjehun' AS town, 'Kpanda Kemo' AS chiefdom, 'Bonthe' AS district, 7.53592231 AS lat, -12.0299338 AS lon
-      UNION ALL
-      SELECT 'Sewama' AS town, 'Kpanda Kemo' AS chiefdom, 'Bonthe' AS district, 7.62589016 AS lat, -12.04223665 AS lon
-      UNION ALL
-      SELECT 'Taokunor' AS town, 'Kpanda Kemo' AS chiefdom, 'Bonthe' AS district, 7.57155463 AS lat, -12.03961287 AS lon
-      UNION ALL
-      SELECT 'Kpanga Koimato' AS town, 'Kwamebai Krim' AS chiefdom, 'Bonthe' AS district, 7.25332637 AS lat, -11.92156742 AS lon
-      UNION ALL
-      SELECT 'Kwako Lanten' AS town, 'Kwamebai Krim' AS chiefdom, 'Bonthe' AS district, 7.31775793 AS lat, -11.99144854 AS lon
-      UNION ALL
-      SELECT 'Massa Settie' AS town, 'Kwamebai Krim' AS chiefdom, 'Bonthe' AS district, 7.22265865 AS lat, -11.97809142 AS lon
-      UNION ALL
-      SELECT 'Mosenten Sahen II' AS town, 'Kwamebai Krim' AS chiefdom, 'Bonthe' AS district, 7.31318001 AS lat, -12.03493091 AS lon
-      UNION ALL
-      SELECT 'Tubla' AS town, 'Kwamebai Krim' AS chiefdom, 'Bonthe' AS district, 7.30718151 AS lat, -11.93241247 AS lon
-      UNION ALL
-      SELECT 'Tun-Tun Sullay' AS town, 'Kwamebai Krim' AS chiefdom, 'Bonthe' AS district, 7.27056699 AS lat, -12.05499687 AS lon
-      UNION ALL
-      SELECT 'Yikie Karbay' AS town, 'Kwamebai Krim' AS chiefdom, 'Bonthe' AS district, 7.26398362 AS lat, -11.98065125 AS lon
-      UNION ALL
-      SELECT 'Baoma' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.45298611 AS lat, -12.22394466 AS lon
-      UNION ALL
-      SELECT 'Bohol' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.39115025 AS lat, -12.46250458 AS lon
-      UNION ALL
-      SELECT 'Bullom' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.40641683 AS lat, -12.29489061 AS lon
-      UNION ALL
-      SELECT 'Garinga' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.3716373 AS lat, -12.36508 AS lon
-      UNION ALL
-      SELECT 'Gbangbassa' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.35430784 AS lat, -12.15767108 AS lon
-      UNION ALL
-      SELECT 'Gbap' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.39246521 AS lat, -12.25100043 AS lon
-      UNION ALL
-      SELECT 'Hahun' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.35418886 AS lat, -12.11936846 AS lon
-      UNION ALL
-      SELECT 'Kessie' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.29279554 AS lat, -12.11249253 AS lon
-      UNION ALL
-      SELECT 'Manyime' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.39885504 AS lat, -12.20614157 AS lon
-      UNION ALL
-      SELECT 'Pelewahun' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.44607992 AS lat, -12.28147291 AS lon
-      UNION ALL
-      SELECT 'Salma' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.35682633 AS lat, -12.09180528 AS lon
-      UNION ALL
-      SELECT 'Solon' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.34962796 AS lat, -12.27568461 AS lon
-      UNION ALL
-      SELECT 'Torma Subu' AS town, 'Nongoba Bullom' AS chiefdom, 'Bonthe' AS district, 7.31912011 AS lat, -12.21941415 AS lon
-      UNION ALL
-      SELECT 'Bamba' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.4152856 AS lat, -12.55007705 AS lon
-      UNION ALL
-      SELECT 'Gonoh' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.5793049 AS lat, -12.54044974 AS lon
-      UNION ALL
-      SELECT 'Kamai' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.5951228 AS lat, -12.75248961 AS lon
-      UNION ALL
-      SELECT 'Kwalloh' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.6039944 AS lat, -12.67086968 AS lon
-      UNION ALL
-      SELECT 'Moh' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.5602119 AS lat, -12.6205028 AS lon
-      UNION ALL
-      SELECT 'Ngepay' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.48970937 AS lat, -12.63310162 AS lon
-      UNION ALL
-      SELECT 'Saama' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.61457995 AS lat, -12.60210342 AS lon
-      UNION ALL
-      SELECT 'Sahaya' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.54660149 AS lat, -12.77477095 AS lon
-      UNION ALL
-      SELECT 'Sahn-Gbegu' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.46918081 AS lat, -12.55770963 AS lon
-      UNION ALL
-      SELECT 'Sampoh' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.5590481 AS lat, -12.68539659 AS lon
-      UNION ALL
-      SELECT 'Yoni' AS town, 'Sittia' AS chiefdom, 'Bonthe' AS district, 7.4896186 AS lat, -12.53417829 AS lon
-      UNION ALL
-      SELECT 'Bakumba' AS town, 'Sogbeni' AS chiefdom, 'Bonthe' AS district, 7.59908819 AS lat, -12.0723325 AS lon
-      UNION ALL
-      SELECT 'Beyorgboh' AS town, 'Sogbeni' AS chiefdom, 'Bonthe' AS district, 7.53275905 AS lat, -12.10822023 AS lon
-      UNION ALL
-      SELECT 'Ndopie' AS town, 'Sogbeni' AS chiefdom, 'Bonthe' AS district, 7.48133549 AS lat, -12.09898587 AS lon
-      UNION ALL
-      SELECT 'Pengor' AS town, 'Sogbeni' AS chiefdom, 'Bonthe' AS district, 7.56005644 AS lat, -12.08405428 AS lon
-      UNION ALL
-      SELECT 'Baryegbe' AS town, 'Yawbeko' AS chiefdom, 'Bonthe' AS district, 7.42732916 AS lat, -12.15897982 AS lon
-      UNION ALL
-      SELECT 'Hahun' AS town, 'Yawbeko' AS chiefdom, 'Bonthe' AS district, 7.47204303 AS lat, -12.14222311 AS lon
-      UNION ALL
-      SELECT 'Ketaway' AS town, 'Yawbeko' AS chiefdom, 'Bonthe' AS district, 7.42492692 AS lat, -12.10957453 AS lon
-      UNION ALL
-      SELECT 'Mobulie' AS town, 'Yawbeko' AS chiefdom, 'Bonthe' AS district, 7.51144339 AS lat, -12.17086038 AS lon
-      UNION ALL
-      SELECT 'Yorma' AS town, 'Yawbeko' AS chiefdom, 'Bonthe' AS district, 7.39370274 AS lat, -12.07602304 AS lon
-      UNION ALL
-      SELECT 'Bonthe Town' AS town, 'Bonthe Urban' AS chiefdom, 'Bonthe' AS district, 7.5340505 AS lat, -12.51850697 AS lon
-      UNION ALL
-      SELECT 'Benduma' AS town, 'Bagruwa' AS chiefdom, 'Moyamba' AS district, 7.91401901 AS lat, -12.48506436 AS lon
-      UNION ALL
-      SELECT 'Benkeh' AS town, 'Bagruwa' AS chiefdom, 'Moyamba' AS district, 7.7886377 AS lat, -12.51135573 AS lon
-      UNION ALL
-      SELECT 'Kawaya' AS town, 'Bagruwa' AS chiefdom, 'Moyamba' AS district, 7.95992609 AS lat, -12.32121174 AS lon
-      UNION ALL
-      SELECT 'Kigbai' AS town, 'Bagruwa' AS chiefdom, 'Moyamba' AS district, 7.9004333 AS lat, -12.56639889 AS lon
-      UNION ALL
-      SELECT 'Mani' AS town, 'Bagruwa' AS chiefdom, 'Moyamba' AS district, 7.98970892 AS lat, -12.53938265 AS lon
-      UNION ALL
-      SELECT 'Mokassi' AS town, 'Bagruwa' AS chiefdom, 'Moyamba' AS district, 7.99161248 AS lat, -12.38438322 AS lon
-      UNION ALL
-      SELECT 'Moseilolo' AS town, 'Bagruwa' AS chiefdom, 'Moyamba' AS district, 7.84539083 AS lat, -12.45177819 AS lon
-      UNION ALL
-      SELECT 'Palima' AS town, 'Bagruwa' AS chiefdom, 'Moyamba' AS district, 7.9118236 AS lat, -12.35955381 AS lon
-      UNION ALL
-      SELECT 'Sembehun' AS town, 'Bagruwa' AS chiefdom, 'Moyamba' AS district, 7.97243403 AS lat, -12.47750203 AS lon
-      UNION ALL
-      SELECT 'Bellentin' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.13100019 AS lat, -12.77585201 AS lon
-      UNION ALL
-      SELECT 'Bumpeh' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.17801834 AS lat, -12.67713493 AS lon
-      UNION ALL
-      SELECT 'Greema' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.25799839 AS lat, -12.66213316 AS lon
-      UNION ALL
-      SELECT 'Kassipoto' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.16507407 AS lat, -12.75231843 AS lon
-      UNION ALL
-      SELECT 'Mamu' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.05047923 AS lat, -12.73685524 AS lon
-      UNION ALL
-      SELECT 'Massah' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.06595689 AS lat, -12.58423186 AS lon
-      UNION ALL
-      SELECT 'Moforay' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.07827133 AS lat, -12.68750954 AS lon
-      UNION ALL
-      SELECT 'Mokebbie' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.20895828 AS lat, -12.72297219 AS lon
-      UNION ALL
-      SELECT 'Motobon' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.1195917 AS lat, -12.8252695 AS lon
-      UNION ALL
-      SELECT 'Moyemi' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.02839783 AS lat, -12.67995617 AS lon
-      UNION ALL
-      SELECT 'Saiama' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.23850424 AS lat, -12.69299701 AS lon
-      UNION ALL
-      SELECT 'Samu' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.06113921 AS lat, -12.84647331 AS lon
-      UNION ALL
-      SELECT 'Yengessa' AS town, 'Bumpeh' AS chiefdom, 'Moyamba' AS district, 8.13721705 AS lat, -12.64228011 AS lon
-      UNION ALL
-      SELECT 'Bambuibu Tommy' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 7.97779916 AS lat, -12.15444679 AS lon
-      UNION ALL
-      SELECT 'Bongoya' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.03462069 AS lat, -12.22482411 AS lon
-      UNION ALL
-      SELECT 'Domboma' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.05957953 AS lat, -12.07294523 AS lon
-      UNION ALL
-      SELECT 'Foya Tewei' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 7.98127318 AS lat, -12.20285522 AS lon
-      UNION ALL
-      SELECT 'Jayahun' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.00359252 AS lat, -12.09326136 AS lon
-      UNION ALL
-      SELECT 'Kenema' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.06693377 AS lat, -12.11742067 AS lon
-      UNION ALL
-      SELECT 'Mano' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.03404488 AS lat, -12.0926484 AS lon
-      UNION ALL
-      SELECT 'Niti Korley' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.06598199 AS lat, -12.14922544 AS lon
-      UNION ALL
-      SELECT 'Semabu' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.00457012 AS lat, -12.05612494 AS lon
-      UNION ALL
-      SELECT 'Taninahun Gomoh' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.05794172 AS lat, -12.23415588 AS lon
-      UNION ALL
-      SELECT 'Taninahun Kapuima' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.00772325 AS lat, -12.22688235 AS lon
-      UNION ALL
-      SELECT 'Timindi' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 8.01026752 AS lat, -12.13566883 AS lon
-      UNION ALL
-      SELECT 'Wonkifore' AS town, 'Dasse' AS chiefdom, 'Moyamba' AS district, 7.92938947 AS lat, -12.17753565 AS lon
-      UNION ALL
-      SELECT 'Fakoi' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.22327216 AS lat, -12.34154599 AS lon
-      UNION ALL
-      SELECT 'Gandorhun Central' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.23616204 AS lat, -12.34080349 AS lon
-      UNION ALL
-      SELECT 'Kovella' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.27502705 AS lat, -12.42502571 AS lon
-      UNION ALL
-      SELECT 'Kpangulgo' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.29420768 AS lat, -12.36006235 AS lon
-      UNION ALL
-      SELECT 'Kunyafoi' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.2623752 AS lat, -12.29774352 AS lon
-      UNION ALL
-      SELECT 'Maninga' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.31994887 AS lat, -12.27930217 AS lon
-      UNION ALL
-      SELECT 'Njawa' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.15899644 AS lat, -12.24596407 AS lon
-      UNION ALL
-      SELECT 'Songo' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.22696076 AS lat, -12.25253542 AS lon
-      UNION ALL
-      SELECT 'Tangbla' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.30247762 AS lat, -12.33470017 AS lon
-      UNION ALL
-      SELECT 'To - Ndambalenga' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.30777552 AS lat, -12.23658848 AS lon
-      UNION ALL
-      SELECT 'Tullu' AS town, 'Fakunya' AS chiefdom, 'Moyamba' AS district, 8.16936167 AS lat, -12.31536988 AS lon
-      UNION ALL
-      SELECT 'Bendu A' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.87363856 AS lat, -12.90588834 AS lon
-      UNION ALL
-      SELECT 'Bendu B' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.84609923 AS lat, -12.78744991 AS lon
-      UNION ALL
-      SELECT 'Bumpetoke' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.81485254 AS lat, -12.83015249 AS lon
-      UNION ALL
-      SELECT 'Gbuallay' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.98910369 AS lat, -12.6223948 AS lon
-      UNION ALL
-      SELECT 'Konolor' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.91940332 AS lat, -12.7293886 AS lon
-      UNION ALL
-      SELECT 'Mambo' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.97327655 AS lat, -12.77556565 AS lon
-      UNION ALL
-      SELECT 'Mano' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.8481273 AS lat, -12.8659682 AS lon
-      UNION ALL
-      SELECT 'Mobeh' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.96263418 AS lat, -12.68151761 AS lon
-      UNION ALL
-      SELECT 'Mofuss' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.9738979 AS lat, -12.71729354 AS lon
-      UNION ALL
-      SELECT 'Mokandor' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.87994817 AS lat, -12.68962704 AS lon
-      UNION ALL
-      SELECT 'Mokebe' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.89643677 AS lat, -12.80360718 AS lon
-      UNION ALL
-      SELECT 'Mokobo' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.93899224 AS lat, -12.63830597 AS lon
-      UNION ALL
-      SELECT 'Mopaileh' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.84938471 AS lat, -12.72723422 AS lon
-      UNION ALL
-      SELECT 'Moyah' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.98330762 AS lat, -12.82569024 AS lon
-      UNION ALL
-      SELECT 'Moyibo' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.97867632 AS lat, -12.59697876 AS lon
-      UNION ALL
-      SELECT 'Ngiehun' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.98491584 AS lat, -12.65766101 AS lon
-      UNION ALL
-      SELECT 'Rembe' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 8.02656647 AS lat, -12.86522172 AS lon
-      UNION ALL
-      SELECT 'Tassoh' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.909371 AS lat, -12.89333813 AS lon
-      UNION ALL
-      SELECT 'Thumba A' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.86961177 AS lat, -12.86722782 AS lon
-      UNION ALL
-      SELECT 'Thumba B' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.86660903 AS lat, -12.74911616 AS lon
-      UNION ALL
-      SELECT 'Yondu' AS town, 'Kagboro' AS chiefdom, 'Moyamba' AS district, 7.99326067 AS lat, -12.86452125 AS lon
-      UNION ALL
-      SELECT 'Angigboya' AS town, 'Kaiyamba' AS chiefdom, 'Moyamba' AS district, 8.04231838 AS lat, -12.35454464 AS lon
-      UNION ALL
-      SELECT 'Koromboya' AS town, 'Kaiyamba' AS chiefdom, 'Moyamba' AS district, 8.12912924 AS lat, -12.44299043 AS lon
-      UNION ALL
-      SELECT 'Kpange' AS town, 'Kaiyamba' AS chiefdom, 'Moyamba' AS district, 8.05717434 AS lat, -12.45142618 AS lon
-      UNION ALL
-      SELECT 'Lungili' AS town, 'Kaiyamba' AS chiefdom, 'Moyamba' AS district, 8.12423119 AS lat, -12.35346661 AS lon
-      UNION ALL
-      SELECT 'Mendegelema' AS town, 'Kaiyamba' AS chiefdom, 'Moyamba' AS district, 8.2002406 AS lat, -12.47221725 AS lon
-      UNION ALL
-      SELECT 'Mosoe' AS town, 'Kaiyamba' AS chiefdom, 'Moyamba' AS district, 8.19809073 AS lat, -12.41113816 AS lon
-      UNION ALL
-      SELECT 'Waliwahun' AS town, 'Kaiyamba' AS chiefdom, 'Moyamba' AS district, 8.07635279 AS lat, -12.28979022 AS lon
-      UNION ALL
-      SELECT 'Kowama' AS town, 'Kamajei' AS chiefdom, 'Moyamba' AS district, 8.30497891 AS lat, -11.91901853 AS lon
-      UNION ALL
-      SELECT 'Mogbuama' AS town, 'Kamajei' AS chiefdom, 'Moyamba' AS district, 8.22707536 AS lat, -11.91930011 AS lon
-      UNION ALL
-      SELECT 'Ngiegombu' AS town, 'Kamajei' AS chiefdom, 'Moyamba' AS district, 8.1152428 AS lat, -12.00633582 AS lon
-      UNION ALL
-      SELECT 'Ngoahun' AS town, 'Kamajei' AS chiefdom, 'Moyamba' AS district, 8.22370871 AS lat, -11.83845644 AS lon
-      UNION ALL
-      SELECT 'Njagbema' AS town, 'Kamajei' AS chiefdom, 'Moyamba' AS district, 8.34293294 AS lat, -11.90989276 AS lon
-      UNION ALL
-      SELECT 'Tawovehun' AS town, 'Kamajei' AS chiefdom, 'Moyamba' AS district, 8.16035894 AS lat, -11.95634299 AS lon
-      UNION ALL
-      SELECT 'Yeima' AS town, 'Kamajei' AS chiefdom, 'Moyamba' AS district, 8.32235164 AS lat, -11.83409075 AS lon
-      UNION ALL
-      SELECT 'Gibina' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.18618693 AS lat, -12.57133777 AS lon
-      UNION ALL
-      SELECT 'Gondama' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.13333251 AS lat, -12.50113239 AS lon
-      UNION ALL
-      SELECT 'Mobonor' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.07392039 AS lat, -12.54368717 AS lon
-      UNION ALL
-      SELECT 'Mokorewo' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.23501161 AS lat, -12.5045991 AS lon
-      UNION ALL
-      SELECT 'Mongere' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.24709014 AS lat, -12.60281422 AS lon
-      UNION ALL
-      SELECT 'Mosongla' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.0750833 AS lat, -12.49951852 AS lon
-      UNION ALL
-      SELECT 'Mowoto' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.16240952 AS lat, -12.52985313 AS lon
-      UNION ALL
-      SELECT 'Senehun' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.14393197 AS lat, -12.59421743 AS lon
-      UNION ALL
-      SELECT 'Taninihun' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.11588633 AS lat, -12.55256791 AS lon
-      UNION ALL
-      SELECT 'Tongieh' AS town, 'Kongbora' AS chiefdom, 'Moyamba' AS district, 8.23495456 AS lat, -12.5560825 AS lon
-      UNION ALL
-      SELECT 'Zone - 1' AS town, 'Kori' AS chiefdom, 'Moyamba' AS district, 8.32131285 AS lat, -12.01404258 AS lon
-      UNION ALL
-      SELECT 'Zone - 2' AS town, 'Kori' AS chiefdom, 'Moyamba' AS district, 8.237665 AS lat, -11.99776881 AS lon
-      UNION ALL
-      SELECT 'Zone - 3' AS town, 'Kori' AS chiefdom, 'Moyamba' AS district, 8.27513618 AS lat, -12.14544793 AS lon
-      UNION ALL
-      SELECT 'Zone - 4' AS town, 'Kori' AS chiefdom, 'Moyamba' AS district, 8.2033006 AS lat, -12.14779371 AS lon
-      UNION ALL
-      SELECT 'Zone - 5' AS town, 'Kori' AS chiefdom, 'Moyamba' AS district, 8.14501169 AS lat, -12.15577104 AS lon
-      UNION ALL
-      SELECT 'Zone - 6' AS town, 'Kori' AS chiefdom, 'Moyamba' AS district, 8.09648325 AS lat, -12.21340986 AS lon
-      UNION ALL
-      SELECT 'Zone - 7' AS town, 'Kori' AS chiefdom, 'Moyamba' AS district, 8.14890531 AS lat, -12.04111271 AS lon
-      UNION ALL
-      SELECT 'Kpandobu' AS town, 'Kowa' AS chiefdom, 'Moyamba' AS district, 8.03338472 AS lat, -11.9135226 AS lon
-      UNION ALL
-      SELECT 'Moforay' AS town, 'Kowa' AS chiefdom, 'Moyamba' AS district, 8.01837101 AS lat, -12.0038456 AS lon
-      UNION ALL
-      SELECT 'Mosumana' AS town, 'Kowa' AS chiefdom, 'Moyamba' AS district, 8.07584689 AS lat, -12.01325035 AS lon
-      UNION ALL
-      SELECT 'Ngiyeiya' AS town, 'Kowa' AS chiefdom, 'Moyamba' AS district, 8.05154069 AS lat, -11.99728213 AS lon
-      UNION ALL
-      SELECT 'Njagbahun' AS town, 'Kowa' AS chiefdom, 'Moyamba' AS district, 8.13444503 AS lat, -11.91491294 AS lon
-      UNION ALL
-      SELECT 'Njama' AS town, 'Kowa' AS chiefdom, 'Moyamba' AS district, 8.08804163 AS lat, -11.93076548 AS lon
-      UNION ALL
-      SELECT 'Tabe' AS town, 'Kowa' AS chiefdom, 'Moyamba' AS district, 8.02013181 AS lat, -11.94988632 AS lon
-      UNION ALL
-      SELECT 'Tawoveihun' AS town, 'Kowa' AS chiefdom, 'Moyamba' AS district, 8.07657262 AS lat, -11.96711883 AS lon
-      UNION ALL
-      SELECT 'Bengelloh' AS town, 'Lower Banta' AS chiefdom, 'Moyamba' AS district, 7.8619479 AS lat, -12.38119955 AS lon
-      UNION ALL
-      SELECT 'Gbangbatoke' AS town, 'Lower Banta' AS chiefdom, 'Moyamba' AS district, 7.8315115 AS lat, -12.35931978 AS lon
-      UNION ALL
-      SELECT 'Largoh' AS town, 'Lower Banta' AS chiefdom, 'Moyamba' AS district, 7.83962546 AS lat, -12.30284394 AS lon
-      UNION ALL
-      SELECT 'Mofindoh' AS town, 'Lower Banta' AS chiefdom, 'Moyamba' AS district, 7.83836435 AS lat, -12.24674886 AS lon
-      UNION ALL
-      SELECT 'Mokotawa' AS town, 'Lower Banta' AS chiefdom, 'Moyamba' AS district, 7.89734948 AS lat, -12.16601703 AS lon
-      UNION ALL
-      SELECT 'Ndendemoya' AS town, 'Lower Banta' AS chiefdom, 'Moyamba' AS district, 7.77791904 AS lat, -12.25349203 AS lon
-      UNION ALL
-      SELECT 'Ngolala' AS town, 'Lower Banta' AS chiefdom, 'Moyamba' AS district, 7.91083012 AS lat, -12.2098141 AS lon
-      UNION ALL
-      SELECT 'Njagbahun' AS town, 'Lower Banta' AS chiefdom, 'Moyamba' AS district, 7.93951833 AS lat, -12.25561985 AS lon
-      UNION ALL
-      SELECT 'Wulbange' AS town, 'Lower Banta' AS chiefdom, 'Moyamba' AS district, 7.84988094 AS lat, -12.1768985 AS lon
-      UNION ALL
-      SELECT 'Kentineh' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.28330847 AS lat, -12.80638143 AS lon
-      UNION ALL
-      SELECT 'Lower Ribbi' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.2199678 AS lat, -12.93318215 AS lon
-      UNION ALL
-      SELECT 'Makera' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.36344871 AS lat, -12.78600503 AS lon
-      UNION ALL
-      SELECT 'Masanka' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.3464555 AS lat, -12.83353889 AS lon
-      UNION ALL
-      SELECT 'Masarakulay' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.32455068 AS lat, -12.6637036 AS lon
-      UNION ALL
-      SELECT 'Mobureh' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.15215195 AS lat, -12.89365528 AS lon
-      UNION ALL
-      SELECT 'Motoni' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.29772339 AS lat, -12.73639624 AS lon
-      UNION ALL
-      SELECT 'Motonkoh' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.25366038 AS lat, -12.83797384 AS lon
-      UNION ALL
-      SELECT 'Upper Ribbi' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.20611875 AS lat, -12.85029153 AS lon
-      UNION ALL
-      SELECT 'Yoni' AS town, 'Ribbi' AS chiefdom, 'Moyamba' AS district, 8.22740245 AS lat, -12.7828226 AS lon
-      UNION ALL
-      SELECT 'Bembellor' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.73645075 AS lat, -12.70834234 AS lon
-      UNION ALL
-      SELECT 'Gambia' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.79242082 AS lat, -12.7045582 AS lon
-      UNION ALL
-      SELECT 'Gbehan' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.76726477 AS lat, -12.5874087 AS lon
-      UNION ALL
-      SELECT 'Kamasunu' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.77178575 AS lat, -12.64194673 AS lon
-      UNION ALL
-      SELECT 'Kambotoke' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.81728104 AS lat, -12.62716648 AS lon
-      UNION ALL
-      SELECT 'Kebail' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.75034199 AS lat, -12.73116993 AS lon
-      UNION ALL
-      SELECT 'Mandu' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.78138012 AS lat, -12.75395105 AS lon
-      UNION ALL
-      SELECT 'Mye' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.77325077 AS lat, -12.67700953 AS lon
-      UNION ALL
-      SELECT 'Nonkoba' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.72495748 AS lat, -12.64311545 AS lon
-      UNION ALL
-      SELECT 'Sahan' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.73205719 AS lat, -12.67701632 AS lon
-      UNION ALL
-      SELECT 'Tombeh' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.8055503 AS lat, -12.67848755 AS lon
-      UNION ALL
-      SELECT 'Yapoma' AS town, 'Timdale' AS chiefdom, 'Moyamba' AS district, 7.88001423 AS lat, -12.63735023 AS lon
-      UNION ALL
-      SELECT 'Bei-Kelleh' AS town, 'Upper Banta' AS chiefdom, 'Moyamba' AS district, 7.73835166 AS lat, -12.15531508 AS lon
-      UNION ALL
-      SELECT 'Kenafallay' AS town, 'Upper Banta' AS chiefdom, 'Moyamba' AS district, 7.75500006 AS lat, -12.22573257 AS lon
-      UNION ALL
-      SELECT 'Kepay' AS town, 'Upper Banta' AS chiefdom, 'Moyamba' AS district, 7.77488262 AS lat, -12.16958956 AS lon
-      UNION ALL
-      SELECT 'Mogongbe' AS town, 'Upper Banta' AS chiefdom, 'Moyamba' AS district, 7.69777983 AS lat, -12.13505775 AS lon
-      UNION ALL
-      SELECT 'Songbo' AS town, 'Upper Banta' AS chiefdom, 'Moyamba' AS district, 7.70092908 AS lat, -12.22570616 AS lon
-      UNION ALL
-      SELECT 'Dakona' AS town, 'Barri' AS chiefdom, 'Pujehun' AS district, 7.40857137 AS lat, -11.37351259 AS lon
-      UNION ALL
-      SELECT 'Fallay' AS town, 'Barri' AS chiefdom, 'Pujehun' AS district, 7.49410606 AS lat, -11.48280485 AS lon
-      UNION ALL
-      SELECT 'Jougba' AS town, 'Barri' AS chiefdom, 'Pujehun' AS district, 7.5897281 AS lat, -11.36978964 AS lon
-      UNION ALL
-      SELECT 'Karjei' AS town, 'Barri' AS chiefdom, 'Pujehun' AS district, 7.51121867 AS lat, -11.39156003 AS lon
-      UNION ALL
-      SELECT 'Laimba' AS town, 'Barri' AS chiefdom, 'Pujehun' AS district, 7.43537592 AS lat, -11.43021314 AS lon
-      UNION ALL
-      SELECT 'Malla' AS town, 'Barri' AS chiefdom, 'Pujehun' AS district, 7.3354969 AS lat, -11.45397676 AS lon
-      UNION ALL
-      SELECT 'Sonjour I' AS town, 'Barri' AS chiefdom, 'Pujehun' AS district, 7.39968743 AS lat, -11.45087747 AS lon
-      UNION ALL
-      SELECT 'Sonjour II' AS town, 'Barri' AS chiefdom, 'Pujehun' AS district, 7.34353448 AS lat, -11.40484498 AS lon
-      UNION ALL
-      SELECT 'Tetima' AS town, 'Barri' AS chiefdom, 'Pujehun' AS district, 7.49168845 AS lat, -11.42242379 AS lon
-      UNION ALL
-      SELECT 'Bondor' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.31000817 AS lat, -11.49625643 AS lon
-      UNION ALL
-      SELECT 'Dabeni' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.26160607 AS lat, -11.55946807 AS lon
-      UNION ALL
-      SELECT 'Dakona' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.27254878 AS lat, -11.59814619 AS lon
-      UNION ALL
-      SELECT 'Gendema I' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.12773546 AS lat, -11.56643783 AS lon
-      UNION ALL
-      SELECT 'Gendema II' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.21211681 AS lat, -11.59015303 AS lon
-      UNION ALL
-      SELECT 'Jakema I' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.33347355 AS lat, -11.53192118 AS lon
-      UNION ALL
-      SELECT 'Jakema II' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.20604537 AS lat, -11.56233827 AS lon
-      UNION ALL
-      SELECT 'Joya' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.43092337 AS lat, -11.54851467 AS lon
-      UNION ALL
-      SELECT 'Kemokai' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.23681445 AS lat, -11.52268747 AS lon
-      UNION ALL
-      SELECT 'Kortugbu' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.38986446 AS lat, -11.63341891 AS lon
-      UNION ALL
-      SELECT 'Mallah' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.35087314 AS lat, -11.48958428 AS lon
-      UNION ALL
-      SELECT 'Mewah' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.34369581 AS lat, -11.64018699 AS lon
-      UNION ALL
-      SELECT 'Pelegbulor' AS town, 'Galliness Perri' AS chiefdom, 'Pujehun' AS district, 7.33209704 AS lat, -11.56305442 AS lon
-      UNION ALL
-      SELECT 'Jassende Kpeima' AS town, 'Kpaka' AS chiefdom, 'Pujehun' AS district, 7.04214151 AS lat, -11.5968999 AS lon
-      UNION ALL
-      SELECT 'Jassende Masaoma' AS town, 'Kpaka' AS chiefdom, 'Pujehun' AS district, 7.21478132 AS lat, -11.6301607 AS lon
-      UNION ALL
-      SELECT 'Jassende Ngoleima' AS town, 'Kpaka' AS chiefdom, 'Pujehun' AS district, 7.32069983 AS lat, -11.67316508 AS lon
-      UNION ALL
-      SELECT 'Jassende Ngoleima' AS town, 'Kpaka' AS chiefdom, 'Pujehun' AS district, 7.41750653 AS lat, -11.61383659 AS lon
-      UNION ALL
-      SELECT 'Nyango - Njeigbla' AS town, 'Kpaka' AS chiefdom, 'Pujehun' AS district, 7.17842644 AS lat, -11.66940164 AS lon
-      UNION ALL
-      SELECT 'Nyango-Ngoleihun' AS town, 'Kpaka' AS chiefdom, 'Pujehun' AS district, 7.27896294 AS lat, -11.64192212 AS lon
-      UNION ALL
-      SELECT 'Parvu' AS town, 'Kpaka' AS chiefdom, 'Pujehun' AS district, 7.01607148 AS lat, -11.58653226 AS lon
-      UNION ALL
-      SELECT 'Sarbah' AS town, 'Kpaka' AS chiefdom, 'Pujehun' AS district, 7.10309031 AS lat, -11.64659287 AS lon
-      UNION ALL
-      SELECT 'Bakoi' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.45562016 AS lat, -11.6816755 AS lon
-      UNION ALL
-      SELECT 'Banyande' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.360795 AS lat, -11.82697347 AS lon
-      UNION ALL
-      SELECT 'Kabonde' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.53796761 AS lat, -11.60797415 AS lon
-      UNION ALL
-      SELECT 'Kondogbe' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.45385992 AS lat, -11.73516336 AS lon
-      UNION ALL
-      SELECT 'Lower Kayiemba' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.33220491 AS lat, -11.6994341 AS lon
-      UNION ALL
-      SELECT 'Panga' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.31032866 AS lat, -11.73482124 AS lon
-      UNION ALL
-      SELECT 'Pessekeh' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.39566703 AS lat, -11.79961663 AS lon
-      UNION ALL
-      SELECT 'Samba' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.4583173 AS lat, -11.61408679 AS lon
-      UNION ALL
-      SELECT 'Setti-Yakanday' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.30209743 AS lat, -11.85803397 AS lon
-      UNION ALL
-      SELECT 'Upper Kayiemba' AS town, 'Panga Kabonde' AS chiefdom, 'Pujehun' AS district, 7.42726081 AS lat, -11.75925433 AS lon
-      UNION ALL
-      SELECT 'Kengo' AS town, 'Makpele' AS chiefdom, 'Pujehun' AS district, 7.24957393 AS lat, -11.34382295 AS lon
-      UNION ALL
-      SELECT 'Samagbe' AS town, 'Makpele' AS chiefdom, 'Pujehun' AS district, 7.28377427 AS lat, -11.23757786 AS lon
-      UNION ALL
-      SELECT 'Seitua' AS town, 'Makpele' AS chiefdom, 'Pujehun' AS district, 7.26486505 AS lat, -11.39278064 AS lon
-      UNION ALL
-      SELECT 'Selimeh' AS town, 'Makpele' AS chiefdom, 'Pujehun' AS district, 7.34687443 AS lat, -11.30826148 AS lon
-      UNION ALL
-      SELECT 'Bahoin' AS town, 'Malen' AS chiefdom, 'Pujehun' AS district, 7.43886728 AS lat, -11.87574595 AS lon
-      UNION ALL
-      SELECT 'Kahaimoh' AS town, 'Malen' AS chiefdom, 'Pujehun' AS district, 7.6002001 AS lat, -11.75292982 AS lon
-      UNION ALL
-      SELECT 'Kakpanda' AS town, 'Malen' AS chiefdom, 'Pujehun' AS district, 7.56168641 AS lat, -11.80917679 AS lon
-      UNION ALL
-      SELECT 'Kemoh' AS town, 'Malen' AS chiefdom, 'Pujehun' AS district, 7.44924882 AS lat, -11.79520785 AS lon
-      UNION ALL
-      SELECT 'Korwa' AS town, 'Malen' AS chiefdom, 'Pujehun' AS district, 7.45445954 AS lat, -11.8209629 AS lon
-      UNION ALL
-      SELECT 'Lower Pemba' AS town, 'Malen' AS chiefdom, 'Pujehun' AS district, 7.51963664 AS lat, -11.83288268 AS lon
-      UNION ALL
-      SELECT 'Seijeila' AS town, 'Malen' AS chiefdom, 'Pujehun' AS district, 7.38445592 AS lat, -11.86478837 AS lon
-      UNION ALL
-      SELECT 'Taukunor' AS town, 'Malen' AS chiefdom, 'Pujehun' AS district, 7.48165138 AS lat, -11.85238684 AS lon
-      UNION ALL
-      SELECT 'Upper Pemba' AS town, 'Malen' AS chiefdom, 'Pujehun' AS district, 7.52490744 AS lat, -11.77522103 AS lon
-      UNION ALL
-      SELECT 'Gbomotie' AS town, 'Mono Sakrim' AS chiefdom, 'Pujehun' AS district, 7.20192254 AS lat, -11.71051501 AS lon
-      UNION ALL
-      SELECT 'Kemoh' AS town, 'Mono Sakrim' AS chiefdom, 'Pujehun' AS district, 7.16088548 AS lat, -11.79379756 AS lon
-      UNION ALL
-      SELECT 'Makpondo' AS town, 'Mono Sakrim' AS chiefdom, 'Pujehun' AS district, 7.14491556 AS lat, -11.66928293 AS lon
-      UNION ALL
-      SELECT 'Masanda Majagbe' AS town, 'Mono Sakrim' AS chiefdom, 'Pujehun' AS district, 7.11160595 AS lat, -11.75004848 AS lon
-      UNION ALL
-      SELECT 'Pembaar' AS town, 'Mono Sakrim' AS chiefdom, 'Pujehun' AS district, 7.18955998 AS lat, -11.90747184 AS lon
-      UNION ALL
-      SELECT 'Pullie' AS town, 'Mono Sakrim' AS chiefdom, 'Pujehun' AS district, 7.17860272 AS lat, -11.69537376 AS lon
-      UNION ALL
-      SELECT 'Sitta' AS town, 'Mono Sakrim' AS chiefdom, 'Pujehun' AS district, 7.08764855 AS lat, -11.69487877 AS lon
-      UNION ALL
-      SELECT 'Sowa' AS town, 'Mono Sakrim' AS chiefdom, 'Pujehun' AS district, 7.15602636 AS lat, -11.83760051 AS lon
-      UNION ALL
-      SELECT 'Fassei' AS town, 'Panga krim' AS chiefdom, 'Pujehun' AS district, 7.28343626 AS lat, -11.78035374 AS lon
-      UNION ALL
-      SELECT 'Pemagbie' AS town, 'Panga krim' AS chiefdom, 'Pujehun' AS district, 7.3821124 AS lat, -11.71464912 AS lon
-      UNION ALL
-      SELECT 'Samba' AS town, 'Panga krim' AS chiefdom, 'Pujehun' AS district, 7.39092676 AS lat, -11.6969027 AS lon
-      UNION ALL
-      SELECT 'Somasa' AS town, 'Panga krim' AS chiefdom, 'Pujehun' AS district, 7.28627848 AS lat, -11.80610842 AS lon
-      UNION ALL
-      SELECT 'Koilenga' AS town, 'Pejeh(Futa peje' AS chiefdom, 'Pujehun' AS district, 7.60637812 AS lat, -11.51041053 AS lon
-      UNION ALL
-      SELECT 'Pejeh East' AS town, 'Pejeh(Futa peje' AS chiefdom, 'Pujehun' AS district, 7.56219827 AS lat, -11.55904006 AS lon
-      UNION ALL
-      SELECT 'Pejeh West' AS town, 'Pejeh(Futa peje' AS chiefdom, 'Pujehun' AS district, 7.51803909 AS lat, -11.55430303 AS lon
-      UNION ALL
-      SELECT 'Kemokai' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 7.04383125 AS lat, -11.40070178 AS lon
-      UNION ALL
-      SELECT 'Kengo' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 7.17431222 AS lat, -11.47925446 AS lon
-      UNION ALL
-      SELECT 'Kiazombo' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 7.1584702 AS lat, -11.34037908 AS lon
-      UNION ALL
-      SELECT 'Mano - River' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 6.97390089 AS lat, -11.46223444 AS lon
-      UNION ALL
-      SELECT 'Massaquoi I' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 7.12189944 AS lat, -11.48978533 AS lon
-      UNION ALL
-      SELECT 'Massaquoi II' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 7.00066392 AS lat, -11.52193666 AS lon
-      UNION ALL
-      SELECT 'Moiwebu' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 7.06977966 AS lat, -11.49506258 AS lon
-      UNION ALL
-      SELECT 'Zoker I' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 7.14122721 AS lat, -11.40825784 AS lon
-      UNION ALL
-      SELECT 'Zoker II' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 7.22379862 AS lat, -11.39587506 AS lon
-      UNION ALL
-      SELECT 'Zombo' AS town, 'Soro Gbema' AS chiefdom, 'Pujehun' AS district, 7.25962739 AS lat, -11.47246508 AS lon
-      UNION ALL
-      SELECT 'Lower Geoma' AS town, 'Sowa' AS chiefdom, 'Pujehun' AS district, 7.51314263 AS lat, -11.72961448 AS lon
-      UNION ALL
-      SELECT 'Sabba I' AS town, 'Sowa' AS chiefdom, 'Pujehun' AS district, 7.59724153 AS lat, -11.64287962 AS lon
-      UNION ALL
-      SELECT 'Sabba II' AS town, 'Sowa' AS chiefdom, 'Pujehun' AS district, 7.63388474 AS lat, -11.54973482 AS lon
-      UNION ALL
-      SELECT 'Upper Geoma' AS town, 'Sowa' AS chiefdom, 'Pujehun' AS district, 7.52989056 AS lat, -11.67060325 AS lon
-      UNION ALL
-      SELECT 'Bagollay' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.19026541 AS lat, -11.76938352 AS lon
-      UNION ALL
-      SELECT 'Bapawa' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.26779421 AS lat, -11.75642696 AS lon
-      UNION ALL
-      SELECT 'Batowa' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.23825139 AS lat, -11.68446251 AS lon
-      UNION ALL
-      SELECT 'Bekowa' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.25393596 AS lat, -11.83293496 AS lon
-      UNION ALL
-      SELECT 'Deyombo' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.23203439 AS lat, -11.65455357 AS lon
-      UNION ALL
-      SELECT 'Fortune' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.22541575 AS lat, -11.80988231 AS lon
-      UNION ALL
-      SELECT 'Kemo-Bo' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.18775043 AS lat, -11.74457918 AS lon
-      UNION ALL
-      SELECT 'Kemo-wa' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.16680433 AS lat, -11.75852295 AS lon
-      UNION ALL
-      SELECT 'Kpukumu' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.22197361 AS lat, -11.75485431 AS lon
-      UNION ALL
-      SELECT 'Seiwoh' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.19773744 AS lat, -11.82493855 AS lon
-      UNION ALL
-      SELECT 'Sowonde' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.2333397 AS lat, -11.88192647 AS lon
-      UNION ALL
-      SELECT 'Yabai' AS town, 'Yakemu Kpukumu' AS chiefdom, 'Pujehun' AS district, 7.23355038 AS lat, -11.84798767 AS lon
-      UNION ALL
-      SELECT 'Fabaina Area' AS town, 'Koya Rural' AS chiefdom, 'Western Area Rural' AS district, 8.30643101 AS lat, -12.93531347 AS lon
-      UNION ALL
-      SELECT 'Madonkeh' AS town, 'Koya Rural' AS chiefdom, 'Western Area Rural' AS district, 8.3652991 AS lat, -13.01095642 AS lon
-      UNION ALL
-      SELECT 'Magbafti' AS town, 'Koya Rural' AS chiefdom, 'Western Area Rural' AS district, 8.28049322 AS lat, -12.99178212 AS lon
-      UNION ALL
-      SELECT 'Malambay' AS town, 'Koya Rural' AS chiefdom, 'Western Area Rural' AS district, 8.30558857 AS lat, -13.02900079 AS lon
-      UNION ALL
-      SELECT 'Newton' AS town, 'Koya Rural' AS chiefdom, 'Western Area Rural' AS district, 8.33609354 AS lat, -12.9947121 AS lon
-      UNION ALL
-      SELECT 'Songo' AS town, 'Koya Rural' AS chiefdom, 'Western Area Rural' AS district, 8.34699158 AS lat, -12.95844293 AS lon
-      UNION ALL
-      SELECT 'Bathurst' AS town, 'Mountain Rural' AS chiefdom, 'Western Area Rural' AS district, 8.43045874 AS lat, -13.20073162 AS lon
-      UNION ALL
-      SELECT 'Charlotte' AS town, 'Mountain Rural' AS chiefdom, 'Western Area Rural' AS district, 8.41119936 AS lat, -13.19168746 AS lon
-      UNION ALL
-      SELECT 'Gloucester' AS town, 'Mountain Rural' AS chiefdom, 'Western Area Rural' AS district, 8.45312204 AS lat, -13.20940277 AS lon
-      UNION ALL
-      SELECT 'Leicester' AS town, 'Mountain Rural' AS chiefdom, 'Western Area Rural' AS district, 8.46446793 AS lat, -13.22028031 AS lon
-      UNION ALL
-      SELECT 'Regent' AS town, 'Mountain Rural' AS chiefdom, 'Western Area Rural' AS district, 8.44171144 AS lat, -13.2296262 AS lon
-      UNION ALL
-      SELECT 'Benguema Village A' AS town, 'Waterloo Rural' AS chiefdom, 'Western Area Rural' AS district, 8.29811664 AS lat, -13.08533892 AS lon
-      UNION ALL
-      SELECT 'Campbell Town Vill' AS town, 'Waterloo Rural' AS chiefdom, 'Western Area Rural' AS district, 8.29181102 AS lat, -13.05400056 AS lon
-      UNION ALL
-      SELECT 'Hastings Village A' AS town, 'Waterloo Rural' AS chiefdom, 'Western Area Rural' AS district, 8.35362747 AS lat, -13.11871257 AS lon
-      UNION ALL
-      SELECT 'Waterloo Village A' AS town, 'Waterloo Rural' AS chiefdom, 'Western Area Rural' AS district, 8.34712474 AS lat, -13.05658698 AS lon
-      UNION ALL
-      SELECT 'Gbendembu' AS town, 'York Rural' AS chiefdom, 'Western Area Rural' AS district, 8.43128662 AS lat, -13.26476696 AS lon
-      UNION ALL
-      SELECT 'Goderich-Adonkia/M' AS town, 'York Rural' AS chiefdom, 'Western Area Rural' AS district, 8.42163804 AS lat, -13.25212444 AS lon
-      UNION ALL
-      SELECT 'Goderich-Funkia' AS town, 'York Rural' AS chiefdom, 'Western Area Rural' AS district, 8.43626133 AS lat, -13.28171563 AS lon
-      UNION ALL
-      SELECT 'Hamilton' AS town, 'York Rural' AS chiefdom, 'Western Area Rural' AS district, 8.3765798 AS lat, -13.21797027 AS lon
-      UNION ALL
-      SELECT 'Kent' AS town, 'York Rural' AS chiefdom, 'Western Area Rural' AS district, 8.19493865 AS lat, -13.14599044 AS lon
-      UNION ALL
-      SELECT 'Sattia/Tombo' AS town, 'York Rural' AS chiefdom, 'Western Area Rural' AS district, 8.23975917 AS lat, -13.08510102 AS lon
-      UNION ALL
-      SELECT 'York' AS town, 'York Rural' AS chiefdom, 'Western Area Rural' AS district, 8.2849823 AS lat, -13.13096055 AS lon
-      UNION ALL
-      SELECT 'Albert Academy' AS town, 'Central I' AS chiefdom, 'Western Area Urban' AS district, 8.47696929 AS lat, -13.23266527 AS lon
-      UNION ALL
-      SELECT 'Mountain Regent' AS town, 'Central I' AS chiefdom, 'Western Area Urban' AS district, 8.48179659 AS lat, -13.22829844 AS lon
-      UNION ALL
-      SELECT 'Sorie Town' AS town, 'Central I' AS chiefdom, 'Western Area Urban' AS district, 8.47323672 AS lat, -13.22678088 AS lon
-      UNION ALL
-      SELECT 'Susan''s Bay' AS town, 'Central I' AS chiefdom, 'Western Area Urban' AS district, 8.48889635 AS lat, -13.22994613 AS lon
-      UNION ALL
-      SELECT 'Tower Hill' AS town, 'Central I' AS chiefdom, 'Western Area Urban' AS district, 8.48373364 AS lat, -13.23275579 AS lon
-      UNION ALL
-      SELECT 'Connaught Hospital' AS town, 'Central II' AS chiefdom, 'Western Area Urban' AS district, 8.48901152 AS lat, -13.23613424 AS lon
-      UNION ALL
-      SELECT 'Sanders Brook' AS town, 'Central II' AS chiefdom, 'Western Area Urban' AS district, 8.4819826 AS lat, -13.23800341 AS lon
-      UNION ALL
-      SELECT 'Cline Town' AS town, 'East I' AS chiefdom, 'Western Area Urban' AS district, 8.48704603 AS lat, -13.20916702 AS lon
-      UNION ALL
-      SELECT 'Fourah Bay' AS town, 'East I' AS chiefdom, 'Western Area Urban' AS district, 8.48883079 AS lat, -13.21354111 AS lon
-      UNION ALL
-      SELECT 'Kossoh Town' AS town, 'East I' AS chiefdom, 'Western Area Urban' AS district, 8.4890527 AS lat, -13.21923758 AS lon
-      UNION ALL
-      SELECT 'Bombay' AS town, 'East II' AS chiefdom, 'Western Area Urban' AS district, 8.48501354 AS lat, -13.22235935 AS lon
-      UNION ALL
-      SELECT 'Coconut Farm/ Asho' AS town, 'East II' AS chiefdom, 'Western Area Urban' AS district, 8.4781018 AS lat, -13.21338559 AS lon
-      UNION ALL
-      SELECT 'Foulah Town' AS town, 'East II' AS chiefdom, 'Western Area Urban' AS district, 8.48356082 AS lat, -13.2252499 AS lon
-      UNION ALL
-      SELECT 'Ginger Hall' AS town, 'East II' AS chiefdom, 'Western Area Urban' AS district, 8.48354013 AS lat, -13.21697975 AS lon
-      UNION ALL
-      SELECT 'Kissy Brook' AS town, 'East II' AS chiefdom, 'Western Area Urban' AS district, 8.47490045 AS lat, -13.21067336 AS lon
-      UNION ALL
-      SELECT 'Magazine' AS town, 'East II' AS chiefdom, 'Western Area Urban' AS district, 8.48945052 AS lat, -13.22419852 AS lon
-      UNION ALL
-      SELECT 'Mount Aureol' AS town, 'East II' AS chiefdom, 'Western Area Urban' AS district, 8.48168295 AS lat, -13.22024609 AS lon
-      UNION ALL
-      SELECT 'Quarry' AS town, 'East II' AS chiefdom, 'Western Area Urban' AS district, 8.48059006 AS lat, -13.21499619 AS lon
-      UNION ALL
-      SELECT 'Allen Town I' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.42395192 AS lat, -13.16110587 AS lon
-      UNION ALL
-      SELECT 'Allen Town II' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.41250668 AS lat, -13.15800194 AS lon
-      UNION ALL
-      SELECT 'Bottom Oku' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.45065291 AS lat, -13.16511338 AS lon
-      UNION ALL
-      SELECT 'Congo Water I' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.45443864 AS lat, -13.17298415 AS lon
-      UNION ALL
-      SELECT 'Congo Water II' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.44801579 AS lat, -13.17694599 AS lon
-      UNION ALL
-      SELECT 'Grass Field' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.46799236 AS lat, -13.1783873 AS lon
-      UNION ALL
-      SELECT 'Industrial Estate' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.43861712 AS lat, -13.18006276 AS lon
-      UNION ALL
-      SELECT 'Jalloh Terrace' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.45535413 AS lat, -13.18722093 AS lon
-      UNION ALL
-      SELECT 'Kissy Brook' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.46935334 AS lat, -13.20951934 AS lon
-      UNION ALL
-      SELECT 'Kissy Bye Pass I' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.47868443 AS lat, -13.20237765 AS lon
-      UNION ALL
-      SELECT 'Kissy Bye Pass II' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.47652665 AS lat, -13.18856309 AS lon
-      UNION ALL
-      SELECT 'Kissy Mental' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.46586614 AS lat, -13.19545637 AS lon
-      UNION ALL
-      SELECT 'Kissy Mess Mess' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.46379523 AS lat, -13.18885723 AS lon
-      UNION ALL
-      SELECT 'Kuntolor' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.45366776 AS lat, -13.18289827 AS lon
-      UNION ALL
-      SELECT 'Lowcost Housing' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.4703923 AS lat, -13.18612286 AS lon
-      UNION ALL
-      SELECT 'Mamba Ridge I' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.4688116 AS lat, -13.20523964 AS lon
-      UNION ALL
-      SELECT 'Mamba Ridge II' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.46617616 AS lat, -13.20053974 AS lon
-      UNION ALL
-      SELECT 'Mayenkineh' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.43145309 AS lat, -13.1624733 AS lon
-      UNION ALL
-      SELECT 'Old Warf' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.44586704 AS lat, -13.16112752 AS lon
-      UNION ALL
-      SELECT 'Pamuronko' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.43485608 AS lat, -13.15322657 AS lon
-      UNION ALL
-      SELECT 'Portee' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.46498403 AS lat, -13.17378481 AS lon
-      UNION ALL
-      SELECT 'Robis' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.43494541 AS lat, -13.17025033 AS lon
-      UNION ALL
-      SELECT 'Rokupa' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.46063062 AS lat, -13.17226224 AS lon
-      UNION ALL
-      SELECT 'Shell' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.46807236 AS lat, -13.19153903 AS lon
-      UNION ALL
-      SELECT 'Thunderhill' AS town, 'East III' AS chiefdom, 'Western Area Urban' AS district, 8.45457227 AS lat, -13.1957772 AS lon
-      UNION ALL
-      SELECT 'Ascension Town' AS town, 'West I' AS chiefdom, 'Western Area Urban' AS district, 8.48376511 AS lat, -13.24750592 AS lon
-      UNION ALL
-      SELECT 'Brookfields' AS town, 'West I' AS chiefdom, 'Western Area Urban' AS district, 8.47631176 AS lat, -13.24843849 AS lon
-      UNION ALL
-      SELECT 'Kingtom' AS town, 'West I' AS chiefdom, 'Western Area Urban' AS district, 8.48902935 AS lat, -13.24802726 AS lon
-      UNION ALL
-      SELECT 'Kroo Town' AS town, 'West I' AS chiefdom, 'Western Area Urban' AS district, 8.48251324 AS lat, -13.24233269 AS lon
-      UNION ALL
-      SELECT 'Brookfields-Congo' AS town, 'West II' AS chiefdom, 'Western Area Urban' AS district, 8.47555466 AS lat, -13.24049612 AS lon
-      UNION ALL
-      SELECT 'Brookfields-Red Pu' AS town, 'West II' AS chiefdom, 'Western Area Urban' AS district, 8.46920615 AS lat, -13.24810229 AS lon
-      UNION ALL
-      SELECT 'Congo Town' AS town, 'West II' AS chiefdom, 'Western Area Urban' AS district, 8.48136551 AS lat, -13.25534328 AS lon
-      UNION ALL
-      SELECT 'George Brook (Dwor' AS town, 'West II' AS chiefdom, 'Western Area Urban' AS district, 8.46563761 AS lat, -13.23009879 AS lon
-      UNION ALL
-      SELECT 'New England-Hannes' AS town, 'West II' AS chiefdom, 'Western Area Urban' AS district, 8.46601573 AS lat, -13.23673575 AS lon
-      UNION ALL
-      SELECT 'New England-Hill C' AS town, 'West II' AS chiefdom, 'Western Area Urban' AS district, 8.46563494 AS lat, -13.24427435 AS lon
-      UNION ALL
-      SELECT 'Tengbeh Town' AS town, 'West II' AS chiefdom, 'Western Area Urban' AS district, 8.47146234 AS lat, -13.25402875 AS lon
-      UNION ALL
-      SELECT 'Aberdeen' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.48129475 AS lat, -13.28312628 AS lon
-      UNION ALL
-      SELECT 'Cockerill-Aberdeen' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.46615341 AS lat, -13.2741885 AS lon
-      UNION ALL
-      SELECT 'Cockle-Bay /Colleg' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.48336181 AS lat, -13.27159926 AS lon
-      UNION ALL
-      SELECT 'Hill Station' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.46004876 AS lat, -13.25527898 AS lon
-      UNION ALL
-      SELECT 'Juba/Kaningo' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.44672122 AS lat, -13.27077339 AS lon
-      UNION ALL
-      SELECT 'Lumley' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.46014749 AS lat, -13.266882 AS lon
-      UNION ALL
-      SELECT 'Malama/Kamayama' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.44865227 AS lat, -13.25307041 AS lon
-      UNION ALL
-      SELECT 'Murray Town' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.49092854 AS lat, -13.26452547 AS lon
-      UNION ALL
-      SELECT 'Pipeline/Wilkinson' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.47222262 AS lat, -13.27200745 AS lon
-      UNION ALL
-      SELECT 'Wilberforce' AS town, 'West III' AS chiefdom, 'Western Area Urban' AS district, 8.47279373 AS lat, -13.26284965 AS lon
-      UNION ALL
-      SELECT 'Tasso Island' AS town, 'Tasso Island' AS chiefdom, 'Western Area Urban' AS district, 8.55334632 AS lat, -13.0736265 AS lon
-      UNION ALL
-      SELECT 'Banguraia' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.25118772 AS lat, -12.88526629 AS lon
-      UNION ALL
-      SELECT 'Bassia' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.27237718 AS lat, -12.8201142 AS lon
-      UNION ALL
-      SELECT 'Bugami' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.48757083 AS lat, -12.55856438 AS lon
-      UNION ALL
-      SELECT 'Duramania' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.43529049 AS lat, -12.59914295 AS lon
-      UNION ALL
-      SELECT 'Filligungee' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.39240671 AS lat, -12.62696608 AS lon
-      UNION ALL
-      SELECT 'Fortumboyie' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.3727945 AS lat, -12.70025799 AS lon
-      UNION ALL
-      SELECT 'Gberekhuray' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.46871918 AS lat, -12.58670061 AS lon
-      UNION ALL
-      SELECT 'Gbolon' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.34018242 AS lat, -12.73505482 AS lon
-      UNION ALL
-      SELECT 'Kabaya' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.43158468 AS lat, -12.64073641 AS lon
-      UNION ALL
-      SELECT 'Kanku Bramaia' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.25891333 AS lat, -12.84354836 AS lon
-      UNION ALL
-      SELECT 'Konta' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.55366058 AS lat, -12.57740014 AS lon
-      UNION ALL
-      SELECT 'Kua Bramaia' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.32042444 AS lat, -12.76075599 AS lon
-      UNION ALL
-      SELECT 'Kufuru' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.51227162 AS lat, -12.49918132 AS lon
-      UNION ALL
-      SELECT 'Kukuna' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.40826197 AS lat, -12.66827289 AS lon
-      UNION ALL
-      SELECT 'Laminaia' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.23423537 AS lat, -12.86143506 AS lon
-      UNION ALL
-      SELECT 'Sansangie' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.27095215 AS lat, -12.87367013 AS lon
-      UNION ALL
-      SELECT 'Seduya' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.43275992 AS lat, -12.66194856 AS lon
-      UNION ALL
-      SELECT 'Shekaia' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.29140591 AS lat, -12.76424606 AS lon
-      UNION ALL
-      SELECT 'Sulaimania' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.28800338 AS lat, -12.78136357 AS lon
-      UNION ALL
-      SELECT 'Teneba Bramaia' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.40627958 AS lat, -12.69088106 AS lon
-      UNION ALL
-      SELECT 'Turaya' AS town, 'Bramaia' AS chiefdom, 'Kambia' AS district, 9.48058184 AS lat, -12.65199128 AS lon
-      UNION ALL
-      SELECT 'Gbinle' AS town, 'Gbinle Dixing' AS chiefdom, 'Kambia' AS district, 9.14794688 AS lat, -12.92938723 AS lon
-      UNION ALL
-      SELECT 'Kalangba' AS town, 'Gbinle Dixing' AS chiefdom, 'Kambia' AS district, 9.18624131 AS lat, -12.92943327 AS lon
-      UNION ALL
-      SELECT 'Katalan' AS town, 'Gbinle Dixing' AS chiefdom, 'Kambia' AS district, 9.07419189 AS lat, -12.97894084 AS lon
-      UNION ALL
-      SELECT 'Mafaray' AS town, 'Gbinle Dixing' AS chiefdom, 'Kambia' AS district, 9.21662312 AS lat, -12.92816144 AS lon
-      UNION ALL
-      SELECT 'Maton' AS town, 'Gbinle Dixing' AS chiefdom, 'Kambia' AS district, 9.26742832 AS lat, -12.9319528 AS lon
-      UNION ALL
-      SELECT 'Rogberay' AS town, 'Gbinle Dixing' AS chiefdom, 'Kambia' AS district, 9.1453159 AS lat, -12.95530294 AS lon
-      UNION ALL
-      SELECT 'Sanda' AS town, 'Gbinle Dixing' AS chiefdom, 'Kambia' AS district, 9.07653526 AS lat, -13.0225435 AS lon
-      UNION ALL
-      SELECT 'Tawuya' AS town, 'Gbinle Dixing' AS chiefdom, 'Kambia' AS district, 9.11987676 AS lat, -12.97324024 AS lon
-      UNION ALL
-      SELECT 'Bombe' AS town, 'Magbema' AS chiefdom, 'Kambia' AS district, 8.97568356 AS lat, -12.90126699 AS lon
-      UNION ALL
-      SELECT 'Kamba' AS town, 'Magbema' AS chiefdom, 'Kambia' AS district, 9.04527384 AS lat, -12.87389825 AS lon
-      UNION ALL
-      SELECT 'Kambia' AS town, 'Magbema' AS chiefdom, 'Kambia' AS district, 9.09867432 AS lat, -12.91648006 AS lon
-      UNION ALL
-      SELECT 'Kargbulor' AS town, 'Magbema' AS chiefdom, 'Kambia' AS district, 8.94553136 AS lat, -12.9425706 AS lon
-      UNION ALL
-      SELECT 'Robat' AS town, 'Magbema' AS chiefdom, 'Kambia' AS district, 9.05754351 AS lat, -12.93732707 AS lon
-      UNION ALL
-      SELECT 'Rokupr' AS town, 'Magbema' AS chiefdom, 'Kambia' AS district, 9.00775609 AS lat, -12.92404189 AS lon
-      UNION ALL
-      SELECT 'Tormina' AS town, 'Magbema' AS chiefdom, 'Kambia' AS district, 9.1751553 AS lat, -12.88394368 AS lon
-      UNION ALL
-      SELECT 'Kalenkay' AS town, 'Mambolo' AS chiefdom, 'Kambia' AS district, 8.89618061 AS lat, -13.10779021 AS lon
-      UNION ALL
-      SELECT 'Mambolo' AS town, 'Mambolo' AS chiefdom, 'Kambia' AS district, 8.90528241 AS lat, -13.02622974 AS lon
-      UNION ALL
-      SELECT 'Matetie' AS town, 'Mambolo' AS chiefdom, 'Kambia' AS district, 8.90219457 AS lat, -13.05647935 AS lon
-      UNION ALL
-      SELECT 'Mayakie' AS town, 'Mambolo' AS chiefdom, 'Kambia' AS district, 8.88418878 AS lat, -12.93320942 AS lon
-      UNION ALL
-      SELECT 'Robis' AS town, 'Mambolo' AS chiefdom, 'Kambia' AS district, 8.88464981 AS lat, -12.98177996 AS lon
-      UNION ALL
-      SELECT 'Rowollon' AS town, 'Mambolo' AS chiefdom, 'Kambia' AS district, 8.92460116 AS lat, -13.00297333 AS lon
-      UNION ALL
-      SELECT 'Tombo-Wallah' AS town, 'Mambolo' AS chiefdom, 'Kambia' AS district, 8.86428378 AS lat, -13.0847778 AS lon
-      UNION ALL
-      SELECT 'Bamoi' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.07811627 AS lat, -12.73326905 AS lon
-      UNION ALL
-      SELECT 'Benna' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.08101799 AS lat, -12.8184343 AS lon
-      UNION ALL
-      SELECT 'Kawula' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.1419031 AS lat, -12.84730203 AS lon
-      UNION ALL
-      SELECT 'Kayenkassa' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.04954539 AS lat, -12.79012165 AS lon
-      UNION ALL
-      SELECT 'Mapolon' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.14137079 AS lat, -12.72059614 AS lon
-      UNION ALL
-      SELECT 'Maserie' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.09127992 AS lat, -12.78933424 AS lon
-      UNION ALL
-      SELECT 'Matengha' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.1156423 AS lat, -12.74591241 AS lon
-      UNION ALL
-      SELECT 'Matilba' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.14434081 AS lat, -12.74012096 AS lon
-      UNION ALL
-      SELECT 'Nonko' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.15631836 AS lat, -12.78486726 AS lon
-      UNION ALL
-      SELECT 'Samu' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.17597569 AS lat, -12.75032155 AS lon
-      UNION ALL
-      SELECT 'Sumbuya' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.09894241 AS lat, -12.71575862 AS lon
-      UNION ALL
-      SELECT 'Thalla' AS town, 'Masungbala' AS chiefdom, 'Kambia' AS district, 9.02359276 AS lat, -12.76038639 AS lon
-      UNION ALL
-      SELECT 'Bubuya' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 9.03075317 AS lat, -13.05466303 AS lon
-      UNION ALL
-      SELECT 'Kassiri' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 8.95651548 AS lat, -13.10636249 AS lon
-      UNION ALL
-      SELECT 'Koya' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 8.9616214 AS lat, -13.03608767 AS lon
-      UNION ALL
-      SELECT 'Kychom' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 8.96632535 AS lat, -13.1650514 AS lon
-      UNION ALL
-      SELECT 'Lusenia' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 9.01494804 AS lat, -13.11360266 AS lon
-      UNION ALL
-      SELECT 'Mafufuneh' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 9.000754 AS lat, -13.07526691 AS lon
-      UNION ALL
-      SELECT 'Makuma' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 9.00215281 AS lat, -13.27181045 AS lon
-      UNION ALL
-      SELECT 'Mange' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 9.0334321 AS lat, -13.00081325 AS lon
-      UNION ALL
-      SELECT 'Mapotolon' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 9.04599374 AS lat, -13.2353928 AS lon
-      UNION ALL
-      SELECT 'Moribaia' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 9.03969753 AS lat, -13.15498697 AS lon
-      UNION ALL
-      SELECT 'Rokon' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 9.00405338 AS lat, -12.9935658 AS lon
-      UNION ALL
-      SELECT 'Rosinor' AS town, 'Samu' AS chiefdom, 'Kambia' AS district, 8.97216813 AS lat, -13.00306623 AS lon
-      UNION ALL
-      SELECT 'Bubuya' AS town, 'Tonko Limba' AS chiefdom, 'Kambia' AS district, 9.26301514 AS lat, -12.707975 AS lon
-      UNION ALL
-      SELECT 'Kamassassa' AS town, 'Tonko Limba' AS chiefdom, 'Kambia' AS district, 9.40795634 AS lat, -12.48172063 AS lon
-      UNION ALL
-      SELECT 'Kathanthineh' AS town, 'Tonko Limba' AS chiefdom, 'Kambia' AS district, 9.28585006 AS lat, -12.55182949 AS lon
-      UNION ALL
-      SELECT 'Magbonkoh' AS town, 'Tonko Limba' AS chiefdom, 'Kambia' AS district, 9.22704414 AS lat, -12.78005477 AS lon
-      UNION ALL
-      SELECT 'Mamankoh' AS town, 'Tonko Limba' AS chiefdom, 'Kambia' AS district, 9.17446875 AS lat, -12.68653478 AS lon
-      UNION ALL
-      SELECT 'Yebaya' AS town, 'Tonko Limba' AS chiefdom, 'Kambia' AS district, 9.33005393 AS lat, -12.59976425 AS lon
-      UNION ALL
-      SELECT 'Foredugu' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.79057667 AS lat, -12.39661135 AS lon
-      UNION ALL
-      SELECT 'Gbaran Kamba' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.8336949 AS lat, -12.38542837 AS lon
-      UNION ALL
-      SELECT 'Kamasundu' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.87489522 AS lat, -12.50389575 AS lon
-      UNION ALL
-      SELECT 'Mabureh Buya' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.87460785 AS lat, -12.47120476 AS lon
-      UNION ALL
-      SELECT 'Mabureh Mende' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.79322233 AS lat, -12.53669861 AS lon
-      UNION ALL
-      SELECT 'Magbengbe' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.82991821 AS lat, -12.43676127 AS lon
-      UNION ALL
-      SELECT 'Manungbu' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.88590259 AS lat, -12.44286286 AS lon
-      UNION ALL
-      SELECT 'Petifu Bana' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.72732552 AS lat, -12.53674654 AS lon
-      UNION ALL
-      SELECT 'Robis' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.75261597 AS lat, -12.45518047 AS lon
-      UNION ALL
-      SELECT 'Rokel' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.76518723 AS lat, -12.53551142 AS lon
-      UNION ALL
-      SELECT 'Rosint' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.8274381 AS lat, -12.5087239 AS lon
-      UNION ALL
-      SELECT 'Worreh Mapoteh' AS town, 'Buya Romende' AS chiefdom, 'Karene' AS district, 8.88257814 AS lat, -12.40093642 AS lon
-      UNION ALL
-      SELECT 'Karine' AS town, 'Dibia' AS chiefdom, 'Karene' AS district, 8.92677872 AS lat, -12.58506243 AS lon
-      UNION ALL
-      SELECT 'Kayembor' AS town, 'Dibia' AS chiefdom, 'Karene' AS district, 8.94101288 AS lat, -12.63651078 AS lon
-      UNION ALL
-      SELECT 'Konta Kargbo' AS town, 'Dibia' AS chiefdom, 'Karene' AS district, 8.89086031 AS lat, -12.62109004 AS lon
-      UNION ALL
-      SELECT 'Mafonda' AS town, 'Dibia' AS chiefdom, 'Karene' AS district, 8.97993331 AS lat, -12.5939959 AS lon
-      UNION ALL
-      SELECT 'Makabari' AS town, 'Dibia' AS chiefdom, 'Karene' AS district, 8.91944225 AS lat, -12.64964352 AS lon
-      UNION ALL
-      SELECT 'Makump' AS town, 'Dibia' AS chiefdom, 'Karene' AS district, 8.8938387 AS lat, -12.68050662 AS lon
-      UNION ALL
-      SELECT 'Rogbalan' AS town, 'Dibia' AS chiefdom, 'Karene' AS district, 8.9022759 AS lat, -12.57913051 AS lon
-      UNION ALL
-      SELECT 'Bankro' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.02129434 AS lat, -12.65238656 AS lon
-      UNION ALL
-      SELECT 'Gbaneh-Loko' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.10589139 AS lat, -12.63094923 AS lon
-      UNION ALL
-      SELECT 'Gbogbodo' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.19606575 AS lat, -12.58391275 AS lon
-      UNION ALL
-      SELECT 'Gbonko' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.16873169 AS lat, -12.51996347 AS lon
-      UNION ALL
-      SELECT 'Kantia' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.22006027 AS lat, -12.46534241 AS lon
-      UNION ALL
-      SELECT 'Layamantmetank' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.15933166 AS lat, -12.62946603 AS lon
-      UNION ALL
-      SELECT 'Magbolontor' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.03992115 AS lat, -12.68806646 AS lon
-      UNION ALL
-      SELECT 'Malkiya' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.08038225 AS lat, -12.68951813 AS lon
-      UNION ALL
-      SELECT 'Mankneh' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.09487483 AS lat, -12.6812108 AS lon
-      UNION ALL
-      SELECT 'Masien' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.04244021 AS lat, -12.71895615 AS lon
-      UNION ALL
-      SELECT 'Menthen' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.11092789 AS lat, -12.5448675 AS lon
-      UNION ALL
-      SELECT 'Robis' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.14542525 AS lat, -12.47905819 AS lon
-      UNION ALL
-      SELECT 'Rotigbonko' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.04733746 AS lat, -12.59957749 AS lon
-      UNION ALL
-      SELECT 'Sendugu' AS town, 'Sanda Magbolont' AS chiefdom, 'Karene' AS district, 9.06924048 AS lat, -12.62344491 AS lon
-      UNION ALL
-      SELECT 'Gbaray Bana' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.98698513 AS lat, -12.52564333 AS lon
-      UNION ALL
-      SELECT 'Mafonikay' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.90639905 AS lat, -12.53878091 AS lon
-      UNION ALL
-      SELECT 'Magbafth' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.89278329 AS lat, -12.5199791 AS lon
-      UNION ALL
-      SELECT 'Maron' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.94354471 AS lat, -12.5225077 AS lon
-      UNION ALL
-      SELECT 'Robombeh' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.9214974 AS lat, -12.4797997 AS lon
-      UNION ALL
-      SELECT 'Batkanu' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 9.07610209 AS lat, -12.42361164 AS lon
-      UNION ALL
-      SELECT 'Mafonda' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 9.06720308 AS lat, -12.52025449 AS lon
-      UNION ALL
-      SELECT 'Magbaingba' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.92900183 AS lat, -12.3088654 AS lon
-      UNION ALL
-      SELECT 'Magbanamba' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 9.03775041 AS lat, -12.45966968 AS lon
-      UNION ALL
-      SELECT 'Makaiba' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.97464359 AS lat, -12.41618586 AS lon
-      UNION ALL
-      SELECT 'Makayrembay' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 9.05223522 AS lat, -12.47943606 AS lon
-      UNION ALL
-      SELECT 'Mandawahun' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.99811001 AS lat, -12.38733336 AS lon
-      UNION ALL
-      SELECT 'Manyakoi' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.94337399 AS lat, -12.36570855 AS lon
-      UNION ALL
-      SELECT 'Mayankay' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 9.04141467 AS lat, -12.39602053 AS lon
-      UNION ALL
-      SELECT 'Robaka' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.9683225 AS lat, -12.47201093 AS lon
-      UNION ALL
-      SELECT 'Rotha-Tha' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 8.93977032 AS lat, -12.4590484 AS lon
-      UNION ALL
-      SELECT 'Simbaya' AS town, 'Libeisaygahun' AS chiefdom, 'Karene' AS district, 9.00003482 AS lat, -12.47667344 AS lon
-      UNION ALL
-      SELECT 'Banka' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.42520653 AS lat, -12.24828072 AS lon
-      UNION ALL
-      SELECT 'Benia' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.42082245 AS lat, -12.19571239 AS lon
-      UNION ALL
-      SELECT 'Kaindema' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.39847887 AS lat, -12.29488406 AS lon
-      UNION ALL
-      SELECT 'Kamalu' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.40188943 AS lat, -12.2421 AS lon
-      UNION ALL
-      SELECT 'Kania' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.36533876 AS lat, -12.2536681 AS lon
-      UNION ALL
-      SELECT 'Kindia' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.46652605 AS lat, -12.14579239 AS lon
-      UNION ALL
-      SELECT 'Laminaya' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.4037492 AS lat, -12.05028382 AS lon
-      UNION ALL
-      SELECT 'Madina' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.45792866 AS lat, -12.01749502 AS lon
-      UNION ALL
-      SELECT 'Maharibo' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.38383576 AS lat, -12.13271807 AS lon
-      UNION ALL
-      SELECT 'Makapa' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.37842778 AS lat, -12.32942007 AS lon
-      UNION ALL
-      SELECT 'Makwie Loko' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.51788808 AS lat, -12.05714344 AS lon
-      UNION ALL
-      SELECT 'Manathi' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.3633893 AS lat, -12.1818886 AS lon
-      UNION ALL
-      SELECT 'Maparay' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.3743517 AS lat, -12.2311123 AS lon
-      UNION ALL
-      SELECT 'Rothatha' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.42132968 AS lat, -12.29527996 AS lon
-      UNION ALL
-      SELECT 'Timbo' AS town, 'Sanda Loko' AS chiefdom, 'Karene' AS district, 9.36662147 AS lat, -12.27623894 AS lon
-      UNION ALL
-      SELECT 'Kalangba' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.21952433 AS lat, -12.26016602 AS lon
-      UNION ALL
-      SELECT 'Kukuna' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.17479852 AS lat, -12.29018604 AS lon
-      UNION ALL
-      SELECT 'Marampa' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.18093385 AS lat, -12.35949199 AS lon
-      UNION ALL
-      SELECT 'Masisan' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.12651438 AS lat, -12.27498072 AS lon
-      UNION ALL
-      SELECT 'Mateboi' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.10851891 AS lat, -12.35632643 AS lon
-      UNION ALL
-      SELECT 'Rogbin' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.20860639 AS lat, -12.20340088 AS lon
-      UNION ALL
-      SELECT 'Rogboreh' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.17855197 AS lat, -12.21766751 AS lon
-      UNION ALL
-      SELECT 'Rosos' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.14148692 AS lat, -12.41233877 AS lon
-      UNION ALL
-      SELECT 'Sendugu' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.18032653 AS lat, -12.24995691 AS lon
-      UNION ALL
-      SELECT 'Yankabala' AS town, 'Sanda Tendaran' AS chiefdom, 'Karene' AS district, 9.17793325 AS lat, -12.32539428 AS lon
-      UNION ALL
-      SELECT 'Kamakwie' AS town, 'Sella Limba' AS chiefdom, 'Karene' AS district, 9.51041387 AS lat, -12.24405877 AS lon
-      UNION ALL
-      SELECT 'Kamankoh' AS town, 'Sella Limba' AS chiefdom, 'Karene' AS district, 9.48970604 AS lat, -12.33435488 AS lon
-      UNION ALL
-      SELECT 'Kayimbor' AS town, 'Sella Limba' AS chiefdom, 'Karene' AS district, 9.5474963 AS lat, -12.12033638 AS lon
-      UNION ALL
-      SELECT 'Magbonkoni I' AS town, 'Sella Limba' AS chiefdom, 'Karene' AS district, 9.48679607 AS lat, -12.23541666 AS lon
-      UNION ALL
-      SELECT 'Magbonkoni II' AS town, 'Sella Limba' AS chiefdom, 'Karene' AS district, 9.44474642 AS lat, -12.3328861 AS lon
-      UNION ALL
-      SELECT 'Manonkoh' AS town, 'Sella Limba' AS chiefdom, 'Karene' AS district, 9.45355675 AS lat, -12.26829061 AS lon
-      UNION ALL
-      SELECT 'Samia' AS town, 'Sella Limba' AS chiefdom, 'Karene' AS district, 9.56081367 AS lat, -12.24143759 AS lon
-      UNION ALL
-      SELECT 'Dugutha' AS town, 'Tambakha' AS chiefdom, 'Karene' AS district, 9.75261708 AS lat, -12.01926851 AS lon
-      UNION ALL
-      SELECT 'Moria' AS town, 'Tambakha' AS chiefdom, 'Karene' AS district, 9.85713368 AS lat, -12.22099259 AS lon
-      UNION ALL
-      SELECT 'Paramount Chief Se' AS town, 'Tambakha' AS chiefdom, 'Karene' AS district, 9.72319772 AS lat, -12.29665028 AS lon
-      UNION ALL
-      SELECT 'Simibue' AS town, 'Tambakha' AS chiefdom, 'Karene' AS district, 9.60530163 AS lat, -12.44188178 AS lon
-      UNION ALL
-      SELECT 'Thalla' AS town, 'Tambakha' AS chiefdom, 'Karene' AS district, 9.82402304 AS lat, -12.39188752 AS lon
-      UNION ALL
-      SELECT 'Barmoi' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.98784417 AS lat, -12.63672261 AS lon
-      UNION ALL
-      SELECT 'Kagbanthama' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.95121345 AS lat, -12.67584701 AS lon
-      UNION ALL
-      SELECT 'Kaiyeabor' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.92945732 AS lat, -12.81478449 AS lon
-      UNION ALL
-      SELECT 'Kalangba' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.89012964 AS lat, -12.88890446 AS lon
-      UNION ALL
-      SELECT 'Kambia Morie' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.93892285 AS lat, -12.85194587 AS lon
-      UNION ALL
-      SELECT 'Konta Ferry' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.91609464 AS lat, -12.84555094 AS lon
-      UNION ALL
-      SELECT 'Mabombo' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.97310759 AS lat, -12.77647148 AS lon
-      UNION ALL
-      SELECT 'Makana' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.87460215 AS lat, -12.80292817 AS lon
-      UNION ALL
-      SELECT 'Mamanka' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.86652277 AS lat, -12.83378342 AS lon
-      UNION ALL
-      SELECT 'Mange Morie' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.93232623 AS lat, -12.8734966 AS lon
-      UNION ALL
-      SELECT 'Marenka' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.98927062 AS lat, -12.69799286 AS lon
-      UNION ALL
-      SELECT 'Minthormore' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.9958658 AS lat, -12.82411055 AS lon
-      UNION ALL
-      SELECT 'Rogbla' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.85677192 AS lat, -12.86615784 AS lon
-      UNION ALL
-      SELECT 'Romeni' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.91065373 AS lat, -12.72111128 AS lon
-      UNION ALL
-      SELECT 'Rotifunk' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.93579445 AS lat, -12.76505497 AS lon
-      UNION ALL
-      SELECT 'Yali-Sanda' AS town, 'Bureh Kasseh Ma' AS chiefdom, 'Port Loko' AS district, 8.89042814 AS lat, -12.83275362 AS lon
-      UNION ALL
-      SELECT 'Foronkoya' AS town, 'Kaffu Bullom' AS chiefdom, 'Port Loko' AS district, 8.64023481 AS lat, -13.18694453 AS lon
-      UNION ALL
-      SELECT 'Kasongha' AS town, 'Kaffu Bullom' AS chiefdom, 'Port Loko' AS district, 8.61782025 AS lat, -13.16080867 AS lon
-      UNION ALL
-      SELECT 'Lungi' AS town, 'Kaffu Bullom' AS chiefdom, 'Port Loko' AS district, 8.67671201 AS lat, -13.19748734 AS lon
-      UNION ALL
-      SELECT 'Mahera' AS town, 'Kaffu Bullom' AS chiefdom, 'Port Loko' AS district, 8.60924744 AS lat, -13.18795521 AS lon
-      UNION ALL
-      SELECT 'Mamanki' AS town, 'Kaffu Bullom' AS chiefdom, 'Port Loko' AS district, 8.57467568 AS lat, -13.15132935 AS lon
-      UNION ALL
-      SELECT 'Mayaya' AS town, 'Kaffu Bullom' AS chiefdom, 'Port Loko' AS district, 8.6776289 AS lat, -13.23070555 AS lon
-      UNION ALL
-      SELECT 'Rosint' AS town, 'Kaffu Bullom' AS chiefdom, 'Port Loko' AS district, 8.5435117 AS lat, -13.16320193 AS lon
-      UNION ALL
-      SELECT 'Yongro' AS town, 'Kaffu Bullom' AS chiefdom, 'Port Loko' AS district, 8.5800124 AS lat, -13.18838062 AS lon
-      UNION ALL
-      SELECT 'Benkia' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.52556796 AS lat, -12.94901811 AS lon
-      UNION ALL
-      SELECT 'Fondu' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.45495553 AS lat, -12.77741992 AS lon
-      UNION ALL
-      SELECT 'Foredugu' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.45126749 AS lat, -12.83033301 AS lon
-      UNION ALL
-      SELECT 'Futa' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.49282605 AS lat, -12.93646099 AS lon
-      UNION ALL
-      SELECT 'Gbabai' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.42495984 AS lat, -12.88882923 AS lon
-      UNION ALL
-      SELECT 'Kagbala A' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.32146467 AS lat, -12.89483751 AS lon
-      UNION ALL
-      SELECT 'Kagbala B' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.38552133 AS lat, -12.99381185 AS lon
-      UNION ALL
-      SELECT 'Magbandoma' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.4197712 AS lat, -12.85997051 AS lon
-      UNION ALL
-      SELECT 'Magbeni' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.50304845 AS lat, -12.85084438 AS lon
-      UNION ALL
-      SELECT 'Mahera' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.54198246 AS lat, -12.76853826 AS lon
-      UNION ALL
-      SELECT 'Marefa' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.47258403 AS lat, -13.06474763 AS lon
-      UNION ALL
-      SELECT 'Matene' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.47935875 AS lat, -12.65543621 AS lon
-      UNION ALL
-      SELECT 'Mathirie' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.40012443 AS lat, -12.91352384 AS lon
-      UNION ALL
-      SELECT 'Mawoma' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.44071941 AS lat, -12.70444465 AS lon
-      UNION ALL
-      SELECT 'Robia' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.40123245 AS lat, -13.04713089 AS lon
-      UNION ALL
-      SELECT 'Rokel' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.55014683 AS lat, -12.71157357 AS lon
-      UNION ALL
-      SELECT 'Roponka' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.52564921 AS lat, -12.88893072 AS lon
-      UNION ALL
-      SELECT 'Rosarr' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.5575062 AS lat, -12.73967294 AS lon
-      UNION ALL
-      SELECT 'Sanda' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.40948786 AS lat, -12.96863773 AS lon
-      UNION ALL
-      SELECT 'Tumba' AS town, 'Koya' AS chiefdom, 'Port Loko' AS district, 8.5059709 AS lat, -13.009614 AS lon
-      UNION ALL
-      SELECT 'Benkia' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.75942591 AS lat, -13.01239035 AS lon
-      UNION ALL
-      SELECT 'Gbainty' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.79875434 AS lat, -13.09407183 AS lon
-      UNION ALL
-      SELECT 'Kamasondo' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.6365917 AS lat, -12.95165062 AS lon
-      UNION ALL
-      SELECT 'Kantaya' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.70218027 AS lat, -13.02956007 AS lon
-      UNION ALL
-      SELECT 'Katonga' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.78705579 AS lat, -12.95990003 AS lon
-      UNION ALL
-      SELECT 'Komrabai' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.67674524 AS lat, -13.1426876 AS lon
-      UNION ALL
-      SELECT 'Konta' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.82332063 AS lat, -13.02106836 AS lon
-      UNION ALL
-      SELECT 'Magbokorr' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.74445901 AS lat, -12.91108477 AS lon
-      UNION ALL
-      SELECT 'Mannah' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.71373331 AS lat, -12.94594843 AS lon
-      UNION ALL
-      SELECT 'Mapiterr' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.65718645 AS lat, -13.07691043 AS lon
-      UNION ALL
-      SELECT 'Matheng' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.71969118 AS lat, -13.16381074 AS lon
-      UNION ALL
-      SELECT 'Petifu' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.68672132 AS lat, -13.06372294 AS lon
-      UNION ALL
-      SELECT 'Royema' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.73334237 AS lat, -13.0834285 AS lon
-      UNION ALL
-      SELECT 'Yurika' AS town, 'Lokomasama' AS chiefdom, 'Port Loko' AS district, 8.77950865 AS lat, -13.19777753 AS lon
-      UNION ALL
-      SELECT 'Batpolon' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.7169234 AS lat, -12.69533925 AS lon
-      UNION ALL
-      SELECT 'Falaba' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.77091833 AS lat, -12.77974747 AS lon
-      UNION ALL
-      SELECT 'Fenka' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.75585059 AS lat, -12.70001042 AS lon
-      UNION ALL
-      SELECT 'Gberray Bana' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.58775667 AS lat, -12.78864722 AS lon
-      UNION ALL
-      SELECT 'Gberray Morie' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.78571224 AS lat, -12.87601973 AS lon
-      UNION ALL
-      SELECT 'Gberray Thunkara' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.7071538 AS lat, -12.84686001 AS lon
-      UNION ALL
-      SELECT 'Gbonko Mayira' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.64485339 AS lat, -12.86441758 AS lon
-      UNION ALL
-      SELECT 'Kabata' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.83349825 AS lat, -12.71303985 AS lon
-      UNION ALL
-      SELECT 'Komrabai-Waterloo' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.71449073 AS lat, -12.62520725 AS lon
-      UNION ALL
-      SELECT 'Kondato' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.76031204 AS lat, -12.78169366 AS lon
-      UNION ALL
-      SELECT 'Maboni' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.63801487 AS lat, -12.89055596 AS lon
-      UNION ALL
-      SELECT 'Maforay' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.7010833 AS lat, -12.80139538 AS lon
-      UNION ALL
-      SELECT 'Magbankitha' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.74295909 AS lat, -12.59609591 AS lon
-      UNION ALL
-      SELECT 'Magbengbeh' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.67491852 AS lat, -12.82400663 AS lon
-      UNION ALL
-      SELECT 'Magbeni' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.80407668 AS lat, -12.79708038 AS lon
-      UNION ALL
-      SELECT 'Makorobolai' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.58591225 AS lat, -12.90565398 AS lon
-      UNION ALL
-      SELECT 'Malal' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.85530985 AS lat, -12.75424148 AS lon
-      UNION ALL
-      SELECT 'Mamanso' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.74772488 AS lat, -12.63728907 AS lon
-      UNION ALL
-      SELECT 'Mapolie' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.62863786 AS lat, -12.79155636 AS lon
-      UNION ALL
-      SELECT 'Maronko' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.73133035 AS lat, -12.57449598 AS lon
-      UNION ALL
-      SELECT 'Marunia' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.6433095 AS lat, -12.82492648 AS lon
-      UNION ALL
-      SELECT 'Massebay' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.58277296 AS lat, -12.83724746 AS lon
-      UNION ALL
-      SELECT 'Mathera' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.67932066 AS lat, -12.76601562 AS lon
-      UNION ALL
-      SELECT 'Moria' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.72545049 AS lat, -12.74663708 AS lon
-      UNION ALL
-      SELECT 'Old Port Loko' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.75140109 AS lat, -12.7855134 AS lon
-      UNION ALL
-      SELECT 'Romaka' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.78325942 AS lat, -12.74510168 AS lon
-      UNION ALL
-      SELECT 'Rosarr' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.7330986 AS lat, -12.79584008 AS lon
-      UNION ALL
-      SELECT 'Sanda' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.76169497 AS lat, -12.79059082 AS lon
-      UNION ALL
-      SELECT 'Sendugu' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.77443474 AS lat, -12.7901714 AS lon
-      UNION ALL
-      SELECT 'Tauya' AS town, 'Maforki' AS chiefdom, 'Port Loko' AS district, 8.82504102 AS lat, -12.81326662 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Baipolon' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.68348209 AS lat, -12.53560046 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Four Road -' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.6795184 AS lat, -12.54158525 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Kenneday' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.68335491 AS lat, -12.53120916 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Mabai' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.67449672 AS lat, -12.53477909 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Madigbo' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.69735684 AS lat, -12.53187304 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Mamanso' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.68134512 AS lat, -12.53034642 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Mines' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.67510554 AS lat, -12.51453346 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Old Town' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.66826732 AS lat, -12.53764984 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Path Bana' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.68731588 AS lat, -12.52526032 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Robis' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.67165374 AS lat, -12.52515791 AS lon
-      UNION ALL
-      SELECT 'Lunsar-Technical' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.69387565 AS lat, -12.54185361 AS lon
-      UNION ALL
-      SELECT 'Magbele' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.63518379 AS lat, -12.66761042 AS lon
-      UNION ALL
-      SELECT 'Mange' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.70895029 AS lat, -12.38887807 AS lon
-      UNION ALL
-      SELECT 'Marampa' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.70246888 AS lat, -12.48535685 AS lon
-      UNION ALL
-      SELECT 'Mawullay' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.65414329 AS lat, -12.51509383 AS lon
-      UNION ALL
-      SELECT 'Petifu Madina' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.63943444 AS lat, -12.72591709 AS lon
-      UNION ALL
-      SELECT 'Rogballan' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.68103765 AS lat, -12.58421518 AS lon
-      UNION ALL
-      SELECT 'Rolankonoh' AS town, 'Marampa' AS chiefdom, 'Port Loko' AS district, 8.66476138 AS lat, -12.63118341 AS lon
-      UNION ALL
-      SELECT 'Biki' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.4815266 AS lat, -12.5309707 AS lon
-      UNION ALL
-      SELECT 'Biss-Manika' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.53239355 AS lat, -12.5121107 AS lon
-      UNION ALL
-      SELECT 'Katick' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.54957943 AS lat, -12.40014194 AS lon
-      UNION ALL
-      SELECT 'Maconteh' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.56538394 AS lat, -12.47607461 AS lon
-      UNION ALL
-      SELECT 'Mamalikie' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.4886262 AS lat, -12.56918038 AS lon
-      UNION ALL
-      SELECT 'Masimera' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.63225854 AS lat, -12.43923533 AS lon
-      UNION ALL
-      SELECT 'Matuku' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.55185463 AS lat, -12.43742543 AS lon
-      UNION ALL
-      SELECT 'Mayola-Thatha' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.60260358 AS lat, -12.36854392 AS lon
-      UNION ALL
-      SELECT 'Nonkoba' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.61958243 AS lat, -12.57916687 AS lon
-      UNION ALL
-      SELECT 'Rokel' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.56546519 AS lat, -12.67767003 AS lon
-      UNION ALL
-      SELECT 'Rokon/Komboya' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.57879136 AS lat, -12.61296882 AS lon
-      UNION ALL
-      SELECT 'Yoni-Pet' AS town, 'Masimera' AS chiefdom, 'Port Loko' AS district, 8.58699833 AS lat, -12.53915235 AS lon
-      UNION ALL
-      SELECT 'Kambia' AS town, 'TMS' AS chiefdom, 'Port Loko' AS district, 8.81868643 AS lat, -12.57359798 AS lon
-      UNION ALL
-      SELECT 'Kanu' AS town, 'TMS' AS chiefdom, 'Port Loko' AS district, 8.86297603 AS lat, -12.57151872 AS lon
-      UNION ALL
-      SELECT 'Kargbo' AS town, 'TMS' AS chiefdom, 'Port Loko' AS district, 8.86432883 AS lat, -12.65714869 AS lon
-      UNION ALL
-      SELECT 'Konkorie' AS town, 'TMS' AS chiefdom, 'Port Loko' AS district, 8.83434496 AS lat, -12.64474775 AS lon
-      UNION ALL
-      SELECT 'Magbapsa' AS town, 'TMS' AS chiefdom, 'Port Loko' AS district, 8.78014203 AS lat, -12.60179836 AS lon
-      UNION ALL
-      SELECT 'Malakuray' AS town, 'TMS' AS chiefdom, 'Port Loko' AS district, 8.7968448 AS lat, -12.6374749 AS lon
-      UNION ALL
-      SELECT 'Kambaia' AS town, 'Sulima' AS chiefdom, 'Fabala' AS district, 9.78300173 AS lat, -11.04621807 AS lon
-    ) t
-    JOIN msip_municipio m
-      ON m.nombre = t.chiefdom
-    JOIN msip_departamento d
-      ON d.id = m.departamento_id AND d.nombre = t.district AND d.pais_id = 694
-    WHERE NOT EXISTS (
-      SELECT 1 FROM msip_centropoblado cp
-      WHERE cp.nombre = t.town AND cp.municipio_id = m.id
-    )
+    INSERT INTO msip_centropoblado (id, nombre, municipio_id, latitud, longitud, fechacreacion, created_at, updated_at)
+    VALUES
+      (45914, 'Baiwalla', 1842, 7.98039328, -10.63604148, NOW(), NOW(), NOW()),
+      (45915, 'Dodo', 1842, 7.9486324, -10.67087367, NOW(), NOW(), NOW()),
+      (45916, 'Sakiema', 1842, 8.00757173, -10.68176221, NOW(), NOW(), NOW()),
+      (45917, 'Sienga', 1842, 7.91063203, -10.63879056, NOW(), NOW(), NOW()),
+      (45918, 'Bobor', 1843, 7.9203002, -10.90929788, NOW(), NOW(), NOW()),
+      (45919, 'Kaio', 1843, 7.94538913, -10.86766264, NOW(), NOW(), NOW()),
+      (45920, 'Lower Giebu', 1843, 7.82206797, -10.90731483, NOW(), NOW(), NOW()),
+      (45921, 'Lower Luyengeh', 1843, 7.84690333, -10.99588921, NOW(), NOW(), NOW()),
+      (45922, 'Mano', 1843, 7.91109369, -10.84265768, NOW(), NOW(), NOW()),
+      (45923, 'Sowa', 1843, 7.98301261, -10.82294552, NOW(), NOW(), NOW()),
+      (45924, 'Upper Giebu', 1843, 7.86267628, -10.89365132, NOW(), NOW(), NOW()),
+      (45925, 'Upper Luyengeh', 1843, 7.8622429, -10.95031394, NOW(), NOW(), NOW()),
+      (45926, 'Dakaleley', 1844, 8.46483866, -10.37693348, NOW(), NOW(), NOW()),
+      (45927, 'Kama Teng', 1844, 8.40958283, -10.40377859, NOW(), NOW(), NOW()),
+      (45928, 'Kama Toh', 1844, 8.36873317, -10.42165224, NOW(), NOW(), NOW()),
+      (45929, 'Bumasadu', 1845, 8.34304419, -10.37665553, NOW(), NOW(), NOW()),
+      (45930, 'Konio', 1845, 8.46539895, -10.3163184, NOW(), NOW(), NOW()),
+      (45931, 'Kundu', 1845, 8.46476732, -10.29710068, NOW(), NOW(), NOW()),
+      (45932, 'Lela', 1845, 8.37472169, -10.37853232, NOW(), NOW(), NOW()),
+      (45933, 'Torli', 1845, 8.4610302, -10.34350208, NOW(), NOW(), NOW()),
+      (45934, 'Bende Bengu', 1846, 8.39268673, -10.29981306, NOW(), NOW(), NOW()),
+      (45935, 'Konio', 1846, 8.36306663, -10.33454414, NOW(), NOW(), NOW()),
+      (45936, 'Pokorli', 1846, 8.32635813, -10.31627093, NOW(), NOW(), NOW()),
+      (45937, 'Tongi Tingi', 1846, 8.21223903, -10.35868993, NOW(), NOW(), NOW()),
+      (45938, 'Bongre', 1847, 8.06516359, -10.80036156, NOW(), NOW(), NOW()),
+      (45939, 'Borkou', 1847, 8.17566274, -10.73236756, NOW(), NOW(), NOW()),
+      (45940, 'Falloh', 1847, 8.17644019, -10.7859282, NOW(), NOW(), NOW()),
+      (45941, 'Jorwu', 1847, 8.09872595, -10.84327356, NOW(), NOW(), NOW()),
+      (45942, 'Manowa', 1847, 8.17907908, -10.7471824, NOW(), NOW(), NOW()),
+      (45943, 'Marwei', 1847, 8.11871211, -10.77932462, NOW(), NOW(), NOW()),
+      (45944, 'Seimaya', 1847, 8.22754735, -10.72227592, NOW(), NOW(), NOW()),
+      (45945, 'Bunumbu', 1848, 8.16751234, -10.85011239, NOW(), NOW(), NOW()),
+      (45946, 'Golama', 1848, 8.22911594, -10.79402145, NOW(), NOW(), NOW()),
+      (45947, 'Kpaewa', 1848, 8.21979075, -10.85194553, NOW(), NOW(), NOW()),
+      (45948, 'Kpindima', 1848, 8.13771103, -10.82678469, NOW(), NOW(), NOW()),
+      (45949, 'Baoma', 1849, 8.27653263, -10.6605757, NOW(), NOW(), NOW()),
+      (45950, 'Gao', 1849, 8.09728842, -10.58160782, NOW(), NOW(), NOW()),
+      (45951, 'Gbela', 1849, 8.26474254, -10.45824001, NOW(), NOW(), NOW()),
+      (45952, 'Giehun', 1849, 8.19781293, -10.63511897, NOW(), NOW(), NOW()),
+      (45953, 'Lower Kpombali', 1849, 8.17480962, -10.55922064, NOW(), NOW(), NOW()),
+      (45954, 'Luawa Foguiya', 1849, 8.24656848, -10.56757575, NOW(), NOW(), NOW()),
+      (45955, 'Mano-Sewallu', 1849, 8.33658552, -10.4754342, NOW(), NOW(), NOW()),
+      (45956, 'Mende Buima', 1849, 8.19965892, -10.69004423, NOW(), NOW(), NOW()),
+      (45957, 'Mofindor', 1849, 8.31683029, -10.61862897, NOW(), NOW(), NOW()),
+      (45958, 'Upper Kpombali', 1849, 8.19780805, -10.48228715, NOW(), NOW(), NOW()),
+      (45959, 'Bamburu', 1850, 7.79516764, -10.67267945, NOW(), NOW(), NOW()),
+      (45960, 'Lower Sami', 1850, 7.73824062, -10.87731136, NOW(), NOW(), NOW()),
+      (45961, 'Njagbla', 1850, 7.88924713, -10.74166813, NOW(), NOW(), NOW()),
+      (45962, 'Pelegbambeima', 1850, 7.74467174, -10.80300338, NOW(), NOW(), NOW()),
+      (45963, 'Upper Sami', 1850, 7.88872135, -10.79609763, NOW(), NOW(), NOW()),
+      (45964, 'Gbongre', 1851, 8.04444464, -10.77627653, NOW(), NOW(), NOW()),
+      (45965, 'Levuma Jeigbla', 1851, 8.04150964, -10.73322908, NOW(), NOW(), NOW()),
+      (45966, 'Lower Kuiva', 1851, 7.92704394, -10.7881914, NOW(), NOW(), NOW()),
+      (45967, 'Upper Kuiva', 1851, 7.94794155, -10.71878913, NOW(), NOW(), NOW()),
+      (45968, 'Bombowa', 1852, 8.11409592, -10.90953507, NOW(), NOW(), NOW()),
+      (45969, 'Dan Sei', 1852, 8.02910427, -10.89307753, NOW(), NOW(), NOW()),
+      (45970, 'Falley', 1852, 8.06121098, -10.87966627, NOW(), NOW(), NOW()),
+      (45971, 'Fauya', 1852, 7.90839254, -11.00351959, NOW(), NOW(), NOW()),
+      (45972, 'Gboo', 1852, 8.03704659, -10.93502961, NOW(), NOW(), NOW()),
+      (45973, 'Jonga', 1852, 8.0407185, -10.83113317, NOW(), NOW(), NOW()),
+      (45974, 'Kargbu', 1852, 7.93283171, -10.95713281, NOW(), NOW(), NOW()),
+      (45975, 'Keimaya', 1852, 7.96752826, -10.91045809, NOW(), NOW(), NOW()),
+      (45976, 'Lower Nyawa', 1852, 7.96434103, -10.98389236, NOW(), NOW(), NOW()),
+      (45977, 'Sei I', 1852, 8.00820533, -10.95520104, NOW(), NOW(), NOW()),
+      (45978, 'Sei II', 1852, 8.06887822, -10.93744039, NOW(), NOW(), NOW()),
+      (45979, 'Upper Nyawa', 1852, 7.98868837, -10.86834439, NOW(), NOW(), NOW()),
+      (45980, 'Bulima', 1853, 8.28717624, -10.73253113, NOW(), NOW(), NOW()),
+      (45981, 'Jagor', 1853, 8.42340768, -10.65397422, NOW(), NOW(), NOW()),
+      (45982, 'Kumatandu', 1853, 8.35497464, -10.70001553, NOW(), NOW(), NOW()),
+      (45983, 'Lombama', 1853, 8.420033, -10.68422042, NOW(), NOW(), NOW()),
+      (45984, 'Nimima', 1853, 8.37623047, -10.74179869, NOW(), NOW(), NOW()),
+      (45985, 'Bambara', 1854, 8.05835544, -10.65586042, NOW(), NOW(), NOW()),
+      (45986, 'Bomaru-guma', 1854, 8.02272915, -10.63012805, NOW(), NOW(), NOW()),
+      (45987, 'Goleiwoma', 1854, 8.12663923, -10.72811193, NOW(), NOW(), NOW()),
+      (45988, 'Golu', 1854, 8.10753848, -10.64045362, NOW(), NOW(), NOW()),
+      (45989, 'Korbu', 1854, 8.07887984, -10.70995515, NOW(), NOW(), NOW()),
+      (45990, 'Naiahun', 1854, 8.13043386, -10.67991569, NOW(), NOW(), NOW()),
+      (45991, 'Bendu', 1855, 8.32428067, -10.79236817, NOW(), NOW(), NOW()),
+      (45992, 'Kuiva Buima', 1855, 8.26277316, -10.80471309, NOW(), NOW(), NOW()),
+      (45993, 'Kuiva Jagor', 1855, 8.35787253, -10.83043515, NOW(), NOW(), NOW()),
+      (45994, 'Kuivawa', 1855, 8.32675622, -10.85368334, NOW(), NOW(), NOW()),
+      (45995, 'Dakowa', 1871, 7.76457121, -11.10388829, NOW(), NOW(), NOW()),
+      (45996, 'Danyadejo', 1871, 7.76457121, -11.15508842, NOW(), NOW(), NOW()),
+      (45997, 'Dassama', 1871, 7.83946937, -11.10438489, NOW(), NOW(), NOW()),
+      (45998, 'Fowai', 1871, 7.74079979, -11.1962585, NOW(), NOW(), NOW()),
+      (45999, 'Klajie', 1871, 7.81173667, -11.07427897, NOW(), NOW(), NOW()),
+      (46000, 'Lower Dabor', 1871, 7.68292382, -11.21236267, NOW(), NOW(), NOW()),
+      (46001, 'Upper Dabor', 1871, 7.83679627, -11.02502301, NOW(), NOW(), NOW()),
+      (46002, 'Bambara', 1872, 8.22380235, -11.19949568, NOW(), NOW(), NOW()),
+      (46003, 'Bonya', 1872, 8.16819122, -11.16216025, NOW(), NOW(), NOW()),
+      (46004, 'Bundoryama', 1872, 8.20492921, -11.23179056, NOW(), NOW(), NOW()),
+      (46005, 'Gorama', 1872, 8.31218755, -11.20648664, NOW(), NOW(), NOW()),
+      (46006, 'Karteh', 1872, 8.24820796, -11.16668691, NOW(), NOW(), NOW()),
+      (46007, 'Korgay', 1872, 8.09351655, -11.22332865, NOW(), NOW(), NOW()),
+      (46008, 'Seiwor', 1872, 8.12280724, -11.18950364, NOW(), NOW(), NOW()),
+      (46009, 'Giebu', 1873, 7.66588783, -11.12998863, NOW(), NOW(), NOW()),
+      (46010, 'Joru', 1873, 7.6748927, -11.03410075, NOW(), NOW(), NOW()),
+      (46011, 'Kokoru', 1873, 7.63958016, -11.10143166, NOW(), NOW(), NOW()),
+      (46012, 'Mendekelema', 1873, 7.77938829, -10.97101714, NOW(), NOW(), NOW()),
+      (46013, 'Sandaru', 1873, 7.7536592, -11.03032265, NOW(), NOW(), NOW()),
+      (46014, 'Sembehun', 1873, 7.68394632, -10.96336736, NOW(), NOW(), NOW()),
+      (46015, 'Biatong', 1874, 8.49247771, -11.40568411, NOW(), NOW(), NOW()),
+      (46016, 'Famanjo', 1874, 8.44729003, -11.27909426, NOW(), NOW(), NOW()),
+      (46017, 'Kaklawa', 1874, 8.41764239, -11.3842286, NOW(), NOW(), NOW()),
+      (46018, 'Kualley', 1874, 8.43173879, -11.49328312, NOW(), NOW(), NOW()),
+      (46019, 'Borley', 1875, 7.99832528, -11.35657583, NOW(), NOW(), NOW()),
+      (46020, 'Gboro-Lokoma', 1875, 8.07236266, -11.30150488, NOW(), NOW(), NOW()),
+      (46021, 'Karga', 1875, 7.98612383, -11.32140378, NOW(), NOW(), NOW()),
+      (46022, 'Sonnie', 1875, 8.01591104, -11.25587423, NOW(), NOW(), NOW()),
+      (46023, 'Joi', 1877, 7.71085145, -11.27467054, NOW(), NOW(), NOW()),
+      (46024, 'Koya Gbundohun', 1877, 7.53175402, -11.3047023, NOW(), NOW(), NOW()),
+      (46025, 'Menima', 1877, 7.68844372, -11.30935649, NOW(), NOW(), NOW()),
+      (46026, 'Serabu', 1877, 7.62738512, -11.34437508, NOW(), NOW(), NOW()),
+      (46027, 'Upper Koya', 1877, 7.60646903, -11.26044867, NOW(), NOW(), NOW()),
+      (46028, 'Korjei', 1878, 7.65942287, -11.45806774, NOW(), NOW(), NOW()),
+      (46029, 'Njeiwoma', 1878, 7.67461161, -11.48133818, NOW(), NOW(), NOW()),
+      (46030, 'Bonya', 1879, 8.27139837, -11.10193036, NOW(), NOW(), NOW()),
+      (46031, 'Fallay', 1879, 8.17101794, -11.02032963, NOW(), NOW(), NOW()),
+      (46032, 'Gboro', 1879, 8.10765455, -11.01848962, NOW(), NOW(), NOW()),
+      (46033, 'Korjei Buima', 1879, 8.10668645, -11.06495467, NOW(), NOW(), NOW()),
+      (46034, 'Korjei Ngieya', 1879, 8.11617286, -11.11799917, NOW(), NOW(), NOW()),
+      (46035, 'Nyawa', 1879, 8.23148181, -11.05216507, NOW(), NOW(), NOW()),
+      (46036, 'Sei', 1879, 8.23644028, -10.97025046, NOW(), NOW(), NOW()),
+      (46037, 'Hulorhun Njagbudor', 1880, 8.17211802, -10.91149754, NOW(), NOW(), NOW()),
+      (46038, 'Hulorhun Njeigor', 1880, 8.21192404, -10.91011502, NOW(), NOW(), NOW()),
+      (46039, 'Konjo Buiima', 1880, 8.26246469, -10.8993535, NOW(), NOW(), NOW()),
+      (46040, 'Konjo Njeigor', 1880, 8.36650242, -10.89947964, NOW(), NOW(), NOW()),
+      (46041, 'Konjo Yematanga', 1880, 8.31792407, -10.91901235, NOW(), NOW(), NOW()),
+      (46042, 'Lower Torgboma', 1880, 8.10089924, -10.97288311, NOW(), NOW(), NOW()),
+      (46043, 'Upper Torgboma', 1880, 8.13082765, -10.95017803, NOW(), NOW(), NOW()),
+      (46044, 'Bandawor', 1881, 7.75590392, -11.3533639, NOW(), NOW(), NOW()),
+      (46045, 'Kpatawa', 1881, 7.56807083, -11.47403202, NOW(), NOW(), NOW()),
+      (46046, 'Mabondor', 1881, 7.61425794, -11.44802929, NOW(), NOW(), NOW()),
+      (46047, 'Niawa', 1881, 7.71511988, -11.36690123, NOW(), NOW(), NOW()),
+      (46048, 'Vaama', 1881, 7.66745089, -11.41200769, NOW(), NOW(), NOW()),
+      (46049, 'Faama', 1882, 7.50467159, -10.99385251, NOW(), NOW(), NOW()),
+      (46050, 'Ngiebu', 1882, 7.58868648, -10.97326999, NOW(), NOW(), NOW()),
+      (46051, 'Ngiewoma-Njeigor', 1882, 7.57116936, -10.87972092, NOW(), NOW(), NOW()),
+      (46052, 'Dagbanya', 1883, 7.92189416, -11.08651154, NOW(), NOW(), NOW()),
+      (46053, 'Dakpana', 1883, 8.03184122, -11.04469587, NOW(), NOW(), NOW()),
+      (46054, 'Gbo Kakajama B', 1883, 7.8591105, -11.15650769, NOW(), NOW(), NOW()),
+      (46055, 'Gbo Lambayama B', 1883, 7.90934751, -11.22338367, NOW(), NOW(), NOW()),
+      (46056, 'Kagbado Kamboima', 1883, 7.95102364, -11.13283439, NOW(), NOW(), NOW()),
+      (46057, 'Kagbado Njeigbla', 1883, 7.90015388, -11.05097577, NOW(), NOW(), NOW()),
+      (46058, 'Kona Foiya', 1883, 7.9932794, -11.02336109, NOW(), NOW(), NOW()),
+      (46059, 'Kona Kpindibu', 1883, 8.02998489, -11.14402346, NOW(), NOW(), NOW()),
+      (46060, 'Bundoryama', 1884, 8.15439366, -11.28608523, NOW(), NOW(), NOW()),
+      (46061, 'Fallay', 1884, 8.1485357, -11.3693258, NOW(), NOW(), NOW()),
+      (46062, 'Fonde', 1884, 8.25772818, -11.29091795, NOW(), NOW(), NOW()),
+      (46063, 'Yalenga', 1884, 8.19519785, -11.3415121, NOW(), NOW(), NOW()),
+      (46064, 'Fallay', 1885, 7.86671397, -11.34834605, NOW(), NOW(), NOW()),
+      (46065, 'Gorama', 1885, 7.81096057, -11.37812749, NOW(), NOW(), NOW()),
+      (46066, 'Kamboma', 1885, 7.82047096, -11.28952643, NOW(), NOW(), NOW()),
+      (46067, 'Niawa', 1885, 7.92914694, -11.32033912, NOW(), NOW(), NOW()),
+      (46068, 'Sowa', 1885, 7.86088052, -11.42326319, NOW(), NOW(), NOW()),
+      (46069, 'Daru', 1886, 7.45432697, -11.10328031, NOW(), NOW(), NOW()),
+      (46070, 'Gegbwema', 1886, 7.57717845, -11.09985897, NOW(), NOW(), NOW()),
+      (46071, 'Giewoma', 1886, 7.60247237, -11.19766631, NOW(), NOW(), NOW()),
+      (46072, 'Gorahun', 1886, 7.44231539, -11.25975925, NOW(), NOW(), NOW()),
+      (46073, 'Jewahun', 1886, 7.59962847, -11.12757654, NOW(), NOW(), NOW()),
+      (46074, 'Kuawuma', 1886, 7.52881657, -11.10462021, NOW(), NOW(), NOW()),
+      (46075, 'Taninahun', 1886, 7.53836076, -11.19294442, NOW(), NOW(), NOW()),
+      (46076, 'Boryongor', 1887, 8.28260999, -11.43784768, NOW(), NOW(), NOW()),
+      (46077, 'Gbogbeima', 1887, 8.33449535, -11.2639204, NOW(), NOW(), NOW()),
+      (46078, 'Kemoh', 1887, 8.35538611, -11.32206372, NOW(), NOW(), NOW()),
+      (46079, 'Niawa', 1887, 8.28363298, -11.3226802, NOW(), NOW(), NOW()),
+      (46080, 'Songhai', 1887, 8.2744942, -11.37988389, NOW(), NOW(), NOW()),
+      (46081, 'Tongorwa', 1887, 8.35006986, -11.41102598, NOW(), NOW(), NOW()),
+      (46082, 'Airfield', 1876, 7.89893837, -11.17333705, NOW(), NOW(), NOW()),
+      (46083, 'Gbo Kakajama A-Bur', 1876, 7.89342482, -11.17056281, NOW(), NOW(), NOW()),
+      (46084, 'Gbo Kakajama A-Lum', 1876, 7.88251144, -11.17103211, NOW(), NOW(), NOW()),
+      (46085, 'Gbo Lambayama A-Le', 1876, 7.89167532, -11.18413334, NOW(), NOW(), NOW()),
+      (46086, 'Gbo Lambayama A-Re', 1876, 7.88362596, -11.19469445, NOW(), NOW(), NOW()),
+      (46087, 'Gbo Kakajama A-Tec', 1876, 7.88043528, -11.17958522, NOW(), NOW(), NOW()),
+      (46088, 'Gbo Kakajama A-Nja', 1876, 7.87253105, -11.18732574, NOW(), NOW(), NOW()),
+      (46089, 'Gbo Kakajama A-Kpa', 1876, 7.87108373, -11.17755254, NOW(), NOW(), NOW()),
+      (46090, 'Gbo Kakajama A-Kis', 1876, 7.86140121, -11.18018506, NOW(), NOW(), NOW()),
+      (46091, 'Gbo Kakajama A-Shi', 1876, 7.86256991, -11.19184624, NOW(), NOW(), NOW()),
+      (46092, 'Gbo Lambayama A-Ny', 1876, 7.87112032, -11.20171951, NOW(), NOW(), NOW()),
+      (46093, 'Gbo Lambayama A-Nd', 1876, 7.86700375, -11.1949068, NOW(), NOW(), NOW()),
+      (46094, 'Gbo Lambayama A-Fo', 1876, 7.86221366, -11.20614573, NOW(), NOW(), NOW()),
+      (46095, 'Gbo Kakajama A-Lam', 1876, 7.854154, -11.20167127, NOW(), NOW(), NOW()),
+      (46096, 'Gbo Lambayama A-Go', 1876, 7.90811099, -11.17385295, NOW(), NOW(), NOW()),
+      (46097, 'Gbo Lambayama A-RT', 1876, 7.91327389, -11.17144425, NOW(), NOW(), NOW()),
+      (46098, 'Gbo Lambayama A-Ko', 1876, 7.89893481, -11.18113392, NOW(), NOW(), NOW()),
+      (46099, 'Dumbia', 1894, 8.57986847, -10.87395653, NOW(), NOW(), NOW()),
+      (46100, 'Fiama', 1894, 8.63524459, -10.82334236, NOW(), NOW(), NOW()),
+      (46101, 'Kokar', 1894, 8.59904449, -10.80447724, NOW(), NOW(), NOW()),
+      (46102, 'Kooma', 1894, 8.71079269, -10.81366827, NOW(), NOW(), NOW()),
+      (46103, 'Yorkor', 1894, 8.65333728, -10.88836775, NOW(), NOW(), NOW()),
+      (46104, 'Gbane Yemao', 1895, 8.45748833, -10.76051115, NOW(), NOW(), NOW()),
+      (46105, 'Gbikidakor', 1895, 8.51526234, -10.89515871, NOW(), NOW(), NOW()),
+      (46106, 'Kamara', 1895, 8.48134005, -10.8987113, NOW(), NOW(), NOW()),
+      (46107, 'Maikandor', 1895, 8.54220945, -10.82823519, NOW(), NOW(), NOW()),
+      (46108, 'Mongo', 1895, 8.44572256, -10.83588087, NOW(), NOW(), NOW()),
+      (46109, 'Gbane Kandor', 1896, 8.67227083, -10.56551463, NOW(), NOW(), NOW()),
+      (46110, 'Gbane Kour', 1896, 8.57134724, -10.59381561, NOW(), NOW(), NOW()),
+      (46111, 'Gbane Tetema', 1896, 8.61214657, -10.58359612, NOW(), NOW(), NOW()),
+      (46112, 'Gbendekor', 1896, 8.61302675, -10.55562533, NOW(), NOW(), NOW()),
+      (46113, 'Yanbidu', 1896, 8.62235424, -10.53372683, NOW(), NOW(), NOW()),
+      (46114, 'Banfinfeh', 1897, 8.77194297, -10.87911481, NOW(), NOW(), NOW()),
+      (46115, 'Banyafeh', 1897, 8.71625516, -10.92081572, NOW(), NOW(), NOW()),
+      (46116, 'Banyakor', 1897, 8.76834275, -10.95811069, NOW(), NOW(), NOW()),
+      (46117, 'Moindefeh', 1897, 8.66759, -10.93562878, NOW(), NOW(), NOW()),
+      (46118, 'Moindekor', 1897, 8.68020036, -10.98123778, NOW(), NOW(), NOW()),
+      (46119, 'Bunabu', 1898, 8.39407191, -11.18545939, NOW(), NOW(), NOW()),
+      (46120, 'Kangama', 1898, 8.38593794, -11.06626491, NOW(), NOW(), NOW()),
+      (46121, 'Selokoma', 1898, 8.40225365, -10.95989934, NOW(), NOW(), NOW()),
+      (46122, 'Dangbaidu', 1899, 8.72320192, -10.97680941, NOW(), NOW(), NOW()),
+      (46123, 'Gbondu', 1899, 8.73859229, -11.05777189, NOW(), NOW(), NOW()),
+      (46124, 'Kongofinja', 1899, 8.68541666, -11.03301644, NOW(), NOW(), NOW()),
+      (46125, 'Sukudu', 1899, 8.74313586, -11.01308302, NOW(), NOW(), NOW()),
+      (46126, 'Dia', 1901, 8.90808288, -10.62216042, NOW(), NOW(), NOW()),
+      (46127, 'Kamara', 1901, 8.81325862, -10.57589808, NOW(), NOW(), NOW()),
+      (46128, 'Kensay', 1901, 8.76169165, -10.56216659, NOW(), NOW(), NOW()),
+      (46129, 'Koaro', 1901, 8.89476014, -10.70655542, NOW(), NOW(), NOW()),
+      (46130, 'Lei', 1901, 8.80930236, -10.62835835, NOW(), NOW(), NOW()),
+      (46131, 'Sangbada', 1901, 8.7483192, -10.64840035, NOW(), NOW(), NOW()),
+      (46132, 'Tankoro', 1901, 8.76789171, -10.75074783, NOW(), NOW(), NOW()),
+      (46133, 'Tingi-Kor', 1901, 8.8360726, -10.77070498, NOW(), NOW(), NOW()),
+      (46134, 'Yawai', 1901, 8.8562982, -10.6055429, NOW(), NOW(), NOW()),
+      (46135, 'Kamiendor', 1902, 8.67377143, -10.52236154, NOW(), NOW(), NOW()),
+      (46136, 'Kutey', 1902, 8.65490337, -10.49943577, NOW(), NOW(), NOW()),
+      (46137, 'Mafindor', 1902, 8.72268375, -10.52009484, NOW(), NOW(), NOW()),
+      (46138, 'Bafinfeh', 1903, 8.68880663, -11.08441583, NOW(), NOW(), NOW()),
+      (46139, 'Bandafafeh', 1903, 8.59266144, -11.02628439, NOW(), NOW(), NOW()),
+      (46140, 'Gbogboafeh', 1903, 8.63170335, -11.13116566, NOW(), NOW(), NOW()),
+      (46141, 'Jaiama', 1903, 8.53642212, -11.10536731, NOW(), NOW(), NOW()),
+      (46142, 'Masayiefeh', 1903, 8.45344107, -11.06551021, NOW(), NOW(), NOW()),
+      (46143, 'Bafinfeh', 1904, 8.65021948, -11.22396817, NOW(), NOW(), NOW()),
+      (46144, 'Njagbakahun', 1904, 8.56690046, -11.30071288, NOW(), NOW(), NOW()),
+      (46145, 'Njaifeh', 1904, 8.56208568, -11.2337338, NOW(), NOW(), NOW()),
+      (46146, 'Peyifeh', 1904, 8.48622126, -11.21976211, NOW(), NOW(), NOW()),
+      (46147, 'Tama', 1904, 8.64373036, -11.30699271, NOW(), NOW(), NOW()),
+      (46148, 'Bafinfeh', 1905, 8.76503835, -11.11159326, NOW(), NOW(), NOW()),
+      (46149, 'Dangbaidu', 1905, 8.73263652, -11.23076367, NOW(), NOW(), NOW()),
+      (46150, 'Fakongofeh', 1905, 8.86650712, -10.84623101, NOW(), NOW(), NOW()),
+      (46151, 'Kawafeh', 1905, 8.97574733, -10.97221244, NOW(), NOW(), NOW()),
+      (46152, 'Njeikor', 1905, 8.85073998, -10.97650364, NOW(), NOW(), NOW()),
+      (46153, 'Samgbafeh', 1905, 8.88911888, -10.92026074, NOW(), NOW(), NOW()),
+      (46154, 'Sinkongofeh', 1905, 9.01169349, -11.0487504, NOW(), NOW(), NOW()),
+      (46155, 'Sumunjifeh', 1905, 8.94159615, -11.06673139, NOW(), NOW(), NOW()),
+      (46156, 'Tharma Forest', 1905, 8.77336237, -11.2969574, NOW(), NOW(), NOW()),
+      (46157, 'Yawatanda', 1905, 8.86311647, -11.14962929, NOW(), NOW(), NOW()),
+      (46158, 'Foidu Mongor', 1906, 8.5389194, -10.6534721, NOW(), NOW(), NOW()),
+      (46159, 'Kokongokuma', 1906, 8.65162479, -10.72374177, NOW(), NOW(), NOW()),
+      (46160, 'Maindu', 1906, 8.54995085, -10.73468836, NOW(), NOW(), NOW()),
+      (46161, 'Mofinkor', 1906, 8.66471688, -10.63856998, NOW(), NOW(), NOW()),
+      (46162, 'Sawa Buma', 1906, 8.50784765, -10.74491167, NOW(), NOW(), NOW()),
+      (46163, 'Sawa Fiama', 1906, 8.49629864, -10.66884651, NOW(), NOW(), NOW()),
+      (46164, 'Tensekor', 1906, 8.59222179, -10.63293106, NOW(), NOW(), NOW()),
+      (46165, 'Tensendakor', 1906, 8.56069709, -10.62542041, NOW(), NOW(), NOW()),
+      (46166, 'Njama', 1907, 8.49224215, -10.98651623, NOW(), NOW(), NOW()),
+      (46167, 'Tankoro', 1907, 8.59846195, -10.92689921, NOW(), NOW(), NOW()),
+      (46168, 'Woafeh', 1907, 8.57907099, -10.99257601, NOW(), NOW(), NOW()),
+      (46169, 'Bawadu', 1908, 8.97196401, -10.59750181, NOW(), NOW(), NOW()),
+      (46170, 'Komadu', 1908, 8.97762668, -10.64712059, NOW(), NOW(), NOW()),
+      (46171, 'Kwidu', 1908, 9.02045335, -10.62374882, NOW(), NOW(), NOW()),
+      (46172, 'Gbense-Sina Town', 1900, 8.65043137, -10.97720606, NOW(), NOW(), NOW()),
+      (46173, 'Gbense-Moindekor', 1900, 8.64997977, -10.96589158, NOW(), NOW(), NOW()),
+      (46174, 'Gbense-Moindefeh', 1900, 8.64899549, -10.9501099, NOW(), NOW(), NOW()),
+      (46175, 'Tankoro-Kinsey', 1900, 8.64563755, -10.98543328, NOW(), NOW(), NOW()),
+      (46176, 'Tankoro-New Sembeh', 1900, 8.63842584, -10.96829587, NOW(), NOW(), NOW()),
+      (46177, 'Tankoro-Lebanon', 1900, 8.63627352, -10.99267297, NOW(), NOW(), NOW()),
+      (46178, 'Tankoro-Kwaquima', 1900, 8.62173022, -10.99137064, NOW(), NOW(), NOW()),
+      (46179, 'Bumban', 1816, 9.1466965, -11.89697071, NOW(), NOW(), NOW()),
+      (46180, 'Bumbandain', 1816, 9.09851143, -11.99624546, NOW(), NOW(), NOW()),
+      (46181, 'Kabakeh/Balandugu', 1816, 9.27826172, -11.94111738, NOW(), NOW(), NOW()),
+      (46182, 'Kagbankuna', 1816, 9.44507814, -11.91413566, NOW(), NOW(), NOW()),
+      (46183, 'Kamabai', 1816, 9.1034812, -11.94763289, NOW(), NOW(), NOW()),
+      (46184, 'Karassa', 1816, 9.34374598, -11.84624735, NOW(), NOW(), NOW()),
+      (46185, 'Karina', 1816, 9.22995772, -11.98596584, NOW(), NOW(), NOW()),
+      (46186, 'Kayonkoro', 1816, 9.24474615, -11.90060158, NOW(), NOW(), NOW()),
+      (46187, 'Kafala', 1817, 8.77327489, -12.14273888, NOW(), NOW(), NOW()),
+      (46188, 'Kagbaran Dokom B', 1817, 8.84912489, -12.0462177, NOW(), NOW(), NOW()),
+      (46189, 'Konta', 1817, 8.75472508, -12.02982758, NOW(), NOW(), NOW()),
+      (46190, 'Matotoka', 1817, 8.73291895, -12.11264967, NOW(), NOW(), NOW()),
+      (46191, 'Gbenkfay', 1818, 9.30351964, -12.26976328, NOW(), NOW(), NOW()),
+      (46192, 'Gbonkobana', 1818, 9.24952423, -12.31980739, NOW(), NOW(), NOW()),
+      (46193, 'Kamaranka', 1818, 9.28896426, -12.19680542, NOW(), NOW(), NOW()),
+      (46194, 'Kambia', 1818, 9.34059278, -12.32533745, NOW(), NOW(), NOW()),
+      (46195, 'Kayourgbor', 1818, 9.24795655, -12.38979878, NOW(), NOW(), NOW()),
+      (46196, 'Laminaya', 1818, 9.31976166, -12.38222675, NOW(), NOW(), NOW()),
+      (46197, 'Makulon', 1818, 9.31026437, -12.31732691, NOW(), NOW(), NOW()),
+      (46198, 'Makumray A', 1818, 9.2468398, -12.25710866, NOW(), NOW(), NOW()),
+      (46199, 'Makumray B', 1818, 9.24802447, -12.29587217, NOW(), NOW(), NOW()),
+      (46200, 'Rogberay', 1818, 9.27660317, -12.37218028, NOW(), NOW(), NOW()),
+      (46201, 'Romaneh', 1818, 9.30885888, -12.18277233, NOW(), NOW(), NOW()),
+      (46202, 'Royeama A', 1818, 9.25837091, -12.16424291, NOW(), NOW(), NOW()),
+      (46203, 'Royeama B', 1818, 9.28797976, -12.16378815, NOW(), NOW(), NOW()),
+      (46204, 'Sakuma A', 1818, 9.26869183, -12.20392527, NOW(), NOW(), NOW()),
+      (46205, 'Sakuma B', 1818, 9.26566741, -12.23411039, NOW(), NOW(), NOW()),
+      (46206, 'Sendugu A', 1818, 9.34499047, -12.2180422, NOW(), NOW(), NOW()),
+      (46207, 'Sendugu B', 1818, 9.33134428, -12.24330086, NOW(), NOW(), NOW()),
+      (46208, 'Garanganwa', 1819, 8.96586745, -12.26150809, NOW(), NOW(), NOW()),
+      (46209, 'Gbendembu', 1819, 9.08244414, -12.20663825, NOW(), NOW(), NOW()),
+      (46210, 'Kalangba', 1819, 9.00034685, -12.16927595, NOW(), NOW(), NOW()),
+      (46211, 'Kania', 1819, 9.07368987, -12.13395724, NOW(), NOW(), NOW()),
+      (46212, 'Lobanga', 1819, 9.19978371, -12.04910834, NOW(), NOW(), NOW()),
+      (46213, 'Lohindie', 1819, 9.14175652, -12.11027019, NOW(), NOW(), NOW()),
+      (46214, 'Loko-Madina', 1819, 9.11621191, -12.04987496, NOW(), NOW(), NOW()),
+      (46215, 'Makai', 1819, 9.13653429, -12.18892458, NOW(), NOW(), NOW()),
+      (46216, 'Makarihiteh', 1819, 9.02694871, -12.10988922, NOW(), NOW(), NOW()),
+      (46217, 'Makeregbohun', 1819, 8.99777926, -12.07795382, NOW(), NOW(), NOW()),
+      (46218, 'Makump', 1819, 9.05095604, -12.07176074, NOW(), NOW(), NOW()),
+      (46219, 'Mamaka', 1819, 9.04606133, -12.31567758, NOW(), NOW(), NOW()),
+      (46220, 'Mamukay', 1819, 9.01859812, -12.22782685, NOW(), NOW(), NOW()),
+      (46221, 'Masongbo', 1819, 8.95498867, -12.19222478, NOW(), NOW(), NOW()),
+      (46222, 'Matehun', 1819, 9.05354706, -12.17048186, NOW(), NOW(), NOW()),
+      (46223, 'Mayorthan', 1819, 9.10570749, -12.24525161, NOW(), NOW(), NOW()),
+      (46224, 'Sahun', 1819, 9.10985827, -12.07333632, NOW(), NOW(), NOW()),
+      (46225, 'Tambiama', 1819, 8.98450702, -12.1009576, NOW(), NOW(), NOW()),
+      (46226, 'Tanyehun', 1819, 9.1988879, -12.09897805, NOW(), NOW(), NOW()),
+      (46227, 'Hunduwa', 1820, 9.26082666, -12.03697712, NOW(), NOW(), NOW()),
+      (46228, 'Kababala', 1820, 9.18601672, -12.1659818, NOW(), NOW(), NOW()),
+      (46229, 'Kagberay', 1820, 9.21303737, -12.1306152, NOW(), NOW(), NOW()),
+      (46230, 'Kawungulu', 1820, 9.34178153, -11.96427541, NOW(), NOW(), NOW()),
+      (46231, 'Makendema', 1820, 9.31482782, -12.01497653, NOW(), NOW(), NOW()),
+      (46232, 'Mambiama', 1820, 9.31391409, -12.09161092, NOW(), NOW(), NOW()),
+      (46233, 'Manjahagha', 1820, 9.24635566, -12.00514132, NOW(), NOW(), NOW()),
+      (46234, 'Sokudala', 1820, 9.36994829, -11.96560837, NOW(), NOW(), NOW()),
+      (46235, 'Yana', 1820, 9.36320956, -11.99609863, NOW(), NOW(), NOW()),
+      (46236, 'Gborbana', 1821, 8.94408999, -12.04453214, NOW(), NOW(), NOW()),
+      (46237, 'Mabanta', 1821, 8.92856514, -12.07046419, NOW(), NOW(), NOW()),
+      (46238, 'Magbenteh', 1821, 8.88342268, -12.08014877, NOW(), NOW(), NOW()),
+      (46239, 'Mangay', 1821, 8.91977803, -12.10431742, NOW(), NOW(), NOW()),
+      (46240, 'Mankene', 1821, 8.83137241, -12.13961816, NOW(), NOW(), NOW()),
+      (46241, 'Masongbo A', 1821, 8.87594092, -12.10701676, NOW(), NOW(), NOW()),
+      (46242, 'Masongbo B', 1821, 8.84375179, -12.30624874, NOW(), NOW(), NOW()),
+      (46243, 'Punthun', 1821, 8.93829853, -12.13950933, NOW(), NOW(), NOW()),
+      (46244, 'Rosint', 1821, 8.89063041, -12.01362456, NOW(), NOW(), NOW()),
+      (46245, 'Tonkoba', 1821, 8.88309209, -12.29494415, NOW(), NOW(), NOW()),
+      (46246, 'Yainkassa', 1821, 8.76859216, -12.27176154, NOW(), NOW(), NOW()),
+      (46247, 'Kathanthan', 1823, 8.87953856, -11.92799958, NOW(), NOW(), NOW()),
+      (46248, 'Kathegeya', 1823, 8.86691678, -11.88723913, NOW(), NOW(), NOW()),
+      (46249, 'Mapaki', 1823, 8.80043553, -11.91024436, NOW(), NOW(), NOW()),
+      (46250, 'Masabong', 1823, 8.72089588, -11.99946205, NOW(), NOW(), NOW()),
+      (46251, 'Mayagba', 1823, 8.75382632, -11.95638163, NOW(), NOW(), NOW()),
+      (46252, 'Rosanda', 1823, 8.82791899, -11.97266486, NOW(), NOW(), NOW()),
+      (46253, 'Binkolo', 1824, 8.94023128, -11.97160784, NOW(), NOW(), NOW()),
+      (46254, 'Bombali Bana', 1824, 9.00694512, -12.00970328, NOW(), NOW(), NOW()),
+      (46255, 'Kabonka', 1824, 9.00729453, -11.90686309, NOW(), NOW(), NOW()),
+      (46256, 'Kasengbeh', 1824, 9.09645804, -11.84789778, NOW(), NOW(), NOW()),
+      (46257, 'Kayassi', 1824, 9.0267451, -11.84924607, NOW(), NOW(), NOW()),
+      (46258, 'Mabamba', 1824, 8.9553606, -11.9026386, NOW(), NOW(), NOW()),
+      (46259, 'Masapi', 1824, 9.04552134, -11.78559014, NOW(), NOW(), NOW()),
+      (46260, 'Bombali Sebora - B', 1822, 8.88237938, -12.04226489, NOW(), NOW(), NOW()),
+      (46261, 'Bombali Sebora - K', 1822, 8.86957413, -12.03312871, NOW(), NOW(), NOW()),
+      (46262, 'Bombali Sebora - Makeni', 1822, 8.88132064, -12.05412908, NOW(), NOW(), NOW()),
+      (46263, 'Bombali Sebora - R', 1822, 8.89806883, -12.042882, NOW(), NOW(), NOW()),
+      (46264, 'Bombali Sebora - T', 1822, 8.88391752, -12.03481164, NOW(), NOW(), NOW()),
+      (46265, 'Bombali Sebora - W', 1822, 8.8922452, -12.04864542, NOW(), NOW(), NOW()),
+      (46266, 'Makari Gbanti - Mi', 1822, 8.890943, -12.05871954, NOW(), NOW(), NOW()),
+      (46267, 'Makari Gbanti -Mas', 1822, 8.89467737, -12.03183663, NOW(), NOW(), NOW()),
+      (46268, 'Darakuru', 1888, 9.21506406, -11.46088153, NOW(), NOW(), NOW()),
+      (46269, 'Gbenekoro', 1888, 9.25524971, -11.60875506, NOW(), NOW(), NOW()),
+      (46270, 'Kania', 1888, 9.14573767, -11.63769173, NOW(), NOW(), NOW()),
+      (46271, 'Kondembaia', 1888, 9.38090196, -11.63678075, NOW(), NOW(), NOW()),
+      (46272, 'Lengekoro', 1888, 9.44960711, -11.63746281, NOW(), NOW(), NOW()),
+      (46273, 'Sokurala', 1888, 9.31986373, -11.49828012, NOW(), NOW(), NOW()),
+      (46274, 'Gbonkobor', 1889, 9.51351736, -11.81617929, NOW(), NOW(), NOW()),
+      (46275, 'Kakallain', 1889, 9.30450656, -11.80776352, NOW(), NOW(), NOW()),
+      (46276, 'Kasunko', 1889, 9.33532015, -11.73278042, NOW(), NOW(), NOW()),
+      (46277, 'Kayaka', 1889, 9.4841788, -11.7346467, NOW(), NOW(), NOW()),
+      (46278, 'Tamiso I', 1889, 9.60415055, -12.05741627, NOW(), NOW(), NOW()),
+      (46279, 'Tamiso II', 1889, 9.59195034, -11.92497849, NOW(), NOW(), NOW()),
+      (46280, 'Barawa', 1890, 9.31403668, -11.34919176, NOW(), NOW(), NOW()),
+      (46281, 'Kalian', 1890, 9.01386192, -11.36394986, NOW(), NOW(), NOW()),
+      (46282, 'Sumbaria', 1890, 8.78782094, -11.36702476, NOW(), NOW(), NOW()),
+      (46283, 'Wollay', 1890, 9.2008571, -11.15926771, NOW(), NOW(), NOW()),
+      (46284, 'Yiffin', 1890, 9.06194134, -11.23454618, NOW(), NOW(), NOW()),
+      (46285, 'Bendugu', 1891, 9.57875363, -11.50697129, NOW(), NOW(), NOW()),
+      (46286, 'Heremakono', 1891, 9.60727593, -11.41526131, NOW(), NOW(), NOW()),
+      (46287, 'Koinadugu', 1891, 9.52766487, -11.38754247, NOW(), NOW(), NOW()),
+      (46288, 'Yogomaia', 1891, 9.59362321, -11.55351188, NOW(), NOW(), NOW()),
+      (46289, 'Bilimaia', 1891, 9.59578405, -11.54575733, NOW(), NOW(), NOW()),
+      (46290, 'Bafodia', 1892, 9.72403898, -11.73388707, NOW(), NOW(), NOW()),
+      (46291, 'Kadanso', 1892, 9.59693055, -11.7505448, NOW(), NOW(), NOW()),
+      (46292, 'Kakoya', 1892, 9.69521068, -11.6691676, NOW(), NOW(), NOW()),
+      (46293, 'Kamanikie', 1892, 9.6767762, -11.81357242, NOW(), NOW(), NOW()),
+      (46294, 'Kamayortortor', 1892, 9.66517893, -11.85794785, NOW(), NOW(), NOW()),
+      (46295, 'Kambalia', 1892, 9.85457148, -11.81183087, NOW(), NOW(), NOW()),
+      (46296, 'Kambia', 1892, 9.84660649, -11.88066608, NOW(), NOW(), NOW()),
+      (46297, 'Kaponpon', 1892, 9.60591355, -11.70044234, NOW(), NOW(), NOW()),
+      (46298, 'Pampakoh', 1892, 9.7659237, -11.85470063, NOW(), NOW(), NOW()),
+      (46299, 'Semamaia', 1892, 9.62570905, -11.67034828, NOW(), NOW(), NOW()),
+      (46300, 'Taelia', 1892, 9.9452592, -11.865642, NOW(), NOW(), NOW()),
+      (46301, 'Zone 1', 1893, 9.63145297, -11.55373072, NOW(), NOW(), NOW()),
+      (46302, 'Zone 2', 1893, 9.60575802, -11.6099153, NOW(), NOW(), NOW()),
+      (46303, 'Zone 3', 1893, 9.58299057, -11.55432668, NOW(), NOW(), NOW()),
+      (46304, 'Zone 4', 1893, 9.5592478, -11.58502313, NOW(), NOW(), NOW()),
+      (46305, 'Zone 5', 1893, 9.52561159, -11.57847777, NOW(), NOW(), NOW()),
+      (46306, 'Zone 6', 1893, 9.51325583, -11.68691622, NOW(), NOW(), NOW()),
+      (46307, 'Zone 7', 1893, 9.50225258, -11.6131766, NOW(), NOW(), NOW()),
+      (46308, 'Lower Massakong', 1943, 8.45120933, -12.00440136, NOW(), NOW(), NOW()),
+      (46309, 'Lower Polie', 1943, 8.52652396, -11.98458469, NOW(), NOW(), NOW()),
+      (46310, 'Mayeppoh', 1943, 8.52816973, -11.77843387, NOW(), NOW(), NOW()),
+      (46311, 'Petifu Mayawa A', 1943, 8.43162094, -11.7835785, NOW(), NOW(), NOW()),
+      (46312, 'Petifu Mayawa B', 1943, 8.38328801, -11.81863606, NOW(), NOW(), NOW()),
+      (46313, 'Petifu Mayeppoh', 1943, 8.54197566, -11.85827616, NOW(), NOW(), NOW()),
+      (46314, 'Upper Massakong', 1943, 8.45096675, -11.9023699, NOW(), NOW(), NOW()),
+      (46315, 'Upper Polie', 1943, 8.52334283, -11.92343273, NOW(), NOW(), NOW()),
+      (46316, 'Yele Manowo', 1943, 8.40680695, -11.85660347, NOW(), NOW(), NOW()),
+      (46317, 'Yiben', 1943, 8.39217737, -11.93974416, NOW(), NOW(), NOW()),
+      (46318, 'Kabaia', 1944, 8.80513989, -11.6101419, NOW(), NOW(), NOW()),
+      (46319, 'Kamarugu', 1944, 8.79503635, -11.68908498, NOW(), NOW(), NOW()),
+      (46320, 'Mabonto', 1944, 8.86203518, -11.81677843, NOW(), NOW(), NOW()),
+      (46321, 'Makelfa', 1944, 8.87264056, -11.74583799, NOW(), NOW(), NOW()),
+      (46322, 'Makontande', 1944, 8.95838836, -11.79463553, NOW(), NOW(), NOW()),
+      (46323, 'Mayaso', 1944, 8.95384694, -11.84682329, NOW(), NOW(), NOW()),
+      (46324, 'Simiria', 1944, 8.87853897, -11.85640465, NOW(), NOW(), NOW()),
+      (46325, 'Fuladugu', 1945, 9.2146404, -11.73021139, NOW(), NOW(), NOW()),
+      (46326, 'Kakallain', 1945, 9.20079836, -11.78628869, NOW(), NOW(), NOW()),
+      (46327, 'Kamakathie', 1945, 9.09729819, -11.7761301, NOW(), NOW(), NOW()),
+      (46328, 'Kamakilla', 1945, 9.1196642, -11.80880937, NOW(), NOW(), NOW()),
+      (46329, 'Kasokira', 1945, 9.11231898, -11.73488798, NOW(), NOW(), NOW()),
+      (46330, 'Lower Section', 1945, 8.98415322, -11.75631161, NOW(), NOW(), NOW()),
+      (46331, 'Upper Section', 1945, 9.01679076, -11.68552872, NOW(), NOW(), NOW()),
+      (46332, 'Kumrabai', 1946, 8.52422996, -12.10587123, NOW(), NOW(), NOW()),
+      (46333, 'Mabang', 1946, 8.5499993, -12.1494296, NOW(), NOW(), NOW()),
+      (46334, 'Marunia Koray', 1946, 8.58511663, -12.25003241, NOW(), NOW(), NOW()),
+      (46335, 'Marunia Sakie', 1946, 8.52893201, -12.22050278, NOW(), NOW(), NOW()),
+      (46336, 'Bo Road', 1947, 8.71904344, -11.93907102, NOW(), NOW(), NOW()),
+      (46337, 'Lal-Lenken', 1947, 8.75986565, -11.86551662, NOW(), NOW(), NOW()),
+      (46338, 'Makump', 1947, 8.68275475, -11.92269822, NOW(), NOW(), NOW()),
+      (46339, 'Mamuntha', 1947, 8.64639084, -12.06189301, NOW(), NOW(), NOW()),
+      (46340, 'Mayatha', 1947, 8.66493693, -11.98923315, NOW(), NOW(), NOW()),
+      (46341, 'Mayossoh', 1947, 8.56269089, -12.0238287, NOW(), NOW(), NOW()),
+      (46342, 'Old Magburaka', 1947, 8.72001304, -11.95946003, NOW(), NOW(), NOW()),
+      (46343, 'Makali', 1949, 8.64830484, -11.55436314, NOW(), NOW(), NOW()),
+      (46344, 'Makong', 1949, 8.53475139, -11.70779872, NOW(), NOW(), NOW()),
+      (46345, 'Mamurie', 1949, 8.64060016, -11.71196833, NOW(), NOW(), NOW()),
+      (46346, 'Masaba', 1949, 8.52781139, -11.62455857, NOW(), NOW(), NOW()),
+      (46347, 'Mathonkara', 1949, 8.61464909, -11.57805711, NOW(), NOW(), NOW()),
+      (46348, 'Wonkibor', 1949, 8.56380236, -11.59030387, NOW(), NOW(), NOW()),
+      (46349, 'Masingbi', 1948, 8.63712168, -11.46694013, NOW(), NOW(), NOW()),
+      (46350, 'Rolal', 1948, 8.71802974, -11.5512989, NOW(), NOW(), NOW()),
+      (46351, 'Sanda', 1948, 8.59711613, -11.50471779, NOW(), NOW(), NOW()),
+      (46352, 'Semorkanie', 1948, 8.69651091, -11.62322328, NOW(), NOW(), NOW()),
+      (46353, 'Thamah', 1948, 8.59408314, -11.39836799, NOW(), NOW(), NOW()),
+      (46354, 'Thambaya', 1948, 8.77493985, -11.44771195, NOW(), NOW(), NOW()),
+      (46355, 'Wana', 1948, 8.80513989, -11.51886206, NOW(), NOW(), NOW()),
+      (46356, 'Yenkeh', 1948, 8.6861247, -11.45151036, NOW(), NOW(), NOW()),
+      (46357, 'Kiamp Kakolo', 1950, 8.64178995, -12.20429957, NOW(), NOW(), NOW()),
+      (46358, 'Mabilafu', 1950, 8.71401595, -12.2052309, NOW(), NOW(), NOW()),
+      (46359, 'Makoba', 1950, 8.6170509, -12.31122613, NOW(), NOW(), NOW()),
+      (46360, 'Malal', 1950, 8.713246, -12.29733623, NOW(), NOW(), NOW()),
+      (46361, 'Manewa', 1950, 8.67838606, -12.15224953, NOW(), NOW(), NOW()),
+      (46362, 'Mara', 1950, 8.66863027, -12.22901465, NOW(), NOW(), NOW()),
+      (46363, 'Matanka', 1950, 8.67505481, -12.36031302, NOW(), NOW(), NOW()),
+      (46364, 'Rochen', 1950, 8.6548294, -12.28751487, NOW(), NOW(), NOW()),
+      (46365, 'Borowah', 1951, 9.13907503, -11.50632282, NOW(), NOW(), NOW()),
+      (46366, 'Buyan', 1951, 8.93582026, -11.55348924, NOW(), NOW(), NOW()),
+      (46367, 'Dayie', 1951, 9.00132933, -11.62229509, NOW(), NOW(), NOW()),
+      (46368, 'Sambaya', 1951, 9.03688797, -11.48969743, NOW(), NOW(), NOW()),
+      (46369, 'Maboboh Koray', 1952, 8.71633803, -11.74843129, NOW(), NOW(), NOW()),
+      (46370, 'Makrugbeh', 1952, 8.60840609, -11.77717471, NOW(), NOW(), NOW()),
+      (46371, 'Mange-bana', 1952, 8.58469871, -11.92746158, NOW(), NOW(), NOW()),
+      (46372, 'Mapakie', 1952, 8.61728675, -11.90010584, NOW(), NOW(), NOW()),
+      (46373, 'Mathunkara', 1952, 8.76397999, -11.77523423, NOW(), NOW(), NOW()),
+      (46374, 'Matotoka', 1952, 8.66030247, -11.8377648, NOW(), NOW(), NOW()),
+      (46375, 'Foindu', 1953, 8.35665394, -12.07818868, NOW(), NOW(), NOW()),
+      (46376, 'Gaindema', 1953, 8.41289672, -12.1555864, NOW(), NOW(), NOW()),
+      (46377, 'Macrogba', 1953, 8.40064133, -12.35089251, NOW(), NOW(), NOW()),
+      (46378, 'Makeni Rokefula', 1953, 8.41086447, -12.55426349, NOW(), NOW(), NOW()),
+      (46379, 'Malanchor', 1953, 8.35233579, -12.59084462, NOW(), NOW(), NOW()),
+      (46380, 'Malompor', 1953, 8.42613575, -12.10417732, NOW(), NOW(), NOW()),
+      (46381, 'Mamaka', 1953, 8.51051686, -12.32277784, NOW(), NOW(), NOW()),
+      (46382, 'Masengbe', 1953, 8.31454445, -12.11144579, NOW(), NOW(), NOW()),
+      (46383, 'Mayira', 1953, 8.41333793, -12.41622379, NOW(), NOW(), NOW()),
+      (46384, 'Petifu Upper', 1953, 8.39417764, -12.28376974, NOW(), NOW(), NOW()),
+      (46385, 'Petifu-Lower', 1953, 8.35977197, -12.41800244, NOW(), NOW(), NOW()),
+      (46386, 'Ronietta', 1953, 8.38342447, -12.46565295, NOW(), NOW(), NOW()),
+      (46387, 'Yoni', 1953, 8.43289884, -12.23017351, NOW(), NOW(), NOW()),
+      (46388, 'Kunbulun 1', 1837, 9.91432178, -11.47460063, NOW(), NOW(), NOW()),
+      (46389, 'Kunbulun 2', 1837, 9.8508755, -11.50887264, NOW(), NOW(), NOW()),
+      (46390, 'Manan', 1837, 9.74890356, -11.48143166, NOW(), NOW(), NOW()),
+      (46391, 'Mawundea', 1837, 9.95339125, -11.46083576, NOW(), NOW(), NOW()),
+      (46392, 'Numula 1', 1837, 9.89255744, -11.50043223, NOW(), NOW(), NOW()),
+      (46393, 'Numula 2', 1837, 9.90654768, -11.41623736, NOW(), NOW(), NOW()),
+      (46394, 'Numula 3', 1837, 9.80719163, -11.5145926, NOW(), NOW(), NOW()),
+      (46395, 'Numula 4', 1837, 9.74580951, -11.51165144, NOW(), NOW(), NOW()),
+      (46396, 'Numula 5', 1837, 9.76318667, -11.45315851, NOW(), NOW(), NOW()),
+      (46397, 'Sinkunia', 1837, 9.84635736, -11.43365219, NOW(), NOW(), NOW()),
+      (46398, 'Balandugu', 1838, 9.66350418, -11.55874196, NOW(), NOW(), NOW()),
+      (46399, 'Dogoloya', 1838, 9.69951203, -11.55349998, NOW(), NOW(), NOW()),
+      (46400, 'Fissaya I', 1838, 9.97371659, -11.6254188, NOW(), NOW(), NOW()),
+      (46401, 'Fissaya II', 1838, 9.97294932, -11.69321016, NOW(), NOW(), NOW()),
+      (46402, 'Gbentu III', 1838, 9.92505382, -11.60636831, NOW(), NOW(), NOW()),
+      (46403, 'Herekor', 1838, 9.80519254, -11.56905742, NOW(), NOW(), NOW()),
+      (46404, 'Kalia', 1838, 9.93072131, -11.69549784, NOW(), NOW(), NOW()),
+      (46405, 'Kamba', 1838, 9.83019882, -11.67681534, NOW(), NOW(), NOW()),
+      (46406, 'Lagor', 1838, 9.7160179, -11.61581699, NOW(), NOW(), NOW()),
+      (46407, 'Musaia', 1838, 9.71101753, -11.52205783, NOW(), NOW(), NOW()),
+      (46408, 'Sankan I', 1838, 9.84488905, -11.56393517, NOW(), NOW(), NOW()),
+      (46409, 'Sankan II', 1838, 9.90349267, -11.55639431, NOW(), NOW(), NOW()),
+      (46410, 'Benadugu', 1839, 9.33654379, -10.9530197, NOW(), NOW(), NOW()),
+      (46411, 'Deldugu', 1839, 9.27192052, -10.7252149, NOW(), NOW(), NOW()),
+      (46412, 'Mankalia', 1839, 9.37717404, -10.81243182, NOW(), NOW(), NOW()),
+      (46413, 'Mongo I', 1839, 9.48068779, -10.93294897, NOW(), NOW(), NOW()),
+      (46414, 'Mongo II', 1839, 9.6265306, -10.99407128, NOW(), NOW(), NOW()),
+      (46415, 'Morifindugu', 1839, 9.51725535, -11.11011722, NOW(), NOW(), NOW()),
+      (46416, 'Kulor', 1840, 9.05181601, -10.62725296, NOW(), NOW(), NOW()),
+      (46417, 'Neya I', 1840, 9.18836099, -10.82268037, NOW(), NOW(), NOW()),
+      (46418, 'Neya II', 1840, 9.08582038, -10.90862515, NOW(), NOW(), NOW()),
+      (46419, 'Nyedu', 1840, 9.16056339, -11.05254512, NOW(), NOW(), NOW()),
+      (46420, 'Saradu', 1840, 9.06563898, -10.75526853, NOW(), NOW(), NOW()),
+      (46421, 'Lower Kamadugu', 1839, 9.45616852, -11.44897053, NOW(), NOW(), NOW()),
+      (46422, 'Upper Kamadugu', 1839, 9.56928046, -11.27026146, NOW(), NOW(), NOW()),
+      (46423, 'Yiraia', 1839, 9.40814214, -11.20056598, NOW(), NOW(), NOW()),
+      (46424, 'Biribaia', 1841, 9.7955297, -11.2483866, NOW(), NOW(), NOW()),
+      (46425, 'Dara', 1841, 9.85632049, -11.25236383, NOW(), NOW(), NOW()),
+      (46426, 'Falaba', 1841, 9.83539315, -11.31456304, NOW(), NOW(), NOW()),
+      (46427, 'Fudea', 1841, 9.68696804, -11.39089919, NOW(), NOW(), NOW()),
+      (46428, 'Ganya', 1841, 9.93536382, -11.28720341, NOW(), NOW(), NOW()),
+      (46429, 'Gberia Fotombu', 1841, 9.88284915, -11.20082322, NOW(), NOW(), NOW()),
+      (46430, 'Gberia-Timbako', 1841, 9.74661302, -11.18422469, NOW(), NOW(), NOW()),
+      (46431, 'Kaliyereh', 1841, 9.94760318, -11.20686685, NOW(), NOW(), NOW()),
+      (46432, 'Koindu-Kura', 1841, 9.88296973, -11.16421864, NOW(), NOW(), NOW()),
+      (46433, 'Laylay', 1841, 9.85740576, -11.23256112, NOW(), NOW(), NOW()),
+      (46434, 'Nomokoya', 1841, 9.95345769, -11.37400259, NOW(), NOW(), NOW()),
+      (46435, 'Sonkoya', 1841, 9.76848653, -11.41280672, NOW(), NOW(), NOW()),
+      (46436, 'Damai', 1800, 8.07728211, -11.4212108, NOW(), NOW(), NOW()),
+      (46437, 'Fallay', 1800, 8.11724066, -11.36603713, NOW(), NOW(), NOW()),
+      (46438, 'Kpallay', 1800, 8.04854915, -11.46927508, NOW(), NOW(), NOW()),
+      (46439, 'Njargbahun', 1800, 8.11632823, -11.45719457, NOW(), NOW(), NOW()),
+      (46440, 'Sei', 1800, 8.07248904, -11.37034501, NOW(), NOW(), NOW()),
+      (46441, 'Bum', 1801, 7.50802665, -11.8693571, NOW(), NOW(), NOW()),
+      (46442, 'Gorapon', 1801, 7.54304041, -11.92161494, NOW(), NOW(), NOW()),
+      (46443, 'Jimmi', 1801, 7.6400944, -11.81791029, NOW(), NOW(), NOW()),
+      (46444, 'Kpangbalia', 1801, 7.59171962, -11.89038873, NOW(), NOW(), NOW()),
+      (46445, 'Mano', 1801, 7.5623378, -11.86200798, NOW(), NOW(), NOW()),
+      (46446, 'Niagorehun', 1801, 7.67440673, -11.76221987, NOW(), NOW(), NOW()),
+      (46447, 'Tissana', 1801, 7.58137066, -11.94739807, NOW(), NOW(), NOW()),
+      (46448, 'Jongo', 1802, 8.062855, -11.51967277, NOW(), NOW(), NOW()),
+      (46449, 'Kemoh', 1802, 8.0211421, -11.50089463, NOW(), NOW(), NOW()),
+      (46450, 'Niawa', 1802, 8.03124667, -11.57353076, NOW(), NOW(), NOW()),
+      (46451, 'Nyallay', 1802, 8.09787378, -11.56766273, NOW(), NOW(), NOW()),
+      (46452, 'Samawa', 1802, 8.13426874, -11.5083487, NOW(), NOW(), NOW()),
+      (46453, 'Bambawo', 1804, 7.92903002, -11.56142134, NOW(), NOW(), NOW()),
+      (46454, 'Fallay', 1804, 7.94364422, -11.43756111, NOW(), NOW(), NOW()),
+      (46455, 'Kimaya', 1804, 7.97539569, -11.48714347, NOW(), NOW(), NOW()),
+      (46456, 'Lower Pataloo', 1804, 7.92511362, -11.50108171, NOW(), NOW(), NOW()),
+      (46457, 'Mawojeh', 1804, 7.87603453, -11.48162406, NOW(), NOW(), NOW()),
+      (46458, 'Njeima', 1804, 7.9524727, -11.38508461, NOW(), NOW(), NOW()),
+      (46459, 'Sonnah', 1804, 7.86091063, -11.54030023, NOW(), NOW(), NOW()),
+      (46460, 'Upper Pataloo', 1804, 8.01431, -11.42083221, NOW(), NOW(), NOW()),
+      (46461, 'Bongo', 1805, 7.76813953, -11.98856287, NOW(), NOW(), NOW()),
+      (46462, 'Bumpe', 1805, 7.90853078, -11.9252515, NOW(), NOW(), NOW()),
+      (46463, 'Foya', 1805, 7.96121051, -11.88414238, NOW(), NOW(), NOW()),
+      (46464, 'Kpetema', 1805, 7.85615558, -11.98743592, NOW(), NOW(), NOW()),
+      (46465, 'Sahn', 1805, 7.71570186, -12.050141, NOW(), NOW(), NOW()),
+      (46466, 'Serabu', 1805, 7.81650313, -12.06484444, NOW(), NOW(), NOW()),
+      (46467, 'Sewama', 1805, 7.71288969, -11.97177467, NOW(), NOW(), NOW()),
+      (46468, 'Taninahun', 1805, 7.89767843, -12.08597912, NOW(), NOW(), NOW()),
+      (46469, 'Walihun', 1805, 7.76688767, -12.0899193, NOW(), NOW(), NOW()),
+      (46470, 'Yengema', 1805, 7.85030437, -12.01826511, NOW(), NOW(), NOW()),
+      (46471, 'Gbo', 1806, 8.07594203, -11.85065161, NOW(), NOW(), NOW()),
+      (46472, 'Maryu', 1806, 8.05329174, -11.88639435, NOW(), NOW(), NOW()),
+      (46473, 'Nyawa', 1806, 8.0994189, -11.80127737, NOW(), NOW(), NOW()),
+      (46474, 'Lower Baimba', 1807, 7.73575606, -11.70278309, NOW(), NOW(), NOW()),
+      (46475, 'Lower Kama', 1807, 7.72042382, -11.6710813, NOW(), NOW(), NOW()),
+      (46476, 'Lower Niawa', 1807, 7.69508912, -11.62726368, NOW(), NOW(), NOW()),
+      (46477, 'Nekpondo', 1807, 7.86236194, -11.58543911, NOW(), NOW(), NOW()),
+      (46478, 'Tongowa', 1807, 7.83036724, -11.64730619, NOW(), NOW(), NOW()),
+      (46479, 'Upper Baimba', 1807, 7.78955899, -11.67747943, NOW(), NOW(), NOW()),
+      (46480, 'Upper Kama', 1807, 7.79475789, -11.59154074, NOW(), NOW(), NOW()),
+      (46481, 'Upper Niawa', 1807, 7.78340321, -11.53318091, NOW(), NOW(), NOW()),
+      (46482, 'Korjeh', 1808, 7.93661595, -11.59578531, NOW(), NOW(), NOW()),
+      (46483, 'Kpandobu', 1808, 8.00362718, -11.67070554, NOW(), NOW(), NOW()),
+      (46484, 'Nguabu', 1808, 8.02428757, -11.70674421, NOW(), NOW(), NOW()),
+      (46485, 'Nyallay', 1808, 7.93628531, -11.63741207, NOW(), NOW(), NOW()),
+      (46486, 'Nyawa', 1808, 7.97993463, -11.58017175, NOW(), NOW(), NOW()),
+      (46487, 'Samamie', 1808, 7.99579229, -11.75583011, NOW(), NOW(), NOW()),
+      (46488, 'Sewa', 1808, 7.92142608, -11.67758451, NOW(), NOW(), NOW()),
+      (46489, 'Sindeh', 1808, 8.00496363, -11.6061123, NOW(), NOW(), NOW()),
+      (46490, 'Keisua', 1809, 8.21323207, -11.50557155, NOW(), NOW(), NOW()),
+      (46491, 'Kemoh', 1809, 8.19493996, -11.41337058, NOW(), NOW(), NOW()),
+      (46492, 'Mangaru', 1809, 8.30574942, -11.51586217, NOW(), NOW(), NOW()),
+      (46493, 'Sei', 1809, 8.21063233, -11.45797827, NOW(), NOW(), NOW()),
+      (46494, 'Tongowa', 1809, 8.26896055, -11.55393626, NOW(), NOW(), NOW()),
+      (46495, 'Gao', 1810, 7.68691569, -11.83334815, NOW(), NOW(), NOW()),
+      (46496, 'Kamba', 1810, 7.66490561, -11.91114826, NOW(), NOW(), NOW()),
+      (46497, 'Kargbevu', 1810, 7.63434781, -11.95881257, NOW(), NOW(), NOW()),
+      (46498, 'Kemoh', 1810, 7.69159441, -11.89131458, NOW(), NOW(), NOW()),
+      (46499, 'Magbao', 1810, 7.74443957, -11.89932772, NOW(), NOW(), NOW()),
+      (46500, 'Yorma', 1810, 7.73024538, -11.80854951, NOW(), NOW(), NOW()),
+      (46501, 'Baimba', 1811, 8.07054195, -11.67476892, NOW(), NOW(), NOW()),
+      (46502, 'Lower Niawa', 1811, 8.11413902, -11.63284061, NOW(), NOW(), NOW()),
+      (46503, 'Upper Niawa', 1811, 8.21344346, -11.55466345, NOW(), NOW(), NOW()),
+      (46504, 'Yalenga', 1811, 8.16975595, -11.62945962, NOW(), NOW(), NOW()),
+      (46505, 'Kaduawo', 1812, 8.10501412, -11.76816296, NOW(), NOW(), NOW()),
+      (46506, 'Mokpendeh', 1812, 8.12876197, -11.72542262, NOW(), NOW(), NOW()),
+      (46507, 'Old Town', 1812, 8.09872861, -11.73360495, NOW(), NOW(), NOW()),
+      (46508, 'Bainyawa', 1813, 7.70836163, -11.74830973, NOW(), NOW(), NOW()),
+      (46509, 'Mambawa', 1813, 7.78534671, -11.83046832, NOW(), NOW(), NOW()),
+      (46510, 'Morku', 1813, 7.77546465, -11.86354945, NOW(), NOW(), NOW()),
+      (46511, 'Ngolamajie', 1813, 7.99038328, -11.82026421, NOW(), NOW(), NOW()),
+      (46512, 'Njagbla I', 1813, 7.78321734, -11.79452071, NOW(), NOW(), NOW()),
+      (46513, 'Njagbla II', 1813, 7.81340217, -11.75849047, NOW(), NOW(), NOW()),
+      (46514, 'Seiwa', 1813, 7.86117413, -11.78793749, NOW(), NOW(), NOW()),
+      (46515, 'Sendeh', 1813, 7.77631022, -11.73105192, NOW(), NOW(), NOW()),
+      (46516, 'Deilenga', 1814, 8.39370492, -11.62496203, NOW(), NOW(), NOW()),
+      (46517, 'Kendebu', 1814, 8.24496101, -11.77100395, NOW(), NOW(), NOW()),
+      (46518, 'Lunia', 1814, 8.35098164, -11.74276078, NOW(), NOW(), NOW()),
+      (46519, 'Ngovo', 1814, 8.17390653, -11.77170009, NOW(), NOW(), NOW()),
+      (46520, 'Seilenga', 1814, 8.30118542, -11.64626588, NOW(), NOW(), NOW()),
+      (46521, 'Vanjelu', 1814, 8.18834589, -11.70399096, NOW(), NOW(), NOW()),
+      (46522, 'Yarlenga', 1814, 8.22863672, -11.63407034, NOW(), NOW(), NOW()),
+      (46523, 'Central Kargoi', 1815, 7.73733062, -11.44321113, NOW(), NOW(), NOW()),
+      (46524, 'Lower Kargoi', 1815, 7.61113773, -11.70724425, NOW(), NOW(), NOW()),
+      (46525, 'Manyeh', 1815, 7.69792955, -11.53119928, NOW(), NOW(), NOW()),
+      (46526, 'Upper Kargoi', 1815, 7.782229, -11.43749094, NOW(), NOW(), NOW()),
+      (46527, 'East Ward-Batiema', 1803, 7.96510164, -11.71394127, NOW(), NOW(), NOW()),
+      (46528, 'East Ward-Bumpeh-W', 1803, 7.95437592, -11.71454326, NOW(), NOW(), NOW()),
+      (46529, 'East Ward-Gbondo T', 1803, 7.94282965, -11.72082937, NOW(), NOW(), NOW()),
+      (46530, 'East Ward-Kindia T', 1803, 7.96112168, -11.72385562, NOW(), NOW(), NOW()),
+      (46531, 'East Ward-Lower Sa', 1803, 7.96642187, -11.7273171, NOW(), NOW(), NOW()),
+      (46532, 'East Ward-Manjama', 1803, 7.94080676, -11.72875202, NOW(), NOW(), NOW()),
+      (46533, 'East Ward-Messima', 1803, 7.95129652, -11.72418524, NOW(), NOW(), NOW()),
+      (46534, 'East Ward-Moriba T', 1803, 7.96170791, -11.73463462, NOW(), NOW(), NOW()),
+      (46535, 'North Ward-Bo Numb', 1803, 7.97602553, -11.72710852, NOW(), NOW(), NOW()),
+      (46536, 'North Ward-Kissy Town', 1803, 7.96994312, -11.73748364, NOW(), NOW(), NOW()),
+      (46537, 'North Ward-Njai To', 1803, 7.9788139, -11.73599531, NOW(), NOW(), NOW()),
+      (46538, 'North Ward-Reservation', 1803, 7.97342, -11.7520081, NOW(), NOW(), NOW()),
+      (46539, 'West Ward-Kandeh T', 1803, 7.94453243, -11.75149434, NOW(), NOW(), NOW()),
+      (46540, 'West Ward-Lewabu -', 1803, 7.94123902, -11.73918691, NOW(), NOW(), NOW()),
+      (46541, 'West Ward-Moriba T', 1803, 7.95119138, -11.73604381, NOW(), NOW(), NOW()),
+      (46542, 'West Ward-Nikibu -', 1803, 7.96045109, -11.74790957, NOW(), NOW(), NOW()),
+      (46543, 'West Ward-Njagboim', 1803, 7.95350859, -11.74551708, NOW(), NOW(), NOW()),
+      (46544, 'Gba-Cha', 1825, 7.44311458, -12.40987803, NOW(), NOW(), NOW()),
+      (46545, 'Sokenteh', 1825, 7.4692395, -12.42783951, NOW(), NOW(), NOW()),
+      (46546, 'Tissagbe', 1825, 7.42461768, -12.3479385, NOW(), NOW(), NOW()),
+      (46547, 'Yallan-gbokie', 1825, 7.4973224, -12.3537459, NOW(), NOW(), NOW()),
+      (46548, 'Fikie', 1827, 7.41246727, -11.96615067, NOW(), NOW(), NOW()),
+      (46549, 'Gbengain', 1827, 7.39304893, -11.89565831, NOW(), NOW(), NOW()),
+      (46550, 'Gbondubum', 1827, 7.44846677, -11.93127875, NOW(), NOW(), NOW()),
+      (46551, 'Koimato', 1827, 7.48830197, -12.0189307, NOW(), NOW(), NOW()),
+      (46552, 'Lanje', 1827, 7.50431835, -11.91992672, NOW(), NOW(), NOW()),
+      (46553, 'Tamba', 1827, 7.36272476, -11.98627835, NOW(), NOW(), NOW()),
+      (46554, 'Torma', 1827, 7.41732525, -12.01330713, NOW(), NOW(), NOW()),
+      (46555, 'Yargbe', 1827, 7.372001, -11.92872105, NOW(), NOW(), NOW()),
+      (46556, 'Yawma', 1827, 7.4756471, -11.93776413, NOW(), NOW(), NOW()),
+      (46557, 'Chepo', 1828, 7.5692322, -12.92430411, NOW(), NOW(), NOW()),
+      (46558, 'Dema', 1828, 7.5937327, -12.89383667, NOW(), NOW(), NOW()),
+      (46559, 'Turtle Islands', 1828, 7.578743, -12.97652606, NOW(), NOW(), NOW()),
+      (46560, 'Yoh', 1828, 7.58834077, -12.83055899, NOW(), NOW(), NOW()),
+      (46561, 'Babum', 1829, 7.77055464, -12.3432617, NOW(), NOW(), NOW()),
+      (46562, 'Bapus', 1829, 7.6940445, -12.44605653, NOW(), NOW(), NOW()),
+      (46563, 'Bigo', 1829, 7.69790793, -12.28970051, NOW(), NOW(), NOW()),
+      (46564, 'Kahekay', 1829, 7.72539416, -12.35442259, NOW(), NOW(), NOW()),
+      (46565, 'Moimaligie', 1829, 7.60965144, -12.34920791, NOW(), NOW(), NOW()),
+      (46566, 'Sokrapan', 1829, 7.61673509, -12.43829325, NOW(), NOW(), NOW()),
+      (46567, 'Basiaka', 1830, 7.49033543, -12.24729691, NOW(), NOW(), NOW()),
+      (46568, 'Bayengbe', 1830, 7.60658654, -12.165573, NOW(), NOW(), NOW()),
+      (46569, 'Beyinga', 1830, 7.53952722, -12.16042662, NOW(), NOW(), NOW()),
+      (46570, 'Falewuja', 1830, 7.62927008, -12.11643155, NOW(), NOW(), NOW()),
+      (46571, 'Kumabeh-Kwe', 1830, 7.63865758, -12.16747785, NOW(), NOW(), NOW()),
+      (46572, 'Landi-Ngere', 1830, 7.62876329, -12.24807817, NOW(), NOW(), NOW()),
+      (46573, 'Sopan-Cleveland', 1830, 7.56673544, -12.21193919, NOW(), NOW(), NOW()),
+      (46574, 'Tucker-Nyambe', 1830, 7.52945206, -12.25506654, NOW(), NOW(), NOW()),
+      (46575, 'Ba-Kobotu', 1831, 7.62954793, -12.01817498, NOW(), NOW(), NOW()),
+      (46576, 'Bewoni', 1831, 7.56451961, -11.99924887, NOW(), NOW(), NOW()),
+      (46577, 'Gbonge', 1831, 7.65123315, -12.05543196, NOW(), NOW(), NOW()),
+      (46578, 'Senjehun', 1831, 7.53592231, -12.0299338, NOW(), NOW(), NOW()),
+      (46579, 'Sewama', 1831, 7.62589016, -12.04223665, NOW(), NOW(), NOW()),
+      (46580, 'Taokunor', 1831, 7.57155463, -12.03961287, NOW(), NOW(), NOW()),
+      (46581, 'Kpanga Koimato', 1832, 7.25332637, -11.92156742, NOW(), NOW(), NOW()),
+      (46582, 'Kwako Lanten', 1832, 7.31775793, -11.99144854, NOW(), NOW(), NOW()),
+      (46583, 'Massa Settie', 1832, 7.22265865, -11.97809142, NOW(), NOW(), NOW()),
+      (46584, 'Mosenten Sahen II', 1832, 7.31318001, -12.03493091, NOW(), NOW(), NOW()),
+      (46585, 'Tubla', 1832, 7.30718151, -11.93241247, NOW(), NOW(), NOW()),
+      (46586, 'Tun-Tun Sullay', 1832, 7.27056699, -12.05499687, NOW(), NOW(), NOW()),
+      (46587, 'Yikie Karbay', 1832, 7.26398362, -11.98065125, NOW(), NOW(), NOW()),
+      (46588, 'Baoma', 1833, 7.45298611, -12.22394466, NOW(), NOW(), NOW()),
+      (46589, 'Bohol', 1833, 7.39115025, -12.46250458, NOW(), NOW(), NOW()),
+      (46590, 'Bullom', 1833, 7.40641683, -12.29489061, NOW(), NOW(), NOW()),
+      (46591, 'Garinga', 1833, 7.3716373, -12.36508, NOW(), NOW(), NOW()),
+      (46592, 'Gbangbassa', 1833, 7.35430784, -12.15767108, NOW(), NOW(), NOW()),
+      (46593, 'Gbap', 1833, 7.39246521, -12.25100043, NOW(), NOW(), NOW()),
+      (46594, 'Hahun', 1833, 7.35418886, -12.11936846, NOW(), NOW(), NOW()),
+      (46595, 'Kessie', 1833, 7.29279554, -12.11249253, NOW(), NOW(), NOW()),
+      (46596, 'Manyime', 1833, 7.39885504, -12.20614157, NOW(), NOW(), NOW()),
+      (46597, 'Pelewahun', 1833, 7.44607992, -12.28147291, NOW(), NOW(), NOW()),
+      (46598, 'Salma', 1833, 7.35682633, -12.09180528, NOW(), NOW(), NOW()),
+      (46599, 'Solon', 1833, 7.34962796, -12.27568461, NOW(), NOW(), NOW()),
+      (46600, 'Torma Subu', 1833, 7.31912011, -12.21941415, NOW(), NOW(), NOW()),
+      (46601, 'Bamba', 1834, 7.4152856, -12.55007705, NOW(), NOW(), NOW()),
+      (46602, 'Gonoh', 1834, 7.5793049, -12.54044974, NOW(), NOW(), NOW()),
+      (46603, 'Kamai', 1834, 7.5951228, -12.75248961, NOW(), NOW(), NOW()),
+      (46604, 'Kwalloh', 1834, 7.6039944, -12.67086968, NOW(), NOW(), NOW()),
+      (46605, 'Moh', 1834, 7.5602119, -12.6205028, NOW(), NOW(), NOW()),
+      (46606, 'Ngepay', 1834, 7.48970937, -12.63310162, NOW(), NOW(), NOW()),
+      (46607, 'Saama', 1834, 7.61457995, -12.60210342, NOW(), NOW(), NOW()),
+      (46608, 'Sahaya', 1834, 7.54660149, -12.77477095, NOW(), NOW(), NOW()),
+      (46609, 'Sahn-Gbegu', 1834, 7.46918081, -12.55770963, NOW(), NOW(), NOW()),
+      (46610, 'Sampoh', 1834, 7.5590481, -12.68539659, NOW(), NOW(), NOW()),
+      (46611, 'Yoni', 1834, 7.4896186, -12.53417829, NOW(), NOW(), NOW()),
+      (46612, 'Bakumba', 1835, 7.59908819, -12.0723325, NOW(), NOW(), NOW()),
+      (46613, 'Beyorgboh', 1835, 7.53275905, -12.10822023, NOW(), NOW(), NOW()),
+      (46614, 'Ndopie', 1835, 7.48133549, -12.09898587, NOW(), NOW(), NOW()),
+      (46615, 'Pengor', 1835, 7.56005644, -12.08405428, NOW(), NOW(), NOW()),
+      (46616, 'Baryegbe', 1836, 7.42732916, -12.15897982, NOW(), NOW(), NOW()),
+      (46617, 'Hahun', 1836, 7.47204303, -12.14222311, NOW(), NOW(), NOW()),
+      (46618, 'Ketaway', 1836, 7.42492692, -12.10957453, NOW(), NOW(), NOW()),
+      (46619, 'Mobulie', 1836, 7.51144339, -12.17086038, NOW(), NOW(), NOW()),
+      (46620, 'Yorma', 1836, 7.39370274, -12.07602304, NOW(), NOW(), NOW()),
+      (46621, 'Bonthe Town', 1826, 7.5340505, -12.51850697, NOW(), NOW(), NOW()),
+      (46622, 'Benduma', 1909, 7.91401901, -12.48506436, NOW(), NOW(), NOW()),
+      (46623, 'Benkeh', 1909, 7.7886377, -12.51135573, NOW(), NOW(), NOW()),
+      (46624, 'Kawaya', 1909, 7.95992609, -12.32121174, NOW(), NOW(), NOW()),
+      (46625, 'Kigbai', 1909, 7.9004333, -12.56639889, NOW(), NOW(), NOW()),
+      (46626, 'Mani', 1909, 7.98970892, -12.53938265, NOW(), NOW(), NOW()),
+      (46627, 'Mokassi', 1909, 7.99161248, -12.38438322, NOW(), NOW(), NOW()),
+      (46628, 'Moseilolo', 1909, 7.84539083, -12.45177819, NOW(), NOW(), NOW()),
+      (46629, 'Palima', 1909, 7.9118236, -12.35955381, NOW(), NOW(), NOW()),
+      (46630, 'Sembehun', 1909, 7.97243403, -12.47750203, NOW(), NOW(), NOW()),
+      (46631, 'Bellentin', 1910, 8.13100019, -12.77585201, NOW(), NOW(), NOW()),
+      (46632, 'Bumpeh', 1910, 8.17801834, -12.67713493, NOW(), NOW(), NOW()),
+      (46633, 'Greema', 1910, 8.25799839, -12.66213316, NOW(), NOW(), NOW()),
+      (46634, 'Kassipoto', 1910, 8.16507407, -12.75231843, NOW(), NOW(), NOW()),
+      (46635, 'Mamu', 1910, 8.05047923, -12.73685524, NOW(), NOW(), NOW()),
+      (46636, 'Massah', 1910, 8.06595689, -12.58423186, NOW(), NOW(), NOW()),
+      (46637, 'Moforay', 1910, 8.07827133, -12.68750954, NOW(), NOW(), NOW()),
+      (46638, 'Mokebbie', 1910, 8.20895828, -12.72297219, NOW(), NOW(), NOW()),
+      (46639, 'Motobon', 1910, 8.1195917, -12.8252695, NOW(), NOW(), NOW()),
+      (46640, 'Moyemi', 1910, 8.02839783, -12.67995617, NOW(), NOW(), NOW()),
+      (46641, 'Saiama', 1910, 8.23850424, -12.69299701, NOW(), NOW(), NOW()),
+      (46642, 'Samu', 1910, 8.06113921, -12.84647331, NOW(), NOW(), NOW()),
+      (46643, 'Yengessa', 1910, 8.13721705, -12.64228011, NOW(), NOW(), NOW()),
+      (46644, 'Bambuibu Tommy', 1911, 7.97779916, -12.15444679, NOW(), NOW(), NOW()),
+      (46645, 'Bongoya', 1911, 8.03462069, -12.22482411, NOW(), NOW(), NOW()),
+      (46646, 'Domboma', 1911, 8.05957953, -12.07294523, NOW(), NOW(), NOW()),
+      (46647, 'Foya Tewei', 1911, 7.98127318, -12.20285522, NOW(), NOW(), NOW()),
+      (46648, 'Jayahun', 1911, 8.00359252, -12.09326136, NOW(), NOW(), NOW()),
+      (46649, 'Kenema', 1911, 8.06693377, -12.11742067, NOW(), NOW(), NOW()),
+      (46650, 'Mano', 1911, 8.03404488, -12.0926484, NOW(), NOW(), NOW()),
+      (46651, 'Niti Korley', 1911, 8.06598199, -12.14922544, NOW(), NOW(), NOW()),
+      (46652, 'Semabu', 1911, 8.00457012, -12.05612494, NOW(), NOW(), NOW()),
+      (46653, 'Taninahun Gomoh', 1911, 8.05794172, -12.23415588, NOW(), NOW(), NOW()),
+      (46654, 'Taninahun Kapuima', 1911, 8.00772325, -12.22688235, NOW(), NOW(), NOW()),
+      (46655, 'Timindi', 1911, 8.01026752, -12.13566883, NOW(), NOW(), NOW()),
+      (46656, 'Wonkifore', 1911, 7.92938947, -12.17753565, NOW(), NOW(), NOW()),
+      (46657, 'Fakoi', 1912, 8.22327216, -12.34154599, NOW(), NOW(), NOW()),
+      (46658, 'Gandorhun Central', 1912, 8.23616204, -12.34080349, NOW(), NOW(), NOW()),
+      (46659, 'Kovella', 1912, 8.27502705, -12.42502571, NOW(), NOW(), NOW()),
+      (46660, 'Kpangulgo', 1912, 8.29420768, -12.36006235, NOW(), NOW(), NOW()),
+      (46661, 'Kunyafoi', 1912, 8.2623752, -12.29774352, NOW(), NOW(), NOW()),
+      (46662, 'Maninga', 1912, 8.31994887, -12.27930217, NOW(), NOW(), NOW()),
+      (46663, 'Njawa', 1912, 8.15899644, -12.24596407, NOW(), NOW(), NOW()),
+      (46664, 'Songo', 1912, 8.22696076, -12.25253542, NOW(), NOW(), NOW()),
+      (46665, 'Tangbla', 1912, 8.30247762, -12.33470017, NOW(), NOW(), NOW()),
+      (46666, 'To - Ndambalenga', 1912, 8.30777552, -12.23658848, NOW(), NOW(), NOW()),
+      (46667, 'Tullu', 1912, 8.16936167, -12.31536988, NOW(), NOW(), NOW()),
+      (46668, 'Bendu A', 1913, 7.87363856, -12.90588834, NOW(), NOW(), NOW()),
+      (46669, 'Bendu B', 1913, 7.84609923, -12.78744991, NOW(), NOW(), NOW()),
+      (46670, 'Bumpetoke', 1913, 7.81485254, -12.83015249, NOW(), NOW(), NOW()),
+      (46671, 'Gbuallay', 1913, 7.98910369, -12.6223948, NOW(), NOW(), NOW()),
+      (46672, 'Konolor', 1913, 7.91940332, -12.7293886, NOW(), NOW(), NOW()),
+      (46673, 'Mambo', 1913, 7.97327655, -12.77556565, NOW(), NOW(), NOW()),
+      (46674, 'Mano', 1913, 7.8481273, -12.8659682, NOW(), NOW(), NOW()),
+      (46675, 'Mobeh', 1913, 7.96263418, -12.68151761, NOW(), NOW(), NOW()),
+      (46676, 'Mofuss', 1913, 7.9738979, -12.71729354, NOW(), NOW(), NOW()),
+      (46677, 'Mokandor', 1913, 7.87994817, -12.68962704, NOW(), NOW(), NOW()),
+      (46678, 'Mokebe', 1913, 7.89643677, -12.80360718, NOW(), NOW(), NOW()),
+      (46679, 'Mokobo', 1913, 7.93899224, -12.63830597, NOW(), NOW(), NOW()),
+      (46680, 'Mopaileh', 1913, 7.84938471, -12.72723422, NOW(), NOW(), NOW()),
+      (46681, 'Moyah', 1913, 7.98330762, -12.82569024, NOW(), NOW(), NOW()),
+      (46682, 'Moyibo', 1913, 7.97867632, -12.59697876, NOW(), NOW(), NOW()),
+      (46683, 'Ngiehun', 1913, 7.98491584, -12.65766101, NOW(), NOW(), NOW()),
+      (46684, 'Rembe', 1913, 8.02656647, -12.86522172, NOW(), NOW(), NOW()),
+      (46685, 'Tassoh', 1913, 7.909371, -12.89333813, NOW(), NOW(), NOW()),
+      (46686, 'Thumba A', 1913, 7.86961177, -12.86722782, NOW(), NOW(), NOW()),
+      (46687, 'Thumba B', 1913, 7.86660903, -12.74911616, NOW(), NOW(), NOW()),
+      (46688, 'Yondu', 1913, 7.99326067, -12.86452125, NOW(), NOW(), NOW()),
+      (46689, 'Angigboya', 1914, 8.04231838, -12.35454464, NOW(), NOW(), NOW()),
+      (46690, 'Koromboya', 1914, 8.12912924, -12.44299043, NOW(), NOW(), NOW()),
+      (46691, 'Kpange', 1914, 8.05717434, -12.45142618, NOW(), NOW(), NOW()),
+      (46692, 'Lungili', 1914, 8.12423119, -12.35346661, NOW(), NOW(), NOW()),
+      (46693, 'Mendegelema', 1914, 8.2002406, -12.47221725, NOW(), NOW(), NOW()),
+      (46694, 'Mosoe', 1914, 8.19809073, -12.41113816, NOW(), NOW(), NOW()),
+      (46695, 'Waliwahun', 1914, 8.07635279, -12.28979022, NOW(), NOW(), NOW()),
+      (46696, 'Kowama', 1915, 8.30497891, -11.91901853, NOW(), NOW(), NOW()),
+      (46697, 'Mogbuama', 1915, 8.22707536, -11.91930011, NOW(), NOW(), NOW()),
+      (46698, 'Ngiegombu', 1915, 8.1152428, -12.00633582, NOW(), NOW(), NOW()),
+      (46699, 'Ngoahun', 1915, 8.22370871, -11.83845644, NOW(), NOW(), NOW()),
+      (46700, 'Njagbema', 1915, 8.34293294, -11.90989276, NOW(), NOW(), NOW()),
+      (46701, 'Tawovehun', 1915, 8.16035894, -11.95634299, NOW(), NOW(), NOW()),
+      (46702, 'Yeima', 1915, 8.32235164, -11.83409075, NOW(), NOW(), NOW()),
+      (46703, 'Gibina', 1916, 8.18618693, -12.57133777, NOW(), NOW(), NOW()),
+      (46704, 'Gondama', 1916, 8.13333251, -12.50113239, NOW(), NOW(), NOW()),
+      (46705, 'Mobonor', 1916, 8.07392039, -12.54368717, NOW(), NOW(), NOW()),
+      (46706, 'Mokorewo', 1916, 8.23501161, -12.5045991, NOW(), NOW(), NOW()),
+      (46707, 'Mongere', 1916, 8.24709014, -12.60281422, NOW(), NOW(), NOW()),
+      (46708, 'Mosongla', 1916, 8.0750833, -12.49951852, NOW(), NOW(), NOW()),
+      (46709, 'Mowoto', 1916, 8.16240952, -12.52985313, NOW(), NOW(), NOW()),
+      (46710, 'Senehun', 1916, 8.14393197, -12.59421743, NOW(), NOW(), NOW()),
+      (46711, 'Taninihun', 1916, 8.11588633, -12.55256791, NOW(), NOW(), NOW()),
+      (46712, 'Tongieh', 1916, 8.23495456, -12.5560825, NOW(), NOW(), NOW()),
+      (46713, 'Zone - 1', 1917, 8.32131285, -12.01404258, NOW(), NOW(), NOW()),
+      (46714, 'Zone - 2', 1917, 8.237665, -11.99776881, NOW(), NOW(), NOW()),
+      (46715, 'Zone - 3', 1917, 8.27513618, -12.14544793, NOW(), NOW(), NOW()),
+      (46716, 'Zone - 4', 1917, 8.2033006, -12.14779371, NOW(), NOW(), NOW()),
+      (46717, 'Zone - 5', 1917, 8.14501169, -12.15577104, NOW(), NOW(), NOW()),
+      (46718, 'Zone - 6', 1917, 8.09648325, -12.21340986, NOW(), NOW(), NOW()),
+      (46719, 'Zone - 7', 1917, 8.14890531, -12.04111271, NOW(), NOW(), NOW()),
+      (46720, 'Kpandobu', 1918, 8.03338472, -11.9135226, NOW(), NOW(), NOW()),
+      (46721, 'Moforay', 1918, 8.01837101, -12.0038456, NOW(), NOW(), NOW()),
+      (46722, 'Mosumana', 1918, 8.07584689, -12.01325035, NOW(), NOW(), NOW()),
+      (46723, 'Ngiyeiya', 1918, 8.05154069, -11.99728213, NOW(), NOW(), NOW()),
+      (46724, 'Njagbahun', 1918, 8.13444503, -11.91491294, NOW(), NOW(), NOW()),
+      (46725, 'Njama', 1918, 8.08804163, -11.93076548, NOW(), NOW(), NOW()),
+      (46726, 'Tabe', 1918, 8.02013181, -11.94988632, NOW(), NOW(), NOW()),
+      (46727, 'Tawoveihun', 1918, 8.07657262, -11.96711883, NOW(), NOW(), NOW()),
+      (46728, 'Bengelloh', 1919, 7.8619479, -12.38119955, NOW(), NOW(), NOW()),
+      (46729, 'Gbangbatoke', 1919, 7.8315115, -12.35931978, NOW(), NOW(), NOW()),
+      (46730, 'Largoh', 1919, 7.83962546, -12.30284394, NOW(), NOW(), NOW()),
+      (46731, 'Mofindoh', 1919, 7.83836435, -12.24674886, NOW(), NOW(), NOW()),
+      (46732, 'Mokotawa', 1919, 7.89734948, -12.16601703, NOW(), NOW(), NOW()),
+      (46733, 'Ndendemoya', 1919, 7.77791904, -12.25349203, NOW(), NOW(), NOW()),
+      (46734, 'Ngolala', 1919, 7.91083012, -12.2098141, NOW(), NOW(), NOW()),
+      (46735, 'Njagbahun', 1919, 7.93951833, -12.25561985, NOW(), NOW(), NOW()),
+      (46736, 'Wulbange', 1919, 7.84988094, -12.1768985, NOW(), NOW(), NOW()),
+      (46737, 'Kentineh', 1920, 8.28330847, -12.80638143, NOW(), NOW(), NOW()),
+      (46738, 'Lower Ribbi', 1920, 8.2199678, -12.93318215, NOW(), NOW(), NOW()),
+      (46739, 'Makera', 1920, 8.36344871, -12.78600503, NOW(), NOW(), NOW()),
+      (46740, 'Masanka', 1920, 8.3464555, -12.83353889, NOW(), NOW(), NOW()),
+      (46741, 'Masarakulay', 1920, 8.32455068, -12.6637036, NOW(), NOW(), NOW()),
+      (46742, 'Mobureh', 1920, 8.15215195, -12.89365528, NOW(), NOW(), NOW()),
+      (46743, 'Motoni', 1920, 8.29772339, -12.73639624, NOW(), NOW(), NOW()),
+      (46744, 'Motonkoh', 1920, 8.25366038, -12.83797384, NOW(), NOW(), NOW()),
+      (46745, 'Upper Ribbi', 1920, 8.20611875, -12.85029153, NOW(), NOW(), NOW()),
+      (46746, 'Yoni', 1920, 8.22740245, -12.7828226, NOW(), NOW(), NOW()),
+      (46747, 'Bembellor', 1921, 7.73645075, -12.70834234, NOW(), NOW(), NOW()),
+      (46748, 'Gambia', 1921, 7.79242082, -12.7045582, NOW(), NOW(), NOW()),
+      (46749, 'Gbehan', 1921, 7.76726477, -12.5874087, NOW(), NOW(), NOW()),
+      (46750, 'Kamasunu', 1921, 7.77178575, -12.64194673, NOW(), NOW(), NOW()),
+      (46751, 'Kambotoke', 1921, 7.81728104, -12.62716648, NOW(), NOW(), NOW()),
+      (46752, 'Kebail', 1921, 7.75034199, -12.73116993, NOW(), NOW(), NOW()),
+      (46753, 'Mandu', 1921, 7.78138012, -12.75395105, NOW(), NOW(), NOW()),
+      (46754, 'Mye', 1921, 7.77325077, -12.67700953, NOW(), NOW(), NOW()),
+      (46755, 'Nonkoba', 1921, 7.72495748, -12.64311545, NOW(), NOW(), NOW()),
+      (46756, 'Sahan', 1921, 7.73205719, -12.67701632, NOW(), NOW(), NOW()),
+      (46757, 'Tombeh', 1921, 7.8055503, -12.67848755, NOW(), NOW(), NOW()),
+      (46758, 'Yapoma', 1921, 7.88001423, -12.63735023, NOW(), NOW(), NOW()),
+      (46759, 'Bei-Kelleh', 1922, 7.73835166, -12.15531508, NOW(), NOW(), NOW()),
+      (46760, 'Kenafallay', 1922, 7.75500006, -12.22573257, NOW(), NOW(), NOW()),
+      (46761, 'Kepay', 1922, 7.77488262, -12.16958956, NOW(), NOW(), NOW()),
+      (46762, 'Mogongbe', 1922, 7.69777983, -12.13505775, NOW(), NOW(), NOW()),
+      (46763, 'Songbo', 1922, 7.70092908, -12.22570616, NOW(), NOW(), NOW()),
+      (46764, 'Dakona', 1931, 7.40857137, -11.37351259, NOW(), NOW(), NOW()),
+      (46765, 'Fallay', 1931, 7.49410606, -11.48280485, NOW(), NOW(), NOW()),
+      (46766, 'Jougba', 1931, 7.5897281, -11.36978964, NOW(), NOW(), NOW()),
+      (46767, 'Karjei', 1931, 7.51121867, -11.39156003, NOW(), NOW(), NOW()),
+      (46768, 'Laimba', 1931, 7.43537592, -11.43021314, NOW(), NOW(), NOW()),
+      (46769, 'Malla', 1931, 7.3354969, -11.45397676, NOW(), NOW(), NOW()),
+      (46770, 'Sonjour I', 1931, 7.39968743, -11.45087747, NOW(), NOW(), NOW()),
+      (46771, 'Sonjour II', 1931, 7.34353448, -11.40484498, NOW(), NOW(), NOW()),
+      (46772, 'Tetima', 1931, 7.49168845, -11.42242379, NOW(), NOW(), NOW()),
+      (46773, 'Bondor', 1932, 7.31000817, -11.49625643, NOW(), NOW(), NOW()),
+      (46774, 'Dabeni', 1932, 7.26160607, -11.55946807, NOW(), NOW(), NOW()),
+      (46775, 'Dakona', 1932, 7.27254878, -11.59814619, NOW(), NOW(), NOW()),
+      (46776, 'Gendema I', 1932, 7.12773546, -11.56643783, NOW(), NOW(), NOW()),
+      (46777, 'Gendema II', 1932, 7.21211681, -11.59015303, NOW(), NOW(), NOW()),
+      (46778, 'Jakema I', 1932, 7.33347355, -11.53192118, NOW(), NOW(), NOW()),
+      (46779, 'Jakema II', 1932, 7.20604537, -11.56233827, NOW(), NOW(), NOW()),
+      (46780, 'Joya', 1932, 7.43092337, -11.54851467, NOW(), NOW(), NOW()),
+      (46781, 'Kemokai', 1932, 7.23681445, -11.52268747, NOW(), NOW(), NOW()),
+      (46782, 'Kortugbu', 1932, 7.38986446, -11.63341891, NOW(), NOW(), NOW()),
+      (46783, 'Mallah', 1932, 7.35087314, -11.48958428, NOW(), NOW(), NOW()),
+      (46784, 'Mewah', 1932, 7.34369581, -11.64018699, NOW(), NOW(), NOW()),
+      (46785, 'Pelegbulor', 1932, 7.33209704, -11.56305442, NOW(), NOW(), NOW()),
+      (46786, 'Jassende Kpeima', 1933, 7.04214151, -11.5968999, NOW(), NOW(), NOW()),
+      (46787, 'Jassende Masaoma', 1933, 7.21478132, -11.6301607, NOW(), NOW(), NOW()),
+      (46788, 'Jassende Ngoleima', 1933, 7.32069983, -11.67316508, NOW(), NOW(), NOW()),
+      (46789, 'Jassende Ngoleima', 1933, 7.41750653, -11.61383659, NOW(), NOW(), NOW()),
+      (46790, 'Nyango - Njeigbla', 1933, 7.17842644, -11.66940164, NOW(), NOW(), NOW()),
+      (46791, 'Nyango-Ngoleihun', 1933, 7.27896294, -11.64192212, NOW(), NOW(), NOW()),
+      (46792, 'Parvu', 1933, 7.01607148, -11.58653226, NOW(), NOW(), NOW()),
+      (46793, 'Sarbah', 1933, 7.10309031, -11.64659287, NOW(), NOW(), NOW()),
+      (46794, 'Bakoi', 1937, 7.45562016, -11.6816755, NOW(), NOW(), NOW()),
+      (46795, 'Banyande', 1937, 7.360795, -11.82697347, NOW(), NOW(), NOW()),
+      (46796, 'Kabonde', 1937, 7.53796761, -11.60797415, NOW(), NOW(), NOW()),
+      (46797, 'Kondogbe', 1937, 7.45385992, -11.73516336, NOW(), NOW(), NOW()),
+      (46798, 'Lower Kayiemba', 1937, 7.33220491, -11.6994341, NOW(), NOW(), NOW()),
+      (46799, 'Panga', 1937, 7.31032866, -11.73482124, NOW(), NOW(), NOW()),
+      (46800, 'Pessekeh', 1937, 7.39566703, -11.79961663, NOW(), NOW(), NOW()),
+      (46801, 'Samba', 1937, 7.4583173, -11.61408679, NOW(), NOW(), NOW()),
+      (46802, 'Setti-Yakanday', 1937, 7.30209743, -11.85803397, NOW(), NOW(), NOW()),
+      (46803, 'Upper Kayiemba', 1937, 7.42726081, -11.75925433, NOW(), NOW(), NOW()),
+      (46804, 'Kengo', 1934, 7.24957393, -11.34382295, NOW(), NOW(), NOW()),
+      (46805, 'Samagbe', 1934, 7.28377427, -11.23757786, NOW(), NOW(), NOW()),
+      (46806, 'Seitua', 1934, 7.26486505, -11.39278064, NOW(), NOW(), NOW()),
+      (46807, 'Selimeh', 1934, 7.34687443, -11.30826148, NOW(), NOW(), NOW()),
+      (46808, 'Bahoin', 1935, 7.43886728, -11.87574595, NOW(), NOW(), NOW()),
+      (46809, 'Kahaimoh', 1935, 7.6002001, -11.75292982, NOW(), NOW(), NOW()),
+      (46810, 'Kakpanda', 1935, 7.56168641, -11.80917679, NOW(), NOW(), NOW()),
+      (46811, 'Kemoh', 1935, 7.44924882, -11.79520785, NOW(), NOW(), NOW()),
+      (46812, 'Korwa', 1935, 7.45445954, -11.8209629, NOW(), NOW(), NOW()),
+      (46813, 'Lower Pemba', 1935, 7.51963664, -11.83288268, NOW(), NOW(), NOW()),
+      (46814, 'Seijeila', 1935, 7.38445592, -11.86478837, NOW(), NOW(), NOW()),
+      (46815, 'Taukunor', 1935, 7.48165138, -11.85238684, NOW(), NOW(), NOW()),
+      (46816, 'Upper Pemba', 1935, 7.52490744, -11.77522103, NOW(), NOW(), NOW()),
+      (46817, 'Gbomotie', 1936, 7.20192254, -11.71051501, NOW(), NOW(), NOW()),
+      (46818, 'Kemoh', 1936, 7.16088548, -11.79379756, NOW(), NOW(), NOW()),
+      (46819, 'Makpondo', 1936, 7.14491556, -11.66928293, NOW(), NOW(), NOW()),
+      (46820, 'Masanda Majagbe', 1936, 7.11160595, -11.75004848, NOW(), NOW(), NOW()),
+      (46821, 'Pembaar', 1936, 7.18955998, -11.90747184, NOW(), NOW(), NOW()),
+      (46822, 'Pullie', 1936, 7.17860272, -11.69537376, NOW(), NOW(), NOW()),
+      (46823, 'Sitta', 1936, 7.08764855, -11.69487877, NOW(), NOW(), NOW()),
+      (46824, 'Sowa', 1936, 7.15602636, -11.83760051, NOW(), NOW(), NOW()),
+      (46825, 'Fassei', 1938, 7.28343626, -11.78035374, NOW(), NOW(), NOW()),
+      (46826, 'Pemagbie', 1938, 7.3821124, -11.71464912, NOW(), NOW(), NOW()),
+      (46827, 'Samba', 1938, 7.39092676, -11.6969027, NOW(), NOW(), NOW()),
+      (46828, 'Somasa', 1938, 7.28627848, -11.80610842, NOW(), NOW(), NOW()),
+      (46829, 'Koilenga', 1939, 7.60637812, -11.51041053, NOW(), NOW(), NOW()),
+      (46830, 'Pejeh East', 1939, 7.56219827, -11.55904006, NOW(), NOW(), NOW()),
+      (46831, 'Pejeh West', 1939, 7.51803909, -11.55430303, NOW(), NOW(), NOW()),
+      (46832, 'Kemokai', 1940, 7.04383125, -11.40070178, NOW(), NOW(), NOW()),
+      (46833, 'Kengo', 1940, 7.17431222, -11.47925446, NOW(), NOW(), NOW()),
+      (46834, 'Kiazombo', 1940, 7.1584702, -11.34037908, NOW(), NOW(), NOW()),
+      (46835, 'Mano - River', 1940, 6.97390089, -11.46223444, NOW(), NOW(), NOW()),
+      (46836, 'Massaquoi I', 1940, 7.12189944, -11.48978533, NOW(), NOW(), NOW()),
+      (46837, 'Massaquoi II', 1940, 7.00066392, -11.52193666, NOW(), NOW(), NOW()),
+      (46838, 'Moiwebu', 1940, 7.06977966, -11.49506258, NOW(), NOW(), NOW()),
+      (46839, 'Zoker I', 1940, 7.14122721, -11.40825784, NOW(), NOW(), NOW()),
+      (46840, 'Zoker II', 1940, 7.22379862, -11.39587506, NOW(), NOW(), NOW()),
+      (46841, 'Zombo', 1940, 7.25962739, -11.47246508, NOW(), NOW(), NOW()),
+      (46842, 'Lower Geoma', 1941, 7.51314263, -11.72961448, NOW(), NOW(), NOW()),
+      (46843, 'Sabba I', 1941, 7.59724153, -11.64287962, NOW(), NOW(), NOW()),
+      (46844, 'Sabba II', 1941, 7.63388474, -11.54973482, NOW(), NOW(), NOW()),
+      (46845, 'Upper Geoma', 1941, 7.52989056, -11.67060325, NOW(), NOW(), NOW()),
+      (46846, 'Bagollay', 1942, 7.19026541, -11.76938352, NOW(), NOW(), NOW()),
+      (46847, 'Bapawa', 1942, 7.26779421, -11.75642696, NOW(), NOW(), NOW()),
+      (46848, 'Batowa', 1942, 7.23825139, -11.68446251, NOW(), NOW(), NOW()),
+      (46849, 'Bekowa', 1942, 7.25393596, -11.83293496, NOW(), NOW(), NOW()),
+      (46850, 'Deyombo', 1942, 7.23203439, -11.65455357, NOW(), NOW(), NOW()),
+      (46851, 'Fortune', 1942, 7.22541575, -11.80988231, NOW(), NOW(), NOW()),
+      (46852, 'Kemo-Bo', 1942, 7.18775043, -11.74457918, NOW(), NOW(), NOW()),
+      (46853, 'Kemo-wa', 1942, 7.16680433, -11.75852295, NOW(), NOW(), NOW()),
+      (46854, 'Kpukumu', 1942, 7.22197361, -11.75485431, NOW(), NOW(), NOW()),
+      (46855, 'Seiwoh', 1942, 7.19773744, -11.82493855, NOW(), NOW(), NOW()),
+      (46856, 'Sowonde', 1942, 7.2333397, -11.88192647, NOW(), NOW(), NOW()),
+      (46857, 'Yabai', 1942, 7.23355038, -11.84798767, NOW(), NOW(), NOW()),
+      (46858, 'Fabaina Area', 1954, 8.30643101, -12.93531347, NOW(), NOW(), NOW()),
+      (46859, 'Madonkeh', 1954, 8.3652991, -13.01095642, NOW(), NOW(), NOW()),
+      (46860, 'Magbafti', 1954, 8.28049322, -12.99178212, NOW(), NOW(), NOW()),
+      (46861, 'Malambay', 1954, 8.30558857, -13.02900079, NOW(), NOW(), NOW()),
+      (46862, 'Newton', 1954, 8.33609354, -12.9947121, NOW(), NOW(), NOW()),
+      (46863, 'Songo', 1954, 8.34699158, -12.95844293, NOW(), NOW(), NOW()),
+      (46864, 'Bathurst', 1955, 8.43045874, -13.20073162, NOW(), NOW(), NOW()),
+      (46865, 'Charlotte', 1955, 8.41119936, -13.19168746, NOW(), NOW(), NOW()),
+      (46866, 'Gloucester', 1955, 8.45312204, -13.20940277, NOW(), NOW(), NOW()),
+      (46867, 'Leicester', 1955, 8.46446793, -13.22028031, NOW(), NOW(), NOW()),
+      (46868, 'Regent', 1955, 8.44171144, -13.2296262, NOW(), NOW(), NOW()),
+      (46869, 'Benguema Village A', 1956, 8.29811664, -13.08533892, NOW(), NOW(), NOW()),
+      (46870, 'Campbell Town Vill', 1956, 8.29181102, -13.05400056, NOW(), NOW(), NOW()),
+      (46871, 'Hastings Village A', 1956, 8.35362747, -13.11871257, NOW(), NOW(), NOW()),
+      (46872, 'Waterloo Village A', 1956, 8.34712474, -13.05658698, NOW(), NOW(), NOW()),
+      (46873, 'Gbendembu', 1957, 8.43128662, -13.26476696, NOW(), NOW(), NOW()),
+      (46874, 'Goderich-Adonkia/M', 1957, 8.42163804, -13.25212444, NOW(), NOW(), NOW()),
+      (46875, 'Goderich-Funkia', 1957, 8.43626133, -13.28171563, NOW(), NOW(), NOW()),
+      (46876, 'Hamilton', 1957, 8.3765798, -13.21797027, NOW(), NOW(), NOW()),
+      (46877, 'Kent', 1957, 8.19493865, -13.14599044, NOW(), NOW(), NOW()),
+      (46878, 'Sattia/Tombo', 1957, 8.23975917, -13.08510102, NOW(), NOW(), NOW()),
+      (46879, 'York', 1957, 8.2849823, -13.13096055, NOW(), NOW(), NOW()),
+      (46880, 'Albert Academy', 1958, 8.47696929, -13.23266527, NOW(), NOW(), NOW()),
+      (46881, 'Mountain Regent', 1958, 8.48179659, -13.22829844, NOW(), NOW(), NOW()),
+      (46882, 'Sorie Town', 1958, 8.47323672, -13.22678088, NOW(), NOW(), NOW()),
+      (46883, 'Susan''''s Bay', 1958, 8.48889635, -13.22994613, NOW(), NOW(), NOW()),
+      (46884, 'Tower Hill', 1958, 8.48373364, -13.23275579, NOW(), NOW(), NOW()),
+      (46885, 'Connaught Hospital', 1959, 8.48901152, -13.23613424, NOW(), NOW(), NOW()),
+      (46886, 'Sanders Brook', 1959, 8.4819826, -13.23800341, NOW(), NOW(), NOW()),
+      (46887, 'Cline Town', 1960, 8.48704603, -13.20916702, NOW(), NOW(), NOW()),
+      (46888, 'Fourah Bay', 1960, 8.48883079, -13.21354111, NOW(), NOW(), NOW()),
+      (46889, 'Kossoh Town', 1960, 8.4890527, -13.21923758, NOW(), NOW(), NOW()),
+      (46890, 'Bombay', 1961, 8.48501354, -13.22235935, NOW(), NOW(), NOW()),
+      (46891, 'Coconut Farm/ Asho', 1961, 8.4781018, -13.21338559, NOW(), NOW(), NOW()),
+      (46892, 'Foulah Town', 1961, 8.48356082, -13.2252499, NOW(), NOW(), NOW()),
+      (46893, 'Ginger Hall', 1961, 8.48354013, -13.21697975, NOW(), NOW(), NOW()),
+      (46894, 'Kissy Brook', 1961, 8.47490045, -13.21067336, NOW(), NOW(), NOW()),
+      (46895, 'Magazine', 1961, 8.48945052, -13.22419852, NOW(), NOW(), NOW()),
+      (46896, 'Mount Aureol', 1961, 8.48168295, -13.22024609, NOW(), NOW(), NOW()),
+      (46897, 'Quarry', 1961, 8.48059006, -13.21499619, NOW(), NOW(), NOW()),
+      (46898, 'Allen Town I', 1962, 8.42395192, -13.16110587, NOW(), NOW(), NOW()),
+      (46899, 'Allen Town II', 1962, 8.41250668, -13.15800194, NOW(), NOW(), NOW()),
+      (46900, 'Bottom Oku', 1962, 8.45065291, -13.16511338, NOW(), NOW(), NOW()),
+      (46901, 'Congo Water I', 1962, 8.45443864, -13.17298415, NOW(), NOW(), NOW()),
+      (46902, 'Congo Water II', 1962, 8.44801579, -13.17694599, NOW(), NOW(), NOW()),
+      (46903, 'Grass Field', 1962, 8.46799236, -13.1783873, NOW(), NOW(), NOW()),
+      (46904, 'Industrial Estate', 1962, 8.43861712, -13.18006276, NOW(), NOW(), NOW()),
+      (46905, 'Jalloh Terrace', 1962, 8.45535413, -13.18722093, NOW(), NOW(), NOW()),
+      (46906, 'Kissy Brook', 1962, 8.46935334, -13.20951934, NOW(), NOW(), NOW()),
+      (46907, 'Kissy Bye Pass I', 1962, 8.47868443, -13.20237765, NOW(), NOW(), NOW()),
+      (46908, 'Kissy Bye Pass II', 1962, 8.47652665, -13.18856309, NOW(), NOW(), NOW()),
+      (46909, 'Kissy Mental', 1962, 8.46586614, -13.19545637, NOW(), NOW(), NOW()),
+      (46910, 'Kissy Mess Mess', 1962, 8.46379523, -13.18885723, NOW(), NOW(), NOW()),
+      (46911, 'Kuntolor', 1962, 8.45366776, -13.18289827, NOW(), NOW(), NOW()),
+      (46912, 'Lowcost Housing', 1962, 8.4703923, -13.18612286, NOW(), NOW(), NOW()),
+      (46913, 'Mamba Ridge I', 1962, 8.4688116, -13.20523964, NOW(), NOW(), NOW()),
+      (46914, 'Mamba Ridge II', 1962, 8.46617616, -13.20053974, NOW(), NOW(), NOW()),
+      (46915, 'Mayenkineh', 1962, 8.43145309, -13.1624733, NOW(), NOW(), NOW()),
+      (46916, 'Old Warf', 1962, 8.44586704, -13.16112752, NOW(), NOW(), NOW()),
+      (46917, 'Pamuronko', 1962, 8.43485608, -13.15322657, NOW(), NOW(), NOW()),
+      (46918, 'Portee', 1962, 8.46498403, -13.17378481, NOW(), NOW(), NOW()),
+      (46919, 'Robis', 1962, 8.43494541, -13.17025033, NOW(), NOW(), NOW()),
+      (46920, 'Rokupa', 1962, 8.46063062, -13.17226224, NOW(), NOW(), NOW()),
+      (46921, 'Shell', 1962, 8.46807236, -13.19153903, NOW(), NOW(), NOW()),
+      (46922, 'Thunderhill', 1962, 8.45457227, -13.1957772, NOW(), NOW(), NOW()),
+      (46923, 'Ascension Town', 1964, 8.48376511, -13.24750592, NOW(), NOW(), NOW()),
+      (46924, 'Brookfields', 1964, 8.47631176, -13.24843849, NOW(), NOW(), NOW()),
+      (46925, 'Kingtom', 1964, 8.48902935, -13.24802726, NOW(), NOW(), NOW()),
+      (46926, 'Kroo Town', 1964, 8.48251324, -13.24233269, NOW(), NOW(), NOW()),
+      (46927, 'Brookfields-Congo', 1965, 8.47555466, -13.24049612, NOW(), NOW(), NOW()),
+      (46928, 'Brookfields-Red Pu', 1965, 8.46920615, -13.24810229, NOW(), NOW(), NOW()),
+      (46929, 'Congo Town', 1965, 8.48136551, -13.25534328, NOW(), NOW(), NOW()),
+      (46930, 'George Brook (Dwor', 1965, 8.46563761, -13.23009879, NOW(), NOW(), NOW()),
+      (46931, 'New England-Hannes', 1965, 8.46601573, -13.23673575, NOW(), NOW(), NOW()),
+      (46932, 'New England-Hill C', 1965, 8.46563494, -13.24427435, NOW(), NOW(), NOW()),
+      (46933, 'Tengbeh Town', 1965, 8.47146234, -13.25402875, NOW(), NOW(), NOW()),
+      (46934, 'Aberdeen', 1966, 8.48129475, -13.28312628, NOW(), NOW(), NOW()),
+      (46935, 'Cockerill-Aberdeen', 1966, 8.46615341, -13.2741885, NOW(), NOW(), NOW()),
+      (46936, 'Cockle-Bay /Colleg', 1966, 8.48336181, -13.27159926, NOW(), NOW(), NOW()),
+      (46937, 'Hill Station', 1966, 8.46004876, -13.25527898, NOW(), NOW(), NOW()),
+      (46938, 'Juba/Kaningo', 1966, 8.44672122, -13.27077339, NOW(), NOW(), NOW()),
+      (46939, 'Lumley', 1966, 8.46014749, -13.266882, NOW(), NOW(), NOW()),
+      (46940, 'Malama/Kamayama', 1966, 8.44865227, -13.25307041, NOW(), NOW(), NOW()),
+      (46941, 'Murray Town', 1966, 8.49092854, -13.26452547, NOW(), NOW(), NOW()),
+      (46942, 'Pipeline/Wilkinson', 1966, 8.47222262, -13.27200745, NOW(), NOW(), NOW()),
+      (46943, 'Wilberforce', 1966, 8.47279373, -13.26284965, NOW(), NOW(), NOW()),
+      (46944, 'Tasso Island', 1963, 8.55334632, -13.0736265, NOW(), NOW(), NOW()),
+      (46945, 'Banguraia', 1856, 9.25118772, -12.88526629, NOW(), NOW(), NOW()),
+      (46946, 'Bassia', 1856, 9.27237718, -12.8201142, NOW(), NOW(), NOW()),
+      (46947, 'Bugami', 1856, 9.48757083, -12.55856438, NOW(), NOW(), NOW()),
+      (46948, 'Duramania', 1856, 9.43529049, -12.59914295, NOW(), NOW(), NOW()),
+      (46949, 'Filligungee', 1856, 9.39240671, -12.62696608, NOW(), NOW(), NOW()),
+      (46950, 'Fortumboyie', 1856, 9.3727945, -12.70025799, NOW(), NOW(), NOW()),
+      (46951, 'Gberekhuray', 1856, 9.46871918, -12.58670061, NOW(), NOW(), NOW()),
+      (46952, 'Gbolon', 1856, 9.34018242, -12.73505482, NOW(), NOW(), NOW()),
+      (46953, 'Kabaya', 1856, 9.43158468, -12.64073641, NOW(), NOW(), NOW()),
+      (46954, 'Kanku Bramaia', 1856, 9.25891333, -12.84354836, NOW(), NOW(), NOW()),
+      (46955, 'Konta', 1856, 9.55366058, -12.57740014, NOW(), NOW(), NOW()),
+      (46956, 'Kua Bramaia', 1856, 9.32042444, -12.76075599, NOW(), NOW(), NOW()),
+      (46957, 'Kufuru', 1856, 9.51227162, -12.49918132, NOW(), NOW(), NOW()),
+      (46958, 'Kukuna', 1856, 9.40826197, -12.66827289, NOW(), NOW(), NOW()),
+      (46959, 'Laminaia', 1856, 9.23423537, -12.86143506, NOW(), NOW(), NOW()),
+      (46960, 'Sansangie', 1856, 9.27095215, -12.87367013, NOW(), NOW(), NOW()),
+      (46961, 'Seduya', 1856, 9.43275992, -12.66194856, NOW(), NOW(), NOW()),
+      (46962, 'Shekaia', 1856, 9.29140591, -12.76424606, NOW(), NOW(), NOW()),
+      (46963, 'Sulaimania', 1856, 9.28800338, -12.78136357, NOW(), NOW(), NOW()),
+      (46964, 'Teneba Bramaia', 1856, 9.40627958, -12.69088106, NOW(), NOW(), NOW()),
+      (46965, 'Turaya', 1856, 9.48058184, -12.65199128, NOW(), NOW(), NOW()),
+      (46966, 'Gbinle', 1857, 9.14794688, -12.92938723, NOW(), NOW(), NOW()),
+      (46967, 'Kalangba', 1857, 9.18624131, -12.92943327, NOW(), NOW(), NOW()),
+      (46968, 'Katalan', 1857, 9.07419189, -12.97894084, NOW(), NOW(), NOW()),
+      (46969, 'Mafaray', 1857, 9.21662312, -12.92816144, NOW(), NOW(), NOW()),
+      (46970, 'Maton', 1857, 9.26742832, -12.9319528, NOW(), NOW(), NOW()),
+      (46971, 'Rogberay', 1857, 9.1453159, -12.95530294, NOW(), NOW(), NOW()),
+      (46972, 'Sanda', 1857, 9.07653526, -13.0225435, NOW(), NOW(), NOW()),
+      (46973, 'Tawuya', 1857, 9.11987676, -12.97324024, NOW(), NOW(), NOW()),
+      (46974, 'Bombe', 1858, 8.97568356, -12.90126699, NOW(), NOW(), NOW()),
+      (46975, 'Kamba', 1858, 9.04527384, -12.87389825, NOW(), NOW(), NOW()),
+      (46976, 'Kambia', 1858, 9.09867432, -12.91648006, NOW(), NOW(), NOW()),
+      (46977, 'Kargbulor', 1858, 8.94553136, -12.9425706, NOW(), NOW(), NOW()),
+      (46978, 'Robat', 1858, 9.05754351, -12.93732707, NOW(), NOW(), NOW()),
+      (46979, 'Rokupr', 1858, 9.00775609, -12.92404189, NOW(), NOW(), NOW()),
+      (46980, 'Tormina', 1858, 9.1751553, -12.88394368, NOW(), NOW(), NOW()),
+      (46981, 'Kalenkay', 1859, 8.89618061, -13.10779021, NOW(), NOW(), NOW()),
+      (46982, 'Mambolo', 1859, 8.90528241, -13.02622974, NOW(), NOW(), NOW()),
+      (46983, 'Matetie', 1859, 8.90219457, -13.05647935, NOW(), NOW(), NOW()),
+      (46984, 'Mayakie', 1859, 8.88418878, -12.93320942, NOW(), NOW(), NOW()),
+      (46985, 'Robis', 1859, 8.88464981, -12.98177996, NOW(), NOW(), NOW()),
+      (46986, 'Rowollon', 1859, 8.92460116, -13.00297333, NOW(), NOW(), NOW()),
+      (46987, 'Tombo-Wallah', 1859, 8.86428378, -13.0847778, NOW(), NOW(), NOW()),
+      (46988, 'Bamoi', 1860, 9.07811627, -12.73326905, NOW(), NOW(), NOW()),
+      (46989, 'Benna', 1860, 9.08101799, -12.8184343, NOW(), NOW(), NOW()),
+      (46990, 'Kawula', 1860, 9.1419031, -12.84730203, NOW(), NOW(), NOW()),
+      (46991, 'Kayenkassa', 1860, 9.04954539, -12.79012165, NOW(), NOW(), NOW()),
+      (46992, 'Mapolon', 1860, 9.14137079, -12.72059614, NOW(), NOW(), NOW()),
+      (46993, 'Maserie', 1860, 9.09127992, -12.78933424, NOW(), NOW(), NOW()),
+      (46994, 'Matengha', 1860, 9.1156423, -12.74591241, NOW(), NOW(), NOW()),
+      (46995, 'Matilba', 1860, 9.14434081, -12.74012096, NOW(), NOW(), NOW()),
+      (46996, 'Nonko', 1860, 9.15631836, -12.78486726, NOW(), NOW(), NOW()),
+      (46997, 'Samu', 1860, 9.17597569, -12.75032155, NOW(), NOW(), NOW()),
+      (46998, 'Sumbuya', 1860, 9.09894241, -12.71575862, NOW(), NOW(), NOW()),
+      (46999, 'Thalla', 1860, 9.02359276, -12.76038639, NOW(), NOW(), NOW()),
+      (47000, 'Bubuya', 1861, 9.03075317, -13.05466303, NOW(), NOW(), NOW()),
+      (47001, 'Kassiri', 1861, 8.95651548, -13.10636249, NOW(), NOW(), NOW()),
+      (47002, 'Koya', 1861, 8.9616214, -13.03608767, NOW(), NOW(), NOW()),
+      (47003, 'Kychom', 1861, 8.96632535, -13.1650514, NOW(), NOW(), NOW()),
+      (47004, 'Lusenia', 1861, 9.01494804, -13.11360266, NOW(), NOW(), NOW()),
+      (47005, 'Mafufuneh', 1861, 9.000754, -13.07526691, NOW(), NOW(), NOW()),
+      (47006, 'Makuma', 1861, 9.00215281, -13.27181045, NOW(), NOW(), NOW()),
+      (47007, 'Mange', 1861, 9.0334321, -13.00081325, NOW(), NOW(), NOW()),
+      (47008, 'Mapotolon', 1861, 9.04599374, -13.2353928, NOW(), NOW(), NOW()),
+      (47009, 'Moribaia', 1861, 9.03969753, -13.15498697, NOW(), NOW(), NOW()),
+      (47010, 'Rokon', 1861, 9.00405338, -12.9935658, NOW(), NOW(), NOW()),
+      (47011, 'Rosinor', 1861, 8.97216813, -13.00306623, NOW(), NOW(), NOW()),
+      (47012, 'Bubuya', 1862, 9.26301514, -12.707975, NOW(), NOW(), NOW()),
+      (47013, 'Kamassassa', 1862, 9.40795634, -12.48172063, NOW(), NOW(), NOW()),
+      (47014, 'Kathanthineh', 1862, 9.28585006, -12.55182949, NOW(), NOW(), NOW()),
+      (47015, 'Magbonkoh', 1862, 9.22704414, -12.78005477, NOW(), NOW(), NOW()),
+      (47016, 'Mamankoh', 1862, 9.17446875, -12.68653478, NOW(), NOW(), NOW()),
+      (47017, 'Yebaya', 1862, 9.33005393, -12.59976425, NOW(), NOW(), NOW()),
+      (47018, 'Foredugu', 1863, 8.79057667, -12.39661135, NOW(), NOW(), NOW()),
+      (47019, 'Gbaran Kamba', 1863, 8.8336949, -12.38542837, NOW(), NOW(), NOW()),
+      (47020, 'Kamasundu', 1863, 8.87489522, -12.50389575, NOW(), NOW(), NOW()),
+      (47021, 'Mabureh Buya', 1863, 8.87460785, -12.47120476, NOW(), NOW(), NOW()),
+      (47022, 'Mabureh Mende', 1863, 8.79322233, -12.53669861, NOW(), NOW(), NOW()),
+      (47023, 'Magbengbe', 1863, 8.82991821, -12.43676127, NOW(), NOW(), NOW()),
+      (47024, 'Manungbu', 1863, 8.88590259, -12.44286286, NOW(), NOW(), NOW()),
+      (47025, 'Petifu Bana', 1863, 8.72732552, -12.53674654, NOW(), NOW(), NOW()),
+      (47026, 'Robis', 1863, 8.75261597, -12.45518047, NOW(), NOW(), NOW()),
+      (47027, 'Rokel', 1863, 8.76518723, -12.53551142, NOW(), NOW(), NOW()),
+      (47028, 'Rosint', 1863, 8.8274381, -12.5087239, NOW(), NOW(), NOW()),
+      (47029, 'Worreh Mapoteh', 1863, 8.88257814, -12.40093642, NOW(), NOW(), NOW()),
+      (47030, 'Karine', 1864, 8.92677872, -12.58506243, NOW(), NOW(), NOW()),
+      (47031, 'Kayembor', 1864, 8.94101288, -12.63651078, NOW(), NOW(), NOW()),
+      (47032, 'Konta Kargbo', 1864, 8.89086031, -12.62109004, NOW(), NOW(), NOW()),
+      (47033, 'Mafonda', 1864, 8.97993331, -12.5939959, NOW(), NOW(), NOW()),
+      (47034, 'Makabari', 1864, 8.91944225, -12.64964352, NOW(), NOW(), NOW()),
+      (47035, 'Makump', 1864, 8.8938387, -12.68050662, NOW(), NOW(), NOW()),
+      (47036, 'Rogbalan', 1864, 8.9022759, -12.57913051, NOW(), NOW(), NOW()),
+      (47037, 'Bankro', 1867, 9.02129434, -12.65238656, NOW(), NOW(), NOW()),
+      (47038, 'Gbaneh-Loko', 1867, 9.10589139, -12.63094923, NOW(), NOW(), NOW()),
+      (47039, 'Gbogbodo', 1867, 9.19606575, -12.58391275, NOW(), NOW(), NOW()),
+      (47040, 'Gbonko', 1867, 9.16873169, -12.51996347, NOW(), NOW(), NOW()),
+      (47041, 'Kantia', 1867, 9.22006027, -12.46534241, NOW(), NOW(), NOW()),
+      (47042, 'Layamantmetank', 1867, 9.15933166, -12.62946603, NOW(), NOW(), NOW()),
+      (47043, 'Magbolontor', 1867, 9.03992115, -12.68806646, NOW(), NOW(), NOW()),
+      (47044, 'Malkiya', 1867, 9.08038225, -12.68951813, NOW(), NOW(), NOW()),
+      (47045, 'Mankneh', 1867, 9.09487483, -12.6812108, NOW(), NOW(), NOW()),
+      (47046, 'Masien', 1867, 9.04244021, -12.71895615, NOW(), NOW(), NOW()),
+      (47047, 'Menthen', 1867, 9.11092789, -12.5448675, NOW(), NOW(), NOW()),
+      (47048, 'Robis', 1867, 9.14542525, -12.47905819, NOW(), NOW(), NOW()),
+      (47049, 'Rotigbonko', 1867, 9.04733746, -12.59957749, NOW(), NOW(), NOW()),
+      (47050, 'Sendugu', 1867, 9.06924048, -12.62344491, NOW(), NOW(), NOW()),
+      (47051, 'Gbaray Bana', 1865, 8.98698513, -12.52564333, NOW(), NOW(), NOW()),
+      (47052, 'Mafonikay', 1865, 8.90639905, -12.53878091, NOW(), NOW(), NOW()),
+      (47053, 'Magbafth', 1865, 8.89278329, -12.5199791, NOW(), NOW(), NOW()),
+      (47054, 'Maron', 1865, 8.94354471, -12.5225077, NOW(), NOW(), NOW()),
+      (47055, 'Robombeh', 1865, 8.9214974, -12.4797997, NOW(), NOW(), NOW()),
+      (47056, 'Batkanu', 1865, 9.07610209, -12.42361164, NOW(), NOW(), NOW()),
+      (47057, 'Mafonda', 1865, 9.06720308, -12.52025449, NOW(), NOW(), NOW()),
+      (47058, 'Magbaingba', 1865, 8.92900183, -12.3088654, NOW(), NOW(), NOW()),
+      (47059, 'Magbanamba', 1865, 9.03775041, -12.45966968, NOW(), NOW(), NOW()),
+      (47060, 'Makaiba', 1865, 8.97464359, -12.41618586, NOW(), NOW(), NOW()),
+      (47061, 'Makayrembay', 1865, 9.05223522, -12.47943606, NOW(), NOW(), NOW()),
+      (47062, 'Mandawahun', 1865, 8.99811001, -12.38733336, NOW(), NOW(), NOW()),
+      (47063, 'Manyakoi', 1865, 8.94337399, -12.36570855, NOW(), NOW(), NOW()),
+      (47064, 'Mayankay', 1865, 9.04141467, -12.39602053, NOW(), NOW(), NOW()),
+      (47065, 'Robaka', 1865, 8.9683225, -12.47201093, NOW(), NOW(), NOW()),
+      (47066, 'Rotha-Tha', 1865, 8.93977032, -12.4590484, NOW(), NOW(), NOW()),
+      (47067, 'Simbaya', 1865, 9.00003482, -12.47667344, NOW(), NOW(), NOW()),
+      (47068, 'Banka', 1866, 9.42520653, -12.24828072, NOW(), NOW(), NOW()),
+      (47069, 'Benia', 1866, 9.42082245, -12.19571239, NOW(), NOW(), NOW()),
+      (47070, 'Kaindema', 1866, 9.39847887, -12.29488406, NOW(), NOW(), NOW()),
+      (47071, 'Kamalu', 1866, 9.40188943, -12.2421, NOW(), NOW(), NOW()),
+      (47072, 'Kania', 1866, 9.36533876, -12.2536681, NOW(), NOW(), NOW()),
+      (47073, 'Kindia', 1866, 9.46652605, -12.14579239, NOW(), NOW(), NOW()),
+      (47074, 'Laminaya', 1866, 9.4037492, -12.05028382, NOW(), NOW(), NOW()),
+      (47075, 'Madina', 1866, 9.45792866, -12.01749502, NOW(), NOW(), NOW()),
+      (47076, 'Maharibo', 1866, 9.38383576, -12.13271807, NOW(), NOW(), NOW()),
+      (47077, 'Makapa', 1866, 9.37842778, -12.32942007, NOW(), NOW(), NOW()),
+      (47078, 'Makwie Loko', 1866, 9.51788808, -12.05714344, NOW(), NOW(), NOW()),
+      (47079, 'Manathi', 1866, 9.3633893, -12.1818886, NOW(), NOW(), NOW()),
+      (47080, 'Maparay', 1866, 9.3743517, -12.2311123, NOW(), NOW(), NOW()),
+      (47081, 'Rothatha', 1866, 9.42132968, -12.29527996, NOW(), NOW(), NOW()),
+      (47082, 'Timbo', 1866, 9.36662147, -12.27623894, NOW(), NOW(), NOW()),
+      (47083, 'Kalangba', 1868, 9.21952433, -12.26016602, NOW(), NOW(), NOW()),
+      (47084, 'Kukuna', 1868, 9.17479852, -12.29018604, NOW(), NOW(), NOW()),
+      (47085, 'Marampa', 1868, 9.18093385, -12.35949199, NOW(), NOW(), NOW()),
+      (47086, 'Masisan', 1868, 9.12651438, -12.27498072, NOW(), NOW(), NOW()),
+      (47087, 'Mateboi', 1868, 9.10851891, -12.35632643, NOW(), NOW(), NOW()),
+      (47088, 'Rogbin', 1868, 9.20860639, -12.20340088, NOW(), NOW(), NOW()),
+      (47089, 'Rogboreh', 1868, 9.17855197, -12.21766751, NOW(), NOW(), NOW()),
+      (47090, 'Rosos', 1868, 9.14148692, -12.41233877, NOW(), NOW(), NOW()),
+      (47091, 'Sendugu', 1868, 9.18032653, -12.24995691, NOW(), NOW(), NOW()),
+      (47092, 'Yankabala', 1868, 9.17793325, -12.32539428, NOW(), NOW(), NOW()),
+      (47093, 'Kamakwie', 1869, 9.51041387, -12.24405877, NOW(), NOW(), NOW()),
+      (47094, 'Kamankoh', 1869, 9.48970604, -12.33435488, NOW(), NOW(), NOW()),
+      (47095, 'Kayimbor', 1869, 9.5474963, -12.12033638, NOW(), NOW(), NOW()),
+      (47096, 'Magbonkoni I', 1869, 9.48679607, -12.23541666, NOW(), NOW(), NOW()),
+      (47097, 'Magbonkoni II', 1869, 9.44474642, -12.3328861, NOW(), NOW(), NOW()),
+      (47098, 'Manonkoh', 1869, 9.45355675, -12.26829061, NOW(), NOW(), NOW()),
+      (47099, 'Samia', 1869, 9.56081367, -12.24143759, NOW(), NOW(), NOW()),
+      (47100, 'Dugutha', 1870, 9.75261708, -12.01926851, NOW(), NOW(), NOW()),
+      (47101, 'Moria', 1870, 9.85713368, -12.22099259, NOW(), NOW(), NOW()),
+      (47102, 'Paramount Chief Se', 1870, 9.72319772, -12.29665028, NOW(), NOW(), NOW()),
+      (47103, 'Simibue', 1870, 9.60530163, -12.44188178, NOW(), NOW(), NOW()),
+      (47104, 'Thalla', 1870, 9.82402304, -12.39188752, NOW(), NOW(), NOW()),
+      (47105, 'Barmoi', 1923, 8.98784417, -12.63672261, NOW(), NOW(), NOW()),
+      (47106, 'Kagbanthama', 1923, 8.95121345, -12.67584701, NOW(), NOW(), NOW()),
+      (47107, 'Kaiyeabor', 1923, 8.92945732, -12.81478449, NOW(), NOW(), NOW()),
+      (47108, 'Kalangba', 1923, 8.89012964, -12.88890446, NOW(), NOW(), NOW()),
+      (47109, 'Kambia Morie', 1923, 8.93892285, -12.85194587, NOW(), NOW(), NOW()),
+      (47110, 'Konta Ferry', 1923, 8.91609464, -12.84555094, NOW(), NOW(), NOW()),
+      (47111, 'Mabombo', 1923, 8.97310759, -12.77647148, NOW(), NOW(), NOW()),
+      (47112, 'Makana', 1923, 8.87460215, -12.80292817, NOW(), NOW(), NOW()),
+      (47113, 'Mamanka', 1923, 8.86652277, -12.83378342, NOW(), NOW(), NOW()),
+      (47114, 'Mange Morie', 1923, 8.93232623, -12.8734966, NOW(), NOW(), NOW()),
+      (47115, 'Marenka', 1923, 8.98927062, -12.69799286, NOW(), NOW(), NOW()),
+      (47116, 'Minthormore', 1923, 8.9958658, -12.82411055, NOW(), NOW(), NOW()),
+      (47117, 'Rogbla', 1923, 8.85677192, -12.86615784, NOW(), NOW(), NOW()),
+      (47118, 'Romeni', 1923, 8.91065373, -12.72111128, NOW(), NOW(), NOW()),
+      (47119, 'Rotifunk', 1923, 8.93579445, -12.76505497, NOW(), NOW(), NOW()),
+      (47120, 'Yali-Sanda', 1923, 8.89042814, -12.83275362, NOW(), NOW(), NOW()),
+      (47121, 'Foronkoya', 1924, 8.64023481, -13.18694453, NOW(), NOW(), NOW()),
+      (47122, 'Kasongha', 1924, 8.61782025, -13.16080867, NOW(), NOW(), NOW()),
+      (47123, 'Lungi', 1924, 8.67671201, -13.19748734, NOW(), NOW(), NOW()),
+      (47124, 'Mahera', 1924, 8.60924744, -13.18795521, NOW(), NOW(), NOW()),
+      (47125, 'Mamanki', 1924, 8.57467568, -13.15132935, NOW(), NOW(), NOW()),
+      (47126, 'Mayaya', 1924, 8.6776289, -13.23070555, NOW(), NOW(), NOW()),
+      (47127, 'Rosint', 1924, 8.5435117, -13.16320193, NOW(), NOW(), NOW()),
+      (47128, 'Yongro', 1924, 8.5800124, -13.18838062, NOW(), NOW(), NOW()),
+      (47129, 'Benkia', 1925, 8.52556796, -12.94901811, NOW(), NOW(), NOW()),
+      (47130, 'Fondu', 1925, 8.45495553, -12.77741992, NOW(), NOW(), NOW()),
+      (47131, 'Foredugu', 1925, 8.45126749, -12.83033301, NOW(), NOW(), NOW()),
+      (47132, 'Futa', 1925, 8.49282605, -12.93646099, NOW(), NOW(), NOW()),
+      (47133, 'Gbabai', 1925, 8.42495984, -12.88882923, NOW(), NOW(), NOW()),
+      (47134, 'Kagbala A', 1925, 8.32146467, -12.89483751, NOW(), NOW(), NOW()),
+      (47135, 'Kagbala B', 1925, 8.38552133, -12.99381185, NOW(), NOW(), NOW()),
+      (47136, 'Magbandoma', 1925, 8.4197712, -12.85997051, NOW(), NOW(), NOW()),
+      (47137, 'Magbeni', 1925, 8.50304845, -12.85084438, NOW(), NOW(), NOW()),
+      (47138, 'Mahera', 1925, 8.54198246, -12.76853826, NOW(), NOW(), NOW()),
+      (47139, 'Marefa', 1925, 8.47258403, -13.06474763, NOW(), NOW(), NOW()),
+      (47140, 'Matene', 1925, 8.47935875, -12.65543621, NOW(), NOW(), NOW()),
+      (47141, 'Mathirie', 1925, 8.40012443, -12.91352384, NOW(), NOW(), NOW()),
+      (47142, 'Mawoma', 1925, 8.44071941, -12.70444465, NOW(), NOW(), NOW()),
+      (47143, 'Robia', 1925, 8.40123245, -13.04713089, NOW(), NOW(), NOW()),
+      (47144, 'Rokel', 1925, 8.55014683, -12.71157357, NOW(), NOW(), NOW()),
+      (47145, 'Roponka', 1925, 8.52564921, -12.88893072, NOW(), NOW(), NOW()),
+      (47146, 'Rosarr', 1925, 8.5575062, -12.73967294, NOW(), NOW(), NOW()),
+      (47147, 'Sanda', 1925, 8.40948786, -12.96863773, NOW(), NOW(), NOW()),
+      (47148, 'Tumba', 1925, 8.5059709, -13.009614, NOW(), NOW(), NOW()),
+      (47149, 'Benkia', 1926, 8.75942591, -13.01239035, NOW(), NOW(), NOW()),
+      (47150, 'Gbainty', 1926, 8.79875434, -13.09407183, NOW(), NOW(), NOW()),
+      (47151, 'Kamasondo', 1926, 8.6365917, -12.95165062, NOW(), NOW(), NOW()),
+      (47152, 'Kantaya', 1926, 8.70218027, -13.02956007, NOW(), NOW(), NOW()),
+      (47153, 'Katonga', 1926, 8.78705579, -12.95990003, NOW(), NOW(), NOW()),
+      (47154, 'Komrabai', 1926, 8.67674524, -13.1426876, NOW(), NOW(), NOW()),
+      (47155, 'Konta', 1926, 8.82332063, -13.02106836, NOW(), NOW(), NOW()),
+      (47156, 'Magbokorr', 1926, 8.74445901, -12.91108477, NOW(), NOW(), NOW()),
+      (47157, 'Mannah', 1926, 8.71373331, -12.94594843, NOW(), NOW(), NOW()),
+      (47158, 'Mapiterr', 1926, 8.65718645, -13.07691043, NOW(), NOW(), NOW()),
+      (47159, 'Matheng', 1926, 8.71969118, -13.16381074, NOW(), NOW(), NOW()),
+      (47160, 'Petifu', 1926, 8.68672132, -13.06372294, NOW(), NOW(), NOW()),
+      (47161, 'Royema', 1926, 8.73334237, -13.0834285, NOW(), NOW(), NOW()),
+      (47162, 'Yurika', 1926, 8.77950865, -13.19777753, NOW(), NOW(), NOW()),
+      (47163, 'Batpolon', 1927, 8.7169234, -12.69533925, NOW(), NOW(), NOW()),
+      (47164, 'Falaba', 1927, 8.77091833, -12.77974747, NOW(), NOW(), NOW()),
+      (47165, 'Fenka', 1927, 8.75585059, -12.70001042, NOW(), NOW(), NOW()),
+      (47166, 'Gberray Bana', 1927, 8.58775667, -12.78864722, NOW(), NOW(), NOW()),
+      (47167, 'Gberray Morie', 1927, 8.78571224, -12.87601973, NOW(), NOW(), NOW()),
+      (47168, 'Gberray Thunkara', 1927, 8.7071538, -12.84686001, NOW(), NOW(), NOW()),
+      (47169, 'Gbonko Mayira', 1927, 8.64485339, -12.86441758, NOW(), NOW(), NOW()),
+      (47170, 'Kabata', 1927, 8.83349825, -12.71303985, NOW(), NOW(), NOW()),
+      (47171, 'Komrabai-Waterloo', 1927, 8.71449073, -12.62520725, NOW(), NOW(), NOW()),
+      (47172, 'Kondato', 1927, 8.76031204, -12.78169366, NOW(), NOW(), NOW()),
+      (47173, 'Maboni', 1927, 8.63801487, -12.89055596, NOW(), NOW(), NOW()),
+      (47174, 'Maforay', 1927, 8.7010833, -12.80139538, NOW(), NOW(), NOW()),
+      (47175, 'Magbankitha', 1927, 8.74295909, -12.59609591, NOW(), NOW(), NOW()),
+      (47176, 'Magbengbeh', 1927, 8.67491852, -12.82400663, NOW(), NOW(), NOW()),
+      (47177, 'Magbeni', 1927, 8.80407668, -12.79708038, NOW(), NOW(), NOW()),
+      (47178, 'Makorobolai', 1927, 8.58591225, -12.90565398, NOW(), NOW(), NOW()),
+      (47179, 'Malal', 1927, 8.85530985, -12.75424148, NOW(), NOW(), NOW()),
+      (47180, 'Mamanso', 1927, 8.74772488, -12.63728907, NOW(), NOW(), NOW()),
+      (47181, 'Mapolie', 1927, 8.62863786, -12.79155636, NOW(), NOW(), NOW()),
+      (47182, 'Maronko', 1927, 8.73133035, -12.57449598, NOW(), NOW(), NOW()),
+      (47183, 'Marunia', 1927, 8.6433095, -12.82492648, NOW(), NOW(), NOW()),
+      (47184, 'Massebay', 1927, 8.58277296, -12.83724746, NOW(), NOW(), NOW()),
+      (47185, 'Mathera', 1927, 8.67932066, -12.76601562, NOW(), NOW(), NOW()),
+      (47186, 'Moria', 1927, 8.72545049, -12.74663708, NOW(), NOW(), NOW()),
+      (47187, 'Old Port Loko', 1927, 8.75140109, -12.7855134, NOW(), NOW(), NOW()),
+      (47188, 'Romaka', 1927, 8.78325942, -12.74510168, NOW(), NOW(), NOW()),
+      (47189, 'Rosarr', 1927, 8.7330986, -12.79584008, NOW(), NOW(), NOW()),
+      (47190, 'Sanda', 1927, 8.76169497, -12.79059082, NOW(), NOW(), NOW()),
+      (47191, 'Sendugu', 1927, 8.77443474, -12.7901714, NOW(), NOW(), NOW()),
+      (47192, 'Tauya', 1927, 8.82504102, -12.81326662, NOW(), NOW(), NOW()),
+      (47193, 'Lunsar-Baipolon', 1928, 8.68348209, -12.53560046, NOW(), NOW(), NOW()),
+      (47194, 'Lunsar-Four Road -', 1928, 8.6795184, -12.54158525, NOW(), NOW(), NOW()),
+      (47195, 'Lunsar-Kenneday', 1928, 8.68335491, -12.53120916, NOW(), NOW(), NOW()),
+      (47196, 'Lunsar-Mabai', 1928, 8.67449672, -12.53477909, NOW(), NOW(), NOW()),
+      (47197, 'Lunsar-Madigbo', 1928, 8.69735684, -12.53187304, NOW(), NOW(), NOW()),
+      (47198, 'Lunsar-Mamanso', 1928, 8.68134512, -12.53034642, NOW(), NOW(), NOW()),
+      (47199, 'Lunsar-Mines', 1928, 8.67510554, -12.51453346, NOW(), NOW(), NOW()),
+      (47200, 'Lunsar-Old Town', 1928, 8.66826732, -12.53764984, NOW(), NOW(), NOW()),
+      (47201, 'Lunsar-Path Bana', 1928, 8.68731588, -12.52526032, NOW(), NOW(), NOW()),
+      (47202, 'Lunsar-Robis', 1928, 8.67165374, -12.52515791, NOW(), NOW(), NOW()),
+      (47203, 'Lunsar-Technical', 1928, 8.69387565, -12.54185361, NOW(), NOW(), NOW()),
+      (47204, 'Magbele', 1928, 8.63518379, -12.66761042, NOW(), NOW(), NOW()),
+      (47205, 'Mange', 1928, 8.70895029, -12.38887807, NOW(), NOW(), NOW()),
+      (47206, 'Marampa', 1928, 8.70246888, -12.48535685, NOW(), NOW(), NOW()),
+      (47207, 'Mawullay', 1928, 8.65414329, -12.51509383, NOW(), NOW(), NOW()),
+      (47208, 'Petifu Madina', 1928, 8.63943444, -12.72591709, NOW(), NOW(), NOW()),
+      (47209, 'Rogballan', 1928, 8.68103765, -12.58421518, NOW(), NOW(), NOW()),
+      (47210, 'Rolankonoh', 1928, 8.66476138, -12.63118341, NOW(), NOW(), NOW()),
+      (47211, 'Biki', 1929, 8.4815266, -12.5309707, NOW(), NOW(), NOW()),
+      (47212, 'Biss-Manika', 1929, 8.53239355, -12.5121107, NOW(), NOW(), NOW()),
+      (47213, 'Katick', 1929, 8.54957943, -12.40014194, NOW(), NOW(), NOW()),
+      (47214, 'Maconteh', 1929, 8.56538394, -12.47607461, NOW(), NOW(), NOW()),
+      (47215, 'Mamalikie', 1929, 8.4886262, -12.56918038, NOW(), NOW(), NOW()),
+      (47216, 'Masimera', 1929, 8.63225854, -12.43923533, NOW(), NOW(), NOW()),
+      (47217, 'Matuku', 1929, 8.55185463, -12.43742543, NOW(), NOW(), NOW()),
+      (47218, 'Mayola-Thatha', 1929, 8.60260358, -12.36854392, NOW(), NOW(), NOW()),
+      (47219, 'Nonkoba', 1929, 8.61958243, -12.57916687, NOW(), NOW(), NOW()),
+      (47220, 'Rokel', 1929, 8.56546519, -12.67767003, NOW(), NOW(), NOW()),
+      (47221, 'Rokon/Komboya', 1929, 8.57879136, -12.61296882, NOW(), NOW(), NOW()),
+      (47222, 'Yoni-Pet', 1929, 8.58699833, -12.53915235, NOW(), NOW(), NOW()),
+      (47223, 'Kambia', 1930, 8.81868643, -12.57359798, NOW(), NOW(), NOW()),
+      (47224, 'Kanu', 1930, 8.86297603, -12.57151872, NOW(), NOW(), NOW()),
+      (47225, 'Kargbo', 1930, 8.86432883, -12.65714869, NOW(), NOW(), NOW()),
+      (47226, 'Konkorie', 1930, 8.83434496, -12.64474775, NOW(), NOW(), NOW()),
+      (47227, 'Magbapsa', 1930, 8.78014203, -12.60179836, NOW(), NOW(), NOW()),
+      (47228, 'Malakuray', 1930, 8.7968448, -12.6374749, NOW(), NOW(), NOW()),
+      (47229, 'Kambaia', 1841, 9.78300173, -11.04621807, NOW(), NOW(), NOW())
+    ON CONFLICT (id) DO NOTHING
   `.execute(db)
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
   await sql`
-    DELETE FROM msip_centropoblado
-    WHERE municipio_id IN (
-      SELECT id FROM msip_municipio
-      WHERE departamento_id IN (SELECT id FROM msip_departamento WHERE pais_id = 694)
-    )
+    DELETE FROM msip_centropoblado WHERE id BETWEEN 45914 AND 47229
   `.execute(db)
 }
