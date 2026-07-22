@@ -22,6 +22,7 @@ interface Slot {
 interface Props {
   lang?: string
   interviewDate: string | null
+  timezone?: string
   onBooked?: () => void
   onCancel?: () => void
 }
@@ -31,30 +32,47 @@ const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Ago
 const DAYS_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
-function getGmtOffset(): string {
-  const o = -new Date().getTimezoneOffset()
-  const s = o >= 0 ? '+' : '-'
-  const a = Math.abs(o)
-  return `GMT${s}${String(Math.floor(a / 60)).padStart(2, '0')}:${String(a % 60).padStart(2, '0')}`
+const DEFAULT_TIMEZONE = 'Africa/Freetown'
+
+function getTimezoneLabel(tz: string): string {
+  const now = new Date()
+  const utc = now.toLocaleString('en', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false })
+  const local = now.toLocaleString('en', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false })
+  const [uh, um] = utc.split(':').map(Number)
+  const [lh, lm] = local.split(':').map(Number)
+  let offsetMin = (lh * 60 + lm) - (uh * 60 + um)
+  if (offsetMin > 720) offsetMin -= 1440
+  if (offsetMin < -720) offsetMin += 1440
+  const sign = offsetMin >= 0 ? '+' : '-'
+  const a = Math.abs(offsetMin)
+  const offset = `GMT${sign}${String(Math.floor(a / 60)).padStart(2, '0')}:${String(a % 60).padStart(2, '0')}`
+  return `${tz} (${offset})`
 }
 
-function formatLocal(d: Date, lang: string, withTime?: boolean): string {
-  const datePart = d.toLocaleDateString(lang === 'es' ? 'es' : 'en', {
+function formatInZone(d: Date, lang: string, tz: string, options: Intl.DateTimeFormatOptions): string {
+  return new Intl.DateTimeFormat(lang === 'es' ? 'es' : 'en', {
+    timeZone: tz,
+    ...options,
+  }).format(d)
+}
+
+function formatLocal(d: Date, lang: string, tz: string, withTime?: boolean): string {
+  const datePart = formatInZone(d, lang, tz, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
   if (!withTime) return datePart
-  const timePart = d.toLocaleTimeString(lang === 'es' ? 'es' : 'en', {
+  const timePart = formatInZone(d, lang, tz, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
   })
-  return `${datePart} ${lang === 'es' ? 'a las' : 'at'} ${timePart} (${getGmtOffset()})`
+  return `${datePart} ${lang === 'es' ? 'a las' : 'at'} ${timePart} (${getTimezoneLabel(tz)})`
 }
 
-export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, onCancel }: Props) {
+export function VerificationScheduler({ lang = 'en', interviewDate, timezone, onBooked, onCancel }: Props) {
   const [slots, setSlots] = useState<Slot[]>([])
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -70,11 +88,13 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
 
   const months = lang === 'es' ? MONTHS_ES : MONTHS_EN
   const dayHeaders = lang === 'es' ? DAYS_ES : DAYS_EN
+  const tz = timezone || DEFAULT_TIMEZONE
+  const tzLabel = getTimezoneLabel(tz)
 
   const t = createComponentT(lang, {
     en: {
       title: 'Schedule Verification Interview',
-      description: 'Select a date and time. All times are in your local timezone.',
+      description: `Select a date and time. All times are in ${tzLabel}.`,
       why: 'To verify your identity and unlock rewards, a brief 30-minute video call is required. It\'s a friendly conversation — no preparation needed.',
       loadingSlots: 'Loading available slots...',
       noSlotsDate: 'No slots available for this date.',
@@ -98,7 +118,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
     },
     es: {
       title: 'Agendar Entrevista de Verificación',
-      description: 'Selecciona fecha y hora. Todos los horarios están en tu zona horaria local.',
+      description: `Selecciona fecha y hora. Todos los horarios están en ${tzLabel}.`,
       why: 'Para verificar tu identidad y desbloquear recompensas, necesitamos una breve videollamada de 30 minutos. Es una conversación amigable — no necesitas preparar nada.',
       loadingSlots: 'Cargando horarios disponibles...',
       noSlotsDate: 'No hay horarios para esta fecha.',
@@ -237,7 +257,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
   const todayKey = today.toISOString().slice(0, 10)
 
   const formatTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString(lang === 'es' ? 'es' : 'en', {
+    formatInZone(new Date(iso), lang, tz, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
@@ -249,8 +269,8 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
         <div className={`border rounded-lg p-4 space-y-2 ${isPast ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200'}`}>
           <p className={`text-sm ${isPast ? 'text-amber-800' : 'text-blue-800'}`}>
             {isPast
-              ? t('missed', formatLocal(interviewDateObj, lang, true))
-              : `${t('scheduled')} ${formatLocal(interviewDateObj, lang, true)}`
+              ? t('missed', formatLocal(interviewDateObj, lang, tz, true))
+              : `${t('scheduled')} ${formatLocal(interviewDateObj, lang, tz, true)}`
             }
           </p>
           <div className="flex gap-2">
@@ -347,7 +367,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
             {selectedDate && !isLoading && (
               <div className="border-t pt-3">
                 <p className="text-sm font-medium mb-2">
-                  {formatLocal(selectedDate, lang)}
+                  {formatLocal(selectedDate, lang, tz)}
                 </p>
                 {isLoading ? (
                   <p className="text-gray-500 text-sm">{t('loadingSlots')}</p>

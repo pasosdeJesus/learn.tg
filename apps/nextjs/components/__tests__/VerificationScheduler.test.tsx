@@ -182,9 +182,23 @@ describe('VerificationScheduler', () => {
     expect(screen.getByText('Cancelar Entrevista')).toBeDefined()
   })
 
+  it('uses provided timezone for display', async () => {
+    const futureDate = new Date(Date.now() + 86400000).toISOString()
+    ;(global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ slots: [] }),
+    })
+    render(<VerificationScheduler interviewDate={null} timezone="America/Bogota" />)
+    fireEvent.click(screen.getByText('Schedule Interview'))
+    await waitFor(() => {
+      expect(screen.getByText(/America\/Bogota/)).toBeDefined()
+    })
+  })
+
   it('renders Spanish scheduled text', () => {
     const futureDate = new Date(Date.now() + 86400000).toISOString()
     render(<VerificationScheduler lang="es" interviewDate={futureDate} />)
     expect(screen.getByText(/Entrevista agendada/)).toBeDefined()
+    expect(screen.getByText(/Africa\/Freetown/)).toBeDefined()
   })
 })
