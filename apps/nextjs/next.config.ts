@@ -51,7 +51,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   experimental: {
-    workers: 2,
   },
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL

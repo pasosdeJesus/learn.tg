@@ -213,10 +213,11 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
 
   const prevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1))
   const nextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1))
+
+  const today = new Date()
   const isCurrentMonth = viewDate.getMonth() === today.getMonth() && viewDate.getFullYear() === today.getFullYear()
   const isNextMonth = viewDate.getMonth() === (today.getMonth() + 1) % 12 && viewDate.getFullYear() === today.getFullYear() + (today.getMonth() === 11 ? 1 : 0)
 
-  const today = new Date()
   const todayKey = today.toISOString().slice(0, 10)
 
   const formatTime = (iso: string) =>
