@@ -12,6 +12,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
+    hookTimeout: 30000,
     deps: {
       inline: ['lz-string', '@pasosdejesus/m'],
     },

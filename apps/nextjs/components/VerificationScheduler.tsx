@@ -82,7 +82,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
       cancelled: 'Interview cancelled. You can schedule a new one.',
       error: 'Failed to schedule interview',
       scheduled: 'Interview scheduled for',
-      missed: 'Interview was scheduled for {0} but was not completed',
+      missed: 'Interview was scheduled for {{0}} but was not completed',
       completed: 'Interview completed on',
       reschedule: 'Reschedule',
       cancel: 'Cancel Interview',
@@ -101,7 +101,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
       cancelled: 'Entrevista cancelada. Puedes agendar una nueva.',
       error: 'Error al agendar entrevista',
       scheduled: 'Entrevista agendada para el',
-      missed: 'La entrevista estaba agendada para el {0} pero no se completó',
+      missed: 'La entrevista estaba agendada para el {{0}} pero no se completó',
       completed: 'Entrevista realizada el',
       reschedule: 'Reagendar',
       cancel: 'Cancelar Entrevista',
@@ -213,6 +213,8 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
 
   const prevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1))
   const nextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1))
+  const isCurrentMonth = viewDate.getMonth() === today.getMonth() && viewDate.getFullYear() === today.getFullYear()
+  const isNextMonth = viewDate.getMonth() === (today.getMonth() + 1) % 12 && viewDate.getFullYear() === today.getFullYear() + (today.getMonth() === 11 ? 1 : 0)
 
   const today = new Date()
   const todayKey = today.toISOString().slice(0, 10)
@@ -250,7 +252,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
           </div>
         </div>
       ) : (
-        <Button variant="outline" onClick={() => setDialogOpen(true)}>
+        <Button variant="default" onClick={() => setDialogOpen(true)}>
           {t('openCalendar')}
         </Button>
       )}
@@ -265,13 +267,13 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
           <div className="space-y-4">
             {/* Month navigation */}
             <div className="flex items-center justify-between">
-              <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded">
+              <button onClick={prevMonth} className={`p-1 rounded ${isCurrentMonth ? 'text-gray-300 cursor-default' : 'hover:bg-gray-100'}`} disabled={isCurrentMonth}>
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <span className="font-semibold text-sm">
                 {months[viewDate.getMonth()]} {viewDate.getFullYear()}
               </span>
-              <button onClick={nextMonth} className="p-1 hover:bg-gray-100 rounded">
+              <button onClick={nextMonth} className={`p-1 rounded ${isNextMonth ? 'text-gray-300 cursor-default' : 'hover:bg-gray-100'}`} disabled={isNextMonth}>
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
