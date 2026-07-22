@@ -48,6 +48,7 @@ interface UserProfile {
   picture: string
   place_of_worship_location: string | null
   profilescore: number | null
+  date_of_interview: string | null
   religion: number
   telegram: string
   uname: string
@@ -99,6 +100,7 @@ export default function ProfileForm({ params }: PageProps) {
     picture: '',
     place_of_worship_location: null,
     profilescore: null,
+    date_of_interview: null,
     religion: 1,
     telegram: '',
     uname: '',
@@ -302,6 +304,7 @@ export default function ProfileForm({ params }: PageProps) {
           picture: rUser.foto_file_name,
           place_of_worship_location: rUser.place_of_worship_location || null,
           profilescore: rUser.profilescore,
+          date_of_interview: rUser.date_of_interview || null,
           religion: rUser.religion_id,
           id_photo_front: rUser.id_photo_front || null,
           id_photo_back: rUser.id_photo_back || null,
@@ -1042,7 +1045,7 @@ export default function ProfileForm({ params }: PageProps) {
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
                   {lang === 'es' ? 'Entrevista de Verificación' : 'Verification Interview'}
                 </h3>
-                <VerificationScheduler lang={lang} onBooked={() => setUpdateProfile(true)} />
+                <VerificationScheduler lang={lang} interviewDate={profile.date_of_interview} onBooked={() => setUpdateProfile(true)} onCancel={() => setUpdateProfile(true)} />
               </div>
             )}
 

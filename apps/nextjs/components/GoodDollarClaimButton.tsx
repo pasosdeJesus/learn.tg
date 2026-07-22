@@ -33,6 +33,7 @@ export default function GoodDollarClaimButton({
     if (typeof window === 'undefined' || !publicClient || !walletClient || !address) return null
     try {
       return new IdentitySDK({
+        account: address as `0x${string}`,
         publicClient: publicClient as any,
         walletClient: walletClient as any,
         env: sdkEnv as any,

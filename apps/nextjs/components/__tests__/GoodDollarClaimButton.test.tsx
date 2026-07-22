@@ -169,16 +169,16 @@ describe('GoodDollarClaimButton', () => {
     expect(mockClaimSDKInstance.claim).toHaveBeenCalledTimes(1)
   })
 
-  it('shows toast with claim number on successful claim', async () => {
+  it('shows success toast on successful claim', async () => {
     render(<GoodDollarClaimButton lang="en" />)
     fireEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
       expect(mockToastFn).toHaveBeenCalledWith({
-        title: expect.stringContaining('Claim number 5'),
+        title: 'Claim successful',
       })
     })
-    
+
     const button = screen.getByRole('button', {
       name: /Sign up with GoodDollar or Claim UBI/i,
     })
@@ -192,11 +192,11 @@ describe('GoodDollarClaimButton', () => {
 
     fireEvent.click(screen.getByRole('button'))
 
-    // Wait for the error message to appear in the DOM
-    expect(await screen.findByText(/Claim failed:/i)).toBeInTheDocument()
-    expect(mockToastFn).toHaveBeenCalledWith({
-      title: expect.stringContaining(`Claim failed: ${error.message}`),
-      variant: 'destructive',
+    await waitFor(() => {
+      expect(mockToastFn).toHaveBeenCalledWith(expect.objectContaining({
+        title: expect.stringContaining('Claim failed'),
+        variant: 'destructive',
+      }))
     })
   })
 

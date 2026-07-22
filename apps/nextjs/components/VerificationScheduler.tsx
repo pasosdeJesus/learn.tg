@@ -1,11 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@pasosdejesus/m/shadcn-components/ui/dialog'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Slot {
   start: string
@@ -14,48 +21,82 @@ interface Slot {
 
 interface Props {
   lang?: string
+  interviewDate: string | null
   onBooked?: () => void
+  onCancel?: () => void
 }
 
-export function VerificationScheduler({ lang = 'en', onBooked }: Props) {
+const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December']
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+const DAYS_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+
+export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, onCancel }: Props) {
   const [slots, setSlots] = useState<Slot[]>([])
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isBooking, setIsBooking] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [viewDate, setViewDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const { toast } = useToast()
   const { data: session } = useSession()
   const { address } = useAuthAddress()
 
+  const months = lang === 'es' ? MONTHS_ES : MONTHS_EN
+  const dayHeaders = lang === 'es' ? DAYS_ES : DAYS_EN
+
   const t = createComponentT(lang, {
     en: {
       title: 'Schedule Verification Interview',
-      description: 'Select a time slot for your verification interview. The interview takes about 20-30 minutes.',
+      description: 'Select a date and time for your verification interview. The interview takes about 20-30 minutes.',
       loadingSlots: 'Loading available slots...',
-      noSlots: 'No slots available in the next 14 days. Please check back later.',
+      noSlotsDate: 'No slots available for this date.',
       book: 'Book Interview',
       booking: 'Booking...',
       success: 'Interview scheduled successfully!',
+      cancelled: 'Interview cancelled. You can schedule a new one.',
       error: 'Failed to schedule interview',
       unauthorized: 'Please connect your wallet first',
+      scheduled: 'Interview scheduled for',
+      completed: 'Interview completed on',
+      reschedule: 'Reschedule',
+      cancel: 'Cancel Interview',
+      cancelling: 'Cancelling...',
+      openCalendar: 'Schedule Interview',
+      close: 'Close',
     },
     es: {
       title: 'Agendar Entrevista de Verificación',
-      description: 'Selecciona un horario para tu entrevista de verificación. La entrevista dura entre 20 y 30 minutos.',
+      description: 'Selecciona fecha y hora para tu entrevista de verificación. La entrevista dura entre 20 y 30 minutos.',
       loadingSlots: 'Cargando horarios disponibles...',
-      noSlots: 'No hay horarios disponibles en los próximos 14 días. Por favor revisa más tarde.',
+      noSlotsDate: 'No hay horarios para esta fecha.',
       book: 'Agendar Entrevista',
       booking: 'Agendando...',
       success: '¡Entrevista agendada exitosamente!',
+      cancelled: 'Entrevista cancelada. Puedes agendar una nueva.',
       error: 'Error al agendar entrevista',
       unauthorized: 'Por favor conecta tu billetera primero',
+      scheduled: 'Entrevista agendada para el',
+      completed: 'Entrevista realizada el',
+      reschedule: 'Reagendar',
+      cancel: 'Cancelar Entrevista',
+      cancelling: 'Cancelando...',
+      openCalendar: 'Agendar Entrevista',
+      close: 'Cerrar',
     },
   })
 
+  const interviewDateObj = interviewDate ? new Date(interviewDate) : null
+  const isPast = interviewDateObj ? interviewDateObj < new Date() : false
+  const hasInterview = !!interviewDate
+
   useEffect(() => {
-    if (session?.address && address) {
+    if (dialogOpen && session?.address && address) {
       fetchSlots()
     }
-  }, [session?.address, address])
+  }, [dialogOpen, session?.address, address])
 
   const fetchSlots = async () => {
     setIsLoading(true)
@@ -90,8 +131,9 @@ export function VerificationScheduler({ lang = 'en', onBooked }: Props) {
       if (!res.ok) throw new Error(data.error || t('error'))
       toast({ title: t('success') })
       setSelectedSlot(null)
+      setSelectedDate(null)
+      setDialogOpen(false)
       onBooked?.()
-      fetchSlots()
     } catch {
       toast({ title: t('error'), variant: 'destructive' })
     } finally {
@@ -99,41 +141,205 @@ export function VerificationScheduler({ lang = 'en', onBooked }: Props) {
     }
   }
 
-  if (isLoading) {
-    return <p className="text-gray-500 text-sm">{t('loadingSlots')}</p>
+  const handleCancel = async () => {
+    if (!address) return
+    setIsCancelling(true)
+    try {
+      const token = localStorage.getItem('learn.tg.authToken')
+      const res = await fetch('/api/verification/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: address, token }),
+      })
+      if (!res.ok) throw new Error()
+      toast({ title: t('cancelled') })
+      onCancel?.()
+    } catch {
+      toast({ title: t('error'), variant: 'destructive' })
+    } finally {
+      setIsCancelling(false)
+    }
   }
 
-  if (slots.length === 0) {
-    return <p className="text-gray-500 text-sm">{t('noSlots')}</p>
-  }
+  const calendarDays = useMemo(() => {
+    const year = viewDate.getFullYear()
+    const month = viewDate.getMonth()
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    const days: (number | null)[] = []
+    for (let i = 0; i < firstDay; i++) days.push(null)
+    for (let d = 1; d <= daysInMonth; d++) days.push(d)
+    return days
+  }, [viewDate])
+
+  const slotsByDate = useMemo(() => {
+    const map: Record<string, Slot[]> = {}
+    for (const s of slots) {
+      const dateKey = s.start.slice(0, 10)
+      if (!map[dateKey]) map[dateKey] = []
+      map[dateKey].push(s)
+    }
+    return map
+  }, [slots])
+
+  const selectedDateKey = selectedDate
+    ? selectedDate.toISOString().slice(0, 10)
+    : null
+  const daySlots = selectedDateKey ? (slotsByDate[selectedDateKey] || []) : []
+
+  const prevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1))
+  const nextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1))
+
+  const today = new Date()
+  const todayKey = today.toISOString().slice(0, 10)
+
+  const formatDate = (d: Date) =>
+    d.toLocaleDateString(lang === 'es' ? 'es' : 'en', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+
+  const formatTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString(lang === 'es' ? 'es' : 'en', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-gray-600">{t('description')}</p>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-        {slots.map((slot, i) => (
-          <Button
-            key={i}
-            variant={selectedSlot?.start === slot.start ? 'default' : 'outline'}
-            size="sm"
-            className="text-xs"
-            onClick={() => setSelectedSlot(slot)}
-          >
-            {new Date(slot.start).toLocaleString(lang === 'es' ? 'es' : 'en', {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Button>
-        ))}
-      </div>
-      {selectedSlot && (
-        <Button onClick={handleBook} disabled={isBooking} className="w-full">
-          {isBooking ? t('booking') : t('book')}
+    <div className="space-y-3">
+      {hasInterview ? (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+          <p className="text-sm text-blue-800">
+            <span className="font-semibold">
+              {isPast ? t('completed') : t('scheduled')}
+            </span>{' '}
+            {interviewDateObj && formatDate(interviewDateObj)}
+            {interviewDateObj && !isPast && (
+              <> {lang === 'es' ? 'a las' : 'at'} {formatTime(interviewDateObj.toISOString())}</>
+            )}
+          </p>
+          {!isPast && (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setDialogOpen(true)}>
+                {t('reschedule')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancel}
+                disabled={isCancelling}
+                className="text-red-600 hover:text-red-700"
+              >
+                {isCancelling ? t('cancelling') : t('cancel')}
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <Button variant="outline" onClick={() => setDialogOpen(true)}>
+          {t('openCalendar')}
         </Button>
       )}
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>{t('title')}</DialogTitle>
+            <p className="text-sm text-gray-600">{t('description')}</p>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Month navigation */}
+            <div className="flex items-center justify-between">
+              <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded">
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <span className="font-semibold text-sm">
+                {months[viewDate.getMonth()]} {viewDate.getFullYear()}
+              </span>
+              <button onClick={nextMonth} className="p-1 hover:bg-gray-100 rounded">
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Day headers */}
+            <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 font-medium">
+              {dayHeaders.map(d => <div key={d}>{d}</div>)}
+            </div>
+
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((day, i) => {
+                if (day === null) return <div key={`empty-${i}`} />
+
+                const dateKey = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                const hasSlots = !!slotsByDate[dateKey]
+                const isPast = dateKey < todayKey
+                const isSel = dateKey === selectedDateKey
+
+                return (
+                  <button
+                    key={dateKey}
+                    disabled={!hasSlots || isPast}
+                    onClick={() => {
+                      const d = new Date(Date.UTC(viewDate.getFullYear(), viewDate.getMonth(), day))
+                      setSelectedDate(d)
+                      setSelectedSlot(null)
+                    }}
+                    className={`
+                      h-9 w-9 rounded-full text-xs font-medium flex items-center justify-center
+                      ${!hasSlots || isPast ? 'text-gray-300 cursor-default' : ''}
+                      ${hasSlots && !isPast && !isSel ? 'bg-green-100 text-green-800 hover:bg-green-200' : ''}
+                      ${isSel ? 'bg-blue-600 text-white' : ''}
+                    `}
+                  >
+                    {day}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Time slots for selected date */}
+            {selectedDate && (
+              <div className="border-t pt-3">
+                <p className="text-sm font-medium mb-2">
+                  {formatDate(selectedDate)}
+                </p>
+                {isLoading ? (
+                  <p className="text-gray-500 text-sm">{t('loadingSlots')}</p>
+                ) : daySlots.length === 0 ? (
+                  <p className="text-gray-500 text-sm">{t('noSlotsDate')}</p>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {daySlots.map((slot, i) => (
+                      <Button
+                        key={i}
+                        variant={selectedSlot?.start === slot.start ? 'default' : 'outline'}
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setSelectedSlot(slot)}
+                      >
+                        {formatTime(slot.start)}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Book button */}
+            {selectedSlot && (
+              <Button onClick={handleBook} disabled={isBooking} className="w-full">
+                {isBooking ? t('booking') : `${t('book')} — ${formatTime(selectedSlot.start)}`}
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
