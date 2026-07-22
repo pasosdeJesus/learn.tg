@@ -76,6 +76,7 @@ export default function GoodDollarClaimButton({
         walletClient: walletClient as any,
         identitySDK,
         env: sdkEnv,
+        rdu: typeof window !== 'undefined' ? window.location.href : undefined,
       })
 
       await (claimSDK as any).claim()

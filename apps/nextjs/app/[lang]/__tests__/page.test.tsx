@@ -58,10 +58,10 @@ vi.mock('next-auth/react', () => ({
 
 // Mock useAuthAddress (replaces wagmi's useAccount after R-#186)
 const useAccountMock = vi.fn(() => ({
-  address: '0x123',
+  address: '0x123' as string | undefined,
   isConnected: true,
-  sessionAddress: '0x123',
-  storedAddress: '0x123',
+  sessionAddress: '0x123' as string | undefined,
+  storedAddress: '0x123' as string | undefined,
   isAuthenticated: true,
   isWalletAvailable: true,
 }))
@@ -100,7 +100,7 @@ describe('Main Page Component', () => {
       data: { address: '0x123', user: { name: 'Test User' } },
       status: 'authenticated',
     })
-    useAccountMock.mockReturnValue({ address: '0x123', isConnected: true })
+    useAccountMock.mockReturnValue({ address: '0x123', isConnected: true, sessionAddress: '0x123', storedAddress: '0x123', isAuthenticated: true, isWalletAvailable: true })
     axiosGet.mockReset()
     axiosGet.mockResolvedValue({ data: [] })
     // Mock de alert para evitar errores de jsdom
@@ -117,7 +117,7 @@ describe('Main Page Component', () => {
       data: { address: '0xAAA', user: { name: 'Test User' } },
       status: 'authenticated',
     })
-    useAccountMock.mockReturnValue({ address: '0xBBB', isConnected: true })
+    useAccountMock.mockReturnValue({ address: '0xBBB', isConnected: true, sessionAddress: '0xBBB', storedAddress: '0xBBB', isAuthenticated: true, isWalletAvailable: true })
     await act(async () => {
       renderWithProviders(
         <Suspense fallback={<div />}>
