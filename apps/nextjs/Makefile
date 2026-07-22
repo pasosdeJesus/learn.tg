@@ -10,8 +10,12 @@ type-source:
 type-check-tests:
 	pnpm tsc --noEmit -p tsconfig.test.json
 
-type:
+type: css-check
 	pnpm typecheck
+
+css-check:
+	@find app components lib -name '*.css' -o -name '*.scss' 2>/dev/null | \
+	xargs node -e "const fs=require('fs'),pc=require('postcss');let ok=0,err=0;for(const f of process.argv.slice(1)){try{pc.parse(fs.readFileSync(f,'utf8'));ok++}catch(e){console.error(f+': '+e.message.split('\n')[0]);err++}};console.log('CSS: '+(ok+err)+' files, '+err+' errors');process.exit(err?1:0)"
 
 format:
 	pnpm format

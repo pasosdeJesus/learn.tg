@@ -345,25 +345,8 @@ textarea,
   animation: spin 1s linear infinite;
 }
 
-
-  right: auto !important;
-  left: 1rem !important;
-}
-
-  right: auto !important;
-  left: 1rem !important;
-}
-
-/* DebugConsole — move to left side to avoid overlapping banners */
-[title="Open debug console"] {
-  right: auto !important;
-  left: 1rem !important;
-}
-
-
 /* DebugConsole - move to left side */
 [title="Open debug console"] {
   right: auto !important;
   left: 1rem !important;
 }
-
