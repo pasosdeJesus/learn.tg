@@ -61,6 +61,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
   const [isBooking, setIsBooking] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false)
   const [viewDate, setViewDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const { toast } = useToast()
@@ -74,6 +75,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
     en: {
       title: 'Schedule Verification Interview',
       description: 'Select a date and time. All times are in your local timezone.',
+      why: 'To verify your identity and unlock rewards, a brief 30-minute video call is required. It\'s a friendly conversation — no preparation needed.',
       loadingSlots: 'Loading available slots...',
       noSlotsDate: 'No slots available for this date.',
       book: 'Book Interview',
@@ -87,12 +89,17 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
       reschedule: 'Reschedule',
       cancel: 'Cancel Interview',
       cancelling: 'Cancelling...',
+      confirmCancelTitle: 'Cancel Interview?',
+      confirmCancelDesc: 'This will cancel your scheduled interview. You can book a new one later. Are you sure?',
+      confirmCancelYes: 'Yes, Cancel',
+      confirmCancelNo: 'Keep It',
       openCalendar: 'Schedule Interview',
       close: 'Close',
     },
     es: {
       title: 'Agendar Entrevista de Verificación',
       description: 'Selecciona fecha y hora. Todos los horarios están en tu zona horaria local.',
+      why: 'Para verificar tu identidad y desbloquear recompensas, necesitamos una breve videollamada de 30 minutos. Es una conversación amigable — no necesitas preparar nada.',
       loadingSlots: 'Cargando horarios disponibles...',
       noSlotsDate: 'No hay horarios para esta fecha.',
       book: 'Agendar Entrevista',
@@ -106,6 +113,10 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
       reschedule: 'Reagendar',
       cancel: 'Cancelar Entrevista',
       cancelling: 'Cancelando...',
+      confirmCancelTitle: '¿Cancelar Entrevista?',
+      confirmCancelDesc: 'Esto cancelará tu entrevista agendada. Puedes agendar una nueva después. ¿Estás seguro?',
+      confirmCancelYes: 'Sí, Cancelar',
+      confirmCancelNo: 'Conservarla',
       openCalendar: 'Agendar Entrevista',
       close: 'Cerrar',
     },
@@ -118,6 +129,10 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
   useEffect(() => {
     if (dialogOpen && session?.address && address) {
       fetchSlots()
+    }
+    if (!dialogOpen) {
+      setSelectedDate(null)
+      setSelectedSlot(null)
     }
   }, [dialogOpen, session?.address, address])
 
@@ -176,6 +191,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
       })
       if (!res.ok) throw new Error()
       toast({ title: t('cancelled') })
+      setConfirmCancelOpen(false)
       onCancel?.()
     } catch {
       toast({ title: t('error'), variant: 'destructive' })
@@ -244,18 +260,20 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
             <Button
               variant="outline"
               size="sm"
-              onClick={handleCancel}
-              disabled={isCancelling}
+              onClick={() => setConfirmCancelOpen(true)}
               className="text-red-600 hover:text-red-700"
             >
-              {isCancelling ? t('cancelling') : t('cancel')}
+              {t('cancel')}
             </Button>
           </div>
         </div>
       ) : (
-        <Button variant="default" onClick={() => setDialogOpen(true)}>
-          {t('openCalendar')}
-        </Button>
+        <div className="space-y-3">
+          <p className="text-sm text-gray-600">{t('why')}</p>
+          <Button variant="default" onClick={() => setDialogOpen(true)}>
+            {t('openCalendar')}
+          </Button>
+        </div>
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -263,6 +281,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
           <DialogHeader>
             <DialogTitle>{t('title')}</DialogTitle>
             <p className="text-sm text-gray-600">{t('description')}</p>
+            <p className="text-sm text-gray-500 mt-2">{t('why')}</p>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -285,6 +304,13 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
             </div>
 
             {/* Calendar grid */}
+            {isLoading ? (
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: 35 }).map((_, i) => (
+                  <div key={i} className="h-9 w-9 rounded-full bg-gray-100 animate-pulse mx-auto" />
+                ))}
+              </div>
+            ) : (
             <div className="grid grid-cols-7 gap-1">
               {calendarDays.map((day, i) => {
                 if (day === null) return <div key={`empty-${i}`} />
@@ -315,9 +341,10 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
                 )
               })}
             </div>
+            )}
 
             {/* Time slots for selected date */}
-            {selectedDate && (
+            {selectedDate && !isLoading && (
               <div className="border-t pt-3">
                 <p className="text-sm font-medium mb-2">
                   {formatLocal(selectedDate, lang)}
@@ -350,6 +377,23 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
                 {isBooking ? t('booking') : `${t('book')} — ${formatTime(selectedSlot.start)}`}
               </Button>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>{t('confirmCancelTitle')}</DialogTitle>
+            <p className="text-sm text-gray-600">{t('confirmCancelDesc')}</p>
+          </DialogHeader>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setConfirmCancelOpen(false)} disabled={isCancelling}>
+              {t('confirmCancelNo')}
+            </Button>
+            <Button variant="destructive" onClick={handleCancel} disabled={isCancelling}>
+              {isCancelling ? t('cancelling') : t('confirmCancelYes')}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

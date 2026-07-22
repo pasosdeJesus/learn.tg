@@ -22,7 +22,7 @@ interface ExtendedSession extends Session {
  */
 export function useAuthAddress() {
   const { data: session } = useSession() as { data: ExtendedSession | null }
-  const [isWalletAvailable, setIsWalletAvailable] = useState(false)
+  const [isWalletAvailable, setIsWalletAvailable] = useState<boolean | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -67,11 +67,14 @@ export function useAuthAddress() {
   const address = sessionAddress || storedAddress
   const isAuthenticated = !!address
 
+  const isWalletCheckComplete = isWalletAvailable !== null
+
   return {
     address,
     sessionAddress,
     storedAddress,
     isAuthenticated,
-    isWalletAvailable,
+    isWalletAvailable: !!isWalletAvailable,
+    isWalletCheckComplete,
   }
 }

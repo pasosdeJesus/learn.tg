@@ -61,7 +61,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     },
   })
 
-  const { address, isWalletAvailable } = useAuthAddress()
+  const { address, isWalletAvailable, isWalletCheckComplete } = useAuthAddress()
 
   const sessionAddress = session?.address || localAddr || undefined
   const showAsConnected = sessionAddress && isWalletAvailable
@@ -86,6 +86,9 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Still checking wallet availability — show nothing to avoid flashing stale state
+  if (!isWalletCheckComplete) return null
 
   async function handleConnect() {
     setLoading(true)
