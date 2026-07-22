@@ -56,10 +56,14 @@ vi.mock('next-auth/react', () => ({
   getCsrfToken: () => getCsrfTokenMock(),
 }))
 
-// Mock wagmi (incluye usePublicClient requerido por el componente principal)
-const useAccountMock = vi.fn((): { address: string; isConnected: boolean } => ({
+// Mock useAuthAddress (replaces wagmi's useAccount after R-#186)
+const useAccountMock = vi.fn(() => ({
   address: '0x123',
   isConnected: true,
+  sessionAddress: '0x123',
+  storedAddress: '0x123',
+  isAuthenticated: true,
+  isWalletAvailable: true,
 }))
 const usePublicClientMock = vi.fn(() => ({
   readContract: vi.fn().mockResolvedValue(0n),
@@ -71,8 +75,10 @@ const usePublicClientMock = vi.fn(() => ({
 const useWalletClientMock = vi.fn(() => ({
   data: { writeContract: vi.fn().mockResolvedValue('0xhash') },
 }))
-vi.mock('wagmi', () => ({
-  useAccount: () => useAccountMock(),
+vi.mock('@/lib/hooks/useAuthAddress', () => ({
+  useAuthAddress: () => useAccountMock(),
+}))
+vi.mock('@/lib/hooks/useWallet', () => ({
   usePublicClient: () => usePublicClientMock(),
   useWalletClient: () => useWalletClientMock(),
 }))

@@ -47,6 +47,10 @@ const mockAccount = {
   isConnecting: false,
   isReconnecting: false,
   isConnected: true,
+  sessionAddress: '0x1234567890123456789012345678901234567890',
+  storedAddress: '0x1234567890123456789012345678901234567890',
+  isAuthenticated: true,
+  isWalletAvailable: true,
 }
 
 const mockCourse: Course = {

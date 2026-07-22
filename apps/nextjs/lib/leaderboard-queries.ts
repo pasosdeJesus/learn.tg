@@ -19,7 +19,7 @@ export async function buildLeaderboardQuery(
   params: LeaderboardQueryParams,
   includeReligion: boolean = false
 ) {
-  const { sortBy = 'profilescore', sortOrder = 'desc', country, page = 1, limit = 50 } = params
+  const { sortBy = 'slearn_balance', sortOrder = 'desc', country, page = 1, limit = 50 } = params
   const offset = (page - 1) * limit
 
   let query: any = db
@@ -68,14 +68,16 @@ export async function buildLeaderboardQuery(
     query = query.where('p.alfa2', '=', country)
   }
 
-  const orderByField = sortBy === 'profilescore' ? sql`profilescore` :
-                      sortBy === 'slearn_balance' ? sql`slearn_balance` :
-                      sortBy === 'scholarship_usdt' ? sql`scholarship_usdt` :
-                      sortBy === 'ubi_celo' ? sql`ubi_celo` :
-                      sortBy === 'sbt_count' ? sql`sbt_count` :
-                      sql`donations_usdt`
-
-  query = query.orderBy(orderByField, sortOrder)
+  if (sortBy === 'profilescore') {
+    query = query.orderBy(sql`profilescore`, sortOrder === 'asc' ? sql`asc nulls first` : sql`desc nulls last`)
+  } else {
+    const orderByField = sortBy === 'slearn_balance' ? sql`slearn_balance` :
+                        sortBy === 'scholarship_usdt' ? sql`scholarship_usdt` :
+                        sortBy === 'ubi_celo' ? sql`ubi_celo` :
+                        sortBy === 'sbt_count' ? sql`sbt_count` :
+                        sql`donations_usdt`
+    query = query.orderBy(orderByField, sortOrder)
+  }
   query = query.limit(limit).offset(offset)
 
   return query

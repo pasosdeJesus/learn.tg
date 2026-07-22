@@ -46,6 +46,8 @@ vi.mock('@pasosdejesus/m/shadcn-components/ui/dialog', () => {
       React.createElement(React.Fragment, null, children),
     DialogTitle: ({ children }: any) =>
       React.createElement(React.Fragment, null, children),
+    DialogTrigger: ({ children, asChild }: any) =>
+      React.createElement(React.Fragment, null, children),
   }
 })
 

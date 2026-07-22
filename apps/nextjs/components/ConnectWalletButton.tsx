@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { IS_PRODUCTION } from '@/lib/config'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 interface ExtendedSession {
   address?: string
@@ -60,7 +61,10 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     },
   })
 
+  const { address, isWalletAvailable } = useAuthAddress()
+
   const sessionAddress = session?.address || localAddr || undefined
+  const showAsConnected = sessionAddress && isWalletAvailable
 
   // Load localStorage address on mount (avoids SSR hydration mismatch)
   useEffect(() => {
@@ -239,13 +243,33 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
   if (hidden) return null
 
   // Connected: show address with disconnect
-  if (sessionAddress) {
+  if (showAsConnected) {
     return (
       <div className="flex items-center gap-2">
         <span
           className="text-xs text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full font-mono"
           title={sessionAddress}
         >
+          {sessionAddress.slice(0, 6)}...{sessionAddress.slice(-4)}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs text-gray-500 hover:text-red-600"
+          onClick={handleDisconnect}
+          title={t('disconnect')}
+        >
+          ✕
+        </Button>
+      </div>
+    )
+  }
+
+  // Stale session: wallet not available but session exists
+  if (sessionAddress && !isWalletAvailable) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full font-mono">
           {sessionAddress.slice(0, 6)}...{sessionAddress.slice(-4)}
         </span>
         <Button

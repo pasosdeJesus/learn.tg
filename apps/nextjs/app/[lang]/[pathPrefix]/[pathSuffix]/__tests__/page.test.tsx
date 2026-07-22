@@ -47,7 +47,7 @@ vi.mock('next/navigation', async (importOriginal) => {
 
 // Mock useAccount to provide a consistent address
 vi.mock('@/lib/hooks/useAuthAddress', () => ({
-  useAuthAddress: vi.fn(() => ({ address: '0x123' })),
+  useAuthAddress: vi.fn(() => ({ address: '0x123', sessionAddress: '0x123', storedAddress: '0x123', isAuthenticated: true, isWalletAvailable: true })),
 }))
 vi.mock('@/lib/hooks/useWallet', () => ({
   usePublicClient: vi.fn(() => ({})),

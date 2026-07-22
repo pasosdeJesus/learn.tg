@@ -15,7 +15,7 @@ interface LeaderboardProps {
 
 export function Leaderboard({ initialData, lang = 'en' }: LeaderboardProps) {
   // State for filters/sorting
-  const [sortBy, setSortBy] = useState<SortField>('profilescore')
+  const [sortBy, setSortBy] = useState<SortField>('slearn_balance')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [country, setCountry] = useState<string | null>(null)
   const [page, setPage] = useState(1)

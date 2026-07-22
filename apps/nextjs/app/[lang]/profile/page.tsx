@@ -1020,6 +1020,15 @@ export default function ProfileForm({ params }: PageProps) {
               lang={lang}
             />
 
+            {profile.profilescore != null && profile.profilescore < 100 && (
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  {lang === 'es' ? 'Entrevista de Verificación' : 'Verification Interview'}
+                </h3>
+                <VerificationScheduler lang={lang} interviewDate={profile.date_of_interview} onBooked={() => setUpdateProfile(true)} onCancel={() => setUpdateProfile(true)} />
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-4">
               <Button type="submit" disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1039,15 +1048,6 @@ export default function ProfileForm({ params }: PageProps) {
                 onSuccess={() => setUpdateProfile(true)}
               />
             </div>
-
-            {profile.profilescore != null && profile.profilescore < 100 && (
-              <div className="mt-8 border-t pt-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                  {lang === 'es' ? 'Entrevista de Verificación' : 'Verification Interview'}
-                </h3>
-                <VerificationScheduler lang={lang} interviewDate={profile.date_of_interview} onBooked={() => setUpdateProfile(true)} onCancel={() => setUpdateProfile(true)} />
-              </div>
-            )}
 
           </form>
           <NewChurchDialog

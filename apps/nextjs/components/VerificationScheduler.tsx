@@ -31,6 +31,29 @@ const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Ago
 const DAYS_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
+function getGmtOffset(): string {
+  const o = -new Date().getTimezoneOffset()
+  const s = o >= 0 ? '+' : '-'
+  const a = Math.abs(o)
+  return `GMT${s}${String(Math.floor(a / 60)).padStart(2, '0')}:${String(a % 60).padStart(2, '0')}`
+}
+
+function formatLocal(d: Date, lang: string, withTime?: boolean): string {
+  const datePart = d.toLocaleDateString(lang === 'es' ? 'es' : 'en', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+  if (!withTime) return datePart
+  const timePart = d.toLocaleTimeString(lang === 'es' ? 'es' : 'en', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  })
+  return `${datePart} ${lang === 'es' ? 'a las' : 'at'} ${timePart} (${getGmtOffset()})`
+}
+
 export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, onCancel }: Props) {
   const [slots, setSlots] = useState<Slot[]>([])
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
@@ -50,7 +73,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
   const t = createComponentT(lang, {
     en: {
       title: 'Schedule Verification Interview',
-      description: 'Select a date and time for your verification interview. The interview takes about 20-30 minutes.',
+      description: 'Select a date and time. All times are in your local timezone.',
       loadingSlots: 'Loading available slots...',
       noSlotsDate: 'No slots available for this date.',
       book: 'Book Interview',
@@ -58,8 +81,8 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
       success: 'Interview scheduled successfully!',
       cancelled: 'Interview cancelled. You can schedule a new one.',
       error: 'Failed to schedule interview',
-      unauthorized: 'Please connect your wallet first',
       scheduled: 'Interview scheduled for',
+      missed: 'Interview was scheduled for {0} but was not completed',
       completed: 'Interview completed on',
       reschedule: 'Reschedule',
       cancel: 'Cancel Interview',
@@ -69,7 +92,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
     },
     es: {
       title: 'Agendar Entrevista de Verificación',
-      description: 'Selecciona fecha y hora para tu entrevista de verificación. La entrevista dura entre 20 y 30 minutos.',
+      description: 'Selecciona fecha y hora. Todos los horarios están en tu zona horaria local.',
       loadingSlots: 'Cargando horarios disponibles...',
       noSlotsDate: 'No hay horarios para esta fecha.',
       book: 'Agendar Entrevista',
@@ -77,8 +100,8 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
       success: '¡Entrevista agendada exitosamente!',
       cancelled: 'Entrevista cancelada. Puedes agendar una nueva.',
       error: 'Error al agendar entrevista',
-      unauthorized: 'Por favor conecta tu billetera primero',
       scheduled: 'Entrevista agendada para el',
+      missed: 'La entrevista estaba agendada para el {0} pero no se completó',
       completed: 'Entrevista realizada el',
       reschedule: 'Reagendar',
       cancel: 'Cancelar Entrevista',
@@ -194,14 +217,6 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
   const today = new Date()
   const todayKey = today.toISOString().slice(0, 10)
 
-  const formatDate = (d: Date) =>
-    d.toLocaleDateString(lang === 'es' ? 'es' : 'en', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString(lang === 'es' ? 'es' : 'en', {
       hour: '2-digit',
@@ -211,33 +226,28 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
 
   return (
     <div className="space-y-3">
-      {hasInterview ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-          <p className="text-sm text-blue-800">
-            <span className="font-semibold">
-              {isPast ? t('completed') : t('scheduled')}
-            </span>{' '}
-            {interviewDateObj && formatDate(interviewDateObj)}
-            {interviewDateObj && !isPast && (
-              <> {lang === 'es' ? 'a las' : 'at'} {formatTime(interviewDateObj.toISOString())}</>
-            )}
+      {hasInterview && interviewDateObj ? (
+        <div className={`border rounded-lg p-4 space-y-2 ${isPast ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200'}`}>
+          <p className={`text-sm ${isPast ? 'text-amber-800' : 'text-blue-800'}`}>
+            {isPast
+              ? t('missed', formatLocal(interviewDateObj, lang, true))
+              : `${t('scheduled')} ${formatLocal(interviewDateObj, lang, true)}`
+            }
           </p>
-          {!isPast && (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDialogOpen(true)}>
-                {t('reschedule')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCancel}
-                disabled={isCancelling}
-                className="text-red-600 hover:text-red-700"
-              >
-                {isCancelling ? t('cancelling') : t('cancel')}
-              </Button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setDialogOpen(true)}>
+              {t('reschedule')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isCancelling}
+              className="text-red-600 hover:text-red-700"
+            >
+              {isCancelling ? t('cancelling') : t('cancel')}
+            </Button>
+          </div>
         </div>
       ) : (
         <Button variant="outline" onClick={() => setDialogOpen(true)}>
@@ -278,13 +288,13 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
 
                 const dateKey = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
                 const hasSlots = !!slotsByDate[dateKey]
-                const isPast = dateKey < todayKey
+                const isPastDate = dateKey < todayKey
                 const isSel = dateKey === selectedDateKey
 
                 return (
                   <button
                     key={dateKey}
-                    disabled={!hasSlots || isPast}
+                    disabled={!hasSlots || isPastDate}
                     onClick={() => {
                       const d = new Date(Date.UTC(viewDate.getFullYear(), viewDate.getMonth(), day))
                       setSelectedDate(d)
@@ -292,8 +302,8 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
                     }}
                     className={`
                       h-9 w-9 rounded-full text-xs font-medium flex items-center justify-center
-                      ${!hasSlots || isPast ? 'text-gray-300 cursor-default' : ''}
-                      ${hasSlots && !isPast && !isSel ? 'bg-green-100 text-green-800 hover:bg-green-200' : ''}
+                      ${!hasSlots || isPastDate ? 'text-gray-300 cursor-default' : ''}
+                      ${hasSlots && !isPastDate && !isSel ? 'bg-green-100 text-green-800 hover:bg-green-200' : ''}
                       ${isSel ? 'bg-blue-600 text-white' : ''}
                     `}
                   >
@@ -307,7 +317,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, onBooked, on
             {selectedDate && (
               <div className="border-t pt-3">
                 <p className="text-sm font-medium mb-2">
-                  {formatDate(selectedDate)}
+                  {formatLocal(selectedDate, lang)}
                 </p>
                 {isLoading ? (
                   <p className="text-gray-500 text-sm">{t('loadingSlots')}</p>

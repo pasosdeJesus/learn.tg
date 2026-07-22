@@ -18,6 +18,8 @@ vi.mock('axios')
 vi.mock('next-auth/react')
 vi.mock('wagmi')
 
+vi.mock('@/lib/hooks/useAuthAddress')
+
 vi.mock('@/components/DonateModal', () => ({
   DonateModal: () => <div data-testid="donate-modal" />,
 }))
@@ -70,7 +72,9 @@ describe('Course Page (Integration)', () => {
     mockedUseAuthAddress.mockReturnValue({
       address: '0x123',
       sessionAddress: '0x123',
+      storedAddress: '0x123',
       isAuthenticated: true,
+      isWalletAvailable: true,
     } as any)
 
     mockedAxios.get.mockImplementation((url: string) => {
@@ -99,7 +103,9 @@ describe('Course Page (Integration)', () => {
     mockedUseAuthAddress.mockReturnValue({
       address: '0xBBB',
       sessionAddress: undefined,
+      storedAddress: '0xBBB',
       isAuthenticated: false,
+      isWalletAvailable: true,
     } as any)
 
     renderWithProviders(<Page params={mockParams} />)
@@ -128,7 +134,9 @@ describe('Course Page (Integration)', () => {
     mockedUseAuthAddress.mockReturnValue({
       address: undefined,
       sessionAddress: undefined,
+      storedAddress: undefined,
       isAuthenticated: false,
+      isWalletAvailable: false,
     } as any)
 
     renderWithProviders(<Page params={mockParams} />)
