@@ -49,6 +49,10 @@ const nextConfig: NextConfig = {
   },
   allowedDevOrigins: ['learn.tg', '127.0.0.1'],
   poweredByHeader: false,
+  productionBrowserSourceMaps: false,
+  experimental: {
+    workers: 2,
+  },
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
     console.log('**[next.config] NEXT_PUBLIC_API_URL:', apiUrl || '(empty, API served locally)')
@@ -94,7 +98,7 @@ const nextConfig: NextConfig = {
       ],
     },
   ],
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@react-native-async-storage/async-storage': false,
@@ -103,6 +107,25 @@ const nextConfig: NextConfig = {
       ...config.resolve.fallback,
       '#async_hooks': false,
     }
+
+    // Caché persistente (acelera builds)
+    config.cache = {
+      type: 'filesystem',
+      buildDependencies: {
+        config: [__filename],
+      },
+    }
+
+    // Excluir módulos de servidor en cliente
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'fs': false,
+        'path': false,
+        'os': false,
+      }
+    }
+
     return config
   },
 }
