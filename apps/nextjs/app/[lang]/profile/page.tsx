@@ -48,7 +48,7 @@ interface UserProfile {
   picture: string
   place_of_worship_location: string | null
   profilescore: number | null
-  date_of_interview: string | null
+  proposed_date_of_interview: string | null
   department_timezone: string | null
   religion: number
   telegram: string
@@ -101,7 +101,7 @@ export default function ProfileForm({ params }: PageProps) {
     picture: '',
     place_of_worship_location: null,
     profilescore: null,
-    date_of_interview: null,
+    proposed_date_of_interview: null,
     department_timezone: null,
     religion: 1,
     telegram: '',
@@ -306,7 +306,7 @@ export default function ProfileForm({ params }: PageProps) {
           picture: rUser.foto_file_name,
           place_of_worship_location: rUser.place_of_worship_location || null,
           profilescore: rUser.profilescore,
-          date_of_interview: rUser.date_of_interview || null,
+          proposed_date_of_interview: rUser.proposed_date_of_interview || null,
           department_timezone: rUser.department_timezone || null,
           religion: rUser.religion_id,
           id_photo_front: rUser.id_photo_front || null,
@@ -1030,7 +1030,7 @@ export default function ProfileForm({ params }: PageProps) {
                 </h3>
                 <VerificationScheduler
                   lang={lang}
-                  interviewDate={profile.date_of_interview}
+                  interviewDate={profile.proposed_date_of_interview}
                   timezone={profile.department_timezone || undefined}
                   onBooked={() => setUpdateProfile(true)}
                   onCancel={() => setUpdateProfile(true)}

@@ -54,9 +54,11 @@ export interface Church {
   country_id: number;
   created_at: Generated<Timestamp | null>;
   created_by: number;
+  deleted_at: Timestamp | null;
   denomination: string | null;
   department_id: number | null;
   id: Generated<number>;
+  merged_into_id: number | null;
   municipality_id: number | null;
   name: string;
   pastor_id: number | null;
@@ -1353,11 +1355,11 @@ export interface Usuario {
   church_id: number | null;
   church_relationship: string | null;
   city_id: number | null;
+  conducted_date_of_interview: Timestamp | null;
   country_id: number | null;
   created_at: Timestamp | null;
   current_sign_in_at: Timestamp | null;
   current_sign_in_ip: string | null;
-  date_of_interview: Timestamp | null;
   department_id: number | null;
   descripcion: string | null;
   email: Generated<string>;
@@ -1391,6 +1393,7 @@ export interface Usuario {
   place_of_worship: string | null;
   place_of_worship_location: string | null;
   profilescore: number | null;
+  proposed_date_of_interview: Timestamp | null;
   religion_id: number | null;
   remember_created_at: Timestamp | null;
   reset_password_sent_at: Timestamp | null;
@@ -1401,6 +1404,7 @@ export interface Usuario {
   tema_id: number | null;
   unlock_token: string | null;
   updated_at: Timestamp | null;
+  verified_church_relationship: string | null;
   verified_city_id: number | null;
   verified_department_id: number | null;
   verified_email: string | null;
@@ -1409,6 +1413,16 @@ export interface Usuario {
   verified_telegram: string | null;
   verified_whatsapp: string | null;
   whatsapp: string | null;
+  working_hours: Json | null;
+}
+
+export interface VerificationLog {
+  action: string;
+  created_at: Generated<Timestamp | null>;
+  details: Json | null;
+  id: Generated<number>;
+  performed_by: number | null;
+  usuario_id: number | null;
 }
 
 export interface ViewUserScores {
@@ -1541,5 +1555,6 @@ export interface DB {
   transaction: Transaction;
   userevent: Userevent;
   usuario: Usuario;
+  verification_log: VerificationLog;
   view_user_scores: ViewUserScores;
 }

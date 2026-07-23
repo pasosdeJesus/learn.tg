@@ -65,7 +65,6 @@ export async function up(db: Kysely<any>): Promise<void> {
           updated_at: new Date(),
         } as any)
         .where('id', '=', syncId)
-        .where(sql`metadata->>'guideId' IS NULL OR metadata->>'guideId' = ''`)
         .execute()
       updated++
     }

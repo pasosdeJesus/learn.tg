@@ -120,7 +120,8 @@ export async function createEvent(
   summary: string,
   start: Date,
   end: Date,
-  description?: string
+  description?: string,
+  rrule?: string
 ): Promise<string | null> {
   if (!configured()) return null
 
@@ -136,6 +137,7 @@ export async function createEvent(
     `SUMMARY:${summary}`,
   ]
   if (description) lines.push(`DESCRIPTION:${description}`)
+  if (rrule) lines.push(`RRULE:${rrule}`)
   lines.push('END:VEVENT', 'END:VCALENDAR')
 
   const res = await fetch(`${CALDAV_URL}${uid}.ics`, {

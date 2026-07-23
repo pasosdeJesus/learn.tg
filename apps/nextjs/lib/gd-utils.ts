@@ -200,7 +200,7 @@ export async function recalculateProfileScore(
       'verified_city_id',
       'place_of_worship',
       'verified_place_of_worship',
-      'date_of_interview',
+      'proposed_date_of_interview',
     ])
     .where('id', '=', userId)
     .executeTakeFirst()
@@ -250,7 +250,7 @@ export async function recalculateProfileScore(
   }
 
   // Interview with verifier: 7 pts
-  if (user.date_of_interview != null) {
+  if (user.proposed_date_of_interview != null) {
     score += 7
   }
 

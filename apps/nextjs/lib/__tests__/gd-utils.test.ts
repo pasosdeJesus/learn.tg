@@ -261,7 +261,7 @@ describe('recalculateProfileScore', () => {
       select: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       executeTakeFirst: vi.fn().mockResolvedValue(
-        hasInterview ? { ...user, date_of_interview: new Date() } : { ...user, date_of_interview: null }
+        hasInterview ? { ...user, proposed_date_of_interview: new Date() } : { ...user, proposed_date_of_interview: null }
       ),
       updateTable: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
