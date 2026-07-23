@@ -4,8 +4,8 @@
 
 \restrict
 
--- Dumped from database version 17.9
--- Dumped by pg_dump version 17.9
+-- Dumped from database version 17.6
+-- Dumped by pg_dump version 17.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -3783,6 +3783,7 @@ CREATE TABLE public.msip_departamento (
     svgcdalto integer,
     svgrotx double precision,
     svgroty double precision,
+    timezone character varying(63),
     CONSTRAINT departamento_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion)))
 );
 
