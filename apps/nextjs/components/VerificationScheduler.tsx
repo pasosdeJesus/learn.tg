@@ -156,6 +156,18 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, on
     }
   }, [dialogOpen, session?.address, address])
 
+  // Auto-cancel missed interviews silently (keep message until reschedule)
+  useEffect(() => {
+    if (hasInterview && isPast && address) {
+      const token = localStorage.getItem('learn.tg.authToken')
+      fetch('/api/verification/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: address, token }),
+      }).catch(() => {})
+    }
+  }, [hasInterview, isPast, address])
+
   const fetchSlots = async () => {
     setIsLoading(true)
     try {
@@ -277,6 +289,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, on
             <Button variant="outline" size="sm" onClick={() => setDialogOpen(true)}>
               {t('reschedule')}
             </Button>
+            {!isPast && (
             <Button
               variant="outline"
               size="sm"
@@ -285,6 +298,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, on
             >
               {t('cancel')}
             </Button>
+            )}
           </div>
         </div>
       ) : (

@@ -70,8 +70,17 @@ describe('VerificationScheduler', () => {
 
   it('renders missed interview info when interview is in the past', () => {
     const pastDate = '2020-01-01T10:00:00.000Z'
+    ;(global.fetch as any).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
     render(<VerificationScheduler interviewDate={pastDate} />)
     expect(screen.getByText(/was not completed/)).toBeDefined()
+  })
+
+  it('shows Reschedule but not Cancel for past interviews', () => {
+    const pastDate = '2020-01-01T10:00:00.000Z'
+    ;(global.fetch as any).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
+    render(<VerificationScheduler interviewDate={pastDate} />)
+    expect(screen.getByText('Reschedule')).toBeDefined()
+    expect(screen.queryByText('Cancel Interview')).toBeNull()
   })
 
   it('opens dialog when schedule button is clicked', async () => {
