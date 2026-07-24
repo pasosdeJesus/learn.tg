@@ -14,18 +14,23 @@ import {
 function loadEnvCredentials() {
   const envPaths = [
     path.join(process.cwd(), '..', '.env'),
-    path.join(process.cwd(), 'apps', '.env'),
     path.join(process.cwd(), '.env'),
   ]
+  let pk, addr, verifierAddr
   for (const envPath of envPaths) {
     if (fs.existsSync(envPath)) {
       const content = fs.readFileSync(envPath, 'utf8')
-      const pk = content.match(/PRIVATE_KEY="([^"]+)"/)?.[1] || content.match(/PRIVATE_KEY=(\S+)/)?.[1]
-      const addr = content.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
-      const verifierAddr = content.match(/NEXT_PUBLIC_VERIFIER_WALLET="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_VERIFIER_WALLET=(\S+)/)?.[1]
-      if (pk && addr) return { pk, addr, verifierAddr }
+      pk = pk || content.match(/PRIVATE_KEY="([^"]+)"/)?.[1] || content.match(/PRIVATE_KEY=(\S+)/)?.[1]
+      addr = addr || content.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
+      verifierAddr = verifierAddr || content.match(/NEXT_PUBLIC_VERIFIER_WALLET="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_VERIFIER_WALLET=(\S+)/)?.[1]
     }
   }
+  // Also check process env (for when set via export)
+  pk = pk || process.env.PRIVATE_KEY
+  addr = addr || process.env.NEXT_PUBLIC_ADDRESS
+  verifierAddr = verifierAddr || process.env.NEXT_PUBLIC_VERIFIER_WALLET
+  console.error(`ENV: PK=${pk?'set':'missing'} ADDR=${addr?.slice(0,10)}... VERIFIER=${verifierAddr?.slice(0,10) || 'NOT SET'}`)
+  if (pk && addr) return { pk, addr, verifierAddr }
   return null
 }
 
@@ -50,12 +55,29 @@ async function main() {
 
   // If NEXT_PUBLIC_VERIFIER_WALLET matches the test wallet, admin tests work.
   // Otherwise tests verify access-denied UX.
-  const isVerifier = creds.verifierAddr && creds.verifierAddr.toLowerCase() === wallet.toLowerCase()
+  const isVerifier = !!(creds.verifierAddr && creds.verifierAddr.toLowerCase() === wallet.toLowerCase())
   console.log(`Wallet: ${wallet.slice(0,10)}... | Verifier: ${isVerifier} | ${base}\n`)
 
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
+  await page.setDefaultNavigationTimeout(90000)
   await setupSIWEMock(page, wallet, creds.pk, chainId)
+
+  // ── Test 0: Verifier check API ──
+  console.log('── Test 0: Verifier check API ──')
+  const verifierCheck = await page.evaluate(async (url) => {
+    const r = await fetch(url)
+    const data = await r.json()
+    return { status: r.status, ...data }
+  }, `${base}/api/admin/check-verifier?wallet=${wallet}`)
+  if (verifierCheck.status === 200 && typeof verifierCheck.isVerifier === 'boolean') {
+    ok(`Verifier check: isVerifier=${verifierCheck.isVerifier}, wallets=${verifierCheck.count}`)
+    if (isVerifier && !verifierCheck.isVerifier) {
+      fail(`Expected isVerifier=true but got false. Check NEXT_PUBLIC_VERIFIER_WALLET in .env`)
+    }
+  } else {
+    fail(`Verifier check API: ${verifierCheck.status}`)
+  }
 
   // ── Test 1: Connect and navigate to admin ──
   console.log('── Test 1: Admin page loads ──')
