@@ -23,6 +23,7 @@ interface Props {
   lang?: string
   interviewDate: string | null
   timezone?: string
+  countryId?: number
   onBooked?: () => void
   onCancel?: () => void
 }
@@ -33,6 +34,14 @@ const DAYS_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
 const DEFAULT_TIMEZONE = 'Africa/Freetown'
+
+/** Country → timezone fallback when user has no department_timezone set */
+const COUNTRY_TIMEZONES: Record<number, string> = {
+  170: 'America/Bogota',       // Colombia
+  694: 'Africa/Freetown',       // Sierra Leone
+  340: 'America/Tegucigalpa',   // Honduras
+  862: 'America/Caracas',       // Venezuela
+}
 
 function getTimezoneLabel(tz: string): string {
   const now = new Date()
@@ -72,7 +81,7 @@ function formatLocal(d: Date, lang: string, tz: string, withTime?: boolean): str
   return `${datePart} ${lang === 'es' ? 'a las' : 'at'} ${timePart} (${getTimezoneLabel(tz)})`
 }
 
-export function VerificationScheduler({ lang = 'en', interviewDate, timezone, onBooked, onCancel }: Props) {
+export function VerificationScheduler({ lang = 'en', interviewDate, timezone, countryId, onBooked, onCancel }: Props) {
   const [slots, setSlots] = useState<Slot[]>([])
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -88,7 +97,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, on
 
   const months = lang === 'es' ? MONTHS_ES : MONTHS_EN
   const dayHeaders = lang === 'es' ? DAYS_ES : DAYS_EN
-  const tz = timezone || DEFAULT_TIMEZONE
+  const tz = timezone || (countryId ? COUNTRY_TIMEZONES[countryId] : undefined) || DEFAULT_TIMEZONE
   const tzLabel = getTimezoneLabel(tz)
 
   const t = createComponentT(lang, {

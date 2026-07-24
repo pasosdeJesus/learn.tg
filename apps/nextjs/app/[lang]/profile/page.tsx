@@ -1032,6 +1032,7 @@ export default function ProfileForm({ params }: PageProps) {
                   lang={lang}
                   interviewDate={profile.proposed_date_of_interview}
                   timezone={profile.department_timezone || undefined}
+                  countryId={profile.country || undefined}
                   onBooked={() => setUpdateProfile(true)}
                   onCancel={() => setUpdateProfile(true)}
                 />
