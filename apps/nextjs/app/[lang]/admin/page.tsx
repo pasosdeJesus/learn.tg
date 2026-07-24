@@ -10,6 +10,8 @@ const VERIFIER_WALLETS = (process.env.NEXT_PUBLIC_VERIFIER_WALLET || '')
   .map(w => w.trim().toLowerCase())
   .filter(Boolean)
 
+type TFunc = (k: string) => string
+
 export default function AdminDashboard({ params }: PageProps) {
   const { lang } = use(params)
   const { address } = useAuthAddress()
@@ -26,8 +28,11 @@ export default function AdminDashboard({ params }: PageProps) {
       interview: 'Interview', blocked: 'Blocked',
       wallet: 'Wallet', name: 'Name', country: 'Country',
       score: 'Score', role: 'Role', date: 'Date',
-      pastor: 'Pastor', city: 'City', denomination: 'Denomination',
-      proposed: 'Proposed',
+      pastor: 'Pastor', city: 'Ciudad', denomination: 'Denomination',
+      proposed: 'Proposed', editUser: 'Edit User', editChurch: 'Edit Church',
+      save: 'Save', cancel: 'Cancel', delete: 'Delete',
+      saveSuccess: 'Saved', deleteConfirm: 'Delete this church?',
+      verifiedFields: 'Verified Fields', profileFields: 'Profile Fields',
     },
     es: {
       title: 'Panel de Verificación', accessDenied: 'Acceso denegado. Se requiere billetera de verificador.',
@@ -41,7 +46,10 @@ export default function AdminDashboard({ params }: PageProps) {
       wallet: 'Billetera', name: 'Nombre', country: 'País',
       score: 'Puntaje', role: 'Rol', date: 'Fecha',
       pastor: 'Pastor', city: 'Ciudad', denomination: 'Denominación',
-      proposed: 'Propuesta',
+      proposed: 'Propuesta', editUser: 'Editar Usuario', editChurch: 'Editar Iglesia',
+      save: 'Guardar', cancel: 'Cancelar', delete: 'Eliminar',
+      saveSuccess: 'Guardado', deleteConfirm: '¿Eliminar esta iglesia?',
+      verifiedFields: 'Campos Verificados', profileFields: 'Campos de Perfil',
     },
   })
 
@@ -69,11 +77,27 @@ export default function AdminDashboard({ params }: PageProps) {
   )
 }
 
+/* ── Shared Modal Shell ── */
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-semibold text-lg">{title}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 /* ── Calendar Widget ── */
 
 interface CalEvent { uid: string; start: string; end: string; summary?: string }
 
-function CalendarWidget({ lang, t }: { lang: string; t: (k: string) => string }) {
+function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [events, setEvents] = useState<CalEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [showBlock, setShowBlock] = useState(false)
@@ -124,9 +148,7 @@ function CalendarWidget({ lang, t }: { lang: string; t: (k: string) => string })
   )
 }
 
-/* ── Block Time Dialog ── */
-
-function BlockTimeDialog({ lang, t, onClose, onSaved }: { lang: string; t: (k: string) => string; onClose: () => void; onSaved: () => void }) {
+function BlockTimeDialog({ lang, t, onClose, onSaved }: { lang: string; t: TFunc; onClose: () => void; onSaved: () => void }) {
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [summary, setSummary] = useState('Blocked')
@@ -145,104 +167,132 @@ function BlockTimeDialog({ lang, t, onClose, onSaved }: { lang: string; t: (k: s
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
-        <h3 className="font-semibold text-lg mb-4">{t('addBlock')}</h3>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">{lang === 'es' ? 'Inicio' : 'Start'}</label>
-            <input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} className="w-full border rounded px-3 py-1.5 text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">{lang === 'es' ? 'Fin' : 'End'}</label>
-            <input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} className="w-full border rounded px-3 py-1.5 text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">{lang === 'es' ? 'Motivo' : 'Reason'}</label>
-            <input type="text" value={summary} onChange={e => setSummary(e.target.value)} className="w-full border rounded px-3 py-1.5 text-sm" />
-          </div>
+    <Modal title={t('addBlock')} onClose={onClose}>
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">{lang === 'es' ? 'Inicio' : 'Start'}</label>
+          <input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} className="w-full border rounded px-3 py-1.5 text-sm" />
         </div>
-        <div className="flex justify-end gap-2 mt-4">
-          <button onClick={onClose} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">{lang === 'es' ? 'Cancelar' : 'Cancel'}</button>
-          <button onClick={handleSave} disabled={saving || !start || !end} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
-            {saving ? (lang === 'es' ? 'Guardando...' : 'Saving...') : (lang === 'es' ? 'Guardar' : 'Save')}
-          </button>
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">{lang === 'es' ? 'Fin' : 'End'}</label>
+          <input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} className="w-full border rounded px-3 py-1.5 text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">{lang === 'es' ? 'Motivo' : 'Reason'}</label>
+          <input type="text" value={summary} onChange={e => setSummary(e.target.value)} className="w-full border rounded px-3 py-1.5 text-sm" />
         </div>
       </div>
-    </div>
+      <div className="flex justify-end gap-2 mt-4">
+        <button onClick={onClose} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">{t('cancel')}</button>
+        <button onClick={handleSave} disabled={saving || !start || !end} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+          {saving ? (lang === 'es' ? 'Guardando...' : 'Saving...') : t('save')}
+        </button>
+      </div>
+    </Modal>
   )
 }
 
-/* ── Pending Verifications Widget ── */
+/* ── User Item (shared) ── */
 
 interface UserItem {
   id: number; nombre?: string; nusuario?: string; billetera?: string
   pais_nombre?: string; profilescore?: number; church_relationship?: string
-  proposed_date_of_interview?: string; created_at?: string
+  proposed_date_of_interview?: string; conducted_date_of_interview?: string
+  created_at?: string; email?: string; whatsapp?: string; telegram?: string
+  passport_name?: string; passport_nationality?: string
+  verified_whatsapp?: boolean; verified_telegram?: boolean; verified_email?: boolean
+  verified_city_id?: boolean; verified_place_of_worship?: boolean
+  verified_church_relationship?: string
 }
 
-function PendingWidget({ lang, t }: { lang: string; t: (k: string) => string }) {
+const VERIFIED_FIELDS = [
+  { key: 'verified_whatsapp', labelEn: 'WhatsApp', labelEs: 'WhatsApp' },
+  { key: 'verified_telegram', labelEn: 'Telegram', labelEs: 'Telegram' },
+  { key: 'verified_email', labelEn: 'Email', labelEs: 'Correo' },
+  { key: 'verified_city_id', labelEn: 'City/ID', labelEs: 'Ciudad/ID' },
+  { key: 'verified_place_of_worship', labelEn: 'Place of Worship', labelEs: 'Lugar de Culto' },
+  { key: 'verified_church_relationship', labelEn: 'Church Role', labelEs: 'Rol en Iglesia' },
+]
+
+function fmtDate(s?: string, lang?: string) {
+  if (!s) return '—'
+  return new Date(s).toLocaleDateString(lang === 'es' ? 'es' : 'en')
+}
+
+function shortAddr(a?: string) {
+  if (!a) return ''
+  return `${a.slice(0, 6)}...${a.slice(-4)}`
+}
+
+/* ── Pending Verifications Widget ── */
+
+function PendingWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [items, setItems] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
-  useEffect(() => {
+  const [selected, setSelected] = useState<UserItem | null>(null)
+  const fetchItems = () => {
+    setLoading(true)
     fetch('/api/admin/users?status=pending')
       .then(r => r.json()).then(d => { setItems(d.users || []); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [])
-
-  const fmtDate = (s?: string) => s ? new Date(s).toLocaleDateString(lang === 'es' ? 'es' : 'en') : '—'
+  }
+  useEffect(fetchItems, [fetchItems])
 
   return (
     <div className="bg-white rounded-lg border p-4">
       <h2 className="font-semibold text-lg mb-3">⏳ {t('pendingVerifications')} ({items.length})</h2>
       {loading ? <p className="text-gray-500 text-sm">{t('loading')}</p>
         : items.length === 0 ? <p className="text-gray-500 text-sm">{t('noPending')}</p>
-        : <div className="space-y-2 max-h-64 overflow-y-auto">
+        : <div className="space-y-1 max-h-64 overflow-y-auto">
           {items.map(u => (
-            <div key={u.id} className="border-b pb-2 text-sm">
+            <div key={u.id} className="border-b border-gray-100 pb-2 text-sm cursor-pointer hover:bg-blue-50 rounded px-2 py-1 -mx-2"
+              onClick={() => { fetch(`/api/admin/user/${u.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
               <div className="flex justify-between items-start">
                 <span className="font-medium">{u.nombre || u.nusuario || '—'}</span>
-                <span className="text-xs text-blue-600">{t('proposed')}: {fmtDate(u.proposed_date_of_interview)}</span>
+                <span className="text-xs text-blue-600">{t('proposed')}: {fmtDate(u.proposed_date_of_interview, lang)}</span>
               </div>
               <div className="text-xs text-gray-500 mt-0.5">
-                {u.billetera ? `${u.billetera.slice(0, 6)}...${u.billetera.slice(-4)}` : ''}
+                {shortAddr(u.billetera)}
                 {u.pais_nombre ? ` · ${u.pais_nombre}` : ''}
                 {u.church_relationship ? ` · ${u.church_relationship}` : ''}
               </div>
             </div>
           ))}
         </div>}
+      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); fetchItems() }} />}
     </div>
   )
 }
 
 /* ── Recent Users Widget ── */
 
-function RecentUsersWidget({ lang, t }: { lang: string; t: (k: string) => string }) {
+function RecentUsersWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [items, setItems] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
-  useEffect(() => {
+  const [selected, setSelected] = useState<UserItem | null>(null)
+  const fetchItems = () => {
+    setLoading(true)
     fetch('/api/admin/users/recent')
       .then(r => r.json()).then(d => { setItems(d.users || []); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [])
-
-  const fmtDate = (s?: string) => s ? new Date(s).toLocaleDateString(lang === 'es' ? 'es' : 'en') : '—'
+  }
+  useEffect(fetchItems, [fetchItems])
 
   return (
     <div className="bg-white rounded-lg border p-4">
       <h2 className="font-semibold text-lg mb-3">👤 {t('recentUsers')}</h2>
       {loading ? <p className="text-gray-500 text-sm">{t('loading')}</p>
         : items.length === 0 ? <p className="text-gray-500 text-sm">{t('noUsers')}</p>
-        : <div className="space-y-2 max-h-64 overflow-y-auto">
+        : <div className="space-y-1 max-h-64 overflow-y-auto">
           {items.map(u => (
-            <div key={u.id} className="border-b pb-2 text-sm">
+            <div key={u.id} className="border-b border-gray-100 pb-2 text-sm cursor-pointer hover:bg-blue-50 rounded px-2 py-1 -mx-2"
+              onClick={() => { fetch(`/api/admin/user/${u.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
               <div className="flex justify-between items-start">
                 <span className="font-medium">{u.nombre || u.nusuario || '—'}</span>
-                <span className="text-xs text-gray-400">{fmtDate(u.created_at)}</span>
+                <span className="text-xs text-gray-400">{fmtDate(u.created_at, lang)}</span>
               </div>
               <div className="text-xs text-gray-500 mt-0.5">
-                {u.billetera ? `${u.billetera.slice(0, 6)}...${u.billetera.slice(-4)}` : ''}
+                {shortAddr(u.billetera)}
                 {u.pais_nombre ? ` · ${u.pais_nombre}` : ''}
                 {u.profilescore != null ? ` · ${t('score')}: ${u.profilescore}` : ''}
                 {u.church_relationship ? ` · ${u.church_relationship}` : ''}
@@ -250,6 +300,103 @@ function RecentUsersWidget({ lang, t }: { lang: string; t: (k: string) => string
             </div>
           ))}
         </div>}
+      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); fetchItems() }} />}
+    </div>
+  )
+}
+
+/* ── User Edit Modal ── */
+
+function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: string; t: TFunc; user: UserItem; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState<Record<string, any>>({})
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => {
+    const initial: Record<string, any> = {}
+    for (const f of VERIFIED_FIELDS) initial[f.key] = !!(user as any)[f.key]
+    initial.nombre = user.nombre || ''
+    initial.email = user.email || ''
+    initial.whatsapp = user.whatsapp || ''
+    initial.telegram = user.telegram || ''
+    initial.passport_name = user.passport_name || ''
+    initial.passport_nationality = user.passport_nationality || ''
+    initial.proposed_date_of_interview = user.proposed_date_of_interview || ''
+    initial.conducted_date_of_interview = user.conducted_date_of_interview || ''
+    setForm(initial)
+  }, [user])
+
+  const toggle = (key: string) => setForm(f => ({ ...f, [key]: !f[key] }))
+  const setF = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
+
+  const handleSave = async () => {
+    setSaving(true)
+    const body: Record<string, any> = { ...form }
+    // Convert verified booleans
+    for (const f of VERIFIED_FIELDS) body[f.key] = form[f.key] ? true : false
+    const res = await fetch(`/api/admin/user/${user.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    setSaving(false)
+    if (res.ok) { setMsg(t('saveSuccess')); setTimeout(onSaved, 800) }
+    else setMsg('Error')
+  }
+
+  return (
+    <Modal title={`${t('editUser')}: ${user.nombre || user.nusuario || user.id}`} onClose={onClose}>
+      <div className="space-y-4">
+        {/* Profile fields */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('profileFields')}</h4>
+          <div className="grid grid-cols-2 gap-2">
+            <InputField label={t('name')} value={form.nombre} onChange={v => setF('nombre', v)} />
+            <InputField label="Email" value={form.email} onChange={v => setF('email', v)} />
+            <InputField label="WhatsApp" value={form.whatsapp} onChange={v => setF('whatsapp', v)} />
+            <InputField label="Telegram" value={form.telegram} onChange={v => setF('telegram', v)} />
+            <InputField label={lang === 'es' ? 'Nombre Pasaporte' : 'Passport Name'} value={form.passport_name} onChange={v => setF('passport_name', v)} />
+            <InputField label={lang === 'es' ? 'Nacionalidad Pasaporte' : 'Passport Nationality'} value={form.passport_nationality} onChange={v => setF('passport_nationality', v)} />
+          </div>
+        </div>
+
+        {/* Interview dates */}
+        <div className="grid grid-cols-2 gap-2">
+          <InputField label={lang === 'es' ? 'Entrevista Propuesta' : 'Proposed Interview'} value={form.proposed_date_of_interview || ''} onChange={v => setF('proposed_date_of_interview', v)} type="date" />
+          <InputField label={lang === 'es' ? 'Entrevista Realizada' : 'Conducted Interview'} value={form.conducted_date_of_interview || ''} onChange={v => setF('conducted_date_of_interview', v)} type="date" />
+        </div>
+
+        {/* Verified fields */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('verifiedFields')}</h4>
+          <div className="space-y-1.5 max-h-48 overflow-y-auto">
+            {VERIFIED_FIELDS.map(f => (
+              <label key={f.key} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+                <input type="checkbox" checked={!!form[f.key]} onChange={() => toggle(f.key)} className="rounded" />
+                <span>{lang === 'es' ? f.labelEs : f.labelEn}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {msg && <p className={`text-sm text-center ${msg === t('saveSuccess') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
+
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">{t('cancel')}</button>
+          <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+            {saving ? (lang === 'es' ? 'Guardando...' : 'Saving...') : t('save')}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+function InputField({ label, value, onChange, type }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+  return (
+    <div>
+      <label className="block text-xs text-gray-500 mb-0.5">{label}</label>
+      <input type={type || 'text'} value={value} onChange={e => onChange(e.target.value)} className="w-full border rounded px-2 py-1 text-sm" />
     </div>
   )
 }
@@ -257,33 +404,36 @@ function RecentUsersWidget({ lang, t }: { lang: string; t: (k: string) => string
 /* ── Recent Churches Widget ── */
 
 interface ChurchItem {
-  id: number; name?: string; pastor_name?: string
-  city_name?: string; denomination?: string
-  country_name?: string; created_at?: string
+  id: number; name?: string; pastor_name?: string; pastor_whatsapp?: string
+  pastor_telegram?: string; city_name?: string; denomination?: string
+  country_name?: string; registration?: string; registration_verified?: boolean
+  created_at?: string
 }
 
-function RecentChurchesWidget({ lang, t }: { lang: string; t: (k: string) => string }) {
+function RecentChurchesWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [items, setItems] = useState<ChurchItem[]>([])
   const [loading, setLoading] = useState(true)
-  useEffect(() => {
+  const [selected, setSelected] = useState<ChurchItem | null>(null)
+  const fetchItems = () => {
+    setLoading(true)
     fetch('/api/admin/churches/recent')
       .then(r => r.json()).then(d => { setItems(d.churches || []); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [])
-
-  const fmtDate = (s?: string) => s ? new Date(s).toLocaleDateString(lang === 'es' ? 'es' : 'en') : '—'
+  }
+  useEffect(fetchItems, [fetchItems])
 
   return (
     <div className="bg-white rounded-lg border p-4">
       <h2 className="font-semibold text-lg mb-3">🏛️ {t('recentChurches')}</h2>
       {loading ? <p className="text-gray-500 text-sm">{t('loading')}</p>
         : items.length === 0 ? <p className="text-gray-500 text-sm">{t('noChurches')}</p>
-        : <div className="space-y-2 max-h-64 overflow-y-auto">
+        : <div className="space-y-1 max-h-64 overflow-y-auto">
           {items.map(ch => (
-            <div key={ch.id} className="border-b pb-2 text-sm">
+            <div key={ch.id} className="border-b border-gray-100 pb-2 text-sm cursor-pointer hover:bg-blue-50 rounded px-2 py-1 -mx-2"
+              onClick={() => { fetch(`/api/admin/church/${ch.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
               <div className="flex justify-between items-start">
                 <span className="font-medium">{ch.name || '—'}</span>
-                <span className="text-xs text-gray-400">{fmtDate(ch.created_at)}</span>
+                <span className="text-xs text-gray-400">{fmtDate(ch.created_at, lang)}</span>
               </div>
               <div className="text-xs text-gray-500 mt-0.5">
                 {ch.pastor_name ? `${t('pastor')}: ${ch.pastor_name}` : ''}
@@ -294,6 +444,86 @@ function RecentChurchesWidget({ lang, t }: { lang: string; t: (k: string) => str
             </div>
           ))}
         </div>}
+      {selected && <ChurchEditModal lang={lang} t={t} church={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); fetchItems() }} />}
     </div>
+  )
+}
+
+/* ── Church Edit Modal ── */
+
+function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: string; t: TFunc; church: ChurchItem; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState<Record<string, any>>({})
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => {
+    setForm({
+      name: church.name || '',
+      pastor_name: church.pastor_name || '',
+      pastor_whatsapp: church.pastor_whatsapp || '',
+      pastor_telegram: church.pastor_telegram || '',
+      city_name: church.city_name || '',
+      denomination: church.denomination || '',
+      registration: church.registration || '',
+      registration_verified: !!church.registration_verified,
+    })
+  }, [church])
+
+  const setF = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }))
+
+  const handleSave = async () => {
+    setSaving(true)
+    const res = await fetch(`/api/admin/church/${church.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
+    setSaving(false)
+    if (res.ok) { setMsg(t('saveSuccess')); setTimeout(onSaved, 800) }
+    else setMsg('Error')
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(t('deleteConfirm'))) return
+    setDeleting(true)
+    const res = await fetch(`/api/admin/church/${church.id}`, { method: 'DELETE' })
+    setDeleting(false)
+    if (res.ok) onSaved()
+    else setMsg('Error')
+  }
+
+  return (
+    <Modal title={`${t('editChurch')}: ${church.name || church.id}`} onClose={onClose}>
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          <InputField label={t('name')} value={form.name} onChange={v => setF('name', v)} />
+          <InputField label={t('city')} value={form.city_name} onChange={v => setF('city_name', v)} />
+          <InputField label={t('pastor')} value={form.pastor_name} onChange={v => setF('pastor_name', v)} />
+          <InputField label="WhatsApp" value={form.pastor_whatsapp} onChange={v => setF('pastor_whatsapp', v)} />
+          <InputField label="Telegram" value={form.pastor_telegram} onChange={v => setF('pastor_telegram', v)} />
+          <InputField label={t('denomination')} value={form.denomination} onChange={v => setF('denomination', v)} />
+          <InputField label={lang === 'es' ? 'Registro' : 'Registration'} value={form.registration} onChange={v => setF('registration', v)} />
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={!!form.registration_verified} onChange={e => setF('registration_verified', e.target.checked)} className="rounded" />
+          <span>{lang === 'es' ? 'Registro Verificado' : 'Registration Verified'}</span>
+        </label>
+
+        {msg && <p className={`text-sm text-center ${msg === t('saveSuccess') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
+
+        <div className="flex justify-between">
+          <button onClick={handleDelete} disabled={deleting} className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 disabled:opacity-50">
+            {deleting ? (lang === 'es' ? 'Eliminando...' : 'Deleting...') : t('delete')}
+          </button>
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">{t('cancel')}</button>
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+              {saving ? (lang === 'es' ? 'Guardando...' : 'Saving...') : t('save')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   )
 }

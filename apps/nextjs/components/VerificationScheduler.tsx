@@ -171,7 +171,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, on
   const fetchSlots = async () => {
     setIsLoading(true)
     try {
-      const res = await fetch('/api/verification/availability?days=14&duration=30')
+      const res = await fetch(`/api/verification/availability?days=14&duration=30&timezone=${encodeURIComponent(tz)}`)
       const data = await res.json()
       setSlots(data.slots || [])
     } catch {
