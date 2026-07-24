@@ -8,12 +8,13 @@ import * as path from 'path'
 import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
-  setupSIWEMock,
+  setupSIWEMock, short,
 } from '@pasosdejesus/m/e2e'
 
 function loadEnvCredentials() {
   const envPaths = [
     path.join(process.cwd(), '..', '.env'),
+    path.join(process.cwd(), 'apps', '.env'),
     path.join(process.cwd(), '.env'),
   ]
   let pk, addr, verifierAddr
@@ -25,13 +26,23 @@ function loadEnvCredentials() {
       verifierAddr = verifierAddr || content.match(/NEXT_PUBLIC_VERIFIER_WALLET="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_VERIFIER_WALLET=(\S+)/)?.[1]
     }
   }
-  // Also check process env (for when set via export)
   pk = pk || process.env.PRIVATE_KEY
   addr = addr || process.env.NEXT_PUBLIC_ADDRESS
   verifierAddr = verifierAddr || process.env.NEXT_PUBLIC_VERIFIER_WALLET
-  console.error(`ENV: PK=${pk?'set':'missing'} ADDR=${addr?.slice(0,10)}... VERIFIER=${verifierAddr?.slice(0,10) || 'NOT SET'}`)
   if (pk && addr) return { pk, addr, verifierAddr }
   return null
+}
+
+/** Navigate to URL and wait for body content */
+async function navAndWait(page, url, timeout) {
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout })
+  for (let i = 0; i < 20; i++) {
+    await new Promise(r => setTimeout(r, 2000))
+    const bodyLen = await page.evaluate(() =>
+      document.body?.textContent?.replace(/\s+/g, '').length || 0)
+    if (bodyLen > 100) return true
+  }
+  return false
 }
 
 async function main() {
@@ -50,18 +61,17 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout, chainId } = env
+  const { base, chainId } = env
+  const timeout = 120000
   const wallet = creds.addr
 
-  // If NEXT_PUBLIC_VERIFIER_WALLET (comma-separated) matches the test wallet, admin tests work.
-  // Otherwise tests verify access-denied UX.
   const verifierWallets = (creds.verifierAddr || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean)
   const isVerifier = verifierWallets.includes(wallet.toLowerCase())
-  console.log(`Wallet: ${wallet.slice(0,10)}... | Verifier: ${isVerifier} | ${base}\n`)
+  console.log(`Wallet: ${short(wallet)} | Verifier: ${isVerifier} | ${base}\n`)
 
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
-  await page.setDefaultNavigationTimeout(90000)
+  await page.setDefaultNavigationTimeout(timeout)
   await setupSIWEMock(page, wallet, creds.pk, chainId)
 
   // ── Test 0: Verifier check API ──
@@ -92,8 +102,8 @@ async function main() {
 
   // ── Test 1: Connect and navigate to admin ──
   console.log('── Test 1: Admin page loads ──')
-  await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
-  await new Promise(r => setTimeout(r, 5000))
+  await navAndWait(page, `${base}/en`, timeout)
+  await new Promise(r => setTimeout(r, 3000))
 
   const hasConnect = await page.evaluate(() =>
     document.body.textContent?.includes('Connect Wallet') ||
@@ -108,12 +118,18 @@ async function main() {
         break
       }
     }
-    await new Promise(r => setTimeout(r, 8000))
+    // Wait for SIWE to complete (up to 36s)
+    for (let i = 0; i < 12; i++) {
+      await new Promise(r => setTimeout(r, 3000))
+      const stillConnect = await page.evaluate(() =>
+        document.body.textContent?.includes('Connect Wallet'))
+      if (!stillConnect) break
+    }
   }
 
   // Navigate to admin
-  await page.goto(`${base}/en/admin`, { waitUntil: 'domcontentloaded', timeout })
-  await new Promise(r => setTimeout(r, 5000))
+  await navAndWait(page, `${base}/en/admin`, timeout)
+  await new Promise(r => setTimeout(r, 3000))
 
   const body = await page.evaluate(() => document.body.textContent || '')
   if (body.includes('Verification Dashboard') || body.includes('Panel de Verificación')) {
