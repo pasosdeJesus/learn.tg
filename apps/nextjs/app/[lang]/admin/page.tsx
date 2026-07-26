@@ -200,18 +200,19 @@ interface UserItem {
   proposed_date_of_interview?: string; conducted_date_of_interview?: string
   created_at?: string; email?: string; whatsapp?: string; telegram?: string
   passport_name?: string; passport_nationality?: string
-  verified_whatsapp?: boolean; verified_telegram?: boolean; verified_email?: boolean
-  verified_city_id?: boolean; verified_place_of_worship?: boolean
+  city_id?: number; place_of_worship?: string
+  verified_whatsapp?: string; verified_telegram?: string; verified_email?: string
+  verified_city_id?: number; verified_place_of_worship?: string
   verified_church_relationship?: string
 }
 
 const VERIFIED_FIELDS = [
-  { key: 'verified_whatsapp', labelEn: 'WhatsApp', labelEs: 'WhatsApp' },
-  { key: 'verified_telegram', labelEn: 'Telegram', labelEs: 'Telegram' },
-  { key: 'verified_email', labelEn: 'Email', labelEs: 'Correo' },
-  { key: 'verified_city_id', labelEn: 'City/ID', labelEs: 'Ciudad/ID' },
-  { key: 'verified_place_of_worship', labelEn: 'Place of Worship', labelEs: 'Lugar de Culto' },
-  { key: 'verified_church_relationship', labelEn: 'Church Role', labelEs: 'Rol en Iglesia' },
+  { key: 'verified_whatsapp', source: 'whatsapp', labelEn: 'WhatsApp', labelEs: 'WhatsApp' },
+  { key: 'verified_telegram', source: 'telegram', labelEn: 'Telegram', labelEs: 'Telegram' },
+  { key: 'verified_email', source: 'email', labelEn: 'Email', labelEs: 'Correo' },
+  { key: 'verified_city_id', source: 'city_id', labelEn: 'City/ID', labelEs: 'Ciudad/ID' },
+  { key: 'verified_place_of_worship', source: 'place_of_worship', labelEn: 'Place of Worship', labelEs: 'Lugar de Culto' },
+  { key: 'verified_church_relationship', source: null, labelEn: 'Church Role', labelEs: 'Rol en Iglesia' },
 ]
 
 function fmtDate(s?: string, lang?: string) {
@@ -314,7 +315,15 @@ function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: string; t: T
 
   useEffect(() => {
     const initial: Record<string, any> = {}
-    for (const f of VERIFIED_FIELDS) initial[f.key] = !!(user as any)[f.key]
+    // Verified fields: checked if the verified value matches the source value
+    for (const f of VERIFIED_FIELDS) {
+      if (f.source) {
+        initial[f.key] = !!(user as any)[f.key] && String((user as any)[f.key]) === String((user as any)[f.source])
+      } else {
+        // verified_church_relationship is a string value (pastor/leader/member)
+        initial[f.key] = (user as any)[f.key] || ''
+      }
+    }
     initial.nombre = user.nombre || ''
     initial.email = user.email || ''
     initial.whatsapp = user.whatsapp || ''
@@ -326,14 +335,28 @@ function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: string; t: T
     setForm(initial)
   }, [user])
 
-  const toggle = (key: string) => setForm(f => ({ ...f, [key]: !f[key] }))
+  const toggle = (key: string, source?: string) => setForm(f => {
+    const next = !f[key]
+    if (source) {
+      // When checking: copy source value to verified field. When unchecking: clear it.
+      return { ...f, [key]: next ? (user as any)[source] : '' }
+    }
+    return { ...f, [key]: next }
+  })
   const setF = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
 
   const handleSave = async () => {
     setSaving(true)
-    const body: Record<string, any> = { ...form }
-    // Convert verified booleans
-    for (const f of VERIFIED_FIELDS) body[f.key] = form[f.key] ? true : false
+    const body: Record<string, any> = {}
+    // Profile fields
+    for (const k of ['nombre', 'email', 'whatsapp', 'telegram', 'passport_name', 'passport_nationality',
+      'proposed_date_of_interview', 'conducted_date_of_interview']) {
+      if (form[k] !== undefined) body[k] = form[k] || null
+    }
+    // Verified fields: send the copied value (or empty to clear)
+    for (const f of VERIFIED_FIELDS) {
+      body[f.key] = form[f.key] || null
+    }
     const res = await fetch(`/api/admin/user/${user.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -371,10 +394,19 @@ function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: string; t: T
           <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('verifiedFields')}</h4>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
             {VERIFIED_FIELDS.map(f => (
-              <label key={f.key} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
-                <input type="checkbox" checked={!!form[f.key]} onChange={() => toggle(f.key)} className="rounded" />
-                <span>{lang === 'es' ? f.labelEs : f.labelEn}</span>
-              </label>
+              f.source ? (
+                <label key={f.key} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+                  <input type="checkbox" checked={!!form[f.key]} onChange={() => toggle(f.key, f.source || undefined)} className="rounded" />
+                  <span>{lang === 'es' ? f.labelEs : f.labelEn}</span>
+                  {form[f.key] ? <span className="text-xs text-green-600 ml-auto">{String(form[f.key]).slice(0, 20)}</span> : null}
+                </label>
+              ) : (
+                <div key={f.key} className="text-sm px-2 py-1">
+                  <span className="text-xs text-gray-500">{lang === 'es' ? f.labelEs : f.labelEn}</span>
+                  <input type="text" value={form[f.key] || ''} onChange={e => setF(f.key, e.target.value)}
+                    className="w-full border rounded px-2 py-0.5 text-sm mt-0.5" placeholder="pastor / leader / member" />
+                </div>
+              )
             ))}
           </div>
         </div>

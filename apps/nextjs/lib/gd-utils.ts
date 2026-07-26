@@ -209,14 +209,14 @@ export async function recalculateProfileScore(
 
   let score = 0
 
-  // Name verified: 25 pts
+  // Name verified: 26 pts
   if (user.nombre && user.passport_name && user.nombre === user.passport_name) {
-    score += 25
+    score += 26
   }
 
-  // Country verified: 25 pts
+  // Country verified: 24 pts
   if (user.pais_id != null && user.passport_nationality != null && user.pais_id === user.passport_nationality) {
-    score += 25
+    score += 24
   }
 
   // Email verified: 9 pts

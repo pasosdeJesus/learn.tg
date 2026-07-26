@@ -270,7 +270,7 @@ describe('recalculateProfileScore', () => {
     return mock
   }
 
-  it('returns 25 when nombre === passport_name', async () => {
+  it('returns 26 when nombre === passport_name', async () => {
     const mockDb = mockDbWith({
       nombre: 'Test', passport_name: 'Test',
       pais_id: null, passport_nationality: null,
@@ -281,7 +281,7 @@ describe('recalculateProfileScore', () => {
       place_of_worship: null, verified_place_of_worship: null,
     })
     const score = await recalculateProfileScore(mockDb, 1)
-    expect(score).toBe(25)
+    expect(score).toBe(26)
   })
 
   it('returns 50 when name + country verified', async () => {

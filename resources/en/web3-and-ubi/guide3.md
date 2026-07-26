@@ -13,10 +13,33 @@ UBI systems use **anti-sybil mechanisms**:
 *   **GoodDollar:** Requires unique **facial verification** every 6 months.
 *   **Learn.tg-UBI:** You need at least **50 points** in your profile score.
 
-**How to get +50 points in profile score?**
-1. **GoodDollar Verification (52 points):** Complete the facial verification 
-   process, then click "Update Score" on your [profile](/en/profile) page.
-2. **Verification with Self (100 points):** Install the [Self](https://self.xyz) app and scan your passport with it. Then, from your profile page on this site, click the **"Verify with Self"** button. This will display a **QR code** (on computers) or directly open the Self app (on smartphones). Scan the QR code with the Self app and authorize sharing your verified **name and country** to receive 100 points.
+**How to increase your profile score?**
+
+Your profile score determines how much CELO UBI you receive daily and unlocks
+scholarships and other benefits. Complete your profile to reach up to 100 points:
+
+| What to verify | Points | How |
+|---------------|:------:|------|
+| Name | 26 | Your name must match your passport name (`passport_name`) |
+| Country | 24 | Your country must match your passport nationality |
+| Email | 9 | Set your email and have a verifier confirm it |
+| WhatsApp or Telegram | 9 | Add your number and have a verifier confirm it |
+| Location (department, city) | 9 | Select your town and have a verifier confirm it |
+| Place of worship | 9 | Declare your church/mosque and have a verifier confirm it |
+| GoodDollar verification | 7 | Complete facial verification on your profile |
+| Interview with verifier | 7 | Schedule and attend a verification interview |
+| **Total** | **100** | |
+
+**💡 Quick start:** Complete GoodDollar facial verification (+7 pts) or verify
+with [Self](https://self.xyz) (+50 pts: name + country). Then schedule an
+interview from your [profile page](/en/profile) to unlock the remaining points.
+
+**🎓 Earn SLEARN while you learn:** Every time you complete a guide and pass
+its crossword, you earn **1 SLEARN token** in addition to any USDT scholarship.
+SLEARN can be saved to pay for premium courses or exchanged for Leones via
+[stable-sl.pdJ.app](https://stable-sl.pdj.app/). The more you learn, the more
+you earn — and the higher your profile score, the more CELO UBI you receive
+daily.
 
 **Approximate daily value:**
 *   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 New Leones). You can save up over several days before converting.
