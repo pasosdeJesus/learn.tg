@@ -111,6 +111,7 @@
     },
     "onlyBuiltDependencies": [
       "@pasosdejesus/m",
+      "@pasosdejesus/m@git+ssh://git@gitlab.com/pasosdejesus/m.git#c1ccbb0402d494296f6def51afeb5db322a8b2c9",
       "@swc/core",
       "blake-hash",
       "bufferutil",
