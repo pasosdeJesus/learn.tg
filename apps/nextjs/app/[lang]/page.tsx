@@ -328,9 +328,9 @@ export default function Page({ params }: PageProps) {
               { label: lang === 'es' ? 'Canjear en stable-sl' : 'Redeem on stable-sl', href: 'https://stable-sl.pdJ.app' },
             ]}
           />
-          {/* TODO: AddSlearnButton uses wagmi (from @pasosdejesus/m/blockchain).
-               Needs migration to window.ethereum in m package. */}
-          {/* <AddSlearnButton lang={lang} /> */}
+          <div className="mt-2">
+            <AddSlearnButton lang={lang} />
+          </div>
         </div>
       </div>
     </section>
