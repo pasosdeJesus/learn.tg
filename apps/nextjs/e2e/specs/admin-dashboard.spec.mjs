@@ -134,8 +134,27 @@ async function main() {
   const body = await page.evaluate(() => document.body.textContent || '')
   if (body.includes('Verification Dashboard') || body.includes('Panel de Verificación')) {
     ok('Admin dashboard loads')
+
+    // ── Flicker check: Loading must NOT reappear after settle ──
+    await new Promise(r => setTimeout(r, 2000))
+    const body2 = await page.evaluate(() => document.body.textContent || '')
+    const hasLoading = body2.includes('Loading...') || body2.includes('Cargando...')
+    if (!hasLoading) {
+      ok('No flickering: Loading did not reappear')
+    } else {
+      fail('FLICKER DETECTED: Loading reappeared after page settled')
+    }
   } else if (body.includes('Access denied') || body.includes('Acceso denegado')) {
     ok('Admin access control works (expected for non-verifier wallet)')
+
+    // Flicker check for access-denied page too
+    await new Promise(r => setTimeout(r, 2000))
+    const body2 = await page.evaluate(() => document.body.textContent || '')
+    if (body2.includes('Access denied') || body2.includes('Acceso denegado')) {
+      ok('Access denied page is stable (no flicker)')
+    } else {
+      fail('Access denied page changed unexpectedly')
+    }
   } else {
     fail('Admin page: unexpected content')
   }

@@ -106,7 +106,14 @@ function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
     setLoading(true)
     fetch('/api/admin/calendar/events')
       .then(r => r.json())
-      .then(d => { setEvents(d.events || []); setLoading(false) })
+      .then(d => {
+        const now = new Date()
+        const upcoming = (d.events || [])
+          .filter((e: CalEvent) => new Date(e.end) >= now)
+          .slice(0, 5)
+        setEvents(upcoming)
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
   }
   useEffect(fetchEvents, [])
@@ -231,13 +238,12 @@ function PendingWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [items, setItems] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<UserItem | null>(null)
-  const fetchItems = () => {
-    setLoading(true)
+  const [refresh, setRefresh] = useState(0)
+  useEffect(() => {
     fetch('/api/admin/users?status=pending')
       .then(r => r.json()).then(d => { setItems(d.users || []); setLoading(false) })
       .catch(() => setLoading(false))
-  }
-  useEffect(fetchItems, [fetchItems])
+  }, [refresh])
 
   return (
     <div className="bg-white rounded-lg border p-4">
@@ -260,7 +266,7 @@ function PendingWidget({ lang, t }: { lang: string; t: TFunc }) {
             </div>
           ))}
         </div>}
-      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); fetchItems() }} />}
+      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); setRefresh(r => r + 1) }} />}
     </div>
   )
 }
@@ -271,13 +277,12 @@ function RecentUsersWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [items, setItems] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<UserItem | null>(null)
-  const fetchItems = () => {
-    setLoading(true)
+  const [refresh, setRefresh] = useState(0)
+  useEffect(() => {
     fetch('/api/admin/users/recent')
       .then(r => r.json()).then(d => { setItems(d.users || []); setLoading(false) })
       .catch(() => setLoading(false))
-  }
-  useEffect(fetchItems, [fetchItems])
+  }, [refresh])
 
   return (
     <div className="bg-white rounded-lg border p-4">
@@ -301,7 +306,7 @@ function RecentUsersWidget({ lang, t }: { lang: string; t: TFunc }) {
             </div>
           ))}
         </div>}
-      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); fetchItems() }} />}
+      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); setRefresh(r => r + 1) }} />}
     </div>
   )
 }
@@ -446,13 +451,12 @@ function RecentChurchesWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [items, setItems] = useState<ChurchItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<ChurchItem | null>(null)
-  const fetchItems = () => {
-    setLoading(true)
+  const [refresh, setRefresh] = useState(0)
+  useEffect(() => {
     fetch('/api/admin/churches/recent')
       .then(r => r.json()).then(d => { setItems(d.churches || []); setLoading(false) })
       .catch(() => setLoading(false))
-  }
-  useEffect(fetchItems, [fetchItems])
+  }, [refresh])
 
   return (
     <div className="bg-white rounded-lg border p-4">
@@ -476,7 +480,7 @@ function RecentChurchesWidget({ lang, t }: { lang: string; t: TFunc }) {
             </div>
           ))}
         </div>}
-      {selected && <ChurchEditModal lang={lang} t={t} church={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); fetchItems() }} />}
+      {selected && <ChurchEditModal lang={lang} t={t} church={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); setRefresh(r => r + 1) }} />}
     </div>
   )
 }
