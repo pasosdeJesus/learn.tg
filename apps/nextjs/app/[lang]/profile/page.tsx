@@ -84,6 +84,7 @@ export default function ProfileForm({ params }: PageProps) {
       (logger as any).floatingConsoleEnabled = true
     }
   }
+  const [showBanner, setShowBanner] = useState(true)
   const [profile, setProfile] = useState<UserProfile>({
     church_relationship: null,
     country: null,
@@ -912,6 +913,10 @@ export default function ProfileForm({ params }: PageProps) {
             </div>
             )}
 
+            {showBanner && profile.religion && profile.religion > 0 && !selectedChurchId && !profile.place_of_worship_location && (
+            <DismissibleBanner religionId={profile.religion} lang={lang} placeOfWorshipLabels={placeOfWorshipLabels} />
+            )}
+
             {profile.religion === 2 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="space-y-2">
@@ -1099,6 +1104,42 @@ export default function ProfileForm({ params }: PageProps) {
             lang={lang}
           />
         </div>
+      </div>
+    </div>
+  )
+}
+
+function DismissibleBanner({ religionId, lang, placeOfWorshipLabels }: {
+  religionId: number
+  lang: string
+  placeOfWorshipLabels: (id: number | null) => { name: string; address: string }
+}) {
+  const labels = placeOfWorshipLabels(religionId)
+  const placeName = labels.name.toLowerCase()
+  const isEs = lang === 'es'
+
+  const texts = isEs ? {
+    title: `Tu ${placeName} aún no está registrada`,
+    description: `Registra tu ${placeName} y ayuda a tu comunidad. Al verificarla obtienes +9 pts en tu puntuación de perfil y acceso a becas completas.`,
+    button: `Registrar ${placeName}`,
+  } : {
+    title: `Your ${placeName} is not registered yet`,
+    description: `Register your ${placeName} and help your community. Verifying it gives you +9 profile score points and access to full scholarships.`,
+    button: `Register ${placeName}`,
+  }
+
+  const [dismissed, setDismissed] = useState(false)
+  if (dismissed) return null
+
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-blue-800 font-medium">🏛️ {texts.title}</p>
+          <p className="text-blue-600 text-sm mt-1">{texts.description}</p>
+        </div>
+        <button onClick={() => setDismissed(true)}
+          className="text-blue-400 hover:text-blue-600 ml-2 shrink-0 text-lg leading-none">&times;</button>
       </div>
     </div>
   )

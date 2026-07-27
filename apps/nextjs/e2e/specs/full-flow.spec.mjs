@@ -136,6 +136,9 @@ async function main() {
   }
   if (!connected) { await browser.close(); process.exit(1) }
 
+  // Let wallet address appear in header after SIWE
+  await new Promise(r => setTimeout(r, 5000))
+
   // Verify token is stored right after SIWE (WalletEventListener fix ensures persistence)
   const lsAfterSiwe = await page.evaluate(() => ({
     token: localStorage.getItem("learn.tg.authToken")?.slice(0, 10),
@@ -388,6 +391,7 @@ async function main() {
   // Step 9: UBI Claim — actually claim
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 9: UBI Claim ──')
+  await ensureSessionAlive(page)
   await ensureSessionAlive(page)
   const ubiPath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide3'
   const ubiOk = await navAndWait(page, `${base}${ubiPath}`, timeout)

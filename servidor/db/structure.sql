@@ -1420,7 +1420,9 @@ CREATE TABLE public.church (
     registration_verified boolean DEFAULT false,
     created_by integer NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    merged_into_id integer,
+    deleted_at timestamp with time zone
 );
 
 
@@ -2936,7 +2938,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL
 );
 
 
@@ -2973,7 +2975,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -3781,6 +3783,7 @@ CREATE TABLE public.msip_departamento (
     svgcdalto integer,
     svgrotx double precision,
     svgroty double precision,
+    timezone character varying(63),
     CONSTRAINT departamento_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion)))
 );
 
@@ -4324,6 +4327,7 @@ CREATE TABLE public.msip_pais (
     svgcdalto integer,
     svgrotx double precision,
     svgroty double precision,
+    indicativo character varying(10),
     CONSTRAINT pais_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion)))
 );
 
@@ -5125,9 +5129,47 @@ CREATE TABLE public.usuario (
     id_photo_verified boolean DEFAULT false,
     verified_email character varying(255),
     place_of_worship_location character varying(200),
+    proposed_date_of_interview date,
+    conducted_date_of_interview timestamp with time zone,
+    verified_church_relationship character varying(20),
+    working_hours jsonb,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
+
+
+--
+-- Name: verification_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.verification_log (
+    id integer NOT NULL,
+    usuario_id integer,
+    action character varying(50) NOT NULL,
+    details jsonb,
+    performed_by integer,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: verification_log_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.verification_log_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: verification_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.verification_log_id_seq OWNED BY public.verification_log.id;
 
 
 --
@@ -5720,6 +5762,13 @@ ALTER TABLE ONLY public.transaction ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.userevent ALTER COLUMN id SET DEFAULT nextval('public.userevent_id_seq'::regclass);
+
+
+--
+-- Name: verification_log id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verification_log ALTER COLUMN id SET DEFAULT nextval('public.verification_log_id_seq'::regclass);
 
 
 --
@@ -6699,6 +6748,14 @@ ALTER TABLE ONLY public.usuario
 
 
 --
+-- Name: verification_log verification_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verification_log
+    ADD CONSTRAINT verification_log_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: cor1440_gen_actividad_id_actividadpf_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7268,6 +7325,14 @@ ALTER TABLE ONLY public.church
 
 ALTER TABLE ONLY public.church
     ADD CONSTRAINT church_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.usuario(id);
+
+
+--
+-- Name: church church_merged_into_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.church
+    ADD CONSTRAINT church_merged_into_id_fkey FOREIGN KEY (merged_into_id) REFERENCES public.church(id);
 
 
 --
@@ -8572,6 +8637,22 @@ ALTER TABLE ONLY public.usuario
 
 ALTER TABLE ONLY public.usuario
     ADD CONSTRAINT usuario_oficina_id_fk FOREIGN KEY (oficina_id) REFERENCES public.msip_oficina(id);
+
+
+--
+-- Name: verification_log verification_log_performed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verification_log
+    ADD CONSTRAINT verification_log_performed_by_fkey FOREIGN KEY (performed_by) REFERENCES public.usuario(id);
+
+
+--
+-- Name: verification_log verification_log_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verification_log
+    ADD CONSTRAINT verification_log_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
 
 
 --
