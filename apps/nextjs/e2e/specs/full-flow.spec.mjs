@@ -156,6 +156,18 @@ async function main() {
   ok('/en loaded')
   await new Promise(r => setTimeout(r, 2000))
 
+  // Check for error toasts (e.g., "Failed to load courses" when Rails is down)
+  const hasErrorToast = await page.evaluate(() => {
+    const toastEls = document.querySelectorAll('[role="status"], [data-slot="toast"], .toast')
+    for (const el of toastEls) {
+      const t = el.textContent || ''
+      if (t.includes('Failed to load') || t.includes('falló') || t.includes('Error')) return t.slice(0, 80)
+    }
+    return null
+  })
+  if (hasErrorToast) fail(`Error toast on /en: "${hasErrorToast}"`)
+  else ok('No error toasts on landing page')
+
   const courseLinks = await page.evaluate(() =>
     [...document.querySelectorAll('a[href]')]
       .filter(a => {

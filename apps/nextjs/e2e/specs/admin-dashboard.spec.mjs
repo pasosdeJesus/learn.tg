@@ -105,6 +105,26 @@ async function main() {
   await navAndWait(page, `${base}/en`, timeout)
   await new Promise(r => setTimeout(r, 3000))
 
+  // Check for error toasts on landing page before connecting
+  const landErr = await page.evaluate(() => {
+    const els = document.querySelectorAll('[role="status"], [data-slot="toast"]')
+    for (const el of els) {
+      const t = el.textContent || ''
+      if (t.includes('Failed to load') || t.includes('falló') || t.includes('Error')) return t.slice(0, 80)
+    }
+    return null
+  })
+  if (landErr) {
+    fail(`Error on /en landing: "${landErr}"`)
+    // Skip remaining tests — landing page is broken
+    await browser.close()
+    const elapsed = ((performance.now() - t0) / 1000).toFixed(1)
+    console.log(`\nLanding error detected: ${landErr}`)
+    console.log(`Tests aborted (landing page broken) | ${elapsed}s`)
+    process.exit(summary.failures > 0 ? 1 : 0)
+  }
+  ok('Landing page clean, no errors')
+
   const hasConnect = await page.evaluate(() =>
     document.body.textContent?.includes('Connect Wallet') ||
     document.body.textContent?.includes('Conectar Billetera')
