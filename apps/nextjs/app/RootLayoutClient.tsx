@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import { AppProvider } from '@/providers/AppProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toaster } from '@pasosdejesus/m/shadcn-components/ui/toaster'
+import { logger, DebugConsole } from '@pasosdejesus/m/debug'
 
 export default function RootLayoutClient({
   children,
@@ -12,6 +13,13 @@ export default function RootLayoutClient({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  
+  // Enable floating debug console for mobile debugging
+  if (typeof window !== 'undefined') {
+    if (process.env.NEXT_PUBLIC_M_DEBUGGER_CONSOLE === '1') {
+      (logger as any).floatingConsoleEnabled = true
+    }
+  }
   
   // Detectar si es diligent-records
   const isDiligentRecords = pathname?.includes('/diligent-records') || false;
@@ -30,6 +38,7 @@ export default function RootLayoutClient({
       )}
     </AppProvider>
     <Toaster />
+    <DebugConsole />
     <style>{`[data-slot=\"toast-viewport\"], ol.fixed.top-0 { max-width: 380px !important; width: auto !important; }`}</style>
     </ErrorBoundary>
   );

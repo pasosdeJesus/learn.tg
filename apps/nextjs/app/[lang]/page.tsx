@@ -5,6 +5,7 @@ import { useSession, getCsrfToken } from 'next-auth/react'
 import { use, useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
+import { logger } from '@pasosdejesus/m/debug'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
@@ -158,6 +159,7 @@ export default function Page({ params }: PageProps) {
         }
       } catch (error) {
         console.error('[courses] failed to fetch from:', url, error)
+        logger.info('[courses] failed: ' + String(error) + ' | url: ' + url, 'Courses')
         toast({ title: 'Failed to load courses. Check console.', variant: 'destructive' })
       }
     }
