@@ -126,6 +126,8 @@ export default function ProfileForm({ params }: PageProps) {
   const [churches, setChurches] = useState<{ id: number; name: string; city_name: string | null }[]>([])
   const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
   const [newChurchName, setNewChurchName] = useState('')
+  const [pastorName, setPastorName] = useState('')
+  const [pastorWhatsApp, setPastorWhatsApp] = useState('')
   const [uploadingPhoto, setUploadingPhoto] = useState<'front' | 'back' | null>(null)
   const [showChurchDialog, setShowChurchDialog] = useState(false)
   const [updatingScores, setUpdatingScores] = useState(false)
@@ -936,33 +938,38 @@ export default function ProfileForm({ params }: PageProps) {
                 <label htmlFor="placeOfWorshipName" className="block text-sm font-medium text-gray-700">
                   {placeOfWorshipLabels(profile.religion).name}
                 </label>
-                {profile.religion === 2 ? (
-                  <Select
-                    value={selectedChurchId?.toString() || ''}
-                    onValueChange={handleSelectChurch}
-                    disabled={!citySearch}
-                  >
-                    <SelectTrigger id="placeOfWorshipName" className="w-full">
-                      <SelectValue placeholder={churches.length === 0 && citySearch ? '...' : t('placeOfWorshipNamePlaceholder')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {churches.map((ch) => (
-                        <SelectItem key={ch.id} value={ch.id.toString()}>
-                          {ch.name}{ch.city_name ? ` — ${ch.city_name}` : ''}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="__new__">{lang === 'es' ? '+ Nueva iglesia' : '+ New church'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <input
-                    id="placeOfWorshipName"
-                    type="text"
-                    value={placeOfWorshipName}
-                    onChange={(e) => setPlaceOfWorshipName(e.target.value)}
-                    placeholder={placeOfWorshipLabels(profile.religion).name}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                <input
+                  id="placeOfWorshipName"
+                  type="text"
+                  value={placeOfWorshipName}
+                  onChange={(e) => setPlaceOfWorshipName(e.target.value)}
+                  placeholder={placeOfWorshipLabels(profile.religion).name}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {profile.religion === 2 && (
+                  <div className="space-y-2 mt-2">
+                    <input
+                      type="text"
+                      value={newChurchName}
+                      onChange={(e) => setNewChurchName(e.target.value)}
+                      placeholder={lang === 'es' ? 'Nombre de la iglesia' : 'Church name'}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={pastorName}
+                      onChange={(e) => setPastorName(e.target.value)}
+                      placeholder={lang === 'es' ? 'Nombre del pastor' : 'Pastor name'}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={pastorWhatsApp}
+                      onChange={(e) => setPastorWhatsApp(e.target.value)}
+                      placeholder={lang === 'es' ? 'WhatsApp del pastor' : 'Pastor WhatsApp'}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                  </div>
                 )}
               </div>
             </div>

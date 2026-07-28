@@ -23,6 +23,11 @@ export function ChurchSelector({ value, countryId, cityId, lang, onChange, allow
     setLoading(true)
     const params = new URLSearchParams({ q: '', country: String(countryId) })
     if (cityId) params.set('cityId', String(cityId))
+    // Auth params from localStorage
+    const addr = typeof window !== 'undefined' ? localStorage.getItem('learn.tg.sessionAddress') || '' : ''
+    const tok = typeof window !== 'undefined' ? localStorage.getItem('learn.tg.authToken') || '' : ''
+    if (addr) params.set('walletAddress', addr)
+    if (tok) params.set('token', tok)
     fetch(`/api/churches/search?${params}`)
       .then(r => r.json())
       .then(d => { setChurches(d.churches || d || []); setLoading(false) })
