@@ -188,6 +188,12 @@ async function main() {
 
   // ── Test 2: Admin API endpoints ──
   console.log('── Test 2: Admin APIs ──')
+  // Get auth token from localStorage
+  const authParams = await page.evaluate(() => {
+    const a = localStorage.getItem('learn.tg.sessionAddress') || ''
+    const t = localStorage.getItem('learn.tg.authToken') || ''
+    return `wallet=${encodeURIComponent(a)}&token=${encodeURIComponent(t)}`
+  })
   const apis = [
     '/api/admin/users', '/api/admin/users/recent',
     '/api/admin/churches', '/api/admin/churches/recent',
@@ -197,7 +203,7 @@ async function main() {
     const res = await page.evaluate(async (url) => {
       const r = await fetch(url)
       return r.status
-    }, `${base}${api}`)
+    }, `${base}${api}?${authParams}`)
     if (res === 200) ok(`API ${api}: ${res}`)
     else fail(`API ${api}: ${res}`)
   }
@@ -207,7 +213,7 @@ async function main() {
   const calRes = await page.evaluate(async (url) => {
     const r = await fetch(url)
     return r.status
-  }, `${base}/api/admin/calendar/events`)
+  }, `${base}/api/admin/calendar/events?${authParams}`)
   if (calRes === 200 || calRes === 500) ok(`Calendar API: ${calRes}`)
   else fail(`Calendar API: ${calRes}`)
 
@@ -216,7 +222,7 @@ async function main() {
   const userDetail = await page.evaluate(async (url) => {
     const r = await fetch(url)
     return { status: r.status, hasError: !!(await r.json()).error }
-  }, `${base}/api/admin/user/101`)
+  }, `${base}/api/admin/user/101?${authParams}`)
   if (userDetail.status === 200 && !userDetail.hasError) ok('User detail: OK')
   else if (userDetail.status === 404) ok('User detail: 404 (expected for dev)')
   else fail(`User detail: ${userDetail.status}`)
@@ -226,7 +232,7 @@ async function main() {
   const churchDetail = await page.evaluate(async (url) => {
     const r = await fetch(url)
     return { status: r.status, hasError: !!(await r.json()).error }
-  }, `${base}/api/admin/church/5`)
+  }, `${base}/api/admin/church/5?${authParams}`)
   if (churchDetail.status === 200 && !churchDetail.hasError) ok('Church detail: OK')
   else if (churchDetail.status === 404) ok('Church detail: 404 (expected for dev)')
   else fail(`Church detail: ${churchDetail.status}`)
@@ -241,7 +247,7 @@ async function main() {
         body: JSON.stringify({ verified_whatsapp: true }),
       })
       return r.status
-    }, `${base}/api/admin/user/101`)
+    }, `${base}/api/admin/user/101?${authParams}`)
     if (patchRes === 200) ok('PATCH user: OK')
     else fail(`PATCH user: ${patchRes}`)
   } else {
