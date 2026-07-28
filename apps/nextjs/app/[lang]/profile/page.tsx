@@ -27,6 +27,8 @@ import { NewChurchDialog } from '@/components/NewChurchDialog'
 import { VerificationScheduler } from '@/components/VerificationScheduler'
 import { IS_PRODUCTION } from '@/lib/config'
 import { logger, DebugConsole } from '@pasosdejesus/m/debug'
+import { CountrySelect, ReligionSelect, ChurchRoleSelect } from '@/components/shared/FormSelects'
+import { TownAutocomplete } from '@/components/shared/TownAutocomplete'
 
 
 
@@ -757,23 +759,8 @@ export default function ProfileForm({ params }: PageProps) {
                   profile.country == profile.passport_nationality
                     ? '✅'
                     : '❌'}{' '}
-                  )
                 </label>
-                <Select
-                  value={profile.country?.toString() || ''}
-                  onValueChange={(value) => handleChange('country', value)}
-                >
-                  <SelectTrigger id="country" className="w-full">
-                    <SelectValue placeholder={t('selectCountry')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.id} value={country.id.toString()}>
-                        {lang === 'en' && country.nombreiso_ingles ? country.nombreiso_ingles : country.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CountrySelect value={profile.country} onChange={(v) => handleChange('country', String(v || ''))} lang={lang} />
               </div>
               <div className="space-y-2">
                 <label
@@ -782,21 +769,7 @@ export default function ProfileForm({ params }: PageProps) {
                 >
                   {t('religion')}
                 </label>
-                <Select
-                  value={profile.religion?.toString() || ''}
-                  onValueChange={(value) => handleChange('religion', value)}
-                >
-                  <SelectTrigger id="religion" className="w-full">
-                    <SelectValue placeholder={t('selectReligion')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {religions.map((religion) => (
-                      <SelectItem key={religion.id} value={religion.id.toString()}>
-                        {lang === 'en' && religion.name_english ? religion.name_english : religion.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ReligionSelect value={profile.religion} onChange={(v) => handleChange('religion', String(v || ''))} lang={lang} />
               </div>
             </div>
 
@@ -926,19 +899,7 @@ export default function ProfileForm({ params }: PageProps) {
                 >
                   {t('churchRelationship')}
                 </label>
-                <Select
-                  value={profile.church_relationship || ''}
-                  onValueChange={(value) => handleChange('church_relationship', value)}
-                >
-                  <SelectTrigger id="churchRelationship" className="w-full">
-                    <SelectValue placeholder={t('selectChurchRelationship')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pastor">{t('churchRelationshipPastor')}</SelectItem>
-                    <SelectItem value="leader">{t('churchRelationshipLeader')}</SelectItem>
-                    <SelectItem value="member">{t('churchRelationshipMember')}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <ChurchRoleSelect value={profile.church_relationship} onChange={(v) => handleChange('church_relationship', v || '')} lang={lang} />
               </div>
             </div>
             )}
@@ -948,31 +909,18 @@ export default function ProfileForm({ params }: PageProps) {
                 <label htmlFor="citySearch" className="block text-sm font-medium text-gray-700">
                   {placeOfWorshipLabels(profile.religion).address}
                 </label>
-
-                                <div className="relative">
-                  <input
-                    id="citySearch"
-                    type="text"
-                    value={citySearch}
-                    onChange={(e) => handleTownSearch(e.target.value)}
-                    onBlur={() => { if (townSuggestions.length === 0 && citySearch && !cityId) handleTownFreeText(citySearch) }}
-                    placeholder={lang === 'es' ? 'Población...' : 'Town...'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  {townSuggestions.length > 0 && (
-                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-auto">
-                      {townSuggestions.map((s) => (
-                        <li
-                          key={s.id}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                          onMouseDown={() => handleSelectTown(s)}
-                        >
-                          {s.town}, {s.municipio}, {s.departamento}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                <TownAutocomplete
+                  value={citySearch}
+                  cityId={cityId}
+                  countryId={profile.country}
+                  lang={lang}
+                  onChange={(newCityId, name, deptId, muniId) => {
+                    setCityId(newCityId)
+                    setCitySearch(name)
+                    if (deptId !== undefined) setDepartmentId(deptId)
+                    if (muniId !== undefined) setMunicipalityId(muniId)
+                  }}
+                />
                 {(cityId || citySearch) && (
                   <p className="text-xs text-green-600 mt-1">
                     ✅ {lang === 'es' ? 'Ubicación registrada' : 'Location registered'}
