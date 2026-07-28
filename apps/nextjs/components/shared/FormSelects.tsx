@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-interface Option { id: number; name: string; name_english?: string }
+interface Option { id: number; nombre?: string; name?: string; nombreiso_ingles?: string; name_english?: string }
 
 export function CountrySelect({ value, onChange, lang }: {
   value: number | string | null
@@ -23,7 +23,7 @@ export function CountrySelect({ value, onChange, lang }: {
       <option value="">—</option>
       {countries.map(c => (
         <option key={c.id} value={c.id}>
-          {lang === 'en' && c.name_english ? c.name_english : c.name}
+          {lang === 'en' && (c.name_english || c.nombreiso_ingles) ? (c.name_english || c.nombreiso_ingles) : (c.name || c.nombre)}
         </option>
       ))}
     </select>
@@ -49,7 +49,7 @@ export function ReligionSelect({ value, onChange, lang }: {
       <option value="">—</option>
       {religions.map(r => (
         <option key={r.id} value={r.id}>
-          {lang === 'en' && r.name_english ? r.name_english : r.name}
+          {lang === 'en' && (r.name_english || r.nombreiso_ingles) ? (r.name_english || r.nombreiso_ingles) : (r.name || r.nombre)}
         </option>
       ))}
     </select>
