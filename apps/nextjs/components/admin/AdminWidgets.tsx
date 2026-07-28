@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Modal, InputField } from './Modal'
 import { CountrySelect, ReligionSelect, ChurchRoleSelect } from '@/components/shared/FormSelects'
 import { TownAutocomplete } from '@/components/shared/TownAutocomplete'
+import { ChurchSelector } from '@/components/shared/ChurchSelector'
 import { adminFetch } from '@/lib/admin-fetch'
 import { CalendarWidget } from './CalendarWidget'
 
@@ -14,7 +15,7 @@ type TFunc = (k: string) => string
 export interface UserItem {
   id: number; nombre?: string; nusuario?: string; billetera?: string
   pais_nombre?: string; pais_id?: number | string; profilescore?: number
-  church_relationship?: string; religion_id?: number | string
+  church_relationship?: string; religion_id?: number | string; church_id?: number | string
   proposed_date_of_interview?: string; conducted_date_of_interview?: string
   created_at?: string; email?: string; whatsapp?: string; telegram?: string
   passport_name?: string; passport_nationality?: number | string
@@ -198,6 +199,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.place_of_worship = user.place_of_worship || ''
     initial.place_of_worship_location = user.place_of_worship_location || ''
     initial.church_relationship = user.church_relationship || ''
+    initial.church_id = user.church_id || ''
     initial.proposed_date_of_interview = user.proposed_date_of_interview ? user.proposed_date_of_interview.slice(0, 16) : ''
     initial.conducted_date_of_interview = user.conducted_date_of_interview ? user.conducted_date_of_interview.slice(0, 16) : ''
     setForm(initial)
@@ -225,7 +227,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     const body: Record<string, any> = {}
     for (const k of ['nombre', 'email', 'whatsapp', 'telegram', 'pais_id', 'religion_id',
       'passport_name', 'passport_nationality',
-      'place_of_worship', 'place_of_worship_location', 'church_relationship',
+      'place_of_worship', 'place_of_worship_location', 'church_id', 'church_relationship',
       'proposed_date_of_interview', 'conducted_date_of_interview']) {
       if (form[k] !== undefined) body[k] = form[k] || null
     }
@@ -311,6 +313,16 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
           <input type="text" value={form.place_of_worship || ''} onChange={e => setF('place_of_worship', e.target.value)}
             className="w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white"
             placeholder={lang === 'es' ? 'Nombre de iglesia/mezquita...' : 'Church/mosque name...'} />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Asignar Iglesia' : 'Assign Church'}</label>
+          <ChurchSelector
+            value={form.church_id ? Number(form.church_id) : null}
+            countryId={form.pais_id ? Number(form.pais_id) : null}
+            cityId={null}
+            lang={lang}
+            onChange={(id, name) => { setF('church_id', String(id || '')); if (name) setF('place_of_worship', name) }}
+          />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <InputField label={lang === 'es' ? 'Entrevista Propuesta' : 'Proposed Interview'} value={form.proposed_date_of_interview || ''} onChange={v => setF('proposed_date_of_interview', v)} type="datetime-local" />
