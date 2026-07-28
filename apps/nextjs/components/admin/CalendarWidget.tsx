@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Modal } from './Modal'
+import { adminFetch } from '@/lib/admin-fetch'
 
 interface CalEvent { uid: string; start: string; end: string; summary?: string }
 
@@ -15,8 +16,7 @@ export function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
 
   const fetchEvents = () => {
     setLoading(true)
-    fetch('/api/admin/calendar/events')
-      .then(r => r.json())
+    adminFetch<{ events?: CalEvent[] }>('/api/admin/calendar/events')
       .then(d => {
         const now = new Date()
         const upcoming = (d.events || [])

@@ -351,3 +351,38 @@ GET /api/gd/contact/:clusterId
 - **Testing:** Hound CI, CodeClimate integration
 - **Code Quality:** Automated linting and security checks
 - **Live Deployment:** Running at https://learn.tg
+
+---
+
+## Admin API Authentication
+
+All endpoints under `/api/admin/*` that expose or modify sensitive data **MUST**
+require authentication. The admin dashboard's client-side wallet check is NOT
+sufficient — API endpoints must independently verify the caller.
+
+### Rules
+
+1. **Every admin endpoint** must read `NEXT_PUBLIC_VERIFIER_WALLET` and reject
+   requests that don't include a valid verifier wallet address.
+2. **The wallet address** must be sent as a query parameter (`?wallet=0x...`) or
+   in the request body.
+3. **Calendar endpoints** (`/api/admin/calendar/*`) are equally sensitive —
+   they expose verifier schedules and must be protected.
+4. **Read-only endpoints** (`GET /api/admin/users`, etc.) are also sensitive
+   (user emails, phone numbers, verification status) and require auth.
+
+### Implementation pattern
+
+```typescript
+const VERIFIER_WALLETS = (process.env.NEXT_PUBLIC_VERIFIER_WALLET || '')
+  .split(',').map(w => w.trim().toLowerCase()).filter(Boolean)
+
+function isVerifier(wallet: string): boolean {
+  return VERIFIER_WALLETS.length > 0 && VERIFIER_WALLETS.includes(wallet.toLowerCase())
+}
+```
+
+### Exceptions
+
+- `GET /api/admin/check-verifier` is intentionally public — it lets the
+  frontend verify if a wallet is a verifier without exposing data.

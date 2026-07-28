@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Modal, InputField } from './Modal'
 import { CountrySelect, ReligionSelect, ChurchRoleSelect } from '@/components/shared/FormSelects'
 import { TownAutocomplete } from '@/components/shared/TownAutocomplete'
+import { adminFetch } from '@/lib/admin-fetch'
 import { CalendarWidget } from './CalendarWidget'
 
 type TFunc = (k: string) => string
@@ -57,7 +58,7 @@ export function PendingWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [selected, setSelected] = useState<UserItem | null>(null)
   const [refresh, setRefresh] = useState(0)
   useEffect(() => {
-    fetch('/api/admin/users?status=pending')
+    adminFetch('/api/admin/users?status=pending')
       .then(r => r.json()).then(d => { setItems(d.users || []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [refresh])
@@ -70,7 +71,7 @@ export function PendingWidget({ lang, t }: { lang: string; t: TFunc }) {
         : <div className="space-y-1 max-h-64 overflow-y-auto">
           {items.map(u => (
             <div key={u.id} className="border-b border-gray-100 pb-2 text-sm cursor-pointer hover:bg-blue-50 rounded px-2 py-1 -mx-2"
-              onClick={() => { fetch(`/api/admin/user/${u.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
+              onClick={() => { adminFetch(`/api/admin/user/${u.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
               <div className="flex justify-between items-start">
                 <span className="font-medium">{u.nombre || u.nusuario || '—'}</span>
                 <span className="text-xs text-blue-600">{t('proposed')}: {fmtDate(u.proposed_date_of_interview, lang)}</span>
@@ -96,7 +97,7 @@ export function RecentUsersWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [selected, setSelected] = useState<UserItem | null>(null)
   const [refresh, setRefresh] = useState(0)
   useEffect(() => {
-    fetch('/api/admin/users/recent')
+    adminFetch('/api/admin/users/recent')
       .then(r => r.json()).then(d => { setItems(d.users || []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [refresh])
@@ -109,7 +110,7 @@ export function RecentUsersWidget({ lang, t }: { lang: string; t: TFunc }) {
         : <div className="space-y-1 max-h-64 overflow-y-auto">
           {items.map(u => (
             <div key={u.id} className="border-b border-gray-100 pb-2 text-sm cursor-pointer hover:bg-blue-50 rounded px-2 py-1 -mx-2"
-              onClick={() => { fetch(`/api/admin/user/${u.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
+              onClick={() => { adminFetch(`/api/admin/user/${u.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
               <div className="flex justify-between items-start">
                 <span className="font-medium">{u.nombre || u.nusuario || '—'}</span>
                 <span className="text-xs text-gray-400">{fmtDate(u.created_at, lang)}</span>
@@ -136,7 +137,7 @@ export function RecentChurchesWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [selected, setSelected] = useState<ChurchItem | null>(null)
   const [refresh, setRefresh] = useState(0)
   useEffect(() => {
-    fetch('/api/admin/churches/recent')
+    adminFetch('/api/admin/churches/recent')
       .then(r => r.json()).then(d => { setItems(d.churches || []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [refresh])
@@ -149,7 +150,7 @@ export function RecentChurchesWidget({ lang, t }: { lang: string; t: TFunc }) {
         : <div className="space-y-1 max-h-64 overflow-y-auto">
           {items.map(ch => (
             <div key={ch.id} className="border-b border-gray-100 pb-2 text-sm cursor-pointer hover:bg-blue-50 rounded px-2 py-1 -mx-2"
-              onClick={() => { fetch(`/api/admin/church/${ch.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
+              onClick={() => { adminFetch(`/api/admin/church/${ch.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
               <div className="flex justify-between items-start">
                 <span className="font-medium">{ch.name || '—'}</span>
                 <span className="text-xs text-gray-400">{fmtDate(ch.created_at, lang)}</span>
@@ -196,8 +197,8 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.place_of_worship = user.place_of_worship || ''
     initial.place_of_worship_location = user.place_of_worship_location || ''
     initial.church_relationship = user.church_relationship || ''
-    initial.proposed_date_of_interview = user.proposed_date_of_interview ? user.proposed_date_of_interview.slice(0, 10) : ''
-    initial.conducted_date_of_interview = user.conducted_date_of_interview ? user.conducted_date_of_interview.slice(0, 10) : ''
+    initial.proposed_date_of_interview = user.proposed_date_of_interview ? user.proposed_date_of_interview.slice(0, 16) : ''
+    initial.conducted_date_of_interview = user.conducted_date_of_interview ? user.conducted_date_of_interview.slice(0, 16) : ''
     setForm(initial)
   }, [user])
 
@@ -236,7 +237,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
         body[f.key] = v || null
       }
     }
-    const res = await fetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const res = await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     setSaving(false)
     if (res.ok) { setMsg(t('saveSuccess')); setTimeout(onSaved, 800) }
     else setMsg('Error')
@@ -337,7 +338,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                 const file = e.target.files?.[0]; if (!file) return
                 const fd = new FormData(); fd.append('photo', file); fd.append('side', 'front')
                 fd.append('walletAddress', user.billetera || ''); fd.append('token', 'admin')
-                await fetch('/api/user/id-photo', { method: 'POST', body: fd })
+                await adminFetch('/api/user/id-photo', { method: 'POST', body: fd })
               }} className="text-xs text-gray-900" />
             </div>
             <div>
@@ -346,7 +347,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                 const file = e.target.files?.[0]; if (!file) return
                 const fd = new FormData(); fd.append('photo', file); fd.append('side', 'back')
                 fd.append('walletAddress', user.billetera || ''); fd.append('token', 'admin')
-                await fetch('/api/user/id-photo', { method: 'POST', body: fd })
+                await adminFetch('/api/user/id-photo', { method: 'POST', body: fd })
               }} className="text-xs text-gray-900" />
             </div>
           </div>
@@ -383,7 +384,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
 
   const handleSave = async () => {
     setSaving(true)
-    const res = await fetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+    const res = await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
     setSaving(false)
     if (res.ok) { setMsg(t('saveSuccess')); setTimeout(onSaved, 800) }
     else setMsg('Error')
@@ -392,7 +393,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
   const handleDelete = async () => {
     if (!confirm(t('deleteConfirm'))) return
     setDeleting(true)
-    const res = await fetch(`/api/admin/church/${church.id}`, { method: 'DELETE' })
+    const res = await adminFetch(`/api/admin/church/${church.id}`, { method: 'DELETE' })
     setDeleting(false)
     if (res.ok) onSaved()
     else setMsg('Error')
@@ -421,7 +422,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
             if (!file) return
             const fd = new FormData()
             fd.append('photo', file)
-            const res = await fetch(`/api/admin/church/${church.id}/registration-photo`, { method: 'POST', body: fd })
+            const res = await adminFetch(`/api/admin/church/${church.id}/registration-photo`, { method: 'POST', body: fd })
             if (res.ok) setMsg(t('saveSuccess'))
             else setMsg('Error uploading document')
           }} className="text-xs" />
