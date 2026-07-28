@@ -18,7 +18,7 @@ export function CountrySelect({ value, onChange, lang }: {
     <select
       value={value?.toString() || ''}
       onChange={e => onChange(e.target.value ? Number(e.target.value) : null)}
-      className="w-full border rounded px-2 py-1 text-sm"
+      className="w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white"
     >
       <option value="">—</option>
       {countries.map(c => (
@@ -44,7 +44,7 @@ export function ReligionSelect({ value, onChange, lang }: {
     <select
       value={value?.toString() || ''}
       onChange={e => onChange(e.target.value ? Number(e.target.value) : null)}
-      className="w-full border rounded px-2 py-1 text-sm"
+      className="w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white"
     >
       <option value="">—</option>
       {religions.map(r => (
@@ -66,7 +66,7 @@ export function ChurchRoleSelect({ value, onChange, lang }: {
     <select
       value={value || ''}
       onChange={e => onChange(e.target.value || null)}
-      className="w-full border rounded px-2 py-1 text-sm"
+      className="w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white"
     >
       <option value="">—</option>
       <option value="pastor">{isEs ? 'Pastor' : 'Pastor'}</option>

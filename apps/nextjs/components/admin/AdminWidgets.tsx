@@ -201,16 +201,18 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     setForm(initial)
   }, [user])
 
-  // Checkbox checked = verified value is a real string (not empty, not "true"/"false")
+  // Checkbox checked = verified value is a non-empty, non-boolean string
   const isChecked = (key: string) => {
     const v = form[key]
-    return typeof v === 'string' && v.length > 0 && v !== 'true' && v !== 'false'
+    if (v == null || v === '') return false
+    const s = String(v)
+    return s.length > 0 && s !== 'true' && s !== 'false'
   }
 
   const toggle = (key: string, source?: string) => setForm(f => {
-    const currentlyChecked = typeof f[key] === 'string' && f[key].length > 0 && f[key] !== 'true' && f[key] !== 'false'
+    const currentlyChecked = isChecked(key)
     if (source) {
-      return { ...f, [key]: currentlyChecked ? '' : ((user as any)[source] || '') }
+      return { ...f, [key]: currentlyChecked ? '' : String((user as any)[source] || '') }
     }
     return { ...f, [key]: currentlyChecked ? '' : 'checked' }
   })
@@ -243,38 +245,70 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   return (
     <Modal title={`${t('editUser')}: ${user.nombre || user.nusuario || user.id}`} onClose={onClose}>
       <div className="space-y-4">
+        {user.profilescore != null && (
+          <p className="text-sm text-gray-600">{t('score')}: <span className="font-bold">{user.profilescore}</span></p>
+        )}
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('profileFields')}</h4>
           <div className="grid grid-cols-2 gap-2">
             <InputField label={t('name')} value={form.nombre} onChange={v => setF('nombre', v)} />
-            <InputField label="Email" value={form.email} onChange={v => setF('email', v)} />
-            <InputField label="WhatsApp" value={form.whatsapp} onChange={v => setF('whatsapp', v)} />
-            <InputField label="Telegram" value={form.telegram} onChange={v => setF('telegram', v)} />
             <div>
               <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'País' : 'Country'}</label>
               <CountrySelect value={form.pais_id || null} onChange={v => setF('pais_id', String(v || ''))} lang={lang} />
             </div>
-            <InputField label={lang === 'es' ? 'Nombre Pasaporte' : 'Passport Name'} value={form.passport_name} onChange={v => setF('passport_name', v)} />
+            <InputField label="Email" value={form.email} onChange={v => setF('email', v)} />
+            <InputField label="WhatsApp" value={form.whatsapp} onChange={v => setF('whatsapp', v)} />
+            <InputField label="Telegram" value={form.telegram} onChange={v => setF('telegram', v)} />
+            <div>
+              <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Nombre Pasaporte' : 'Passport Name'}</label>
+              <div className="flex items-center gap-2">
+                <InputField label="" value={form.passport_name} onChange={v => setF('passport_name', v)} />
+                <label className="flex items-center gap-1 text-xs cursor-pointer shrink-0" title={lang === 'es' ? 'Copiar de Nombre' : 'Copy from Name'}>
+                  <input type="checkbox" checked={form.passport_name === form.nombre && !!form.nombre}
+                    onChange={() => setF('passport_name', form.passport_name === form.nombre ? '' : (form.nombre || ''))} className="rounded" />
+                  <span className="text-gray-400">= {t('name')}</span>
+                </label>
+              </div>
+            </div>
             <div>
               <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Nacionalidad Pasaporte' : 'Passport Nationality'}</label>
-              <CountrySelect value={form.passport_nationality || null} onChange={v => setF('passport_nationality', String(v || ''))} lang={lang} />
-            </div>
-            <InputField label={lang === 'es' ? 'Lugar de Culto' : 'Place of Worship'} value={form.place_of_worship} onChange={v => setF('place_of_worship', v)} />
-            <div>
-              <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Ubicación Culto' : 'Worship Location'}</label>
-              <TownAutocomplete
-                value={form.place_of_worship_location || ''}
-                cityId={null}
-                countryId={form.pais_id ? Number(form.pais_id) : null}
-                lang={lang}
-                onChange={(cityId, cityName) => setF('place_of_worship_location', cityName)}
-              />
+              <div className="flex items-center gap-2">
+                <CountrySelect value={form.passport_nationality || null} onChange={v => setF('passport_nationality', String(v || ''))} lang={lang} />
+                <label className="flex items-center gap-1 text-xs cursor-pointer shrink-0" title={lang === 'es' ? 'Copiar de País' : 'Copy from Country'}>
+                  <input type="checkbox" checked={String(form.passport_nationality || '') === String(form.pais_id || '') && !!form.pais_id}
+                    onChange={() => setF('passport_nationality', String(form.passport_nationality || '') === String(form.pais_id || '') ? '' : String(form.pais_id || ''))} className="rounded" />
+                  <span className="text-gray-400">= {lang === 'es' ? 'País' : 'Country'}</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Ubicación Culto' : 'Worship Location'}</label>
+          <TownAutocomplete
+            value={form.place_of_worship_location || ''}
+            cityId={null}
+            countryId={form.pais_id ? Number(form.pais_id) : null}
+            lang={lang}
+            onChange={(cityId, cityName) => {
+              setF('place_of_worship_location', cityName)
+              // If town changed, clear church and uncheck location verification
+              setF('place_of_worship', '')
+              if (isChecked('verified_place_of_worship')) {
+                setF('verified_place_of_worship', '')
+              }
+            }}
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Lugar de Culto' : 'Place of Worship'}</label>
+          <input type="text" value={form.place_of_worship || ''} onChange={e => setF('place_of_worship', e.target.value)}
+            className="w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white"
+            placeholder={lang === 'es' ? 'Nombre de iglesia/mezquita...' : 'Church/mosque name...'} />
+        </div>
         <div className="grid grid-cols-2 gap-2">
-          <InputField label={lang === 'es' ? 'Entrevista Propuesta' : 'Proposed Interview'} value={form.proposed_date_of_interview || ''} onChange={v => setF('proposed_date_of_interview', v)} type="date" />
-          <InputField label={lang === 'es' ? 'Entrevista Realizada' : 'Conducted Interview'} value={form.conducted_date_of_interview || ''} onChange={v => setF('conducted_date_of_interview', v)} type="date" />
+          <InputField label={lang === 'es' ? 'Entrevista Propuesta' : 'Proposed Interview'} value={form.proposed_date_of_interview || ''} onChange={v => setF('proposed_date_of_interview', v)} type="datetime-local" />
+          <InputField label={lang === 'es' ? 'Entrevista Realizada' : 'Conducted Interview'} value={form.conducted_date_of_interview || ''} onChange={v => setF('conducted_date_of_interview', v)} type="datetime-local" />
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Rol en Iglesia' : 'Church Role'}</label>
@@ -296,7 +330,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
         </div>
         <div className="border-t pt-3">
           <h4 className="text-sm font-semibold text-gray-700 mb-2">{lang === 'es' ? 'Documentos de Identidad' : 'ID Documents'}</h4>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
             <div>
               <label className="block text-xs text-gray-500 mb-1">{lang === 'es' ? 'Foto Frontal' : 'Front Photo'}</label>
               <input type="file" accept="image/*" onChange={async (e) => {
@@ -304,7 +338,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                 const fd = new FormData(); fd.append('photo', file); fd.append('side', 'front')
                 fd.append('walletAddress', user.billetera || ''); fd.append('token', 'admin')
                 await fetch('/api/user/id-photo', { method: 'POST', body: fd })
-              }} className="text-xs" />
+              }} className="text-xs text-gray-900" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">{lang === 'es' ? 'Foto Reverso' : 'Back Photo'}</label>
@@ -313,7 +347,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                 const fd = new FormData(); fd.append('photo', file); fd.append('side', 'back')
                 fd.append('walletAddress', user.billetera || ''); fd.append('token', 'admin')
                 await fetch('/api/user/id-photo', { method: 'POST', body: fd })
-              }} className="text-xs" />
+              }} className="text-xs text-gray-900" />
             </div>
           </div>
         </div>

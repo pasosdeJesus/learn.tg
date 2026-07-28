@@ -144,7 +144,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
 
   return (
     <>
-      <Button onClick={handleClaimClick} disabled={claimState === 'loading' || !session} size="lg">
+      <Button onClick={handleClaimClick} disabled={claimState === 'loading' || !sessionAddress} size="lg">
         {claimState === 'loading' ? t('claiming') : t('claimButton')}
       </Button>
 
