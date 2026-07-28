@@ -59,7 +59,7 @@ export function PendingWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [refresh, setRefresh] = useState(0)
   useEffect(() => {
     adminFetch('/api/admin/users?status=pending')
-      .then(r => r.json()).then(d => { setItems(d.users || []); setLoading(false) })
+      .then(d => { setItems(d.users || []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [refresh])
 
@@ -71,7 +71,7 @@ export function PendingWidget({ lang, t }: { lang: string; t: TFunc }) {
         : <div className="space-y-1 max-h-64 overflow-y-auto">
           {items.map(u => (
             <div key={u.id} className="border-b border-gray-100 pb-2 text-sm cursor-pointer hover:bg-blue-50 rounded px-2 py-1 -mx-2"
-              onClick={() => { adminFetch(`/api/admin/user/${u.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
+              onClick={() => { adminFetch(`/api/admin/user/${u.id}`).then(setSelected).catch(() => {}) }}>
               <div className="flex justify-between items-start">
                 <span className="font-medium">{u.nombre || u.nusuario || '—'}</span>
                 <span className="text-xs text-blue-600">{t('proposed')}: {fmtDate(u.proposed_date_of_interview, lang)}</span>
@@ -98,7 +98,7 @@ export function RecentUsersWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [refresh, setRefresh] = useState(0)
   useEffect(() => {
     adminFetch('/api/admin/users/recent')
-      .then(r => r.json()).then(d => { setItems(d.users || []); setLoading(false) })
+      .then(d => { setItems(d.users || []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [refresh])
 
@@ -110,7 +110,7 @@ export function RecentUsersWidget({ lang, t }: { lang: string; t: TFunc }) {
         : <div className="space-y-1 max-h-64 overflow-y-auto">
           {items.map(u => (
             <div key={u.id} className="border-b border-gray-100 pb-2 text-sm cursor-pointer hover:bg-blue-50 rounded px-2 py-1 -mx-2"
-              onClick={() => { adminFetch(`/api/admin/user/${u.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
+              onClick={() => { adminFetch(`/api/admin/user/${u.id}`).then(setSelected).catch(() => {}) }}>
               <div className="flex justify-between items-start">
                 <span className="font-medium">{u.nombre || u.nusuario || '—'}</span>
                 <span className="text-xs text-gray-400">{fmtDate(u.created_at, lang)}</span>
@@ -138,7 +138,7 @@ export function RecentChurchesWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [refresh, setRefresh] = useState(0)
   useEffect(() => {
     adminFetch('/api/admin/churches/recent')
-      .then(r => r.json()).then(d => { setItems(d.churches || []); setLoading(false) })
+      .then(d => { setItems(d.churches || []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [refresh])
 
@@ -150,7 +150,7 @@ export function RecentChurchesWidget({ lang, t }: { lang: string; t: TFunc }) {
         : <div className="space-y-1 max-h-64 overflow-y-auto">
           {items.map(ch => (
             <div key={ch.id} className="border-b border-gray-100 pb-2 text-sm cursor-pointer hover:bg-blue-50 rounded px-2 py-1 -mx-2"
-              onClick={() => { adminFetch(`/api/admin/church/${ch.id}`).then(r => r.json()).then(setSelected).catch(() => {}) }}>
+              onClick={() => { adminFetch(`/api/admin/church/${ch.id}`).then(setSelected).catch(() => {}) }}>
               <div className="flex justify-between items-start">
                 <span className="font-medium">{ch.name || '—'}</span>
                 <span className="text-xs text-gray-400">{fmtDate(ch.created_at, lang)}</span>
