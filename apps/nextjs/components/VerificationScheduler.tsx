@@ -346,7 +346,8 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
               {dayHeaders.map(d => <div key={d}>{d}</div>)}
             </div>
 
-            {/* Calendar grid */}
+            {/* Calendar grid — hide on mobile when date selected */}
+            <div className={selectedDate ? 'hidden sm:block' : ''}>
             {isLoading ? (
               <div className="grid grid-cols-7 gap-1">
                 {Array.from({ length: 35 }).map((_, i) => (
@@ -384,6 +385,15 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
                 )
               })}
             </div>
+            )}
+            </div>
+
+            {/* Selected date header on mobile */}
+            {selectedDate && (
+              <div className="sm:hidden flex items-center gap-2 text-sm">
+                <button onClick={() => setSelectedDate(null)} className="text-blue-600">&larr; {lang === 'es' ? 'cambiar' : 'change'}</button>
+                <span className="font-medium">{formatLocal(selectedDate, lang, tz)}</span>
+              </div>
             )}
 
             {/* Time slots for selected date */}

@@ -294,6 +294,29 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             ))}
           </div>
         </div>
+        <div className="border-t pt-3">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">{lang === 'es' ? 'Documentos de Identidad' : 'ID Documents'}</h4>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">{lang === 'es' ? 'Foto Frontal' : 'Front Photo'}</label>
+              <input type="file" accept="image/*" onChange={async (e) => {
+                const file = e.target.files?.[0]; if (!file) return
+                const fd = new FormData(); fd.append('photo', file); fd.append('side', 'front')
+                fd.append('walletAddress', user.billetera || ''); fd.append('token', 'admin')
+                await fetch('/api/user/id-photo', { method: 'POST', body: fd })
+              }} className="text-xs" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">{lang === 'es' ? 'Foto Reverso' : 'Back Photo'}</label>
+              <input type="file" accept="image/*" onChange={async (e) => {
+                const file = e.target.files?.[0]; if (!file) return
+                const fd = new FormData(); fd.append('photo', file); fd.append('side', 'back')
+                fd.append('walletAddress', user.billetera || ''); fd.append('token', 'admin')
+                await fetch('/api/user/id-photo', { method: 'POST', body: fd })
+              }} className="text-xs" />
+            </div>
+          </div>
+        </div>
         {msg && <p className={`text-sm text-center ${msg === t('saveSuccess') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">{t('cancel')}</button>
@@ -357,6 +380,18 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
           <input type="checkbox" checked={!!form.registration_verified} onChange={e => setF('registration_verified', e.target.checked)} className="rounded" />
           <span>{lang === 'es' ? 'Registro Verificado' : 'Registration Verified'}</span>
         </label>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">{lang === 'es' ? 'Documento de Registro' : 'Registration Document'}</label>
+          <input type="file" accept="image/*,.pdf" onChange={async (e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+            const fd = new FormData()
+            fd.append('photo', file)
+            const res = await fetch(`/api/admin/church/${church.id}/registration-photo`, { method: 'POST', body: fd })
+            if (res.ok) setMsg(t('saveSuccess'))
+            else setMsg('Error uploading document')
+          }} className="text-xs" />
+        </div>
         {msg && <p className={`text-sm text-center ${msg === t('saveSuccess') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
         <div className="flex justify-between">
           <button onClick={handleDelete} disabled={deleting} className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 disabled:opacity-50">

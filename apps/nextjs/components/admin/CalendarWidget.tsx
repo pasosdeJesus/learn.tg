@@ -11,6 +11,7 @@ export function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [events, setEvents] = useState<CalEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [showBlock, setShowBlock] = useState(false)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   const fetchEvents = () => {
     setLoading(true)
@@ -20,13 +21,20 @@ export function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
         const now = new Date()
         const upcoming = (d.events || [])
           .filter((e: CalEvent) => new Date(e.end) >= now)
-          .slice(0, 5)
+          .slice(0, 10)
         setEvents(upcoming)
         setLoading(false)
       })
       .catch(() => setLoading(false))
   }
   useEffect(fetchEvents, [])
+
+  const handleDelete = async (uid: string) => {
+    setDeleting(uid)
+    await fetch(`/api/admin/calendar/block?uid=${encodeURIComponent(uid)}`, { method: 'DELETE' })
+    setDeleting(null)
+    fetchEvents()
+  }
 
   const formatDate = (d: string) => {
     const dt = new Date(d)
@@ -50,14 +58,22 @@ export function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
 
       {loading ? <p className="text-gray-500 text-sm">{t('loading')}</p>
         : events.length === 0 ? <p className="text-gray-500 text-sm">{t('noEvents')}</p>
-        : <div className="space-y-1 max-h-64 overflow-y-auto">
+        : <div className="space-y-1 max-h-80 overflow-y-auto">
           {events.map((e, i) => (
-            <div key={e.uid || i} className="flex items-center gap-3 text-sm py-1 border-b border-gray-100 last:border-0">
+            <div key={e.uid || i} className="flex items-center gap-2 text-sm py-1 border-b border-gray-100 last:border-0 group">
               <span className="text-xs text-gray-500 w-20 shrink-0">{formatDate(e.start)}</span>
               <span className="text-xs font-medium w-16 shrink-0">{formatTime(e.start)}</span>
-              <span className={e.summary?.toLowerCase().includes('block') ? 'text-red-600' : 'text-green-700'}>
+              <span className={`flex-1 text-xs ${e.summary?.toLowerCase().includes('block') ? 'text-red-600' : 'text-green-700'}`}>
                 {e.summary || t('blocked')}
               </span>
+              <button
+                onClick={() => handleDelete(e.uid)}
+                disabled={deleting === e.uid}
+                className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs px-1"
+                title={lang === 'es' ? 'Eliminar' : 'Delete'}
+              >
+                {deleting === e.uid ? '...' : '✕'}
+              </button>
             </div>
           ))}
         </div>}
