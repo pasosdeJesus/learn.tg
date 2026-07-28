@@ -14,7 +14,7 @@ type TFunc = (k: string) => string
 export interface UserItem {
   id: number; nombre?: string; nusuario?: string; billetera?: string
   pais_nombre?: string; pais_id?: number | string; profilescore?: number
-  church_relationship?: string
+  church_relationship?: string; religion_id?: number | string
   proposed_date_of_interview?: string; conducted_date_of_interview?: string
   created_at?: string; email?: string; whatsapp?: string; telegram?: string
   passport_name?: string; passport_nationality?: number | string
@@ -192,6 +192,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.whatsapp = user.whatsapp || ''
     initial.telegram = user.telegram || ''
     initial.pais_id = user.pais_id || ''
+    initial.religion_id = user.religion_id || ''
     initial.passport_name = user.passport_name || ''
     initial.passport_nationality = user.passport_nationality || ''
     initial.place_of_worship = user.place_of_worship || ''
@@ -222,7 +223,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   const handleSave = async () => {
     setSaving(true)
     const body: Record<string, any> = {}
-    for (const k of ['nombre', 'email', 'whatsapp', 'telegram', 'pais_id',
+    for (const k of ['nombre', 'email', 'whatsapp', 'telegram', 'pais_id', 'religion_id',
       'passport_name', 'passport_nationality',
       'place_of_worship', 'place_of_worship_location', 'church_relationship',
       'proposed_date_of_interview', 'conducted_date_of_interview']) {
@@ -240,7 +241,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     const res = await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     setSaving(false)
     if (res.ok) { setMsg(t('saveSuccess')); setTimeout(onSaved, 800) }
-    else setMsg('Error')
+    else { const err = await res.json().catch(() => ({})); setMsg(err.error || 'Error') }
   }
 
   return (
@@ -256,6 +257,10 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             <div>
               <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'País' : 'Country'}</label>
               <CountrySelect value={form.pais_id || null} onChange={v => setF('pais_id', String(v || ''))} lang={lang} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Religión' : 'Religion'}</label>
+              <ReligionSelect value={form.religion_id ? Number(form.religion_id) : null} onChange={v => setF('religion_id', String(v || ''))} lang={lang} />
             </div>
             <InputField label="Email" value={form.email} onChange={v => setF('email', v)} />
             <InputField label="WhatsApp" value={form.whatsapp} onChange={v => setF('whatsapp', v)} />
@@ -387,7 +392,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
     const res = await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
     setSaving(false)
     if (res.ok) { setMsg(t('saveSuccess')); setTimeout(onSaved, 800) }
-    else setMsg('Error')
+    else { const err = await res.json().catch(() => ({})); setMsg(err.error || 'Error') }
   }
 
   const handleDelete = async () => {
@@ -396,7 +401,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
     const res = await adminFetch(`/api/admin/church/${church.id}`, { method: 'DELETE' })
     setDeleting(false)
     if (res.ok) onSaved()
-    else setMsg('Error')
+    else { const err = await res.json().catch(() => ({})); setMsg(err.error || 'Error') }
   }
 
   return (
