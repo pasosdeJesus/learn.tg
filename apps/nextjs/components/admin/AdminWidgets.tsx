@@ -21,6 +21,7 @@ export interface UserItem {
   created_at?: string; email?: string; whatsapp?: string; telegram?: string
   passport_name?: string; passport_nationality?: number | string
   city_id?: number; place_of_worship?: string; place_of_worship_location?: string
+  pastor_name?: string; pastor_whatsapp?: string
   verified_whatsapp?: string; verified_telegram?: string; verified_email?: string
   verified_city_id?: number | string; verified_place_of_worship?: string
   verified_church_relationship?: string
@@ -176,6 +177,8 @@ export function RecentChurchesWidget({ lang, t }: { lang: string; t: TFunc }) {
 export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: string; t: TFunc; user: UserItem; onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState<Record<string, any>>({})
   const [saving, setSaving] = useState(false)
+  const [creatingChurch, setCreatingChurch] = useState(false)
+  const [churchRefresh, setChurchRefresh] = useState(0)
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
@@ -199,6 +202,8 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.passport_nationality = user.passport_nationality || ''
     initial.place_of_worship = user.place_of_worship || ''
     initial.place_of_worship_location = user.place_of_worship_location || ''
+    initial.pastor_name = user.pastor_name || ''
+    initial.pastor_whatsapp = user.pastor_whatsapp || ''
     initial.church_relationship = user.church_relationship || ''
     initial.church_id = user.church_id || ''
     initial.proposed_date_of_interview = user.proposed_date_of_interview ? user.proposed_date_of_interview.slice(0, 16) : ''
@@ -320,9 +325,68 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             countryId={form.pais_id ? Number(form.pais_id) : null}
             cityId={null}
             lang={lang}
+            refreshKey={churchRefresh}
             onChange={(id, name) => { setF('church_id', String(id || '')); if (name) setF('place_of_worship', name) }}
           />
         </div>
+        {(() => {
+          const hasPastorInfo = (form.pastor_name || form.pastor_whatsapp) && !form.church_id
+          const hasChurchName = form.place_of_worship
+          const countryId = form.pais_id ? Number(form.pais_id) : null
+          if (!hasPastorInfo || !hasChurchName || !countryId) return null
+          return (
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+              <p className="text-xs text-gray-700 mb-2">
+                {lang === 'es'
+                  ? 'El usuario suministró esta información de iglesia. ¿Crearla?'
+                  : 'User supplied this church info. Create it?'}
+              </p>
+              <div className="text-xs text-gray-600 space-y-0.5 mb-2">
+                <p><strong>{lang === 'es' ? 'Iglesia' : 'Church'}:</strong> {form.place_of_worship}</p>
+                {form.pastor_name && <p><strong>{t('pastor')}:</strong> {form.pastor_name}</p>}
+                {form.pastor_whatsapp && <p><strong>WhatsApp:</strong> {form.pastor_whatsapp}</p>}
+              </div>
+              <button
+                type="button"
+                disabled={creatingChurch}
+                onClick={async () => {
+                  setCreatingChurch(true)
+                  try {
+                    const res = await adminFetch('/api/admin/churches', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        name: form.place_of_worship,
+                        pastor_name: form.pastor_name,
+                        pastor_whatsapp: form.pastor_whatsapp,
+                        country_id: countryId,
+                      }),
+                    })
+                    if (res.ok) {
+                      const data = await res.json()
+                      const church = data.church
+                      setF('church_id', String(church.id))
+                      setF('place_of_worship', church.name)
+                      setChurchRefresh(r => r + 1)
+                      setMsg(lang === 'es' ? 'Iglesia creada y asignada' : 'Church created & assigned')
+                    } else {
+                      const err = await res.json().catch(() => ({}))
+                      setMsg(err.error || 'Error')
+                    }
+                  } catch {
+                    setMsg('Error')
+                  }
+                  setCreatingChurch(false)
+                }}
+                className="px-3 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              >
+                {creatingChurch
+                  ? (lang === 'es' ? 'Creando...' : 'Creating...')
+                  : (lang === 'es' ? 'Crear Iglesia' : 'Create Church')}
+              </button>
+            </div>
+          )
+        })()}
         <div className="grid grid-cols-2 gap-2">
           <InputField label={lang === 'es' ? 'Entrevista Propuesta' : 'Proposed Interview'} value={form.proposed_date_of_interview || ''} onChange={v => setF('proposed_date_of_interview', v)} type="datetime-local" />
           <InputField label={lang === 'es' ? 'Entrevista Realizada' : 'Conducted Interview'} value={form.conducted_date_of_interview || ''} onChange={v => setF('conducted_date_of_interview', v)} type="datetime-local" />

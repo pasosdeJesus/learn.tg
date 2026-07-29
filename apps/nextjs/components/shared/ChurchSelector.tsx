@@ -14,7 +14,7 @@ interface ChurchSelectorProps {
   onNewChurch?: () => void
 }
 
-export function ChurchSelector({ value, countryId, cityId, lang, onChange, allowNew, onNewChurch }: ChurchSelectorProps) {
+export function ChurchSelector({ value, countryId, cityId, lang, onChange, allowNew, onNewChurch, refreshKey }: ChurchSelectorProps) {
   const [churches, setChurches] = useState<Church[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -32,7 +32,7 @@ export function ChurchSelector({ value, countryId, cityId, lang, onChange, allow
       .then(r => r.json())
       .then(d => { setChurches(d.churches || d || []); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [countryId, cityId])
+  }, [countryId, cityId, refreshKey])
 
   const handleChange = (val: string) => {
     if (val === '__new__') { onNewChurch?.(); return }
