@@ -4,13 +4,14 @@ Your **Web3 wallet** is your personal gateway to the blockchain. It's like a
 digital passport and bank account in one, allowing you to securely receive, 
 store, and manage your digital UBI and your identification.
 
-For this course, we recommend the **OneKey Wallet** or MetaMask. 
-They are user-friendly, support the Celo network (which powers our UBI projects),
-and they have helpful built-in tools for beginners.
+For this course, we recommend **MetaMask**. 
+It is user-friendly, supports the Celo network (which powers our UBI projects),
+and has helpful built-in tools for beginners.
 
-Install OneKey:
-<a href="https://play.google.com/store/apps/details?id=so.onekey.app.wallet&pli=1" target="_blank">Google Play</a> ·
-<a href="https://apps.apple.com/app/onekey-open-source-wallet/id1609559473" target="_blank">App Store</a>
+Install MetaMask:
+<a href="https://play.google.com/store/apps/details?id=io.metamask" target="_blank">Google Play</a> ·
+<a href="https://apps.apple.com/app/metamask-blockchain-wallet/id1438144202" target="_blank">App Store</a>
+· <a href="https://metamask.io/download/" target="_blank">Browser Extension</a>
 
 Your wallet’s security depends entirely on one thing: your 
 **Secret Recovery Phrase**. As the master key to your digital assets, whoever 
@@ -18,16 +19,16 @@ possesses it has full control.
 
 ---
 
-### **Step-by-Step: Installing the OneKey Wallet**
+### **Step-by-Step: Installing the MetaMask Wallet**
 
 #### **Step 1: Install the Wallet**
-*  On your smartphone install the OneKey wallet (its icon is black and green) 
-   or the OneKey application (its icon is white and black). If you install the OneKey
+*  On your smartphone install the MetaMask wallet (its icon is black and green) 
+   or the MetaMask application (its icon is white and black). If you install the MetaMask
    application, choose "Web3" at the top to switch from the Exchange to the
    web3 wallet.
 
 #### **Step 2: Create a New Wallet**
-*   Open the OneKey Wallet and tap **"Create Wallet"**.
+*   Open the MetaMask Wallet and tap **"Create Wallet"**.
 *   You will be prompted to set a strong password or biometric method
     for daily access to this device.
 
@@ -42,7 +43,7 @@ possesses it has full control.
 
 The procedure is presented in this video:
 
-[![Video showing how to create a web3 wallet with OneKey](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
+[![Video showing how to create a web3 wallet with MetaMask](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
 
 
 #### **Step 4: Access Your Wallet**
@@ -56,7 +57,7 @@ The procedure is presented in this video:
 ### **Connecting to the Celo Network**
 To interact with GoodDollar and learn.tg, your wallet needs to be connected to the Celo network.
 
-1.  In your OneKey Wallet, look for the network selector (often at the top right).
+1.  In your MetaMask Wallet, look for the network selector (often at the top right).
 2.  Search for and select CELO
 3.  Close the selector
 
@@ -67,7 +68,7 @@ To interact with GoodDollar and learn.tg, your wallet needs to be connected to t
 Now that your wallet is set up, to continue this course and claim UBI or
 crossword rewards you must use your wallet's built-in browser:
 
-1.  Open your **OneKey wallet** on your smartphone.
+1.  Open your **MetaMask wallet** on your smartphone.
 2.  Use the wallet's browser (look for "Discover" or "Browser" in the menu).
 3.  Go to **[learn.tg](https://learn.tg)** and connect your wallet.
 4.  Sign the message when prompted — this verifies you own the wallet.
