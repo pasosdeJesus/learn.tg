@@ -342,6 +342,8 @@ export default function ProfileForm({ params }: PageProps) {
           setCitySearch(rUser.city_name || rUser.place_of_worship_location)
         }
         if (rUser.place_of_worship && !rUser.church_id) setPlaceOfWorshipName(rUser.place_of_worship)
+        if (rUser.pastor_name) setPastorName(rUser.pastor_name)
+        if (rUser.pastor_whatsapp) setPastorWhatsApp(rUser.pastor_whatsapp)
 
         // Fetch saved church name from profile API response
         if (rUser.church_id && rUser.church_name) {
@@ -411,6 +413,8 @@ export default function ProfileForm({ params }: PageProps) {
         department_id: departmentId,
         municipality_id: municipalityId,
         city_id: cityId,
+        pastor_name: pastorName || null,
+        pastor_whatsapp: pastorWhatsApp || null,
       }
       const url = `/api/profile?walletAddress=${session!.address}&token=${csrfToken}`
       logger.info(`Patching ${url}`, 'Profile')
@@ -835,9 +839,12 @@ export default function ProfileForm({ params }: PageProps) {
                 {profile.id_photo_front ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
-                    <a href={`/api/user/id-photo/${profile.userId}?side=front`} target="_blank" className="text-xs text-blue-600 hover:underline">
+                    <button type="button" onClick={() => {
+                      const csrf = localStorage.getItem('learn.tg.authToken') || ''
+                      window.open(`/api/user/id-photo/${profile.userId}?side=front&walletAddress=${session?.address}&token=${csrf}`, '_blank')
+                    }} className="text-xs text-blue-600 hover:underline">
                       {lang === 'es' ? 'Ver' : 'View'}
-                    </a>
+                    </button>
                     <button type="button" onClick={() => handlePhotoDelete('front')} className="text-xs text-red-600 hover:underline">
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
                     </button>
@@ -861,9 +868,12 @@ export default function ProfileForm({ params }: PageProps) {
                 {profile.id_photo_back ? (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subida' : 'Uploaded'}</span>
-                    <a href={`/api/user/id-photo/${profile.userId}?side=back`} target="_blank" className="text-xs text-blue-600 hover:underline">
+                    <button type="button" onClick={() => {
+                      const csrf = localStorage.getItem('learn.tg.authToken') || ''
+                      window.open(`/api/user/id-photo/${profile.userId}?side=back&walletAddress=${session?.address}&token=${csrf}`, '_blank')
+                    }} className="text-xs text-blue-600 hover:underline">
                       {lang === 'es' ? 'Ver' : 'View'}
-                    </a>
+                    </button>
                     <button type="button" onClick={() => handlePhotoDelete('back')} className="text-xs text-red-600 hover:underline">
                       {lang === 'es' ? 'Eliminar' : 'Delete'}
                     </button>
