@@ -1390,6 +1390,8 @@ export interface Usuario {
   passport_name: string | null;
   passport_nationality: number | null;
   password: Generated<string>;
+  pastor_name: string | null;
+  pastor_whatsapp: string | null;
   place_of_worship: string | null;
   place_of_worship_location: string | null;
   profilescore: number | null;

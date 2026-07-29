@@ -5135,6 +5135,8 @@ CREATE TABLE public.usuario (
     conducted_date_of_interview timestamp with time zone,
     verified_church_relationship character varying(20),
     working_hours jsonb,
+    pastor_name character varying(100),
+    pastor_whatsapp character varying(20),
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
