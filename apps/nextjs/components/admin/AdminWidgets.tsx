@@ -292,7 +292,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
           </div>
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Ubicación Culto' : 'Worship Location'}</label>
+          <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Ciudad del Lugar de Culto' : 'City of Place of Worship'}</label>
           <TownAutocomplete
             value={form.place_of_worship_location || ''}
             cityId={null}
@@ -300,11 +300,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             lang={lang}
             onChange={(cityId, cityName) => {
               setF('place_of_worship_location', cityName)
-              // If town changed, clear church and uncheck location verification
-              setF('place_of_worship', '')
-              if (isChecked('verified_place_of_worship')) {
-                setF('verified_place_of_worship', '')
-              }
+              if (isChecked('verified_place_of_worship')) setF('verified_place_of_worship', '')
             }}
           />
         </div>

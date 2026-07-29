@@ -343,16 +343,9 @@ export default function ProfileForm({ params }: PageProps) {
         }
         if (rUser.place_of_worship && !rUser.church_id) setPlaceOfWorshipName(rUser.place_of_worship)
 
-        // Fetch saved church by ID so it appears in the selector
-        if (rUser.church_id) {
-          try {
-            const churchRes = await fetch(`/api/church/${rUser.church_id}`)
-            if (churchRes.ok) {
-              const churchData = await churchRes.json()
-              setSelectedChurchName(churchData.name || '')
-              setChurches([{ id: churchData.id, name: churchData.name, city_name: churchData.city_name }])
-            }
-          } catch {}
+        // Fetch saved church name from profile API response
+        if (rUser.church_id && rUser.church_name) {
+          setSelectedChurchName(rUser.church_name)
         }
       } catch (error) {
         logger.error('Profile fetch error details: ' + JSON.stringify({
