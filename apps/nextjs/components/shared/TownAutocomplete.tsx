@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 
-interface TownSuggestion { id: number; town: string; municipio: string; departamento: string }
+interface TownSuggestion { id: number; town: string; municipio_id: number; municipio: string; departamento_id: number; departamento: string }
 
 interface TownAutocompleteProps {
   value: string        // display text (city/town name)
@@ -42,7 +42,7 @@ export function TownAutocomplete({ value, cityId, countryId, lang, onChange }: T
   const handleSelect = (s: TownSuggestion) => {
     setSearch(`${s.town}, ${s.municipio}, ${s.departamento}`)
     setSuggestions([])
-    onChange(s.id, s.town, s.departamento as any, s.municipio as any)
+    onChange(s.id, s.town, s.departamento_id, s.municipio_id)
   }
 
   const handleBlur = () => {
