@@ -125,6 +125,7 @@ export default function ProfileForm({ params }: PageProps) {
   const [townSearchTimer, setTownSearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [churches, setChurches] = useState<{ id: number; name: string; city_name: string | null }[]>([])
   const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
+  const [selectedChurchName, setSelectedChurchName] = useState('')
   const [newChurchName, setNewChurchName] = useState('')
   const [pastorName, setPastorName] = useState('')
   const [pastorWhatsApp, setPastorWhatsApp] = useState('')
@@ -348,6 +349,7 @@ export default function ProfileForm({ params }: PageProps) {
             const churchRes = await fetch(`/api/church/${rUser.church_id}`)
             if (churchRes.ok) {
               const churchData = await churchRes.json()
+              setSelectedChurchName(churchData.name || '')
               setChurches([{ id: churchData.id, name: churchData.name, city_name: churchData.city_name }])
             }
           } catch {}
@@ -928,47 +930,59 @@ export default function ProfileForm({ params }: PageProps) {
                     ✅ {lang === 'es' ? 'Ubicación registrada' : 'Location registered'}
                   </p>
                 )}
-                {(departmentName || municipalityName || cityDisplayName || citySearch) && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {[cityDisplayName || citySearch, municipalityName, departmentName].filter(Boolean).join(', ')}
-                  </p>
-                )}
               </div>
               <div className="space-y-2">
-                <label htmlFor="placeOfWorshipName" className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700">
                   {placeOfWorshipLabels(profile.religion).name}
                 </label>
-                <input
-                  id="placeOfWorshipName"
-                  type="text"
-                  value={placeOfWorshipName}
-                  onChange={(e) => setPlaceOfWorshipName(e.target.value)}
-                  placeholder={placeOfWorshipLabels(profile.religion).name}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                {profile.religion === 2 && (
-                  <div className="space-y-2 mt-2">
+                {/* Conditional: assigned church vs free text */}
+                {selectedChurchId ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-800 px-3 py-2 bg-gray-50 rounded border">
+                      {selectedChurchName || (lang === 'es' ? 'Iglesia asignada' : 'Assigned church')}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedChurchId(null); setSelectedChurchName(''); setPlaceOfWorshipName('') }}
+                      className="text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      {lang === 'es' ? 'Cambiar de iglesia' : 'Change church'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
                     <input
                       type="text"
-                      value={newChurchName}
-                      onChange={(e) => setNewChurchName(e.target.value)}
-                      placeholder={lang === 'es' ? 'Nombre de la iglesia' : 'Church name'}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      value={placeOfWorshipName}
+                      onChange={(e) => setPlaceOfWorshipName(e.target.value)}
+                      placeholder={placeOfWorshipLabels(profile.religion).name}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
-                    <input
-                      type="text"
-                      value={pastorName}
-                      onChange={(e) => setPastorName(e.target.value)}
-                      placeholder={lang === 'es' ? 'Nombre del pastor' : 'Pastor name'}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                    <input
-                      type="text"
-                      value={pastorWhatsApp}
-                      onChange={(e) => setPastorWhatsApp(e.target.value)}
-                      placeholder={lang === 'es' ? 'WhatsApp del pastor' : 'Pastor WhatsApp'}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
+                    {profile.religion === 2 && (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={newChurchName}
+                          onChange={(e) => setNewChurchName(e.target.value)}
+                          placeholder={lang === 'es' ? 'Nombre de la iglesia' : 'Church name'}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                        <input
+                          type="text"
+                          value={pastorName}
+                          onChange={(e) => setPastorName(e.target.value)}
+                          placeholder={lang === 'es' ? 'Nombre del pastor' : 'Pastor name'}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                        <input
+                          type="text"
+                          value={pastorWhatsApp}
+                          onChange={(e) => setPastorWhatsApp(e.target.value)}
+                          placeholder={lang === 'es' ? 'WhatsApp/Telegram del pastor' : 'Pastor WhatsApp/Telegram'}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
