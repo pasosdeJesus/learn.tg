@@ -944,21 +944,14 @@ export default function ProfileForm({ params }: PageProps) {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={placeOfWorshipName}
-                      onChange={(e) => setPlaceOfWorshipName(e.target.value)}
-                      placeholder={placeOfWorshipLabels(profile.religion).name}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    {profile.religion === 2 && (
-                      <div className="space-y-2">
+                    {profile.religion === 2 ? (
+                      <>
                         <input
                           type="text"
-                          value={newChurchName}
-                          onChange={(e) => setNewChurchName(e.target.value)}
+                          value={placeOfWorshipName}
+                          onChange={(e) => setPlaceOfWorshipName(e.target.value)}
                           placeholder={lang === 'es' ? 'Nombre de la iglesia' : 'Church name'}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                         <input
                           type="text"
@@ -974,7 +967,15 @@ export default function ProfileForm({ params }: PageProps) {
                           placeholder={lang === 'es' ? 'WhatsApp/Telegram del pastor' : 'Pastor WhatsApp/Telegram'}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         />
-                      </div>
+                      </>
+                    ) : (
+                      <input
+                        type="text"
+                        value={placeOfWorshipName}
+                        onChange={(e) => setPlaceOfWorshipName(e.target.value)}
+                        placeholder={placeOfWorshipLabels(profile.religion).name}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
                     )}
                   </div>
                 )}

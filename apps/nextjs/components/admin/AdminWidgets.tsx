@@ -5,6 +5,7 @@ import { Modal, InputField } from './Modal'
 import { CountrySelect, ReligionSelect, ChurchRoleSelect } from '@/components/shared/FormSelects'
 import { TownAutocomplete } from '@/components/shared/TownAutocomplete'
 import { ChurchSelector } from '@/components/shared/ChurchSelector'
+import { PhotoUpload } from '@/components/shared/PhotoUpload'
 import { adminFetch } from '@/lib/admin-fetch'
 import { CalendarWidget } from './CalendarWidget'
 
@@ -209,14 +210,16 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   const isChecked = (key: string) => {
     const v = form[key]
     if (v == null || v === '') return false
+    if (typeof v === 'number') return v > 0
     const s = String(v)
-    return s.length > 0 && s !== 'true' && s !== 'false'
+    return s.length > 0 && s !== 'true' && s !== 'false' && s !== '0'
   }
 
   const toggle = (key: string, source?: string) => setForm(f => {
     const currentlyChecked = isChecked(key)
     if (source) {
-      return { ...f, [key]: currentlyChecked ? '' : String((user as any)[source] || '') }
+      const sourceVal = (user as any)[source]
+      return { ...f, [key]: currentlyChecked ? '' : (sourceVal != null ? String(sourceVal) : '') }
     }
     return { ...f, [key]: currentlyChecked ? '' : 'checked' }
   })
@@ -363,6 +366,27 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                 await adminFetch('/api/user/id-photo', { method: 'POST', body: fd })
               }} className="text-xs text-gray-900" />
             </div>
+          </div>
+        </div>
+        <div className="border-t pt-3">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">{lang === 'es' ? 'Documentos de Identidad' : 'ID Documents'}</h4>
+          <div className="space-y-2">
+            <PhotoUpload
+              label={lang === 'es' ? 'Foto Frontal' : 'Front Photo'}
+              existingPath={(user as any).id_photo_front || null}
+              userId={user.id}
+              walletAddress={user.billetera || ''}
+              side="front"
+              lang={lang}
+            />
+            <PhotoUpload
+              label={lang === 'es' ? 'Foto Reverso' : 'Back Photo'}
+              existingPath={(user as any).id_photo_back || null}
+              userId={user.id}
+              walletAddress={user.billetera || ''}
+              side="back"
+              lang={lang}
+            />
           </div>
         </div>
         {msg && <p className={`text-sm text-center ${msg === t('saveSuccess') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
