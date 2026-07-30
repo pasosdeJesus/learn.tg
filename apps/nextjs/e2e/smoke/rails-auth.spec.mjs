@@ -26,36 +26,48 @@ function updateCookies(current, headers) {
 
 async function main() {
   let cookies = ''
-  console.log(`🔑 Wallet: ${wallet}`)
+  console.log(`Wallet: ${wallet}`)
 
   // ── PASO 1: Autenticación SIWE ──
   console.log('\n── PASO 1: SIWE Auth ──')
 
   const csrfRes = await api.get(`${SITE}/api/auth/csrf`)
   const csrfToken = csrfRes.data.csrfToken
+  if (csrfRes.headers['set-cookie']) cookies = updateCookies(cookies, csrfRes.headers['set-cookie'])
   console.log(`1.1 CSRF: ${csrfToken.slice(0,10)}...`)
 
   const msg = new SiweMessage({
     domain: new URL(SITE).host,
     address: wallet,
-    statement: 'Sign in to Learn through games.',
+    statement: 'Sign in to Learn through games with DIVVI tracking.',
     uri: SITE,
     version: '1',
     chainId: 11142220,
     nonce: csrfToken,
+    issuedAt: new Date().toISOString(),
   })
   const signature = await account.signMessage({ message: msg.prepareMessage() })
   console.log('1.2 Signed')
 
-  const authRes = await api.post(`${SITE}/api/auth/callback/credentials`, {
-    message: msg.prepareMessage(),
-    signature,
-    redirect: false,
-    csrfToken,
-    json: true,
+  const fd = new URLSearchParams()
+  fd.append('csrfToken', csrfToken)
+  fd.append('message', msg.prepareMessage())
+  fd.append('signature', signature)
+  fd.append('redirect', 'false')
+  fd.append('callbackUrl', `${SITE}/`)
+  fd.append('json', 'true')
+
+  const authRes = await api.post(`${SITE}/api/auth/callback/credentials`, fd.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookies }
   })
   cookies = updateCookies(cookies, authRes.headers['set-cookie'])
-  console.log(`1.3 Auth: ${authRes.status}`)
+  // NextAuth with json:true returns 200 with {url:"..."} on success, not 302
+  const authOk = authRes.status === 302 || (authRes.status === 200 && authRes.data?.url)
+  if (!authOk) {
+    console.error('SIWE auth failed:', authRes.status, JSON.stringify(authRes.data).slice(0, 200))
+    process.exit(1)
+  }
+  console.log(`1.3 Auth: ${authRes.status} OK`)
 
   const sessRes = await api.get(`${SITE}/api/auth/session`, { headers: { Cookie: cookies } })
   console.log(`1.4 Session: ${sessRes.status}`)

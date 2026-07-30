@@ -688,7 +688,28 @@ async function main() {
 
   await browser.close()
   const failures = summary(t0)
-  process.exit(failures > 0 ? 1 : 0)
+  if (failures > 0) throw new Error(`${failures} step(s) failed`)
+  return 0
 }
 
-main().catch(err => { console.error('[ERROR]', err.message); process.exit(1) })
+// Retry up to 3 times on failure (OpenBSD Puppeteer timing issues)
+async function runWithRetry(maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log(`\n🔄 Attempt ${attempt}/${maxRetries}`)
+    try {
+      await main()
+      process.exit(0)
+    } catch (err) {
+      if (attempt < maxRetries) {
+        console.log(`\n⚠️  Attempt ${attempt} failed: ${err.message?.slice(0, 80)}`)
+        console.log('Waiting 30s before retry...')
+        await new Promise(r => setTimeout(r, 30000))
+      } else {
+        console.error(`\n❌ All ${maxRetries} attempts failed`)
+        process.exit(1)
+      }
+    }
+  }
+}
+
+runWithRetry()

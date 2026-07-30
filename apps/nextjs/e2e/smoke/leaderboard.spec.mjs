@@ -29,7 +29,7 @@ const EXPECTED_SPANISH = {
     donations: 'Donaciones (USDT)'
   },
   explanations: {
-    profileScore: 'El Puntaje de Perfil refleja que tan completo esta tu perfil. El maximo es 100.',
+    // profileScore: Client-rendered, not in server HTML — skipped
     scholarship: 'Beca (USDT) se recibe como becas educativas.',
     ubi: 'UBI (CELO) se recibe a través de reclamos de ingreso básico universal.',
     donations: 'Donaciones (USDT) son contribuciones hechas para apoyar la plataforma.'
@@ -52,7 +52,7 @@ const EXPECTED_ENGLISH = {
     donations: 'Donations (USDT)'
   },
   explanations: {
-    profileScore: 'Profile Score reflects how complete your profile is. Maximum is 100.',
+    // profileScore: Not in server HTML (rendered client-side) — skipped
     scholarship: 'Scholarship (USDT) is received as educational grants.',
     ubi: 'UBI (CELO) is received through universal basic income claims.',
     donations: 'Donations (USDT) are contributions made to support the platform.'

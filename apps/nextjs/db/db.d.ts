@@ -65,6 +65,9 @@ export interface Church {
   pastor_name: string;
   pastor_telegram: string | null;
   pastor_whatsapp: string;
+  pastoral_position_israel_covenant: string | null;
+  pastoral_position_israel_gaza: string | null;
+  pastoral_position_israel_remnant: string | null;
   registration: string | null;
   registration_photo: string | null;
   registration_verified: Generated<boolean | null>;

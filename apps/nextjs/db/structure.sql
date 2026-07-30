@@ -1424,7 +1424,10 @@ CREATE TABLE public.church (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     merged_into_id integer,
-    deleted_at timestamp with time zone
+    deleted_at timestamp with time zone,
+    pastoral_position_israel_covenant character varying(3),
+    pastoral_position_israel_remnant character varying(3),
+    pastoral_position_israel_gaza character varying(3)
 );
 
 

@@ -43,6 +43,9 @@ export function NewChurchDialog({
   const [indicativo, setIndicativo] = useState('+232')
   const [registration, setRegistration] = useState('')
   const [registrationPhoto, setRegistrationPhoto] = useState<File | null>(null)
+  const [zionQ1, setZionQ1] = useState('')
+  const [zionQ2, setZionQ2] = useState('')
+  const [zionQ3, setZionQ3] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const { data: session } = useSession()
@@ -65,6 +68,10 @@ export function NewChurchDialog({
       noAuth: 'You must be connected to register a church',
       fillRequired: 'Please fill all required fields',
       pastorNote: 'Please inform your pastor that to confirm your membership we may contact him via WhatsApp. We encourage you to invite him to learn.tg.',
+      zionTitle: 'Theological Position (optional)',
+      zionQ1: 'Do you believe God has a plan of salvation for ethnic Israel that operates through a separate covenant or dispensation, independent of faith in Jesus Christ (e.g., restoration of Levitical sacrifices in the millennium)?',
+      zionQ2: 'Do you believe the true Israel of God is exclusively the remnant of Jews and Gentiles who believe in Jesus, and that the territorial promises are ultimately fulfilled in the new creation?',
+      zionQ3: 'Considering the ICJ has found a "plausible risk of genocide" in Gaza and the ICC has issued arrest warrants for war crimes, do you believe Christians should unconditionally support the Modern State of Israel?',
     },
     es: {
       title: 'Registrar Nueva Iglesia',
@@ -82,6 +89,10 @@ export function NewChurchDialog({
       noAuth: 'Debes estar conectado para registrar una iglesia',
       fillRequired: 'Por favor llena todos los campos requeridos',
       pastorNote: 'Por favor infórmale a tu pastor que para confirmar tu membresía posiblemente nos comunicaremos con él por WhatsApp. Te motivamos a invitarlo a learn.tg.',
+      zionTitle: 'Posición Teológica (opcional)',
+      zionQ1: '¿Cree que Dios tiene un plan de salvación para Israel étnico que opera mediante un pacto o dispensación separada, independiente de la fe en Jesucristo (ej. restauración de sacrificios levíticos en el milenio)?',
+      zionQ2: '¿Cree que el verdadero Israel de Dios es exclusivamente el remanente de judíos y gentiles que creen en Jesús, y que las promesas territoriales se cumplen finalmente en la nueva creación?',
+      zionQ3: 'Teniendo en cuenta que la CIJ ha señalado un "riesgo plausible de genocidio" en Gaza y la CPI ha emitido órdenes de arresto por crímenes de guerra, ¿cree que los cristianos debemos respaldar incondicionalmente al Estado Moderno de Israel?',
     },
   })
 
@@ -151,6 +162,9 @@ export function NewChurchDialog({
           pastorWhatsapp,
           registration: isPastor ? registration : undefined,
           registrationPhoto: isPastor ? photoPath : undefined,
+          zionQ1: zionQ1 || undefined,
+          zionQ2: zionQ2 || undefined,
+          zionQ3: zionQ3 || undefined,
         }),
       })
 
@@ -240,6 +254,39 @@ export function NewChurchDialog({
               </div>
             </>
           )}
+          {/* Zionism theological position */}
+          <details className="border rounded p-3">
+            <summary className="cursor-pointer text-sm font-medium text-gray-600">
+              {t('zionTitle')}
+            </summary>
+            <div className="mt-2 space-y-3">
+              {[1, 2, 3].map(q => {
+                const val = q === 1 ? zionQ1 : q === 2 ? zionQ2 : zionQ3
+                const setVal = q === 1 ? setZionQ1 : q === 2 ? setZionQ2 : setZionQ3
+                return (
+                  <div key={q} className="space-y-1">
+                    <p className="text-xs text-gray-600">{t(`zionQ${q}` as any)}</p>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-1 text-sm">
+                        <input type="radio" name={`zion_q${q}`} checked={val === 'yes'}
+                          onChange={() => setVal(val === 'yes' ? '' : 'yes')} className="rounded" />
+                        {lang === 'es' ? 'Sí' : 'Yes'}
+                      </label>
+                      <label className="flex items-center gap-1 text-sm">
+                        <input type="radio" name={`zion_q${q}`} checked={val === 'no'}
+                          onChange={() => setVal(val === 'no' ? '' : 'no')} className="rounded" />
+                        No
+                      </label>
+                    </div>
+                  </div>
+                )
+              })}
+              <div className="space-y-1">
+                <label className="text-xs text-gray-500">{t('zionNotes')}</label>
+                <Input value={zionNotes} onChange={(e) => setZionNotes(e.target.value)} />
+              </div>
+            </div>
+          </details>
         </div>
 
         <DialogFooter>
