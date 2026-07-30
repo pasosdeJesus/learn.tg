@@ -1,7 +1,10 @@
 // E2E Test: Full User Flow (R-#179)
-// Covers: Connect → Courses → Donate → Profile Score → Crossword → UBI Claim → Disconnect
+// Covers: Connect → Profile fill → Admin self-verify → Courses → Crossword → UBI Claim → Disconnect
 //
-// Wallet: verified, 60 profile score → can claim UBI and do crosswords
+// PREREQUISITE: The test wallet (from apps/.env) must be registered and be a verifier
+// on the dev server (https://learn.tg:9001). No prior profile score needed — this
+// spec fills and self-verifies the profile to reach ≥50.
+// See doc/e2e-testing.md § Wallet Prerequisites.
 //
 // Execution:
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg PUERTOPRU=9001 node e2e/specs/full-flow.spec.mjs
@@ -50,11 +53,9 @@ async function ensureSessionAlive(page, timeout = 15000) {
   const deadline = Date.now() + timeout
   while (Date.now() < deadline) {
     const alive = await page.evaluate(async () => {
-      // Check localStorage fallback (fast, survives navigation)
       const lsAddr = localStorage.getItem('learn.tg.sessionAddress')
       const lsToken = localStorage.getItem('learn.tg.authToken')
       if (lsAddr && lsToken) return true
-      // Check session API
       try {
         const r = await fetch('/api/auth/session')
         const s = await r.json()
@@ -68,12 +69,23 @@ async function ensureSessionAlive(page, timeout = 15000) {
   return false
 }
 
+/** Click an element matching selector, retrying until found or timeout */
+async function clickWhenFound(page, selector, timeout = 10000) {
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    const el = await page.$(selector)
+    if (el) { await el.click(); return true }
+    await new Promise(r => setTimeout(r, 500))
+  }
+  return false
+}
+
 async function main() {
   const t0 = performance.now()
   resetFailures()
 
   const envCreds = loadEnvCredentials()
-  if (!envCreds) { console.error('❌ No credentials found'); process.exit(1) }
+  if (!envCreds) { console.error('[ERROR] No credentials found'); process.exit(1) }
   process.env.TEST_PRIVATE_KEY = envCreds.pk
 
   if (!process.env.IPDES) process.env.IPDES = 'learn.tg'
@@ -81,12 +93,12 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout: _t, chainId } = env
+  const { base, chainId } = env
   const timeout = 120000
   const wallet = short(envCreds.addr)
 
   console.log(`Wallet: ${wallet} | ${base} (chain: ${chainId})`)
-  console.log('Target: Full user flow with profile score, UBI claim, crossword\n')
+  console.log('Target: Full user flow — profile fill → admin verify → crossword → UBI\n')
 
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
@@ -99,7 +111,6 @@ async function main() {
   // ════════════════════════════════════════════════════════════════
   console.log('── Step 1: Landing — Connect Wallet ──')
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
-  // Wait for React hydration (can be slow on OpenBSD)
   let hasConnect = false
   for (let i = 0; i < 15; i++) {
     await new Promise(r => setTimeout(r, 3000))
@@ -129,7 +140,6 @@ async function main() {
     const stillConnect = await page.evaluate(() =>
       document.body.textContent?.includes('Connect Wallet'))
     if (!stillConnect) {
-      // Verify address is now displayed — look for hex pattern
       const addrFound = await page.evaluate(() => {
         const text = document.body.textContent || ''
         return /0x[a-fA-F0-9]{4,}...[a-fA-F0-9]{4}/.test(text)
@@ -142,13 +152,12 @@ async function main() {
   }
   if (!connected) { await browser.close(); process.exit(1) }
 
-  // Let wallet address appear in header after SIWE
   await new Promise(r => setTimeout(r, 5000))
 
-  // Verify token is stored right after SIWE (WalletEventListener fix ensures persistence)
+  // Verify token is stored
   const lsAfterSiwe = await page.evaluate(() => ({
-    token: localStorage.getItem("learn.tg.authToken")?.slice(0, 10),
-    addr: localStorage.getItem("learn.tg.sessionAddress")?.slice(0, 10),
+    token: localStorage.getItem('learn.tg.authToken')?.slice(0, 10),
+    addr: localStorage.getItem('learn.tg.sessionAddress')?.slice(0, 10),
   }))
   if (lsAfterSiwe.token && lsAfterSiwe.addr) {
     ok(`Token persisted: ${lsAfterSiwe.token}... / ${lsAfterSiwe.addr}...`)
@@ -157,15 +166,213 @@ async function main() {
   }
 
   // ════════════════════════════════════════════════════════════════
-  // Step 3: /en — courses page
+  // Step 3: Profile — fill fields and save
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 3: /en — courses ──')
+  console.log('\n── Step 3: Profile fill ──')
+  await ensureSessionAlive(page)
+
+  // Navigate to profile — may show "Partial login" if NextAuth session
+  // hasn't hydrated yet (known issue on OpenBSD). Reload until form appears.
+  let profileFormReady = false
+  for (let attempt = 0; attempt < 5; attempt++) {
+    await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded', timeout })
+    await new Promise(r => setTimeout(r, 5000))
+
+    const isPartialLogin = await page.evaluate(() =>
+      document.body.textContent?.includes('Partial login'))
+    if (!isPartialLogin) {
+      // Verify form fields are actually rendered
+      const hasName = await page.evaluate(() => !!document.getElementById('name'))
+      if (hasName) { profileFormReady = true; break }
+    }
+    console.log(`  Profile not ready (attempt ${attempt + 1}/5), reloading...`)
+  }
+
+  if (!profileFormReady) {
+    fail('Profile form did not render after 5 attempts — NextAuth session not hydrated')
+    await browser.close(); process.exit(1)
+  }
+  ok('Profile form ready')
+
+  // Wait for profile API to populate fields
+  for (let w = 0; w < 10; w++) {
+    await new Promise(r => setTimeout(r, 2000))
+    const hasName = await page.evaluate(() => {
+      const el = document.getElementById('name')
+      return el && el.value && el.value.length > 0
+    })
+    if (hasName) break
+    if (w === 9) console.log('  [!] Profile name field still empty')
+  }
+
+  // Fill Full Name
+  const testName = 'E2E Flow Test'
+  await page.evaluate((name) => {
+    const el = document.getElementById('name')
+    if (el) { el.value = name; el.dispatchEvent(new Event('input', { bubbles: true })) }
+  }, testName)
+  ok(`Set name: "${testName}"`)
+
+  // Fill Email
+  const testEmail = 'e2e-flow@learn.tg'
+  await page.evaluate((email) => {
+    const el = document.getElementById('email')
+    if (el) { el.value = email; el.dispatchEvent(new Event('input', { bubbles: true })) }
+  }, testEmail)
+  ok(`Set email: "${testEmail}"`)
+
+  // Fill WhatsApp — field exists but may not be visible in all profiles
+  const testWhatsapp = '+1234567890'
+  const waFound = await page.evaluate((wa) => {
+    const el = document.getElementById('whatsapp')
+    if (el) { el.value = wa; el.dispatchEvent(new Event('input', { bubbles: true })); return true }
+    return false
+  }, testWhatsapp)
+  waFound ? ok(`Set WhatsApp: "${testWhatsapp}"`) : console.log('  [!] No WhatsApp field (#whatsapp) — skipping')
+
+  // Fill Place of Worship — no id attribute, find by label text
+  const testChurch = 'E2E Test Church'
+  const churchFound = await page.evaluate((church) => {
+    // Look for the place_of_worship input near its label
+    const labels = [...document.querySelectorAll('label')]
+    for (const label of labels) {
+      const text = (label.textContent || '').toLowerCase()
+      if (text.includes('place of worship') || text.includes('lugar de culto') ||
+          text.includes('name of your') || text.includes('nombre de tu')) {
+        // Find the input in the same container
+        const container = label.closest('div')?.parentElement
+        if (container) {
+          const input = container.querySelector('input[type="text"]')
+          if (input) {
+            input.value = church
+            input.dispatchEvent(new Event('input', { bubbles: true }))
+            input.dispatchEvent(new Event('change', { bubbles: true }))
+            return true
+          }
+        }
+      }
+    }
+    return false
+  }, testChurch)
+  churchFound ? ok(`Set place_of_worship: "${testChurch}"`) : console.log('  [!] No place_of_worship field — skipping')
+
+  // Save profile
+  const saveBtn = await page.evaluateHandle(() =>
+    [...document.querySelectorAll('button')].find(b =>
+      (b.textContent || '').includes('Save') || (b.textContent || '').includes('Guardar'))
+  )
+  if (saveBtn.asElement()) {
+    await saveBtn.asElement().click()
+    await new Promise(r => setTimeout(r, 4000))
+    ok('Profile saved')
+  } else {
+    fail('Save button not found')
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // Step 4: Admin self-verify via API
+  // ════════════════════════════════════════════════════════════════
+  console.log('\n── Step 4: Admin self-verify ──')
+
+  // Get userId and current profile from API (same browser context = same auth)
+  const profileData = await page.evaluate(async () => {
+    const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
+    const token = localStorage.getItem('learn.tg.authToken') || ''
+    const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+    const r = await fetch(url)
+    if (!r.ok) return null
+    return r.json()
+  })
+
+  if (!profileData || !profileData.id) {
+    fail('Could not fetch profile via API — session may be stale')
+    await browser.close(); process.exit(1)
+  }
+  const userId = profileData.id
+  ok(`User ID: ${userId}, current score: ${profileData.profilescore}`)
+
+  // Read current values that were just saved
+  const currentName = profileData.nombre || testName
+  const currentEmail = profileData.email || testEmail
+  const currentWhatsapp = profileData.whatsapp || testWhatsapp
+  const currentChurch = profileData.place_of_worship || testChurch
+  const currentPaisId = profileData.pais_id
+
+  // Self-verify via admin PATCH API
+  const adminResult = await page.evaluate(async (params) => {
+    const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
+    const token = localStorage.getItem('learn.tg.authToken') || ''
+    const url = `/api/admin/user/${params.userId}?wallet=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+    const r = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params.updates),
+    })
+    return r.ok ? await r.json() : { error: r.status, body: await r.text() }
+  }, {
+    userId,
+    updates: {
+      passport_name: currentName,
+      passport_nationality: currentPaisId,
+      verified_email: currentEmail,
+      verified_whatsapp: currentWhatsapp,
+      verified_place_of_worship: currentChurch,
+    },
+  })
+
+  if (adminResult.success) {
+    ok(`Admin verify OK — user: ${adminResult.user?.nombre}, new score: ${adminResult.user?.profilescore}`)
+  } else {
+    fail(`Admin verify failed: ${JSON.stringify(adminResult).slice(0, 120)}`)
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // Step 5: Profile score ≥ 50
+  // ════════════════════════════════════════════════════════════════
+  console.log('\n── Step 5: Profile score ≥ 50 ──')
+  await ensureSessionAlive(page)
+  await navAndWait(page, `${base}/en/profile`, timeout)
+  await new Promise(r => setTimeout(r, 4000))
+
+  // Wait for profile score to appear
+  for (let w = 0; w < 8; w++) {
+    await new Promise(r => setTimeout(r, 2000))
+    const hasScore = await page.evaluate(() =>
+      document.body.textContent?.includes('Profile Score') ||
+      document.body.textContent?.includes('Puntaje de Perfil'))
+    if (hasScore) break
+    if (w === 7) console.log('  [!] Profile score still loading...')
+  }
+
+  const scoreMatch = await page.evaluate(() => {
+    const body = document.body.textContent || ''
+    const idx = body.indexOf('Profile Score') !== -1 ? body.indexOf('Profile Score') :
+                body.indexOf('Puntaje de Perfil')
+    if (idx === -1) return null
+    const nearby = body.slice(idx, idx + 80)
+    const m = nearby.match(/(\d{1,3})/)
+    return m ? parseInt(m[1]) : null
+  })
+  if (scoreMatch !== null) {
+    if (scoreMatch >= 50) {
+      ok(`Profile score: ${scoreMatch} (≥ 50 ✓)`)
+    } else {
+      fail(`Profile score: ${scoreMatch} (< 50 — UBI and crossword WILL fail)`)
+    }
+  } else {
+    fail('Could not extract profile score')
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // Step 6: /en — courses page
+  // ════════════════════════════════════════════════════════════════
+  console.log('\n── Step 6: /en — courses ──')
   const enOk = await navAndWait(page, `${base}/en`, timeout)
   if (!enOk) { fail('/en did not render'); await browser.close(); process.exit(1) }
   ok('/en loaded')
   await new Promise(r => setTimeout(r, 2000))
 
-  // Check for error toasts (e.g., "Failed to load courses" when Rails is down)
+  // Check for error toasts
   const hasErrorToast = await page.evaluate(() => {
     const toastEls = document.querySelectorAll('[role="status"], [data-slot="toast"], .toast')
     for (const el of toastEls) {
@@ -196,12 +403,11 @@ async function main() {
   }
 
   // ════════════════════════════════════════════════════════════════
-  // Step 4: Enter course (prefer real courses, skip privacy/terms)
+  // Step 7: Enter course
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 4: Enter course ──')
+  console.log('\n── Step 7: Enter course ──')
   let courseEntered = false
   let courseHref = null
-  // Pick first real course (not privacy-policy, terms-of-service)
   const realCourse = courseLinks.find(l =>
     !l.href.includes('privacy') && !l.href.includes('terms'))
   if (realCourse) {
@@ -212,8 +418,7 @@ async function main() {
       courseEntered = true
     } else fail(`Course ${courseHref} did not render`)
   } else {
-    console.log('  ⚠️  No real courses available (server may be returning limited data)')
-    // Fall back to any course
+    console.log('  [!] No real courses available')
     if (courseLinks.length > 0) {
       courseHref = courseLinks[0].href
       await navAndWait(page, `${base}${courseHref}`, timeout)
@@ -221,151 +426,115 @@ async function main() {
   }
 
   // ════════════════════════════════════════════════════════════════
-  // Step 5: Donate — check if button present
+  // Step 8: Donate — client-rendered, wait for button
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 5: Donate ──')
+  console.log('\n── Step 8: Donate ──')
   if (courseEntered) {
-    await new Promise(r => setTimeout(r, 3000))
-    const donateBtn = await page.evaluateHandle(() =>
-      [...document.querySelectorAll('button')].find(b =>
-        (b.textContent || '').includes('Donate') || (b.textContent || '').includes('Donar'))
-    )
-    if (donateBtn.asElement()) {
+    let donateFound = false
+    for (let w = 0; w < 8; w++) {
+      await new Promise(r => setTimeout(r, 2000))
+      donateFound = await page.evaluate(() =>
+        [...document.querySelectorAll('button')].some(b =>
+          (b.textContent || '').includes('Donate') || (b.textContent || '').includes('Donar')))
+      if (donateFound) break
+    }
+    if (donateFound) {
+      const donateBtn = await page.evaluateHandle(() =>
+        [...document.querySelectorAll('button')].find(b =>
+          (b.textContent || '').includes('Donate') || (b.textContent || '').includes('Donar')))
       await donateBtn.asElement().click()
       ok('Donate dialog opened')
       await new Promise(r => setTimeout(r, 2000))
-      // Close dialog
       const cancelBtn = await page.evaluateHandle(() =>
         [...document.querySelectorAll('[role="dialog"] button')].find(b =>
           (b.textContent || '').includes('Cancel') || (b.textContent || '').includes('Cancelar'))
       )
       if (cancelBtn.asElement()) await cancelBtn.asElement().click()
       else await page.keyboard.press('Escape')
-    } else console.log('  ⚠️  No Donate button')
-  }
-
-  // ════════════════════════════════════════════════════════════════
-  // Step 6: Profile — verify score, verified status
-  // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 6: Profile — score & verified ──')
-  await ensureSessionAlive(page)
-  const profileOk = await navAndWait(page, `${base}/en/profile`, timeout)
-  if (!profileOk) { fail('Profile page did not render') }
-  else {
-    ok('Profile loaded')
-
-    // Wait longer for profile API call to complete (fetches from port 3500)
-    for (let w = 0; w < 6; w++) {
-      await new Promise(r => setTimeout(r, 2000))
-      const hasScore = await page.evaluate(() =>
-        document.body.textContent?.includes('Profile Score') ||
-        document.body.textContent?.includes('Puntaje de Perfil'))
-      if (hasScore) break
-      if (w === 5) console.log('  ⚠️  Profile data still loading...')
-    }
-
-    // Verify "Profile Score" / "Puntaje de Perfil" section
-    const hasScoreLabel = await page.evaluate(() =>
-      document.body.textContent?.includes('Profile Score') ||
-      document.body.textContent?.includes('Puntaje de Perfil'))
-    if (hasScoreLabel) ok('Profile Score section visible')
-    else fail('Profile Score section not found')
-
-    // Look for score value near the label (≥ 50)
-    const scoreMatch = await page.evaluate(() => {
-      const body = document.body.textContent || ''
-      // Find "Profile Score" and look for a number nearby
-      const idx = body.indexOf('Profile Score') !== -1 ? body.indexOf('Profile Score') :
-                  body.indexOf('Puntaje de Perfil')
-      if (idx === -1) return null
-      const nearby = body.slice(idx, idx + 80)
-      const m = nearby.match(/(\d{1,3})/)
-      return m ? parseInt(m[1]) : null
-    })
-    if (scoreMatch !== null) {
-      if (scoreMatch >= 50) ok(`Profile score: ${scoreMatch} (≥ 50 ✓)`)
-      else ok(`Profile score: ${scoreMatch}`)
-    } else console.log('  ⚠️  Could not extract score number')
-
-    // Verify "Verified" status text
-    const hasVerified = await page.evaluate(() =>
-      document.body.textContent?.includes('Verified') ||
-      document.body.textContent?.includes('Verificado'))
-    if (hasVerified) ok('Verified status visible')
-    else console.log('  ⚠️  Verified status not visible in text')
-
-    // Save button test
-    const saveBtn = await page.evaluateHandle(() =>
-      [...document.querySelectorAll('button')].find(b =>
-        (b.textContent || '').includes('Save') || (b.textContent || '').includes('Guardar'))
-    )
-    if (saveBtn.asElement()) {
-      const isDisabled = await page.evaluate(el => el.disabled, saveBtn.asElement())
-      if (!isDisabled) {
-        await saveBtn.asElement().click()
-        await new Promise(r => setTimeout(r, 3000))
-        ok('Save submitted')
-      } else ok('Save button present (disabled)')
+    } else {
+      const btns = await page.evaluate(() =>
+        [...document.querySelectorAll('button')].map(b => (b.textContent || '').trim()).filter(t => t).slice(0, 8))
+      console.log(`  Course buttons: ${JSON.stringify(btns)}`)
+      console.log('  [!] No Donate button after 16s')
     }
   }
 
   // ════════════════════════════════════════════════════════════════
-  // Step 7: Guide page
+  // Step 9: Guide page
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 7: Guide ──')
+  console.log('\n── Step 9: Guide ──')
   if (courseEntered && courseHref) {
-    await navAndWait(page, `${base}${courseHref}`, timeout)
-    await new Promise(r => setTimeout(r, 2000))
-    const guideLinks = await page.evaluate(() =>
-      [...document.querySelectorAll('a[href]')]
-        .map(a => a.getAttribute('href'))
-        .filter(h => h && h.match(/\/(guide|guia)\d*$/)))
+    await ensureSessionAlive(page)
+    await page.goto(`${base}${courseHref}`, { waitUntil: 'domcontentloaded', timeout })
+    let guideLinks = []
+    for (let w = 0; w < 12; w++) {
+      await new Promise(r => setTimeout(r, 2000))
+      guideLinks = await page.evaluate(() =>
+        [...document.querySelectorAll('a[href]')]
+          .map(a => a.getAttribute('href'))
+          .filter(h => h && h.match(/\/(guide|guia)\d*$/)))
+      if (guideLinks.length > 0) break
+      if (w === 5 || w === 9) {
+        const allLinks = await page.evaluate(() =>
+          [...document.querySelectorAll('a[href]')].map(a => a.getAttribute('href')).filter(h => h && h.startsWith('/')))
+        console.log(`  Links at ${w * 2}s: ${JSON.stringify(allLinks.slice(0, 10))}`)
+      }
+    }
     if (guideLinks.length > 0) {
       const gOk = await navAndWait(page, `${base}${guideLinks[0]}`, timeout)
       gOk ? ok(`Guide: ${guideLinks[0]}`) : fail('Guide did not render')
-    } else console.log('  ⚠️  No guide links')
+    } else console.log('  [!] No guide links after 24s')
   }
 
   // ════════════════════════════════════════════════════════════════
-  // Step 8: Crossword — fill cells and submit
+  // Step 10: Crossword — fill cells and submit
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 8: Crossword ──')
+  console.log('\n── Step 10: Crossword ──')
   if (courseEntered && courseHref) {
     const testUrl = `${courseHref}/test`
+    await ensureSessionAlive(page)
     const testOk = await navAndWait(page, `${base}${testUrl}`, timeout)
     if (testOk) {
       ok(`Crossword loaded: ${testUrl}`)
-      await new Promise(r => setTimeout(r, 3000))
 
-      // Count grid inputs (text fields in crossword)
-      const gridInputs = await page.evaluate(() => {
-        const inputs = document.querySelectorAll('input[type="text"]')
-        return Array.from(inputs).map((inp, i) => ({
-          idx: i,
-          value: inp.value || '',
-          disabled: inp.disabled,
-          readOnly: inp.readOnly,
-          className: inp.className?.slice(0, 30) || '',
-        }))
-      })
+      // Crossword inputs are client-rendered (fetched from API after hydration)
+      let gridInputs = []
+      for (let w = 0; w < 10; w++) {
+        await new Promise(r => setTimeout(r, 2000))
+        gridInputs = await page.evaluate(() => {
+          const inputs = document.querySelectorAll('input[type="text"]')
+          return Array.from(inputs).map((inp, i) => ({
+            idx: i,
+            value: inp.value || '',
+            disabled: inp.disabled,
+            readOnly: inp.readOnly,
+            className: inp.className?.slice(0, 30) || '',
+          }))
+        })
+        const activeInputs = gridInputs.filter(i => !i.disabled && !i.readOnly)
+        if (activeInputs.length > 0) break
+        if (w === 5) {
+          const bodyLen = await page.evaluate(() => document.body?.textContent?.length || 0)
+          console.log(`  Page body: ${bodyLen} chars, inputs: ${gridInputs.length}`)
+        }
+      }
+
       const activeInputs = gridInputs.filter(i => !i.disabled && !i.readOnly)
       if (activeInputs.length > 0) {
         ok(`Crossword grid: ${activeInputs.length} fillable cells`)
 
-        // Fill first few cells with letters
         let filled = 0
         const inputs = await page.$$('input[type="text"]')
         for (const inp of inputs) {
           const isDisabled = await page.evaluate(el => el.disabled || el.readOnly, inp)
           if (!isDisabled && filled < 5) {
             await inp.click()
-            await inp.type(String.fromCharCode(65 + filled)) // A, B, C, D, E
+            await inp.type(String.fromCharCode(65 + filled))
             filled++
           }
         }
         if (filled > 0) ok(`Filled ${filled} crossword cells`)
 
-        // Try to submit
         await new Promise(r => setTimeout(r, 1000))
         const submitBtn = await page.evaluateHandle(() =>
           [...document.querySelectorAll('button')].find(b =>
@@ -376,7 +545,6 @@ async function main() {
           if (!isDisabled) {
             await submitBtn.asElement().click()
             await new Promise(r => setTimeout(r, 4000))
-            // Check for feedback
             const feedback = await page.evaluate(() => {
               const body = document.body.textContent || ''
               if (body.includes('Correct') || body.includes('Correcto') ||
@@ -386,38 +554,49 @@ async function main() {
               return null
             })
             if (feedback) ok(`Crossword feedback: "${feedback.slice(0, 50)}"`)
-            else console.log('  ⚠️  No visible feedback after submit')
-          } else console.log('  ⚠️  Submit disabled (puzzle incomplete)')
-        } else console.log('  ⚠️  No submit button')
-      } else console.log('  ⚠️  No fillable crossword cells — may need course data')
-    } else console.log(`  ⚠️  Crossword not at ${testUrl}`)
+            else console.log('  [!] No visible feedback after submit')
+          } else console.log('  [!] Submit disabled')
+        } else console.log('  [!] No submit button')
+      } else console.log('  [!] No fillable crossword cells after wait')
+    } else console.log(`  [!] Crossword not at ${testUrl}`)
   }
 
   // ════════════════════════════════════════════════════════════════
-  // Step 9: UBI Claim — actually claim
+  // Step 11: UBI Claim
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 9: UBI Claim ──')
-  await ensureSessionAlive(page)
+  console.log('\n── Step 11: UBI Claim ──')
   await ensureSessionAlive(page)
   const ubiPath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide3'
-  const ubiOk = await navAndWait(page, `${base}${ubiPath}`, timeout)
-  if (ubiOk) {
-    ok(`UBI guide: ${ubiPath}`)
 
-    // Guide content loads from course server (port 3500) — can be slow.
-    // Wait for either: content loaded, or timeout.
-    for (let w = 0; w < 8; w++) {
+  // Navigate and wait for client-rendered buttons (CeloUbiButton, GoodDollarButton)
+  // These are React components that only render after hydration + session check
+  let ubiOk = await navAndWait(page, `${base}${ubiPath}`, timeout)
+  if (!ubiOk) { fail('UBI guide not found'); }
+
+  // The UBI buttons are client-rendered — may need page reload if session just restored
+  let claimFound = false
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      console.log(`  Reloading UBI guide (attempt ${attempt + 1}/3)...`)
+      await page.goto(`${base}${ubiPath}`, { waitUntil: 'domcontentloaded', timeout })
+    }
+    // Wait for client-side hydration
+    for (let w = 0; w < 10; w++) {
       await new Promise(r => setTimeout(r, 2500))
       const hasBtn = await page.evaluate(() =>
         [...document.querySelectorAll('button')].some(b =>
           (b.textContent || '').includes('Claim') || (b.textContent || '').includes('Reclamar')))
       const isLoading = await page.evaluate(() =>
-        document.body.textContent?.includes('Loading...'))
-      if (hasBtn || !isLoading) break
-      if (w === 7) console.log('  ⚠️  Guide still loading after 20s')
+        document.body.textContent?.includes('Loading...') || document.body.textContent?.includes('Cargando...'))
+      if (hasBtn) { claimFound = true; break }
+      if (!isLoading && w > 4) break // Page loaded but no button — try reload
     }
+    if (claimFound) break
+  }
 
-    // Find and click Claim button
+  if (claimFound) {
+    ok(`UBI guide loaded: ${ubiPath}`)
+
     const claimBtn = await page.evaluateHandle(() =>
       [...document.querySelectorAll('button')].find(b =>
         (b.textContent || '').includes('Claim Learn.tg-UBI') ||
@@ -428,7 +607,6 @@ async function main() {
       await claimBtn.asElement().click()
       ok('Clicked Claim')
 
-      // Wait for dialog result
       for (let i = 0; i < 15; i++) {
         await new Promise(r => setTimeout(r, 2000))
         const dialogText = await page.evaluate(() => {
@@ -449,28 +627,47 @@ async function main() {
           fail(`UBI claim rejected: "${dialogText.slice(0, 80)}"`)
           break
         }
-        if (i === 14) console.log('  ⚠️  UBI dialog still pending')
+        if (i === 14) console.log('  [!] UBI dialog still pending')
       }
     } else {
-      fail('Claim button not found — session token should persist with WalletEventListener fix')
+      fail('Claim button not found')
     }
   } else {
-    fail('UBI guide not found')
+    // Log what's on the page for debugging
+    const pageButtons = await page.evaluate(() =>
+      [...document.querySelectorAll('button')].map(b => (b.textContent || '').trim()).filter(t => t)
+    )
+    console.log(`  Page buttons: ${JSON.stringify(pageButtons)}`)
+    fail('Claim button not found — UBI buttons are client-rendered, may need active session')
   }
 
   // ════════════════════════════════════════════════════════════════
-  // Step 10: Disconnect ✕ → Connect Wallet returns
+  // Step 12: Disconnect ✕ → Connect Wallet returns
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 10: Disconnect ✕ ──')
+  console.log('\n── Step 12: Disconnect ✕ ──')
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
   await ensureSessionAlive(page)
-  await new Promise(r => setTimeout(r, 3000))
 
-  const disconnectBtn = await page.evaluateHandle(() =>
-    [...document.querySelectorAll('button')].find(b =>
-      (b.textContent || '').trim() === '✕')
-  )
-  if (disconnectBtn.asElement()) {
+  // The ✕ (disconnect) button is client-rendered by ConnectWalletButton.
+  // May need reload if session just restored from localStorage.
+  let dcFound = false
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
+    }
+    await new Promise(r => setTimeout(r, 4000))
+    dcFound = await page.evaluate(() =>
+      [...document.querySelectorAll('button')].some(b =>
+        (b.textContent || '').trim() === '✕'))
+    if (dcFound) break
+    console.log(`  ✕ not visible (attempt ${attempt + 1}/3)`)
+  }
+
+  if (dcFound) {
+    const disconnectBtn = await page.evaluateHandle(() =>
+      [...document.querySelectorAll('button')].find(b =>
+        (b.textContent || '').trim() === '✕')
+    )
     await disconnectBtn.asElement().click()
     ok('Clicked ✕')
     for (let i = 0; i < 8; i++) {
@@ -482,7 +679,11 @@ async function main() {
       if (i === 7) fail('Connect Wallet did NOT return')
     }
   } else {
-    fail('✕ button not found — session should be active')
+    // Log page buttons for debugging
+    const btns = await page.evaluate(() =>
+      [...document.querySelectorAll('button')].map(b => (b.textContent || '').trim()).filter(t => t).slice(0, 10))
+    console.log(`  Page buttons: ${JSON.stringify(btns)}`)
+    fail('✕ button not found — session may not be active on landing page')
   }
 
   await browser.close()
@@ -490,4 +691,4 @@ async function main() {
   process.exit(failures > 0 ? 1 : 0)
 }
 
-main().catch(err => { console.error('❌', err.message); process.exit(1) })
+main().catch(err => { console.error('[ERROR]', err.message); process.exit(1) })

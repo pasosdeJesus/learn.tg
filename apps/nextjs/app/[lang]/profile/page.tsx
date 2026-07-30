@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
-import { use, useEffect, useState, useMemo } from 'react'
+import { use, useEffect, useState, useMemo, useRef } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { getUniversalLink } from '@selfxyz/core'
 import { SelfAppBuilder } from '@selfxyz/qrcode'
@@ -114,6 +114,9 @@ export default function ProfileForm({ params }: PageProps) {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [savingFields, setSavingFields] = useState<Set<string>>(new Set())
+  const [savedFields, setSavedFields] = useState<Set<string>>(new Set())
+  const saveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const [updateProfile, setUpdateProfile] = useState(false)
   const [religions, setReligions] = useState<Religion[]>([])
   const [countries, setCountries] = useState<Country[]>([])
@@ -164,6 +167,15 @@ export default function ProfileForm({ params }: PageProps) {
       errorLabel: 'Error: ', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion',
       verificationWarning: 'Para mantener tu verificación y puntaje de perfil, conserva la información ya verificada como la suministraste durante la verificación' },
   }), [lang])
+
+  const isSavingField = (f: string) => savingFields.has(f)
+  const isSavedField = (f: string) => savedFields.has(f)
+
+  const FieldIndicator = ({ field }: { field: string }) => {
+    if (isSavingField(field)) return <span className="ml-1 text-xs text-gray-400 animate-pulse">...</span>
+    if (isSavedField(field)) return <span className="ml-1 text-xs text-green-500">{lang === 'es' ? 'guardado' : 'saved'}</span>
+    return null
+  }
 
   const handleUpdateScores = async () => {
     if (!session || !address || !session.address || session.address.toLowerCase() !== address.toLowerCase()) {
@@ -496,12 +508,80 @@ export default function ProfileForm({ params }: PageProps) {
     }
   }
 
-  // Handle input changes
+  // Handle input changes with auto-save
   const handleChange = (field: keyof UserProfile, value: string) => {
     setProfile((prev) => ({
       ...prev,
       [field]: field === 'religion' || field === 'country' ? Number(value) : value,
     }))
+    // Auto-save with debounce: 800ms for text, immediate for selects
+    const isSelect = field === 'religion' || field === 'country' || field === 'church_relationship'
+    const delay = isSelect ? 0 : 800
+    autoSaveField(field, value, delay)
+  }
+
+  // Auto-save a single field to the API
+  const autoSaveField = async (field: string, value: string, delay: number) => {
+    // Clear existing timer for this field
+    const existing = saveTimers.current.get(field)
+    if (existing) clearTimeout(existing)
+
+    const doSave = async () => {
+      if (!session?.address || !address) return
+      const apiField = mapFieldToApi(field)
+      if (!apiField) return
+
+      setSavingFields(prev => new Set(prev).add(field))
+      try {
+        const csrfToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+        const apiValue = field === 'religion' || field === 'country' ? Number(value) : value
+        const url = `/api/profile?walletAddress=${session.address}&token=${csrfToken}`
+        const res = await fetch(url, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ [apiField]: apiValue === '' || apiValue === undefined ? null : apiValue }),
+        })
+        if (res.ok) {
+          setSavedFields(prev => new Set(prev).add(field))
+          setTimeout(() => setSavedFields(prev => {
+            const next = new Set(prev)
+            next.delete(field)
+            return next
+          }), 2000)
+          // Update profile score after relevant field saves
+          try {
+            const data = await res.json()
+            if (data.profilescore != null) {
+              setProfile(prev => ({ ...prev, profilescore: data.profilescore }))
+            }
+          } catch {}
+        }
+      } catch { /* silently fail — user can retry with Save button */ }
+      finally {
+        setSavingFields(prev => {
+          const next = new Set(prev)
+          next.delete(field)
+          return next
+        })
+      }
+    }
+
+    if (delay === 0) {
+      doSave()
+    } else {
+      saveTimers.current.set(field, setTimeout(doSave, delay))
+    }
+  }
+
+  // Map UI field names to API field names
+  const mapFieldToApi = (field: string): string | null => {
+    const mapping: Record<string, string> = {
+      name: 'nombre', uname: 'nusuario', email: 'email',
+      whatsapp: 'whatsapp', telegram: 'telegram',
+      religion: 'religion_id', country: 'pais_id',
+      church_relationship: 'church_relationship',
+    }
+    return mapping[field] || null
   }
 
   // Town autocomplete search
@@ -695,6 +775,7 @@ export default function ProfileForm({ params }: PageProps) {
                   className="block text-sm font-medium text-gray-700"
                 >
                   {t('displayName')}
+                  <FieldIndicator field="uname" />
                 </label>
                 <input
                   id="uname"
@@ -712,6 +793,7 @@ export default function ProfileForm({ params }: PageProps) {
                   className="block text-sm font-medium text-gray-700"
                 >
                   {t('fullNameVerified')}
+                  <FieldIndicator field="name" />
                   {profile.name != '' && profile.name == profile.passport_name
                     ? '✅'
                     : '❌'}{' '}
@@ -736,6 +818,7 @@ export default function ProfileForm({ params }: PageProps) {
                   className="block text-sm font-medium text-gray-700"
                 >
                   Email
+                  <FieldIndicator field="email" />
                 </label>
                 <input
                   id="email"
@@ -781,6 +864,7 @@ export default function ProfileForm({ params }: PageProps) {
                   className="block text-sm font-medium text-gray-700"
                 >
                   WhatsApp
+                  <FieldIndicator field="whatsapp" />
                 </label>
                 <div className="flex items-center">
                   <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-gray-500 text-sm">
@@ -801,6 +885,7 @@ export default function ProfileForm({ params }: PageProps) {
                   className="block text-sm font-medium text-gray-700"
                 >
                   Telegram
+                  <FieldIndicator field="telegram" />
                 </label>
                 <input
                   id="telegram"
@@ -1018,11 +1103,11 @@ export default function ProfileForm({ params }: PageProps) {
             )}
 
             <div className="border-t pt-4 mt-4 flex flex-wrap gap-4">
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving} variant="outline">
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {saving
                   ? t('saving')
-                  : t('saveChanges')}
+                  : (lang === 'es' ? 'Guardar todo' : 'Save All')}
               </Button>
               <Button type="button" onClick={handleSelfVerify}>
                 {t('verifySelf')}

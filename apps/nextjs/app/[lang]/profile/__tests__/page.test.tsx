@@ -144,9 +144,9 @@ describe('Profile Page', () => {
   it('should handle profile update', async () => {
     render(<ProfileForm params={Promise.resolve({ lang: 'en' })} />)
     await waitFor(() => {
-      expect(screen.getByText('Save Changes')).toBeInTheDocument()
+      expect(screen.getByText('Save All')).toBeInTheDocument()
     }, { timeout: 10000 })
-    const saveButton = screen.getByText('Save Changes')
+    const saveButton = screen.getByText('Save All')
     fireEvent.click(saveButton)
     expect(saveButton).toBeInTheDocument()
   })
