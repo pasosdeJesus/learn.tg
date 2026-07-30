@@ -31,17 +31,13 @@ export function ChurchSelector({ value, countryId, cityId, lang, onChange, allow
     fetch(`/api/churches/search?${params}`)
       .then(r => {
         if (!r.ok) {
-          console.log(`[ChurchSelector] Auth check: HTTP ${r.status}`, {
-            addr: addr.slice(0, 10) + '...',
-            tokenLen: tok.length,
-          })
-          try { const { logger } = require('@pasosdejesus/m/debug'); logger.info(`Church search failed: HTTP ${r.status}`, 'ChurchSelector') } catch {}
+          console.log(`[ChurchSelector] HTTP ${r.status} — addr: ${addr.slice(0, 10)}..., tokenLen: ${tok.length}`)
         }
         return r.json()
       })
       .then(d => { setChurches(d.churches || d || []); setLoading(false) })
       .catch((e) => {
-        console.log('[ChurchSelector] Fetch error:', e.message?.slice(0, 80) || e)
+        console.log('[ChurchSelector] Error:', e?.message || String(e))
         setLoading(false)
       })
   }, [countryId, cityId, refreshKey])

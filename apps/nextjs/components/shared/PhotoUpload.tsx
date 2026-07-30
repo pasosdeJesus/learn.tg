@@ -17,6 +17,14 @@ export function PhotoUpload({ label, existingPath, userId, walletAddress, side, 
   const [preview, setPreview] = useState<string | null>(null)
   const isEs = lang === 'es'
 
+  const getAuthParams = () => {
+    if (typeof window === 'undefined') return ''
+    const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
+    const tok = localStorage.getItem('learn.tg.authToken') || ''
+    if (!addr || !tok) return ''
+    return `walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(tok)}`
+  }
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -30,7 +38,8 @@ export function PhotoUpload({ label, existingPath, userId, walletAddress, side, 
       const res = await fetch('/api/user/id-photo', { method: 'POST', body: fd })
       if (!res.ok) throw new Error('Upload failed')
       const data = await res.json()
-      setPreview(`/api/user/id-photo/${userId}?side=${side}`)
+      const auth = getAuthParams()
+      setPreview(`/api/user/id-photo/${userId}?side=${side}${auth ? '&' + auth : ''}`)
       onUploaded?.(data.path || '')
     } catch {
       // silent
@@ -39,7 +48,9 @@ export function PhotoUpload({ label, existingPath, userId, walletAddress, side, 
     }
   }
 
-  const photoUrl = preview || (existingPath ? `/api/user/id-photo/${userId}?side=${side}` : null)
+  const photoUrl = preview || (existingPath
+    ? `/api/user/id-photo/${userId}?side=${side}&${getAuthParams()}`
+    : null)
 
   return (
     <div>

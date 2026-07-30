@@ -1,9 +1,5 @@
 function debugLog(msg: string, data?: any) {
   if (typeof window === 'undefined') return
-  try {
-    const { logger } = require('@pasosdejesus/m/debug')
-    logger.info(msg, 'AdminFetch')
-  } catch {}
   if (data !== undefined) {
     console.log(`[AdminFetch] ${msg}`, data)
   } else {
