@@ -281,10 +281,6 @@ export function NewChurchDialog({
                   </div>
                 )
               })}
-              <div className="space-y-1">
-                <label className="text-xs text-gray-500">{t('zionNotes')}</label>
-                <Input value={zionNotes} onChange={(e) => setZionNotes(e.target.value)} />
-              </div>
             </div>
           </details>
         </div>
