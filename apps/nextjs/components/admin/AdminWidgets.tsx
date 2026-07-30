@@ -355,7 +355,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                 onClick={async () => {
                   setCreatingChurch(true)
                   try {
-                    const res = await adminFetch('/api/admin/churches', {
+                    const data = await adminFetch('/api/admin/churches', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
@@ -365,18 +365,11 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                         country_id: countryId,
                       }),
                     })
-                    if (res.ok) {
-                      const data = await res.json()
-                      const church = data.church
-                      setF('church_id', String(church.id))
-                      setF('place_of_worship', church.name)
-                      setChurchRefresh(r => r + 1)
-                      setMsg(lang === 'es' ? 'Iglesia creada y asignada' : 'Church created & assigned')
-                    } else {
-                      const err = await res.json().catch(() => ({}))
-                      const detail = err.error || `HTTP ${res.status}`
-                      setMsg(lang === 'es' ? `Error: ${detail}` : `Error: ${detail}`)
-                    }
+                    const church = data.church
+                    setF('church_id', String(church.id))
+                    setF('place_of_worship', church.name)
+                    setChurchRefresh(r => r + 1)
+                    setMsg(lang === 'es' ? 'Iglesia creada y asignada' : 'Church created & assigned')
                   } catch (e: any) {
                     const msg = e.message || String(e)
                     if (msg.includes('401') || msg.includes('403')) {
