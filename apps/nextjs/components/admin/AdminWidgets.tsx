@@ -374,10 +374,18 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                       setMsg(lang === 'es' ? 'Iglesia creada y asignada' : 'Church created & assigned')
                     } else {
                       const err = await res.json().catch(() => ({}))
-                      setMsg(err.error || 'Error')
+                      const detail = err.error || `HTTP ${res.status}`
+                      setMsg(lang === 'es' ? `Error: ${detail}` : `Error: ${detail}`)
                     }
-                  } catch {
-                    setMsg('Error')
+                  } catch (e: any) {
+                    const msg = e.message || String(e)
+                    if (msg.includes('401') || msg.includes('403')) {
+                      setMsg(lang === 'es'
+                        ? 'Error de autenticación. Intenta desconectar y reconectar tu billetera.'
+                        : 'Auth error. Try disconnecting and reconnecting your wallet.')
+                    } else {
+                      setMsg(msg || 'Error')
+                    }
                   }
                   setCreatingChurch(false)
                 }}

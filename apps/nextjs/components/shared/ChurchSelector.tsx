@@ -29,9 +29,21 @@ export function ChurchSelector({ value, countryId, cityId, lang, onChange, allow
     if (addr) params.set('walletAddress', addr)
     if (tok) params.set('token', tok)
     fetch(`/api/churches/search?${params}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) {
+          console.log(`[ChurchSelector] Auth check: HTTP ${r.status}`, {
+            addr: addr.slice(0, 10) + '...',
+            tokenLen: tok.length,
+          })
+          try { const { logger } = require('@pasosdejesus/m/debug'); logger.info(`Church search failed: HTTP ${r.status}`, 'ChurchSelector') } catch {}
+        }
+        return r.json()
+      })
       .then(d => { setChurches(d.churches || d || []); setLoading(false) })
-      .catch(() => setLoading(false))
+      .catch((e) => {
+        console.log('[ChurchSelector] Fetch error:', e.message?.slice(0, 80) || e)
+        setLoading(false)
+      })
   }, [countryId, cityId, refreshKey])
 
   const handleChange = (val: string) => {
