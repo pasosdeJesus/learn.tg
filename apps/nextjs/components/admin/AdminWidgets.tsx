@@ -202,6 +202,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.passport_nationality = user.passport_nationality || ''
     initial.place_of_worship = user.place_of_worship || ''
     initial.place_of_worship_location = user.place_of_worship_location || ''
+    initial.city_id = user.city_id || ''
     initial.pastor_name = user.pastor_name || ''
     initial.pastor_whatsapp = user.pastor_whatsapp || ''
     initial.church_relationship = user.church_relationship || ''
@@ -236,6 +237,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     for (const k of ['nombre', 'email', 'whatsapp', 'telegram', 'pais_id', 'religion_id',
       'passport_name', 'passport_nationality',
       'place_of_worship', 'place_of_worship_location', 'church_id', 'church_relationship',
+      'city_id',
       'proposed_date_of_interview', 'conducted_date_of_interview']) {
       if (form[k] !== undefined) body[k] = form[k] || null
     }
@@ -303,11 +305,12 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
           <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Ciudad del Lugar de Culto' : 'City of Place of Worship'}</label>
           <TownAutocomplete
             value={form.place_of_worship_location || ''}
-            cityId={null}
+            cityId={form.city_id ? Number(form.city_id) : null}
             countryId={form.pais_id ? Number(form.pais_id) : null}
             lang={lang}
             onChange={(cityId, cityName) => {
               setF('place_of_worship_location', cityName)
+              setF('city_id', cityId != null ? String(cityId) : '')
               if (isChecked('verified_place_of_worship')) setF('verified_place_of_worship', '')
             }}
           />
@@ -407,29 +410,6 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                 </label>
               ) : null
             ))}
-          </div>
-        </div>
-        <div className="border-t pt-3">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">{lang === 'es' ? 'Documentos de Identidad' : 'ID Documents'}</h4>
-          <div className="space-y-2">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">{lang === 'es' ? 'Foto Frontal' : 'Front Photo'}</label>
-              <input type="file" accept="image/*" onChange={async (e) => {
-                const file = e.target.files?.[0]; if (!file) return
-                const fd = new FormData(); fd.append('photo', file); fd.append('side', 'front')
-                fd.append('walletAddress', user.billetera || ''); fd.append('token', 'admin')
-                await adminFetch('/api/user/id-photo', { method: 'POST', body: fd })
-              }} className="text-xs text-gray-900" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">{lang === 'es' ? 'Foto Reverso' : 'Back Photo'}</label>
-              <input type="file" accept="image/*" onChange={async (e) => {
-                const file = e.target.files?.[0]; if (!file) return
-                const fd = new FormData(); fd.append('photo', file); fd.append('side', 'back')
-                fd.append('walletAddress', user.billetera || ''); fd.append('token', 'admin')
-                await adminFetch('/api/user/id-photo', { method: 'POST', body: fd })
-              }} className="text-xs text-gray-900" />
-            </div>
           </div>
         </div>
         <div className="border-t pt-3">
