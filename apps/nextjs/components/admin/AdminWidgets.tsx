@@ -346,6 +346,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
               </p>
               <div className="text-xs text-gray-600 space-y-0.5 mb-2">
                 <p><strong>{lang === 'es' ? 'Iglesia' : 'Church'}:</strong> {form.place_of_worship}</p>
+                {form.place_of_worship_location && <p><strong>{lang === 'es' ? 'Ciudad' : 'City'}:</strong> {form.place_of_worship_location}</p>}
                 {form.pastor_name && <p><strong>{t('pastor')}:</strong> {form.pastor_name}</p>}
                 {form.pastor_whatsapp && <p><strong>WhatsApp:</strong> {form.pastor_whatsapp}</p>}
               </div>
@@ -363,6 +364,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                         pastor_name: form.pastor_name,
                         pastor_whatsapp: form.pastor_whatsapp,
                         country_id: countryId,
+                        city_name: form.place_of_worship_location || null,
                       }),
                     })
                     const church = data.church
