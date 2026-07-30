@@ -67,7 +67,7 @@ graph TD
 - **Language:** Solidity (^0.8.24)
 - **Network:** Celo (mainnet) & Celo Sepolia (testnet)
 - **Contracts:**
-    - `LearnTGVaults.sol`: Manages USDT rewards for crossword puzzle completions.
+    - `LearnTGVaultsV4.sol`: Manages USDT and SLEARN scholarship rewards for crossword puzzle completions (active).
     - `CeloUBI.sol`: Manages periodic claims of Universal Basic Income (UBI) in CELO.
 
 ---
@@ -100,9 +100,9 @@ The platform features two distinct reward mechanisms, demonstrating our principl
 - **Trigger:** A student submits a crossword answer via the `/api/check-crossword` endpoint.
 - **Process:**
     1. The Next.js backend validates the answer.
-    2. If correct, it calls the `submitGuideResult()` function on the `LearnTGVaults.sol` contract.
+    2. If correct, it calls the `payScholarship()` function on the `LearnTGVaultsV4.sol` contract.
     3. The contract verifies on-chain that the user has a `profileScore` of at least 50, has not already been rewarded for the guide, and has respected the 24-hour cooldown period.
-    4. If checks pass, the contract calculates and transfers the USDT reward to the student's wallet.
+    4. If checks pass, the contract calculates and transfers USDT and SLEARN rewards to the student's wallet.
 
 ### 2. Universal Basic Income (UBI) Claims in CELO
 - **Trigger:** A user initiates a UBI claim via the `/api/claim-celo-ubi` endpoint.

@@ -8,8 +8,9 @@ Deployed on Celo.
 | Contract | File | Purpose |
 |---|---|---|
 | **SLEARN** | `SLEARN.sol` | ERC-20 utility token, mixed payments, 3-tier reserve backing |
-| **LearnTGVaultsV3** | `LearnTGVaultsV3.sol` | Scholarship vaults (USDT + SLEARN), `guideId` = `actividadpf_id` |
-| **LearnTGVaults** | `LearnTGVaults.sol` | Legacy V2 — being migrated to V3 |
+| **LearnTGVaultsV4** | `LearnTGVaultsV4.sol` | Active — scholarship vaults (USDT + SLEARN), partial payments, `guideId` = `actividadpf_id` |
+| **LearnTGVaultsV3** | `LearnTGVaultsV3.sol` | Legacy V3 |
+| **LearnTGVaults** | `LearnTGVaults.sol` | Legacy V2 |
 | **CeloUbi** | `CeloUbi.sol` | Universal Basic Income claims in CELO |
 | **MockUSDT** | `MockUSDT.sol` | Mock USDT for testnet |
 
@@ -46,7 +47,8 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 | Command | Purpose |
 |---|---|
 | `bin/deploySLEARN` | Deploy SLEARN token |
-| `bin/deployLearnTGVaultsV3` | Deploy V3 vaults (reads SLEARN from deployments) |
+| `bin/deployLearnTGVaultsV4` | Deploy V4 vaults (active) |
+| `bin/deployLearnTGVaultsV3` | Deploy V3 vaults (legacy) |
 | `bin/deployMockUSDT` | Deploy MockUSDT (testnet only) |
 | `bin/deployCeloUbi` | Deploy CeloUBI |
 | `bin/configSLEARN` | Configure SLEARN after deploy (addresses + roles) |
@@ -56,6 +58,7 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 | Command | Purpose |
 |---|---|
 | `bin/contractVerificationSLEARN` | Verify SLEARN source code |
+| `bin/contractVerificationLearnTGVaultsV4` | Verify V4 source code |
 | `bin/contractVerificationLearnTGVaultsV3` | Verify V3 source code |
 | `bin/contractVerificationCeloUbi` | Verify CeloUBI source code |
 | `bin/contractVerificationMusdt` | Verify MockUSDT source code |
@@ -65,6 +68,7 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 | Command | Purpose |
 |---|---|
 | `bin/verifySLEARN` | Check SLEARN: name, rate, supply, paused |
+| `bin/verifyLearnTGVaultsV4` | Check V4: VERSION, owner, balances |
 | `bin/verifyLearnTGVaultsV3` | Check V3: VERSION, owner, balances |
 | `bin/verifyCeloUbi` | Check CeloUBI: owner, backendAddress |
 | `bin/verifyMockUSDT` | Check MockUSDT |

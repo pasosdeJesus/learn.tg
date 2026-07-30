@@ -46,7 +46,7 @@ ganas — y entre más alta tu puntuación de perfil, más CELO recibes diariame
 
 **Valor diario aproximado:**
 *   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 Nuevos Leones). Puedes ahorrar durante varios días antes de convertir.
-*   **IBU de CELO:** Hasta 1 CELO diario, dependiendo de tu puntuación de perfil. Con 52 puntos, recibes 0.52 CELO.
+*   **IBU de CELO:** Hasta 0.20 CELO diario, dependiendo de tu puntuación de perfil. Con 50 puntos, recibes 0.10 CELO.
 
 **💡 Consejo:** Varios adultos en un hogar pueden reclamar, cada uno con su propia billetera, todo gestionable desde **una única aplicación MetaMask**.
 
@@ -56,7 +56,7 @@ Como puedes ver, las cantidades diarias de IBU son pequeñas. Aunque se suman co
 
 Una estrategia poderosa es **ahorrar tu IBU** durante varios días o semanas.
 
-Para acelerar tus ahorros, puedes **combinar tu IBU con otras ganancias** en learn.tg. Por ejemplo, completar crucigramas en la plataforma te recompensa con **1 USDT** por cada crucigrama resuelto. Al ahorrar tus G$, CELO y sumar tus ganancias de USDT, puedes acumular una cantidad más significativa para convertir a efectivo cuando lo necesites.
+Para acelerar tus ahorros, puedes **combinar tu IBU con otras ganancias** en learn.tg. Por ejemplo, completar crucigramas en la plataforma te recompensa con **hasta 1 USDT** (dependiendo de tu puntaje de perfil). Al ahorrar tus G$, CELO y sumar tus ganancias de USDT, puedes acumular una cantidad más significativa para convertir a efectivo cuando lo necesites.
 
 ---
 

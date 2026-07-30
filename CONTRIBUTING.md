@@ -59,6 +59,12 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
 - **Commits**: Use [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`
 - **Type checking**: Code at `apps/nextjs` must pass `make type` without errors
 
+## 🔗 Smart Contracts
+
+The active scholarship contract is **LearnTGVaultsV4** (`apps/hardhat/contracts/LearnTGVaultsV4.sol`) — deployed on Celo. V3 and V2 are legacy. The scholarship formula in all versions is `(amountPerGuide × profileScore) / 100`, requiring profile score ≥ 50. USDT and SLEARN are paid independently (partial payments supported in V4). CELO UBI is handled by `CeloUbi.sol` with `MAX_REWARD = 0.2 CELO` and formula `(0.2 × profileScore) / 100`.
+
+See [apps/hardhat/README.md](apps/hardhat/README.md) for deploy, verify, and smoke-test commands.
+
 ## 📋 Requirements (REQ/)
 
 Requirements that correspond to GitHub/GitLab issues must be written in **English**. Use:

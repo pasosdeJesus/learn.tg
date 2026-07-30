@@ -8,20 +8,53 @@ End-to-end testing for learn.tg uses `@pasosdejesus/m`'s test runner
 
 | Command | What | Needs Chrome? | Default target |
 |---------|------|:---:|---|
-| `make test-smoke` | HTTP smoke tests | ❌ | `https://learn.tg:9001` |
-| `bin/m test:e2e` | Browser specs (falls back to smoke) | ✅ | `https://learn.tg:9001` |
+| `make test-smoke` | All HTTP smoke tests | ❌ | `https://learn.tg:9001` |
+| `make test-e2e` | All browser specs | ✅ | `https://learn.tg:9001` |
+| `make test-e2e-<name>` | Single browser spec by filename pattern | ✅ | `https://learn.tg:9001` |
+| `bin/m test:e2e` | Browser specs (falls back to smoke if none found) | ✅ | `https://learn.tg:9001` |
 | `bin/m test:e2e --smoke` | Smoke only | ❌ | `https://learn.tg:9001` |
-| `bin/m test:e2e <pattern>` | Specific spec(s) | ✅ | `https://learn.tg:9001` |
-| `bin/m test:e2e --grep <filter>` | Filter by name | ✅ | `https://learn.tg:9001` |
+| `bin/m test:e2e <pattern>` | Specific spec(s) matching filename | ✅ | `https://learn.tg:9001` |
+| `bin/m test:e2e --grep <filter>` | Filter specs by test name | ✅ | `https://learn.tg:9001` |
 
 Override target: `SITE_URL=https://learn.tg bin/m test:e2e`
 
 Chrome path: `CHROME_PATH=/usr/local/bin/chrome bin/m test:e2e`
 
+## `bin/m test:e2e` in Detail
+
+The runner (`@pasosdejesus/m/e2e`) searches `e2e/specs/` first (browser),
+then falls back to `e2e/smoke/` (HTTP) with a warning when no browser specs
+match the pattern.
+
+```sh
+# Run all browser specs
+bin/m test:e2e
+
+# Run smoke tests only (no Chrome needed)
+bin/m test:e2e --smoke
+
+# Run a single spec by filename substring
+bin/m test:e2e connect-wallet-flow        # → e2e/specs/connect-wallet-flow.spec.mjs
+bin/m test:e2e leaderboard                # → e2e/smoke/leaderboard.spec.mjs
+
+# Filter by test name inside a spec file
+bin/m test:e2e --grep "session"
+
+# Run against production
+SITE_URL=https://learn.tg bin/m test:e2e --smoke
+```
+
+Each spec is a standalone Node.js script — you can also run them directly:
+
+```sh
+CHROME_PATH=/usr/local/bin/chrome node e2e/specs/connect-wallet-flow.spec.mjs
+node e2e/smoke/leaderboard.spec.mjs
+```
+
 ## Smoke Tests (`e2e/smoke/`)
 
-HTTP-only tests using `axios`. No browser required. Run in CI and locally
-without display server.
+HTTP-only tests using `axios` (some use `fetch`). No browser required.
+Run in CI and locally without display server.
 
 Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 
@@ -29,14 +62,21 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 |------|---------------|
 | `auth-cookies.spec.mjs` | SIWE auth + session cookie + profile score update |
 | `auth-ux.spec.mjs` | Landing page before/after auth, Connect Wallet button presence |
+| `caldav-completa.spec.mjs` | CalDAV full cycle: create event, list, verify, delete (Radicale) |
+| `caldav-http.spec.mjs` | CalDAV connectivity: PROPFIND, OPTIONS to Radicale |
 | `celo-claim.spec.mjs` | Full crossword → submit → scholarship claim flow |
 | `full-journey.spec.mjs` | All endpoints: CSRF, SIWE, session, profile, crossword, UBI, signout |
+| `landing-page.spec.mjs` | `/en` and `/es` return 200, no "Failed to load courses" error |
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
 | `rails-auth.spec.mjs` | Rails API calls with auth token in ES and EN |
+| `verification-timezone.spec.mjs` | Verification availability API: timezone handling, 7-day window |
 
 ### Current Status (2026-07-28)
 
-**8/10 passing.** `leaderboard.spec.mjs` fails on profileScore explanation text not rendered (minor content issue). `rails-auth.spec.mjs` shows token mismatch for new wallets (expected for wallets without Rails-side session).
+**10 smokes.** `leaderboard.spec.mjs` fails on profileScore explanation text
+not rendered (minor content issue). `rails-auth.spec.mjs` shows token mismatch
+for new wallets (expected for wallets without Rails-side session).
+`caldav-*` smokes skip gracefully when `CALDAV_URL` is not set.
 
 ### Known Limitation: Client-Rendered Auth UI
 
@@ -55,10 +95,11 @@ Full verification requires Puppeteer E2E specs (see below).
 
 ## Browser Specs (`e2e/specs/`)
 
-Puppeteer-based tests using `@pasosdejesus/m/e2e`'s `setupSIWEMock`.
+Puppeteer-based tests using `@pasosdejesus/m/e2e`'s test harness
+(`initTestEnv`, `launchBrowser`, `setupSIWEMock`, `ok`/`fail`/`summary`).
 Requires `CHROME_PATH` set (OpenBSD: `/usr/local/bin/chromium`).
 
-Run with: `bin/m test:e2e` (without `--smoke`)
+Run with: `bin/m test:e2e` (without `--smoke`) or `make test-e2e`
 
 | Spec | What it tests |
 |------|---------------|
@@ -77,7 +118,10 @@ Run with: `bin/m test:e2e` (without `--smoke`)
 
 ### Current Status (2026-07-28)
 
-**10/12 passing.** `full-flow.spec.mjs` Steps 9-10 fail (UBI claim + disconnect) — test wallet has profile score 0, needs ≥50. `prod-landing-to-profile.spec.mjs` fails on wallet connection timing (React hydration on OpenBSD). Both are pre-existing, not regressions.
+**12 specs.** `full-flow.spec.mjs` Steps 9-10 fail (UBI claim + disconnect) —
+test wallet has profile score 0, needs ≥50. `prod-landing-to-profile.spec.mjs`
+fails on wallet connection timing (React hydration on OpenBSD). Both are
+pre-existing, not regressions.
 
 ### SIWE Mock
 
@@ -91,25 +135,28 @@ with real ECDSA signing via `page.exposeFunction`. This enables:
 - `eth_sendTransaction` → simulated tx hash
 - `eth_call` + `eth_getBalance` → simulated balances
 
+Usage in specs:
+
+```js
+import { initTestEnv, launchBrowser, setupSIWEMock, ok, fail, summary } from '@pasosdejesus/m/e2e'
+
+const TEST_PRIVATE_KEY = process.env.PRIVATE_KEY
+const TEST_ADDRESS = process.env.NEXT_PUBLIC_ADDRESS
+
+const page = await browser.newPage()
+await setupSIWEMock(page, TEST_ADDRESS, TEST_PRIVATE_KEY)
+await page.goto(SITE_URL)
+// Wallet is now mocked — SIWE sign-in works without real wallet
+```
+
+The mock survives page reloads (injected via `evaluateOnNewDocument`).
+
 ### Requirements
 
-- `puppeteer-core` (devDependency)
+- `puppeteer-core` (devDependency in `apps/nextjs/package.json`)
 - `CHROME_PATH` set: `/usr/local/bin/chromium` (OpenBSD) or equivalent
 - Test wallet in `apps/.env`: `PRIVATE_KEY` + `NEXT_PUBLIC_ADDRESS`
 - Dev server running on `https://learn.tg:9001` (or set `IPDES` env var)
-
-### Running a Single Spec
-
-```sh
-# By filename pattern
-bin/m test:e2e connect-wallet-flow
-
-# By name filter
-bin/m test:e2e --grep "session"
-
-# Against production
-SITE_URL=https://learn.tg bin/m test:e2e --smoke
-```
 
 ## Test Environment
 
@@ -122,8 +169,18 @@ Override with env vars:
 |----------|---------|---------|
 | `SITE_URL` | `https://learn.tg:9001` | Target site |
 | `IPDES` | `learn.tg` | Hostname for SIWE domain validation |
-| `CHROME_PATH` | — | Path to Chromium/Chrome binary |
+| `CHROME_PATH` | — | Path to Chromium/Chrome binary (required for browser specs) |
 | `PRIVATE_KEY` | From `apps/.env` | Test wallet private key |
+| `NEXT_PUBLIC_ADDRESS` | From `apps/.env` | Test wallet address |
+| `CALDAV_URL` | — | Radicale/CalDAV server URL (smoke: `caldav-*`) |
+| `CALDAV_USER` | — | CalDAV username (smoke: `caldav-*`) |
+| `CALDAV_PASS` | — | CalDAV password (smoke: `caldav-*`) |
+
+CalDAV smokes skip gracefully when these are not set:
+
+```
+ℹ️  CALDAV not configured — skipping CalDAV smoke test
+```
 
 ## CI / Automated Testing
 
@@ -138,6 +195,13 @@ make test-smoke
 CHROME_PATH=/usr/bin/google-chrome make test-e2e
 ```
 
+## OpenBSD / adJ Specifics
+
+- Chrome 141+ requires `--ozone-platform=headless` (handled by `@pasosdejesus/m/e2e`)
+- Clean `/tmp/puppeteer*` between runs if Chrome hangs
+- `CHROME_PATH=/usr/local/bin/chromium`
+- Self-signed cert: tests use `NODE_TLS_REJECT_UNAUTHORIZED=0` internally
+
 ## Troubleshooting
 
 | Symptom | Likely Cause | Fix |
@@ -148,9 +212,13 @@ CHROME_PATH=/usr/bin/google-chrome make test-e2e
 | Smoke `celo-claim` fails with "24 hours" | Test wallet cooldown | Wait 24h or use different wallet |
 | Smoke `auth-ux` shows address ❌ | Client-rendered components | Use Puppeteer specs for UI verification |
 | Rails API 401 "Different tokens" | Token mismatch between auth and API | Normal for new wallets; retry authenticating |
+| Chrome hangs on OpenBSD | Zombie Puppeteer processes | `rm -rf /tmp/puppeteer*` and retry |
+| CalDAV smokes skipped | `CALDAV_URL` not set | Set env vars if CalDAV testing is needed |
+| `full-flow.spec.mjs` UBI claim fails | Test wallet profile score < 50 | Use a wallet with ≥50 profile score |
 
 ## Related Docs
 
 - [SIWE Auth Flow](siwe-auth-flow.md) — Authentication protocol
 - [Wallet Auth](wallet-auth.md) — Custom wallet implementation (no wagmi)
 - [REQ/179.md](../REQ/179.md) — E2E testing infrastructure spec
+- [apps/nextjs/CONTRIBUTING.md](../apps/nextjs/CONTRIBUTING.md) — Testing policy and coverage targets

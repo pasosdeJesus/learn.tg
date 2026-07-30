@@ -44,7 +44,7 @@ daily.
 
 **Approximate daily value:**
 *   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 New Leones). You can save up over several days before converting.
-*   **CELO UBI:** Up to 1 CELO daily, depending on your profile score. With 52 points, you receive 0.52 CELO.
+*   **CELO UBI:** Up to 0.20 CELO daily, depending on your profile score. With 50 points, you receive 0.10 CELO.
 
 **💡 Tip:** Multiple adults in a household can claim, each with their own wallet, all manageable from **a single MetaMask app**.
 
