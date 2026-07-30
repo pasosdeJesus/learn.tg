@@ -1,7 +1,6 @@
 import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
-  // Insert guide2b for both English and Spanish courses
   for (const prefijo of ['/web3-and-ubi', '/web3-e-ibu']) {
     const course = await db
       .selectFrom('cor1440_gen_proyectofinanciero')
@@ -22,7 +21,17 @@ export async function up(db: Kysely<any>): Promise<void> {
       .executeTakeFirst()
 
     if (existing) {
-      console.log(`guide2b already exists for ${prefijo} — skipping`)
+      // Update nombrecorto if needed (from '25' to 'guide2b')
+      if (existing.nombrecorto !== 'guide2b') {
+        await db
+          .updateTable('cor1440_gen_actividadpf')
+          .set({ nombrecorto: 'guide2b' })
+          .where('id', '=', existing.id)
+          .execute()
+        console.log(`Updated nombrecorto to guide2b for ${prefijo}`)
+      } else {
+        console.log(`guide2b already exists for ${prefijo} — skipping`)
+      }
       continue
     }
 
@@ -30,7 +39,7 @@ export async function up(db: Kysely<any>): Promise<void> {
       .insertInto('cor1440_gen_actividadpf')
       .values({
         proyectofinanciero_id: course.id,
-        nombrecorto: '25',
+        nombrecorto: 'guide2b',
         titulo: prefijo === '/web3-and-ubi'
           ? 'How to Earn Scholarships on learn.tg'
           : 'Cómo Ganar Becas en learn.tg',

@@ -41,8 +41,9 @@ Jesus is God incarnated, the Truth and the Logos.
 11. **[SLEARN-WHITEPAPER.md]**: Tokenomics: distribution percentages, reserve backing rules, stability formula.
 12. **[doc/e2e-testing.md]**: E2E testing — smoke tests (HTTP), Puppeteer browser specs, SIWE mock, CI setup.
 13. **[doc/guide-writing.md]**: Conventions for writing course guides — Five Pillars, comprehension question format, database integration.
-14. **[resources/en/web3-and-ubi/guide*.md]**: User-facing course content — profile score breakdown, scholarship rules, UBI claiming, stable-sl integration.
-15. Read the structure and key files of this project
+14. **[doc/how-to-create-a-course.md]**: Step-by-step course creation — script, DB migration, vault, credentials, SBT.
+15. **[resources/en/web3-and-ubi/guide*.md]**: User-facing course content — profile score breakdown, scholarship rules, UBI claiming, stable-sl integration.
+16. Read the structure and key files of this project
 
 ### 5. Confirm Your understanding of the documentation and the project
 

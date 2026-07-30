@@ -12,7 +12,7 @@ A step-by-step guide to creating a fully functional course with scholarships (US
 |------|-------|------|------------|
 | 0 | `scripts/create-course.sh` | Generate guide templates + DB migration | ✅ |
 | 1 | `db/migrations/` | Execute DB records for course + guides | ⚠️ Review then run |
-| 2 | `resources/` | Write guide content (Markdown) | ❌ Manual |
+| 2 | `resources/` | Write guide content (Markdown) | ❌ Manual — see [Guide Writing Conventions](guide-writing.md) |
 | 3 | Smart Contract | Create vault with scholarship amounts | ⚠️ Review then run |
 | 4 | `public/img/` | Prepare 512×512 SVG icon | ❌ Manual |
 | 5 | Smart Contract | Register credential type | ⚠️ Review then run |

@@ -216,7 +216,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   const isChecked = (key: string) => {
     const v = form[key]
     if (v == null || v === '') return false
-    if (typeof v === 'number') return v > 0
+    if (typeof v === 'number') return v !== 0
     const s = String(v)
     return s.length > 0 && s !== 'true' && s !== 'false' && s !== '0'
   }
@@ -224,8 +224,14 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   const toggle = (key: string, source?: string) => setForm(f => {
     const currentlyChecked = isChecked(key)
     if (source) {
-      const sourceVal = (f as any)[source] // Read from current form, not original user
-      return { ...f, [key]: currentlyChecked ? '' : (sourceVal != null ? String(sourceVal) : '') }
+      let sourceVal = (f as any)[source]
+      // If city_id is null (non-SL country), use -1 as sentinel for text-based city
+      if (key === 'verified_city_id' && (sourceVal == null || sourceVal === '')) {
+        sourceVal = -1
+      }
+      const newVal = currentlyChecked ? '' : String(sourceVal ?? '')
+      console.log(`[UserEditModal] toggle ${key}: currentlyChecked=${currentlyChecked}, source=${source}, sourceVal=${sourceVal}, newVal=${newVal}`)
+      return { ...f, [key]: newVal }
     }
     return { ...f, [key]: currentlyChecked ? '' : 'checked' }
   })
@@ -245,8 +251,9 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     for (const f of VERIFIED_FIELDS) {
       const v = form[f.key]
       if (f.source) {
-        // Convert numeric IDs from string to number for DB compatibility
-        const isNumericId = f.key === 'verified_city_id'
+        // Convert numeric IDs from string to number for DB compatibility.
+        // If the value is text (non-SL country fallback), send as-is.
+        const isNumericId = f.key === 'verified_city_id' || f.key === 'verified_department_id' || f.key === 'verified_municipality_id'
         body[f.key] = (typeof v === 'string' && v.length > 0 && v !== 'true' && v !== 'false')
           ? (isNumericId ? Number(v) : v)
           : null
@@ -255,7 +262,9 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
       }
     }
     try {
-      await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const bodyJson = JSON.stringify(body)
+      console.log('[UserEditModal] Saving:', { city_id: body.city_id, verified_city_id: body.verified_city_id, fullBody: bodyJson.slice(0, 200) })
+      await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: bodyJson })
       onSaved()
     } catch (e: any) {
       setMsg(e.message || 'Error')

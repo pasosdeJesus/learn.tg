@@ -43,8 +43,11 @@ Rules for writing course guides (content in `resources/{lang}/{course}/`).
 
 - Each guide is a row in `cor1440_gen_actividadpf` linked to a course via
   `proyectofinanciero_id`.
-- `nombrecorto` controls ordering (text sort). Use numbers for main guides
-  (`1`, `2`, `3`, `4`) and intermediate values for insertions (`25` between
-  2 and 3).
+- `nombrecorto` controls ordering (text sort). Match the existing naming
+  pattern of the course. If existing guides use `guide1`, `guide2`, `guide3`,
+  use `guide2b` to insert between 2 and 3. If they use `1`, `2`, `3`, use
+  `25`.
 - `sufijoRuta` must match the filename without extension.
 - To add a guide between existing ones, use a migration (`bin/m db:mig:make`).
+  See [How to Create a Course](how-to-create-a-course.md) for the full course
+  setup workflow (script, DB, vault, credentials).
