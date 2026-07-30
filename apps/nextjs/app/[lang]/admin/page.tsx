@@ -1,6 +1,6 @@
 'use client'
 
-import { use } from 'react'
+import { use, useState } from 'react'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { CalendarWidget } from '@/components/admin/CalendarWidget'
@@ -15,6 +15,8 @@ const VERIFIER_WALLETS = (process.env.NEXT_PUBLIC_VERIFIER_WALLET || '')
 export default function AdminDashboard({ params }: PageProps) {
   const { lang } = use(params)
   const { address } = useAuthAddress()
+  const [churchKey, setChurchKey] = useState(0)
+  const bumpChurches = () => setChurchKey(k => k + 1)
 
   const t = createComponentT(lang, {
     en: {
@@ -66,11 +68,11 @@ export default function AdminDashboard({ params }: PageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
           <CalendarWidget lang={lang} t={t} />
-          <PendingWidget lang={lang} t={t} />
+          <PendingWidget lang={lang} t={t} onUserModalClose={bumpChurches} />
         </div>
         <div className="space-y-6">
-          <RecentUsersWidget lang={lang} t={t} />
-          <RecentChurchesWidget lang={lang} t={t} />
+          <RecentUsersWidget lang={lang} t={t} onUserModalClose={bumpChurches} />
+          <RecentChurchesWidget lang={lang} t={t} key={churchKey} />
         </div>
       </div>
     </div>

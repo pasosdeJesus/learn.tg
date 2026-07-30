@@ -38,7 +38,7 @@ const VERIFIED_FIELDS = [
   { key: 'verified_whatsapp', source: 'whatsapp', labelEn: 'WhatsApp', labelEs: 'WhatsApp' },
   { key: 'verified_telegram', source: 'telegram', labelEn: 'Telegram', labelEs: 'Telegram' },
   { key: 'verified_email', source: 'email', labelEn: 'Email', labelEs: 'Correo' },
-  { key: 'verified_city_id', source: 'city_id', labelEn: 'City/ID', labelEs: 'Ciudad/ID' },
+  { key: 'verified_city_id', source: 'city_id', labelEn: 'City', labelEs: 'Ciudad' },
   { key: 'verified_place_of_worship', source: 'place_of_worship', labelEn: 'Place of Worship', labelEs: 'Lugar de Culto' },
   { key: 'verified_church_relationship', source: null, labelEn: 'Church Role', labelEs: 'Rol en Iglesia' },
 ]
@@ -55,7 +55,7 @@ function shortAddr(a?: string) {
 
 /* ── Pending Verifications Widget ── */
 
-export function PendingWidget({ lang, t }: { lang: string; t: TFunc }) {
+export function PendingWidget({ lang, t, onUserModalClose }: { lang: string; t: TFunc; onUserModalClose?: () => void }) {
   const [items, setItems] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<UserItem | null>(null)
@@ -87,14 +87,14 @@ export function PendingWidget({ lang, t }: { lang: string; t: TFunc }) {
             </div>
           ))}
         </div>}
-      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); setRefresh(r => r + 1) }} />}
+      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => { setSelected(null); onUserModalClose?.() }} onSaved={() => { setSelected(null); setRefresh(r => r + 1); onUserModalClose?.() }} />}
     </div>
   )
 }
 
 /* ── Recent Users Widget ── */
 
-export function RecentUsersWidget({ lang, t }: { lang: string; t: TFunc }) {
+export function RecentUsersWidget({ lang, t, onUserModalClose }: { lang: string; t: TFunc; onUserModalClose?: () => void }) {
   const [items, setItems] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<UserItem | null>(null)
@@ -127,7 +127,7 @@ export function RecentUsersWidget({ lang, t }: { lang: string; t: TFunc }) {
             </div>
           ))}
         </div>}
-      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => setSelected(null)} onSaved={() => { setSelected(null); setRefresh(r => r + 1) }} />}
+      {selected && <UserEditModal lang={lang} t={t} user={selected} onClose={() => { setSelected(null); onUserModalClose?.() }} onSaved={() => { setSelected(null); setRefresh(r => r + 1); onUserModalClose?.() }} />}
     </div>
   )
 }
@@ -224,7 +224,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   const toggle = (key: string, source?: string) => setForm(f => {
     const currentlyChecked = isChecked(key)
     if (source) {
-      const sourceVal = (user as any)[source]
+      const sourceVal = (f as any)[source] // Read from current form, not original user
       return { ...f, [key]: currentlyChecked ? '' : (sourceVal != null ? String(sourceVal) : '') }
     }
     return { ...f, [key]: currentlyChecked ? '' : 'checked' }
@@ -245,15 +245,22 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     for (const f of VERIFIED_FIELDS) {
       const v = form[f.key]
       if (f.source) {
-        body[f.key] = (typeof v === 'string' && v.length > 0 && v !== 'true' && v !== 'false') ? v : null
+        // Convert numeric IDs from string to number for DB compatibility
+        const isNumericId = f.key === 'verified_city_id'
+        body[f.key] = (typeof v === 'string' && v.length > 0 && v !== 'true' && v !== 'false')
+          ? (isNumericId ? Number(v) : v)
+          : null
       } else {
         body[f.key] = v || null
       }
     }
-    const res = await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    try {
+      await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      onSaved()
+    } catch (e: any) {
+      setMsg(e.message || 'Error')
+    }
     setSaving(false)
-    if (res.ok) { setMsg(t('saveSuccess')); setTimeout(onSaved, 800) }
-    else { const err = await res.json().catch(() => ({})); setMsg(err.error || 'Error') }
   }
 
   return (
@@ -262,6 +269,12 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
         {user.profilescore != null && (
           <p className="text-sm text-gray-600">{t('score')}: <span className="font-bold">{user.profilescore}</span></p>
         )}
+        <p className="text-sm">
+          <a href={`/${lang}/user/${user.id}`} target="_blank" rel="noopener noreferrer"
+            className="text-blue-600 hover:underline">
+            {lang === 'es' ? 'Ver perfil público' : 'View public profile'} →
+          </a>
+        </p>
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('profileFields')}</h4>
           <div className="grid grid-cols-2 gap-2">
@@ -329,7 +342,18 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             cityId={null}
             lang={lang}
             refreshKey={churchRefresh}
-            onChange={(id, name) => { setF('church_id', String(id || '')); if (name) setF('place_of_worship', name) }}
+            onChange={async (id, name) => {
+              setF('church_id', String(id || ''))
+              if (name) setF('place_of_worship', name)
+              // Auto-fill pastor info from church
+              if (id) {
+                try {
+                  const church = await adminFetch(`/api/admin/church/${id}`)
+                  if (church.pastor_name) setF('pastor_name', church.pastor_name)
+                  if (church.pastor_whatsapp) setF('pastor_whatsapp', church.pastor_whatsapp)
+                } catch {}
+              }
+            }}
           />
         </div>
         {(() => {
@@ -455,6 +479,8 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [msg, setMsg] = useState('')
+  const [memberCount, setMemberCount] = useState<number | null>(null)
+  const [members, setMembers] = useState<{ id: number; nombre: string }[]>([])
 
   useEffect(() => {
     setForm({
@@ -462,25 +488,40 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
       pastor_telegram: church.pastor_telegram || '', city_name: church.city_name || '', denomination: church.denomination || '',
       registration: church.registration || '', registration_verified: !!church.registration_verified,
     })
+    // Fetch church members
+    adminFetch(`/api/admin/users?church_id=${church.id}`)
+      .then(d => {
+        const list = d.users || []
+        setMembers(list.slice(0, 10))
+        setMemberCount(list.length)
+      })
+      .catch(() => { setMemberCount(null); setMembers([]) })
   }, [church])
 
   const setF = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }))
 
   const handleSave = async () => {
     setSaving(true)
-    const res = await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+    try {
+      await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      setMsg(t('saveSuccess'))
+      setTimeout(onSaved, 800)
+    } catch (e: any) {
+      setMsg(e.message || 'Error')
+    }
     setSaving(false)
-    if (res.ok) { setMsg(t('saveSuccess')); setTimeout(onSaved, 800) }
-    else { const err = await res.json().catch(() => ({})); setMsg(err.error || 'Error') }
   }
 
   const handleDelete = async () => {
     if (!confirm(t('deleteConfirm'))) return
     setDeleting(true)
-    const res = await adminFetch(`/api/admin/church/${church.id}`, { method: 'DELETE' })
+    try {
+      await adminFetch(`/api/admin/church/${church.id}`, { method: 'DELETE' })
+      onSaved()
+    } catch (e: any) {
+      setMsg(e.message || 'Error')
+    }
     setDeleting(false)
-    if (res.ok) onSaved()
-    else { const err = await res.json().catch(() => ({})); setMsg(err.error || 'Error') }
   }
 
   return (
@@ -511,6 +552,22 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
             else setMsg('Error uploading document')
           }} className="text-xs" />
         </div>
+        {memberCount !== null && memberCount > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs">
+            <p className="font-medium text-amber-800 mb-1">
+              {lang === 'es'
+                ? `${memberCount} miembro(s) en esta iglesia:`
+                : `${memberCount} member(s) in this church:`}
+            </p>
+            <div className="max-h-24 overflow-y-auto space-y-0.5">
+              {members.map(m => (
+                <span key={m.id} className="block">
+                  {m.nombre || `User #${m.id}`}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         {msg && <p className={`text-sm text-center ${msg === t('saveSuccess') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
         <div className="flex justify-between">
           <button onClick={handleDelete} disabled={deleting} className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 disabled:opacity-50">
