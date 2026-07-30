@@ -41,11 +41,17 @@ native coin of a network or a token built on top of it.
 *   **Native Coin:** The main currency of a blockchain (for example CELO on the Celo
     network).
 *   **Token:** A digital asset built on an existing blockchain (for example GoodDollar
-    **G$** and USDT on Celo).
+    **G$**, USDT, and **SLEARN** on Celo).
 
 > **Why it matters for you:** The UBI you claim will be in the form of
 > cryptocurrency tokens (G$ and CELO), while the bonus scholarships are in USDT
-> all of which live on the Celo blockchain.
+> and SLEARN — all of which live on the Celo blockchain.
+
+**SLEARN** is learn.tg's own utility token. You earn it by completing guides
+and passing crosswords, and you can use it to pay for premium courses on the
+platform. It can also be exchanged for Leones through
+[stable-sl.pdJ.app](https://stable-sl.pdj.app/).
+Learn more in the [SLEARN Whitepaper](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md).
 
 
 #### 3. Web3 Wallet & Digital Identity (Your Passport)

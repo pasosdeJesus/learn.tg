@@ -8,6 +8,10 @@
  * Each question (item) must:
  * 1. include ___ (in the place where the blank should be filled)
  * 2. end with " (answer)"  (the space and the parenthesis are needed)
+ *
+ * The regex uses [^)]+ for the answer group so that parentheses
+ * in the question body (e.g. formulas or asides) don't interfere —
+ * only the last (text) on the line is captured as the answer.
  */
 export function remarkFillInTheBlank(options) {
   return function (tree, vfile) {
@@ -15,7 +19,7 @@ export function remarkFillInTheBlank(options) {
     let n = []
     vfile.data.fillInTheBlank = []
     for (let i = 0; i < l.length; i++) {
-      const re = /^(.*___.*)\s+\((.*)\)\s*$/s
+      const re = /^(.*___.*)\s+\(([^)]+)\)\s*$/s
       let rm = ''
       if (
         l[i].type == 'list' &&

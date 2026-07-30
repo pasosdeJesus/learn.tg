@@ -40,7 +40,9 @@ Jesus is God incarnated, the Truth and the Logos.
 10. **[doc/wallet-auth.md]**: Custom wallet-auth implementation — `ConnectWalletButton`, `useAuthAddress`, `useWriteContract`, and disconnect detection. Replaced RainbowKit + wagmi (R-#186).
 11. **[SLEARN-WHITEPAPER.md]**: Tokenomics: distribution percentages, reserve backing rules, stability formula.
 12. **[doc/e2e-testing.md]**: E2E testing — smoke tests (HTTP), Puppeteer browser specs, SIWE mock, CI setup.
-13. Read the structure and key files of this project
+13. **[doc/guide-writing.md]**: Conventions for writing course guides — Five Pillars, comprehension question format, database integration.
+14. **[resources/en/web3-and-ubi/guide*.md]**: User-facing course content — profile score breakdown, scholarship rules, UBI claiming, stable-sl integration.
+15. Read the structure and key files of this project
 
 ### 5. Confirm Your understanding of the documentation and the project
 

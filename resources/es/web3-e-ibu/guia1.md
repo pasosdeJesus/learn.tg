@@ -41,11 +41,17 @@ moneda nativa de una red o un token construido sobre ella.
 *   **Moneda Nativa:** La moneda principal de una blockchain (por ejemplo, CELO en la red
     Celo).
 *   **Token:** Un activo digital construido sobre una blockchain existente (por ejemplo, GoodDollar
-    **G$** y USDT en Celo).
+    **G$**, USDT y **SLEARN** en Celo).
 
 > **Por qué es importante para ti:** El IBU que reclames será en forma de
-> tokens de criptomoneda (G$ y CELO), mientras que las becas adicionales están en USDT,
-> todos los cuales residen en la blockchain de Celo.
+> tokens de criptomoneda (G$ y CELO), mientras que las becas adicionales están en USDT
+> y SLEARN — todos los cuales residen en la blockchain de Celo.
+
+**SLEARN** es el token de utilidad de learn.tg. Lo ganas completando guías
+y pasando crucigramas, y puedes usarlo para pagar cursos premium en la
+plataforma. También se puede cambiar por Leones mediante
+[stable-sl.pdJ.app](https://stable-sl.pdj.app/).
+Más información en el [Whitepaper de SLEARN](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md).
 
 
 #### 3. Billetera Web3 e Identidad Digital (Tu Pasaporte)

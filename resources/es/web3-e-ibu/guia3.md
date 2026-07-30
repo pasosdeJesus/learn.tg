@@ -17,25 +17,8 @@ sistemas de IBU utilizan **mecanismos anti-sybil**:
 
 **¿Cómo aumentar tu puntuación de perfil?**
 
-Tu puntuación determina cuánto IBU en CELO recibes diariamente y desbloquea
-becas y otros beneficios. Completa tu perfil para llegar hasta 100 puntos:
-
-| Qué verificar | Puntos | Cómo |
-|--------------|:------:|------|
-| Nombre | 26 | Tu nombre debe coincidir con el de tu pasaporte (`passport_name`) |
-| País | 24 | Tu país debe coincidir con tu nacionalidad del pasaporte |
-| Correo | 9 | Configura tu correo y pide a un verificador que lo confirme |
-| WhatsApp o Telegram | 9 | Agrega tu número y pide a un verificador que lo confirme |
-| Ubicación (departamento, ciudad) | 9 | Selecciona tu población y pide a un verificador que confirme |
-| Lugar de culto | 9 | Declara tu iglesia/mezquita y pide a un verificador que confirme |
-| Verificación GoodDollar | 7 | Completa la verificación facial en tu perfil |
-| Entrevista con verificador | 7 | Agenda y asiste a una entrevista de verificación |
-| **Total** | **100** | |
-
-**💡 Inicio rápido:** Completa la verificación facial de GoodDollar (+7 pts) o
-verifícate con [Self](https://self.xyz) (+50 pts: nombre + país). Luego agenda
-una entrevista desde tu [página de perfil](/es/profile) para desbloquear el
-resto de puntos.
+Consulta la **[Guía 2b — Cómo Ganar Becas](../guia2b)** para ver el desglose
+completo de puntuación, la fórmula de becas y consejos para llegar a 50+ puntos.
 
 **🎓 Gana SLEARN mientras aprendes:** Cada vez que completes una guía y pases
 su crucigrama, ganas **hasta 1 token SLEARN** (dependiendo tu puntaje de perfil)

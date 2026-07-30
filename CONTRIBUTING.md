@@ -65,6 +65,24 @@ The active scholarship contract is **LearnTGVaultsV4** (`apps/hardhat/contracts/
 
 See [apps/hardhat/README.md](apps/hardhat/README.md) for deploy, verify, and smoke-test commands.
 
+## 📚 Documentation Sync Policy
+
+When source code changes affect user-facing behavior, three layers of
+documentation must stay consistent:
+
+| Layer | File | Audience | What to update |
+|---|---|---|---|
+| **User guides** | `resources/{en,es}/{course}/guide*.md` | Students | Reward formulas, limits, flows, rules |
+| **Architecture** | `ARCHITECTURE.md` | Developers | Contracts, APIs, DB schema, parsing |
+| **Contributing** | `CONTRIBUTING.md`, `apps/*/README.md` | Contributors | Commands, setup, standards |
+
+**Invariant:** Any change to a contract's `MAX_REWARD`, scholarship formula,
+profile score calculation, or cooldown period MUST be reflected in both the
+user guides AND ARCHITECTURE.md. Code changes without doc updates are
+incomplete.
+
+Guide writing conventions are in [doc/guide-writing.md](doc/guide-writing.md).
+
 ## 📋 Requirements (REQ/)
 
 Requirements that correspond to GitHub/GitLab issues must be written in **English**. Use:

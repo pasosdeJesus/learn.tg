@@ -10,6 +10,36 @@ Learn.tg is a live, production gamified educational platform making learning eng
 
 The platform currently features **crossword puzzles** as the primary interactive assessment method. Each guide concludes with a crossword puzzle that tests the material learned. Future development plans include expanding to additional game types while maintaining the core educational value.
 
+### Guide Format and Parsing
+
+Course guides are Markdown files in `resources/{lang}/{prefijoRuta}/guide*.md`.
+They contain comprehension questions as numbered lists ending with `(answer)`:
+
+```markdown
+1. The Celo native cryptocurrency is called ___ . (CELO)
+```
+
+The parser (`lib/remarkFillInTheBlank.mjs`) extracts questions and answers
+using regex `/^(.*___.*)\s+\(([^)]+)\)\s*$/s`. Key behaviors:
+- Questions with `___` become crossword clues (max 5 shown, randomly selected
+  from all available).
+- The answer in `(...)` is captured — `[^)]+` allows parentheses in the
+  question body (e.g. formulas) without interference.
+- Answers are stored in `billetera_usuario.answer_fib` as pipe-separated
+  values (` | `) and validated against user submissions.
+- Guide order is controlled by `nombrecorto` in `cor1440_gen_actividadpf`
+  (text sort). The `sufijoRuta` column must match the filename.
+
+See [Guide Writing Conventions](doc/guide-writing.md) for the full style guide.
+
+### Credentials (SBTs)
+
+When a student completes 100% of guides in a course, an SBT (Soul-Bound Token)
+is minted via `lib/credentials.ts` → `mintCourseCredential()`. The SBT is
+non-transferable proof of learning, displayed on the user's public profile.
+Emission records are cached in `credential_emission` and metadata in
+`credential_metadata`.
+
 ## System Architecture Diagram
 
 This diagram illustrates the flow of information and actions between the user, the different parts of the application, and the blockchain.
@@ -39,7 +69,7 @@ graph TD
     C -- 5. Submits Answers/Actions --> F
     F -- 6. Validates, Records Events, Triggers Reward --> E
     E -- 7. Executes Transaction --> G
-    G -- 8. Sends USDT/CELO Reward --> A
+    G -- 8. Sends USDT, SLEARN, and CELO Rewards --> A
 
     style E fill:#f9f,stroke:#333,stroke-width:2px
     style D fill:#bbf,stroke:#333,stroke-width:2px
@@ -54,11 +84,11 @@ graph TD
 - **Database:** PostgreSQL (>= 16.2) with unaccent extension
 - **Purpose:** Course management, guide organization, user data persistence, teacher administration.
 - **Based on:** MSIP and cor1440_gen frameworks
-- **Authentication:** Token-based (receives and validates JWT tokens from the Next.js frontend).
+- **Authentication:** Receives and validates tokens from the Next.js frontend (the same CSRF token used for SIWE, stored in `billetera_usuario.token`).
 
 ### 2. **Frontend and minor backend: Next.js (apps/nextjs/)**
 - **Framework:** Next.js with React + TypeScript.
-- **UI Components:** Utilizes Radix UI for building a flexible and accessible component library.
+- **UI Components:** Utilizes Radix UI for building a flexible and accessible component library. Shared utilities and CLI tooling from `@pasosdejesus/m` (i18n, WBA metrics, E2E test harness, debug console, Kysely mocks, shadcn components, blockchain helpers).
 - **Purpose:** User interface, content delivery, and user authentication.
 - **Authentication:** Implements Sign-In With Ethereum (SIWE) with a custom `window.ethereum`-based wallet layer (no RainbowKit, no wagmi). See [SIWE Auth Flow](doc/siwe-auth-flow.md) and [Wallet Auth](doc/wallet-auth.md) for details.
 - **Note:** For a detailed technical breakdown of the Next.js application, refer to the `README.md` file within the `apps/nextjs` directory.
@@ -69,6 +99,8 @@ graph TD
 - **Contracts:**
     - `LearnTGVaultsV4.sol`: Manages USDT and SLEARN scholarship rewards for crossword puzzle completions (active).
     - `CeloUBI.sol`: Manages periodic claims of Universal Basic Income (UBI) in CELO.
+    - `SLEARN.sol`: ERC-20 utility token, 2 decimals, restricted transfers.
+    - `PasosDeJesusCredentials.sol`: Course completion SBTs (Soul-Bound Tokens).
 
 ---
 
@@ -103,6 +135,7 @@ The platform features two distinct reward mechanisms, demonstrating our principl
     2. If correct, it calls the `payScholarship()` function on the `LearnTGVaultsV4.sol` contract.
     3. The contract verifies on-chain that the user has a `profileScore` of at least 50, has not already been rewarded for the guide, and has respected the 24-hour cooldown period.
     4. If checks pass, the contract calculates and transfers USDT and SLEARN rewards to the student's wallet.
+    5. When 100% of guides in a course are completed, `mintCourseCredential()` issues an SBT via `PasosDeJesusCredentials.sol`.
 
 ### 2. Universal Basic Income (UBI) Claims in CELO
 - **Trigger:** A user initiates a UBI claim via the `/api/claim-celo-ubi` endpoint.
@@ -120,7 +153,7 @@ The platform tracks user progress and scores through two main database tables:
 
 ### `guide_usuario` (per-guide progress)
 - `points`: 1 if the guide was answered correctly, 0 otherwise
-- `amountpaid`: USDT amount rewarded for this guide (0 if not yet paid)
+- `amountpaid`: Amount rewarded for this guide — USDT if paid, otherwise SLEARN (0 if not yet paid)
 - `profilescore`: User's profile score at the time of submission
 
 ### Global user scores (in `usuario` table)
@@ -134,6 +167,28 @@ When a user answers a guide correctly:
 3. Progress percentages are recomputed based on completed vs total guides
 
 The frontend displays progress using a three-color arc showing completion and payment percentages.
+
+### Admin Dashboard
+
+Verifiers access `/en/admin` to manage users and churches. Key features:
+- **Pending Verifications**: Users who requested interviews
+- **Recent Users / Churches**: Quick access to recently modified records
+- **User Edit Modal**: Edit profile fields, verify data (checkboxes), assign churches, schedule interviews
+- **Church Edit Modal**: Edit church details, view members, delete (soft-delete)
+- **Calendar**: Verifier availability managed via CalDAV (Radicale)
+
+See [Admin API](apps/nextjs/app/api/admin/) for endpoint details.
+
+### Additional Database Tables
+
+##### `church` (places of worship)
+- Managed by verifiers via `/api/admin/churches`
+- Linked to users via `usuario.church_id`
+- Tracks pastor info, location, denomination, registration
+
+##### `credential_emission` + `credential_metadata` (SBT cache)
+- `credential_emission`: Records SBT minting events (user, course, tokenId, txHash)
+- `credential_metadata`: Cached on-chain metadata (name, type, image URL, premium status)
 
 ---
 

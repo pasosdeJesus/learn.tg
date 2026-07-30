@@ -15,24 +15,8 @@ UBI systems use **anti-sybil mechanisms**:
 
 **How to increase your profile score?**
 
-Your profile score determines how much CELO UBI you receive daily and unlocks
-scholarships and other benefits. Complete your profile to reach up to 100 points:
-
-| What to verify | Points | How |
-|---------------|:------:|------|
-| Name | 26 | Your name must match your passport name (`passport_name`) |
-| Country | 24 | Your country must match your passport nationality |
-| Email | 9 | Set your email and have a verifier confirm it |
-| WhatsApp or Telegram | 9 | Add your number and have a verifier confirm it |
-| Location (department, city) | 9 | Select your town and have a verifier confirm it |
-| Place of worship | 9 | Declare your church/mosque and have a verifier confirm it |
-| GoodDollar verification | 7 | Complete facial verification on your profile |
-| Interview with verifier | 7 | Schedule and attend a verification interview |
-| **Total** | **100** | |
-
-**💡 Quick start:** Complete GoodDollar facial verification (+7 pts) or verify
-with [Self](https://self.xyz) (+50 pts: name + country). Then schedule an
-interview from your [profile page](/en/profile) to unlock the remaining points.
+See **[Guide 2b — How to Earn Scholarships](../guide2b)** for the full
+profile score breakdown, scholarship formula, and tips to reach 50+ points.
 
 **🎓 Earn SLEARN while you learn:** Every time you complete a guide and pass
 its crossword, you earn **up to 1 SLEARN token** (depending on your profile
