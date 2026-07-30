@@ -548,15 +548,21 @@ export default function ProfileForm({ params }: PageProps) {
             next.delete(field)
             return next
           }), 2000)
-          // Update profile score after relevant field saves
           try {
             const data = await res.json()
             if (data.profilescore != null) {
               setProfile(prev => ({ ...prev, profilescore: data.profilescore }))
             }
           } catch {}
+        } else {
+          // Only show error for non-transient failures
+          if (res.status !== 401 && res.status !== 403) {
+            console.error(`[autoSave] Failed to save ${field}: ${res.status}`)
+          }
         }
-      } catch { /* silently fail — user can retry with Save button */ }
+      } catch (e) {
+        console.error(`[autoSave] Error saving ${field}:`, e?.message || e)
+      }
       finally {
         setSavingFields(prev => {
           const next = new Set(prev)
