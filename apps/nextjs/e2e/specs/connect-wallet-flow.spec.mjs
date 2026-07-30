@@ -54,10 +54,16 @@ async function main() {
   // ── Test 1: Connect Wallet on landing ──
   console.log('── Test 1: Connect Wallet visible ──')
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
-  await new Promise(r => setTimeout(r, 5000))
-  const hasConnect = await page.evaluate(() =>
-    document.body.textContent?.includes('Connect Wallet') ||
-    document.body.textContent?.includes('Conectar Billetera'))
+  // Wait for React hydration (can be slow on OpenBSD)
+  let hasConnect = false
+  for (let i = 0; i < 15; i++) {
+    await new Promise(r => setTimeout(r, 3000))
+    hasConnect = await page.evaluate(() =>
+      document.body.textContent?.includes('Connect Wallet') ||
+      document.body.textContent?.includes('Conectar Billetera'))
+    if (hasConnect) break
+    console.log(`  Waiting for Connect Wallet... (${i + 1}/15)`)
+  }
   if (hasConnect) ok('Connect Wallet visible')
   else fail('Connect Wallet NOT visible')
 

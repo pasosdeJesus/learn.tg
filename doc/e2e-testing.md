@@ -34,10 +34,9 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
 | `rails-auth.spec.mjs` | Rails API calls with auth token in ES and EN |
 
-### Current Status (2026-07-15)
+### Current Status (2026-07-28)
 
-**5/6 passing.** `celo-claim.spec.mjs` fails because the test wallet hits the
-24-hour cooldown period on the scholarship contract — not a bug.
+**8/10 passing.** `leaderboard.spec.mjs` fails on profileScore explanation text not rendered (minor content issue). `rails-auth.spec.mjs` shows token mismatch for new wallets (expected for wallets without Rails-side session).
 
 ### Known Limitation: Client-Rendered Auth UI
 
@@ -72,6 +71,13 @@ Run with: `bin/m test:e2e` (without `--smoke`)
 | `guide-claims.spec.mjs` | Guide completion and claim flow |
 | `nav-session-diag.spec.mjs` | Navigation + session diagnostics |
 | `profile-data.spec.mjs` | Profile data loading and display |
+| `admin-dashboard.spec.mjs` | Admin dashboard: widgets load, APIs respond, user/church detail, PATCH |
+| `prod-landing-to-profile.spec.mjs` | Production landing page → wallet connect → profile save flow |
+| `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
+
+### Current Status (2026-07-28)
+
+**10/12 passing.** `full-flow.spec.mjs` Steps 9-10 fail (UBI claim + disconnect) — test wallet has profile score 0, needs ≥50. `prod-landing-to-profile.spec.mjs` fails on wallet connection timing (React hydration on OpenBSD). Both are pre-existing, not regressions.
 
 ### SIWE Mock
 
