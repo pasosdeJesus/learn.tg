@@ -50,12 +50,22 @@ Jesus is God incarnated, the Truth and the Logos.
 Make a summary of this project and the relation you see between it and the
 framework and principles.
 
-## ⚠️ Financial Constraint
+## 6. Financial Constraint
 
 Any token with real value in wallets whose private key is known by the agent
 cannot be spent by the agent except in something directly and recently ordered
 by the owner of the project. The agent must never autonomously transfer,
 swap, claim, or send real tokens without explicit, recent human authorization.
+
+
+### 7. Git Operations — Restricted
+
+**NEVER write to Git.** This agent runs in a VM that shares a directory
+with the real machine. Git write operations (`commit`, `push`, `tag`, etc.)
+must be performed by the human operator from the real machine where no AI runs.
+The agent may read Git state (`status`, `diff`, `log`, `blame`) but must not
+modify it.
+
 
 ---
 

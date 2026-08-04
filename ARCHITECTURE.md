@@ -365,7 +365,7 @@ Communications between users, and between pdJ and users, are **confidential by d
 ### What API endpoints expose
 
 ```typescript
-// ✅ Public — metadata only
+// ⏳ Planned (REQ/157) — not yet implemented
 GET /api/gd/contact/:clusterId
 → { cluster_sent_at, pdj_sent_at, gd_responded_at, released_at, status }
 
