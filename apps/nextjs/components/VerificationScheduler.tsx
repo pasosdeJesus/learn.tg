@@ -50,6 +50,17 @@ function getTimezoneLabel(tz: string): string {
   return `${tz} (${offset})`
 }
 
+const formatDateKey = (dateKey: string, lang: string) => {
+  const [y, m, d] = dateKey.split('-').map(Number)
+  const date = new Date(y, m - 1, d, 12, 0, 0)
+  return new Intl.DateTimeFormat(lang === 'es' ? 'es' : 'en', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date)
+}
+
 function formatInZone(d: Date, lang: string, tz: string, options: Intl.DateTimeFormatOptions): string {
   return new Intl.DateTimeFormat(lang === 'es' ? 'es' : 'en', {
     timeZone: tz,
@@ -384,7 +395,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
             {selectedDate && (
               <div className="sm:hidden flex items-center gap-2 text-sm">
                 <button onClick={() => setSelectedDate(null)} className="text-blue-600">&larr; {lang === 'es' ? 'cambiar' : 'change'}</button>
-                <span className="font-medium">{formatLocal(selectedDate, lang, tz)}</span>
+                <span className="font-medium">{selectedDateKey ? formatDateKey(selectedDateKey, lang) : formatLocal(selectedDate, lang, tz)}</span>
               </div>
             )}
 
@@ -392,7 +403,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
             {selectedDate && !isLoading && (
               <div className="border-t pt-3">
                 <p className="text-sm font-medium mb-2">
-                  {formatLocal(selectedDate, lang, tz)}
+                  {selectedDateKey ? formatDateKey(selectedDateKey, lang) : formatLocal(selectedDate, lang, tz)}
                 </p>
                 {isLoading ? (
                   <p className="text-gray-500 text-sm">{t('loadingSlots')}</p>
