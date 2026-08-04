@@ -15,7 +15,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     const existing = await db
       .selectFrom('cor1440_gen_actividadpf')
-      .select('id')
+      .select(['id', 'nombrecorto'])
       .where('proyectofinanciero_id', '=', course.id)
       .where('sufijoRuta', '=', 'guide2b')
       .executeTakeFirst()

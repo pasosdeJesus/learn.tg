@@ -4,8 +4,8 @@
 
 \restrict
 
--- Dumped from database version 17.6
--- Dumped by pg_dump version 17.6
+-- Dumped from database version 17.9
+-- Dumped by pg_dump version 17.9
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2943,7 +2943,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL
 );
 
 
@@ -2980,7 +2980,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -3332,6 +3332,41 @@ CREATE TABLE public.kysely_migration_lock (
     id character varying(255) NOT NULL,
     is_locked integer DEFAULT 0 NOT NULL
 );
+
+
+--
+-- Name: m_hdi; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.m_hdi (
+    id integer NOT NULL,
+    pais_id integer NOT NULL,
+    year integer NOT NULL,
+    hdi numeric(4,3) NOT NULL,
+    source character varying(50) DEFAULT 'UNDP'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: m_hdi_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.m_hdi_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: m_hdi_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.m_hdi_id_seq OWNED BY public.m_hdi.id;
 
 
 --
@@ -5520,6 +5555,13 @@ ALTER TABLE ONLY public.heb412_gen_plantillahcr ALTER COLUMN id SET DEFAULT next
 
 
 --
+-- Name: m_hdi id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.m_hdi ALTER COLUMN id SET DEFAULT nextval('public.m_hdi_id_seq'::regclass);
+
+
+--
 -- Name: mr519_gen_campo id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -6235,6 +6277,22 @@ ALTER TABLE ONLY public.kysely_migration
 
 
 --
+-- Name: m_hdi m_hdi_pais_id_year_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.m_hdi
+    ADD CONSTRAINT m_hdi_pais_id_year_key UNIQUE (pais_id, year);
+
+
+--
+-- Name: m_hdi m_hdi_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.m_hdi
+    ADD CONSTRAINT m_hdi_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: mr519_gen_campo mr519_gen_campo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6816,6 +6874,20 @@ CREATE UNIQUE INDEX cor1440_gen_datointermedioti_pmindicadorpf_llaves_idx ON pub
 --
 
 CREATE INDEX credential_emission_usuario_idx ON public.credential_emission USING btree (usuario_id);
+
+
+--
+-- Name: idx_m_hdi_pais_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_m_hdi_pais_id ON public.m_hdi USING btree (pais_id);
+
+
+--
+-- Name: idx_m_hdi_year; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_m_hdi_year ON public.m_hdi USING btree (year);
 
 
 --
@@ -8484,6 +8556,14 @@ ALTER TABLE ONLY public.msip_ubicacionpre
 
 ALTER TABLE ONLY public.cor1440_gen_proyectofinanciero
     ADD CONSTRAINT lf_proyectofinanciero_responsable FOREIGN KEY (responsable_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: m_hdi m_hdi_pais_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.m_hdi
+    ADD CONSTRAINT m_hdi_pais_id_fkey FOREIGN KEY (pais_id) REFERENCES public.msip_pais(id);
 
 
 --

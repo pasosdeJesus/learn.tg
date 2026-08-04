@@ -722,6 +722,16 @@ export interface Heb412GenPlantillahcr {
   vista: string | null;
 }
 
+export interface MHdi {
+  created_at: Generated<Timestamp | null>;
+  hdi: Numeric;
+  id: Generated<number>;
+  pais_id: number;
+  source: Generated<string | null>;
+  updated_at: Generated<Timestamp | null>;
+  year: number;
+}
+
 export interface Mr519GenCampo {
   ancho: number | null;
   ayudauso: string | null;
@@ -1506,6 +1516,7 @@ export interface DB {
   heb412_gen_plantilladoc: Heb412GenPlantilladoc;
   heb412_gen_plantillahcm: Heb412GenPlantillahcm;
   heb412_gen_plantillahcr: Heb412GenPlantillahcr;
+  m_hdi: MHdi;
   mr519_gen_campo: Mr519GenCampo;
   mr519_gen_encuestapersona: Mr519GenEncuestapersona;
   mr519_gen_encuestausuario: Mr519GenEncuestausuario;
