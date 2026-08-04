@@ -1089,6 +1089,7 @@ export interface MsipPais {
   svgrotx: number | null;
   svgroty: number | null;
   svgruta: string | null;
+  timezone: string | null;
   ultvigenciafin: Timestamp | null;
   ultvigenciaini: Timestamp | null;
   updated_at: Timestamp | null;

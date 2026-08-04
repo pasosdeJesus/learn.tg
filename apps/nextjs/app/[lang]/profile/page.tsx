@@ -52,6 +52,7 @@ interface UserProfile {
   profilescore: number | null
   proposed_date_of_interview: string | null
   department_timezone: string | null
+  country_timezone?: string | null
   religion: number
   telegram: string
   uname: string
@@ -1039,6 +1040,7 @@ export default function ProfileForm({ params }: PageProps) {
                   {placeOfWorshipLabels(profile.religion).address}
                 </label>
                 <TownAutocomplete
+                  key={`town-${profile.country}`}
                   value={citySearch}
                   cityId={cityId}
                   countryId={profile.country}
@@ -1133,7 +1135,7 @@ export default function ProfileForm({ params }: PageProps) {
                 <VerificationScheduler
                   lang={lang}
                   interviewDate={profile.proposed_date_of_interview}
-                  timezone={profile.department_timezone || undefined}
+                  timezone={profile.department_timezone || profile.country_timezone || undefined}
                   countryId={profile.country || undefined}
                   onBooked={() => setUpdateProfile(true)}
                   onCancel={() => setUpdateProfile(true)}

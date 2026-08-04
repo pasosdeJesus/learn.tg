@@ -33,15 +33,7 @@ const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Ago
 const DAYS_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
-const DEFAULT_TIMEZONE = 'Africa/Freetown'
-
-/** Country → timezone fallback when user has no department_timezone set */
-const COUNTRY_TIMEZONES: Record<number, string> = {
-  170: 'America/Bogota',       // Colombia
-  694: 'Africa/Freetown',       // Sierra Leone
-  340: 'America/Tegucigalpa',   // Honduras
-  862: 'America/Caracas',       // Venezuela
-}
+const DEFAULT_TIMEZONE = 'UTC'
 
 function getTimezoneLabel(tz: string): string {
   const now = new Date()
@@ -97,7 +89,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
 
   const months = lang === 'es' ? MONTHS_ES : MONTHS_EN
   const dayHeaders = lang === 'es' ? DAYS_ES : DAYS_EN
-  const tz = timezone || (countryId ? COUNTRY_TIMEZONES[countryId] : undefined) || DEFAULT_TIMEZONE
+  const tz = timezone || DEFAULT_TIMEZONE
   const tzLabel = getTimezoneLabel(tz)
 
   const t = createComponentT(lang, {
