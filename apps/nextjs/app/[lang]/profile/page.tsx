@@ -327,6 +327,7 @@ export default function ProfileForm({ params }: PageProps) {
           profilescore: rUser.profilescore,
           proposed_date_of_interview: rUser.proposed_date_of_interview || null,
           department_timezone: rUser.department_timezone || null,
+          country_timezone: rUser.country_timezone || null,
           religion: rUser.religion_id,
           id_photo_front: rUser.id_photo_front || null,
           id_photo_back: rUser.id_photo_back || null,
@@ -348,11 +349,14 @@ export default function ProfileForm({ params }: PageProps) {
         }
         if (rUser.city_id != null) {
           setCityId(rUser.city_id)
-          if (rUser.city_name) setCityDisplayName(rUser.city_name)
+          if (rUser.city_name) {
+            setCityDisplayName(rUser.city_name)
+            setCitySearch(rUser.city_name)
+          }
         }
         if (rUser.place_of_worship_location) {
           setPlaceOfWorshipLocation(rUser.place_of_worship_location)
-          setCitySearch(rUser.city_name || rUser.place_of_worship_location)
+          if (!rUser.city_name) setCitySearch(rUser.place_of_worship_location)
         }
         if (rUser.place_of_worship && !rUser.church_id) setPlaceOfWorshipName(rUser.place_of_worship)
         if (rUser.pastor_name) setPastorName(rUser.pastor_name)
@@ -541,6 +545,8 @@ export default function ProfileForm({ params }: PageProps) {
       autoSaveField('place_of_worship', '', 0)
       autoSaveField('place_of_worship_location', '', 0)
       autoSaveField('church_id', '', 0)
+      // Refresh full profile to get new timezone data
+      setTimeout(() => setUpdateProfile(true), 500)
       return
     }
 
