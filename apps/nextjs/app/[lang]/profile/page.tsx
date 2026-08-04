@@ -517,6 +517,32 @@ export default function ProfileForm({ params }: PageProps) {
     // Auto-save with debounce: 800ms for text, immediate for selects
     const isSelect = field === 'religion' || field === 'country' || field === 'church_relationship'
     const delay = isSelect ? 0 : 800
+
+    // When country changes, clear location-dependent fields
+    if (field === 'country') {
+      setCityId(null)
+      setCitySearch('')
+      setCityDisplayName('')
+      setDepartmentId(null)
+      setDepartmentName('')
+      setMunicipalityId(null)
+      setMunicipalityName('')
+      setPlaceOfWorshipLocation('')
+      setPlaceOfWorshipName('')
+      setSelectedChurchId(null)
+      setSelectedChurchName('')
+      setChurches([])
+      // Send nulls for all location fields to trigger backend validation
+      autoSaveField('country', value, delay)
+      autoSaveField('city_id', '', 0)
+      autoSaveField('department_id', '', 0)
+      autoSaveField('municipality_id', '', 0)
+      autoSaveField('place_of_worship', '', 0)
+      autoSaveField('place_of_worship_location', '', 0)
+      autoSaveField('church_id', '', 0)
+      return
+    }
+
     autoSaveField(field, value, delay)
   }
 
@@ -586,6 +612,11 @@ export default function ProfileForm({ params }: PageProps) {
       whatsapp: 'whatsapp', telegram: 'telegram',
       religion: 'religion_id', country: 'pais_id',
       church_relationship: 'church_relationship',
+      city_id: 'city_id', department_id: 'department_id',
+      municipality_id: 'municipality_id',
+      place_of_worship: 'place_of_worship',
+      place_of_worship_location: 'place_of_worship_location',
+      church_id: 'church_id',
     }
     return mapping[field] || null
   }
