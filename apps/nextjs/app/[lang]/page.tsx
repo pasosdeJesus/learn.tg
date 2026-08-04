@@ -110,7 +110,9 @@ export default function Page({ params }: PageProps) {
       try {
         const response = await axios.get<Course[]>(url)
         if (response.data) {
-          const courseInfo = Array.isArray(response.data) ? response.data : (response.data as any).proyectosfinancieros || (response.data as any).data || []
+          const courseInfo = (Array.isArray(response.data) ? response.data : (response.data as any).proyectosfinancieros || (response.data as any).data || [])
+            // Hide paid courses until payment flow is implemented
+            .filter((c: Course) => c.prefijoRuta !== '/gdcluster')
           setCourses(courseInfo)
 
           if (!Array.isArray(courseInfo) || courseInfo.length === 0) return
