@@ -256,7 +256,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
   }, [slots])
 
   const selectedDateKey = selectedDate
-    ? selectedDate.toISOString().slice(0, 10)
+    ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
     : null
   const daySlots = selectedDateKey ? (slotsByDate[selectedDateKey] || []) : []
 
@@ -267,7 +267,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
   const isCurrentMonth = viewDate.getMonth() === today.getMonth() && viewDate.getFullYear() === today.getFullYear()
   const isNextMonth = viewDate.getMonth() === (today.getMonth() + 1) % 12 && viewDate.getFullYear() === today.getFullYear() + (today.getMonth() === 11 ? 1 : 0)
 
-  const todayKey = today.toISOString().slice(0, 10)
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
   const formatTime = (iso: string) =>
     formatInZone(new Date(iso), lang, tz, {
@@ -361,7 +361,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
                     key={dateKey}
                     disabled={!hasSlots || isPastDate}
                     onClick={() => {
-                      const d = new Date(Date.UTC(viewDate.getFullYear(), viewDate.getMonth(), day))
+                      const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), day)
                       setSelectedDate(d)
                       setSelectedSlot(null)
                     }}
