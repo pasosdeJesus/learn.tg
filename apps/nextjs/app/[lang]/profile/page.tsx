@@ -420,7 +420,7 @@ export default function ProfileForm({ params }: PageProps) {
         whatsapp: profile.whatsapp,
         telegram: profile.telegram,
         place_of_worship: selectedChurchId ? churches.find(c => c.id === selectedChurchId)?.name || '' : placeOfWorshipName || null,
-        place_of_worship_location: placeOfWorshipLocation || citySearch,
+        place_of_worship_location: cityId ? placeOfWorshipLocation : (citySearch || placeOfWorshipLocation),
         church_id: selectedChurchId || null,
         department_id: departmentId,
         municipality_id: municipalityId,
@@ -561,7 +561,7 @@ export default function ProfileForm({ params }: PageProps) {
           }
         }
       } catch (e) {
-        console.error(`[autoSave] Error saving ${field}:`, e?.message || e)
+        console.error(`[autoSave] Error saving ${field}:`, (e as any)?.message || String(e))
       }
       finally {
         setSavingFields(prev => {
@@ -1017,6 +1017,8 @@ export default function ProfileForm({ params }: PageProps) {
                     setCitySearch(name)
                     if (deptId !== undefined) setDepartmentId(deptId)
                     if (muniId !== undefined) setMunicipalityId(muniId)
+                    // Free-text entry (country without city data): persist as place_of_worship_location
+                    if (newCityId === null) setPlaceOfWorshipLocation(name)
                   }}
                 />
                 {(cityId || citySearch) && (

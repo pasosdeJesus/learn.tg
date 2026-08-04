@@ -12,6 +12,7 @@ interface ChurchSelectorProps {
   onChange: (churchId: number | null, churchName: string) => void
   allowNew?: boolean             // show "+ New church" option
   onNewChurch?: () => void
+  refreshKey?: number            // trigger re-fetch when changed
 }
 
 export function ChurchSelector({ value, countryId, cityId, lang, onChange, allowNew, onNewChurch, refreshKey }: ChurchSelectorProps) {
