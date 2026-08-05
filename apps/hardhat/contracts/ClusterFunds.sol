@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title ClusterFunds
@@ -18,7 +19,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  * Security: Uses OpenZeppelin's SafeERC20, ReentrancyGuard, and Ownable.
  * Emergency withdrawals are restricted to contract balances with timelock.
  */
-contract ClusterFunds is Ownable, ReentrancyGuard {
+contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     // ──── State ────
@@ -83,6 +84,9 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
 
     // ──── Admin ────
 
+    function pause() external onlyOwner { _pause(); }
+    function unpause() external onlyOwner { _unpause(); }
+
     function setPdJTreasury(address _treasury) external onlyOwner {
         require(_treasury != address(0), "Invalid treasury");
         pdjTreasury = _treasury;
@@ -120,7 +124,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
         address donor,
         uint256 usdtAmount,
         uint256 slearnAmount
-    ) external onlyOwner nonReentrant {
+    ) external onlyOwner whenNotPaused nonReentrant {
         require(!processedTx[txHash], "Already processed");
         require(clusterWallet != address(0), "Invalid cluster wallet");
         require(donor != address(0), "Invalid donor");
@@ -164,7 +168,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
         address donor,
         uint256 usdtAmount,
         uint256 slearnAmount
-    ) external onlyOwner nonReentrant {
+    ) external onlyOwner whenNotPaused nonReentrant {
         require(!processedTx[txHash], "Already processed");
         require(bytes(countryCode).length == 2, "Invalid country code");
         require(donor != address(0), "Invalid donor");
@@ -205,7 +209,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
     function redistributeCountryFunds(
         string calldata countryCode,
         address[] calldata clusters
-    ) external onlyOwner nonReentrant {
+    ) external onlyOwner whenNotPaused nonReentrant {
         require(bytes(countryCode).length == 2, "Invalid country code");
         uint256 count = clusters.length;
         require(count > 0, "No clusters in country");
@@ -256,7 +260,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
      * @notice Release accumulated funds to a verified cluster's wallet.
      * @param clusterWallet The cluster's wallet address.
      */
-    function releaseClusterFunds(address clusterWallet) external onlyOwner nonReentrant {
+    function releaseClusterFunds(address clusterWallet) external onlyOwner whenNotPaused nonReentrant {
         require(clusterWallet != address(0), "Invalid cluster wallet");
         ClusterFund storage fund = clusterFunds[clusterWallet];
         require(fund.exists, "Cluster not found");
@@ -284,7 +288,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
     function releaseCountryFunds(
         string calldata countryCode,
         address recipient
-    ) external onlyOwner nonReentrant {
+    ) external onlyOwner whenNotPaused nonReentrant {
         require(bytes(countryCode).length == 2, "Invalid country code");
         require(recipient != address(0), "Invalid recipient");
         CountryFund storage fund = countryFunds[countryCode];
@@ -313,7 +317,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
      * @param countryCode ISO 3166-1 alpha-2 country code (e.g., "SL", "CO").
      * Called by backend when a cluster is dissolved (last pastor leaves).
      */
-    function removeCluster(address clusterWallet, string calldata countryCode) external onlyOwner nonReentrant {
+    function removeCluster(address clusterWallet, string calldata countryCode) external onlyOwner whenNotPaused nonReentrant {
         require(clusterWallet != address(0), "Invalid cluster wallet");
         require(bytes(countryCode).length == 2, "Invalid country code");
         ClusterFund storage fund = clusterFunds[clusterWallet];
@@ -347,7 +351,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
      * @param token Address of the token to withdraw (USDT or SLEARN).
      * @param amount Amount to withdraw.
      */
-    function requestEmergencyWithdrawal(address token, uint256 amount) external onlyOwner nonReentrant {
+    function requestEmergencyWithdrawal(address token, uint256 amount) external onlyOwner whenNotPaused nonReentrant {
         require(amount > 0, "Amount > 0");
         require(token == address(usdtToken) || token == address(slearnToken), "Invalid token");
 
@@ -368,7 +372,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
      * @param token Address of the token to withdraw.
      * @param amount Amount to withdraw.
      */
-    function executeEmergencyWithdrawal(bytes32 requestId, address token, uint256 amount) external onlyOwner nonReentrant {
+    function executeEmergencyWithdrawal(bytes32 requestId, address token, uint256 amount) external onlyOwner whenNotPaused nonReentrant {
         require(emergencyWithdrawRequests[requestId] > 0, "Request not found");
         require(block.timestamp >= emergencyWithdrawRequests[requestId], "Timelock not expired");
         require(amount > 0, "Amount > 0");
