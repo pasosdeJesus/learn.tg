@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
  * Phase 1: Donations, fund accumulation, admin release.
  * Phase 2 (post-pilot): AAVE yield for idle USDT.
  *
- * Security: Uses OpenZeppelin's SafeERC20, ReentrancyGuard, and Ownable.
+ * Security: Uses OpenZeppelin's SafeERC20, ReentrancyGuard, Ownable, and Pausable.
  * Emergency withdrawals are restricted to contract balances with timelock.
  */
 contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
@@ -40,7 +40,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         uint256 usdtBalance;
         uint256 slearnBalance;
         bool exists;
-        bool verified;
+        // verified removed — countries are fixed entities, no verification needed
     }
 
     mapping(address => ClusterFund) public clusterFunds;      // clusterWallet → fund
@@ -84,8 +84,13 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
 
     // ──── Admin ────
 
-    function pause() external onlyOwner { _pause(); }
-    function unpause() external onlyOwner { _unpause(); }
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
 
     function setPdJTreasury(address _treasury) external onlyOwner {
         require(_treasury != address(0), "Invalid treasury");
@@ -236,9 +241,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
             require(clusterFunds[cw].verified, "Cluster not verified");
             seen[cw] = true;
 
-            if (!clusterFunds[cw].exists) {
-                clusterFunds[cw].exists = true;
-            }
+            // if (!clusterFunds[cw].exists) { clusterFunds[cw].exists = true; } // REDUNDANT — already checked above
             clusterFunds[cw].usdtBalance += usdtPerCluster;
             clusterFunds[cw].slearnBalance += slearnPerCluster;
         }
@@ -293,7 +296,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         require(recipient != address(0), "Invalid recipient");
         CountryFund storage fund = countryFunds[countryCode];
         require(fund.exists, "Country not found");
-        require(fund.verified, "Country not verified");
 
         uint256 usdtAmt = fund.usdtBalance;
         uint256 slearnAmt = fund.slearnBalance;
@@ -360,7 +362,14 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
             : slearnToken.balanceOf(address(this));
         require(amount <= balance, "Insufficient balance");
 
-        bytes32 requestId = keccak256(abi.encodePacked(token, amount, block.timestamp, msg.sender));
+        // Include blockhash for uniqueness to prevent collisions
+        bytes32 requestId = keccak256(abi.encodePacked(
+            token,
+            amount,
+            block.timestamp,
+            msg.sender,
+            blockhash(block.number - 1)
+        ));
         emergencyWithdrawRequests[requestId] = block.timestamp + emergencyWithdrawTimelock;
 
         emit EmergencyWithdrawRequested(requestId, token, amount, block.timestamp + emergencyWithdrawTimelock);
@@ -428,11 +437,10 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     function getCountryFunds(string calldata countryCode) external view returns (
         uint256 usdtBalance,
         uint256 slearnBalance,
-        bool exists,
-        bool verified
+        bool exists
     ) {
         CountryFund storage f = countryFunds[countryCode];
-        return (f.usdtBalance, f.slearnBalance, f.exists, f.verified);
+        return (f.usdtBalance, f.slearnBalance, f.exists);
     }
 
     // ──── Internal ────
