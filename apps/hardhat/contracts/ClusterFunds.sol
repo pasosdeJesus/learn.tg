@@ -38,7 +38,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
     mapping(address => ClusterFund) public clusterFunds;      // clusterWallet → fund
     mapping(string => CountryFund) public countryFunds;       // countryCode → fund
     mapping(bytes32 => bool) public processedTx;              // replay protection
-    mapping(string => uint256) public clusterCount;           // countryCode → count
 
     // ──── Events ────
 
@@ -85,23 +84,23 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
         emit ClusterVerified(_clusterWallet, _verified);
     }
 
-    function incrementClusterCount(string calldata _countryCode) external onlyOwner {
-        clusterCount[_countryCode]++;
-    }
-
-    function decrementClusterCount(string calldata _countryCode) external onlyOwner {
-        require(clusterCount[_countryCode] > 0, "No clusters");
-        clusterCount[_countryCode]--;
-    }
-
     // ──── Donations ────
 
     /**
      * @notice Process a verified donation to a specific cluster.
      * @param txHash The transaction hash of the incoming transfer (replay protection).
-     * @param clusterWallet The cluster's wallet address receiving 85% of funds.
+     * @param clusterWallet The cluster's wallet address receiving the cluster share.
+     * @param donor The original donor address (for event accuracy).
+     * @param usdtAmount Exact USDT amount of this donation.
+     * @param slearnAmount Exact SLEARN amount of this donation.
      */
-    function processDonation(bytes32 txHash, address clusterWallet) external onlyOwner nonReentrant {
+    function processDonation(
+        bytes32 txHash,
+        address clusterWallet,
+        address donor,
+        uint256 usdtAmount,
+        uint256 slearnAmount
+    ) external onlyOwner nonReentrant {
         require(!processedTx[txHash], "Already processed");
         processedTx[txHash] = true;
 
@@ -109,54 +108,56 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
             clusterFunds[clusterWallet].exists = true;
         }
 
-        uint256 usdtBal = usdtToken.balanceOf(address(this));
-        uint256 slearnBal = slearnToken.balanceOf(address(this));
+        (uint256 clusterUsdt, uint256 clusterSlearn, uint256 pdjUsdt, uint256 pdjSlearn) =
+            _splitAmounts(usdtAmount, slearnAmount);
 
-        // Get current balances snapshot (after this tx arrived)
-        // Note: caller must transfer tokens before calling this function,
-        // so we use pre/post balance tracking. For simplicity in Phase 1,
-        // we process whatever arrived since last donation.
-        // In practice the backend transfers then calls this immediately.
+        if (pdjUsdt > 0) usdtToken.transfer(pdjTreasury, pdjUsdt);
+        if (pdjSlearn > 0) slearnToken.transfer(pdjTreasury, pdjSlearn);
 
-        // For now: accept explicit amounts (backend calculates delta)
-        _processDonationAmounts(clusterWallet, usdtBal, slearnBal, txHash);
+        clusterFunds[clusterWallet].usdtBalance += clusterUsdt;
+        clusterFunds[clusterWallet].slearnBalance += clusterSlearn;
+
+        emit ClusterDonation(donor, clusterWallet, clusterUsdt, clusterSlearn);
     }
 
     /**
      * @notice Process a verified donation to a country fund.
      */
-    function processCountryDonation(bytes32 txHash, string calldata countryCode) external onlyOwner nonReentrant {
+    function processCountryDonation(
+        bytes32 txHash,
+        string calldata countryCode,
+        address donor,
+        uint256 usdtAmount,
+        uint256 slearnAmount
+    ) external onlyOwner nonReentrant {
         require(!processedTx[txHash], "Already processed");
         processedTx[txHash] = true;
 
-        uint256 usdtBal = usdtToken.balanceOf(address(this));
-        uint256 slearnBal = slearnToken.balanceOf(address(this));
-
         (uint256 clusterUsdt, uint256 clusterSlearn, uint256 pdjUsdt, uint256 pdjSlearn) =
-            _splitAmounts(usdtBal, slearnBal);
+            _splitAmounts(usdtAmount, slearnAmount);
 
-        // Transfer pdJ share
         if (pdjUsdt > 0) usdtToken.transfer(pdjTreasury, pdjUsdt);
         if (pdjSlearn > 0) slearnToken.transfer(pdjTreasury, pdjSlearn);
 
-        // Accumulate in country fund
         if (!countryFunds[countryCode].exists) {
             countryFunds[countryCode].exists = true;
         }
         countryFunds[countryCode].usdtBalance += clusterUsdt;
         countryFunds[countryCode].slearnBalance += clusterSlearn;
 
-        emit CountryDonation(msg.sender, countryCode, clusterUsdt, clusterSlearn);
+        emit CountryDonation(donor, countryCode, clusterUsdt, clusterSlearn);
     }
 
     // ──── Redistribution ────
 
     /**
-     * @notice Distribute country fund equally among all clusters in that country.
+     * @notice Distribute country fund equally among clusters in that country.
+     * @param countryCode The country whose funds to redistribute.
+     * @param clusters Array of cluster wallet addresses in that country.
      * Called by backend when a new cluster forms.
      */
-    function redistributeCountryFunds(string calldata countryCode) external onlyOwner {
-        uint256 count = clusterCount[countryCode];
+    function redistributeCountryFunds(string calldata countryCode, address[] calldata clusters) external onlyOwner {
+        uint256 count = clusters.length;
         require(count > 0, "No clusters in country");
 
         CountryFund storage fund = countryFunds[countryCode];
@@ -169,6 +170,23 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
 
         uint256 usdtPerCluster = usdtTotal / count;
         uint256 slearnPerCluster = slearnTotal / count;
+
+        for (uint256 i = 0; i < count; i++) {
+            address cw = clusters[i];
+            if (!clusterFunds[cw].exists) {
+                clusterFunds[cw].exists = true;
+            }
+            clusterFunds[cw].usdtBalance += usdtPerCluster;
+            clusterFunds[cw].slearnBalance += slearnPerCluster;
+        }
+
+        // Any remainder stays in country fund
+        uint256 usdtRemainder = usdtTotal - (usdtPerCluster * count);
+        uint256 slearnRemainder = slearnTotal - (slearnPerCluster * count);
+        if (usdtRemainder > 0 || slearnRemainder > 0) {
+            fund.usdtBalance = usdtRemainder;
+            fund.slearnBalance = slearnRemainder;
+        }
 
         emit CountryFundsRedistributed(countryCode, usdtPerCluster, slearnPerCluster, count);
     }
@@ -262,22 +280,5 @@ contract ClusterFunds is Ownable, ReentrancyGuard {
         clusterSlearn = (slearnAmt * clusterPct) / 100;
         pdjUsdt = usdtAmt - clusterUsdt;
         pdjSlearn = slearnAmt - clusterSlearn;
-    }
-
-    function _processDonationAmounts(address clusterWallet, uint256 usdtAmt, uint256 slearnAmt, bytes32 txHash)
-        internal
-    {
-        (uint256 clusterUsdt, uint256 clusterSlearn, uint256 pdjUsdt, uint256 pdjSlearn) =
-            _splitAmounts(usdtAmt, slearnAmt);
-
-        // Transfer pdJ share
-        if (pdjUsdt > 0) usdtToken.transfer(pdjTreasury, pdjUsdt);
-        if (pdjSlearn > 0) slearnToken.transfer(pdjTreasury, pdjSlearn);
-
-        // Accumulate cluster share
-        clusterFunds[clusterWallet].usdtBalance += clusterUsdt;
-        clusterFunds[clusterWallet].slearnBalance += clusterSlearn;
-
-        emit ClusterDonation(txHash, clusterWallet, clusterUsdt, clusterSlearn);
     }
 }
