@@ -71,7 +71,7 @@ export function NewChurchDialog({
       zionTitle: 'Theological Position (optional)',
       zionQ1: 'Do you believe God has a plan of salvation for ethnic Israel that operates through a separate covenant or dispensation, independent of faith in Jesus Christ (e.g., restoration of Levitical sacrifices in the millennium)?',
       zionQ2: 'Do you believe the true Israel of God is exclusively the remnant of Jews and Gentiles who believe in Jesus, and that the territorial promises are ultimately fulfilled in the new creation?',
-      zionQ3: 'Considering the ICJ has found a "plausible risk of genocide" in Gaza and the ICC has issued arrest warrants for war crimes, do you believe Christians should unconditionally support the Modern State of Israel?',
+      zionQ3: 'Considering the ICJ has found a "plausible risk of genocide" in Gaza, the ICC has issued arrest warrants for war crimes, and the UN Independent Commission of Inquiry has concluded that Israel has committed acts of genocide in Gaza —including deliberate targeting of children—, do you believe Christians should unconditionally support the Modern State of Israel?',
     },
     es: {
       title: 'Registrar Nueva Iglesia',
@@ -92,7 +92,7 @@ export function NewChurchDialog({
       zionTitle: 'Posición Teológica (opcional)',
       zionQ1: '¿Cree que Dios tiene un plan de salvación para Israel étnico que opera mediante un pacto o dispensación separada, independiente de la fe en Jesucristo (ej. restauración de sacrificios levíticos en el milenio)?',
       zionQ2: '¿Cree que el verdadero Israel de Dios es exclusivamente el remanente de judíos y gentiles que creen en Jesús, y que las promesas territoriales se cumplen finalmente en la nueva creación?',
-      zionQ3: 'Teniendo en cuenta que la CIJ ha señalado un "riesgo plausible de genocidio" en Gaza y la CPI ha emitido órdenes de arresto por crímenes de guerra, ¿cree que los cristianos debemos respaldar incondicionalmente al Estado Moderno de Israel?',
+      zionQ3: 'Teniendo en cuenta que la CIJ ha señalado un "riesgo plausible de genocidio" en Gaza, la CPI ha emitido órdenes de arresto por crímenes de guerra, y la Comisión Independiente de Investigación de la ONU ha concluido que Israel ha cometido actos de genocidio en Gaza —incluyendo el targeting deliberado de niños—, ¿cree que los cristianos debemos respaldar incondicionalmente al Estado Moderno de Israel?',
     },
   })
 

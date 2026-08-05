@@ -159,14 +159,16 @@ export default function ProfileForm({ params }: PageProps) {
       expiredSession: '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.',
       connectionIssue: '\n\nPlease check your internet connection and try again.',
       errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below',
-      verificationWarning: 'To maintain your verification and profile score, keep the information already verified as you provided during verification' },
+      verificationWarning: 'To maintain your verification and profile score, keep the information already verified as you provided during verification',
+      displayNamePrivacy: 'Do not use your real name, surname, specific location, or any personally identifying information.' },
     es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', churchRelationship: 'Relación con la Iglesia', selectChurchRelationship: 'Selecciona tu rol', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Líder/Anciano', churchRelationshipMember: 'Miembro', placeOfWorshipAddress: 'Dirección de tu lugar de culto', searchPlace: 'Escribe para buscar lugar...', placeOfWorshipName: 'Nombre de tu lugar de culto', placeOfWorshipNamePlaceholder: 'Nombre o iglesia', contactNotice: 'Ocasionalmente enviaremos anuncios sobre la plataforma a tu correo, WhatsApp o Telegram. Si no deseas recibirlos, no suministres esa información.', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes', deleteVerifiedData: 'Eliminar Datos Verificados',
       viewCredentials: 'Ver mis credenciales públicas',
       saveFailed: 'Fallo al guardar el perfil.',
       expiredSession: '\n\nPuede deberse a que la sesi\u00f3n ha expirado. Por favor, intenta desconectar y reconectar tu billetera.',
       connectionIssue: '\n\nPor favor, revisa tu conexi\u00f3n a internet e int\u00e9ntalo de nuevo.',
       errorLabel: 'Error: ', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion',
-      verificationWarning: 'Para mantener tu verificación y puntaje de perfil, conserva la información ya verificada como la suministraste durante la verificación' },
+      verificationWarning: 'Para mantener tu verificación y puntaje de perfil, conserva la información ya verificada como la suministraste durante la verificación',
+      displayNamePrivacy: 'No uses tu nombre real, apellido, ubicación específica ni información que te identifique personalmente.' },
   }), [lang])
 
   const isSavingField = (f: string) => savingFields.has(f)
@@ -826,10 +828,11 @@ export default function ProfileForm({ params }: PageProps) {
                   type="text"
                   value={profile.uname}
                   onChange={(e) => handleChange('uname', e.target.value)}
-                  placeholder="Enter your user-name"
+                  placeholder={lang === 'es' ? 'Nombre por presentar' : 'Display name'}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+                <p className="text-xs text-amber-700 mt-1">{t('displayNamePrivacy')}</p>
               </div>
               <div className="space-y-2">
                 <label
