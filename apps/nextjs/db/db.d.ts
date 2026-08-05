@@ -619,6 +619,19 @@ export interface CredentialMetadata {
   updated_at: Generated<Timestamp>;
 }
 
+export interface Gdcontact {
+  cluster_id: number | null;
+  cluster_sent_at: Timestamp | null;
+  course_completed_at: Timestamp | null;
+  created_at: Generated<Timestamp | null>;
+  gd_responded_at: Timestamp | null;
+  id: Generated<number>;
+  pdj_sent_at: Timestamp | null;
+  release_reason: string | null;
+  released_at: Timestamp | null;
+  updated_at: Generated<Timestamp | null>;
+}
+
 export interface GuideUsuario {
   actividadpf_id: number;
   amountpaid: number;
@@ -1506,6 +1519,7 @@ export interface DB {
   cor1440_gen_tipomoneda: Cor1440GenTipomoneda;
   credential_emission: CredentialEmission;
   credential_metadata: CredentialMetadata;
+  gdcontact: Gdcontact;
   guide_usuario: GuideUsuario;
   heb412_gen_campohc: Heb412GenCampohc;
   heb412_gen_campoplantillahcm: Heb412GenCampoplantillahcm;

@@ -2986,6 +2986,44 @@ CREATE TABLE public.credential_metadata (
 
 
 --
+-- Name: gdcontact; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.gdcontact (
+    id integer NOT NULL,
+    cluster_id integer,
+    cluster_sent_at timestamp without time zone,
+    pdj_sent_at timestamp without time zone,
+    gd_responded_at timestamp without time zone,
+    released_at timestamp without time zone,
+    release_reason character varying(50),
+    course_completed_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: gdcontact_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.gdcontact_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: gdcontact_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.gdcontact_id_seq OWNED BY public.gdcontact.id;
+
+
+--
 -- Name: guide_usuario; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5493,6 +5531,13 @@ ALTER TABLE ONLY public.credential_emission ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
+-- Name: gdcontact id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gdcontact ALTER COLUMN id SET DEFAULT nextval('public.gdcontact_id_seq'::regclass);
+
+
+--
 -- Name: heb412_gen_campohc id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -6190,6 +6235,22 @@ ALTER TABLE ONLY public.credential_metadata
 
 
 --
+-- Name: gdcontact gdcontact_cluster_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gdcontact
+    ADD CONSTRAINT gdcontact_cluster_id_key UNIQUE (cluster_id);
+
+
+--
+-- Name: gdcontact gdcontact_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gdcontact
+    ADD CONSTRAINT gdcontact_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: heb412_gen_campohc heb412_gen_campohc_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6875,6 +6936,13 @@ CREATE UNIQUE INDEX cor1440_gen_datointermedioti_pmindicadorpf_llaves_idx ON pub
 --
 
 CREATE INDEX credential_emission_usuario_idx ON public.credential_emission USING btree (usuario_id);
+
+
+--
+-- Name: idx_gdcontact_cluster_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gdcontact_cluster_id ON public.gdcontact USING btree (cluster_id);
 
 
 --
@@ -8549,6 +8617,14 @@ ALTER TABLE ONLY public.msip_ubicacionpre
 
 ALTER TABLE ONLY public.msip_ubicacionpre
     ADD CONSTRAINT fk_ubicacionpre_pais_departamento FOREIGN KEY (pais_id, departamento_id) REFERENCES public.msip_departamento(pais_id, id);
+
+
+--
+-- Name: gdcontact gdcontact_cluster_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gdcontact
+    ADD CONSTRAINT gdcontact_cluster_id_fkey FOREIGN KEY (cluster_id) REFERENCES public.clustergd(id);
 
 
 --
