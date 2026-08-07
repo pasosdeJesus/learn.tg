@@ -1,9 +1,19 @@
+.PHONY: build all type test clean prepadJ
+
 build:
-	yarn build
+	pnpm install
+	pnpm build
+
+all: build
 
 type:
-	yarn build
+	pnpm tsc
 
 test:
-	yarn test
+	pnpm test
 
+clean:
+	pnpm clean
+
+prepadJ:
+	sh bin/prepadJ.sh

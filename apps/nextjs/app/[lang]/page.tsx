@@ -10,7 +10,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
-import { SlearnInfo, AddSlearnButton } from '@pasosdejesus/m/blockchain'
+import { SlearnInfo, AddSlearnButton } from '@pasosdejesus/mpdj/blockchain'
 import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 

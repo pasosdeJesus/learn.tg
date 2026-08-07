@@ -44,11 +44,11 @@ vi.mock('next/navigation', () => ({
 
 // Mock axios
 interface AxiosGetReturn { data: unknown }
-const axiosGet = vi.fn<[url: string, ...rest: unknown[]], Promise<AxiosGetReturn>>(
+const axiosGet = vi.fn(
   (url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => Promise.resolve({ data: [] }),
 )
 vi.mock('axios', () => ({
-  default: { get: (url: string, ...rest: unknown[]) => axiosGet(url, ...rest) },
+  default: { get: (url: string, ...rest: unknown[]) => (axiosGet as any)(url, ...rest) },
 }))
 
 // Mock next-auth/react

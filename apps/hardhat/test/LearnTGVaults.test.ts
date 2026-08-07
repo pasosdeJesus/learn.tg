@@ -26,9 +26,9 @@ describe("LearnTGVaults", function () {
 
     // Deploy mock tokens
     const MockUSDT_Factory = await hre.ethers.getContractFactory("MockUSDT");
-    const mockUSDT = (await MockUSDT_Factory.deploy()) as unknown as MockUSDT;
-    const mockCCop = (await MockUSDT_Factory.deploy()) as unknown as MockUSDT;
-    const mockGooddollar = (await MockUSDT_Factory.deploy()) as unknown as MockUSDT;
+    const mockUSDT = (await MockUSDT_Factory.deploy(owner.address)) as unknown as MockUSDT;
+    const mockCCop = (await MockUSDT_Factory.deploy(owner.address)) as unknown as MockUSDT;
+    const mockGooddollar = (await MockUSDT_Factory.deploy(owner.address)) as unknown as MockUSDT;
     await mockUSDT.waitForDeployment();
     await mockCCop.waitForDeployment();
     await mockGooddollar.waitForDeployment();

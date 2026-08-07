@@ -18,11 +18,72 @@ import {
   tabsMock
 } from '@pasosdejesus/m/test-utils/radix-mocks';
 import { apiAuthMocks } from '@pasosdejesus/m/test-utils/rainbowkit-mocks';
+import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks';
 console.log('Vitest setup loaded');
 
 // Setup default implementations for auth mocks
 const { mocks, setupDefaultImplementations } = apiAuthMocks;
 setupDefaultImplementations()
+
+// Kysely + pg mocks at module scope — vi.mock() MUST be at module scope
+// for vitest to hoist it. Using apiDbMocks mock functions so tests can
+// control behavior via mockExecuteTakeFirst, mockExecute, etc.
+const { mockExecuteTakeFirst, mockExecute, mockSqlExecute, mockSql, mockPgPool } = apiDbMocks
+class GlobalMockKysely {
+  selectFrom() { return this }
+  where() { return this }
+  selectAll() { return this }
+  select(..._args: any[]) { return this }
+  orderBy() { return this }
+  limit() { return this }
+  groupBy() { return this }
+  having() { return this }
+  leftJoin() { return this }
+  innerJoin() { return this }
+  insertInto() { return this }
+  values() { return this }
+  returningAll() { return this }
+  updateTable() { return this }
+  set() { return this }
+  deleteFrom() { return this }
+  with() { return this }
+  onConflict() { return this }
+  doNothing() { return this }
+  executeTakeFirst() { return mockExecuteTakeFirst() }
+  executeTakeFirstOrThrow() { return mockExecuteTakeFirst() }
+  execute() { return mockExecute() }
+  transaction() {
+    const self = this
+    return {
+      execute: async (callback: any) => {
+        const mockTrx = new GlobalMockKysely()
+        return callback(mockTrx)
+      }
+    }
+  }
+  getExecutor() {
+    return {
+      executeQuery: (query: any) => mockSqlExecute(query),
+      provideConnection: async (callback: any) => callback({}),
+      releaseConnection: () => {},
+      transformQuery: (query: any, transformer: any) => query,
+      compileQuery: (query: any, ctx: any) => ({ sql: '', parameters: [] }),
+    }
+  }
+  fn = {
+    countAll: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+    sum: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+    avg: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+    max: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+    min: vi.fn(() => ({ as: vi.fn(() => ({})) })),
+  }
+}
+vi.mock('kysely', () => ({
+  Kysely: GlobalMockKysely,
+  PostgresDialect: vi.fn(),
+  sql: mockSql,
+}))
+vi.mock('pg', () => ({ Pool: mockPgPool }))
 
 // Mock @pasosdejesus/m shadcn components to avoid React version mismatch
 vi.mock('@pasosdejesus/m/shadcn-components/ui/button', () => ({
@@ -118,7 +179,10 @@ vi.mock('@radix-ui/react-tabs', () => {
 });
 
 // Set the database URL for tests
-process.env.DATABASE_URL = 'postgres://postgres:postgres@db:5432/postgres';
+if (!process.env.PGHOST) process.env.PGHOST = '/var/www/var/run/postgresql/'
+if (!process.env.PGDATABASE) process.env.PGDATABASE = process.env.PGDATABASE_TEST || 'learntg_des'
+if (!process.env.PGUSER) process.env.PGUSER = process.env.PGUSER_TEST || 'learntg'
+if (!process.env.PGPASSWORD) process.env.PGPASSWORD = process.env.PGPASSWORD_TEST || 'PlovDeynk'
 
 // Mock authentication modules using apiAuthMocks mocks
 vi.mock('axios', () => ({

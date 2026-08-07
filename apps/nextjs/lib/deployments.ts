@@ -31,7 +31,7 @@ export async function getV3Address(): Promise<`0x${string}`> {
 
 export async function getSlearnAddress(): Promise<`0x${string}`> {
   const network = getNetwork() as 'celo' | 'celoSepolia'
-  const { SLEARN_ADDRESSES } = await import('@pasosdejesus/m/blockchain/ecosystem-addresses')
+  const { SLEARN_ADDRESSES } = await import('@pasosdejesus/mpdj/blockchain/ecosystem-addresses')
   const addr = SLEARN_ADDRESSES[network]
   if (addr) return addr as `0x${string}`
   return readAddr('SLEARN')

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mockCredentialsWithRefs, mockDeploymentsWithRefs } from '@pasosdejesus/mpdj/test-utils'
 
 let sharedDb: any
 
@@ -7,26 +8,26 @@ vi.mock('@/.config/kysely-db', () => ({
   newKyselyPostgresql: vi.fn(() => sharedDb),
 }))
 
-const {
-  mockGetTokenIdByCourseId,
-  mockHasCredentialOnChain,
-  mockGetCeloCredentialsAddress,
-  mockMintCourseWithRetry,
-} = vi.hoisted(() => ({
-  mockGetTokenIdByCourseId: vi.fn(),
-  mockHasCredentialOnChain: vi.fn(),
-  mockGetCeloCredentialsAddress: vi.fn(),
-  mockMintCourseWithRetry: vi.fn(),
-}))
+// Credentials module — with refs for assertions
+const credRefs = vi.hoisted(() => ({} as Record<string, any>))
+vi.mock('@pasosdejesus/mpdj/blockchain', () => {
+  const result = mockCredentialsWithRefs()
+  Object.assign(credRefs, result.refs)
+  return result.module
+})
 
-vi.mock('@pasosdejesus/m/blockchain', () => ({
-  getTokenIdByCourseId: mockGetTokenIdByCourseId,
-  hasCredentialOnChain: mockHasCredentialOnChain,
-  mintCourseWithRetry: mockMintCourseWithRetry,
-}))
-vi.mock('@pasosdejesus/m/blockchain/deployments', () => ({
-  getCeloCredentialsAddress: mockGetCeloCredentialsAddress,
-}))
+// Deployments module — with refs for assertions
+const depRefs = vi.hoisted(() => ({} as Record<string, any>))
+vi.mock('@pasosdejesus/m/blockchain/deployments', () => {
+  const result = mockDeploymentsWithRefs()
+  Object.assign(depRefs, result.refs)
+  return result.module
+})
+
+const mockGetTokenIdByCourseId = credRefs.getTokenIdByCourseId
+const mockHasCredentialOnChain = credRefs.hasCredentialOnChain
+const mockMintCourseWithRetry = credRefs.mintCourseWithRetry
+const mockGetCeloCredentialsAddress = depRefs.getCeloCredentialsAddress
 
 const mockWaitForTxReceipt = vi.fn().mockResolvedValue({ status: 'success' })
 vi.mock('viem', () => ({

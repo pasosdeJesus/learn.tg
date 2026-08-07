@@ -231,17 +231,18 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         uint256 usdtPerCluster = usdtTotal / count;
         uint256 slearnPerCluster = slearnTotal / count;
 
-        // Deduplicate clusters and track seen addresses
-        mapping(address => bool) storage seen;
+        // Validate and deduplicate: no zero addresses, no duplicates
+        for (uint256 i = 0; i < count; i++) {
+            require(clusters[i] != address(0), "Invalid cluster address");
+            require(clusterFunds[clusters[i]].exists, "Cluster not registered");
+            require(clusterFunds[clusters[i]].verified, "Cluster not verified");
+            for (uint256 j = 0; j < i; j++) {
+                require(clusters[i] != clusters[j], "Duplicate cluster");
+            }
+        }
+
         for (uint256 i = 0; i < count; i++) {
             address cw = clusters[i];
-            require(cw != address(0), "Invalid cluster address");
-            require(!seen[cw], "Duplicate cluster");
-            require(clusterFunds[cw].exists, "Cluster not registered");
-            require(clusterFunds[cw].verified, "Cluster not verified");
-            seen[cw] = true;
-
-            // if (!clusterFunds[cw].exists) { clusterFunds[cw].exists = true; } // REDUNDANT — already checked above
             clusterFunds[cw].usdtBalance += usdtPerCluster;
             clusterFunds[cw].slearnBalance += slearnPerCluster;
         }

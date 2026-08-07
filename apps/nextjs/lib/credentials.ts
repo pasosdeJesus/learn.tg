@@ -14,7 +14,7 @@ import {
   getTokenIdByCourseId,
   hasCredentialOnChain,
   mintCourseWithRetry,
-} from '@pasosdejesus/m/blockchain'
+} from '@pasosdejesus/mpdj/blockchain'
 import { getCeloCredentialsAddress } from '@pasosdejesus/m/blockchain/deployments'
 import path from 'path'
 import { IS_PRODUCTION } from '@/lib/config'

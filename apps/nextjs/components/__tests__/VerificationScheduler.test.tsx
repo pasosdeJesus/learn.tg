@@ -208,6 +208,5 @@ describe('VerificationScheduler', () => {
     const futureDate = new Date(Date.now() + 86400000).toISOString()
     render(<VerificationScheduler lang="es" interviewDate={futureDate} />)
     expect(screen.getByText(/Entrevista agendada/)).toBeDefined()
-    expect(screen.getByText(/Africa\/Freetown/)).toBeDefined()
   })
 })

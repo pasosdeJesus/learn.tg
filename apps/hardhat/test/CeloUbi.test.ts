@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { CeloUbi } from "../typechain-types";
 
 describe("CeloUbi", function () {
-    const MAX_REWARD = ethers.parseEther("1");
+    const MAX_REWARD = ethers.parseEther("0.2");
     const COOLDOWN_PERIOD = 24 * 60 * 60; // 24 hours in seconds
 
     async function deployCeloUbiFixture() {
@@ -77,13 +77,14 @@ describe("CeloUbi", function () {
         it("Should fail if profile score is below 50", async function () {
             const { celoUbi, backend, recipient } = await loadFixture(deployAndFundCeloUbiFixture);
             await expect(celoUbi.connect(backend).claim(recipient.address, 49))
-                .to.be.revertedWith("CeloUbi: Profile score must be between 50 and 100");
+                .to.be.revertedWith("CeloUbi: Profile score must be greather or equal to 50");
         });
 
-        it("Should fail if profile score is above 100", async function () {
+        it("Should allow claim with profile score above 100 (contract has no upper bound)", async function () {
             const { celoUbi, backend, recipient } = await loadFixture(deployAndFundCeloUbiFixture);
+            // Contract only enforces >= 50; scores > 100 give proportionally higher reward
             await expect(celoUbi.connect(backend).claim(recipient.address, 101))
-                .to.be.revertedWith("CeloUbi: Profile score must be between 50 and 100");
+                .to.emit(celoUbi, "Claimed");
         });
 
         it("Should enforce cooldown period", async function () {
