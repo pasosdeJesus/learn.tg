@@ -239,7 +239,7 @@ async function main() {
     // Set profile fields needed for verification
     const profileData = {
       nombre: profile.nombre || 'E2E Test User',
-      email: 'e2e-test@learn.tg',
+      email: `e2e-test${addr.slice(0,5)}@learn.tg`,
       whatsapp: '+1234567890',
       place_of_worship: 'E2E Test Church',
     }

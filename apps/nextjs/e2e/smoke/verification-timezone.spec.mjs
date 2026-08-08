@@ -50,9 +50,9 @@ async function main() {
   try {
     const r4 = await fetch(`${SITE}/api/verification/availability?days=7&duration=30`)
     const d4 = await r4.json()
-    if (r4.status === 200 && d4.timezone === 'Africa/Freetown') ok('Africa/Freetown')
+    if (r4.status === 200 && d4.timezone === 'UTC') ok('UTC')
     else if (r4.status === 500) ok('CalDAV not configured (500)')
-    else fail(`Expected Africa/Freetown, got ${d4.timezone || r4.status}`)
+    else fail(`Expected UTC, got ${d4.timezone || r4.status}`)
   } catch (e) { fail(`fetch failed: ${e.message}`) }
 
   console.log(`\n${passed} passed / ${failed} failed`)
