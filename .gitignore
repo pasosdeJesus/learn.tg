@@ -130,3 +130,4 @@ I*.md
 *bak
 servidor/app/assets/stylesheets/action_text-trix
 apps/nextjs/ref
+apps/hardhat/apps
