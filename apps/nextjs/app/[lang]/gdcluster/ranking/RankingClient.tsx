@@ -2,10 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { adminAuthParams } from '@/lib/admin-fetch'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import DonateModal from '@/components/DonateModal'
 import type { ClusterDonation, CountryDonation } from '@/lib/donation-target'
-
-type TFunc = (k: string) => string
 
 interface ClusterRow {
   id: number; name: string; country_name: string | null
@@ -17,7 +16,23 @@ interface CountryRow {
   country_code: string | null; cluster_count: number; church_count: number
 }
 
-export function RankingClient({ lang, t }: { lang: string; t: TFunc }) {
+export function RankingClient({ lang }: { lang: string }) {
+  const t = createComponentT(lang, {
+    en: {
+      clustersTab: 'Clusters', countriesTab: 'Countries',
+      cluster: 'Cluster', country: 'Country',
+      churches: 'Churches', members: 'Members',
+      fundUSDT: 'USDT Fund', fundSLEARN: 'SLEARN Fund',
+      noData: 'No data yet.', loading: 'Loading...', donate: 'Donate',
+    },
+    es: {
+      clustersTab: 'Clústeres', countriesTab: 'Países',
+      cluster: 'Clúster', country: 'País',
+      churches: 'Iglesias', members: 'Miembros',
+      fundUSDT: 'Fondo USDT', fundSLEARN: 'Fondo SLEARN',
+      noData: 'Aún no hay datos.', loading: 'Cargando...', donate: 'Donar',
+    },
+  })
   const [tab, setTab] = useState<'clusters' | 'countries'>('clusters')
   const [clusters, setClusters] = useState<ClusterRow[]>([])
   const [countries, setCountries] = useState<CountryRow[]>([])

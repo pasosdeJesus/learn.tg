@@ -136,3 +136,4 @@ apps/nextjs/uploads
 apps/nextjs/public/img/credential/generated
 apps/nextjs/public/img/credential/*png
 resources/en/
+servidor/.bundle
