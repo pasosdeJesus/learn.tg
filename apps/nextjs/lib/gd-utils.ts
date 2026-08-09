@@ -1,6 +1,8 @@
 import { Kysely } from 'kysely'
 import type { DB } from '@/db/db.d'
-import { newKyselyPostgresql } from '@/.config/kysely-db'
+
+/** Pilot phase: only these countries can create clusters and receive donations */
+export const PILOT_COUNTRIES = [170, 694] // Colombia, Sierra Leona
 
 export interface Church {
   id: number
