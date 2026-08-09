@@ -13,6 +13,9 @@ While this project has a specific Christian mission, we welcome all contributors
 ## 📋 Code of Conduct
 By participating in this project, you agree to maintain a respectful and collaborative environment.
 
+## 🌐 Language Policy
+All project documentation, REQ files, commit messages, and code comments must be written in **English**. This ensures accessibility for the global open-source community and compatibility with AI agents and tooling that primarily operate in English.
+
 ## 🚀 Development Setup
 
 ### Frontend Only (quickest — no backend required)

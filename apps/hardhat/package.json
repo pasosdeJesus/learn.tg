@@ -46,6 +46,10 @@
     "deploy-celoubi": "bin/deployCeloUbi",
     "verify-celoubi": "bin/verifyCeloUbi",
     "contract-verification-celoubi": "bin/contractVerificationCeloUbi",
+    "deploy-clusterfunds": "bin/deployClusterFunds",
+    "test-clusterfunds": "bin/testClusterFunds",
+    "verify-clusterfunds": "bin/verifyClusterFunds",
+    "contract-verification-clusterfunds": "bin/contractVerificationClusterFunds",
     "prettier": "prettier --write 'contracts/**/*.sol' '**/*.ts'",
     "sync:abis": "node sync-abis.mjs"
   },
