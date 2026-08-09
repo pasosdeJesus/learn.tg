@@ -112,7 +112,9 @@ export default function Page({ params }: PageProps) {
         if (response.data) {
           const courseInfo = (Array.isArray(response.data) ? response.data : (response.data as any).proyectosfinancieros || (response.data as any).data || [])
             // Hide paid courses until payment flow is implemented
-            .filter((c: Course) => c.prefijoRuta !== '/gdcluster')
+            .filter((c: Course) => c.prefijoRuta !== '/gdcluster' &&
+                   c.prefijoRuta !== '/redgd')
+          console.log(courseInfo)
           setCourses(courseInfo)
 
           if (!Array.isArray(courseInfo) || courseInfo.length === 0) return
