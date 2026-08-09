@@ -131,3 +131,8 @@ I*.md
 servidor/app/assets/stylesheets/action_text-trix
 apps/nextjs/ref
 apps/hardhat/apps
+resources/sw.js
+apps/nextjs/uploads
+apps/nextjs/public/img/credential/generated
+apps/nextjs/public/img/credential/*png
+resources/en/
