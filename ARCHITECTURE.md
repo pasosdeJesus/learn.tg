@@ -397,6 +397,48 @@ GET /api/gd/contact/:clusterId
 | Metrics & Analytics | Next.js + Recharts + PostgreSQL | User engagement tracking, performance metrics, dashboard visualization |
 | Wallet | OKX/Metamask/etc | User authentication and reward receipt |
 
+### Smart Contract Addresses
+
+Contract addresses are stored as JSON files in `apps/hardhat/deployments/{Contract}/{network}.json`,
+**not** in `.env` variables. This is the single source of truth for all environments.
+
+```
+apps/hardhat/deployments/
+  SLEARN/{network}.json
+  LearnTGVaults/V4/{network}.json
+  ClusterFunds/{network}.json
+  MockUSDT/{network}.json
+  CeloUbi/{network}.json
+```
+
+**Reading addresses in scripts** (`apps/hardhat/scripts/`):
+
+```typescript
+import * as path from "path"
+import * as fs from "fs"
+const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia"
+const file = path.join(__dirname, "..", "deployments", "ClusterFunds", `${network}.json`)
+const { address } = JSON.parse(fs.readFileSync(file, "utf8"))
+```
+
+**Reading addresses in Next.js backend** (`apps/nextjs/`):
+
+Use `@pasosdejesus/m/blockchain/deployments`:
+
+```typescript
+import { readDeployment } from "@pasosdejesus/m/blockchain/deployments"
+const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia"
+const deployment = readDeployment(network,
+  path.join(process.cwd(), "..", "hardhat", "deployments"),
+  { contract: "ClusterFunds" }
+)
+const address = deployment?.address
+```
+
+**Do NOT** add `NEXT_PUBLIC_*_ADDRESS` environment variables for contract addresses.
+Environment variables are for secrets and network configuration (RPC URLs, API keys),
+not for derived data like deployment addresses.
+
 ---
 
 ## Development & Deployment

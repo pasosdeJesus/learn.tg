@@ -9,9 +9,8 @@ Deployed on Celo.
 |---|---|---|
 | **SLEARN** | `SLEARN.sol` | ERC-20 utility token, mixed payments, 3-tier reserve backing |
 | **LearnTGVaultsV4** | `LearnTGVaultsV4.sol` | Active — scholarship vaults (USDT + SLEARN), partial payments, `guideId` = `actividadpf_id` |
-| **LearnTGVaultsV3** | `LearnTGVaultsV3.sol` | Legacy V3 |
-| **LearnTGVaults** | `LearnTGVaults.sol` | Legacy V2 |
 | **CeloUbi** | `CeloUbi.sol` | Universal Basic Income claims in CELO |
+| **ClusterFunds** | `ClusterFunds.sol` | Cluster/country fund management — USDT + SLEARN donations, GD contact release |
 | **MockUSDT** | `MockUSDT.sol` | Mock USDT for testnet |
 
 ## Prerequisites
@@ -47,9 +46,9 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 | Command | Purpose |
 |---|---|
 | `bin/deploySLEARN` | Deploy SLEARN token |
-| `bin/deployLearnTGVaultsV4` | Deploy V4 vaults (active) |
-| `bin/deployLearnTGVaultsV3` | Deploy V3 vaults (legacy) |
+| `bin/deployLearnTGVaultsV4` | Deploy V4 vaults |
 | `bin/deployMockUSDT` | Deploy MockUSDT (testnet only) |
+| `bin/deployClusterFunds` | Deploy ClusterFunds |
 | `bin/deployCeloUbi` | Deploy CeloUBI |
 | `bin/configSLEARN` | Configure SLEARN after deploy (addresses + roles) |
 
@@ -59,7 +58,7 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 |---|---|
 | `bin/contractVerificationSLEARN` | Verify SLEARN source code |
 | `bin/contractVerificationLearnTGVaultsV4` | Verify V4 source code |
-| `bin/contractVerificationLearnTGVaultsV3` | Verify V3 source code |
+| `bin/contractVerificationClusterFunds` | Verify ClusterFunds source code |
 | `bin/contractVerificationCeloUbi` | Verify CeloUBI source code |
 | `bin/contractVerificationMusdt` | Verify MockUSDT source code |
 
@@ -69,7 +68,8 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 |---|---|
 | `bin/verifySLEARN` | Check SLEARN: name, rate, supply, paused |
 | `bin/verifyLearnTGVaultsV4` | Check V4: VERSION, owner, balances |
-| `bin/verifyLearnTGVaultsV3` | Check V3: VERSION, owner, balances |
+| `bin/testClusterFunds` | Functional test: owner, treasury, percentage, views |
+| `bin/verifyClusterFunds` | Quick on-chain check: all state fields |
 | `bin/verifyCeloUbi` | Check CeloUBI: owner, backendAddress |
 | `bin/verifyMockUSDT` | Check MockUSDT |
 
@@ -83,8 +83,30 @@ bin/deploySLEARN
 
 ## Deployment Addresses
 
-After deploy, addresses are saved to `deployments/{Contract}/{network}.json`.
-V3 addresses are also available via `lib/deployments.ts` in the Next.js app.
+After deploy, each script saves the address to `deployments/{Contract}/{network}.json`:
+
+```
+deployments/
+  SLEARN/celoSepolia.json
+  LearnTGVaults/V4/celoSepolia.json
+  ClusterFunds/celoSepolia.json
+  MockUSDT/celoSepolia.json
+  CeloUbi/celoSepolia.json
+```
+
+**Do NOT add `NEXT_PUBLIC_*_ADDRESS` to `.env` for contract addresses.**
+The deployment JSON is the single source of truth. Scripts read from it directly.
+The Next.js frontend uses `@pasosdejesus/m/blockchain/deployments`
+(`readDeployment()`) or `@pasosdejesus/mpdj/blockchain/ecosystem-addresses`.
+
+Example reading a deployment in a script:
+```typescript
+import * as path from "path"
+import * as fs from "fs"
+const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia"
+const file = path.join(__dirname, "..", "deployments", "ClusterFunds", `${network}.json`)
+const { address } = JSON.parse(fs.readFileSync(file, "utf8"))
+```
 
 ## Testing
 

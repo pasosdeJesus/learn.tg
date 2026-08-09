@@ -56,9 +56,6 @@ async function main() {
   const tx = await clusterFunds.setPdJPercentage(15);
   await tx.wait();
   console.log("pdJPercentage set to 15%");
-
-  console.log("\nAdd to your .env file:");
-  console.log(`NEXT_PUBLIC_CLUSTERFUNDS_ADDRESS="${addr}"`);
 }
 
 main().catch((error) => {
