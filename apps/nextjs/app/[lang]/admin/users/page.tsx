@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState, useCallback } from 'react'
+import { use, useEffect, useState, useCallback, useMemo } from 'react'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { adminFetch } from '@/lib/admin-fetch'
@@ -13,16 +13,25 @@ const VERIFIER_WALLETS = (process.env.NEXT_PUBLIC_VERIFIER_WALLET || '')
   .map(w => w.trim().toLowerCase())
   .filter(Boolean)
 
-const PAGE_SIZE = 30
+const PAGE_SIZE = 50
+const DEBOUNCE_MS = 300
 
 export default function AdminUsersPage({ params }: PageProps) {
   const { lang } = use(params)
   const { address } = useAuthAddress()
   const [users, setUsers] = useState<UserItem[]>([])
+  const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<UserItem | null>(null)
   const [page, setPage] = useState(0)
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [search])
 
   const t = createComponentT(lang, {
     en: {
@@ -47,15 +56,16 @@ export default function AdminUsersPage({ params }: PageProps) {
     setLoading(true)
     try {
       const params = new URLSearchParams()
-      if (search) params.set('search', search)
-      const data = await adminFetch<{ users: UserItem[] }>(`/api/admin/users?${params}`)
+      if (debouncedSearch) params.set('search', debouncedSearch)
+      const data = await adminFetch<{ users: UserItem[]; total: number }>(`/api/admin/users?${params}`)
       setUsers(data.users || [])
+      setTotal(data.total || 0)
       setPage(0)
     } catch (err) {
       console.error('Failed to fetch users:', err)
     }
     setLoading(false)
-  }, [search])
+  }, [debouncedSearch])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
 
@@ -70,7 +80,7 @@ export default function AdminUsersPage({ params }: PageProps) {
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6">
-      <h1 className="text-2xl font-bold mb-4">{t('title')} ({users.length})</h1>
+      <h1 className="text-2xl font-bold mb-4">{t('title')} ({users.length} / {total})</h1>
 
       <div className="mb-4">
         <input

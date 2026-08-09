@@ -10,20 +10,38 @@ import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@/
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { TransactionStatus } from '@/components/ui/TransactionStatus'
+import {
+  type PaymentTarget,
+  type CourseDonation,
+  getTargetCopy,
+  getTargetRecipient,
+  getTargetEndpoint,
+} from '@/lib/donation-target'
 
 const SLEARN_DECIMALS = 2
 const SLEARN_RATE = 22 // 1 USDT = 22 SLEARN
-const REWARD_PCT = 10 // 10% of total value as SLEARN reward
 
 export interface DonateModalProps {
-  courseId: number | null
+  courseId?: number | null
+  target?: PaymentTarget
   isOpen: boolean
   onClose: () => void
   onSuccess?: (data: { increment?: number }) => void
   lang?: string
 }
 
-export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: DonateModalProps) {
+export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang }: DonateModalProps) {
+  // Derive effective target: explicit target or wrap legacy courseId
+  const effectiveTarget: PaymentTarget | null = target || (courseId != null && courseId > 0
+    ? { type: 'course-donation', courseId } as CourseDonation
+    : null)
+
+  const tCopy = effectiveTarget ? getTargetCopy(lang || 'en', effectiveTarget) : null
+  const rewardPct = tCopy?.rewardPct ?? 0
+  const recipientAddress = (effectiveTarget
+    ? getTargetRecipient(effectiveTarget)
+    : process.env.NEXT_PUBLIC_ADDRESS || '') as Address | undefined
+
   const { address: rawAddress } = useAuthAddress()
   const address = rawAddress as Address | undefined
   const publicClient = usePublicClient()
@@ -35,20 +53,20 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
   const [amount, setAmount] = useState('')
   const [slearnAmount, setSlearnAmount] = useState('')
 
-  const backendWalletAddress = (process.env.NEXT_PUBLIC_ADDRESS as Address) || undefined
   const usdtAddress = (process.env.NEXT_PUBLIC_USDT_ADDRESS as Address) || undefined
   const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address) || undefined
+  const cId = effectiveTarget?.type === 'course-donation' ? effectiveTarget.courseId : null
 
   const usdtNum = safeParseFloat(amount)
   const slearnNum = safeParseFloat(slearnAmount)
   const totalUSDTValue = usdtNum + (slearnNum / SLEARN_RATE)
-  const estimatedReward = totalUSDTValue * (REWARD_PCT / 100) * SLEARN_RATE
+  const estimatedReward = totalUSDTValue * (rewardPct / 100) * SLEARN_RATE
 
   const { gasState, estimating } = useGasEstimation({
     amount, slearnAmount, usdtDecimals,
     address, walletClient, publicClient,
-    backendWalletAddress, usdtAddress, slearnAddress,
-    courseId, celoBalance,
+    backendWalletAddress: recipientAddress, usdtAddress, slearnAddress,
+    courseId: cId, celoBalance,
   })
 
   const {
@@ -60,13 +78,26 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
   } = useContractPayment({
     amount, slearnAmount, usdtDecimals, slearnDecimals: SLEARN_DECIMALS,
     address, walletClient, publicClient,
-    backendWalletAddress, usdtAddress, slearnAddress,
-    courseId, usdtBalance, slearnBalance, lang,
-    onBackendCallback: async ({ walletAddress, token, donationAmountUSD, slearnDonationAmount, usdtHash, slearnHash, courseId: cId }) => {
-      const { data } = await axios.post('/api/add-donation', {
-        walletAddress, token, donationAmountUSD, slearnDonationAmount,
-        usdtHash, slearnHash, courseId: cId,
-      })
+    backendWalletAddress: recipientAddress, usdtAddress, slearnAddress,
+    courseId: cId, usdtBalance, slearnBalance, lang,
+    onBackendCallback: async (params) => {
+      const endpoint = effectiveTarget ? getTargetEndpoint(effectiveTarget) : '/api/add-donation'
+      const payload: Record<string, unknown> = {
+        walletAddress: params.walletAddress, token: params.token,
+        donationAmountUSD: params.donationAmountUSD,
+        slearnDonationAmount: params.slearnDonationAmount,
+        usdtHash: params.usdtHash, slearnHash: params.slearnHash,
+      }
+      if (effectiveTarget?.type === 'course-donation') {
+        payload.courseId = params.courseId
+      }
+      if (effectiveTarget?.type === 'cluster-donation') {
+        payload.clusterWallet = effectiveTarget.clusterWallet
+      }
+      if (effectiveTarget?.type === 'country-donation') {
+        payload.countryCode = effectiveTarget.countryCode
+      }
+      const { data } = await axios.post(endpoint, payload)
       return data
     },
     onSuccess,
@@ -84,7 +115,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
   }, [reset, onClose])
 
   const loadData = useCallback(async () => {
-    if (!isOpen || !address || !publicClient || !courseId || !usdtAddress || !backendWalletAddress) return
+    if (!isOpen || !address || !publicClient || !usdtAddress || !recipientAddress) return
     try {
       const promises: Promise<any>[] = [
         publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'decimals' }).catch(() => BigInt(usdtDecimals)),
@@ -106,15 +137,14 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
     } catch {
       // Silently fail; balances will show as 0
     }
-  }, [isOpen, address, publicClient, courseId, usdtAddress, backendWalletAddress, usdtDecimals, slearnAddress])
+  }, [isOpen, address, publicClient, usdtAddress, recipientAddress, usdtDecimals, slearnAddress])
 
   useEffect(() => { loadData() }, [loadData])
 
-  if (!isOpen || courseId === null) return null
+  if (!isOpen || !effectiveTarget) return null
 
   const t = createComponentT(lang || 'en', {
     en: {
-      donateToCourse: 'Donate to course',
       connectSign: 'Connect and sign with your wallet to donate',
       yourBalance: 'Your USDT Balance',
       yourSlearnBalance: 'Your SLEARN Balance',
@@ -124,7 +154,6 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
       noGasHint: 'From guide 3 of the Web3 & UBI course you can request Learn.tg-UBI paid in CELO to cover gas costs.',
       gasWarn: 'Gas estimation failed, proceed at your own risk',
       estimating: 'estimating...',
-      donateSplit: '70% goes to course scholarships, 10% back as SLEARN reward, 20% sustains operations and missions.',
       amountLabel: 'Amount (USDT)',
       slearnAmountLabel: 'Amount (SLEARN)',
       enterAmount: 'Enter amount',
@@ -136,9 +165,9 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
       missingContract: 'Missing contract env vars',
       estimatedReward: 'Estimated SLEARN reward',
       estimatedRewardValue: '~{{0}} SLEARN',
+      donateToCourse: 'Donate to course',
     },
     es: {
-      donateToCourse: 'Donar al curso',
       connectSign: 'Conecta y firma con tu billetera para donar',
       yourBalance: 'Tu saldo USDT',
       yourSlearnBalance: 'Tu saldo SLEARN',
@@ -148,7 +177,6 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
       noGasHint: 'Desde la guia 3 del curso Web3 & UBI puedes pedir Learn.tg-UBI que se paga en CELO y te permite cubrir costos de gas.',
       gasWarn: 'Fallo al estimar gas, continue bajo su propio riesgo',
       estimating: 'estimando...',
-      donateSplit: '70% va a becas del curso, 10% vuelve como SLEARN de recompensa, 20% sostiene operaciones y misiones.',
       amountLabel: 'Monto (USDT)',
       slearnAmountLabel: 'Monto (SLEARN)',
       enterAmount: 'Ingresa monto',
@@ -160,6 +188,7 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
       missingContract: 'Faltan variables de entorno del contrato',
       estimatedReward: 'Recompensa SLEARN estimada',
       estimatedRewardValue: '~{{0}} SLEARN',
+      donateToCourse: 'Donar al curso',
     },
   })
 
@@ -177,12 +206,12 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
         <button onClick={closeAll} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
-        <h2 className="text-xl font-semibold mb-4">{t('donateToCourse')} #{courseId}</h2>
+        <h2 className="text-xl font-semibold mb-4">{tCopy?.title || t('donateToCourse')}</h2>
 
         {(!address || !walletClient) && (
           <div className="text-sm text-red-600 mb-4">{t('connectSign')}</div>
         )}
-        {(!backendWalletAddress || !usdtAddress) && (
+        {(!recipientAddress || !usdtAddress) && (
           <div className="text-sm text-red-600 mb-4">{t('missingContract')}</div>
         )}
 
@@ -209,19 +238,19 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
           )}
         </div>
 
-        {hasAnyAmount && (
-          <div className="mt-4 text-xs bg-yellow-50 border border-yellow-200 rounded p-3">{t('donateSplit')}</div>
+        {hasAnyAmount && tCopy?.splitInfo && (
+          <div className="mt-4 text-xs bg-yellow-50 border border-yellow-200 rounded p-3">{tCopy.splitInfo}</div>
         )}
 
-        {hasAnyAmount && totalUSDTValue > 0 && (
+        {hasAnyAmount && rewardPct > 0 && totalUSDTValue > 0 && (
           <div className="mt-3 text-xs bg-green-50 border border-green-200 rounded p-3">
-            <strong>{t('estimatedReward')}:</strong> {t('estimatedRewardValue', estimatedReward.toFixed(2))}
+            <strong>{tCopy?.rewardLabel || t('estimatedReward')}:</strong> {t('estimatedRewardValue', estimatedReward.toFixed(2))}
           </div>
         )}
 
         <div className="mt-4">
-          <label htmlFor={`donate-amount-${courseId}`} className="block text-sm mb-1">{t('amountLabel')}</label>
-          <input id={`donate-amount-${courseId}`} type="number" min="0" step={1 / 10 ** Math.min(usdtDecimals, 6)}
+          <label htmlFor="donate-amount" className="block text-sm mb-1">{t('amountLabel')}</label>
+          <input id="donate-amount" type="number" min="0" step={1 / 10 ** Math.min(usdtDecimals, 6)}
             className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400"
             value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={t('enterAmount')} />
           <div className="flex justify-end mt-1 space-x-2 text-xs">
@@ -230,37 +259,38 @@ export function DonateModal({ courseId, isOpen, onClose, onSuccess, lang }: Dona
           </div>
         </div>
 
-        {slearnAddress && (
-          <div className="mt-4">
-            <label htmlFor={`donate-slearn-amount-${courseId}`} className="block text-sm mb-1">{t('slearnAmountLabel')}</label>
-            <input id={`donate-slearn-amount-${courseId}`} type="number" min="0" step={1 / 10 ** SLEARN_DECIMALS}
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400"
-              value={slearnAmount} onChange={(e) => setSlearnAmount(e.target.value)} placeholder={t('enterAmount')} />
-            <div className="flex justify-end mt-1 space-x-2 text-xs">
-              <button onClick={() => setSlearnAmount(Number(formatUnits(slearnBalance, SLEARN_DECIMALS)).toString())} className="text-blue-600 hover:underline">{t('max')}</button>
-              <button onClick={() => setSlearnAmount('')} className="text-gray-500 hover:underline">{t('clear')}</button>
-            </div>
+        <div className="mt-3">
+          <label htmlFor="donate-slearn-amount" className="block text-sm mb-1">{t('slearnAmountLabel')}</label>
+          <input id="donate-slearn-amount" type="number" min="0" step={1 / 10 ** SLEARN_DECIMALS}
+            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400"
+            value={slearnAmount} onChange={(e) => setSlearnAmount(e.target.value)} placeholder={t('enterAmount')} />
+          <div className="flex justify-end mt-1 space-x-2 text-xs">
+            <button onClick={() => setSlearnAmount(Number(formatUnits(slearnBalance, SLEARN_DECIMALS)).toString())} className="text-blue-600 hover:underline">{t('max')}</button>
+            <button onClick={() => setSlearnAmount('')} className="text-gray-500 hover:underline">{t('clear')}</button>
           </div>
-        )}
+        </div>
 
-        <TransactionStatus
-          state={paymentState}
-          error={paymentError}
-          onRetry={executePayment}
-          onDismiss={resetPayment}
-          lang={lang}
-        />
-
-        <div className="mt-6 flex justify-end space-x-3">
-          <button onClick={closeAll} className="px-4 py-2 text-sm border rounded-md hover:bg-gray-50">{t('cancel')}</button>
-          <button
-            disabled={donateDisabled}
-            onClick={executePayment}
-            className={`px-4 py-2 text-sm rounded-md text-white ${donateDisabled ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-          >
+        <div className="flex gap-3 mt-6">
+          <button onClick={closeAll} className="flex-1 border rounded px-4 py-2 text-sm hover:bg-gray-50">{t('cancel')}</button>
+          <button onClick={executePayment} disabled={donateDisabled}
+            className={`flex-1 rounded px-4 py-2 text-sm font-medium text-white ${donateDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
             {isSubmitting ? t('processing') : t('donate')}
           </button>
         </div>
+
+        {paymentError && (
+          <div className="mt-3 text-sm text-red-600">{paymentError}</div>
+        )}
+
+        {needsApproval && !isSubmitting && (
+          <div className="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded p-2">
+            {lang === 'es' ? 'Requiere aprobación de tokens' : 'Token approval required'}
+          </div>
+        )}
+
+        {paymentState === 'success' && (
+          <div className="mt-3 text-sm text-green-600 font-medium">✅ {lang === 'es' ? 'Donación completada' : 'Donation completed'}</div>
+        )}
       </div>
     </div>
   )
