@@ -5,6 +5,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { CalendarWidget } from '@/components/admin/CalendarWidget'
 import { PendingWidget, RecentUsersWidget, RecentChurchesWidget } from '@/components/admin/AdminWidgets'
+import Link from 'next/link'
 
 type PageProps = { params: Promise<{ lang: string }> }
 const VERIFIER_WALLETS = (process.env.NEXT_PUBLIC_VERIFIER_WALLET || '')
@@ -23,6 +24,7 @@ export default function AdminDashboard({ params }: PageProps) {
       title: 'Verification Dashboard', accessDenied: 'Access denied. Verifier wallet required.',
       loading: 'Loading...', recentUsers: 'Recent Users', recentChurches: 'Recent Churches',
       pendingVerifications: 'Pending Verifications', calendar: 'My Calendar',
+      allUsers: 'All Users →', allChurches: 'All Churches →',
       notConfigured: 'NEXT_PUBLIC_VERIFIER_WALLET not set',
       noEvents: 'No events', noPending: 'No pending verifications',
       noUsers: 'No users', noChurches: 'No churches',
@@ -40,6 +42,7 @@ export default function AdminDashboard({ params }: PageProps) {
       title: 'Panel de Verificación', accessDenied: 'Acceso denegado. Se requiere billetera de verificador.',
       loading: 'Cargando...', recentUsers: 'Usuarios Recientes', recentChurches: 'Iglesias Recientes',
       pendingVerifications: 'Verificaciones Pendientes', calendar: 'Mi Calendario',
+      allUsers: 'Todos los Usuarios →', allChurches: 'Todas las Iglesias →',
       notConfigured: 'NEXT_PUBLIC_VERIFIER_WALLET no configurado',
       noEvents: 'Sin eventos', noPending: 'Sin verificaciones pendientes',
       noUsers: 'Sin usuarios', noChurches: 'Sin iglesias',
@@ -74,6 +77,14 @@ export default function AdminDashboard({ params }: PageProps) {
           <RecentUsersWidget lang={lang} t={t} onUserModalClose={bumpChurches} />
           <RecentChurchesWidget lang={lang} t={t} key={churchKey} />
         </div>
+      </div>
+      <div className="mt-6 flex gap-4">
+        <Link href={`/${lang}/admin/users`} className="text-sm text-blue-600 hover:underline">
+          👥 {t('allUsers')}
+        </Link>
+        <Link href={`/${lang}/admin/churches`} className="text-sm text-blue-600 hover:underline">
+          🏛️ {t('allChurches')}
+        </Link>
       </div>
     </div>
   )
