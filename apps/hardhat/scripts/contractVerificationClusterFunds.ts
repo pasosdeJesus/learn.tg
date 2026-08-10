@@ -16,8 +16,10 @@ async function main() {
   // Read constructor args from deployment JSON (saved at deploy time)
   const usdtAddress = deployment.usdtAddress;
   const slearnAddress = deployment.slearnAddress;
-  const pdjTreasury = deployment.pdjTreasury;
+  const pdjTreasury = deployment.pdjTreasury || process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS || process.env.PDJ_TREASURY_ADDRESS;
   const initialOwner = deployment.initialOwner;
+
+  if (!pdjTreasury) throw new Error("pdjTreasury not found in deployment JSON or env");
 
   console.log(`Verifying ClusterFunds at ${addr} on ${network}`);
   console.log(`Constructor args: USDT=${usdtAddress} SLEARN=${slearnAddress} Treasury=${pdjTreasury} Owner=${initialOwner}`);

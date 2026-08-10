@@ -45,6 +45,7 @@ async function main() {
     network,
     usdtAddress,
     slearnAddress,
+    pdjTreasury,
     initialOwner,
     deployedAt: new Date().toISOString(),
   };
