@@ -172,7 +172,7 @@ export async function updateProfileScore(
  * - Email verified (email = verified_email): 9 pts
  * - WhatsApp or Telegram verified: 9 pts
  * - GoodDollar verified (lastgooddollarverification IS NOT NULL): 7 pts
- * - Location verified (city_id = verified_city_id): 9 pts
+ * - Location verified (city_id = verified_city_id, or for countries without cities: place_of_worship_location = verified_place_of_worship_location): 9 pts
  * - Place of worship verified: 9 pts
  * - Interview scheduled: 7 pts
  * Total: 100
@@ -199,6 +199,8 @@ export async function recalculateProfileScore(
       'verified_city_id',
       'place_of_worship',
       'verified_place_of_worship',
+      'place_of_worship_location',
+      'verified_place_of_worship_location',
       'proposed_date_of_interview',
     ])
     .where('id', '=', userId)
@@ -234,8 +236,13 @@ export async function recalculateProfileScore(
     score += 7
   }
 
-  // Location verified: 9 pts (city determines department + municipality)
-  if (user.city_id != null && user.verified_city_id === user.city_id) {
+  // Location verified: 9 pts
+  // Countries with cities: city_id must match verified_city_id
+  // Countries without cities (e.g. USA): place_of_worship_location must be set and match verified_place_of_worship_location
+  if ((user.city_id != null && user.verified_city_id === user.city_id) ||
+      (user.city_id == null && user.verified_city_id == null &&
+       user.place_of_worship_location != null &&
+       user.verified_place_of_worship_location === user.place_of_worship_location)) {
     score += 9
   }
 

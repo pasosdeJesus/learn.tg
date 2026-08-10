@@ -278,6 +278,7 @@ describe('recalculateProfileScore', () => {
       lastgooddollarverification: null,
       city_id: null, verified_city_id: null,
       place_of_worship: null, verified_place_of_worship: null,
+      place_of_worship_location: null, verified_place_of_worship_location: null,
     })
     const score = await recalculateProfileScore(mockDb, 1)
     expect(score).toBe(26)
@@ -291,6 +292,7 @@ describe('recalculateProfileScore', () => {
       lastgooddollarverification: null,
       city_id: null, verified_city_id: null,
       place_of_worship: null, verified_place_of_worship: null,
+      place_of_worship_location: null, verified_place_of_worship_location: null,
     })
     const score = await recalculateProfileScore(mockDb, 1)
     expect(score).toBe(50)
@@ -306,6 +308,7 @@ describe('recalculateProfileScore', () => {
       lastgooddollarverification: new Date(),
       city_id: 15, verified_city_id: 15,
       place_of_worship: 'Church', verified_place_of_worship: 'Church',
+      place_of_worship_location: null, verified_place_of_worship_location: null,
     }, true)
     const score = await recalculateProfileScore(mockDb, 1)
     expect(score).toBe(100)
