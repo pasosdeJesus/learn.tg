@@ -474,6 +474,8 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
               const isWorshipLoc = f.key === 'verified_place_of_worship_location'
               const hasCentroPoblado = form.city_id && String(form.city_id) !== ''
               if (isLocationField && !hasCentroPoblado) return null
+              // Hide Department and Municipality entirely — City cascades to them automatically
+              if (f.key === 'verified_department_id' || f.key === 'verified_municipality_id') return null
               if (isWorshipLoc && hasCentroPoblado) return null
               if (!f.source) return null
 
