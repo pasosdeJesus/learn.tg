@@ -13,6 +13,11 @@
       },
       {
         "internalType": "address",
+        "name": "_pdjTreasury",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "initialOwner",
         "type": "address"
       }
@@ -272,6 +277,44 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "donor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "usdtBacking",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "slearnReturned",
+        "type": "uint256"
+      }
+    ],
+    "name": "DonorCashback",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "newPct",
+        "type": "uint8"
+      }
+    ],
+    "name": "DonorCashbackPctUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "bytes32",
         "name": "requestId",
         "type": "bytes32"
@@ -483,6 +526,19 @@
         "internalType": "bool",
         "name": "exists",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "donorCashbackPct",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -934,6 +990,19 @@
       }
     ],
     "name": "setClusterVerification",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "pct",
+        "type": "uint8"
+      }
+    ],
+    "name": "setDonorCashbackPct",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

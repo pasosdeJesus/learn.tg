@@ -25,12 +25,14 @@ async function main() {
   const clusterFunds = await ClusterFunds.deploy(
     usdtAddress,
     slearnAddress,
+    pdjTreasury,
     initialOwner
   );
   await clusterFunds.waitForDeployment();
 
   const addr = await clusterFunds.getAddress();
   console.log(`ClusterFunds deployed to: ${addr}`);
+  console.log(`Default config: 10% pdJ treasury, 10% donor cashback, 80% cluster/country`);
 
   // Save deployment
   const dir = path.join(__dirname, "..", "deployments", "ClusterFunds");
@@ -48,11 +50,6 @@ async function main() {
   };
   fs.writeFileSync(file, JSON.stringify(deployment, null, 2));
   console.log(`Deployment saved to: ${file}`);
-
-  // Set fee config: 10% pdJ treasury, 10% donor (configured at runtime via setFeeConfig)
-  // Default: no fees — 100% to cluster. Admin calls setFeeConfig after deployment.
-  console.log("Fee config must be set via setFeeConfig([pdjTreasury, donor], [10, 10]) after deployment");
-  console.log("pdJ Treasury for reference:", pdjTreasury);
 }
 
 main().catch((error) => {

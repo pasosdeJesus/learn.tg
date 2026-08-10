@@ -7,6 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
+interface ISLEARNMint {
+    function mintAndReserve(address to, uint256 usdtAmount) external returns (uint256);
+}
+
 /**
  * @title ClusterFunds
  * @author learn.tg
@@ -16,13 +20,12 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
  * Phase 1: Donations, fund accumulation, admin release.
  * Phase 2 (post-pilot): AAVE yield for idle USDT.
  *
- * Fee system: configurable fee wallets + percentages.
- * Remainder after fees goes to the cluster or country fund.
- * Donor cashback is handled by the backend (mint SLEARN for USDT, return SLEARN).
- * Example: wallets=[pdjTreasury], pcts=[10] → 10% pdJ, 90% cluster.
+ * Fee system: configurable fee wallets + percentages + donor cashback.
+ * Remainder after fees + cashback goes to the cluster or country fund.
+ * Donor cashback: USDT portion → mintAndReserve (backs SLEARN), SLEARN portion → direct return.
+ * Example: wallets=[pdjTreasury], pcts=[10], cashback=10 → 10% pdJ, 10% donor, 80% cluster.
  *
  * Security: Uses OpenZeppelin's SafeERC20, ReentrancyGuard, Ownable, and Pausable.
- * Emergency withdrawals are restricted to contract balances with timelock.
  */
 contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
@@ -32,9 +35,10 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     IERC20 public immutable usdtToken;
     IERC20 public immutable slearnToken;
 
-    // Configurable fee recipients (replaces single pdjTreasury + pdjPercentage)
+    // Configurable fee recipients + cashback
     address[] public feeWallets;
     uint8[] public feePercentages;
+    uint8 public donorCashbackPct; // e.g. 10 = 10% SLEARN cashback to donor
 
     struct ClusterFund {
         uint256 usdtBalance;
@@ -67,7 +71,9 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     event ClusterRemoved(address indexed clusterWallet, string countryCode, uint256 usdtAmount, uint256 slearnAmount);
     event ClusterVerified(address indexed clusterWallet, bool verified);
     event FeeConfigUpdated(address[] wallets, uint8[] percentages);
+    event DonorCashbackPctUpdated(uint8 newPct);
     event FeeDistributed(address indexed recipient, uint256 usdtAmount, uint256 slearnAmount);
+    event DonorCashback(address indexed donor, uint256 usdtBacking, uint256 slearnReturned);
     event EmergencyWithdrawRequested(bytes32 indexed requestId, address indexed token, uint256 amount, uint256 releaseTime);
     event EmergencyWithdrawExecuted(bytes32 indexed requestId, address indexed token, uint256 amount);
 
@@ -76,12 +82,19 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     constructor(
         address _usdt,
         address _slearn,
+        address _pdjTreasury,
         address initialOwner
     ) Ownable(initialOwner) {
         require(_usdt != address(0), "Invalid USDT");
         require(_slearn != address(0), "Invalid SLEARN");
+        require(_pdjTreasury != address(0), "Invalid treasury");
         usdtToken = IERC20(_usdt);
         slearnToken = IERC20(_slearn);
+
+        // Default: 10% pdJ treasury, 10% donor cashback, 80% cluster/country
+        feeWallets.push(_pdjTreasury);
+        feePercentages.push(10);
+        donorCashbackPct = 10;
     }
 
     // ──── Admin ────
@@ -125,6 +138,16 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         return (feeWallets, feePercentages);
     }
 
+    /**
+     * @notice Set donor cashback percentage.
+     * @param pct Cashback percentage (0-50). USDT: mintAndReserve, SLEARN: direct return.
+     */
+    function setDonorCashbackPct(uint8 pct) external onlyOwner {
+        require(pct <= 50, "Max 50%");
+        donorCashbackPct = pct;
+        emit DonorCashbackPctUpdated(pct);
+    }
+
     function setClusterVerification(address _clusterWallet, bool _verified) external onlyOwner {
         require(_clusterWallet != address(0), "Zero address");
         require(clusterFunds[_clusterWallet].exists, "Cluster not found");
@@ -160,7 +183,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
             clusterFunds[clusterWallet].exists = true;
         }
 
-        (uint256 clusterUsdt, uint256 clusterSlearn) = _distributeFees(usdtAmount, slearnAmount);
+        (uint256 clusterUsdt, uint256 clusterSlearn) = _distributeFees(usdtAmount, slearnAmount, donor);
 
         clusterFunds[clusterWallet].usdtBalance += clusterUsdt;
         clusterFunds[clusterWallet].slearnBalance += clusterSlearn;
@@ -190,7 +213,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
 
         processedTx[txHash] = true;
 
-        (uint256 countryUsdt, uint256 countrySlearn) = _distributeFees(usdtAmount, slearnAmount);
+        (uint256 countryUsdt, uint256 countrySlearn) = _distributeFees(usdtAmount, slearnAmount, donor);
 
         if (!countryFunds[countryCode].exists) {
             countryFunds[countryCode].exists = true;
@@ -414,14 +437,15 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     // ──── Internal ────
 
     /**
-     * @dev Distribute fees to configured recipients. Remainder goes to cluster/country.
+     * @dev Distribute fees + cashback. Remainder goes to cluster/country.
      */
-    function _distributeFees(uint256 usdtAmt, uint256 slearnAmt)
+    function _distributeFees(uint256 usdtAmt, uint256 slearnAmt, address donor)
         internal returns (uint256 clusterUsdt, uint256 clusterSlearn)
     {
         clusterUsdt = usdtAmt;
         clusterSlearn = slearnAmt;
 
+        // 1. Static fee wallets (e.g. pdjTreasury)
         uint256 len = feeWallets.length;
         for (uint256 i = 0; i < len; i++) {
             uint256 feeUsdt = (usdtAmt * feePercentages[i]) / 100;
@@ -436,6 +460,29 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
                 slearnToken.safeTransfer(feeWallets[i], feeSlearn);
                 clusterSlearn -= feeSlearn;
                 emit FeeDistributed(feeWallets[i], 0, feeSlearn);
+            }
+        }
+
+        // 2. Donor cashback
+        if (donorCashbackPct > 0 && donor != address(0)) {
+            uint256 cashbackUsdt = (usdtAmt * donorCashbackPct) / 100;
+            uint256 cashbackSlearn = (slearnAmt * donorCashbackPct) / 100;
+            uint256 cashbackMinted = 0;
+
+            if (cashbackUsdt > 0) {
+                // Transfer USDT to SLEARN contract, then mintAndReserve → backs SLEARN
+                address slearnAddr = address(slearnToken);
+                usdtToken.safeTransfer(slearnAddr, cashbackUsdt);
+                cashbackMinted = ISLEARNMint(slearnAddr).mintAndReserve(donor, cashbackUsdt);
+                clusterUsdt -= cashbackUsdt;
+            }
+            if (cashbackSlearn > 0) {
+                slearnToken.safeTransfer(donor, cashbackSlearn);
+                clusterSlearn -= cashbackSlearn;
+            }
+
+            if (cashbackUsdt > 0 || cashbackSlearn > 0) {
+                emit DonorCashback(donor, cashbackUsdt, cashbackSlearn);
             }
         }
     }
