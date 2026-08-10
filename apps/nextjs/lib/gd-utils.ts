@@ -168,12 +168,13 @@ export async function updateProfileScore(
 /**
  * Calculates profile score based on verified fields:
  * - Name verified (nombre = passport_name): 26 pts
- * - Country verified (pais_id = passport_nationality): 26 pts
- * - Email verified (email = verified_email): 10 pts
- * - WhatsApp or Telegram verified: 10 pts
- * - GoodDollar verified (lastgooddollarverification IS NOT NULL): 8 pts
- * - Location verified (dept + municipality + city match): 10 pts
- * - Place of worship verified: 10 pts
+ * - Country verified (pais_id = passport_nationality): 24 pts
+ * - Email verified (email = verified_email): 9 pts
+ * - WhatsApp or Telegram verified: 9 pts
+ * - GoodDollar verified (lastgooddollarverification IS NOT NULL): 7 pts
+ * - Location verified (city_id = verified_city_id): 9 pts
+ * - Place of worship verified: 9 pts
+ * - Interview scheduled: 7 pts
  * Total: 100
  */
 export async function recalculateProfileScore(
@@ -194,11 +195,7 @@ export async function recalculateProfileScore(
       'verified_whatsapp',
       'verified_telegram',
       'lastgooddollarverification',
-      'department_id',
-      'municipality_id',
       'city_id',
-      'verified_department_id',
-      'verified_municipality_id',
       'verified_city_id',
       'place_of_worship',
       'verified_place_of_worship',
@@ -237,11 +234,8 @@ export async function recalculateProfileScore(
     score += 7
   }
 
-  // Location verified: 9 pts
-  if (user.department_id != null &&
-      user.verified_department_id === user.department_id &&
-      user.verified_municipality_id === user.municipality_id &&
-      user.verified_city_id === user.city_id) {
+  // Location verified: 9 pts (city determines department + municipality)
+  if (user.city_id != null && user.verified_city_id === user.city_id) {
     score += 9
   }
 

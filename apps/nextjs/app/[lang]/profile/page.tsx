@@ -136,13 +136,9 @@ export default function ProfileForm({ params }: PageProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState<'front' | 'back' | null>(null)
   const [showChurchDialog, setShowChurchDialog] = useState(false)
   const [updatingScores, setUpdatingScores] = useState(false)
-  const [departmentId, setDepartmentId] = useState<number | null>(null)
-  const [municipalityId, setMunicipalityId] = useState<number | null>(null)
   const [cityId, setCityId] = useState<number | null>(null)
   const [placeOfWorshipLocation, setPlaceOfWorshipLocation] = useState('')
   const [placeOfWorshipName, setPlaceOfWorshipName] = useState('')
-  const [departmentName, setDepartmentName] = useState('')
-  const [municipalityName, setMunicipalityName] = useState('')
   const [cityDisplayName, setCityDisplayName] = useState('')
 
   const { address } = useAuthAddress()
@@ -341,14 +337,6 @@ export default function ProfileForm({ params }: PageProps) {
         logger.info('locProfile=' + JSON.stringify(locProfile), 'Profile')
         setProfile(locProfile)
         if (rUser.church_id) setSelectedChurchId(rUser.church_id)
-        if (rUser.department_id != null) {
-          setDepartmentId(rUser.department_id)
-          if (rUser.department_name) setDepartmentName(rUser.department_name)
-        }
-        if (rUser.municipality_id != null) {
-          setMunicipalityId(rUser.municipality_id)
-          if (rUser.municipality_name) setMunicipalityName(rUser.municipality_name)
-        }
         if (rUser.city_id != null) {
           setCityId(rUser.city_id)
           if (rUser.city_name) {
@@ -429,8 +417,6 @@ export default function ProfileForm({ params }: PageProps) {
         place_of_worship: selectedChurchId ? churches.find(c => c.id === selectedChurchId)?.name || '' : placeOfWorshipName || null,
         place_of_worship_location: cityId ? placeOfWorshipLocation : (citySearch || placeOfWorshipLocation),
         church_id: selectedChurchId || null,
-        department_id: departmentId,
-        municipality_id: municipalityId,
         city_id: cityId,
         pastor_name: pastorName || null,
         pastor_whatsapp: pastorWhatsApp || null,
@@ -530,10 +516,6 @@ export default function ProfileForm({ params }: PageProps) {
       setCityId(null)
       setCitySearch('')
       setCityDisplayName('')
-      setDepartmentId(null)
-      setDepartmentName('')
-      setMunicipalityId(null)
-      setMunicipalityName('')
       setPlaceOfWorshipLocation('')
       setPlaceOfWorshipName('')
       setSelectedChurchId(null)
@@ -542,8 +524,6 @@ export default function ProfileForm({ params }: PageProps) {
       // Send nulls for all location fields to trigger backend validation
       autoSaveField('country', value, delay)
       autoSaveField('city_id', '', 0)
-      autoSaveField('department_id', '', 0)
-      autoSaveField('municipality_id', '', 0)
       autoSaveField('place_of_worship', '', 0)
       autoSaveField('place_of_worship_location', '', 0)
       autoSaveField('church_id', '', 0)
@@ -621,8 +601,7 @@ export default function ProfileForm({ params }: PageProps) {
       whatsapp: 'whatsapp', telegram: 'telegram',
       religion: 'religion_id', country: 'pais_id',
       church_relationship: 'church_relationship',
-      city_id: 'city_id', department_id: 'department_id',
-      municipality_id: 'municipality_id',
+      city_id: 'city_id',
       place_of_worship: 'place_of_worship',
       place_of_worship_location: 'place_of_worship_location',
       church_id: 'church_id',
@@ -654,8 +633,6 @@ export default function ProfileForm({ params }: PageProps) {
     setCitySearch(town.town)
     setPlaceOfWorshipLocation(town.town)
     setCityDisplayName(town.town)
-    setDepartmentName(town.departamento)
-    setMunicipalityName(town.municipio)
     setTownSuggestions([])
     setSelectedChurchId(null)
     // Fetch churches for this town
@@ -673,8 +650,6 @@ export default function ProfileForm({ params }: PageProps) {
     setCitySearch(text)
     setPlaceOfWorshipLocation(text)
     setCityDisplayName('')
-    setDepartmentName('')
-    setMunicipalityName('')
     setTownSuggestions([])
     setSelectedChurchId(null)
     setChurches([])
@@ -1057,8 +1032,6 @@ export default function ProfileForm({ params }: PageProps) {
                   onChange={(newCityId, name, deptId, muniId) => {
                     setCityId(newCityId)
                     setCitySearch(name)
-                    if (deptId !== undefined) setDepartmentId(deptId)
-                    if (muniId !== undefined) setMunicipalityId(muniId)
                     // Free-text entry (country without city data): persist as place_of_worship_location
                     if (newCityId === null) setPlaceOfWorshipLocation(name)
                   }}

@@ -1387,7 +1387,6 @@ export interface Usuario {
   created_at: Timestamp | null;
   current_sign_in_at: Timestamp | null;
   current_sign_in_ip: string | null;
-  department_id: number | null;
   descripcion: string | null;
   email: Generated<string>;
   encrypted_password: Generated<string>;
@@ -1408,8 +1407,6 @@ export interface Usuario {
   last_sign_in_ip: string | null;
   lastgooddollarverification: Timestamp | null;
   learningscore_deprecated: number | null;
-  locked_at: Timestamp | null;
-  municipality_id: number | null;
   nombre: string | null;
   nusuario: string;
   oficina_id: number | null;
@@ -1435,9 +1432,7 @@ export interface Usuario {
   updated_at: Timestamp | null;
   verified_church_relationship: string | null;
   verified_city_id: number | null;
-  verified_department_id: number | null;
   verified_email: string | null;
-  verified_municipality_id: number | null;
   verified_place_of_worship: string | null;
   verified_place_of_worship_location: string | null;
   verified_telegram: string | null;

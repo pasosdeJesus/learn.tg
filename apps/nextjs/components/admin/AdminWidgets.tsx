@@ -39,8 +39,6 @@ const VERIFIED_FIELDS = [
   { key: 'verified_telegram', source: 'telegram', labelEn: 'Telegram', labelEs: 'Telegram' },
   { key: 'verified_email', source: 'email', labelEn: 'Email', labelEs: 'Correo' },
   { key: 'verified_city_id', source: 'city_id', labelEn: 'City', labelEs: 'Ciudad' },
-  { key: 'verified_department_id', source: 'department_id', labelEn: 'Department', labelEs: 'Departamento' },
-  { key: 'verified_municipality_id', source: 'municipality_id', labelEn: 'Municipality', labelEs: 'Municipio' },
   { key: 'verified_place_of_worship', source: 'place_of_worship', labelEn: 'Place of Worship', labelEs: 'Lugar de Culto' },
   { key: 'verified_place_of_worship_location', source: 'place_of_worship_location', labelEn: 'Worship Location', labelEs: 'Ubicación del Culto' },
   { key: 'verified_church_relationship', source: null, labelEn: 'Church Role', labelEs: 'Rol en Iglesia' },
@@ -212,8 +210,6 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.place_of_worship = user.place_of_worship || ''
     initial.place_of_worship_location = user.place_of_worship_location || ''
     initial.city_id = user.city_id || ''
-    initial.department_id = (user as any).department_id || ''
-    initial.municipality_id = (user as any).municipality_id || ''
     initial.pastor_name = user.pastor_name || ''
     initial.pastor_whatsapp = user.pastor_whatsapp || ''
     initial.church_relationship = user.church_relationship || ''
@@ -246,23 +242,11 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
         ...f,
         verified_city_id: '',
         verified_place_of_worship_location: newVal,
-        verified_department_id: '',
-        verified_municipality_id: '',
       }
     }
 
     const newVal = currentlyChecked ? '' : String(sourceVal ?? '')
     const next: Record<string, any> = { ...f, [key]: newVal }
-
-    // Cascade location fields: checking City also marks Department + Municipality
-    if (key === 'verified_city_id' && !currentlyChecked) {
-      if (f.department_id != null) next.verified_department_id = String(f.department_id)
-      if (f.municipality_id != null) next.verified_municipality_id = String(f.municipality_id)
-    }
-    if (key === 'verified_city_id' && currentlyChecked) {
-      next.verified_department_id = ''
-      next.verified_municipality_id = ''
-    }
 
     return next
   })
@@ -284,7 +268,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
       if (f.source) {
         // Convert numeric IDs from string to number for DB compatibility.
         // If the value is text (non-SL country fallback), send as-is.
-        const isNumericId = f.key === 'verified_city_id' || f.key === 'verified_department_id' || f.key === 'verified_municipality_id'
+        const isNumericId = f.key === 'verified_city_id'
         body[f.key] = (typeof v === 'string' && v.length > 0 && v !== 'true' && v !== 'false')
           ? (isNumericId ? Number(v) : v)
           : null
@@ -470,12 +454,10 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
             {VERIFIED_FIELDS.map(f => {
               // Location fields: show only the relevant set per country type
-              const isLocationField = ['verified_city_id', 'verified_department_id', 'verified_municipality_id'].includes(f.key)
+              const isLocationField = f.key === 'verified_city_id'
               const isWorshipLoc = f.key === 'verified_place_of_worship_location'
               const hasCentroPoblado = form.city_id && String(form.city_id) !== ''
               if (isLocationField && !hasCentroPoblado) return null
-              // Hide Department and Municipality entirely — City cascades to them automatically
-              if (f.key === 'verified_department_id' || f.key === 'verified_municipality_id') return null
               if (isWorshipLoc && hasCentroPoblado) return null
               if (!f.source) return null
 

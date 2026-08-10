@@ -57,7 +57,9 @@ export function PhotoUpload({ label, existingPath, userId, walletAddress, side, 
       <label className="block text-xs text-gray-500 mb-1">{label}</label>
       {photoUrl ? (
         <div className="flex items-center gap-2">
-          <img src={photoUrl} alt={label} className="h-16 w-12 object-cover rounded border" />
+          <a href={photoUrl} target="_blank" rel="noopener noreferrer">
+            <img src={photoUrl} alt={label} className="h-16 w-12 object-cover rounded border hover:opacity-80 cursor-pointer" />
+          </a>
           <label className="text-xs text-blue-600 cursor-pointer hover:underline">
             {isEs ? 'Cambiar' : 'Change'}
             <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />

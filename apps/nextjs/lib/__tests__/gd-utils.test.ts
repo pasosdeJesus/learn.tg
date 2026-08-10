@@ -276,8 +276,7 @@ describe('recalculateProfileScore', () => {
       pais_id: null, passport_nationality: null,
       email: null, verified_email: null,
       lastgooddollarverification: null,
-      department_id: null, municipality_id: null, city_id: null,
-      verified_department_id: null, verified_municipality_id: null, verified_city_id: null,
+      city_id: null, verified_city_id: null,
       place_of_worship: null, verified_place_of_worship: null,
     })
     const score = await recalculateProfileScore(mockDb, 1)
@@ -290,8 +289,7 @@ describe('recalculateProfileScore', () => {
       pais_id: 1, passport_nationality: 1,
       email: null, verified_email: null,
       lastgooddollarverification: null,
-      department_id: null, municipality_id: null, city_id: null,
-      verified_department_id: null, verified_municipality_id: null, verified_city_id: null,
+      city_id: null, verified_city_id: null,
       place_of_worship: null, verified_place_of_worship: null,
     })
     const score = await recalculateProfileScore(mockDb, 1)
@@ -306,8 +304,7 @@ describe('recalculateProfileScore', () => {
       whatsapp: '+123', telegram: null,
       verified_whatsapp: '+123', verified_telegram: null,
       lastgooddollarverification: new Date(),
-      department_id: 5, municipality_id: 10, city_id: 15,
-      verified_department_id: 5, verified_municipality_id: 10, verified_city_id: 15,
+      city_id: 15, verified_city_id: 15,
       place_of_worship: 'Church', verified_place_of_worship: 'Church',
     }, true)
     const score = await recalculateProfileScore(mockDb, 1)
