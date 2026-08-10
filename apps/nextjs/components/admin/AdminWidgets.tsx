@@ -186,11 +186,17 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
 
   useEffect(() => {
     const initial: Record<string, any> = {}
-    // Verified fields: store the actual DB value (string), not boolean
+    // Verified fields: store the actual DB value (number or string)
     for (const f of VERIFIED_FIELDS) {
       if (f.source) {
         const dbVal = (user as any)[f.key]
-        initial[f.key] = (dbVal && typeof dbVal === 'string' && dbVal !== 'true' && dbVal !== 'false') ? dbVal : ''
+        if (typeof dbVal === 'number') {
+          initial[f.key] = dbVal === 0 ? '' : String(dbVal)
+        } else if (typeof dbVal === 'string' && dbVal !== 'true' && dbVal !== 'false') {
+          initial[f.key] = dbVal
+        } else {
+          initial[f.key] = ''
+        }
       } else {
         initial[f.key] = (user as any)[f.key] || ''
       }
@@ -206,6 +212,8 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.place_of_worship = user.place_of_worship || ''
     initial.place_of_worship_location = user.place_of_worship_location || ''
     initial.city_id = user.city_id || ''
+    initial.department_id = (user as any).department_id || ''
+    initial.municipality_id = (user as any).municipality_id || ''
     initial.pastor_name = user.pastor_name || ''
     initial.pastor_whatsapp = user.pastor_whatsapp || ''
     initial.church_relationship = user.church_relationship || ''
@@ -460,15 +468,23 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('verifiedFields')}</h4>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
-            {VERIFIED_FIELDS.map(f => (
-              f.source ? (
+            {VERIFIED_FIELDS.map(f => {
+              // Location fields: show only the relevant set per country type
+              const isLocationField = ['verified_city_id', 'verified_department_id', 'verified_municipality_id'].includes(f.key)
+              const isWorshipLoc = f.key === 'verified_place_of_worship_location'
+              const hasCentroPoblado = form.city_id && String(form.city_id) !== ''
+              if (isLocationField && !hasCentroPoblado) return null
+              if (isWorshipLoc && hasCentroPoblado) return null
+              if (!f.source) return null
+
+              return (
                 <label key={f.key} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
                   <input type="checkbox" checked={isChecked(f.key)} onChange={() => toggle(f.key, f.source || undefined)} className="rounded" />
                   <span>{lang === 'es' ? f.labelEs : f.labelEn}</span>
                   {isChecked(f.key) ? <span className="text-xs text-green-600 ml-auto">{String(form[f.key] || '').slice(0, 20)}</span> : null}
                 </label>
-              ) : null
-            ))}
+              )
+            })}
           </div>
         </div>
         <div className="border-t pt-3">

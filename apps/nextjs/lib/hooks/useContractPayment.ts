@@ -37,7 +37,7 @@ export interface UseContractPaymentOptions {
     slearnDonationAmount: number
     usdtHash: string
     slearnHash: string
-    courseId: number
+    courseId: number | null
   }) => Promise<{ increment?: number }>
   onSuccess?: (data: { increment?: number }) => void
 }
@@ -81,7 +81,7 @@ export function useContractPayment({
   }, [])
 
   const execute = useCallback(async () => {
-    if (!walletClient || !publicClient || !address || !backendWalletAddress || !usdtAddress || !courseId) {
+    if (!walletClient || !publicClient || !address || !backendWalletAddress || !usdtAddress) {
       setState('error')
       setError('Missing wallet or contract configuration')
       return
