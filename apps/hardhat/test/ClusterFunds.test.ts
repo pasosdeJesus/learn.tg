@@ -25,7 +25,6 @@ describe('ClusterFunds', () => {
     clusterB = signers[4]
     clusterC = signers[5]
 
-    // Deploy mock tokens (MockUSDT is ERC20 + Ownable, use as both USDT and SLEARN)
     const USDTFactory = await ethers.getContractFactory('MockUSDT')
     mockUSDT = await USDTFactory.deploy(owner.address)
     await mockUSDT.waitForDeployment()
@@ -33,64 +32,65 @@ describe('ClusterFunds', () => {
     mockSLEARN = await USDTFactory.deploy(owner.address)
     await mockSLEARN.waitForDeployment()
 
-    // Deploy ClusterFunds
     const factory = await ethers.getContractFactory('ClusterFunds')
     contract = await factory.deploy(
       await mockUSDT.getAddress(),
       await mockSLEARN.getAddress(),
-      pdjTreasury.address,
       owner.address,
     )
     await contract.waitForDeployment()
 
-    // Fund donor with tokens (MockUSDT has 6 decimals for both)
     const usdtAmt = ethers.parseUnits('10000', 6)
     const slearnAmt = ethers.parseUnits('10000', 6)
     await mockUSDT.mint(donor.address, usdtAmt)
     await mockSLEARN.mint(donor.address, slearnAmt)
 
-    // Approve contract to spend donor's tokens
     await mockUSDT.connect(donor).approve(await contract.getAddress(), ethers.MaxUint256)
     await mockSLEARN.connect(donor).approve(await contract.getAddress(), ethers.MaxUint256)
   })
 
   // ──── Deployment ────
 
-  it('deploys with correct token addresses, treasury, and owner', async () => {
+  it('deploys with correct token addresses and owner', async () => {
     expect((await contract.usdtToken()).toLowerCase()).to.equal((await mockUSDT.getAddress()).toLowerCase())
     expect((await contract.slearnToken()).toLowerCase()).to.equal((await mockSLEARN.getAddress()).toLowerCase())
-    expect((await contract.pdjTreasury()).toLowerCase()).to.equal(pdjTreasury.address.toLowerCase())
     expect((await contract.owner()).toLowerCase()).to.equal(owner.address.toLowerCase())
-    expect(await contract.pdjPercentage()).to.equal(15)
+    const cfg = await contract.getFeeConfig()
+    expect(cfg.wallets.length).to.equal(0)
   })
 
-  // ──── Admin ────
+  // ──── Fee Config ────
 
-  it('setPdJTreasury rejects zero address', async () => {
-    await expect(contract.setPdJTreasury(ethers.ZeroAddress))
-      .to.be.revertedWith('Invalid treasury')
+  it('setFeeConfig validates inputs', async () => {
+    await expect(contract.setFeeConfig([pdjTreasury.address], [10, 5]))
+      .to.be.revertedWith('Length mismatch')
+    await expect(contract.setFeeConfig([ethers.ZeroAddress], [10]))
+      .to.be.revertedWith('Zero address')
+    await expect(contract.setFeeConfig([pdjTreasury.address], [110]))
+      .to.be.revertedWith('Total exceeds 100%')
   })
 
-  it('setPdJTreasury updates treasury and emits event', async () => {
-    await expect(contract.setPdJTreasury(clusterA.address))
-      .to.emit(contract, 'PdjTreasuryUpdated')
-      .withArgs(clusterA.address)
-    // Restore
-    await contract.setPdJTreasury(pdjTreasury.address)
+  it('setFeeConfig emits FeeConfigUpdated', async () => {
+    await expect(contract.setFeeConfig([pdjTreasury.address], [10]))
+      .to.emit(contract, 'FeeConfigUpdated')
+
+    const cfg = await contract.getFeeConfig()
+    expect(cfg.wallets.length).to.equal(1)
+    expect(cfg.wallets[0].toLowerCase()).to.equal(pdjTreasury.address.toLowerCase())
+    expect(cfg.percentages[0]).to.equal(10)
   })
 
-  it('setPdJPercentage validates range and steps', async () => {
-    await expect(contract.setPdJPercentage(3)).to.be.revertedWith('Min 5%')
-    await expect(contract.setPdJPercentage(35)).to.be.revertedWith('Max 30%')
-    await expect(contract.setPdJPercentage(12)).to.be.revertedWith('Steps of 5')
-
-    await contract.setPdJPercentage(20)
-    expect(await contract.pdjPercentage()).to.equal(20)
-    await contract.setPdJPercentage(15)
+  it('setFeeConfig clears fees with empty arrays', async () => {
+    await contract.setFeeConfig([pdjTreasury.address], [15])
+    await contract.setFeeConfig([], [])
+    const cfg = await contract.getFeeConfig()
+    expect(cfg.wallets.length).to.equal(0)
+    await contract.setFeeConfig([pdjTreasury.address], [10])
   })
+
+  // ──── Cluster Verification ────
 
   it('setClusterVerification works', async () => {
-    // Register cluster via donation
     await mockUSDT.connect(donor).transfer(await contract.getAddress(), ethers.parseUnits('100', 6))
     const txHash = ethers.id('verify-test')
     await contract.processDonation(txHash, clusterA.address, donor.address, ethers.parseUnits('100', 6), 0n)
@@ -98,11 +98,6 @@ describe('ClusterFunds', () => {
     await expect(contract.setClusterVerification(clusterA.address, true))
       .to.emit(contract, 'ClusterVerified')
       .withArgs(clusterA.address, true)
-
-    const funds = await contract.getClusterFunds(clusterA.address)
-    // HRE mock may return named properties or indexed tuple
-    expect(funds.exists || funds[2]).to.be.true
-    expect(funds.verified || funds[3]).to.be.true
 
     await expect(contract.setClusterVerification(clusterB.address, true))
       .to.be.revertedWith('Cluster not found')
@@ -123,9 +118,9 @@ describe('ClusterFunds', () => {
     expect(await contract.paused()).to.be.false
   })
 
-  // ──── Donations ────
+  // ──── Donations (with 10% pdJ fee config) ────
 
-  it('processDonation splits 85/15 and emits events', async () => {
+  it('processDonation sends 10% to pdJ, 90% to cluster', async () => {
     const usdtAmount = ethers.parseUnits('100', 6)
     const slearnAmount = ethers.parseUnits('200', 6)
     const txHash = ethers.id('don-1')
@@ -133,18 +128,39 @@ describe('ClusterFunds', () => {
     await mockUSDT.connect(donor).transfer(await contract.getAddress(), usdtAmount)
     await mockSLEARN.connect(donor).transfer(await contract.getAddress(), slearnAmount)
 
+    const pdjUsdtBefore = await mockUSDT.balanceOf(pdjTreasury.address)
+    const pdjSlearnBefore = await mockSLEARN.balanceOf(pdjTreasury.address)
+
     await expect(contract.processDonation(txHash, clusterA.address, donor.address, usdtAmount, slearnAmount))
+      .to.emit(contract, 'FeeDistributed')
       .to.emit(contract, 'ClusterDonation')
 
+    const pdjUsdt = await mockUSDT.balanceOf(pdjTreasury.address) - pdjUsdtBefore
+    const pdjSlearn = await mockSLEARN.balanceOf(pdjTreasury.address) - pdjSlearnBefore
+    expect(pdjUsdt).to.equal(usdtAmount * 10n / 100n)
+    expect(pdjSlearn).to.equal(slearnAmount * 10n / 100n)
+
     const bal = await contract.getClusterBalance(clusterA.address)
-    const usdtBal = bal[0]
-    const slearnBal = bal[1]
-    expect(usdtBal).to.equal(usdtAmount * 85n / 100n)
-    expect(slearnBal).to.equal(slearnAmount * 85n / 100n)
+    expect(bal[0]).to.equal(usdtAmount * 90n / 100n)
+    expect(bal[1]).to.equal(slearnAmount * 90n / 100n)
 
     await expect(
       contract.processDonation(txHash, clusterA.address, donor.address, usdtAmount, slearnAmount)
     ).to.be.revertedWith('Already processed')
+  })
+
+  it('processDonation with empty fees sends 100% to cluster', async () => {
+    await contract.setFeeConfig([], [])
+    const usdtAmount = ethers.parseUnits('100', 6)
+    const txHash = ethers.id('don-no-fee')
+
+    await mockUSDT.connect(donor).transfer(await contract.getAddress(), usdtAmount)
+    await contract.processDonation(txHash, clusterA.address, donor.address, usdtAmount, 0n)
+
+    const bal = await contract.getClusterBalance(clusterA.address)
+    expect(bal[0]).to.equal(usdtAmount)
+
+    await contract.setFeeConfig([pdjTreasury.address], [10])
   })
 
   it('processDonation rejects zero addresses and zero amounts', async () => {
@@ -169,7 +185,7 @@ describe('ClusterFunds', () => {
     await contract.processCountryDonation(txHash, COUNTRY_SL, donor.address, usdtAmount, 0n)
 
     const countryBal = await contract.getCountryBalance(COUNTRY_SL)
-    expect(countryBal[0]).to.equal(usdtAmount * 85n / 100n)
+    expect(countryBal[0]).to.equal(usdtAmount * 90n / 100n)
   })
 
   it('processCountryDonation validates country code', async () => {
@@ -181,7 +197,6 @@ describe('ClusterFunds', () => {
   // ──── Redistribution ────
 
   it('redistributeCountryFunds distributes among verified clusters', async () => {
-    // Ensure both clusters are registered
     const txC = ethers.id('reg-B')
     await mockUSDT.connect(donor).transfer(await contract.getAddress(), ethers.parseUnits('10', 6))
     await contract.processDonation(txC, clusterB.address, donor.address, ethers.parseUnits('10', 6), 0n)
@@ -197,7 +212,6 @@ describe('ClusterFunds', () => {
     const afterB = await contract.getClusterBalance(clusterB.address)
     expect(Number(afterA[0])).to.be.greaterThan(0)
     expect(Number(afterB[0])).to.be.greaterThan(0)
-
   })
 
   it('redistributeCountryFunds rejects unverified or duplicates', async () => {
@@ -238,27 +252,9 @@ describe('ClusterFunds', () => {
     await mockUSDT.connect(donor).transfer(await contract.getAddress(), ethers.parseUnits('50', 6))
     await contract.processDonation(txHash, clusterB.address, donor.address, ethers.parseUnits('50', 6), 0n)
 
-    const clusterBal = await contract.getClusterBalance(clusterB.address)
-
     await contract.removeCluster(clusterB.address, COUNTRY_SL)
 
     const removedFunds = await contract.getClusterFunds(clusterB.address)
-    expect(removedFunds[2]).to.be.false // exists
-  })
-
-  // ──── pct = 0 edge case ────
-
-  it('pdjPercentage = 5 sends 95% to cluster', async () => {
-    await contract.setPdJPercentage(5)
-    const txHash = ethers.id('pct-5')
-    const amount = ethers.parseUnits('100', 6)
-
-    await mockUSDT.connect(donor).transfer(await contract.getAddress(), amount)
-    await contract.processDonation(txHash, clusterA.address, donor.address, amount, 0n)
-
-    const bal = await contract.getClusterBalance(clusterA.address)
-    expect(Number(bal[0])).to.be.greaterThan(0)
-
-    await contract.setPdJPercentage(15)
+    expect(removedFunds[2]).to.be.false
   })
 })

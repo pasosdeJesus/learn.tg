@@ -24,21 +24,21 @@ export function getTargetCopy(lang: string, target: PaymentTarget) {
       return {
         title: `${t('Donate to cluster', 'Donar al clúster')}: ${target.clusterName}`,
         splitInfo: t(
-          '85% goes to the cluster fund, 15% to pdJ operations.',
-          '85% va al fondo del clúster, 15% a operaciones de pdJ.'
+          '80% goes to the cluster fund, 10% to pdJ operations, 10% back as SLEARN cashback.',
+          '80% va al fondo del clúster, 10% a operaciones de pdJ, 10% vuelve como cashback en SLEARN.'
         ),
-        rewardPct: 0,
-        rewardLabel: '',
+        rewardPct: 10,
+        rewardLabel: t('Estimated SLEARN cashback', 'Cashback SLEARN estimado'),
       }
     case 'country-donation':
       return {
         title: `${t('Donate to country', 'Donar al país')}: ${target.countryName}`,
         splitInfo: t(
-          '85% goes to the country fund (distributed among clusters), 15% to pdJ operations.',
-          '85% va al fondo del país (distribuido entre clústeres), 15% a operaciones de pdJ.'
+          '80% goes to the country fund (distributed among clusters), 10% to pdJ operations, 10% back as SLEARN cashback.',
+          '80% va al fondo del país (distribuido entre clústeres), 10% a operaciones de pdJ, 10% vuelve como cashback en SLEARN.'
         ),
-        rewardPct: 0,
-        rewardLabel: '',
+        rewardPct: 10,
+        rewardLabel: t('Estimated SLEARN cashback', 'Cashback SLEARN estimado'),
       }
   }
 }

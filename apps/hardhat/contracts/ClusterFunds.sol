@@ -16,6 +16,11 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
  * Phase 1: Donations, fund accumulation, admin release.
  * Phase 2 (post-pilot): AAVE yield for idle USDT.
  *
+ * Fee system: configurable fee wallets + percentages.
+ * Remainder after fees goes to the cluster or country fund.
+ * Donor cashback is handled by the backend (mint SLEARN for USDT, return SLEARN).
+ * Example: wallets=[pdjTreasury], pcts=[10] → 10% pdJ, 90% cluster.
+ *
  * Security: Uses OpenZeppelin's SafeERC20, ReentrancyGuard, Ownable, and Pausable.
  * Emergency withdrawals are restricted to contract balances with timelock.
  */
@@ -26,8 +31,10 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
 
     IERC20 public immutable usdtToken;
     IERC20 public immutable slearnToken;
-    address public pdjTreasury;
-    uint8 public pdjPercentage = 15; // fixed at 15%, configurable 5-30 in steps of 5
+
+    // Configurable fee recipients (replaces single pdjTreasury + pdjPercentage)
+    address[] public feeWallets;
+    uint8[] public feePercentages;
 
     struct ClusterFund {
         uint256 usdtBalance;
@@ -40,7 +47,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         uint256 usdtBalance;
         uint256 slearnBalance;
         bool exists;
-        // verified removed — countries are fixed entities, no verification needed
     }
 
     mapping(address => ClusterFund) public clusterFunds;      // clusterWallet → fund
@@ -48,8 +54,8 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     mapping(bytes32 => bool) public processedTx;              // replay protection
 
     // Emergency withdrawal timelock
-    uint256 public emergencyWithdrawTimelock = 7 days;        // 7-day delay
-    mapping(bytes32 => uint256) public emergencyWithdrawRequests; // requestId → timestamp
+    uint256 public emergencyWithdrawTimelock = 7 days;
+    mapping(bytes32 => uint256) public emergencyWithdrawRequests;
 
     // ──── Events ────
 
@@ -60,9 +66,8 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     event CountryFundsReleased(string countryCode, address indexed recipient, uint256 usdtAmount, uint256 slearnAmount);
     event ClusterRemoved(address indexed clusterWallet, string countryCode, uint256 usdtAmount, uint256 slearnAmount);
     event ClusterVerified(address indexed clusterWallet, bool verified);
-    event PdjTreasuryUpdated(address indexed newTreasury);
-    event PdjPercentageUpdated(uint8 newPercentage);
-    event PdjFeeDeducted(uint256 usdtAmount, uint256 slearnAmount);
+    event FeeConfigUpdated(address[] wallets, uint8[] percentages);
+    event FeeDistributed(address indexed recipient, uint256 usdtAmount, uint256 slearnAmount);
     event EmergencyWithdrawRequested(bytes32 indexed requestId, address indexed token, uint256 amount, uint256 releaseTime);
     event EmergencyWithdrawExecuted(bytes32 indexed requestId, address indexed token, uint256 amount);
 
@@ -71,15 +76,12 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     constructor(
         address _usdt,
         address _slearn,
-        address _pdjTreasury,
         address initialOwner
     ) Ownable(initialOwner) {
         require(_usdt != address(0), "Invalid USDT");
         require(_slearn != address(0), "Invalid SLEARN");
-        require(_pdjTreasury != address(0), "Invalid treasury");
         usdtToken = IERC20(_usdt);
         slearnToken = IERC20(_slearn);
-        pdjTreasury = _pdjTreasury;
     }
 
     // ──── Admin ────
@@ -92,18 +94,35 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    function setPdJTreasury(address _treasury) external onlyOwner {
-        require(_treasury != address(0), "Invalid treasury");
-        pdjTreasury = _treasury;
-        emit PdjTreasuryUpdated(_treasury);
+    /**
+     * @notice Configure fee recipients and percentages.
+     * @param wallets Array of recipient addresses (no zero addresses).
+     * @param percentages Array of percentages (each 0-100, sum must be <= 100).
+     *        Remainder after fees goes to cluster/country fund.
+     *        Pass empty arrays to disable all fees (100% to cluster/country).
+     *        Donor cashback is handled by the backend separately.
+     */
+    function setFeeConfig(address[] calldata wallets, uint8[] calldata percentages) external onlyOwner {
+        require(wallets.length == percentages.length, "Length mismatch");
+        uint16 total;
+        for (uint256 i = 0; i < percentages.length; i++) {
+            require(wallets[i] != address(0), "Zero address");
+            total += percentages[i];
+        }
+        require(total <= 100, "Total exceeds 100%");
+
+        delete feeWallets;
+        delete feePercentages;
+        for (uint256 i = 0; i < wallets.length; i++) {
+            feeWallets.push(wallets[i]);
+            feePercentages.push(percentages[i]);
+        }
+
+        emit FeeConfigUpdated(wallets, percentages);
     }
 
-    function setPdJPercentage(uint8 _pct) external onlyOwner {
-        require(_pct >= 5, "Min 5%");
-        require(_pct <= 30, "Max 30%");
-        require(_pct % 5 == 0, "Steps of 5");
-        pdjPercentage = _pct;
-        emit PdjPercentageUpdated(_pct);
+    function getFeeConfig() external view returns (address[] memory wallets, uint8[] memory percentages) {
+        return (feeWallets, feePercentages);
     }
 
     function setClusterVerification(address _clusterWallet, bool _verified) external onlyOwner {
@@ -141,17 +160,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
             clusterFunds[clusterWallet].exists = true;
         }
 
-        (uint256 clusterUsdt, uint256 clusterSlearn, uint256 pdjUsdt, uint256 pdjSlearn) =
-            _splitAmounts(usdtAmount, slearnAmount);
-
-        if (pdjUsdt > 0) {
-            usdtToken.safeTransfer(pdjTreasury, pdjUsdt);
-            emit PdjFeeDeducted(pdjUsdt, 0);
-        }
-        if (pdjSlearn > 0) {
-            slearnToken.safeTransfer(pdjTreasury, pdjSlearn);
-            emit PdjFeeDeducted(0, pdjSlearn);
-        }
+        (uint256 clusterUsdt, uint256 clusterSlearn) = _distributeFees(usdtAmount, slearnAmount);
 
         clusterFunds[clusterWallet].usdtBalance += clusterUsdt;
         clusterFunds[clusterWallet].slearnBalance += clusterSlearn;
@@ -181,25 +190,15 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
 
         processedTx[txHash] = true;
 
-        (uint256 clusterUsdt, uint256 clusterSlearn, uint256 pdjUsdt, uint256 pdjSlearn) =
-            _splitAmounts(usdtAmount, slearnAmount);
-
-        if (pdjUsdt > 0) {
-            usdtToken.safeTransfer(pdjTreasury, pdjUsdt);
-            emit PdjFeeDeducted(pdjUsdt, 0);
-        }
-        if (pdjSlearn > 0) {
-            slearnToken.safeTransfer(pdjTreasury, pdjSlearn);
-            emit PdjFeeDeducted(0, pdjSlearn);
-        }
+        (uint256 countryUsdt, uint256 countrySlearn) = _distributeFees(usdtAmount, slearnAmount);
 
         if (!countryFunds[countryCode].exists) {
             countryFunds[countryCode].exists = true;
         }
-        countryFunds[countryCode].usdtBalance += clusterUsdt;
-        countryFunds[countryCode].slearnBalance += clusterSlearn;
+        countryFunds[countryCode].usdtBalance += countryUsdt;
+        countryFunds[countryCode].slearnBalance += countrySlearn;
 
-        emit CountryDonation(donor, countryCode, clusterUsdt, clusterSlearn);
+        emit CountryDonation(donor, countryCode, countryUsdt, countrySlearn);
     }
 
     // ──── Redistribution ────
@@ -231,7 +230,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         uint256 usdtPerCluster = usdtTotal / count;
         uint256 slearnPerCluster = slearnTotal / count;
 
-        // Validate and deduplicate: no zero addresses, no duplicates
+        // Validate and deduplicate
         for (uint256 i = 0; i < count; i++) {
             require(clusters[i] != address(0), "Invalid cluster address");
             require(clusterFunds[clusters[i]].exists, "Cluster not registered");
@@ -260,10 +259,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
 
     // ──── Release ────
 
-    /**
-     * @notice Release accumulated funds to a verified cluster's wallet.
-     * @param clusterWallet The cluster's wallet address.
-     */
     function releaseClusterFunds(address clusterWallet) external onlyOwner whenNotPaused nonReentrant {
         require(clusterWallet != address(0), "Invalid cluster wallet");
         ClusterFund storage fund = clusterFunds[clusterWallet];
@@ -273,7 +268,7 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         uint256 usdtAmt = fund.usdtBalance;
         uint256 slearnAmt = fund.slearnBalance;
         require(usdtAmt > 0 || slearnAmt > 0, "No funds to release");
-        require(usdtAmt >= 1e6 || slearnAmt >= 1, "Amount too small"); // 1 USDT min, 1 SLEARN min
+        require(usdtAmt >= 1e6 || slearnAmt >= 1, "Amount too small");
 
         fund.usdtBalance = 0;
         fund.slearnBalance = 0;
@@ -284,11 +279,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         emit ClusterFundsReleased(clusterWallet, usdtAmt, slearnAmt);
     }
 
-    /**
-     * @notice Release country funds to a specific recipient.
-     * @param countryCode ISO 3166-1 alpha-2 country code (e.g., "SL", "CO").
-     * @param recipient Address receiving the funds.
-     */
     function releaseCountryFunds(
         string calldata countryCode,
         address recipient
@@ -314,12 +304,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
 
     // ──── Cluster Removal (Dissolution) ────
 
-    /**
-     * @notice Remove a dissolved cluster and transfer its funds to the country fund.
-     * @param clusterWallet The cluster's wallet address to remove.
-     * @param countryCode ISO 3166-1 alpha-2 country code (e.g., "SL", "CO").
-     * Called by backend when a cluster is dissolved (last pastor leaves).
-     */
     function removeCluster(address clusterWallet, string calldata countryCode) external onlyOwner whenNotPaused nonReentrant {
         require(clusterWallet != address(0), "Invalid cluster wallet");
         require(bytes(countryCode).length == 2, "Invalid country code");
@@ -329,7 +313,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         uint256 usdtAmt = fund.usdtBalance;
         uint256 slearnAmt = fund.slearnBalance;
 
-        // Transfer funds to country fund
         if (usdtAmt > 0 || slearnAmt > 0) {
             if (!countryFunds[countryCode].exists) {
                 countryFunds[countryCode].exists = true;
@@ -349,11 +332,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
 
     // ──── Emergency Withdrawals (with Timelock) ────
 
-    /**
-     * @notice Request an emergency withdrawal. Funds become available after 7 days.
-     * @param token Address of the token to withdraw (USDT or SLEARN).
-     * @param amount Amount to withdraw.
-     */
     function requestEmergencyWithdrawal(address token, uint256 amount) external onlyOwner whenNotPaused nonReentrant {
         require(amount > 0, "Amount > 0");
         require(token == address(usdtToken) || token == address(slearnToken), "Invalid token");
@@ -363,7 +341,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
             : slearnToken.balanceOf(address(this));
         require(amount <= balance, "Insufficient balance");
 
-        // Include blockhash for uniqueness to prevent collisions
         bytes32 requestId = keccak256(abi.encodePacked(
             token,
             amount,
@@ -376,12 +353,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         emit EmergencyWithdrawRequested(requestId, token, amount, block.timestamp + emergencyWithdrawTimelock);
     }
 
-    /**
-     * @notice Execute a previously requested emergency withdrawal after timelock expires.
-     * @param requestId The request ID returned from requestEmergencyWithdrawal.
-     * @param token Address of the token to withdraw.
-     * @param amount Amount to withdraw.
-     */
     function executeEmergencyWithdrawal(bytes32 requestId, address token, uint256 amount) external onlyOwner whenNotPaused nonReentrant {
         require(emergencyWithdrawRequests[requestId] > 0, "Request not found");
         require(block.timestamp >= emergencyWithdrawRequests[requestId], "Timelock not expired");
@@ -404,10 +375,6 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
         emit EmergencyWithdrawExecuted(requestId, token, amount);
     }
 
-    /**
-     * @notice Cancel an emergency withdrawal request.
-     * @param requestId The request ID to cancel.
-     */
     function cancelEmergencyWithdrawal(bytes32 requestId) external onlyOwner {
         require(emergencyWithdrawRequests[requestId] > 0, "Request not found");
         delete emergencyWithdrawRequests[requestId];
@@ -447,23 +414,29 @@ contract ClusterFunds is Ownable, ReentrancyGuard, Pausable {
     // ──── Internal ────
 
     /**
-     * @dev Split amounts between cluster/country and pdJ treasury.
-     * Rounding favors the cluster (cluster receives the rounded-up amount).
+     * @dev Distribute fees to configured recipients. Remainder goes to cluster/country.
      */
-    function _splitAmounts(uint256 usdtAmt, uint256 slearnAmt)
-        internal view returns (
-            uint256 clusterUsdt,
-            uint256 clusterSlearn,
-            uint256 pdjUsdt,
-            uint256 pdjSlearn
-        )
+    function _distributeFees(uint256 usdtAmt, uint256 slearnAmt)
+        internal returns (uint256 clusterUsdt, uint256 clusterSlearn)
     {
-        uint256 clusterPct = 100 - pdjPercentage;
-        // Round up for cluster (favors cluster over pdJ)
-        clusterUsdt = (usdtAmt * clusterPct + 99) / 100;
-        clusterSlearn = (slearnAmt * clusterPct + 99) / 100;
-        // PDJ receives the remainder
-        pdjUsdt = usdtAmt - clusterUsdt;
-        pdjSlearn = slearnAmt - clusterSlearn;
+        clusterUsdt = usdtAmt;
+        clusterSlearn = slearnAmt;
+
+        uint256 len = feeWallets.length;
+        for (uint256 i = 0; i < len; i++) {
+            uint256 feeUsdt = (usdtAmt * feePercentages[i]) / 100;
+            uint256 feeSlearn = (slearnAmt * feePercentages[i]) / 100;
+
+            if (feeUsdt > 0) {
+                usdtToken.safeTransfer(feeWallets[i], feeUsdt);
+                clusterUsdt -= feeUsdt;
+                emit FeeDistributed(feeWallets[i], feeUsdt, 0);
+            }
+            if (feeSlearn > 0) {
+                slearnToken.safeTransfer(feeWallets[i], feeSlearn);
+                clusterSlearn -= feeSlearn;
+                emit FeeDistributed(feeWallets[i], 0, feeSlearn);
+            }
+        }
     }
 }

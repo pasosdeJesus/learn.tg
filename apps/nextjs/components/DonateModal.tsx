@@ -10,6 +10,7 @@ import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@/
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { TransactionStatus } from '@/components/ui/TransactionStatus'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import {
   type PaymentTarget,
   type CourseDonation,
@@ -46,6 +47,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const address = rawAddress as Address | undefined
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
+  const { toast } = useToast()
   const [usdtDecimals, setUsdtDecimals] = useState<number>(+(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6))
   const [usdtBalance, setUsdtBalance] = useState<bigint>(0n)
   const [slearnBalance, setSlearnBalance] = useState<bigint>(0n)
@@ -108,6 +110,18 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     setSlearnAmount('')
     resetPayment()
   }, [resetPayment])
+
+  // Auto-close on success with toast
+  useEffect(() => {
+    if (paymentState === 'success') {
+      toast({ title: lang === 'es' ? '✅ Donación completada' : '✅ Donation completed' })
+      const timer = setTimeout(() => {
+        reset()
+        onClose()
+      }, 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [paymentState, toast, lang, reset, onClose])
 
   const closeAll = useCallback(() => {
     reset()
@@ -280,16 +294,6 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
 
         {paymentError && (
           <div className="mt-3 text-sm text-red-600">{paymentError}</div>
-        )}
-
-        {needsApproval && !isSubmitting && (
-          <div className="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded p-2">
-            {lang === 'es' ? 'Requiere aprobación de tokens' : 'Token approval required'}
-          </div>
-        )}
-
-        {paymentState === 'success' && (
-          <div className="mt-3 text-sm text-green-600 font-medium">✅ {lang === 'es' ? 'Donación completada' : 'Donation completed'}</div>
         )}
       </div>
     </div>
