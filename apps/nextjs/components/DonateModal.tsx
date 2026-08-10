@@ -115,11 +115,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   useEffect(() => {
     if (paymentState === 'success') {
       toast({ title: lang === 'es' ? '✅ Donación completada' : '✅ Donation completed' })
-      const timer = setTimeout(() => {
-        reset()
-        onClose()
-      }, 1500)
-      return () => clearTimeout(timer)
+      reset()
+      onClose()
     }
   }, [paymentState, toast, lang, reset, onClose])
 
@@ -148,7 +145,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       if (slearnAddress && results.length >= 4) {
         setSlearnBalance(results[3])
       }
-    } catch {
+    } catch (e: any) {
+    console.error('[DonateModal] Backend verification failed:', e?.message || String(e))
       // Silently fail; balances will show as 0
     }
   }, [isOpen, address, publicClient, usdtAddress, recipientAddress, usdtDecimals, slearnAddress])

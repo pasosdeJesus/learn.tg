@@ -6,6 +6,7 @@ import { erc20Abi, parseUserAmount, safeParseFloat } from '@/lib/donate-utils'
 import { getCsrfToken } from 'next-auth/react'
 import axios from 'axios'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
+import { logger } from '@pasosdejesus/m/debug'
 
 export type PaymentState =
   | 'idle'
@@ -119,6 +120,7 @@ export function useContractPayment({
 
     try {
       setState('paying')
+      logger.info('[useContractPayment] Starting payment...', 'Donate')
 
       let usdtHash = ''
       let slearnHash = ''
@@ -145,6 +147,8 @@ export function useContractPayment({
 
       setState('confirming')
 
+      logger.info('[useContractPayment] Txs confirmed, calling backend... usdtHash=' + (usdtHash || 'none') + ' slearnHash=' + (slearnHash || 'none'), 'Donate')
+
       // Backend callback (e.g. /api/add-donation)
       let increment: number | undefined
       if (onBackendCallback) {
@@ -166,7 +170,8 @@ export function useContractPayment({
               increment = result.increment
             }
           }
-        } catch {
+        } catch (e: any) {
+          logger.error('[useContractPayment] Backend verification failed: ' + (e?.message || String(e)), 'Donate')
           const now = new Date().toISOString()
           const info = [
             `Time: ${now}`,
@@ -181,9 +186,11 @@ export function useContractPayment({
       }
 
       setState('success')
+      logger.info('[useContractPayment] Donation completed successfully', 'Donate')
       onSuccess?.({ increment })
     } catch (e: any) {
       setState('error')
+      logger.error('[useContractPayment] Transaction failed: ' + (e?.message || String(e)), 'Donate')
       setError(e?.message || 'Transaction failed')
     }
   }, [amount, slearnAmount, usdtDecimals, slearnDecimals, address, walletClient, publicClient, backendWalletAddress, usdtAddress, slearnAddress, courseId, usdtBalance, slearnBalance, lang, onBackendCallback, onSuccess])
