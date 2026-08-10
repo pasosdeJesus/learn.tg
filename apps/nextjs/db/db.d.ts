@@ -1439,6 +1439,7 @@ export interface Usuario {
   verified_email: string | null;
   verified_municipality_id: number | null;
   verified_place_of_worship: string | null;
+  verified_place_of_worship_location: string | null;
   verified_telegram: string | null;
   verified_whatsapp: string | null;
   whatsapp: string | null;

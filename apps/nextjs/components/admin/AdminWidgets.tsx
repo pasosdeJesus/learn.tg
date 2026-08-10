@@ -39,7 +39,10 @@ const VERIFIED_FIELDS = [
   { key: 'verified_telegram', source: 'telegram', labelEn: 'Telegram', labelEs: 'Telegram' },
   { key: 'verified_email', source: 'email', labelEn: 'Email', labelEs: 'Correo' },
   { key: 'verified_city_id', source: 'city_id', labelEn: 'City', labelEs: 'Ciudad' },
+  { key: 'verified_department_id', source: 'department_id', labelEn: 'Department', labelEs: 'Departamento' },
+  { key: 'verified_municipality_id', source: 'municipality_id', labelEn: 'Municipality', labelEs: 'Municipio' },
   { key: 'verified_place_of_worship', source: 'place_of_worship', labelEn: 'Place of Worship', labelEs: 'Lugar de Culto' },
+  { key: 'verified_place_of_worship_location', source: 'place_of_worship_location', labelEn: 'Worship Location', labelEs: 'Ubicación del Culto' },
   { key: 'verified_church_relationship', source: null, labelEn: 'Church Role', labelEs: 'Rol en Iglesia' },
 ]
 
@@ -223,17 +226,37 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
 
   const toggle = (key: string, source?: string) => setForm(f => {
     const currentlyChecked = isChecked(key)
-    if (source) {
-      let sourceVal = (f as any)[source]
-      // If city_id is null (non-SL country), use -1 as sentinel for text-based city
-      if (key === 'verified_city_id' && (sourceVal == null || sourceVal === '')) {
-        sourceVal = -1
+    if (!source) return { ...f, [key]: currentlyChecked ? '' : 'checked' }
+
+    let sourceVal = (f as any)[source]
+    // If city_id is null (non-centro-poblado country), city checkbox toggles place_of_worship_location instead
+    if (key === 'verified_city_id' && (sourceVal == null || sourceVal === '')) {
+      // No centro poblado: delegate to place_of_worship_location verification
+      const placeLoc = f.place_of_worship_location
+      const newVal = currentlyChecked ? '' : String(placeLoc || '')
+      return {
+        ...f,
+        verified_city_id: '',
+        verified_place_of_worship_location: newVal,
+        verified_department_id: '',
+        verified_municipality_id: '',
       }
-      const newVal = currentlyChecked ? '' : String(sourceVal ?? '')
-      console.log(`[UserEditModal] toggle ${key}: currentlyChecked=${currentlyChecked}, source=${source}, sourceVal=${sourceVal}, newVal=${newVal}`)
-      return { ...f, [key]: newVal }
     }
-    return { ...f, [key]: currentlyChecked ? '' : 'checked' }
+
+    const newVal = currentlyChecked ? '' : String(sourceVal ?? '')
+    const next: Record<string, any> = { ...f, [key]: newVal }
+
+    // Cascade location fields: checking City also marks Department + Municipality
+    if (key === 'verified_city_id' && !currentlyChecked) {
+      if (f.department_id != null) next.verified_department_id = String(f.department_id)
+      if (f.municipality_id != null) next.verified_municipality_id = String(f.municipality_id)
+    }
+    if (key === 'verified_city_id' && currentlyChecked) {
+      next.verified_department_id = ''
+      next.verified_municipality_id = ''
+    }
+
+    return next
   })
   const setF = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
 
