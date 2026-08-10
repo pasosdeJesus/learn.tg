@@ -78,6 +78,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "latest",
     "@pasosdejesus/contract-test": "^0.1.1",
+    "@learn-tg/mr519": "link:../../packages/mr519",
     "@pasosdejesus/edr": "^0.1.1",
     "@pasosdejesus/m": "^0.16.1",
     "@pasosdejesus/mpdj": "^0.1.1",

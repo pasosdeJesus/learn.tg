@@ -196,6 +196,9 @@ importers:
       '@eslint/eslintrc':
         specifier: latest
         version: 3.3.6
+      '@learn-tg/mr519':
+        specifier: link:../../packages/mr519
+        version: link:../../packages/mr519
       '@pasosdejesus/contract-test':
         specifier: ^0.1.1
         version: 0.1.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
@@ -207,7 +210,7 @@ importers:
         version: 0.16.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
       '@pasosdejesus/mpdj':
         specifier: ^0.1.1
-        version: 0.1.1(vitest@2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0))
+        version: 0.1.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(vitest@2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0))
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0
@@ -10870,12 +10873,14 @@ snapshots:
       - supports-color
       - viem
 
-  '@pasosdejesus/mpdj@0.1.1(vitest@2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0))':
+  '@pasosdejesus/mpdj@0.1.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(vitest@2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0))':
     dependencies:
       '@pasosdejesus/m': 0.16.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
       vitest: 2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0)
     transitivePeerDependencies:
+      - ethers
       - supports-color
+      - viem
 
   '@paulmillr/qr@0.2.1': {}
 
