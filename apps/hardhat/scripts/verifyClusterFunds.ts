@@ -23,13 +23,14 @@ async function main() {
   const deployer = await signers[0].getAddress();
   console.log(`  Owner: ${owner} ${owner.toLowerCase() === deployer.toLowerCase() ? '✓' : '✗'}`);
 
-  // Verify pdJ treasury
-  const treasury = await cf.pdjTreasury();
-  console.log(`  pdJ Treasury: ${treasury} ${treasury !== ethers.ZeroAddress ? '✓' : '✗'}`);
+  // Verify fee config
+  const cfg = await cf.getFeeConfig();
+  console.log(`  Fee wallets: ${cfg.wallets.length}, percentages: ${cfg.percentages}`);
+  console.log(`  Fee config ${cfg.wallets.length > 0 && cfg.percentages[0] === 10n ? '✓' : '✗'}`);
 
-  // Verify percentage
-  const percentage = await cf.pdjPercentage();
-  console.log(`  pdJ Percentage: ${percentage}% ${percentage === 15n ? '✓' : '✗'}`);
+  // Verify cashback
+  const cashback = await cf.donorCashbackPct();
+  console.log(`  Donor cashback: ${cashback}% ${cashback === 10n ? '✓' : '✗'}`);
 
   // Verify tokens set
   const usdt = await cf.usdtToken();
