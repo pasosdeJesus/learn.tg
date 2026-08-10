@@ -41,7 +41,7 @@ export function useGasEstimation({
       const hasUsdt = amount && safeParseFloat(amount) > 0
       const hasSlearn = slearnAmount && safeParseFloat(slearnAmount) > 0
       if (!hasUsdt && !hasSlearn) { setGasState('idle'); return }
-      if (!address || !walletClient || !publicClient || !backendWalletAddress || !courseId) {
+      if (!address || !walletClient || !publicClient || !backendWalletAddress) {
         setGasState('no-gas'); return
       }
       try {
