@@ -28,6 +28,8 @@ export async function up(db: Kysely<any>): Promise<void> {
     throw new Error('Missing required env vars (PRIVATE_KEY, NEXT_PUBLIC_RPC_URL, NEXT_PUBLIC_USDT_ADDRESS)')
   }
 
+  try {
+
   const V5 = await getV5Address()
   const V4 = await getV4Address()
   if (!V5) throw new Error('V5 not deployed. Run bin/deployLearnTGVaultsV5 first.')
@@ -114,11 +116,14 @@ export async function up(db: Kysely<any>): Promise<void> {
   console.log(`    ${guidePaidFile} (${guidePaidCsv.length - 1} guidePaid records)`)
   console.log('')
 
-  // 1. Drain V4
+  // 1. Drain V4 (skip if already drained — re-run safety)
   const oldUsdt = await pub.readContract({ address: V4, abi: LearnTGVaultsV3Abi as any, functionName: 'getContractUSDTBalance' }) as bigint
   const oldSlearn = await pub.readContract({ address: V4, abi: LearnTGVaultsV3Abi as any, functionName: 'getContractSLEARNBalance' }) as bigint
 
   console.log(`  V4 holds: ${formatUnits(oldUsdt, 6)} USDT, ${formatUnits(oldSlearn, 2)} SLEARN`)
+
+  const v4AlreadyDrained = oldUsdt === 0n && oldSlearn === 0n
+  if (!v4AlreadyDrained) {
 
   if (oldUsdt > 0n) {
     console.log(`  Draining ${formatUnits(oldUsdt, 6)} USDT from V4`)
@@ -169,6 +174,51 @@ export async function up(db: Kysely<any>): Promise<void> {
     }
   }
 
+  // 3.5 Authorize SLEARN contract on V5 and update SLEARN to point to V5
+  console.log('  Configuring SLEARN ↔ V5 integration...')
+  const slearnAddr = await pub.readContract({ address: V4, abi: LearnTGVaultsV3Abi as any, functionName: 'slearnToken' }) as Address
+  const slearnAbi = ['function setLearnTGVault(address)', 'function setLearnTGVaultSLEARN(address)', 'function addAuthorizedTransfer(address)', 'function authorizedTransfers(address) view returns (bool)'] as const
+
+  // 3.5a: Authorize SLEARN on V5 (so SLEARN can call recordCourseFunds)
+  const v5HasRole: boolean = await pub.readContract({ address: V5, abi: LearnTGVaultsV5Abi as any, functionName: 'slearnContractRole', args: [slearnAddr] }) as boolean
+  if (!v5HasRole) {
+    const h = await wallet.writeContract({ address: V5, abi: LearnTGVaultsV5Abi as any, functionName: 'setSlearnContractRole', args: [slearnAddr, true], account, chain })
+    await pub.waitForTransactionReceipt({ hash: h })
+    console.log(`  ✓ SLEARN authorized on V5`)
+  } else {
+    console.log(`  SLEARN already authorized on V5, skipping`)
+  }
+
+  // 3.5b: Update SLEARN's learnTGVault → V5 (so SLEARN sends USDT to V5)
+  const currentVault: Address = await pub.readContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'learnTGVault' }) as Address
+  if (currentVault.toLowerCase() !== V5.toLowerCase()) {
+    const h = await wallet.writeContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'setLearnTGVault', args: [V5], account, chain })
+    await pub.waitForTransactionReceipt({ hash: h })
+    console.log(`  ✓ SLEARN.learnTGVault → V5`)
+  } else {
+    console.log(`  SLEARN.learnTGVault already V5, skipping`)
+  }
+
+  // 3.5c: Update SLEARN's learnTGVaultSLEARN → V5 (so SLEARN sends SLEARN to V5)
+  const currentVaultSlearn: Address = await pub.readContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'learnTGVaultSLEARN' }) as Address
+  if (currentVaultSlearn.toLowerCase() !== V5.toLowerCase()) {
+    const h = await wallet.writeContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'setLearnTGVaultSLEARN', args: [V5], account, chain })
+    await pub.waitForTransactionReceipt({ hash: h })
+    console.log(`  ✓ SLEARN.learnTGVaultSLEARN → V5`)
+  } else {
+    console.log(`  SLEARN.learnTGVaultSLEARN already V5, skipping`)
+  }
+
+  // 3.5d: Authorize V5 for SLEARN transfers (so payScholarship can send SLEARN)
+  const v5Authorized: boolean = await pub.readContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'authorizedTransfers', args: [V5] }) as boolean
+  if (!v5Authorized) {
+    const h = await wallet.writeContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'addAuthorizedTransfer', args: [V5], account, chain })
+    await pub.waitForTransactionReceipt({ hash: h })
+    console.log(`  ✓ V5 authorized for SLEARN transfers`)
+  } else {
+    console.log(`  V5 already authorized for SLEARN transfers, skipping`)
+  }
+
   // 4. Restore vault balances — reuse allCourses
   console.log('  Restoring vault balances...')
   for (const course of allCourses) {
@@ -183,6 +233,11 @@ export async function up(db: Kysely<any>): Promise<void> {
         console.log(`  Course ${course.id}: balance set (USDT=${formatUnits(balUSDT, 6)} SLEARN=${formatUnits(balSLEARN, 2)})`)
       }
     } catch {}
+  }
+
+  } // end if (!v4AlreadyDrained)
+  else {
+    console.log('  V4 already drained — skipping drain/transfer/vaults/balances, jumping to guidePaid')
   }
 
   // 5. Migrate guidePaid (idempotent) — reuse allScholarshipTxs
@@ -245,7 +300,8 @@ export async function up(db: Kysely<any>): Promise<void> {
         skipped++
       }
     } catch (e: any) {
-      console.error(`  ⚠️ Failed guide=${guideId} user=${usuarioId}: ${e?.message || e}`)
+      const detail = e?.walk ? e.walk().map((x: any) => x.message || x).join(' → ') : ''
+      console.error(`  ⚠️ Failed guide=${guideId} user=${usuarioId}: ${e?.message || e} ${detail}`)
     }
   }
   console.log(`  guidePaid migrated: ${migrated}, skipped: ${skipped}`)
@@ -257,6 +313,31 @@ export async function up(db: Kysely<any>): Promise<void> {
   console.log(`     NEXT_PUBLIC_DEPLOYED_AT_V5=${V5}  # active`)
   console.log(`  2. Restart Next.js`)
   console.log(`  3. Remove LEARNTG_VAULTS_READONLY=1 from .env`)
+
+  } catch (e: any) {
+    console.error('\n❌ Migration failed:')
+    console.error(`  ${e?.message || e}`)
+    if (e?.stack) {
+      const lines = e.stack.split('\n').slice(0, 6)
+      lines.forEach((l: string) => console.error(`  ${l.trim()}`))
+    }
+    if (e?.cause) {
+      console.error(`  Cause: ${e.cause?.message || e.cause}`)
+    }
+    if (e?.walk) {
+      try {
+        const walk = e.walk()
+        if (Array.isArray(walk) && walk.length > 0) {
+          console.error('  Call trace:')
+          walk.forEach((w: any) => console.error(`    ${w.message || w}`))
+        }
+      } catch {}
+    }
+    if (e?.data) {
+      console.error(`  Tx data: ${JSON.stringify(e.data).slice(0, 500)}`)
+    }
+    throw e
+  }
 }
 
 export async function down(_db: Kysely<any>): Promise<void> {}

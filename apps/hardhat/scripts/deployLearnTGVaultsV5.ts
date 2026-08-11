@@ -41,8 +41,5 @@ async function main() {
     deployedAt: new Date().toISOString(),
   }, null, 2))
   console.log(`Deployment saved to ${file}`)
-
-  console.log(`\nAdd to .env:`)
-  console.log(`NEXT_PUBLIC_DEPLOYED_AT_V5="${addr}"`)
 }
 main().catch((error) => { console.error(error); process.exitCode = 1 })
