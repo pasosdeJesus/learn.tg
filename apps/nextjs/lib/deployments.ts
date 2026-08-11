@@ -44,6 +44,13 @@ export async function getV4Address(): Promise<`0x${string}`> {
   }) as `0x${string}`
 }
 
+export async function getV5Address(): Promise<`0x${string}`> {
+  return getContractAddress(getNetwork(), 'NEXT_PUBLIC_DEPLOYED_AT_V5', getDeploymentsDir(), {
+    contract: 'LearnTGVaults',
+    version: 'V5',
+  }) as `0x${string}`
+}
+
 export async function getV2Address(): Promise<`0x${string}`> {
   return process.env.NEXT_PUBLIC_DEPLOYED_AT_V2 as `0x${string}`
 }
