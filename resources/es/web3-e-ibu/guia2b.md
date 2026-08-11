@@ -25,7 +25,8 @@ más ganas por guía. Completa tu perfil para llegar hasta 100 puntos:
 | Ubicación (departamento, ciudad) | 9 | Selecciona tu población y pide a un verificador que confirme |
 | Lugar de culto | 9 | Declara tu iglesia/mezquita y pide a un verificador que confirme |
 | Verificación GoodDollar | 7 | Completa la verificación facial en tu perfil |
-| Entrevista con verificador | 7 | Agenda y asiste a una entrevista de verificación |
+| Entrevista con verificador | 7 | Agenda y asiste a una entrevista de verificación —
+   ve a tu perfil y haz clic en "Solicitar Verificación" para abrir un calendario |
 | **Total** | **100** | |
 
 Puedes gestionar tu perfil en tu [página de perfil](/es/profile).
@@ -70,6 +71,17 @@ aprobados), recibes un **Soul-Bound Token (SBT)** — una insignia digital no
 transferible que prueba que dominaste el curso. Aparece en tu perfil público
 y contribuye a tu posición en la tabla de líderes. Es como un certificado de
 finalización, registrado permanentemente en la blockchain de Celo.
+
+### Tu Paso de Acción
+
+1.  Ve a tu **[página de perfil](/es/profile)** y completa tu nombre, país,
+    correo, WhatsApp o Telegram, municipio y lugar de culto.
+2.  Haz clic en **"Solicitar Verificación"** en tu perfil para agendar una
+    entrevista con un verificador — esto te da 7 puntos extra.
+3.  Completa la **verificación facial de GoodDollar** — en la Guía 3
+    encontrarás el botón para iniciar este proceso. Te da 7 puntos de perfil.
+4.  Apunta a al menos **50 puntos** de perfil — con este nivel ya empiezas a
+    recibir becas.
 
 ### Preguntas de Comprensión
 

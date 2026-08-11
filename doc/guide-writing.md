@@ -14,12 +14,14 @@ Rules for writing course guides (content in `resources/{lang}/{course}/`).
 
 ## Comprehension Questions
 
-- Write **more than 5 questions** in the guide content to provide variety when
-  a user retakes the guide. The platform randomly selects a subset each time.
+- Write **6 or more questions** per guide (recommended: 6-8) to provide
+  variety when a user retakes the guide. The platform randomly selects a
+  subset each time.
 - The user sees **at most 5 questions** per attempt (from PRINCIPLES.md:
   3-5, not a heavy burden).
 - Each question ends with a blank `___` followed by the expected answer in
-  parentheses: `(answer)`.
+  parentheses: `(answer)`. Answers are case-insensitive and accent-insensitive
+  — the system normalizes both before comparison.
 - The answer in parentheses is what the crossword system uses to validate.
 - Never put instructions or extra text inside the parentheses — they are
   reserved for the answer only. Put instructions in the question body.

@@ -59,9 +59,13 @@ El procedimiento se presenta en este video:
 ### **Conectándose a la Red Celo**
 Para interactuar con GoodDollar y learn.tg, tu billetera necesita estar conectada a la red Celo.
 
-1.  En tu Billetera MetaMask, busca el selector de red (a menudo en la parte superior derecha).
-2.  Busca y selecciona CELO
-3.  Cierra el selector
+La forma más fácil es agregar Celo automáticamente:
+
+1.  En el navegador integrado de tu billetera MetaMask, ve a **[chainlist.org](https://chainlist.org)**.
+2.  Busca **"Celo"**.
+3.  Toca **"Connect Wallet"** en la entrada de Celo — MetaMask te pedirá que
+    apruebes agregar la red.
+4.  Una vez agregada, cambia a la red Celo desde el selector de redes.
 
 ---
 

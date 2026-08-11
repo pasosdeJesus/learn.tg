@@ -53,7 +53,7 @@ cd apps/nextjs
 ./scripts/create-course.sh "Discípulos Globales" es "discipulos-globales" 4 "1.0" "1.0" "source/global-disciples.svg" 5
 
 # O sin ID (auto-generado por la DB):
-./scripts/create-course.sh "Global Disciples" "global-disciples" 4 "1.0" "1.0"
+./scripts/create-course.sh "Global Disciples" en "global-disciples" 4 "1.0" "1.0"
 ```
 
 This generates:
@@ -170,7 +170,7 @@ Answers are stored as pipe-separated text in `billetera_usuario.answer_fib`
 
 ### 2.3 Crossword Puzzle
 
-Each guide must include **3-5 comprehension questions** that form the crossword puzzle assessment. Answers are pipe-separated text stored in `billetera_usuario.answer_fib` by the Rails backend after guide viewing.
+Each guide must include **3-5 comprehension questions** that form the crossword puzzle assessment. Write **6 or more questions** in the guide content to provide variety when a user retakes; the platform randomly selects 3-5 per attempt. Answers are pipe-separated text stored in `billetera_usuario.answer_fib` by the Rails backend after guide viewing.
 
 Example:
 ```

@@ -77,6 +77,18 @@ graph TD
     style F fill:#9f9,stroke:#333,stroke-width:2px
 ```
 
+---
+
+## Service Ports
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| Next.js dev server | `4000` | UI + API routes (local development) |
+| Rails API | `3500` | Admin backend (`/learntg-admin`) |
+| Next.js API (HTTPS) | `9001` | API proxied to live server for quickstart mode |
+
+---
+
 ## Architecture Stack
 
 ### 1. **Major Backend: Rails (servidor/)**
@@ -134,6 +146,7 @@ The platform features two distinct reward mechanisms, demonstrating our principl
     1. The Next.js backend validates the answer.
     2. If correct, it calls the `payScholarship()` function on the `LearnTGVaultsV4.sol` contract.
     3. The contract verifies on-chain that the user has a `profileScore` of at least 50, has not already been rewarded for the guide, and has respected the 24-hour cooldown period.
+       The `profileScore` breakdown and scholarship formula are documented in the user-facing course: [Web3 & UBI — Guide 2b](resources/en/web3-and-ubi/guide2b.md).
     4. If checks pass, the contract calculates and transfers USDT and SLEARN rewards to the student's wallet.
     5. When 100% of guides in a course are completed, `mintCourseCredential()` issues an SBT via `PasosDeJesusCredentials.sol`.
 
@@ -230,7 +243,7 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 - In the crossword validation API (`/api/check-crossword`), guides are ordered by `nombrecorto`
 - Guide numbers (1-indexed) correspond to the position in this ordered list
 - The frontend uses `sufijoRuta` to construct URLs: `/{lang}/{prefijoRuta}/{sufijoRuta}`
-- **Note**: While the validation API orders by `nombrecorto`, other parts of the system (like the Rails backend API) may use different ordering. The 1-indexed `guideId` passed to the smart contract must match the ordering used in `check-crossword`.
+- **Note**: While the validation API orders by `nombrecorto`, other parts of the system (like the Rails backend API) may use different ordering. The `guideId` parameter in API requests is 1-indexed (position in ordered list), but the smart contract receives `actividadpf_id` (database ID from `cor1440_gen_actividadpf.id`). The backend translates between them via `guides.rows[guideId - 1].id`.
 
 #### User Management Tables
 

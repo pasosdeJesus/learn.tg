@@ -18,10 +18,19 @@ All project documentation, REQ files, commit messages, and code comments must be
 
 ## 🚀 Development Setup
 
+> **pnpm version:** This project requires **pnpm v10**. pnpm v11 breaks React 19
+> tests. The version is pinned via `packageManager` in `package.json` and
+> `pnpm-workspace.yaml`.
+
 ### Frontend Only (quickest — no backend required)
 
 See [apps/nextjs/README.md](apps/nextjs/README.md) for the quick start.
 Requires only Node.js, pnpm, and a web3 wallet. No database or Rails setup.
+
+> **Note:** Write operations (scholarship, crossword submissions, learning
+> points) require your wallet to be whitelisted. Submit yours in
+> [GitHub Discussion #142](https://github.com/pasosdeJesus/learn.tg/discussions/142).
+> Read-only operations (courses, guides, leaderboard, metrics) work without it.
 
 ### Backend (Rails Server)
 See instructions in [servidor/README.md](servidor/README.md)
@@ -38,6 +47,7 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
 2. **Create a branch** from `main`: `git checkout -b feature/my-feature`
 3. **Make your changes** following the style guides
 4. **Run tests in directory `apps/nextjs`**: `make type` and `make test`
+   - `make type` checks TypeScript in source files; `make type-source` checks test files too
    - `make test` runs 6 sub-targets in sequence (parallel-safe, sin coverage)
    - `make coverage` runs all tests with coverage (lento, usa más memoria)
    - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.

@@ -6,14 +6,10 @@
 [![Pipeline Status](https://gitlab.com/pasosdeJesus/learn.tg/badges/main/pipeline.svg)](https://gitlab.com/pasosdeJesus/learn.tg/-/pipelines?page=1&scope=all&ref=main) [![Code Climate](https://codeclimate.com/github/pasosdeJesus/learn.tg/badges/gpa.svg)](https://codeclimate.com/github/pasosdeJesus/learn.tg)
 
 **Learn.tg** is a gamified educational platform that makes learning
-engaging through crossword puzzles, with a core mission rooted in Christian 
-principles. Our platform at [learn.tg](https://learn.tg) allows 
+engaging through crossword puzzles, with a core mission rooted in Christian
+principles — see our **[Foundational Principles (PRINCIPLES.md)](PRINCIPLES.md)**.
+Our platform at [learn.tg](https://learn.tg) allows 
 students to earn cryptocurrency rewards for mastering educational content.
-
-## 📜 Foundational Document
-
-*   **[Foundational Principles (PRINCIPLES.md)](PRINCIPLES.md)**: The 
-  theological, ethical, and missional principles that guide our work.
 
 ## 🎯 Our Mission in Action
 
@@ -54,12 +50,12 @@ For a detailed technical overview, please see
 
 ```sh
 git clone <repo-url>
-cd apps/nextjs
-cp .env.template .env
+cd apps
+cp .env.example .env
 # Edit .env:
 #   NEXT_PUBLIC_API_URL=https://learn.tg:9001/api
 #   NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin
-#   NEXTAUTH_SECRET=<any-random-string>
+#   NEXTAUTH_SECRET=<any-random-string>  # dev only; for production: openssl rand -base64 32
 pnpm install
 bin/dev
 ```

@@ -26,7 +26,8 @@ score, the more you earn per guide. Complete your profile to reach up to
 | Location (department, city) | 9 | Select your town and have a verifier confirm it |
 | Place of worship | 9 | Declare your church/mosque and have a verifier confirm it |
 | GoodDollar verification | 7 | Complete facial verification on your profile |
-| Interview with verifier | 7 | Schedule and attend a verification interview |
+| Interview with verifier | 7 | Schedule and attend a verification interview —
+   go to your profile and click "Request Verification" to open a calendar |
 | **Total** | **100** | |
 
 You can manage your profile at your [profile page](/en/profile).
@@ -71,6 +72,17 @@ you receive a **Soul-Bound Token (SBT)** — a non-transferable digital badge
 that proves you mastered the course. It appears on your public profile and
 contributes to your leaderboard ranking. Think of it as a certificate of
 completion, permanently recorded on the Celo blockchain.
+
+### Your Action Step
+
+1.  Go to your **[profile page](/en/profile)** and fill in your name, country,
+    email, WhatsApp or Telegram, town, and place of worship.
+2.  Click **"Request Verification"** on your profile to schedule an interview
+    with a verifier — this gives you 7 extra profile score points.
+3.  Complete the **GoodDollar facial verification** — in Guide 3 you will
+    find the button to start this process. It gives you 7 profile score points.
+4.  Aim for at least **50 profile score points** — at this level you already
+    start receiving scholarships.
 
 ### Comprehension Questions
 

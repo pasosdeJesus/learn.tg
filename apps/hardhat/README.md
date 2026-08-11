@@ -8,7 +8,8 @@ Deployed on Celo.
 | Contract | File | Purpose |
 |---|---|---|
 | **SLEARN** | `SLEARN.sol` | ERC-20 utility token, mixed payments, 3-tier reserve backing |
-| **LearnTGVaultsV4** | `LearnTGVaultsV4.sol` | Active — scholarship vaults (USDT + SLEARN), partial payments, `guideId` = `actividadpf_id` |
+| **LearnTGVaultsV5** | `LearnTGVaultsV5.sol` | Active — scholarship vaults (USDT + SLEARN), flexible split (referrer + learnTg), `guideId` = `actividadpf_id` |
+| **LearnTGVaultsV4** | `LearnTGVaultsV4.sol` | Legacy V4 — partial payments, being migrated to V5 |
 | **CeloUbi** | `CeloUbi.sol` | Universal Basic Income claims in CELO |
 | **ClusterFunds** | `ClusterFunds.sol` | Cluster/country fund management — USDT + SLEARN donations, GD contact release |
 | **MockUSDT** | `MockUSDT.sol` | Mock USDT for testnet |
@@ -16,7 +17,7 @@ Deployed on Celo.
 ## Prerequisites
 
 - Node.js >= 18
-- Yarn
+- pnpm
 - Celo wallet with funds (CELO for gas)
 
 ## Setup
@@ -29,13 +30,13 @@ cd apps
 cp .env.example .env
 # Edit .env: PRIVATE_KEY, BLOCKSCOUT_API_KEY, etc.
 cd hardhat
-yarn install
+pnpm install
 ```
 
 ## Build
 
 ```sh
-yarn build       # compile + sync ABIs to nextjs
+pnpm build       # compile + sync ABIs to nextjs
 make             # same
 ```
 
@@ -46,7 +47,8 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 | Command | Purpose |
 |---|---|
 | `bin/deploySLEARN` | Deploy SLEARN token |
-| `bin/deployLearnTGVaultsV4` | Deploy V4 vaults |
+| `bin/deployLearnTGVaultsV5` | Deploy V5 vaults |
+| `bin/deployLearnTGVaultsV4` | Deploy V4 vaults (legacy) |
 | `bin/deployMockUSDT` | Deploy MockUSDT (testnet only) |
 | `bin/deployClusterFunds` | Deploy ClusterFunds |
 | `bin/deployCeloUbi` | Deploy CeloUBI |
@@ -57,7 +59,8 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 | Command | Purpose |
 |---|---|
 | `bin/contractVerificationSLEARN` | Verify SLEARN source code |
-| `bin/contractVerificationLearnTGVaultsV4` | Verify V4 source code |
+| `bin/contractVerificationLearnTGVaultsV5` | Verify V5 source code |
+| `bin/contractVerificationLearnTGVaultsV4` | Verify V4 source code (legacy) |
 | `bin/contractVerificationClusterFunds` | Verify ClusterFunds source code |
 | `bin/contractVerificationCeloUbi` | Verify CeloUBI source code |
 | `bin/contractVerificationMusdt` | Verify MockUSDT source code |
@@ -67,7 +70,8 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 | Command | Purpose |
 |---|---|
 | `bin/verifySLEARN` | Check SLEARN: name, rate, supply, paused |
-| `bin/verifyLearnTGVaultsV4` | Check V4: VERSION, owner, balances |
+| `bin/verifyLearnTGVaultsV5` | Check V5: VERSION, owner, balances |
+| `bin/verifyLearnTGVaultsV4` | Check V4: VERSION, owner, balances (legacy) |
 | `bin/testClusterFunds` | Functional test: owner, treasury, percentage, views |
 | `bin/verifyClusterFunds` | Quick on-chain check: all state fields |
 | `bin/verifyCeloUbi` | Check CeloUBI: owner, backendAddress |
@@ -88,6 +92,7 @@ After deploy, each script saves the address to `deployments/{Contract}/{network}
 ```
 deployments/
   SLEARN/celoSepolia.json
+  LearnTGVaults/V5/celoSepolia.json
   LearnTGVaults/V4/celoSepolia.json
   ClusterFunds/celoSepolia.json
   MockUSDT/celoSepolia.json
@@ -111,13 +116,19 @@ const { address } = JSON.parse(fs.readFileSync(file, "utf8"))
 ## Testing
 
 ```sh
-yarn test
+pnpm test
 ```
+
+> **OpenBSD/adJ:** Hardhat's native test runner (EDR) does not support OpenBSD.
+> Use the EthereumJS fallback instead:
+> ```sh
+> cd ../nextjs && bin/m contract:test
+> ```
 
 ## ABI Sync
 
-ABIs are auto-synced to `../nextjs/abis/` on `yarn build`.
-To sync manually: `yarn sync:abis`.
+ABIs are auto-synced to `../nextjs/abis/` on `pnpm build`.
+To sync manually: `pnpm sync:abis`.
 
 ## OpenBSD / adJ
 

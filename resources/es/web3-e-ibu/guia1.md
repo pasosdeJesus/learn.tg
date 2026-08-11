@@ -92,6 +92,17 @@ Leones y activos digitales.
 > **Por qué es importante para ti:** Así es como convertirás tu IBU digital en
 > efectivo para tus necesidades diarias en Sierra Leona. 
 
+### Tu Paso de Acción
+
+1.  Si aún no tienes una billetera Web3, instala **MetaMask** en tu smartphone
+    (desde Google Play o App Store). La siguiente guía te explicará la
+    configuración en detalle.
+2.  Marca como favorito **[learn.tg](https://learn.tg)** — aquí aprenderás,
+    ganarás recompensas y reclamarás tu IBU.
+3.  Marca como favorito **[stable-sl.pdJ.app](https://stable-sl.pdj.app)** —
+    este será tu puente para convertir las recompensas digitales en Leones
+    cuando estés listo.
+
 ### Preguntas de Comprensión:
 
 1. Una ___ es un registro digital seguro y descentralizado que registra todas las

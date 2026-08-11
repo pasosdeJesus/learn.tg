@@ -27,7 +27,8 @@ money. Before  you start watch a short video of the process:
 #### **Step-by-Step Guide to change crypto for SLE:**
 
 **Step 1: Connect your wallet**
-1. Open the MetaMask wallet (if you are in the exchange remember to push Web3 at the top)
+1. Open the MetaMask wallet. If you are using the MetaMask app, make sure you
+   are in Web3 mode — tap "Web3" at the top (see Guide 2 for wallet setup).
 2. Using the search function of the web3 wallet go to **[stable-sl.pdJ.app](https://stable-sl.pdj.app/)**.
 
 **Step 2: Send Your UBI Tokens**
@@ -60,8 +61,9 @@ money. Before  you start watch a short video of the process:
 
 ### **Important Considerations**
 *   **Fees:** Small transaction fees apply for the network and conversion
-    services, you need to have CELO (1 will be enough for more than 10
-    transactions) in your wallet to pay for them.
+    services, you need to have a small amount of CELO in your wallet to pay
+    for network fees (approximately 0.001 CELO per transaction, so 1 CELO is
+    enough for hundreds of transactions).
 *   **Rates:** Exchange rates vary. Always check the final amount you will
     receive.
 *   **Security:** Only use reputable services. Double-check website URLs and

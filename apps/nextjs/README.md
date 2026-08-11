@@ -139,9 +139,13 @@ Then edit `.env` with your values. Key variables:
 
     The application will be available at [http://localhost:4000](http://localhost:4000) (or the `$PORT` you set in `.env`).
 
+    `bin/dev` is a wrapper that configures HTTPS with local certificates and
+    loads environment variables before starting Next.js. Use `pnpm dev` for a
+    plain HTTP server without these extras.
+
 ## Available Scripts
 
-- `pnpm dev`: Starts the development server with HTTPS.
+- `pnpm dev`: Starts the development server without HTTPS (plain `next dev`).
 - `pnpm build`: Builds the application for production.
 - `pnpm start`: Starts a production server.
 - `pnpm lint`: Lints the codebase for errors.

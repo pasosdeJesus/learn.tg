@@ -56,9 +56,9 @@ User Wallet                Frontend                   NextAuth API Route        
 ### Hostname Validation
 
 Only these domains can authenticate:
-- `learn.tg`
-- `learntg.pdj.app`
-- With ports `:9001` for local dev
+- `learn.tg` and `learntg.pdj.app` (production)
+- `learn.tg:9001` and `learntg.pdj.app:9001` (quickstart mode — proxies to live server)
+- `localhost`, `localhost:4000`, `localhost:4300` (local development, non-production only)
 
 ### OKX Browser Detection
 
@@ -120,7 +120,7 @@ All wallet addresses are stored and compared in **lowercase**:
 
 | Component | File | Key Lines |
 |-----------|------|-----------|
-| SIWE verification + DB upsert | `app/api/auth/auth-options.ts` | `authorize()` function, lines 40-244 |
-| Session callback (lowercase) | `app/api/auth/auth-options.ts` | `callbacks.session`, line 259 |
-| API token validation | `lib/authenticateUser.ts` | Full file (16 lines of logic) |
-| Frontend auth guard pattern | `app/[lang]/profile/page.tsx` | `useEffect` at line 256 |
+| SIWE verification + DB upsert | `app/api/auth/auth-options.ts` | `authorize()` function, ~lines 40-240 |
+| Session callback (lowercase) | `app/api/auth/auth-options.ts` | `callbacks.session`, ~line 242 |
+| API token validation | `lib/authenticateUser.ts` | Full file (59 lines) |
+| Frontend auth guard pattern | `app/[lang]/profile/page.tsx` | `useEffect` at ~line 256 |

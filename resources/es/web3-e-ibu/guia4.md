@@ -28,7 +28,9 @@ Este servicio está diseñado para funcionar directamente con Leones de Sierra L
 #### **Guía Paso a Paso para cambiar cripto por SLE:**
 
 **Paso 1: Conecta tu billetera**
-1. Abre la billetera de MetaMask (si estás en el exchange, recuerda presionar Web3 en la parte superior)
+1. Abre la billetera de MetaMask. Si estás usando la app de MetaMask,
+   asegúrate de estar en modo Web3 — presiona "Web3" en la parte superior
+   (ver Guía 2 para configurar la billetera).
 2. Usando la función de búsqueda de la billetera web3, ve a **[stable-sl.pdJ.app](https://stable-sl.pdj.app/)**.
 
 **Paso 2: Envía Tus Tokens de IBU**
@@ -61,8 +63,9 @@ Este servicio está diseñado para funcionar directamente con Leones de Sierra L
 
 ### **Consideraciones Importantes**
 *   **Comisiones:** Se aplican pequeñas comisiones de transacción para la red y los servicios de conversión
-    , necesitas tener CELO (1 será suficiente para más de 10
-    transacciones) en tu billetera para pagarlas.
+    , necesitas tener una pequeña cantidad de CELO en tu billetera para pagar
+    las tarifas de red (aproximadamente 0.001 CELO por transacción, así que 1
+    CELO alcanza para cientos de transacciones).
 *   **Tasas:** Los tipos de cambio varían. Siempre verifica la cantidad final que
     recibirás.
 *   **Seguridad:** Solo usa servicios de buena reputación. Verifica dos veces las URL de los sitios web y

@@ -57,9 +57,13 @@ The procedure is presented in this video:
 ### **Connecting to the Celo Network**
 To interact with GoodDollar and learn.tg, your wallet needs to be connected to the Celo network.
 
-1.  In your MetaMask Wallet, look for the network selector (often at the top right).
-2.  Search for and select CELO
-3.  Close the selector
+The easiest way is to add Celo automatically:
+
+1.  In your MetaMask wallet's built-in browser, go to **[chainlist.org](https://chainlist.org)**.
+2.  Search for **"Celo"**.
+3.  Tap **"Connect Wallet"** on the Celo entry — MetaMask will prompt you to
+    approve adding the network.
+4.  Once added, switch to the Celo network from the network selector.
 
 ---
 

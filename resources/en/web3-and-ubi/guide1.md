@@ -92,6 +92,16 @@ Leones and digital assets.
 > **Why it matters for you:** This is how you will convert your digital UBI into
 > cash for your daily needs in Sierra Leone. 
 
+### Your Action Step
+
+1.  If you do not have a Web3 wallet yet, install **MetaMask** on your
+    smartphone (from Google Play or App Store). The next guide will walk you
+    through setup in detail.
+2.  Bookmark **[learn.tg](https://learn.tg)** — this is where you will learn,
+    earn rewards, and claim your UBI.
+3.  Bookmark **[stable-sl.pdJ.app](https://stable-sl.pdj.app)** — this will be
+    your bridge to convert digital rewards into Leones when you are ready.
+
 ### Comprehension Questions:
 
 1. A ___ is a secure, decentralized digital ledger that records all 
