@@ -290,7 +290,7 @@
         "type": "bool"
       }
     ],
-    "name": "SlearmContractRoleSet",
+    "name": "SlearnContractRoleSet",
     "type": "event"
   },
   {

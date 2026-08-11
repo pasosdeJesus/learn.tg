@@ -87,8 +87,7 @@ contract LearnTGVaultsV5 is ReentrancyGuard {
     event GuidePaidSet(uint256 courseId, uint256 guideId, address student, uint256 usdtAmount, uint256 slearnAmount);
     event VaultBalanceSet(uint256 courseId, uint256 balanceUsdt, uint256 balanceSlearn);
     event AmountPerGuideSet(uint256 courseId, uint256 amountUsdt, uint256 amountSlearn);
-    event SlearmContractRoleSet(address indexed addr, bool authorized);
-
+    event SlearnContractRoleSet(address indexed addr, bool authorized);
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner");
         _;
@@ -116,7 +115,7 @@ contract LearnTGVaultsV5 is ReentrancyGuard {
 
     function setSlearnContractRole(address addr, bool authorized) external onlyOwner {
         slearnContractRole[addr] = authorized;
-        emit SlearmContractRoleSet(addr, authorized);
+        emit SlearnContractRoleSet(addr, authorized);
     }
 
     function createVault(
@@ -214,9 +213,6 @@ contract LearnTGVaultsV5 is ReentrancyGuard {
 
         // Pay USDT if not already paid AND vault has enough for the full amount
         if (!alreadyPaidUSDT && actualUSDT > 0 && vault.balanceUsdt >= actualUSDT) {
-            vault.balanceUsdt -= actualUSDT;
-            guidePaidUSDT[courseId][guideId][student] = actualUSDT;
-
             if (studentUSDT > 0) {
                 require(usdtToken.transfer(student, studentUSDT), "USDT student transfer failed");
             }
@@ -226,14 +222,15 @@ contract LearnTGVaultsV5 is ReentrancyGuard {
             if (learnTgWallet != address(0) && learnTgUSDT > 0) {
                 require(usdtToken.transfer(learnTgWallet, learnTgUSDT), "USDT learnTg transfer failed");
             }
+
+            // Update state AFTER all transfers succeeded
+            vault.balanceUsdt -= actualUSDT;
+            guidePaidUSDT[courseId][guideId][student] = actualUSDT;
             paidUSDT = actualUSDT;
         }
 
         // Pay SLEARN if not already paid AND vault has enough for the full amount
         if (!alreadyPaidSLEARN && actualSlearn > 0 && vault.balanceSlearn >= actualSlearn) {
-            vault.balanceSlearn -= actualSlearn;
-            guidePaidSLEARN[courseId][guideId][student] = actualSlearn;
-
             if (studentSlearn > 0) {
                 require(slearnToken.transfer(student, studentSlearn), "SLEARN student transfer failed");
             }
@@ -243,6 +240,10 @@ contract LearnTGVaultsV5 is ReentrancyGuard {
             if (learnTgWallet != address(0) && learnTgSlearn > 0) {
                 require(slearnToken.transfer(learnTgWallet, learnTgSlearn), "SLEARN learnTg transfer failed");
             }
+
+            // Update state AFTER all transfers succeeded
+            vault.balanceSlearn -= actualSlearn;
+            guidePaidSLEARN[courseId][guideId][student] = actualSlearn;
             paidSlearn = actualSlearn;
         }
 
