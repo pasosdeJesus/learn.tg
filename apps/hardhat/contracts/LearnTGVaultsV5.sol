@@ -138,6 +138,10 @@ contract LearnTGVaultsV5 is ReentrancyGuard {
 
     // ============ SLEARN CONTRACT INTERFACE ============
 
+    // recordCourseFunds is called by the SLEARN contract AFTER it has already
+    // transferred USDT (via transferFrom) and minted SLEARN to this vault.
+    // The SLEARN contract is a trusted, same-project contract — it handles
+    // the actual token movement; this function only updates the accounting.
     function recordCourseFunds(uint256 courseId, uint256 usdtAmount, uint256 slearnAmount)
         external vaultExists(courseId) onlySlearnContract
     {
