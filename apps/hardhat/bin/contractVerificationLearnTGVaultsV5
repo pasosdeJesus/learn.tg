@@ -1,0 +1,5 @@
+#!/bin/sh
+. ../.env 2>/dev/null || true
+cd "$(dirname "$0")/.." || exit 1
+echo "Verifying LearnTGVaultsV5 source on Blockscout..."
+node_modules/.bin/hardhat run scripts/contractVerificationLearnTGVaultsV5.ts --network ${NEXT_PUBLIC_NETWORK:-celoSepolia}
