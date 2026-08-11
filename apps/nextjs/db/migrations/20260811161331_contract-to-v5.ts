@@ -315,27 +315,41 @@ export async function up(db: Kysely<any>): Promise<void> {
   console.log(`  3. Remove LEARNTG_VAULTS_READONLY=1 from .env`)
 
   } catch (e: any) {
-    console.error('\n❌ Migration failed:')
-    console.error(`  ${e?.message || e}`)
+    console.error('')
+    console.error('========================================')
+    console.error('❌ MIGRATION FAILED')
+    console.error('========================================')
+    console.error(`  typeof: ${typeof e}`)
+    console.error(`  constructor: ${e?.constructor?.name || 'N/A'}`)
+    console.error(`  message: ${String(e?.message || e)}`)
+    console.error(`  code: ${e?.code || 'N/A'}`)
+    if (typeof e === 'string') {
+      console.error(`  raw string: ${e}`)
+    } else {
+      console.error(`  keys: ${Object.keys(e || {}).join(', ') || 'none'}`)
+    }
     if (e?.stack) {
-      const lines = e.stack.split('\n').slice(0, 6)
+      const lines = e.stack.split('\n')
       lines.forEach((l: string) => console.error(`  ${l.trim()}`))
     }
-    if (e?.cause) {
-      console.error(`  Cause: ${e.cause?.message || e.cause}`)
-    }
-    if (e?.walk) {
+    // viem contract errors
+    if (typeof e?.walk === 'function') {
       try {
         const walk = e.walk()
         if (Array.isArray(walk) && walk.length > 0) {
-          console.error('  Call trace:')
-          walk.forEach((w: any) => console.error(`    ${w.message || w}`))
+          console.error('  Error walk:')
+          walk.forEach((w: any) => console.error(`    - ${w.message || String(w)}`))
         }
-      } catch {}
+      } catch (we: any) { console.error(`  walk() threw: ${we.message}`) }
     }
-    if (e?.data) {
-      console.error(`  Tx data: ${JSON.stringify(e.data).slice(0, 500)}`)
-    }
+    // Full JSON dump (limited)
+    try {
+      const dump = JSON.stringify(e, Object.getOwnPropertyNames(e), 2)
+      if (dump && dump !== '{}') {
+        console.error(`  JSON dump: ${dump.slice(0, 2000)}`)
+      }
+    } catch {}
+    console.error('========================================')
     throw e
   }
 }
