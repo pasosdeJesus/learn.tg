@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
 import type { DB } from '@/db/db.d'
+import { SCORE_RULES, ALL_SCORE_FIELDS } from '@/lib/score-rules'
 
 /** Pilot phase: only these countries can create clusters and receive donations */
 export const PILOT_COUNTRIES = [170, 694] // Colombia, Sierra Leona
@@ -183,78 +184,17 @@ export async function recalculateProfileScore(
 ): Promise<number> {
   const user = await db
     .selectFrom('usuario')
-    .select([
-      'nombre',
-      'passport_name',
-      'pais_id',
-      'passport_nationality',
-      'email',
-      'verified_email',
-      'whatsapp',
-      'telegram',
-      'verified_whatsapp',
-      'verified_telegram',
-      'lastgooddollarverification',
-      'city_id',
-      'verified_city_id',
-      'place_of_worship',
-      'verified_place_of_worship',
-      'place_of_worship_location',
-      'verified_place_of_worship_location',
-      'proposed_date_of_interview',
-    ])
+    .select(ALL_SCORE_FIELDS as any)
     .where('id', '=', userId)
     .executeTakeFirst()
 
   if (!user) return 0
 
   let score = 0
-
-  // Name verified: 26 pts
-  if (user.nombre && user.passport_name && user.nombre === user.passport_name) {
-    score += 26
-  }
-
-  // Country verified: 24 pts
-  if (user.pais_id != null && user.passport_nationality != null && user.pais_id === user.passport_nationality) {
-    score += 24
-  }
-
-  // Email verified: 9 pts
-  if (user.email && user.verified_email && user.email === user.verified_email) {
-    score += 9
-  }
-
-  // WhatsApp or Telegram verified: 9 pts (max 9, not 18)
-  if ((user.whatsapp && user.verified_whatsapp && user.whatsapp === user.verified_whatsapp) ||
-      (user.telegram && user.verified_telegram && user.telegram === user.verified_telegram)) {
-    score += 9
-  }
-
-  // GoodDollar verified: 7 pts
-  if (user.lastgooddollarverification != null) {
-    score += 7
-  }
-
-  // Location verified: 9 pts
-  // Countries with cities: city_id must match verified_city_id
-  // Countries without cities (e.g. USA): place_of_worship_location must be set and match verified_place_of_worship_location
-  if ((user.city_id != null && user.verified_city_id === user.city_id) ||
-      (user.city_id == null && user.verified_city_id == null &&
-       user.place_of_worship_location != null &&
-       user.verified_place_of_worship_location === user.place_of_worship_location)) {
-    score += 9
-  }
-
-  // Place of worship verified: 9 pts
-  if (user.place_of_worship && user.verified_place_of_worship &&
-      user.place_of_worship === user.verified_place_of_worship) {
-    score += 9
-  }
-
-  // Interview with verifier: 7 pts
-  if (user.proposed_date_of_interview != null) {
-    score += 7
+  for (const rule of SCORE_RULES) {
+    if (rule.check(user as any)) {
+      score += rule.points
+    }
   }
 
   await db

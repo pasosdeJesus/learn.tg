@@ -278,6 +278,9 @@ describe('recalculateProfileScore', () => {
       lastgooddollarverification: null,
       city_id: null, verified_city_id: null,
       place_of_worship: null, verified_place_of_worship: null,
+      church_id: null,
+      church_relationship: null, verified_church_relationship: null,
+      religion_id: 2,
       place_of_worship_location: null, verified_place_of_worship_location: null,
     })
     const score = await recalculateProfileScore(mockDb, 1)
@@ -292,6 +295,9 @@ describe('recalculateProfileScore', () => {
       lastgooddollarverification: null,
       city_id: null, verified_city_id: null,
       place_of_worship: null, verified_place_of_worship: null,
+      church_id: null,
+      church_relationship: null, verified_church_relationship: null,
+      religion_id: 2,
       place_of_worship_location: null, verified_place_of_worship_location: null,
     })
     const score = await recalculateProfileScore(mockDb, 1)
@@ -307,7 +313,9 @@ describe('recalculateProfileScore', () => {
       verified_whatsapp: '+123', verified_telegram: null,
       lastgooddollarverification: new Date(),
       city_id: 15, verified_city_id: 15,
-      place_of_worship: 'Church', verified_place_of_worship: 'Church',
+      place_of_worship: null, verified_place_of_worship: null,
+      church_id: 1, church_relationship: 'leader', verified_church_relationship: 'leader',
+      religion_id: 2,
       place_of_worship_location: null, verified_place_of_worship_location: null,
     }, true)
     const score = await recalculateProfileScore(mockDb, 1)

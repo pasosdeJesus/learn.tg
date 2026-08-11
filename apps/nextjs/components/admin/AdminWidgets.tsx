@@ -8,6 +8,7 @@ import { ChurchSelector } from '@/components/shared/ChurchSelector'
 import { PhotoUpload } from '@/components/shared/PhotoUpload'
 import { adminFetch } from '@/lib/admin-fetch'
 import { CalendarWidget } from './CalendarWidget'
+import { VERIFIED_FIELDS_CONFIG } from '@/lib/score-rules'
 
 type TFunc = (k: string) => string
 
@@ -34,15 +35,7 @@ export interface ChurchItem {
   created_at?: string
 }
 
-const VERIFIED_FIELDS = [
-  { key: 'verified_whatsapp', source: 'whatsapp', labelEn: 'WhatsApp', labelEs: 'WhatsApp' },
-  { key: 'verified_telegram', source: 'telegram', labelEn: 'Telegram', labelEs: 'Telegram' },
-  { key: 'verified_email', source: 'email', labelEn: 'Email', labelEs: 'Correo' },
-  { key: 'verified_city_id', source: 'city_id', labelEn: 'City', labelEs: 'Ciudad' },
-  { key: 'verified_place_of_worship', source: 'place_of_worship', labelEn: 'Place of Worship', labelEs: 'Lugar de Culto' },
-  { key: 'verified_place_of_worship_location', source: 'place_of_worship_location', labelEn: 'Worship Location', labelEs: 'Ubicación del Culto' },
-  { key: 'verified_church_relationship', source: null, labelEn: 'Church Role', labelEs: 'Rol en Iglesia' },
-]
+const VERIFIED_FIELDS = VERIFIED_FIELDS_CONFIG
 
 function fmtDate(s?: string, lang?: string) {
   if (!s) return '—'
