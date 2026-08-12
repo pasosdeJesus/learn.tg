@@ -35,7 +35,7 @@ Jesus is God incarnated, the Truth and the Logos.
 6. Execute and assimilate the content of 
     ```cd apps/nextjs && bin/m ai:skill```
 7. **[celopedia-skill](~/.agents/skills/celopedia-skill/SKILL.md)**: Celo ecosystem intelligence — contract addresses, grants, security patterns, MiniPay, DeFi protocols, network info. Installed via `npx skills add celo-org/celopedia-skills -y -g`.
-8. **[apps/nextjs/node_modules/@pasosdejesus/m/ia/construir_en_adJ_y_celo.md]**: Celo development guide for the pdJ ecosystem.
+8. **[apps/nextjs/node_modules/@pasosdejesus/mpdj/ia/construir_en_adJ_y_celo.md]**: Celo development guide for the pdJ ecosystem.
 9. **[doc/siwe-auth-flow.md]**: SIWE authentication flow — how wallet sign-in works, CSRF token reuse as API auth token, two-layer auth model, and address case normalization.
 10. **[doc/wallet-auth.md]**: Custom wallet-auth implementation — `ConnectWalletButton`, `useAuthAddress`, `useWriteContract`, and disconnect detection. Replaced RainbowKit + wagmi (R-#186).
 11. **[SLEARN-WHITEPAPER.md]**: Tokenomics: distribution percentages, reserve backing rules, stability formula.
@@ -43,7 +43,7 @@ Jesus is God incarnated, the Truth and the Logos.
 13. **[doc/guide-writing.md]**: Conventions for writing course guides — Five Pillars, comprehension question format, database integration.
 14. **[doc/how-to-create-a-course.md]**: Step-by-step course creation — script, DB migration, vault, credentials, SBT.
 15. **[resources/en/web3-and-ubi/guide*.md]**: User-facing course content — profile score breakdown, scholarship rules, UBI claiming, stable-sl integration.
-16. **[node_modules/@pasosdejesus/m/src/debug/README.md]**: DebugConsole — floating debug panel for MiniPay/embedded browsers. Use `logger.info/error(tag)` instead of `console.log`. Appears in bottom-right corner when `NEXT_PUBLIC_M_DEBUGGER_CONSOLE=1`.
+16. **[apps/nextjs/node_modules/@pasosdejesus/m/src/debug/README.md]**: DebugConsole — floating debug panel for MiniPay/embedded browsers. Use `logger.info/error(tag)` instead of `console.log`. Appears in bottom-right corner when `NEXT_PUBLIC_M_DEBUGGER_CONSOLE=1`.
 17. Read the structure and key files of this project
 
 ### 5. Confirm Your understanding of the documentation and the project
