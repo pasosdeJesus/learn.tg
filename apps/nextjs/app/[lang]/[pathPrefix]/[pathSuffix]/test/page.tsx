@@ -11,6 +11,7 @@ import { usePublicClient } from '@/lib/hooks/useWallet'
 import { useWriteContract } from '@/lib/hooks/useWriteContract'
 
 import { useGuideData } from '@/lib/hooks/useGuideData'
+import { MaintenanceBanner } from '@/components/MaintenanceBanner'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@pasosdejesus/m/shadcn-components/ui/card'
 import { cn } from '@pasosdejesus/m/shadcn-components/cn'
@@ -422,6 +423,7 @@ export default function Page({
 
   return (
     <>
+      <MaintenanceBanner />
       <div className="mt-8 pt-2 dark:bg-gray-100 dark:text-gray-800">
         <div className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
           <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">

@@ -16,6 +16,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
+import { MaintenanceBanner } from '@/components/MaintenanceBanner'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { useScholarshipData } from '@/lib/hooks/useScholarshipData'
 
@@ -148,6 +149,7 @@ export default function Page({ params }: PageProps) {
 
   return (
     <>
+      <MaintenanceBanner />
       {donationIncrement && (
         <DonationSuccessAlert
           increment={donationIncrement}
