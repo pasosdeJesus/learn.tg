@@ -347,6 +347,7 @@ export async function up(db: Kysely<any>): Promise<void> {
       console.log(`  Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(pending.length / BATCH_SIZE)} (${batch.length} pairs)`)
 
       for (const p of batch) {
+        const key = `${p.usuarioId}:${p.courseId}:${p.guideId}`
         const billetera = billeteraMap.get(p.usuarioId)
         if (!billetera) { batchSkipped++; continue }
 
@@ -357,7 +358,12 @@ export async function up(db: Kysely<any>): Promise<void> {
           })
           const v4USDT = v4Status[0] as bigint
           const v4SLEARN = v4Status[1] as bigint
-          if (v4USDT === 0n && v4SLEARN === 0n) { batchSkipped++; continue }
+          if (v4USDT === 0n && v4SLEARN === 0n) {
+            batchSkipped++
+            migrated.push(key)
+            fs.writeFileSync(progressFile, JSON.stringify(migrated))
+            continue
+          }
 
           const v5Status: any = await pub.readContract({
             address: V5, abi: LearnTGVaultsV5Abi as any, functionName: 'getStudentGuideStatus',
@@ -373,13 +379,14 @@ export async function up(db: Kysely<any>): Promise<void> {
           } else {
             batchSkipped++
           }
+
+          // Mark progress ONLY on success (setGuidePaid done, or already correct)
+          migrated.push(key)
+          fs.writeFileSync(progressFile, JSON.stringify(migrated))
         } catch (e: any) {
           console.log(`    ⚠️ Failed user=${p.usuarioId} guide=${p.guideId}: ${e?.shortMessage || e?.message || e}`)
+          // Do NOT mark progress — will retry on next run
         }
-
-        // Save progress after each pair
-        migrated.push(`${p.usuarioId}:${p.courseId}:${p.guideId}`)
-        fs.writeFileSync(progressFile, JSON.stringify(migrated))
       }
     }
     console.log(`  guidePaid migrated: ${batchMigrated}, skipped: ${batchSkipped}`)
