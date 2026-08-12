@@ -250,7 +250,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
           )}
         </div>
 
-        {hasAnyAmount && tCopy?.splitInfo && (
+        {tCopy?.splitInfo && (
           <div className="mt-4 text-xs bg-yellow-50 border border-yellow-200 rounded p-3">{tCopy.splitInfo}</div>
         )}
 

@@ -14,8 +14,8 @@ export function getTargetCopy(lang: string, target: PaymentTarget) {
       return {
         title: `${t('Donate to course', 'Donar al curso')} #${target.courseId}`,
         splitInfo: t(
-          '70% goes to course scholarships, 10% back as SLEARN reward, 20% sustains operations and missions.',
-          '70% va a becas del curso, 10% vuelve como SLEARN de recompensa, 20% sostiene operaciones y misiones.'
+          '70% to course vault (35% USDT + 35% SLEARN), 10% back as SLEARN reward, 5% pdJ, 5% missional, 5% UBI+referrals, 5% churches.',
+          '70% a bóveda del curso (35% USDT + 35% SLEARN), 10% vuelve como SLEARN de recompensa, 5% pdJ, 5% misional, 5% IUB+referidos, 5% iglesias.'
         ),
         rewardPct: 10,
         rewardLabel: t('Estimated SLEARN reward', 'Recompensa SLEARN estimada'),
