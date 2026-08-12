@@ -27,6 +27,15 @@ export type Numeric = ColumnType<string, number | string, number | string>;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface AdminSolves {
+  created_at: Generated<Timestamp>;
+  id: Generated<Int8>;
+  metadata: Generated<Json>;
+  solved_at: Timestamp | null;
+  type: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface ArInternalMetadata {
   created_at: Timestamp;
   key: string;
@@ -1407,6 +1416,7 @@ export interface Usuario {
   last_sign_in_ip: string | null;
   lastgooddollarverification: Timestamp | null;
   learningscore_deprecated: number | null;
+  locked_at: Timestamp | null;
   nombre: string | null;
   nusuario: string;
   oficina_id: number | null;
@@ -1457,6 +1467,7 @@ export interface ViewUserScores {
 }
 
 export interface DB {
+  admin_solves: AdminSolves;
   ar_internal_metadata: ArInternalMetadata;
   billetera_usuario: BilleteraUsuario;
   church: Church;

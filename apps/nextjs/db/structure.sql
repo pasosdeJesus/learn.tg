@@ -1351,6 +1351,39 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: admin_solves; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.admin_solves (
+    id bigint NOT NULL,
+    type character varying(100) NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    solved_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: admin_solves_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.admin_solves_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: admin_solves_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.admin_solves_id_seq OWNED BY public.admin_solves.id;
+
+
+--
 -- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5262,6 +5295,13 @@ CREATE VIEW public.view_user_scores AS
 
 
 --
+-- Name: admin_solves id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_solves ALTER COLUMN id SET DEFAULT nextval('public.admin_solves_id_seq'::regclass);
+
+
+--
 -- Name: billetera_usuario id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -5885,6 +5925,14 @@ ALTER TABLE ONLY public.cor1440_gen_actividadarea
 
 ALTER TABLE ONLY public.cor1440_gen_actividadareas_actividad
     ADD CONSTRAINT actividadareas_actividad_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: admin_solves admin_solves_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_solves
+    ADD CONSTRAINT admin_solves_pkey PRIMARY KEY (id);
 
 
 --
@@ -6933,6 +6981,13 @@ CREATE UNIQUE INDEX cor1440_gen_datointermedioti_pmindicadorpf_llaves_idx ON pub
 --
 
 CREATE INDEX credential_emission_usuario_idx ON public.credential_emission USING btree (usuario_id);
+
+
+--
+-- Name: idx_admin_solves_pending; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_admin_solves_pending ON public.admin_solves USING btree (type, solved_at) WHERE (solved_at IS NULL);
 
 
 --
