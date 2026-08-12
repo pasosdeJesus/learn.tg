@@ -22,13 +22,11 @@ import { celo, celoSepolia } from 'viem/chains'
 import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const NETWORK = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'celo' : 'celoSepolia'
 const RPC = process.env.NEXT_PUBLIC_RPC_URL!
-
-import { fileURLToPath } from 'url'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 // These come from deployments/
 const deploymentsDir = path.join(__dirname, '..', '..', 'hardhat', 'deployments')

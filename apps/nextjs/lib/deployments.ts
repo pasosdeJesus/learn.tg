@@ -54,3 +54,21 @@ export async function getV5Address(): Promise<`0x${string}`> {
 export async function getV2Address(): Promise<`0x${string}`> {
   return process.env.NEXT_PUBLIC_DEPLOYED_AT_V2 as `0x${string}`
 }
+
+// Vault version detection for ABI selection
+export type VaultVersion = 'V5' | 'V4'
+
+/**
+ * Returns the most recent deployed vault address and its version.
+ * Tries V5 first, falls back to V4. No env vars needed —
+ * reads from deployment JSON files only.
+ */
+export async function getActiveVault(): Promise<{ address: `0x${string}`; version: VaultVersion }> {
+  try {
+    const addr = await getV5Address()
+    return { address: addr, version: 'V5' }
+  } catch {
+    const addr = await getV4Address()
+    return { address: addr, version: 'V4' }
+  }
+}

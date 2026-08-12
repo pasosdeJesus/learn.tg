@@ -379,11 +379,8 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   console.log(`\n✅ V4 -> V5 migration complete`)
   console.log(`\nNext steps:`)
-  console.log(`  1. Update apps/.env:`)
-  console.log(`     NEXT_PUBLIC_DEPLOYED_AT_V4=${V4}  # archive`)
-  console.log(`     NEXT_PUBLIC_DEPLOYED_AT_V5=${V5}  # active`)
-  console.log(`  2. Restart Next.js`)
-  console.log(`  3. Remove LEARNTG_VAULTS_READONLY=1 from .env`)
+  console.log(`  1. Remove LEARNTG_VAULTS_READONLY=1 from .env`)
+  console.log(`  2. Restart Next.js — getActiveVault() will auto-detect V5`)
 
   } catch (e: any) {
     console.error('')
