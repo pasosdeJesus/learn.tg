@@ -40,6 +40,30 @@ export async function up(db: Kysely<any>): Promise<void> {
   const account = privateKeyToAccount(PRIVATE_KEY as Address)
   const wallet = createWalletClient({ account, chain, transport: http(RPC_URL) })
 
+  // Robust transaction sender: always fetches a fresh pending nonce and
+  // retries with the next nonce if there's a collision.
+  async function sendTx(address: Address, abi: any, functionName: string, args: any[]): Promise<`0x${string}`> {
+    let lastErr: any = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const nonce = await pub.getTransactionCount({ address: account.address, blockTag: 'pending' })
+        const hash = await wallet.writeContract({
+          address, abi, functionName, args, account, chain, nonce,
+        })
+        await pub.waitForTransactionReceipt({ hash })
+        return hash
+      } catch (e: any) {
+        lastErr = e
+        const msg = e?.shortMessage || e?.message || String(e)
+        if (!msg.includes('nonce') && !msg.includes('Nonce')) throw e
+        // Nonce collision — retry with a fresh nonce
+        console.log(`    [nonce] retry attempt ${attempt + 1}: ${msg.slice(0, 80)}`)
+        await new Promise(r => setTimeout(r, 2000))
+      }
+    }
+    throw lastErr
+  }
+
   console.log('V4 -> V5 migration (idempotent)')
   console.log(`  V4: ${V4}`)
   console.log(`  V5: ${V5}`)
@@ -157,26 +181,22 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   if (oldUsdt > 0n) {
     console.log(`  Draining ${formatUnits(oldUsdt, 6)} USDT from V4`)
-    const h = await wallet.writeContract({ address: V4, abi: LearnTGVaultsV3Abi as any, functionName: 'emergencyWithdrawUSDT', args: [oldUsdt], account, chain })
-    await pub.waitForTransactionReceipt({ hash: h })
+    await sendTx(V4, LearnTGVaultsV3Abi as any, 'emergencyWithdrawUSDT', [oldUsdt])
   }
   if (oldSlearn > 0n) {
     console.log(`  Draining ${formatUnits(oldSlearn, 2)} SLEARN from V4`)
-    const h = await wallet.writeContract({ address: V4, abi: LearnTGVaultsV3Abi as any, functionName: 'emergencyWithdrawSLEARN', args: [oldSlearn], account, chain })
-    await pub.waitForTransactionReceipt({ hash: h })
+    await sendTx(V4, LearnTGVaultsV3Abi as any, 'emergencyWithdrawSLEARN', [oldSlearn])
   }
 
   // 2. Transfer tokens to V5
   if (oldUsdt > 0n) {
     console.log(`  Transferring USDT -> V5`)
-    const h = await wallet.writeContract({ address: USDT_ADDRESS as Address, abi: Erc20Abi as any, functionName: 'transfer', args: [V5, oldUsdt], account, chain })
-    await pub.waitForTransactionReceipt({ hash: h })
+    await sendTx(USDT_ADDRESS as Address, Erc20Abi as any, 'transfer', [V5, oldUsdt])
   }
   if (oldSlearn > 0n) {
     const slearnAddr = await pub.readContract({ address: V4, abi: LearnTGVaultsV3Abi as any, functionName: 'slearnToken' }) as Address
     console.log(`  Transferring SLEARN -> V5 (token: ${slearnAddr})`)
-    const h = await wallet.writeContract({ address: slearnAddr, abi: Erc20Abi as any, functionName: 'transfer', args: [V5, oldSlearn], account, chain })
-    await pub.waitForTransactionReceipt({ hash: h })
+    await sendTx(slearnAddr, Erc20Abi as any, 'transfer', [V5, oldSlearn])
   }
 
   } else {
@@ -195,9 +215,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         continue
       }
 
-      const h = await wallet.writeContract({ address: V5, abi: LearnTGVaultsV5Abi as any, functionName: 'createVault', args: [cid, snap.perUSDT, snap.perSlearn], account, chain })
-      console.log(`  Course ${courseId}: tx sent, waiting...`)
-      await pub.waitForTransactionReceipt({ hash: h })
+      await sendTx(V5, LearnTGVaultsV5Abi as any, 'createVault', [cid, snap.perUSDT, snap.perSlearn])
       console.log(`  Course ${courseId}: created (USDT=${formatUnits(snap.perUSDT, 6)} SLEARN=${formatUnits(snap.perSlearn, 2)})`)
     } catch (e: any) {
       console.log(`  Course ${courseId}: ⚠️ ${e?.message || e}`)
@@ -219,8 +237,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   // 3.5a: Authorize SLEARN on V5 (so SLEARN can call recordCourseFunds)
   const v5HasRole: boolean = await pub.readContract({ address: V5, abi: LearnTGVaultsV5Abi as any, functionName: 'slearnContractRole', args: [slearnAddr] }) as boolean
   if (!v5HasRole) {
-    const h = await wallet.writeContract({ address: V5, abi: LearnTGVaultsV5Abi as any, functionName: 'setSlearnContractRole', args: [slearnAddr, true], account, chain })
-    await pub.waitForTransactionReceipt({ hash: h })
+    await sendTx(V5, LearnTGVaultsV5Abi as any, 'setSlearnContractRole', [slearnAddr, true])
     console.log(`  ✓ SLEARN authorized on V5`)
   } else {
     console.log(`  SLEARN already authorized on V5, skipping`)
@@ -229,8 +246,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   // 3.5b: Update SLEARN's learnTGVault → V5 (so SLEARN sends USDT to V5)
   const currentVault: Address = await pub.readContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'learnTGVault' }) as Address
   if (currentVault.toLowerCase() !== V5.toLowerCase()) {
-    const h = await wallet.writeContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'setLearnTGVault', args: [V5], account, chain })
-    await pub.waitForTransactionReceipt({ hash: h })
+    await sendTx(slearnAddr, slearnAbi as any, 'setLearnTGVault', [V5])
     console.log(`  ✓ SLEARN.learnTGVault → V5`)
   } else {
     console.log(`  SLEARN.learnTGVault already V5, skipping`)
@@ -239,8 +255,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   // 3.5c: Update SLEARN's learnTGVaultSLEARN → V5 (so SLEARN sends SLEARN to V5)
   const currentVaultSlearn: Address = await pub.readContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'learnTGVaultSLEARN' }) as Address
   if (currentVaultSlearn.toLowerCase() !== V5.toLowerCase()) {
-    const h = await wallet.writeContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'setLearnTGVaultSLEARN', args: [V5], account, chain })
-    await pub.waitForTransactionReceipt({ hash: h })
+    await sendTx(slearnAddr, slearnAbi as any, 'setLearnTGVaultSLEARN', [V5])
     console.log(`  ✓ SLEARN.learnTGVaultSLEARN → V5`)
   } else {
     console.log(`  SLEARN.learnTGVaultSLEARN already V5, skipping`)
@@ -250,8 +265,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   try {
     const v5Authorized: boolean = await pub.readContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'authorizedTransfers', args: [V5] }) as boolean
     if (!v5Authorized) {
-      const h = await wallet.writeContract({ address: slearnAddr, abi: slearnAbi as any, functionName: 'addAuthorizedTransfer', args: [V5], account, chain })
-      await pub.waitForTransactionReceipt({ hash: h })
+      await sendTx(slearnAddr, slearnAbi as any, 'addAuthorizedTransfer', [V5])
       console.log(`  ✓ V5 authorized for SLEARN transfers`)
     } else {
       console.log(`  V5 already authorized for SLEARN transfers, skipping`)
@@ -265,8 +279,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   for (const [courseId, snap] of v4VaultSnapshot) {
     try {
       if (snap.balUSDT > 0n || snap.balSlearn > 0n) {
-        const h = await wallet.writeContract({ address: V5, abi: LearnTGVaultsV5Abi as any, functionName: 'setVaultBalance', args: [BigInt(courseId), snap.balUSDT, snap.balSlearn], account, chain })
-        await pub.waitForTransactionReceipt({ hash: h })
+        await sendTx(V5, LearnTGVaultsV5Abi as any, 'setVaultBalance', [BigInt(courseId), snap.balUSDT, snap.balSlearn])
         console.log(`  Course ${courseId}: balance set (USDT=${formatUnits(snap.balUSDT, 6)} SLEARN=${formatUnits(snap.balSlearn, 2)})`)
       }
     } catch {}
@@ -355,12 +368,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
           if (v4USDT > v5USDT || v4SLEARN > v5SLEARN) {
             console.log(`    setGuidePaid user=${p.usuarioId} guide=${p.guideId} course=${p.courseId} USDT=${formatUnits(v4USDT, 6)} SLEARN=${formatUnits(v4SLEARN, 2)}`)
-            const h = await wallet.writeContract({
-              address: V5, abi: LearnTGVaultsV5Abi as any, functionName: 'setGuidePaid',
-              args: [BigInt(p.courseId), BigInt(p.guideId), billetera as Address, v4USDT, v4SLEARN],
-              account, chain
-            })
-            await pub.waitForTransactionReceipt({ hash: h })
+            await sendTx(V5, LearnTGVaultsV5Abi as any, 'setGuidePaid', [BigInt(p.courseId), BigInt(p.guideId), billetera as Address, v4USDT, v4SLEARN])
             batchMigrated++
           } else {
             batchSkipped++
