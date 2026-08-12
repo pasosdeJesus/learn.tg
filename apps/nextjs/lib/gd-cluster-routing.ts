@@ -1,11 +1,11 @@
-'use server'
-
 import { Kysely } from 'kysely'
 import type { Address } from 'viem'
 import type { DB } from '@/db/db.d'
 import ClusterFundsAbi from '@/abis/ClusterFunds.json'
 import Erc20Abi from '@/abis/IERC20.json'
 import { PILOT_COUNTRIES } from '@/lib/gd-utils'
+import * as fs from 'fs'
+import * as path from 'path'
 
 const GD_COURSE_IDS = [10, 11]
 
@@ -69,8 +69,6 @@ export function isGDCourse(courseId: number): boolean {
  * Get ClusterFunds contract address from deployments.
  */
 export function getClusterFundsAddress(): Address {
-  const fs = require('fs')
-  const path = require('path')
   const network = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'celo' : 'celoSepolia'
   const file = path.join(process.cwd(), '..', 'hardhat', 'deployments', 'ClusterFunds', `${network}.json`)
   if (!fs.existsSync(file)) throw new Error(`ClusterFunds deployment not found: ${file}`)
