@@ -126,6 +126,9 @@ export default function Page() {
       .replaceAll('<li><p>([^<]*)</p></li>', '<li>$1</li>')
       .replaceAll('<p>', '<p class="pt-2 pb-2">')
       .replaceAll('<ul>', '<ul class="block list-disc ml-8">')
+      .replaceAll('<table>', '<table class="border-collapse border border-gray-300 my-4">')
+      .replaceAll('<th>', '<th class="border border-gray-300 px-4 py-2 bg-gray-50 text-left font-semibold">')
+      .replaceAll('<td>', '<td class="border border-gray-300 px-4 py-2">')
 
     return html_con_tailwind
   }, [pathSuffix, address])
