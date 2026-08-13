@@ -94,12 +94,13 @@ export async function routeToClusterFunds(
   const cfAddress = getClusterFundsAddress()
   const chain = publicClient.chain
 
-  // Approve ClusterFunds to spend tokens
+  // Transfer tokens from backend wallet to ClusterFunds (no approve; the
+  // backend sends the tokens directly and processDonation just records them).
   if (usdtAmount > 0n) {
     const hash = await walletClient.writeContract({
       address: usdtToken,
       abi: Erc20Abi as any,
-      functionName: 'approve',
+      functionName: 'transfer',
       args: [cfAddress, usdtAmount],
       account,
       chain,
@@ -111,7 +112,7 @@ export async function routeToClusterFunds(
     const hash = await walletClient.writeContract({
       address: slearnToken,
       abi: Erc20Abi as any,
-      functionName: 'approve',
+      functionName: 'transfer',
       args: [cfAddress, slearnAmount],
       account,
       chain,
