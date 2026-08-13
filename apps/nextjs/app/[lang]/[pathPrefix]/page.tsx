@@ -15,6 +15,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
+import { CheckoutModal } from '@/components/CheckoutModal'
 import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
 import { MaintenanceBanner } from '@/components/MaintenanceBanner'
 import { useGuideData } from '@/lib/hooks/useGuideData'
@@ -83,6 +84,7 @@ export default function Page({ params }: PageProps) {
   const [htmlSummary, setHtmlSummary] = useState('')
   const [htmlExtended, setHtmlExtended] = useState('')
   const [contentsHtml, setContentsHtml] = useState('')
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
 
   useEffect(() => {
     if (address) {
@@ -171,6 +173,20 @@ export default function Page({ params }: PageProps) {
               <h1 className="text-2xl lg:text-3xl font-bold mb-2">
                 {course.titulo}
               </h1>
+              {Number(course.porPagar) > 0 && (
+                <div className="flex flex-col items-center gap-2">
+                  <span className="inline-block text-xs font-semibold uppercase tracking-wide bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                    {course.idioma === 'en' ? 'Premium course' : 'Curso premium'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsCheckoutOpen(true)}
+                    className="inline-block rounded bg-primary px-4 py-1 text-sm font-semibold text-white hover:opacity-90"
+                  >
+                    {course.idioma === 'en' ? 'Buy this course' : 'Comprar este curso'}
+                  </button>
+                </div>
+              )}
               {/* @ts-ignore */}
               <h2 className="text-lg lg:text-xl font-semibold text-gray-600">
                 {course.subtitulo}
@@ -260,6 +276,15 @@ export default function Page({ params }: PageProps) {
       )}
       {!loading && !error && !course && (
         <div className="p-10 mt-10">{t('notFound')}</div>
+      )}
+      {course && (
+        <CheckoutModal
+          courseId={parseInt(course.id)}
+          lang={lang}
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          onSuccess={() => window.location.reload()}
+        />
       )}
     </>
   )

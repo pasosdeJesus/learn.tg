@@ -11,6 +11,22 @@ function mockDb(churchRow: any | null) {
   return mock
 }
 
+// Returns a sequence of rows, one per executeTakeFirst call (course, then
+// enrollment, then church). Lets us simulate the premium + course-rule flow.
+function mockDbSeq(rows: any[]) {
+  let i = 0
+  const mock = {
+    selectFrom: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
+    executeTakeFirst: vi.fn().mockImplementation(() =>
+      Promise.resolve(rows[i++] ?? null),
+    ),
+  } as any
+  return mock
+}
+
 describe('canAccessCourse — course without access rules', () => {
   it('returns access:true for any course without explicit rules', async () => {
     const db = mockDb(null)
@@ -21,6 +37,34 @@ describe('canAccessCourse — course without access rules', () => {
   it('returns access:true even when user has no church', async () => {
     const db = mockDb(null)
     const result = await canAccessCourse(db, 1, 99)
+    expect(result).toEqual({ access: true })
+  })
+})
+
+describe('canAccessCourse — premium course (porPagar > 0)', () => {
+  it('denies access when the course is premium and not purchased', async () => {
+    // course query → premium; enrollment query → null
+    const db = mockDbSeq([{ porPagar: 1 }, null])
+    const result = await canAccessCourse(db, 1, 5)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('premium')
+  })
+
+  it('grants access when the premium course is purchased', async () => {
+    const db = mockDbSeq([{ porPagar: 1 }, { id: 1 }])
+    const result = await canAccessCourse(db, 1, 5)
+    expect(result).toEqual({ access: true })
+  })
+
+  it('grants access to a free course without enrollment', async () => {
+    const db = mockDbSeq([{ porPagar: 0 }])
+    const result = await canAccessCourse(db, 1, 5)
+    expect(result).toEqual({ access: true })
+  })
+
+  it('grants access to a course with NULL porPagar (free)', async () => {
+    const db = mockDbSeq([{ porPagar: null }])
+    const result = await canAccessCourse(db, 1, 5)
     expect(result).toEqual({ access: true })
   })
 })

@@ -51,6 +51,7 @@ export default function Page() {
   const [isClient, setIsClient] = useState(false)
   const [showGoodDollarButton, setShowGoodDollarButton] = useState(false)
   const [showCeloUbiButton, setShowCeloUbiButton] = useState(false)
+  const [purchaseRequired, setPurchaseRequired] = useState('')
 
 
   const htmlDeMd = useCallback((md: string) => {
@@ -163,6 +164,12 @@ export default function Page() {
 
             } catch (err) {
                 if (err instanceof AxiosError) {
+                    if (err.response?.status === 403) {
+                        const reason = (err.response.data as any)?.error || 'This is a premium course. Purchase it to access its guides.'
+                        setPurchaseRequired(reason)
+                        setGuideHtml('')
+                        return
+                    }
                     console.error("Error fetching guide content:", err)
                     setGuideHtml(`<p>Error: ${err.message}</p>`)
                 } else {
@@ -227,11 +234,22 @@ export default function Page() {
           {myGuide.receivedScholarship ? ' 💵' : ''}
           {myGuide.receivedSlearnScholarship ? <img src="/img/slearn-icon.svg" alt="SLEARN" className="w-15 h-15 inline align-middle" /> : ''}
         </h1>
+        {purchaseRequired ? (
+          <div className="py-10 px-16 text-center space-y-4">
+            <p className="text-lg font-semibold">{purchaseRequired}</p>
+            <p>
+              <Link href={coursePath} className="underline text-primary">
+                {course.idioma === 'en' ? 'Purchase this course' : 'Comprar este curso'}
+              </Link>
+            </p>
+          </div>
+        ) : (
         <section
           className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside"
           dangerouslySetInnerHTML={{ __html: guideHtml }}
           aria-label="Guide text"
         />
+        )}
         <aside className="flex space-x-4 items-center justify-center" aria-label="Interactive buttons">
           {isClient && showGoodDollarButton && (
             <SafeRender fallback={

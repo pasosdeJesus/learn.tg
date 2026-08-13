@@ -83,9 +83,37 @@ export async function canAccessCourse(
   userId: number,
   courseId: number,
 ): Promise<AccessResult> {
+  // Premium check (applies to all courses)
+  const course = await db
+    .selectFrom('cor1440_gen_proyectofinanciero')
+    .select('porPagar')
+    .where('id', '=', courseId)
+    .executeTakeFirst()
+
+  const isPremium =
+    course?.porPagar !== null &&
+    course?.porPagar !== undefined &&
+    Number(course.porPagar) > 0
+
+  if (isPremium) {
+    const enrollment = await db
+      .selectFrom('premium_course_usuario')
+      .select('id')
+      .where('usuario_id', '=', userId)
+      .where('course_id', '=', courseId)
+      .executeTakeFirst()
+
+    if (!enrollment) {
+      return {
+        access: false,
+        reason: 'This is a premium course. Purchase it to access its guides.',
+      }
+    }
+  }
+
+  // Course-specific rules (e.g. non-Zionist requirement for GD)
   const validator = COURSE_ACCESS_RULES[courseId]
   if (!validator) {
-    // No special rules → public access
     return { access: true }
   }
   return validator(db, userId)

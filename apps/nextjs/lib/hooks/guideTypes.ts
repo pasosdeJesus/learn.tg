@@ -21,6 +21,7 @@ export interface Course {
   creditosMd: string
   resumenMd?: string
   ampliaMd?: string
+  porPagar?: string
   imagen?: string
   altImagen?: string
   enlaceImagen?: string

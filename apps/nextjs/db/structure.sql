@@ -2976,7 +2976,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
 );
 
 
@@ -3013,7 +3013,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -5045,6 +5045,42 @@ ALTER SEQUENCE public.nonce_id_seq OWNED BY public.nonce.id;
 
 
 --
+-- Name: premium_course_usuario; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.premium_course_usuario (
+    id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    course_id integer NOT NULL,
+    purchased_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    usdt_amount_paid numeric(10,2),
+    slearn_amount_paid integer,
+    transaction_hash character varying(66) NOT NULL,
+    expires_at timestamp without time zone
+);
+
+
+--
+-- Name: premium_course_usuario_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.premium_course_usuario_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: premium_course_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.premium_course_usuario_id_seq OWNED BY public.premium_course_usuario.id;
+
+
+--
 -- Name: religion; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5873,6 +5909,13 @@ ALTER TABLE ONLY public.msip_vereda ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.nonce ALTER COLUMN id SET DEFAULT nextval('public.nonce_id_seq'::regclass);
+
+
+--
+-- Name: premium_course_usuario id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario ALTER COLUMN id SET DEFAULT nextval('public.premium_course_usuario_id_seq'::regclass);
 
 
 --
@@ -6856,6 +6899,22 @@ ALTER TABLE ONLY public.nonce
 
 
 --
+-- Name: premium_course_usuario premium_course_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario
+    ADD CONSTRAINT premium_course_usuario_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: premium_course_usuario premium_course_usuario_usuario_id_course_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario
+    ADD CONSTRAINT premium_course_usuario_usuario_id_course_id_key UNIQUE (usuario_id, course_id);
+
+
+--
 -- Name: cor1440_gen_rangoedadac rangoedadac_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7009,6 +7068,20 @@ CREATE INDEX idx_m_hdi_pais_id ON public.m_hdi USING btree (pais_id);
 --
 
 CREATE INDEX idx_m_hdi_year ON public.m_hdi USING btree (year);
+
+
+--
+-- Name: idx_premium_course_usuario_course; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_premium_course_usuario_course ON public.premium_course_usuario USING btree (course_id);
+
+
+--
+-- Name: idx_premium_course_usuario_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_premium_course_usuario_usuario ON public.premium_course_usuario USING btree (usuario_id);
 
 
 --
@@ -8813,6 +8886,22 @@ ALTER TABLE ONLY public.msip_persona_trelacion
 
 ALTER TABLE ONLY public.msip_persona_trelacion
     ADD CONSTRAINT persona_trelacion_persona2_fkey FOREIGN KEY (persona2) REFERENCES public.msip_persona(id);
+
+
+--
+-- Name: premium_course_usuario premium_course_usuario_course_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario
+    ADD CONSTRAINT premium_course_usuario_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.cor1440_gen_proyectofinanciero(id);
+
+
+--
+-- Name: premium_course_usuario premium_course_usuario_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario
+    ADD CONSTRAINT premium_course_usuario_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
 
 
 --
