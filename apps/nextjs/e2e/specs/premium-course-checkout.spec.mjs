@@ -51,6 +51,21 @@ async function main() {
   if (modalVisible) ok('Checkout modal opened')
   else fail('Checkout modal did not open')
 
+  // ── Slider (USDT/SLEARN split) present and functional ──
+  const sliderInfo = await page.evaluate(() => {
+    const range = document.querySelector('input[type="range"]')
+    if (!range) return null
+    const before = range.value
+    // Move slider to 100% SLEARN
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
+    setter.call(range, '100')
+    range.dispatchEvent(new Event('input', { bubbles: true }))
+    range.dispatchEvent(new Event('change', { bubbles: true }))
+    return { before, after: range.value, min: range.min, max: range.max }
+  })
+  if (sliderInfo) ok(`Slider present (${sliderInfo.min}–${sliderInfo.max}, moved ${sliderInfo.before}→${sliderInfo.after})`)
+  else fail('Slider not found in modal')
+
   summary(t0)
   await browser.close()
 }

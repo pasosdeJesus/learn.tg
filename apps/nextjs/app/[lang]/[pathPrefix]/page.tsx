@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState, useRef, useCallback } from 'react'
 import { getCsrfToken, useSession } from 'next-auth/react'
+import axios from 'axios'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -85,6 +86,59 @@ export default function Page({ params }: PageProps) {
   const [htmlExtended, setHtmlExtended] = useState('')
   const [contentsHtml, setContentsHtml] = useState('')
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [hasPurchased, setHasPurchased] = useState(false)
+  const [gdEligible, setGdEligible] = useState<boolean | null>(null)
+  const [gdReason, setGdReason] = useState<string | null>(null)
+
+  const isGd =
+    course?.prefijoRuta === '/gdcluster' || course?.prefijoRuta === '/redgd'
+
+  // Check whether the authenticated user already purchased this premium course.
+  useEffect(() => {
+    if (!course || !address || Number(course.porPagar) <= 0) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+        const url = `/api/courses/premium/mine?walletAddress=${address}&token=${token}`
+        const res = await axios.get(url)
+        if (cancelled) return
+        const courses = res.data?.courses || []
+        setHasPurchased(courses.some((c: any) => Number(c.course_id) === Number(course.id)))
+      } catch {
+        if (!cancelled) setHasPurchased(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [course, address])
+
+  // Global Disciples courses: determine pilot purchase eligibility so the Buy
+  // button is only shown to eligible members.
+  useEffect(() => {
+    if (!course || !address || Number(course.porPagar) <= 0) return
+    if (!isGd) {
+      setGdEligible(true)
+      setGdReason(null)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+        const url = `/api/courses/${course.id}/purchase-eligibility?walletAddress=${address}&token=${token}`
+        const res = await axios.get(url)
+        if (cancelled) return
+        setGdEligible(!!res.data?.eligible)
+        setGdReason(res.data?.reason || null)
+      } catch {
+        if (!cancelled) {
+          setGdEligible(false)
+          setGdReason(null)
+        }
+      }
+    })()
+    return () => { cancelled = true }
+  }, [course, address, isGd])
 
   useEffect(() => {
     if (address) {
@@ -178,13 +232,26 @@ export default function Page({ params }: PageProps) {
                   <span className="inline-block text-xs font-semibold uppercase tracking-wide bg-amber-100 text-amber-800 px-2 py-1 rounded">
                     {course.idioma === 'en' ? 'Premium course' : 'Curso premium'}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsCheckoutOpen(true)}
-                    className="inline-block rounded bg-primary px-4 py-1 text-sm font-semibold text-white hover:opacity-90"
-                  >
-                    {course.idioma === 'en' ? 'Buy this course' : 'Comprar este curso'}
-                  </button>
+                  {hasPurchased ? (
+                    <span className="inline-block rounded bg-green-100 px-4 py-1 text-sm font-semibold text-green-800">
+                      {course.idioma === 'en' ? 'Purchased' : 'Comprado'}
+                    </span>
+                  ) : isGd && gdEligible === false ? (
+                    <span className="inline-block rounded bg-gray-100 px-4 py-1 text-sm font-semibold text-gray-600">
+                      {gdReason ||
+                        (course.idioma === 'en'
+                          ? 'Not eligible for this course'
+                          : 'No cumples los requisitos para este curso')}
+                    </span>
+                  ) : isGd && gdEligible === null ? null : (
+                    <button
+                      type="button"
+                      onClick={() => setIsCheckoutOpen(true)}
+                      className="inline-block rounded bg-primary px-4 py-1 text-sm font-semibold text-white hover:opacity-90"
+                    >
+                      {course.idioma === 'en' ? 'Buy this course' : 'Comprar este curso'}
+                    </button>
+                  )}
                 </div>
               )}
               {/* @ts-ignore */}

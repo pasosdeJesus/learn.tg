@@ -101,19 +101,33 @@ export default function Page({ params }: PageProps) {
       let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?filtro[busidioma]=${lang}`
       console.log('[courses] fetching:', url)
       let csrfToken = null
+      let christian = false
 
       if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
         csrfToken = await getCsrfToken()
         url += `&filtro[busconBilletera]=true&walletAddress=${session.address}&token=${csrfToken}`
+
+        // Determine whether the user is Christian so Global Disciples courses
+        // (gdcluster/redgd) are only shown to Christians.
+        try {
+          const profileRes = await axios.get(
+            `/api/profile?walletAddress=${session.address}&token=${csrfToken}`,
+          )
+          christian = Number(profileRes.data?.religion_id) === 2
+        } catch {
+          christian = false
+        }
       }
 
       try {
         const response = await axios.get<Course[]>(url)
         if (response.data) {
           const courseInfo = (Array.isArray(response.data) ? response.data : (response.data as any).proyectosfinancieros || (response.data as any).data || [])
-            // Hide paid courses until payment flow is implemented
-            .filter((c: Course) => c.prefijoRuta !== '/gdcluster' &&
-                   c.prefijoRuta !== '/redgd')
+            // Global Disciples courses are only shown to Christians.
+            .filter((c: Course) =>
+              (c.prefijoRuta !== '/gdcluster' && c.prefijoRuta !== '/redgd') ||
+              christian,
+            )
           console.log(courseInfo)
           setCourses(courseInfo)
 

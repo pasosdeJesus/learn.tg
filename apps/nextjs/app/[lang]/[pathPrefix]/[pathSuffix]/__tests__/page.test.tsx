@@ -110,7 +110,7 @@ describe('Page', () => {
       )
     })
     
-    const expectedUrl = `http://localhost:3000/api/guide?courseId=1&lang=en&prefix=guia&guide=celo-ubi&guideNumber=1`
+    const expectedUrl = `http://localhost:3000/api/guide?courseId=1&lang=en&prefix=guia&guide=celo-ubi&guideNumber=1&walletAddress=0x123&token=mock-csrf-token`
     expect(mockAxios.get).toHaveBeenCalledWith(expectedUrl)
     
     expect(await screen.findByTestId('celo-ubi-button')).toBeInTheDocument()

@@ -144,6 +144,7 @@ describe('Main Page Component', () => {
     ]
     const mockScholarshipData = { amountPerGuide: 5, canSubmit: true, percentageCompleted: null }
     axiosGet
+      .mockResolvedValueOnce({ data: { religion_id: 2 } }) // perfil
       .mockResolvedValueOnce({ data: mockCourses as Course[] }) // cursos
       .mockResolvedValueOnce({ data: { message: '', ...mockScholarshipData } }) // scholarship
     await act(async () => {
@@ -153,10 +154,10 @@ describe('Main Page Component', () => {
         </Suspense>,
       )
     })
-    await waitFor(() => expect(axiosGet).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(axiosGet).toHaveBeenCalledTimes(3))
     const callList: any[] = axiosGet.mock.calls as any
-    const secondCall = callList.length > 1 ? callList[1][0] : ''
-    expect(secondCall).toMatch(/\/api\/scholarship/)
+    const scholarshipCall = callList.length > 2 ? callList[2][0] : ''
+    expect(scholarshipCall).toMatch(/\/api\/scholarship/)
   })
 
   it('tolera errores de API sin colapsar', async () => {
@@ -188,8 +189,10 @@ describe('Main Page Component', () => {
         canSubmit: true,
       },
     ]
-    // Primera llamada: cursos
-    axiosGet.mockResolvedValueOnce({ data: mockCourses as Course[] })
+    // Primera llamada: perfil; segunda: cursos
+    axiosGet
+      .mockResolvedValueOnce({ data: { religion_id: null } })
+      .mockResolvedValueOnce({ data: mockCourses as Course[] })
     await act(async () => {
       renderWithProviders(
         <Suspense fallback={<div />}>
@@ -214,7 +217,9 @@ describe('Main Page Component', () => {
         subtitulo: 'Test',
       },
     ]
-    axiosGet.mockResolvedValueOnce({ data: mockCourses as Course[] })
+    axiosGet
+      .mockResolvedValueOnce({ data: { religion_id: null } }) // perfil
+      .mockResolvedValueOnce({ data: mockCourses as Course[] }) // cursos
     await act(async () => {
       renderWithProviders(
         <Suspense fallback={<div />}>
@@ -224,7 +229,7 @@ describe('Main Page Component', () => {
     })
     await waitFor(() => expect(axiosGet).toHaveBeenCalled())
     const callList2: any[] = axiosGet.mock.calls as any
-    const firstUrl = callList2.length > 0 ? callList2[0][0] : ''
-    expect(firstUrl).toMatch(/filtro\[busidioma\]=en/)
+    const coursesUrl = callList2.length > 1 ? callList2[1][0] : ''
+    expect(coursesUrl).toMatch(/filtro\[busidioma\]=en/)
   })
 })

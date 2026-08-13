@@ -1,18 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { canAccessCourse } from '../course-access'
+import { describe, it, expect, vi } from 'vitest'
+import { canAccessCourse, canPurchaseGDCourse } from '../course-access'
 
-function mockDb(churchRow: any | null) {
-  const mock = {
-    selectFrom: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    executeTakeFirst: vi.fn().mockResolvedValue(churchRow),
-  } as any
-  return mock
-}
-
-// Returns a sequence of rows, one per executeTakeFirst call (course, then
-// enrollment, then church). Lets us simulate the premium + course-rule flow.
+// Returns a sequence of rows, one per executeTakeFirst call. This lets us
+// simulate the ordered Kysely queries inside canAccessCourse (course, then
+// enrollment) and canPurchaseGDCourse (usuario, then church).
 function mockDbSeq(rows: any[]) {
   let i = 0
   const mock = {
@@ -27,154 +18,166 @@ function mockDbSeq(rows: any[]) {
   return mock
 }
 
-describe('canAccessCourse — course without access rules', () => {
-  it('returns access:true for any course without explicit rules', async () => {
-    const db = mockDb(null)
+describe('canAccessCourse', () => {
+  it('grants access to a free course (porPagar 0) without enrollment', async () => {
+    const db = mockDbSeq([{ porPagar: 0 }])
     const result = await canAccessCourse(db, 1, 5)
     expect(result).toEqual({ access: true })
   })
 
-  it('returns access:true even when user has no church', async () => {
-    const db = mockDb(null)
-    const result = await canAccessCourse(db, 1, 99)
+  it('grants access to a free course (porPagar null)', async () => {
+    const db = mockDbSeq([{ porPagar: null }])
+    const result = await canAccessCourse(db, 1, 5)
     expect(result).toEqual({ access: true })
   })
-})
 
-describe('canAccessCourse — premium course (porPagar > 0)', () => {
-  it('denies access when the course is premium and not purchased', async () => {
-    // course query → premium; enrollment query → null
+  it('denies access when premium and not purchased', async () => {
     const db = mockDbSeq([{ porPagar: 1 }, null])
     const result = await canAccessCourse(db, 1, 5)
     expect(result.access).toBe(false)
     expect(result.reason).toContain('premium')
   })
 
-  it('grants access when the premium course is purchased', async () => {
+  it('grants access when premium and purchased', async () => {
     const db = mockDbSeq([{ porPagar: 1 }, { id: 1 }])
-    const result = await canAccessCourse(db, 1, 5)
-    expect(result).toEqual({ access: true })
-  })
-
-  it('grants access to a free course without enrollment', async () => {
-    const db = mockDbSeq([{ porPagar: 0 }])
-    const result = await canAccessCourse(db, 1, 5)
-    expect(result).toEqual({ access: true })
-  })
-
-  it('grants access to a course with NULL porPagar (free)', async () => {
-    const db = mockDbSeq([{ porPagar: null }])
     const result = await canAccessCourse(db, 1, 5)
     expect(result).toEqual({ access: true })
   })
 })
 
-describe('canAccessCourse — Global Disciples (id=10)', () => {
-  const courseId = 10
-  const userId = 42
+const PILOT_COLOMBIA = 170
+const PILOT_SIERRA_LEONE = 694
 
-  it('grants access when all 3 answers match non-Zionist pattern (1=No, 2=Yes, 3=No)', async () => {
-    const db = mockDb({
-      id: 1,
-      pastoral_position_israel_covenant: 'no',
-      pastoral_position_israel_remnant: 'yes',
-      pastoral_position_israel_gaza: 'no',
-    })
-    const result = await canAccessCourse(db, userId, courseId)
+const nonZionistChurch = {
+  id: 1,
+  pastor_id: 99,
+  pastoral_position_israel_covenant: 'no',
+  pastoral_position_israel_remnant: 'yes',
+  pastoral_position_israel_gaza: 'no',
+}
+
+function userRow(overrides: Record<string, any> = {}) {
+  return {
+    religion_id: 2,
+    pais_id: PILOT_COLOMBIA,
+    church_id: 1,
+    ...overrides,
+  }
+}
+
+describe('canPurchaseGDCourse', () => {
+  it('denies when user is not found', async () => {
+    const db = mockDbSeq([null])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+  })
+
+  it('denies non-Christians (religion_id !== 2)', async () => {
+    const db = mockDbSeq([userRow({ religion_id: 3 })])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('Christians')
+  })
+
+  it('denies Christians outside pilot countries', async () => {
+    // United States (not in pilot)
+    const db = mockDbSeq([userRow({ pais_id: 76 })])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('pilot')
+  })
+
+  it('denies Christians with no country set', async () => {
+    const db = mockDbSeq([userRow({ pais_id: null })])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+  })
+
+  it('denies Christians in pilot country without a church', async () => {
+    const db = mockDbSeq([userRow({ church_id: null })])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('church')
+  })
+
+  it('denies when the church record does not exist', async () => {
+    const db = mockDbSeq([userRow(), null])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('church')
+  })
+
+  it('denies when the church has no pastor registered', async () => {
+    const db = mockDbSeq([userRow(), { ...nonZionistChurch, pastor_id: null }])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('pastor')
+  })
+
+  it('denies when the church has no pastor_id column at all', async () => {
+    const { pastor_id, ...noPastor } = nonZionistChurch
+    const db = mockDbSeq([userRow(), noPastor])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('pastor')
+  })
+
+  it('denies when pastor is Zionist (covenant=yes)', async () => {
+    const church = {
+      ...nonZionistChurch,
+      pastoral_position_israel_covenant: 'yes',
+    }
+    const db = mockDbSeq([userRow(), church])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('non-Zionist')
+  })
+
+  it('denies when pastor is Zionist (remnant=no)', async () => {
+    const church = {
+      ...nonZionistChurch,
+      pastoral_position_israel_remnant: 'no',
+    }
+    const db = mockDbSeq([userRow(), church])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('non-Zionist')
+  })
+
+  it('denies when pastor is Zionist (gaza=yes)', async () => {
+    const church = {
+      ...nonZionistChurch,
+      pastoral_position_israel_gaza: 'yes',
+    }
+    const db = mockDbSeq([userRow(), church])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('non-Zionist')
+  })
+
+  it('denies when any answer is null (unknown position)', async () => {
+    const church = {
+      ...nonZionistChurch,
+      pastoral_position_israel_covenant: null,
+    }
+    const db = mockDbSeq([userRow(), church])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toContain('non-Zionist')
+  })
+
+  it('grants a Christian church member in Colombia with a non-Zionist pastor', async () => {
+    const db = mockDbSeq([userRow({ pais_id: PILOT_COLOMBIA }), nonZionistChurch])
+    const result = await canPurchaseGDCourse(db, 42)
     expect(result).toEqual({ access: true })
   })
 
-  it('denies access when user has no church', async () => {
-    const db = mockDb(null)
-    const result = await canAccessCourse(db, userId, courseId)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('requires a registered church')
-  })
-
-  it('denies access with pending reason when any answer is null', async () => {
-    const cases = [
-      { pastoral_position_israel_covenant: null, pastoral_position_israel_remnant: 'yes', pastoral_position_israel_gaza: 'no' },
-      { pastoral_position_israel_covenant: 'no', pastoral_position_israel_remnant: null, pastoral_position_israel_gaza: 'no' },
-      { pastoral_position_israel_covenant: 'no', pastoral_position_israel_remnant: 'yes', pastoral_position_israel_gaza: null },
-      { pastoral_position_israel_covenant: null, pastoral_position_israel_remnant: null, pastoral_position_israel_gaza: null },
-    ]
-    for (const row of cases) {
-      const db = mockDb({ id: 1, ...row })
-      const result = await canAccessCourse(db, userId, courseId)
-      expect(result.access).toBe(false)
-      expect(result.reason).toContain('theological position questions')
-    }
-  })
-
-  it('denies access when any answer is undefined (missing column)', async () => {
-    const db = mockDb({
-      id: 1,
-      pastoral_position_israel_covenant: 'no',
-      pastoral_position_israel_remnant: 'yes',
-      // gaza is undefined
-    })
-    const result = await canAccessCourse(db, userId, courseId)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('theological position questions')
-  })
-
-  it('denies access when question 1 is yes (Zionist)', async () => {
-    const db = mockDb({
-      id: 1,
-      pastoral_position_israel_covenant: 'yes',
-      pastoral_position_israel_remnant: 'yes',
-      pastoral_position_israel_gaza: 'no',
-    })
-    const result = await canAccessCourse(db, userId, courseId)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('non-Zionist')
-  })
-
-  it('denies access when question 2 is no (Zionist)', async () => {
-    const db = mockDb({
-      id: 1,
-      pastoral_position_israel_covenant: 'no',
-      pastoral_position_israel_remnant: 'no',
-      pastoral_position_israel_gaza: 'no',
-    })
-    const result = await canAccessCourse(db, userId, courseId)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('non-Zionist')
-  })
-
-  it('denies access when question 3 is yes (unconditional support)', async () => {
-    const db = mockDb({
-      id: 1,
-      pastoral_position_israel_covenant: 'no',
-      pastoral_position_israel_remnant: 'yes',
-      pastoral_position_israel_gaza: 'yes',
-    })
-    const result = await canAccessCourse(db, userId, courseId)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('non-Zionist')
-  })
-
-  it('denies access when all 3 answers are inverted (full Zionist)', async () => {
-    const db = mockDb({
-      id: 1,
-      pastoral_position_israel_covenant: 'yes',
-      pastoral_position_israel_remnant: 'no',
-      pastoral_position_israel_gaza: 'yes',
-    })
-    const result = await canAccessCourse(db, userId, courseId)
-    expect(result.access).toBe(false)
-  })
-
-  it('denies access when only 2 out of 3 match', async () => {
-    const partials = [
-      { pastoral_position_israel_covenant: 'no', pastoral_position_israel_remnant: 'yes', pastoral_position_israel_gaza: 'yes' },
-      { pastoral_position_israel_covenant: 'no', pastoral_position_israel_remnant: 'no', pastoral_position_israel_gaza: 'no' },
-      { pastoral_position_israel_covenant: 'yes', pastoral_position_israel_remnant: 'yes', pastoral_position_israel_gaza: 'no' },
-    ]
-    for (const row of partials) {
-      const db = mockDb({ id: 1, ...row })
-      const result = await canAccessCourse(db, userId, courseId)
-      expect(result.access).toBe(false)
-    }
+  it('grants a Christian church member in Sierra Leone with a non-Zionist pastor', async () => {
+    const db = mockDbSeq([
+      userRow({ pais_id: PILOT_SIERRA_LEONE }),
+      nonZionistChurch,
+    ])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result).toEqual({ access: true })
   })
 })
