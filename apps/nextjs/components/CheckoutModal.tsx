@@ -11,10 +11,8 @@ import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { erc20Abi, formatDisplay } from '@/lib/donate-utils'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
-import { SLEARN_DISCOUNT } from '@/lib/premium-pricing'
 
 const SLEARN_DECIMALS = 2
-const SLEARN_RATE = 22
 
 interface CheckoutModalProps {
   courseId: number
@@ -30,27 +28,31 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       title: 'Purchase course',
       priceUsdt: 'Price (USDT)',
       priceSlearn: 'Or pay in SLEARN (10% off)',
-      slearnToUse: 'SLEARN to use',
-      usdtToPay: 'USDT to pay',
+      split: 'How would you like to pay?',
+      slearnPct: 'SLEARN',
+      usdtPct: 'USDT',
       yourBalance: 'Balance',
       purchase: 'Purchase',
       cancel: 'Cancel',
       processing: 'Processing...',
       success: 'Course purchased',
-      missingConfig: 'Missing wallet or contract configuration',
+      copyError: 'Copy error',
+      error: 'Error',
     },
     es: {
       title: 'Comprar curso',
       priceUsdt: 'Precio (USDT)',
       priceSlearn: 'O paga en SLEARN (10% descuento)',
-      slearnToUse: 'SLEARN a usar',
-      usdtToPay: 'USDT a pagar',
+      split: '¿Cómo quieres pagar?',
+      slearnPct: 'SLEARN',
+      usdtPct: 'USDT',
       yourBalance: 'Saldo',
       purchase: 'Comprar',
       cancel: 'Cancelar',
       processing: 'Procesando...',
       success: 'Curso comprado',
-      missingConfig: 'Falta configuración de wallet o contrato',
+      copyError: 'Copiar error',
+      error: 'Error',
     },
   }), [lang])
 
@@ -62,7 +64,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
 
   const [priceUSDT, setPriceUSDT] = useState<number | null>(null)
   const [priceSLEARN, setPriceSLEARN] = useState<number | null>(null)
-  const [slearnAmount, setSlearnAmount] = useState('0')
+  const [slearnPct, setSlearnPct] = useState(0) // 0-100, % paid with SLEARN
   const [usdtBalance, setUsdtBalance] = useState(0n)
   const [slearnBalance, setSlearnBalance] = useState(0n)
 
@@ -76,7 +78,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     let cancelled = false
     ;(async () => {
       try {
-        const token = await getCsrfToken()
+        const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
         const url = `/api/courses/premium/price?courseId=${courseId}&walletAddress=${address}&token=${token}`
         const res = await axios.get(url)
         if (cancelled) return
@@ -102,12 +104,12 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     return () => { cancelled = true }
   }, [isOpen, address, publicClient, usdtAddress, slearnAddress, courseId, lang, toast])
 
-  // USDT required for the chosen SLEARN amount (mixed payment formula)
-  const slearnChosen = Number(slearnAmount) || 0
-  const usdtNeeded = priceUSDT != null
-    ? Math.max(0, priceUSDT - slearnChosen / (SLEARN_RATE * (1 - SLEARN_DISCOUNT)))
-    : 0
-  const usdtAmount = usdtNeeded.toFixed(2)
+  // Mixed payment split: slearnPct% with SLEARN, the rest with USDT.
+  //   slearnAmount = priceSLEARN * pct/100  (already has the 10% discount)
+  //   usdtAmount   = priceUSDT * (100-pct)/100
+  const slearnAmount = priceSLEARN != null ? ((priceSLEARN * slearnPct) / 100).toFixed(2) : '0'
+  const usdtAmount = priceUSDT != null ? ((priceUSDT * (100 - slearnPct)) / 100).toFixed(2) : '0'
+  const usdtPct = 100 - slearnPct
 
   const handleSuccess = useCallback(() => {
     toast({ title: t('success') })
@@ -155,16 +157,27 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     onSuccess: handleSuccess,
   })
 
+  const copyError = useCallback(async () => {
+    if (paymentError) {
+      try {
+        await navigator.clipboard.writeText(paymentError)
+        toast({ title: lang === 'es' ? 'Error copiado' : 'Error copied' })
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [paymentError, lang, toast])
+
   if (!isOpen) return null
 
   const busy = paymentState === 'paying' || paymentState === 'confirming'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg text-gray-800">
+      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg text-gray-800">
         <h3 className="text-lg font-bold mb-4">{t('title')}</h3>
 
-        <div className="space-y-3 text-sm">
+        <div className="space-y-4 text-sm">
           <p>
             {t('priceUsdt')}: <strong>{priceUSDT != null ? `$${priceUSDT.toFixed(2)}` : '…'}</strong>
           </p>
@@ -173,27 +186,42 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
           </p>
 
           <div>
-            <label className="block mb-1">
-              {t('slearnToUse')} ({t('yourBalance')}: {formatDisplay(slearnBalance, SLEARN_DECIMALS)} SLEARN)
-            </label>
+            <label className="block mb-1 font-medium">{t('split')}</label>
             <input
-              type="number"
+              type="range"
               min="0"
-              max={priceSLEARN ?? 0}
-              step="0.01"
-              value={slearnAmount}
-              onChange={(e) => setSlearnAmount(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2"
+              max="100"
+              step="1"
+              value={slearnPct}
+              onChange={(e) => setSlearnPct(Number(e.target.value))}
+              className="w-full"
             />
+            <div className="mt-2 grid grid-cols-2 gap-4">
+              <div className="rounded border border-gray-200 p-3">
+                <div className="text-xs text-gray-500">{t('usdtPct')} ({usdtPct}%)</div>
+                <div className="text-base font-semibold">${usdtAmount}</div>
+                <div className="text-xs text-gray-500">{t('yourBalance')}: {formatDisplay(usdtBalance, +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6))} USDT</div>
+              </div>
+              <div className="rounded border border-gray-200 p-3">
+                <div className="text-xs text-gray-500">{t('slearnPct')} ({slearnPct}%)</div>
+                <div className="text-base font-semibold">{slearnAmount} SLEARN</div>
+                <div className="text-xs text-gray-500">{t('yourBalance')}: {formatDisplay(slearnBalance, SLEARN_DECIMALS)} SLEARN</div>
+              </div>
+            </div>
           </div>
-
-          <p>
-            {t('usdtToPay')}: <strong>${usdtAmount}</strong>{' '}
-            ({t('yourBalance')}: {formatDisplay(usdtBalance, +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6))} USDT)
-          </p>
         </div>
 
-        {paymentError && <p className="mt-3 text-sm text-red-600">{paymentError}</p>}
+        {paymentError && (
+          <div className="mt-4 rounded border border-red-300 bg-red-50 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-red-700">{t('error')}</span>
+              <button type="button" onClick={copyError} className="text-xs font-medium text-red-700 underline">
+                {t('copyError')}
+              </button>
+            </div>
+            <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-xs text-red-800">{paymentError}</pre>
+          </div>
+        )}
 
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>{t('cancel')}</Button>

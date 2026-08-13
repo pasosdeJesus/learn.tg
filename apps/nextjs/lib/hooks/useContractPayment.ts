@@ -153,7 +153,7 @@ export function useContractPayment({
       let increment: number | undefined
       if (onBackendCallback) {
         try {
-          const csrfToken = await getCsrfToken()
+          const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
           if (csrfToken && address) {
             const donationAmountUSD = safeParseFloat(amount)
             const slearnDonationAmount = safeParseFloat(slearnAmount)
@@ -171,17 +171,25 @@ export function useContractPayment({
             }
           }
         } catch (e: any) {
-          logger.error('[useContractPayment] Backend verification failed: ' + (e?.message || String(e)), 'Donate')
+          const detail = e?.response?.data?.error || e?.message || String(e)
+          logger.error('[useContractPayment] Backend verification failed: ' + detail, 'Payment')
           const now = new Date().toISOString()
           const info = [
             `Time: ${now}`,
+            `Error: ${detail}`,
             usdtHash && `USDT tx: ${usdtHash}`,
             slearnHash && `SLEARN tx: ${slearnHash}`,
             `Course: ${courseId}`,
           ].filter(Boolean).join('\n')
-          toast({ title: lang === 'es'
-            ? `¡Gracias por tu donación! No pudimos procesarla automáticamente.\n\n${info}\n\nToma un pantallazo y envíalo a soporte.`
-            : `Thank you for your donation! We could not process it automatically.\n\n${info}\n\nPlease screenshot and contact support.`, variant: 'destructive' })
+          setState('error')
+          setError(detail)
+          toast({
+            title: lang === 'es' ? 'No pudimos procesar el pago automáticamente' : 'We could not process the payment automatically',
+            description: info,
+            duration: Infinity,
+            variant: 'destructive',
+          })
+          return
         }
       }
 
