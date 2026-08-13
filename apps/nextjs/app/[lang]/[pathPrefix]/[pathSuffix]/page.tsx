@@ -1,7 +1,7 @@
 'use client'
 
 import axios, { AxiosError } from 'axios'
-import { useSession } from 'next-auth/react'
+import { useSession, getCsrfToken } from 'next-auth/react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
@@ -139,8 +139,14 @@ export default function Page() {
     if (course && guideNumber > 0) {
         const fetchGuideContent = async () => {
             try {
-                const nurl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
+                let nurl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
                     `&lang=${lang}&prefix=${pathPrefix}&guide=${pathSuffix}&guideNumber=${guideNumber}`
+                if (address && session?.address) {
+                    const authToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+                    if (authToken) {
+                        nurl += `&walletAddress=${address}&token=${authToken}`
+                    }
+                }
 
                 const response = await axios.get<{ markdown?: string, message?: string }>(nurl)
                 if (response.data && response.data.markdown) {
@@ -170,6 +176,12 @@ export default function Page() {
                         setGuideHtml('')
                         return
                     }
+                    if (err.response?.status === 401) {
+                        const reason = (err.response.data as any)?.error || 'Connect your wallet to access this premium course.'
+                        setPurchaseRequired(reason)
+                        setGuideHtml('')
+                        return
+                    }
                     console.error("Error fetching guide content:", err)
                     setGuideHtml(`<p>Error: ${err.message}</p>`)
                 } else {
@@ -180,7 +192,7 @@ export default function Page() {
         }
         fetchGuideContent()
     }
-  }, [course, guideNumber, lang, pathPrefix, pathSuffix, htmlDeMd])
+  }, [course, guideNumber, lang, pathPrefix, pathSuffix, htmlDeMd, address, session?.address])
 
 
   if (loading) {
