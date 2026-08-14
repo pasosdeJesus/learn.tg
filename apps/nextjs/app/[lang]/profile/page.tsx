@@ -884,14 +884,15 @@ export default function ProfileForm({ params }: PageProps) {
               </div>
             </div>
 
+            {profile.religion === 2 && (
             <div className="space-y-2 mt-4">
               <label className="block text-sm font-medium text-gray-700">
                 {lang === 'es' ? 'Posición sobre Israel y Gaza' : 'Position on Israel and Gaza'}
               </label>
               <p className="text-xs text-gray-600">
                 {lang === 'es'
-                  ? 'Teniendo en cuenta que la CIJ ha señalado un "riesgo plausible de genocidio" en Gaza, la CPI ha emitido órdenes de arresto por crímenes de guerra, y la Comisión Independiente de Investigación de la ONU ha concluido que Israel ha cometido actos de genocidio en Gaza (incluyendo el ataque deliberado a niños), ¿cree que los cristianos debemos respaldar incondicionalmente al Estado Moderno de Israel?'
-                  : 'Considering the ICJ has found a "plausible risk of genocide" in Gaza, the ICC has issued arrest warrants for war crimes, and the UN Independent Commission of Inquiry has concluded that Israel has committed acts of genocide in Gaza (including deliberate targeting of children), do you believe Christians should unconditionally support the Modern State of Israel?'}
+                  ? 'Teniendo en cuenta que la CIJ ha señalado un "riesgo plausible de genocidio" en Gaza, la CPI ha emitido órdenes de arresto por crímenes de guerra, y la Comisión Independiente de Investigación de la ONU ha concluido que Israel ha cometido actos de genocidio en Gaza (incluyendo el ataque deliberado a niños), ¿respaldas incondicionalmente al Estado Moderno de Israel?'
+                  : 'Considering the ICJ has found a "plausible risk of genocide" in Gaza, the ICC has issued arrest warrants for war crimes, and the UN Independent Commission of Inquiry has concluded that Israel has committed acts of genocide in Gaza (including deliberate targeting of children), do you unconditionally support the Modern State of Israel?'}
               </p>
               <div className="flex gap-4">
                 <label className="flex items-center gap-1 text-sm">
@@ -906,6 +907,7 @@ export default function ProfileForm({ params }: PageProps) {
                 </label>
               </div>
             </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">

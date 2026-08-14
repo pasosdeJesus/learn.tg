@@ -146,11 +146,11 @@ describe("LearnTGVaultsV5", function () {
         ZERO_ADDR, 0, 0, ZERO_ADDR, 0, 0
       );
 
-      // Second call should emit AlreadyPaid, not pay again
+      // Second call within cooldown reverts (prevents double-pay)
       await expect(vault.payScholarship(
         COURSE_ID, GUIDE_ID, student.address, true, PROFILE_SCORE,
         ZERO_ADDR, 0, 0, ZERO_ADDR, 0, 0
-      )).to.emit(vault, "ScholarshipAlreadyPaid");
+      )).to.be.revertedWith("In cooldown");
 
       expect(await vault.guidePaidUSDT(COURSE_ID, GUIDE_ID, student.address)).to.equal(AMOUNT_PER_GUIDE_USDT);
     });

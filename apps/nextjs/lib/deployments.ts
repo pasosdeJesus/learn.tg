@@ -1,21 +1,10 @@
 'use server'
 
-import * as fs from 'fs'
 import * as path from 'path'
-import { getContractAddress } from '@pasosdejesus/m/blockchain/deployments'
+import { getContractAddress, readDeployment } from '@pasosdejesus/m/blockchain/deployments'
 
 function getNetwork(): string {
   return process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'celo' : 'celoSepolia'
-}
-
-function readAddr(relativePath: string): `0x${string}` {
-  const net = getNetwork()
-  const deploymentsDir = path.join(process.cwd(), '..', 'hardhat', 'deployments')
-  const file = path.join(deploymentsDir, ...relativePath.split('/'), `${net}.json`)
-  if (!fs.existsSync(file)) {
-    throw new Error(`Deployment not found: ${file}`)
-  }
-  return JSON.parse(fs.readFileSync(file, 'utf8')).address as `0x${string}`
 }
 
 function getDeploymentsDir(): string {
@@ -34,7 +23,9 @@ export async function getSlearnAddress(): Promise<`0x${string}`> {
   const { SLEARN_ADDRESSES } = await import('@pasosdejesus/mpdj/blockchain/ecosystem-addresses')
   const addr = SLEARN_ADDRESSES[network]
   if (addr) return addr as `0x${string}`
-  return readAddr('SLEARN')
+  const deployment = readDeployment(network, getDeploymentsDir(), { contract: 'SLEARN' })
+  if (!deployment?.address) throw new Error('SLEARN not deployed — address not found')
+  return deployment.address as `0x${string}`
 }
 
 export async function getV4Address(): Promise<`0x${string}`> {

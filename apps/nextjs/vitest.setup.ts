@@ -85,6 +85,14 @@ vi.mock('kysely', () => ({
 }))
 vi.mock('pg', () => ({ Pool: mockPgPool }))
 
+// Mock deployment readers (uses fs/path, not available in jsdom).
+vi.mock('@pasosdejesus/m/blockchain/deployments', () => ({
+  readDeployment: vi.fn().mockReturnValue(null),
+  getContractAddress: vi.fn().mockReturnValue(null),
+  getCeloCredentialsAddress: vi.fn().mockReturnValue(null),
+  getBaseCredentialsAddress: vi.fn().mockReturnValue(null),
+}))
+
 // Mock @pasosdejesus/m shadcn components to avoid React version mismatch
 vi.mock('@pasosdejesus/m/shadcn-components/ui/button', () => ({
   Button: ({ children, onClick, type, className, size, variant, ...props }: any) =>
