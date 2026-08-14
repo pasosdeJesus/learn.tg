@@ -28,8 +28,12 @@ describe('metrics-server', () => {
     // Reset mocks to default behavior
     libDbMocks.mockExecute.mockResolvedValue(undefined)
 
-    // Create fresh mock DB instance
-    mockDb = new libDbMocks.MockKysely()
+    // Create fresh mock DB instance wired to libDbMocks.mockExecute so that
+    // `.execute()` calls are observable and controllable.
+    mockDb = new libDbMocks.MockKysely({
+      execute: libDbMocks.mockExecute,
+      executeTakeFirst: libDbMocks.mockExecuteTakeFirst,
+    })
     mockInsertIntoSpy = vi.spyOn(mockDb, 'insertInto').mockReturnValue(mockDb)
     mockValuesSpy = vi.spyOn(mockDb, 'values').mockReturnValue(mockDb)
     mockGetDb = vi.fn(() => mockDb)

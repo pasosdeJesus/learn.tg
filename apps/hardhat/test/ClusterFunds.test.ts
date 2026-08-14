@@ -5,7 +5,7 @@ const { ethers } = hre
 describe('ClusterFunds', () => {
   let contract: any
   let mockUSDT: any
-  let mockSLEARN: any
+  let slearn: any
   let owner: any
   let pdjTreasury: any
   let donor: any
@@ -24,38 +24,48 @@ describe('ClusterFunds', () => {
     clusterB = signers[4]
     clusterC = signers[5]
 
+    // USDT (MockUSDT, 6 decimals)
     const USDTFactory = await ethers.getContractFactory('MockUSDT')
     mockUSDT = await USDTFactory.deploy(owner.address)
     await mockUSDT.waitForDeployment()
 
-    mockSLEARN = await USDTFactory.deploy(owner.address)
-    await mockSLEARN.waitForDeployment()
+    // SLEARN (real contract, 2 decimals) — implements mintAndReserve used by
+    // ClusterFunds._distributeFees for donor cashback.
+    const SLEARNFactory = await ethers.getContractFactory('SLEARN')
+    slearn = await SLEARNFactory.deploy(await mockUSDT.getAddress())
+    await slearn.waitForDeployment()
 
+    // mintAndReserve requires a hot reserve (learnTgReserve).
+    await slearn.setLearnTgReserve(owner.address)
+
+    // ClusterFunds
     const factory = await ethers.getContractFactory('ClusterFunds')
     contract = await factory.deploy(
       await mockUSDT.getAddress(),
-      await mockSLEARN.getAddress(),
+      await slearn.getAddress(),
       pdjTreasury.address,
       owner.address,
     )
     await contract.waitForDeployment()
 
+    // Grant MINTER_ROLE: ClusterFunds (mintAndReserve) and owner (mint for donor).
+    // grantRole also auto-authorizes the holder for SLEARN transfers.
+    const MINTER_ROLE = await slearn.MINTER_ROLE()
+    await slearn.grantRole(MINTER_ROLE, await contract.getAddress())
+    await slearn.grantRole(MINTER_ROLE, owner.address)
+
     const usdtAmt = ethers.parseUnits('10000', 6)
-    const slearnAmt = ethers.parseUnits('10000', 6)
+    const slearnAmt = ethers.parseUnits('10000', 2)
     await mockUSDT.mint(donor.address, usdtAmt)
-    await mockSLEARN.mint(donor.address, slearnAmt)
+    await slearn.mint(donor.address, slearnAmt)
 
     await mockUSDT.connect(donor).approve(await contract.getAddress(), ethers.MaxUint256)
-    await mockSLEARN.connect(donor).approve(await contract.getAddress(), ethers.MaxUint256)
-
-    // MockSLEARN has mint() via Ownable — simulate mintAndReserve behavior
-    // For testing, we approve SLEARN to spend contract's USDT and mock the mint
-    // (MockSLEARN doesn't have mintAndReserve; we test cashback transfers directly)
+    await slearn.connect(donor).approve(await contract.getAddress(), ethers.MaxUint256)
   })
 
   it('deploys with correct defaults (10% pdJ, 10% cashback)', async () => {
     expect((await contract.usdtToken()).toLowerCase()).to.equal((await mockUSDT.getAddress()).toLowerCase())
-    expect((await contract.slearnToken()).toLowerCase()).to.equal((await mockSLEARN.getAddress()).toLowerCase())
+    expect((await contract.slearnToken()).toLowerCase()).to.equal((await slearn.getAddress()).toLowerCase())
     expect(await contract.donorCashbackPct()).to.equal(10)
     const cfg = await contract.getFeeConfig()
     expect(cfg.wallets.length).to.equal(1)
@@ -79,35 +89,35 @@ describe('ClusterFunds', () => {
 
   it('processDonation distributes fees + cashback correctly', async () => {
     const usdtAmount = ethers.parseUnits('100', 6)
-    const slearnAmount = ethers.parseUnits('200', 6)
+    const slearnAmount = ethers.parseUnits('200', 2)
     const txHash = ethers.id('don-1')
 
     await mockUSDT.connect(donor).transfer(await contract.getAddress(), usdtAmount)
-    await mockSLEARN.connect(donor).transfer(await contract.getAddress(), slearnAmount)
+    await slearn.connect(donor).transfer(await contract.getAddress(), slearnAmount)
 
     const pdjUsdtBefore = await mockUSDT.balanceOf(pdjTreasury.address)
-    const pdjSlearnBefore = await mockSLEARN.balanceOf(pdjTreasury.address)
-    const donorSlearnBefore = await mockSLEARN.balanceOf(donor.address)
+    const pdjSlearnBefore = await slearn.balanceOf(pdjTreasury.address)
+    const donorSlearnBefore = await slearn.balanceOf(donor.address)
 
     await contract.processDonation(txHash, clusterA.address, donor.address, usdtAmount, slearnAmount)
 
     // 10% pdJ
     const pdjUsdt = await mockUSDT.balanceOf(pdjTreasury.address) - pdjUsdtBefore
-    const pdjSlearn = await mockSLEARN.balanceOf(pdjTreasury.address) - pdjSlearnBefore
+    const pdjSlearn = await slearn.balanceOf(pdjTreasury.address) - pdjSlearnBefore
     expect(pdjUsdt).to.equal(usdtAmount * 10n / 100n)
     expect(pdjSlearn).to.equal(slearnAmount * 10n / 100n)
 
-    // 10% SLEARN cashback to donor
-    const donorSlearn = await mockSLEARN.balanceOf(donor.address) - donorSlearnBefore
-    expect(donorSlearn).to.equal(slearnAmount * 10n / 100n)
+    // Donor SLEARN cashback = 10% of SLEARN returned directly + SLEARN minted
+    // from the 10% USDT cashback via mintAndReserve.
+    const cashbackUsdt = usdtAmount * 10n / 100n
+    const mintedSlearn = await slearn.usdtToSLEARN(cashbackUsdt)
+    const donorSlearn = await slearn.balanceOf(donor.address) - donorSlearnBefore
+    expect(donorSlearn).to.equal(slearnAmount * 10n / 100n + mintedSlearn)
 
     // 80% cluster
     const bal = await contract.getClusterBalance(clusterA.address)
     expect(bal[0]).to.equal(usdtAmount * 80n / 100n)
     expect(bal[1]).to.equal(slearnAmount * 80n / 100n)
-
-    // NOTE: USDT cashback via mintAndReserve is tested separately
-    // (MockSLEARN doesn't implement mintAndReserve)
   })
 
   it('processCountryDonation works', async () => {

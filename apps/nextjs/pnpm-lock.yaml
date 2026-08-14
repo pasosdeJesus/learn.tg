@@ -206,11 +206,11 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1
       '@pasosdejesus/m':
-        specifier: ^0.16.1
-        version: 0.16.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
+        specifier: ^0.17.2
+        version: 0.17.2(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
       '@pasosdejesus/mpdj':
         specifier: ^0.1.1
-        version: 0.1.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(vitest@2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0))
+        version: 0.1.1(vitest@2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0))
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0
@@ -2127,6 +2127,10 @@ packages:
 
   '@pasosdejesus/m@0.16.1':
     resolution: {integrity: sha512-lX2FTP/zpiB/BLkRQZKfpF/FMBQXd3ejmLMw2nygKv2e3yrD0pO2oakvImZA0x+yGIikzf7eD2M+h2PAE+witQ==}
+    hasBin: true
+
+  '@pasosdejesus/m@0.17.2':
+    resolution: {integrity: sha512-puxNe2FfmX5moXSQoNIKxsrq+yEUP/BpPYElhpKUQrxFLrKwHuANXErkzEt8Z44S0RCvJIVKXMRc8Ci7zm4g9w==}
     hasBin: true
 
   '@pasosdejesus/mpdj@0.1.1':
@@ -5539,8 +5543,8 @@ packages:
   hmac-drbg@1.0.1:
     resolution: {integrity: sha512-Tti3gMqLdZfhOQY1Mzf/AanLiqh1WTiJgEj26ZuYQ9fbkLomzGchCws4FyrSd4VkpBfiNhaE1On+lOz894jvXg==}
 
-  hono@4.13.1:
-    resolution: {integrity: sha512-kdJoFVv2xmayw6cY09H7AbMJMt8Jn5jdlEdXsP7AGBdF2DIptVlKlOLKXP41yPip4/a3yQPv9gVcJYI8YY04dw==}
+  hono@4.13.2:
+    resolution: {integrity: sha512-JydRilDRkYBQMt9qR9U92mXxmbGqsqSn/IKOrh4e7/gEbn+0zSr8igTu0obwJoNGN4sez28DIql7FBHWydoJpA==}
     engines: {node: '>=16.9.0'}
 
   hoopy@0.1.4:
@@ -7717,8 +7721,8 @@ packages:
     resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
 
-  styled-components@6.5.1:
-    resolution: {integrity: sha512-6AsQEXcG7QhtdzjwJ4s5Amx5R9veYH9AP3+U6nF2BAMU0i1iM3cAXKJXuAKZCdv3Y2ntVMcL44cPx4cIDxgYFg==}
+  styled-components@6.5.2:
+    resolution: {integrity: sha512-49qBCjwsBmt08/UXIr3KYa1wdntVkhU5cxvQ4uqytl/fITQC85B0PI5EN1GWetRYOzyzcgxqukiitqFRemZ7pg==}
     engines: {node: '>= 16'}
     peerDependencies:
       css-to-react-native: '>= 3.2.0'
@@ -8733,8 +8737,8 @@ packages:
       use-sync-external-store:
         optional: true
 
-  zustand@5.0.14:
-    resolution: {integrity: sha512-/8tAspM5LMPr28b3fwLYrtdj77ECpfZviaP75CMTnwO8ISyaE4GDIG/9rDDYq/cH9D2Xw2A2RXglLInmVBQB/g==}
+  zustand@5.0.15:
+    resolution: {integrity: sha512-MpSEjRiBkA9crSYeOUH32rJC7SVqAbm0Fqcqge/bUi2PPoLcBWKOsG+C8mevmpr8TwXHBVkChbbJiyvkE+i/3A==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
       '@types/react': '>=18.0.0'
@@ -10873,14 +10877,26 @@ snapshots:
       - supports-color
       - viem
 
-  '@pasosdejesus/mpdj@0.1.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(vitest@2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0))':
+  '@pasosdejesus/m@0.17.2(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))':
     dependencies:
-      '@pasosdejesus/m': 0.16.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
-      vitest: 2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0)
+      dotenv: 17.4.2
+      execa: 9.6.1
+      glob: 13.0.6
+      picocolors: 1.1.1
+    optionalDependencies:
+      '@pasosdejesus/contract-test': 0.1.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
+      '@pasosdejesus/edr': 0.1.1
     transitivePeerDependencies:
       - ethers
       - supports-color
       - viem
+
+  '@pasosdejesus/mpdj@0.1.1(vitest@2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0))':
+    dependencies:
+      '@pasosdejesus/m': 0.16.1(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
+      vitest: 2.1.9(@types/node@24.12.4)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.48.0)
+    transitivePeerDependencies:
+      - supports-color
 
   '@paulmillr/qr@0.2.1': {}
 
@@ -11986,7 +12002,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       snarkjs: 0.7.6
-      styled-components: 6.5.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      styled-components: 6.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       uuid: 9.0.1
       valid-url: 1.0.9
       web-worker: 1.2.0
@@ -15672,7 +15688,7 @@ snapshots:
       minimalistic-assert: 1.0.1
       minimalistic-crypto-utils: 1.0.1
 
-  hono@4.13.1: {}
+  hono@4.13.2: {}
 
   hoopy@0.1.4: {}
 
@@ -17347,13 +17363,13 @@ snapshots:
   porto@0.2.35(@tanstack/react-query@5.100.14(react@19.2.6))(@types/react@19.2.15)(@wagmi/core@2.22.1(@tanstack/query-core@5.100.14)(@types/react@19.2.15)(react@19.2.6)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.6))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3)))(react@19.2.6)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.6))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(wagmi@2.19.5(@tanstack/query-core@5.100.14)(@tanstack/react-query@5.100.14(react@19.2.6))(@types/react@19.2.15)(bufferutil@4.1.0)(preact-render-to-string@5.2.6)(react@19.2.6)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(zod@4.4.3)):
     dependencies:
       '@wagmi/core': 2.22.1(@tanstack/query-core@5.100.14)(@types/react@19.2.15)(react@19.2.6)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.6))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
-      hono: 4.13.1
+      hono: 4.13.2
       idb-keyval: 6.3.0
       mipd: 0.0.7(typescript@5.9.3)
       ox: 0.9.17(typescript@5.9.3)(zod@4.4.3)
       viem: 2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3)
       zod: 4.4.3
-      zustand: 5.0.14(@types/react@19.2.15)(react@19.2.6)(use-sync-external-store@1.4.0(react@19.2.6))
+      zustand: 5.0.15(@types/react@19.2.15)(react@19.2.6)(use-sync-external-store@1.4.0(react@19.2.6))
     optionalDependencies:
       '@tanstack/react-query': 5.100.14(react@19.2.6)
       react: 19.2.6
@@ -18263,7 +18279,7 @@ snapshots:
 
   strip-json-comments@5.0.3: {}
 
-  styled-components@6.5.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  styled-components@6.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@emotion/is-prop-valid': 1.4.0
       csstype: 3.2.3
@@ -19386,7 +19402,7 @@ snapshots:
       react: 19.2.6
       use-sync-external-store: 1.4.0(react@19.2.6)
 
-  zustand@5.0.14(@types/react@19.2.15)(react@19.2.6)(use-sync-external-store@1.4.0(react@19.2.6)):
+  zustand@5.0.15(@types/react@19.2.15)(react@19.2.6)(use-sync-external-store@1.4.0(react@19.2.6)):
     optionalDependencies:
       '@types/react': 19.2.15
       react: 19.2.6

@@ -48,19 +48,12 @@ describe('canAccessCourse', () => {
 const PILOT_COLOMBIA = 170
 const PILOT_SIERRA_LEONE = 694
 
-const nonZionistChurch = {
-  id: 1,
-  pastor_id: 99,
-  pastoral_position_israel_covenant: 'no',
-  pastoral_position_israel_remnant: 'yes',
-  pastoral_position_israel_gaza: 'no',
-}
-
 function userRow(overrides: Record<string, any> = {}) {
   return {
     religion_id: 2,
     pais_id: PILOT_COLOMBIA,
     church_id: 1,
+    position_israel_gaza: 'no',
     ...overrides,
   }
 }
@@ -100,83 +93,28 @@ describe('canPurchaseGDCourse', () => {
     expect(result.reason).toContain('church')
   })
 
-  it('denies when the church record does not exist', async () => {
-    const db = mockDbSeq([userRow(), null])
-    const result = await canPurchaseGDCourse(db, 42)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('church')
-  })
-
-  it('denies when the church has no pastor registered', async () => {
-    const db = mockDbSeq([userRow(), { ...nonZionistChurch, pastor_id: null }])
-    const result = await canPurchaseGDCourse(db, 42)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('pastor')
-  })
-
-  it('denies when the church has no pastor_id column at all', async () => {
-    const { pastor_id, ...noPastor } = nonZionistChurch
-    const db = mockDbSeq([userRow(), noPastor])
-    const result = await canPurchaseGDCourse(db, 42)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('pastor')
-  })
-
-  it('denies when pastor is Zionist (covenant=yes)', async () => {
-    const church = {
-      ...nonZionistChurch,
-      pastoral_position_israel_covenant: 'yes',
-    }
-    const db = mockDbSeq([userRow(), church])
+  it('denies when the Gaza answer is yes (supports Israel in the genocide)', async () => {
+    const db = mockDbSeq([userRow({ position_israel_gaza: 'yes' })])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result.access).toBe(false)
     expect(result.reason).toContain('non-Zionist')
   })
 
-  it('denies when pastor is Zionist (remnant=no)', async () => {
-    const church = {
-      ...nonZionistChurch,
-      pastoral_position_israel_remnant: 'no',
-    }
-    const db = mockDbSeq([userRow(), church])
+  it('denies when the Gaza answer is null (unknown position)', async () => {
+    const db = mockDbSeq([userRow({ position_israel_gaza: null })])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result.access).toBe(false)
     expect(result.reason).toContain('non-Zionist')
   })
 
-  it('denies when pastor is Zionist (gaza=yes)', async () => {
-    const church = {
-      ...nonZionistChurch,
-      pastoral_position_israel_gaza: 'yes',
-    }
-    const db = mockDbSeq([userRow(), church])
-    const result = await canPurchaseGDCourse(db, 42)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('non-Zionist')
-  })
-
-  it('denies when any answer is null (unknown position)', async () => {
-    const church = {
-      ...nonZionistChurch,
-      pastoral_position_israel_covenant: null,
-    }
-    const db = mockDbSeq([userRow(), church])
-    const result = await canPurchaseGDCourse(db, 42)
-    expect(result.access).toBe(false)
-    expect(result.reason).toContain('non-Zionist')
-  })
-
-  it('grants a Christian church member in Colombia with a non-Zionist pastor', async () => {
-    const db = mockDbSeq([userRow({ pais_id: PILOT_COLOMBIA }), nonZionistChurch])
+  it('grants a Christian church member in Colombia who answered no to the Gaza question', async () => {
+    const db = mockDbSeq([userRow({ pais_id: PILOT_COLOMBIA, position_israel_gaza: 'no' })])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result).toEqual({ access: true })
   })
 
-  it('grants a Christian church member in Sierra Leone with a non-Zionist pastor', async () => {
-    const db = mockDbSeq([
-      userRow({ pais_id: PILOT_SIERRA_LEONE }),
-      nonZionistChurch,
-    ])
+  it('grants a Christian church member in Sierra Leone who answered no to the Gaza question', async () => {
+    const db = mockDbSeq([userRow({ pais_id: PILOT_SIERRA_LEONE, position_israel_gaza: 'no' })])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result).toEqual({ access: true })
   })

@@ -61,11 +61,10 @@ export async function canAccessCourse(
  * A user can buy the GD course only if they are:
  *   - a Christian (`usuario.religion_id = 2`), and
  *   - in a pilot country (`usuario.pais_id` in Colombia or Sierra Leone), and
- *   - a member of a church (`usuario.church_id`) whose pastor is registered
- *     (`church.pastor_id` set) and declared non-Zionist
- *     (`pastoral_position_israel_covenant='no'`,
- *      `pastoral_position_israel_remnant='yes'`,
- *      `pastoral_position_israel_gaza='no'`).
+ *   - a member of a church (`usuario.church_id` set), and
+ *   - non-Zionist: answered `no` to the single Gaza question in their own
+ *     profile (`usuario.position_israel_gaza='no'`, i.e. does NOT support
+ *     Israel in the Gaza genocide).
  */
 export async function canPurchaseGDCourse(
   db: Kysely<DB>,
@@ -73,7 +72,7 @@ export async function canPurchaseGDCourse(
 ): Promise<AccessResult> {
   const user = await db
     .selectFrom('usuario')
-    .select(['religion_id', 'pais_id', 'church_id'])
+    .select(['religion_id', 'pais_id', 'church_id', 'position_israel_gaza'])
     .where('id', '=', userId)
     .executeTakeFirst()
 
@@ -95,42 +94,10 @@ export async function canPurchaseGDCourse(
     }
   }
 
-  const church = await db
-    .selectFrom('church')
-    .select([
-      'id',
-      'pastor_id',
-      'pastoral_position_israel_covenant',
-      'pastoral_position_israel_remnant',
-      'pastoral_position_israel_gaza',
-    ])
-    .where('id', '=', user.church_id)
-    .where('deleted_at', 'is', null)
-    .executeTakeFirst()
-
-  if (!church) {
+  if (user.position_israel_gaza !== 'no') {
     return {
       access: false,
-      reason: 'This course requires belonging to a church.',
-    }
-  }
-
-  if (church.pastor_id === null || church.pastor_id === undefined) {
-    return {
-      access: false,
-      reason: 'This course requires a church whose pastor is registered.',
-    }
-  }
-
-  const isNonZionist =
-    church.pastoral_position_israel_covenant === 'no' &&
-    church.pastoral_position_israel_remnant === 'yes' &&
-    church.pastoral_position_israel_gaza === 'no'
-
-  if (!isNonZionist) {
-    return {
-      access: false,
-      reason: 'This course is restricted to churches whose pastor is non-Zionist.',
+      reason: 'This course is restricted to non-Zionists (those who answered no to supporting Israel in the Gaza genocide).',
     }
   }
 

@@ -1439,6 +1439,7 @@ export interface Usuario {
   pastor_whatsapp: string | null;
   place_of_worship: string | null;
   place_of_worship_location: string | null;
+  position_israel_gaza: string | null;
   profilescore: number | null;
   proposed_date_of_interview: Timestamp | null;
   religion_id: number | null;

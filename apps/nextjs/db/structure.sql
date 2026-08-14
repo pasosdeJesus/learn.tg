@@ -5280,6 +5280,7 @@ CREATE TABLE public.usuario (
     pastor_name character varying(100),
     pastor_whatsapp character varying(20),
     verified_place_of_worship_location character varying,
+    position_israel_gaza character varying(3),
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );

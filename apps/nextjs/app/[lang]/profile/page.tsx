@@ -49,6 +49,7 @@ interface UserProfile {
   phone: string
   picture: string
   place_of_worship_location: string | null
+  position_israel_gaza: string | null
   profilescore: number | null
   proposed_date_of_interview: string | null
   department_timezone: string | null
@@ -104,6 +105,7 @@ export default function ProfileForm({ params }: PageProps) {
     phone: '',
     picture: '',
     place_of_worship_location: null,
+    position_israel_gaza: null,
     profilescore: null,
     proposed_date_of_interview: null,
     department_timezone: null,
@@ -322,6 +324,7 @@ export default function ProfileForm({ params }: PageProps) {
           phone: '',
           picture: rUser.foto_file_name,
           place_of_worship_location: rUser.place_of_worship_location || null,
+          position_israel_gaza: rUser.position_israel_gaza || null,
           profilescore: rUser.profilescore,
           proposed_date_of_interview: rUser.proposed_date_of_interview || null,
           department_timezone: rUser.department_timezone || null,
@@ -420,6 +423,7 @@ export default function ProfileForm({ params }: PageProps) {
         city_id: cityId,
         pastor_name: pastorName || null,
         pastor_whatsapp: pastorWhatsApp || null,
+        position_israel_gaza: profile.position_israel_gaza || null,
       }
       const url = `/api/profile?walletAddress=${session!.address}&token=${csrfToken}`
       logger.info(`Patching ${url}`, 'Profile')
@@ -508,7 +512,7 @@ export default function ProfileForm({ params }: PageProps) {
       [field]: field === 'religion' || field === 'country' ? Number(value) : value,
     }))
     // Auto-save with debounce: 800ms for text, immediate for selects
-    const isSelect = field === 'religion' || field === 'country' || field === 'church_relationship'
+    const isSelect = field === 'religion' || field === 'country' || field === 'church_relationship' || field === 'position_israel_gaza'
     const delay = isSelect ? 0 : 800
 
     // When country changes, clear location-dependent fields
@@ -601,6 +605,7 @@ export default function ProfileForm({ params }: PageProps) {
       whatsapp: 'whatsapp', telegram: 'telegram',
       religion: 'religion_id', country: 'pais_id',
       church_relationship: 'church_relationship',
+      position_israel_gaza: 'position_israel_gaza',
       city_id: 'city_id',
       place_of_worship: 'place_of_worship',
       place_of_worship_location: 'place_of_worship_location',
@@ -876,6 +881,29 @@ export default function ProfileForm({ params }: PageProps) {
                   {t('religion')}
                 </label>
                 <ReligionSelect value={profile.religion} onChange={(v) => handleChange('religion', String(v || ''))} lang={lang} />
+              </div>
+            </div>
+
+            <div className="space-y-2 mt-4">
+              <label className="block text-sm font-medium text-gray-700">
+                {lang === 'es' ? 'Posición sobre Israel y Gaza' : 'Position on Israel and Gaza'}
+              </label>
+              <p className="text-xs text-gray-600">
+                {lang === 'es'
+                  ? 'Teniendo en cuenta que la CIJ ha señalado un "riesgo plausible de genocidio" en Gaza, la CPI ha emitido órdenes de arresto por crímenes de guerra, y la Comisión Independiente de Investigación de la ONU ha concluido que Israel ha cometido actos de genocidio en Gaza (incluyendo el ataque deliberado a niños), ¿cree que los cristianos debemos respaldar incondicionalmente al Estado Moderno de Israel?'
+                  : 'Considering the ICJ has found a "plausible risk of genocide" in Gaza, the ICC has issued arrest warrants for war crimes, and the UN Independent Commission of Inquiry has concluded that Israel has committed acts of genocide in Gaza (including deliberate targeting of children), do you believe Christians should unconditionally support the Modern State of Israel?'}
+              </p>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-1 text-sm">
+                  <input type="radio" name="position_israel_gaza" checked={profile.position_israel_gaza === 'yes'}
+                    onChange={() => handleChange('position_israel_gaza', 'yes')} className="rounded" />
+                  {lang === 'es' ? 'Sí' : 'Yes'}
+                </label>
+                <label className="flex items-center gap-1 text-sm">
+                  <input type="radio" name="position_israel_gaza" checked={profile.position_israel_gaza === 'no'}
+                    onChange={() => handleChange('position_israel_gaza', 'no')} className="rounded" />
+                  No
+                </label>
               </div>
             </div>
 
