@@ -206,11 +206,11 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1
       '@pasosdejesus/m':
-        specifier: ^0.17.2
-        version: 0.17.2(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
+        specifier: ^0.17.3
+        version: 0.17.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
       '@pasosdejesus/mpdj':
-        specifier: ^0.1.1
-        version: 0.1.1(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(vitest@2.1.9(@types/node@24.13.3)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.50.0))
+        specifier: ^0.2.1
+        version: 0.2.1(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(vitest@2.1.9(@types/node@24.13.3)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.50.0))
       '@tailwindcss/postcss':
         specifier: ^4.3.3
         version: 4.3.3
@@ -2130,12 +2130,12 @@ packages:
     resolution: {integrity: sha512-lX2FTP/zpiB/BLkRQZKfpF/FMBQXd3ejmLMw2nygKv2e3yrD0pO2oakvImZA0x+yGIikzf7eD2M+h2PAE+witQ==}
     hasBin: true
 
-  '@pasosdejesus/m@0.17.2':
-    resolution: {integrity: sha512-puxNe2FfmX5moXSQoNIKxsrq+yEUP/BpPYElhpKUQrxFLrKwHuANXErkzEt8Z44S0RCvJIVKXMRc8Ci7zm4g9w==}
+  '@pasosdejesus/m@0.17.3':
+    resolution: {integrity: sha512-LL9rAn+LkY6mX64IwevZVm5f+1HGdcYd2Umr8YbYKUrlrYxSWANm8A17lEYxAC0O5eUQHUhgL2kyovq3uazCYg==}
     hasBin: true
 
-  '@pasosdejesus/mpdj@0.1.1':
-    resolution: {integrity: sha512-lzIlgmz0WAra9iD/IC9YtGpJEomX3jKbSgPE+hhKy/Lc+HZBY/YvF6GzJc9TFsjMv4EUXAc3BJnvJ5AqcllMoQ==}
+  '@pasosdejesus/mpdj@0.2.1':
+    resolution: {integrity: sha512-IASPTktL1+6/sI5azEQG+BEYIGRxEiuWblez+Ea0EWH2AwvIh+aNBH8jss91kVm3/PNnMje2C3wfPCNhyxBFhA==}
     peerDependencies:
       vitest: ^2.1.9
 
@@ -10259,7 +10259,7 @@ snapshots:
   '@iden3/binfileutils@0.0.11':
     dependencies:
       fastfile: 0.0.20
-      ffjavascript: 0.2.56
+      ffjavascript: 0.2.63
 
   '@iden3/binfileutils@0.0.12':
     dependencies:
@@ -10570,7 +10570,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
       '@types/debug': 4.1.13
-      debug: 4.3.4
+      debug: 4.4.3(supports-color@8.1.1)
       pony-cause: 2.1.11
       semver: 7.8.5
       uuid: 9.0.1
@@ -10584,7 +10584,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
       '@types/debug': 4.1.13
-      debug: 4.3.4
+      debug: 4.4.3(supports-color@8.1.1)
       pony-cause: 2.1.11
       semver: 7.8.5
       uuid: 9.0.1
@@ -10775,7 +10775,7 @@ snapshots:
       - supports-color
       - viem
 
-  '@pasosdejesus/m@0.17.2(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))':
+  '@pasosdejesus/m@0.17.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))':
     dependencies:
       dotenv: 17.4.2
       execa: 9.6.1
@@ -10789,9 +10789,9 @@ snapshots:
       - supports-color
       - viem
 
-  '@pasosdejesus/mpdj@0.1.1(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(vitest@2.1.9(@types/node@24.13.3)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.50.0))':
+  '@pasosdejesus/mpdj@0.2.1(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))(vitest@2.1.9(@types/node@24.13.3)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.50.0))':
     dependencies:
-      '@pasosdejesus/m': 0.16.1(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
+      '@pasosdejesus/m': 0.17.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.3))
       vitest: 2.1.9(@types/node@24.13.3)(jsdom@27.4.0(@noble/hashes@2.3.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.50.0)
     transitivePeerDependencies:
       - ethers
@@ -16948,11 +16948,11 @@ snapshots:
   ox@0.6.7(typescript@5.9.3)(zod@4.4.3):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
-      '@noble/curves': 1.8.1
-      '@noble/hashes': 1.7.1
-      '@scure/bip32': 1.6.2
-      '@scure/bip39': 1.5.4
-      abitype: 1.0.8(typescript@5.9.3)(zod@4.4.3)
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      abitype: 1.3.0(typescript@5.9.3)(zod@4.4.3)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 5.9.3
