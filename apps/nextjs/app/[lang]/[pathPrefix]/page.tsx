@@ -89,6 +89,8 @@ export default function Page({ params }: PageProps) {
   const [hasPurchased, setHasPurchased] = useState(false)
   const [gdEligible, setGdEligible] = useState<boolean | null>(null)
   const [gdReason, setGdReason] = useState<string | null>(null)
+  const [fundSlearn, setFundSlearn] = useState<string | null>(null)
+  const [fundUsdt, setFundUsdt] = useState<string | null>(null)
 
   const isGd =
     course?.prefijoRuta === '/gdcluster' || course?.prefijoRuta === '/redgd'
@@ -139,6 +141,23 @@ export default function Page({ params }: PageProps) {
     })()
     return () => { cancelled = true }
   }, [course, address, isGd])
+
+  // Global Disciples courses: show remaining churches fund (44 SLEARN pastor bonus).
+  useEffect(() => {
+    if (!isGd) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await axios.get('/api/churches/fund')
+        if (cancelled) return
+        setFundSlearn(res.data?.slearnBalance ?? null)
+        setFundUsdt(res.data?.usdtBalance ?? null)
+      } catch {
+        if (!cancelled) { setFundSlearn(null); setFundUsdt(null) }
+      }
+    })()
+    return () => { cancelled = true }
+  }, [isGd])
 
   useEffect(() => {
     if (address) {
@@ -298,6 +317,21 @@ export default function Page({ params }: PageProps) {
                 dangerouslySetInnerHTML={{ __html: contentsHtml }}
               />
             </div>
+
+            {isGd && fundSlearn !== null && (
+              <div className="px-6 py-4 rounded-xl bg-white text-gray-800 shadow">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                  {course.idioma === 'en'
+                    ? 'Churches fund for pastor bonus'
+                    : 'Fondo de iglesias para el bono de pastores'}
+                </h3>
+                <p className="text-sm text-gray-700">
+                  {course.idioma === 'en' ? 'Available' : 'Disponible'}:{' '}
+                  <span className="font-semibold">{fundSlearn} SLEARN</span>
+                  {fundUsdt !== null && <span> · {fundUsdt} USDT</span>}
+                </p>
+              </div>
+            )}
 
             {htmlExtended && (
               <div dangerouslySetInnerHTML={{ __html: htmlExtended }} />
