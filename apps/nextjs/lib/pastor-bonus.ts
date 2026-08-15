@@ -9,6 +9,7 @@ import { IS_PRODUCTION } from '@/lib/config'
 
 export const BONUS_AMOUNT = 44
 export const ELIGIBLE_COUNTRIES = [170, 694] // Colombia, Sierra Leone
+export const MIN_SCORE_FOR_BONUS = 90
 
 export interface BonusUser {
   church_relationship: string | null
@@ -19,6 +20,7 @@ export interface BonusUser {
   verified_church_relationship: string | null
   verified_place_of_worship: string | null
   position_israel_gaza: string | null
+  profilescore?: number | null
   billetera?: string | null
 }
 
@@ -31,7 +33,8 @@ export function isEligiblePastor(user: BonusUser): boolean {
     !!user.verified_city_id &&
     !!user.verified_church_relationship &&
     !!user.verified_place_of_worship &&
-    user.position_israel_gaza === 'no'
+    user.position_israel_gaza === 'no' &&
+    (user.profilescore ?? 0) > MIN_SCORE_FOR_BONUS
   )
 }
 
@@ -48,6 +51,7 @@ export async function awardPastorBonus(
       'usuario.verified_whatsapp', 'usuario.verified_email', 'usuario.verified_city_id',
       'usuario.verified_church_relationship', 'usuario.verified_place_of_worship',
       'usuario.position_israel_gaza',
+      'usuario.profilescore',
       'bw.billetera',
       'ch.registration_verified',
     ])
@@ -118,6 +122,17 @@ export async function awardPastorBonus(
     usuario_id: userId,
     action: 'award_pastor_bonus',
     details: JSON.stringify({ amount: BONUS_AMOUNT, crypto: 'slearn', hash }),
+    created_at: new Date(),
+  } as any).execute()
+
+  // In-app notification for the pastor (R-#162 phase 1 MVP).
+  await db.insertInto('notifications').values({
+    usuario_id: userId,
+    type: 'pastor_bonus',
+    title: 'Bono de 44 SLEARN recibido',
+    content: 'Se acreditaron 44 SLEARN a tu billetera por ser pastor verificado.',
+    link: null,
+    is_read: false,
     created_at: new Date(),
   } as any).execute()
 

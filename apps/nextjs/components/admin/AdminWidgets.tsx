@@ -7,6 +7,7 @@ import { TownAutocomplete } from '@/components/shared/TownAutocomplete'
 import { ChurchSelector } from '@/components/shared/ChurchSelector'
 import { PhotoUpload } from '@/components/shared/PhotoUpload'
 import { adminFetch } from '@/lib/admin-fetch'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { CalendarWidget } from './CalendarWidget'
 import { VERIFIED_FIELDS_CONFIG } from '@/lib/score-rules'
 
@@ -174,6 +175,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   const [creatingChurch, setCreatingChurch] = useState(false)
   const [churchRefresh, setChurchRefresh] = useState(0)
   const [msg, setMsg] = useState('')
+  const { toast } = useToast()
 
   useEffect(() => {
     const initial: Record<string, any> = {}
@@ -272,7 +274,12 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     try {
       const bodyJson = JSON.stringify(body)
       console.log('[UserEditModal] Saving:', { city_id: body.city_id, verified_city_id: body.verified_city_id, fullBody: bodyJson.slice(0, 200) })
-      await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: bodyJson })
+      const data = await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: bodyJson })
+      if (data?.bonus?.awarded) {
+        toast({ title: lang === 'es' ? '✅ Bono de 44 SLEARN enviado al pastor' : '✅ 44 SLEARN bonus sent to pastor' })
+      } else if (data?.bonus && data.bonus.reason) {
+        toast({ title: lang === 'es' ? `Bono no enviado: ${data.bonus.reason}` : `Bonus not sent: ${data.bonus.reason}`, variant: 'destructive' })
+      }
       onSaved()
     } catch (e: any) {
       setMsg(e.message || 'Error')
@@ -504,6 +511,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [msg, setMsg] = useState('')
+  const { toast } = useToast()
   const [memberCount, setMemberCount] = useState<number | null>(null)
   const [members, setMembers] = useState<{ id: number; nombre: string }[]>([])
 
@@ -528,7 +536,12 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
   const handleSave = async () => {
     setSaving(true)
     try {
-      await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      const data = await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      if (data?.bonus?.awarded) {
+        toast({ title: lang === 'es' ? '✅ Bono de 44 SLEARN enviado al pastor' : '✅ 44 SLEARN bonus sent to pastor' })
+      } else if (data?.bonus && data.bonus.reason) {
+        toast({ title: lang === 'es' ? `Bono no enviado: ${data.bonus.reason}` : `Bonus not sent: ${data.bonus.reason}`, variant: 'destructive' })
+      }
       setMsg(t('saveSuccess'))
       setTimeout(onSaved, 800)
     } catch (e: any) {

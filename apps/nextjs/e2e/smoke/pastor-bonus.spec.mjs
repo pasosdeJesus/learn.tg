@@ -81,7 +81,7 @@ async function main() {
         maxRedirects: 0,
       })
       const text = String(res.data || '')
-      const needle = path.startsWith('/es') ? 'SLEARN para pastores' : 'SLEARN for non-Zionist pastors'
+      const needle = path.startsWith('/es') ? 'pastores de Colombia' : 'An invitation to pastors'
       if (res.status === 200 && text.includes(needle)) ok(`landing ${path} 200 + title`)
       else fail(`landing ${path}`, `status ${res.status}, title=${text.includes(needle)}`)
     } catch (e) {

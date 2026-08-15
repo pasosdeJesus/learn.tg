@@ -1342,6 +1342,17 @@ export interface Nonce {
   updated_at: Timestamp;
 }
 
+export interface Notifications {
+  content: string | null;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  is_read: Generated<boolean>;
+  link: string | null;
+  title: string | null;
+  type: string | null;
+  usuario_id: number | null;
+}
+
 export interface PremiumCourseUsuario {
   course_id: number;
   expires_at: Timestamp | null;
@@ -1600,6 +1611,7 @@ export interface DB {
   msip_ubicacionpre: MsipUbicacionpre;
   msip_vereda: MsipVereda;
   nonce: Nonce;
+  notifications: Notifications;
   premium_course_usuario: PremiumCourseUsuario;
   religion: Religion;
   schema_migrations: SchemaMigrations;

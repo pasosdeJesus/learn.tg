@@ -10,6 +10,7 @@ import { useParams } from 'next/navigation'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
+import { NotificationsBell } from '@/components/NotificationsBell'
 
 export default function Header({ lang: langProp = 'en' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -108,6 +109,7 @@ export default function Header({ lang: langProp = 'en' }) {
                 </div>
               )}
 
+              <NotificationsBell lang={lang} />
               <ConnectWalletButton lang={lang} />
             </div>
           </nav>

@@ -5042,6 +5042,42 @@ ALTER SEQUENCE public.nonce_id_seq OWNED BY public.nonce.id;
 
 
 --
+-- Name: notifications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notifications (
+    id integer NOT NULL,
+    usuario_id integer,
+    type character varying(50),
+    title character varying(200),
+    content text,
+    link character varying(500),
+    is_read boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT '2026-08-15 14:25:59.719-05'::timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.notifications_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
+
+
+--
 -- Name: premium_course_usuario; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5910,6 +5946,13 @@ ALTER TABLE ONLY public.msip_vereda ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.nonce ALTER COLUMN id SET DEFAULT nextval('public.nonce_id_seq'::regclass);
+
+
+--
+-- Name: notifications id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
 
 
 --
@@ -6897,6 +6940,14 @@ ALTER TABLE ONLY public.msip_vereda
 
 ALTER TABLE ONLY public.nonce
     ADD CONSTRAINT nonce_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
 
 
 --
@@ -8839,6 +8890,14 @@ ALTER TABLE ONLY public.msip_ubicacion
 
 ALTER TABLE ONLY public.msip_ubicacion
     ADD CONSTRAINT msip_ubicacion_id_municipio_fkey FOREIGN KEY (municipio_id) REFERENCES public.msip_municipio(id);
+
+
+--
+-- Name: notifications notifications_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
 
 
 --
