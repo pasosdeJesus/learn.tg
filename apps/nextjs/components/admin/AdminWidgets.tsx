@@ -6,8 +6,9 @@ import { CountrySelect, ReligionSelect, ChurchRoleSelect } from '@/components/sh
 import { TownAutocomplete } from '@/components/shared/TownAutocomplete'
 import { ChurchSelector } from '@/components/shared/ChurchSelector'
 import { PhotoUpload } from '@/components/shared/PhotoUpload'
-import { adminFetch } from '@/lib/admin-fetch'
+import { adminFetch, adminAuthParams } from '@/lib/admin-fetch'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
+import { IS_PRODUCTION } from '@/lib/config'
 import { CalendarWidget } from './CalendarWidget'
 import { VERIFIED_FIELDS_CONFIG } from '@/lib/score-rules'
 
@@ -46,6 +47,13 @@ function fmtDate(s?: string, lang?: string) {
 function shortAddr(a?: string) {
   if (!a) return ''
   return `${a.slice(0, 6)}...${a.slice(-4)}`
+}
+
+function txExplorerUrl(hash?: string) {
+  if (!hash) return ''
+  return IS_PRODUCTION
+    ? `https://celoscan.io/tx/${hash}`
+    : `https://sepolia.celoscan.io/tx/${hash}`
 }
 
 /* ── Pending Verifications Widget ── */
@@ -276,7 +284,14 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
       console.log('[UserEditModal] Saving:', { city_id: body.city_id, verified_city_id: body.verified_city_id, fullBody: bodyJson.slice(0, 200) })
       const data = await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: bodyJson })
       if (data?.bonus?.awarded) {
-        toast({ title: lang === 'es' ? '✅ Bono de 44 SLEARN enviado al pastor' : '✅ 44 SLEARN bonus sent to pastor' })
+        toast({
+          title: lang === 'es' ? '✅ Bono de 44 SLEARN enviado al pastor' : '✅ 44 SLEARN bonus sent to pastor',
+          description: (
+            <a href={txExplorerUrl(data.bonus.hash)} target="_blank" rel="noopener noreferrer" className="underline">
+              {lang === 'es' ? 'Ver transacción' : 'View transaction'} ↗
+            </a>
+          ),
+        })
       } else if (data?.bonus && data.bonus.reason) {
         toast({ title: lang === 'es' ? `Bono no enviado: ${data.bonus.reason}` : `Bonus not sent: ${data.bonus.reason}`, variant: 'destructive' })
       }
@@ -538,7 +553,14 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
     try {
       const data = await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       if (data?.bonus?.awarded) {
-        toast({ title: lang === 'es' ? '✅ Bono de 44 SLEARN enviado al pastor' : '✅ 44 SLEARN bonus sent to pastor' })
+        toast({
+          title: lang === 'es' ? '✅ Bono de 44 SLEARN enviado al pastor' : '✅ 44 SLEARN bonus sent to pastor',
+          description: (
+            <a href={txExplorerUrl(data.bonus.hash)} target="_blank" rel="noopener noreferrer" className="underline">
+              {lang === 'es' ? 'Ver transacción' : 'View transaction'} ↗
+            </a>
+          ),
+        })
       } else if (data?.bonus && data.bonus.reason) {
         toast({ title: lang === 'es' ? `Bono no enviado: ${data.bonus.reason}` : `Bonus not sent: ${data.bonus.reason}`, variant: 'destructive' })
       }
@@ -562,6 +584,16 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
     setDeleting(false)
   }
 
+  const handleDeletePhoto = async () => {
+    try {
+      await adminFetch(`/api/admin/church/${church.id}/registration-photo`, { method: 'DELETE' })
+      setF('registration_photo', '')
+      setMsg(t('saveSuccess'))
+    } catch (e: any) {
+      setMsg(e.message || 'Error')
+    }
+  }
+
   return (
     <Modal title={`${t('editChurch')}: ${church.name || church.id}`} onClose={onClose}>
       <div className="space-y-3">
@@ -581,7 +613,20 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
         <div>
           <label className="block text-xs text-gray-500 mb-1">{lang === 'es' ? 'Documento de Registro' : 'Registration Document'}</label>
           {form.registration_photo ? (
-            <p className="text-xs text-green-600 mb-1">✅ {lang === 'es' ? 'Documento subido' : 'Document uploaded'}</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs text-green-600">✅ {lang === 'es' ? 'Documento subido' : 'Document uploaded'}</span>
+              <a
+                href={`/api/admin/church/${church.id}/registration-photo?${adminAuthParams()}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:underline"
+              >
+                {lang === 'es' ? 'Ver' : 'View'}
+              </a>
+              <button type="button" onClick={handleDeletePhoto} className="text-xs text-red-600 hover:underline">
+                {lang === 'es' ? 'Eliminar' : 'Delete'}
+              </button>
+            </div>
           ) : (
             <p className="text-xs text-gray-400 mb-1">{lang === 'es' ? 'Sin documento' : 'No document'}</p>
           )}
@@ -591,7 +636,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
             const fd = new FormData()
             fd.append('photo', file)
             const res = await adminFetch(`/api/admin/church/${church.id}/registration-photo`, { method: 'POST', body: fd })
-            if (res.ok) setMsg(t('saveSuccess'))
+            if (res.ok) { setF('registration_photo', res.path || 'church/' + church.id + '/registration.' + (file.name.split('.').pop() || 'jpg')); setMsg(t('saveSuccess')) }
             else setMsg('Error uploading document')
           }} className="text-xs" />
         </div>
