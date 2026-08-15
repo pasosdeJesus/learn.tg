@@ -37,13 +37,13 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
     requirements: es ? 'Requisitos' : 'Requirements',
     reqPastor: es ? 'Ser pastor (relación con la iglesia: pastor).' : 'Be a pastor (church relationship: pastor).',
     reqCountry: es ? 'Vivir en Colombia o Sierra Leona (países del pilotaje).' : 'Live in Colombia or Sierra Leone (pilot countries).',
-    reqProfile: es ? 'Completar tu perfil con los datos verificados (no se exige GoodDollar).' : 'Complete your profile with verified data (GoodDollar is not required).',
+    reqProfile: es ? 'Obtener más de 90 puntos en tu perfil.' : 'Score more than 90 points in your profile.',
     reqChurch: es
       ? 'Suministrar el documento de registro de tu iglesia y que sea confirmado como correcto.'
       : 'Provide your church\'s registration document and have it confirmed as correct.',
     reqNonZionist: es
-      ? 'Ser no-sionista: responder "No" a la pregunta sobre el apoyo incondicional al Estado de Israel en Gaza.'
-      : 'Be non-Zionist: answer "No" to the question about unconditionally supporting the State of Israel in Gaza.',
+      ? 'Responder "No" a la pregunta sobre Israel y Gaza.'
+      : 'Answer "No" to the question about Israel and Gaza.',
     autoNote: es
       ? 'El bono se acredita automáticamente cuando se verifican tus datos y el registro de tu iglesia.'
       : 'The bonus is credited automatically once your data and your church registration are verified.',
