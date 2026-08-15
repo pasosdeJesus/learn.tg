@@ -28,11 +28,6 @@ export function isEligiblePastor(user: BonusUser): boolean {
   return (
     user.church_relationship === 'pastor' &&
     !!user.pais_id && ELIGIBLE_COUNTRIES.includes(user.pais_id) &&
-    !!user.verified_whatsapp &&
-    !!user.verified_email &&
-    !!user.verified_city_id &&
-    !!user.verified_church_relationship &&
-    !!user.verified_place_of_worship &&
     user.position_israel_gaza === 'no' &&
     (user.profilescore ?? 0) > MIN_SCORE_FOR_BONUS
   )
