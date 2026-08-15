@@ -1115,7 +1115,7 @@ export default function ProfileForm({ params }: PageProps) {
                   type="text"
                   value={profile.denomination || ''}
                   onChange={(e) => handleChange('denomination', e.target.value)}
-                  placeholder={lang === 'es' ? 'Ej. Bautista, Pentecostal...' : 'e.g. Baptist, Pentecostal...'}
+                  placeholder={lang === 'es' ? 'Ej. Menonita, Pentecostal...' : 'e.g. Mennonite, Pentecostal...'}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>

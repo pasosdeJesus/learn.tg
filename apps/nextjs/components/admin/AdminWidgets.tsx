@@ -31,7 +31,7 @@ export interface UserItem {
 export interface ChurchItem {
   id: number; name?: string; pastor_name?: string; pastor_whatsapp?: string
   pastor_telegram?: string; city_name?: string; denomination?: string
-  country_name?: string; registration?: string; registration_verified?: boolean
+  country_name?: string; registration?: string; registration_photo?: string; registration_verified?: boolean
   created_at?: string
 }
 
@@ -511,7 +511,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
     setForm({
       name: church.name || '', pastor_name: church.pastor_name || '', pastor_whatsapp: church.pastor_whatsapp || '',
       pastor_telegram: church.pastor_telegram || '', city_name: church.city_name || '', denomination: church.denomination || '',
-      registration: church.registration || '', registration_verified: !!church.registration_verified,
+      registration: church.registration || '', registration_photo: church.registration_photo || '', registration_verified: !!church.registration_verified,
     })
     // Fetch church members
     adminFetch(`/api/admin/users?church_id=${church.id}`)
@@ -567,6 +567,11 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
         </label>
         <div>
           <label className="block text-xs text-gray-500 mb-1">{lang === 'es' ? 'Documento de Registro' : 'Registration Document'}</label>
+          {form.registration_photo ? (
+            <p className="text-xs text-green-600 mb-1">✅ {lang === 'es' ? 'Documento subido' : 'Document uploaded'}</p>
+          ) : (
+            <p className="text-xs text-gray-400 mb-1">{lang === 'es' ? 'Sin documento' : 'No document'}</p>
+          )}
           <input type="file" accept="image/*,.pdf" onChange={async (e) => {
             const file = e.target.files?.[0]
             if (!file) return
