@@ -1404,6 +1404,7 @@ export interface Usuario {
   created_at: Timestamp | null;
   current_sign_in_at: Timestamp | null;
   current_sign_in_ip: string | null;
+  denomination: string | null;
   descripcion: string | null;
   email: Generated<string>;
   encrypted_password: Generated<string>;

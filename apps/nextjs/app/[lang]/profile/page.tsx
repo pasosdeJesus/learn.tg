@@ -51,6 +51,7 @@ interface UserProfile {
   position_israel_gaza: string | null
   registration: string | null
   registration_photo: string | null
+  denomination: string | null
   profilescore: number | null
   proposed_date_of_interview: string | null
   department_timezone: string | null
@@ -109,6 +110,7 @@ export default function ProfileForm({ params }: PageProps) {
     position_israel_gaza: null,
     registration: null,
     registration_photo: null,
+    denomination: null,
     profilescore: null,
     proposed_date_of_interview: null,
     department_timezone: null,
@@ -328,6 +330,7 @@ export default function ProfileForm({ params }: PageProps) {
           position_israel_gaza: rUser.position_israel_gaza || null,
           registration: rUser.registration || null,
           registration_photo: rUser.registration_photo || null,
+          denomination: rUser.denomination || null,
           profilescore: rUser.profilescore,
           proposed_date_of_interview: rUser.proposed_date_of_interview || null,
           department_timezone: rUser.department_timezone || null,
@@ -429,6 +432,7 @@ export default function ProfileForm({ params }: PageProps) {
         position_israel_gaza: profile.position_israel_gaza || null,
         registration: profile.registration || null,
         registration_photo: profile.registration_photo || null,
+        denomination: profile.denomination || null,
       }
       const url = `/api/profile?walletAddress=${session!.address}&token=${csrfToken}`
       logger.info(`Patching ${url}`, 'Profile')
@@ -613,6 +617,7 @@ export default function ProfileForm({ params }: PageProps) {
       position_israel_gaza: 'position_israel_gaza',
       registration: 'registration',
       registration_photo: 'registration_photo',
+      denomination: 'denomination',
       city_id: 'city_id',
       place_of_worship: 'place_of_worship',
       place_of_worship_location: 'place_of_worship_location',
@@ -1100,6 +1105,19 @@ export default function ProfileForm({ params }: PageProps) {
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                 )}
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="denomination" className="block text-sm font-medium text-gray-700">
+                  {lang === 'es' ? 'Denominación de la iglesia' : 'Church denomination'}
+                </label>
+                <input
+                  id="denomination"
+                  type="text"
+                  value={profile.denomination || ''}
+                  onChange={(e) => handleChange('denomination', e.target.value)}
+                  placeholder={lang === 'es' ? 'Ej. Bautista, Pentecostal...' : 'e.g. Baptist, Pentecostal...'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
             </div>
             )}

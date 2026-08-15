@@ -5280,6 +5280,7 @@ CREATE TABLE public.usuario (
     position_israel_gaza character varying(3),
     registration character varying(50),
     registration_photo text,
+    denomination character varying(100),
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
 );
