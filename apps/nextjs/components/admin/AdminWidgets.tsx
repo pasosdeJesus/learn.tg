@@ -512,7 +512,6 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
       name: church.name || '', pastor_name: church.pastor_name || '', pastor_whatsapp: church.pastor_whatsapp || '',
       pastor_telegram: church.pastor_telegram || '', city_name: church.city_name || '', denomination: church.denomination || '',
       registration: church.registration || '', registration_verified: !!church.registration_verified,
-      zion_q1: (church as any).pastoral_position_israel_covenant || '', zion_q2: (church as any).pastoral_position_israel_remnant || '', zion_q3: (church as any).pastoral_position_israel_gaza || '',
     })
     // Fetch church members
     adminFetch(`/api/admin/users?church_id=${church.id}`)
@@ -594,31 +593,6 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
             </div>
           </div>
         )}
-        {/* Zionism theological position */}
-        <details className="text-xs border rounded p-2">
-          <summary className="cursor-pointer font-medium text-gray-600">
-            {lang === 'es' ? 'Posición Teológica (opcional)' : 'Theological Position (optional)'}
-          </summary>
-          <div className="mt-2 space-y-2">
-            {[1, 2, 3].map(q => (
-              <div key={q} className="flex items-center gap-3">
-                <span className="text-gray-500 w-4">Q{q}</span>
-                <label className="flex items-center gap-1">
-                  <input type="radio" name={`zion_q${q}`} checked={form[`zion_q${q}`] === 'yes'}
-                    onChange={() => setF(`zion_q${q}`, form[`zion_q${q}`] === 'yes' ? '' : 'yes')} className="rounded" />
-                  <span>{lang === 'es' ? 'Sí' : 'Yes'}</span>
-                </label>
-                <label className="flex items-center gap-1">
-                  <input type="radio" name={`zion_q${q}`} checked={form[`zion_q${q}`] === 'no'}
-                    onChange={() => setF(`zion_q${q}`, form[`zion_q${q}`] === 'no' ? '' : 'no')} className="rounded" />
-                  <span>No</span>
-                </label>
-              </div>
-            ))}
-            <InputField label={lang === 'es' ? 'Notas adicionales' : 'Additional notes'}
-              value={form.zion_notes} onChange={v => setF('zion_notes', v)} />
-          </div>
-        </details>
         {msg && <p className={`text-sm text-center ${msg === t('saveSuccess') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
         <div className="flex justify-between">
           <button onClick={handleDelete} disabled={deleting} className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 disabled:opacity-50">

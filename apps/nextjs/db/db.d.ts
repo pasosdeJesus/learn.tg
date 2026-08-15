@@ -74,9 +74,6 @@ export interface Church {
   pastor_name: string;
   pastor_telegram: string | null;
   pastor_whatsapp: string;
-  pastoral_position_israel_covenant: string | null;
-  pastoral_position_israel_gaza: string | null;
-  pastoral_position_israel_remnant: string | null;
   registration: string | null;
   registration_photo: string | null;
   registration_verified: Generated<boolean | null>;
@@ -1442,6 +1439,8 @@ export interface Usuario {
   position_israel_gaza: string | null;
   profilescore: number | null;
   proposed_date_of_interview: Timestamp | null;
+  registration: string | null;
+  registration_photo: string | null;
   religion_id: number | null;
   remember_created_at: Timestamp | null;
   reset_password_sent_at: Timestamp | null;

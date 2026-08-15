@@ -107,7 +107,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
     en: {
       title: 'Schedule Verification Interview',
       description: `Select a date and time. All times are in ${tzLabel}.`,
-      why: 'To verify your identity and unlock rewards, a brief 30-minute video call is required. It\'s a friendly conversation — no preparation needed.',
+      why: 'To verify your identity and unlock rewards, a brief 20-minute video call is required. It\'s a friendly conversation — no preparation needed.',
       loadingSlots: 'Loading available slots...',
       noSlotsDate: 'No slots available for this date.',
       book: 'Book Interview',
@@ -131,7 +131,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
     es: {
       title: 'Agendar Entrevista de Verificación',
       description: `Selecciona fecha y hora. Todos los horarios están en ${tzLabel}.`,
-      why: 'Para verificar tu identidad y desbloquear recompensas, necesitamos una breve videollamada de 30 minutos. Es una conversación amigable — no necesitas preparar nada.',
+      why: 'Para verificar tu identidad y desbloquear recompensas, necesitamos una breve videollamada de 20 minutos. Es una conversación amigable — no necesitas preparar nada.',
       loadingSlots: 'Cargando horarios disponibles...',
       noSlotsDate: 'No hay horarios para esta fecha.',
       book: 'Agendar Entrevista',

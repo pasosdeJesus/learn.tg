@@ -8,7 +8,6 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
   const es = lang === 'es'
 
   const [fundSlearn, setFundSlearn] = useState<string | null>(null)
-  const [fundUsdt, setFundUsdt] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -17,22 +16,24 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
         const res = await axios.get('/api/churches/fund')
         if (cancelled) return
         setFundSlearn(res.data?.slearnBalance ?? null)
-        setFundUsdt(res.data?.usdtBalance ?? null)
       } catch {
-        if (!cancelled) { setFundSlearn(null); setFundUsdt(null) }
+        if (!cancelled) setFundSlearn(null)
       }
     })()
     return () => { cancelled = true }
   }, [])
 
+  const remainingPastors =
+    fundSlearn !== null ? Math.floor(Number(fundSlearn) / 44) : null
+
   const t = {
-    title: es ? '44 SLEARN para pastores no-sionistas' : '44 SLEARN for non-Zionist pastors',
+    title: es ? 'Curso de Discípulos Globales (GD)' : 'Global Disciples (GD) course',
     subtitle: es
-      ? 'Una invitación para pastores de Colombia y Sierra Leona'
-      : 'An invitation for pastors in Colombia and Sierra Leone',
+      ? 'Invitación a pastores de Colombia y Sierra Leona'
+      : 'An invitation to pastors in Colombia and Sierra Leone',
     intro: es
-      ? 'Learn.tg te da 44 SLEARN automáticamente al completar tu perfil verificado, declarar tu iglesia con documento de registro confirmado y ser no-sionista.'
-      : 'Learn.tg gives you 44 SLEARN automatically once your verified profile is complete, your church is declared with a confirmed registration document, and you are non-Zionist.',
+      ? 'El curso de GD se puede pagar en SLEARN. Para darte la bienvenida, learn.tg te regala 44 SLEARN (= US$2) al cumplir los requisitos.'
+      : 'The GD course can be paid in SLEARN. To welcome you, learn.tg gives you 44 SLEARN (= US$2) once you meet the requirements.',
     requirements: es ? 'Requisitos' : 'Requirements',
     reqPastor: es ? 'Ser pastor (relación con la iglesia: pastor).' : 'Be a pastor (church relationship: pastor).',
     reqCountry: es ? 'Vivir en Colombia o Sierra Leona (países del pilotaje).' : 'Live in Colombia or Sierra Leone (pilot countries).',
@@ -46,8 +47,17 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
     autoNote: es
       ? 'El bono se acredita automáticamente cuando se verifican tus datos y el registro de tu iglesia.'
       : 'The bonus is credited automatically once your data and your church registration are verified.',
-    fundTitle: es ? 'Fondo de iglesias disponible' : 'Churches fund available',
+    fundTitle: es ? 'Fondo de iglesias' : 'Churches fund',
+    fundAvailable: es ? 'SLEARN disponibles' : 'SLEARN available',
+    fundPastors: es
+      ? 'financia ~{{n}} pastores más'
+      : 'funds ~{{n}} more pastors',
     fundUnavailable: es ? 'No se pudo consultar el fondo en este momento.' : 'Could not read the fund right now.',
+    learnWalletsTitle: es ? '¿No conoces billeteras?' : 'New to wallets?',
+    learnWalletsDesc: es
+      ? 'Toma el curso Web3 & UBI, donde aprenderás a usar una billetera y a reclamar un pequeño ingreso diario.'
+      : 'Take the Web3 & UBI course, where you will learn to use a wallet and claim a small daily income.',
+    learnWalletsCta: es ? 'Ir al curso Web3 & UBI' : 'Go to the Web3 & UBI course',
     cta: es ? 'Regístrate en learn.tg' : 'Sign up on learn.tg',
     ctaSub: es
       ? 'Conecta tu billetera, completa tu perfil y declara tu iglesia.'
@@ -79,7 +89,12 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
             {fundSlearn !== null ? (
               <p className="text-gray-700">
                 <span className="font-semibold text-green-700">{fundSlearn} SLEARN</span>
-                {fundUsdt !== null && <span className="text-gray-500"> · {fundUsdt} USDT</span>}
+                {remainingPastors !== null && (
+                  <span className="text-gray-500">
+                    {' '}
+                    · {t.fundPastors.replace('{{n}}', String(remainingPastors))}
+                  </span>
+                )}
               </p>
             ) : (
               <p className="text-gray-500">{t.fundUnavailable}</p>
@@ -93,6 +108,17 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
             {t.cta}
           </Link>
           <p className="text-sm text-gray-500 mt-3">{t.ctaSub}</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 mt-6 text-center">
+          <h2 className="text-xl font-bold text-gray-900 mb-3">{t.learnWalletsTitle}</h2>
+          <p className="text-gray-700 mb-4">{t.learnWalletsDesc}</p>
+          <Link
+            href="/en/web3-and-ubi"
+            className="inline-block rounded border border-primary px-6 py-2 text-sm font-semibold text-primary hover:opacity-90"
+          >
+            {t.learnWalletsCta}
+          </Link>
         </div>
       </div>
     </div>

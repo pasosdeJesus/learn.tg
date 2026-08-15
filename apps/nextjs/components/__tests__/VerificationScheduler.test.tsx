@@ -57,7 +57,7 @@ describe('VerificationScheduler', () => {
 
   it('renders explanatory text when no interview is booked', () => {
     render(<VerificationScheduler interviewDate={null} />)
-    expect(screen.getByText(/brief 30-minute/)).toBeDefined()
+    expect(screen.getByText(/brief 20-minute/)).toBeDefined()
   })
 
   it('renders scheduled interview info when interview is booked for future', () => {

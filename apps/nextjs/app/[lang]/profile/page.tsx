@@ -23,7 +23,6 @@ import {
   SelectValue 
 } from '@/components/ui/select'
 import DeleteVerifiedDataDialog from '@/components/DeleteVerifiedDataDialog'
-import { NewChurchDialog } from '@/components/NewChurchDialog'
 import { VerificationScheduler } from '@/components/VerificationScheduler'
 import { IS_PRODUCTION } from '@/lib/config'
 import { logger, DebugConsole } from '@pasosdejesus/m/debug'
@@ -50,6 +49,8 @@ interface UserProfile {
   picture: string
   place_of_worship_location: string | null
   position_israel_gaza: string | null
+  registration: string | null
+  registration_photo: string | null
   profilescore: number | null
   proposed_date_of_interview: string | null
   department_timezone: string | null
@@ -106,6 +107,8 @@ export default function ProfileForm({ params }: PageProps) {
     picture: '',
     place_of_worship_location: null,
     position_israel_gaza: null,
+    registration: null,
+    registration_photo: null,
     profilescore: null,
     proposed_date_of_interview: null,
     department_timezone: null,
@@ -132,11 +135,9 @@ export default function ProfileForm({ params }: PageProps) {
   const [churches, setChurches] = useState<{ id: number; name: string; city_name: string | null }[]>([])
   const [selectedChurchId, setSelectedChurchId] = useState<number | null>(null)
   const [selectedChurchName, setSelectedChurchName] = useState('')
-  const [newChurchName, setNewChurchName] = useState('')
   const [pastorName, setPastorName] = useState('')
   const [pastorWhatsApp, setPastorWhatsApp] = useState('')
-  const [uploadingPhoto, setUploadingPhoto] = useState<'front' | 'back' | null>(null)
-  const [showChurchDialog, setShowChurchDialog] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState<'front' | 'back' | 'registration' | null>(null)
   const [updatingScores, setUpdatingScores] = useState(false)
   const [cityId, setCityId] = useState<number | null>(null)
   const [placeOfWorshipLocation, setPlaceOfWorshipLocation] = useState('')
@@ -325,6 +326,8 @@ export default function ProfileForm({ params }: PageProps) {
           picture: rUser.foto_file_name,
           place_of_worship_location: rUser.place_of_worship_location || null,
           position_israel_gaza: rUser.position_israel_gaza || null,
+          registration: rUser.registration || null,
+          registration_photo: rUser.registration_photo || null,
           profilescore: rUser.profilescore,
           proposed_date_of_interview: rUser.proposed_date_of_interview || null,
           department_timezone: rUser.department_timezone || null,
@@ -424,6 +427,8 @@ export default function ProfileForm({ params }: PageProps) {
         pastor_name: pastorName || null,
         pastor_whatsapp: pastorWhatsApp || null,
         position_israel_gaza: profile.position_israel_gaza || null,
+        registration: profile.registration || null,
+        registration_photo: profile.registration_photo || null,
       }
       const url = `/api/profile?walletAddress=${session!.address}&token=${csrfToken}`
       logger.info(`Patching ${url}`, 'Profile')
@@ -606,6 +611,8 @@ export default function ProfileForm({ params }: PageProps) {
       religion: 'religion_id', country: 'pais_id',
       church_relationship: 'church_relationship',
       position_israel_gaza: 'position_israel_gaza',
+      registration: 'registration',
+      registration_photo: 'registration_photo',
       city_id: 'city_id',
       place_of_worship: 'place_of_worship',
       place_of_worship_location: 'place_of_worship_location',
@@ -660,16 +667,6 @@ export default function ProfileForm({ params }: PageProps) {
     setChurches([])
   }
 
-  const handleSelectChurch = (churchId: string) => {
-    if (churchId === '__new__') {
-      setSelectedChurchId(null)
-      setShowChurchDialog(true)
-      return
-    }
-    setSelectedChurchId(parseInt(churchId, 10))
-    setNewChurchName('')
-  }
-
   const placeOfWorshipLabels = (religionId: number | null): { name: string; address: string } => {
     const isEs = lang === 'es'
     switch (religionId) {
@@ -682,30 +679,43 @@ export default function ProfileForm({ params }: PageProps) {
     }
   }
 
-  const handlePhotoUpload = async (side: 'front' | 'back', file: File) => {
+  const photoFieldForSide = (side: string) =>
+    side === 'front' ? 'id_photo_front' : side === 'back' ? 'id_photo_back' : 'registration_photo'
+
+  const handlePhotoUpload = async (side: 'front' | 'back' | 'registration', file: File) => {
     setUploadingPhoto(side)
+    logger.info('handlePhotoUpload start', 'Profile')
+    logger.info('side=' + side + ' fileSize=' + file.size + ' fileName=' + file.name, 'Profile')
+    logger.info('address=' + (address || '') + ' sessionAddress=' + (session?.address || ''), 'Profile')
     try {
       const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+      logger.info('csrfToken present=' + !!csrfToken + ' len=' + (csrfToken?.length || 0), 'Profile')
       const formData = new FormData()
       formData.append('photo', file)
       formData.append('side', side)
       formData.append('walletAddress', address || '')
       formData.append('token', csrfToken || '')
+      logger.info('POST /api/user/id-photo', 'Profile')
       const res = await fetch('/api/user/id-photo', { method: 'POST', body: formData })
+      logger.info('POST /api/user/id-photo res.status=' + res.status, 'Profile')
       if (!res.ok) {
         const err = await res.json()
+        logger.error('Upload failed status=' + res.status + ' err=' + JSON.stringify(err), 'Profile')
         throw new Error(err.error || 'Upload failed')
       }
       const data = await res.json()
-      setProfile((prev) => ({ ...prev, [side === 'front' ? 'id_photo_front' : 'id_photo_back']: data.path }))
+      logger.info('Upload ok path=' + data.path, 'Profile')
+      setProfile((prev) => ({ ...prev, [photoFieldForSide(side)]: data.path }))
     } catch (e: any) {
+      logger.error('handlePhotoUpload catch message=' + (e?.message || '') + ' name=' + (e?.name || '') + ' cause=' + JSON.stringify(e?.cause || null), 'Profile')
+      logger.error('handlePhotoUpload stack=' + (e?.stack || ''), 'Profile')
       toast({ title: e?.message || (lang === 'es' ? 'Error al subir foto' : 'Photo upload failed'), variant: 'destructive' })
     } finally {
       setUploadingPhoto(null)
     }
   }
 
-  const handlePhotoDelete = async (side: 'front' | 'back') => {
+  const handlePhotoDelete = async (side: 'front' | 'back' | 'registration') => {
     try {
       const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
       const res = await fetch('/api/user/id-photo', {
@@ -714,7 +724,7 @@ export default function ProfileForm({ params }: PageProps) {
         body: JSON.stringify({ walletAddress: address, token: csrfToken, side }),
       })
       if (!res.ok) throw new Error('Delete failed')
-      setProfile((prev) => ({ ...prev, [side === 'front' ? 'id_photo_front' : 'id_photo_back']: null }))
+      setProfile((prev) => ({ ...prev, [photoFieldForSide(side)]: null }))
     } catch {
       toast({ title: lang === 'es' ? 'Error al eliminar foto' : 'Photo delete failed', variant: 'destructive' })
     }
@@ -944,7 +954,6 @@ export default function ProfileForm({ params }: PageProps) {
                   type="text"
                   value={profile.telegram}
                   onChange={(e) => handleChange('telegram', e.target.value)}
-                  placeholder="@username"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -1048,6 +1057,53 @@ export default function ProfileForm({ params }: PageProps) {
             </div>
             )}
 
+            {profile.church_relationship === 'pastor' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <label htmlFor="registration" className="block text-sm font-medium text-gray-700">
+                  {lang === 'es' ? 'Número de registro de la iglesia' : 'Church registration number'}
+                </label>
+                <input
+                  id="registration"
+                  type="text"
+                  value={profile.registration || ''}
+                  onChange={(e) => handleChange('registration', e.target.value)}
+                  placeholder="REG-12345"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  {lang === 'es' ? 'Documento de registro' : 'Registration document'}
+                </label>
+                {profile.registration_photo ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-green-600">✅ {lang === 'es' ? 'Subido' : 'Uploaded'}</span>
+                    <button type="button" onClick={() => {
+                      const csrf = localStorage.getItem('learn.tg.authToken') || ''
+                      window.open(`/api/user/id-photo/${profile.userId}?side=registration&walletAddress=${session?.address}&token=${csrf}`, '_blank')
+                    }} className="text-xs text-blue-600 hover:underline">
+                      {lang === 'es' ? 'Ver' : 'View'}
+                    </button>
+                    <button type="button" onClick={() => handlePhotoDelete('registration')} className="text-xs text-red-600 hover:underline">
+                      {lang === 'es' ? 'Eliminar' : 'Delete'}
+                    </button>
+                  </div>
+                ) : uploadingPhoto === 'registration' ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                ) : (
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoUpload('registration', f) }}
+                    disabled={uploadingPhoto != null}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                )}
+              </div>
+            </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="space-y-2">
                 <label htmlFor="citySearch" className="block text-sm font-medium text-gray-700">
@@ -1105,14 +1161,14 @@ export default function ProfileForm({ params }: PageProps) {
                           type="text"
                           value={pastorName}
                           onChange={(e) => setPastorName(e.target.value)}
-                          placeholder={lang === 'es' ? 'Nombre del pastor' : 'Pastor name'}
+                          placeholder={lang === 'es' ? 'Nombre del pastor principal' : 'Principal pastor name'}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         />
                         <input
                           type="text"
                           value={pastorWhatsApp}
                           onChange={(e) => setPastorWhatsApp(e.target.value)}
-                          placeholder={lang === 'es' ? 'WhatsApp/Telegram del pastor' : 'Pastor WhatsApp/Telegram'}
+                          placeholder={lang === 'es' ? 'WhatsApp/Telegram del pastor principal' : 'Principal Pastor WhatsApp/Telegram'}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         />
                       </>
@@ -1176,44 +1232,6 @@ export default function ProfileForm({ params }: PageProps) {
             </div>
 
           </form>
-          <NewChurchDialog
-            open={showChurchDialog}
-            onOpenChange={setShowChurchDialog}
-            onSuccess={(churchId) => {
-              // Refresh church list, then select the new church.
-              // Also fetch the individual church to ensure it's in the list
-              // immediately (search may not return it right away).
-              const addChurch = (list: any[]) => {
-                fetch(`/api/church/${churchId}`)
-                  .then(r => r.json())
-                  .then(church => {
-                    const exists = list.some((c: any) => c.id === churchId)
-                    if (!exists && church.id) {
-                      list.unshift({ id: church.id, name: church.name, city_name: church.city_name })
-                    }
-                    setChurches(list)
-                    setSelectedChurchId(churchId)
-                    setNewChurchName('')
-                  })
-                  .catch(() => {
-                    setChurches(list)
-                    setSelectedChurchId(churchId)
-                    setNewChurchName('')
-                  })
-              }
-              if (profile.country) {
-                fetch(`/api/churches/search?q=&country=${profile.country}`)
-                  .then(r => r.json())
-                  .then(data => addChurch(data.churches || []))
-                  .catch(() => {})
-              }
-            }}
-            countryId={profile.country}
-            cityName={citySearch}
-            churchName={newChurchName}
-            churchRelationship={profile.church_relationship}
-            lang={lang}
-          />
         </div>
       </div>
     </div>
