@@ -8,6 +8,7 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
+import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { erc20Abi, formatDisplay } from '@/lib/donate-utils'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
@@ -38,6 +39,14 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       success: 'Course purchased',
       copyError: 'Copy error',
       error: 'Error',
+      insufficient: 'You need to add USDT to your wallet to buy this course. Complete crosswords and claim your daily UBI to help gather the funds.',
+      needMoreUsdt: 'To pay more with USDT you need to add more USDT to your wallet.',
+      yourCelo: 'Your CELO (gas)',
+      enoughGas: 'Enough gas estimated',
+      noGas: 'Not enough gas for transaction',
+      noGasHint: 'From guide 3 of the Web3 & UBI course you can request Learn.tg-UBI paid in CELO to cover gas costs.',
+      gasWarn: 'Gas estimation failed, proceed at your own risk',
+      estimating: 'estimating...',
     },
     es: {
       title: 'Comprar curso',
@@ -53,6 +62,14 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       success: 'Curso comprado',
       copyError: 'Copiar error',
       error: 'Error',
+      insufficient: 'Necesitas poner USDT en tu billetera para comprar este curso. Completa crucigramas y reclama tu UBI diario para ayudar a reunir los fondos.',
+      needMoreUsdt: 'Para pagar más con USDT necesitas cargar más USDT en tu billetera.',
+      yourCelo: 'Tu CELO (gas)',
+      enoughGas: 'Gas suficiente estimado',
+      noGas: 'Gas insuficiente para la transaccion',
+      noGasHint: 'Desde la guia 3 del curso Web3 & UBI puedes pedir Learn.tg-UBI que se paga en CELO y te permite cubrir costos de gas.',
+      gasWarn: 'Fallo al estimar gas, continue bajo su propio riesgo',
+      estimating: 'estimando...',
     },
   }), [lang])
 
@@ -67,6 +84,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   const [slearnPct, setSlearnPct] = useState(0) // 0-100, % paid with SLEARN
   const [usdtBalance, setUsdtBalance] = useState(0n)
   const [slearnBalance, setSlearnBalance] = useState(0n)
+  const [celoBalance, setCeloBalance] = useState(0n)
 
   const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as Address | undefined
   const slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address | undefined
@@ -85,15 +103,23 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
         setPriceUSDT(Number(res.data.priceUSDT))
         setPriceSLEARN(Number(res.data.priceSLEARN))
 
-        const [usdtBal, slearnBal] = await Promise.all([
+        const [usdtBal, slearnBal, celoBal] = await Promise.all([
           publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>,
           slearnAddress
             ? publicClient.readContract({ address: slearnAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>
             : Promise.resolve(0n),
+          publicClient.getBalance({ address }) as Promise<bigint>,
         ])
         if (!cancelled) {
           setUsdtBalance(usdtBal)
           setSlearnBalance(slearnBal)
+          setCeloBalance(celoBal)
+          // Default the split to as much SLEARN as the wallet can cover (up to 100%).
+          const sDecimal = Number(slearnBal) / 10 ** SLEARN_DECIMALS
+          const pSlearn = Number(res.data.priceSLEARN)
+          if (pSlearn > 0) {
+            setSlearnPct(Math.min(100, Math.floor((sDecimal / pSlearn) * 100)))
+          }
         }
       } catch {
         if (!cancelled) {
@@ -110,6 +136,42 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   const slearnAmount = priceSLEARN != null ? ((priceSLEARN * slearnPct) / 100).toFixed(2) : '0'
   const usdtAmount = priceUSDT != null ? ((priceUSDT * (100 - slearnPct)) / 100).toFixed(2) : '0'
   const usdtPct = 100 - slearnPct
+
+  const usdtDecimals = +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6)
+  const slearnBalanceDecimal = Number(slearnBalance) / 10 ** SLEARN_DECIMALS
+  const usdtBalanceDecimal = Number(usdtBalance) / 10 ** usdtDecimals
+  // The wallet can pay if the fractions of the price covered by SLEARN and
+  // USDT together reach 100%.
+  const canPay =
+    priceSLEARN != null && priceUSDT != null && priceSLEARN > 0 && priceUSDT > 0
+      ? slearnBalanceDecimal / priceSLEARN + usdtBalanceDecimal / priceUSDT >= 1
+      : false
+
+  // Bounds for the SLEARN/USDT slider, based on what the wallet can actually
+  // cover: maxSlearnPct is limited by the SLEARN balance, minSlearnPct by the
+  // USDT balance (can't slide into more USDT than the wallet holds).
+  const maxSlearnPct = priceSLEARN != null && priceSLEARN > 0
+    ? Math.min(100, Math.floor((slearnBalanceDecimal / priceSLEARN) * 100))
+    : 0
+  const minSlearnPct = priceUSDT != null && priceUSDT > 0
+    ? Math.max(0, Math.ceil(100 - (usdtBalanceDecimal / priceUSDT) * 100))
+    : 0
+  const sliderMin = minSlearnPct
+  const sliderMax = Math.max(maxSlearnPct, minSlearnPct)
+
+  const { gasState, estimating } = useGasEstimation({
+    amount: usdtAmount,
+    slearnAmount,
+    usdtDecimals,
+    address,
+    walletClient,
+    publicClient,
+    backendWalletAddress,
+    usdtAddress,
+    slearnAddress,
+    courseId,
+    celoBalance,
+  })
 
   const handleSuccess = useCallback(() => {
     toast({ title: t('success') })
@@ -171,6 +233,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   if (!isOpen) return null
 
   const busy = paymentState === 'paying' || paymentState === 'confirming'
+  const hasAmount = priceUSDT != null && priceSLEARN != null
+  const purchaseDisabled = busy || priceUSDT == null || !canPay || (hasAmount && gasState === 'no-gas')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -189,13 +253,16 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
             <label className="block mb-1 font-medium">{t('split')}</label>
             <input
               type="range"
-              min="0"
-              max="100"
+              min={sliderMin}
+              max={sliderMax}
               step="1"
               value={slearnPct}
               onChange={(e) => setSlearnPct(Number(e.target.value))}
               className="w-full"
             />
+            {canPay && minSlearnPct > 0 && (
+              <p className="mt-1 text-xs text-amber-600">{t('needMoreUsdt')}</p>
+            )}
             <div className="mt-2 grid grid-cols-2 gap-4">
               <div className="rounded border border-gray-200 p-3">
                 <div className="text-xs text-gray-500">{t('usdtPct')} ({usdtPct}%)</div>
@@ -209,6 +276,25 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
               </div>
             </div>
           </div>
+
+          <div className="text-xs text-gray-500">
+            {t('yourCelo')}: {formatDisplay(celoBalance, 18)} CELO
+          </div>
+          {hasAmount && (
+            <>
+              <div className={gasState === 'ok' ? 'text-green-600' : gasState === 'no-gas' ? 'text-red-600' : gasState === 'warn' ? 'text-yellow-600' : 'text-gray-500'}>
+                {gasState === 'ok' && t('enoughGas')}
+                {gasState === 'no-gas' && t('noGas')}
+                {gasState === 'warn' && t('gasWarn')}
+                {estimating && <span className="ml-2 animate-pulse">{t('estimating')}</span>}
+              </div>
+              {gasState === 'no-gas' && (
+                <div className="mt-2 text-xs bg-blue-50 border border-blue-200 rounded p-2">
+                  {t('noGasHint')}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {paymentError && (
@@ -223,9 +309,15 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
           </div>
         )}
 
+        {!busy && priceUSDT != null && priceSLEARN != null && !canPay && (
+          <div className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+            {t('insufficient')}
+          </div>
+        )}
+
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>{t('cancel')}</Button>
-          <Button onClick={executePayment} disabled={busy || priceUSDT == null}>
+          <Button onClick={executePayment} disabled={purchaseDisabled}>
             {busy ? t('processing') : t('purchase')}
           </Button>
         </div>

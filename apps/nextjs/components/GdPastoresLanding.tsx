@@ -47,6 +47,31 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
     autoNote: es
       ? 'El bono se acredita automáticamente cuando se verifican tus datos y el registro de tu iglesia.'
       : 'The bonus is credited automatically once your data and your church registration are verified.',
+    pathTitle: es ? 'Tu camino como pastor' : 'Your path as a pastor',
+    pathStep1: es
+      ? 'Configura tu billetera y aprende a usar la plataforma en el curso Web3 & UBI.'
+      : 'Set up your wallet and learn to use the platform in the Web3 & UBI course.',
+    pathStep2: es
+      ? 'Completa tu perfil (tus datos y los de tu iglesia) y propón una fecha de entrevista. Si suministras toda la información tendrás más de 90 puntos y, una vez se verifiquen los documentos que envías, ganarás 44 SLEARN automáticamente.'
+      : 'Complete your profile (your data and your church) and propose an interview date. If you supply all the information you will have more than 90 points, and once the documents you send are verified you will earn 44 SLEARN automatically.',
+    pathStep3: es
+      ? 'Regresa al curso Web3 & UBI y reclama tu UBI diario (necesitas CELO para el gas).'
+      : 'Return to the Web3 & UBI course and claim your daily UBI (you need CELO for gas).',
+    pathStep4: es
+      ? 'Opcional: completa crucigramas en otros cursos para ganar USDT y SLEARN.'
+      : 'Optional: complete crosswords in other courses to earn USDT and SLEARN.',
+    pathStep5: es
+      ? 'Entra al curso Global Disciples y págalo con SLEARN y/o USDT.'
+      : 'Enter the Global Disciples course and pay with SLEARN and/or USDT.',
+    pathStep5Hint: es
+      ? 'Si te falta USDT y estás en Sierra Leona, te recomendamos'
+      : 'If you are short on USDT and in Sierra Leone, we recommend',
+    gdTitle: es
+      ? '¿Por qué es importante el curso Global Disciples?'
+      : 'Why is the Global Disciples course important?',
+    gdDesc: es
+      ? 'Prepara a tu iglesia para aplicar al proceso de Global Disciples y abre la puerta a recursos para tu comunidad. Su contenido completo lo descubrirás al pagarlo.'
+      : 'It prepares your church to apply to the Global Disciples process and opens the door to resources for your community. You will discover its full content once you pay.',
     fundTitle: es ? 'Fondo de iglesias' : 'Churches fund',
     fundAvailable: es ? 'SLEARN disponibles' : 'SLEARN available',
     fundPastors: es
@@ -82,6 +107,30 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
               <li>{t.reqNonZionist}</li>
             </ul>
             <p className="text-sm text-gray-500 mt-3">{t.autoNote}</p>
+          </div>
+
+          <div className="text-left bg-white border border-gray-200 rounded-xl p-6 mb-8">
+            <h2 className="font-semibold text-gray-800 mb-3">{t.pathTitle}</h2>
+            <ol className="list-decimal list-inside space-y-2 text-gray-700">
+              <li>{t.pathStep1}</li>
+              <li>{t.pathStep2}</li>
+              <li>{t.pathStep3}</li>
+              <li>{t.pathStep4}</li>
+              <li>
+                {t.pathStep5}
+                <div className="text-sm text-gray-500 mt-1">
+                  {t.pathStep5Hint}{' '}
+                  <a href="https://stable-sl.pdJ.app" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                    stable-sl.pdJ.app
+                  </a>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          <div className="text-left bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+            <h2 className="font-semibold text-gray-800 mb-2">{t.gdTitle}</h2>
+            <p className="text-gray-700">{t.gdDesc}</p>
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">

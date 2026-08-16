@@ -111,9 +111,16 @@ export function NotificationsBell({ lang = 'en' }: { lang?: string }) {
                 >
                   <p className="font-medium text-gray-800">{n.title}</p>
                   {n.content && <p className="text-gray-600 text-xs mt-0.5">{n.content}</p>}
-                  <p className="text-gray-400 text-xs mt-1">
-                    {new Date(n.created_at).toLocaleString(isEs ? 'es' : 'en')}
-                  </p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-gray-400 text-xs">
+                      {new Date(n.created_at).toLocaleString(isEs ? 'es' : 'en')}
+                    </p>
+                    {n.link && (
+                      <a href={n.link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                        {isEs ? 'Ver transacción' : 'View transaction'} ↗
+                      </a>
+                    )}
+                  </div>
                 </div>
               ))
             )}

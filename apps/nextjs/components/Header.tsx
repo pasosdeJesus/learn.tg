@@ -11,6 +11,7 @@ import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { NotificationsBell } from '@/components/NotificationsBell'
+import { UserLanguageSync } from '@/components/UserLanguageSync'
 
 export default function Header({ lang: langProp = 'en' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -111,6 +112,7 @@ export default function Header({ lang: langProp = 'en' }) {
 
               <NotificationsBell lang={lang} />
               <ConnectWalletButton lang={lang} />
+              <UserLanguageSync lang={lang} />
             </div>
           </nav>
         </div>

@@ -90,7 +90,6 @@ export default function Page({ params }: PageProps) {
   const [gdEligible, setGdEligible] = useState<boolean | null>(null)
   const [gdReason, setGdReason] = useState<string | null>(null)
   const [fundSlearn, setFundSlearn] = useState<string | null>(null)
-  const [fundUsdt, setFundUsdt] = useState<string | null>(null)
 
   const isGd =
     course?.prefijoRuta === '/gdcluster' || course?.prefijoRuta === '/redgd'
@@ -151,9 +150,8 @@ export default function Page({ params }: PageProps) {
         const res = await axios.get('/api/churches/fund')
         if (cancelled) return
         setFundSlearn(res.data?.slearnBalance ?? null)
-        setFundUsdt(res.data?.usdtBalance ?? null)
       } catch {
-        if (!cancelled) { setFundSlearn(null); setFundUsdt(null) }
+        if (!cancelled) setFundSlearn(null)
       }
     })()
     return () => { cancelled = true }
@@ -328,7 +326,6 @@ export default function Page({ params }: PageProps) {
                 <p className="text-sm text-gray-700">
                   {course.idioma === 'en' ? 'Available' : 'Disponible'}:{' '}
                   <span className="font-semibold">{fundSlearn} SLEARN</span>
-                  {fundUsdt !== null && <span> · {fundUsdt} USDT</span>}
                 </p>
               </div>
             )}

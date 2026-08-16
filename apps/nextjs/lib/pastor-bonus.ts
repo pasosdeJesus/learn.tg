@@ -47,6 +47,7 @@ export async function awardPastorBonus(
       'usuario.verified_church_relationship', 'usuario.verified_place_of_worship',
       'usuario.position_israel_gaza',
       'usuario.profilescore',
+      'usuario.idioma',
       'bw.billetera',
       'ch.registration_verified',
     ])
@@ -120,13 +121,20 @@ export async function awardPastorBonus(
     created_at: new Date(),
   } as any).execute()
 
-  // In-app notification for the pastor (R-#162 phase 1 MVP).
+  // In-app notification for the pastor (R-#162 phase 1 MVP), localized by
+  // the pastor's preferred language (usuario.idioma).
+  const isEnglish = ((pastor as any).idioma || '').toLowerCase().startsWith('en')
+  const explorerUrl = IS_PRODUCTION
+    ? `https://celoscan.io/tx/${hash}`
+    : `https://sepolia.celoscan.io/tx/${hash}`
   await db.insertInto('notifications').values({
     usuario_id: userId,
     type: 'pastor_bonus',
-    title: 'Bono de 44 SLEARN recibido',
-    content: 'Se acreditaron 44 SLEARN a tu billetera por ser pastor verificado.',
-    link: null,
+    title: isEnglish ? '44 SLEARN bonus received' : 'Bono de 44 SLEARN recibido',
+    content: isEnglish
+      ? '44 SLEARN were credited to your wallet for being a verified pastor.'
+      : 'Se acreditaron 44 SLEARN a tu billetera por ser pastor verificado.',
+    link: explorerUrl,
     is_read: false,
     created_at: new Date(),
   } as any).execute()
