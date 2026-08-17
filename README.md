@@ -63,6 +63,11 @@ bin/dev
 Open [http://localhost:4000](http://localhost:4000). No database or Rails setup needed.
 All API requests are proxied to the live server.
 
+> **Environments & wallets:** for the map of production vs development sites,
+> the wallets per role, and the difference between the frontend-only proxy
+> mode and the full local Rails+Next.js stack, see
+> **[doc/environments.md](doc/environments.md)**.
+
 ### Full development
 
 To set up the Rails backend and smart contracts as well, see:

@@ -138,3 +138,4 @@ apps/nextjs/public/img/credential/*png
 resources/en/
 servidor/.bundle
 resources/es/redgd/
+apps/.env.bak.full-local
