@@ -3,7 +3,7 @@ all:
 	rm -rf .next
 	pnpm i
 	$(MAKE) swc-wasm
-	NODE_OPTIONS="--max-old-space-size=14336" pnpm build
+	NODE_OPTIONS="--max-old-space-size=14336" pnpm exec next build --webpack
 
 type-source:
 	pnpm tsc --noEmit
@@ -59,7 +59,7 @@ dev:
 	./bin/dev
 
 prod: swc-wasm
-	NODE_OPTIONS="--max-old-space-size=14336" pnpm build
+	NODE_OPTIONS="--max-old-space-size=14336" pnpm exec next build --webpack
 	./bin/start > prod.log 2>&1 &
 
 # Next.js 16 SWC wasm fallback: OpenBSD has no native bindings and the
