@@ -27,10 +27,10 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
     fundSlearn !== null ? Math.floor(Number(fundSlearn) / 44) : null
 
   const t = {
-    title: es ? 'Curso de Discípulos Globales (GD)' : 'Global Disciples (GD) course',
+    title: es ? 'Herramientas para traer Discípulos Globales (GD) a tu red de iglesias' : 'Tools to bring Global Disciples (GD) to your cluster of churches',
     subtitle: es
       ? 'Invitación a pastores de Colombia y Sierra Leona'
-      : 'An invitation to pastors in Colombia and Sierra Leone',
+      : 'An invitation to pastors in Sierra Leone and Colombia',
     intro: es
       ? 'El curso de GD se puede pagar en SLEARN. Para darte la bienvenida, learn.tg te regala 44 SLEARN (= US$2) al cumplir los requisitos.'
       : 'The GD course can be paid in SLEARN. To welcome you, learn.tg gives you 44 SLEARN (= US$2) once you meet the requirements.',
@@ -42,8 +42,8 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
       ? 'Suministrar el documento de registro de tu iglesia y que sea confirmado como correcto.'
       : 'Provide your church\'s registration document and have it confirmed as correct.',
     reqNonZionist: es
-      ? 'Responder "No" a la pregunta sobre Israel y Gaza.'
-      : 'Answer "No" to the question about Israel and Gaza.',
+      ? 'No ser sionista.'
+      : 'Not be a zionist.',
     autoNote: es
       ? 'El bono se acredita automáticamente cuando se verifican tus datos y el registro de tu iglesia.'
       : 'The bonus is credited automatically once your data and your church registration are verified.',
@@ -70,8 +70,8 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
       ? '¿Por qué es importante el curso Global Disciples?'
       : 'Why is the Global Disciples course important?',
     gdDesc: es
-      ? 'Prepara a tu iglesia para aplicar al proceso de Global Disciples y abre la puerta a recursos para tu comunidad. Su contenido completo lo descubrirás al pagarlo.'
-      : 'It prepares your church to apply to the Global Disciples process and opens the door to resources for your community. You will discover its full content once you pay.',
+      ? 'Prepara a tu iglesia para aplicar al proceso de Discípulos Globales. Este curso te guía para formar y financiar, en tu red de iglesias, una "academia" autosostenible que forme líderes, misioneros, plantadores de iglesias y pastores que se sostengan a sí mismos. El contenido completo, las herramientas y ventajas que proveemos las descubrirás al pagar el curso.'
+      : 'Prepare your church to apply to the Global Disciples process. This course guides you to form and fund, within your network of churches, a self-sustaining "academy" that trains leaders, missionaries, church planters, and self-supporting pastors. You will discover the full content, the tools, and the benefits we provide once you pay for the course.',
     fundTitle: es ? 'Fondo de iglesias' : 'Churches fund',
     fundAvailable: es ? 'SLEARN disponibles' : 'SLEARN available',
     fundPastors: es

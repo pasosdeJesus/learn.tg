@@ -2,7 +2,8 @@
 all:
 	rm -rf .next
 	pnpm i
-	NODE_OPTIONS="--max-old-space-size=8192" pnpm build
+	$(MAKE) swc-wasm
+	NODE_OPTIONS="--max-old-space-size=14336" pnpm build
 
 type-source:
 	pnpm tsc --noEmit
@@ -57,9 +58,16 @@ coverage:
 dev:
 	./bin/dev
 
-prod:
-	NODE_OPTIONS="--max-old-space-size=8192" pnpm build
+prod: swc-wasm
+	NODE_OPTIONS="--max-old-space-size=14336" pnpm build
 	./bin/start > prod.log 2>&1 &
+
+# Next.js 16 SWC wasm fallback: OpenBSD has no native bindings and the
+# on-demand download leaves node_modules/next/wasm empty (REQ/205).
+.PHONY: swc-wasm
+swc-wasm:
+	mkdir -p node_modules/next/wasm/@next/swc-wasm-nodejs
+	cp node_modules/@next/swc-wasm-nodejs/wasm.js node_modules/@next/swc-wasm-nodejs/wasm_bg.wasm node_modules/next/wasm/@next/swc-wasm-nodejs/
 
 # ── E2E Tests ───────────────────────────────────────────────────────────
 

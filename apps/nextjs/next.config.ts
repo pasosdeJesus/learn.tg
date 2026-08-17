@@ -1,6 +1,10 @@
 import type { NextConfig } from 'next'
 import dotenv from 'dotenv'
 import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // Load shared .env from apps/.env
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
@@ -43,9 +47,6 @@ const pwaConfig: PWAConfig = {
 const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   allowedDevOrigins: ['learn.tg', '127.0.0.1'],
   poweredByHeader: false,
