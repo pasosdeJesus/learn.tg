@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { IS_PRODUCTION } from '@/lib/config'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { logger } from '@pasosdejesus/m/debug'
 
 interface ExtendedSession {
   address?: string
@@ -88,14 +89,26 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
   }, [])
 
   // Still checking wallet availability — show nothing to avoid flashing stale state
-  if (!isWalletCheckComplete) return null
+  if (!isWalletCheckComplete) {
+    logger.info(
+      `ConnectWalletButton: not rendered (isWalletCheckComplete=${isWalletCheckComplete} isWalletAvailable=${isWalletAvailable})`,
+      'auth',
+    )
+    return null
+  }
+  logger.info(
+    `ConnectWalletButton: rendered (sessionAddress=${sessionAddress ? sessionAddress.slice(0, 6) : 'null'} isWalletAvailable=${isWalletAvailable} hidden=${hidden})`,
+    'auth',
+  )
 
   async function handleConnect() {
+    logger.info('ConnectWalletButton: handleConnect() invoked', 'auth')
     setLoading(true)
     setError('')
 
     try {
       if (typeof window === 'undefined' || !window.ethereum) {
+        logger.error('ConnectWalletButton: no window.ethereum in handleConnect', 'auth')
         setError(t('noWallet'))
         return
       }

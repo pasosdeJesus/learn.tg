@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import { useState, useEffect } from 'react'
+import { logger } from '@pasosdejesus/m/debug'
 
 interface ExtendedSession extends Session {
   address?: string
@@ -26,10 +27,12 @@ export function useAuthAddress() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    logger.info('useAuthAddress: checking wallet availability', 'auth')
 
     const check = async () => {
       const hasProvider = !!window.ethereum
       if (!hasProvider) {
+        logger.info('useAuthAddress: no window.ethereum provider', 'auth')
         setIsWalletAvailable(false)
         return
       }
@@ -38,8 +41,14 @@ export function useAuthAddress() {
         const accounts = await window.ethereum!.request({
           method: 'eth_accounts',
         })
-        setIsWalletAvailable(Array.isArray(accounts) && accounts.length > 0)
-      } catch {
+        const available = Array.isArray(accounts) && accounts.length > 0
+        logger.info(
+          `useAuthAddress: eth_accounts=${JSON.stringify(accounts)} available=${available}`,
+          'auth',
+        )
+        setIsWalletAvailable(available)
+      } catch (e) {
+        logger.error(`useAuthAddress: eth_accounts error: ${String(e)}`, 'auth')
         setIsWalletAvailable(false)
       }
     }
