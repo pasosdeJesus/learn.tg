@@ -65,8 +65,8 @@ export const SCORE_RULES: ScoreRule[] = [
   },
   {
     points: 7,
-    fields: ['proposed_date_of_interview'],
-    check: (u) => u.proposed_date_of_interview != null,
+    fields: ['proposed_date_of_interview', 'conducted_date_of_interview'],
+    check: (u) => u.proposed_date_of_interview != null || u.conducted_date_of_interview != null,
   },
 ]
 

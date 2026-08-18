@@ -5,6 +5,7 @@ import Link from 'next/link'
 import axios from 'axios'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { SCORE_RULES } from '@/lib/score-rules'
+import { IS_PRODUCTION } from '@/lib/config'
 
 // Labels aligned with SCORE_RULES order (lib/score-rules.ts)
 const SCORE_LABELS = [
@@ -31,6 +32,7 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
   const [fundSlearn, setFundSlearn] = useState<string | null>(null)
   const [profile, setProfile] = useState<Record<string, any> | null>(null)
   const [funds, setFunds] = useState<{ countries: any[]; clusters: any[] } | null>(null)
+  const [pastorBonus, setPastorBonus] = useState<{ hash: string } | null>(null)
 
   const courses = es
     ? { web3ubi: '/es/web3-e-ibu', gd: '/es/redgd' }
@@ -56,11 +58,13 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
   useEffect(() => {
     if (!isAuthenticated || !address) {
       setProfile(null)
+      setPastorBonus(null)
       return
     }
     const token = localStorage.getItem('learn.tg.authToken') || ''
     if (!token) {
       setProfile(null)
+      setPastorBonus(null)
       return
     }
     let cancelled = false
@@ -69,9 +73,24 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
         const res = await axios.get(
           `/api/profile?walletAddress=${encodeURIComponent(address)}&token=${encodeURIComponent(token)}`,
         )
-        if (!cancelled) setProfile(res.data)
+        if (cancelled) return
+        setProfile(res.data)
+        if (res.data?.id) {
+          try {
+            const txRes = await axios.get(`/api/user-transactions/${res.data.id}`)
+            const bonus = (txRes.data?.transactions || []).find(
+              (tx: any) => tx.type === 'pastor_bonus',
+            )
+            if (!cancelled) setPastorBonus(bonus?.hash ? { hash: bonus.hash } : null)
+          } catch {
+            if (!cancelled) setPastorBonus(null)
+          }
+        } else {
+          setPastorBonus(null)
+        }
       } catch {
         if (!cancelled) setProfile(null)
+        if (!cancelled) setPastorBonus(null)
       }
     })()
     return () => { cancelled = true }
@@ -134,6 +153,42 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
       })).filter((item) => !item.satisfied)
     : []
 
+  // Checklist of requirements, ordered like the profile form
+  const requirements = [
+    {
+      key: 'wallet',
+      met: hasWallet,
+      label: es ? 'Tener billetera y conectarla a este sitio' : 'Have a wallet and connect it to this site',
+    },
+    {
+      key: 'country',
+      met: !!profile && (profile.pais_id === 170 || profile.pais_id === 694),
+      label: es ? 'Vivir en Colombia o Sierra Leona' : 'Live in Colombia or Sierra Leone',
+    },
+    {
+      key: 'nonZionist',
+      met: !!profile && profile.position_israel_gaza === 'no',
+      label: es ? 'No ser sionista' : 'Not be a zionist',
+    },
+    {
+      key: 'pastor',
+      met: !!profile && profile.church_relationship === 'pastor',
+      label: es ? 'Ser un pastor' : 'Be a pastor',
+    },
+    {
+      key: 'churchReg',
+      met: !!profile && (profile.registration != null || profile.registration_photo != null),
+      label: es ? 'Proveer el registro de su iglesia' : 'Provide your church registration',
+    },
+    {
+      key: 'interview',
+      met: !!profile && (profile.proposed_date_of_interview != null || profile.conducted_date_of_interview != null),
+      label: es
+        ? 'Tener una cita de verificación o haberla tenido para alcanzar más de 90 puntos en su perfil'
+        : 'Have a verification appointment (or have had one) to reach more than 90 points in your profile',
+    },
+  ]
+
   const t = {
     title: es
       ? 'Herramientas para traer Discípulos Globales (GD) a tu red de iglesias'
@@ -145,13 +200,11 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
       ? 'El curso de GD se puede pagar en SLEARN. Para darte la bienvenida, learn.tg te regala 44 SLEARN (= US$2) al cumplir los requisitos.'
       : 'The GD course can be paid in SLEARN. To welcome you, learn.tg gives you 44 SLEARN (= US$2) once you meet the requirements.',
     requirements: es ? 'Requisitos' : 'Requirements',
-    reqPastor: es ? 'Ser pastor (relación con la iglesia: pastor).' : 'Be a pastor (church relationship: pastor).',
-    reqCountry: es ? 'Vivir en Colombia o Sierra Leona (países del pilotaje).' : 'Live in Colombia or Sierra Leone (pilot countries).',
-    reqProfile: es ? 'Obtener más de 90 puntos en tu perfil.' : 'Score more than 90 points in your profile.',
-    reqChurch: es
-      ? 'Suministrar el documento de registro de tu iglesia y que sea confirmado como correcto.'
-      : 'Provide your church\'s registration document and have it confirmed as correct.',
-    reqNonZionist: es ? 'No ser sionista.' : 'Not be a zionist.',
+    claimedTitle: es ? 'Ya reclamaste tu bono' : 'You already claimed your bonus',
+    claimedDesc: es
+      ? 'Usted ya cumplió los requisitos y reclamó su bono de 44 SLEARN.'
+      : 'You already met the requirements and claimed your 44 SLEARN bonus.',
+    claimedTx: es ? 'La transacción fue' : 'The transaction was',
     autoNote: es
       ? 'El bono se acredita automáticamente cuando se verifican tus datos y el registro de tu iglesia.'
       : 'The bonus is credited automatically once your data and your church registration are verified.',
@@ -218,14 +271,45 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
 
           <div className="text-left bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
             <h2 className="font-semibold text-gray-800 mb-3">{t.requirements}</h2>
-            <ul className="list-disc list-inside space-y-2 text-gray-700">
-              <li>{t.reqPastor}</li>
-              <li>{t.reqCountry}</li>
-              <li>{t.reqProfile}</li>
-              <li>{t.reqChurch}</li>
-              <li>{t.reqNonZionist}</li>
-            </ul>
-            <p className="text-sm text-gray-500 mt-3">{t.autoNote}</p>
+            {pastorBonus ? (
+              <div className="text-gray-700">
+                <p className="font-medium text-green-700 mb-2">✓ {t.claimedTitle}</p>
+                <p>{t.claimedDesc}</p>
+                <p className="mt-2">
+                  {t.claimedTx}{' '}
+                  <a
+                    href={
+                      IS_PRODUCTION
+                        ? `https://celoscan.io/tx/${pastorBonus.hash}`
+                        : `https://sepolia.celoscan.io/tx/${pastorBonus.hash}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline font-mono text-sm break-all"
+                  >
+                    {pastorBonus.hash.slice(0, 10)}…{pastorBonus.hash.slice(-6)}
+                  </a>
+                </p>
+              </div>
+            ) : (
+              <>
+                <ul className="space-y-2 text-gray-700">
+                  {requirements.map((req) => (
+                    <li key={req.key} className="flex items-start gap-2">
+                      <span
+                        className={`mt-0.5 inline-flex items-center justify-center w-5 h-5 rounded border text-sm shrink-0 ${
+                          req.met ? 'bg-green-600 border-green-600 text-white' : 'border-gray-400'
+                        }`}
+                      >
+                        {req.met ? '✓' : ''}
+                      </span>
+                      <span className={req.met ? '' : 'text-gray-600'}>{req.label}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-sm text-gray-500 mt-3">{t.autoNote}</p>
+              </>
+            )}
           </div>
 
           <div className="text-left bg-white border border-gray-200 rounded-xl p-6 mb-8">
@@ -365,16 +449,18 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 mt-6 text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-3">{t.learnWalletsTitle}</h2>
-          <p className="text-gray-700 mb-4">{t.learnWalletsDesc}</p>
-          <Link
-            href={courses.web3ubi}
-            className="inline-block rounded border border-primary px-6 py-2 text-sm font-semibold text-primary hover:opacity-90"
-          >
-            {t.learnWalletsCta}
-          </Link>
-        </div>
+        {noWallet && (
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 mt-6 text-center">
+            <h2 className="text-xl font-bold text-gray-900 mb-3">{t.learnWalletsTitle}</h2>
+            <p className="text-gray-700 mb-4">{t.learnWalletsDesc}</p>
+            <Link
+              href={courses.web3ubi}
+              className="inline-block rounded border border-primary px-6 py-2 text-sm font-semibold text-primary hover:opacity-90"
+            >
+              {t.learnWalletsCta}
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )
