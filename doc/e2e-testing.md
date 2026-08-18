@@ -164,6 +164,7 @@ for an example.
 | `admin-dashboard.spec.mjs` | Admin dashboard: widgets load, APIs respond, user/church detail, PATCH |
 | `prod-landing-to-profile.spec.mjs` | Production landing page → wallet connect → profile save flow |
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
+| `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
 
 ### Current Status (2026-07-28)
 
@@ -171,6 +172,32 @@ for an example.
 via admin API to reach ≥50 score before crossword/UBI steps.
 `prod-landing-to-profile.spec.mjs` fails on wallet connection timing (React
 hydration on OpenBSD). Pre-existing, not a regression.
+
+### Hydration / SIWE gotcha on the dev server (REQ/208)
+
+The dev server `https://learn.tg:9001` sits behind an **nginx reverse proxy**.
+Two nginx settings are required for the browser specs to pass on Next 16, or
+`ConnectWalletButton` never hydrates (HMR socket broken) and SIWE returns
+`401 CredentialsSignin` (domain mismatch):
+
+```nginx
+location @learntgdes {
+    # 1. WebSocket upgrade for /_next/hmr (otherwise it returns 200, not 101,
+    #    and Next 16 dev blocks client hydration).
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    # 2. Preserve the port in Host so authorize() sees the same domain the
+    #    client signs (window.location.host = learn.tg:9001).
+    proxy_set_header Host $http_host;   # NOT $host (strips the port)
+    # ...
+}
+```
+
+Symptoms: `buttonCount: 0` and no `useAuthAddress:` logs in the browser console
+(hydration never runs), or `[ConnectWallet] callback failed: 401`. See
+[REQ/208](../REQ/208.md) for the full diagnosis.
 
 ### SIWE Mock
 

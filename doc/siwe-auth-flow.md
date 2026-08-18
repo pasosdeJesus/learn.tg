@@ -116,6 +116,25 @@ All wallet addresses are stored and compared in **lowercase**:
 - `session.address` is lowercased in the session callback
 - Frontend address comparisons use `.toLowerCase()` on both sides
 
+### 4. Domain binding is port-sensitive
+
+`authorize()` verifies the SIWE `domain` against
+`new URL('https://' + validHostname).host`, where `validHostname` comes from
+the `x-forwarded-host` / `host` header. The client signs
+`domain = window.location.host`, which includes the port on non-default ports
+(e.g. `learn.tg:9001`). If a reverse proxy forwards `Host: $host` (port
+stripped), the server verifies `learn.tg` against the client's `learn.tg:9001`
+and `siwe.verify()` fails with `DOMAIN_MISMATCH` → `401 CredentialsSignin`.
+
+The proxy must preserve the port:
+
+```nginx
+proxy_set_header Host $http_host;   # NOT $host
+```
+
+This only matters on non-default ports (`:9001`); production (`:443`) is
+unaffected because `$host` and `$http_host` are both `learn.tg`.
+
 ## Code References
 
 | Component | File | Key Lines |

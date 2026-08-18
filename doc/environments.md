@@ -189,3 +189,9 @@ Contract addresses are **not** read from `.env`. They come from:
 - The E2E suites default to `https://learn.tg:9001`; override with
   `SITE_URL` / `NEXT_PUBLIC_AUTH_URL`. Production-targeting specs exist
   (chain 42220).
+- The dev server (`:9001`) runs behind **nginx**. The proxy location that
+  forwards to `next dev` must (a) forward the WebSocket upgrade for
+  `/_next/hmr` (`proxy_http_version 1.1` + `Upgrade`/`Connection` headers) or
+  Next 16 dev never hydrates, and (b) forward `Host $http_host` (not `$host`)
+  so the SIWE domain matches `window.location.host` on the non-default port.
+  See [e2e-testing.md](e2e-testing.md) and [siwe-auth-flow.md](siwe-auth-flow.md).
