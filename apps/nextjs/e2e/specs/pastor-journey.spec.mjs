@@ -153,6 +153,9 @@ async function main() {
   // 1. Generate a brand-new pastor wallet.
   const pastorPk = generatePrivateKey()
   const pastorAddr = privateKeyToAddress(pastorPk)
+  // Unique per run — usuario.email has a UNIQUE index, so a fixed email
+  // collides on the second run and makes the profile PATCH fail with 500.
+  const testEmail = `pastor-e2e-${pastorAddr.slice(2, 10).toLowerCase()}@learn.tg`
   console.log(`Pastor wallet:  ${short(pastorAddr)}`)
   console.log(`Verifier wallet: ${short(verifier.addr)}`)
 
@@ -255,21 +258,22 @@ async function main() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    return { ok: r.ok, status: r.status, body: await r.text() }
+    return { ok: r.ok, status: r.status, body: await r.text(), addr: addr.slice(0, 10), token: token.slice(0, 10) }
   }, {
     nombre: 'Pastor E2E Test',
-    email: 'pastor-e2e@learn.tg',
+    email: testEmail,
     whatsapp: '+23276123456',
     pais_id: 694,                       // Sierra Leone
     religion_id: 1,
     church_relationship: 'pastor',
     position_israel_gaza: 'no',
     place_of_worship: 'E2E Test Church',
+    place_of_worship_location: 'Freetown',
     registration: 'E2E-REG-001',
     denomination: 'E2E Denomination',
   })
   if (profileRes.ok) ok('Pastor profile saved')
-  else fail(`Profile PATCH failed: ${profileRes.status} ${profileRes.body.slice(0, 120)}`)
+  else fail(`Profile PATCH failed: ${profileRes.status} addr=${profileRes.addr} token=${profileRes.token} ${profileRes.body.slice(0, 120)}`)
 
   // Fetch pastor userId + score
   const pastorProfile = await page.evaluate(async () => {
@@ -306,10 +310,12 @@ async function main() {
     {
       passport_name: 'Pastor E2E Test',
       passport_nationality: 694,
-      verified_email: 'pastor-e2e@learn.tg',
+      verified_email: testEmail,
       verified_whatsapp: '+23276123456',
       verified_place_of_worship: 'E2E Test Church',
+      verified_place_of_worship_location: 'Freetown',
       verified_church_relationship: 'pastor',
+      proposed_date_of_interview: '2026-08-25',
     },
     { wallet: verifier.addr, token: vAuth.token },
     vAuth.cookies,
