@@ -3,21 +3,89 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { SCORE_RULES } from '@/lib/score-rules'
+
+// Labels aligned with SCORE_RULES order (lib/score-rules.ts)
+const SCORE_LABELS = [
+  { en: 'Name verified (matches passport)', es: 'Nombre verificado (coincide con el pasaporte)' },
+  { en: 'Country verified (matches passport nationality)', es: 'País verificado (coincide con la nacionalidad del pasaporte)' },
+  { en: 'Email verified', es: 'Correo verificado' },
+  { en: 'WhatsApp or Telegram verified', es: 'WhatsApp o Telegram verificado' },
+  { en: 'GoodDollar facial verification', es: 'Verificación facial GoodDollar' },
+  { en: 'Location verified (city)', es: 'Ubicación verificada (ciudad)' },
+  { en: 'Church membership/role verified', es: 'Iglesia/rol verificado' },
+  { en: 'Interview scheduled', es: 'Entrevista programada' },
+]
 
 export function GdPastoresLanding({ lang }: { lang: string }) {
   const es = lang === 'es'
 
-  const [fundSlearn, setFundSlearn] = useState<string | null>(null)
+  const {
+    address,
+    isAuthenticated,
+    isWalletAvailable,
+    isWalletCheckComplete,
+  } = useAuthAddress()
 
+  const [fundSlearn, setFundSlearn] = useState<string | null>(null)
+  const [profile, setProfile] = useState<Record<string, any> | null>(null)
+  const [funds, setFunds] = useState<{ countries: any[]; clusters: any[] } | null>(null)
+
+  const courses = es
+    ? { web3ubi: '/es/web3-e-ibu', gd: '/es/redgd' }
+    : { web3ubi: '/en/web3-and-ubi', gd: '/en/gdcluster' }
+  const profileUrl = `/${lang}/profile`
+  const rankingUrl = `/${lang}/gdcluster/ranking`
+
+  // Churches fund (44 SLEARN bonus source)
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       try {
         const res = await axios.get('/api/churches/fund')
-        if (cancelled) return
-        setFundSlearn(res.data?.slearnBalance ?? null)
+        if (!cancelled) setFundSlearn(res.data?.slearnBalance ?? null)
       } catch {
         if (!cancelled) setFundSlearn(null)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  // Current user profile (score, religion, church role, verified fields)
+  useEffect(() => {
+    if (!isAuthenticated || !address) {
+      setProfile(null)
+      return
+    }
+    const token = localStorage.getItem('learn.tg.authToken') || ''
+    if (!token) {
+      setProfile(null)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await axios.get(
+          `/api/profile?walletAddress=${encodeURIComponent(address)}&token=${encodeURIComponent(token)}`,
+        )
+        if (!cancelled) setProfile(res.data)
+      } catch {
+        if (!cancelled) setProfile(null)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [address, isAuthenticated])
+
+  // Accumulated funds by country/cluster (ranking)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await axios.get('/api/gdcluster/ranking/funds')
+        if (!cancelled) setFunds(res.data)
+      } catch {
+        if (!cancelled) setFunds(null)
       }
     })()
     return () => { cancelled = true }
@@ -26,8 +94,50 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
   const remainingPastors =
     fundSlearn !== null ? Math.floor(Number(fundSlearn) / 44) : null
 
+  // Situation detection
+  const score = profile?.profilescore != null ? Number(profile.profilescore) : null
+  const religionId = profile?.religion_id
+  const isChristian = religionId === 2
+  const hasWallet = isWalletAvailable
+  const noWallet = isWalletCheckComplete && !isWalletAvailable
+  const partialProfile = score !== null && score > 0 && score < 90
+
+  // Dynamic "next step"
+  let nextStep: { href: string; label: string }
+  if (noWallet) {
+    nextStep = {
+      href: courses.web3ubi,
+      label: es ? 'Ir al curso Web3 & UBI' : 'Go to the Web3 & UBI course',
+    }
+  } else if (score !== null && score >= 90 && isChristian) {
+    nextStep = {
+      href: courses.gd,
+      label: es ? 'Ir al curso Global Disciples' : 'Go to the Global Disciples course',
+    }
+  } else if (hasWallet || isAuthenticated) {
+    nextStep = {
+      href: profileUrl,
+      label: es ? 'Completa tu perfil' : 'Complete your profile',
+    }
+  } else {
+    nextStep = { href: `/${lang}`, label: es ? 'Regístrate en learn.tg' : 'Sign up on learn.tg' }
+  }
+
+  // Detailed analysis: any user with a partially filled profile (0 < score < 90)
+  const showAnalysis = partialProfile
+  const missingItems = showAnalysis
+    ? SCORE_RULES.map((rule, i) => ({
+        points: rule.points,
+        satisfied: rule.check(profile!),
+        label: es ? SCORE_LABELS[i].es : SCORE_LABELS[i].en,
+        mandatory: rule.points >= 9,
+      })).filter((item) => !item.satisfied)
+    : []
+
   const t = {
-    title: es ? 'Herramientas para traer Discípulos Globales (GD) a tu red de iglesias' : 'Tools to bring Global Disciples (GD) to your cluster of churches',
+    title: es
+      ? 'Herramientas para traer Discípulos Globales (GD) a tu red de iglesias'
+      : 'Tools to bring Global Disciples (GD) to your cluster of churches',
     subtitle: es
       ? 'Invitación a pastores de Colombia y Sierra Leona'
       : 'An invitation to pastors in Sierra Leone and Colombia',
@@ -41,28 +151,14 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
     reqChurch: es
       ? 'Suministrar el documento de registro de tu iglesia y que sea confirmado como correcto.'
       : 'Provide your church\'s registration document and have it confirmed as correct.',
-    reqNonZionist: es
-      ? 'No ser sionista.'
-      : 'Not be a zionist.',
+    reqNonZionist: es ? 'No ser sionista.' : 'Not be a zionist.',
     autoNote: es
       ? 'El bono se acredita automáticamente cuando se verifican tus datos y el registro de tu iglesia.'
       : 'The bonus is credited automatically once your data and your church registration are verified.',
     pathTitle: es ? 'Tu camino como pastor' : 'Your path as a pastor',
-    pathStep1: es
-      ? 'Configura tu billetera y aprende a usar la plataforma en el curso Web3 & UBI.'
-      : 'Set up your wallet and learn to use the platform in the Web3 & UBI course.',
-    pathStep2: es
-      ? 'Completa tu perfil (tus datos y los de tu iglesia) y propón una fecha de entrevista. Si suministras toda la información tendrás más de 90 puntos y, una vez se verifiquen los documentos que envías, ganarás 44 SLEARN automáticamente.'
-      : 'Complete your profile (your data and your church) and propose an interview date. If you supply all the information you will have more than 90 points, and once the documents you send are verified you will earn 44 SLEARN automatically.',
-    pathStep3: es
-      ? 'Regresa al curso Web3 & UBI y reclama tu UBI diario (necesitas CELO para el gas).'
-      : 'Return to the Web3 & UBI course and claim your daily UBI (you need CELO for gas).',
     pathStep4: es
       ? 'Opcional: completa crucigramas en otros cursos para ganar USDT y SLEARN.'
       : 'Optional: complete crosswords in other courses to earn USDT and SLEARN.',
-    pathStep5: es
-      ? 'Entra al curso Global Disciples y págalo con SLEARN y/o USDT.'
-      : 'Enter the Global Disciples course and pay with SLEARN and/or USDT.',
     pathStep5Hint: es
       ? 'Si te falta USDT y estás en Sierra Leona, te recomendamos'
       : 'If you are short on USDT and in Sierra Leone, we recommend',
@@ -70,23 +166,46 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
       ? '¿Por qué es importante el curso Global Disciples?'
       : 'Why is the Global Disciples course important?',
     gdDesc: es
-      ? 'Prepara a tu iglesia para aplicar al proceso de Discípulos Globales. Este curso te guía para formar y financiar, en tu red de iglesias, una "academia" autosostenible que forme líderes, misioneros, plantadores de iglesias y pastores que se sostengan a sí mismos. El contenido completo, las herramientas y ventajas que proveemos las descubrirás al pagar el curso.'
-      : 'Prepare your church to apply to the Global Disciples process. This course guides you to form and fund, within your network of churches, a self-sustaining "academy" that trains leaders, missionaries, church planters, and self-supporting pastors. You will discover the full content, the tools, and the benefits we provide once you pay for the course.',
-    fundTitle: es ? 'Fondo de iglesias' : 'Churches fund',
+      ? 'Prepara a tu iglesia para aplicar al proceso de Discípulos Globales quienes ayudan económicamente y con formación para que tu red de iglesias conforme una academia autosostenible de "Discipulado" y de "Desarrollo de Pequeños Negocios," que forme líderes, misioneros plantadores de iglesias y pastores que puedan sostenerse económicamente y compartir el evangelio con los no alcanzados. Este curso te prepara para iniciar el proceso y es a su vez herramienta para levantar los fondos iniciales que se requieren.'
+      : 'Prepare your church to apply to the Global Disciples process, who help economically and with training so that your network of churches forms a self-sustaining academy of "Discipleship" and "Small Business Development," that trains leaders, missionary church planters, and pastors who can sustain themselves economically and share the gospel with the unreached. This course prepares you to start the process and is also a tool to raise the initial funds required.',
+    fundTitle: es
+      ? 'Fondo de iglesias para financiar bonos de pastores'
+      : 'Churches fund to finance pastor bonuses',
     fundAvailable: es ? 'SLEARN disponibles' : 'SLEARN available',
-    fundPastors: es
-      ? 'financia ~{{n}} pastores más'
-      : 'funds ~{{n}} more pastors',
+    fundPastors: es ? 'financia ~{{n}} pastores más' : 'funds ~{{n}} more pastors',
     fundUnavailable: es ? 'No se pudo consultar el fondo en este momento.' : 'Could not read the fund right now.',
     learnWalletsTitle: es ? '¿No conoces billeteras?' : 'New to wallets?',
     learnWalletsDesc: es
       ? 'Toma el curso Web3 & UBI, donde aprenderás a usar una billetera y a reclamar un pequeño ingreso diario.'
       : 'Take the Web3 & UBI course, where you will learn to use a wallet and claim a small daily income.',
-    learnWalletsCta: es ? 'Ir al curso Web3 & UBI' : 'Go to the Web3 & UBI course',
-    cta: es ? 'Regístrate en learn.tg' : 'Sign up on learn.tg',
+    learnWalletsCta: es ? 'Ir al curso gratuito Web3 & UBI' : 'Go to the free Web3 & UBI course',
+    rankingTitle: es ? 'Ranking de países y clusters' : 'Country and cluster ranking',
+    rankingSub: es
+      ? 'Lo acumulado por país y clúster para cubrir los costos iniciales.'
+      : 'Amounts accumulated by country and cluster to cover initial costs.',
+    rankingCountries: es ? 'Países' : 'Countries',
+    rankingClusters: es ? 'Clústeres' : 'Clusters',
+    rankingEmpty: es ? 'Aún no hay fondos acumulados.' : 'No funds accumulated yet.',
+    nextStepLabel: es ? 'Siguiente paso' : 'Next step',
     ctaSub: es
       ? 'Conecta tu billetera, completa tu perfil y declara tu iglesia.'
       : 'Connect your wallet, complete your profile, and declare your church.',
+    analysisTitle: es
+      ? 'Lo que te falta para superar 90 puntos'
+      : 'What you still need to exceed 90 points',
+    analysisIntro: es
+      ? 'Para recibir el bono de 44 SLEARN debes superar 90 puntos. Te falta completar:'
+      : 'To receive the 44 SLEARN bonus you must exceed 90 points. You still need to complete:',
+    analysisMandatory: es ? 'obligatorio' : 'mandatory',
+    analysisOptional: es ? 'recomendado' : 'recommended',
+    analysisCurrent: es ? 'Puntaje actual' : 'Current score',
+  }
+
+  const flagEmoji = (iso2: string) => {
+    if (!iso2 || iso2.length !== 2) return ''
+    const a = iso2.toUpperCase().charCodeAt(0) + 127397
+    const b = iso2.toUpperCase().charCodeAt(1) + 127397
+    return String.fromCodePoint(a, b)
   }
 
   return (
@@ -112,12 +231,34 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
           <div className="text-left bg-white border border-gray-200 rounded-xl p-6 mb-8">
             <h2 className="font-semibold text-gray-800 mb-3">{t.pathTitle}</h2>
             <ol className="list-decimal list-inside space-y-2 text-gray-700">
-              <li>{t.pathStep1}</li>
-              <li>{t.pathStep2}</li>
-              <li>{t.pathStep3}</li>
+              <li>
+                {es ? 'Configura tu billetera y aprende a usar la plataforma en el curso ' : 'Set up your wallet and learn to use the platform in the '}
+                <Link href={courses.web3ubi} className="text-primary underline">
+                  Web3 &amp; UBI
+                </Link>
+                {es ? '.' : ' course.'}
+              </li>
+              <li>
+                {es ? 'Conecta tu billetera y completa tu ' : 'Connect your wallet and complete your '}
+                <Link href={profileUrl} className="text-primary underline">
+                  {es ? 'perfil' : 'profile'}
+                </Link>
+                {es
+                  ? ' (tus datos y los de tu iglesia) y propón una fecha de entrevista. Si suministras toda la información tendrás más de 90 puntos y, una vez se verifiquen los documentos que envías, ganarás 44 SLEARN automáticamente.'
+                  : ' (your data and your church) and propose an interview date. If you supply all the information you will have more than 90 points, and once the documents you send are verified you will earn 44 SLEARN automatically.'}
+              </li>
+              <li>
+                {es
+                  ? 'Regresa al curso Web3 & UBI y reclama tu UBI diario en CELO (necesitarás el token CELO para pagar el gas de las transacciones).'
+                  : 'Return to the Web3 & UBI course and claim your daily UBI in CELO (you will need the CELO token to pay for transaction gas).'}
+              </li>
               <li>{t.pathStep4}</li>
               <li>
-                {t.pathStep5}
+                {es ? 'Entra al curso ' : 'Enter the '}
+                <Link href={courses.gd} className="text-primary underline">
+                  {es ? 'Global Disciples' : 'Global Disciples'}
+                </Link>
+                {es ? ' y págalo con SLEARN y/o USDT.' : ' course and pay with SLEARN and/or USDT.'}
                 <div className="text-sm text-gray-500 mt-1">
                   {t.pathStep5Hint}{' '}
                   <a href="https://stable-sl.pdJ.app" target="_blank" rel="noopener noreferrer" className="text-primary underline">
@@ -127,6 +268,24 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
               </li>
             </ol>
           </div>
+
+          {showAnalysis && (
+            <div className="text-left bg-orange-50 border border-orange-200 rounded-xl p-6 mb-8">
+              <h2 className="font-semibold text-gray-800 mb-2">{t.analysisTitle}</h2>
+              <p className="text-sm text-gray-600 mb-3">
+                {t.analysisIntro}{' '}
+                <span className="font-semibold">{t.analysisCurrent}: {score}</span>
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-gray-700">
+                {missingItems.map((item) => (
+                  <li key={item.label}>
+                    <span className="font-medium">{item.label}</span>
+                    <span className="text-gray-500"> (+{item.points} pts, {item.mandatory ? t.analysisMandatory : t.analysisOptional})</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="text-left bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
             <h2 className="font-semibold text-gray-800 mb-2">{t.gdTitle}</h2>
@@ -150,20 +309,67 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
             )}
           </div>
 
-          <Link
-            href={`/${lang}`}
-            className="inline-block rounded bg-primary px-8 py-3 text-base font-semibold text-white hover:opacity-90"
-          >
-            {t.cta}
-          </Link>
-          <p className="text-sm text-gray-500 mt-3">{t.ctaSub}</p>
+          <div className="text-left bg-white border border-gray-200 rounded-xl p-6 mb-8">
+            <h2 className="font-semibold text-gray-800 mb-2">{t.rankingTitle}</h2>
+            <p className="text-sm text-gray-500 mb-4">{t.rankingSub}</p>
+            {funds && (funds.countries.length > 0 || funds.clusters.length > 0) ? (
+              <div className="space-y-4">
+                {funds.countries.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">{t.rankingCountries}</h3>
+                    <ul className="space-y-1 text-gray-700">
+                      {funds.countries.map((c) => (
+                        <li key={c.country_code || c.country_name} className="flex justify-between">
+                          <span>
+                            {c.country_code ? `${flagEmoji(c.country_code)} ` : ''}
+                            {c.country_name || c.country_code || '—'}
+                          </span>
+                          <span className="font-mono text-sm">≈ {Number(c.total).toFixed(2)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {funds.clusters.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">{t.rankingClusters}</h3>
+                    <ul className="space-y-1 text-gray-700">
+                      {funds.clusters.map((c) => (
+                        <li key={c.cluster_wallet || c.cluster_name} className="flex justify-between">
+                          <span>{c.cluster_name || c.cluster_wallet || '—'}</span>
+                          <span className="font-mono text-sm">≈ {Number(c.total).toFixed(2)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <Link href={rankingUrl} className="text-sm text-primary underline">
+                  {es ? 'Ver ranking completo' : 'See full ranking'}
+                </Link>
+              </div>
+            ) : (
+              <p className="text-gray-500">{t.rankingEmpty}</p>
+            )}
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-gray-500 mb-2">{t.nextStepLabel}</p>
+            <Link
+              href={nextStep.href}
+              style={{ color: '#ffffff' }}
+              className="inline-block rounded bg-primary px-8 py-3 text-base font-semibold hover:opacity-90"
+            >
+              {nextStep.label}
+            </Link>
+            <p className="text-sm text-gray-500 mt-3">{t.ctaSub}</p>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 mt-6 text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-3">{t.learnWalletsTitle}</h2>
           <p className="text-gray-700 mb-4">{t.learnWalletsDesc}</p>
           <Link
-            href="/en/web3-and-ubi"
+            href={courses.web3ubi}
             className="inline-block rounded border border-primary px-6 py-2 text-sm font-semibold text-primary hover:opacity-90"
           >
             {t.learnWalletsCta}

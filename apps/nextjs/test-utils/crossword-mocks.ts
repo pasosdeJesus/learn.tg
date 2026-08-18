@@ -17,20 +17,19 @@ function createRemarkFillInTheBlankMock(fillInTheBlankData: Array<{ answer: stri
   { answer: 'TEST', clue: 'A test word' },
   { answer: 'CODE', clue: 'Programming stuff' },
 ]) {
-  const mockRemarkFillInTheBlank = vi.hoisted(() => vi.fn(() => () => {
+  const mockRemarkFillInTheBlank = vi.fn(() => () => {
     ;(global as any).fillInTheBlank = fillInTheBlankData
-  }))
+  })
 
   return {
     mockRemarkFillInTheBlank,
 
     /**
-     * Setup vi.mock call for remarkFillInTheBlank module
+     * @deprecated `vi.mock()` no se hoistea desde una función importada (Vitest 3).
+     * El `vi.mock` de este módulo vive a module scope en `vitest.setup.ts`.
      */
     setupRemarkFillInTheBlankMock() {
-      vi.mock('@/lib/remarkFillInTheBlank.mjs', () => ({
-        remarkFillInTheBlank: mockRemarkFillInTheBlank,
-      }))
+      // no-op: conservado por compatibilidad.
     },
 
     /**
@@ -57,7 +56,7 @@ function createCrosswordLayoutMock(options: {
   const cols = options.cols || 5
   const tableString = options.tableString || '-----<br>-----'
 
-  const mockGenerateLayout = vi.hoisted(() => vi.fn((scrambled: any[]) => ({
+  const mockGenerateLayout = vi.fn((scrambled: any[]) => ({
     rows,
     cols,
     table: Array(rows).fill(null).map(() => Array(cols).fill('-')),
@@ -69,21 +68,17 @@ function createCrosswordLayoutMock(options: {
       starty: 1,
       orientation: i % 2 === 0 ? 'across' : 'down',
     })),
-  })))
+  }))
 
   return {
     mockGenerateLayout,
 
     /**
-     * Setup vi.mock call for crossword-layout-generator-with-isolated module
+     * @deprecated `vi.mock()` no se hoistea desde una función importada (Vitest 3).
+     * El `vi.mock` de este módulo vive a module scope en `vitest.setup.ts`.
      */
     setupCrosswordLayoutMock() {
-      vi.mock('crossword-layout-generator-with-isolated', () => ({
-        __esModule: true,
-        default: {
-          generateLayout: mockGenerateLayout,
-        },
-      }))
+      // no-op: conservado por compatibilidad.
     },
 
     /**

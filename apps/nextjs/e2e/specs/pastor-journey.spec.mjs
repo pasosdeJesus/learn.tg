@@ -164,20 +164,48 @@ async function main() {
   const page = await browser.newPage()
   await setupSIWEMock(page, pastorAddr, pastorPk, chainId)
 
+  // Diagnostic capture (REQ/208): log everything the browser sees so we can
+  // tell hydration-failure apart from slow on-demand compilation, a client
+  // JS error, or a missing window.ethereum mock.
+  const browserEvents = []
+  page.on('console', (m) => browserEvents.push(`[console.${m.type()}] ${m.text()}`))
+  page.on('pageerror', (e) => browserEvents.push(`[pageerror] ${e.message}`))
+  page.on('requestfailed', (r) =>
+    browserEvents.push(`[requestfailed] ${r.url()} ${r.failure()?.errorText || ''}`))
+  page.on('response', (r) => {
+    if (r.request().resourceType() === 'script' && !r.ok()) {
+      browserEvents.push(`[script ${r.status()}] ${r.url()}`)
+    }
+  })
+
   // ════════════════════════════════════════════════════════════════
   // Step 1: Pastor connects wallet
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 1: Pastor connects wallet ──')
+  const tGoto = Date.now()
   await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
   let hasConnect = false
+  let lastProbe = null
   for (let i = 0; i < 15; i++) {
     await new Promise(r => setTimeout(r, 3000))
-    hasConnect = await page.evaluate(() =>
-      document.body.textContent?.includes('Connect Wallet') ||
-      document.body.textContent?.includes('Conectar Billetera'))
+    lastProbe = await page.evaluate(() => ({
+      hasEthereum: typeof window.ethereum !== 'undefined',
+      hasNextData: typeof window.__NEXT_DATA__ !== 'undefined',
+      buttonCount: document.querySelectorAll('button').length,
+      hasConnectText: (document.body.textContent || '')
+        .includes('Connect Wallet') || (document.body.textContent || '')
+        .includes('Conectar Billetera'),
+    }))
+    hasConnect = lastProbe.hasConnectText
     if (hasConnect) break
   }
-  if (!hasConnect) { fail('Connect Wallet not visible'); await browser.close(); process.exit(1) }
+  if (!hasConnect) {
+    console.log(`[DIAG] goto→poll elapsed=${Date.now() - tGoto}ms lastProbe=`, JSON.stringify(lastProbe))
+    console.log('[DIAG] browser events:\n' + browserEvents.join('\n'))
+    fail('Connect Wallet not visible')
+    await browser.close()
+    process.exit(1)
+  }
 
   const connectBtn = await page.evaluateHandle(() =>
     [...document.querySelectorAll('button')].find(b =>
@@ -190,11 +218,28 @@ async function main() {
   let connected = false
   for (let i = 0; i < 40; i++) {
     await new Promise(r => setTimeout(r, 3000))
-    const stillConnect = await page.evaluate(() =>
-      document.body.textContent?.includes('Connect Wallet'))
-    if (!stillConnect) { connected = true; ok('Pastor SIWE complete'); break }
+    try {
+      const stillConnect = await page.evaluate(() =>
+        document.body.textContent?.includes('Connect Wallet'))
+      if (!stillConnect) { connected = true; ok('Pastor SIWE complete'); break }
+    } catch (e) {
+      // window.location.reload() after SIWE destroys the execution context;
+      // this is expected — retry on the next poll.
+    }
   }
-  if (!connected) { fail('Pastor SIWE did not complete'); await browser.close(); process.exit(1) }
+  if (!connected) {
+    const probe = await page.evaluate(() => ({
+      text: (document.body?.textContent || '').slice(0, 500),
+      buttons: [...document.querySelectorAll('button')].map((b) => b.textContent?.trim()),
+      lsAddr: localStorage.getItem('learn.tg.sessionAddress')?.slice(0, 12),
+      lsToken: localStorage.getItem('learn.tg.authToken')?.slice(0, 12),
+    })).catch((e) => ({ evalError: e.message }))
+    console.log('[DIAG] SIWE failure probe:', JSON.stringify(probe, null, 2))
+    console.log('[DIAG] browser events:\n' + browserEvents.join('\n'))
+    fail('Pastor SIWE did not complete')
+    await browser.close()
+    process.exit(1)
+  }
   await new Promise(r => setTimeout(r, 4000))
 
   // ════════════════════════════════════════════════════════════════
