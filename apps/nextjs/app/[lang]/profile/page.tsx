@@ -157,6 +157,7 @@ export default function ProfileForm({ params }: PageProps) {
     en: { editProfile: 'Edit Profile', profileScore: 'Profile Score', displayName: 'Display Name', religion: 'Religion', selectReligion: 'Select your religion', churchRelationship: 'Church Relationship', selectChurchRelationship: 'Select your role', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Leader/Elder', churchRelationshipMember: 'Member', placeOfWorshipAddress: 'Address of your place of worship', searchPlace: 'Type to search place...', placeOfWorshipName: 'Name of your place of worship', placeOfWorshipNamePlaceholder: 'Name or church', contactNotice: 'We may occasionally send announcements about the platform to your email, WhatsApp, or Telegram. If you prefer not to receive them, do not provide that information.', countryVerified: 'Country (Verified:', selectCountry: 'Select your country', uniquenessGoodDollar: 'Uniqueness with GoodDollar (Verified:', saving: 'Saving', saveChanges: 'Save Changes', verifySelf: 'Verify with self', updateScores: 'Update scores', deleteVerifiedData: 'Delete Verified Data',
       viewCredentials: 'View my public credentials',
       saveFailed: 'Failed to save profile.',
+      emailInUse: 'This email is already in use. Please use a different one.',
       expiredSession: '\n\nThis may be due to an expired session. Please try disconnecting and reconnecting your wallet.',
       connectionIssue: '\n\nPlease check your internet connection and try again.',
       errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below',
@@ -165,6 +166,7 @@ export default function ProfileForm({ params }: PageProps) {
     es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', churchRelationship: 'Relación con la Iglesia', selectChurchRelationship: 'Selecciona tu rol', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Líder/Anciano', churchRelationshipMember: 'Miembro', placeOfWorshipAddress: 'Dirección de tu lugar de culto', searchPlace: 'Escribe para buscar lugar...', placeOfWorshipName: 'Nombre de tu lugar de culto', placeOfWorshipNamePlaceholder: 'Nombre o iglesia', contactNotice: 'Ocasionalmente enviaremos anuncios sobre la plataforma a tu correo, WhatsApp o Telegram. Si no deseas recibirlos, no suministres esa información.', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar ( Verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes', deleteVerifiedData: 'Eliminar Datos Verificados',
       viewCredentials: 'Ver mis credenciales públicas',
       saveFailed: 'Fallo al guardar el perfil.',
+      emailInUse: 'Este correo ya está en uso. Usa uno diferente.',
       expiredSession: '\n\nPuede deberse a que la sesi\u00f3n ha expirado. Por favor, intenta desconectar y reconectar tu billetera.',
       connectionIssue: '\n\nPor favor, revisa tu conexi\u00f3n a internet e int\u00e9ntalo de nuevo.',
       errorLabel: 'Error: ', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion',
@@ -447,6 +449,11 @@ export default function ProfileForm({ params }: PageProps) {
 
       if (!response.ok) {
         const errorText = await response.text()
+        let serverError = response.statusText
+        try {
+          const parsed = JSON.parse(errorText)
+          if (parsed.error) serverError = parsed.error
+        } catch { /* not JSON */ }
         logger.error('Profile save failed: ' + JSON.stringify({
           status: response.status,
           statusText: response.statusText,
@@ -454,7 +461,10 @@ export default function ProfileForm({ params }: PageProps) {
           url: url,
           is_okx: navigator.userAgent.includes('OKX'),
         }), 'Profile')
-        throw new Error(`[${response.status}] ${response.statusText}`)
+        const err = new Error(`[${response.status}] ${serverError}`)
+        ;(err as any).status = response.status
+        ;(err as any).serverError = serverError
+        throw err
       }
 
 
@@ -489,10 +499,14 @@ export default function ProfileForm({ params }: PageProps) {
       } catch { /* non-blocking */ }
     } catch (error) {
       logger.error('Profile save error: ' + String(error), 'Profile')
+      const status = (error as any)?.status
+      const serverError = (error as any)?.serverError || ''
       let alertMessage =
         t('saveFailed')
 
-      if (error instanceof Error) {
+      if (status === 409 && serverError === 'Email already in use') {
+        alertMessage = t('emailInUse')
+      } else if (error instanceof Error) {
         alertMessage += `\n\n${t('details')}: ${
           error.message
         }.`
@@ -583,8 +597,15 @@ export default function ProfileForm({ params }: PageProps) {
             }
           } catch {}
         } else {
-          // Only show error for non-transient failures
-          if (res.status !== 401 && res.status !== 403) {
+          // Duplicate email (unique index) — show a friendly toast
+          if (res.status === 409) {
+            let msg = ''
+            try {
+              const errData = await res.json()
+              if (errData.error === 'Email already in use') msg = t('emailInUse')
+            } catch { /* ignore */ }
+            toast({ title: lang === 'es' ? 'Error al guardar' : 'Save failed', description: msg || t('saveFailed'), variant: 'destructive' })
+          } else if (res.status !== 401 && res.status !== 403) {
             console.error(`[autoSave] Failed to save ${field}: ${res.status}`)
           }
         }

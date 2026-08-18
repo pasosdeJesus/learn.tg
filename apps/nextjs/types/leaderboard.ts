@@ -72,7 +72,9 @@ export interface TransparencyResponse {
     stableSlReserveUSDT: number
     reserveMultisigUSDT: number
     referralWalletUSDT: number
+    referralWalletSLEARN: number
     churchesWalletUSDT: number
+    churchesWalletSLEARN: number
     coverageRatio: number
     coverageTarget: number
     adminTestSLEARN: number

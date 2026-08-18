@@ -144,10 +144,12 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
             <div className="p-3 rounded-md border bg-muted/30">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">{t('referralWallet')}</div>
               <div className="text-xl font-bold">${reserves.referralWalletUSDT.toFixed(2)}</div>
+              <div className="text-sm text-muted-foreground">{reserves.referralWalletSLEARN.toFixed(2)} SLEARN</div>
             </div>
             <div className="p-3 rounded-md border bg-muted/30">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">{t('churchesWallet')}</div>
               <div className="text-xl font-bold">${reserves.churchesWalletUSDT.toFixed(2)}</div>
+              <div className="text-sm text-muted-foreground">{reserves.churchesWalletSLEARN.toFixed(2)} SLEARN</div>
             </div>
           </div>
         </div>
