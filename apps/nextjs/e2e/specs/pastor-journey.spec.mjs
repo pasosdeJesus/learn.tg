@@ -22,10 +22,25 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
+import { createPublicClient, createWalletClient, http, parseUnits, parseEther } from 'viem'
+import { celoSepolia } from 'viem/chains'
 import {
   initTestEnv, launchBrowser, resetFailures, fail, ok, summary,
   setupSIWEMock, short,
 } from '@pasosdejesus/m/e2e'
+
+const slearnTransferAbi = [
+  {
+    name: 'transfer',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+]
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
@@ -44,6 +59,22 @@ function loadEnvCredentials() {
       const pk = content.match(/PRIVATE_KEY="([^"]+)"/)?.[1] || content.match(/PRIVATE_KEY=(\S+)/)?.[1]
       const addr = content.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
       if (pk && addr) return { pk, addr }
+    }
+  }
+  return null
+}
+
+function loadEnvValue(key) {
+  const envPaths = [
+    path.join(process.cwd(), '..', '.env'),
+    path.join(process.cwd(), 'apps', '.env'),
+    path.join(process.cwd(), '.env'),
+  ]
+  for (const envPath of envPaths) {
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8')
+      const m = content.match(new RegExp(`${key}="([^"]+)"`)) || content.match(new RegExp(`${key}=(\\S+)`))
+      if (m) return m[1]
     }
   }
   return null
@@ -264,7 +295,7 @@ async function main() {
     email: testEmail,
     whatsapp: '+23276123456',
     pais_id: 694,                       // Sierra Leone
-    religion_id: 1,
+    religion_id: 2,                     // Christian (GD course purchase gate)
     church_relationship: 'pastor',
     position_israel_gaza: 'no',
     place_of_worship: 'E2E Test Church',
@@ -326,6 +357,47 @@ async function main() {
     fail(`Verifier PATCH failed: ${JSON.stringify(verifyRes).slice(0, 140)}`)
   }
 
+  // Create a church and assign the pastor (required for GD course purchase:
+  // religion_id=2 Christian + church membership + verified registration).
+  let churchId = null
+  try {
+    const churchRes = await axios.post(
+      `${SITE}/api/admin/churches?wallet=${verifier.addr}&token=${vAuth.token}`,
+      { name: 'E2E Test Church', country_id: 694, denomination: 'E2E Denomination' },
+      { httpsAgent, headers: { 'Content-Type': 'application/json', Cookie: vAuth.cookies } },
+    )
+    churchId = churchRes.data?.church?.id
+    if (churchId) ok(`Church created (#${churchId})`)
+    else fail(`Church creation failed: ${JSON.stringify(churchRes.data).slice(0, 140)}`)
+  } catch (e) {
+    fail(`Church creation error: ${e.message}`)
+  }
+
+  if (churchId) {
+    const assignRes = await apiPatch(
+      `/api/admin/user/${pastorUserId}`,
+      { church_id: churchId },
+      { wallet: verifier.addr, token: vAuth.token },
+      vAuth.cookies,
+    )
+    if (assignRes?.success || assignRes?.user) ok(`Pastor assigned to church #${churchId}`)
+    else fail(`Church assignment failed: ${JSON.stringify(assignRes).slice(0, 140)}`)
+
+    const churchVerifyRes = await apiPatch(
+      `/api/admin/church/${churchId}`,
+      { registration_verified: true },
+      { wallet: verifier.addr, token: vAuth.token },
+      vAuth.cookies,
+    )
+    if (churchVerifyRes?.success) {
+      ok('Church registration verified')
+      if (churchVerifyRes.bonus?.awarded) ok(`44 SLEARN bonus awarded (tx ${churchVerifyRes.bonus.hash})`)
+      else if (churchVerifyRes.bonus?.reason) console.log(`  [!] Bonus not awarded: ${churchVerifyRes.bonus.reason}`)
+    } else {
+      fail(`Church registration verification failed: ${JSON.stringify(churchVerifyRes).slice(0, 140)}`)
+    }
+  }
+
   // ════════════════════════════════════════════════════════════════
   // Step 4: Pastor signs back in and claims UBI in Web3 & UBI guide 3
   // ════════════════════════════════════════════════════════════════
@@ -358,15 +430,108 @@ async function main() {
   // The 44 SLEARN bonus is awarded on-chain by the verifier/admin flow and
   // depends on the churches fund holding SLEARN. Detect it via the
   // transaction/notification path.
-  const txRes = await page.evaluate(async () => {
-    const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const token = localStorage.getItem('learn.tg.authToken') || ''
-    const r = await fetch(`/api/user-transactions/${addr}?walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`)
+  const txRes = await page.evaluate(async (userId) => {
+    const r = await fetch(`/api/user-transactions/${userId}`)
     return r.ok ? r.json() : null
-  })
+  }, pastorUserId)
   const hasBonus = txRes && JSON.stringify(txRes).includes('pastor_bonus')
   if (hasBonus) ok('44 SLEARN pastor bonus recorded')
   else console.log('  [!] No pastor_bonus transaction yet (requires funded churches fund + verifier award step)')
+
+  // ════════════════════════════════════════════════════════════════
+  // Step 6: Pastor buys the Global Disciples course (on-chain)
+  // ════════════════════════════════════════════════════════════════
+  console.log('\n── Step 6: Pastor buys Global Disciples course ──')
+  const gdCourseId = 10 // EN /gdcluster
+  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || loadEnvValue('NEXT_PUBLIC_RPC_URL') || 'https://forno.celo-sepolia.celo-testnet.org'
+  // Read live contract addresses from the dev server — the local .env may point
+  // to a stale deployment (the SLEARN was re-deployed, and the backend wallet
+  // differs from the local test wallet).
+  let slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS || loadEnvValue('NEXT_PUBLIC_SLEARN_ADDRESS')
+  let backendWallet = verifier.addr
+  try {
+    const fundRes = await axios.get(`${SITE}/api/churches/fund`, { httpsAgent })
+    if (fundRes.data?.slearnAddress) slearnAddress = fundRes.data.slearnAddress
+    if (fundRes.data?.address) backendWallet = fundRes.data.address
+  } catch { /* keep env fallback */ }
+
+  // Check purchase eligibility (Christian + pilot country + church + non-Zionist)
+  const purchaseCheck = await page.evaluate(async (courseId) => {
+    const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
+    const token = localStorage.getItem('learn.tg.authToken') || ''
+    const q = `walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+    const eligRes = await fetch(`/api/courses/${courseId}/purchase-eligibility?${q}`)
+    const elig = eligRes.ok ? await eligRes.json() : null
+    const accessRes = await fetch(`/api/courses/${courseId}/access?${q}`)
+    return { eligOk: eligRes.ok, elig, accessStatus: accessRes.status }
+  }, gdCourseId)
+
+  if (purchaseCheck.elig?.eligible) ok('GD course purchase eligibility confirmed')
+  else { fail(`GD course not eligible: ${JSON.stringify(purchaseCheck.elig).slice(0, 140)}`); await browser.close(); process.exit(1) }
+
+  // Before purchase, a premium course should deny guide access.
+  if (purchaseCheck.accessStatus === 403) ok('GD course is gated (403 before purchase)')
+  else console.log(`  [!] Access status ${purchaseCheck.accessStatus} (expected 403 before purchase)`)
+
+  // On-chain purchase: fund gas → transfer SLEARN → purchase endpoint → verify access.
+  try {
+    const publicClient = createPublicClient({ chain: celoSepolia, transport: http(rpcUrl) })
+
+    // 1. Fund the pastor's wallet with CELO gas (from the test/backend wallet).
+    const funder = privateKeyToAccount(verifier.pk)
+    const funderClient = createWalletClient({ account: funder, chain: celoSepolia, transport: http(rpcUrl) })
+    const gasHash = await funderClient.sendTransaction({ to: pastorAddr, value: parseEther('0.1') })
+    await publicClient.waitForTransactionReceipt({ hash: gasHash })
+    ok('Pastor funded with CELO gas')
+
+    // 2. Pastor transfers SLEARN (the 44 bonus) to the backend wallet.
+    const pastorAccount = privateKeyToAccount(pastorPk)
+    const pastorClient = createWalletClient({ account: pastorAccount, chain: celoSepolia, transport: http(rpcUrl) })
+    const slearnHash = await pastorClient.writeContract({
+      address: slearnAddress,
+      abi: slearnTransferAbi,
+      functionName: 'transfer',
+      args: [backendWallet, parseUnits('44', 2)],
+    })
+    await publicClient.waitForTransactionReceipt({ hash: slearnHash })
+    ok(`SLEARN transferred to backend (tx ${short(slearnHash)})`)
+
+    // 3. Call the premium purchase endpoint.
+    const purchaseRes = await page.evaluate(async ({ courseId, slearnHash }) => {
+      const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
+      const token = localStorage.getItem('learn.tg.authToken') || ''
+      const r = await fetch('/api/courses/premium/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: addr, token, courseId, slearnHash }),
+      })
+      return { status: r.status, body: await r.text() }
+    }, { courseId: gdCourseId, slearnHash })
+
+    if (purchaseRes.status === 200 || purchaseRes.status === 201) ok('GD course purchased')
+    else fail(`Course purchase failed: ${purchaseRes.status} ${purchaseRes.body.slice(0, 160)}`)
+
+    // 4. Verify access is now granted (200 instead of 403).
+    const accessAfter = await page.evaluate(async (courseId) => {
+      const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
+      const token = localStorage.getItem('learn.tg.authToken') || ''
+      const q = `walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+      const r = await fetch(`/api/courses/${courseId}/access?${q}`)
+      return r.status
+    }, gdCourseId)
+    if (accessAfter === 200) ok('GD course access granted after purchase')
+    else fail(`GD course access not granted (${accessAfter})`)
+
+    // Navigate to the GD course page — it should now load the guides.
+    await navAndWait(page, `${base}/en/gdcluster`, timeout)
+    await new Promise(r => setTimeout(r, 4000))
+    const courseLoaded = await page.evaluate(() =>
+      (document.body?.textContent || '').replace(/\s+/g, '').length > 100)
+    if (courseLoaded) ok('GD course page loaded')
+    else fail('GD course page did not load')
+  } catch (e) {
+    fail(`On-chain purchase error: ${e.message}`)
+  }
 
   await browser.close()
   summary(t0)
