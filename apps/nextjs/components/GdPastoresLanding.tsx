@@ -182,10 +182,10 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
     },
     {
       key: 'interview',
-      met: !!profile && (profile.proposed_date_of_interview != null || profile.conducted_date_of_interview != null),
+      met: !!profile && profile.conducted_date_of_interview != null,
       label: es
-        ? 'Tener una cita de verificación o haberla tenido para alcanzar más de 90 puntos en su perfil'
-        : 'Have a verification appointment (or have had one) to reach more than 90 points in your profile',
+        ? 'Propón y asiste a una cita de verificación para alcanzar más de 90 puntos en tu perfil'
+        : 'Propose and attend a verification appointment to reach more than 90 points in your profile',
     },
   ]
 
@@ -437,15 +437,19 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-gray-500 mb-2">{t.nextStepLabel}</p>
-            <Link
-              href={nextStep.href}
-              style={{ color: '#ffffff' }}
-              className="inline-block rounded bg-primary px-8 py-3 text-base font-semibold hover:opacity-90"
-            >
-              {nextStep.label}
-            </Link>
-            <p className="text-sm text-gray-500 mt-3">{t.ctaSub}</p>
+            {hasWallet && (
+              <>
+                <p className="text-sm font-semibold text-gray-500 mb-2">{t.nextStepLabel}</p>
+                <Link
+                  href={nextStep.href}
+                  style={{ color: '#ffffff' }}
+                  className="inline-block rounded bg-primary px-8 py-3 text-base font-semibold hover:opacity-90"
+                >
+                  {nextStep.label}
+                </Link>
+                <p className="text-sm text-gray-500 mt-3">{t.ctaSub}</p>
+              </>
+            )}
           </div>
         </div>
 

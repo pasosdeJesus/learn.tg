@@ -38,7 +38,6 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
   }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [hidden, setHidden] = useState(false)
   const [localAddr, setLocalAddr] = useState<string | null>(null)
 
   const t = createComponentT(lang, {
@@ -79,15 +78,6 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     }
   }, [session?.address])
 
-  // Auto-connect for MiniPay
-  useEffect(() => {
-    if (typeof window !== 'undefined' && (window.ethereum as any)?.isMiniPay) {
-      setHidden(true)
-      handleConnect()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   // Still checking wallet availability — show nothing to avoid flashing stale state
   if (!isWalletCheckComplete) {
     logger.info(
@@ -97,7 +87,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     return null
   }
   logger.info(
-    `ConnectWalletButton: rendered (sessionAddress=${sessionAddress ? sessionAddress.slice(0, 6) : 'null'} isWalletAvailable=${isWalletAvailable} hidden=${hidden})`,
+    `ConnectWalletButton: rendered (sessionAddress=${sessionAddress ? sessionAddress.slice(0, 6) : 'null'} isWalletAvailable=${isWalletAvailable})`,
     'auth',
   )
 
@@ -254,9 +244,6 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     await signOut({ redirect: false })
     window.location.href = '/'
   }
-
-  // MiniPay: hide the button completely
-  if (hidden) return null
 
   // Connected: show address with disconnect
   if (showAsConnected) {
