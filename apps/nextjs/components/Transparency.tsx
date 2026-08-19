@@ -108,7 +108,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
         <div className="rounded-xl border bg-card p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-3">
             <span>{t('reserves')}</span>
-            <img src="/img/slearn-icon.svg" alt="SLEARN" className="w-[100px] h-[100px]" />
+            <img src="/img/slearn-icon.svg" alt="SLEARN" className="w-8 h-8" />
             {reserves.slearnExplorerUrl && (
               <a href={reserves.slearnExplorerUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center ml-auto text-xs text-primary hover:underline gap-1">
                 {t('explorer')} <ExternalLink className="h-3 w-3" />
@@ -127,29 +127,29 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="p-3 rounded-md border bg-muted/30">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">{t('slearnSupply')}</div>
-              <div className="text-xl font-bold">{reserves.slearnTotalSupply.toLocaleString()}</div>
+              <div className="text-xl font-bold">{reserves.slearnTotalSupply.toLocaleString()} SLEARN</div>
             </div>
             <div className="p-3 rounded-md border bg-muted/30">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">{t('learnTgReserve')}</div>
-              <div className="text-xl font-bold text-emerald-600">${reserves.learnTgReserveUSDT.toFixed(2)}</div>
+              <div className="text-xl font-bold text-emerald-600">${reserves.learnTgReserveUSDT.toFixed(2)} USDT</div>
             </div>
             <div className="p-3 rounded-md border bg-muted/30">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">{t('stableSlReserve')}</div>
-              <div className="text-xl font-bold text-emerald-600">${reserves.stableSlReserveUSDT.toFixed(2)}</div>
+              <div className="text-xl font-bold text-emerald-600">${reserves.stableSlReserveUSDT.toFixed(2)} USDT</div>
             </div>
             <div className="p-3 rounded-md border bg-muted/30">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">{t('reserveMultisig')}</div>
-              <div className="text-xl font-bold text-amber-600">${reserves.reserveMultisigUSDT.toFixed(2)}</div>
+              <div className="text-xl font-bold text-amber-600">${reserves.reserveMultisigUSDT.toFixed(2)} USDT</div>
             </div>
             <div className="p-3 rounded-md border bg-muted/30">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">{t('referralWallet')}</div>
-              <div className="text-xl font-bold">${reserves.referralWalletUSDT.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">{reserves.referralWalletSLEARN.toFixed(2)} SLEARN</div>
+              <div className="text-xl font-bold text-emerald-600">${reserves.referralWalletUSDT.toFixed(2)} USDT</div>
+              <div className="text-sm font-medium text-amber-600">{reserves.referralWalletSLEARN.toFixed(2)} SLEARN</div>
             </div>
             <div className="p-3 rounded-md border bg-muted/30">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">{t('churchesWallet')}</div>
-              <div className="text-xl font-bold">${reserves.churchesWalletUSDT.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">{reserves.churchesWalletSLEARN.toFixed(2)} SLEARN</div>
+              <div className="text-xl font-bold text-emerald-600">${reserves.churchesWalletUSDT.toFixed(2)} USDT</div>
+              <div className="text-sm font-medium text-amber-600">{reserves.churchesWalletSLEARN.toFixed(2)} SLEARN</div>
             </div>
           </div>
         </div>

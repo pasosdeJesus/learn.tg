@@ -131,11 +131,11 @@ export function TransparencyTable({
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalSLEARN')}</div>
-            <div className="text-lg font-bold">{totals.totalSLEARNBalance.toFixed(2)}</div>
+            <div className="text-lg font-bold">{totals.totalSLEARNBalance.toFixed(2)} SLEARN</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('Scholarships', 'Becas')}</div>
-            <div className="text-lg font-bold">{formatUSDT(totals.totalScholarshipUSDT)}</div>
+            <div className="text-lg font-bold">{formatUSDT(totals.totalScholarshipUSDT)} USDT</div>
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalUBI')}</div>
@@ -143,7 +143,7 @@ export function TransparencyTable({
           </div>
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('totalDonations')}</div>
-            <div className="text-lg font-bold">{formatUSDT(totals.totalDonationsUSDT)}</div>
+            <div className="text-lg font-bold">{formatUSDT(totals.totalDonationsUSDT)} USDT</div>
           </div>
         </div>
       )}
