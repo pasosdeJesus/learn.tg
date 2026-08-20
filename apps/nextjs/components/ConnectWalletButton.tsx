@@ -78,31 +78,25 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     }
   }, [session?.address])
 
+  useEffect(() => {
+    // Logging removed to debug React warning and wallet connection hang
+  }, [isWalletCheckComplete, isWalletAvailable, sessionAddress])
+
   // Still checking wallet availability — show nothing to avoid flashing stale state
   if (!isWalletCheckComplete) {
-    logger.info(
-      `ConnectWalletButton: not rendered (isWalletCheckComplete=${isWalletCheckComplete} isWalletAvailable=${isWalletAvailable})`,
-      'auth',
-    )
     return null
   }
-  logger.info(
-    `ConnectWalletButton: rendered (sessionAddress=${sessionAddress ? sessionAddress.slice(0, 6) : 'null'} isWalletAvailable=${isWalletAvailable})`,
-    'auth',
-  )
 
   async function handleConnect() {
-    logger.info('ConnectWalletButton: handleConnect() invoked', 'auth')
     setLoading(true)
     setError('')
 
     try {
       if (typeof window === 'undefined' || !window.ethereum) {
-        logger.error('ConnectWalletButton: no window.ethereum in handleConnect', 'auth')
         setError(t('noWallet'))
         return
       }
-
+      // ... rest of handleConnect ...
       // 1. Ensure we're on the correct chain before requesting accounts
       //    This avoids the confusing "Ethereum" prompt when the wallet defaults
       //    to mainnet — we switch to Celo first, then connect.
