@@ -102,15 +102,24 @@ export async function routeToClusterFunds(
   })
 
   // Helper to send tx with incremented nonce
-  const sendWithNonce = async (args: any) => {
-    const hash = await walletClient.writeContract({
-      ...args,
-      account,
-      chain,
-      nonce: nonce++,
-    })
-    await publicClient.waitForTransactionReceipt({ hash })
-    return hash
+  const sendWithNonce = async (args: any, description: string) => {
+    const currentNonce = nonce
+    console.log(`[gd-debug] Sending ${description} with nonce ${currentNonce}`)
+    try {
+      const hash = await walletClient.writeContract({
+        ...args,
+        account,
+        chain,
+        nonce: nonce++,
+      })
+      console.log(`[gd-debug] ${description} tx hash: ${hash}`)
+      await publicClient.waitForTransactionReceipt({ hash })
+      console.log(`[gd-debug] ${description} tx confirmed: ${hash}`)
+      return hash
+    } catch (e: any) {
+      console.error(`[gd-debug] Error in ${description} (nonce ${currentNonce}):`, e?.shortMessage || e?.message || e)
+      throw e
+    }
   }
 
   // Transfer tokens
@@ -120,7 +129,7 @@ export async function routeToClusterFunds(
       abi: Erc20Abi as any,
       functionName: 'transfer',
       args: [cfAddress, usdtAmount],
-    })
+    }, 'USDT transfer')
   }
 
   if (slearnAmount > 0n) {
@@ -129,7 +138,7 @@ export async function routeToClusterFunds(
       abi: Erc20Abi as any,
       functionName: 'transfer',
       args: [cfAddress, slearnAmount],
-    })
+    }, 'SLEARN transfer')
   }
 
   // Route to ClusterFunds
@@ -139,13 +148,13 @@ export async function routeToClusterFunds(
       abi: ClusterFundsAbi as any,
       functionName: 'processDonation',
       args: [tx, destino.destination as Address, donor, usdtAmount, slearnAmount],
-    })
+    }, 'processDonation')
   } else {
     await sendWithNonce({
       address: cfAddress,
       abi: ClusterFundsAbi as any,
       functionName: 'processCountryDonation',
       args: [tx, destino.destination, donor, usdtAmount, slearnAmount],
-    })
+    }, 'processCountryDonation')
   }
 }
