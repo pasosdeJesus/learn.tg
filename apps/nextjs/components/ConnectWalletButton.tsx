@@ -191,6 +191,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         method: 'personal_sign',
         params: [msgStr, address],
       })
+      console.log('[debug-wallet] Signature received')
 
       // 5. POST to NextAuth credentials callback
       const body = new URLSearchParams({
@@ -200,15 +201,16 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         redirect: 'false',
         json: 'true',
       })
+      console.log('[debug-wallet] Fetching /api/auth/callback/credentials')
       const cbRes = await fetch('/api/auth/callback/credentials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString(),
       })
+      console.log('[debug-wallet] Callback fetch returned. Status:', cbRes.status)
 
       if (!cbRes.ok) {
         const text = await cbRes.text()
-        console.error('[ConnectWallet] callback failed:', cbRes.status, text.slice(0, 200))
         throw new Error(`Authentication failed (${cbRes.status})`)
       }
 
@@ -219,6 +221,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       localStorage.setItem('learn.tg.authToken', csrfToken)
       // Reload page so NextAuth reads the session cookie on mount.
       // update() from useSession() is unreliable after SIWE callback.
+      console.log('[debug-wallet] Reloading page...')
       window.location.reload()
     } catch (err: any) {
       console.error('ConnectWalletButton error:', err)
