@@ -216,7 +216,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto mx-4">
         <button onClick={closeAll} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
         <h2 className="text-xl font-semibold mb-4">{tCopy?.title || t('donateToCourse')}</h2>
 

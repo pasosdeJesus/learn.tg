@@ -8,7 +8,7 @@ import type { ClusterDonation, CountryDonation } from '@/lib/donation-target'
 
 interface ClusterRow {
   id: number; name: string; country_name: string | null
-  country_code: string | null; church_count: number
+  country_code: string | null; church_count: number; wallet: string
 }
 
 interface CountryRow {
@@ -33,7 +33,7 @@ export function RankingClient({ lang }: { lang: string }) {
       noData: 'Aún no hay datos.', loading: 'Cargando...', donate: 'Donar',
     },
   })
-  const [tab, setTab] = useState<'clusters' | 'countries'>('clusters')
+  const [tab, setTab] = useState<'clusters' | 'countries'>('countries')
   const [clusters, setClusters] = useState<ClusterRow[]>([])
   const [countries, setCountries] = useState<CountryRow[]>([])
   const [funds, setFunds] = useState<{ clusters: any[], countries: any[] }>({ clusters: [], countries: [] })
@@ -58,7 +58,7 @@ export function RankingClient({ lang }: { lang: string }) {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  const findClusterFunds = (wallet: string) => funds.clusters.find(f => f.cluster_wallet === wallet)
+  const findClusterFunds = (wallet: string) => funds.clusters.find(f => f.cluster_wallet?.toLowerCase() === wallet.toLowerCase())
   const findCountryFunds = (code: string) => funds.countries.find(f => f.country_code === code)
 
   if (loading) return <p className="text-gray-500">{t('loading')}</p>
@@ -102,19 +102,15 @@ export function RankingClient({ lang }: { lang: string }) {
                   </td>
                   <td className="px-3 py-2 text-center text-xs">{c.church_count}</td>
                   <td className="px-3 py-2 text-right text-xs">
-                    {tab === 'clusters' 
-                      ? (findClusterFunds(c.id.toString())?.usdt_total.toFixed(2) || '0.00')
-                      : (findCountryFunds(c.country_code || '')?.usdt_total.toFixed(2) || '0.00')}
+                    {findClusterFunds(c.wallet)?.usdt_total.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-3 py-2 text-right text-xs">
-                    {tab === 'clusters' 
-                      ? (findClusterFunds(c.id.toString())?.slearn_total.toFixed(2) || '0.00')
-                      : (findCountryFunds(c.country_code || '')?.slearn_total.toFixed(2) || '0.00')}
+                    {findClusterFunds(c.wallet)?.slearn_total.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-3 py-2 text-center">
                     <button onClick={() => setDonateTarget({
                       type: 'cluster-donation',
-                      clusterWallet: '', // TODO: from cluster row
+                      clusterWallet: c.wallet,
                       clusterName: c.name,
                     })}
                     className="text-xs text-blue-600 hover:underline px-2 py-1 rounded hover:bg-blue-50">
@@ -152,14 +148,10 @@ export function RankingClient({ lang }: { lang: string }) {
                   <td className="px-3 py-2 text-center text-xs">{c.cluster_count}</td>
                   <td className="px-3 py-2 text-center text-xs">{c.church_count}</td>
                   <td className="px-3 py-2 text-right text-xs">
-                    {tab === 'clusters' 
-                      ? (findClusterFunds(c.id.toString())?.usdt_total.toFixed(2) || '0.00')
-                      : (findCountryFunds(c.country_code || '')?.usdt_total.toFixed(2) || '0.00')}
+                    {findCountryFunds(c.country_code || '')?.usdt_total.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-3 py-2 text-right text-xs">
-                    {tab === 'clusters' 
-                      ? (findClusterFunds(c.id.toString())?.slearn_total.toFixed(2) || '0.00')
-                      : (findCountryFunds(c.country_code || '')?.slearn_total.toFixed(2) || '0.00')}
+                    {findCountryFunds(c.country_code || '')?.slearn_total.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-3 py-2 text-center">
                     <button onClick={() => setDonateTarget({
