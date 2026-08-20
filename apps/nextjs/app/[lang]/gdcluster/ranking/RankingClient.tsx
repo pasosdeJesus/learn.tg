@@ -36,6 +36,7 @@ export function RankingClient({ lang }: { lang: string }) {
   const [tab, setTab] = useState<'clusters' | 'countries'>('clusters')
   const [clusters, setClusters] = useState<ClusterRow[]>([])
   const [countries, setCountries] = useState<CountryRow[]>([])
+  const [funds, setFunds] = useState<{ clusters: any[], countries: any[] }>({ clusters: [], countries: [] })
   const [loading, setLoading] = useState(true)
   const [donateTarget, setDonateTarget] = useState<ClusterDonation | CountryDonation | null>(null)
 
@@ -43,17 +44,22 @@ export function RankingClient({ lang }: { lang: string }) {
     setLoading(true)
     const auth = adminAuthParams()
     try {
-      const [cRes, coRes] = await Promise.all([
+      const [cRes, coRes, fRes] = await Promise.all([
         fetch(`/api/gdcluster/ranking/clusters?${auth}`),
         fetch(`/api/gdcluster/ranking/countries?${auth}`),
+        fetch(`/api/gdcluster/ranking/funds?${auth}`),
       ])
       if (cRes.ok) setClusters((await cRes.json()).clusters || [])
       if (coRes.ok) setCountries((await coRes.json()).countries || [])
+      if (fRes.ok) setFunds(await fRes.json())
     } catch (e) { /* public */ }
     setLoading(false)
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  const findClusterFunds = (wallet: string) => funds.clusters.find(f => f.cluster_wallet === wallet)
+  const findCountryFunds = (code: string) => funds.countries.find(f => f.country_code === code)
 
   if (loading) return <p className="text-gray-500">{t('loading')}</p>
 
@@ -95,8 +101,16 @@ export function RankingClient({ lang }: { lang: string }) {
                     {c.country_code ? `${flagEmoji(c.country_code)} ${c.country_name}` : c.country_name || '—'}
                   </td>
                   <td className="px-3 py-2 text-center text-xs">{c.church_count}</td>
-                  <td className="px-3 py-2 text-right text-xs text-gray-400">—</td>
-                  <td className="px-3 py-2 text-right text-xs text-gray-400">—</td>
+                  <td className="px-3 py-2 text-right text-xs">
+                    {tab === 'clusters' 
+                      ? (findClusterFunds(c.id.toString())?.usdt_total.toFixed(2) || '0.00')
+                      : (findCountryFunds(c.country_code || '')?.usdt_total.toFixed(2) || '0.00')}
+                  </td>
+                  <td className="px-3 py-2 text-right text-xs">
+                    {tab === 'clusters' 
+                      ? (findClusterFunds(c.id.toString())?.slearn_total.toFixed(2) || '0.00')
+                      : (findCountryFunds(c.country_code || '')?.slearn_total.toFixed(2) || '0.00')}
+                  </td>
                   <td className="px-3 py-2 text-center">
                     <button onClick={() => setDonateTarget({
                       type: 'cluster-donation',
@@ -137,8 +151,16 @@ export function RankingClient({ lang }: { lang: string }) {
                   </td>
                   <td className="px-3 py-2 text-center text-xs">{c.cluster_count}</td>
                   <td className="px-3 py-2 text-center text-xs">{c.church_count}</td>
-                  <td className="px-3 py-2 text-right text-xs text-gray-400">—</td>
-                  <td className="px-3 py-2 text-right text-xs text-gray-400">—</td>
+                  <td className="px-3 py-2 text-right text-xs">
+                    {tab === 'clusters' 
+                      ? (findClusterFunds(c.id.toString())?.usdt_total.toFixed(2) || '0.00')
+                      : (findCountryFunds(c.country_code || '')?.usdt_total.toFixed(2) || '0.00')}
+                  </td>
+                  <td className="px-3 py-2 text-right text-xs">
+                    {tab === 'clusters' 
+                      ? (findClusterFunds(c.id.toString())?.slearn_total.toFixed(2) || '0.00')
+                      : (findCountryFunds(c.country_code || '')?.slearn_total.toFixed(2) || '0.00')}
+                  </td>
                   <td className="px-3 py-2 text-center">
                     <button onClick={() => setDonateTarget({
                       type: 'country-donation',
@@ -161,6 +183,7 @@ export function RankingClient({ lang }: { lang: string }) {
           target={donateTarget}
           isOpen={true}
           onClose={() => setDonateTarget(null)}
+          onSuccess={() => { fetchData(); setDonateTarget(null) }}
           lang={lang}
         />
       )}
