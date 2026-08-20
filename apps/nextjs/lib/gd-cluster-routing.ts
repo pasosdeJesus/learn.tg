@@ -94,53 +94,58 @@ export async function routeToClusterFunds(
 ) {
   const cfAddress = getClusterFundsAddress()
   const chain = publicClient.chain
+  
+  // Fetch initial nonce
+  let nonce = await publicClient.getTransactionCount({
+    address: account.address,
+    blockTag: 'pending',
+  })
 
-  // Transfer tokens from backend wallet to ClusterFunds (no approve; the
-  // backend sends the tokens directly and processDonation just records them).
-  if (usdtAmount > 0n) {
+  // Helper to send tx with incremented nonce
+  const sendWithNonce = async (args: any) => {
     const hash = await walletClient.writeContract({
+      ...args,
+      account,
+      chain,
+      nonce: nonce++,
+    })
+    await publicClient.waitForTransactionReceipt({ hash })
+    return hash
+  }
+
+  // Transfer tokens
+  if (usdtAmount > 0n) {
+    await sendWithNonce({
       address: usdtToken,
       abi: Erc20Abi as any,
       functionName: 'transfer',
       args: [cfAddress, usdtAmount],
-      account,
-      chain,
     })
-    await publicClient.waitForTransactionReceipt({ hash })
   }
 
   if (slearnAmount > 0n) {
-    const hash = await walletClient.writeContract({
+    await sendWithNonce({
       address: slearnToken,
       abi: Erc20Abi as any,
       functionName: 'transfer',
       args: [cfAddress, slearnAmount],
-      account,
-      chain,
     })
-    await publicClient.waitForTransactionReceipt({ hash })
   }
 
   // Route to ClusterFunds
   if (destino.type === 'cluster') {
-    const hash = await walletClient.writeContract({
+    await sendWithNonce({
       address: cfAddress,
       abi: ClusterFundsAbi as any,
       functionName: 'processDonation',
       args: [tx, destino.destination as Address, donor, usdtAmount, slearnAmount],
-      account,
-      chain,
     })
-    await publicClient.waitForTransactionReceipt({ hash })
   } else {
-    const hash = await walletClient.writeContract({
+    await sendWithNonce({
       address: cfAddress,
       abi: ClusterFundsAbi as any,
       functionName: 'processCountryDonation',
       args: [tx, destino.destination, donor, usdtAmount, slearnAmount],
-      account,
-      chain,
     })
-    await publicClient.waitForTransactionReceipt({ hash })
   }
 }
