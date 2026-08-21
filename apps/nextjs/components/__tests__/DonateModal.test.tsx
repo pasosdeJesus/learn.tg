@@ -331,6 +331,15 @@ describe('DonateModal', () => {
         fireEvent.click(donateButton)
       })
 
+      // Wait for result screen, then click OK
+      await waitFor(() => {
+        expect(screen.getByText('🎉 Donation completed!')).toBeTruthy()
+      })
+      const okButton = screen.getByRole('button', { name: /^OK$/i })
+      await act(async () => {
+        fireEvent.click(okButton)
+      })
+
       await waitFor(() => {
         expect(defaultOnSuccess).toHaveBeenCalled()
       })

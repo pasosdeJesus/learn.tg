@@ -39,6 +39,9 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       success: 'Course purchased',
       copyError: 'Copy error',
       error: 'Error',
+      resultTitle: '🎉 Course purchased!',
+      resultTx: 'View transaction',
+      resultOk: 'OK',
       insufficient: 'You need to add USDT to your wallet to buy this course. Complete crosswords and claim your daily UBI to help gather the funds.',
       needMoreUsdt: 'To pay more with USDT you need to add more USDT to your wallet.',
       yourCelo: 'Your CELO (gas)',
@@ -62,6 +65,9 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       success: 'Curso comprado',
       copyError: 'Copiar error',
       error: 'Error',
+      resultTitle: '🎉 ¡Curso comprado!',
+      resultTx: 'Ver transacción',
+      resultOk: 'OK',
       insufficient: 'Necesitas poner USDT en tu billetera para comprar este curso. Completa crucigramas y reclama tu UBI diario para ayudar a reunir los fondos.',
       needMoreUsdt: 'Para pagar más con USDT necesitas cargar más USDT en tu billetera.',
       yourCelo: 'Tu CELO (gas)',
@@ -173,11 +179,21 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     celoBalance,
   })
 
-  const handleSuccess = useCallback(() => {
-    toast({ title: t('success') })
+  const [showResult, setShowResult] = useState(false)
+  const [resultTxHash, setResultTxHash] = useState<string | null>(null)
+  const [resultProcessPaymentHash, setResultProcessPaymentHash] = useState<string | null>(null)
+
+  const handleSuccess = useCallback((data: { increment?: number; usdtHash?: string; slearnHash?: string; processPaymentHash?: string }) => {
+    if (data?.slearnHash) setResultTxHash(data.slearnHash)
+    else if (data?.usdtHash) setResultTxHash(data.usdtHash)
+    if (data?.processPaymentHash) setResultProcessPaymentHash(data.processPaymentHash)
+    setShowResult(true)
+  }, [])
+
+  const handleResultOk = useCallback(() => {
     onSuccess?.()
     onClose()
-  }, [t, onSuccess, onClose, toast])
+  }, [onSuccess, onClose])
 
   const onBackendCallback = useCallback(async (params: {
     walletAddress: string
@@ -239,7 +255,28 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg text-gray-800">
-        <h3 className="text-lg font-bold mb-4">{t('title')}</h3>
+        {showResult ? (
+          <div className="text-center py-6">
+            <h3 className="text-lg font-bold mb-4">{t('resultTitle')}</h3>
+            {(() => {
+              const tx = resultProcessPaymentHash || resultTxHash
+              if (!tx) return null
+              const explorerBase = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'https://celo.blockscout.com' : 'https://celo-sepolia.blockscout.com'
+              return (
+                <a href={`${explorerBase}/tx/${tx}`} target="_blank" rel="noopener noreferrer"
+                  className="inline-block text-sm text-blue-600 underline break-all mb-6">
+                  {t('resultTx')}
+                </a>
+              )
+            })()}
+            <button onClick={handleResultOk}
+              className="mt-4 w-full rounded px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+              {t('resultOk')}
+            </button>
+          </div>
+        ) : (
+          <>
+            <h3 className="text-lg font-bold mb-4">{t('title')}</h3>
 
         <div className="space-y-4 text-sm">
           <p>
@@ -321,6 +358,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
             {busy ? t('processing') : t('purchase')}
           </Button>
         </div>
+          </>
+        )}
       </div>
     </div>
   )

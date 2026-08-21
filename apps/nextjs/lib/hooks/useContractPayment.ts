@@ -39,8 +39,8 @@ export interface UseContractPaymentOptions {
     usdtHash: string
     slearnHash: string
     courseId: number | null
-  }) => Promise<{ increment?: number }>
-  onSuccess?: (data: { increment?: number; usdtHash?: string; slearnHash?: string }) => void
+  }) => Promise<Record<string, any>>
+  onSuccess?: (data: { increment?: number; usdtHash?: string; slearnHash?: string; [key: string]: any }) => void
 }
 
 export interface UseContractPaymentReturn {

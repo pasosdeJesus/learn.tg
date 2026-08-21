@@ -10,7 +10,6 @@ import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@/
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { TransactionStatus } from '@/components/ui/TransactionStatus'
-import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import {
   type PaymentTarget,
   type CourseDonation,
@@ -47,15 +46,15 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const address = rawAddress as Address | undefined
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
-  const { toast } = useToast()
   const [usdtDecimals, setUsdtDecimals] = useState<number>(+(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6))
   const [usdtBalance, setUsdtBalance] = useState<bigint>(0n)
   const [slearnBalance, setSlearnBalance] = useState<bigint>(0n)
   const [celoBalance, setCeloBalance] = useState<bigint>(0n)
   const [amount, setAmount] = useState('')
   const [slearnAmount, setSlearnAmount] = useState('')
-  const lastTxHash = useRef<string | null>(null)
-  const lastCashback = useRef<number>(0)
+  const [showResult, setShowResult] = useState(false)
+  const [resultTxHash, setResultTxHash] = useState<string | null>(null)
+  const [resultCashback, setResultCashback] = useState(0)
 
   const usdtAddress = (process.env.NEXT_PUBLIC_USDT_ADDRESS as Address) || undefined
   const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address) || undefined
@@ -105,46 +104,28 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       return data
     },
     onSuccess: (data) => {
-      if (data?.slearnHash) lastTxHash.current = data.slearnHash
-      else if (data?.usdtHash) lastTxHash.current = data.usdtHash
-      if (data?.increment && data.increment > 0) lastCashback.current = data.increment
-      onSuccess?.(data)
+      if (data?.slearnHash) setResultTxHash(data.slearnHash)
+      else if (data?.usdtHash) setResultTxHash(data.usdtHash)
+      if (data?.increment && data.increment > 0) setResultCashback(data.increment)
+      setShowResult(true)
     },
   })
 
   const reset = useCallback(() => {
     setAmount('')
     setSlearnAmount('')
+    setShowResult(false)
+    setResultTxHash(null)
+    setResultCashback(0)
     resetPayment()
   }, [resetPayment])
 
-  // Auto-close on success with toast
-  useEffect(() => {
-    if (paymentState === 'success') {
-      const txHash = lastTxHash.current
-      const cashback = lastCashback.current
-      const explorerBase = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'https://celo.blockscout.com' : 'https://celo-sepolia.blockscout.com'
-      const txLink = txHash ? `${explorerBase}/tx/${txHash}` : null
-      const descParts: string[] = []
-      if (cashback > 0) {
-        descParts.push(lang === 'es' ? `+${cashback.toFixed(2)} SLEARN de cashback` : `+${cashback.toFixed(2)} SLEARN cashback`)
-      }
-      if (txLink) {
-        descParts.push(
-          lang === 'es' ? 'Ver transacción: ' : 'View transaction: '
-        )
-      }
-      toast({
-        title: lang === 'es' ? '🎉 ¡Gracias por tu donación!' : '🎉 Thank you for your donation!',
-        description: (descParts.length > 0 || txLink)
-          ? <div className="space-y-1">{descParts.length > 0 && <div>{descParts[0]}</div>}{txLink && <a href={txLink} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 break-all">{txLink}</a>}</div>
-          : undefined,
-        duration: 8000,
-      })
-      reset()
-      onClose()
-    }
-  }, [paymentState, toast, lang, reset, onClose])
+  // On success → show result screen instead of toast
+  const handleResultOk = useCallback(() => {
+    onSuccess?.({ increment: resultCashback, usdtHash: resultTxHash || undefined, slearnHash: resultTxHash || undefined })
+    reset()
+    onClose()
+  }, [onSuccess, resultCashback, resultTxHash, reset, onClose])
 
   const closeAll = useCallback(() => {
     reset()
@@ -204,6 +185,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       estimatedReward: 'Estimated SLEARN reward',
       estimatedRewardValue: '~{{0}} SLEARN',
       donateToCourse: 'Donate to course',
+      resultTitle: '🎉 Donation completed!',
+      resultCashback: '+{{0}} SLEARN cashback',
+      resultTx: 'View transaction',
+      resultOk: 'OK',
     },
     es: {
       connectSign: 'Conecta y firma con tu billetera para donar',
@@ -227,6 +212,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       estimatedReward: 'Recompensa SLEARN estimada',
       estimatedRewardValue: '~{{0}} SLEARN',
       donateToCourse: 'Donar al curso',
+      resultTitle: '🎉 ¡Donación completada!',
+      resultCashback: '+{{0}} SLEARN de cashback',
+      resultTx: 'Ver transacción',
+      resultOk: 'OK',
     },
   })
 
@@ -243,8 +232,32 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto mx-4">
-        <button onClick={closeAll} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
-        <h2 className="text-xl font-semibold mb-4">{tCopy?.title || t('donateToCourse')}</h2>
+        {showResult ? (
+          <div className="text-center py-6">
+            <button onClick={handleResultOk} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+            <h2 className="text-xl font-semibold mb-4">{t('resultTitle')}</h2>
+            {resultCashback > 0 && (
+              <p className="text-lg text-green-700 font-medium mb-2">{t('resultCashback', resultCashback.toFixed(2))}</p>
+            )}
+            {resultTxHash && (() => {
+              const explorerBase = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'https://celo.blockscout.com' : 'https://celo-sepolia.blockscout.com'
+              const txLink = `${explorerBase}/tx/${resultTxHash}`
+              return (
+                <a href={txLink} target="_blank" rel="noopener noreferrer"
+                  className="inline-block text-sm text-blue-600 underline break-all mb-6">
+                  {t('resultTx')}
+                </a>
+              )
+            })()}
+            <button onClick={handleResultOk}
+              className="mt-4 w-full rounded px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+              {t('resultOk')}
+            </button>
+          </div>
+        ) : (
+          <>
+            <button onClick={closeAll} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+            <h2 className="text-xl font-semibold mb-4">{tCopy?.title || t('donateToCourse')}</h2>
 
         {(!address || !walletClient) && (
           <div className="text-sm text-red-600 mb-4">{t('connectSign')}</div>
@@ -318,6 +331,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
 
         {paymentError && (
           <div className="mt-3 text-sm text-red-600">{paymentError}</div>
+        )}
+          </>
         )}
       </div>
     </div>
