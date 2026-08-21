@@ -94,3 +94,25 @@ export function getTargetEndpoint(target: PaymentTarget): string {
     case 'country-donation': return '/api/gdcluster/donations/verify'
   }
 }
+
+/** Distribution breakdown from backend response (actual on-chain events) */
+export interface DistributionItem {
+  label: string
+  amount: string
+  crypto: string
+}
+
+export function getDistributionFromResponse(data: any, lang: string): DistributionItem[] {
+  const t = (en: string, es: string) => lang === 'es' ? es : en
+  const items: DistributionItem[] = []
+  if (data?.distribution) {
+    for (const d of data.distribution) {
+      items.push({
+        label: d.label || d.destination || d.subcategoria || '—',
+        amount: d.amount?.toFixed?.(2) ?? String(d.amount ?? '0'),
+        crypto: d.crypto || 'usdt',
+      })
+    }
+  }
+  return items
+}

@@ -63,7 +63,10 @@ export default function UserTransactionsPage({ params }: PageProps) {
   }, [id])
 
   const getExplorerUrl = (hash: string) => {
-    return `https://celoscan.io/tx/${hash}`
+    const isProduction = process.env.NEXT_PUBLIC_NETWORK === 'celo'
+    return isProduction
+      ? `https://celo.blockscout.com/tx/${hash}`
+      : `https://celo-sepolia.blockscout.com/tx/${hash}`
   }
 
   const formatAmount = (tx: UserTransaction) => {

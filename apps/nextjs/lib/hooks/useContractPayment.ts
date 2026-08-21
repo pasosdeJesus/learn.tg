@@ -40,7 +40,7 @@ export interface UseContractPaymentOptions {
     slearnHash: string
     courseId: number | null
   }) => Promise<Record<string, any>>
-  onSuccess?: (data: { increment?: number; usdtHash?: string; slearnHash?: string; [key: string]: any }) => void
+  onSuccess?: (data: Record<string, any>) => void
 }
 
 export interface UseContractPaymentReturn {

@@ -13,10 +13,11 @@ import { TransactionStatus } from '@/components/ui/TransactionStatus'
 import {
   type PaymentTarget,
   type CourseDonation,
+  type DistributionItem,
   getTargetCopy,
   getTargetRecipient,
   getTargetEndpoint,
-  getDistributionBreakdown,
+  getDistributionFromResponse,
 } from '@/lib/donation-target'
 
 const SLEARN_DECIMALS = 2
@@ -56,6 +57,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const [showResult, setShowResult] = useState(false)
   const [resultTxHash, setResultTxHash] = useState<string | null>(null)
   const [resultCashback, setResultCashback] = useState(0)
+  const [resultDistribution, setResultDistribution] = useState<DistributionItem[]>([])
 
   const usdtAddress = (process.env.NEXT_PUBLIC_USDT_ADDRESS as Address) || undefined
   const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address) || undefined
@@ -108,6 +110,9 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       if (data?.slearnHash) setResultTxHash(data.slearnHash)
       else if (data?.usdtHash) setResultTxHash(data.usdtHash)
       if (data?.increment && data.increment > 0) setResultCashback(data.increment)
+      if (data?.distribution) {
+        setResultDistribution(getDistributionFromResponse(data, lang || 'en'))
+      }
       setShowResult(true)
     },
   })
@@ -240,20 +245,17 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
             {resultCashback > 0 && (
               <p className="text-lg text-green-700 font-medium mb-4">{t('resultCashback', resultCashback.toFixed(2))}</p>
             )}
-            {/* Distribution breakdown */}
-            {effectiveTarget && (() => {
-              const breakdown = getDistributionBreakdown(lang || 'en', effectiveTarget, safeParseFloat(amount), safeParseFloat(slearnAmount))
-              return (
-                <div className="text-left text-sm space-y-1 mb-4 bg-gray-50 rounded-lg p-3">
-                  {breakdown.map((item, i) => (
-                    <div key={i} className="flex justify-between">
-                      <span className="text-gray-700">{item.label} <span className="text-gray-400">({item.pct}%)</span></span>
-                      <span className="font-mono font-medium">{item.value} {item.type === 'usdt' ? 'USDT' : item.type === 'slearn' ? 'SLEARN' : 'USDT/SLEARN'}</span>
-                    </div>
-                  ))}
-                </div>
-              )
-            })()}
+            {/* Distribution breakdown from actual on-chain data */}
+            {resultDistribution.length > 0 && (
+              <div className="text-left text-sm space-y-1 mb-4 bg-gray-50 rounded-lg p-3">
+                {resultDistribution.map((item, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span className="text-gray-700">{item.label}</span>
+                    <span className="font-mono font-medium">{item.amount} {item.crypto.toUpperCase()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             {resultTxHash && (() => {
               const explorerBase = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'https://celo.blockscout.com' : 'https://celo-sepolia.blockscout.com'
               const txLink = `${explorerBase}/tx/${resultTxHash}`
