@@ -97,22 +97,14 @@ export function getTargetEndpoint(target: PaymentTarget): string {
 
 /** Distribution breakdown from backend response (actual on-chain events) */
 export interface DistributionItem {
-  label: string
-  amount: string
+  destination: string
+  amount: string | number
   crypto: string
 }
 
 export function getDistributionFromResponse(data: any, lang: string): DistributionItem[] {
-  const t = (en: string, es: string) => lang === 'es' ? es : en
-  const items: DistributionItem[] = []
   if (data?.distribution) {
-    for (const d of data.distribution) {
-      items.push({
-        label: d.label || d.destination || d.subcategoria || '—',
-        amount: d.amount?.toFixed?.(2) ?? String(d.amount ?? '0'),
-        crypto: d.crypto || 'usdt',
-      })
-    }
+    return data.distribution
   }
-  return items
+  return []
 }

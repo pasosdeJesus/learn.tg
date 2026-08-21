@@ -250,8 +250,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
               <div className="text-left text-sm space-y-1 mb-4 bg-gray-50 rounded-lg p-3">
                 {resultDistribution.map((item, i) => (
                   <div key={i} className="flex justify-between">
-                    <span className="text-gray-700">{item.label}</span>
-                    <span className="font-mono font-medium">{item.amount} {item.crypto.toUpperCase()}</span>
+                    <span className="text-gray-700">{item.destination}</span>
+                    <span className="font-mono font-medium">{Number(item.amount).toFixed?.(2) ?? item.amount} {item.crypto.toUpperCase()}</span>
                   </div>
                 ))}
               </div>
