@@ -45,7 +45,7 @@ export async function verifyTransfer(
 
   const [recipient, amount] = args as [Address, bigint]
   if (recipient.toLowerCase() !== toAddress.toLowerCase()) {
-    throw new Error(`${crypto.toUpperCase()} transfer was not sent to the expected wallet`)
+    throw new Error(`${crypto.toUpperCase()} transfer was not sent to backend wallet`)
   }
 
   return { amount }
