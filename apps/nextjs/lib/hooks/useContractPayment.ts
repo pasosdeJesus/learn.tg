@@ -173,22 +173,8 @@ export function useContractPayment({
         } catch (e: any) {
           const detail = e?.response?.data?.error || e?.message || String(e)
           logger.error('[useContractPayment] Backend verification failed: ' + detail, 'Payment')
-          const now = new Date().toISOString()
-          const info = [
-            `Time: ${now}`,
-            `Error: ${detail}`,
-            usdtHash && `USDT tx: ${usdtHash}`,
-            slearnHash && `SLEARN tx: ${slearnHash}`,
-            `Course: ${courseId}`,
-          ].filter(Boolean).join('\n')
           setState('error')
           setError(detail)
-          toast({
-            title: lang === 'es' ? 'No pudimos procesar el pago automáticamente' : 'We could not process the payment automatically',
-            description: info,
-            duration: Infinity,
-            variant: 'destructive',
-          })
           return
         }
       }

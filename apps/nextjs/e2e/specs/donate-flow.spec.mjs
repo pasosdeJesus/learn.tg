@@ -20,7 +20,6 @@ import {
   setupSIWEMock, short,
 } from '@pasosdejesus/m/e2e'
 
-const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
 
 function loadEnvCredentials() {

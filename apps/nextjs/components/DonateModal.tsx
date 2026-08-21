@@ -345,7 +345,16 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         </div>
 
         {paymentError && (
-          <div className="mt-3 text-sm text-red-600">{paymentError}</div>
+          <div className="mt-3 text-sm">
+            <div className="bg-red-50 border border-red-300 rounded p-3">
+              <p className="font-semibold text-red-700 mb-1">{lang === 'es' ? 'Error' : 'Error'}</p>
+              <pre className="whitespace-pre-wrap text-red-600 text-xs max-h-32 overflow-y-auto">{paymentError}</pre>
+              <button onClick={() => navigator.clipboard.writeText(paymentError)}
+                className="mt-1 text-xs text-red-500 underline hover:text-red-700">
+                {lang === 'es' ? 'Copiar error' : 'Copy error'}
+              </button>
+            </div>
+          </div>
         )}
           </>
         )}

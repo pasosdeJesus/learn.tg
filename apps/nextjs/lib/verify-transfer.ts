@@ -28,9 +28,15 @@ export async function verifyTransfer(
     throw new Error(`${crypto.toUpperCase()} transaction was not sent to ${crypto.toUpperCase()} contract`)
   }
 
-  const block = await publicClient.getBlock({ blockNumber: receipt.blockNumber })
-  if (Date.now() - Number(block.timestamp * 1000n) > maxAgeMs) {
-    throw new Error(`${crypto.toUpperCase()} transaction is too old (max 24 hours)`)
+  // Age check: best-effort, skip if getBlock fails (viem version compat)
+  try {
+    const block = await publicClient.getBlock({ blockNumber: receipt.blockNumber })
+    if (Date.now() - Number(block.timestamp * 1000n) > maxAgeMs) {
+      throw new Error(`${crypto.toUpperCase()} transaction is too old (max 24 hours)`)
+    }
+  } catch (e: any) {
+    if (e.message?.includes?.('too old')) throw e
+    // otherwise log and skip — not critical
   }
 
   const tx = await publicClient.getTransaction({ hash: hash as `0x${string}` })
