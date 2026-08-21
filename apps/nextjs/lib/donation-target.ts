@@ -16,7 +16,7 @@ export function getDistributionBreakdown(lang: string, target: PaymentTarget, us
     case 'course-donation':
       base.push(
         { label: t('Course vault (USDT)', 'Bóveda del curso (USDT)'), pct: 35, value: fmt(usdtAmount * 0.35), type: 'usdt' },
-        { label: t('Course vault (SLEARN)', 'Bóveda del curso (SLEARN)'), pct: 35, value: fmt(slearnAmount * 0.35), type: 'slearn' },
+        { label: t('Course vault (SLEARN)', 'Bóveda del curso (SLEARN)'), pct: 35, value: fmt(usdtAmount * 0.35 * 22 + slearnAmount * 0.35), type: 'slearn' },
         { label: t('SLEARN cashback (you)', 'Cashback SLEARN (tú)'), pct: 10, value: '~' + fmt(totalUSDT * 0.10 * 22), type: 'slearn' },
         { label: t('pdJ operations', 'Operaciones pdJ'), pct: 5, value: fmt(usdtAmount * 0.05), type: 'usdt' },
         { label: t('Missional', 'Misional'), pct: 5, value: fmt(usdtAmount * 0.05), type: 'usdt' },
