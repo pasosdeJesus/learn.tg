@@ -6,7 +6,41 @@ export interface CountryDonation { type: 'country-donation'; countryCode: string
 
 export type PaymentTarget = CourseDonation | ClusterDonation | CountryDonation
 
-/** Human-readable copy for each target type */
+export function getDistributionBreakdown(lang: string, target: PaymentTarget, usdtAmount: number, slearnAmount: number) {
+  const t = (en: string, es: string) => lang === 'es' ? es : en
+  const totalUSDT = usdtAmount + (slearnAmount / 22)
+  const fmt = (v: number) => v.toFixed(2)
+  const base: { label: string; pct: number; value: string; type: 'usdt' | 'slearn' | 'both' }[] = []
+
+  switch (target.type) {
+    case 'course-donation':
+      base.push(
+        { label: t('Course vault (USDT)', 'Bóveda del curso (USDT)'), pct: 35, value: fmt(usdtAmount * 0.35), type: 'usdt' },
+        { label: t('Course vault (SLEARN)', 'Bóveda del curso (SLEARN)'), pct: 35, value: fmt(slearnAmount * 0.35), type: 'slearn' },
+        { label: t('SLEARN cashback (you)', 'Cashback SLEARN (tú)'), pct: 10, value: '~' + fmt(totalUSDT * 0.10 * 22), type: 'slearn' },
+        { label: t('pdJ operations', 'Operaciones pdJ'), pct: 5, value: fmt(usdtAmount * 0.05), type: 'usdt' },
+        { label: t('Missional', 'Misional'), pct: 5, value: fmt(usdtAmount * 0.05), type: 'usdt' },
+        { label: t('UBI + Referrals', 'IUB + Referidos'), pct: 5, value: fmt(usdtAmount * 0.05), type: 'usdt' },
+        { label: t('Churches', 'Iglesias'), pct: 5, value: fmt(usdtAmount * 0.05), type: 'usdt' },
+      )
+      break
+    case 'country-donation':
+      base.push(
+        { label: t('Country fund', 'Fondo del país'), pct: 80, value: fmt(totalUSDT * 0.8), type: 'both' },
+        { label: t('pdJ operations', 'Operaciones pdJ'), pct: 10, value: fmt(totalUSDT * 0.1), type: 'both' },
+        { label: t('SLEARN cashback (you)', 'Cashback SLEARN (tú)'), pct: 10, value: '~' + fmt(totalUSDT * 0.10 * 22), type: 'slearn' },
+      )
+      break
+    case 'cluster-donation':
+      base.push(
+        { label: t('Cluster fund', 'Fondo del clúster'), pct: 80, value: fmt(totalUSDT * 0.8), type: 'both' },
+        { label: t('pdJ operations', 'Operaciones pdJ'), pct: 10, value: fmt(totalUSDT * 0.1), type: 'both' },
+        { label: t('SLEARN cashback (you)', 'Cashback SLEARN (tú)'), pct: 10, value: '~' + fmt(totalUSDT * 0.10 * 22), type: 'slearn' },
+      )
+      break
+  }
+  return base
+}
 export function getTargetCopy(lang: string, target: PaymentTarget) {
   const t = (en: string, es: string) => lang === 'es' ? es : en
   switch (target.type) {

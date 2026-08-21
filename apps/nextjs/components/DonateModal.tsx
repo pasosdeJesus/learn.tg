@@ -16,6 +16,7 @@ import {
   getTargetCopy,
   getTargetRecipient,
   getTargetEndpoint,
+  getDistributionBreakdown,
 } from '@/lib/donation-target'
 
 const SLEARN_DECIMALS = 2
@@ -237,8 +238,22 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
             <button onClick={handleResultOk} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
             <h2 className="text-xl font-semibold mb-4">{t('resultTitle')}</h2>
             {resultCashback > 0 && (
-              <p className="text-lg text-green-700 font-medium mb-2">{t('resultCashback', resultCashback.toFixed(2))}</p>
+              <p className="text-lg text-green-700 font-medium mb-4">{t('resultCashback', resultCashback.toFixed(2))}</p>
             )}
+            {/* Distribution breakdown */}
+            {effectiveTarget && (() => {
+              const breakdown = getDistributionBreakdown(lang || 'en', effectiveTarget, safeParseFloat(amount), safeParseFloat(slearnAmount))
+              return (
+                <div className="text-left text-sm space-y-1 mb-4 bg-gray-50 rounded-lg p-3">
+                  {breakdown.map((item, i) => (
+                    <div key={i} className="flex justify-between">
+                      <span className="text-gray-700">{item.label} <span className="text-gray-400">({item.pct}%)</span></span>
+                      <span className="font-mono font-medium">{item.value} {item.type === 'usdt' ? 'USDT' : item.type === 'slearn' ? 'SLEARN' : 'USDT/SLEARN'}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
             {resultTxHash && (() => {
               const explorerBase = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'https://celo.blockscout.com' : 'https://celo-sepolia.blockscout.com'
               const txLink = `${explorerBase}/tx/${resultTxHash}`
