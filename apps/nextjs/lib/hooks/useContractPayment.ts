@@ -40,7 +40,7 @@ export interface UseContractPaymentOptions {
     slearnHash: string
     courseId: number | null
   }) => Promise<{ increment?: number }>
-  onSuccess?: (data: { increment?: number }) => void
+  onSuccess?: (data: { increment?: number; usdtHash?: string; slearnHash?: string }) => void
 }
 
 export interface UseContractPaymentReturn {
@@ -195,7 +195,7 @@ export function useContractPayment({
 
       setState('success')
       logger.info('[useContractPayment] Donation completed successfully', 'Donate')
-      onSuccess?.({ increment })
+      onSuccess?.({ increment, usdtHash, slearnHash })
     } catch (e: any) {
       setState('error')
       logger.error('[useContractPayment] Transaction failed: ' + (e?.message || String(e)), 'Donate')

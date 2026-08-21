@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
@@ -27,7 +27,7 @@ export interface DonateModalProps {
   target?: PaymentTarget
   isOpen: boolean
   onClose: () => void
-  onSuccess?: (data: { increment?: number }) => void
+  onSuccess?: (data: { increment?: number; usdtHash?: string; slearnHash?: string }) => void
   lang?: string
 }
 
@@ -54,6 +54,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const [celoBalance, setCeloBalance] = useState<bigint>(0n)
   const [amount, setAmount] = useState('')
   const [slearnAmount, setSlearnAmount] = useState('')
+  const lastTxHash = useRef<string | null>(null)
 
   const usdtAddress = (process.env.NEXT_PUBLIC_USDT_ADDRESS as Address) || undefined
   const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address) || undefined
@@ -102,7 +103,11 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       const { data } = await axios.post(endpoint, payload)
       return data
     },
-    onSuccess,
+    onSuccess: (data) => {
+      if (data?.slearnHash) lastTxHash.current = data.slearnHash
+      else if (data?.usdtHash) lastTxHash.current = data.usdtHash
+      onSuccess?.(data)
+    },
   })
 
   const reset = useCallback(() => {
@@ -114,7 +119,16 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   // Auto-close on success with toast
   useEffect(() => {
     if (paymentState === 'success') {
-      toast({ title: lang === 'es' ? '✅ Donación completada' : '✅ Donation completed' })
+      const txHash = lastTxHash.current
+      const explorerBase = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'https://celo.blockscout.com' : 'https://celo-sepolia.blockscout.com'
+      const txLink = txHash ? `${explorerBase}/tx/${txHash}` : null
+      toast({
+        title: lang === 'es' ? '🎉 ¡Gracias por tu donación!' : '🎉 Thank you for your donation!',
+        description: txLink
+          ? <a href={txLink} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 break-all">{txLink}</a>
+          : undefined,
+        duration: 8000,
+      })
       reset()
       onClose()
     }
