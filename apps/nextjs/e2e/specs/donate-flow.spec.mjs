@@ -17,8 +17,8 @@ import * as path from 'path'
 import {
   initTestEnv, launchBrowser, newPage,
   resetFailures, fail, ok, summary,
-  setupSIWEMock, short,
 } from '@pasosdejesus/m/e2e'
+import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
 
@@ -64,30 +64,16 @@ async function main() {
   console.log(`Wallet: ${wallet} | ${base} (chain: ${CHAIN_ID})`)
 
   const browser = await launchBrowser()
-  const page = await newPage(browser, creds.addr, timeout)
-  await setupSIWEMock(page, creds.addr, creds.pk, CHAIN_ID)
+  const page = await browser.newPage()
+  // Set up auth BEFORE navigating — injects wallet mock + runs SIWE
+  await setupE2EAuth(page, creds.addr, creds.pk, CHAIN_ID, base)
 
   // ════════════════════════════════════════════════════════════════
-  // Step 1: SIWE — Connect wallet
+  // Step 1: Landing page (already authenticated)
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 1: Connect wallet ──')
+  console.log('\n── Step 1: Landing page ──')
   if (!await navAndWait(page, base, timeout)) { fail('Landing page did not load'); await browser.close(); process.exit(1) }
-  ok('Landing page loaded')
-
-  // Click Connect Wallet
-  let connected = false
-  for (let w = 0; w < 10; w++) {
-    const hasConnect = await page.evaluate(() =>
-      [...document.querySelectorAll('button')].some(b =>
-        (b.textContent || '').includes('Connect') || (b.textContent || '').includes('Conectar')))
-    if (!hasConnect) { connected = true; break }
-    const btn = await page.evaluateHandle(() =>
-      [...document.querySelectorAll('button')].find(b =>
-        (b.textContent || '').includes('Connect') || (b.textContent || '').includes('Conectar')))
-    if (btn.asElement()) { await btn.asElement().click(); await new Promise(r => setTimeout(r, 2000)) }
-  }
-  if (connected) ok('Wallet connected')
-  else { fail('Could not connect wallet'); await browser.close(); process.exit(1) }
+  ok('Landing page loaded (authenticated)')
 
   // ════════════════════════════════════════════════════════════════
   // Step 2: Course page — Donate modal

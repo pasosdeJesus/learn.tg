@@ -6,6 +6,7 @@ export interface UserTransaction {
   type: string
   crypto: string
   amount: number
+  balance_impact: number
   date: Date | string
   hash: string | null
   descripcion: string | null
@@ -20,6 +21,7 @@ export async function getUserTransactions(db: Kysely<DB>, usuarioId: number) {
       'type',
       'crypto',
       'amount',
+      'balance_impact',
       'date',
       'hash',
       'descripcion'

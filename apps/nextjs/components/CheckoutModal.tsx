@@ -182,11 +182,13 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   const [showResult, setShowResult] = useState(false)
   const [resultTxHash, setResultTxHash] = useState<string | null>(null)
   const [resultProcessPaymentHash, setResultProcessPaymentHash] = useState<string | null>(null)
+  const [resultDistribution, setResultDistribution] = useState<any[]>([])
 
-  const handleSuccess = useCallback((data: { increment?: number; usdtHash?: string; slearnHash?: string; processPaymentHash?: string }) => {
+  const handleSuccess = useCallback((data: any) => {
     if (data?.slearnHash) setResultTxHash(data.slearnHash)
     else if (data?.usdtHash) setResultTxHash(data.usdtHash)
     if (data?.processPaymentHash) setResultProcessPaymentHash(data.processPaymentHash)
+    if (data?.distribution) setResultDistribution(data.distribution)
     setShowResult(true)
   }, [])
 
@@ -258,6 +260,16 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
         {showResult ? (
           <div className="text-center py-6">
             <h3 className="text-lg font-bold mb-4">{t('resultTitle')}</h3>
+            {resultDistribution.length > 0 && (
+              <div className="text-left text-sm space-y-1 mb-4 bg-gray-50 rounded-lg p-3">
+                {resultDistribution.map((item, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span className="text-gray-700">{item.destination}</span>
+                    <span className="font-mono font-medium">{Number(item.amount).toFixed?.(2) ?? item.amount} {item.crypto?.toUpperCase?.() || ''}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             {(() => {
               const tx = resultProcessPaymentHash || resultTxHash
               if (!tx) return null

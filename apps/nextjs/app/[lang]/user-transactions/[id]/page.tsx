@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@pasosdejesus/m/shadcn-components/ui/table'
-import { formatUSDT, formatCELO } from '@/lib/format'
 import type { UserTransaction } from '@/lib/user-transactions'
 import { ExternalLink, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -70,10 +69,12 @@ export default function UserTransactionsPage({ params }: PageProps) {
   }
 
   const formatAmount = (tx: UserTransaction) => {
-    if (tx.crypto === 'slearn') return `${Number(tx.amount).toFixed(2)} SLEARN`
-    if (tx.crypto === 'usdt') return formatUSDT(tx.amount)
-    if (tx.crypto === 'celo') return formatCELO(tx.amount)
-    return tx.amount.toString()
+    const sign = tx.balance_impact >= 0 ? '+' : ''
+    const color = tx.balance_impact >= 0 ? 'text-green-600' : 'text-red-600'
+    if (tx.crypto === 'slearn') return <span className={color}>{sign}{Number(tx.amount).toFixed(2)} SLEARN</span>
+    if (tx.crypto === 'usdt') return <span className={color}>{sign}{Number(tx.amount).toFixed(2)} USDT</span>
+    if (tx.crypto === 'celo') return <span className={color}>{sign}{Number(tx.amount).toFixed(4)} CELO</span>
+    return <span className={color}>{sign}{tx.amount.toString()}</span>
   }
 
   const getTypeName = (tipo: string) => {
@@ -147,7 +148,7 @@ export default function UserTransactionsPage({ params }: PageProps) {
                   <TableCell className="text-right font-mono font-medium">
                     {formatAmount(tx)}
                   </TableCell>
-                  <TableCell className="max-w-xs truncate" title={tx.descripcion || ''}>
+                  <TableCell className="max-w-xs whitespace-normal break-words" title={tx.descripcion || ''}>
                     {tx.descripcion || '-'}
                   </TableCell>
                   <TableCell className="text-center">

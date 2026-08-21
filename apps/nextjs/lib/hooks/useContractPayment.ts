@@ -151,6 +151,7 @@ export function useContractPayment({
 
       // Backend callback (e.g. /api/add-donation)
       let increment: number | undefined
+      let backendResult: Record<string, any> = {}
       if (onBackendCallback) {
         try {
           const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
@@ -158,7 +159,7 @@ export function useContractPayment({
             const donationAmountUSD = safeParseFloat(amount)
             const slearnDonationAmount = safeParseFloat(slearnAmount)
             if (donationAmountUSD > 0 || slearnDonationAmount > 0) {
-              const result = await onBackendCallback({
+              backendResult = await onBackendCallback({
                 walletAddress: address,
                 token: csrfToken,
                 donationAmountUSD,
@@ -167,7 +168,7 @@ export function useContractPayment({
                 slearnHash,
                 courseId,
               })
-              increment = result.increment
+              increment = backendResult.increment
             }
           }
         } catch (e: any) {
@@ -181,7 +182,7 @@ export function useContractPayment({
 
       setState('success')
       logger.info('[useContractPayment] Donation completed successfully', 'Donate')
-      onSuccess?.({ increment, usdtHash, slearnHash })
+      onSuccess?.({ increment, usdtHash, slearnHash, ...backendResult })
     } catch (e: any) {
       setState('error')
       logger.error('[useContractPayment] Transaction failed: ' + (e?.message || String(e)), 'Donate')
