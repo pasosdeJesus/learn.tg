@@ -26,8 +26,9 @@ import { createPublicClient, createWalletClient, http, parseUnits, parseEther } 
 import { celoSepolia } from 'viem/chains'
 import {
   initTestEnv, launchBrowser, resetFailures, fail, ok, summary,
-  setupSIWEMock, short,
+  short,
 } from '@pasosdejesus/m/e2e'
+import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
 
 const slearnTransferAbi = [
   {
@@ -196,7 +197,10 @@ async function main() {
 
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
-  await setupSIWEMock(page, pastorAddr, pastorPk, chainId)
+  await page.setDefaultNavigationTimeout(timeout)
+
+  // Auth: inject wallet mock + SIWE programmatico for the pastor
+  await setupE2EAuth(page, pastorAddr, pastorPk, chainId, base)
 
   // Diagnostic capture (REQ/208): log everything the browser sees so we can
   // tell hydration-failure apart from slow on-demand compilation, a client
@@ -213,68 +217,16 @@ async function main() {
   })
 
   // ════════════════════════════════════════════════════════════════
-  // Step 1: Pastor connects wallet
+  // Step 1: Pastor already authenticated (setupE2EAuth)
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 1: Pastor connects wallet ──')
-  const tGoto = Date.now()
-  await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
-  let hasConnect = false
-  let lastProbe = null
-  for (let i = 0; i < 15; i++) {
-    await new Promise(r => setTimeout(r, 3000))
-    lastProbe = await page.evaluate(() => ({
-      hasEthereum: typeof window.ethereum !== 'undefined',
-      hasNextData: typeof window.__NEXT_DATA__ !== 'undefined',
-      buttonCount: document.querySelectorAll('button').length,
-      hasConnectText: (document.body.textContent || '')
-        .includes('Connect Wallet') || (document.body.textContent || '')
-        .includes('Conectar Billetera'),
-    }))
-    hasConnect = lastProbe.hasConnectText
-    if (hasConnect) break
-  }
-  if (!hasConnect) {
-    console.log(`[DIAG] goto→poll elapsed=${Date.now() - tGoto}ms lastProbe=`, JSON.stringify(lastProbe))
-    console.log('[DIAG] browser events:\n' + browserEvents.join('\n'))
-    fail('Connect Wallet not visible')
-    await browser.close()
-    process.exit(1)
-  }
-
-  const connectBtn = await page.evaluateHandle(() =>
-    [...document.querySelectorAll('button')].find(b =>
-      (b.textContent || '').includes('Connect') || (b.textContent || '').includes('Conectar'))
-  )
-  if (!connectBtn.asElement()) { fail('Connect button not found'); await browser.close(); process.exit(1) }
-  await connectBtn.asElement().click()
-  ok('Clicked Connect')
-
-  let connected = false
-  for (let i = 0; i < 40; i++) {
-    await new Promise(r => setTimeout(r, 3000))
-    try {
-      const stillConnect = await page.evaluate(() =>
-        document.body.textContent?.includes('Connect Wallet'))
-      if (!stillConnect) { connected = true; ok('Pastor SIWE complete'); break }
-    } catch (e) {
-      // window.location.reload() after SIWE destroys the execution context;
-      // this is expected — retry on the next poll.
-    }
-  }
-  if (!connected) {
-    const probe = await page.evaluate(() => ({
-      text: (document.body?.textContent || '').slice(0, 500),
-      buttons: [...document.querySelectorAll('button')].map((b) => b.textContent?.trim()),
-      lsAddr: localStorage.getItem('learn.tg.sessionAddress')?.slice(0, 12),
-      lsToken: localStorage.getItem('learn.tg.authToken')?.slice(0, 12),
-    })).catch((e) => ({ evalError: e.message }))
-    console.log('[DIAG] SIWE failure probe:', JSON.stringify(probe, null, 2))
-    console.log('[DIAG] browser events:\n' + browserEvents.join('\n'))
-    fail('Pastor SIWE did not complete')
-    await browser.close()
-    process.exit(1)
-  }
-  await new Promise(r => setTimeout(r, 4000))
+  console.log('\n── Step 1: Pastor authenticated ──')
+  const pastorAuth = await page.evaluate(() => ({
+    addr: localStorage.getItem('learn.tg.sessionAddress')?.slice(0, 12),
+    token: localStorage.getItem('learn.tg.authToken')?.slice(0, 12),
+  })).catch(() => ({ addr: null, token: null }))
+  if (pastorAuth.addr) ok('Pastor SIWE complete (programmatic)')
+  else { fail('Pastor auth state missing'); await browser.close(); process.exit(1) }
+  await new Promise(r => setTimeout(r, 2000))
 
   // ════════════════════════════════════════════════════════════════
   // Step 2: Pastor fills fictitious Sierra Leone profile via API

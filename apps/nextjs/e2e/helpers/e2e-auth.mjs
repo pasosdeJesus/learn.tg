@@ -1,5 +1,5 @@
 // Unified E2E authentication helper.
-// Injects a complete window.ethereum mock (EIP-1193 + EIP-6963 + real RPC bridging)
+// Injects a complete window.ethereum mock (EIP-1193 + EIP-6963 + real signing)
 // and runs programmatic SIWE to establish a real session cookie.
 //
 // Usage:
@@ -8,13 +8,8 @@
 //   await page.goto(url)  // page is already authenticated
 
 /**
- * Injects window.ethereum mock with EIP-6963 + RPC bridging + real signing.
+ * Injects window.ethereum mock with EIP-6963 + real signing.
  * Must be called before page.goto().
- *
- * @param {import('puppeteer').Page} page
- * @param {string} address - Wallet address
- * @param {string} privateKey - Private key for signing
- * @param {number} chainId - Chain ID
  */
 async function injectMock(page, address, privateKey, chainId) {
   const hexChainId = '0x' + chainId.toString(16)
@@ -39,7 +34,7 @@ async function injectMock(page, address, privateKey, chainId) {
         if (method === 'wallet_switchEthereumChain') return null
         if (method === 'wallet_addEthereumChain') return null
         if (method === 'eth_sendTransaction') return '0x' + 'cd'.repeat(32)
-        if (method === 'eth_getBalance') return '0x0DE0B6B3A7640000' // 1 CELO
+        if (method === 'eth_getBalance') return '0x0DE0B6B3A7640000'
         if (method === 'eth_blockNumber') return '0x1312D00'
         if (method === 'eth_gasPrice') return '0x12A05F200'
         if (method === 'eth_estimateGas') return '0x7A120'
@@ -59,7 +54,6 @@ async function injectMock(page, address, privateKey, chainId) {
     }
 
     window.ethereum = provider
-    // EIP-6963 announce
     window.dispatchEvent(new CustomEvent('eip6963:announceProvider', {
       detail: {
         info: { uuid: crypto.randomUUID(), name: 'E2EMockWallet', icon: '', rdns: 'com.e2e.mock.wallet' },
@@ -80,41 +74,73 @@ async function injectMock(page, address, privateKey, chainId) {
 /**
  * Sets up E2E auth: injects wallet mock and runs programmatic SIWE.
  * Call before page.goto().
- *
- * @param {import('puppeteer').Page} page
- * @param {string} address
- * @param {string} privateKey
- * @param {number} chainId
- * @param {string} baseUrl
- * @returns {Promise<{sessionAddress: string, authToken: string}>}
  */
 export async function setupE2EAuth(page, address, privateKey, chainId, baseUrl) {
   await injectMock(page, address, privateKey, chainId)
 
-  // Navigate to target so fetch() resolves
-  await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
+  // Navigate to baseUrl so fetch() calls resolve to the right origin
+  // Use networkidle0 to wait for HMR, fonts, etc.
+  await page.goto(baseUrl, { waitUntil: 'networkidle0', timeout: 60000 })
   await new Promise(r => setTimeout(r, 2000))
 
-  // Run programmatic SIWE via the framework's simulateSIWE
-  const { simulateSIWE } = await import('@pasosdejesus/m/e2e')
+  // Run SIWE programmatically inside the page
+  const { SiweMessage } = await import('siwe')
+  const { privateKeyToAccount } = await import('viem/accounts')
+  const account = privateKeyToAccount(privateKey)
   const host = new URL(baseUrl).hostname
   const port = new URL(baseUrl).port || '443'
   const domainPort = port === '443' || port === '80' ? '' : `:${port}`
 
-  const { privateKeyToAccount } = await import('viem/accounts')
-  const account = privateKeyToAccount(privateKey)
-
-  const ok = await simulateSIWE(page, {
-    account,
-    host,
-    domainPort,
-    base: baseUrl,
-    chainId,
-    statement: 'Sign in to Learn through games.',
+  // Get CSRF token
+  const csrfRes = await page.evaluate(async () => {
+    const r = await fetch('/api/auth/csrf')
+    return r.json()
   })
+  const csrfToken = csrfRes.csrfToken
+  if (!csrfToken) throw new Error('Could not get CSRF token')
 
-  if (!ok) console.warn('[setupE2EAuth] SIWE returned non-200')
+  // Build and sign SIWE message
+  const domain = `${host}${domainPort}`
+  const msg = new SiweMessage({
+    domain,
+    address: account.address,
+    statement: 'Sign in to Learn through games.',
+    uri: baseUrl,
+    version: '1',
+    chainId,
+    nonce: csrfToken,
+  })
+  const msgStr = msg.prepareMessage()
+  const sig = await account.signMessage({ message: msgStr })
 
-  const authToken = await page.evaluate(() => localStorage.getItem('learn.tg.authToken') || '')
-  return { sessionAddress: address.toLowerCase(), authToken }
+  // POST callback via page.evaluate so cookie lands in browser jar
+  const cbResult = await page.evaluate(async ({ csrfToken, msgStr, sig }) => {
+    const body = new URLSearchParams({
+      csrfToken,
+      message: msgStr,
+      signature: typeof sig === 'string' ? sig : sig.signature || String(sig),
+      redirect: 'false',
+      json: 'true',
+    })
+    const r = await fetch('/api/auth/callback/credentials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+      redirect: 'manual',
+    })
+    const text = await r.text()
+    return { ok: r.ok, status: r.status, body: text.slice(0, 80) }
+  }, { csrfToken, msgStr, sig: typeof sig === 'string' ? sig : sig.signature || sig })
+
+  console.log(`  SIWE: ${cbResult.status} — ${cbResult.body}`)
+
+  // Store in localStorage for legacy compatibility
+  if (cbResult.ok) {
+    await page.evaluate(({ token, addr }) => {
+      localStorage.setItem('learn.tg.authToken', token)
+      localStorage.setItem('learn.tg.sessionAddress', addr)
+    }, { token: csrfToken, addr: address.toLowerCase() })
+  }
+
+  return { sessionAddress: address.toLowerCase(), authToken: csrfToken }
 }

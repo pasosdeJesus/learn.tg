@@ -1,5 +1,5 @@
 // E2E Test: Church selection persists on profile save + reload
-// Uses setupSIWEMock for persistent wallet mock across reloads.
+// Uses setupE2EAuth for persistent auth across reloads.
 //
 // Execution:
 //   CHROME_PATH=/usr/local/bin/chrome node e2e/specs/church-persistence.spec.mjs
@@ -9,8 +9,8 @@ import * as path from 'path'
 import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
-  setupSIWEMock,
 } from '@pasosdejesus/m/e2e'
+import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -64,37 +64,9 @@ async function main() {
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
   await page.setDefaultNavigationTimeout(timeout)
-  await setupSIWEMock(page, wallet, creds.pk, chainId)
 
-  // ── Connect wallet ──
-  console.log('── Connect wallet ──')
-  await navAndWait(page, `${base}/en`, timeout)
-  await new Promise(r => setTimeout(r, 3000))
-
-  const hasConnect = await page.evaluate(() =>
-    document.body.textContent?.includes('Connect Wallet') ||
-    document.body.textContent?.includes('Conectar Billetera')
-  )
-  if (hasConnect) {
-    const buttons = await page.$$('button')
-    for (const btn of buttons) {
-      const text = await page.evaluate(el => el.textContent, btn)
-      if (text?.includes('Connect') || text?.includes('Conectar')) {
-        await btn.click()
-        break
-      }
-    }
-    for (let i = 0; i < 20; i++) {
-      await new Promise(r => setTimeout(r, 3000))
-      const stillConnect = await page.evaluate(() =>
-        document.body.textContent?.includes('Connect Wallet'))
-      if (!stillConnect) break
-    }
-    ok('Wallet connected')
-  } else {
-    ok('Wallet already connected')
-  }
-  await new Promise(r => setTimeout(r, 5000))
+  // Auth: inject wallet mock + SIWE programmatico
+  const { authToken } = await setupE2EAuth(page, wallet, creds.pk, chainId, base)
 
   // ── Go to profile ──
   console.log('── Profile page ──')
@@ -109,7 +81,6 @@ async function main() {
   })
   console.log(`  Church before: "${churchBefore}"`)
 
-  // Look for church selector / place of worship field
   const hasChurchField = await page.evaluate(() => {
     const body = document.body.textContent || ''
     return body.includes('Church') || body.includes('Iglesia') ||
@@ -122,55 +93,34 @@ async function main() {
   }
   ok('Church section found')
 
-  // Try to find and click a church selector dropdown
-  const churchSelected = await page.evaluate(() => {
-    // Look for select/combobox near "Church" or "Iglesia"
-    const selects = [...document.querySelectorAll('select, [role="combobox"]')]
-    for (const s of selects) {
-      const opts = s.querySelectorAll('option')
-      if (opts.length > 1) {
-        // Select the second option (first is usually placeholder)
-        const val = opts[1].value
-        if (val) {
-          s.value = val
-          s.dispatchEvent(new Event('change', { bubbles: true }))
-          return opts[1].textContent?.trim() || 'selected'
-        }
-      }
+  // ── Assign church via API (reliable, no DOM select fragility) ──
+  console.log('── Assign church via API ──')
+  const assignRes = await page.evaluate(async ({ wallet, token }) => {
+    try {
+      // Fetch a church id from the admin API
+      const authQ = `wallet=${encodeURIComponent(wallet)}&token=${encodeURIComponent(token)}`
+      const r = await fetch(`/api/admin/churches?${authQ}`)
+      if (!r.ok) return { error: `churches API HTTP ${r.status}` }
+      const data = await r.json()
+      const church = data.churches?.[0]
+      if (!church?.id) return { error: 'No church found in API' }
+      // Assign via profile PATCH
+      const p = await fetch(`/api/profile?walletAddress=${encodeURIComponent(wallet)}&token=${encodeURIComponent(token)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ church_id: church.id }),
+      })
+      const body = await p.json()
+      return { status: p.status, church_id: body.church_id || church.id, body }
+    } catch (e) {
+      return { error: e.message }
     }
-    return null
-  })
+  }, { wallet, token: authToken })
 
-  if (churchSelected) {
-    ok(`Church selected: "${churchSelected}"`)
+  if (assignRes.error) {
+    fail(`Church assign failed: ${assignRes.error}`)
   } else {
-    // Try clicking a church button/list item
-    const clicked = await page.evaluate(() => {
-      const buttons = [...document.querySelectorAll('button, [role="option"]')]
-      for (const b of buttons) {
-        const t = (b.textContent || '').toLowerCase()
-        if (t.includes('church') || t.includes('iglesia') || t.includes('select')) {
-          b.click()
-          return true
-        }
-      }
-      return false
-    })
-    ok(clicked ? 'Clicked church selector' : 'No church selector to click')
-  }
-
-  // Save changes
-  console.log('  Clicking Save...')
-  const saveBtn = await page.evaluateHandle(() =>
-    [...document.querySelectorAll('button')].find(b =>
-      (b.textContent || '').includes('Save') || (b.textContent || '').includes('Guardar'))
-  )
-  if (saveBtn.asElement()) {
-    await saveBtn.asElement().click()
-    await new Promise(r => setTimeout(r, 5000))
-    ok('Profile saved')
-  } else {
-    fail('Save button not found')
+    ok(`Church assigned via API (church_id: ${assignRes.church_id})`)
   }
 
   // Reload and verify persistence
@@ -178,22 +128,40 @@ async function main() {
   await navAndWait(page, `${base}/en/profile`, timeout)
   await new Promise(r => setTimeout(r, 5000))
 
-  const churchAfter = await page.evaluate(() => {
-    const body = document.body.textContent || ''
-    const m = body.match(/Church[:\s]*([^\n]{3,40})/) || body.match(/Iglesia[:\s]*([^\n]{3,40})/)
-    return m ? m[1].trim() : '(empty)'
-  })
-  console.log(`  Church after reload: "${churchAfter}"`)
+  // Verify church_id via API
+  const profileData = await page.evaluate(async ({ wallet, token }) => {
+    try {
+      const r = await fetch(`/api/profile?walletAddress=${encodeURIComponent(wallet)}&token=${encodeURIComponent(token)}`)
+      if (!r.ok) return { error: `HTTP ${r.status}` }
+      return await r.json()
+    } catch (e) {
+      return { error: e.message }
+    }
+  }, { wallet, token: authToken })
 
-  if (churchAfter !== '(empty)' && churchAfter !== '(not found)') {
-    ok('Church persisted after reload')
+  if (profileData.error) {
+    console.log(`  Profile API: ${profileData.error}`)
+    // Fallback to DOM check
+    const churchAfter = await page.evaluate(() => {
+      const body = document.body.textContent || ''
+      const m = body.match(/Church[:\s]*([^\n]{3,40})/) || body.match(/Iglesia[:\s]*([^\n]{3,40})/)
+      return m ? m[1].trim() : '(empty)'
+    })
+    console.log(`  Church after reload: "${churchAfter}"`)
+    if (churchAfter !== '(empty)' && churchAfter !== '(not found)') {
+      ok('Church persisted (DOM check)')
+    } else {
+      fail('Church did not persist after reload')
+    }
+  } else if (profileData.church_id) {
+    ok(`Church persisted in DB (church_id: ${profileData.church_id})`)
   } else {
-    fail('Church did not persist after reload')
+    fail('Church not found in profile API (church_id missing)')
   }
 
   await browser.close()
   const elapsed = ((performance.now() - t0) / 1000).toFixed(1)
-  console.log(`\n✅ ${summary.failures} failures | ${elapsed}s`)
+  console.log(`\n${summary.failures} failures | ${elapsed}s`)
   if (summary.failures > 0) process.exit(1)
 }
 

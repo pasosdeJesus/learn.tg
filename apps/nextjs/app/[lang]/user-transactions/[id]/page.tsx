@@ -148,8 +148,10 @@ export default function UserTransactionsPage({ params }: PageProps) {
                   <TableCell className="text-right font-mono font-medium">
                     {formatAmount(tx)}
                   </TableCell>
-                  <TableCell className="max-w-xs whitespace-normal break-words" title={tx.descripcion || ''}>
-                    {tx.descripcion || '-'}
+                  <TableCell className="max-w-xs whitespace-pre-line break-words text-xs" title={tx.descripcion || ''}>
+                    {tx.descripcion ? tx.descripcion.split('\n').map((line, i) => (
+                      <div key={i}>{line}</div>
+                    )) : '-'}
                   </TableCell>
                   <TableCell className="text-center">
                     {tx.hash ? (
