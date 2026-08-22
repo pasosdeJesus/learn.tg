@@ -11,7 +11,6 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
 import { SlearnInfo, AddSlearnButton } from '@pasosdejesus/mpdj/blockchain'
-import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 
 type PageProps = {
@@ -55,7 +54,6 @@ export default function Page({ params }: PageProps) {
   const [extCourses, setExtCourses] = useState<Map<number, CourseExtra>>(
     new Map(),
   )
-  const [donationIncrement, setDonationIncrement] = useState<number | null>(null)
   const [countdown, setCountdown] = useState(0)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const countdownCourseRef = useRef(0)
@@ -200,10 +198,7 @@ export default function Page({ params }: PageProps) {
     )
   }
 
-  const refreshCourseVault = async (courseId: number, data?: { increment?: number }) => {
-    if (data?.increment) {
-      setDonationIncrement(data.increment)
-    }
+  const refreshCourseVault = async (courseId: number) => {
     if (!session || !address || !session.address || session.address.toLowerCase() !== address.toLowerCase())
       return
     const csrfToken = await getCsrfToken()
@@ -242,13 +237,6 @@ export default function Page({ params }: PageProps) {
       aria-label="Courses grid"
       className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6"
     >
-      {donationIncrement && (
-        <DonationSuccessAlert
-          increment={donationIncrement}
-          lang={lang}
-          onClose={() => setDonationIncrement(null)}
-        />
-      )}
       {countdown > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 shadow-lg rounded-lg px-6 py-3 text-sm text-gray-700 animate-pulse">
           {lang === 'es' ? `Actualizando en ${countdown}…` : `Refreshing in ${countdown}…`}
@@ -317,7 +305,7 @@ export default function Page({ params }: PageProps) {
                     vaultBalanceSlearn={extra.vaultBalanceSlearn}
                     courseId={course.id}
                     isLoggedIn={!!session?.address}
-                    onDonationSuccess={(courseId, data) => { refreshCourseVault(courseId, data); startCountdownRefresh(courseId) }}
+                    onDonationSuccess={(courseId) => { refreshCourseVault(courseId); startCountdownRefresh(courseId) }}
                     showDonateButton={false}
                   />
                 )}

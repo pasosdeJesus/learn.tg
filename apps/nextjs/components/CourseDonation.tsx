@@ -13,7 +13,7 @@ interface CourseDonationProps {
   vaultBalanceSlearn?: number | null
   courseId: number
   isLoggedIn: boolean
-  onDonationSuccess: (courseId: number, data: { increment?: number }) => void
+  onDonationSuccess: (courseId: number) => void
   showDonateButton?: boolean
 }
 
@@ -59,8 +59,8 @@ export const CourseDonation = ({
     setIsModalOpen(true)
   }
 
-  const handleDonationResult = (data: { increment?: number }) => {
-    onDonationSuccess(courseId, data)
+  const handleDonationResult = () => {
+    onDonationSuccess(courseId)
     setIsModalOpen(false)
   }
 

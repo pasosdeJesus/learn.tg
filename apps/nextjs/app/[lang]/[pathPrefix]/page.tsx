@@ -17,7 +17,6 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CheckoutModal } from '@/components/CheckoutModal'
-import { DonationSuccessAlert } from '@/components/DonationSuccessAlert'
 import { MaintenanceBanner } from '@/components/MaintenanceBanner'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { useScholarshipData } from '@/lib/hooks/useScholarshipData'
@@ -36,7 +35,6 @@ export default function Page({ params }: PageProps) {
   const { lang, pathPrefix } = parameters
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading course...","error":"Error: ","notFound":"Course not found."},"es":{"loading":"Cargando curso...","error":"Error: ","notFound":"Curso no encontrado."}}), [lang])
   const [csrfToken, setCsrfToken] = useState('')
-  const [donationIncrement, setDonationIncrement] = useState<number | null>(null)
   const [countdown, setCountdown] = useState(0)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -223,13 +221,6 @@ export default function Page({ params }: PageProps) {
   return (
     <>
       <MaintenanceBanner />
-      {donationIncrement && (
-        <DonationSuccessAlert
-          increment={donationIncrement}
-          lang={lang}
-          onClose={() => setDonationIncrement(null)}
-        />
-      )}
       {countdown > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 shadow-lg rounded-lg px-6 py-3 text-sm text-gray-700 animate-pulse">
           {lang === 'es' ? `Actualizando en ${countdown}…` : `Refreshing in ${countdown}…`}
@@ -360,12 +351,9 @@ export default function Page({ params }: PageProps) {
                 vaultBalanceSlearn={sData.vaultBalanceSlearn}
                 courseId={parseInt(course.id)}
                 isLoggedIn={!!session?.address}
-                onDonationSuccess={(courseId, data) => {
+                onDonationSuccess={(courseId) => {
                   fetchScholarship()
                   startCountdownRefresh()
-                  if (data.increment) {
-                    setDonationIncrement(data.increment)
-                  }
                 }}
               />
             )}
