@@ -45,3 +45,21 @@ export const MAX_TX_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
 export const SLEARN_RATE = 22
 export const SLEARN_DECIMALS = 2
+
+/**
+ * Write a contract transaction, wait for its receipt, and throw if it
+ * reverted on-chain. Prevents recording DB rows for transfers/payments
+ * that never actually succeeded on-chain.
+ */
+export async function sendTxAndWait(
+  walletClient: any,
+  publicClient: any,
+  args: any,
+): Promise<`0x${string}`> {
+  const hash = await walletClient.writeContract(args)
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
+  if (receipt.status !== 'success') {
+    throw new Error(`Transaction reverted on-chain: ${hash}`)
+  }
+  return hash
+}

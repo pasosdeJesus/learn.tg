@@ -4,6 +4,7 @@ import type { DB } from '@/db/db.d'
 import ClusterFundsAbi from '@/abis/ClusterFunds.json'
 import Erc20Abi from '@/abis/IERC20.json'
 import { PILOT_COUNTRIES } from '@/lib/gd-utils'
+import { sendTxAndWait } from '@/lib/backend-config'
 import { readDeployment } from '@pasosdejesus/m/blockchain/deployments'
 import * as path from 'path'
 
@@ -106,14 +107,12 @@ export async function routeToClusterFunds(
     const currentNonce = nonce
     console.log(`[gd-debug] Sending ${description} with nonce ${currentNonce}`)
     try {
-      const hash = await walletClient.writeContract({
+      const hash = await sendTxAndWait(walletClient, publicClient, {
         ...args,
         account,
         chain,
         nonce: nonce++,
       })
-      console.log(`[gd-debug] ${description} tx hash: ${hash}`)
-      await publicClient.waitForTransactionReceipt({ hash })
       console.log(`[gd-debug] ${description} tx confirmed: ${hash}`)
       return hash
     } catch (e: any) {
