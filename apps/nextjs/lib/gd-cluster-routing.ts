@@ -1,7 +1,7 @@
 import { Kysely } from 'kysely'
 import type { Address } from 'viem'
 import type { DB } from '@/db/db.d'
-import ClusterFundsAbi from '@/abis/ClusterFunds.json'
+import ClusterFundsV2Abi from '@/abis/ClusterFundsV2.json'
 import Erc20Abi from '@/abis/IERC20.json'
 import { PILOT_COUNTRIES } from '@/lib/gd-utils'
 import { sendTxAndWait } from '@/lib/backend-config'
@@ -72,21 +72,21 @@ export function isGDCourse(courseId: number): boolean {
 export function getClusterFundsAddress(): Address {
   const network = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'celo' : 'celoSepolia'
   const deploymentsDir = path.join(process.cwd(), '..', 'hardhat', 'deployments')
-  const deployment = readDeployment(network, deploymentsDir, { contract: 'ClusterFunds' })
-  if (!deployment?.address) throw new Error('ClusterFunds not deployed — address not found')
+  const deployment = readDeployment(network, deploymentsDir, { contract: 'ClusterFundsV2' })
+  if (!deployment?.address) throw new Error('ClusterFundsV2 not deployed — address not found')
   return deployment.address as Address
 }
 
 /**
  * Route GD scholarship funds to ClusterFunds.
- * Approves tokens and calls processDonation or processCountryDonation.
+ * Approves tokens and credits the cluster/country fund 100%
+ * (processClusterContribution / processCountryContribution, no fees).
  */
 export async function routeToClusterFunds(
   publicClient: any,
   walletClient: any,
   account: any,
   tx: Address,
-  donor: Address,
   destino: GDDestination,
   usdtAmount: bigint,
   slearnAmount: bigint,
@@ -140,20 +140,20 @@ export async function routeToClusterFunds(
     }, 'SLEARN transfer')
   }
 
-  // Route to ClusterFunds
+  // Route to ClusterFunds (course payments: credit the fund 100%, no fees)
   if (destino.type === 'cluster') {
     await sendWithNonce({
       address: cfAddress,
-      abi: ClusterFundsAbi as any,
-      functionName: 'processDonation',
-      args: [tx, destino.destination as Address, donor, usdtAmount, slearnAmount],
-    }, 'processDonation')
+      abi: ClusterFundsV2Abi as any,
+      functionName: 'processClusterContribution',
+      args: [tx, destino.destination as Address, usdtAmount, slearnAmount],
+    }, 'processClusterContribution')
   } else {
     await sendWithNonce({
       address: cfAddress,
-      abi: ClusterFundsAbi as any,
-      functionName: 'processCountryDonation',
-      args: [tx, destino.destination, donor, usdtAmount, slearnAmount],
-    }, 'processCountryDonation')
+      abi: ClusterFundsV2Abi as any,
+      functionName: 'processCountryContribution',
+      args: [tx, destino.destination, usdtAmount, slearnAmount],
+    }, 'processCountryContribution')
   }
 }
