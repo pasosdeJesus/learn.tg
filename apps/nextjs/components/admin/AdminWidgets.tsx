@@ -20,6 +20,7 @@ export interface UserItem {
   id: number; nombre?: string; nusuario?: string; billetera?: string
   pais_nombre?: string; pais_id?: number | string; profilescore?: number
   church_relationship?: string; religion_id?: number | string; church_id?: number | string
+  position_israel_gaza?: string
   proposed_date_of_interview?: string; conducted_date_of_interview?: string
   created_at?: string; email?: string; whatsapp?: string; telegram?: string
   passport_name?: string; passport_nationality?: number | string
@@ -208,6 +209,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.telegram = user.telegram || ''
     initial.pais_id = user.pais_id || ''
     initial.religion_id = user.religion_id || ''
+    initial.position_israel_gaza = user.position_israel_gaza || ''
     initial.passport_name = user.passport_name || ''
     initial.passport_nationality = user.passport_nationality || ''
     initial.place_of_worship = user.place_of_worship || ''
@@ -259,6 +261,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     setSaving(true)
     const body: Record<string, any> = {}
     for (const k of ['nombre', 'email', 'whatsapp', 'telegram', 'pais_id', 'religion_id',
+      'position_israel_gaza',
       'passport_name', 'passport_nationality',
       'place_of_worship', 'place_of_worship_location', 'church_id', 'church_relationship',
       'city_id',
@@ -325,6 +328,28 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             <div>
               <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Religión' : 'Religion'}</label>
               <ReligionSelect value={form.religion_id ? Number(form.religion_id) : null} onChange={v => setF('religion_id', String(v || ''))} lang={lang} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-0.5">
+                {lang === 'es' ? 'Posición sobre Israel y Gaza (sionismo)' : 'Position on Israel and Gaza (Zionism)'}
+              </label>
+              <div className="flex gap-3">
+                <label className="flex items-center gap-1 text-sm cursor-pointer">
+                  <input type="radio" name="position_israel_gaza" checked={form.position_israel_gaza === 'yes'}
+                    onChange={() => setF('position_israel_gaza', 'yes')} className="rounded" />
+                  {lang === 'es' ? 'Sí' : 'Yes'}
+                </label>
+                <label className="flex items-center gap-1 text-sm cursor-pointer">
+                  <input type="radio" name="position_israel_gaza" checked={form.position_israel_gaza === 'no'}
+                    onChange={() => setF('position_israel_gaza', 'no')} className="rounded" />
+                  No
+                </label>
+                <label className="flex items-center gap-1 text-sm cursor-pointer">
+                  <input type="radio" name="position_israel_gaza" checked={form.position_israel_gaza !== 'yes' && form.position_israel_gaza !== 'no'}
+                    onChange={() => setF('position_israel_gaza', '')} className="rounded" />
+                  <span className="text-gray-400">{lang === 'es' ? 'Sin responder' : 'Unanswered'}</span>
+                </label>
+              </div>
             </div>
             <InputField label="Email" value={form.email} onChange={v => setF('email', v)} />
             <InputField label="WhatsApp" value={form.whatsapp} onChange={v => setF('whatsapp', v)} />

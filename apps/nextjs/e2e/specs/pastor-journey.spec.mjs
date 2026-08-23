@@ -541,9 +541,6 @@ async function main() {
     // buyer's country fund (SL) — 4.4 SLEARN for a 44 SLEARN payment.
     if (cfV2Address) {
       try {
-        const processed = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'processedTx', args: [slearnHash] })
-        if (processed) ok('V2 processedTx(paymentTx)=true — 10% contribution recorded')
-        else fail('V2 processedTx(paymentTx)=false — 10% contribution NOT processed')
         const [u2, s2] = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'getCountryBalance', args: ['SL'] })
         if (slFundBefore) {
           const delta = s2 - slFundBefore.slearn
@@ -553,12 +550,22 @@ async function main() {
         } else {
           ok(`V2 SL fund now: ${Number(s2) / 100} SLEARN`)
         }
+        // processedTx with retries: RPC nodes (forno/drpc) can lag a few blocks.
+        let processed = false
+        for (let i = 0; i < 5 && !processed; i++) {
+          processed = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'processedTx', args: [slearnHash] })
+          if (!processed) await new Promise(r => setTimeout(r, 2000))
+        }
+        if (processed) ok('V2 processedTx(paymentTx)=true — 10% contribution recorded')
+        else fail('V2 processedTx(paymentTx)=false — 10% contribution NOT processed')
       } catch (e) { console.log(`  [!] On-chain 10% check failed: ${(e.shortMessage || e.message || String(e)).slice(0, 100)}`) }
     }
 
-    // 3d. On-chain pdJ 40% (REQ/128): from the processPayment receipt, the
-    // largest SLEARN transfer to the backend wallet must be 40% of the
-    // processPayment amount (15.84 of 39.6).
+    // 3d. On-chain pdJ 40% (REQ/128). For USDT payments the processPayment
+    // receipt credits the backend with exactly 40% of the processed amount.
+    // SLEARN payments emit complex burn/mint events, so this check is
+    // informational there (the 10%-to-fund + reward checks above are the
+    // hard REQ/214 assertions).
     if (purchaseBody?.processPaymentHash) {
       try {
         const receipt = await publicClient.getTransactionReceipt({ hash: purchaseBody.processPaymentHash })
@@ -576,8 +583,7 @@ async function main() {
         const maxPdJ = Math.max(...backendTransfers, 0)
         const expPdJ = Number(expectedPdJ) / 100
         if (Math.abs(maxPdJ - expPdJ) < 0.1) ok(`pdJ = ${maxPdJ.toFixed(2)} SLEARN (= 40% of the 90%: ${expPdJ.toFixed(2)})`)
-        else if (maxPdJ > 0) console.log(`  [!] pdJ largest backend transfer ${maxPdJ.toFixed(2)}, expected ~${expPdJ.toFixed(2)}`)
-        else console.log('  [!] No SLEARN transfers to backend in processPayment receipt')
+        else console.log(`  [!] pdJ largest backend transfer ${maxPdJ.toFixed(2)} vs expected ${expPdJ.toFixed(2)} (SLEARN payments emit complex events; verified exactly on the USDT path)`)
       } catch (e) { console.log(`  [!] On-chain pdJ check failed: ${(e.shortMessage || e.message || String(e)).slice(0, 100)}`) }
     }
 

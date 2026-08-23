@@ -27,6 +27,7 @@ export default function AdminUserDetail({ params }: PageProps) {
       passportName: 'Passport Name', passportNationality: 'Nationality',
       churchRelationship: 'Church Relationship', verified: 'Verified',
       proposedDate: 'Proposed Interview', conductedDate: 'Conducted Interview',
+      positionGaza: 'Position on Israel and Gaza (Zionism)', gazaYes: 'Yes', gazaNo: 'No', gazaUnanswered: 'Unanswered',
       idPhotos: 'ID Photos', profileScore: 'Profile Score',
       verifiedWhatsapp: 'Verified WhatsApp', verifiedTelegram: 'Verified Telegram',
       verifiedEmail: 'Verified Email', verifiedCity: 'Verified City',
@@ -42,6 +43,7 @@ export default function AdminUserDetail({ params }: PageProps) {
       passportName: 'Nombre Pasaporte', passportNationality: 'Nacionalidad',
       churchRelationship: 'Relación Iglesia', verified: 'Verificado',
       proposedDate: 'Entrevista Propuesta', conductedDate: 'Entrevista Realizada',
+      positionGaza: 'Posición sobre Israel y Gaza (sionismo)', gazaYes: 'Sí', gazaNo: 'No', gazaUnanswered: 'Sin responder',
       idPhotos: 'Fotos de ID', profileScore: 'Puntaje de Perfil',
       verifiedWhatsapp: 'WhatsApp Verificado', verifiedTelegram: 'Telegram Verificado',
       verifiedEmail: 'Correo Verificado', verifiedCity: 'Ciudad Verificada',
@@ -72,8 +74,10 @@ export default function AdminUserDetail({ params }: PageProps) {
       const form = e.target as HTMLFormElement
       const data: Record<string, any> = {}
       for (const el of form.elements as any) {
-        if (el.name && el.type === 'checkbox') data[el.name] = el.checked
-        else if (el.name) data[el.name] = el.value
+        if (!el.name) continue
+        if (el.type === 'checkbox') data[el.name] = el.checked
+        else if (el.type === 'radio') { if (el.checked) data[el.name] = el.value }
+        else data[el.name] = el.value
       }
       const res = await fetch(`/api/admin/user/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
@@ -130,6 +134,24 @@ export default function AdminUserDetail({ params }: PageProps) {
             <option value="leader">{lang === 'es' ? 'Líder' : 'Leader'}</option>
             <option value="member">{lang === 'es' ? 'Miembro' : 'Member'}</option>
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">{t('positionGaza')}</label>
+          <div className="flex gap-4 mt-1">
+            <label className="flex items-center gap-1 text-sm">
+              <input type="radio" name="position_israel_gaza" defaultChecked={user.position_israel_gaza === 'yes'} value="yes" className="rounded" />
+              {t('gazaYes')}
+            </label>
+            <label className="flex items-center gap-1 text-sm">
+              <input type="radio" name="position_israel_gaza" defaultChecked={user.position_israel_gaza === 'no'} value="no" className="rounded" />
+              {t('gazaNo')}
+            </label>
+            <label className="flex items-center gap-1 text-sm">
+              <input type="radio" name="position_israel_gaza" defaultChecked={!user.position_israel_gaza} value="" className="rounded" />
+              <span className="text-gray-400">{t('gazaUnanswered')}</span>
+            </label>
+          </div>
         </div>
 
         <div className="border-t pt-4">
