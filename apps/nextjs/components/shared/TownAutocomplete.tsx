@@ -9,10 +9,11 @@ interface TownAutocompleteProps {
   cityId: number | null
   countryId: number | null
   lang?: string
+  placeholder?: string
   onChange: (cityId: number | null, cityName: string, departmentId?: number, municipalityId?: number) => void
 }
 
-export function TownAutocomplete({ value, cityId, countryId, lang, onChange }: TownAutocompleteProps) {
+export function TownAutocomplete({ value, cityId, countryId, lang, placeholder, onChange }: TownAutocompleteProps) {
   const [search, setSearch] = useState(value || '')
   const [suggestions, setSuggestions] = useState<TownSuggestion[]>([])
   const [loading, setLoading] = useState(false)
@@ -60,7 +61,7 @@ export function TownAutocomplete({ value, cityId, countryId, lang, onChange }: T
         value={search}
         onChange={e => handleSearch(e.target.value)}
         onBlur={handleBlur}
-        placeholder={lang === 'es' ? 'Población...' : 'Town...'}
+        placeholder={placeholder || (lang === 'es' ? 'Población...' : 'Town...')}
         className="w-full border rounded px-2 py-1 text-sm"
       />
       {loading && <span className="absolute right-2 top-1.5 text-xs text-gray-400">...</span>}

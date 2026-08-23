@@ -21,10 +21,11 @@ export interface UserItem {
   pais_nombre?: string; pais_id?: number | string; profilescore?: number
   church_relationship?: string; religion_id?: number | string; church_id?: number | string
   position_israel_gaza?: string
+  city_id?: number | string; city_name?: string; place_of_worship_location?: string
   proposed_date_of_interview?: string; conducted_date_of_interview?: string
   created_at?: string; email?: string; whatsapp?: string; telegram?: string
   passport_name?: string; passport_nationality?: number | string
-  city_id?: number; place_of_worship?: string; place_of_worship_location?: string
+  place_of_worship?: string
   pastor_name?: string; pastor_whatsapp?: string
   verified_whatsapp?: string; verified_telegram?: string; verified_email?: string
   verified_city_id?: number | string; verified_place_of_worship?: string
@@ -213,7 +214,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.passport_name = user.passport_name || ''
     initial.passport_nationality = user.passport_nationality || ''
     initial.place_of_worship = user.place_of_worship || ''
-    initial.place_of_worship_location = user.place_of_worship_location || ''
+    initial.place_of_worship_location = user.place_of_worship_location || user.city_name || ''
     initial.city_id = user.city_id || ''
     initial.pastor_name = user.pastor_name || ''
     initial.pastor_whatsapp = user.pastor_whatsapp || ''
@@ -385,6 +386,9 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             cityId={form.city_id ? Number(form.city_id) : null}
             countryId={form.pais_id ? Number(form.pais_id) : null}
             lang={lang}
+            placeholder={lang === 'es'
+              ? 'Escribe al menos 2 letras y elige de la lista (ej: Free… → Freetown)'
+              : 'Type at least 2 letters and pick from the list (e.g. Free… → Freetown)'}
             onChange={(cityId, cityName) => {
               setF('place_of_worship_location', cityName)
               setF('city_id', cityId != null ? String(cityId) : '')

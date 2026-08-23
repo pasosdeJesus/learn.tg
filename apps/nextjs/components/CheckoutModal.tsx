@@ -43,7 +43,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       title: 'Purchase course',
       priceUsdt: 'Price (USDT)',
       priceSlearn: 'Or pay in SLEARN (10% off)',
-      split: 'How would you like to pay?',
+      split: 'Percentage to pay with SLEARN',
       slearnPct: 'SLEARN',
       usdtPct: 'USDT',
       yourBalance: 'Balance',
@@ -57,7 +57,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       resultTx: 'View transaction',
       resultOk: 'OK',
       insufficient: 'You need to add USDT to your wallet to buy this course. Complete crosswords and claim your daily UBI to help gather the funds.',
-      needMoreUsdt: 'To pay more with USDT you need to add more USDT to your wallet.',
+      needMoreUsdt: 'You need {{0}} more USDT to complete the purchase.',
       yourCelo: 'Your CELO (gas)',
       enoughGas: 'Enough gas estimated',
       noGas: 'Not enough gas for transaction',
@@ -69,7 +69,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       title: 'Comprar curso',
       priceUsdt: 'Precio (USDT)',
       priceSlearn: 'O paga en SLEARN (10% descuento)',
-      split: '¿Cómo quieres pagar?',
+      split: 'Porcentaje a pagar con SLEARN',
       slearnPct: 'SLEARN',
       usdtPct: 'USDT',
       yourBalance: 'Saldo',
@@ -83,7 +83,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       resultTx: 'Ver transacción',
       resultOk: 'OK',
       insufficient: 'Necesitas poner USDT en tu billetera para comprar este curso. Completa crucigramas y reclama tu UBI diario para ayudar a reunir los fondos.',
-      needMoreUsdt: 'Para pagar más con USDT necesitas cargar más USDT en tu billetera.',
+      needMoreUsdt: 'Necesitas {{0}} USDT más para completar la compra.',
       yourCelo: 'Tu CELO (gas)',
       enoughGas: 'Gas suficiente estimado',
       noGas: 'Gas insuficiente para la transaccion',
@@ -101,7 +101,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
 
   const [priceUSDT, setPriceUSDT] = useState<number | null>(null)
   const [priceSLEARN, setPriceSLEARN] = useState<number | null>(null)
-  const [slearnPct, setSlearnPct] = useState(0) // 0-100, % paid with SLEARN
+  const [slearnPct, setSlearnPct] = useState(100) // 0-100, % paid with SLEARN (default: all SLEARN)
   const [usdtBalance, setUsdtBalance] = useState(0n)
   const [slearnBalance, setSlearnBalance] = useState(0n)
   const [celoBalance, setCeloBalance] = useState(0n)
@@ -167,17 +167,20 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       ? slearnBalanceDecimal / priceSLEARN + usdtBalanceDecimal / priceUSDT >= 1
       : false
 
-  // Bounds for the SLEARN/USDT slider, based on what the wallet can actually
-  // cover: maxSlearnPct is limited by the SLEARN balance, minSlearnPct by the
-  // USDT balance (can't slide into more USDT than the wallet holds).
-  const maxSlearnPct = priceSLEARN != null && priceSLEARN > 0
-    ? Math.min(100, Math.floor((slearnBalanceDecimal / priceSLEARN) * 100))
-    : 0
-  const minSlearnPct = priceUSDT != null && priceUSDT > 0
-    ? Math.max(0, Math.ceil(100 - (usdtBalanceDecimal / priceUSDT) * 100))
-    : 0
-  const sliderMin = minSlearnPct
-  const sliderMax = Math.max(maxSlearnPct, minSlearnPct)
+  // The slider is free (0-100% SLEARN). The wallet's balances only drive the
+  // default position and the "needs X more USDT" hint when it cannot cover
+  // the selected split.
+  const sliderMin = 0
+  const sliderMax = 100
+
+  // USDT still missing after using the full SLEARN balance (shown only when
+  // the wallet cannot cover the price).
+  const missingUsdt = (() => {
+    if (canPay) return 0
+    if (priceUSDT == null || priceSLEARN == null || priceSLEARN <= 0) return 0
+    const covered = usdtBalanceDecimal + (slearnBalanceDecimal / priceSLEARN) * priceUSDT
+    return Math.max(0, Math.ceil((priceUSDT - covered) * 100) / 100)
+  })()
 
   const { gasState, estimating } = useGasEstimation({
     amount: usdtAmount,
@@ -326,8 +329,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
               onChange={(e) => setSlearnPct(Number(e.target.value))}
               className="w-full"
             />
-            {canPay && minSlearnPct > 0 && (
-              <p className="mt-1 text-xs text-amber-600">{t('needMoreUsdt')}</p>
+            {!canPay && missingUsdt > 0 && (
+              <p className="mt-1 text-xs text-amber-600">{t('needMoreUsdt', missingUsdt.toFixed(2))}</p>
             )}
             <div className="mt-2 grid grid-cols-2 gap-4">
               <div className="rounded border border-gray-200 p-3">

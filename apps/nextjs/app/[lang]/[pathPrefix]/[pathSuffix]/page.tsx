@@ -262,7 +262,7 @@ export default function Page() {
           aria-label="Guide text"
         />
         )}
-        <aside className="flex space-x-4 items-center justify-center" aria-label="Interactive buttons">
+        <aside className="flex flex-col space-y-4 items-center justify-center w-full" aria-label="Interactive buttons">
           {isClient && showGoodDollarButton && (
             <SafeRender fallback={
               <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded">

@@ -87,7 +87,7 @@ export function NotificationsBell({ lang = 'en' }: { lang?: string }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-md shadow-lg border border-gray-200 z-50">
+        <div className="fixed left-4 right-4 top-14 z-50 md:absolute md:left-auto md:right-0 md:top-auto md:mt-2 md:w-72 md:max-w-[calc(100vw-2rem)] bg-white rounded-md shadow-lg border border-gray-200 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
             <span className="text-sm font-semibold text-gray-700">
               {isEs ? 'Notificaciones' : 'Notifications'}
@@ -109,8 +109,8 @@ export function NotificationsBell({ lang = 'en' }: { lang?: string }) {
                   key={n.id}
                   className={`px-4 py-3 border-b border-gray-50 text-sm ${n.is_read ? '' : 'bg-blue-50'}`}
                 >
-                  <p className="font-medium text-gray-800">{n.title}</p>
-                  {n.content && <p className="text-gray-600 text-xs mt-0.5">{n.content}</p>}
+                  <p className="font-medium text-gray-800 break-words">{n.title}</p>
+                  {n.content && <p className="text-gray-600 text-xs mt-0.5 break-words whitespace-normal">{n.content}</p>}
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-gray-400 text-xs">
                       {new Date(n.created_at).toLocaleString(isEs ? 'es' : 'en')}

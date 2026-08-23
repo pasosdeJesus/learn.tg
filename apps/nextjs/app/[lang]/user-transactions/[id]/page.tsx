@@ -82,6 +82,8 @@ export default function UserTransactionsPage({ params }: PageProps) {
       case 'scholarship': return t('scholarship')
       case 'ubi-claim': return t('UBI Claim', 'Reclamo de UBI')
       case 'donation': return t('donation')
+      case 'donation_reward': return lang === 'es' ? 'Recompensa' : 'Reward'
+      case 'pay-course': return lang === 'es' ? 'Pago de curso' : 'Course payment'
       case 'conversion': return lang === 'es' ? 'Conversión LP→SLEARN' : 'LP→SLEARN Conversion'
       default: return tipo
     }
