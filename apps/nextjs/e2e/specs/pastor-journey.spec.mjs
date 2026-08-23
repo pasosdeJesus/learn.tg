@@ -22,7 +22,7 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
-import { createPublicClient, createWalletClient, http, parseUnits, parseEther } from 'viem'
+import { createPublicClient, createWalletClient, http, parseUnits, parseEther, parseEventLogs } from 'viem'
 import { celoSepolia } from 'viem/chains'
 import {
   initTestEnv, launchBrowser, resetFailures, fail, ok, summary,
@@ -49,6 +49,18 @@ const clusterFundsV2Abi = [
   { name: 'getCountryBalance', type: 'function', stateMutability: 'view', inputs: [{ name: 'c', type: 'string' }], outputs: [{ name: 'usdt', type: 'uint256' }, { name: 'slearn', type: 'uint256' }] },
   { name: 'processedTx', type: 'function', stateMutability: 'view', inputs: [{ name: 'h', type: 'bytes32' }], outputs: [{ name: '', type: 'bool' }] },
 ]
+
+// Transfer event (indexed from/to) to parse the processPayment receipt.
+const transferEventAbi = {
+  anonymous: false,
+  inputs: [
+    { indexed: true, name: 'from', type: 'address' },
+    { indexed: true, name: 'to', type: 'address' },
+    { indexed: false, name: 'value', type: 'uint256' },
+  ],
+  name: 'Transfer',
+  type: 'event',
+}
 
 function readClusterFundsV2Address() {
   const file = path.join(process.cwd(), '..', 'hardhat', 'deployments', 'ClusterFundsV2', 'celoSepolia.json')
@@ -490,11 +502,18 @@ async function main() {
     if (purchaseRes.status === 200 || purchaseRes.status === 201) ok('GD course purchased')
     else fail(`Course purchase failed: ${purchaseRes.status} ${purchaseRes.body.slice(0, 160)}`)
 
-    // 3b. Distribution (REQ/214 Paso 7): the response carries the
-    // processPayment breakdown (90% of the payment; the other 10% is routed
-    // to the buyer's country fund).
+    // 3b. Distribution (REQ/214 Paso 7 / REQ/128): the response carries the
+    // processPayment breakdown. Payment = 44 SLEARN → 10% (4.4) routed to the
+    // country fund; processPayment handles 90% (39.6) with pdJ 40%,
+    // reward 10%, missional 10%, ubi 5%, referral 5%, churches 5%.
     let purchaseBody = null
     try { purchaseBody = JSON.parse(purchaseRes.body) } catch { /* non-JSON */ }
+    const paymentSlearn = parseUnits('44', 2)              // SLEARN paid
+    const clusterAmt = (paymentSlearn * 10n) / 100n        // 4.4 → country fund
+    const processAmt = paymentSlearn - clusterAmt          // 39.6 → processPayment
+    const expectedReward = (processAmt * 10n) / 100n       // 3.96 (reward 10%)
+    const expectedPdJ = (processAmt * 40n) / 100n          // 15.84 (pdJ 40%)
+
     if (purchaseBody?.distribution && purchaseBody.distribution.length > 0) {
       ok(`distribution: ${purchaseBody.distribution.length} items`)
       for (const d of purchaseBody.distribution) {
@@ -503,8 +522,17 @@ async function main() {
       const dests = purchaseBody.distribution.map(d => d.destination)
       if (dests.includes('course_vault')) ok('course_vault present')
       else console.log('  [!] course_vault not in distribution (event parsing may label differently)')
-      if (dests.includes('cashback')) ok('reward/cashback present')
-      else console.log('  [!] cashback not in distribution')
+
+      // Reward: 10% of the processPayment portion → 3.96 SLEARN of 44.
+      const cashbackItem = purchaseBody.distribution.find(d => d.destination === 'cashback' && d.crypto === 'slearn')
+      if (cashbackItem) {
+        const cb = Number(cashbackItem.amount)
+        const exp = Number(expectedReward) / 100
+        if (Math.abs(cb - exp) < 0.1) ok(`cashback = ${cb.toFixed(2)} SLEARN (= 10% of the 90%: ${exp.toFixed(2)})`)
+        else fail(`cashback = ${cb.toFixed(2)} SLEARN, expected ~${exp.toFixed(2)}`)
+      } else {
+        console.log('  [!] cashback not in distribution (event parsing may miss it)')
+      }
     } else {
       console.log('  [!] No distribution in purchase response')
     }
@@ -517,16 +545,40 @@ async function main() {
         if (processed) ok('V2 processedTx(paymentTx)=true — 10% contribution recorded')
         else fail('V2 processedTx(paymentTx)=false — 10% contribution NOT processed')
         const [u2, s2] = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'getCountryBalance', args: ['SL'] })
-        const expected = (parseUnits('44', 2) * 10n) / 100n // 10% of the 44 SLEARN payment
         if (slFundBefore) {
           const delta = s2 - slFundBefore.slearn
-          if (delta === expected) ok(`SL fund SLEARN delta = ${Number(delta) / 100} (= 10% of 44, REQ/214)`)
-          else if (delta > expected) ok(`SL fund delta ${Number(delta) / 100} ≥ 10% (includes concurrent activity)`)
+          if (delta === clusterAmt) ok(`SL fund SLEARN delta = ${Number(delta) / 100} (= 10% of 44, REQ/214)`)
+          else if (delta > clusterAmt) ok(`SL fund delta ${Number(delta) / 100} ≥ 10% (includes concurrent activity)`)
           else fail(`SL fund delta ${Number(delta) / 100} < expected 4.4 — fees deducted from the 10%`)
         } else {
           ok(`V2 SL fund now: ${Number(s2) / 100} SLEARN`)
         }
       } catch (e) { console.log(`  [!] On-chain 10% check failed: ${(e.shortMessage || e.message || String(e)).slice(0, 100)}`) }
+    }
+
+    // 3d. On-chain pdJ 40% (REQ/128): from the processPayment receipt, the
+    // largest SLEARN transfer to the backend wallet must be 40% of the
+    // processPayment amount (15.84 of 39.6).
+    if (purchaseBody?.processPaymentHash) {
+      try {
+        const receipt = await publicClient.getTransactionReceipt({ hash: purchaseBody.processPaymentHash })
+        const backendTransfers = []
+        for (const log of receipt.logs) {
+          if (log.address.toLowerCase() !== slearnAddress.toLowerCase()) continue
+          const parsed = parseEventLogs({ abi: [transferEventAbi], logs: [log], eventName: 'Transfer' })[0]
+          if (!parsed) continue
+          const { to, value } = parsed.args
+          if (String(to).toLowerCase() === backendWallet.toLowerCase()) {
+            backendTransfers.push(Number(value) / 100)
+          }
+        }
+        console.log(`    processPayment backend SLEARN transfers: ${backendTransfers.map(v => v.toFixed(2)).join(', ') || '(none)'}`)
+        const maxPdJ = Math.max(...backendTransfers, 0)
+        const expPdJ = Number(expectedPdJ) / 100
+        if (Math.abs(maxPdJ - expPdJ) < 0.1) ok(`pdJ = ${maxPdJ.toFixed(2)} SLEARN (= 40% of the 90%: ${expPdJ.toFixed(2)})`)
+        else if (maxPdJ > 0) console.log(`  [!] pdJ largest backend transfer ${maxPdJ.toFixed(2)}, expected ~${expPdJ.toFixed(2)}`)
+        else console.log('  [!] No SLEARN transfers to backend in processPayment receipt')
+      } catch (e) { console.log(`  [!] On-chain pdJ check failed: ${(e.shortMessage || e.message || String(e)).slice(0, 100)}`) }
     }
 
     // 4. Verify access is now granted (200 instead of 403).
