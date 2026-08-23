@@ -36,7 +36,9 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
         `filtro[busprefijoRuta]=/${pathPrefix}&` +
         `filtro[busidioma]=${lang}`
 
-      const csrfToken = await getCsrfToken()
+      // Prefer the localStorage CSRF nonce (the one stored in billetera_usuario
+      // at SIWE time); getCsrfToken() may return a rotated nonce → 401.
+      const csrfToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
 
       if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
         url += `&walletAddress=${session.address}&token=${csrfToken}`
@@ -65,10 +67,15 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
       const detailResponse = await axios.get(detailUrl)
       const detailedCourse = detailResponse.data
 
-      const guideStatusPromises = detailedCourse.guias.map((_: Guide, index: number) => {
+      const guideStatusPromises = detailedCourse.guias.map(async (_: Guide, index: number) => {
         if (session && address && detailedCourse.id) {
-          const statusUrl = `/api/guide-status?walletAddress=${address}&courseId=${detailedCourse.id}&guideNumber=${index + 1}`
-          return axios.get(statusUrl)
+          // Token (localStorage CSRF nonce) + session: guide-status accepts
+          // either, so a stale/absent session cookie no longer 401s the page.
+          const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+          const statusUrl = `/api/guide-status?walletAddress=${address}&courseId=${detailedCourse.id}&guideNumber=${index + 1}&token=${encodeURIComponent(token || '')}`
+          return axios.get(statusUrl).catch(() => ({
+            data: { completed: false, receivedScholarship: false, receivedSlearnScholarship: false },
+          }))
         }
         return Promise.resolve({ data: { completed: false, receivedScholarship: false, receivedSlearnScholarship: false } })
       })
