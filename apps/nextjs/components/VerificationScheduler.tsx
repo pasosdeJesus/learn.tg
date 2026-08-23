@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@pasosdejesus/m/shadcn-components/ui/dialog'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { parseDbTimestamp } from '@/lib/date-utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Slot {
@@ -154,7 +155,9 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
     },
   })
 
-  const interviewDateObj = interviewDate ? new Date(interviewDate) : null
+  // DB returns timestamptz as ISO-with-Z; parseDbTimestamp also tolerates any
+  // legacy naive "YYYY-MM-DD HH:MM:SS" values (treated as UTC wall-clock).
+  const interviewDateObj = parseDbTimestamp(interviewDate)
   const isPast = interviewDateObj ? interviewDateObj < new Date() : false
   const hasInterview = !!interviewDate
 

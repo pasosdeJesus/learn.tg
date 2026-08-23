@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { dbTimestampToLocalInput } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 
@@ -79,6 +80,10 @@ export default function AdminUserDetail({ params }: PageProps) {
         else if (el.type === 'radio') { if (el.checked) data[el.name] = el.value }
         else data[el.name] = el.value
       }
+      // datetime-local values are local wall-clock; store the exact instant
+      for (const k of ['proposed_date_of_interview', 'conducted_date_of_interview']) {
+        if (data[k]) data[k] = new Date(data[k]).toISOString()
+      }
       const res = await fetch(`/api/admin/user/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
       })
@@ -115,13 +120,13 @@ export default function AdminUserDetail({ params }: PageProps) {
           <div>
             <label className="block text-sm font-medium text-gray-700">{t('proposedDate')}</label>
             <input name="proposed_date_of_interview" type="datetime-local"
-              defaultValue={user.proposed_date_of_interview ? new Date(user.proposed_date_of_interview).toISOString().slice(0, 16) : ''}
+              defaultValue={dbTimestampToLocalInput(user.proposed_date_of_interview)}
               className="w-full px-3 py-2 border rounded-md" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">{t('conductedDate')}</label>
             <input name="conducted_date_of_interview" type="datetime-local"
-              defaultValue={user.conducted_date_of_interview ? new Date(user.conducted_date_of_interview).toISOString().slice(0, 16) : ''}
+              defaultValue={dbTimestampToLocalInput(user.conducted_date_of_interview)}
               className="w-full px-3 py-2 border rounded-md" />
           </div>
         </div>

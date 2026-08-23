@@ -7,6 +7,7 @@ import { TownAutocomplete } from '@/components/shared/TownAutocomplete'
 import { ChurchSelector } from '@/components/shared/ChurchSelector'
 import { PhotoUpload } from '@/components/shared/PhotoUpload'
 import { adminFetch, adminAuthParams } from '@/lib/admin-fetch'
+import { dbTimestampToLocalInput } from '@/lib/date-utils'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { IS_PRODUCTION } from '@/lib/config'
 import { CalendarWidget } from './CalendarWidget'
@@ -220,8 +221,8 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.pastor_whatsapp = user.pastor_whatsapp || ''
     initial.church_relationship = user.church_relationship || ''
     initial.church_id = user.church_id || ''
-    initial.proposed_date_of_interview = user.proposed_date_of_interview ? user.proposed_date_of_interview.slice(0, 16) : ''
-    initial.conducted_date_of_interview = user.conducted_date_of_interview ? user.conducted_date_of_interview.slice(0, 16) : ''
+    initial.proposed_date_of_interview = dbTimestampToLocalInput(user.proposed_date_of_interview)
+    initial.conducted_date_of_interview = dbTimestampToLocalInput(user.conducted_date_of_interview)
     setForm(initial)
   }, [user])
 
@@ -268,6 +269,10 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
       'city_id',
       'proposed_date_of_interview', 'conducted_date_of_interview']) {
       if (form[k] !== undefined) body[k] = form[k] || null
+    }
+    // datetime-local values are local wall-clock; store the exact instant (ISO UTC)
+    for (const k of ['proposed_date_of_interview', 'conducted_date_of_interview']) {
+      if (body[k]) body[k] = new Date(body[k]).toISOString()
     }
     // Verified fields: send the value (string) or null
     for (const f of VERIFIED_FIELDS) {

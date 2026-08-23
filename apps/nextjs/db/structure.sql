@@ -5306,7 +5306,7 @@ CREATE TABLE public.usuario (
     id_photo_verified boolean DEFAULT false,
     verified_email character varying(255),
     place_of_worship_location character varying(200),
-    proposed_date_of_interview date,
+    proposed_date_of_interview timestamp with time zone,
     conducted_date_of_interview timestamp with time zone,
     verified_church_relationship character varying(20),
     working_hours jsonb,
