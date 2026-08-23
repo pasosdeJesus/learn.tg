@@ -1,13 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+// @vitest-environment node
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
 const { mockExecuteTakeFirst, resetMocks, setupCommonResponses } = apiDbMocks
 
 // Simulate the NextAuth session cookie the browser holds after a SIWE login.
 let cookieValue: string | null = null
-let sessionSub: string | null = null
-
-const mockGetToken = vi.fn()
 
 vi.mock('next/headers', () => ({
   cookies: async () => ({
@@ -15,15 +13,10 @@ vi.mock('next/headers', () => ({
   }),
 }))
 
-vi.mock('next-auth/jwt', () => ({
-  getToken: (args: any) => mockGetToken(args),
-  encode: vi.fn(),
-  decode: vi.fn(),
-}))
-
 process.env.NEXTAUTH_SECRET = 'test-secret-007'
 
 import { authenticateUser } from '@/lib/authenticateUser'
+import { encode } from 'next-auth/jwt'
 
 const BILLETERA = { id: 1, billetera: '0xabcd1234', usuario_id: 42, token: 'rotated-token' }
 
@@ -41,16 +34,17 @@ function mockDb(): any {
 }
 
 describe('authenticateUser session-cookie fallback', () => {
+  beforeAll(async () => {
+    // Real NextAuth JWT, as produced by the SIWE login
+    cookieValue = await encode({
+      token: { sub: '0xabcd1234' },
+      secret: process.env.NEXTAUTH_SECRET as string,
+    })
+  })
+
   beforeEach(() => {
     resetMocks()
     setupCommonResponses()
-    cookieValue = 'encrypted-jwt'
-    sessionSub = '0xabcd1234'
-    mockGetToken.mockReset()
-    mockGetToken.mockImplementation(async ({ cookieName }: any) => {
-      if (!cookieValue) return null
-      return { sub: sessionSub }
-    })
   })
 
   it('accepts a valid token normally (session fallback not invoked)', async () => {
@@ -60,7 +54,6 @@ describe('authenticateUser session-cookie fallback', () => {
     const auth = await authenticateUser(mockDb(), '0xabcd1234', 'good-token')
     expect(auth).not.toBeNull()
     expect(auth!.usuario.id).toBe(42)
-    expect(mockGetToken).not.toHaveBeenCalled()
   })
 
   it('falls back to the session cookie when the token was rotated (stale)', async () => {
@@ -72,11 +65,13 @@ describe('authenticateUser session-cookie fallback', () => {
     expect(auth).not.toBeNull()
     expect(auth!.usuario.id).toBe(42)
     expect(auth!.billetera.token).toBe('rotated-token')
-    expect(mockGetToken).toHaveBeenCalled()
   })
 
   it('rejects when the session cookie belongs to another wallet', async () => {
-    sessionSub = '0xother9999'
+    cookieValue = await encode({
+      token: { sub: '0xother9999' },
+      secret: process.env.NEXTAUTH_SECRET as string,
+    })
     mockExecuteTakeFirst.mockResolvedValueOnce(BILLETERA)
     const auth = await authenticateUser(mockDb(), '0xabcd1234', 'stale-token')
     expect(auth).toBeNull()

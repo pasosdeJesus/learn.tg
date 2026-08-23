@@ -86,7 +86,8 @@ async function authenticateBySession(
       return null
     }
     const payload = await getToken({
-      req: { headers: { cookie: `${sessionCookie.name}=${sessionCookie.value}` } } as any,
+      // getToken's SessionStore reads req.cookies (headers.cookie is ignored)
+      req: { cookies: { [sessionCookie.name]: sessionCookie.value } } as any,
       cookieName: sessionCookie.name,
       secret: process.env.NEXTAUTH_SECRET,
     })
