@@ -461,14 +461,24 @@ async function main() {
     await publicClient.waitForTransactionReceipt({ hash: gasHash })
     ok('Pastor funded with CELO gas')
 
-    // 2. Pastor transfers SLEARN (the 44 bonus) to the backend wallet.
+    // 2. Fetch the course price (SL → 39.60 SLEARN) and pay exactly that.
+    //    The 44 SLEARN bonus is more than the price; the pastor keeps the rest.
+    const priceRes = await page.evaluate(async (courseId) => {
+      const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
+      const token = localStorage.getItem('learn.tg.authToken') || ''
+      const r = await fetch(`/api/courses/premium/price?courseId=${courseId}&walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`)
+      return r.ok ? await r.json() : null
+    }, gdCourseId)
+    const priceSlearn = Number(priceRes?.priceSLEARN ?? 39.6)
+    const paymentSlearn = parseUnits(String(priceSlearn), 2)
+    console.log(`  Course price (SLEARN): ${priceSlearn.toFixed(2)}`)
     const pastorAccount = privateKeyToAccount(pastorPk)
     const pastorClient = createWalletClient({ account: pastorAccount, chain: celoSepolia, transport: http(rpcUrl) })
     const slearnHash = await pastorClient.writeContract({
       address: slearnAddress,
       abi: slearnTransferAbi,
       functionName: 'transfer',
-      args: [backendWallet, parseUnits('44', 2)],
+      args: [backendWallet, paymentSlearn],
     })
     await publicClient.waitForTransactionReceipt({ hash: slearnHash })
     ok(`SLEARN transferred to backend (tx ${short(slearnHash)})`)
@@ -503,16 +513,16 @@ async function main() {
     else fail(`Course purchase failed: ${purchaseRes.status} ${purchaseRes.body.slice(0, 160)}`)
 
     // 3b. Distribution (REQ/214 Paso 7 / REQ/128): the response carries the
-    // processPayment breakdown. Payment = 44 SLEARN → 10% (4.4) routed to the
-    // country fund; processPayment handles 90% (39.6) with pdJ 40%,
-    // reward 10%, missional 10%, ubi 5%, referral 5%, churches 5%.
+    // processPayment breakdown. The pastor pays the course price (SL: 39.60
+    // SLEARN) → 10% (3.96) routed to the country fund; processPayment handles
+    // 90% (35.64) with pdJ 40%, reward 10%, missional 10%, ubi 5%, referral 5%,
+    // churches 5% and the remainder to the vault.
     let purchaseBody = null
     try { purchaseBody = JSON.parse(purchaseRes.body) } catch { /* non-JSON */ }
-    const paymentSlearn = parseUnits('44', 2)              // SLEARN paid
-    const clusterAmt = (paymentSlearn * 10n) / 100n        // 4.4 → country fund
-    const processAmt = paymentSlearn - clusterAmt          // 39.6 → processPayment
-    const expectedReward = (processAmt * 10n) / 100n       // 3.96 (reward 10%)
-    const expectedPdJ = (processAmt * 40n) / 100n          // 15.84 (pdJ 40%)
+    const clusterAmt = (paymentSlearn * 10n) / 100n        // 10% → country fund
+    const processAmt = paymentSlearn - clusterAmt          // 90% → processPayment
+    const expectedReward = (processAmt * 10n) / 100n       // reward 10%
+    const expectedPdJ = (processAmt * 40n) / 100n          // pdJ 40%
 
     if (purchaseBody?.distribution && purchaseBody.distribution.length > 0) {
       ok(`distribution: ${purchaseBody.distribution.length} items`)
@@ -523,7 +533,7 @@ async function main() {
       if (dests.includes('course_vault')) ok('course_vault present')
       else console.log('  [!] course_vault not in distribution (event parsing may label differently)')
 
-      // Reward: 10% of the processPayment portion → 3.96 SLEARN of 44.
+      // Reward: 10% of the processPayment portion (in SLEARN).
       const cashbackItem = purchaseBody.distribution.find(d => d.destination === 'cashback' && d.crypto === 'slearn')
       if (cashbackItem) {
         const cb = Number(cashbackItem.amount)
@@ -538,10 +548,24 @@ async function main() {
     }
 
     // 3c. REQ/214: the 10% routed to ClusterFundsV2 must arrive intact at the
-    // buyer's country fund (SL) — 4.4 SLEARN for a 44 SLEARN payment.
+    // buyer's country fund (SL) — 10% of the price paid.
     if (cfV2Address) {
       try {
-        const [u2, s2] = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'getCountryBalance', args: ['SL'] })
+        // Balance + processedTx with retries: RPC nodes (forno/drpc) can lag
+        // a few blocks right after the contribution is mined.
+        const readBalance = async () => (await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'getCountryBalance', args: ['SL'] }))
+        let s2 = 0n
+        let processed = false
+        for (let i = 0; i < 6; i++) {
+          const [u2, bal2] = await readBalance()
+          s2 = bal2
+          processed = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'processedTx', args: [slearnHash] })
+          const delta = slFundBefore ? s2 - slFundBefore.slearn : 0n
+          if (processed && (slFundBefore ? delta >= clusterAmt : true)) break
+          await new Promise(r => setTimeout(r, 2000))
+        }
+        if (processed) ok('V2 processedTx(paymentTx)=true — 10% contribution recorded')
+        else fail('V2 processedTx(paymentTx)=false — 10% contribution NOT processed')
         if (slFundBefore) {
           const delta = s2 - slFundBefore.slearn
           if (delta === clusterAmt) ok(`SL fund SLEARN delta = ${Number(delta) / 100} (= 10% of 44, REQ/214)`)
@@ -550,14 +574,6 @@ async function main() {
         } else {
           ok(`V2 SL fund now: ${Number(s2) / 100} SLEARN`)
         }
-        // processedTx with retries: RPC nodes (forno/drpc) can lag a few blocks.
-        let processed = false
-        for (let i = 0; i < 5 && !processed; i++) {
-          processed = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'processedTx', args: [slearnHash] })
-          if (!processed) await new Promise(r => setTimeout(r, 2000))
-        }
-        if (processed) ok('V2 processedTx(paymentTx)=true — 10% contribution recorded')
-        else fail('V2 processedTx(paymentTx)=false — 10% contribution NOT processed')
       } catch (e) { console.log(`  [!] On-chain 10% check failed: ${(e.shortMessage || e.message || String(e)).slice(0, 100)}`) }
     }
 

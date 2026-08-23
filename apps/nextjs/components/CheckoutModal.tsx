@@ -15,6 +15,20 @@ import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 
 const SLEARN_DECIMALS = 2
 
+// Human-readable destination labels for the distribution breakdown shown in
+// the result screen (keys match the purchase route's clean distribution).
+const DIST_LABELS: Record<string, [string, string]> = {
+  country_fund: ['Country fund', 'Fondo del país'],
+  cluster: ['Cluster fund', 'Fondo del clúster'],
+  pdJ: ['pdJ', 'pdJ'],
+  cashback: ['Reward (cashback)', 'Recompensa (cashback)'],
+  missional: ['Missional', 'Misional'],
+  ubi: ['UBI', 'IUB'],
+  referral: ['Referrals', 'Referidos'],
+  churches: ['Churches', 'Iglesias'],
+  course_vault: ['Course vault', 'Bóveda del curso'],
+}
+
 interface CheckoutModalProps {
   courseId: number
   lang: string
@@ -262,12 +276,15 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
             <h3 className="text-lg font-bold mb-4">{t('resultTitle')}</h3>
             {resultDistribution.length > 0 && (
               <div className="text-left text-sm space-y-1 mb-4 bg-gray-50 rounded-lg p-3">
-                {resultDistribution.map((item, i) => (
-                  <div key={i} className="flex justify-between">
-                    <span className="text-gray-700">{item.destination}</span>
-                    <span className="font-mono font-medium">{Number(item.amount).toFixed?.(2) ?? item.amount} {item.crypto?.toUpperCase?.() || ''}</span>
-                  </div>
-                ))}
+                {resultDistribution.map((item, i) => {
+                  const label = DIST_LABELS[item.destination]?.[lang === 'es' ? 1 : 0] || item.destination
+                  return (
+                    <div key={i} className="flex justify-between">
+                      <span className="text-gray-700">{label}</span>
+                      <span className="font-mono font-medium">{Number(item.amount).toFixed?.(2) ?? item.amount} {item.crypto?.toUpperCase?.() || ''}</span>
+                    </div>
+                  )
+                })}
               </div>
             )}
             {(() => {
