@@ -43,6 +43,19 @@ const slearnTransferAbi = [
   },
 ]
 
+// ClusterFundsV2 (REQ/214): country fund + replay protection read for the
+// "10% to the buyer's country fund" check.
+const clusterFundsV2Abi = [
+  { name: 'getCountryBalance', type: 'function', stateMutability: 'view', inputs: [{ name: 'c', type: 'string' }], outputs: [{ name: 'usdt', type: 'uint256' }, { name: 'slearn', type: 'uint256' }] },
+  { name: 'processedTx', type: 'function', stateMutability: 'view', inputs: [{ name: 'h', type: 'bytes32' }], outputs: [{ name: '', type: 'bool' }] },
+]
+
+function readClusterFundsV2Address() {
+  const file = path.join(process.cwd(), '..', 'hardhat', 'deployments', 'ClusterFundsV2', 'celoSepolia.json')
+  if (!fs.existsSync(file)) return null
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')).address } catch { return null }
+}
+
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
@@ -448,6 +461,20 @@ async function main() {
     await publicClient.waitForTransactionReceipt({ hash: slearnHash })
     ok(`SLEARN transferred to backend (tx ${short(slearnHash)})`)
 
+    // 2b. REQ/214: read ClusterFundsV2 SL fund BEFORE — the 10% routed from
+    // the purchase must arrive intact (100% credit, no fees).
+    const cfV2Address = readClusterFundsV2Address()
+    if (cfV2Address) console.log(`  ClusterFundsV2: ${short(cfV2Address)}`)
+    else console.log('  [!] ClusterFundsV2 deployment not found — skipping on-chain 10% check')
+    let slFundBefore = null
+    if (cfV2Address) {
+      try {
+        const [u, s] = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'getCountryBalance', args: ['SL'] })
+        slFundBefore = { usdt: u, slearn: s }
+        console.log(`  SL fund before: ${Number(s) / 100} SLEARN`)
+      } catch (e) { console.log(`  [!] Could not read V2 SL fund before: ${(e.shortMessage || e.message || String(e)).slice(0, 80)}`) }
+    }
+
     // 3. Call the premium purchase endpoint.
     const purchaseRes = await page.evaluate(async ({ courseId, slearnHash }) => {
       const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
@@ -462,6 +489,45 @@ async function main() {
 
     if (purchaseRes.status === 200 || purchaseRes.status === 201) ok('GD course purchased')
     else fail(`Course purchase failed: ${purchaseRes.status} ${purchaseRes.body.slice(0, 160)}`)
+
+    // 3b. Distribution (REQ/214 Paso 7): the response carries the
+    // processPayment breakdown (90% of the payment; the other 10% is routed
+    // to the buyer's country fund).
+    let purchaseBody = null
+    try { purchaseBody = JSON.parse(purchaseRes.body) } catch { /* non-JSON */ }
+    if (purchaseBody?.distribution && purchaseBody.distribution.length > 0) {
+      ok(`distribution: ${purchaseBody.distribution.length} items`)
+      for (const d of purchaseBody.distribution) {
+        console.log(`    ${d.destination}: ${Number(d.amount).toFixed(2)} ${d.crypto.toUpperCase()}`)
+      }
+      const dests = purchaseBody.distribution.map(d => d.destination)
+      if (dests.includes('course_vault')) ok('course_vault present')
+      else console.log('  [!] course_vault not in distribution (event parsing may label differently)')
+      if (dests.includes('cashback')) ok('reward/cashback present')
+      else console.log('  [!] cashback not in distribution')
+    } else {
+      console.log('  [!] No distribution in purchase response')
+    }
+
+    // 3c. REQ/214: the 10% routed to ClusterFundsV2 must arrive intact at the
+    // buyer's country fund (SL) — 4.4 SLEARN for a 44 SLEARN payment.
+    if (cfV2Address) {
+      try {
+        const processed = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'processedTx', args: [slearnHash] })
+        if (processed) ok('V2 processedTx(paymentTx)=true — 10% contribution recorded')
+        else fail('V2 processedTx(paymentTx)=false — 10% contribution NOT processed')
+        const [u2, s2] = await publicClient.readContract({ address: cfV2Address, abi: clusterFundsV2Abi, functionName: 'getCountryBalance', args: ['SL'] })
+        const expected = (parseUnits('44', 2) * 10n) / 100n // 10% of the 44 SLEARN payment
+        if (slFundBefore) {
+          const delta = s2 - slFundBefore.slearn
+          if (delta === expected) ok(`SL fund SLEARN delta = ${Number(delta) / 100} (= 10% of 44, REQ/214)`)
+          else if (delta > expected) ok(`SL fund delta ${Number(delta) / 100} ≥ 10% (includes concurrent activity)`)
+          else fail(`SL fund delta ${Number(delta) / 100} < expected 4.4 — fees deducted from the 10%`)
+        } else {
+          ok(`V2 SL fund now: ${Number(s2) / 100} SLEARN`)
+        }
+      } catch (e) { console.log(`  [!] On-chain 10% check failed: ${(e.shortMessage || e.message || String(e)).slice(0, 100)}`) }
+    }
 
     // 4. Verify access is now granted (200 instead of 403).
     const accessAfter = await page.evaluate(async (courseId) => {

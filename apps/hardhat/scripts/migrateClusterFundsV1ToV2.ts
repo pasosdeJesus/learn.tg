@@ -8,7 +8,9 @@ dotenv.config({ path: "../.env" });
  * Migrate ClusterFunds (V1) country/cluster balances to ClusterFundsV2.
  *
  * Uses the PRIVATE_KEY from ../.env (loaded by hardhat.config.ts) — the
- * signer must be the OWNER of both contracts (the backend wallet).
+ * signer must be the OWNER of both contracts. Per doc/environments.md, the
+ * backend wallet (owner) lives in the REMOTE dev server's own .env, distinct
+ * from this repo's apps/.env — run this where the backend key is available.
  *
  * Idempotent: safe to re-run any number of times.
  *   - Countries already migrated (V1 balance 0 and V2 mapping credited) are

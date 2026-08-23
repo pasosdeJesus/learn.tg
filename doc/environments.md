@@ -180,7 +180,8 @@ Contract addresses are **not** read from `.env`. They come from:
 - `@pasosdejesus/mpdj/blockchain` — credentials (SBTs)
 - `@pasosdejesus/m/blockchain/deployments` (`readDeployment()`) reading
   `apps/hardhat/deployments/<Contract>/<network>.json` — vaults
-  (`LearnTGVaults` V3/V4/V5) and `ClusterFunds`
+  (`LearnTGVaults` V3/V4/V5), `ClusterFunds` (V1) y `ClusterFundsV2` (REQ/214;
+  la app opera con V2)
 
 ## Notes
 
