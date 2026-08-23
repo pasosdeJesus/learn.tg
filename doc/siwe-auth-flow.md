@@ -107,6 +107,16 @@ The frontend checks `session.address` to decide page visibility. But every data-
 
 **Do not rely on `session.address` alone for API authorization** — use `authenticateUser()`.
 
+**Stale-token fallback:** every SIWE sign-in rotates `billetera_usuario.token`,
+so a browser holding an older token (e.g. a verifier whose wallet was also used
+by another login/device) would get silent 401s. When the `token` param is
+missing or mismatched, `authenticateUser()` now falls back to validating the
+NextAuth session cookie (JWT, `sub` = wallet address, signed with
+`NEXTAUTH_SECRET` via `getToken`) for the same wallet. Identity is unchanged
+(the session wallet must equal the requested wallet and exist in
+`billetera_usuario`); this is the same "session or token" acceptance already
+used by `guide-status`. See `lib/authenticateUser.ts`.
+
 ### 3. Wallet address case normalization
 
 All wallet addresses are stored and compared in **lowercase**:
