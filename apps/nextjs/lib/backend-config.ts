@@ -113,7 +113,7 @@ export async function sendTxAndWait(
   args: any,
 ): Promise<`0x${string}`> {
   const hash = await walletClient.writeContract(args)
-  const receipt = await publicClient.waitForTransactionReceipt({ hash })
+  const { receipt } = await fetchTxWithReceipt(hash)
   if (receipt.status !== 'success') {
     throw new Error(`Transaction reverted on-chain: ${hash}`)
   }
