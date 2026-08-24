@@ -51,11 +51,11 @@ importers:
         specifier: ^2.2.3
         version: 2.2.3(ethers@6.17.0)(hardhat@2.29.0(ts-node@10.9.2(@types/node@26.1.2)(typescript@5.9.3))(typescript@5.9.3))
       '@pasosdejesus/contract-test':
-        specifier: ^0.1.0
-        version: 0.1.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
+        specifier: ^0.1.3
+        version: 0.1.3(@pasosdejesus/m@0.15.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
       '@pasosdejesus/edr':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.1.1
+        version: 0.1.1
       '@typechain/ethers-v6':
         specifier: ^0.5.0
         version: 0.5.1(ethers@6.17.0)(typechain@8.3.2(typescript@5.9.3))(typescript@5.9.3)
@@ -589,8 +589,18 @@ packages:
       ethers: ^6
       viem: ^2
 
+  '@pasosdejesus/contract-test@0.1.3':
+    resolution: {integrity: sha512-7W9+h5ZArq0wnC2en8yjNqDgunp84LRU8FYIJ7ZZ2OcJrt6XuCYYEAAZQskcw6GebPe5FxpjuZiPtgQWlNJRVw==}
+    peerDependencies:
+      '@pasosdejesus/m': '>=0.16.0'
+      ethers: ^6
+      viem: ^2
+
   '@pasosdejesus/edr@0.1.0':
     resolution: {integrity: sha512-6JCq93qBsJaRTXdFvMoUNuAFkUTg+q7Ern0aj0ZzBWA4u9T9cNYoL1a//g8IELNxaljsIdG5r+dIJMCqfVadEQ==}
+
+  '@pasosdejesus/edr@0.1.1':
+    resolution: {integrity: sha512-LBDUYNTEScS5Z9OVgMk0N71PuxrKmmbb7cHjMcQaLygTDsHk3qvLAatByHMwYQ920uKUgLdhjlGWP3l6sZQJ4w==}
 
   '@pasosdejesus/m@0.15.0':
     resolution: {integrity: sha512-0nkVHG0qwdf8LZ7hE8goQ/oR2q7zl288DUTV+973N5rX0v44c/hvudw8lSpUV/o/iUESvbTXTUM5Z6iokdiVRw==}
@@ -3050,8 +3060,35 @@ snapshots:
       viem: 2.55.11(typescript@5.9.3)
     transitivePeerDependencies:
       - supports-color
+    optional: true
+
+  '@pasosdejesus/contract-test@0.1.3(@pasosdejesus/m@0.15.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))':
+    dependencies:
+      '@pasosdejesus/edr': 0.1.1
+      '@pasosdejesus/m': 0.15.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
+      ethers: 6.17.0
+      glob: 13.0.6
+      mocha: 11.8.0
+      viem: 2.55.11(typescript@5.9.3)
+    transitivePeerDependencies:
+      - supports-color
 
   '@pasosdejesus/edr@0.1.0':
+    dependencies:
+      '@ethereumjs/block': 10.1.2
+      '@ethereumjs/blockchain': 10.1.2
+      '@ethereumjs/common': 10.1.2
+      '@ethereumjs/evm': 10.1.2
+      '@ethereumjs/mpt': 10.1.2
+      '@ethereumjs/statemanager': 10.1.2
+      '@ethereumjs/tx': 10.1.2
+      '@ethereumjs/util': 10.1.2
+      '@ethereumjs/vm': 10.1.2
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
+  '@pasosdejesus/edr@0.1.1':
     dependencies:
       '@ethereumjs/block': 10.1.2
       '@ethereumjs/blockchain': 10.1.2

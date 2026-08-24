@@ -97,7 +97,7 @@ export async function canPurchaseGDCourse(
   if (user.position_israel_gaza !== 'no') {
     return {
       access: false,
-      reason: 'This course is restricted to non-Zionists (those who answered no to supporting Israel in the Gaza genocide).',
+      reason: 'This course is restricted to non-Zionists (those who answered no to supporting Israel in the Gaza genocide in the Profile question).',
     }
   }
 
