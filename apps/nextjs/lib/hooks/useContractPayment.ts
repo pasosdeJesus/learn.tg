@@ -118,12 +118,15 @@ export function useContractPayment({
       return
     }
 
+    let usdtHash = ''
+    let slearnHash = ''
+
     try {
       setState('paying')
-      logger.info('[useContractPayment] Starting payment...', 'Donate')
-
-      let usdtHash = ''
-      let slearnHash = ''
+      // [PayDiag] Version marker: confirms which bundle is running. If the
+      // deployed UI shows "v2.1" in DevTools, the best-effort wait is live;
+      // otherwise production was not rebuilt.
+      console.log('[PayDiag] flow v2.1 start', { amount, slearnAmount, backend: backendWalletAddress?.slice(0, 10) })
 
       if (parsedUsdt > 0n) {
         usdtHash = await walletClient.writeContract({
@@ -132,6 +135,7 @@ export function useContractPayment({
           functionName: 'transfer',
           args: [backendWalletAddress, parsedUsdt],
         })
+        console.log('[PayDiag] USDT broadcast', usdtHash)
       }
 
       if (parsedSlearn > 0n && slearnAddress) {
@@ -141,6 +145,7 @@ export function useContractPayment({
           functionName: 'transfer',
           args: [backendWalletAddress, parsedSlearn],
         })
+        console.log('[PayDiag] SLEARN broadcast', slearnHash)
       }
 
       // Best-effort confirmation: forno lags, so never abort here — the
@@ -149,14 +154,14 @@ export function useContractPayment({
       for (const h of [usdtHash, slearnHash].filter(Boolean)) {
         try {
           await publicClient.waitForTransactionReceipt({ hash: h as Address, timeout: 120_000 })
+          console.log('[PayDiag] receipt wait OK', h)
         } catch (e: any) {
-          logger.info('[useContractPayment] Receipt wait failed (backend will re-check): ' + (e?.shortMessage || e?.message || String(e)), 'Donate')
+          console.log('[PayDiag] receipt wait FAILED (continuing to backend):', h, e?.constructor?.name, e?.shortMessage || e?.message)
         }
       }
 
       setState('confirming')
-
-      logger.info('[useContractPayment] Txs confirmed, calling backend... usdtHash=' + (usdtHash || 'none') + ' slearnHash=' + (slearnHash || 'none'), 'Donate')
+      console.log('[PayDiag] calling backend with', { usdtHash: usdtHash || null, slearnHash: slearnHash || null })
 
       // Backend callback (e.g. /api/add-donation)
       let increment: number | undefined
@@ -182,6 +187,12 @@ export function useContractPayment({
           }
         } catch (e: any) {
           const detail = e?.response?.data?.error || e?.message || String(e)
+          console.log('[PayDiag] BACKEND FAILED', {
+            status: e?.response?.status,
+            dataError: e?.response?.data?.error,
+            name: e?.constructor?.name,
+            message: e?.message,
+          })
           logger.error('[useContractPayment] Backend verification failed: ' + detail, 'Payment')
           setState('error')
           setError(detail)
@@ -194,6 +205,13 @@ export function useContractPayment({
       onSuccess?.({ increment, usdtHash, slearnHash, ...backendResult })
     } catch (e: any) {
       setState('error')
+      console.log('[PayDiag] EXECUTE ERROR', {
+        name: e?.constructor?.name,
+        shortMessage: e?.shortMessage,
+        message: e?.message,
+        usdtHash: usdtHash || null,
+        slearnHash: slearnHash || null,
+      })
       logger.error('[useContractPayment] Transaction failed: ' + (e?.message || String(e)), 'Donate')
       setError(e?.message || 'Transaction failed')
     }
