@@ -13,6 +13,7 @@ import { unified } from 'unified'
 import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { courseAccessReasonText } from '@/lib/course-access-msg'
 
 import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
@@ -246,7 +247,7 @@ export default function Page({ params }: PageProps) {
                     </span>
                   ) : isGd && gdEligible === false ? (
                     <span className="inline-block rounded bg-gray-100 px-4 py-1 text-sm font-semibold text-gray-600">
-                      {gdReason ||
+                      {courseAccessReasonText(gdReason, lang) ||
                         (course.idioma === 'en'
                           ? 'Not eligible for this course'
                           : 'No cumples los requisitos para este curso')}

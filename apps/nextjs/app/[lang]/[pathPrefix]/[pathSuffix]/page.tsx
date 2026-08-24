@@ -16,6 +16,7 @@ import type { Processor } from 'unified'
 import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { courseAccessReasonText } from '@/lib/course-access-msg'
 
 import CeloUbiButton from '@/components/CeloUbiButton'
 import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
@@ -171,14 +172,14 @@ export default function Page() {
             } catch (err) {
                 if (err instanceof AxiosError) {
                     if (err.response?.status === 403) {
-                        const reason = (err.response.data as any)?.error || 'This is a premium course. Purchase it to access its guides.'
-                        setPurchaseRequired(reason)
+                        const reasonKey = (err.response.data as any)?.error || 'premium_purchase_required'
+                        setPurchaseRequired(courseAccessReasonText(reasonKey, lang))
                         setGuideHtml('')
                         return
                     }
                     if (err.response?.status === 401) {
-                        const reason = (err.response.data as any)?.error || 'Connect your wallet to access this premium course.'
-                        setPurchaseRequired(reason)
+                        const reasonKey = (err.response.data as any)?.error || 'connect_wallet'
+                        setPurchaseRequired(courseAccessReasonText(reasonKey, lang))
                         setGuideHtml('')
                         return
                     }

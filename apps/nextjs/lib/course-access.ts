@@ -47,7 +47,7 @@ export async function canAccessCourse(
     if (!enrollment) {
       return {
         access: false,
-        reason: 'This is a premium course. Purchase it to access its guides.',
+        reason: 'premium_purchase_required',
       }
     }
   }
@@ -61,7 +61,10 @@ export async function canAccessCourse(
  * A user can buy the GD course only if they are:
  *   - a Christian (`usuario.religion_id = 2`), and
  *   - in a pilot country (`usuario.pais_id` in Colombia or Sierra Leone), and
- *   - a member of a church (`usuario.church_id` set), and
+ *   - verified in a church city (`verified_city_id` when the place of worship
+ *     has a centro poblado, otherwise `verified_place_of_worship_location`).
+ *     The course price depends on the country, and the country itself is
+ *     self-reported, so the verifier-confirmed church city stands in for it.
  *   - non-Zionist: answered `no` to the single Gaza question in their own
  *     profile (`usuario.position_israel_gaza='no'`, i.e. does NOT support
  *     Israel in the Gaza genocide).
@@ -72,32 +75,34 @@ export async function canPurchaseGDCourse(
 ): Promise<AccessResult> {
   const user = await db
     .selectFrom('usuario')
-    .select(['religion_id', 'pais_id', 'church_id', 'position_israel_gaza'])
+    .select(['religion_id', 'pais_id', 'verified_city_id', 'verified_place_of_worship_location', 'position_israel_gaza'])
     .where('id', '=', userId)
     .executeTakeFirst()
 
   if (!user || user.religion_id !== 2) {
-    return { access: false, reason: 'This course is for Christians.' }
+    return { access: false, reason: 'gd_for_christians' }
   }
 
   if (!user.pais_id || !PILOT_COUNTRIES.includes(user.pais_id)) {
     return {
       access: false,
-      reason: 'This course is only available in pilot countries (Colombia, Sierra Leone).',
+      reason: 'gd_pilot_countries',
     }
   }
 
-  if (!user.church_id) {
+  // The price depends on the country; there is no country verification, only
+  // the verifier-confirmed church city (numeric id or free-text fallback).
+  if (!user.verified_city_id && !user.verified_place_of_worship_location) {
     return {
       access: false,
-      reason: 'This course requires belonging to a church.',
+      reason: 'gd_verified_city_required',
     }
   }
 
   if (user.position_israel_gaza !== 'no') {
     return {
       access: false,
-      reason: 'This course is restricted to non-Zionists (those who answered no to supporting Israel in the Gaza genocide in the Profile question).',
+      reason: 'gd_non_zionist',
     }
   }
 
