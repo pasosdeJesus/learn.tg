@@ -132,7 +132,6 @@ export function useContractPayment({
           functionName: 'transfer',
           args: [backendWalletAddress, parsedUsdt],
         })
-        await publicClient.waitForTransactionReceipt({ hash: usdtHash })
       }
 
       if (parsedSlearn > 0n && slearnAddress) {
@@ -142,7 +141,17 @@ export function useContractPayment({
           functionName: 'transfer',
           args: [backendWalletAddress, parsedSlearn],
         })
-        await publicClient.waitForTransactionReceipt({ hash: slearnHash })
+      }
+
+      // Best-effort confirmation: forno lags, so never abort here — the
+      // backend re-verifies each hash with its own polling and rejects the
+      // donation if a transaction genuinely never mined.
+      for (const h of [usdtHash, slearnHash].filter(Boolean)) {
+        try {
+          await publicClient.waitForTransactionReceipt({ hash: h as Address, timeout: 120_000 })
+        } catch (e: any) {
+          logger.info('[useContractPayment] Receipt wait failed (backend will re-check): ' + (e?.shortMessage || e?.message || String(e)), 'Donate')
+        }
       }
 
       setState('confirming')

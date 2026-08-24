@@ -20,7 +20,7 @@ export async function verifyTransfer(
   tokenAddress: Address,
   maxAgeMs = 86400000,
 ): Promise<VerifiedTransfer> {
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` })
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}`, timeout: 120_000 })
   if (receipt.status !== 'success') {
     throw new Error(`${crypto.toUpperCase()} transfer failed on-chain`)
   }
