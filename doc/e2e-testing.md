@@ -166,12 +166,33 @@ for an example.
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
 | `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
 
-### Current Status (2026-07-28)
+### Current Status (2026-08-24)
 
-**12 specs.** `full-flow.spec.mjs` — now fills profile and self-verifies
-via admin API to reach ≥50 score before crossword/UBI steps.
-`prod-landing-to-profile.spec.mjs` fails on wallet connection timing (React
-hydration on OpenBSD). Pre-existing, not a regression.
+**21 browser specs.** New specs cover the 2026-08 regressions: interview date
+(timestamptz migration), verified-city purchase gate, session fallback, and
+the vault donation with both cryptos:
+
+|| Spec | What it tests |
+||------|---------------|
+|| `premium-course-checkout.spec.mjs` | GD checkout UI (Buy button → CheckoutModal → slider). Creates a fresh eligible pastor via API, so it never depends on the fixture wallet's purchase state |
+|| `interview-date.spec.mjs` | Booking a 2PM interview stores/displays the exact instant (timestamptz regression: 2PM → "05:00 AM" bug) |
+|| `verified-city-gate.spec.mjs` | Purchase eligibility: unverified pastor NOT eligible (`verified_city_required`), verified pastor eligible |
+|| `church-selector-diag.spec.mjs` | Session-cookie fallback in `authenticateUser` (stale token) + `ChurchSelector` options/assigned church |
+|| `vault-both-donate.spec.mjs` | Vault donation with BOTH USDT+SLEARN through `/api/add-donation` (sends real testnet tokens to the dev backend) |
+
+`admin-dashboard` waits for widget content before sampling flicker, and
+`guide-claims` waits up to 30s for the UBI button — both were flaky under the
+full suite (cold on-demand compilation) but pass individually. `full-flow` can
+time out on SIWE under suite load (passes solo).
+
+### Dev-server prerequisites for on-chain specs
+
+| Spec | Requires on the dev server |
+|------|----------------------------|
+| `interview-date` | `proposed_date_of_interview` migrated to `timestamptz` (see `db/migrations/20260822000000_proposed_interview_timestamptz.ts`) |
+| `verified-city-gate`, `premium-course-checkout` | Verifier wallet (`apps/.env`) whitelisted; eligibility = verified worship city |
+| `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
+| `church-selector-diag` | Session cookie auth (works via the session fallback in `lib/authenticateUser.ts`) |
 
 ### Hydration / SIWE gotcha on the dev server (REQ/208)
 
@@ -291,6 +312,10 @@ CHROME_PATH=/usr/bin/google-chrome make test-e2e
 | Chrome hangs on OpenBSD | Zombie Puppeteer processes | `rm -rf /tmp/puppeteer*` and retry |
 | CalDAV smokes skipped | `CALDAV_URL` not set | Set env vars if CalDAV testing is needed |
 | `full-flow.spec.mjs` UBI claim fails | Test wallet profile score < 50 | Run `bin/m test:e2e prerequisites` to set up |
+| "Transaction … could not be found" en donación/compra | forno no indexa receipts recién minados | Ya mitigado con `fetchTxWithReceipt` (multi-RPC) en `lib/backend-config.ts`; verifica que el deploy incluya el rebuild |
+| Donación/compra falla con 500 y "exceeds the balance" en el servidor | Backend wallet sin CELO para gas | Funde `NEXT_PUBLIC_ADDRESS` con CELO (ver `doc/runbook.md` §3) |
+| `premium-course-checkout` sin botón Buy | La wallet no es elegible (compra/eligibilidad) | El spec ahora crea su propio pastor elegible vía API; si falla, revisa la verificación de ciudad en el dev server |
+| `interview-date` muestra otra hora | Migración timestamptz no aplicada en la BD dev | Aplica `db/migrations/20260822000000_proposed_interview_timestamptz.ts` |
 
 ## Related Docs
 

@@ -67,3 +67,31 @@ bin/m wallet:send --name admin --to <SLEARN> --function "setUsdtToSlearnRate(uin
 bin/m wallet:send --name admin --to <SLEARN> --function "grantRole(bytes32,address)" --args "<ROLE_HASH>,<addr>"
 bin/m wallet:send --name admin --to <SLEARN> --function "revokeRole(bytes32,address)" --args "<ROLE_HASH>,<addr>"
 ```
+
+## 3. Backend wallet gas (CELO) — incident 2026-08-24
+
+En mainnet el backend wallet (`NEXT_PUBLIC_ADDRESS`, signer `0x358643…`) firma
+`processPayment`/`processCountryDonation`. Si se queda sin CELO, el navegador
+ve "Transaction … could not be found" o un 500 "total cost (gas * gas fee +
+value) exceeds the balance" en el servidor, aunque las tx del usuario sí se
+minaron (los tokens llegan al backend pero la donación/compra no se procesa).
+
+- **Chequear saldo:** `bin/m wallet:balance --name <backend> --network celo`
+- **Fijar:** enviar CELO al backend. Cada `processPayment` consume ~0.05-0.1 CELO;
+  con 10-20 CELO hay holgura para cientos de operaciones.
+- Monitorear el saldo junto con las métricas de donaciones/compras.
+
+## 4. ClusterFundsV2 permissions (mainnet)
+
+- `authorizedTransfers[V2] = true` y `MINTER_ROLE` otorgado en SLEARN mainnet
+  (el cashback de donaciones usa `SLEARN.mintAndReserve`, que exige MINTER).
+- El backend wallet también debe tener `MINTER_ROLE` en SLEARN (lo usa
+  `processPayment`).
+- Verificación read-only: `scripts/verify-mainnet-v2.cjs` (apps/nextjs).
+
+## 5. RPC lag (forno)
+
+forno (canónico) a veces retrasa indexar receipts recién minados. El backend
+usa `fetchTxWithReceipt` (lib/backend-config.ts) que hace polling round-robin
+en forno/ankr/drpc/publicnode/1rpc. Si un receipt "no se encuentra", verifica
+que el deploy incluya este helper (requiere rebuild de producción).

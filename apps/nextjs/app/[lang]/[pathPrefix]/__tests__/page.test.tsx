@@ -360,7 +360,7 @@ describe('Course List Page Component', () => {
     expect(guideStatusCalls.length).toBe(0)
   })
 
-  it('handles guide-status API errors gracefully', async () => {
+  it('handles guide-status API errors gracefully (course still renders)', async () => {
     axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
       if (url.startsWith(API_BUSCA_URL)) {
         return Promise.resolve({ data: [mockCourse] })
@@ -383,9 +383,17 @@ describe('Course List Page Component', () => {
       )
     })
 
+    // A guide-status failure must NOT break the page: the course renders with
+    // every guide marked as incomplete (useCourse swallows per-guide errors).
     await waitFor(() => {
-      expect(screen.getByText(/API error/)).toBeInTheDocument()
+      expect(screen.getByText(/GoodDollar Course/)).toBeInTheDocument()
     })
+    expect(screen.getByText(/Course contents/)).toBeInTheDocument()
+
+    const guideStatusCalls = axiosGet.mock.calls.filter((call: [string, ...unknown[]]) =>
+      call[0] && typeof call[0] === 'string' && call[0].includes('/api/guide-status')
+    )
+    expect(guideStatusCalls.length).toBe(2)
   })
 })
 

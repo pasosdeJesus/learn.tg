@@ -196,3 +196,16 @@ Contract addresses are **not** read from `.env`. They come from:
   Next 16 dev never hydrates, and (b) forward `Host $http_host` (not `$host`)
   so the SIWE domain matches `window.location.host` on the non-default port.
   See [e2e-testing.md](e2e-testing.md) and [siwe-auth-flow.md](siwe-auth-flow.md).
+- **Dev DB — migración de entrevistas:** `usuario.proposed_date_of_interview`
+  debe estar en `timestamptz` (migración
+  `20260822000000_proposed_interview_timestamptz`); la columna `date` original
+  rompe la hora (2PM → 5AM). Aplicar en la BD dev con
+  `bin/m db:console "ALTER TABLE usuario ALTER COLUMN proposed_date_of_interview TYPE TIMESTAMPTZ USING (proposed_date_of_interview::timestamp AT TIME ZONE 'UTC');"`.
+- **Dev SLEARN roles:** para donaciones al vault/país en dev, el backend dev
+  (`0x01a728…`) debe tener `MINTER_ROLE` en SLEARN Sepolia y ClusterFundsV2
+  dev (`0xcA9c6A…`) también (el cashback de donaciones usa
+  `SLEARN.mintAndReserve`). En mainnet ya están otorgados (ver
+  [runbook.md](runbook.md) §4).
+- **RPC:** forno a veces retrasa indexar receipts recién minados; el backend
+  usa `fetchTxWithReceipt` (multi-RPC: forno/ankr/drpc/publicnode). Ver
+  [runbook.md](runbook.md) §5.

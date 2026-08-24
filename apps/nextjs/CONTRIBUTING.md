@@ -97,6 +97,34 @@ session persistence, UBI claims, crossword puzzles.
 
 Exit code > 0 si algún test falla (compatible con CI).
 
+### On-chain / eligibility specs (2026-08+)
+
+Varios specs en `e2e/specs/` hacen setup on-chain o de elegibilidad vía API y
+requieren el servidor de desarrollo bien configurado:
+
+| Spec | Prerequisito del dev server |
+|------|-----------------------------|
+| `interview-date.spec.mjs` | Migración `proposed_date_of_interview → timestamptz` aplicada en la BD dev (columna `date` rompe la hora: 2PM → 5AM) |
+| `verified-city-gate.spec.mjs` | Compra de cursos pagos exige ciudad de culto verificada (`verified_city_id` o `verified_place_of_worship_location`) |
+| `premium-course-checkout.spec.mjs` | Crea un pastor nuevo elegible vía API (perfil SL + verificación del verificador) — no depende de la wallet fixture |
+| `church-selector-diag.spec.mjs` | Valida el fallback de sesión en `authenticateUser` (token stale + cookie de sesión) y el `ChurchSelector` |
+| `vault-both-donate.spec.mjs` | Donación USDT+SLEARN al vault del curso vía `/api/add-donation`; transfiere tokens de prueba reales al backend dev |
+| `guide-claims.spec.mjs` | El reclamo puede rechazarse por cooldown/score — el spec lo trata como OK |
+
+**Experiencia: lag de forno y gas del backend.** forno (canónico) a veces
+retrasa indexar receipts recién minados; `lib/backend-config.ts` expone
+`fetchTxWithReceipt`, que hace polling round-robin en varios RPCs
+(forno/ankr/drpc/publicnode). La verificación de donaciones y compras lo usa.
+En mainnet el backend wallet (`NEXT_PUBLIC_ADDRESS`) también necesita CELO para
+el gas de `processPayment`/`processCountryDonation` — si se agota, el modal
+muestra "could not be found"/errores 500 aunque las tx del usuario sí se minen
+(ver `doc/runbook.md` §3).
+
+**Specs flaky (conocidos).** `admin-dashboard` (flicker por compilación en
+frío) y `guide-claims` (botón UBI tarda tras deploy) pueden fallar en la suite
+completa pero pasan individualmente; esperan contenido estable o hasta 30s.
+`full-flow` puede dar timeout de SIWE bajo carga de suite (pasa solo).
+
 ### Tools
 
 - **Vitest** with `--coverage` (v8 provider).

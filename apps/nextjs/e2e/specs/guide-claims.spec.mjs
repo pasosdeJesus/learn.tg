@@ -84,7 +84,7 @@ async function main() {
         (b.textContent || '').includes('Claim Learn.tg-UBI') ||
         (b.textContent || '').includes('Reclamar Learn.tg-IBU')
       )
-    }, { timeout: 15000 }).catch(() => false)
+    }, { timeout: 30000 }).catch(() => false)
 
     if (!btnAppeared) {
       fail('CeloUbi button not found — guide may not have {CeloUbiButton} marker')

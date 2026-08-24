@@ -114,7 +114,21 @@ async function main() {
   if (body.includes('Verification Dashboard') || body.includes('Panel de Verificación')) {
     ok('Admin dashboard loads')
 
-    await new Promise(r => setTimeout(r, 5000))
+    // Wait until the widgets finish loading (no "Loading..." text) before
+    // sampling for flicker — cold on-demand compilation can keep the admin
+    // APIs busy for a while after a deploy or under full-suite load.
+    let settled = false
+    let lastHadLoading = true
+    for (let i = 0; i < 20 && !settled; i++) {
+      await new Promise(r => setTimeout(r, 2000))
+      const b = await page.evaluate(() => document.body.textContent || '')
+      const hasLoading = b.includes('Loading...') || b.includes('Cargando...')
+      if (!hasLoading && !lastHadLoading) settled = true
+      lastHadLoading = hasLoading
+    }
+    if (!settled) console.log('  ⚠️  Dashboard still showed Loading after 40s — sampling anyway')
+
+    await new Promise(r => setTimeout(r, 1000))
     let flickerCount = 0
     for (let i = 0; i < 3; i++) {
       await new Promise(r => setTimeout(r, 2000))
