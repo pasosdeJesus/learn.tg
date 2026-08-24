@@ -19,7 +19,7 @@ const MESSAGES: Record<string, [en: string, es: string]> = {
     'This course is only available in pilot countries (Colombia, Sierra Leone).',
     'Este curso solo está disponible en países piloto (Colombia, Sierra Leona).',
   ],
-  gd_verified_city_required: [
+  verified_city_required: [
     'This course requires a verified city of worship.',
     'Este curso requiere una ciudad de culto verificada.',
   ],

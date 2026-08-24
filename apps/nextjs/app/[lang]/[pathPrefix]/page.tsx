@@ -112,15 +112,11 @@ export default function Page({ params }: PageProps) {
     return () => { cancelled = true }
   }, [course, address])
 
-  // Global Disciples courses: determine pilot purchase eligibility so the Buy
-  // button is only shown to eligible members.
+  // Premium courses: determine purchase eligibility so the Buy button is only
+  // shown to eligible members (every paid course requires a verified worship
+  // city; GD adds the pilot gates).
   useEffect(() => {
     if (!course || !address || Number(course.porPagar) <= 0) return
-    if (!isGd) {
-      setGdEligible(true)
-      setGdReason(null)
-      return
-    }
     let cancelled = false
     ;(async () => {
       try {
@@ -138,7 +134,7 @@ export default function Page({ params }: PageProps) {
       }
     })()
     return () => { cancelled = true }
-  }, [course, address, isGd])
+  }, [course, address])
 
   // Global Disciples courses: show remaining churches fund (44 SLEARN pastor bonus).
   useEffect(() => {
@@ -245,7 +241,7 @@ export default function Page({ params }: PageProps) {
                     <span className="inline-block rounded bg-green-100 px-4 py-1 text-sm font-semibold text-green-800">
                       {course.idioma === 'en' ? 'Purchased' : 'Comprado'}
                     </span>
-                  ) : isGd && gdEligible === false ? (
+                  ) : gdEligible === false ? (
                     <span className="inline-block rounded bg-gray-100 px-4 py-1 text-sm font-semibold text-gray-600">
                       {courseAccessReasonText(gdReason, lang) ||
                         (course.idioma === 'en'

@@ -1,6 +1,7 @@
 import { Kysely } from 'kysely'
 import type { DB } from '@/db/db.d.ts'
 import { PILOT_COUNTRIES } from '@/lib/gd-utils'
+import { isGDCourse } from '@/lib/gd-cluster-routing'
 
 export interface AccessResult {
   access: boolean
@@ -8,11 +9,24 @@ export interface AccessResult {
 }
 
 /**
+ * True when the verifier has confirmed the user's place-of-worship city:
+ * `verified_city_id` when the city is in a centro poblado, or the free-text
+ * `verified_place_of_worship_location` otherwise (e.g. Freetown, which has no
+ * centro poblado in the catalog).
+ */
+export function hasVerifiedWorshipCity(user: {
+  verified_city_id?: number | null
+  verified_place_of_worship_location?: string | null
+}): boolean {
+  return !!(user.verified_city_id || user.verified_place_of_worship_location)
+}
+
+/**
  * Check whether a user can access a specific course's guides.
  *
  * Guides are gated by purchase only (`premium_course_usuario`). Course-specific
  * eligibility (e.g. GD pilot) gates the *purchase*, not guide viewing — see
- * `canPurchaseGDCourse`.
+ * `canPurchasePremiumCourse`.
  *
  * @param db    Kysely DB instance
  * @param userId Authenticated user ID (usuario.id)
@@ -56,15 +70,51 @@ export async function canAccessCourse(
 }
 
 /**
+ * Purchase eligibility for ANY premium (paid) course.
+ *
+ * Paid courses have country-dependent prices, and the country itself is
+ * self-reported — there is no country verification. The verifier-confirmed
+ * church city (`verified_city_id` or `verified_place_of_worship_location`)
+ * stands in for it, so every paid course purchase requires a verified worship
+ * city. Global Disciples courses add the pilot gates on top
+ * (`canPurchaseGDCourse`).
+ */
+export async function canPurchasePremiumCourse(
+  db: Kysely<DB>,
+  userId: number,
+  courseId: number,
+): Promise<AccessResult> {
+  const user = await db
+    .selectFrom('usuario')
+    .select(['religion_id', 'pais_id', 'verified_city_id', 'verified_place_of_worship_location', 'position_israel_gaza'])
+    .where('id', '=', userId)
+    .executeTakeFirst()
+
+  if (!user) {
+    return { access: false, reason: 'auth_required' }
+  }
+
+  if (!hasVerifiedWorshipCity(user)) {
+    return {
+      access: false,
+      reason: 'verified_city_required',
+    }
+  }
+
+  if (isGDCourse(courseId)) {
+    return canPurchaseGDCourse(db, userId)
+  }
+
+  return { access: true }
+}
+
+/**
  * Global Disciples course purchase eligibility (pilot phase).
  *
  * A user can buy the GD course only if they are:
  *   - a Christian (`usuario.religion_id = 2`), and
  *   - in a pilot country (`usuario.pais_id` in Colombia or Sierra Leone), and
- *   - verified in a church city (`verified_city_id` when the place of worship
- *     has a centro poblado, otherwise `verified_place_of_worship_location`).
- *     The course price depends on the country, and the country itself is
- *     self-reported, so the verifier-confirmed church city stands in for it.
+ *   - verified in a church city (see `hasVerifiedWorshipCity`), and
  *   - non-Zionist: answered `no` to the single Gaza question in their own
  *     profile (`usuario.position_israel_gaza='no'`, i.e. does NOT support
  *     Israel in the Gaza genocide).
@@ -90,12 +140,10 @@ export async function canPurchaseGDCourse(
     }
   }
 
-  // The price depends on the country; there is no country verification, only
-  // the verifier-confirmed church city (numeric id or free-text fallback).
-  if (!user.verified_city_id && !user.verified_place_of_worship_location) {
+  if (!hasVerifiedWorshipCity(user)) {
     return {
       access: false,
-      reason: 'gd_verified_city_required',
+      reason: 'verified_city_required',
     }
   }
 

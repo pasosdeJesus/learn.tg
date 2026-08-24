@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { canAccessCourse, canPurchaseGDCourse } from '../course-access'
+import { canAccessCourse, canPurchaseGDCourse, canPurchasePremiumCourse, hasVerifiedWorshipCity } from '../course-access'
 import { courseAccessReasonText } from '../course-access-msg'
 
 // Returns a sequence of rows, one per executeTakeFirst call. This lets us
@@ -92,7 +92,7 @@ describe('canPurchaseGDCourse', () => {
     const db = mockDbSeq([userRow({ verified_city_id: null, verified_place_of_worship_location: null })])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result.access).toBe(false)
-    expect(result.reason).toBe('gd_verified_city_required')
+    expect(result.reason).toBe('verified_city_required')
   })
 
   it('allows a text-only verified worship location (non-centro-poblado country)', async () => {
@@ -128,11 +128,55 @@ describe('canPurchaseGDCourse', () => {
   })
 })
 
+describe('canPurchasePremiumCourse (any paid course)', () => {
+  it('denies a premium purchase without a verified worship city', async () => {
+    const db = mockDbSeq([userRow({ verified_city_id: null, verified_place_of_worship_location: null })])
+    const result = await canPurchasePremiumCourse(db, 42, 5) // non-GD premium
+    expect(result.access).toBe(false)
+    expect(result.reason).toBe('verified_city_required')
+  })
+
+  it('allows a premium purchase with a numeric verified city', async () => {
+    const db = mockDbSeq([userRow({ verified_city_id: 47231, verified_place_of_worship_location: null })])
+    const result = await canPurchasePremiumCourse(db, 42, 5)
+    expect(result).toEqual({ access: true })
+  })
+
+  it('allows a premium purchase with a text verified worship location', async () => {
+    const db = mockDbSeq([userRow({ verified_city_id: null, verified_place_of_worship_location: 'Freetown' })])
+    const result = await canPurchasePremiumCourse(db, 42, 5)
+    expect(result).toEqual({ access: true })
+  })
+
+  it('rejects a user without any profile row', async () => {
+    const db = mockDbSeq([null])
+    const result = await canPurchasePremiumCourse(db, 42, 5)
+    expect(result.access).toBe(false)
+  })
+
+  it('applies the GD pilot gates for GD courses', async () => {
+    // GD course id=10; non-Christian → gd_for_christians, not the general gate
+    const db = mockDbSeq([userRow({ religion_id: 3 })])
+    const result = await canPurchasePremiumCourse(db, 42, 10)
+    expect(result.access).toBe(false)
+    expect(result.reason).toBe('gd_for_christians')
+  })
+})
+
+describe('hasVerifiedWorshipCity', () => {
+  it('accepts numeric city or free text', () => {
+    expect(hasVerifiedWorshipCity({ verified_city_id: 1, verified_place_of_worship_location: null })).toBe(true)
+    expect(hasVerifiedWorshipCity({ verified_city_id: null, verified_place_of_worship_location: 'Freetown' })).toBe(true)
+    expect(hasVerifiedWorshipCity({ verified_city_id: null, verified_place_of_worship_location: null })).toBe(false)
+    expect(hasVerifiedWorshipCity({ verified_city_id: 0, verified_place_of_worship_location: '' })).toBe(false)
+  })
+})
+
 describe('courseAccessReasonText', () => {
   it('translates known keys to Spanish', () => {
     expect(courseAccessReasonText('gd_for_christians', 'es')).toBe('Este curso es para cristianos.')
     expect(courseAccessReasonText('gd_pilot_countries', 'es')).toContain('países piloto')
-    expect(courseAccessReasonText('gd_verified_city_required', 'es')).toContain('ciudad de culto verificada')
+    expect(courseAccessReasonText('verified_city_required', 'es')).toContain('ciudad de culto verificada')
     expect(courseAccessReasonText('premium_purchase_required', 'es')).toContain('curso premium')
     expect(courseAccessReasonText('gd_non_zionist', 'es')).toContain('no sionistas')
     expect(courseAccessReasonText('auth_required', 'es')).toContain('autenticación')
