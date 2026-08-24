@@ -1,4 +1,5 @@
 import { type Address, decodeFunctionData } from 'viem'
+import { fetchTxWithReceipt } from '@/lib/backend-config'
 
 export const erc20TransferAbi = [
   { name: 'transfer', type: 'function', inputs: [
@@ -20,7 +21,9 @@ export async function verifyTransfer(
   tokenAddress: Address,
   maxAgeMs = 86400000,
 ): Promise<VerifiedTransfer> {
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}`, timeout: 120_000 })
+  // Poll across several RPCs: forno can lag indexing freshly-mined receipts,
+  // while mirrors (ankr/drpc/publicnode) return them immediately.
+  const { receipt, tx } = await fetchTxWithReceipt(hash as `0x${string}`)
   if (receipt.status !== 'success') {
     throw new Error(`${crypto.toUpperCase()} transfer failed on-chain`)
   }
@@ -39,7 +42,6 @@ export async function verifyTransfer(
     // otherwise log and skip — not critical
   }
 
-  const tx = await publicClient.getTransaction({ hash: hash as `0x${string}` })
   if (tx.from.toLowerCase() !== fromAddress.toLowerCase()) {
     throw new Error(`${crypto.toUpperCase()} transaction was not sent from the expected wallet`)
   }
