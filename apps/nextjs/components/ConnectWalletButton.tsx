@@ -7,7 +7,7 @@ import { getAddress } from 'viem'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-import { IS_PRODUCTION } from '@/lib/config'
+import { IS_PRODUCTION } from '@learn-tg/rewards/src/lib/config'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { logger } from '@pasosdejesus/m/debug'
 

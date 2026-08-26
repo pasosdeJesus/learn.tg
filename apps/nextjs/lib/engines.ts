@@ -1,21 +1,35 @@
 import type { NextRequest } from 'next/server'
 
-type HandlerFn = (req: NextRequest, ctx: { params: Record<string, string> }) => Promise<Response>
+import { createRegistry } from '@pasosdejesus/m/engine'
 
-interface EngineRegistry {
-  [engineName: string]: {
-    [methodPath: string]: () => Promise<HandlerFn>
-  }
+type HandlerFn = (req: NextRequest, ctx: { params: Record<string, string> }) => Promise<Response>
+type EngineHandlers = Record<string, () => Promise<HandlerFn>>
+
+// Engine registry backed by the generic globalThis registry from
+// @pasosdejesus/m/engine (REQ/35, REQ/44). Lazy accessor so the static import
+// below (which self-registers engines) can run before this module finishes
+// evaluating (circular import is safe: registerEngine is a hoisted function).
+function registry() {
+  return createRegistry<EngineHandlers>('learn-tg:engine')
 }
 
-const registry: EngineRegistry = {}
+export function registerEngine(engineName: string, handlers: EngineHandlers): void {
+  const r = registry()
+  const existing = r.get(engineName) ?? {}
+  for (const [k, v] of Object.entries(handlers)) existing[k] = v
+  r.register(engineName, existing)
+}
 
-export function registerEngine(
-  engineName: string,
-  handlers: Record<string, () => Promise<HandlerFn>>
-) {
-  if (!registry[engineName]) registry[engineName] = {}
-  Object.assign(registry[engineName], handlers)
+// ── Auto-register engines ───────────────────────────────────
+// Each engine package self-registers via registerEngine on import
+// (see packages/mr519/src/server/register.ts). Loaded lazily to avoid a
+// circular import: a static import here would evaluate before this module's
+// body, so `registerEngine` would be undefined inside the engine.
+let enginesLoaded = false
+async function ensureEnginesLoaded(): Promise<void> {
+  if (enginesLoaded) return
+  enginesLoaded = true
+  await import('@learn-tg/mr519/src/server/register')
 }
 
 export async function getEngineHandler(
@@ -23,44 +37,22 @@ export async function getEngineHandler(
   method: string,
   path: string[]
 ): Promise<HandlerFn | null> {
-  const eng = registry[engineName]
+  await ensureEnginesLoaded()
+  const eng = registry().get(engineName)
   if (!eng) return null
   const key = `${method} /${path.join('/')}`
   const loader = eng[key]
   if (!loader) return null
-  return loader()
-}
-
-// ── Auto-register known engines ──────────────────────────────
-// Using a wrapper to avoid TypeScript module resolution errors
-// for link: packages that don't have their own node_modules.
-
-// @ts-ignore - dynamic import via string, TS can't statically check
-async function _import(specifier: string): Promise<any> {
-  return import(specifier)
-}
-
-// All handlers wrap with try/catch — if the import fails (e.g. in test
-// context where next/server is unavailable), returns a stub that logs the error.
-function safeHandler(loader: () => Promise<HandlerFn | undefined>): () => Promise<HandlerFn> {
-  return async () => {
-    try {
-      const h = await loader()
-      if (h) return h
-    } catch (e) {
-      console.warn(`[engines] Handler load failed:`, e)
-    }
-    // Fallback: returns 500 on invocation
-    return (async () => new Response(JSON.stringify({ error: 'Engine handler unavailable' }), { status: 500, headers: { 'Content-Type': 'application/json' } })) as HandlerFn
+  try {
+    return await loader()
+  } catch (e) {
+    // Graceful fallback (e.g. test context where next/server is unavailable):
+    // the engine is registered, but its route could not be loaded.
+    console.warn(`[engines] Handler load failed for ${engineName} ${key}:`, e)
+    return (async () =>
+      new Response(JSON.stringify({ error: 'Engine handler unavailable' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      })) as HandlerFn
   }
 }
-
-registerEngine('mr519', {
-  'GET /forms': safeHandler(() => _import('@learn-tg/mr519/src/server/forms/route').then(m => m.GET)),
-  'GET /forms/[id]': safeHandler(() => _import('@learn-tg/mr519/src/server/forms/by-id/route').then(m => m.GET)),
-  'POST /forms/[id]/responses': safeHandler(() => _import('@learn-tg/mr519/src/server/forms/by-id-responses/route').then(m => m.POST)),
-})
-
-registerEngine('mr519-admin', {
-  'POST /forms': safeHandler(() => _import('@learn-tg/mr519/src/server/admin/forms/route').then(m => m.POST)),
-})

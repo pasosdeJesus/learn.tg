@@ -17,7 +17,7 @@ import LearnTGVaultsAbi from '../../abis/LearnTGVaults.json' with { type: 'json'
 import LearnTGVaultsV3Abi from '../../abis/LearnTGVaultsV3.json' with { type: 'json' }
 import Erc20Abi from '../../abis/IERC20.json' with { type: 'json' }
 import type { GuideUsuario } from '../../db/db.d.ts'
-import { getV3Address } from '../../lib/deployments'
+import { getV3Address } from '@learn-tg/rewards/src/lib/deployments'
 
 async function callWriteFun(
   publicClient: any,

@@ -13,7 +13,7 @@
  */
 
 import { newKyselyPostgresql } from '../.config/kysely.config'
-import { mintCourseCredential } from '../lib/credentials'
+import { mintCourseCredential } from '@learn-tg/rewards/src/lib/credentials'
 import { sql } from 'kysely'
 
 async function main() {
@@ -91,6 +91,7 @@ async function main() {
       try {
         console.log(`  🎓 Minting for user ${c.usuario_id} (${c.wallet})...`)
         const result = await mintCourseCredential(
+          db,
           c.usuario_id,
           courseId,
           c.wallet,

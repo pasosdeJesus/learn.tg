@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Loader2, Lock, Star, ExternalLink, Share2, Trophy } from 'lucide-react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-import { IS_PRODUCTION } from '@/lib/config'
+import { IS_PRODUCTION } from '@learn-tg/rewards/src/lib/config'
 
 type PageProps = {
   params: Promise<{ lang: string; id: string }>

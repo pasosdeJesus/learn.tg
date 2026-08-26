@@ -5,7 +5,7 @@ import Link from 'next/link'
 import axios from 'axios'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { SCORE_RULES } from '@/lib/score-rules'
-import { IS_PRODUCTION } from '@/lib/config'
+import { IS_PRODUCTION } from '@learn-tg/rewards/src/lib/config'
 
 // Labels aligned with SCORE_RULES order (lib/score-rules.ts)
 const SCORE_LABELS = [

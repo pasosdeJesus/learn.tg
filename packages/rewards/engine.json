@@ -1,0 +1,9 @@
+{
+  "name": "rewards",
+  "version": "0.1.0",
+  "description": "On-chain rewards engine — scholarships, UBI, donations, premium courses (REQ/35 Fase 2)",
+  "stage": "local",
+  "db": { "migrations": "db/migrations" },
+  "provides": ["scholarship", "ubi-claim", "donation", "premium-course"],
+  "requires": ["auth", "wallet"]
+}

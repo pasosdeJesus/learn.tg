@@ -1,5 +1,14 @@
 {
   "name": "@learn-tg/mr519",
   "version": "0.1.0",
-  "private": true
+  "private": true,
+  "peerDependencies": {
+    "next": ">=15.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.41",
+    "kysely": "^0.28.17",
+    "next": "^16.3.1",
+    "typescript": "^5.9.3"
+  }
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { type Address } from 'viem'
-import { erc20Abi, parseUserAmount, safeParseFloat } from '@/lib/donate-utils'
+import { erc20Abi, parseUserAmount, safeParseFloat } from '@learn-tg/rewards/src/lib/donate-utils'
 
 export type GasState = 'idle' | 'ok' | 'no-gas' | 'warn'
 

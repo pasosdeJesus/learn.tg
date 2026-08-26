@@ -103,18 +103,32 @@ const nextConfig: NextConfig = {
       ...config.resolve.alias,
       '@react-native-async-storage/async-storage': false,
     }
+    // Motores (packages/rewards, packages/mr519): learn.tg no es workspace pnpm,
+    // los paquetes link: no tienen node_modules propio. Añadir el node_modules de
+    // la app como fallback de resolución (respeta exports map → dist/*, y los
+    // subpaths con nombres distintos: shadcn-components → dist/shadcn_components).
+    config.resolve.modules = [
+      ...(config.resolve.modules ?? []),
+      path.join(__dirname, 'node_modules'),
+    ]
+    // WORKAROUND next@16.3.1 (pre-existente): `next/dynamic` en App Router con
+    // webpack requiere `route-modules/app-page/vendored/contexts/loadable`, que
+    // 16.3.1 no incluye en app-page (sí en pages). Se alinea al shared-lib, que
+    // es el módulo real que el flujo de dynamic usa.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'next/dist/server/route-modules/app-page/vendored/contexts/loadable$': path.join(__dirname, 'node_modules/next/dist/shared/lib/loadable.shared-runtime.js'),
+      'next/dist/server/route-modules/app-page/vendored/contexts/loadable-context$': path.join(__dirname, 'node_modules/next/dist/shared/lib/loadable-context.shared-runtime.js'),
+    }
     config.resolve.fallback = {
       ...config.resolve.fallback,
       '#async_hooks': false,
     }
 
-    // Caché persistente (acelera builds)
-    config.cache = {
-      type: 'filesystem',
-      buildDependencies: {
-        config: [__filename],
-      },
-    }
+    // Caché persistente webpack: DESHABILITADO temporalmente — falla en este
+    // entorno (`Can't resolve next.config.compiled.js`) y sirve entradas stale
+    // que rompen la resolución de módulos vendored de Next (app-page/loadable).
+    // Re-evaluar con workspace pnpm o CI Linux (#206).
 
     // Excluir módulos de servidor en cliente
     if (!isServer) {

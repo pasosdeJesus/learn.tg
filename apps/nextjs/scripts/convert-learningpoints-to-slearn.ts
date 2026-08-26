@@ -18,7 +18,7 @@ import {
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
 import SLEARNAbi from '../abis/SLEARN.json' with { type: 'json' }
-import { getSlearnAddress } from '../lib/deployments'
+import { getSlearnAddress } from '@learn-tg/rewards/src/lib/deployments'
 
 const CONVERSION_EVENT_TYPE = 'learningpoints_to_slearn'
 

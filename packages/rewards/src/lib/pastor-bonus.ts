@@ -1,11 +1,10 @@
 import { Kysely } from 'kysely'
-import type { DB } from '@/db/db.d'
 import { createPublicClient, createWalletClient, http, parseUnits, formatUnits, type Address } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
-import SLEARNAbi from '@/abis/SLEARN.json'
-import { getSlearnAddress } from '@/lib/deployments'
-import { IS_PRODUCTION } from '@/lib/config'
+import SLEARNAbi from '../abis/SLEARN.json'
+import { getSlearnAddress } from './deployments'
+import { IS_PRODUCTION } from './config'
 
 export const BONUS_AMOUNT = 44
 export const ELIGIBLE_COUNTRIES = [170, 694] // Colombia, Sierra Leone
@@ -34,7 +33,7 @@ export function isEligiblePastor(user: BonusUser): boolean {
 }
 
 export async function awardPastorBonus(
-  db: Kysely<DB>,
+  db: Kysely<any>,
   userId: number,
 ): Promise<{ awarded: boolean; reason?: string; hash?: string }> {
   const pastor = await db

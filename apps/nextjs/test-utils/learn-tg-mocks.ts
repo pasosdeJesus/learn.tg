@@ -93,12 +93,12 @@ export function mockLibConfig() {
  */
 export function setupApiMocks() {
   vi.mock('@/lib/metrics/queries', () => metricsQueriesMocks)
-  vi.mock('@/lib/crypto', () => cryptoMocks)
+  vi.mock('@learn-tg/rewards/src/lib/crypto', () => cryptoMocks)
   vi.mock('@/lib/scores', () => scoresMocks)
   vi.mock('@/lib/guide-utils', () => guideUtilsMocks)
   vi.mock('viem', () => viemMocks)
   vi.mock('viem/chains', () => viemChainsMocks)
   vi.mock('@/lib/metrics-server', () => metricsServerMocks)
-  vi.mock('@/lib/config', () => libConfigMocks)
+  vi.mock('@learn-tg/rewards/src/lib/config', () => libConfigMocks)
 }
 

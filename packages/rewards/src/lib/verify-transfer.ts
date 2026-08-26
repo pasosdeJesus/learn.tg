@@ -1,5 +1,4 @@
 import { type Address, decodeFunctionData } from 'viem'
-import { fetchTxWithReceipt } from '@/lib/backend-config'
 
 export const erc20TransferAbi = [
   { name: 'transfer', type: 'function', inputs: [
@@ -12,7 +11,12 @@ export interface VerifiedTransfer {
   amount: bigint
 }
 
+export type FetchTxWithReceipt = (
+  hash: `0x${string}`,
+) => Promise<{ receipt: { status: string; to?: string; blockNumber?: bigint }; tx: { from: string; input: `0x${string}` } }>
+
 export async function verifyTransfer(
+  fetchTxWithReceipt: FetchTxWithReceipt,
   publicClient: any,
   hash: string,
   crypto: 'usdt' | 'slearn',

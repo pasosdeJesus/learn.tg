@@ -19,7 +19,15 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "next/*": ["./node_modules/next/*"],
+      "next": ["./node_modules/next"],
+      "kysely": ["./node_modules/kysely"],
+      "viem": ["./node_modules/viem"],
+      "viem/accounts": ["./node_modules/viem/_types/accounts/index.d.ts"],
+      "viem/chains": ["./node_modules/viem/_types/chains/index.d.ts"],
+      "@pasosdejesus/m/*": ["./node_modules/@pasosdejesus/m/dist/*"],
+      "@pasosdejesus/mpdj/*": ["./node_modules/@pasosdejesus/mpdj/dist/*"]
     },
     "types": ["@testing-library/jest-dom", "vitest", "vitest/globals"]
   },

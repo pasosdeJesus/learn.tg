@@ -9,7 +9,7 @@ import {
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
-import { newKyselyPostgresql } from '@/.config/kysely-db'
+import type { Kysely } from 'kysely'
 import {
   getTokenIdByCourseId,
   hasCredentialOnChain,
@@ -17,7 +17,7 @@ import {
 } from '@pasosdejesus/mpdj/blockchain'
 import { getCeloCredentialsAddress } from '@pasosdejesus/m/blockchain/deployments'
 import path from 'path'
-import { IS_PRODUCTION } from '@/lib/config'
+import { IS_PRODUCTION } from './config'
 
 const CREDENTIALS_DEPLOYMENTS_DIR = path.join(
   process.cwd(), '..', 'hardhat', 'deployments', 'PasosDeJesusCredentials'
@@ -56,11 +56,11 @@ function getContractAddress(): `0x${string}` {
  * Returns { txHash, tokenId, isPremium } on success, null if already minted.
  */
 export async function mintCourseCredential(
+  db: Kysely<any>,
   usuarioId: number,
   courseId: number,
   walletAddress: string,
 ): Promise<{ txHash: string; tokenId: number; isPremium: boolean } | null> {
-  const db = newKyselyPostgresql()
   const contractAddress = getContractAddress()
   const chainId = getChainId()
 

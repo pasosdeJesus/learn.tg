@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select'
 import DeleteVerifiedDataDialog from '@/components/DeleteVerifiedDataDialog'
 import { VerificationScheduler } from '@/components/VerificationScheduler'
-import { IS_PRODUCTION } from '@/lib/config'
+import { IS_PRODUCTION } from '@learn-tg/rewards/src/lib/config'
 import { logger, DebugConsole } from '@pasosdejesus/m/debug'
 import { CountrySelect, ReligionSelect, ChurchRoleSelect } from '@/components/shared/FormSelects'
 import { TownAutocomplete } from '@/components/shared/TownAutocomplete'

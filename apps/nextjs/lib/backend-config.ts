@@ -1,8 +1,8 @@
 import { createPublicClient, createWalletClient, http, type Address } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
-import { getSlearnAddress } from '@/lib/deployments'
-import { IS_PRODUCTION } from '@/lib/config'
+import { getSlearnAddress } from '@learn-tg/rewards/src/lib/deployments'
+import { IS_PRODUCTION } from '@learn-tg/rewards/src/lib/config'
 
 export function getChain() {
   return IS_PRODUCTION ? celo : celoSepolia

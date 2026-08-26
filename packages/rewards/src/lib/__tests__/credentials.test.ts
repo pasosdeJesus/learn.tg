@@ -4,9 +4,6 @@ import { mockCredentialsWithRefs, mockDeploymentsWithRefs } from '@pasosdejesus/
 let sharedDb: any
 
 vi.mock('kysely', () => ({ Kysely: vi.fn(), PostgresDialect: vi.fn() }))
-vi.mock('@/.config/kysely-db', () => ({
-  newKyselyPostgresql: vi.fn(() => sharedDb),
-}))
 
 // Credentials module — with refs for assertions
 const credRefs = vi.hoisted(() => ({} as Record<string, any>))
@@ -39,7 +36,7 @@ vi.mock('viem/accounts', () => ({
   privateKeyToAccount: vi.fn(() => ({ address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' })),
 }))
 vi.mock('viem/chains', () => ({ celo: { id: 42220 }, celoSepolia: { id: 11142220 } }))
-vi.mock('@/lib/config', () => ({ IS_PRODUCTION: false }))
+vi.mock('@learn-tg/rewards/src/lib/config', () => ({ IS_PRODUCTION: false }))
 
 const originalEnv = { ...process.env }
 import { mintCourseCredential } from '../credentials'
@@ -84,7 +81,7 @@ describe('mintCourseCredential', () => {
   it('returns null when already emitted (off-chain cache hit)', async () => {
     sharedDb = createMockDb([{ id: 1 }])
 
-    const result = await mintCourseCredential(1, 3, '0x123')
+    const result = await mintCourseCredential(sharedDb, 1, 3, '0x123')
 
     expect(result).toBeNull()
     expect(mockMintCourseWithRetry).not.toHaveBeenCalled()
@@ -94,7 +91,7 @@ describe('mintCourseCredential', () => {
     sharedDb = createMockDb([null, null]) // no cache, then metadata for backfill
     mockHasCredentialOnChain.mockResolvedValue(true)
 
-    const result = await mintCourseCredential(1, 3, '0x123')
+    const result = await mintCourseCredential(sharedDb, 1, 3, '0x123')
 
     expect(result).toBeNull()
     expect(sharedDb._insertInto).toBe('credential_emission')
@@ -104,7 +101,7 @@ describe('mintCourseCredential', () => {
   it('mints a new credential and records emission', async () => {
     sharedDb = createMockDb([null, { is_premium: false }])
 
-    const result = await mintCourseCredential(1, 3, '0x123')
+    const result = await mintCourseCredential(sharedDb, 1, 3, '0x123')
 
     expect(result).not.toBeNull()
     expect(result!.tokenId).toBe(3)
@@ -122,7 +119,7 @@ describe('mintCourseCredential', () => {
     sharedDb = createMockDb([null, { is_premium: true }])
     mockGetTokenIdByCourseId.mockResolvedValue(5)
 
-    const result = await mintCourseCredential(1, 1, '0x456')
+    const result = await mintCourseCredential(sharedDb, 1, 1, '0x456')
 
     expect(result!.isPremium).toBe(true)
   })
@@ -131,20 +128,20 @@ describe('mintCourseCredential', () => {
     sharedDb = createMockDb([null])
     mockMintCourseWithRetry.mockRejectedValue(new Error('tx failed after retries'))
 
-    await expect(mintCourseCredential(1, 3, '0x123')).rejects.toThrow('tx failed after retries')
+    await expect(mintCourseCredential(sharedDb, 1, 3, '0x123')).rejects.toThrow('tx failed after retries')
   })
 
   it('throws when contract address is not configured', async () => {
     sharedDb = createMockDb([])
     mockGetCeloCredentialsAddress.mockReturnValue(null)
 
-    await expect(mintCourseCredential(1, 3, '0x123')).rejects.toThrow('Credentials contract not configured')
+    await expect(mintCourseCredential(sharedDb, 1, 3, '0x123')).rejects.toThrow('Credentials contract not configured')
   })
 
   it('uses testnet chain when IS_PRODUCTION is false', async () => {
     sharedDb = createMockDb([null, { is_premium: false }])
 
-    await mintCourseCredential(2, 102, '0x789')
+    await mintCourseCredential(sharedDb, 2, 102, '0x789')
 
     expect(mockMintCourseWithRetry).toHaveBeenCalledWith(
       expect.objectContaining({ chain: { id: 11142220 } })
@@ -155,7 +152,7 @@ describe('mintCourseCredential', () => {
     sharedDb = createMockDb([null])
     mockGetTokenIdByCourseId.mockResolvedValue(0)
 
-    const result = await mintCourseCredential(1, 999, '0x123')
+    const result = await mintCourseCredential(sharedDb, 1, 999, '0x123')
 
     expect(result).toBeNull()
     expect(mockMintCourseWithRetry).not.toHaveBeenCalled()

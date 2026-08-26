@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import DonateModal from '../DonateModal'
 
-vi.mock('@/lib/deployments', () => ({
+vi.mock('@learn-tg/rewards/src/lib/deployments', () => ({
   getV3Address: vi.fn().mockReturnValue('0xVAULT12345678901234567890123456789012345678'),
   getSlearnAddress: vi.fn().mockReturnValue('0xSLEARN123456789012345678901234567890123456'),
   getV2Address: vi.fn().mockReturnValue('0xV212345678901234567890123456789012345678'),
