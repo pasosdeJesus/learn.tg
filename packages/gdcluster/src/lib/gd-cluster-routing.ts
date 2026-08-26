@@ -1,12 +1,7 @@
-import { Kysely } from 'kysely'
 import type { Address } from 'viem'
-import type { DB } from '@/db/db.d'
-import ClusterFundsV2Abi from '@/abis/ClusterFundsV2.json'
-import Erc20Abi from '@/abis/IERC20.json'
-import { PILOT_COUNTRIES } from '@/lib/gd-utils'
-import { sendTxAndWait } from '@/lib/backend-config'
-import { readDeployment } from '@pasosdejesus/m/blockchain/deployments'
-import * as path from 'path'
+import ClusterFundsV2Abi from '../abis/ClusterFundsV2.json'
+import Erc20Abi from '../abis/IERC20.json'
+import { PILOT_COUNTRIES } from './gd-utils'
 
 const GD_COURSE_IDS = [10, 11]
 
@@ -22,7 +17,7 @@ interface GDDestination {
  * 3. Sierra Leone (fallback)
  */
 export async function resolveGDClusterDestination(
-  db: Kysely<DB>,
+  db: any,
   usuarioId: number,
 ): Promise<GDDestination> {
   // 1. Try church cluster
@@ -68,8 +63,17 @@ export function isGDCourse(courseId: number): boolean {
 
 /**
  * Get ClusterFunds contract address from deployments.
+ *
+ * `readDeployment`/`path` se importan de forma diferida: tiran `fs`/`path` de
+ * Node y romperían el test aislado del motor (vite:import-analysis no resuelve
+ * builtins desde el root del paquete). La resolución de deployments solo ocurre
+ * en handlers server-side, donde sí están disponibles.
  */
-export function getClusterFundsAddress(): Address {
+export async function getClusterFundsAddress(): Promise<Address> {
+  const [{ readDeployment }, path] = await Promise.all([
+    import('@pasosdejesus/m/blockchain/deployments'),
+    import('path'),
+  ])
   const network = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'celo' : 'celoSepolia'
   const deploymentsDir = path.join(process.cwd(), '..', 'hardhat', 'deployments')
   const deployment = readDeployment(network, deploymentsDir, { contract: 'ClusterFundsV2' })
@@ -78,11 +82,20 @@ export function getClusterFundsAddress(): Address {
 }
 
 /**
+ * Dependencias del core inyectadas por el host (D2, REQ/35 §11.2): el motor no
+ * importa `@/lib/backend-config`.
+ */
+export interface GdRoutingDeps {
+  sendTxAndWait: (walletClient: any, publicClient: any, args: any) => Promise<`0x${string}`>
+}
+
+/**
  * Route GD scholarship funds to ClusterFunds.
  * Approves tokens and credits the cluster/country fund 100%
  * (processClusterContribution / processCountryContribution, no fees).
  */
 export async function routeToClusterFunds(
+  routing: GdRoutingDeps,
   publicClient: any,
   walletClient: any,
   account: any,
@@ -93,9 +106,10 @@ export async function routeToClusterFunds(
   usdtToken: Address,
   slearnToken: Address,
 ) {
-  const cfAddress = getClusterFundsAddress()
+  const { sendTxAndWait } = routing
+  const cfAddress = await getClusterFundsAddress()
   const chain = publicClient.chain
-  
+
   // Fetch initial nonce
   let nonce = await publicClient.getTransactionCount({
     address: account.address,

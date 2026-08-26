@@ -193,6 +193,9 @@ importers:
       '@eslint/eslintrc':
         specifier: latest
         version: 3.3.6
+      '@learn-tg/gdcluster':
+        specifier: link:../../packages/gdcluster
+        version: link:../../packages/gdcluster
       '@learn-tg/mr519':
         specifier: link:../../packages/mr519
         version: link:../../packages/mr519

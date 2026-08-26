@@ -26,6 +26,9 @@
       "viem": ["./node_modules/viem"],
       "viem/accounts": ["./node_modules/viem/_types/accounts/index.d.ts"],
       "viem/chains": ["./node_modules/viem/_types/chains/index.d.ts"],
+      "@learn-tg/rewards/*": ["./node_modules/@learn-tg/rewards/*"],
+      "@learn-tg/gdcluster/*": ["./node_modules/@learn-tg/gdcluster/*"],
+      "@learn-tg/mr519/*": ["./node_modules/@learn-tg/mr519/*"],
       "@pasosdejesus/m/*": ["./node_modules/@pasosdejesus/m/dist/*"],
       "@pasosdejesus/mpdj/*": ["./node_modules/@pasosdejesus/mpdj/dist/*"]
     },

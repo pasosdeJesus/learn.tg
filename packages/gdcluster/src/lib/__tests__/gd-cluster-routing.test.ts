@@ -1,24 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
-import { resolveGDClusterDestination, isGDCourse } from '@/lib/gd-cluster-routing'
-import type { DB } from '@/db/db.d'
-import { Kysely } from 'kysely'
-
-// Mock the PILOT_COUNTRIES import
-vi.mock('@/lib/gd-utils', () => ({
-  PILOT_COUNTRIES: [170, 694], // Colombia, Sierra Leone
-}))
+import { resolveGDClusterDestination, isGDCourse } from '../gd-cluster-routing'
 
 function mockDb(overrides: Record<string, any> = {}) {
-  const executeTakeFirst = vi.fn()
-  const selectFrom = vi.fn().mockReturnValue({
-    innerJoin: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    executeTakeFirst: vi.fn().mockResolvedValue(overrides.churchResult ?? null),
-    orderBy: vi.fn().mockReturnThis(),
-    execute: vi.fn(),
-  })
-
   const db = {
     selectFrom: vi.fn((table: string) => {
       if (table === 'church') {
@@ -45,7 +28,7 @@ function mockDb(overrides: Record<string, any> = {}) {
       }
       return { select: vi.fn().mockReturnThis(), where: vi.fn().mockReturnThis(), executeTakeFirst: vi.fn().mockResolvedValue(null) }
     }),
-  } as unknown as Kysely<DB>
+  } as any
 
   return db
 }

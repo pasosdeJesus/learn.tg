@@ -37,6 +37,17 @@
       "kysely": [
         "./node_modules/kysely"
       ],
+      // Motores link: (REQ/35 Fase 3) — puente de resolución para imports
+      // cross-motor (gdcluster → rewards) y desde el core.
+      "@learn-tg/rewards/*": [
+        "./node_modules/@learn-tg/rewards/*"
+      ],
+      "@learn-tg/gdcluster/*": [
+        "./node_modules/@learn-tg/gdcluster/*"
+      ],
+      "@learn-tg/mr519/*": [
+        "./node_modules/@learn-tg/mr519/*"
+      ],
       "viem": [
         "./node_modules/viem"
       ],

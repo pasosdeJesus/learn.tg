@@ -10,6 +10,8 @@ import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@l
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { TransactionStatus } from '@/components/ui/TransactionStatus'
+// donation-target vive en el motor gdcluster (REQ/35 Fase 3); los componentes
+// client aún lo importan desde allí (puente de migración, Fase 4).
 import {
   type PaymentTarget,
   type CourseDonation,
@@ -18,7 +20,7 @@ import {
   getTargetRecipient,
   getTargetEndpoint,
   getDistributionFromResponse,
-} from '@/lib/donation-target'
+} from '@learn-tg/gdcluster/src/lib/donation-target'
 
 const SLEARN_DECIMALS = 2
 const SLEARN_RATE = 22 // 1 USDT = 22 SLEARN

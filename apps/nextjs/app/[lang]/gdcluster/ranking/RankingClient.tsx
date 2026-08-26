@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { adminAuthParams } from '@/lib/admin-fetch'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import DonateModal from '@/components/DonateModal'
-import type { ClusterDonation, CountryDonation } from '@/lib/donation-target'
+import type { ClusterDonation, CountryDonation } from '@learn-tg/gdcluster/src/lib/donation-target'
 
 interface ClusterRow {
   id: number; name: string; country_name: string | null

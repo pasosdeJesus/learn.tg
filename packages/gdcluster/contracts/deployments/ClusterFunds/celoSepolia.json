@@ -1,0 +1,11 @@
+{
+  "contract": "ClusterFunds",
+  "address": "0x150E97AE9871b7249dfF8e55BaA5c0B24a598Cbd",
+  "chainId": 11142220,
+  "network": "celoSepolia",
+  "usdtAddress": "0x7d7a73c8c0D00Fdf8b54b1a6dB6eBDEcdBa78aE8",
+  "slearnAddress": "0x095567C23DF9FBbc668f3BC7fdf23BDA6c6F423D",
+  "initialOwner": "0x84272a6dd0D5fE9ea2Ab28Cf96e72f4F7da00C5C",
+  "deployedAt": "2026-08-10T18:12:45.439Z",
+  "pdjTreasury": "0x84272a6dd0D5fE9ea2Ab28Cf96e72f4F7da00C5C"
+}

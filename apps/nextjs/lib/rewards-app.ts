@@ -19,7 +19,7 @@ import {
   SLEARN_DECIMALS,
 } from '@/lib/backend-config'
 import { routeReward } from '@/lib/reward-routing'
-import { routeToClusterFunds } from '@/lib/gd-cluster-routing'
+import { routeToClusterFunds as gdRouteToClusterFunds } from '@learn-tg/gdcluster/src/lib/gd-cluster-routing'
 import { canPurchasePremiumCourse } from '@/lib/course-access'
 import { updateUserAndCoursePoints } from '@/lib/scores'
 
@@ -41,7 +41,15 @@ export const rewardsApp = createRewardsApp({
     SLEARN_DECIMALS,
   },
   routeReward,
-  routeToClusterFunds,
+  // `routeToClusterFunds` vive en el motor gdcluster (Fase 3); el host inyecta
+  // `sendTxAndWait` del backend-config (D2) y conserva la firma de 9 args que
+  // el motor rewards espera.
+  routeToClusterFunds: (publicClient, walletClient, account, replayTx, destino, clusterUSDT, clusterSlearn, usdtAddress, slearnAddress) =>
+    gdRouteToClusterFunds(
+      { sendTxAndWait },
+      publicClient, walletClient, account, replayTx,
+      destino, clusterUSDT, clusterSlearn, usdtAddress, slearnAddress,
+    ),
   canPurchasePremiumCourse,
   updateUserAndCoursePoints,
 })
