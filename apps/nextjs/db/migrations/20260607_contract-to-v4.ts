@@ -14,7 +14,7 @@ import { celo, celoSepolia } from 'viem/chains'
 
 import LearnTGVaultsV3Abi from '../../abis/LearnTGVaultsV3.json' with { type: 'json' }
 import Erc20Abi from '../../abis/IERC20.json' with { type: 'json' }
-import { getV3Address, getV4Address } from '@learn-tg/rewards/src/lib/deployments'
+import { getV3Address, getV4Address } from './_contract-addresses'
 
 export async function up(db: Kysely<any>): Promise<void> {
   const PRIVATE_KEY = process.env.PRIVATE_KEY

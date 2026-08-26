@@ -2973,7 +2973,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
 );
 
 
@@ -3010,7 +3010,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -5053,7 +5053,7 @@ CREATE TABLE public.notifications (
     content text,
     link character varying(500),
     is_read boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT '2026-08-16 18:21:31.035-05'::timestamp with time zone NOT NULL
+    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL
 );
 
 
@@ -5179,7 +5179,7 @@ CREATE TABLE public.transaction (
     synced boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
     CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'donation_reward'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying, 'conversion'::character varying, 'pastor_bonus'::character varying])::text[])))
+    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('donation_reward'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text, ('conversion'::character varying)::text, ('pastor_bonus'::character varying)::text])))
 );
 
 

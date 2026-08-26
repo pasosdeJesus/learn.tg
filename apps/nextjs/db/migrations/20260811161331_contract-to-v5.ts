@@ -16,7 +16,7 @@ import * as path from 'path'
 import LearnTGVaultsV3Abi from '../../abis/LearnTGVaultsV3.json' with { type: 'json' }
 import LearnTGVaultsV5Abi from '../../abis/LearnTGVaultsV5.json' with { type: 'json' }
 import Erc20Abi from '../../abis/IERC20.json' with { type: 'json' }
-import { getV4Address, getV5Address } from '@learn-tg/rewards/src/lib/deployments'
+import { getV4Address, getV5Address } from './_contract-addresses'
 
 export async function up(db: Kysely<any>): Promise<void> {
   const PRIVATE_KEY = process.env.PRIVATE_KEY
