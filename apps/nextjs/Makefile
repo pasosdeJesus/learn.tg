@@ -3,7 +3,9 @@ all:
 	rm -rf .next
 	pnpm i
 	$(MAKE) swc-wasm
-	NODE_OPTIONS="--max-old-space-size=12000" pnpm exec next build --webpack
+	# Heap por worker (REQ/35 §11.3 gate): 12000 hereda a TODOS los workers
+	# webpack y excede la RAM; 4096 es lo validado en 64 GB/16 cores.
+	NODE_OPTIONS="--max-old-space-size=4096" pnpm exec next build --webpack
 
 type-source:
 	pnpm tsc --noEmit
@@ -59,7 +61,7 @@ dev:
 	./bin/dev
 
 prod: swc-wasm
-	NODE_OPTIONS="--max-old-space-size=12000" pnpm exec next build --webpack
+	NODE_OPTIONS="--max-old-space-size=4096" pnpm exec next build --webpack
 	./bin/start > prod.log 2>&1 &
 
 # Next.js 16 SWC wasm fallback: OpenBSD has no native bindings and the
