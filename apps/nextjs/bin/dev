@@ -13,6 +13,19 @@ fi
 
 rm -rf .next
 pnpm install
+
+# Motores (REQ/35 Fase 4): se consumen vía dist/ (exports map) y dist/ NO está
+# en git (artefacto de build). Compilar antes de servir — un checkout fresco
+# fallaría con "Module not found: ... dist/lib/...". Orden: rewards antes que
+# gdcluster (gdcluster importa @learn-tg/rewards -> dist).
+for engine in rewards gdcluster; do
+  if [ -d "../../packages/$engine" ]; then
+    echo "[bin/dev] compilando packages/$engine -> dist"
+    (cd "../../packages/$engine" && ../../apps/nextjs/node_modules/.bin/tsc -b) \
+      || echo "[bin/dev] AVISO: falló tsc para $engine (¿pnpm install pendiente?)"
+  fi
+done
+
 . ../.env
 cmd="node_modules/next/dist/bin/next dev -p${PORT} --webpack ${OPDEV}"
 echo $cmd

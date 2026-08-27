@@ -12,7 +12,18 @@ build-guard:
 	  exit 1 ; \
 	fi
 
-all: build-guard
+# Motores (REQ/35 Fase 4): consumidos vía dist/ (exports map); dist/ no está en
+# git. Compilar antes del build — un checkout fresco no resuelve
+# @learn-tg/{rewards,gdcluster} sin esto. Orden: rewards antes que gdcluster.
+engines-dist:
+	@for e in rewards gdcluster; do \
+	  if [ -d "../../packages/$$e" ]; then \
+	    echo "[engines-dist] compilando packages/$$e"; \
+	    (cd "../../packages/$$e" && ../../apps/nextjs/node_modules/.bin/tsc -b) || exit 1; \
+	  fi; \
+	done
+
+all: build-guard engines-dist
 	rm -rf .next
 	pnpm i
 	$(MAKE) swc-wasm
@@ -73,7 +84,7 @@ coverage:
 dev:
 	./bin/dev
 
-prod: build-guard swc-wasm
+prod: build-guard engines-dist swc-wasm
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
 	./bin/start > prod.log 2>&1 &
 

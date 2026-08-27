@@ -35,7 +35,8 @@ See [Guide Writing Conventions](doc/guide-writing.md) for the full style guide.
 ### Credentials (SBTs)
 
 When a student completes 100% of guides in a course, an SBT (Soul-Bound Token)
-is minted via `lib/credentials.ts` → `mintCourseCredential()`. The SBT is
+is minted via the `rewards` engine (`packages/rewards/src/lib/credentials.ts`
+→ `mintCourseCredential()`). The SBT is
 non-transferable proof of learning, displayed on the user's public profile.
 Emission records are cached in `credential_emission` and metadata in
 `credential_metadata`.
