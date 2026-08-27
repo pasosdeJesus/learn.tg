@@ -234,3 +234,48 @@ Reglas para no tumbarla (lección REQ/35 §12.8: un `next build` con 15 workers
    4. `bin/warmup` (compila rutas en caliente).
    5. `make test-smoke` y luego `make test-e2e` (m 0.20.1+ rota billeteras y
       pausa entre specs; ver `E2E_SPEC_DELAY_MS`).
+
+## Motores locales (packages/) y pruebas E2E
+
+### Compilar los motores antes de dev/build
+
+Los motores (`packages/rewards`, `packages/gdcluster`) se consumen vía `exports`
+→ `dist/`, y `dist/` **no está en git** (artefacto de build). Tras un checkout
+fresco hay que compilarlos; imports con `src/` quedan bloqueados por el exports
+map (error "not exported from package").
+
+```sh
+cd apps/nextjs
+make engines-dist        # compila dist de packages/{rewards,gdcluster} (rewards primero)
+make engines-assets      # copia assets de los motores a public/ (p.ej. gdcluster.svg)
+make engines-sync-abis   # tras regenerar abis en hardhat: copia a src/abis/ y recompila
+bin/dev                  # ya ejecuta engines-dist automáticamente; Next en :4000 (modo 2 local)
+```
+
+`build-guard` (en `make all`/`make prod`) aborta si el dev server está activo
+(no compilar mientras sirve: máquina compartida, ver arriba).
+
+### E2E contra el sitio de desarrollo
+
+```sh
+node bin/warmup.mjs      # pre-compila ~34 rutas (compilación ≠ ausencia de respuesta)
+```
+- **Smoke directo** (con `node`, no `bin/m`: el CLI recarga `.env` con
+  `override:true` y pisa `NEXT_PUBLIC_AUTH_URL`):
+  ```sh
+  PK=$(grep '^PRIVATE_KEY=' ../.env | cut -d= -f2- | tr -d '"')
+  for f in e2e/smoke/*.spec.mjs; do SITE_URL=https://learn.tg:9001 \
+    NEXT_PUBLIC_AUTH_URL=https://learn.tg:9001 \
+    NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin \
+    PRIVATE_KEY=$PK NODE_TLS_REJECT_UNAUTHORIZED=0 node "$f" || echo "FAIL $f"; done
+  ```
+- **Browser specs**: `PUERTOPRU=9001 CHAIN_ID=11142220 make test-e2e` (12s de
+  aire entre specs vía `E2E_SPEC_DELAY_MS`).
+- **m ≥ 0.21**: `initTestEnv` lee `apps/.env` (billetera local registrada en el
+  sitio), soporta `TEST_PRIVATE_KEYS` (multi-billetera), y el runner rota
+  `WALLET_INDEX` por spec. Billeteras extra deben estar registradas en el sitio
+  (SIWE 401 si no).
+- **Retries**: `e2e/helpers/retry.mjs` (`retry`/`retrySpec`); los specs de claim
+  reconectan la billetera (limpiar sesión + re-SIWE) si el botón no aparece.
+- Rails admin del dev: `https://learn.tg:3500/learntg-admin` (404 si Puma/nginx
+  caído); local full-stack: Puma en `127.0.0.1:3000`.
