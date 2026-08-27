@@ -56,15 +56,15 @@ async function main() {
 
   // ── Step 1: SIWE Auth ──
   console.log('── Step 1: SIWE Authentication ──')
-  const page = await newPage(browser, account.address, timeout)
+  const page = await newPage(browser, account.address, 120000)
   trace(page, 'home')
-  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
   const siweOk = await simulateSIWE(page, { account, host, domainPort, base, chainId })
   console.log(`  SIWE: ${siweOk ? '✅' : '❌'}`)
   if (!siweOk) { await browser.close(); process.exit(1) }
 
-  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await new Promise(r => setTimeout(r, 3000))
   await checkState(page, '1-home')
 
@@ -72,7 +72,7 @@ async function main() {
   console.log('\n── Step 2: Navigate to /en ──')
   const enLink = await page.$('a[href="/en"]')
   if (enLink) await safeNavigate(page, enLink, `${base}/en`)
-  else await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
+  else await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await new Promise(r => setTimeout(r, 3000))
   await checkState(page, '2-en')
 

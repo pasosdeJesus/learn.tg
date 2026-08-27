@@ -53,7 +53,7 @@ async function main() {
 
   // Go to landing and connect
   console.log('1. Landing...')
-  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await new Promise(r => setTimeout(r, 5000))
 
   // Click Connect via evaluate + click JS
@@ -95,7 +95,7 @@ async function main() {
 
   // Check /en page
   console.log('\n6. /en page:')
-  await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await new Promise(r => setTimeout(r, 3000))
   const links = await page.evaluate(() =>
     [...document.querySelectorAll('a[href]')]
@@ -109,7 +109,7 @@ async function main() {
 
   // Check UBI guide
   console.log('\n7. UBI guide:')
-  await page.goto(`${base}/en/web3-and-ubi/guide3`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/en/web3-and-ubi/guide3`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await new Promise(r => setTimeout(r, 5000))
   const claimBtnText = await page.evaluate(() =>
     [...document.querySelectorAll('button')].map(b => b.textContent?.trim().slice(0, 60)).join(' | '))

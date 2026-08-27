@@ -62,7 +62,7 @@ async function main() {
 
   // ── Test: CELO UBI Claim ─────────────────────────────────
   {
-    const page = await newPage(browser, account.address, timeout) // EIP-6963 pending R-#14
+    const page = await newPage(browser, account.address, 120000) // EIP-6963 pending R-#14
 
     // Capture claim API response for diagnostics
     page.on('response', res => {
@@ -71,20 +71,34 @@ async function main() {
     })
 
     // Navigate to guide and authenticate
-    await page.goto(`${base}${guidePath}`, { waitUntil: 'domcontentloaded', timeout })
+    await page.goto(`${base}${guidePath}`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     const siweOk = await simulateSIWE(page, { account, host, domainPort, base, chainId })
     if (!siweOk) { fail('SIWE failed'); await browser.close(); process.exit(1) }
     ok('SIWE completed')
 
     // Wait for CeloUbi button to appear
     console.log('  Waiting for CeloUbi button...')
-    const btnAppeared = await page.waitForFunction(() => {
+    const waitBtn = () => page.waitForFunction(() => {
       const buttons = [...document.querySelectorAll('button')]
       return buttons.some(b =>
         (b.textContent || '').includes('Claim Learn.tg-UBI') ||
         (b.textContent || '').includes('Reclamar Learn.tg-IBU')
       )
     }, { timeout: 30000 }).catch(() => false)
+
+    let btnAppeared = await waitBtn()
+
+    // Retry con "desconectar y reconectar" (igual que en el sitio): sesión/token
+    // stale hace 401 en /api/guide → la guía no carga → sin botón.
+    if (!btnAppeared) {
+      console.log('  Botón no apareció — reconectando billetera (limpiar sesión + re-SIWE)...')
+      await page.evaluate(() => { localStorage.clear() })
+      const cookies = await page.cookies()
+      for (const c of cookies) await page.deleteCookie(c)
+      await page.reload({ waitUntil: 'domcontentloaded' })
+      await simulateSIWE(page, { account, host, domainPort, base, chainId })
+      btnAppeared = await waitBtn()
+    }
 
     if (!btnAppeared) {
       fail('CeloUbi button not found — guide may not have {CeloUbiButton} marker')

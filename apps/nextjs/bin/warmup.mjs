@@ -28,6 +28,22 @@ const URLS = [
   '/en/a-relationship-with-Jesus',
   '/en/web3-and-ubi',
   '/en/user-transactions/191',
+  // Páginas que tocan los specs E2E (guías, clúster, redgd, referidos)
+  '/en/web3-and-ubi/guide3',
+  '/en/redgd',
+  '/en/cluster/1',
+  '/en/referrals',
+  // APIs de guías/cursos (compilan el route handler en la primera visita)
+  '/api/guide?courseId=103&lang=en&prefix=web3-and-ubi&guide=guide3&guideNumber=3',
+  '/api/gdcluster/donations/history',
+  '/api/gdcluster/donations/verify',
+  '/api/churches/search?q=a',
+  '/api/profile',
+  '/api/claim-celo-ubi',
+  '/api/add-donation',
+  '/api/courses/premium/purchase',
+  '/api/user-transactions/191',
+  '/api/self-verify',
   // APIs
   '/api/gdcluster/ranking/funds',
   '/api/gdcluster/ranking/clusters',

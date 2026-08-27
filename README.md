@@ -36,7 +36,10 @@ The platform consists of three main components working in unison:
   content.
 2.  **Frontend ([apps/nextjs/](apps/nextjs/))**: A **Next.js** application 
   that provides the user interface, handles user authentication via crypto 
-  wallets (SIWE), and delivers educational content.
+  wallets (SIWE), and delivers educational content. On-chain business logic is
+  split into **Web3 engines** (`packages/rewards`, `packages/gdcluster`,
+  `packages/mr519`) compiled to `dist/` — see [ARCHITECTURE.md](ARCHITECTURE.md)
+  §Web3 Engines.
 3.  **Smart Contracts ([apps/hardhat/](apps/hardhat/))**: **Solidity** 
   contracts deployed on the Celo network to manage and distribute USDT 
   rewards transparently and securely.

@@ -61,7 +61,7 @@ async function main() {
       }
       if (attempt < 3) {
         console.log(`    ${label}: retry ${attempt}/3`)
-        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout })
+        await page.goto(targetUrl, { waitUntil: 'domcontentloaded' , timeout: 120000 })
       }
     }
     return false
@@ -70,9 +70,9 @@ async function main() {
   // ── Test 1: Unauthenticated — course page renders ──────────────
   console.log('── Test 1: /en without auth → NO Partial login ──')
   {
-    const page = await newPage(browser, account.address, timeout)
+    const page = await newPage(browser, account.address, 120000)
     logPartialLogin(page)
-    await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
+    await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     await new Promise(r => setTimeout(r, 2000))
 
     if (await checkPartialLogin(page))
@@ -91,11 +91,11 @@ async function main() {
   // ── Test 2: SIWE → multi-page navigation ───────────────────────
   console.log('\n── Test 2: SIWE → multi-page navigation without Partial login ──')
   {
-    const page = await newPage(browser, account.address, timeout)
+    const page = await newPage(browser, account.address, 120000)
     logPartialLogin(page)
 
     // 2a. Landing + authenticate
-    await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
+    await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     const siweParams = { account, host, domainPort, base, chainId }
     const siweOk = await simulateSIWE(page, siweParams)
     if (siweOk) ok('SIWE completed')
@@ -110,7 +110,7 @@ async function main() {
     if (enLink)
       await safeNavigate(page, enLink, `${base}/en`)
     else
-      await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
+      await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
     if (await waitForNoPartial(page, `${base}/en`, '/en after SIWE'))
       ok('/en does NOT show Partial login after SIWE')
@@ -154,7 +154,7 @@ async function main() {
       }
 
       // 2e. Return to /en
-      await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
+      await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
       if (await waitForNoPartial(page, `${base}/en`, 'return to /en'))
         ok('Return to /en does NOT show Partial login')
       else fail('Return to /en shows Partial login (3 retries exhausted)')
@@ -174,7 +174,7 @@ async function main() {
     logPartialLogin(page)
 
     await clearBrowserCache(page)
-    await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded', timeout })
+    await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
     // Wait for React hydration (may lag post-deploy due to chunks)
     await waitForText(page, 'Partial login', 15)

@@ -123,9 +123,9 @@ async function main() {
 
   // 4. Browser: Buy button + CheckoutModal
   const browser = await launchBrowser(env.headless)
-  const page = await newPage(browser, addr, timeout)
+  const page = await newPage(browser, addr, 120000)
   await setupE2EAuth(page, addr, pk, chainId, base)
-  await page.goto(`${base}/en/gdcluster`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/en/gdcluster`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
   // Wait for the course page to finish loading (cold on-demand compilation can
   // leave "Loading course..." up for a while in the full suite).
@@ -193,8 +193,9 @@ async function main() {
 
   await browser.close()
   const elapsed = ((performance.now() - t0) / 1000).toFixed(1)
-  console.log(`\n${summary.failures} failures | ${elapsed}s`)
-  if (summary.failures > 0) process.exit(1)
+  const failures = summary(t0)
+  console.log(`\n${failures} failures | ${elapsed}s`)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch((e) => {

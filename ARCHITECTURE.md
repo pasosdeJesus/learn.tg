@@ -115,6 +115,37 @@ graph TD
     - `SLEARN.sol`: ERC-20 utility token, 2 decimals, restricted transfers.
     - `PasosDeJesusCredentials.sol`: Course completion SBTs (Soul-Bound Tokens).
 
+### 4. **Web3 Engines (packages/)**
+
+The Next.js app is split into a **core** (apps/nextjs) plus self-contained
+**engines** (`packages/*`), each compiled to `dist/` with `tsc` and consumed via
+its `exports` map (never re-transpiled by Next/SWC). Design: `m` repo REQ/35;
+developer guide: `m` repo `doc/engines.md`. Architecture decisions (D1 next as
+peer dep, D2 dependency injection, D3 hooks):
+
+| Engine | Purpose | Handlers / libs | Depends on |
+|--------|---------|-----------------|------------|
+| **core** (apps/nextjs) | auth SIWE/wallet, guides/crossword UI, scoring, metrics, admin, profiles, catalogs, notifications | `app/api/*` restantes + adapters `lib/{rewards-app,gdcluster-app}.ts` | — |
+| **`@learn-tg/rewards`** | on-chain rewards: `check-crossword`, `claim-celo-ubi`, `add-donation`, `scholarship`, `credential/*`, `ubi-report*`, `slearn`, `churches/fund`, `referrals/fund`, `courses/premium/purchase` + `lib/{crypto,deployments,donate-utils,pastor-bonus,sle-rate,verify-transfer,replay-protection,credentials,premium-pricing,config}` | core (DB, auth, metrics, backend-config inyectados) |
+| **`@learn-tg/gdcluster`** | GD course: `/api/gdcluster/*`, `/api/cluster/*`, `/api/churches/search`; `lib/{gd-utils,gd-cluster-routing,donation-target}`; hook `reward:route-destination` (`src/register.ts`); contracts + deployments `ClusterFunds(V2)` | core, rewards, mr519 |
+| **`@learn-tg/mr519`** | dynamic forms (`mr519_gen_*`, `DynamicForm`) | core (auth, DB) |
+
+**Patterns:**
+- **Adapters**: `lib/rewards-app.ts` / `lib/gdcluster-app.ts` instantiate the
+  engine factory (`createRewardsApp` / `createGdclusterApp`) once, injecting DB,
+  auth, metrics, and `backend-config` functions (D2). App routes are thin
+  re-exports: `export async function POST(req) { return rewardsApp['x'].POST(req) }`.
+- **Inverted dependencies (D3)**: the core never imports engine logic. `lib/reward-routing.ts`
+  dispatches via the `reward:route-destination` hook (`runHooks`); the `gdcluster`
+  engine registers its handler in the server process (`import '@learn-tg/gdcluster/register'`).
+- **Engine registry**: `lib/engines.ts` uses `createRegistry('learn-tg:engine')`
+  from `@pasosdejesus/m/engine`; `mr519` self-registers on lazy load
+  (`getEngineHandler` → `ensureEnginesLoaded`).
+- **Build**: `bin/dev` and `make all/prod` compile `packages/*` → `dist/` first
+  (`engines-dist`); dist is not in git. Webpack resolution falls back to the
+  app's `node_modules` (`next.config.ts`). See REQ/35 Fase 4 for pitfalls
+  (webpack parallelism, heap limits, vendored loadable alias).
+
 ---
 
 ## Authentication & Communication Flow

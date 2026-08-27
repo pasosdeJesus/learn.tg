@@ -97,6 +97,7 @@ async function apiPatch(pathname, body, params, cookies) {
 }
 
 async function main() {
+  const t0 = performance.now()
   resetFailures()
   const verifier = loadEnvCredentials()
   if (!verifier) { console.error('No verifier credentials'); process.exit(1) }
@@ -144,8 +145,9 @@ async function main() {
     fail(`Expected eligible:true after verification, got ${JSON.stringify(after)}`)
   }
 
-  console.log(`\n${summary.failures} failures`)
-  if (summary.failures > 0) process.exit(1)
+  const failures = summary(t0)
+  console.log(`\n${failures} failures`)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

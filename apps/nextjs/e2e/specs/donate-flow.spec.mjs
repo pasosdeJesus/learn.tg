@@ -40,7 +40,7 @@ function loadEnvCredentials() {
 }
 
 async function navAndWait(page, url, timeout) {
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(url, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 2000))
     const bodyLen = await page.evaluate(() =>
@@ -212,7 +212,7 @@ async function main() {
   }
 
   await browser.close()
-  summary(t0)
+  const failures = summary(t0); process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

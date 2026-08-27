@@ -25,25 +25,40 @@ async function main() {
   const browser = await launchBrowser(env.headless)
 
   {
-    const page = await newPage(browser, account.address, timeout)
+    const page = await newPage(browser, account.address, 120000)
 
     page.on('response', res => {
       if (res.url().includes('claim-celo-ubi'))
         console.log(`  [net] ${res.status()} claim-celo-ubi`)
     })
 
-    await page.goto(`${base}${guidePath}`, { waitUntil: 'domcontentloaded', timeout })
+    await page.goto(`${base}${guidePath}`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     const siweOk = await simulateSIWE(page, { account, host, domainPort, base, chainId })
     if (!siweOk) { fail('SIWE failed'); await browser.close(); process.exit(1) }
     ok('SIWE completed')
 
     console.log('  Waiting for CeloUbi button...')
-    const btnAppeared = await page.waitForFunction(() => {
+    const waitBtn = () => page.waitForFunction(() => {
       return [...document.querySelectorAll('button')].some(b =>
         (b.textContent || '').includes('Claim Learn.tg-UBI') ||
         (b.textContent || '').includes('Reclamar Learn.tg-IBU')
       )
-    }, { timeout: 15000 }).catch(() => false)
+    }, { timeout: 30000 }).catch(() => false)
+
+    let btnAppeared = await waitBtn()
+
+    // Retry con "desconectar y reconectar" (igual que en el sitio): sesión/token
+    // stale hace 401 en /api/guide → la guía no carga → sin botón. Se limpia
+    // localStorage (learn.tg.authToken) y cookies, se recarga y se re-hace SIWE.
+    if (!btnAppeared) {
+      console.log('  Botón no apareció — reconectando billetera (limpiar sesión + re-SIWE)...')
+      await page.evaluate(() => { localStorage.clear() })
+      const cookies = await page.cookies()
+      for (const c of cookies) await page.deleteCookie(c)
+      await page.reload({ waitUntil: 'domcontentloaded' })
+      await simulateSIWE(page, { account, host, domainPort, base, chainId })
+      btnAppeared = await waitBtn()
+    }
 
     if (!btnAppeared) {
       fail('CeloUbi button not found')

@@ -190,7 +190,8 @@ bin/m wallet:approve --name stableslreserve --token <USDT_ADDRESS> --spender <SL
 
 ### 5.1 Update Next.js `.env`
 
-Set mainnet config. V3 and SLEARN addresses come from `lib/deployments.ts` automatically.
+Set mainnet config. V3 and SLEARN addresses come from `lib/deployments.ts`
+(ahora en el motor `@learn-tg/rewards`: `packages/rewards/src/lib/deployments.ts`, REQ/35) automatically.
 
 ```
 NEXT_PUBLIC_NETWORK=celo

@@ -11,6 +11,7 @@ import {
   resetFailures, fail, ok, summary, short,
 } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
+import { retrySpec } from '../helpers/retry.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -35,6 +36,7 @@ function loadEnvCredentials() {
 }
 
 async function main() {
+  const t0 = performance.now()
   resetFailures()
   const creds = loadEnvCredentials()
   if (!creds) { console.error('Credentials not found in .env'); process.exit(1) }
@@ -111,7 +113,7 @@ async function main() {
 
   // ── 3. Admin dashboard → UserEditModal → ChurchSelector ──
   console.log('\n── 3. Admin dashboard → UserEditModal → ChurchSelector ──')
-  await page.goto(`${base}/en/admin`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/en/admin`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await new Promise(r => setTimeout(r, 8000))
 
   // Find a clickable user row that opens the modal with an ENABLED Assign
@@ -157,8 +159,10 @@ async function main() {
   }
 
   await browser.close()
-  console.log(`\n${summary.failures} failures`)
-  if (summary.failures > 0) process.exit(1)
+  const failures = summary(t0)
+  console.log(`\n${failures} failures`)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
-main().catch(e => { console.error(e); process.exit(1) })
+retrySpec(main, { attempts: 2, delayMs: 20000, label: 'church-selector-diag' })
+  .catch(e => { console.error(e); process.exit(1) })

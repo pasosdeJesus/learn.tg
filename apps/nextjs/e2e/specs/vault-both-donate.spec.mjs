@@ -15,6 +15,22 @@ const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 const httpsAgent = new https.Agent({ rejectUnauthorized: false })
 
+// Retry con espera entre intentos (RPC/rate-limit): "replacement transaction
+// underpriced" ocurre cuando un tx previo sigue pending (nonce) — esperar deja
+// que el mempool se asiente. 429 del sitio: esperar libera el rate-limit.
+async function retry(fn, { retries = 3, delayMs = 10000, label = '' } = {}) {
+  for (let i = 1; ; i++) {
+    try {
+      return await fn()
+    } catch (e) {
+      if (i > retries) throw e
+      const msg = e?.shortMessage || e?.message || String(e)
+      console.log(`  [retry:${label}] intento ${i}/${retries} falló (${msg.slice(0, 80)}) — reintento en ${delayMs / 1000}s`)
+      await new Promise(r => setTimeout(r, delayMs))
+    }
+  }
+}
+
 function loadEnv() {
   const env = fs.readFileSync(path.join(process.cwd(), '..', '.env'), 'utf8')
   const g = (k) => env.match(new RegExp(`${k}=\"?([^\"\\n]+)\"?`))?.[1]
@@ -52,15 +68,20 @@ async function main() {
   const slearnBal = await client.readContract({ address: env.slearn, abi: [{ name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'a', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }], functionName: 'balanceOf', args: [account.address] })
   console.log('Balances — USDT:', Number(usdtBal) / 1e6, 'SLEARN:', Number(slearnBal) / 1e2)
 
-  // 1. Transfer 1 USDT + 10 SLEARN to the backend
+  // 1. Transfer 1 USDT + 10 SLEARN to the backend (retry con espera: RPC
+  //    "replacement transaction underpriced" / mempool pending)
   console.log('\nTransferring 1 USDT + 10 SLEARN to backend...')
-  const usdtHash = await wallet.writeContract({ address: env.usdt, abi: erc20, functionName: 'transfer', args: [backend, 1000000n] })
-  console.log('USDT tx:', usdtHash)
-  const slearnHash = await wallet.writeContract({ address: env.slearn, abi: erc20, functionName: 'transfer', args: [backend, 1000n] })
-  console.log('SLEARN tx:', slearnHash)
-  await client.waitForTransactionReceipt({ hash: usdtHash, timeout: 120_000 })
-  await client.waitForTransactionReceipt({ hash: slearnHash, timeout: 120_000 })
-  console.log('Both receipts confirmed')
+  const { usdtHash, slearnHash } = await retry(async () => {
+    const nonce = await client.getTransactionCount({ address: account.address, blockTag: 'pending' })
+    const usdtHash = await wallet.writeContract({ address: env.usdt, abi: erc20, functionName: 'transfer', args: [backend, 1000000n], nonce })
+    console.log('USDT tx:', usdtHash)
+    const slearnHash = await wallet.writeContract({ address: env.slearn, abi: erc20, functionName: 'transfer', args: [backend, 1000n], nonce: nonce + 1 })
+    console.log('SLEARN tx:', slearnHash)
+    await client.waitForTransactionReceipt({ hash: usdtHash, timeout: 120_000 })
+    await client.waitForTransactionReceipt({ hash: slearnHash, timeout: 120_000 })
+    console.log('Both receipts confirmed')
+    return { usdtHash, slearnHash }
+  }, { retries: 3, delayMs: 15000, label: 'transfer' })
 
   // 2. SIWE sign-in
   const csrfRes = await axios.get(`${SITE}/api/auth/csrf`, { httpsAgent })
@@ -81,7 +102,11 @@ async function main() {
     donationAmountUSD: 1, slearnDonationAmount: 10,
     usdtHash, slearnHash, courseId: 1,
   }
-  const d = await axios.post(`${SITE}/api/add-donation`, payload, { httpsAgent, headers: { 'Content-Type': 'application/json', Cookie: cookies }, validateStatus: s => s < 500 })
+  const d = await retry(async () => {
+    const r = await axios.post(`${SITE}/api/add-donation`, payload, { httpsAgent, headers: { 'Content-Type': 'application/json', Cookie: cookies }, validateStatus: s => s < 500 })
+    if (r.status >= 400) throw new Error(`add-donation status ${r.status}: ${JSON.stringify(r.data).slice(0, 120)}`)
+    return r
+  }, { retries: 3, delayMs: 8000, label: 'add-donation' })
   console.log('add-donation status:', d.status)
   console.log('response:', JSON.stringify(d.data).slice(0, 500))
 }

@@ -102,8 +102,10 @@ test-smoke:
 	./bin/m test:e2e --smoke
 
 # Full E2E tests (Puppeteer + Chrome, requires CHROME_PATH)
+# 12s de aire entre specs: el dev site (16G compartido) limita por wallet/IP
+# (429) y bajo carga los specs de timing flaquean (REQ/35 §12.8).
 test-e2e:
-	./bin/m test:e2e
+	E2E_SPEC_DELAY_MS=12000 ./bin/m test:e2e
 
 # Run a specific E2E spec
 test-e2e-%:

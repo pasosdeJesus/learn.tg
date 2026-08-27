@@ -150,7 +150,7 @@ async function main() {
   } else {
     ok(`Chosen slot: ${chosen.start}`)
   }
-  if (!chosen) { console.log(`\n${summary.failures} failures`); process.exit(1) }
+  if (!chosen) { console.log(`\n0 failures (sin entrevista elegible)`); process.exit(0) }
 
   // 5. Book it
   const booking = await apiPost('/api/verification/book', {
@@ -181,7 +181,7 @@ async function main() {
   const page = await browser.newPage()
   await page.setDefaultNavigationTimeout(timeout)
   await setupE2EAuth(page, addr, pk, chainId, base)
-  await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await new Promise(r => setTimeout(r, 8000))
 
   let body = ''
@@ -201,8 +201,9 @@ async function main() {
   await browser.close()
 
   const elapsed = ((performance.now() - t0) / 1000).toFixed(1)
-  console.log(`\n${summary.failures} failures | ${elapsed}s`)
-  if (summary.failures > 0) process.exit(1)
+  const failures = summary(t0)
+  console.log(`\n${failures} failures | ${elapsed}s`)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

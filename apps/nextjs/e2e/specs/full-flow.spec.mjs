@@ -36,7 +36,7 @@ function loadEnvCredentials() {
 
 /** Navigate to URL and wait for body content */
 async function navAndWait(page, url, timeout) {
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(url, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 2000))
     const bodyLen = await page.evaluate(() =>
@@ -110,7 +110,7 @@ async function main() {
   // Step 1: Landing — Connect Wallet visible
   // ════════════════════════════════════════════════════════════════
   console.log('── Step 1: Landing — Connect Wallet ──')
-  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   let hasConnect = false
   for (let i = 0; i < 15; i++) {
     await new Promise(r => setTimeout(r, 3000))
@@ -175,7 +175,7 @@ async function main() {
   // hasn't hydrated yet (known issue on OpenBSD). Reload until form appears.
   let profileFormReady = false
   for (let attempt = 0; attempt < 5; attempt++) {
-    await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded', timeout })
+    await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     await new Promise(r => setTimeout(r, 5000))
 
     const isPartialLogin = await page.evaluate(() =>
@@ -465,7 +465,7 @@ async function main() {
   console.log('\n── Step 9: Guide ──')
   if (courseEntered && courseHref) {
     await ensureSessionAlive(page)
-    await page.goto(`${base}${courseHref}`, { waitUntil: 'domcontentloaded', timeout })
+    await page.goto(`${base}${courseHref}`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     let guideLinks = []
     for (let w = 0; w < 12; w++) {
       await new Promise(r => setTimeout(r, 2000))
@@ -578,7 +578,7 @@ async function main() {
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt > 0) {
       console.log(`  Reloading UBI guide (attempt ${attempt + 1}/3)...`)
-      await page.goto(`${base}${ubiPath}`, { waitUntil: 'domcontentloaded', timeout })
+      await page.goto(`${base}${ubiPath}`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     }
     // Wait for client-side hydration
     for (let w = 0; w < 10; w++) {
@@ -645,7 +645,7 @@ async function main() {
   // Step 12: Disconnect ✕ → Connect Wallet returns
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 12: Disconnect ✕ ──')
-  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await ensureSessionAlive(page)
 
   // The ✕ (disconnect) button is client-rendered by ConnectWalletButton.
@@ -653,7 +653,7 @@ async function main() {
   let dcFound = false
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt > 0) {
-      await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
+      await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     }
     await new Promise(r => setTimeout(r, 4000))
     dcFound = await page.evaluate(() =>

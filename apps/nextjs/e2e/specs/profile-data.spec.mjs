@@ -21,7 +21,7 @@ async function main() {
 
   console.log(`Wallet: ${short(account.address)} | ${base}\n`)
   const browser = await launchBrowser(env.headless)
-  const page = await newPage(browser, account.address, timeout)
+  const page = await newPage(browser, account.address, 120000)
 
   // ── Authenticate via SIWE (deferred to profile page) ────
   console.log('── SIWE Authentication ──')
@@ -29,7 +29,7 @@ async function main() {
   // ── Navigate to profile ──────────────────────────────────
   console.log('\n── Profile page ──')
   // Navigate to profile directly, then SIWE there so session is fresh
-  await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
   // Do SIWE on the profile page
   const siwe2Ok = await simulateSIWE(page, { account, host, domainPort, base, chainId })
@@ -37,7 +37,7 @@ async function main() {
   ok('SIWE on profile page completed')
 
   // Reload profile page with fresh session
-  await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
   // Wait for profile data to load
   console.log('  Waiting for profile data...')

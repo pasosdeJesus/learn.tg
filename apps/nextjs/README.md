@@ -58,8 +58,20 @@ This section provides a deeper look into the technical implementation of the Nex
 This directory contains crucial application logic, decoupled from the UI and API routes, ensuring reusability and testability.
 - **`lib/guide-utils.ts`**: Manages logic related to course and guide progress.
 - **`lib/scores.ts`**: Handles the calculation and updating of user scores (`learningscore`, `profilescore`).
-- **`lib/crypto.ts`**: Contains cryptographic functions for authentication and data integrity.
 - **`lib/metrics-server.ts`**: Provides server-side functions for recording user events.
+- **`lib/rewards-app.ts` / `lib/gdcluster-app.ts`**: Adapters that instantiate the
+  `@learn-tg/rewards` / `@learn-tg/gdcluster` engines (dependency injection).
+- **`lib/reward-routing.ts`**: Dispatcher that runs the `reward:route-destination`
+  hook (GD cluster/country routing registered by the `gdcluster` engine).
+- **`lib/engines.ts`**: Engine registry backed by `createRegistry('learn-tg:engine')`
+  from `@pasosdejesus/m/engine`; `mr519` self-registers on lazy load.
+
+> **Web3 engines (`packages/`)**: on-chain business logic (crypto, deployments,
+> credentials/SBTs, pastor-bonus, premium pricing, GD cluster routing, donations)
+> lives in the `@learn-tg/rewards`, `@learn-tg/gdcluster`, and `@learn-tg/mr519`
+> packages, compiled to `dist/` and consumed via `exports`. See
+> [ARCHITECTURE.md](../../ARCHITECTURE.md) §Web3 Engines and the `m` repo
+> (`REQ/35.md`, `doc/engines.md`) for the design.
 
 ### UI Components (components/ui)
 The application uses **Radix UI** as a foundation for its UI components. Our library of reusable and custom components is located in `apps/nextjs/components/ui`, providing a consistent look and feel across the platform.

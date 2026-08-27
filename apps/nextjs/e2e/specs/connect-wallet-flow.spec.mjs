@@ -53,7 +53,7 @@ async function main() {
 
   // ── Test 1: Connect Wallet on landing ──
   console.log('── Test 1: Connect Wallet visible ──')
-  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   // Wait for React hydration (can be slow on OpenBSD)
   let hasConnect = false
   for (let i = 0; i < 15; i++) {
@@ -100,7 +100,7 @@ async function main() {
 
   // ── Test 3: /en shows content ──
   console.log('\n── Test 3: /en renders normally ──')
-  await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   for (let i = 0; i < 8; i++) {
     await new Promise(r => setTimeout(r, 2000))
     const body = await page.evaluate(() =>

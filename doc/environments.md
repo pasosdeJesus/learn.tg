@@ -176,7 +176,7 @@ It must be set up once before first run.
 Contract addresses are **not** read from `.env`. They come from:
 
 - `@pasosdejesus/mpdj/blockchain/ecosystem-addresses` — `SLEARN_ADDRESSES`
-  (see `apps/nextjs/lib/deployments.ts`)
+  (helper `deployments` en el motor `@learn-tg/rewards`, REQ/35 — `packages/rewards/src/lib/deployments.ts`)
 - `@pasosdejesus/mpdj/blockchain` — credentials (SBTs)
 - `@pasosdejesus/m/blockchain/deployments` (`readDeployment()`) reading
   `apps/hardhat/deployments/<Contract>/<network>.json` — vaults

@@ -186,7 +186,7 @@ async function apiPatch(path, body, params, cookies) {
 }
 
 async function navAndWait(page, url, timeout) {
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout })
+  await page.goto(url, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 2000))
     const bodyLen = await page.evaluate(() =>
