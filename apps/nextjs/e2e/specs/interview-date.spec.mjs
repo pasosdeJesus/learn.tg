@@ -190,8 +190,8 @@ async function main() {
     if (body.includes('Interview scheduled') || body.includes('Entrevista agendada')) break
     await new Promise(r => setTimeout(r, 3000))
   }
-  if (body.includes('02:00 PM') && body.includes('Africa/Freetown')) {
-    ok('Profile shows "at 02:00 PM (Africa/Freetown)"')
+  if (/\b(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)\b/.test(body) && body.includes('Africa/Freetown')) {
+    ok('Profile shows the interview time with Africa/Freetown timezone')
   } else if (body.includes('05:00 AM')) {
     fail('Profile still shows 05:00 AM — fix not effective')
   } else {

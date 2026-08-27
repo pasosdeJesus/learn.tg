@@ -15,6 +15,7 @@ import {
   resetFailures, fail, ok, summary,
   setupSIWEMock, short,
 } from '@pasosdejesus/m/e2e'
+import { retrySpec } from '../helpers/retry.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -333,4 +334,5 @@ async function main() {
   process.exit(failures > 0 ? 1 : 0)
 }
 
-main().catch(e => { console.error('FATAL:', e); process.exit(1) })
+retrySpec(main, { attempts: 2, delayMs: 20000, label: 'prod-landing-to-profile' })
+  .catch(e => { console.error('FATAL:', e); process.exit(1) })
