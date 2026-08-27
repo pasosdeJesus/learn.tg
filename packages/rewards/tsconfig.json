@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "lib": ["esnext"],
+    "lib": ["esnext", "dom"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
@@ -11,8 +11,27 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "declaration": true,
+    "sourceMap": true,
+    "composite": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "types": ["node"],
+    "typeRoots": ["../../apps/nextjs/node_modules/@types"],
+    // Puente de resolución (REQ/35 Fase 4): learn.tg no es workspace pnpm y el
+    // motor no tiene node_modules propio; las deps las resuelve el node_modules
+    // de la app. Al publicarse (graduación local→shared) se eliminan.
+    "paths": {
+      "next/*": ["../../apps/nextjs/node_modules/next/*"],
+      "next": ["../../apps/nextjs/node_modules/next"],
+      "kysely": ["../../apps/nextjs/node_modules/kysely"],
+      "viem": ["../../apps/nextjs/node_modules/viem"],
+      "viem/accounts": ["../../apps/nextjs/node_modules/viem/_types/accounts/index.d.ts"],
+      "viem/chains": ["../../apps/nextjs/node_modules/viem/_types/chains/index.d.ts"],
+      "@pasosdejesus/m/*": ["../../apps/nextjs/node_modules/@pasosdejesus/m/dist/*"],
+      "@pasosdejesus/mpdj/*": ["../../apps/nextjs/node_modules/@pasosdejesus/mpdj/dist/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*", "src/**/*.json"],
+  "exclude": ["node_modules", "dist", "**/__tests__/**"]
 }

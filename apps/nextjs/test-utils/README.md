@@ -25,10 +25,10 @@ test-utils/
 | Function | Returns | Purpose |
 |----------|---------|---------|
 | `mockMetricsQueries()` | `MetricsQueriesMocks` | Mocks `@/lib/metrics/queries` functions (`getAllMetrics`, `getCompletionRate`, etc.) |
-| `mockCrypto()` | `CryptoMocks` | Mocks `@learn-tg/rewards/src/lib/crypto` functions (`callWriteFun`, `waitForReceiptWithRetry`) |
+| `mockCrypto()` | `CryptoMocks` | Mocks `@learn-tg/rewards/lib/crypto` functions (`callWriteFun`, `waitForReceiptWithRetry`) |
 | `mockScores()` | `ScoresMocks` | Mocks `@/lib/scores` function (`updateUserAndCoursePoints`) |
 | `mockMetricsServer()` | `MetricsServerMocks` | Mocks `@/lib/metrics-server` function (`recordEvent`) |
-| `mockLibConfig()` | `LibConfigMocks` | Mocks `@learn-tg/rewards/src/lib/config` constants (`IS_PRODUCTION`) |
+| `mockLibConfig()` | `LibConfigMocks` | Mocks `@learn-tg/rewards/lib/config` constants (`IS_PRODUCTION`) |
 | `setupApiMocks()` | `void` | **One-call setup:** Configures `vi.mock` for all Learn.tg modules |
 
 #### **Internal Mocks (not exported):**

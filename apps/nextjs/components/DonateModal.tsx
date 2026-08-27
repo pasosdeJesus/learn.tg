@@ -6,7 +6,7 @@ import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { type Address, formatUnits } from 'viem'
 import axios from 'axios'
-import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@learn-tg/rewards/src/lib/donate-utils'
+import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@learn-tg/rewards/lib/donate-utils'
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { TransactionStatus } from '@/components/ui/TransactionStatus'
@@ -20,7 +20,7 @@ import {
   getTargetRecipient,
   getTargetEndpoint,
   getDistributionFromResponse,
-} from '@learn-tg/gdcluster/src/lib/donation-target'
+} from '@learn-tg/gdcluster/lib/donation-target'
 
 const SLEARN_DECIMALS = 2
 const SLEARN_RATE = 22 // 1 USDT = 22 SLEARN

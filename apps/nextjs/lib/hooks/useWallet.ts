@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { createPublicClient, createWalletClient, custom } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
-import { IS_PRODUCTION } from '@learn-tg/rewards/src/lib/config'
+import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 const chain = IS_PRODUCTION ? celo : celoSepolia

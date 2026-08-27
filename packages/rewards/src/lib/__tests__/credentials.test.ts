@@ -36,7 +36,7 @@ vi.mock('viem/accounts', () => ({
   privateKeyToAccount: vi.fn(() => ({ address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' })),
 }))
 vi.mock('viem/chains', () => ({ celo: { id: 42220 }, celoSepolia: { id: 11142220 } }))
-vi.mock('@learn-tg/rewards/src/lib/config', () => ({ IS_PRODUCTION: false }))
+vi.mock('@learn-tg/rewards/lib/config', () => ({ IS_PRODUCTION: false }))
 
 const originalEnv = { ...process.env }
 import { mintCourseCredential } from '../credentials'

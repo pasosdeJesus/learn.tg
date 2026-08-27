@@ -13,7 +13,7 @@
  */
 
 import { newKyselyPostgresql } from '../.config/kysely.config'
-import { mintCourseCredential } from '@learn-tg/rewards/src/lib/credentials'
+import { mintCourseCredential } from '@learn-tg/rewards/lib/credentials'
 import { sql } from 'kysely'
 
 async function main() {

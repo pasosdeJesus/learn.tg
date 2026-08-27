@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./index": "./dist/index.js",
+    "./lib/*": "./dist/lib/*.js",
+    "./package.json": "./package.json"
+  },
   "peerDependencies": {
     "next": ">=15.0.0",
     "react": ">=18.0.0",
@@ -16,5 +22,8 @@
     "typescript": "^5.9.3",
     "viem": "^2.55.0",
     "vitest": "^3.2.7"
+  },
+  "scripts": {
+    "test": "cd ../../apps/nextjs && pnpm vitest run --root ../../packages/rewards --config vitest.config.ts"
   }
 }

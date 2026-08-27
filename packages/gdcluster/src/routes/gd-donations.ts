@@ -3,7 +3,7 @@ import { type Address } from 'viem'
 import { PILOT_COUNTRIES } from '../lib/gd-utils'
 import { getClusterFundsAddress } from '../lib/gd-cluster-routing'
 import ClusterFundsV2Abi from '../abis/ClusterFundsV2.json'
-import { erc20Abi } from '@learn-tg/rewards/src/lib/donate-utils'
+import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
 import type { GdclusterDeps } from '../index'
 
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'

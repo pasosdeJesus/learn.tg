@@ -14,7 +14,7 @@ import type { GuideUsuario, Transaction } from '../db/db.d'
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') })
 
-import { getV3Address } from '@learn-tg/rewards/src/lib/deployments'
+import { getV3Address } from '@learn-tg/rewards/lib/deployments'
 
 // Validación de variables de entorno críticas
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL

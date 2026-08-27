@@ -2,8 +2,8 @@ import { Kysely } from 'kysely'
 import type { DB } from '@/db/db.d.ts'
 // Puente de migración (REQ/35 Fase 3): PILOT_COUNTRIES e isGDCourse viven en el
 // motor gdcluster; el core aún los importa hasta resolver en Fase 4.
-import { PILOT_COUNTRIES } from '@learn-tg/gdcluster/src/lib/gd-utils'
-import { isGDCourse } from '@learn-tg/gdcluster/src/lib/gd-cluster-routing'
+import { PILOT_COUNTRIES } from '@learn-tg/gdcluster/lib/gd-utils'
+import { isGDCourse } from '@learn-tg/gdcluster/lib/gd-cluster-routing'
 
 export interface AccessResult {
   access: boolean

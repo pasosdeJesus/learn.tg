@@ -4,7 +4,7 @@ import { Kysely } from 'kysely'
 import type { Selectable } from 'kysely'
 
 import type { DB, Usuario, GuideUsuario } from '@/db/db.d'
-import { getSLEUSDRate } from '@learn-tg/rewards/src/lib/sle-rate'
+import { getSLEUSDRate } from '@learn-tg/rewards/lib/sle-rate'
 
 const USD_TO_SLE_RATE = 22
 const DONATION_REWARD_PCT = 0.10;

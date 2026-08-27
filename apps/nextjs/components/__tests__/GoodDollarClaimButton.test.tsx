@@ -13,7 +13,7 @@ const { mockConfig } = vi.hoisted(() => {
     mockConfig: config,
   }
 })
-vi.mock('@learn-tg/rewards/src/lib/config', () => ({
+vi.mock('@learn-tg/rewards/lib/config', () => ({
   __esModule: true,
   get IS_PRODUCTION() {
     return mockConfig.IS_PRODUCTION

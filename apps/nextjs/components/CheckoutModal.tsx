@@ -9,7 +9,7 @@ import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
-import { erc20Abi, formatDisplay } from '@learn-tg/rewards/src/lib/donate-utils'
+import { erc20Abi, formatDisplay } from '@learn-tg/rewards/lib/donate-utils'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 

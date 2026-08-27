@@ -4,7 +4,7 @@ import path from 'path'
 // Helper de direcciones de contratos para migraciones kysely (REQ/35 Fase 3).
 //
 // Las migraciones se cargan con kysely-ctl/jiti, que NO resuelve paquetes de
-// motores link: (`@learn-tg/rewards/src/lib/deployments` importaba
+// motores link: (`@learn-tg/rewards/lib/deployments` importaba
 // `@pasosdejesus/m`, inalcanzable desde el paquete). Este helper replica esa
 // lógica con solo builtins (fs/path) y rutas relativas, igual que las
 // migraciones ya importan los abis (`../../abis/*.json`).

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { type Address } from 'viem'
-import { erc20Abi, parseUserAmount, safeParseFloat } from '@learn-tg/rewards/src/lib/donate-utils'
+import { erc20Abi, parseUserAmount, safeParseFloat } from '@learn-tg/rewards/lib/donate-utils'
 import { getCsrfToken } from 'next-auth/react'
 import axios from 'axios'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'

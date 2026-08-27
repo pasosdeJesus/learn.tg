@@ -8,7 +8,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
-import { IS_PRODUCTION } from '@learn-tg/rewards/src/lib/config'
+import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 export interface GoodDollarClaimButtonProps {

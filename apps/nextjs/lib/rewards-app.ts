@@ -1,7 +1,7 @@
 // Adapter del core → motor `rewards` (REQ/35 §11.2 D2).
 // El host inyecta DB, auth, métricas y las funciones de backend-config;
 // las rutas de la app re-exportan handlers del motor sin lógica propia.
-import { createRewardsApp } from '@learn-tg/rewards/src/index'
+import { createRewardsApp } from '@learn-tg/rewards/index'
 import { newKyselyPostgresql } from '@/.config/kysely-db'
 import { authenticateUser } from '@/lib/authenticateUser'
 import { recordEvent } from '@/lib/metrics-server'
@@ -19,7 +19,7 @@ import {
   SLEARN_DECIMALS,
 } from '@/lib/backend-config'
 import { routeReward } from '@/lib/reward-routing'
-import { routeToClusterFunds as gdRouteToClusterFunds } from '@learn-tg/gdcluster/src/lib/gd-cluster-routing'
+import { routeToClusterFunds as gdRouteToClusterFunds } from '@learn-tg/gdcluster/lib/gd-cluster-routing'
 import { canPurchasePremiumCourse } from '@/lib/course-access'
 import { updateUserAndCoursePoints } from '@/lib/scores'
 

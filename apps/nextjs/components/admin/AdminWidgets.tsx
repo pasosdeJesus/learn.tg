@@ -9,7 +9,7 @@ import { PhotoUpload } from '@/components/shared/PhotoUpload'
 import { adminFetch, adminAuthParams } from '@/lib/admin-fetch'
 import { dbTimestampToLocalInput } from '@/lib/date-utils'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
-import { IS_PRODUCTION } from '@learn-tg/rewards/src/lib/config'
+import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { CalendarWidget } from './CalendarWidget'
 import { VERIFIED_FIELDS_CONFIG } from '@/lib/score-rules'
 
