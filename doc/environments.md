@@ -209,3 +209,28 @@ Contract addresses are **not** read from `.env`. They come from:
 - **RPC:** forno a veces retrasa indexar receipts recién minados; el backend
   usa `fetchTxWithReceipt` (multi-RPC: forno/ankr/drpc/publicnode). Ver
   [runbook.md](runbook.md) §5.
+
+## Operación en la máquina compartida (prod + dev, 16G RAM)
+
+La misma máquina aloja **producción** (`https://learn.tg`) y **desarrollo**
+(`https://learn.tg:9001`) con **16G RAM + 16G swap** y otras aplicaciones.
+Reglas para no tumbarla (lección REQ/35 §12.8: un `next build` con 15 workers
+× heap grande derribó el dev server por OOM):
+
+1. **NO compilar mientras el dev site sirve requests ni mientras corre la
+   suite E2E.** `make all`/`make prod` verifican con `build-guard` que no haya
+   `next dev` activo (aborta con instrucciones). Si la suite E2E está en
+   marcha, espera a que termine antes de compilar.
+2. **Presupuesto de memoria del build:** `webpack.parallelism = 8` (variable
+   `WEBPACK_PARALLELISM`) y `--max-old-space-size=2048` (Makefile y
+   `bin/prod.sh`). No subir sin medir: 8 × 2048 MB ya compite con prod.
+3. **La suite E2E agrega carga al dev site** (SIWE + claims + páginas). Correr
+   en horas de bajo tráfico de prod, o desde la VM de desarrollo (ya tiene
+   Chromium en `/usr/local/bin/chrome`), con `PUERTOPRU=9001 CHAIN_ID=11142220`.
+4. **Secuencia recomendada al desplegar cambios en dev:**
+   1. Detener el dev server (`pkill -f 'next dev'` o el servicio).
+   2. `make all` (compila sin competencia de memoria).
+   3. Arrancar el dev server (`bin/dev` o servicio).
+   4. `bin/warmup` (compila rutas en caliente).
+   5. `make test-smoke` y luego `make test-e2e` (m 0.20.1+ rota billeteras y
+      pausa entre specs; ver `E2E_SPEC_DELAY_MS`).

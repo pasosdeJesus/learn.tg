@@ -1,5 +1,18 @@
 
-all:
+# ── Build ──────────────────────────────────────────────────────────────
+# La máquina real es compartida (prod learn.tg + dev learn.tg:9001, 16G RAM +
+# 16G swap). NO compilar mientras el sitio de desarrollo sirve requests o se
+# está ejecutando la suite E2E: 8 workers × 2048 MB todavía compiten con el
+# dev server y el resto de apps → OOM (REQ/35 §12.8). Detener `next dev` y los
+# specs E2E antes de `make all`/`make prod`.
+build-guard:
+	@if pgrep -f '[n]ext d''ev' >/dev/null 2>&1; then \
+	  echo "ERROR: el sitio de desarrollo está activo (dev server corriendo)." ; \
+	  echo "Detén el dev server antes de compilar (misma máquina, 16G RAM)." ; \
+	  exit 1 ; \
+	fi
+
+all: build-guard
 	rm -rf .next
 	pnpm i
 	$(MAKE) swc-wasm
@@ -60,7 +73,7 @@ coverage:
 dev:
 	./bin/dev
 
-prod: swc-wasm
+prod: build-guard swc-wasm
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
 	./bin/start > prod.log 2>&1 &
 
