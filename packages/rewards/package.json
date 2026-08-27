@@ -24,6 +24,6 @@
     "vitest": "^3.2.7"
   },
   "scripts": {
-    "test": "cd ../../apps/nextjs && pnpm vitest run --root ../../packages/rewards --config vitest.config.ts"
+    "test": "cd ../../apps/nextjs && pnpm vitest run --root ../../packages/rewards --config \"$(pwd)/vitest.config.ts\""
   }
 }

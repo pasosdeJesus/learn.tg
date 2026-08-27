@@ -1,6 +1,9 @@
 import type { NextRequest } from 'next/server'
 
 import { createRegistry } from '@pasosdejesus/m/engine'
+import { newKyselyPostgresql } from '@/.config/kysely-db'
+import { authenticateUser } from '@/lib/authenticateUser'
+import { authenticateAdmin } from '@/lib/admin-auth'
 
 type HandlerFn = (req: NextRequest, ctx: { params: Record<string, string> }) => Promise<Response>
 type EngineHandlers = Record<string, () => Promise<HandlerFn>>
@@ -29,7 +32,14 @@ let enginesLoaded = false
 async function ensureEnginesLoaded(): Promise<void> {
   if (enginesLoaded) return
   enginesLoaded = true
-  await import('@learn-tg/mr519/src/server/register')
+  // mr519 recibe sus deps inyectadas (D2, REQ/35 §10.3): db/auth del core.
+  await import('@learn-tg/mr519/src/server/register').then((m) =>
+    m.registerMr519({
+      db: () => newKyselyPostgresql(),
+      authenticateUser,
+      authenticateAdmin,
+    })
+  )
 }
 
 export async function getEngineHandler(

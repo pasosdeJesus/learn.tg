@@ -23,6 +23,17 @@ engines-dist:
 	  fi; \
 	done
 
+# Sync de ABIs (REQ/35 Fase 4): los motores guardan COPIA en src/abis/. Al
+# regenerar abis en hardhat, copiar y recompilar.
+engines-sync-abis:
+	@for e in rewards gdcluster; do \
+	  if [ -d "../../packages/$$e/src/abis" ]; then \
+	    echo "[engines-sync-abis] abis -> packages/$$e/src/abis"; \
+	    cp -f abis/*.json "../../packages/$$e/src/abis/" 2>/dev/null || true; \
+	    (cd "../../packages/$$e" && ../../apps/nextjs/node_modules/.bin/tsc -b) || exit 1; \
+	  fi; \
+	done
+
 all: build-guard engines-dist
 	rm -rf .next
 	pnpm i
