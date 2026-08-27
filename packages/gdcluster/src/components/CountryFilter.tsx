@@ -2,8 +2,7 @@
 
 import { useMemo } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@pasosdejesus/m/shadcn-components/ui/select'
-import { CountryFlag } from '@/components/CountryFlag'
-import { createComponentT } from '@/lib/hooks/useTranslation'
+import { CountryFlag } from './CountryFlag'
 
 export interface Country {
   alfa2: string
@@ -20,6 +19,11 @@ interface CountryFilterProps {
   lang?: string
 }
 
+const LABELS = {
+  en: { allCountries: 'All countries', country: 'Country:' },
+  es: { allCountries: 'Todos los países', country: 'País:' },
+} as const
+
 export function CountryFilter({
   countries,
   selectedCountry,
@@ -29,10 +33,11 @@ export function CountryFilter({
   disabled = false,
   lang = 'en',
 }: CountryFilterProps) {
-  const t = useMemo(() => createComponentT(lang, {
-    en: { allCountries: 'All countries', country: 'Country:' },
-    es: { allCountries: 'Todos los países', country: 'País:' },
-  }), [lang])
+  // i18n mínima local (REQ/35 §5.2: el motor no importa hooks del core)
+  const t = useMemo(() => {
+    const l = LABELS[lang === 'es' ? 'es' : 'en']
+    return (k: keyof typeof l) => l[k]
+  }, [lang])
 
   // Translate default placeholder if not customized
   const translatedPlaceholder = placeholder === 'All countries'

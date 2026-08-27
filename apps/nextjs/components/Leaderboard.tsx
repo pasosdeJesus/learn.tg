@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { LeaderboardTable, type SortField, type SortOrder } from '@/components/LeaderboardTable'
-import { CountryFilter } from '@/components/CountryFilter'
+import { CountryFilter } from '@learn-tg/gdcluster/components/CountryFilter'
 import { MetricsExplanation } from '@/components/MetricsExplanation'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useApiData } from '@/lib/hooks/useApiData'

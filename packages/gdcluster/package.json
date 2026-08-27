@@ -7,6 +7,7 @@
     ".": "./dist/index.js",
     "./register": "./dist/register.js",
     "./lib/*": "./dist/lib/*.js",
+    "./components/*": "./dist/components/*.js",
     "./package.json": "./package.json"
   },
   "peerDependencies": {

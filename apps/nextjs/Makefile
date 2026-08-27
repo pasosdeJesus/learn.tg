@@ -34,7 +34,16 @@ engines-sync-abis:
 	  fi; \
 	done
 
-all: build-guard engines-dist
+# Assets del motor gdcluster (REQ/35): gdcluster.svg vive en el motor
+# (assets/) y se copia a public/ (convención create-course.sh:
+# public/img/credential/$ICON_PATH servido por URL).
+engines-assets:
+	@if [ -d "../../packages/gdcluster/assets" ]; then \
+	  mkdir -p public/img/credential/source; \
+	  cp -f ../../packages/gdcluster/assets/*.svg public/img/credential/source/ 2>/dev/null || true; \
+	fi
+
+all: build-guard engines-dist engines-assets
 	rm -rf .next
 	pnpm i
 	$(MAKE) swc-wasm
@@ -95,7 +104,7 @@ coverage:
 dev:
 	./bin/dev
 
-prod: build-guard engines-dist swc-wasm
+prod: build-guard engines-dist engines-assets swc-wasm
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
 	./bin/start > prod.log 2>&1 &
 

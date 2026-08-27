@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@pasosdejesus/m/shadcn-components/ui/table'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
-import { CountryFlag } from '@/components/CountryFlag'
+import { CountryFlag } from '@learn-tg/gdcluster/components/CountryFlag'
 import { formatUSDT, formatCELO } from '@/lib/format'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { LeaderboardRow } from '@/types/leaderboard'
