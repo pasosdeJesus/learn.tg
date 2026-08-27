@@ -9,4 +9,4 @@ if (test "$d2" = "") then {
   d2="."
 } fi;
 . $d2/../.env
-su vtamara -c "cd $d2; NODE_OPTIONS="--max-old-space-size=4096" make >> prod.log 2>&1 ; ./bin/start >> prod.log 2>&1 &"
+su vtamara -c "cd $d2; NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 make >> prod.log 2>&1 ; ./bin/start >> prod.log 2>&1 &"

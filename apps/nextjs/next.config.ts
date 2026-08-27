@@ -99,6 +99,11 @@ const nextConfig: NextConfig = {
     },
   ],
   webpack: (config, { isServer }) => {
+    // Límite de workers de compilación (REQ/35 gate): la máquina real tiene
+    // 16G RAM (+16G swap) y corre otras apps; 15 workers webpack × heap grande
+    // la tumban (OOM). 8 workers × 2048 MB es lo seguro. Configurable vía
+    // WEBPACK_PARALLELISM (1 = completamente secuencial).
+    config.parallelism = parseInt(process.env.WEBPACK_PARALLELISM || '8', 10)
     config.resolve.alias = {
       ...config.resolve.alias,
       '@react-native-async-storage/async-storage': false,
