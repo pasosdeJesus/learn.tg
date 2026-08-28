@@ -3,8 +3,6 @@
   "license": "MIT",
   "version": "1.0.0",
   "devDependencies": {
-    "@pasosdejesus/edr": "^0.1.1",
-    "@pasosdejesus/contract-test": "^0.1.3",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
@@ -12,6 +10,9 @@
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "@nomicfoundation/hardhat-verify": "^2.0.11",
     "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@pasosdejesus/contract-test": "^0.1.3",
+    "@pasosdejesus/edr": "^0.1.1",
+    "@pasosdejesus/usdt": "^0.1.1",
     "@typechain/ethers-v6": "^0.5.0",
     "@typechain/hardhat": "^9.1.0",
     "chai": "^4.2.0",

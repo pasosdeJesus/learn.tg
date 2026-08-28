@@ -1,10 +1,22 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { adminAuthParams } from '@/lib/admin-fetch'
-import { createComponentT } from '@/lib/hooks/useTranslation'
-import DonateModal from '@/components/DonateModal'
-import type { ClusterDonation, CountryDonation } from '@learn-tg/gdcluster/lib/donation-target'
+import type { ComponentType } from 'react'
+import type { ClusterDonation, CountryDonation } from '../lib/donation-target'
+
+// Deps del core inyectadas por el host (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §13.3/§13.6, D2): el motor no
+// importa `@/lib/admin-fetch` ni el DonateModal del core. `DonateModal` queda
+// en core por decisión documentada en https://gitlab.com/pasosdeJesus/m/-/work_items/35 §13.6 y se inyecta por props.
+export interface RankingClientDeps {
+  adminAuthParams: () => string
+  DonateModal: ComponentType<{
+    target: ClusterDonation | CountryDonation
+    isOpen: boolean
+    onClose: () => void
+    onSuccess: () => void
+    lang: string
+  }>
+}
 
 interface ClusterRow {
   id: number; name: string; country_name: string | null
@@ -16,23 +28,26 @@ interface CountryRow {
   country_code: string | null; cluster_count: number; church_count: number
 }
 
-export function RankingClient({ lang }: { lang: string }) {
-  const t = createComponentT(lang, {
-    en: {
-      clustersTab: 'Clusters', countriesTab: 'Countries',
-      cluster: 'Cluster', country: 'Country',
-      churches: 'Churches', members: 'Members',
-      fundUSDT: 'USDT Fund', fundSLEARN: 'SLEARN Fund',
-      noData: 'No data yet.', loading: 'Loading...', donate: 'Donate',
-    },
-    es: {
-      clustersTab: 'Clústeres', countriesTab: 'Países',
-      cluster: 'Clúster', country: 'País',
-      churches: 'Iglesias', members: 'Miembros',
-      fundUSDT: 'Fondo USDT', fundSLEARN: 'Fondo SLEARN',
-      noData: 'Aún no hay datos.', loading: 'Cargando...', donate: 'Donar',
-    },
-  })
+const T = {
+  en: {
+    clustersTab: 'Clusters', countriesTab: 'Countries',
+    cluster: 'Cluster', country: 'Country',
+    churches: 'Churches', members: 'Members',
+    fundUSDT: 'USDT Fund', fundSLEARN: 'SLEARN Fund',
+    noData: 'No data yet.', loading: 'Loading...', donate: 'Donate',
+  },
+  es: {
+    clustersTab: 'Clústeres', countriesTab: 'Países',
+    cluster: 'Clúster', country: 'País',
+    churches: 'Iglesias', members: 'Miembros',
+    fundUSDT: 'Fondo USDT', fundSLEARN: 'Fondo SLEARN',
+    noData: 'Aún no hay datos.', loading: 'Cargando...', donate: 'Donar',
+  },
+} as const
+
+export function RankingClient({ lang, deps }: { lang: string; deps: RankingClientDeps }) {
+  const t = (key: keyof typeof T.en) =>
+    (lang === 'es' ? T.es[key] : T.en[key])
   const [tab, setTab] = useState<'clusters' | 'countries'>('countries')
   const [clusters, setClusters] = useState<ClusterRow[]>([])
   const [countries, setCountries] = useState<CountryRow[]>([])
@@ -42,7 +57,7 @@ export function RankingClient({ lang }: { lang: string }) {
 
   const fetchData = useCallback(async () => {
     setLoading(true)
-    const auth = adminAuthParams()
+    const auth = deps.adminAuthParams()
     try {
       const [cRes, coRes, fRes] = await Promise.all([
         fetch(`/api/gdcluster/ranking/clusters?${auth}`),
@@ -54,7 +69,7 @@ export function RankingClient({ lang }: { lang: string }) {
       if (fRes.ok) setFunds(await fRes.json())
     } catch (e) { /* public */ }
     setLoading(false)
-  }, [])
+  }, [deps])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -171,7 +186,7 @@ export function RankingClient({ lang }: { lang: string }) {
       )}
 
       {donateTarget && (
-        <DonateModal
+        <deps.DonateModal
           target={donateTarget}
           isOpen={true}
           onClose={() => setDonateTarget(null)}

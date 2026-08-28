@@ -3,11 +3,26 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
-import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
-import { SCORE_RULES } from '@/lib/score-rules'
-import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 
-// Labels aligned with SCORE_RULES order (lib/score-rules.ts)
+// Deps del core inyectadas por el host (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §13.3, D2 para componentes):
+// el motor no importa hooks ni libs del core. `lib/gdcluster-ui.tsx` (host)
+// provee los valores reales.
+export interface GdPastoresLandingDeps {
+  useAuthAddress: () => {
+    address?: string
+    isAuthenticated: boolean
+    isWalletAvailable: boolean
+    isWalletCheckComplete: boolean
+  }
+  scoreRules: {
+    points: number
+    check: (user: Record<string, any>) => boolean
+    fields: string[]
+  }[]
+  isProduction: boolean
+}
+
+// Labels aligned with SCORE_RULES order (lib/score-rules.ts, core)
 const SCORE_LABELS = [
   { en: 'Name verified (matches passport)', es: 'Nombre verificado (coincide con el pasaporte)' },
   { en: 'Country verified (matches passport nationality)', es: 'País verificado (coincide con la nacionalidad del pasaporte)' },
@@ -19,7 +34,7 @@ const SCORE_LABELS = [
   { en: 'Interview scheduled', es: 'Entrevista programada' },
 ]
 
-export function GdPastoresLanding({ lang }: { lang: string }) {
+export function GdPastoresLanding({ lang, deps }: { lang: string; deps: GdPastoresLandingDeps }) {
   const es = lang === 'es'
 
   const {
@@ -27,7 +42,7 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
     isAuthenticated,
     isWalletAvailable,
     isWalletCheckComplete,
-  } = useAuthAddress()
+  } = deps.useAuthAddress()
 
   const [fundSlearn, setFundSlearn] = useState<string | null>(null)
   const [profile, setProfile] = useState<Record<string, any> | null>(null)
@@ -145,7 +160,7 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
   // Detailed analysis: any user with a partially filled profile (0 < score < 90)
   const showAnalysis = partialProfile
   const missingItems = showAnalysis
-    ? SCORE_RULES.map((rule, i) => ({
+    ? deps.scoreRules.map((rule, i) => ({
         points: rule.points,
         satisfied: rule.check(profile!),
         label: es ? SCORE_LABELS[i].es : SCORE_LABELS[i].en,
@@ -279,7 +294,7 @@ export function GdPastoresLanding({ lang }: { lang: string }) {
                   {t.claimedTx}{' '}
                   <a
                     href={
-                      IS_PRODUCTION
+                      deps.isProduction
                         ? `https://celoscan.io/tx/${pastorBonus.hash}`
                         : `https://sepolia.celoscan.io/tx/${pastorBonus.hash}`
                     }

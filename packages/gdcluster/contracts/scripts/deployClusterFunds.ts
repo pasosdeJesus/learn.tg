@@ -1,0 +1,62 @@
+// Deploy de ClusterFunds desde el motor gdcluster (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 6).
+// Escribe el deployment en contracts/deployments/ClusterFunds/<network>.json
+// (copias en el motor; apps/hardhat conserva las suyas para producción).
+import { ethers } from 'hardhat'
+import dotenv from 'dotenv'
+import * as fs from 'fs'
+import * as path from 'path'
+dotenv.config({ path: path.resolve(__dirname, '../../../apps/.env') })
+
+async function main() {
+  const ClusterFunds = await ethers.getContractFactory('ClusterFunds')
+
+  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS
+  const slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS
+  const pdjTreasury = process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS || process.env.PDJ_TREASURY_ADDRESS
+  const [deployer] = await ethers.getSigners()
+  const initialOwner = await deployer.getAddress()
+
+  if (!usdtAddress) throw new Error('NEXT_PUBLIC_USDT_ADDRESS not found in env')
+  if (!slearnAddress) throw new Error('NEXT_PUBLIC_SLEARN_ADDRESS not found in env')
+
+  const network = process.env.NEXT_PUBLIC_NETWORK || 'celoSepolia'
+  console.log(`Deploying ClusterFunds to ${network}`)
+  console.log(`  USDT: ${usdtAddress}`)
+  console.log(`  SLEARN: ${slearnAddress}`)
+  console.log(`  Owner: ${initialOwner}`)
+
+  const clusterFunds = await ClusterFunds.deploy(
+    usdtAddress,
+    slearnAddress,
+    pdjTreasury,
+    initialOwner
+  )
+  await clusterFunds.waitForDeployment()
+
+  const addr = await clusterFunds.getAddress()
+  console.log(`ClusterFunds deployed to: ${addr}`)
+  console.log(`Default config: 10% pdJ treasury, 10% donor cashback, 80% cluster/country`)
+
+  // Save deployment
+  const dir = path.join(__dirname, '..', 'deployments', 'ClusterFunds')
+  fs.mkdirSync(dir, { recursive: true })
+  const file = path.join(dir, `${network}.json`)
+  const deployment = {
+    contract: 'ClusterFunds',
+    address: addr,
+    chainId: Number((await ethers.provider.getNetwork()).chainId),
+    network,
+    usdtAddress,
+    slearnAddress,
+    pdjTreasury,
+    initialOwner,
+    deployedAt: new Date().toISOString(),
+  }
+  fs.writeFileSync(file, JSON.stringify(deployment, null, 2))
+  console.log(`Deployment saved to: ${file}`)
+}
+
+main().catch((error) => {
+  console.error(error)
+  process.exitCode = 1
+})

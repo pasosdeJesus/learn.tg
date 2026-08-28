@@ -3,7 +3,7 @@
 # La máquina real es compartida (prod learn.tg + dev learn.tg:9001, 16G RAM +
 # 16G swap). NO compilar mientras el sitio de desarrollo sirve requests o se
 # está ejecutando la suite E2E: 8 workers × 2048 MB todavía compiten con el
-# dev server y el resto de apps → OOM (REQ/35 §12.8). Detener `next dev` y los
+# dev server y el resto de apps → OOM (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8). Detener `next dev` y los
 # specs E2E antes de `make all`/`make prod`.
 build-guard:
 	@if pgrep -f '[n]ext d''ev' >/dev/null 2>&1; then \
@@ -12,7 +12,7 @@ build-guard:
 	  exit 1 ; \
 	fi
 
-# Motores (REQ/35 Fase 4): consumidos vía dist/ (exports map); dist/ no está en
+# Motores (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): consumidos vía dist/ (exports map); dist/ no está en
 # git. Compilar antes del build — un checkout fresco no resuelve
 # @learn-tg/{rewards,gdcluster} sin esto. Orden: rewards antes que gdcluster.
 engines-dist:
@@ -23,7 +23,7 @@ engines-dist:
 	  fi; \
 	done
 
-# Sync de ABIs (REQ/35 Fase 4): los motores guardan COPIA en src/abis/. Al
+# Sync de ABIs (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): los motores guardan COPIA en src/abis/. Al
 # regenerar abis en hardhat, copiar y recompilar.
 engines-sync-abis:
 	@for e in rewards gdcluster; do \
@@ -34,7 +34,7 @@ engines-sync-abis:
 	  fi; \
 	done
 
-# Assets del motor gdcluster (REQ/35): gdcluster.svg vive en el motor
+# Assets del motor gdcluster (https://gitlab.com/pasosdeJesus/m/-/work_items/35): gdcluster.svg vive en el motor
 # (assets/) y se copia a public/ (convención create-course.sh:
 # public/img/credential/$ICON_PATH servido por URL).
 engines-assets:
@@ -48,7 +48,7 @@ all: build-guard engines-dist engines-assets
 	pnpm i
 	$(MAKE) swc-wasm
 	# Máquina real: 16G RAM + swap, otras apps. 15 workers × heap grande = OOM.
-	# 8 workers × 2048 MB (webpack.parallelism en next.config.ts, REQ/35 gate).
+	# 8 workers × 2048 MB (webpack.parallelism en next.config.ts, https://gitlab.com/pasosdeJesus/m/-/work_items/35 gate).
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
 
 type-source:
@@ -123,7 +123,7 @@ test-smoke:
 
 # Full E2E tests (Puppeteer + Chrome, requires CHROME_PATH)
 # 12s de aire entre specs: el dev site (16G compartido) limita por wallet/IP
-# (429) y bajo carga los specs de timing flaquean (REQ/35 §12.8).
+# (429) y bajo carga los specs de timing flaquean (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8).
 test-e2e:
 	E2E_SPEC_DELAY_MS=12000 ./bin/m test:e2e
 

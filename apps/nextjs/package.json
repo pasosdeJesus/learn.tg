@@ -84,6 +84,7 @@
     "@pasosdejesus/edr": "^0.1.1",
     "@pasosdejesus/m": "^0.20.1",
     "@pasosdejesus/mpdj": "^0.2.5",
+    "@pasosdejesus/usdt": "^0.1.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

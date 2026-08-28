@@ -1,4 +1,4 @@
-// Adapter del core → motor `rewards` (REQ/35 §11.2 D2).
+// Adapter del core → motor `rewards` (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §11.2 D2).
 // El host inyecta DB, auth, métricas y las funciones de backend-config;
 // las rutas de la app re-exportan handlers del motor sin lógica propia.
 import { createRewardsApp } from '@learn-tg/rewards/index'

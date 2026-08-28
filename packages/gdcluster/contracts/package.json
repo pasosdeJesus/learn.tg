@@ -1,0 +1,29 @@
+{
+  "name": "@learn-tg/gdcluster-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Contratos del motor gdcluster (ClusterFunds) — compilan y testean aislados (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 6)",
+  "scripts": {
+    "compile": "hardhat compile",
+    "build": "hardhat compile",
+    "test": "node run-tests.mjs",
+    "test:clusterfunds": "node run-tests.mjs test/ClusterFunds.test.ts",
+    "deploy:clusterfunds": "hardhat run scripts/deployClusterFunds.ts --network ${NEXT_PUBLIC_NETWORK:-celoSepolia}",
+    "deploy:clusterfunds:v2": "hardhat run scripts/deployClusterFundsV2.ts --network ${NEXT_PUBLIC_NETWORK:-celoSepolia}",
+    "test:deployed": "hardhat run scripts/testClusterFunds.ts --network ${NEXT_PUBLIC_NETWORK:-celoSepolia}"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "@pasosdejesus/contract-test": "^0.1.3",
+    "chai": "^4.2.0",
+    "dotenv": "^17.2.3",
+    "ethers": "^6.15.0",
+    "hardhat": ">=2.27.0 <3.0.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.5.3"
+  },
+  "packageManager": "pnpm@10.34.5"
+}

@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely'
 import type { DB } from '@/db/db.d.ts'
-// Puente de migración (REQ/35 Fase 3): PILOT_COUNTRIES e isGDCourse viven en el
+// Puente de migración (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3): PILOT_COUNTRIES e isGDCourse viven en el
 // motor gdcluster; el core aún los importa hasta resolver en Fase 4.
 import { PILOT_COUNTRIES } from '@learn-tg/gdcluster/lib/gd-utils'
 import { isGDCourse } from '@learn-tg/gdcluster/lib/gd-cluster-routing'

@@ -28,6 +28,7 @@
       "viem": ["../../apps/nextjs/node_modules/viem"],
       "viem/accounts": ["../../apps/nextjs/node_modules/viem/_types/accounts/index.d.ts"],
       "axios": ["../../apps/nextjs/node_modules/axios"],
+      "lucide-react": ["../../apps/nextjs/node_modules/lucide-react"],
       "@pasosdejesus/m/shadcn-components/*": ["../../apps/nextjs/node_modules/@pasosdejesus/m/dist/shadcn_components/*"],
       "@pasosdejesus/m/*": ["../../apps/nextjs/node_modules/@pasosdejesus/m/dist/*"],
       "@learn-tg/rewards/*": ["../../apps/nextjs/node_modules/@learn-tg/rewards/dist/*"]

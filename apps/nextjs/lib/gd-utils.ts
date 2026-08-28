@@ -3,7 +3,7 @@ import type { DB } from '@/db/db.d'
 import { SCORE_RULES, ALL_SCORE_FIELDS } from '@/lib/score-rules'
 
 // Las funciones de dominio GD (clusters, iglesias, códigos) viven ahora en el
-// motor `@learn-tg/gdcluster` (REQ/35 Fase 3). Este archivo conserva solo el
+// motor `@learn-tg/gdcluster` (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3). Este archivo conserva solo el
 // scoring de perfil, usado por rutas del core (profile, update-scores,
 // verified-data, admin/user/[id]).
 

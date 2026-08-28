@@ -9,7 +9,7 @@ type HandlerFn = (req: NextRequest, ctx: { params: Record<string, string> }) => 
 type EngineHandlers = Record<string, () => Promise<HandlerFn>>
 
 // Engine registry backed by the generic globalThis registry from
-// @pasosdejesus/m/engine (REQ/35, REQ/44). Lazy accessor so the static import
+// @pasosdejesus/m/engine (https://gitlab.com/pasosdeJesus/m/-/work_items/35, REQ/44). Lazy accessor so the static import
 // below (which self-registers engines) can run before this module finishes
 // evaluating (circular import is safe: registerEngine is a hoisted function).
 function registry() {
@@ -32,7 +32,7 @@ let enginesLoaded = false
 async function ensureEnginesLoaded(): Promise<void> {
   if (enginesLoaded) return
   enginesLoaded = true
-  // mr519 recibe sus deps inyectadas (D2, REQ/35 §10.3): db/auth del core.
+  // mr519 recibe sus deps inyectadas (D2, https://gitlab.com/pasosdeJesus/m/-/work_items/35 §10.3): db/auth del core.
   await import('@learn-tg/mr519/src/server/register').then((m) =>
     m.registerMr519({
       db: () => newKyselyPostgresql(),
