@@ -28,7 +28,8 @@
       "viem/chains": ["./node_modules/viem/_types/chains/index.d.ts"],
       "@learn-tg/mr519/*": ["./node_modules/@learn-tg/mr519/*"],
       "@pasosdejesus/m/*": ["./node_modules/@pasosdejesus/m/dist/*"],
-      "@pasosdejesus/mpdj/*": ["./node_modules/@pasosdejesus/mpdj/dist/*"]
+      "@pasosdejesus/mpdj/*": ["./node_modules/@pasosdejesus/mpdj/dist/*"],
+      "@pasosdejesus/usdt/*": ["./node_modules/@pasosdejesus/usdt/dist/*"]
     },
     "types": ["@testing-library/jest-dom", "vitest", "vitest/globals"]
   },

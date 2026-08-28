@@ -31,6 +31,7 @@
       "lucide-react": ["../../apps/nextjs/node_modules/lucide-react"],
       "@pasosdejesus/m/shadcn-components/*": ["../../apps/nextjs/node_modules/@pasosdejesus/m/dist/shadcn_components/*"],
       "@pasosdejesus/m/*": ["../../apps/nextjs/node_modules/@pasosdejesus/m/dist/*"],
+      "@pasosdejesus/usdt/*": ["../../apps/nextjs/node_modules/@pasosdejesus/usdt/dist/*"],
       "@learn-tg/rewards/*": ["../../apps/nextjs/node_modules/@learn-tg/rewards/dist/*"]
     }
   },

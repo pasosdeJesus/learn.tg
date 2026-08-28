@@ -29,7 +29,8 @@
       "viem/accounts": ["../../apps/nextjs/node_modules/viem/_types/accounts/index.d.ts"],
       "viem/chains": ["../../apps/nextjs/node_modules/viem/_types/chains/index.d.ts"],
       "@pasosdejesus/m/*": ["../../apps/nextjs/node_modules/@pasosdejesus/m/dist/*"],
-      "@pasosdejesus/mpdj/*": ["../../apps/nextjs/node_modules/@pasosdejesus/mpdj/dist/*"]
+      "@pasosdejesus/mpdj/*": ["../../apps/nextjs/node_modules/@pasosdejesus/mpdj/dist/*"],
+      "@pasosdejesus/usdt/*": ["../../apps/nextjs/node_modules/@pasosdejesus/usdt/dist/*"]
     }
   },
   "include": ["src/**/*", "src/**/*.json"],
