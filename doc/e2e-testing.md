@@ -179,6 +179,7 @@ the vault donation with both cryptos:
 || `verified-city-gate.spec.mjs` | Purchase eligibility: unverified pastor NOT eligible (`verified_city_required`), verified pastor eligible |
 || `church-selector-diag.spec.mjs` | Session-cookie fallback in `authenticateUser` (stale token) + `ChurchSelector` options/assigned church |
 || `vault-both-donate.spec.mjs` | Vault donation with BOTH USDT+SLEARN through `/api/add-donation` (sends real testnet tokens to the dev backend) |
+|| `gas-insufficient-panel.spec.mjs` | Donación sin CELO para gas → el modal se reemplaza por el panel "Se necesita CELO" (EN/ES) con enlace al curso Web3 & UBI (Guía 2) y botón Cerrar; regresión con CELO suficiente (formulario se mantiene). Mockea `eth_getBalance` |
 
 `admin-dashboard` waits for widget content before sampling flicker, and
 `guide-claims` waits up to 30s for the UBI button — both were flaky under the
