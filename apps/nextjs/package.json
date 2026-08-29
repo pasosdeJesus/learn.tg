@@ -72,7 +72,7 @@
     "tsx": "^4.23.12",
     "unified": "^11.0.5",
     "viem": "2.55.11",
-    "zod": "^4.5.1"
+    "zod": "^4.5.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "latest",
@@ -84,7 +84,7 @@
     "@pasosdejesus/edr": "^0.1.2",
     "@pasosdejesus/m": "^0.20.1",
     "@pasosdejesus/mpdj": "^0.2.6",
-    "@pasosdejesus/usdt": "^0.1.1",
+    "@pasosdejesus/usdt": "^0.1.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",
