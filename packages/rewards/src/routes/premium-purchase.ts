@@ -9,7 +9,7 @@ import { verifyTransfer } from '../lib/verify-transfer'
 import { checkReplayAttack } from '../lib/replay-protection'
 
 const PREMIUM_PCT = {
-  pdJ: 55, reward: 10, missional: 10, ubi: 5, referral: 5, churches: 5,
+  pdJ: 50, reward: 10, missional: 10, ubi: 5, referral: 10, churches: 5,
 }
 
 /**

@@ -1364,6 +1364,25 @@ export interface PremiumCourseUsuario {
   usuario_id: number;
 }
 
+export interface Referralcode {
+  activated_at: Generated<Timestamp | null>;
+  active: Generated<boolean | null>;
+  code: string;
+  expires_at: Timestamp | null;
+  id: Generated<number>;
+  usuario_id: number;
+}
+
+export interface Referralrelationship {
+  created_at: Generated<Timestamp | null>;
+  id: Generated<number>;
+  referral_claimed_at: Generated<Timestamp | null>;
+  referral_code: string | null;
+  referred_id: number;
+  referrer_id: number;
+  status: Generated<string | null>;
+}
+
 export interface Religion {
   created_at: Timestamp;
   fechacreacion: Timestamp;
@@ -1613,6 +1632,8 @@ export interface DB {
   nonce: Nonce;
   notifications: Notifications;
   premium_course_usuario: PremiumCourseUsuario;
+  referralcode: Referralcode;
+  referralrelationship: Referralrelationship;
   religion: Religion;
   schema_migrations: SchemaMigrations;
   transaction: Transaction;

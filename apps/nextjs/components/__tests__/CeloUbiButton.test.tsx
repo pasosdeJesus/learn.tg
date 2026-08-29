@@ -162,4 +162,35 @@ describe('CeloUbiButton', () => {
     expect(screen.getByText('Claim Error')).toBeInTheDocument()
     expect(screen.getByText('Network Error')).toBeInTheDocument()
   })
+
+  it('shows the profile-completion guide when the claim fails for profile score', async () => {
+    const mockSession = { address: '0x123', expires: '1' }
+    mockAxiosPost.mockRejectedValue({
+      isAxiosError: true,
+      response: {
+        data: { message: 'Profile score must be at least 50' },
+        status: 403,
+        statusText: 'Forbidden',
+        headers: {} as any,
+        config: { headers: {} as any },
+      },
+    })
+
+    render(
+      <SessionProvider session={mockSession as any}>
+        <CeloUbiButton lang="en" />
+      </SessionProvider>
+    )
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button'))
+    })
+
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toBeInTheDocument()
+    expect(screen.getByText('Complete your profile to claim UBI')).toBeInTheDocument()
+    expect(screen.getByText(/verify your identity with self.xyz/i)).toBeInTheDocument()
+    expect(screen.getByText(/schedule a verification appointment/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Go to my profile' })).toHaveAttribute('href', '/en/profile')
+  })
 })

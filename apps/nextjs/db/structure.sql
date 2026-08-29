@@ -5053,7 +5053,7 @@ CREATE TABLE public.notifications (
     content text,
     link character varying(500),
     is_read boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL
+    created_at timestamp with time zone DEFAULT '2026-08-15 14:25:59.719-05'::timestamp with time zone NOT NULL
 );
 
 
@@ -5111,6 +5111,75 @@ CREATE SEQUENCE public.premium_course_usuario_id_seq
 --
 
 ALTER SEQUENCE public.premium_course_usuario_id_seq OWNED BY public.premium_course_usuario.id;
+
+
+--
+-- Name: referralcode; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.referralcode (
+    id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    code character varying(20) NOT NULL,
+    activated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    expires_at timestamp without time zone,
+    active boolean DEFAULT true
+);
+
+
+--
+-- Name: referralcode_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.referralcode_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: referralcode_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.referralcode_id_seq OWNED BY public.referralcode.id;
+
+
+--
+-- Name: referralrelationship; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.referralrelationship (
+    id integer NOT NULL,
+    referrer_id integer NOT NULL,
+    referred_id integer NOT NULL,
+    referral_code character varying(20),
+    referral_claimed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    status character varying(20) DEFAULT 'pending'::character varying
+);
+
+
+--
+-- Name: referralrelationship_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.referralrelationship_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: referralrelationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.referralrelationship_id_seq OWNED BY public.referralrelationship.id;
 
 
 --
@@ -5179,7 +5248,7 @@ CREATE TABLE public.transaction (
     synced boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
     CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('donation_reward'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text, ('conversion'::character varying)::text, ('pastor_bonus'::character varying)::text])))
+    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'donation_reward'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying, 'conversion'::character varying, 'pastor_bonus'::character varying, 'referral_reward'::character varying, 'referral_bonus'::character varying])::text[])))
 );
 
 
@@ -5960,6 +6029,20 @@ ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('publi
 --
 
 ALTER TABLE ONLY public.premium_course_usuario ALTER COLUMN id SET DEFAULT nextval('public.premium_course_usuario_id_seq'::regclass);
+
+
+--
+-- Name: referralcode id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralcode ALTER COLUMN id SET DEFAULT nextval('public.referralcode_id_seq'::regclass);
+
+
+--
+-- Name: referralrelationship id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship ALTER COLUMN id SET DEFAULT nextval('public.referralrelationship_id_seq'::regclass);
 
 
 --
@@ -6972,6 +7055,38 @@ ALTER TABLE ONLY public.premium_course_usuario
 
 ALTER TABLE ONLY public.cor1440_gen_rangoedadac
     ADD CONSTRAINT rangoedadac_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: referralcode referralcode_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralcode
+    ADD CONSTRAINT referralcode_code_key UNIQUE (code);
+
+
+--
+-- Name: referralcode referralcode_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralcode
+    ADD CONSTRAINT referralcode_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: referralrelationship referralrelationship_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship
+    ADD CONSTRAINT referralrelationship_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: referralrelationship referralrelationship_referred_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship
+    ADD CONSTRAINT referralrelationship_referred_unique UNIQUE (referred_id);
 
 
 --
@@ -8962,6 +9077,30 @@ ALTER TABLE ONLY public.premium_course_usuario
 
 ALTER TABLE ONLY public.premium_course_usuario
     ADD CONSTRAINT premium_course_usuario_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: referralcode referralcode_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralcode
+    ADD CONSTRAINT referralcode_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: referralrelationship referralrelationship_referred_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship
+    ADD CONSTRAINT referralrelationship_referred_id_fkey FOREIGN KEY (referred_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: referralrelationship referralrelationship_referrer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship
+    ADD CONSTRAINT referralrelationship_referrer_id_fkey FOREIGN KEY (referrer_id) REFERENCES public.usuario(id);
 
 
 --

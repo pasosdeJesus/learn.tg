@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import axios from 'axios'
 import { getCsrfToken, useSession } from 'next-auth/react'
+import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -47,6 +48,12 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
       claimErrorTitle: 'Claim Error',
       viewTransaction: 'View Transaction',
       successMessage: 'Claim successful! You have received {{0}} Celo of Learn.tg-UBI.',
+      profileTitle: 'Complete your profile to claim UBI',
+      profileBody: 'To claim Learn.tg-UBI you need a profile score of at least 50. Complete and verify your profile:',
+      profilePassport: 'If you have a passport: verify your identity with self.xyz from your profile.',
+      profileSierraLeone: 'If you are in Sierra Leone: schedule a verification appointment and a verifier will confirm your data.',
+      profileButton: 'Go to my profile',
+      profileHint: 'You reach the score by completing your data and getting it verified.',
     },
     es: {
       claimButton: 'Reclamar Learn.tg-IBU',
@@ -59,6 +66,12 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
       claimErrorTitle: 'Error en el Reclamo',
       viewTransaction: 'Ver transacción',
       successMessage: '¡Reclamo exitoso! Has recibido {{0}} Celo de Learn.tg-IBU.',
+      profileTitle: 'Completa tu perfil para reclamar IBU',
+      profileBody: 'Para reclamar Learn.tg-IBU necesitas un puntaje de perfil de al menos 50. Completa y verifica tu perfil:',
+      profilePassport: 'Si tienes pasaporte: verifica tu identidad con self.xyz desde tu perfil.',
+      profileSierraLeone: 'Si estás en Sierra Leona: agenda una cita de verificación y un verificador confirmará tus datos.',
+      profileButton: 'Ir a mi perfil',
+      profileHint: 'Alcanzas el puntaje completando tus datos y verificándolos.',
     },
   }), [lang])
 
@@ -131,6 +144,33 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
           </DialogHeader>
         )
       case 'error':
+        // Error específico de puntaje de perfil → guía amigable (como
+        // GasInsufficientPanel): completar perfil (self.xyz) o agendar
+        // verificación (Sierra Leona).
+        if ((claimResult.message || '').includes('Profile score must be at least')) {
+          return (
+            <div className="text-center py-2">
+              <div className="text-4xl mb-3">🎓</div>
+              <h3 className="text-xl font-semibold mb-2">{t('profileTitle')}</h3>
+              <p className="text-sm text-gray-700 mb-4">{t('profileBody')}</p>
+              <div className="space-y-2 text-left text-sm mb-5">
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
+                  🛂 {t('profilePassport')}
+                </div>
+                <div className="rounded-lg bg-green-50 border border-green-200 p-3">
+                  🇸🇱 {t('profileSierraLeone')}
+                </div>
+              </div>
+              <Link
+                href={`/${lang}/profile`}
+                className="inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                {t('profileButton')}
+              </Link>
+              <p className="text-xs text-gray-500 mt-4">💡 {t('profileHint')}</p>
+            </div>
+          )
+        }
         return (
           <DialogHeader>
             <DialogTitle>{t('claimErrorTitle')}</DialogTitle>
