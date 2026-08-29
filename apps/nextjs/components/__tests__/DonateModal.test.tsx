@@ -273,14 +273,13 @@ describe('DonateModal', () => {
       })
     })
 
-    it('replaces the modal with the CELO-needed panel when gas is insufficient', async () => {
+    it('replaces the modal with the CELO-needed panel when the wallet has no CELO', async () => {
       mockGetBalance.mockResolvedValue(100n) // Very little CELO
       await waitFor(() => {
         renderModal()
       })
-      const input = screen.getByLabelText(/Amount \(USDT\)/i)
-      fireEvent.change(input, { target: { value: '1' } })
 
+      // Con CELO ≈ 0 el panel aparece de inmediato (sin necesidad de monto)
       await waitFor(() => {
         expect(screen.getByText(/CELO is needed to complete this transaction/i)).toBeInTheDocument()
       })

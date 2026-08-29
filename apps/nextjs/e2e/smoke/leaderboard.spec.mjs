@@ -2,9 +2,12 @@ import 'dotenv/config';
 import axios from 'axios';
 import https from 'https';
 
+// Sitio bajo prueba: SITE_URL (dev :9001, producción https://learn.tg)
+const BASE_URL = process.env.SITE_URL || 'https://learn.tg:9001';
+
 // Configurar cliente HTTP que ignore certificados autofirmados (para desarrollo)
 const apiClient = axios.create({
-  baseURL: 'https://learn.tg:9001',
+  baseURL: BASE_URL,
   httpsAgent: new https.Agent({
     rejectUnauthorized: false
   }),
@@ -256,7 +259,7 @@ async function testLanguage(lang) {
 // Función principal
 async function runTest() {
   console.log('🚀 INICIANDO PRUEBAS E2E DEL LEADERBOARD');
-  console.log('🔗 URL base: https://learn.tg:9001');
+  console.log('🔗 URL base: ' + BASE_URL);
   console.log('📅 Fecha:', new Date().toISOString());
   console.log('');
 

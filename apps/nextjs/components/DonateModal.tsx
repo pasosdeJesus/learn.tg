@@ -55,6 +55,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const [usdtBalance, setUsdtBalance] = useState<bigint>(0n)
   const [slearnBalance, setSlearnBalance] = useState<bigint>(0n)
   const [celoBalance, setCeloBalance] = useState<bigint>(0n)
+  const [dataLoaded, setDataLoaded] = useState(false)
   const [amount, setAmount] = useState('')
   const [slearnAmount, setSlearnAmount] = useState('')
   const [showResult, setShowResult] = useState(false)
@@ -143,6 +144,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
 
   const loadData = useCallback(async () => {
     if (!isOpen || !address || !publicClient || !usdtAddress || !recipientAddress) return
+    setDataLoaded(false)
     try {
       const promises: Promise<any>[] = [
         publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'decimals' }).catch(() => BigInt(usdtDecimals)),
@@ -161,6 +163,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       if (slearnAddress && results.length >= 4) {
         setSlearnBalance(results[3])
       }
+      setDataLoaded(true)
     } catch (e: any) {
     console.error('[DonateModal] Backend verification failed:', e?.message || String(e))
       // Silently fail; balances will show as 0
@@ -231,6 +234,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const usdtBalFmt = formatDisplay(usdtBalance, usdtDecimals)
   const slearnBalFmt = formatDisplay(slearnBalance, SLEARN_DECIMALS)
   const celoBalFmt = formatDisplay(celoBalance, 18)
+  // Sin CELO (menos de 0.01): el modal muestra la guía de inmediato
+  const noCelo = celoBalance < 10_000_000_000_000_000n
   const hasAnyAmount = usdtNum > 0 || slearnNum > 0
   const isSubmitting = paymentState === 'approving' || paymentState === 'paying' || paymentState === 'confirming'
   const donateDisabled = isSubmitting || !hasAnyAmount ||
@@ -274,7 +279,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
               {t('resultOk')}
             </button>
           </div>
-        ) : gasState === 'no-gas' && address && walletClient ? (
+        ) : address && walletClient && (gasState === 'no-gas' || (dataLoaded && noCelo)) ? (
           <GasInsufficientPanel lang={lang || 'en'} onClose={closeAll} />
         ) : (
           <>

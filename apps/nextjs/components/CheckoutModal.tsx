@@ -106,6 +106,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   const [usdtBalance, setUsdtBalance] = useState(0n)
   const [slearnBalance, setSlearnBalance] = useState(0n)
   const [celoBalance, setCeloBalance] = useState(0n)
+  const [dataLoaded, setDataLoaded] = useState(false)
 
   const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as Address | undefined
   const slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address | undefined
@@ -135,6 +136,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
           setUsdtBalance(usdtBal)
           setSlearnBalance(slearnBal)
           setCeloBalance(celoBal)
+          setDataLoaded(true)
           // Default the split to as much SLEARN as the wallet can cover (up to 100%).
           const sDecimal = Number(slearnBal) / 10 ** SLEARN_DECIMALS
           const pSlearn = Number(res.data.priceSLEARN)
@@ -270,6 +272,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
 
   const busy = paymentState === 'paying' || paymentState === 'confirming'
   const hasAmount = priceUSDT != null && priceSLEARN != null
+  // Sin CELO (menos de 0.01): el modal muestra la guía de inmediato
+  const noCelo = celoBalance < 10_000_000_000_000_000n
   const purchaseDisabled = busy || priceUSDT == null || !canPay || (hasAmount && gasState === 'no-gas')
 
   return (
@@ -307,7 +311,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
               {t('resultOk')}
             </button>
           </div>
-        ) : gasState === 'no-gas' && address && walletClient ? (
+        ) : address && walletClient && (gasState === 'no-gas' || (dataLoaded && noCelo)) ? (
           <GasInsufficientPanel lang={lang} onClose={onClose} />
         ) : (
           <>

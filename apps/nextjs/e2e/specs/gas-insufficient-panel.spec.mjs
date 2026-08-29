@@ -11,6 +11,9 @@
 //      enlace a /en/web3-and-ubi/guide2; Cerrar cierra el modal
 //   3. Panel en español (ranking /es) con enlace a /es/web3-e-ibu/guia2
 //
+// Cada paso navega a una página fresca y aplica el parche ANTES de abrir el
+// modal (loadData corre al abrir; navegar re-inyecta el mock con 1 CELO).
+//
 // PREREQUISITE: the wallet (PRIVATE_KEY / NEXT_PUBLIC_ADDRESS in apps/.env)
 // must be registered on the dev server.
 //
@@ -27,9 +30,7 @@ import {
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
-// mock inyectado por e2e-auth: eth_getBalance → 1 CELO (gas suficiente)
-const CELO_OK = '0x0DE0B6B3A7640000'
-// 100 wei → insuficiente para el gas estimado (500000 gas × 5 gwei)
+// 100 wei → insuficiente para el gas estimado (500000 gas × 5 gwei ≈ 0.0025 CELO)
 const CELO_LOW = '0x64'
 
 function loadEnvCredentials() {
@@ -62,6 +63,7 @@ async function navAndWait(page, url, timeout) {
 
 // Parchea eth_getBalance del proveedor inyectado (mismo objeto window.ethereum,
 // así la referencia del transport de viem sigue apuntando al provider parcheado).
+// DEBE ejecutarse antes de abrir el modal (loadData corre al abrir).
 async function patchCeloBalance(page, hexBalance) {
   await page.evaluate((bal) => {
     const orig = window.ethereum.request.bind(window.ethereum)
@@ -71,28 +73,45 @@ async function patchCeloBalance(page, hexBalance) {
   console.log(`  [mock] eth_getBalance → ${hexBalance}`)
 }
 
-async function openDonateModal(page, lang) {
-  for (let w = 0; w < 8; w++) {
-    await new Promise(r => setTimeout(r, 2000))
+async function clickDonate(page, lang) {
+  // Espera el botón, y reintenta el click hasta que el modal abra (evita
+  // perder el click si React aún está hidratando)
+  for (let attempt = 0; attempt < 6; attempt++) {
     const found = await page.evaluate((l) =>
       [...document.querySelectorAll('button')].some(b =>
         (b.textContent || '').includes(l === 'es' ? 'Donar' : 'Donate')))
-    if (found) break
+    if (found) {
+      // Evita tabs (Países/Countr/Clúster/Cluster) y elige una fila con Donar/Donate
+      await page.evaluate((l) => {
+        const btns = [...document.querySelectorAll('button')].filter(b => {
+          const txt = b.textContent || ''
+          return txt.includes(l === 'es' ? 'Donar' : 'Donate') &&
+            !txt.includes('País') && !txt.includes('Countr') &&
+            !txt.includes('Clúster') && !txt.includes('Cluster')
+        })
+        if (btns[0]) btns[0].click()
+      })
+      await new Promise(r => setTimeout(r, 2500))
+      const open = await page.evaluate(() => !!document.querySelector('.fixed.inset-0'))
+      if (open) return true
+    }
+    await new Promise(r => setTimeout(r, 2000))
   }
-  await page.evaluate((l) => {
-    const btn = [...document.querySelectorAll('button')].find(b =>
-      (b.textContent || '').includes(l === 'es' ? 'Donar' : 'Donate'))
-    if (btn) btn.click()
-  })
-  await new Promise(r => setTimeout(r, 3000))
+  return false
 }
 
 async function fillUsdtAmount(page, value) {
-  const input = await page.$('input[type="number"]')
+  // Espera a que el modal abra y renderice el input (dev server lento)
+  let input = null
+  for (let w = 0; w < 10; w++) {
+    input = await page.$('input[type="number"]')
+    if (input) break
+    await new Promise(r => setTimeout(r, 1500))
+  }
   if (!input) return false
   await input.click()
   await input.type(String(value))
-  await new Promise(r => setTimeout(r, 1500))
+  await new Promise(r => setTimeout(r, 2000))
   return true
 }
 
@@ -106,15 +125,25 @@ function modalText(page) {
 }
 
 async function closeModal(page) {
-  const closeBtn = await page.evaluateHandle(() => {
-    const btns = [...document.querySelectorAll('button')].filter(b =>
-      (b.textContent || '').includes('Cancel') || (b.textContent || '').includes('Cancelar')
-      || (b.textContent || '').includes('Close') || (b.textContent || '').includes('Cerrar')
-      || b.textContent === '✕')
-    return btns[0] || null
-  })
-  if (closeBtn.asElement()) { await closeBtn.asElement().click() } else { await page.keyboard.press('Escape') }
-  await new Promise(r => setTimeout(r, 1500))
+  // Prefiere el ✕ (aria-label Close/Cerrar); reintenta con Escape
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const closeBtn = await page.evaluateHandle(() => {
+      const btns = [...document.querySelectorAll('button')].filter(b =>
+        b.getAttribute('aria-label') === 'Close' || b.getAttribute('aria-label') === 'Cerrar'
+        || b.textContent?.includes('Close') || b.textContent?.includes('Cerrar')
+        || b.textContent?.trim() === '✕')
+      return btns[btns.length - 1] || null
+    })
+    if (closeBtn.asElement()) {
+      await closeBtn.asElement().click()
+    } else {
+      await page.keyboard.press('Escape')
+    }
+    await new Promise(r => setTimeout(r, 2500))
+    const overlay = await page.evaluate(() => !!document.querySelector('.fixed.inset-0'))
+    if (!overlay) return true
+  }
+  return false
 }
 
 async function main() {
@@ -131,16 +160,18 @@ async function main() {
 
   const browser = await launchBrowser()
   const page = await browser.newPage()
+  page.on('pageerror', (err) => console.log('  [pageerror]', String(err).slice(0, 300)))
+  page.on('console', (msg) => { if (msg.type() === 'error') console.log('  [console.error]', msg.text().slice(0, 300)) })
   await setupE2EAuth(page, creds.addr, creds.pk, CHAIN_ID, base)
 
   // ════════════════════════════════════════════════════════════════
-  // Step 1: Course page — modal con CELO suficiente (regresión)
+  // Step 1: Curso — modal con CELO suficiente (regresión, sin parche)
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 1: Curso — CELO suficiente, el formulario se mantiene ──')
   if (!await navAndWait(page, `${base}/en/a-relationship-with-Jesus`, timeout)) {
     fail('Course page did not load'); await browser.close(); process.exit(1)
   }
-  await openDonateModal(page, 'en')
+  await clickDonate(page, 'en')
   if (!await fillUsdtAmount(page, 1)) {
     fail('Amount input not found (modal not open)'); await browser.close(); process.exit(1)
   }
@@ -150,14 +181,16 @@ async function main() {
   await closeModal(page)
 
   // ════════════════════════════════════════════════════════════════
-  // Step 2: Sin CELO → el modal se reemplaza por el panel (EN)
+  // Step 2: Página fresca + parche → sin CELO → panel (EN)
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 2: Sin CELO → panel "Se necesita CELO" (EN) ──')
-  await patchCeloBalance(page, CELO_LOW)
-  await openDonateModal(page, 'en')
-  if (!await fillUsdtAmount(page, 1)) {
-    fail('Amount input not found'); await browser.close(); process.exit(1)
+  console.log('\n── Step 2: Sin CELO → panel "Se necesita CELO" (EN, al abrir) ──')
+  if (!await navAndWait(page, `${base}/en/a-relationship-with-Jesus`, timeout)) {
+    fail('Course page did not load'); await browser.close(); process.exit(1)
   }
+  await patchCeloBalance(page, CELO_LOW)
+  await clickDonate(page, 'en')
+  // Con CELO ≈ 0 el panel aparece de inmediato al abrir (sin monto)
+  await new Promise(r => setTimeout(r, 2500))
   const panelText = await modalText(page)
   if (panelText.includes('CELO is needed to complete this transaction')) {
     ok('Panel mostrado: "CELO is needed to complete this transaction"')
@@ -173,34 +206,38 @@ async function main() {
   else { console.log(`  Link: ${courseLink}`); fail('Enlace a Guía 2 incorrecto') }
 
   // Cerrar cierra el modal
-  await closeModal(page)
-  const afterClose = await modalText(page)
-  if (!afterClose.includes('CELO is needed')) ok('Cerrar cierra el panel/modal')
+  if (await closeModal(page)) ok('Cerrar cierra el panel/modal')
   else fail('El modal no se cerró con Cerrar')
 
-  // ════════════════════════════════════════════════════════════════
-  // Step 3: Ranking /es — panel en español con enlace a guia2
-  // ════════════════════════════════════════════════════════════════
+  // Ranking /es: panel en español (página fresca; el modal del ranking abre sin
+  // depender de isLoggedIn, a diferencia del botón de la página de curso)
   console.log('\n── Step 3: Ranking /es — panel en español ──')
-  if (!await navAndWait(page, `${base}/es/gdcluster/ranking`, timeout)) {
+  await new Promise(r => setTimeout(r, 4000))
+  const esPage = await browser.newPage()
+  esPage.on('pageerror', (err) => console.log('  [pageerror]', String(err).slice(0, 200)))
+  await setupE2EAuth(esPage, creds.addr, creds.pk, CHAIN_ID, base)
+  if (!await navAndWait(esPage, `${base}/es/gdcluster/ranking`, timeout)) {
     fail('Ranking page did not load'); await browser.close(); process.exit(1)
   }
-  await patchCeloBalance(page, CELO_LOW)
-  await openDonateModal(page, 'es')
-  if (!await fillUsdtAmount(page, 1)) {
-    fail('Amount input not found'); await browser.close(); process.exit(1)
-  }
-  const esText = await modalText(page)
+  await new Promise(r => setTimeout(r, 5000))
+  await patchCeloBalance(esPage, CELO_LOW)
+  // Click directo (igual que el probe que sí abrió el modal del ranking)
+  await esPage.evaluate(() => {
+    const b = [...document.querySelectorAll('button')].find(x => (x.textContent || '').includes('Donar'))
+    if (b) b.click()
+  })
+  await new Promise(r => setTimeout(r, 4000))
+  const esText = await modalText(esPage)
   if (esText.includes('Se necesita CELO para completar esta transacción')) {
     ok('Panel mostrado en español')
   } else { console.log(`  Modal text: ${esText.slice(0, 200)}`); fail('Panel CELO no apareció (ES)') }
-  const esLink = await page.evaluate(() => {
+  const esLink = await esPage.evaluate(() => {
     const a = [...document.querySelectorAll('a')].find(x => (x.textContent || '').includes('curso Web3 & UBI'))
     return a ? a.getAttribute('href') : null
   })
   if (esLink === '/es/web3-e-ibu/guia2') ok(`Enlace español a Guía 2 correcto: ${esLink}`)
   else { console.log(`  Link: ${esLink}`); fail('Enlace español incorrecto') }
-  await closeModal(page)
+  await esPage.close()
 
   await browser.close()
   const failures = summary(t0); process.exit(failures > 0 ? 1 : 0)
