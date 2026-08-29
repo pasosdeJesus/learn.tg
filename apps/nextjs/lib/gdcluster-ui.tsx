@@ -7,6 +7,7 @@
 import { GdPastoresLanding } from '@learn-tg/gdcluster/components/GdPastoresLanding'
 import { RankingClient } from '@learn-tg/gdcluster/components/RankingClient'
 import { ClusterPage } from '@learn-tg/gdcluster/components/ClusterPage'
+import ReferralsPage from '@learn-tg/gdcluster/components/ReferralsPage'
 
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { SCORE_RULES } from '@/lib/score-rules'
@@ -32,4 +33,8 @@ export const ClusterPageHost = (p: { lang: string; id: string }) => (
     {...p}
     deps={{ useAuthAddress, useSession, getCsrfToken, Button }}
   />
+)
+
+export const ReferralsPageHost = (p: { params: Promise<{ lang: string }> }) => (
+  <ReferralsPage {...p} deps={{ useAuthAddress }} />
 )

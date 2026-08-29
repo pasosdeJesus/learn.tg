@@ -1,3 +1,7 @@
-// Página de referidos del motor gdcluster (REQ/35 §12.4). El componente vive
-// en el motor (@learn-tg/gdcluster/components/ReferralsPage) y la app re-exporta.
-export { default } from '@learn-tg/gdcluster/components/ReferralsPage'
+// Página de referidos: el componente vive en el motor gdcluster; el host
+// inyecta el hook de auth del core (D2, REQ/35).
+import { ReferralsPageHost } from '@/lib/gdcluster-ui'
+
+export default function ReferralsPage(props: { params: Promise<{ lang: string }> }) {
+  return <ReferralsPageHost params={props.params} />
+}
