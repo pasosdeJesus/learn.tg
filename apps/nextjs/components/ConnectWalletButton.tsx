@@ -129,7 +129,11 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
             params: [{ chainId: expectedChainId }],
           })
         } catch (switchError: any) {
-          if (switchError.code === 4902) {
+          // 4902 = chain not added. Other wallets (e.g. Rabby extension) fail
+          // the switch with different codes (e.g. -32000 "Switch chain failed")
+          // when the network is not added → attempt the add for ANY error that
+          // is not a user rejection (4001). See REQ/216.
+          if (switchError.code === 4902 || switchError.code !== 4001) {
             try {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
@@ -141,7 +145,13 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
                   blockExplorerUrls: [blockExplorer],
                 }],
               })
-            } catch {
+            } catch (addError: any) {
+              console.error('Add chain error:', {
+                code: addError?.code,
+                message: addError?.message,
+                data: addError?.data,
+                raw: String(addError),
+              })
               setError(t('addChainFailed'))
               return
             }
@@ -149,7 +159,12 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
             setError(t('cancelled'))
             return
           } else {
-            console.error('Switch chain error:', switchError)
+            console.error('Switch chain error:', {
+              code: switchError?.code,
+              message: switchError?.message,
+              data: switchError?.data,
+              raw: String(switchError),
+            })
             setError(t('switchChainFailed'))
             return
           }
