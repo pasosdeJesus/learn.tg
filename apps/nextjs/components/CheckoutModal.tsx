@@ -11,6 +11,7 @@ import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { erc20Abi, formatDisplay } from '@learn-tg/rewards/lib/donate-utils'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
+import { GasInsufficientPanel } from '@/components/GasInsufficientPanel'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 
 const SLEARN_DECIMALS = 2
@@ -306,6 +307,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
               {t('resultOk')}
             </button>
           </div>
+        ) : gasState === 'no-gas' && address && walletClient ? (
+          <GasInsufficientPanel lang={lang} onClose={onClose} />
         ) : (
           <>
             <h3 className="text-lg font-bold mb-4">{t('title')}</h3>

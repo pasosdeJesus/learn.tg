@@ -131,8 +131,8 @@ export async function awardPastorBonus(
     type: 'pastor_bonus',
     title: isEnglish ? '44 SLEARN bonus received' : 'Bono de 44 SLEARN recibido',
     content: isEnglish
-      ? '44 SLEARN were credited to your wallet for being a verified pastor.'
-      : 'Se acreditaron 44 SLEARN a tu billetera por ser pastor verificado.',
+      ? 'Congratulations! You received 44 SLEARN to pay for the Global Disciples course. Now, to use those SLEARN, you need a little CELO to pay the network fee (gas). Do not worry — the free Web3 & UBI course teaches you how to claim free CELO every day (0.2 CELO/day). Take that course first, claim your CELO, and then come back here to pay for the GD course with your 44 SLEARN.'
+      : '¡Felicidades! Has recibido 44 SLEARN para pagar el curso de Discípulos Globales. Ahora, para usar esos SLEARN, necesitas tener un poco de CELO para pagar la comisión de la red (gas). No te preocupes — el curso gratuito Web3 & UBI te enseña cómo reclamar CELO gratis todos los días (0.2 CELO/día). Toma ese curso primero, reclama tu CELO, y luego regresa aquí para pagar el curso GD con tus 44 SLEARN.',
     link: explorerUrl,
     is_read: false,
     created_at: new Date(),

@@ -1,0 +1,74 @@
+'use client'
+
+// Panel que reemplaza el contenido de los modales de donación/pago cuando el
+// usuario no tiene CELO suficiente para pagar la comisión de la red (gas).
+// Estado `no-gas` de useGasEstimation (gasState). Guía el pastor/estudiante
+// al curso Web3 & UBI (Guía 2) donde aprende a reclamar CELO gratis (UBI).
+import Link from 'next/link'
+
+interface GasInsufficientPanelProps {
+  lang: string
+  onClose: () => void
+}
+
+export function GasInsufficientPanel({ lang, onClose }: GasInsufficientPanelProps) {
+  const isEs = lang === 'es'
+  const courseHref = isEs ? `/${lang}/web3-e-ibu/guia2` : `/${lang}/web3-and-ubi/guide2`
+
+  return (
+    <div className="text-center py-4">
+      <button
+        onClick={onClose}
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none"
+        aria-label={isEs ? 'Cerrar' : 'Close'}
+      >
+        ✕
+      </button>
+
+      <div className="text-4xl mb-3">⛽</div>
+      <h2 className="text-xl font-semibold mb-3">
+        {isEs
+          ? 'Se necesita CELO para completar esta transacción'
+          : 'CELO is needed to complete this transaction'}
+      </h2>
+
+      <p className="text-sm text-gray-700 mb-2">
+        {isEs
+          ? 'Para pagar la comisión de la red (gas), necesitas tener un poco de CELO en tu wallet.'
+          : 'To pay the network fee (gas), you need a little CELO in your wallet.'}
+      </p>
+
+      <p className="text-sm text-gray-700 mb-4">
+        {isEs
+          ? 'No te preocupes — puedes obtener CELO gratis todos los días en learn.tg.'
+          : 'Do not worry — you can get free CELO every day on learn.tg.'}
+      </p>
+
+      <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm text-left mb-5">
+        📘{' '}
+        {isEs
+          ? 'Aprende a reclamar CELO gratis en el curso Web3 & UBI (Guía 2)'
+          : 'Learn how to claim free CELO in the Web3 & UBI course (Guide 2)'}
+      </div>
+
+      <div className="flex gap-3 justify-center">
+        <Link
+          href={courseHref}
+          className="rounded bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+        >
+          {isEs ? 'Ir al curso Web3 & UBI' : 'Go to the Web3 & UBI course'}
+        </Link>
+        <button
+          onClick={onClose}
+          className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          {isEs ? 'Cerrar' : 'Close'}
+        </button>
+      </div>
+
+      <p className="text-xs text-gray-500 mt-5">
+        💡 {isEs ? 'Después de reclamar CELO, vuelve a intentarlo.' : 'After claiming CELO, come back and try again.'}
+      </p>
+    </div>
+  )
+}

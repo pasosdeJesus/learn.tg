@@ -273,7 +273,7 @@ describe('DonateModal', () => {
       })
     })
 
-    it('shows "Not enough gas for transaction" when gas is insufficient', async () => {
+    it('replaces the modal with the CELO-needed panel when gas is insufficient', async () => {
       mockGetBalance.mockResolvedValue(100n) // Very little CELO
       await waitFor(() => {
         renderModal()
@@ -282,8 +282,11 @@ describe('DonateModal', () => {
       fireEvent.change(input, { target: { value: '1' } })
 
       await waitFor(() => {
-        expect(screen.getByText(/Not enough gas for transaction/i)).toBeInTheDocument()
+        expect(screen.getByText(/CELO is needed to complete this transaction/i)).toBeInTheDocument()
       })
+      // Enlaza al curso Web3 & UBI (Guía 2) y ofrece cerrar (✕ + botón Cerrar)
+      expect(screen.getByRole('link', { name: /Go to the Web3 & UBI course/i })).toHaveAttribute('href', '/en/web3-and-ubi/guide2')
+      expect(screen.getAllByRole('button', { name: /Close/i }).length).toBeGreaterThan(0)
     })
 
     it('shows warning when gas estimation fails', async () => {
