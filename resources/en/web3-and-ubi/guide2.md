@@ -4,14 +4,11 @@ Your **Web3 wallet** is your personal gateway to the blockchain. It's like a
 digital passport and bank account in one, allowing you to securely receive, 
 store, and manage your digital UBI and your identification.
 
-For this course, we recommend **MetaMask**. 
-It is user-friendly, supports the Celo network (which powers our UBI projects),
-and has helpful built-in tools for beginners.
-
-Install MetaMask:
-<a href="https://play.google.com/store/apps/details?id=io.metamask" target="_blank">Google Play</a> ·
-<a href="https://apps.apple.com/app/metamask-blockchain-wallet/id1438144202" target="_blank">App Store</a>
-· <a href="https://metamask.io/download/" target="_blank">Browser Extension</a>
+For this course we use **Rabby Wallet** — a mobile and browser wallet that
+supports the Celo network (which powers our UBI projects). Install it from
+<a href="https://rabby.io/" target="_blank">rabby.io</a> (mobile app or browser
+extension). If you already use MetaMask, you can keep it — the steps below are
+the same.
 
 Your wallet’s security depends entirely on one thing: your 
 **Secret Recovery Phrase**. As the master key to your digital assets, whoever 
@@ -19,16 +16,14 @@ possesses it has full control.
 
 ---
 
-### **Step-by-Step: Installing the MetaMask Wallet**
+### **Step-by-Step: Installing Rabby Wallet**
 
 #### **Step 1: Install the Wallet**
-*  On your smartphone install the MetaMask wallet (its icon is black and green) 
-   or the MetaMask application (its icon is white and black). If you install the MetaMask
-   application, choose "Web3" at the top to switch from the Exchange to the
-   web3 wallet.
+*  Install **Rabby Wallet** on your smartphone (Google Play or App Store) or
+   the browser extension from <a href="https://rabby.io/" target="_blank">rabby.io</a>.
 
 #### **Step 2: Create a New Wallet**
-*   Open the MetaMask Wallet and tap **"Create Wallet"**.
+*   Open **Rabby Wallet** and choose to **create a new wallet**.
 *   You will be prompted to set a strong password or biometric method
     for daily access to this device.
 
@@ -41,9 +36,9 @@ possesses it has full control.
     *   Store the paper in a safe, physical place.
 *   Confirm you have written it down correctly by selecting the words in order.
 
-The procedure is presented in this video:
+The procedure is presented in this video (the steps are the same in Rabby):
 
-[![Video showing how to create a web3 wallet with MetaMask](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
+[![Video showing how to create a web3 wallet](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
 
 
 #### **Step 4: Access Your Wallet**
@@ -59,9 +54,9 @@ To interact with GoodDollar and learn.tg, your wallet needs to be connected to t
 
 The easiest way is to add Celo automatically:
 
-1.  In your MetaMask wallet's built-in browser, go to **[chainlist.org](https://chainlist.org)**.
+1.  In your wallet's built-in browser, go to **[chainlist.org](https://chainlist.org)**.
 2.  Search for **"Celo"**.
-3.  Tap **"Connect Wallet"** on the Celo entry — MetaMask will prompt you to
+3.  Tap **"Connect Wallet"** on the Celo entry — the wallet will prompt you to
     approve adding the network.
 4.  Once added, switch to the Celo network from the network selector.
 
@@ -72,7 +67,7 @@ The easiest way is to add Celo automatically:
 Now that your wallet is set up, to continue this course and claim UBI or
 crossword rewards you must use your wallet's built-in browser:
 
-1.  Open your **MetaMask wallet** on your smartphone.
+1.  Open your **wallet** on your smartphone.
 2.  Use the wallet's browser (look for "Discover" or "Browser" in the menu).
 3.  Go to **[learn.tg](https://learn.tg)** and connect your wallet.
 4.  Sign the message when prompted — this verifies you own the wallet.

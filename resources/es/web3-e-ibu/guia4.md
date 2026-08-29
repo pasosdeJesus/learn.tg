@@ -28,9 +28,9 @@ Este servicio está diseñado para funcionar directamente con Leones de Sierra L
 #### **Guía Paso a Paso para cambiar cripto por SLE:**
 
 **Paso 1: Conecta tu billetera**
-1. Abre la billetera de MetaMask. Si estás usando la app de MetaMask,
-   asegúrate de estar en modo Web3 — presiona "Web3" en la parte superior
-   (ver Guía 2 para configurar la billetera).
+1. Abre tu billetera (**Rabby** o MetaMask). Si estás usando la app de la
+   billetera, asegúrate de estar en modo Web3 — presiona "Web3" en la parte
+   superior (ver Guía 2 para configurar la billetera).
 2. Usando la función de búsqueda de la billetera web3, ve a **[stable-sl.pdJ.app](https://stable-sl.pdj.app/)**.
 
 **Paso 2: Envía Tus Tokens de IBU**

@@ -27,8 +27,9 @@ money. Before  you start watch a short video of the process:
 #### **Step-by-Step Guide to change crypto for SLE:**
 
 **Step 1: Connect your wallet**
-1. Open the MetaMask wallet. If you are using the MetaMask app, make sure you
-   are in Web3 mode — tap "Web3" at the top (see Guide 2 for wallet setup).
+1. Open your wallet (**Rabby** or MetaMask). If you are using the wallet app,
+   make sure you are in Web3 mode — tap "Web3" at the top (see Guide 2 for
+   wallet setup).
 2. Using the search function of the web3 wallet go to **[stable-sl.pdJ.app](https://stable-sl.pdj.app/)**.
 
 **Step 2: Send Your UBI Tokens**

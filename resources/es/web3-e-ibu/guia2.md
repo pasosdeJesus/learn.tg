@@ -7,13 +7,11 @@ Tu **billetera Web3** es tu puerta de entrada personal a la blockchain. Es como 
 pasaporte digital y una cuenta bancaria en uno, permitiéndote recibir, 
 almacenar y gestionar de forma segura tu IBU digital y tu identificación.
 
-Para este curso, recomendamos la **Billetera MetaMask** o MetaMask. 
-Son fáciles de usar, soportan la red Celo (que impulsa nuestros proyectos de IBU)
- y tienen herramientas integradas muy útiles para principiantes.
-
-Instalar MetaMask:
-<a href="https://play.google.com/store/apps/details?id=so.MetaMask.app.wallet&pli=1" target="_blank">Google Play</a> ·
-<a href="https://apps.apple.com/app/MetaMask-open-source-wallet/id1609559473" target="_blank">App Store</a>
+Para este curso usamos la **Billetera Rabby** — una billetera móvil y de
+navegador que soporta la red Celo (que impulsa nuestros proyectos de IBU).
+Instálala desde <a href="https://rabby.io/" target="_blank">rabby.io</a>
+(app móvil o extensión de navegador). Si ya usas MetaMask, puedes seguir con
+ella — los pasos siguientes son los mismos.
 
 La seguridad de tu billetera depende enteramente de una cosa: tu 
 **Frase de Recuperación Secreta**. Como la llave maestra de tus activos digitales, quien la 
@@ -21,16 +19,14 @@ posea tiene el control total.
 
 ---
 
-### **Paso a Paso: Instalando la Billetera MetaMask**
+### **Paso a Paso: Instalando la Billetera Rabby**
 
 #### **Paso 1: Instala la Billetera**
-*  En tu smartphone, instala la billetera MetaMask (su ícono es negro y verde) 
-   o la aplicación MetaMask (su ícono es blanco y negro). Si instalas la aplicación MetaMask,
-   elige "Web3" en la parte superior para cambiar del Exchange a la
-   billetera web3.
+*  Instala **Rabby Wallet** en tu smartphone (Google Play o App Store) o la
+   extensión de navegador desde <a href="https://rabby.io/" target="_blank">rabby.io</a>.
 
 #### **Paso 2: Crea una Nueva Billetera**
-*   Abre la Billetera MetaMask y pulsa **"Crear Billetera"**.
+*   Abre **Rabby Wallet** y elige **crear una nueva billetera**.
 *   Se te pedirá que establezcas una contraseña segura o un método biométrico
     para el acceso diario en este dispositivo.
 
@@ -43,9 +39,9 @@ posea tiene el control total.
     *   Guarda el papel en un lugar físico y seguro.
 *   Confirma que la has escrito correctamente seleccionando las palabras en orden.
 
-El procedimiento se presenta en este video:
+El procedimiento se presenta en este video (los pasos son los mismos en Rabby):
 
-[![Video que muestra cómo crear una billetera web3 con MetaMask](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
+[![Video que muestra cómo crear una billetera web3](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
 
 
 #### **Paso 4: Accede a Tu Billetera**
@@ -61,9 +57,9 @@ Para interactuar con GoodDollar y learn.tg, tu billetera necesita estar conectad
 
 La forma más fácil es agregar Celo automáticamente:
 
-1.  En el navegador integrado de tu billetera MetaMask, ve a **[chainlist.org](https://chainlist.org)**.
+1.  En el navegador integrado de tu billetera, ve a **[chainlist.org](https://chainlist.org)**.
 2.  Busca **"Celo"**.
-3.  Toca **"Connect Wallet"** en la entrada de Celo — MetaMask te pedirá que
+3.  Toca **"Connect Wallet"** en la entrada de Celo — la billetera te pedirá que
     apruebes agregar la red.
 4.  Una vez agregada, cambia a la red Celo desde el selector de redes.
 
@@ -74,7 +70,7 @@ La forma más fácil es agregar Celo automáticamente:
 Ahora que tu billetera está configurada, para continuar este curso y reclamar
 IBU o becas de crucigramas debes usar el navegador integrado de tu billetera:
 
-1.  Abre tu **billetera MetaMask** en tu smartphone.
+1.  Abre tu **billetera** en tu smartphone.
 2.  Usa el navegador de la billetera (busca "Discover" o "Navegador" en el menú).
 3.  Ve a **[learn.tg](https://learn.tg)** y conecta tu billetera.
 4.  Firma el mensaje cuando se te solicite — esto verifica que eres dueño de la billetera.

@@ -94,9 +94,9 @@ Leones y activos digitales.
 
 ### Tu Paso de Acción
 
-1.  Si aún no tienes una billetera Web3, instala **MetaMask** en tu smartphone
-    (desde Google Play o App Store). La siguiente guía te explicará la
-    configuración en detalle.
+1.  Si aún no tienes una billetera Web3, instala **Rabby Wallet** o
+    **MetaMask** en tu smartphone (desde Google Play o App Store). La siguiente
+    guía te explicará la configuración en detalle.
 2.  Marca como favorito **[learn.tg](https://learn.tg)** — aquí aprenderás,
     ganarás recompensas y reclamarás tu IBU.
 3.  Marca como favorito **[stable-sl.pdJ.app](https://stable-sl.pdj.app)** —
