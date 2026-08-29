@@ -234,6 +234,21 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       // Store auth token so profile/crossword/UBI API calls can authenticate
       // without relying on a new getCsrfToken() which returns a different nonce
       localStorage.setItem('learn.tg.authToken', csrfToken)
+      // Referido: si el usuario llegó por un enlace /ref/{CODE}, reclámalo
+      // ahora que ya está autenticado (REQ/163 §2.3).
+      const pendingReferral = localStorage.getItem('learn.tg.pendingReferralCode')
+      if (pendingReferral) {
+        try {
+          const res = await fetch('/api/referral/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ walletAddress: checksummedAddress, token: csrfToken, code: pendingReferral }),
+          })
+          if (res.ok) localStorage.removeItem('learn.tg.pendingReferralCode')
+        } catch {
+          // No bloquea el login; el código se puede reclamar luego en /referrals
+        }
+      }
       // Reload page so NextAuth reads the session cookie on mount.
       // update() from useSession() is unreliable after SIWE callback.
       console.log('[debug-wallet] Reloading page...')
