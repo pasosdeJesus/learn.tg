@@ -99,7 +99,15 @@ async function main() {
     const buttons = await page.$$('button')
     for (const btn of buttons) {
       const text = await page.evaluate(el => el.textContent, btn)
-      if (text?.includes('Connect') || text?.includes('Conectar')) { await btn.click(); break }
+      if (text?.includes('Connect') || text?.includes('Conectar')) {
+        // El clic dispara SIWE → navegación/recarga: esperarla antes de los
+        // evaluates del loop (contexto destruido si no).
+        await Promise.all([
+          page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 120000 }).catch(() => {}),
+          btn.click(),
+        ])
+        break
+      }
     }
     for (let i = 0; i < 20; i++) {
       await new Promise(r => setTimeout(r, 3000))
@@ -114,10 +122,20 @@ async function main() {
   await new Promise(r => setTimeout(r, 5000))
 
   // Select Sierra Leone as country first
-  const hasCountry = await page.evaluate(() => {
-    const body = document.body.textContent || ''
-    return body.includes('Country') || body.includes('País')
-  })
+  // El dev site compila on-demand: si el evaluate pisa una navegación
+  // ("Execution context was destroyed"), reintentar tras esperar.
+  let hasCountry = false
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      hasCountry = await page.evaluate(() => {
+        const body = document.body.textContent || ''
+        return body.includes('Country') || body.includes('País')
+      })
+      break
+    } catch {
+      await new Promise(r => setTimeout(r, 5000))
+    }
+  }
   if (hasCountry) {
     // Find the country select and pick Sierra Leone (id=694)
     const selected = await page.evaluate(() => {

@@ -136,7 +136,13 @@ async function main() {
     })
   )
   if (w3Link.asElement()) {
-    await w3Link.asElement().click()
+    // Esperar la navegación (full page load) tras el clic: el dev site
+    // compila on-demand (SWC-WASM) y un timeout fijo deja al evaluateHandle
+    // siguiente con el contexto destruido ("Execution context was destroyed").
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 120000 }).catch(() => {}),
+      w3Link.asElement().click(),
+    ])
     await new Promise(r => setTimeout(r, 4000))
     ok('Opened Web3 & UBI course')
   } else {
@@ -156,7 +162,11 @@ async function main() {
     })
   )
   if (g3Link.asElement()) {
-    await g3Link.asElement().click()
+    // Mismo patrón que Step 3: esperar la navegación tras el clic.
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 120000 }).catch(() => {}),
+      g3Link.asElement().click(),
+    ])
     await new Promise(r => setTimeout(r, 4000))
     ok('Opened Guide 3')
   } else {

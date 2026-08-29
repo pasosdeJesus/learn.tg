@@ -4,6 +4,13 @@ import * as fs from "fs";
 import * as path from "path";
 dotenv.config({ path: "../.env" });
 
+// Prueba de un ClusterFunds desplegado, alineada con la API actual del
+// contrato (REQ/215): pdJ treasury se configura como fee wallet en el
+// constructor; no hay pdjTreasury()/pdjPercentage()/setPdJPercentage().
+// API real: getFeeConfig(), setDonorCashbackPct(), donorCashbackPct(),
+// usdtToken(), slearnToken(), owner(), paused(), getCountryBalance(),
+// getClusterFunds().
+
 async function main() {
   const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia";
   const deployFile = path.join(__dirname, "..", "deployments", "ClusterFunds", `${network}.json`);
@@ -16,20 +23,21 @@ async function main() {
 
   // State checks
   console.log(`Owner:           ${await cf.owner()}`);
-  console.log(`pdJ Treasury:    ${await cf.pdjTreasury()}`);
-  console.log(`pdJ Percentage:  ${await cf.pdjPercentage()}%`);
+  const feeCfg = await cf.getFeeConfig();
+  console.log(`Fee wallets:     ${feeCfg.wallets.join(", ")} (pcts ${feeCfg.percentages.join(", ")})`);
+  console.log(`Cashback pct:    ${await cf.donorCashbackPct()}%`);
   console.log(`USDT:            ${await cf.usdtToken()}`);
-  console.log(`SLEARN:         ${await cf.slearnToken()}`);
+  console.log(`SLEARN:          ${await cf.slearnToken()}`);
   console.log(`Paused:          ${await cf.paused()}\n`);
 
-  // pdJ percentage validation
-  try { await cf.setPdJPercentage(99); console.log("  ✗ Should revert"); }
+  // Cashback validation (max 50%)
+  try { await cf.setDonorCashbackPct(99); console.log("  ✗ Should revert"); }
   catch (e: any) { console.log(`  ✓ Reverts on 99%: ${e?.reason || e?.message?.slice(0, 40)}`); }
 
   // View functions
   const bal = await cf.getCountryBalance("SL");
   const funds = await cf.getClusterFunds(ethers.ZeroAddress);
-  console.log(`  Country SL: USDT=${bal.usdtBalance} SLEARN=${bal.slearnBalance}`);
+  console.log(`  Country SL: USDT=${bal.usdt} SLEARN=${bal.slearn}`);
   console.log(`  Zero addr cluster: exists=${funds.exists} verified=${funds.verified}`);
 
   console.log(`\n✓ All tests passed`);
