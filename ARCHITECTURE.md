@@ -110,10 +110,11 @@ graph TD
 - **Language:** Solidity (^0.8.24)
 - **Network:** Celo (mainnet) & Celo Sepolia (testnet)
 - **Contracts:**
-    - `LearnTGVaultsV4.sol`: Manages USDT and SLEARN scholarship rewards for crossword puzzle completions (active).
-    - `CeloUBI.sol`: Manages periodic claims of Universal Basic Income (UBI) in CELO.
+    - `LearnTGVaultsV5.sol`: Manages USDT and SLEARN scholarship rewards for crossword puzzle completions (active; flexible split referrer/learnTgWallet). V4 y V3 legacy.
+    - `CeloUbi.sol`: Manages periodic claims of Universal Basic Income (UBI) in CELO.
     - `SLEARN.sol`: ERC-20 utility token, 2 decimals, restricted transfers.
     - `PasosDeJesusCredentials.sol`: Course completion SBTs (Soul-Bound Tokens).
+    - `ClusterFunds.sol` / `ClusterFundsV2.sol`: cluster/country funds y donaciones GD (V2 operativo, REQ/214).
 
 ### 4. **Web3 Engines (packages/)**
 
@@ -123,12 +124,13 @@ its `exports` map (never re-transpiled by Next/SWC). Design: `m` repo REQ/35;
 developer guide: `m` repo `doc/engines.md`. Architecture decisions (D1 next as
 peer dep, D2 dependency injection, D3 hooks):
 
-| Engine | Purpose | Handlers / libs | Depends on |
+| Engine | Purpose | Handlers / libs / UI | Depends on |
 |--------|---------|-----------------|------------|
-| **core** (apps/nextjs) | auth SIWE/wallet, guides/crossword UI, scoring, metrics, admin, profiles, catalogs, notifications | `app/api/*` restantes + adapters `lib/{rewards-app,gdcluster-app}.ts` | — |
+| **core** (apps/nextjs) | auth SIWE/wallet, guides/crossword UI, scoring, metrics, admin, profiles, catalogs, notifications | `app/api/*` restantes + adapters `lib/{rewards-app,gdcluster-app,gdcluster-ui}.tsx` | — |
 | **`@learn-tg/rewards`** | on-chain rewards: `check-crossword`, `claim-celo-ubi`, `add-donation`, `scholarship`, `credential/*`, `ubi-report*`, `slearn`, `churches/fund`, `referrals/fund`, `courses/premium/purchase` + `lib/{crypto,deployments,donate-utils,pastor-bonus,sle-rate,verify-transfer,replay-protection,credentials,premium-pricing,config}` | core (DB, auth, metrics, backend-config inyectados) |
-| **`@learn-tg/gdcluster`** | GD course: `/api/gdcluster/*`, `/api/cluster/*`, `/api/churches/search`; `lib/{gd-utils,gd-cluster-routing,donation-target}`; hook `reward:route-destination` (`src/register.ts`); contracts + deployments `ClusterFunds(V2)` | core, rewards, mr519 |
+| **`@learn-tg/gdcluster`** | curso GD completo: `/api/gdcluster/*`, `/api/cluster/*`, `/api/churches/search`; `lib/{gd-utils,gd-cluster-routing,donation-target}`; hook `reward:route-destination` (`src/register.ts`); componentes `{ClusterPage,RankingClient,GdPastoresLanding,ReferralsPage,CountryFilter,CountryFlag}`; contracts + deployments `ClusterFunds(V2)` con hardhat aislado (`contracts/`) | core, rewards, mr519, `@pasosdejesus/usdt` |
 | **`@learn-tg/mr519`** | dynamic forms (`mr519_gen_*`, `DynamicForm`) | core (auth, DB) |
+| **`@pasosdejesus/usdt`** (shared, en `m`) | hooks de pago compartidos: `useContractPayment`, `useGasEstimation` (1ª graduación local→shared, adoptado por learn.tg y sivel3) | `m` |
 
 **Patterns:**
 - **Adapters**: `lib/rewards-app.ts` / `lib/gdcluster-app.ts` instantiate the
@@ -143,8 +145,11 @@ peer dep, D2 dependency injection, D3 hooks):
   (`getEngineHandler` → `ensureEnginesLoaded`).
 - **Build**: `bin/dev` and `make all/prod` compile `packages/*` → `dist/` first
   (`engines-dist`); dist is not in git. Webpack resolution falls back to the
-  app's `node_modules` (`next.config.ts`). See REQ/35 Fase 4 for pitfalls
-  (webpack parallelism, heap limits, vendored loadable alias).
+  app's `node_modules` (`next.config.ts`). The gdcluster engine also carries an
+  isolated Hardhat project (`packages/gdcluster/contracts/`: `hardhat.config.ts`,
+  deploy/verify scripts, `ClusterFunds.test.ts`) — `contract:test` green (80 tests)
+  with `@pasosdejesus/edr` ≥ 0.1.2 (fix `block.timestamp` en `eth_call`).
+  See `m` REQ/35 for pitfalls (webpack parallelism, heap limits, vendored loadable alias).
 
 ---
 
@@ -176,7 +181,7 @@ The platform features two distinct reward mechanisms, demonstrating our principl
 - **Trigger:** A student submits a crossword answer via the `/api/check-crossword` endpoint.
 - **Process:**
     1. The Next.js backend validates the answer.
-    2. If correct, it calls the `payScholarship()` function on the `LearnTGVaultsV4.sol` contract.
+    2. If correct, it calls the `payScholarship()` function on the `LearnTGVaultsV5.sol` contract (handler en el motor `@learn-tg/rewards`).
     3. The contract verifies on-chain that the user has a `profileScore` of at least 50, has not already been rewarded for the guide, and has respected the 24-hour cooldown period.
        The `profileScore` breakdown and scholarship formula are documented in the user-facing course: [Web3 & UBI — Guide 2b](resources/en/web3-and-ubi/guide2b.md).
     4. If checks pass, the contract calculates and transfers USDT and SLEARN rewards to the student's wallet.
@@ -451,7 +456,9 @@ Contract addresses are stored as JSON files in `apps/hardhat/deployments/{Contra
 apps/hardhat/deployments/
   SLEARN/{network}.json
   LearnTGVaults/V4/{network}.json
+  LearnTGVaults/V5/{network}.json
   ClusterFunds/{network}.json
+  ClusterFundsV2/{network}.json
   MockUSDT/{network}.json
   CeloUbi/{network}.json
 ```

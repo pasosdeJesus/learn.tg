@@ -21,7 +21,7 @@ This document defines the documentation and testing policies for the Next.js app
 |------|----------|---------|---------|
 | Directory index | `lib/README.md`, `db/README.md`, `app/api/README.md` | Brief map of what's in the directory, references to `doc/` for complex topics | |
 | Feature/protocol | `doc/<feature>.md` | Self-contained document that can be understood without reading the codebase. Potentially reusable in other projects. | `doc/crossword-reward-flow.md` |
-| Module comments | Top of `.ts` files with complex logic | Protocol details, design rationale, external references. | `lib/crypto.ts` |
+| Module comments | Top of `.ts` files with complex logic | Protocol details, design rationale, external references. | `lib/reward-routing.ts` |
 
 ### Decision Criterion: `doc/` vs. Inline Comment
 

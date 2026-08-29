@@ -362,10 +362,10 @@ SLEARN_RAW=$(echo "$SLEARN_AMOUNT * 100" | bc | cut -d. -f1)
 echo ""
 if [ -n "$COURSE_ID" ]; then
   echo "  Create vault (run manually in apps/hardhat):"
-  echo "  bin/m wallet:send --name admin --to <VAULT_V4> --function \"createVault(uint256,uint256,uint256)\" --args \"$COURSE_ID,$USDT_RAW,$SLEARN_RAW\" --network $NETWORK"
+  echo "  bin/m wallet:send --name admin --to <VAULT_V5> --function \"createVault(uint256,uint256,uint256)\" --args \"$COURSE_ID,$USDT_RAW,$SLEARN_RAW\" --network $NETWORK"
 else
   echo "  Create vault (run manually in apps/hardhat — replace <ID> with actual course ID):"
-  echo "  bin/m wallet:send --name admin --to <VAULT_V4> --function \"createVault(uint256,uint256,uint256)\" --args \"<ID>,$USDT_RAW,$SLEARN_RAW\" --network $NETWORK"
+  echo "  bin/m wallet:send --name admin --to <VAULT_V5> --function \"createVault(uint256,uint256,uint256)\" --args \"<ID>,$USDT_RAW,$SLEARN_RAW\" --network $NETWORK"
 fi
 echo ""
 

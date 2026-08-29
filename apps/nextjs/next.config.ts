@@ -133,7 +133,7 @@ const nextConfig: NextConfig = {
     // Caché persistente webpack: DESHABILITADO temporalmente — falla en este
     // entorno (`Can't resolve next.config.compiled.js`) y sirve entradas stale
     // que rompen la resolución de módulos vendored de Next (app-page/loadable).
-    // Re-evaluar con workspace pnpm o CI Linux (#206).
+    // Re-evaluar con workspace pnpm o CI Linux (m REQ/35, antes REQ/206).
 
     // Excluir módulos de servidor en cliente
     if (!isServer) {

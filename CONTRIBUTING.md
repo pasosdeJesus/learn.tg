@@ -77,7 +77,7 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
 
 ## 🔗 Smart Contracts
 
-The active scholarship contract is **LearnTGVaultsV4** (`apps/hardhat/contracts/LearnTGVaultsV4.sol`) — deployed on Celo. V3 and V2 are legacy. The scholarship formula in all versions is `(amountPerGuide × profileScore) / 100`, requiring profile score ≥ 50. USDT and SLEARN are paid independently (partial payments supported in V4). CELO UBI is handled by `CeloUbi.sol` with `MAX_REWARD = 0.2 CELO` and formula `(0.2 × profileScore) / 100`.
+The active scholarship contract is **LearnTGVaultsV5** (`apps/hardhat/contracts/LearnTGVaultsV5.sol`) — deployed on Celo, with flexible split (student/referrer/learnTg). V4 y V3 are legacy (en migración a V5). The scholarship formula in all versions is `(amountPerGuide × profileScore) / 100`, requiring profile score ≥ 50. USDT and SLEARN are paid independently (partial payments). CELO UBI is handled by `CeloUbi.sol` with `MAX_REWARD = 0.2 CELO` and formula `(0.2 × profileScore) / 100`. Cluster/country funds GD: `ClusterFundsV2.sol` (REQ/214; V1 legacy).
 
 See [apps/hardhat/README.md](apps/hardhat/README.md) for deploy, verify, and smoke-test commands.
 
