@@ -13,7 +13,8 @@ interface GasInsufficientPanelProps {
 
 export function GasInsufficientPanel({ lang, onClose }: GasInsufficientPanelProps) {
   const isEs = lang === 'es'
-  const courseHref = isEs ? `/${lang}/web3-e-ibu/guia2` : `/${lang}/web3-and-ubi/guide2`
+  // Guía de reclamar CELO (UBI) del curso Web3 & UBI: guide3 (EN) / guia3 (ES)
+  const courseHref = isEs ? `/${lang}/web3-e-ibu/guia3` : `/${lang}/web3-and-ubi/guide3`
 
   return (
     <div className="text-center py-4">
@@ -47,14 +48,14 @@ export function GasInsufficientPanel({ lang, onClose }: GasInsufficientPanelProp
       <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm text-left mb-5">
         📘{' '}
         {isEs
-          ? 'Aprende a reclamar CELO gratis en el curso Web3 & UBI (Guía 2)'
-          : 'Learn how to claim free CELO in the Web3 & UBI course (Guide 2)'}
+          ? 'Aprende a reclamar CELO gratis en el curso Web3 & UBI (Reclama tu IBU diario)'
+          : 'Learn how to claim free CELO in the Web3 & UBI course (Claiming CELO)'}
       </div>
 
       <div className="flex gap-3 justify-center">
         <Link
           href={courseHref}
-          className="rounded bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+          className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
         >
           {isEs ? 'Ir al curso Web3 & UBI' : 'Go to the Web3 & UBI course'}
         </Link>

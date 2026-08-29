@@ -284,7 +284,7 @@ describe('DonateModal', () => {
         expect(screen.getByText(/CELO is needed to complete this transaction/i)).toBeInTheDocument()
       })
       // Enlaza al curso Web3 & UBI (Guía 2) y ofrece cerrar (✕ + botón Cerrar)
-      expect(screen.getByRole('link', { name: /Go to the Web3 & UBI course/i })).toHaveAttribute('href', '/en/web3-and-ubi/guide2')
+      expect(screen.getByRole('link', { name: /Go to the Web3 & UBI course/i })).toHaveAttribute('href', '/en/web3-and-ubi/guide3')
       expect(screen.getAllByRole('button', { name: /Close/i }).length).toBeGreaterThan(0)
     })
 
