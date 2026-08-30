@@ -107,12 +107,19 @@ async function main() {
   const referrerActivated = score != null && score > 90
 
   // Step 2: CTA según estado (score ≤ 90 → "Complete your profile")
+  // La UI tarda unos segundos en hidratar y cargar el score (efecto auth).
+  // El CTA dependiente del estado es el ÚLTIMO link bg-blue-600 (el de la
+  // tarjeta ámbar "See premium courses" aparece primero en el DOM).
   await pageA.reload({ waitUntil: 'domcontentloaded' })
-  await new Promise(r => setTimeout(r, 4000))
-  const ctaText = await pageA.evaluate(() => {
-    const a = [...document.querySelectorAll('a')].find(x => x.className.includes('bg-blue-600'))
-    return a?.textContent?.trim() || ''
-  })
+  let ctaText = ''
+  for (let i = 0; i < 15; i++) {
+    await new Promise(r => setTimeout(r, 2000))
+    ctaText = await pageA.evaluate(() => {
+      const a = [...document.querySelectorAll('a')].filter(x => x.className.includes('bg-blue-600')).at(-1)
+      return a?.textContent?.trim() || ''
+    })
+    if (ctaText && !ctaText.includes('Go to the Web3')) break
+  }
   if (referrerActivated) {
     console.log('  [skip] referidor activado (>90) — CTA de código, no de perfil')
   } else if (ctaText.includes('Complete your profile')) {
@@ -120,7 +127,11 @@ async function main() {
   } else { console.log(`  CTA: "${ctaText}"`); fail('CTA esperado "Complete your profile"') }
 
   // Step 3: checklist de requisitos (✖ score > 90 si no aplica)
-  const reqText = await pageA.evaluate(() => document.body?.textContent?.replace(/\s+/g, ' ') || '')
+  let reqText = ''
+  for (let i = 0; i < 10 && !reqText.includes('Requirements to join'); i++) {
+    await new Promise(r => setTimeout(r, 2000))
+    reqText = await pageA.evaluate(() => document.body?.textContent?.replace(/\s+/g, ' ') || '')
+  }
   if (reqText.includes('Requirements to join') && reqText.includes('90 profile points')) {
     ok('Checklist de requisitos visible (compra premium + >90 puntos)')
   } else { fail('Checklist de requisitos no visible') }
@@ -160,7 +171,9 @@ async function main() {
   if (!await navAndWait(pageB, `${base}/ref/${refCode}`, timeout)) { fail('/ref no cargó'); await browser.close(); process.exit(1) }
   await new Promise(r => setTimeout(r, 3000))
   const storedCode = await pageB.evaluate(() => localStorage.getItem('learn.tg.pendingReferralCode'))
-  if (storedCode === refCode) ok(`/ref/{CODE} guardó pendingReferralCode (${storedCode})`)
+  // El contrato del claim es case-insensitive (ilike); códigos legacy en la DB
+  // pueden estar en minúsculas mientras /ref/{CODE} guarda en mayúsculas.
+  if (storedCode && storedCode.toUpperCase() === String(refCode).toUpperCase()) ok(`/ref/{CODE} guardó pendingReferralCode (${storedCode})`)
   else { console.log(`  stored: ${storedCode}`); fail('pendingReferralCode no guardado') }
 
   // Autentica al referido (SIWE; la billetera nueva se auto-registra)

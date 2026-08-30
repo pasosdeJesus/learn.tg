@@ -140,9 +140,20 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
     reqPremium: es ? 'Comprar un curso premium (por ejemplo, Global Disciples).' : 'Buy a premium course (for example, Global Disciples).',
     reqScore: es ? 'Tener más de 90 puntos de perfil.' : 'Have more than 90 profile points.',
     stepsTitle: es ? 'Pasos para empezar' : 'Steps to get started',
+    // Sin numeración manual: el <ol list-decimal> la agrega (evita "1. 1. ...")
     steps: es
-      ? ['1. Compra un curso premium para activar tu código.', '2. Comparte tu enlace de referido.', '3. Gana el 10% cuando tus referidos compran o ganan becas, y 1 USDT por cada pastor que referiste al curso GD.']
-      : ['1. Buy a premium course to activate your code.', '2. Share your referral link.', '3. Earn 10% when your referrals buy or earn scholarships, plus 1 USDT for each pastor you referred to the GD course.'],
+      ? [
+          'Completa tu perfil y agenda una cita de verificación.',
+          'Una vez verificado y con más de 90 puntos en el perfil, compra un curso premium para activar tu código.',
+          'Comparte tu enlace de referido.',
+          'Gana el 10% cuando tus referidos compran o ganan becas, y 1 USDT por cada pastor que referiste al curso GD.',
+        ]
+      : [
+          'Complete your profile and schedule a verification interview.',
+          'Once verified and with more than 90 profile points, buy a premium course to activate your code.',
+          'Share your referral link.',
+          'Earn 10% when your referrals buy or earn scholarships, plus 1 USDT for each pastor you referred to the GD course.',
+        ],
     goCourse: es ? 'Ver cursos premium' : 'See premium courses',
     referredByTitle: es ? 'Te refirió' : 'You were referred by',
     enterCode: es
