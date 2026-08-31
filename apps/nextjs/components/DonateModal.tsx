@@ -148,7 +148,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const loadData = useCallback(async () => {
     if (!isOpen || !address || !publicClient || !usdtAddress || !recipientAddress) return
     setDataLoaded(false)
-    try {
+    // forno falla intermitentemente (igual que eth_estimateGas): reintentar una
+    // vez y cargar saldos parciales (allSettled) — un fallo de getBalance no
+    // debe tumbar la carga ni provocar un falso "no-gas" (celo=0 sin cargar).
+    const attemptLoad = async () => {
       const promises: Promise<any>[] = [
         publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'decimals' }).catch(() => BigInt(usdtDecimals)),
         publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>,
@@ -159,17 +162,33 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
           publicClient.readContract({ address: slearnAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>,
         )
       }
-      const results = await Promise.all(promises)
-      setUsdtDecimals(Number(results[0]))
-      setUsdtBalance(results[1])
-      setCeloBalance(results[2])
-      if (slearnAddress && results.length >= 4) {
-        setSlearnBalance(results[3])
+      const results = await Promise.allSettled(promises)
+      const val = (i: number) => results[i]?.status === 'fulfilled' ? (results[i] as PromiseFulfilledResult<any>).value : null
+      const decimals = val(0)
+      const usdtBal = val(1)
+      const celoBal = val(2)
+      const slearnBal = slearnAddress ? val(3) : null
+      if (decimals != null) setUsdtDecimals(Number(decimals))
+      if (usdtBal != null) setUsdtBalance(usdtBal)
+      if (celoBal != null) setCeloBalance(celoBal)
+      if (slearnBal != null) setSlearnBalance(slearnBal)
+      // dataLoaded solo cuando el saldo CELO se leyó: la estimación de gas
+      // requiere un saldo real (celoBalance=0 por fallo RPC → falso no-gas).
+      if (celoBal != null) setDataLoaded(true)
+      results.forEach((r, i) => {
+        if (r.status === 'rejected') {
+          console.error(`[DonateModal] balance read #${i} failed:`, (r as PromiseRejectedResult).reason?.message || r.reason)
+        }
+      })
+    }
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await attemptLoad()
+        return
+      } catch (e: any) {
+        console.error('[DonateModal] loadData failed:', e?.message || String(e))
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 600))
       }
-      setDataLoaded(true)
-    } catch (e: any) {
-    console.error('[DonateModal] Backend verification failed:', e?.message || String(e))
-      // Silently fail; balances will show as 0
     }
   }, [isOpen, address, publicClient, usdtAddress, recipientAddress, usdtDecimals, slearnAddress])
 

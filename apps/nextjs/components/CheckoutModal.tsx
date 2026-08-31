@@ -116,38 +116,50 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   useEffect(() => {
     if (!isOpen || !address || !publicClient || !usdtAddress) return
     let cancelled = false
-    ;(async () => {
-      try {
-        const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
-        const url = `/api/courses/premium/price?courseId=${courseId}&walletAddress=${address}&token=${token}`
-        const res = await axios.get(url)
-        if (cancelled) return
-        setPriceUSDT(Number(res.data.priceUSDT))
-        setPriceSLEARN(Number(res.data.priceSLEARN))
+    // forno falla intermitentemente (igual que eth_estimateGas): reintentar una
+    // vez y cargar saldos parciales (allSettled) — un fallo de getBalance no
+    // debe tumbar la carga ni provocar un falso "no-gas" (celo=0 sin cargar).
+    const load = async () => {
+      const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+      const url = `/api/courses/premium/price?courseId=${courseId}&walletAddress=${address}&token=${token}`
+      const res = await axios.get(url)
+      if (cancelled) return
+      setPriceUSDT(Number(res.data.priceUSDT))
+      setPriceSLEARN(Number(res.data.priceSLEARN))
 
-        const [usdtBal, slearnBal, celoBal] = await Promise.all([
-          publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>,
-          slearnAddress
-            ? publicClient.readContract({ address: slearnAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>
-            : Promise.resolve(0n),
-          publicClient.getBalance({ address }) as Promise<bigint>,
-        ])
-        if (!cancelled) {
-          setUsdtBalance(usdtBal)
-          setSlearnBalance(slearnBal)
-          setCeloBalance(celoBal)
-          setDataLoaded(true)
-          // Default the split to as much SLEARN as the wallet can cover (up to 100%).
-          const sDecimal = Number(slearnBal) / 10 ** SLEARN_DECIMALS
-          const pSlearn = Number(res.data.priceSLEARN)
-          if (pSlearn > 0) {
-            setSlearnPct(Math.min(100, Math.floor((sDecimal / pSlearn) * 100)))
-          }
+      const [usdtBal, slearnBal, celoBal] = await Promise.allSettled([
+        publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>,
+        slearnAddress
+          ? publicClient.readContract({ address: slearnAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>
+          : Promise.resolve(0n),
+        publicClient.getBalance({ address }) as Promise<bigint>,
+      ])
+      if (cancelled) return
+      if (usdtBal.status === 'fulfilled') setUsdtBalance(usdtBal.value)
+      if (slearnBal.status === 'fulfilled') setSlearnBalance(slearnBal.value)
+      if (celoBal.status === 'fulfilled') {
+        setCeloBalance(celoBal.value)
+        setDataLoaded(true)
+        // Default the split to as much SLEARN as the wallet can cover (up to 100%).
+        const sDecimal = Number(slearnBal.status === 'fulfilled' ? slearnBal.value : 0n) / 10 ** SLEARN_DECIMALS
+        const pSlearn = Number(res.data.priceSLEARN)
+        if (pSlearn > 0) {
+          setSlearnPct(Math.min(100, Math.floor((sDecimal / pSlearn) * 100)))
         }
-      } catch {
-        if (!cancelled) {
-          toast({ title: lang === 'es' ? 'No se pudo cargar el precio' : 'Could not load price', variant: 'destructive' })
+      }
+    }
+    ;(async () => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          await load()
+          return
+        } catch {
+          if (cancelled) return
+          if (attempt === 0) await new Promise((r) => setTimeout(r, 600))
         }
+      }
+      if (!cancelled) {
+        toast({ title: lang === 'es' ? 'No se pudo cargar el precio' : 'Could not load price', variant: 'destructive' })
       }
     })()
     return () => { cancelled = true }

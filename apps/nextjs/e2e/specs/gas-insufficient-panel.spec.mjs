@@ -7,6 +7,9 @@
 //
 // Escenarios (modal de donación del ranking, abre sin gate de sesión):
 //   1. Con CELO suficiente → el formulario se mantiene ("Enough gas estimated")
+//   1b. CELO suficiente con eth_getBalance RETARDADO (latencia RPC simulada) →
+//       el formulario NO es reemplazado por el panel (regresión de la carrera
+//       de gas: la estimación corría con celo=0 antes de cargar el saldo)
 //   2. Sin CELO (mock eth_getBalance → 100 wei) → el panel aparece de inmediato
 //      al abrir (EN), con enlace a /en/web3-and-ubi/guide3; Cerrar cierra
 //   3. Panel en español (ranking /es) con enlace a /es/web3-e-ibu/guia3
@@ -68,6 +71,40 @@ async function patchCeloBalance(page, hexBalance) {
       method === 'eth_getBalance' ? bal : orig({ method, params })
   }, hexBalance)
   console.log(`  [mock] eth_getBalance → ${hexBalance}`)
+}
+
+// Parchea el proveedor para la regresión de la carrera de gas: saldo CELO
+// suficiente con LATENCIA RPC simulada (balanceDelayMs) + eth_estimateGas y
+// eth_gasPrice fijos. Sin parchear, el mock devuelve null y viem lanza
+// "Cannot convert null to a BigInt" en getBalance/getGasPrice.
+async function patchGasProvider(page, {
+  balance, balanceDelayMs = 0, estimateGas, gasPrice,
+}) {
+  await page.evaluate((cfg) => {
+    const orig = window.ethereum.request.bind(window.ethereum)
+    window.ethereum.request = async ({ method, params }) => {
+      if (method === 'eth_getBalance') {
+        if (cfg.balanceDelayMs) await new Promise((r) => setTimeout(r, cfg.balanceDelayMs))
+        return cfg.balance
+      }
+      if (method === 'eth_estimateGas' && cfg.estimateGas) return cfg.estimateGas
+      if (method === 'eth_gasPrice' && cfg.gasPrice) return cfg.gasPrice
+      return orig({ method, params })
+    }
+  }, { balance, balanceDelayMs, estimateGas, gasPrice })
+  console.log(`  [mock] eth_getBalance → ${balance} (delay ${balanceDelayMs}ms), eth_estimateGas → ${estimateGas}, eth_gasPrice → ${gasPrice}`)
+}
+
+// Espera el texto del modal hasta que contenga uno de los marcadores o expire.
+async function waitModalText(page, markers, timeoutMs = 12000) {
+  const t0 = Date.now()
+  let text = ''
+  while (Date.now() - t0 < timeoutMs) {
+    text = await modalText(page)
+    if (markers.some((m) => text.includes(m))) break
+    await new Promise((r) => setTimeout(r, 1000))
+  }
+  return text
 }
 
 // Espera el botón Donar/Donate de una fila y lo pulsa (click real por coordenadas).
@@ -171,6 +208,37 @@ async function main() {
   const okText = await modalText(page)
   if (okText.includes('Enough gas estimated')) ok('Con CELO suficiente el formulario se mantiene ("Enough gas estimated")')
   else { console.log(`  Modal text: ${okText.slice(0, 160)}`); fail('Formulario esperado con CELO suficiente') }
+  await closeModal(page)
+
+  // ════════════════════════════════════════════════════════════════
+  // Step 1b: CELO suficiente + eth_getBalance RETARDADO (regresión de la
+  // carrera de gas, bug 2026-08-31). Antes del fix, la estimación corría con
+  // celoBalance=0 (saldo aún sin cargar) y un fallo RPC transitorio de forno
+  // clasificaba "no-gas" → el panel reemplazaba el formulario pese a tener
+  // 1 CELO. Ahora el hook espera a balanceLoaded → sin falso panel.
+  // ════════════════════════════════════════════════════════════════
+  console.log('\n── Step 1b: CELO suficiente con getBalance lento → el formulario NO se reemplaza ──')
+  if (!await navAndWait(page, `${base}/en/gdcluster/ranking`, timeout)) {
+    fail('Ranking page did not load'); await browser.close(); process.exit(1)
+  }
+  await new Promise(r => setTimeout(r, 4000))
+  // 1 CELO (0xde0b6b3a7640000) con 1.5s de latencia simulada; 21000 gas a 0.5 gwei
+  await patchGasProvider(page, {
+    balance: '0xde0b6b3a7640000', balanceDelayMs: 1500,
+    estimateGas: '0x5208', gasPrice: '0x1dcd6500',
+  })
+  if (!await clickDonateRow(page, 'en')) {
+    fail('Donar button not found / modal not open'); await browser.close(); process.exit(1)
+  }
+  if (!await fillUsdtAmount(page, 1)) {
+    fail('Amount input not found'); await browser.close(); process.exit(1)
+  }
+  const regText = await waitModalText(page, [
+    'Enough gas estimated', 'CELO is needed to complete this transaction',
+  ])
+  if (regText.includes('Enough gas estimated') && !regText.includes('CELO is needed to complete this transaction')) {
+    ok('Con saldo suficiente y RPC lento el formulario se mantiene (sin falso panel)')
+  } else { console.log(`  Modal text: ${regText.slice(0, 200)}`); fail('Falso panel de gas con saldo suficiente (carrera)') }
   await closeModal(page)
 
   // ════════════════════════════════════════════════════════════════
