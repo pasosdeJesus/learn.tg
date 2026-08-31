@@ -3,6 +3,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import DonateModal from '../DonateModal'
 
+// El barrel @pasosdejesus/m/debug (DebugConsole.js) crashea el worker de Node en
+// OpenBSD (Check failed: result.ptr != nullptr); el hook lo usa solo para loguear.
+vi.mock('@pasosdejesus/m/debug', () => ({
+  logger: { info: vi.fn(), error: vi.fn(), success: vi.fn(), warning: vi.fn(), debug: vi.fn() },
+}))
+
 vi.mock('@learn-tg/rewards/lib/deployments', () => ({
   getV3Address: vi.fn().mockReturnValue('0xVAULT12345678901234567890123456789012345678'),
   getSlearnAddress: vi.fn().mockReturnValue('0xSLEARN123456789012345678901234567890123456'),

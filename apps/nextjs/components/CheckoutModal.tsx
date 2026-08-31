@@ -185,7 +185,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     return Math.max(0, Math.ceil((priceUSDT - covered) * 100) / 100)
   })()
 
-  const { gasState, estimating } = useGasEstimation({
+  const { gasState, estimating, diag } = useGasEstimation({
     amount: usdtAmount,
     slearnAmount,
     usdtDecimals,
@@ -198,6 +198,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     courseId,
     celoBalance,
   })
+  // Diagnóstico de gas visible en el panel con ?diag=1 (depuración dev site)
+  const gasDiagMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('diag')
 
   const [showResult, setShowResult] = useState(false)
   const [resultTxHash, setResultTxHash] = useState<string | null>(null)
@@ -312,7 +314,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
             </button>
           </div>
         ) : address && walletClient && (gasState === 'no-gas' || (dataLoaded && noCelo)) ? (
-          <GasInsufficientPanel lang={lang} onClose={onClose} />
+          <GasInsufficientPanel lang={lang} onClose={onClose} diag={gasDiagMode ? diag : null} />
         ) : (
           <>
             <h3 className="text-lg font-bold mb-4">{t('title')}</h3>

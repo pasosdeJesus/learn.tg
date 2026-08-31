@@ -72,12 +72,14 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const totalUSDTValue = usdtNum + (slearnNum / SLEARN_RATE)
   const estimatedReward = totalUSDTValue * (rewardPct / 100) * SLEARN_RATE
 
-  const { gasState, estimating } = useGasEstimation({
+  const { gasState, estimating, diag } = useGasEstimation({
     amount, slearnAmount, usdtDecimals,
     address, walletClient, publicClient,
     backendWalletAddress: recipientAddress, usdtAddress, slearnAddress,
     courseId: cId, celoBalance,
   })
+  // Diagnóstico de gas visible en el panel con ?diag=1 (depuración dev site)
+  const gasDiagMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('diag')
 
   const {
     state: paymentState,
@@ -280,7 +282,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
             </button>
           </div>
         ) : address && walletClient && (gasState === 'no-gas' || (dataLoaded && noCelo)) ? (
-          <GasInsufficientPanel lang={lang || 'en'} onClose={closeAll} />
+          <GasInsufficientPanel lang={lang || 'en'} onClose={closeAll} diag={gasDiagMode ? diag : null} />
         ) : (
           <>
             <button onClick={closeAll} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
