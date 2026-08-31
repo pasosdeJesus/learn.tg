@@ -42,7 +42,7 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
   const [activated, setActivated] = useState(false)
   const [purchasedPremium, setPurchasedPremium] = useState(false)
   const [profileScore, setProfileScore] = useState<number | null>(null)
-  const [referredBy, setReferredBy] = useState<string | null>(null)
+  const [referredBy, setReferredBy] = useState<{ nombre: string | null; nusuario: string | null; billetera: string | null } | null>(null)
   const [score, setScore] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -81,7 +81,7 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
       setActivated(!!codeRes?.data?.activated)
       setPurchasedPremium(!!codeRes?.data?.purchasedPremium)
       setProfileScore(typeof codeRes?.data?.profileScore === 'number' ? codeRes.data.profileScore : null)
-      setReferredBy(codeRes?.data?.referredBy ?? null)
+      setReferredBy(codeRes?.data?.referredByDetails ?? null)
       setStats(statsRes?.data ?? null)
       setHistory(histRes?.data?.rewards ?? [])
       setReferrals(histRes?.data?.referrals ?? [])
@@ -94,7 +94,7 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
   const copyCode = async () => {
     if (!code) return
     try {
-      await navigator.clipboard.writeText(`https://learn.tg/ref/${code}`)
+      await navigator.clipboard.writeText(`https://learn.tg/${lang}/ref/${code}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch { /* clipboard unavailable */ }
@@ -122,16 +122,17 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
     fundAvailable: es ? 'Disponible para distribuir' : 'Available to distribute',
     fundUnavailable: es ? 'No se pudo consultar la billetera de referidos en este momento.' : 'Could not read the referral wallet right now.',
     noFundsNote: es ? 'Las recompensas se pagan desde la billetera de referidos. Si no tiene fondos, no se entrega recompensa.' : 'Rewards are paid from the referral wallet. If it has no funds, no reward is given.',
-    myTitle: es ? 'Mi programa de referidos' : 'My referral program',
-    myCode: es ? 'Tu código' : 'Your code',
+    myReferrerTitle: es ? 'Mi referidor' : 'My referrer',
+    referrerName: es ? 'Nombre' : 'Name',
+    referrerUser: es ? 'Usuario' : 'Username',
+    referrerWallet: es ? 'Billetera' : 'Wallet',
     copyLink: es ? 'Copiar enlace' : 'Copy link',
     copiedOk: es ? '¡Enlace copiado!' : 'Link copied!',
     shareLink: es ? 'Comparte este enlace:' : 'Share this link:',
-    statsTitle: es ? 'Estadísticas' : 'Stats',
     referred: es ? 'Referidos' : 'Referrals',
     rewards: es ? 'Recompensas' : 'Rewards',
     historyTitle: es ? 'Historial de recompensas' : 'Reward history',
-    loading: es ? 'Cargando tu código…' : 'Loading your code…',
+    loading: es ? 'Cargando…' : 'Loading…',
     // Adaptativo según estado
     reqTitle: es ? 'Requisitos para participar' : 'Requirements to join',
     reqBody: es
@@ -155,18 +156,23 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
           'Earn 10% when your referrals buy or earn scholarships, plus 1 USDT for each pastor you referred to the GD course.',
         ],
     goCourse: es ? 'Ver cursos premium' : 'See premium courses',
-    referredByTitle: es ? 'Te refirió' : 'You were referred by',
     enterCode: es
       ? 'Aún no tienes referidor. Puedes ingresar el código de quien te invitó desde tu perfil (sección Referidos).'
       : 'You do not have a referrer yet. You can enter the code of the person who invited you from your profile (Referrals section).',
     goProfile: es ? 'Ir a mi perfil' : 'Go to my profile',
-    myReferralsTitle: es ? 'Personas que he referido' : 'People I have referred',
+    myReferralsTitle: es ? 'Mis referidos' : 'My referrals',
     emptyReferrals: es ? 'Aún no has referido a nadie.' : 'You have not referred anyone yet.',
     ctaNoWallet: es ? 'Ir al curso Web3 & UBI' : 'Go to the Web3 & UBI course',
     ctaNoWalletHint: es ? 'Crea tu billetera en el curso Web3 & UBI (Guía 2).' : 'Create your wallet in the Web3 & UBI course (Guide 2).',
     ctaProfile: es ? 'Completa tu perfil' : 'Complete your profile',
     ctaProfileHint: es ? 'Para activar tu código de referido completa tu perfil y agenda una entrevista de verificación.' : 'To activate your referral code, complete your profile and schedule a verification interview.',
-    ctaReadyHint: es ? 'Comparte tu código y gana recompensas.' : 'Share your code and earn rewards.',
+    // CTA múltiple para quien ya tiene código activo
+    promoTitle: es ? 'Promociona learn.tg' : 'Promote learn.tg',
+    promoHint: es ? 'Comparte el programa y gana recompensas:' : 'Share the program and earn rewards:',
+    invitePastors: es ? 'Invitar pastores' : 'Invite pastors',
+    invitePastorsHint: es ? 'Presenta el programa de pastores a líderes de tu comunidad.' : 'Introduce the pastors program to community leaders.',
+    inviteWhatsApp: es ? 'Invitar por WhatsApp' : 'Invite via WhatsApp',
+    inviteWhatsAppHint: es ? 'Envía una invitación personal con tu enlace de referido.' : 'Send a personal invitation with your referral link.',
   }
 
   const courseHref = es ? `/${lang}/web3-e-ibu/guide1` : `/${lang}/web3-and-ubi/guide1`
@@ -177,11 +183,15 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
     ctaHref = `/${lang}/profile`
     ctaLabel = t.ctaProfile
     ctaHint = t.ctaProfileHint
-  } else if (address && score != null && score > 90) {
-    ctaHref = `/${lang === 'es' ? 'referidos' : 'referrals'}#code`
-    ctaLabel = t.myCode
-    ctaHint = t.ctaReadyHint
   }
+
+  // CTA múltiple para quien ya tiene el programa activado: invitar pastores
+  // (landing del programa) y enviar una invitación personal por WhatsApp.
+  const pastorsHref = es ? `/${lang}/redgd/pastores` : `/${lang}/gdcluster/pastors`
+  const waMessage = es
+    ? `¡Hola! Te invito a aprender en learn.tg: aprendes jugando y ganas recompensas en criptomonedas. Únete con mi invitación: https://learn.tg/${lang}/ref/${code}`
+    : `Hi! I invite you to learn on learn.tg: you learn through games and earn crypto rewards. Join with my invitation: https://learn.tg/${lang}/ref/${code}`
+  const waHref = `https://wa.me/?text=${encodeURIComponent(waMessage)}`
 
   return (
     <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 min-h-screen">
@@ -254,93 +264,136 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
           )}
 
           {address && activated && (
-            <div id="code" className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6 text-left">
-              <h2 className="font-semibold text-gray-800 mb-3">{t.myTitle}</h2>
-
-              {referredBy ? (
-                <p className="text-sm text-gray-700 mb-3">
-                  <span className="font-semibold">{t.referredByTitle}:</span> {referredBy}
-                </p>
-              ) : (
-                <p className="text-sm text-gray-700 mb-3">
-                  {t.enterCode}{' '}
-                  <Link href={`/${lang}/profile#referral`} className="text-blue-600 underline">{t.goProfile}</Link>
-                </p>
-              )}
-
-              {code ? (
-                <>
-                  <p className="text-sm text-gray-600 mb-1">{t.shareLink}</p>
-                  <p className="font-mono text-lg font-semibold text-gray-900 mb-3 break-all">
-                    https://learn.tg/ref/{code}
+            <div className="space-y-6 mb-6">
+              {/* Tarjeta 1: Mi referidor (quién me invitó: nombre, usuario, billetera) */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-left">
+                <h2 className="font-semibold text-gray-800 mb-3">{t.myReferrerTitle}</h2>
+                {referredBy ? (
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <p>
+                      <span className="font-semibold">{t.referrerName}:</span> {referredBy.nombre || '—'}
+                    </p>
+                    <p>
+                      <span className="font-semibold">{t.referrerUser}:</span> {referredBy.nusuario || '—'}
+                    </p>
+                    <p className="break-all">
+                      <span className="font-semibold">{t.referrerWallet}:</span>{' '}
+                      <span className="font-mono">{referredBy.billetera || '—'}</span>
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-700">
+                    {t.enterCode}{' '}
+                    <Link href={`/${lang}/profile#referral`} className="text-blue-600 underline">{t.goProfile}</Link>
                   </p>
-                  <button
-                    onClick={copyCode}
-                    className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                  >
-                    {copied ? t.copiedOk : t.copyLink}
-                  </button>
-                  {stats && (
-                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                      <div className="rounded-lg bg-white border border-blue-100 p-3">
-                        <div className="text-gray-500">{t.referred}</div>
-                        <div className="text-lg font-bold text-gray-900">{stats.total}</div>
-                      </div>
-                      <div className="rounded-lg bg-white border border-blue-100 p-3">
-                        <div className="text-gray-500">{t.rewards}</div>
-                        <div className="text-lg font-bold text-gray-900">
-                          {stats.rewardsUsdt.toFixed(2)} USDT · {stats.rewardsSlearn.toFixed(2)} SLEARN
+                )}
+              </div>
+
+              {/* Tarjeta 2: Mis referidos (enlace para compartir, totales y listado) */}
+              <div id="code" className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-left">
+                <h2 className="font-semibold text-gray-800 mb-3">{t.myReferralsTitle}</h2>
+                {code ? (
+                  <>
+                    <p className="text-sm text-gray-600 mb-1">{t.shareLink}</p>
+                    <p className="font-mono text-lg font-semibold text-gray-900 mb-3 break-all">
+                      https://learn.tg/{lang}/ref/{code}
+                    </p>
+                    <button
+                      onClick={copyCode}
+                      className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                    >
+                      {copied ? t.copiedOk : t.copyLink}
+                    </button>
+                    {stats && (
+                      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                        <div className="rounded-lg bg-white border border-blue-100 p-3">
+                          <div className="text-gray-500">{t.referred}</div>
+                          <div className="text-lg font-bold text-gray-900">{stats.total}</div>
+                        </div>
+                        <div className="rounded-lg bg-white border border-blue-100 p-3">
+                          <div className="text-gray-500">{t.rewards}</div>
+                          <div className="text-lg font-bold text-gray-900">
+                            {stats.rewardsUsdt.toFixed(2)} USDT · {stats.rewardsSlearn.toFixed(2)} SLEARN
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                  {referrals.length > 0 && (
-                    <div className="mt-4">
-                      <h3 className="text-sm font-semibold text-gray-700 mb-2">{t.myReferralsTitle}</h3>
-                      <ul className="space-y-1 text-sm text-gray-700">
-                        {referrals.slice(0, 10).map((r, i) => (
-                          <li key={i} className="flex justify-between rounded bg-white border border-blue-100 px-3 py-1.5">
-                            <span>{r.name || (es ? 'Usuario' : 'User')}</span>
-                            <span className="text-gray-500">{r.status}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      {referrals.length > 10 && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {es ? `…y ${referrals.length - 10} más.` : `…and ${referrals.length - 10} more.`}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {history.length > 0 && (
-                    <div className="mt-4">
-                      <h3 className="text-sm font-semibold text-gray-700 mb-2">{t.historyTitle}</h3>
-                      <ul className="space-y-1 text-sm text-gray-700">
-                        {history.slice(0, 8).map((r, i) => (
-                          <li key={i} className="flex justify-between rounded bg-white border border-blue-100 px-3 py-1.5">
-                            <span>{r.type === 'referral_bonus' ? 'Pastor bonus' : es ? 'Recompensa' : 'Reward'}</span>
-                            <span className="font-mono font-medium">
-                              {r.amount.toFixed(2)} {r.crypto.toUpperCase()}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm text-gray-600">{t.loading}</p>
-              )}
+                    )}
+                    {referrals.length > 0 ? (
+                      <div className="mt-4">
+                        <ul className="space-y-1 text-sm text-gray-700">
+                          {referrals.slice(0, 10).map((r, i) => (
+                            <li key={i} className="flex justify-between rounded bg-white border border-blue-100 px-3 py-1.5">
+                              <span>{r.name || (es ? 'Usuario' : 'User')}</span>
+                              <span className="text-gray-500">{r.status}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {referrals.length > 10 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {es ? `…y ${referrals.length - 10} más.` : `…and ${referrals.length - 10} more.`}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 mt-4">{t.emptyReferrals}</p>
+                    )}
+                    {history.length > 0 && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-semibold text-gray-700 mb-2">{t.historyTitle}</h3>
+                        <ul className="space-y-1 text-sm text-gray-700">
+                          {history.slice(0, 8).map((r, i) => (
+                            <li key={i} className="flex justify-between rounded bg-white border border-blue-100 px-3 py-1.5">
+                              <span>{r.type === 'referral_bonus' ? 'Pastor bonus' : es ? 'Recompensa' : 'Reward'}</span>
+                              <span className="font-mono font-medium">
+                                {r.amount.toFixed(2)} {r.crypto.toUpperCase()}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-600">{t.loading}</p>
+                )}
+              </div>
             </div>
           )}
 
-          <p className="text-sm text-gray-500 mb-3">{ctaHint}</p>
-          <Link
-            href={ctaHref}
-            className="inline-block rounded bg-blue-600 px-8 py-3 text-base font-semibold text-white hover:bg-blue-700"
-          >
-            {ctaLabel}
-          </Link>
+          {address && activated && code ? (
+            <div className="mb-2">
+              <h2 className="text-lg font-bold text-gray-800 mb-1">{t.promoTitle}</h2>
+              <p className="text-sm text-gray-500 mb-4">{t.promoHint}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Link
+                  href={pastorsHref}
+                  className="rounded-xl border border-blue-200 bg-white p-4 text-left hover:bg-blue-50"
+                >
+                  <div className="font-semibold text-blue-700 mb-1">🙏 {t.invitePastors}</div>
+                  <div className="text-xs text-gray-500">{t.invitePastorsHint}</div>
+                </Link>
+                <a
+                  href={waHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-xl border border-green-200 bg-white p-4 text-left hover:bg-green-50"
+                >
+                  <div className="font-semibold text-green-700 mb-1">💬 {t.inviteWhatsApp}</div>
+                  <div className="text-xs text-gray-500">{t.inviteWhatsAppHint}</div>
+                </a>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-gray-500 mb-3">{ctaHint}</p>
+              <Link
+                href={ctaHref}
+                className="inline-block rounded bg-blue-600 px-8 py-3 text-base font-semibold text-white hover:bg-blue-700"
+              >
+                {ctaLabel}
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>
