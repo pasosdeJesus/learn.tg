@@ -113,9 +113,11 @@ export async function adminCreateCluster(deps: GdclusterDeps, req: NextRequest) 
 
     const churchIds = [Number(leaderChurchId), ...memberChurchIds.map((id: any) => Number(id))]
     for (const churchId of new Set(churchIds)) {
+      // church_clustergd no tiene constraint único (church_id, clustergd_id):
+      // insert directo; el handler ya valida que las iglesias no estén en otro
+      // clúster en adminAddMember, aquí se confía en el admin.
       await db.insertInto('church_clustergd')
         .values({ church_id: churchId, clustergd_id: cluster.id })
-        .onConflict((oc: any) => oc.columns(['church_id', 'clustergd_id']).doNothing())
         .execute()
     }
 

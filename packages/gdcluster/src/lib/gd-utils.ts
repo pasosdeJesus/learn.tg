@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 
 /** Pilot phase: only these countries can create clusters and receive donations */
 export const PILOT_COUNTRIES = [170, 694] // Colombia, Sierra Leona
@@ -193,7 +193,7 @@ export async function getClusterCandidates(
   const base = (refQuery: any) =>
     refQuery
       .innerJoin('church as c', 'c.created_by', 'u.id')
-      .leftJoin('church_clustergd as cc', (jb: any) => jb.on('cc.church_id', '=', 'c.id').on('cc.left_at', 'is', null))
+      .leftJoin('church_clustergd as cc', (jb: any) => jb.on('cc.church_id', '=', sql.ref('c.id')).on('cc.left_at', 'is', null))
       .select([
         'u.id as usuario_id', 'u.nombre', 'u.nusuario',
         'c.id as church_id', 'c.name as church_name', 'c.country_id',
