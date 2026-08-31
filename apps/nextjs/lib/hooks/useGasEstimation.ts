@@ -11,6 +11,13 @@
 // y el logger escribe `GasDiag ...` en la consola / DebugConsole (?debug=1).
 // TODO: subir el diagnóstico al paquete compartido @pasosdejesus/usdt (repo m)
 // para que sivel.xyz también lo tenga.
+//
+// Cambios frente al hook compartido (además del diagnóstico):
+// 1. `balanceLoaded` — cuando es `false` la estimación NO se ejecuta (estado
+//    idle, reason 'balance-not-loaded'): evita clasificar como 'no-gas' con un
+//    saldo 0 que todavía no se cargó (carrera modal recién abierto).
+// 2. Reintento (2 intentos, 600ms) ante fallos RPC transitorios de forno
+//    ("RPC Request failed") — mismo patrón que fetchTxWithReceipt.
 
 import { useEffect, useState } from 'react'
 import { type Address, formatEther } from 'viem'
@@ -32,6 +39,8 @@ export interface UseGasEstimationOptions {
   slearnAddress: Address | undefined
   courseId: number | null
   celoBalance: bigint
+  /** false → la estimación espera (idle) hasta que el modal cargó el saldo */
+  balanceLoaded?: boolean
 }
 
 export interface GasDiagnostics {
@@ -94,6 +103,7 @@ export function useGasEstimation({
   slearnAddress,
   courseId,
   celoBalance,
+  balanceLoaded = true,
 }: UseGasEstimationOptions) {
   const [gasState, setGasState] = useState<GasState>('idle')
   const [estimating, setEstimating] = useState(false)
@@ -129,7 +139,14 @@ export function useGasEstimation({
         }
         setDiag(d); logDiag(d); setGasState('no-gas'); return
       }
-      try {
+      if (balanceLoaded === false) {
+        // El saldo CELO todavía no se cargó: no clasificar aún (evita el
+        // falso "no-gas" con celo=0 en la apertura del modal).
+        const d: GasDiagnostics = { ...base, state: 'idle', reason: 'balance-not-loaded' }
+        setDiag(d); logDiag(d); return
+      }
+
+      const estimateOnce = async (): Promise<{ state: GasState; d: GasDiagnostics }> => {
         let walletChainId: string | undefined
         try { walletChainId = String(await walletClient.getChainId()) } catch { /* provider may not implement it */ }
 
@@ -177,26 +194,37 @@ export function useGasEstimation({
           estimatedCostCELO: formatEther(totalGas * gasPrice),
           sufficient: celoBalance > totalGas * gasPrice,
         }
-        if (totalGas === 0n) {
-          setDiag(d); logDiag(d); setGasState('idle'); return
+        if (totalGas === 0n) return { state: 'idle' as GasState, d }
+        const state: GasState = celoBalance > totalGas * gasPrice ? 'ok' : 'no-gas'
+        return { state, d: { ...d, state } }
+      }
+
+      // forno (celo-sepolia) falla intermitentemente en eth_estimateGas
+      // ("RPC Request failed"): reintentar una vez antes de clasificar.
+      let lastError: any
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const { state, d } = await estimateOnce()
+          setDiag(d); logDiag(d); setGasState(state)
+          return
+        } catch (e: any) {
+          lastError = e
+          if (attempt === 0) await new Promise((r) => setTimeout(r, 600))
         }
-        d.state = celoBalance > totalGas * gasPrice ? 'ok' : 'no-gas'
-        setDiag(d); logDiag(d); setGasState(d.state)
-      } catch (e: any) {
-        const fallbackNoGas = celoBalance < (1n << 50n)
-        const d: GasDiagnostics = {
-          ...base,
-          state: fallbackNoGas ? 'no-gas' : 'warn',
-          celoBalanceRaw: celoBalance.toString(),
-          celoBalanceCELO: formatEther(celoBalance),
-          error: e?.message ? String(e.message) : String(e),
-          fallbackNoGas,
-        }
-        setDiag(d); logDiag(d); setGasState(d.state)
-      } finally { setEstimating(false) }
+      }
+      const fallbackNoGas = celoBalance < (1n << 50n)
+      const d: GasDiagnostics = {
+        ...base,
+        state: fallbackNoGas ? 'no-gas' : 'warn',
+        celoBalanceRaw: celoBalance.toString(),
+        celoBalanceCELO: formatEther(celoBalance),
+        error: lastError?.message ? String(lastError.message) : String(lastError),
+        fallbackNoGas,
+      }
+      setDiag(d); logDiag(d); setGasState(d.state)
     }
     estimate()
-  }, [amount, slearnAmount, address, walletClient, publicClient, backendWalletAddress, usdtAddress, slearnAddress, courseId, celoBalance, usdtDecimals])
+  }, [amount, slearnAmount, address, walletClient, publicClient, backendWalletAddress, usdtAddress, slearnAddress, courseId, celoBalance, usdtDecimals, balanceLoaded])
 
   return { gasState, estimating, diag }
 }

@@ -77,6 +77,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     address, walletClient, publicClient,
     backendWalletAddress: recipientAddress, usdtAddress, slearnAddress,
     courseId: cId, celoBalance,
+    balanceLoaded: dataLoaded,
   })
   // Diagnóstico de gas visible en el panel con ?diag=1 (depuración dev site)
   const gasDiagMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('diag')
@@ -281,7 +282,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
               {t('resultOk')}
             </button>
           </div>
-        ) : address && walletClient && (gasState === 'no-gas' || (dataLoaded && noCelo)) ? (
+        ) : address && walletClient && dataLoaded && (gasState === 'no-gas' || noCelo) ? (
           <GasInsufficientPanel lang={lang || 'en'} onClose={closeAll} diag={gasDiagMode ? diag : null} />
         ) : (
           <>

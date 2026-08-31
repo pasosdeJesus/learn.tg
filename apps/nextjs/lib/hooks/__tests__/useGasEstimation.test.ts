@@ -123,4 +123,36 @@ describe('useGasEstimation (diagnóstico de gas)', () => {
     await waitFor(() => expect(result.current.gasState).toBe('warn'))
     expect(result.current.diag?.fallbackNoGas).toBe(false)
   })
+
+  it('waits (idle) until the balance is loaded — no premature no-gas', async () => {
+    const clients = makeClients()
+    const { result } = renderHook(() => useGasEstimation(props({ ...clients, balanceLoaded: false })))
+    await waitFor(() => expect(result.current.diag?.reason).toBe('balance-not-loaded'))
+    expect(result.current.gasState).toBe('idle')
+    expect(clients.publicClient.getGasPrice).not.toHaveBeenCalled()
+    expect(clients.publicClient.estimateContractGas).not.toHaveBeenCalled()
+  })
+
+  it('re-estimates once the balance loads (celoBalance dep changes)', async () => {
+    const clients = makeClients()
+    const { result, rerender } = renderHook(({ loaded }) =>
+      useGasEstimation(props({ ...clients, celoBalance: loaded ? 10n ** 18n : 0n, balanceLoaded: loaded })),
+      { initialProps: { loaded: false } },
+    )
+    await waitFor(() => expect(result.current.diag?.reason).toBe('balance-not-loaded'))
+    rerender({ loaded: true })
+    await waitFor(() => expect(result.current.gasState).toBe('ok'))
+    expect(result.current.diag?.celoBalanceCELO).toBe('1')
+  })
+
+  it('retries once on a transient RPC failure and recovers to ok', async () => {
+    const clients = makeClients()
+    clients.publicClient.estimateContractGas
+      .mockRejectedValueOnce(new Error('RPC Request failed'))
+      .mockResolvedValueOnce(60000n)
+    const { result } = renderHook(() => useGasEstimation(props(clients)))
+    await waitFor(() => expect(result.current.gasState).toBe('ok'))
+    expect(clients.publicClient.estimateContractGas).toHaveBeenCalledTimes(2)
+    expect(result.current.diag?.sufficient).toBe(true)
+  })
 })
