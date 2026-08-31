@@ -33,6 +33,7 @@ const URLS = [
   '/en/redgd',
   '/en/cluster/1',
   '/en/referrals',
+  '/ref/5F75CC53',
   // APIs de guías/cursos (compilan el route handler en la primera visita)
   '/api/guide?courseId=103&lang=en&prefix=web3-and-ubi&guide=guide3&guideNumber=3',
   '/api/gdcluster/donations/history',
@@ -49,6 +50,7 @@ const URLS = [
   '/api/gdcluster/ranking/clusters',
   '/api/gdcluster/ranking/countries',
   '/api/churches/fund',
+  '/api/referrals/fund',
   '/api/courses/premium/price?courseId=10',
   '/api/scholarship?courseId=1',
   '/api/transparency',

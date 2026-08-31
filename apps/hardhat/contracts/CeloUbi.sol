@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * This ensures that on-chain rules are met and prevents Sybil attacks.
  */
 contract CeloUbi is Ownable {
-    // The maximum amount of CELO to be rewarded per claim (1 CELO). The actual
+    // The maximum amount of CELO to be rewarded per claim (0.2 CELO). The actual
     // amount is a percentage of this, determined by the user's profileScore.
     uint256 public constant MAX_REWARD = 0.2 ether;
 

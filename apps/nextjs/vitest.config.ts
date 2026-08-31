@@ -100,7 +100,12 @@ export default defineConfig({
     },
     onConsoleLog: (log, type) => type !== 'stderr',
     // Excluir E2E tests — requieren servidor corriendo (solo CI)
-    exclude: ['e2e/**', 'node_modules/**'],
+    // `**/node_modules/**` (no solo `node_modules/**`): el motor gdcluster
+    // enlaza contracts/node_modules -> apps/hardhat/node_modules y su store
+    // .pnpm contiene archivos *.test.* que no deben recolectarse.
+    // `**/contracts/test/**`: los tests del hardhat aislado del gdcluster se
+    // ejecutan con `node run-tests.mjs`, no bajo vitest.
+    exclude: ['e2e/**', '**/node_modules/**', '**/contracts/test/**'],
   },
   esbuild: {
     jsx: 'automatic',

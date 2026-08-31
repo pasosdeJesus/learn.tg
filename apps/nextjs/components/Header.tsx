@@ -54,7 +54,7 @@ export default function Header({ lang: langProp = 'en' }) {
     { key: 'navProfile', href: `/${lang}/profile`, emoji: '👤' },
     { key: 'navLeaderboard', href: `/${lang}/leaderboard`, emoji: '🏆' },
     { key: 'navTransparency', href: `/${lang}/transparency`, emoji: '📊' },
-    { key: 'navReferrals', href: `/${lang}/referrals`, emoji: '🤝' },
+    { key: 'navReferrals', href: lang === 'es' ? '/es/referidos' : `/${lang}/referrals`, emoji: '🤝' },
   ]
 
   return (

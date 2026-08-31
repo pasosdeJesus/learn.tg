@@ -314,6 +314,14 @@ export default function Page({ params }: PageProps) {
                 <p className="text-sm text-gray-700">
                   {course.idioma === 'en' ? 'Available' : 'Disponible'}:{' '}
                   <span className="font-semibold">{fundSlearn} SLEARN</span>
+                  {Number(fundSlearn) > 0 && (
+                    <>
+                      {' · '}
+                      {course.idioma === 'en'
+                        ? `funds ~${Math.floor(Number(fundSlearn) / 44)} more pastors`
+                        : `financia ~${Math.floor(Number(fundSlearn) / 44)} pastores más`}
+                    </>
+                  )}
                 </p>
               </div>
             )}

@@ -83,7 +83,8 @@ export function getTargetCopy(lang: string, target: PaymentTarget) {
  * contract (LearnTGVaults for courses, ClusterFunds for clusters/countries).
  */
 export function getTargetRecipient(_target: PaymentTarget): Address | undefined {
-  return (process.env.NEXT_PUBLIC_ADDRESS || '') as Address
+  const addr = process.env.NEXT_PUBLIC_ADDRESS
+  return addr ? (addr as Address) : undefined
 }
 
 /** Backend verification endpoint */

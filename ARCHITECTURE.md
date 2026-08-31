@@ -113,7 +113,14 @@ graph TD
     - `LearnTGVaultsV5.sol`: Manages USDT and SLEARN scholarship rewards for crossword puzzle completions (active; flexible split referrer/learnTgWallet). V4 y V3 legacy.
     - `CeloUbi.sol`: Manages periodic claims of Universal Basic Income (UBI) in CELO.
     - `SLEARN.sol`: ERC-20 utility token, 2 decimals, restricted transfers.
-    - `PasosDeJesusCredentials.sol`: Course completion SBTs (Soul-Bound Tokens).
+    - Course completion SBTs are minted via the ecosystem `PasosDeJesusCredentials`
+      contract (shared from the pdJ/sivel3 ecosystem — **source not in this repo**).
+      The rewards engine delegates to `@pasosdejesus/mpdj/blockchain`
+      (`mintCourseWithRetry`/`hasCredentialOnChain`) and resolves the address via
+      `@pasosdejesus/m/blockchain/deployments` (`getCeloCredentialsAddress`) from
+      `apps/hardhat/deployments/PasosDeJesusCredentials/{network}.json`, with env
+      fallback `NEXT_PUBLIC_PDJCREDENTIALS_CELO_ADDRESS`. See
+      [doc/deploy-credentials.md](doc/deploy-credentials.md).
     - `ClusterFunds.sol` / `ClusterFundsV2.sol`: cluster/country funds y donaciones GD (V2 operativo, REQ/214).
 
 ### 4. **Web3 Engines (packages/)**
@@ -147,8 +154,10 @@ peer dep, D2 dependency injection, D3 hooks):
   (`engines-dist`); dist is not in git. Webpack resolution falls back to the
   app's `node_modules` (`next.config.ts`). The gdcluster engine also carries an
   isolated Hardhat project (`packages/gdcluster/contracts/`: `hardhat.config.ts`,
-  deploy/verify scripts, `ClusterFunds.test.ts`) — `contract:test` green (80 tests)
-  with `@pasosdejesus/edr` ≥ 0.1.2 (fix `block.timestamp` en `eth_call`).
+  deploy/verify scripts, `run-tests.mjs`, `test/ClusterFunds.test.ts` — 7 tests).
+  `contract:test` (from `apps/nextjs`) runs `apps/hardhat/test` — green (80 tests:
+  34 V2 + 24 V5 + 15 CeloUbi + 7 ClusterFunds) with `@pasosdejesus/edr` ≥ 0.1.2
+  (fix `block.timestamp` en `eth_call`).
   See `m` REQ/35 for pitfalls (webpack parallelism, heap limits, vendored loadable alias).
 
 ---
@@ -316,8 +325,8 @@ Single source of truth for all value movements — both on-chain (USDT, SLEARN, 
 - `id`: Primary key
 - `usuario_id`: Foreign key to `usuario`
 - `wallet`: Wallet address that signed the transaction
-- `type`: Operation type — `scholarship` (crossword reward), `donation` (user gave value), `donation_reward` (SLEARN cashback for donating), `pay-course` (premium course payment), `ubi-claim` (CELO basic income), `conversion` (SLEARN ↔ Learning Points)
-- `crypto`: Asset — `usdt`, `slearn`, `celo`
+- `type`: Operation type — `scholarship` (crossword reward), `donation` (user gave value), `donation_reward` (SLEARN cashback for donating), `pay-course` (premium course payment), `ubi-claim` (CELO basic income), `conversion` (SLEARN ↔ Learning Points), `pastor_bonus` (44 SLEARN pastor bonus), `referral_reward` / `referral_bonus` (referral incentives)
+- `crypto`: Asset — `usdt`, `slearn`, `celo`, `learningpoints`
 - `amount`: Human-readable amount (e.g., 10.00 USDT, 5.50 SLEARN)
 - `balance_impact`: Net effect on user's balance — negative for outflows (donations), positive for inflows (rewards, scholarships)
 - `hash`: Blockchain transaction hash (null for off-chain operations like Learning Points)
@@ -329,8 +338,9 @@ Single source of truth for all value movements — both on-chain (USDT, SLEARN, 
 - `synced`: Whether synced with blockchain state
 
 **Constraints:**
-- `type` CHECK: `scholarship | donation | donation_reward | pay-course | ubi-claim | conversion`
-- `hash` UNIQUE (prevents replay attacks)
+- `type` CHECK: `scholarship | donation | donation_reward | pay-course | ubi-claim | conversion | pastor_bonus | referral_reward | referral_bonus`
+- `crypto` CHECK: `usdt | celo | learningpoints | slearn`
+- `(crypto, hash)` UNIQUE (prevents replay attacks)
 
 **Usage in leaderboard:** Leaderboard metrics aggregate this table — SLEARN net balance via `SUM(balance_impact)`, scholarships via `SUM(amount) WHERE type='scholarship'`, donations via `SUM(amount) WHERE type='donation'`. The leaderboard does not filter by `subcategoria`, showing total user donation activity regardless of destination.
 
@@ -449,8 +459,9 @@ GET /api/gd/contact/:clusterId
 
 ### Smart Contract Addresses
 
-Contract addresses are stored as JSON files in `apps/hardhat/deployments/{Contract}/{network}.json`,
-**not** in `.env` variables. This is the single source of truth for all environments.
+Contract addresses are stored as JSON files in `apps/hardhat/deployments/{Contract}/{network}.json` —
+the primary source for vaults, SLEARN, and ClusterFunds. Legacy/testnet contracts use documented
+env fallbacks (see below). Deployment JSONs present in this repo:
 
 ```
 apps/hardhat/deployments/
@@ -459,9 +470,20 @@ apps/hardhat/deployments/
   LearnTGVaults/V5/{network}.json
   ClusterFunds/{network}.json
   ClusterFundsV2/{network}.json
-  MockUSDT/{network}.json
-  CeloUbi/{network}.json
 ```
+
+Address resolution per contract:
+- **Vaults (V5/V4)**: `LearnTGVaults/V{4,5}/{network}.json` (`getV5Address`/`getV4Address`),
+  env fallbacks `NEXT_PUBLIC_DEPLOYED_AT_V5` / `NEXT_PUBLIC_DEPLOYED_AT`. V3 (legacy) uses
+  `NEXT_PUBLIC_DEPLOYED_AT` only.
+- **SLEARN**: `@pasosdejesus/mpdj/blockchain/ecosystem-addresses` (`SLEARN_ADDRESSES`) first,
+  then `SLEARN/{network}.json`.
+- **ClusterFunds / ClusterFundsV2**: `ClusterFunds/{network}.json` / `ClusterFundsV2/{network}.json`
+  (`@pasosdejesus/m/blockchain/deployments` `readDeployment`).
+- **CeloUbi**: env `NEXT_PUBLIC_CELOUBI_ADDRESS` (no deployment JSON).
+- **Credentials (SBTs)**: `PasosDeJesusCredentials/{network}.json` (expected, generated by the
+  sivel3 ecosystem tooling; not committed here) with env fallback
+  `NEXT_PUBLIC_PDJCREDENTIALS_CELO_ADDRESS`.
 
 **Reading addresses in scripts** (`apps/hardhat/scripts/`):
 

@@ -178,7 +178,7 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
     ctaLabel = t.ctaProfile
     ctaHint = t.ctaProfileHint
   } else if (address && score != null && score > 90) {
-    ctaHref = `/${lang}/referrals#code`
+    ctaHref = `/${lang === 'es' ? 'referidos' : 'referrals'}#code`
     ctaLabel = t.myCode
     ctaHint = t.ctaReadyHint
   }

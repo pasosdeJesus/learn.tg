@@ -795,7 +795,6 @@ export default function ProfileForm({ params }: PageProps) {
         }
       `}</style>
       <DebugConsole />
-      <ReferralProfileSection lang={lang} />
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">
@@ -1275,6 +1274,7 @@ export default function ProfileForm({ params }: PageProps) {
           </form>
         </div>
       </div>
+      <ReferralProfileSection lang={lang} />
     </div>
   )
 }

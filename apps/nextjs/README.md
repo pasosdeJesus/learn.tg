@@ -57,7 +57,9 @@ This section provides a deeper look into the technical implementation of the Nex
 ### Business Logic and Utilities (lib/)
 This directory contains crucial application logic, decoupled from the UI and API routes, ensuring reusability and testability.
 - **`lib/guide-utils.ts`**: Manages logic related to course and guide progress.
-- **`lib/scores.ts`**: Handles the calculation and updating of user scores (`learningscore`, `profilescore`).
+- **`lib/scores.ts`**: Refreshes the learning score (`learningscore_deprecated`)
+  from SLEARN transactions and computes donation SLEARN rewards. Profile score
+  updates live in `lib/gd-utils.ts` (`updateProfileScore` / `recalculateProfileScore`).
 - **`lib/metrics-server.ts`**: Provides server-side functions for recording user events.
 - **`lib/rewards-app.ts` / `lib/gdcluster-app.ts`**: Adapters that instantiate the
   `@learn-tg/rewards` / `@learn-tg/gdcluster` engines (dependency injection).
