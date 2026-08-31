@@ -148,3 +148,84 @@ export async function addClusterHistory(
     })
     .execute()
 }
+
+// ── REQ/220: invitaciones y notificaciones ────────────────────────────────
+
+export interface ClusterCandidate {
+  usuario_id: number
+  nombre: string | null
+  nusuario: string
+  church_id: number
+  church_name: string
+  country_id: number
+}
+
+/**
+ * Notificación in-app (tabla `notifications`, R-#162 MVP).
+ */
+export async function notifyUser(
+  db: Kysely<any>,
+  usuarioId: number,
+  type: string,
+  title: string,
+  content: string,
+  link = ''
+): Promise<void> {
+  await db
+    .insertInto('notifications')
+    .values({ usuario_id: usuarioId, type, title, content, link, is_read: false, created_at: new Date() })
+    .execute()
+}
+
+/**
+ * Candidatos a invitar a un clúster (REQ/220 §2.1):
+ * 1. Pastores referidos por el líder (grafo #163) con iglesia declarada y
+ *    verificada, mismo país, sin clúster actual.
+ * 2. El referidor del líder, si es pastor (mismas condiciones).
+ * Excluye al propio líder y a pastores ya en un clúster.
+ */
+export async function getClusterCandidates(
+  db: Kysely<any>,
+  leaderUserId: number,
+  leaderCountryId: number,
+  leaderChurchId: number
+): Promise<ClusterCandidate[]> {
+  const base = (refQuery: any) =>
+    refQuery
+      .innerJoin('church as c', 'c.created_by', 'u.id')
+      .leftJoin('church_clustergd as cc', (jb: any) => jb.on('cc.church_id', '=', 'c.id').on('cc.left_at', 'is', null))
+      .select([
+        'u.id as usuario_id', 'u.nombre', 'u.nusuario',
+        'c.id as church_id', 'c.name as church_name', 'c.country_id',
+      ])
+      .where('u.church_relationship', '=', 'pastor')
+      .where('u.fechadeshabilitacion', 'is', null)
+      .where('c.registration_verified', '=', true)
+      .where('c.country_id', '=', leaderCountryId)
+      .where('c.id', '!=', leaderChurchId)
+      .where('cc.church_id', 'is', null) // sin clúster actual
+      .execute()
+
+  const referred = await base(
+    db.selectFrom('referralrelationship as rr').innerJoin('usuario as u', 'u.id', 'rr.referred_id').where('rr.referrer_id', '=', leaderUserId)
+  )
+  const referrer = await base(
+    db.selectFrom('referralrelationship as rr').innerJoin('usuario as u', 'u.id', 'rr.referrer_id').where('rr.referred_id', '=', leaderUserId)
+  )
+
+  const seen = new Set<number>()
+  const candidates: ClusterCandidate[] = []
+  for (const row of [...referred, ...referrer]) {
+    if (seen.has(row.usuario_id)) continue
+    seen.add(row.usuario_id)
+    candidates.push({
+      usuario_id: row.usuario_id,
+      nombre: row.nombre ?? null,
+      nusuario: row.nusuario,
+      church_id: row.church_id,
+      church_name: row.church_name,
+      country_id: row.country_id,
+    })
+  }
+  return candidates
+}

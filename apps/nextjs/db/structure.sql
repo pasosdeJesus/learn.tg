@@ -1515,6 +1515,42 @@ ALTER SEQUENCE public.church_id_seq OWNED BY public.church.id;
 
 
 --
+-- Name: cluster_invitation; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cluster_invitation (
+    id integer NOT NULL,
+    clustergd_id integer NOT NULL,
+    invited_pastor_id integer NOT NULL,
+    invited_church_id integer NOT NULL,
+    invited_by_id integer NOT NULL,
+    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    responded_at timestamp without time zone
+);
+
+
+--
+-- Name: cluster_invitation_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.cluster_invitation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: cluster_invitation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.cluster_invitation_id_seq OWNED BY public.cluster_invitation.id;
+
+
+--
 -- Name: clustergd; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1524,7 +1560,10 @@ CREATE TABLE public.clustergd (
     code character varying(6) NOT NULL,
     country_id integer NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    pseudonym character varying(100),
+    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
+    leader_church_id integer
 );
 
 
@@ -5465,6 +5504,13 @@ ALTER TABLE ONLY public.church_clustergd ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
+-- Name: cluster_invitation id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation ALTER COLUMN id SET DEFAULT nextval('public.cluster_invitation_id_seq'::regclass);
+
+
+--
 -- Name: clustergd id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -6135,6 +6181,22 @@ ALTER TABLE ONLY public.church_clustergd
 
 ALTER TABLE ONLY public.church
     ADD CONSTRAINT church_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_cluster_pastor_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_cluster_pastor_unique UNIQUE (clustergd_id, invited_pastor_id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_pkey PRIMARY KEY (id);
 
 
 --
@@ -7784,6 +7846,38 @@ ALTER TABLE ONLY public.church
 
 
 --
+-- Name: cluster_invitation cluster_invitation_clustergd_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_clustergd_id_fkey FOREIGN KEY (clustergd_id) REFERENCES public.clustergd(id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_invited_by_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_invited_by_id_fkey FOREIGN KEY (invited_by_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_invited_church_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_invited_church_id_fkey FOREIGN KEY (invited_church_id) REFERENCES public.church(id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_invited_pastor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_invited_pastor_id_fkey FOREIGN KEY (invited_pastor_id) REFERENCES public.usuario(id);
+
+
+--
 -- Name: clustergd_history clustergd_history_changed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7797,6 +7891,14 @@ ALTER TABLE ONLY public.clustergd_history
 
 ALTER TABLE ONLY public.clustergd_history
     ADD CONSTRAINT clustergd_history_clustergd_id_fkey FOREIGN KEY (clustergd_id) REFERENCES public.clustergd(id);
+
+
+--
+-- Name: clustergd clustergd_leader_church_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd
+    ADD CONSTRAINT clustergd_leader_church_id_fkey FOREIGN KEY (leader_church_id) REFERENCES public.church(id);
 
 
 --

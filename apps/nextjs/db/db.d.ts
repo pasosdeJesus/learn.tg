@@ -93,7 +93,10 @@ export interface Clustergd {
   country_id: number;
   created_at: Generated<Timestamp | null>;
   id: Generated<number>;
+  leader_church_id: number | null;
   name: string;
+  pseudonym: string | null;
+  status: Generated<string>;
   updated_at: Generated<Timestamp | null>;
 }
 
@@ -105,6 +108,17 @@ export interface ClustergdHistory {
   id: Generated<number>;
   new_value: string | null;
   old_value: string | null;
+}
+
+export interface ClusterInvitation {
+  clustergd_id: number;
+  created_at: Generated<Timestamp | null>;
+  id: Generated<number>;
+  invited_by_id: number;
+  invited_church_id: number;
+  invited_pastor_id: number;
+  responded_at: Timestamp | null;
+  status: Generated<string>;
 }
 
 export interface Cor1440GenActividad {
@@ -1514,6 +1528,7 @@ export interface DB {
   billetera_usuario: BilleteraUsuario;
   church: Church;
   church_clustergd: ChurchClustergd;
+  cluster_invitation: ClusterInvitation;
   clustergd: Clustergd;
   clustergd_history: ClustergdHistory;
   cor1440_gen_actividad: Cor1440GenActividad;

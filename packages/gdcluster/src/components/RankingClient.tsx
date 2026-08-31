@@ -19,7 +19,8 @@ export interface RankingClientDeps {
 }
 
 interface ClusterRow {
-  id: number; name: string; country_name: string | null
+  id: number; name: string; pseudonym: string | null; display_name: string
+  country_name: string | null
   country_code: string | null; church_count: number; wallet: string
 }
 
@@ -111,7 +112,7 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
               ) : clusters.map((c, i) => (
                 <tr key={c.id} className="border-b hover:bg-blue-50">
                   <td className="px-3 py-2 font-mono text-xs text-gray-500">{i + 1}</td>
-                  <td className="px-3 py-2 font-medium">{c.name}</td>
+                  <td className="px-3 py-2 font-medium">{c.display_name || c.name}</td>
                   <td className="px-3 py-2 text-xs">
                     {c.country_code ? `${flagEmoji(c.country_code)} ${c.country_name}` : c.country_name || '—'}
                   </td>
@@ -126,7 +127,7 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
                     <button onClick={() => setDonateTarget({
                       type: 'cluster-donation',
                       clusterWallet: c.wallet,
-                      clusterName: c.name,
+                      clusterName: c.display_name || c.name,
                     })}
                     className="text-xs text-blue-600 hover:underline px-2 py-1 rounded hover:bg-blue-50">
                       {t('donate')}

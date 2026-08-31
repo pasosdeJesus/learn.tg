@@ -4,6 +4,8 @@ import type { Kysely } from 'kysely'
 import { rankingClusters, rankingCountries, rankingFunds } from './routes/gd-ranking'
 import { verifyDonation, donationHistory } from './routes/gd-donations'
 import { createCluster, joinCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster'
+import { clusterStatus, clusterCandidates, listInvitations, acceptInvitation, rejectInvitation } from './routes/gd-invitations'
+import { adminListClusters, adminGetCluster, adminCreateCluster, adminUpdateCluster, adminDisbandCluster, adminAddMember, adminRemoveMember } from './routes/gd-admin-clusters'
 import { searchChurches } from './routes/gd-churches'
 
 export interface AuthUser {
@@ -33,6 +35,12 @@ export interface GdclusterDeps {
     token?: string,
   ) => Promise<AuthUser | null>
   backend: GdclusterBackendDeps
+  /** Auth de admin/verificador (inyectada por el host; REQ/220 admin) */
+  authenticateAdmin?: (
+    db: Kysely<any>,
+    wallet: string,
+    token: string,
+  ) => Promise<{ usuario_id: number; billetera: string } | null>
 }
 
 export interface RouteHandlers {
@@ -40,6 +48,7 @@ export interface RouteHandlers {
   POST?: (req?: Request, params?: Record<string, string>) => Promise<Response>
   PUT?: (req?: Request, params?: Record<string, string>) => Promise<Response>
   PATCH?: (req?: Request, params?: Record<string, string>) => Promise<Response>
+  DELETE?: (req?: Request, params?: Record<string, string>) => Promise<Response>
 }
 
 /**
@@ -79,6 +88,34 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
     },
     'cluster/[id]/leave': {
       POST: (req, params) => leaveCluster(deps, req as NextRequest, params!),
+    },
+    'cluster/status': {
+      GET: (req) => clusterStatus(deps, req as NextRequest),
+    },
+    'cluster/candidates': {
+      GET: (req) => clusterCandidates(deps, req as NextRequest),
+    },
+    'cluster/invitations': {
+      GET: (req) => listInvitations(deps, req as NextRequest),
+    },
+    'cluster/invitation/accept': {
+      POST: (req) => acceptInvitation(deps, req as NextRequest),
+    },
+    'cluster/invitation/reject': {
+      POST: (req) => rejectInvitation(deps, req as NextRequest),
+    },
+    'admin/clusters': {
+      GET: (req) => adminListClusters(deps, req as NextRequest),
+      POST: (req) => adminCreateCluster(deps, req as NextRequest),
+    },
+    'admin/clusters/[id]': {
+      GET: (req, params) => adminGetCluster(deps, req as NextRequest, params!),
+      PUT: (req, params) => adminUpdateCluster(deps, req as NextRequest, params!),
+      DELETE: (req, params) => adminDisbandCluster(deps, req as NextRequest, params!),
+    },
+    'admin/clusters/[id]/members': {
+      POST: (req, params) => adminAddMember(deps, req as NextRequest, params!),
+      DELETE: (req, params) => adminRemoveMember(deps, req as NextRequest, params!),
     },
     'churches/search': {
       GET: (req) => searchChurches(deps, req as NextRequest),

@@ -8,6 +8,7 @@ import { createGdclusterApp } from '@learn-tg/gdcluster'
 import '@learn-tg/gdcluster/register'
 import { newKyselyPostgresql } from '@/.config/kysely-db'
 import { authenticateUser } from '@/lib/authenticateUser'
+import { authenticateAdmin } from '@/lib/admin-auth'
 import {
   getPublicClient,
   getWalletClient,
@@ -20,6 +21,7 @@ import {
 export const gdclusterApp = createGdclusterApp({
   db: () => newKyselyPostgresql(),
   authenticateUser,
+  authenticateAdmin,
   backend: {
     getPublicClient,
     getWalletClient,
