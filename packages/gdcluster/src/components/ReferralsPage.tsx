@@ -38,13 +38,13 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
   const [code, setCode] = useState<string | null>(null)
   const [stats, setStats] = useState<ReferralStats | null>(null)
   const [history, setHistory] = useState<HistoryReward[]>([])
-  const [referrals, setReferrals] = useState<Array<{ name: string | null; status: string; claimedAt: unknown }>>([])
   const [activated, setActivated] = useState(false)
   const [purchasedPremium, setPurchasedPremium] = useState(false)
   const [profileScore, setProfileScore] = useState<number | null>(null)
-  const [referredBy, setReferredBy] = useState<{ nombre: string | null; nusuario: string | null; billetera: string | null } | null>(null)
+  const [referredBy, setReferredBy] = useState<{ id: number | null; nusuario: string | null; billetera: string | null } | null>(null)
   const [score, setScore] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
+  const [referrals, setReferrals] = useState<Array<{ referredId?: number; nusuario?: string | null; status: string; claimedAt: unknown }>>([])
 
   useEffect(() => {
     let cancelled = false
@@ -123,7 +123,6 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
     fundUnavailable: es ? 'No se pudo consultar la billetera de referidos en este momento.' : 'Could not read the referral wallet right now.',
     noFundsNote: es ? 'Las recompensas se pagan desde la billetera de referidos. Si no tiene fondos, no se entrega recompensa.' : 'Rewards are paid from the referral wallet. If it has no funds, no reward is given.',
     myReferrerTitle: es ? 'Mi referidor' : 'My referrer',
-    referrerName: es ? 'Nombre' : 'Name',
     referrerUser: es ? 'Usuario' : 'Username',
     referrerWallet: es ? 'Billetera' : 'Wallet',
     copyLink: es ? 'Copiar enlace' : 'Copy link',
@@ -271,10 +270,12 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
                 {referredBy ? (
                   <div className="space-y-2 text-sm text-gray-700">
                     <p>
-                      <span className="font-semibold">{t.referrerName}:</span> {referredBy.nombre || '—'}
-                    </p>
-                    <p>
-                      <span className="font-semibold">{t.referrerUser}:</span> {referredBy.nusuario || '—'}
+                      <span className="font-semibold">{t.referrerUser}:</span>{' '}
+                      {referredBy.id ? (
+                        <Link href={`/${lang}/user/${referredBy.id}`} className="text-blue-600 underline hover:text-blue-800">
+                          {referredBy.nusuario || '—'}
+                        </Link>
+                      ) : (referredBy.nusuario || '—')}
                     </p>
                     <p className="break-all">
                       <span className="font-semibold">{t.referrerWallet}:</span>{' '}
@@ -323,7 +324,13 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
                         <ul className="space-y-1 text-sm text-gray-700">
                           {referrals.slice(0, 10).map((r, i) => (
                             <li key={i} className="flex justify-between rounded bg-white border border-blue-100 px-3 py-1.5">
-                              <span>{r.name || (es ? 'Usuario' : 'User')}</span>
+                              {r.referredId ? (
+                                <Link href={`/${lang}/user/${r.referredId}`} className="text-blue-600 underline hover:text-blue-800">
+                                  {r.nusuario || (es ? 'Usuario' : 'User')}
+                                </Link>
+                              ) : (
+                                <span>{r.nusuario || (es ? 'Usuario' : 'User')}</span>
+                              )}
                               <span className="text-gray-500">{r.status}</span>
                             </li>
                           ))}
