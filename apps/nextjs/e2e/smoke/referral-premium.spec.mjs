@@ -227,6 +227,7 @@ async function main() {
       walletAddress: pastorAddr, token: pastor.token, code: refCode,
     }, { httpsAgent, validateStatus: s => s < 500 }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
     if (claimRes.status === 200 && claimRes.data?.ok) ok(`Claim 200 — relación creada (referrer_id=${claimRes.data.referrer_id})`)
+    else if (claimRes.status === 429) { skip('Rate-limit del claim (REQ/163: 5/día por IP) — reintenta en 24h'); finish() }
     else { fail(`Claim falló: ${claimRes.status} ${JSON.stringify(claimRes.data)}`); finish() }
 
     // ════════════════════════════════════════════════════════════

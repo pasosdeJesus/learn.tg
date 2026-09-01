@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { use } from 'react'
+import type { ComponentType } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
 
@@ -11,6 +12,8 @@ type PageProps = {
 
 export interface ReferralsPageDeps {
   useAuthAddress: () => { address?: string | null }
+  // QR del enlace de referido (inyectado por el host — REQ/163 §1.6)
+  QrCode?: ComponentType<{ value: string; size?: number }>
 }
 
 interface ReferralStats {
@@ -305,6 +308,11 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
                     >
                       {copied ? t.copiedOk : t.copyLink}
                     </button>
+                    {deps?.QrCode && (
+                      <div className="mt-4 flex justify-center">
+                        <deps.QrCode value={`https://learn.tg/${lang}/ref/${code}`} size={128} />
+                      </div>
+                    )}
                     {stats && (
                       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                         <div className="rounded-lg bg-white border border-blue-100 p-3">

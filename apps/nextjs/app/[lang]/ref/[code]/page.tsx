@@ -25,6 +25,15 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
   const [hasWallet, setHasWallet] = useState(false)
   const [status, setStatus] = useState<'stored' | 'claimed' | 'already'>('stored')
 
+  // Móvil (lo más común en Sierra Leone): en el navegador normal no hay
+  // window.ethereum. MetaMask tiene universal link documentado para abrir una
+  // URL en su navegador integrado: https://metamask.app.link/d/<url>.
+  const isMobile = typeof navigator !== 'undefined' &&
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+  const metaMaskDeepLink = typeof window !== 'undefined' && isMobile
+    ? `https://metamask.app.link/d/${encodeURIComponent(window.location.href)}`
+    : null
+
   useEffect(() => {
     const normalized = (code || '').toUpperCase()
     let cancelled = false
@@ -97,6 +106,13 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
     noWalletBody: es
       ? 'Para unirte y recibir recompensas necesitas una billetera de criptomonedas. Aprende a crear la tuya en el curso Web3 & UBI (Guía 2).'
       : 'To join and receive rewards you need a crypto wallet. Learn how to create yours in the Web3 & UBI course (Guide 2).',
+    // Móvil (lo más común en Sierra Leone): en el navegador normal no hay
+    // window.ethereum; quien ya tiene una billetera debe abrir el enlace en el
+    // navegador integrado de la billetera.
+    noWalletHaveApp: es
+      ? '¿Ya tienes una billetera en el teléfono (Rabby, MetaMask u OKX)? Abre este enlace en el navegador de tu billetera para conectar y reclamar tu código.'
+      : 'Already have a wallet app (Rabby, MetaMask, or OKX)? Open this link in your wallet\u2019s built-in browser to connect and claim your code.',
+    openInMetaMask: es ? 'Abrir en MetaMask' : 'Open in MetaMask',
     goCourse: es ? 'Ir al curso Web3 & UBI' : 'Go to the Web3 & UBI course',
     loading: es ? 'Verificando tu invitación…' : 'Checking your invitation…',
     error: es ? 'No se pudo verificar el código. Inténtalo de nuevo.' : 'Could not verify the code. Please try again.',
@@ -156,9 +172,22 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
                     <h2 className="font-semibold text-gray-800 mb-1">{t.noWalletTitle}</h2>
                     <p className="text-sm text-gray-700 mb-3">{t.noWalletBody}</p>
-                    <Link href={courseHref} className="inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-                      {t.goCourse}
-                    </Link>
+                    <p className="text-sm text-gray-700 mb-3">{t.noWalletHaveApp}</p>
+                    {metaMaskDeepLink && (
+                      <a
+                        href={metaMaskDeepLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block rounded bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 mb-3"
+                      >
+                        {t.openInMetaMask}
+                      </a>
+                    )}
+                    <div>
+                      <Link href={courseHref} className="inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                        {t.goCourse}
+                      </Link>
+                    </div>
                   </div>
                 )}
               </>

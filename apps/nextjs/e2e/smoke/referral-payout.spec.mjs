@@ -262,6 +262,9 @@ async function main() {
     }, { httpsAgent, validateStatus: s => s < 500 }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
     if (claimRes.status === 200 && claimRes.data?.ok) {
       ok(`Claim 200 — relación creada (referrer_id=${claimRes.data.referrer_id})`)
+    } else if (claimRes.status === 429) {
+      skip('Rate-limit del claim (REQ/163: 5/día por IP) — reintenta en 24h')
+      finish()
     } else {
       // El referido pudo haberse reclamado en una corrida anterior (idempotencia)
       if (claimRes.status === 400 && String(claimRes.data?.error || '').includes('already')) {

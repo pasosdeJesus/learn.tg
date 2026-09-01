@@ -40,11 +40,18 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
   const [error, setError] = useState('')
   const [localAddr, setLocalAddr] = useState<string | null>(null)
 
+  // Móvil (lo más común en Sierra Leone): en el navegador normal no hay
+  // extensiones → la única vía viable es el navegador integrado de la billetera.
+  const isMobileUA = typeof navigator !== 'undefined' &&
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+
   const t = createComponentT(lang, {
     en: {
       connect: 'Connect Wallet',
       disconnect: 'Disconnect',
-      noWallet: 'No wallet detected. Please install OneKey or MetaMask.',
+      noWallet: isMobileUA
+        ? 'No wallet detected here. If you have a wallet app (Rabby, MetaMask, OKX), open this page in the wallet\u2019s built-in browser.'
+        : 'No wallet detected. Please install the Rabby or MetaMask extension.',
       cancelled: 'Connection cancelled. Please try again.',
       failed: 'Connection failed. Please try again.',
       addChainFailed: 'Could not add Celo network. Please add it manually via chainlist.org.',
@@ -53,7 +60,9 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     es: {
       connect: 'Conectar Billetera',
       disconnect: 'Desconectar',
-      noWallet: 'No se detectó billetera. Instala OneKey o MetaMask.',
+      noWallet: isMobileUA
+        ? 'No se detectó billetera aquí. Si tienes una app de billetera (Rabby, MetaMask, OKX), abre esta página en el navegador integrado de la billetera.'
+        : 'No se detectó billetera. Instala la extensión de Rabby o MetaMask.',
       cancelled: 'Conexión cancelada. Intenta de nuevo.',
       failed: 'Conexión fallida. Intenta de nuevo.',
       addChainFailed: 'No se pudo agregar la red Celo. Agrégala manualmente vía chainlist.org.',

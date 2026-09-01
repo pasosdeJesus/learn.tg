@@ -16,6 +16,7 @@ import { adminAuthParams } from '@/lib/admin-fetch'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import DonateModal from '@/components/DonateModal'
 import { Button } from '@/components/ui/button'
+import { ReferralQr } from '@/components/ReferralQr'
 
 export const GdPastoresLandingHost = (p: { lang: string }) => (
   <GdPastoresLanding
@@ -36,5 +37,5 @@ export const ClusterPageHost = (p: { lang: string; id: string }) => (
 )
 
 export const ReferralsPageHost = (p: { params: Promise<{ lang: string }> }) => (
-  <ReferralsPage {...p} deps={{ useAuthAddress }} />
+  <ReferralsPage {...p} deps={{ useAuthAddress, QrCode: ReferralQr }} />
 )
