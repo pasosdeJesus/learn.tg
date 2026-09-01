@@ -69,7 +69,14 @@ format:
 
 # ── Tests rápidos sin coverage ──────────────────────────────────────────
 
-test: test-lib test-hooks test-api test-components test-pages test-db
+# La suite COMPLETA en una sola corrida necesita más memoria (esbuild WASM en
+# OpenBSD/adJ: los 6 sub-objetivos juntos superan el ulimit -d por defecto y
+# crashean el worker de V8). Sube el límite de datos y ejecuta los
+# sub-objetivos recursivamente bajo él. Los sub-objetivos individuales no lo
+# necesitan.
+test:
+	@ulimit -d 8000000 2>/dev/null || true; \
+	$(MAKE) test-lib test-hooks test-api test-components test-pages test-db
 
 test-lib:
 	pnpm vitest run lib/__tests__

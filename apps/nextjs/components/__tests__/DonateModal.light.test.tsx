@@ -31,17 +31,21 @@ const readContractMock = vi.fn().mockImplementation((opts: any) => {
 vi.mock('@/lib/hooks/useAuthAddress', () => ({
   useAuthAddress: () => ({ address: '0xabc0000000000000000000000000000000000000' }),
 }))
+// Mocks ESTABLES: devolver un objeto nuevo por render rompía las deps de
+// useGasEstimation (montado vía CheckoutModal) → efecto en bucle → OOM.
+const publicClientMock = {
+  readContract: readContractMock,
+  getBalance: vi.fn().mockResolvedValue(10_000_000_000_000_000n), // 0.01 CELO
+  getGasPrice: vi.fn().mockResolvedValue(1n),
+  estimateContractGas: vi.fn().mockResolvedValue(21_000n),
+  waitForTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' }),
+}
+const walletClientMock = {
+  data: { writeContract: vi.fn().mockResolvedValue('0xhash') },
+}
 vi.mock('@/lib/hooks/useWallet', () => ({
-  usePublicClient: () => ({
-    readContract: readContractMock,
-    getBalance: vi.fn().mockResolvedValue(10_000_000_000_000_000n), // 0.01 CELO
-    getGasPrice: vi.fn().mockResolvedValue(1n),
-    estimateContractGas: vi.fn().mockResolvedValue(21_000n),
-    waitForTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' }),
-  }),
-  useWalletClient: () => ({
-    data: { writeContract: vi.fn().mockResolvedValue('0xhash') },
-  }),
+  usePublicClient: () => publicClientMock,
+  useWalletClient: () => walletClientMock,
 }))
 
 describe('DonateModal (light)', () => {

@@ -6,6 +6,13 @@ import React, { Suspense } from 'react'
 import { useGuideData, type Course } from '@/lib/hooks/useGuideData'
 import { useScholarshipData } from '@/lib/hooks/useScholarshipData'
 
+// El barrel @pasosdejesus/m/debug (DebugConsole.js) crashea el worker de Node en
+// OpenBSD (Check failed: result.ptr != nullptr / heap OOM); los hooks lo usan
+// solo para loguear. Mismo workaround que components/__tests__/DonateModal.light.
+vi.mock('@pasosdejesus/m/debug', () => ({
+  logger: { info: vi.fn(), error: vi.fn(), success: vi.fn(), warning: vi.fn(), debug: vi.fn() },
+}))
+
 vi.mock('@/lib/hooks/useGuideData', () => ({ useGuideData: vi.fn() }))
 vi.mock('@/lib/hooks/useScholarshipData', () => ({
   useScholarshipData: vi.fn(() => ({
@@ -75,16 +82,18 @@ const useAccountMock = vi.fn(() => ({
   isAuthenticated: true,
   isWalletAvailable: true,
 }))
-const usePublicClientMock = vi.fn(() => ({
+// Mocks ESTABLES: devolver un objeto nuevo por render rompía las deps de
+// useGasEstimation (montado vía CheckoutModal) → efecto en bucle → OOM.
+const usePublicClientMock = vi.fn().mockReturnValue({
   readContract: vi.fn().mockResolvedValue(0n),
   getBalance: vi.fn().mockResolvedValue(0n),
   getGasPrice: vi.fn().mockResolvedValue(1n),
   estimateContractGas: vi.fn().mockResolvedValue(21000n),
   waitForTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' }),
-}))
-const useWalletClientMock = vi.fn(() => ({
+})
+const useWalletClientMock = vi.fn().mockReturnValue({
   data: { writeContract: vi.fn().mockResolvedValue('0xhash') },
-}))
+})
 vi.mock('@/lib/hooks/useAuthAddress', () => ({
   useAuthAddress: () => useAccountMock(),
 }))
