@@ -58,6 +58,23 @@ const URLS = [
   '/api/courses/10/access',
   '/api/auth/csrf',
   '/api/auth/providers',
+  // Referidos (REQ/163) — rutas de los specs E2E de desembolso:
+  // referral-payout (Form 2, crucigrama misional) y referral-premium (Form 1+3)
+  '/en/ref/5F75CC53',
+  '/api/referral/code',
+  '/api/referral/stats',
+  '/api/referral/history',
+  '/api/referral/share',
+  '/api/referral/claim',
+  '/api/referral/lookup?code=5F75CC53',
+  '/api/check-crossword',
+  '/api/crossword?lang=en&prefix=a-relationship-with-Jesus&guide=guide1',
+  '/api/guide?lang=en&prefix=a-relationship-with-Jesus&guide=guide1',
+  '/api/guide-status?courseId=2&guideNumber=1',
+  '/api/auth/callback/credentials',
+  '/api/admin/check-verifier',
+  '/api/admin/user/191',
+  '/api/admin/churches',
 ]
 
 function fetchOnce(url, timeoutMs) {

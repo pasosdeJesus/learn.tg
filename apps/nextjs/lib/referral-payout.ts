@@ -167,7 +167,7 @@ export async function awardReferralRewards(opts: {
     await recordEvent({
       event_type: tipo === 'referral_bonus' ? 'referral_bonus_paid' : 'referral_reward_paid',
       usuario_id: referrerId,
-      metadata: { referred_id: referredUserId, course_id: courseId, ...(guideId ? { guide_id: guideId } : {}), usdt: amounts.usdt, slearn: amounts.slearn },
+      event_data: { referred_id: referredUserId, course_id: courseId, ...(guideId ? { guide_id: guideId } : {}), usdt: amounts.usdt, slearn: amounts.slearn },
     } as any).catch(() => {})
   }
 }
