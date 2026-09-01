@@ -70,6 +70,7 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
 | `prerequisites.spec.mjs` | Wallet registration + verifier check + profile setup + self-verify → ≥50 score |
 | `referral-payout.spec.mjs` | Referral payout (REQ/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
+| `referral-premium.spec.mjs` | Referral payout (REQ/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 44 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
 | `rails-auth.spec.mjs` | Rails API calls with auth token in ES and EN |
 | `verification-timezone.spec.mjs` | Verification availability API: timezone handling, 7-day window |
 

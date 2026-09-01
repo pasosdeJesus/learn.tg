@@ -135,7 +135,8 @@ export default function AdminUserDetail({ params }: PageProps) {
           <label className="block text-sm font-medium text-gray-700">{t('churchRelationship')}</label>
           <select name="church_relationship" defaultValue={user.church_relationship || ''} className="w-full px-3 py-2 border rounded-md">
             <option value="">—</option>
-            <option value="pastor">{lang === 'es' ? 'Pastor' : 'Pastor'}</option>
+            <option value="pastor">{lang === 'es' ? 'Pastor principal' : 'Lead Pastor'}</option>
+            <option value="co_pastor">{lang === 'es' ? 'Co-pastor' : 'Co-pastor'}</option>
             <option value="leader">{lang === 'es' ? 'Líder' : 'Leader'}</option>
             <option value="member">{lang === 'es' ? 'Miembro' : 'Member'}</option>
           </select>

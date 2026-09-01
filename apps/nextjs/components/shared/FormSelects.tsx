@@ -69,7 +69,8 @@ export function ChurchRoleSelect({ value, onChange, lang }: {
       className="w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white"
     >
       <option value="">—</option>
-      <option value="pastor">{isEs ? 'Pastor' : 'Pastor'}</option>
+      <option value="pastor">{isEs ? 'Pastor principal' : 'Lead Pastor'}</option>
+      <option value="co_pastor">{isEs ? 'Co-pastor' : 'Co-pastor'}</option>
       <option value="leader">{isEs ? 'Líder' : 'Leader'}</option>
       <option value="member">{isEs ? 'Miembro' : 'Member'}</option>
     </select>

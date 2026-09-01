@@ -1333,6 +1333,31 @@ CREATE FUNCTION public.soundexespm(entrada text) RETURNS text
 
 
 --
+-- Name: sync_church_principal(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sync_church_principal() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+      IF NEW.church_id IS NOT NULL AND NEW.church_relationship = 'pastor' THEN
+        UPDATE church SET pastor_id = NEW.id, updated_at = NOW() WHERE id = NEW.church_id;
+      ELSE
+        IF OLD.church_id IS NOT NULL THEN
+          UPDATE church SET pastor_id = NULL, updated_at = NOW()
+          WHERE id = OLD.church_id AND pastor_id = NEW.id;
+        END IF;
+        IF NEW.church_id IS NOT NULL THEN
+          UPDATE church SET pastor_id = NULL, updated_at = NOW()
+          WHERE id = NEW.church_id AND pastor_id = NEW.id;
+        END IF;
+      END IF;
+      RETURN NEW;
+    END;
+    $$;
+
+
+--
 -- Name: transaction_lowercase_wallet_fn(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5426,7 +5451,9 @@ CREATE TABLE public.usuario (
     registration_photo text,
     denomination character varying(100),
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
-    CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
+    CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[])))),
+    CONSTRAINT usuario_rol_check CHECK ((rol >= 1)),
+    CONSTRAINT usuario_verified_church_relationship_check CHECK (((verified_church_relationship IS NULL) OR ((verified_church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[]))))
 );
 
 
@@ -7587,6 +7614,13 @@ CREATE INDEX msip_ubicacionpre_vereda_id_idx ON public.msip_ubicacionpre USING b
 
 
 --
+-- Name: one_principal_per_church; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX one_principal_per_church ON public.usuario USING btree (church_id) WHERE ((church_relationship)::text = 'pastor'::text);
+
+
+--
 -- Name: transaction_tipo_categoria_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7787,6 +7821,13 @@ CREATE TRIGGER transaction_lowercase_wallet_trigger BEFORE INSERT OR UPDATE OF w
 --
 
 CREATE TRIGGER tras_crear_o_actualizar_ubicacionpre BEFORE INSERT OR UPDATE OF pais_id, departamento_id, municipio_id, centropoblado_id, vereda_id, lugar, sitio, nombre ON public.msip_ubicacionpre FOR EACH ROW EXECUTE FUNCTION public.msip_ubicacionpre_actualiza_nombre();
+
+
+--
+-- Name: usuario trg_sync_church_principal; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_sync_church_principal AFTER INSERT OR UPDATE OF church_id, church_relationship ON public.usuario FOR EACH ROW EXECUTE FUNCTION public.sync_church_principal();
 
 
 --

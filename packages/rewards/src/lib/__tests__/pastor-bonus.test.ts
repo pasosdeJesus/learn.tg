@@ -44,6 +44,8 @@ function eligiblePastorRow(overrides: Record<string, any> = {}): Record<string, 
     billetera: PASTOR_WALLET,
     idioma: 'en',
     registration_verified: true,
+    church_pastor_id: 1, // el lead (los tests invocan awardPastorBonus(db, 1))
+    church_id: 5,
     ...overrides,
   }
 }
@@ -125,6 +127,22 @@ describe('awardPastorBonus', () => {
     const { db } = buildDeps()
     const result = await awardPastorBonus(db, 1)
     expect(result).toEqual({ awarded: false, reason: 'church not verified' })
+  })
+
+  it('rejects when the user is NOT the lead pastor (church.pastor_id)', async () => {
+    mockExecuteTakeFirst.mockResolvedValue(eligiblePastorRow({ church_pastor_id: 2 }))
+    const { db, walletClient } = buildDeps()
+    const result = await awardPastorBonus(db, 1)
+    expect(result).toEqual({ awarded: false, reason: 'not the lead pastor of the church' })
+    expect(walletClient.writeContract).not.toHaveBeenCalled()
+  })
+
+  it('rejects when the user is not verified as lead pastor (co_pastor)', async () => {
+    mockExecuteTakeFirst.mockResolvedValue(eligiblePastorRow({ verified_church_relationship: 'co_pastor' }))
+    const { db, walletClient } = buildDeps()
+    const result = await awardPastorBonus(db, 1)
+    expect(result).toEqual({ awarded: false, reason: 'not verified as lead pastor' })
+    expect(walletClient.writeContract).not.toHaveBeenCalled()
   })
 
   it('rejects when the pastor has no wallet', async () => {

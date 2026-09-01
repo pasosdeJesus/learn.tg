@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 import { createPublicClient, createWalletClient, http, parseUnits, formatUnits, type Address } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
@@ -49,21 +49,39 @@ export async function awardPastorBonus(
       'usuario.idioma',
       'bw.billetera',
       'ch.registration_verified',
+      'ch.pastor_id as church_pastor_id',
+      'ch.id as church_id',
     ])
     .where('usuario.id', '=', userId)
     .executeTakeFirst()
 
   if (!pastor) return { awarded: false, reason: 'pastor not found' }
   if (!isEligiblePastor(pastor as BonusUser)) return { awarded: false, reason: 'not eligible' }
+  // El bono de 44 SLEARN es SOLO para el pastor principal (church.pastor_id),
+  // confirmado por el verificador (verified_church_relationship='pastor').
+  if (pastor.verified_church_relationship !== 'pastor') return { awarded: false, reason: 'not verified as lead pastor' }
+  if (pastor.church_pastor_id !== userId) return { awarded: false, reason: 'not the lead pastor of the church' }
   if (pastor.registration_verified !== true) return { awarded: false, reason: 'church not verified' }
   if (!pastor.billetera) return { awarded: false, reason: 'no wallet' }
 
-  const existing = await db
-    .selectFrom('transaction')
-    .select('id')
-    .where('usuario_id', '=', userId)
-    .where('type', '=', 'pastor_bonus')
-    .executeTakeFirst()
+  // Dedupe por IGLESIA (no por usuario): el bono se paga una sola vez por
+  // iglesia, aunque el pastor principal cambie con el tiempo.
+  let existing: { id: number } | undefined
+  if (pastor.church_id != null) {
+    existing = await db
+      .selectFrom('transaction')
+      .select('id')
+      .where('type', '=', 'pastor_bonus')
+      .where(sql`metadata->>'church_id'`, '=', String(pastor.church_id))
+      .executeTakeFirst()
+  } else {
+    existing = await db
+      .selectFrom('transaction')
+      .select('id')
+      .where('usuario_id', '=', userId)
+      .where('type', '=', 'pastor_bonus')
+      .executeTakeFirst()
+  }
   if (existing) return { awarded: false, reason: 'already awarded' }
 
   const churchesWallet = process.env.NEXT_PUBLIC_CHURCHES_WALLET_ADDRESS as Address | undefined
@@ -110,7 +128,7 @@ export async function awardPastorBonus(
     date: new Date(),
     created_at: new Date(),
     updated_at: new Date(),
-    metadata: JSON.stringify({ source: 'churches_fund', reason: 'Verified non-Zionist pastor bonus' }),
+    metadata: JSON.stringify({ source: 'churches_fund', reason: 'Verified non-Zionist lead pastor bonus', ...(pastor.church_id != null ? { church_id: pastor.church_id } : {}) }),
   } as any).execute()
 
   await db.insertInto('verification_log').values({

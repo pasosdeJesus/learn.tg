@@ -346,6 +346,16 @@ See [Admin API](apps/nextjs/app/api/admin/) for endpoint details.
 - Managed by verifiers via `/api/admin/churches`
 - Linked to users via `usuario.church_id`
 - Tracks pastor info, location, denomination, registration
+- **Lead pastor** (`pastor_id`): the church's **pastor principal** — must
+  coincide with the single `usuario` whose `church_relationship = 'pastor'`.
+  Roles live on the user (`usuario.church_relationship`): `'pastor'` (principal,
+  one per church), `'co_pastor'` (secondary pastors, many allowed), `'leader'`
+  (church leader, independent role — not the principal), `'member'`.
+  Guarantees (migration `20260901074316_church_principal_roles`): partial unique
+  index `one_principal_per_church` (max one principal per church) + trigger
+  `trg_sync_church_principal` (keeps `church.pastor_id` in sync with the
+  principal). The 44 SLEARN welcome bonus is paid **only** to the verified
+  principal (`pastor-bonus.ts`), once per church.
 
 ##### `credential_emission` + `credential_metadata` (SBT cache)
 - `credential_emission`: Records SBT minting events (user, course, tokenId, txHash)

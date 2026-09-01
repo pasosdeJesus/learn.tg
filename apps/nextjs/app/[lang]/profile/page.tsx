@@ -1084,7 +1084,7 @@ export default function ProfileForm({ params }: PageProps) {
             </div>
             )}
 
-            {profile.church_relationship === 'pastor' && (
+            {(profile.church_relationship === 'pastor' || profile.church_relationship === 'co_pastor') && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="space-y-2">
                 <label htmlFor="registration" className="block text-sm font-medium text-gray-700">
