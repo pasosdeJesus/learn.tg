@@ -1,5 +1,5 @@
 // CalDAV client for Radicale — uses fetch() directly, no dependencies.
-// See REQ/188.md for implementation details and OpenBSD/adJ notes.
+// See https://github.com/pasosdeJesus/learn.tg/issues/188 for implementation details and OpenBSD/adJ notes.
 
 const CALDAV_URL = process.env.CALDAV_URL || ''
 const CALDAV_USER = process.env.CALDAV_USER || ''

@@ -69,6 +69,7 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `landing-page.spec.mjs` | `/en` and `/es` return 200, no "Failed to load courses" error |
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
 | `prerequisites.spec.mjs` | Wallet registration + verifier check + profile setup + self-verify → ≥50 score |
+| `referral-payout.spec.mjs` | Referral payout (REQ/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
 | `rails-auth.spec.mjs` | Rails API calls with auth token in ES and EN |
 | `verification-timezone.spec.mjs` | Verification availability API: timezone handling, 7-day window |
 
@@ -219,7 +220,7 @@ location @learntgdes {
 
 Symptoms: `buttonCount: 0` and no `useAuthAddress:` logs in the browser console
 (hydration never runs), or `[ConnectWallet] callback failed: 401`. See
-[REQ/208](../REQ/208.md) for the full diagnosis.
+[REQ/208](https://github.com/pasosdeJesus/learn.tg/issues/208) for the full diagnosis.
 
 ### SIWE Mock
 
@@ -322,5 +323,5 @@ CHROME_PATH=/usr/bin/google-chrome make test-e2e
 
 - [SIWE Auth Flow](siwe-auth-flow.md) — Authentication protocol
 - [Wallet Auth](wallet-auth.md) — Custom wallet implementation (no wagmi)
-- [REQ/179.md](../REQ/179.md) — E2E testing infrastructure spec
+- [REQ/179](https://github.com/pasosdeJesus/learn.tg/issues/179) — E2E testing infrastructure spec
 - [apps/nextjs/CONTRIBUTING.md](../apps/nextjs/CONTRIBUTING.md) — Testing policy and coverage targets

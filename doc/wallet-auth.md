@@ -177,4 +177,4 @@ and sent with every authenticated API request. See
 | `lib/hooks/useWallet.ts` | usePublicClient + useWalletClient (viem, no wagmi) |
 | `lib/hooks/useWriteContract.ts` | useWriteContract via eth_sendTransaction |
 | `doc/siwe-auth-flow.md` | SIWE handshake protocol (NextAuth backend) |
-| `REQ/186.md` | Full migration specification and history |
+| [REQ/186](https://github.com/pasosdeJesus/learn.tg/issues/186) | Full migration specification and history |

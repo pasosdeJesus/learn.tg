@@ -64,6 +64,8 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
     let retMessage = ''
     let scholarshipResult: any = null
     let credentialMinted = false
+    let scholarshipPaidUsdt = 0
+    let scholarshipPaidSlearn = 0
     const requestJson = await req.json()
     const courseId = +requestJson['courseId']
     const guideId = +requestJson['guideId']
@@ -501,6 +503,12 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
             scholarshipResult = tx
             const paidUSDT = paidUSDTAfter - paidUSDTBefore
             const paidSlearn = paidSlearnAfter - paidSlearnBefore
+            scholarshipPaidUsdt = paidUSDT > 0n
+              ? parseFloat(formatUnits(paidUSDT, +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6)))
+              : 0
+            scholarshipPaidSlearn = paidSlearn > 0n
+              ? parseFloat(formatUnits(paidSlearn, 2))
+              : 0
 
             if (mistakesInCW.length == 0) {
               retMessage += '\n' + msg[locale].correct
@@ -602,6 +610,8 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         credentialUserId: credentialMinted ? billeteraUsuario.usuario_id : null,
         message: retMessage,
         scholarshipResult: scholarshipResult,
+        scholarshipUsdt: scholarshipPaidUsdt,
+        scholarshipSlearn: scholarshipPaidSlearn,
       },
       { status: 200 },
     )

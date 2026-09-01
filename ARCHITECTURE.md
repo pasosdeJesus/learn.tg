@@ -139,6 +139,16 @@ peer dep, D2 dependency injection, D3 hooks):
 | **`@learn-tg/mr519`** | dynamic forms (`mr519_gen_*`, `DynamicForm`) | core (auth, DB) |
 | **`@pasosdejesus/usdt`** (shared, en `m`) | hooks de pago compartidos: `useContractPayment`, `useGasEstimation` (1ª graduación local→shared, adoptado por learn.tg y sivel3) | `m` |
 
+**Engine documentation:** each engine package carries its own `README.md`
+(what it provides and how to use it) and `ARCHITECTURE.md` (design decisions,
+data flow, contracts):
+
+| Engine | Docs |
+|--------|------|
+| `@learn-tg/rewards` | [`packages/rewards/README.md`](packages/rewards/README.md) · [`packages/rewards/ARCHITECTURE.md`](packages/rewards/ARCHITECTURE.md) |
+| `@learn-tg/gdcluster` | [`packages/gdcluster/README.md`](packages/gdcluster/README.md) · [`packages/gdcluster/ARCHITECTURE.md`](packages/gdcluster/ARCHITECTURE.md) |
+| `@learn-tg/mr519` | [`packages/mr519/README.md`](packages/mr519/README.md) · [`packages/mr519/ARCHITECTURE.md`](packages/mr519/ARCHITECTURE.md) |
+
 **Patterns:**
 - **Adapters**: `lib/rewards-app.ts` / `lib/gdcluster-app.ts` instantiate the
   engine factory (`createRewardsApp` / `createGdclusterApp`) once, injecting DB,
@@ -203,6 +213,98 @@ The platform features two distinct reward mechanisms, demonstrating our principl
     2. It then calls the `claim()` function on the `CeloUBI.sol` contract.
     3. The contract validates the claim conditions (such as cooldown periods) on-chain.
     4. Upon successful validation, it transfers a set amount of CELO to the user's wallet.
+
+### 3. Referral Program (REQ/163)
+
+A general referral program with **three reward forms**, documented in detail in
+[REQ/163](https://github.com/pasosdeJesus/learn.tg/issues/163):
+
+| Form | Reward | Trigger |
+|------|--------|---------|
+| **1 — Course purchases** | 10% of the course price (50% USDT + 50% SLEARN) | A referred user buys any premium course |
+| **2 — Missional scholarships** | 10% of the scholarship value (50% USDT + 50% SLEARN) | A referred user completes a crossword in a missional course ("Una relación con Jesús"); the student keeps 100% of their scholarship |
+| **3 — Pastor bonus** | Additional 1 USDT | A referred **pastor** purchases the **Global Disciples** course |
+
+**Activation:** the program activates for a user when they **purchase a premium
+course** and have a **profile score > 90** (checked in `GET /api/referral/code`
+→ `activated`).
+
+**Funding rule:** all rewards are paid **from the referral wallet**
+(`NEXT_PUBLIC_REFERRAL_WALLET_ADDRESS` / `PRIVATE_KEY_REFERRAL_WALLET`), never
+from scholarships or student funds. If the wallet has no funds, the reward is
+skipped (logged, not silently swallowed).
+
+**Architecture decision (REQ/35):** the referral program is part of the
+**core** of learn.tg, not a Web3 engine — it is a cross-cutting feature with no
+contracts of its own. The on-chain routing is off-chain: the backend reads the
+`ReferralReward(referralWallet, usdtAmount, slearnAmount)` event emitted by
+`SLEARN.processPayment`, attributes the reward to the referrer of the paying
+user (from the `referralrelationship` table), and transfers from the referral
+wallet. The contract never calculates the per-referrer split.
+
+**Tables:** `referralcode` (unique per user, created on first use) and
+`referralrelationship` (referrer ↔ referred, claimed once, `referral_claimed_at`).
+
+**Endpoints (core, `apps/nextjs/app/api/referral/*`):** `code` (GET),
+`stats` (GET), `history` (GET), `claim` (POST, one-time), `share` (POST),
+`lookup` (GET, public, powers the `/ref/{CODE}` landing). The referral wallet
+on-chain balance is served by the rewards engine at `/api/referrals/fund`.
+
+**Rules:** no self-referral, one claim per user, one reward per relationship
+per course, referrer must be older than the referred, pastor bonus requires
+`church_relationship = 'pastor'`, idempotent payout via `transaction`
+(`type = 'referral_reward'` / `'referral_bonus'`, `subcategoria =
+'pastor_bonus'`).
+
+**Events recorded** in `userevent`: `referral_activated`, `referral_claimed`,
+`referral_reward_paid`, `referral_bonus_paid`.
+
+### 4. Global Disciples (GD) Program — Cluster Formation (REQ/220)
+
+[REQ/220](https://github.com/pasosdeJesus/learn.tg/issues/220) simplifies the
+original cluster draft: a GD cluster is **3 churches** (lead pastor + 2 invited
+pastors) built **on the existing GD cluster model** — no parallel tables, no
+duplicated routes. Implemented (2026-08-31, migration
+`20260831100000_cluster_formation`).
+
+**Domain model:**
+
+- `clustergd` (existing) gains `pseudonym` (privacy in persecution contexts),
+  `status` (`pending` | `active` | `disbanded`), and `leader_church_id`.
+- Membership stays church-based: `church_clustergd`. New table
+  `cluster_invitation` (unique per cluster + pastor, status
+  `pending`/`accepted`/`rejected`/`expired`).
+- Funds stay on `ClusterFundsV2` via the **lead church's** `cluster_wallet`
+  (80% of GD donations); the column is not moved in this phase.
+
+**States:**
+
+| Entity | States |
+|--------|--------|
+| Pastor | No cluster → Pending invitation → In a cluster |
+| Cluster | `pending` (1–2 member churches) → `active` (3 churches) → `disbanded` (< 2 after a leave, or leader decision) |
+
+**Candidate selection** (`GET /api/cluster/candidates`): referred pastors from
+the [REQ/163](https://github.com/pasosdeJesus/learn.tg/issues/163) referral
+graph first, then the leader's referrer if they are a pastor, same pilot
+country (CO/SL), declared + verified church, no current cluster, not self.
+Fallback: invite by the existing 6-char code (`POST /api/cluster/join`).
+
+**Endpoints (gdcluster engine):** `POST /api/cluster` (extended: name +
+pseudonym + 2 invitations), `GET /api/cluster/candidates`,
+`GET /api/cluster/invitations`, `POST /api/cluster/invitation/accept|reject`,
+`POST /api/cluster/[id]/leave` (extended: leadership transfer or disband when
+the leader leaves), `PATCH /api/cluster/[id]` (leader-only name/pseudonym
+edit), and `/api/admin/clusters*` (admin: full CRUD + disband; verifier:
+view/edit, no disband).
+
+**Rules:** one cluster per church (409 via `getChurchCluster`); activation at
+3 members; in-app notifications on invite/accept/reject/activation/disband;
+public ranking shows the pseudonym when set; leader changes logged in
+`userevent` + `clustergd_history`.
+
+**Out of scope:** multiple clusters per church, bulk invitations, external
+notifications, on-chain member-count activation.
 
 ---
 
