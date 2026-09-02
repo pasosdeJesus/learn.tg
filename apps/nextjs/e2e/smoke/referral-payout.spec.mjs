@@ -429,6 +429,27 @@ async function main() {
     )
     if (dupes.length === 1) ok('Idempotente: 1 sola reward para esta relación/curso/guía')
     else fail(`Idempotencia rota: ${dupes.length} rewards`)
+
+    // ════════════════════════════════════════════════════════════
+    // 7. Notificación al referidor (acción + valor pagado)
+    // ════════════════════════════════════════════════════════════
+    console.log('── 7. Notificación al referidor ──')
+    const notif = await apiGet('/api/notifications',
+      { walletAddress: referrerAddr, token: referrer.token }, referrer.cookies)
+    const rewardNotif = (notif.notifications || []).find((n) =>
+      n.type === 'referral_reward' &&
+      String(n.content || '').includes(`${expectedUsdt.toFixed(2)} USDT`) &&
+      String(n.content || '').includes(`${expectedSlearn.toFixed(2)} SLEARN`))
+    if (rewardNotif) {
+      ok(`Notificación referral_reward: "${rewardNotif.title}"`)
+      const content = String(rewardNotif.content || '')
+      if (content.includes('paid') || content.includes('pagada')) ok(`Contenido: ${content.slice(0, 140)}`)
+      else fail(`Contenido sin estado de pago: "${content.slice(0, 140)}"`)
+      if (rewardNotif.link && String(rewardNotif.link).includes('celoscan')) ok('Enlace al explorador de la tx')
+      else fail(`Enlace inesperado: ${rewardNotif.link}`)
+    } else {
+      fail(`Sin notificación referral_reward con el valor ${expectedUsdt.toFixed(2)} USDT + ${expectedSlearn.toFixed(2)} SLEARN. Notifs: ${JSON.stringify((notif.notifications || []).map(n => n.type + ':' + n.title)).slice(0, 200)}`)
+    }
   } catch (e) {
     fail(`Error inesperado: ${e.message}`)
     if (e.response) console.log(`   Response: ${JSON.stringify(e.response.data)?.slice(0, 300)}`)

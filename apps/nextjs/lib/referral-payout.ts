@@ -9,6 +9,7 @@ import { createWalletClient, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { getChain, getPublicClient, getUsdtAddress, sendTxAndWait } from '@/lib/backend-config'
 import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
+import { getSlearnAddress } from '@learn-tg/rewards/lib/deployments'
 import { referralReward, canPayFromWallet, type RewardAmounts } from '@/lib/referral-rewards'
 import { recordEvent } from '@/lib/metrics-server'
 import Erc20Abi from '@/abis/IERC20.json'
@@ -41,7 +42,7 @@ export async function getReferralWalletBalances(): Promise<{ usdt: number; slear
     args: [wallet],
   }) as bigint
   const slearn = await publicClient.readContract({
-    address: process.env.NEXT_PUBLIC_SLEARN_ADDRESS as `0x${string}`,
+    address: await getSlearnAddress(),
     abi: SLEARNAbi as any,
     functionName: 'balanceOf',
     args: [wallet],
@@ -89,9 +90,71 @@ async function transferToken(
 }
 
 /**
+ * Notificación al referidor cuando una recompensa DEBE pagarse (REQ/163):
+ * siempre indica la acción que la generó y el valor pagado — incluso 0, en
+ * cuyo caso aclara que la billetera de referidos no tiene fondos suficientes.
+ */
+async function notifyReferralReward(
+  db: Kysely<any>,
+  referrerId: number,
+  idioma: string | null,
+  tipo: 'referral_reward' | 'referral_bonus',
+  action: { title: string; text: string },
+  expected: RewardAmounts,
+  status: { paid: boolean; hash?: string | null },
+): Promise<void> {
+  try {
+    const isEnglish = (idioma || '').toLowerCase().startsWith('en')
+    const valueLine = `${expected.usdt.toFixed(2)} USDT + ${expected.slearn.toFixed(2)} SLEARN`
+    let content: string
+    let link: string | null
+    if (status.paid) {
+      content = isEnglish
+        ? `${action.text} Reward paid: ${valueLine}.`
+        : `${action.text} Recompensa pagada: ${valueLine}.`
+      link = (IS_PRODUCTION ? 'https://celoscan.io/tx/' : 'https://sepolia.celoscan.io/tx/') + status.hash
+    } else {
+      content = isEnglish
+        ? `${action.text} Reward would have been ${valueLine}, but the referral wallet has insufficient funds, so 0 was paid.`
+        : `${action.text} La recompensa habría sido ${valueLine}, pero la billetera de referidos no tiene fondos suficientes, así que se pagó 0.`
+      link = isEnglish ? '/en/referrals' : '/es/referidos'
+    }
+    await db.insertInto('notifications').values({
+      usuario_id: referrerId,
+      type: tipo,
+      title: action.title,
+      content,
+      link,
+      is_read: false,
+      created_at: new Date(),
+    } as any).execute()
+  } catch (e) {
+    console.warn('[referral] notification failed:', e instanceof Error ? e.message : String(e))
+  }
+}
+
+/** Acción que generó la recompensa (Form 1 compra / Form 2 crucigrama misional / Form 3 pastor GD). */
+function rewardAction(tipo: 'referral_reward' | 'referral_bonus', guideId?: number | null, isEnglish = false) {
+  if (tipo === 'referral_bonus') {
+    return isEnglish
+      ? { title: 'Pastor referral bonus', text: 'A pastor you referred purchased the Global Disciples course.' }
+      : { title: 'Bono por referir pastor', text: 'Un pastor que referiste compró el curso Global Disciples.' }
+  }
+  if (guideId != null) {
+    return isEnglish
+      ? { title: 'Missional scholarship referral', text: 'Someone you referred completed a crossword in a missional course.' }
+      : { title: 'Referido por beca misional', text: 'Alguien que referiste completó un crucigrama en un curso misional.' }
+  }
+  return isEnglish
+    ? { title: 'Premium course referral', text: 'Someone you referred purchased a premium course.' }
+    : { title: 'Referido por compra premium', text: 'Alguien que referiste compró un curso premium.' }
+}
+
+/**
  * Paga las recompensas de referidos del usuario `referredUserId` tras una
  * compra premium (Form 1 + Form 3 si pastor GD) o un crossword missional
- * (Form 2). No hace nada si el usuario no tiene referidor.
+ * (Form 2). No hace nada si el usuario no tiene referidor. Siempre notifica
+ * al referidor (acción + valor pagado; 0 si no hay fondos en la referral wallet).
  */
 export async function awardReferralRewards(opts: {
   db: Kysely<any>
@@ -114,10 +177,13 @@ export async function awardReferralRewards(opts: {
   if (!rel) return
 
   const referrerId = rel.referrer_id
-  const referrer = await db.selectFrom('usuario').select('billetera_usuario')
-    .innerJoin('billetera_usuario', 'billetera_usuario.usuario_id', 'usuario.id')
-    .where('usuario.id', '=', referrerId).executeTakeFirst()
-  if (!referrer?.billetera_usuario) return
+  const referrer = await db.selectFrom('usuario as u')
+    .innerJoin('billetera_usuario as bw', 'bw.usuario_id', 'u.id')
+    .select(['bw.billetera as billetera', 'u.idioma'])
+    .where('u.id', '=', referrerId).executeTakeFirst()
+  if (!referrer?.billetera) return
+
+  const isEnglish = (referrer.idioma || '').toLowerCase().startsWith('en')
 
   const rewards: Array<{ tipo: 'referral_reward' | 'referral_bonus'; amounts: RewardAmounts }> = []
   if (coursePriceUsdt != null || form1Amounts != null) {
@@ -135,39 +201,47 @@ export async function awardReferralRewards(opts: {
 
   for (const { tipo, amounts } of rewards) {
     if (await alreadyPaid(db, referrerId, referredUserId, courseId, guideId ?? null, tipo)) continue
+    const action = rewardAction(tipo, guideId, isEnglish)
     const wallet = await getReferralWalletBalances()
     if (!canPayFromWallet(amounts, wallet)) {
       console.warn(`[referral] ${tipo} skipped: insufficient referral wallet funds`, amounts, wallet)
+      await notifyReferralReward(db, referrerId, referrer.idioma, tipo, action, amounts, { paid: false })
       continue
     }
-    const dest = referrer.billetera_usuario as `0x${string}`
-    const usdtAddress = await getUsdtAddress()
-    const usdtHash = await transferToken(usdtAddress!, Erc20Abi as any, 6, dest, amounts.usdt)
-    const slearnHash = await transferToken(process.env.NEXT_PUBLIC_SLEARN_ADDRESS as `0x${string}`, SLEARNAbi as any, 2, dest, amounts.slearn)
-    const hash = usdtHash || slearnHash
-    if (!hash) continue
+    try {
+      const dest = referrer.billetera as `0x${string}`
+      const usdtAddress = await getUsdtAddress()
+      const usdtHash = await transferToken(usdtAddress!, Erc20Abi as any, 6, dest, amounts.usdt)
+      const slearnHash = await transferToken(await getSlearnAddress(), SLEARNAbi as any, 2, dest, amounts.slearn)
+      const hash = usdtHash || slearnHash
+      if (!hash) continue
 
-    const now = new Date()
-    if (amounts.usdt > 0) {
-      await db.insertInto('transaction').values({
-        usuario_id: referrerId, wallet: dest, crypto: 'usdt', type: tipo,
-        amount: amounts.usdt, balance_impact: amounts.usdt, date: now, hash: usdtHash,
-        categoria: 'referral', subcategoria: tipo === 'referral_bonus' ? 'pastor_bonus' : 'referrer',
-        metadata: JSON.stringify({ referred_id: referredUserId, course_id: courseId, ...(guideId ? { guide_id: guideId } : {}) }),
-      } as any).execute()
+      const now = new Date()
+      if (amounts.usdt > 0) {
+        await db.insertInto('transaction').values({
+          usuario_id: referrerId, wallet: dest, crypto: 'usdt', type: tipo,
+          amount: amounts.usdt, balance_impact: amounts.usdt, date: now, hash: usdtHash,
+          categoria: 'referral', subcategoria: tipo === 'referral_bonus' ? 'pastor_bonus' : 'referrer',
+          metadata: JSON.stringify({ referred_id: referredUserId, course_id: courseId, ...(guideId ? { guide_id: guideId } : {}) }),
+        } as any).execute()
+      }
+      if (amounts.slearn > 0) {
+        await db.insertInto('transaction').values({
+          usuario_id: referrerId, wallet: dest, crypto: 'slearn', type: tipo,
+          amount: amounts.slearn, balance_impact: amounts.slearn, date: now, hash: slearnHash,
+          categoria: 'referral', subcategoria: tipo === 'referral_bonus' ? 'pastor_bonus' : 'referrer',
+          metadata: JSON.stringify({ referred_id: referredUserId, course_id: courseId, ...(guideId ? { guide_id: guideId } : {}) }),
+        } as any).execute()
+      }
+      await recordEvent({
+        event_type: tipo === 'referral_bonus' ? 'referral_bonus_paid' : 'referral_reward_paid',
+        usuario_id: referrerId,
+        event_data: { referred_id: referredUserId, course_id: courseId, ...(guideId ? { guide_id: guideId } : {}), usdt: amounts.usdt, slearn: amounts.slearn },
+      } as any).catch(() => {})
+      await notifyReferralReward(db, referrerId, referrer.idioma, tipo, action, amounts, { paid: true, hash })
+    } catch (e) {
+      console.warn(`[referral] ${tipo} payout failed:`, e instanceof Error ? e.message : String(e))
+      await notifyReferralReward(db, referrerId, referrer.idioma, tipo, action, amounts, { paid: false })
     }
-    if (amounts.slearn > 0) {
-      await db.insertInto('transaction').values({
-        usuario_id: referrerId, wallet: dest, crypto: 'slearn', type: tipo,
-        amount: amounts.slearn, balance_impact: amounts.slearn, date: now, hash: slearnHash,
-        categoria: 'referral', subcategoria: tipo === 'referral_bonus' ? 'pastor_bonus' : 'referrer',
-        metadata: JSON.stringify({ referred_id: referredUserId, course_id: courseId, ...(guideId ? { guide_id: guideId } : {}) }),
-      } as any).execute()
-    }
-    await recordEvent({
-      event_type: tipo === 'referral_bonus' ? 'referral_bonus_paid' : 'referral_reward_paid',
-      usuario_id: referrerId,
-      event_data: { referred_id: referredUserId, course_id: courseId, ...(guideId ? { guide_id: guideId } : {}), usdt: amounts.usdt, slearn: amounts.slearn },
-    } as any).catch(() => {})
   }
 }

@@ -377,6 +377,20 @@ async function main() {
     const dupes = rewards.filter(r => r.type === 'referral_reward')
     if (dupes.length <= 2) ok(`Idempotente: ${dupes.length} reward(s) para esta relación/curso`)
     else fail(`Idempotencia rota: ${dupes.length} rewards`)
+
+    // ════════════════════════════════════════════════════════════
+    // 7. Notificaciones al referidor (Form 1 reward + Form 3 bonus)
+    // ════════════════════════════════════════════════════════════
+    console.log('── 7. Notificaciones al referidor ──')
+    const notif = await apiGet('/api/notifications',
+      { walletAddress: referrerAddr, token: referrer.token }, referrer.cookies)
+    const types = (notif.notifications || []).map(n => n.type)
+    const rewardNotif = (notif.notifications || []).find(n => n.type === 'referral_reward' && /USDT/.test(String(n.content || '')))
+    const bonusNotif = (notif.notifications || []).find(n => n.type === 'referral_bonus' && n.subcategoria === undefined && /USDT/.test(String(n.content || '')))
+    if (rewardNotif) ok(`Notificación Form 1: "${rewardNotif.title}" (${String(rewardNotif.content).slice(0, 120)})`)
+    else fail(`Sin notificación referral_reward. Types: ${JSON.stringify(types)}`)
+    if (bonusNotif) ok(`Notificación Form 3 (pastor bonus): "${bonusNotif.title}"`)
+    else fail(`Sin notificación referral_bonus. Types: ${JSON.stringify(types)}`)
   } catch (e) {
     fail(`Error inesperado: ${e.message}`)
     if (e.response) console.log(`   Response: ${JSON.stringify(e.response.data)?.slice(0, 300)}`)
