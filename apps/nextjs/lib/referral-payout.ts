@@ -202,13 +202,13 @@ export async function awardReferralRewards(opts: {
   for (const { tipo, amounts } of rewards) {
     if (await alreadyPaid(db, referrerId, referredUserId, courseId, guideId ?? null, tipo)) continue
     const action = rewardAction(tipo, guideId, isEnglish)
-    const wallet = await getReferralWalletBalances()
-    if (!canPayFromWallet(amounts, wallet)) {
-      console.warn(`[referral] ${tipo} skipped: insufficient referral wallet funds`, amounts, wallet)
-      await notifyReferralReward(db, referrerId, referrer.idioma, tipo, action, amounts, { paid: false })
-      continue
-    }
     try {
+      const wallet = await getReferralWalletBalances()
+      if (!canPayFromWallet(amounts, wallet)) {
+        console.warn(`[referral] ${tipo} skipped: insufficient referral wallet funds`, amounts, wallet)
+        await notifyReferralReward(db, referrerId, referrer.idioma, tipo, action, amounts, { paid: false })
+        continue
+      }
       const dest = referrer.billetera as `0x${string}`
       const usdtAddress = await getUsdtAddress()
       const usdtHash = await transferToken(usdtAddress!, Erc20Abi as any, 6, dest, amounts.usdt)
@@ -240,6 +240,7 @@ export async function awardReferralRewards(opts: {
       } as any).catch(() => {})
       await notifyReferralReward(db, referrerId, referrer.idioma, tipo, action, amounts, { paid: true, hash })
     } catch (e) {
+      // Cualquier error (lectura de saldo, transferencia...) → notifica con 0
       console.warn(`[referral] ${tipo} payout failed:`, e instanceof Error ? e.message : String(e))
       await notifyReferralReward(db, referrerId, referrer.idioma, tipo, action, amounts, { paid: false })
     }
