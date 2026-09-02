@@ -2,8 +2,9 @@
 
 // Sección de referidos en el perfil (REQ/163): si el usuario no tiene
 // referidor puede ingresar el código de quien lo invitó UNA vez; después solo
-// ve quién lo refirió (sin editar).
+// ve quién lo refirió (sin editar), como enlace a su perfil público.
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import axios from 'axios'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
@@ -11,10 +12,15 @@ interface ReferralProfileSectionProps {
   lang: string
 }
 
+interface ReferredByInfo {
+  id: number | null
+  nusuario: string | null
+}
+
 export function ReferralProfileSection({ lang }: ReferralProfileSectionProps) {
   const { address } = useAuthAddress()
   const es = lang === 'es'
-  const [referredBy, setReferredBy] = useState<string | null>(null)
+  const [referredBy, setReferredBy] = useState<ReferredByInfo | null>(null)
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -27,7 +33,7 @@ export function ReferralProfileSection({ lang }: ReferralProfileSectionProps) {
     ;(async () => {
       try {
         const res = await axios.get(`/api/referral/code?walletAddress=${encodeURIComponent(address)}&token=${encodeURIComponent(token || '')}`)
-        if (!cancelled) setReferredBy(res.data?.referredBy ?? null)
+        if (!cancelled) setReferredBy(res.data?.referredByDetails ?? null)
       } catch { /* ignore */ }
     })()
     return () => { cancelled = true }
@@ -46,7 +52,7 @@ export function ReferralProfileSection({ lang }: ReferralProfileSectionProps) {
       })
       if (res.status === 200) {
         const ref = await axios.get(`/api/referral/code?walletAddress=${encodeURIComponent(address)}&token=${encodeURIComponent(token || '')}`)
-        setReferredBy(ref.data?.referredBy ?? null)
+        setReferredBy(ref.data?.referredByDetails ?? null)
         setOk(true)
         setCode('')
       }
@@ -64,7 +70,17 @@ export function ReferralProfileSection({ lang }: ReferralProfileSectionProps) {
       </h3>
       {referredBy ? (
         <p className="text-gray-700">
-          {es ? 'Te refirió' : 'You were referred by'}: <span className="font-semibold">{referredBy}</span>
+          {es ? 'Te refirió' : 'You were referred by'}:{' '}
+          {referredBy.id ? (
+            <Link
+              href={`/${lang}/user/${referredBy.id}`}
+              className="font-semibold text-blue-600 underline hover:text-blue-800"
+            >
+              {referredBy.nusuario || `#${referredBy.id}`}
+            </Link>
+          ) : (
+            <span className="font-semibold">{referredBy.nusuario}</span>
+          )}
         </p>
       ) : (
         <div className="space-y-2">

@@ -296,6 +296,13 @@ export default function Page({ params }: PageProps) {
                          scholarshipPaidSlearn={extra.scholarshipPaidSlearn}
                       />
                     }
+                    <div className="px-5 pb-5">
+                      {/* Botón "Ir al curso" (el span está dentro del <a> de la
+                          tarjeta: toda la tarjeta navega al curso) */}
+                      <span className="block w-full rounded bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">
+                        {lang === 'es' ? 'Ir al curso' : 'Go to course'}
+                      </span>
+                    </div>
                   </footer>
                 </a>
                 {extra && extra.vaultCreated && (

@@ -35,6 +35,9 @@ interface HistoryReward {
 export default function ReferralsPage({ params, deps }: PageProps & { deps?: ReferralsPageDeps }) {
   const { lang } = use(params)
   const es = lang === 'es'
+  // Origen dinámico (dev :9001 vs prod): el enlace de compartir debe apuntar
+  // al host donde corre la app, no a learn.tg fijo.
+  const base = typeof window !== 'undefined' ? window.location.origin : ''
   const address = deps?.useAuthAddress?.().address
 
   const [fund, setFund] = useState<{ slearnBalance: string | null; usdtBalance: string | null } | null>(null)
@@ -97,7 +100,7 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
   const copyCode = async () => {
     if (!code) return
     try {
-      await navigator.clipboard.writeText(`https://learn.tg/${lang}/ref/${code}`)
+      await navigator.clipboard.writeText(`${base}/${lang}/ref/${code}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch { /* clipboard unavailable */ }
@@ -191,8 +194,8 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
   // (landing del programa) y enviar una invitación personal por WhatsApp.
   const pastorsHref = es ? `/${lang}/redgd/pastores` : `/${lang}/gdcluster/pastors`
   const waMessage = es
-    ? `¡Hola! Te invito a aprender en learn.tg: aprendes jugando y ganas recompensas en criptomonedas. Únete con mi invitación: https://learn.tg/${lang}/ref/${code}`
-    : `Hi! I invite you to learn on learn.tg: you learn through games and earn crypto rewards. Join with my invitation: https://learn.tg/${lang}/ref/${code}`
+    ? `¡Hola! Te invito a aprender en learn.tg: aprendes jugando y ganas recompensas en criptomonedas. Únete con mi invitación: ${base}/${lang}/ref/${code}`
+    : `Hi! I invite you to learn on learn.tg: you learn through games and earn crypto rewards. Join with my invitation: ${base}/${lang}/ref/${code}`
   const waHref = `https://wa.me/?text=${encodeURIComponent(waMessage)}`
 
   return (
@@ -300,7 +303,7 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
                   <>
                     <p className="text-sm text-gray-600 mb-1">{t.shareLink}</p>
                     <p className="font-mono text-lg font-semibold text-gray-900 mb-3 break-all">
-                      https://learn.tg/{lang}/ref/{code}
+                      {code ? `${base}/${lang}/ref/${code}` : ''}
                     </p>
                     <button
                       onClick={copyCode}
@@ -310,7 +313,7 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
                     </button>
                     {deps?.QrCode && (
                       <div className="mt-4 flex justify-center">
-                        <deps.QrCode value={`https://learn.tg/${lang}/ref/${code}`} size={128} />
+                        <deps.QrCode value={code ? `${base}/${lang}/ref/${code}` : ''} size={128} />
                       </div>
                     )}
                     {stats && (

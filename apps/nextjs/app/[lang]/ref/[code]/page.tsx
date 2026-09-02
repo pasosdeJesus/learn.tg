@@ -24,6 +24,18 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
   const [inviter, setInviter] = useState<{ nusuario: string | null; nombre: string | null } | null>(null)
   const [hasWallet, setHasWallet] = useState(false)
   const [status, setStatus] = useState<'stored' | 'claimed' | 'already'>('stored')
+  const [copied, setCopied] = useState(false)
+
+  // Puente navegador normal → navegador de la billetera: el portapapeles del
+  // sistema sí sobrevive al cambio de app. Copiar el enlace (con el código en
+  // la URL) y pegarlo en el navegador de la billetera recaptura el código allí.
+  const copyInviteLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch { /* clipboard unavailable */ }
+  }
 
   // Móvil (lo más común en Sierra Leone): en el navegador normal no hay
   // window.ethereum. MetaMask tiene universal link documentado para abrir una
@@ -106,18 +118,24 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
     noWalletBody: es
       ? 'Para unirte y recibir recompensas necesitas una billetera de criptomonedas. Aprende a crear la tuya en el curso Web3 & UBI (Guía 2).'
       : 'To join and receive rewards you need a crypto wallet. Learn how to create yours in the Web3 & UBI course (Guide 2).',
-    // Móvil (lo más común en Sierra Leone): en el navegador normal no hay
-    // window.ethereum; quien ya tiene una billetera debe abrir el enlace en el
-    // navegador integrado de la billetera.
-    noWalletHaveApp: es
-      ? '¿Ya tienes una billetera en el teléfono (Rabby, MetaMask u OKX)? Abre este enlace en el navegador de tu billetera para conectar y reclamar tu código.'
-      : 'Already have a wallet app (Rabby, MetaMask, or OKX)? Open this link in your wallet\u2019s built-in browser to connect and claim your code.',
     openInMetaMask: es ? 'Abrir en MetaMask' : 'Open in MetaMask',
+    // Puente con portapapeles (navegador normal → navegador de la billetera)
+    copyBridge: es
+      ? '¿Ya tienes una billetera (Rabby, MetaMask u OKX)? Copia este enlace y pégalo en el navegador de tu billetera para conectar y reclamar tu código.'
+      : 'Already have a wallet app (Rabby, MetaMask, or OKX)? Copy this link and paste it into your wallet\u2019s browser to connect and claim your code.',
+    copyLink: es ? 'Copiar enlace' : 'Copy link',
+    copiedOk: es ? '¡Enlace copiado!' : 'Link copied!',
     goCourse: es ? 'Ir al curso Web3 & UBI' : 'Go to the Web3 & UBI course',
     loading: es ? 'Verificando tu invitación…' : 'Checking your invitation…',
     error: es ? 'No se pudo verificar el código. Inténtalo de nuevo.' : 'Could not verify the code. Please try again.',
   }
   const courseHref = es ? `/${lang}/web3-e-ibu/guia2` : `/${lang}/web3-and-ubi/guide2`
+  // El enlace al curso conserva el código (?ref=) para que, si el usuario lo
+  // abre después en otro navegador (p.ej. el de su billetera web3, con otro
+  // localStorage), la página lo vuelva a guardar y el claim siga funcionando.
+  const courseRefHref = lookup === 'valid' && code
+    ? `${courseHref}?ref=${(code || '').toUpperCase()}`
+    : courseHref
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-gray-50 to-gray-100 p-4">
@@ -172,19 +190,25 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
                     <h2 className="font-semibold text-gray-800 mb-1">{t.noWalletTitle}</h2>
                     <p className="text-sm text-gray-700 mb-3">{t.noWalletBody}</p>
-                    <p className="text-sm text-gray-700 mb-3">{t.noWalletHaveApp}</p>
+                    <p className="text-sm text-gray-700 mb-2">{t.copyBridge}</p>
+                    <button
+                      onClick={copyInviteLink}
+                      className="inline-block rounded bg-gray-800 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-900 mb-3"
+                    >
+                      {copied ? t.copiedOk : t.copyLink}
+                    </button>
                     {metaMaskDeepLink && (
                       <a
                         href={metaMaskDeepLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block rounded bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 mb-3"
+                        className="inline-block rounded bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 mb-3 ml-2"
                       >
                         {t.openInMetaMask}
                       </a>
                     )}
                     <div>
-                      <Link href={courseHref} className="inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                      <Link href={courseRefHref} className="inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
                         {t.goCourse}
                       </Link>
                     </div>
@@ -192,13 +216,15 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
                 )}
               </>
             ) : (
-              <p className="text-gray-600 mb-6">
-                {status === 'claimed' ? t.bodyClaimed : status === 'already' ? t.bodyAlready : t.activating}
-              </p>
+              <>
+                <p className="text-gray-600 mb-6">
+                  {status === 'claimed' ? t.bodyClaimed : status === 'already' ? t.bodyAlready : t.activating}
+                </p>
+                <Link href={`/${lang}/profile`} className="inline-block rounded bg-blue-600 px-6 py-3 text-base font-semibold text-white hover:bg-blue-700">
+                  {t.goProfile}
+                </Link>
+              </>
             )}
-            <Link href={`/${lang}/profile`} className="inline-block rounded bg-blue-600 px-6 py-3 text-base font-semibold text-white hover:bg-blue-700">
-              {t.goProfile}
-            </Link>
           </>
         )}
       </div>
