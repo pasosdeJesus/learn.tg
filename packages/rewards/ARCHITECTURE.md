@@ -4,7 +4,7 @@
 
 The rewards engine centralizes every **on-chain value movement** of learn.tg
 (scholarships, UBI, donations, premium purchases, SBT credentials) in one
-package. It follows the engine design from the `m` repo (REQ/35): self-contained
+package. It follows the engine design from the `m` repo (https://gitlab.com/pasosdeJesus/m/-/work_items/35): self-contained
 package, compiled to `dist/` with `tsc`, consumed via `exports` (never
 re-transpiled by Next/SWC).
 
@@ -52,7 +52,7 @@ country fund before the vault split. The rewards engine calls
 2. Recompute scores (`guide_usuario.points`, `learningscore`, `profilescore`).
 3. On perfect score: determine active vault (`getActiveVault`: V5 → V4),
    call `callWriteFun` on `LearnTGVaultsV5.payScholarship` (student, guide,
-   referrer fields — referrer unused for now, [REQ/163](https://github.com/pasosdeJesus/learn.tg/issues/163) pays off-chain).
+   referrer fields — referrer unused for now, https://github.com/pasosdeJesus/learn.tg/issues/163 pays off-chain).
 4. Record the payout in the `transaction` table (`type='scholarship'`,
    `crypto='usdt'|'slearn'`).
 5. On 100% course completion: `mintCourseCredential` (SBT via
@@ -77,7 +77,7 @@ country fund before the vault split. The rewards engine calls
    (pdJ 50 / reward 10 / missional 10 / ubi 5 / referral 10 / churches 5 /
    course vault 10).
 3. GD courses route 10% to the country fund (hook D3); `referralAddress` is
-   recorded so the core can attribute Form-1 referral rewards ([REQ/163](https://github.com/pasosdeJesus/learn.tg/issues/163)).
+   recorded so the core can attribute Form-1 referral rewards (https://github.com/pasosdeJesus/learn.tg/issues/163).
 4. Records `transaction` entries (`type='pay-course'`).
 
 ### UBI claim (`claim-celo-ubi`)

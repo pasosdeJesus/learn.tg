@@ -1,5 +1,5 @@
 // lib/referral-payout.ts — Pagos off-chain de recompensas de referidos
-// (REQ/163). Form 1 (10% de compra premium, 50% USDT + 50% SLEARN), Form 2
+// (https://github.com/pasosdeJesus/learn.tg/issues/163). Form 1 (10% de compra premium, 50% USDT + 50% SLEARN), Form 2
 // (10% del scholarship en curso missional) y Form 3 (1 USDT pastor bonus al
 // referir un pastor que compra el curso GD). Todos se pagan DESDE la referral
 // wallet (PRIVATE_KEY_REFERRAL_WALLET); si no hay fondos se omite (logged).
@@ -90,7 +90,7 @@ async function transferToken(
 }
 
 /**
- * Notificación al referidor cuando una recompensa DEBE pagarse (REQ/163):
+ * Notificación al referidor cuando una recompensa DEBE pagarse (https://github.com/pasosdeJesus/learn.tg/issues/163):
  * siempre indica la acción que la generó y el valor pagado — incluso 0, en
  * cuyo caso aclara que la billetera de referidos no tiene fondos suficientes.
  */

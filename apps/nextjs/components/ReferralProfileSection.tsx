@@ -1,6 +1,6 @@
 'use client'
 
-// Sección de referidos en el perfil (REQ/163): si el usuario no tiene
+// Sección de referidos en el perfil (https://github.com/pasosdeJesus/learn.tg/issues/163): si el usuario no tiene
 // referidor puede ingresar el código de quien lo invitó UNA vez; después solo
 // ve quién lo refirió (sin editar), como enlace a su perfil público.
 import { useEffect, useState } from 'react'

@@ -9,7 +9,7 @@ import {
 } from '../lib/gd-utils'
 import type { GdclusterDeps } from '../index'
 
-// Rutas REQ/220: estado del pastor, candidatos e invitaciones de clúster.
+// Rutas https://github.com/pasosdeJesus/learn.tg/issues/220: estado del pastor, candidatos e invitaciones de clúster.
 // La membresía sigue siendo por iglesia (`church_clustergd`); las invitaciones
 // se dirigen al pastor (`cluster_invitation`).
 
@@ -67,7 +67,7 @@ export async function clusterStatus(deps: GdclusterDeps, req: NextRequest) {
 
 /**
  * GET /api/cluster/candidates — pastores invitables para formar un clúster
- * (REQ/220 §2.1: referidos #163 + referidor si es pastor).
+ * (https://github.com/pasosdeJesus/learn.tg/issues/220 §2.1: referidos #163 + referidor si es pastor).
  */
 export async function clusterCandidates(deps: GdclusterDeps, req: NextRequest) {
   try {

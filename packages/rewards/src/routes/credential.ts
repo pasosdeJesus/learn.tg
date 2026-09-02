@@ -3,7 +3,7 @@ import type { RewardsDeps } from '../index'
 
 /**
  * GET /api/credential/[tokenId] — metadata ERC-1155 (público).
- * DB inyectada vía deps (D2, REQ/35 §11.2).
+ * DB inyectada vía deps (D2, https://gitlab.com/pasosdeJesus/m/-/work_items/35 §11.2).
  */
 export async function credentialByTokenId(
   deps: RewardsDeps,

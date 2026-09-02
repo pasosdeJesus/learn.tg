@@ -4,9 +4,9 @@ const { celo } = require('viem/chains')
 const fs = require('fs')
 
 const RPC = 'https://forno.celo.org'
-const V1 = '0xB31925E72402e91de01784b4512B2A83D3e2CFBD' // ClusterFunds mainnet (REQ/155)
+const V1 = '0xB31925E72402e91de01784b4512B2A83D3e2CFBD' // ClusterFunds mainnet (https://github.com/pasosdeJesus/learn.tg/issues/155)
 const V2 = '0x3F524c8E7003f9D4bF95134898593CD9E7Fcc7a7'  // ClusterFundsV2 mainnet
-const SLEARN = '0x27fd41Bea85C39254f2B12789eB37a1543152CC1' // SLEARN mainnet (REQ/155)
+const SLEARN = '0x27fd41Bea85C39254f2B12789eB37a1543152CC1' // SLEARN mainnet (https://github.com/pasosdeJesus/learn.tg/issues/155)
 
 const v2Abi = JSON.parse(fs.readFileSync('abis/ClusterFundsV2.json', 'utf8'))
 const v1Abi = JSON.parse(fs.readFileSync('abis/ClusterFunds.json', 'utf8'))

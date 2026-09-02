@@ -1,5 +1,5 @@
 // lib/referral-crossword.ts — Atribución de referidos en el flujo de crucigrama
-// (REQ/163, Form 2): cuando un usuario referido completa un crucigrama de un
+// (https://github.com/pasosdeJesus/learn.tg/issues/163, Form 2): cuando un usuario referido completa un crucigrama de un
 // curso MISSIONAL, el referidor gana el 10% del scholarship, pagado desde la
 // billetera de referidos. El estudiante conserva el 100%.
 import { Kysely } from 'kysely'

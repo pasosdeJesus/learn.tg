@@ -1,7 +1,7 @@
 {
   "name": "gdcluster",
   "version": "0.1.0",
-  "description": "Global Disciples engine — cluster/country funds, donations, ranking, churches, contact (REQ/35 Fase 3)",
+  "description": "Global Disciples engine — cluster/country funds, donations, ranking, churches, contact (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3)",
   "stage": "local",
   "apiPrefix": "/api/gdcluster",
   "routePrefix": "/gdcluster",

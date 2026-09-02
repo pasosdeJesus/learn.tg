@@ -3,7 +3,7 @@
 /**
  * Smoke test E2E: Referral payout — Form 1 (10% compra premium) + Form 3
  * (1 USDT pastor bonus) cuando un REFERIDO que es PASTOR compra el curso
- * Global Disciples (REQ/163).
+ * Global Disciples (https://github.com/pasosdeJesus/learn.tg/issues/163).
  *
  * Flujo (análogo a pastor-journey.spec.mjs + relación de referido):
  *   1. Referidor (wallet de apps/.env, verificador) → código de referido
@@ -227,7 +227,7 @@ async function main() {
       walletAddress: pastorAddr, token: pastor.token, code: refCode,
     }, { httpsAgent, validateStatus: s => s < 500 }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
     if (claimRes.status === 200 && claimRes.data?.ok) ok(`Claim 200 — relación creada (referrer_id=${claimRes.data.referrer_id})`)
-    else if (claimRes.status === 429) { skip('Rate-limit del claim (REQ/163: 10/día por IP) — reintenta en 24h'); finish() }
+    else if (claimRes.status === 429) { skip('Rate-limit del claim (https://github.com/pasosdeJesus/learn.tg/issues/163: 10/día por IP) — reintenta en 24h'); finish() }
     else { fail(`Claim falló: ${claimRes.status} ${JSON.stringify(claimRes.data)}`); finish() }
 
     // ════════════════════════════════════════════════════════════

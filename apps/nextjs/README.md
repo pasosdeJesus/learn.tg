@@ -73,7 +73,7 @@ This directory contains crucial application logic, decoupled from the UI and API
 > lives in the `@learn-tg/rewards`, `@learn-tg/gdcluster`, and `@learn-tg/mr519`
 > packages, compiled to `dist/` and consumed via `exports`. See
 > [ARCHITECTURE.md](../../ARCHITECTURE.md) §Web3 Engines and the `m` repo
-> (`REQ/35`, `doc/engines.md`) for the design.
+> (`https://gitlab.com/pasosdeJesus/m/-/work_items/35`, `doc/engines.md`) for the design.
 
 ### UI Components (components/ui)
 The application uses **Radix UI** as a foundation for its UI components. Our library of reusable and custom components is located in `apps/nextjs/components/ui`, providing a consistent look and feel across the platform.

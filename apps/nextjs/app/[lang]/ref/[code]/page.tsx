@@ -1,7 +1,7 @@
 'use client'
 
 // Página /[lang]/ref/{CODE} — captura el código de referido en localStorage y
-// lo reclama automáticamente al conectar la wallet (REQ/163 §2.3).
+// lo reclama automáticamente al conectar la wallet (https://github.com/pasosdeJesus/learn.tg/issues/163 §2.3).
 //
 // - Valida el código contra la DB (/api/referral/lookup): si no existe muestra
 //   "El código de referido no existe" en vez de la invitación genérica.

@@ -58,7 +58,7 @@ const URLS = [
   '/api/courses/10/access',
   '/api/auth/csrf',
   '/api/auth/providers',
-  // Referidos (REQ/163) — rutas de los specs E2E de desembolso:
+  // Referidos (https://github.com/pasosdeJesus/learn.tg/issues/163) — rutas de los specs E2E de desembolso:
   // referral-payout (Form 2, crucigrama misional) y referral-premium (Form 1+3)
   '/en/ref/5F75CC53',
   '/api/referral/code',

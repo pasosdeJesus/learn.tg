@@ -1,6 +1,6 @@
 'use client'
 
-// Página /[lang]/cluster — formación de clústeres (REQ/220):
+// Página /[lang]/cluster — formación de clústeres (https://github.com/pasosdeJesus/learn.tg/issues/220):
 // 3 estados: sin clúster (crear), invitación pendiente (aceptar/rechazar),
 // en un clúster (detalle + salir). El backend vive en el motor gdcluster
 // (/api/cluster/status, /candidates, /invitation/*, /api/cluster).

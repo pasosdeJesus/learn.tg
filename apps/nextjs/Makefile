@@ -116,7 +116,7 @@ prod: build-guard engines-dist engines-assets swc-wasm
 	./bin/start > prod.log 2>&1 &
 
 # Next.js 16 SWC wasm fallback: OpenBSD has no native bindings and the
-# on-demand download leaves node_modules/next/wasm empty (REQ/205).
+# on-demand download leaves node_modules/next/wasm empty (https://github.com/pasosdeJesus/learn.tg/issues/205).
 .PHONY: swc-wasm
 swc-wasm:
 	mkdir -p node_modules/next/wasm/@next/swc-wasm-nodejs

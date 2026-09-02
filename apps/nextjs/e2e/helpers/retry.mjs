@@ -1,4 +1,4 @@
-// Helper compartido de retry para specs E2E (REQ/35 §12.8).
+// Helper compartido de retry para specs E2E (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8).
 // El dev site (16G compartido, prod+dev) limita por wallet/IP (429) y bajo
 // carga los specs de timing flaquean; reintentar con espera los estabiliza.
 

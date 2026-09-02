@@ -36,7 +36,7 @@ function mockDb({ referredRows = [], referrerRows = [] }: {
   return db
 }
 
-describe('getClusterCandidates (REQ/220 §2.1)', () => {
+describe('getClusterCandidates (https://github.com/pasosdeJesus/learn.tg/issues/220 §2.1)', () => {
   const LEADER = 191
   const COUNTRY = 694
 

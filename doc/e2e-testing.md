@@ -69,8 +69,8 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `landing-page.spec.mjs` | `/en` and `/es` return 200, no "Failed to load courses" error |
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
 | `prerequisites.spec.mjs` | Wallet registration + verifier check + profile setup + self-verify → ≥50 score |
-| `referral-payout.spec.mjs` | Referral payout (REQ/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
-| `referral-premium.spec.mjs` | Referral payout (REQ/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 44 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
+| `referral-payout.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
+| `referral-premium.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 44 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
 | `rails-auth.spec.mjs` | Rails API calls with auth token in ES and EN |
 | `verification-timezone.spec.mjs` | Verification availability API: timezone handling, 7-day window |
 
@@ -197,7 +197,7 @@ time out on SIWE under suite load (passes solo).
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
 | `church-selector-diag` | Session cookie auth (works via the session fallback in `lib/authenticateUser.ts`) |
 
-### Hydration / SIWE gotcha on the dev server (REQ/208)
+### Hydration / SIWE gotcha on the dev server (https://github.com/pasosdeJesus/learn.tg/issues/208)
 
 The dev server `https://learn.tg:9001` sits behind an **nginx reverse proxy**.
 Two nginx settings are required for the browser specs to pass on Next 16, or
@@ -221,7 +221,7 @@ location @learntgdes {
 
 Symptoms: `buttonCount: 0` and no `useAuthAddress:` logs in the browser console
 (hydration never runs), or `[ConnectWallet] callback failed: 401`. See
-[REQ/208](https://github.com/pasosdeJesus/learn.tg/issues/208) for the full diagnosis.
+https://github.com/pasosdeJesus/learn.tg/issues/208 for the full diagnosis.
 
 ### SIWE Mock
 
@@ -324,5 +324,5 @@ CHROME_PATH=/usr/bin/google-chrome make test-e2e
 
 - [SIWE Auth Flow](siwe-auth-flow.md) — Authentication protocol
 - [Wallet Auth](wallet-auth.md) — Custom wallet implementation (no wagmi)
-- [REQ/179](https://github.com/pasosdeJesus/learn.tg/issues/179) — E2E testing infrastructure spec
+- https://github.com/pasosdeJesus/learn.tg/issues/179 — E2E testing infrastructure spec
 - [apps/nextjs/CONTRIBUTING.md](../apps/nextjs/CONTRIBUTING.md) — Testing policy and coverage targets

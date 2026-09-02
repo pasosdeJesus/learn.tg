@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Smoke test E2E: Referral payout (REQ/163, Form 2 — desembolso real)
+ * Smoke test E2E: Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163, Form 2 — desembolso real)
  *
  * Verifica el desembolso de la recompensa de referidos cuando un usuario
  * REFERIDO completa un crucigrama de un curso MISIONAL ("A relationship
@@ -263,7 +263,7 @@ async function main() {
     if (claimRes.status === 200 && claimRes.data?.ok) {
       ok(`Claim 200 — relación creada (referrer_id=${claimRes.data.referrer_id})`)
     } else if (claimRes.status === 429) {
-      skip('Rate-limit del claim (REQ/163: 10/día por IP) — reintenta en 24h')
+      skip('Rate-limit del claim (https://github.com/pasosdeJesus/learn.tg/issues/163: 10/día por IP) — reintenta en 24h')
       finish()
     } else {
       // El referido pudo haberse reclamado en una corrida anterior (idempotencia)
@@ -284,7 +284,7 @@ async function main() {
     const fundUsdt = Number(fund.usdtBalance ?? 0)
     const fundSlearn = Number(fund.slearnBalance ?? 0)
     if (fundUsdt <= 0 && fundSlearn <= 0) {
-      skip('Billetera de referidos sin fondos — la recompensa se omitiría (funding rule REQ/163)')
+      skip('Billetera de referidos sin fondos — la recompensa se omitiría (funding rule https://github.com/pasosdeJesus/learn.tg/issues/163)')
       finish()
     }
     ok(`Fund con fondos: ${fundSlearn} SLEARN · ${fundUsdt} USDT`)
@@ -409,7 +409,7 @@ async function main() {
       fail(`No se encontró la reward del referido. Rewards del referidor: ${seen}`)
       finish()
     }
-    // REQ/163 §6.4: una fila de transaction POR CRIPTO (USDT y SLEARN)
+    // https://github.com/pasosdeJesus/learn.tg/issues/163 §6.4: una fila de transaction POR CRIPTO (USDT y SLEARN)
     const paidUsdt = matches.filter(r => r.crypto === 'usdt').reduce((s, r) => s + Number(r.amount), 0)
     const paidSlearn = matches.filter(r => r.crypto === 'slearn').reduce((s, r) => s + Number(r.amount), 0)
     ok(`Reward registrada: ${paidUsdt.toFixed(2)} USDT + ${paidSlearn.toFixed(2)} SLEARN (10% de ${usdtPaid}/${slearnPaid})`)

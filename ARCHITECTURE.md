@@ -121,13 +121,13 @@ graph TD
       `apps/hardhat/deployments/PasosDeJesusCredentials/{network}.json`, with env
       fallback `NEXT_PUBLIC_PDJCREDENTIALS_CELO_ADDRESS`. See
       [doc/deploy-credentials.md](doc/deploy-credentials.md).
-    - `ClusterFunds.sol` / `ClusterFundsV2.sol`: cluster/country funds y donaciones GD (V2 operativo, REQ/214).
+    - `ClusterFunds.sol` / `ClusterFundsV2.sol`: cluster/country funds y donaciones GD (V2 operativo, https://github.com/pasosdeJesus/learn.tg/issues/214).
 
 ### 4. **Web3 Engines (packages/)**
 
 The Next.js app is split into a **core** (apps/nextjs) plus self-contained
 **engines** (`packages/*`), each compiled to `dist/` with `tsc` and consumed via
-its `exports` map (never re-transpiled by Next/SWC). Design: `m` repo REQ/35;
+its `exports` map (never re-transpiled by Next/SWC). Design: `m` repo https://gitlab.com/pasosdeJesus/m/-/work_items/35;
 developer guide: `m` repo `doc/engines.md`. Architecture decisions (D1 next as
 peer dep, D2 dependency injection, D3 hooks):
 
@@ -168,7 +168,7 @@ data flow, contracts):
   `contract:test` (from `apps/nextjs`) runs `apps/hardhat/test` — green (80 tests:
   34 V2 + 24 V5 + 15 CeloUbi + 7 ClusterFunds) with `@pasosdejesus/edr` ≥ 0.1.2
   (fix `block.timestamp` en `eth_call`).
-  See `m` REQ/35 for pitfalls (webpack parallelism, heap limits, vendored loadable alias).
+  See `m` https://gitlab.com/pasosdeJesus/m/-/work_items/35 for pitfalls (webpack parallelism, heap limits, vendored loadable alias).
 
 ---
 
@@ -214,10 +214,10 @@ The platform features two distinct reward mechanisms, demonstrating our principl
     3. The contract validates the claim conditions (such as cooldown periods) on-chain.
     4. Upon successful validation, it transfers a set amount of CELO to the user's wallet.
 
-### 3. Referral Program (REQ/163)
+### 3. Referral Program (https://github.com/pasosdeJesus/learn.tg/issues/163)
 
 A general referral program with **three reward forms**, documented in detail in
-[REQ/163](https://github.com/pasosdeJesus/learn.tg/issues/163):
+https://github.com/pasosdeJesus/learn.tg/issues/163:
 
 | Form | Reward | Trigger |
 |------|--------|---------|
@@ -234,7 +234,7 @@ course** and have a **profile score > 90** (checked in `GET /api/referral/code`
 from scholarships or student funds. If the wallet has no funds, the reward is
 skipped (logged, not silently swallowed).
 
-**Architecture decision (REQ/35):** the referral program is part of the
+**Architecture decision (https://gitlab.com/pasosdeJesus/m/-/work_items/35):** the referral program is part of the
 **core** of learn.tg, not a Web3 engine — it is a cross-cutting feature with no
 contracts of its own. The on-chain routing is off-chain: the backend reads the
 `ReferralReward(referralWallet, usdtAmount, slearnAmount)` event emitted by
@@ -259,9 +259,9 @@ per course, referrer must be older than the referred, pastor bonus requires
 **Events recorded** in `userevent`: `referral_activated`, `referral_claimed`,
 `referral_reward_paid`, `referral_bonus_paid`.
 
-### 4. Global Disciples (GD) Program — Cluster Formation (REQ/220)
+### 4. Global Disciples (GD) Program — Cluster Formation (https://github.com/pasosdeJesus/learn.tg/issues/220)
 
-[REQ/220](https://github.com/pasosdeJesus/learn.tg/issues/220) simplifies the
+https://github.com/pasosdeJesus/learn.tg/issues/220 simplifies the
 original cluster draft: a GD cluster is **3 churches** (lead pastor + 2 invited
 pastors) built **on the existing GD cluster model** — no parallel tables, no
 duplicated routes. Implemented (2026-08-31, migration
@@ -285,7 +285,7 @@ duplicated routes. Implemented (2026-08-31, migration
 | Cluster | `pending` (1–2 member churches) → `active` (3 churches) → `disbanded` (< 2 after a leave, or leader decision) |
 
 **Candidate selection** (`GET /api/cluster/candidates`): referred pastors from
-the [REQ/163](https://github.com/pasosdeJesus/learn.tg/issues/163) referral
+the https://github.com/pasosdeJesus/learn.tg/issues/163 referral
 graph first, then the leader's referrer if they are a pastor, same pilot
 country (CO/SL), declared + verified church, no current cluster, not self.
 Fallback: invite by the existing 6-char code (`POST /api/cluster/join`).
@@ -537,7 +537,7 @@ Communications between users, and between pdJ and users, are **confidential by d
 ### What API endpoints expose
 
 ```typescript
-// ⏳ Planned (REQ/157) — not yet implemented
+// ⏳ Planned (https://github.com/pasosdeJesus/learn.tg/issues/157) — not yet implemented
 GET /api/gd/contact/:clusterId
 → { cluster_sent_at, pdj_sent_at, gd_responded_at, released_at, status }
 

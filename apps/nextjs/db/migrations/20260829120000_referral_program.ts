@@ -1,6 +1,6 @@
 import { Kysely, sql } from 'kysely'
 
-// REQ/163 — Programa de referidos: tablas de códigos/relaciones + tipos de
+// https://github.com/pasosdeJesus/learn.tg/issues/163 — Programa de referidos: tablas de códigos/relaciones + tipos de
 // transacción `referral_reward` y `referral_bonus` (pagos off-chain desde la
 // referral wallet).
 

@@ -1,4 +1,4 @@
-// Hook `reward:route-destination` (REQ/35 §5.4): registrado por el motor
+// Hook `reward:route-destination` (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §5.4): registrado por el motor
 // `gdcluster` (Fase 3) en el proceso server vía `lib/gdcluster-app.ts`
 // (`import '@learn-tg/gdcluster/src/register'`), que es donde `routeReward`
 // lo ejecuta. El cargador de `m-extensions/` (CLI de m) no puede importar TS

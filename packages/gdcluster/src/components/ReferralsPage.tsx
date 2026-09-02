@@ -12,7 +12,7 @@ type PageProps = {
 
 export interface ReferralsPageDeps {
   useAuthAddress: () => { address?: string | null }
-  // QR del enlace de referido (inyectado por el host — REQ/163 §1.6)
+  // QR del enlace de referido (inyectado por el host — https://github.com/pasosdeJesus/learn.tg/issues/163 §1.6)
   QrCode?: ComponentType<{ value: string; size?: number }>
 }
 

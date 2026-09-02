@@ -14,7 +14,7 @@ fi
 rm -rf .next
 pnpm install
 
-# Motores (REQ/35 Fase 4): se consumen vía dist/ (exports map) y dist/ NO está
+# Motores (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): se consumen vía dist/ (exports map) y dist/ NO está
 # en git (artefacto de build). Compilar antes de servir — un checkout fresco
 # fallaría con "Module not found: ... dist/lib/...". Orden: rewards antes que
 # gdcluster (gdcluster importa @learn-tg/rewards -> dist).

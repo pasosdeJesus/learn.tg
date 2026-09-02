@@ -5,7 +5,7 @@ import * as path from "path";
 dotenv.config({ path: "../.env" });
 
 // Prueba de un ClusterFunds desplegado, alineada con la API actual del
-// contrato (REQ/215): pdJ treasury se configura como fee wallet en el
+// contrato (https://github.com/pasosdeJesus/learn.tg/issues/215): pdJ treasury se configura como fee wallet en el
 // constructor; no hay pdjTreasury()/pdjPercentage()/setPdJPercentage().
 // API real: getFeeConfig(), setDonorCashbackPct(), donorCashbackPct(),
 // usdtToken(), slearnToken(), owner(), paused(), getCountryBalance(),

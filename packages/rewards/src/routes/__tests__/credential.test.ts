@@ -11,7 +11,7 @@ const {
   setupCommonResponses,
 } = apiDbMocks
 
-// D4 (REQ/35 §11.2): el test inyecta deps mock al handler del motor.
+// D4 (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §11.2): el test inyecta deps mock al handler del motor.
 // `MockKysely` (apiDbMocks) queda cableado a los mock fns compartidos.
 const deps: any = {
   db: () => new apiDbMocks.MockKysely(),

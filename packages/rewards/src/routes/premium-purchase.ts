@@ -14,7 +14,7 @@ const PREMIUM_PCT = {
 
 /**
  * Clean distribution computed from the percentages actually passed to
- * SLEARN.processPayment (REQ/128). For GD courses, 10% is routed to the
+ * SLEARN.processPayment (https://github.com/pasosdeJesus/learn.tg/issues/128). For GD courses, 10% is routed to the
  * country/cluster fund first (ClusterFundsV2, 100% net) and processPayment
  * receives the remaining 90%. Sums to 100% of the payment.
  */
@@ -224,7 +224,7 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
     const slearnPaid = Math.round(Number(formatUnits(onChainSlearnAmount, deps.backend.SLEARN_DECIMALS)) * 100)
 
     // Clean distribution computed from the percentages actually passed to
-    // SLEARN.processPayment (REQ/128) — what the success dialog should show.
+    // SLEARN.processPayment (https://github.com/pasosdeJesus/learn.tg/issues/128) — what the success dialog should show.
     const distribution = computePremiumDistribution(usdtPaid, Number(formatUnits(onChainSlearnAmount, deps.backend.SLEARN_DECIMALS)), courseIdNum, isGd, deps.backend.SLEARN_RATE)
     const breakdownText = distribution
       .map(d => `${d.destination}: ${d.amount.toFixed(2)} ${d.crypto.toUpperCase()}`)

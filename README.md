@@ -32,7 +32,7 @@ Users earn rewards for inviting others to the platform: **10%** of any premium
 course purchase, **10%** of the scholarship value for missional courses, and an
 extra **1 USDT** when a referred pastor buys the Global Disciples course.
 Rewards are paid from a dedicated referral wallet — never from student
-scholarships. Full specification in [REQ/163](https://github.com/pasosdeJesus/learn.tg/issues/163) and the
+scholarships. Full specification in https://github.com/pasosdeJesus/learn.tg/issues/163 and the
 [Architecture](ARCHITECTURE.md#3-referral-program-req163).
 
 

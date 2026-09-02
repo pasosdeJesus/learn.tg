@@ -1,4 +1,4 @@
-// E2E Test: Cluster formation (REQ/220) — admin CRUD + ranking pseudonym +
+// E2E Test: Cluster formation (https://github.com/pasosdeJesus/learn.tg/issues/220) — admin CRUD + ranking pseudonym +
 // auth gating + estado/candidatos del pastor. El flujo de invitaciones
 // (aceptar/rechazar/activación a 3) está cubierto por unit tests del motor
 // (cluster-invitation.test.ts); aquí se verifica el contrato HTTP y el

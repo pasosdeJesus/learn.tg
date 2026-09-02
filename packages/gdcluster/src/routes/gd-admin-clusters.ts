@@ -3,7 +3,7 @@ import { sql } from 'kysely'
 import { getChurchCluster, getClusterMembers, addClusterHistory } from '../lib/gd-utils'
 import type { GdclusterDeps } from '../index'
 
-// Admin/verificador de clústeres (REQ/220 §5) — sobre los datos existentes
+// Admin/verificador de clústeres (https://github.com/pasosdeJesus/learn.tg/issues/220 §5) — sobre los datos existentes
 // (`clustergd` + `church_clustergd` + `church`). El auth actual distingue
 // solo "verificador" (`authenticateAdmin`); no existe rol admin separado en el
 // modelo de auth, así que disolver también está permitido al verificador

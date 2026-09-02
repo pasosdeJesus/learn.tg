@@ -6,7 +6,7 @@ The gdcluster engine implements the **Global Disciples (GD)** program on top of
 the platform: pastors form **clusters** (and belong to a **country**), clusters
 receive donations, and a share of every GD donation/premium payment is routed
 to the cluster or country fund on `ClusterFundsV2`. It follows the engine
-design from the `m` repo (REQ/35) and adds a notable inversion: instead of the
+design from the `m` repo (https://gitlab.com/pasosdeJesus/m/-/work_items/35) and adds a notable inversion: instead of the
 core dispatching to the engine, the **engine registers a hook** that the core
 dispatches through.
 
@@ -43,7 +43,7 @@ framework bindings.
 Unlike `rewards` (which consumes contracts from `apps/hardhat`), gdcluster
 ships its own isolated Hardhat project under `contracts/` with `ClusterFunds`
 and `ClusterFundsV2`. This was chosen so the cluster-fund domain can evolve
-independently (REQ/214) without touching the main hardhat app; ABI sync and
+independently (https://github.com/pasosdeJesus/learn.tg/issues/214) without touching the main hardhat app; ABI sync and
 deployment JSONs live with the package.
 
 ## Data flow
@@ -54,8 +54,8 @@ deployment JSONs live with the package.
    a cluster → unique 6-char code generated, rows in `clustergd` +
    `church_clustergd`.
 2. **Join**: another user joins with the code (`cluster/join`).
-3. **Invitations ([REQ/220](https://github.com/pasosdeJesus/learn.tg/issues/220))**: `cluster/candidates` proposes pastors from the
-   user's **referral graph** (`referralrelationship`, [REQ/163](https://github.com/pasosdeJesus/learn.tg/issues/163)) — referred
+3. **Invitations (https://github.com/pasosdeJesus/learn.tg/issues/220)**: `cluster/candidates` proposes pastors from the
+   user's **referral graph** (`referralrelationship`, https://github.com/pasosdeJesus/learn.tg/issues/163) — referred
    pastors first, then the referrer. Invitations can be accepted or rejected;
    state via `cluster/status`.
 4. **Admin**: verifiers can list/create/update/disband clusters and add/remove
@@ -87,7 +87,7 @@ rewards engine (add-donation / premium-purchase)
 | Contract | Role in flow |
 |----------|--------------|
 | `ClusterFunds` | Direct donations with configurable fee wallets + donor cashback (default 10/10/80) |
-| `ClusterFundsV2` | Routed GD contributions credited **in full** (no fees/cashback); migration target (REQ/214) |
+| `ClusterFundsV2` | Routed GD contributions credited **in full** (no fees/cashback); migration target (https://github.com/pasosdeJesus/learn.tg/issues/214) |
 
 Deployments are read from `contracts/deployments/<Contract>/<network>.json`
 via `@pasosdejesus/m/blockchain/deployments` (`readDeployment`) — never `.env`.

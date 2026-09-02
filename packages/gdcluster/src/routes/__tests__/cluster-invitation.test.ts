@@ -26,7 +26,7 @@ function post(url: string, body: any): NextRequest {
   return new NextRequest(`http://localhost${url}`, { method: 'POST', body: JSON.stringify(body) })
 }
 
-describe('clusterStatus (REQ/220)', () => {
+describe('clusterStatus (https://github.com/pasosdeJesus/learn.tg/issues/220)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetMocks()
@@ -66,7 +66,7 @@ describe('clusterStatus (REQ/220)', () => {
   })
 })
 
-describe('acceptInvitation (REQ/220)', () => {
+describe('acceptInvitation (https://github.com/pasosdeJesus/learn.tg/issues/220)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetMocks()
@@ -139,7 +139,7 @@ describe('acceptInvitation (REQ/220)', () => {
   })
 })
 
-describe('rejectInvitation (REQ/220)', () => {
+describe('rejectInvitation (https://github.com/pasosdeJesus/learn.tg/issues/220)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetMocks()

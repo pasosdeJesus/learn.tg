@@ -1,4 +1,4 @@
-// E2E Test: Referral program (REQ/163 §14)
+// E2E Test: Referral program (https://github.com/pasosdeJesus/learn.tg/issues/163 §14)
 //
 // Cubre el flujo completo de referidos contra el sitio dev:
 //   1. Landing pública /en/referrals (documentación + fund)

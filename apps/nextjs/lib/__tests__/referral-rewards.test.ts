@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { referralReward, canPayFromWallet } from '../referral-rewards'
 
-// Tests TDD de la lógica pura de recompensas de referidos (REQ/163 §1).
+// Tests TDD de la lógica pura de recompensas de referidos (https://github.com/pasosdeJesus/learn.tg/issues/163 §1).
 
 describe('referralReward — Form 1 (10% del curso premium, 50/50 USDT/SLEARN)', () => {
   it('precio 100 → 5 USDT + 5 SLEARN (10% = 10, mitad cada uno)', () => {
@@ -18,7 +18,7 @@ describe('referralReward — Form 1 (10% del curso premium, 50/50 USDT/SLEARN)',
 })
 
 describe('referralReward — Form 2 (10% del scholarship missional)', () => {
-  it('scholarship USDT 1.00 + SLEARN 5 → 0.10 USDT + 0.50 SLEARN (ejemplo REQ/163 §1.3)', () => {
+  it('scholarship USDT 1.00 + SLEARN 5 → 0.10 USDT + 0.50 SLEARN (ejemplo https://github.com/pasosdeJesus/learn.tg/issues/163 §1.3)', () => {
     expect(referralReward(2, { scholarshipUsdt: 1, scholarshipSlearn: 5 })).toEqual({
       usdt: 0.1,
       slearn: 0.5,

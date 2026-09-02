@@ -4,7 +4,7 @@
 
 The **rewards engine** implements learn.tg's on-chain reward logic: crossword
 scholarships, CELO UBI claims, donations, premium course purchases, credentials
-(SBTs), and on-chain balance reporting. It is a Web3 engine (REQ/35, Fase 2):
+(SBTs), and on-chain balance reporting. It is a Web3 engine (https://gitlab.com/pasosdeJesus/m/-/work_items/35, Fase 2):
 a self-contained TypeScript package compiled to `dist/` and consumed by the
 Next.js app through its `exports` map. See the design decisions in
 [ARCHITECTURE.md](ARCHITECTURE.md) and the general engine guide in the `m`

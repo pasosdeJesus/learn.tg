@@ -18,7 +18,7 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "types": ["node"],
     "typeRoots": ["../../apps/nextjs/node_modules/@types"],
-    // Puente de resolución (REQ/35 Fase 4): learn.tg no es workspace pnpm y el
+    // Puente de resolución (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): learn.tg no es workspace pnpm y el
     // motor no tiene node_modules propio; las deps las resuelve el node_modules
     // de la app. Al publicarse (graduación local→shared) se eliminan.
     "paths": {

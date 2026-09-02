@@ -17,7 +17,7 @@ async function main() {
 
   console.log(`Verifying ClusterFundsV2 at: ${addr}`);
 
-  // Verify ownership: REQ/214 transfiere la propiedad al backend wallet
+  // Verify ownership: https://github.com/pasosdeJesus/learn.tg/issues/214 transfiere la propiedad al backend wallet
   // (0x01a72816...) — el deployer ya no es owner por diseño.
   const owner = await cf.owner();
   const signers = await ethers.getSigners();
@@ -25,7 +25,7 @@ async function main() {
   const BACKEND = "0x01a72816110a88883F79026C0199827fCF9184c8";
   const ownerOk = owner.toLowerCase() === deployer.toLowerCase() || owner.toLowerCase() === BACKEND.toLowerCase();
   console.log(`  Owner: ${owner} ${ownerOk ? '✓' : '✗'}`);
-  if (owner.toLowerCase() === BACKEND) console.log(`         (backend wallet — transferencia REQ/214)`);
+  if (owner.toLowerCase() === BACKEND) console.log(`         (backend wallet — transferencia https://github.com/pasosdeJesus/learn.tg/issues/214)`);
 
   // Verify fee config
   const cfg = await cf.getFeeConfig();
@@ -42,7 +42,7 @@ async function main() {
   console.log(`  USDT: ${usdt} ${usdt !== ethers.ZeroAddress ? '✓' : '✗'}`);
   console.log(`  SLEARN: ${slearn} ${slearn !== ethers.ZeroAddress ? '✓' : '✗'}`);
 
-  // Verify contribution functions exist in the ABI (REQ/214)
+  // Verify contribution functions exist in the ABI (https://github.com/pasosdeJesus/learn.tg/issues/214)
   const hasCountry = !!cf.interface.getFunction('processCountryContribution');
   const hasCluster = !!cf.interface.getFunction('processClusterContribution');
   console.log(`  processCountryContribution ${hasCountry ? '✓ presente' : '✗ ausente'}`);

@@ -1,4 +1,4 @@
-// Dispatcher de enrutamiento de recompensas (REQ/35 §5.4).
+// Dispatcher de enrutamiento de recompensas (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §5.4).
 //
 // El core NO conoce GD: delega en el hook `reward:route-destination`, que
 // registran los motores (gdcluster en Fase 3; temporalmente desde

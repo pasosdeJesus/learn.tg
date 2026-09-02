@@ -1,7 +1,7 @@
 // lib/referral-rewards.ts
-// Lógica pura de recompensas de referidos (REQ/163, separado de testimonios → REQ/219).
+// Lógica pura de recompensas de referidos (https://github.com/pasosdeJesus/learn.tg/issues/163, separado de testimonios → https://github.com/pasosdeJesus/learn.tg/issues/219).
 //
-// Reglas (REQ/163 §1):
+// Reglas (https://github.com/pasosdeJesus/learn.tg/issues/163 §1):
 // - Form 1: 10% del precio del curso premium, pagado 50% USDT + 50% SLEARN.
 // - Form 2: 10% del scholarship (USDT y SLEARN) en curso missional; el
 //   estudiante conserva el 100%.
@@ -47,7 +47,7 @@ export function referralReward(
 }
 
 /**
- * Regla de funding (REQ/163): la recompensa se paga desde la referral wallet;
+ * Regla de funding (https://github.com/pasosdeJesus/learn.tg/issues/163): la recompensa se paga desde la referral wallet;
  * si la wallet no tiene fondos suficientes, la recompensa se omite.
  */
 export function canPayFromWallet(

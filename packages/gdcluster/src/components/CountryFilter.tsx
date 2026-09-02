@@ -33,7 +33,7 @@ export function CountryFilter({
   disabled = false,
   lang = 'en',
 }: CountryFilterProps) {
-  // i18n mínima local (REQ/35 §5.2: el motor no importa hooks del core)
+  // i18n mínima local (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §5.2: el motor no importa hooks del core)
   const t = useMemo(() => {
     const l = LABELS[lang === 'es' ? 'es' : 'en']
     return (k: keyof typeof l) => l[k]

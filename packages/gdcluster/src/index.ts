@@ -14,7 +14,7 @@ export interface AuthUser {
 }
 
 /**
- * Dependencias del `backend-config` del core (REQ/35 §5.2 — backend-config NO se
+ * Dependencias del `backend-config` del core (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §5.2 — backend-config NO se
  * mueve al motor). El host las inyecta vía deps (D2): el motor nunca importa
  * `@/lib/backend-config`.
  */
@@ -35,7 +35,7 @@ export interface GdclusterDeps {
     token?: string,
   ) => Promise<AuthUser | null>
   backend: GdclusterBackendDeps
-  /** Auth de admin/verificador (inyectada por el host; REQ/220 admin) */
+  /** Auth de admin/verificador (inyectada por el host; https://github.com/pasosdeJesus/learn.tg/issues/220 admin) */
   authenticateAdmin?: (
     db: Kysely<any>,
     wallet: string,
@@ -52,7 +52,7 @@ export interface RouteHandlers {
 }
 
 /**
- * Factoría del motor `gdcluster` (REQ/35 §12, D2).
+ * Factoría del motor `gdcluster` (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12, D2).
  *
  * El motor no importa alias internos de la app (`@/`, `@/.config`): recibe sus
  * dependencias (DB, auth, backend) inyectadas desde el host. Cada ruta se

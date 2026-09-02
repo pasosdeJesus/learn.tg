@@ -1,5 +1,5 @@
 // E2E Test: CELO UBI Claim on Sepolia (R-#179)
-// Same flow as REQ/175 but on Celo Sepolia testnet — no real value at stake.
+// Same flow as https://github.com/pasosdeJesus/learn.tg/issues/175 but on Celo Sepolia testnet — no real value at stake.
 //
 // Execution:
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg:9001 CHAIN_ID=11142220 \

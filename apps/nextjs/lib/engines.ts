@@ -9,7 +9,7 @@ type HandlerFn = (req: NextRequest, ctx: { params: Record<string, string> }) => 
 type EngineHandlers = Record<string, () => Promise<HandlerFn>>
 
 // Engine registry backed by the generic globalThis registry from
-// @pasosdejesus/m/engine (https://gitlab.com/pasosdeJesus/m/-/work_items/35, REQ/44). Lazy accessor so the static import
+// @pasosdejesus/m/engine (https://gitlab.com/pasosdeJesus/m/-/work_items/35, https://gitlab.com/pasosdeJesus/m/-/work_items/44). Lazy accessor so the static import
 // below (which self-registers engines) can run before this module finishes
 // evaluating (circular import is safe: registerEngine is a hoisted function).
 function registry() {

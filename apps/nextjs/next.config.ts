@@ -99,7 +99,7 @@ const nextConfig: NextConfig = {
     },
   ],
   webpack: (config, { isServer }) => {
-    // Límite de workers de compilación (REQ/35 gate): la máquina real tiene
+    // Límite de workers de compilación (https://gitlab.com/pasosdeJesus/m/-/work_items/35 gate): la máquina real tiene
     // 16G RAM (+16G swap) y corre otras apps; 15 workers webpack × heap grande
     // la tumban (OOM). 8 workers × 2048 MB es lo seguro. Configurable vía
     // WEBPACK_PARALLELISM (1 = completamente secuencial).
@@ -133,7 +133,7 @@ const nextConfig: NextConfig = {
     // Caché persistente webpack: DESHABILITADO temporalmente — falla en este
     // entorno (`Can't resolve next.config.compiled.js`) y sirve entradas stale
     // que rompen la resolución de módulos vendored de Next (app-page/loadable).
-    // Re-evaluar con workspace pnpm o CI Linux (m REQ/35, antes REQ/206).
+    // Re-evaluar con workspace pnpm o CI Linux (m https://gitlab.com/pasosdeJesus/m/-/work_items/35, antes https://github.com/pasosdeJesus/learn.tg/issues/206).
 
     // Excluir módulos de servidor en cliente
     if (!isServer) {

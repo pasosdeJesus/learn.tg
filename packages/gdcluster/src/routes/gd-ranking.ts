@@ -3,7 +3,7 @@ import { sql } from 'kysely'
 import { PILOT_COUNTRIES } from '../lib/gd-utils'
 import type { GdclusterDeps } from '../index'
 
-// Ranking de clústeres y países para el curso Global Disciples (REQ/35 Fase 3).
+// Ranking de clústeres y países para el curso Global Disciples (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3).
 
 export async function rankingClusters(deps: GdclusterDeps) {
   try {

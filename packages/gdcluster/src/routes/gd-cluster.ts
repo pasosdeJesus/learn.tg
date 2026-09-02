@@ -12,7 +12,7 @@ import {
 } from '../lib/gd-utils'
 import type { GdclusterDeps } from '../index'
 
-// Rutas de clústeres del curso Global Disciples (REQ/35 Fase 3, REQ/220).
+// Rutas de clústeres del curso Global Disciples (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3, https://github.com/pasosdeJesus/learn.tg/issues/220).
 
 export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
   try {
@@ -115,7 +115,7 @@ export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
 
     await addClusterHistory(db, cluster.id, 'church_join', null, church.name, user.id)
 
-    // REQ/220 §2: invitaciones a los pastores seleccionados (solo candidatos
+    // https://github.com/pasosdeJesus/learn.tg/issues/220 §2: invitaciones a los pastores seleccionados (solo candidatos
     // válidos: referidos #163 / referidor, mismo país, iglesia verificada,
     // sin clúster). Con < 2 candidatos no se bloquea la creación (fallback por
     // código 6 chars en /api/cluster/join).
@@ -319,7 +319,7 @@ export async function updateCluster(
       return NextResponse.json({ error: 'Cluster not found' }, { status: 404 })
     }
 
-    // REQ/220 §4: solo el líder edita nombre/pseudónimo.
+    // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: solo el líder edita nombre/pseudónimo.
     if (cluster.leader_church_id && cluster.leader_church_id !== church.id) {
       return NextResponse.json({ error: 'Only the cluster leader can edit the details' }, { status: 403 })
     }
@@ -416,7 +416,7 @@ export async function leaveCluster(
     const remainingMembers = await getClusterMembers(db, clusterId)
 
     if (isLeader) {
-      // REQ/220 §4: el líder saliente transfiere el liderazgo al miembro más
+      // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: el líder saliente transfiere el liderazgo al miembro más
       // antiguo o disuelve el clúster si no quedan miembros.
       if (remainingMembers.length >= 1) {
         await db
@@ -435,7 +435,7 @@ export async function leaveCluster(
         return NextResponse.json({ dissolved: true })
       }
     } else if (remainingMembers.length < 3 && cluster.status === 'active') {
-      // REQ/220 §4: con < 3 miembros el clúster vuelve a pending (el líder
+      // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: con < 3 miembros el clúster vuelve a pending (el líder
       // puede invitar un reemplazo).
       await db
         .updateTable('clustergd')

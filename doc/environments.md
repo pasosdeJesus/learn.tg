@@ -176,11 +176,11 @@ It must be set up once before first run.
 Contract addresses are **not** read from `.env`. They come from:
 
 - `@pasosdejesus/mpdj/blockchain/ecosystem-addresses` — `SLEARN_ADDRESSES`
-  (helper `deployments` en el motor `@learn-tg/rewards`, REQ/35 — `packages/rewards/src/lib/deployments.ts`)
+  (helper `deployments` en el motor `@learn-tg/rewards`, https://gitlab.com/pasosdeJesus/m/-/work_items/35 — `packages/rewards/src/lib/deployments.ts`)
 - `@pasosdejesus/mpdj/blockchain` — credentials (SBTs)
 - `@pasosdejesus/m/blockchain/deployments` (`readDeployment()`) reading
   `apps/hardhat/deployments/<Contract>/<network>.json` — vaults
-  (`LearnTGVaults` V3/V4/V5), `ClusterFunds` (V1) y `ClusterFundsV2` (REQ/214;
+  (`LearnTGVaults` V3/V4/V5), `ClusterFunds` (V1) y `ClusterFundsV2` (https://github.com/pasosdeJesus/learn.tg/issues/214;
   la app opera con V2)
 
 ## Notes
@@ -214,7 +214,7 @@ Contract addresses are **not** read from `.env`. They come from:
 
 La misma máquina aloja **producción** (`https://learn.tg`) y **desarrollo**
 (`https://learn.tg:9001`) con **16G RAM + 16G swap** y otras aplicaciones.
-Reglas para no tumbarla (lección REQ/35 §12.8: un `next build` con 15 workers
+Reglas para no tumbarla (lección https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8: un `next build` con 15 workers
 × heap grande derribó el dev server por OOM):
 
 1. **NO compilar mientras el dev site sirve requests ni mientras corre la

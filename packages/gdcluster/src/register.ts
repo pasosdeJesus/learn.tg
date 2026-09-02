@@ -1,7 +1,7 @@
 import { registerHook } from '@pasosdejesus/m/plugin'
 import { isGDCourse, resolveGDClusterDestination } from './lib/gd-cluster-routing'
 
-// Hook `reward:route-destination` (REQ/35 §5.4).
+// Hook `reward:route-destination` (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §5.4).
 // Registrado por el motor `gdcluster` (Fase 3); el core solo llama
 // `routeReward` (dispatcher en lib/reward-routing.ts) y no conoce GD.
 // Si el curso es GD, resuelve el cluster/country fund destino y el split (10%).

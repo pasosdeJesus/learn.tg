@@ -43,7 +43,7 @@ const slearnTransferAbi = [
   },
 ]
 
-// ClusterFundsV2 (REQ/214): country fund + replay protection read for the
+// ClusterFundsV2 (https://github.com/pasosdeJesus/learn.tg/issues/214): country fund + replay protection read for the
 // "10% to the buyer's country fund" check.
 const clusterFundsV2Abi = [
   { name: 'getCountryBalance', type: 'function', stateMutability: 'view', inputs: [{ name: 'c', type: 'string' }], outputs: [{ name: 'usdt', type: 'uint256' }, { name: 'slearn', type: 'uint256' }] },
@@ -227,7 +227,7 @@ async function main() {
   // Auth: inject wallet mock + SIWE programmatico for the pastor
   await setupE2EAuth(page, pastorAddr, pastorPk, chainId, base)
 
-  // Diagnostic capture (REQ/208): log everything the browser sees so we can
+  // Diagnostic capture (https://github.com/pasosdeJesus/learn.tg/issues/208): log everything the browser sees so we can
   // tell hydration-failure apart from slow on-demand compilation, a client
   // JS error, or a missing window.ethereum mock.
   const browserEvents = []
@@ -483,7 +483,7 @@ async function main() {
     await publicClient.waitForTransactionReceipt({ hash: slearnHash })
     ok(`SLEARN transferred to backend (tx ${short(slearnHash)})`)
 
-    // 2b. REQ/214: read ClusterFundsV2 SL fund BEFORE — the 10% routed from
+    // 2b. https://github.com/pasosdeJesus/learn.tg/issues/214: read ClusterFundsV2 SL fund BEFORE — the 10% routed from
     // the purchase must arrive intact (100% credit, no fees).
     const cfV2Address = readClusterFundsV2Address()
     if (cfV2Address) console.log(`  ClusterFundsV2: ${short(cfV2Address)}`)
@@ -512,7 +512,7 @@ async function main() {
     if (purchaseRes.status === 200 || purchaseRes.status === 201) ok('GD course purchased')
     else fail(`Course purchase failed: ${purchaseRes.status} ${purchaseRes.body.slice(0, 160)}`)
 
-    // 3b. Distribution (REQ/214 Paso 7 / REQ/128): the response carries the
+    // 3b. Distribution (https://github.com/pasosdeJesus/learn.tg/issues/214 Paso 7 / https://github.com/pasosdeJesus/learn.tg/issues/128): the response carries the
     // processPayment breakdown. The pastor pays the course price (SL: 39.60
     // SLEARN) → 10% (3.96) routed to the country fund; processPayment handles
     // 90% (35.64) with pdJ 40%, reward 10%, missional 10%, ubi 5%, referral 5%,
@@ -547,7 +547,7 @@ async function main() {
       console.log('  [!] No distribution in purchase response')
     }
 
-    // 3c. REQ/214: the 10% routed to ClusterFundsV2 must arrive intact at the
+    // 3c. https://github.com/pasosdeJesus/learn.tg/issues/214: the 10% routed to ClusterFundsV2 must arrive intact at the
     // buyer's country fund (SL) — 10% of the price paid.
     if (cfV2Address) {
       try {
@@ -568,7 +568,7 @@ async function main() {
         else fail('V2 processedTx(paymentTx)=false — 10% contribution NOT processed')
         if (slFundBefore) {
           const delta = s2 - slFundBefore.slearn
-          if (delta === clusterAmt) ok(`SL fund SLEARN delta = ${Number(delta) / 100} (= 10% of 44, REQ/214)`)
+          if (delta === clusterAmt) ok(`SL fund SLEARN delta = ${Number(delta) / 100} (= 10% of 44, https://github.com/pasosdeJesus/learn.tg/issues/214)`)
           else if (delta > clusterAmt) ok(`SL fund delta ${Number(delta) / 100} ≥ 10% (includes concurrent activity)`)
           else fail(`SL fund delta ${Number(delta) / 100} < expected 4.4 — fees deducted from the 10%`)
         } else {
@@ -577,11 +577,11 @@ async function main() {
       } catch (e) { console.log(`  [!] On-chain 10% check failed: ${(e.shortMessage || e.message || String(e)).slice(0, 100)}`) }
     }
 
-    // 3d. On-chain pdJ 40% (REQ/128). For USDT payments the processPayment
+    // 3d. On-chain pdJ 40% (https://github.com/pasosdeJesus/learn.tg/issues/128). For USDT payments the processPayment
     // receipt credits the backend with exactly 40% of the processed amount.
     // SLEARN payments emit complex burn/mint events, so this check is
     // informational there (the 10%-to-fund + reward checks above are the
-    // hard REQ/214 assertions).
+    // hard https://github.com/pasosdeJesus/learn.tg/issues/214 assertions).
     if (purchaseBody?.processPaymentHash) {
       try {
         const receipt = await publicClient.getTransactionReceipt({ hash: purchaseBody.processPaymentHash })

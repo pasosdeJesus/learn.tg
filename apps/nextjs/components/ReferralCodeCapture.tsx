@@ -1,6 +1,6 @@
 'use client'
 
-// Captura global de ?ref=CODE en cualquier página (REQ/163 §2.3): si el
+// Captura global de ?ref=CODE en cualquier página (https://github.com/pasosdeJesus/learn.tg/issues/163 §2.3): si el
 // enlace de invitación incluye el código como query param (p.ej. los enlaces
 // al curso Web3 & UBI desde /ref, o un enlace compartido), lo valida y lo
 // guarda en localStorage como pendiente — así sobrevive al cambio de

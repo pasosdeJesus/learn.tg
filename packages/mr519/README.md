@@ -5,7 +5,7 @@
 The **mr519 engine** provides the dynamic (survey/registry) form system used by
 the pdJ ecosystem: form definitions stored in the database, served as JSON, and
 rendered client-side by `DynamicForm`. It is the smallest of the three engines
-(REQ/35 Fase 1) and is **consumed directly as source** — no `dist/` build, no
+(https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 1) and is **consumed directly as source** — no `dist/` build, no
 `exports` map. See [ARCHITECTURE.md](ARCHITECTURE.md) for the design.
 
 ## What it provides

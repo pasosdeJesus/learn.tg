@@ -1,6 +1,6 @@
 import { Kysely, sql } from 'kysely'
 
-// REQ/220 — Cluster Formation (Simplified): sobre el modelo GD existente.
+// https://github.com/pasosdeJesus/learn.tg/issues/220 — Cluster Formation (Simplified): sobre el modelo GD existente.
 // Añade pseudonym/status/leader_church_id a `clustergd` y crea la tabla
 // `cluster_invitation` (invitaciones a pastores; la membresía sigue en
 // `church_clustergd` — no se crean tablas de clúster paralelas).

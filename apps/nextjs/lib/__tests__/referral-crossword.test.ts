@@ -13,7 +13,7 @@ import {
   awardMissionalScholarshipReferral,
 } from '../referral-crossword'
 
-describe('isMissionalCourse (REQ/163 Form 2 — solo cursos misionales)', () => {
+describe('isMissionalCourse (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 2 — solo cursos misionales)', () => {
   it('solo "Una relación con Jesús" (1) y "A relationship with Jesus" (2)', () => {
     expect(MISSIONAL_COURSE_IDS).toEqual([1, 2])
     expect(isMissionalCourse(1)).toBe(true)
@@ -28,7 +28,7 @@ describe('isMissionalCourse (REQ/163 Form 2 — solo cursos misionales)', () => 
   })
 })
 
-describe('awardMissionalScholarshipReferral (REQ/163 Form 2)', () => {
+describe('awardMissionalScholarshipReferral (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 2)', () => {
   const base = {
     db: {} as any,
     referredUserId: 456,

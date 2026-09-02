@@ -82,7 +82,7 @@ export async function getClusterFundsAddress(): Promise<Address> {
 }
 
 /**
- * Dependencias del core inyectadas por el host (D2, REQ/35 §11.2): el motor no
+ * Dependencias del core inyectadas por el host (D2, https://gitlab.com/pasosdeJesus/m/-/work_items/35 §11.2): el motor no
  * importa `@/lib/backend-config`.
  */
 export interface GdRoutingDeps {

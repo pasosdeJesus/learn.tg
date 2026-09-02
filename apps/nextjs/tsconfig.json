@@ -37,7 +37,7 @@
       "kysely": [
         "./node_modules/kysely"
       ],
-      // Motores link: (REQ/35 Fase 3) — puente de resolución para imports
+      // Motores link: (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3) — puente de resolución para imports
       // cross-motor (gdcluster → rewards) y desde el core.
       "@learn-tg/mr519/*": [
         "./node_modules/@learn-tg/mr519/*"

@@ -5,7 +5,7 @@
 The **Global Disciples engine** implements the GD program: cluster and country
 funds, donations, rankings, church search, pastor invitations, and the
 cluster/country routing of rewards from the `rewards` engine. It is a Web3
-engine (REQ/35, Fase 3; REQ/214 for ClusterFundsV2) with its own isolated
+engine (https://gitlab.com/pasosdeJesus/m/-/work_items/35, Fase 3; https://github.com/pasosdeJesus/learn.tg/issues/214 for ClusterFundsV2) with its own isolated
 Hardhat subproject for the `ClusterFunds` contracts. Design decisions and
 flows in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -16,7 +16,7 @@ flows in [ARCHITECTURE.md](ARCHITECTURE.md).
 | Cluster funds | `gdcluster/ranking/clusters`, `gdcluster/ranking/countries`, `gdcluster/ranking/funds` (GET) | Public leaderboards of cluster/country funds with USDT/SLEARN balances |
 | GD donations | `gdcluster/donations/verify` (POST), `gdcluster/donations/history` (GET) | Verify USDT/SLEARN transfer receipt and credit the cluster/country fund; donation history |
 | Clusters | `cluster` (POST), `cluster/join` (POST), `cluster/[id]` (GET, PATCH), `cluster/[id]/leave` (POST) | Cluster lifecycle: pastor-only creation (pilot CO/SL, must own GD course), join by 6-char code, detail/rename, leave |
-| Invitations | `cluster/status`, `cluster/candidates`, `cluster/invitations` (GET), `cluster/invitation/accept`, `cluster/invitation/reject` (POST) | [REQ/220](https://github.com/pasosdeJesus/learn.tg/issues/220): pastor cluster state, candidates from the referral graph ([REQ/163](https://github.com/pasosdeJesus/learn.tg/issues/163)), accept/reject invitations |
+| Invitations | `cluster/status`, `cluster/candidates`, `cluster/invitations` (GET), `cluster/invitation/accept`, `cluster/invitation/reject` (POST) | https://github.com/pasosdeJesus/learn.tg/issues/220: pastor cluster state, candidates from the referral graph (https://github.com/pasosdeJesus/learn.tg/issues/163), accept/reject invitations |
 | Admin | `admin/clusters` (GET, POST), `admin/clusters/[id]` (GET, PUT, DELETE), `admin/clusters/[id]/members` (POST, DELETE) | Verifier/admin CRUD over `clustergd` / `church_clustergd` |
 | Churches | `churches/search` (GET) | Search churches by query parameter `q` |
 
@@ -101,7 +101,7 @@ Isolated Hardhat project `@learn-tg/gdcluster-contracts`:
 | Contract | Purpose |
 |----------|---------|
 | `ClusterFunds.sol` | USDT+SLEARN donations to cluster/country funds; configurable fee wallets + donor cashback (default 10/10/80), Ownable/ReentrancyGuard/Pausable |
-| `ClusterFundsV2.sol` | Adds `processClusterContribution`/`processCountryContribution` crediting the **full** amount (no fees/cashback) for routed GD premium payments; doubles as migration entry point (REQ/214 — the app operates on V2) |
+| `ClusterFundsV2.sol` | Adds `processClusterContribution`/`processCountryContribution` crediting the **full** amount (no fees/cashback) for routed GD premium payments; doubles as migration entry point (https://github.com/pasosdeJesus/learn.tg/issues/214 — the app operates on V2) |
 | `SLEARN.sol` | 2-decimal utility token (MINTER_ROLE auto-authorized), `mintAndReserve`, 3-tier reserve |
 | `_usdt_mock.sol` | MockUSDT (6 decimals), synced from the usdt engine |
 

@@ -141,7 +141,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
           // 4902 = chain not added. Other wallets (e.g. Rabby extension) fail
           // the switch with different codes (e.g. -32000 "Switch chain failed")
           // when the network is not added → attempt the add for ANY error that
-          // is not a user rejection (4001). See REQ/216.
+          // is not a user rejection (4001). See https://github.com/pasosdeJesus/learn.tg/issues/216.
           if (switchError.code === 4902 || switchError.code !== 4001) {
             try {
               await window.ethereum.request({
@@ -244,7 +244,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       // without relying on a new getCsrfToken() which returns a different nonce
       localStorage.setItem('learn.tg.authToken', csrfToken)
       // Referido: si el usuario llegó por un enlace /ref/{CODE}, reclámalo
-      // ahora que ya está autenticado (REQ/163 §2.3).
+      // ahora que ya está autenticado (https://github.com/pasosdeJesus/learn.tg/issues/163 §2.3).
       const pendingReferral = localStorage.getItem('learn.tg.pendingReferralCode')
       if (pendingReferral) {
         try {

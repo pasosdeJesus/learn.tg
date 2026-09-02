@@ -17,7 +17,7 @@ export interface AuthUser {
 }
 
 /**
- * Contexto del hook `reward:route-destination` (REQ/35 §5.4).
+ * Contexto del hook `reward:route-destination` (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §5.4).
  *
  * El motor construye el ctx y llama `deps.routeReward(ctx)` (que ejecuta el
  * hook registrado por el core/GD). Si un curso es GD, el hook setea `destino`
@@ -37,7 +37,7 @@ export interface RewardRouteCtx {
 }
 
 /**
- * Funciones del `backend-config` del core (REQ/35 §5.2 — backend-config NO se
+ * Funciones del `backend-config` del core (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §5.2 — backend-config NO se
  * mueve al motor). El host las inyecta vía deps (D2): el motor nunca importa
  * `@/lib/backend-config`.
  */
@@ -93,7 +93,7 @@ export interface RouteHandlers {
 }
 
 /**
- * Factoría del motor `rewards` (REQ/35 §11.2 D2).
+ * Factoría del motor `rewards` (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §11.2 D2).
  *
  * El motor no importa alias internos de la app (`@/`, `@/.config`): recibe sus
  * dependencias (DB, auth, métricas) inyectadas desde el host. Cada ruta se

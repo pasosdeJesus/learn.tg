@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-// Helper de direcciones de contratos para migraciones kysely (REQ/35 Fase 3).
+// Helper de direcciones de contratos para migraciones kysely (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3).
 //
 // Las migraciones se cargan con kysely-ctl/jiti, que NO resuelve paquetes de
 // motores link: (`@learn-tg/rewards/lib/deployments` importaba

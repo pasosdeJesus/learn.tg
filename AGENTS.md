@@ -68,6 +68,21 @@ must be performed by the human operator from the real machine where no AI runs.
 The agent may read Git state (`status`, `diff`, `log`, `blame`) but must not
 modify it.
 
+### 8. Referencing Requirements — use the GitHub issue URL, not `REQ/n`
+
+Requirement files in `REQ/` (`https://github.com/pasosdeJesus/learn.tg/issues/163.md`, `https://github.com/pasosdeJesus/learn.tg/issues/220.md`, ...) are **deleted
+when the issue is closed**, so any reference to `REQ/n` in code, tests,
+documentation, or comments becomes a dead link. Instead, reference the
+**persistent GitHub issue URL**:
+
+- learn.tg issues: `https://github.com/pasosdeJesus/learn.tg/issues/<n>`
+  (e.g. `https://github.com/pasosdeJesus/learn.tg/issues/163`)
+- Do NOT write `REQ/<n>` or `REQ/<n>.md` in source files or repo docs.
+- Requirements of the **`m` repo** (`https://gitlab.com/pasosdeJesus/m/-/work_items/35`, `https://gitlab.com/pasosdeJesus/m/-/work_items/44`, ...) live at GitLab:
+  reference them as `https://gitlab.com/pasosdeJesus/m/-/work_items/<n>`
+  (e.g. `https://gitlab.com/pasosdeJesus/m/-/work_items/35`), never with a
+  learn.tg issue URL and never as `m/REQ/<n>.md`.
+
 
 ---
 

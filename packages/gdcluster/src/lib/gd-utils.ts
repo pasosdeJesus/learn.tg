@@ -149,7 +149,7 @@ export async function addClusterHistory(
     .execute()
 }
 
-// ── REQ/220: invitaciones y notificaciones ────────────────────────────────
+// ── https://github.com/pasosdeJesus/learn.tg/issues/220: invitaciones y notificaciones ────────────────────────────────
 
 export interface ClusterCandidate {
   usuario_id: number
@@ -178,7 +178,7 @@ export async function notifyUser(
 }
 
 /**
- * Candidatos a invitar a un clúster (REQ/220 §2.1):
+ * Candidatos a invitar a un clúster (https://github.com/pasosdeJesus/learn.tg/issues/220 §2.1):
  * 1. Pastores referidos por el líder (grafo #163) con iglesia declarada y
  *    verificada, mismo país, sin clúster actual.
  * 2. El referidor del líder, si es pastor (mismas condiciones).
