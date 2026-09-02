@@ -263,7 +263,7 @@ async function main() {
     if (claimRes.status === 200 && claimRes.data?.ok) {
       ok(`Claim 200 — relación creada (referrer_id=${claimRes.data.referrer_id})`)
     } else if (claimRes.status === 429) {
-      skip('Rate-limit del claim (REQ/163: 5/día por IP) — reintenta en 24h')
+      skip('Rate-limit del claim (REQ/163: 10/día por IP) — reintenta en 24h')
       finish()
     } else {
       // El referido pudo haberse reclamado en una corrida anterior (idempotencia)
@@ -398,37 +398,33 @@ async function main() {
     const hist = await apiGet('/api/referral/history',
       { walletAddress: referrerAddr, token: referrer.token }, referrer.cookies)
 
-    const reward = (hist.rewards || []).find((r) =>
+    const matches = (hist.rewards || []).filter((r) =>
       r.type === 'referral_reward' &&
       Number(r.metadata?.referred_id) === referredUserId &&
       Number(r.metadata?.course_id) === COURSE_ID &&
       Number(r.metadata?.guide_id) === GUIDE_NUMBER,
     )
-    if (!reward) {
+    if (matches.length === 0) {
       const seen = (hist.rewards || []).map(r => `${r.type}:${r.crypto}:${r.amount}:ref${r.metadata?.referred_id}`).join(' | ') || '(sin rewards)'
       fail(`No se encontró la reward del referido. Rewards del referidor: ${seen}`)
       finish()
     }
-    const paidUsdt = reward.crypto === 'usdt' ? Number(reward.amount) : 0
-    const paidSlearn = reward.crypto === 'slearn' ? Number(reward.amount) : 0
-    ok(`Reward registrada: ${paidUsdt} USDT + ${paidSlearn} SLEARN (10% de ${usdtPaid}/${slearnPaid})`)
+    // REQ/163 §6.4: una fila de transaction POR CRIPTO (USDT y SLEARN)
+    const paidUsdt = matches.filter(r => r.crypto === 'usdt').reduce((s, r) => s + Number(r.amount), 0)
+    const paidSlearn = matches.filter(r => r.crypto === 'slearn').reduce((s, r) => s + Number(r.amount), 0)
+    ok(`Reward registrada: ${paidUsdt.toFixed(2)} USDT + ${paidSlearn.toFixed(2)} SLEARN (10% de ${usdtPaid}/${slearnPaid})`)
     if (Math.abs(paidUsdt - expectedUsdt) < 0.001 && Math.abs(paidSlearn - expectedSlearn) < 0.001) {
       ok(`Cuantía correcta: 10% (${expectedUsdt} USDT + ${expectedSlearn} SLEARN)`)
     } else {
       fail(`Cuantía inesperada: esperaba ${expectedUsdt} USDT + ${expectedSlearn} SLEARN`)
     }
-    if (reward.subcategoria === 'referrer') ok('subcategoria "referrer" (no pastor_bonus)')
-    else fail(`subcategoria inesperada: ${reward.subcategoria}`)
+    if (matches.every(r => r.subcategoria === 'referrer')) ok('subcategoria "referrer" (no pastor_bonus)')
+    else fail(`subcategoria inesperada: ${JSON.stringify(matches.map(r => r.subcategoria))}`)
 
-    // Idempotencia: solo UNA reward por relación/curso/guía
-    const dupes = (hist.rewards || []).filter((r) =>
-      r.type === 'referral_reward' &&
-      Number(r.metadata?.referred_id) === referredUserId &&
-      Number(r.metadata?.course_id) === COURSE_ID &&
-      Number(r.metadata?.guide_id) === GUIDE_NUMBER,
-    )
-    if (dupes.length === 1) ok('Idempotente: 1 sola reward para esta relación/curso/guía')
-    else fail(`Idempotencia rota: ${dupes.length} rewards`)
+    // Idempotencia: exactamente las filas esperadas (1 por cripto con monto > 0)
+    const expectedRows = (expectedUsdt > 0 ? 1 : 0) + (expectedSlearn > 0 ? 1 : 0)
+    if (matches.length === expectedRows) ok(`Idempotente: ${matches.length} fila(s) (= 1 por cripto pagado) para esta relación/curso/guía`)
+    else fail(`Idempotencia rota: ${matches.length} rewards (esperaba ${expectedRows})`)
 
     // ════════════════════════════════════════════════════════════
     // 7. Notificación al referidor (acción + valor pagado)
