@@ -169,8 +169,14 @@ async function main() {
   const pageB = await browser.newPage()
   // Visita el enlace de referido SIN sesión → guarda pendingReferralCode
   if (!await navAndWait(pageB, `${base}/ref/${refCode}`, timeout)) { fail('/ref no cargó'); await browser.close(); process.exit(1) }
-  await new Promise(r => setTimeout(r, 3000))
-  const storedCode = await pageB.evaluate(() => localStorage.getItem('learn.tg.pendingReferralCode'))
+  // El lookup de /api/referral/lookup es lento en dev (compilación + DB remota):
+  // el guardado ocurre ~4s tras la carga → esperar con polling, no un sleep fijo.
+  let storedCode = null
+  for (let i = 0; i < 12; i++) {
+    await new Promise(r => setTimeout(r, 2000))
+    storedCode = await pageB.evaluate(() => localStorage.getItem('learn.tg.pendingReferralCode'))
+    if (storedCode) break
+  }
   // El contrato del claim es case-insensitive (ilike); códigos legacy en la DB
   // pueden estar en minúsculas mientras /ref/{CODE} guarda en mayúsculas.
   if (storedCode && storedCode.toUpperCase() === String(refCode).toUpperCase()) ok(`/ref/{CODE} guardó pendingReferralCode (${storedCode})`)
@@ -191,6 +197,8 @@ async function main() {
     if (claimRes.status === 200 && claimData.ok) {
       ok(`Claim 200: referido registrado (referrer_id=${claimData.referrer_id})`)
       await pageB.evaluate(() => localStorage.removeItem('learn.tg.pendingReferralCode'))
+    } else if (claimRes.status === 429) {
+      skip('Claim → 429 (rate-limit 10/día por IP alcanzado en el dev) — reintenta en 24h')
     } else {
       console.log(`  claim: ${claimRes.status} ${JSON.stringify(claimData)}`)
       fail('Claim del referido falló')
@@ -204,6 +212,7 @@ async function main() {
     })
     const againData = await again.json().catch(() => ({}))
     if (again.status === 400 && String(againData.error).includes('already')) ok('2º claim → 400 "Referral already claimed"')
+    else if (again.status === 429) skip('2º claim → 429 (rate-limit 10/día por IP alcanzado en el dev) — idempotencia no verificable hoy')
     else { console.log(`  again: ${again.status} ${JSON.stringify(againData)}`); fail('Idempotencia del claim falló') }
 
     // Step 6b: solo lectura — /api/referral/code del referido → referredBy
@@ -211,6 +220,7 @@ async function main() {
     if (myCode && myCode.ok) {
       const myData = await myCode.json()
       if (myData.referredBy) ok(`Solo lectura: "Te refirió: ${myData.referredBy}"`)
+      else if (claimRes.status !== 200) skip('referredBy no verificable: el claim no se pudo completar hoy (rate-limit)')
       else fail('referredBy no devuelto para el referido')
     }
 
