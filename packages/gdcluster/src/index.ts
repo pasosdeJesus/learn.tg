@@ -2,7 +2,8 @@ import type { NextRequest } from 'next/server'
 import type { Kysely } from 'kysely'
 
 import { rankingClusters, rankingCountries, rankingFunds } from './routes/gd-ranking'
-import { verifyDonation, donationHistory } from './routes/gd-donations'
+import { verifyDonation, donationHistory, verifyCampaignDonation } from './routes/gd-donations'
+import { campaignBalance } from './routes/campaign-balance'
 import { createCluster, joinCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster'
 import { clusterStatus, clusterCandidates, listInvitations, acceptInvitation, rejectInvitation } from './routes/gd-invitations'
 import { adminListClusters, adminGetCluster, adminCreateCluster, adminUpdateCluster, adminDisbandCluster, adminAddMember, adminRemoveMember } from './routes/gd-admin-clusters'
@@ -75,6 +76,12 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
     },
     'gdcluster/donations/history': {
       GET: (req) => donationHistory(deps, req as NextRequest),
+    },
+    'donations/[slug]/verify': {
+      POST: (req, params) => verifyCampaignDonation(deps, req as NextRequest, params),
+    },
+    'donations/[slug]/balance': {
+      GET: (req, params) => campaignBalance(deps, params),
     },
     'cluster': {
       POST: (req) => createCluster(deps, req as NextRequest),

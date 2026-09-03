@@ -3,7 +3,17 @@ import { type Address } from 'viem'
 import { PILOT_COUNTRIES } from '../lib/gd-utils'
 import { getClusterFundsAddress } from '../lib/gd-cluster-routing'
 import ClusterFundsV2Abi from '../abis/ClusterFundsV2.json'
+import SLEARNAbi from '../abis/SLEARN.json'
 import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
+import { verifyTransfer } from '@learn-tg/rewards/lib/verify-transfer'
+import {
+  getCampaignConfig,
+  getCampaignDonationToken,
+  getCampaignDonationTokenKeys,
+  campaignDonorSplit,
+  splitRawAmount,
+  getPdJTreasuryAddress,
+} from '../lib/donation-target'
 import type { GdclusterDeps } from '../index'
 
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
@@ -202,6 +212,198 @@ export async function donationHistory(deps: GdclusterDeps, req: NextRequest) {
     return NextResponse.json({ donations })
   } catch (error) {
     console.error('Error fetching donation history:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+/**
+ * Verifica una donación a una campaña (REQ/223 §4.1) — Celo mainnet only.
+ *
+ * Flujo: el donante envió el token a la billetera del backend (vía DonateModal
+ * / useContractPayment). Aquí se verifica el transfer on-chain y se:
+ *  1. Reenvía AUTOMÁTICA e INMEDIATAMENTE la parte de la campaña
+ *     ((100 − pdjSharePct)%) a la billetera destino de la campaña.
+ *  2. Reenvía la parte pdJ (pdjSharePct%) a NEXT_PUBLIC_PDJ_TREASURY_ADDRESS
+ *     cuando el donante la eligió.
+ *  3. Si `receiveCashback` → mintea el cashback SLEARN (10% del valor) al
+ *     donante (requiere MINTER_ROLE en la billetera del backend).
+ *  4. Registra en `transaction` (una fila por pago + una fila `donation_reward`
+ *     cuando hay cashback) con el split denormalizado en metadata.
+ *
+ * La restricción `(crypto, hash)` UNIQUE impide duplicar filas (replay).
+ *
+ * Consciente de red (REQ/223 + testnet): en mainnet (42220) se usan los
+ * tokens del registro (USDT/USDC/XAUt0 según `cfg.donationTokens`); en Celo
+ * Sepolia (11142220) se usan los tokens de `cfg.testnet` (hoy solo USDT
+ * Mock). Nota: el ledger solo admite `crypto IN (usdt, slearn, celo,
+ * learningpoints)` (CHECK) — USDC/XAUt0 requieren una migración del CHECK
+ * (USDC/XAUt0 se presentan en el balance, recepción pendiente).
+ */
+export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextRequest, params?: Record<string, string>) {
+  try {
+    const slug = params?.slug || ''
+    const cfg = getCampaignConfig(slug)
+    if (!cfg) {
+      return NextResponse.json({ error: `Unknown campaign: ${slug}` }, { status: 404 })
+    }
+
+    const body = await req.json()
+    const { walletAddress, token, payToken, usdtHash, receiveCashback, pdjSharePct } = body
+
+    if (!walletAddress || !token) {
+      return NextResponse.json({ error: 'Missing auth fields' }, { status: 400 })
+    }
+    if (!usdtHash) {
+      return NextResponse.json({ error: 'No transaction hash provided' }, { status: 400 })
+    }
+
+    const optsPct = Number(pdjSharePct ?? 0)
+    if (Number.isNaN(optsPct) || optsPct < 0 || optsPct > 100) {
+      return NextResponse.json({ error: 'pdjSharePct must be between 0 and 100' }, { status: 400 })
+    }
+    const optsCashback = receiveCashback !== false
+
+    const db = deps.db()
+    const auth = await deps.authenticateUser(db, walletAddress, token)
+    if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Red activa: mainnet (42220) o Celo Sepolia (11142220)
+    const pub = deps.backend.getPublicClient()
+    const chainId = Number((pub as any).chain?.id ?? 42220)
+    if (chainId !== 42220 && chainId !== 11142220) {
+      return NextResponse.json({ error: `Unsupported network (chainId ${chainId}); campaign donations run on Celo mainnet or Celo Sepolia` }, { status: 400 })
+    }
+    const mainnet = chainId === 42220
+
+    const payKey = payToken || 'usdt'
+    const allowedKeys = getCampaignDonationTokenKeys(cfg, mainnet)
+    if (!allowedKeys.includes(payKey)) {
+      return NextResponse.json({
+        error: `Donations in ${payKey} are not enabled for this campaign ${mainnet ? 'on Celo mainnet' : 'on Celo Sepolia'}. Allowed: ${allowedKeys.join(', ')}`,
+      }, { status: 400 })
+    }
+    const payCfg = getCampaignDonationToken(cfg, payKey, mainnet)
+    if (!payCfg) return NextResponse.json({ error: `Campaign has no ${payKey} token configured for this network` }, { status: 500 })
+    const tokenAddr = payCfg.address as Address
+    const tokenDecimals = payCfg.decimals
+
+    const backendWallet = deps.backend.getBackendWalletLower()
+
+    const { amount: tokenAmount } = await verifyTransfer(
+      deps.backend.fetchTxWithReceipt, pub, usdtHash, payKey,
+      walletAddress, backendWallet, tokenAddr, 24 * 60 * 60 * 1000,
+    )
+    if (tokenAmount <= 0n) {
+      return NextResponse.json({ error: 'Transfer amount must be greater than zero' }, { status: 400 })
+    }
+
+    const usdValue = Number(tokenAmount) / 10 ** tokenDecimals
+    const split = campaignDonorSplit(usdValue, { receiveCashback: optsCashback, pdjSharePct: optsPct }, deps.backend.SLEARN_RATE)
+    const { campaignRaw, pdjRaw } = splitRawAmount(tokenAmount, split.pdjSharePct)
+
+    const wallet = deps.backend.getWalletClient()
+    const chain = (wallet as any).chain || pub.chain
+    let nonce = await pub.getTransactionCount({
+      address: (await wallet.getAddresses())[0],
+      blockTag: 'pending',
+    })
+    const sendWithNonce = async (args: any) => {
+      return deps.backend.sendTxAndWait(wallet, pub, { ...args, chain, nonce: nonce++ })
+    }
+
+    // Cashback SLEARN primero (si el backend no tiene MINTER_ROLE falla antes
+    // de reenviar nada; el donante ve el error y nada queda a medias).
+    let mintHash: string | undefined
+    if (split.receiveCashback && split.cashbackSlearn > 0) {
+      const slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address | undefined
+      if (!slearnAddress) {
+        return NextResponse.json({ error: 'NEXT_PUBLIC_SLEARN_ADDRESS not configured (needed for the SLEARN cashback)' }, { status: 500 })
+      }
+      const slearnRaw = BigInt(Math.round(split.cashbackSlearn * 100))
+      try {
+        mintHash = await sendWithNonce({
+          address: slearnAddress, abi: SLEARNAbi as any, functionName: 'mint',
+          args: [walletAddress as Address, slearnRaw],
+        })
+      } catch (e: any) {
+        console.error('[CampaignDonation] SLEARN cashback mint failed:', e?.shortMessage || e?.message)
+        return NextResponse.json({
+          error: 'SLEARN cashback unavailable: the backend wallet lacks MINTER_ROLE on the SLEARN contract',
+        }, { status: 400 })
+      }
+    }
+
+    // Reenvío automático e inmediato a la campaña (y a pdJ si aplica)
+    let campaignHash: string | undefined
+    let pdjHash: string | undefined
+    if (campaignRaw > 0n) {
+      campaignHash = await sendWithNonce({
+        address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
+        args: [cfg.wallet, campaignRaw],
+      })
+    }
+    if (pdjRaw > 0n) {
+      const treasury = getPdJTreasuryAddress()
+      if (!treasury) {
+        return NextResponse.json({ error: 'NEXT_PUBLIC_PDJ_TREASURY_ADDRESS not configured (needed for the pdJ share)' }, { status: 500 })
+      }
+      pdjHash = await sendWithNonce({
+        address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
+        args: [treasury as Address, pdjRaw],
+      })
+    }
+
+    const dest = `campaign:${slug}`
+    const distribution = []
+    if (campaignRaw > 0n) distribution.push({ destination: 'campaign', amount: split.campaignUSD, crypto: 'usdt' })
+    if (pdjRaw > 0n) distribution.push({ destination: 'pdJ', amount: split.pdjUSD, crypto: 'usdt' })
+    if (mintHash) distribution.push({ destination: 'cashback', amount: split.cashbackSlearn, crypto: 'slearn' })
+    const breakdownText = distribution
+      .map(d => `${d.destination}: ${d.amount.toFixed(2)} ${d.crypto.toUpperCase()}`)
+      .join('\n')
+
+    const metadata = {
+      campaign: slug, network: mainnet ? 'celo' : 'celoSepolia', payToken: payKey,
+      pdjSharePct: split.pdjSharePct,
+      campaignAmountUSD: split.campaignUSD, pdjAmountUSD: split.pdjUSD,
+      receiveCashback: split.receiveCashback,
+      cashbackSlearn: split.cashbackSlearn > 0 ? split.cashbackSlearn : undefined,
+      campaignWallet: cfg.wallet, destination: dest,
+      campaignForwardHash: campaignHash, pdjForwardHash: pdjHash, mintHash,
+      distribution,
+    }
+
+    await db.insertInto('transaction').values({
+      usuario_id: auth.usuario.id, wallet: walletAddress, crypto: payKey,
+      type: 'donation', amount: usdValue, balance_impact: -usdValue,
+      date: new Date(), hash: usdtHash as string, categoria: 'donation',
+      subcategoria: 'campaign',
+      descripcion: `donated: ${usdValue.toFixed(2)} ${payKey.toUpperCase()}\n${breakdownText}`,
+      metadata,
+      created_at: new Date(), updated_at: new Date(),
+    } as any).execute()
+
+    if (mintHash) {
+      await db.insertInto('transaction').values({
+        usuario_id: auth.usuario.id, wallet: walletAddress, crypto: 'slearn',
+        type: 'donation_reward', amount: split.cashbackSlearn, balance_impact: split.cashbackSlearn,
+        date: new Date(), hash: mintHash, categoria: 'cashback',
+        subcategoria: 'campaign',
+        descripcion: `${dest} cashback: ${split.cashbackSlearn.toFixed(2)} SLEARN (10%)`,
+        metadata: { campaign: slug, destination: 'cashback', campaignWallet: cfg.wallet, usdtHash },
+        created_at: new Date(), updated_at: new Date(),
+      } as any).execute()
+    }
+
+    return NextResponse.json({
+      success: true, txHash: usdtHash,
+      tokenAmount: String(tokenAmount),
+      increment: split.cashbackSlearn,
+      distribution,
+      hashes: { campaignForwardHash: campaignHash, pdjForwardHash: pdjHash, mintHash },
+    })
+  } catch (error) {
+    console.error('Error verifying campaign donation:', (error as any)?.shortMessage || (error as any)?.message || error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

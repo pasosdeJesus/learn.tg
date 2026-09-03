@@ -41,7 +41,12 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     ? { type: 'course-donation', courseId } as CourseDonation
     : null)
 
-  const tCopy = effectiveTarget ? getTargetCopy(lang || 'en', effectiveTarget) : null
+  const isCampaign = effectiveTarget?.type === 'campaign-donation'
+  const [receiveCashback, setReceiveCashback] = useState(true)
+  const [pdjSharePct, setPdjSharePct] = useState(0)
+  const tCopy = effectiveTarget
+    ? getTargetCopy(lang || 'en', effectiveTarget, isCampaign ? { receiveCashback, pdjSharePct } : {})
+    : null
   const rewardPct = tCopy?.rewardPct ?? 0
   const recipientAddress = (effectiveTarget
     ? getTargetRecipient(effectiveTarget)
@@ -110,6 +115,11 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       if (effectiveTarget?.type === 'country-donation') {
         payload.countryCode = effectiveTarget.countryCode
       }
+      if (effectiveTarget?.type === 'campaign-donation') {
+        payload.campaign = effectiveTarget.slug
+        payload.receiveCashback = receiveCashback
+        payload.pdjSharePct = pdjSharePct
+      }
       const { data } = await axios.post(endpoint, payload)
       return data
     },
@@ -130,6 +140,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     setShowResult(false)
     setResultTxHash(null)
     setResultCashback(0)
+    setReceiveCashback(true)
+    setPdjSharePct(0)
     resetPayment()
   }, [resetPayment])
 
@@ -218,6 +230,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       missingContract: 'Missing contract env vars',
       estimatedReward: 'Estimated SLEARN reward',
       estimatedRewardValue: '~{{0}} SLEARN',
+      campaignOptionsTitle: 'Donation options (this campaign)',
+      campaignCashbackLabel: 'Receive 10% back as SLEARN cashback',
+      campaignToPdJLabel: 'Also donate a percentage to pdJ',
+      campaignCustomPct: 'Custom %',
       donateToCourse: 'Donate to course',
       resultTitle: '🎉 Donation completed!',
       resultCashback: '+{{0}} SLEARN cashback',
@@ -245,6 +261,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       missingContract: 'Faltan variables de entorno del contrato',
       estimatedReward: 'Recompensa SLEARN estimada',
       estimatedRewardValue: '~{{0}} SLEARN',
+      campaignOptionsTitle: 'Opciones de la donación (esta campaña)',
+      campaignCashbackLabel: 'Recibir 10% de vuelta como cashback en SLEARN',
+      campaignToPdJLabel: 'Donar además un porcentaje a pdJ',
+      campaignCustomPct: '% personalizado',
       donateToCourse: 'Donar al curso',
       resultTitle: '🎉 ¡Donación completada!',
       resultCashback: '+{{0}} SLEARN de cashback',
@@ -317,7 +337,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
 
         <div className="space-y-2 text-sm">
           <div>{t('yourBalance')}: <span className="font-mono">{usdtBalFmt}</span></div>
-          {slearnAddress && (
+          {!isCampaign && slearnAddress && (
             <div>{t('yourSlearnBalance')}: <span className="font-mono">{slearnBalFmt}</span></div>
           )}
           <div>{t('yourCelo')}: <span className="font-mono">{celoBalFmt}</span></div>
@@ -337,6 +357,32 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
             </>
           )}
         </div>
+
+        {isCampaign && (
+          <div className="mt-4 space-y-3 border border-gray-200 rounded-lg p-3 text-sm">
+            <div className="font-medium">{t('campaignOptionsTitle')}</div>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" checked={receiveCashback} onChange={(e) => setReceiveCashback(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-blue-600" />
+              <span>{t('campaignCashbackLabel')}</span>
+            </label>
+            <div>
+              <div className="mb-1">{t('campaignToPdJLabel')}</div>
+              <div className="flex flex-wrap items-center gap-2">
+                {[0, 5, 10, 20, 50].map((p) => (
+                  <button key={p} type="button" onClick={() => setPdjSharePct(p)}
+                    className={`px-2 py-1 rounded border text-xs ${pdjSharePct === p ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-300 hover:bg-gray-50'}`}>
+                    {p === 0 ? '0%' : `${p}%`}
+                  </button>
+                ))}
+                <input type="number" min={0} max={100} step={1} value={pdjSharePct}
+                  onChange={(e) => setPdjSharePct(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+                  className="w-20 border rounded px-2 py-1 text-xs" placeholder={t('campaignCustomPct')} />
+                <span className="text-xs text-gray-500">%</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {tCopy?.splitInfo && (
           <div className="mt-4 text-xs bg-yellow-50 border border-yellow-200 rounded p-3">{tCopy.splitInfo}</div>
@@ -359,6 +405,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
           </div>
         </div>
 
+        {!isCampaign && (
         <div className="mt-3">
           <label htmlFor="donate-slearn-amount" className="block text-sm mb-1">{t('slearnAmountLabel')}</label>
           <input id="donate-slearn-amount" type="number" min="0" step={1 / 10 ** SLEARN_DECIMALS}
@@ -369,6 +416,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
             <button onClick={() => setSlearnAmount('')} className="text-gray-500 hover:underline">{t('clear')}</button>
           </div>
         </div>
+        )}
 
         <div className="flex gap-3 mt-6">
           <button onClick={closeAll} className="flex-1 border rounded px-4 py-2 text-sm hover:bg-gray-50">{t('cancel')}</button>

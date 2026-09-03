@@ -19,7 +19,7 @@ export async function verifyTransfer(
   fetchTxWithReceipt: FetchTxWithReceipt,
   publicClient: any,
   hash: string,
-  crypto: 'usdt' | 'slearn',
+  crypto: string,
   fromAddress: string,
   toAddress: string,
   tokenAddress: Address,

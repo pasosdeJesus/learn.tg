@@ -5,6 +5,9 @@ import {
   getTargetRecipient,
   getTargetEndpoint,
   getDistributionFromResponse,
+  getCampaignConfig,
+  campaignDonorSplit,
+  splitRawAmount,
   type PaymentTarget,
 } from '../donation-target'
 
@@ -117,5 +120,98 @@ describe('getDistributionFromResponse', () => {
 
   it('returns an empty array when the response has no distribution', () => {
     expect(getDistributionFromResponse({}, 'en')).toEqual([])
+  })
+})
+
+describe('campaignDonorSplit (REQ/223 §3.3)', () => {
+  it('defaults to 100% campaign with cashback ON', () => {
+    const split = campaignDonorSplit(100, {}, 22)
+    expect(split.campaignUSD).toBe(100)
+    expect(split.pdjUSD).toBe(0)
+    expect(split.pdjSharePct).toBe(0)
+    expect(split.receiveCashback).toBe(true)
+    expect(split.cashbackSlearn).toBe(220) // 100 × 10% × 22
+  })
+
+  it('moves the chosen percentage to pdJ', () => {
+    const split = campaignDonorSplit(100, { pdjSharePct: 10 }, 22)
+    expect(split.campaignUSD).toBe(90)
+    expect(split.pdjUSD).toBe(10)
+    expect(split.cashbackSlearn).toBe(220)
+  })
+
+  it('does not mint cashback when the donor opts out', () => {
+    const split = campaignDonorSplit(100, { receiveCashback: false }, 22)
+    expect(split.receiveCashback).toBe(false)
+    expect(split.cashbackSlearn).toBe(0)
+    expect(split.campaignUSD).toBe(100)
+  })
+
+  it('clamps pdjSharePct to 0–100', () => {
+    expect(campaignDonorSplit(100, { pdjSharePct: 150 }).pdjSharePct).toBe(100)
+    expect(campaignDonorSplit(100, { pdjSharePct: -5 }).pdjSharePct).toBe(0)
+  })
+})
+
+describe('splitRawAmount', () => {
+  it('splits raw token amounts without dust', () => {
+    const { campaignRaw, pdjRaw } = splitRawAmount(1_000_000n, 10)
+    expect(campaignRaw).toBe(900_000n)
+    expect(pdjRaw).toBe(100_000n)
+  })
+
+  it('keeps everything in the campaign at 0%', () => {
+    const { campaignRaw, pdjRaw } = splitRawAmount(123_456_789n, 0)
+    expect(campaignRaw).toBe(123_456_789n)
+    expect(pdjRaw).toBe(0n)
+  })
+})
+
+describe('campaign donations (REQ/223)', () => {
+  const campaign: PaymentTarget = { type: 'campaign-donation', slug: 'lensenia' }
+
+  it('resolves the campaign config from the registry', () => {
+    const cfg = getCampaignConfig('lensenia')
+    expect(cfg).toBeDefined()
+    expect(cfg!.wallet).toBe('0x9c7218a253d1565fc5f2149ba51f0f55f0f27f07')
+    expect(cfg!.goalUSD).toBe(8500)
+    expect(cfg!.chains.map((c) => c.chain)).toEqual(['celo', 'avax', 'base'])
+  })
+
+  it('routes campaign donations to the campaign verify endpoint', () => {
+    expect(getTargetEndpoint(campaign)).toBe('/api/donations/lensenia/verify')
+  })
+
+  it('describes the default split in English and Spanish', () => {
+    const en = getTargetCopy('en', campaign)
+    expect(en.title).toContain('Lensenia Water Well')
+    expect(en.splitInfo).toContain('100% goes to the Lensenia Water Well campaign')
+    const es = getTargetCopy('es', campaign)
+    expect(es.splitInfo).toContain('100% va a la campaña Pozo de Agua Lensenia')
+  })
+
+  it('describes the split with a pdJ share chosen by the donor', () => {
+    const en = getTargetCopy('en', campaign, { pdjSharePct: 10 })
+    expect(en.splitInfo).toContain('90% goes to the Lensenia Water Well campaign')
+    expect(en.splitInfo).toContain('The remaining 10% goes to pdJ')
+  })
+
+  it('turns off the reward estimate when cashback is declined', () => {
+    expect(getTargetCopy('en', campaign).rewardPct).toBe(10)
+    expect(getTargetCopy('en', campaign, { receiveCashback: false }).rewardPct).toBe(0)
+  })
+
+  it('builds a 100/0 campaign breakdown that sums to 100', () => {
+    const rows = getDistributionBreakdown('en', campaign, 10, 0)
+    expect(rows.find((r) => r.label.includes('Campaign'))?.pct).toBe(100)
+    expect(rows.reduce((acc, r) => acc + r.pct, 0)).toBe(100)
+  })
+
+  it('builds a split breakdown with a pdJ share', () => {
+    const rows = getDistributionBreakdown('en', campaign, 100, 0, { pdjSharePct: 10, receiveCashback: false })
+    const pct = (d: string) => rows.find((r) => r.label.includes(d))?.pct
+    expect(pct('Campaign')).toBe(90)
+    expect(pct('pdJ')).toBe(10)
+    expect(rows.reduce((acc, r) => acc + r.pct, 0)).toBe(100)
   })
 })
