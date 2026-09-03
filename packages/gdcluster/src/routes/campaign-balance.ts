@@ -15,7 +15,17 @@ import { getTokenUsdPrice, round2 } from '../lib/token-prices'
  */
 
 const V_CHAIN = { celo, avax: avalanche, base }
-const RPC_ENV: Record<string, string> = { celo: 'RPC_URL_CELO', avax: 'RPC_URL_AVAX', base: 'RPC_URL_BASE' }
+/**
+ * Rutas RPC configurables por cadena (mismo patrón Alchemy que
+ * NEXT_PUBLIC_RPC_URL): NEXT_PUBLIC_CELO_RPC_URL / NEXT_PUBLIC_AVAX_RPC_URL /
+ * NEXT_PUBLIC_BASE_RPC_URL. Sin override se usan los RPC públicos del
+ * registro (rpcDefault).
+ */
+const RPC_ENV: Record<string, string> = {
+  celo: 'NEXT_PUBLIC_CELO_RPC_URL',
+  avax: 'NEXT_PUBLIC_AVAX_RPC_URL',
+  base: 'NEXT_PUBLIC_BASE_RPC_URL',
+}
 
 export interface CampaignBalanceEntry {
   key: string
