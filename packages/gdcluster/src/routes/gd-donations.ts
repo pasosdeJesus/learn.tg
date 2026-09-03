@@ -357,25 +357,48 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       }
     }
 
-    // Reenvío automático e inmediato a la campaña (y a pdJ si aplica)
+    // Reenvío automático e inmediato a la campaña (y a pdJ si aplica), con
+    // reintento inline (2 intentos, 1.5s entre ellos). Si tras los intentos
+    // un reenvío sigue fallando se registra igual la donación con el hash
+    // pendiente (el balance lo muestra como "pendiente de reenvío") y se
+    // loguea una alerta para el operador — el monto nunca se pierde de vista.
+    const attemptWithRetry = async (label: string, args: any) => {
+      let lastError: unknown
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          return { hash: await sendWithNonce(args) }
+        } catch (e: unknown) {
+          lastError = e
+          console.error(`[CampaignDonation] ${label} attempt ${attempt + 1} failed:`, (e as any)?.shortMessage || (e as any)?.message || e)
+          if (attempt === 0) await new Promise((r) => setTimeout(r, 1500))
+        }
+      }
+      return { error: lastError }
+    }
+
     let campaignHash: string | undefined
     let pdjHash: string | undefined
     if (campaignRaw > 0n) {
-      campaignHash = await sendWithNonce({
+      const r = await attemptWithRetry('campaign forward', {
         address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
         args: [cfg.wallet, campaignRaw],
       })
+      campaignHash = r.hash
+      if (r.error) console.error('[CampaignDonation] campaign forward PENDING (recorded without hash; funds remain in the backend wallet)')
     }
     if (pdjRaw > 0n) {
       const treasury = getPdJTreasuryAddress()
       if (!treasury) {
         return NextResponse.json({ error: 'NEXT_PUBLIC_PDJ_TREASURY_ADDRESS not configured (needed for the pdJ share)' }, { status: 500 })
       }
-      pdjHash = await sendWithNonce({
+      const r = await attemptWithRetry('pdJ forward', {
         address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
         args: [treasury as Address, pdjRaw],
       })
+      pdjHash = r.hash
+      if (r.error) console.error('[CampaignDonation] pdJ forward PENDING (recorded without hash; funds remain in the backend wallet)')
     }
+    const forwardPending = !campaignHash || (pdjRaw > 0n && !pdjHash)
 
     const dest = `campaign:${slug}`
     const distribution = []
@@ -394,6 +417,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       cashbackSlearn: split.cashbackSlearn > 0 ? split.cashbackSlearn : undefined,
       campaignWallet: cfg.wallet, destination: dest,
       campaignForwardHash: campaignHash, pdjForwardHash: pdjHash, mintHash,
+      forwardPending,
       distribution,
     }
 
@@ -424,6 +448,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       tokenAmount: String(tokenAmount),
       increment: split.cashbackSlearn,
       distribution,
+      pendingForward: forwardPending,
       hashes: { campaignForwardHash: campaignHash, pdjForwardHash: pdjHash, mintHash },
     })
   } catch (error) {

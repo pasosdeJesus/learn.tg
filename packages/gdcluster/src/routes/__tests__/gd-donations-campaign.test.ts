@@ -124,3 +124,43 @@ describe('verifyCampaignDonation', () => {
     expect(json.hashes).toBeDefined()
   })
 })
+
+describe('verifyCampaignDonation — auto-forward retries (REQ/223)', () => {
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_ADDRESS = BACKEND
+    process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = TREASURY
+    process.env.NEXT_PUBLIC_USDT_ADDRESS = USDT_TOKEN
+    process.env.NEXT_PUBLIC_SLEARN_ADDRESS = SLEARN_TOKEN
+  })
+
+  it('retries once when the forward fails and then succeeds', async () => {
+    const { deps, sendTxAndWait } = buildDeps()
+    sendTxAndWait.mockRejectedValueOnce(new Error('boom'))
+    const res = await verifyCampaignDonation(deps, req({
+      walletAddress: DONOR, token: 'tok', usdtHash: '0x' + '11'.repeat(32),
+      receiveCashback: false, pdjSharePct: 0,
+    }), params)
+    expect(res.status).toBe(200)
+    expect(sendTxAndWait).toHaveBeenCalledTimes(2)
+    const json = await res.json()
+    expect(json.pendingForward).toBe(false)
+  })
+
+  it('records the donation as pending when the forward keeps failing', async () => {
+    const { deps, db, sendTxAndWait } = buildDeps()
+    sendTxAndWait.mockRejectedValue(new Error('boom'))
+    const res = await verifyCampaignDonation(deps, req({
+      walletAddress: DONOR, token: 'tok', usdtHash: '0x' + '22'.repeat(32),
+      receiveCashback: false, pdjSharePct: 0,
+    }), params)
+    expect(res.status).toBe(200)
+    expect(sendTxAndWait).toHaveBeenCalledTimes(2)
+    const json = await res.json()
+    expect(json.pendingForward).toBe(true)
+    expect(json.hashes.campaignForwardHash).toBeUndefined()
+    // La donación queda registrada (el balance lo muestra como pendiente)
+    expect(db.insertInto).toHaveBeenCalledTimes(1)
+    const inserted = db.insertInto.mock.results[0].value.values.mock.calls[0][0]
+    expect(inserted.metadata.forwardPending).toBe(true)
+  })
+})

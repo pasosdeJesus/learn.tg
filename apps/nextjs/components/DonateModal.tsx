@@ -21,7 +21,12 @@ import {
   getTargetRecipient,
   getTargetEndpoint,
   getDistributionFromResponse,
+  getCampaignConfig,
+  getCampaignDonationToken,
+  getCampaignDonationTokenKeys,
 } from '@learn-tg/gdcluster/lib/donation-target'
+import { getTokenUsdPrice } from '@learn-tg/gdcluster/lib/token-prices'
+import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 
 const SLEARN_DECIMALS = 2
 const SLEARN_RATE = 22 // 1 USDT = 22 SLEARN
@@ -44,6 +49,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const isCampaign = effectiveTarget?.type === 'campaign-donation'
   const [receiveCashback, setReceiveCashback] = useState(true)
   const [pdjSharePct, setPdjSharePct] = useState(0)
+  const [payTokenKey, setPayTokenKey] = useState('usdt')
+  const [payPrice, setPayPrice] = useState<number | null>(1)
   const tCopy = effectiveTarget
     ? getTargetCopy(lang || 'en', effectiveTarget, isCampaign ? { receiveCashback, pdjSharePct } : {})
     : null
@@ -68,14 +75,39 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const [resultCashback, setResultCashback] = useState(0)
   const [resultDistribution, setResultDistribution] = useState<DistributionItem[]>([])
 
-  const usdtAddress = (process.env.NEXT_PUBLIC_USDT_ADDRESS as Address) || undefined
+  const envUsdtAddress = (process.env.NEXT_PUBLIC_USDT_ADDRESS as Address) || undefined
   const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address) || undefined
   const cId = effectiveTarget?.type === 'course-donation' ? effectiveTarget.courseId : null
 
+  // Tokens de pago de un destino `campaign` (REQ/223): mainnet = cfg.donationTokens
+  // (USDT/USDC/XAUt0), testnet = cfg.testnet (USDT Mock). La dirección/decimals
+  // se resuelve del registro (con override NEXT_PUBLIC_USDT_ADDRESS en USDT).
+  const campaignCfg = isCampaign && effectiveTarget?.type === 'campaign-donation'
+    ? getCampaignConfig(effectiveTarget.slug)
+    : undefined
+  const payKeys = campaignCfg ? getCampaignDonationTokenKeys(campaignCfg, IS_PRODUCTION) : []
+  const activePayKey = campaignCfg && payKeys.includes(payTokenKey) ? payTokenKey : (payKeys[0] ?? 'usdt')
+  const activeToken = campaignCfg ? getCampaignDonationToken(campaignCfg, activePayKey, IS_PRODUCTION) : undefined
+  const usdtAddress = campaignCfg ? (activeToken?.address as Address | undefined) : envUsdtAddress
+
   const usdtNum = safeParseFloat(amount)
   const slearnNum = safeParseFloat(slearnAmount)
-  const totalUSDTValue = usdtNum + (slearnNum / SLEARN_RATE)
+  // Valor en USD: tokens pegados = cantidad; XAUt0 = cantidad × precio (CoinGecko)
+  const totalUSDTValue = campaignCfg ? usdtNum * (payPrice ?? 0) : usdtNum + (slearnNum / SLEARN_RATE)
   const estimatedReward = totalUSDTValue * (rewardPct / 100) * SLEARN_RATE
+
+  // Precio USD del token activo en campañas (solo los no pegados consultan API)
+  useEffect(() => {
+    let cancelled = false
+    if (!campaignCfg || !activeToken || activeToken.peggedUsd) {
+      setPayPrice(1)
+      return () => { cancelled = true }
+    }
+    getTokenUsdPrice({ key: activeToken.key, peggedUsd: activeToken.peggedUsd, coingeckoId: activeToken.coingeckoId })
+      .then((p) => { if (!cancelled) setPayPrice(p) })
+      .catch(() => { if (!cancelled) setPayPrice(null) })
+    return () => { cancelled = true }
+  }, [campaignCfg, activeToken, activePayKey])
 
   const { gasState, estimating, diag } = useGasEstimation({
     amount, slearnAmount, usdtDecimals,
@@ -117,6 +149,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       }
       if (effectiveTarget?.type === 'campaign-donation') {
         payload.campaign = effectiveTarget.slug
+        payload.payToken = activePayKey
         payload.receiveCashback = receiveCashback
         payload.pdjSharePct = pdjSharePct
       }
@@ -234,6 +267,11 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       campaignCashbackLabel: 'Receive 10% back as SLEARN cashback',
       campaignToPdJLabel: 'Also donate a percentage to pdJ',
       campaignCustomPct: 'Custom %',
+      payWith: 'Pay with',
+      balanceOfToken: 'Your {{0}} balance',
+      amountLabelToken: 'Amount ({{0}})',
+      tokenRate: '1 {{0}} ≈ ${{1}}',
+      priceUnavailable: 'Price unavailable — cannot compute the USD value. Try again later.',
       donateToCourse: 'Donate to course',
       resultTitle: '🎉 Donation completed!',
       resultCashback: '+{{0}} SLEARN cashback',
@@ -265,6 +303,11 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       campaignCashbackLabel: 'Recibir 10% de vuelta como cashback en SLEARN',
       campaignToPdJLabel: 'Donar además un porcentaje a pdJ',
       campaignCustomPct: '% personalizado',
+      payWith: 'Pagar con',
+      balanceOfToken: 'Tu saldo de {{0}}',
+      amountLabelToken: 'Monto ({{0}})',
+      tokenRate: '1 {{0}} ≈ ${{1}}',
+      priceUnavailable: 'Precio no disponible — no se puede calcular el valor USD. Intenta más tarde.',
       donateToCourse: 'Donar al curso',
       resultTitle: '🎉 ¡Donación completada!',
       resultCashback: '+{{0}} SLEARN de cashback',
@@ -283,6 +326,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const donateDisabled = isSubmitting || !hasAnyAmount ||
     parseUserAmountSafe(amount, usdtDecimals) > usdtBalance ||
     parseUserAmountSafe(slearnAmount, SLEARN_DECIMALS) > slearnBalance ||
+    (isCampaign && payPrice == null && usdtNum > 0) ||
     (hasAnyAmount && gasState === 'no-gas')
 
   return (
@@ -336,7 +380,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         )}
 
         <div className="space-y-2 text-sm">
-          <div>{t('yourBalance')}: <span className="font-mono">{usdtBalFmt}</span></div>
+          <div>{isCampaign && activeToken ? t('balanceOfToken', activeToken.symbol) : t('yourBalance')}: <span className="font-mono">{usdtBalFmt}</span></div>
           {!isCampaign && slearnAddress && (
             <div>{t('yourSlearnBalance')}: <span className="font-mono">{slearnBalFmt}</span></div>
           )}
@@ -357,6 +401,29 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
             </>
           )}
         </div>
+
+        {isCampaign && payKeys.length > 1 && campaignCfg && (
+          <div className="mt-4 text-sm">
+            <div className="mb-1 font-medium">{t('payWith')}</div>
+            <div className="flex flex-wrap items-center gap-2">
+              {payKeys.map((k) => {
+                const tk = getCampaignDonationToken(campaignCfg, k, IS_PRODUCTION)
+                if (!tk) return null
+                return (
+                  <button key={k} type="button" onClick={() => { setPayTokenKey(k); setAmount('') }}
+                    className={`px-3 py-1.5 rounded-full border text-xs ${activePayKey === k ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-300 hover:bg-gray-50'}`}>
+                    {tk.symbol}
+                  </button>
+                )
+              })}
+            </div>
+            {activeToken && !activeToken.peggedUsd && (
+              <p className={`mt-1 text-xs ${payPrice == null ? 'text-red-600' : 'text-gray-500'}`}>
+                {payPrice == null ? t('priceUnavailable') : t('tokenRate', activeToken.symbol, payPrice.toFixed(2))}
+              </p>
+            )}
+          </div>
+        )}
 
         {isCampaign && (
           <div className="mt-4 space-y-3 border border-gray-200 rounded-lg p-3 text-sm">
@@ -395,7 +462,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         )}
 
         <div className="mt-4">
-          <label htmlFor="donate-amount" className="block text-sm mb-1">{t('amountLabel')}</label>
+          <label htmlFor="donate-amount" className="block text-sm mb-1">{isCampaign && activeToken ? t('amountLabelToken', activeToken.symbol) : t('amountLabel')}</label>
           <input id="donate-amount" type="number" min="0" step={1 / 10 ** Math.min(usdtDecimals, 6)}
             className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400"
             value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={t('enterAmount')} />
