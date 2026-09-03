@@ -6,6 +6,7 @@ import {
   getTargetEndpoint,
   getDistributionFromResponse,
   getCampaignConfig,
+  getCampaignDonationToken,
   campaignDonorSplit,
   splitRawAmount,
   type PaymentTarget,
@@ -176,6 +177,26 @@ describe('campaign donations (REQ/223)', () => {
     expect(cfg!.wallet).toBe('0x9c7218a253d1565fc5f2149ba51f0f55f0f27f07')
     expect(cfg!.goalUSD).toBe(8500)
     expect(cfg!.chains.map((c) => c.chain)).toEqual(['celo', 'avax', 'base'])
+  })
+
+  it('prefers NEXT_PUBLIC_USDT_ADDRESS for the donation token (dev server may differ from the registry example)', () => {
+    const cfg = getCampaignConfig('lensenia')!
+    const prevAddr = process.env.NEXT_PUBLIC_USDT_ADDRESS
+    const prevDec = process.env.NEXT_PUBLIC_USDT_DECIMALS
+    try {
+      process.env.NEXT_PUBLIC_USDT_ADDRESS = '0x0d130F97fB5349656F95ad3Ab46BC0b34a8556a6'
+      delete process.env.NEXT_PUBLIC_USDT_DECIMALS
+      const mainnet = getCampaignDonationToken(cfg, 'usdt', true)!
+      const testnet = getCampaignDonationToken(cfg, 'usdt', false)!
+      expect(mainnet.address).toBe('0x0d130F97fB5349656F95ad3Ab46BC0b34a8556a6')
+      expect(testnet.address).toBe('0x0d130F97fB5349656F95ad3Ab46BC0b34a8556a6')
+      expect(testnet.decimals).toBe(6)
+    } finally {
+      if (prevAddr === undefined) delete process.env.NEXT_PUBLIC_USDT_ADDRESS
+      else process.env.NEXT_PUBLIC_USDT_ADDRESS = prevAddr
+      if (prevDec === undefined) delete process.env.NEXT_PUBLIC_USDT_DECIMALS
+      else process.env.NEXT_PUBLIC_USDT_DECIMALS = prevDec
+    }
   })
 
   it('routes campaign donations to the campaign verify endpoint', () => {

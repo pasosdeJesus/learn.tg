@@ -121,11 +121,26 @@ export function getCampaignConfig(slug: string): CampaignConfig | undefined {
 
 /** Token de recepción de una campaña para la red activa (mainnet vs Celo Sepolia) */
 export function getCampaignDonationToken(cfg: CampaignConfig, key: string, mainnet: boolean): CampaignToken | undefined {
+  let base: CampaignToken | undefined
   if (mainnet) {
     const celo = cfg.chains.find((c) => c.chain === 'celo')
-    return celo?.tokens.find((t) => t.key === key)
+    base = celo?.tokens.find((t) => t.key === key)
+  } else {
+    base = cfg.testnet?.tokens.find((t) => t.key === key)
   }
-  return cfg.testnet?.tokens.find((t) => t.key === key)
+  if (!base) return undefined
+  // USDT: la dirección del servidor (NEXT_PUBLIC_USDT_ADDRESS, la misma que usa
+  // el DonateModal y los receipts) tiene prioridad sobre el registro — así el
+  // testnet de desarrollo (dev MockUSDT) coincide aunque difiera del ejemplo.
+  if (key === 'usdt' && process.env.NEXT_PUBLIC_USDT_ADDRESS) {
+    const dec = Number(process.env.NEXT_PUBLIC_USDT_DECIMALS)
+    return {
+      ...base,
+      address: process.env.NEXT_PUBLIC_USDT_ADDRESS,
+      decimals: Number.isFinite(dec) ? dec : base.decimals,
+    }
+  }
+  return base
 }
 
 /** Criptos aceptadas en recepción para la red activa */

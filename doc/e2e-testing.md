@@ -20,6 +20,25 @@ Override target: `SITE_URL=https://learn.tg bin/m test:e2e`
 
 Chrome path: `CHROME_PATH=/usr/local/bin/chrome bin/m test:e2e`
 
+## Dev-server warmup: `bin/warmup.mjs`
+
+Tras un deploy, Next.js compila cada ruta bajo demanda y el primer request es
+lentísimo (timeouts en la suite). `apps/nextjs/bin/warmup.mjs` toca las páginas
+y APIs clave **antes** de correr los specs: pasada 1 secuencial (compila con
+timeout generoso por ruta), pasada 2 en paralelo (caché caliente, verifica
+tiempos).
+
+```sh
+cd apps/nextjs
+bin/warmup                       # SITE_URL por defecto (learn.tg:9001)
+SITE_URL=https://learn.tg bin/warmup   # producción
+```
+
+Incluye las rutas de las donaciones a campaña (REQ/223):
+`/en/donations/lensenia`, `/api/donations/lensenia/balance` y
+`/api/donations/lensenia/verify` (la página compila los client chunks y los
+route handlers del motor `gdcluster`).
+
 ## `bin/m test:e2e` in Detail
 
 The runner (`@pasosdejesus/m/e2e`) searches `e2e/specs/` first (browser),
@@ -73,10 +92,14 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `referral-premium.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 44 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
 | `rails-auth.spec.mjs` | Rails API calls with auth token in ES and EN |
 | `verification-timezone.spec.mjs` | Verification availability API: timezone handling, 7-day window |
+| `donate-course.spec.mjs` | Course donation endpoint (`/api/add-donation`): validation paths (400/401) |
+| `donate-gd.spec.mjs` | GD cluster/country donation endpoint (`/api/gdcluster/donations/verify`): validation paths (400/401/403) |
+| `donate-campaign.spec.mjs` | Campaign donation (REQ/223, `/api/donations/{slug}/verify` + balance): 404/400/401, bounds de `pdjSharePct` y forma del balance multi-cadena |
 
 ### Current Status (2026-07-28)
 
-**10 smokes.** `leaderboard.spec.mjs` fails on profileScore explanation text
+**10 smokes** (más las donaciones `donate-course`, `donate-gd` y
+`donate-campaign`). `leaderboard.spec.mjs` fails on profileScore explanation text
 not rendered (minor content issue). `rails-auth.spec.mjs` shows token mismatch
 for new wallets (expected for wallets without Rails-side session).
 `caldav-*` smokes skip gracefully when `CALDAV_URL` is not set.
@@ -167,6 +190,7 @@ for an example.
 | `prod-landing-to-profile.spec.mjs` | Production landing page → wallet connect → profile save flow |
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
 | `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
+| `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), distribución, balance on-chain de la billetera campaña y filas en user-transactions (sin `donation_reward` con cashback OFF) |
 
 ### Current Status (2026-08-24)
 
@@ -195,6 +219,7 @@ time out on SIWE under suite load (passes solo).
 | `interview-date` | `proposed_date_of_interview` migrated to `timestamptz` (see `db/migrations/20260822000000_proposed_interview_timestamptz.ts`) |
 | `verified-city-gate`, `premium-course-checkout` | Verifier wallet (`apps/.env`) whitelisted; eligibility = verified worship city |
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
+| `donate-campaign-real` | Motor de campañas desplegado (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_ADDRESS`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` en el dev (billetera única). Cashback ON adicional requiere MINTER_ROLE de SLEARN en el backend (no probado por defecto) |
 | `church-selector-diag` | Session cookie auth (works via the session fallback in `lib/authenticateUser.ts`) |
 
 ### Hydration / SIWE gotcha on the dev server (https://github.com/pasosdeJesus/learn.tg/issues/208)

@@ -289,10 +289,19 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
 
     const backendWallet = deps.backend.getBackendWalletLower()
 
-    const { amount: tokenAmount } = await verifyTransfer(
-      deps.backend.fetchTxWithReceipt, pub, usdtHash, payKey,
-      walletAddress, backendWallet, tokenAddr, 24 * 60 * 60 * 1000,
-    )
+    let tokenAmount: bigint
+    try {
+      const verified = await verifyTransfer(
+        deps.backend.fetchTxWithReceipt, pub, usdtHash, payKey,
+        walletAddress, backendWallet, tokenAddr, 24 * 60 * 60 * 1000,
+      )
+      tokenAmount = verified.amount
+    } catch (e: any) {
+      console.error('[CampaignDonation] verifyTransfer failed:', e?.shortMessage || e?.message || e)
+      return NextResponse.json({
+        error: `Transfer verification failed: ${e?.shortMessage || e?.message || String(e)}`,
+      }, { status: 400 })
+    }
     if (tokenAmount <= 0n) {
       return NextResponse.json({ error: 'Transfer amount must be greater than zero' }, { status: 400 })
     }

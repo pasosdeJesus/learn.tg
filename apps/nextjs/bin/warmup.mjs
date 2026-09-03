@@ -38,6 +38,11 @@ const URLS = [
   '/api/guide?courseId=103&lang=en&prefix=web3-and-ubi&guide=guide3&guideNumber=3',
   '/api/gdcluster/donations/history',
   '/api/gdcluster/donations/verify',
+  // Campañas (REQ/223): página de donación Lensenia + balance multi-cadena + verify
+  '/en/donations/lensenia',
+  '/es/donations/lensenia',
+  '/api/donations/lensenia/balance',
+  '/api/donations/lensenia/verify',
   '/api/churches/search?q=a',
   '/api/profile',
   '/api/claim-celo-ubi',
