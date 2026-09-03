@@ -30,8 +30,8 @@ tiempos).
 
 ```sh
 cd apps/nextjs
-bin/warmup                       # SITE_URL por defecto (learn.tg:9001)
-SITE_URL=https://learn.tg bin/warmup   # producción
+bin/warmup.mjs                   # SITE_URL por defecto (learn.tg:9001)
+SITE_URL=https://learn.tg bin/warmup.mjs   # producción
 ```
 
 Incluye las rutas de las donaciones a campaña (REQ/223):

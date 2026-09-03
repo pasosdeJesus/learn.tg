@@ -14,6 +14,7 @@ import {
   splitRawAmount,
   getPdJTreasuryAddress,
 } from '../lib/donation-target'
+import { getTokenUsdPrice, round2 } from '../lib/token-prices'
 import type { GdclusterDeps } from '../index'
 
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
@@ -232,12 +233,12 @@ export async function donationHistory(deps: GdclusterDeps, req: NextRequest) {
  *
  * La restricción `(crypto, hash)` UNIQUE impide duplicar filas (replay).
  *
- * Consciente de red (REQ/223 + testnet): en mainnet (42220) se usan los
- * tokens del registro (USDT/USDC/XAUt0 según `cfg.donationTokens`); en Celo
- * Sepolia (11142220) se usan los tokens de `cfg.testnet` (hoy solo USDT
- * Mock). Nota: el ledger solo admite `crypto IN (usdt, slearn, celo,
- * learningpoints)` (CHECK) — USDC/XAUt0 requieren una migración del CHECK
- * (USDC/XAUt0 se presentan en el balance, recepción pendiente).
+ * Consciente de red (REQ/223 + testnet): en mainnet (42220) se aceptan los
+ * tokens de `cfg.donationTokens` (USDT/USDC/XAUt0; USDC/XAUt0 registran filas
+ * `transaction.crypto` = 'usdc'/'xaut0', migración 20260903120000); en Celo
+ * Sepolia (11142220) solo los de `cfg.testnet` (hoy USDT Mock). El valor USD
+ * usa precio de mercado (pegados = 1; XAUt0 = CoinGecko). CELO nativo y G$
+ * quedan pendientes (verify ERC-20 actual).
  */
 export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextRequest, params?: Record<string, string>) {
   try {
@@ -306,9 +307,23 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       return NextResponse.json({ error: 'Transfer amount must be greater than zero' }, { status: 400 })
     }
 
-    const usdValue = Number(tokenAmount) / 10 ** tokenDecimals
+    // Precio USD del token donado (pegados → 1; XAUt0 → CoinGecko con caché)
+    let price: number
+    try {
+      price = await getTokenUsdPrice({ key: payCfg.key, peggedUsd: payCfg.peggedUsd, coingeckoId: payCfg.coingeckoId })
+    } catch (e: any) {
+      console.error('[CampaignDonation] price fetch failed:', e?.message || e)
+      return NextResponse.json({
+        error: `USD price unavailable for ${payKey} (${e?.message || String(e)}) — try again later`,
+      }, { status: 400 })
+    }
+
+    const tokenUnits = Number(tokenAmount) / 10 ** tokenDecimals
+    const usdValue = tokenUnits * price
     const split = campaignDonorSplit(usdValue, { receiveCashback: optsCashback, pdjSharePct: optsPct }, deps.backend.SLEARN_RATE)
     const { campaignRaw, pdjRaw } = splitRawAmount(tokenAmount, split.pdjSharePct)
+    const campaignUnits = round2(Number(campaignRaw) / 10 ** tokenDecimals)
+    const pdjUnits = round2(Number(pdjRaw) / 10 ** tokenDecimals)
 
     const wallet = deps.backend.getWalletClient()
     const chain = (wallet as any).chain || pub.chain
@@ -364,8 +379,8 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
 
     const dest = `campaign:${slug}`
     const distribution = []
-    if (campaignRaw > 0n) distribution.push({ destination: 'campaign', amount: split.campaignUSD, crypto: 'usdt' })
-    if (pdjRaw > 0n) distribution.push({ destination: 'pdJ', amount: split.pdjUSD, crypto: 'usdt' })
+    if (campaignRaw > 0n) distribution.push({ destination: 'campaign', amount: campaignUnits, crypto: payKey })
+    if (pdjRaw > 0n) distribution.push({ destination: 'pdJ', amount: pdjUnits, crypto: payKey })
     if (mintHash) distribution.push({ destination: 'cashback', amount: split.cashbackSlearn, crypto: 'slearn' })
     const breakdownText = distribution
       .map(d => `${d.destination}: ${d.amount.toFixed(2)} ${d.crypto.toUpperCase()}`)
@@ -384,10 +399,10 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
 
     await db.insertInto('transaction').values({
       usuario_id: auth.usuario.id, wallet: walletAddress, crypto: payKey,
-      type: 'donation', amount: usdValue, balance_impact: -usdValue,
+      type: 'donation', amount: round2(tokenUnits), balance_impact: -round2(tokenUnits),
       date: new Date(), hash: usdtHash as string, categoria: 'donation',
       subcategoria: 'campaign',
-      descripcion: `donated: ${usdValue.toFixed(2)} ${payKey.toUpperCase()}\n${breakdownText}`,
+      descripcion: `donated: ${round2(tokenUnits).toFixed(2)} ${payCfg.symbol}\n${breakdownText}`,
       metadata,
       created_at: new Date(), updated_at: new Date(),
     } as any).execute()

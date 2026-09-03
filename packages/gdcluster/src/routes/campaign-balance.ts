@@ -2,6 +2,7 @@ import { createPublicClient, http, type Address } from 'viem'
 import { celo, avalanche, base } from 'viem/chains'
 import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
 import { getCampaignConfig } from '../lib/donation-target'
+import { getTokenUsdPrice, round2 } from '../lib/token-prices'
 
 /**
  * Balance multi-cadena de una campaña (REQ/223 §4.1 — presentación):
@@ -15,26 +16,6 @@ import { getCampaignConfig } from '../lib/donation-target'
 
 const V_CHAIN = { celo, avax: avalanche, base }
 const RPC_ENV: Record<string, string> = { celo: 'RPC_URL_CELO', avax: 'RPC_URL_AVAX', base: 'RPC_URL_BASE' }
-
-const PRICE_TTL = 5 * 60 * 1000
-const priceCache = new Map<string, { usd: number; at: number }>()
-
-async function getPriceUsd(coingeckoId: string): Promise<number> {
-  const cached = priceCache.get(coingeckoId)
-  if (cached && Date.now() - cached.at < PRICE_TTL) return cached.usd
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(coingeckoId)}&vs_currencies=usd`
-  const res = await fetch(url, { headers: { accept: 'application/json' } })
-  if (!res.ok) throw new Error(`Price fetch failed (${res.status}) for ${coingeckoId}`)
-  const json = (await res.json()) as Record<string, { usd?: number }>
-  const usd = json[coingeckoId]?.usd
-  if (usd == null || Number.isNaN(usd)) throw new Error(`No USD price for ${coingeckoId}`)
-  priceCache.set(coingeckoId, { usd, at: Date.now() })
-  return usd
-}
-
-function round2(v: number): number {
-  return Math.round(v * 100) / 100
-}
 
 export interface CampaignBalanceEntry {
   key: string
@@ -92,7 +73,7 @@ export async function campaignBalance(deps: { db: () => any }, params?: Record<s
         const amount = Number(raw) / 10 ** tk.decimals
         let usd: number | null = null
         try {
-          const price = tk.peggedUsd ? 1 : await getPriceUsd(tk.coingeckoId || tk.key)
+          const price = await getTokenUsdPrice({ key: tk.key, peggedUsd: tk.peggedUsd, coingeckoId: tk.coingeckoId })
           usd = round2(amount * price)
         } catch {
           usd = null // token sin precio disponible → no suma al total
