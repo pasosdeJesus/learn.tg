@@ -5,6 +5,7 @@ import { rankingClusters, rankingCountries, rankingFunds } from './routes/gd-ran
 import { verifyDonation, donationHistory, verifyCampaignDonation } from './routes/gd-donations'
 import { campaignBalance } from './routes/campaign-balance'
 import { campaignTransparency } from './routes/gd-campaign-transparency'
+import { campaignMovements } from './routes/campaign-movements'
 import { createCluster, joinCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster'
 import { clusterStatus, clusterCandidates, listInvitations, acceptInvitation, rejectInvitation } from './routes/gd-invitations'
 import { adminListClusters, adminGetCluster, adminCreateCluster, adminUpdateCluster, adminDisbandCluster, adminAddMember, adminRemoveMember } from './routes/gd-admin-clusters'
@@ -88,6 +89,9 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
     },
     'donations/[slug]/transparency': {
       GET: (req, params) => campaignTransparency(deps, params),
+    },
+    'donations/[slug]/movements': {
+      GET: (req, params) => campaignMovements(req, params),
     },
     'cluster': {
       POST: (req) => createCluster(deps, req as NextRequest),

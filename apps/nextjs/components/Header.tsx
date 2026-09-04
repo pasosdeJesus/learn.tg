@@ -53,6 +53,7 @@ export default function Header({ lang: langProp = 'en' }) {
   const menuItems = [
     { key: 'navProfile', href: `/${lang}/profile`, emoji: '👤' },
     { key: 'navLeaderboard', href: `/${lang}/leaderboard`, emoji: '🏆' },
+    { key: 'navDonateLensenia', href: `/${lang}/donations/lensenia`, emoji: '💧' },
     { key: 'navTransparency', href: `/${lang}/transparency`, emoji: '📊' },
     { key: 'navReferrals', href: lang === 'es' ? '/es/referidos' : `/${lang}/referrals`, emoji: '🤝' },
   ]
@@ -111,6 +112,15 @@ export default function Header({ lang: langProp = 'en' }) {
                 </div>
               )}
 
+              {/* R-#223: acceso público a la página de donación */}
+              <Link
+                href={`/${lang}/donations/lensenia`}
+                title={tCommon('navDonateLensenia')}
+                className="text-xl hover:opacity-70"
+                aria-label={tCommon('navDonateLensenia')}
+              >
+                💧
+              </Link>
               <NotificationsBell lang={lang} />
               <ConnectWalletButton lang={lang} />
               <UserLanguageSync lang={lang} />

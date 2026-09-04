@@ -95,6 +95,7 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `donate-course.spec.mjs` | Course donation endpoint (`/api/add-donation`): validation paths (400/401) |
 | `donate-gd.spec.mjs` | GD cluster/country donation endpoint (`/api/gdcluster/donations/verify`): validation paths (400/401/403) |
 | `donate-campaign.spec.mjs` | Campaign donation (REQ/223, `/api/donations/{slug}/verify` + balance): 404/400/401, bounds de `pdjSharePct` y forma del balance multi-cadena |
+| `rails-health.spec.mjs` | Health check del backend Rails del dev site (`NEXT_PUBLIC_API_BASE/proyectosfinancieros.json`): 200 con cursos → UP; error de red/502 → DOWN (exit 1). Correr antes de las suites que dependen de Rails |
 
 ### Current Status (2026-07-28)
 
@@ -191,6 +192,7 @@ for an example.
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
 | `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
 | `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), distribución, balance on-chain de la billetera campaña y filas en user-transactions (sin `donation_reward` con cashback OFF) |
+| `donate-campaign-celo-real.spec.mjs` | **Real donation in native CELO (REQ/223):** `sendTransaction` (value) al backend → `verify` con `payToken='celo'` (verify por `tx.value`) → auto-forward nativo 100% y 90/10, balance CELO on-chain y filas `crypto=celo` |
 
 ### Current Status (2026-08-24)
 

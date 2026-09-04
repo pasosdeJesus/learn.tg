@@ -8,6 +8,7 @@ import { use, useState, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import BalanceDisplay from '@/components/donations/BalanceDisplay'
 import DonateButton from '@/components/donations/DonateButton'
+import Movements from '@/components/donations/Movements'
 import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
 
 type PageProps = { params: Promise<{ lang: string }> }
@@ -29,7 +30,7 @@ export default function Page({ params }: PageProps) {
       guideLink: 'Guide: claiming GoodDollar and giving to the well',
       otherWays: 'Other ways to donate',
       otherWaysText:
-        'Bank transfers, Binance, Giveth and off-chain XAUT are handled on the project page at pasosdejesus.org.',
+        'Bank transfers, Binance and Giveth: see the project page below. Off-chain XAUT (gold) donations are also described there — contact the team through pasosdejesus.org to arrange delivery instructions.',
       otherWaysLink: 'pasosdejesus.org/lensenia',
       success: 'Donation completed',
     },
@@ -45,7 +46,7 @@ export default function Page({ params }: PageProps) {
       guideLink: 'Guía: reclamar GoodDollar y darlo al pozo',
       otherWays: 'Otras formas de donar',
       otherWaysText:
-        'Transferencias bancarias, Binance, Giveth y XAUT off-chain se gestionan en la página del proyecto en pasosdejesus.org.',
+        'Transferencias bancarias, Binance y Giveth: ver la página del proyecto abajo. Las donaciones de XAUT (oro) off-chain también se describen allí — contacta al equipo vía pasosdejesus.org para las instrucciones de entrega.',
       otherWaysLink: 'pasosdejesus.org/lensenia',
       success: 'Donación completada',
     },
@@ -89,6 +90,11 @@ export default function Page({ params }: PageProps) {
             {t('otherWaysLink')}
           </a>
         </section>
+
+        {/* REQ/223: movimientos recientes de la billetera de la campaña */}
+        <div className="mt-6">
+          <Movements slug="lensenia" lang={lang} limit={8} showLink />
+        </div>
       </div>
     </main>
   )
