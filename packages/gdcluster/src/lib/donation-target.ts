@@ -72,11 +72,12 @@ export const CAMPAIGN_CONFIGS: CampaignConfig[] = [
     wallet: '0x9c7218a253d1565fc5f2149ba51f0f55f0f27f07',
     goalUSD: 8500,
     pasosdejesusUrl: 'https://pasosdejesus.org/lensenia',
-    donationTokens: ['usdt', 'usdc', 'xaut0', 'gdoll'],
-    // Celo Sepolia (pruebas): solo USDT por ahora (MockUSDT de apps/.env.example,
-    // REQ/223 — USDC/XAUt0 solo mainnet hasta tener direcciones de test verificadas)
+    donationTokens: ['usdt', 'usdc', 'xaut0', 'gdoll', 'celo'],
+    // Celo Sepolia (pruebas): USDT Mock (apps/.env) + CELO nativo para probar
+    // el flujo nativo en el dev site (REQ/223 — USDC/XAUt0/G$ solo mainnet
+    // hasta tener direcciones de test verificadas)
     testnet: {
-      donationTokens: ['usdt'],
+      donationTokens: ['usdt', 'celo'],
       tokens: [
         { key: 'usdt', symbol: 'USDT', address: '0x7d7a73c8c0D00Fdf8b54b1a6dB6eBDEcdBa78aE8', decimals: 6, peggedUsd: true },
       ],
@@ -122,7 +123,11 @@ export function getCampaignConfig(slug: string): CampaignConfig | undefined {
 /** Token de recepción de una campaña para la red activa (mainnet vs Celo Sepolia) */
 export function getCampaignDonationToken(cfg: CampaignConfig, key: string, mainnet: boolean): CampaignToken | undefined {
   let base: CampaignToken | undefined
-  if (mainnet) {
+  if (key === 'celo') {
+    // CELO nativo (la misma moneda en ambas redes): no es ERC-20, se reenvía
+    // por valor (sendTransaction). Configuración sintética estable.
+    base = { key: 'celo', symbol: 'CELO', address: '', decimals: 18, native: true, coingeckoId: 'celo' }
+  } else if (mainnet) {
     const celo = cfg.chains.find((c) => c.chain === 'celo')
     base = celo?.tokens.find((t) => t.key === key)
   } else {

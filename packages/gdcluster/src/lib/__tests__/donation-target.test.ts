@@ -236,3 +236,18 @@ describe('campaign donations (REQ/223)', () => {
     expect(rows.reduce((acc, r) => acc + r.pct, 0)).toBe(100)
   })
 })
+
+describe('CELO nativo como token de donación (REQ/223)', () => {
+  it('is enabled in mainnet and testnet donationTokens with native config', () => {
+    const cfg = getCampaignConfig('lensenia')!
+    expect(cfg.donationTokens).toContain('celo')
+    expect(cfg.testnet?.donationTokens).toContain('celo')
+    const mainnet = getCampaignDonationToken(cfg, 'celo', true)!
+    const testnet = getCampaignDonationToken(cfg, 'celo', false)!
+    expect(mainnet.native).toBe(true)
+    expect(mainnet.decimals).toBe(18)
+    expect(mainnet.coingeckoId).toBe('celo')
+    expect(testnet.native).toBe(true)
+    expect(testnet.decimals).toBe(18)
+  })
+})

@@ -285,23 +285,49 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     }
     const payCfg = getCampaignDonationToken(cfg, payKey, mainnet)
     if (!payCfg) return NextResponse.json({ error: `Campaign has no ${payKey} token configured for this network` }, { status: 500 })
+    const isNative = payKey === 'celo' // CELO no es ERC-20: verify y reenvío por valor
     const tokenAddr = payCfg.address as Address
     const tokenDecimals = payCfg.decimals
 
     const backendWallet = deps.backend.getBackendWalletLower()
 
     let tokenAmount: bigint
-    try {
-      const verified = await verifyTransfer(
-        deps.backend.fetchTxWithReceipt, pub, usdtHash, payKey,
-        walletAddress, backendWallet, tokenAddr, 24 * 60 * 60 * 1000,
-      )
-      tokenAmount = verified.amount
-    } catch (e: any) {
-      console.error('[CampaignDonation] verifyTransfer failed:', e?.shortMessage || e?.message || e)
-      return NextResponse.json({
-        error: `Transfer verification failed: ${e?.shortMessage || e?.message || String(e)}`,
-      }, { status: 400 })
+    if (isNative) {
+      try {
+        const { receipt, tx } = await deps.backend.fetchTxWithReceipt(usdtHash as `0x${string}`)
+        if (!receipt || receipt.status !== 'success') {
+          return NextResponse.json({ error: 'CELO transfer failed on-chain' }, { status: 400 })
+        }
+        const to = (receipt.to || '').toLowerCase()
+        if (to !== backendWallet) {
+          return NextResponse.json({ error: 'CELO transfer was not sent to the backend wallet' }, { status: 400 })
+        }
+        if ((tx.from || '').toLowerCase() !== walletAddress.toLowerCase()) {
+          return NextResponse.json({ error: 'CELO transfer was not sent from the expected wallet' }, { status: 400 })
+        }
+        if (!tx.value || tx.value <= 0n) {
+          return NextResponse.json({ error: 'CELO transfer amount must be greater than zero' }, { status: 400 })
+        }
+        tokenAmount = tx.value
+      } catch (e: any) {
+        console.error('[CampaignDonation] CELO verify failed:', e?.shortMessage || e?.message || e)
+        return NextResponse.json({
+          error: `CELO transfer verification failed: ${e?.shortMessage || e?.message || String(e)}`,
+        }, { status: 400 })
+      }
+    } else {
+      try {
+        const verified = await verifyTransfer(
+          deps.backend.fetchTxWithReceipt, pub, usdtHash, payKey,
+          walletAddress, backendWallet, tokenAddr, 24 * 60 * 60 * 1000,
+        )
+        tokenAmount = verified.amount
+      } catch (e: any) {
+        console.error('[CampaignDonation] verifyTransfer failed:', e?.shortMessage || e?.message || e)
+        return NextResponse.json({
+          error: `Transfer verification failed: ${e?.shortMessage || e?.message || String(e)}`,
+        }, { status: 400 })
+      }
     }
     if (tokenAmount <= 0n) {
       return NextResponse.json({ error: 'Transfer amount must be greater than zero' }, { status: 400 })
@@ -332,8 +358,18 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       blockTag: 'pending',
     })
     const sendWithNonce = async (args: any) => {
+      if (isNative) {
+        if (!deps.backend.sendNativeTxAndWait) {
+          throw new Error('sendNativeTxAndWait not configured (CELO native donations)')
+        }
+        return deps.backend.sendNativeTxAndWait(wallet, pub, { ...args, chain, nonce: nonce++ })
+      }
       return deps.backend.sendTxAndWait(wallet, pub, { ...args, chain, nonce: nonce++ })
     }
+    // Args de reenvío: ERC-20 (transfer) o CELO nativo (to + value)
+    const transferArgs = (to: Address, raw: bigint) => isNative
+      ? { to, value: raw }
+      : { address: tokenAddr, abi: erc20Abi, functionName: 'transfer', args: [to, raw] }
 
     // Cashback SLEARN primero (si el backend no tiene MINTER_ROLE falla antes
     // de reenviar nada; el donante ve el error y nada queda a medias).
@@ -380,10 +416,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     let pdjHash: string | undefined
     let pdjTreasury: string | undefined
     if (campaignRaw > 0n) {
-      const r = await attemptWithRetry('campaign forward', {
-        address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
-        args: [cfg.wallet, campaignRaw],
-      })
+      const r = await attemptWithRetry('campaign forward', transferArgs(cfg.wallet, campaignRaw))
       campaignHash = r.hash
       if (r.error) console.error('[CampaignDonation] campaign forward PENDING (recorded without hash; funds remain in the backend wallet)')
     }
@@ -393,10 +426,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
         return NextResponse.json({ error: 'NEXT_PUBLIC_PDJ_TREASURY_ADDRESS not configured (needed for the pdJ share)' }, { status: 500 })
       }
       pdjTreasury = treasury
-      const r = await attemptWithRetry('pdJ forward', {
-        address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
-        args: [treasury as Address, pdjRaw],
-      })
+      const r = await attemptWithRetry('pdJ forward', transferArgs(treasury as Address, pdjRaw))
       pdjHash = r.hash
       if (r.error) console.error('[CampaignDonation] pdJ forward PENDING (recorded without hash; funds remain in the backend wallet)')
     }
@@ -514,13 +544,18 @@ export async function retryPendingCampaignForwards(deps: GdclusterDeps, slug: st
         const tokenAddr = m.tokenAddress as Address
         const campaignRaw = BigInt(m.campaignRaw || '0')
         const pdjRaw = BigInt(m.pdjRaw || '0')
+        const nativeRow = m.payToken === 'celo'
+        const sendRow = async (toRaw: string, raw: bigint) => {
+          if (nativeRow) {
+            if (!deps.backend.sendNativeTxAndWait) throw new Error('sendNativeTxAndWait not configured (CELO native donations)')
+            return deps.backend.sendNativeTxAndWait(wallet, pub, { to: toRaw, value: raw, chain, nonce: nonce++ })
+          }
+          return send({ address: tokenAddr, abi: erc20Abi, functionName: 'transfer', args: [toRaw as Address, raw] })
+        }
         const updates: Record<string, unknown> = {}
         if (!m.campaignForwardHash && campaignRaw > 0n) {
           try {
-            updates.campaignForwardHash = await send({
-              address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
-              args: [(m.campaignWallet || cfg.wallet) as Address, campaignRaw],
-            })
+            updates.campaignForwardHash = await sendRow(m.campaignWallet || cfg.wallet, campaignRaw)
           } catch (e: any) {
             console.error(`[CampaignDonation:retry] campaign forward ${id} failed:`, e?.shortMessage || e?.message || e)
           }
@@ -529,10 +564,7 @@ export async function retryPendingCampaignForwards(deps: GdclusterDeps, slug: st
           const treasury = m.pdjTreasury || getPdJTreasuryAddress()
           if (treasury) {
             try {
-              updates.pdjForwardHash = await send({
-                address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
-                args: [treasury as Address, pdjRaw],
-              })
+              updates.pdjForwardHash = await sendRow(treasury, pdjRaw)
             } catch (e: any) {
               console.error(`[CampaignDonation:retry] pdJ forward ${id} failed:`, e?.shortMessage || e?.message || e)
             }

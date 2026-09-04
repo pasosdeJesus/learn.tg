@@ -79,3 +79,32 @@ describe('retryPendingCampaignForwards', () => {
     expect(sendTxAndWait).not.toHaveBeenCalled()
   })
 })
+
+describe('retryPendingCampaignForwards — CELO nativo', () => {
+  it('re-forwards native CELO rows with sendNativeTxAndWait', async () => {
+    const rows = [{ id: 9, metadata: { ...rowMeta, payToken: 'celo', tokenAddress: '', campaignRaw: String(2n * 10n ** 18n), pdjRaw: '0', pdjTreasury: TREASURY } }]
+    const seen: any = {}
+    const db: any = {
+      selectFrom: () => ({ select: () => ({ where: () => ({ where: () => ({ orderBy: () => ({ limit: () => ({ execute: async () => rows }) }) }) }) }) }),
+      updateTable: () => ({ set: (payload: any) => ({ where: (...w: any[]) => ({ execute: async () => { seen.payload = payload } }) }) }),
+    }
+    const pub = { chain: { id: 42220 }, getTransactionCount: vi.fn(async () => 0) }
+    const wallet = { getAddresses: vi.fn(async () => [BACKEND]), chain: { id: 42220 } }
+    const sendNativeTxAndWait = vi.fn(async () => '0x' + 'fb'.repeat(32))
+    const deps: any = {
+      db: () => db,
+      backend: {
+        getPublicClient: () => pub,
+        getWalletClient: () => wallet,
+        sendTxAndWait: vi.fn(),
+        sendNativeTxAndWait,
+        getBackendWalletLower: () => BACKEND.toLowerCase(),
+      },
+    }
+    const done = await retryPendingCampaignForwards(deps, 'lensenia')
+    expect(done).toBe(1)
+    expect(sendNativeTxAndWait).toHaveBeenCalledTimes(1)
+    expect(sendNativeTxAndWait.mock.calls[0][2]).toMatchObject({ to: CAMPAIGN_WALLET, value: 2n * 10n ** 18n })
+    expect(seen.payload.metadata.forwardPending).toBe(false)
+  })
+})

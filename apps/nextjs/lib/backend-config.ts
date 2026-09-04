@@ -119,3 +119,21 @@ export async function sendTxAndWait(
   }
   return hash
 }
+
+/**
+ * Envío de CELO nativo (donaciones de campaña en CELO, REQ/223): usa
+ * sendTransaction (to + value) en vez de writeContract, y espera el receipt.
+ */
+export async function sendNativeTxAndWait(
+  walletClient: any,
+  publicClient: any,
+  args: { to: Address; value: bigint; chain?: any; nonce?: number },
+): Promise<`0x${string}`> {
+  const { to, value, chain, nonce } = args
+  const hash: `0x${string}` = await walletClient.sendTransaction({ to, value, chain, nonce })
+  const { receipt } = await fetchTxWithReceipt(hash)
+  if (receipt.status !== 'success') {
+    throw new Error(`Transaction reverted on-chain: ${hash}`)
+  }
+  return hash
+}

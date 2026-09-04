@@ -14,6 +14,7 @@ import {
   getWalletClient,
   getBackendWalletLower,
   sendTxAndWait,
+  sendNativeTxAndWait,
   fetchTxWithReceipt,
   SLEARN_RATE,
 } from '@/lib/backend-config'
@@ -27,6 +28,7 @@ export const gdclusterApp = createGdclusterApp({
     getWalletClient,
     getBackendWalletLower,
     sendTxAndWait,
+    sendNativeTxAndWait,
     fetchTxWithReceipt,
     SLEARN_RATE,
   },

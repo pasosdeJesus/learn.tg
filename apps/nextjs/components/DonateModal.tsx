@@ -85,7 +85,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const campaignCfg = isCampaign && effectiveTarget?.type === 'campaign-donation'
     ? getCampaignConfig(effectiveTarget.slug)
     : undefined
-  const payKeys = campaignCfg ? getCampaignDonationTokenKeys(campaignCfg, IS_PRODUCTION) : []
+  const payKeys = (campaignCfg ? getCampaignDonationTokenKeys(campaignCfg, IS_PRODUCTION) : [])
+    // CELO nativo: el pago del modal es ERC-20; la recepción de CELO funciona
+    // vía el backend (verify por valor) pero la UI nativa queda pendiente.
+    .filter((k) => k !== 'celo')
   const activePayKey = campaignCfg && payKeys.includes(payTokenKey) ? payTokenKey : (payKeys[0] ?? 'usdt')
   const activeToken = campaignCfg ? getCampaignDonationToken(campaignCfg, activePayKey, IS_PRODUCTION) : undefined
   const usdtAddress = campaignCfg ? (activeToken?.address as Address | undefined) : envUsdtAddress

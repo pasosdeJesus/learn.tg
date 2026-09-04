@@ -25,6 +25,8 @@ export interface GdclusterBackendDeps {
   getWalletClient: () => any
   getBackendWalletLower: () => string
   sendTxAndWait: (walletClient: any, publicClient: any, args: any) => Promise<`0x${string}`>
+  /** Envío de CELO nativo (sendTransaction con value) — donaciones de campaña en CELO (REQ/223) */
+  sendNativeTxAndWait?: (walletClient: any, publicClient: any, args: any) => Promise<`0x${string}`>
   fetchTxWithReceipt: (hash: `0x${string}`, timeoutMs?: number) => Promise<{ receipt: any; tx: any }>
   SLEARN_RATE: number
 }
