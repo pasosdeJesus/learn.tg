@@ -107,6 +107,27 @@ async function main() {
   if (r.status === 404) ok('Unknown campaign balance → 404')
   else fail(`Unknown campaign balance → ${r.status}`)
 
+  // ── 0b. Movements (breve y completo) ──
+  console.log('\n── 0b. GET /api/donations/lensenia/movements (brief + full) ──')
+  const brief = await (await fetch(`${SITE}/api/donations/lensenia/movements?limit=8`)).json()
+  if (Array.isArray(brief.rows) && brief.rows.length <= 8 && brief.rows.length > 0) ok(`movements brief: ${brief.rows.length} rows (<=8)`)
+  else fail(`movements brief: ${JSON.stringify(brief).slice(0, 160)}`)
+  const full = await (await fetch(`${SITE}/api/donations/lensenia/movements?limit=300`)).json()
+  if (Array.isArray(full.rows) && full.rows.length >= brief.rows.length) ok(`movements full: ${full.rows.length} rows (>= brief ${brief.rows.length})`)
+  else fail(`movements full: ${JSON.stringify(full).slice(0, 160)}`)
+  const mRow = full.rows[0]
+  if (mRow && typeof mRow.direction === 'string' && mRow.hash) ok(`movements row: ${mRow.ts?.slice(0, 10)} ${mRow.direction} ${mRow.token || mRow.kind} (${mRow.hash.slice(0, 10)}…)`)
+  else fail('movements: first row malformed')
+
+  const mBrief = await fetch(`${SITE}/en/donations/lensenia`)
+  const mBriefHtml = await mBrief.text()
+  if (mBrief.status === 200 && mBriefHtml.includes('Recent movements of the campaign wallet')) ok('donation page shows recent movements section')
+  else fail('donation page does not show recent movements')
+  const mFullPage = await fetch(`${SITE}/en/donations/lensenia/movements`)
+  const mFullHtml = await mFullPage.text()
+  if (mFullPage.status === 200 && mFullHtml.includes('Movement history')) ok('full movements page renders')
+  else fail('full movements page missing')
+
   // ── 1. Unknown campaign on verify → 404 (sin auth) ──
   console.log('\n── 1. POST /api/donations/{slug}/verify validation ──')
   r = await fetch(`${SITE}/api/donations/nope/verify`, {
