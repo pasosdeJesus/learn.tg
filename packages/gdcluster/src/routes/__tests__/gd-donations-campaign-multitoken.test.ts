@@ -14,6 +14,7 @@ const BACKEND = '0x2222222222222222222222222222222222222222'
 const CAMPAIGN_WALLET = '0x9c7218a253d1565fc5f2149ba51f0f55f0f27f07'
 const USDC_MAINNET = '0xcebA9300f2b948710d2653dD7B07f33A8B32118C'
 const XAUT0_MAINNET = '0xaf37E8B6C9ED7f6318979f56Fc287d76c30847ff'
+const GDOLL_MAINNET = '0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A'
 
 function buildDeps(tokenAddr: string, amount: bigint) {
   const pub = {
@@ -120,5 +121,29 @@ describe('verifyCampaignDonation — multi-token mainnet (REQ/223)', () => {
     expect(json.error).toContain('USD price unavailable')
     expect(sendTxAndWait).not.toHaveBeenCalled()
     expect(db.insertInto).not.toHaveBeenCalled()
+  })
+
+  it('accepts G$ (GoodDollar, 18 decimals) priced via CoinGecko', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ gooddollar: { usd: 0.00012 } }),
+    })))
+    const amount = 150n * 10n ** 18n // 150 G$
+    const { deps, db, sendTxAndWait } = buildDeps(GDOLL_MAINNET, amount)
+    const res = await verifyCampaignDonation(deps, req({
+      walletAddress: DONOR, token: 'tok', payToken: 'gdoll', usdtHash: '0x' + '44'.repeat(32),
+      receiveCashback: false, pdjSharePct: 0,
+    }), params)
+    expect(res.status).toBe(200)
+    expect(sendTxAndWait).toHaveBeenCalledTimes(1)
+    const tx = sendTxAndWait.mock.calls[0][2]
+    expect(tx.address.toLowerCase()).toBe(GDOLL_MAINNET.toLowerCase())
+    expect(tx.args).toEqual([CAMPAIGN_WALLET, amount])
+    expect(db.insertInto).toHaveBeenCalledTimes(1)
+    const json = await res.json()
+    expect(json.distribution).toEqual([{ destination: 'campaign', amount: 150, crypto: 'gdoll' }])
+    const inserted = db.insertInto.mock.results[0].value.values.mock.calls[0][0]
+    expect(inserted.crypto).toBe('gdoll')
+    expect(inserted.metadata.campaignAmountUSD).toBeCloseTo(0.018, 5)
   })
 })

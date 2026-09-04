@@ -3,6 +3,8 @@ import { celo, avalanche, base } from 'viem/chains'
 import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
 import { getCampaignConfig } from '../lib/donation-target'
 import { getTokenUsdPrice, round2 } from '../lib/token-prices'
+import { retryPendingCampaignForwards } from './gd-donations'
+import type { GdclusterDeps } from '../index'
 
 /**
  * Balance multi-cadena de una campaña (REQ/223 §4.1 — presentación):
@@ -56,12 +58,18 @@ export interface CampaignBalanceResponse {
   updatedAt: string
 }
 
-export async function campaignBalance(deps: { db: () => any }, params?: Record<string, string>): Promise<Response> {
+export async function campaignBalance(deps: GdclusterDeps, params?: Record<string, string>): Promise<Response> {
   const slug = params?.slug || ''
   const cfg = getCampaignConfig(slug)
   if (!cfg) {
     return Response.json({ error: `Unknown campaign: ${slug}` }, { status: 404 })
   }
+
+  // Reintento oportunista (fire-and-forget): el próximo visitante de la página
+  // reintenta los reenvíos pendientes sin necesidad de un scheduler (REQ/223 §6.1).
+  void retryPendingCampaignForwards(deps, slug).catch((e: any) => {
+    console.error('[CampaignBalance] retry pending forwards failed:', e?.message || e)
+  })
 
   const chains: CampaignBalanceChain[] = await Promise.all(cfg.chains.map(async (chainCfg): Promise<CampaignBalanceChain> => {
     const chainEntry: CampaignBalanceChain = {

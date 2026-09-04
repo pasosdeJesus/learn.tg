@@ -72,7 +72,7 @@ export const CAMPAIGN_CONFIGS: CampaignConfig[] = [
     wallet: '0x9c7218a253d1565fc5f2149ba51f0f55f0f27f07',
     goalUSD: 8500,
     pasosdejesusUrl: 'https://pasosdejesus.org/lensenia',
-    donationTokens: ['usdt', 'usdc', 'xaut0'],
+    donationTokens: ['usdt', 'usdc', 'xaut0', 'gdoll'],
     // Celo Sepolia (pruebas): solo USDT por ahora (MockUSDT de apps/.env.example,
     // REQ/223 — USDC/XAUt0 solo mainnet hasta tener direcciones de test verificadas)
     testnet: {

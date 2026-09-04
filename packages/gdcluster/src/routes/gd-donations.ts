@@ -378,6 +378,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
 
     let campaignHash: string | undefined
     let pdjHash: string | undefined
+    let pdjTreasury: string | undefined
     if (campaignRaw > 0n) {
       const r = await attemptWithRetry('campaign forward', {
         address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
@@ -391,6 +392,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       if (!treasury) {
         return NextResponse.json({ error: 'NEXT_PUBLIC_PDJ_TREASURY_ADDRESS not configured (needed for the pdJ share)' }, { status: 500 })
       }
+      pdjTreasury = treasury
       const r = await attemptWithRetry('pdJ forward', {
         address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
         args: [treasury as Address, pdjRaw],
@@ -418,6 +420,10 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       campaignWallet: cfg.wallet, destination: dest,
       campaignForwardHash: campaignHash, pdjForwardHash: pdjHash, mintHash,
       forwardPending,
+      // Datos crudos para reintentar el reenvío pendiente sin recalcular
+      tokenAddress: tokenAddr, tokenDecimals, tokenAmountRaw: tokenAmount.toString(),
+      campaignRaw: campaignRaw.toString(), pdjRaw: pdjRaw.toString(),
+      pdjTreasury,
       distribution,
     }
 
@@ -454,5 +460,106 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
   } catch (error) {
     console.error('Error verifying campaign donation:', (error as any)?.shortMessage || (error as any)?.message || error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+/**
+ * Reintento oportunista de reenvíos pendientes de campaña (REQ/223 §4.1).
+ * Busca en el ledger filas con `metadata.forwardPending=true` (reenvío fallido
+ * tras los intentos inline) y las reenvía con la billetera del backend,
+ * actualizando la fila con los hashes. Se invoca al leer el balance (GET) —
+ * el siguiente visitante de la página reintenta sin necesidad de un scheduler.
+ * Protección: nunca procesa dos veces la misma fila en paralelo (inflight).
+ */
+const inflightPending = new Set<number>()
+
+export async function retryPendingCampaignForwards(deps: GdclusterDeps, slug: string): Promise<number> {
+  try {
+    const cfg = getCampaignConfig(slug)
+    if (!cfg) return 0
+    const db = deps.db()
+    const rows = await db.selectFrom('transaction')
+      .select(['id', 'metadata'])
+      .where('type', '=', 'donation')
+      .where('subcategoria', '=', 'campaign')
+      .orderBy('date', 'asc')
+      .limit(25)
+      .execute()
+    const pendientes = (rows as any[]).filter((r) => {
+      const m = r.metadata as any
+      if (!m || m.campaign !== slug || m.forwardPending !== true) return false
+      const pdjRaw = BigInt(m.pdjRaw || '0')
+      return !m.campaignForwardHash || (pdjRaw > 0n && !m.pdjForwardHash)
+    })
+    if (pendientes.length === 0) return 0
+
+    const pub = deps.backend.getPublicClient()
+    const mainnet = Number((pub as any).chain?.id ?? 42220) === 42220
+    const wallet = deps.backend.getWalletClient()
+    const chain = (wallet as any).chain || pub.chain
+    let nonce = await pub.getTransactionCount({
+      address: (await wallet.getAddresses())[0],
+      blockTag: 'pending',
+    })
+    const send = async (args: any) => deps.backend.sendTxAndWait(wallet, pub, { ...args, chain, nonce: nonce++ })
+
+    let done = 0
+    for (const row of pendientes) {
+      const id = Number(row.id)
+      if (inflightPending.has(id)) continue
+      inflightPending.add(id)
+      try {
+        const m = row.metadata as any
+        if ((m.network === 'celo') !== mainnet) continue // solo filas de la red actual
+        const tokenAddr = m.tokenAddress as Address
+        const campaignRaw = BigInt(m.campaignRaw || '0')
+        const pdjRaw = BigInt(m.pdjRaw || '0')
+        const updates: Record<string, unknown> = {}
+        if (!m.campaignForwardHash && campaignRaw > 0n) {
+          try {
+            updates.campaignForwardHash = await send({
+              address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
+              args: [(m.campaignWallet || cfg.wallet) as Address, campaignRaw],
+            })
+          } catch (e: any) {
+            console.error(`[CampaignDonation:retry] campaign forward ${id} failed:`, e?.shortMessage || e?.message || e)
+          }
+        }
+        if (!m.pdjForwardHash && pdjRaw > 0n) {
+          const treasury = m.pdjTreasury || getPdJTreasuryAddress()
+          if (treasury) {
+            try {
+              updates.pdjForwardHash = await send({
+                address: tokenAddr, abi: erc20Abi, functionName: 'transfer',
+                args: [treasury as Address, pdjRaw],
+              })
+            } catch (e: any) {
+              console.error(`[CampaignDonation:retry] pdJ forward ${id} failed:`, e?.shortMessage || e?.message || e)
+            }
+          }
+        }
+        const finalCamp = updates.campaignForwardHash || m.campaignForwardHash
+        const finalPdj = updates.pdjForwardHash || m.pdjForwardHash
+        const stillPending = (!finalCamp && campaignRaw > 0n) || (!finalPdj && pdjRaw > 0n)
+        await db.updateTable('transaction').set({
+          metadata: {
+            ...m,
+            campaignForwardHash: finalCamp,
+            pdjForwardHash: finalPdj,
+            forwardPending: stillPending,
+          },
+          updated_at: new Date(),
+        } as any).where('id', '=', id).execute()
+        if (updates.campaignForwardHash || updates.pdjForwardHash) done++
+      } catch (e: any) {
+        console.error(`[CampaignDonation:retry] row ${id} failed:`, e?.shortMessage || e?.message || e)
+      } finally {
+        inflightPending.delete(id)
+      }
+    }
+    return done
+  } catch (e: any) {
+    console.error('[CampaignDonation:retry] scan failed:', e?.shortMessage || e?.message || e)
+    return 0
   }
 }
