@@ -4,6 +4,7 @@ import type { Kysely } from 'kysely'
 import { rankingClusters, rankingCountries, rankingFunds } from './routes/gd-ranking'
 import { verifyDonation, donationHistory, verifyCampaignDonation } from './routes/gd-donations'
 import { campaignBalance } from './routes/campaign-balance'
+import { campaignTransparency } from './routes/gd-campaign-transparency'
 import { createCluster, joinCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster'
 import { clusterStatus, clusterCandidates, listInvitations, acceptInvitation, rejectInvitation } from './routes/gd-invitations'
 import { adminListClusters, adminGetCluster, adminCreateCluster, adminUpdateCluster, adminDisbandCluster, adminAddMember, adminRemoveMember } from './routes/gd-admin-clusters'
@@ -82,6 +83,9 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
     },
     'donations/[slug]/balance': {
       GET: (req, params) => campaignBalance(deps, params),
+    },
+    'donations/[slug]/transparency': {
+      GET: (req, params) => campaignTransparency(deps, params),
     },
     'cluster': {
       POST: (req) => createCluster(deps, req as NextRequest),
