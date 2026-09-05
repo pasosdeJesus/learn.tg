@@ -49,6 +49,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const isCampaign = effectiveTarget?.type === 'campaign-donation'
   const [receiveCashback, setReceiveCashback] = useState(true)
   const [pdjSharePct, setPdjSharePct] = useState(0)
+  const [comment, setComment] = useState('')
   const [payTokenKey, setPayTokenKey] = useState('usdt')
   const [payPrice, setPayPrice] = useState<number | null>(1)
   const tCopy = effectiveTarget
@@ -155,6 +156,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         payload.payToken = activePayKey
         payload.receiveCashback = receiveCashback
         payload.pdjSharePct = pdjSharePct
+        if (comment.trim()) payload.comment = comment.trim()
       }
       const { data } = await axios.post(endpoint, payload)
       return data
@@ -178,6 +180,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     setResultCashback(0)
     setReceiveCashback(true)
     setPdjSharePct(0)
+    setComment('')
     resetPayment()
   }, [resetPayment])
 
@@ -270,6 +273,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       campaignCashbackLabel: 'Receive 10% back as SLEARN cashback',
       campaignToPdJLabel: 'Also donate a percentage to pdJ',
       campaignCustomPct: 'Custom %',
+      commentLabel: 'Comment (optional)',
+      commentPlaceholder: 'e.g. provenance of the funds (cash collected)',
       payWith: 'Pay with',
       balanceOfToken: 'Your {{0}} balance',
       amountLabelToken: 'Amount ({{0}})',
@@ -306,6 +311,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       campaignCashbackLabel: 'Recibir 10% de vuelta como cashback en SLEARN',
       campaignToPdJLabel: 'Donar además un porcentaje a pdJ',
       campaignCustomPct: '% personalizado',
+      commentLabel: 'Comentario (opcional)',
+      commentPlaceholder: 'p. ej. procedencia de los fondos (efectivo recibido)',
       payWith: 'Pagar con',
       balanceOfToken: 'Tu saldo de {{0}}',
       amountLabelToken: 'Monto ({{0}})',
@@ -431,6 +438,14 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         {isCampaign && (
           <div className="mt-4 space-y-3 border border-gray-200 rounded-lg p-3 text-sm">
             <div className="font-medium">{t('campaignOptionsTitle')}</div>
+            <div>
+              <label htmlFor="donate-comment" className="block text-xs mb-1 text-gray-600">{t('commentLabel')}</label>
+              <input id="donate-comment" type="text" maxLength={200}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder={t('commentPlaceholder')}
+                className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring focus:border-gray-400" />
+            </div>
             <label className="flex items-start gap-2 cursor-pointer">
               <input type="checkbox" checked={receiveCashback} onChange={(e) => setReceiveCashback(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-blue-600" />

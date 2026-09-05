@@ -37,6 +37,7 @@ export interface CampaignTransparencyResponse {
     pdjSharePct?: number
     receiveCashback?: boolean
     forwardOK: boolean
+    comment?: string
     campaignForwardHash?: string
     pdjForwardHash?: string
   }>
@@ -91,6 +92,7 @@ export async function campaignTransparency(deps: GdclusterDeps, params?: Record<
       usd: typeof m.campaignAmountUSD === 'number' ? m.campaignAmountUSD : undefined,
       pdjSharePct: m.pdjSharePct,
       receiveCashback: m.receiveCashback,
+      comment: typeof m.comment === 'string' ? m.comment : undefined,
       forwardOK,
       campaignForwardHash: m.campaignForwardHash,
       pdjForwardHash: m.pdjForwardHash,

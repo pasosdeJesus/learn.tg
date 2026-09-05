@@ -30,6 +30,7 @@ export interface CampaignTransparencyData {
     pdjSharePct?: number
     receiveCashback?: boolean
     forwardOK: boolean
+    comment?: string
     campaignForwardHash?: string
     pdjForwardHash?: string
   }>
@@ -54,6 +55,7 @@ export default function CampaignTransparency({ slug = 'lensenia', lang = 'en' }:
       recent: 'Latest donations',
       forwardOK: 'Forwarded',
       forwardPending: 'Pending forward',
+      comment: 'Comment',
       noDonations: 'No donations yet',
       loadFailed: 'Could not load the campaign transparency. Try again later.',
       retry: 'Retry',
@@ -68,6 +70,7 @@ export default function CampaignTransparency({ slug = 'lensenia', lang = 'en' }:
       recent: 'Últimas donaciones',
       forwardOK: 'Reenviado',
       forwardPending: 'Pendiente de reenvío',
+      comment: 'Comentario',
       noDonations: 'Aún no hay donaciones',
       loadFailed: 'No se pudo cargar la transparencia de la campaña. Intenta más tarde.',
       retry: 'Reintentar',
@@ -149,6 +152,7 @@ export default function CampaignTransparency({ slug = 'lensenia', lang = 'en' }:
                     <th className="py-1 pr-2 text-right">pdJ %</th>
                     <th className="py-1 pr-2">Cashback</th>
                     <th className="py-1 pr-2">Forward</th>
+                    <th className="py-1 pr-2">{t('comment')}</th>
                     <th className="py-1">Tx</th>
                   </tr>
                 </thead>
@@ -165,6 +169,9 @@ export default function CampaignTransparency({ slug = 'lensenia', lang = 'en' }:
                         {d.forwardOK
                           ? <span className="text-green-600">{t('forwardOK')}</span>
                           : <span className="text-amber-600">{t('forwardPending')}</span>}
+                      </td>
+                      <td className="py-1 pr-2 max-w-[16rem]">
+                        {d.comment ? <span className="text-gray-500 italic">{d.comment}</span> : '—'}
                       </td>
                       <td className="py-1">
                         {d.donorHash ? (

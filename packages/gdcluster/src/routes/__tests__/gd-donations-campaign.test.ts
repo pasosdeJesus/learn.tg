@@ -164,3 +164,36 @@ describe('verifyCampaignDonation — auto-forward retries (REQ/223)', () => {
     expect(inserted.metadata.forwardPending).toBe(true)
   })
 })
+
+describe('verifyCampaignDonation — donor comment (REQ/223)', () => {
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_ADDRESS = BACKEND
+    process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = TREASURY
+    process.env.NEXT_PUBLIC_USDT_ADDRESS = USDT_TOKEN
+    process.env.NEXT_PUBLIC_SLEARN_ADDRESS = SLEARN_TOKEN
+  })
+
+  it('stores a sanitized provenance comment in metadata and descripcion', async () => {
+    const { deps, db } = buildDeps()
+    const res = await verifyCampaignDonation(deps, req({
+      walletAddress: DONOR, token: 'tok', usdtHash: '0x' + '55'.repeat(32),
+      receiveCashback: false, pdjSharePct: 0,
+      comment: '  Colecta\nen efectivo  de la iglesia  ',
+    }), params)
+    expect(res.status).toBe(200)
+    const inserted = db.insertInto.mock.results[0].value.values.mock.calls[0][0]
+    expect(inserted.metadata.comment).toBe('Colecta en efectivo de la iglesia')
+    expect(inserted.descripcion).toContain('comment: Colecta en efectivo de la iglesia')
+  })
+
+  it('keeps metadata.comment undefined when no comment is sent', async () => {
+    const { deps, db } = buildDeps()
+    const res = await verifyCampaignDonation(deps, req({
+      walletAddress: DONOR, token: 'tok', usdtHash: '0x' + '66'.repeat(32),
+      receiveCashback: false, pdjSharePct: 0,
+    }), params)
+    expect(res.status).toBe(200)
+    const inserted = db.insertInto.mock.results[0].value.values.mock.calls[0][0]
+    expect(inserted.metadata.comment).toBeUndefined()
+  })
+})

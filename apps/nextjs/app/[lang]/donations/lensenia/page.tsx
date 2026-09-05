@@ -29,8 +29,7 @@ export default function Page({ params }: PageProps) {
         'Claim free G$ every day with the GoodDollar wallet (guide 3 of the Web3 & UBI course explains how) and send it to the campaign.',
       guideLink: 'Guide: claiming GoodDollar and giving to the well',
       otherWays: 'Other ways to donate',
-      otherWaysText:
-        'Bank transfers, Binance and Giveth: see the project page below. Off-chain XAUT (gold) donations are also described there — contact the team through pasosdejesus.org to arrange delivery instructions.',
+      otherWaysText: 'Bank transfers, Binance, Giveth and off-chain XAUT are handled on the project page at pasosdejesus.org.',
       otherWaysLink: 'pasosdejesus.org/lensenia',
       success: 'Donation completed',
     },
@@ -46,7 +45,7 @@ export default function Page({ params }: PageProps) {
       guideLink: 'Guía: reclamar GoodDollar y darlo al pozo',
       otherWays: 'Otras formas de donar',
       otherWaysText:
-        'Transferencias bancarias, Binance y Giveth: ver la página del proyecto abajo. Las donaciones de XAUT (oro) off-chain también se describen allí — contacta al equipo vía pasosdejesus.org para las instrucciones de entrega.',
+        'Transferencias bancarias, Binance, Giveth y XAUT off-chain se gestionan en la página del proyecto en pasosdejesus.org.',
       otherWaysLink: 'pasosdejesus.org/lensenia',
       success: 'Donación completada',
     },

@@ -249,7 +249,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     }
 
     const body = await req.json()
-    const { walletAddress, token, payToken, usdtHash, receiveCashback, pdjSharePct } = body
+    const { walletAddress, token, payToken, usdtHash, receiveCashback, pdjSharePct, comment } = body
 
     if (!walletAddress || !token) {
       return NextResponse.json({ error: 'Missing auth fields' }, { status: 400 })
@@ -263,6 +263,9 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       return NextResponse.json({ error: 'pdjSharePct must be between 0 and 100' }, { status: 400 })
     }
     const optsCashback = receiveCashback !== false
+    // Comentario opcional del donante (p. ej. procedencia de los fondos,
+    // donación en efectivo recibida) — solo texto, máx 200 chars, sin saltos.
+    const donorComment = typeof comment === 'string' ? comment.replace(/\s+/g, ' ').trim().slice(0, 200) : undefined
 
     const db = deps.db()
     const auth = await deps.authenticateUser(db, walletAddress, token)
@@ -447,6 +450,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       campaignAmountUSD: split.campaignUSD, pdjAmountUSD: split.pdjUSD,
       receiveCashback: split.receiveCashback,
       cashbackSlearn: split.cashbackSlearn > 0 ? split.cashbackSlearn : undefined,
+      comment: donorComment,
       campaignWallet: cfg.wallet, destination: dest,
       campaignForwardHash: campaignHash, pdjForwardHash: pdjHash, mintHash,
       forwardPending,
@@ -462,7 +466,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       type: 'donation', amount: round2(tokenUnits), balance_impact: -round2(tokenUnits),
       date: new Date(), hash: usdtHash as string, categoria: 'donation',
       subcategoria: 'campaign',
-      descripcion: `donated: ${round2(tokenUnits).toFixed(2)} ${payCfg.symbol}\n${breakdownText}`,
+      descripcion: `donated: ${round2(tokenUnits).toFixed(2)} ${payCfg.symbol}\n${breakdownText}${donorComment ? `\ncomment: ${donorComment}` : ''}`,
       metadata,
       created_at: new Date(), updated_at: new Date(),
     } as any).execute()
