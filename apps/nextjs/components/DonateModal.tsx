@@ -6,6 +6,7 @@ import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { type Address, formatUnits } from 'viem'
 import axios from 'axios'
+import { getCsrfToken } from 'next-auth/react'
 import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@learn-tg/rewards/lib/donate-utils'
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
@@ -52,6 +53,9 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const [comment, setComment] = useState('')
   const [payTokenKey, setPayTokenKey] = useState('usdt')
   const [payPrice, setPayPrice] = useState<number | null>(1)
+  const [nativeGasCost, setNativeGasCost] = useState<bigint>(0n)
+  const [sendingNative, setSendingNative] = useState(false)
+  const [nativeError, setNativeError] = useState<string | null>(null)
   const tCopy = effectiveTarget
     ? getTargetCopy(lang || 'en', effectiveTarget, isCampaign ? { receiveCashback, pdjSharePct } : {})
     : null
@@ -86,13 +90,16 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const campaignCfg = isCampaign && effectiveTarget?.type === 'campaign-donation'
     ? getCampaignConfig(effectiveTarget.slug)
     : undefined
-  const payKeys = (campaignCfg ? getCampaignDonationTokenKeys(campaignCfg, IS_PRODUCTION) : [])
-    // CELO nativo: el pago del modal es ERC-20; la recepción de CELO funciona
-    // vía el backend (verify por valor) pero la UI nativa queda pendiente.
-    .filter((k) => k !== 'celo')
+  const payKeys = campaignCfg ? getCampaignDonationTokenKeys(campaignCfg, IS_PRODUCTION) : []
   const activePayKey = campaignCfg && payKeys.includes(payTokenKey) ? payTokenKey : (payKeys[0] ?? 'usdt')
   const activeToken = campaignCfg ? getCampaignDonationToken(campaignCfg, activePayKey, IS_PRODUCTION) : undefined
   const usdtAddress = campaignCfg ? (activeToken?.address as Address | undefined) : envUsdtAddress
+
+  // CELO nativo: donable máximo = saldo − gas estimado del sendTransaction
+  const isNativePay = !!(campaignCfg && activeToken?.native)
+  const nativeValue = isNativePay ? parseUserAmountSafe(amount, 18) : 0n
+  const maxNative = isNativePay && celoBalance > nativeGasCost ? celoBalance - nativeGasCost : 0n
+  const maxNativeStr = maxNative > 0n ? formatUnits(maxNative, 18) : '0'
 
   const usdtNum = safeParseFloat(amount)
   const slearnNum = safeParseFloat(slearnAmount)
@@ -112,6 +119,27 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       .catch(() => { if (!cancelled) setPayPrice(null) })
     return () => { cancelled = true }
   }, [campaignCfg, activeToken, activePayKey])
+
+  // Gas estimado para el envío de CELO nativo (campaña, token CELO)
+  useEffect(() => {
+    if (!isNativePay || !dataLoaded || !publicClient || !address || !recipientAddress) {
+      setNativeGasCost(0n)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const gasPrice = await publicClient.getGasPrice()
+        const gas = await publicClient.estimateGas({
+          account: address, to: recipientAddress as Address, value: 0n,
+        }).catch(() => 21000n)
+        if (!cancelled) setNativeGasCost(gas * gasPrice)
+      } catch {
+        if (!cancelled) setNativeGasCost(0n)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [isNativePay, dataLoaded, publicClient, address, recipientAddress])
 
   const { gasState, estimating, diag } = useGasEstimation({
     amount, slearnAmount, usdtDecimals,
@@ -181,6 +209,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     setReceiveCashback(true)
     setPdjSharePct(0)
     setComment('')
+    setSendingNative(false)
+    setNativeError(null)
     resetPayment()
   }, [resetPayment])
 
@@ -197,38 +227,44 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   }, [reset, onClose])
 
   const loadData = useCallback(async () => {
-    if (!isOpen || !address || !publicClient || !usdtAddress || !recipientAddress) return
+    if (!isOpen || !address || !publicClient || !recipientAddress) return
     setDataLoaded(false)
     // forno falla intermitentemente (igual que eth_estimateGas): reintentar una
-    // vez y cargar saldos parciales (allSettled) — un fallo de getBalance no
-    // debe tumbar la carga ni provocar un falso "no-gas" (celo=0 sin cargar).
+    // vez y cargar saldos parciales (allSettled). Para CELO nativo no hay
+    // contrato ERC-20 (usdtAddress vacío): solo se lee el balance nativo.
     const attemptLoad = async () => {
-      const promises: Promise<any>[] = [
-        publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'decimals' }).catch(() => BigInt(usdtDecimals)),
-        publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>,
-        publicClient.getBalance({ address }),
-      ]
+      const jobs: Promise<any>[] = []
+      if (usdtAddress) {
+        jobs.push(
+          publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'decimals' }).catch(() => BigInt(usdtDecimals)),
+          publicClient.readContract({ address: usdtAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>,
+        )
+      }
+      jobs.push(publicClient.getBalance({ address }))
       if (slearnAddress) {
-        promises.push(
+        jobs.push(
           publicClient.readContract({ address: slearnAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address] }) as Promise<bigint>,
         )
       }
-      const results = await Promise.allSettled(promises)
+      const results = await Promise.allSettled(jobs)
       const val = (i: number) => results[i]?.status === 'fulfilled' ? (results[i] as PromiseFulfilledResult<any>).value : null
-      const decimals = val(0)
-      const usdtBal = val(1)
-      const celoBal = val(2)
-      const slearnBal = slearnAddress ? val(3) : null
-      if (decimals != null) setUsdtDecimals(Number(decimals))
-      if (usdtBal != null) setUsdtBalance(usdtBal)
+      let i = 0
+      if (usdtAddress) {
+        const decimals = val(i++)
+        const usdtBal = val(i++)
+        if (decimals != null) setUsdtDecimals(Number(decimals))
+        if (usdtBal != null) setUsdtBalance(usdtBal)
+      }
+      const celoBal = val(i++)
+      const slearnBal = slearnAddress ? val(i) : null
       if (celoBal != null) setCeloBalance(celoBal)
       if (slearnBal != null) setSlearnBalance(slearnBal)
       // dataLoaded solo cuando el saldo CELO se leyó: la estimación de gas
       // requiere un saldo real (celoBalance=0 por fallo RPC → falso no-gas).
       if (celoBal != null) setDataLoaded(true)
-      results.forEach((r, i) => {
+      results.forEach((r, idx) => {
         if (r.status === 'rejected') {
-          console.error(`[DonateModal] balance read #${i} failed:`, (r as PromiseRejectedResult).reason?.message || r.reason)
+          console.error(`[DonateModal] balance read #${idx} failed:`, (r as PromiseRejectedResult).reason?.message || r.reason)
         }
       })
     }
@@ -275,6 +311,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       campaignCustomPct: 'Custom %',
       commentLabel: 'Comment (optional)',
       commentPlaceholder: 'e.g. provenance of the funds (cash collected)',
+      donatingNative: 'Sending CELO…',
+      donatableMax: 'Donatable (max, minus gas): {{0}} CELO',
       payWith: 'Pay with',
       balanceOfToken: 'Your {{0}} balance',
       amountLabelToken: 'Amount ({{0}})',
@@ -313,6 +351,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       campaignCustomPct: '% personalizado',
       commentLabel: 'Comentario (opcional)',
       commentPlaceholder: 'p. ej. procedencia de los fondos (efectivo recibido)',
+      donatingNative: 'Enviando CELO…',
+      donatableMax: 'Donable (máx., menos gas): {{0}} CELO',
       payWith: 'Pagar con',
       balanceOfToken: 'Tu saldo de {{0}}',
       amountLabelToken: 'Monto ({{0}})',
@@ -330,14 +370,59 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const slearnBalFmt = formatDisplay(slearnBalance, SLEARN_DECIMALS)
   const celoBalFmt = formatDisplay(celoBalance, 18)
   // Sin CELO (menos de 0.01): el modal muestra la guía de inmediato
-  const noCelo = celoBalance < 10_000_000_000_000_000n
+  const noCelo = celoBalance < 10_000_000_000_000_000n && !isNativePay
   const hasAnyAmount = usdtNum > 0 || slearnNum > 0
-  const isSubmitting = paymentState === 'approving' || paymentState === 'paying' || paymentState === 'confirming'
-  const donateDisabled = isSubmitting || !hasAnyAmount ||
+  const isSubmitting = sendingNative || paymentState === 'approving' || paymentState === 'paying' || paymentState === 'confirming'
+  const ercOverBalance = !isNativePay && (
     parseUserAmountSafe(amount, usdtDecimals) > usdtBalance ||
-    parseUserAmountSafe(slearnAmount, SLEARN_DECIMALS) > slearnBalance ||
+    parseUserAmountSafe(slearnAmount, SLEARN_DECIMALS) > slearnBalance
+  )
+  const displayError = paymentError || nativeError
+  const donateDisabled = isSubmitting || !hasAnyAmount || ercOverBalance ||
     (isCampaign && payPrice == null && usdtNum > 0) ||
-    (hasAnyAmount && gasState === 'no-gas')
+    (hasAnyAmount && gasState === 'no-gas' && !isNativePay) ||
+    (isNativePay && (nativeValue <= 0n || nativeValue > maxNative || nativeGasCost === 0n))
+
+  // Donación en CELO nativo: envía value al backend y llama al verify (el
+  // backend valida tx.value y reenvía por sendTransaction).
+  const handleNativeDonate = async () => {
+    if (!address || !walletClient || !recipientAddress) { setNativeError(t('connectSign')); return }
+    if (nativeValue <= 0n || nativeValue > maxNative || nativeGasCost === 0n) {
+      setNativeError('Amount exceeds the donatable CELO (balance minus gas)')
+      return
+    }
+    setSendingNative(true)
+    setNativeError(null)
+    try {
+      const csrf = await getCsrfToken()
+      const txHash = await walletClient.sendTransaction({ to: recipientAddress, value: nativeValue })
+      const endpoint = getTargetEndpoint(effectiveTarget!)
+      const payload: Record<string, unknown> = {
+        walletAddress: address, token: csrf,
+        donationAmountUSD: usdtNum,
+        slearnDonationAmount: 0,
+        usdtHash: txHash,
+      }
+      if (effectiveTarget?.type === 'campaign-donation') {
+        payload.campaign = effectiveTarget.slug
+        payload.payToken = 'celo'
+        payload.receiveCashback = receiveCashback
+        payload.pdjSharePct = pdjSharePct
+        if (comment.trim()) payload.comment = comment.trim()
+      }
+      const { data } = await axios.post(endpoint, payload)
+      setResultTxHash(txHash)
+      if (data?.increment && data.increment > 0) setResultCashback(data.increment)
+      if (data?.distribution) setResultDistribution(getDistributionFromResponse(data, lang || 'en'))
+      setShowResult(true)
+    } catch (e: any) {
+      console.error('[DonateModal] native CELO donation failed:', e?.shortMessage || e?.message || e)
+      setNativeError(e?.shortMessage || e?.message || String(e))
+    } finally {
+      setSendingNative(false)
+    }
+  }
+  const handleDonateClick = () => { if (isNativePay) void handleNativeDonate(); else executePayment() }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -385,16 +470,23 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         {(!address || !walletClient) && (
           <div className="text-sm text-red-600 mb-4">{t('connectSign')}</div>
         )}
-        {(!recipientAddress || !usdtAddress) && (
+        {(!recipientAddress || (!isNativePay && !usdtAddress)) && (
           <div className="text-sm text-red-600 mb-4">{t('missingContract')}</div>
         )}
 
         <div className="space-y-2 text-sm">
-          <div>{isCampaign && activeToken ? t('balanceOfToken', activeToken.symbol) : t('yourBalance')}: <span className="font-mono">{usdtBalFmt}</span></div>
+          {isNativePay ? (
+            <>
+              <div>{t('balanceOfToken', 'CELO')}: <span className="font-mono">{celoBalFmt}</span></div>
+              <div className="text-xs text-gray-500">{t('donatableMax', maxNativeStr)}</div>
+            </>
+          ) : (
+            <div>{isCampaign && activeToken ? t('balanceOfToken', activeToken.symbol) : t('yourBalance')}: <span className="font-mono">{usdtBalFmt}</span></div>
+          )}
           {!isCampaign && slearnAddress && (
             <div>{t('yourSlearnBalance')}: <span className="font-mono">{slearnBalFmt}</span></div>
           )}
-          <div>{t('yourCelo')}: <span className="font-mono">{celoBalFmt}</span></div>
+          {!isNativePay && <div>{t('yourCelo')}: <span className="font-mono">{celoBalFmt}</span></div>}
           {hasAnyAmount && (
             <>
               <div className={gasState === 'ok' ? 'text-green-600' : gasState === 'no-gas' ? 'text-red-600' : gasState === 'warn' ? 'text-yellow-600' : 'text-gray-500'}>
@@ -485,7 +577,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
             className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-gray-400"
             value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={t('enterAmount')} />
           <div className="flex justify-end mt-1 space-x-2 text-xs">
-            <button onClick={() => setAmount(Number(formatUnits(usdtBalance, usdtDecimals)).toString())} className="text-blue-600 hover:underline">{t('max')}</button>
+            <button onClick={() => setAmount(isNativePay ? maxNativeStr : Number(formatUnits(usdtBalance, usdtDecimals)).toString())} className="text-blue-600 hover:underline">{t('max')}</button>
             <button onClick={() => setAmount('')} className="text-gray-500 hover:underline">{t('clear')}</button>
           </div>
         </div>
@@ -505,18 +597,18 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
 
         <div className="flex gap-3 mt-6">
           <button onClick={closeAll} className="flex-1 border rounded px-4 py-2 text-sm hover:bg-gray-50">{t('cancel')}</button>
-          <button onClick={executePayment} disabled={donateDisabled}
+          <button onClick={handleDonateClick} disabled={donateDisabled}
             className={`flex-1 rounded px-4 py-2 text-sm font-medium text-white ${donateDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
-            {isSubmitting ? t('processing') : t('donate')}
+            {isSubmitting ? (isNativePay ? t('donatingNative') : t('processing')) : t('donate')}
           </button>
         </div>
 
-        {paymentError && (
+        {displayError && (
           <div className="mt-3 text-sm">
             <div className="bg-red-50 border border-red-300 rounded p-3">
-              <p className="font-semibold text-red-700 mb-1">{lang === 'es' ? 'Error' : 'Error'}</p>
-              <pre className="whitespace-pre-wrap text-red-600 text-xs max-h-32 overflow-y-auto">{paymentError}</pre>
-              <button onClick={() => navigator.clipboard.writeText(paymentError)}
+              <p className="font-semibold text-red-700 mb-1">Error</p>
+              <pre className="whitespace-pre-wrap text-red-600 text-xs max-h-32 overflow-y-auto">{displayError}</pre>
+              <button onClick={() => navigator.clipboard.writeText(displayError)}
                 className="mt-1 text-xs text-red-500 underline hover:text-red-700">
                 {lang === 'es' ? 'Copiar error' : 'Copy error'}
               </button>
