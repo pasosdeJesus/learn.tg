@@ -28,6 +28,7 @@ import {
 } from '@learn-tg/gdcluster/lib/donation-target'
 import { getTokenUsdPrice } from '@learn-tg/gdcluster/lib/token-prices'
 import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
+import { celo, celoSepolia } from 'viem/chains'
 
 const SLEARN_DECIMALS = 2
 const SLEARN_RATE = 22 // 1 USDT = 22 SLEARN
@@ -395,7 +396,28 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     setNativeError(null)
     try {
       const csrf = await getCsrfToken()
-      const txHash = await walletClient.sendTransaction({ to: recipientAddress, value: nativeValue })
+      // Rabby (y algunas wallets) fallan con "no support chain found" si la red
+      // no está activa: asegurar la cadena antes de enviar (switch/add chain).
+      const w = walletClient as any
+      const targetChain = IS_PRODUCTION ? celo : celoSepolia
+      try {
+        const current = await w.getChainId?.()
+        if (Number(current) !== targetChain.id) {
+          try { await w.switchChain?.({ id: targetChain.id }) } catch {
+            try { await w.addChain?.({ chain: targetChain }) } catch { /* provider may still accept the tx */ }
+          }
+        }
+      } catch { /* wallet may not implement chain methods — continue */ }
+      // Timeout para no quedarse colgado en "Sending…" si la wallet no confirma
+      const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> =>
+        Promise.race([
+          p,
+          new Promise<T>((_, rej) => setTimeout(() => rej(new Error('The wallet did not confirm the transaction (timeout)')), ms)),
+        ])
+      const txHash = await withTimeout<string>(
+        walletClient.sendTransaction({ to: recipientAddress, value: nativeValue }),
+        90000,
+      )
       const endpoint = getTargetEndpoint(effectiveTarget!)
       const payload: Record<string, unknown> = {
         walletAddress: address, token: csrf,
@@ -417,7 +439,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       setShowResult(true)
     } catch (e: any) {
       console.error('[DonateModal] native CELO donation failed:', e?.shortMessage || e?.message || e)
-      setNativeError(e?.shortMessage || e?.message || String(e))
+      const raw = e?.shortMessage || e?.message || String(e)
+      setNativeError(/no support chain/i.test(raw)
+        ? `${raw} — add the ${IS_PRODUCTION ? 'Celo (42220)' : 'Celo Sepolia (11142220)'} network in your wallet and retry.`
+        : raw)
     } finally {
       setSendingNative(false)
     }
