@@ -32,6 +32,7 @@ import { celo, celoSepolia } from 'viem/chains'
 
 const SLEARN_DECIMALS = 2
 const SLEARN_RATE = 22 // 1 USDT = 22 SLEARN
+const NATIVE_GAS_MARGIN = 10n ** 16n // 0.01 CELO de margen sobre el gas estimado
 
 export interface DonateModalProps {
   courseId?: number | null
@@ -99,7 +100,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   // CELO nativo: donable máximo = saldo − gas estimado del sendTransaction
   const isNativePay = !!(campaignCfg && activeToken?.native)
   const nativeValue = isNativePay ? parseUserAmountSafe(amount, 18) : 0n
-  const maxNative = isNativePay && celoBalance > nativeGasCost ? celoBalance - nativeGasCost : 0n
+  const maxNative = isNativePay && celoBalance > nativeGasCost + NATIVE_GAS_MARGIN ? celoBalance - nativeGasCost - NATIVE_GAS_MARGIN : 0n
   const maxNativeStr = maxNative > 0n ? formatUnits(maxNative, 18) : '0'
 
   const usdtNum = safeParseFloat(amount)
@@ -395,6 +396,19 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     setSendingNative(true)
     setNativeError(null)
     try {
+      // Re-estimar el gas justo antes de enviar y descontar el margen: el
+      // proveedor rechaza si el coste total (gas + value) supera el saldo.
+      let reserve = nativeGasCost
+      try {
+        const gp = await publicClient?.getGasPrice()
+        const g = await publicClient?.estimateGas({ account: address, to: recipientAddress as Address, value: 1n }).catch(() => 21000n)
+        if (gp && g) reserve = g * gp
+      } catch { /* keep previous reserve */ }
+      const safeMax = celoBalance > reserve + NATIVE_GAS_MARGIN ? celoBalance - reserve - NATIVE_GAS_MARGIN : 0n
+      if (nativeValue <= 0n || nativeValue > safeMax) {
+        setNativeError('Amount exceeds the donatable CELO (balance minus gas and margin)')
+        return
+      }
       const csrf = await getCsrfToken()
       // Rabby (y algunas wallets) fallan con "no support chain found" si la red
       // no está activa: asegurar la cadena antes de enviar (switch/add chain).

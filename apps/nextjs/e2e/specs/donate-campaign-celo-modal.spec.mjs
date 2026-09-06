@@ -84,6 +84,8 @@ async function main() {
 
   const browser = await launchBrowser()
   const page = await browser.newPage()
+  page.on('pageerror', (e) => console.log(`  [PAGEERR] ${e.message}`))
+  page.on('console', (m) => { if (m.type() === 'error') console.log(`  [CONSOLE-ERR] ${m.text().slice(0, 300)}`) })
   await setupE2EAuth(page, account.address, creds.pk, CHAIN_ID, base)
 
   // Real RPC bridge (replaces the mock's fake sendTransaction/balances).
@@ -189,17 +191,33 @@ async function main() {
   })
   await new Promise(r => setTimeout(r, 800))
 
-  // Fill amount (0.2 CELO) using the React-compatible input setter
-  await page.evaluate((val) => {
+  // Max: fill with donatable max (balance minus gas)
+  await page.evaluate(() => {
+    const b = [...document.querySelectorAll('button')].find(x => ['Max', 'Todo'].includes((x.textContent || '').trim()))
+    if (b) b.click()
+  })
+  await new Promise(r => setTimeout(r, 1200))
+  const amountStr = await page.evaluate(() => {
     const el = document.getElementById('donate-amount')
-    if (!el) return
-    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
-    setter.call(el, val)
-    el.dispatchEvent(new Event('input', { bubbles: true }))
-  }, formatEther(DONATE_CELO))
-  await new Promise(r => setTimeout(r, 1500))
+    return el ? el.value : ''
+  })
+  const amountNum = Number(amountStr)
+  if (!(amountNum > 0)) { fail(`Max did not fill the amount (value: "${amountStr}")`); process.exit(1) }
+  ok(`Max filled: ${amountStr} CELO`)
+  const amountRaw = BigInt(Math.round(amountNum * 1e18))
 
-  // Click Donate (modal button)
+  // Wait until Donate is enabled (price/gas ready)
+  let ready = false
+  for (let i = 0; i < 20; i++) {
+    await new Promise(r => setTimeout(r, 1000))
+    ready = await page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find(x => x.textContent?.trim() === 'Donate')
+      return !!b && !b.disabled
+    })
+    if (ready) break
+  }
+  if (!ready) { fail('Donate button stayed disabled'); process.exit(1) }
+
   const donated = await page.evaluate(() => {
     const b = [...document.querySelectorAll('button')].find(x => x.textContent?.trim() === 'Donate')
     if (!b || b.disabled) return false
@@ -207,32 +225,57 @@ async function main() {
   })
   if (!donated) { fail('Donate button not clickable'); process.exit(1) }
 
+  // The button label must switch to "Sending CELO…"
+  let sawSending = false
+  for (let i = 0; i < 15; i++) {
+    await new Promise(r => setTimeout(r, 250))
+    const lbl = await page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find(x => /Sending CELO|Enviando CELO/.test(x.textContent || ''))
+      return b ? b.textContent.trim() : ''
+    })
+    if (lbl) { sawSending = true; break }
+  }
+  if (sawSending) ok('Button switched to "Sending CELO…"')
+  else fail('Button never showed "Sending CELO…"')
+
   // Wait for the success dialog
   let success = false
   let txt = ''
-  for (let i = 0; i < 40; i++) {
-    await new Promise(r => setTimeout(r, 2000))
+  let modalGoneAt = ''
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 1500))
     txt = await page.evaluate(() => document.body?.textContent || '')
     if (/Donation completed/i.test(txt)) { success = true; break }
-    if (/Error/i.test(txt) && i > 10) break
+    if (!/Donation options|Donatable \(max|Sending CELO|Enviando CELO/.test(txt)) { modalGoneAt = txt; break }
+    if (/Error|Unauthorized|Internal server/i.test(txt) && i > 15) { modalGoneAt = txt; break }
   }
-  if (!success) { fail(`Success dialog not shown (last text… ${txt.slice(-300).replace(/\s+/g, ' ')})`); process.exit(1) }
+  if (!success) {
+    fail(`Success dialog not shown`)
+    console.log(`  modal gone at: ${modalGoneAt ? modalGoneAt.slice(-400).replace(/\s+/g, ' ') : '(still open)'}`)
+    console.log(`  last text: ${txt.slice(-300).replace(/\s+/g, ' ')}`)
+    process.exit(1)
+  }
   ok('Success dialog shown')
 
-  // Distribution should mention campaign + CELO
+  // Distribution + transaction link
   if (/campaign/i.test(txt) && /CELO/i.test(txt)) ok('Distribution shows campaign + CELO')
   else fail('Distribution text missing campaign/CELO')
+  const hasTxLink = await page.evaluate(() =>
+    !!document.querySelector('a[href*="blockscout.com/tx/"]') &&
+    /View transaction|Ver transacción/i.test(document.body?.textContent || ''))
+  if (hasTxLink) ok('Success dialog shows transaction link')
+  else fail('Missing transaction link in the success dialog')
 
-  // Campaign wallet AFTER: increased ≈ DONATE_CELO
+  // Campaign wallet AFTER: increased ≈ max amount
   let after = 0n
   for (let i = 0; i < 10; i++) {
     after = await publicClient.getBalance({ address: CAMPAIGN_WALLET })
-    if (after - before >= DONATE_CELO * 99n / 100n) break
+    if (after - before >= amountRaw * 99n / 100n) break
     await new Promise(r => setTimeout(r, 3000))
   }
   const delta = after - before
-  if (delta >= DONATE_CELO * 99n / 100n) ok(`Campaign wallet +${formatEther(delta)} CELO (≈ 0.2 donated)`)
-  else fail(`Campaign wallet +${formatEther(delta)} CELO, expected ≈ ${formatEther(DONATE_CELO)}`)
+  if (delta >= amountRaw * 99n / 100n) ok(`Campaign wallet +${formatEther(delta)} CELO (≈ max)`)
+  else fail(`Campaign wallet +${formatEther(delta)} CELO, expected ≈ ${formatEther(amountRaw)}`)
 
   console.log(`\nDone (${((performance.now() - t0) / 1000).toFixed(1)}s)`)
   await browser.close()
