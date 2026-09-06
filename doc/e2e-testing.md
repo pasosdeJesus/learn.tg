@@ -193,6 +193,7 @@ for an example.
 | `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
 | `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), distribución, balance on-chain de la billetera campaña y filas en user-transactions (sin `donation_reward` con cashback OFF) |
 | `donate-campaign-celo-real.spec.mjs` | **Real donation in native CELO (REQ/223):** `sendTransaction` (value) al backend → `verify` con `payToken='celo'` (verify por `tx.value`) → auto-forward nativo 100% y 90/10, balance CELO on-chain y filas `crypto=celo` |
+| `donate-campaign-celo-modal.spec.mjs` | **Donation modal in native CELO (REQ/223, UI real):** RPC bridge real (eth_sendTransaction) sobre el mock de SIWE; selector muestra CELO, hint "Donable (máx., menos gas)", dona CELO y verifica el incremento on-chain de la billetera campaña |
 
 ### Current Status (2026-08-24)
 
