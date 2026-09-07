@@ -10,7 +10,9 @@
  *      Round A: 100% campaign | Round B: 90% campaign / 10% pdJ
  *   5. Response: distribution in CELO + campaignForwardHash
  *   6. Campaign wallet CELO balance AFTER: increased by the campaign share
- *   7. /api/user-transactions: donation row crypto=celo, no donation_reward
+ *   7. /api/user-transactions: donation row crypto=celo; deltas vs baseline
+ *      (dev ledger acumulativo: las rondas cashback ON de otros specs dejan
+ *      donation_reward rows previas — se comparan filas NUEVAS)
  *
  * Execution:
  *   node e2e/specs/donate-campaign-celo-real.spec.mjs
@@ -177,6 +179,18 @@ async function main() {
   if (!auth) { console.log(`\n${passed} passed, ${failed} failed`); process.exit(1) }
   ok('SIWE sign-in OK')
   const headers = { 'Content-Type': 'application/json', ...(auth.cookies ? { Cookie: auth.cookies } : {}) }
+
+  // ── Baseline del ledger (acumulativo entre corridas y specs) ──
+  const ledgerBaseline = { celo: [], reward: [] }
+  try {
+    const prof = await (await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`)).json()
+    if (prof?.id) {
+      const txs = (await (await fetch(`${SITE}/api/user-transactions/${prof.id}`)).json()).transactions || []
+      ledgerBaseline.celo = txs.filter((t) => t.type === 'donation' && (t.descripcion || '').includes('CELO') && (t.descripcion || '').includes('campaign:'))
+      ledgerBaseline.reward = txs.filter((t) => t.type === 'donation_reward' &&
+        ((t.subcategoria || '') === 'campaign' || (t.descripcion || '').includes('campaign')))
+    }
+  } catch { /* sin baseline: los chequeos finales usan mínimo absoluto */ }
   const verifyEndpoint = `${SITE}/api/donations/lensenia/verify`
 
   async function donateRound(value, opts, label) {
@@ -223,23 +237,25 @@ async function main() {
   if (delta === expected) ok(`campaign wallet +${formatEther(delta)} CELO (= 100% A + 90% B)`)
   else fail(`campaign wallet +${formatEther(delta)} CELO, expected +${formatEther(expected)}`)
 
-  // Ledger rows
-  console.log('\n── /api/user-transactions ──')
+  // Ledger rows (deltas vs baseline)
+  console.log('\n── /api/user-transactions (deltas vs baseline) ──')
   const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`)
   const userProfile = await userIdRes.json()
   if (!userProfile?.id) { fail('Could not get userId') }
   else {
     ok(`userId: ${userProfile.id}`)
-    const txsRes = await fetch(`${SITE}/api/user-transactions/${userProfile.id}`)
-    const txsData = await txsRes.json()
-    const txs = txsData.transactions || []
-    const celoRows = txs.filter((t) => (t.descripcion || '').includes('CELO') && (t.descripcion || '').includes('campaign:'))
-    if (celoRows.length >= 2) ok(`CELO donation row(s): ${celoRows.length}`)
-    else fail(`Expected ≥2 CELO campaign rows, got ${celoRows.length}`)
+    const txs = (await (await fetch(`${SITE}/api/user-transactions/${userProfile.id}`)).json()).transactions || []
+    const celoRows = txs.filter((t) => t.type === 'donation' && (t.descripcion || '').includes('CELO') && (t.descripcion || '').includes('campaign:'))
     const rewardRows = txs.filter((t) => t.type === 'donation_reward' &&
       ((t.subcategoria || '') === 'campaign' || (t.descripcion || '').includes('campaign')))
-    if (rewardRows.length === 0) ok('no campaign donation_reward rows (cashback OFF)')
-    else fail(`unexpected campaign donation_reward rows: ${rewardRows.length}`)
+    const baseCeloIds = new Set(ledgerBaseline.celo.map(t => t.id).filter(Boolean))
+    const baseRewardIds = new Set(ledgerBaseline.reward.map(t => t.id).filter(Boolean))
+    const newCelo = celoRows.filter(t => !baseCeloIds.has(t.id))
+    const newReward = rewardRows.filter(t => !baseRewardIds.has(t.id))
+    if (newCelo.length >= 2) ok(`new CELO campaign donation rows: ${newCelo.length} (≥2 rondas)`)
+    else fail(`Expected ≥2 new CELO campaign rows, got ${newCelo.length}`)
+    if (newReward.length === 0) ok('no NEW campaign donation_reward rows (cashback OFF en estas rondas)')
+    else fail(`unexpected NEW campaign donation_reward rows: ${newReward.length}`)
   }
 
   console.log(`\n${passed} passed, ${failed} failed`)
