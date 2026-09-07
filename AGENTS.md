@@ -45,7 +45,8 @@ Jesus is God incarnated, the Truth and the Logos.
 15. **[resources/en/web3-and-ubi/guide*.md]**: User-facing course content — profile score breakdown, scholarship rules, UBI claiming, stable-sl integration.
 16. **[apps/nextjs/node_modules/@pasosdejesus/m/src/debug/README.md]**: DebugConsole — floating debug panel for MiniPay/embedded browsers. Use `logger.info/error(tag)` instead of `console.log`. Appears in bottom-right corner when `NEXT_PUBLIC_M_DEBUGGER_CONSOLE=1`.
 17. **[doc/environments.md]**: Environments, wallets, and local run modes — production (`https://learn.tg`, one wallet per role) vs development (`https://learn.tg:9001`, single wallet), the local `.env` test wallet, frontend-only proxy mode vs full Rails+Next.js stack, and where contract addresses come from.
-18. Read the structure and key files of this project
+18. **[doc/api-security.md]**: API route security rules (public vs authenticated vs admin-only) and the route audit (`apps/nextjs/bin/audit-api-auth.mjs`) — run it after touching any `app/api` route.
+19. Read the structure and key files of this project
 
 ### 5. Confirm Your understanding of the documentation and the project
 

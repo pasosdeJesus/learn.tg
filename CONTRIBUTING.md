@@ -74,6 +74,11 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
 - **Tests**: Try to include tests for new functionality
 - **Commits**: Use [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`
 - **Type checking**: Code at `apps/nextjs` must pass `make type` without errors
+- **API route security**: Every route under `apps/nextjs/app/api` that touches
+  the DB or files must authenticate (`authenticateUser`/`authenticateAdmin`)
+  or be declared public with a reason. Before opening a PR that touches API
+  routes run `cd apps/nextjs && node bin/audit-api-auth.mjs` (must end with
+  `0 failed`). Rules in [doc/api-security.md](doc/api-security.md).
 
 ## 🔗 Smart Contracts
 

@@ -35,3 +35,7 @@ jobs:
           echo "::warning::Running public-only test suite. API tests are excluded as they require the private repository, which is handled by the GitLab CI."
           pnpm test -- --exclude **/api/**
         working-directory: ./apps/nextjs
+
+      - name: Run API route security audit (static, no server/DB needed)
+        run: node bin/audit-api-auth.mjs
+        working-directory: ./apps/nextjs

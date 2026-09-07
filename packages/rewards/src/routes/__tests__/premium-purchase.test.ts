@@ -102,7 +102,7 @@ describe('premiumPurchase (motor rewards)', () => {
       .mockResolvedValueOnce(null) // replay check: no existing tx
       .mockResolvedValueOnce(null) // alreadyOwned: no enrollment
       .mockResolvedValueOnce({ pais_id: 170 }) // user country
-      .mockResolvedValueOnce({ hdi: 0.467 }) // m_hdi → $2 price
+      .mockResolvedValueOnce({ hdi: 0.467 }) // m_hdi → $0.70 price
     mockExecute.mockResolvedValue([])
   })
 
@@ -175,7 +175,7 @@ describe('premiumPurchase (motor rewards)', () => {
   it('returns 400 when the payment is below the country price', async () => {
     decodeFunctionData.mockReturnValue({
       functionName: 'transfer',
-      args: [BACKEND_WALLET, 1000000n], // 1.0 USDT < $2
+      args: [BACKEND_WALLET, 500000n], // 0.5 USDT < $0.70
     })
     const res = await premiumPurchase(buildDeps(), createRequest({
       walletAddress: WALLET, token: TOKEN, courseId: 1, usdtHash: USDT_HASH,
@@ -265,7 +265,7 @@ describe('premiumPurchase (motor rewards)', () => {
       .mockResolvedValueOnce(null) // replay slearnHash
       .mockResolvedValueOnce(null) // alreadyOwned
       .mockResolvedValueOnce({ pais_id: 170 }) // user country
-      .mockResolvedValueOnce({ hdi: 0.467 }) // m_hdi → $2 price
+      .mockResolvedValueOnce({ hdi: 0.467 }) // m_hdi → $0.70 price
     deps.backend.fetchTxWithReceipt.mockImplementation((hash: string) => Promise.resolve(
       hash === USDT_HASH
         ? { receipt: { status: 'success', to: USDT_ADDRESS, blockNumber: 100n }, tx: { from: WALLET, input: '0xa9059cbb' } }

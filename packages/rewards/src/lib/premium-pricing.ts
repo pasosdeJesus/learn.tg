@@ -5,10 +5,10 @@ export const DEFAULT_SLEARN_RATE = 22
 export const SLEARN_DISCOUNT = 0.1 // 10% discount for paying in SLEARN
 
 // Linear price formula p = A * hdi + B, calibrated from two points:
-//   Sierra Leone: hdi = 0.467 → price = 2 USDT
-//   Colombia:     hdi = 0.788 → price = 5 USDT
-const PRICE_A = (5 - 2) / (0.788 - 0.467)
-const PRICE_B = 2 - PRICE_A * 0.467
+//   Sierra Leone: hdi = 0.467 → price = 0.7 USDT
+//   Colombia:     hdi = 0.788 → price = 3 USDT
+const PRICE_A = (3 - 0.7) / (0.788 - 0.467)
+const PRICE_B = 0.7 - PRICE_A * 0.467
 
 /**
  * USDT price from a country's HDI using the two-point linear calibration.
