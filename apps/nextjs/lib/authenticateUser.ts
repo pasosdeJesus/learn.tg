@@ -24,6 +24,11 @@ function dbg(...args: any[]) {
  * signed in with the same wallet) would get 401s. As a fallback, when the
  * token is missing or mismatched we accept a valid NextAuth session cookie for
  * the same wallet (the session JWT survives token rotation).
+ *
+ * R-#227 Fase 1 (session-first): la cookie de sesión se valida PRIMERO; el
+ * token de `billetera_usuario` queda como camino legacy (lo usa Rails y
+ * clientes no-browser). Con `AUTH_SESSION_ONLY=1` solo se acepta la sesión
+ * (para medir dependencias del token antes de retirarlo en Fase 2).
  */
 export async function authenticateUser(
   db: Kysely<DB>,
@@ -33,9 +38,22 @@ export async function authenticateUser(
   const now = new Date().toISOString()
   const tag = `[auth:${now.slice(11, 19)}]`
 
+  // 1) Sesión primero (cookie HttpOnly firmada con NEXTAUTH_SECRET): no sufre
+  //    la rotación del token; identidad = session.sub == wallet.
+  const sessionAuth = await authenticateBySession(db, walletAddress, tag)
+  if (sessionAuth) {
+    dbg(`${tag} AUTH OK via session cookie (session-first) — userId: ${sessionAuth.usuario.id}`)
+    return sessionAuth
+  }
+  if (process.env.AUTH_SESSION_ONLY === '1') {
+    dbg(`${tag} AUTH_SESSION_ONLY=1: sin sesión válida → 401 (token legacy deshabilitado)`)
+    return null
+  }
+
+  // 2) Legacy: wallet + token contra billetera_usuario (Rails y no-browser).
   if (!walletAddress || !token) {
-    dbg(`${tag} Missing auth params — wallet: ${!!walletAddress}, token: ${!!token}, tokenLen: ${token?.length || 0}`)
-    return authenticateBySession(db, walletAddress, tag)
+    dbg(`${tag} Missing auth params (y sin sesión) — wallet: ${!!walletAddress}, token: ${!!token}`)
+    return null
   }
 
   const billetera = await db
@@ -50,11 +68,10 @@ export async function authenticateUser(
   }
 
   if (billetera.token !== token) {
-    dbg(`${tag} TOKEN MISMATCH for wallet ${walletAddress.toLowerCase().slice(0, 10)}...`)
+    dbg(`${tag} TOKEN MISMATCH for wallet ${walletAddress.toLowerCase().slice(0, 10)}... (sin sesión válida previa)`)
     dbg(`${tag}   DB token: ${(billetera.token || '').slice(0, 12)}... (len=${billetera.token?.length})`)
     dbg(`${tag}   Req token: ${token.slice(0, 12)}... (len=${token.length})`)
-    dbg(`${tag}   Match first 8: ${billetera.token?.slice(0, 8) === token.slice(0, 8)}`)
-    return authenticateBySession(db, walletAddress, tag)
+    return null
   }
 
   const usuario = await db
@@ -68,7 +85,7 @@ export async function authenticateUser(
     return null
   }
 
-  dbg(`${tag} AUTH OK — userId: ${usuario.id}, wallet: ${walletAddress.toLowerCase().slice(0, 10)}...`)
+  dbg(`${tag} AUTH OK (legacy token) — userId: ${usuario.id}, wallet: ${walletAddress.toLowerCase().slice(0, 10)}...`)
   return { usuario: usuario as any, billetera }
 }
 
