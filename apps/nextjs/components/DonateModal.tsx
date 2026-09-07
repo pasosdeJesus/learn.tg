@@ -96,6 +96,11 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const activePayKey = campaignCfg && payKeys.includes(payTokenKey) ? payTokenKey : (payKeys[0] ?? 'usdt')
   const activeToken = campaignCfg ? getCampaignDonationToken(campaignCfg, activePayKey, IS_PRODUCTION) : undefined
   const usdtAddress = campaignCfg ? (activeToken?.address as Address | undefined) : envUsdtAddress
+  // El cashback SLEARN sale de la misma donación y se respalda con USDT de la
+  // plataforma (SLEARN.mintAndReserve), por lo que solo está disponible cuando
+  // se dona en USDT (el token reserva del contrato SLEARN).
+  const cashbackAvailable = !!(campaignCfg && activePayKey === 'usdt')
+  const effectiveCashback = receiveCashback && cashbackAvailable
 
   // CELO nativo: donable máximo = saldo − gas estimado del sendTransaction
   const isNativePay = !!(campaignCfg && activeToken?.native)
@@ -121,6 +126,12 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       .catch(() => { if (!cancelled) setPayPrice(null) })
     return () => { cancelled = true }
   }, [campaignCfg, activeToken, activePayKey])
+
+  // El cashback SLEARN solo aplica a donaciones en USDT (reserva del contrato
+  // SLEARN vía mintAndReserve): al cambiar a otro token se apaga.
+  useEffect(() => {
+    if (isCampaign && !cashbackAvailable && receiveCashback) setReceiveCashback(false)
+  }, [isCampaign, cashbackAvailable, receiveCashback])
 
   // Gas estimado para el envío de CELO nativo (campaña, token CELO)
   useEffect(() => {
@@ -184,7 +195,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       if (effectiveTarget?.type === 'campaign-donation') {
         payload.campaign = effectiveTarget.slug
         payload.payToken = activePayKey
-        payload.receiveCashback = receiveCashback
+        payload.receiveCashback = effectiveCashback
         payload.pdjSharePct = pdjSharePct
         if (comment.trim()) payload.comment = comment.trim()
       }
@@ -308,8 +319,9 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       estimatedReward: 'Estimated SLEARN reward',
       estimatedRewardValue: '~{{0}} SLEARN',
       campaignOptionsTitle: 'Donation options (this campaign)',
-      campaignCashbackLabel: 'Receive 10% back as SLEARN cashback',
-      campaignToPdJLabel: 'Also donate a percentage to pdJ',
+      campaignCashbackLabel: 'Receive 10% back as SLEARN cashback (taken from your donation)',
+      campaignCashbackUsdtOnly: 'Cashback is only available for USDT donations (the SLEARN reserve is USDT).',
+      campaignToPdJLabel: 'Also donate a percentage to pdJ (max 10%)',
       campaignCustomPct: 'Custom %',
       commentLabel: 'Comment (optional)',
       commentPlaceholder: 'e.g. provenance of the funds (cash collected)',
@@ -348,8 +360,9 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       estimatedReward: 'Recompensa SLEARN estimada',
       estimatedRewardValue: '~{{0}} SLEARN',
       campaignOptionsTitle: 'Opciones de la donación (esta campaña)',
-      campaignCashbackLabel: 'Recibir 10% de vuelta como cashback en SLEARN',
-      campaignToPdJLabel: 'Donar además un porcentaje a pdJ',
+      campaignCashbackLabel: 'Recibir 10% de vuelta como cashback en SLEARN (de tu donación)',
+      campaignCashbackUsdtOnly: 'El cashback solo está disponible para donaciones en USDT (la reserva de SLEARN es USDT).',
+      campaignToPdJLabel: 'Donar además un porcentaje a pdJ (máx. 10%)',
       campaignCustomPct: '% personalizado',
       commentLabel: 'Comentario (opcional)',
       commentPlaceholder: 'p. ej. procedencia de los fondos (efectivo recibido)',
@@ -442,7 +455,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       if (effectiveTarget?.type === 'campaign-donation') {
         payload.campaign = effectiveTarget.slug
         payload.payToken = 'celo'
-        payload.receiveCashback = receiveCashback
+        payload.receiveCashback = effectiveCashback
         payload.pdjSharePct = pdjSharePct
         if (comment.trim()) payload.comment = comment.trim()
       }
@@ -579,21 +592,27 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
                 className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring focus:border-gray-400" />
             </div>
             <label className="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" checked={receiveCashback} onChange={(e) => setReceiveCashback(e.target.checked)}
+              <input type="checkbox" checked={effectiveCashback} disabled={!cashbackAvailable}
+                onChange={(e) => setReceiveCashback(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-blue-600" />
-              <span>{t('campaignCashbackLabel')}</span>
+              <span className={cashbackAvailable ? '' : 'text-gray-400'}>
+                <span>{t('campaignCashbackLabel')}</span>
+                {!cashbackAvailable && (
+                  <span className="block text-xs text-gray-400 mt-0.5">{t('campaignCashbackUsdtOnly')}</span>
+                )}
+              </span>
             </label>
             <div>
               <div className="mb-1">{t('campaignToPdJLabel')}</div>
               <div className="flex flex-wrap items-center gap-2">
-                {[0, 5, 10, 20, 50].map((p) => (
+                {[0, 5, 10].map((p) => (
                   <button key={p} type="button" onClick={() => setPdjSharePct(p)}
                     className={`px-2 py-1 rounded border text-xs ${pdjSharePct === p ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-300 hover:bg-gray-50'}`}>
                     {p === 0 ? '0%' : `${p}%`}
                   </button>
                 ))}
-                <input type="number" min={0} max={100} step={1} value={pdjSharePct}
-                  onChange={(e) => setPdjSharePct(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+                <input type="number" min={0} max={10} step={1} value={pdjSharePct}
+                  onChange={(e) => setPdjSharePct(Math.min(10, Math.max(0, Number(e.target.value) || 0)))}
                   className="w-20 border rounded px-2 py-1 text-xs" placeholder={t('campaignCustomPct')} />
                 <span className="text-xs text-gray-500">%</span>
               </div>

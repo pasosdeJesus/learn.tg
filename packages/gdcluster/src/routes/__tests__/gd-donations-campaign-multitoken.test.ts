@@ -115,6 +115,7 @@ describe('verifyCampaignDonation — multi-token mainnet (REQ/223)', () => {
     const { deps, db, sendTxAndWait } = buildDeps(XAUT0_MAINNET, 1_000_000n)
     const res = await verifyCampaignDonation(deps, req({
       walletAddress: DONOR, token: 'tok', payToken: 'xaut0', usdtHash: '0x' + '33'.repeat(32),
+      receiveCashback: false, pdjSharePct: 0,
     }), params)
     expect(res.status).toBe(400)
     const json = await res.json()

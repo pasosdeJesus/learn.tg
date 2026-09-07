@@ -125,46 +125,68 @@ describe('getDistributionFromResponse', () => {
 })
 
 describe('campaignDonorSplit (REQ/223 §3.3)', () => {
-  it('defaults to 100% campaign with cashback ON', () => {
+  it('defaults to cashback ON: campaign 90% + 10% SLEARN cashback (from the donation)', () => {
     const split = campaignDonorSplit(100, {}, 22)
-    expect(split.campaignUSD).toBe(100)
+    expect(split.campaignUSD).toBe(90)
     expect(split.pdjUSD).toBe(0)
     expect(split.pdjSharePct).toBe(0)
     expect(split.receiveCashback).toBe(true)
     expect(split.cashbackSlearn).toBe(220) // 100 × 10% × 22
   })
 
-  it('moves the chosen percentage to pdJ', () => {
+  it('keeps the cashback inside the donation: campaign + pdJ + cashback = donated value', () => {
+    // Caso reportado: US$10 con 5% a pdJ y cashback ON → campaña 8.50, pdJ 0.50,
+    // cashback 22 SLEARN (≈ US$1) — el total no excede lo donado.
+    const split = campaignDonorSplit(10, { pdjSharePct: 5 }, 22)
+    expect(split.campaignUSD).toBe(8.5)
+    expect(split.pdjUSD).toBe(0.5)
+    expect(split.cashbackSlearn).toBe(22)
+    expect(split.campaignUSD + split.pdjUSD).toBe(9)
+  })
+
+  it('moves the chosen percentage to pdJ (campaña 80% con pdJ 10% + cashback 10%)', () => {
     const split = campaignDonorSplit(100, { pdjSharePct: 10 }, 22)
-    expect(split.campaignUSD).toBe(90)
+    expect(split.campaignUSD).toBe(80)
     expect(split.pdjUSD).toBe(10)
     expect(split.cashbackSlearn).toBe(220)
   })
 
-  it('does not mint cashback when the donor opts out', () => {
+  it('does not mint cashback when the donor opts out (campaña recibe 100% con pdJ 0)', () => {
     const split = campaignDonorSplit(100, { receiveCashback: false }, 22)
     expect(split.receiveCashback).toBe(false)
     expect(split.cashbackSlearn).toBe(0)
     expect(split.campaignUSD).toBe(100)
   })
 
-  it('clamps pdjSharePct to 0–100', () => {
-    expect(campaignDonorSplit(100, { pdjSharePct: 150 }).pdjSharePct).toBe(100)
+  it('clamps pdjSharePct to 0–10 (CAMPAIGN_PDJ_MAX_PCT)', () => {
+    expect(campaignDonorSplit(100, { pdjSharePct: 150 }).pdjSharePct).toBe(10)
+    expect(campaignDonorSplit(100, { pdjSharePct: 20 }).pdjSharePct).toBe(10)
     expect(campaignDonorSplit(100, { pdjSharePct: -5 }).pdjSharePct).toBe(0)
   })
 })
 
 describe('splitRawAmount', () => {
-  it('splits raw token amounts without dust', () => {
-    const { campaignRaw, pdjRaw } = splitRawAmount(1_000_000n, 10)
+  it('splits raw token amounts without dust (cashback OFF)', () => {
+    const { campaignRaw, pdjRaw, reserveRaw } = splitRawAmount(1_000_000n, 10, false)
     expect(campaignRaw).toBe(900_000n)
     expect(pdjRaw).toBe(100_000n)
+    expect(reserveRaw).toBe(0n)
   })
 
   it('keeps everything in the campaign at 0%', () => {
-    const { campaignRaw, pdjRaw } = splitRawAmount(123_456_789n, 0)
+    const { campaignRaw, pdjRaw, reserveRaw } = splitRawAmount(123_456_789n, 0, false)
     expect(campaignRaw).toBe(123_456_789n)
     expect(pdjRaw).toBe(0n)
+    expect(reserveRaw).toBe(0n)
+  })
+
+  it('reserves 10% for the SLEARN cashback when ON: campaign + pdJ + reserve = amount', () => {
+    const amount = 10_000_000n // 10 USDT
+    const { campaignRaw, pdjRaw, reserveRaw } = splitRawAmount(amount, 5, true)
+    expect(reserveRaw).toBe(1_000_000n) // 1 USDT
+    expect(pdjRaw).toBe(500_000n) // 0.5 USDT
+    expect(campaignRaw).toBe(8_500_000n) // 8.5 USDT
+    expect(campaignRaw + pdjRaw + reserveRaw).toBe(amount)
   })
 })
 
@@ -203,18 +225,20 @@ describe('campaign donations (REQ/223)', () => {
     expect(getTargetEndpoint(campaign)).toBe('/api/donations/lensenia/verify')
   })
 
-  it('describes the default split in English and Spanish', () => {
+  it('describes the default split in English and Spanish (cashback sale de la donación)', () => {
     const en = getTargetCopy('en', campaign)
     expect(en.title).toContain('Lensenia Water Well')
-    expect(en.splitInfo).toContain('100% goes to the Lensenia Water Well campaign')
+    expect(en.splitInfo).toContain('90% goes to the Lensenia Water Well campaign and 10% comes back to you as SLEARN cashback (from your donation)')
     const es = getTargetCopy('es', campaign)
-    expect(es.splitInfo).toContain('100% va a la campaña Pozo de Agua Lensenia')
+    expect(es.splitInfo).toContain('90% va a la campaña Pozo de Agua Lensenia y 10% vuelve a ti como cashback en SLEARN (de tu donación)')
   })
 
   it('describes the split with a pdJ share chosen by the donor', () => {
     const en = getTargetCopy('en', campaign, { pdjSharePct: 10 })
-    expect(en.splitInfo).toContain('90% goes to the Lensenia Water Well campaign')
-    expect(en.splitInfo).toContain('The remaining 10% goes to pdJ')
+    expect(en.splitInfo).toContain('80% goes to the Lensenia Water Well campaign, 10% to pdJ (your choice)')
+    expect(en.splitInfo).toContain('10% comes back to you as SLEARN cashback')
+    const enOff = getTargetCopy('en', campaign, { pdjSharePct: 10, receiveCashback: false })
+    expect(enOff.splitInfo).toContain('90% goes to the Lensenia Water Well campaign, 10% to pdJ (your choice)')
   })
 
   it('turns off the reward estimate when cashback is declined', () => {
@@ -222,9 +246,10 @@ describe('campaign donations (REQ/223)', () => {
     expect(getTargetCopy('en', campaign, { receiveCashback: false }).rewardPct).toBe(0)
   })
 
-  it('builds a 100/0 campaign breakdown that sums to 100', () => {
+  it('builds a campaign breakdown with the cashback inside the 100% (90/10 default)', () => {
     const rows = getDistributionBreakdown('en', campaign, 10, 0)
-    expect(rows.find((r) => r.label.includes('Campaign'))?.pct).toBe(100)
+    expect(rows.find((r) => r.label.includes('Campaign'))?.pct).toBe(90)
+    expect(rows.find((r) => r.label.includes('SLEARN cashback'))?.pct).toBe(10)
     expect(rows.reduce((acc, r) => acc + r.pct, 0)).toBe(100)
   })
 

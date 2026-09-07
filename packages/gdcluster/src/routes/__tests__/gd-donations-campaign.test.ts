@@ -103,25 +103,40 @@ describe('verifyCampaignDonation', () => {
     expect(json.distribution).toEqual([{ destination: 'campaign', amount: 100, crypto: 'usdt' }])
   })
 
-  it('mints cashback first, then forwards campaign + pdJ shares automatically', async () => {
+  it('reserves the 10% USDT and mints the cashback first, then forwards campaign + pdJ shares', async () => {
     const { deps, db, sendTxAndWait } = buildDeps()
     const res = await verifyCampaignDonation(deps, req({
       walletAddress: DONOR, token: 'tok', usdtHash: '0x' + '11'.repeat(32),
       receiveCashback: true, pdjSharePct: 10,
     }), params)
     expect(res.status).toBe(200)
-    expect(sendTxAndWait).toHaveBeenCalledTimes(3)
-    const [mint, campaign, pdj] = sendTxAndWait.mock.calls.map((c) => c[2])
+    // transfer USDT al contrato SLEARN (reserva) → mintAndReserve → campaña → pdJ
+    expect(sendTxAndWait).toHaveBeenCalledTimes(4)
+    const [reserve, mint, campaign, pdj] = sendTxAndWait.mock.calls.map((c) => c[2])
+    expect(reserve.functionName).toBe('transfer')
+    expect(reserve.args).toEqual([SLEARN_TOKEN, 10_000_000n]) // 10% de 100 USDT a la reserva
     expect(mint.address.toLowerCase()).toBe(SLEARN_TOKEN.toLowerCase())
-    expect(mint.functionName).toBe('mint')
-    expect(mint.args).toEqual([DONOR, 22000n]) // 220 SLEARN (2 decimals)
-    expect(campaign.args).toEqual([CAMPAIGN_WALLET, 90_000_000n])
+    expect(mint.functionName).toBe('mintAndReserve')
+    expect(mint.args).toEqual([DONOR, 10_000_000n])
+    // Neto del cashback: campaña 80 USDT (no 90), pdJ 10 USDT
+    expect(campaign.args).toEqual([CAMPAIGN_WALLET, 80_000_000n])
     expect(pdj.args).toEqual([TREASURY, 10_000_000n])
     // Ledger: fila donation + fila donation_reward
     expect(db.insertInto).toHaveBeenCalledTimes(2)
     const json = await res.json()
     expect(json.increment).toBe(220)
     expect(json.hashes).toBeDefined()
+  })
+
+  it('rejects the SLEARN cashback for non-USDT donations (reserve token is the platform USDT)', async () => {
+    const { deps } = buildDeps()
+    const res = await verifyCampaignDonation(deps, req({
+      walletAddress: DONOR, token: 'tok', payToken: 'usdc', usdtHash: '0x' + '77'.repeat(32),
+      receiveCashback: true, pdjSharePct: 0,
+    }), params)
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.error).toContain('only available for USDT donations')
   })
 })
 

@@ -13,6 +13,8 @@ import {
   campaignDonorSplit,
   splitRawAmount,
   getPdJTreasuryAddress,
+  CAMPAIGN_CASHBACK_PCT,
+  CAMPAIGN_PDJ_MAX_PCT,
 } from '../lib/donation-target'
 import { getTokenUsdPrice, round2 } from '../lib/token-prices'
 import type { GdclusterDeps } from '../index'
@@ -222,12 +224,15 @@ export async function donationHistory(deps: GdclusterDeps, req: NextRequest) {
  *
  * Flujo: el donante envió el token a la billetera del backend (vía DonateModal
  * / useContractPayment). Aquí se verifica el transfer on-chain y se:
- *  1. Reenvía AUTOMÁTICA e INMEDIATAMENTE la parte de la campaña
- *     ((100 − pdjSharePct)%) a la billetera destino de la campaña.
- *  2. Reenvía la parte pdJ (pdjSharePct%) a NEXT_PUBLIC_PDJ_TREASURY_ADDRESS
- *     cuando el donante la eligió.
- *  3. Si `receiveCashback` → mintea el cashback SLEARN (10% del valor) al
- *     donante (requiere MINTER_ROLE en la billetera del backend).
+ *  1. Reenvía AUTOMÁTICA e INMEDIATAMENTE la parte de la campaña (neta del
+ *     cashback: (100 − pdjSharePct − 10)%) a la billetera destino de la
+ *     campaña (con cashback OFF: (100 − pdjSharePct)%).
+ *  2. Reenvía la parte pdJ (pdjSharePct%, tope 10) a
+ *     NEXT_PUBLIC_PDJ_TREASURY_ADDRESS cuando el donante la eligió.
+ *  3. Si `receiveCashback` (solo donaciones en USDT, el token reserva del
+ *     contrato SLEARN) → el cashback sale DE LA MISMA donación: se retiene el
+ *     10% en USDT y se entrega vía `SLEARN.mintAndReserve` (el USDT va a la
+ *     reserva caliente y se mintea el SLEARN al donante; requiere MINTER_ROLE).
  *  4. Registra en `transaction` (una fila por pago + una fila `donation_reward`
  *     cuando hay cashback) con el split denormalizado en metadata.
  *
@@ -259,8 +264,10 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     }
 
     const optsPct = Number(pdjSharePct ?? 0)
-    if (Number.isNaN(optsPct) || optsPct < 0 || optsPct > 100) {
-      return NextResponse.json({ error: 'pdjSharePct must be between 0 and 100' }, { status: 400 })
+    if (Number.isNaN(optsPct) || optsPct < 0 || optsPct > CAMPAIGN_PDJ_MAX_PCT) {
+      return NextResponse.json({
+        error: `pdjSharePct must be between 0 and ${CAMPAIGN_PDJ_MAX_PCT} (the campaign keeps the rest)`,
+      }, { status: 400 })
     }
     const optsCashback = receiveCashback !== false
     // Comentario opcional del donante (p. ej. procedencia de los fondos,
@@ -288,6 +295,14 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     }
     const payCfg = getCampaignDonationToken(cfg, payKey, mainnet)
     if (!payCfg) return NextResponse.json({ error: `Campaign has no ${payKey} token configured for this network` }, { status: 500 })
+    // El cashback SLEARN sale de la misma donación y se respalda con USDT de la
+    // plataforma vía SLEARN.mintAndReserve (el token reserva del contrato
+    // SLEARN), por lo que solo aplica a donaciones pagadas en USDT.
+    if (optsCashback && payKey !== 'usdt') {
+      return NextResponse.json({
+        error: `The SLEARN cashback is only available for USDT donations (its reserve is the platform USDT); for ${payKey} donations please donate with the cashback off`,
+      }, { status: 400 })
+    }
     const isNative = payKey === 'celo' // CELO no es ERC-20: verify y reenvío por valor
     const tokenAddr = payCfg.address as Address
     const tokenDecimals = payCfg.decimals
@@ -350,9 +365,12 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     const tokenUnits = Number(tokenAmount) / 10 ** tokenDecimals
     const usdValue = tokenUnits * price
     const split = campaignDonorSplit(usdValue, { receiveCashback: optsCashback, pdjSharePct: optsPct }, deps.backend.SLEARN_RATE)
-    const { campaignRaw, pdjRaw } = splitRawAmount(tokenAmount, split.pdjSharePct)
+    // El cashback sale de la misma donación: campaña (neta) + pdJ + reserva del
+    // 10% (USDT que respalda el SLEARN vía mintAndReserve) = monto total.
+    const { campaignRaw, pdjRaw, reserveRaw } = splitRawAmount(tokenAmount, split.pdjSharePct, split.receiveCashback)
     const campaignUnits = round2(Number(campaignRaw) / 10 ** tokenDecimals)
     const pdjUnits = round2(Number(pdjRaw) / 10 ** tokenDecimals)
+    const reserveUnits = round2(Number(reserveRaw) / 10 ** tokenDecimals)
 
     const wallet = deps.backend.getWalletClient()
     const chain = (wallet as any).chain || pub.chain
@@ -374,28 +392,6 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       ? { to, value: raw }
       : { address: tokenAddr, abi: erc20Abi, functionName: 'transfer', args: [to, raw] }
 
-    // Cashback SLEARN primero (si el backend no tiene MINTER_ROLE falla antes
-    // de reenviar nada; el donante ve el error y nada queda a medias).
-    let mintHash: string | undefined
-    if (split.receiveCashback && split.cashbackSlearn > 0) {
-      const slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address | undefined
-      if (!slearnAddress) {
-        return NextResponse.json({ error: 'NEXT_PUBLIC_SLEARN_ADDRESS not configured (needed for the SLEARN cashback)' }, { status: 500 })
-      }
-      const slearnRaw = BigInt(Math.round(split.cashbackSlearn * 100))
-      try {
-        mintHash = await sendWithNonce({
-          address: slearnAddress, abi: SLEARNAbi as any, functionName: 'mint',
-          args: [walletAddress as Address, slearnRaw],
-        })
-      } catch (e: any) {
-        console.error('[CampaignDonation] SLEARN cashback mint failed:', e?.shortMessage || e?.message)
-        return NextResponse.json({
-          error: 'SLEARN cashback unavailable: the backend wallet lacks MINTER_ROLE on the SLEARN contract',
-        }, { status: 400 })
-      }
-    }
-
     // Reenvío automático e inmediato a la campaña (y a pdJ si aplica), con
     // reintento inline (2 intentos, 1.5s entre ellos). Si tras los intentos
     // un reenvío sigue fallando se registra igual la donación con el hash
@@ -413,6 +409,47 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
         }
       }
       return { error: lastError }
+    }
+
+    // Cashback SLEARN (solo USDT) ANTES de los reenvíos a la campaña/pdJ: si el
+    // backend no tiene MINTER_ROLE o falta la reserva, falla aquí y el donante
+    // ve el error sin que los reenvíos queden a medias. Sale de la misma
+    // donación: se retiene el 10% en USDT (reserveRaw), se transfiere al
+    // contrato SLEARN y se llama mintAndReserve (el contrato envía ese USDT a
+    // la reserva caliente y mintea el SLEARN al donante — como en ClusterFunds
+    // 80/10/10). mintAndReserve puede revertir por el pozo compartido (otro
+    // minter consumió el USDT entre el transfer y el mint); al reintentar se
+    // vuelve a transferir el 10% — el USDT extra solo engrosa la reserva, sin
+    // doble mint.
+    const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS || '') as Address | undefined
+    let reserveHash: string | undefined
+    let mintHash: string | undefined
+    if (split.receiveCashback && split.cashbackSlearn > 0) {
+      if (!slearnAddress) {
+        return NextResponse.json({ error: 'NEXT_PUBLIC_SLEARN_ADDRESS not configured (needed for the SLEARN cashback)' }, { status: 500 })
+      }
+      const reserveAndMint = async () => {
+        const rr = await attemptWithRetry('cashback reserve transfer', transferArgs(slearnAddress, reserveRaw))
+        const mr = await attemptWithRetry('SLEARN mintAndReserve', {
+          address: slearnAddress, abi: SLEARNAbi as any, functionName: 'mintAndReserve',
+          args: [walletAddress as Address, reserveRaw],
+        })
+        return { reserveHash: rr.hash, mintHash: mr.hash }
+      }
+      const first = await reserveAndMint()
+      reserveHash = first.reserveHash
+      mintHash = first.mintHash
+      if (!mintHash) {
+        const second = await reserveAndMint()
+        reserveHash = reserveHash || second.reserveHash
+        mintHash = mintHash || second.mintHash
+      }
+      if (!mintHash) {
+        console.error('[CampaignDonation] SLEARN cashback mintAndReserve failed')
+        return NextResponse.json({
+          error: 'SLEARN cashback unavailable: the backend wallet lacks MINTER_ROLE on the SLEARN contract or the USDT reserve transfer failed',
+        }, { status: 400 })
+      }
     }
 
     let campaignHash: string | undefined
@@ -453,10 +490,11 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       comment: donorComment,
       campaignWallet: cfg.wallet, destination: dest,
       campaignForwardHash: campaignHash, pdjForwardHash: pdjHash, mintHash,
-      forwardPending,
+      reserveForwardHash: reserveHash, forwardPending,
       // Datos crudos para reintentar el reenvío pendiente sin recalcular
       tokenAddress: tokenAddr, tokenDecimals, tokenAmountRaw: tokenAmount.toString(),
       campaignRaw: campaignRaw.toString(), pdjRaw: pdjRaw.toString(),
+      reserveRaw: reserveRaw > 0n ? reserveRaw.toString() : undefined,
       pdjTreasury,
       distribution,
     }

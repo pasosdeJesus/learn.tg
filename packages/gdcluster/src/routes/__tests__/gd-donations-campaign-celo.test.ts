@@ -102,6 +102,7 @@ describe('verifyCampaignDonation — CELO nativo (REQ/223)', () => {
     }))
     const res = await verifyCampaignDonation(deps, req({
       walletAddress: DONOR, token: 'tok', payToken: 'celo', usdtHash: '0x' + '33'.repeat(32),
+      receiveCashback: false,
     }), params)
     expect(res.status).toBe(400)
     expect((await res.json()).error).toContain('not sent to the backend wallet')

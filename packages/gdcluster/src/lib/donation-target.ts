@@ -14,11 +14,22 @@ export type PaymentTarget = CourseDonation | ClusterDonation | CountryDonation |
 
 /** Opciones por donación (REQ/223 §3.3) — solo destinos `campaign` */
 export interface CampaignDonorOptions {
-  /** SLEARN cashback (10% del valor) on/off. Default true */
+  /** SLEARN cashback (10% del valor) on/off. Default true.
+   * Sale DE LA MISMA donación (como en cluster/country 80/10/10): se retiene
+   * el 10% en USDT como reserva y se entrega vía `SLEARN.mintAndReserve`
+   * (REQ/223). La campaña recibe (100 − pdjSharePct − 10)% cuando está ON. */
   receiveCashback?: boolean
-  /** % de la donación que va a pdJ (0–100). Default 0 → 100% a la campaña */
+  /** % de la donación que va a pdJ (0–10, tope CAMPAIGN_PDJ_MAX_PCT). */
   pdjSharePct?: number
 }
+
+/** Cashback SLEARN de campañas: % del valor de la donación que vuelve al
+ * donante (respaldado con USDT de la misma donación vía mintAndReserve). */
+export const CAMPAIGN_CASHBACK_PCT = 10
+
+/** Tope del % que puede ir a pdJ en una donación a campaña (el resto se queda
+ * en la campaña; la campaña nunca recibe menos de 80% con cashback ON). */
+export const CAMPAIGN_PDJ_MAX_PCT = 10
 
 export interface CampaignToken {
   key: string
@@ -162,30 +173,45 @@ export function getPdJTreasuryAddress(): string | undefined {
 }
 
 /**
- * Reparto de una donación a campaña (REQ/223 §3.3): parte campaña
- * ((100 − pdjSharePct)%), parte pdJ (pdjSharePct%) y cashback SLEARN opcional
- * (10% del valor, en SLEARN a la tasa `slearnRate`). Devuelve valores en USD.
+ * Reparto de una donación a campaña (REQ/223 §3.3): el 100% de la donación se
+ * divide entre la campaña, pdJ y el cashback SLEARN (que SALE de la misma
+ * donación, como en los flujos cluster/country — no se suma por encima):
+ *   - cashback ON: campaña (100 − pdjSharePct − 10)%, pdJ pdjSharePct%,
+ *     cashback 10% (SLEARN respaldado en USDT, mintAndReserve).
+ *   - cashback OFF: campaña (100 − pdjSharePct)%, pdJ pdjSharePct%.
+ * pdjSharePct se limita a CAMPAIGN_PDJ_MAX_PCT (10).
+ * Devuelve valores en USD (y cashback en unidades SLEARN a `slearnRate`).
  */
 export function campaignDonorSplit(
   usdValue: number,
   options: CampaignDonorOptions = {},
   slearnRate = 22,
 ): { campaignUSD: number; pdjUSD: number; pdjSharePct: number; receiveCashback: boolean; cashbackSlearn: number } {
-  const pdjSharePct = Math.min(100, Math.max(0, Math.round(options.pdjSharePct ?? 0)))
+  const pdjSharePct = Math.min(CAMPAIGN_PDJ_MAX_PCT, Math.max(0, Math.round(options.pdjSharePct ?? 0)))
   const receiveCashback = options.receiveCashback !== false
-  const campaignUSD = Math.round(usdValue * (100 - pdjSharePct) * 100) / 10000
-  const pdjUSD = Math.round((usdValue - campaignUSD) * 100) / 100
+  const round4 = (v: number) => Math.round(v * 10000) / 10000
+  const pdjUSD = round4(usdValue * pdjSharePct / 100)
+  const cashbackUSD = receiveCashback ? round4(usdValue * CAMPAIGN_CASHBACK_PCT / 100) : 0
+  const campaignUSD = round4(usdValue - pdjUSD - cashbackUSD)
   const cashbackSlearn = receiveCashback
-    ? Math.round(usdValue * 0.10 * slearnRate * 100) / 100
+    ? Math.round(usdValue * (CAMPAIGN_CASHBACK_PCT / 100) * slearnRate * 100) / 100
     : 0
   return { campaignUSD, pdjUSD, pdjSharePct, receiveCashback, cashbackSlearn }
 }
 
-/** Reparto en unidades crudas del token (evita polvo de centavos) */
-export function splitRawAmount(amount: bigint, pdjSharePct: number): { campaignRaw: bigint; pdjRaw: bigint } {
-  const pct = Math.min(100, Math.max(0, Math.round(pdjSharePct)))
-  const campaignRaw = (amount * BigInt(100 - pct)) / 100n
-  return { campaignRaw, pdjRaw: amount - campaignRaw }
+/** Reparto en unidades crudas del token (evita polvo de centavos): parte de la
+ * campaña (neta del cashback), parte pdJ y, si hay cashback, la reserva del
+ * 10% que respalda el SLEARN (mintAndReserve). campaign+pdJ+reserve = amount. */
+export function splitRawAmount(
+  amount: bigint,
+  pdjSharePct: number,
+  receiveCashback = false,
+): { campaignRaw: bigint; pdjRaw: bigint; reserveRaw: bigint } {
+  const pct = Math.min(CAMPAIGN_PDJ_MAX_PCT, Math.max(0, Math.round(pdjSharePct)))
+  const pdjRaw = (amount * BigInt(pct)) / 100n
+  const reserveRaw = receiveCashback ? (amount * BigInt(CAMPAIGN_CASHBACK_PCT)) / 100n : 0n
+  const campaignRaw = amount - pdjRaw - reserveRaw
+  return { campaignRaw, pdjRaw, reserveRaw }
 }
 
 export function getDistributionBreakdown(
@@ -231,13 +257,13 @@ export function getDistributionBreakdown(
       const name = cfg ? (lang === 'es' ? cfg.name.es : cfg.name.en) : target.slug
       const split = campaignDonorSplit(totalUSDT, options)
       base.push(
-        { label: t(`Campaign: ${name}`, `Campaña: ${name}`), pct: 100 - split.pdjSharePct, value: fmt(split.campaignUSD), type: 'both' },
+        { label: t(`Campaign: ${name}`, `Campaña: ${name}`), pct: split.receiveCashback ? 100 - split.pdjSharePct - CAMPAIGN_CASHBACK_PCT : 100 - split.pdjSharePct, value: fmt(split.campaignUSD), type: 'both' },
       )
       if (split.pdjSharePct > 0) {
         base.push({ label: t('pdJ (your choice)', 'pdJ (tu elección)'), pct: split.pdjSharePct, value: fmt(split.pdjUSD), type: 'both' })
       }
       if (split.cashbackSlearn > 0) {
-        base.push({ label: t('SLEARN cashback (you)', 'Cashback SLEARN (tú)'), pct: 0, value: '~' + fmt(split.cashbackSlearn), type: 'slearn' })
+        base.push({ label: t('SLEARN cashback (you)', 'Cashback SLEARN (tú)'), pct: CAMPAIGN_CASHBACK_PCT, value: '~' + fmt(split.cashbackSlearn), type: 'slearn' })
       }
       break
     }
@@ -282,17 +308,23 @@ export function getTargetCopy(lang: string, target: PaymentTarget, options: Camp
       const cfg = getCampaignConfig(target.slug)
       const name = cfg ? (lang === 'es' ? cfg.name.es : cfg.name.en) : target.slug
       const receiveCashback = options.receiveCashback !== false
-      const pdjSharePct = Math.min(100, Math.max(0, Math.round(options.pdjSharePct ?? 0)))
+      const pdjSharePct = Math.min(CAMPAIGN_PDJ_MAX_PCT, Math.max(0, Math.round(options.pdjSharePct ?? 0)))
+      // El cashback sale de la misma donación (REQ/223 §3.3): la campaña recibe
+      // (100 − pdj − 10)% cuando está ON, igual que en cluster/country (80/10/10).
+      const campaignNet = receiveCashback ? 100 - pdjSharePct - CAMPAIGN_CASHBACK_PCT : 100 - pdjSharePct
+      const enTxt = pdjSharePct > 0
+        ? `${campaignNet}% goes to the ${name} campaign, ${pdjSharePct}% to pdJ (your choice), and ${CAMPAIGN_CASHBACK_PCT}% comes back to you as SLEARN cashback (from your donation).`
+        : receiveCashback
+          ? `${campaignNet}% goes to the ${name} campaign and ${CAMPAIGN_CASHBACK_PCT}% comes back to you as SLEARN cashback (from your donation).`
+          : `${campaignNet}% goes to the ${name} campaign.`
+      const esTxt = pdjSharePct > 0
+        ? `${campaignNet}% va a la campaña ${name}, ${pdjSharePct}% a pdJ (tu elección) y ${CAMPAIGN_CASHBACK_PCT}% vuelve a ti como cashback en SLEARN (de tu donación).`
+        : receiveCashback
+          ? `${campaignNet}% va a la campaña ${name} y ${CAMPAIGN_CASHBACK_PCT}% vuelve a ti como cashback en SLEARN (de tu donación).`
+          : `${campaignNet}% va a la campaña ${name}.`
       return {
         title: `${t('Donate to campaign', 'Donar a la campaña')}: ${name}`,
-        splitInfo: t(
-          pdjSharePct > 0
-            ? `${100 - pdjSharePct}% goes to the ${name} campaign${receiveCashback ? ', and you get 10% back as SLEARN cashback' : ''}. The remaining ${pdjSharePct}% goes to pdJ (your choice).`
-            : `100% goes to the ${name} campaign${receiveCashback ? '. You get 10% back as SLEARN cashback (optional)' : ''}.`,
-          pdjSharePct > 0
-            ? `${100 - pdjSharePct}% va a la campaña ${name}${receiveCashback ? ', y recibes 10% de vuelta como cashback en SLEARN' : ''}. El ${pdjSharePct}% restante va a pdJ (tu elección).`
-            : `100% va a la campaña ${name}${receiveCashback ? '. Recibes 10% de vuelta como cashback en SLEARN (opcional)' : ''}.`,
-        ),
+        splitInfo: t(enTxt, esTxt),
         rewardPct: receiveCashback ? 10 : 0,
         rewardLabel: t('Estimated SLEARN cashback', 'Cashback SLEARN estimado'),
       }
