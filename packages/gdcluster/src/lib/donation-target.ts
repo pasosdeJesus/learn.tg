@@ -1,9 +1,10 @@
 import type { Address } from 'viem'
 
-// REQ #223: destinos de donación y reparto. Los destinos cluster/country usan
-// ClusterFundsV2 (80/10/10); los destinos `campaign` (p. ej. Lensenia) NO usan
-// contrato: el backend reenvía automáticamente la parte de la campaña a la
-// billetera destino y la parte pdJ a la tesorería (ver §4.1 de REQ/223.md).
+// REQ #223 (https://github.com/pasosdeJesus/learn.tg/issues/223): destinos de
+// donación y reparto. Los destinos cluster/country usan ClusterFundsV2
+// (80/10/10); los destinos `campaign` (p. ej. Lensenia) NO usan contrato: el
+// backend reenvía automáticamente la parte de la campaña a la billetera
+// destino y la parte pdJ a la tesorería (ver §4.1 de la especificación).
 
 export interface CourseDonation { type: 'course-donation'; courseId: number }
 export interface ClusterDonation { type: 'cluster-donation'; clusterWallet: string; clusterName: string }

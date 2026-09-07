@@ -9,6 +9,12 @@ export interface AuthenticatedUser {
   billetera: any
 }
 
+// Diagnóstico gated (R-#224/R-#227): detalle solo con DEBUG_AUTH=1, nunca en
+// logs normales de producción; no imprime tokens/PII completos.
+function dbg(...args: any[]) {
+  if (process.env.DEBUG_AUTH === '1') console.log(...args)
+}
+
 /**
  * Validates wallet + token authentication.
  * Pattern used across all API routes — see app/api routes
@@ -28,7 +34,7 @@ export async function authenticateUser(
   const tag = `[auth:${now.slice(11, 19)}]`
 
   if (!walletAddress || !token) {
-    console.log(`${tag} Missing auth params — wallet: ${!!walletAddress}, token: ${!!token}, tokenLen: ${token?.length || 0}`)
+    dbg(`${tag} Missing auth params — wallet: ${!!walletAddress}, token: ${!!token}, tokenLen: ${token?.length || 0}`)
     return authenticateBySession(db, walletAddress, tag)
   }
 
@@ -39,15 +45,15 @@ export async function authenticateUser(
     .executeTakeFirst()
 
   if (!billetera) {
-    console.log(`${tag} Billetera not found for: ${walletAddress.toLowerCase().slice(0, 10)}...`)
+    dbg(`${tag} Billetera not found for: ${walletAddress.toLowerCase().slice(0, 10)}...`)
     return null
   }
 
   if (billetera.token !== token) {
-    console.log(`${tag} TOKEN MISMATCH for wallet ${walletAddress.toLowerCase().slice(0, 10)}...`)
-    console.log(`${tag}   DB token: ${(billetera.token || '').slice(0, 12)}... (len=${billetera.token?.length})`)
-    console.log(`${tag}   Req token: ${token.slice(0, 12)}... (len=${token.length})`)
-    console.log(`${tag}   Match first 8: ${billetera.token?.slice(0, 8) === token.slice(0, 8)}`)
+    dbg(`${tag} TOKEN MISMATCH for wallet ${walletAddress.toLowerCase().slice(0, 10)}...`)
+    dbg(`${tag}   DB token: ${(billetera.token || '').slice(0, 12)}... (len=${billetera.token?.length})`)
+    dbg(`${tag}   Req token: ${token.slice(0, 12)}... (len=${token.length})`)
+    dbg(`${tag}   Match first 8: ${billetera.token?.slice(0, 8) === token.slice(0, 8)}`)
     return authenticateBySession(db, walletAddress, tag)
   }
 
@@ -58,11 +64,11 @@ export async function authenticateUser(
     .executeTakeFirst()
 
   if (!usuario) {
-    console.log(`${tag} Usuario not found for id: ${billetera.usuario_id}`)
+    dbg(`${tag} Usuario not found for id: ${billetera.usuario_id}`)
     return null
   }
 
-  console.log(`${tag} AUTH OK — userId: ${usuario.id}, wallet: ${walletAddress.toLowerCase().slice(0, 10)}...`)
+  dbg(`${tag} AUTH OK — userId: ${usuario.id}, wallet: ${walletAddress.toLowerCase().slice(0, 10)}...`)
   return { usuario: usuario as any, billetera }
 }
 
@@ -82,7 +88,7 @@ async function authenticateBySession(
     const store = await cookies()
     const sessionCookie = store.getAll().find(c => c.name.includes('session-token'))
     if (!sessionCookie) {
-      console.log(`${tag} Session fallback: no session-token cookie`)
+      dbg(`${tag} Session fallback: no session-token cookie`)
       return null
     }
     const payload = await getToken({
@@ -93,11 +99,11 @@ async function authenticateBySession(
     })
     const address = payload?.sub
     if (!address) {
-      console.log(`${tag} Session fallback: token has no sub`)
+      dbg(`${tag} Session fallback: token has no sub`)
       return null
     }
     if (address.toLowerCase() !== (walletAddress || '').toLowerCase()) {
-      console.log(`${tag} Session fallback: wallet mismatch ${address.toLowerCase().slice(0, 10)}... != ${(walletAddress || '').slice(0, 10)}...`)
+      dbg(`${tag} Session fallback: wallet mismatch ${address.toLowerCase().slice(0, 10)}... != ${(walletAddress || '').slice(0, 10)}...`)
       return null
     }
     const billetera = await db
@@ -106,7 +112,7 @@ async function authenticateBySession(
       .selectAll()
       .executeTakeFirst()
     if (!billetera) {
-      console.log(`${tag} Session fallback: billetera not found`)
+      dbg(`${tag} Session fallback: billetera not found`)
       return null
     }
     const usuario = await db
@@ -115,13 +121,13 @@ async function authenticateBySession(
       .selectAll()
       .executeTakeFirst()
     if (!usuario) {
-      console.log(`${tag} Session fallback: usuario not found`)
+      dbg(`${tag} Session fallback: usuario not found`)
       return null
     }
-    console.log(`${tag} AUTH OK via session cookie — userId: ${usuario.id}`)
+    dbg(`${tag} AUTH OK via session cookie — userId: ${usuario.id}`)
     return { usuario: usuario as any, billetera }
   } catch (e: any) {
-    console.log(`${tag} Session fallback failed:`, e?.message || String(e))
+    dbg(`${tag} Session fallback failed:`, e?.message || String(e))
     return null
   }
 }
