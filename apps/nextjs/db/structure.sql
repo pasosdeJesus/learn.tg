@@ -5117,7 +5117,7 @@ CREATE TABLE public.notifications (
     content text,
     link character varying(500),
     is_read boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT '2026-08-15 14:25:59.719-05'::timestamp with time zone NOT NULL
+    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL
 );
 
 
@@ -5311,7 +5311,7 @@ CREATE TABLE public.transaction (
     updated_at timestamp without time zone DEFAULT now() NOT NULL,
     synced boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
-    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'usdc'::text, 'xaut0'::text, 'gdoll'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
     CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'donation_reward'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying, 'conversion'::character varying, 'pastor_bonus'::character varying, 'referral_reward'::character varying, 'referral_bonus'::character varying])::text[])))
 );
 

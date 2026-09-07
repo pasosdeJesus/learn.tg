@@ -1331,6 +1331,31 @@ CREATE FUNCTION public.soundexespm(entrada text) RETURNS text
 
 
 --
+-- Name: sync_church_principal(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sync_church_principal() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+      IF NEW.church_id IS NOT NULL AND NEW.church_relationship = 'pastor' THEN
+        UPDATE church SET pastor_id = NEW.id, updated_at = NOW() WHERE id = NEW.church_id;
+      ELSE
+        IF OLD.church_id IS NOT NULL THEN
+          UPDATE church SET pastor_id = NULL, updated_at = NOW()
+          WHERE id = OLD.church_id AND pastor_id = NEW.id;
+        END IF;
+        IF NEW.church_id IS NOT NULL THEN
+          UPDATE church SET pastor_id = NULL, updated_at = NOW()
+          WHERE id = NEW.church_id AND pastor_id = NEW.id;
+        END IF;
+      END IF;
+      RETURN NEW;
+    END;
+    $$;
+
+
+--
 -- Name: transaction_lowercase_wallet_fn(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1347,6 +1372,39 @@ CREATE FUNCTION public.transaction_lowercase_wallet_fn() RETURNS trigger
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: admin_solves; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.admin_solves (
+    id bigint NOT NULL,
+    type character varying(100) NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    solved_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: admin_solves_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.admin_solves_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: admin_solves_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.admin_solves_id_seq OWNED BY public.admin_solves.id;
+
 
 --
 -- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
@@ -1422,10 +1480,7 @@ CREATE TABLE public.church (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     merged_into_id integer,
-    deleted_at timestamp with time zone,
-    pastoral_position_israel_covenant character varying(3),
-    pastoral_position_israel_remnant character varying(3),
-    pastoral_position_israel_gaza character varying(3)
+    deleted_at timestamp with time zone
 );
 
 
@@ -1483,6 +1538,42 @@ ALTER SEQUENCE public.church_id_seq OWNED BY public.church.id;
 
 
 --
+-- Name: cluster_invitation; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cluster_invitation (
+    id integer NOT NULL,
+    clustergd_id integer NOT NULL,
+    invited_pastor_id integer NOT NULL,
+    invited_church_id integer NOT NULL,
+    invited_by_id integer NOT NULL,
+    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    responded_at timestamp without time zone
+);
+
+
+--
+-- Name: cluster_invitation_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.cluster_invitation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: cluster_invitation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.cluster_invitation_id_seq OWNED BY public.cluster_invitation.id;
+
+
+--
 -- Name: clustergd; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1492,7 +1583,10 @@ CREATE TABLE public.clustergd (
     code character varying(6) NOT NULL,
     country_id integer NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    pseudonym character varying(100),
+    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
+    leader_church_id integer
 );
 
 
@@ -2981,6 +3075,44 @@ CREATE TABLE public.credential_metadata (
     updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
     course_id integer
 );
+
+
+--
+-- Name: gdcontact; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.gdcontact (
+    id integer NOT NULL,
+    cluster_id integer,
+    cluster_sent_at timestamp without time zone,
+    pdj_sent_at timestamp without time zone,
+    gd_responded_at timestamp without time zone,
+    released_at timestamp without time zone,
+    release_reason character varying(50),
+    course_completed_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: gdcontact_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.gdcontact_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: gdcontact_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.gdcontact_id_seq OWNED BY public.gdcontact.id;
 
 
 --
@@ -4972,6 +5104,147 @@ ALTER SEQUENCE public.nonce_id_seq OWNED BY public.nonce.id;
 
 
 --
+-- Name: notifications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notifications (
+    id integer NOT NULL,
+    usuario_id integer,
+    type character varying(50),
+    title character varying(200),
+    content text,
+    link character varying(500),
+    is_read boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.notifications_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
+
+
+--
+-- Name: premium_course_usuario; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.premium_course_usuario (
+    id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    course_id integer NOT NULL,
+    purchased_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    usdt_amount_paid numeric(10,2),
+    slearn_amount_paid integer,
+    transaction_hash character varying(66) NOT NULL,
+    expires_at timestamp without time zone
+);
+
+
+--
+-- Name: premium_course_usuario_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.premium_course_usuario_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: premium_course_usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.premium_course_usuario_id_seq OWNED BY public.premium_course_usuario.id;
+
+
+--
+-- Name: referralcode; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.referralcode (
+    id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    code character varying(20) NOT NULL,
+    activated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    expires_at timestamp without time zone,
+    active boolean DEFAULT true
+);
+
+
+--
+-- Name: referralcode_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.referralcode_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: referralcode_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.referralcode_id_seq OWNED BY public.referralcode.id;
+
+
+--
+-- Name: referralrelationship; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.referralrelationship (
+    id integer NOT NULL,
+    referrer_id integer NOT NULL,
+    referred_id integer NOT NULL,
+    referral_code character varying(20),
+    referral_claimed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    status character varying(20) DEFAULT 'pending'::character varying
+);
+
+
+--
+-- Name: referralrelationship_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.referralrelationship_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: referralrelationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.referralrelationship_id_seq OWNED BY public.referralrelationship.id;
+
+
+--
 -- Name: religion; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5036,8 +5309,8 @@ CREATE TABLE public.transaction (
     updated_at timestamp without time zone DEFAULT now() NOT NULL,
     synced boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
-    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY (ARRAY['scholarship'::text, 'donation'::text, 'donation_reward'::text, 'pay-course'::text, 'ubi-claim'::text, 'conversion'::text])))
+    CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'usdc'::text, 'xaut0'::text, 'gdoll'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
+    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'donation_reward'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying, 'conversion'::character varying, 'pastor_bonus'::character varying, 'referral_reward'::character varying, 'referral_bonus'::character varying])::text[])))
 );
 
 
@@ -5164,14 +5437,21 @@ CREATE TABLE public.usuario (
     id_photo_verified boolean DEFAULT false,
     verified_email character varying(255),
     place_of_worship_location character varying(200),
-    proposed_date_of_interview date,
+    proposed_date_of_interview timestamp with time zone,
     conducted_date_of_interview timestamp with time zone,
     verified_church_relationship character varying(20),
     working_hours jsonb,
     pastor_name character varying(100),
     pastor_whatsapp character varying(20),
+    verified_place_of_worship_location character varying,
+    position_israel_gaza character varying(3),
+    registration character varying(50),
+    registration_photo text,
+    denomination character varying(100),
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
-    CONSTRAINT usuario_rol_check CHECK ((rol >= 1))
+    CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[])))),
+    CONSTRAINT usuario_rol_check CHECK ((rol >= 1)),
+    CONSTRAINT usuario_verified_church_relationship_check CHECK (((verified_church_relationship IS NULL) OR ((verified_church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[]))))
 );
 
 
@@ -5221,6 +5501,13 @@ CREATE VIEW public.view_user_scores AS
 
 
 --
+-- Name: admin_solves id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_solves ALTER COLUMN id SET DEFAULT nextval('public.admin_solves_id_seq'::regclass);
+
+
+--
 -- Name: billetera_usuario id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -5239,6 +5526,13 @@ ALTER TABLE ONLY public.church ALTER COLUMN id SET DEFAULT nextval('public.churc
 --
 
 ALTER TABLE ONLY public.church_clustergd ALTER COLUMN id SET DEFAULT nextval('public.church_clustergd_id_seq'::regclass);
+
+
+--
+-- Name: cluster_invitation id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation ALTER COLUMN id SET DEFAULT nextval('public.cluster_invitation_id_seq'::regclass);
 
 
 --
@@ -5484,6 +5778,13 @@ ALTER TABLE ONLY public.cor1440_gen_tipomoneda ALTER COLUMN id SET DEFAULT nextv
 --
 
 ALTER TABLE ONLY public.credential_emission ALTER COLUMN id SET DEFAULT nextval('public.credential_emission_id_seq'::regclass);
+
+
+--
+-- Name: gdcontact id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gdcontact ALTER COLUMN id SET DEFAULT nextval('public.gdcontact_id_seq'::regclass);
 
 
 --
@@ -5788,6 +6089,34 @@ ALTER TABLE ONLY public.nonce ALTER COLUMN id SET DEFAULT nextval('public.nonce_
 
 
 --
+-- Name: notifications id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
+
+
+--
+-- Name: premium_course_usuario id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario ALTER COLUMN id SET DEFAULT nextval('public.premium_course_usuario_id_seq'::regclass);
+
+
+--
+-- Name: referralcode id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralcode ALTER COLUMN id SET DEFAULT nextval('public.referralcode_id_seq'::regclass);
+
+
+--
+-- Name: referralrelationship id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship ALTER COLUMN id SET DEFAULT nextval('public.referralrelationship_id_seq'::regclass);
+
+
+--
 -- Name: religion id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -5840,6 +6169,14 @@ ALTER TABLE ONLY public.cor1440_gen_actividadareas_actividad
 
 
 --
+-- Name: admin_solves admin_solves_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_solves
+    ADD CONSTRAINT admin_solves_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: ar_internal_metadata ar_internal_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5869,6 +6206,22 @@ ALTER TABLE ONLY public.church_clustergd
 
 ALTER TABLE ONLY public.church
     ADD CONSTRAINT church_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_cluster_pastor_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_cluster_pastor_unique UNIQUE (clustergd_id, invited_pastor_id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_pkey PRIMARY KEY (id);
 
 
 --
@@ -6181,6 +6534,22 @@ ALTER TABLE ONLY public.credential_emission
 
 ALTER TABLE ONLY public.credential_metadata
     ADD CONSTRAINT credential_metadata_pkey PRIMARY KEY (token_id, chain_id);
+
+
+--
+-- Name: gdcontact gdcontact_cluster_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gdcontact
+    ADD CONSTRAINT gdcontact_cluster_id_key UNIQUE (cluster_id);
+
+
+--
+-- Name: gdcontact gdcontact_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gdcontact
+    ADD CONSTRAINT gdcontact_pkey PRIMARY KEY (id);
 
 
 --
@@ -6744,11 +7113,67 @@ ALTER TABLE ONLY public.nonce
 
 
 --
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: premium_course_usuario premium_course_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario
+    ADD CONSTRAINT premium_course_usuario_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: premium_course_usuario premium_course_usuario_usuario_id_course_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario
+    ADD CONSTRAINT premium_course_usuario_usuario_id_course_id_key UNIQUE (usuario_id, course_id);
+
+
+--
 -- Name: cor1440_gen_rangoedadac rangoedadac_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.cor1440_gen_rangoedadac
     ADD CONSTRAINT rangoedadac_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: referralcode referralcode_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralcode
+    ADD CONSTRAINT referralcode_code_key UNIQUE (code);
+
+
+--
+-- Name: referralcode referralcode_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralcode
+    ADD CONSTRAINT referralcode_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: referralrelationship referralrelationship_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship
+    ADD CONSTRAINT referralrelationship_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: referralrelationship referralrelationship_referred_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship
+    ADD CONSTRAINT referralrelationship_referred_unique UNIQUE (referred_id);
 
 
 --
@@ -6872,6 +7297,20 @@ CREATE INDEX credential_emission_usuario_idx ON public.credential_emission USING
 
 
 --
+-- Name: idx_admin_solves_pending; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_admin_solves_pending ON public.admin_solves USING btree (type, solved_at) WHERE (solved_at IS NULL);
+
+
+--
+-- Name: idx_gdcontact_cluster_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gdcontact_cluster_id ON public.gdcontact USING btree (cluster_id);
+
+
+--
 -- Name: idx_m_hdi_pais_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6883,6 +7322,20 @@ CREATE INDEX idx_m_hdi_pais_id ON public.m_hdi USING btree (pais_id);
 --
 
 CREATE INDEX idx_m_hdi_year ON public.m_hdi USING btree (year);
+
+
+--
+-- Name: idx_premium_course_usuario_course; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_premium_course_usuario_course ON public.premium_course_usuario USING btree (course_id);
+
+
+--
+-- Name: idx_premium_course_usuario_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_premium_course_usuario_usuario ON public.premium_course_usuario USING btree (usuario_id);
 
 
 --
@@ -7159,6 +7612,13 @@ CREATE INDEX msip_ubicacionpre_vereda_id_idx ON public.msip_ubicacionpre USING b
 
 
 --
+-- Name: one_principal_per_church; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX one_principal_per_church ON public.usuario USING btree (church_id) WHERE ((church_relationship)::text = 'pastor'::text);
+
+
+--
 -- Name: transaction_tipo_categoria_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7362,6 +7822,13 @@ CREATE TRIGGER tras_crear_o_actualizar_ubicacionpre BEFORE INSERT OR UPDATE OF p
 
 
 --
+-- Name: usuario trg_sync_church_principal; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_sync_church_principal AFTER INSERT OR UPDATE OF church_id, church_relationship ON public.usuario FOR EACH ROW EXECUTE FUNCTION public.sync_church_principal();
+
+
+--
 -- Name: cor1440_gen_actividad actividad_regionsjr_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7418,6 +7885,38 @@ ALTER TABLE ONLY public.church
 
 
 --
+-- Name: cluster_invitation cluster_invitation_clustergd_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_clustergd_id_fkey FOREIGN KEY (clustergd_id) REFERENCES public.clustergd(id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_invited_by_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_invited_by_id_fkey FOREIGN KEY (invited_by_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_invited_church_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_invited_church_id_fkey FOREIGN KEY (invited_church_id) REFERENCES public.church(id);
+
+
+--
+-- Name: cluster_invitation cluster_invitation_invited_pastor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_invitation
+    ADD CONSTRAINT cluster_invitation_invited_pastor_id_fkey FOREIGN KEY (invited_pastor_id) REFERENCES public.usuario(id);
+
+
+--
 -- Name: clustergd_history clustergd_history_changed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7431,6 +7930,14 @@ ALTER TABLE ONLY public.clustergd_history
 
 ALTER TABLE ONLY public.clustergd_history
     ADD CONSTRAINT clustergd_history_clustergd_id_fkey FOREIGN KEY (clustergd_id) REFERENCES public.clustergd(id);
+
+
+--
+-- Name: clustergd clustergd_leader_church_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clustergd
+    ADD CONSTRAINT clustergd_leader_church_id_fkey FOREIGN KEY (leader_church_id) REFERENCES public.church(id);
 
 
 --
@@ -8546,6 +9053,14 @@ ALTER TABLE ONLY public.msip_ubicacionpre
 
 
 --
+-- Name: gdcontact gdcontact_cluster_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gdcontact
+    ADD CONSTRAINT gdcontact_cluster_id_fkey FOREIGN KEY (cluster_id) REFERENCES public.clustergd(id);
+
+
+--
 -- Name: cor1440_gen_proyectofinanciero lf_proyectofinanciero_responsable; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8634,6 +9149,14 @@ ALTER TABLE ONLY public.msip_ubicacion
 
 
 --
+-- Name: notifications notifications_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
+
+
+--
 -- Name: msip_persona persona_id_pais_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8679,6 +9202,46 @@ ALTER TABLE ONLY public.msip_persona_trelacion
 
 ALTER TABLE ONLY public.msip_persona_trelacion
     ADD CONSTRAINT persona_trelacion_persona2_fkey FOREIGN KEY (persona2) REFERENCES public.msip_persona(id);
+
+
+--
+-- Name: premium_course_usuario premium_course_usuario_course_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario
+    ADD CONSTRAINT premium_course_usuario_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.cor1440_gen_proyectofinanciero(id);
+
+
+--
+-- Name: premium_course_usuario premium_course_usuario_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.premium_course_usuario
+    ADD CONSTRAINT premium_course_usuario_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: referralcode referralcode_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralcode
+    ADD CONSTRAINT referralcode_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: referralrelationship referralrelationship_referred_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship
+    ADD CONSTRAINT referralrelationship_referred_id_fkey FOREIGN KEY (referred_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: referralrelationship referralrelationship_referrer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referralrelationship
+    ADD CONSTRAINT referralrelationship_referrer_id_fkey FOREIGN KEY (referrer_id) REFERENCES public.usuario(id);
 
 
 --
