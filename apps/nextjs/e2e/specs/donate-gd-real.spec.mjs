@@ -262,12 +262,12 @@ async function main() {
 
   // ── 5. Verify user transactions ──
   console.log('\n── 5. /api/user-transactions ──')
-  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`)
+  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`, { headers: { ...(auth.cookies ? { Cookie: auth.cookies } : {}) } })
   const userProfile = await userIdRes.json()
   if (!userProfile?.id) { fail('Could not get userId'); console.log(JSON.stringify(userProfile).slice(0, 200)) }
   else {
     ok(`userId: ${userProfile.id}`)
-    const txsRes = await fetch(`${SITE}/api/user-transactions/${userProfile.id}`)
+    const txsRes = await fetch(`${SITE}/api/user-transactions/${userProfile.id}`, { headers: { ...(auth.cookies ? { Cookie: auth.cookies } : {}) } })
     const txsData = await txsRes.json()
     const txs = txsData.transactions || []
     const donationRows = txs.filter(t => t.descripcion?.includes('donated:'))

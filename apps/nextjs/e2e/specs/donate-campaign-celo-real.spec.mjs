@@ -183,9 +183,9 @@ async function main() {
   // ── Baseline del ledger (acumulativo entre corridas y specs) ──
   const ledgerBaseline = { celo: [], reward: [] }
   try {
-    const prof = await (await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`)).json()
+    const prof = await (await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`, { headers })).json()
     if (prof?.id) {
-      const txs = (await (await fetch(`${SITE}/api/user-transactions/${prof.id}`)).json()).transactions || []
+      const txs = (await (await fetch(`${SITE}/api/user-transactions/${prof.id}`, { headers })).json()).transactions || []
       ledgerBaseline.celo = txs.filter((t) => t.type === 'donation' && (t.descripcion || '').includes('CELO') && (t.descripcion || '').includes('campaign:'))
       ledgerBaseline.reward = txs.filter((t) => t.type === 'donation_reward' &&
         ((t.subcategoria || '') === 'campaign' || (t.descripcion || '').includes('campaign')))
@@ -239,12 +239,12 @@ async function main() {
 
   // Ledger rows (deltas vs baseline)
   console.log('\n── /api/user-transactions (deltas vs baseline) ──')
-  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`)
+  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`, { headers })
   const userProfile = await userIdRes.json()
   if (!userProfile?.id) { fail('Could not get userId') }
   else {
     ok(`userId: ${userProfile.id}`)
-    const txs = (await (await fetch(`${SITE}/api/user-transactions/${userProfile.id}`)).json()).transactions || []
+    const txs = (await (await fetch(`${SITE}/api/user-transactions/${userProfile.id}`, { headers })).json()).transactions || []
     const celoRows = txs.filter((t) => t.type === 'donation' && (t.descripcion || '').includes('CELO') && (t.descripcion || '').includes('campaign:'))
     const rewardRows = txs.filter((t) => t.type === 'donation_reward' &&
       ((t.subcategoria || '') === 'campaign' || (t.descripcion || '').includes('campaign')))

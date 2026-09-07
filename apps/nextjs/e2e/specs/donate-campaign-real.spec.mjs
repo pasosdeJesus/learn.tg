@@ -217,9 +217,9 @@ async function main() {
   // ── Baseline del ledger (el dev ledger es acumulativo entre corridas) ──
   const ledgerBaseline = { campaign: [], reward: [] }
   try {
-    const prof = await (await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`)).json()
+    const prof = await (await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`, { headers })).json()
     if (prof?.id) {
-      const txs = (await (await fetch(`${SITE}/api/user-transactions/${prof.id}`)).json()).transactions || []
+      const txs = (await (await fetch(`${SITE}/api/user-transactions/${prof.id}`, { headers })).json()).transactions || []
       ledgerBaseline.campaign = txs.filter(t => t.type === 'donation' && (t.descripcion || '').includes('campaign:'))
       ledgerBaseline.reward = txs.filter(t => t.type === 'donation_reward' && (t.subcategoria === 'campaign' || (t.descripcion || '').includes('campaign')))
     }
@@ -347,12 +347,12 @@ async function main() {
   // ── Ledger rows (user transactions): deltas contra el baseline ──
   console.log('\n── /api/user-transactions (deltas vs baseline) ──')
   const activeRounds = (ROUND_A_USDT > 0 ? 1 : 0) + (ROUND_B_USDT > 0 ? 1 : 0) + (ROUND_C_USDT > 0 ? 1 : 0)
-  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`)
+  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`, { headers })
   const userProfile = await userIdRes.json()
   if (!userProfile?.id) { fail('Could not get userId') }
   else {
     ok(`userId: ${userProfile.id}`)
-    const txs = (await (await fetch(`${SITE}/api/user-transactions/${userProfile.id}`)).json()).transactions || []
+    const txs = (await (await fetch(`${SITE}/api/user-transactions/${userProfile.id}`, { headers })).json()).transactions || []
     const campaignRows = txs.filter(t => t.type === 'donation' && (t.descripcion || '').includes('campaign:'))
     const rewardRows = txs.filter(t => t.type === 'donation_reward' && (t.subcategoria === 'campaign' || (t.descripcion || '').includes('campaign')))
     const baseCampaignIds = new Set(ledgerBaseline.campaign.map(t => t.id).filter(Boolean))
