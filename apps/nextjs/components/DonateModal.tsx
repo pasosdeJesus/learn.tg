@@ -453,7 +453,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       setShowResult(true)
     } catch (e: any) {
       console.error('[DonateModal] native CELO donation failed:', e?.shortMessage || e?.message || e)
-      const raw = e?.shortMessage || e?.message || String(e)
+      const respErr = e?.response?.data?.error || e?.response?.data?.message
+      const raw = respErr || e?.shortMessage || e?.message || String(e)
       setNativeError(/no support chain/i.test(raw)
         ? `${raw} — add the ${IS_PRODUCTION ? 'Celo (42220)' : 'Celo Sepolia (11142220)'} network in your wallet and retry.`
         : raw)

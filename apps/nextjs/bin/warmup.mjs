@@ -10,6 +10,7 @@
  *
  * Uso:
  *   bin/warmup            # SITE_URL por defecto (learn.tg:9001)
+ *   bin/warmup donations  # calienta SOLO las rutas que contienen "donations"
  *   SITE_URL=https://learn.tg bin/warmup
  */
 
@@ -82,6 +83,23 @@ const URLS = [
   '/api/admin/churches',
 ]
 
+// Calentamiento solo de donaciones/campañas (REQ/223): bin/warmup donations
+const DONATION_URLS = [
+  '/en/donations/lensenia',
+  '/es/donations/lensenia',
+  '/en/donations/lensenia/movements',
+  '/api/donations/lensenia/balance',
+  '/api/donations/lensenia/verify',
+  '/api/donations/lensenia/movements?limit=8',
+  '/api/donations/lensenia/transparency',
+  '/en/transparency',
+]
+
+// Selección: `bin/warmup` (todo), `bin/warmup donations` (solo campañas) o
+// `bin/warmup <filtro>` (rutas cuyo path contiene el filtro)
+const ARG = process.argv[2]
+const ACTIVE_URLS = !ARG ? URLS : (ARG === 'donations' ? DONATION_URLS : URLS.filter(u => u.includes(ARG)))
+
 function fetchOnce(url, timeoutMs) {
   return new Promise((resolve) => {
     const t0 = Date.now()
@@ -98,14 +116,14 @@ function fetchOnce(url, timeoutMs) {
 async function pass(label, sequential, timeoutMs) {
   const results = []
   if (sequential) {
-    for (const url of URLS) {
+    for (const url of ACTIVE_URLS) {
       const r = await fetchOnce(url, timeoutMs)
       results.push(r)
       const mark = r.err ? 'ERR' : (r.status >= 200 && r.status < 500 ? 'OK ' : '?? ')
       console.log(`  ${mark} ${String(r.status).padStart(3)} ${String(r.ms).padStart(7)}ms  ${r.url}${r.err ? '  (' + r.err + ')' : ''}`)
     }
   } else {
-    results.push(...await Promise.all(URLS.map(url => fetchOnce(url, timeoutMs))))
+    results.push(...await Promise.all(ACTIVE_URLS.map(url => fetchOnce(url, timeoutMs))))
     for (const r of results) {
       const mark = r.err ? 'ERR' : (r.status >= 200 && r.status < 500 ? 'OK ' : '?? ')
       console.log(`  ${mark} ${String(r.status).padStart(3)} ${String(r.ms).padStart(7)}ms  ${r.url}${r.err ? '  (' + r.err + ')' : ''}`)
@@ -117,7 +135,7 @@ async function pass(label, sequential, timeoutMs) {
 }
 
 async function main() {
-  console.log(`Warmup ${SITE} — ${URLS.length} rutas`)
+  console.log(`Warmup ${SITE} — ${ACTIVE_URLS.length} rutas${ARG ? ` (filtro: ${ARG})` : ''}`)
   console.log(`\n── Pasada 1 (compila, secuencial) ──`)
   await pass('compile', true, 300000)
   console.log(`\n── Pasada 2 (verifica, paralela) ──`)

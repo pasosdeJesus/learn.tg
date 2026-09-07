@@ -182,14 +182,24 @@ async function main() {
   else fail('Missing "Donatable (max, minus gas)" hint')
 
   // Uncheck cashback so the backend does not need MINTER_ROLE on dev
-  await page.evaluate(() => {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const checked = await page.evaluate(() => {
+      const labels = [...document.querySelectorAll('label')].filter(l => /SLEARN cashback/i.test(l.textContent || ''))
+      for (const l of labels) {
+        const cb = l.querySelector('input[type="checkbox"]')
+        if (cb && cb.checked) { cb.click(); return true }
+      }
+      return false
+    })
+    if (!checked) break
+    await new Promise(r => setTimeout(r, 400))
+  }
+  const stillOn = await page.evaluate(() => {
     const labels = [...document.querySelectorAll('label')].filter(l => /SLEARN cashback/i.test(l.textContent || ''))
-    for (const l of labels) {
-      const cb = l.querySelector('input[type="checkbox"]')
-      if (cb && cb.checked) cb.click()
-    }
+    return labels.some(l => { const cb = l.querySelector('input[type="checkbox"]'); return cb && cb.checked })
   })
-  await new Promise(r => setTimeout(r, 800))
+  if (stillOn) fail('Could not turn cashback OFF')
+  else ok('Cashback OFF')
 
   // Max: fill with donatable max (balance minus gas)
   await page.evaluate(() => {
@@ -242,17 +252,21 @@ async function main() {
   let success = false
   let txt = ''
   let modalGoneAt = ''
+  let errSnap = ''
   for (let i = 0; i < 60; i++) {
     await new Promise(r => setTimeout(r, 1500))
     txt = await page.evaluate(() => document.body?.textContent || '')
     if (/Donation completed/i.test(txt)) { success = true; break }
+    if (/Error|exceeds|Unauthorized|Internal server|failed|Something went wrong/i.test(txt)) errSnap = txt
     if (!/Donation options|Donatable \(max|Sending CELO|Enviando CELO/.test(txt)) { modalGoneAt = txt; break }
-    if (/Error|Unauthorized|Internal server/i.test(txt) && i > 15) { modalGoneAt = txt; break }
+    if (errSnap && i > 15) break
   }
   if (!success) {
-    fail(`Success dialog not shown`)
-    console.log(`  modal gone at: ${modalGoneAt ? modalGoneAt.slice(-400).replace(/\s+/g, ' ') : '(still open)'}`)
-    console.log(`  last text: ${txt.slice(-300).replace(/\s+/g, ' ')}`)
+    fail('Success dialog not shown')
+    const probe = errSnap || modalGoneAt || txt
+    const m = probe.match(/(Error|Something went wrong|exceeds|Unauthorized|Internal server|failed)[^]*?\./i)
+    console.log(`  error snapshot: ${(m ? m[0] : probe).slice(0, 500).replace(/\s+/g, ' ')}`)
+    console.log(`  modal gone: ${!!modalGoneAt}`)
     process.exit(1)
   }
   ok('Success dialog shown')
