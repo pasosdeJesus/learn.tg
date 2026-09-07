@@ -9,6 +9,13 @@ import { fileURLToPath } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const API_DIR = join(__dirname, '..', 'app', 'api')
 
+// Patterns that indicate a route handler requires ADMIN (verifier) auth,
+// not just any logged-in user. 'authenticateAdmin' es el patrón canónico; los
+// endpoints que exponen un campo extra solo a admin (públicos pero con dato
+// admin-only, p. ej. referral/lookup con `nombre`) también lo usan.
+const ADMIN_AUTH_PATTERNS = [
+  'authenticateAdmin',
+]
 // Patterns that indicate a route handler has authentication
 const AUTH_PATTERNS = [
   'authenticateUser',
@@ -54,7 +61,16 @@ const PUBLIC_ENDPOINTS = [
   'ubi-report-wallet',
   'user-transactions',    // public blockchain transactions
   'verification/availability', // public time slots
+  'referral/lookup',      // landing pública /[lang]/ref/{CODE}: resuelve código de
+                          // referido (solo nusuario/nombre, sin la billetera)
 ]
+
+// Endpoints públicos que además exponen UN CAMPO solo a admin (p. ej. el
+// `nombre` de referral/lookup). Anotación por endpoint para que el audit no
+// suene contradictorio: el endpoint es público, el campo marcado no.
+const PUBLIC_ADMIN_DATA_NOTES = {
+  'referral/lookup': '`nusuario` es público; el campo `nombre` solo se devuelve a admin',
+}
 
 function findRouteFiles(dir) {
   const files = []
@@ -78,6 +94,10 @@ function hasAuth(content) {
   return AUTH_PATTERNS.some(p => content.includes(p))
 }
 
+function hasAdminAuth(content) {
+  return ADMIN_AUTH_PATTERNS.some(p => content.includes(p))
+}
+
 function hasDb(content) {
   return DB_PATTERNS.some(p => content.includes(p))
 }
@@ -98,14 +118,18 @@ function isPublic(relPath) {
 function main() {
   const routeFiles = findRouteFiles(API_DIR)
   const publics = []
+  const adminOnly = []
   const authenticated = []
   const issues = []
+  // Endpoints públicos que además usan chequeo de admin (dato admin-only)
+  const publicWithAdminData = []
 
   for (const file of routeFiles) {
     const rel = classifyEndpoint(file)
     const content = readFileSync(file, 'utf8')
     const usesDb = hasDb(content)
     const usesAuth = hasAuth(content)
+    const usesAdmin = hasAdminAuth(content)
     const isPublicEp = isPublic(rel)
 
     if (file.includes('__tests__')) continue
@@ -114,16 +138,23 @@ function main() {
 
     if (isPublicEp) {
       publics.push(rel)
+      if (usesAdmin) publicWithAdminData.push(rel)
     } else if (usesAuth) {
-      authenticated.push(rel)
+      if (usesAdmin) adminOnly.push(rel)
+      else authenticated.push(rel)
     } else {
       issues.push(rel)
     }
   }
 
-  // Show publics first
+  // Show publics first (annotating admin-only fields)
   for (const rel of publics) {
-    console.log(`  ✅ ${rel} (public)`)
+    const note = PUBLIC_ADMIN_DATA_NOTES[rel] || (publicWithAdminData.includes(rel) ? 'parte de sus datos es admin-only' : '')
+    console.log(`  ✅ ${rel} (public)${note ? ` — ${note}` : ''}`)
+  }
+  // Then admin-only endpoints
+  for (const rel of adminOnly) {
+    console.log(`  🔒 ${rel} (admin-only)`)
   }
   // Then authenticated
   for (const rel of authenticated) {
@@ -134,9 +165,9 @@ function main() {
     console.log(`  ❌ ${rel} — DATABASE ACCESS WITHOUT AUTH`)
   }
 
-  const passed = publics.length + authenticated.length
+  const passed = publics.length + authenticated.length + adminOnly.length
   const failed = issues.length
-  console.log(`\n${passed} passed / ${failed} failed (public: ${publics.length}, authenticated: ${authenticated.length})`)
+  console.log(`\n${passed} passed / ${failed} failed (public: ${publics.length}, admin-only: ${adminOnly.length}, authenticated: ${authenticated.length})`)
 
   if (failed > 0) {
     console.log('\nEndpoints needing auth:')

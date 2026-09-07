@@ -191,7 +191,7 @@ for an example.
 | `prod-landing-to-profile.spec.mjs` | Production landing page → wallet connect → profile save flow |
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
 | `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
-| `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), distribución, balance on-chain de la billetera campaña y filas en user-transactions (sin `donation_reward` con cashback OFF) |
+| `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), **ronda C con cashback ON (10 USDT @ pdJ 5%)**: campaña neta 85% (8.50), pdJ 5%, cashback 22.00 SLEARN vía `mintAndReserve` (+saldo on-chain del donante y del `learnTgReserve`), balance de la billetera campaña y filas en user-transactions (deltas vs baseline, acumulativo en dev) |
 | `donate-campaign-celo-real.spec.mjs` | **Real donation in native CELO (REQ/223):** `sendTransaction` (value) al backend → `verify` con `payToken='celo'` (verify por `tx.value`) → auto-forward nativo 100% y 90/10, balance CELO on-chain y filas `crypto=celo` |
 | `donate-campaign-celo-modal.spec.mjs` | **Donation modal in native CELO (REQ/223, UI real):** RPC bridge real (eth_sendTransaction) sobre el mock de SIWE; selector muestra CELO, hint "Donable (máx., menos gas)", dona CELO y verifica el incremento on-chain de la billetera campaña |
 
@@ -222,7 +222,7 @@ time out on SIWE under suite load (passes solo).
 | `interview-date` | `proposed_date_of_interview` migrated to `timestamptz` (see `db/migrations/20260822000000_proposed_interview_timestamptz.ts`) |
 | `verified-city-gate`, `premium-course-checkout` | Verifier wallet (`apps/.env`) whitelisted; eligibility = verified worship city |
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
-| `donate-campaign-real` | Motor de campañas desplegado (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_ADDRESS`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` en el dev (billetera única). Cashback ON adicional requiere MINTER_ROLE de SLEARN en el backend (no probado por defecto) |
+| `donate-campaign-real` | Motor de campañas desplegado (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_ADDRESS`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` en el dev (billetera única). La ronda C (cashback ON) requiere MINTER_ROLE de SLEARN en el backend (otorgado en el SLEARN Sepolia del dev) + CELO en la billetera de prueba para el gas; las rondas A/B (cashback OFF) no lo requieren |
 | `church-selector-diag` | Session cookie auth (works via the session fallback in `lib/authenticateUser.ts`) |
 
 ### Hydration / SIWE gotcha on the dev server (https://github.com/pasosdeJesus/learn.tg/issues/208)
