@@ -78,6 +78,8 @@ async function main() {
   await authedGet('B) token#1 viejo SIN cookie', s1.token, '')
   // c) token#2 vigente con su cookie → control
   await authedGet('C) token#2 vigente CON cookie sesión#2', s2.token, s2.cookies)
+  // d) token#2 vigente SIN cookie → con AUTH_SESSION_ONLY=1 debe ser 401 (legacy off)
+  await authedGet('D) token#2 vigente SIN cookie (AUTH_SESSION_ONLY esperado=401)', s2.token, '')
   // d) sesión: qué dice /api/auth/session con cookie 1
   const sess = await fetch(`${SITE}/api/auth/session`, { headers: { Cookie: s1.cookies } })
   console.log(`\nsession cookie#1 → /api/auth/session: ${sess.status} ${(await sess.text()).slice(0, 160)}`)

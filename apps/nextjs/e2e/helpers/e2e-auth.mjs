@@ -134,13 +134,24 @@ export async function setupE2EAuth(page, address, privateKey, chainId, baseUrl) 
 
   console.log(`  SIWE: ${cbResult.status} — ${cbResult.body}`)
 
-  // Store in localStorage for legacy compatibility
+  // Store in localStorage: R-#227 (Opción B) → token DEDICADO desde
+  // /api/auth/token (la cookie de sesión ya quedó en el browser); respaldo CSRF.
+  let authToken = csrfToken
   if (cbResult.ok) {
+    try {
+      const tok = await page.evaluate(async () => {
+        const r = await fetch('/api/auth/token', { headers: { Accept: 'application/json' } })
+        if (!r.ok) return null
+        const j = await r.json()
+        return j && j.token ? j.token : null
+      })
+      if (tok) authToken = tok
+    } catch { /* respaldo */ }
     await page.evaluate(({ token, addr }) => {
       localStorage.setItem('learn.tg.authToken', token)
       localStorage.setItem('learn.tg.sessionAddress', addr)
-    }, { token: csrfToken, addr: address.toLowerCase() })
+    }, { token: authToken, addr: address.toLowerCase() })
   }
 
-  return { sessionAddress: address.toLowerCase(), authToken: csrfToken }
+  return { sessionAddress: address.toLowerCase(), authToken }
 }

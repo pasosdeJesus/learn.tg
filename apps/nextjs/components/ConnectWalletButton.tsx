@@ -240,9 +240,19 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
 
       // Set localStorage — survives NextAuth's useSession() glitch (#5719)
       localStorage.setItem('learn.tg.sessionAddress', checksummedAddress)
-      // Store auth token so profile/crossword/UBI API calls can authenticate
-      // without relying on a new getCsrfToken() which returns a different nonce
-      localStorage.setItem('learn.tg.authToken', csrfToken)
+      // R-#227 (Opción B): el token de API ya NO es el CSRF. Tras el login se
+      // pide el token dedicado a /api/auth/token (sesión-primero); si falla,
+      // se conserva el CSRF como respaldo (legacy).
+      try {
+        const tokRes = await fetch('/api/auth/token', { headers: { Accept: 'application/json' } })
+        if (tokRes.ok) {
+          const tokData = await tokRes.json()
+          if (tokData?.token) localStorage.setItem('learn.tg.authToken', tokData.token)
+        }
+      } catch { /* respaldo: CSRF abajo */ }
+      if (!localStorage.getItem('learn.tg.authToken')) {
+        localStorage.setItem('learn.tg.authToken', csrfToken)
+      }
       // Referido: si el usuario llegó por un enlace /ref/{CODE}, reclámalo
       // ahora que ya está autenticado (https://github.com/pasosdeJesus/learn.tg/issues/163 §2.3).
       const pendingReferral = localStorage.getItem('learn.tg.pendingReferralCode')
