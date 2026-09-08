@@ -17,12 +17,16 @@ import {
   initTestEnv, launchBrowser, resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-import { createPublicClient, createWalletClient, http, parseUnits, formatEther } from 'viem'
+import { createPublicClient, createWalletClient, http, parseUnits, formatEther, formatUnits } from 'viem'
 import { celoSepolia } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
-const DONATE_CELO = parseUnits(process.env.DONATE_CELO || '0.2', 18)
+// Tope de donación CELO (testnet): el "Max" del modal llenaría saldo − gas
+// (varios CELO tras el UBI diario); se limita a DONATE_CELO para que la suite
+// quepa en la recarga diaria automática (~0.75 CELO/día del claim UBI) sin
+// intervención del operador. Sobreescribible vía DONATE_CELO.
+const DONATE_CELO = parseUnits(process.env.DONATE_CELO || '0.15', 18)
 const CAMPAIGN_WALLET = '0x9c7218a253d1565fc5f2149ba51f0f55f0f27f07'
 
 function loadEnvCredentials() {
@@ -207,14 +211,30 @@ async function main() {
     if (b) b.click()
   })
   await new Promise(r => setTimeout(r, 1200))
-  const amountStr = await page.evaluate(() => {
+  let amountStr = await page.evaluate(() => {
     const el = document.getElementById('donate-amount')
     return el ? el.value : ''
   })
   const amountNum = Number(amountStr)
   if (!(amountNum > 0)) { fail(`Max did not fill the amount (value: "${amountStr}")`); process.exit(1) }
   ok(`Max filled: ${amountStr} CELO`)
-  const amountRaw = BigInt(Math.round(amountNum * 1e18))
+
+  // Presupuesto diario (testnet): si el Max supera el tope, acotar el monto.
+  const cap = formatUnits(DONATE_CELO, 18)
+  if (amountNum > Number(cap)) {
+    const capped = await page.evaluate((val) => {
+      const el = document.getElementById('donate-amount')
+      if (!el) return null
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
+      setter.call(el, val)
+      el.dispatchEvent(new Event('input', { bubbles: true }))
+      return el.value
+    }, cap)
+    await new Promise(r => setTimeout(r, 800))
+    amountStr = capped || amountStr
+    ok(`Capped to ${formatUnits(DONATE_CELO, 18)} CELO (daily testnet budget)`)
+  }
+  const amountRaw = BigInt(Math.round(Number(amountStr) * 1e18))
 
   // Wait until Donate is enabled (price/gas ready)
   let ready = false

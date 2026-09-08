@@ -240,7 +240,7 @@ export default function Page() {
             {course.idioma === 'en' ? 'Course: ' : 'Curso: '}{course.titulo}
           </h3>
         </header>
-        <h1 className="py-3 px-16 text-[2rem] font-bold text-left">
+        <h1 className="py-3 px-4 md:px-16 text-[2rem] font-bold text-left">
           {course.idioma === 'en' ? 'Guide' : 'Guía'}
           &nbsp;
           <span>{guideNumber}</span>: {myGuide.titulo}
@@ -249,7 +249,7 @@ export default function Page() {
           {myGuide.receivedSlearnScholarship ? <img src="/img/slearn-icon.svg" alt="SLEARN" className="w-15 h-15 inline align-middle" /> : ''}
         </h1>
         {purchaseRequired ? (
-          <div className="py-10 px-16 text-center space-y-4">
+          <div className="py-10 px-4 md:px-16 text-center space-y-4">
             <p className="text-lg font-semibold">{purchaseRequired}</p>
             <p>
               <Link href={coursePath} className="underline text-primary">
@@ -258,11 +258,16 @@ export default function Page() {
             </p>
           </div>
         ) : (
-        <section
-          className="py-3 px-16 text-1xl md:text-1xl text-justify **:list-inside"
-          dangerouslySetInnerHTML={{ __html: guideHtml }}
-          aria-label="Guide text"
-        />
+        // R-#228: overflow-x-auto permite hacer scroll horizontal en móvil a
+        // las tablas anchas del markdown (p. ej. gdcluster/guide1, 3 columnas);
+        // px responsivo gana ancho real en pantallas pequeñas.
+        <div className="overflow-x-auto">
+          <section
+            className="py-3 px-4 md:px-16 text-1xl md:text-1xl text-justify **:list-inside"
+            dangerouslySetInnerHTML={{ __html: guideHtml }}
+            aria-label="Guide text"
+          />
+        </div>
         )}
         <aside className="flex flex-col space-y-4 items-center justify-center w-full" aria-label="Interactive buttons">
           {isClient && showGoodDollarButton && (

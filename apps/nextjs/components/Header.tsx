@@ -49,14 +49,22 @@ export default function Header({ lang: langProp = 'en' }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Menu items configuration
-  const menuItems = [
-    { key: 'navProfile', href: `/${lang}/profile`, emoji: '👤' },
+  // Menu items configuration. R-#230/#231: el menú ☰ se muestra también sin
+  // sesión (sin Profile); con sesión añade Profile y Donate (la gota 💧 suelta
+  // desaparece porque ya está aquí).
+  const baseItems = [
+    { key: 'navCourses', href: `/${lang}`, emoji: '📚' }, // R-#231
     { key: 'navLeaderboard', href: `/${lang}/leaderboard`, emoji: '🏆' },
-    { key: 'navDonateLensenia', href: `/${lang}/donations/lensenia`, emoji: '💧' },
     { key: 'navTransparency', href: `/${lang}/transparency`, emoji: '📊' },
     { key: 'navReferrals', href: lang === 'es' ? '/es/referidos' : `/${lang}/referrals`, emoji: '🤝' },
   ]
+  const menuItems = isAuthenticated
+    ? [
+        { key: 'navProfile', href: `/${lang}/profile`, emoji: '👤' },
+        ...baseItems,
+        { key: 'navDonateLensenia', href: `/${lang}/donations/lensenia`, emoji: '💧' },
+      ]
+    : baseItems
 
   return (
     <header className="bg-white shadow-md">
@@ -81,46 +89,49 @@ export default function Header({ lang: langProp = 'en' }) {
 
           <nav aria-label="User authentication">
             <div className="flex items-center justify-end gap-4">
-              {/* Hamburger Menu — visible when authenticated */}
-              {isAuthenticated && (
-                <div className="relative" ref={menuRef}>
-                  <Button
-                    variant="ghost"
-                    className="text-2xl px-3 py-1 hover:bg-gray-100"
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    aria-label="Menu"
-                  >
-                    {t('menu')}
-                  </Button>
+              {/* Hamburger Menu — visible para todos (R-#230: también invitados,
+                  sin Profile). Renderizado incondicional evita el hydration
+                  mismatch del menú condicional (R-#218). */}
+              <div className="relative" ref={menuRef}>
+                <Button
+                  variant="ghost"
+                  className="text-2xl px-3 py-1 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  aria-label="Menu"
+                >
+                  {t('menu')}
+                </Button>
 
-                  {/* Dropdown menu */}
-                  {isMenuOpen && (
-                    <div className="absolute left-0 mt-2 w-56 max-w-[calc(100vw-3rem)] bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-                      {menuItems.map((item) => (
-                        <Link
-                          key={item.key}
-                          href={item.href}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <span className="text-base">{item.emoji}</span>
-                          <span>{tCommon(item.key)}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                {/* Dropdown menu */}
+                {isMenuOpen && (
+                  <div className="absolute left-0 mt-2 w-56 max-w-[calc(100vw-3rem)] bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                    {menuItems.map((item) => (
+                      <Link
+                        key={item.key}
+                        href={item.href}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <span className="text-base">{item.emoji}</span>
+                        <span>{tCommon(item.key)}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* R-#223 + R-#230: gota 💧 de acceso público a la donación — solo
+                  SIN sesión; con sesión la donación vive en el menú ☰. */}
+              {!isAuthenticated && (
+                <Link
+                  href={`/${lang}/donations/lensenia`}
+                  title={tCommon('navDonateLensenia')}
+                  className="text-xl hover:opacity-70"
+                  aria-label={tCommon('navDonateLensenia')}
+                >
+                  💧
+                </Link>
               )}
-
-              {/* R-#223: acceso público a la página de donación */}
-              <Link
-                href={`/${lang}/donations/lensenia`}
-                title={tCommon('navDonateLensenia')}
-                className="text-xl hover:opacity-70"
-                aria-label={tCommon('navDonateLensenia')}
-              >
-                💧
-              </Link>
               <NotificationsBell lang={lang} />
               <ConnectWalletButton lang={lang} />
               <UserLanguageSync lang={lang} />

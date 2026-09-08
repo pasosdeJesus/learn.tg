@@ -30,6 +30,7 @@ const common: TranslationSet = {
     confirm: 'Confirm',
     // R-#180: Navigation & Footer
     navProfile: 'Profile',
+    navCourses: 'Courses', // R-#231
     navLeaderboard: 'Leaderboard',
     navTransparency: 'Transparency',
     navDonateLensenia: 'Donate · Lensenia',
@@ -77,6 +78,7 @@ const common: TranslationSet = {
     confirm: 'Confirmar',
     // R-#180: Navigation & Footer
     navProfile: 'Perfil',
+    navCourses: 'Cursos', // R-#231
     navLeaderboard: 'Tabla de Líderes',
     navTransparency: 'Transparencia',
     navDonateLensenia: 'Donar · Lensenia',

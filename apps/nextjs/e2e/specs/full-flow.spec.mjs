@@ -69,6 +69,27 @@ async function ensureSessionAlive(page, timeout = 15000) {
   return false
 }
 
+// R-#227: refresca learn.tg.authToken con el token DEDICADO de la sesión actual
+// (GET /api/auth/token). Cada re-login (p. ej. reloads con re-SIWE del mock)
+// rota el token en BD; si localStorage queda con el anterior, /api/guide y otras
+// rutas responden 401 y la guía no renderiza los botones de claim.
+async function refreshApiToken(page) {
+  const dedicated = await page.evaluate(async () => {
+    try {
+      const r = await fetch('/api/auth/token')
+      if (!r.ok) return null
+      const j = await r.json()
+      return (j && typeof j.token === 'string' && j.token) || null
+    } catch { return null }
+  })
+  if (dedicated) {
+    await page.evaluate((t) => localStorage.setItem('learn.tg.authToken', t), dedicated)
+    return true
+  }
+  console.log('  [!] /api/auth/token no disponible — respaldo CSRF legacy')
+  return false
+}
+
 /** Click an element matching selector, retrying until found or timeout */
 async function clickWhenFound(page, selector, timeout = 10000) {
   const deadline = Date.now() + timeout
@@ -573,15 +594,19 @@ async function main() {
   let ubiOk = await navAndWait(page, `${base}${ubiPath}`, timeout)
   if (!ubiOk) { fail('UBI guide not found'); }
 
-  // The UBI buttons are client-rendered — may need page reload if session just restored
+  // The UBI buttons are client-rendered — may need page reload if session just restored.
+  // R-#227: refrescar el token dedicado antes de cada intento (un re-SIWE previo
+  // rota el token en BD; con token viejo la guía responde 401 y no hay botones).
   let claimFound = false
   for (let attempt = 0; attempt < 3; attempt++) {
+    await refreshApiToken(page)
     if (attempt > 0) {
       console.log(`  Reloading UBI guide (attempt ${attempt + 1}/3)...`)
       await page.goto(`${base}${ubiPath}`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     }
-    // Wait for client-side hydration
-    for (let w = 0; w < 10; w++) {
+    // Wait for client-side hydration (los botones tardan ~15s en dev: guía +
+    // fetch autenticado + render — no cortar antes de ese umbral)
+    for (let w = 0; w < 12; w++) {
       await new Promise(r => setTimeout(r, 2500))
       const hasBtn = await page.evaluate(() =>
         [...document.querySelectorAll('button')].some(b =>
@@ -589,7 +614,7 @@ async function main() {
       const isLoading = await page.evaluate(() =>
         document.body.textContent?.includes('Loading...') || document.body.textContent?.includes('Cargando...'))
       if (hasBtn) { claimFound = true; break }
-      if (!isLoading && w > 4) break // Page loaded but no button — try reload
+      if (!isLoading && w > 7) break // Page loaded but no button — try reload
     }
     if (claimFound) break
   }

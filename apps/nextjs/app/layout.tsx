@@ -9,12 +9,17 @@ import RootLayoutClient from './RootLayoutClient'
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
   subsets: ['latin'],
+  // R-#217: sin preload automático (woff2 "preloaded but not used" en rutas
+  // que no usan la fuente en el primer render); next/font las carga vía
+  // @font-face con font-display: swap.
+  preload: false,
 })
 
 const dmMono = DM_Mono({
   variable: '--font-dm-mono',
   weight: ['300', '400', '500'],
   subsets: ['latin'],
+  preload: false,
 })
 
 export const metadata: Metadata = {

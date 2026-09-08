@@ -66,11 +66,15 @@ async function main() {
   if (btnFound) console.log('2. Clicking Connect...')
   else console.log('2. No Connect button found')
 
-  // Wait for SIWE
+  // Wait for SIWE (the debug-wallet reloads the page after the credentials
+  // callback; evaluate can race that navigation → destroyed context → retry).
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 3000))
-    const connected = await page.evaluate(() =>
-      !document.body.textContent?.includes('Connect Wallet'))
+    let connected = false
+    try {
+      connected = await page.evaluate(() =>
+        !document.body.textContent?.includes('Connect Wallet'))
+    } catch { /* page navigating (reload after SIWE) — wait and retry */ }
     if (connected) { console.log(`3. Connected after ${(i+1)*3}s`); break }
   }
 

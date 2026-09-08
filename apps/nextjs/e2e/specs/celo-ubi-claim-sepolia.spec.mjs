@@ -13,6 +13,28 @@ import {
   short,
 } from '@pasosdejesus/m/e2e'
 
+// R-#227: simulateSIWE guarda el CSRF legacy en learn.tg.authToken, pero la
+// API de sesión espera el token DEDICADO (GET /api/auth/token). Reemplazarlo
+// y recargar para que la guía cargue autenticada (un 401 en /api/guide deja la
+// página sin los botones de claim).
+async function upgradeToDedicatedToken(page) {
+  const dedicated = await page.evaluate(async () => {
+    try {
+      const r = await fetch('/api/auth/token')
+      if (!r.ok) return null
+      const j = await r.json()
+      return (j && typeof j.token === 'string' && j.token) || null
+    } catch { return null }
+  })
+  if (dedicated) {
+    await page.evaluate((t) => localStorage.setItem('learn.tg.authToken', t), dedicated)
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 120000 }).catch(() => {})
+    return true
+  }
+  console.log('  [!] /api/auth/token no disponible — respaldo CSRF legacy')
+  return false
+}
+
 async function main() {
   const t0 = performance.now()
   resetFailures()
@@ -39,6 +61,7 @@ async function main() {
     const siweOk = await simulateSIWE(page, { account, host, domainPort, base, chainId })
     if (!siweOk) { fail('SIWE failed'); await browser.close(); process.exit(1) }
     ok('SIWE completed')
+    await upgradeToDedicatedToken(page)
 
     console.log('  Waiting for CeloUbi button...')
     const waitBtn = () => page.waitForFunction(() => {
@@ -60,6 +83,7 @@ async function main() {
       for (const c of cookies) await page.deleteCookie(c)
       await page.reload({ waitUntil: 'domcontentloaded' })
       await simulateSIWE(page, { account, host, domainPort, base, chainId })
+      await upgradeToDedicatedToken(page)
       btnAppeared = await waitBtn()
     }
 

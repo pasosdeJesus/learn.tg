@@ -37,8 +37,13 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
 const CAMPAIGN_WALLET = process.env.CAMPAIGN_WALLET || '0x9c7218a253d1565fc5f2149ba51f0f55f0f27f07'
-const ROUND_A = parseUnits(process.env.ROUND_A_CELO || '0.5', 18)
-const ROUND_B = parseUnits(process.env.ROUND_B_CELO || '0.4', 18)
+// Montos NATIVOS (CELO testnet). La única recarga diaria automática es el UBI
+// (celo-ubi-claim-sepolia, ~0.75 CELO/día), así que las donaciones CELO de la
+// suite donate-campaign* deben caber en ese presupuesto sin intervención del
+// operador: A+B ≈ 0.2 (más ~0.15 del modal = 0.35 < 0.6). Sobreescribibles vía
+// ROUND_A_CELO / ROUND_B_CELO cuando haya más saldo.
+const ROUND_A = parseUnits(process.env.ROUND_A_CELO || '0.1', 18)
+const ROUND_B = parseUnits(process.env.ROUND_B_CELO || '0.1', 18)
 
 let passed = 0
 let failed = 0
@@ -170,7 +175,7 @@ async function main() {
   console.log(`Wallet: ${account.address.slice(0, 10)}... | ${SITE}\n`)
 
   const donorBal = await publicClient.getBalance({ address: account.address })
-  if (donorBal < ROUND_A + ROUND_B + parseUnits('0.2', 18)) {
+  if (donorBal < ROUND_A + ROUND_B + parseUnits('0.1', 18)) {
     fail('Not enough CELO in the test wallet (gas + donation)')
     process.exit(1)
   }
