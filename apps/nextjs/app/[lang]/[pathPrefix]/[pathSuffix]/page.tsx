@@ -129,7 +129,9 @@ export default function Page() {
       .replaceAll('<li><p>([^<]*)</p></li>', '<li>$1</li>')
       .replaceAll('<p>', '<p class="pt-2 pb-2">')
       .replaceAll('<ul>', '<ul class="block list-disc ml-8">')
-      .replaceAll('<table>', '<table class="border-collapse border border-gray-300 my-4">')
+      // R-#228: text-sm en móvil (hasta md) para que las tablas anchas de las
+      // guías (min-content por palabra larga) quepan en 320 px sin recorte.
+      .replaceAll('<table>', '<table class="text-sm md:text-base border-collapse border border-gray-300 my-4">')
       .replaceAll('<th>', '<th class="border border-gray-300 px-4 py-2 bg-gray-50 text-left font-semibold">')
       .replaceAll('<td>', '<td class="border border-gray-300 px-4 py-2">')
 
@@ -240,7 +242,7 @@ export default function Page() {
             {course.idioma === 'en' ? 'Course: ' : 'Curso: '}{course.titulo}
           </h3>
         </header>
-        <h1 className="py-3 px-4 md:px-16 text-[2rem] font-bold text-left">
+        <h1 className="py-3 px-3 md:px-16 text-[2rem] font-bold text-left">
           {course.idioma === 'en' ? 'Guide' : 'Guía'}
           &nbsp;
           <span>{guideNumber}</span>: {myGuide.titulo}
@@ -249,7 +251,7 @@ export default function Page() {
           {myGuide.receivedSlearnScholarship ? <img src="/img/slearn-icon.svg" alt="SLEARN" className="w-15 h-15 inline align-middle" /> : ''}
         </h1>
         {purchaseRequired ? (
-          <div className="py-10 px-4 md:px-16 text-center space-y-4">
+          <div className="py-10 px-3 md:px-16 text-center space-y-4">
             <p className="text-lg font-semibold">{purchaseRequired}</p>
             <p>
               <Link href={coursePath} className="underline text-primary">
@@ -263,7 +265,7 @@ export default function Page() {
         // px responsivo gana ancho real en pantallas pequeñas.
         <div className="overflow-x-auto">
           <section
-            className="py-3 px-4 md:px-16 text-1xl md:text-1xl text-justify **:list-inside"
+            className="py-3 px-3 md:px-16 text-1xl md:text-1xl text-justify **:list-inside"
             dangerouslySetInnerHTML={{ __html: guideHtml }}
             aria-label="Guide text"
           />
