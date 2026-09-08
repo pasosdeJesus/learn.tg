@@ -76,10 +76,15 @@ async function main() {
   console.log(`    user.name: ${sessRes.data?.user?.name || 'N/A'}`)
 
   // ── PASO 2: Usar el mismo CSRF que se usó en auth (no uno nuevo) ──
-  // El token almacenado en billetera_usuario es result.data.nonce = csrfToken original
-  console.log('\n── PASO 2: Using auth CSRF token for Rails API ──')
-  const apiToken = csrfToken
-  console.log(`2.1 API token (same as auth CSRF): ${apiToken.slice(0,10)}...`)
+  // R-#227: el token de API es el DEDICADO expuesto por /api/auth/token
+  // (session cookie); el CSRF ya no es un credencial válido.
+  console.log('\n── PASO 2: Obteniendo token de API dedicado (R-#227) ──')
+  let apiToken = csrfToken
+  try {
+    const tokRes = await api.get(`${SITE}/api/auth/token`, { headers: { Cookie: cookies } })
+    if (tokRes.data?.token) apiToken = tokRes.data.token
+  } catch { /* respaldo CSRF legacy */ }
+  console.log(`2.1 API token (dedicado): ${apiToken.slice(0,10)}...`)
 
   // ── PASO 3: Llamada a Rails con wallet minúscula ──
   console.log('\n── PASO 3: Rails API calls ──')

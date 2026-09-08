@@ -15,7 +15,7 @@ import 'dotenv/config'
 import axios from 'axios'
 import https from 'https'
 
-const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001'
+const BASE_URL = process.env.SITE_URL || process.env.E2E_SITE_URL || process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001'
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false })
 

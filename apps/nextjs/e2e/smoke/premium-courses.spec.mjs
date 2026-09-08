@@ -15,7 +15,7 @@ import https from 'https';
 import { SiweMessage } from 'siwe';
 import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts';
 
-const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001';
+const BASE_URL = process.env.SITE_URL || process.env.E2E_SITE_URL || process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001';
 const CHAIN_ID = 11142220;
 const PREMIUM_COURSE_ID = 10; // GD course (EN), porPagar=1
 

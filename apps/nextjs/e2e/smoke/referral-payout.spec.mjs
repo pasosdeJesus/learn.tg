@@ -263,7 +263,11 @@ async function main() {
       walletAddress: refAddr,
       token: referred.token,
       code: refCode,
-    }, { httpsAgent, validateStatus: s => s < 500 }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
+    }, {
+      httpsAgent,
+      headers: referred.cookies ? { Cookie: referred.cookies } : {},
+      validateStatus: s => s < 500,
+    }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
     if (claimRes.status === 200 && claimRes.data?.ok) {
       ok(`Claim 200 — relación creada (referrer_id=${claimRes.data.referrer_id})`)
     } else if (claimRes.status === 429) {
@@ -364,7 +368,11 @@ async function main() {
       placements,
       walletAddress: refAddr,
       token: referred.token,
-    }, { httpsAgent, validateStatus: s => s < 500 }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
+    }, {
+      httpsAgent,
+      headers: referred.cookies ? { Cookie: referred.cookies } : {},
+      validateStatus: s => s < 500,
+    }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
 
     const checkData = checkRes.data || {}
     const msg = String(checkData.message || '')

@@ -563,7 +563,7 @@ async function verifyGameMetrics(apiClient) {
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://celo-sepolia.infura.io/v3/';
 
 // --- Parámetros de la Prueba ---
-const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001';
+const BASE_URL = process.env.SITE_URL || process.env.E2E_SITE_URL || process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001';
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://learn.tg:3500/learntg-admin';
 const LANG = 'en';
 const COURSE_PREFIX = 'a-relationship-with-Jesus';

@@ -42,7 +42,7 @@ function updateCookies(currentCookies, setCookieHeaders) {
   return Array.from(cookieMap.values()).join('; ');
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001';
+const BASE_URL = process.env.SITE_URL || process.env.E2E_SITE_URL || process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001';
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://learn.tg:3500/learntg-admin';
 const CHAIN_ID = 11142220;
 

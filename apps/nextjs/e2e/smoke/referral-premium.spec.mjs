@@ -229,7 +229,7 @@ async function main() {
 
     const claimRes = await axios.post(`${SITE}/api/referral/claim`, {
       walletAddress: pastorAddr, token: pastor.token, code: refCode,
-    }, { httpsAgent, validateStatus: s => s < 500 }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
+    }, { httpsAgent, headers: pastor.cookies ? { Cookie: pastor.cookies } : {}, validateStatus: s => s < 500 }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
     if (claimRes.status === 200 && claimRes.data?.ok) ok(`Claim 200 — relación creada (referrer_id=${claimRes.data.referrer_id})`)
     else if (claimRes.status === 429) { skip('Rate-limit del claim (https://github.com/pasosdeJesus/learn.tg/issues/163: 10/día por IP) — reintenta en 24h'); finish() }
     else { fail(`Claim falló: ${claimRes.status} ${JSON.stringify(claimRes.data)}`); finish() }
@@ -334,7 +334,7 @@ async function main() {
 
     const purchaseRes = await axios.post(`${SITE}/api/courses/premium/purchase`, {
       walletAddress: pastorAddr, token: pastor.token, courseId: GD_COURSE_ID, slearnHash,
-    }, { httpsAgent, validateStatus: s => s < 500 }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
+    }, { httpsAgent, headers: pastor.cookies ? { Cookie: pastor.cookies } : {}, validateStatus: s => s < 500 }).catch(e => ({ status: e?.response?.status, data: e?.response?.data }))
     if (purchaseRes.status !== 200 && purchaseRes.status !== 201) {
       fail(`Compra falló: ${purchaseRes.status} ${JSON.stringify(purchaseRes.data).slice(0, 160)}`)
       finish()
