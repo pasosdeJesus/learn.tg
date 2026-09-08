@@ -68,8 +68,16 @@ export function useAuthAddress() {
     }
   }, [])
 
+  const [mounted, setMounted] = useState(false)
+  // R-#218: NO leer localStorage durante el primer render (hidratación). El
+  // servidor no tiene localStorage → si el cliente lo lee síncrono, los
+  // componentes que alternan DOM según isAuthenticated (p. ej.
+  // NotificationsBell: null ↔ div.relative) rompen la hidratación. Se expone
+  // tras montar (effect), igual que el patrón de Header/ConnectWalletButton.
+  useEffect(() => { setMounted(true) }, [])
+
   const sessionAddress = session?.address || undefined
-  const storedAddress = typeof window !== 'undefined'
+  const storedAddress = (typeof window !== 'undefined' && mounted)
     ? localStorage.getItem('learn.tg.sessionAddress') || undefined
     : undefined
 
