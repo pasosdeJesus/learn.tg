@@ -36,6 +36,7 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
+import { dedicatedApiTokenAxios } from '../helpers/siwe-auth.mjs'
 import { createPublicClient, createWalletClient, http, parseUnits, parseEther } from 'viem'
 import { celoSepolia } from 'viem/chains'
 
@@ -149,11 +150,7 @@ async function siweSignIn(privateKey, address) {
   })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
 
-  let apiToken = csrfToken
-  try {
-    const tokRes = await axios.get(`${SITE}/api/auth/token`, { httpsAgent, headers: { Cookie: cookies } })
-    if (tokRes.data?.token) apiToken = tokRes.data.token
-  } catch { /* respaldo CSRF legacy */ }
+  const apiToken = await dedicatedApiTokenAxios(axios, httpsAgent, SITE, cookies, csrfToken)
 
   return { token: apiToken, cookies, address }
 }

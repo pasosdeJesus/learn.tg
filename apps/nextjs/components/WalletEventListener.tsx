@@ -15,27 +15,12 @@ export function WalletEventListener() {
   const { data: session } = useSession()
   const wasAuthenticated = useRef(false)
 
-  // TEMP-DIAG (R-#227 problema 1): timestamp + estado de donación en vuelo para
-  // saber qué evento de wallet recarga la página. Eliminar tras el diagnóstico.
-  const diagTs = () => new Date().toISOString()
-  const inFlight = () => !!(window as any).__donationInFlight
-  const diagLog = (evt: string, detail?: unknown) => {
-    console.log(`[WalletEvtDiag:${diagTs()}]`, evt,
-      JSON.stringify({
-        inFlight: inFlight(),
-        sessionAddr: (session as any)?.address?.slice(0, 10) || null,
-        lastDiag: (window as any).__donationDiag || null,
-        ...(detail ? { detail } : {}),
-      }))
-  }
-
   // Clear auth token when session transitions from authenticated to null.
   // Don't clear on initial mount (session loads async — would wipe token).
   useEffect(() => {
     if (session?.address) {
       wasAuthenticated.current = true
     } else if (wasAuthenticated.current) {
-      diagLog('session->null')
       // Session was valid, now it's gone — user signed out or expired
       localStorage.removeItem('learn.tg.sessionAddress')
       localStorage.removeItem('learn.tg.authToken')
@@ -46,19 +31,52 @@ export function WalletEventListener() {
   useEffect(() => {
     if (typeof window === 'undefined' || !window.ethereum) return
 
-    function handleAccountsChanged(accounts: string[]) {
-      diagLog('accountsChanged', { count: accounts?.length, empty: !accounts || accounts.length === 0 })
+    // R-#227 problema 1: algunas billeteras (móvil/Rabby/OneKey) emiten
+    // `accountsChanged([])` o `disconnect` AL CONFIRMAR una transacción
+    // (p.ej. donación ERC-20 al vault). Si firmamos desconexión a ciegas la
+    // app recarga y se pierde el modal de resultado aunque el backend ya
+    // registró la operación. Antes de `signOut` re-verificamos `eth_accounts`
+    // tras un breve debounce: si la billetera sigue conectada con cuenta, el
+    // evento era transitorio y NO se firma la desconexión.
+    const verifyStillDisconnected = async (): Promise<boolean> => {
+      try {
+        const accounts = await window.ethereum!.request({ method: 'eth_accounts' })
+        return !Array.isArray(accounts) || accounts.length === 0
+      } catch {
+        return true // no se puede verificar → tratar como desconexión real
+      }
+    }
+    const debounceMs = 400
+    let pending = false
+
+    async function handleAccountsChanged(accounts: string[]) {
       if (!accounts || accounts.length === 0) {
+        if (pending) return
+        pending = true
+        await new Promise((r) => setTimeout(r, debounceMs))
+        pending = false
+        const stillOut = await verifyStillDisconnected()
+        if (!stillOut) {
+          console.log('[WalletEventListener] accountsChanged([]) transitorio — sesión conservada')
+          return
+        }
         // User disconnected from wallet
-        diagLog('accountsChanged -> signOut(redirect:true)')
         localStorage.removeItem('learn.tg.sessionAddress')
         localStorage.removeItem('learn.tg.authToken')
         signOut({ redirect: true, callbackUrl: '/' })
       }
     }
 
-    function handleDisconnect() {
-      diagLog('disconnect -> signOut(redirect:true)')
+    async function handleDisconnect() {
+      if (pending) return
+      pending = true
+      await new Promise((r) => setTimeout(r, debounceMs))
+      pending = false
+      const stillOut = await verifyStillDisconnected()
+      if (!stillOut) {
+        console.log('[WalletEventListener] disconnect transitorio — sesión conservada')
+        return
+      }
       localStorage.removeItem('learn.tg.sessionAddress')
       localStorage.removeItem('learn.tg.authToken')
       signOut({ redirect: true, callbackUrl: '/' })

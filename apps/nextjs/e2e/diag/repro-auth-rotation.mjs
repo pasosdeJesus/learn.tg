@@ -7,6 +7,7 @@ import * as path from 'path'
 import dotenv from 'dotenv'
 import { SiweMessage } from 'siwe'
 import { privateKeyToAccount } from 'viem/accounts'
+import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 for (const p of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env')]) {
   if (fs.existsSync(p)) dotenv.config({ path: p, override: false })
@@ -56,14 +57,7 @@ async function siweLogin(label) {
   const body = new URLSearchParams({ csrfToken, message: msgStr, signature: typeof sig === 'string' ? sig : sig.signature || String(sig), redirect: 'false', json: 'true' })
   const cb = await fetch(`${SITE}/api/auth/callback/credentials`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookies }, body: body.toString(), redirect: 'manual' })
   const c2 = mergeCookies(cookies, cb.headers.getSetCookie?.() || [])
-  let apiToken = csrfToken
-  try {
-    const tokRes = await fetch(`${SITE}/api/auth/token`, { headers: { Cookie: c2 } })
-    if (tokRes.ok) {
-      const j = await tokRes.json()
-      if (j?.token) apiToken = j.token
-    }
-  } catch { /* respaldo CSRF legacy */ }
+  const apiToken = await dedicatedApiTokenFetch(SITE, c2, csrfToken)
   console.log(`${label}: callback ${cb.status}${cb.status === 302 ? ' (ok)' : ''} | cookies:${c2.split(';').length} | token:${apiToken.slice(0, 10)}…`)
   return { cookies: c2, token: apiToken }
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import axios from 'axios'
-import { getCsrfToken } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import { type Address } from 'viem'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
@@ -120,7 +120,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     // vez y cargar saldos parciales (allSettled) — un fallo de getBalance no
     // debe tumbar la carga ni provocar un falso "no-gas" (celo=0 sin cargar).
     const load = async () => {
-      const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+      const token = await getApiToken()
       const url = `/api/courses/premium/price?courseId=${courseId}&walletAddress=${address}&token=${token}`
       const res = await axios.get(url)
       if (cancelled) return

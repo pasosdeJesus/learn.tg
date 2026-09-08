@@ -29,6 +29,7 @@ import { SiweMessage } from 'siwe'
 import { createPublicClient, createWalletClient, http, formatUnits, parseUnits } from 'viem'
 import { celoSepolia } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
+import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 // Load apps/.env (contains contract addresses not present in apps/nextjs/.env)
 for (const p of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env')]) {
@@ -119,14 +120,7 @@ async function siweSignIn(base, account) {
   const cbCookies = cbRes.headers.getSetCookie?.() || []
   if (cbCookies.length) cookies = updateCookies(cookies, cbCookies)
 
-  let apiToken = csrfToken
-  try {
-    const tokRes = await fetch(`${base}/api/auth/token`, { headers: { Cookie: cookies } })
-    if (tokRes.ok) {
-      const j = await tokRes.json()
-      if (j?.token) apiToken = j.token
-    }
-  } catch { /* respaldo CSRF legacy */ }
+  const apiToken = await dedicatedApiTokenFetch(base, cookies, csrfToken)
 
   return { token: apiToken, cookies }
 }

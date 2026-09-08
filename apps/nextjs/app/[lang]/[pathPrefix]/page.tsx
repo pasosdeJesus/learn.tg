@@ -1,7 +1,8 @@
 'use client'
 
 import { use, useEffect, useState, useRef, useCallback } from 'react'
-import { getCsrfToken, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import axios from 'axios'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -35,7 +36,6 @@ export default function Page({ params }: PageProps) {
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading course...","error":"Error: ","notFound":"Course not found."},"es":{"loading":"Cargando curso...","error":"Error: ","notFound":"Curso no encontrado."}}), [lang])
-  const [apiToken, setApiToken] = useState('')
   const [countdown, setCountdown] = useState(0)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -99,7 +99,7 @@ export default function Page({ params }: PageProps) {
     let cancelled = false
     ;(async () => {
       try {
-        const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+        const token = await getApiToken()
         const url = `/api/courses/premium/mine?walletAddress=${address}&token=${token}`
         const res = await axios.get(url)
         if (cancelled) return
@@ -120,7 +120,7 @@ export default function Page({ params }: PageProps) {
     let cancelled = false
     ;(async () => {
       try {
-        const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+        const token = await getApiToken()
         const url = `/api/courses/${course.id}/purchase-eligibility?walletAddress=${address}&token=${token}`
         const res = await axios.get(url)
         if (cancelled) return
@@ -151,16 +151,6 @@ export default function Page({ params }: PageProps) {
     })()
     return () => { cancelled = true }
   }, [isGd])
-
-  useEffect(() => {
-    if (address) {
-      getCsrfToken().then((token) => {
-        setApiToken(token || '')
-      })
-    } else {
-      setApiToken('')
-    }
-  }, [address])
 
   const htmlDeMd = (md: string) => {
     if (!md) return ''

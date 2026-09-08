@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import axios from 'axios'
-import { getCsrfToken } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 
 export interface ScholarshipData {
   vaultCreated: boolean | null
@@ -40,7 +40,7 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
   const fetchScholarship = useCallback(async () => {
     if (!courseId || !address) return
     try {
-      const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+      const apiToken = await getApiToken()
       if (!apiToken) return
       const { data: res } = await axios.get(
         `/api/scholarship?courseId=${courseId}&walletAddress=${address}&token=${apiToken}`

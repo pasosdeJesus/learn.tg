@@ -1,7 +1,8 @@
 'use client'
 
 import axios, { AxiosError } from 'axios'
-import { useSession, getCsrfToken } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
@@ -143,7 +144,7 @@ export default function Page() {
                 let nurl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
                     `&lang=${lang}&prefix=${pathPrefix}&guide=${pathSuffix}&guideNumber=${guideNumber}`
                 if (address && session?.address) {
-                    const authToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+                    const authToken = await getApiToken()
                     if (authToken) {
                         nurl += `&walletAddress=${address}&token=${authToken}`
                     }

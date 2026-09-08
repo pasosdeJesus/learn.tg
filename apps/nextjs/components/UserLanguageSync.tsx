@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { getCsrfToken } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
 /**
@@ -21,7 +21,7 @@ export function UserLanguageSync({ lang }: { lang: string }) {
 
     const sync = async () => {
       try {
-        const token = localStorage.getItem('learn.tg.authToken') || (await getCsrfToken())
+        const token = await getApiToken()
         const res = await fetch(`/api/profile?walletAddress=${address}&token=${token}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },

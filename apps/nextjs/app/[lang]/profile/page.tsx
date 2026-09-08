@@ -4,7 +4,8 @@ import axios from 'axios'
 import type { AxiosResponse, AxiosError } from 'axios'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useSession, getCsrfToken } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { use, useEffect, useState, useMemo, useRef } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
@@ -191,7 +192,7 @@ export default function ProfileForm({ params }: PageProps) {
     }
     setUpdatingScores(true)
     try {
-      const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+      const csrfToken = await getApiToken()
       const res = await fetch('/api/update-scores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -306,7 +307,7 @@ export default function ProfileForm({ params }: PageProps) {
         data = await response.json()
         setReligions(data)
 
-        const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+        const csrfToken = await getApiToken()
         url = `/api/profile?walletAddress=${session!.address || ''}&token=${csrfToken}`
         logger.info('OJO url=' + url, 'Profile')
 
@@ -413,7 +414,7 @@ export default function ProfileForm({ params }: PageProps) {
     logger.info('4. User Agent: ' + navigator.userAgent, 'Profile')
     logger.info('5. Is OKX Browser? ' + navigator.userAgent.includes('OKX'), 'Profile')
 
-    const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+    const csrfToken = await getApiToken()
     logger.info('6. CSRF Token length: ' + csrfToken?.length, 'Profile')
 
     try {
@@ -485,7 +486,7 @@ export default function ProfileForm({ params }: PageProps) {
       toast({ title: lang === 'es' ? 'Perfil actualizado' : 'Profile updated' })
       // Recalculate profile score after save
       try {
-        const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+        const apiToken = await getApiToken()
         const scoresRes = await fetch('/api/update-scores', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -576,7 +577,7 @@ export default function ProfileForm({ params }: PageProps) {
 
       setSavingFields(prev => new Set(prev).add(field))
       try {
-        const csrfToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+        const csrfToken = await getApiToken()
         const apiValue = field === 'religion' || field === 'country' ? Number(value) : value
         const url = `/api/profile?walletAddress=${session.address}&token=${csrfToken}`
         const res = await fetch(url, {
@@ -715,7 +716,7 @@ export default function ProfileForm({ params }: PageProps) {
     logger.info('side=' + side + ' fileSize=' + file.size + ' fileName=' + file.name, 'Profile')
     logger.info('address=' + (address || '') + ' sessionAddress=' + (session?.address || ''), 'Profile')
     try {
-      const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+      const csrfToken = await getApiToken()
       logger.info('csrfToken present=' + !!csrfToken + ' len=' + (csrfToken?.length || 0), 'Profile')
       const formData = new FormData()
       formData.append('photo', file)
@@ -744,7 +745,7 @@ export default function ProfileForm({ params }: PageProps) {
 
   const handlePhotoDelete = async (side: 'front' | 'back' | 'registration') => {
     try {
-      const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+      const csrfToken = await getApiToken()
       const res = await fetch('/api/user/id-photo', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },

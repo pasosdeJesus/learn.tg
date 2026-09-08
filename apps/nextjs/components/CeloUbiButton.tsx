@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import axios from 'axios'
-import { getCsrfToken, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
@@ -88,7 +89,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
     setClaimResult(null)
 
     try {
-      const csrfToken = localStorage.getItem("learn.tg.authToken") || await getCsrfToken()
+      const csrfToken = await getApiToken()
       const response = await axios.post('/api/claim-celo-ubi', {
         walletAddress: sessionAddress,
         token: csrfToken,

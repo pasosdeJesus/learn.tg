@@ -1,7 +1,8 @@
 'use client'
 
 import axios from 'axios'
-import { useSession, getCsrfToken } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import { use, useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
@@ -104,7 +105,7 @@ export default function Page({ params }: PageProps) {
       if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
         // R-#227: el token de API es el DEDICADO (learn.tg.authToken), no el
         // CSRF; getCsrfToken() queda solo como respaldo legacy.
-        apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+        apiToken = await getApiToken()
         url += `&filtro[busconBilletera]=true&walletAddress=${session.address}&token=${apiToken}`
 
         // Determine whether the user is Christian so Global Disciples courses
@@ -203,7 +204,7 @@ export default function Page({ params }: PageProps) {
   const refreshCourseVault = async (courseId: number) => {
     if (!session || !address || !session.address || session.address.toLowerCase() !== address.toLowerCase())
       return
-    const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+    const apiToken = await getApiToken()
     const url2 = `/api/scholarship?courseId=${courseId}&walletAddress=${session.address}&token=${apiToken}`
 
     try {

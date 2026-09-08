@@ -1,7 +1,8 @@
 'use client'
 
 import axios from 'axios'
-import { getCsrfToken, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import { use, useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { useMemo } from 'react'
@@ -121,7 +122,7 @@ export default function Page({
       const fetchAndSetNewCrossword = async () => {
         console.log('Fetching new crossword')
         try {
-          const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+          const apiToken = await getApiToken()
           if (!apiToken) throw new Error('Could not get API token')
           setGCsrfToken(apiToken)
 
@@ -177,7 +178,7 @@ export default function Page({
             setPlacements(savedState.placements)
             setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
 
-            const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+            const apiToken = await getApiToken()
             if (!apiToken) throw new Error('Could not get API token for restored session')
             setGCsrfToken(apiToken)
 

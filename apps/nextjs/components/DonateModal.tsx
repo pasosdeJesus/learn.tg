@@ -6,7 +6,7 @@ import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { type Address, formatUnits } from 'viem'
 import axios from 'axios'
-import { getCsrfToken } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@learn-tg/rewards/lib/donate-utils'
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
@@ -423,7 +423,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         setNativeError('Amount exceeds the donatable CELO (balance minus gas and margin)')
         return
       }
-      const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+      const apiToken = await getApiToken()
       // Rabby (y algunas wallets) fallan con "no support chain found" si la red
       // no está activa: asegurar la cadena antes de enviar (switch/add chain).
       const w = walletClient as any

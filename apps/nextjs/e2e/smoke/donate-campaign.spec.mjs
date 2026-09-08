@@ -22,6 +22,7 @@ import 'dotenv/config'
 import * as fs from 'fs'
 import * as path from 'path'
 import { SiweMessage } from 'siwe'
+import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
@@ -75,14 +76,7 @@ async function getAuthToken(base, account) {
   })
   if (!cbRes.ok) return null
   const cookie = cbRes.headers.getSetCookie?.()?.map(c => c.split(';')[0]).join('; ') || ''
-  let apiToken = csrfToken
-  try {
-    const tokRes = await fetch(`${base}/api/auth/token`, { headers: { Cookie: cookie } })
-    if (tokRes.ok) {
-      const j = await tokRes.json()
-      if (j?.token) apiToken = j.token
-    }
-  } catch { /* respaldo CSRF legacy */ }
+  const apiToken = await dedicatedApiTokenFetch(base, cookie, csrfToken)
   return { cookie, apiToken }
 }
 

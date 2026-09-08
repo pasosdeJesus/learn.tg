@@ -20,6 +20,7 @@ import { SiweMessage } from 'siwe'
 import { createPublicClient, createWalletClient, http, formatEther, parseUnits } from 'viem'
 import { celo } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
+import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 for (const p of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env')]) {
   if (fs.existsSync(p)) dotenv.config({ path: p, override: false })
@@ -69,14 +70,7 @@ async function siweLogin(account) {
   const cb = await fetch(`${SITE}/api/auth/callback/credentials`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookies }, body: body.toString(), redirect: 'manual' })
   if (cb.status !== 200 && cb.status !== 302) throw new Error(`SIWE callback ${cb.status}`)
   const finalCookies = mergeCookies(cookies, cb.headers.getSetCookie?.() || [])
-  let apiToken = csrfToken
-  try {
-    const tokRes = await fetch(`${SITE}/api/auth/token`, { headers: { Cookie: finalCookies } })
-    if (tokRes.ok) {
-      const j = await tokRes.json()
-      if (j?.token) apiToken = j.token
-    }
-  } catch { /* respaldo CSRF legacy */ }
+  const apiToken = await dedicatedApiTokenFetch(SITE, finalCookies, csrfToken)
   return { cookies: finalCookies, token: apiToken }
 }
 async function rpcRetry(fn, retries = 8) {

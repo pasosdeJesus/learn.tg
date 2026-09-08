@@ -7,6 +7,7 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
+import { dedicatedApiTokenAxios } from '../helpers/siwe-auth.mjs'
 import { createPublicClient, createWalletClient, http } from 'viem'
 import { celoSepolia } from 'viem/chains'
 
@@ -95,11 +96,7 @@ async function main() {
   const res = await axios.post(`${SITE}/api/auth/callback/credentials`, fd.toString(), { httpsAgent, headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookies }, maxRedirects: 0, validateStatus: s => s < 400 })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
 
-  let apiToken = csrfToken
-  try {
-    const tokRes = await axios.get(`${SITE}/api/auth/token`, { httpsAgent, headers: { Cookie: cookies } })
-    if (tokRes.data?.token) apiToken = tokRes.data.token
-  } catch { /* respaldo CSRF legacy */ }
+  const apiToken = await dedicatedApiTokenAxios(axios, httpsAgent, SITE, cookies, csrfToken)
 
   // 3. POST /api/add-donation with BOTH hashes
   console.log('\nPOST /api/add-donation (both) courseId=1...')

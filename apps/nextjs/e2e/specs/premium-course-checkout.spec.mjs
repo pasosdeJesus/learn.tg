@@ -16,6 +16,7 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
+import { dedicatedApiTokenAxios } from '../helpers/siwe-auth.mjs'
 import {
   initTestEnv, launchBrowser, newPage,
   resetFailures, fail, ok, summary, short,
@@ -80,13 +81,7 @@ async function siweSignIn(privateKey, address) {
 
   // R-#227: el token de API es el DEDICADO expuesto por /api/auth/token
   // (session cookie); el CSRF ya no es un credencial válido.
-  let apiToken = csrfToken
-  try {
-    const tokRes = await axios.get(`${SITE}/api/auth/token`, {
-      httpsAgent, headers: { Cookie: cookies },
-    })
-    if (tokRes.data?.token) apiToken = tokRes.data.token
-  } catch { /* fallback: CSRF legacy */ }
+  const apiToken = await dedicatedApiTokenAxios(axios, httpsAgent, SITE, cookies, csrfToken)
 
   return { token: apiToken, cookies, address }
 }

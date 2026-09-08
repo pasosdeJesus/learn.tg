@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useSession, getCsrfToken } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import axios from 'axios'
 import type { Course, Guide } from './guideTypes'
@@ -38,7 +39,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
 
       // Prefer the localStorage CSRF nonce (the one stored in billetera_usuario
       // at SIWE time); getCsrfToken() may return a rotated nonce → 401.
-      const csrfToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+      const csrfToken = await getApiToken()
 
       if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
         url += `&walletAddress=${session.address}&token=${csrfToken}`
@@ -71,7 +72,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
         if (session && address && detailedCourse.id) {
           // Token (localStorage CSRF nonce) + session: guide-status accepts
           // either, so a stale/absent session cookie no longer 401s the page.
-          const token = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+          const token = await getApiToken()
           const statusUrl = `/api/guide-status?walletAddress=${address}&courseId=${detailedCourse.id}&guideNumber=${index + 1}&token=${encodeURIComponent(token || '')}`
           return axios.get(statusUrl).catch(() => ({
             data: { completed: false, receivedScholarship: false, receivedSlearnScholarship: false },

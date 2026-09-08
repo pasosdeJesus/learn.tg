@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession, getCsrfToken } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import {
   Dialog,
@@ -67,7 +68,7 @@ export function DeleteVerifiedDataDialog({ lang = 'en', onSuccess }: Props) {
 
     setIsLoading(true)
     try {
-      const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+      const apiToken = await getApiToken()
       if (!apiToken) {
         toast({ title: t('unauthorized'), variant: 'destructive' })
         return

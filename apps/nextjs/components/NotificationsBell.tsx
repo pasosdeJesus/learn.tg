@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { getCsrfToken } from 'next-auth/react'
+import { getApiToken } from '@/lib/auth-token'
 import { Bell } from 'lucide-react'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
@@ -24,7 +24,7 @@ export function NotificationsBell({ lang = 'en' }: { lang?: string }) {
 
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem('learn.tg.authToken') || (await getCsrfToken())
+      const token = await getApiToken()
       const res = await fetch(`/api/notifications?walletAddress=${address || ''}&token=${token || ''}`)
       if (!res.ok) return
       const data = await res.json()
@@ -55,7 +55,7 @@ export function NotificationsBell({ lang = 'en' }: { lang?: string }) {
 
   const markAllRead = async () => {
     try {
-      const token = localStorage.getItem('learn.tg.authToken') || (await getCsrfToken())
+      const token = await getApiToken()
       await fetch('/api/notifications/read', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
