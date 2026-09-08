@@ -518,13 +518,13 @@ async function main() {
     // 3b. Distribution (https://github.com/pasosdeJesus/learn.tg/issues/214 Paso 7 / https://github.com/pasosdeJesus/learn.tg/issues/128): the response carries the
     // processPayment breakdown. The pastor pays the course price (SL: 39.60
     // SLEARN) → 10% (3.96) routed to the country fund; processPayment handles
-    // 90% (35.64) with pdJ 40%, reward 10%, missional 10%, ubi 5%, referral 5%,
+    // 90% (35.64) with pdJ 40%, reward 12%, missional 10%, ubi 5%, referral 5%,
     // churches 5% and the remainder to the vault.
     let purchaseBody = null
     try { purchaseBody = JSON.parse(purchaseRes.body) } catch { /* non-JSON */ }
     const clusterAmt = (paymentSlearn * 10n) / 100n        // 10% → country fund
     const processAmt = paymentSlearn - clusterAmt          // 90% → processPayment
-    const expectedReward = (processAmt * 10n) / 100n       // reward 10%
+    const expectedReward = (processAmt * 12n) / 100n       // reward 12% (GD: 12% × 90% = 10.8% del original, R-#214)
     const expectedPdJ = (processAmt * 40n) / 100n          // pdJ 40%
 
     if (purchaseBody?.distribution && purchaseBody.distribution.length > 0) {
@@ -536,12 +536,12 @@ async function main() {
       if (dests.includes('course_vault')) ok('course_vault present')
       else console.log('  [!] course_vault not in distribution (event parsing may label differently)')
 
-      // Reward: 10% of the processPayment portion (in SLEARN).
+      // Reward: 12% of the processPayment portion (in SLEARN) — GD courses (R-#214).
       const cashbackItem = purchaseBody.distribution.find(d => d.destination === 'cashback' && d.crypto === 'slearn')
       if (cashbackItem) {
         const cb = Number(cashbackItem.amount)
         const exp = Number(expectedReward) / 100
-        if (Math.abs(cb - exp) < 0.1) ok(`cashback = ${cb.toFixed(2)} SLEARN (= 10% of the 90%: ${exp.toFixed(2)})`)
+        if (Math.abs(cb - exp) < 0.1) ok(`cashback = ${cb.toFixed(2)} SLEARN (= 12% of the 90%: ${exp.toFixed(2)})`)
         else fail(`cashback = ${cb.toFixed(2)} SLEARN, expected ~${exp.toFixed(2)}`)
       } else {
         console.log('  [!] cashback not in distribution (event parsing may miss it)')

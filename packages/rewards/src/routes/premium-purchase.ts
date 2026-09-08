@@ -11,6 +11,11 @@ import { checkReplayAttack } from '../lib/replay-protection'
 const PREMIUM_PCT = {
   pdJ: 50, reward: 10, missional: 10, ubi: 5, referral: 10, churches: 5,
 }
+// R-#214: en GD el 10% del pago va íntegro al cluster/country fund ANTES de
+// processPayment. El cashback del comprador se quiere ~10% del pago original;
+// como processPayment recibe solo el 90%, el % de reward a pasar es 12
+// (12 × 0.9 = 10.8% del original, ≈ 10% ± redondeo del contrato).
+const GD_REWARD_PCT = 12
 
 /**
  * Clean distribution computed from the percentages actually passed to
@@ -35,11 +40,12 @@ function computePremiumDistribution(usdtValue: number, slearnValue: number, cour
   const pu = isGd ? usdtValue * 0.9 : usdtValue
   const ps = isGd ? slearnValue * 0.9 : slearnValue
   const pdJPct = isGd ? 40 : PREMIUM_PCT.pdJ
+  const rewardPct = isGd ? GD_REWARD_PCT : PREMIUM_PCT.reward
 
   push('pdJ', (pu * pdJPct) / 100, 'usdt')
   push('pdJ', (ps * pdJPct) / 100, 'slearn')
   // Reward/cashback is delivered in SLEARN (USDT part is minted as SLEARN)
-  push('cashback', (pu * PREMIUM_PCT.reward * slearnRate) / 100 + (ps * PREMIUM_PCT.reward) / 100, 'slearn')
+  push('cashback', (pu * rewardPct * slearnRate) / 100 + (ps * rewardPct) / 100, 'slearn')
   push('missional', (pu * PREMIUM_PCT.missional) / 100, 'usdt')
   push('missional', (ps * PREMIUM_PCT.missional) / 100, 'slearn')
   push('ubi', (pu * PREMIUM_PCT.ubi) / 100, 'usdt')
@@ -49,8 +55,8 @@ function computePremiumDistribution(usdtValue: number, slearnValue: number, cour
   push('churches', (pu * PREMIUM_PCT.churches) / 100, 'usdt')
   push('churches', (ps * PREMIUM_PCT.churches) / 100, 'slearn')
   // Vault = remainder of the processed amount
-  push('course_vault', pu - (pu * (pdJPct + PREMIUM_PCT.reward + PREMIUM_PCT.missional + PREMIUM_PCT.ubi + PREMIUM_PCT.referral + PREMIUM_PCT.churches)) / 100, 'usdt')
-  push('course_vault', ps - (ps * (pdJPct + PREMIUM_PCT.reward + PREMIUM_PCT.missional + PREMIUM_PCT.ubi + PREMIUM_PCT.referral + PREMIUM_PCT.churches)) / 100, 'slearn')
+  push('course_vault', pu - (pu * (pdJPct + rewardPct + PREMIUM_PCT.missional + PREMIUM_PCT.ubi + PREMIUM_PCT.referral + PREMIUM_PCT.churches)) / 100, 'usdt')
+  push('course_vault', ps - (ps * (pdJPct + rewardPct + PREMIUM_PCT.missional + PREMIUM_PCT.ubi + PREMIUM_PCT.referral + PREMIUM_PCT.churches)) / 100, 'slearn')
   return distribution
 }
 
@@ -167,6 +173,7 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
     await deps.routeReward(gdCtx)
     const isGd = !!gdCtx.destino
     const pdJPct = isGd ? 40 : PREMIUM_PCT.pdJ
+    const rewardPct = isGd ? GD_REWARD_PCT : PREMIUM_PCT.reward
 
     if (isGd) {
       const clusterUSDT = gdCtx.gdUsdtAmount ?? 0n
@@ -216,7 +223,7 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
 
     const processPaymentHash = await deps.backend.sendTxAndWait(walletClient, publicClient, {
       address: slearnAddress, abi: SLEARNAbi as any, functionName: 'processPayment',
-      args: [walletAddress as Address, processUsdtAmount, processSlearnAmount, BigInt(courseIdNum), BigInt(pdJPct), BigInt(PREMIUM_PCT.reward), BigInt(PREMIUM_PCT.missional), BigInt(PREMIUM_PCT.ubi), BigInt(PREMIUM_PCT.referral), BigInt(PREMIUM_PCT.churches)],
+      args: [walletAddress as Address, processUsdtAmount, processSlearnAmount, BigInt(courseIdNum), BigInt(pdJPct), BigInt(rewardPct), BigInt(PREMIUM_PCT.missional), BigInt(PREMIUM_PCT.ubi), BigInt(PREMIUM_PCT.referral), BigInt(PREMIUM_PCT.churches)],
       chain, nonce,
     })
 
@@ -259,7 +266,7 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
         usuario_id: usuario.id, date: new Date(), type: 'donation_reward', crypto: 'slearn',
         amount: slearnReward, balance_impact: slearnReward, hash: null, wallet: walletAddress,
         categoria: 'cashback', subcategoria: 'course_purchase',
-        descripcion: `course reward: ${slearnReward.toFixed(2)} SLEARN (10% of the processed payment)`,
+        descripcion: `course reward: ${slearnReward.toFixed(2)} SLEARN (${isGd ? 12 : 10}% of the processed payment)`,
         metadata: { courseId: courseIdNum, processPaymentHash, distribution },
       }).execute()
     }

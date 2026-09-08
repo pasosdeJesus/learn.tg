@@ -2,6 +2,11 @@
 // El host inyecta DB, auth, métricas y las funciones de backend-config;
 // las rutas de la app re-exportan handlers del motor sin lógica propia.
 import { createRewardsApp } from '@learn-tg/rewards/index'
+// R-#214: registra el hook `reward:route-destination` del motor gdcluster en
+// este bundle. Las rutas del motor rewards que enrutan el 10% GD al cluster
+// (`/api/courses/premium/purchase`, `/api/check-crossword`) se ejecutan desde
+// aquí; sin el registro la compra GD se procesaba como curso no-GD.
+import '@learn-tg/gdcluster/register'
 import { newKyselyPostgresql } from '@/.config/kysely-db'
 import { authenticateUser } from '@/lib/authenticateUser'
 import { recordEvent } from '@/lib/metrics-server'

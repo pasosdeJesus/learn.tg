@@ -240,17 +240,21 @@ describe('premiumPurchase (motor rewards)', () => {
       expect.anything(), expect.anything(), expect.anything(),
       USDT_HASH, 'SL', 250000n, 0n, USDT_ADDRESS, SLEARN_ADDRESS,
     )
-    // processPayment receives the remaining 90% with 40% pdJ split (GD)
+    // processPayment receives the remaining 90% with 40% pdJ and 12% reward
+    // split (GD: cashback ≈10% del original = 12% del 90% procesado, R-#214)
     expect(deps.backend.sendTxAndWait).toHaveBeenLastCalledWith(
       expect.anything(), expect.anything(),
       expect.objectContaining({
         functionName: 'processPayment',
-        args: [WALLET, 2250000n, 0n, 1n, 40n, 10n, 10n, 5n, 10n, 5n],
+        args: [WALLET, 2250000n, 0n, 1n, 40n, 12n, 10n, 5n, 10n, 5n],
       }),
     )
     // country_fund shows 10% of the value
     const countryFund = json.distribution.find((d: any) => d.destination === 'country_fund')
     expect(countryFund.amount).toBeCloseTo(0.25, 2)
+    // cashback GD = 12% del 90% procesado (≈10.8% del original), en SLEARN
+    const cashback = json.distribution.find((d: any) => d.destination === 'cashback')
+    expect(cashback.amount).toBeCloseTo(2.5 * 0.9 * 0.12 * 22, 2) // 5.94 SLEARN
   })
 
   it('purchases with a mixed USDT + SLEARN payment', async () => {

@@ -120,14 +120,18 @@ async function navAndWait(page, url) {
   await new Promise(r => setTimeout(r, 3000))
 }
 
-/** Dispara el evento y espera a ver si la página recarga/navega. */
-async function emitAndCheck(page, label, fn) {
+/** Dispara el evento y espera (poll) a ver si la página recarga/navega. */
+async function emitAndCheck(page, label, fn, expectMove) {
   const before = page.url()
   await page.evaluate(fn)
-  await new Promise(r => setTimeout(r, 2500))
-  const after = page.url()
-  const moved = before !== after
-  console.log(`  ${label}: ${moved ? 'RECARGÓ → ' + after : 'sin recarga (OK)'}`)
+  // Poll hasta ~12s: la recarga tras signOut(redirect) puede tardar bajo carga.
+  let moved = false
+  for (let i = 0; i < 24; i++) {
+    await new Promise(r => setTimeout(r, 500))
+    if (page.url() !== before) { moved = true; break }
+  }
+  console.log(`  ${label}: ${moved ? 'RECARGÓ → ' + page.url() : 'sin recarga (OK)'}`)
+  if (expectMove && !moved) console.log('    (sin recarga; URL sigue en ' + before + ')')
   return moved
 }
 
