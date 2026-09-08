@@ -658,13 +658,13 @@ function normalizeClue(text) {
 }
 
 // Función para obtener perfil de usuario desde la API de Rails
-async function getUserProfile(walletAddress, csrfToken) {
+async function getUserProfile(walletAddress, apiToken) {
   try {
     const url = `${API_BASE}/usuarios.json`;
     const params = new URLSearchParams({
       'filtro[walletAddress]': walletAddress,
       'walletAddress': walletAddress,
-      'token': csrfToken
+      'token': apiToken
     });
     const fullUrl = `${url}?${params.toString()}`;
     console.log(`   URL: ${fullUrl}`);
@@ -774,11 +774,11 @@ async function runTest() {
     console.log('   ✅ Autenticación exitosa');
 
     // 0.5 Obtener nuevo CSRF token después de autenticación
-    console.log('\n   0.5 Nuevo CSRF token (post-autenticación)...');
+    console.log('\n   0.5 Token de API dedicado (post-autenticación, R-#227)...');
     let newToken = csrfToken;
     try {
-      const newCsrfRes = await apiClient.get('/api/auth/csrf');
-      newToken = newCsrfRes.data.csrfToken;
+      const tokRes = await apiClient.get('/api/auth/token');
+      if (tokRes.data?.token) newToken = tokRes.data.token;
       console.log(`      Token: ${newToken.slice(0, 10)}...`);
     } catch (error) {
       console.log(`      Error: ${error.message}`);

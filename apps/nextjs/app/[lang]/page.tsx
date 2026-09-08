@@ -98,18 +98,20 @@ export default function Page({ params }: PageProps) {
 
       let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?filtro[busidioma]=${lang}`
       console.log('[courses] fetching:', url)
-      let csrfToken = null
+      let apiToken = null
       let christian = false
 
       if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
-        csrfToken = await getCsrfToken()
-        url += `&filtro[busconBilletera]=true&walletAddress=${session.address}&token=${csrfToken}`
+        // R-#227: el token de API es el DEDICADO (learn.tg.authToken), no el
+        // CSRF; getCsrfToken() queda solo como respaldo legacy.
+        apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+        url += `&filtro[busconBilletera]=true&walletAddress=${session.address}&token=${apiToken}`
 
         // Determine whether the user is Christian so Global Disciples courses
         // (gdcluster/redgd) are only shown to Christians.
         try {
           const profileRes = await axios.get(
-            `/api/profile?walletAddress=${session.address}&token=${csrfToken}`,
+            `/api/profile?walletAddress=${session.address}&token=${apiToken}`,
           )
           christian = Number(profileRes.data?.religion_id) === 2
         } catch {
@@ -133,8 +135,8 @@ export default function Page({ params }: PageProps) {
 
           courseInfo.forEach(async (course: Course) => {
             let url2 = `/api/scholarship?courseId=${course.id}`
-            if (csrfToken) {
-              url2 += `&walletAddress=${session!.address}&token=${csrfToken}`
+            if (apiToken) {
+              url2 += `&walletAddress=${session!.address}&token=${apiToken}`
             }
             try {
               const response2 = await axios.get(url2)
@@ -201,8 +203,8 @@ export default function Page({ params }: PageProps) {
   const refreshCourseVault = async (courseId: number) => {
     if (!session || !address || !session.address || session.address.toLowerCase() !== address.toLowerCase())
       return
-    const csrfToken = await getCsrfToken()
-    const url2 = `/api/scholarship?courseId=${courseId}&walletAddress=${session.address}&token=${csrfToken}`
+    const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+    const url2 = `/api/scholarship?courseId=${courseId}&walletAddress=${session.address}&token=${apiToken}`
 
     try {
       const response2 = await axios.get(url2)

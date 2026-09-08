@@ -35,7 +35,7 @@ export default function Page({ params }: PageProps) {
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading course...","error":"Error: ","notFound":"Course not found."},"es":{"loading":"Cargando curso...","error":"Error: ","notFound":"Curso no encontrado."}}), [lang])
-  const [csrfToken, setCsrfToken] = useState('')
+  const [apiToken, setApiToken] = useState('')
   const [countdown, setCountdown] = useState(0)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -155,10 +155,10 @@ export default function Page({ params }: PageProps) {
   useEffect(() => {
     if (address) {
       getCsrfToken().then((token) => {
-        setCsrfToken(token || '')
+        setApiToken(token || '')
       })
     } else {
-      setCsrfToken('')
+      setApiToken('')
     }
   }, [address])
 

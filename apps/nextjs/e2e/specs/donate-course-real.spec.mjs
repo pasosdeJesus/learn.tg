@@ -111,7 +111,17 @@ async function siweSignIn(base, account) {
   if (!cbRes.ok) { fail(`SIWE callback: ${cbRes.status}`); return null }
   const cbCookies = cbRes.headers.getSetCookie?.() || []
   if (cbCookies.length) cookies = updateCookies(cookies, cbCookies)
-  return { token: csrfToken, cookies }
+
+  let apiToken = csrfToken
+  try {
+    const tokRes = await fetch(`${base}/api/auth/token`, { headers: { Cookie: cookies } })
+    if (tokRes.ok) {
+      const j = await tokRes.json()
+      if (j?.token) apiToken = j.token
+    }
+  } catch { /* respaldo CSRF legacy */ }
+
+  return { token: apiToken, cookies }
 }
 
 async function rpcRetry(fn, retries = 5) {

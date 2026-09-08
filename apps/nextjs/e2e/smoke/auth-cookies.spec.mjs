@@ -47,13 +47,13 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://learn.tg:3500/lear
 const CHAIN_ID = 11142220;
 
 // Función para obtener perfil de usuario desde la API de Rails
-async function getUserProfile(httpsAgent, cookiesString, walletAddress, csrfToken) {
+async function getUserProfile(httpsAgent, cookiesString, walletAddress, apiToken) {
   try {
     const url = `${API_BASE}/usuarios.json`;
     const params = new URLSearchParams({
       'filtro[walletAddress]': walletAddress,
       'walletAddress': walletAddress,
-      'token': csrfToken
+      'token': apiToken
     });
     const fullUrl = `${url}?${params.toString()}`;
     console.log(`   URL: ${fullUrl}`);
@@ -255,15 +255,14 @@ async function main() {
       console.log(`   Error: ${error.message}`);
     }
 
-    // 6. Nuevo CSRF token
-    console.log('\n6. Nuevo CSRF token');
+    // 6. Token de API dedicado (R-#227)
+    console.log('\n6. Token de API dedicado (/api/auth/token)');
     let newToken = csrfToken;
     try {
-      const newCsrfRes = await api.get('/api/auth/csrf');
-      newToken = newCsrfRes.data.csrfToken;
-      console.log(`   Status: ${newCsrfRes.status}`);
+      const tokRes = await api.get('/api/auth/token');
+      if (tokRes.data?.token) newToken = tokRes.data.token;
+      console.log(`   Status: ${tokRes.status}`);
       console.log(`   Token: ${newToken.slice(0, 10)}...`);
-      console.log(`   ¿Diferente? ${newToken !== csrfToken ? 'Sí' : 'No'}`);
       console.log(`   💡 Token para update-scores: ${newToken.slice(0, 10)}...`);
     } catch (error) {
       console.log(`   Error: ${error.message}`);

@@ -8,7 +8,7 @@ How wallet-based authentication works in learn.tg — from wallet connection to 
 
 ## Overview
 
-The platform uses **Sign-In With Ethereum (SIWE)** for passwordless authentication, but with a non-standard twist: the SIWE nonce (NextAuth CSRF token) doubles as the API authentication token stored in the database. NextAuth's JWT session only carries the user address for UI-level checks; actual API authorization is done by validating the token against the `billetera_usuario` table.
+The platform uses **Sign-In With Ethereum (SIWE)** for passwordless authentication. NextAuth's JWT session (cookie, `sub` = wallet address) is the **primary** identity for both UI-level checks and API authorization (session-first, R-#227); a dedicated API token stored in `billetera_usuario` is the legacy fallback for non-browser clients (Rails, specs). The SIWE nonce (NextAuth CSRF token) is used **only** as the handshake nonce, never as a persistent credential.
 
 ## Flow
 
@@ -34,12 +34,16 @@ User Wallet                Frontend                   NextAuth API Route        
     |                         |                              |    - New user: INSERT       |
     |                         |                              |      usuario +              |
     |                         |                              |      billetera_usuario      |
-    |                         |                              |      (token = nonce)        |
-    |                         |                              |    - Existing: UPDATE token  |
+    |                         |                              |      (token = random 256b)  |
+    |                         |                              |    - Existing: UPDATE token |
     |                         |                              |                            |
     |                         |<--[8] JWT session -----------|                            |
     |                         |    {sub: address}            |                            |
     |                         |    session.address = sub     |                            |
+    |                         |                              |                            |
+    |                         |--[9] GET /api/auth/token --->|                            |
+    |                         |    (same session cookie)     |                            |
+    |                         |<--- dedicated api token -----|                            |
 ```
 
 ### authorize() step by step
@@ -52,6 +56,13 @@ User Wallet                Frontend                   NextAuth API Route        
 6. New user → INSERT `usuario` + `billetera_usuario` (username = truncated address)
 7. Existing user → UPDATE `billetera_usuario.token`, UPDATE `usuario` (sign-in IPs, timestamps)
 8. Return `{ id: siwe.address }` → NextAuth creates JWT session
+
+> **R-#227:** step 7 stores a **dedicated random API token** (256 bits, from
+> `newApiToken()`) — the SIWE nonce/CSRF is never persisted as an API
+> credential. The token is exposed to the browser later via `GET
+> /api/auth/token` (same session cookie) and kept in localStorage as
+> `learn.tg.authToken` for API calls / Rails; it is a *legacy fallback*
+> because `authenticateUser` is now session-first.
 
 ### Hostname Validation
 
@@ -80,42 +91,57 @@ No server-side session store needed.
 
 ## Key Design Decisions
 
-### 1. CSRF token = API auth token
+### 1. Session-first API auth (R-#227); CSRF is only the SIWE nonce
 
-The SIWE nonce (retrieved via NextAuth's `getCsrfToken()`) serves two purposes:
-- **CSRF protection** during the SIWE handshake (standard)
-- **API authentication token** stored in `billetera_usuario.token` and sent with every authenticated API request
+**The NextAuth session cookie is the primary identity** for API authorization,
+not a DB token:
 
-This avoids a separate token generation step. The nonce is already a cryptographically random value tied to the session.
+- `authorize()` verifies the SIWE message whose nonce is the CSRF token
+  (standard handshake), then creates the JWT session (`sub` = wallet).
+- `authenticateUser()` validates the **session cookie first** (JWT signed with
+  `NEXTAUTH_SECRET`, `sub` == requested wallet, lowercase) and only falls back
+  to the DB token for non-browser clients.
+- The CSRF token is **never** persisted as an API credential.
 
-**Why not use the NextAuth JWT token directly?**
+**Why not carry the NextAuth JWT client-side?**
 
-- The NextAuth JWT lives in an HTTP-only cookie — inaccessible to client-side JavaScript for inclusion in API request headers/params.
-- Extracting and verifying the JWT server-side on every API call would require JWT decoding + signature verification, adding complexity and latency.
-- The CSRF token is available client-side via `getCsrfToken()` and can be sent as a plain query/body parameter.
-- Storing the token in `billetera_usuario` centralizes auth state in the database: one table links wallet → user → token. No JWT parsing needed — a simple string comparison suffices.
-- Each SIWE sign-in generates a fresh nonce, effectively rotating the API token on every wallet connection.
+- The NextAuth JWT lives in an HTTP-only cookie — the server reads it directly
+  via `getToken()`/`cookies()`; no client-side storage, no per-call JWT
+  decode needed server-side beyond the existing `authenticateUser()`.
+- CSRF for cookie-authenticated mutations is handled by the middleware
+  (`Origin`/`Sec-Fetch-Site`, see `doc/api-security.md` and R-#227 §4.3),
+  not by an app-level token in the body.
+
+**Why keep a DB token at all (legacy)?**
+
+- Rails (`servidor/`) and non-browser clients (e2e specs, scripts)
+  authenticate exclusively against `billetera_usuario.token`, so the column
+  and the legacy path stay during the migration. Each SIWE sign-in still
+  rotates a **dedicated random token** (`newApiToken()`, 256 bits) — not the
+  CSRF — exposed to the browser via `GET /api/auth/token` and stored in
+  localStorage as `learn.tg.authToken`. Removing the column is pending Rails
+  migration (R-#227 Fase 2).
+- Legacy-token staleness (another login/device rotated it) is harmless: the
+  session cookie authorizes regardless of token rotation.
 
 ### 2. Two-layer auth model
 
 | Layer | Mechanism | Purpose |
 |-------|-----------|---------|
-| **UI / session** | NextAuth JWT (`session.address`) | Is the user logged in? Which address? |
-| **API authorization** | `walletAddress` + `token` → DB lookup | Is this request authorized? |
+| **UI / session** | NextAuth JWT cookie (`session.address`) | Is the user logged in? Which address? |
+| **API authorization** | session cookie first; `walletAddress` + `token` legacy fallback | Is this request authorized? |
 
-The frontend checks `session.address` to decide page visibility. But every data-changing API call sends `walletAddress` + `token` as query/body params, and the API route validates them against `billetera_usuario` via `authenticateUser()`.
+The frontend checks `session.address` to decide page visibility. Data-changing
+API calls are cookie-authenticated (browser) or send `walletAddress` + `token`
+(non-browser), and the route validates via `authenticateUser()`.
 
 **Do not rely on `session.address` alone for API authorization** — use `authenticateUser()`.
 
-**Stale-token fallback:** every SIWE sign-in rotates `billetera_usuario.token`,
-so a browser holding an older token (e.g. a verifier whose wallet was also used
-by another login/device) would get silent 401s. When the `token` param is
-missing or mismatched, `authenticateUser()` now falls back to validating the
-NextAuth session cookie (JWT, `sub` = wallet address, signed with
-`NEXTAUTH_SECRET` via `getToken`) for the same wallet. Identity is unchanged
-(the session wallet must equal the requested wallet and exist in
-`billetera_usuario`); this is the same "session or token" acceptance already
-used by `guide-status`. See `lib/authenticateUser.ts`.
+**Order inside `authenticateUser()`:** (1) session cookie valid and
+`sub` == wallet → OK; (2) `AUTH_SESSION_ONLY=1` and no session → 401 (used to
+measure residual token dependencies); (3) legacy DB token match → OK. Debug
+tracing of every path is gated behind `DEBUG_AUTH=1` (no PII). See
+`lib/authenticateUser.ts`.
 
 ### 3. Wallet address case normalization
 
@@ -151,5 +177,7 @@ unaffected because `$host` and `$http_host` are both `learn.tg`.
 |-----------|------|-----------|
 | SIWE verification + DB upsert | `app/api/auth/auth-options.ts` | `authorize()` function, ~lines 40-240 |
 | Session callback (lowercase) | `app/api/auth/auth-options.ts` | `callbacks.session`, ~line 242 |
-| API token validation | `lib/authenticateUser.ts` | Full file (59 lines) |
+| API auth (session-first + legacy) | `lib/authenticateUser.ts` | Full file |
+| Dedicated API token endpoint | `app/api/auth/token/route.ts` | Full file |
+| CSRF/origin middleware | `apps/nextjs/middleware.ts` | Full file |
 | Frontend auth guard pattern | `app/[lang]/profile/page.tsx` | `useEffect` at ~line 256 |

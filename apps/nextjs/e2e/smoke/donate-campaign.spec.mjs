@@ -74,7 +74,16 @@ async function getAuthToken(base, account) {
     body: cbBody.toString(), redirect: 'manual',
   })
   if (!cbRes.ok) return null
-  return { cookie: cbRes.headers.getSetCookie?.()?.map(c => c.split(';')[0]).join('; ') || '', csrfToken }
+  const cookie = cbRes.headers.getSetCookie?.()?.map(c => c.split(';')[0]).join('; ') || ''
+  let apiToken = csrfToken
+  try {
+    const tokRes = await fetch(`${base}/api/auth/token`, { headers: { Cookie: cookie } })
+    if (tokRes.ok) {
+      const j = await tokRes.json()
+      if (j?.token) apiToken = j.token
+    }
+  } catch { /* respaldo CSRF legacy */ }
+  return { cookie, apiToken }
 }
 
 async function main() {
@@ -149,7 +158,7 @@ async function main() {
   ok('SIWE sign-in OK')
   const headers = { Cookie: auth.cookie, 'Content-Type': 'application/json' }
   const wallet = account.address
-  const token = auth.csrfToken
+  const token = auth.apiToken
 
   r = await fetch(`${SITE}/api/donations/lensenia/verify`, {
     method: 'POST', headers,

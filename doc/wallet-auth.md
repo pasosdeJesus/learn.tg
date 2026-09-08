@@ -49,7 +49,9 @@ Custom connect/disconnect button. Replaces RainbowKit's `ConnectButton`.
 4. Build SIWE message with EIP-55 checksummed address (`getAddress()`)
 5. Sign via `window.ethereum.request({ method: 'personal_sign', ... })`
 6. POST to `/api/auth/callback/credentials`
-7. Store `sessionAddress` + `authToken` in localStorage
+7. Fetch the dedicated API token from `/api/auth/token` (R-#227, same
+   session cookie; falls back to the CSRF token if the endpoint is
+   unavailable) and store `sessionAddress` + `authToken` in localStorage
 8. Reload page (NextAuth reads session cookie on mount)
 
 **Disconnect flow:**
@@ -143,16 +145,20 @@ Two keys managed by the auth system:
 | Key | Purpose | Set by | Cleared by |
 |-----|---------|--------|------------|
 | `learn.tg.sessionAddress` | Wallet address for UI persistence | `ConnectWalletButton` on connect | `WalletEventListener` on disconnect/session loss |
-| `learn.tg.authToken` | CSRF token reused as API auth token | `ConnectWalletButton` on connect | `WalletEventListener` on disconnect/session loss |
+| `learn.tg.authToken` | Dedicated API token (R-#227) for non-browser/legacy calls | `ConnectWalletButton` on connect (from `/api/auth/token`) | `WalletEventListener` on disconnect/session loss |
 
 These survive NextAuth's `useSession()` losing state on client-side
 navigation (bug #5719), ensuring the UI doesn't flash "Connect Wallet"
 between page transitions.
 
-The auth token is the SIWE nonce obtained via `getCsrfToken()` during the
-connect flow. It's stored in `billetera_usuario.token` in the database
-and sent with every authenticated API request. See
-[SIWE Auth Flow](siwe-auth-flow.md) for the full protocol.
+**Auth model (R-#227, session-first):** the primary API authorization is the
+NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The `authToken` in
+localStorage is a *legacy fallback* for clients that cannot send the cookie
+(Rails, non-browser specs). Since R-#227 the token is no longer the SIWE nonce:
+`authorize()` generates a dedicated random token (256 bits) at sign-in, and
+`ConnectWalletButton` fetches it from `GET /api/auth/token` right after the
+callback. If that fetch fails (older backend), the CSRF token is kept as a
+legacy fallback. See [SIWE Auth Flow](siwe-auth-flow.md) and REQ/227.
 
 ## Comparison with Previous Approach
 

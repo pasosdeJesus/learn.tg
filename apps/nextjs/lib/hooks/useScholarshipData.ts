@@ -40,10 +40,10 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
   const fetchScholarship = useCallback(async () => {
     if (!courseId || !address) return
     try {
-      const csrfToken = await getCsrfToken()
-      if (!csrfToken) return
+      const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+      if (!apiToken) return
       const { data: res } = await axios.get(
-        `/api/scholarship?courseId=${courseId}&walletAddress=${address}&token=${csrfToken}`
+        `/api/scholarship?courseId=${courseId}&walletAddress=${address}&token=${apiToken}`
       )
       setData({
         vaultCreated: res.vaultCreated != null ? Boolean(res.vaultCreated) : null,

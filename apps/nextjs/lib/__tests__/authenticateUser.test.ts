@@ -47,27 +47,27 @@ describe('authenticateUser session-cookie fallback', () => {
     setupCommonResponses()
   })
 
-  it('accepts a valid token normally (session fallback not invoked)', async () => {
+  it('authenticates by session cookie (session-first), ignoring a stale token', async () => {
     mockExecuteTakeFirst
-      .mockResolvedValueOnce({ ...BILLETERA, token: 'good-token' })
-      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor' })
-    const auth = await authenticateUser(mockDb(), '0xabcd1234', 'good-token')
-    expect(auth).not.toBeNull()
-    expect(auth!.usuario.id).toBe(42)
-  })
-
-  it('falls back to the session cookie when the token was rotated (stale)', async () => {
-    mockExecuteTakeFirst
-      .mockResolvedValueOnce(BILLETERA)            // token-path billetera lookup
       .mockResolvedValueOnce(BILLETERA)            // session-path billetera lookup
-      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor' })
+      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor' }) // session-path usuario lookup
     const auth = await authenticateUser(mockDb(), '0xabcd1234', 'stale-token')
     expect(auth).not.toBeNull()
     expect(auth!.usuario.id).toBe(42)
     expect(auth!.billetera.token).toBe('rotated-token')
   })
 
-  it('rejects when the session cookie belongs to another wallet', async () => {
+  it('falls back to the legacy token when there is no session cookie', async () => {
+    cookieValue = null
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ ...BILLETERA, token: 'good-token' }) // token-path billetera lookup
+      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor' })          // token-path usuario lookup
+    const auth = await authenticateUser(mockDb(), '0xabcd1234', 'good-token')
+    expect(auth).not.toBeNull()
+    expect(auth!.usuario.id).toBe(42)
+  })
+
+  it('rejects when the session cookie belongs to another wallet and the token is stale', async () => {
     cookieValue = await encode({
       token: { sub: '0xother9999' },
       secret: process.env.NEXTAUTH_SECRET as string,

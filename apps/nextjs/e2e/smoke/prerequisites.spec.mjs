@@ -147,7 +147,16 @@ async function siweSignIn(privateKey, address) {
     cookies = updateCookies(cookies, res.headers['set-cookie'])
   }
 
-  return { token: csrfToken, cookies, address }
+  // R-#227: token de API dedicado (no el CSRF), expuesto por /api/auth/token.
+  let apiToken = csrfToken
+  try {
+    const tokRes = await axios.get(`${SITE}/api/auth/token`, {
+      httpsAgent, headers: { Cookie: cookies },
+    })
+    if (tokRes.data?.token) apiToken = tokRes.data.token
+  } catch { /* respaldo CSRF legacy */ }
+
+  return { token: apiToken, cookies, address }
 }
 
 // ── API Helpers ─────────────────────────────────────────────────────

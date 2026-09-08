@@ -67,8 +67,8 @@ export function DeleteVerifiedDataDialog({ lang = 'en', onSuccess }: Props) {
 
     setIsLoading(true)
     try {
-      const token = await getCsrfToken()
-      if (!token) {
+      const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+      if (!apiToken) {
         toast({ title: t('unauthorized'), variant: 'destructive' })
         return
       }
@@ -78,7 +78,7 @@ export function DeleteVerifiedDataDialog({ lang = 'en', onSuccess }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           walletAddress: address.toLowerCase(),
-          token,
+          token: apiToken,
         }),
       })
 

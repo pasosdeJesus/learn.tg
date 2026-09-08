@@ -485,11 +485,11 @@ export default function ProfileForm({ params }: PageProps) {
       toast({ title: lang === 'es' ? 'Perfil actualizado' : 'Profile updated' })
       // Recalculate profile score after save
       try {
-        const csrfToken2 = await getCsrfToken()
+        const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
         const scoresRes = await fetch('/api/update-scores', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lang, walletAddress: address, token: csrfToken2 }),
+          body: JSON.stringify({ lang, walletAddress: address, token: apiToken }),
         })
         if (scoresRes.ok) {
           const scoresData = await scoresRes.json()

@@ -12,8 +12,17 @@ blockchain keys) must authenticate the caller. Three classes exist:
 | Class | Meaning | How a route expresses it |
 |---|---|---|
 | **public** | No auth needed; only non-sensitive data or self-data | Listed in `PUBLIC_ENDPOINTS` of the audit script with a reason comment |
-| **authenticated** | Any logged-in user (SIWE token / session cookie) | `authenticateUser(db, wallet, token)` from `lib/authenticateUser.ts` |
+| **authenticated** | Any logged-in user (session cookie first; legacy `wallet`+`token` fallback) | `authenticateUser(db, wallet, token)` from `lib/authenticateUser.ts` |
 | **admin-only** | Only verifier/admin wallets | `authenticateAdmin(db, wallet, token)` from `lib/admin-auth.ts` |
+
+> **Auth model (R-#227, session-first):** `authenticateUser` validates the
+> NextAuth session cookie first (JWT, `sub` == requested wallet, lowercase) and
+> falls back to the `billetera_usuario.token` legacy path only for
+> non-browser clients (Rails, specs). CSRF is never an API credential: each
+> SIWE sign-in rotates a dedicated random token (256 bits) that the browser
+> fetches from `GET /api/auth/token`. `AUTH_SESSION_ONLY=1` disables the legacy
+> path to measure residual dependencies; `DEBUG_AUTH=1` adds gated no-PII
+> tracing. See `doc/siwe-auth-flow.md`.
 
 Rules:
 
@@ -37,6 +46,21 @@ Rules:
    must gate that field behind admin credentials explicitly passed by the
    caller (`wallet`+`token`), never via the browser session cookie of a
    public page.
+
+## 1b. CSRF / origin checks for mutations (R-#227 §4.3)
+
+Cookie-authenticated APIs need CSRF protection on unsafe methods
+(`POST`/`PUT`/`PATCH`/`DELETE`). `apps/nextjs/middleware.ts` rejects:
+
+- `Sec-Fetch-Site` header = `cross-site` or `same-site` → **403** (browsers
+  always send it; `same-site` is not trusted because sibling subdomains could
+  forge requests). `same-origin`/`none` pass.
+- No `Sec-Fetch-Site` (non-browser client: specs, scripts, Rails) with an
+  `Origin` that does not match the request host → **403**.
+
+Non-browser clients with neither header pass: a CSRF attacker needs a browser
+(which always sends `Sec-Fetch-Site`), so there is no ambient-credentials
+bypass. NextAuth keeps its own internal CSRF for `/api/auth/*`.
 
 ## 2. The route audit script
 

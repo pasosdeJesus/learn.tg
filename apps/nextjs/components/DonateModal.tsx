@@ -422,7 +422,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         setNativeError('Amount exceeds the donatable CELO (balance minus gas and margin)')
         return
       }
-      const csrf = await getCsrfToken()
+      const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
       // Rabby (y algunas wallets) fallan con "no support chain found" si la red
       // no está activa: asegurar la cadena antes de enviar (switch/add chain).
       const w = walletClient as any
@@ -447,7 +447,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       )
       const endpoint = getTargetEndpoint(effectiveTarget!)
       const payload: Record<string, unknown> = {
-        walletAddress: address, token: csrf,
+        walletAddress: address, token: apiToken,
         donationAmountUSD: usdtNum,
         slearnDonationAmount: 0,
         usdtHash: txHash,

@@ -95,10 +95,16 @@ async function main() {
   const res = await axios.post(`${SITE}/api/auth/callback/credentials`, fd.toString(), { httpsAgent, headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookies }, maxRedirects: 0, validateStatus: s => s < 400 })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
 
+  let apiToken = csrfToken
+  try {
+    const tokRes = await axios.get(`${SITE}/api/auth/token`, { httpsAgent, headers: { Cookie: cookies } })
+    if (tokRes.data?.token) apiToken = tokRes.data.token
+  } catch { /* respaldo CSRF legacy */ }
+
   // 3. POST /api/add-donation with BOTH hashes
   console.log('\nPOST /api/add-donation (both) courseId=1...')
   const payload = {
-    walletAddress: account.address, token: csrfToken,
+    walletAddress: account.address, token: apiToken,
     donationAmountUSD: 1, slearnDonationAmount: 10,
     usdtHash, slearnHash, courseId: 1,
   }

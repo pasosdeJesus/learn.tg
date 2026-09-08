@@ -110,8 +110,13 @@ async function main() {
   if (cb.status === 200) ok('SIWE auth');
   else return fail('SIWE auth', `status ${cb.status}`);
 
-  // The nonce doubles as the API auth token (billetera_usuario.token)
-  const token = csrfToken;
+  // R-#227: token de API dedicado vía /api/auth/token (el CSRF es solo el nonce)
+  let apiToken = csrfToken;
+  try {
+    const tokRes = await api.get('/api/auth/token');
+    if (tokRes.data?.token) apiToken = tokRes.data.token;
+  } catch { /* respaldo CSRF legacy */ }
+  const token = apiToken;
   const walletAddress = account.address;
 
   // 2. Price endpoint (fresh wallet has no country → 400, proves deployed)

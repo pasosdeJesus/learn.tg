@@ -184,7 +184,14 @@ async function siweSignIn(privateKey, address) {
     validateStatus: s => s < 400,
   })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
-  return { token: csrfToken, cookies, address }
+
+  let apiToken = csrfToken
+  try {
+    const tokRes = await axios.get(`${SITE}/api/auth/token`, { httpsAgent, headers: { Cookie: cookies } })
+    if (tokRes.data?.token) apiToken = tokRes.data.token
+  } catch { /* respaldo CSRF legacy */ }
+
+  return { token: apiToken, cookies, address }
 }
 
 // ── API helpers ──

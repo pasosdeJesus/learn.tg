@@ -56,8 +56,16 @@ async function siweLogin(label) {
   const body = new URLSearchParams({ csrfToken, message: msgStr, signature: typeof sig === 'string' ? sig : sig.signature || String(sig), redirect: 'false', json: 'true' })
   const cb = await fetch(`${SITE}/api/auth/callback/credentials`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookies }, body: body.toString(), redirect: 'manual' })
   const c2 = mergeCookies(cookies, cb.headers.getSetCookie?.() || [])
-  console.log(`${label}: callback ${cb.status}${cb.status === 302 ? ' (ok)' : ''} | cookies:${c2.split(';').length} | token:${csrfToken.slice(0, 10)}…`)
-  return { cookies: c2, token: csrfToken }
+  let apiToken = csrfToken
+  try {
+    const tokRes = await fetch(`${SITE}/api/auth/token`, { headers: { Cookie: c2 } })
+    if (tokRes.ok) {
+      const j = await tokRes.json()
+      if (j?.token) apiToken = j.token
+    }
+  } catch { /* respaldo CSRF legacy */ }
+  console.log(`${label}: callback ${cb.status}${cb.status === 302 ? ' (ok)' : ''} | cookies:${c2.split(';').length} | token:${apiToken.slice(0, 10)}…`)
+  return { cookies: c2, token: apiToken }
 }
 
 async function authedGet(label, token, cookies) {

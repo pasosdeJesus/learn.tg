@@ -68,7 +68,16 @@ async function siweLogin(account) {
   const body = new URLSearchParams({ csrfToken, message: msgStr, signature: typeof sig === 'string' ? sig : sig.signature || String(sig), redirect: 'false', json: 'true' })
   const cb = await fetch(`${SITE}/api/auth/callback/credentials`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookies }, body: body.toString(), redirect: 'manual' })
   if (cb.status !== 200 && cb.status !== 302) throw new Error(`SIWE callback ${cb.status}`)
-  return { cookies: mergeCookies(cookies, cb.headers.getSetCookie?.() || []), token: csrfToken }
+  const finalCookies = mergeCookies(cookies, cb.headers.getSetCookie?.() || [])
+  let apiToken = csrfToken
+  try {
+    const tokRes = await fetch(`${SITE}/api/auth/token`, { headers: { Cookie: finalCookies } })
+    if (tokRes.ok) {
+      const j = await tokRes.json()
+      if (j?.token) apiToken = j.token
+    }
+  } catch { /* respaldo CSRF legacy */ }
+  return { cookies: finalCookies, token: apiToken }
 }
 async function rpcRetry(fn, retries = 8) {
   let last

@@ -121,9 +121,9 @@ export default function Page({
       const fetchAndSetNewCrossword = async () => {
         console.log('Fetching new crossword')
         try {
-          const csrfToken = await getCsrfToken()
-          if (!csrfToken) throw new Error('Could not get CSRF token')
-          setGCsrfToken(csrfToken)
+          const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+          if (!apiToken) throw new Error('Could not get API token')
+          setGCsrfToken(apiToken)
 
           let urlc = 
             `/api/crossword?courseId=${course.id}` +
@@ -132,7 +132,7 @@ export default function Page({
             `&guide=${pathSuffix}` +
             `&guideNumber=${guideNumber}` +
             `&walletAddress=${address}` +
-            `&token=${csrfToken}`
+            `&token=${apiToken}`
 
           console.log(`Fetching Crossword: ${urlc}`)
           const response = await axios.get(urlc)
@@ -177,9 +177,9 @@ export default function Page({
             setPlacements(savedState.placements)
             setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
 
-            const csrfToken = await getCsrfToken()
-            if (!csrfToken) throw new Error('Could not get CSRF token for restored session')
-            setGCsrfToken(csrfToken)
+            const apiToken = localStorage.getItem('learn.tg.authToken') || await getCsrfToken()
+            if (!apiToken) throw new Error('Could not get API token for restored session')
+            setGCsrfToken(apiToken)
 
             inputRefs.current = savedState.grid.map(() => [])
             setIsLoading(false)

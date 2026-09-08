@@ -77,7 +77,18 @@ async function siweSignIn(privateKey, address) {
     maxRedirects: 0, validateStatus: s => s < 400,
   })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
-  return { token: csrfToken, cookies, address }
+
+  // R-#227: el token de API es el DEDICADO expuesto por /api/auth/token
+  // (session cookie); el CSRF ya no es un credencial válido.
+  let apiToken = csrfToken
+  try {
+    const tokRes = await axios.get(`${SITE}/api/auth/token`, {
+      httpsAgent, headers: { Cookie: cookies },
+    })
+    if (tokRes.data?.token) apiToken = tokRes.data.token
+  } catch { /* fallback: CSRF legacy */ }
+
+  return { token: apiToken, cookies, address }
 }
 
 async function apiPatch(pathname, body, params, cookies) {
@@ -110,11 +121,11 @@ async function main() {
     nombre: 'E2E Checkout', email: testEmail, pais_id: 694, religion_id: 2,
     position_israel_gaza: 'no', place_of_worship: 'E2E Checkout Church',
     place_of_worship_location: 'Freetown', church_relationship: 'pastor',
-  }, auth)
+  }, auth, s.cookies)
 
   // 3. Verifier confirms the worship location → eligible to buy GD
   const vAuth = await siweSignIn(verifier.pk, verifier.addr)
-  const profile = await axios.get(`${SITE}/api/profile?walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(s.token)}`, { httpsAgent }).then(r => r.data)
+  const profile = await axios.get(`${SITE}/api/profile?walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(s.token)}`, { httpsAgent, headers: { Cookie: s.cookies } }).then(r => r.data)
   await apiPatch(`/api/admin/user/${profile.id}`, {
     verified_place_of_worship_location: 'Freetown',
     verified_place_of_worship: 'E2E Checkout Church',

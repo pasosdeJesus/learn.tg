@@ -71,8 +71,17 @@ async function getAuthToken(base, account) {
     body: cbBody.toString(), redirect: 'manual',
   })
   if (!cbRes.ok) return null
-  // The CSRF token is the auth token stored in billetera_usuario
-  return { cookie: cbRes.headers.getSetCookie?.()?.map(c => c.split(';')[0]).join('; ') || '', csrfToken }
+  const cookie = cbRes.headers.getSetCookie?.()?.map(c => c.split(';')[0]).join('; ') || ''
+  // R-#227: token de API dedicado vía /api/auth/token (el CSRF es solo el nonce)
+  let apiToken = csrfToken
+  try {
+    const tokRes = await fetch(`${base}/api/auth/token`, { headers: { Cookie: cookie } })
+    if (tokRes.ok) {
+      const j = await tokRes.json()
+      if (j?.token) apiToken = j.token
+    }
+  } catch { /* respaldo CSRF legacy */ }
+  return { cookie, apiToken }
 }
 
 async function main() {
@@ -92,7 +101,7 @@ async function main() {
 
   const headers = { Cookie: auth.cookie, 'Content-Type': 'application/json' }
   const wallet = account.address
-  const token = auth.csrfToken
+  const token = auth.apiToken
 
   // ── 1. Missing params ──
   console.log('\n── 1. Missing required params ──')
