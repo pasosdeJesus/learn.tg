@@ -203,6 +203,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       return data
     },
     onSuccess: (data) => {
+      diagMark('erc20-onSuccess', { hasDistribution: !!data?.distribution, hasIncrement: !!data?.increment })
       if (data?.slearnHash) setResultTxHash(data.slearnHash)
       else if (data?.usdtHash) setResultTxHash(data.usdtHash)
       if (data?.increment && data.increment > 0) setResultCashback(data.increment)
@@ -460,12 +461,14 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         if (comment.trim()) payload.comment = comment.trim()
       }
       const { data } = await axios.post(endpoint, payload)
+      diagMark('native-verify-ok', { hasDistribution: !!data?.distribution, hasIncrement: !!data?.increment })
       setResultTxHash(txHash)
       if (data?.increment && data.increment > 0) setResultCashback(data.increment)
       if (data?.distribution) setResultDistribution(getDistributionFromResponse(data, lang || 'en'))
       setShowResult(true)
     } catch (e: any) {
       console.error('[DonateModal] native CELO donation failed:', e?.shortMessage || e?.message || e)
+      diagMark('native-error', { msg: String(e?.message || e).slice(0, 120) })
       const respErr = e?.response?.data?.error || e?.response?.data?.message
       const raw = respErr || e?.shortMessage || e?.message || String(e)
       setNativeError(/no support chain/i.test(raw)
@@ -475,7 +478,25 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       setSendingNative(false)
     }
   }
-  const handleDonateClick = () => { if (isNativePay) void handleNativeDonate(); else executePayment() }
+  // TEMP-DIAG (R-#227 problema 1): marcador global + timestamps para saber si
+  // un evento de wallet (accountsChanged/disconnect) recarga la página durante
+  // la donación, antes del fix. Eliminar tras el diagnóstico.
+  const diagTs = () => new Date().toISOString()
+  const diagMark = (what: string, extra?: Record<string, unknown>) => {
+    const rec = { t: diagTs(), what, ...extra }
+    ;(window as any).__donationDiag = rec
+    console.log('[DonateDiag]', JSON.stringify(rec))
+  }
+
+  const setDonationInFlight = (v: boolean) => {
+    ;(window as any).__donationInFlight = v
+  }
+
+  const handleDonateClick = () => {
+    setDonationInFlight(true)
+    diagMark('donateClick', { isNative: isNativePay, target: effectiveTarget?.type })
+    if (isNativePay) void handleNativeDonate(); else executePayment()
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
