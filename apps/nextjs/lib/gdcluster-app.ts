@@ -9,6 +9,7 @@ import '@learn-tg/gdcluster/register'
 import { newKyselyPostgresql } from '@/.config/kysely-db'
 import { authenticateUser } from '@/lib/authenticateUser'
 import { authenticateAdmin } from '@/lib/admin-auth'
+import { raiseVerifierAlert, resolveVerifierAlert } from '@/lib/verifier-alerts'
 import {
   getPublicClient,
   getWalletClient,
@@ -23,6 +24,8 @@ export const gdclusterApp = createGdclusterApp({
   db: () => newKyselyPostgresql(),
   authenticateUser,
   authenticateAdmin,
+  notifyVerifiers: (evt) => raiseVerifierAlert(newKyselyPostgresql(), evt),
+  resolveVerifierAlert: (ref) => resolveVerifierAlert(newKyselyPostgresql(), ref),
   backend: {
     getPublicClient,
     getWalletClient,

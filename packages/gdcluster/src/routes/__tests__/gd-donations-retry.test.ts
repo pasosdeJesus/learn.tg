@@ -15,6 +15,7 @@ const rowMeta = {
   campaignWallet: CAMPAIGN_WALLET, pdjTreasury: TREASURY,
   tokenAddress: USDT_MAIN, tokenDecimals: 6,
   tokenAmountRaw: '10000000', campaignRaw: '9000000', pdjRaw: '1000000',
+  alertRefKey: 'campaign:lensenia:0x' + '00'.repeat(32),
 }
 
 function buildDeps(rows: any[]) {
@@ -55,6 +56,8 @@ function buildDeps(rows: any[]) {
 describe('retryPendingCampaignForwards', () => {
   it('re-forwards pending rows and clears forwardPending', async () => {
     const { deps, sendTxAndWait, seen } = buildDeps([{ id: 7, metadata: { ...rowMeta } }])
+    deps.resolveVerifierAlert = vi.fn(async () => 1)
+    deps.notifyVerifiers = vi.fn(async () => 1)
     const done = await retryPendingCampaignForwards(deps, 'lensenia')
     expect(done).toBe(1)
     expect(sendTxAndWait).toHaveBeenCalledTimes(2)
@@ -66,6 +69,24 @@ describe('retryPendingCampaignForwards', () => {
     expect(row.payload.metadata.forwardPending).toBe(false)
     expect(row.payload.metadata.campaignForwardHash).toBeTruthy()
     expect(row.payload.metadata.pdjForwardHash).toBeTruthy()
+    // Resuelto → la alerta a verificadores se marca como leída para todos
+    expect(deps.resolveVerifierAlert).toHaveBeenCalledWith({ type: 'funds_forward_pending', refKey: rowMeta.alertRefKey })
+    expect(deps.notifyVerifiers).not.toHaveBeenCalled()
+  })
+
+  it('re-alerta (idempotente) cuando el reenvío sigue pendiente tras el reintento', async () => {
+    const { deps, sendTxAndWait, seen } = buildDeps([{ id: 8, metadata: { ...rowMeta } }])
+    deps.resolveVerifierAlert = vi.fn(async () => 1)
+    deps.notifyVerifiers = vi.fn(async () => 1)
+    sendTxAndWait.mockRejectedValue(new Error('rpc down'))
+    const done = await retryPendingCampaignForwards(deps, 'lensenia')
+    expect(done).toBe(0)
+    expect(seen()!.payload.metadata.forwardPending).toBe(true)
+    expect(deps.notifyVerifiers).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'funds_forward_pending',
+      refKey: rowMeta.alertRefKey,
+    }))
+    expect(deps.resolveVerifierAlert).not.toHaveBeenCalled()
   })
 
   it('skips rows that are already resolved or belong to another campaign', async () => {

@@ -163,6 +163,8 @@ describe('verifyCampaignDonation — auto-forward retries (REQ/223)', () => {
 
   it('records the donation as pending when the forward keeps failing', async () => {
     const { deps, db, sendTxAndWait } = buildDeps()
+    deps.notifyVerifiers = vi.fn(async () => 1)
+    deps.resolveVerifierAlert = vi.fn(async () => 1)
     sendTxAndWait.mockRejectedValue(new Error('boom'))
     const res = await verifyCampaignDonation(deps, req({
       walletAddress: DONOR, token: 'tok', usdtHash: '0x' + '22'.repeat(32),
@@ -177,6 +179,12 @@ describe('verifyCampaignDonation — auto-forward retries (REQ/223)', () => {
     expect(db.insertInto).toHaveBeenCalledTimes(1)
     const inserted = db.insertInto.mock.results[0].value.values.mock.calls[0][0]
     expect(inserted.metadata.forwardPending).toBe(true)
+    // Alerta a los verificadores (patrón billetera intermediaria, REQ/223)
+    expect(deps.notifyVerifiers).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'funds_forward_pending',
+      refKey: 'campaign:lensenia:0x' + '22'.repeat(32),
+    }))
+    expect(deps.resolveVerifierAlert).not.toHaveBeenCalled()
   })
 })
 

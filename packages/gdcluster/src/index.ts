@@ -46,6 +46,21 @@ export interface GdclusterDeps {
     wallet: string,
     token: string,
   ) => Promise<{ usuario_id: number; billetera: string } | null>
+  /**
+   * Alerta in-app a TODOS los verificadores (REQ/223 — patrón "billetera del
+   * backend como intermediaria"): p. ej. un reenvío de donación pendiente.
+   * Idempotente por (type, refKey). La inyecta el host (D2) — el motor no
+   * conoce la lista de verificadores ni la tabla de notificaciones.
+   */
+  notifyVerifiers?: (evt: {
+    type: string
+    refKey: string
+    title: string
+    content: string
+    link?: string
+  }) => Promise<number>
+  /** Marca como leída — para todos los destinatarios — la alerta type + refKey. */
+  resolveVerifierAlert?: (ref: { type: string; refKey: string }) => Promise<number>
 }
 
 export interface RouteHandlers {

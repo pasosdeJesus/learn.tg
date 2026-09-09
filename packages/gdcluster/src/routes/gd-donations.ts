@@ -22,6 +22,27 @@ import type { GdclusterDeps } from '../index'
 
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 
+// Alertas a verificadores (REQ/223 — patrón "billetera del backend como
+// intermediaria"): type/refKey genéricos; cada operación que deja fondos
+// pendientes en la billetera del backend usa el mecanismo de
+// apps/nextjs/lib/verifier-alerts.ts vía deps D2 (notifyVerifiers /
+// resolveVerifierAlert).
+const FORWARD_PENDING_ALERT_TYPE = 'funds_forward_pending'
+
+export function campaignAlertRefKey(slug: string, donorTxHash: string): string {
+  return `campaign:${slug}:${donorTxHash.toLowerCase()}`
+}
+
+function pendingForwardAlertCopy(slug: string, detail?: string): { title: string; content: string; link?: string } {
+  return {
+    title: 'Reenvío de fondos pendiente / Pending funds forward',
+    content: `Campaña ${slug}: una donación registrada dejó fondos en la billetera del backend sin reenviar (hash pendiente). Se reintenta automáticamente; al resolverse, esta alerta se marca como leída para todos. / Campaign ${slug}: a recorded donation left funds in the backend wallet pending relay. It retries automatically; once resolved, this alert is marked read for everyone.${
+      detail ? `\n${detail}` : ''
+    }`,
+    link: '',
+  }
+}
+
 async function extractAmountsFromReceipt(deps: GdclusterDeps, txHash: string, backendWallet: string) {
   // Poll across several RPCs: forno can lag indexing freshly-mined receipts
   // while mirrors (ankr/drpc/publicnode) return them immediately.
@@ -492,6 +513,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       campaignWallet: cfg.wallet, destination: dest,
       campaignForwardHash: campaignHash, pdjForwardHash: pdjHash, mintHash,
       reserveForwardHash: reserveHash, forwardPending,
+      ...(forwardPending ? { alertRefKey: campaignAlertRefKey(slug, usdtHash) } : {}),
       // Datos crudos para reintentar el reenvío pendiente sin recalcular
       tokenAddress: tokenAddr, tokenDecimals, tokenAmountRaw: tokenAmount.toString(),
       campaignRaw: campaignRaw.toString(), pdjRaw: pdjRaw.toString(),
@@ -526,6 +548,15 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     // movimientos/balance debe servirse fresco, sin esperar el TTL de 60 s
     // (REQ/223 — al cerrar el modal de éxito la página recarga las secciones).
     invalidateCampaignMovements(slug)
+
+    // Fondos pendientes en la billetera del backend (patrón intermediaria):
+    // alertar a los verificadores (idempotente por type+refKey).
+    if (forwardPending && deps.notifyVerifiers) {
+      const copy = pendingForwardAlertCopy(slug, breakdownText)
+      await deps
+        .notifyVerifiers({ type: FORWARD_PENDING_ALERT_TYPE, refKey: campaignAlertRefKey(slug, usdtHash), ...copy })
+        .catch((e: any) => console.error('[CampaignDonation] notify verifiers failed:', e?.message || e))
+    }
 
     return NextResponse.json({
       success: true, txHash: usdtHash,
@@ -635,6 +666,20 @@ export async function retryPendingCampaignForwards(deps: GdclusterDeps, slug: st
           // Reenvío completado: el movimiento entrante ya existe en el explorer;
           // que el próximo GET no sirva la caché vieja (TTL 60 s).
           invalidateCampaignMovements(slug)
+        }
+        // Resolución/estado de la alerta a verificadores (patrón intermediaria):
+        // - resuelto → marcar la alerta como leída para todos;
+        // - sigue pendiente → re-alertar (idempotente por type+refKey).
+        if (m.alertRefKey) {
+          if (!stillPending) {
+            await deps
+              .resolveVerifierAlert?.({ type: FORWARD_PENDING_ALERT_TYPE, refKey: m.alertRefKey })
+              .catch((e: any) => console.error('[CampaignDonation:retry] resolve verifier alert failed:', e?.message || e))
+          } else if (deps.notifyVerifiers) {
+            await deps
+              .notifyVerifiers({ type: FORWARD_PENDING_ALERT_TYPE, refKey: m.alertRefKey, ...pendingForwardAlertCopy(slug) })
+              .catch((e: any) => console.error('[CampaignDonation:retry] notify verifiers failed:', e?.message || e))
+          }
         }
       } catch (e: any) {
         console.error(`[CampaignDonation:retry] row ${id} failed:`, e?.shortMessage || e?.message || e)
