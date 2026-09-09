@@ -90,9 +90,11 @@ export default function Page({ params }: PageProps) {
           </a>
         </section>
 
-        {/* REQ/223: movimientos recientes de la billetera de la campaña */}
+        {/* REQ/223: movimientos recientes de la billetera de la campaña.
+            key={refreshTick}: al cerrar el modal de éxito de una donación se
+            remonta (refetch) igual que BalanceDisplay. */}
         <div className="mt-6">
-          <Movements slug="lensenia" lang={lang} limit={8} showLink />
+          <Movements key={refreshTick} slug="lensenia" lang={lang} limit={8} showLink />
         </div>
       </div>
     </main>

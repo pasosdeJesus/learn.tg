@@ -20,6 +20,7 @@ export interface Movement {
   counterpartyName: string | null
   contract: boolean
   tag: 'pool' | 'xaut' | null
+  comment?: string | null
 }
 
 export interface MovementsResponse {
@@ -65,6 +66,7 @@ export default function Movements({
       loadFailed: 'Could not load movements. Try again later.',
       in: 'In', out: 'Out', self: 'Internal',
       token: 'Token', amount: 'Amount', date: 'Date', chain: 'Chain', dir: 'Dir',
+      comment: 'Comment',
       tagPool: 'Pool (invested)', tagXaut: 'XAUt0', tagNone: '—',
       note: 'Transparency note: outflows of this wallet went to smart contracts — e.g. Uniswap pools and the XAUt0 (gold) token — not to personal accounts. Current balances are shown in the balance card. Historical P&L per investment is a future phase.',
       devNote: 'Development site: movements below are the TESTNET ones (Celo Sepolia). The balance card shows the real mainnet wallet.',
@@ -77,6 +79,7 @@ export default function Movements({
       loadFailed: 'No se pudieron cargar los movimientos. Intenta más tarde.',
       in: 'Entrada', out: 'Salida', self: 'Interno',
       token: 'Token', amount: 'Monto', date: 'Fecha', chain: 'Cadena', dir: 'Dir.',
+      comment: 'Comentario',
       tagPool: 'Piscina (invertido)', tagXaut: 'XAUt0', tagNone: '—',
       note: 'Nota de transparencia: las salidas de esta billetera fueron a contratos inteligentes — p. ej. piscinas Uniswap y el token XAUt0 (oro) — no a cuentas personales. Los saldos actuales se muestran en la tarjeta de balance. El P&L histórico por inversión es una fase futura.',
       devNote: 'Sitio de desarrollo: los movimientos de abajo son los de PRUEBA (Celo Sepolia). La tarjeta de balance muestra la billetera real en mainnet.',
@@ -100,6 +103,7 @@ export default function Movements({
   useEffect(() => { load() }, [load])
 
   const rows = data?.rows || []
+  const hasComments = rows.some((m) => m.comment)
   const isTestnet = data?.network === 'testnet' || process.env.NEXT_PUBLIC_NETWORK !== 'celo'
   return (
     <div className="rounded-2xl bg-white shadow-md p-4 text-gray-800">
@@ -130,6 +134,7 @@ export default function Movements({
                 <th className="py-1 pr-2">{t('amount')}</th>
                 <th className="py-1 pr-2">{t('token')}</th>
                 <th className="py-1 pr-2">Detail</th>
+                {hasComments && <th className="py-1 pr-2">{t('comment')}</th>}
                 <th className="py-1">Tx</th>
               </tr>
             </thead>
@@ -153,6 +158,15 @@ export default function Movements({
                       <span className="font-medium">{tag}</span>
                       {m.counterparty && <span className="block text-gray-400 truncate max-w-[12rem]">{label}</span>}
                     </td>
+                    {hasComments && (
+                      <td className="py-1 pr-2 max-w-[16rem]">
+                        {m.comment ? (
+                          <span title={m.comment} className="text-gray-600 italic break-words">{m.comment}</span>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                    )}
                     <td className="py-1">
                       {m.hash ? (
                         <a href={explorerFor(m.chain, m.hash)} target="_blank" rel="noopener noreferrer"

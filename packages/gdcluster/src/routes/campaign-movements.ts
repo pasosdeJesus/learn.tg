@@ -8,7 +8,10 @@
  * Sin secretos, datos públicos de la billetera destino.
  */
 
+import { sql } from 'kysely'
+
 import { getCampaignConfig } from '../lib/donation-target'
+import type { GdclusterDeps } from '../index'
 
 const TTL = 60_000
 const cache = new Map<string, { at: number; value: any }>()
@@ -31,6 +34,19 @@ const addrNameCache = new Map<string, { name: string | null; contract: boolean; 
 function cacheGet(key: string) {
   const hit = cache.get(key)
   return hit && Date.now() - hit.at < TTL ? hit.value : undefined
+}
+
+/**
+ * Invalida la caché de movimientos de una campaña (REQ/223): al registrarse una
+ * donación (o completarse un reenvío pendiente) el próximo GET debe servirse
+ * fresco — si no, el resumen/historial seguiría mostrando la lista vieja
+ * durante hasta 60 s aunque la UI recargue.
+ */
+export function invalidateCampaignMovements(slug: string): void {
+  const prefix = `mov|${slug}|`
+  for (const key of Array.from(cache.keys())) {
+    if (key.startsWith(prefix)) cache.delete(key)
+  }
 }
 
 function poolish(s: string | null | undefined): boolean {
@@ -70,9 +86,52 @@ interface Movement {
   counterpartyName: string | null
   contract: boolean
   tag: 'pool' | 'xaut' | null
+  /** Comentario del donante (REQ/223), adjuntado al movimiento entrante del reenvío de su donación */
+  comment?: string | null
+}
+
+/**
+ * REQ/223 — enriquece los movimientos entrantes de la billetera de la campaña
+ * con el comentario del donante (transparencia de la procedencia de los fondos).
+ * Une por hash: el ledger guarda el hash del reenvío a la billetera de la
+ * campaña en `metadata.campaignForwardHash` (verify de campaña), y ese mismo
+ * hash aparece como transferencia entrante en el explorer.
+ */
+export async function attachDonorComments(db: any, rows: Movement[]): Promise<Movement[]> {
+  const hashes = Array.from(
+    new Set(rows.filter((r) => r.direction === 'in' && r.hash).map((r) => r.hash.toLowerCase())),
+  )
+  if (hashes.length === 0) return rows
+  let ledger: Array<{ metadata: any }> = []
+  try {
+    ledger = await db
+      .selectFrom('transaction')
+      .select(['metadata'])
+      .where('subcategoria', '=', 'campaign')
+      .where(sql`lower(metadata ->> 'campaignForwardHash')`, 'in', hashes)
+      .execute()
+  } catch (e) {
+    // Nunca romper los movimientos por falta de enriquecimiento (explorer o BD caídos).
+    console.error('[campaignMovements] donor-comment lookup failed:', e instanceof Error ? e.message : String(e))
+    return rows
+  }
+  const commentByHash: Record<string, string> = {}
+  for (const row of ledger) {
+    const md = row.metadata
+    if (md && typeof md.campaignForwardHash === 'string' && typeof md.comment === 'string' && md.comment) {
+      commentByHash[md.campaignForwardHash.toLowerCase()] = md.comment
+    }
+  }
+  if (Object.keys(commentByHash).length === 0) return rows
+  return rows.map((r) => {
+    if (r.direction !== 'in' || !r.hash) return r
+    const c = commentByHash[r.hash.toLowerCase()]
+    return c ? { ...r, comment: c } : r
+  })
 }
 
 export async function campaignMovements(
+  deps: GdclusterDeps,
   req?: Request,
   params?: Record<string, string>,
 ): Promise<Response> {
@@ -166,7 +225,7 @@ export async function campaignMovements(
   }
 
   rows.sort((a, b) => (a.ts < b.ts ? 1 : -1))
-  const sliced = rows.slice(0, limit)
+  const sliced = await attachDonorComments(deps.db(), rows.slice(0, limit))
   const body = { slug, network, wallet, chains, rows: sliced, total: rows.length, truncated: rows.length > limit }
   cache.set(cacheKey, { at: Date.now(), value: body })
   return Response.json(body)

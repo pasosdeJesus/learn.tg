@@ -91,7 +91,7 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
       GET: (req, params) => campaignTransparency(deps, params),
     },
     'donations/[slug]/movements': {
-      GET: (req, params) => campaignMovements(req, params),
+      GET: (req, params) => campaignMovements(deps, req, params),
     },
     'cluster': {
       POST: (req) => createCluster(deps, req as NextRequest),

@@ -17,6 +17,7 @@ import {
   CAMPAIGN_PDJ_MAX_PCT,
 } from '../lib/donation-target'
 import { getTokenUsdPrice, round2 } from '../lib/token-prices'
+import { invalidateCampaignMovements } from './campaign-movements'
 import type { GdclusterDeps } from '../index'
 
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
@@ -521,6 +522,11 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       } as any).execute()
     }
 
+    // Donación registrada (con reenvío o pendiente): el próximo GET de
+    // movimientos/balance debe servirse fresco, sin esperar el TTL de 60 s
+    // (REQ/223 — al cerrar el modal de éxito la página recarga las secciones).
+    invalidateCampaignMovements(slug)
+
     return NextResponse.json({
       success: true, txHash: usdtHash,
       tokenAmount: String(tokenAmount),
@@ -624,7 +630,12 @@ export async function retryPendingCampaignForwards(deps: GdclusterDeps, slug: st
           },
           updated_at: new Date(),
         } as any).where('id', '=', id).execute()
-        if (updates.campaignForwardHash || updates.pdjForwardHash) done++
+        if (updates.campaignForwardHash || updates.pdjForwardHash) {
+          done++
+          // Reenvío completado: el movimiento entrante ya existe en el explorer;
+          // que el próximo GET no sirva la caché vieja (TTL 60 s).
+          invalidateCampaignMovements(slug)
+        }
       } catch (e: any) {
         console.error(`[CampaignDonation:retry] row ${id} failed:`, e?.shortMessage || e?.message || e)
       } finally {
