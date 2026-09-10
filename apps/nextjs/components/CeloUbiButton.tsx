@@ -3,8 +3,8 @@
 import { useState, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import axios from 'axios'
-import { useSession } from 'next-auth/react'
 import { getApiToken } from '@/lib/auth-token'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
@@ -30,8 +30,11 @@ interface ClaimResult {
 }
 
 export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
-  const { data: session } = useSession()
-  const sessionAddress = session?.address || (typeof window !== "undefined" ? localStorage.getItem("learn.tg.sessionAddress") : null)
+  // R-#218: useAuthAddress difiere el fallback de localStorage hasta después de
+  // montar (el servidor no tiene localStorage). Leerlo síncrono en el primer
+  // render provocaba hydration mismatch y el botón quedaba `disabled` para
+  // siempre al cargar la página directamente (p. ej. /donations/lensenia).
+  const { address: sessionAddress } = useAuthAddress()
 
   const [claimState, setClaimState] = useState<ClaimStatus>('idle')
   const [dialogOpen, setDialogOpen] = useState(false)
