@@ -2,7 +2,7 @@
 
 // REQ #223 — página de donación de la campaña Lensenia Water Well.
 // Estructura (REQ/223 §3.1): header, progreso, breakdown multi-cadena,
-// donar, GoodDollar claim (guía 3) y otras formas de donar.
+// donar, claim Learn.tg-UBI + GoodDollar (guía 3) y otras formas de donar.
 
 import { use, useState, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
@@ -10,6 +10,7 @@ import BalanceDisplay from '@/components/donations/BalanceDisplay'
 import DonateButton from '@/components/donations/DonateButton'
 import Movements from '@/components/donations/Movements'
 import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
+import CeloUbiButton from '@/components/CeloUbiButton'
 
 type PageProps = { params: Promise<{ lang: string }> }
 
@@ -24,10 +25,10 @@ export default function Page({ params }: PageProps) {
       description:
         'Clean water transforms a community. Your donation goes straight to the Lensenia water well project: 100% reaches the campaign unless you choose to share a percentage with pdJ. You may also receive 10% back as SLEARN cashback.',
       donateSection: 'Donate',
-      goodDollarTitle: 'Claim GoodDollar daily and give it to the well',
-      goodDollarText:
-        'Claim free G$ every day with the GoodDollar wallet (guide 3 of the Web3 & UBI course explains how) and send it to the campaign.',
-      guideLink: 'Guide: claiming GoodDollar and giving to the well',
+      claimTitle: 'Claim daily and give it to the well',
+      claimText:
+        'Claim the daily Learn.tg-UBI in CELO (verified profile, score 50+) and the free GoodDollar G$ with your wallet, then send them to the campaign. Guide 3 of the Web3 & UBI course explains the whole flow.',
+      guideLink: 'Guide: claiming Learn.tg-UBI and GoodDollar, and giving to the well',
       otherWays: 'Other ways to donate',
       otherWaysText: 'Bank transfers, Binance, Giveth and off-chain XAUT are handled on the project page at pasosdejesus.org.',
       otherWaysLink: 'pasosdejesus.org/lensenia',
@@ -39,10 +40,10 @@ export default function Page({ params }: PageProps) {
       description:
         'El agua limpia transforma una comunidad. Tu donación va directo al proyecto del pozo de Lensenia: 100% llega a la campaña salvo que elijas compartir un porcentaje con pdJ. También puedes recibir 10% de vuelta como cashback en SLEARN.',
       donateSection: 'Donar',
-      goodDollarTitle: 'Reclama GoodDollar a diario y dónalo al pozo',
-      goodDollarText:
-        'Reclama G$ gratis cada día con la billetera GoodDollar (la guía 3 del curso Web3 & UBI explica cómo) y envíalo a la campaña.',
-      guideLink: 'Guía: reclamar GoodDollar y darlo al pozo',
+      claimTitle: 'Reclama a diario y dónalo al pozo',
+      claimText:
+        'Reclama el Learn.tg-UBI diario en CELO (perfil verificado, score 50+) y los G$ gratis de GoodDollar con tu billetera, y envíalos a la campaña. La guía 3 del curso Web3 & UBI explica todo el flujo.',
+      guideLink: 'Guía: reclamar Learn.tg-UBI y GoodDollar, y darlos al pozo',
       otherWays: 'Otras formas de donar',
       otherWaysText:
         'Transferencias bancarias, Binance, Giveth y XAUT off-chain se gestionan en la página del proyecto en pasosdejesus.org.',
@@ -70,9 +71,12 @@ export default function Page({ params }: PageProps) {
         </section>
 
         <section className="mt-6 rounded-2xl bg-white shadow-md p-4 text-gray-800">
-          <h2 className="text-sm font-bold mb-2">{t('goodDollarTitle')}</h2>
-          <p className="text-xs text-gray-500 mb-3">{t('goodDollarText')}</p>
-          <GoodDollarClaimButton lang={lang} />
+          <h2 className="text-sm font-bold mb-2">{t('claimTitle')}</h2>
+          <p className="text-xs text-gray-500 mb-3">{t('claimText')}</p>
+          <div className="flex flex-col gap-3">
+            <CeloUbiButton lang={lang} />
+            <GoodDollarClaimButton lang={lang} />
+          </div>
           <a href={`/${lang}/${guidePath}`} className="inline-block mt-3 text-xs text-blue-600 underline">
             {t('guideLink')}
           </a>
