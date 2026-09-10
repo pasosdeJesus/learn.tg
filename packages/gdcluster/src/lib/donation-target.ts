@@ -314,12 +314,16 @@ export function getTargetCopy(lang: string, target: PaymentTarget, options: Camp
       // (100 − pdj − 10)% cuando está ON, igual que en cluster/country (80/10/10).
       const campaignNet = receiveCashback ? 100 - pdjSharePct - CAMPAIGN_CASHBACK_PCT : 100 - pdjSharePct
       const enTxt = pdjSharePct > 0
-        ? `${campaignNet}% goes to the ${name} campaign, ${pdjSharePct}% to pdJ (your choice), and ${CAMPAIGN_CASHBACK_PCT}% comes back to you as SLEARN cashback (from your donation).`
+        ? receiveCashback
+          ? `${campaignNet}% goes to the ${name} campaign, ${pdjSharePct}% to pdJ (your choice), and ${CAMPAIGN_CASHBACK_PCT}% comes back to you as SLEARN cashback (from your donation).`
+          : `${campaignNet}% goes to the ${name} campaign and ${pdjSharePct}% to pdJ (your choice).`
         : receiveCashback
           ? `${campaignNet}% goes to the ${name} campaign and ${CAMPAIGN_CASHBACK_PCT}% comes back to you as SLEARN cashback (from your donation).`
           : `${campaignNet}% goes to the ${name} campaign.`
       const esTxt = pdjSharePct > 0
-        ? `${campaignNet}% va a la campaña ${name}, ${pdjSharePct}% a pdJ (tu elección) y ${CAMPAIGN_CASHBACK_PCT}% vuelve a ti como cashback en SLEARN (de tu donación).`
+        ? receiveCashback
+          ? `${campaignNet}% va a la campaña ${name}, ${pdjSharePct}% a pdJ (tu elección) y ${CAMPAIGN_CASHBACK_PCT}% vuelve a ti como cashback en SLEARN (de tu donación).`
+          : `${campaignNet}% va a la campaña ${name} y ${pdjSharePct}% a pdJ (tu elección).`
         : receiveCashback
           ? `${campaignNet}% va a la campaña ${name} y ${CAMPAIGN_CASHBACK_PCT}% vuelve a ti como cashback en SLEARN (de tu donación).`
           : `${campaignNet}% va a la campaña ${name}.`

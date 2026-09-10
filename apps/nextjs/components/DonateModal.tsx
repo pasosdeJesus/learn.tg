@@ -50,7 +50,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     : null)
 
   const isCampaign = effectiveTarget?.type === 'campaign-donation'
-  const [receiveCashback, setReceiveCashback] = useState(true)
+  // REQ/223: el cashback SLEARN es opt-in — por omisión NO está marcado (el
+  // donante decide recibirlo; evita confusiones y deshabilitados al cambiar de
+  // token).
+  const [receiveCashback, setReceiveCashback] = useState(false)
   const [pdjSharePct, setPdjSharePct] = useState(0)
   const [comment, setComment] = useState('')
   const [payTokenKey, setPayTokenKey] = useState('usdt')
@@ -58,10 +61,6 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const [nativeGasCost, setNativeGasCost] = useState<bigint>(0n)
   const [sendingNative, setSendingNative] = useState(false)
   const [nativeError, setNativeError] = useState<string | null>(null)
-  const tCopy = effectiveTarget
-    ? getTargetCopy(lang || 'en', effectiveTarget, isCampaign ? { receiveCashback, pdjSharePct } : {})
-    : null
-  const rewardPct = tCopy?.rewardPct ?? 0
   const recipientAddress = (effectiveTarget
     ? getTargetRecipient(effectiveTarget)
     : process.env.NEXT_PUBLIC_ADDRESS || '') as Address | undefined
@@ -102,6 +101,14 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const cashbackAvailable = !!(campaignCfg && activePayKey === 'usdt')
   const effectiveCashback = receiveCashback && cashbackAvailable
 
+  // Copia del desglose: usa el cashback EFECTIVO (marcado y disponible para el
+  // token activo), no el estado crudo del checkbox — si el cashback no aplica
+  // (otro token) o está desmarcado, el desglose no debe mencionar SLEARN.
+  const tCopy = effectiveTarget
+    ? getTargetCopy(lang || 'en', effectiveTarget, isCampaign ? { receiveCashback: effectiveCashback, pdjSharePct } : {})
+    : null
+  const rewardPct = tCopy?.rewardPct ?? 0
+
   // CELO nativo: donable máximo = saldo − gas estimado del sendTransaction
   const isNativePay = !!(campaignCfg && activeToken?.native)
   const nativeValue = isNativePay ? parseUserAmountSafe(amount, 18) : 0n
@@ -141,15 +148,23 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     }
     let cancelled = false
     ;(async () => {
-      try {
-        const gasPrice = await publicClient.getGasPrice()
-        const gas = await publicClient.estimateGas({
-          account: address, to: recipientAddress as Address, value: 0n,
-        }).catch(() => 21000n)
-        if (!cancelled) setNativeGasCost(gas * gasPrice)
-      } catch {
-        if (!cancelled) setNativeGasCost(0n)
+      // forno falla intermitentemente (igual que eth_estimateGas): reintentar
+      // para no dejar el botón Donate deshabilitado por un fallo transitorio
+      // (reportado al donar CELO nativo en dev/Sepolia).
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const gasPrice = await publicClient.getGasPrice()
+          const gas = await publicClient.estimateGas({
+            account: address, to: recipientAddress as Address, value: 0n,
+          }).catch(() => 21000n)
+          if (!cancelled) setNativeGasCost(gas * gasPrice)
+          return
+        } catch {
+          if (cancelled) return
+          if (attempt < 2) await new Promise((r) => setTimeout(r, 1500))
+        }
       }
+      if (!cancelled) setNativeGasCost(0n)
     })()
     return () => { cancelled = true }
   }, [isNativePay, dataLoaded, publicClient, address, recipientAddress])
@@ -220,7 +235,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     setShowResult(false)
     setResultTxHash(null)
     setResultCashback(0)
-    setReceiveCashback(true)
+    setReceiveCashback(false)
     setPdjSharePct(0)
     setComment('')
     setSendingNative(false)
@@ -395,7 +410,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   )
   const displayError = paymentError || nativeError
   const donateDisabled = isSubmitting || !hasAnyAmount || ercOverBalance ||
-    (isCampaign && payPrice == null && usdtNum > 0) ||
+    // El precio USD desconocido solo bloquea tokens volátiles ERC-20 (p. ej.
+    // XAUt0). En CELO nativo el reparto real lo calcula el backend en CELO, así
+    // que un fallo del proveedor de precios no debe impedir donar.
+    (isCampaign && payPrice == null && usdtNum > 0 && !isNativePay) ||
     (hasAnyAmount && gasState === 'no-gas' && !isNativePay) ||
     (isNativePay && (nativeValue <= 0n || nativeValue > maxNative || nativeGasCost === 0n))
 

@@ -238,7 +238,12 @@ describe('campaign donations (REQ/223)', () => {
     expect(en.splitInfo).toContain('80% goes to the Lensenia Water Well campaign, 10% to pdJ (your choice)')
     expect(en.splitInfo).toContain('10% comes back to you as SLEARN cashback')
     const enOff = getTargetCopy('en', campaign, { pdjSharePct: 10, receiveCashback: false })
-    expect(enOff.splitInfo).toContain('90% goes to the Lensenia Water Well campaign, 10% to pdJ (your choice)')
+    expect(enOff.splitInfo).toContain('90% goes to the Lensenia Water Well campaign and 10% to pdJ (your choice)')
+    // Sin cashback marcado no debe mencionarse el SLEARN de cashback (REQ/223)
+    expect(enOff.splitInfo).not.toContain('cashback')
+    const esOff = getTargetCopy('es', campaign, { pdjSharePct: 5, receiveCashback: false })
+    expect(esOff.splitInfo).toContain('95% va a la campaña Pozo de Agua Lensenia y 5% a pdJ (tu elección)')
+    expect(esOff.splitInfo).not.toContain('cashback')
   })
 
   it('turns off the reward estimate when cashback is declined', () => {
