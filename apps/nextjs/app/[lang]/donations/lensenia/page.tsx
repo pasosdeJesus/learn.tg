@@ -30,7 +30,7 @@ export default function Page({ params }: PageProps) {
         'Claim the daily Learn.tg-UBI in CELO (verified profile, score 50+) and the free GoodDollar G$ with your wallet, then send them to the campaign. Guide 3 of the Web3 & UBI course explains the whole flow.',
       guideLink: 'Guide: claiming Learn.tg-UBI and GoodDollar, and giving to the well',
       otherWays: 'Other ways to donate',
-      otherWaysText: 'Bank transfers, Binance, Giveth and off-chain XAUT are handled on the project page at pasosdejesus.org.',
+      otherWaysText: 'Bank transfers, Binance and Giveth are handled on the project page at pasosdejesus.org.',
       otherWaysLink: 'pasosdejesus.org/lensenia',
       success: 'Donation completed',
     },
@@ -46,7 +46,7 @@ export default function Page({ params }: PageProps) {
       guideLink: 'Guía: reclamar Learn.tg-UBI y GoodDollar, y darlos al pozo',
       otherWays: 'Otras formas de donar',
       otherWaysText:
-        'Transferencias bancarias, Binance, Giveth y XAUT off-chain se gestionan en la página del proyecto en pasosdejesus.org.',
+        'Transferencias bancarias, Binance y Giveth se gestionan en la página del proyecto en pasosdejesus.org.',
       otherWaysLink: 'pasosdejesus.org/lensenia',
       success: 'Donación completada',
     },
