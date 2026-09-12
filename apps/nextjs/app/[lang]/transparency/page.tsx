@@ -18,6 +18,12 @@ export default function TransparencyPage({ params }: PageProps) {
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
       <Transparency lang={lang} />
+      {/* REQ/223: explorador público de donaciones (detalle + comentario del donante) */}
+      <p className="mt-4 text-sm">
+        <a href={`/${lang}/donations`} className="text-blue-600 underline">
+          {lang === 'es' ? 'Explorador de donaciones (detalle y comentarios)' : 'Donation explorer (detail and comments)'}
+        </a>
+      </p>
       {/* REQ/223: transparencia de la campaña Lensenia (ledger de donaciones) */}
       <div className="mt-8">
         <CampaignTransparency slug="lensenia" lang={lang} />

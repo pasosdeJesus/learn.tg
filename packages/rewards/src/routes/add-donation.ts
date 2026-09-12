@@ -43,7 +43,12 @@ export async function addDonation(deps: RewardsDeps, req: NextRequest) {
 
   try {
     const requestJson = await req.json()
-    const { walletAddress, token, donationAmountUSD, slearnDonationAmount, usdtHash, slearnHash, courseId } = requestJson
+    const { walletAddress, token, donationAmountUSD, slearnDonationAmount, usdtHash, slearnHash, courseId, comment } = requestJson
+
+    // Comentario opcional del donante (REQ/223; procedencia de los fondos):
+    // máx 200 chars, sin saltos de línea; se guarda en el ledger.
+    const donorComment = typeof comment === 'string' ? comment.replace(/\s+/g, ' ').trim().slice(0, 200) : undefined
+    const commentSuffix = donorComment ? `\ncomment: ${donorComment}` : ''
 
     if (!walletAddress || !token || !courseId) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 })
@@ -142,8 +147,8 @@ export async function addDonation(deps: RewardsDeps, req: NextRequest) {
         usuario_id: usuario.id, date: new Date(), type: 'donation', crypto: 'usdt',
         amount: actualUSDTValue, balance_impact: -actualUSDTValue, hash: usdtHash,
         wallet: walletAddress, categoria: 'donation', subcategoria: 'course_vault',
-        descripcion: `donated: ${actualUSDTValue.toFixed(2)} USDT\n${breakdownText}`,
-        metadata: { courseId, processPaymentHash, distribution },
+        descripcion: `donated: ${actualUSDTValue.toFixed(2)} USDT\n${breakdownText}${commentSuffix}`,
+        metadata: { courseId, processPaymentHash, distribution, comment: donorComment },
       }).execute()
     }
     if (onChainSlearnAmount > 0n && slearnHash) {
@@ -151,8 +156,8 @@ export async function addDonation(deps: RewardsDeps, req: NextRequest) {
         usuario_id: usuario.id, date: new Date(), type: 'donation', crypto: 'slearn',
         amount: actualSlearnValue, balance_impact: -actualSlearnValue, hash: slearnHash,
         wallet: walletAddress, categoria: 'donation', subcategoria: 'course_vault',
-        descripcion: `donated: ${actualSlearnValue.toFixed(2)} SLEARN\n${breakdownText}`,
-        metadata: { courseId, processPaymentHash, distribution },
+        descripcion: `donated: ${actualSlearnValue.toFixed(2)} SLEARN\n${breakdownText}${commentSuffix}`,
+        metadata: { courseId, processPaymentHash, distribution, comment: donorComment },
       }).execute()
     }
     if (slearnReward > 0) {

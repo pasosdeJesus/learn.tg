@@ -77,7 +77,7 @@ async function extractAmountsFromReceipt(deps: GdclusterDeps, txHash: string, ba
 export async function verifyDonation(deps: GdclusterDeps, req: NextRequest) {
   try {
     const body = await req.json()
-    const { walletAddress, token, clusterWallet, countryCode, usdtHash, slearnHash } = body
+    const { walletAddress, token, clusterWallet, countryCode, usdtHash, slearnHash, comment } = body
 
     if (!walletAddress || !token) {
       return NextResponse.json({ error: 'Missing auth fields' }, { status: 400 })
@@ -89,6 +89,11 @@ export async function verifyDonation(deps: GdclusterDeps, req: NextRequest) {
     const db = deps.db()
     const auth = await deps.authenticateUser(db, walletAddress, token)
     if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Comentario opcional del donante (procedencia de los fondos), igual que en
+    // las donaciones a campaña: máx 200 chars, sin saltos de línea.
+    const donorComment = typeof comment === 'string' ? comment.replace(/\s+/g, ' ').trim().slice(0, 200) : undefined
+    const commentSuffix = donorComment ? `\ncomment: ${donorComment}` : ''
 
     if (countryCode) {
       const country = await db.selectFrom('msip_pais').select('id').where('alfa2', '=', countryCode).executeTakeFirst()
@@ -174,8 +179,8 @@ export async function verifyDonation(deps: GdclusterDeps, req: NextRequest) {
         type: 'donation', amount: usdtValue, balance_impact: -usdtValue,
         date: new Date(), hash: usdtHash as string, categoria: 'donation',
         subcategoria: countryCode ? 'country' : 'cluster',
-        descripcion: `donated: ${usdtValue.toFixed(2)} USDT\n${breakdownText}`,
-        metadata: { destination: dest, clusterWallet, countryCode, distribution },
+        descripcion: `donated: ${usdtValue.toFixed(2)} USDT\n${breakdownText}${commentSuffix}`,
+        metadata: { destination: dest, clusterWallet, countryCode, distribution, comment: donorComment },
         created_at: new Date(), updated_at: new Date(),
       } as any).execute()
     }
@@ -185,8 +190,8 @@ export async function verifyDonation(deps: GdclusterDeps, req: NextRequest) {
         type: 'donation', amount: slearnValue, balance_impact: -slearnValue,
         date: new Date(), hash: slearnHash as string, categoria: 'donation',
         subcategoria: countryCode ? 'country' : 'cluster',
-        descripcion: `donated: ${slearnValue.toFixed(2)} SLEARN\n${breakdownText}`,
-        metadata: { destination: dest, clusterWallet, countryCode, distribution },
+        descripcion: `donated: ${slearnValue.toFixed(2)} SLEARN\n${breakdownText}${commentSuffix}`,
+        metadata: { destination: dest, clusterWallet, countryCode, distribution, comment: donorComment },
         created_at: new Date(), updated_at: new Date(),
       } as any).execute()
     }

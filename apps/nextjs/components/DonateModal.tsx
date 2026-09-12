@@ -112,7 +112,12 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   // CELO nativo: donable máximo = saldo − gas estimado del sendTransaction
   const isNativePay = !!(campaignCfg && activeToken?.native)
   const nativeValue = isNativePay ? parseUserAmountSafe(amount, 18) : 0n
-  const maxNative = isNativePay && celoBalance > nativeGasCost + NATIVE_GAS_MARGIN ? celoBalance - nativeGasCost - NATIVE_GAS_MARGIN : 0n
+  // Reserva de gas conservadora: costo estimado ×2 + margen fijo. El precio del
+  // gas puede subir entre la estimación y el envío; con ×2 el máximo donable
+  // nunca deja la billetera sin gas (reportado donando CELO: el máximo salió
+  // alto y no alcanzó para el gas).
+  const nativeGasReserve = nativeGasCost * 2n + NATIVE_GAS_MARGIN
+  const maxNative = isNativePay && celoBalance > nativeGasReserve ? celoBalance - nativeGasReserve : 0n
   const maxNativeStr = maxNative > 0n ? formatUnits(maxNative, 18) : '0'
 
   const usdtNum = safeParseFloat(amount)
@@ -212,8 +217,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         payload.payToken = activePayKey
         payload.receiveCashback = effectiveCashback
         payload.pdjSharePct = pdjSharePct
-        if (comment.trim()) payload.comment = comment.trim()
       }
+      // Comentario del donante (REQ/223): disponible para todos los destinos
+      // (curso, clúster, país y campaña); el backend lo guarda en el ledger.
+      if (comment.trim()) payload.comment = comment.trim()
       const { data } = await axios.post(endpoint, payload)
       return data
     },
@@ -436,7 +443,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         const g = await publicClient?.estimateGas({ account: address, to: recipientAddress as Address, value: 1n }).catch(() => 21000n)
         if (gp && g) reserve = g * gp
       } catch { /* keep previous reserve */ }
-      const safeMax = celoBalance > reserve + NATIVE_GAS_MARGIN ? celoBalance - reserve - NATIVE_GAS_MARGIN : 0n
+      const safeMax = celoBalance > reserve * 2n + NATIVE_GAS_MARGIN ? celoBalance - reserve * 2n - NATIVE_GAS_MARGIN : 0n
       if (nativeValue <= 0n || nativeValue > safeMax) {
         setNativeError('Amount exceeds the donatable CELO (balance minus gas and margin)')
         return
@@ -476,8 +483,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         payload.payToken = 'celo'
         payload.receiveCashback = effectiveCashback
         payload.pdjSharePct = pdjSharePct
-        if (comment.trim()) payload.comment = comment.trim()
       }
+      if (comment.trim()) payload.comment = comment.trim()
       const { data } = await axios.post(endpoint, payload)
       diagMark('native-verify-ok', { hasDistribution: !!data?.distribution, hasIncrement: !!data?.increment })
       setResultTxHash(txHash)
@@ -619,17 +626,18 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
           </div>
         )}
 
+        <div className="mt-4">
+          <label htmlFor="donate-comment" className="block text-xs mb-1 text-gray-600">{t('commentLabel')}</label>
+          <input id="donate-comment" type="text" maxLength={200}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={t('commentPlaceholder')}
+            className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring focus:border-gray-400" />
+        </div>
+
         {isCampaign && (
           <div className="mt-4 space-y-3 border border-gray-200 rounded-lg p-3 text-sm">
             <div className="font-medium">{t('campaignOptionsTitle')}</div>
-            <div>
-              <label htmlFor="donate-comment" className="block text-xs mb-1 text-gray-600">{t('commentLabel')}</label>
-              <input id="donate-comment" type="text" maxLength={200}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder={t('commentPlaceholder')}
-                className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring focus:border-gray-400" />
-            </div>
             <label className="flex items-start gap-2 cursor-pointer">
               <input type="checkbox" checked={effectiveCashback} disabled={!cashbackAvailable}
                 onChange={(e) => setReceiveCashback(e.target.checked)}

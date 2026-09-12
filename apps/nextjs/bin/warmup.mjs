@@ -85,9 +85,12 @@ const URLS = [
 
 // Calentamiento solo de donaciones/campañas (REQ/223): bin/warmup donations
 const DONATION_URLS = [
+  '/en/donations',
+  '/es/donations',
   '/en/donations/lensenia',
   '/es/donations/lensenia',
   '/en/donations/lensenia/movements',
+  '/api/donations',
   '/api/donations/lensenia/balance',
   '/api/donations/lensenia/verify',
   '/api/donations/lensenia/movements?limit=8',

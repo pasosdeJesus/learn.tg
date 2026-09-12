@@ -27,6 +27,8 @@ const AUTH_PATTERNS = [
   'verifySignature',   // generic signature check
   'verifyMessage',     // message signature verification
   'SelfBackendVerifier', // ZK proof verification (e.g., /api/self-verify)
+  'getToken(',         // session-first (R-#227): JWT de la cookie NextAuth
+                       // (p. ej. /api/auth/token responde 401 sin cookie)
 ]
 
 // Patterns that indicate a route handler accesses sensitive data
@@ -57,6 +59,9 @@ const PUBLIC_ENDPOINTS = [
   'departments',
   'municipalities',
   'credential',           // public credential verification
+  'donations',            // explorador público de donaciones (REQ/223): solo
+                          // nusuario + monto/hash on-chain + comentario del
+                          // donante; no expone nombre real ni metadata interna
   'metrics/health',
   'ubi-report',
   'ubi-report-wallet',
