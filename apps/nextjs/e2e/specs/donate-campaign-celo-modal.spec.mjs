@@ -17,6 +17,7 @@ import {
   initTestEnv, launchBrowser, resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
+import { retry } from '../helpers/retry.mjs'
 import { createPublicClient, createWalletClient, http, parseUnits, formatEther, formatUnits } from 'viem'
 import { celoSepolia } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
@@ -91,10 +92,18 @@ async function main() {
   }
 
   const browser = await launchBrowser()
-  const page = await browser.newPage()
+  let page = await browser.newPage()
   page.on('pageerror', (e) => console.log(`  [PAGEERR] ${e.message}`))
   page.on('console', (m) => { if (m.type() === 'error') console.log(`  [CONSOLE-ERR] ${m.text().slice(0, 300)}`) })
-  await setupE2EAuth(page, account.address, creds.pk, CHAIN_ID, base)
+  // El dev site puede tardar (compilación/redeploy): reintentar con página
+  // nueva por intento (`exposeFunction('__signSiwe')` no se puede re-registrar).
+  page = await retry(async () => {
+    const p = await browser.newPage()
+    p.on('pageerror', (e) => console.log(`  [PAGEERR] ${e.message}`))
+    p.on('console', (m) => { if (m.type() === 'error') console.log(`  [CONSOLE-ERR] ${m.text().slice(0, 300)}`) })
+    await setupE2EAuth(p, account.address, creds.pk, CHAIN_ID, base)
+    return p
+  }, { label: 'setupE2EAuth modal' })
 
   // Real RPC bridge (replaces the mock's fake sendTransaction/balances).
   await page.exposeFunction('__rpcReal', async (method, params) => {
