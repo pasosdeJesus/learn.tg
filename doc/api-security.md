@@ -87,6 +87,11 @@ Detection patterns (auth, admin, DB, files, `nombre`) live at the top of the
 script and are the source of truth; keep them in sync when the auth helpers
 change.
 
+Among the auth patterns, `getToken(` recognizes **session-first** routes
+(R-#227) that authorize directly with the NextAuth JWT from the session cookie
+and return 401 without it (e.g. `/api/auth/token`). A route using
+`getToken(` must still reject when the cookie/subject is missing.
+
 ### When to run it
 
 - After **adding, removing, or modifying any `app/api/**/route.ts`** that

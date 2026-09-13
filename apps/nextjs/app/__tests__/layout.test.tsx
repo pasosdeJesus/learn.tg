@@ -73,11 +73,14 @@ describe('RootLayout', () => {
     expect(fontMocks.mockDMSans).toHaveBeenCalledWith({
       variable: '--font-dm-sans',
       subsets: ['latin'],
+      // R-#217: sin preload automático (warning "preloaded but not used")
+      preload: false,
     })
     expect(fontMocks.mockDMMono).toHaveBeenCalledWith({
       variable: '--font-dm-mono',
       weight: ['300', '400', '500'],
       subsets: ['latin'],
+      preload: false,
     })
   })
 

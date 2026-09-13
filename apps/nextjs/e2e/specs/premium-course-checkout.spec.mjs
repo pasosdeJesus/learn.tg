@@ -22,6 +22,7 @@ import {
   resetFailures, fail, ok, summary, short,
 } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
+import { gotoWithRetry } from '../helpers/retry.mjs'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
@@ -131,7 +132,7 @@ async function main() {
   const browser = await launchBrowser(env.headless)
   const page = await newPage(browser, addr, 120000)
   await setupE2EAuth(page, addr, pk, chainId, base)
-  await page.goto(`${base}/en/gdcluster`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
+  await gotoWithRetry(page, `${base}/en/gdcluster`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
   // Wait for the course page to finish loading (cold on-demand compilation can
   // leave "Loading course..." up for a while in the full suite).

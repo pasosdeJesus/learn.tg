@@ -53,10 +53,11 @@ async function main() {
   if (!creds) { console.error('No credentials found'); process.exit(1) }
   process.env.TEST_PRIVATE_KEY = creds.pk
 
-  // Production target
-  if (!process.env.IPDES) process.env.IPDES = 'learn.tg'
-  if (!process.env.PUERTOPRU) process.env.PUERTOPRU = '443'
-  if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '42220' // Celo mainnet
+  // Production target — spec `prod-`: no heredar IPDES/PUERTOPRU/CHAIN_ID de un
+  // runner que por defecto apunta al dev site (learn.tg:9001).
+  process.env.IPDES = 'learn.tg'
+  process.env.PUERTOPRU = '443'
+  process.env.CHAIN_ID = '42220' // Celo mainnet
 
   const env = await initTestEnv()
   const { base, chainId } = env

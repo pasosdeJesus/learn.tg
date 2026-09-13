@@ -28,7 +28,7 @@ for (const p of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd()
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg'
-const CHAIN_ID = parseInt(process.env.CHAIN_ID || '42220', 10)
+const CHAIN_ID = parseInt(process.env.PROD_CHAIN_ID || '42220', 10)
 const AMOUNT = parseUnits(process.env.AMOUNT_CELO || '0.01', 18)
 const ROUNDS = parseInt(process.env.ROUNDS || '20', 10)
 const ROTATE_AT = parseInt(process.env.ROTATE_AT || '6', 10)
@@ -81,6 +81,12 @@ async function rpcRetry(fn, retries = 8) {
 
 async function main() {
   console.log(`STRESS donaciones CELO prod — ${ROUNDS} rondas x ${formatEther(AMOUNT)} CELO | ${SITE} (chain ${CHAIN_ID})\n`)
+  // Spec de estrés en MAINNET con fondos reales: opt-in explícito. En una
+  // corrida normal (dev site) se omite en vez de fallar por faltantes de entorno.
+  if (process.env.PROD_STRESS !== '1') {
+    console.log('  [skip] estrés mainnet: exporta PROD_STRESS=1 (y SITE_URL=https://learn.tg BACKEND_ADDRESS=0x…) para ejecutarlo')
+    return
+  }
   const pk = loadCreds(); if (!pk) { console.error('no PRIVATE_KEY'); process.exit(1) }
   const account = privateKeyToAccount(pk)
   const rpcs = [...new Set(['https://forno.celo.org', 'https://celo.drpc.org', 'https://celo-rpc.publicnode.com', process.env.NEXT_PUBLIC_CELO_RPC_URL])].filter(Boolean)
@@ -110,7 +116,11 @@ async function main() {
   const donor0 = await rpcRetry(() => pub.getBalance({ address: account.address }))
   const camp0 = await rpcRetry(() => pub.getBalance({ address: CAMPAIGN_WALLET }))
   const need = AMOUNT * BigInt(ROUNDS) + parseUnits('0.1', 18)
-  if (donor0 < need) { console.error(`Saldo insuficiente: ${formatEther(donor0)} < ${formatEther(need)}`); process.exit(1) }
+  if (donor0 < need) {
+    // Entorno sin fondos suficientes en mainnet: no es un fallo del código.
+    console.log(`  [skip] saldo insuficiente del donante: ${formatEther(donor0)} CELO < ${formatEther(need)} requeridos`)
+    process.exit(0)
+  }
   ok(`saldo donante ${formatEther(donor0)} CELO (requiere ≈${formatEther(need)})`)
 
   // "Página" del usuario: sesión original (token + cookie que se quedan viejos)

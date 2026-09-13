@@ -121,10 +121,18 @@ async function main() {
 
     for (let i = 0; i < 30; i++) {
       await new Promise(r => setTimeout(r, 1000))
-      const text = await page.evaluate(() => {
-        const d = document.querySelector('[role="dialog"]')
-        return d?.textContent?.trim() || ''
-      })
+      let text = ''
+      try {
+        text = await page.evaluate(() => {
+          const d = document.querySelector('[role="dialog"]')
+          return d?.textContent?.trim() || ''
+        })
+      } catch (e) {
+        // El click puede disparar navegación/recarga (contexto destruido) o el
+        // backend responde 502 bajo carga: no es un fallo del flujo.
+        console.log(`  [i] contexto destruido/recarga durante el claim (${String(e?.message || e).slice(0, 60)})`)
+        continue
+      }
       if (text.includes('Claim Successful') || text.includes('Reclamo Exitoso')) {
         ok('CELO UBI claimed on Sepolia ✅')
         break

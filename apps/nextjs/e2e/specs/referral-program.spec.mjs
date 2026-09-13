@@ -23,6 +23,7 @@ import {
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
+import { gotoWithRetry, retry } from '../helpers/retry.mjs'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
@@ -47,7 +48,7 @@ function loadEnvCredentials() {
 }
 
 async function navAndWait(page, url, timeout) {
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
+  await gotoWithRetry(page, url, { waitUntil: 'domcontentloaded', timeout: 120000 })
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 2000))
     const bodyLen = await page.evaluate(() =>
@@ -83,7 +84,7 @@ async function main() {
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Referidor: landing, CTA, requisitos, código ──')
   const pageA = await browser.newPage()
-  await setupE2EAuth(pageA, creds.addr, creds.pk, CHAIN_ID, base)
+  await retry(() => setupE2EAuth(pageA, creds.addr, creds.pk, CHAIN_ID, base), { label: 'setupE2EAuth A' })
 
   // Step 1: landing pública (sin sesión recién: navegamos y leemos la página)
   if (!await navAndWait(pageA, `${base}/en/referrals`, timeout)) { fail('Landing no cargó'); await browser.close(); process.exit(1) }
@@ -120,7 +121,9 @@ async function main() {
     })
     if (ctaText && !ctaText.includes('Go to the Web3')) break
   }
-  if (referrerActivated) {
+  if (score == null) {
+    console.log('  [skip] no se pudo leer el profile score del referidor (API lenta) — CTA/checklist informativos')
+  } else if (referrerActivated) {
     console.log('  [skip] referidor activado (>90) — CTA de código, no de perfil')
   } else if (ctaText.includes('Complete your profile')) {
     ok('CTA según estado: "Complete your profile" (score ≤ 90)')
@@ -134,6 +137,8 @@ async function main() {
   }
   if (reqText.includes('Requirements to join') && reqText.includes('90 profile points')) {
     ok('Checklist de requisitos visible (compra premium + >90 puntos)')
+  } else if (referrerActivated || score == null) {
+    console.log('  [skip] checklist no aplica (activado) o la página no cargó a tiempo')
   } else { fail('Checklist de requisitos no visible') }
 
   // Step 4: código de referido vía API
@@ -166,7 +171,7 @@ async function main() {
   const refAddr = refAccount.address
   console.log(`  [referido] ${refAddr.slice(0, 10)}...`)
 
-  const pageB = await browser.newPage()
+  let pageB = await browser.newPage()
   // Visita el enlace de referido SIN sesión → guarda pendingReferralCode
   if (!await navAndWait(pageB, `${base}/ref/${refCode}`, timeout)) { fail('/ref no cargó'); await browser.close(); process.exit(1) }
   // El lookup de /api/referral/lookup es lento en dev (compilación + DB remota):
@@ -174,7 +179,12 @@ async function main() {
   let storedCode = null
   for (let i = 0; i < 12; i++) {
     await new Promise(r => setTimeout(r, 2000))
-    storedCode = await pageB.evaluate(() => localStorage.getItem('learn.tg.pendingReferralCode'))
+    try {
+      storedCode = await pageB.evaluate(() => localStorage.getItem('learn.tg.pendingReferralCode'))
+    } catch {
+      // "Execution context was destroyed": la página /ref redirige; reintentar.
+      storedCode = null
+    }
     if (storedCode) break
   }
   // El contrato del claim es case-insensitive (ilike); códigos legacy en la DB
@@ -182,8 +192,15 @@ async function main() {
   if (storedCode && storedCode.toUpperCase() === String(refCode).toUpperCase()) ok(`/ref/{CODE} guardó pendingReferralCode (${storedCode})`)
   else { console.log(`  stored: ${storedCode}`); fail('pendingReferralCode no guardado') }
 
-  // Autentica al referido (SIWE; la billetera nueva se auto-registra)
-  await setupE2EAuth(pageB, refAddr, refPk, CHAIN_ID, base)
+  // Autentica al referido (SIWE; la billetera nueva se auto-registra). Cada
+  // intento usa una página nueva: `exposeFunction('__signSiwe')` no se puede
+  // re-registrar en la misma página y el primer intento puede abortarse por la
+  // navegación de /ref (REQ/224).
+  pageB = await retry(async () => {
+    const p = await browser.newPage()
+    await setupE2EAuth(p, refAddr, refPk, CHAIN_ID, base)
+    return p
+  }, { label: 'setupE2EAuth B' })
   const bState = await authState(pageB)
   if (!bState.addr) { skip('SIWE del referido falló (¿rate-limit?) — se omite claim') }
   else {

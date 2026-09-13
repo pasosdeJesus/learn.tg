@@ -14,6 +14,10 @@ export default defineConfig({
       { find: 'viem/chains', replacement: path.join(modulesDir, 'viem/_esm/chains/index.js') },
       { find: 'viem', replacement: path.join(modulesDir, 'viem') },
       { find: '@pasosdejesus/m/blockchain/deployments', replacement: path.join(modulesDir, '@pasosdejesus', 'm', 'dist', 'blockchain', 'deployments.js') },
+      // Motores fuera del root de la app (packages/gdcluster/dist): Vite no
+      // resuelve sus bare imports desde el node_modules de la app → alias.
+      // p. ej. `register.js` (hook reward:route-destination).
+      { find: '@pasosdejesus/m/plugin', replacement: path.join(modulesDir, '@pasosdejesus', 'm', 'dist', 'plugin.js') },
       { find: '@learn-tg/rewards/lib/donate-utils', replacement: path.join(modulesDir, '@learn-tg', 'rewards', 'dist', 'lib', 'donate-utils.js') },
       { find: '@learn-tg/rewards/lib/verify-transfer', replacement: path.join(modulesDir, '@learn-tg', 'rewards', 'dist', 'lib', 'verify-transfer.js') },
       { find: '@learn-tg/rewards/lib/config', replacement: path.join(modulesDir, '@learn-tg', 'rewards', 'dist', 'lib', 'config.js') },

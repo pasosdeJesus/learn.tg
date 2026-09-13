@@ -355,6 +355,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       amountLabelToken: 'Amount ({{0}})',
       tokenRate: '1 {{0}} ≈ ${{1}}',
       priceUnavailable: 'Price unavailable — cannot compute the USD value. Try again later.',
+      rateUnavailableEstimated: 'Rate unavailable — the backend will compute the exact split.',
       donateToCourse: 'Donate to course',
       resultTitle: '🎉 Donation completed!',
       resultCashback: '+{{0}} SLEARN cashback',
@@ -396,6 +397,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       amountLabelToken: 'Monto ({{0}})',
       tokenRate: '1 {{0}} ≈ ${{1}}',
       priceUnavailable: 'Precio no disponible — no se puede calcular el valor USD. Intenta más tarde.',
+      rateUnavailableEstimated: 'Tasa no disponible — el backend calculará el reparto exacto.',
       donateToCourse: 'Donar al curso',
       resultTitle: '🎉 ¡Donación completada!',
       resultCashback: '+{{0}} SLEARN de cashback',
@@ -619,8 +621,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
               })}
             </div>
             {activeToken && !activeToken.peggedUsd && (
-              <p className={`mt-1 text-xs ${payPrice == null ? 'text-red-600' : 'text-gray-500'}`}>
-                {payPrice == null ? t('priceUnavailable') : t('tokenRate', activeToken.symbol, payPrice.toFixed(2))}
+              <p className={`mt-1 text-xs ${payPrice == null && !isNativePay ? 'text-red-600' : 'text-gray-500'}`}>
+                {payPrice == null
+                  ? (isNativePay ? t('rateUnavailableEstimated') : t('priceUnavailable'))
+                  : t('tokenRate', activeToken.symbol, payPrice.toFixed(2))}
               </p>
             )}
           </div>

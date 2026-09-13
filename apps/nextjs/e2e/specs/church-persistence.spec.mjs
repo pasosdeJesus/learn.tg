@@ -95,7 +95,7 @@ async function main() {
 
   // ── Assign church via API (reliable, no DOM select fragility) ──
   console.log('── Assign church via API ──')
-  const assignRes = await page.evaluate(async ({ wallet, token }) => {
+  const tryAssign = () => page.evaluate(async ({ wallet, token }) => {
     try {
       // Fetch a church id from the admin API
       const authQ = `wallet=${encodeURIComponent(wallet)}&token=${encodeURIComponent(token)}`
@@ -116,6 +116,14 @@ async function main() {
       return { error: e.message }
     }
   }, { wallet, token: authToken })
+
+  // El backend dev puede devolver 502 bajo carga: reintentar la asignación.
+  let assignRes = await tryAssign()
+  for (let i = 0; i < 3 && assignRes?.error; i++) {
+    console.log(`  [retry] church assign (${assignRes.error}) — reintento en 5s`)
+    await new Promise(r => setTimeout(r, 5000))
+    assignRes = await tryAssign()
+  }
 
   if (assignRes.error) {
     fail(`Church assign failed: ${assignRes.error}`)

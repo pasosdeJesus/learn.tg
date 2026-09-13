@@ -110,18 +110,21 @@ describe('verifyCampaignDonation — multi-token mainnet (REQ/223)', () => {
     expect(inserted.amount).toBe(2)
   })
 
-  it('returns 400 when the XAUt0 price cannot be fetched', async () => {
+  it('sigue con la donación sin metadata USD cuando el precio no se puede obtener (REQ/223)', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false })))
     const { deps, db, sendTxAndWait } = buildDeps(XAUT0_MAINNET, 1_000_000n)
     const res = await verifyCampaignDonation(deps, req({
       walletAddress: DONOR, token: 'tok', payToken: 'xaut0', usdtHash: '0x' + '33'.repeat(32),
       receiveCashback: false, pdjSharePct: 0,
     }), params)
-    expect(res.status).toBe(400)
-    const json = await res.json()
-    expect(json.error).toContain('USD price unavailable')
-    expect(sendTxAndWait).not.toHaveBeenCalled()
-    expect(db.insertInto).not.toHaveBeenCalled()
+    // El movimiento de fondos no depende del precio: se transfiere igual y se
+    // registra con usdUnavailable (antes devolvía 400 y tumbaba la donación).
+    expect(res.status).toBe(200)
+    expect(sendTxAndWait).toHaveBeenCalled()
+    expect(db.insertInto).toHaveBeenCalled()
+    const insertedRow = db.insertInto.mock.results[0].value.values.mock.calls[0][0]
+    expect(insertedRow.metadata.usdUnavailable).toBe(true)
+    expect(insertedRow.metadata.campaignAmountUSD).toBeUndefined()
   })
 
   it('accepts G$ (GoodDollar, 18 decimals) priced via CoinGecko', async () => {

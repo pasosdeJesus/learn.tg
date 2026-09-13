@@ -131,9 +131,18 @@ test-smoke:
 # Full E2E tests (Puppeteer + Chrome, requires CHROME_PATH)
 # 12s de aire entre specs: el dev site (16G compartido) limita por wallet/IP
 # (429) y bajo carga los specs de timing flaquean (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8).
+# Objetivo por defecto: el dev site (learn.tg:9001, chain 11142220), como
+# documenta doc/e2e-testing.md. El helper `@pasosdejesus/m/e2e/env` sin
+# IPDES/PUERTOPRU apunta a PRODUCCIÓN, por eso se exportan aquí (los specs
+# `prod-*` fuerzan learn.tg:443/42220 por su cuenta). Override:
+#   IPDES=… PUERTOPRU=… CHAIN_ID=… make test-e2e
 test-e2e:
-	E2E_SPEC_DELAY_MS=12000 ./bin/m test:e2e
+	E2E_SPEC_DELAY_MS=12000 \
+	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-9001} CHAIN_ID=$${CHAIN_ID:-11142220} \
+	./bin/m test:e2e
 
-# Run a specific E2E spec
-test-e2e-%:
-	./bin/m test:e2e $*
+# Run a specific E2E spec (OpenBSD make no soporta pattern rules `%`)
+#   make test-e2e-spec SPEC=cluster-formation
+test-e2e-spec:
+	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-9001} CHAIN_ID=$${CHAIN_ID:-11142220} \
+	./bin/m test:e2e "$(SPEC)"

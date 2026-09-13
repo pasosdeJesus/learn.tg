@@ -378,19 +378,20 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
       return NextResponse.json({ error: 'Transfer amount must be greater than zero' }, { status: 400 })
     }
 
-    // Precio USD del token donado (pegados → 1; XAUt0 → CoinGecko con caché)
-    let price: number
+    // Precio USD del token donado (pegados → 1; XAUt0 → CoinGecko con caché).
+    // El MOVIMIENTO de fondos no depende del precio (el split va en unidades
+    // crudas del token); solo la metadata USD de transparencia. Si el proveedor
+    // de precios falla (p. ej. CoinGecko 429) se degrada sin bloquear la
+    // donación (REQ/223) — antes devolvía 400 y tumbaba donaciones en CELO.
+    let price: number | null = null
     try {
       price = await getTokenUsdPrice({ key: payCfg.key, peggedUsd: payCfg.peggedUsd, coingeckoId: payCfg.coingeckoId })
     } catch (e: any) {
-      console.error('[CampaignDonation] price fetch failed:', e?.message || e)
-      return NextResponse.json({
-        error: `USD price unavailable for ${payKey} (${e?.message || String(e)}) — try again later`,
-      }, { status: 400 })
+      console.warn('[CampaignDonation] price fetch failed, continuing without USD metadata:', e?.message || e)
     }
 
     const tokenUnits = Number(tokenAmount) / 10 ** tokenDecimals
-    const usdValue = tokenUnits * price
+    const usdValue = price != null ? tokenUnits * price : 0
     const split = campaignDonorSplit(usdValue, { receiveCashback: optsCashback, pdjSharePct: optsPct }, deps.backend.SLEARN_RATE)
     // El cashback sale de la misma donación: campaña (neta) + pdJ + reserva del
     // 10% (USDT que respalda el SLEARN vía mintAndReserve) = monto total.
@@ -511,7 +512,8 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     const metadata = {
       campaign: slug, network: mainnet ? 'celo' : 'celoSepolia', payToken: payKey,
       pdjSharePct: split.pdjSharePct,
-      campaignAmountUSD: split.campaignUSD, pdjAmountUSD: split.pdjUSD,
+      campaignAmountUSD: price != null ? split.campaignUSD : undefined, pdjAmountUSD: price != null ? split.pdjUSD : undefined,
+      usdUnavailable: price == null,
       receiveCashback: split.receiveCashback,
       cashbackSlearn: split.cashbackSlearn > 0 ? split.cashbackSlearn : undefined,
       comment: donorComment,

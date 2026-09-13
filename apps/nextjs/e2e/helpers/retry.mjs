@@ -37,3 +37,17 @@ export async function retrySpec(run, { attempts = 2, delayMs = 20000, label = 's
     }
   }
 }
+
+/**
+ * Navegación con reintentos: el dev site saturado responde con timeouts
+ * (`Navigation timeout …`) en la suite completa (REQ/224).
+ */
+export async function gotoWithRetry(page, url, {
+  waitUntil = 'domcontentloaded',
+  timeout = 60000,
+  retries = 3,
+  delayMs = 5000,
+  label = 'goto',
+} = {}) {
+  return retry(() => page.goto(url, { waitUntil, timeout }), { retries, delayMs, label: `${label} ${url}` })
+}

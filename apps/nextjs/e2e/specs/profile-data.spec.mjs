@@ -12,6 +12,7 @@ import {
   simulateSIWE, checkSessionFull, checkPartialLogin,
   waitForText, short,
 } from '@pasosdejesus/m/e2e'
+import { gotoWithRetry } from '../helpers/retry.mjs'
 
 async function main() {
   const t0 = performance.now()
@@ -29,7 +30,7 @@ async function main() {
   // ── Navigate to profile ──────────────────────────────────
   console.log('\n── Profile page ──')
   // Navigate to profile directly, then SIWE there so session is fresh
-  await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
+  await gotoWithRetry(page, `${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
   // Do SIWE on the profile page
   const siwe2Ok = await simulateSIWE(page, { account, host, domainPort, base, chainId })
@@ -37,7 +38,7 @@ async function main() {
   ok('SIWE on profile page completed')
 
   // Reload profile page with fresh session
-  await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
+  await gotoWithRetry(page, `${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
   // Wait for profile data to load
   console.log('  Waiting for profile data...')

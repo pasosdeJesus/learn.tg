@@ -205,7 +205,13 @@ async function main() {
   if (!await fillUsdtAmount(page, 1)) {
     fail('Amount input not found'); await browser.close(); process.exit(1)
   }
-  const okText = await modalText(page)
+  // La estimación de gas puede tardar bajo carga: sondear hasta ~15 s.
+  let okText = ''
+  for (let i = 0; i < 15; i++) {
+    okText = await modalText(page)
+    if (okText.includes('Enough gas estimated') || /not enough|CELO is needed/i.test(okText)) break
+    await new Promise(r => setTimeout(r, 1000))
+  }
   if (okText.includes('Enough gas estimated')) ok('Con CELO suficiente el formulario se mantiene ("Enough gas estimated")')
   else { console.log(`  Modal text: ${okText.slice(0, 160)}`); fail('Formulario esperado con CELO suficiente') }
   await closeModal(page)

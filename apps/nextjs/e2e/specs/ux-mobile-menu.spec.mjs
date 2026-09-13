@@ -11,6 +11,7 @@ import {
   initTestEnv, launchBrowser, newPage,
   resetFailures, fail, ok, summary, short, simulateSIWE,
 } from '@pasosdejesus/m/e2e'
+import { gotoWithRetry } from '../helpers/retry.mjs'
 
 async function main() {
   const t0 = performance.now()
@@ -50,14 +51,19 @@ async function main() {
 
   // ═══ Parte A: invitado (sin sesión) — R-#230/R-#231 ═══
   console.log('── A. Invitado en /en ──')
-  await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
+  await gotoWithRetry(page, `${base}/en`, { waitUntil: 'domcontentloaded', timeout })
   await new Promise(r => setTimeout(r, 6000))
   {
     const s = await uiState()
     if (s.menuBtn) { ok('☰ visible para invitado (R-#230)') } else { fail('☰ ausente para invitado') }
     if (s.droplet) { ok('Gota 💧 visible para invitado') } else { fail('Gota 💧 ausente para invitado') }
     await openMenu()
-    const hs = await hrefs()
+    // Bajo carga el menú puede aparecer/actualizarse tarde: sondear el enlace.
+    let hs = await hrefs()
+    for (let i = 0; i < 10 && !hs.includes('/en'); i++) {
+      await new Promise(r => setTimeout(r, 1000))
+      hs = await hrefs()
+    }
     if (hs.includes('/en')) { ok('Menú invitado incluye Courses → /en (R-#231)') } else { fail(`Menú sin Courses /en: ${JSON.stringify(hs)}`) }
     if (!hs.includes('/en/profile')) { ok('Menú invitado NO incluye Profile (R-#230)') } else { fail('Menú invitado incluye /en/profile (no debe)') }
   }
@@ -74,7 +80,7 @@ async function main() {
     return (j && typeof j.token === 'string' && j.token) || null
   })
   if (dedicated) await page.evaluate(t => localStorage.setItem('learn.tg.authToken', t), dedicated)
-  await page.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout })
+  await gotoWithRetry(page, `${base}/en`, { waitUntil: 'domcontentloaded', timeout })
   await new Promise(r => setTimeout(r, 6000))
   {
     const s = await uiState()
@@ -93,7 +99,7 @@ async function main() {
   for (let attempt = 0; attempt < 3 && !guideOk; attempt++) {
     if (attempt > 0) {
       console.log(`  Reintentando guía (${attempt + 1}/3)...`)
-      await page.goto(`${base}/en/gdcluster/guide1`, { waitUntil: 'domcontentloaded', timeout })
+      await gotoWithRetry(page, `${base}/en/gdcluster/guide1`, { waitUntil: 'domcontentloaded', timeout })
     }
     for (let i = 0; i < 8 && !guideOk; i++) {
       await new Promise(r => setTimeout(r, 2000))
@@ -152,7 +158,7 @@ async function main() {
 
   // ═══ Parte D: consola limpia (R-#217/R-#218) + footer /es ═══
   console.log('\n── D. Consola y footer ──')
-  await page.goto(`${base}/es`, { waitUntil: 'domcontentloaded', timeout })
+  await gotoWithRetry(page, `${base}/es`, { waitUntil: 'domcontentloaded', timeout })
   await new Promise(r => setTimeout(r, 5000))
   {
     const legal = await page.evaluate(() =>

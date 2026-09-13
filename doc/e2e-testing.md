@@ -291,6 +291,20 @@ The mock survives page reloads (injected via `evaluateOnNewDocument`).
 All tests target the **development server** at `https://learn.tg:9001` by
 default. This server runs locally or on the dev VM with the latest code.
 
+> **Browser specs and `IPDES`/`PUERTOPRU`:** the shared helper
+> `@pasosdejesus/m/e2e/env` defaults to **production** (`learn.tg:443`) when
+> `IPDES`/`PUERTOPRU` are unset. `make test-e2e` (and `make test-e2e-spec
+> SPEC=…`) export `IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220` so the
+> documented default really is the dev site; the `prod-*` specs force
+> `learn.tg:443 / 42220` themselves. Running a spec directly with `node
+> e2e/specs/x.spec.mjs` **requires those envs** (REQ/224).
+
+Under a full 30-spec run the shared 16G dev VM saturates and navigation can time
+out; `e2e/helpers/retry.mjs` provides `gotoWithRetry()`/`retry()` (used by the
+flaky specs) and specs skip gracefully when an environment prerequisite is
+missing (testnet CELO balance, mainnet stress opt-in `PROD_STRESS=1`, no courses
+listed on `/en`).
+
 Override with env vars:
 
 | Variable | Default | Purpose |
