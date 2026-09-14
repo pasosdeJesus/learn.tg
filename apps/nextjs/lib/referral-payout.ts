@@ -142,8 +142,8 @@ function rewardAction(tipo: 'referral_reward' | 'referral_bonus', guideId?: numb
   }
   if (guideId != null) {
     return isEnglish
-      ? { title: 'Missional scholarship referral', text: 'Someone you referred completed a crossword in a missional course.' }
-      : { title: 'Referido por beca misional', text: 'Alguien que referiste completó un crucigrama en un curso misional.' }
+      ? { title: 'Missional scholarship referral', text: 'Someone you referred completed a crossword in "A relationship with Jesus".' }
+      : { title: 'Referido por beca misional', text: 'Alguien que referiste completó un crucigrama en «Una relación con Jesús».' }
   }
   return isEnglish
     ? { title: 'Premium course referral', text: 'Someone you referred purchased a premium course.' }

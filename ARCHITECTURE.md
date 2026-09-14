@@ -85,7 +85,7 @@ graph TD
 | Service | Port | Purpose |
 |---------|------|---------|
 | Next.js dev server | `4000` | UI + API routes (local development) |
-| Rails API | `3500` | Admin backend (`/learntg-admin`) |
+| Rails admin API | `3500` dev / `3250` prod | Admin backend (`/learntg-admin`); different port per environment |
 | Next.js API (HTTPS) | `9001` | API proxied to live server for quickstart mode |
 
 ---

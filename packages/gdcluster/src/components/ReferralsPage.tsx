@@ -116,10 +116,10 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
     form1: es
       ? 'Gana el 10% del precio del curso cuando alguien que referiste compra un curso. Se paga 50% USDT + 50% SLEARN.'
       : 'Earn 10% of the course price when someone you referred buys a course. Paid 50% USDT + 50% SLEARN.',
-    form2Title: es ? 'Becas de cursos misionales' : 'Missional course scholarships',
+    form2Title: es ? 'Becas de «Una relación con Jesús»' : 'A relationship with Jesus scholarships',
     form2: es
-      ? 'Gana el 10% del valor de la beca cuando alguien que referiste completa un crucigrama en un curso misional. El alumno conserva el 100% de su beca.'
-      : 'Earn 10% of the scholarship value when someone you referred completes a crossword in a missional course. The student keeps 100% of their scholarship.',
+      ? 'Gana el 10% del valor de la beca cuando alguien que referiste completa un crucigrama en «Una relación con Jesús». El alumno conserva el 100% de su beca.'
+      : 'Earn 10% of the scholarship value when someone you referred completes a crossword in "A relationship with Jesus". The student keeps 100% of their scholarship.',
     form3Title: es ? 'Bono por pastor' : 'Pastor bonus',
     form3: es
       ? 'Gana 1 USDT extra cuando un pastor que referiste compra el curso Global Disciples.'

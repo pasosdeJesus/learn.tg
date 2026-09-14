@@ -246,8 +246,9 @@ MOCK_COURSE_LIST=1 CHROME_PATH=/usr/local/bin/chrome \
 
 `MOCK_COURSE_LIST=1` serves the real course JSON (fetched from
 `COURSE_LIST_SOURCE_URL`, default `https://learn.tg:3500/…`) via request
-interception, because the production list is served on `:3250` (unreachable from
-the CI/dev VM). A real browser on production does not need it.
+interception, because the production list is served on `:3250` (which may be
+firewalled from the runner; set `COURSE_LIST_SOURCE_URL` to the reachable admin
+URL). A real browser on production does not need it.
 
 Expected in both phases: `ANÓNIMAS 0` (never an anonymous `/api/scholarship`)
 and `¿cooldown?: no`; phase B (stale token) still queries with the wallet.

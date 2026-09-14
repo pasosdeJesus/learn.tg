@@ -13,10 +13,17 @@ stack locally.
 |---|---|---|
 | URL | `https://learn.tg` | `https://learn.tg:9001` |
 | Celo network | `celo` (chain 42220) | `celoSepolia` (chain 11142220) |
-| Rails admin API | served on the production host | `https://learn.tg:3500/learntg-admin` |
+| Rails admin API | `https://learn.tg:3250/learntg-admin` | `https://learn.tg:3500/learntg-admin` |
 | Next.js API | same host | same host (`:9001`) |
 | Wallets | one per role (below) | single wallet for all roles |
 | Data | real users | development data |
+
+The Rails admin app listens on a **different port per environment** (both under
+`https://learn.tg`, behind nginx): **`:3250` in production** and **`:3500` in
+development**. The dev port is the one used by the frontend quickstart proxy
+(`NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin`). The production
+list (`:3250`) may be firewalled in some networks (hence `MOCK_COURSE_LIST=1` in
+the E2E specs, which can fetch it through `COURSE_LIST_SOURCE_URL`).
 
 Chain IDs confirmed by the E2E suites: specs targeting `https://learn.tg`
 report `chain: 42220` (mainnet), specs targeting `https://learn.tg:9001`
