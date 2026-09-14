@@ -232,4 +232,43 @@ describe('Main Page Component', () => {
     const coursesUrl = callList2.length > 1 ? callList2[1][0] : ''
     expect(coursesUrl).toMatch(/filtro\[busidioma\]=en/)
   })
+
+  it('reintenta el listado con un token dedicado nuevo tras un 401 (token obsoleto)', async () => {
+    const mockCourses = [
+      {
+        id: 'course-1',
+        idioma: 'en',
+        prefijoRuta: '/course-1',
+        imagen: '/image1.jpg',
+        titulo: 'Recovered Course',
+        subtitulo: 'Description',
+      },
+    ]
+    const unauthorized: any = new Error('Request failed with status code 401')
+    unauthorized.response = { status: 401 }
+    axiosGet
+      .mockResolvedValueOnce({ data: { religion_id: null } }) // perfil
+      .mockRejectedValueOnce(unauthorized) // listado con el token guardado (obsoleto)
+      .mockResolvedValueOnce({ data: mockCourses as Course[] }) // listado reintentado
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ token: 'dedicated-fresh-token' }),
+    })
+    // @ts-ignore
+    global.fetch = fetchMock
+
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
+
+    await waitFor(() => expect(screen.getByText(/Recovered Course/i)).toBeInTheDocument())
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/token', expect.anything())
+    const calls: any[] = axiosGet.mock.calls as any
+    expect(calls[2][0]).toMatch(/token=dedicated-fresh-token/)
+    window.localStorage.removeItem('learn.tg.authToken')
+  })
 })

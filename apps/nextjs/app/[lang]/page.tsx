@@ -2,7 +2,7 @@
 
 import axios from 'axios'
 import { useSession } from 'next-auth/react'
-import { getApiToken } from '@/lib/auth-token'
+import { getApiToken, refreshApiToken } from '@/lib/auth-token'
 import { use, useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
@@ -97,8 +97,8 @@ export default function Page({ params }: PageProps) {
         return
       }
 
-      let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?filtro[busidioma]=${lang}`
-      console.log('[courses] fetching:', url)
+      const listBaseUrl = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?filtro[busidioma]=${lang}`
+      console.log('[courses] fetching:', listBaseUrl)
       // Tras una navegación cliente la sesión de NextAuth puede venir "fría"
       // (bug #5719) mientras el address sigue en localStorage. Usar el address
       // disponible (sesión o localStorage) evita la consulta ANÓNIMA de
@@ -115,13 +115,18 @@ export default function Page({ params }: PageProps) {
       let apiToken: string | null = null
       let christian = false
 
+      // Listado de cursos con la billetera + token (R-#227): nunca anónimo
+      // cuando hay usuario conectado.
+      const listUrl = (token: string | null) =>
+        wallet && token
+          ? `${listBaseUrl}&filtro[busconBilletera]=true&walletAddress=${wallet}&token=${token}`
+          : listBaseUrl
+
       if (wallet) {
         // R-#227: el token de API es el DEDICADO (learn.tg.authToken), no el
         // CSRF; getCsrfToken() queda solo como respaldo legacy.
         apiToken = await getApiToken()
         if (apiToken) {
-          url += `&filtro[busconBilletera]=true&walletAddress=${wallet}&token=${apiToken}`
-
           // Determine whether the user is Christian so Global Disciples courses
           // (gdcluster/redgd) are only shown to Christians.
           try {
@@ -136,7 +141,21 @@ export default function Page({ params }: PageProps) {
       }
 
       try {
-        const response = await axios.get<Course[]>(url)
+        let response
+        try {
+          response = await axios.get<Course[]>(listUrl(apiToken))
+        } catch (error: any) {
+          // Token obsoleto (p. ej. `/api/auth/token` falló en el login y quedó
+          // el CSRF legacy, u otra pestaña rotó el token): la cookie de sesión
+          // sigue siendo válida, así que se pide uno dedicado nuevo y se
+          // reintenta — en vez de dejar el listado vacío (401 de Rails) o caer
+          // a consultas anónimas (que marcarían "cooldown").
+          if (error?.response?.status !== 401 || !wallet) throw error
+          const fresh = await refreshApiToken()
+          if (!fresh || fresh === apiToken) throw error
+          apiToken = fresh
+          response = await axios.get<Course[]>(listUrl(fresh))
+        }
         if (response.data) {
           const courseInfo = (Array.isArray(response.data) ? response.data : (response.data as any).proyectosfinancieros || (response.data as any).data || [])
             // Global Disciples courses are only shown to Christians.
@@ -199,8 +218,8 @@ export default function Page({ params }: PageProps) {
           })
         }
       } catch (error) {
-        console.error('[courses] failed to fetch from:', url, error)
-        logger.info('[courses] failed: ' + String(error) + ' | url: ' + url, 'Courses')
+        console.error('[courses] failed to fetch from:', listUrl(apiToken), error)
+        logger.info('[courses] failed: ' + String(error) + ' | url: ' + listUrl(apiToken), 'Courses')
         toast({ title: 'Failed to load courses. Check console.', variant: 'destructive' })
       }
     }

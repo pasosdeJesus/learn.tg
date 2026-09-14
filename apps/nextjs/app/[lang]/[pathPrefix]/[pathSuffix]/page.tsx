@@ -1,8 +1,8 @@
 'use client'
 
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
 import { useSession } from 'next-auth/react'
-import { getApiToken } from '@/lib/auth-token'
+import { getApiToken, refreshApiToken } from '@/lib/auth-token'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
@@ -143,16 +143,29 @@ export default function Page() {
     if (course && guideNumber > 0) {
         const fetchGuideContent = async () => {
             try {
-                let nurl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
+                let baseUrl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
                     `&lang=${lang}&prefix=${pathPrefix}&guide=${pathSuffix}&guideNumber=${guideNumber}`
-                if (address && session?.address) {
-                    const authToken = await getApiToken()
-                    if (authToken) {
-                        nurl += `&walletAddress=${address}&token=${authToken}`
-                    }
-                }
+                // Sesión "fría" (#5719): el address puede estar solo en
+                // localStorage aunque `session.address` aún no llegue. Antes se
+                // exigía `session?.address`, así que la guía se pedía ANÓNIMA y
+                // las guías premium respondían 401 (auth_required) en pantalla.
+                const wallet = address || session?.address || null
+                const withAuth = (tok: string | null) =>
+                    wallet && tok ? `${baseUrl}&walletAddress=${wallet}&token=${tok}` : baseUrl
+                let guideToken = wallet ? await getApiToken() : null
 
-                const response = await axios.get<{ markdown?: string, message?: string }>(nurl)
+                let response
+                try {
+                    response = await axios.get<{ markdown?: string, message?: string }>(withAuth(guideToken))
+                } catch (e: any) {
+                    // Token obsoleto: la cookie de sesión sigue válida → pedir uno
+                    // dedicado nuevo y reintentar (R-#227) en vez de mostrar 401.
+                    if (e?.response?.status !== 401 || !wallet) throw e
+                    const fresh = await refreshApiToken()
+                    if (!fresh || fresh === guideToken) throw e
+                    guideToken = fresh
+                    response = await axios.get<{ markdown?: string, message?: string }>(withAuth(fresh))
+                }
                 if (response.data && response.data.markdown) {
                     const markdown = response.data.markdown
 
@@ -172,26 +185,20 @@ export default function Page() {
                 }
                 setCreditsHtml(htmlDeMd(course.creditosMd || ''))
 
-            } catch (err) {
-                if (err instanceof AxiosError) {
-                    if (err.response?.status === 403) {
-                        const reasonKey = (err.response.data as any)?.error || 'premium_purchase_required'
-                        setPurchaseRequired(courseAccessReasonText(reasonKey, lang))
-                        setGuideHtml('')
-                        return
-                    }
-                    if (err.response?.status === 401) {
-                        const reasonKey = (err.response.data as any)?.error || 'connect_wallet'
-                        setPurchaseRequired(courseAccessReasonText(reasonKey, lang))
-                        setGuideHtml('')
-                        return
-                    }
-                    console.error("Error fetching guide content:", err)
-                    setGuideHtml(`<p>Error: ${err.message}</p>`)
-                } else {
-                    console.error("An unexpected error occurred:", err);
-                    setGuideHtml(`<p>An unexpected error occurred</p>`);
+            } catch (err: any) {
+                // Se comprueba `response.status` sin `instanceof AxiosError`: con
+                // varias copias del módulo (bundles/hooks) el instanceof falla y
+                // el 401 se mostraba como texto crudo en vez del mensaje de acceso.
+                const status = err?.response?.status
+                if (status === 403 || status === 401) {
+                    const reasonKey = (err?.response?.data as any)?.error ||
+                        (status === 403 ? 'premium_purchase_required' : 'connect_wallet')
+                    setPurchaseRequired(courseAccessReasonText(reasonKey, lang))
+                    setGuideHtml('')
+                    return
                 }
+                console.error("Error fetching guide content:", err)
+                setGuideHtml(`<p>Error: ${err.message}</p>`)
             }
         }
         fetchGuideContent()

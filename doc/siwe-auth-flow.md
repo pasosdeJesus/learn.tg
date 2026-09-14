@@ -121,8 +121,11 @@ not a DB token:
   CSRF — exposed to the browser via `GET /api/auth/token` and stored in
   localStorage as `learn.tg.authToken`. Removing the column is pending Rails
   migration (R-#227 Fase 2).
-- Legacy-token staleness (another login/device rotated it) is harmless: the
-  session cookie authorizes regardless of token rotation.
+- Legacy-token staleness is harmless **for Next.js API routes** (the session
+  cookie authorizes regardless of token rotation), but **not for the Rails
+  endpoints** (`proyectosfinancieros.json`, `presenta_curso`): Rails validates
+  `billetera_usuario.token == token`, so a rotated/stale token answers `401`
+  there. Recover by fetching a fresh dedicated token and retrying (below).
 
 ### 2. Two-layer auth model
 
@@ -146,6 +149,17 @@ localStorage fallback) and the token from `getApiToken()` to build
 wrong/zero state (reported: a newly connected student saw the course in
 "cooldown" and 0% progress until reconnecting). For the same reason, treat an
 unknown `canSubmit` (`null`) as *unknown* in the UI, never as "in cooldown".
+
+**Recover from a stale token instead of going anonymous or empty.** If the
+stored token is obsolete (e.g. `GET /api/auth/token` failed during the first
+login and the legacy CSRF was kept, or another tab rotated the token), Rails
+answers `401`; the page must fetch `/api/auth/token` again
+(`refreshApiToken()` in `lib/auth-token.ts`) and retry **once**, reusing the
+still-valid session cookie. Applied to the course list/detail
+(`app/[lang]/page.tsx`, `lib/hooks/useCourse.ts`) and to the premium guide
+content (`app/[lang]/[pathPrefix]/[pathSuffix]/page.tsx`), which previously
+gated the fetch on `session?.address` and showed `401 auth_required` for
+premium guides under a cold session.
 
 **Order inside `authenticateUser()`:** (1) session cookie valid and
 `sub` == wallet → OK; (2) `AUTH_SESSION_ONLY=1` and no session → 401 (used to

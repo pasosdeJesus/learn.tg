@@ -192,6 +192,13 @@ async function main() {
   if (storedCode && storedCode.toUpperCase() === String(refCode).toUpperCase()) ok(`/ref/{CODE} guardó pendingReferralCode (${storedCode})`)
   else { console.log(`  stored: ${storedCode}`); fail('pendingReferralCode no guardado') }
 
+  // Cerrar la página de captura antes de autenticar al referido: /ref/{CODE}
+  // reclama solo cuando ya hay sesión (ref/[code]/page.tsx), y en un contexto de
+  // navegador compartido esa página abandonada vería la cookie del referido y
+  // reclamaría el código, dejando el claim explícito de abajo en 400 "already
+  // claimed". El pendingReferralCode queda en el localStorage del contexto.
+  await pageB.close().catch(() => {})
+
   // Autentica al referido (SIWE; la billetera nueva se auto-registra). Cada
   // intento usa una página nueva: `exposeFunction('__signSiwe')` no se puede
   // re-registrar en la misma página y el primer intento puede abortarse por la

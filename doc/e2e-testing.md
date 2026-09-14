@@ -225,6 +225,7 @@ time out on SIWE under suite load (passes solo).
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
 | `donate-campaign-real` | Motor de campañas desplegado (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_ADDRESS`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` en el dev (billetera única). La ronda C (cashback ON) requiere MINTER_ROLE de SLEARN en el backend (otorgado en el SLEARN Sepolia del dev) + CELO en la billetera de prueba para el gas; las rondas A/B (cashback OFF) no lo requieren |
 | `church-selector-diag` | Session cookie auth (works via the session fallback in `lib/authenticateUser.ts`) |
+| `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, shown by `/api/churches/fund`) with **≥44 SLEARN** for the pastor bonus; otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when `/api/churches/fund` reports a low balance |
 
 ### Hydration / SIWE gotcha on the dev server (https://github.com/pasosdeJesus/learn.tg/issues/208)
 
