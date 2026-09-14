@@ -93,8 +93,8 @@ async function main() {
 
   // Connect wallet
   const hasConnect = await page.evaluate(() =>
-    document.body.textContent?.includes('Connect Wallet') ||
-    document.body.textContent?.includes('Conectar Billetera'))
+    document.body?.textContent?.includes('Connect Wallet') ||
+    document.body?.textContent?.includes('Conectar Billetera'))
   if (hasConnect) {
     const buttons = await page.$$('button')
     for (const btn of buttons) {

@@ -40,11 +40,20 @@ async function main() {
     return { droplet: !!droplet, menuBtn: !!menuBtn }
   })
   const openMenu = async () => {
-    await page.evaluate(() => {
-      const b = [...document.querySelectorAll('button')].find(x => (x.getAttribute('aria-label') || '') === 'Menu')
-      if (b) b.click()
-    })
-    await new Promise(r => setTimeout(r, 500))
+    // Reintentar el clic: con el dev bajo carga la hidratación puede llegar
+    // tarde y el primer clic (React aún no enganchado) no abre el menú. Se
+    // considera abierto si aparece un enlace exclusivo del menú (Leaderboard,
+    // que no está en el footer).
+    for (let i = 0; i < 6; i++) {
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find(x => (x.getAttribute('aria-label') || '') === 'Menu')
+        if (b) b.click()
+      })
+      await new Promise(r => setTimeout(r, 1000))
+      const opened = await page.evaluate(() =>
+        [...document.querySelectorAll('a[href]')].some(a => (a.getAttribute('href') || '').endsWith('/leaderboard')))
+      if (opened) return
+    }
   }
 
   console.log(`Wallet: ${short(account.address)} | ${base} (móvil 375px)\n`)
@@ -70,8 +79,21 @@ async function main() {
 
   // ═══ Parte B: autenticado — R-#230 (gota oculta + Profile) ═══
   console.log('\n── B. Autenticado en /en ──')
-  const siweOk = await simulateSIWE(page, { account, host, domainPort, base, chainId })
-  if (!siweOk) { fail('SIWE failed'); await browser.close(); process.exit(1) }
+  // SIWE con reintentos: bajo carga el callback de NextAuth a veces cae a
+  // "/api/auth/signin?csrf=true" (nonce/cookie rotado) y `simulateSIWE`
+  // devuelve ok igualmente. Se valida la sesión real (/api/auth/session) y se
+  // reintenta hasta 3 veces antes de seguir.
+  let sessionAddr = null
+  for (let attempt = 0; attempt < 3 && !sessionAddr; attempt++) {
+    await simulateSIWE(page, { account, host, domainPort, base, chainId })
+    sessionAddr = await page.evaluate(async () => {
+      const r = await fetch('/api/auth/session')
+      const j = await r.json().catch(() => ({}))
+      return (j && j.address) || null
+    })
+    if (!sessionAddr) await new Promise(r => setTimeout(r, 2000))
+  }
+  if (!sessionAddr) { fail('SIWE failed (sin sesión válida tras 3 intentos)'); await browser.close(); process.exit(1) }
   // Token dedicado (R-#227) para las APIs de la guía en Parte C
   const dedicated = await page.evaluate(async () => {
     const r = await fetch('/api/auth/token')
@@ -79,7 +101,14 @@ async function main() {
     const j = await r.json()
     return (j && typeof j.token === 'string' && j.token) || null
   })
-  if (dedicated) await page.evaluate(t => localStorage.setItem('learn.tg.authToken', t), dedicated)
+  // Igual que ConnectWalletButton tras un login real: guardar el address y el
+  // token DEDICADO (R-#227). Sin el address `useAuthAddress()` queda vacío
+  // cuando la sesión de NextAuth viene "fría" (#5719) y la guía premium se
+  // pediría anónima → 401 auth_required (Parte C).
+  await page.evaluate(({ token, addr }) => {
+    if (token) localStorage.setItem('learn.tg.authToken', token)
+    localStorage.setItem('learn.tg.sessionAddress', addr)
+  }, { token: dedicated, addr: account.address.toLowerCase() })
   await gotoWithRetry(page, `${base}/en`, { waitUntil: 'domcontentloaded', timeout })
   await new Promise(r => setTimeout(r, 6000))
   {

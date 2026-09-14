@@ -177,6 +177,8 @@ async function main() {
   // forma anónima (es la causa del estado "cooldown"/cero).
   if (control.rel.length === 0) {
     fail('la lista de cursos no consultó /api/scholarship para la billetera nueva (tarjeta sin avance/estado)')
+  } else if (repro.rel.length === 0) {
+    fail('la fase B (token obsoleto) no consultó /api/scholarship: la página no se recuperó del token caducado (401/lista vacía) en vez de pedir uno nuevo con la sesión vigente')
   } else if (control.anon.length > 0 || repro.anon.length > 0) {
     fail(`la página consultó /api/scholarship SIN walletAddress (anónima): control=${control.anon.length}, repro=${repro.anon.length} → estado "cooldown"/cero en la tarjeta (bug del reporte)`)
   } else if (control.cooldown || repro.cooldown) {
