@@ -5,7 +5,10 @@ import '@testing-library/jest-dom'
 import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const useSessionMock = vi.fn(() => ({ data: null, status: 'unauthenticated' }))
+const useSessionMock = vi.fn((..._args: unknown[]) => ({
+  data: null,
+  status: 'unauthenticated',
+}))
 vi.mock('next-auth/react', () => ({
   SessionProvider: ({ children }: { children: React.ReactNode }) =>
     React.createElement(React.Fragment, null, children),

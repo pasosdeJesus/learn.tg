@@ -155,10 +155,12 @@ between page transitions.
 NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The `authToken` in
 localStorage is a *legacy fallback* for clients that cannot send the cookie
 (Rails, non-browser specs). Since R-#227 the token is no longer the SIWE nonce:
-`authorize()` generates a dedicated random token (256 bits) at sign-in, and
+`authorize()` generates a dedicated random token (256 bits) on the first sign-in
+and reuses it afterwards (no longer rotated since 2026-09-14), and
 `ConnectWalletButton` fetches it from `GET /api/auth/token` right after the
 callback. If that fetch fails (older backend), the CSRF token is kept as a
-legacy fallback. See [SIWE Auth Flow](siwe-auth-flow.md) and REQ/227.
+legacy fallback. See [SIWE Auth Flow](siwe-auth-flow.md) and
+[R-#227](https://github.com/pasosdeJesus/learn.tg/issues/227).
 
 ## Comparison with Previous Approach
 

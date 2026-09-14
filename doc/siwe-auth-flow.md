@@ -62,7 +62,9 @@ User Wallet                Frontend                   NextAuth API Route        
 > credential. The token is exposed to the browser later via `GET
 > /api/auth/token` (same session cookie) and kept in localStorage as
 > `learn.tg.authToken` for API calls / Rails; it is a *legacy fallback*
-> because `authenticateUser` is now session-first.
+> because `authenticateUser` is now session-first. Since 2026-09-14 the token is
+> generated on the first sign-in and **reused** afterwards (no longer rotated),
+> so already-open tabs and token-only clients (Rails) keep working.
 
 ### Hostname Validation
 
@@ -116,16 +118,17 @@ not a DB token:
 
 - Rails (`servidor/`) and non-browser clients (e2e specs, scripts)
   authenticate exclusively against `billetera_usuario.token`, so the column
-  and the legacy path stay during the migration. Each SIWE sign-in still
-  rotates a **dedicated random token** (`newApiToken()`, 256 bits) — not the
-  CSRF — exposed to the browser via `GET /api/auth/token` and stored in
-  localStorage as `learn.tg.authToken`. Removing the column is pending Rails
-  migration (R-#227 Fase 2).
+  and the legacy path stay during the migration. Since 2026-09-14 `authorize()`
+  no longer rotates the token: it generates the **dedicated random token**
+  (`newApiToken()`, 256 bits) on the first sign-in and reuses it afterwards,
+  exposed to the browser via `GET /api/auth/token` and stored in localStorage as
+  `learn.tg.authToken`. Removing the column is pending the Rails migration
+  (R-#233).
 - Legacy-token staleness is harmless **for Next.js API routes** (the session
-  cookie authorizes regardless of token rotation), but **not for the Rails
+  cookie authorizes regardless of the DB token), but **not for the Rails
   endpoints** (`proyectosfinancieros.json`, `presenta_curso`): Rails validates
-  `billetera_usuario.token == token`, so a rotated/stale token answers `401`
-  there. Recover by fetching a fresh dedicated token and retrying (below).
+  `billetera_usuario.token == token`, so a stale token answers `401` there.
+  Recover by fetching a fresh dedicated token and retrying (below).
 
 ### 2. Two-layer auth model
 
