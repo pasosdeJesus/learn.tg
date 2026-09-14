@@ -137,6 +137,16 @@ API calls are cookie-authenticated (browser) or send `walletAddress` + `token`
 
 **Do not rely on `session.address` alone for API authorization** — use `authenticateUser()`.
 
+**Client pages must not gate wallet-scoped fetches on `session.address` alone.**
+After a client-side navigation NextAuth's `useSession()` can be "cold" (returns
+no address) while the wallet is still connected — see the known issue #5719.
+Use the address from `useAuthAddress()` (session **or** the `learn.tg.sessionAddress`
+localStorage fallback) and the token from `getApiToken()` to build
+`?walletAddress=…&token=…`; otherwise the fetch goes **anonymous** and pages show
+wrong/zero state (reported: a newly connected student saw the course in
+"cooldown" and 0% progress until reconnecting). For the same reason, treat an
+unknown `canSubmit` (`null`) as *unknown* in the UI, never as "in cooldown".
+
 **Order inside `authenticateUser()`:** (1) session cookie valid and
 `sub` == wallet → OK; (2) `AUTH_SESSION_ONLY=1` and no session → 401 (used to
 measure residual token dependencies); (3) legacy DB token match → OK. Debug

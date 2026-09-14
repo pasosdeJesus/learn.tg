@@ -99,24 +99,39 @@ export default function Page({ params }: PageProps) {
 
       let url = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?filtro[busidioma]=${lang}`
       console.log('[courses] fetching:', url)
-      let apiToken = null
+      // Tras una navegación cliente la sesión de NextAuth puede venir "fría"
+      // (bug #5719) mientras el address sigue en localStorage. Usar el address
+      // disponible (sesión o localStorage) evita la consulta ANÓNIMA de
+      // avance/scholarship — que renderizaba "cooldown" y 0% de avance para
+      // estudiantes recién conectados.
+      const wallet = session?.address || address || null
+      // Usuario conectado pero con el address aún no montado (useAuthAddress
+      // expone el fallback de localStorage tras el effect): esperar en vez de
+      // consultar anónimo — el effect se re-ejecuta cuando llega el address.
+      const connectedHint = sessionStatus === 'authenticated' || !!address ||
+        (typeof window !== 'undefined' && !!localStorage.getItem('learn.tg.sessionAddress'))
+      if (connectedHint && !wallet) return
+
+      let apiToken: string | null = null
       let christian = false
 
-      if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
+      if (wallet) {
         // R-#227: el token de API es el DEDICADO (learn.tg.authToken), no el
         // CSRF; getCsrfToken() queda solo como respaldo legacy.
         apiToken = await getApiToken()
-        url += `&filtro[busconBilletera]=true&walletAddress=${session.address}&token=${apiToken}`
+        if (apiToken) {
+          url += `&filtro[busconBilletera]=true&walletAddress=${wallet}&token=${apiToken}`
 
-        // Determine whether the user is Christian so Global Disciples courses
-        // (gdcluster/redgd) are only shown to Christians.
-        try {
-          const profileRes = await axios.get(
-            `/api/profile?walletAddress=${session.address}&token=${apiToken}`,
-          )
-          christian = Number(profileRes.data?.religion_id) === 2
-        } catch {
-          christian = false
+          // Determine whether the user is Christian so Global Disciples courses
+          // (gdcluster/redgd) are only shown to Christians.
+          try {
+            const profileRes = await axios.get(
+              `/api/profile?walletAddress=${wallet}&token=${apiToken}`,
+            )
+            christian = Number(profileRes.data?.religion_id) === 2
+          } catch {
+            christian = false
+          }
         }
       }
 
@@ -136,8 +151,15 @@ export default function Page({ params }: PageProps) {
 
           courseInfo.forEach(async (course: Course) => {
             let url2 = `/api/scholarship?courseId=${course.id}`
-            if (apiToken) {
-              url2 += `&walletAddress=${session!.address}&token=${apiToken}`
+            // Solo se consulta el avance si hay billetera + token: con un usuario
+            // conectado NUNCA en anónimo (la respuesta anónima trae
+            // canSubmit:false/0% → tarjeta en "cooldown").
+            if (!wallet) {
+              url2 += ''
+            } else if (apiToken) {
+              url2 += `&walletAddress=${wallet}&token=${apiToken}`
+            } else {
+              return // esperar al token (el effect se re-ejecuta)
             }
             try {
               const response2 = await axios.get(url2)

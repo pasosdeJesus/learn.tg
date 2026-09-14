@@ -80,7 +80,10 @@ export async function scholarshipStatus(deps: RewardsDeps, req: NextRequest) {
     let vaultBalance = 0
     let vaultBalanceSlearn = 0
     let amountPerGuideSlearn = 0
-    let canSubmit = false
+    // `null` = no hay billetera autenticada en la consulta (anónima) → el
+    // frontend no debe interpretarlo como "en cooldown" (reporte: estudiantes
+    // recién conectados veían cooldown y 0% por una consulta anónima).
+    let canSubmit: boolean | null = walletAddress ? false : null
     let amountPerGuide = 0
     let percentageCompleted = 0
     let completedGuides = 0

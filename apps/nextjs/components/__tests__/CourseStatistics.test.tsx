@@ -43,4 +43,17 @@ describe('CourseStatistics', () => {
     render(<CourseStatistics {...defaultProps} address={undefined} scholarshipPerGuide={5} />)
     expect(screen.getByText(/Scholarship of up to 5 USDT/i)).toBeInTheDocument()
   })
+
+  it('no muestra "cooldown" cuando canSubmit es desconocido (null)', () => {
+    // Reporte: estudiantes recién conectados veían cooldown por una consulta
+    // anónima de scholarship (canSubmit=false por defecto). Ahora el API
+    // devuelve null y solo `false` (verificado) muestra el mensaje.
+    render(<CourseStatistics {...defaultProps} canSubmit={null as any} />)
+    expect(screen.queryByText(/cooldown period/i)).not.toBeInTheDocument()
+  })
+
+  it('muestra "cooldown" solo cuando canSubmit es false', () => {
+    render(<CourseStatistics {...defaultProps} canSubmit={false} />)
+    expect(screen.getByText(/cooldown period/i)).toBeInTheDocument()
+  })
 })

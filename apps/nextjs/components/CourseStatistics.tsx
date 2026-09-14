@@ -114,7 +114,7 @@ export function CourseStatistics({
         )}
         {scholarshipPerGuide !== null && percentagePaid !== null &&
           +scholarshipPerGuide > 0 && address &&
-          +percentagePaid < 100 && !canSubmit && (
+          +percentagePaid < 100 && canSubmit === false && (
             <div className="p-2">
               <span className="text-red-500">
                 {t('cooldown')}

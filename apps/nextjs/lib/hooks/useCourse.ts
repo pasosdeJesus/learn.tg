@@ -40,9 +40,13 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
       // Prefer the localStorage CSRF nonce (the one stored in billetera_usuario
       // at SIWE time); getCsrfToken() may return a rotated nonce → 401.
       const csrfToken = await getApiToken()
+      // Sesión "fría" (bug #5719): usar el address de localStorage si la sesión
+      // de NextAuth aún no expone `session.address`; si no, el fetch iría
+      // anónimo y se perdería el avance del usuario.
+      const wallet = address || session?.address || null
 
-      if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
-        url += `&walletAddress=${session.address}&token=${csrfToken}`
+      if (wallet && csrfToken) {
+        url += `&walletAddress=${wallet}&token=${csrfToken}`
       }
 
       const courseListResponse = await axios.get(url)
@@ -61,19 +65,19 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
         basicCourse.id,
       )
 
-      if (session && address && session.address?.toLowerCase() === address.toLowerCase()) {
-        detailUrl += `&walletAddress=${session.address}&token=${csrfToken}`
+      if (wallet && csrfToken) {
+        detailUrl += `&walletAddress=${wallet}&token=${csrfToken}`
       }
 
       const detailResponse = await axios.get(detailUrl)
       const detailedCourse = detailResponse.data
 
       const guideStatusPromises = detailedCourse.guias.map(async (_: Guide, index: number) => {
-        if (session && address && detailedCourse.id) {
+        if (wallet && detailedCourse.id) {
           // Token (localStorage CSRF nonce) + session: guide-status accepts
           // either, so a stale/absent session cookie no longer 401s the page.
           const token = await getApiToken()
-          const statusUrl = `/api/guide-status?walletAddress=${address}&courseId=${detailedCourse.id}&guideNumber=${index + 1}&token=${encodeURIComponent(token || '')}`
+          const statusUrl = `/api/guide-status?walletAddress=${wallet}&courseId=${detailedCourse.id}&guideNumber=${index + 1}&token=${encodeURIComponent(token || '')}`
           return axios.get(statusUrl).catch(() => ({
             data: { completed: false, receivedScholarship: false, receivedSlearnScholarship: false },
           }))
