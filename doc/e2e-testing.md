@@ -227,6 +227,36 @@ time out on SIWE under suite load (passes solo).
 | `church-selector-diag` | Session cookie auth (works via the session fallback in `lib/authenticateUser.ts`) |
 | `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, shown by `/api/churches/fund`) with **≥44 SLEARN** for the pastor bonus; otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when `/api/churches/fund` reports a low balance |
 
+### Verifying the new-wallet "cooldown" fix on production
+
+After deploying the cold-session fix (`app/[lang]/page.tsx`,
+`lib/hooks/useCourse.ts`, guide page, `packages/rewards`) to
+`https://learn.tg`, verify that a **new wallet** no longer sees a course in a
+false "cooldown" / 0% (see R-#227):
+
+```sh
+# from a network that cannot reach the production course-list port (:3250)
+MOCK_COURSE_LIST=1 CHROME_PATH=/usr/local/bin/chrome \
+  IPDES=learn.tg PUERTOPRU=443 CHAIN_ID=42220 SITE_URL=https://learn.tg \
+  bin/m test:e2e fresh-wallet-first-connect
+```
+
+`MOCK_COURSE_LIST=1` serves the real course JSON (fetched from
+`COURSE_LIST_SOURCE_URL`, default `https://learn.tg:3500/…`) via request
+interception, because the production list is served on `:3250` (unreachable from
+the CI/dev VM). A real browser on production does not need it.
+
+Expected in both phases: `ANÓNIMAS 0` (never an anonymous `/api/scholarship`)
+and `¿cooldown?: no`; phase B (stale token) still queries with the wallet.
+Manual alternative: connect a brand-new wallet on `https://learn.tg`, open the
+course list and check "A relationship with Jesus" shows the real state (not
+"cooldown"), then reconnect and confirm it does not change.
+
+Note: `packages/*/dist` is **gitignored** — on the deploy machine rebuild the
+engines after `pull` (`cd packages/<engine> && ../../apps/nextjs/node_modules/.bin/tsc -b`)
+before verifying, otherwise the `canSubmit: null` change in `packages/rewards`
+is not live.
+
 ### Hydration / SIWE gotcha on the dev server (https://github.com/pasosdeJesus/learn.tg/issues/208)
 
 The dev server `https://learn.tg:9001` sits behind an **nginx reverse proxy**.
