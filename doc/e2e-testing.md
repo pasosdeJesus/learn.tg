@@ -229,6 +229,9 @@ time out on SIWE under suite load (passes solo).
 
 ### Verifying the new-wallet "cooldown" fix on production
 
+**Verified on production 2026-09-12** (new wallet, `https://learn.tg`): `0
+failures`, `ANÓNIMAS 0` in both phases, no false "cooldown".
+
 After deploying the cold-session fix (`app/[lang]/page.tsx`,
 `lib/hooks/useCourse.ts`, guide page, `packages/rewards`) to
 `https://learn.tg`, verify that a **new wallet** no longer sees a course in a
