@@ -116,18 +116,18 @@ async function main() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       walletAddress: '0x0000000000000000000000000000000000000000',
-      token: 'bad', countryCode: 'SL',
+      countryCode: 'SL',
     }),
   })
-  if (r.status === 401) ok('Bad wallet/token → 401')
-  else fail(`Bad wallet/token → ${r.status}`)
+  if (r.status === 401) ok('Bad wallet → 401')
+  else fail(`Bad wallet → ${r.status}`)
 
   // ── 3. Non-pilot country ──
   console.log('\n── 3. Non-pilot country ──')
   r = await fetch(`${SITE}/api/gdcluster/donations/verify`, {
     method: 'POST', headers,
     body: JSON.stringify({
-      walletAddress: wallet, token, countryCode: 'US',
+      walletAddress: wallet, countryCode: 'US',
     }),
   })
   // May return 401 (auth issue with fetch-based SIWE) or 403 (correct country check)

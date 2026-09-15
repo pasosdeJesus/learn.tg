@@ -279,7 +279,6 @@ async function main() {
       const response = await api.post('/api/update-scores', {
         lang: 'en',
         walletAddress: account.address,
-        token: newToken,
       });
       console.log(`   Status: ${response.status}`);
       console.log(`   Profile score: ${response.data.profilescore}`);
@@ -302,7 +301,7 @@ async function main() {
     console.log('\n8. Verificando perfil después de update-scores...');
     let updatedProfile = null;
     try {
-      updatedProfile = await getUserProfile(httpsAgent, cookies, account.address, newToken);
+      updatedProfile = await getUserProfile(httpsAgent, cookies, account.address);
       if (updatedProfile) {
         console.log(`   Profile score final: ${updatedProfile.profilescore}`);
         console.log(`   Learning score final: ${updatedProfile.learningscore}`);

@@ -3,16 +3,21 @@
 /**
  * Smoke test: ¿está arriba el backend Rails del sitio de desarrollo?
  *
+ * Desde R-#233 §8 el sitio público **no requiere Rails** (todo el runtime vive
+ * en Next.js + la BD compartida), así que esta prueba es informativa: si Rails
+ * no responde se OMITE en vez de fallar. Fuerza el fallo con `RAILS_CHECK=1`
+ * (útil mientras Rails siga siendo parte del despliegue).
+ *
  * Hace un GET sin autenticar a
  *   {NEXT_PUBLIC_API_BASE}/proyectosfinancieros.json?filtro[busidioma]=en
  * (por defecto https://learn.tg:3500/learntg-admin/...).
  * - HTTP 200 con lista JSON de cursos → [UP]
  * - Cualquier otra respuesta o error de red/timeout/502 (nginx sin upstream)
- *   → [DOWN] y exit 1.
+ *   → [DOWN]; exit 1 solo si `RAILS_CHECK=1`, si no exit 0 (omitido).
  *
  * Uso:
  *   bin/m test:e2e --smoke rails-health
- *   node e2e/smoke/rails-health.spec.mjs
+ *   RAILS_CHECK=1 node e2e/smoke/rails-health.spec.mjs
  */
 
 import 'dotenv/config'
@@ -22,6 +27,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 const BASE = (process.env.NEXT_PUBLIC_API_BASE || 'https://learn.tg:3500/learntg-admin').replace(/\/+$/, '')
 const URL = `${BASE}/proyectosfinancieros.json?filtro[busidioma]=en`
 const TIMEOUT_MS = Number(process.env.RAILS_HEALTH_TIMEOUT_MS || '15000')
+const REQUIRED = process.env.RAILS_CHECK === '1'
 
 let failed = 0
 function fail(msg) { failed++; console.log(`  [FAIL] ${msg}`) }
@@ -48,6 +54,12 @@ async function main() {
     }
   } catch (e) {
     fail(`Rails NO responde: ${e.name}: ${e.message.slice(0, 120)}`)
+  }
+
+  if (failed > 0 && !REQUIRED) {
+    console.log(`\nℹ️  Rails NO está arriba — omitido: el sitio opera solo con Next.js (R-#233 §8).`)
+    console.log('   (usa RAILS_CHECK=1 para exigirlo)')
+    process.exit(0)
   }
   console.log(`\n${failed === 0 ? 'Rails backend UP' : 'Rails backend DOWN'} (${failed} failed)`)
   process.exit(failed > 0 ? 1 : 0)

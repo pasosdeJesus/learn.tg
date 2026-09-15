@@ -177,6 +177,28 @@ This mode is memory/CPU intensive and not pre-provisioned in the shared VM:
 no `servidor/.env`, no DB credentials in env, native gems and JS deps missing.
 It must be set up once before first run.
 
+### 3. Next-only (no Rails) — how the site runs today
+
+Since R-#233 (Phase 1 + §4.4 + Phase 2, 2026-09-15) the **public site does not
+call Rails at runtime**: the course catalog comes from Next
+(`/api/course-catalog`), the verifier admin UI uses Next's `/api/admin/*`, and
+every authenticated call is same-origin with the NextAuth session cookie (no API
+token, no Rails session). Verified on dev with Rails stopped: `prerequisites`
+6/6, `fresh-wallet-first-connect`, `ux-mobile-menu`, `premium-course-checkout`
+and `full-flow` all green.
+
+Requirements:
+
+- `NEXT_PUBLIC_API_URL` **empty** (otherwise `next.config.ts` proxies `/api/*`
+  to that host). `NEXT_PUBLIC_API_BASE` is unused by app code.
+- The shared PostgreSQL DB is the integration point; new schema changes are
+  Next-side migrations (`bin/m db:migrate`).
+
+Rails is kept only as an on-demand backoffice (MSIP UI + Devise on `:3250`
+prod / `:3500` dev, `usuarios#foto`, its historical migrations). The
+`rails-health` smoke skips when Rails is down unless `RAILS_CHECK=1`; see
+R-#233 §8 for the plan and pending decisions.
+
 ## Contract addresses
 
 Contract addresses are **not** read from `.env`. They come from:
