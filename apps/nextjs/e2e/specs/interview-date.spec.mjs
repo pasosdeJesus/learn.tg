@@ -128,21 +128,22 @@ async function main() {
   const testEmail = `interview-date-${addr.slice(2, 10).toLowerCase()}@learn.tg`
   console.log(`Pastor wallet: ${short(addr)} | ${base}\n`)
 
-  // 2. SIWE sign-in (HTTP) → token + cookies
+  // 2. SIWE sign-in (HTTP) → session cookie (the only credential, R-#233)
   const session = await siweSignIn(pk, addr)
   const auth = `walletAddress=${encodeURIComponent(addr)}`
+  const cookie = { Cookie: session.cookies }
   console.log('Signed in (HTTP).')
 
   // 3. Fill SL profile so profilescore is computed (< 100 → scheduler shows)
   await apiPatch('/api/profile', {
     religion_id: 2, pais_id: 694, position_israel_gaza: 'no',
     email: testEmail, nombre: 'E2E Interview Date',
-  }, { walletAddress: addr })
-  const profileAfterFill = await apiGet('/api/profile', { walletAddress: addr })
+  }, { walletAddress: addr }, cookie)
+  const profileAfterFill = await apiGet('/api/profile', { walletAddress: addr }, cookie)
   console.log(`Profile after fill: score=${profileAfterFill.profilescore}, tz=${profileAfterFill.country_timezone}`)
 
   // 4. Fetch availability, pick a 14:00 UTC slot (= 2PM in Africa/Freetown)
-  const avail = await apiGet('/api/verification/availability', { days: 14, duration: 30, timezone: 'Africa/Freetown' })
+  const avail = await apiGet('/api/verification/availability', { days: 14, duration: 30, timezone: 'Africa/Freetown' }, cookie)
   const slots = avail.slots || []
   let chosen = slots.find(s => s.start.includes('T14:00:00.000Z'))
   if (!chosen) chosen = slots.find(s => s.start.includes('T15:00:00.000Z'))
@@ -157,7 +158,7 @@ async function main() {
   const booking = await apiPost('/api/verification/book', {
     walletAddress: addr,
     start: chosen.start, end: chosen.end,
-  })
+  }, undefined, cookie)
   if (booking.success !== true) {
     fail(`Booking failed: ${JSON.stringify(booking).slice(0, 200)}`)
   } else {
@@ -165,7 +166,7 @@ async function main() {
   }
 
   // 6. Profile must return the exact instant (14:00:00.000Z), not midnight
-  const profile = await apiGet('/api/profile', { walletAddress: addr })
+  const profile = await apiGet('/api/profile', { walletAddress: addr }, cookie)
   const stored = profile.proposed_date_of_interview || ''
   console.log(`Stored proposed_date_of_interview: ${stored}`)
   if (stored === chosen.start) {

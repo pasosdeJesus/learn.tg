@@ -9,7 +9,7 @@ import { useParams } from 'next/navigation'
 
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-import { ConnectWalletButton } from '@/components/ConnectWalletButton'
+import { WalletSelector } from '@/components/WalletSelector'
 import { NotificationsBell } from '@/components/NotificationsBell'
 import { UserLanguageSync } from '@/components/UserLanguageSync'
 
@@ -133,7 +133,7 @@ export default function Header({ lang: langProp = 'en' }) {
                 </Link>
               )}
               <NotificationsBell lang={lang} />
-              <ConnectWalletButton lang={lang} />
+              <WalletSelector lang={lang} />
               <UserLanguageSync lang={lang} />
             </div>
           </nav>

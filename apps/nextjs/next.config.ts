@@ -16,8 +16,13 @@ const pwaConfig: PWAConfig = {
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: true,
-  // Solo cachear diligent-records
+  disable: false,
+  fallbacks: {
+    document: '/offline',
+  } as PWAConfig['fallbacks'],
+  additionalManifestEntries: [
+    { url: '/offline', revision: null },
+  ],
   runtimeCaching: [
     {
       urlPattern: /^https?:\/\/[^\/]+\/[a-z]{2}\/diligent-records/,
@@ -40,6 +45,47 @@ const pwaConfig: PWAConfig = {
           maxAgeSeconds: 7 * 24 * 60 * 60, // 7 días
         },
       },
+    },
+    {
+      urlPattern: /^https?:\/\/[^\/]+\/(img|icons)\/.*\.(png|jpg|jpeg|svg|webp|gif)$/,
+      handler: 'CacheFirst' as const,
+      options: {
+        cacheName: 'learntg-images',
+        expiration: {
+          maxEntries: 150,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 días
+        },
+      },
+    },
+    {
+      urlPattern: /^https?:\/\/[^\/]+\/(en|es)\/.*/,
+      handler: 'NetworkFirst' as const,
+      options: {
+        cacheName: 'learntg-pages',
+        networkTimeoutSeconds: 5,
+        expiration: {
+          maxEntries: 60,
+          maxAgeSeconds: 24 * 60 * 60, // 24 horas
+        },
+      },
+    },
+    {
+      urlPattern: ({ url, request }) =>
+        url.pathname.startsWith('/api/') && request.method === 'GET',
+      handler: 'NetworkFirst' as const,
+      options: {
+        cacheName: 'learntg-api-get',
+        networkTimeoutSeconds: 5,
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 60 * 60, // 1 hora
+        },
+      },
+    },
+    {
+      urlPattern: ({ url, request }) =>
+        url.pathname.startsWith('/api/') && request.method !== 'GET',
+      handler: 'NetworkOnly' as const,
     },
   ],
 };

@@ -182,6 +182,43 @@ async function apiPatch(reqPath, params, body, cookies) {
 
 // ── Main ────────────────────────────────────────────────────────────
 
+/**
+ * El bono de 44 SLEARN del pastor lo paga el fondo de iglesias. Se rellena
+ * desde la billetera de prueba (PRIVATE_KEY del verificador) cuando está bajo,
+ * para que el spec no dependa del saldo que dejaron corridas anteriores (sin
+ * bono el pastor no tiene SLEARN y la compra del curso revierte).
+ */
+async function ensureChurchesFund(pk) {
+  const res = await axios.get(`${SITE}/api/churches/fund`, { httpsAgent })
+  const fund = res.data?.address
+  const slearnAddress = res.data?.slearnAddress || process.env.NEXT_PUBLIC_SLEARN_ADDRESS || loadEnvValue('NEXT_PUBLIC_SLEARN_ADDRESS')
+  const balance = Number(res.data?.slearnBalance || 0)
+  const needed = 60
+  console.log(`Fondo de iglesias ${fund ? fund.slice(0, 10) + '...' : '(desconocido)'}: ${balance} SLEARN`)
+  if (!fund || !slearnAddress || balance >= needed) return
+
+  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || loadEnvValue('NEXT_PUBLIC_RPC_URL') || 'https://forno.celo-sepolia.celo-testnet.org'
+  const account = privateKeyToAccount(pk)
+  const client = createPublicClient({ chain: celoSepolia, transport: http(rpcUrl) })
+  const wallet = createWalletClient({ account, chain: celoSepolia, transport: http(rpcUrl) })
+  const balanceOfAbi = [
+    { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'a', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] },
+  ]
+  const own = await client.readContract({
+    address: slearnAddress, abi: balanceOfAbi, functionName: 'balanceOf', args: [account.address],
+  })
+  const missing = parseUnits(String(needed - balance), 2)
+  if (own < missing) {
+    console.log(`  [!] Fondo bajo (${balance} SLEARN) y la billetera de prueba tiene ${Number(own) / 100} SLEARN — rellenar manualmente`)
+    return
+  }
+  const hash = await wallet.writeContract({
+    address: slearnAddress, abi: slearnTransferAbi, functionName: 'transfer', args: [fund, missing],
+  })
+  await client.waitForTransactionReceipt({ hash, timeout: 120000 })
+  console.log(`  Fondo de iglesias rellenado con ${needed - balance} SLEARN (tx ${hash.slice(0, 10)}...)`)
+}
+
 async function main() {
   console.log(`\nReferral premium payout E2E (Form 1 + Form 3) — target: ${SITE} (chain: ${CHAIN_ID})\n`)
 
@@ -190,6 +227,14 @@ async function main() {
   const { pk: referrerPk, addr: referrerAddr } = creds
 
   try {
+    // El bono de 44 SLEARN (paso 3) sale del fondo de iglesias: asegurarlo
+    // antes de que el verificador lo otorgue.
+    try {
+      await ensureChurchesFund(referrerPk)
+    } catch (e) {
+      console.log(`  [!] No se pudo verificar/rellenar el fondo de iglesias: ${e.message}`)
+    }
+
     // ════════════════════════════════════════════════════════════
     // 1. Referidor: SIWE + código
     // ════════════════════════════════════════════════════════════

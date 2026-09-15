@@ -54,7 +54,7 @@ graph TD
 
     subgraph Platform
         C[Frontend - Next.js/React]
-        D[Backend - Rails]
+        D[Backend - Rails (backoffice, optional)]
         E[Smart Contract - Solidity/Celo]
         F[Backend - Next.js API]
     end
@@ -65,8 +65,8 @@ graph TD
 
     A -- 1. Connects & Signs (SIWE) --> C
     B -- 2. Interacts with Content --> C
-    C -- 3. Fetches Guides/Data (JWT Auth) --> D
-    D -- 4. Returns Content --> C
+    C -- 3. Fetches Guides/Data (session cookie) --> F
+    F -- 4. Returns Content --> C
     C -- 5. Submits Answers/Actions --> F
     F -- 6. Validates, Records Events, Triggers Reward --> E
     E -- 7. Executes Transaction --> G
@@ -176,19 +176,24 @@ data flow, contracts):
 
 1.  **Frontend (Next.js):** A user connects their wallet and signs a message
    (SIWE).
-2.  **Next.js API:** Validates the signature and generates a JWT token.
-  This token is stored and used for subsequent authenticated actions.
-3.  **Backend Communication:**
-    - For fetching course data and content, the frontend sends the
-  JWT in the `Authorization` header to the **Rails backend**.
-    - For submitting answers and triggering rewards, the frontend sends
-  the answers along with the JWT to a specific **Next.js API route**
-  (`/api/check-crossword`).
+2.  **Next.js API:** Validates the signature and creates the NextAuth
+  **session cookie** (HttpOnly JWT, `sub` = wallet). That cookie is the only
+  credential (R-#233 Phase 2): no API token is issued or stored, and the CSRF
+  token is only the SIWE handshake nonce.
+3.  **Backend Communication:** every call is same-origin to the Next.js API,
+   which authorizes with the session cookie (`authenticateUser` /
+   `authenticateAdmin`):
+    - Course and guide data comes from the Next.js app itself
+  (`/api/course-catalog`, `/api/guide`).
+    - Submitting answers and triggering rewards goes to Next.js API routes
+  (`/api/check-crossword`), which talk to the contracts.
+    - Rails is an on-demand backoffice only (R-#233): the public site sends it
+  no credential.
 
-**Key Point:** The platform uses a hybrid backend approach. The Rails server
-acts as the primary administrative and content backend, while the Next.js
-server handles real-time, user-specific actions like answer validation
-and blockchain interactions.
+**Key Point:** the platform is **Next-only at runtime** (R-#233). The shared
+PostgreSQL database is the integration point, the Next.js server handles answer
+validation and blockchain interactions, and Rails remains available as a
+backoffice UI.
 
 ---
 
@@ -414,8 +419,7 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 ##### `billetera_usuario` (wallet linking)
 - `billetera`: Wallet address (case-insensitive)
 - `usuario_id`: Foreign key to `usuario`
-- `token`: JWT token for API authentication
-- `answer_fib`: Stores correct crossword answers (pipe-separated ` | `) provided by the Rails backend after guide viewing
+- `answer_fib`: Stores correct crossword answers (pipe-separated ` | `) recorded when the guide is served (`/api/guide`)
 
 ##### `guide_usuario` (per-guide progress)
 - `usuario_id`, `actividadpf_id`: Composite primary key
@@ -457,8 +461,8 @@ Single source of truth for all value movements — both on-chain (USDT, SLEARN, 
 **Usage in leaderboard:** Leaderboard metrics aggregate this table — SLEARN net balance via `SUM(balance_impact)`, scholarships via `SUM(amount) WHERE type='scholarship'`, donations via `SUM(amount) WHERE type='donation'`. The leaderboard does not filter by `subcategoria`, showing total user donation activity regardless of destination.
 
 ### Data Flow Notes
-1. User wallet connection creates/updates `billetera_usuario` with a signed token
-2. Course and guide data is fetched from Rails APIs (which query the above tables)
+1. User wallet connection creates/updates `billetera_usuario`; the credential is the NextAuth session cookie — there is no token column (R-#233 Phase 2)
+2. Course and guide data is served by the Next.js app (`/api/course-catalog`, `/api/guide`), which queries the above tables
 3. Crossword answers are validated against `billetera_usuario.answer_fib`
 4. Progress is tracked in `guide_usuario`
 5. Blockchain rewards update `guide_usuario.amountpaid`

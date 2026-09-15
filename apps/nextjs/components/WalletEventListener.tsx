@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { signOut } from 'next-auth/react'
+import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 
 /**
  * Listens for wallet events (disconnect, account change) and syncs
@@ -14,6 +15,22 @@ import { signOut } from 'next-auth/react'
 export function WalletEventListener() {
   const { data: session } = useSession()
   const wasAuthenticated = useRef(false)
+  const wasInAppUnlocked = useRef(false)
+  const { status: inAppStatus } = useInAppWallet()
+
+  // R-#238: locking or deleting the in-app wallet ends the session, exactly
+  // like disconnecting an external wallet. Only a real transition counts: a
+  // wallet that is already locked when the page loads keeps the session.
+  useEffect(() => {
+    if (inAppStatus === 'unlocked') {
+      wasInAppUnlocked.current = true
+      return
+    }
+    if (inAppStatus === 'loading' || !wasInAppUnlocked.current) return
+    wasInAppUnlocked.current = false
+    localStorage.removeItem('learn.tg.sessionAddress')
+    signOut({ redirect: true, callbackUrl: '/' })
+  }, [inAppStatus])
 
   // Clear auth token when session transitions from authenticated to null.
   // Don't clear on initial mount (session loads async — would wipe token).

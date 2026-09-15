@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { DM_Sans, DM_Mono } from 'next/font/google'
 import { usePathname } from 'next/navigation'
 
@@ -25,6 +25,11 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: 'Learn Through Games',
   description: 'Learn Through Games',
+  manifest: '/manifest.webmanifest',
+}
+
+export const viewport: Viewport = {
+  themeColor: '#2B6B4E',
 }
 
 export default function RootLayout({

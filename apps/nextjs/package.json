@@ -79,6 +79,8 @@
     "@eslint/eslintrc": "latest",
     "@learn-tg/gdcluster": "link:../../packages/gdcluster",
     "@learn-tg/mr519": "link:../../packages/mr519",
+    "@learn-tg/pdj-wallet": "link:../../packages/pdj-wallet",
+    "@learn-tg/pdj-wallet-next": "link:../../packages/pdj-wallet-next",
     "@learn-tg/rewards": "link:../../packages/rewards",
     "@next/swc-wasm-nodejs": "16.3.1",
     "@pasosdejesus/contract-test": "^0.1.4",

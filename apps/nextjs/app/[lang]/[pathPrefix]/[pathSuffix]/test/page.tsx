@@ -7,6 +7,7 @@ import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
+import { useOfflineQueue } from '@/lib/hooks/useOfflineQueue'
 import { usePublicClient } from '@/lib/hooks/useWallet'
 import { useWriteContract } from '@/lib/hooks/useWriteContract'
 
@@ -46,6 +47,8 @@ export default function Page({
   const { address } = useAuthAddress()
   const { data: session } = useSession()
   const { ready, mismatch, authedGet, authedPost } = useAuthedApi()
+  // R-#241/R-#242: respuestas que no pudieron enviarse sin conexión.
+  const { isOffline, pending, enqueue } = useOfflineQueue()
   const { data: hash, writeContract } = useWriteContract()
   const publicClient = usePublicClient()
   const parameters = use(params)
@@ -313,17 +316,19 @@ export default function Page({
     setCredentialEarned(false)
     setCredentialUserId(null)
 
-    try {
-      const response = await authedPost<any>('/api/check-crossword', {
-        courseId: +course.id,
-        guideId: guideNumber,
-        lang: lang,
-        grid: grid,
-        placements: placements,
-        walletAddress: address || '0x0',
-      })
+    const locale = lang === 'en' ? 'en' : 'es'
+    const payload = {
+      courseId: +course.id,
+      guideId: guideNumber,
+      lang: lang,
+      grid: grid,
+      placements: placements,
+      walletAddress: address || '0x0',
+    }
 
-      const locale = lang === 'en' ? 'en' : 'es'
+    try {
+      const response = await authedPost<any>('/api/check-crossword', payload)
+
       const uiMsg = {
         es: { problemWords: 'Problema(s) con la(s) palabra(s) ' },
         en: { problemWords: 'Problem(s) with word(s) ' },
@@ -360,6 +365,17 @@ export default function Page({
         }
       }
     } catch (error: any) {
+      // Sin `response` el fallo es de red (sin conexión): se guarda la respuesta
+      // y se reintenta al recuperar la conexión (R-#241/R-#242).
+      if (!error?.response) {
+        try {
+          await enqueue('/api/check-crossword', payload)
+          setFlashWarning(uiMsg[locale].offlineQueued)
+          return
+        } catch (queueError) {
+          console.error('No se pudo encolar la respuesta:', queueError)
+        }
+      }
       console.error(error)
       setFlashError(error.response?.data?.error || error.message)
     } finally {
@@ -379,6 +395,8 @@ export default function Page({
       scholarshipPaidPartial: 'Recibiste una beca. Aún puedes recibir la segunda.',
       sending: 'Enviando...',
       submit: 'Enviar respuesta',
+      offlineQueued: 'Sin conexión: tu respuesta quedó guardada y se enviará sola cuando vuelvas a tener conexión.',
+      offlinePending: 'respuesta(s) guardada(s) sin conexión, pendiente(s) de enviar.',
     },
     en: {
       across: 'Across',
@@ -390,6 +408,8 @@ export default function Page({
       scholarshipPaidPartial: 'Received one scholarship but you can receive a second one.',
       sending: 'Sending...',
       submit: 'Submit answer',
+      offlineQueued: 'You are offline: your answer was saved and will be sent automatically when the connection returns.',
+      offlinePending: 'answer(s) saved offline, waiting to be sent.',
     },
   }
 
@@ -482,6 +502,14 @@ export default function Page({
                       onClick={() => setFlashSuccess('')}
                     >
                       {flashSuccess}
+                    </div>
+                  )}
+                  {pending > 0 && (
+                    <div
+                      data-testid="offline-pending"
+                      className="p-3 mb-4 text-sm text-amber-800 bg-amber-100 rounded-lg"
+                    >
+                      {pending} {uiMsg[locale].offlinePending}
                     </div>
                   )}
                   {credentialEarned && (

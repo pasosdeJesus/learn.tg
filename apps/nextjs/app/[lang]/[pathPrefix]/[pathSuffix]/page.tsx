@@ -16,6 +16,7 @@ import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
+import { useCachedGuide } from '@/lib/hooks/useCachedGuide'
 import { courseAccessReasonText } from '@/lib/course-access-msg'
 
 import CeloUbiButton from '@/components/CeloUbiButton'
@@ -54,6 +55,10 @@ export default function Page() {
   const [showGoodDollarButton, setShowGoodDollarButton] = useState(false)
   const [showCeloUbiButton, setShowCeloUbiButton] = useState(false)
   const [purchaseRequired, setPurchaseRequired] = useState('')
+
+  // R-#241: copia sin conexión de esta guía (Markdown en IndexedDB).
+  const { isOffline, isFromCache, markFromCache, getCached, save } =
+    useCachedGuide(`${lang}/${pathPrefix}/${pathSuffix}`)
 
 
   const htmlDeMd = useCallback((md: string) => {
@@ -144,6 +149,14 @@ export default function Page() {
     if (course && guideNumber > 0) {
         const fetchGuideContent = async () => {
             try {
+                if (isOffline) {
+                    const cached = await getCached()
+                    if (cached) {
+                        setGuideHtml(htmlDeMd(cached))
+                        markFromCache(true)
+                        return
+                    }
+                }
                 // Standard mechanism: same-origin, identity hint only, no token.
                 const baseUrl = `/api/guide?courseId=${course.id}` +
                     `&lang=${lang}&prefix=${pathPrefix}&guide=${pathSuffix}&guideNumber=${guideNumber}`
@@ -162,6 +175,8 @@ export default function Page() {
                     const cleanedMarkdown = markdown.replace(/\{GoodDollarButton\}|\{CeloUbiButton\}/g, '')
                     
                     setGuideHtml(htmlDeMd(cleanedMarkdown))
+                    markFromCache(false)
+                    void save(markdown)
                 } else if (response.data && response.data.message) {
                     throw new Error(response.data.message)
                 }
@@ -179,13 +194,19 @@ export default function Page() {
                     setGuideHtml('')
                     return
                 }
+                const cached = await getCached()
+                if (cached) {
+                    setGuideHtml(htmlDeMd(cached))
+                    markFromCache(true)
+                    return
+                }
                 console.error("Error fetching guide content:", err)
                 setGuideHtml(`<p>Error: ${err.message}</p>`)
             }
         }
         fetchGuideContent()
     }
-  }, [course, guideNumber, lang, pathPrefix, pathSuffix, htmlDeMd, address, session?.address, ready, authedGet])
+  }, [course, guideNumber, lang, pathPrefix, pathSuffix, htmlDeMd, address, session?.address, ready, authedGet, isOffline, getCached, save, markFromCache])
 
 
   if (loading) {
@@ -253,6 +274,13 @@ export default function Page() {
         // las tablas anchas del markdown (p. ej. gdcluster/guide1, 3 columnas);
         // px responsivo gana ancho real en pantallas pequeñas.
         <div className="overflow-x-auto">
+          {isFromCache && (
+            <p className="px-3 md:px-16 text-sm text-amber-800">
+              {course.idioma === 'en'
+                ? 'Showing the saved copy: your device is offline.'
+                : 'Mostrando la copia guardada: tu dispositivo está sin conexión.'}
+            </p>
+          )}
           <section
             className="py-3 px-3 md:px-16 text-1xl md:text-1xl text-justify **:list-inside"
             dangerouslySetInnerHTML={{ __html: guideHtml }}

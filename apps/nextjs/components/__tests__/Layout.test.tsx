@@ -12,8 +12,8 @@ vi.mock('next-auth/react', () => ({
   getCsrfToken: () => Promise.resolve('mock-csrf-token'),
 }))
 
-vi.mock('@/components/ConnectWalletButton', () => ({
-  ConnectWalletButton: ({ lang }: { lang?: string }) =>
+vi.mock('@/components/WalletSelector', () => ({
+  WalletSelector: ({ lang }: { lang?: string }) =>
     React.createElement('span', { 'data-testid': 'connect-wallet-btn' }, 'Connect'),
 }))
 

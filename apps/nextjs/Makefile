@@ -16,7 +16,7 @@ build-guard:
 # git. Compilar antes del build — un checkout fresco no resuelve
 # @learn-tg/{rewards,gdcluster} sin esto. Orden: rewards antes que gdcluster.
 engines-dist:
-	@for e in rewards gdcluster; do \
+	@for e in pdj-wallet pdj-wallet-next rewards gdcluster; do \
 	  if [ -d "../../packages/$$e" ]; then \
 	    echo "[engines-dist] compilando packages/$$e"; \
 	    (cd "../../packages/$$e" && ../../apps/nextjs/node_modules/.bin/tsc -b) || exit 1; \
@@ -26,7 +26,7 @@ engines-dist:
 # Sync de ABIs (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): los motores guardan COPIA en src/abis/. Al
 # regenerar abis en hardhat, copiar y recompilar.
 engines-sync-abis:
-	@for e in rewards gdcluster; do \
+	@for e in pdj-wallet pdj-wallet-next rewards gdcluster; do \
 	  if [ -d "../../packages/$$e/src/abis" ]; then \
 	    echo "[engines-sync-abis] abis -> packages/$$e/src/abis"; \
 	    cp -f abis/*.json "../../packages/$$e/src/abis/" 2>/dev/null || true; \

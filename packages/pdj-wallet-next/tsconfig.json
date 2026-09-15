@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["esnext", "dom"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "sourceMap": true,
+    "composite": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "types": ["node"],
+    "typeRoots": ["../../apps/nextjs/node_modules/@types"],
+    "paths": {
+      "react": ["../../apps/nextjs/node_modules/@types/react"],
+      "react/jsx-runtime": ["../../apps/nextjs/node_modules/@types/react/jsx-runtime.d.ts"],
+      "react-dom": ["../../apps/nextjs/node_modules/@types/react-dom"],
+      "next": ["../../apps/nextjs/node_modules/next"],
+      "@learn-tg/pdj-wallet": ["../pdj-wallet/dist/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*", "src/**/*.json"],
+  "exclude": ["node_modules", "dist", "**/__tests__/**"]
+}

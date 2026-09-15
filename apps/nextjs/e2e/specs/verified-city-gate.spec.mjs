@@ -117,13 +117,13 @@ async function main() {
     nombre: 'E2E Gate', email: testEmail, pais_id: 694, religion_id: 2,
     position_israel_gaza: 'no', place_of_worship: 'E2E Gate Church',
     place_of_worship_location: 'Freetown', church_relationship: 'pastor',
-  }, auth)
-  const prof = await apiGet('/api/profile', auth)
+  }, auth, s.cookies)
+  const prof = await apiGet('/api/profile', auth, s.cookies)
   const uid = prof.id
   console.log(`userId: ${uid}, verified_city_id: ${prof.verified_city_id}, verified_place_of_worship_location: ${prof.verified_place_of_worship_location}`)
 
   // 1. Without verification → must be ineligible with the verified-city reason
-  const before = await apiGet('/api/courses/10/purchase-eligibility', auth)
+  const before = await apiGet('/api/courses/10/purchase-eligibility', auth, s.cookies)
   console.log('Eligibility (unverified):', JSON.stringify(before))
   if (before.eligible === false && before.reason === 'verified_city_required') {
     ok(`Unverified pastor NOT eligible (${before.reason})`)
@@ -139,7 +139,7 @@ async function main() {
     verified_church_relationship: 'pastor',
   }, { wallet: verifier.addr }, vAuth.cookies)
 
-  const after = await apiGet('/api/courses/10/purchase-eligibility', auth)
+  const after = await apiGet('/api/courses/10/purchase-eligibility', auth, s.cookies)
   console.log('Eligibility (verified):', JSON.stringify(after))
   if (after.eligible === true) {
     ok('Verified pastor IS eligible')

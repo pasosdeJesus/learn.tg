@@ -8,7 +8,7 @@ How wallet-based authentication works in learn.tg — from wallet connection to 
 
 ## Overview
 
-The platform uses **Sign-In With Ethereum (SIWE)** for passwordless authentication. NextAuth's JWT session (cookie, `sub` = wallet address) is the **primary** identity for both UI-level checks and API authorization (session-first, R-#227); a dedicated API token stored in `billetera_usuario` is the legacy fallback for non-browser clients (Rails, specs). The SIWE nonce (NextAuth CSRF token) is used **only** as the handshake nonce, never as a persistent credential.
+The platform uses **Sign-In With Ethereum (SIWE)** for passwordless authentication. NextAuth's JWT session (cookie, `sub` = wallet address) is the identity for both UI-level checks and API authorization (session-first, R-#227; session-only, R-#233 Phase 2) and is the **only** credential. The SIWE nonce (NextAuth CSRF token) is used **only** as the handshake nonce, never as a persistent credential.
 
 ## Flow
 
@@ -34,8 +34,9 @@ User Wallet                Frontend                   NextAuth API Route        
     |                         |                              |    - New user: INSERT       |
     |                         |                              |      usuario +              |
     |                         |                              |      billetera_usuario      |
-    |                         |                              |      (token = random 256b)  |
-    |                         |                              |    - Existing: UPDATE token |
+    |                         |                              |                             |
+    |                         |                              |    - Existing: UPDATE       |
+    |                         |                              |      usuario                |
     |                         |                              |                            |
     |                         |<--[8] JWT session -----------|                            |
     |                         |    {sub: address}            |                            |
@@ -95,9 +96,9 @@ not a DB token:
 
 - `authorize()` verifies the SIWE message whose nonce is the CSRF token
   (standard handshake), then creates the JWT session (`sub` = wallet).
-- `authenticateUser()` validates the **session cookie first** (JWT signed with
-  `NEXTAUTH_SECRET`, `sub` == requested wallet, lowercase) and only falls back
-  to the DB token for non-browser clients.
+- `authenticateUser()` validates the **session cookie** (JWT signed with
+  `NEXTAUTH_SECRET`, `sub` == requested wallet, lowercase); that is the only
+  credential (no DB fallback since R-#233 Fase 2).
 - The CSRF token is **never** persisted as an API credential.
 
 **Why not carry the NextAuth JWT client-side?**
@@ -109,9 +110,9 @@ not a DB token:
   (`Origin`/`Sec-Fetch-Site`, see `doc/api-security.md` and R-#227 §4.3),
   not by an app-level token in the body.
 
-**Why keep a DB token at all (legacy)?**
+**Why there is no DB token**
 
-- Rails (`servidor/`) **no longer uses the token** (R-#233, 2026-09-14): the two
+- Rails (`servidor/`) no longer uses one (R-#233, 2026-09-14): the two
   endpoints it exposed (`proyectosfinancieros#index/#show`) return public course
   data and are now unauthenticated, and the unused
   `usuarios#actualiza_mi_usuario` was removed.

@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import { useState, useEffect } from 'react'
 import { logger } from '@pasosdejesus/m/debug'
+import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 
 interface ExtendedSession extends Session {
   address?: string
@@ -80,8 +81,13 @@ export function useAuthAddress() {
   const storedAddress = (typeof window !== 'undefined' && mounted)
     ? localStorage.getItem('learn.tg.sessionAddress') || undefined
     : undefined
+  const { status: inAppStatus, walletInfo: inAppWalletInfo } = useInAppWallet()
+  const isInAppUnlocked = inAppStatus === 'unlocked'
+  const inAppAddress = isInAppUnlocked && inAppWalletInfo?.address
+    ? (inAppWalletInfo.address.toLowerCase() as `0x${string}`)
+    : undefined
 
-  const address = sessionAddress || storedAddress
+  const address = sessionAddress || inAppAddress || storedAddress
   const isAuthenticated = !!address
 
   const isWalletCheckComplete = isWalletAvailable !== null
@@ -90,8 +96,10 @@ export function useAuthAddress() {
     address,
     sessionAddress,
     storedAddress,
+    inAppAddress,
+    isInAppUnlocked,
     isAuthenticated,
-    isWalletAvailable: !!isWalletAvailable,
+    isWalletAvailable: isInAppUnlocked || !!isWalletAvailable,
     isWalletCheckComplete,
   }
 }

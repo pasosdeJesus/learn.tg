@@ -5,6 +5,8 @@ import { FC, ReactNode } from 'react'
 import { useParams } from 'next/navigation'
 import Footer from './Footer'
 import Header from './Header'
+import { OfflineBanner } from './OfflineBanner'
+import { InstallPrompt } from './InstallPrompt'
 
 interface Props {
   children: ReactNode
@@ -17,6 +19,8 @@ const Layout: FC<Props> = ({ children }) => {
   const lang = (params?.lang as string) || 'en'
   return (
     <>
+      <OfflineBanner lang={lang} />
+      <InstallPrompt lang={lang} />
       <div className="bg-gypsum overflow-hidden flex flex-col min-h-screen">
         <Header lang={lang} />
         <main role="main">{children}</main>

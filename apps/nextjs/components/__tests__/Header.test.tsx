@@ -16,9 +16,9 @@ vi.mock('next-auth/react', () => ({
   getCsrfToken: () => Promise.resolve('mock-csrf-token'),
 }))
 
-// ConnectWalletButton is client-only with window.ethereum — mock it
-vi.mock('@/components/ConnectWalletButton', () => ({
-  ConnectWalletButton: ({ lang }: { lang?: string }) =>
+// WalletSelector is client-only (window.ethereum / in-app wallet) — mock it
+vi.mock('@/components/WalletSelector', () => ({
+  WalletSelector: ({ lang }: { lang?: string }) =>
     React.createElement('span', { 'data-testid': 'connect-wallet-btn' }, 'Connect'),
 }))
 

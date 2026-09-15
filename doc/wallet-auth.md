@@ -36,6 +36,13 @@ learn.tg after removing RainbowKit + wagmi (R-#186).
 user identity. Wallet connection state (wagmi) is no longer tracked
 separately.
 
+**Two wallets (R-#244 MVP):** `WalletSelector` lets the user pick between the
+**in-app wallet** (`packages/pdj-wallet` core + `packages/pdj-wallet-next`
+React layer) and the **external** wallet (`ConnectWalletButton`,
+`window.ethereum`). `useWalletProvider()` resolves the effective EIP-1193
+provider — the in-app one while it is unlocked, otherwise the injected one —
+and every wallet hook goes through it.
+
 ## Components
 
 ### ConnectWalletButton (`components/ConnectWalletButton.tsx`)
@@ -66,6 +73,22 @@ Custom connect/disconnect button. Replaces RainbowKit's `ConnectButton`.
 - Hydration-safe localStorage (useState + useEffect, no SSR mismatch)
 - Chain detection + auto-switch with fallback to `wallet_addEthereumChain`
 
+### WalletSelector (`components/WalletSelector.tsx`)
+
+Mounted in `Header` (R-#238). Chooses which wallet signs in:
+
+| State | UI |
+|-------|----|
+| `no-wallet` | "Use in-app wallet" (opens `InAppWalletSetup`) plus "Use external wallet" when `window.ethereum` exists |
+| `locked` | "Unlock in-app wallet" (`InAppWalletUnlock`, PIN) |
+| `unlocked` | In-app address (short) + "Disconnect" |
+| external chosen | Defers to `ConnectWalletButton` (existing flow, preserved) |
+
+The in-app wallet is created with a PIN and stored encrypted (AES-256-GCM +
+PBKDF2 600k) in IndexedDB (`learn-tg-pdj-wallet` → `wallet`). It signs SIWE with
+the same POST to `/api/auth/callback/credentials`, so the resulting session
+cookie is identical to the external-wallet flow.
+
 ### WalletEventListener (`components/WalletEventListener.tsx`)
 
 Mounts at layout level (`AppProvider`). Listens for wallet events and syncs
@@ -78,35 +101,42 @@ app state.
 | `accountsChanged` with empty array | Clear localStorage + signOut |
 | `disconnect` | Clear localStorage + signOut |
 | `session?.address` becomes `null` | Clear localStorage (covers session expiry, signOut from another tab, etc.) |
+| in-app wallet leaves the `unlocked` state (locked or deleted) | Clear localStorage + signOut |
 
 When any of these fire, `learn.tg.sessionAddress` is removed from localStorage,
-and NextAuth signOut is called.
+and NextAuth signOut is called. The in-app case only reacts to a **transition**
+(a wallet that is already locked when the page loads keeps the session).
 
 ## Hooks
 
 ### useAuthAddress (`lib/hooks/useAuthAddress.ts`)
 
-Returns the authenticated user's address from NextAuth session, with
-localStorage fallback for navigation persistence (NextAuth bug #5719).
+Returns the authenticated user's address. Precedence: NextAuth session, then
+the in-app wallet (while unlocked), then the localStorage fallback used for
+navigation persistence (NextAuth bug #5719).
 
 ```ts
-const { address, sessionAddress, isAuthenticated } = useAuthAddress()
+const { address, sessionAddress, inAppAddress, isInAppUnlocked } = useAuthAddress()
 ```
 
-- `address` — session address or localStorage fallback
+- `address` — `sessionAddress || inAppAddress || storedAddress`
 - `sessionAddress` — session address only (undefined if not authenticated)
-- `isAuthenticated` — true if address exists from either source
+- `storedAddress` — the `learn.tg.sessionAddress` localStorage fallback
+- `inAppAddress` — in-app wallet address (lowercase) while unlocked
+- `isInAppUnlocked` — the in-app wallet is unlocked (counts as "wallet available")
+- `isAuthenticated` — true if an address exists from any of the sources
 
 Replaces `useAccount().address` from wagmi.
 
 ### usePublicClient (`lib/hooks/useWallet.ts`)
 
-Creates a viem `PublicClient` using `window.ethereum` as transport.
+Creates a viem `PublicClient` using the provider from `useWalletProvider()`
+(the in-app wallet while it is unlocked, otherwise `window.ethereum`).
 Memoized — no state, no re-renders.
 
 ```ts
 const publicClient = usePublicClient()
-// → PublicClient with custom(window.ethereum) transport
+// → PublicClient with custom(useWalletProvider().provider) transport
 ```
 
 ### useWalletClient (`lib/hooks/useWallet.ts`)
@@ -124,7 +154,8 @@ Returns `null` if not authenticated (no address available to sign).
 ### useWriteContract (`lib/hooks/useWriteContract.ts`)
 
 Encodes contract calls with viem's `encodeFunctionData` and sends via
-`window.ethereum.request({ method: 'eth_sendTransaction' })`.
+`eth_sendTransaction` on the provider from `useWalletProvider()` (the in-app
+wallet while it is unlocked, otherwise `window.ethereum`).
 
 ```ts
 const { data: hash, writeContract } = useWriteContract()
@@ -143,7 +174,8 @@ One key is managed by the auth system:
 
 | Key | Purpose | Set by | Cleared by |
 |-----|---------|--------|------------|
-| `learn.tg.sessionAddress` | Wallet address for UI persistence | `ConnectWalletButton` on connect | `WalletEventListener` on disconnect/session loss |
+| `learn.tg.sessionAddress` | Wallet address for UI persistence | `ConnectWalletButton` / `WalletSelector` on connect | `WalletEventListener` on disconnect/session loss |
+| IndexedDB `learn-tg-pdj-wallet` → `wallet` | Encrypted in-app wallet (AES-256-GCM + PBKDF2 600k) | `pdj-wallet` `createWallet` / `importWallet` | `deleteWallet` (WalletSelector → Disconnect) |
 
 It survives NextAuth's `useSession()` losing state on client-side
 navigation (bug #5719), ensuring the UI doesn't flash "Connect Wallet"
@@ -173,9 +205,13 @@ NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The former
 
 | File | Purpose |
 |------|---------|
+| `components/WalletSelector.tsx` | Chooses in-app vs external wallet (R-#244 MVP) |
 | `components/ConnectWalletButton.tsx` | Connect/Disconnect button with SIWE via window.ethereum |
 | `components/WalletEventListener.tsx` | Wallet event listener + session-based auth cleanup |
-| `lib/hooks/useAuthAddress.ts` | Unified hook: session ∥ localStorage |
+| `lib/hooks/useAuthAddress.ts` | Unified hook: session ∥ in-app wallet ∥ localStorage |
+| `lib/hooks/useWalletProvider.ts` | Effective EIP-1193 provider (in-app while unlocked, else window.ethereum) |
+| `packages/pdj-wallet` | Core: create/import/unlock/sign, AES-256-GCM storage, EIP-1193 provider |
+| `packages/pdj-wallet-next` | `useInAppWallet`, `InAppWalletSetup`, `InAppWalletUnlock` |
 | `lib/hooks/useWallet.ts` | usePublicClient + useWalletClient (viem, no wagmi) |
 | `lib/hooks/useWriteContract.ts` | useWriteContract via eth_sendTransaction |
 | `doc/siwe-auth-flow.md` | SIWE handshake protocol (NextAuth backend) |

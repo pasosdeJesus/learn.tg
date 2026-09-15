@@ -1,0 +1,27 @@
+{
+  "name": "@learn-tg/pdj-wallet",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./index": "./dist/index.js",
+    "./provider": "./dist/provider.js",
+    "./storage": "./dist/storage/index.js",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "viem": ">=2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.41",
+    "fake-indexeddb": "^6.0.0",
+    "typescript": "^5.9.3",
+    "viem": "^2.55.0",
+    "vitest": "^3.2.7"
+  },
+  "scripts": {
+    "build": "../../apps/nextjs/node_modules/.bin/tsc -b",
+    "test": "../../apps/nextjs/node_modules/.bin/vitest run --config vitest.config.ts"
+  }
+}

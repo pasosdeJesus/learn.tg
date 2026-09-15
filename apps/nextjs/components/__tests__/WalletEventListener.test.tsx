@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, act } from '@testing-library/react'
 
 // Hoisted mocks (disponibles antes de vi.mock)
 const mocks = vi.hoisted(() => ({
@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   removeItem: vi.fn(),
   listeners: {} as Record<string, ((...a: any[]) => void)[]>,
   accountsResult: [] as string[] | Promise<string[]>,
+  inAppStatus: 'no-wallet',
   emit: (evt: string, ...args: any[]) => {
     const hs = mocks.listeners[evt] || []
     hs.forEach((h) => h(...args))
@@ -17,6 +18,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock('next-auth/react', () => ({
   signOut: mocks.signOut,
   useSession: () => ({ data: { address: '0xabcd' }, status: 'authenticated' }),
+}))
+
+vi.mock('@learn-tg/pdj-wallet-next', () => ({
+  useInAppWallet: () => ({ status: mocks.inAppStatus }),
 }))
 
 // window.ethereum con captura de handlers y eth_accounts controlable
@@ -97,6 +102,37 @@ describe('WalletEventListener (R-#227 problema 1)', () => {
 
     mocks.emit('accountsChanged', ['0xabcd']) // no vacío → nunca fue desconexión
     await new Promise((r) => setTimeout(r, 700))
+
+    expect(mocks.signOut).not.toHaveBeenCalled()
+  })
+
+  // R-#238: bloquear o borrar la billetera de la aplicación termina la sesión.
+  it('firma desconexión cuando la billetera de la aplicación se bloquea', async () => {
+    mocks.inAppStatus = 'unlocked'
+    const { rerender } = render(<WalletEventListener />)
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)) })
+
+    mocks.inAppStatus = 'locked'
+    await act(async () => { rerender(<WalletEventListener />) })
+
+    expect(mocks.signOut).toHaveBeenCalledWith({ redirect: true, callbackUrl: '/' })
+  })
+
+  it('firma desconexión cuando la billetera de la aplicación se borra', async () => {
+    mocks.inAppStatus = 'unlocked'
+    const { rerender } = render(<WalletEventListener />)
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)) })
+
+    mocks.inAppStatus = 'no-wallet'
+    await act(async () => { rerender(<WalletEventListener />) })
+
+    expect(mocks.signOut).toHaveBeenCalledWith({ redirect: true, callbackUrl: '/' })
+  })
+
+  it('NO firma desconexión si la billetera llega bloqueada al cargar la página', async () => {
+    mocks.inAppStatus = 'locked'
+    render(<WalletEventListener />)
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)) })
 
     expect(mocks.signOut).not.toHaveBeenCalled()
   })

@@ -106,6 +106,44 @@ function loadEnvValue(key) {
   return null
 }
 
+/**
+ * The 44 SLEARN pastor bonus is paid from the churches fund. Top it up from the
+ * local test wallet (the verifier PRIVATE_KEY) when it runs low, so the spec
+ * does not depend on the balance left behind by earlier runs.
+ */
+async function ensureChurchesFund(env, verifier) {
+  const res = await axios.get(`${SITE}/api/churches/fund`, { httpsAgent })
+  const fund = res.data?.address
+  const slearnAddress = res.data?.slearnAddress || env.slearn
+  const balance = Number(res.data?.slearnBalance || 0)
+  const needed = 60
+  console.log(`Churches fund ${short(fund)}: ${balance} SLEARN`)
+  if (!fund || !slearnAddress || balance >= needed) return
+
+  const rpc = env.rpc || process.env.NEXT_PUBLIC_RPC_URL || loadEnvValue('NEXT_PUBLIC_RPC_URL') || 'https://forno.celo-sepolia.celo-testnet.org'
+  const account = privateKeyToAccount(verifier.pk)
+  const client = createPublicClient({ chain: celoSepolia, transport: http(rpc) })
+  const wallet = createWalletClient({ account, chain: celoSepolia, transport: http(rpc) })
+
+  const balanceOfAbi = [
+    { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'a', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] },
+  ]
+  const own = await client.readContract({
+    address: slearnAddress, abi: balanceOfAbi, functionName: 'balanceOf', args: [account.address],
+  })
+  const missing = parseUnits(String(needed - balance), 2)
+  if (own < missing) {
+    console.log(`  [!] Churches fund low (${balance} SLEARN) and the test wallet holds ${Number(own) / 100} SLEARN — top up the fund manually`)
+    return
+  }
+
+  const hash = await wallet.writeContract({
+    address: slearnAddress, abi: slearnTransferAbi, functionName: 'transfer', args: [fund, missing],
+  })
+  await client.waitForTransactionReceipt({ hash, timeout: 120000 })
+  console.log(`  Funded churches fund with ${needed - balance} SLEARN (tx ${short(hash)})`)
+}
+
 function updateCookies(current, setCookieHeaders) {
   const map = new Map()
   if (current) {
@@ -220,6 +258,14 @@ async function main() {
   const env = await initTestEnv()
   const { base, chainId } = env
   const timeout = 120000
+
+  // The 44 SLEARN pastor bonus (Step 3) is paid from the churches fund: make
+  // sure it can afford it before the verifier awards it.
+  try {
+    await ensureChurchesFund(env, verifier)
+  } catch (e) {
+    console.log(`  [!] Could not verify/fund the churches fund: ${e.message}`)
+  }
 
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()

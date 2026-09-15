@@ -21,6 +21,8 @@ export default defineConfig({
       { find: '@learn-tg/rewards/lib/donate-utils', replacement: path.join(modulesDir, '@learn-tg', 'rewards', 'dist', 'lib', 'donate-utils.js') },
       { find: '@learn-tg/rewards/lib/verify-transfer', replacement: path.join(modulesDir, '@learn-tg', 'rewards', 'dist', 'lib', 'verify-transfer.js') },
       { find: '@learn-tg/rewards/lib/config', replacement: path.join(modulesDir, '@learn-tg', 'rewards', 'dist', 'lib', 'config.js') },
+      { find: '@learn-tg/pdj-wallet-next', replacement: path.join(modulesDir, '@learn-tg', 'pdj-wallet-next') },
+      { find: '@learn-tg/pdj-wallet', replacement: path.join(modulesDir, '@learn-tg', 'pdj-wallet') },
       { find: '@pasosdejesus/m/test-utils/kysely-mocks', replacement: path.join(modulesDir, '@pasosdejesus', 'm', 'dist', 'test-utils', 'kysely-mocks.js') },
       { find: '@pasosdejesus/mpdj/test-utils', replacement: path.join(modulesDir, '@pasosdejesus', 'mpdj', 'dist', 'test-utils', 'blockchain-mocks.js') },
       { find: '@pasosdejesus/mpdj/blockchain/ecosystem-addresses', replacement: path.join(modulesDir, '@pasosdejesus', 'mpdj', 'dist', 'blockchain', 'ecosystem-addresses.js') },

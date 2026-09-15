@@ -1,0 +1,29 @@
+{
+  "name": "@learn-tg/pdj-wallet-next",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./index": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "next": ">=15.0.0",
+    "react": ">=18.0.0",
+    "@learn-tg/pdj-wallet": "*"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.0.0",
+    "@types/node": "^20.19.41",
+    "@types/react": "^19.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  },
+  "scripts": {
+    "build": "../../apps/nextjs/node_modules/.bin/tsc -b",
+    "test": "../../apps/nextjs/node_modules/.bin/vitest run --config vitest.config.ts"
+  }
+}
