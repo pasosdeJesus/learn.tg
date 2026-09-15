@@ -13,7 +13,7 @@
 // - Requests are same-origin and authorize through the session cookie; only
 //   `walletAddress` (identity hint) is added. The legacy API token remains a
 //   server-side fallback for non-browser clients and is never sent by the app.
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import axios, { type AxiosRequestConfig } from 'axios'
 import { useSession } from 'next-auth/react'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
@@ -22,6 +22,12 @@ export function useAuthedApi() {
   const { data: session, status } = useSession()
   const { address, sessionAddress, storedAddress, isWalletAvailable, isWalletCheckComplete } =
     useAuthAddress()
+
+  // localStorage is only readable after mount (R-#218: reading it during the
+  // first render breaks hydration). Until then the identity is unknown, so
+  // `ready` must stay false.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   const sessionAddr = (session as { address?: string } | null)?.address
   const wallet = address || sessionAddress || sessionAddr || storedAddress || null
@@ -33,9 +39,14 @@ export function useAuthedApi() {
     !!sessionAddr && !!fallbackAddr && sessionAddr.toLowerCase() !== fallbackAddr.toLowerCase()
   const connectedHint =
     status === 'authenticated' || !!sessionAddress || !!address || !!storedAddress
+  // The identity is unresolved while the component has not mounted (localStorage
+  // not readable yet) or the session status has not settled and no address is
+  // known from localStorage. In both cases pages must wait (ready=false)
+  // instead of firing an anonymous request during the first render.
+  const identityPending = !mounted || (status === 'loading' && !storedAddress)
   // While a connected user's address is not resolved yet (or the identities
   // mismatch), pages must wait (ready=false) instead of querying anonymously.
-  const ready = !mismatch && (!!wallet || !connectedHint)
+  const ready = !mismatch && !identityPending && (!!wallet || !connectedHint)
 
   const withWallet = useCallback(
     (base: string) => {
