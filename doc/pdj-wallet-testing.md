@@ -45,7 +45,7 @@ make test-hooks test-components
 ```
 
 Expected: `lib/hooks/__tests__` 74 passed / 2 skipped and
-`components/__tests__` 100 passed / 3 skipped (numbers as of 2026-09-15).
+`components/__tests__` 104 passed / 3 skipped (numbers as of 2026-09-15).
 
 What these cover:
 

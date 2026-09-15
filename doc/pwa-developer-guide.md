@@ -8,8 +8,9 @@ https://github.com/pasosdeJesus/learn.tg/issues/243 (install + docs).
 
 | Piece | Where | Notes |
 |-------|-------|-------|
-| Service worker generation | `next.config.ts` (`withPWA(pwaConfig)`) | `next-pwa@^5.6.0`, `dest: 'public'`, `register: true`, `skipWaiting: true`, `disable: false` |
+| Service worker generation | `next.config.ts` (`withPWA(pwaConfig)`) | `next-pwa@^5.6.0`, `dest: 'public'`, `skipWaiting: true`, `disable: false`, `register: false` (see *Registration*) |
 | Generated worker | `public/sw.js`, `public/workbox-*.js` | Build artefacts, gitignored, never edit by hand |
+| **Registration** | `components/ServiceWorkerRegistrar.tsx` | Registers `/sw.js` from the app, because next-pwa's auto-register does not work in the App Router; `NEXT_PUBLIC_PWA_DISABLE=1` opts out |
 | Manifest | `public/manifest.webmanifest` | Linked from `app/layout.tsx` metadata (`manifest`); `viewport.themeColor` too |
 | Icons | `public/icons/learntg-{192x192,512x512,maskable-512x512}.png` | Generated from `public/logo-learntg.png` with ImageMagick |
 | Offline page | `app/offline/page.tsx` | Route `/offline`, precached through `additionalManifestEntries` |
@@ -20,6 +21,23 @@ https://github.com/pasosdeJesus/learn.tg/issues/243 (install + docs).
 
 The diligent-records app served by the same Next app keeps its own manifest
 (`public/manifest.json`) and cache entry; do not remove them.
+
+## Registration
+
+`register: true` **does not work with the App Router**: next-pwa injects its
+`register.js` into the webpack `main.js` entry, which the App Router does not
+have, and the injection is skipped silently. Verified on the dev site on
+2026-09-15: `/sw.js` answered 200 while `navigator.serviceWorker
+.getRegistrations()` was empty and no client chunk contained the registration
+code (a manual `register('/sw.js')` worked, so it was not a certificate issue).
+
+So the config keeps `register: false` and `components/ServiceWorkerRegistrar.tsx`
+(mounted in `app/RootLayoutClient.tsx`) calls
+`navigator.serviceWorker.register('/sw.js')`. Verified with Chrome on
+`http://localhost:4000`: one registration, activated, page controlled.
+
+Alternatives if this ever breaks: `serwist` (App Router native) or registering
+in a `next/script` with `strategy="afterInteractive"`.
 
 ## How the service worker caches
 
@@ -69,6 +87,43 @@ site data before debugging anything else.
 - The full E2E suite runs against the deployed dev site, so PWA behaviour is not
   covered there yet: `e2e/specs/in-app-wallet.spec.mjs` is the first step in that
   direction and skips when `/en/test/wallet` is not deployed.
+
+## Generated files and how to retire the worker
+
+next-pwa writes `public/sw.js`, `public/sw.js.map`, `public/workbox-*.js` and
+(in dev) `public/fallback-development.js`; all of them are gitignored and
+**regenerated on every compile while the PWA is enabled** (the plugin installs a
+`CleanWebpackPlugin` for them), so nothing else is needed while the PWA is on.
+`make pwa-clean` removes them anyway, and `bin/dev`, `make all` and `make prod`
+call it so the state is deterministic when you switch branches or modes.
+
+When the PWA is **disabled** (`disable: true`), none of that runs: an `sw.js`
+left behind by an earlier enabled build stays in `public/` and keeps being
+served. That is what happened in production between 2026-02-15
+(`be6e1c4` enabled the PWA in production) and 2026-07-25 (`9a5675e` disabled
+it): the worker generated on the 25th stayed there (37 KB, caching
+`_next/static` and `diligent-records`).
+
+Procedure to retire a deployed worker (do not just delete the file: a 404, or
+the 500 that `next start` answers for a missing `/sw.js`, fails the update check
+and browsers keep the old worker):
+
+1. `make pwa-kill-switch`: copies `scripts/pwa-kill-switch.js` to
+   `public/sw.js`, the same path, so the next update check fetches it
+   (`cache-control: max-age=0` makes that prompt). The worker clears every cache
+   of the origin, unregisters itself and reloads the open tabs.
+
+2. After a week or two with no `/sw.js` requests in the access log,
+   `make pwa-clean` and leave **an empty `public/sw.js`** (or add an nginx rule
+   `location = /sw.js { return 404; }`), so the path stops answering 500.
+
+The kill switch was deployed to production on 2026-09-15 for the worker
+generated on 2026-07-25. To count how many clients had it registered (a browser
+fetches `/sw.js` at registration and then on every update check):
+
+```sh
+grep 'GET /sw.js' /var/log/nginx/access.log* | awk '{print $1, $NF}' | sort | uniq -c | sort -rn
+```
 
 ## Why `next-pwa` and not `serwist`
 

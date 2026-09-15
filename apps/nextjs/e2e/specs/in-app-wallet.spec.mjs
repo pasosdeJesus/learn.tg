@@ -73,7 +73,11 @@ async function main() {
   console.log(`In-app wallet | ${base}\n`)
 
   // 1. Create the wallet with a PIN
+  // `wallet-pin` existe en todos los estados menos 'unlocked'; el de
+  // confirmación solo aparece cuando el hook ya resolvió 'no-wallet' (consulta
+  // IndexedDB), así que hay que esperarlo antes de escribir.
   await page.waitForSelector('[data-testid="wallet-pin"]')
+  await page.waitForSelector('[data-testid="wallet-pin-confirm"]', { timeout })
   await page.type('[data-testid="wallet-pin"]', PIN)
   await page.type('[data-testid="wallet-pin-confirm"]', PIN)
   await page.click('[data-testid="wallet-create"]')

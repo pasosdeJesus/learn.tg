@@ -26,6 +26,12 @@ for engine in pdj-wallet pdj-wallet-next rewards gdcluster; do
   fi
 done
 
+# Artefactos del PWA (public/sw.js, workbox-*, fallback-*, worker-*): limpiar los
+# que haya dejado una compilación anterior. Con el PWA encendido next-pwa los
+# regenera al compilar; con el PWA apagado (disable: true) no, y un sw.js viejo
+# se seguiría sirviendo (ver doc/pwa-developer-guide.md).
+make pwa-clean || true
+
 . ../.env
 cmd="node_modules/next/dist/bin/next dev -p${PORT} --webpack ${OPDEV}"
 echo $cmd

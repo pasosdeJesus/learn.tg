@@ -14,7 +14,10 @@ import type { PWAConfig } from 'next-pwa';
 
 const pwaConfig: PWAConfig = {
   dest: 'public',
-  register: true,
+  // El auto-registro de next-pwa inyecta register.js en la entrada main.js, que
+  // no existe en el App Router: el sw.js se genera pero nadie lo registra. Lo
+  // registra components/ServiceWorkerRegistrar.tsx (ver doc/pwa-developer-guide.md).
+  register: false,
   skipWaiting: true,
   disable: false,
   fallbacks: {

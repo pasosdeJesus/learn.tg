@@ -43,7 +43,23 @@ engines-assets:
 	  cp -f ../../packages/gdcluster/assets/*.svg public/img/credential/source/ 2>/dev/null || true; \
 	fi
 
-all: build-guard engines-dist engines-assets
+# next-pwa: limpiar artefactos generados (public/sw.js, workbox-*, fallback-*).
+# Con el PWA encendido next-pwa los limpia y regenera en cada compilacion; con el
+# PWA apagado (disable: true) nadie lo hace y un sw.js viejo se sigue sirviendo.
+pwa-clean:
+	@echo "[pwa-clean] public/sw.js, workbox-*, fallback-*, worker-*"
+	@rm -f public/sw.js public/sw.js.map public/workbox-*.js public/workbox-*.js.map public/fallback-*.js public/fallback-*.js.map public/worker-*.js public/worker-*.js.map
+
+# Retirar un service worker desplegado (R-#243): deja el kill switch en public/sw.js
+# para que los navegadores que lo registraron lo reciban en su proxima comprobacion
+# de actualizacion, borren caches y se desregistren. Luego: 1-2 semanas con 0
+# peticiones a /sw.js, `make pwa-clean` y dejar un public/sw.js vacio (un /sw.js
+# inexistente responde 500 con next start).
+pwa-kill-switch:
+	@echo "[pwa-kill-switch] public/sw.js <- scripts/pwa-kill-switch.js"
+	@cp scripts/pwa-kill-switch.js public/sw.js
+
+all: build-guard engines-dist engines-assets pwa-clean
 	rm -rf .next
 	pnpm i
 	$(MAKE) swc-wasm
@@ -111,7 +127,7 @@ coverage:
 dev:
 	./bin/dev
 
-prod: build-guard engines-dist engines-assets swc-wasm
+prod: build-guard engines-dist engines-assets swc-wasm pwa-clean
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
 	./bin/start > prod.log 2>&1 &
 
