@@ -52,62 +52,68 @@ async function main() {
   const page = await browser.newPage()
   await setupE2EAuth(page, creds.addr, creds.pk, CHAIN_ID, base)
   const wallet = creds.addr.toLowerCase()
+  // R-#233 Fase 2: la credencial es la cookie de sesión (ya no hay token de API).
+  // Las llamadas autenticadas hechas desde Node deben enviarla explícitamente.
+  const cookieHeader = (await page.browserContext().cookies())
+    .map((c) => `${c.name}=${c.value}`).join('; ')
+  const authFetch = (url, init = {}) =>
+    fetch(url, { ...init, headers: { ...(init.headers || {}), Cookie: cookieHeader } })
   const q = `wallet=${encodeURIComponent(wallet)}`
   const qc = `walletAddress=${encodeURIComponent(wallet)}`
   const name = `E2E ${Date.now().toString(36)}`
 
   // ════════════════════════════════════════════════════════════════
-  // 1. Auth gating (sin sesión)
+  // 1. Auth gating (without a session)
   // ════════════════════════════════════════════════════════════════
   console.log('\n── 1. Auth gating ──')
   const unauth = await fetch(`${base}/api/cluster/status`)
-  if (unauth.status === 401) ok('GET /api/cluster/status sin sesión → 401')
-  else fail(`GET /api/cluster/status sin sesión → ${unauth.status}`)
+  if (unauth.status === 401) ok('GET /api/cluster/status without a session → 401')
+  else fail(`GET /api/cluster/status without a session → ${unauth.status}`)
   const unauthAdmin = await fetch(`${base}/api/admin/clusters`)
-  if (unauthAdmin.status === 403) ok('GET /api/admin/clusters sin sesión → 403')
-  else fail(`GET /api/admin/clusters sin sesión → ${unauthAdmin.status}`)
+  if (unauthAdmin.status === 403) ok('GET /api/admin/clusters without a session → 403')
+  else fail(`GET /api/admin/clusters without a session → ${unauthAdmin.status}`)
 
   // ════════════════════════════════════════════════════════════════
-  // 2. Estado y candidatos del pastor (wallet verificadora)
+  // 2. Pastor status and candidates (verifier wallet)
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── 2. Estado y candidatos del pastor ──')
-  const statusRes = await fetch(`${base}/api/cluster/status?${qc}`)
+  console.log('\n── 2. Pastor status and candidates ──')
+  const statusRes = await authFetch(`${base}/api/cluster/status?${qc}`)
   if (statusRes.status === 200) {
     const s = await statusRes.json()
-    ok(`GET /api/cluster/status → 200 (hasCluster=${s.hasCluster}, invitaciones=${s.pendingInvitations?.length ?? 0})`)
+    ok(`GET /api/cluster/status → 200 (hasCluster=${s.hasCluster}, invitations=${s.pendingInvitations?.length ?? 0})`)
   } else fail(`GET /api/cluster/status → ${statusRes.status}`)
-  const candRes = await fetch(`${base}/api/cluster/candidates?${qc}`)
+  const candRes = await authFetch(`${base}/api/cluster/candidates?${qc}`)
   if (candRes.status === 200) {
     const c = await candRes.json()
-    ok(`GET /api/cluster/candidates → 200 (candidatos=${c.candidates?.length ?? 0}, fallback=${c.fallback})`)
+    ok(`GET /api/cluster/candidates → 200 (candidates=${c.candidates?.length ?? 0}, fallback=${c.fallback})`)
   } else if (candRes.status === 400) {
-    ok('GET /api/cluster/candidates → 400 (pastor sin iglesia declarada, esperado)')
+    ok('GET /api/cluster/candidates → 400 (pastor without a declared church, expected)')
   } else fail(`GET /api/cluster/candidates → ${candRes.status}`)
 
   // ════════════════════════════════════════════════════════════════
-  // 3. Admin: lista de clústeres
+  // 3. Admin: cluster list
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── 3. Admin: lista ──')
-  const listRes = await fetch(`${base}/api/admin/clusters?${q}`)
+  console.log('\n── 3. Admin: list ──')
+  const listRes = await authFetch(`${base}/api/admin/clusters?${q}`)
   if (listRes.status === 200) {
     const list = await listRes.json()
-    ok(`GET /api/admin/clusters → 200 (${list.clusters?.length ?? 0} clústeres)`)
+    ok(`GET /api/admin/clusters → 200 (${list.clusters?.length ?? 0} clusters)`)
   } else fail(`GET /api/admin/clusters → ${listRes.status}`)
 
   // ════════════════════════════════════════════════════════════════
   // 4. Admin: crear clúster con una iglesia existente como líder
   // ════════════════════════════════════════════════════════════════
   console.log('\n── 4. Admin: crear clúster ──')
-  const churchesRes = await fetch(`${base}/api/admin/churches?${q}`)
+  const churchesRes = await authFetch(`${base}/api/admin/churches?${q}`)
   let leaderChurch = null
   if (churchesRes.ok) {
     const churches = (await churchesRes.json()).churches || (await churchesRes.json()) || []
     const arr = Array.isArray(churches) ? churches : (churches.rows || [])
     leaderChurch = arr.find((c) => c.registration_verified === true) || arr[0] || null
   }
-  if (!leaderChurch) { console.log('  [skip] sin iglesias en el dev site — se omite crear clúster'); ok('SKIP: no hay iglesias para crear clúster') }
+  if (!leaderChurch) { console.log('  [skip] no churches on the dev site — skipping cluster creation'); ok('SKIP: no churches to create a cluster') }
   else {
-    const createRes = await fetch(`${base}/api/admin/clusters?${q}`, {
+    const createRes = await authFetch(`${base}/api/admin/clusters?${q}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -121,46 +127,46 @@ async function main() {
       const clusterId = created.cluster.id
 
       // 5. Detalle
-      const detailRes = await fetch(`${base}/api/admin/clusters/${clusterId}?${q}`)
+      const detailRes = await authFetch(`${base}/api/admin/clusters/${clusterId}?${q}`)
       const detail = await detailRes.json().catch(() => ({}))
       if (detailRes.status === 200 && detail.cluster?.name === name) ok(`GET /api/admin/clusters/[id] → 200 (${detail.cluster.name})`)
       else fail(`GET /api/admin/clusters/[id] → ${detailRes.status}`)
 
       // 6. Actualizar pseudónimo
-      const upRes = await fetch(`${base}/api/admin/clusters/${clusterId}?${q}`, {
+      const upRes = await authFetch(`${base}/api/admin/clusters/${clusterId}?${q}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pseudonym: 'PseudoActualizado' }),
       })
-      if (upRes.status === 200) ok('PUT /api/admin/clusters/[id] (pseudónimo) → 200')
+      if (upRes.status === 200) ok('PUT /api/admin/clusters/[id] (pseudonym) → 200')
       else fail(`PUT /api/admin/clusters/[id] → ${upRes.status}`)
 
       // 7. Ranking con pseudónimo
       const rankRes = await fetch(`${base}/api/gdcluster/ranking/clusters`)
       const rank = await rankRes.json().catch(() => ({ clusters: [] }))
       const row = (rank.clusters || []).find((c) => c.id === clusterId)
-      if (row && row.display_name === 'PseudoActualizado') ok(`Ranking muestra el pseudónimo (display_name=${row.display_name})`)
-      else { console.log(`  ranking row: ${JSON.stringify(row)}`); fail('Ranking sin pseudónimo actualizado') }
+      if (row && row.display_name === 'PseudoActualizado') ok(`Ranking shows the pseudonym (display_name=${row.display_name})`)
+      else { console.log(`  ranking row: ${JSON.stringify(row)}`); fail('Ranking without the updated pseudonym') }
 
       // 8. Disolver (soft) → ranking lo excluye
-      const delRes = await fetch(`${base}/api/admin/clusters/${clusterId}?${q}`, { method: 'DELETE' })
+      const delRes = await authFetch(`${base}/api/admin/clusters/${clusterId}?${q}`, { method: 'DELETE' })
       if (delRes.status === 200) ok('DELETE /api/admin/clusters/[id] (disband) → 200')
       else fail(`DELETE /api/admin/clusters/[id] → ${delRes.status}`)
       const rank2 = await (await fetch(`${base}/api/gdcluster/ranking/clusters`)).json().catch(() => ({ clusters: [] }))
       const still = (rank2.clusters || []).some((c) => c.id === clusterId)
-      if (!still) ok('Ranking excluye el clúster disuelto')
-      else fail('El clúster disuelto sigue en el ranking')
+      if (!still) ok('Ranking excludes the disbanded cluster')
+      else fail('The disbanded cluster is still in the ranking')
     } else {
       console.log(`  create: ${createRes.status} ${JSON.stringify(created).slice(0, 120)}`)
-      fail('POST /api/admin/clusters no devolvió 201')
+      fail('POST /api/admin/clusters did not return 201')
     }
   }
 
   // ════════════════════════════════════════════════════════════════
-  // 9. Invitación: accept con id inexistente → 404 (validación auth)
+  // 9. Invitation: accept a nonexistent id → 404 (auth validation)
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── 9. Invitación: aceptar inexistente ──')
-  const accRes = await fetch(`${base}/api/cluster/invitation/accept`, {
+  console.log('\n── 9. Invitation: accept nonexistent ──')
+  const accRes = await authFetch(`${base}/api/cluster/invitation/accept`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ walletAddress: wallet, invitationId: 999999 }),
