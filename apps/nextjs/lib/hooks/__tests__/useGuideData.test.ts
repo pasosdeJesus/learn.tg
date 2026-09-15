@@ -80,16 +80,13 @@ describe('useGuideData', () => {
       if (url.includes('/api/guide-status')) {
         return Promise.resolve({ data: { completed: false, receivedScholarship: false } })
       }
-      if (url.includes('presenta')) {
+      if (url.startsWith('/api/course-catalog/')) {
         return Promise.resolve({ data: mockCourse })
       }
       // Default: course list
       return Promise.resolve({ data: [mockCourse] })
     })
 
-    // Set environment variables
-    process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = 'https://fake.local/courses'
-    process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL = 'https://fake.local/presenta'
   })
 
   it('should return loading state initially', () => {
@@ -113,7 +110,7 @@ describe('useGuideData', () => {
        if (url.includes('/api/scholarship')) {
         return Promise.resolve({ data: mockScholarshipData })
       }
-      if (url.includes('presenta')) {
+      if (url.startsWith('/api/course-catalog/')) {
         return Promise.resolve({ data: mockCourse })
       }
       return Promise.resolve({ data: [mockCourse] })
@@ -190,8 +187,13 @@ describe('useGuideData', () => {
     expect(result.current.course).toBe(null)
   })
 
-  it('should handle missing API URL environment variable', async () => {
-    delete process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL
+  it('should handle a 404 from the course detail endpoint', async () => {
+    const notFound: any = new Error('Request failed with status code 404')
+    notFound.response = { status: 404 }
+    axiosGetMock.mockImplementation((url: string) => {
+      if (url.startsWith('/api/course-catalog/')) return Promise.reject(notFound)
+      return Promise.resolve({ data: [mockCourse] })
+    })
 
     const { result } = renderHook(() =>
       useGuideData({ lang: 'en', pathPrefix: 'test' })
@@ -201,7 +203,7 @@ describe('useGuideData', () => {
       expect(result.current.loading).toBe(false)
     })
 
-    expect(result.current.error).toBe('API presentation URL is not defined')
+    expect(result.current.course).toBe(null)
   })
 
   it('should handle axios network error', async () => {
@@ -224,7 +226,7 @@ describe('useGuideData', () => {
       if (url.includes('/api/scholarship')) {
         return Promise.reject(new Error('Scholarship API down'))
       }
-      if (url.includes('presenta')) {
+      if (url.startsWith('/api/course-catalog/')) {
         return Promise.resolve({ data: mockCourse })
       }
       return Promise.resolve({ data: [mockCourse] })
@@ -285,7 +287,7 @@ describe('useGuideData', () => {
           data: { completed: guideStatusCallCount === 1, receivedScholarship: false }
         })
       }
-      if (url.includes('presenta')) {
+      if (url.startsWith('/api/course-catalog/')) {
         return Promise.resolve({ data: mockCourse })
       }
       return Promise.resolve({ data: [mockCourse] })
@@ -313,7 +315,7 @@ describe('useGuideData', () => {
         guideStatusCalled = true
         return Promise.resolve({ data: { completed: true, receivedScholarship: false } })
       }
-      if (url.includes('presenta')) {
+      if (url.startsWith('/api/course-catalog/')) {
         return Promise.resolve({ data: mockCourse })
       }
       return Promise.resolve({ data: [mockCourse] })

@@ -84,12 +84,8 @@ module Cor1440Gen
     end
 
     def index(c = nil)
-      merr = "".dup
-      unless ::ApplicationHelper.verificaToken(request, merr)
-        puts "OJO #{merr}"
-        render(json: { error: "Unauthorized. #{merr}" }, status: :unauthorized)
-        return
-      end
+      # R-#233: public course data. The wallet address only drives the
+      # sinBilletera/conBilletera filter; no token/session is required.
       c = Cor1440Gen::Proyectofinanciero.all
       unless current_usuario || (params && params[:walletAddress])
         c = c.where(sinBilletera: true)
@@ -100,12 +96,7 @@ module Cor1440Gen
     end
 
     def show
-      merr = "".dup
-      unless ::ApplicationHelper.verificaToken(request, merr)
-        puts "OJO #{merr}"
-        render(json: { error: "Unauthorized. #{merr}" }, status: :unauthorized)
-        return
-      end
+      # R-#233: public course data; no token/session is required.
       super
     end
 

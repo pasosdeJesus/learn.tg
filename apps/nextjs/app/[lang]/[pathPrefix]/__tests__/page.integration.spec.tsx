@@ -58,9 +58,6 @@ describe('Course Page (Integration)', () => {
   const mockScholarship = { canSubmit: true, amountScholarship: 1000, isEligible: true } // isEligible añadido
 
   beforeEach(() => {
-    vi.stubEnv('NEXT_PUBLIC_API_BUSCA_CURSOS_URL', 'https://fake.local/courses')
-    vi.stubEnv('NEXT_PUBLIC_API_PRESENTA_CURSO_URL', 'https://fake.local/presenta_curso_id')
-
     vi.clearAllMocks()
     mockedGetCsrfToken.mockResolvedValue('mock-csrf-token')
 
@@ -78,9 +75,9 @@ describe('Course Page (Integration)', () => {
     } as any)
 
     mockedAxios.get.mockImplementation((url: string) => {
-      if (url.startsWith(process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL!))
+      if (url.startsWith('/api/course-catalog?'))
         return Promise.resolve({ data: [mockCourse] })
-      if (url.includes('presenta'))
+      if (url.startsWith('/api/course-catalog/'))
         return Promise.resolve({ data: mockCourse })
       if (url.includes('scholarship'))
         return Promise.resolve({ data: mockScholarship })

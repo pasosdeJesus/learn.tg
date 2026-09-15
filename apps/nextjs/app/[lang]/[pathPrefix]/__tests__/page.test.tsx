@@ -171,8 +171,8 @@ describe('Course List Page Component', () => {
     profileScore: 50,
   }
 
-  const API_BUSCA_URL = 'https://fake.local/courses'
-  const API_PRESENTA_URL = 'https://fake.local/presenta'
+  const API_LIST_URL = '/api/course-catalog?'
+  const API_DETAIL_URL = '/api/course-catalog/'
   let realUseGuideData: typeof useGuideData
   const useGuideDataMock = vi.mocked(useGuideData)
 
@@ -197,10 +197,10 @@ describe('Course List Page Component', () => {
     axiosGet.mockReset()
     // Default axios implementation
     axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
-      if (url.startsWith(API_BUSCA_URL)) {
+      if (url.startsWith(API_LIST_URL)) {
         return Promise.resolve({ data: [mockCourse] })
       }
-      if (url.startsWith(API_PRESENTA_URL)) {
+      if (url.startsWith(API_DETAIL_URL)) {
         return Promise.resolve({ data: mockCourse })
       }
       if (url.includes('/api/scholarship')) {
@@ -213,9 +213,6 @@ describe('Course List Page Component', () => {
     })
     // Mock alert to avoid jsdom errors
     global.window.alert = vi.fn()
-    // Mock environment variables
-    process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = API_BUSCA_URL
-    process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL = API_PRESENTA_URL
   })
 
   it('no carga datos cuando dirección y sesión difieren (partial login)', async () => {
@@ -242,10 +239,10 @@ describe('Course List Page Component', () => {
     const mockGuideStatus2 = { completed: false, receivedScholarship: true }
 
     axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
-      if (url.startsWith(API_BUSCA_URL)) {
+      if (url.startsWith(API_LIST_URL)) {
         return Promise.resolve({ data: [mockCourse] })
       }
-      if (url.startsWith(API_PRESENTA_URL)) {
+      if (url.startsWith(API_DETAIL_URL)) {
         return Promise.resolve({ data: mockCourse })
       }
       if (url.includes('/api/guide-status')) {
@@ -293,10 +290,10 @@ describe('Course List Page Component', () => {
     const mockGuideStatus2 = { completed: false, receivedScholarship: false, receivedSlearnScholarship: false }
 
     axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
-      if (url.startsWith(API_BUSCA_URL)) {
+      if (url.startsWith(API_LIST_URL)) {
         return Promise.resolve({ data: [mockCourse] })
       }
-      if (url.startsWith(API_PRESENTA_URL)) {
+      if (url.startsWith(API_DETAIL_URL)) {
         return Promise.resolve({ data: mockCourse })
       }
       if (url.includes('/api/guide-status')) {
@@ -341,10 +338,10 @@ describe('Course List Page Component', () => {
     useAccountMock.mockReturnValue({ address: undefined, isConnected: false, sessionAddress: undefined, storedAddress: undefined, isAuthenticated: false, isWalletAvailable: false })
 
     axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
-        if (url.startsWith(API_BUSCA_URL)) {
+        if (url.startsWith(API_LIST_URL)) {
             return Promise.resolve({ data: [mockCourse] })
         }
-        if (url.startsWith(API_PRESENTA_URL)) {
+        if (url.startsWith(API_DETAIL_URL)) {
             return Promise.resolve({ data: mockCourse })
         }
         if (url.includes('/api/scholarship')) {
@@ -371,10 +368,10 @@ describe('Course List Page Component', () => {
 
   it('handles guide-status API errors gracefully (course still renders)', async () => {
     axiosGet.mockImplementation((url: string, ..._rest: unknown[]): Promise<AxiosGetReturn> => {
-      if (url.startsWith(API_BUSCA_URL)) {
+      if (url.startsWith(API_LIST_URL)) {
         return Promise.resolve({ data: [mockCourse] })
       }
-      if (url.startsWith(API_PRESENTA_URL)) {
+      if (url.startsWith(API_DETAIL_URL)) {
         return Promise.resolve({ data: mockCourse })
       }
       if (url.includes('/api/guide-status')) {

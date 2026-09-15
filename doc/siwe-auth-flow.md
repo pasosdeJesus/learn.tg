@@ -116,19 +116,18 @@ not a DB token:
 
 **Why keep a DB token at all (legacy)?**
 
-- Rails (`servidor/`) and non-browser clients (e2e specs, scripts)
-  authenticate exclusively against `billetera_usuario.token`, so the column
-  and the legacy path stay during the migration. Since 2026-09-14 `authorize()`
-  no longer rotates the token: it generates the **dedicated random token**
-  (`newApiToken()`, 256 bits) on the first sign-in and reuses it afterwards,
-  exposed to the browser via `GET /api/auth/token` and stored in localStorage as
-  `learn.tg.authToken`. Removing the column is pending the Rails migration
-  (R-#233).
+- Rails (`servidor/`) **no longer uses the token** (R-#233, 2026-09-14): the two
+  endpoints it exposed (`proyectosfinancieros#index/#show`) return public course
+  data and are now unauthenticated, and the unused
+  `usuarios#actualiza_mi_usuario` was removed. The column and the legacy path stay
+  only for non-browser clients (e2e specs, scripts) until Phase 2 removes them.
+  Since 2026-09-14 `authorize()` does not rotate the token: it generates the
+  **dedicated random token** (`newApiToken()`, 256 bits) on the first sign-in and
+  reuses it afterwards, exposed to the browser via `GET /api/auth/token` and
+  stored in localStorage as `learn.tg.authToken`. Removing the column is tracked
+  in R-#233.
 - Legacy-token staleness is harmless **for Next.js API routes** (the session
-  cookie authorizes regardless of the DB token), but **not for the Rails
-  endpoints** (`proyectosfinancieros.json`, `presenta_curso`): Rails validates
-  `billetera_usuario.token == token`, so a stale token answers `401` there.
-  Recover by fetching a fresh dedicated token and retrying (below).
+  cookie authorizes regardless of the DB token).
 
 ### 2. Two-layer auth model
 

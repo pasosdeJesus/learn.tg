@@ -103,34 +103,6 @@ class UsuariosController < Msip::ModelosController
     super
   end
 
-  def actualiza_mi_usuario
-    merr = "".dup
-    u = ApplicationHelper.usuarioBilleteraToken(request, merr)
-    if u.nil?
-      puts merr
-      render(json: { error: merr }, status: :unauthorized)
-      return
-    end
-    u.update({
-      nusuario: params["nusuario"],
-      nombre: params["nombre"],
-      email: params["email"],
-      religion_id: params["religion_id"],
-      pais_id: params["pais_id"],
-    })
-    unless u.save
-      me = u.errors.full_messages.join(". ")
-      puts me
-      render(
-        json: { error: me },
-        status: :unauthorized,
-      )
-      return
-    end
-
-    render(json: { reult: "updated" }, status: :ok)
-  end
-
   def index_otros_formatos(format, params)
     puts "OJO paso por index_otros_formatos"
     render(:index, json: @registros)

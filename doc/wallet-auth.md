@@ -154,7 +154,8 @@ between page transitions.
 **Auth model (R-#227, session-first):** the primary API authorization is the
 NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The `authToken` in
 localStorage is a *legacy fallback* for clients that cannot send the cookie
-(Rails, non-browser specs). Since R-#227 the token is no longer the SIWE nonce:
+(non-browser specs; Rails no longer uses the token, R-#233). Since R-#227 the
+token is no longer the SIWE nonce:
 `authorize()` generates a dedicated random token (256 bits) on the first sign-in
 and reuses it afterwards (no longer rotated since 2026-09-14), and
 `ConnectWalletButton` fetches it from `GET /api/auth/token` right after the

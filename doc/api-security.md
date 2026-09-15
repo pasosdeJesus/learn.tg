@@ -18,7 +18,8 @@ blockchain keys) must authenticate the caller. Three classes exist:
 > **Auth model (R-#227, session-first):** `authenticateUser` validates the
 > NextAuth session cookie first (JWT, `sub` == requested wallet, lowercase) and
 > falls back to the `billetera_usuario.token` legacy path only for
-> non-browser clients (Rails, specs). CSRF is never an API credential: a
+> non-browser clients (specs; Rails no longer uses the token, R-#233). CSRF is
+> never an API credential: a
 > dedicated random token (256 bits) is generated on the first sign-in and reused
 > afterwards (no longer rotated, 2026-09-14); the browser fetches it from
 > `GET /api/auth/token`. `AUTH_SESSION_ONLY=1` disables the legacy

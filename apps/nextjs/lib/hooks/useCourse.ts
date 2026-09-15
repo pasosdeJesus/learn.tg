@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { getApiToken, refreshApiToken } from '@/lib/auth-token'
+import { getApiToken } from '@/lib/auth-token'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import axios from 'axios'
 import type { Course, Guide } from './guideTypes'
@@ -36,54 +36,29 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
       // de NextAuth aún no expone `session.address`; si no, el fetch iría
       // anónimo y se perdería el avance del usuario.
       const wallet = address || session?.address || null
-      // R-#227: token de API DEDICADO (el CSRF legacy queda solo como respaldo).
-      let apiToken = await getApiToken()
+      // R-#227: token de API DEDICADO (el CSRF legacy queda solo como respaldo);
+      // se usa en las rutas internas de Next (guide-status), no en Rails.
+      const apiToken = await getApiToken()
 
-      const listUrl = (token: string | null) => {
+      // R-#233 §4.4: public course list/detail served by Next directly from the
+      // shared DB (same-origin, no Rails API, no token, no CORS). `walletAddress`
+      // is only an untrusted hint for the sinBilletera/conBilletera filter.
+      const listUrl = () => {
         let u =
-          `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?` +
-          `filtro[busprefijoRuta]=/${pathPrefix}&` +
+          `/api/course-catalog?filtro[busprefijoRuta]=/${pathPrefix}&` +
           `filtro[busidioma]=${lang}`
-        if (wallet && token) u += `&walletAddress=${wallet}&token=${token}`
+        if (wallet) u += `&walletAddress=${wallet}`
         return u
       }
 
-      // Si el token guardado está obsoleto (401) pero la cookie de sesión sigue
-      // válida, se pide uno dedicado nuevo y se reintenta — sin degradar a
-      // consulta anónima con una billetera conectada.
-      const getWithTokenRefresh = async (buildUrl: (token: string | null) => string) => {
-        try {
-          return await axios.get(buildUrl(apiToken))
-        } catch (e: any) {
-          if (e?.response?.status !== 401 || !wallet) throw e
-          const fresh = await refreshApiToken()
-          if (!fresh || fresh === apiToken) throw e
-          apiToken = fresh
-          return await axios.get(buildUrl(fresh))
-        }
-      }
-
-      const courseListResponse = await getWithTokenRefresh(listUrl)
+      const courseListResponse = await axios.get(listUrl())
 
       if (!courseListResponse.data || courseListResponse.data.length !== 1) {
         throw new Error('Course not found')
       }
       const basicCourse = courseListResponse.data[0]
 
-      if (!process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL) {
-        throw new Error('API presentation URL is not defined')
-      }
-
-      const detailUrl = (token: string | null) => {
-        let d = process.env.NEXT_PUBLIC_API_PRESENTA_CURSO_URL!.replace(
-          'curso_id',
-          basicCourse.id,
-        )
-        if (wallet && token) d += `&walletAddress=${wallet}&token=${token}`
-        return d
-      }
-
-      const detailResponse = await getWithTokenRefresh(detailUrl)
+      const detailResponse = await axios.get(`/api/course-catalog/${basicCourse.id}`)
       const detailedCourse = detailResponse.data
 
       const guideStatusPromises = detailedCourse.guias.map(async (_: Guide, index: number) => {

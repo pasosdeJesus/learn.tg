@@ -2,7 +2,7 @@
 
 import axios from 'axios'
 import { useSession } from 'next-auth/react'
-import { getApiToken, refreshApiToken } from '@/lib/auth-token'
+import { getApiToken } from '@/lib/auth-token'
 import { use, useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
@@ -92,12 +92,9 @@ export default function Page({ params }: PageProps) {
     }
 
     const configure = async () => {
-      if (!process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL) {
-        toast({ title: 'NEXT_PUBLIC_API_BUSCA_CURSOS_URL not defined', variant: 'destructive' })
-        return
-      }
-
-      const listBaseUrl = `${process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL}?filtro[busidioma]=${lang}`
+      // R-#233 §4.4: public course list served by Next directly from the shared
+      // DB (same-origin, no Rails API, no token, no CORS).
+      const listBaseUrl = `/api/course-catalog?filtro[busidioma]=${lang}`
       console.log('[courses] fetching:', listBaseUrl)
       // Tras una navegación cliente la sesión de NextAuth puede venir "fría"
       // (bug #5719) mientras el address sigue en localStorage. Usar el address
@@ -115,11 +112,11 @@ export default function Page({ params }: PageProps) {
       let apiToken: string | null = null
       let christian = false
 
-      // Listado de cursos con la billetera + token (R-#227): nunca anónimo
-      // cuando hay usuario conectado.
-      const listUrl = (token: string | null) =>
-        wallet && token
-          ? `${listBaseUrl}&filtro[busconBilletera]=true&walletAddress=${wallet}&token=${token}`
+      // R-#233 §4.4: `walletAddress` is only an untrusted hint for the
+      // sinBilletera/conBilletera filter; it is not a credential.
+      const listUrl = () =>
+        wallet
+          ? `${listBaseUrl}&filtro[busconBilletera]=true&walletAddress=${wallet}`
           : listBaseUrl
 
       if (wallet) {
@@ -141,21 +138,7 @@ export default function Page({ params }: PageProps) {
       }
 
       try {
-        let response
-        try {
-          response = await axios.get<Course[]>(listUrl(apiToken))
-        } catch (error: any) {
-          // Token obsoleto (p. ej. `/api/auth/token` falló en el login y quedó
-          // el CSRF legacy, u otra pestaña rotó el token): la cookie de sesión
-          // sigue siendo válida, así que se pide uno dedicado nuevo y se
-          // reintenta — en vez de dejar el listado vacío (401 de Rails) o caer
-          // a consultas anónimas (que marcarían "cooldown").
-          if (error?.response?.status !== 401 || !wallet) throw error
-          const fresh = await refreshApiToken()
-          if (!fresh || fresh === apiToken) throw error
-          apiToken = fresh
-          response = await axios.get<Course[]>(listUrl(fresh))
-        }
+        const response = await axios.get<Course[]>(listUrl())
         if (response.data) {
           const courseInfo = (Array.isArray(response.data) ? response.data : (response.data as any).proyectosfinancieros || (response.data as any).data || [])
             // Global Disciples courses are only shown to Christians.
@@ -218,8 +201,8 @@ export default function Page({ params }: PageProps) {
           })
         }
       } catch (error) {
-        console.error('[courses] failed to fetch from:', listUrl(apiToken), error)
-        logger.info('[courses] failed: ' + String(error) + ' | url: ' + listUrl(apiToken), 'Courses')
+        console.error('[courses] failed to fetch from:', listUrl(), error)
+        logger.info('[courses] failed: ' + String(error) + ' | url: ' + listUrl(), 'Courses')
         toast({ title: 'Failed to load courses. Check console.', variant: 'destructive' })
       }
     }
@@ -234,7 +217,7 @@ export default function Page({ params }: PageProps) {
   if (
     address && session && session.address && address.toLowerCase() !== session.address.toLowerCase()
   ) {
-    console.log('[courses] PARTIAL LOGIN — session:', !!session, 'address:', !!address, 'session.addr:', session?.address?.slice(0,10), 'wagmi.addr:', address?.slice(0,10), 'NEXTAUTH_URL:', process.env.NEXT_PUBLIC_AUTH_URL, 'NEXT_PUBLIC_API_BUSCA_CURSOS_URL:', process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL)
+    console.log('[courses] PARTIAL LOGIN — session:', !!session, 'address:', !!address, 'session.addr:', session?.address?.slice(0,10), 'wagmi.addr:', address?.slice(0,10), 'NEXTAUTH_URL:', process.env.NEXT_PUBLIC_AUTH_URL)
     return (
       <div className="p-10 mt-10">
         Partial login. Please disconnect your wallet and connect and sign again.

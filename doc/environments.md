@@ -148,9 +148,8 @@ ulimit -d 7340032 && R=f bundle exec ./bin/corre
 # in apps/.env switch the frontend to local endpoints (verified):
 #   NEXT_PUBLIC_API_URL=                    (empty -> Next.js serves /api itself)
 #   NEXT_PUBLIC_API_BASE=http://localhost:3000/learntg-admin
-#   NEXT_PUBLIC_API_BUSCA_CURSOS_URL=http://localhost:3000/learntg-admin/proyectosfinancieros.json
-#   NEXT_PUBLIC_API_PRESENTA_CURSO_URL=http://localhost:3000/learntg-admin/proyectosfinancieros/curso_id.json
 #   NEXT_PUBLIC_SELF_ENDPOINT=http://localhost:4000/api/self-verify
+#   (course list/detail come from Next: /api/course-catalog — R-#233 §4.4)
 #   NEXT_PUBLIC_AUTH_URL=http://localhost:4000
 #   NEXTAUTH_URL=http://localhost:4000
 cd ../nextjs && bin/dev   # http://localhost:4000

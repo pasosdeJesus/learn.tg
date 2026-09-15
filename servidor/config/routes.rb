@@ -34,9 +34,6 @@ Rails.application.routes.draw do
     to: "usuarios#foto",
     as: "usuarios_foto"
 
-  post "/usuarios/actualiza_mi_usuario",
-    to: "usuarios#actualiza_mi_usuario",
-    as: "actualiza_mi_usuario"
   resources :cursos,
     path_names: { new: "crear", edit: "editar" },
     controller: "cor1440_gen/proyectosfinancieros"

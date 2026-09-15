@@ -109,7 +109,7 @@ describe('Main Page Component', () => {
     // Mock console.error para evitar stderr en tests de errores
     vi.spyOn(console, 'error').mockImplementation(() => {})
     // Mock de variable de entorno usada en componente
-    process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = 'https://fake.local/courses'
+    process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = '/api/course-catalog'
   })
 
   it('no carga cursos (early return) cuando dirección y sesión difieren (partial login)', async () => {
@@ -233,30 +233,20 @@ describe('Main Page Component', () => {
     expect(coursesUrl).toMatch(/filtro\[busidioma\]=en/)
   })
 
-  it('reintenta el listado con un token dedicado nuevo tras un 401 (token obsoleto)', async () => {
+  it('consulta el listado de Rails con walletAddress y sin token (R-#233)', async () => {
     const mockCourses = [
       {
         id: 'course-1',
         idioma: 'en',
         prefijoRuta: '/course-1',
         imagen: '/image1.jpg',
-        titulo: 'Recovered Course',
+        titulo: 'Public Course',
         subtitulo: 'Description',
       },
     ]
-    const unauthorized: any = new Error('Request failed with status code 401')
-    unauthorized.response = { status: 401 }
     axiosGet
       .mockResolvedValueOnce({ data: { religion_id: null } }) // perfil
-      .mockRejectedValueOnce(unauthorized) // listado con el token guardado (obsoleto)
-      .mockResolvedValueOnce({ data: mockCourses as Course[] }) // listado reintentado
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ token: 'dedicated-fresh-token' }),
-    })
-    // @ts-ignore
-    global.fetch = fetchMock
-
+      .mockResolvedValueOnce({ data: mockCourses as Course[] }) // cursos
     await act(async () => {
       renderWithProviders(
         <Suspense fallback={<div />}>
@@ -264,11 +254,12 @@ describe('Main Page Component', () => {
         </Suspense>,
       )
     })
-
-    await waitFor(() => expect(screen.getByText(/Recovered Course/i)).toBeInTheDocument())
-    expect(fetchMock).toHaveBeenCalledWith('/api/auth/token', expect.anything())
+    await waitFor(() => expect(screen.getByText(/Public Course/i)).toBeInTheDocument())
     const calls: any[] = axiosGet.mock.calls as any
-    expect(calls[2][0]).toMatch(/token=dedicated-fresh-token/)
-    window.localStorage.removeItem('learn.tg.authToken')
+    const listUrl = String(
+      calls.find((c) => String(c[0]).includes('/api/course-catalog'))?.[0] || '',
+    )
+    expect(listUrl).toMatch(/walletAddress=0x123/)
+    expect(listUrl).not.toMatch(/[?&]token=/)
   })
 })
