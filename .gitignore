@@ -119,6 +119,13 @@ public/sw.js
 public/sw.js.map
 public/workbox-*.js
 public/workbox-*.js.map
+apps/nextjs/public/sw.js.map
+apps/nextjs/public/workbox-*.js
+apps/nextjs/public/workbox-*.js.map
+apps/nextjs/public/fallback-*.js
+apps/nextjs/public/fallback-*.js.map
+apps/nextjs/public/worker-*.js
+apps/nextjs/public/worker-*.js.map
 
 IDEAS
 apps/hardhat/tmpart
