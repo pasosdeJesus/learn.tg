@@ -12,20 +12,15 @@
 // El spec FALLA mientras el bug exista y PASA cuando el primer login (o la
 // página) tolera el token obsoleto: sin "cooldown" falso y con el avance real.
 //
-// Nota de red: el frontend de producción pide la lista de cursos a
-// `https://learn.tg:3250/learntg-admin/proyectosfinancieros.json`, puerto que no
-// es alcanzable desde la VM de CI/desarrollo (el :3500 sí). Con
-// `MOCK_COURSE_LIST=1` el spec obtiene el JSON real por :3500
-// (`COURSE_LIST_SOURCE_URL`) y responde con él a las peticiones a
-// `proyectosfinancieros.json`, para que la página renderice las tarjetas. En
-// dev (lista alcanzable) no se activa.
+// Nota de red: la lista de cursos la sirve la propia app (Next) desde la BD
+// compartida en `/api/course-catalog` (R-#233 §4.4), same-origin — no hay puerto
+// aparte ni mock de red.
 //
 // Ejecución:
-//   # dev
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220 \
 //     bin/m test:e2e fresh-wallet-first-connect
-//   # producción (desde una red sin :3250)
-//   MOCK_COURSE_LIST=1 CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg \
+//   # producción
+//   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg \
 //     PUERTOPRU=443 CHAIN_ID=42220 SITE_URL=https://learn.tg bin/m test:e2e fresh-wallet-first-connect
 
 import {
@@ -81,21 +76,6 @@ async function main() {
   const env = await initTestEnv()
   const { base, timeout } = env
 
-  // Datos reales de la lista de cursos para el mock (puerto :3250 inalcanzable)
-  const mockList = process.env.MOCK_COURSE_LIST === '1'
-  let courseListJson = '[]'
-  if (mockList) {
-    const src = process.env.COURSE_LIST_SOURCE_URL ||
-      'https://learn.tg:3500/learntg-admin/proyectosfinancieros.json?filtro[busidioma]=en'
-    try {
-      const r = await fetch(src, { signal: AbortSignal.timeout(20000) })
-      courseListJson = JSON.stringify(await r.json())
-      console.log(`MOCK_COURSE_LIST=1: lista de cursos desde ${src.replace(/\?.*/, '')} (${courseListJson.length} bytes)`)
-    } catch (e) {
-      console.log(`[!] no se pudo obtener la lista de cursos (${e.message}) — puede que no se rendericen tarjetas`)
-    }
-  }
-
   const pk = generatePrivateKey()
   const account = privateKeyToAccount(pk)
   console.log(`Billetera NUEVA: ${account.address} | ${base} (chain ${CHAIN_ID})\n`)
@@ -113,24 +93,6 @@ async function main() {
   ok('billetera nueva autenticada (SIWE)')
 
   const { calls, other } = attachProbe(page, base)
-
-  // Con MOCK_COURSE_LIST=1 sirve la lista real a las peticiones
-  // `proyectosfinancieros.json` (en prod van a :3250, inalcanzable desde la VM)
-  if (mockList) {
-    await page.setRequestInterception(true)
-    page.on('request', (req) => {
-      if (/proyectosfinancieros\.json/.test(req.url())) {
-        req.respond({
-          status: 200,
-          contentType: 'application/json',
-          headers: { 'Access-Control-Allow-Origin': base, Vary: 'Origin' },
-          body: courseListJson,
-        })
-      } else {
-        req.continue()
-      }
-    })
-  }
 
   const loadAndSnapshot = async (label) => {
     await gotoWithRetry(page, `${base}/en`, { waitUntil: 'domcontentloaded', timeout })

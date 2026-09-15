@@ -20,9 +20,10 @@ export function PhotoUpload({ label, existingPath, userId, walletAddress, side, 
   const getAuthParams = () => {
     if (typeof window === 'undefined') return ''
     const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const tok = localStorage.getItem('learn.tg.authToken') || ''
-    if (!addr || !tok) return ''
-    return `walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(tok)}`
+    if (!addr) return ''
+    // Standard mechanism (R-#233): identity hint only; the session cookie
+    // authorizes the same-origin request.
+    return `walletAddress=${encodeURIComponent(addr)}`
   }
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +35,6 @@ export function PhotoUpload({ label, existingPath, userId, walletAddress, side, 
       fd.append('photo', file)
       fd.append('side', side)
       fd.append('walletAddress', walletAddress || '')
-      fd.append('token', typeof window !== 'undefined' ? localStorage.getItem('learn.tg.authToken') || '' : '')
       const res = await fetch('/api/user/id-photo', { method: 'POST', body: fd })
       if (!res.ok) throw new Error('Upload failed')
       const data = await res.json()

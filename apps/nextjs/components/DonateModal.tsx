@@ -4,9 +4,8 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { type Address, formatUnits } from 'viem'
-import axios from 'axios'
-import { getApiToken } from '@/lib/auth-token'
 import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@learn-tg/rewards/lib/donate-utils'
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
@@ -67,6 +66,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
 
   const { address: rawAddress } = useAuthAddress()
   const address = rawAddress as Address | undefined
+  const { authedPost } = useAuthedApi()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const [usdtDecimals, setUsdtDecimals] = useState<number>(+(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6))
@@ -198,7 +198,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     onBackendCallback: async (params) => {
       const endpoint = effectiveTarget ? getTargetEndpoint(effectiveTarget) : '/api/add-donation'
       const payload: Record<string, unknown> = {
-        walletAddress: params.walletAddress, token: params.token,
+        walletAddress: params.walletAddress,
         donationAmountUSD: params.donationAmountUSD,
         slearnDonationAmount: params.slearnDonationAmount,
         usdtHash: params.usdtHash, slearnHash: params.slearnHash,
@@ -221,7 +221,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       // Comentario del donante (REQ/223): disponible para todos los destinos
       // (curso, clúster, país y campaña); el backend lo guarda en el ledger.
       if (comment.trim()) payload.comment = comment.trim()
-      const { data } = await axios.post(endpoint, payload)
+      const { data } = await authedPost<any>(endpoint, payload)
       return data
     },
     onSuccess: (data) => {
@@ -450,7 +450,6 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         setNativeError('Amount exceeds the donatable CELO (balance minus gas and margin)')
         return
       }
-      const apiToken = await getApiToken()
       // Rabby (y algunas wallets) fallan con "no support chain found" si la red
       // no está activa: asegurar la cadena antes de enviar (switch/add chain).
       const w = walletClient as any
@@ -475,7 +474,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
       )
       const endpoint = getTargetEndpoint(effectiveTarget!)
       const payload: Record<string, unknown> = {
-        walletAddress: address, token: apiToken,
+        walletAddress: address,
         donationAmountUSD: usdtNum,
         slearnDonationAmount: 0,
         usdtHash: txHash,
@@ -487,7 +486,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         payload.pdjSharePct = pdjSharePct
       }
       if (comment.trim()) payload.comment = comment.trim()
-      const { data } = await axios.post(endpoint, payload)
+      const { data } = await authedPost<any>(endpoint, payload)
       diagMark('native-verify-ok', { hasDistribution: !!data?.distribution, hasIncrement: !!data?.increment })
       setResultTxHash(txHash)
       if (data?.increment && data.increment > 0) setResultCashback(data.increment)

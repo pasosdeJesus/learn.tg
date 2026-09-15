@@ -13,13 +13,14 @@ import { useEffect, useState } from 'react'
 import { use } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import axios from 'axios'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 
 export default function RefPage({ params }: { params: Promise<{ lang: string; code: string }> }) {
   const { lang, code } = use(params)
   const es = lang === 'es'
   const { data: session } = useSession()
+  const { authedGet, authedPost } = useAuthedApi()
   const [lookup, setLookup] = useState<'loading' | 'valid' | 'invalid' | 'error'>('loading')
   const [inviter, setInviter] = useState<{ nusuario: string | null; nombre: string | null } | null>(null)
   const [hasWallet, setHasWallet] = useState(false)
@@ -51,7 +52,7 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
     let cancelled = false
     ;(async () => {
       try {
-        const res = await axios.get(`/api/referral/lookup?code=${encodeURIComponent(normalized)}`)
+        const res = await authedGet<any>(`/api/referral/lookup?code=${encodeURIComponent(normalized)}`)
         if (cancelled) return
         if (res.data?.valid) {
           setInviter({ nusuario: res.data.nusuario, nombre: res.data.nombre })
@@ -79,12 +80,7 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
     if (!pending) return
     ;(async () => {
       try {
-        const token = localStorage.getItem('learn.tg.authToken')
-        const res = await axios.post('/api/referral/claim', {
-          walletAddress: session.address,
-          token: token || '',
-          code: pending,
-        })
+        const res = await authedPost('/api/referral/claim', { code: pending })
         if (res.status === 200) {
           localStorage.removeItem('learn.tg.pendingReferralCode')
           setStatus('claimed')

@@ -1,13 +1,12 @@
 'use client'
 
-import axios from 'axios'
 import { useSession } from 'next-auth/react'
-import { getApiToken } from '@/lib/auth-token'
 import { use, useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { usePublicClient } from '@/lib/hooks/useWallet'
 import { useWriteContract } from '@/lib/hooks/useWriteContract'
 
@@ -46,6 +45,7 @@ export default function Page({
   const [isLoading, setIsLoading] = useState(true)
   const { address } = useAuthAddress()
   const { data: session } = useSession()
+  const { ready, mismatch, authedGet, authedPost } = useAuthedApi()
   const { data: hash, writeContract } = useWriteContract()
   const publicClient = usePublicClient()
   const parameters = use(params)
@@ -70,7 +70,6 @@ export default function Page({
   const [scholarshipTx, setScholarshipTx] = useState('')
   const [credentialEarned, setCredentialEarned] = useState(false)
   const [credentialUserId, setCredentialUserId] = useState<number | null>(null)
-  const [gCsrfToken, setGCsrfToken] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // New state for robust navigation
@@ -110,6 +109,13 @@ export default function Page({
 
   useEffect(() => {
     const loadCrossword = async () => {
+      // Partial login: do not fetch with a mismatched identity.
+      if (mismatch) {
+        setIsLoading(false)
+        return
+      }
+      // Wait until the identity is resolved (cold session #5719).
+      if (!ready) return
       if (!course || !guideNumber || !address) {
         setIsLoading(false);
         return;
@@ -122,21 +128,16 @@ export default function Page({
       const fetchAndSetNewCrossword = async () => {
         console.log('Fetching new crossword')
         try {
-          const apiToken = await getApiToken()
-          if (!apiToken) throw new Error('Could not get API token')
-          setGCsrfToken(apiToken)
-
-          let urlc = 
+          // Standard mechanism: same-origin, identity hint only, no token (R-#233).
+          const urlc =
             `/api/crossword?courseId=${course.id}` +
             `&lang=${lang}` +
             `&prefix=${pathPrefix}` +
             `&guide=${pathSuffix}` +
-            `&guideNumber=${guideNumber}` +
-            `&walletAddress=${address}` +
-            `&token=${apiToken}`
+            `&guideNumber=${guideNumber}`
 
           console.log(`Fetching Crossword: ${urlc}`)
-          const response = await axios.get(urlc)
+          const response = await authedGet<any>(urlc)
 
           if (response.data.message) {
             throw new Error(response.data.message)
@@ -178,10 +179,6 @@ export default function Page({
             setPlacements(savedState.placements)
             setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
 
-            const apiToken = await getApiToken()
-            if (!apiToken) throw new Error('Could not get API token for restored session')
-            setGCsrfToken(apiToken)
-
             inputRefs.current = savedState.grid.map(() => [])
             setIsLoading(false)
             return
@@ -200,7 +197,7 @@ export default function Page({
     
     }
     loadCrossword()
-  }, [course, guideNumber, address, session, lang, pathPrefix, pathSuffix])
+  }, [course, guideNumber, address, session, ready, mismatch, lang, pathPrefix, pathSuffix, authedGet])
 
   // New useEffect for robust navigation
   useEffect(() => {
@@ -317,14 +314,13 @@ export default function Page({
     setCredentialUserId(null)
 
     try {
-      const response = await axios.post('/api/check-crossword', {
+      const response = await authedPost<any>('/api/check-crossword', {
         courseId: +course.id,
         guideId: guideNumber,
         lang: lang,
         grid: grid,
         placements: placements,
         walletAddress: address || '0x0',
-        token: gCsrfToken,
       })
 
       const locale = lang === 'en' ? 'en' : 'es'

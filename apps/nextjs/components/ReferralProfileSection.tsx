@@ -5,8 +5,8 @@
 // ve quién lo refirió (sin editar), como enlace a su perfil público.
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import axios from 'axios'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 
 interface ReferralProfileSectionProps {
   lang: string
@@ -19,6 +19,7 @@ interface ReferredByInfo {
 
 export function ReferralProfileSection({ lang }: ReferralProfileSectionProps) {
   const { address } = useAuthAddress()
+  const { authedGet, authedPost } = useAuthedApi()
   const es = lang === 'es'
   const [referredBy, setReferredBy] = useState<ReferredByInfo | null>(null)
   const [code, setCode] = useState('')
@@ -29,14 +30,14 @@ export function ReferralProfileSection({ lang }: ReferralProfileSectionProps) {
   useEffect(() => {
     if (!address) return
     let cancelled = false
-    const token = localStorage.getItem('learn.tg.authToken')
     ;(async () => {
       try {
-        const res = await axios.get(`/api/referral/code?walletAddress=${encodeURIComponent(address)}&token=${encodeURIComponent(token || '')}`)
+        const res = await authedGet<any>('/api/referral/code')
         if (!cancelled) setReferredBy(res.data?.referredByDetails ?? null)
       } catch { /* ignore */ }
     })()
     return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address])
 
   if (!address) return null
@@ -46,12 +47,9 @@ export function ReferralProfileSection({ lang }: ReferralProfileSectionProps) {
     if (!code.trim()) { setError(es ? 'Ingresa el código de tu referidor.' : 'Enter your referrer\'s code.'); return }
     setBusy(true)
     try {
-      const token = localStorage.getItem('learn.tg.authToken')
-      const res = await axios.post('/api/referral/claim', {
-        walletAddress: address, token: token || '', code: code.trim(),
-      })
+      const res = await authedPost<any>('/api/referral/claim', { code: code.trim() })
       if (res.status === 200) {
-        const ref = await axios.get(`/api/referral/code?walletAddress=${encodeURIComponent(address)}&token=${encodeURIComponent(token || '')}`)
+        const ref = await authedGet<any>('/api/referral/code')
         setReferredBy(ref.data?.referredByDetails ?? null)
         setOk(true)
         setCode('')

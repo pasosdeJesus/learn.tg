@@ -194,7 +194,7 @@ for an example.
 | `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), **ronda C con cashback ON (10 USDT @ pdJ 5%)**: campaña neta 85% (8.50), pdJ 5%, cashback 22.00 SLEARN vía `mintAndReserve` (+saldo on-chain del donante y del `learnTgReserve`), balance de la billetera campaña y filas en user-transactions (deltas vs baseline, acumulativo en dev) |
 | `donate-campaign-celo-real.spec.mjs` | **Real donation in native CELO (REQ/223):** `sendTransaction` (value) al backend → `verify` con `payToken='celo'` (verify por `tx.value`) → auto-forward nativo 100% y 90/10, balance CELO on-chain y filas `crypto=celo` |
 | `donate-campaign-celo-modal.spec.mjs` | **Donation modal in native CELO (REQ/223, UI real):** RPC bridge real (eth_sendTransaction) sobre el mock de SIWE; selector muestra CELO, hint "Donable (máx., menos gas)", dona CELO y verifica el incremento on-chain de la billetera campaña |
-| `fresh-wallet-first-connect.spec.mjs` | **Billetera NUEVA conectada por primera vez (sesión fría #5719):** crea una billetera, la registra por SIWE y verifica que la página de cursos **no consulte `/api/scholarship` en anónimo** (causa del "cooldown" falso y del 0% de avance) y que la tarjeta muestre el estado real. Reproduce el bug en el sitio sin el fix. Con `MOCK_COURSE_LIST=1` sirve la lista real de cursos por `COURSE_LIST_SOURCE_URL` (necesario desde redes sin acceso al puerto de la lista, p. ej. prod `:3250`) |
+| `fresh-wallet-first-connect.spec.mjs` | **Billetera NUEVA conectada por primera vez (sesión fría #5719):** crea una billetera, la registra por SIWE y verifica que la página de cursos **no consulte `/api/scholarship` en anónimo** (causa del "cooldown" falso y del 0% de avance) y que la tarjeta muestre el estado real. La lista de cursos la sirve la app (`/api/course-catalog`, R-#233 §4.4), same-origin. |
 
 ### Current Status (2026-08-24)
 
@@ -238,17 +238,13 @@ After deploying the cold-session fix (`app/[lang]/page.tsx`,
 false "cooldown" / 0% (see R-#227):
 
 ```sh
-# from a network that cannot reach the production course-list port (:3250)
-MOCK_COURSE_LIST=1 CHROME_PATH=/usr/local/bin/chrome \
+CHROME_PATH=/usr/local/bin/chrome \
   IPDES=learn.tg PUERTOPRU=443 CHAIN_ID=42220 SITE_URL=https://learn.tg \
   bin/m test:e2e fresh-wallet-first-connect
 ```
 
-`MOCK_COURSE_LIST=1` serves the real course JSON (fetched from
-`COURSE_LIST_SOURCE_URL`, default `https://learn.tg:3500/…`) via request
-interception, because the production list is served on `:3250` (which may be
-firewalled from the runner; set `COURSE_LIST_SOURCE_URL` to the reachable admin
-URL). A real browser on production does not need it.
+The course list is served by the app itself (`/api/course-catalog`, R-#233 §4.4)
+same-origin, so no port/mock is needed.
 
 Expected in both phases: `ANÓNIMAS 0` (never an anonymous `/api/scholarship`)
 and `¿cooldown?: no`; phase B (stale token) still queries with the wallet.

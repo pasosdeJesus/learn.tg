@@ -26,15 +26,14 @@ export function ChurchSelector({ value, countryId, cityId, lang, onChange, allow
     setHint('')
     const params = new URLSearchParams({ q: '', country: String(countryId) })
     if (cityId) params.set('cityId', String(cityId))
-    // Auth params from localStorage
+    // Standard mechanism (R-#233): identity hint only; the session cookie
+    // authorizes the same-origin request.
     const addr = typeof window !== 'undefined' ? localStorage.getItem('learn.tg.sessionAddress') || '' : ''
-    const tok = typeof window !== 'undefined' ? localStorage.getItem('learn.tg.authToken') || '' : ''
     if (addr) params.set('walletAddress', addr)
-    if (tok) params.set('token', tok)
     fetch(`/api/churches/search?${params}`)
       .then(r => {
         if (!r.ok) {
-          console.log(`[ChurchSelector] HTTP ${r.status} — addr: ${addr.slice(0, 10)}..., tokenLen: ${tok.length}`)
+          console.log(`[ChurchSelector] HTTP ${r.status} — addr: ${addr.slice(0, 10)}...`)
         }
         return r.json()
       })

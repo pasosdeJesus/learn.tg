@@ -2,9 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-import axios from 'axios'
-import { getApiToken } from '@/lib/auth-token'
-import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
@@ -34,7 +32,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
   // montar (el servidor no tiene localStorage). Leerlo síncrono en el primer
   // render provocaba hydration mismatch y el botón quedaba `disabled` para
   // siempre al cargar la página directamente (p. ej. /donations/lensenia).
-  const { address: sessionAddress } = useAuthAddress()
+  const { wallet: sessionAddress, authedPost } = useAuthedApi()
 
   const [claimState, setClaimState] = useState<ClaimStatus>('idle')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -92,11 +90,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
     setClaimResult(null)
 
     try {
-      const csrfToken = await getApiToken()
-      const response = await axios.post('/api/claim-celo-ubi', {
-        walletAddress: sessionAddress,
-        token: csrfToken,
-      })
+      const response = await authedPost<ClaimResult>('/api/claim-celo-ubi', {})
       
       setClaimResult(response.data)
       setClaimState('success')

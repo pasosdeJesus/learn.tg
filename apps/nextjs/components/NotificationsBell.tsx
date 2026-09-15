@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { getApiToken } from '@/lib/auth-token'
 import { Bell } from 'lucide-react'
-import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 
 interface Notification {
   id: number
@@ -16,7 +15,7 @@ interface Notification {
 }
 
 export function NotificationsBell({ lang = 'en' }: { lang?: string }) {
-  const { address, isAuthenticated } = useAuthAddress()
+  const { wallet: address, ready, isAuthenticated, authedGet, authedPost } = useAuthedApi()
   const [items, setItems] = useState<Notification[]>([])
   const [unread, setUnread] = useState(0)
   const [open, setOpen] = useState(false)
@@ -24,23 +23,23 @@ export function NotificationsBell({ lang = 'en' }: { lang?: string }) {
 
   const fetchNotifications = async () => {
     try {
-      const token = await getApiToken()
-      const res = await fetch(`/api/notifications?walletAddress=${address || ''}&token=${token || ''}`)
-      if (!res.ok) return
-      const data = await res.json()
-      setItems(data.notifications || [])
-      setUnread(data.unread || 0)
+      const res = await authedGet<{ notifications?: Notification[]; unread?: number }>(
+        '/api/notifications',
+      )
+      setItems(res.data.notifications || [])
+      setUnread(res.data.unread || 0)
     } catch {
       // ignore transient fetch errors
     }
   }
 
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || !ready) return
     fetchNotifications()
     const id = setInterval(fetchNotifications, 60000)
     return () => clearInterval(id)
-  }, [isAuthenticated, address])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, ready, address])
 
   // Close on outside click
   useEffect(() => {
@@ -55,12 +54,7 @@ export function NotificationsBell({ lang = 'en' }: { lang?: string }) {
 
   const markAllRead = async () => {
     try {
-      const token = await getApiToken()
-      await fetch('/api/notifications/read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address, token }),
-      })
+      await authedPost('/api/notifications/read', {})
       setItems((prev) => prev.map((n) => ({ ...n, is_read: true })))
       setUnread(0)
     } catch {

@@ -1,8 +1,6 @@
 'use client'
 
-import axios from 'axios'
 import { useSession } from 'next-auth/react'
-import { getApiToken, refreshApiToken } from '@/lib/auth-token'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
@@ -17,6 +15,7 @@ import type { Processor } from 'unified'
 import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { courseAccessReasonText } from '@/lib/course-access-msg'
 
 import CeloUbiButton from '@/components/CeloUbiButton'
@@ -30,6 +29,7 @@ export default function Page() {
   const params = useParams()
   const { address } = useAuthAddress()
   const { data: session, status: sessionStatus } = useSession()
+  const { ready, authedGet } = useAuthedApi()
   const { lang, pathPrefix, pathSuffix } = params as { lang: string; pathPrefix: string; pathSuffix: string }
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading guide...","error":"Error: ","notFound":"Guide not found."},"es":{"loading":"Cargando guía...","error":"Error: ","notFound":"Guía no encontrada."}}), [lang])
 
@@ -140,32 +140,14 @@ export default function Page() {
 
   useEffect(() => {
     setIsClient(true)
+    if (!ready) return
     if (course && guideNumber > 0) {
         const fetchGuideContent = async () => {
             try {
-                let baseUrl = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/guide?courseId=${course.id}` +
+                // Standard mechanism: same-origin, identity hint only, no token.
+                const baseUrl = `/api/guide?courseId=${course.id}` +
                     `&lang=${lang}&prefix=${pathPrefix}&guide=${pathSuffix}&guideNumber=${guideNumber}`
-                // Sesión "fría" (#5719): el address puede estar solo en
-                // localStorage aunque `session.address` aún no llegue. Antes se
-                // exigía `session?.address`, así que la guía se pedía ANÓNIMA y
-                // las guías premium respondían 401 (auth_required) en pantalla.
-                const wallet = address || session?.address || null
-                const withAuth = (tok: string | null) =>
-                    wallet && tok ? `${baseUrl}&walletAddress=${wallet}&token=${tok}` : baseUrl
-                let guideToken = wallet ? await getApiToken() : null
-
-                let response
-                try {
-                    response = await axios.get<{ markdown?: string, message?: string }>(withAuth(guideToken))
-                } catch (e: any) {
-                    // Token obsoleto: la cookie de sesión sigue válida → pedir uno
-                    // dedicado nuevo y reintentar (R-#227) en vez de mostrar 401.
-                    if (e?.response?.status !== 401 || !wallet) throw e
-                    const fresh = await refreshApiToken()
-                    if (!fresh || fresh === guideToken) throw e
-                    guideToken = fresh
-                    response = await axios.get<{ markdown?: string, message?: string }>(withAuth(fresh))
-                }
+                const response = await authedGet<{ markdown?: string, message?: string }>(baseUrl)
                 if (response.data && response.data.markdown) {
                     const markdown = response.data.markdown
 
@@ -203,7 +185,7 @@ export default function Page() {
         }
         fetchGuideContent()
     }
-  }, [course, guideNumber, lang, pathPrefix, pathSuffix, htmlDeMd, address, session?.address])
+  }, [course, guideNumber, lang, pathPrefix, pathSuffix, htmlDeMd, address, session?.address, ready, authedGet])
 
 
   if (loading) {

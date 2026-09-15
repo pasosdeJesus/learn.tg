@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import axios from 'axios'
-import { getApiToken } from '@/lib/auth-token'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 
 export interface ScholarshipData {
   vaultCreated: boolean | null
@@ -29,6 +28,8 @@ interface UseScholarshipDataProps {
 }
 
 export function useScholarshipData({ courseId, address }: UseScholarshipDataProps) {
+  const { wallet, ready, authedGet } = useAuthedApi()
+
   const [data, setData] = useState<ScholarshipData>({
     vaultCreated: null, vaultBalance: null, vaultBalanceSlearn: null,
     scholarshipPerGuide: null, scholarshipPerGuideSlearn: null,
@@ -37,14 +38,13 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
     scholarshipPaid: null, scholarshipPaidSlearn: null, profileScore: null,
   })
 
+  const target = address || wallet
+
   const fetchScholarship = useCallback(async () => {
-    if (!courseId || !address) return
+    // Wait for the identity and never query anonymously for a connected user.
+    if (!courseId || !target || !ready) return
     try {
-      const apiToken = await getApiToken()
-      if (!apiToken) return
-      const { data: res } = await axios.get(
-        `/api/scholarship?courseId=${courseId}&walletAddress=${address}&token=${apiToken}`
-      )
+      const { data: res } = await authedGet<any>(`/api/scholarship?courseId=${courseId}`)
       setData({
         vaultCreated: res.vaultCreated != null ? Boolean(res.vaultCreated) : null,
         vaultBalance: res.vaultBalance != null ? Number(res.vaultBalance) : null,
@@ -66,7 +66,7 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
     } catch (e) {
       console.error('Failed to fetch scholarship data:', e)
     }
-  }, [courseId, address])
+  }, [courseId, target, ready, authedGet])
 
   return { ...data, fetchScholarship }
 }

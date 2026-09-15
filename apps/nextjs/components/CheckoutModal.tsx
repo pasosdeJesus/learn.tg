@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
-import axios from 'axios'
-import { getApiToken } from '@/lib/auth-token'
 import { type Address } from 'viem'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { erc20Abi, formatDisplay } from '@learn-tg/rewards/lib/donate-utils'
@@ -96,6 +95,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
 
   const { address: rawAddress } = useAuthAddress()
   const address = rawAddress as Address | undefined
+  const { authedGet, authedPost } = useAuthedApi()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const { toast } = useToast()
@@ -120,9 +120,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     // vez y cargar saldos parciales (allSettled) — un fallo de getBalance no
     // debe tumbar la carga ni provocar un falso "no-gas" (celo=0 sin cargar).
     const load = async () => {
-      const token = await getApiToken()
-      const url = `/api/courses/premium/price?courseId=${courseId}&walletAddress=${address}&token=${token}`
-      const res = await axios.get(url)
+      const res = await authedGet<any>(`/api/courses/premium/price?courseId=${courseId}`)
       if (cancelled) return
       setPriceUSDT(Number(res.data.priceUSDT))
       setPriceSLEARN(Number(res.data.priceSLEARN))
@@ -239,15 +237,13 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     usdtHash: string
     slearnHash: string
   }) => {
-    const { data } = await axios.post('/api/courses/premium/purchase', {
-      walletAddress: params.walletAddress,
-      token: params.token,
+    const { data } = await authedPost<any>('/api/courses/premium/purchase', {
       courseId: params.courseId,
       usdtHash: params.usdtHash || undefined,
       slearnHash: params.slearnHash || undefined,
     })
     return { increment: 0, ...data }
-  }, [])
+  }, [authedPost])
 
   const {
     state: paymentState,

@@ -21,9 +21,9 @@ stack locally.
 The Rails admin app listens on a **different port per environment** (both under
 `https://learn.tg`, behind nginx): **`:3250` in production** and **`:3500` in
 development**. The dev port is the one used by the frontend quickstart proxy
-(`NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin`). The production
-list (`:3250`) may be firewalled in some networks (hence `MOCK_COURSE_LIST=1` in
-the E2E specs, which can fetch it through `COURSE_LIST_SOURCE_URL`).
+(`NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin`). The course list and
+detail are served by the app itself (`/api/course-catalog`, R-#233 §4.4), so the
+public site no longer depends on those Rails ports.
 
 Chain IDs confirmed by the E2E suites: specs targeting `https://learn.tg`
 report `chain: 42220` (mainnet), specs targeting `https://learn.tg:9001`

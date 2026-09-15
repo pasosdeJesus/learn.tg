@@ -429,6 +429,7 @@ async function main() {
   console.log('\n── Step 7: Enter course ──')
   let courseEntered = false
   let courseHref = null
+  let guideHref = null
   const realCourse = courseLinks.find(l =>
     !l.href.includes('privacy') && !l.href.includes('terms'))
   if (realCourse) {
@@ -502,8 +503,9 @@ async function main() {
       }
     }
     if (guideLinks.length > 0) {
-      const gOk = await navAndWait(page, `${base}${guideLinks[0]}`, timeout)
-      gOk ? ok(`Guide: ${guideLinks[0]}`) : fail('Guide did not render')
+      guideHref = guideLinks[0]
+      const gOk = await navAndWait(page, `${base}${guideHref}`, timeout)
+      gOk ? ok(`Guide: ${guideHref}`) : fail('Guide did not render')
     } else console.log('  [!] No guide links after 24s')
   }
 
@@ -511,8 +513,11 @@ async function main() {
   // Step 10: Crossword — fill cells and submit
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 10: Crossword ──')
-  if (courseEntered && courseHref) {
-    const testUrl = `${courseHref}/test`
+  if (courseEntered && (guideHref || courseHref)) {
+    // The crossword lives at /[lang]/[pathPrefix]/[pathSuffix]/test; the guide
+    // suffix is required (a bare /<course>/test matches the guide route with
+    // pathSuffix='test' and renders no crossword).
+    const testUrl = `${guideHref || `${courseHref}/guide1`}/test`
     await ensureSessionAlive(page)
     const testOk = await navAndWait(page, `${base}${testUrl}`, timeout)
     if (testOk) {

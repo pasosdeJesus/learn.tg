@@ -71,9 +71,11 @@ describe('useScholarshipData', () => {
     expect(result.current.scholarshipPaid).toBe(20)
     expect(result.current.profileScore).toBe(75)
 
-    expect(mocks.mockAxiosGet).toHaveBeenCalledWith(
-      '/api/scholarship?courseId=1&walletAddress=0xabc&token=mock-csrf-token'
-    )
+    expect(mocks.mockAxiosGet).toHaveBeenCalled()
+    const url = mocks.mockAxiosGet.mock.calls[0][0] as string
+    // Standard mechanism: identity hint only, no token in the URL (R-#233).
+    expect(url).toMatch(/^\/api\/scholarship\?courseId=1&walletAddress=/)
+    expect(url).not.toContain('token=')
   })
 
   it('handles null response fields gracefully', async () => {

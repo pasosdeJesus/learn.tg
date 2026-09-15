@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { getApiToken } from '@/lib/auth-token'
-import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 
 /**
  * Keeps `usuario.idioma` in sync with the language the user is currently
@@ -10,30 +9,26 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
  * pastor bonus notification is localized to the user's preferred language.
  */
 export function UserLanguageSync({ lang }: { lang: string }) {
-  const { address, isAuthenticated } = useAuthAddress()
+  const { wallet: address, ready, isAuthenticated, authedPatch } = useAuthedApi()
   const lastSynced = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated || !address) return
+    if (!isAuthenticated || !address || !ready) return
     const normalized = lang === 'es' ? 'es' : 'en'
     const key = `${address.toLowerCase()}:${normalized}`
     if (lastSynced.current === key) return
 
     const sync = async () => {
       try {
-        const token = await getApiToken()
-        const res = await fetch(`/api/profile?walletAddress=${address}&token=${token}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idioma: normalized }),
-        })
-        if (res.ok) lastSynced.current = key
+        await authedPatch('/api/profile', { idioma: normalized })
+        lastSynced.current = key
       } catch {
         // ignore transient errors
       }
     }
     sync()
-  }, [lang, address, isAuthenticated])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang, address, isAuthenticated, ready])
 
   return null
 }

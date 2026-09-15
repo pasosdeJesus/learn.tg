@@ -7,28 +7,26 @@ function debugLog(msg: string, data?: any) {
   }
 }
 
+// Standard mechanism (R-#233): same-origin requests authorize with the NextAuth
+// session cookie; only the identity hint (`wallet`) is sent, never a token.
 export function adminAuthParams(): string {
   if (typeof window === 'undefined') return ''
   const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-  const tok = localStorage.getItem('learn.tg.authToken') || ''
-  return `wallet=${encodeURIComponent(addr)}&token=${encodeURIComponent(tok)}`
+  return `wallet=${encodeURIComponent(addr)}`
 }
 
 export async function adminFetch<T = any>(url: string, init?: RequestInit): Promise<T> {
   const params = adminAuthParams()
   const addr = typeof window !== 'undefined' ? (localStorage.getItem('learn.tg.sessionAddress') || '') : ''
-  const tok = typeof window !== 'undefined' ? (localStorage.getItem('learn.tg.authToken') || '') : ''
 
-  if (!tok) {
-    const msg = 'Auth token missing from localStorage. Please reconnect your wallet.'
-    debugLog(msg, { addr: addr.slice(0, 10) + '...' })
+  if (!addr) {
+    const msg = 'Wallet address missing. Please reconnect your wallet.'
+    debugLog(msg)
     throw new Error(msg)
   }
 
   debugLog(`Fetching ${init?.method || 'GET'} ${url}`, {
     addr: addr.slice(0, 10) + '...',
-    token: tok.slice(0, 8) + '...',
-    tokenLen: tok.length,
   })
 
   const sep = url.includes('?') ? '&' : '?'
@@ -41,7 +39,6 @@ export async function adminFetch<T = any>(url: string, init?: RequestInit): Prom
       status: res.status,
       error: msg,
       addr: addr.slice(0, 10) + '...',
-      token: tok.slice(0, 8) + '...',
     })
     if (res.status === 401 || res.status === 403) {
       throw new Error(`Auth error (${res.status}). Try reconnecting your wallet.`)

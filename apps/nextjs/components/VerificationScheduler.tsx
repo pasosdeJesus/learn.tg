@@ -174,11 +174,10 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
   // Auto-cancel missed interviews silently (keep message until reschedule)
   useEffect(() => {
     if (hasInterview && isPast && address) {
-      const token = localStorage.getItem('learn.tg.authToken')
       fetch('/api/verification/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address, token }),
+        body: JSON.stringify({ walletAddress: address }),
       }).catch(() => {})
     }
   }, [hasInterview, isPast, address])
@@ -201,13 +200,11 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
 
     setIsBooking(true)
     try {
-      const token = localStorage.getItem('learn.tg.authToken')
       const res = await fetch('/api/verification/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           walletAddress: address,
-          token,
           start: selectedSlot.start,
           end: selectedSlot.end,
         }),
@@ -230,11 +227,10 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
     if (!address) return
     setIsCancelling(true)
     try {
-      const token = localStorage.getItem('learn.tg.authToken')
       const res = await fetch('/api/verification/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address, token }),
+        body: JSON.stringify({ walletAddress: address }),
       })
       if (!res.ok) throw new Error()
       toast({ title: t('cancelled') })

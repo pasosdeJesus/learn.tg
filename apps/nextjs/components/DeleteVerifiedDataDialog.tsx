@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
-import { getApiToken } from '@/lib/auth-token'
-import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import {
   Dialog,
   DialogContent,
@@ -28,8 +26,7 @@ export function DeleteVerifiedDataDialog({ lang = 'en', onSuccess }: Props) {
   const [confirmText, setConfirmText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
-  const { data: session } = useSession()
-  const { address } = useAuthAddress()
+  const { wallet: address, mismatch, authedDelete } = useAuthedApi()
 
   const t = createComponentT(lang, {
     en: {
@@ -61,32 +58,14 @@ export function DeleteVerifiedDataDialog({ lang = 'en', onSuccess }: Props) {
   const isConfirmed = confirmText === 'DELETE' || confirmText === 'ELIMINAR'
 
   const handleDelete = async () => {
-    if (!session?.address || !address) {
+    if (!address || mismatch) {
       toast({ title: t('unauthorized'), variant: 'destructive' })
       return
     }
 
     setIsLoading(true)
     try {
-      const apiToken = await getApiToken()
-      if (!apiToken) {
-        toast({ title: t('unauthorized'), variant: 'destructive' })
-        return
-      }
-
-      const res = await fetch('/api/user/verified-data', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          walletAddress: address.toLowerCase(),
-          token: apiToken,
-        }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || t('error'))
-      }
+      await authedDelete('/api/user/verified-data', {})
 
       toast({ title: t('success') })
       setOpen(false)

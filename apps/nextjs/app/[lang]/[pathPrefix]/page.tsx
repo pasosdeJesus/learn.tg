@@ -2,8 +2,6 @@
 
 import { use, useEffect, useState, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { getApiToken } from '@/lib/auth-token'
-import axios from 'axios'
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -14,6 +12,7 @@ import { unified } from 'unified'
 import { useMemo } from 'react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { courseAccessReasonText } from '@/lib/course-access-msg'
 
 import { CourseDonation } from '@/components/CourseDonation'
@@ -33,6 +32,7 @@ type PageProps = {
 export default function Page({ params }: PageProps) {
   const { address } = useAuthAddress()
   const { data: session, status: sessionStatus } = useSession()
+  const { authedGet } = useAuthedApi()
   const parameters = use(params)
   const { lang, pathPrefix } = parameters
   const t = useMemo(() => createComponentT(lang, {"en":{"loading":"Loading course...","error":"Error: ","notFound":"Course not found."},"es":{"loading":"Cargando curso...","error":"Error: ","notFound":"Curso no encontrado."}}), [lang])
@@ -99,9 +99,7 @@ export default function Page({ params }: PageProps) {
     let cancelled = false
     ;(async () => {
       try {
-        const token = await getApiToken()
-        const url = `/api/courses/premium/mine?walletAddress=${address}&token=${token}`
-        const res = await axios.get(url)
+        const res = await authedGet<any>('/api/courses/premium/mine')
         if (cancelled) return
         const courses = res.data?.courses || []
         setHasPurchased(courses.some((c: any) => Number(c.course_id) === Number(course.id)))
@@ -120,9 +118,7 @@ export default function Page({ params }: PageProps) {
     let cancelled = false
     ;(async () => {
       try {
-        const token = await getApiToken()
-        const url = `/api/courses/${course.id}/purchase-eligibility?walletAddress=${address}&token=${token}`
-        const res = await axios.get(url)
+        const res = await authedGet<any>(`/api/courses/${course.id}/purchase-eligibility`)
         if (cancelled) return
         setGdEligible(!!res.data?.eligible)
         setGdReason(res.data?.reason || null)
@@ -142,7 +138,7 @@ export default function Page({ params }: PageProps) {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await axios.get('/api/churches/fund')
+        const res = await authedGet<any>('/api/churches/fund')
         if (cancelled) return
         setFundSlearn(res.data?.slearnBalance ?? null)
       } catch {

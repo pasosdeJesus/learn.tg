@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { use } from 'react'
 import Link from 'next/link'
-import axios from 'axios'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
@@ -30,6 +30,7 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
   const { lang } = use(params)
   const es = lang === 'es'
   const { address } = useAuthAddress()
+  const { authedGet, authedPost } = useAuthedApi()
 
   const t = createComponentT(lang, {
     en: {
@@ -93,15 +94,12 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  const authToken = () => (typeof window !== 'undefined' ? localStorage.getItem('learn.tg.authToken') || '' : '')
-  const q = () => `walletAddress=${encodeURIComponent(address || '')}&token=${encodeURIComponent(authToken())}`
-
   const load = useCallback(async () => {
     if (!address) { setStatus('loading'); return }
     try {
       const [sRes, cRes] = await Promise.all([
-        axios.get(`/api/cluster/status?${q()}`).catch(() => null),
-        axios.get(`/api/cluster/candidates?${q()}`).catch(() => null),
+        authedGet<any>('/api/cluster/status').catch(() => null),
+        authedGet<any>('/api/cluster/candidates').catch(() => null),
       ])
       const s = sRes?.data
       if (!s) { setStatus('none'); return }
@@ -120,7 +118,7 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
     } catch {
       setStatus('none')
     }
-  }, [address])
+  }, [address, authedGet])
 
   useEffect(() => { load() }, [load])
 
@@ -132,9 +130,7 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
     if (!name || name.length < 3) { setError(t('name')); return }
     setBusy(true); setError('')
     try {
-      const res = await axios.post('/api/cluster', {
-        walletAddress: address, token: authToken(), name, pseudonym, inviteeIds: selected,
-      })
+      const res = await authedPost('/api/cluster', { name, pseudonym, inviteeIds: selected })
       if (res.status === 201) {
         setShowCreate(false)
         await load()
@@ -147,9 +143,7 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
   const respond = async (invitationId: number, action: 'accept' | 'reject') => {
     setBusy(true); setError('')
     try {
-      await axios.post(`/api/cluster/invitation/${action}`, {
-        walletAddress: address, token: authToken(), invitationId,
-      })
+      await authedPost(`/api/cluster/invitation/${action}`, { invitationId })
       await load()
     } catch (e: any) {
       setError(e?.response?.data?.error || t('error'))
@@ -160,7 +154,7 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
     if (!cluster?.id || !confirm(t('leaveConfirm'))) return
     setBusy(true); setError('')
     try {
-      await axios.post(`/api/cluster/${cluster.id}/leave`, { walletAddress: address, token: authToken() })
+      await authedPost(`/api/cluster/${cluster.id}/leave`, {})
       await load()
     } catch (e: any) {
       setError(e?.response?.data?.error || t('error'))

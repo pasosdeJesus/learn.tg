@@ -1,13 +1,12 @@
 'use client'
 
-import axios from 'axios'
 import { useSession } from 'next-auth/react'
-import { getApiToken } from '@/lib/auth-token'
 import { use, useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { logger } from '@pasosdejesus/m/debug'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
@@ -49,6 +48,7 @@ interface CourseExtra {
 export default function Page({ params }: PageProps) {
   const { address } = useAuthAddress()
   const { data: session, status: sessionStatus } = useSession()
+  const { wallet, ready, authedGet } = useAuthedApi()
   const { toast } = useToast()
 
   const [courses, setCourses] = useState<Course[]>([])
@@ -92,53 +92,31 @@ export default function Page({ params }: PageProps) {
     }
 
     const configure = async () => {
+      // Wait until the identity is resolved; never query anonymously while the
+      // session is "cold" (#5719) — that produced the false "cooldown"/0%.
+      if (!ready) return
+
       // R-#233 §4.4: public course list served by Next directly from the shared
-      // DB (same-origin, no Rails API, no token, no CORS).
-      const listBaseUrl = `/api/course-catalog?filtro[busidioma]=${lang}`
+      // DB. The standard hook adds the identity hint (`walletAddress`); there is
+      // no token in the URL and no CORS.
+      const listBaseUrl =
+        `/api/course-catalog?filtro[busidioma]=${lang}` +
+        (wallet ? `&filtro[busconBilletera]=true` : '')
       console.log('[courses] fetching:', listBaseUrl)
-      // Tras una navegación cliente la sesión de NextAuth puede venir "fría"
-      // (bug #5719) mientras el address sigue en localStorage. Usar el address
-      // disponible (sesión o localStorage) evita la consulta ANÓNIMA de
-      // avance/scholarship — que renderizaba "cooldown" y 0% de avance para
-      // estudiantes recién conectados.
-      const wallet = session?.address || address || null
-      // Usuario conectado pero con el address aún no montado (useAuthAddress
-      // expone el fallback de localStorage tras el effect): esperar en vez de
-      // consultar anónimo — el effect se re-ejecuta cuando llega el address.
-      const connectedHint = sessionStatus === 'authenticated' || !!address ||
-        (typeof window !== 'undefined' && !!localStorage.getItem('learn.tg.sessionAddress'))
-      if (connectedHint && !wallet) return
 
-      let apiToken: string | null = null
       let christian = false
-
-      // R-#233 §4.4: `walletAddress` is only an untrusted hint for the
-      // sinBilletera/conBilletera filter; it is not a credential.
-      const listUrl = () =>
-        wallet
-          ? `${listBaseUrl}&filtro[busconBilletera]=true&walletAddress=${wallet}`
-          : listBaseUrl
-
       if (wallet) {
-        // R-#227: el token de API es el DEDICADO (learn.tg.authToken), no el
-        // CSRF; getCsrfToken() queda solo como respaldo legacy.
-        apiToken = await getApiToken()
-        if (apiToken) {
-          // Determine whether the user is Christian so Global Disciples courses
-          // (gdcluster/redgd) are only shown to Christians.
-          try {
-            const profileRes = await axios.get(
-              `/api/profile?walletAddress=${wallet}&token=${apiToken}`,
-            )
-            christian = Number(profileRes.data?.religion_id) === 2
-          } catch {
-            christian = false
-          }
+        // Global Disciples courses (gdcluster/redgd) are only shown to Christians.
+        try {
+          const profileRes = await authedGet<{ religion_id?: number }>('/api/profile')
+          christian = Number(profileRes.data?.religion_id) === 2
+        } catch {
+          christian = false
         }
       }
 
       try {
-        const response = await axios.get<Course[]>(listUrl())
+        const response = await authedGet<Course[]>(listBaseUrl)
         if (response.data) {
           const courseInfo = (Array.isArray(response.data) ? response.data : (response.data as any).proyectosfinancieros || (response.data as any).data || [])
             // Global Disciples courses are only shown to Christians.
@@ -152,19 +130,10 @@ export default function Page({ params }: PageProps) {
           if (!Array.isArray(courseInfo) || courseInfo.length === 0) return
 
           courseInfo.forEach(async (course: Course) => {
-            let url2 = `/api/scholarship?courseId=${course.id}`
-            // Solo se consulta el avance si hay billetera + token: con un usuario
-            // conectado NUNCA en anónimo (la respuesta anónima trae
-            // canSubmit:false/0% → tarjeta en "cooldown").
-            if (!wallet) {
-              url2 += ''
-            } else if (apiToken) {
-              url2 += `&walletAddress=${wallet}&token=${apiToken}`
-            } else {
-              return // esperar al token (el effect se re-ejecuta)
-            }
             try {
-              const response2 = await axios.get(url2)
+              const response2 = await authedGet<any>(
+                `/api/scholarship?courseId=${course.id}`,
+              )
               if (response2.data.message) {
                 console.error(
                   'Error message received:',
@@ -201,14 +170,14 @@ export default function Page({ params }: PageProps) {
           })
         }
       } catch (error) {
-        console.error('[courses] failed to fetch from:', listUrl(), error)
-        logger.info('[courses] failed: ' + String(error) + ' | url: ' + listUrl(), 'Courses')
+        console.error('[courses] failed to fetch from:', listBaseUrl, error)
+        logger.info('[courses] failed: ' + String(error) + ' | url: ' + listBaseUrl, 'Courses')
         toast({ title: 'Failed to load courses. Check console.', variant: 'destructive' })
       }
     }
 
     configure()
-  }, [session, address, lang])
+  }, [ready, wallet, lang, authedGet])
 
   if (sessionStatus === 'loading') {
     return <div className="p-10 mt-10 text-center">Loading...</div>
@@ -226,13 +195,9 @@ export default function Page({ params }: PageProps) {
   }
 
   const refreshCourseVault = async (courseId: number) => {
-    if (!session || !address || !session.address || session.address.toLowerCase() !== address.toLowerCase())
-      return
-    const apiToken = await getApiToken()
-    const url2 = `/api/scholarship?courseId=${courseId}&walletAddress=${session.address}&token=${apiToken}`
-
+    if (!wallet) return
     try {
-      const response2 = await axios.get(url2)
+      const response2 = await authedGet<any>(`/api/scholarship?courseId=${courseId}`)
       if (response2.data && !response2.data.message) {
         const extraData: CourseExtra = {
           vaultCreated: response2.data.vaultCreated,

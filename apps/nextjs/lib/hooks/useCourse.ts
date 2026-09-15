@@ -1,10 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
-import { getApiToken } from '@/lib/auth-token'
-import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
-import axios from 'axios'
+import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import type { Course, Guide } from './guideTypes'
 
 interface UseCourseProps {
@@ -13,93 +10,103 @@ interface UseCourseProps {
 }
 
 export function useCourse({ lang, pathPrefix }: UseCourseProps) {
-  const { address } = useAuthAddress()
-  const { data: session } = useSession()
+  const { wallet, ready, mismatch, authedGet } = useAuthedApi()
 
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const fetchCourse = useCallback(async () => {
-    if (
-      address && session && session.address && address.toLowerCase() !== session.address.toLowerCase()
-    ) {
+    // Partial login (session vs localStorage mismatch): do not fetch.
+    if (mismatch) {
       setLoading(false)
       return
     }
+    // Wait until the identity is resolved: never fire an anonymous request while
+    // the session is "cold" (#5719) — that produced the false "cooldown"/0%.
+    if (!ready) return
 
     setLoading(true)
     setError(null)
 
     try {
-      // Sesión "fría" (bug #5719): usar el address de localStorage si la sesión
-      // de NextAuth aún no expone `session.address`; si no, el fetch iría
-      // anónimo y se perdería el avance del usuario.
-      const wallet = address || session?.address || null
-      // R-#227: token de API DEDICADO (el CSRF legacy queda solo como respaldo);
-      // se usa en las rutas internas de Next (guide-status), no en Rails.
-      const apiToken = await getApiToken()
-
       // R-#233 §4.4: public course list/detail served by Next directly from the
-      // shared DB (same-origin, no Rails API, no token, no CORS). `walletAddress`
-      // is only an untrusted hint for the sinBilletera/conBilletera filter.
-      const listUrl = () => {
-        let u =
-          `/api/course-catalog?filtro[busprefijoRuta]=/${pathPrefix}&` +
-          `filtro[busidioma]=${lang}`
-        if (wallet) u += `&walletAddress=${wallet}`
-        return u
-      }
-
-      const courseListResponse = await axios.get(listUrl())
+      // shared DB. The standard hook adds the identity hint (`walletAddress`);
+      // there is no token in the URL.
+      const courseListResponse = await authedGet<
+        Array<{ id: string | number }>
+      >(
+        `/api/course-catalog?filtro[busprefijoRuta]=/${pathPrefix}` +
+          `&filtro[busidioma]=${lang}`,
+      )
 
       if (!courseListResponse.data || courseListResponse.data.length !== 1) {
         throw new Error('Course not found')
       }
       const basicCourse = courseListResponse.data[0]
 
-      const detailResponse = await axios.get(`/api/course-catalog/${basicCourse.id}`)
+      const detailResponse = await authedGet<TempCourseDetail>(
+        `/api/course-catalog/${basicCourse.id}`,
+      )
       const detailedCourse = detailResponse.data
 
-      const guideStatusPromises = detailedCourse.guias.map(async (_: Guide, index: number) => {
-        if (wallet && detailedCourse.id) {
-          // Token + sesión: guide-status acepta ambos, así que una cookie de
-          // sesión ausente u obsoleta ya no deja la página en 401.
-          const statusUrl = `/api/guide-status?walletAddress=${wallet}&courseId=${detailedCourse.id}&guideNumber=${index + 1}&token=${encodeURIComponent(apiToken || '')}`
-          return axios.get(statusUrl).catch(() => ({
-            data: { completed: false, receivedScholarship: false, receivedSlearnScholarship: false },
-          }))
-        }
-        return Promise.resolve({ data: { completed: false, receivedScholarship: false, receivedSlearnScholarship: false } })
-      })
+      const guideStatusPromises = (detailedCourse.guias || []).map(
+        async (_guide: Guide, index: number) => {
+          if (wallet && detailedCourse.id) {
+            return authedGet<GuideStatus>(
+              `/api/guide-status?courseId=${detailedCourse.id}&guideNumber=${index + 1}`,
+            ).catch(() => ({ data: emptyGuideStatus }))
+          }
+          return Promise.resolve({ data: emptyGuideStatus })
+        },
+      )
 
       const guideStatuses = await Promise.all(guideStatusPromises)
 
-      const guidesWithStatus = detailedCourse.guias.map((guide: Guide, index: number) => ({
-        ...guide,
-        completed: guideStatuses[index].data.completed,
-        receivedScholarship: guideStatuses[index].data.receivedScholarship,
-        receivedSlearnScholarship: guideStatuses[index].data.receivedSlearnScholarship,
-      }))
+      const guidesWithStatus = (detailedCourse.guias || []).map(
+        (guide: Guide, index: number) => ({
+          ...guide,
+          completed: guideStatuses[index].data.completed,
+          receivedScholarship: guideStatuses[index].data.receivedScholarship,
+          receivedSlearnScholarship: guideStatuses[index].data.receivedSlearnScholarship,
+        }),
+      )
 
       const fullCourse: Course = {
-        ...basicCourse,
-        ...detailedCourse,
+        ...(basicCourse as object),
+        ...(detailedCourse as object),
         guias: guidesWithStatus,
-      }
+      } as Course
       setCourse(fullCourse)
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to fetch course data:', e)
-      setError(e.message)
+      setError(e instanceof Error ? e.message : String(e))
       setCourse(null)
     } finally {
       setLoading(false)
     }
-  }, [session, address, lang, pathPrefix])
+  }, [ready, mismatch, wallet, lang, pathPrefix, authedGet])
 
   useEffect(() => {
     fetchCourse()
   }, [fetchCourse])
 
   return { course, loading, error }
+}
+
+interface GuideStatus {
+  completed: boolean
+  receivedScholarship: boolean
+  receivedSlearnScholarship: boolean
+}
+
+interface TempCourseDetail {
+  id?: number
+  guias?: Guide[]
+}
+
+const emptyGuideStatus: GuideStatus = {
+  completed: false,
+  receivedScholarship: false,
+  receivedSlearnScholarship: false,
 }
