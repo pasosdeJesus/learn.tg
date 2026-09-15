@@ -7,6 +7,10 @@
  *   2. Premium guide returns 403 for a non-purchaser.
  *   3. Access endpoint returns 403 for a non-purchaser.
  *   4. "My premium courses" lists empty for a fresh wallet.
+ *
+ * It signs in with a brand-new wallet, so pointing it at production creates a
+ * throwaway user there: run it against dev (the default) unless you have an
+ * authorized test window.
  */
 
 import 'dotenv/config';
@@ -16,7 +20,10 @@ import { SiweMessage } from 'siwe';
 import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts';
 
 const BASE_URL = process.env.SITE_URL || process.env.E2E_SITE_URL || process.env.NEXT_PUBLIC_AUTH_URL || 'https://learn.tg:9001';
-const CHAIN_ID = 11142220;
+// El dominio y la red salen del sitio objetivo: con SITE_URL de producción el
+// SIWE debe firmarse con learn.tg y con la cadena de Celo mainnet.
+const SITE_HOST = new URL(BASE_URL).host;
+const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10);
 const PREMIUM_COURSE_ID = 10; // GD course (EN), porPagar=1
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
@@ -84,7 +91,7 @@ async function main() {
   const csrfRes = await api.get('/api/auth/csrf');
   const csrfToken = csrfRes.data.csrfToken;
   const siweMessage = new SiweMessage({
-    domain: 'learn.tg:9001',
+    domain: SITE_HOST,
     address: account.address,
     statement: 'Sign in to Learn through games with DIVVI tracking.',
     uri: BASE_URL,
