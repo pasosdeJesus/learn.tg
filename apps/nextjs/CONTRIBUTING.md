@@ -107,7 +107,7 @@ requieren el servidor de desarrollo bien configurado:
 | `interview-date.spec.mjs` | Migración `proposed_date_of_interview → timestamptz` aplicada en la BD dev (columna `date` rompe la hora: 2PM → 5AM) |
 | `verified-city-gate.spec.mjs` | Compra de cursos pagos exige ciudad de culto verificada (`verified_city_id` o `verified_place_of_worship_location`) |
 | `premium-course-checkout.spec.mjs` | Crea un pastor nuevo elegible vía API (perfil SL + verificación del verificador) — no depende de la wallet fixture |
-| `church-selector-diag.spec.mjs` | Valida el fallback de sesión en `authenticateUser` (token stale + cookie de sesión) y el `ChurchSelector` |
+| `church-selector-diag.spec.mjs` | Valida la autenticación por cookie de sesión en `authenticateUser` y el `ChurchSelector` |
 | `vault-both-donate.spec.mjs` | Donación USDT+SLEARN al vault del curso vía `/api/add-donation`; transfiere tokens de prueba reales al backend dev |
 | `guide-claims.spec.mjs` | El reclamo puede rechazarse por cooldown/score — el spec lo trata como OK |
 

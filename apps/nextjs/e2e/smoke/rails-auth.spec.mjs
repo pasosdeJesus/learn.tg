@@ -75,16 +75,8 @@ async function main() {
   console.log(`    address: ${sessRes.data?.address || 'N/A'}`)
   console.log(`    user.name: ${sessRes.data?.user?.name || 'N/A'}`)
 
-  // ── PASO 2: Usar el mismo CSRF que se usó en auth (no uno nuevo) ──
-  // R-#227: el token de API es el DEDICADO expuesto por /api/auth/token
-  // (session cookie); el CSRF ya no es un credencial válido.
-  console.log('\n── PASO 2: Obteniendo token de API dedicado (R-#227) ──')
-  let apiToken = csrfToken
-  try {
-    const tokRes = await api.get(`${SITE}/api/auth/token`, { headers: { Cookie: cookies } })
-    if (tokRes.data?.token) apiToken = tokRes.data.token
-  } catch { /* respaldo CSRF legacy */ }
-  console.log(`2.1 API token (dedicado): ${apiToken.slice(0,10)}...`)
+  // ── PASO 2: la cookie de sesión es la única credencial (R-#233 Fase 2) ──
+  console.log('\n── PASO 2: credencial = cookie de sesión (ya no hay token de API) ──')
 
   // ── PASO 3: Llamada a Rails con wallet minúscula ──
   console.log('\n── PASO 3: Rails API calls ──')
@@ -94,7 +86,7 @@ async function main() {
     const walletLower = wallet.toLowerCase()
 
     // Con billetera (autenticado)
-    const urlAuth = `${RAILS}/proyectosfinancieros.json?filtro[busidioma]=${lang}&filtro[busconBilletera]=true&walletAddress=${walletLower}&token=${apiToken}`
+    const urlAuth = `${RAILS}/proyectosfinancieros.json?filtro[busidioma]=${lang}&filtro[busconBilletera]=true&walletAddress=${walletLower}`
     console.log(`\n3.${lang} Con billetera:`)
     try {
       const r = await api.get(urlAuth, { headers: { Cookie: cookies } })

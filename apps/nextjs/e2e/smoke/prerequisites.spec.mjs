@@ -31,7 +31,6 @@ import axios from 'axios'
 import https from 'https'
 import { SiweMessage } from 'siwe'
 import { privateKeyToAccount } from 'viem/accounts'
-import { dedicatedApiTokenAxios } from '../helpers/siwe-auth.mjs'
 
 // ── Config ──────────────────────────────────────────────────────────
 
@@ -148,10 +147,8 @@ async function siweSignIn(privateKey, address) {
     cookies = updateCookies(cookies, res.headers['set-cookie'])
   }
 
-  // R-#227: token de API dedicado (no el CSRF), expuesto por /api/auth/token.
-  const apiToken = await dedicatedApiTokenAxios(axios, httpsAgent, SITE, cookies, csrfToken)
 
-  return { token: apiToken, cookies, address }
+  return { cookies, address }
 }
 
 // ── API Helpers ─────────────────────────────────────────────────────
@@ -195,12 +192,11 @@ async function main() {
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Test 1: Wallet registered (SIWE) ──')
 
-  let authToken, cookies, userId
+  let cookies, userId
   try {
     const auth = await siweSignIn(pk, addr)
-    authToken = auth.token
     cookies = auth.cookies
-    ok(`SIWE sign-in OK — token: ${authToken.slice(0, 8)}...`)
+    ok('SIWE sign-in OK (cookie de sesión)')
   } catch (e) {
     fail(`SIWE sign-in failed: ${e.message}`)
     console.log(`\n${passed}/${passed + failed} passed — ${failed} failed\n`)
@@ -236,7 +232,7 @@ async function main() {
   try {
     // First get current profile to know userId and existing values
     const profile = await apiGet('/api/profile',
-      { walletAddress: addr, token: authToken }, cookies)
+      { walletAddress: addr }, cookies)
     userId = profile.id
     ok(`Profile loaded — userId: ${userId}, score: ${profile.profilescore}`)
 
@@ -248,7 +244,7 @@ async function main() {
       place_of_worship: 'E2E Test Church',
     }
     const patchRes = await apiPatch('/api/profile',
-      { walletAddress: addr, token: authToken },
+      { walletAddress: addr },
       profileData, cookies)
     ok(`Profile updated — new score: ${patchRes.profilescore}`)
   } catch (e) {
@@ -266,7 +262,7 @@ async function main() {
   try {
     // Get current profile to read current values for verification
     const currentProfile = await apiGet('/api/profile',
-      { walletAddress: addr, token: authToken }, cookies)
+      { walletAddress: addr }, cookies)
 
     // Set verified fields to match current profile values
     // passport_name == nombre → 26 pts
@@ -284,7 +280,7 @@ async function main() {
     }
 
     const adminRes = await apiPatch(`/api/admin/user/${userId}`,
-      { wallet: addr, token: authToken },
+      { wallet: addr },
       adminUpdates, cookies)
 
     if (adminRes.success) {
@@ -307,7 +303,7 @@ async function main() {
   try {
     // Re-fetch to get recalculated score
     const finalProfile = await apiGet('/api/profile',
-      { walletAddress: addr, token: authToken }, cookies)
+      { walletAddress: addr }, cookies)
 
     if (finalProfile.profilescore >= 50) {
       ok(`Profile score: ${finalProfile.profilescore} (≥ 50 ✓) — ready for full-flow`)

@@ -60,7 +60,6 @@ export interface RewardsDeps {
   authenticateUser: (
     db: Kysely<any>,
     wallet?: string,
-    token?: string,
   ) => Promise<AuthUser | null>
   recordEvent: (ev: any) => Promise<void>
   backend: RewardsBackendDeps

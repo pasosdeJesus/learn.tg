@@ -16,14 +16,13 @@ export async function claimCeloUbi(deps: RewardsDeps, request: NextRequest): Pro
     const lang = request.headers.get('accept-language')?.startsWith('es') ? 'es' : 'en';
     const requestJson = await request.json()
     const walletAddress = requestJson['walletAddress'] ?? ''
-    const token = requestJson['token'] ?? ''
 
-    if (!walletAddress || walletAddress.trim() === '' || !token || token.trim() === '') {
-      return NextResponse.json({ message: 'walletAddress and token are required' }, { status: 400 })
+    if (!walletAddress || walletAddress.trim() === '') {
+      return NextResponse.json({ message: 'walletAddress is required' }, { status: 400 })
     }
 
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) {
       return NextResponse.json({ message: "Authentication failed." }, { status: 401 })
     }

@@ -14,7 +14,6 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
-import { dedicatedApiTokenAxios } from '../helpers/siwe-auth.mjs'
 import { resetFailures, fail, ok, summary, short } from '@pasosdejesus/m/e2e'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
@@ -79,9 +78,8 @@ async function siweSignIn(privateKey, address) {
   })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
 
-  const apiToken = await dedicatedApiTokenAxios(axios, httpsAgent, SITE, cookies, csrfToken)
 
-  return { token: apiToken, cookies, address }
+  return { cookies, address }
 }
 
 async function apiGet(pathname, params, cookies) {
@@ -112,7 +110,7 @@ async function main() {
   console.log(`Pastor: ${short(addr)} | ${SITE}`)
 
   const s = await siweSignIn(pk, addr)
-  const auth = { walletAddress: addr, token: s.token }
+  const auth = { walletAddress: addr }
 
   // Fill SL profile (Christian, SL, non-Zionist) — but NOT verified
   await apiPatch('/api/profile', {
@@ -139,7 +137,7 @@ async function main() {
     verified_place_of_worship_location: 'Freetown',
     verified_place_of_worship: 'E2E Gate Church',
     verified_church_relationship: 'pastor',
-  }, { wallet: verifier.addr, token: vAuth.token }, vAuth.cookies)
+  }, { wallet: verifier.addr }, vAuth.cookies)
 
   const after = await apiGet('/api/courses/10/purchase-eligibility', auth)
   console.log('Eligibility (verified):', JSON.stringify(after))

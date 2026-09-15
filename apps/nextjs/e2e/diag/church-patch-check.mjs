@@ -10,7 +10,6 @@ import * as path from 'path'
 import dotenv from 'dotenv'
 import { SiweMessage } from 'siwe'
 import { privateKeyToAccount } from 'viem/accounts'
-import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 for (const p of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env')]) {
   if (fs.existsSync(p)) dotenv.config({ path: p, override: false })
@@ -55,14 +54,13 @@ async function siweLogin() {
   const body = new URLSearchParams({ csrfToken, message: msgStr, signature: typeof sig === 'string' ? sig : sig.signature || String(sig), redirect: 'false', json: 'true' })
   const cb = await fetch(`${SITE}/api/auth/callback/credentials`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookies }, body: body.toString(), redirect: 'manual' })
   const c2 = mergeCookies(cookies, cb.headers.getSetCookie?.() || [])
-  const apiToken = await dedicatedApiTokenFetch(SITE, c2, csrfToken)
-  console.log(`login: callback ${cb.status} | token ${apiToken.slice(0, 8)}…`)
-  return { cookies: c2, token: apiToken }
+  console.log(`login: callback ${cb.status} (cookie de sesión)`)
+  return { cookies: c2 }
 }
 
 async function main() {
-  const { cookies, token } = await siweLogin()
-  const q = `wallet=${encodeURIComponent(account.address)}&token=${encodeURIComponent(token)}`
+  const { cookies } = await siweLogin()
+  const q = `wallet=${encodeURIComponent(account.address)}`
 
   const listRes = await fetch(`${SITE}/api/admin/churches?${q}`, { headers: { Cookie: cookies } })
   const list = await listRes.json()

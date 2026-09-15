@@ -23,7 +23,6 @@ import { SiweMessage } from 'siwe'
 import { createPublicClient, createWalletClient, http, formatUnits, parseUnits } from 'viem'
 import { celoSepolia } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
-import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 // Load apps/.env (contains contract addresses not present in apps/nextjs/.env)
 for (const p of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env')]) {
@@ -113,9 +112,8 @@ async function siweSignIn(base, account) {
   const cbCookies = cbRes.headers.getSetCookie?.() || []
   if (cbCookies.length) cookies = updateCookies(cookies, cbCookies)
 
-  const apiToken = await dedicatedApiTokenFetch(base, cookies, csrfToken)
 
-  return { token: apiToken, cookies }
+  return { cookies }
 }
 
 async function rpcRetry(fn, retries = 5) {
@@ -198,8 +196,7 @@ async function main() {
     headers: { 'Content-Type': 'application/json', ...(auth.cookies ? { Cookie: auth.cookies } : {}) },
     body: JSON.stringify({
       walletAddress: account.address,
-      token: auth.token,
-      donationAmountUSD: 10,
+            donationAmountUSD: 10,
       slearnDonationAmount: 0,
       usdtHash,
       courseId: GD_COURSE_ID,
@@ -226,7 +223,7 @@ async function main() {
 
   // ── 5. Verify user transactions ──
   console.log('\n── 5. /api/user-transactions ──')
-  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`, { headers: { ...(auth.cookies ? { Cookie: auth.cookies } : {}) } })
+  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}`, { headers: { ...(auth.cookies ? { Cookie: auth.cookies } : {}) } })
   const userProfile = await userIdRes.json()
   if (!userProfile?.id) { fail('Could not get userId'); console.log(JSON.stringify(userProfile).slice(0, 200)) }
   else {

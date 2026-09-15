@@ -4,6 +4,10 @@ import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
 const { mockExecuteTakeFirst, resetMocks, setupCommonResponses } = apiDbMocks
 
+// El setup global simula `@/lib/authenticateUser` para las pruebas de rutas;
+// esta prueba ejercita la implementación real (session-only).
+vi.unmock('@/lib/authenticateUser')
+
 // Simulate the NextAuth session cookie the browser holds after a SIWE login.
 let cookieValue: string | null = null
 
@@ -18,7 +22,7 @@ process.env.NEXTAUTH_SECRET = 'test-secret-007'
 import { authenticateUser } from '@/lib/authenticateUser'
 import { encode } from 'next-auth/jwt'
 
-const BILLETERA = { id: 1, billetera: '0xabcd1234', usuario_id: 42, token: 'rotated-token' }
+const BILLETERA = { id: 1, billetera: '0xabcd1234', usuario_id: 42 }
 
 // Chainable mock DB whose executeTakeFirst delegates to mockExecuteTakeFirst
 function mockDb(): any {
@@ -33,60 +37,54 @@ function mockDb(): any {
   return chain
 }
 
-describe('authenticateUser session-cookie fallback', () => {
-  beforeAll(async () => {
-    // Real NextAuth JWT, as produced by the SIWE login
-    cookieValue = await encode({
-      token: { sub: '0xabcd1234' },
-      secret: process.env.NEXTAUTH_SECRET as string,
-    })
+async function sessionCookie(sub: string): Promise<string> {
+  return encode({
+    token: { sub },
+    secret: process.env.NEXTAUTH_SECRET as string,
   })
+}
 
-  beforeEach(() => {
+describe('authenticateUser (session-only, R-#233 Fase 2)', () => {
+  beforeEach(async () => {
     resetMocks()
     setupCommonResponses()
+    // Real NextAuth JWT, as produced by the SIWE login
+    cookieValue = await sessionCookie('0xabcd1234')
   })
 
-  it('authenticates by session cookie (session-first), ignoring a stale token', async () => {
+  beforeAll(() => {
+    process.env.NEXTAUTH_SECRET = 'test-secret-007'
+  })
+
+  it('authenticates by session cookie', async () => {
     mockExecuteTakeFirst
-      .mockResolvedValueOnce(BILLETERA)            // session-path billetera lookup
-      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor' }) // session-path usuario lookup
-    const auth = await authenticateUser(mockDb(), '0xabcd1234', 'stale-token')
+      .mockResolvedValueOnce(BILLETERA)                     // billetera lookup
+      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor' })   // usuario lookup
+    const auth = await authenticateUser(mockDb(), '0xabcd1234')
     expect(auth).not.toBeNull()
     expect(auth!.usuario.id).toBe(42)
-    expect(auth!.billetera.token).toBe('rotated-token')
   })
 
-  it('falls back to the legacy token when there is no session cookie', async () => {
+  it('rejects when there is no session cookie', async () => {
     cookieValue = null
-    mockExecuteTakeFirst
-      .mockResolvedValueOnce({ ...BILLETERA, token: 'good-token' }) // token-path billetera lookup
-      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor' })          // token-path usuario lookup
-    const auth = await authenticateUser(mockDb(), '0xabcd1234', 'good-token')
-    expect(auth).not.toBeNull()
-    expect(auth!.usuario.id).toBe(42)
-  })
-
-  it('rejects when the session cookie belongs to another wallet and the token is stale', async () => {
-    cookieValue = await encode({
-      token: { sub: '0xother9999' },
-      secret: process.env.NEXTAUTH_SECRET as string,
-    })
-    mockExecuteTakeFirst.mockResolvedValueOnce(BILLETERA)
-    const auth = await authenticateUser(mockDb(), '0xabcd1234', 'stale-token')
+    const auth = await authenticateUser(mockDb(), '0xabcd1234')
     expect(auth).toBeNull()
   })
 
-  it('rejects with no session cookie and no valid token', async () => {
-    cookieValue = null
-    mockExecuteTakeFirst.mockResolvedValueOnce(BILLETERA)
-    const auth = await authenticateUser(mockDb(), '0xabcd1234', 'stale-token')
+  it('rejects when the session cookie belongs to another wallet', async () => {
+    cookieValue = await sessionCookie('0xother9999')
+    const auth = await authenticateUser(mockDb(), '0xabcd1234')
     expect(auth).toBeNull()
   })
 
   it('rejects when the wallet is not registered at all', async () => {
     mockExecuteTakeFirst.mockResolvedValueOnce(undefined)
-    const auth = await authenticateUser(mockDb(), '0xnone0000', 'whatever')
+    const auth = await authenticateUser(mockDb(), '0xnone0000')
+    expect(auth).toBeNull()
+  })
+
+  it('rejects when the wallet hint is missing', async () => {
+    const auth = await authenticateUser(mockDb())
     expect(auth).toBeNull()
   })
 })

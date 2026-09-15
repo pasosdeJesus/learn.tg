@@ -41,9 +41,6 @@ User Wallet                Frontend                   NextAuth API Route        
     |                         |    {sub: address}            |                            |
     |                         |    session.address = sub     |                            |
     |                         |                              |                            |
-    |                         |--[9] GET /api/auth/token --->|                            |
-    |                         |    (same session cookie)     |                            |
-    |                         |<--- dedicated api token -----|                            |
 ```
 
 ### authorize() step by step
@@ -54,17 +51,15 @@ User Wallet                Frontend                   NextAuth API Route        
 4. `siwe.verify()` — checks signature against address, domain, nonce
 5. Look up `billetera_usuario WHERE LOWER(billetera) = LOWER(siwe.address)`
 6. New user → INSERT `usuario` + `billetera_usuario` (username = truncated address)
-7. Existing user → UPDATE `billetera_usuario.token`, UPDATE `usuario` (sign-in IPs, timestamps)
+7. Existing user → UPDATE `usuario` (sign-in IPs, timestamps)
 8. Return `{ id: siwe.address }` → NextAuth creates JWT session
 
-> **R-#227:** step 7 stores a **dedicated random API token** (256 bits, from
-> `newApiToken()`) — the SIWE nonce/CSRF is never persisted as an API
-> credential. The token is exposed to the browser later via `GET
-> /api/auth/token` (same session cookie) and kept in localStorage as
-> `learn.tg.authToken` for API calls / Rails; it is a *legacy fallback*
-> because `authenticateUser` is now session-first. Since 2026-09-14 the token is
-> generated on the first sign-in and **reused** afterwards (no longer rotated),
-> so already-open tabs and token-only clients (Rails) keep working.
+> **R-#233 Fase 2 (2026-09-15):** no API token is created or stored. The session
+> cookie (HttpOnly JWT, `sub` = wallet) is the only credential; `authorize()` no
+> longer writes `billetera_usuario.token`, and `GET /api/auth/token`,
+> `lib/auth-token.ts` and the `learn.tg.authToken` localStorage entry were
+> removed. The SIWE nonce/CSRF is never persisted as a credential either: it is
+> only the handshake nonce.
 
 ### Hostname Validation
 
@@ -119,26 +114,25 @@ not a DB token:
 - Rails (`servidor/`) **no longer uses the token** (R-#233, 2026-09-14): the two
   endpoints it exposed (`proyectosfinancieros#index/#show`) return public course
   data and are now unauthenticated, and the unused
-  `usuarios#actualiza_mi_usuario` was removed. The column and the legacy path stay
-  only for non-browser clients (e2e specs, scripts) until Phase 2 removes them.
-  Since 2026-09-14 `authorize()` does not rotate the token: it generates the
-  **dedicated random token** (`newApiToken()`, 256 bits) on the first sign-in and
-  reuses it afterwards, exposed to the browser via `GET /api/auth/token` and
-  stored in localStorage as `learn.tg.authToken`. Removing the column is tracked
-  in R-#233.
-- Legacy-token staleness is harmless **for Next.js API routes** (the session
-  cookie authorizes regardless of the DB token).
+  `usuarios#actualiza_mi_usuario` was removed.
+- **R-#233 Fase 2 (2026-09-15):** the column and the API token are gone. No
+  client stores or sends a token: `authenticateUser()` authenticates only with
+  the session cookie and the migration
+  `db/migrations/20260915120000_drop_billetera_usuario_token.ts` removes
+  `billetera_usuario.token`. The e2e specs use the session cookie (Node-side
+  calls send the `Cookie` header captured from the browser context).
 
 ### 2. Two-layer auth model
 
 | Layer | Mechanism | Purpose |
 |-------|-----------|---------|
 | **UI / session** | NextAuth JWT cookie (`session.address`) | Is the user logged in? Which address? |
-| **API authorization** | session cookie first; `walletAddress` + `token` legacy fallback | Is this request authorized? |
+| **API authorization** | session cookie (`sub` == `walletAddress`) | Is this request authorized? |
 
 The frontend checks `session.address` to decide page visibility. Data-changing
-API calls are cookie-authenticated (browser) or send `walletAddress` + `token`
-(non-browser), and the route validates via `authenticateUser()`.
+API calls are cookie-authenticated; `walletAddress` travels only as an identity
+hint that must match the session subject, and the route validates via
+`authenticateUser()`.
 
 **Do not rely on `session.address` alone for API authorization** — use `authenticateUser()`.
 
@@ -146,27 +140,28 @@ API calls are cookie-authenticated (browser) or send `walletAddress` + `token`
 After a client-side navigation NextAuth's `useSession()` can be "cold" (returns
 no address) while the wallet is still connected — see the known issue #5719.
 Use the address from `useAuthAddress()` (session **or** the `learn.tg.sessionAddress`
-localStorage fallback) and the token from `getApiToken()` to build
-`?walletAddress=…&token=…`; otherwise the fetch goes **anonymous** and pages show
+localStorage fallback) to build `?walletAddress=…`; otherwise the fetch goes
+**anonymous** and pages show
 wrong/zero state (reported: a newly connected student saw the course in
-"cooldown" and 0% progress until reconnecting). For the same reason, treat an
+"cooldown" and 0% progress until reconnecting). The single standard mechanism is
+`lib/hooks/useAuthedApi.ts` (R-#235): its `ready` flag is false until the
+identity resolves, so pages wait instead of querying anonymously. For the same
+reason, treat an
 unknown `canSubmit` (`null`) as *unknown* in the UI, never as "in cooldown".
 
-**Recover from a stale token instead of going anonymous or empty.** If the
-stored token is obsolete (e.g. `GET /api/auth/token` failed during the first
-login and the legacy CSRF was kept, or another tab rotated the token), Rails
-answers `401`; the page must fetch `/api/auth/token` again
-(`refreshApiToken()` in `lib/auth-token.ts`) and retry **once**, reusing the
-still-valid session cookie. Applied to the course list/detail
-(`app/[lang]/page.tsx`, `lib/hooks/useCourse.ts`) and to the premium guide
-content (`app/[lang]/[pathPrefix]/[pathSuffix]/page.tsx`), which previously
+**Wait for the identity instead of going anonymous or empty.** With a cold
+session (#5719) a page must not fetch wallet-scoped data until the address
+resolves. `lib/hooks/useAuthedApi.ts` (R-#235) exposes `ready` for that: it is
+false until the component mounted and the session status settled, so pages wait
+(never a token refresh, which no longer exists). Applied to the course
+list/detail (`app/[lang]/page.tsx`, `lib/hooks/useCourse.ts`) and to the premium
+guide content (`app/[lang]/[pathPrefix]/[pathSuffix]/page.tsx`), which previously
 gated the fetch on `session?.address` and showed `401 auth_required` for
 premium guides under a cold session.
 
-**Order inside `authenticateUser()`:** (1) session cookie valid and
-`sub` == wallet → OK; (2) `AUTH_SESSION_ONLY=1` and no session → 401 (used to
-measure residual token dependencies); (3) legacy DB token match → OK. Debug
-tracing of every path is gated behind `DEBUG_AUTH=1` (no PII). See
+**Order inside `authenticateUser()`:** the session cookie must be valid and its
+`sub` must equal the requested wallet; anything else is a 401. Debug
+tracing of the decision is gated behind `DEBUG_AUTH=1` (no PII). See
 `lib/authenticateUser.ts`.
 
 ### 3. Wallet address case normalization
@@ -203,7 +198,6 @@ unaffected because `$host` and `$http_host` are both `learn.tg`.
 |-----------|------|-----------|
 | SIWE verification + DB upsert | `app/api/auth/auth-options.ts` | `authorize()` function, ~lines 40-240 |
 | Session callback (lowercase) | `app/api/auth/auth-options.ts` | `callbacks.session`, ~line 242 |
-| API auth (session-first + legacy) | `lib/authenticateUser.ts` | Full file |
-| Dedicated API token endpoint | `app/api/auth/token/route.ts` | Full file |
+| API auth (session only) | `lib/authenticateUser.ts` | Full file |
 | CSRF/origin middleware | `apps/nextjs/middleware.ts` | Full file |
 | Frontend auth guard pattern | `app/[lang]/profile/page.tsx` | `useEffect` at ~line 256 |

@@ -8,11 +8,10 @@ export async function searchChurches(deps: GdclusterDeps, req: NextRequest) {
   const municipalityId = searchParams.get('municipality')
   const cityId = searchParams.get('cityId')
   const wallet = searchParams.get('walletAddress') || ''
-  const token = searchParams.get('token') || ''
-  console.log(`[churches/search] wallet: ${wallet.slice(0, 10)}... token: ${token.slice(0, 8)}... (len=${token.length})`)
+  console.log(`[churches/search] wallet: ${wallet.slice(0, 10)}...`)
 
   const db = deps.db()
-  const auth = await deps.authenticateUser(db, wallet, token)
+  const auth = await deps.authenticateUser(db, wallet)
   if (!auth) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
 
   if (!q && !countryId) {

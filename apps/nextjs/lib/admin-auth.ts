@@ -16,9 +16,8 @@ export interface AdminAuth {
 export async function authenticateAdmin(
   db: Kysely<DB>,
   walletAddress: string,
-  token: string,
 ): Promise<AdminAuth | null> {
-  const auth = await authenticateUser(db, walletAddress, token)
+  const auth = await authenticateUser(db, walletAddress)
   if (!auth) return null
 
   const wallet = walletAddress.toLowerCase()

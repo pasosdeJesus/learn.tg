@@ -70,7 +70,7 @@ async function main() {
   await page.setDefaultNavigationTimeout(timeout)
 
   // Auth: inject wallet mock + SIWE programmatico
-  const { authToken } = await setupE2EAuth(page, wallet, creds.pk, chainId, base)
+  await setupE2EAuth(page, wallet, creds.pk, chainId, base)
 
   // ── Test 0: Verifier check API ──
   console.log('── Test 0: Verifier check API ──')
@@ -146,7 +146,7 @@ async function main() {
 
   // ── Test 2: Admin API endpoints (with auth token) ──
   console.log('\n── Test 2: Admin APIs ──')
-  const q = `wallet=${encodeURIComponent(wallet)}&token=${encodeURIComponent(authToken)}`
+  const q = `wallet=${encodeURIComponent(wallet)}`
   const apis = [
     '/api/admin/users', '/api/admin/users/recent',
     '/api/admin/churches', '/api/admin/churches/recent',

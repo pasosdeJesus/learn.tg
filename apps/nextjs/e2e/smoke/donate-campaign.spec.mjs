@@ -22,7 +22,6 @@ import 'dotenv/config'
 import * as fs from 'fs'
 import * as path from 'path'
 import { SiweMessage } from 'siwe'
-import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
@@ -76,8 +75,7 @@ async function getAuthToken(base, account) {
   })
   if (!cbRes.ok) return null
   const cookie = cbRes.headers.getSetCookie?.()?.map(c => c.split(';')[0]).join('; ') || ''
-  const apiToken = await dedicatedApiTokenFetch(base, cookie, csrfToken)
-  return { cookie, apiToken }
+  return { cookie }
 }
 
 async function main() {
@@ -152,11 +150,10 @@ async function main() {
   ok('SIWE sign-in OK')
   const headers = { Cookie: auth.cookie, 'Content-Type': 'application/json' }
   const wallet = account.address
-  const token = auth.apiToken
 
   r = await fetch(`${SITE}/api/donations/lensenia/verify`, {
     method: 'POST', headers,
-    body: JSON.stringify({ walletAddress: wallet, token }),
+    body: JSON.stringify({ walletAddress: wallet }),
   })
   if (r.status === 400) ok('Missing tx hash → 400')
   else fail(`Missing tx hash → ${r.status}`)
@@ -164,7 +161,7 @@ async function main() {
   r = await fetch(`${SITE}/api/donations/lensenia/verify`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      walletAddress: '0x0000000000000000000000000000000000000000', token: 'bad',
+      walletAddress: '0x0000000000000000000000000000000000000000',
       usdtHash: '0x' + 'ab'.repeat(32),
     }),
   })
@@ -173,7 +170,7 @@ async function main() {
 
   r = await fetch(`${SITE}/api/donations/lensenia/verify`, {
     method: 'POST', headers,
-    body: JSON.stringify({ walletAddress: wallet, token, usdtHash: '0x' + 'ab'.repeat(32), pdjSharePct: 150 }),
+    body: JSON.stringify({ walletAddress: wallet, usdtHash: '0x' + 'ab'.repeat(32), pdjSharePct: 150 }),
   })
   if (r.status === 400) ok('pdjSharePct out of bounds → 400')
   else fail(`pdjSharePct out of bounds → ${r.status}`)

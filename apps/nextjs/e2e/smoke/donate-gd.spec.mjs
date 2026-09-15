@@ -18,7 +18,6 @@ import 'dotenv/config'
 import * as fs from 'fs'
 import * as path from 'path'
 import { SiweMessage } from 'siwe'
-import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
@@ -74,8 +73,7 @@ async function getAuthToken(base, account) {
   })
   if (!cbRes.ok) return null
   const cookie = cbRes.headers.getSetCookie?.()?.map(c => c.split(';')[0]).join('; ') || ''
-  const apiToken = await dedicatedApiTokenFetch(base, cookie, csrfToken)
-  return { cookie, apiToken }
+  return { cookie }
 }
 
 async function main() {
@@ -95,7 +93,6 @@ async function main() {
 
   const headers = { Cookie: auth.cookie, 'Content-Type': 'application/json' }
   const wallet = account.address
-  const token = auth.apiToken
 
   // ── 1. Missing params ──
   console.log('\n── 1. Missing required params ──')
@@ -107,7 +104,7 @@ async function main() {
 
   r = await fetch(`${SITE}/api/gdcluster/donations/verify`, {
     method: 'POST', headers,
-    body: JSON.stringify({ walletAddress: wallet, token }),
+    body: JSON.stringify({ walletAddress: wallet }),
   })
   if (r.status === 400) ok('Missing clusterWallet/countryCode → 400')
   else fail(`Missing clusterWallet/countryCode → ${r.status}`)

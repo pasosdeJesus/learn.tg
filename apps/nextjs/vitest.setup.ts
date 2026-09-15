@@ -8,6 +8,48 @@ import { vi } from 'vitest';
 // @ts-ignore
 global.React = React;
 
+// R-#233 Fase 2: la credencial de API es la cookie de sesión de NextAuth, que
+// las pruebas de rutas no tienen. Se simula `authenticateUser`/`authenticateAdmin`
+// resolviendo la billetera por wallet contra la BD simulada (ya no hay token de
+// API), de modo que las pruebas ejercen la lógica del handler. El test de
+// `lib/authenticateUser.ts` hace `vi.unmock` para probar la implementación real.
+const authModuleMocks = vi.hoisted(() => ({
+  authenticateUser: vi.fn(async (db: any, wallet?: string) => {
+    if (!wallet) return null
+    const billetera = await db
+      .selectFrom('billetera_usuario')
+      .where('billetera', '=', wallet.toLowerCase())
+      .selectAll()
+      .executeTakeFirst()
+    if (!billetera) return null
+    const usuario = await db
+      .selectFrom('usuario')
+      .where('id', '=', billetera.usuario_id)
+      .selectAll()
+      .executeTakeFirst()
+    if (!usuario) return null
+    return { usuario, billetera }
+  }),
+  authenticateAdmin: vi.fn(async (db: any, wallet?: string) => {
+    if (!wallet) return null
+    const billetera = await db
+      .selectFrom('billetera_usuario')
+      .where('billetera', '=', wallet.toLowerCase())
+      .selectAll()
+      .executeTakeFirst()
+    if (!billetera) return null
+    const usuario = await db
+      .selectFrom('usuario')
+      .where('id', '=', billetera.usuario_id)
+      .selectAll()
+      .executeTakeFirst()
+    if (!usuario) return null
+    return { usuario_id: usuario.id, billetera: wallet.toLowerCase() }
+  }),
+}))
+vi.mock('@/lib/authenticateUser', () => ({ authenticateUser: authModuleMocks.authenticateUser }))
+vi.mock('@/lib/admin-auth', () => ({ authenticateAdmin: authModuleMocks.authenticateAdmin }))
+
 import '@pasosdejesus/m/test-utils/radix-mocks';
 import {
   menubarMock,

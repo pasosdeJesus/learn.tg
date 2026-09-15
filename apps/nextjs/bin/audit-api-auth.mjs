@@ -27,8 +27,8 @@ const AUTH_PATTERNS = [
   'verifySignature',   // generic signature check
   'verifyMessage',     // message signature verification
   'SelfBackendVerifier', // ZK proof verification (e.g., /api/self-verify)
-  'getToken(',         // session-first (R-#227): JWT de la cookie NextAuth
-                       // (p. ej. /api/auth/token responde 401 sin cookie)
+  'getToken(',         // sesión (R-#227/R-#233): JWT de la cookie NextAuth
+                       // (la cookie es la única credencial; no hay token de API)
 ]
 
 // Patterns that indicate a route handler accesses sensitive data

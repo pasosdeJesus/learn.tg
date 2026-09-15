@@ -50,22 +50,22 @@ async function main() {
 
   const browser = await launchBrowser()
   const page = await browser.newPage()
-  const { authToken } = await setupE2EAuth(page, creds.addr, creds.pk, CHAIN_ID, base)
+  await setupE2EAuth(page, creds.addr, creds.pk, CHAIN_ID, base)
   const wallet = creds.addr.toLowerCase()
-  const q = `wallet=${encodeURIComponent(wallet)}&token=${encodeURIComponent(authToken)}`
-  const qc = `walletAddress=${encodeURIComponent(wallet)}&token=${encodeURIComponent(authToken)}`
+  const q = `wallet=${encodeURIComponent(wallet)}`
+  const qc = `walletAddress=${encodeURIComponent(wallet)}`
   const name = `E2E ${Date.now().toString(36)}`
 
   // ════════════════════════════════════════════════════════════════
-  // 1. Auth gating (sin token)
+  // 1. Auth gating (sin sesión)
   // ════════════════════════════════════════════════════════════════
   console.log('\n── 1. Auth gating ──')
   const unauth = await fetch(`${base}/api/cluster/status`)
-  if (unauth.status === 401) ok('GET /api/cluster/status sin token → 401')
-  else fail(`GET /api/cluster/status sin token → ${unauth.status}`)
+  if (unauth.status === 401) ok('GET /api/cluster/status sin sesión → 401')
+  else fail(`GET /api/cluster/status sin sesión → ${unauth.status}`)
   const unauthAdmin = await fetch(`${base}/api/admin/clusters`)
-  if (unauthAdmin.status === 403) ok('GET /api/admin/clusters sin token → 403')
-  else fail(`GET /api/admin/clusters sin token → ${unauthAdmin.status}`)
+  if (unauthAdmin.status === 403) ok('GET /api/admin/clusters sin sesión → 403')
+  else fail(`GET /api/admin/clusters sin sesión → ${unauthAdmin.status}`)
 
   // ════════════════════════════════════════════════════════════════
   // 2. Estado y candidatos del pastor (wallet verificadora)
@@ -163,7 +163,7 @@ async function main() {
   const accRes = await fetch(`${base}/api/cluster/invitation/accept`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ walletAddress: wallet, token: authToken, invitationId: 999999 }),
+    body: JSON.stringify({ walletAddress: wallet, invitationId: 999999 }),
   })
   if (accRes.status === 404) ok('POST /api/cluster/invitation/accept (inexistente) → 404')
   else { console.log(`  accept: ${accRes.status} ${(await accRes.text()).slice(0, 80)}`); fail(`accept → ${accRes.status}`) }

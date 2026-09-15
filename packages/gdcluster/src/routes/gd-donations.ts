@@ -77,9 +77,9 @@ async function extractAmountsFromReceipt(deps: GdclusterDeps, txHash: string, ba
 export async function verifyDonation(deps: GdclusterDeps, req: NextRequest) {
   try {
     const body = await req.json()
-    const { walletAddress, token, clusterWallet, countryCode, usdtHash, slearnHash, comment } = body
+    const { walletAddress, clusterWallet, countryCode, usdtHash, slearnHash, comment } = body
 
-    if (!walletAddress || !token) {
+    if (!walletAddress) {
       return NextResponse.json({ error: 'Missing auth fields' }, { status: 400 })
     }
     if (!clusterWallet && !countryCode) {
@@ -87,7 +87,7 @@ export async function verifyDonation(deps: GdclusterDeps, req: NextRequest) {
     }
 
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Comentario opcional del donante (procedencia de los fondos), igual que en
@@ -221,11 +221,10 @@ export async function verifyDonation(deps: GdclusterDeps, req: NextRequest) {
 
 export async function donationHistory(deps: GdclusterDeps, req: NextRequest) {
   const wallet = req.nextUrl.searchParams.get('walletAddress') || ''
-  const token = req.nextUrl.searchParams.get('token') || ''
 
   try {
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, wallet, token)
+    const auth = await deps.authenticateUser(db, wallet)
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -281,9 +280,9 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     }
 
     const body = await req.json()
-    const { walletAddress, token, payToken, usdtHash, receiveCashback, pdjSharePct, comment } = body
+    const { walletAddress, payToken, usdtHash, receiveCashback, pdjSharePct, comment } = body
 
-    if (!walletAddress || !token) {
+    if (!walletAddress) {
       return NextResponse.json({ error: 'Missing auth fields' }, { status: 400 })
     }
     if (!usdtHash) {
@@ -302,7 +301,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     const donorComment = typeof comment === 'string' ? comment.replace(/\s+/g, ' ').trim().slice(0, 200) : undefined
 
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Red activa: mainnet (42220) o Celo Sepolia (11142220)

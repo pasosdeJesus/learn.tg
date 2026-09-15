@@ -130,11 +130,10 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
     if (!joinCode || joinCode.length !== 6) return
     setJoining(true)
     try {
-      const csrfToken = await deps.getCsrfToken()
       const res = await fetch('/api/cluster/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address, token: csrfToken, code: joinCode }),
+        body: JSON.stringify({ walletAddress: address, code: joinCode }),
       })
       if (!res.ok) {
         const data = await res.json()
@@ -151,11 +150,10 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
 
   const handleLeave = async () => {
     try {
-      const csrfToken = await deps.getCsrfToken()
       const res = await fetch(`/api/cluster/${id}/leave`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address, token: csrfToken }),
+        body: JSON.stringify({ walletAddress: address }),
       })
       if (!res.ok) {
         const data = await res.json()
@@ -176,11 +174,10 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
   const handleRename = async () => {
     if (!newName || newName.length < 3 || newName.length > 50) return
     try {
-      const csrfToken = await deps.getCsrfToken()
       const res = await fetch(`/api/cluster/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address, token: csrfToken, name: newName }),
+        body: JSON.stringify({ walletAddress: address, name: newName }),
       })
       if (!res.ok) {
         const data = await res.json()

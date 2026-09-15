@@ -47,13 +47,12 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://learn.tg:3500/lear
 const CHAIN_ID = 11142220;
 
 // Función para obtener perfil de usuario desde la API de Rails
-async function getUserProfile(httpsAgent, cookiesString, walletAddress, apiToken) {
+async function getUserProfile(httpsAgent, cookiesString, walletAddress) {
   try {
     const url = `${API_BASE}/usuarios.json`;
     const params = new URLSearchParams({
       'filtro[walletAddress]': walletAddress,
-      'walletAddress': walletAddress,
-      'token': apiToken
+      'walletAddress': walletAddress
     });
     const fullUrl = `${url}?${params.toString()}`;
     console.log(`   URL: ${fullUrl}`);
@@ -255,24 +254,15 @@ async function main() {
       console.log(`   Error: ${error.message}`);
     }
 
-    // 6. Token de API dedicado (R-#227)
-    console.log('\n6. Token de API dedicado (/api/auth/token)');
-    let newToken = csrfToken;
-    try {
-      const tokRes = await api.get('/api/auth/token');
-      if (tokRes.data?.token) newToken = tokRes.data.token;
-      console.log(`   Status: ${tokRes.status}`);
-      console.log(`   Token: ${newToken.slice(0, 10)}...`);
-      console.log(`   💡 Token para update-scores: ${newToken.slice(0, 10)}...`);
-    } catch (error) {
-      console.log(`   Error: ${error.message}`);
-    }
+    // 6. R-#233 Fase 2: ya no existe un token de API; la cookie de sesión es la
+    // única credencial. Las llamadas autenticadas basta con enviar la cookie.
+    console.log('\n6. Credencial: cookie de sesión (sin token de API)');
 
     // 6.5 Obtener perfil inicial antes de update-scores
     console.log('\n6.5 Perfil inicial desde API...');
     let initialProfile = null;
     try {
-      initialProfile = await getUserProfile(httpsAgent, cookies, account.address, newToken);
+      initialProfile = await getUserProfile(httpsAgent, cookies, account.address);
       if (initialProfile) {
         console.log(`   Profile score inicial: ${initialProfile.profilescore}`);
         console.log(`   Learning score inicial: ${initialProfile.learningscore}`);

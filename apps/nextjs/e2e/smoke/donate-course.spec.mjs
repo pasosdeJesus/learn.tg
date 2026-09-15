@@ -17,7 +17,6 @@ import 'dotenv/config'
 import * as fs from 'fs'
 import * as path from 'path'
 import { SiweMessage } from 'siwe'
-import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
@@ -73,9 +72,7 @@ async function getAuthToken(base, account) {
   })
   if (!cbRes.ok) return null
   const cookie = cbRes.headers.getSetCookie?.()?.map(c => c.split(';')[0]).join('; ') || ''
-  // R-#227: token de API dedicado vía /api/auth/token (el CSRF es solo el nonce)
-  const apiToken = await dedicatedApiTokenFetch(base, cookie, csrfToken)
-  return { cookie, apiToken }
+  return { cookie }
 }
 
 async function main() {
@@ -95,7 +92,6 @@ async function main() {
 
   const headers = { Cookie: auth.cookie, 'Content-Type': 'application/json' }
   const wallet = account.address
-  const token = auth.apiToken
 
   // ── 1. Missing params ──
   console.log('\n── 1. Missing required params ──')
@@ -107,14 +103,14 @@ async function main() {
 
   r = await fetch(`${SITE}/api/add-donation`, {
     method: 'POST', headers,
-    body: JSON.stringify({ walletAddress: wallet, token }),
+    body: JSON.stringify({ walletAddress: wallet }),
   })
   if (r.status === 400) ok('Missing courseId → 400')
   else fail(`Missing courseId → ${r.status}`)
 
   r = await fetch(`${SITE}/api/add-donation`, {
     method: 'POST', headers,
-    body: JSON.stringify({ walletAddress: wallet, token, courseId: 1 }),
+    body: JSON.stringify({ walletAddress: wallet, courseId: 1 }),
   })
   if (r.status === 400) ok('Missing both hashes → 400')
   else fail(`Missing both hashes → ${r.status}`)
@@ -124,7 +120,7 @@ async function main() {
   r = await fetch(`${SITE}/api/add-donation`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ walletAddress: '0x0000000000000000000000000000000000000000', token: 'bad', courseId: 1, usdtHash: '0x' + 'ab'.repeat(32) }),
+    body: JSON.stringify({ walletAddress: '0x0000000000000000000000000000000000000000', courseId: 1, usdtHash: '0x' + 'ab'.repeat(32) }),
   })
   if (r.status === 401) ok('Bad wallet/token → 401')
   else fail(`Bad wallet/token → ${r.status}`)

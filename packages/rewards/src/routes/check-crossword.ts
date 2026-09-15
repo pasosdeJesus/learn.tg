@@ -1,7 +1,7 @@
 
 // Crossword submission pipeline:
-// 1. Validate inputs (courseId, guideId, wallet, token, grid, placements).
-// 2. Verify wallet + token match billetera_usuario record.
+// 1. Validate inputs (courseId, guideId, wallet, grid, placements).
+// 2. Authenticate the wallet against the NextAuth session (R-#233).
 // 3. Compare each placement against answer_fib (from Rails backend),
 //    tracking mistakes per word.
 // 4. Record game_complete event with score and elapsed time.
@@ -73,7 +73,6 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
     const grid = requestJson['grid'] ?? ''
     const placements = requestJson['placements'] ?? ''
     const walletAddress = requestJson['walletAddress'] ?? ''
-    const token = requestJson['token'] ?? ''
 
     const locale = lang === 'es' ? 'es' : 'en'
     const msg = {
@@ -91,13 +90,12 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         noWallet: 'La respuesta no será calificada ni se buscarán becas posibles.',
         submitError: 'Error al enviar el resultado a la blockchain: ',
         userNotFound: 'No se encontró el usuario para la billetera.',
-        tokenMismatch: 'El token almacenado para el usuario no coincide con el token proporcionado.',
+        authFailed: 'La sesión no es válida o no corresponde a la billetera.',
         youReceived: "Recibiste",
         youReceivedSLEARN: "Recibiste",
         scholarshipPaid: 'Ambas becas ya fueron pagadas para esta guía.',
         invalidCourse: 'ID de curso inválido',
         invalidGuide: 'ID de guía inválido',
-        invalidToken: 'Token inválido',
         invalidGrid: 'Estructura de cuadrícula inválida',
         invalidPlacements: 'Estructura de colocaciones inválida',
       },
@@ -115,13 +113,12 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         noWallet: 'Your answer will not be graded nor will possible scholarships be sought.',
         submitError: 'Error submitting result to the blockchain: ',
         userNotFound: 'User not found for wallet.',
-        tokenMismatch: "Token stored for user doesn't match given token.",
+        authFailed: 'The session is invalid or does not match the wallet.',
         youReceived: "You received",
         youReceivedSLEARN: "You received",
         scholarshipPaid: 'Both scholarships already paid for this guide.',
         invalidCourse: 'Invalid course ID',
         invalidGuide: 'Invalid guide ID',
-        invalidToken: 'Invalid token',
         invalidGrid: 'Invalid grid structure',
         invalidPlacements: 'Invalid placements structure',
       },
@@ -137,9 +134,6 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
     if (!Number.isInteger(guideId) || guideId <= 0) {
       return NextResponse.json({ error: msg[locale].invalidGuide }, { status: 400 })
     }
-    if (!token || token.trim() === '') {
-      return NextResponse.json({ error: msg[locale].invalidToken }, { status: 400 })
-    }
     if (!grid || !Array.isArray(grid)) {
       return NextResponse.json({ error: msg[locale].invalidGrid }, { status: 400 })
     }
@@ -149,12 +143,9 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
 
     const db = deps.db()
 
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) {
-      if (!walletAddress) {
-        return NextResponse.json({ error: msg[locale].noWallet }, { status: 400 });
-      }
-      return NextResponse.json({ error: msg[locale].tokenMismatch }, { status: 401 });
+      return NextResponse.json({ error: msg[locale].authFailed }, { status: 401 });
     }
     const { usuario, billetera: billeteraUsuario } = auth
 

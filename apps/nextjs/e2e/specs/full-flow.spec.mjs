@@ -54,8 +54,7 @@ async function ensureSessionAlive(page, timeout = 15000) {
   while (Date.now() < deadline) {
     const alive = await page.evaluate(async () => {
       const lsAddr = localStorage.getItem('learn.tg.sessionAddress')
-      const lsToken = localStorage.getItem('learn.tg.authToken')
-      if (lsAddr && lsToken) return true
+      if (lsAddr) return true
       try {
         const r = await fetch('/api/auth/session')
         const s = await r.json()
@@ -66,27 +65,6 @@ async function ensureSessionAlive(page, timeout = 15000) {
     if (alive) return true
     await new Promise(r => setTimeout(r, 1500))
   }
-  return false
-}
-
-// R-#227: refresca learn.tg.authToken con el token DEDICADO de la sesión actual
-// (GET /api/auth/token). Cada re-login (p. ej. reloads con re-SIWE del mock)
-// rota el token en BD; si localStorage queda con el anterior, /api/guide y otras
-// rutas responden 401 y la guía no renderiza los botones de claim.
-async function refreshApiToken(page) {
-  const dedicated = await page.evaluate(async () => {
-    try {
-      const r = await fetch('/api/auth/token')
-      if (!r.ok) return null
-      const j = await r.json()
-      return (j && typeof j.token === 'string' && j.token) || null
-    } catch { return null }
-  })
-  if (dedicated) {
-    await page.evaluate((t) => localStorage.setItem('learn.tg.authToken', t), dedicated)
-    return true
-  }
-  console.log('  [!] /api/auth/token no disponible — respaldo CSRF legacy')
   return false
 }
 
@@ -175,15 +153,14 @@ async function main() {
 
   await new Promise(r => setTimeout(r, 5000))
 
-  // Verify token is stored
+  // Verify the session is stored (R-#233 Fase 2: only the address; no token)
   const lsAfterSiwe = await page.evaluate(() => ({
-    token: localStorage.getItem('learn.tg.authToken')?.slice(0, 10),
     addr: localStorage.getItem('learn.tg.sessionAddress')?.slice(0, 10),
   }))
-  if (lsAfterSiwe.token && lsAfterSiwe.addr) {
-    ok(`Token persisted: ${lsAfterSiwe.token}... / ${lsAfterSiwe.addr}...`)
+  if (lsAfterSiwe.addr) {
+    ok(`Session address persisted: ${lsAfterSiwe.addr}...`)
   } else {
-    fail(`Token missing after SIWE: token=${lsAfterSiwe.token || 'NONE'} addr=${lsAfterSiwe.addr || 'NONE'}`)
+    fail(`Session address missing after SIWE: ${lsAfterSiwe.addr || 'NONE'}`)
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -298,8 +275,7 @@ async function main() {
   // Get userId and current profile from API (same browser context = same auth)
   const profileData = await page.evaluate(async () => {
     const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const token = localStorage.getItem('learn.tg.authToken') || ''
-    const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+    const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}`
     const r = await fetch(url)
     if (!r.ok) return null
     return r.json()
@@ -322,8 +298,7 @@ async function main() {
   // Self-verify via admin PATCH API
   const adminResult = await page.evaluate(async (params) => {
     const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const token = localStorage.getItem('learn.tg.authToken') || ''
-    const url = `/api/admin/user/${params.userId}?wallet=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+    const url = `/api/admin/user/${params.userId}?wallet=${encodeURIComponent(addr)}`
     const r = await fetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -600,11 +575,8 @@ async function main() {
   if (!ubiOk) { fail('UBI guide not found'); }
 
   // The UBI buttons are client-rendered — may need page reload if session just restored.
-  // R-#227: refrescar el token dedicado antes de cada intento (un re-SIWE previo
-  // rota el token en BD; con token viejo la guía responde 401 y no hay botones).
   let claimFound = false
   for (let attempt = 0; attempt < 3; attempt++) {
-    await refreshApiToken(page)
     if (attempt > 0) {
       console.log(`  Reloading UBI guide (attempt ${attempt + 1}/3)...`)
       await page.goto(`${base}${ubiPath}`, { waitUntil: 'domcontentloaded' , timeout: 120000 })

@@ -658,13 +658,12 @@ function normalizeClue(text) {
 }
 
 // Función para obtener perfil de usuario desde la API de Rails
-async function getUserProfile(walletAddress, apiToken) {
+async function getUserProfile(walletAddress) {
   try {
     const url = `${API_BASE}/usuarios.json`;
     const params = new URLSearchParams({
       'filtro[walletAddress]': walletAddress,
       'walletAddress': walletAddress,
-      'token': apiToken
     });
     const fullUrl = `${url}?${params.toString()}`;
     console.log(`   URL: ${fullUrl}`);
@@ -773,16 +772,7 @@ async function runTest() {
     console.log(`      Data: ${JSON.stringify(authRes.data)}`);
     console.log('   ✅ Autenticación exitosa');
 
-    // 0.5 Obtener nuevo CSRF token después de autenticación
-    console.log('\n   0.5 Token de API dedicado (post-autenticación, R-#227)...');
-    let newToken = csrfToken;
-    try {
-      const tokRes = await apiClient.get('/api/auth/token');
-      if (tokRes.data?.token) newToken = tokRes.data.token;
-      console.log(`      Token: ${newToken.slice(0, 10)}...`);
-    } catch (error) {
-      console.log(`      Error: ${error.message}`);
-    }
+    // 0.5 R-#233 Fase 2: no hay token de API; la cookie de sesión autentica.
 
     // 0.6 Actualizar puntaje de perfil
     console.log('\n   0.6 Actualizando puntaje de perfil (update-scores)...');
@@ -790,7 +780,6 @@ async function runTest() {
       const response = await apiClient.post('/api/update-scores', {
         lang: LANG,
         walletAddress: account.address,
-        token: newToken,
       });
       console.log(`      Status: ${response.status}`);
       console.log(`      Profile score: ${response.data.profilescore}`);
@@ -811,7 +800,7 @@ async function runTest() {
 
     // 0.7 Verificar perfil en API
     console.log('\n   0.7 Verificando perfil en API...');
-    const profile = await getUserProfile(account.address, newToken);
+    const profile = await getUserProfile(account.address);
     if (profile) {
       console.log(`      Profile score: ${profile.profilescore}`);
       console.log(`      Learning score: ${profile.learningscore}`);
@@ -901,7 +890,6 @@ async function runTest() {
         prefix: COURSE_PREFIX,
         guide: GUIDE_SUFFIX,
         walletAddress: account.address,
-        token: newToken,
         test: 'true',
       },
     });
@@ -992,7 +980,6 @@ async function runTest() {
       grid: solvedGrid,
       placements: placements,
       walletAddress: account.address,
-      token: newToken,
     });
 
     console.log('Check response status:', checkResponse.status);
@@ -1052,7 +1039,6 @@ async function runTest() {
         prefix: CELO_UBI_PREFIX,
         guide: CELO_UBI_GUIDE,
         walletAddress: account.address,
-        token: newToken,
       },
     });
     console.log(`-> Guide loaded successfully. Status: ${guideResponse.status}`);
@@ -1062,7 +1048,6 @@ async function runTest() {
     try {
       const claimResponse = await apiClient.post('/api/claim-celo-ubi', {
         walletAddress: account.address,
-        token: newToken,
       }, {
         headers: { 'Accept-Language': 'en' }
       });

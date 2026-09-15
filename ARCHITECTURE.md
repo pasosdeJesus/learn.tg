@@ -97,7 +97,7 @@ graph TD
 - **Database:** PostgreSQL (>= 16.2) with unaccent extension
 - **Purpose:** Course management, guide organization, user data persistence, teacher administration.
 - **Based on:** MSIP and cor1440_gen frameworks
-- **Authentication:** Receives and validates tokens from the Next.js frontend (the same CSRF token used for SIWE, stored in `billetera_usuario.token`).
+- **Authentication:** No longer an auth boundary. The public course data it used to serve under a token is now public (R-#233); the nextjs app authorizes with its own NextAuth session cookie, so Rails receives no credential from it.
 
 ### 2. **Frontend and minor backend: Next.js (apps/nextjs/)**
 - **Framework:** Next.js with React + TypeScript.

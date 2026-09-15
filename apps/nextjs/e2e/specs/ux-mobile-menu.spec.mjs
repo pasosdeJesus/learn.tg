@@ -94,21 +94,13 @@ async function main() {
     if (!sessionAddr) await new Promise(r => setTimeout(r, 2000))
   }
   if (!sessionAddr) { fail('SIWE failed (sin sesión válida tras 3 intentos)'); await browser.close(); process.exit(1) }
-  // Token dedicado (R-#227) para las APIs de la guía en Parte C
-  const dedicated = await page.evaluate(async () => {
-    const r = await fetch('/api/auth/token')
-    if (!r.ok) return null
-    const j = await r.json()
-    return (j && typeof j.token === 'string' && j.token) || null
-  })
-  // Igual que ConnectWalletButton tras un login real: guardar el address y el
-  // token DEDICADO (R-#227). Sin el address `useAuthAddress()` queda vacío
-  // cuando la sesión de NextAuth viene "fría" (#5719) y la guía premium se
-  // pediría anónima → 401 auth_required (Parte C).
-  await page.evaluate(({ token, addr }) => {
-    if (token) localStorage.setItem('learn.tg.authToken', token)
+  // R-#233 Fase 2: la cookie de sesión es la credencial; no hay token de API.
+  // Guardar el address: sin él `useAuthAddress()` queda vacío cuando la sesión
+  // de NextAuth viene "fría" (#5719) y la guía premium se pediría anónima →
+  // 401 auth_required (Parte C).
+  await page.evaluate((addr) => {
     localStorage.setItem('learn.tg.sessionAddress', addr)
-  }, { token: dedicated, addr: account.address.toLowerCase() })
+  }, account.address.toLowerCase())
   await gotoWithRetry(page, `${base}/en`, { waitUntil: 'domcontentloaded', timeout })
   await new Promise(r => setTimeout(r, 6000))
   {

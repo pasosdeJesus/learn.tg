@@ -49,13 +49,13 @@ Custom connect/disconnect button. Replaces RainbowKit's `ConnectButton`.
 4. Build SIWE message with EIP-55 checksummed address (`getAddress()`)
 5. Sign via `window.ethereum.request({ method: 'personal_sign', ... })`
 6. POST to `/api/auth/callback/credentials`
-7. Fetch the dedicated API token from `/api/auth/token` (R-#227, same
-   session cookie; falls back to the CSRF token if the endpoint is
-   unavailable) and store `sessionAddress` + `authToken` in localStorage
+7. Store `sessionAddress` in localStorage (cold-session fallback for
+   `useSession()`, #5719). There is no API token: the NextAuth session cookie
+   (HttpOnly) is the credential (R-#233 Fase 2)
 8. Reload page (NextAuth reads session cookie on mount)
 
 **Disconnect flow:**
-1. Remove `sessionAddress` + `authToken` from localStorage
+1. Remove `sessionAddress` from localStorage
 2. Call NextAuth `signOut({ redirect: false })`
 3. Redirect to `/`
 
@@ -79,9 +79,8 @@ app state.
 | `disconnect` | Clear localStorage + signOut |
 | `session?.address` becomes `null` | Clear localStorage (covers session expiry, signOut from another tab, etc.) |
 
-When any of these fire, both `learn.tg.sessionAddress` and
-`learn.tg.authToken` are removed from localStorage, and NextAuth signOut is
-called.
+When any of these fire, `learn.tg.sessionAddress` is removed from localStorage,
+and NextAuth signOut is called.
 
 ## Hooks
 
@@ -140,28 +139,22 @@ await writeContract({
 
 ## localStorage Convention
 
-Two keys managed by the auth system:
+One key is managed by the auth system:
 
 | Key | Purpose | Set by | Cleared by |
 |-----|---------|--------|------------|
 | `learn.tg.sessionAddress` | Wallet address for UI persistence | `ConnectWalletButton` on connect | `WalletEventListener` on disconnect/session loss |
-| `learn.tg.authToken` | Dedicated API token (R-#227) for non-browser/legacy calls | `ConnectWalletButton` on connect (from `/api/auth/token`) | `WalletEventListener` on disconnect/session loss |
 
-These survive NextAuth's `useSession()` losing state on client-side
+It survives NextAuth's `useSession()` losing state on client-side
 navigation (bug #5719), ensuring the UI doesn't flash "Connect Wallet"
 between page transitions.
 
-**Auth model (R-#227, session-first):** the primary API authorization is the
-NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The `authToken` in
-localStorage is a *legacy fallback* for clients that cannot send the cookie
-(non-browser specs; Rails no longer uses the token, R-#233). Since R-#227 the
-token is no longer the SIWE nonce:
-`authorize()` generates a dedicated random token (256 bits) on the first sign-in
-and reuses it afterwards (no longer rotated since 2026-09-14), and
-`ConnectWalletButton` fetches it from `GET /api/auth/token` right after the
-callback. If that fetch fails (older backend), the CSRF token is kept as a
-legacy fallback. See [SIWE Auth Flow](siwe-auth-flow.md) and
-[R-#227](https://github.com/pasosdeJesus/learn.tg/issues/227).
+**Auth model (R-#227 + R-#233 Fase 2):** the only API credential is the
+NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The former
+`learn.tg.authToken` localStorage entry, `GET /api/auth/token` and
+`lib/auth-token.ts` were removed on 2026-09-15, together with the
+`billetera_usuario.token` column. See [SIWE Auth Flow](siwe-auth-flow.md) and
+[R-#233](https://github.com/pasosdeJesus/learn.tg/issues/233).
 
 ## Comparison with Previous Approach
 

@@ -23,7 +23,6 @@ export function WalletEventListener() {
     } else if (wasAuthenticated.current) {
       // Session was valid, now it's gone — user signed out or expired
       localStorage.removeItem('learn.tg.sessionAddress')
-      localStorage.removeItem('learn.tg.authToken')
       wasAuthenticated.current = false
     }
   }, [session?.address])
@@ -62,7 +61,6 @@ export function WalletEventListener() {
         }
         // User disconnected from wallet
         localStorage.removeItem('learn.tg.sessionAddress')
-        localStorage.removeItem('learn.tg.authToken')
         signOut({ redirect: true, callbackUrl: '/' })
       }
     }
@@ -78,7 +76,6 @@ export function WalletEventListener() {
         return
       }
       localStorage.removeItem('learn.tg.sessionAddress')
-      localStorage.removeItem('learn.tg.authToken')
       signOut({ redirect: true, callbackUrl: '/' })
     }
 

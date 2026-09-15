@@ -16,82 +16,34 @@ function dbg(...args: any[]) {
 }
 
 /**
- * Validates wallet + token authentication.
+ * Authenticates an API request against the shared NextAuth session.
  * Pattern used across all API routes — see app/api routes
  *
- * Token staleness: every SIWE login rotates `billetera_usuario.token`, so a
- * browser holding an older token (e.g. a verifier logged in before an e2e run
- * signed in with the same wallet) would get 401s. As a fallback, when the
- * token is missing or mismatched we accept a valid NextAuth session cookie for
- * the same wallet (the session JWT survives token rotation).
- *
- * R-#227 Fase 1 (session-first): la cookie de sesión se valida PRIMERO; el
- * token de `billetera_usuario` queda como camino legacy (lo usa Rails y
- * clientes no-browser). Con `AUTH_SESSION_ONLY=1` solo se acepta la sesión
- * (para medir dependencias del token antes de retirarlo en Fase 2).
+ * R-#233 Fase 2: the session cookie is the ONLY credential. The former
+ * `walletAddress` + `billetera_usuario.token` path was removed: the column no
+ * longer exists and no client stores or sends a token. The `walletAddress`
+ * parameter remains only as an (untrusted) identity hint that must match the
+ * session subject; the session alone decides.
  */
 export async function authenticateUser(
   db: Kysely<DB>,
-  walletAddress?: string,
-  token?: string
+  walletAddress?: string
 ): Promise<AuthenticatedUser | null> {
   const now = new Date().toISOString()
   const tag = `[auth:${now.slice(11, 19)}]`
 
-  // 1) Sesión primero (cookie HttpOnly firmada con NEXTAUTH_SECRET): no sufre
-  //    la rotación del token; identidad = session.sub == wallet.
   const sessionAuth = await authenticateBySession(db, walletAddress, tag)
   if (sessionAuth) {
-    dbg(`${tag} AUTH OK via session cookie (session-first) — userId: ${sessionAuth.usuario.id}`)
+    dbg(`${tag} AUTH OK via session cookie — userId: ${sessionAuth.usuario.id}`)
     return sessionAuth
   }
-  if (process.env.AUTH_SESSION_ONLY === '1') {
-    dbg(`${tag} AUTH_SESSION_ONLY=1: sin sesión válida → 401 (token legacy deshabilitado)`)
-    return null
-  }
-
-  // 2) Legacy: wallet + token contra billetera_usuario (Rails y no-browser).
-  if (!walletAddress || !token) {
-    dbg(`${tag} Missing auth params (y sin sesión) — wallet: ${!!walletAddress}, token: ${!!token}`)
-    return null
-  }
-
-  const billetera = await db
-    .selectFrom('billetera_usuario')
-    .where('billetera', '=', walletAddress.toLowerCase())
-    .selectAll()
-    .executeTakeFirst()
-
-  if (!billetera) {
-    dbg(`${tag} Billetera not found for: ${walletAddress.toLowerCase().slice(0, 10)}...`)
-    return null
-  }
-
-  if (billetera.token !== token) {
-    dbg(`${tag} TOKEN MISMATCH for wallet ${walletAddress.toLowerCase().slice(0, 10)}... (sin sesión válida previa)`)
-    dbg(`${tag}   DB token: ${(billetera.token || '').slice(0, 12)}... (len=${billetera.token?.length})`)
-    dbg(`${tag}   Req token: ${token.slice(0, 12)}... (len=${token.length})`)
-    return null
-  }
-
-  const usuario = await db
-    .selectFrom('usuario')
-    .where('id', '=', billetera.usuario_id)
-    .selectAll()
-    .executeTakeFirst()
-
-  if (!usuario) {
-    dbg(`${tag} Usuario not found for id: ${billetera.usuario_id}`)
-    return null
-  }
-
-  dbg(`${tag} AUTH OK (legacy token) — userId: ${usuario.id}, wallet: ${walletAddress.toLowerCase().slice(0, 10)}...`)
-  return { usuario: usuario as any, billetera }
+  dbg(`${tag} Missing or invalid session — wallet hint: ${!!walletAddress}`)
+  return null
 }
 
 /**
- * Fallback: accept a valid NextAuth session cookie whose address matches the
- * requested wallet. Runs only inside a request context (route handlers).
+ * Accepts a valid NextAuth session cookie whose address matches the requested
+ * wallet. Runs only inside a request context (route handlers).
  *
  * Uses `cookies()` (async) + getToken directly instead of getServerSession,
  * which relies on the sync cookies() API removed in Next 16.

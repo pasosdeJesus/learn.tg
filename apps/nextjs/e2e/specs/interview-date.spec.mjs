@@ -15,7 +15,6 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
-import { dedicatedApiTokenAxios } from '../helpers/siwe-auth.mjs'
 import { initTestEnv, launchBrowser, resetFailures, fail, ok, summary, short } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
 
@@ -81,9 +80,8 @@ async function siweSignIn(privateKey, address) {
   })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
 
-  const apiToken = await dedicatedApiTokenAxios(axios, httpsAgent, SITE, cookies, csrfToken)
 
-  return { token: apiToken, cookies, address }
+  return { cookies, address }
 }
 
 async function apiGet(pathname, params, extra) {
@@ -132,15 +130,15 @@ async function main() {
 
   // 2. SIWE sign-in (HTTP) → token + cookies
   const session = await siweSignIn(pk, addr)
-  const auth = `walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(session.token)}`
+  const auth = `walletAddress=${encodeURIComponent(addr)}`
   console.log('Signed in (HTTP).')
 
   // 3. Fill SL profile so profilescore is computed (< 100 → scheduler shows)
   await apiPatch('/api/profile', {
     religion_id: 2, pais_id: 694, position_israel_gaza: 'no',
     email: testEmail, nombre: 'E2E Interview Date',
-  }, { walletAddress: addr, token: session.token })
-  const profileAfterFill = await apiGet('/api/profile', { walletAddress: addr, token: session.token })
+  }, { walletAddress: addr })
+  const profileAfterFill = await apiGet('/api/profile', { walletAddress: addr })
   console.log(`Profile after fill: score=${profileAfterFill.profilescore}, tz=${profileAfterFill.country_timezone}`)
 
   // 4. Fetch availability, pick a 14:00 UTC slot (= 2PM in Africa/Freetown)
@@ -157,7 +155,7 @@ async function main() {
 
   // 5. Book it
   const booking = await apiPost('/api/verification/book', {
-    walletAddress: addr, token: session.token,
+    walletAddress: addr,
     start: chosen.start, end: chosen.end,
   })
   if (booking.success !== true) {
@@ -167,7 +165,7 @@ async function main() {
   }
 
   // 6. Profile must return the exact instant (14:00:00.000Z), not midnight
-  const profile = await apiGet('/api/profile', { walletAddress: addr, token: session.token })
+  const profile = await apiGet('/api/profile', { walletAddress: addr })
   const stored = profile.proposed_date_of_interview || ''
   console.log(`Stored proposed_date_of_interview: ${stored}`)
   if (stored === chosen.start) {

@@ -58,6 +58,11 @@ const URLS = [
   '/api/churches/fund',
   '/api/referrals/fund',
   '/api/courses/premium/price?courseId=10',
+  // Catálogo público servido por Next (R-#233 §4.4): la home lo pide en el
+  // primer render, así que compilar su route handler evita timeouts del spec
+  // fresh-wallet-first-connect.
+  '/api/course-catalog?filtro[busidioma]=en',
+  '/api/course-catalog/2',
   '/api/scholarship?courseId=1',
   '/api/transparency',
   '/api/courses/premium/mine',

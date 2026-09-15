@@ -13,10 +13,9 @@ type Ctx = { db: any; admin: { usuario_id: number; billetera: string } }
 
 async function requireAdmin(deps: GdclusterDeps, req: NextRequest): Promise<Ctx | null> {
   const walletAddress = req.nextUrl.searchParams.get('wallet') || ''
-  const token = req.nextUrl.searchParams.get('token') || ''
-  if (!deps.authenticateAdmin || !walletAddress || !token) return null
+  if (!deps.authenticateAdmin || !walletAddress) return null
   const db = deps.db()
-  const admin = await deps.authenticateAdmin(db, walletAddress, token)
+  const admin = await deps.authenticateAdmin(db, walletAddress)
   if (!admin) return null
   return { db, admin }
 }

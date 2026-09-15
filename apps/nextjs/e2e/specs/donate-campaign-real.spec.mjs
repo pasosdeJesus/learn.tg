@@ -39,7 +39,6 @@ import { SiweMessage } from 'siwe'
 import { createPublicClient, createWalletClient, http, formatUnits, parseUnits } from 'viem'
 import { celoSepolia } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
-import { dedicatedApiTokenFetch } from '../helpers/siwe-auth.mjs'
 
 for (const p of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env')]) {
   if (fs.existsSync(p)) dotenv.config({ path: p, override: false })
@@ -134,9 +133,8 @@ async function siweSignIn(base, account) {
   const cbCookies = cbRes.headers.getSetCookie?.() || []
   if (cbCookies.length) cookies = updateCookies(cookies, cbCookies)
 
-  const apiToken = await dedicatedApiTokenFetch(base, cookies, csrfToken)
 
-  return { token: apiToken, cookies }
+  return { cookies }
 }
 
 async function rpcRetry(fn, retries = 6) {
@@ -221,7 +219,7 @@ async function main() {
   // ── Baseline del ledger (el dev ledger es acumulativo entre corridas) ──
   const ledgerBaseline = { campaign: [], reward: [] }
   try {
-    const prof = await (await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`, { headers })).json()
+    const prof = await (await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}`, { headers })).json()
     if (prof?.id) {
       const txs = (await (await fetch(`${SITE}/api/user-transactions/${prof.id}`, { headers })).json()).transactions || []
       ledgerBaseline.campaign = txs.filter(t => t.type === 'donation' && (t.descripcion || '').includes('campaign:'))
@@ -244,7 +242,7 @@ async function main() {
 
     const res = await fetch(verifyEndpoint, {
       method: 'POST', headers,
-      body: JSON.stringify({ walletAddress: account.address, token: auth.token, usdtHash: txHash, ...opts }),
+      body: JSON.stringify({ walletAddress: account.address, usdtHash: txHash, ...opts }),
     })
     const body = await res.json()
     if (res.status === 200) ok(`verify: 200 (forward ${(body.hashes?.campaignForwardHash || '').slice(0, 10)}...)`)
@@ -351,7 +349,7 @@ async function main() {
   // ── Ledger rows (user transactions): deltas contra el baseline ──
   console.log('\n── /api/user-transactions (deltas vs baseline) ──')
   const activeRounds = (ROUND_A_USDT > 0 ? 1 : 0) + (ROUND_B_USDT > 0 ? 1 : 0) + (ROUND_C_USDT > 0 ? 1 : 0)
-  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}&token=${encodeURIComponent(auth.token)}`, { headers })
+  const userIdRes = await fetch(`${SITE}/api/profile?walletAddress=${encodeURIComponent(account.address)}`, { headers })
   const userProfile = await userIdRes.json()
   if (!userProfile?.id) { fail('Could not get userId') }
   else {

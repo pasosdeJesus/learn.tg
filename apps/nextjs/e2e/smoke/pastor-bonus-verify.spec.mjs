@@ -22,7 +22,6 @@ import axios from 'axios'
 import https from 'https'
 import { SiweMessage } from 'siwe'
 import { privateKeyToAccount } from 'viem/accounts'
-import { dedicatedApiTokenAxios } from '../helpers/siwe-auth.mjs'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
@@ -107,9 +106,8 @@ async function siweSignIn(privateKey, address) {
   })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
 
-  const apiToken = await dedicatedApiTokenAxios(axios, httpsAgent, SITE, cookies, csrfToken)
 
-  return { token: apiToken, cookies, address }
+  return { cookies, address }
 }
 
 async function apiGet(path, params, cookies) {

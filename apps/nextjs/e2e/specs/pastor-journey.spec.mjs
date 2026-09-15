@@ -22,7 +22,6 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
-import { dedicatedApiTokenAxios } from '../helpers/siwe-auth.mjs'
 import { createPublicClient, createWalletClient, http, parseUnits, parseEther, parseEventLogs } from 'viem'
 import { celoSepolia } from 'viem/chains'
 import {
@@ -164,9 +163,8 @@ async function siweSignIn(privateKey, address) {
   })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
 
-  const apiToken = await dedicatedApiTokenAxios(axios, httpsAgent, SITE, cookies, csrfToken)
 
-  return { token: apiToken, cookies, address }
+  return { cookies, address }
 }
 
 /** HTTP GET with verifier cookies. */
@@ -250,8 +248,7 @@ async function main() {
   console.log('\n── Step 1: Pastor authenticated ──')
   const pastorAuth = await page.evaluate(() => ({
     addr: localStorage.getItem('learn.tg.sessionAddress')?.slice(0, 12),
-    token: localStorage.getItem('learn.tg.authToken')?.slice(0, 12),
-  })).catch(() => ({ addr: null, token: null }))
+  })).catch(() => ({ addr: null }))
   if (pastorAuth.addr) ok('Pastor SIWE complete (programmatic)')
   else { fail('Pastor auth state missing'); await browser.close(); process.exit(1) }
   await new Promise(r => setTimeout(r, 2000))
@@ -262,14 +259,13 @@ async function main() {
   console.log('\n── Step 2: Pastor fills profile (Sierra Leone) ──')
   const profileRes = await page.evaluate(async (data) => {
     const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const token = localStorage.getItem('learn.tg.authToken') || ''
-    const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+    const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}`
     const r = await fetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    return { ok: r.ok, status: r.status, body: await r.text(), addr: addr.slice(0, 10), token: token.slice(0, 10) }
+    return { ok: r.ok, status: r.status, body: await r.text(), addr: addr.slice(0, 10) }
   }, {
     nombre: 'Pastor E2E Test',
     email: testEmail,
@@ -284,13 +280,12 @@ async function main() {
     denomination: 'E2E Denomination',
   })
   if (profileRes.ok) ok('Pastor profile saved')
-  else fail(`Profile PATCH failed: ${profileRes.status} addr=${profileRes.addr} token=${profileRes.token} ${profileRes.body.slice(0, 120)}`)
+  else fail(`Profile PATCH failed: ${profileRes.status} addr=${profileRes.addr} ${profileRes.body.slice(0, 120)}`)
 
   // Fetch pastor userId + score
   const pastorProfile = await page.evaluate(async () => {
     const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const token = localStorage.getItem('learn.tg.authToken') || ''
-    const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+    const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}`
     const r = await fetch(url)
     return r.ok ? r.json() : null
   })
@@ -328,7 +323,7 @@ async function main() {
       verified_church_relationship: 'pastor',
       proposed_date_of_interview: '2026-08-25',
     },
-    { wallet: verifier.addr, token: vAuth.token },
+    { wallet: verifier.addr },
     vAuth.cookies,
   )
   if (verifyRes?.success || verifyRes?.user) {
@@ -342,7 +337,7 @@ async function main() {
   let churchId = null
   try {
     const churchRes = await axios.post(
-      `${SITE}/api/admin/churches?wallet=${verifier.addr}&token=${vAuth.token}`,
+      `${SITE}/api/admin/churches?wallet=${verifier.addr}`,
       { name: 'E2E Test Church', country_id: 694, denomination: 'E2E Denomination' },
       { httpsAgent, headers: { 'Content-Type': 'application/json', Cookie: vAuth.cookies } },
     )
@@ -357,7 +352,7 @@ async function main() {
     const assignRes = await apiPatch(
       `/api/admin/user/${pastorUserId}`,
       { church_id: churchId },
-      { wallet: verifier.addr, token: vAuth.token },
+      { wallet: verifier.addr },
       vAuth.cookies,
     )
     if (assignRes?.success || assignRes?.user) ok(`Pastor assigned to church #${churchId}`)
@@ -366,7 +361,7 @@ async function main() {
     const churchVerifyRes = await apiPatch(
       `/api/admin/church/${churchId}`,
       { registration_verified: true },
-      { wallet: verifier.addr, token: vAuth.token },
+      { wallet: verifier.addr },
       vAuth.cookies,
     )
     if (churchVerifyRes?.success) {
@@ -398,8 +393,7 @@ async function main() {
   console.log('\n── Step 5: Score + 44 SLEARN bonus ──')
   const finalProfile = await page.evaluate(async () => {
     const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const token = localStorage.getItem('learn.tg.authToken') || ''
-    const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+    const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}`
     const r = await fetch(url)
     return r.ok ? r.json() : null
   })
@@ -438,8 +432,7 @@ async function main() {
   // Check purchase eligibility (Christian + pilot country + church + non-Zionist)
   const purchaseCheck = await page.evaluate(async (courseId) => {
     const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const token = localStorage.getItem('learn.tg.authToken') || ''
-    const q = `walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+    const q = `walletAddress=${encodeURIComponent(addr)}`
     const eligRes = await fetch(`/api/courses/${courseId}/purchase-eligibility?${q}`)
     const elig = eligRes.ok ? await eligRes.json() : null
     const accessRes = await fetch(`/api/courses/${courseId}/access?${q}`)
@@ -468,8 +461,7 @@ async function main() {
     //    The 44 SLEARN bonus is more than the price; the pastor keeps the rest.
     const priceRes = await page.evaluate(async (courseId) => {
       const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-      const token = localStorage.getItem('learn.tg.authToken') || ''
-      const r = await fetch(`/api/courses/premium/price?courseId=${courseId}&walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`)
+      const r = await fetch(`/api/courses/premium/price?courseId=${courseId}&walletAddress=${encodeURIComponent(addr)}`)
       return r.ok ? await r.json() : null
     }, gdCourseId)
     const priceSlearn = Number(priceRes?.priceSLEARN ?? 39.6)
@@ -503,11 +495,10 @@ async function main() {
     // 3. Call the premium purchase endpoint.
     const purchaseRes = await page.evaluate(async ({ courseId, slearnHash }) => {
       const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-      const token = localStorage.getItem('learn.tg.authToken') || ''
       const r = await fetch('/api/courses/premium/purchase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: addr, token, courseId, slearnHash }),
+        body: JSON.stringify({ walletAddress: addr, courseId, slearnHash }),
       })
       return { status: r.status, body: await r.text() }
     }, { courseId: gdCourseId, slearnHash })
@@ -609,8 +600,7 @@ async function main() {
     // 4. Verify access is now granted (200 instead of 403).
     const accessAfter = await page.evaluate(async (courseId) => {
       const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-      const token = localStorage.getItem('learn.tg.authToken') || ''
-      const q = `walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(token)}`
+      const q = `walletAddress=${encodeURIComponent(addr)}`
       const r = await fetch(`/api/courses/${courseId}/access?${q}`)
       return r.status
     }, gdCourseId)

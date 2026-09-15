@@ -43,21 +43,21 @@ export async function addDonation(deps: RewardsDeps, req: NextRequest) {
 
   try {
     const requestJson = await req.json()
-    const { walletAddress, token, donationAmountUSD, slearnDonationAmount, usdtHash, slearnHash, courseId, comment } = requestJson
+    const { walletAddress, donationAmountUSD, slearnDonationAmount, usdtHash, slearnHash, courseId, comment } = requestJson
 
     // Comentario opcional del donante (REQ/223; procedencia de los fondos):
     // máx 200 chars, sin saltos de línea; se guarda en el ledger.
     const donorComment = typeof comment === 'string' ? comment.replace(/\s+/g, ' ').trim().slice(0, 200) : undefined
     const commentSuffix = donorComment ? `\ncomment: ${donorComment}` : ''
 
-    if (!walletAddress || !token || !courseId) {
+    if (!walletAddress || !courseId) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 })
     }
     if (!usdtHash && !slearnHash) {
       return NextResponse.json({ error: 'At least one transaction hash required' }, { status: 400 })
     }
 
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) return NextResponse.json({ error: "Authentication failed." }, { status: 401 })
     const { usuario } = auth
 

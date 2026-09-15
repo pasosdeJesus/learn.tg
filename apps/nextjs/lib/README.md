@@ -18,7 +18,7 @@ Brief map of each module. For complex features (crossword rewards, auth), see `d
 | `config.ts` | `IS_PRODUCTION` constant |
 | `utils.ts` | `cn()` Tailwind class merge utility |
 | `user-transactions.ts` | User transaction history queries |
-| `authenticateUser.ts` | Wallet+token auth helper for API routes |
+| `authenticateUser.ts` | Session-cookie auth helper for API routes |
 | `donate-utils.ts` | `parseUserAmount`, `formatDisplay`, `erc20Abi` for donations |
 | `hooks/` | React hooks: `useApiData`, `useFetchData`, `useGuideData`, `useSort`, `useTranslation`, `useScholarshipData`, `useGuideNavigation`, `useGasEstimation` |
 | `metrics/queries.ts` | Aggregated metrics queries for the dashboard |

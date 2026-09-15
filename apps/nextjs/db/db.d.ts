@@ -50,7 +50,6 @@ export interface BilleteraUsuario {
   id: Generated<Int8>;
   nonce: string | null;
   nonce_expires_at: Timestamp | null;
-  token: string | null;
   updated_at: Timestamp;
   usuario_id: number;
 }

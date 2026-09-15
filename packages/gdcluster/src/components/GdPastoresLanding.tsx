@@ -76,17 +76,12 @@ export function GdPastoresLanding({ lang, deps }: { lang: string; deps: GdPastor
       setPastorBonus(null)
       return
     }
-    const token = localStorage.getItem('learn.tg.authToken') || ''
-    if (!token) {
-      setProfile(null)
-      setPastorBonus(null)
-      return
-    }
+    // R-#233 Fase 2: la cookie de sesión autentica; no hay token de API.
     let cancelled = false
     ;(async () => {
       try {
         const res = await axios.get(
-          `/api/profile?walletAddress=${encodeURIComponent(address)}&token=${encodeURIComponent(token)}`,
+          `/api/profile?walletAddress=${encodeURIComponent(address)}`,
         )
         if (cancelled) return
         setProfile(res.data)

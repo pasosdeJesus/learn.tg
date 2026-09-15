@@ -66,7 +66,7 @@ async function main() {
   await page.setDefaultNavigationTimeout(timeout)
 
   // Auth: inject wallet mock + SIWE programmatico
-  const { authToken } = await setupE2EAuth(page, wallet, creds.pk, chainId, base)
+  await setupE2EAuth(page, wallet, creds.pk, chainId, base)
 
   // ── Go to profile ──
   console.log('── Profile page ──')
@@ -95,17 +95,17 @@ async function main() {
 
   // ── Assign church via API (reliable, no DOM select fragility) ──
   console.log('── Assign church via API ──')
-  const tryAssign = () => page.evaluate(async ({ wallet, token }) => {
+  const tryAssign = () => page.evaluate(async ({ wallet }) => {
     try {
       // Fetch a church id from the admin API
-      const authQ = `wallet=${encodeURIComponent(wallet)}&token=${encodeURIComponent(token)}`
+      const authQ = `wallet=${encodeURIComponent(wallet)}`
       const r = await fetch(`/api/admin/churches?${authQ}`)
       if (!r.ok) return { error: `churches API HTTP ${r.status}` }
       const data = await r.json()
       const church = data.churches?.[0]
       if (!church?.id) return { error: 'No church found in API' }
       // Assign via profile PATCH
-      const p = await fetch(`/api/profile?walletAddress=${encodeURIComponent(wallet)}&token=${encodeURIComponent(token)}`, {
+      const p = await fetch(`/api/profile?walletAddress=${encodeURIComponent(wallet)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ church_id: church.id }),
@@ -115,7 +115,7 @@ async function main() {
     } catch (e) {
       return { error: e.message }
     }
-  }, { wallet, token: authToken })
+  }, { wallet })
 
   // El backend dev puede devolver 502 bajo carga: reintentar la asignación.
   let assignRes = await tryAssign()
@@ -137,15 +137,15 @@ async function main() {
   await new Promise(r => setTimeout(r, 5000))
 
   // Verify church_id via API
-  const profileData = await page.evaluate(async ({ wallet, token }) => {
+  const profileData = await page.evaluate(async ({ wallet }) => {
     try {
-      const r = await fetch(`/api/profile?walletAddress=${encodeURIComponent(wallet)}&token=${encodeURIComponent(token)}`)
+      const r = await fetch(`/api/profile?walletAddress=${encodeURIComponent(wallet)}`)
       if (!r.ok) return { error: `HTTP ${r.status}` }
       return await r.json()
     } catch (e) {
       return { error: e.message }
     }
-  }, { wallet, token: authToken })
+  }, { wallet })
 
   if (profileData.error) {
     console.log(`  Profile API: ${profileData.error}`)

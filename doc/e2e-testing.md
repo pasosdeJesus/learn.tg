@@ -90,7 +90,7 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `prerequisites.spec.mjs` | Wallet registration + verifier check + profile setup + self-verify → ≥50 score |
 | `referral-payout.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
 | `referral-premium.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 44 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
-| `rails-auth.spec.mjs` | Rails API calls with auth token in ES and EN |
+| `rails-auth.spec.mjs` | Rails API calls (public course endpoints) in ES and EN |
 | `verification-timezone.spec.mjs` | Verification availability API: timezone handling, 7-day window |
 | `donate-course.spec.mjs` | Course donation endpoint (`/api/add-donation`): validation paths (400/401) |
 | `donate-gd.spec.mjs` | GD cluster/country donation endpoint (`/api/gdcluster/donations/verify`): validation paths (400/401/403) |
@@ -101,8 +101,8 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 
 **10 smokes** (más las donaciones `donate-course`, `donate-gd` y
 `donate-campaign`). `leaderboard.spec.mjs` fails on profileScore explanation text
-not rendered (minor content issue). `rails-auth.spec.mjs` shows token mismatch
-for new wallets (expected for wallets without Rails-side session).
+not rendered (minor content issue). The Rails course endpoints are public
+(R-#233), so no credential is needed for `rails-auth.spec.mjs`.
 `caldav-*` smokes skip gracefully when `CALDAV_URL` is not set.
 
 ### Known Limitation: Client-Rendered Auth UI
@@ -207,7 +207,7 @@ the vault donation with both cryptos:
 || `premium-course-checkout.spec.mjs` | GD checkout UI (Buy button → CheckoutModal → slider). Creates a fresh eligible pastor via API, so it never depends on the fixture wallet's purchase state |
 || `interview-date.spec.mjs` | Booking a 2PM interview stores/displays the exact instant (timestamptz regression: 2PM → "05:00 AM" bug) |
 || `verified-city-gate.spec.mjs` | Purchase eligibility: unverified pastor NOT eligible (`verified_city_required`), verified pastor eligible |
-|| `church-selector-diag.spec.mjs` | Session-cookie fallback in `authenticateUser` (stale token) + `ChurchSelector` options/assigned church |
+|| `church-selector-diag.spec.mjs` | Session-cookie auth in `authenticateUser` + `ChurchSelector` options/assigned church |
 || `vault-both-donate.spec.mjs` | Vault donation with BOTH USDT+SLEARN through `/api/add-donation` (sends real testnet tokens to the dev backend) |
 || `gas-insufficient-panel.spec.mjs` | Donación sin CELO para gas → el modal se reemplaza por el panel "Se necesita CELO" (EN/ES) con enlace al curso Web3 & UBI (Guía 2) y botón Cerrar; regresión con CELO suficiente (formulario se mantiene). Mockea `eth_getBalance` |
 
@@ -224,7 +224,7 @@ time out on SIWE under suite load (passes solo).
 | `verified-city-gate`, `premium-course-checkout` | Verifier wallet (`apps/.env`) whitelisted; eligibility = verified worship city |
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
 | `donate-campaign-real` | Motor de campañas desplegado (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_ADDRESS`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` en el dev (billetera única). La ronda C (cashback ON) requiere MINTER_ROLE de SLEARN en el backend (otorgado en el SLEARN Sepolia del dev) + CELO en la billetera de prueba para el gas; las rondas A/B (cashback OFF) no lo requieren |
-| `church-selector-diag` | Session cookie auth (works via the session fallback in `lib/authenticateUser.ts`) |
+| `church-selector-diag` | Session cookie auth (`lib/authenticateUser.ts`, session only) |
 | `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, shown by `/api/churches/fund`) with **≥44 SLEARN** for the pastor bonus; otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when `/api/churches/fund` reports a low balance |
 
 ### Verifying the new-wallet "cooldown" fix on production
@@ -247,7 +247,7 @@ The course list is served by the app itself (`/api/course-catalog`, R-#233 §4.4
 same-origin, so no port/mock is needed.
 
 Expected in both phases: `ANÓNIMAS 0` (never an anonymous `/api/scholarship`)
-and `¿cooldown?: no`; phase B (stale token) still queries with the wallet.
+and `¿cooldown?: no`; phase B (second load) also queries with the wallet.
 Manual alternative: connect a brand-new wallet on `https://learn.tg`, open the
 course list and check "A relationship with Jesus" shows the real state (not
 "cooldown"), then reconnect and confirm it does not change.
@@ -385,7 +385,6 @@ CHROME_PATH=/usr/bin/google-chrome make test-e2e
 | "CHROME_PATH not set" | No Chrome binary | Install chromium, set env var |
 | Smoke `celo-claim` fails with "24 hours" | Test wallet cooldown | Wait 24h or use different wallet |
 | Smoke `auth-ux` shows address ❌ | Client-rendered components | Use Puppeteer specs for UI verification |
-| Rails API 401 "Different tokens" | Token mismatch between auth and API | Normal for new wallets; retry authenticating |
 | Chrome hangs on OpenBSD | Zombie Puppeteer processes | `rm -rf /tmp/puppeteer*` and retry |
 | CalDAV smokes skipped | `CALDAV_URL` not set | Set env vars if CalDAV testing is needed |
 | `full-flow.spec.mjs` UBI claim fails | Test wallet profile score < 50 | Run `bin/m test:e2e prerequisites` to set up |

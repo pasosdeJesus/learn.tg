@@ -1426,7 +1426,6 @@ CREATE TABLE public.billetera_usuario (
     id bigint NOT NULL,
     billetera character varying(60) NOT NULL,
     usuario_id integer NOT NULL,
-    token character varying(256),
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     answer_fib character varying,

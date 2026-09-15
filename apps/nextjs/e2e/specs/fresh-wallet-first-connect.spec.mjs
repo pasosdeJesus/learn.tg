@@ -3,14 +3,13 @@
 // en "cooldown" y sin avance; al reconectar se ve normal (reporte de alumnos).
 //
 // Reproducción en dos fases con una billetera nueva (SIWE):
-//   A) CONTROL: token dedicado recién obtenido (equivalente a "tras reconectar")
-//      → la tarjeta muestra el estado real de la beca.
-//   B) REPRO: misma sesión válida pero token de API obsoleto/fallback (CSRF) —
-//      lo que deja el PRIMER login cuando `GET /api/auth/token` falla y
-//      `ConnectWalletButton` guarda el CSRF como respaldo legacy.
+//   A) CONTROL: primera carga tras el SIWE → la tarjeta muestra el estado real.
+//   B) REPRO: segunda carga de la misma sesión → idéntico (sin consultas
+//      anónimas ni "cooldown" falso). Desde R-#233 Fase 2 ya no hay token de
+//      API que pueda quedar obsoleto: la credencial es la cookie de sesión.
 //
-// El spec FALLA mientras el bug exista y PASA cuando el primer login (o la
-// página) tolera el token obsoleto: sin "cooldown" falso y con el avance real.
+// El spec FALLA si la página consulta el avance sin billetera (estado
+// "cooldown"/cero falso) y PASA cuando usa la billetera de la sesión.
 //
 // Nota de red: la lista de cursos la sirve la propia app (Next) desde la BD
 // compartida en `/api/course-catalog` (R-#233 §4.4), same-origin — no hay puerto
@@ -51,7 +50,6 @@ function attachProbe(page, base) {
     calls.push({
       courseId: q.get('courseId'),
       walletInQuery: q.get('walletAddress'),
-      token: (q.get('token') || '').slice(0, 8),
       status: res.status(),
       canSubmit: body?.canSubmit,
       percentageCompleted: body?.percentageCompleted,
@@ -122,15 +120,9 @@ async function main() {
     return { rel, anon, scoped, cooldown, realState, text }
   }
 
-  const control = await loadAndSnapshot('Fase A — control (token dedicado recién obtenido)')
+  const control = await loadAndSnapshot('Fase A — control (primera carga tras SIWE)')
 
-  const stalePrefix = await page.evaluate(async () => {
-    const j = await (await fetch('/api/auth/csrf')).json()
-    localStorage.setItem('learn.tg.authToken', j.csrfToken)
-    return j.csrfToken.slice(0, 8)
-  })
-  console.log(`\n  token reemplazado por el CSRF legacy (${stalePrefix}…) — estado del primer login si /api/auth/token falló`)
-  const repro = await loadAndSnapshot('Fase B — repro (token obsoleto, sesión válida)')
+  const repro = await loadAndSnapshot('Fase B — repro (segunda carga)')
 
   await page.screenshot({ path: '/tmp/fresh-wallet-first-connect.png' }).catch(() => {})
 
@@ -140,13 +132,13 @@ async function main() {
   if (control.rel.length === 0) {
     fail('la lista de cursos no consultó /api/scholarship para la billetera nueva (tarjeta sin avance/estado)')
   } else if (repro.rel.length === 0) {
-    fail('la fase B (token obsoleto) no consultó /api/scholarship: la página no se recuperó del token caducado (401/lista vacía) en vez de pedir uno nuevo con la sesión vigente')
+    fail('la fase B (segunda carga) no consultó /api/scholarship: la página no cargó el avance con la sesión vigente')
   } else if (control.anon.length > 0 || repro.anon.length > 0) {
     fail(`la página consultó /api/scholarship SIN walletAddress (anónima): control=${control.anon.length}, repro=${repro.anon.length} → estado "cooldown"/cero en la tarjeta (bug del reporte)`)
   } else if (control.cooldown || repro.cooldown) {
     fail('la tarjeta muestra "cooldown" con una billetera nueva (canSubmit:false)')
   } else {
-    ok('sin consultas anónimas ni cooldown falso: la página usa el address/token de la billetera conectada')
+    ok('sin consultas anónimas ni cooldown falso: la página usa la billetera de la sesión')
   }
 
   await browser.close()

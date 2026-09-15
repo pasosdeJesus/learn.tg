@@ -47,14 +47,13 @@ export async function scholarshipStatus(deps: RewardsDeps, req: NextRequest) {
     const { searchParams } = req.nextUrl
     const courseId = searchParams.get('courseId')
     const walletAddress = searchParams.get('walletAddress')
-    const token = searchParams.get('token')
 
     const db = deps.db()
     let courseIdNumber = NaN
 
-    const auth = await deps.authenticateUser(db, walletAddress || '', token || '')
+    const auth = await deps.authenticateUser(db, walletAddress || '')
     const billeteraUsuario = auth?.billetera
-    if (walletAddress && token && !auth) {
+    if (walletAddress && !auth) {
       retMessage += "\nAuthentication failed. "
     }
 

@@ -12,19 +12,18 @@ blockchain keys) must authenticate the caller. Three classes exist:
 | Class | Meaning | How a route expresses it |
 |---|---|---|
 | **public** | No auth needed; only non-sensitive data or self-data | Listed in `PUBLIC_ENDPOINTS` of the audit script with a reason comment |
-| **authenticated** | Any logged-in user (session cookie first; legacy `wallet`+`token` fallback) | `authenticateUser(db, wallet, token)` from `lib/authenticateUser.ts` |
-| **admin-only** | Only verifier/admin wallets | `authenticateAdmin(db, wallet, token)` from `lib/admin-auth.ts` |
+| **authenticated** | Any logged-in user (NextAuth session cookie) | `authenticateUser(db, wallet)` from `lib/authenticateUser.ts` |
+| **admin-only** | Only verifier/admin wallets | `authenticateAdmin(db, wallet)` from `lib/admin-auth.ts` |
 
-> **Auth model (R-#227, session-first):** `authenticateUser` validates the
-> NextAuth session cookie first (JWT, `sub` == requested wallet, lowercase) and
-> falls back to the `billetera_usuario.token` legacy path only for
-> non-browser clients (specs; Rails no longer uses the token, R-#233). CSRF is
-> never an API credential: a
-> dedicated random token (256 bits) is generated on the first sign-in and reused
-> afterwards (no longer rotated, 2026-09-14); the browser fetches it from
-> `GET /api/auth/token`. `AUTH_SESSION_ONLY=1` disables the legacy
-> path to measure residual dependencies; `DEBUG_AUTH=1` adds gated no-PII
-> tracing. See `doc/siwe-auth-flow.md`.
+> **Auth model (R-#227 + R-#233 Fase 2):** `authenticateUser` validates the
+> NextAuth session cookie (JWT, `sub` == requested wallet, lowercase) and that is
+> the **only** credential: the `walletAddress` argument is an untrusted identity
+> hint that must match the session subject. The former
+> `billetera_usuario.token` path was removed (2026-09-15) together with
+> `GET /api/auth/token`, `lib/auth-token.ts` and the `learn.tg.authToken`
+> localStorage entry: no client stores or sends a token and the column is
+> dropped. CSRF is never an API credential (it is only the SIWE nonce).
+> `DEBUG_AUTH=1` adds gated no-PII tracing. See `doc/siwe-auth-flow.md`.
 
 Rules:
 
@@ -89,10 +88,9 @@ Detection patterns (auth, admin, DB, files, `nombre`) live at the top of the
 script and are the source of truth; keep them in sync when the auth helpers
 change.
 
-Among the auth patterns, `getToken(` recognizes **session-first** routes
-(R-#227) that authorize directly with the NextAuth JWT from the session cookie
-and return 401 without it (e.g. `/api/auth/token`). A route using
-`getToken(` must still reject when the cookie/subject is missing.
+Among the auth patterns, `getToken(` recognizes routes that authorize directly
+with the NextAuth JWT from the session cookie and return 401 without it. A route
+using `getToken(` must still reject when the cookie/subject is missing.
 
 ### When to run it
 

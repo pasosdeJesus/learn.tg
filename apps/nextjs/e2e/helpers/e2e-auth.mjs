@@ -4,7 +4,7 @@
 //
 // Usage:
 //   import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-//   const { sessionAddress, authToken } = await setupE2EAuth(page, address, privateKey, chainId, baseUrl)
+//   const { sessionAddress } = await setupE2EAuth(page, address, privateKey, chainId, baseUrl)
 //   await page.goto(url)  // page is already authenticated
 
 /**
@@ -134,24 +134,13 @@ export async function setupE2EAuth(page, address, privateKey, chainId, baseUrl) 
 
   console.log(`  SIWE: ${cbResult.status} — ${cbResult.body}`)
 
-  // Store in localStorage: R-#227 (Opción B) → token DEDICADO desde
-  // /api/auth/token (la cookie de sesión ya quedó en el browser); respaldo CSRF.
-  let authToken = csrfToken
+  // Store in localStorage: R-#233 Fase 2 — the session cookie (already in the
+  // browser) is the only credential; there is no API token to store.
   if (cbResult.ok) {
-    try {
-      const tok = await page.evaluate(async () => {
-        const r = await fetch('/api/auth/token', { headers: { Accept: 'application/json' } })
-        if (!r.ok) return null
-        const j = await r.json()
-        return j && j.token ? j.token : null
-      })
-      if (tok) authToken = tok
-    } catch { /* respaldo */ }
-    await page.evaluate(({ token, addr }) => {
-      localStorage.setItem('learn.tg.authToken', token)
+    await page.evaluate((addr) => {
       localStorage.setItem('learn.tg.sessionAddress', addr)
-    }, { token: authToken, addr: address.toLowerCase() })
+    }, address.toLowerCase())
   }
 
-  return { sessionAddress: address.toLowerCase(), authToken }
+  return { sessionAddress: address.toLowerCase() }
 }

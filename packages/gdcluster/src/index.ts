@@ -37,14 +37,12 @@ export interface GdclusterDeps {
   authenticateUser: (
     db: Kysely<any>,
     wallet?: string,
-    token?: string,
   ) => Promise<AuthUser | null>
   backend: GdclusterBackendDeps
   /** Auth de admin/verificador (inyectada por el host; https://github.com/pasosdeJesus/learn.tg/issues/220 admin) */
   authenticateAdmin?: (
     db: Kysely<any>,
     wallet: string,
-    token: string,
   ) => Promise<{ usuario_id: number; billetera: string } | null>
   /**
    * Alerta in-app a TODOS los verificadores (REQ/223 — patrón "billetera del

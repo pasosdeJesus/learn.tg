@@ -65,9 +65,9 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { walletAddress, token, courseId, usdtHash, slearnHash, referralAddress } = body
+    const { walletAddress, courseId, usdtHash, slearnHash, referralAddress } = body
 
-    if (!walletAddress || !token || !courseId) {
+    if (!walletAddress || !courseId) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 })
     }
     if (!usdtHash && !slearnHash) {
@@ -75,7 +75,7 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
     }
 
     const courseIdNum = Number(courseId)
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
     const { usuario } = auth
 

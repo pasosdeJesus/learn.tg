@@ -240,19 +240,8 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
 
       // Set localStorage — survives NextAuth's useSession() glitch (#5719)
       localStorage.setItem('learn.tg.sessionAddress', checksummedAddress)
-      // R-#227 (Opción B): el token de API ya NO es el CSRF. Tras el login se
-      // pide el token dedicado a /api/auth/token (sesión-primero); si falla,
-      // se conserva el CSRF como respaldo (legacy).
-      try {
-        const tokRes = await fetch('/api/auth/token', { headers: { Accept: 'application/json' } })
-        if (tokRes.ok) {
-          const tokData = await tokRes.json()
-          if (tokData?.token) localStorage.setItem('learn.tg.authToken', tokData.token)
-        }
-      } catch { /* respaldo: CSRF abajo */ }
-      if (!localStorage.getItem('learn.tg.authToken')) {
-        localStorage.setItem('learn.tg.authToken', csrfToken)
-      }
+      // R-#233 Fase 2: no hay token de API que guardar. La cookie de sesión
+      // (HttpOnly) es la única credencial y las llamadas API la usan solas.
       // Referido: si el usuario llegó por un enlace /ref/{CODE}, reclámalo
       // ahora que ya está autenticado (https://github.com/pasosdeJesus/learn.tg/issues/163 §2.3).
       const pendingReferral = localStorage.getItem('learn.tg.pendingReferralCode')
@@ -261,7 +250,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
           const res = await fetch('/api/referral/claim', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ walletAddress: checksummedAddress, token: csrfToken, code: pendingReferral }),
+            body: JSON.stringify({ walletAddress: checksummedAddress, code: pendingReferral }),
           })
           if (res.ok) localStorage.removeItem('learn.tg.pendingReferralCode')
         } catch {
@@ -283,7 +272,6 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
 
   async function handleDisconnect() {
     localStorage.removeItem('learn.tg.sessionAddress')
-    localStorage.removeItem('learn.tg.authToken')
     setLocalAddr(null)
     // Use NextAuth's signOut which properly clears cookies + redirects
     const { signOut } = await import('next-auth/react')

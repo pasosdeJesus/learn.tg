@@ -88,7 +88,7 @@ describe('Profile Page', () => {
     console.error = vi.fn()
 
     // Mock localStorage
-    const storage: Record<string, string> = { 'learn.tg.authToken': 'test-token', 'learn.tg.sessionAddress': '0x1234567890123456789012345678901234567890' }
+    const storage: Record<string, string> = { 'learn.tg.sessionAddress': '0x1234567890123456789012345678901234567890' }
     Object.defineProperty(window, 'localStorage', {
       value: {
         getItem: (key: string) => storage[key] || null,

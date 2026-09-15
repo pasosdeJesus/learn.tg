@@ -20,9 +20,8 @@ import type { GdclusterDeps } from '../index'
 export async function clusterStatus(deps: GdclusterDeps, req: NextRequest) {
   try {
     const walletAddress = req.nextUrl.searchParams.get('walletAddress') || ''
-    const token = req.nextUrl.searchParams.get('token') || ''
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
 
     const church = await getPastorChurch(db, auth.usuario.id)
@@ -72,9 +71,8 @@ export async function clusterStatus(deps: GdclusterDeps, req: NextRequest) {
 export async function clusterCandidates(deps: GdclusterDeps, req: NextRequest) {
   try {
     const walletAddress = req.nextUrl.searchParams.get('walletAddress') || ''
-    const token = req.nextUrl.searchParams.get('token') || ''
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
 
     const church = await getPastorChurch(db, auth.usuario.id)
@@ -99,9 +97,8 @@ export async function clusterCandidates(deps: GdclusterDeps, req: NextRequest) {
 export async function listInvitations(deps: GdclusterDeps, req: NextRequest) {
   try {
     const walletAddress = req.nextUrl.searchParams.get('walletAddress') || ''
-    const token = req.nextUrl.searchParams.get('token') || ''
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
 
     const invitations = await db
@@ -126,11 +123,11 @@ export async function listInvitations(deps: GdclusterDeps, req: NextRequest) {
  */
 export async function acceptInvitation(deps: GdclusterDeps, req: NextRequest) {
   try {
-    const { walletAddress, token, invitationId } = await req.json()
+    const { walletAddress, invitationId } = await req.json()
     if (!invitationId) return NextResponse.json({ error: 'invitationId is required' }, { status: 400 })
 
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
 
     const church = await getPastorChurch(db, auth.usuario.id)
@@ -207,11 +204,11 @@ export async function acceptInvitation(deps: GdclusterDeps, req: NextRequest) {
  */
 export async function rejectInvitation(deps: GdclusterDeps, req: NextRequest) {
   try {
-    const { walletAddress, token, invitationId } = await req.json()
+    const { walletAddress, invitationId } = await req.json()
     if (!invitationId) return NextResponse.json({ error: 'invitationId is required' }, { status: 400 })
 
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
 
     const invitation = await db

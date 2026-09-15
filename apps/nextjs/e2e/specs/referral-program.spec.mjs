@@ -59,10 +59,13 @@ async function navAndWait(page, url, timeout) {
 }
 
 function authState(page) {
-  return page.evaluate(() => ({
-    addr: localStorage.getItem('learn.tg.sessionAddress'),
-    token: localStorage.getItem('learn.tg.authToken'),
-  }))
+  return page.evaluate(() => localStorage.getItem('learn.tg.sessionAddress'))
+    .then(async (addr) => {
+      // R-#233 Fase 2: las llamadas desde Node deben enviar la cookie de sesión
+      // (ya no hay token de API).
+      const cookies = await page.browserContext().cookies()
+      return { addr, cookie: cookies.map(c => `${c.name}=${c.value}`).join('; ') }
+    })
 }
 
 async function main() {
@@ -98,7 +101,7 @@ async function main() {
 
   // Score del referidor (adaptativo: activado requiere > 90)
   const aState = await authState(pageA)
-  const profileRes = await fetch(`${base}/api/profile?walletAddress=${encodeURIComponent(aState.addr)}&token=${encodeURIComponent(aState.token)}`).catch(() => null)
+  const profileRes = await fetch(`${base}/api/profile?walletAddress=${encodeURIComponent(aState.addr)}`, { headers: { Cookie: aState.cookie } }).catch(() => null)
   let score = null
   if (profileRes && profileRes.ok) {
     const pj = await profileRes.json()
@@ -142,7 +145,7 @@ async function main() {
   } else { fail('Checklist de requisitos no visible') }
 
   // Step 4: código de referido vía API
-  const codeRes = await fetch(`${base}/api/referral/code?walletAddress=${encodeURIComponent(aState.addr)}&token=${encodeURIComponent(aState.token)}`).catch(() => null)
+  const codeRes = await fetch(`${base}/api/referral/code?walletAddress=${encodeURIComponent(aState.addr)}`, { headers: { Cookie: aState.cookie } }).catch(() => null)
   if (codeRes && codeRes.ok) {
     const codeData = await codeRes.json()
     if (codeData.code) {
@@ -216,8 +219,8 @@ async function main() {
     // Claim con el código pendiente (equivalente al auto-claim de ConnectWalletButton)
     const claimRes = await fetch(`${base}/api/referral/claim`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletAddress: bState.addr, token: bState.token, code: refCode }),
+      headers: { 'Content-Type': 'application/json', Cookie: bState.cookie },
+      body: JSON.stringify({ walletAddress: bState.addr, code: refCode }),
     })
     const claimData = await claimRes.json().catch(() => ({}))
     if (claimRes.status === 200 && claimData.ok) {
@@ -233,8 +236,8 @@ async function main() {
     // Step 6: 2º claim → 400 "Referral already claimed"
     const again = await fetch(`${base}/api/referral/claim`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletAddress: bState.addr, token: bState.token, code: refCode }),
+      headers: { 'Content-Type': 'application/json', Cookie: bState.cookie },
+      body: JSON.stringify({ walletAddress: bState.addr, code: refCode }),
     })
     const againData = await again.json().catch(() => ({}))
     if (again.status === 400 && String(againData.error).includes('already')) ok('2º claim → 400 "Referral already claimed"')
@@ -242,7 +245,7 @@ async function main() {
     else { console.log(`  again: ${again.status} ${JSON.stringify(againData)}`); fail('Idempotencia del claim falló') }
 
     // Step 6b: solo lectura — /api/referral/code del referido → referredBy
-    const myCode = await fetch(`${base}/api/referral/code?walletAddress=${encodeURIComponent(bState.addr)}&token=${encodeURIComponent(bState.token)}`).catch(() => null)
+    const myCode = await fetch(`${base}/api/referral/code?walletAddress=${encodeURIComponent(bState.addr)}`, { headers: { Cookie: bState.cookie } }).catch(() => null)
     if (myCode && myCode.ok) {
       const myData = await myCode.json()
       if (myData.referredBy) ok(`Solo lectura: "Te refirió: ${myData.referredBy}"`)
@@ -251,7 +254,7 @@ async function main() {
     }
 
     // Step 7: historial del referidor incluye al referido
-    const histRes = await fetch(`${base}/api/referral/history?walletAddress=${encodeURIComponent(aState.addr)}&token=${encodeURIComponent(aState.token)}`).catch(() => null)
+    const histRes = await fetch(`${base}/api/referral/history?walletAddress=${encodeURIComponent(aState.addr)}`, { headers: { Cookie: aState.cookie } }).catch(() => null)
     if (histRes && histRes.ok) {
       const hist = await histRes.json()
       if (Array.isArray(hist.referrals) && hist.referrals.length >= 1) {

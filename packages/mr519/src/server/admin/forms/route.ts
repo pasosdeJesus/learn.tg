@@ -5,10 +5,9 @@ import type { Mr519Deps } from '../../deps'
 export function makePostAdminForm(deps: Mr519Deps) {
   return async function POST(req: NextRequest) {
     const wallet = req.nextUrl.searchParams.get('wallet') || ''
-    const token = req.nextUrl.searchParams.get('token') || ''
     try {
       const db = deps.db()
-      const admin = await deps.authenticateAdmin(db, wallet, token)
+      const admin = await deps.authenticateAdmin(db, wallet)
       if (!admin) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
 
       const body = await req.json()

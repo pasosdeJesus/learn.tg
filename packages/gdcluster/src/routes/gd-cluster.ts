@@ -16,7 +16,7 @@ import type { GdclusterDeps } from '../index'
 
 export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
   try {
-    const { walletAddress, token, name, pseudonym, inviteeIds } = await req.json()
+    const { walletAddress, name, pseudonym, inviteeIds } = await req.json()
 
     if (!name || name.length < 3 || name.length > 50) {
       return NextResponse.json(
@@ -26,7 +26,7 @@ export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
     }
 
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) {
       return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
     }
@@ -157,7 +157,7 @@ export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
 
 export async function joinCluster(deps: GdclusterDeps, req: NextRequest) {
   try {
-    const { walletAddress, token, code } = await req.json()
+    const { walletAddress, code } = await req.json()
 
     if (!code || code.length !== 6) {
       return NextResponse.json(
@@ -167,7 +167,7 @@ export async function joinCluster(deps: GdclusterDeps, req: NextRequest) {
     }
 
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) {
       return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
     }
@@ -289,9 +289,9 @@ export async function updateCluster(
   }
 
   try {
-    const { walletAddress, token, name, pseudonym } = await req.json()
+    const { walletAddress, name, pseudonym } = await req.json()
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) {
       return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
     }
@@ -378,9 +378,9 @@ export async function leaveCluster(
   }
 
   try {
-    const { walletAddress, token } = await req.json()
+    const { walletAddress } = await req.json()
     const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress, token)
+    const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) {
       return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
     }

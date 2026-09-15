@@ -56,24 +56,22 @@ async function main() {
   const page = await browser.newPage()
   await page.setDefaultNavigationTimeout(timeout)
 
-  const { sessionAddress, authToken } = await setupE2EAuth(page, wallet, creds.pk, chainId, base)
-  console.log(`Session: ${short(sessionAddress)} tokenLen=${authToken.length}`)
+  const { sessionAddress } = await setupE2EAuth(page, wallet, creds.pk, chainId, base)
+  console.log(`Session: ${short(sessionAddress)}`)
 
   // ── 1. Reproduce ChurchSelector fetch exactly ──
   console.log('\n── 1. ChurchSelector fetch (exact reproduction) ──')
   const fetchReport = await page.evaluate(async () => {
     const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const tok = localStorage.getItem('learn.tg.authToken') || ''
     const params = new URLSearchParams({ q: '', country: '694' })
     if (addr) params.set('walletAddress', addr)
-    if (tok) params.set('token', tok)
     const url = `/api/churches/search?${params}`
     const r = await fetch(url)
     let body = null
     try { body = await r.json() } catch { body = { parseError: true } }
     return {
       status: r.status,
-      addrKey: !!addr, tokKey: !!tok, addr, tokenLen: tok.length,
+      addrKey: !!addr, addr,
       url,
       count: Array.isArray(body.churches) ? body.churches.length : null,
       first: Array.isArray(body.churches) ? body.churches.slice(0, 3) : body,
@@ -83,32 +81,7 @@ async function main() {
   if (fetchReport.status === 200 && fetchReport.count > 0) {
     ok(`Search fetch: 200 with ${fetchReport.count} churches`)
   } else {
-    fail(`Search fetch: status=${fetchReport.status} count=${fetchReport.count} addrKey=${fetchReport.addrKey} tokKey=${fetchReport.tokKey}`)
-  }
-
-  // ── 2. Stale token + fresh session (root cause: token rotation) ──
-  console.log('\n── 2. Stale token + fresh session cookie ──')
-  const staleTest = await page.evaluate(async () => {
-    // Simulate the verifier's browser: token was rotated by a later login
-    const originalTok = localStorage.getItem('learn.tg.authToken')
-    localStorage.setItem('learn.tg.authToken', 'stale-token-00000000000000000000000000000000')
-    const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-    const q1 = `walletAddress=${encodeURIComponent(addr)}&token=stale-token-00000000000000000000000000000000`
-    const resSearch = await fetch(`/api/churches/search?q=&country=694&${q1}`)
-    let searchStatus = resSearch.status
-    let searchCount = null
-    try { const j = await resSearch.json(); searchCount = Array.isArray(j.churches) ? j.churches.length : null } catch {}
-    const q2 = `wallet=${encodeURIComponent(addr)}&token=stale-token-00000000000000000000000000000000`
-    const resAdmin = await fetch(`/api/admin/users/recent?${q2}`)
-    const adminStatus = resAdmin.status
-    localStorage.setItem('learn.tg.authToken', originalTok || '')
-    return { searchStatus, searchCount, adminStatus }
-  })
-  console.log('Stale-token result:', JSON.stringify(staleTest))
-  if (staleTest.searchStatus === 200 && staleTest.searchCount > 0 && staleTest.adminStatus === 200) {
-    ok(`Session fallback works: search=200(${staleTest.searchCount}), admin=200`)
-  } else {
-    fail(`Session fallback: search=${staleTest.searchStatus}(${staleTest.searchCount}) admin=${staleTest.adminStatus}`)
+    fail(`Search fetch: status=${fetchReport.status} count=${fetchReport.count} addrKey=${fetchReport.addrKey}`)
   }
 
   // ── 3. Admin dashboard → UserEditModal → ChurchSelector ──

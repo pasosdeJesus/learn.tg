@@ -8,12 +8,12 @@ export function makePostResponse(deps: Mr519Deps) {
     const parts = p.split('/')
     const formId = parseInt(parts[0] || '0')
     const body = await req.json()
-    const { walletAddress, token, values } = body
+    const { walletAddress, values } = body
 
-    if (!walletAddress || !token) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    if (!walletAddress) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     try {
       const db = deps.db()
-      const auth = await deps.authenticateUser(db, walletAddress, token)
+      const auth = await deps.authenticateUser(db, walletAddress)
       if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
       const exists = await sql`SELECT id FROM mr519_gen_formulario WHERE id = ${formId}`.execute(db)

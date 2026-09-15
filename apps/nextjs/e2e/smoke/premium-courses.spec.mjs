@@ -110,20 +110,14 @@ async function main() {
   if (cb.status === 200) ok('SIWE auth');
   else return fail('SIWE auth', `status ${cb.status}`);
 
-  // R-#227: token de API dedicado vía /api/auth/token (el CSRF es solo el nonce)
-  let apiToken = csrfToken;
-  try {
-    const tokRes = await api.get('/api/auth/token');
-    if (tokRes.data?.token) apiToken = tokRes.data.token;
-  } catch { /* respaldo CSRF legacy */ }
-  const token = apiToken;
+  // R-#233 Fase 2: la credencial es la cookie de sesión; no hay token de API.
   const walletAddress = account.address;
 
   // 2. Price endpoint (fresh wallet has no country → 400, proves deployed)
   console.log('\n2. Price endpoint');
   try {
     const priceRes = await api.get(
-      `/api/courses/premium/price?courseId=${PREMIUM_COURSE_ID}&walletAddress=${walletAddress}&token=${token}`,
+      `/api/courses/premium/price?courseId=${PREMIUM_COURSE_ID}&walletAddress=${walletAddress}`,
     );
     if (priceRes.status === 200) ok('Price endpoint 200', `priceUSDT=${priceRes.data.priceUSDT}`);
     else fail('Price endpoint', `unexpected status ${priceRes.status}`);
@@ -137,7 +131,7 @@ async function main() {
   console.log('\n3. Guide access control (premium, not purchased)');
   try {
     await api.get(
-      `/api/guide?courseId=${PREMIUM_COURSE_ID}&lang=en&prefix=gdcluster&guide=guide1&walletAddress=${walletAddress}&token=${token}`,
+      `/api/guide?courseId=${PREMIUM_COURSE_ID}&lang=en&prefix=gdcluster&guide=guide1&walletAddress=${walletAddress}`,
     );
     fail('Guide access control', 'expected 403 but got 200');
   } catch (e) {
@@ -150,7 +144,7 @@ async function main() {
   console.log('\n4. Access endpoint');
   try {
     await api.get(
-      `/api/courses/${PREMIUM_COURSE_ID}/access?walletAddress=${walletAddress}&token=${token}`,
+      `/api/courses/${PREMIUM_COURSE_ID}/access?walletAddress=${walletAddress}`,
     );
     fail('Access endpoint', 'expected 403 but got 200');
   } catch (e) {
@@ -165,7 +159,7 @@ async function main() {
   console.log('\n5. My premium courses');
   try {
     const mineRes = await api.get(
-      `/api/courses/premium/mine?walletAddress=${walletAddress}&token=${token}`,
+      `/api/courses/premium/mine?walletAddress=${walletAddress}`,
     );
     if (mineRes.status === 200 && Array.isArray(mineRes.data.courses) && mineRes.data.courses.length === 0) {
       ok('My premium courses empty');

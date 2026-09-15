@@ -16,7 +16,6 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
-import { dedicatedApiTokenAxios } from '../helpers/siwe-auth.mjs'
 import {
   initTestEnv, launchBrowser, newPage,
   resetFailures, fail, ok, summary, short,
@@ -80,11 +79,8 @@ async function siweSignIn(privateKey, address) {
   })
   if (res.headers['set-cookie']) cookies = updateCookies(cookies, res.headers['set-cookie'])
 
-  // R-#227: el token de API es el DEDICADO expuesto por /api/auth/token
-  // (session cookie); el CSRF ya no es un credencial válido.
-  const apiToken = await dedicatedApiTokenAxios(axios, httpsAgent, SITE, cookies, csrfToken)
-
-  return { token: apiToken, cookies, address }
+  // R-#233 Fase 2: la credencial es la cookie de sesión; no hay token de API.
+  return { cookies, address }
 }
 
 async function apiPatch(pathname, body, params, cookies) {
@@ -112,7 +108,7 @@ async function main() {
 
   // 2. Fill Sierra Leone profile (Christian, pilot country, non-Zionist)
   const s = await siweSignIn(pk, addr)
-  const auth = { walletAddress: addr, token: s.token }
+  const auth = { walletAddress: addr }
   await apiPatch('/api/profile', {
     nombre: 'E2E Checkout', email: testEmail, pais_id: 694, religion_id: 2,
     position_israel_gaza: 'no', place_of_worship: 'E2E Checkout Church',
@@ -121,12 +117,12 @@ async function main() {
 
   // 3. Verifier confirms the worship location → eligible to buy GD
   const vAuth = await siweSignIn(verifier.pk, verifier.addr)
-  const profile = await axios.get(`${SITE}/api/profile?walletAddress=${encodeURIComponent(addr)}&token=${encodeURIComponent(s.token)}`, { httpsAgent, headers: { Cookie: s.cookies } }).then(r => r.data)
+  const profile = await axios.get(`${SITE}/api/profile?walletAddress=${encodeURIComponent(addr)}`, { httpsAgent, headers: { Cookie: s.cookies } }).then(r => r.data)
   await apiPatch(`/api/admin/user/${profile.id}`, {
     verified_place_of_worship_location: 'Freetown',
     verified_place_of_worship: 'E2E Checkout Church',
     verified_church_relationship: 'pastor',
-  }, { wallet: verifier.addr, token: vAuth.token }, vAuth.cookies)
+  }, { wallet: verifier.addr }, vAuth.cookies)
 
   // 4. Browser: Buy button + CheckoutModal
   const browser = await launchBrowser(env.headless)

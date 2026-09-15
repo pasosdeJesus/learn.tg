@@ -10,11 +10,9 @@ export interface Mr519Deps {
   authenticateUser: (
     db: Kysely<any>,
     wallet?: string,
-    token?: string,
   ) => Promise<{ usuario: { id: number } } | null>
   authenticateAdmin: (
     db: Kysely<any>,
     wallet: string,
-    token: string,
   ) => Promise<any>
 }

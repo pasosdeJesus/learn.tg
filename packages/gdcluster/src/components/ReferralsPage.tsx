@@ -73,9 +73,8 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
   useEffect(() => {
     if (!address) { setCode(null); setStats(null); setHistory([]); setReferrals([]); setActivated(false); setPurchasedPremium(false); setProfileScore(null); setReferredBy(null); return }
     let cancelled = false
-    const token = typeof window !== 'undefined' ? localStorage.getItem('learn.tg.authToken') : null
     ;(async () => {
-      const q = `?walletAddress=${encodeURIComponent(address)}&token=${encodeURIComponent(token || '')}`
+      const q = `?walletAddress=${encodeURIComponent(address)}`
       const [codeRes, statsRes, histRes, profileRes] = await Promise.all([
         axios.get(`/api/referral/code${q}`).catch(() => null),
         axios.get(`/api/referral/stats${q}`).catch(() => null),
