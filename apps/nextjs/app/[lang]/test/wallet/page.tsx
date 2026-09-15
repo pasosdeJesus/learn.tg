@@ -2,12 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { SiweMessage } from 'siwe'
-import { getAddress } from 'viem'
 import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-
-const CHAIN_IDS: Record<string, number> = { celo: 42220, celoSepolia: 11142220 }
+import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 
 export default function WalletTestPage() {
   const params = useParams<{ lang?: string }>()
@@ -108,45 +105,7 @@ export default function WalletTestPage() {
   const onSignIn = () => guarded(async () => {
     const provider = getProvider()
     if (!provider) throw new Error('wallet is not unlocked')
-
-    const accounts = (await provider.request({ method: 'eth_accounts' })) as string[]
-    const address = accounts[0]
-    if (!address) throw new Error('no accounts from the in-app wallet')
-
-    const csrfRes = await fetch('/api/auth/csrf')
-    const { csrfToken } = (await csrfRes.json()) as { csrfToken?: string }
-    if (!csrfToken) throw new Error('could not get the CSRF token')
-
-    const msg = new SiweMessage({
-      domain: window.location.host,
-      address: getAddress(address),
-      statement: 'Sign in to Learn through games.',
-      uri: window.location.origin,
-      version: '1',
-      chainId: CHAIN_IDS[network] ?? 11142220,
-      nonce: csrfToken,
-    })
-    const message = msg.prepareMessage()
-    const signature = (await provider.request({
-      method: 'personal_sign',
-      params: [message, address],
-    })) as string
-
-    const body = new URLSearchParams({
-      csrfToken,
-      message,
-      signature,
-      redirect: 'false',
-      json: 'true',
-    })
-    const callback = await fetch('/api/auth/callback/credentials', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-    })
-    if (!callback.ok) throw new Error(`authentication failed (${callback.status})`)
-
-    localStorage.setItem('learn.tg.sessionAddress', getAddress(address))
+    const address = await signInWithInAppWallet(provider)
     append(`OK signed in as ${address}`)
   })
 

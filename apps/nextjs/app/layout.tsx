@@ -26,6 +26,16 @@ export const metadata: Metadata = {
   title: 'Learn Through Games',
   description: 'Learn Through Games',
   manifest: '/manifest.webmanifest',
+  // R-#243: en iOS/Safari la instalación no usa el manifiesto; sin estos metadatos
+  // el icono del inicio es una captura de pantalla.
+  icons: {
+    apple: '/icons/learntg-180x180.png',
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'Learn.tg',
+    statusBarStyle: 'default',
+  },
 }
 
 export const viewport: Viewport = {

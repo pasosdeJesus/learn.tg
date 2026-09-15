@@ -12,6 +12,14 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') })
 import withPWA from 'next-pwa';
 import type { PWAConfig } from 'next-pwa';
 
+// El PWA se activa siempre (dev y producción) para poder probar la instalación
+// en el sitio de desarrollo; `NEXT_PUBLIC_PWA_DISABLE=1` lo apaga en el build
+// (y entonces el registrador desregistra cualquier worker sobrante).
+// Ojo: en `next dev` next-pwa fuerza NetworkOnly (sin caché ni offline) y
+// regenera el worker en cada compilación; el offline solo se prueba en un build
+// de producción. Ver doc/pwa-developer-guide.md.
+const pwaDisabled = process.env.NEXT_PUBLIC_PWA_DISABLE === '1';
+
 const pwaConfig: PWAConfig = {
   dest: 'public',
   // El auto-registro de next-pwa inyecta register.js en la entrada main.js, que
@@ -19,7 +27,7 @@ const pwaConfig: PWAConfig = {
   // registra components/ServiceWorkerRegistrar.tsx (ver doc/pwa-developer-guide.md).
   register: false,
   skipWaiting: true,
-  disable: false,
+  disable: pwaDisabled,
   fallbacks: {
     document: '/offline',
   } as PWAConfig['fallbacks'],
@@ -94,6 +102,11 @@ const pwaConfig: PWAConfig = {
 };
 
 const nextConfig: NextConfig = {
+  // Lo lee components/ServiceWorkerRegistrar.tsx: registra el worker cuando esta
+  // compilación lo genera, y si está apagado desregistra el que hubiera quedado.
+  env: {
+    NEXT_PUBLIC_PWA_ENABLED: pwaDisabled ? '0' : '1',
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

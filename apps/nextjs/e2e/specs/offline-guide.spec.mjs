@@ -73,6 +73,17 @@ async function main() {
   }
   ok(`Service worker registrado (${String(registration).split('/').pop()})`)
 
+  // El worker de desarrollo (next dev) es NetworkOnly y sin precache: no puede
+  // servir nada offline, así que el offline solo se verifica en un build de
+  // producción. Se detecta por el contenido del propio /sw.js.
+  const swSource = await fetch(`${base}/sw.js`).then((r) => (r.ok ? r.text() : '')).catch(() => '')
+  const isDevWorker = /NetworkOnly/.test(swSource) && !/precacheAndRoute/.test(swSource)
+  if (isDevWorker) {
+    console.log('[SKIP] el sitio sirve el worker de desarrollo (NetworkOnly, sin precache): el offline se prueba en un build de producción')
+    await browser.close()
+    process.exit(0)
+  }
+
   // Recarga: la página pasa a estar controlada por el service worker y el
   // handler NetworkFirst guarda el HTML de la guía.
   await page.reload({ waitUntil: 'domcontentloaded' })

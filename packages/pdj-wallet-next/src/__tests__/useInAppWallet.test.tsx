@@ -14,7 +14,7 @@ const walletMock = vi.hoisted(() => ({
 
 vi.mock('@learn-tg/pdj-wallet', () => walletMock)
 
-import { useInAppWallet } from '../useInAppWallet'
+import { useInAppWallet, resetInAppWalletStoreForTests } from '../useInAppWallet'
 
 const ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as `0x${string}`
 const INFO = { address: ADDRESS, chain: 'celoSepolia' as const, createdAt: 1 }
@@ -22,6 +22,7 @@ const INFO = { address: ADDRESS, chain: 'celoSepolia' as const, createdAt: 1 }
 describe('useInAppWallet', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    resetInAppWalletStoreForTests()
     ;(globalThis as { indexedDB?: unknown }).indexedDB = {}
     window.indexedDB = {} as IDBFactory
   })
@@ -101,5 +102,29 @@ describe('useInAppWallet', () => {
     })
     expect(walletMock.deleteWallet).toHaveBeenCalled()
     expect(result.current.status).toBe('no-wallet')
+  })
+
+  // Sin estado compartido, `InAppWalletSetup` desbloqueaba la billetera y el
+  // componente que lo contenía seguía viendo `locked`: la interfaz parecía no
+  // hacer nada.
+  it('shares the state between instances (setup and consumer agree)', async () => {
+    walletMock.hasWallet.mockResolvedValue(false)
+    walletMock.createWallet.mockResolvedValue({ walletInfo: INFO, mnemonic: 'one two three' })
+    const setup = renderHook(() => useInAppWallet())
+    const consumer = renderHook(() => useInAppWallet())
+
+    await waitFor(() => expect(consumer.result.current.status).toBe('no-wallet'))
+    await act(async () => {
+      await setup.result.current.create('123456')
+    })
+
+    expect(setup.result.current.status).toBe('unlocked')
+    expect(consumer.result.current.status).toBe('unlocked')
+    expect(consumer.result.current.walletInfo?.address).toBe(ADDRESS)
+
+    await act(async () => {
+      await consumer.result.current.lock()
+    })
+    expect(setup.result.current.status).toBe('locked')
   })
 })

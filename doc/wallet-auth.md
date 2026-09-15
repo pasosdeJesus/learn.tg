@@ -75,19 +75,38 @@ Custom connect/disconnect button. Replaces RainbowKit's `ConnectButton`.
 
 ### WalletSelector (`components/WalletSelector.tsx`)
 
-Mounted in `Header` (R-#238). Chooses which wallet signs in:
+Mounted in `Header` (R-#238). The header only shows the state; the whole flow
+lives in the modal below.
 
 | State | UI |
 |-------|----|
-| `no-wallet` | "Use in-app wallet" (opens `InAppWalletSetup`) plus "Use external wallet" when `window.ethereum` exists |
-| `locked` | "Unlock in-app wallet" (`InAppWalletUnlock`, PIN) |
-| `unlocked` | In-app address (short) + "Disconnect" |
+| `no-wallet` | "Use in-app wallet" (opens `WalletDialog`) plus "Use external wallet" when `window.ethereum` exists |
+| `locked` | "Unlock your in-app wallet" (opens `WalletDialog`) |
+| `unlocked` without a session | "Sign in with in-app wallet" (opens `WalletDialog`, which runs the SIWE) |
+| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out) |
 | external chosen | Defers to `ConnectWalletButton` (existing flow, preserved) |
 
-The in-app wallet is created with a PIN and stored encrypted (AES-256-GCM +
-PBKDF2 600k) in IndexedDB (`learn-tg-pdj-wallet` → `wallet`). It signs SIWE with
-the same POST to `/api/auth/callback/credentials`, so the resulting session
-cookie is identical to the external-wallet flow.
+### WalletDialog (`components/WalletDialog.tsx`)
+
+Modal with the whole in-app flow (it does not belong in the header): create or
+import with a PIN, show the **12 words for manual backup** with a confirmation
+step, unlock an existing wallet, delete the wallet, and finish with the SIWE
+sign-in (`lib/in-app-siwe.ts`, same POST to `/api/auth/callback/credentials` as
+the external wallet, then a reload so NextAuth reads the session cookie).
+
+Two behaviours came out of the operator's manual testing on 2026-09-15:
+
+- The creation used to happen inside the header through `InAppWalletSetup`,
+  which had **its own copy of the hook state**: the selector kept seeing `locked`
+  and the button looked dead. `useInAppWallet` now keeps a single module-level
+  store (via `useSyncExternalStore`) shared by every instance.
+- Creating or unlocking the wallet **did not sign in**, so `useAuthAddress()`
+  reported an address while there was no session: pages showed "Partial login.
+  Please disconnect your wallet and connect and sign again" and authenticated
+  calls answered 401. The SIWE is now part of the flow.
+
+The wallet is created with a PIN and stored encrypted (AES-256-GCM + PBKDF2
+600k) in IndexedDB (`learn-tg-pdj-wallet` → `wallet`).
 
 ### WalletEventListener (`components/WalletEventListener.tsx`)
 

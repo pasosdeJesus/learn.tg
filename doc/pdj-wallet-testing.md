@@ -45,7 +45,7 @@ make test-hooks test-components
 ```
 
 Expected: `lib/hooks/__tests__` 74 passed / 2 skipped and
-`components/__tests__` 104 passed / 3 skipped (numbers as of 2026-09-15).
+`components/__tests__` 120 passed / 3 skipped (numbers as of 2026-09-15).
 
 What these cover:
 
@@ -94,11 +94,15 @@ CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=offline-guide
 
 ## 4. Manual: service worker, manifest and offline
 
-Prerequisites: the branch deployed to the dev site (`https://learn.tg:9001`),
-Chrome on a phone (or desktop Chrome with device emulation).
+Prerequisites: a **production build** deployed (the site, or a dev instance
+started with `make all` + `bin/start`), Chrome on a phone (or desktop Chrome with
+device emulation). A plain `next dev` instance will not do: next-pwa disables
+cache and precache in development, so there is no offline to test (see
+`doc/pwa-developer-guide.md`).
 
-1. Open `https://learn.tg:9001/<lang>` and reload once. The service worker is
-   registered (`register: true`, `skipWaiting: true`).
+1. Open `https://learn.tg/<lang>` and reload once. The service worker is
+   registered by `components/ServiceWorkerRegistrar.tsx` (`skipWaiting: true`,
+   and `NEXT_PUBLIC_PWA_ENABLED=1` because the build is production).
 2. DevTools > Application > Service Workers: `sw.js` is activated.
    Application > Manifest: name "Learn.tg - Learn through games", icons
    `/icons/learntg-*.png`.
@@ -119,6 +123,8 @@ To discard stale cached pages after deploying changes: DevTools > Application >
 Storage > "Clear site data", or unregister the service worker.
 
 ## 5. Manual: offline crossword (R-#242)
+
+No service worker needed: this works on a dev server too.
 
 1. Open `https://learn.tg:9001/en/gdcluster/guide1/test` while online; the puzzle
    is stored in `localStorage` (`crossword-state-<address>`).

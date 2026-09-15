@@ -199,6 +199,30 @@ prod / `:3500` dev, `usuarios#foto`, its historical migrations). The
 `rails-health` smoke skips when Rails is down unless `RAILS_CHECK=1`; see
 R-#233 §8 for the plan and pending decisions.
 
+**Production runs without Rails since 2026-09-15**: the operator stopped the
+service that day and **removed it from `/etc/rc.conf.local`**, so it does not
+start at boot any more. Verified against `https://learn.tg` with Rails down:
+
+- Pages 200: `/`, `/en`, `/es`, `/en/transparency`, `/en/leaderboard`,
+  `/en/web3-and-ubi/guide1`, `/en/gdcluster/guide1`; APIs:
+  `/api/course-catalog` and `/api/course-catalog/1` return the real catalog
+  (served by Next, so `NEXT_PUBLIC_API_URL` is empty as required).
+- SIWE on chain 42220 works: `/api/auth/session` returns the address,
+  `/api/profile`, `/api/notifications`, `/api/referral/code` and
+  `/api/user-transactions/<userId>` answer 200 with the session cookie, and 401
+  without it (no token anywhere).
+- `GET /api/auth/token` (removed in R-#233 Phase 2) 404s/falls through to
+  NextAuth, which confirms the deployed code is the Rails-free one.
+- Read-only smokes green: `landing-page` 3/3, `leaderboard`,
+  `verification-timezone` 4/4, `pastor-bonus` 6/6 (churches fund 282.15 SLEARN).
+- The app code has no runtime reference to Rails (`NEXT_PUBLIC_API_BASE`,
+  `learntg-admin`, `:3250/:3500`, `proyectosfinancieros`) and it has no mailer.
+
+What is lost while Rails is stopped: the MSIP backoffice UI (`:3250`), anything
+that used it for data fixes or `usuarios#foto`, and any email sent from Rails
+(Devise resets). Verifier work is unaffected: it lives in the Next admin UI
+(`/{lang}/admin` → `/api/admin/*`, e.g. `/api/admin/check-verifier`).
+
 ## Contract addresses
 
 Contract addresses are **not** read from `.env`. They come from:

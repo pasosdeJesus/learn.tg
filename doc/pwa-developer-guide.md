@@ -10,9 +10,9 @@ https://github.com/pasosdeJesus/learn.tg/issues/243 (install + docs).
 |-------|-------|-------|
 | Service worker generation | `next.config.ts` (`withPWA(pwaConfig)`) | `next-pwa@^5.6.0`, `dest: 'public'`, `skipWaiting: true`, `disable: false`, `register: false` (see *Registration*) |
 | Generated worker | `public/sw.js`, `public/workbox-*.js` | Build artefacts, gitignored, never edit by hand |
-| **Registration** | `components/ServiceWorkerRegistrar.tsx` | Registers `/sw.js` from the app, because next-pwa's auto-register does not work in the App Router; `NEXT_PUBLIC_PWA_DISABLE=1` opts out |
+| **Registration** | `components/ServiceWorkerRegistrar.tsx` | Registers `/sw.js` in production builds (`NEXT_PUBLIC_PWA_ENABLED`); in dev it cleans up any leftover worker. next-pwa's auto-register does not work in the App Router |
 | Manifest | `public/manifest.webmanifest` | Linked from `app/layout.tsx` metadata (`manifest`); `viewport.themeColor` too |
-| Icons | `public/icons/learntg-{192x192,512x512,maskable-512x512}.png` | Generated from `public/logo-learntg.png` with ImageMagick |
+| Icons | `public/icons/learntg-{180x180,192x192,512x512,maskable-512x512}.png` | Generated from `public/logo-learntg.png` with ImageMagick; the 180 one is the Apple touch icon (`metadata.icons.apple` + `metadata.appleWebApp` in `app/layout.tsx`) |
 | Offline page | `app/offline/page.tsx` | Route `/offline`, precached through `additionalManifestEntries` |
 | Offline indicator | `components/OfflineBanner.tsx` + `lib/hooks/useOfflineStatus.ts` | Mounted in `components/Layout.tsx` |
 | Install prompt | `components/InstallPrompt.tsx` | `beforeinstallprompt`; dismissal stored for 7 days |
@@ -35,6 +35,21 @@ So the config keeps `register: false` and `components/ServiceWorkerRegistrar.tsx
 (mounted in `app/RootLayoutClient.tsx`) calls
 `navigator.serviceWorker.register('/sw.js')`. Verified with Chrome on
 `http://localhost:4000`: one registration, activated, page controlled.
+
+**The PWA is enabled only in production builds.** `next-pwa` disables cache and
+precache in development (it forces `NetworkOnly` and says so in the build log:
+*"Build in develop mode, cache and precache are mostly disabled... offline support
+is disabled"*), so in `next dev` the worker adds nothing and regenerates on every
+compile (*"GenerateSW has been called multiple times"*). `next.config.ts`
+computes `pwaEnabled = NODE_ENV === 'production'`, passes `disable: !pwaEnabled`
+and injects `NEXT_PUBLIC_PWA_ENABLED` (via `env`); the registrar reads that flag
+and, when it is `0`, **unregisters any leftover worker and clears its caches** so
+a browser cannot keep running stale code. `NEXT_PUBLIC_PWA_DISABLE=1` forces the
+cleanup even in production.
+
+Consequence for testing: installability and offline (guide cache, offline page)
+can only be verified on a **production build** (`make all` / `make prod`, the
+deployed site), never on a plain `next dev` instance.
 
 Alternatives if this ever breaks: `serwist` (App Router native) or registering
 in a `next/script` with `strategy="afterInteractive"`.

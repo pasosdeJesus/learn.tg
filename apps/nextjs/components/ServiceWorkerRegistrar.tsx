@@ -7,23 +7,46 @@ import { useEffect } from 'react'
  *
  * next-pwa would do it by itself, but its auto-register injects `register.js`
  * into the webpack `main.js` entry, which does not exist in the App Router: the
- * worker is generated and served while nothing registers it (verified on the dev
- * site on 2026-09-15: `/sw.js` answers 200 while `navigator.serviceWorker
- * .getRegistrations()` is empty). Registering from the app keeps the manifest,
- * the offline caches and installability working.
+ * worker was generated and served while nothing registered it (found on the dev
+ * site on 2026-09-15).
  *
- * Set `NEXT_PUBLIC_PWA_DISABLE=1` to skip the registration.
+ * The worker is generated in development too (so the install prompt can be tried
+ * on the dev site), but note that next-pwa disables cache and precache there (it
+ * forces `NetworkOnly`): offline support only exists in production builds.
+ * `next.config.ts` injects `NEXT_PUBLIC_PWA_ENABLED`; if the build has the PWA
+ * disabled (`NEXT_PUBLIC_PWA_DISABLE=1`), any worker left over from a previous
+ * build is unregistered and its caches dropped, so a browser cannot keep running
+ * stale code.
  */
 export function ServiceWorkerRegistrar() {
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_PWA_DISABLE === '1') return
     // `'serviceWorker' in navigator` no basta: en navegadores sin soporte la
     // propiedad puede existir con valor undefined.
     if (typeof navigator === 'undefined' || !navigator.serviceWorker?.register) return
 
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
-      console.info('[pwa] no se pudo registrar el service worker:', error?.message || error)
-    })
+    const enabled =
+      process.env.NEXT_PUBLIC_PWA_ENABLED !== '0' &&
+      process.env.NEXT_PUBLIC_PWA_DISABLE !== '1'
+
+    if (enabled) {
+      navigator.serviceWorker.register('/sw.js').catch((error) => {
+        console.info('[pwa] no se pudo registrar el service worker:', error?.message || error)
+      })
+      return
+    }
+
+    void (async () => {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations?.()
+        await Promise.all((registrations || []).map((registration) => registration.unregister()))
+        if (typeof caches !== 'undefined') {
+          const keys = await caches.keys()
+          await Promise.all(keys.map((key) => caches.delete(key)))
+        }
+      } catch (error) {
+        console.info('[pwa] no se pudo limpiar el service worker previo:', error)
+      }
+    })()
   }, [])
 
   return null

@@ -31,6 +31,11 @@ const { status, walletInfo, create, importExisting, unlock, lock, remove, getPro
 exists, and `unlocked` after `create`, `importExisting` or `unlock`. `error`
 keeps the last failure message.
 
+The state is **shared by every instance** of the hook (a module-level store read
+with `useSyncExternalStore`): a component that renders `InAppWalletSetup` and the
+component that consumes `useInAppWallet()` see the same `status`. Without that,
+creating a wallet left the consumer on `locked` and the UI looked broken.
+
 | Component | Props |
 |---|---|
 | `InAppWalletSetup` | `lang?: 'en' \| 'es'` (default `en`), `onDone?(address)` |
@@ -44,8 +49,9 @@ copy (`src/i18n.ts`).
 
 ## Tests
 
-`npm test` runs 14 tests in `jsdom` with Testing Library: the hook state
+`npm test` runs 15 tests in `jsdom` with Testing Library: the hook state
 transitions (`no-wallet` → `unlocked` → `locked` → `no-wallet`), error
-propagation, `getProvider`, the setup form (create, import, PIN mismatch,
-Spanish labels) and the unlock form. The core package is mocked, so no real
-crypto or IndexedDB is required.
+propagation, `getProvider`, the state shared between instances (the components
+and the consumer that renders them must agree), the setup form (create, import,
+PIN mismatch, Spanish labels) and the unlock form. The core package is mocked,
+so no real crypto or IndexedDB is required.
