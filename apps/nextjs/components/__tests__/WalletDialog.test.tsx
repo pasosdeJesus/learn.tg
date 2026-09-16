@@ -152,4 +152,28 @@ describe('WalletDialog (R-#244)', () => {
     expect(screen.getByRole('dialog').textContent).toContain('Crear una billetera')
     expect(screen.getByTestId('wallet-create')).toHaveTextContent('Crear billetera')
   })
+
+  // R-#238: el modal reabría en la pantalla de la frase de recuperación (el
+  // operador lo reportó el 2026-09-15) y parecía imposible desbloquear la
+  // billetera recién creada. Al cerrar, el flujo vuelve a empezar.
+  it('starts a fresh flow when it is closed and reopened', async () => {
+    mocks.create.mockResolvedValue({
+      walletInfo: { address: ADDRESS },
+      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
+    })
+    const onOpenChange = vi.fn()
+    const { rerender } = render(<WalletDialog lang="en" open onOpenChange={onOpenChange} />)
+
+    await fillPin()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-create'))
+    })
+    expect(screen.getByTestId('wallet-recovery-words')).toBeInTheDocument()
+
+    rerender(<WalletDialog lang="en" open={false} onOpenChange={onOpenChange} />)
+    rerender(<WalletDialog lang="en" open onOpenChange={onOpenChange} />)
+
+    expect(screen.queryByTestId('wallet-recovery-words')).not.toBeInTheDocument()
+    expect(screen.getByTestId('wallet-pin')).toBeInTheDocument()
+  })
 })

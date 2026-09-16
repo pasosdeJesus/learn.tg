@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { t, type Lang } from '../i18n'
-import { useInAppWallet } from '../useInAppWallet'
+import { t, type Lang } from '../i18n.js'
+import { useInAppWallet } from '../useInAppWallet.js'
 
 export interface InAppWalletSetupProps {
   lang?: Lang

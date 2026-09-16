@@ -3,7 +3,8 @@
 Next.js hooks and client components for the in-app wallet. It wraps
 `@learn-tg/pdj-wallet` with React state and UI.
 
-Part of R-#237 (see `REQ/237.md`); used by the MVP of `REQ/244.md`.
+Part of https://github.com/pasosdeJesus/learn.tg/issues/237; used by the MVP of
+https://github.com/pasosdeJesus/learn.tg/issues/244.
 
 ## Install and build
 

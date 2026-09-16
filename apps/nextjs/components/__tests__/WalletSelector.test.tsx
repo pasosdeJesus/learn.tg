@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   sessionAddress: undefined as string | undefined,
   inAppAddress: undefined as string | undefined,
   isInAppUnlocked: false,
+  isSessionLoading: false,
   dialogOpen: false,
 }))
 
@@ -24,9 +25,11 @@ vi.mock('next-auth/react', () => ({
 
 vi.mock('@/lib/hooks/useAuthAddress', () => ({
   useAuthAddress: () => ({
+    address: mocks.sessionAddress ?? mocks.inAppAddress,
     sessionAddress: mocks.sessionAddress,
     inAppAddress: mocks.inAppAddress,
     isInAppUnlocked: mocks.isInAppUnlocked,
+    isSessionLoading: mocks.isSessionLoading,
   }),
 }))
 
@@ -81,7 +84,7 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/sign in with in-app wallet/i)
   })
 
-  it('shows the address and signs out when the in-app wallet has a session', async () => {
+  it('shows the address and signs out when there is a session', async () => {
     mocks.status = 'unlocked'
     mocks.isInAppUnlocked = true
     mocks.inAppAddress = ADDRESS
@@ -94,6 +97,19 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     })
     expect(mocks.lock).toHaveBeenCalled()
     expect(mocks.signOut).toHaveBeenCalledWith({ redirect: true, callbackUrl: '/en' })
+  })
+
+  // Tras el SIWE la página recarga y la billetera queda bloqueada: la cabecera
+  // debe seguir mostrando la sesión, no volver a pedir "Unlock".
+  it('keeps showing the session when the in-app wallet is locked again after a reload', () => {
+    mocks.status = 'locked'
+    mocks.isInAppUnlocked = false
+    mocks.inAppAddress = undefined
+    mocks.sessionAddress = ADDRESS
+    render(<WalletSelector lang="en" />)
+
+    expect(screen.getByTestId('wallet-selector-in-app')).toHaveTextContent(/0xf39f…2266/)
+    expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
   })
 
   it('offers the external wallet only when the browser injects one', () => {
@@ -112,5 +128,26 @@ describe('WalletSelector (R-#238/R-#244)', () => {
   it('is bilingual', () => {
     render(<WalletSelector lang="es" />)
     expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/billetera de la aplicación/i)
+  })
+
+  // R-#238: mientras el estado es 'loading' no se sabe si hay billetera; decir
+  // "Use in-app wallet" (o "Unlock") confundía al operador.
+  it('shows a neutral, disabled button while the wallet status is loading', () => {
+    mocks.status = 'loading'
+    render(<WalletSelector lang="en" />)
+
+    expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/^In-app wallet$/i)
+    expect(screen.getByTestId('wallet-open-dialog')).toBeDisabled()
+  })
+
+  it('does not ask to unlock while the NextAuth session is still loading', () => {
+    mocks.status = 'locked'
+    mocks.isInAppUnlocked = false
+    mocks.sessionAddress = undefined
+    mocks.isSessionLoading = true
+    render(<WalletSelector lang="en" />)
+
+    expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/^In-app wallet$/i)
+    expect(screen.getByTestId('wallet-open-dialog')).toBeDisabled()
   })
 })

@@ -42,10 +42,13 @@ from the browser menu.
 
 You do not need to install a wallet app to use learn.tg.
 
-1. Open the app and choose **Use in-app wallet**.
+1. Open the app and choose **Use in-app wallet** (while the app checks whether a
+   wallet already exists the button just says **In-app wallet**).
 2. Create a wallet with a 6-digit PIN. Write down the recovery phrase it shows:
    it is the only way to recover the wallet if you lose the phone.
-3. Sign in: the app signs the message for you with the wallet it just created.
+3. Press **I saved them, sign in**: the app signs the message for you with the
+   wallet it just created. If you close the window before pressing it, open the
+   wallet again with **Sign in with in-app wallet** and press the same button.
 4. To stop using it, choose **Disconnect**. To use another wallet (for example
    MetaMask/OneKey instead), choose **Use external wallet**.
 

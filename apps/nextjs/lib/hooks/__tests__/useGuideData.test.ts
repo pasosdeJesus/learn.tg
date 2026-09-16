@@ -69,7 +69,7 @@ describe('useGuideData', () => {
 
     // Default mocks
     useSessionMock.mockReturnValue({ data: mockSession, status: 'authenticated' })
-    vi.mocked(useAuthAddress).mockReturnValue({ address: '0x123', sessionAddress: '0x123', storedAddress: '0x123', inAppAddress: undefined, isInAppUnlocked: false, isAuthenticated: true, isWalletAvailable: true, isWalletCheckComplete: true })
+    vi.mocked(useAuthAddress).mockReturnValue({ address: '0x123', sessionAddress: '0x123', storedAddress: '0x123', inAppAddress: undefined, isInAppUnlocked: false, isAuthenticated: true, isSessionLoading: false, isWalletAvailable: true, isWalletCheckComplete: true })
     getCsrfTokenMock.mockResolvedValue('mock-csrf-token')
 
     // Default axios.get implementation
@@ -135,7 +135,7 @@ describe('useGuideData', () => {
       data: { ...mockSession, address: '0xAAA' },
       status: 'authenticated'
     })
-    vi.mocked(useAuthAddress).mockReturnValue({ address: '0xBBB', sessionAddress: undefined, storedAddress: '0xBBB', inAppAddress: undefined, isInAppUnlocked: false, isAuthenticated: true, isWalletAvailable: true, isWalletCheckComplete: true })
+    vi.mocked(useAuthAddress).mockReturnValue({ address: '0xBBB', sessionAddress: undefined, storedAddress: '0xBBB', inAppAddress: undefined, isInAppUnlocked: false, isAuthenticated: true, isSessionLoading: false, isWalletAvailable: true, isWalletCheckComplete: true })
 
     const { result } = renderHook(() =>
       useGuideData({ lang: 'en', pathPrefix: 'test' })
@@ -156,7 +156,7 @@ describe('useGuideData', () => {
       data: null,
       status: 'unauthenticated'
     })
-    vi.mocked(useAuthAddress).mockReturnValue({ address: undefined, sessionAddress: undefined, storedAddress: undefined, inAppAddress: undefined, isInAppUnlocked: false, isAuthenticated: false, isWalletAvailable: false, isWalletCheckComplete: false })
+    vi.mocked(useAuthAddress).mockReturnValue({ address: undefined, sessionAddress: undefined, storedAddress: undefined, inAppAddress: undefined, isInAppUnlocked: false, isAuthenticated: false, isSessionLoading: false, isWalletAvailable: false, isWalletCheckComplete: false })
 
     const { result } = renderHook(() =>
       useGuideData({ lang: 'en', pathPrefix: 'test' })
@@ -307,7 +307,7 @@ describe('useGuideData', () => {
 
   it('should not fetch guide status when no session', async () => {
     useSessionMock.mockReturnValue({ data: null, status: 'unauthenticated' })
-    vi.mocked(useAuthAddress).mockReturnValue({ address: undefined, sessionAddress: undefined, storedAddress: undefined, inAppAddress: undefined, isInAppUnlocked: false, isAuthenticated: false, isWalletAvailable: false, isWalletCheckComplete: false })
+    vi.mocked(useAuthAddress).mockReturnValue({ address: undefined, sessionAddress: undefined, storedAddress: undefined, inAppAddress: undefined, isInAppUnlocked: false, isAuthenticated: false, isSessionLoading: false, isWalletAvailable: false, isWalletCheckComplete: false })
 
     let guideStatusCalled = false
     axiosGetMock.mockImplementation((url: string) => {

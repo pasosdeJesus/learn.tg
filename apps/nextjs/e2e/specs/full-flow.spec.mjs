@@ -13,9 +13,10 @@ import * as fs from 'fs'
 import * as path from 'path'
 import {
   initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-  setupSIWEMock, short,
+  resetFailures, fail, ok, summary, short,
 } from '@pasosdejesus/m/e2e'
+// R-#239: the pdj-wallet core signs (setupSIWEMock retired).
+import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -103,22 +104,16 @@ async function main() {
   const page = await browser.newPage()
 
   // Full mock: SIWE + balances + transactions
-  await setupSIWEMock(page, envCreds.addr, envCreds.pk, chainId)
+  await installCoreWalletMock(page, { privateKey: envCreds.pk, address: envCreds.addr, chainId })
 
   // ════════════════════════════════════════════════════════════════
   // Step 1: Landing — Connect Wallet visible
   // ════════════════════════════════════════════════════════════════
   console.log('── Step 1: Landing — Connect Wallet ──')
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
-  let hasConnect = false
-  for (let i = 0; i < 15; i++) {
-    await new Promise(r => setTimeout(r, 3000))
-    hasConnect = await page.evaluate(() =>
-      document.body.textContent?.includes('Connect Wallet') ||
-      document.body.textContent?.includes('Conectar Billetera'))
-    if (hasConnect) break
-    console.log(`  Waiting for Connect Wallet... (${i + 1}/15)`)
-  }
+  // R-#238: the header shows `WalletSelector`; the external wallet lives behind
+  // "Use external wallet", which this helper clicks until Connect shows up.
+  const hasConnect = await waitForExternalConnect(page, { timeout: 45000 })
   hasConnect ? ok('Connect Wallet visible') : fail('Connect Wallet NOT visible')
 
   // ════════════════════════════════════════════════════════════════
@@ -169,25 +164,32 @@ async function main() {
   console.log('\n── Step 3: Profile fill ──')
   await ensureSessionAlive(page)
 
-  // Navigate to profile — may show "Partial login" if NextAuth session
-  // hasn't hydrated yet (known issue on OpenBSD). Reload until form appears.
+  // Navigate to profile — may show "Partial login" if the NextAuth session has not
+  // hydrated yet (known issue on OpenBSD), and the page itself fetches several
+  // authenticated endpoints before the form exists ("Loading profile..."), which
+  // on a cold dev server takes ~30 s. So: wait patiently on ONE load, and only
+  // reload when the page says "Partial login" (a reload restarts that chain).
   let profileFormReady = false
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 3 && !profileFormReady; attempt++) {
     await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
-    await new Promise(r => setTimeout(r, 5000))
 
-    const isPartialLogin = await page.evaluate(() =>
-      document.body.textContent?.includes('Partial login'))
-    if (!isPartialLogin) {
-      // Verify form fields are actually rendered
-      const hasName = await page.evaluate(() => !!document.getElementById('name'))
-      if (hasName) { profileFormReady = true; break }
+    for (let wait = 0; wait < 30; wait++) {
+      await new Promise(r => setTimeout(r, 2000))
+      const state = await page.evaluate(() => ({
+        name: !!document.getElementById('name'),
+        partial: document.body.textContent?.includes('Partial login') || false,
+      }))
+      if (state.name) { profileFormReady = true; break }
+      if (state.partial) {
+        console.log(`  Partial login on attempt ${attempt + 1}, reloading...`)
+        break
+      }
     }
-    console.log(`  Profile not ready (attempt ${attempt + 1}/5), reloading...`)
+    if (!profileFormReady) console.log(`  Profile still loading (attempt ${attempt + 1}/3)...`)
   }
 
   if (!profileFormReady) {
-    fail('Profile form did not render after 5 attempts — NextAuth session not hydrated')
+    fail('Profile form did not render after 3 loads of up to 60 s each')
     await browser.close(); process.exit(1)
   }
   ok('Profile form ready')
@@ -650,14 +652,18 @@ async function main() {
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await ensureSessionAlive(page)
 
-  // The ✕ (disconnect) button is client-rendered by ConnectWalletButton.
-  // May need reload if session just restored from localStorage.
+  // The ✕ (disconnect) button is client-rendered by ConnectWalletButton, which
+  // R-#238 put behind "Use external wallet" in the header (`WalletSelector`), and
+  // every reload resets that choice. May need reload if the session was just
+  // restored from localStorage.
   let dcFound = false
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt > 0) {
       await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
     }
     await new Promise(r => setTimeout(r, 4000))
+    await waitForExternalConnect(page, { timeout: 20000 })
+    await new Promise(r => setTimeout(r, 2000))
     dcFound = await page.evaluate(() =>
       [...document.querySelectorAll('button')].some(b =>
         (b.textContent || '').trim() === '✕'))
@@ -672,14 +678,11 @@ async function main() {
     )
     await disconnectBtn.asElement().click()
     ok('Clicked ✕')
-    for (let i = 0; i < 8; i++) {
-      await new Promise(r => setTimeout(r, 2000))
-      const reconnected = await page.evaluate(() =>
-        document.body.textContent?.includes('Connect Wallet') ||
-        document.body.textContent?.includes('Conectar Billetera'))
-      if (reconnected) { ok('Connect Wallet returned'); break }
-      if (i === 7) fail('Connect Wallet did NOT return')
-    }
+    // R-#238: after disconnecting, the header returns to `WalletSelector`, which
+    // offers the external wallet behind "Use external wallet".
+    const cameBack = await waitForExternalConnect(page, { timeout: 30000 })
+    if (cameBack) ok('Connect Wallet returned')
+    else fail('Connect Wallet did NOT return')
   } else {
     // Log page buttons for debugging
     const btns = await page.evaluate(() =>

@@ -23,7 +23,10 @@ interface ExtendedSession extends Session {
  * wagmi removed in R-#186 Phase 4 — no useAccount() dependency.
  */
 export function useAuthAddress() {
-  const { data: session } = useSession() as { data: ExtendedSession | null }
+  const { data: session, status: sessionStatus } = useSession() as {
+    data: ExtendedSession | null
+    status: string
+  }
   const [isWalletAvailable, setIsWalletAvailable] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -89,6 +92,10 @@ export function useAuthAddress() {
 
   const address = sessionAddress || inAppAddress || storedAddress
   const isAuthenticated = !!address
+  // Mientras NextAuth resuelve la cookie no se sabe si hay sesión: la cabecera
+  // debe mostrar un estado neutro, no "desbloquea tu billetera" (reportado el
+  // 2026-09-15: tras el SIWE parecía que la sesión se perdía).
+  const isSessionLoading = sessionStatus === 'loading'
 
   const isWalletCheckComplete = isWalletAvailable !== null
 
@@ -99,6 +106,7 @@ export function useAuthAddress() {
     inAppAddress,
     isInAppUnlocked,
     isAuthenticated,
+    isSessionLoading,
     isWalletAvailable: isInAppUnlocked || !!isWalletAvailable,
     isWalletCheckComplete,
   }

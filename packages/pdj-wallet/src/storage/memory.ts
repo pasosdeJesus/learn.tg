@@ -1,4 +1,4 @@
-import type { StorageAdapter, StoredWallet } from '../types'
+import type { StorageAdapter, StoredWallet } from '../types.js'
 
 export class MemoryStorage implements StorageAdapter {
   private record: StoredWallet | null

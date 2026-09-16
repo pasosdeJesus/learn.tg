@@ -1,5 +1,5 @@
-import { getUnlockedAccount, getUnlockedInfo, signMessage, signTransaction, signTypedData } from './wallet'
-import { CHAIN_IDS, type Eip1193Provider, type Eip1193RequestArgs } from './types'
+import { getUnlockedAccount, getUnlockedInfo, signMessage, signTransaction, signTypedData } from './wallet.js'
+import { CHAIN_IDS, type Eip1193Provider, type Eip1193RequestArgs } from './types.js'
 
 export interface ProviderOptions {
   rpcUrl?: string

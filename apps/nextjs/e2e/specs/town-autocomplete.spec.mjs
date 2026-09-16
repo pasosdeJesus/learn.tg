@@ -7,10 +7,11 @@
 import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
-  setupSIWEMock,
 } from '@pasosdejesus/m/e2e'
 import * as fs from 'fs'
 import * as path from 'path'
+// R-#239: the pdj-wallet core signs (setupSIWEMock retired).
+import { installCoreWalletMock } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -64,7 +65,7 @@ async function main() {
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
   await page.setDefaultNavigationTimeout(timeout)
-  await setupSIWEMock(page, wallet, creds.pk, chainId)
+  await installCoreWalletMock(page, { privateKey: creds.pk, address: wallet, chainId })
 
   // ── Test 1: Town API returns Freetown ──
   console.log('── Test 1: /api/towns/search?country=694&q=free ──')

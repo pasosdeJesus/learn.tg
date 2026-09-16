@@ -1,3 +1,4 @@
-export { MemoryStorage } from './memory'
-export { IndexedDBStorage } from './indexeddb'
-export type { StorageAdapter, StoredWallet } from '../types'
+export { MemoryStorage } from './memory.js'
+export { IndexedDBStorage } from './indexeddb.js'
+export { FileStorage } from './file.js'
+export type { StorageAdapter, StoredWallet } from '../types.js'

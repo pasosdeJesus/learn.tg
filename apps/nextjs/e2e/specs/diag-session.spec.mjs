@@ -5,8 +5,10 @@ import * as fs from 'fs'
 import * as path from 'path'
 import {
   initTestEnv, launchBrowser,
-  setupSIWEMock, short,
+  short,
 } from '@pasosdejesus/m/e2e'
+// R-#239: the pdj-wallet core signs (setupSIWEMock retired).
+import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -49,14 +51,16 @@ async function main() {
     if (t.length < 300) console.log(`  [browser:${msg.type()}]`, t)
   })
 
-  await setupSIWEMock(page, envCreds.addr, envCreds.pk, chainId)
+  await installCoreWalletMock(page, { privateKey: envCreds.pk, address: envCreds.addr, chainId })
 
   // Go to landing and connect
   console.log('1. Landing...')
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
   await new Promise(r => setTimeout(r, 5000))
 
-  // Click Connect via evaluate + click JS
+  // R-#238: the header shows `WalletSelector`; switch to the external wallet
+  // first, then click Connect via evaluate + click JS
+  await waitForExternalConnect(page, { timeout: 45000 })
   const btnFound = await page.evaluate(() => {
     const btn = [...document.querySelectorAll('button')].find(b =>
       (b.textContent || '').includes('Connect') || (b.textContent || '').includes('Conectar'))

@@ -157,8 +157,37 @@ in the Next.js README.
 ## Browser Specs (`e2e/specs/`)
 
 Puppeteer-based tests using `@pasosdejesus/m/e2e`'s test harness
-(`initTestEnv`, `launchBrowser`, `setupSIWEMock`, `ok`/`fail`/`summary`).
-Requires `CHROME_PATH` set (OpenBSD: `/usr/local/bin/chromium`).
+(`initTestEnv`, `launchBrowser`, `ok`/`fail`/`summary`).
+Requires `CHROME_PATH` set (OpenBSD: `/usr/local/bin/chrome`).
+
+### Wallet in the specs (R-#239)
+
+The wallet is the real `@learn-tg/pdj-wallet` **core running in Node**, not a
+mock: `e2e/helpers/in-app-wallet.mjs` imports the key from `apps/.env` (or creates
+a fresh one) with `FileStorage`, exposes a thin `window.ethereum` shim in the page
+and bridges `personal_sign` to the core (`signSIWE`).
+
+```js
+import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
+
+await installCoreWalletMock(page, { privateKey: pk, address: addr, chainId })  // before goto
+await page.goto(`${base}/`)
+await waitForExternalConnect(page)   // R-#238: header = WalletSelector; this clicks
+                                     // "Use external wallet" until Connect shows up
+```
+
+`signInWithCoreWallet(page, { privateKey, baseUrl, chainId })` skips the UI: it
+builds the SIWE message in Node, signs it with the core and posts the callback
+inside the page so the NextAuth session cookie lands in the browser jar.
+
+This replaced the `setupSIWEMock` / `simulateSIWE` helpers of
+`@pasosdejesus/m/e2e` in `connect-wallet-flow`, `full-flow`, `diag-session`,
+`town-autocomplete` and `prod-landing-to-profile` (2026-09-15).
+`e2e/helpers/siwe-wallet-mock.mjs` (a local copy, unused) was deleted.
+
+Requirements for Node: the package needs its own `node_modules`
+(`cd packages/pdj-wallet && pnpm install`) and its `dist/` built
+(`make engines-dist`), because Node ESM resolves `viem` from the package folder.
 
 Run with: `bin/m test:e2e` (without `--smoke`) or `make test-e2e`
 
@@ -190,6 +219,9 @@ for an example.
 | `admin-dashboard.spec.mjs` | Admin dashboard: widgets load, APIs respond, user/church detail, PATCH |
 | `prod-landing-to-profile.spec.mjs` | Production landing page → wallet connect → profile save flow |
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
+| `offline-crossword.spec.mjs` | R-#242: crossword filled, submitted offline → queued (`offline-pending`), survives a reload, and drains when the connection returns (no service worker needed) |
+| `offline-guide.spec.mjs` | R-#241: guide readable offline from the PWA cached page (skips when the site serves the development worker) |
+| `in-app-wallet.spec.mjs` | R-#245: in-app wallet created in `/en/test/wallet`, unlocked, SIWE and session cookie (skips when the page is not deployed) |
 | `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
 | `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), **ronda C con cashback ON (10 USDT @ pdJ 5%)**: campaña neta 85% (8.50), pdJ 5%, cashback 22.00 SLEARN vía `mintAndReserve` (+saldo on-chain del donante y del `learnTgReserve`), balance de la billetera campaña y filas en user-transactions (deltas vs baseline, acumulativo en dev) |
 | `donate-campaign-celo-real.spec.mjs` | **Real donation in native CELO (REQ/223):** `sendTransaction` (value) al backend → `verify` con `payToken='celo'` (verify por `tx.value`) → auto-forward nativo 100% y 90/10, balance CELO on-chain y filas `crypto=celo` |

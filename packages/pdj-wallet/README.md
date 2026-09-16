@@ -4,18 +4,24 @@ Framework-agnostic, self-custodied in-app wallet for the pdJ ecosystem
 (learn.tg today; sivel3 and stable-sl later). It has no dependency on `next`,
 `react` or `kysely`; `viem` is its only peer dependency.
 
-Part of R-#236 (see `REQ/236.md`) and used by the MVP described in `REQ/244.md`.
+Part of https://github.com/pasosdeJesus/learn.tg/issues/236 and used by the MVP
+described in https://github.com/pasosdeJesus/learn.tg/issues/244.
 
 ## Install and build
 
-The package has no `node_modules` of its own: it resolves `viem` and the test
-runner from `apps/nextjs` (see `tsconfig.json` and `vitest.config.ts`).
+The package declares its own dependencies (`viem`, `vitest`, `fake-indexeddb`,
+`typescript`), so Node can import `dist/` directly (ESM needs the real package
+resolvable from this folder). Install them once:
 
 ```sh
 cd packages/pdj-wallet
-npm run build          # tsc -b  -> dist/
-npm test               # vitest run --config vitest.config.ts
+pnpm install
+pnpm run build          # tsc -b  -> dist/ (nodenext: explicit .js extensions)
+pnpm test               # vitest run --config vitest.config.ts
 ```
+
+`apps/nextjs` consumes the built `dist/` through its `exports` map, and its
+`vitest.config.ts` aliases `viem` to the app's copy, so the two can coexist.
 
 ## API
 
@@ -23,6 +29,7 @@ npm test               # vitest run --config vitest.config.ts
 import {
   createWallet, importWallet, unlockWallet, lockWallet, deleteWallet,
   hasWallet, getWalletInfo, isUnlocked,
+  exportMnemonic, exportPrivateKey,
   signMessage, signTypedData, signTransaction, signSIWE,
   getInAppWalletProvider,
   MemoryStorage, IndexedDBStorage,
@@ -37,6 +44,7 @@ import {
 | `lockWallet()` | Clears the in-memory key |
 | `deleteWallet(storage?)` | Removes the stored record and locks |
 | `hasWallet(storage?)` / `getWalletInfo(storage?)` | Inspect the stored record without unlocking |
+| `exportMnemonic(pin, storage?)` / `exportPrivateKey(pin, storage?)` | PIN-protected export, no side effects on the session (a wallet imported from a private key has no phrase) |
 | `signMessage(message)` / `signSIWE(message)` | EIP-191 signature with the unlocked key |
 | `signTypedData(typedData)` / `signTransaction(tx)` | EIP-712 / transaction signature |
 | `getInAppWalletProvider({ rpcUrl? })` | EIP-1193 provider when unlocked, `null` otherwise |
@@ -62,6 +70,11 @@ import {
 |---|---|---|
 | `IndexedDBStorage` | Browser | Default when `indexedDB` exists |
 | `MemoryStorage` | Tests, Node.js | Pass it explicitly |
+| `FileStorage` | Node.js (E2E) | JSON file (`0600`); import it from `@learn-tg/pdj-wallet/storage` |
+
+`FileStorage` lives in the `./storage` subpath on purpose: it imports
+`node:fs/promises` dynamically, and keeping it out of the package root keeps that
+out of browser bundles.
 
 An adapter implements:
 
@@ -74,17 +87,24 @@ interface StorageAdapter {
 }
 ```
 
-`FileStorage` (Node.js, for E2E) is planned but not part of the MVP.
+`FileStorage` (Node.js, for E2E) is implemented: see the table above.
 
 ## Using it from E2E (Node.js)
 
-```js
-import { createWallet, importWallet, MemoryStorage, signSIWE } from '@learn-tg/pdj-wallet'
+The package is ESM with explicit extensions, so Node can import it directly:
 
-const storage = new MemoryStorage()
+```js
+import { createWallet, importWallet, signSIWE } from '@learn-tg/pdj-wallet'
+import { FileStorage } from '@learn-tg/pdj-wallet/storage'
+
+const storage = new FileStorage('/tmp/e2e-wallet.json')
 const { walletInfo } = await createWallet({ pin: '123456', storage })
 const signature = await signSIWE(siweMessageFor(walletInfo.address))
 ```
+
+`apps/nextjs/e2e/helpers/in-app-wallet.mjs` wraps this (create/import a wallet,
+shim `window.ethereum` in the page so its `personal_sign` is signed by the core,
+and sign in with SIWE from Node).
 
 ## Tests
 

@@ -223,6 +223,68 @@ that used it for data fixes or `usuarios#foto`, and any email sent from Rails
 (Devise resets). Verifier work is unaffected: it lives in the Next admin UI
 (`/{lang}/admin` → `/api/admin/*`, e.g. `/api/admin/check-verifier`).
 
+### 4. Local browser / PWA testing (`bin/dev` + Chrome)
+
+The app (and most of the PWA) can be exercised in a local browser without
+deploying to the dev site. This is how the service worker registration, the
+manifest and the install prompt were first checked (2026-09-15).
+
+```sh
+cd apps/nextjs
+bin/dev          # Next.js on http://localhost:4000 (PORT in apps/.env)
+```
+
+- **Open `localhost`, not `127.0.0.1`.** `authorize()` in
+  `app/api/auth/auth-options.ts` accepts `learn.tg`, `learntg.pdj.app` and their
+  `:9001`, plus — outside production — `localhost`, `localhost:4000` and
+  `localhost:4300`. SIWE signs `window.location.host`, so the host you type is the
+  host inside the signed message; anything else fails the check.
+- Chrome treats `http://localhost` as a **secure context**, so the service worker
+  registers and the install prompt can appear **over plain HTTP**: no certificate
+  is needed for local PWA checks.
+- **The worker is generated in development too** (next-pwa is only disabled with
+  `NEXT_PUBLIC_PWA_DISABLE=1`), so `bin/dev` serves `/sw.js` and
+  `components/ServiceWorkerRegistrar.tsx` registers it. Locally you can verify:
+  DevTools > Application > Service Workers (`sw.js` activated, page controlled),
+  the manifest (`/manifest.webmanifest`), the icons and the install prompt.
+  `next.config.ts` also sets `allowedDevOrigins: ['learn.tg', '127.0.0.1']`.
+- **Offline cannot be tested on a dev server**: `next-pwa` forces `NetworkOnly`
+  in `next dev` (no cache, no precache). For offline, stop the dev server (the
+  Makefile `build-guard` refuses to build while `next dev` runs), run `make all`
+  and start with `bin/start`.
+- `NEXT_PUBLIC_PWA_DISABLE=1 bin/dev` builds with the PWA off; that is how to
+  verify the cleanup path (the registrar unregisters any leftover worker and
+  deletes its caches), and it is also what the unit tests of
+  `ServiceWorkerRegistrar` cover.
+- For local **HTTPS** (needed to test from another device, e.g. a phone) use
+  `pnpm dev` (the package script), which listens on `:4300` with the certificate
+  in `../../.cert/` (`llave.pem`, `cert.pem`). A phone on the LAN still needs its
+  host added to the `authorize()` allowlist, or the SIWE check rejects it.
+- What the local instance talks to comes from `apps/.env`: with
+  `NEXT_PUBLIC_API_URL` empty it serves `/api` from the shared PostgreSQL DB (run
+  mode 3); set `NEXT_PUBLIC_API_URL=https://learn.tg:9001/api` to proxy to the
+  development site instead (run mode 1).
+
+**Driving the browser from Node.** The E2E helpers (`@pasosdejesus/m/e2e`)
+resolve from `apps/nextjs`, so a throwaway script placed inside the app
+(`e2e/tmp-*.mjs`, not committed — see `e2e/tmp-hyd-probe.mjs`) can drive the local
+instance step by step:
+
+```sh
+cd apps/nextjs
+CHROME_PATH=/usr/local/bin/chrome IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 \
+  node e2e/tmp-mi-prueba.mjs
+```
+
+`SITE_URL` + `NEXT_PUBLIC_AUTH_URL` are the alternative to `IPDES`/`PUERTOPRU`.
+The specs under `e2e/specs` accept the same overrides, but they are written
+against the dev site (registered wallet, rewards, claims), so for UI work the
+throwaway script is usually faster — and the fastest reproducible check for the
+in-app wallet is `make test-e2e-spec SPEC=in-app-wallet` against the dev site.
+
+Note: `page.waitForTimeout()` no longer exists in the bundled Puppeteer
+(24.x); use a small `sleep()` helper.
+
 ## Contract addresses
 
 Contract addresses are **not** read from `.env`. They come from:
@@ -303,6 +365,13 @@ make engines-assets      # copia assets de los motores a public/ (p.ej. gdcluste
 make engines-sync-abis   # tras regenerar abis en hardhat: copia a src/abis/ y recompila
 bin/dev                  # ya ejecuta engines-dist automáticamente; Next en :4000 (modo 2 local)
 ```
+
+`engines-dist` también compila `pdj-wallet` y `pdj-wallet-next`. El motor
+`pdj-wallet` además necesita **sus propias dependencias** (`pnpm install` dentro
+de `packages/pdj-wallet`): los specs E2E lo importan desde Node (R-#239) y Node
+ESM resuelve `viem` desde la carpeta del paquete, no desde `apps/nextjs`. Su
+build usa `moduleResolution: nodenext` (extensiones `.js` explícitas en `dist/`)
+por la misma razón.
 
 `build-guard` (en `make all`/`make prod`) aborta si el dev server está activo
 (no compilar mientras sirve: máquina compartida, ver arriba).

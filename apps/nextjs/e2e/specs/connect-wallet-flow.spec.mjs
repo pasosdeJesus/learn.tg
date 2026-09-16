@@ -9,8 +9,9 @@ import * as path from 'path'
 import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
-  setupSIWEMock,
 } from '@pasosdejesus/m/e2e'
+// R-#239: the pdj-wallet core signs (setupSIWEMock retired).
+import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -48,22 +49,16 @@ async function main() {
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
 
-  // Full mock with real signing via evaluateOnNewDocument (survives reloads)
-  await setupSIWEMock(page, envCreds.addr, envCreds.pk, chainId)
+  // Full mock with real signing by the pdj-wallet core (survives reloads)
+  await installCoreWalletMock(page, { privateKey: envCreds.pk, address: envCreds.addr, chainId })
 
   // ── Test 1: Connect Wallet on landing ──
   console.log('── Test 1: Connect Wallet visible ──')
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
-  // Wait for React hydration (can be slow on OpenBSD)
-  let hasConnect = false
-  for (let i = 0; i < 15; i++) {
-    await new Promise(r => setTimeout(r, 3000))
-    hasConnect = await page.evaluate(() =>
-      document.body.textContent?.includes('Connect Wallet') ||
-      document.body.textContent?.includes('Conectar Billetera'))
-    if (hasConnect) break
-    console.log(`  Waiting for Connect Wallet... (${i + 1}/15)`)
-  }
+  // Wait for React hydration (can be slow on OpenBSD).
+  // R-#238: the header shows `WalletSelector`; the external wallet lives behind
+  // "Use external wallet", which this helper clicks until Connect shows up.
+  const hasConnect = await waitForExternalConnect(page, { timeout: 45000 })
   if (hasConnect) ok('Connect Wallet visible')
   else fail('Connect Wallet NOT visible')
 
@@ -72,9 +67,9 @@ async function main() {
   const buttons = await page.$$('button')
   let clicked = false
   for (const btn of buttons) {
-    const text = await page.evaluate(el => el.textContent, btn)
+    const text = await page.evaluate(el => el.textContent, btn).catch(() => null)
     if (text?.includes('Connect') || text?.includes('Conectar')) {
-      await btn.click()
+      await btn.click().catch(() => {})
       clicked = true
       break
     }
@@ -82,15 +77,23 @@ async function main() {
   if (!clicked) { fail('Connect button not found'); await browser.close(); process.exit(1) }
   ok('Clicked Connect Wallet')
 
-  // Wait for reload + check
+  // Wait for reload + check. The page reloads after SIWE, so the evaluate calls
+  // can race the navigation (`Execution context was destroyed`).
   for (let i = 0; i < 12; i++) {
     await new Promise(r => setTimeout(r, 3000))
-    const stillConnect = await page.evaluate(() =>
-      document.body.textContent?.includes('Connect Wallet'))
-    const addr = await page.evaluate(() => {
-      const m = document.body.textContent?.match(/(0x[a-fA-F0-9]{6})[a-fA-F0-9]*...[a-fA-F0-9]{4}/)
-      return m ? m[0] : null
-    })
+    let stillConnect = true
+    let addr = null
+    try {
+      stillConnect = await page.evaluate(() =>
+        document.body.textContent?.includes('Connect Wallet'))
+      addr = await page.evaluate(() => {
+        const m = document.body.textContent?.match(/(0x[a-fA-F0-9]{6})[a-fA-F0-9]*...[a-fA-F0-9]{4}/)
+        return m ? m[0] : null
+      })
+    } catch {
+      console.log(`  (navigating after SIWE, retry ${i + 1}/12)`)
+      continue
+    }
     if (!stillConnect) {
       ok(`Connect Wallet replaced after SIWE ${addr ? '(' + addr + ')' : ''}`)
       break

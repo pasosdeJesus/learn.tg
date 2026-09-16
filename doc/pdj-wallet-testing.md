@@ -19,20 +19,21 @@ the dependency graph and the installed `vitest`:
 ```sh
 cd apps/nextjs
 
-# Core wallet: create/import/unlock/sign, crypto, provider (18 tests, ~8 s)
+# Core wallet: lifecycle, crypto, provider, FileStorage and exports (25 tests, ~11 s)
 ./node_modules/.bin/vitest run --root ../../packages/pdj-wallet \
   --config ../../packages/pdj-wallet/vitest.config.ts
 
-# React layer: useInAppWallet + components (14 tests, ~7 s)
+# React layer: useInAppWallet + components (15 tests, ~8 s)
 ./node_modules/.bin/vitest run --root ../../packages/pdj-wallet-next \
   --config ../../packages/pdj-wallet-next/vitest.config.ts
 ```
 
-Expected: `18 passed | 1 skipped` and `14 passed`.
+Expected: `25 passed` and `15 passed`.
 
-The skipped one is `IndexedDBStorage`: `fake-indexeddb` is declared in
-`packages/pdj-wallet/package.json` but not installed, so the test self-skips.
-Install it (`pnpm install` in `apps/nextjs`) to enable it.
+The core package declares its own dependencies (`viem`, `vitest`, `fake-indexeddb`,
+`typescript`): run `pnpm install` inside `packages/pdj-wallet` once. That is also
+what enables the `IndexedDBStorage` test, which used to self-skip because
+`fake-indexeddb` was not installed (2026-09-15: now it runs).
 
 `pnpm test` inside a package goes through corepack, which resolves pnpm 11 here
 while the repo is pinned to pnpm 10; the commands above avoid that.
@@ -44,8 +45,10 @@ cd apps/nextjs
 make test-hooks test-components
 ```
 
-Expected: `lib/hooks/__tests__` 74 passed / 2 skipped and
-`components/__tests__` 120 passed / 3 skipped (numbers as of 2026-09-15).
+Expected: `lib/hooks/__tests__` 74 passed / 2 skipped (44 s) and
+`components/__tests__` 124 passed / 3 skipped (85 s) — numbers as of 2026-09-15;
+the full `make test` is 587 passed / 6 skipped in 332 s, and most of that time is
+jsdom environment setup per test file, not the assertions.
 
 What these cover:
 
@@ -70,13 +73,20 @@ Vite cannot resolve from outside the app root). Order matters:
 ## 3. Minimal E2E
 
 `e2e/specs/in-app-wallet.spec.mjs` creates the wallet in `/en/test/wallet`,
-unlocks it, signs in with SIWE and checks the session cookie. It **skips** when
-that page is not deployed (the dev site serves `main` today):
+unlocks it, signs in with SIWE and checks the session cookie. On the dev site
+(which serves this branch since 2026-09-15) it passes in ~18 s; it **skips**
+instead of failing where that page is not deployed:
 
 ```sh
 cd apps/nextjs
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=in-app-wallet
 ```
+
+`e2e/specs/offline-crossword.spec.mjs` (R-#242) fills the crossword at
+`/en/gdcluster/guide1/test`, submits it offline, checks the `offline-pending`
+indicator, reloads and waits for the queue to drain. It needs **no** service
+worker, so it also works against a dev server; it signs in with the core through
+`e2e/helpers/in-app-wallet.mjs` (R-#239).
 
 It must end with a real NextAuth **session cookie** (there is no API token since
 R-#233 Phase 2), so any Node-side call has to forward the `Cookie` header
@@ -102,7 +112,9 @@ cache and precache in development, so there is no offline to test (see
 
 1. Open `https://learn.tg/<lang>` and reload once. The service worker is
    registered by `components/ServiceWorkerRegistrar.tsx` (`skipWaiting: true`,
-   and `NEXT_PUBLIC_PWA_ENABLED=1` because the build is production).
+   and `NEXT_PUBLIC_PWA_ENABLED=1` because the build does not set
+   `NEXT_PUBLIC_PWA_DISABLE`). On a dev server the worker also registers, but it
+   is `NetworkOnly`: offline only works on a production build.
 2. DevTools > Application > Service Workers: `sw.js` is activated.
    Application > Manifest: name "Learn.tg - Learn through games", icons
    `/icons/learntg-*.png`.

@@ -1,11 +1,12 @@
-import { decryptSecret, encryptSecret } from './crypto'
-import { IndexedDBStorage } from './storage/indexeddb'
+import { decryptSecret, encryptSecret } from './crypto.js'
+import { IndexedDBStorage } from './storage/indexeddb.js'
 import {
   accountFromPrivateKey,
   newMnemonic,
+  normalizeMnemonic,
   privateKeyFromMnemonic,
   type PrivateKey,
-} from './signer'
+} from './signer.js'
 import {
   CHAIN_IDS,
   DEFAULT_CHAIN,
@@ -15,12 +16,45 @@ import {
   type StorageAdapter,
   type StoredWallet,
   type WalletInfo,
-} from './types'
+} from './types.js'
 
 interface UnlockedState {
   privateKey: PrivateKey
   account: ReturnType<typeof accountFromPrivateKey>
   info: WalletInfo
+}
+
+/**
+ * What is encrypted at rest. The recovery phrase is kept next to the private key
+ * (it cannot be derived from it) so `exportMnemonic` can return it later; wallets
+ * imported from a private key have no phrase.
+ */
+interface WalletSecret {
+  v: 1
+  privateKey: PrivateKey
+  mnemonic?: string
+}
+
+function serializeSecret(privateKey: PrivateKey, mnemonic?: string): string {
+  const secret: WalletSecret = mnemonic
+    ? { v: 1, privateKey, mnemonic }
+    : { v: 1, privateKey }
+  return JSON.stringify(secret)
+}
+
+function parseSecret(plaintext: string): WalletSecret {
+  // Compatibility: records created before this format stored the bare key.
+  if (!plaintext.trimStart().startsWith('{')) {
+    return { v: 1, privateKey: plaintext as PrivateKey }
+  }
+  const parsed = JSON.parse(plaintext) as Partial<WalletSecret>
+  if (!parsed.privateKey) throw new Error('Corrupted wallet data')
+  return { v: 1, privateKey: parsed.privateKey, mnemonic: parsed.mnemonic }
+}
+
+async function decryptRecord(record: StoredWallet, pin: string): Promise<WalletSecret> {
+  const plaintext = await decryptSecret({ kdf: record.kdf, cipher: record.cipher }, pin)
+  return parseSecret(plaintext)
 }
 
 let unlocked: UnlockedState | null = null
@@ -65,10 +99,11 @@ async function persist(
   privateKey: PrivateKey,
   chain: ChainName,
   pin: string,
+  mnemonic?: string,
 ): Promise<WalletInfo> {
   const account = accountFromPrivateKey(privateKey)
   const createdAt = Date.now()
-  const secret = await encryptSecret(privateKey, pin)
+  const secret = await encryptSecret(serializeSecret(privateKey, mnemonic), pin)
   const info: WalletInfo = { address: account.address, chain, createdAt }
   await storage.set(buildRecord(info.address, chain, createdAt, secret))
   unlocked = { privateKey, account, info }
@@ -83,7 +118,7 @@ export async function createWallet(
   const storage = resolveStorage(options.storage)
   const mnemonic = newMnemonic()
   const privateKey = privateKeyFromMnemonic(mnemonic)
-  const walletInfo = await persist(storage, privateKey, chain, options.pin)
+  const walletInfo = await persist(storage, privateKey, chain, options.pin, mnemonic)
   return { walletInfo, mnemonic }
 }
 
@@ -94,20 +129,19 @@ export async function importWallet(options: ImportWalletOptions): Promise<Wallet
   }
   const chain = assertChain(options.chain)
   const storage = resolveStorage(options.storage)
-  const privateKey = options.mnemonic
-    ? privateKeyFromMnemonic(options.mnemonic)
+  const mnemonic = options.mnemonic ? normalizeMnemonic(options.mnemonic) : undefined
+  const privateKey = mnemonic
+    ? privateKeyFromMnemonic(mnemonic)
     : (options.privateKey as PrivateKey)
-  return persist(storage, privateKey, chain, options.pin)
+  return persist(storage, privateKey, chain, options.pin, mnemonic)
 }
 
 export async function unlockWallet(pin: string, storage?: StorageAdapter): Promise<WalletInfo> {
   const adapter = resolveStorage(storage)
   const record = await adapter.get()
   if (!record) throw new Error('There is no in-app wallet to unlock')
-  const privateKey = (await decryptSecret(
-    { kdf: record.kdf, cipher: record.cipher },
-    pin,
-  )) as PrivateKey
+  const secret = await decryptRecord(record, pin)
+  const privateKey = secret.privateKey
   const account = accountFromPrivateKey(privateKey)
   if (account.address.toLowerCase() !== record.address.toLowerCase()) {
     throw new Error('The stored wallet does not match the decrypted key')
@@ -137,6 +171,32 @@ export async function getWalletInfo(storage?: StorageAdapter): Promise<WalletInf
   const record = await adapter.get()
   if (!record) return null
   return { address: record.address, chain: record.chain, createdAt: record.createdAt }
+}
+
+/**
+ * PIN-protected export. Both read the stored record with the PIN and have no
+ * side effects on the session (the wallet may stay locked). The caller is
+ * responsible for whatever it does with the secret.
+ */
+export async function exportPrivateKey(pin: string, storage?: StorageAdapter): Promise<`0x${string}`> {
+  assertPin(pin)
+  const adapter = resolveStorage(storage)
+  const record = await adapter.get()
+  if (!record) throw new Error('There is no in-app wallet to export')
+  const secret = await decryptRecord(record, pin)
+  return secret.privateKey
+}
+
+export async function exportMnemonic(pin: string, storage?: StorageAdapter): Promise<string> {
+  assertPin(pin)
+  const adapter = resolveStorage(storage)
+  const record = await adapter.get()
+  if (!record) throw new Error('There is no in-app wallet to export')
+  const secret = await decryptRecord(record, pin)
+  if (!secret.mnemonic) {
+    throw new Error('This wallet was imported from a private key: it has no recovery phrase')
+  }
+  return secret.mnemonic
 }
 
 export function isUnlocked(): boolean {

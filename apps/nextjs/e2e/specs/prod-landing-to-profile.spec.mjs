@@ -13,9 +13,10 @@ import * as path from 'path'
 import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
-  setupSIWEMock, short,
 } from '@pasosdejesus/m/e2e'
 import { retrySpec } from '../helpers/retry.mjs'
+// R-#239: the pdj-wallet core signs (setupSIWEMock retired).
+import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -68,7 +69,7 @@ async function main() {
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
   await page.setDefaultNavigationTimeout(timeout)
-  await setupSIWEMock(page, wallet, creds.pk, chainId)
+  await installCoreWalletMock(page, { privateKey: creds.pk, address: wallet, chainId })
 
   // ═══════════════════════════════════════════════════════════
   // Step 1: Landing page — check no errors
@@ -96,10 +97,9 @@ async function main() {
   await new Promise(r => setTimeout(r, 3000))
   ok('Navigated to /en')
 
-  const hasConnect = await page.evaluate(() =>
-    document.body.textContent?.includes('Connect Wallet') ||
-    document.body.textContent?.includes('Conectar Billetera')
-  )
+  // R-#238: the header shows `WalletSelector`; the external wallet lives behind
+  // "Use external wallet", which this helper clicks until Connect shows up.
+  const hasConnect = await waitForExternalConnect(page, { timeout: 45000 })
   if (hasConnect) {
     const buttons = await page.$$('button')
     let clicked = false

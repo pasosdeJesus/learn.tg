@@ -1,4 +1,4 @@
-import type { StorageAdapter, StoredWallet } from '../types'
+import type { StorageAdapter, StoredWallet } from '../types.js'
 
 const DB_NAME = 'learn-tg-pdj-wallet'
 const DB_VERSION = 1

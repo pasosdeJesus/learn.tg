@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -107,6 +107,20 @@ export function WalletDialog({ lang = 'en', open, onOpenChange }: WalletDialogPr
       deleteWallet: 'Borrar billetera',
     },
   }), [lang])
+
+  // Al cerrar, el flujo vuelve a empezar: sin esto el modal reabría en la
+  // pantalla de la frase de recuperación (el operador lo reportó el 2026-09-15)
+  // y parecía que no se podía desbloquear la billetera recién creada.
+  useEffect(() => {
+    if (open) return
+    setMode('create')
+    setPin('')
+    setConfirm('')
+    setMnemonic('')
+    setRecovery(null)
+    setLocalError(null)
+    setBusy(false)
+  }, [open])
 
   const translateError = useCallback((raw: unknown) => {
     const code = raw instanceof Error ? raw.message : String(raw)

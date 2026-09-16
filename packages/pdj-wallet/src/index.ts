@@ -6,17 +6,19 @@ export {
   deleteWallet,
   hasWallet,
   getWalletInfo,
+  exportMnemonic,
+  exportPrivateKey,
   isUnlocked,
   getUnlockedAccount,
   getUnlockedInfo,
   signMessage,
   signTypedData,
   signTransaction,
-} from './wallet'
+} from './wallet.js'
 
-export { signSIWE } from './siwe'
-export { getInAppWalletProvider } from './provider'
-export type { ProviderOptions } from './provider'
+export { signSIWE } from './siwe.js'
+export { getInAppWalletProvider } from './provider.js'
+export type { ProviderOptions } from './provider.js'
 
 export {
   addressFromMnemonic,
@@ -26,12 +28,12 @@ export {
   normalizeMnemonic,
   privateKeyFromMnemonic,
   type PrivateKey,
-} from './signer'
+} from './signer.js'
 
-export { encryptSecret, decryptSecret, KDF_ITERATIONS } from './crypto'
+export { encryptSecret, decryptSecret, KDF_ITERATIONS } from './crypto.js'
 
-export { MemoryStorage } from './storage/memory'
-export { IndexedDBStorage } from './storage/indexeddb'
+export { MemoryStorage } from './storage/memory.js'
+export { IndexedDBStorage } from './storage/indexeddb.js'
 
 export {
   CHAIN_IDS,
@@ -44,4 +46,4 @@ export {
   type WalletInfo,
   type Eip1193Provider,
   type Eip1193RequestArgs,
-} from './types'
+} from './types.js'
