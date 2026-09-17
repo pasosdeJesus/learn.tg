@@ -10,6 +10,17 @@ https://github.com/pasosdeJesus/learn.tg/issues/240 (service worker).
 
 The goal is a fast loop: seconds, not the ~45 minute full E2E suite.
 
+**Device capabilities first:** `public/pdj-wallet-probe.html` is a self-contained
+page (no build, no React) that reports what the device can do before any code
+depends on it: `isUserVerifyingPlatformAuthenticatorAvailable()`,
+`getClientCapabilities()` (`extension:prf`), a real passkey + PRF evaluation, and
+whether `localStorage` / `sessionStorage` / **IndexedDB** survive closing and
+reopening the app. Open `https://learn.tg:9001/pdj-wallet-probe.html` or
+`http://localhost:4000/pdj-wallet-probe.html` (after `bin/dev`), press the four
+buttons, and paste the report into
+https://github.com/pasosdeJesus/learn.tg/issues/246 §8. It is the input for the
+three-layer unlock design (PIN, WebAuthn gesture, WebAuthn PRF).
+
 ## 1. Unit: the packages
 
 Both packages ship their own `vitest.config.ts` (a plain object with an alias
