@@ -2,6 +2,7 @@ export {
   createWallet,
   importWallet,
   unlockWallet,
+  restoreUnlockedSession,
   lockWallet,
   deleteWallet,
   hasWallet,
@@ -15,6 +16,14 @@ export {
   signTypedData,
   signTransaction,
 } from './wallet.js'
+
+export {
+  SESSION_UNLOCK_TTL_MS,
+  rememberUnlockedSession,
+  readUnlockedSession,
+  forgetUnlockedSession,
+  type RememberedUnlock,
+} from './session.js'
 
 export { signSIWE } from './siwe.js'
 export { getInAppWalletProvider } from './provider.js'

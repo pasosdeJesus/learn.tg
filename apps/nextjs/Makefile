@@ -92,7 +92,7 @@ format:
 # necesitan.
 test:
 	@ulimit -d 8000000 2>/dev/null || true; \
-	$(MAKE) test-lib test-hooks test-api test-components test-pages test-db
+	$(MAKE) test-lib test-hooks test-api test-components test-pages test-db test-packages
 
 test-lib:
 	pnpm vitest run lib/__tests__
@@ -116,6 +116,27 @@ test-pages:
 
 test-db:
 	pnpm vitest run db/__tests__
+
+# ── Paquetes (unit tests de los motores en packages/) ─────────────────────
+# Cada paquete trae su propio vitest.config.ts (con los alias a
+# apps/nextjs/node_modules), así que se ejecutan desde aquí y no hace falta
+# instalar nada para correrlos. `pnpm install` dentro del paquete solo hace
+# falta para importar `dist/` desde Node (E2E, R-#239), porque Node resuelve
+# `viem` desde esa carpeta. Ver doc/pdj-wallet-testing.md.
+
+test-pdj-wallet:
+	pnpm vitest run --root ../../packages/pdj-wallet
+
+# El paquete Next resuelve el core por alias a `packages/pdj-wallet/dist`, así que
+# hay que compilarlo antes. Solo el core (no engines-dist): así esta regla no
+# depende de los otros motores ni de sus node_modules.
+pdj-wallet-dist:
+	(cd ../../packages/pdj-wallet && ../../apps/nextjs/node_modules/.bin/tsc -b)
+
+test-pdj-wallet-next: pdj-wallet-dist
+	pnpm vitest run --root ../../packages/pdj-wallet-next
+
+test-packages: test-pdj-wallet test-pdj-wallet-next
 
 # ── Coverage (lento, incluye todos los tests) ────────────────────────────
 
@@ -162,3 +183,15 @@ test-e2e:
 test-e2e-spec:
 	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-9001} CHAIN_ID=$${CHAIN_ID:-11142220} \
 	./bin/m test:e2e "$(SPEC)"
+
+# Atajos por área. `SPEC` acepta cualquier patrón (el runner usa
+# `*<patrón>*.spec.mjs`), p. ej. `make test-e2e-spec SPEC=offline` corre los dos
+# specs offline. Estos son los del MVP (R-#244/R-#242):
+test-e2e-wallet:
+	$(MAKE) test-e2e-spec SPEC=in-app-wallet
+
+test-e2e-offline:
+	$(MAKE) test-e2e-spec SPEC=offline
+
+# Todo el PWA del MVP (R-#244): billetera in-app + guía offline + crucigrama offline
+test-e2e-pwa: test-e2e-wallet test-e2e-offline

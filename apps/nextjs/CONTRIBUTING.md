@@ -178,13 +178,21 @@ beforeAll(() => {
 # From apps/nextjs/
 
 # ── Fast (no coverage, parallel-safe sub-targets) ──
-make test           # Run all tests (6 sub-targets in sequence)
+make test           # Run all tests (app sub-targets + test-packages, in sequence)
 make test-lib       # Only lib/__tests__
 make test-hooks     # Only lib/hooks/__tests__
 make test-api       # Only app/api
 make test-components # Only components/__tests__ + components/ui/__tests__ + providers/__tests__
 make test-pages     # Only app/__tests__ + app/[lang]/**/__tests__
 make test-db        # Only db/__tests__
+make test-packages  # Only packages/pdj-wallet + packages/pdj-wallet-next
+make test-pdj-wallet      # Only packages/pdj-wallet (core, ~12 s)
+make test-pdj-wallet-next # Only packages/pdj-wallet-next (compila el core antes)
+
+# ── E2E shortcuts ──
+make test-e2e-wallet   # SPEC=in-app-wallet (billetera in-app, R-#245)
+make test-e2e-offline  # SPEC=offline (guía + crucigrama offline, R-#241/R-#242)
+make test-e2e-pwa      # los tres del MVP PWA
 
 # ── Type checking ──
 make type           # TypeScript check (source + test files)

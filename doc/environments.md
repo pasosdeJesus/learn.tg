@@ -373,6 +373,18 @@ ESM resuelve `viem` desde la carpeta del paquete, no desde `apps/nextjs`. Su
 build usa `moduleResolution: nodenext` (extensiones `.js` explícitas en `dist/`)
 por la misma razón.
 
+Pruebas unitarias de esos dos paquetes (viven en el Makefile de la app, igual
+que la integración):
+
+```sh
+cd apps/nextjs
+make test-packages          # pdj-wallet + pdj-wallet-next (25 + 15, ~22 s)
+make test-pdj-wallet        # solo el core
+make test-pdj-wallet-next   # solo React (compila el core por ti)
+```
+
+Cada paquete tiene su propio `Makefile` (`make test`, `make build`, `make install`).
+
 `build-guard` (en `make all`/`make prod`) aborta si el dev server está activo
 (no compilar mientras sirve: máquina compartida, ver arriba).
 

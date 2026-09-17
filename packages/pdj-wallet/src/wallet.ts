@@ -1,6 +1,11 @@
 import { decryptSecret, encryptSecret } from './crypto.js'
 import { IndexedDBStorage } from './storage/indexeddb.js'
 import {
+  forgetUnlockedSession,
+  readUnlockedSession,
+  rememberUnlockedSession,
+} from './session.js'
+import {
   accountFromPrivateKey,
   newMnemonic,
   normalizeMnemonic,
@@ -107,6 +112,7 @@ async function persist(
   const info: WalletInfo = { address: account.address, chain, createdAt }
   await storage.set(buildRecord(info.address, chain, createdAt, secret))
   unlocked = { privateKey, account, info }
+  rememberUnlockedSession(info.address, privateKey)
   return info
 }
 
@@ -148,17 +154,47 @@ export async function unlockWallet(pin: string, storage?: StorageAdapter): Promi
   }
   const info: WalletInfo = { address: record.address, chain: record.chain, createdAt: record.createdAt }
   unlocked = { privateKey, account, info }
+  // La clave queda disponible para el resto de la pestaña (session.ts).
+  rememberUnlockedSession(info.address, privateKey)
+  return info
+}
+
+/**
+ * Recupera el desbloqueo recordado para esta pestaña, si lo hay y la billetera
+ * guardada sigue siendo la misma. Devuelve `null` (y olvida la entrada) cuando
+ * no aplica.
+ */
+export async function restoreUnlockedSession(storage?: StorageAdapter): Promise<WalletInfo | null> {
+  const remembered = readUnlockedSession()
+  if (!remembered) return null
+  const adapter = resolveStorage(storage)
+  const record = await adapter.get()
+  if (!record || record.address.toLowerCase() !== remembered.address.toLowerCase()) {
+    forgetUnlockedSession()
+    return null
+  }
+  const account = accountFromPrivateKey(remembered.privateKey)
+  if (account.address.toLowerCase() !== record.address.toLowerCase()) {
+    forgetUnlockedSession()
+    return null
+  }
+  const info: WalletInfo = { address: record.address, chain: record.chain, createdAt: record.createdAt }
+  unlocked = { privateKey: remembered.privateKey, account, info }
+  // Se renueva solo: mientras la billetera se use, no vuelve a pedir el PIN.
+  rememberUnlockedSession(info.address, remembered.privateKey)
   return info
 }
 
 export async function lockWallet(): Promise<void> {
   unlocked = null
+  forgetUnlockedSession()
 }
 
 export async function deleteWallet(storage?: StorageAdapter): Promise<void> {
   const adapter = resolveStorage(storage)
   await adapter.delete()
   unlocked = null
+  forgetUnlockedSession()
 }
 
 export async function hasWallet(storage?: StorageAdapter): Promise<boolean> {

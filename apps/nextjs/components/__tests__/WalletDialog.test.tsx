@@ -43,8 +43,8 @@ import { WalletDialog } from '../WalletDialog'
 
 const ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
-function renderDialog(lang = 'en') {
-  return render(<WalletDialog lang={lang} open onOpenChange={vi.fn()} />)
+function renderDialog(lang = 'en', sessionAddress?: string) {
+  return render(<WalletDialog lang={lang} open onOpenChange={vi.fn()} sessionAddress={sessionAddress} />)
 }
 
 async function fillPin(pin = '123456') {
@@ -139,6 +139,28 @@ describe('WalletDialog (R-#244)', () => {
 
     expect(mocks.unlock).toHaveBeenCalledWith('123456')
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
+  // R-#244: si la cookie de sesión ya es de esta billetera, volver a firmar el
+  // SIWE recarga la página, la clave sale de memoria y la billetera queda
+  // bloqueada otra vez: el usuario no llegaba a donar ni a comprar
+  // (reportado el 2026-09-16).
+  it('does not sign in again when the session already is this wallet', async () => {
+    mocks.status = 'locked'
+    mocks.walletInfo = { address: ADDRESS }
+    mocks.unlock.mockResolvedValue({ address: ADDRESS })
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog('en', ADDRESS.toLowerCase())
+
+    await fillPin()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-unlock'))
+    })
+
+    expect(mocks.unlock).toHaveBeenCalledWith('123456')
+    expect(mocks.signInWithInAppWallet).not.toHaveBeenCalled()
+    expect(mocks.reload).not.toHaveBeenCalled()
   })
 
   it('shows the error reported by the hook', () => {

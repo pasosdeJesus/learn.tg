@@ -36,6 +36,10 @@ jobs:
           pnpm test -- --exclude **/api/**
         working-directory: ./apps/nextjs
 
+      - name: Run pdj-wallet package suites
+        run: make test-packages
+        working-directory: ./apps/nextjs
+
       - name: Run API route security audit (static, no server/DB needed)
         run: node bin/audit-api-auth.mjs
         working-directory: ./apps/nextjs

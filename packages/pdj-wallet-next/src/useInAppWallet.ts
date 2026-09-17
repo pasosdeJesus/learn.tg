@@ -9,6 +9,7 @@ import {
   hasWallet,
   importWallet,
   lockWallet,
+  restoreUnlockedSession,
   unlockWallet,
   type Eip1193Provider,
   type ImportWalletOptions,
@@ -81,6 +82,18 @@ async function initialize(): Promise<void> {
       return
     }
     const info = await getWalletInfo()
+    // R-#244: si esta pestaña ya desbloqueó la billetera, la cabecera muestra la
+    // sesión y los modales de pago no vuelven a pedir el PIN tras la recarga.
+    let restored: WalletInfo | null = null
+    try {
+      restored = await restoreUnlockedSession()
+    } catch {
+      restored = null
+    }
+    if (restored) {
+      setState({ walletInfo: restored, status: 'unlocked' })
+      return
+    }
     setState({
       walletInfo: info,
       status: state.status === 'unlocked' ? 'unlocked' : 'locked',

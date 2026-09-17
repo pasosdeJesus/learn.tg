@@ -108,6 +108,21 @@ Two behaviours came out of the operator's manual testing on 2026-09-15:
 The wallet is created with a PIN and stored encrypted (AES-256-GCM + PBKDF2
 600k) in IndexedDB (`learn-tg-pdj-wallet` → `wallet`).
 
+Three behaviours came out of the operator's manual testing on 2026-09-16
+(https://github.com/pasosdeJesus/learn.tg/issues/244): the modal is also mounted
+when the header already shows a session — it is the only listener of
+`learn-tg:open-in-app-wallet-dialog`, so without it the "unlock" button of the
+donation and purchase modals did nothing —, unlocking skips the SIWE (and the
+reload that would lock the wallet again) when the session cookie already belongs
+to that wallet, and the unlock is remembered for the tab
+(`packages/pdj-wallet/src/session.ts`, `sessionStorage`, sliding 30 min TTL) so a
+reload does not ask for the PIN again.
+
+The session entry is a **stopgap**: it keeps the private key in plaintext, and
+https://github.com/pasosdeJesus/learn.tg/issues/246 replaces it with the
+three-layer design (PIN, WebAuthn gesture gate, WebAuthn **PRF** hardware
+unlock) so that nothing is readable at rest.
+
 ### WalletEventListener (`components/WalletEventListener.tsx`)
 
 Mounts at layout level (`AppProvider`). Listens for wallet events and syncs

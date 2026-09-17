@@ -11,14 +11,36 @@ End-to-end testing for learn.tg uses `@pasosdejesus/m`'s test runner
 | `make test-smoke` | All HTTP smoke tests | ❌ | `https://learn.tg:9001` |
 | `make test-e2e` | All browser specs | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-<name>` | Single browser spec by filename pattern | ✅ | `https://learn.tg:9001` |
-| `bin/m test:e2e` | Browser specs (falls back to smoke if none found) | ✅ | `https://learn.tg:9001` |
+| `make test-e2e-wallet` | Atajo: `SPEC=in-app-wallet` (billetera in-app, R-#245) | ✅ | `https://learn.tg:9001` |
+| `make test-e2e-offline` | Atajo: `SPEC=offline` (offline-guide + offline-crossword) | ✅ | `https://learn.tg:9001` |
+| `make test-packages` | Unit tests de `packages/pdj-wallet{,−next}` | ❌ | local |
+| `bin/m test:e2e` | Browser specs (falls back to smoke if none found) | ✅ | ⚠️ **`https://learn.tg` (producción)** |
 | `bin/m test:e2e --smoke` | Smoke only | ❌ | `https://learn.tg:9001` |
-| `bin/m test:e2e <pattern>` | Specific spec(s) matching filename | ✅ | `https://learn.tg:9001` |
-| `bin/m test:e2e --grep <filter>` | Filter specs by test name | ✅ | `https://learn.tg:9001` |
+| `bin/m test:e2e <pattern>` | Specific spec(s) matching filename | ✅ | ⚠️ **`https://learn.tg` (producción)** |
+| `bin/m test:e2e --grep <filter>` | Filter specs by test name | ❌ | `https://learn.tg:9001` |
 
 Override target: `SITE_URL=https://learn.tg bin/m test:e2e`
 
 Chrome path: `CHROME_PATH=/usr/local/bin/chrome bin/m test:e2e`
+
+### ⚠️ `bin/m test:e2e` directo apunta a PRODUCCIÓN
+
+Los atajos de `make` exportan
+`IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220` (`apps/nextjs/Makefile:184`),
+por eso llegan al sitio de desarrollo. `bin/m test:e2e` **sin esos tres
+variables** usa los valores por defecto de `initTestEnv()`
+(`@pasosdejesus/m/dist/e2e/env.js`): host `learn.tg`, puerto `443` y
+**cadena `42220`** (mainnet).
+
+Consecuencia medida (2026-09-16): corriendo `./bin/m test:e2e
+premium-course-checkout` sin variables, el spec firmaba SIWE con cadena `42220`
+contra un sitio que espera `11142220`; `auth-options.ts` descarta el mensaje por
+red equivocada (`return null`, `apps/nextjs/app/api/auth/auth-options.ts:129`) y el
+callback responde **401 CredentialsSignin**. El spec falla con "Buy button not
+visible" porque no hay sesión, no por un defecto del producto. Con
+`make test-e2e-spec SPEC=premium-course-checkout` (variables exportadas) pasa.
+
+Regla: usar siempre los atajos de `make`, o exportar las tres variables.
 
 ## Dev-server warmup: `bin/warmup.mjs`
 
@@ -222,6 +244,8 @@ for an example.
 | `offline-crossword.spec.mjs` | R-#242: crossword filled, submitted offline → queued (`offline-pending`), survives a reload, and drains when the connection returns (no service worker needed) |
 | `offline-guide.spec.mjs` | R-#241: guide readable offline from the PWA cached page (skips when the site serves the development worker) |
 | `in-app-wallet.spec.mjs` | R-#245: in-app wallet created in `/en/test/wallet`, unlocked, SIWE and session cookie (skips when the page is not deployed) |
+| `header-wallet-dialog.spec.mjs` | R-#245: the real header + wallet modal flow — create → close → reopen must start fresh → unlock from the header → SIWE → the header **keeps the session after a reload** → `✕` returns to signed-out |
+| `donate-unlock-dialog.spec.mjs` | R-#244: with an in-app session and the wallet locked, the donation modal's unlock button must open the wallet dialog **on top** with the PIN form, and unlocking must remove the notice |
 | `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
 | `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), **ronda C con cashback ON (10 USDT @ pdJ 5%)**: campaña neta 85% (8.50), pdJ 5%, cashback 22.00 SLEARN vía `mintAndReserve` (+saldo on-chain del donante y del `learnTgReserve`), balance de la billetera campaña y filas en user-transactions (deltas vs baseline, acumulativo en dev) |
 | `donate-campaign-celo-real.spec.mjs` | **Real donation in native CELO (REQ/223):** `sendTransaction` (value) al backend → `verify` con `payToken='celo'` (verify por `tx.value`) → auto-forward nativo 100% y 90/10, balance CELO on-chain y filas `crypto=celo` |

@@ -92,22 +92,29 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
 
   if (signedIn) {
     return (
-      <div data-testid="wallet-selector-in-app" className="flex items-center gap-2">
-        <span className="text-xs text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full font-mono">
-          {shortAddress}
-        </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs text-gray-500 hover:text-red-600"
-          data-testid="wallet-disconnect"
-          title={t('disconnect')}
-          aria-label={t('disconnect')}
-          onClick={() => { void disconnect() }}
-        >
-          ✕
-        </Button>
-      </div>
+      <>
+        <div data-testid="wallet-selector-in-app" className="flex items-center gap-2">
+          <span className="text-xs text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full font-mono">
+            {shortAddress}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-gray-500 hover:text-red-600"
+            data-testid="wallet-disconnect"
+            title={t('disconnect')}
+            aria-label={t('disconnect')}
+            onClick={() => { void disconnect() }}
+          >
+            ✕
+          </Button>
+        </div>
+        {/* Con sesión iniciada la billetera queda bloqueada tras recargar, así que
+            el diálogo tiene que seguir montado: es el único que atiende
+            OPEN_IN_APP_WALLET_DIALOG. Sin él, el botón "desbloquear" de los modales
+            de donación y de compra no hacía nada (reportado el 2026-09-16). */}
+        <WalletDialog lang={lang} open={dialogOpen} onOpenChange={setDialogOpen} sessionAddress={sessionAddress} />
+      </>
     )
   }
 
@@ -137,7 +144,7 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
           {t('useExternal')}
         </Button>
       )}
-      <WalletDialog lang={lang} open={dialogOpen} onOpenChange={setDialogOpen} />
+      <WalletDialog lang={lang} open={dialogOpen} onOpenChange={setDialogOpen} sessionAddress={sessionAddress} />
     </div>
   )
 }

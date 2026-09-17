@@ -32,6 +32,12 @@ const { status, walletInfo, create, importExisting, unlock, lock, remove, getPro
 exists, and `unlocked` after `create`, `importExisting` or `unlock`. `error`
 keeps the last failure message.
 
+When a wallet exists the hook first tries `restoreUnlockedSession()` from the core
+package: the unlock is remembered in `sessionStorage` for the lifetime of the tab
+(sliding 30 min TTL, cleared by `lock()` / the header ✕), so a reload no longer
+forces the user to type the PIN again while the header shows a valid session
+(https://github.com/pasosdeJesus/learn.tg/issues/244).
+
 The state is **shared by every instance** of the hook (a module-level store read
 with `useSyncExternalStore`): a component that renders `InAppWalletSetup` and the
 component that consumes `useInAppWallet()` see the same `status`. Without that,

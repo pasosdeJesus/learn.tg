@@ -7,6 +7,7 @@ const walletMock = vi.hoisted(() => ({
   createWallet: vi.fn(),
   importWallet: vi.fn(),
   unlockWallet: vi.fn(),
+  restoreUnlockedSession: vi.fn(),
   lockWallet: vi.fn(),
   deleteWallet: vi.fn(),
   getInAppWalletProvider: vi.fn(),
@@ -23,6 +24,9 @@ describe('useInAppWallet', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetInAppWalletStoreForTests()
+    // `clearAllMocks` no revierte las implementaciones: fijar la de restaurar
+    // evita que un test deje la billetera desbloqueada para los siguientes.
+    walletMock.restoreUnlockedSession.mockResolvedValue(null)
     ;(globalThis as { indexedDB?: unknown }).indexedDB = {}
     window.indexedDB = {} as IDBFactory
   })
@@ -37,8 +41,21 @@ describe('useInAppWallet', () => {
   it('reports locked when a wallet exists', async () => {
     walletMock.hasWallet.mockResolvedValue(true)
     walletMock.getWalletInfo.mockResolvedValue(INFO)
+    walletMock.restoreUnlockedSession.mockResolvedValue(null)
     const { result } = renderHook(() => useInAppWallet())
     await waitFor(() => expect(result.current.status).toBe('locked'))
+    expect(result.current.walletInfo?.address).toBe(ADDRESS)
+  })
+
+  // R-#244: si la pestaña ya desbloqueó la billetera, recargar no debe volver a
+  // pedir el PIN (la cabecera muestra la sesión y los modales quedan usables).
+  it('restores the unlock remembered for the tab', async () => {
+    walletMock.hasWallet.mockResolvedValue(true)
+    walletMock.getWalletInfo.mockResolvedValue(INFO)
+    walletMock.restoreUnlockedSession.mockResolvedValue(INFO)
+    const { result } = renderHook(() => useInAppWallet())
+    await waitFor(() => expect(result.current.status).toBe('unlocked'))
+    expect(walletMock.restoreUnlockedSession).toHaveBeenCalled()
     expect(result.current.walletInfo?.address).toBe(ADDRESS)
   })
 

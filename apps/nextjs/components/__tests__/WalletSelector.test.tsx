@@ -45,6 +45,7 @@ vi.mock('@/components/ConnectWalletButton', () => ({
 }))
 
 import { WalletSelector } from '../WalletSelector'
+import { OPEN_IN_APP_WALLET_DIALOG } from '@/lib/in-app-wallet-dialog'
 
 const ADDRESS = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'
 
@@ -110,6 +111,21 @@ describe('WalletSelector (R-#238/R-#244)', () => {
 
     expect(screen.getByTestId('wallet-selector-in-app')).toHaveTextContent(/0xf39f…2266/)
     expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
+  })
+
+  // R-#244: con sesión y billetera bloqueada el encabezado muestra la dirección,
+  // pero el diálogo debe seguir montado: es el único que atiende el evento de los
+  // modales de donación/compra (reportado el 2026-09-16: el botón no hacía nada).
+  it('opens the dialog from the outside event while showing a session', async () => {
+    mocks.status = 'locked'
+    mocks.isInAppUnlocked = false
+    mocks.sessionAddress = ADDRESS
+    render(<WalletSelector lang="en" />)
+
+    await act(async () => {
+      window.dispatchEvent(new Event(OPEN_IN_APP_WALLET_DIALOG))
+    })
+    expect(screen.getByTestId('wallet-dialog-open')).toBeInTheDocument()
   })
 
   it('offers the external wallet only when the browser injects one', () => {

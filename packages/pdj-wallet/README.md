@@ -28,6 +28,7 @@ pnpm test               # vitest run --config vitest.config.ts
 ```ts
 import {
   createWallet, importWallet, unlockWallet, lockWallet, deleteWallet,
+  restoreUnlockedSession, readUnlockedSession, forgetUnlockedSession,
   hasWallet, getWalletInfo, isUnlocked,
   exportMnemonic, exportPrivateKey,
   signMessage, signTypedData, signTransaction, signSIWE,
@@ -41,7 +42,8 @@ import {
 | `createWallet({ pin, chain?, storage? })` | Generates a 12-word mnemonic, stores the encrypted key and returns `{ walletInfo, mnemonic }` |
 | `importWallet({ mnemonic?, privateKey?, pin, chain?, storage? })` | Imports an existing wallet |
 | `unlockWallet(pin, storage?)` | Decrypts the key into memory and returns `WalletInfo` |
-| `lockWallet()` | Clears the in-memory key |
+| `restoreUnlockedSession(storage?)` | Restores the unlock remembered for this **tab** (see below), or `null` |
+| `lockWallet()` | Clears the in-memory key and the remembered unlock |
 | `deleteWallet(storage?)` | Removes the stored record and locks |
 | `hasWallet(storage?)` / `getWalletInfo(storage?)` | Inspect the stored record without unlocking |
 | `exportMnemonic(pin, storage?)` / `exportPrivateKey(pin, storage?)` | PIN-protected export, no side effects on the session (a wallet imported from a private key has no phrase) |
@@ -49,7 +51,30 @@ import {
 | `signTypedData(typedData)` / `signTransaction(tx)` | EIP-712 / transaction signature |
 | `getInAppWalletProvider({ rpcUrl? })` | EIP-1193 provider when unlocked, `null` otherwise |
 
-`chain` is `'celo'` (42220) or `'celoSepolia'` (11142220, default).
+| `chain` is `'celo'` (42220) or `'celoSepolia'` (11142220, default).
+
+### Session-scoped unlock
+
+A page reload wipes the module memory, so without help every reload locked the
+wallet again and the payment modals asked for the PIN even though the header
+showed a valid session (https://github.com/pasosdeJesus/learn.tg/issues/244).
+After a successful `unlockWallet` / `createWallet` / `importWallet` the private
+key is also written to **`sessionStorage`** (key
+`learn.tg:in-app-wallet:unlocked`, sliding TTL `SESSION_UNLOCK_TTL_MS`, 30 min)
+and `restoreUnlockedSession()` puts it back during the next page load.
+
+- It dies with the tab, is not shared with other tabs, and `lockWallet()`
+  (the header ✕), `deleteWallet()` or the TTL remove it earlier.
+- `restoreUnlockedSession()` refuses and forgets an entry whose wallet no longer
+  matches the stored record.
+- Tradeoff: while the entry exists, script running on the page (XSS) can read the
+  key. That is the same window in which the user already signs without a PIN, but
+  it extends across reloads; keep the TTL short. Use `forgetUnlockedSession()` if
+  an integrator prefers to require the PIN on every load.
+
+This entry is a **stopgap**: https://github.com/pasosdeJesus/learn.tg/issues/246
+replaces it with device authentication (WebAuthn gesture gate, and WebAuthn PRF
+for a biometric unlock that stores nothing readable at rest).
 
 ## Security model
 
@@ -59,7 +84,8 @@ import {
 - `crypto.subtle` (Web Crypto) is used, so Node 18+ and secure browser contexts
   both work.
 - The decrypted key lives only in module memory while the wallet is unlocked;
-  `lockWallet()` and `deleteWallet()` clear it.
+  `lockWallet()` and `deleteWallet()` clear it. The session-scoped copy (above)
+  is `sessionStorage`-only and expires with the tab or the TTL.
 - A wrong PIN fails closed (`Wrong PIN or corrupted wallet data`); a decrypted
   key that does not match the stored address is rejected.
 - Argon2id is the documented future evolution (not implemented in the MVP).

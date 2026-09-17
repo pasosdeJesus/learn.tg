@@ -19,6 +19,11 @@ interface WalletDialogProps {
   lang?: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  /**
+   * Dirección de la cookie de sesión, si ya hay una. Cuando coincide con la
+   * billetera de la aplicación no hace falta volver a firmar el SIWE.
+   */
+  sessionAddress?: string
 }
 
 const MIN_PIN = 6
@@ -29,7 +34,7 @@ const MIN_PIN = 6
  * (PIN, frase de recuperación, ingreso) no cabe ahí y el usuario necesita leer
  * las 12 palabras con calma antes de continuar.
  */
-export function WalletDialog({ lang = 'en', open, onOpenChange }: WalletDialogProps) {
+export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }: WalletDialogProps) {
   const { status, walletInfo, error, create, importExisting, unlock, remove, getProvider } = useInAppWallet()
   const [mode, setMode] = useState<'create' | 'import'>('create')
   const [pin, setPin] = useState('')
@@ -136,6 +141,17 @@ export function WalletDialog({ lang = 'en', open, onOpenChange }: WalletDialogPr
     try {
       const provider = getProvider()
       if (!provider) throw new Error(t('notUnlocked'))
+      // Si la cookie de sesión ya es de esta billetera, firmar de nuevo solo
+      // recarga la página y la clave vuelve a salir de memoria: el usuario
+      // quedaba en un ciclo desbloquear → recargar → bloqueada y no podía donar
+      // ni comprar (reportado el 2026-09-16).
+      const sameSession = !!sessionAddress && !!walletInfo?.address
+        && sessionAddress.toLowerCase() === walletInfo.address.toLowerCase()
+      if (sameSession) {
+        setBusy(false)
+        onOpenChange(false)
+        return
+      }
       await signInWithInAppWallet(provider)
       onOpenChange(false)
       // NextAuth lee la cookie de sesión al montar (mismo patrón que
@@ -145,7 +161,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange }: WalletDialogPr
       setLocalError(translateError(e))
       setBusy(false)
     }
-  }, [getProvider, onOpenChange, t, translateError])
+  }, [getProvider, onOpenChange, sessionAddress, t, translateError, walletInfo])
 
   const handleCreate = useCallback(async () => {
     setLocalError(null)

@@ -13,30 +13,42 @@ The goal is a fast loop: seconds, not the ~45 minute full E2E suite.
 ## 1. Unit: the packages
 
 Both packages ship their own `vitest.config.ts` (a plain object with an alias
-map onto `apps/nextjs/node_modules`). Run them from `apps/nextjs`, which owns
-the dependency graph and the installed `vitest`:
+map onto `apps/nextjs/node_modules`), and the app's Makefile exposes them like
+any other suite:
 
 ```sh
 cd apps/nextjs
 
-# Core wallet: lifecycle, crypto, provider, FileStorage and exports (25 tests, ~11 s)
+make test-packages          # los dos paquetes (25 + 15 tests, ~22 s)
+make test-pdj-wallet        # solo el core (25 tests, ~12 s)
+make test-pdj-wallet-next   # solo React; compila el core antes (~10 s)
+```
+
+Equivalentes directos (si prefieres el comando crudo):
+
+```sh
+cd apps/nextjs
 ./node_modules/.bin/vitest run --root ../../packages/pdj-wallet \
   --config ../../packages/pdj-wallet/vitest.config.ts
-
-# React layer: useInAppWallet + components (15 tests, ~8 s)
 ./node_modules/.bin/vitest run --root ../../packages/pdj-wallet-next \
   --config ../../packages/pdj-wallet-next/vitest.config.ts
 ```
 
-Expected: `25 passed` and `15 passed`.
+Y dentro de cada paquete hay `Makefile` (`make test`, `make build`, `make install`).
+
+Expected: `25 passed` y `15 passed`. `make test` (la suite completa) ya incluye
+`test-packages`.
 
 The core package declares its own dependencies (`viem`, `vitest`, `fake-indexeddb`,
-`typescript`): run `pnpm install` inside `packages/pdj-wallet` once. That is also
-what enables the `IndexedDBStorage` test, which used to self-skip because
-`fake-indexeddb` was not installed (2026-09-15: now it runs).
+`typescript`): run `pnpm install` inside `packages/pdj-wallet` once (`make -C
+../../packages/pdj-wallet install`). That is also what enables the
+`IndexedDBStorage` test, which used to self-skip because `fake-indexeddb` was not
+installed (2026-09-15: now it runs). It is also needed to import the built core
+from Node (E2E, R-#239).
 
 `pnpm test` inside a package goes through corepack, which resolves pnpm 11 here
-while the repo is pinned to pnpm 10; the commands above avoid that.
+while the repo is pinned to pnpm 10; los targets del Makefile y los comandos de
+arriba evitan eso.
 
 ## 2. Integration in learn.tg
 
@@ -47,7 +59,7 @@ make test-hooks test-components
 
 Expected: `lib/hooks/__tests__` 74 passed / 2 skipped (44 s) and
 `components/__tests__` 125 passed / 3 skipped (85 s) — numbers as of 2026-09-15;
-the full `make test` is 588 passed / 6 skipped in 330 s, and most of that time is
+the full `make test` is 628 passed / 6 skipped in 368 s, and most of that time is
 jsdom environment setup per test file, not the assertions.
 
 What these cover:
@@ -63,6 +75,12 @@ What these cover:
   the in-memory fallback; install `fake-indexeddb` to cover the real store.
 - Offline crossword queue: `lib/__tests__/offline-queue-db.test.ts` (5) and
   `lib/hooks/__tests__/useOfflineQueue.test.ts` (5).
+- Both payment modals tell the user to unlock the wallet when it is locked
+  instead of the misleading "Connect and sign with your wallet"
+  (`DonateModal.test.tsx` and `CheckoutModal.light.test.tsx`, 4 tests): the amber
+  notice appears, the old message does not, and the
+  `data-testid="wallet-unlock-request"` button dispatches
+  `learn-tg:open-in-app-wallet-dialog`.
 
 If a hook test fails to resolve `@learn-tg/pdj-wallet`, the aliases at the top
 of `apps/nextjs/vitest.config.ts` are missing (the linked
@@ -79,8 +97,45 @@ instead of failing where that page is not deployed:
 
 ```sh
 cd apps/nextjs
+make test-e2e-wallet                                        # = SPEC=in-app-wallet
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=in-app-wallet
 ```
+
+`e2e/specs/header-wallet-dialog.spec.mjs` drives the **real header + modal**
+instead of `/en/test/wallet`: it opens the wallet from the header, creates one,
+closes the modal, checks that reopening starts a fresh flow, unlocks from the
+header, signs in with SIWE and verifies that the header **keeps the session
+after a reload** (the R-#238 regression where it fell back to "Unlock your
+in-app wallet"), then disconnects with `✕`. It passes in ~32 s against the dev
+site.
+
+```sh
+cd apps/nextjs
+CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=header-wallet-dialog
+```
+
+`e2e/specs/donate-unlock-dialog.spec.mjs` cubre el camino que reportó el
+operador el 2026-09-16 ("quise donar y el botón de desbloquear no hacía nada"):
+con sesión de la billetera in-app (que queda **bloqueada** tras recargar) abre el
+modal de donación del curso, presiona el botón del aviso y exige que el diálogo
+de la billetera aparezca **encima** (`elementFromPoint`) con el formulario de PIN.
+Acepta `SITE_URL` para apuntar a un servidor local (`next dev -p 4000` sirve
+HTTP, mientras que `initTestEnv()` siempre arma `https://`).
+
+```sh
+cd apps/nextjs
+CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=donate-unlock-dialog
+SITE_URL=http://localhost:4000 IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 \
+  CHROME_PATH=/usr/local/bin/chrome ./bin/m test:e2e donate-unlock-dialog
+```
+
+Dos defectos de R-#244 relacionados: (1) `WalletSelector` devolvía la cabecera
+con sesión sin montar `WalletDialog`, el único que atiende
+`OPEN_IN_APP_WALLET_DIALOG`, así que el evento no tenía quien lo escuchara; (2)
+`WalletDialog` volvía a firmar el SIWE aunque la sesión ya fuera de esa
+billetera, y el `window.location.reload()` posterior aterrizaba con la clave
+fuera de memoria (billetera bloqueada otra vez): un ciclo en el que la donación
+nunca se podía completar.
 
 `e2e/specs/offline-crossword.spec.mjs` (R-#242) fills the crossword at
 `/en/gdcluster/guide1/test`, submits it offline, checks the `offline-pending`
@@ -99,6 +154,7 @@ is not deployed:
 
 ```sh
 cd apps/nextjs
+make test-e2e-offline      # = SPEC=offline: corre offline-guide y offline-crossword
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=offline-guide
 ```
 
