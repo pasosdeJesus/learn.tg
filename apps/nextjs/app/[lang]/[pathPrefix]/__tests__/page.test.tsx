@@ -324,10 +324,14 @@ describe('Course List Page Component', () => {
     expect(guide1Element).toBeInTheDocument()
     const parent1 = guide1Element.parentElement
     expect(parent1?.innerHTML).toContain('slearn-icon.svg')
+    // La numeración va dentro del texto: el marcador del <ol> queda recortado por
+    // el reseteo de Tailwind (`list-style: none`, `padding: 0`).
+    expect(parent1?.textContent).toMatch(/^\s*1\.\s*Guide 1/)
 
     const guide2Element = screen.getByText(/Guide 2/)
     expect(guide2Element).toBeInTheDocument()
     const parent2 = guide2Element.parentElement
+    expect(parent2?.textContent).toMatch(/^\s*2\.\s*Guide 2/)
     expect(parent2?.textContent).not.toMatch(/✅/)
     expect(parent2?.textContent).not.toMatch(/💵/)
     expect(parent2?.innerHTML).not.toContain('slearn-icon.svg')

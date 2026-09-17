@@ -88,25 +88,41 @@ export async function listEvents(): Promise<CalDavEvent[]> {
     if (uid) uids.push(uid)
   }
 
-  // Fetch each .ics to get start/end times
+  // Fetch each .ics to get start/end times. En paralelo: eran N peticiones
+  // secuenciales al servidor CalDAV y por eso "mostrar las fechas disponibles"
+  // tardaba tanto (reportado 2026-09-16). Se limita la concurrencia para no
+  // saturar el servidor de calendario.
   const events: CalDavEvent[] = []
-  for (const uid of uids) {
-    try {
-      const icsRes = await fetch(`${CALDAV_URL}${uid}.ics`, {
-        headers: { 'Authorization': authHeader() },
-      })
-      if (!icsRes.ok) continue
-      const ics = await icsRes.text()
-      const parsed = parseICalendar(ics)
-      if (parsed) {
-        events.push({
-          uid: parsed.uid,
-          start: parseCalDate(parsed.dtstart),
-          end: parseCalDate(parsed.dtend),
-          summary: parsed.summary,
-        })
-      }
-    } catch { /* skip unparseable events */ }
+  const CONCURRENCY = 8
+  for (let i = 0; i < uids.length; i += CONCURRENCY) {
+    const batch = uids.slice(i, i + CONCURRENCY)
+    const fetched = await Promise.all(
+      batch.map(async (uid) => {
+        try {
+          const icsRes = await fetch(`${CALDAV_URL}${uid}.ics`, {
+            headers: { 'Authorization': authHeader() },
+          })
+          if (!icsRes.ok) return null
+          return await icsRes.text()
+        } catch {
+          return null
+        }
+      }),
+    )
+    for (const ics of fetched) {
+      if (!ics) continue
+      try {
+        const parsed = parseICalendar(ics)
+        if (parsed) {
+          events.push({
+            uid: parsed.uid,
+            start: parseCalDate(parsed.dtstart),
+            end: parseCalDate(parsed.dtend),
+            summary: parsed.summary,
+          })
+        }
+      } catch { /* skip unparseable events */ }
+    }
   }
 
   return events

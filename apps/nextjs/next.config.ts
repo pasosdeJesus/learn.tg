@@ -97,6 +97,11 @@ const pwaConfig: PWAConfig = {
       urlPattern: ({ url, request }) =>
         url.pathname.startsWith('/api/') && request.method !== 'GET',
       handler: 'NetworkOnly' as const,
+      // `options: {}` is required, not cosmetic: with `fallbacks` configured,
+      // next-pwa@5.6 reads `entry.options.precacheFallback` for every entry and
+      // crashes the production build ("Cannot read properties of undefined
+      // (reading 'precacheFallback')") when an entry has no `options`.
+      options: {},
     },
   ],
 };

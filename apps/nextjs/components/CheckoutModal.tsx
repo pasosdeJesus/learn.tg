@@ -12,6 +12,8 @@ import { erc20Abi, formatDisplay } from '@learn-tg/rewards/lib/donate-utils'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { GasInsufficientPanel } from '@/components/GasInsufficientPanel'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
+import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
 
 const SLEARN_DECIMALS = 2
 
@@ -48,6 +50,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       usdtPct: 'USDT',
       yourBalance: 'Balance',
       purchase: 'Purchase',
+      inAppLocked: 'Your in-app wallet is locked. Unlock it to purchase.',
+      unlockInApp: 'Unlock your in-app wallet',
       cancel: 'Cancel',
       processing: 'Processing...',
       success: 'Course purchased',
@@ -74,6 +78,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       usdtPct: 'USDT',
       yourBalance: 'Saldo',
       purchase: 'Comprar',
+      inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala para comprar.',
+      unlockInApp: 'Desbloquear tu billetera',
       cancel: 'Cancelar',
       processing: 'Procesando...',
       success: 'Curso comprado',
@@ -95,6 +101,10 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
 
   const { address: rawAddress } = useAuthAddress()
   const address = rawAddress as Address | undefined
+  // R-#244: la billetera in-app queda bloqueada al cargar la página (la clave vive
+  // en memoria), así que sin desbloquearla no hay wallet client y el botón de
+  // compra nunca se habilita. Antes no se explicaba nada.
+  const { status: inAppStatus } = useInAppWallet()
   const { authedGet, authedPost } = useAuthedApi()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
@@ -399,6 +409,20 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
         {!busy && priceUSDT != null && priceSLEARN != null && !canPay && (
           <div className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
             {t('insufficient')}
+          </div>
+        )}
+
+        {!walletClient && inAppStatus === 'locked' && (
+          <div className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+            {t('inAppLocked')}
+            <button
+              type="button"
+              data-testid="wallet-unlock-request"
+              onClick={openInAppWalletDialog}
+              className="ml-2 underline font-medium"
+            >
+              {t('unlockInApp')}
+            </button>
           </div>
         )}
 

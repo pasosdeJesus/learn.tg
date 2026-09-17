@@ -167,9 +167,15 @@ export default function Page({ params }: PageProps) {
       // @ts-ignore
       setHtmlExtended(htmlDeMd(course.ampliaMd))
 
-      let guias = "<ol class='list-decimal text-primary-foreground'>\n"
+      // Numeración explícita dentro del texto: el reseteo de Tailwind pone
+      // `list-style: none` y `padding: 0`, así que el marcador de un <ol> queda
+      // fuera de la caja y el contenedor lo recorta (el operador reportó que no
+      // se veía la numeración de las guías, 2026-09-16).
+      let guias = "<ol class='list-none space-y-1 p-0 m-0 text-primary-foreground'>\n"
+      let guideIndex = 0
       for (const guia of course.guias) {
-        guias += '<li>'
+        guideIndex += 1
+        guias += `<li><span class="font-semibold">${guideIndex}.</span> `
         if (guia.sufijoRuta) {
           guias +=
             `<a href='/${lang}/${pathPrefix}/${guia.sufijoRuta}' style='text-decoration: underline'>${guia.titulo}</a>`

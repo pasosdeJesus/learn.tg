@@ -9,6 +9,8 @@ import { type Address, formatUnits } from 'viem'
 import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@learn-tg/rewards/lib/donate-utils'
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
+import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
 import { TransactionStatus } from '@/components/ui/TransactionStatus'
 import { GasInsufficientPanel } from '@/components/GasInsufficientPanel'
 // donation-target vive en el motor gdcluster (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3); los componentes
@@ -65,6 +67,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     : process.env.NEXT_PUBLIC_ADDRESS || '') as Address | undefined
 
   const { address: rawAddress } = useAuthAddress()
+  // R-#244: tras cargar la página la billetera in-app queda bloqueada (la clave
+  // vive solo en memoria), así que estos modales no tienen wallet client aunque
+  // el usuario tenga sesión. Antes decían "Connect and sign…", que confunde.
+  const { status: inAppStatus } = useInAppWallet()
   const address = rawAddress as Address | undefined
   const { authedPost } = useAuthedApi()
   const publicClient = usePublicClient()
@@ -322,6 +328,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const t = createComponentT(lang || 'en', {
     en: {
       connectSign: 'Connect and sign with your wallet to donate',
+      inAppLocked: 'Your in-app wallet is locked. Unlock it to donate.',
+      unlockInApp: 'Unlock your in-app wallet',
       yourBalance: 'Your USDT Balance',
       yourSlearnBalance: 'Your SLEARN Balance',
       yourCelo: 'Your CELO (gas)',
@@ -364,6 +372,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     },
     es: {
       connectSign: 'Conecta y firma con tu billetera para donar',
+      inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala para donar.',
+      unlockInApp: 'Desbloquear tu billetera',
       yourBalance: 'Tu saldo USDT',
       yourSlearnBalance: 'Tu saldo SLEARN',
       yourCelo: 'Tu CELO (gas)',
@@ -429,7 +439,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   // Donación en CELO nativo: envía value al backend y llama al verify (el
   // backend valida tx.value y reenvía por sendTransaction).
   const handleNativeDonate = async () => {
-    if (!address || !walletClient || !recipientAddress) { setNativeError(t('connectSign')); return }
+    if (!address || !walletClient || !recipientAddress) {
+      setNativeError(inAppStatus === 'locked' ? t('inAppLocked') : t('connectSign'))
+      return
+    }
     if (nativeValue <= 0n || nativeValue > maxNative || nativeGasCost === 0n) {
       setNativeError('Amount exceeds the donatable CELO (balance minus gas)')
       return
@@ -567,8 +580,21 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
             <button onClick={closeAll} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
             <h2 className="text-xl font-semibold mb-4">{tCopy?.title || t('donateToCourse')}</h2>
 
-        {(!address || !walletClient) && (
+        {(!address || !walletClient) && inAppStatus !== 'locked' && (
           <div className="text-sm text-red-600 mb-4">{t('connectSign')}</div>
+        )}
+        {!walletClient && inAppStatus === 'locked' && (
+          <div className="text-sm text-amber-800 bg-amber-100 rounded p-3 mb-4">
+            {t('inAppLocked')}
+            <button
+              type="button"
+              data-testid="wallet-unlock-request"
+              onClick={openInAppWalletDialog}
+              className="ml-2 underline font-medium"
+            >
+              {t('unlockInApp')}
+            </button>
+          </div>
         )}
         {(!recipientAddress || (!isNativePay && !usdtAddress)) && (
           <div className="text-sm text-red-600 mb-4">{t('missingContract')}</div>

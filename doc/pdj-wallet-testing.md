@@ -46,8 +46,8 @@ make test-hooks test-components
 ```
 
 Expected: `lib/hooks/__tests__` 74 passed / 2 skipped (44 s) and
-`components/__tests__` 124 passed / 3 skipped (85 s) — numbers as of 2026-09-15;
-the full `make test` is 587 passed / 6 skipped in 332 s, and most of that time is
+`components/__tests__` 125 passed / 3 skipped (85 s) — numbers as of 2026-09-15;
+the full `make test` is 588 passed / 6 skipped in 330 s, and most of that time is
 jsdom environment setup per test file, not the assertions.
 
 What these cover:

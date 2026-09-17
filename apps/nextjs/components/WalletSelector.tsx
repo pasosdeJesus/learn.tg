@@ -7,6 +7,7 @@ import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletDialog } from '@/components/WalletDialog'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { OPEN_IN_APP_WALLET_DIALOG } from '@/lib/in-app-wallet-dialog'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 interface WalletSelectorProps {
@@ -38,6 +39,14 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
     detect()
     window.addEventListener('ethereum#initialized', detect, { once: true })
     return () => window.removeEventListener('ethereum#initialized', detect)
+  }, [])
+
+  // Donation/purchase modals can ask for the wallet to be unlocked
+  // (`lib/in-app-wallet-dialog.ts`).
+  useEffect(() => {
+    const openFromOutside = () => setDialogOpen(true)
+    window.addEventListener(OPEN_IN_APP_WALLET_DIALOG, openFromOutside)
+    return () => window.removeEventListener(OPEN_IN_APP_WALLET_DIALOG, openFromOutside)
   }, [])
 
   const t = useMemo(() => createComponentT(lang, {
@@ -92,9 +101,11 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
           size="sm"
           className="text-xs text-gray-500 hover:text-red-600"
           data-testid="wallet-disconnect"
+          title={t('disconnect')}
+          aria-label={t('disconnect')}
           onClick={() => { void disconnect() }}
         >
-          {t('disconnect')}
+          ✕
         </Button>
       </div>
     )

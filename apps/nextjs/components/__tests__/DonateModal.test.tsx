@@ -58,6 +58,12 @@ vi.mock('@/lib/hooks/useWallet', () => ({
   useWalletClient: () => mockUseWalletClient(),
 }))
 
+// R-#244: los modales consultan el estado de la billetera de la aplicación.
+const mockInAppStatus = vi.fn(() => 'no-wallet')
+vi.mock('@learn-tg/pdj-wallet-next', () => ({
+  useInAppWallet: () => ({ status: mockInAppStatus() }),
+}))
+
 const BACKEND_WALLET = '0xBACKEND123456789012345678901234567890123456'
 
 describe('DonateModal', () => {
@@ -173,6 +179,24 @@ describe('DonateModal', () => {
         renderModal()
         expect(screen.getByText(/Connect and sign with your wallet to donate/i)).toBeInTheDocument()
       })
+    })
+
+    // R-#244: con la billetera in-app bloqueada no hay wallet client aunque haya
+    // sesión; antes decía "Connect and sign…" y no había forma de desbloquearla.
+    it('asks to unlock the in-app wallet when it is locked', async () => {
+      mockUseWalletClient.mockReturnValue({ data: undefined })
+      mockInAppStatus.mockReturnValue('locked')
+      await waitFor(() => {
+        renderModal()
+        expect(screen.getByText(/in-app wallet is locked/i)).toBeInTheDocument()
+      })
+      expect(screen.queryByText(/Connect and sign with your wallet to donate/i)).not.toBeInTheDocument()
+
+      const opened = vi.fn()
+      window.addEventListener('learn-tg:open-in-app-wallet-dialog', opened)
+      fireEvent.click(screen.getByTestId('wallet-unlock-request'))
+      expect(opened).toHaveBeenCalled()
+      window.removeEventListener('learn-tg:open-in-app-wallet-dialog', opened)
     })
   })
 
