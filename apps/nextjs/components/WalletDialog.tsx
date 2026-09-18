@@ -35,13 +35,28 @@ const MIN_PIN = 6
  * las 12 palabras con calma antes de continuar.
  */
 export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }: WalletDialogProps) {
-  const { status, walletInfo, error, create, importExisting, unlock, remove, getProvider } = useInAppWallet()
+  const {
+    status,
+    walletInfo,
+    error,
+    create,
+    importExisting,
+    unlock,
+    unlockWithBiometric,
+    enableBiometric,
+    disableBiometric,
+    biometricAvailable,
+    biometricEnabled,
+    remove,
+    getProvider,
+  } = useInAppWallet()
   const [mode, setMode] = useState<'create' | 'import'>('create')
   const [pin, setPin] = useState('')
   const [confirm, setConfirm] = useState('')
   const [mnemonic, setMnemonic] = useState('')
   const [recovery, setRecovery] = useState<string | null>(null)
   const [localError, setLocalError] = useState<string | null>(null)
+  const [biometricPin, setBiometricPin] = useState('')
   const [busy, setBusy] = useState(false)
 
   const t = useMemo(() => createComponentT(lang, {
@@ -53,6 +68,15 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       importDescription: 'Use the 12 words or the private key of a wallet you already have.',
       lockedTitle: 'Unlock your in-app wallet',
       lockedDescription: 'Enter your PIN to sign in.',
+      biometricUnlock: 'Unlock with fingerprint',
+      biometricEnable: 'Unlock with fingerprint next time',
+      biometricHint: 'Uses the fingerprint or Face ID of this device. The PIN keeps working.',
+      biometricOn: 'Fingerprint unlock is on',
+      biometricOff: 'Turn off fingerprint unlock',
+      noWebauthn: 'This device cannot verify your fingerprint or Face ID.',
+      noPrf: 'This device cannot store the biometric unlock. Use your PIN.',
+      noBiometric: 'There is no fingerprint unlock saved on this device.',
+      biometricCancelled: 'The fingerprint or Face ID prompt was cancelled.',
       pin: 'PIN (6 or more digits)',
       pinConfirm: 'Repeat the PIN',
       mnemonic: 'Recovery phrase (12 words)',
@@ -86,6 +110,15 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       importDescription: 'Usa las 12 palabras o la clave privada de una billetera que ya tengas.',
       lockedTitle: 'Desbloquea tu billetera',
       lockedDescription: 'Escribe tu PIN para ingresar.',
+      biometricUnlock: 'Desbloquear con huella',
+      biometricEnable: 'Desbloquear con huella la próxima vez',
+      biometricHint: 'Usa la huella o Face ID de este dispositivo. El PIN sigue funcionando.',
+      biometricOn: 'Desbloqueo con huella activado',
+      biometricOff: 'Desactivar el desbloqueo con huella',
+      noWebauthn: 'Este dispositivo no puede verificar tu huella o Face ID.',
+      noPrf: 'Este dispositivo no puede guardar el desbloqueo por huella. Usa tu PIN.',
+      noBiometric: 'No hay un desbloqueo por huella guardado en este dispositivo.',
+      biometricCancelled: 'Se canceló la huella o Face ID.',
       pin: 'PIN (6 o más dígitos)',
       pinConfirm: 'Repite el PIN',
       mnemonic: 'Frase de recuperación (12 palabras)',
@@ -132,6 +165,10 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     if (code === 'no-accounts') return t('noAccounts')
     if (code === 'no-csrf') return t('noCsrf')
     if (code === 'auth-failed') return t('authFailed')
+    if (code === 'no-webauthn') return t('noWebauthn')
+    if (code === 'no-prf') return t('noPrf')
+    if (code === 'no-biometric') return t('noBiometric')
+    if (code === 'NotAllowedError') return t('biometricCancelled')
     return code || t('unknownError')
   }, [t])
 
@@ -206,6 +243,63 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     }
   }, [pin, signIn, t, translateError, unlock])
 
+  // R-#246: un gesto reemplaza al PIN cuando la clave quedó sellada con el
+  // secreto PRF de la passkey.
+  const handleUnlockWithBiometric = useCallback(async () => {
+    setLocalError(null)
+    setBusy(true)
+    try {
+      await unlockWithBiometric()
+      await signIn()
+    } catch (e) {
+      setLocalError(translateError(e))
+      setBusy(false)
+    }
+  }, [signIn, translateError, unlockWithBiometric])
+
+  // Mismo PIN, un paso extra: además de desbloquear, recuerda el gesto para la
+  // próxima vez. `enableBiometric` deja la billetera desbloqueada.
+  const handleUnlockAndEnableBiometric = useCallback(async () => {
+    setLocalError(null)
+    if (pin.length < MIN_PIN) { setLocalError(t('pinTooShort')); return }
+    setBusy(true)
+    try {
+      await enableBiometric(pin)
+      await signIn()
+    } catch (e) {
+      setLocalError(translateError(e))
+      setBusy(false)
+    }
+  }, [enableBiometric, pin, signIn, t, translateError])
+
+  const handleDisableBiometric = useCallback(async () => {
+    setLocalError(null)
+    setBusy(true)
+    try {
+      await disableBiometric()
+    } catch (e) {
+      setLocalError(translateError(e))
+    } finally {
+      setBusy(false)
+    }
+  }, [disableBiometric, translateError])
+
+  // Desde el estado ya desbloqueado (billetera recién creada): activar el gesto
+  // pide el PIN otra vez porque no se guarda en memoria.
+  const handleEnableBiometric = useCallback(async () => {
+    setLocalError(null)
+    if (biometricPin.length < MIN_PIN) { setLocalError(t('pinTooShort')); return }
+    setBusy(true)
+    try {
+      await enableBiometric(biometricPin)
+      setBiometricPin('')
+    } catch (e) {
+      setLocalError(translateError(e))
+    } finally {
+      setBusy(false)
+    }
+  }, [biometricPin, enableBiometric, t, translateError])
+
   const handleDelete = useCallback(async () => {
     setLocalError(null)
     setBusy(true)
@@ -231,7 +325,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
 
   const showRecovery = recovery !== null
   const showUnlock = !showRecovery && status === 'locked'
-  const message = localError ?? error
+  // El error del hook también se traduce: los códigos del camino biométrico
+  // (`NotAllowedError`, `no-prf`…) no son texto para el usuario.
+  const message = localError ?? (error ? translateError(error) : null)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -345,6 +441,51 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                 {t('deleteWallet')}
               </Button>
             )}
+
+            {!showUnlock && biometricEnabled && (
+              <div className="space-y-1">
+                <p className="text-sm text-gray-600" data-testid="wallet-biometric-status">
+                  {t('biometricOn')}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  data-testid="wallet-disable-biometric"
+                  onClick={() => { void handleDisableBiometric() }}
+                  disabled={busy}
+                >
+                  {t('biometricOff')}
+                </Button>
+              </div>
+            )}
+
+            {/* Recién creada o importada: la billetera está desbloqueada y el PIN
+                sigue en memoria del usuario, así que es el momento de activar el
+                gesto sin volver a pedirlo más tarde. */}
+            {!showUnlock && walletInfo?.address && biometricAvailable && !biometricEnabled && (
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500" data-testid="wallet-biometric-hint">
+                  {t('biometricHint')}
+                </p>
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  data-testid="wallet-biometric-pin"
+                  value={biometricPin}
+                  onChange={(event) => setBiometricPin(event.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  data-testid="wallet-enable-biometric"
+                  onClick={() => { void handleEnableBiometric() }}
+                  disabled={busy || biometricPin.length < MIN_PIN}
+                >
+                  {t('biometricEnable')}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -364,9 +505,41 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 {t('close')}
               </Button>
-              <Button data-testid="wallet-unlock" onClick={() => { void handleUnlock() }} disabled={busy}>
-                {busy ? t('signingIn') : t('unlock')}
-              </Button>
+              {biometricEnabled ? (
+                <>
+                  <Button
+                    variant="outline"
+                    data-testid="wallet-unlock"
+                    onClick={() => { void handleUnlock() }}
+                    disabled={busy}
+                  >
+                    {busy ? t('signingIn') : t('unlock')}
+                  </Button>
+                  <Button
+                    data-testid="wallet-unlock-biometric"
+                    onClick={() => { void handleUnlockWithBiometric() }}
+                    disabled={busy}
+                  >
+                    {busy ? t('signingIn') : t('biometricUnlock')}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {biometricAvailable && (
+                    <Button
+                      variant="outline"
+                      data-testid="wallet-enable-biometric"
+                      onClick={() => { void handleUnlockAndEnableBiometric() }}
+                      disabled={busy || pin.length < MIN_PIN}
+                    >
+                      {t('biometricEnable')}
+                    </Button>
+                  )}
+                  <Button data-testid="wallet-unlock" onClick={() => { void handleUnlock() }} disabled={busy}>
+                    {busy ? t('signingIn') : t('unlock')}
+                  </Button>
+                </>
+              )}
             </>
           ) : (
             <>

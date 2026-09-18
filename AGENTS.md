@@ -88,6 +88,29 @@ documentation, or comments becomes a dead link. Instead, reference the
   learn.tg issue URL and never as `m/REQ/<n>.md`.
 
 
+### 9. Long-Running Commands — Background, Reviewed Every ~5 Minutes
+
+This VM is for **development**. Long commands must not hold the session: they run
+in the background so the agent can keep working in the foreground and stay
+available for the human's questions and interaction.
+
+1. **Anything that can take minutes runs in the background**, with its output
+   redirected to a log file: test suites (`make test`, the E2E specs), builds
+   (`make all`, `next build`), installs, migrations, deploys. Use background
+   execution plus `> /tmp/<task>.log 2>&1` so partial output can be read at any
+   time.
+2. **Review the log roughly every 5 minutes** with short reads (`tail -n`,
+   `grep -c`), never with blocking waits or long `sleep` calls in the foreground.
+3. **Keep working while it runs**: finish the documentation, add the tests,
+   update the requirement file, review a diff, or start the next step. Report the
+   result when it is ready, not before.
+4. **Do not run two heavy jobs at once**: this VM has one CPU and a full suite
+   already risks OOM (see the `m` repo work item 35 §12.8). Run them in sequence.
+5. **Balance the servers**: stop any local server started for a test
+   (`next dev`, `bin/start`) when the test is done.
+6. **Report periodically in the chat** (a short status line is enough) so the
+   human always knows what is still running and what has finished.
+
 ---
 
 > "Con seguridad les digo, donde quiera que esta Buena Nueva se predique por

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { getExternalProvider } from '@/lib/external-provider'
 import { logger } from '@pasosdejesus/m/debug'
 
 interface ExtendedSession {
@@ -101,7 +102,9 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     setError('')
 
     try {
-      if (typeof window === 'undefined' || !window.ethereum) {
+      // R-#246: la billetera inyectada puede no ser `window.ethereum` (EIP-6963).
+      const provider = getExternalProvider()
+      if (!provider) {
         setError(t('noWallet'))
         return
       }
@@ -122,9 +125,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       // Get current chain (read-only, no prompt)
       let currentChainId: string
       try {
-        currentChainId = await window.ethereum.request({
-          method: 'eth_chainId',
-        })
+        currentChainId = (await provider.request({ method: 'eth_chainId' })) as string
       } catch {
         // Wallet may not support eth_chainId without connection
         currentChainId = expectedChainId
@@ -133,7 +134,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       // Switch to correct chain if needed
       if (currentChainId !== expectedChainId) {
         try {
-          await window.ethereum.request({
+          await provider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: expectedChainId }],
           })
@@ -144,7 +145,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
           // is not a user rejection (4001). See https://github.com/pasosdeJesus/learn.tg/issues/216.
           if (switchError.code === 4902 || switchError.code !== 4001) {
             try {
-              await window.ethereum.request({
+              await provider.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
                   chainId: expectedChainId,
@@ -181,16 +182,12 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       }
 
       // 2. Request accounts — opens wallet (now on Celo chain)
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      })
+      const accounts = (await provider.request({ method: 'eth_requestAccounts' })) as string[]
       const address: string = accounts[0]
       const checksummedAddress = getAddress(address)
 
       // Read final chain ID after potential switch
-      const chainIdHex: string = await window.ethereum.request({
-        method: 'eth_chainId',
-      })
+      const chainIdHex = (await provider.request({ method: 'eth_chainId' })) as string
       const chainId = parseInt(chainIdHex, 16)
 
       // 4. Get CSRF token (nonce) from NextAuth
@@ -211,10 +208,10 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         nonce: csrfToken,
       })
       const msgStr = msg.prepareMessage()
-      const sig: string = await window.ethereum.request({
+      const sig = (await provider.request({
         method: 'personal_sign',
         params: [msgStr, address],
-      })
+      })) as string
       console.log('[debug-wallet] Signature received')
 
       // 5. POST to NextAuth credentials callback

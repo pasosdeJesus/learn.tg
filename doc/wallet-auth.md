@@ -112,16 +112,39 @@ Three behaviours came out of the operator's manual testing on 2026-09-16
 (https://github.com/pasosdeJesus/learn.tg/issues/244): the modal is also mounted
 when the header already shows a session — it is the only listener of
 `learn-tg:open-in-app-wallet-dialog`, so without it the "unlock" button of the
-donation and purchase modals did nothing —, unlocking skips the SIWE (and the
+donation and purchase modals did nothing — and unlocking skips the SIWE (and the
 reload that would lock the wallet again) when the session cookie already belongs
-to that wallet, and the unlock is remembered for the tab
-(`packages/pdj-wallet/src/session.ts`, `sessionStorage`, sliding 30 min TTL) so a
-reload does not ask for the PIN again.
+to that wallet.
 
-The session entry is a **stopgap**: it keeps the private key in plaintext, and
-https://github.com/pasosdeJesus/learn.tg/issues/246 replaces it with the
-three-layer design (PIN, WebAuthn gesture gate, WebAuthn **PRF** hardware
-unlock) so that nothing is readable at rest.
+**Biometric unlock (layer L2 of
+https://github.com/pasosdeJesus/learn.tg/issues/246).** The decrypted key lives in
+module memory, so a reload locks the wallet again. With the dialog the user can
+register a **passkey** and let the wallet key be stored **sealed with the PRF
+secret** of that credential (`packages/pdj-wallet/src/biometric.ts`): from then on
+one Face ID / fingerprint gesture decrypts it, and the PIN remains the fallback
+and the 12 words the recovery. Nothing is stored in plaintext —
+`PublicKeyCredential`/`prf` do not exist in the in-app browsers of Rabby,
+MetaMask, OneKey and OKX (measured 2026-09-18), so there the dialog simply offers
+the PIN. The tab-scoped `sessionStorage` entry used in 2026-09-16 was removed: it
+kept the key readable and the measurement showed it never survived closing the app.
+
+**Moving funds asks for a fresh gesture (layer L1).** Even inside an unlocked
+session, `eth_sendTransaction` on the in-app provider calls
+`requireFundsConfirmation()` (`packages/pdj-wallet/src/provider.ts`), which asks
+the device to verify the user before signing; a cancelled prompt rejects with code
+`4001` and nothing is broadcast. Reads and `personal_sign` (the SIWE) are not
+gated, so signing in never prompts twice. Without a passkey — or without WebAuthn
+at all — the request goes through, because the layer needs hardware.
+
+**Locking.** `INACTIVITY_LOCK_MS` (10 minutes without pointer, key or visibility
+activity) drops the key in memory and marks `lockReason: 'idle'`;
+`WalletEventListener` signs the user out only for the header ✕ (`'user'`) or when
+the wallet is deleted (`'deleted'`), never for the idle lock.
+
+**Injected wallet detection.** `lib/external-provider.ts` resolves the external
+wallet from `eip6963:announceProvider` announcements, with `window.ethereum` as
+fallback and brief retries, because several wallet browsers do not define
+`window.ethereum` at page load (R-#246 §8).
 
 ### WalletEventListener (`components/WalletEventListener.tsx`)
 

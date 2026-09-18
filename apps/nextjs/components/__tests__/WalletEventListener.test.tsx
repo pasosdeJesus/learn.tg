@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   listeners: {} as Record<string, ((...a: any[]) => void)[]>,
   accountsResult: [] as string[] | Promise<string[]>,
   inAppStatus: 'no-wallet',
+  lockReason: 'initial',
   emit: (evt: string, ...args: any[]) => {
     const hs = mocks.listeners[evt] || []
     hs.forEach((h) => h(...args))
@@ -21,7 +22,7 @@ vi.mock('next-auth/react', () => ({
 }))
 
 vi.mock('@learn-tg/pdj-wallet-next', () => ({
-  useInAppWallet: () => ({ status: mocks.inAppStatus }),
+  useInAppWallet: () => ({ status: mocks.inAppStatus, lockReason: mocks.lockReason }),
 }))
 
 // window.ethereum con captura de handlers y eth_accounts controlable
@@ -47,6 +48,7 @@ describe('WalletEventListener (R-#227 problema 1)', () => {
     vi.clearAllMocks()
     mocks.listeners = {}
     mocks.accountsResult = []
+    mocks.lockReason = 'initial'
     localStorage.clear()
     vi.useRealTimers()
   })
@@ -113,9 +115,24 @@ describe('WalletEventListener (R-#227 problema 1)', () => {
     await act(async () => { await new Promise((r) => setTimeout(r, 50)) })
 
     mocks.inAppStatus = 'locked'
+    mocks.lockReason = 'user'
     await act(async () => { rerender(<WalletEventListener />) })
 
     expect(mocks.signOut).toHaveBeenCalledWith({ redirect: true, callbackUrl: '/' })
+  })
+
+  // R-#246: el auto-lock por inactividad bloquea la billetera pero NO cierra la
+  // sesión; el usuario solo dejó el teléfono quieto.
+  it('NO firma desconexión cuando el bloqueo es por inactividad', async () => {
+    mocks.inAppStatus = 'unlocked'
+    const { rerender } = render(<WalletEventListener />)
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)) })
+
+    mocks.inAppStatus = 'locked'
+    mocks.lockReason = 'idle'
+    await act(async () => { rerender(<WalletEventListener />) })
+
+    expect(mocks.signOut).not.toHaveBeenCalled()
   })
 
   it('firma desconexión cuando la billetera de la aplicación se borra', async () => {
@@ -124,6 +141,7 @@ describe('WalletEventListener (R-#227 problema 1)', () => {
     await act(async () => { await new Promise((r) => setTimeout(r, 50)) })
 
     mocks.inAppStatus = 'no-wallet'
+    mocks.lockReason = 'deleted'
     await act(async () => { rerender(<WalletEventListener />) })
 
     expect(mocks.signOut).toHaveBeenCalledWith({ redirect: true, callbackUrl: '/' })

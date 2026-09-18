@@ -29,14 +29,32 @@ const { status, walletInfo, create, importExisting, unlock, lock, remove, getPro
 
 `status` is `'loading' | 'no-wallet' | 'locked' | 'unlocked'`: it starts as
 `loading`, becomes `no-wallet` when nothing is stored, `locked` when a wallet
-exists, and `unlocked` after `create`, `importExisting` or `unlock`. `error`
-keeps the last failure message.
+exists, and `unlocked` after `create`, `importExisting`, `unlock` or
+`unlockWithBiometric`. `error` keeps the last failure message.
 
-When a wallet exists the hook first tries `restoreUnlockedSession()` from the core
-package: the unlock is remembered in `sessionStorage` for the lifetime of the tab
-(sliding 30 min TTL, cleared by `lock()` / the header ✕), so a reload no longer
-forces the user to type the PIN again while the header shows a valid session
-(https://github.com/pasosdeJesus/learn.tg/issues/244).
+The hook also reports and drives the device authentication of
+https://github.com/pasosdeJesus/learn.tg/issues/246:
+
+- `biometricAvailable`: the device can verify the user
+  (`isUserVerifyingPlatformAuthenticatorAvailable()` and, when the engine says so,
+  the `prf` extension).
+- `biometricEnabled`: a key sealed with the passkey's PRF secret is stored, so one
+  gesture unlocks the wallet.
+- `enableBiometric(pin)`: registers the passkey and seals the key (needs the PIN,
+  and leaves the wallet unlocked).
+- `unlockWithBiometric()` / `disableBiometric()`.
+- `lockReason`: `'user'` when the header ✕ locked the wallet (the app signs out),
+  `'idle'` when the **inactivity auto-lock** dropped the key after
+  `INACTIVITY_LOCK_MS` (10 min; the app must keep the session), `'deleted'` when the
+  wallet was removed.
+
+Because the unlock lives in module memory, a reload asks again: with
+`biometricEnabled` the answer is one Face ID / fingerprint gesture instead of the
+PIN. On devices without WebAuthn (the in-app browsers of Rabby, MetaMask, OneKey
+and OKX) the hook reports `biometricAvailable: false` and the PIN path is used.
+While the wallet is unlocked, sitting idle for `INACTIVITY_LOCK_MS` locks it again
+(same behaviour as OneKey and OKX Web3), and moving funds always asks for a fresh
+gesture — that gate lives in the core provider, not here.
 
 The state is **shared by every instance** of the hook (a module-level store read
 with `useSyncExternalStore`): a component that renders `InAppWalletSetup` and the

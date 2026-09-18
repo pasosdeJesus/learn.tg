@@ -2,11 +2,14 @@ export {
   createWallet,
   importWallet,
   unlockWallet,
-  restoreUnlockedSession,
   lockWallet,
   deleteWallet,
   hasWallet,
   getWalletInfo,
+  enableBiometricUnlock,
+  hasBiometricUnlock,
+  unlockWithBiometric,
+  disableBiometricUnlock,
   exportMnemonic,
   exportPrivateKey,
   isUnlocked,
@@ -18,12 +21,22 @@ export {
 } from './wallet.js'
 
 export {
-  SESSION_UNLOCK_TTL_MS,
-  rememberUnlockedSession,
-  readUnlockedSession,
-  forgetUnlockedSession,
-  type RememberedUnlock,
-} from './session.js'
+  type BiometricRecord,
+  readBiometricRecord,
+  writeBiometricRecord,
+  deleteBiometricRecord,
+  sealWithPrfSecret,
+  unsealWithPrfSecret,
+} from './biometric.js'
+
+export {
+  detectPlatformSupport,
+  createPrfCredential,
+  evaluatePrf,
+  deriveWrappingKey,
+  type PlatformSupport,
+  type PrfCredential,
+} from './web-authn.js'
 
 export { signSIWE } from './siwe.js'
 export { getInAppWalletProvider } from './provider.js'

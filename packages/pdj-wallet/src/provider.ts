@@ -1,8 +1,39 @@
 import { getUnlockedAccount, getUnlockedInfo, signMessage, signTransaction, signTypedData } from './wallet.js'
+import { readBiometricRecord } from './biometric.js'
+import { assertUserVerification } from './web-authn.js'
 import { CHAIN_IDS, type Eip1193Provider, type Eip1193RequestArgs } from './types.js'
 
 export interface ProviderOptions {
   rpcUrl?: string
+  /**
+   * Layer L1 of https://github.com/pasosdeJesus/learn.tg/issues/246: before an
+   * `eth_sendTransaction` (money leaving the wallet), ask the device to verify the
+   * user. On by default when a passkey is enrolled; set to `false` in tests.
+   */
+  requireUserVerification?: boolean
+}
+
+/** Error shape wallets use for "the user rejected the request". */
+function userRejected(): Error {
+  return Object.assign(new Error('User rejected the request'), { code: 4001 })
+}
+
+/**
+ * Fresh user-verified assertion before moving funds (L1). Silently allows the
+ * request on devices without a platform authenticator — no passkey enrolled, or a
+ * wallet WebView without WebAuthn: L1 needs hardware and must not block the
+ * wallet. A cancelled prompt is a rejection (`4001`), like any wallet.
+ */
+export async function requireFundsConfirmation(): Promise<void> {
+  const sealed = await readBiometricRecord().catch(() => null)
+  if (!sealed) return
+  try {
+    await assertUserVerification(sealed.credentialId)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (message === 'no-webauthn') return
+    throw userRejected()
+  }
 }
 
 function utf8ToHex(value: string): `0x${string}` {
@@ -54,6 +85,10 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
           const [tx] = (params ?? []) as [Record<string, unknown>]
           if (!options.rpcUrl) {
             throw new Error('eth_sendTransaction requires the provider to be created with an rpcUrl')
+          }
+          // R-#246 (L1): mover fondos exige una verificación fresca del usuario.
+          if (options.requireUserVerification !== false) {
+            await requireFundsConfirmation()
           }
           const raw = await signTransaction(tx as never)
           const response = await fetch(options.rpcUrl, {

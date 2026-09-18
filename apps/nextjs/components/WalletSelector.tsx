@@ -7,6 +7,7 @@ import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletDialog } from '@/components/WalletDialog'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useExternalProvider } from '@/lib/external-provider'
 import { OPEN_IN_APP_WALLET_DIALOG } from '@/lib/in-app-wallet-dialog'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
@@ -29,17 +30,10 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   const { address, sessionAddress, isInAppUnlocked, isSessionLoading } = useAuthAddress()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [external, setExternal] = useState(false)
-  // `window.ethereum` solo existe en el navegador: decidirlo durante el render
-  // rompe la hidratación (el servidor no dibuja el botón y el cliente sí). Se
-  // resuelve después de montar, como en `ConnectWalletButton`.
-  const [externalAvailable, setExternalAvailable] = useState(false)
-
-  useEffect(() => {
-    const detect = () => setExternalAvailable(typeof window !== 'undefined' && !!window.ethereum)
-    detect()
-    window.addEventListener('ethereum#initialized', detect, { once: true })
-    return () => window.removeEventListener('ethereum#initialized', detect)
-  }, [])
+  // R-#246: la billetera inyectada se detecta por EIP-6963 (Rabby, MetaMask y
+  // OneKey móviles no definen `window.ethereum`), así que ya no se decide durante
+  // el render ni con un solo evento `ethereum#initialized`.
+  const { available: externalAvailable } = useExternalProvider()
 
   // Donation/purchase modals can ask for the wallet to be unlocked
   // (`lib/in-app-wallet-dialog.ts`).
@@ -57,6 +51,7 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       signInInApp: 'Sign in with in-app wallet',
       useExternal: 'Use external wallet',
       disconnect: 'Disconnect',
+      openWallet: 'In-app wallet options',
     },
     es: {
       useInApp: 'Usar billetera de la aplicación',
@@ -65,6 +60,7 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       signInInApp: 'Ingresar con la billetera de la aplicación',
       useExternal: 'Usar billetera externa',
       disconnect: 'Desconectar',
+      openWallet: 'Opciones de la billetera de la aplicación',
     },
   }), [lang])
 
@@ -94,9 +90,20 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
     return (
       <>
         <div data-testid="wallet-selector-in-app" className="flex items-center gap-2">
-          <span className="text-xs text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full font-mono">
+          {/* La dirección es también la entrada al panel de la billetera: sin ella,
+              un usuario con sesión no podía abrir el diálogo (y por tanto ni
+              activar el desbloqueo por huella ni borrar la billetera). */}
+          <Button
+            variant="ghost"
+            size="sm"
+            data-testid="wallet-open-dialog"
+            title={t('openWallet')}
+            aria-label={t('openWallet')}
+            onClick={() => setDialogOpen(true)}
+            className="text-xs text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full font-mono hover:bg-gray-200"
+          >
             {shortAddress}
-          </span>
+          </Button>
           <Button
             variant="ghost"
             size="sm"

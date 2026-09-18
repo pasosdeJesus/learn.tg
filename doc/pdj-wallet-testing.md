@@ -30,7 +30,7 @@ any other suite:
 ```sh
 cd apps/nextjs
 
-make test-packages          # los dos paquetes (25 + 15 tests, ~22 s)
+make test-packages          # los dos paquetes (34 + 21 tests, ~25 s)
 make test-pdj-wallet        # solo el core (25 tests, ~12 s)
 make test-pdj-wallet-next   # solo React; compila el core antes (~10 s)
 ```
@@ -47,8 +47,22 @@ cd apps/nextjs
 
 Y dentro de cada paquete hay `Makefile` (`make test`, `make build`, `make install`).
 
-Expected: `25 passed` y `15 passed`. `make test` (la suite completa) ya incluye
-`test-packages`.
+Expected: `39 passed` (core) y `23 passed` (next). `make test` (la suite completa)
+ya incluye `test-packages`.
+
+Lo que cubre el core sobre R-#246 (14 de esos 39): sellado de la clave con el
+secreto PRF y comprobación de que el registro guardado **no contiene la clave
+privada**, desbloqueo con un gesto, determinismo entre recargas (misma sal → mismo
+secreto), el PIN como respaldo, `auth-failed` con un secreto que no coincide,
+`no-prf` y `no-webauthn` sin romper, baja/borrado del sello, un sello que
+pertenece a otra billetera, y la confirmación de fondos (L1) del proveedor: pide el
+gesto en `eth_sendTransaction`, no lo pide en lecturas ni en `personal_sign`, un
+gesto cancelado rechaza con código `4001` sin transmitir, sin passkey deja pasar la
+transacción y se puede desactivar con `requireUserVerification: false`.
+
+En `pdj-wallet-next` dos pruebas cubren el auto-lock por inactividad: tras
+`INACTIVITY_LOCK_MS` sin actividad la clave se suelta con `lockReason: 'idle'`, y el
+✕ de la cabecera marca `'user'`.
 
 The core package declares its own dependencies (`viem`, `vitest`, `fake-indexeddb`,
 `typescript`): run `pnpm install` inside `packages/pdj-wallet` once (`make -C
@@ -69,7 +83,7 @@ make test-hooks test-components
 ```
 
 Expected: `lib/hooks/__tests__` 74 passed / 2 skipped (44 s) and
-`components/__tests__` 125 passed / 3 skipped (85 s) — numbers as of 2026-09-15;
+`components/__tests__` 136 passed / 3 skipped (85 s) — numbers as of 2026-09-18;
 the full `make test` is 628 passed / 6 skipped in 368 s, and most of that time is
 jsdom environment setup per test file, not the assertions.
 
@@ -138,6 +152,18 @@ cd apps/nextjs
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=donate-unlock-dialog
 SITE_URL=http://localhost:4000 IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 \
   CHROME_PATH=/usr/local/bin/chrome ./bin/m test:e2e donate-unlock-dialog
+```
+
+`e2e/specs/biometric-unlock.spec.mjs` (R-#246) cubre el desbloqueo por huella con
+un **authenticator virtual de Chrome por CDP** (`WebAuthn.addVirtualAuthenticator`
+con `hasPrf: true`, que auto-verifica al usuario como haría Face ID): crea la
+billetera desde la cabecera, activa "desbloquear con huella la próxima vez",
+recarga —la clave salió de memoria— y comprueba que **un gesto** deja la billetera
+lista y que el modal de donación deja de pedir desbloqueo.
+
+```sh
+cd apps/nextjs
+CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=biometric-unlock
 ```
 
 Dos defectos de R-#244 relacionados: (1) `WalletSelector` devolvía la cabecera

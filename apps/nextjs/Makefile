@@ -190,6 +190,10 @@ test-e2e-spec:
 test-e2e-wallet:
 	$(MAKE) test-e2e-spec SPEC=in-app-wallet
 
+# R-#246: desbloqueo por huella (usa un authenticator virtual de Chrome por CDP).
+test-e2e-biometric:
+	$(MAKE) test-e2e-spec SPEC=biometric-unlock
+
 test-e2e-offline:
 	$(MAKE) test-e2e-spec SPEC=offline
 

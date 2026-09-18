@@ -296,8 +296,10 @@ async function main() {
     if (after.notice) fail(`Tras desbloquear, el aviso sigue en el modal: ${after.text}`)
     else ok('Tras desbloquear, el aviso desaparece')
 
-    // 4. El desbloqueo queda recordado en esta pestaña: recargar no vuelve a
-    // pedir el PIN mientras la cabecera siga mostrando la sesión.
+    // 4. R-#246: el desbloqueo vive en memoria, así que recargar vuelve a
+    // pedirlo (el parche de `sessionStorage` se quitó: no sobrevivía al cierre de
+    // la app en ningún entorno medido). Lo que evita teclear el PIN es el camino
+    // biométrico, cubierto por `biometric-unlock.spec.mjs`.
     await locked.reload({ waitUntil: 'domcontentloaded' })
     await sleep(5000)
     const currentUrl = locked.url()
@@ -308,10 +310,10 @@ async function main() {
     ])
     if (!reopened) {
       fail('Tras recargar, el modal de donación no abrió')
-    } else if (reopened.notice) {
-      fail(`Tras recargar la pestaña, el modal vuelve a pedir desbloquear: ${reopened.text}`)
+    } else if (!reopened.notice) {
+      fail(`Tras recargar, el modal no pide desbloquear: ${reopened.text}`)
     } else {
-      ok('Tras recargar la pestaña, la billetera sigue desbloqueada (no pide PIN)')
+      ok('Tras recargar, la billetera vuelve a estar bloqueada y el modal lo explica')
     }
   }
 

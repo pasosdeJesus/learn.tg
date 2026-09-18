@@ -12,6 +12,7 @@ End-to-end testing for learn.tg uses `@pasosdejesus/m`'s test runner
 | `make test-e2e` | All browser specs | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-<name>` | Single browser spec by filename pattern | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-wallet` | Atajo: `SPEC=in-app-wallet` (billetera in-app, R-#245) | ✅ | `https://learn.tg:9001` |
+| `make test-e2e-biometric` | Atajo: `SPEC=biometric-unlock` (desbloqueo por huella, R-#246) | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-offline` | Atajo: `SPEC=offline` (offline-guide + offline-crossword) | ✅ | `https://learn.tg:9001` |
 | `make test-packages` | Unit tests de `packages/pdj-wallet{,−next}` | ❌ | local |
 | `bin/m test:e2e` | Browser specs (falls back to smoke if none found) | ✅ | ⚠️ **`https://learn.tg` (producción)** |
@@ -246,6 +247,7 @@ for an example.
 | `in-app-wallet.spec.mjs` | R-#245: in-app wallet created in `/en/test/wallet`, unlocked, SIWE and session cookie (skips when the page is not deployed) |
 | `header-wallet-dialog.spec.mjs` | R-#245: the real header + wallet modal flow — create → close → reopen must start fresh → unlock from the header → SIWE → the header **keeps the session after a reload** → `✕` returns to signed-out |
 | `donate-unlock-dialog.spec.mjs` | R-#244: with an in-app session and the wallet locked, the donation modal's unlock button must open the wallet dialog **on top** with the PIN form, and unlocking must remove the notice |
+| `biometric-unlock.spec.mjs` | R-#246: drives the real header + dialog with a **CDP virtual authenticator (`hasPrf`)** — create → enable fingerprint → reload → one gesture unlocks → the donation modal stops asking to unlock |
 | `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
 | `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), **ronda C con cashback ON (10 USDT @ pdJ 5%)**: campaña neta 85% (8.50), pdJ 5%, cashback 22.00 SLEARN vía `mintAndReserve` (+saldo on-chain del donante y del `learnTgReserve`), balance de la billetera campaña y filas en user-transactions (deltas vs baseline, acumulativo en dev) |
 | `donate-campaign-celo-real.spec.mjs` | **Real donation in native CELO (REQ/223):** `sendTransaction` (value) al backend → `verify` con `payToken='celo'` (verify por `tx.value`) → auto-forward nativo 100% y 90/10, balance CELO on-chain y filas `crypto=celo` |

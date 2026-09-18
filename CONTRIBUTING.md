@@ -53,7 +53,7 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
    - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.
    - **`pdj-wallet` packages** (`packages/pdj-wallet`, `packages/pdj-wallet-next`):
      `make test-pdj-wallet`, `make test-pdj-wallet-next` or `make test-packages`
-     (25 + 15 tests, ~22 s; each package also has its own `Makefile`). See
+     (34 + 21 tests, ~25 s; each package also has its own `Makefile`). See
      [doc/pdj-wallet-testing.md](doc/pdj-wallet-testing.md).
    - **Engine tests** (`packages/rewards`, `packages/gdcluster`): run in isolation with
      `pnpm --filter @learn-tg/rewards test` / `pnpm --filter @learn-tg/gdcluster test`

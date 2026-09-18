@@ -5,6 +5,7 @@ import type { Session } from 'next-auth'
 import { useState, useEffect } from 'react'
 import { logger } from '@pasosdejesus/m/debug'
 import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { useExternalProvider } from '@/lib/external-provider'
 
 interface ExtendedSession extends Session {
   address?: string
@@ -28,21 +29,24 @@ export function useAuthAddress() {
     status: string
   }
   const [isWalletAvailable, setIsWalletAvailable] = useState<boolean | null>(null)
+  // R-#246: la billetera inyectada se resuelve por EIP-6963 + `window.ethereum`,
+  // porque varios navegadores de billetera no definen `window.ethereum` al cargar.
+  const { provider: externalProvider } = useExternalProvider()
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     logger.info('useAuthAddress: checking wallet availability', 'auth')
 
+    if (!externalProvider) {
+      logger.info('useAuthAddress: no external provider', 'auth')
+      setIsWalletAvailable(false)
+      return
+    }
+
     const check = async () => {
-      const hasProvider = !!window.ethereum
-      if (!hasProvider) {
-        logger.info('useAuthAddress: no window.ethereum provider', 'auth')
-        setIsWalletAvailable(false)
-        return
-      }
       // Verify there are actually connected accounts (no prompt)
       try {
-        const accounts = await window.ethereum!.request({
+        const accounts = await externalProvider.request({
           method: 'eth_accounts',
         })
         const available = Array.isArray(accounts) && accounts.length > 0
@@ -56,21 +60,17 @@ export function useAuthAddress() {
         setIsWalletAvailable(false)
       }
     }
-    check()
+    void check()
 
-    if (window.ethereum) {
-      window.ethereum.on('accountsChanged', check)
-      window.ethereum.on('connect', check)
-      window.ethereum.on('disconnect', () => setIsWalletAvailable(false))
-    }
+    externalProvider.on?.('accountsChanged', check)
+    externalProvider.on?.('connect', check)
+    externalProvider.on?.('disconnect', () => setIsWalletAvailable(false))
 
     return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', check)
-        window.ethereum.removeListener('connect', check)
-      }
+      externalProvider.removeListener?.('accountsChanged', check)
+      externalProvider.removeListener?.('connect', check)
     }
-  }, [])
+  }, [externalProvider])
 
   const [mounted, setMounted] = useState(false)
   // R-#218: NO leer localStorage durante el primer render (hidratación). El

@@ -102,7 +102,7 @@ describe('WalletSelector (R-#238/R-#244)', () => {
 
   // Tras el SIWE la página recarga y la billetera queda bloqueada: la cabecera
   // debe seguir mostrando la sesión, no volver a pedir "Unlock".
-  it('keeps showing the session when the in-app wallet is locked again after a reload', () => {
+  it('keeps showing the session when the in-app wallet is locked again after a reload', async () => {
     mocks.status = 'locked'
     mocks.isInAppUnlocked = false
     mocks.inAppAddress = undefined
@@ -110,7 +110,14 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     render(<WalletSelector lang="en" />)
 
     expect(screen.getByTestId('wallet-selector-in-app')).toHaveTextContent(/0xf39f…2266/)
-    expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
+    // R-#246: la dirección es también la entrada al panel (antes con sesión no
+    // había forma de abrir el diálogo, y por tanto de activar la huella).
+    const pill = screen.getByTestId('wallet-open-dialog')
+    expect(pill).toHaveTextContent(/0xf39f…2266/)
+    await act(async () => {
+      fireEvent.click(pill)
+    })
+    expect(screen.getByTestId('wallet-dialog-open')).toBeInTheDocument()
   })
 
   // R-#244: con sesión y billetera bloqueada el encabezado muestra la dirección,

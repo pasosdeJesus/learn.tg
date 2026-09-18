@@ -378,7 +378,7 @@ que la integración):
 
 ```sh
 cd apps/nextjs
-make test-packages          # pdj-wallet + pdj-wallet-next (25 + 15, ~22 s)
+make test-packages          # pdj-wallet + pdj-wallet-next (34 + 21, ~25 s)
 make test-pdj-wallet        # solo el core
 make test-pdj-wallet-next   # solo React (compila el core por ti)
 ```

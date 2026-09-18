@@ -28,11 +28,13 @@ pnpm test               # vitest run --config vitest.config.ts
 ```ts
 import {
   createWallet, importWallet, unlockWallet, lockWallet, deleteWallet,
-  restoreUnlockedSession, readUnlockedSession, forgetUnlockedSession,
+  enableBiometricUnlock, hasBiometricUnlock, unlockWithBiometric, disableBiometricUnlock,
+  detectPlatformSupport, createPrfCredential, evaluatePrf,
   hasWallet, getWalletInfo, isUnlocked,
   exportMnemonic, exportPrivateKey,
   signMessage, signTypedData, signTransaction, signSIWE,
   getInAppWalletProvider,
+  requireFundsConfirmation,
   MemoryStorage, IndexedDBStorage,
 } from '@learn-tg/pdj-wallet'
 ```
@@ -42,39 +44,61 @@ import {
 | `createWallet({ pin, chain?, storage? })` | Generates a 12-word mnemonic, stores the encrypted key and returns `{ walletInfo, mnemonic }` |
 | `importWallet({ mnemonic?, privateKey?, pin, chain?, storage? })` | Imports an existing wallet |
 | `unlockWallet(pin, storage?)` | Decrypts the key into memory and returns `WalletInfo` |
-| `restoreUnlockedSession(storage?)` | Restores the unlock remembered for this **tab** (see below), or `null` |
-| `lockWallet()` | Clears the in-memory key and the remembered unlock |
-| `deleteWallet(storage?)` | Removes the stored record and locks |
+| `enableBiometricUnlock(pin, storage?)` | Registers a passkey and stores the key sealed with its **PRF** secret (layer L2, see below); leaves the wallet unlocked |
+| `unlockWithBiometric(storage?)` | One user-verified gesture decrypts the sealed key (`auth-failed` if it does not match) |
+| `hasBiometricUnlock(storage?)` / `disableBiometricUnlock()` | Inspect or forget the sealed key |
+| `detectPlatformSupport()` | `{ webauthn, userVerifying, prf }` without throwing; `prf: null` means "the engine did not say" |
+| `lockWallet()` | Clears the in-memory key (the sealed key and the PIN record stay) |
+| `deleteWallet(storage?)` | Removes the stored record, the sealed key and locks |
 | `hasWallet(storage?)` / `getWalletInfo(storage?)` | Inspect the stored record without unlocking |
 | `exportMnemonic(pin, storage?)` / `exportPrivateKey(pin, storage?)` | PIN-protected export, no side effects on the session (a wallet imported from a private key has no phrase) |
 | `signMessage(message)` / `signSIWE(message)` | EIP-191 signature with the unlocked key |
 | `signTypedData(typedData)` / `signTransaction(tx)` | EIP-712 / transaction signature |
-| `getInAppWalletProvider({ rpcUrl? })` | EIP-1193 provider when unlocked, `null` otherwise |
+| `getInAppWalletProvider({ rpcUrl?, requireUserVerification? })` | EIP-1193 provider when unlocked, `null` otherwise. `eth_sendTransaction` asks for a fresh user-verified assertion first (layer L1); `requireUserVerification: false` disables that for tests |
+| `requireFundsConfirmation()` | Performs the L1 check on its own; allows the operation on devices without a passkey |
 
-| `chain` is `'celo'` (42220) or `'celoSepolia'` (11142220, default).
+`chain` is `'celo'` (42220) or `'celoSepolia'` (11142220, default).
 
-### Session-scoped unlock
+### Biometric unlock (WebAuthn PRF)
 
-A page reload wipes the module memory, so without help every reload locked the
-wallet again and the payment modals asked for the PIN even though the header
-showed a valid session (https://github.com/pasosdeJesus/learn.tg/issues/244).
-After a successful `unlockWallet` / `createWallet` / `importWallet` the private
-key is also written to **`sessionStorage`** (key
-`learn.tg:in-app-wallet:unlocked`, sliding TTL `SESSION_UNLOCK_TTL_MS`, 30 min)
-and `restoreUnlockedSession()` puts it back during the next page load.
+A page reload wipes the module memory, so a reload used to mean typing the PIN
+again even with a valid session. `enableBiometricUnlock(pin)` registers a passkey
+and stores the private key **encrypted with a key derived (HKDF) from the
+WebAuthn PRF secret** of that credential — the record holds only ciphertext, the
+credential id and two non-secret salts. `unlockWithBiometric()` evaluates the PRF
+(one Face ID / fingerprint / device-PIN gesture) and decrypts.
 
-- It dies with the tab, is not shared with other tabs, and `lockWallet()`
-  (the header ✕), `deleteWallet()` or the TTL remove it earlier.
-- `restoreUnlockedSession()` refuses and forgets an entry whose wallet no longer
-  matches the stored record.
-- Tradeoff: while the entry exists, script running on the page (XSS) can read the
-  key. That is the same window in which the user already signs without a PIN, but
-  it extends across reloads; keep the TTL short. Use `forgetUnlockedSession()` if
-  an integrator prefers to require the PIN on every load.
+- The authenticator produces the PRF secret; it never leaves the device and is
+  never written down. Two evaluations with the same salt are identical, which is
+  what makes this work across reloads.
+- The **PIN record is untouched**: the PIN keeps working as fallback and recovery,
+  and the 12 words remain the only way to recover on another device.
+- Nothing readable is stored: no plaintext key in `sessionStorage` or IndexedDB.
+  The earlier tab-scoped `sessionStorage` entry (2026-09-16) was removed; it was
+  measured not to survive closing the app on any tested environment, so it bought
+  little and kept the key readable.
+- On devices without WebAuthn (the in-app browsers of Rabby, MetaMask, OneKey and
+  OKX report `PublicKeyCredential: false`), these functions throw
+  `no-webauthn` / `no-prf` and callers fall back to the PIN.
 
-This entry is a **stopgap**: https://github.com/pasosdeJesus/learn.tg/issues/246
-replaces it with device authentication (WebAuthn gesture gate, and WebAuthn PRF
-for a biometric unlock that stores nothing readable at rest).
+### Funds confirmation (WebAuthn gesture, layer L1)
+
+Moving money out of the wallet asks the device to verify the user first, even
+inside the same unlocked session: `eth_sendTransaction` calls
+`requireFundsConfirmation()`, which performs a plain assertion with
+`userVerification: 'required'` against the enrolled passkey. It needs no `prf`, so
+it also works on devices where the biometric *unlock* is not available; and if no
+passkey is enrolled (or the engine has no WebAuthn, as in the in-app browsers of
+Rabby, MetaMask, OneKey and OKX) the request goes through, because L1 alone
+cannot protect a device without hardware.
+
+- A cancelled prompt rejects the request with `code: 4001` and nothing is
+  broadcast — the same contract as every other wallet.
+- Reads (`eth_accounts`, `eth_chainId`) and signatures that do not move funds
+  (`personal_sign`, `eth_signTypedData_v4`) are not gated, so signing in and
+  reading balances never prompt twice.
+- `requireUserVerification: false` exists for tests and for callers that do their
+  own confirmation.
 
 ## Security model
 
@@ -84,8 +108,8 @@ for a biometric unlock that stores nothing readable at rest).
 - `crypto.subtle` (Web Crypto) is used, so Node 18+ and secure browser contexts
   both work.
 - The decrypted key lives only in module memory while the wallet is unlocked;
-  `lockWallet()` and `deleteWallet()` clear it. The session-scoped copy (above)
-  is `sessionStorage`-only and expires with the tab or the TTL.
+  `lockWallet()` and `deleteWallet()` clear it. The biometric record is ciphertext
+  whose key can only be produced by the authenticator after the user verifies.
 - A wrong PIN fails closed (`Wrong PIN or corrupted wallet data`); a decrypted
   key that does not match the stored address is rejected.
 - Argon2id is the documented future evolution (not implemented in the MVP).

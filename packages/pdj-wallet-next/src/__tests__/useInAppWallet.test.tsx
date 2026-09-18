@@ -7,7 +7,11 @@ const walletMock = vi.hoisted(() => ({
   createWallet: vi.fn(),
   importWallet: vi.fn(),
   unlockWallet: vi.fn(),
-  restoreUnlockedSession: vi.fn(),
+  unlockWithBiometric: vi.fn(),
+  enableBiometricUnlock: vi.fn(),
+  disableBiometricUnlock: vi.fn(),
+  hasBiometricUnlock: vi.fn(),
+  detectPlatformSupport: vi.fn(),
   lockWallet: vi.fn(),
   deleteWallet: vi.fn(),
   getInAppWalletProvider: vi.fn(),
@@ -15,7 +19,7 @@ const walletMock = vi.hoisted(() => ({
 
 vi.mock('@learn-tg/pdj-wallet', () => walletMock)
 
-import { useInAppWallet, resetInAppWalletStoreForTests } from '../useInAppWallet'
+import { useInAppWallet, resetInAppWalletStoreForTests, INACTIVITY_LOCK_MS } from '../useInAppWallet'
 
 const ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as `0x${string}`
 const INFO = { address: ADDRESS, chain: 'celoSepolia' as const, createdAt: 1 }
@@ -24,9 +28,10 @@ describe('useInAppWallet', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetInAppWalletStoreForTests()
-    // `clearAllMocks` no revierte las implementaciones: fijar la de restaurar
-    // evita que un test deje la billetera desbloqueada para los siguientes.
-    walletMock.restoreUnlockedSession.mockResolvedValue(null)
+    // `clearAllMocks` does not revert implementations: pin them so one test does
+    // not leave the wallet unlocked (or biometric) for the next one.
+    walletMock.hasBiometricUnlock.mockResolvedValue(false)
+    walletMock.detectPlatformSupport.mockResolvedValue({ webauthn: false, userVerifying: false, prf: null })
     ;(globalThis as { indexedDB?: unknown }).indexedDB = {}
     window.indexedDB = {} as IDBFactory
   })
@@ -41,22 +46,85 @@ describe('useInAppWallet', () => {
   it('reports locked when a wallet exists', async () => {
     walletMock.hasWallet.mockResolvedValue(true)
     walletMock.getWalletInfo.mockResolvedValue(INFO)
-    walletMock.restoreUnlockedSession.mockResolvedValue(null)
     const { result } = renderHook(() => useInAppWallet())
     await waitFor(() => expect(result.current.status).toBe('locked'))
     expect(result.current.walletInfo?.address).toBe(ADDRESS)
   })
 
-  // R-#244: si la pestaña ya desbloqueó la billetera, recargar no debe volver a
-  // pedir el PIN (la cabecera muestra la sesión y los modales quedan usables).
-  it('restores the unlock remembered for the tab', async () => {
+  // R-#246: el desbloqueo vive en memoria, así que recargar vuelve a pedirlo.
+  // Lo que evita teclear el PIN es el camino biométrico.
+  it('reports the biometric capability of the device', async () => {
     walletMock.hasWallet.mockResolvedValue(true)
     walletMock.getWalletInfo.mockResolvedValue(INFO)
-    walletMock.restoreUnlockedSession.mockResolvedValue(INFO)
+    walletMock.detectPlatformSupport.mockResolvedValue({ webauthn: true, userVerifying: true, prf: true })
     const { result } = renderHook(() => useInAppWallet())
-    await waitFor(() => expect(result.current.status).toBe('unlocked'))
-    expect(walletMock.restoreUnlockedSession).toHaveBeenCalled()
+    await waitFor(() => expect(result.current.status).toBe('locked'))
+    expect(result.current.biometricAvailable).toBe(true)
+    expect(result.current.biometricEnabled).toBe(false)
+  })
+
+  it('stays locked and PIN-only on devices without WebAuthn', async () => {
+    walletMock.hasWallet.mockResolvedValue(true)
+    walletMock.getWalletInfo.mockResolvedValue(INFO)
+    walletMock.detectPlatformSupport.mockResolvedValue({ webauthn: false, userVerifying: false, prf: null })
+    const { result } = renderHook(() => useInAppWallet())
+    await waitFor(() => expect(result.current.status).toBe('locked'))
+    expect(result.current.biometricAvailable).toBe(false)
+  })
+
+  it('reports biometric as enabled when a sealed key exists', async () => {
+    walletMock.hasWallet.mockResolvedValue(true)
+    walletMock.getWalletInfo.mockResolvedValue(INFO)
+    walletMock.hasBiometricUnlock.mockResolvedValue(true)
+    const { result } = renderHook(() => useInAppWallet())
+    await waitFor(() => expect(result.current.status).toBe('locked'))
+    expect(result.current.biometricEnabled).toBe(true)
+    expect(result.current.biometricAvailable).toBe(true)
+  })
+
+  it('unlocks with one gesture', async () => {
+    walletMock.hasWallet.mockResolvedValue(true)
+    walletMock.getWalletInfo.mockResolvedValue(INFO)
+    walletMock.hasBiometricUnlock.mockResolvedValue(true)
+    walletMock.unlockWithBiometric.mockResolvedValue(INFO)
+    const { result } = renderHook(() => useInAppWallet())
+    await waitFor(() => expect(result.current.status).toBe('locked'))
+    await act(async () => {
+      await result.current.unlockWithBiometric()
+    })
+    expect(result.current.status).toBe('unlocked')
     expect(result.current.walletInfo?.address).toBe(ADDRESS)
+  })
+
+  it('records the error and keeps the wallet locked when the gesture fails', async () => {
+    walletMock.hasWallet.mockResolvedValue(true)
+    walletMock.getWalletInfo.mockResolvedValue(INFO)
+    walletMock.unlockWithBiometric.mockRejectedValue(new Error('auth-failed'))
+    const { result } = renderHook(() => useInAppWallet())
+    await waitFor(() => expect(result.current.status).toBe('locked'))
+    await act(async () => {
+      await expect(result.current.unlockWithBiometric()).rejects.toThrow('auth-failed')
+    })
+    expect(result.current.status).toBe('locked')
+    expect(result.current.error).toBe('auth-failed')
+  })
+
+  it('enables and disables the biometric unlock', async () => {
+    walletMock.hasWallet.mockResolvedValue(true)
+    walletMock.getWalletInfo.mockResolvedValue(INFO)
+    const { result } = renderHook(() => useInAppWallet())
+    await waitFor(() => expect(result.current.status).toBe('locked'))
+
+    await act(async () => {
+      await result.current.enableBiometric('123456')
+    })
+    expect(walletMock.enableBiometricUnlock).toHaveBeenCalledWith('123456')
+    expect(result.current.biometricEnabled).toBe(true)
+
+    await act(async () => {
+      await result.current.disableBiometric()
+    })
+    expect(result.current.biometricEnabled).toBe(false)
   })
 
   it('goes to unlocked after creating a wallet', async () => {
@@ -69,6 +137,50 @@ describe('useInAppWallet', () => {
     })
     expect(result.current.status).toBe('unlocked')
     expect(result.current.walletInfo?.address).toBe(ADDRESS)
+  })
+
+  // R-#246: auto-lock por inactividad, como OneKey y OKX. Suelta la clave pero no
+  // cierra la sesión (el motivo `idle` lo distingue WalletEventListener).
+  it('locks the wallet after inactivity and marks the reason as idle', async () => {
+    vi.useFakeTimers()
+    try {
+      walletMock.hasWallet.mockResolvedValue(true)
+      walletMock.getWalletInfo.mockResolvedValue(INFO)
+      walletMock.unlockWallet.mockResolvedValue(INFO)
+      const { result } = renderHook(() => useInAppWallet())
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      await act(async () => {
+        await result.current.unlock('123456')
+      })
+      expect(result.current.status).toBe('unlocked')
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(INACTIVITY_LOCK_MS + 1)
+      })
+
+      expect(walletMock.lockWallet).toHaveBeenCalled()
+      expect(result.current.status).toBe('locked')
+      expect(result.current.lockReason).toBe('idle')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('marks the reason as user when the header ✕ locks it', async () => {
+    walletMock.hasWallet.mockResolvedValue(true)
+    walletMock.getWalletInfo.mockResolvedValue(INFO)
+    walletMock.unlockWallet.mockResolvedValue(INFO)
+    const { result } = renderHook(() => useInAppWallet())
+    await waitFor(() => expect(result.current.status).toBe('locked'))
+    await act(async () => {
+      await result.current.unlock('123456')
+    })
+    await act(async () => {
+      await result.current.lock()
+    })
+    expect(result.current.lockReason).toBe('user')
   })
 
   it('goes to unlocked after importing and back to locked after locking', async () => {

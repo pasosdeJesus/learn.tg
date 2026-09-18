@@ -11,6 +11,11 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   importExisting: vi.fn(),
   unlock: vi.fn(),
+  unlockWithBiometric: vi.fn(),
+  enableBiometric: vi.fn(),
+  disableBiometric: vi.fn(),
+  biometricAvailable: false,
+  biometricEnabled: false,
   remove: vi.fn(),
   getProvider: vi.fn(),
   signInWithInAppWallet: vi.fn(),
@@ -25,6 +30,11 @@ vi.mock('@learn-tg/pdj-wallet-next', () => ({
     create: mocks.create,
     importExisting: mocks.importExisting,
     unlock: mocks.unlock,
+    unlockWithBiometric: mocks.unlockWithBiometric,
+    enableBiometric: mocks.enableBiometric,
+    disableBiometric: mocks.disableBiometric,
+    biometricAvailable: mocks.biometricAvailable,
+    biometricEnabled: mocks.biometricEnabled,
     remove: mocks.remove,
     getProvider: mocks.getProvider,
   }),
@@ -60,6 +70,8 @@ describe('WalletDialog (R-#244)', () => {
     mocks.status = 'no-wallet'
     mocks.walletInfo = null
     mocks.error = null
+    mocks.biometricAvailable = false
+    mocks.biometricEnabled = false
   })
 
   it('creates the wallet and shows the 12 words with a confirmation', async () => {
@@ -139,6 +151,81 @@ describe('WalletDialog (R-#244)', () => {
 
     expect(mocks.unlock).toHaveBeenCalledWith('123456')
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
+  // R-#246 (L2): con la clave sellada por la passkey, el gesto reemplaza al PIN.
+  it('unlocks with the fingerprint when it is enabled', async () => {
+    mocks.status = 'locked'
+    mocks.walletInfo = { address: ADDRESS }
+    mocks.biometricEnabled = true
+    mocks.unlockWithBiometric.mockResolvedValue({ address: ADDRESS })
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    expect(screen.getByTestId('wallet-unlock')).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-unlock-biometric'))
+    })
+
+    expect(mocks.unlockWithBiometric).toHaveBeenCalled()
+    expect(mocks.unlock).not.toHaveBeenCalled()
+    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
+  it('offers to enable the fingerprint with the same PIN', async () => {
+    mocks.status = 'locked'
+    mocks.walletInfo = { address: ADDRESS }
+    mocks.biometricAvailable = true
+    mocks.enableBiometric.mockResolvedValue({ address: ADDRESS })
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    // Deshabilitado hasta que haya PIN
+    expect(screen.getByTestId('wallet-enable-biometric')).toBeDisabled()
+    await fillPin()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-enable-biometric'))
+    })
+
+    expect(mocks.enableBiometric).toHaveBeenCalledWith('123456')
+    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
+  it('does not offer the fingerprint when the device cannot verify the user', () => {
+    mocks.status = 'locked'
+    mocks.walletInfo = { address: ADDRESS }
+    mocks.biometricAvailable = false
+    renderDialog()
+
+    expect(screen.queryByTestId('wallet-enable-biometric')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-unlock-biometric')).not.toBeInTheDocument()
+    expect(screen.getByTestId('wallet-unlock')).toBeInTheDocument()
+  })
+
+  it('lets the user turn the fingerprint unlock off', async () => {
+    mocks.status = 'unlocked'
+    mocks.walletInfo = { address: ADDRESS }
+    mocks.biometricEnabled = true
+    mocks.disableBiometric.mockResolvedValue(undefined)
+    renderDialog()
+
+    expect(screen.getByTestId('wallet-biometric-status')).toHaveTextContent(/fingerprint unlock is on/i)
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-disable-biometric'))
+    })
+    expect(mocks.disableBiometric).toHaveBeenCalled()
+  })
+
+  it('reports a cancelled gesture without losing the wallet', async () => {
+    mocks.status = 'locked'
+    mocks.walletInfo = { address: ADDRESS }
+    mocks.biometricEnabled = true
+    mocks.error = 'NotAllowedError'
+    renderDialog()
+
+    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/cancelled/i)
   })
 
   // R-#244: si la cookie de sesión ya es de esta billetera, volver a firmar el

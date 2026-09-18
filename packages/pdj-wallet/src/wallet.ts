@@ -1,10 +1,15 @@
-import { decryptSecret, encryptSecret } from './crypto.js'
+import { decryptSecret, encryptSecret, fromBase64 } from './crypto.js'
 import { IndexedDBStorage } from './storage/indexeddb.js'
 import {
-  forgetUnlockedSession,
-  readUnlockedSession,
-  rememberUnlockedSession,
-} from './session.js'
+  deleteBiometricRecord,
+  newPrfSalt,
+  readBiometricRecord,
+  sealWithPrfSecret,
+  unsealWithPrfSecret,
+  wipePrfSecret,
+  writeBiometricRecord,
+} from './biometric.js'
+import { createPrfCredential, detectPlatformSupport, evaluatePrf } from './web-authn.js'
 import {
   accountFromPrivateKey,
   newMnemonic,
@@ -112,7 +117,6 @@ async function persist(
   const info: WalletInfo = { address: account.address, chain, createdAt }
   await storage.set(buildRecord(info.address, chain, createdAt, secret))
   unlocked = { privateKey, account, info }
-  rememberUnlockedSession(info.address, privateKey)
   return info
 }
 
@@ -154,47 +158,119 @@ export async function unlockWallet(pin: string, storage?: StorageAdapter): Promi
   }
   const info: WalletInfo = { address: record.address, chain: record.chain, createdAt: record.createdAt }
   unlocked = { privateKey, account, info }
-  // La clave queda disponible para el resto de la pestaña (session.ts).
-  rememberUnlockedSession(info.address, privateKey)
   return info
 }
 
 /**
- * Recupera el desbloqueo recordado para esta pestaña, si lo hay y la billetera
- * guardada sigue siendo la misma. Devuelve `null` (y olvida la entrada) cuando
- * no aplica.
+ * Layer L2 (https://github.com/pasosdeJesus/learn.tg/issues/246): registers a
+ * passkey and stores the private key **sealed with its PRF secret**, so the user
+ * can unlock with Face ID / fingerprint instead of typing the PIN. The PIN record
+ * is untouched and keeps working as fallback and recovery.
+ *
+ * Throws `no-webauthn`, `no-prf` or the WebAuthn error when the device cannot do
+ * it; callers degrade silently.
  */
-export async function restoreUnlockedSession(storage?: StorageAdapter): Promise<WalletInfo | null> {
-  const remembered = readUnlockedSession()
-  if (!remembered) return null
+export async function enableBiometricUnlock(pin: string, storage?: StorageAdapter): Promise<{ address: string }> {
+  assertPin(pin)
   const adapter = resolveStorage(storage)
   const record = await adapter.get()
-  if (!record || record.address.toLowerCase() !== remembered.address.toLowerCase()) {
-    forgetUnlockedSession()
-    return null
+  if (!record) throw new Error('There is no in-app wallet to seal')
+
+  const support = await detectPlatformSupport()
+  if (!support.webauthn || !support.userVerifying) throw new Error('no-webauthn')
+
+  // The PIN is required on purpose: the passkey must wrap a key the user owns.
+  const { privateKey } = await decryptRecord(record, pin)
+  if (accountFromPrivateKey(privateKey).address.toLowerCase() !== record.address.toLowerCase()) {
+    throw new Error('The stored wallet does not match the decrypted key')
   }
-  const account = accountFromPrivateKey(remembered.privateKey)
+
+  const credential = await createPrfCredential(record.address)
+  if (!credential.prfEnabled) throw new Error('no-prf')
+
+  const prfSalt = newPrfSalt()
+  const prfSecret = await evaluatePrf(credential.credentialId, prfSalt)
+  if (!prfSecret) {
+    throw new Error('no-prf')
+  }
+  try {
+    const sealed = await sealWithPrfSecret(prfSecret, prfSalt, privateKey, {
+      address: record.address,
+      credentialId: credential.credentialId,
+    })
+    await writeBiometricRecord(sealed)
+  } finally {
+    wipePrfSecret(prfSecret)
+  }
+
+  // El PIN ya se verificó: dejar la billetera lista evita pedirlo dos veces.
+  const account = accountFromPrivateKey(privateKey)
+  unlocked = {
+    privateKey,
+    account,
+    info: { address: record.address, chain: record.chain, createdAt: record.createdAt },
+  }
+  return { address: record.address }
+}
+
+/** Whether this device has a sealed key waiting for a biometric unlock. */
+export async function hasBiometricUnlock(storage?: StorageAdapter): Promise<boolean> {
+  const sealed = await readBiometricRecord().catch(() => null)
+  if (!sealed) return false
+  const adapter = resolveStorage(storage)
+  const record = await adapter.get().catch(() => null)
+  return !!record && record.address.toLowerCase() === sealed.address.toLowerCase()
+}
+
+/**
+ * Unlocks with one user-verified WebAuthn gesture. Throws `auth-failed` when the
+ * assertion, the PRF result or the ciphertext does not check out, and
+ * `no-biometric` when there is nothing sealed for this wallet.
+ */
+export async function unlockWithBiometric(storage?: StorageAdapter): Promise<WalletInfo> {
+  const sealed = await readBiometricRecord().catch(() => null)
+  if (!sealed) throw new Error('no-biometric')
+
+  const adapter = resolveStorage(storage)
+  const record = await adapter.get()
+  if (!record || record.address.toLowerCase() !== sealed.address.toLowerCase()) {
+    throw new Error('no-biometric')
+  }
+
+  const prfSecret = await evaluatePrf(sealed.credentialId, fromBase64(sealed.prfSalt))
+  if (!prfSecret) throw new Error('auth-failed')
+
+  let privateKey: `0x${string}`
+  try {
+    privateKey = await unsealWithPrfSecret(prfSecret, sealed)
+  } finally {
+    wipePrfSecret(prfSecret)
+  }
+
+  const account = accountFromPrivateKey(privateKey)
   if (account.address.toLowerCase() !== record.address.toLowerCase()) {
-    forgetUnlockedSession()
-    return null
+    throw new Error('auth-failed')
   }
   const info: WalletInfo = { address: record.address, chain: record.chain, createdAt: record.createdAt }
-  unlocked = { privateKey: remembered.privateKey, account, info }
-  // Se renueva solo: mientras la billetera se use, no vuelve a pedir el PIN.
-  rememberUnlockedSession(info.address, remembered.privateKey)
+  unlocked = { privateKey, account, info }
   return info
+}
+
+/** Forgets the biometric unlock (the PIN keeps working). */
+export async function disableBiometricUnlock(): Promise<void> {
+  await deleteBiometricRecord().catch(() => undefined)
 }
 
 export async function lockWallet(): Promise<void> {
   unlocked = null
-  forgetUnlockedSession()
 }
 
 export async function deleteWallet(storage?: StorageAdapter): Promise<void> {
   const adapter = resolveStorage(storage)
   await adapter.delete()
   unlocked = null
-  forgetUnlockedSession()
+  // The sealed copy belongs to a wallet that no longer exists.
+  await deleteBiometricRecord().catch(() => undefined)
 }
 
 export async function hasWallet(storage?: StorageAdapter): Promise<boolean> {
