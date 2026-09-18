@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sondeo de capacidades — billetera in-app (R-#246)</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0 auto; padding: 16px; max-width: 720px; }
+  h1 { font-size: 19px; } h2 { font-size: 15px; margin: 22px 0 6px; }
+  button { font: inherit; padding: 10px 14px; margin: 4px 6px 4px 0; border-radius: 10px; border: 1px solid #8888; background: #f2f2f5; }
+  button:active { transform: translateY(1px); }
+  pre { background: #f4f4f7; border: 1px solid #ddd; border-radius: 8px; padding: 10px; white-space: pre-wrap; word-break: break-word; font-size: 12.5px; }
+  textarea { width: 100%; min-height: 260px; font: 12.5px/1.4 ui-monospace, Menlo, monospace; }
+  .note { font-size: 13px; color: #555; }
+  .ok { color: #0a7d33; } .no { color: #b00020; } .warn { color: #9a6a00; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #16171a; color: #e8e8ea; }
+    button { background: #26272b; color: #e8e8ea; }
+    pre { background: #1f2024; border-color: #33343a; }
+    .note { color: #a9a9b0; }
+  }
+</style>
+</head>
+<body>
+<h1>Sondeo de capacidades — billetera in-app</h1>
+<p class="note">
+  R-#246 · https://github.com/pasosdeJesus/learn.tg/issues/246<br>
+  Mide qué puede usar el dispositivo (WebAuthn, passkeys, PRF) y qué almacenamiento
+  sobrevive al cerrar la app. No pide nada, no firma nada y no toca la billetera.<br>
+  Traducción: <em>measures device capabilities; nothing is signed, nothing is stored but the test markers.</em>
+</p>
+
+<h2>1. Entorno <span class="note">(environment)</span></h2>
+<pre id="env">…</pre>
+
+<h2>2. WebAuthn: ¿el dispositivo puede verificar al usuario? <span class="note">(platform authenticator)</span></h2>
+<pre id="webauthn">…</pre>
+
+<h2>3. Passkey + PRF <span class="note">(crea una credencial de prueba)</span></h2>
+<p class="note">
+  Esto <strong>crea una passkey</strong> en tu dispositivo (te pedirá Face ID / huella / PIN).
+  Es una credencial de prueba llamada «learn.tg probe» y puedes borrarla después desde
+  la configuración de contraseñas/claves de tu teléfono. Sirve para saber si tu
+  dispositivo soporta la extensión <code>prf</code>, que es lo que permitiría
+  desbloquear la billetera sin escribir el PIN.
+</p>
+<button id="btnPrf">Probar passkey + PRF <span class="note">(create passkey)</span></button>
+<pre id="prf">— sin probar todavía —</pre>
+
+<h2>4. Almacenamiento: ¿qué sobrevive al cerrar la aplicación?</h2>
+<p class="note">
+  Presiona «Escribir marcas», <strong>cierra por completo la app/navegador</strong>
+  (quítala de recientes) y vuelve a abrir esta página. Lo que siga apareciendo
+  aquí abajo sobrevive; lo que diga «no» se perdió.
+</p>
+<button id="btnMark">Escribir marcas <span class="note">(write markers)</span></button>
+<button id="btnCheck">Releer marcas <span class="note">(re-read)</span></button>
+<pre id="storage">…</pre>
+
+<h2>5. Informe para pegar en el issue</h2>
+<button id="btnReport">Generar informe <span class="note">(build report)</span></button>
+<button id="btnCopy">Copiar <span class="note">(copy)</span></button>
+<p class="note" id="copyState"></p>
+<textarea id="report" readonly placeholder="Presiona «Generar informe»"></textarea>
+
+<script>
+(function () {
+  'use strict';
+  var IDB_NAME = 'pdj-wallet-probe';
+  var IDB_STORE = 'markers';
+  var lines = { env: [], webauthn: [], prf: [], storage: [] };
+
+  function set(id, text) { document.getElementById(id).textContent = text; }
+  function push(bucket, text) { lines[bucket].push(text); }
+  function section(bucket, header) { push(bucket, '== ' + header + ' =='); }
+  function bool(label, value) {
+    var mark = value === true ? '[SI]' : value === false ? '[NO]' : '[?]';
+    var cls = value === true ? 'ok' : value === false ? 'no' : 'warn';
+    return mark.replace('[SI]', '<span class="' + cls + '">SI</span>')
+               .replace('[NO]', '<span class="' + cls + '">NO</span>')
+               .replace('[?]', '<span class="' + cls + '">?</span>')
+      + ' ' + label + ': ' + String(value);
+  }
+  function plainBool(label, value) {
+    return (value === true ? 'SI ' : value === false ? 'NO ' : '?  ') + label + ': ' + String(value);
+  }
+
+  function providerFlags() {
+    var eth = window.ethereum;
+    if (!eth) return 'window.ethereum: NO';
+    var flags = [];
+    ['isMiniPay', 'isMetaMask', 'isRabby', 'isOneKey', 'isOkxWallet', 'isOKExWallet', 'isCoinbaseWallet', 'isTrust', 'isBraveWallet']
+      .forEach(function (f) { if (eth[f]) flags.push(f); });
+    return 'window.ethereum: SI' + (flags.length ? ' (' + flags.join(', ') + ')' : ' (sin banderas conocidas)');
+  }
+
+  function collectEnvironment() {
+    section('env', 'ENTORNO');
+    push('env', 'fecha: ' + new Date().toISOString());
+    push('env', 'origen: ' + location.origin);
+    push('env', 'UA: ' + navigator.userAgent);
+    push('env', 'plataforma: ' + (navigator.platform || '-') + ' | idioma: ' + (navigator.language || '-'));
+    push('env', 'secure context: ' + String(window.isSecureContext));
+    push('env', plainBool('window.ethereum', !!window.ethereum));
+    push('env', providerFlags());
+    if (navigator.userAgentData && navigator.userAgentData.platform) {
+      push('env', 'userAgentData.platform: ' + navigator.userAgentData.platform + ' | mobile: ' + String(navigator.userAgentData.mobile));
+    }
+    set('env', lines.env.join('\n'));
+
+    // EIP-6963 anuncios (2 s de escucha)
+    var found = [];
+    window.addEventListener('eip6963:announceProvider', function (event) {
+      var info = (event.detail && event.detail.info) || {};
+      found.push((info.name || '?') + ' [rdns=' + (info.rdns || '?') + ']');
+    });
+    window.dispatchEvent(new Event('eip6963:requestProvider'));
+    setTimeout(function () {
+      push('env', 'EIP-6963 providers: ' + (found.length ? found.join(', ') : 'ninguno'));
+      set('env', lines.env.join('\n'));
+    }, 2000);
+  }
+
+  function collectWebAuthn() {
+    section('webauthn', 'WEBAUTHN');
+    var has = typeof window.PublicKeyCredential !== 'undefined';
+    push('webauthn', plainBool('PublicKeyCredential', has));
+    push('webauthn', plainBool('navigator.credentials', !!(navigator.credentials && navigator.credentials.create)));
+    set('webauthn', lines.webauthn.join('\n'));
+
+    if (!has || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) return;
+    PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(function (uv) {
+      push('webauthn', plainBool('isUserVerifyingPlatformAuthenticatorAvailable()', uv));
+      if (PublicKeyCredential.getClientCapabilities) {
+        return PublicKeyCredential.getClientCapabilities().then(function (caps) {
+          push('webauthn', 'caps clave: userVerifyingPlatformAuthenticator=' + caps.userVerifyingPlatformAuthenticator
+            + ' passkeyPlatformAuthenticator=' + caps.passkeyPlatformAuthenticator
+            + ' extension:prf=' + caps['extension:prf']
+            + ' extension:hmacCreateSecret=' + caps['extension:hmacCreateSecret']);
+          push('webauthn', 'getClientCapabilities(): ' + JSON.stringify(caps));
+        }, function (e) {
+          push('webauthn', 'getClientCapabilities() falló: ' + (e && e.name));
+        });
+      }
+    }).then(function () {
+      set('webauthn', lines.webauthn.join('\n'));
+    }, function (e) {
+      push('webauthn', 'isUserVerifyingPlatformAuthenticatorAvailable() falló: ' + (e && e.name));
+      set('webauthn', lines.webauthn.join('\n'));
+    });
+  }
+
+  function randomBytes(n) {
+    var b = new Uint8Array(n);
+    crypto.getRandomValues(b);
+    return b;
+  }
+
+  function createPasskey() {
+    var out = document.getElementById('prf');
+    out.textContent = '… pidiendo la passkey al dispositivo …';
+    section('prf', 'PASSKEY + PRF');
+    push('prf', 'fecha: ' + new Date().toISOString());
+    // El navegador puede dejar la promesa pendiente para siempre (WebView sin
+    // authenticator): avisar sin bloquear la página.
+    var watchdog = setTimeout(function () {
+      out.textContent = lines.prf.join('\n') + '\n(sin respuesta del dispositivo tras 45 s: ciérrala o cancélala)';
+    }, 45000);
+    var stopWatchdog = function () { clearTimeout(watchdog); };
+    var options = {
+      publicKey: {
+        challenge: randomBytes(32),
+        rp: { name: 'learn.tg probe' },
+        user: {
+          id: randomBytes(16),
+          name: 'probe-' + Date.now(),
+          displayName: 'learn.tg probe'
+        },
+        pubKeyCredParams: [
+          { type: 'public-key', alg: -7 },   // ES256
+          { type: 'public-key', alg: -257 }  // RS256
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          residentKey: 'required',
+          userVerification: 'required'
+        },
+        timeout: 120000,
+        attestation: 'none',
+        extensions: { prf: {} }
+      }
+    };
+
+    navigator.credentials.create(options).then(function (cred) {
+      push('prf', 'creación: OK');
+      var ext = {};
+      try { ext = cred.getClientExtensionResults() || {}; } catch (e) {}
+      var prf = ext.prf || {};
+      push('prf', plainBool('extensions.prf.enabled', prf.enabled === true));
+      if (!prf.enabled) {
+        push('prf', 'NOTA: sin prf no se puede desbloquear por hardware; quedaría el PIN + gesto.');
+        out.textContent = lines.prf.join('\n');
+        return;
+      }
+      // Segunda fase: evaluación determinista con la misma sal
+      var salt = randomBytes(32);
+      var salted = function (s) { return crypto.subtle.digest('SHA-256', s).then(function (d) { return new Uint8Array(d); }); };
+      return salted(new TextEncoder().encode('learn.tg-probe-salt')).then(function (first) {
+        var get = function () {
+          return navigator.credentials.get({
+            publicKey: {
+              challenge: randomBytes(32),
+              allowCredentials: [{ type: 'public-key', id: cred.rawId, transports: ['internal'] }],
+              userVerification: 'required',
+              timeout: 120000,
+              extensions: { prf: { eval: { first: first } } }
+            }
+          });
+        };
+        return get().then(function (a) {
+          var ra = a.getClientExtensionResults() || {};
+          var outA = ra.prf && ra.prf.results && ra.prf.results.first;
+          push('prf', plainBool('get() con prf eval', !!(outA)));
+          return get().then(function (b) {
+            var rb = b.getClientExtensionResults() || {};
+            var outB = rb.prf && rb.prf.results && rb.prf.results.first;
+            var same = false;
+            if (outA && outB) {
+              var va = new Uint8Array(outA), vb = new Uint8Array(outB);
+              same = va.length === vb.length;
+              for (var i = 0; same && i < va.length; i++) { if (va[i] !== vb[i]) same = false; }
+            }
+            push('prf', plainBool('PRF determinista entre dos get()', same));
+            push('prf', 'longitud del secreto PRF: ' + (outA ? new Uint8Array(outA).length : 0) + ' bytes');
+          });
+        });
+      });
+    }).catch(function (e) {
+      var name = e && e.name ? e.name : String(e);
+      push('prf', 'FALLÓ: ' + name + ' — ' + (e && e.message ? e.message : ''));
+      if (name === 'NotAllowedError') push('prf', 'NOTA: cancelado o no permitido por el usuario/sistema.');
+      if (name === 'SecurityError') {
+        push('prf', 'NOTA: el RP ID debe ser un dominio. Si abriste esta página por IP'
+          + ' (127.0.0.1, 192.168.…) usa un nombre (learn.tg o localhost) o no se puede crear la passkey.');
+      }
+      if (name === 'InvalidStateError') push('prf', 'NOTA: la credencial ya existía en este dispositivo.');
+    }).then(function () {
+      stopWatchdog();
+      out.textContent = lines.prf.join('\n');
+    });
+  }
+
+  function withStore(mode, fn) {
+    return new Promise(function (resolve, reject) {
+      var req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+      };
+      req.onerror = function () { reject(req.error); };
+      req.onsuccess = function () {
+        var db = req.result;
+        var tx = db.transaction(IDB_STORE, mode);
+        var store = tx.objectStore(IDB_STORE);
+        fn(store, function (value) { db.close(); resolve(value); }, function (err) { db.close(); reject(err); });
+      };
+    });
+  }
+
+  function readMarker(key) {
+    return withStore('readonly', function (store, done, fail) {
+      var r = store.get(key);
+      r.onsuccess = function () { done(r.result); };
+      r.onerror = function () { fail(r.error); };
+    });
+  }
+
+  function writeMarker(key, value) {
+    return withStore('readwrite', function (store, done, fail) {
+      var r = store.put(value, key);
+      r.onsuccess = function () { done(value); };
+      r.onerror = function () { fail(r.error); };
+    });
+  }
+
+  function describe(label, value) {
+    if (value === null || value === undefined) return 'NO  ' + label + ': no está';
+    var when = '';
+    try {
+      var ms = Date.now() - Number(value);
+      when = ' (hace ' + Math.round(ms / 1000) + ' s)';
+    } catch (e) {}
+    return 'SI  ' + label + ': ' + String(value) + when;
+  }
+
+  function checkStorage(html) {
+    lines.storage = [];
+    section('storage', 'ALMACENAMIENTO ' + (html ? '' : '(texto)'));
+    lines.storage.push('origen: ' + location.origin);
+    var plain = [];
+    try {
+      plain.push(describe('localStorage', localStorage.getItem('pdjProbe')));
+    } catch (e) { plain.push('?   localStorage: ' + e.name); }
+    try {
+      plain.push(describe('sessionStorage', sessionStorage.getItem('pdjProbe')));
+    } catch (e) { plain.push('?   sessionStorage: ' + e.name); }
+    set('storage', plain.join('\n') + '\nindexedDB: leyendo…');
+    lines.storage = lines.storage.concat(plain);
+
+    readMarker('pdjProbe').then(function (v) {
+      var idb = describe('indexedDB', v);
+      lines.storage.push(idb);
+      set('storage', plain.concat([idb]).join('\n'));
+    }, function (e) {
+      var err = '?   indexedDB: ' + (e && e.name ? e.name : String(e));
+      lines.storage.push(err);
+      set('storage', plain.concat([err]).join('\n'));
+    });
+  }
+
+  function writeAll() {
+    var now = Date.now();
+    try { localStorage.setItem('pdjProbe', String(now)); } catch (e) {}
+    try { sessionStorage.setItem('pdjProbe', String(now)); } catch (e) {}
+    writeMarker('pdjProbe', now).then(function () {
+      checkStorage(false);
+    }, function () {
+      checkStorage(false);
+    });
+  }
+
+  function buildReport() {
+    var blocks = [];
+    blocks.push('SONDEO BILLETERA IN-APP (R-#246)');
+    blocks.push(lines.env.join('\n'));
+    blocks.push(lines.webauthn.join('\n'));
+    blocks.push(lines.prf.join('\n'));
+    blocks.push(lines.storage.join('\n'));
+    blocks.push('fin del informe');
+    document.getElementById('report').value = blocks.join('\n\n');
+  }
+
+  function copyReport() {
+    var text = document.getElementById('report').value || '';
+    var done = document.getElementById('copyState');
+    if (!text) { done.textContent = 'Primero genera el informe.'; return; }
+    function fallback() {
+      var ta = document.getElementById('report');
+      ta.removeAttribute('readonly');
+      ta.select();
+      try { document.execCommand('copy'); done.textContent = 'Copiado (método antiguo). Pega en el issue.'; }
+      catch (e) { done.textContent = 'Selecciona el texto y copia a mano.'; }
+      ta.setAttribute('readonly', 'readonly');
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        done.textContent = 'Copiado al portapapeles. Pégalo en el issue 246.';
+      }, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  document.getElementById('btnPrf').addEventListener('click', createPasskey);
+  document.getElementById('btnMark').addEventListener('click', writeAll);
+  document.getElementById('btnCheck').addEventListener('click', function () { checkStorage(false); });
+  document.getElementById('btnReport').addEventListener('click', buildReport);
+  document.getElementById('btnCopy').addEventListener('click', copyReport);
+
+  collectEnvironment();
+  collectWebAuthn();
+  // No escribimos marcas automáticamente (eso falsearía el «sobrevive o no»).
+  lines.storage.push('== ALMACENAMIENTO ==');
+  checkStorage(false);
+})();
+</script>
+</body>
+</html>
