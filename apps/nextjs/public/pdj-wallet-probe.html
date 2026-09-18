@@ -48,8 +48,15 @@
 <button id="btnPrf">Probar passkey + PRF <span class="note">(create passkey)</span></button>
 <pre id="prf">— sin probar todavía —</pre>
 
-<h2>4. Almacenamiento: ¿qué sobrevive al cerrar la aplicación?</h2>
+<h2>4. Costo del PIN <span class="note">(PBKDF2 600k, lo que tarda en abrir la billetera)</span></h2>
 <p class="note">
+  Mide cuánto tarda el dispositivo en derivar la clave del PIN: es el tiempo que el
+  usuario ve «desbloqueando» en un teléfono de gama baja.
+</p>
+<button id="btnKdf">Medir PBKDF2 (600.000 iteraciones)</button>
+<pre id="kdf">— sin medir todavía —</pre>
+
+<h2>5. Almacenamiento: ¿qué sobrevive al cerrar la aplicación?</h2><p class="note">
   Presiona «Escribir marcas», <strong>cierra por completo la app/navegador</strong>
   (quítala de recientes) y vuelve a abrir esta página. Lo que siga apareciendo
   aquí abajo sobrevive; lo que diga «no» se perdió.
@@ -69,7 +76,7 @@
   'use strict';
   var IDB_NAME = 'pdj-wallet-probe';
   var IDB_STORE = 'markers';
-  var lines = { env: [], webauthn: [], prf: [], storage: [] };
+  var lines = { env: [], webauthn: [], prf: [], kdf: [], storage: [] };
 
   function set(id, text) { document.getElementById(id).textContent = text; }
   function push(bucket, text) { lines[bucket].push(text); }
@@ -330,12 +337,38 @@
     });
   }
 
+  function measureKdf() {
+    var out = document.getElementById('kdf');
+    out.textContent = '… midiendo …';
+    var iterations = 600000;
+    section('kdf', 'PBKDF2-SHA256 600k');
+    push('kdf', 'fecha: ' + new Date().toISOString());
+    var start = function () {
+      return crypto.subtle.importKey('raw', new TextEncoder().encode('123456'), 'PBKDF2', false, ['deriveBits']);
+    };
+    start().then(function (key) {
+      var salt = randomBytes(16);
+      var t0 = performance.now();
+      return crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt, iterations: iterations, hash: 'SHA-256' }, key, 256)
+        .then(function () {
+          var ms = Math.round(performance.now() - t0);
+          push('kdf', 'derivacion de la clave con el PIN: ' + ms + ' ms (' + iterations + ' iteraciones, SHA-256, 256 bits)');
+          push('kdf', 'hardwareConcurrency: ' + (navigator.hardwareConcurrency || '?') + ' nucleos | deviceMemory: ' + (navigator.deviceMemory || '?') + ' GB');
+          out.textContent = lines.kdf.join('\n');
+        });
+    }).catch(function (e) {
+      push('kdf', 'FALLÓ: ' + (e && e.name ? e.name : String(e)));
+      out.textContent = lines.kdf.join('\n');
+    });
+  }
+
   function buildReport() {
     var blocks = [];
     blocks.push('SONDEO BILLETERA IN-APP (R-#246)');
     blocks.push(lines.env.join('\n'));
     blocks.push(lines.webauthn.join('\n'));
     blocks.push(lines.prf.join('\n'));
+    blocks.push(lines.kdf.join('\n'));
     blocks.push(lines.storage.join('\n'));
     blocks.push('fin del informe');
     document.getElementById('report').value = blocks.join('\n\n');
@@ -363,6 +396,7 @@
   }
 
   document.getElementById('btnPrf').addEventListener('click', createPasskey);
+  document.getElementById('btnKdf').addEventListener('click', measureKdf);
   document.getElementById('btnMark').addEventListener('click', writeAll);
   document.getElementById('btnCheck').addEventListener('click', function () { checkStorage(false); });
   document.getElementById('btnReport').addEventListener('click', buildReport);
