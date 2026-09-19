@@ -13,11 +13,13 @@ const mocks = vi.hoisted(() => ({
   isInAppUnlocked: false,
   isSessionLoading: false,
   dialogOpen: false,
+  panelOpen: false,
+  panelAddress: '',
   externalAvailable: false,
 }))
 
 vi.mock('@learn-tg/pdj-wallet-next', () => ({
-  useInAppWallet: () => ({ status: mocks.status, lock: mocks.lock }),
+  useInAppWallet: () => ({ status: mocks.status, lock: mocks.lock, getProvider: () => null }),
 }))
 
 vi.mock('next-auth/react', () => ({
@@ -39,6 +41,14 @@ vi.mock('@/lib/external-provider', () => ({
     provider: mocks.externalAvailable ? { request: vi.fn() } : null,
     available: mocks.externalAvailable,
   }),
+}))
+
+vi.mock('@/components/WalletPanel', () => ({
+  WalletPanel: ({ open, address }: { open: boolean; address: string }) => {
+    mocks.panelOpen = open
+    mocks.panelAddress = address
+    return open ? React.createElement('div', { 'data-testid': 'wallet-panel-open' }) : null
+  },
 }))
 
 vi.mock('@/components/WalletDialog', () => ({
@@ -65,6 +75,8 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     mocks.inAppAddress = undefined
     mocks.isInAppUnlocked = false
     mocks.dialogOpen = false
+    mocks.panelOpen = false
+    mocks.panelAddress = ''
     mocks.externalAvailable = false
     window.history.pushState({}, '', '/en')
     Object.defineProperty(window, 'ethereum', { value: undefined, configurable: true })
@@ -133,6 +145,34 @@ describe('WalletSelector (R-#238/R-#244)', () => {
   // R-#244: con sesión y billetera bloqueada el encabezado muestra la dirección,
   // pero el diálogo debe seguir montado: es el único que atiende el evento de los
   // modales de donación/compra (reportado el 2026-09-16: el botón no hacía nada).
+  // R-#249: la píldora abre el PANEL con la billetera desbloqueada y el diálogo de
+  // desbloqueo cuando está bloqueada.
+  it('opens the panel when the wallet is unlocked and the dialog when it is locked', async () => {
+    mocks.status = 'unlocked'
+    mocks.isInAppUnlocked = true
+    mocks.inAppAddress = ADDRESS
+    mocks.sessionAddress = ADDRESS
+    render(<WalletSelector lang="en" />)
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-open-dialog'))
+    })
+    expect(screen.getByTestId('wallet-panel-open')).toBeInTheDocument()
+    expect(mocks.panelAddress.toLowerCase()).toBe(ADDRESS)
+
+    cleanup()
+    mocks.isInAppUnlocked = false
+    mocks.inAppAddress = undefined
+    mocks.status = 'locked'
+    render(<WalletSelector lang="en" />)
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-open-dialog'))
+    })
+    expect(screen.getByTestId('wallet-dialog-open')).toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-panel-open')).not.toBeInTheDocument()
+  })
+
   it('opens the dialog from the outside event while showing a session', async () => {
     mocks.status = 'locked'
     mocks.isInAppUnlocked = false

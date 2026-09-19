@@ -6,6 +6,7 @@ import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletDialog } from '@/components/WalletDialog'
+import { WalletPanel } from '@/components/WalletPanel'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useExternalProvider } from '@/lib/external-provider'
 import { OPEN_IN_APP_WALLET_DIALOG } from '@/lib/in-app-wallet-dialog'
@@ -27,8 +28,9 @@ interface WalletSelectorProps {
  */
 export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   const { status, lock } = useInAppWallet()
-  const { address, sessionAddress, isInAppUnlocked, isSessionLoading } = useAuthAddress()
+  const { address, sessionAddress, inAppAddress, isInAppUnlocked, isSessionLoading } = useAuthAddress()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [panelOpen, setPanelOpen] = useState(false)
   const [external, setExternal] = useState(false)
   // R-#246: la billetera inyectada se detecta por EIP-6963 (Rabby, MetaMask y
   // OneKey móviles no definen `window.ethereum`), así que ya no se decide durante
@@ -102,19 +104,23 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   }
 
   if (signedIn) {
+    // R-#249: con la billetera desbloqueada la píldora abre el PANEL (saldos,
+    // recibir, enviar, coleccionables); bloqueada abre el diálogo de desbloqueo, que
+    // es el único camino a la clave.
+    const openWalletUi = () => {
+      if (isInAppUnlocked) setPanelOpen(true)
+      else setDialogOpen(true)
+    }
     return (
       <>
         <div data-testid="wallet-selector-in-app" className="flex items-center gap-2">
-          {/* La dirección es también la entrada al panel de la billetera: sin ella,
-              un usuario con sesión no podía abrir el diálogo (y por tanto ni
-              activar el desbloqueo por huella ni borrar la billetera). */}
           <Button
             variant="ghost"
             size="sm"
             data-testid="wallet-open-dialog"
             title={t('openWallet')}
             aria-label={t('openWallet')}
-            onClick={() => setDialogOpen(true)}
+            onClick={openWalletUi}
             className="text-xs text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full font-mono hover:bg-gray-200"
           >
             {shortAddress}
@@ -136,6 +142,13 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
             OPEN_IN_APP_WALLET_DIALOG. Sin él, el botón "desbloquear" de los modales
             de donación y de compra no hacía nada (reportado el 2026-09-16). */}
         <WalletDialog lang={lang} open={dialogOpen} onOpenChange={setDialogOpen} sessionAddress={sessionAddress} />
+        <WalletPanel
+          lang={lang}
+          open={panelOpen}
+          onOpenChange={setPanelOpen}
+          address={inAppAddress || shownAddress || ''}
+          onLock={() => { void disconnect() }}
+        />
       </>
     )
   }

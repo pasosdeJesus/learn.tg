@@ -414,11 +414,9 @@ async function main() {
     }
   }
 
-  // ── 4. Bug E: la píldora tras desbloquear muestra la billetera, no el
-  //        formulario de crear.
+  // ── 4. R-#249: con la billetera desbloqueada la píldora abre el PANEL (saldos,
+  //        recibir, enviar, coleccionables) y nunca el formulario de crear (bug E).
   await closePayModal(page)
-  // La página puede estar recargando (SIWE o navegación): esperar contenido antes de
-  // evaluar, si no el diagnóstico sale vacío y el fallo es engañoso.
   for (let i = 0; i < 20; i++) {
     const ready = await page
       .evaluate(() => (document.body?.innerText || '').length > 200)
@@ -427,11 +425,10 @@ async function main() {
     await sleep(1000)
   }
   if (await openDialog(page)) {
-    // Esperar a que el diálogo decida su estado (leyendo IndexedDB).
     for (let i = 0; i < 15; i++) {
+      if (await exists(page, '[data-testid="wallet-panel"]')) break
       if (await exists(page, '[data-testid="wallet-address"]')) break
       if (await exists(page, '[data-testid="wallet-create"]')) break
-      if (await exists(page, '[data-testid="wallet-pin-confirm"]')) break
       await sleep(1000)
     }
     const dialogText = await bodyText(page)
@@ -440,16 +437,59 @@ async function main() {
       (await exists(page, '[data-testid="wallet-pin-confirm"]')) ||
       (await exists(page, '[data-testid="wallet-mode-create"]')) ||
       /Create a wallet|Crear una billetera/i.test(dialogText)
-    const showsWallet = await exists(page, '[data-testid="wallet-address"]')
-    if (createUi || !showsWallet) {
+    const panelOpen = await exists(page, '[data-testid="wallet-panel"]')
+    const walletUi = panelOpen || (await exists(page, '[data-testid="wallet-address"]'))
+
+    if (createUi || !walletUi) {
       console.log(`  [diag] texto del diálogo: ${dialogText.replace(/\s+/g, ' ').slice(0, 200)}`)
       fail('La píldora mostró el formulario de crear billetera en vez de la billetera (E)')
-    } else {
+    } else if (!panelOpen) {
+      console.log('  [!] El panel (R-#249) no está en este build: la píldora abre el diálogo')
       ok('La píldora muestra la billetera y no el formulario de crear (E)')
+    } else {
+      ok('La píldora abre el panel de la billetera (R-#249)')
+
+      // Saldos reales del panel (se fondeó 1 USDT a esta billetera).
+      let usdtShown = null
+      for (let i = 0; i < 15; i++) {
+        const text = await text(page, '[data-testid="wallet-panel-balance-USDT"]')
+        if (text) { usdtShown = Number(text.replace(',', '.')) ; break }
+        await sleep(1000)
+      }
+      if (usdtShown !== null && usdtShown > 0) ok(`El panel muestra el saldo USDT real: ${usdtShown}`)
+      else fail(`El panel muestra el saldo USDT como ${usdtShown ?? 'nada'}`)
+
+      // Recibir: QR con la dirección.
+      await page.click('[data-testid="wallet-panel-receive"]').catch(() => {})
+      await sleep(1200)
+      if (await exists(page, '[data-testid="wallet-panel-qr"]')) ok('El panel muestra el QR para recibir')
+      else fail('El panel no mostró el QR para recibir')
+
+      // Copiar la dirección.
+      await page.click('[data-testid="wallet-panel-copy"]').catch(() => {})
+      await sleep(800)
+      const copyText = await text(page, '[data-testid="wallet-panel-copy"]')
+      if (/Copied|Copiada/i.test(copyText)) ok('Copiar la dirección confirma la copia')
+      else console.log(`  [!] El botón de copiar quedó en "${copyText.trim()}"`)
+
+      // Enviar: la validación rechaza una dirección inválida antes de firmar.
+      await page.type('[data-testid="wallet-panel-to"]', 'no-es-direccion').catch(() => {})
+      await page.type('[data-testid="wallet-panel-amount"]', '0.1').catch(() => {})
+      await sleep(1500)
+      const validation = await text(page, '[data-testid="wallet-panel-error"]')
+      if (validation) ok('El panel valida la dirección destino antes de firmar')
+      else fail('El panel no avisó de una dirección destino inválida')
+      const sentDisabled = await page
+        .$eval('[data-testid="wallet-panel-send"]', (el) => el.disabled)
+        .catch(() => null)
+      if (sentDisabled === true) ok('El botón de enviar queda deshabilitado con datos inválidos')
+      else console.log('  [!] El botón de enviar no está deshabilitado con datos inválidos')
     }
-    await closeDialog(page)
+    await closePayModal(page)
+    await page.keyboard.press('Escape')
+    await sleep(800)
   } else {
-    fail('La cabecera no abrió el diálogo de la billetera')
+    fail('La cabecera no abrió la billetera')
   }
 
   // ── 5. Bug C2: con huella registrada, abrir el modal pide el gesto directo ─
@@ -460,11 +500,24 @@ async function main() {
       await sleep(1000)
     }
     if (await exists(page, '[data-testid="wallet-enable-biometric"]')) {
-      await page.type('[data-testid="wallet-pin"]', PIN)
+      // Con la billetera desbloqueada el PIN de la activación es `wallet-biometric-pin`
+      // (el formulario de crear, con `wallet-pin`, ya no se muestra: bug E).
+      const pinField = (await exists(page, '[data-testid="wallet-pin"]'))
+        ? '[data-testid="wallet-pin"]'
+        : '[data-testid="wallet-biometric-pin"]'
+      if (await exists(page, pinField.replace('[data-testid="', '[data-testid="'))) {
+        await page.type(pinField, PIN)
+      }
       await page.click('[data-testid="wallet-enable-biometric"]')
       for (let i = 0; i < 25; i++) {
         await sleep(1500)
-        if (!(await exists(page, '[data-testid="wallet-dialog"]'))) { enrolled = true; break }
+        // Señal de éxito: el estado "desbloqueo con huella activado"; el diálogo
+        // puede seguir abierto (activar no cierra ni firma).
+        if (await exists(page, '[data-testid="wallet-biometric-status"]')) { enrolled = true; break }
+        const err = await page
+          .$eval('[data-testid="wallet-dialog-error"]', (el) => el.textContent || '')
+          .catch(() => null)
+        if (err) { console.log(`  [!] Activar huella falló: ${err}`); break }
       }
     }
     await closeDialog(page)
@@ -474,14 +527,23 @@ async function main() {
     await page.reload({ waitUntil: 'domcontentloaded' })
     await sleep(6000)
     if (await openDonateModal(page, base)) {
+      // El gesto se completa en milisegundos (authenticator virtual), así que ver el
+      // diálogo es una carrera: lo que importa es el resultado para el usuario, que
+      // el aviso "desbloquear" desaparezca SIN pulsarlo.
       let askedDirectly = false
-      for (let i = 0; i < 12; i++) {
+      let noticeStays = false
+      for (let i = 0; i < 20; i++) {
         await sleep(1000)
-        if (await exists(page, '[data-testid="wallet-dialog"]')) { askedDirectly = true; break }
+        const dialog = await exists(page, '[data-testid="wallet-dialog"]')
+        const notice = await exists(page, '[data-testid="wallet-unlock-request"]')
+        if (dialog) askedDirectly = true
+        if (!notice && !dialog) { askedDirectly = true; break }
+        if (i >= 12 && notice) { noticeStays = true; break }
       }
-      if (askedDirectly) ok('Con huella, el modal pide el gesto directamente (C2)')
+      if (askedDirectly && !noticeStays) ok('Con huella, el modal pide el gesto directamente (C2)')
       else fail('El modal no pidió el gesto por sí solo: el usuario tiene que pulsar "desbloquear" (C2)')
       await closeDialog(page)
+      await closePayModal(page)
     } else {
       console.log('  [!] Sin modal de donación para probar C2')
     }

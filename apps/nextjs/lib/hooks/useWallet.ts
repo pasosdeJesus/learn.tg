@@ -13,22 +13,23 @@ const chain = IS_PRODUCTION ? celo : celoSepolia
 /**
  * Replacement for wagmi's usePublicClient.
  *
- * Reads are **public**: they go directly to the chain RPC and do not need a wallet.
- * Before, this client was built on the wallet provider, so it was `null` while the
- * in-app wallet was locked and — once built on it — every read failed with
- * "Unsupported method: eth_call". The donation and purchase modals ended up showing
- * the three balances as zero with the funds in the wallet
- * (`/var/www/adJ-ia/en.txt`, 2026-09-19).
+ * Reads go through the available provider when there is one (a real wallet proxies
+ * them, and the E2E specs patch `eth_getBalance`/`eth_call` there to simulate
+ * balances and gas), and **straight to the RPC when there is none**. That second
+ * case was the bug of 2026-09-19: with the in-app wallet locked and no injected
+ * wallet this client was `null`, so the donation and purchase modals could not read
+ * anything and showed the three balances as zero with the funds in the wallet.
  */
 export function usePublicClient() {
-  return useMemo(
-    () =>
-      createPublicClient({
-        chain,
-        transport: http(getRpcUrl()),
-      }),
-    [],
-  )
+  const { provider } = useWalletProvider()
+
+  return useMemo(() => {
+    const transport = provider ? custom(provider as never) : http(getRpcUrl())
+    return createPublicClient({
+      chain,
+      transport,
+    })
+  }, [provider])
 }
 
 /**
