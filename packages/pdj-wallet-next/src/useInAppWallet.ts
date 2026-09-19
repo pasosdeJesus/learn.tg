@@ -32,8 +32,23 @@ export type InAppWalletLockReason = 'initial' | 'user' | 'idle' | 'deleted'
  * Auto-lock after this much inactivity, like OneKey and OKX Web3 (R-#246).
  * Dropping the key means the next action asks for the gesture (or the PIN on
  * devices without WebAuthn).
+ *
+ * One hour, not ten minutes: the operator's mobile test had to unlock again
+ * while donating on `/[lang]/gdcluster/ranking` less than ten minutes after
+ * unlocking, and OneKey waits about an hour after its own fingerprint prompt.
+ * The value only bounds how long the in-memory key survives a pause; moving
+ * funds is always gated by layer L1 (a fresh gesture), so a longer pause cannot
+ * make a transfer silent. An operator or the user changing the value is
+ * https://github.com/pasosdeJesus/learn.tg/issues/248.
  */
-export const INACTIVITY_LOCK_MS = 10 * 60 * 1000
+export const INACTIVITY_LOCK_MS = 60 * 60 * 1000
+
+/**
+ * Minimum time between two inactivity resets. Activity events arrive in bursts
+ * (a scroll fires dozens of them), and restarting the timer on each one is
+ * wasted work on the low-end phones this audience uses.
+ */
+const ACTIVITY_RESET_THROTTLE_MS = 5 * 1000
 
 export interface UseInAppWalletResult {
   status: InAppWalletStatus
@@ -251,6 +266,9 @@ export function useInAppWallet(): UseInAppWalletResult {
 
   // R-#246: auto-lock tras inactividad (como OneKey y OKX). Suelta la clave en
   // memoria; NO cierra la sesión (el motivo lo distingue `WalletEventListener`).
+  // `visibilitychange` se escucha en `document` (no burbujea hasta `window`, que
+  // era el defecto que dejaba el temporizador corriendo en el teléfono), y el
+  // reinicio se limita a uno cada pocos segundos para que `scroll` no lo agite.
   useEffect(() => {
     if (snapshot.status !== 'unlocked') return
     const lockForIdle = () => {
@@ -258,15 +276,27 @@ export function useInAppWallet(): UseInAppWalletResult {
       setState({ status: 'locked', lockReason: 'idle' })
     }
     let timer = window.setTimeout(lockForIdle, INACTIVITY_LOCK_MS)
+    let lastReset = Date.now()
     const reset = () => {
+      const now = Date.now()
+      if (now - lastReset < ACTIVITY_RESET_THROTTLE_MS) return
+      lastReset = now
       window.clearTimeout(timer)
       timer = window.setTimeout(lockForIdle, INACTIVITY_LOCK_MS)
     }
-    const events = ['pointerdown', 'keydown', 'visibilitychange'] as const
-    for (const name of events) window.addEventListener(name, reset, { passive: true })
+    const events = ['pointerdown', 'keydown', 'touchstart', 'click', 'scroll'] as const
+    for (const name of events) {
+      window.addEventListener(name, reset, { passive: true })
+    }
+    const onVisibilityChange = () => {
+      lastReset = 0
+      reset()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
     return () => {
       window.clearTimeout(timer)
       for (const name of events) window.removeEventListener(name, reset)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [snapshot.status])
 

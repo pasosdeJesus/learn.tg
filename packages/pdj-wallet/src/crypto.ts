@@ -98,3 +98,9 @@ export async function decryptSecret(secret: EncryptedSecret, pin: string): Promi
 export function wipe(bytes: Uint8Array | null | undefined): void {
   if (bytes) bytes.fill(0)
 }
+
+/** SHA-256 over bytes. Used by the BIP39 checksum of `isValidMnemonic`. */
+export async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
+  const digest = await subtle().digest('SHA-256', bytes as unknown as ArrayBuffer)
+  return new Uint8Array(digest)
+}

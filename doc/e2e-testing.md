@@ -226,6 +226,15 @@ Specs prefixed with `prod-` run against the production site at
 (not the same as the dev wallet). See `prod-landing-to-profile.spec.mjs`
 for an example.
 
+**`prod-landing-to-profile` writes to production** (it completes the test wallet's
+profile and cancels/reschedules a real interview), so it is **excluded from the
+default suite**: it self-skips unless `PROD_SPECS=1` is set.
+
+```sh
+cd apps/nextjs
+PROD_SPECS=1 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=prod-landing-to-profile
+```
+
 ### Spec Index
 
 | Spec | What it tests |

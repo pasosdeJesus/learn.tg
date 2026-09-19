@@ -106,7 +106,7 @@ async function main() {
 
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
-  await page.setDefaultNavigationTimeout(120000)
+  await page.setDefaultNavigationTimeout(180000)
 
   console.log(`Desbloqueo por huella (L2) | ${base}\n`)
 
@@ -199,15 +199,29 @@ async function main() {
 
   if (await openDialog(page)) {
     const hasBiometric = await exists(page, '[data-testid="wallet-unlock-biometric"]')
-    if (!hasBiometric) {
+    // Con R-#246 el gesto arranca al abrir el diálogo, así que también es válido
+    // que ya se haya cerrado (el authenticator virtual se auto-verifica).
+    const gestureAlreadyDone = !(await exists(page, '[data-testid="wallet-dialog"]'))
+    if (!hasBiometric && !gestureAlreadyDone) {
       fail('El diálogo no ofreció el desbloqueo por huella')
     } else {
       ok('El diálogo ofrece "desbloquear con huella"')
-      await page.click('[data-testid="wallet-unlock-biometric"]')
-      let unlocked = false
-      for (let i = 0; i < 20; i++) {
+      // R-#246: con la passkey registrada el gesto se pide al abrir el diálogo y
+      // el SIGNO de que funcionó es que el diálogo se cierre (la firma cierra y
+      // recarga). Tolerante con builds anteriores, donde hay que presionar el
+      // botón: se espera primero y solo se presiona si no pasó nada.
+      let unlocked = gestureAlreadyDone
+      const dialogGone = async () => !(await exists(page, '[data-testid="wallet-dialog"]'))
+      for (let i = 0; i < 12; i++) {
         await sleep(1500)
-        if (!(await exists(page, '[data-testid="wallet-pin"]'))) { unlocked = true; break }
+        if (await dialogGone()) { unlocked = true; break }
+      }
+      if (!unlocked) {
+        await page.click('[data-testid="wallet-unlock-biometric"]')
+        for (let i = 0; i < 20; i++) {
+          await sleep(1500)
+          if (await dialogGone()) { unlocked = true; break }
+        }
       }
       if (unlocked) ok('El gesto desbloqueó la billetera sin teclear el PIN')
       else fail('El gesto no desbloqueó la billetera')

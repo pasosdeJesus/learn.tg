@@ -70,7 +70,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   // R-#244: tras cargar la página la billetera in-app queda bloqueada (la clave
   // vive solo en memoria), así que estos modales no tienen wallet client aunque
   // el usuario tenga sesión. Antes decían "Connect and sign…", que confunde.
-  const { status: inAppStatus } = useInAppWallet()
+  const { status: inAppStatus, biometricEnabled, biometricAvailable } = useInAppWallet()
   const address = rawAddress as Address | undefined
   const { authedPost } = useAuthedApi()
   const publicClient = usePublicClient()
@@ -328,8 +328,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const t = createComponentT(lang || 'en', {
     en: {
       connectSign: 'Connect and sign with your wallet to donate',
-      inAppLocked: 'Your in-app wallet is locked. Unlock it to donate.',
+      inAppLocked: 'Your in-app wallet is locked. Unlock it with your PIN to donate.',
+      inAppLockedGesture: 'Your in-app wallet is locked. Confirm with your fingerprint or Face ID to donate.',
       unlockInApp: 'Unlock your in-app wallet',
+      unlockInAppGesture: 'Unlock with fingerprint or Face ID',
       yourBalance: 'Your USDT Balance',
       yourSlearnBalance: 'Your SLEARN Balance',
       yourCelo: 'Your CELO (gas)',
@@ -372,8 +374,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     },
     es: {
       connectSign: 'Conecta y firma con tu billetera para donar',
-      inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala para donar.',
+      inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala con tu PIN para donar.',
+      inAppLockedGesture: 'Tu billetera está bloqueada. Confirma con tu huella o Face ID para donar.',
       unlockInApp: 'Desbloquear tu billetera',
+      unlockInAppGesture: 'Desbloquear con huella o Face ID',
       yourBalance: 'Tu saldo USDT',
       yourSlearnBalance: 'Tu saldo SLEARN',
       yourCelo: 'Tu CELO (gas)',
@@ -440,7 +444,9 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   // backend valida tx.value y reenvía por sendTransaction).
   const handleNativeDonate = async () => {
     if (!address || !walletClient || !recipientAddress) {
-      setNativeError(inAppStatus === 'locked' ? t('inAppLocked') : t('connectSign'))
+      setNativeError(inAppStatus === 'locked'
+        ? (biometricEnabled ? t('inAppLockedGesture') : t('inAppLocked'))
+        : t('connectSign'))
       return
     }
     if (nativeValue <= 0n || nativeValue > maxNative || nativeGasCost === 0n) {
@@ -585,14 +591,14 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         )}
         {!walletClient && inAppStatus === 'locked' && (
           <div className="text-sm text-amber-800 bg-amber-100 rounded p-3 mb-4">
-            {t('inAppLocked')}
+            {biometricEnabled ? t('inAppLockedGesture') : t('inAppLocked')}
             <button
               type="button"
               data-testid="wallet-unlock-request"
               onClick={openInAppWalletDialog}
               className="ml-2 underline font-medium"
             >
-              {t('unlockInApp')}
+              {biometricEnabled ? t('unlockInAppGesture') : t('unlockInApp')}
             </button>
           </div>
         )}

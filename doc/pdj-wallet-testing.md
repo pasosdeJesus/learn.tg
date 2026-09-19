@@ -47,7 +47,7 @@ cd apps/nextjs
 
 Y dentro de cada paquete hay `Makefile` (`make test`, `make build`, `make install`).
 
-Expected: `39 passed` (core) y `23 passed` (next). `make test` (la suite completa)
+Expected: `44 passed` (core) y `24 passed` (next). `make test` (la suite completa)
 ya incluye `test-packages`.
 
 Lo que cubre el core sobre R-#246 (14 de esos 39): sellado de la clave con el
@@ -60,8 +60,10 @@ gesto en `eth_sendTransaction`, no lo pide en lecturas ni en `personal_sign`, un
 gesto cancelado rechaza con código `4001` sin transmitir, sin passkey deja pasar la
 transacción y se puede desactivar con `requireUserVerification: false`.
 
-En `pdj-wallet-next` dos pruebas cubren el auto-lock por inactividad: tras
-`INACTIVITY_LOCK_MS` sin actividad la clave se suelta con `lockReason: 'idle'`, y el
+En `pdj-wallet-next` tres pruebas cubren el auto-lock por inactividad: tras
+`INACTIVITY_LOCK_MS` (una hora) sin actividad la clave se suelta con
+`lockReason: 'idle'`, la actividad real de un teléfono lo reinicia
+(`visibilitychange` llega a `document`, no a `window` — el defecto de R-#246), y el
 ✕ de la cabecera marca `'user'`.
 
 The core package declares its own dependencies (`viem`, `vitest`, `fake-indexeddb`,

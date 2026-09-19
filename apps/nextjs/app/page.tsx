@@ -15,7 +15,7 @@ export default function Home() {
   const t = useMemo(() => createComponentT(browserLang, {
     en: {
       title: 'Learn Through Games',
-      desc: 'Blockchain-powered education with real rewards. Study by solving crossword puzzles and earn scholarships as you learn. More game types coming soon!',
+      desc: 'Blockchain-powered education with real rewards. Study by solving crossword puzzles and earn scholarships as you learn. Read your free courses and the ones you paid for without a connection, crosswords included. More game types coming soon!',
       web3: 'Web3 Enabled',
       usdtRewards: 'USDT Rewards',
       freeStart: 'Free to Start',
@@ -30,10 +30,12 @@ export default function Home() {
       earnDesc: 'Get paid in USDT for completing educational guides',
       secured: 'Blockchain Secured',
       securedDesc: 'Transparent scholarships on Celo blockchain',
+      offline: 'Works Offline',
+      offlineDesc: 'Read the free courses and the courses you paid for without a connection, crosswords included. Answer them offline: the review and the result (and the prize) arrive when you are back online, and the app updates that content at least once every 24 hours.',
     },
     es: {
       title: 'Aprende Mediante Juegos',
-      desc: 'Educaci\u00f3n impulsada por blockchain con recompensas reales. Estudia resolviendo crucigramas y gana becas mientras aprendes. \u00a1M\u00e1s tipos de juegos pr\u00f3ximamente!',
+      desc: 'Educaci\u00f3n impulsada por blockchain con recompensas reales. Estudia resolviendo crucigramas y gana becas mientras aprendes. Lee sin conexi\u00f3n tus cursos gratis y los que hayas pagado, con sus crucigramas. \u00a1M\u00e1s tipos de juegos pr\u00f3ximamente!',
       web3: 'Habilitado Web3',
       usdtRewards: 'Recompensas USDT',
       freeStart: 'Comienza Gratis',
@@ -48,6 +50,8 @@ export default function Home() {
       earnDesc: 'Recibe USDT por completar gu\u00edas educativas',
       secured: 'Asegurado con Blockchain',
       securedDesc: 'Becas transparentes en la blockchain de Celo',
+      offline: 'Funciona sin Conexi\u00f3n',
+      offlineDesc: 'Lee sin conexi\u00f3n los cursos gratis y los cursos que hayas pagado, con sus crucigramas. Resu\u00e9lvelos sin conexi\u00f3n: la revisi\u00f3n y el resultado (y el premio) llegan cuando vuelvas a estar en l\u00ednea, y la aplicaci\u00f3n actualiza ese contenido al menos una vez cada 24 horas.',
     },
   }), [browserLang])
 
@@ -138,7 +142,7 @@ export default function Home() {
             </section>
 
             <section aria-label="Key features">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto pt-16 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto pt-16 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-700">
                 <article className="text-center space-y-3 p-6 rounded-2xl bg-white/50 backdrop-blur-sm border border-gray-100 hover:border-primary-100 transition-all duration-300 hover:shadow-lg">
                   <div className="text-4xl">🎓</div>
                   <h3 className="text-lg font-semibold text-gray-800">
@@ -166,6 +170,16 @@ export default function Home() {
                   </h3>
                   <p className="text-sm text-gray-600">
                     {t('securedDesc')}
+                  </p>
+                </article>
+
+                <article className="text-center space-y-3 p-6 rounded-2xl bg-white/50 backdrop-blur-sm border border-gray-100 hover:border-primary-100 transition-all duration-300 hover:shadow-lg">
+                  <div className="text-4xl">📶</div>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {t('offline')}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {t('offlineDesc')}
                   </p>
                 </article>
               </div>

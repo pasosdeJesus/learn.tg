@@ -50,8 +50,10 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       usdtPct: 'USDT',
       yourBalance: 'Balance',
       purchase: 'Purchase',
-      inAppLocked: 'Your in-app wallet is locked. Unlock it to purchase.',
+      inAppLocked: 'Your in-app wallet is locked. Unlock it with your PIN to purchase.',
+      inAppLockedGesture: 'Your in-app wallet is locked. Confirm with your fingerprint or Face ID to purchase.',
       unlockInApp: 'Unlock your in-app wallet',
+      unlockInAppGesture: 'Unlock with fingerprint or Face ID',
       cancel: 'Cancel',
       processing: 'Processing...',
       success: 'Course purchased',
@@ -78,8 +80,10 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       usdtPct: 'USDT',
       yourBalance: 'Saldo',
       purchase: 'Comprar',
-      inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala para comprar.',
+      inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala con tu PIN para comprar.',
+      inAppLockedGesture: 'Tu billetera está bloqueada. Confirma con tu huella o Face ID para comprar.',
       unlockInApp: 'Desbloquear tu billetera',
+      unlockInAppGesture: 'Desbloquear con huella o Face ID',
       cancel: 'Cancelar',
       processing: 'Procesando...',
       success: 'Curso comprado',
@@ -104,7 +108,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   // R-#244: la billetera in-app queda bloqueada al cargar la página (la clave vive
   // en memoria), así que sin desbloquearla no hay wallet client y el botón de
   // compra nunca se habilita. Antes no se explicaba nada.
-  const { status: inAppStatus } = useInAppWallet()
+  const { status: inAppStatus, biometricEnabled, biometricAvailable } = useInAppWallet()
   const { authedGet, authedPost } = useAuthedApi()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
@@ -414,14 +418,14 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
 
         {!walletClient && inAppStatus === 'locked' && (
           <div className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-            {t('inAppLocked')}
+            {biometricEnabled ? t('inAppLockedGesture') : t('inAppLocked')}
             <button
               type="button"
               data-testid="wallet-unlock-request"
               onClick={openInAppWalletDialog}
               className="ml-2 underline font-medium"
             >
-              {t('unlockInApp')}
+              {biometricEnabled ? t('unlockInAppGesture') : t('unlockInApp')}
             </button>
           </div>
         )}

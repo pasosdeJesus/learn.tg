@@ -12,6 +12,7 @@ import {
 import { createPrfCredential, detectPlatformSupport, evaluatePrf } from './web-authn.js'
 import {
   accountFromPrivateKey,
+  assertValidMnemonic,
   newMnemonic,
   normalizeMnemonic,
   privateKeyFromMnemonic,
@@ -140,6 +141,9 @@ export async function importWallet(options: ImportWalletOptions): Promise<Wallet
   const chain = assertChain(options.chain)
   const storage = resolveStorage(options.storage)
   const mnemonic = options.mnemonic ? normalizeMnemonic(options.mnemonic) : undefined
+  // `mnemonicToSeedSync` does not validate: a phrase with a typo would become a
+  // different (and empty) wallet without any warning.
+  if (mnemonic) await assertValidMnemonic(mnemonic)
   const privateKey = mnemonic
     ? privateKeyFromMnemonic(mnemonic)
     : (options.privateKey as PrivateKey)

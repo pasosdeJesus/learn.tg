@@ -128,16 +128,41 @@ MetaMask, OneKey and OKX (measured 2026-09-18), so there the dialog simply offer
 the PIN. The tab-scoped `sessionStorage` entry used in 2026-09-16 was removed: it
 kept the key readable and the measurement showed it never survived closing the app.
 
+**The gesture is the default path (R-#246 §10).** The operator's mobile test found
+the flow right but "not intuitive": the fingerprint was an outline button next to a
+primary "Unlock", so most users would never enrol, and the PIN field appeared first
+even with a passkey registered. Now:
+
+- Locked, no passkey, device can verify: the primary action is "desbloquear con
+  huella" (it types the PIN once and seals the key) and the secondary is "seguir
+  usando solo el PIN"; the same primary treatment applies right after creating the
+  wallet.
+- Locked with a passkey: the dialog **asks for the gesture as it opens** and shows
+  only "usar el PIN" as the escape; the PIN field appears only if the gesture is
+  cancelled or fails, together with "reintentar huella".
+- The donation and purchase modals name the gesture in their lock notice
+  ("confirma con tu huella") when the device can verify the user, instead of
+  sending everybody to type a PIN.
+
 **Moving funds asks for a fresh gesture (layer L1).** Even inside an unlocked
 session, `eth_sendTransaction` on the in-app provider calls
 `requireFundsConfirmation()` (`packages/pdj-wallet/src/provider.ts`), which asks
 the device to verify the user before signing; a cancelled prompt rejects with code
-`4001` and nothing is broadcast. Reads and `personal_sign` (the SIWE) are not
-gated, so signing in never prompts twice. Without a passkey — or without WebAuthn
-at all — the request goes through, because the layer needs hardware.
+`4001` and nothing is broadcast. The gate also covers `eth_signTypedData_v4` and
+`eth_signTransaction`, because an EIP-2612 permit or an EIP-3009
+`TransferWithAuthorization` (what USDC on Celo uses) moves money without going
+through a transaction. Reads and `personal_sign` (the SIWE) are **not** gated, so
+signing in never prompts twice. Without a passkey — or without WebAuthn at all — the
+request goes through, because the layer needs hardware.
 
-**Locking.** `INACTIVITY_LOCK_MS` (10 minutes without pointer, key or visibility
-activity) drops the key in memory and marks `lockReason: 'idle'`;
+**Locking.** `INACTIVITY_LOCK_MS` (**one hour** without pointer, key, touch,
+scroll or visibility activity) drops the key in memory and marks
+`lockReason: 'idle'`. Ten minutes turned out to be too aggressive on a phone
+(the operator had to unlock again while donating, R-#246 §10) and OneKey waits
+about an hour; the funds gate below is what keeps a long pause from making a
+transfer silent. Activity listens on `document` for `visibilitychange` (the
+event does not reach `window`, which was the other half of the defect) and
+restarts the timer at most once every five seconds.
 `WalletEventListener` signs the user out only for the header ✕ (`'user'`) or when
 the wallet is deleted (`'deleted'`), never for the idle lock.
 

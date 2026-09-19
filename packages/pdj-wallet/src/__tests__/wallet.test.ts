@@ -12,6 +12,7 @@ import {
   unlockWallet,
 } from '../wallet'
 import { MemoryStorage } from '../storage/memory'
+import { isValidMnemonic } from '../signer'
 import { signSIWE } from '../siwe'
 
 const HARDHAT_MNEMONIC = 'test test test test test test test test test test test junk'
@@ -49,6 +50,31 @@ describe('wallet', () => {
     expect(await hasWallet(storage)).toBe(true)
     const unlocked = await unlockWallet(PIN, storage)
     expect(unlocked.address).toBe(HARDHAT_ADDRESS)
+  })
+
+  // Sin `validateMnemonic`, `mnemonicToSeedSync` acepta una frase con un error de
+  // dedo o de checksum y deriva otra billetera (vacía) sin avisar.
+  it('rejects a mnemonic that is not BIP39', async () => {
+    const typo = 'test test test test test test test test test test test tset'
+    await expect(importWallet({ mnemonic: typo, pin: PIN, storage })).rejects.toThrow(/invalid-mnemonic/)
+    expect(await hasWallet(storage)).toBe(false)
+
+    // Misma palabra 12 veces: todas están en la lista, el checksum no cuadra.
+    const badChecksum = 'test test test test test test test test test test test test'
+    await expect(importWallet({ mnemonic: badChecksum, pin: PIN, storage })).rejects.toThrow(/invalid-mnemonic/)
+
+    // 11 palabras: longitud inválida.
+    await expect(
+      importWallet({ mnemonic: HARDHAT_MNEMONIC.split(' ').slice(0, 11).join(' '), pin: PIN, storage }),
+    ).rejects.toThrow(/invalid-mnemonic/)
+  })
+
+  it('accepts the phrases it generates and a valid 24-word phrase', async () => {
+    const { mnemonic } = await createWallet({ pin: PIN, storage })
+    expect(await isValidMnemonic(mnemonic)).toBe(true)
+    expect(await isValidMnemonic(`  ${HARDHAT_MNEMONIC.toUpperCase()}  `)).toBe(true)
+    expect(await isValidMnemonic('abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art')).toBe(true)
+    expect(await isValidMnemonic('not a mnemonic at all')).toBe(false)
   })
 
   it('reports the wallet info without unlocking', async () => {

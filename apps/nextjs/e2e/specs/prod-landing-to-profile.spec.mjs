@@ -11,7 +11,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import {
-  initTestEnv, launchBrowser,
+  initTestEnv, launchBrowser, short,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 import { retrySpec } from '../helpers/retry.mjs'
@@ -49,6 +49,15 @@ async function navAndWait(page, url, timeout) {
 async function main() {
   const t0 = performance.now()
   resetFailures()
+
+  // Este spec ESCRIBE en producción: completa el perfil de la billetera de pruebas
+  // y cancela/reprograma una entrevista real en learn.tg:443. Por eso no puede
+  // correr en la suite por defecto (`make test-e2e` ejecuta todos los specs):
+  // requiere PROD_SPECS=1 explícito.
+  if (process.env.PROD_SPECS !== '1') {
+    console.log('[SKIP] escribe en producción (perfil + entrevista en learn.tg): ejecutar con PROD_SPECS=1')
+    process.exit(0)
+  }
 
   const creds = loadEnvCredentials()
   if (!creds) { console.error('No credentials found'); process.exit(1) }

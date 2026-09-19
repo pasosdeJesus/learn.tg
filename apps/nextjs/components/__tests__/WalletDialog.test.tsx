@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react'
-import { render, screen, act, fireEvent } from '@testing-library/react'
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { beforeEach, describe, it, expect, vi } from 'vitest'
 
@@ -153,8 +153,9 @@ describe('WalletDialog (R-#244)', () => {
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
   })
 
-  // R-#246 (L2): con la clave sellada por la passkey, el gesto reemplaza al PIN.
-  it('unlocks with the fingerprint when it is enabled', async () => {
+  // R-#246 (L2): con la passkey registrada el gesto es el camino principal: al
+  // abrir el diálogo bloqueado se pide directamente, sin campo de PIN.
+  it('asks for the gesture as soon as the locked dialog opens', async () => {
     mocks.status = 'locked'
     mocks.walletInfo = { address: ADDRESS }
     mocks.biometricEnabled = true
@@ -163,13 +164,36 @@ describe('WalletDialog (R-#244)', () => {
     mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
     renderDialog()
 
-    expect(screen.getByTestId('wallet-unlock')).toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-pin')).not.toBeInTheDocument()
+
+    await waitFor(() => expect(mocks.unlockWithBiometric).toHaveBeenCalled())
+    expect(mocks.unlock).not.toHaveBeenCalled()
+    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
+  // R-#246: el gesto no es el único camino. Si se cancela, el PIN queda a un
+  // toque de distancia y no se pierde la billetera.
+  it('falls back to the PIN when the gesture is cancelled', async () => {
+    mocks.status = 'locked'
+    mocks.walletInfo = { address: ADDRESS }
+    mocks.biometricEnabled = true
+    mocks.unlockWithBiometric.mockRejectedValue(new Error('NotAllowedError'))
+    mocks.unlock.mockResolvedValue({ address: ADDRESS })
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/cancelled/i)
+    })
+    expect(screen.getByTestId('wallet-pin')).toBeInTheDocument()
+
+    await fillPin()
     await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-unlock-biometric'))
+      fireEvent.click(screen.getByTestId('wallet-unlock'))
     })
 
-    expect(mocks.unlockWithBiometric).toHaveBeenCalled()
-    expect(mocks.unlock).not.toHaveBeenCalled()
+    expect(mocks.unlock).toHaveBeenCalledWith('123456')
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
   })
 
@@ -222,10 +246,13 @@ describe('WalletDialog (R-#244)', () => {
     mocks.status = 'locked'
     mocks.walletInfo = { address: ADDRESS }
     mocks.biometricEnabled = true
-    mocks.error = 'NotAllowedError'
+    mocks.unlockWithBiometric.mockRejectedValue(new Error('NotAllowedError'))
     renderDialog()
 
-    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/cancelled/i)
+    await waitFor(() => {
+      expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/cancelled/i)
+    })
+    expect(screen.getByTestId('wallet-unlock-biometric')).toBeInTheDocument()
   })
 
   // R-#244: si la cookie de sesión ya es de esta billetera, volver a firmar el
@@ -254,6 +281,26 @@ describe('WalletDialog (R-#244)', () => {
     mocks.error = 'Wrong PIN or corrupted wallet data'
     renderDialog()
     expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/Wrong PIN/)
+  })
+
+  // R-#251: la frase de recuperación se valida (BIP39) antes de derivar; el código
+  // `invalid-mnemonic` no es texto para el usuario.
+  it('translates an invalid recovery phrase when importing', async () => {
+    mocks.status = 'no-wallet'
+    mocks.importExisting.mockRejectedValue(new Error('invalid-mnemonic'))
+    renderDialog()
+
+    fireEvent.click(screen.getByTestId('wallet-mode-import'))
+    fireEvent.change(screen.getByTestId('wallet-mnemonic'), {
+      target: { value: 'test test test test test test test test test test test tset' },
+    })
+    await fillPin()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-import'))
+    })
+
+    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/not valid/i)
+    expect(mocks.importExisting).toHaveBeenCalled()
   })
 
   it('is bilingual', () => {

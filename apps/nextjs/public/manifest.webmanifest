@@ -1,7 +1,7 @@
 {
   "name": "Learn.tg - Learn through games",
   "short_name": "Learn.tg",
-  "description": "Gamified education on Celo: learn with crossword puzzles and earn rewards.",
+  "description": "Gamified education on Celo: learn with crossword puzzles, read your free and paid courses offline, and earn rewards.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

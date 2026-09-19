@@ -46,6 +46,8 @@ export {
   addressFromMnemonic,
   accountFromMnemonic,
   accountFromPrivateKey,
+  assertValidMnemonic,
+  isValidMnemonic,
   newMnemonic,
   normalizeMnemonic,
   privateKeyFromMnemonic,

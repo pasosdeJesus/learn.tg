@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -57,6 +57,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   const [recovery, setRecovery] = useState<string | null>(null)
   const [localError, setLocalError] = useState<string | null>(null)
   const [biometricPin, setBiometricPin] = useState('')
+  const [pinFallback, setPinFallback] = useState(false)
+  const autoGestureTried = useRef(false)
   const [busy, setBusy] = useState(false)
 
   const t = useMemo(() => createComponentT(lang, {
@@ -77,6 +79,11 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       noPrf: 'This device cannot store the biometric unlock. Use your PIN.',
       noBiometric: 'There is no fingerprint unlock saved on this device.',
       biometricCancelled: 'The fingerprint or Face ID prompt was cancelled.',
+      invalidMnemonic: 'That recovery phrase is not valid. Check the words and their order.',
+      biometricRetry: 'Try the fingerprint again',
+      usePin: 'Use the PIN',
+      unlockWithPinOnly: 'Use the PIN only',
+      lockedDescriptionGesture: 'Confirm with your fingerprint or Face ID to sign in. No PIN to type.',
       pin: 'PIN (6 or more digits)',
       pinConfirm: 'Repeat the PIN',
       mnemonic: 'Recovery phrase (12 words)',
@@ -119,6 +126,11 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       noPrf: 'Este dispositivo no puede guardar el desbloqueo por huella. Usa tu PIN.',
       noBiometric: 'No hay un desbloqueo por huella guardado en este dispositivo.',
       biometricCancelled: 'Se canceló la huella o Face ID.',
+      invalidMnemonic: 'Esa frase de recuperación no es válida. Revisa las palabras y su orden.',
+      biometricRetry: 'Reintentar huella',
+      usePin: 'Usar el PIN',
+      unlockWithPinOnly: 'Seguir usando solo el PIN',
+      lockedDescriptionGesture: 'Confirma con tu huella o Face ID para ingresar. No hay que escribir el PIN.',
       pin: 'PIN (6 o más dígitos)',
       pinConfirm: 'Repite el PIN',
       mnemonic: 'Frase de recuperación (12 palabras)',
@@ -157,6 +169,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setMnemonic('')
     setRecovery(null)
     setLocalError(null)
+    setPinFallback(false)
+    autoGestureTried.current = false
     setBusy(false)
   }, [open])
 
@@ -169,6 +183,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     if (code === 'no-prf') return t('noPrf')
     if (code === 'no-biometric') return t('noBiometric')
     if (code === 'NotAllowedError') return t('biometricCancelled')
+    // R-#251: `importWallet` valida BIP39 antes de derivar; una frase con un error
+    // de dedo derivaría otra billetera (vacía) sin este aviso.
+    if (code === 'invalid-mnemonic') return t('invalidMnemonic')
     return code || t('unknownError')
   }, [t])
 
@@ -244,7 +261,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   }, [pin, signIn, t, translateError, unlock])
 
   // R-#246: un gesto reemplaza al PIN cuando la clave quedó sellada con el
-  // secreto PRF de la passkey.
+  // secreto PRF de la passkey. Si el gesto falla o se cancela, el PIN queda a un
+  // toque de distancia (`pinFallback`).
   const handleUnlockWithBiometric = useCallback(async () => {
     setLocalError(null)
     setBusy(true)
@@ -253,6 +271,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
+      setPinFallback(true)
       setBusy(false)
     }
   }, [signIn, translateError, unlockWithBiometric])
@@ -325,6 +344,17 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
 
   const showRecovery = recovery !== null
   const showUnlock = !showRecovery && status === 'locked'
+  // Con la passkey registrada el gesto es el camino principal: el PIN solo
+  // aparece si el usuario lo pide o si el gesto falla (R-#246).
+  const gestureOnly = showUnlock && biometricEnabled && !pinFallback
+  // Al abrir con una passkey registrada se pide el gesto directamente, en lugar
+  // de mostrar un campo de PIN que invita a escribir cuando un toque bastaba.
+  useEffect(() => {
+    if (!open || !showUnlock || !biometricEnabled) return
+    if (autoGestureTried.current) return
+    autoGestureTried.current = true
+    void handleUnlockWithBiometric()
+  }, [open, showUnlock, biometricEnabled, handleUnlockWithBiometric])
   // El error del hook también se traduce: los códigos del camino biométrico
   // (`NotAllowedError`, `no-prf`…) no son texto para el usuario.
   const message = localError ?? (error ? translateError(error) : null)
@@ -344,7 +374,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
             {showRecovery
               ? t('recoveryDescription')
               : showUnlock
-                ? t('lockedDescription')
+                ? gestureOnly ? t('lockedDescriptionGesture') : t('lockedDescription')
                 : mode === 'create' ? t('createDescription') : t('importDescription')}
           </DialogDescription>
         </DialogHeader>
@@ -398,17 +428,19 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               </label>
             )}
 
-            <label className="block space-y-1">
-              <span className="text-sm font-medium">{t('pin')}</span>
-              <Input
-                type="password"
-                inputMode="numeric"
-                autoComplete="off"
-                data-testid="wallet-pin"
-                value={pin}
-                onChange={(event) => setPin(event.target.value)}
-              />
-            </label>
+            {!gestureOnly && (
+              <label className="block space-y-1">
+                <span className="text-sm font-medium">{t('pin')}</span>
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  data-testid="wallet-pin"
+                  value={pin}
+                  onChange={(event) => setPin(event.target.value)}
+                />
+              </label>
+            )}
 
             {!showUnlock && mode === 'create' && (
               <label className="block space-y-1">
@@ -476,7 +508,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                   onChange={(event) => setBiometricPin(event.target.value)}
                 />
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   data-testid="wallet-enable-biometric"
                   onClick={() => { void handleEnableBiometric() }}
@@ -507,37 +539,59 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               </Button>
               {biometricEnabled ? (
                 <>
+                  {gestureOnly ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        data-testid="wallet-use-pin"
+                        onClick={() => setPinFallback(true)}
+                        disabled={busy}
+                      >
+                        {t('usePin')}
+                      </Button>
+                      <Button
+                        data-testid="wallet-unlock-biometric"
+                        onClick={() => { void handleUnlockWithBiometric() }}
+                        disabled={busy}
+                      >
+                        {busy ? t('signingIn') : t('biometricUnlock')}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outline"
+                        data-testid="wallet-unlock-biometric"
+                        onClick={() => { void handleUnlockWithBiometric() }}
+                        disabled={busy}
+                      >
+                        {busy ? t('signingIn') : t('biometricRetry')}
+                      </Button>
+                      <Button data-testid="wallet-unlock" onClick={() => { void handleUnlock() }} disabled={busy}>
+                        {busy ? t('signingIn') : t('unlock')}
+                      </Button>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
                   <Button
-                    variant="outline"
+                    variant={biometricAvailable ? 'outline' : 'default'}
                     data-testid="wallet-unlock"
                     onClick={() => { void handleUnlock() }}
                     disabled={busy}
                   >
-                    {busy ? t('signingIn') : t('unlock')}
+                    {busy ? t('signingIn') : biometricAvailable ? t('unlockWithPinOnly') : t('unlock')}
                   </Button>
-                  <Button
-                    data-testid="wallet-unlock-biometric"
-                    onClick={() => { void handleUnlockWithBiometric() }}
-                    disabled={busy}
-                  >
-                    {busy ? t('signingIn') : t('biometricUnlock')}
-                  </Button>
-                </>
-              ) : (
-                <>
                   {biometricAvailable && (
                     <Button
-                      variant="outline"
                       data-testid="wallet-enable-biometric"
                       onClick={() => { void handleUnlockAndEnableBiometric() }}
                       disabled={busy || pin.length < MIN_PIN}
                     >
-                      {t('biometricEnable')}
+                      {busy ? t('signingIn') : t('biometricUnlock')}
                     </Button>
                   )}
-                  <Button data-testid="wallet-unlock" onClick={() => { void handleUnlock() }} disabled={busy}>
-                    {busy ? t('signingIn') : t('unlock')}
-                  </Button>
                 </>
               )}
             </>

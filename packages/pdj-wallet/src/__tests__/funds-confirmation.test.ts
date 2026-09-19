@@ -23,6 +23,26 @@ const TX = {
   chainId: 11142220,
 }
 
+// Autorización EIP-712 del tipo que usa USDC (EIP-3009): mueve fondos sin pasar
+// por `eth_sendTransaction`.
+const TYPED_DATA = {
+  types: {
+    EIP712Domain: [
+      { name: 'name', type: 'string' },
+      { name: 'version', type: 'string' },
+      { name: 'chainId', type: 'uint256' },
+    ],
+    TransferWithAuthorization: [
+      { name: 'from', type: 'address' },
+      { name: 'to', type: 'address' },
+      { name: 'value', type: 'uint256' },
+    ],
+  },
+  primaryType: 'TransferWithAuthorization',
+  domain: { name: 'USDC', version: '2', chainId: 11142220 },
+  message: { from: ADDRESS, to: ADDRESS, value: '1' },
+}
+
 /** Authenticator falso que registra cada pedido de verificación. */
 function installFakeAuthenticator({ reject = false } = {}) {
   const calls: string[] = []
@@ -112,6 +132,49 @@ describeIdb('confirmación de fondos (L1, R-#246)', () => {
     await provider.request({ method: 'personal_sign', params: ['0xdeadbeef', ADDRESS] })
 
     expect(calls.filter((c) => c === 'assertion')).toHaveLength(0)
+  })
+
+  // R-#246 §10: una autorización EIP-712 fuera de `eth_sendTransaction`
+  // (EIP-2612 / EIP-3009 de USDC) o una firma cruda también mueven fondos.
+  it('asks for the gesture before signing typed data', async () => {
+    const calls = installFakeAuthenticator()
+    await unlockWithPasskey()
+    const { getInAppWalletProvider } = await import('../provider')
+
+    const signature = await getInAppWalletProvider({ rpcUrl: 'https://rpc.example' })!.request({
+      method: 'eth_signTypedData_v4',
+      params: [ADDRESS, JSON.stringify(TYPED_DATA)],
+    })
+
+    expect(signature).toMatch(/^0x[0-9a-f]+$/i)
+    expect(calls.filter((c) => c === 'assertion')).toHaveLength(1)
+  })
+
+  it('asks for the gesture before signing a raw transaction', async () => {
+    const calls = installFakeAuthenticator()
+    await unlockWithPasskey()
+    const { getInAppWalletProvider } = await import('../provider')
+
+    const raw = await getInAppWalletProvider({ rpcUrl: 'https://rpc.example' })!.request({
+      method: 'eth_signTransaction',
+      params: [TX],
+    })
+
+    expect(raw).toMatch(/^0x[0-9a-f]+$/i)
+    expect(calls.filter((c) => c === 'assertion')).toHaveLength(1)
+  })
+
+  it('rejects typed data with 4001 when the user cancels the prompt', async () => {
+    await unlockWithPasskey()
+    installFakeAuthenticator({ reject: true })
+    const { getInAppWalletProvider } = await import('../provider')
+
+    await expect(
+      getInAppWalletProvider({ rpcUrl: 'https://rpc.example' })!.request({
+        method: 'eth_signTypedData_v4',
+        params: [ADDRESS, JSON.stringify(TYPED_DATA)],
+      }),
+    ).rejects.toMatchObject({ code: 4001 })
   })
 
   it('rejects the transfer with 4001 when the user cancels the prompt', async () => {

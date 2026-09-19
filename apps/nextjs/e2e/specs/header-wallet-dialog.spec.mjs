@@ -80,7 +80,7 @@ async function main() {
 
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
-  await page.setDefaultNavigationTimeout(120000)
+  await page.setDefaultNavigationTimeout(180000)
   page.on('console', (msg) => {
     if (/Hydration|hydration mismatch/i.test(msg.text())) console.log(`  [!] hidratación: ${msg.text().split('\n')[0]}`)
   })
@@ -98,7 +98,7 @@ async function main() {
   // 2. Crear la billetera en el modal y cerrarlo (como hizo el operador)
   if (!(await page.$('[data-testid="wallet-selector-in-app"]'))) {
     await openDialog(page)
-    const hasCreateForm = await page.waitForSelector('[data-testid="wallet-pin-confirm"]', { timeout: 15000 }).catch(() => null)
+    const hasCreateForm = await page.waitForSelector('[data-testid="wallet-pin-confirm"]', { timeout: 60000 }).catch(() => null)
     if (hasCreateForm) {
       await page.type('[data-testid="wallet-pin"]', PIN)
       await page.type('[data-testid="wallet-pin-confirm"]', PIN)

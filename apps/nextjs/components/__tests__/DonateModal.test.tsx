@@ -60,8 +60,17 @@ vi.mock('@/lib/hooks/useWallet', () => ({
 
 // R-#244: los modales consultan el estado de la billetera de la aplicación.
 const mockInAppStatus = vi.fn(() => 'no-wallet')
+// R-#246: el aviso nombra el gesto cuando el dispositivo puede verificar al usuario.
+const mockBiometric = vi.fn(() => ({ enabled: false, available: false }))
 vi.mock('@learn-tg/pdj-wallet-next', () => ({
-  useInAppWallet: () => ({ status: mockInAppStatus() }),
+  useInAppWallet: () => {
+    const { enabled, available } = mockBiometric()
+    return {
+      status: mockInAppStatus(),
+      biometricEnabled: enabled,
+      biometricAvailable: available,
+    }
+  },
 }))
 
 const BACKEND_WALLET = '0xBACKEND123456789012345678901234567890123456'
@@ -117,6 +126,7 @@ describe('DonateModal', () => {
     mockEstimateContractGas.mockResolvedValue(21_000n)
     mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success' })
     mockWriteContract.mockResolvedValue('0xhash')
+    mockBiometric.mockReturnValue({ enabled: false, available: false })
   })
 
   afterEach(() => {
@@ -197,6 +207,33 @@ describe('DonateModal', () => {
       fireEvent.click(screen.getByTestId('wallet-unlock-request'))
       expect(opened).toHaveBeenCalled()
       window.removeEventListener('learn-tg:open-in-app-wallet-dialog', opened)
+    })
+
+    // R-#246: "Unlock it to donate" no decía el camino más rápido. Con huella
+    // registrada (o disponible) el aviso la nombra en lugar de mandar al PIN.
+    it('names the gesture when the device can verify the user', async () => {
+      mockUseWalletClient.mockReturnValue({ data: undefined })
+      mockInAppStatus.mockReturnValue('locked')
+      mockBiometric.mockReturnValue({ enabled: true, available: true })
+      await waitFor(() => {
+        renderModal()
+        expect(screen.getByText(/Confirm with your fingerprint or Face ID to donate/i)).toBeInTheDocument()
+      })
+      expect(screen.getByText(/Unlock with fingerprint or Face ID/i)).toBeInTheDocument()
+      expect(screen.queryByText(/Unlock it with your PIN to donate/i)).not.toBeInTheDocument()
+    })
+
+    // El gesto solo se nombra cuando ya está registrado: la primera vez hay que
+    // escribir el PIN (y ahí el diálogo ofrece sellar la clave con la huella).
+    it('still names the PIN when the device could enrol but has not yet', async () => {
+      mockUseWalletClient.mockReturnValue({ data: undefined })
+      mockInAppStatus.mockReturnValue('locked')
+      mockBiometric.mockReturnValue({ enabled: false, available: true })
+      await waitFor(() => {
+        renderModal()
+        expect(screen.getByText(/Unlock it with your PIN to donate/i)).toBeInTheDocument()
+      })
+      expect(screen.queryByText(/Confirm with your fingerprint or Face ID to donate/i)).not.toBeInTheDocument()
     })
   })
 

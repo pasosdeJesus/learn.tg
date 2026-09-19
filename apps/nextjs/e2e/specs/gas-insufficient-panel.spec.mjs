@@ -112,16 +112,23 @@ async function clickDonateRow(page, lang) {
   const needle = lang === 'es' ? 'Donar' : 'Donate'
   for (let w = 0; w < 12; w++) {
     await new Promise(r => setTimeout(r, 2000))
-    const box = await page.evaluate((n) => {
-      const b = [...document.querySelectorAll('button')].find(x => (x.textContent || '').includes(n))
-      if (!b) return null
-      const r = b.getBoundingClientRect()
-      return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height }
-    }, needle)
+    // El `evaluate` puede caer si la página navegó (recarga o compilación en frío
+    // del dev site): se reintenta en la siguiente vuelta en lugar de abortar.
+    let box = null
+    try {
+      box = await page.evaluate((n) => {
+        const b = [...document.querySelectorAll('button')].find(x => (x.textContent || '').includes(n))
+        if (!b) return null
+        const r = b.getBoundingClientRect()
+        return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height }
+      }, needle)
+    } catch {
+      continue
+    }
     if (box && box.w > 0 && box.h > 0) {
       await page.mouse.click(box.x, box.y)
       await new Promise(r => setTimeout(r, 3000))
-      const open = await page.evaluate(() => !!document.querySelector('.fixed.inset-0'))
+      const open = await page.evaluate(() => !!document.querySelector('.fixed.inset-0')).catch(() => false)
       if (open) return true
     }
   }

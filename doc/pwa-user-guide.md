@@ -37,6 +37,17 @@ from the browser menu.
   when the connection comes back. The page shows how many answers are waiting
   ("1 answer saved offline, waiting to be sent."). Do not delete the app before
   the answers are sent.
+- **The review happens online:** offline the app only shows the puzzle and takes
+  your answer; the app does not tell you whether it is right while you have no
+  connection. When you are back online the answer is checked and you get a
+  **notification**: "correct" with the scholarship (USDT/SLEARN) if you qualify, or
+  the crossword words that have a problem so you can try again.
+
+**Which courses can be read offline (planned).** The free courses and the courses
+you have paid for, with their crosswords, without having to open each page first.
+When you are online —at least once every 24 hours— the app checks whether that
+content changed and updates the copy on your phone. The app will say how much
+space it takes and let you delete it.
 
 ## The wallet inside the app
 
@@ -51,6 +62,15 @@ You do not need to install a wallet app to use learn.tg.
    wallet again with **Sign in with in-app wallet** and press the same button.
 4. To stop using it, choose **Disconnect**. To use another wallet (for example
    MetaMask/OneKey instead), choose **Use external wallet**.
+
+If your phone can unlock with a fingerprint or Face ID, learn.tg offers
+**unlock with fingerprint**: one touch opens the wallet and you do not type the
+PIN again. The PIN keeps working as a backup, and if you cancel the fingerprint
+prompt the app lets you type the PIN instead. The wallet stays unlocked while you
+use it and locks itself after an hour without activity; it also asks for the
+fingerprint again before sending money, so a transfer never leaves without you
+confirming it. Both options are in the same window, and you can turn the
+fingerprint on or off at any time.
 
 Your PIN is never sent anywhere: it only unlocks the wallet stored (encrypted)
 on your phone. If you forget the PIN, restore the wallet with the recovery

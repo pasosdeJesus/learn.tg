@@ -152,7 +152,7 @@ async function openDonateModal(page, base, urls = [`${base}/en/gdcluster`, `${ba
         button.scrollIntoView({ block: 'center' })
         button.click()
         return true
-      })
+      }).catch(() => false) // la página puede estar navegando (compilación en frío)
       if (!clicked) continue
       for (let w = 0; w < 10; w++) {
         await sleep(1000)
@@ -163,7 +163,7 @@ async function openDonateModal(page, base, urls = [`${base}/en/gdcluster`, `${ba
             notice: !!document.querySelector('[data-testid="wallet-unlock-request"]'),
             text: (overlay.innerText || '').replace(/\s+/g, ' ').slice(0, 200),
           }
-        })
+        }).catch(() => null)
         if (state) return state
       }
     }
@@ -188,7 +188,7 @@ async function main() {
 
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
-  await page.setDefaultNavigationTimeout(120000)
+  await page.setDefaultNavigationTimeout(180000)
 
   console.log(`Donación + desbloqueo de la billetera | ${base}\n`)
 
@@ -202,7 +202,7 @@ async function main() {
 
   // Pestaña B: misma sesión (cookie), billetera bloqueada (la clave es por pestaña)
   const locked = await browser.newPage()
-  await locked.setDefaultNavigationTimeout(120000)
+  await locked.setDefaultNavigationTimeout(180000)
   await locked.goto(`${base}/en/gdcluster`, { waitUntil: 'domcontentloaded' })
   await locked.waitForSelector('button', { timeout: 90000 }).catch(() => {})
   await sleep(4000)

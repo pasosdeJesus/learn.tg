@@ -73,11 +73,20 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
 
         case 'eth_signTypedData_v4': {
           const [, json] = (params ?? []) as [string, string]
+          // R-#246 (L1): una firma EIP-712 también mueve fondos (permiso EIP-2612,
+          // `TransferWithAuthorization` EIP-3009 de USDC): mismo gesto fresco.
+          if (options.requireUserVerification !== false) {
+            await requireFundsConfirmation()
+          }
           return signTypedData(JSON.parse(json) as never)
         }
 
         case 'eth_signTransaction': {
           const [tx] = (params ?? []) as [Record<string, unknown>]
+          // R-#246 (L1): firma cruda que el llamador puede transmitir después.
+          if (options.requireUserVerification !== false) {
+            await requireFundsConfirmation()
+          }
           return signTransaction(tx as never)
         }
 

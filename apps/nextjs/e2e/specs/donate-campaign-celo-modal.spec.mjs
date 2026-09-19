@@ -148,7 +148,9 @@ async function main() {
   let pageText = ''
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 1000))
-    pageText = await page.evaluate(() => document.body?.textContent || '')
+    // La página puede estar navegando o compilando en frío: sin el try, el
+    // `evaluate` aborta el spec con "Execution context was destroyed".
+    pageText = await page.evaluate(() => document.body?.textContent || '').catch(() => pageText)
     if (/0x8427|Disconnect/i.test(pageText)) break
   }
   if (!/0x8427/i.test(pageText)) { fail('Wallet session not hydrated on the donation page'); process.exit(1) }
@@ -160,14 +162,14 @@ async function main() {
     const b = [...document.querySelectorAll('button')].find(x => /Donate now/i.test(x.textContent || ''))
     if (!b) return false
     b.click(); return true
-  })
+  }).catch(() => false)
   if (!clicked) { fail('Donate now button not found'); process.exit(1) }
 
   // Wait for the modal to render (options panel is client-rendered)
   let modalText = ''
   for (let i = 0; i < 25; i++) {
     await new Promise(r => setTimeout(r, 1000))
-    modalText = await page.evaluate(() => document.body?.textContent || '')
+    modalText = await page.evaluate(() => document.body?.textContent || '').catch(() => modalText)
     if (/Donation options|Opciones de la donación|Pay with|Pagar con/.test(modalText)) break
   }
   if (!/Pay with|Pagar con/.test(modalText)) {

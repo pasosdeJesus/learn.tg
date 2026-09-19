@@ -168,6 +168,41 @@ describe('useInAppWallet', () => {
     }
   })
 
+  // El temporizador debe reiniciarse con la actividad real de un teléfono:
+  // `visibilitychange` se emite en `document`, no en `window` (R-#246).
+  it('restarts the inactivity timer when the tab becomes visible again', async () => {
+    vi.useFakeTimers()
+    try {
+      walletMock.hasWallet.mockResolvedValue(true)
+      walletMock.getWalletInfo.mockResolvedValue(INFO)
+      walletMock.unlockWallet.mockResolvedValue(INFO)
+      const { result } = renderHook(() => useInAppWallet())
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      await act(async () => {
+        await result.current.unlock('123456')
+      })
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(INACTIVITY_LOCK_MS - 1000)
+      })
+      document.dispatchEvent(new Event('visibilitychange'))
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000)
+      })
+      expect(result.current.status).toBe('unlocked')
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(INACTIVITY_LOCK_MS)
+      })
+      expect(result.current.status).toBe('locked')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('marks the reason as user when the header ✕ locks it', async () => {
     walletMock.hasWallet.mockResolvedValue(true)
     walletMock.getWalletInfo.mockResolvedValue(INFO)
