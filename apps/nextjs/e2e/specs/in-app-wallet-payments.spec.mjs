@@ -19,7 +19,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import {
-  initTestEnv, launchBrowser,
+  initTestEnv, launchBrowser, newIncognitoContext,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 
@@ -417,11 +417,32 @@ async function main() {
   // ── 4. Bug E: la píldora tras desbloquear muestra la billetera, no el
   //        formulario de crear.
   await closePayModal(page)
-  await sleep(1500)
+  // La página puede estar recargando (SIWE o navegación): esperar contenido antes de
+  // evaluar, si no el diagnóstico sale vacío y el fallo es engañoso.
+  for (let i = 0; i < 20; i++) {
+    const ready = await page
+      .evaluate(() => (document.body?.innerText || '').length > 200)
+      .catch(() => false)
+    if (ready) break
+    await sleep(1000)
+  }
   if (await openDialog(page)) {
+    // Esperar a que el diálogo decida su estado (leyendo IndexedDB).
+    for (let i = 0; i < 15; i++) {
+      if (await exists(page, '[data-testid="wallet-address"]')) break
+      if (await exists(page, '[data-testid="wallet-create"]')) break
+      if (await exists(page, '[data-testid="wallet-pin-confirm"]')) break
+      await sleep(1000)
+    }
     const dialogText = await bodyText(page)
-    const hasCreateForm = await exists(page, '[data-testid="wallet-pin-confirm"]')
-    if (hasCreateForm || /Create a wallet|Crear una billetera/i.test(dialogText)) {
+    const createUi =
+      (await exists(page, '[data-testid="wallet-create"]')) ||
+      (await exists(page, '[data-testid="wallet-pin-confirm"]')) ||
+      (await exists(page, '[data-testid="wallet-mode-create"]')) ||
+      /Create a wallet|Crear una billetera/i.test(dialogText)
+    const showsWallet = await exists(page, '[data-testid="wallet-address"]')
+    if (createUi || !showsWallet) {
+      console.log(`  [diag] texto del diálogo: ${dialogText.replace(/\s+/g, ' ').slice(0, 200)}`)
       fail('La píldora mostró el formulario de crear billetera en vez de la billetera (E)')
     } else {
       ok('La píldora muestra la billetera y no el formulario de crear (E)')
@@ -470,7 +491,10 @@ async function main() {
 
   // ── 6. Bug D: en un navegador con billetera inyectada no se ofrece la de la
   //        aplicación, salvo con ?iappwallet=1.
-  const externalPage = await browser.newPage()
+  // Contexto de incógnito: el perfil de la corrida YA tiene una billetera in-app, y
+  // con ella el selector la conserva por diseño (no se puede dejar inaccesible).
+  const incognito = await newIncognitoContext(browser)
+  const externalPage = await incognito.newPage()
   await externalPage.setDefaultNavigationTimeout(120000)
   await externalPage.evaluateOnNewDocument(() => {
     const provider = {
@@ -510,6 +534,7 @@ async function main() {
     fail('?iappwallet=1 no ofreció la billetera de la aplicación (D)')
   }
   await externalPage.close()
+  await incognito.close().catch(() => {})
 
   if (authenticatorId) {
     await cdp.send('WebAuthn.removeVirtualAuthenticator', { authenticatorId }).catch(() => {})

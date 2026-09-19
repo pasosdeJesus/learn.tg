@@ -16,15 +16,13 @@ pnpm install
 
 # Motores (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): se consumen vía dist/ (exports map) y dist/ NO está
 # en git (artefacto de build). Compilar antes de servir — un checkout fresco
-# fallaría con "Module not found: ... dist/lib/...". Orden: rewards antes que
-# gdcluster (gdcluster importa @learn-tg/rewards -> dist).
-for engine in pdj-wallet pdj-wallet-next rewards gdcluster; do
-  if [ -d "../../packages/$engine" ]; then
-    echo "[bin/dev] compilando packages/$engine -> dist"
-    (cd "../../packages/$engine" && ../../apps/nextjs/node_modules/.bin/tsc -b) \
-      || echo "[bin/dev] AVISO: falló tsc para $engine (¿pnpm install pendiente?)"
-  fi
-done
+# fallaría con "Module not found: ... dist/lib/...".
+#
+# Se llama al target del Makefile en vez de repetir el bucle aquí: el orden
+# (rewards antes que gdcluster) y la lista de paquetes viven en un solo lugar. Una
+# edición en packages/* se ve al REINICIAR bin/dev: un `next dev` en marcha sigue
+# sirviendo el dist anterior (2026-09-19, costó un diagnóstico).
+make engines-dist || echo "[bin/dev] AVISO: falló la compilación de motores (¿pnpm install pendiente en packages/*?)"
 
 # Artefactos del PWA (public/sw.js, workbox-*, fallback-*, worker-*): limpiar los
 # que haya dejado una compilación anterior. Con el PWA encendido next-pwa los

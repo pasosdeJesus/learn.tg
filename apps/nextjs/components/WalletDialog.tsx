@@ -350,6 +350,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   // Mientras el hook resuelve IndexedDB/sesión el diálogo no sabe si hay billetera:
   // mostrar el formulario de crear hacía pensar que la billetera se había perdido.
   const booting = status === 'loading'
+  // Hay billetera en este dispositivo (bloqueada o desbloqueada): el diálogo muestra
+  // la billetera, no el formulario de crear o importar.
+  const hasWallet = status === 'locked' || status === 'unlocked'
   // Con la passkey registrada el gesto es el camino principal: el PIN solo
   // aparece si el usuario lo pide o si el gesto falla (R-#246).
   const gestureOnly = showUnlock && biometricEnabled && !pinFallback
@@ -417,7 +420,11 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
           </div>
         ) : booting ? null : (
           <div className="py-4 space-y-3">
-            {!showUnlock && (
+            {/* Con una billetera existente (bloqueada o desbloqueada) NO se muestra el
+                formulario de crear/importar: el operador abrió el diálogo esperando su
+                billetera y veía "crear billetera" (reportado el 2026-09-19). Ese
+                formulario sólo tiene sentido cuando no hay billetera. */}
+            {!showUnlock && !hasWallet && (
               <div role="group" className="flex gap-2">
                 <Button
                   variant={mode === 'create' ? 'default' : 'outline'}
@@ -436,7 +443,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               </div>
             )}
 
-            {!showUnlock && mode === 'import' && (
+            {!showUnlock && !hasWallet && mode === 'import' && (
               <label className="block space-y-1">
                 <span className="text-sm font-medium">{t('mnemonic')}</span>
                 <Input
@@ -447,7 +454,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               </label>
             )}
 
-            {!gestureOnly && (
+            {/* El PIN se pide para desbloquear una billetera existente o para crear
+                una nueva; nunca cuando el gesto reemplaza al PIN. */}
+            {!gestureOnly && (!hasWallet || showUnlock) && (
               <label className="block space-y-1">
                 <span className="text-sm font-medium">{t('pin')}</span>
                 <Input
@@ -461,7 +470,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               </label>
             )}
 
-            {!showUnlock && mode === 'create' && (
+            {!showUnlock && !hasWallet && mode === 'create' && (
               <label className="block space-y-1">
                 <span className="text-sm font-medium">{t('pinConfirm')}</span>
                 <Input
@@ -618,6 +627,13 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                 </>
               )}
             </>
+          ) : hasWallet ? (
+            // Con billetera existente y desbloqueada sólo se cierra (o se desbloquea,
+            // que es el caso de `showUnlock` de arriba): crear o importar otra
+            // billetera encima de la que hay no es una acción normal.
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              {t('close')}
+            </Button>
           ) : (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>

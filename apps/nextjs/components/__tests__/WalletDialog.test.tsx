@@ -303,6 +303,21 @@ describe('WalletDialog (R-#244)', () => {
     expect(mocks.importExisting).toHaveBeenCalled()
   })
 
+  // Bug E (2026-09-19): con la billetera desbloqueada el diálogo mostraba el
+  // formulario de crear/importar; el operador esperaba ver SU billetera.
+  it('shows the wallet, not the create form, when it is unlocked', () => {
+    mocks.status = 'unlocked'
+    mocks.walletInfo = { address: ADDRESS }
+    mocks.biometricEnabled = true
+    renderDialog()
+
+    expect(screen.getByTestId('wallet-address')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-biometric-status')).toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-create')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-pin-confirm')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-mode-create')).not.toBeInTheDocument()
+  })
+
   it('is bilingual', () => {
     renderDialog('es')
     expect(screen.getByRole('dialog').textContent).toContain('Crear una billetera')
