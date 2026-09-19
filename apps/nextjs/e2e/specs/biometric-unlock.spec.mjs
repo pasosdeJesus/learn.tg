@@ -49,6 +49,56 @@ async function exists(page, selector) {
   }
 }
 
+/** Texto del error que muestre el diálogo de la billetera, si hay alguno. */
+async function dialogError(page) {
+  try {
+    return await page.$eval('[data-testid="wallet-dialog-error"]', (el) => el.textContent || '')
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Diagnóstico: qué quedó realmente en IndexedDB (versión, almacenes y las
+ * direcciones de los registros de PIN y de huella). Sirve para distinguir "no se
+ * selló" de "se selló y no se leyó".
+ */
+async function dumpWalletDb(page) {
+  try {
+    return await page.evaluate(async () => {
+      const name = 'learn-tg-pdj-wallet'
+      const list = (await indexedDB.databases?.()) || []
+      const known = list.find((d) => d.name === name)
+      if (!known) return { exists: false }
+      return await new Promise((resolve) => {
+        const open = indexedDB.open(name)
+        open.onerror = () => resolve({ exists: true, version: known.version, error: 'open failed' })
+        open.onsuccess = () => {
+          const db = open.result
+          const stores = Array.from(db.objectStoreNames)
+          const out = { exists: true, version: db.version, stores }
+          if (!stores.length) return resolve(out)
+          const tx = db.transaction(stores, 'readonly')
+          const read = (store) =>
+            new Promise((res) => {
+              if (!stores.includes(store)) return res(null)
+              const req = tx.objectStore(store).get('current')
+              req.onsuccess = () => res(req.result || null)
+              req.onerror = () => res(null)
+            })
+          Promise.all([read('wallet'), read('biometric')]).then(([w, b]) => {
+            out.wallet = w ? { address: w.address, version: w.version } : null
+            out.biometric = b ? { address: b.address, credentialId: String(b.credentialId).slice(0, 10) } : null
+            resolve(out)
+          })
+        }
+      })
+    })
+  } catch (e) {
+    return { error: String(e) }
+  }
+}
+
 async function header(page) {
   try {
     return await page.evaluate(() => {
@@ -161,15 +211,32 @@ async function main() {
 
   let enableButton = false
   if (await openDialog(page)) {
-    enableButton = await exists(page, '[data-testid="wallet-enable-biometric"]')
+    // El diálogo carga su estado del hook (IndexedDB + detección de plataforma)
+    // después de abrirse: en `next dev` tarda, así que se espera la oferta en vez
+    // de mirar una sola vez.
+    for (let i = 0; i < 20; i++) {
+      enableButton = await exists(page, '[data-testid="wallet-enable-biometric"]')
+      if (enableButton) break
+      await sleep(1000)
+    }
     if (enableButton) {
       await page.type('[data-testid="wallet-pin"]', PIN)
       await page.click('[data-testid="wallet-enable-biometric"]')
+      // El ok() no puede ser incondicional (lo era y ocultaba fallos): se espera la
+      // señal real —el error en el diálogo, o su cierre (la firma con la sesión ya
+      // existente cierra el modal sin recargar)—.
       for (let i = 0; i < 25; i++) {
         await sleep(1500)
-        if ((await header(page)).signedIn) break
+        const err = await dialogError(page)
+        if (err) {
+          fail(`No se pudo activar el desbloqueo por huella: ${err}`)
+          break
+        }
+        if (!(await exists(page, '[data-testid="wallet-dialog"]'))) {
+          ok('Activó el desbloqueo por huella (passkey + PRF)')
+          break
+        }
       }
-      ok('Activó el desbloqueo por huella (passkey + PRF) y volvió a firmar')
     } else if (await exists(page, '[data-testid="wallet-unlock"]')) {
       // El sitio desplegado puede no tener todavía la UI de R-#246: usar el PIN
       await page.type('[data-testid="wallet-pin"]', PIN)
@@ -198,23 +265,51 @@ async function main() {
   }
 
   if (await openDialog(page)) {
-    const hasBiometric = await exists(page, '[data-testid="wallet-unlock-biometric"]')
-    // Con R-#246 el gesto arranca al abrir el diálogo, así que también es válido
-    // que ya se haya cerrado (el authenticator virtual se auto-verifica).
-    const gestureAlreadyDone = !(await exists(page, '[data-testid="wallet-dialog"]'))
-    if (!hasBiometric && !gestureAlreadyDone) {
+    // R-#246: con la passkey registrada el gesto arranca al abrir el diálogo, así
+    // que el desbloqueo puede completarse ANTES de que alcancemos a ver el botón:
+    // el diálogo pasa a su estado desbloqueado (sin campo de PIN) y luego se cierra
+    // con la recarga de la firma. Tres señales válidas: el botón, el diálogo
+    // cerrado, o el diálogo ya desbloqueado. Lo último deja de valer en builds
+    // anteriores, donde el formulario espera a que se presione el botón.
+    let hasBiometric = false
+    let unlockedByAutoGesture = false
+    for (let i = 0; i < 15; i++) {
+      if (await exists(page, '[data-testid="wallet-unlock-biometric"]')) {
+        hasBiometric = true
+        break
+      }
+      // Señal de "ya está desbloqueada": los botones de desbloqueo sólo existen en
+      // el estado bloqueado (el campo de PIN se renderiza también desbloqueada, así
+      // que no sirve como señal).
+      const dialogOpen = await exists(page, '[data-testid="wallet-dialog"]')
+      const lockedUi =
+        (await exists(page, '[data-testid="wallet-unlock"]')) ||
+        (await exists(page, '[data-testid="wallet-unlock-biometric"]'))
+      if (!dialogOpen || !lockedUi) {
+        unlockedByAutoGesture = true
+        break
+      }
+      await sleep(1000)
+    }
+
+    if (!hasBiometric && !unlockedByAutoGesture) {
+      const db = await dumpWalletDb(page)
+      const buttons = await page
+        .$$eval('[data-testid^="wallet-"]', (els) => els.map((e) => e.getAttribute('data-testid')))
+        .catch(() => [])
+      console.log(`  [diag] IndexedDB: ${JSON.stringify(db)}`)
+      console.log(`  [diag] testids en la página: ${JSON.stringify(buttons)}`)
       fail('El diálogo no ofreció el desbloqueo por huella')
     } else {
-      ok('El diálogo ofrece "desbloquear con huella"')
-      // R-#246: con la passkey registrada el gesto se pide al abrir el diálogo y
-      // el SIGNO de que funcionó es que el diálogo se cierre (la firma cierra y
-      // recarga). Tolerante con builds anteriores, donde hay que presionar el
-      // botón: se espera primero y solo se presiona si no pasó nada.
-      let unlocked = gestureAlreadyDone
+      if (hasBiometric) ok('El diálogo ofrece "desbloquear con huella"')
+      else ok('El gesto se pidió al abrir el diálogo y la billetera quedó lista')
+      let unlocked = unlockedByAutoGesture
       const dialogGone = async () => !(await exists(page, '[data-testid="wallet-dialog"]'))
-      for (let i = 0; i < 12; i++) {
-        await sleep(1500)
-        if (await dialogGone()) { unlocked = true; break }
+      if (!unlocked) {
+        for (let i = 0; i < 12; i++) {
+          await sleep(1500)
+          if (await dialogGone()) { unlocked = true; break }
+        }
       }
       if (!unlocked) {
         await page.click('[data-testid="wallet-unlock-biometric"]')
@@ -225,6 +320,9 @@ async function main() {
       }
       if (unlocked) ok('El gesto desbloqueó la billetera sin teclear el PIN')
       else fail('El gesto no desbloqueó la billetera')
+
+      // Deja que termine la recarga de la firma antes de navegar.
+      await sleep(3000)
 
       // Con la billetera lista, el modal de donación ya no pide desbloquear
       await page.goto(`${base}/en/gdcluster`, { waitUntil: 'domcontentloaded' }).catch(() => {})

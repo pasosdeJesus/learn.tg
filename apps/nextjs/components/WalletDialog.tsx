@@ -14,6 +14,7 @@ import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
 import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
+import { getRpcUrl } from '@/lib/rpc-url'
 
 interface WalletDialogProps {
   lang?: string
@@ -64,6 +65,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   const t = useMemo(() => createComponentT(lang, {
     en: {
       title: 'In-app wallet',
+      checking: 'Checking your wallet…',
       createTitle: 'Create a wallet',
       createDescription: 'It is created on this device and protected with a PIN. No wallet app is needed.',
       importTitle: 'Import a wallet',
@@ -111,6 +113,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     },
     es: {
       title: 'Billetera de la aplicación',
+      checking: 'Comprobando tu billetera…',
       createTitle: 'Crear una billetera',
       createDescription: 'Se crea en este dispositivo y se protege con un PIN. No necesitas una aplicación de billetera.',
       importTitle: 'Importar una billetera',
@@ -193,7 +196,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setLocalError(null)
     setBusy(true)
     try {
-      const provider = getProvider()
+      const provider = getProvider(getRpcUrl())
       if (!provider) throw new Error(t('notUnlocked'))
       // Si la cookie de sesión ya es de esta billetera, firmar de nuevo solo
       // recarga la página y la clave vuelve a salir de memoria: el usuario
@@ -344,6 +347,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
 
   const showRecovery = recovery !== null
   const showUnlock = !showRecovery && status === 'locked'
+  // Mientras el hook resuelve IndexedDB/sesión el diálogo no sabe si hay billetera:
+  // mostrar el formulario de crear hacía pensar que la billetera se había perdido.
+  const booting = status === 'loading'
   // Con la passkey registrada el gesto es el camino principal: el PIN solo
   // aparece si el usuario lo pide o si el gesto falla (R-#246).
   const gestureOnly = showUnlock && biometricEnabled && !pinFallback
@@ -366,18 +372,31 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
           <DialogTitle>
             {showRecovery
               ? t('recoveryTitle')
-              : showUnlock
-                ? t('lockedTitle')
-                : mode === 'create' ? t('createTitle') : t('importTitle')}
+              : booting
+                ? t('title')
+                : showUnlock
+                  ? t('lockedTitle')
+                  : mode === 'create' ? t('createTitle') : t('importTitle')}
           </DialogTitle>
           <DialogDescription>
             {showRecovery
               ? t('recoveryDescription')
-              : showUnlock
-                ? gestureOnly ? t('lockedDescriptionGesture') : t('lockedDescription')
-                : mode === 'create' ? t('createDescription') : t('importDescription')}
+              : booting
+                ? t('checking')
+                : showUnlock
+                  ? gestureOnly ? t('lockedDescriptionGesture') : t('lockedDescription')
+                  : mode === 'create' ? t('createDescription') : t('importDescription')}
           </DialogDescription>
         </DialogHeader>
+
+        {booting && (
+          // Mientras el hook lee IndexedDB y resuelve la sesión el formulario no
+          // debe mostrarse: el operador abrió el diálogo tras desbloquear y vio el
+          // formulario de "crear billetera" (reportado el 2026-09-19).
+          <div className="py-6 text-center text-sm text-gray-500" data-testid="wallet-loading">
+            {t('checking')}
+          </div>
+        )}
 
         {showRecovery ? (
           <div className="py-4 space-y-3">
@@ -396,7 +415,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               {t('copy')}
             </Button>
           </div>
-        ) : (
+        ) : booting ? null : (
           <div className="py-4 space-y-3">
             {!showUnlock && (
               <div role="group" className="flex gap-2">
@@ -528,7 +547,11 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
         )}
 
         <DialogFooter>
-          {showRecovery ? (
+          {booting ? (
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              {t('close')}
+            </Button>
+          ) : showRecovery ? (
             <Button data-testid="wallet-signin" onClick={() => { void signIn() }} disabled={busy}>
               {busy ? t('signingIn') : t('recoveryConfirm')}
             </Button>

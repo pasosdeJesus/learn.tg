@@ -42,6 +42,36 @@ function utf8ToHex(value: string): `0x${string}` {
   return `0x${hex}`
 }
 
+/**
+ * Anything the wallet does not own (reads: `eth_call`, `eth_getBalance`,
+ * `eth_gasPrice`, `eth_estimateGas`, `eth_blockNumber`, receipt lookups…) is
+ * forwarded to the RPC endpoint. Without this the provider only answered the
+ * signing methods, so a page that used the in-app wallet could not read a balance
+ * or estimate gas ("Unsupported method: eth_call", reported 2026-09-19).
+ */
+async function forwardToRpc(
+  rpcUrl: string | undefined,
+  method: string,
+  params: unknown,
+): Promise<unknown> {
+  if (!rpcUrl) {
+    throw new Error(
+      `The in-app wallet cannot answer "${method}": it was created without an rpcUrl`,
+    )
+  }
+  const response = await fetch(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params: params ?? [] }),
+  })
+  const json = (await response.json()) as {
+    result?: unknown
+    error?: { message?: string; code?: number }
+  }
+  if (json.error) throw new Error(json.error.message ?? `${method} failed`)
+  return json.result
+}
+
 export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Provider | null {
   const account = getUnlockedAccount()
   const info = getUnlockedInfo()
@@ -92,6 +122,8 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
 
         case 'eth_sendTransaction': {
           const [tx] = (params ?? []) as [Record<string, unknown>]
+          // El chequeo va antes del gesto: no tiene sentido pedir la huella si no
+          // hay a dónde transmitir.
           if (!options.rpcUrl) {
             throw new Error('eth_sendTransaction requires the provider to be created with an rpcUrl')
           }
@@ -100,26 +132,15 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
             await requireFundsConfirmation()
           }
           const raw = await signTransaction(tx as never)
-          const response = await fetch(options.rpcUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              id: Date.now(),
-              method: 'eth_sendRawTransaction',
-              params: [raw],
-            }),
-          })
-          const json = (await response.json()) as { result?: string; error?: { message?: string } }
-          if (json.error) throw new Error(json.error.message ?? 'eth_sendRawTransaction failed')
-          return json.result
+          return forwardToRpc(options.rpcUrl, 'eth_sendRawTransaction', [raw])
         }
 
         case 'wallet_getCapabilities':
           return {}
 
         default:
-          throw new Error(`Unsupported method: ${method}`)
+          // Lecturas y métodos que no son de firma van al RPC (ver forwardToRpc).
+          return forwardToRpc(options.rpcUrl, method, params)
       }
     },
 

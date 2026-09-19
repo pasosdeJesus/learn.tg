@@ -70,7 +70,12 @@ export interface UseInAppWalletResult {
   disableBiometric: () => Promise<void>
   lock: () => Promise<void>
   remove: () => Promise<void>
-  getProvider: () => Eip1193Provider | null
+  /**
+   * The EIP-1193 provider of the unlocked wallet. `rpcUrl` is required for
+   * anything that talks to the chain: reads (`eth_call`, `eth_getBalance`…) and
+   * broadcasts are forwarded to it.
+   */
+  getProvider: (rpcUrl?: string) => Eip1193Provider | null
 }
 
 interface InAppWalletState {
@@ -300,7 +305,7 @@ export function useInAppWallet(): UseInAppWalletResult {
     }
   }, [snapshot.status])
 
-  const getProvider = useCallback(() => getInAppWalletProvider(), [])
+  const getProvider = useCallback((rpcUrl?: string) => getInAppWalletProvider({ rpcUrl }), [])
 
   return {
     status: snapshot.status,

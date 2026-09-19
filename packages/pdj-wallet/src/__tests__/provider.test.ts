@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { verifyMessage } from 'viem'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { getInAppWalletProvider } from '../provider'
 import { importWallet, lockWallet } from '../wallet'
 import { MemoryStorage } from '../storage/memory'
@@ -44,10 +45,42 @@ describe('getInAppWalletProvider', () => {
     expect(await verifyMessage({ address: HARDHAT_ADDRESS, message, signature })).toBe(true)
   })
 
-  it('rejects unsupported methods', async () => {
+  // 2026-09-19: el provider sólo respondía a los métodos de firma, así que las
+  // lecturas de la app (eth_call, eth_getBalance…) fallaban con "Unsupported
+  // method" y los modales de donación/pago mostraban saldos en cero.
+  it('forwards read methods to the RPC endpoint', async () => {
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, pin: PIN, storage: new MemoryStorage() })
+    const calls: string[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: { body: string }) => {
+        const body = JSON.parse(init.body)
+        calls.push(body.method)
+        return { json: async () => ({ result: body.method === 'eth_getBalance' ? '0x64' : '0x1' }) }
+      }),
+    )
+    try {
+      const provider = getInAppWalletProvider({ rpcUrl: 'https://rpc.example' })!
+      const balance = await provider.request({
+        method: 'eth_getBalance',
+        params: [HARDHAT_ADDRESS, 'latest'],
+      })
+      expect(balance).toBe('0x64')
+      const call = await provider.request({
+        method: 'eth_call',
+        params: [{ to: HARDHAT_ADDRESS, data: '0x' }, 'latest'],
+      })
+      expect(call).toBe('0x1')
+      expect(calls).toEqual(['eth_getBalance', 'eth_call'])
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('explains that a read needs an rpcUrl when the provider has none', async () => {
     await importWallet({ mnemonic: HARDHAT_MNEMONIC, pin: PIN, storage: new MemoryStorage() })
     const provider = getInAppWalletProvider()!
-    await expect(provider.request({ method: 'eth_unknownMethod' })).rejects.toThrow(/Unsupported method/)
+    await expect(provider.request({ method: 'eth_call', params: [] })).rejects.toThrow(/rpcUrl/)
   })
 
   it('requires an rpcUrl to broadcast transactions', async () => {

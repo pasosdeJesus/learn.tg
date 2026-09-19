@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { type Address } from 'viem'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
@@ -113,6 +113,16 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const { toast } = useToast()
+
+  // R-#246 (2026-09-19): con la huella registrada el gesto se pide al abrir el
+  // modal en vez de un aviso que obliga a pulsar "desbloquear" y después la huella.
+  const autoUnlockTried = useRef(false)
+  useEffect(() => {
+    if (!isOpen || !biometricEnabled || autoUnlockTried.current) return
+    if (inAppStatus !== 'locked' || walletClient) return
+    autoUnlockTried.current = true
+    openInAppWalletDialog()
+  }, [isOpen, biometricEnabled, inAppStatus, walletClient])
 
   const [priceUSDT, setPriceUSDT] = useState<number | null>(null)
   const [priceSLEARN, setPriceSLEARN] = useState<number | null>(null)

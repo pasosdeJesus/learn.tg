@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent, act, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { beforeEach, describe, it, expect, vi } from 'vitest'
 
@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   isInAppUnlocked: false,
   isSessionLoading: false,
   dialogOpen: false,
+  externalAvailable: false,
 }))
 
 vi.mock('@learn-tg/pdj-wallet-next', () => ({
@@ -30,6 +31,13 @@ vi.mock('@/lib/hooks/useAuthAddress', () => ({
     inAppAddress: mocks.inAppAddress,
     isInAppUnlocked: mocks.isInAppUnlocked,
     isSessionLoading: mocks.isSessionLoading,
+  }),
+}))
+
+vi.mock('@/lib/external-provider', () => ({
+  useExternalProvider: () => ({
+    provider: mocks.externalAvailable ? { request: vi.fn() } : null,
+    available: mocks.externalAvailable,
   }),
 }))
 
@@ -57,6 +65,8 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     mocks.inAppAddress = undefined
     mocks.isInAppUnlocked = false
     mocks.dialogOpen = false
+    mocks.externalAvailable = false
+    window.history.pushState({}, '', '/en')
     Object.defineProperty(window, 'ethereum', { value: undefined, configurable: true })
   })
 
@@ -135,17 +145,41 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     expect(screen.getByTestId('wallet-dialog-open')).toBeInTheDocument()
   })
 
-  it('offers the external wallet only when the browser injects one', () => {
+  // R-#246 §3 (2026-09-19): en un navegador que ya trae billetera inyectada
+  // (OKX, Rabby, MetaMask…) la de la aplicación solo se ofrece si el URL la pide
+  // con `?iappwallet=1`; sin billetera inyectada sigue siendo el único camino.
+  it('offers the in-app wallet only without an injected wallet (or with ?iappwallet=1)', () => {
+    mocks.externalAvailable = false
     render(<WalletSelector lang="en" />)
+    expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/use in-app wallet/i)
     expect(screen.queryByTestId('wallet-use-external')).not.toBeInTheDocument()
 
-    Object.defineProperty(window, 'ethereum', { value: { request: vi.fn() }, configurable: true })
+    cleanup()
+    mocks.externalAvailable = true
     render(<WalletSelector lang="en" />)
-    const external = screen.getAllByTestId('wallet-use-external')[0]
+    expect(screen.getByTestId('wallet-selector-external')).toBeInTheDocument()
+    expect(screen.getByTestId('connect-wallet-btn')).toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
+
+    cleanup()
+    window.history.pushState({}, '', '/en?iappwallet=1')
+    render(<WalletSelector lang="en" />)
+    const external = screen.getByTestId('wallet-use-external')
     expect(external).toHaveTextContent(/use external wallet/i)
+    expect(screen.getByTestId('wallet-open-dialog')).toBeInTheDocument()
 
     fireEvent.click(external)
     expect(screen.getByTestId('connect-wallet-btn')).toBeInTheDocument()
+  })
+
+  // Si este dispositivo ya tiene billetera de la aplicación, su interfaz se
+  // conserva aunque haya billetera inyectada: no se puede dejar inaccesible.
+  it('keeps the in-app interface when this device already has one', () => {
+    mocks.externalAvailable = true
+    mocks.status = 'locked'
+    render(<WalletSelector lang="en" />)
+
+    expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/unlock your in-app wallet/i)
   })
 
   it('is bilingual', () => {

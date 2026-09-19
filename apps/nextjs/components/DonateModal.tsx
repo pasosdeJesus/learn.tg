@@ -423,6 +423,17 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const usdtBalFmt = formatDisplay(usdtBalance, usdtDecimals)
   const slearnBalFmt = formatDisplay(slearnBalance, SLEARN_DECIMALS)
   const celoBalFmt = formatDisplay(celoBalance, 18)
+
+  // R-#246 (2026-09-19): con la huella registrada, el modal pide el gesto de una
+  // vez en lugar de mostrar un aviso que obliga a pulsar "desbloquear" y después
+  // la huella. Si el gesto se cancela, el diálogo ofrece el PIN y el aviso queda.
+  const autoUnlockTried = useRef(false)
+  useEffect(() => {
+    if (!isOpen || !biometricEnabled || autoUnlockTried.current) return
+    if (inAppStatus !== 'locked' || walletClient) return
+    autoUnlockTried.current = true
+    openInAppWalletDialog()
+  }, [isOpen, biometricEnabled, inAppStatus, walletClient])
   // Sin CELO (menos de 0.01): el modal muestra la guía de inmediato
   const noCelo = celoBalance < 10_000_000_000_000_000n && !isNativePay
   const hasAnyAmount = usdtNum > 0 || slearnNum > 0

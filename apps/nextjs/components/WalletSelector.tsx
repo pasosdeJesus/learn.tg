@@ -82,6 +82,21 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
     await signOut({ redirect: true, callbackUrl: `/${lang}` })
   }, [lang, lock])
 
+  // R-#246 §3 (2026-09-19): en un navegador que ya trae billetera inyectada (OKX,
+  // Rabby, MetaMask, OneKey…) mandan las reglas de esa billetera y la de la
+  // aplicación solo se ofrece si el URL la pide (`?iappwallet=1`). En un navegador
+  // sin billetera sigue siendo el único camino, y si este dispositivo ya tiene una
+  // billetera de la aplicación se conserva su interfaz para no dejarla inaccesible.
+  // El estado va aquí arriba (antes de los `return` de abajo) para que el número de
+  // hooks no cambie entre renders.
+  const [inAppRequested, setInAppRequested] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setInAppRequested(new URLSearchParams(window.location.search).get('iappwallet') === '1')
+  }, [])
+  const hasInAppWallet = status === 'locked' || status === 'unlocked'
+  const offerInApp = !externalAvailable || inAppRequested || hasInAppWallet
+
   if (external) {
     return <ConnectWalletButton lang={lang} />
   }
@@ -136,20 +151,29 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       : status === 'locked' ? t('unlockInApp') : t('useInApp')
 
   return (
-    <div data-testid="wallet-selector" className="flex items-center gap-2">
-      <Button size="sm" data-testid="wallet-open-dialog" disabled={booting} onClick={() => setDialogOpen(true)}>
-        {label}
-      </Button>
-      {externalAvailable && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs text-gray-600 hover:bg-gray-100"
-          data-testid="wallet-use-external"
-          onClick={() => setExternal(true)}
-        >
-          {t('useExternal')}
-        </Button>
+    <div
+      data-testid={offerInApp ? 'wallet-selector' : 'wallet-selector-external'}
+      className="flex items-center gap-2"
+    >
+      {offerInApp ? (
+        <>
+          <Button size="sm" data-testid="wallet-open-dialog" disabled={booting} onClick={() => setDialogOpen(true)}>
+            {label}
+          </Button>
+          {externalAvailable && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-gray-600 hover:bg-gray-100"
+              data-testid="wallet-use-external"
+              onClick={() => setExternal(true)}
+            >
+              {t('useExternal')}
+            </Button>
+          )}
+        </>
+      ) : (
+        <ConnectWalletButton lang={lang} />
       )}
       <WalletDialog lang={lang} open={dialogOpen} onOpenChange={setDialogOpen} sessionAddress={sessionAddress} />
     </div>

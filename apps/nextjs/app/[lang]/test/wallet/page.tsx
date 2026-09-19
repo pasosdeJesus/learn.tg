@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
+import { getRpcUrl } from '@/lib/rpc-url'
 
 export default function WalletTestPage() {
   const params = useParams<{ lang?: string }>()
@@ -103,7 +104,7 @@ export default function WalletTestPage() {
   })
 
   const onSignIn = () => guarded(async () => {
-    const provider = getProvider()
+    const provider = getProvider(getRpcUrl())
     if (!provider) throw new Error('wallet is not unlocked')
     const address = await signInWithInAppWallet(provider)
     append(`OK signed in as ${address}`)
