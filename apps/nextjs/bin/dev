@@ -22,7 +22,16 @@ pnpm install
 # (rewards antes que gdcluster) y la lista de paquetes viven en un solo lugar. Una
 # edición en packages/* se ve al REINICIAR bin/dev: un `next dev` en marcha sigue
 # sirviendo el dist anterior (2026-09-19, costó un diagnóstico).
-make engines-dist || echo "[bin/dev] AVISO: falló la compilación de motores (¿pnpm install pendiente en packages/*?)"
+#
+# Si la compilación falla se ABORTA: arrancar con un dist/ viejo mezcla app nueva
+# con motores viejos y produce fallos en tiempo de ejecución (2026-09-20: la
+# creación de billeteras fallaba con "The password must have at least 8 characters"
+# porque pdj-wallet-next viejo pasaba `pin` al core renombrado a `password`).
+if ! make engines-dist; then
+  echo "[bin/dev] ERROR: falló la compilación de motores (¿pnpm install pendiente en packages/*?)." >&2
+  echo "[bin/dev] Se aborta para no servir un dist/ viejo con la app nueva." >&2
+  exit 1
+fi
 
 # Artefactos del PWA (public/sw.js, workbox-*, fallback-*, worker-*): limpiar los
 # que haya dejado una compilación anterior. Con el PWA encendido next-pwa los

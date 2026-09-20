@@ -47,7 +47,7 @@ The frontend is built with [Next.js](https://nextjs.org/) and uses [Sign-In with
 - **Wallet Integration**: Custom `window.ethereum` direct (no wagmi, no RainbowKit) — see [wallet-auth docs](../../doc/wallet-auth.md)
 - **State Management**: [React Query](https://tanstack.com/query) for server state and React Context for global UI state
 - **Testing**: [Vitest](https://vitest.dev/) for unit and integration testing, with [React Testing Library](https://testing-library.com/)
-- **Quick dev**: `bin/dev` starts the frontend on port 4000 without any backend setup. On start it reinstalls, compiles the Web3 engines (`packages/*` → `dist/`, see `make engines-dist`) and cleans the PWA artefacts; **restart it after editing anything under `packages/`**, because a running `next dev` keeps serving the previous `dist/`
+- **Quick dev**: `bin/dev` starts the frontend on port 4000 without any backend setup. On start it reinstalls, compiles the Web3 engines (`packages/*` → `dist/`, see `make engines-dist`) and cleans the PWA artefacts; if the engine build fails it **aborts** (it never serves a stale `dist/` with the new app), and **restart it after editing anything under `packages/`**, because a running `next dev` keeps serving the previous `dist/`
 - **Linting & Formatting**: [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/)
 
 ## In-Depth Architecture
