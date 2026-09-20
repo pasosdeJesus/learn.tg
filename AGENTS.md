@@ -111,6 +111,15 @@ available for the human's questions and interaction.
 6. **Report periodically in the chat** (a short status line is enough) so the
    human always knows what is still running and what has finished.
 
+### 10. Searching the Codebase — Prefer Project-Aware Tools
+
+Use **`git grep`** or the agent's own **Grep/Glob/Agent tools** (the agentic
+searchers) instead of the system-installed BSD `grep`. Those tools respect the
+project filters (`.gitignore`, tracked-file scope) and skip `node_modules/`,
+`dist/`, `.next/` and other non-project paths, so results stay relevant and
+fast. Reserve the raw system `grep` for cases where you deliberately need to
+look inside ignored directories.
+
 ---
 
 > "Con seguridad les digo, donde quiera que esta Buena Nueva se predique por

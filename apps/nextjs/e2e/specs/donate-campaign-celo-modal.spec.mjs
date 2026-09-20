@@ -251,14 +251,21 @@ async function main() {
   }
   const amountRaw = BigInt(Math.round(Number(amountStr) * 1e18))
 
-  // Wait until Donate is enabled (price/gas ready)
+  // Wait until Donate is enabled (price/gas ready). Bajo carga la estimación de gas
+  // puede tardar bastante: dar hasta 40 s en vez de 20 s.
   let ready = false
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 40; i++) {
     await new Promise(r => setTimeout(r, 1000))
-    ready = await page.evaluate(() => {
-      const b = [...document.querySelectorAll('button')].find(x => x.textContent?.trim() === 'Donate')
-      return !!b && !b.disabled
-    })
+    try {
+      ready = await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find(x => x.textContent?.trim() === 'Donate')
+        return !!b && !b.disabled
+      })
+    } catch {
+      // La página navegó mientras se evaluaba ("Execution context was destroyed"):
+      // el dev site recarga/compila en frío; reintentar en la siguiente vuelta.
+      continue
+    }
     if (ready) break
   }
   if (!ready) { fail('Donate button stayed disabled'); process.exit(1) }
@@ -290,7 +297,12 @@ async function main() {
   let errSnap = ''
   for (let i = 0; i < 60; i++) {
     await new Promise(r => setTimeout(r, 1500))
-    txt = await page.evaluate(() => document.body?.textContent || '')
+    try {
+      txt = await page.evaluate(() => document.body?.textContent || '')
+    } catch {
+      // La página navegó mientras se evaluaba (contexto destruido): reintentar.
+      continue
+    }
     if (/Donation completed/i.test(txt)) { success = true; break }
     if (/Error|exceeds|Unauthorized|Internal server|failed|Something went wrong/i.test(txt)) errSnap = txt
     if (!/Donation options|Donatable \(max|Sending CELO|Enviando CELO/.test(txt)) { modalGoneAt = txt; break }
@@ -311,7 +323,7 @@ async function main() {
   else fail('Distribution text missing campaign/CELO')
   const hasTxLink = await page.evaluate(() =>
     !!document.querySelector('a[href*="blockscout.com/tx/"]') &&
-    /View transaction|Ver transacción/i.test(document.body?.textContent || ''))
+    /View transaction|Ver transacción/i.test(document.body?.textContent || '')).catch(() => false)
   if (hasTxLink) ok('Success dialog shows transaction link')
   else fail('Missing transaction link in the success dialog')
 

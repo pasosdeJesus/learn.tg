@@ -57,6 +57,43 @@ function renderDialog(lang = 'en', sessionAddress?: string) {
   return render(<WalletDialog lang={lang} open onOpenChange={vi.fn()} sessionAddress={sessionAddress} />)
 }
 
+/**
+ * Lee la frase de la pantalla, confirma que se anotó y responde las tres palabras
+ * que pide la verificación (R-#249). Devuelve las posiciones usadas.
+ */
+function wordByPosition(): Map<number, string> {
+  const map = new Map<number, string>()
+  const list = screen.getByTestId('wallet-recovery-words')
+  list.querySelectorAll('li').forEach((li) => {
+    const spans = li.querySelectorAll('span')
+    map.set(Number((spans[0]?.textContent || '').replace(/[^0-9]/g, '')), (spans[1]?.textContent || '').trim())
+  })
+  return map
+}
+
+async function completeBackup({ wrongInsteadOfCorrect = false } = {}) {
+  const words = wordByPosition()
+  await act(async () => {
+    fireEvent.click(screen.getByTestId('wallet-words-done'))
+  })
+  // Sólo las posiciones que el diálogo pide (tres), no las doce de la lista.
+  const asked = [...document.querySelectorAll('[data-testid^="wallet-verify-"]')]
+    .map((el) => Number((el.getAttribute('data-testid') || '').replace('wallet-verify-', '')))
+    .filter((position) => Number.isFinite(position))
+    .sort((a, b) => a - b)
+
+  asked.forEach((position, index) => {
+    const input = screen.queryByTestId(`wallet-verify-${position}`)
+    if (!input) return
+    const value = wrongInsteadOfCorrect && index === 0 ? 'nottheword' : words.get(position) || ''
+    fireEvent.change(input, { target: { value } })
+  })
+  await act(async () => {
+    fireEvent.click(screen.getByTestId('wallet-verify'))
+  })
+  return asked
+}
+
 async function fillPin(pin = '123456') {
   fireEvent.change(screen.getByTestId('wallet-pin'), { target: { value: pin } })
   if (screen.queryByTestId('wallet-pin-confirm')) {
@@ -67,6 +104,7 @@ async function fillPin(pin = '123456') {
 describe('WalletDialog (R-#244)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
     mocks.status = 'no-wallet'
     mocks.walletInfo = null
     mocks.error = null
@@ -89,9 +127,10 @@ describe('WalletDialog (R-#244)', () => {
     expect(mocks.create).toHaveBeenCalledWith('123456')
     const words = screen.getByTestId('wallet-recovery-words')
     expect(words.querySelectorAll('li')).toHaveLength(12)
-    // Todavía no firma: primero se respaldan las palabras
+    // Todavía no firma: primero se respaldan las palabras y se verifica (R-#249)
     expect(mocks.signInWithInAppWallet).not.toHaveBeenCalled()
-    expect(screen.getByTestId('wallet-signin')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-words-done')).toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-verify')).not.toBeInTheDocument()
   })
 
   it('does not create the wallet when the PINs differ', async () => {
@@ -115,7 +154,7 @@ describe('WalletDialog (R-#244)', () => {
     expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/6 digits/i)
   })
 
-  it('signs in (SIWE) after the user confirms the recovery phrase', async () => {
+  it('asks for three words and signs in only when they match', async () => {
     mocks.create.mockResolvedValue({
       walletInfo: { address: ADDRESS },
       mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
@@ -128,12 +167,41 @@ describe('WalletDialog (R-#244)', () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-create'))
     })
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-signin'))
-    })
 
+    const positions = await completeBackup()
+    expect(positions).toHaveLength(3)
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
     expect(mocks.reload).toHaveBeenCalled()
+    expect(localStorage.getItem('learn.tg.wallet.backupConfirmed')).toBe('1')
+  })
+
+  // El respaldo no se da por hecho: con una palabra equivocada no se firma y se
+  // puede volver a ver la frase.
+  it('does not sign in when a backup word is wrong', async () => {
+    mocks.create.mockResolvedValue({
+      walletInfo: { address: ADDRESS },
+      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
+    })
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    await fillPin()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-create'))
+    })
+
+    await completeBackup({ wrongInsteadOfCorrect: true })
+
+    expect(mocks.signInWithInAppWallet).not.toHaveBeenCalled()
+    expect(screen.getByTestId('wallet-verify-error')).toHaveTextContent(/do not match/i)
+    expect(localStorage.getItem('learn.tg.wallet.backupConfirmed')).not.toBe('1')
+
+    // Y puede volver a ver la frase si no la recuerda.
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-words-peek'))
+    })
+    expect(screen.getByTestId('wallet-recovery-words')).toBeInTheDocument()
   })
 
   it('unlocks an existing wallet and then signs in', async () => {

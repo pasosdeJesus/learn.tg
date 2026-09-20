@@ -15,6 +15,7 @@ import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
+import { markBackupConfirmed, pickVerifyPositions, verifyWords } from '@/lib/wallet-backup'
 
 interface WalletDialogProps {
   lang?: string
@@ -56,6 +57,12 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   const [confirm, setConfirm] = useState('')
   const [mnemonic, setMnemonic] = useState('')
   const [recovery, setRecovery] = useState<string | null>(null)
+  // R-#249: verificación de 3 palabras del respaldo (antes sólo se pulsaba
+  // "ya las guardé", que no probaba nada).
+  const [verifyPositions, setVerifyPositions] = useState<number[]>([])
+  const [verifyInputs, setVerifyInputs] = useState<Record<number, string>>({})
+  const [verifyError, setVerifyError] = useState(false)
+  const [showWords, setShowWords] = useState(true)
   const [localError, setLocalError] = useState<string | null>(null)
   const [biometricPin, setBiometricPin] = useState('')
   const [pinFallback, setPinFallback] = useState(false)
@@ -101,6 +108,13 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       copy: 'Copy',
       copied: 'Copied',
       recoveryConfirm: 'I saved them, sign in',
+      wordsDone: 'I have them written down',
+      verifyTitle: 'Confirm your backup',
+      verifyHint: 'Type these three words of your phrase to confirm you saved it:',
+      verifyWord: 'Word #{{0}}',
+      verifyWrong: 'Those words do not match the phrase. Check them and try again.',
+      verifySubmit: 'Confirm and sign in',
+      peekWords: 'Show the words again',
       pinTooShort: 'The PIN needs at least 6 digits.',
       pinMismatch: 'The two PINs do not match.',
       notUnlocked: 'The wallet is not unlocked.',
@@ -149,6 +163,13 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       copy: 'Copiar',
       copied: 'Copiado',
       recoveryConfirm: 'Ya las guardé, ingresar',
+      wordsDone: 'Ya las anoté',
+      verifyTitle: 'Confirma tu respaldo',
+      verifyHint: 'Escribe estas tres palabras de tu frase para confirmar que la guardaste:',
+      verifyWord: 'Palabra #{{0}}',
+      verifyWrong: 'Esas palabras no coinciden con la frase. Revísalas e intenta de nuevo.',
+      verifySubmit: 'Confirmar e ingresar',
+      peekWords: 'Ver las palabras otra vez',
       pinTooShort: 'El PIN necesita al menos 6 dígitos.',
       pinMismatch: 'Los dos PIN no coinciden.',
       notUnlocked: 'La billetera no está desbloqueada.',
@@ -171,6 +192,10 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setConfirm('')
     setMnemonic('')
     setRecovery(null)
+    setVerifyPositions([])
+    setVerifyInputs({})
+    setVerifyError(false)
+    setShowWords(true)
     setLocalError(null)
     setPinFallback(false)
     autoGestureTried.current = false
@@ -228,6 +253,10 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     try {
       const result = await create(pin)
       setRecovery(result.mnemonic)
+      setVerifyPositions(pickVerifyPositions(result.mnemonic.trim().split(' ').length))
+      setVerifyInputs({})
+      setVerifyError(false)
+      setShowWords(true)
       setPin('')
       setConfirm('')
     } catch (e) {
@@ -322,6 +351,22 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     }
   }, [biometricPin, enableBiometric, t, translateError])
 
+  // R-#249: las 3 palabras deben coincidir con la frase; sólo entonces se marca el
+  // respaldo como confirmado y se firma. `signIn` ya cierra el diálogo.
+  const handleVerifyBackup = useCallback(() => {
+    if (!recovery) return
+    setLocalError(null)
+    const result = verifyWords(recovery.trim().split(' '), verifyInputs)
+    if (!result.ok) {
+      setVerifyError(true)
+      setShowWords(false)
+      return
+    }
+    setVerifyError(false)
+    markBackupConfirmed()
+    void signIn()
+  }, [recovery, signIn, verifyInputs])
+
   const handleDelete = useCallback(async () => {
     setLocalError(null)
     setBusy(true)
@@ -403,20 +448,59 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
 
         {showRecovery ? (
           <div className="py-4 space-y-3">
-            <ol
-              data-testid="wallet-recovery-words"
-              className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm bg-gray-50 border rounded p-3"
-            >
-              {recovery.split(' ').map((word, index) => (
-                <li key={`${index}-${word}`} className="flex gap-2">
-                  <span className="text-gray-500">{index + 1}.</span>
-                  <span className="font-mono">{word}</span>
-                </li>
-              ))}
-            </ol>
-            <Button variant="outline" onClick={() => { void handleCopy() }} data-testid="wallet-copy-recovery">
-              {t('copy')}
-            </Button>
+            {showWords ? (
+              <>
+                <ol
+                  data-testid="wallet-recovery-words"
+                  className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm bg-gray-50 border rounded p-3"
+                >
+                  {recovery.split(' ').map((word, index) => (
+                    <li key={`${index}-${word}`} className="flex gap-2">
+                      <span className="text-gray-500">{index + 1}.</span>
+                      <span className="font-mono">{word}</span>
+                    </li>
+                  ))}
+                </ol>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => { void handleCopy() }} data-testid="wallet-copy-recovery">
+                    {t('copy')}
+                  </Button>
+                  <Button data-testid="wallet-words-done" onClick={() => setShowWords(false)}>
+                    {t('wordsDone')}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium">{t('verifyTitle')}</p>
+                <p className="text-sm text-gray-600">{t('verifyHint')}</p>
+                {verifyPositions.map((position) => (
+                  <label key={position} className="block space-y-1">
+                    <span className="text-sm text-gray-500">{t('verifyWord', String(position))}</span>
+                    <Input
+                      data-testid={`wallet-verify-${position}`}
+                      autoComplete="off"
+                      value={verifyInputs[position] || ''}
+                      onChange={(event) =>
+                        setVerifyInputs((current) => ({ ...current, [position]: event.target.value }))
+                      }
+                    />
+                  </label>
+                ))}
+                {verifyError && (
+                  <p role="alert" className="text-sm text-red-700" data-testid="wallet-verify-error">
+                    {t('verifyWrong')}
+                  </p>
+                )}
+                <Button
+                  variant="outline"
+                  data-testid="wallet-words-peek"
+                  onClick={() => setShowWords(true)}
+                >
+                  {t('peekWords')}
+                </Button>
+              </>
+            )}
           </div>
         ) : booting ? null : (
           <div className="py-4 space-y-3">
@@ -561,9 +645,15 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               {t('close')}
             </Button>
           ) : showRecovery ? (
-            <Button data-testid="wallet-signin" onClick={() => { void signIn() }} disabled={busy}>
-              {busy ? t('signingIn') : t('recoveryConfirm')}
-            </Button>
+            showWords ? (
+              <Button data-testid="wallet-words-done-footer" onClick={() => setShowWords(false)} disabled={busy}>
+                {t('wordsDone')}
+              </Button>
+            ) : (
+              <Button data-testid="wallet-verify" onClick={handleVerifyBackup} disabled={busy}>
+                {busy ? t('signingIn') : t('verifySubmit')}
+              </Button>
+            )
           ) : showUnlock ? (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>

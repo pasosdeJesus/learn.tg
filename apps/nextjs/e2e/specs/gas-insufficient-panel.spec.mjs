@@ -61,36 +61,32 @@ async function navAndWait(page, url, timeout) {
   return false
 }
 
-// Parchea eth_getBalance del proveedor inyectado (mismo objeto window.ethereum,
-// así la referencia del transport de viem sigue apuntando al provider parcheado).
+// Simula un saldo CELO bajo con el override que lee el mock inyectado
+// (`e2e-auth.mjs`). No se reasigna `window.ethereum.request`: viem enlaza la
+// referencia al construir el cliente (`custom(provider)`), así que parchear
+// después no surte efecto (causa del fallo de esta spec). El mock lee el global
+// en cada invocación.
 // DEBE ejecutarse antes de abrir el modal (loadData corre al abrir).
 async function patchCeloBalance(page, hexBalance) {
   await page.evaluate((bal) => {
-    const orig = window.ethereum.request.bind(window.ethereum)
-    window.ethereum.request = async ({ method, params }) =>
-      method === 'eth_getBalance' ? bal : orig({ method, params })
+    window.__e2eGetBalanceOverride = bal
+    window.__e2eGetBalanceDelayMs = 0
   }, hexBalance)
   console.log(`  [mock] eth_getBalance → ${hexBalance}`)
 }
 
-// Parchea el proveedor para la regresión de la carrera de gas: saldo CELO
-// suficiente con LATENCIA RPC simulada (balanceDelayMs) + eth_estimateGas y
-// eth_gasPrice fijos. Sin parchear, el mock devuelve null y viem lanza
+// Simula la regresión de la carrera de gas con los overrides del mock: saldo
+// CELO suficiente con LATENCIA RPC simulada (balanceDelayMs) + eth_estimateGas y
+// eth_gasPrice fijos. Sin ellos, el mock devuelve null y viem lanza
 // "Cannot convert null to a BigInt" en getBalance/getGasPrice.
 async function patchGasProvider(page, {
   balance, balanceDelayMs = 0, estimateGas, gasPrice,
 }) {
   await page.evaluate((cfg) => {
-    const orig = window.ethereum.request.bind(window.ethereum)
-    window.ethereum.request = async ({ method, params }) => {
-      if (method === 'eth_getBalance') {
-        if (cfg.balanceDelayMs) await new Promise((r) => setTimeout(r, cfg.balanceDelayMs))
-        return cfg.balance
-      }
-      if (method === 'eth_estimateGas' && cfg.estimateGas) return cfg.estimateGas
-      if (method === 'eth_gasPrice' && cfg.gasPrice) return cfg.gasPrice
-      return orig({ method, params })
-    }
+    window.__e2eGetBalanceOverride = cfg.balance
+    window.__e2eGetBalanceDelayMs = cfg.balanceDelayMs
+    if (cfg.estimateGas) window.__e2eEstimateGasOverride = cfg.estimateGas
+    if (cfg.gasPrice) window.__e2eGasPriceOverride = cfg.gasPrice
   }, { balance, balanceDelayMs, estimateGas, gasPrice })
   console.log(`  [mock] eth_getBalance → ${balance} (delay ${balanceDelayMs}ms), eth_estimateGas → ${estimateGas}, eth_gasPrice → ${gasPrice}`)
 }

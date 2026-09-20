@@ -34,11 +34,21 @@ function loadEnvCredentials() {
 }
 
 async function navAndWait(page, url, timeout) {
-  await page.goto(url, { waitUntil: 'domcontentloaded' , timeout: 120000 })
+  // `net::ERR_ABORTED` es transitorio en el dev site (compilación en frío o una
+  // navegación en vuelo): reintentar en vez de abortar la spec entera.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
+      break
+    } catch (e) {
+      if (attempt === 2) throw e
+      await new Promise(r => setTimeout(r, 3000))
+    }
+  }
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 2000))
     const bodyLen = await page.evaluate(() =>
-      document.body?.textContent?.replace(/\s+/g, '').length || 0)
+      document.body?.textContent?.replace(/\s+/g, '').length || 0).catch(() => 0)
     if (bodyLen > 100) return true
   }
   return false

@@ -22,6 +22,7 @@ import {
   initTestEnv, launchBrowser, newIncognitoContext,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
+import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
@@ -86,6 +87,8 @@ async function openDialog(page) {
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
     await sleep(700)
     if (await exists(page, '[data-testid="wallet-dialog"]')) return true
+    // R-#249: con la billetera desbloqueada la píldora abre el PANEL, no el diálogo.
+    if (await exists(page, '[data-testid="wallet-panel"]')) return true
   }
   return false
 }
@@ -140,7 +143,7 @@ async function createInAppWallet(page, base) {
   await page.type('[data-testid="wallet-pin-confirm"]', PIN)
   await page.click('[data-testid="wallet-create"]')
   await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 90000 })
-  await page.click('[data-testid="wallet-signin"]').catch(() => {})
+  await completeBackupVerification(page)
   for (let i = 0; i < 30; i++) {
     await sleep(1500)
     if (await headerSignedIn(page)) return true
@@ -452,8 +455,9 @@ async function main() {
       // Saldos reales del panel (se fondeó 1 USDT a esta billetera).
       let usdtShown = null
       for (let i = 0; i < 15; i++) {
-        const text = await text(page, '[data-testid="wallet-panel-balance-USDT"]')
-        if (text) { usdtShown = Number(text.replace(',', '.')) ; break }
+        // Ojo: `text` es la función lectora del spec; no reutilizar su nombre aquí.
+        const balanceText = await text(page, '[data-testid="wallet-panel-balance-USDT"]')
+        if (balanceText) { usdtShown = Number(balanceText.replace(',', '.')) ; break }
         await sleep(1000)
       }
       if (usdtShown !== null && usdtShown > 0) ok(`El panel muestra el saldo USDT real: ${usdtShown}`)

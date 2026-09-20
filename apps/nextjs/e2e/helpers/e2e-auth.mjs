@@ -34,10 +34,19 @@ async function injectMock(page, address, privateKey, chainId) {
         if (method === 'wallet_switchEthereumChain') return null
         if (method === 'wallet_addEthereumChain') return null
         if (method === 'eth_sendTransaction') return '0x' + 'cd'.repeat(32)
-        if (method === 'eth_getBalance') return '0x0DE0B6B3A7640000'
+        // Overrides de los specs (gas-insufficient-panel). Se leen al invocar, no al
+        // inyectar: viem enlaza `provider.request` al construir el cliente
+        // (`custom(provider)` hace `provider.request.bind(provider)`), así que
+        // reasignar `window.ethereum.request` después NO surte efecto.
+        if (method === 'eth_getBalance') {
+          if (window.__e2eGetBalanceDelayMs) {
+            await new Promise((r) => setTimeout(r, window.__e2eGetBalanceDelayMs))
+          }
+          return window.__e2eGetBalanceOverride || '0x0DE0B6B3A7640000'
+        }
         if (method === 'eth_blockNumber') return '0x1312D00'
-        if (method === 'eth_gasPrice') return '0x12A05F200'
-        if (method === 'eth_estimateGas') return '0x7A120'
+        if (method === 'eth_gasPrice') return window.__e2eGasPriceOverride || '0x12A05F200'
+        if (method === 'eth_estimateGas') return window.__e2eEstimateGasOverride || '0x7A120'
         if (method === 'eth_call') {
           const data = params[0]?.data || ''
           return data.startsWith('0x70a08231')

@@ -32,14 +32,24 @@ async function main() {
   }
 
   async function checkState(page, label) {
-    const state = await page.evaluate(() => {
-      const body = document.body.textContent || ''
-      const hasConnect = body.includes('Connect Wallet') || body.includes('Conectar Wallet') || body.includes('Conecta tu billetera')
-      const hasPartial = body.includes('Partial login')
-      const hasAddr = /0x[a-fA-F0-9]{6,}/.test(body)
-      return { hasConnect, hasPartial, hasAddr, snippet: body.substring(0, 120).replace(/\s+/g, ' ') }
-    })
-    const cookies = await page.cookies()
+    let state = { hasConnect: false, hasPartial: false, hasAddr: false, snippet: '' }
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        state = await page.evaluate(() => {
+          const body = document.body.textContent || ''
+          const hasConnect = body.includes('Connect Wallet') || body.includes('Conectar Wallet') || body.includes('Conecta tu billetera')
+          const hasPartial = body.includes('Partial login')
+          const hasAddr = /0x[a-fA-F0-9]{6,}/.test(body)
+          return { hasConnect, hasPartial, hasAddr, snippet: body.substring(0, 120).replace(/\s+/g, ' ') }
+        })
+        break
+      } catch {
+        // La página navegó durante la evaluación ("Execution context was destroyed"):
+        // el dev site recarga/compila; reintentar en vez de abortar la spec.
+        await new Promise(r => setTimeout(r, 1500))
+      }
+    }
+    const cookies = await page.cookies().catch(() => [])
     const sessionCookie = cookies.find(c => c.name.includes('next-auth.session-token'))
     console.log(`  [${label}] Connect btn: ${state.hasConnect} | Partial: ${state.hasPartial} | Addr visible: ${state.hasAddr} | Session cookie: ${!!sessionCookie}`)
     if (state.hasAddr) {
@@ -48,7 +58,7 @@ async function main() {
         if (!m) return null
         const all = document.body.textContent?.match(/(0x[a-fA-F0-9]{40,42})/)
         return all ? all[1].slice(0, 10) + '...' + all[1].slice(-4) : m[0]
-      })
+      }).catch(() => null)
       if (addr) console.log(`    Address visible: ${addr}`)
     }
     return state

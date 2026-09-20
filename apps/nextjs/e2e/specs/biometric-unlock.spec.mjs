@@ -25,6 +25,7 @@ import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
+import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
 const PIN = '123456'
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -118,6 +119,8 @@ async function openDialog(page) {
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
     await sleep(700)
     if (await exists(page, '[data-testid="wallet-dialog"]')) return true
+    // R-#249: con la billetera desbloqueada la píldora abre el PANEL, no el diálogo.
+    if (await exists(page, '[data-testid="wallet-panel"]')) return true
   }
   return false
 }
@@ -193,7 +196,7 @@ async function main() {
         await page.click('[data-testid="wallet-create"]')
         await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 60000 })
         ok('Billetera in-app creada')
-        await page.click('[data-testid="wallet-signin"]').catch(() => {})
+        await completeBackupVerification(page)
       } else {
         await closeDialog(page)
       }

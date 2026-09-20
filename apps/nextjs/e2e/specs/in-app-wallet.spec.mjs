@@ -18,6 +18,7 @@ import {
   initTestEnv, launchBrowser, newPage,
   resetFailures, fail, ok, summary, short,
 } from '@pasosdejesus/m/e2e'
+import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
 const PIN = '123456'
 
@@ -98,7 +99,7 @@ async function main() {
   ok('Unlocked with the PIN')
 
   // 3. SIWE with the in-app wallet
-  await page.click('[data-testid="wallet-signin"]')
+  await completeBackupVerification(page)
   await page.waitForFunction(
     () => document.querySelector('[data-testid="wallet-log"]')?.textContent?.includes('OK signed in'),
     { timeout },

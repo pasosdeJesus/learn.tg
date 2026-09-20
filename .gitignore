@@ -148,4 +148,4 @@ resources/en/
 servidor/.bundle
 resources/es/redgd/
 apps/.env.bak.full-local
-node.core
+*.core

@@ -264,3 +264,34 @@ export async function useExternalWalletInHeader(page, { timeout = 30000, interva
   }
   return false
 }
+
+/**
+ * Completa la confirmación del respaldo (R-#249): lee las 12 palabras de la
+ * pantalla, pulsa "ya las anoté" y responde las tres posiciones que pide.
+ *
+ * Es tolerante con builds anteriores, donde sólo existía "ya las guardé, ingresar"
+ * (`wallet-signin`): cada paso se intenta y se ignora si no está.
+ */
+export async function completeBackupVerification(page) {
+  const words = await page
+    .$eval('[data-testid="wallet-recovery-words"]', (ol) =>
+      [...ol.querySelectorAll('li')].map((li) => {
+        const spans = li.querySelectorAll('span')
+        return {
+          position: Number((spans[0]?.textContent || '').replace(/[^0-9]/g, '')),
+          word: (spans[1]?.textContent || '').trim(),
+        }
+      }),
+    )
+    .catch(() => [])
+
+  await page.click('[data-testid="wallet-words-done"]').catch(() => {})
+  await page.click('[data-testid="wallet-words-done-footer"]').catch(() => {})
+  for (const { position, word } of words) {
+    const selector = `[data-testid="wallet-verify-${position}"]`
+    if (word && (await page.$(selector))) await page.type(selector, word)
+  }
+  await page.click('[data-testid="wallet-verify"]').catch(() => {})
+  await page.click('[data-testid="wallet-signin"]').catch(() => {})
+  return words.length
+}

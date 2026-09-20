@@ -116,7 +116,17 @@ async function siweInPage(page, address, privateKey, chainId, baseUrl) {
 }
 
 async function navAndWait(page, url) {
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
+  // El primer goto puede expirar si la ruta compila en frío en el dev site:
+  // reintentar en vez de abortar la spec entera.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
+      break
+    } catch (e) {
+      if (attempt === 2) throw e
+      await new Promise(r => setTimeout(r, 3000))
+    }
+  }
   await new Promise(r => setTimeout(r, 3000))
 }
 
@@ -164,20 +174,26 @@ async function main() {
   await new Promise(r => setTimeout(r, 4000))
   let courseLink = null
   for (let i = 0; i < 4 && !courseLink; i++) {
-    courseLink = await page.evaluate(() => {
-      const a = [...document.querySelectorAll('a[href]')].find((x) => {
-        const h = x.getAttribute('href') || ''
-        return h.startsWith('/en/') && !h.includes('privacy') && !h.includes('terms') && !h.includes('profile') && !h.includes('donations') && !h.includes('gdcluster') && !h.includes('ranking')
+    try {
+      courseLink = await page.evaluate(() => {
+        const a = [...document.querySelectorAll('a[href]')].find((x) => {
+          const h = x.getAttribute('href') || ''
+          return h.startsWith('/en/') && !h.includes('privacy') && !h.includes('terms') && !h.includes('profile') && !h.includes('donations') && !h.includes('gdcluster') && !h.includes('ranking')
+        })
+        return a ? a.getAttribute('href') : null
       })
-      return a ? a.getAttribute('href') : null
-    })
+    } catch {
+      // La página navegó durante la evaluación ("Execution context was destroyed"):
+      // el dev site recarga/compila; reintentar en la siguiente vuelta.
+      courseLink = null
+    }
     if (!courseLink) {
       console.log(`  (curso aún no listado, intento ${i + 1}/4)`)
       await new Promise(r => setTimeout(r, 4000))
     }
   }
   if (!courseLink) {
-    const body = await page.evaluate(() => document.body?.textContent?.slice(0, 200))
+    const body = await page.evaluate(() => document.body?.textContent?.slice(0, 200)).catch(() => null)
     console.log('  body en /en:', JSON.stringify(body))
     // Sin cursos listados (datos de curso/Rails no disponibles) no se puede
     // probar la desconexión desde la guía: se omite en vez de fallar.
