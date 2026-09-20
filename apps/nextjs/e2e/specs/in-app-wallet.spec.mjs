@@ -57,7 +57,10 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout, chainId } = env
+  const { timeout, chainId } = env
+  // SITE_URL permite apuntar a un servidor local (`next dev -p 4000`, HTTP);
+  // el helper de m fija https, así que sin esto no se puede probar en local.
+  const base = process.env.SITE_URL || env.base
 
   const browser = await launchBrowser(env.headless)
   const page = await newPage(browser, creds?.addr, timeout)

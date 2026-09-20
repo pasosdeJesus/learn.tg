@@ -98,7 +98,10 @@ async function main() {
   const verifier = loadEnvCredentials()
   if (!verifier) { console.error('No verifier credentials'); process.exit(1) }
   const env = await initTestEnv()
-  const { base, timeout, chainId } = env
+  const { timeout, chainId } = env
+  // SITE_URL permite apuntar a un servidor local (`next dev -p 4000`, HTTP);
+  // el helper de m fija https, así que sin esto no se puede probar en local.
+  const base = process.env.SITE_URL || env.base
 
   // 1. Fresh eligible pastor wallet
   const pk = generatePrivateKey()

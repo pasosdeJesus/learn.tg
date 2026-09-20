@@ -58,6 +58,16 @@ function failedSpecs(out) {
   const re = /✗\s+(\S+\.spec\.mjs)\s+falló/g
   let match
   while ((match = re.exec(out))) found.add(match[1])
+  // Red de seguridad: el runner decide por el código de salida, así que un spec
+  // que llama `fail()` y termina sin `process.exit(failures > 0 ? 1 : 0)`
+  // (2026-09-20: pastor-journey; su resumen decía "❌ 1 failures" y el runner lo
+  // daba por verde) no aparece en las líneas `✗`. Se leen también los bloques.
+  for (const block of out.split(/^▶\s+/m).slice(1)) {
+    const name = block.match(/^specs\/(\S+\.spec\.mjs)/)?.[1]
+    if (!name) continue
+    const failures = block.match(/❌\s+(\d+)\s+failures/)
+    if (failures && Number(failures[1]) > 0) found.add(name)
+  }
   return [...found]
 }
 

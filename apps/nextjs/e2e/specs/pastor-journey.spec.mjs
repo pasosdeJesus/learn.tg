@@ -217,11 +217,19 @@ async function apiGet(path, params, cookies) {
 async function apiPatch(path, body, params, cookies) {
   const url = new URL(path, SITE)
   Object.entries(params || {}).forEach(([k, v]) => url.searchParams.set(k, v))
-  const res = await axios.patch(url.toString(), body, {
-    httpsAgent,
-    headers: cookies ? { 'Content-Type': 'application/json', Cookie: cookies } : {},
-  })
-  return res.data
+  try {
+    const res = await axios.patch(url.toString(), body, {
+      httpsAgent,
+      headers: cookies ? { 'Content-Type': 'application/json', Cookie: cookies } : {},
+    })
+    return res.data
+  } catch (e) {
+    // Sin esto el spec solo mostraba el AxiosError y se perdía el motivo del 500
+    // (el detalle viene en `detail` fuera de producción, ver lib/server-errors.ts).
+    const status = e?.response?.status
+    const data = e?.response?.data
+    throw new Error(`PATCH ${path} falló (${status ?? e.message}): ${JSON.stringify(data)?.slice(0, 300) ?? ''}`)
+  }
 }
 
 async function navAndWait(page, url, timeout) {
@@ -256,7 +264,10 @@ async function main() {
   console.log(`Verifier wallet: ${short(verifier.addr)}`)
 
   const env = await initTestEnv()
-  const { base, chainId } = env
+  const { chainId } = env
+  // SITE_URL permite apuntar a un servidor local (`next dev -p 4000`, HTTP);
+  // el helper de m fija https, así que sin esto no se puede probar en local.
+  const base = process.env.SITE_URL || env.base
   const timeout = 120000
 
   // The 44 SLEARN pastor bonus (Step 3) is paid from the churches fund: make
@@ -692,7 +703,8 @@ async function main() {
   }
 
   await browser.close()
-  summary(t0)
+  const failures = summary(t0)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

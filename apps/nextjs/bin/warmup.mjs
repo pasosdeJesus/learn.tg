@@ -12,12 +12,16 @@
  *   bin/warmup            # SITE_URL por defecto (learn.tg:9001)
  *   bin/warmup donations  # calienta SOLO las rutas que contienen "donations"
  *   SITE_URL=https://learn.tg bin/warmup
+ *   SITE_URL=http://localhost:4000 bin/warmup   # servidor local (http)
  */
 
 import https from 'https'
+import http from 'http'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
-const agent = new https.Agent({ rejectUnauthorized: false })
+const isHttps = SITE.startsWith('https')
+const agent = isHttps ? new https.Agent({ rejectUnauthorized: false }) : undefined
+const client = isHttps ? https : http
 
 // Rutas clave: páginas (compilan server components + client chunks) y APIs.
 const URLS = [
@@ -111,7 +115,7 @@ const ACTIVE_URLS = !ARG ? URLS : (ARG === 'donations' ? DONATION_URLS : URLS.fi
 function fetchOnce(url, timeoutMs) {
   return new Promise((resolve) => {
     const t0 = Date.now()
-    const req = https.get(SITE + url, { agent, timeout: timeoutMs }, (res) => {
+    const req = client.get(SITE + url, { agent, timeout: timeoutMs }, (res) => {
       let size = 0
       res.on('data', (chunk) => { size += chunk.length })
       res.on('end', () => resolve({ url, status: res.statusCode, ms: Date.now() - t0, size }))

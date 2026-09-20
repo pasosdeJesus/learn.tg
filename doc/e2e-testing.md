@@ -56,6 +56,95 @@ transitorio no envenene el resultado. Úsalo para la verificación final; usa
 `make test-e2e` cuando quieras la foto cruda. Antes de cualquiera, calienta el dev
 site (`bin/warmup.mjs`).
 
+**Un spec solo se reporta verde si sale con el código correcto.** El runner
+(`@pasosdejesus/m/dist/tasks/e2e.js:116`) decide por el exit code, y `fail()`
+solo imprime `❌` y suma un contador: un spec que llama `fail()` y termina con
+`summary(t0)` sin `process.exit(failures > 0 ? 1 : 0)` **se reporta como
+aprobado** aunque su último renglón diga `❌ 1 failures`. Medido el 2026-09-20:
+`pastor-journey.spec.mjs` falló la compra del curso y el runner lo dio por bueno
+(no se reintentó). Regla: terminar siempre con
+`const failures = summary(t0); process.exit(failures > 0 ? 1 : 0)`.
+`bin/e2e-retry.mjs` además lee los bloques de la primera pasada y trata como
+fallida cualquier spec cuyo resumen diga `❌ N failures` con N > 0, así que un
+spec mal terminado igual se reintenta.
+
+### Comparar dos corridas: `bin/e2e-summary.mjs`
+
+Para distinguir un fallo de producto de uno ambiental conviene correr lo mismo en
+otro entorno (por ejemplo un servidor local) y comparar:
+
+```sh
+cd apps/nextjs
+node bin/e2e-summary.mjs /tmp/e2e-retry-site2.log /tmp/e2e-local.log
+```
+
+Imprime una fila por spec con `ok`, `FALLA`, `SKIP` o `?` (arrancó y no dejó
+resumen), y marca con `<-- difiere` las filas cuyo estado cambia entre corridas:
+un spec que falla en el dev site y pasa en local apunta al entorno del sitio, no
+al código.
+
+**No corras dos suites a la vez.** Ambas usan la misma billetera (`apps/.env`)
+sobre la misma cadena: dos corridas simultáneas compiten por los nonces y por el
+estado compartido (saldo de la iglesia, curso premium ya comprado) y producen
+fallos que no existen. Secuéncialas.
+
+### Correr los specs contra un servidor local
+
+Sirve para separar un fallo de producto de uno del entorno del dev site (paso de
+nginx, RPC, carga remota). Preparación:
+
+```sh
+cd apps/nextjs
+# apps/.env debe estar en modo "pila completa": NEXT_PUBLIC_API_URL vacío
+# (Next sirve /api y habla con Postgres vía Kysely; NO necesita Rails para esto).
+NEXT_PUBLIC_PWA_DISABLE=1 bin/dev            # http://localhost:4000
+bin/warmup-local.mjs                          # calienta 24 rutas, SECUENCIAL
+# en otra terminal:
+IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 \
+  SITE_URL=http://localhost:4000 ./bin/m test:e2e pastor-journey
+```
+
+Detalles que cuestan tiempo si se ignoran:
+
+- **`SITE_URL` es obligatorio**: el helper de `m` arma `base` como
+  `https://${IPDES}:${PUERTOPRU}` (fijo), así que sin `SITE_URL` el spec navega a
+  `https://localhost:4000` y muere con `ERR_SSL_PROTOCOL_ERROR`. Los specs de
+  billetera ya lo respetaban; desde 2026-09-20 también `pastor-journey`,
+  `header-wallet-dialog`, `donate-campaign-celo-modal`, `in-app-wallet` y
+  `premium-course-checkout`.
+- **No uses `bin/warmup.mjs` contra local**: su pasada 2 dispara 55 requests en
+  paralelo y en esta VM (1 CPU, límite de datos del chroot) mata al `next dev`
+  con `Fatal error ... Check failed: (result.ptr) != nullptr`. Para local usa
+  `bin/warmup-local.mjs` (secuencial, timeout de 180s por ruta).
+- **Memoria**: aun así, `next dev` se cae bajo el spec más pesado
+  (`in-app-wallet-payments`, medido 2026-09-20); `NEXT_PUBLIC_PWA_DISABLE=1` baja
+  el trabajo de webpack (los specs offline se saltan en dev de todos modos).
+- **Fallos que solo aparecen en local** suelen ser del entorno local: medido
+  `PATCH /api/admin/church/[id]` → 500 sin log del route, porque el overlay de
+  errores del `next dev` también falla (`invalid type: boolean \`false\`, expected
+  enum CodeFrameColorMode`). Si un paso falla en local y pasa en el dev site,
+  revisa antes el servidor local (base de datos sin migrar, `next dev`) que el
+  código.
+
+### Diagnóstico de errores del servidor
+
+Un 500 puede quedarse sin causa visible: en `next dev` el overlay de errores a
+veces no se pinta (medido 2026-09-20: `invalid type: boolean \`false\`, expected
+enum CodeFrameColorMode`) y ni el `console.error` del route ni la página de error
+llegan a la consola. Desde entonces:
+
+- `apps/nextjs/instrumentation.ts` (`onRequestError` + `unhandledRejection` /
+  `uncaughtException`) registra todo error del servidor, incluidas las rutas de
+  streaming, en `stderr` **y** en un archivo.
+- El archivo es `/tmp/learn-tg-server-errors.log` (`SERVER_ERROR_LOG` lo cambia);
+  cada entrada trae método, URL, route, `extra` y el stack, más `sql`, `detail` y
+  `code` de los errores de Postgres.
+- `lib/server-errors.ts` (`logServerError`, `devErrorDetail`) es el helper. El
+  `PATCH /api/admin/church/[id]` ya lo usa y, fuera de producción, agrega
+  `detail` a la respuesta; el spec `pastor-journey` imprime ese cuerpo cuando el
+  PATCH falla (`apiPatch` lanza con el mensaje del servidor en vez del
+  `AxiosError` pelado).
+
 ## Dev-server warmup: `bin/warmup.mjs`
 
 Tras un deploy, Next.js compila cada ruta bajo demanda y el primer request es

@@ -105,7 +105,7 @@ async function main() {
   if (!publicClient) { console.error('No working RPC'); process.exit(1) }
 
   const env = await initTestEnv()
-  const { base } = env
+  const base = process.env.SITE_URL || env.base
   console.log(`Wallet: ${account.address.slice(0, 10)}... | ${base} (chain: ${CHAIN_ID})`)
 
   // Campaign wallet CELO BEFORE (Sepolia)
@@ -118,15 +118,26 @@ async function main() {
   }
 
   const browser = await launchBrowser()
+  // Un 4xx/5xx se ve en consola como "Failed to load resource: 404" sin URL;
+  // registrar la respuesta deja la URL a la vista (2026-09-20: el botón Donate
+  // quedó deshabilitado tras un 404 y no se sabía de qué recurso).
+  const logBadResponse = (p) => p.on('response', (r) => {
+    const type = r.request().resourceType()
+    if ((type === 'xhr' || type === 'fetch' || type === 'script' || type === 'document') && r.status() >= 400) {
+      console.log(`  [HTTP ${r.status()}] ${r.request().method()} ${r.url().slice(0, 160)}`)
+    }
+  })
   let page = await browser.newPage()
   page.on('pageerror', (e) => console.log(`  [PAGEERR] ${e.message}`))
   page.on('console', (m) => { if (m.type() === 'error') console.log(`  [CONSOLE-ERR] ${m.text().slice(0, 300)}`) })
+  logBadResponse(page)
   // El dev site puede tardar (compilación/redeploy): reintentar con página
   // nueva por intento (`exposeFunction('__signSiwe')` no se puede re-registrar).
   page = await retry(async () => {
     const p = await browser.newPage()
     p.on('pageerror', (e) => console.log(`  [PAGEERR] ${e.message}`))
     p.on('console', (m) => { if (m.type() === 'error') console.log(`  [CONSOLE-ERR] ${m.text().slice(0, 300)}`) })
+    logBadResponse(p)
     await setupE2EAuth(p, account.address, creds.pk, CHAIN_ID, base)
     return hardenPage(p)
   }, { label: 'setupE2EAuth modal' })
@@ -321,7 +332,7 @@ async function main() {
   let txt = ''
   let modalGoneAt = ''
   let errSnap = ''
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 80; i++) {
     await new Promise(r => setTimeout(r, 1500))
     try {
       txt = await page.evaluate(() => document.body?.textContent || '')
@@ -330,9 +341,13 @@ async function main() {
       continue
     }
     if (/Donation completed/i.test(txt)) { success = true; break }
-    if (/Error|exceeds|Unauthorized|Internal server|failed|Something went wrong/i.test(txt)) errSnap = txt
+    if (/Something went wrong|Internal server error|Unauthorized/i.test(txt)) errSnap = txt
     if (!/Donation options|Donatable \(max|Sending CELO|Enviando CELO/.test(txt)) { modalGoneAt = txt; break }
-    if (errSnap && i > 15) break
+    // Sin corte por error: la confirmación en Sepolia puede tardar >30s y el
+    // texto de la propia página (créditos, UBI, comentario) hace que una
+    // heurística amplia de error dé falsos positivos. Medido 2026-09-20: el
+    // spec falló igual en el dev site y en el servidor local por cortar en
+    // i>15 con errSnap, antes de que el recibo llegara.
   }
   if (!success) {
     fail('Success dialog not shown')
