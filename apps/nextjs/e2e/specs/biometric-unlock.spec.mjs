@@ -5,10 +5,10 @@
 //
 //  1. crea la billetera y firma (SIWE);
 //  2. al abrir el diálogo otra vez, activa "desbloquear con huella la próxima vez"
-//     (mismo PIN, un paso más) y firma;
+//     (mismo password, un paso más) y firma;
 //  3. recarga: la clave salió de memoria, pero el diálogo ofrece
 //     `wallet-unlock-biometric` y un gesto deja la billetera lista;
-//  4. el PIN sigue funcionando como respaldo.
+//  4. el password sigue funcionando como respaldo.
 //
 // El "gesto" lo simula un authenticator virtual de Chrome por CDP
 // (`WebAuthn.addVirtualAuthenticator` con `hasPrf: true`), que auto-verifica al
@@ -27,7 +27,7 @@ import {
 } from '@pasosdejesus/m/e2e'
 import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
-const PIN = '123456'
+const password = '12345678'
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function loadEnvCredentials() {
@@ -61,7 +61,7 @@ async function dialogError(page) {
 
 /**
  * Diagnóstico: qué quedó realmente en IndexedDB (versión, almacenes y las
- * direcciones de los registros de PIN y de huella). Sirve para distinguir "no se
+ * direcciones de los registros de password y de huella). Sirve para distinguir "no se
  * selló" de "se selló y no se leyó".
  */
 async function dumpWalletDb(page) {
@@ -189,10 +189,10 @@ async function main() {
     if (!(await openDialog(page))) {
       fail('La cabecera no abrió el diálogo de la billetera')
     } else {
-      const createForm = await page.waitForSelector('[data-testid="wallet-pin-confirm"]', { timeout: 25000 }).catch(() => null)
+      const createForm = await page.waitForSelector('[data-testid="wallet-password-confirm"]', { timeout: 25000 }).catch(() => null)
       if (createForm) {
-        await page.type('[data-testid="wallet-pin"]', PIN)
-        await page.type('[data-testid="wallet-pin-confirm"]', PIN)
+        await page.type('[data-testid="wallet-password"]', password)
+        await page.type('[data-testid="wallet-password-confirm"]', password)
         await page.click('[data-testid="wallet-create"]')
         await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 60000 })
         ok('Billetera in-app creada')
@@ -223,7 +223,7 @@ async function main() {
       await sleep(1000)
     }
     if (enableButton) {
-      await page.type('[data-testid="wallet-pin"]', PIN)
+      await page.type('[data-testid="wallet-password"]', password)
       await page.click('[data-testid="wallet-enable-biometric"]')
       // El ok() no puede ser incondicional (lo era y ocultaba fallos): se espera la
       // señal real —el error en el diálogo, o su cierre (la firma con la sesión ya
@@ -241,8 +241,8 @@ async function main() {
         }
       }
     } else if (await exists(page, '[data-testid="wallet-unlock"]')) {
-      // El sitio desplegado puede no tener todavía la UI de R-#246: usar el PIN
-      await page.type('[data-testid="wallet-pin"]', PIN)
+      // El sitio desplegado puede no tener todavía la UI de R-#246: usar el password
+      await page.type('[data-testid="wallet-password"]', password)
       await page.click('[data-testid="wallet-unlock"]')
       for (let i = 0; i < 25; i++) {
         await sleep(1500)
@@ -257,7 +257,7 @@ async function main() {
     fail(`El diálogo no ofreció activar el desbloqueo por huella (cabecera: "${(await header(page)).button}")`)
   }
 
-  // 3. Recargar otra vez: el gesto debe reemplazar al PIN
+  // 3. Recargar otra vez: el gesto debe reemplazar al password
   await page.reload({ waitUntil: 'domcontentloaded' })
   await sleep(5000)
   const afterReload = await header(page)
@@ -270,7 +270,7 @@ async function main() {
   if (await openDialog(page)) {
     // R-#246: con la passkey registrada el gesto arranca al abrir el diálogo, así
     // que el desbloqueo puede completarse ANTES de que alcancemos a ver el botón:
-    // el diálogo pasa a su estado desbloqueado (sin campo de PIN) y luego se cierra
+    // el diálogo pasa a su estado desbloqueado (sin campo de password) y luego se cierra
     // con la recarga de la firma. Tres señales válidas: el botón, el diálogo
     // cerrado, o el diálogo ya desbloqueado. Lo último deja de valer en builds
     // anteriores, donde el formulario espera a que se presione el botón.
@@ -282,7 +282,7 @@ async function main() {
         break
       }
       // Señal de "ya está desbloqueada": los botones de desbloqueo sólo existen en
-      // el estado bloqueado (el campo de PIN se renderiza también desbloqueada, así
+      // el estado bloqueado (el campo de password se renderiza también desbloqueada, así
       // que no sirve como señal).
       const dialogOpen = await exists(page, '[data-testid="wallet-dialog"]')
       const lockedUi =
@@ -321,7 +321,7 @@ async function main() {
           if (await dialogGone()) { unlocked = true; break }
         }
       }
-      if (unlocked) ok('El gesto desbloqueó la billetera sin teclear el PIN')
+      if (unlocked) ok('El gesto desbloqueó la billetera sin teclear el password')
       else fail('El gesto no desbloqueó la billetera')
 
       // Deja que termine la recarga de la firma antes de navegar.

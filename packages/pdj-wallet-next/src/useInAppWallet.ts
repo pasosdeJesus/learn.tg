@@ -30,7 +30,7 @@ export type InAppWalletLockReason = 'initial' | 'user' | 'idle' | 'deleted'
 
 /**
  * Auto-lock after this much inactivity, like OneKey and OKX Web3 (R-#246).
- * Dropping the key means the next action asks for the gesture (or the PIN on
+ * Dropping the key means the next action asks for the gesture (or the password on
  * devices without WebAuthn).
  *
  * One hour, not ten minutes: the operator's mobile test had to unlock again
@@ -42,6 +42,9 @@ export type InAppWalletLockReason = 'initial' | 'user' | 'idle' | 'deleted'
  * https://github.com/pasosdeJesus/learn.tg/issues/248.
  */
 export const INACTIVITY_LOCK_MS = 60 * 60 * 1000
+// Distinto de `USER_VERIFICATION_GRACE_MS` del core (15 min, R-#253): el auto-lock
+// es por inactividad (una hora) y, al llamar a `lockWallet()`, cierra la ventana de
+// gracia para que el próximo movimiento vuelva a pedir el gesto.
 
 /**
  * Minimum time between two inactivity resets. Activity events arrive in bursts
@@ -60,13 +63,13 @@ export interface UseInAppWalletResult {
   biometricEnabled: boolean
   /** Why the wallet got locked: the ✕ (`user`) signs out, `idle` does not. */
   lockReason: InAppWalletLockReason
-  create: (pin: string) => Promise<{ walletInfo: WalletInfo; mnemonic: string }>
+  create: (password: string) => Promise<{ walletInfo: WalletInfo; mnemonic: string }>
   importExisting: (options: ImportWalletOptions) => Promise<WalletInfo>
-  unlock: (pin: string) => Promise<WalletInfo>
+  unlock: (password: string) => Promise<WalletInfo>
   /** Unlocks with one user-verified WebAuthn gesture (needs `biometricEnabled`). */
   unlockWithBiometric: () => Promise<WalletInfo>
-  /** Registers a passkey and seals the key with its PRF secret. Needs the PIN. */
-  enableBiometric: (pin: string) => Promise<void>
+  /** Registers a passkey and seals the key with its PRF secret. Needs the password. */
+  enableBiometric: (password: string) => Promise<void>
   disableBiometric: () => Promise<void>
   lock: () => Promise<void>
   remove: () => Promise<void>
@@ -142,7 +145,7 @@ async function initialize(): Promise<void> {
     const info = await getWalletInfo()
 
     // R-#246: the unlock lives in module memory. A reload locks the wallet again,
-    // which is why the biometric path exists: one gesture instead of the PIN.
+    // which is why the biometric path exists: one gesture instead of the password.
     let biometricEnabled = false
     try {
       biometricEnabled = await hasBiometricUnlock()
@@ -189,10 +192,10 @@ export function useInAppWallet(): UseInAppWalletResult {
     void initialize()
   }, [])
 
-  const create = useCallback(async (pin: string) => {
+  const create = useCallback(async (password: string) => {
     setState({ error: null })
     try {
-      const result = await createWallet({ pin })
+      const result = await createWallet({ password })
       setState({ walletInfo: result.walletInfo, status: 'unlocked' })
       return result
     } catch (e) {
@@ -213,10 +216,10 @@ export function useInAppWallet(): UseInAppWalletResult {
     }
   }, [])
 
-  const unlock = useCallback(async (pin: string) => {
+  const unlock = useCallback(async (password: string) => {
     setState({ error: null })
     try {
-      const info = await unlockWallet(pin)
+      const info = await unlockWallet(password)
       setState({ walletInfo: info, status: 'unlocked' })
       return info
     } catch (e) {
@@ -237,10 +240,10 @@ export function useInAppWallet(): UseInAppWalletResult {
     }
   }, [])
 
-  const enableBiometric = useCallback(async (pin: string) => {
+  const enableBiometric = useCallback(async (password: string) => {
     setState({ error: null })
     try {
-      await enableBiometricUnlock(pin)
+      await enableBiometricUnlock(password)
       setState({ biometricEnabled: true, biometricAvailable: true })
     } catch (e) {
       setState({ error: e instanceof Error ? e.message : String(e) })

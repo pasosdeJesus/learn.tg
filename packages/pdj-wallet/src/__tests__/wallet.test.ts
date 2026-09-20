@@ -7,6 +7,7 @@ import {
   hasWallet,
   importWallet,
   isUnlocked,
+  isValidPassword,
   lockWallet,
   signMessage,
   unlockWallet,
@@ -17,7 +18,7 @@ import { signSIWE } from '../siwe'
 
 const HARDHAT_MNEMONIC = 'test test test test test test test test test test test junk'
 const HARDHAT_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
-const PIN = '123456'
+const password = '12345678'
 
 describe('wallet', () => {
   let storage: MemoryStorage
@@ -28,7 +29,7 @@ describe('wallet', () => {
   })
 
   it('creates a wallet with a fresh mnemonic and stores it encrypted', async () => {
-    const { walletInfo, mnemonic } = await createWallet({ pin: PIN, storage })
+    const { walletInfo, mnemonic } = await createWallet({ password: password, storage })
     expect(mnemonic.split(' ')).toHaveLength(12)
     expect(walletInfo.address).toMatch(/^0x[0-9a-fA-F]{40}$/)
     expect(walletInfo.chain).toBe('celoSepolia')
@@ -39,16 +40,43 @@ describe('wallet', () => {
     expect(record?.address).toBe(walletInfo.address)
   })
 
-  it('rejects short PINs', async () => {
-    await expect(createWallet({ pin: '123', storage })).rejects.toThrow(/at least 6 digits/i)
+  it('rejects a password shorter than 8 characters', async () => {
+    await expect(createWallet({ password: '123', storage })).rejects.toThrow(
+      /at least 8 characters/i,
+    )
+    await expect(createWallet({ password: 'short', storage })).rejects.toThrow(
+      /at least 8 characters/i,
+    )
+    // El password numérico corto (6 dígitos) ya no se acepta (R-#251, nada en producción).
+    await expect(createWallet({ password: '123456', storage })).rejects.toThrow(
+      /at least 8 characters/i,
+    )
+  })
+
+  // R-#251: la billetera se protege con una clave de 8+ caracteres y se desbloquea
+  // con ella.
+  it('accepts a passphrase of 8+ characters and unlocks with it', async () => {
+    const { walletInfo } = await createWallet({ password: 'correct horse', storage })
+    expect(walletInfo.address).toMatch(/^0x[a-fA-F0-9]{40}$/)
+    await lockWallet()
+    const unlocked = await unlockWallet('correct horse', storage)
+    expect(unlocked.address).toBe(walletInfo.address)
+  })
+
+  it('isValidPassword accepts 8+ character secrets only', () => {
+    expect(isValidPassword('12345678')).toBe(true)
+    expect(isValidPassword('correct horse')).toBe(true)
+    expect(isValidPassword('123456')).toBe(false)
+    expect(isValidPassword('short')).toBe(false)
+    expect(isValidPassword('  short  ')).toBe(false)
   })
 
   it('imports a known mnemonic and derives the expected address', async () => {
-    const info = await importWallet({ mnemonic: HARDHAT_MNEMONIC, pin: PIN, storage })
+    const info = await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
     expect(info.address).toBe(HARDHAT_ADDRESS)
     await lockWallet()
     expect(await hasWallet(storage)).toBe(true)
-    const unlocked = await unlockWallet(PIN, storage)
+    const unlocked = await unlockWallet(password, storage)
     expect(unlocked.address).toBe(HARDHAT_ADDRESS)
   })
 
@@ -56,21 +84,21 @@ describe('wallet', () => {
   // dedo o de checksum y deriva otra billetera (vacía) sin avisar.
   it('rejects a mnemonic that is not BIP39', async () => {
     const typo = 'test test test test test test test test test test test tset'
-    await expect(importWallet({ mnemonic: typo, pin: PIN, storage })).rejects.toThrow(/invalid-mnemonic/)
+    await expect(importWallet({ mnemonic: typo, password: password, storage })).rejects.toThrow(/invalid-mnemonic/)
     expect(await hasWallet(storage)).toBe(false)
 
     // Misma palabra 12 veces: todas están en la lista, el checksum no cuadra.
     const badChecksum = 'test test test test test test test test test test test test'
-    await expect(importWallet({ mnemonic: badChecksum, pin: PIN, storage })).rejects.toThrow(/invalid-mnemonic/)
+    await expect(importWallet({ mnemonic: badChecksum, password: password, storage })).rejects.toThrow(/invalid-mnemonic/)
 
     // 11 palabras: longitud inválida.
     await expect(
-      importWallet({ mnemonic: HARDHAT_MNEMONIC.split(' ').slice(0, 11).join(' '), pin: PIN, storage }),
+      importWallet({ mnemonic: HARDHAT_MNEMONIC.split(' ').slice(0, 11).join(' '), password: password, storage }),
     ).rejects.toThrow(/invalid-mnemonic/)
   })
 
   it('accepts the phrases it generates and a valid 24-word phrase', async () => {
-    const { mnemonic } = await createWallet({ pin: PIN, storage })
+    const { mnemonic } = await createWallet({ password: password, storage })
     expect(await isValidMnemonic(mnemonic)).toBe(true)
     expect(await isValidMnemonic(`  ${HARDHAT_MNEMONIC.toUpperCase()}  `)).toBe(true)
     expect(await isValidMnemonic('abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art')).toBe(true)
@@ -78,21 +106,21 @@ describe('wallet', () => {
   })
 
   it('reports the wallet info without unlocking', async () => {
-    await importWallet({ mnemonic: HARDHAT_MNEMONIC, pin: PIN, storage })
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
     await lockWallet()
     const info = await getWalletInfo(storage)
     expect(info?.address).toBe(HARDHAT_ADDRESS)
     expect(isUnlocked()).toBe(false)
   })
 
-  it('rejects a wrong PIN when unlocking', async () => {
-    await importWallet({ mnemonic: HARDHAT_MNEMONIC, pin: PIN, storage })
+  it('rejects a wrong password when unlocking', async () => {
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
     await lockWallet()
-    await expect(unlockWallet('999999', storage)).rejects.toThrow(/Wrong PIN/i)
+    await expect(unlockWallet('99999999', storage)).rejects.toThrow(/Wrong password/i)
   })
 
   it('signs messages only while unlocked', async () => {
-    await importWallet({ mnemonic: HARDHAT_MNEMONIC, pin: PIN, storage })
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
     const signature = await signMessage('hello')
     expect(signature).toMatch(/^0x[0-9a-f]{130}$/i)
     expect(await verifyMessage({ address: HARDHAT_ADDRESS, message: 'hello', signature })).toBe(true)
@@ -101,7 +129,7 @@ describe('wallet', () => {
   })
 
   it('signs SIWE messages that verify against the wallet address', async () => {
-    await importWallet({ mnemonic: HARDHAT_MNEMONIC, pin: PIN, storage })
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
     const message = [
       'learn.tg:9001 wants you to sign in with your Ethereum account:',
       HARDHAT_ADDRESS,
@@ -119,11 +147,11 @@ describe('wallet', () => {
   })
 
   it('deletes the wallet and locks it', async () => {
-    await importWallet({ mnemonic: HARDHAT_MNEMONIC, pin: PIN, storage })
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
     await deleteWallet(storage)
     expect(await hasWallet(storage)).toBe(false)
     expect(await getWalletInfo(storage)).toBeNull()
     expect(isUnlocked()).toBe(false)
-    await expect(unlockWallet(PIN, storage)).rejects.toThrow(/no in-app wallet/i)
+    await expect(unlockWallet(password, storage)).rejects.toThrow(/no in-app wallet/i)
   })
 })

@@ -11,7 +11,7 @@ import {
 } from '@pasosdejesus/m/shadcn-components/ui/dialog'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
-import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { isValidPassword, useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
@@ -28,12 +28,14 @@ interface WalletDialogProps {
   sessionAddress?: string
 }
 
-const MIN_PIN = 6
+// Secreto aceptado: password de 6+ dígitos o clave de 8+ caracteres (R-#251).
+// La validación real vive en el paquete (`isValidPassword`); aquí sólo se usa para
+// habilitar el botón y dar el mensaje.
 
 /**
  * Modal que crea, importa o desbloquea la billetera de la aplicación y firma el
  * SIWE (R-#244). Vive fuera de la cabecera a propósito: el flujo completo
- * (PIN, frase de recuperación, ingreso) no cabe ahí y el usuario necesita leer
+ * (password, frase de recuperación, ingreso) no cabe ahí y el usuario necesita leer
  * las 12 palabras con calma antes de continuar.
  */
 export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }: WalletDialogProps) {
@@ -53,7 +55,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     getProvider,
   } = useInAppWallet()
   const [mode, setMode] = useState<'create' | 'import'>('create')
-  const [pin, setPin] = useState('')
+  const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [mnemonic, setMnemonic] = useState('')
   const [recovery, setRecovery] = useState<string | null>(null)
@@ -64,8 +66,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   const [verifyError, setVerifyError] = useState(false)
   const [showWords, setShowWords] = useState(true)
   const [localError, setLocalError] = useState<string | null>(null)
-  const [biometricPin, setBiometricPin] = useState('')
-  const [pinFallback, setPinFallback] = useState(false)
+  const [biometricPassword, setBiometricPassword] = useState('')
+  const [passwordFallback, setPasswordFallback] = useState(false)
   const autoGestureTried = useRef(false)
   const [busy, setBusy] = useState(false)
 
@@ -74,27 +76,27 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       title: 'In-app wallet',
       checking: 'Checking your wallet…',
       createTitle: 'Create a wallet',
-      createDescription: 'It is created on this device and protected with a PIN. No wallet app is needed.',
+      createDescription: 'It is created on this device and protected with a password. No wallet app is needed.',
       importTitle: 'Import a wallet',
       importDescription: 'Use the 12 words or the private key of a wallet you already have.',
       lockedTitle: 'Unlock your in-app wallet',
-      lockedDescription: 'Enter your PIN to sign in.',
+      lockedDescription: 'Enter your password to sign in.',
       biometricUnlock: 'Unlock with fingerprint',
       biometricEnable: 'Unlock with fingerprint next time',
-      biometricHint: 'Uses the fingerprint or Face ID of this device. The PIN keeps working.',
+      biometricHint: 'Uses the fingerprint or Face ID of this device. Your password is the backup.',
       biometricOn: 'Fingerprint unlock is on',
       biometricOff: 'Turn off fingerprint unlock',
       noWebauthn: 'This device cannot verify your fingerprint or Face ID.',
-      noPrf: 'This device cannot store the biometric unlock. Use your PIN.',
+      noPrf: 'This device cannot store the biometric unlock. Use your password.',
       noBiometric: 'There is no fingerprint unlock saved on this device.',
       biometricCancelled: 'The fingerprint or Face ID prompt was cancelled.',
       invalidMnemonic: 'That recovery phrase is not valid. Check the words and their order.',
       biometricRetry: 'Try the fingerprint again',
-      usePin: 'Use the PIN',
-      unlockWithPinOnly: 'Use the PIN only',
-      lockedDescriptionGesture: 'Confirm with your fingerprint or Face ID to sign in. No PIN to type.',
-      pin: 'PIN (6 or more digits)',
-      pinConfirm: 'Repeat the PIN',
+      usePassword: 'Use the password',
+      unlockWithPasswordOnly: 'Use the password only',
+      lockedDescriptionGesture: 'Confirm with your fingerprint or Face ID to sign in. No password to type.',
+      password: 'Password (8+ characters)',
+      passwordConfirm: 'Repeat the password',
       mnemonic: 'Recovery phrase (12 words)',
       create: 'Create wallet',
       import: 'Import wallet',
@@ -115,8 +117,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       verifyWrong: 'Those words do not match the phrase. Check them and try again.',
       verifySubmit: 'Confirm and sign in',
       peekWords: 'Show the words again',
-      pinTooShort: 'The PIN needs at least 6 digits.',
-      pinMismatch: 'The two PINs do not match.',
+      passwordTooShort: 'The password must have at least 8 characters.',
+      passwordMismatch: 'The passwords do not match.',
       notUnlocked: 'The wallet is not unlocked.',
       noAccounts: 'The wallet has no account.',
       noCsrf: 'Could not start the session. Try again.',
@@ -129,27 +131,27 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       title: 'Billetera de la aplicación',
       checking: 'Comprobando tu billetera…',
       createTitle: 'Crear una billetera',
-      createDescription: 'Se crea en este dispositivo y se protege con un PIN. No necesitas una aplicación de billetera.',
+      createDescription: 'Se crea en este dispositivo y se protege con una clave. No necesitas una aplicación de billetera.',
       importTitle: 'Importar una billetera',
       importDescription: 'Usa las 12 palabras o la clave privada de una billetera que ya tengas.',
       lockedTitle: 'Desbloquea tu billetera',
-      lockedDescription: 'Escribe tu PIN para ingresar.',
+      lockedDescription: 'Escribe tu clave para ingresar.',
       biometricUnlock: 'Desbloquear con huella',
       biometricEnable: 'Desbloquear con huella la próxima vez',
-      biometricHint: 'Usa la huella o Face ID de este dispositivo. El PIN sigue funcionando.',
+      biometricHint: 'Usa la huella o Face ID de este dispositivo. Tu clave es el respaldo.',
       biometricOn: 'Desbloqueo con huella activado',
       biometricOff: 'Desactivar el desbloqueo con huella',
       noWebauthn: 'Este dispositivo no puede verificar tu huella o Face ID.',
-      noPrf: 'Este dispositivo no puede guardar el desbloqueo por huella. Usa tu PIN.',
+      noPrf: 'Este dispositivo no puede guardar el desbloqueo por huella. Usa tu clave.',
       noBiometric: 'No hay un desbloqueo por huella guardado en este dispositivo.',
       biometricCancelled: 'Se canceló la huella o Face ID.',
       invalidMnemonic: 'Esa frase de recuperación no es válida. Revisa las palabras y su orden.',
       biometricRetry: 'Reintentar huella',
-      usePin: 'Usar el PIN',
-      unlockWithPinOnly: 'Seguir usando solo el PIN',
-      lockedDescriptionGesture: 'Confirma con tu huella o Face ID para ingresar. No hay que escribir el PIN.',
-      pin: 'PIN (6 o más dígitos)',
-      pinConfirm: 'Repite el PIN',
+      usePassword: 'Usar la clave',
+      unlockWithPasswordOnly: 'Seguir usando solo la clave',
+      lockedDescriptionGesture: 'Confirma con tu huella o Face ID para ingresar. No hay que escribir la clave.',
+      password: 'Clave (8+ caracteres)',
+      passwordConfirm: 'Repite la clave',
       mnemonic: 'Frase de recuperación (12 palabras)',
       create: 'Crear billetera',
       import: 'Importar billetera',
@@ -170,8 +172,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       verifyWrong: 'Esas palabras no coinciden con la frase. Revísalas e intenta de nuevo.',
       verifySubmit: 'Confirmar e ingresar',
       peekWords: 'Ver las palabras otra vez',
-      pinTooShort: 'El PIN necesita al menos 6 dígitos.',
-      pinMismatch: 'Los dos PIN no coinciden.',
+      passwordTooShort: 'La clave debe tener al menos 8 caracteres.',
+      passwordMismatch: 'Las claves no coinciden.',
       notUnlocked: 'La billetera no está desbloqueada.',
       noAccounts: 'La billetera no tiene cuenta.',
       noCsrf: 'No se pudo iniciar la sesión. Intenta de nuevo.',
@@ -188,7 +190,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   useEffect(() => {
     if (open) return
     setMode('create')
-    setPin('')
+    setPassword('')
     setConfirm('')
     setMnemonic('')
     setRecovery(null)
@@ -197,7 +199,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setVerifyError(false)
     setShowWords(true)
     setLocalError(null)
-    setPinFallback(false)
+    setPasswordFallback(false)
     autoGestureTried.current = false
     setBusy(false)
   }, [open])
@@ -247,54 +249,54 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
 
   const handleCreate = useCallback(async () => {
     setLocalError(null)
-    if (pin.length < MIN_PIN) { setLocalError(t('pinTooShort')); return }
-    if (pin !== confirm) { setLocalError(t('pinMismatch')); return }
+    if (!isValidPassword(password)) { setLocalError(t('passwordTooShort')); return }
+    if (password !== confirm) { setLocalError(t('passwordMismatch')); return }
     setBusy(true)
     try {
-      const result = await create(pin)
+      const result = await create(password)
       setRecovery(result.mnemonic)
       setVerifyPositions(pickVerifyPositions(result.mnemonic.trim().split(' ').length))
       setVerifyInputs({})
       setVerifyError(false)
       setShowWords(true)
-      setPin('')
+      setPassword('')
       setConfirm('')
     } catch (e) {
       setLocalError(translateError(e))
     } finally {
       setBusy(false)
     }
-  }, [confirm, create, pin, t, translateError])
+  }, [confirm, create, password, t, translateError])
 
   const handleImport = useCallback(async () => {
     setLocalError(null)
-    if (pin.length < MIN_PIN) { setLocalError(t('pinTooShort')); return }
+    if (!isValidPassword(password)) { setLocalError(t('passwordTooShort')); return }
     setBusy(true)
     try {
-      await importExisting({ pin, mnemonic: mnemonic.trim() })
+      await importExisting({ password, mnemonic: mnemonic.trim() })
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
       setBusy(false)
     }
-  }, [importExisting, mnemonic, pin, signIn, t, translateError])
+  }, [importExisting, mnemonic, password, signIn, t, translateError])
 
   const handleUnlock = useCallback(async () => {
     setLocalError(null)
-    if (pin.length < MIN_PIN) { setLocalError(t('pinTooShort')); return }
+    if (!isValidPassword(password)) { setLocalError(t('passwordTooShort')); return }
     setBusy(true)
     try {
-      await unlock(pin)
+      await unlock(password)
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
       setBusy(false)
     }
-  }, [pin, signIn, t, translateError, unlock])
+  }, [password, signIn, t, translateError, unlock])
 
-  // R-#246: un gesto reemplaza al PIN cuando la clave quedó sellada con el
-  // secreto PRF de la passkey. Si el gesto falla o se cancela, el PIN queda a un
-  // toque de distancia (`pinFallback`).
+  // R-#246: un gesto reemplaza al password cuando la clave quedó sellada con el
+  // secreto PRF de la passkey. Si el gesto falla o se cancela, el password queda a un
+  // toque de distancia (`passwordFallback`).
   const handleUnlockWithBiometric = useCallback(async () => {
     setLocalError(null)
     setBusy(true)
@@ -303,25 +305,25 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
-      setPinFallback(true)
+      setPasswordFallback(true)
       setBusy(false)
     }
   }, [signIn, translateError, unlockWithBiometric])
 
-  // Mismo PIN, un paso extra: además de desbloquear, recuerda el gesto para la
+  // Mismo password, un paso extra: además de desbloquear, recuerda el gesto para la
   // próxima vez. `enableBiometric` deja la billetera desbloqueada.
   const handleUnlockAndEnableBiometric = useCallback(async () => {
     setLocalError(null)
-    if (pin.length < MIN_PIN) { setLocalError(t('pinTooShort')); return }
+    if (!isValidPassword(password)) { setLocalError(t('passwordTooShort')); return }
     setBusy(true)
     try {
-      await enableBiometric(pin)
+      await enableBiometric(password)
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
       setBusy(false)
     }
-  }, [enableBiometric, pin, signIn, t, translateError])
+  }, [enableBiometric, password, signIn, t, translateError])
 
   const handleDisableBiometric = useCallback(async () => {
     setLocalError(null)
@@ -336,20 +338,20 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   }, [disableBiometric, translateError])
 
   // Desde el estado ya desbloqueado (billetera recién creada): activar el gesto
-  // pide el PIN otra vez porque no se guarda en memoria.
+  // pide el password otra vez porque no se guarda en memoria.
   const handleEnableBiometric = useCallback(async () => {
     setLocalError(null)
-    if (biometricPin.length < MIN_PIN) { setLocalError(t('pinTooShort')); return }
+    if (!isValidPassword(biometricPassword)) { setLocalError(t('passwordTooShort')); return }
     setBusy(true)
     try {
-      await enableBiometric(biometricPin)
-      setBiometricPin('')
+      await enableBiometric(biometricPassword)
+      setBiometricPassword('')
     } catch (e) {
       setLocalError(translateError(e))
     } finally {
       setBusy(false)
     }
-  }, [biometricPin, enableBiometric, t, translateError])
+  }, [biometricPassword, enableBiometric, t, translateError])
 
   // R-#249: las 3 palabras deben coincidir con la frase; sólo entonces se marca el
   // respaldo como confirmado y se firma. `signIn` ya cierra el diálogo.
@@ -398,11 +400,11 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   // Hay billetera en este dispositivo (bloqueada o desbloqueada): el diálogo muestra
   // la billetera, no el formulario de crear o importar.
   const hasWallet = status === 'locked' || status === 'unlocked'
-  // Con la passkey registrada el gesto es el camino principal: el PIN solo
+  // Con la passkey registrada el gesto es el camino principal: el password solo
   // aparece si el usuario lo pide o si el gesto falla (R-#246).
-  const gestureOnly = showUnlock && biometricEnabled && !pinFallback
+  const gestureOnly = showUnlock && biometricEnabled && !passwordFallback
   // Al abrir con una passkey registrada se pide el gesto directamente, en lugar
-  // de mostrar un campo de PIN que invita a escribir cuando un toque bastaba.
+  // de mostrar un campo de password que invita a escribir cuando un toque bastaba.
   useEffect(() => {
     if (!open || !showUnlock || !biometricEnabled) return
     if (autoGestureTried.current) return
@@ -538,30 +540,30 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               </label>
             )}
 
-            {/* El PIN se pide para desbloquear una billetera existente o para crear
-                una nueva; nunca cuando el gesto reemplaza al PIN. */}
+            {/* El password se pide para desbloquear una billetera existente o para crear
+                una nueva; nunca cuando el gesto reemplaza al password. */}
             {!gestureOnly && (!hasWallet || showUnlock) && (
               <label className="block space-y-1">
-                <span className="text-sm font-medium">{t('pin')}</span>
+                <span className="text-sm font-medium">{t('password')}</span>
                 <Input
                   type="password"
-                  inputMode="numeric"
+                  inputMode="text"
                   autoComplete="off"
-                  data-testid="wallet-pin"
-                  value={pin}
-                  onChange={(event) => setPin(event.target.value)}
+                  data-testid="wallet-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                 />
               </label>
             )}
 
             {!showUnlock && !hasWallet && mode === 'create' && (
               <label className="block space-y-1">
-                <span className="text-sm font-medium">{t('pinConfirm')}</span>
+                <span className="text-sm font-medium">{t('passwordConfirm')}</span>
                 <Input
                   type="password"
-                  inputMode="numeric"
+                  inputMode="text"
                   autoComplete="off"
-                  data-testid="wallet-pin-confirm"
+                  data-testid="wallet-password-confirm"
                   value={confirm}
                   onChange={(event) => setConfirm(event.target.value)}
                 />
@@ -603,7 +605,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               </div>
             )}
 
-            {/* Recién creada o importada: la billetera está desbloqueada y el PIN
+            {/* Recién creada o importada: la billetera está desbloqueada y el password
                 sigue en memoria del usuario, así que es el momento de activar el
                 gesto sin volver a pedirlo más tarde. */}
             {!showUnlock && walletInfo?.address && biometricAvailable && !biometricEnabled && (
@@ -613,18 +615,18 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                 </p>
                 <Input
                   type="password"
-                  inputMode="numeric"
+                  inputMode="text"
                   autoComplete="off"
-                  data-testid="wallet-biometric-pin"
-                  value={biometricPin}
-                  onChange={(event) => setBiometricPin(event.target.value)}
+                  data-testid="wallet-biometric-password"
+                  value={biometricPassword}
+                  onChange={(event) => setBiometricPassword(event.target.value)}
                 />
                 <Button
                   variant="default"
                   size="sm"
                   data-testid="wallet-enable-biometric"
                   onClick={() => { void handleEnableBiometric() }}
-                  disabled={busy || biometricPin.length < MIN_PIN}
+                  disabled={busy || !isValidPassword(biometricPassword)}
                 >
                   {t('biometricEnable')}
                 </Button>
@@ -665,11 +667,11 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                     <>
                       <Button
                         variant="outline"
-                        data-testid="wallet-use-pin"
-                        onClick={() => setPinFallback(true)}
+                        data-testid="wallet-use-password"
+                        onClick={() => setPasswordFallback(true)}
                         disabled={busy}
                       >
-                        {t('usePin')}
+                        {t('usePassword')}
                       </Button>
                       <Button
                         data-testid="wallet-unlock-biometric"
@@ -703,13 +705,13 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                     onClick={() => { void handleUnlock() }}
                     disabled={busy}
                   >
-                    {busy ? t('signingIn') : biometricAvailable ? t('unlockWithPinOnly') : t('unlock')}
+                    {busy ? t('signingIn') : biometricAvailable ? t('unlockWithPasswordOnly') : t('unlock')}
                   </Button>
                   {biometricAvailable && (
                     <Button
                       data-testid="wallet-enable-biometric"
                       onClick={() => { void handleUnlockAndEnableBiometric() }}
-                      disabled={busy || pin.length < MIN_PIN}
+                      disabled={busy || !isValidPassword(password)}
                     >
                       {busy ? t('signingIn') : t('biometricUnlock')}
                     </Button>

@@ -210,7 +210,7 @@ describe('DonateModal', () => {
     })
 
     // R-#246: "Unlock it to donate" no decía el camino más rápido. Con huella
-    // registrada (o disponible) el aviso la nombra en lugar de mandar al PIN.
+    // registrada (o disponible) el aviso la nombra en lugar de mandar al password.
     it('names the gesture when the device can verify the user', async () => {
       mockUseWalletClient.mockReturnValue({ data: undefined })
       mockInAppStatus.mockReturnValue('locked')
@@ -220,18 +220,18 @@ describe('DonateModal', () => {
         expect(screen.getByText(/Confirm with your fingerprint or Face ID to donate/i)).toBeInTheDocument()
       })
       expect(screen.getByText(/Unlock with fingerprint or Face ID/i)).toBeInTheDocument()
-      expect(screen.queryByText(/Unlock it with your PIN to donate/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Unlock it with your password to donate/i)).not.toBeInTheDocument()
     })
 
     // El gesto solo se nombra cuando ya está registrado: la primera vez hay que
-    // escribir el PIN (y ahí el diálogo ofrece sellar la clave con la huella).
-    it('still names the PIN when the device could enrol but has not yet', async () => {
+    // escribir el password (y ahí el diálogo ofrece sellar la clave con la huella).
+    it('still names the password when the device could enrol but has not yet', async () => {
       mockUseWalletClient.mockReturnValue({ data: undefined })
       mockInAppStatus.mockReturnValue('locked')
       mockBiometric.mockReturnValue({ enabled: false, available: true })
       await waitFor(() => {
         renderModal()
-        expect(screen.getByText(/Unlock it with your PIN to donate/i)).toBeInTheDocument()
+        expect(screen.getByText(/Unlock it with your password to donate/i)).toBeInTheDocument()
       })
       expect(screen.queryByText(/Confirm with your fingerprint or Face ID to donate/i)).not.toBeInTheDocument()
     })

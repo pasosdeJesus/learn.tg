@@ -11,7 +11,7 @@ export default function WalletTestPage() {
   const params = useParams<{ lang?: string }>()
   const lang = params?.lang === 'es' ? 'es' : 'en'
   const { status, walletInfo, create, importExisting, unlock, lock, remove, getProvider } = useInAppWallet()
-  const [pin, setPin] = useState('')
+  const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [mnemonic, setMnemonic] = useState('')
   const [recovery, setRecovery] = useState<string | null>(null)
@@ -23,8 +23,8 @@ export default function WalletTestPage() {
       title: 'In-app wallet test page',
       warning: 'Development only. Do not enable in production.',
       status: 'Status',
-      pin: 'PIN (6+ digits)',
-      pinConfirm: 'Confirm PIN',
+      password: 'password (6+ digits)',
+      passwordConfirm: 'Confirm password',
       create: 'Create wallet',
       import: 'Import wallet',
       mnemonic: 'Mnemonic (import only)',
@@ -40,8 +40,8 @@ export default function WalletTestPage() {
       title: 'Página de prueba de la billetera de la aplicación',
       warning: 'Solo desarrollo. No habilitar en producción.',
       status: 'Estado',
-      pin: 'PIN (6 o más dígitos)',
-      pinConfirm: 'Confirmar PIN',
+      password: 'password (6 o más dígitos)',
+      passwordConfirm: 'Confirmar password',
       create: 'Crear billetera',
       import: 'Importar billetera',
       mnemonic: 'Mnemónico (solo para importar)',
@@ -72,22 +72,22 @@ export default function WalletTestPage() {
   }
 
   const onCreate = () => guarded(async () => {
-    const result = await create(pin)
+    const result = await create(password)
     setRecovery(result.mnemonic)
-    setPin('')
+    setPassword('')
     setConfirm('')
     append(`OK wallet created ${result.walletInfo.address}`)
   })
 
   const onImport = () => guarded(async () => {
-    const info = await importExisting({ pin, mnemonic: mnemonic.trim() })
-    setPin('')
+    const info = await importExisting({ password, mnemonic: mnemonic.trim() })
+    setPassword('')
     append(`OK wallet imported ${info.address}`)
   })
 
   const onUnlock = () => guarded(async () => {
-    const info = await unlock(pin)
-    setPin('')
+    const info = await unlock(password)
+    setPassword('')
     append(`OK wallet unlocked ${info.address}`)
   })
 
@@ -140,24 +140,24 @@ export default function WalletTestPage() {
         {status !== 'unlocked' && (
           <>
             <label className="flex flex-col gap-1">
-              {t('pin')}
+              {t('password')}
               <input
                 type="password"
                 inputMode="numeric"
-                data-testid="wallet-pin"
-                value={pin}
-                onChange={(event) => setPin(event.target.value)}
+                data-testid="wallet-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 className="border px-2 py-1"
               />
             </label>
             {status === 'no-wallet' && (
               <>
                 <label className="flex flex-col gap-1">
-                  {t('pinConfirm')}
+                  {t('passwordConfirm')}
                   <input
                     type="password"
                     inputMode="numeric"
-                    data-testid="wallet-pin-confirm"
+                    data-testid="wallet-password-confirm"
                     value={confirm}
                     onChange={(event) => setConfirm(event.target.value)}
                     className="border px-2 py-1"
@@ -167,7 +167,7 @@ export default function WalletTestPage() {
                   type="button"
                   data-testid="wallet-create"
                   onClick={onCreate}
-                  disabled={busy || pin.length < 6 || pin !== confirm}
+                  disabled={busy || password.length < 6 || password !== confirm}
                   className="px-4 py-2 rounded bg-emerald-700 text-white disabled:opacity-50"
                 >
                   {t('create')}
@@ -186,7 +186,7 @@ export default function WalletTestPage() {
                   type="button"
                   data-testid="wallet-import"
                   onClick={onImport}
-                  disabled={busy || pin.length < 6 || !mnemonic.trim()}
+                  disabled={busy || password.length < 6 || !mnemonic.trim()}
                   className="px-4 py-2 rounded border border-emerald-700 disabled:opacity-50"
                 >
                   {t('import')}
@@ -198,7 +198,7 @@ export default function WalletTestPage() {
                 type="button"
                 data-testid="wallet-unlock"
                 onClick={onUnlock}
-                disabled={busy || pin.length < 6}
+                disabled={busy || password.length < 6}
                 className="px-4 py-2 rounded bg-emerald-700 text-white disabled:opacity-50"
               >
                 {t('unlock')}

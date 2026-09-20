@@ -178,6 +178,16 @@ test-e2e:
 	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-9001} CHAIN_ID=$${CHAIN_ID:-11142220} \
 	./bin/m test:e2e
 
+# Corre la suite y reintenta los specs que fallen. Los fallos contra el dev site
+# son de carga/timing (la misma spec pasa sola), no de producto; ver
+# doc/e2e-testing.md y bin/e2e-retry.mjs.
+#   E2E_RETRIES=3 make test-e2e-retry
+test-e2e-retry:
+	E2E_SPEC_DELAY_MS=12000 \
+	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-9001} CHAIN_ID=$${CHAIN_ID:-11142220} \
+	E2E_RETRIES=$${E2E_RETRIES:-2} \
+	node bin/e2e-retry.mjs
+
 # Run a specific E2E spec (OpenBSD make no soporta pattern rules `%`)
 #   make test-e2e-spec SPEC=cluster-formation
 test-e2e-spec:

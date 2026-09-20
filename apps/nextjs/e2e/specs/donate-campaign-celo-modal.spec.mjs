@@ -52,6 +52,32 @@ async function navAndWait(page, url) {
   return false
 }
 
+/**
+ * Hace `evaluate`/`$eval`/`$$eval` tolerantes a "Execution context was destroyed":
+ * el dev site navega o compila mientras se evalúa, y sin esto la spec muere en la
+ * primera carrera. Reintenta hasta 3 veces; sólo los errores transitorios.
+ */
+function hardenPage(page) {
+  for (const name of ['evaluate', '$eval', '$$eval']) {
+    const original = page[name].bind(page)
+    page[name] = async (...args) => {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          return await original(...args)
+        } catch (e) {
+          const message = String(e && e.message)
+          const transient = /context was destroyed|Cannot find context|Target closed|Execution context/i.test(
+            message,
+          )
+          if (attempt === 2 || !transient) throw e
+          await new Promise((r) => setTimeout(r, 1500))
+        }
+      }
+    }
+  }
+  return page
+}
+
 async function main() {
   const t0 = performance.now()
   resetFailures()
@@ -102,7 +128,7 @@ async function main() {
     p.on('pageerror', (e) => console.log(`  [PAGEERR] ${e.message}`))
     p.on('console', (m) => { if (m.type() === 'error') console.log(`  [CONSOLE-ERR] ${m.text().slice(0, 300)}`) })
     await setupE2EAuth(p, account.address, creds.pk, CHAIN_ID, base)
-    return p
+    return hardenPage(p)
   }, { label: 'setupE2EAuth modal' })
 
   // Real RPC bridge (replaces the mock's fake sendTransaction/balances).
@@ -311,8 +337,7 @@ async function main() {
   if (!success) {
     fail('Success dialog not shown')
     const probe = errSnap || modalGoneAt || txt
-    const m = probe.match(/(Error|Something went wrong|exceeds|Unauthorized|Internal server|failed)[^]*?\./i)
-    console.log(`  error snapshot: ${(m ? m[0] : probe).slice(0, 500).replace(/\s+/g, ' ')}`)
+    console.log(`  modal text: ${String(probe).slice(0, 900).replace(/\s+/g, ' ')}`)
     console.log(`  modal gone: ${!!modalGoneAt}`)
     process.exit(1)
   }

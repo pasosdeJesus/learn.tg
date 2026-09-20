@@ -14,9 +14,9 @@
 //  2. el botón abre `WalletDialog` ENCIMA del modal (era el defecto: el diálogo
 //     no estaba montado con sesión iniciada, así que el evento no tenía quien lo
 //     escuchara);
-//  3. el PIN deja el modal usable (el aviso desaparece);
+//  3. el password deja el modal usable (el aviso desaparece);
 //  4. tras recargar esa pestaña, el desbloqueo recordado evita volver a pedir el
-//     PIN aunque la cabecera siga mostrando la sesión.
+//     password aunque la cabecera siga mostrando la sesión.
 //
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg PUERTOPRU=9001 \
 //   CHAIN_ID=11142220 node e2e/specs/donate-unlock-dialog.spec.mjs
@@ -29,7 +29,7 @@ import {
 } from '@pasosdejesus/m/e2e'
 import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
-const PIN = '123456'
+const password = '12345678'
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function loadEnvCredentials() {
@@ -108,17 +108,17 @@ async function signInFromHeader(page, base) {
       fail('La cabecera no abrió el diálogo de la billetera')
       return false
     }
-    const createForm = await page.waitForSelector('[data-testid="wallet-pin-confirm"]', { timeout: 25000 }).catch(() => null)
+    const createForm = await page.waitForSelector('[data-testid="wallet-password-confirm"]', { timeout: 25000 }).catch(() => null)
     if (createForm) {
-      await page.type('[data-testid="wallet-pin"]', PIN)
-      await page.type('[data-testid="wallet-pin-confirm"]', PIN)
+      await page.type('[data-testid="wallet-password"]', password)
+      await page.type('[data-testid="wallet-password-confirm"]', password)
       await page.click('[data-testid="wallet-create"]')
       await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 60000 })
       ok('Billetera in-app creada')
       // "Guardé las palabras, ingresar" firma el SIWE y recarga
       await completeBackupVerification(page)
     } else if (await exists(page, '[data-testid="wallet-unlock"]')) {
-      await page.type('[data-testid="wallet-pin"]', PIN)
+      await page.type('[data-testid="wallet-password"]', password)
       await page.click('[data-testid="wallet-unlock"]')
     } else if (await exists(page, '[data-testid="wallet-signin"]')) {
       await page.click('[data-testid="wallet-signin"]')
@@ -261,7 +261,7 @@ async function main() {
         visible: rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none',
         onTop: !!top && (el === top || el.contains(top)),
         text: (el.innerText || '').replace(/\s+/g, ' ').slice(0, 120),
-        hasPin: !!el.querySelector('[data-testid="wallet-pin"]'),
+        hasPassword: !!el.querySelector('[data-testid="wallet-password"]'),
       }
     })
     if (dialog) break
@@ -273,17 +273,17 @@ async function main() {
     fail(`El diálogo de la billetera se abrió pero no es visible: ${JSON.stringify(dialog)}`)
   } else if (!dialog.onTop) {
     fail(`El diálogo de la billetera se abrió DEBAJO del modal de donación (z-index): ${JSON.stringify(dialog)}`)
-  } else if (!dialog.hasPin) {
-    fail(`El diálogo de la billetera se abrió sin el formulario de PIN: ${dialog.text}`)
+  } else if (!dialog.hasPassword) {
+    fail(`El diálogo de la billetera se abrió sin el formulario de password: ${dialog.text}`)
   } else {
     ok(`El diálogo de la billetera se abrió sobre el modal: "${dialog.text}"`)
 
-    await locked.type('[data-testid="wallet-pin"]', PIN)
+    await locked.type('[data-testid="wallet-password"]', password)
     await locked.click('[data-testid="wallet-unlock"]')
     await locked.waitForFunction(
-      () => !document.querySelector('[data-testid="wallet-pin"]'),
+      () => !document.querySelector('[data-testid="wallet-password"]'),
       { timeout: 30000 },
-    ).then(() => ok('El PIN desbloquea la billetera')).catch(() => fail('El PIN no desbloqueó la billetera'))
+    ).then(() => ok('El password desbloquea la billetera')).catch(() => fail('El password no desbloqueó la billetera'))
 
     // Con la billetera desbloqueada el aviso desaparece y el modal queda usable
     await sleep(1500)
@@ -299,7 +299,7 @@ async function main() {
 
     // 4. R-#246: el desbloqueo vive en memoria, así que recargar vuelve a
     // pedirlo (el parche de `sessionStorage` se quitó: no sobrevivía al cierre de
-    // la app en ningún entorno medido). Lo que evita teclear el PIN es el camino
+    // la app en ningún entorno medido). Lo que evita teclear el password es el camino
     // biométrico, cubierto por `biometric-unlock.spec.mjs`.
     await locked.reload({ waitUntil: 'domcontentloaded' })
     await sleep(5000)

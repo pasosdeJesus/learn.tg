@@ -17,7 +17,7 @@ import {
 import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 
 const GUIDE_PATH = '/en/gdcluster/guide1/test'
-const PIN = '123456'
+const password = '12345678'
 
 function loadEnvCredentials() {
   for (const envPath of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env'), path.join(process.cwd(), '.env')]) {
@@ -116,9 +116,9 @@ async function main() {
   const page = await browser.newPage()
   await page.setDefaultNavigationTimeout(120000)
 
-  await installCoreWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId, pin: PIN })
+  await installCoreWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId, password: password })
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
-  await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base, pin: PIN })
+  await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base, password: password })
   ok('Signed in with the pdj-wallet core (session cookie)')
 
   console.log(`\nCrossword offline | ${base}${GUIDE_PATH}\n`)

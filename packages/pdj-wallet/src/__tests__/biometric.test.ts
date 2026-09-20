@@ -11,7 +11,7 @@ try {
 
 const describeIdb = fakeIndexedDB ? describe : describe.skip
 
-const PIN = '123456'
+const password = '12345678'
 const PN = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
 const ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
@@ -93,8 +93,8 @@ describeIdb('biometric unlock (L2, R-#246)', () => {
     const { importWallet, enableBiometricUnlock, hasBiometricUnlock } = await import('../wallet')
     const { readBiometricRecord } = await import('../biometric')
 
-    await importWallet({ privateKey: PN as `0x${string}`, pin: PIN, storage })
-    await enableBiometricUnlock(PIN, storage)
+    await importWallet({ privateKey: PN as `0x${string}`, password: password, storage })
+    await enableBiometricUnlock(password, storage)
 
     const record = await readBiometricRecord()
     expect(record).not.toBeNull()
@@ -109,8 +109,8 @@ describeIdb('biometric unlock (L2, R-#246)', () => {
     const { importWallet, enableBiometricUnlock, lockWallet, unlockWithBiometric, isUnlocked } =
       await import('../wallet')
 
-    await importWallet({ privateKey: PN as `0x${string}`, pin: PIN, storage })
-    await enableBiometricUnlock(PIN, storage)
+    await importWallet({ privateKey: PN as `0x${string}`, password: password, storage })
+    await enableBiometricUnlock(password, storage)
     await lockWallet()
     expect(isUnlocked()).toBe(false)
 
@@ -121,8 +121,8 @@ describeIdb('biometric unlock (L2, R-#246)', () => {
 
   it('is deterministic: the same salt gives the same wrapped key across reloads', async () => {
     const { importWallet, enableBiometricUnlock, lockWallet } = await import('../wallet')
-    await importWallet({ privateKey: PN as `0x${string}`, pin: PIN, storage })
-    await enableBiometricUnlock(PIN, storage)
+    await importWallet({ privateKey: PN as `0x${string}`, password: password, storage })
+    await enableBiometricUnlock(password, storage)
     await lockWallet()
 
     // Otra "carga de página": módulo limpio, mismo almacenamiento y authenticator
@@ -132,14 +132,14 @@ describeIdb('biometric unlock (L2, R-#246)', () => {
     expect(info.address).toBe(ADDRESS)
   })
 
-  it('keeps the PIN working as fallback and recovery', async () => {
+  it('keeps the password working as fallback and recovery', async () => {
     const { importWallet, enableBiometricUnlock, lockWallet, unlockWallet } = await import('../wallet')
 
-    await importWallet({ privateKey: PN as `0x${string}`, pin: PIN, storage })
-    await enableBiometricUnlock(PIN, storage)
+    await importWallet({ privateKey: PN as `0x${string}`, password: password, storage })
+    await enableBiometricUnlock(password, storage)
     await lockWallet()
 
-    const info = await unlockWallet(PIN, storage)
+    const info = await unlockWallet(password, storage)
     expect(info.address).toBe(ADDRESS)
   })
 
@@ -147,8 +147,8 @@ describeIdb('biometric unlock (L2, R-#246)', () => {
     const { importWallet, enableBiometricUnlock, lockWallet, unlockWithBiometric } = await import(
       '../wallet'
     )
-    await importWallet({ privateKey: PN as `0x${string}`, pin: PIN, storage })
-    await enableBiometricUnlock(PIN, storage)
+    await importWallet({ privateKey: PN as `0x${string}`, password: password, storage })
+    await enableBiometricUnlock(password, storage)
     await lockWallet()
 
     installFakeAuthenticator({ corruptPrf: true })
@@ -157,19 +157,19 @@ describeIdb('biometric unlock (L2, R-#246)', () => {
 
   it('reports no-prf instead of sealing when the authenticator has no prf', async () => {
     const { importWallet, enableBiometricUnlock, hasBiometricUnlock } = await import('../wallet')
-    await importWallet({ privateKey: PN as `0x${string}`, pin: PIN, storage })
+    await importWallet({ privateKey: PN as `0x${string}`, password: password, storage })
 
     installFakeAuthenticator({ createPrf: false })
-    await expect(enableBiometricUnlock(PIN, storage)).rejects.toThrow('no-prf')
+    await expect(enableBiometricUnlock(password, storage)).rejects.toThrow('no-prf')
     expect(await hasBiometricUnlock(storage)).toBe(false)
   })
 
   it('reports no-webauthn on devices without a platform authenticator', async () => {
     const { importWallet, enableBiometricUnlock, hasBiometricUnlock } = await import('../wallet')
-    await importWallet({ privateKey: PN as `0x${string}`, pin: PIN, storage })
+    await importWallet({ privateKey: PN as `0x${string}`, password: password, storage })
 
     removeAuthenticator()
-    await expect(enableBiometricUnlock(PIN, storage)).rejects.toThrow('no-webauthn')
+    await expect(enableBiometricUnlock(password, storage)).rejects.toThrow('no-webauthn')
     expect(await hasBiometricUnlock(storage)).toBe(false)
     // Y no revienta al consultar el estado
     expect(await hasBiometricUnlock(storage)).toBe(false)
@@ -179,12 +179,12 @@ describeIdb('biometric unlock (L2, R-#246)', () => {
     const { importWallet, enableBiometricUnlock, disableBiometricUnlock, deleteWallet, hasBiometricUnlock } =
       await import('../wallet')
 
-    await importWallet({ privateKey: PN as `0x${string}`, pin: PIN, storage })
-    await enableBiometricUnlock(PIN, storage)
+    await importWallet({ privateKey: PN as `0x${string}`, password: password, storage })
+    await enableBiometricUnlock(password, storage)
     await disableBiometricUnlock()
     expect(await hasBiometricUnlock(storage)).toBe(false)
 
-    await enableBiometricUnlock(PIN, storage)
+    await enableBiometricUnlock(password, storage)
     expect(await hasBiometricUnlock(storage)).toBe(true)
     await deleteWallet(storage)
     expect(await hasBiometricUnlock(storage)).toBe(false)
@@ -194,13 +194,13 @@ describeIdb('biometric unlock (L2, R-#246)', () => {
     const { importWallet, enableBiometricUnlock, lockWallet, unlockWithBiometric, hasBiometricUnlock } =
       await import('../wallet')
 
-    await importWallet({ privateKey: PN as `0x${string}`, pin: PIN, storage })
-    await enableBiometricUnlock(PIN, storage)
+    await importWallet({ privateKey: PN as `0x${string}`, password: password, storage })
+    await enableBiometricUnlock(password, storage)
     await lockWallet()
 
     const other = new MemoryStorage()
     const OTHER_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d'
-    await importWallet({ privateKey: OTHER_KEY as `0x${string}`, pin: PIN, storage: other })
+    await importWallet({ privateKey: OTHER_KEY as `0x${string}`, password: password, storage: other })
     expect(await hasBiometricUnlock(other)).toBe(false)
     await expect(unlockWithBiometric(other)).rejects.toThrow('no-biometric')
   })

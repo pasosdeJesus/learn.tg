@@ -124,20 +124,22 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
         return (
           <DialogHeader>
             <DialogTitle>{t('successTitle')}</DialogTitle>
-            <DialogDescription className="py-4">
-              {claimResult.message}
-              {claimResult.txHash && (
-                <div className="mt-4">
-                  <a
-                    href={`${process.env.NEXT_PUBLIC_EXPLORER_TX}/${claimResult.txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
-                  >
-                    {t('viewTransaction')}
-                  </a>
-                </div>
-              )}
+            <DialogDescription asChild>
+              <div className="py-4">
+                {claimResult.message}
+                {claimResult.txHash && (
+                  <div className="mt-4">
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_EXPLORER_TX}/${claimResult.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
+                      {t('viewTransaction')}
+                    </a>
+                  </div>
+                )}
+              </div>
             </DialogDescription>
           </DialogHeader>
         )

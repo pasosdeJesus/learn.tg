@@ -20,7 +20,7 @@ import {
 } from '@pasosdejesus/m/e2e'
 import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
-const PIN = '123456'
+const password = '12345678'
 
 function loadEnvCredentials() {
   for (const envPath of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env'), path.join(process.cwd(), '.env')]) {
@@ -73,30 +73,30 @@ async function main() {
 
   console.log(`In-app wallet | ${base}\n`)
 
-  // 1. Create the wallet with a PIN
-  // `wallet-pin` existe en todos los estados menos 'unlocked'; el de
+  // 1. Create the wallet with a password
+  // `wallet-password` existe en todos los estados menos 'unlocked'; el de
   // confirmación solo aparece cuando el hook ya resolvió 'no-wallet' (consulta
   // IndexedDB), así que hay que esperarlo antes de escribir.
-  await page.waitForSelector('[data-testid="wallet-pin"]')
-  await page.waitForSelector('[data-testid="wallet-pin-confirm"]', { timeout })
-  await page.type('[data-testid="wallet-pin"]', PIN)
-  await page.type('[data-testid="wallet-pin-confirm"]', PIN)
+  await page.waitForSelector('[data-testid="wallet-password"]')
+  await page.waitForSelector('[data-testid="wallet-password-confirm"]', { timeout })
+  await page.type('[data-testid="wallet-password"]', password)
+  await page.type('[data-testid="wallet-password-confirm"]', password)
   await page.click('[data-testid="wallet-create"]')
   await waitForStatus(page, 'unlocked', timeout)
   const address = await page.$eval('[data-testid="wallet-address"]', (el) => el.textContent)
   if (/^0x[0-9a-fA-F]{40}$/.test(address || '')) ok(`Wallet created: ${short(address)}`)
   else fail(`Unexpected address: ${address}`)
 
-  // 2. It survives a reload (IndexedDB) and asks for the PIN again
+  // 2. It survives a reload (IndexedDB) and asks for the password again
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await page.waitForSelector('[data-testid="wallet-pin"]')
+  await page.waitForSelector('[data-testid="wallet-password"]')
   await waitForStatus(page, 'locked', timeout)
   ok('Wallet persisted and locked after reload')
 
-  await page.type('[data-testid="wallet-pin"]', PIN)
+  await page.type('[data-testid="wallet-password"]', password)
   await page.click('[data-testid="wallet-unlock"]')
   await waitForStatus(page, 'unlocked', timeout)
-  ok('Unlocked with the PIN')
+  ok('Unlocked with the password')
 
   // 3. SIWE with the in-app wallet
   await completeBackupVerification(page)

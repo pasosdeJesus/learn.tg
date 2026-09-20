@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@learn-tg/pdj-wallet-next', () => ({
+  // Misma regla que el paquete (R-#251): clave de 8+ caracteres.
+  isValidPassword: (value: string) => value.trim().length >= 8,
   useInAppWallet: () => ({
     status: mocks.status,
     walletInfo: mocks.walletInfo,
@@ -94,10 +96,10 @@ async function completeBackup({ wrongInsteadOfCorrect = false } = {}) {
   return asked
 }
 
-async function fillPin(pin = '123456') {
-  fireEvent.change(screen.getByTestId('wallet-pin'), { target: { value: pin } })
-  if (screen.queryByTestId('wallet-pin-confirm')) {
-    fireEvent.change(screen.getByTestId('wallet-pin-confirm'), { target: { value: pin } })
+async function fillPassword(password = '12345678') {
+  fireEvent.change(screen.getByTestId('wallet-password'), { target: { value: password } })
+  if (screen.queryByTestId('wallet-password-confirm')) {
+    fireEvent.change(screen.getByTestId('wallet-password-confirm'), { target: { value: password } })
   }
 }
 
@@ -119,12 +121,12 @@ describe('WalletDialog (R-#244)', () => {
     })
     renderDialog()
 
-    await fillPin()
+    await fillPassword()
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-create'))
     })
 
-    expect(mocks.create).toHaveBeenCalledWith('123456')
+    expect(mocks.create).toHaveBeenCalledWith('12345678')
     const words = screen.getByTestId('wallet-recovery-words')
     expect(words.querySelectorAll('li')).toHaveLength(12)
     // Todavía no firma: primero se respaldan las palabras y se verifica (R-#249)
@@ -135,8 +137,8 @@ describe('WalletDialog (R-#244)', () => {
 
   it('does not create the wallet when the PINs differ', async () => {
     renderDialog()
-    fireEvent.change(screen.getByTestId('wallet-pin'), { target: { value: '123456' } })
-    fireEvent.change(screen.getByTestId('wallet-pin-confirm'), { target: { value: '654321' } })
+    fireEvent.change(screen.getByTestId('wallet-password'), { target: { value: '12345678' } })
+    fireEvent.change(screen.getByTestId('wallet-password-confirm'), { target: { value: '87654321' } })
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-create'))
     })
@@ -144,14 +146,14 @@ describe('WalletDialog (R-#244)', () => {
     expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/do not match/i)
   })
 
-  it('rejects a PIN shorter than six digits', async () => {
+  it('rejects a password shorter than eight characters', async () => {
     renderDialog()
-    await fillPin('123')
+    await fillPassword('123')
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-create'))
     })
     expect(mocks.create).not.toHaveBeenCalled()
-    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/6 digits/i)
+    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/8 characters/i)
   })
 
   it('asks for three words and signs in only when they match', async () => {
@@ -163,7 +165,7 @@ describe('WalletDialog (R-#244)', () => {
     mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
     renderDialog()
 
-    await fillPin()
+    await fillPassword()
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-create'))
     })
@@ -186,7 +188,7 @@ describe('WalletDialog (R-#244)', () => {
     mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
     renderDialog()
 
-    await fillPin()
+    await fillPassword()
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-create'))
     })
@@ -212,17 +214,17 @@ describe('WalletDialog (R-#244)', () => {
     mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
     renderDialog()
 
-    await fillPin()
+    await fillPassword()
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-unlock'))
     })
 
-    expect(mocks.unlock).toHaveBeenCalledWith('123456')
+    expect(mocks.unlock).toHaveBeenCalledWith('12345678')
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
   })
 
   // R-#246 (L2): con la passkey registrada el gesto es el camino principal: al
-  // abrir el diálogo bloqueado se pide directamente, sin campo de PIN.
+  // abrir el diálogo bloqueado se pide directamente, sin campo de password.
   it('asks for the gesture as soon as the locked dialog opens', async () => {
     mocks.status = 'locked'
     mocks.walletInfo = { address: ADDRESS }
@@ -232,16 +234,16 @@ describe('WalletDialog (R-#244)', () => {
     mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
     renderDialog()
 
-    expect(screen.queryByTestId('wallet-pin')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-password')).not.toBeInTheDocument()
 
     await waitFor(() => expect(mocks.unlockWithBiometric).toHaveBeenCalled())
     expect(mocks.unlock).not.toHaveBeenCalled()
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
   })
 
-  // R-#246: el gesto no es el único camino. Si se cancela, el PIN queda a un
+  // R-#246: el gesto no es el único camino. Si se cancela, el password queda a un
   // toque de distancia y no se pierde la billetera.
-  it('falls back to the PIN when the gesture is cancelled', async () => {
+  it('falls back to the password when the gesture is cancelled', async () => {
     mocks.status = 'locked'
     mocks.walletInfo = { address: ADDRESS }
     mocks.biometricEnabled = true
@@ -254,18 +256,18 @@ describe('WalletDialog (R-#244)', () => {
     await waitFor(() => {
       expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/cancelled/i)
     })
-    expect(screen.getByTestId('wallet-pin')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-password')).toBeInTheDocument()
 
-    await fillPin()
+    await fillPassword()
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-unlock'))
     })
 
-    expect(mocks.unlock).toHaveBeenCalledWith('123456')
+    expect(mocks.unlock).toHaveBeenCalledWith('12345678')
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
   })
 
-  it('offers to enable the fingerprint with the same PIN', async () => {
+  it('offers to enable the fingerprint with the same password', async () => {
     mocks.status = 'locked'
     mocks.walletInfo = { address: ADDRESS }
     mocks.biometricAvailable = true
@@ -274,14 +276,14 @@ describe('WalletDialog (R-#244)', () => {
     mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
     renderDialog()
 
-    // Deshabilitado hasta que haya PIN
+    // Deshabilitado hasta que haya password
     expect(screen.getByTestId('wallet-enable-biometric')).toBeDisabled()
-    await fillPin()
+    await fillPassword()
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-enable-biometric'))
     })
 
-    expect(mocks.enableBiometric).toHaveBeenCalledWith('123456')
+    expect(mocks.enableBiometric).toHaveBeenCalledWith('12345678')
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
   })
 
@@ -335,20 +337,20 @@ describe('WalletDialog (R-#244)', () => {
     mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
     renderDialog('en', ADDRESS.toLowerCase())
 
-    await fillPin()
+    await fillPassword()
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-unlock'))
     })
 
-    expect(mocks.unlock).toHaveBeenCalledWith('123456')
+    expect(mocks.unlock).toHaveBeenCalledWith('12345678')
     expect(mocks.signInWithInAppWallet).not.toHaveBeenCalled()
     expect(mocks.reload).not.toHaveBeenCalled()
   })
 
   it('shows the error reported by the hook', () => {
-    mocks.error = 'Wrong PIN or corrupted wallet data'
+    mocks.error = 'Wrong password or corrupted wallet data'
     renderDialog()
-    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/Wrong PIN/)
+    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/Wrong password/)
   })
 
   // R-#251: la frase de recuperación se valida (BIP39) antes de derivar; el código
@@ -362,7 +364,7 @@ describe('WalletDialog (R-#244)', () => {
     fireEvent.change(screen.getByTestId('wallet-mnemonic'), {
       target: { value: 'test test test test test test test test test test test tset' },
     })
-    await fillPin()
+    await fillPassword()
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-import'))
     })
@@ -382,7 +384,7 @@ describe('WalletDialog (R-#244)', () => {
     expect(screen.getByTestId('wallet-address')).toBeInTheDocument()
     expect(screen.getByTestId('wallet-biometric-status')).toBeInTheDocument()
     expect(screen.queryByTestId('wallet-create')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('wallet-pin-confirm')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-password-confirm')).not.toBeInTheDocument()
     expect(screen.queryByTestId('wallet-mode-create')).not.toBeInTheDocument()
   })
 
@@ -403,7 +405,7 @@ describe('WalletDialog (R-#244)', () => {
     const onOpenChange = vi.fn()
     const { rerender } = render(<WalletDialog lang="en" open onOpenChange={onOpenChange} />)
 
-    await fillPin()
+    await fillPassword()
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-create'))
     })
@@ -413,6 +415,6 @@ describe('WalletDialog (R-#244)', () => {
     rerender(<WalletDialog lang="en" open onOpenChange={onOpenChange} />)
 
     expect(screen.queryByTestId('wallet-recovery-words')).not.toBeInTheDocument()
-    expect(screen.getByTestId('wallet-pin')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-password')).toBeInTheDocument()
   })
 })

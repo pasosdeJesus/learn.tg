@@ -11,7 +11,7 @@ export interface InAppWalletUnlockProps {
 
 export function InAppWalletUnlock({ lang = 'en', onUnlocked }: InAppWalletUnlockProps) {
   const { unlock } = useInAppWallet()
-  const [pin, setPin] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -20,10 +20,10 @@ export function InAppWalletUnlock({ lang = 'en', onUnlocked }: InAppWalletUnlock
     setError(null)
     setBusy(true)
     try {
-      const info = await unlock(pin)
+      const info = await unlock(password)
       onUnlocked?.(info.address)
     } catch {
-      setError(t(lang, 'wrongPin'))
+      setError(t(lang, 'wrongPassword'))
     } finally {
       setBusy(false)
     }
@@ -33,13 +33,13 @@ export function InAppWalletUnlock({ lang = 'en', onUnlocked }: InAppWalletUnlock
     <form onSubmit={handleSubmit} data-testid="in-app-wallet-unlock">
       <h2>{t(lang, 'unlockTitle')}</h2>
       <label>
-        {t(lang, 'pin')}
+        {t(lang, 'password')}
         <input
           type="password"
-          inputMode="numeric"
-          aria-label={t(lang, 'pin')}
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
+          inputMode="text"
+          aria-label={t(lang, 'password')}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
       </label>
       {error && <p role="alert">{error}</p>}

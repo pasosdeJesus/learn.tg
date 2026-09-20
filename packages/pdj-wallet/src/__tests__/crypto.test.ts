@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { KDF_ITERATIONS, decryptSecret, encryptSecret, fromBase64, toBase64 } from '../crypto'
 
 describe('crypto', () => {
-  it('round-trips a secret with the PIN', async () => {
+  it('round-trips a secret with the password', async () => {
     const secret = await encryptSecret('0x' + 'ab'.repeat(32), '123456')
     expect(secret.kdf.name).toBe('PBKDF2')
     expect(secret.kdf.hash).toBe('SHA-256')
@@ -26,9 +26,9 @@ describe('crypto', () => {
     expect(first.cipher.data).not.toBe(second.cipher.data)
   })
 
-  it('rejects a wrong PIN', async () => {
+  it('rejects a wrong password', async () => {
     const secret = await encryptSecret('secret', '123456')
-    await expect(decryptSecret(secret, '654321')).rejects.toThrow(/Wrong PIN/i)
+    await expect(decryptSecret(secret, '654321')).rejects.toThrow(/Wrong password/i)
   })
 
   it('round-trips base64 helpers', () => {

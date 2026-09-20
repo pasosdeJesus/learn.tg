@@ -1,6 +1,8 @@
+import { hexToBigInt } from 'viem'
 import { getUnlockedAccount, getUnlockedInfo, signMessage, signTransaction, signTypedData } from './wallet.js'
+import { isKnownDestination, rememberDestination } from './destinations.js'
 import { readBiometricRecord } from './biometric.js'
-import { assertUserVerification } from './web-authn.js'
+import { assertUserVerification, hasRecentUserVerification } from './web-authn.js'
 import { CHAIN_IDS, type Eip1193Provider, type Eip1193RequestArgs } from './types.js'
 
 export interface ProviderOptions {
@@ -18,15 +20,48 @@ function userRejected(): Error {
   return Object.assign(new Error('User rejected the request'), { code: 4001 })
 }
 
+const ERC20_TRANSFER = '0xa9059cbb'
+const ERC20_TRANSFER_FROM = '0x23b872dd'
+
+/**
+ * Recipient of a transfer (R-#253): `tx.to` for a native transfer, or the address
+ * argument of an ERC-20 `transfer(address,uint256)` / `transferFrom(address,address,uint256)`
+ * (that is where USDT/G$/XAUT put the recipient; `to` is the token contract).
+ */
+export function extractDestination(tx: Record<string, unknown>): string | undefined {
+  const to = typeof tx.to === 'string' ? tx.to : undefined
+  const data = typeof tx.data === 'string' ? tx.data : undefined
+  if (!data || data.length < 10) return to
+  const selector = data.slice(0, 10).toLowerCase()
+  const body = data.slice(10)
+  const argument = (index: number): string | undefined => {
+    const chunk = body.slice(index * 64, (index + 1) * 64)
+    return chunk.length === 64 ? `0x${chunk.slice(24)}` : undefined
+  }
+  if (selector === ERC20_TRANSFER) return argument(0) ?? to
+  if (selector === ERC20_TRANSFER_FROM) return argument(1) ?? to
+  return to
+}
+
 /**
  * Fresh user-verified assertion before moving funds (L1). Silently allows the
  * request on devices without a platform authenticator — no passkey enrolled, or a
  * wallet WebView without WebAuthn: L1 needs hardware and must not block the
  * wallet. A cancelled prompt is a rejection (`4001`), like any wallet.
+ *
+ * R-#253: `destination` (when known) decides whether the grace window applies. A
+ * **new** destination always asks for the gesture.
  */
-export async function requireFundsConfirmation(): Promise<void> {
+export async function requireFundsConfirmation(
+  { destination }: { destination?: string } = {},
+): Promise<void> {
   const sealed = await readBiometricRecord().catch(() => null)
   if (!sealed) return
+  const wallet = getUnlockedInfo()?.address
+  const newDestination = !!(wallet && destination && !isKnownDestination(wallet, destination))
+  // Ventana de gracia (R-#253, 15 min): un destino ya conocido no vuelve a pedir el
+  // gesto dentro de la ventana; uno nuevo lo exige siempre.
+  if (!newDestination && hasRecentUserVerification()) return
   try {
     await assertUserVerification(sealed.credentialId)
   } catch (error) {
@@ -70,6 +105,41 @@ async function forwardToRpc(
   }
   if (json.error) throw new Error(json.error.message ?? `${method} failed`)
   return json.result
+}
+
+/**
+ * Fills the fields a local account needs to sign. viem's `sendTransaction`
+ * delegates `eth_sendTransaction` to the wallet for JSON-RPC accounts **without**
+ * filling fees/gas/nonce, and a local account cannot infer the transaction type
+ * without them: it throws "Cannot infer a transaction type from provided
+ * transaction." (reported 2026-09-20 donating CELO/G$/XAUT with the in-app wallet).
+ */
+async function fillTransaction(
+  rpcUrl: string | undefined,
+  tx: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const hasType = tx.type !== undefined
+  const hasFees = tx.gasPrice !== undefined || tx.maxFeePerGas !== undefined
+  if (hasType || hasFees) return tx
+  if (!rpcUrl) {
+    throw new Error('eth_sendTransaction requires the provider to be created with an rpcUrl')
+  }
+  const filled: Record<string, unknown> = { ...tx }
+  const chainIdHex = (await forwardToRpc(rpcUrl, 'eth_chainId', [])) as string
+  filled.chainId = Number(chainIdHex)
+  const nonceHex = (await forwardToRpc(rpcUrl, 'eth_getTransactionCount', [
+    filled.from,
+    'pending',
+  ])) as string
+  filled.nonce = hexToBigInt(nonceHex as `0x${string}`)
+  const gasHex = (await forwardToRpc(rpcUrl, 'eth_estimateGas', [
+    { from: filled.from, to: filled.to, value: filled.value, data: filled.data },
+  ])) as string
+  filled.gas = hexToBigInt(gasHex as `0x${string}`)
+  const gasPriceHex = (await forwardToRpc(rpcUrl, 'eth_gasPrice', [])) as string
+  filled.gasPrice = hexToBigInt(gasPriceHex as `0x${string}`)
+  filled.type = 'legacy'
+  return filled
 }
 
 export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Provider | null {
@@ -117,7 +187,8 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
           if (options.requireUserVerification !== false) {
             await requireFundsConfirmation()
           }
-          return signTransaction(tx as never)
+          const filled = options.rpcUrl ? await fillTransaction(options.rpcUrl, tx) : tx
+          return signTransaction(filled as never)
         }
 
         case 'eth_sendTransaction': {
@@ -127,12 +198,18 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
           if (!options.rpcUrl) {
             throw new Error('eth_sendTransaction requires the provider to be created with an rpcUrl')
           }
-          // R-#246 (L1): mover fondos exige una verificación fresca del usuario.
+          const destination = extractDestination(tx)
+          // R-#246/R-#253: mover fondos exige verificación; un destino nuevo siempre.
           if (options.requireUserVerification !== false) {
-            await requireFundsConfirmation()
+            await requireFundsConfirmation({ destination })
           }
-          const raw = await signTransaction(tx as never)
-          return forwardToRpc(options.rpcUrl, 'eth_sendRawTransaction', [raw])
+          const filled = await fillTransaction(options.rpcUrl, tx)
+          const raw = await signTransaction(filled as never)
+          const hash = await forwardToRpc(options.rpcUrl, 'eth_sendRawTransaction', [raw])
+          // Se recuerda sólo tras transmitir: la próxima vez a esa dirección no
+          // vuelve a pedir el gesto dentro de la ventana.
+          if (destination && info.address) rememberDestination(info.address, destination)
+          return hash
         }
 
         case 'wallet_getCapabilities':

@@ -26,7 +26,7 @@ import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
-const PIN = '123456'
+const password = '12345678'
 const USDT_DECIMALS = 6
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -133,14 +133,14 @@ async function createInAppWallet(page, base) {
   if (await headerSignedIn(page)) return true
   if (!(await openDialog(page))) return false
   const createForm = await page
-    .waitForSelector('[data-testid="wallet-pin-confirm"]', { timeout: 30000 })
+    .waitForSelector('[data-testid="wallet-password-confirm"]', { timeout: 30000 })
     .catch(() => null)
   if (!createForm) {
     await closeDialog(page)
     return false
   }
-  await page.type('[data-testid="wallet-pin"]', PIN)
-  await page.type('[data-testid="wallet-pin-confirm"]', PIN)
+  await page.type('[data-testid="wallet-password"]', password)
+  await page.type('[data-testid="wallet-password-confirm"]', password)
   await page.click('[data-testid="wallet-create"]')
   await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 90000 })
   await completeBackupVerification(page)
@@ -320,7 +320,7 @@ async function main() {
       await sleep(1000)
     }
     if (await exists(page, '[data-testid="wallet-unlock"]')) {
-      await page.type('[data-testid="wallet-pin"]', PIN)
+      await page.type('[data-testid="wallet-password"]', password)
       await page.click('[data-testid="wallet-unlock"]')
       for (let i = 0; i < 25; i++) {
         await sleep(1000)
@@ -384,7 +384,7 @@ async function main() {
         await sleep(1000)
       }
       if (await exists(page, '[data-testid="wallet-unlock"]')) {
-        await page.type('[data-testid="wallet-pin"]', PIN)
+        await page.type('[data-testid="wallet-password"]', password)
         await page.click('[data-testid="wallet-unlock"]')
         for (let i = 0; i < 25; i++) {
           await sleep(1000)
@@ -437,7 +437,7 @@ async function main() {
     const dialogText = await bodyText(page)
     const createUi =
       (await exists(page, '[data-testid="wallet-create"]')) ||
-      (await exists(page, '[data-testid="wallet-pin-confirm"]')) ||
+      (await exists(page, '[data-testid="wallet-password-confirm"]')) ||
       (await exists(page, '[data-testid="wallet-mode-create"]')) ||
       /Create a wallet|Crear una billetera/i.test(dialogText)
     const panelOpen = await exists(page, '[data-testid="wallet-panel"]')
@@ -504,13 +504,13 @@ async function main() {
       await sleep(1000)
     }
     if (await exists(page, '[data-testid="wallet-enable-biometric"]')) {
-      // Con la billetera desbloqueada el PIN de la activación es `wallet-biometric-pin`
-      // (el formulario de crear, con `wallet-pin`, ya no se muestra: bug E).
-      const pinField = (await exists(page, '[data-testid="wallet-pin"]'))
-        ? '[data-testid="wallet-pin"]'
-        : '[data-testid="wallet-biometric-pin"]'
+      // Con la billetera desbloqueada el password de la activación es `wallet-biometric-password`
+      // (el formulario de crear, con `wallet-password`, ya no se muestra: bug E).
+      const pinField = (await exists(page, '[data-testid="wallet-password"]'))
+        ? '[data-testid="wallet-password"]'
+        : '[data-testid="wallet-biometric-password"]'
       if (await exists(page, pinField.replace('[data-testid="', '[data-testid="'))) {
-        await page.type(pinField, PIN)
+        await page.type(pinField, password)
       }
       await page.click('[data-testid="wallet-enable-biometric"]')
       for (let i = 0; i < 25; i++) {

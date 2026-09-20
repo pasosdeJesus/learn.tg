@@ -5,7 +5,7 @@
  * The private key is never written in plaintext. The stored record only holds the
  * ciphertext plus the (non-secret) salts and the credential id; the key that opens
  * it can only be produced by the authenticator, after the user verifies (Face ID /
- * fingerprint / device PIN). The PIN-encrypted record of `wallet.ts` is untouched
+ * fingerprint / device password). The password-encrypted record of `wallet.ts` is untouched
  * and remains the recovery path.
  */
 import { fromBase64, toBase64, wipe } from './crypto.js'

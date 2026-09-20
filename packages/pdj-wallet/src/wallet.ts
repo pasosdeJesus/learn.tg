@@ -9,7 +9,7 @@ import {
   wipePrfSecret,
   writeBiometricRecord,
 } from './biometric.js'
-import { createPrfCredential, detectPlatformSupport, evaluatePrf } from './web-authn.js'
+import { clearUserVerification, createPrfCredential, detectPlatformSupport, evaluatePrf } from './web-authn.js'
 import {
   accountFromPrivateKey,
   assertValidMnemonic,
@@ -63,8 +63,8 @@ function parseSecret(plaintext: string): WalletSecret {
   return { v: 1, privateKey: parsed.privateKey, mnemonic: parsed.mnemonic }
 }
 
-async function decryptRecord(record: StoredWallet, pin: string): Promise<WalletSecret> {
-  const plaintext = await decryptSecret({ kdf: record.kdf, cipher: record.cipher }, pin)
+async function decryptRecord(record: StoredWallet, password: string): Promise<WalletSecret> {
+  const plaintext = await decryptSecret({ kdf: record.kdf, cipher: record.cipher }, password)
   return parseSecret(plaintext)
 }
 
@@ -84,9 +84,22 @@ function resolveStorage(storage?: StorageAdapter): StorageAdapter {
   return storage ?? browserStorage()
 }
 
-function assertPin(pin: string): void {
-  if (typeof pin !== 'string' || !/^\d{6,}$/.test(pin)) {
-    throw new Error('The PIN must have at least 6 digits')
+/**
+ * Accepted secret (R-#251): a password/passphrase of at least 8 printable
+ * characters. Nothing is in production yet, so the old 6-digit PIN is not
+ * supported (discarded feature). `unlockWallet` does not validate: this guards
+ * creation, import, export and the biometric seal.
+ */
+export function isValidPassword(password: string): boolean {
+  if (typeof password !== 'string') return false
+  if (password.trim().length < 8) return false
+  // Sin caracteres de control.
+  return !/[\u0000-\u001f\u007f]/.test(password)
+}
+
+function assertPassword(password: string): void {
+  if (!isValidPassword(password)) {
+    throw new Error('The password must have at least 8 characters')
   }
 }
 
@@ -109,12 +122,12 @@ async function persist(
   storage: StorageAdapter,
   privateKey: PrivateKey,
   chain: ChainName,
-  pin: string,
+  password: string,
   mnemonic?: string,
 ): Promise<WalletInfo> {
   const account = accountFromPrivateKey(privateKey)
   const createdAt = Date.now()
-  const secret = await encryptSecret(serializeSecret(privateKey, mnemonic), pin)
+  const secret = await encryptSecret(serializeSecret(privateKey, mnemonic), password)
   const info: WalletInfo = { address: account.address, chain, createdAt }
   await storage.set(buildRecord(info.address, chain, createdAt, secret))
   unlocked = { privateKey, account, info }
@@ -124,17 +137,17 @@ async function persist(
 export async function createWallet(
   options: CreateWalletOptions,
 ): Promise<{ walletInfo: WalletInfo; mnemonic: string }> {
-  assertPin(options.pin)
+  assertPassword(options.password)
   const chain = assertChain(options.chain)
   const storage = resolveStorage(options.storage)
   const mnemonic = newMnemonic()
   const privateKey = privateKeyFromMnemonic(mnemonic)
-  const walletInfo = await persist(storage, privateKey, chain, options.pin, mnemonic)
+  const walletInfo = await persist(storage, privateKey, chain, options.password, mnemonic)
   return { walletInfo, mnemonic }
 }
 
 export async function importWallet(options: ImportWalletOptions): Promise<WalletInfo> {
-  assertPin(options.pin)
+  assertPassword(options.password)
   if (!options.mnemonic && !options.privateKey) {
     throw new Error('Provide a mnemonic or a private key')
   }
@@ -147,14 +160,14 @@ export async function importWallet(options: ImportWalletOptions): Promise<Wallet
   const privateKey = mnemonic
     ? privateKeyFromMnemonic(mnemonic)
     : (options.privateKey as PrivateKey)
-  return persist(storage, privateKey, chain, options.pin, mnemonic)
+  return persist(storage, privateKey, chain, options.password, mnemonic)
 }
 
-export async function unlockWallet(pin: string, storage?: StorageAdapter): Promise<WalletInfo> {
+export async function unlockWallet(password: string, storage?: StorageAdapter): Promise<WalletInfo> {
   const adapter = resolveStorage(storage)
   const record = await adapter.get()
   if (!record) throw new Error('There is no in-app wallet to unlock')
-  const secret = await decryptRecord(record, pin)
+  const secret = await decryptRecord(record, password)
   const privateKey = secret.privateKey
   const account = accountFromPrivateKey(privateKey)
   if (account.address.toLowerCase() !== record.address.toLowerCase()) {
@@ -168,14 +181,14 @@ export async function unlockWallet(pin: string, storage?: StorageAdapter): Promi
 /**
  * Layer L2 (https://github.com/pasosdeJesus/learn.tg/issues/246): registers a
  * passkey and stores the private key **sealed with its PRF secret**, so the user
- * can unlock with Face ID / fingerprint instead of typing the PIN. The PIN record
- * is untouched and keeps working as fallback and recovery.
+ * can unlock with Face ID / fingerprint instead of typing the password. The
+ * password record is untouched and keeps working as fallback and recovery.
  *
  * Throws `no-webauthn`, `no-prf` or the WebAuthn error when the device cannot do
  * it; callers degrade silently.
  */
-export async function enableBiometricUnlock(pin: string, storage?: StorageAdapter): Promise<{ address: string }> {
-  assertPin(pin)
+export async function enableBiometricUnlock(password: string, storage?: StorageAdapter): Promise<{ address: string }> {
+  assertPassword(password)
   const adapter = resolveStorage(storage)
   const record = await adapter.get()
   if (!record) throw new Error('There is no in-app wallet to seal')
@@ -183,8 +196,8 @@ export async function enableBiometricUnlock(pin: string, storage?: StorageAdapte
   const support = await detectPlatformSupport()
   if (!support.webauthn || !support.userVerifying) throw new Error('no-webauthn')
 
-  // The PIN is required on purpose: the passkey must wrap a key the user owns.
-  const { privateKey } = await decryptRecord(record, pin)
+  // The password is required on purpose: the passkey must wrap a key the user owns.
+  const { privateKey } = await decryptRecord(record, password)
   if (accountFromPrivateKey(privateKey).address.toLowerCase() !== record.address.toLowerCase()) {
     throw new Error('The stored wallet does not match the decrypted key')
   }
@@ -207,7 +220,7 @@ export async function enableBiometricUnlock(pin: string, storage?: StorageAdapte
     wipePrfSecret(prfSecret)
   }
 
-  // El PIN ya se verificó: dejar la billetera lista evita pedirlo dos veces.
+  // El password ya se verificó: dejar la billetera lista evita pedirlo dos veces.
   const account = accountFromPrivateKey(privateKey)
   unlocked = {
     privateKey,
@@ -260,19 +273,22 @@ export async function unlockWithBiometric(storage?: StorageAdapter): Promise<Wal
   return info
 }
 
-/** Forgets the biometric unlock (the PIN keeps working). */
+/** Forgets the biometric unlock (the password keeps working). */
 export async function disableBiometricUnlock(): Promise<void> {
   await deleteBiometricRecord().catch(() => undefined)
 }
 
 export async function lockWallet(): Promise<void> {
   unlocked = null
+  // Un bloqueo vuelve a pedir el gesto en el próximo movimiento de fondos.
+  clearUserVerification()
 }
 
 export async function deleteWallet(storage?: StorageAdapter): Promise<void> {
   const adapter = resolveStorage(storage)
   await adapter.delete()
   unlocked = null
+  clearUserVerification()
   // The sealed copy belongs to a wallet that no longer exists.
   await deleteBiometricRecord().catch(() => undefined)
 }
@@ -290,25 +306,25 @@ export async function getWalletInfo(storage?: StorageAdapter): Promise<WalletInf
 }
 
 /**
- * PIN-protected export. Both read the stored record with the PIN and have no
+ * password-protected export. Both read the stored record with the password and have no
  * side effects on the session (the wallet may stay locked). The caller is
  * responsible for whatever it does with the secret.
  */
-export async function exportPrivateKey(pin: string, storage?: StorageAdapter): Promise<`0x${string}`> {
-  assertPin(pin)
+export async function exportPrivateKey(password: string, storage?: StorageAdapter): Promise<`0x${string}`> {
+  assertPassword(password)
   const adapter = resolveStorage(storage)
   const record = await adapter.get()
   if (!record) throw new Error('There is no in-app wallet to export')
-  const secret = await decryptRecord(record, pin)
+  const secret = await decryptRecord(record, password)
   return secret.privateKey
 }
 
-export async function exportMnemonic(pin: string, storage?: StorageAdapter): Promise<string> {
-  assertPin(pin)
+export async function exportMnemonic(password: string, storage?: StorageAdapter): Promise<string> {
+  assertPassword(password)
   const adapter = resolveStorage(storage)
   const record = await adapter.get()
   if (!record) throw new Error('There is no in-app wallet to export')
-  const secret = await decryptRecord(record, pin)
+  const secret = await decryptRecord(record, password)
   if (!secret.mnemonic) {
     throw new Error('This wallet was imported from a private key: it has no recovery phrase')
   }

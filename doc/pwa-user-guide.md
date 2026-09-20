@@ -55,26 +55,32 @@ You do not need to install a wallet app to use learn.tg.
 
 1. Open the app and choose **Use in-app wallet** (while the app checks whether a
    wallet already exists the button just says **In-app wallet**).
-2. Create a wallet with a 6-digit PIN. Write down the recovery phrase it shows:
-   it is the only way to recover the wallet if you lose the phone.
-3. Press **I saved them, sign in**: the app signs the message for you with the
-   wallet it just created. If you close the window before pressing it, open the
-   wallet again with **Sign in with in-app wallet** and press the same button.
+2. Create a wallet with a **password (8 or more characters)**. Write down the
+   recovery phrase it shows: it is the only way to recover the wallet if you lose
+   the phone.
+3. Write down the 12 words it shows, then type the **3 words** it asks for
+   (random positions) and press **Confirm and sign in**: the app signs the message
+   for you with the wallet it just created. If you close the window before
+   pressing it, open the wallet again with **Sign in with in-app wallet**.
 4. To stop using it, choose **Disconnect**. To use another wallet (for example
    MetaMask/OneKey instead), choose **Use external wallet**.
 
+The full walkthrough (receive, send, collectibles) is in
+[pdJ-wallet.md](pdJ-wallet.md).
+
 If your phone can unlock with a fingerprint or Face ID, learn.tg offers
 **unlock with fingerprint**: one touch opens the wallet and you do not type the
-PIN again. The PIN keeps working as a backup, and if you cancel the fingerprint
-prompt the app lets you type the PIN instead. The wallet stays unlocked while you
-use it and locks itself after an hour without activity; it also asks for the
-fingerprint again before sending money, so a transfer never leaves without you
-confirming it. Both options are in the same window, and you can turn the
-fingerprint on or off at any time.
+password again. The password keeps working as a backup, and if you cancel the
+fingerprint prompt the app lets you type the password instead. The wallet stays
+unlocked while you use it and locks itself after an hour without activity; the first
+time you send money to an address it asks for the fingerprint to confirm, and then
+not again for 15 minutes **to that same address** (a new address always asks, and
+after the wallet locks itself it asks again). Both options are in the same window,
+and you can turn the fingerprint on or off at any time.
 
-Your PIN is never sent anywhere: it only unlocks the wallet stored (encrypted)
-on your phone. If you forget the PIN, restore the wallet with the recovery
-phrase.
+Your password is never sent anywhere: it only unlocks the wallet stored
+(encrypted) on your phone. If you forget the password, restore the wallet with the
+recovery phrase.
 
 ## Problems?
 

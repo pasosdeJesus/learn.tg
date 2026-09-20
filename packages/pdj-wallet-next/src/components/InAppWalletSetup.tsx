@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { isValidPassword } from '@learn-tg/pdj-wallet'
 import { t, type Lang } from '../i18n.js'
 import { useInAppWallet } from '../useInAppWallet.js'
 
@@ -12,7 +13,7 @@ export interface InAppWalletSetupProps {
 export function InAppWalletSetup({ lang = 'en', onDone }: InAppWalletSetupProps) {
   const { create, importExisting, error } = useInAppWallet()
   const [mode, setMode] = useState<'create' | 'import'>('create')
-  const [pin, setPin] = useState('')
+  const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [mnemonic, setMnemonic] = useState('')
   const [privateKey, setPrivateKey] = useState('')
@@ -23,23 +24,23 @@ export function InAppWalletSetup({ lang = 'en', onDone }: InAppWalletSetupProps)
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setLocalError(null)
-    if (!/^\d{6,}$/.test(pin)) {
-      setLocalError(t(lang, 'pinTooShort'))
+    if (!isValidPassword(password)) {
+      setLocalError(t(lang, 'passwordTooShort'))
       return
     }
-    if (pin !== confirm) {
-      setLocalError(t(lang, 'pinMismatch'))
+    if (password !== confirm) {
+      setLocalError(t(lang, 'passwordMismatch'))
       return
     }
     setBusy(true)
     try {
       if (mode === 'create') {
-        const result = await create(pin)
+        const result = await create(password)
         setRecoveryPhrase(result.mnemonic)
         onDone?.(result.walletInfo.address)
       } else {
         const info = await importExisting({
-          pin,
+          password,
           mnemonic: mnemonic.trim() ? mnemonic : undefined,
           privateKey: privateKey.trim() ? (privateKey.trim() as `0x${string}`) : undefined,
         })
@@ -89,22 +90,22 @@ export function InAppWalletSetup({ lang = 'en', onDone }: InAppWalletSetupProps)
       )}
 
       <label>
-        {t(lang, 'pin')}
+        {t(lang, 'password')}
         <input
           type="password"
-          inputMode="numeric"
-          aria-label={t(lang, 'pin')}
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
+          inputMode="text"
+          aria-label={t(lang, 'password')}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
       </label>
 
       <label>
-        {t(lang, 'pinConfirm')}
+        {t(lang, 'passwordConfirm')}
         <input
           type="password"
-          inputMode="numeric"
-          aria-label={t(lang, 'pinConfirm')}
+          inputMode="text"
+          aria-label={t(lang, 'passwordConfirm')}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />

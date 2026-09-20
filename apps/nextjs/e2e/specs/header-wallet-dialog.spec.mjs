@@ -19,7 +19,7 @@ import {
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 
-const PIN = '123456'
+const password = '12345678'
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function loadEnvCredentials() {
@@ -98,10 +98,10 @@ async function main() {
   // 2. Crear la billetera en el modal y cerrarlo (como hizo el operador)
   if (!(await page.$('[data-testid="wallet-selector-in-app"]'))) {
     await openDialog(page)
-    const hasCreateForm = await page.waitForSelector('[data-testid="wallet-pin-confirm"]', { timeout: 60000 }).catch(() => null)
+    const hasCreateForm = await page.waitForSelector('[data-testid="wallet-password-confirm"]', { timeout: 60000 }).catch(() => null)
     if (hasCreateForm) {
-      await page.type('[data-testid="wallet-pin"]', PIN)
-      await page.type('[data-testid="wallet-pin-confirm"]', PIN)
+      await page.type('[data-testid="wallet-password"]', password)
+      await page.type('[data-testid="wallet-password-confirm"]', password)
       await page.click('[data-testid="wallet-create"]')
       await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 60000 })
       ok('Billetera creada y frase de recuperación visible')
@@ -131,16 +131,16 @@ async function main() {
     }
   }
 
-  // 3. Desbloquear desde la cabecera: el modal pide el PIN y firma el SIWE
+  // 3. Desbloquear desde la cabecera: el modal pide el password y firma el SIWE
   await page.reload({ waitUntil: 'domcontentloaded' })
   await sleep(3000)
   if (!(await page.$('[data-testid="wallet-selector-in-app"]'))) {
     await openDialog(page)
-    const pin = await page.waitForSelector('[data-testid="wallet-pin"]', { timeout: 15000 }).catch(() => null)
-    if (!pin) {
-      fail('El modal no mostró el formulario de PIN para desbloquear')
+    const password = await page.waitForSelector('[data-testid="wallet-password"]', { timeout: 15000 }).catch(() => null)
+    if (!password) {
+      fail('El modal no mostró el formulario de password para desbloquear')
     } else {
-      await page.type('[data-testid="wallet-pin"]', PIN)
+      await page.type('[data-testid="wallet-password"]', password)
       await page.click('[data-testid="wallet-unlock"]')
       // El ingreso recarga la página (signIn + reload)
       for (let i = 0; i < 20; i++) {

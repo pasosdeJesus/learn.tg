@@ -3,6 +3,16 @@
 How wallet connection, SIWE authentication, and transaction signing work in
 learn.tg after removing RainbowKit + wagmi (R-#186).
 
+> **Scope:** this is the **learn.tg app** integration (its components, hooks and
+> SIWE session). The wallet packages have their own docs:
+> [`packages/pdj-wallet/README.md`](../packages/pdj-wallet/README.md) (library API)
+> and [`packages/pdj-wallet/ARCHITECTURE.md`](../packages/pdj-wallet/ARCHITECTURE.md)
+> (core design), plus
+> [`packages/pdj-wallet-next/README.md`](../packages/pdj-wallet-next/README.md)
+> (React hooks/components) and
+> [`packages/pdj-wallet-next/ARCHITECTURE.md`](../packages/pdj-wallet-next/ARCHITECTURE.md).
+> For the end user, see [pdJ-wallet.md](pdJ-wallet.md).
+
 ## Architecture
 
 ```
@@ -144,8 +154,8 @@ even with a passkey registered. Now:
   ("confirma con tu huella") when the device can verify the user, instead of
   sending everybody to type a PIN.
 
-**Moving funds asks for a fresh gesture (layer L1).** Even inside an unlocked
-session, `eth_sendTransaction` on the in-app provider calls
+**Moving funds asks for a gesture (layer L1), at most once an hour.** Even inside
+an unlocked session, `eth_sendTransaction` on the in-app provider calls
 `requireFundsConfirmation()` (`packages/pdj-wallet/src/provider.ts`), which asks
 the device to verify the user before signing; a cancelled prompt rejects with code
 `4001` and nothing is broadcast. The gate also covers `eth_signTypedData_v4` and
@@ -154,6 +164,17 @@ the device to verify the user before signing; a cancelled prompt rejects with co
 through a transaction. Reads and `personal_sign` (the SIWE) are **not** gated, so
 signing in never prompts twice. Without a passkey — or without WebAuthn at all — the
 request goes through, because the layer needs hardware.
+
+**Grace window + new destinations (R-#253).** Once the user verified with the device
+— an L1 assertion or an L2 biometric unlock — a transfer **to an address already
+used** does not ask again within `USER_VERIFICATION_GRACE_MS` (**15 minutes**,
+`packages/pdj-wallet/src/web-authn.ts`); a **new destination always asks**, even
+inside the window (`packages/pdj-wallet/src/destinations.ts`, per-wallet in
+`localStorage`, remembered only after a successful broadcast).
+`lockWallet()`/`deleteWallet()` clear the window, so the idle auto-lock makes the
+next move prompt again. Trade-off accepted by the operator: on a stolen *unlocked*
+device money can be moved to a known address within the 15 minutes without a
+gesture.
 
 **Locking.** `INACTIVITY_LOCK_MS` (**one hour** without pointer, key, touch,
 scroll or visibility activity) drops the key in memory and marks
@@ -170,6 +191,35 @@ the wallet is deleted (`'deleted'`), never for the idle lock.
 wallet from `eip6963:announceProvider` announcements, with `window.ethereum` as
 fallback and brief retries, because several wallet browsers do not define
 `window.ethereum` at page load (R-#246 §8).
+
+### WalletPanel (`components/WalletPanel.tsx`)
+
+The **unlocked** state of the pill (R-#249): `WalletSelector` opens it when the
+in-app wallet is unlocked, and `WalletDialog` when it is locked. It shows the
+checksummed address with a Copy button, the CELO/USDT/SLEARN balances, receive
+with a `QRCodeSVG`, send (CELO/USDT/SLEARN) and the Celo collectibles read lazily
+from Blockscout.
+
+- The three balances are read in parallel with `Promise.allSettled`, so one
+  failing read does not blank the others (a `null` shows `—`, never `NaN`).
+- The send rules are pure functions in `lib/wallet-amounts.ts`
+  (`formatTokenAmount`, `parseTokenAmount`, `validateSend`); the `Max` button
+  reserves 0.01 CELO for the fee on native transfers.
+- Signing goes through the wallet provider, so it inherits the L1 gesture gate
+  (`requireFundsConfirmation`) described above.
+- Collectibles use `explorerApiNftsUrl` (Blockscout, no key) and degrade silently:
+  a failing section never touches the balances.
+
+### Backup confirmation (`lib/wallet-backup.ts`)
+
+The recovery phrase is shown **once**, when the wallet is created. Before the
+wallet counts as backed up, `WalletDialog` asks for **three random positions** of
+the phrase: `pickVerifyPositions(wordCount)` and `verifyWords(words, inputs)`
+(case-insensitive, trimmed) decide, and `markBackupConfirmed()` stores a
+`localStorage` flag (not a secret, `learn.tg.wallet.backupConfirmed`). A wrong
+word never signs in, and the user can re-read the phrase while confirming.
+
+The user-facing version of this flow is [pdJ-wallet.md](pdJ-wallet.md).
 
 ### WalletEventListener (`components/WalletEventListener.tsx`)
 
@@ -288,6 +338,9 @@ NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The former
 | File | Purpose |
 |------|---------|
 | `components/WalletSelector.tsx` | Chooses in-app vs external wallet (R-#244 MVP) |
+| `components/WalletPanel.tsx` | Unlocked wallet UI: balances, receive, send, collectibles (R-#249) |
+| `lib/wallet-amounts.ts` | Panel format/parse/send-validation helpers |
+| `lib/wallet-backup.ts` | Three-word backup confirmation |
 | `components/ConnectWalletButton.tsx` | Connect/Disconnect button with SIWE via window.ethereum |
 | `components/WalletEventListener.tsx` | Wallet event listener + session-based auth cleanup |
 | `lib/hooks/useAuthAddress.ts` | Unified hook: session ∥ in-app wallet ∥ localStorage |

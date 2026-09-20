@@ -28,7 +28,7 @@ describe('useInAppWallet', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetInAppWalletStoreForTests()
-    // `clearAllMocks` does not revert implementations: pin them so one test does
+    // `clearAllMocks` does not revert implementations: password them so one test does
     // not leave the wallet unlocked (or biometric) for the next one.
     walletMock.hasBiometricUnlock.mockResolvedValue(false)
     walletMock.detectPlatformSupport.mockResolvedValue({ webauthn: false, userVerifying: false, prf: null })
@@ -52,7 +52,7 @@ describe('useInAppWallet', () => {
   })
 
   // R-#246: el desbloqueo vive en memoria, así que recargar vuelve a pedirlo.
-  // Lo que evita teclear el PIN es el camino biométrico.
+  // Lo que evita teclear el password es el camino biométrico.
   it('reports the biometric capability of the device', async () => {
     walletMock.hasWallet.mockResolvedValue(true)
     walletMock.getWalletInfo.mockResolvedValue(INFO)
@@ -63,7 +63,7 @@ describe('useInAppWallet', () => {
     expect(result.current.biometricEnabled).toBe(false)
   })
 
-  it('stays locked and PIN-only on devices without WebAuthn', async () => {
+  it('stays locked and password-only on devices without WebAuthn', async () => {
     walletMock.hasWallet.mockResolvedValue(true)
     walletMock.getWalletInfo.mockResolvedValue(INFO)
     walletMock.detectPlatformSupport.mockResolvedValue({ webauthn: false, userVerifying: false, prf: null })
@@ -224,10 +224,10 @@ describe('useInAppWallet', () => {
     const { result } = renderHook(() => useInAppWallet())
     await waitFor(() => expect(result.current.status).toBe('no-wallet'))
     await act(async () => {
-      await result.current.importExisting({ mnemonic: 'one two three', pin: '123456' })
+      await result.current.importExisting({ mnemonic: 'one two three', password: '123456' })
     })
     expect(result.current.status).toBe('unlocked')
-    expect(walletMock.importWallet).toHaveBeenCalledWith({ mnemonic: 'one two three', pin: '123456' })
+    expect(walletMock.importWallet).toHaveBeenCalledWith({ mnemonic: 'one two three', password: '123456' })
     await act(async () => {
       await result.current.lock()
     })
@@ -238,13 +238,13 @@ describe('useInAppWallet', () => {
   it('records the error and rethrows when unlocking fails', async () => {
     walletMock.hasWallet.mockResolvedValue(true)
     walletMock.getWalletInfo.mockResolvedValue(INFO)
-    walletMock.unlockWallet.mockRejectedValue(new Error('Wrong PIN or corrupted wallet data'))
+    walletMock.unlockWallet.mockRejectedValue(new Error('Wrong password or corrupted wallet data'))
     const { result } = renderHook(() => useInAppWallet())
     await waitFor(() => expect(result.current.status).toBe('locked'))
     await act(async () => {
-      await expect(result.current.unlock('000000')).rejects.toThrow(/Wrong PIN/)
+      await expect(result.current.unlock('000000')).rejects.toThrow(/Wrong password/)
     })
-    expect(result.current.error).toMatch(/Wrong PIN/)
+    expect(result.current.error).toMatch(/Wrong password/)
   })
 
   it('takes the provider from the core package', async () => {

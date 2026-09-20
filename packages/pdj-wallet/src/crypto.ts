@@ -37,10 +37,10 @@ export function fromBase64(value: string): Uint8Array {
   return bytes
 }
 
-async function deriveKey(pin: string, salt: Uint8Array, iterations: number): Promise<CryptoKey> {
+async function deriveKey(password: string, salt: Uint8Array, iterations: number): Promise<CryptoKey> {
   const material = await subtle().importKey(
     'raw',
-    new TextEncoder().encode(pin) as unknown as ArrayBuffer,
+    new TextEncoder().encode(password) as unknown as ArrayBuffer,
     'PBKDF2',
     false,
     ['deriveKey'],
@@ -64,10 +64,10 @@ export interface EncryptedSecret {
   cipher: { name: 'AES-GCM'; iv: string; data: string }
 }
 
-export async function encryptSecret(plaintext: string, pin: string): Promise<EncryptedSecret> {
+export async function encryptSecret(plaintext: string, password: string): Promise<EncryptedSecret> {
   const salt = randomBytes(SALT_BYTES)
   const iv = randomBytes(IV_BYTES)
-  const key = await deriveKey(pin, salt, PBKDF2_ITERATIONS)
+  const key = await deriveKey(password, salt, PBKDF2_ITERATIONS)
   const data = await subtle().encrypt(
     { name: 'AES-GCM', iv: iv as unknown as ArrayBuffer },
     key,
@@ -79,10 +79,10 @@ export async function encryptSecret(plaintext: string, pin: string): Promise<Enc
   }
 }
 
-export async function decryptSecret(secret: EncryptedSecret, pin: string): Promise<string> {
+export async function decryptSecret(secret: EncryptedSecret, password: string): Promise<string> {
   const salt = fromBase64(secret.kdf.salt)
   const iv = fromBase64(secret.cipher.iv)
-  const key = await deriveKey(pin, salt, secret.kdf.iterations)
+  const key = await deriveKey(password, salt, secret.kdf.iterations)
   try {
     const plain = await subtle().decrypt(
       { name: 'AES-GCM', iv: iv as unknown as ArrayBuffer },
@@ -91,7 +91,7 @@ export async function decryptSecret(secret: EncryptedSecret, pin: string): Promi
     )
     return new TextDecoder().decode(plain)
   } catch {
-    throw new Error('Wrong PIN or corrupted wallet data')
+    throw new Error('Wrong password or corrupted wallet data')
   }
 }
 

@@ -132,18 +132,24 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const totalUSDTValue = campaignCfg ? usdtNum * (payPrice ?? 0) : usdtNum + (slearnNum / SLEARN_RATE)
   const estimatedReward = totalUSDTValue * (rewardPct / 100) * SLEARN_RATE
 
-  // Precio USD del token activo en campañas (solo los no pegados consultan API)
+  // Precio USD del token activo en campañas (solo los no pegados consultan API).
+  // Las dependencias son campos primitivos: si dependiera del objeto `activeToken`
+  // el efecto se re-ejecutaba en cada render (lluvia de peticiones a CoinGecko →
+  // 429 → "price unavailable" para CELO/G$/XAUT, reportado 2026-09-20).
+  const activeTokenKey = activeToken?.key
+  const activeTokenPegged = activeToken?.peggedUsd
+  const activeTokenCoingeckoId = activeToken?.coingeckoId
   useEffect(() => {
     let cancelled = false
-    if (!campaignCfg || !activeToken || activeToken.peggedUsd) {
+    if (!campaignCfg || !activeTokenKey || activeTokenPegged) {
       setPayPrice(1)
       return () => { cancelled = true }
     }
-    getTokenUsdPrice({ key: activeToken.key, peggedUsd: activeToken.peggedUsd, coingeckoId: activeToken.coingeckoId })
+    getTokenUsdPrice({ key: activeTokenKey, peggedUsd: activeTokenPegged, coingeckoId: activeTokenCoingeckoId })
       .then((p) => { if (!cancelled) setPayPrice(p) })
       .catch(() => { if (!cancelled) setPayPrice(null) })
     return () => { cancelled = true }
-  }, [campaignCfg, activeToken, activePayKey])
+  }, [campaignCfg, activeTokenKey, activeTokenPegged, activeTokenCoingeckoId])
 
   // El cashback SLEARN solo aplica a donaciones en USDT (reserva del contrato
   // SLEARN vía mintAndReserve): al cambiar a otro token se apaga.
@@ -328,7 +334,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const t = createComponentT(lang || 'en', {
     en: {
       connectSign: 'Connect and sign with your wallet to donate',
-      inAppLocked: 'Your in-app wallet is locked. Unlock it with your PIN to donate.',
+      inAppLocked: 'Your in-app wallet is locked. Unlock it with your password to donate.',
       inAppLockedGesture: 'Your in-app wallet is locked. Confirm with your fingerprint or Face ID to donate.',
       unlockInApp: 'Unlock your in-app wallet',
       unlockInAppGesture: 'Unlock with fingerprint or Face ID',
@@ -374,7 +380,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     },
     es: {
       connectSign: 'Conecta y firma con tu billetera para donar',
-      inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala con tu PIN para donar.',
+      inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala con tu password para donar.',
       inAppLockedGesture: 'Tu billetera está bloqueada. Confirma con tu huella o Face ID para donar.',
       unlockInApp: 'Desbloquear tu billetera',
       unlockInAppGesture: 'Desbloquear con huella o Face ID',
@@ -426,7 +432,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
 
   // R-#246 (2026-09-19): con la huella registrada, el modal pide el gesto de una
   // vez en lugar de mostrar un aviso que obliga a pulsar "desbloquear" y después
-  // la huella. Si el gesto se cancela, el diálogo ofrece el PIN y el aviso queda.
+  // la huella. Si el gesto se cancela, el diálogo ofrece el password y el aviso queda.
   const autoUnlockTried = useRef(false)
   useEffect(() => {
     if (!isOpen || !biometricEnabled || autoUnlockTried.current) return

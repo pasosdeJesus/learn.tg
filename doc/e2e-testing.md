@@ -10,6 +10,7 @@ End-to-end testing for learn.tg uses `@pasosdejesus/m`'s test runner
 |---------|------|:---:|---|
 | `make test-smoke` | All HTTP smoke tests | ❌ | `https://learn.tg:9001` |
 | `make test-e2e` | All browser specs | ✅ | `https://learn.tg:9001` |
+| `make test-e2e-retry` | All browser specs + retry the ones that fail | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-<name>` | Single browser spec by filename pattern | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-wallet` | Atajo: `SPEC=in-app-wallet` (billetera in-app, R-#245) | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-biometric` | Atajo: `SPEC=biometric-unlock` (desbloqueo por huella, R-#246) | ✅ | `https://learn.tg:9001` |
@@ -42,6 +43,18 @@ visible" porque no hay sesión, no por un defecto del producto. Con
 `make test-e2e-spec SPEC=premium-course-checkout` (variables exportadas) pasa.
 
 Regla: usar siempre los atajos de `make`, o exportar las tres variables.
+
+### Estabilidad: reintentar los fallos (`make test-e2e-retry`)
+
+La suite completa corre 37 specs en secuencia contra el dev site remoto desde una
+VM de 1 CPU. Bajo esa carga algunas specs fallan por timing (una carrera de
+navegación, un RPC lento, una ruta compilando bajo demanda) y la **misma spec pasa
+al correrla sola**: son fallos **ambientales, no defectos de producto**.
+`make test-e2e-retry` corre la suite y vuelve a correr cada spec fallida por
+separado hasta `E2E_RETRIES` veces (`bin/e2e-retry.mjs`), de modo que un fallo
+transitorio no envenene el resultado. Úsalo para la verificación final; usa
+`make test-e2e` cuando quieras la foto cruda. Antes de cualquiera, calienta el dev
+site (`bin/warmup.mjs`).
 
 ## Dev-server warmup: `bin/warmup.mjs`
 

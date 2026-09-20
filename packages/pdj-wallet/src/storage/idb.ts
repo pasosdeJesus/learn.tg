@@ -1,7 +1,7 @@
 /**
  * Single owner of the `learn-tg-pdj-wallet` IndexedDB database.
  *
- * Two object stores live here: `wallet` (the PIN-encrypted record, see
+ * Two object stores live here: `wallet` (the password-encrypted record, see
  * `storage/indexeddb.ts`) and `biometric` (the key sealed with the WebAuthn PRF
  * secret, see `biometric.ts`). Both modules must open the database with the same
  * version, so the version lives here and nowhere else.

@@ -6,6 +6,7 @@ export {
   deleteWallet,
   hasWallet,
   getWalletInfo,
+  isValidPassword,
   enableBiometricUnlock,
   hasBiometricUnlock,
   unlockWithBiometric,
@@ -36,11 +37,16 @@ export {
   deriveWrappingKey,
   type PlatformSupport,
   type PrfCredential,
+  USER_VERIFICATION_GRACE_MS,
+  markUserVerified,
+  clearUserVerification,
+  hasRecentUserVerification,
 } from './web-authn.js'
 
 export { signSIWE } from './siwe.js'
-export { getInAppWalletProvider } from './provider.js'
+export { getInAppWalletProvider, extractDestination, requireFundsConfirmation } from './provider.js'
 export type { ProviderOptions } from './provider.js'
+export { isKnownDestination, rememberDestination, clearDestinations } from './destinations.js'
 
 export {
   addressFromMnemonic,

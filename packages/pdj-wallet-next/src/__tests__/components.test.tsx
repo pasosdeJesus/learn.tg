@@ -10,6 +10,8 @@ const walletMock = vi.hoisted(() => ({
   lockWallet: vi.fn(),
   deleteWallet: vi.fn(),
   getInAppWalletProvider: vi.fn(),
+  // Misma regla que el core (R-#251): clave de 8+ caracteres.
+  isValidPassword: (value: string) => value.trim().length >= 8,
 }))
 
 vi.mock('@learn-tg/pdj-wallet', () => walletMock)
@@ -39,20 +41,20 @@ describe('InAppWalletSetup', () => {
     render(<InAppWalletSetup onDone={onDone} />)
     await waitFor(() => expect(screen.getByTestId('in-app-wallet-setup')).toBeTruthy())
 
-    fireEvent.change(screen.getByLabelText('PIN (6 digits)'), { target: { value: '123456' } })
-    fireEvent.change(screen.getByLabelText('Confirm PIN'), { target: { value: '123456' } })
+    fireEvent.change(screen.getByLabelText('Password (8+ characters)'), { target: { value: '12345678' } })
+    fireEvent.change(screen.getByLabelText('Repeat the password'), { target: { value: '12345678' } })
     fireEvent.click(screen.getByTestId('submit'))
 
     await waitFor(() => expect(screen.getByTestId('recovery-phrase').textContent).toMatch(/alpha beta gamma/))
-    expect(walletMock.createWallet).toHaveBeenCalledWith({ pin: '123456' })
+    expect(walletMock.createWallet).toHaveBeenCalledWith({ password: '12345678' })
     expect(onDone).toHaveBeenCalledWith(ADDRESS)
   })
 
-  it('rejects a PIN mismatch before calling the core', async () => {
+  it('rejects a password mismatch before calling the core', async () => {
     render(<InAppWalletSetup />)
     await waitFor(() => expect(screen.getByTestId('in-app-wallet-setup')).toBeTruthy())
-    fireEvent.change(screen.getByLabelText('PIN (6 digits)'), { target: { value: '123456' } })
-    fireEvent.change(screen.getByLabelText('Confirm PIN'), { target: { value: '654321' } })
+    fireEvent.change(screen.getByLabelText('Password (8+ characters)'), { target: { value: '12345678' } })
+    fireEvent.change(screen.getByLabelText('Repeat the password'), { target: { value: '87654321' } })
     fireEvent.click(screen.getByTestId('submit'))
     await waitFor(() => expect(screen.getByRole('alert').textContent).toMatch(/do not match/i))
     expect(walletMock.createWallet).not.toHaveBeenCalled()
@@ -66,12 +68,12 @@ describe('InAppWalletSetup', () => {
     fireEvent.change(screen.getByLabelText('Recovery phrase'), {
       target: { value: 'test test test test test test test test test test test junk' },
     })
-    fireEvent.change(screen.getByLabelText('PIN (6 digits)'), { target: { value: '123456' } })
-    fireEvent.change(screen.getByLabelText('Confirm PIN'), { target: { value: '123456' } })
+    fireEvent.change(screen.getByLabelText('Password (8+ characters)'), { target: { value: '12345678' } })
+    fireEvent.change(screen.getByLabelText('Repeat the password'), { target: { value: '12345678' } })
     fireEvent.click(screen.getByTestId('submit'))
     await waitFor(() =>
       expect(walletMock.importWallet).toHaveBeenCalledWith({
-        pin: '123456',
+        password: '12345678',
         mnemonic: 'test test test test test test test test test test test junk',
         privateKey: undefined,
       }),
@@ -94,21 +96,21 @@ describe('InAppWalletUnlock', () => {
     walletMock.getWalletInfo.mockResolvedValue(INFO)
   })
 
-  it('unlocks with the right PIN', async () => {
+  it('unlocks with the right password', async () => {
     walletMock.unlockWallet.mockResolvedValue(INFO)
     const onUnlocked = vi.fn()
     render(<InAppWalletUnlock onUnlocked={onUnlocked} />)
-    fireEvent.change(screen.getByLabelText('PIN (6 digits)'), { target: { value: '123456' } })
+    fireEvent.change(screen.getByLabelText('Password (8+ characters)'), { target: { value: '12345678' } })
     fireEvent.click(screen.getByRole('button', { name: 'Unlock' }))
     await waitFor(() => expect(onUnlocked).toHaveBeenCalledWith(ADDRESS))
-    expect(walletMock.unlockWallet).toHaveBeenCalledWith('123456')
+    expect(walletMock.unlockWallet).toHaveBeenCalledWith('12345678')
   })
 
-  it('shows an error with the wrong PIN', async () => {
-    walletMock.unlockWallet.mockRejectedValue(new Error('Wrong PIN or corrupted wallet data'))
+  it('shows an error with the wrong password', async () => {
+    walletMock.unlockWallet.mockRejectedValue(new Error('Wrong password or corrupted wallet data'))
     render(<InAppWalletUnlock />)
-    fireEvent.change(screen.getByLabelText('PIN (6 digits)'), { target: { value: '000000' } })
+    fireEvent.change(screen.getByLabelText('Password (8+ characters)'), { target: { value: '00000000' } })
     fireEvent.click(screen.getByRole('button', { name: 'Unlock' }))
-    await waitFor(() => expect(screen.getByRole('alert').textContent).toMatch(/wrong pin/i))
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toMatch(/wrong password/i))
   })
 })

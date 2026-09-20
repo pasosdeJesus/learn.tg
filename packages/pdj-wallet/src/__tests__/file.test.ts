@@ -20,7 +20,7 @@ import {
 import { privateKeyFromMnemonic } from '../signer'
 import type { StoredWallet } from '../types'
 
-const PIN = '123456'
+const password = '12345678'
 const HARDHAT_MNEMONIC = 'test test test test test test test test test test test junk'
 const HARDHAT_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
@@ -80,7 +80,7 @@ describe('wallet with FileStorage (Node.js)', () => {
   it('creates, persists, unlocks and signs without a browser', async () => {
     const { storage } = await tempStorage()
 
-    const { walletInfo, mnemonic } = await createWallet({ pin: PIN, storage })
+    const { walletInfo, mnemonic } = await createWallet({ password: password, storage })
     expect(walletInfo.address).toMatch(/^0x[0-9a-fA-F]{40}$/)
     expect(mnemonic.split(' ')).toHaveLength(12)
 
@@ -90,7 +90,7 @@ describe('wallet with FileStorage (Node.js)', () => {
 
     expect((await getWalletInfo(storage))?.address).toBe(walletInfo.address)
 
-    const unlocked = await unlockWallet(PIN, storage)
+    const unlocked = await unlockWallet(password, storage)
     expect(unlocked.address).toBe(walletInfo.address)
 
     const signature = await signMessage('hola')
@@ -100,41 +100,41 @@ describe('wallet with FileStorage (Node.js)', () => {
     expect(await hasWallet(storage)).toBe(false)
   })
 
-  it('exports the recovery phrase and the private key with the PIN', async () => {
+  it('exports the recovery phrase and the private key with the password', async () => {
     const { storage } = await tempStorage()
-    const { mnemonic } = await createWallet({ pin: PIN, storage })
+    const { mnemonic } = await createWallet({ password: password, storage })
 
-    expect(await exportMnemonic(PIN, storage)).toBe(mnemonic)
-    expect(await exportPrivateKey(PIN, storage)).toMatch(/^0x[0-9a-f]{64}$/i)
+    expect(await exportMnemonic(password, storage)).toBe(mnemonic)
+    expect(await exportPrivateKey(password, storage)).toMatch(/^0x[0-9a-f]{64}$/i)
 
-    await expect(exportMnemonic('999999', storage)).rejects.toThrow(/PIN/)
-    await expect(exportPrivateKey('999999', storage)).rejects.toThrow(/PIN/)
+    await expect(exportMnemonic('99999999', storage)).rejects.toThrow(/password/)
+    await expect(exportPrivateKey('99999999', storage)).rejects.toThrow(/password/)
   })
 
   it('has no recovery phrase when the wallet was imported from a private key', async () => {
     const { storage } = await tempStorage()
     const privateKey = privateKeyFromMnemonic(HARDHAT_MNEMONIC)
 
-    await importWallet({ privateKey, pin: PIN, storage })
-    expect(await exportPrivateKey(PIN, storage)).toBe(privateKey)
-    await expect(exportMnemonic(PIN, storage)).rejects.toThrow(/recovery phrase/)
+    await importWallet({ privateKey, password: password, storage })
+    expect(await exportPrivateKey(password, storage)).toBe(privateKey)
+    await expect(exportMnemonic(password, storage)).rejects.toThrow(/recovery phrase/)
   })
 })
 
 describe('legacy records', () => {
   it('unlocks a record whose ciphertext is the bare private key', async () => {
     const privateKey = privateKeyFromMnemonic(HARDHAT_MNEMONIC)
-    const legacy = await encryptSecret(privateKey, PIN)
+    const legacy = await encryptSecret(privateKey, password)
     const storage = new MemoryStorage({
       ...sampleRecord(),
       kdf: legacy.kdf,
       cipher: legacy.cipher,
     })
 
-    const info = await unlockWallet(PIN, storage)
+    const info = await unlockWallet(password, storage)
     expect(info.address.toLowerCase()).toBe(HARDHAT_ADDRESS.toLowerCase())
 
     // The old format cannot give back a recovery phrase.
-    await expect(exportMnemonic(PIN, storage)).rejects.toThrow(/recovery phrase/)
+    await expect(exportMnemonic(password, storage)).rejects.toThrow(/recovery phrase/)
   })
 })

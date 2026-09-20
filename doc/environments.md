@@ -29,6 +29,20 @@ Chain IDs confirmed by the E2E suites: specs targeting `https://learn.tg`
 report `chain: 42220` (mainnet), specs targeting `https://learn.tg:9001`
 report `chain: 11142220` (Sepolia).
 
+### Who runs what — and who can deploy
+
+Both sites above run on **other machines**. This VM (where the agent works) has
+**no access to either**: the agent cannot deploy to `learn.tg` or to the official
+development site `learn.tg:9001` (no shell there), and Git writes (`commit`,
+`push`, `tag`) are reserved for the human operator (`AGENTS.md` §7). A change
+reaches the dev site **only when the operator deploys the branch**; until then the
+dev site keeps serving the previous build, so a fix can be in the tree and still
+not be visible in a manual test there.
+
+The agent's own sandbox is **`http://localhost:4000`** (`cd apps/nextjs &&
+bin/dev`, on this VM), used for unit/E2E/smoke checks. It is **not** the official
+development site and is **not** a place for the operator's manual testing.
+
 ## Wallets
 
 ### Production — one wallet per role
@@ -228,6 +242,10 @@ that used it for data fixes or `usuarios#foto`, and any email sent from Rails
 The app (and most of the PWA) can be exercised in a local browser without
 deploying to the dev site. This is how the service worker registration, the
 manifest and the install prompt were first checked (2026-09-15).
+
+This local server is the **agent's sandbox** (and where local E2E specs are run);
+it is not the official development site (`learn.tg:9001`, another machine, see
+*Who runs what* above) and the operator does not need it for manual testing.
 
 ```sh
 cd apps/nextjs

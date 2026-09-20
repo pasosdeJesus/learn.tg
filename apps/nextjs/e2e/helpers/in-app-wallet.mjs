@@ -36,7 +36,7 @@ import {
 } from '@learn-tg/pdj-wallet'
 import { FileStorage } from '@learn-tg/pdj-wallet/storage'
 
-export const TEST_PIN = '123456'
+export const TEST_PASSWORD = '12345678'
 
 async function tempWalletPath() {
   const dir = await mkdtemp(join(tmpdir(), 'pdj-wallet-e2e-'))
@@ -44,24 +44,24 @@ async function tempWalletPath() {
 }
 
 /** Creates a brand-new core wallet (mnemonic) in a temp file. */
-export async function createTestWallet({ pin = TEST_PIN, chain = 'celoSepolia' } = {}) {
+export async function createTestWallet({ password = TEST_PASSWORD, chain = 'celoSepolia' } = {}) {
   const path = await tempWalletPath()
   const storage = new FileStorage(path)
-  const { walletInfo, mnemonic } = await createWallet({ pin, chain, storage })
+  const { walletInfo, mnemonic } = await createWallet({ password, chain, storage })
   return {
     address: walletInfo.address,
     mnemonic,
-    privateKey: await exportPrivateKey(pin, storage),
+    privateKey: await exportPrivateKey(password, storage),
     path,
     storage,
   }
 }
 
 /** Imports an existing key (e.g. the one in `apps/.env`) into the core. */
-export async function importTestWallet(privateKey, { pin = TEST_PIN, chain = 'celoSepolia' } = {}) {
+export async function importTestWallet(privateKey, { password = TEST_PASSWORD, chain = 'celoSepolia' } = {}) {
   const path = await tempWalletPath()
   const storage = new FileStorage(path)
-  const walletInfo = await importWallet({ privateKey, pin, chain, storage })
+  const walletInfo = await importWallet({ privateKey, password, chain, storage })
   return {
     address: walletInfo.address,
     privateKey,
@@ -71,9 +71,9 @@ export async function importTestWallet(privateKey, { pin = TEST_PIN, chain = 'ce
 }
 
 /** Re-opens a wallet created by `createTestWallet`/`importTestWallet`. */
-export async function unlockTestWallet(path, pin = TEST_PIN) {
+export async function unlockTestWallet(path, password = TEST_PASSWORD) {
   const storage = new FileStorage(path)
-  return unlockWallet(pin, storage)
+  return unlockWallet(password, storage)
 }
 
 export async function lockTestWallet() {
@@ -93,10 +93,10 @@ export async function signSIWEForTest(message) {
  * Installs a read-only-ish `window.ethereum` shim that signs through the core
  * wallet held in Node. Must be called before `page.goto()`.
  */
-export async function installCoreWalletMock(page, { privateKey, address, chainId = 11142220, pin = TEST_PIN }) {
+export async function installCoreWalletMock(page, { privateKey, address, chainId = 11142220, password = TEST_PASSWORD }) {
   const wallet = privateKey
-    ? await importTestWallet(privateKey, { pin, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
-    : await createTestWallet({ pin, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
+    ? await importTestWallet(privateKey, { password, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
+    : await createTestWallet({ password, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
 
   const selectedAddress = address || wallet.address
   const hexChainId = `0x${chainId.toString(16)}`
@@ -168,10 +168,10 @@ export async function installCoreWalletMock(page, { privateKey, address, chainId
  * with the core and posts the callback inside the page so the NextAuth session
  * cookie lands in the browser jar (R-#233 Phase 2: the cookie is the credential).
  */
-export async function signInWithCoreWallet(page, { privateKey, address, chainId = 11142220, baseUrl, pin = TEST_PIN }) {
+export async function signInWithCoreWallet(page, { privateKey, address, chainId = 11142220, baseUrl, password = TEST_PASSWORD }) {
   const wallet = privateKey
-    ? await importTestWallet(privateKey, { pin, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
-    : await createTestWallet({ pin, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
+    ? await importTestWallet(privateKey, { password, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
+    : await createTestWallet({ password, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
 
   // SIWE needs a checksummed address in the message; the app keeps the lowercase
   // form for its comparisons.

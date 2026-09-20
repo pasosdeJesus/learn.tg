@@ -15,10 +15,46 @@ const TIMEOUT_MS = 120_000
 /** HKDF info string: separates this use of a PRF secret from any other. */
 const HKDF_INFO = 'learn.tg/pdj-wallet/prf/v1'
 
+/**
+ * Ventana de gracia de la verificación del usuario (decisión del operador,
+ * 2026-09-20). Una vez que el usuario verificó con el dispositivo (gesto L1 o
+ * desbloqueo L2), un movimiento de fondos **a un destino ya conocido** no vuelve a
+ * pedir el gesto dentro de esta ventana. Es deliberadamente corta: 15 minutos.
+ *
+ * Además, un **destino nuevo siempre exige el gesto** (ver `destinations.ts`),
+ * aunque la ventana esté abierta: eso frena el drenaje automatizado/hostil a una
+ * dirección que el usuario nunca usó.
+ *
+ * Compromiso explícito: en un dispositivo desbloqueado y robado, dentro de la
+ * ventana se puede mover dinero a direcciones ya usadas sin gesto. La clave/PIN
+ * nunca se guarda y los 12 palabras siguen siendo la recuperación.
+ */
+export const USER_VERIFICATION_GRACE_MS = 15 * 60 * 1000
+
+let lastUserVerificationAt = 0
+
+/** Records that the user just verified (called on a successful assertion/PRF). */
+export function markUserVerified(now: number = Date.now()): void {
+  lastUserVerificationAt = now
+}
+
+/** Forgets the verification (called when the wallet locks or is deleted). */
+export function clearUserVerification(): void {
+  lastUserVerificationAt = 0
+}
+
+/** Whether a user verification happened within the grace window. */
+export function hasRecentUserVerification(
+  windowMs: number = USER_VERIFICATION_GRACE_MS,
+  now: number = Date.now(),
+): boolean {
+  return lastUserVerificationAt > 0 && now - lastUserVerificationAt < windowMs
+}
+
 export interface PlatformSupport {
   /** `navigator.credentials` with WebAuthn is present at all. */
   webauthn: boolean
-  /** The device can verify the user (Face ID, fingerprint, device PIN). */
+  /** The device can verify the user (Face ID, fingerprint, device password). */
   userVerifying: boolean
   /** Whether the engine advertises the `prf` extension (may be unknown). */
   prf: boolean | null
@@ -134,7 +170,7 @@ export async function createPrfCredential(userName: string): Promise<PrfCredenti
 
 /**
  * Evaluates the PRF for `salt` and returns its 32-byte secret, asking the user to
- * verify (Face ID / fingerprint / device PIN). Returns `null` when the
+ * verify (Face ID / fingerprint / device password). Returns `null` when the
  * authenticator does not provide a result instead of throwing.
  */
 export async function evaluatePrf(credentialId: string, salt: Uint8Array): Promise<Uint8Array | null> {
@@ -158,6 +194,7 @@ export async function evaluatePrf(credentialId: string, salt: Uint8Array): Promi
   })) as PublicKeyCredential | null
 
   if (!assertion) return null
+  markUserVerified()
   const results = assertion.getClientExtensionResults() as {
     prf?: { results?: { first?: ArrayBuffer } }
   }
@@ -167,7 +204,7 @@ export async function evaluatePrf(credentialId: string, salt: Uint8Array): Promi
 
 /**
  * Layer L1: asks the user to verify **with the device** (Face ID / fingerprint /
- * device PIN) before a sensitive operation, and returns the assertion. It does not
+ * device password) before a sensitive operation, and returns the assertion. It does not
  * need the `prf` extension: any user-verified assertion is enough. Throws
  * `no-webauthn` when there is no platform authenticator and `NotAllowedError` when
  * the user cancels.
@@ -195,6 +232,7 @@ export async function assertUserVerification(
   })) as PublicKeyCredential | null
 
   if (!assertion) throw new Error('auth-failed')
+  markUserVerified()
 }
 
 /** HKDF(PRF secret) → AES-GCM key that wraps the wallet key. */export async function deriveWrappingKey(

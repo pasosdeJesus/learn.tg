@@ -39,7 +39,7 @@ export interface StorageAdapter {
 }
 
 export interface CreateWalletOptions {
-  pin: string
+  password: string
   chain?: ChainName
   storage?: StorageAdapter
 }
@@ -47,7 +47,7 @@ export interface CreateWalletOptions {
 export interface ImportWalletOptions {
   mnemonic?: string
   privateKey?: `0x${string}`
-  pin: string
+  password: string
   chain?: ChainName
   storage?: StorageAdapter
 }

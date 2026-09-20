@@ -1,129 +1,82 @@
-# In-app wallet panel
+# Your in-app wallet (user guide)
 
-> "Whatever you do, work at it with all your heart, as working for the Lord,
-> not for human masters." (Colossians 3:23)
+learn.tg can create a wallet **inside the app**: you do not need to install
+MetaMask, OneKey or any other wallet app. This guide is for using it. To install
+the app and read guides offline, see [pwa-user-guide.md](pwa-user-guide.md).
 
-How the in-app wallet (created on the device, `packages/pdj-wallet`) is shown and
-used in learn.tg: the header pill, the **wallet panel** with balances, receive and
-send, the collectibles section, and the three-word backup confirmation.
+> Are you a developer? The components, hooks and backup internals are in
+> [wallet-auth.md](wallet-auth.md); the library itself is in
+> [`packages/pdj-wallet/README.md`](../packages/pdj-wallet/README.md).
 
-Spec: https://github.com/pasosdeJesus/learn.tg/issues/249 (panel),
-https://github.com/pasosdeJesus/learn.tg/issues/244 (in-app wallet) and
-https://github.com/pasosdeJesus/learn.tg/issues/246 (unlock layers).
+## Create your wallet
 
-> **See also:** [wallet-auth.md](wallet-auth.md) for the connection/SIWE flow and
-> the `WalletDialog` (create, import, unlock, fingerprint),
-> [pdj-wallet-testing.md](pdj-wallet-testing.md) for the test loop, and
-> [siwe-auth-flow.md](siwe-auth-flow.md) for the session model.
+1. Open the app and choose **Use in-app wallet** (while it checks whether a wallet
+   already exists, the button just says **In-app wallet**).
+2. Choose a **password of at least 8 characters** and repeat it. There is no
+   6-digit PIN: a short password is too easy to guess.
+3. The app shows **12 words**. Write them down on paper and keep them offline:
+   they are the **only** way to recover your wallet if you lose the phone.
+4. It then asks you to type **3 of those words** (it picks random positions). This
+   proves you really wrote them down; type them and press **Confirm and sign in**.
+   If you did not copy them, press **Show the words again**.
+5. The app signs you in with the wallet it just created.
 
-## 1. Two surfaces, one pill
+Your password is never sent anywhere: it only unlocks the wallet stored
+(encrypted) on your phone.
 
-Tapping the wallet pill in the header opens one of two dialogs, decided by the
-wallet state (`components/WalletSelector.tsx`):
+## Come back later
 
-| Wallet state | What the pill opens |
-|---|---|
-| No wallet, or wallet locked | `WalletDialog` — create / import / unlock / fingerprint |
-| Wallet **unlocked** | `WalletPanel` — balances, receive, send, collectibles |
+- If the app asks, type your **password**.
+- If your phone can unlock with a fingerprint or Face ID, learn.tg offers
+  **unlock with fingerprint**: one touch opens the wallet. The password keeps
+  working as a backup, and you can cancel the fingerprint prompt and type the
+  password instead.
+- The wallet locks itself after an hour without activity. The **first time** you
+  move money to an address it asks for the fingerprint to confirm, and then **not
+  again for 15 minutes to that same address**; a new address always asks again, and
+  so does the wallet once it locks itself.
 
-The unlock flow is a security surface and the panel is a wallet UI; keeping them
-apart makes each one easier to reason about (and to test). The panel is only
-opened when the key is in memory, so it never has to ask for the PIN itself.
+## See what you have
 
-## 2. What the panel shows
+Tapping the wallet button in the header opens the **wallet panel**:
 
-`components/WalletPanel.tsx` (client component):
+- Your **address** (with a **Copy** button) — the account where your rewards and
+  donations arrive.
+- Your **balances** in CELO, USDT and SLEARN.
+- **Collectibles (Celo)**: your badges and NFTs, loaded when you ask for them.
 
-- **Address**: checksummed (`getAddress`), with a **Copy** button that confirms
-  (`Copied`).
-- **Balances**: CELO (18 decimals), USDT (6) and SLEARN (2). The three reads run
-  in parallel with `Promise.allSettled`: one failing call leaves the other two
-  visible instead of blanking the row, and a `null` balance shows `—` (never
-  `NaN`). Balances refresh when the panel opens and after a transfer.
-- **Receive**: a `QRCodeSVG` (`qrcode.react`, the dependency the app already had)
-  plus the address as text.
-- **Send**: token selector (CELO / USDT / SLEARN), destination, amount and a
-  `Max` that leaves **0.01 CELO** for the network fee on native transfers.
-- **Collectibles (Celo)**: loaded lazily from Blockscout when the user asks, with
-  an explicit empty state and a section that fails without touching the balances.
-- **Disconnect and lock**: same effect as the header ✕.
+## Receive money
 
-## 3. Send validation
+Choose **Receive**: the app shows your address and a QR code. Share either one
+with whoever is going to send you funds (on the Celo network).
 
-The rules live in `lib/wallet-amounts.ts` (pure functions, unit-tested), not in
-the component:
+## Send money
 
-| Helper | Purpose |
-|---|---|
-| `formatTokenAmount(value, decimals)` | Display, trims trailing zeros, `—` for `null` |
-| `parseTokenAmount(input, decimals)` | Base units; rejects non-positive and too many decimals |
-| `validateSend({ to, amount, balance, isNative, selfAddress, gasCost })` | Returns `invalid-address`, `invalid-amount`, `insufficient`, `self`, `no-gas` or `null` |
-| `explorerAddressBase` / `explorerApiNftsUrl` / `explorerTxUrl` | Blockscout links per network |
+1. Open the panel and choose the token: **CELO**, **USDT** or **SLEARN**.
+2. Type the destination address and the amount. **Max** fills the amount leaving
+   a little CELO for the network fee.
+3. Press **Send** and confirm with your fingerprint (or password) when asked.
+4. The panel shows the transaction hash and a link to view it on the explorer.
 
-`validateSend` rejects a malformed address, an address with a bad EIP-55
-checksum, the wallet's own address, a non-positive amount, and an amount above
-the balance. For native CELO the amount **plus the fee** must fit, hence the
-`no-gas` case.
+The app refuses an invalid address, an address that is yours, or an amount larger
+than your balance, before asking you to confirm anything.
 
-Signing goes through the wallet provider, so it **inherits layer L1** of
-https://github.com/pasosdeJesus/learn.tg/issues/246: moving funds asks for a
-fresh fingerprint (or the PIN) before signing. The result screen shows the hash
-and an explorer link.
+## Stop using it
 
-## 4. Balances and addresses
+- **Disconnect** signs you out on this device. To use another wallet instead,
+  choose **Use external wallet** (MetaMask, OneKey, OKX…).
+- **Delete wallet** (in the wallet window) removes the wallet from this device.
+  Your funds remain on the blockchain and can only be restored with your 12 words.
 
-Reads go through `usePublicClient()` (`lib/hooks/useWallet.ts`), which uses the
-effective provider when there is one and falls back to the configured RPC when
-there is none (an unlocked in-app wallet is itself an EIP-1193 provider). USDT
-and SLEARN addresses come from the environment (`NEXT_PUBLIC_USDT_ADDRESS`,
-`NEXT_PUBLIC_SLEARN_ADDRESS`), the same resolution the donation and checkout
-modals use.
+## Problems?
 
-## 5. Backup confirmation (three words)
-
-The recovery phrase is shown **once**, when the wallet is created. Before the
-wallet counts as backed up the user must type **three words in random positions**
-(`lib/wallet-backup.ts`):
-
-- `pickVerifyPositions(wordCount)` returns distinct 1-based positions, sorted.
-- `verifyWords(words, inputs)` compares case-insensitively and trimmed, and
-  reports which positions are wrong.
-- `markBackupConfirmed()` / `isBackupConfirmed()` keep a `localStorage` flag
-  (`learn.tg.wallet.backupConfirmed`) that is **not** a secret; it only records
-  that the check was passed on this device.
-- The user can press "Show the words again" to re-read the phrase while
-  confirming, and a wrong word never signs in.
-
-This replaced the previous "I saved them" button, which proved nothing
-(`WalletDialog.tsx`), and moved the check from
-https://github.com/pasosdeJesus/learn.tg/issues/184 to
-https://github.com/pasosdeJesus/learn.tg/issues/249.
-
-## 6. Language
-
-Every string is in the component's `createComponentT` dictionary with English and
-Spanish entries (`components/WalletPanel.tsx`, `components/WalletDialog.tsx`).
-English is the source language.
-
-## 7. Tests
-
-Unit (`cd apps/nextjs`):
-
-```sh
-./node_modules/.bin/vitest run components/__tests__/WalletPanel.test.tsx \
-  lib/__tests__/wallet-amounts.test.ts lib/hooks/__tests__/usePublicClient.test.tsx \
-  lib/__tests__/wallet-backup.test.ts components/__tests__/WalletDialog.test.tsx
-```
-
-E2E (`e2e/specs/in-app-wallet-payments.spec.mjs`) covers pill → panel → real
-balance → QR → copy → invalid destination rejected. See
-[pdj-wallet-testing.md](pdj-wallet-testing.md) for the full fast loop.
-
-## 8. Open items
-
-- Fiat estimate: there is no price feed for SLEARN (its value comes from the
-  reserve rules of the whitepaper), so the panel shows token amounts only.
-- NFT API choice (Blockscout vs Celoscan) and caching are not settled.
-- Contact/address book: a plain address is enough for now.
-- "Lock now" and "delete wallet" still live in `WalletDialog`; "disconnect and
-  lock" is offered in the panel.
+- **I forgot my password:** restore the wallet with your **12 words**; the password
+  cannot be recovered.
+- **I lost the phone:** restore the wallet with your 12 words on another device.
+  No one else can do it for you: keep them offline.
+- **The panel shows a balance of `—`:** that token could not be read at that
+  moment; close and reopen the panel to try again. The other balances still work.
+- **A send was cancelled with no explanation:** that is the fingerprint or Face ID
+  prompt being cancelled; nothing was sent, try again.
+- **Offline:** your progress is saved on the phone and sent when the connection
+  comes back. See [pwa-user-guide.md](pwa-user-guide.md).

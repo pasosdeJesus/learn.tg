@@ -74,6 +74,21 @@ export interface CampaignConfig {
 const PDJ_TREASURY_ENV = 'NEXT_PUBLIC_PDJ_TREASURY_ADDRESS'
 
 /**
+ * CELO nativo: la misma moneda en ambas redes (no es ERC-20, se reenvía por
+ * valor). Constante a nivel de módulo para que `getCampaignDonationToken` devuelva
+ * siempre el mismo objeto: un literal nuevo en cada llamada cambiaba la identidad
+ * del token y disparaba el efecto de precio del modal en bucle (REQ/223).
+ */
+export const NATIVE_CELO_TOKEN: CampaignToken = {
+  key: 'celo',
+  symbol: 'CELO',
+  address: '',
+  decimals: 18,
+  native: true,
+  coingeckoId: 'celo',
+}
+
+/**
  * Registro de campañas. Las direcciones están verificadas (REQ/223 §8):
  * Celo/AVAX/Base en Blockscout/avascan/RPC (2026-09).
  */
@@ -101,7 +116,7 @@ export const CAMPAIGN_CONFIGS: CampaignConfig[] = [
     chains: [
       {
         chain: 'celo', chainId: 42220, rpcDefault: 'https://forno.celo.org',
-        nativeToken: { key: 'celo', symbol: 'CELO', address: '', decimals: 18, native: true, coingeckoId: 'celo' },
+        nativeToken: NATIVE_CELO_TOKEN,
         tokens: [
           { key: 'usdt', symbol: 'USDT', address: '0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e', decimals: 6, peggedUsd: true },
           { key: 'usdc', symbol: 'USDC', address: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C', decimals: 6, peggedUsd: true },
@@ -137,8 +152,8 @@ export function getCampaignDonationToken(cfg: CampaignConfig, key: string, mainn
   let base: CampaignToken | undefined
   if (key === 'celo') {
     // CELO nativo (la misma moneda en ambas redes): no es ERC-20, se reenvía
-    // por valor (sendTransaction). Configuración sintética estable.
-    base = { key: 'celo', symbol: 'CELO', address: '', decimals: 18, native: true, coingeckoId: 'celo' }
+    // por valor (sendTransaction). Identidad estable (ver NATIVE_CELO_TOKEN).
+    base = NATIVE_CELO_TOKEN
   } else if (mainnet) {
     const celo = cfg.chains.find((c) => c.chain === 'celo')
     base = celo?.tokens.find((t) => t.key === key)
