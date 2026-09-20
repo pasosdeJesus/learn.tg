@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { isValidPassword, useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
@@ -23,7 +23,7 @@ export default function WalletTestPage() {
       title: 'In-app wallet test page',
       warning: 'Development only. Do not enable in production.',
       status: 'Status',
-      password: 'password (6+ digits)',
+      password: 'password (8+ characters)',
       passwordConfirm: 'Confirm password',
       create: 'Create wallet',
       import: 'Import wallet',
@@ -40,7 +40,7 @@ export default function WalletTestPage() {
       title: 'Página de prueba de la billetera de la aplicación',
       warning: 'Solo desarrollo. No habilitar en producción.',
       status: 'Estado',
-      password: 'password (6 o más dígitos)',
+      password: 'clave (8+ caracteres)',
       passwordConfirm: 'Confirmar password',
       create: 'Crear billetera',
       import: 'Importar billetera',
@@ -167,7 +167,7 @@ export default function WalletTestPage() {
                   type="button"
                   data-testid="wallet-create"
                   onClick={onCreate}
-                  disabled={busy || password.length < 6 || password !== confirm}
+                  disabled={busy || !isValidPassword(password) || password !== confirm}
                   className="px-4 py-2 rounded bg-emerald-700 text-white disabled:opacity-50"
                 >
                   {t('create')}
@@ -186,7 +186,7 @@ export default function WalletTestPage() {
                   type="button"
                   data-testid="wallet-import"
                   onClick={onImport}
-                  disabled={busy || password.length < 6 || !mnemonic.trim()}
+                  disabled={busy || !isValidPassword(password) || !mnemonic.trim()}
                   className="px-4 py-2 rounded border border-emerald-700 disabled:opacity-50"
                 >
                   {t('import')}

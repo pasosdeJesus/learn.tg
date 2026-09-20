@@ -18,7 +18,7 @@
     "types": ["node"],
     "typeRoots": ["../../apps/nextjs/node_modules/@types"],
     "paths": {
-      "viem": ["../../apps/nextjs/node_modules/viem"],
+      "viem": ["../../apps/nextjs/node_modules/viem/_types/index.d.ts"],
       "viem/accounts": ["../../apps/nextjs/node_modules/viem/_types/accounts/index.d.ts"],
       "viem/chains": ["../../apps/nextjs/node_modules/viem/_types/chains/index.d.ts"]
     }

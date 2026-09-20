@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // test-e2e-retry — corre la suite E2E completa y reintenta los specs que fallen.
 //
-// Por qué: contra el dev site remoto (`https://learn.tg:9001`) los fallos de la
-// suite son casi siempre de carga/timing (la misma spec pasa al correrla sola),
-// no de producto. Reintentar cada fallo por separado estabiliza el resultado sin
-// tocar los specs. Ver `doc/e2e-testing.md`.
+// Por qué: contra el dev site los fallos son casi siempre de carga/timing (la
+// misma spec pasa al correrla sola), no de producto. Reintentar cada fallo por
+// separado estabiliza el resultado. Ver `doc/e2e-testing.md`.
+//
+// La salida se transmite en vivo (stream) además de guardarse en el log, para
+// poder seguir una corrida larga.
 //
 // Uso:
 //   cd apps/nextjs
@@ -14,7 +16,7 @@
 // Variables: `E2E_RETRIES` (reintentos por spec, por defecto 2), `E2E_LOG_DIR`
 // (por defecto /tmp).
 
-import { spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
@@ -25,15 +27,29 @@ const logDir = process.env.E2E_LOG_DIR || '/tmp'
 
 function runE2e(pattern, logFile) {
   const args = pattern ? [binM, 'test:e2e', pattern] : [binM, 'test:e2e']
-  const res = spawnSync(process.execPath, args, { cwd, encoding: 'utf8', env: process.env })
-  const out = `${res.stdout || ''}${res.stderr || ''}`
-  try {
-    fs.writeFileSync(logFile, out)
-  } catch {
-    // El log es best-effort: no debe tumbar la corrida.
-  }
-  process.stdout.write(out)
-  return { status: res.status, out }
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, args, { cwd, env: process.env })
+    let out = ''
+    let log = null
+    try {
+      log = fs.createWriteStream(logFile)
+    } catch {
+      // El log es best-effort: no debe tumbar la corrida.
+    }
+    const onData = (chunk) => {
+      const text = chunk.toString()
+      out += text
+      process.stdout.write(text)
+      log?.write(text)
+    }
+    child.stdout.on('data', onData)
+    child.stderr.on('data', onData)
+    child.on('error', reject)
+    child.on('close', (code) => {
+      log?.end()
+      resolve({ status: code ?? 1, out })
+    })
+  })
 }
 
 /** Specs que el runner reportó como fallidos (una vez cada uno). */
@@ -45,26 +61,37 @@ function failedSpecs(out) {
   return [...found]
 }
 
-let { status, out } = runE2e(null, path.join(logDir, 'e2e-retry-pass1.log'))
-let pending = failedSpecs(out)
-console.log(`\n[e2e-retry] Primera pasada: ${pending.length} spec(s) fallaron.`)
-void status
+async function main() {
+  const { out } = await runE2e(null, path.join(logDir, 'e2e-retry-pass1.log'))
+  let pending = failedSpecs(out)
+  console.log(`\n[e2e-retry] Primera pasada: ${pending.length} spec(s) fallaron.`)
 
-for (let attempt = 1; attempt <= retries && pending.length > 0; attempt += 1) {
-  console.log(`\n[e2e-retry] Reintento ${attempt}/${retries} de ${pending.length} spec(s): ${pending.join(', ')}`)
-  const still = []
-  for (const spec of pending) {
-    const name = spec.replace(/\.spec\.mjs$/, '')
-    const logFile = path.join(logDir, `e2e-retry-${name}-intento${attempt}.log`)
-    const res = runE2e(name, logFile)
-    if (res.status !== 0) still.push(spec)
+  for (let attempt = 1; attempt <= retries && pending.length > 0; attempt += 1) {
+    console.log(
+      `\n[e2e-retry] Reintento ${attempt}/${retries} de ${pending.length} spec(s): ${pending.join(', ')}`,
+    )
+    const still = []
+    for (const spec of pending) {
+      const name = spec.replace(/\.spec\.mjs$/, '')
+      console.log(`\n[e2e-retry] ▶ ${spec} (intento ${attempt})`)
+      const res = await runE2e(
+        name,
+        path.join(logDir, `e2e-retry-${name}-intento${attempt}.log`),
+      )
+      if (res.status !== 0) still.push(spec)
+    }
+    pending = still
   }
-  pending = still
+
+  if (pending.length > 0) {
+    console.log(`\n[e2e-retry] Siguen fallando tras ${retries} reintento(s): ${pending.join(', ')}`)
+    process.exit(1)
+  }
+  console.log('\n[e2e-retry] Suite E2E verde (o sin fallos tras reintentos).')
+  process.exit(0)
 }
 
-if (pending.length > 0) {
-  console.log(`\n[e2e-retry] Siguen fallando tras ${retries} reintento(s): ${pending.join(', ')}`)
+main().catch((error) => {
+  console.error(error)
   process.exit(1)
-}
-console.log('\n[e2e-retry] Suite E2E verde (o sin fallos tras reintentos).')
-process.exit(0)
+})

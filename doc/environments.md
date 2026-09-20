@@ -43,6 +43,16 @@ The agent's own sandbox is **`http://localhost:4000`** (`cd apps/nextjs &&
 bin/dev`, on this VM), used for unit/E2E/smoke checks. It is **not** the official
 development site and is **not** a place for the operator's manual testing.
 
+**The deploy must rebuild the engines.** `packages/*/dist` is not in git: `make all`
+/ `make prod` run `engines-dist` first, and a build that skips it serves stale engine
+code with the new app (or vice versa). That mismatch is a **runtime** error, not a
+compile one. Measured 2026-09-20: after a deploy the dev site could not create an
+in-app wallet (the e2e specs waited forever for the recovery words and the test page
+logged "The password must have at least 8 characters") because the deployed
+`pdj-wallet-next` still passed `pin` to the renamed `pdj-wallet` core, which expects
+`password`; rebuilding the engines fixed it. If a wallet spec fails right after a
+deploy, check `engines-dist` before the code.
+
 ## Wallets
 
 ### Production — one wallet per role

@@ -1,4 +1,3 @@
-import { hexToBigInt } from 'viem'
 import { getUnlockedAccount, getUnlockedInfo, signMessage, signTransaction, signTypedData } from './wallet.js'
 import { isKnownDestination, rememberDestination } from './destinations.js'
 import { readBiometricRecord } from './biometric.js'
@@ -131,13 +130,13 @@ async function fillTransaction(
     filled.from,
     'pending',
   ])) as string
-  filled.nonce = hexToBigInt(nonceHex as `0x${string}`)
+  filled.nonce = BigInt(nonceHex)
   const gasHex = (await forwardToRpc(rpcUrl, 'eth_estimateGas', [
     { from: filled.from, to: filled.to, value: filled.value, data: filled.data },
   ])) as string
-  filled.gas = hexToBigInt(gasHex as `0x${string}`)
+  filled.gas = BigInt(gasHex)
   const gasPriceHex = (await forwardToRpc(rpcUrl, 'eth_gasPrice', [])) as string
-  filled.gasPrice = hexToBigInt(gasPriceHex as `0x${string}`)
+  filled.gasPrice = BigInt(gasPriceHex)
   filled.type = 'legacy'
   return filled
 }
