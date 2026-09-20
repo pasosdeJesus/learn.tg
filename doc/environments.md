@@ -42,6 +42,9 @@ not be visible in a manual test there.
 The agent's own sandbox is **`http://localhost:4000`** (`cd apps/nextjs &&
 bin/dev`, on this VM), used for unit/E2E/smoke checks. It is **not** the official
 development site and is **not** a place for the operator's manual testing.
+`bin/dev` runs `make engines-dist` first and **aborts on failure** (a stale
+`dist/` would otherwise be served along the new app), so a broken engine surfaces
+before the server starts.
 
 **The deploy must rebuild the engines.** `packages/*/dist` is not in git: `make all`
 / `make prod` run `engines-dist` first, and a build that skips it serves stale engine

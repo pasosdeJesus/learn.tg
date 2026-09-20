@@ -136,8 +136,8 @@ async function main() {
   await sleep(3000)
   if (!(await page.$('[data-testid="wallet-selector-in-app"]'))) {
     await openDialog(page)
-    const password = await page.waitForSelector('[data-testid="wallet-password"]', { timeout: 15000 }).catch(() => null)
-    if (!password) {
+    const passwordInput = await page.waitForSelector('[data-testid="wallet-password"]', { timeout: 15000 }).catch(() => null)
+    if (!passwordInput) {
       fail('El modal no mostró el formulario de password para desbloquear')
     } else {
       await page.type('[data-testid="wallet-password"]', password)

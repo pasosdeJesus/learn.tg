@@ -278,15 +278,28 @@ async function main() {
   // tell hydration-failure apart from slow on-demand compilation, a client
   // JS error, or a missing window.ethereum mock.
   const browserEvents = []
-  page.on('console', (m) => browserEvents.push(`[console.${m.type()}] ${m.text()}`))
-  page.on('pageerror', (e) => browserEvents.push(`[pageerror] ${e.message}`))
+  const pushEvent = (line) => {
+    browserEvents.push(line)
+    if (browserEvents.length > 300) browserEvents.shift()
+  }
+  page.on('console', (m) => pushEvent(`[console.${m.type()}] ${m.text()}`))
+  page.on('pageerror', (e) => pushEvent(`[pageerror] ${e.message}`))
   page.on('requestfailed', (r) =>
-    browserEvents.push(`[requestfailed] ${r.url()} ${r.failure()?.errorText || ''}`))
+    pushEvent(`[requestfailed] ${r.url()} ${r.failure()?.errorText || ''}`))
   page.on('response', (r) => {
-    if (r.request().resourceType() === 'script' && !r.ok()) {
-      browserEvents.push(`[script ${r.status()}] ${r.url()}`)
+    const type = r.request().resourceType()
+    if ((type === 'script' || type === 'xhr' || type === 'fetch' || type === 'document') && !r.ok()) {
+      pushEvent(`[http ${r.status()}] ${r.request().method()} ${r.url()}`)
     }
   })
+
+  // Se imprime al fallar (ver el catch de la compra on-chain): sin esto los
+  // eventos se recogían pero nunca salían, y un "Failed to fetch" quedaba sin
+  // causa (un 502 del sitio, un contexto destruido, etc.).
+  const dumpBrowserEvents = (label) => {
+    console.log(`  ── eventos del navegador (${label}) ──`)
+    for (const line of browserEvents.slice(-30)) console.log(`     ${line}`)
+  }
 
   // ════════════════════════════════════════════════════════════════
   // Step 1: Pastor already authenticated (setupE2EAuth)
@@ -541,13 +554,26 @@ async function main() {
     // 3. Call the premium purchase endpoint.
     const purchaseRes = await page.evaluate(async ({ courseId, slearnHash }) => {
       const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
-      const r = await fetch('/api/courses/premium/purchase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: addr, courseId, slearnHash }),
-      })
-      return { status: r.status, body: await r.text() }
+      const t0 = Date.now()
+      try {
+        const r = await fetch('/api/courses/premium/purchase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletAddress: addr, courseId, slearnHash }),
+        })
+        return { status: r.status, body: await r.text(), ms: Date.now() - t0 }
+      } catch (e) {
+        // Un "Failed to fetch" (TypeError) aquí es de red/HTTP, no del motor:
+        // se devuelve como status 0 para que el reporte diga qué pasó y cuánto
+        // tardó, en vez de perderse en un stack de puppeteer.
+        return {
+          status: 0,
+          body: `fetch error tras ${Date.now() - t0}ms: ${e.name}: ${e.message}`,
+          ms: Date.now() - t0,
+        }
+      }
     }, { courseId: gdCourseId, slearnHash })
+    console.log(`  purchase POST: status ${purchaseRes.status} en ${purchaseRes.ms}ms`)
 
     if (purchaseRes.status === 200 || purchaseRes.status === 201) ok('GD course purchased')
     else fail(`Course purchase failed: ${purchaseRes.status} ${purchaseRes.body.slice(0, 160)}`)
@@ -661,6 +687,7 @@ async function main() {
     if (courseLoaded) ok('GD course page loaded')
     else fail('GD course page did not load')
   } catch (e) {
+    dumpBrowserEvents('fallo en la compra on-chain')
     fail(`On-chain purchase error: ${e.message}`)
   }
 
