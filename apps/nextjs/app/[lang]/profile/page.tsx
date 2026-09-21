@@ -27,6 +27,7 @@ import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { logger, DebugConsole } from '@pasosdejesus/m/debug'
 import { CountrySelect, ReligionSelect, ChurchRoleSelect } from '@/components/shared/FormSelects'
 import { TownAutocomplete } from '@/components/shared/TownAutocomplete'
+import { saveProfileScore } from '@/lib/offline-profile'
 
 
 
@@ -197,6 +198,8 @@ export default function ProfileForm({ params }: PageProps) {
       if (!res.ok) throw new Error('Failed')
       const data = await res.json()
       setProfile((prev) => ({ ...prev, profilescore: data.profilescore ?? prev.profilescore }))
+      // R-#242: el crucigrama avisa sin conexión si el puntaje no llega a 50.
+      saveProfileScore(data.profilescore)
       toast({ title: `${lang === 'es' ? 'Puntaje actualizado' : 'Score updated'}: ${data.profilescore ?? '0'}` })
     } catch {
       toast({ title: lang === 'es' ? 'Error al actualizar puntaje' : 'Failed to update scores', variant: 'destructive' })
@@ -344,6 +347,8 @@ export default function ProfileForm({ params }: PageProps) {
         }
         logger.info('locProfile=' + JSON.stringify(locProfile), 'Profile')
         setProfile(locProfile)
+        // R-#242: guardar el puntaje para el aviso sin conexión del crucigrama.
+        saveProfileScore(rUser.profilescore)
         if (rUser.church_id) setSelectedChurchId(rUser.church_id)
         if (rUser.city_id != null) {
           setCityId(rUser.city_id)

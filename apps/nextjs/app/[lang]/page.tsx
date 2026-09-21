@@ -12,6 +12,8 @@ import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CourseDonation } from '@/components/CourseDonation'
 import { SlearnInfo, AddSlearnButton } from '@pasosdejesus/mpdj/blockchain'
+import { saveCourseCatalog, getCourseCatalog } from '@/lib/offline-catalog'
+import { saveProfileScore } from '@/lib/offline-profile'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 
 type PageProps = {
@@ -113,8 +115,10 @@ export default function Page({ params }: PageProps) {
       if (wallet) {
         // Global Disciples courses (gdcluster/redgd) are only shown to Christians.
         try {
-          const profileRes = await authedGet<{ religion_id?: number }>('/api/profile')
+          const profileRes = await authedGet<{ religion_id?: number; profilescore?: number }>('/api/profile')
           christian = Number(profileRes.data?.religion_id) === 2
+          // R-#242: último puntaje conocido, para poder avisar sin conexión.
+          saveProfileScore(profileRes.data?.profilescore)
         } catch {
           christian = false
         }
@@ -131,6 +135,8 @@ export default function Page({ params }: PageProps) {
             )
           console.log(courseInfo)
           setCourses(courseInfo)
+          // R-#240 §4b: guardar la última lista vista para el menú sin conexión.
+          saveCourseCatalog(lang, courseInfo)
 
           if (!Array.isArray(courseInfo) || courseInfo.length === 0) return
 
@@ -177,7 +183,23 @@ export default function Page({ params }: PageProps) {
       } catch (error) {
         console.error('[courses] failed to fetch from:', listBaseUrl, error)
         logger.info('[courses] failed: ' + String(error) + ' | url: ' + listBaseUrl, 'Courses')
-        toast({ title: 'Failed to load courses. Check console.', variant: 'destructive' })
+        // R-#240 §4b: sin conexión se muestra la última lista guardada en vez de
+        // dejar la página vacía o en la de respaldo.
+        const cached = getCourseCatalog<Course>(lang)
+        if (cached && cached.courses.length > 0) {
+          setCourses(
+            cached.courses.filter((c: Course) =>
+              (c.prefijoRuta !== '/gdcluster' && c.prefijoRuta !== '/redgd') || christian,
+            ),
+          )
+          toast({
+            title: lang === 'es'
+              ? 'Sin conexión: mostrando la lista de cursos guardada.'
+              : 'You are offline: showing the saved course list.',
+          })
+        } else {
+          toast({ title: 'Failed to load courses. Check console.', variant: 'destructive' })
+        }
       }
     }
 

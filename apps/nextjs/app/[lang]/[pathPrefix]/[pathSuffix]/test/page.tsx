@@ -8,6 +8,7 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { useOfflineQueue } from '@/lib/hooks/useOfflineQueue'
+import { getProfileScore, profileScoreBelowMinimum, MIN_PROFILE_SCORE_FOR_SCHOLARSHIP } from '@/lib/offline-profile'
 import { usePublicClient } from '@/lib/hooks/useWallet'
 import { useWriteContract } from '@/lib/hooks/useWriteContract'
 
@@ -370,7 +371,17 @@ export default function Page({
       if (!error?.response) {
         try {
           await enqueue('/api/check-crossword', payload)
-          setFlashWarning(uiMsg[locale].offlineQueued)
+          // R-#242: sin conexión el servidor no puede decir si el perfil llega a
+          // los 50 puntos que exige la beca. Con el último puntaje guardado se
+          // avisa **antes** de encolar, en vez de descubrirlo al reconectar.
+          const knownScore = getProfileScore()
+          setFlashWarning(
+            profileScoreBelowMinimum(knownScore)
+              ? uiMsg[locale].offlineQueuedLowScore
+                  .replace('{{0}}', String(knownScore))
+                  .replace('{{1}}', String(MIN_PROFILE_SCORE_FOR_SCHOLARSHIP))
+              : uiMsg[locale].offlineQueued,
+          )
           return
         } catch (queueError) {
           console.error('No se pudo encolar la respuesta:', queueError)
@@ -396,6 +407,7 @@ export default function Page({
       sending: 'Enviando...',
       submit: 'Enviar respuesta',
       offlineQueued: 'Sin conexión: tu respuesta quedó guardada y se enviará sola cuando vuelvas a tener conexión.',
+      offlineQueuedLowScore: 'Sin conexión: tu respuesta quedó guardada y se enviará sola cuando vuelvas a tener conexión. Ojo: tu perfil tiene {{0}} puntos y necesitas {{1}} o más para recibir beca; completa tu perfil y podrás reclamarla.',
       offlinePending: 'respuesta(s) guardada(s) sin conexión, pendiente(s) de enviar.',
     },
     en: {
@@ -409,6 +421,7 @@ export default function Page({
       sending: 'Sending...',
       submit: 'Submit answer',
       offlineQueued: 'You are offline: your answer was saved and will be sent automatically when the connection returns.',
+      offlineQueuedLowScore: 'You are offline: your answer was saved and will be sent automatically when the connection returns. Note: your profile has {{0}} points and you need {{1}} or more to receive a scholarship; complete your profile and you will be able to claim it.',
       offlinePending: 'answer(s) saved offline, waiting to be sent.',
     },
   }

@@ -33,6 +33,12 @@ const pwaConfig: PWAConfig = {
   } as PWAConfig['fallbacks'],
   additionalManifestEntries: [
     { url: '/offline', revision: null },
+    // R-#240 §4b: el armazón de la lista de cursos queda precacheado para que el
+    // menú ☰ → Courses funcione sin conexión (el operador lo reportó el
+    // 2026-09-21: mostraba la página de respaldo). Los datos los aporta
+    // `lib/offline-catalog.ts`.
+    { url: '/en', revision: null },
+    { url: '/es', revision: null },
   ],
   runtimeCaching: [
     {
