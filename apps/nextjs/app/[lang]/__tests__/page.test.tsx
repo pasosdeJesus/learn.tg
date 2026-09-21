@@ -82,6 +82,23 @@ vi.mock('@/lib/hooks/useWallet', () => ({
   usePublicClient: () => usePublicClientMock(),
   useWalletClient: () => useWalletClientMock(),
 }))
+// R-#254: con la billetera de la aplicación activa, el botón "Add SLEARN" se oculta.
+const useWalletProviderMock = vi.fn(() => ({
+  provider: null,
+  isInApp: false,
+  isInAppUnlocked: false,
+  externalAvailable: true,
+}))
+vi.mock('@/lib/hooks/useWalletProvider', () => ({
+  useWalletProvider: () => useWalletProviderMock(),
+}))
+// El botón real sólo se pinta con un proveedor externo y necesita `window.ethereum`;
+// aquí se sustituye por un testid estable para comprobar que el page lo monta o no.
+vi.mock('@pasosdejesus/mpdj/blockchain', () => ({
+  SlearnInfo: () => React.createElement('div', { 'data-testid': 'slearn-info' }),
+  AddSlearnButton: ({ lang }: { lang?: string }) =>
+    React.createElement('div', { 'data-testid': 'add-slearn' }, `Add SLEARN to my wallet (${lang})`),
+}))
 
 // Render directo (el componente usa hooks mockeados)
 function renderWithProviders(ui: React.ReactElement) {
@@ -110,6 +127,39 @@ describe('Main Page Component', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     // Mock de variable de entorno usada en componente
     process.env.NEXT_PUBLIC_API_BUSCA_CURSOS_URL = '/api/course-catalog'
+    useWalletProviderMock.mockReturnValue({ provider: null, isInApp: false, isInAppUnlocked: false, externalAvailable: true })
+  })
+
+  // R-#254: la billetera de la aplicación no soporta `wallet_watchAsset` (su panel
+  // ya lista CELO/USDT/SLEARN), así que el botón no se muestra cuando es el
+  // proveedor efectivo (el operador lo reportó el 2026-09-21: no hacía nada).
+  const slearnCourses = [
+    { id: '1', idioma: 'en', prefijoRuta: '/test-course', imagen: '/test.jpg', titulo: 'Test Course', subtitulo: 'Test desc', amountPerGuide: 15, canSubmit: true },
+  ]
+
+  async function renderCoursesPage() {
+    axiosGet
+      .mockResolvedValueOnce({ data: { religion_id: null } })
+      .mockResolvedValueOnce({ data: slearnCourses as Course[] })
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
+    await waitFor(() => expect(screen.getByTestId('slearn-info')).toBeInTheDocument())
+  }
+
+  it('oculta el botón de agregar SLEARN con la billetera de la aplicación activa', async () => {
+    useWalletProviderMock.mockReturnValue({ provider: null, isInApp: true, isInAppUnlocked: true, externalAvailable: false })
+    await renderCoursesPage()
+    expect(screen.queryByTestId('add-slearn')).not.toBeInTheDocument()
+  })
+
+  it('muestra el botón de agregar SLEARN con una billetera externa', async () => {
+    await renderCoursesPage()
+    expect(screen.getByTestId('add-slearn')).toBeInTheDocument()
   })
 
   it('no carga cursos (early return) cuando dirección y sesión difieren (partial login)', async () => {

@@ -12,6 +12,7 @@ import {
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
 import { isValidPassword, useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { detectPlatformSupport } from '@learn-tg/pdj-wallet'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
@@ -73,6 +74,12 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   // (nunca se pinta ni se guarda en disco).
   const [createBiometric, setCreateBiometric] = useState(true)
   const createPasswordRef = useRef('')
+  // R-#254: antes de crear la billetera el hook no conoce el soporte del
+  // dispositivo (lo calcula cuando encuentra una billetera), así que la creación lo
+  // sondea aquí. Sin esto la huella nunca se ofrecía al crear (reportado el
+  // 2026-09-21 desde un Android).
+  const [deviceCanVerify, setDeviceCanVerify] = useState(false)
+  const [biometricNotice, setBiometricNotice] = useState<string | null>(null)
   const autoGestureTried = useRef(false)
   const [busy, setBusy] = useState(false)
 
@@ -92,6 +99,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       biometricOn: 'Fingerprint unlock is on',
       biometricOff: 'Turn off fingerprint unlock',
       biometricCreate: 'Also unlock with my fingerprint or Face ID',
+      biometricCreateFailed: 'The fingerprint could not be saved. Your password still works; you can turn the gesture on later from the wallet.',
       noWebauthn: 'This device cannot verify your fingerprint or Face ID.',
       noPrf: 'This device cannot store the biometric unlock. Use your password.',
       noBiometric: 'There is no fingerprint unlock saved on this device.',
@@ -148,6 +156,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       biometricOn: 'Desbloqueo con huella activado',
       biometricOff: 'Desactivar el desbloqueo con huella',
       biometricCreate: 'Desbloquear también con mi huella o Face ID',
+      biometricCreateFailed: 'No se pudo guardar la huella. Tu clave sigue funcionando y puedes activar el gesto después desde la billetera.',
       noWebauthn: 'Este dispositivo no puede verificar tu huella o Face ID.',
       noPrf: 'Este dispositivo no puede guardar el desbloqueo por huella. Usa tu clave.',
       noBiometric: 'No hay un desbloqueo por huella guardado en este dispositivo.',
@@ -209,9 +218,30 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setPasswordFallback(false)
     createPasswordRef.current = ''
     setCreateBiometric(true)
+    setBiometricNotice(null)
     autoGestureTried.current = false
     setBusy(false)
   }, [open])
+
+  // R-#254: sondeo del soporte del dispositivo para poder ofrecer la huella en la
+  // creación, cuando el hook todavía no tiene billetera que inspeccionar.
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    void detectPlatformSupport()
+      .then((support) => {
+        if (!cancelled) setDeviceCanVerify(!!support.userVerifying && support.prf !== false)
+      })
+      .catch(() => {
+        if (!cancelled) setDeviceCanVerify(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+
+  // En la creación manda el sondeo propio; ya con billetera, lo que diga el hook.
+  const canOfferBiometric = biometricAvailable || deviceCanVerify
 
   const translateError = useCallback((raw: unknown) => {
     const code = raw instanceof Error ? raw.message : String(raw)
@@ -380,18 +410,20 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     markBackupConfirmed()
     const passwordForBiometric = createPasswordRef.current
     createPasswordRef.current = ''
-    if (createBiometric && biometricAvailable && !biometricEnabled && passwordForBiometric) {
+    if (createBiometric && canOfferBiometric && !biometricEnabled && passwordForBiometric) {
       setBusy(true)
       try {
         await enableBiometric(passwordForBiometric)
       } catch {
-        // La huella no se pudo guardar: la clave sigue siendo el respaldo.
+        // La huella no se pudo guardar: la clave sigue siendo el respaldo, pero el
+        // usuario debe enterarse (antes se fallaba en silencio).
+        setBiometricNotice(t('biometricCreateFailed'))
       } finally {
         setBusy(false)
       }
     }
     void signIn()
-  }, [biometricAvailable, biometricEnabled, createBiometric, enableBiometric, recovery, signIn, verifyInputs])
+  }, [biometricEnabled, canOfferBiometric, createBiometric, enableBiometric, recovery, signIn, t, verifyInputs])
 
   const handleDelete = useCallback(async () => {
     setLocalError(null)
@@ -520,7 +552,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                 )}
                 {/* R-#254: en un dispositivo que puede verificar al usuario, la creación
                     pide también la huella; sin esa capacidad no se ofrece nada. */}
-                {biometricAvailable && !biometricEnabled && (
+                {canOfferBiometric && !biometricEnabled && (
                   <div className="space-y-1" data-testid="wallet-create-biometric-block">
                     <p className="text-xs text-gray-500">{t('biometricHint')}</p>
                     <label className="flex items-center gap-2 text-sm">
@@ -532,6 +564,11 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                       />
                       {t('biometricCreate')}
                     </label>
+                    {biometricNotice && (
+                      <p className="text-xs text-amber-700" data-testid="wallet-create-biometric-notice">
+                        {biometricNotice}
+                      </p>
+                    )}
                   </div>
                 )}
                 <Button

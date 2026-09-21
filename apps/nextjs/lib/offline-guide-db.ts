@@ -44,3 +44,21 @@ export async function deleteGuide(key: string): Promise<void> {
     // the in-memory copy is already gone
   }
 }
+
+/**
+ * Guides cached on this device, newest first (R-#240/R-#241). The offline page
+ * lists them so "read offline" has somewhere to go when the browser is offline:
+ * the course list itself is not cached on a first visit.
+ */
+export async function listGuides(): Promise<CachedGuide[]> {
+  const fromMemory = () => [...memory.values()].sort((a, b) => b.savedAt - a.savedAt)
+  if (!hasIndexedDB()) return fromMemory()
+  try {
+    const records = await withStore<CachedGuide[]>(GUIDE_STORE, 'readonly', (store) => store.getAll())
+    const merged = new Map<string, CachedGuide>()
+    for (const record of [...(records ?? []), ...memory.values()]) merged.set(record.key, record)
+    return [...merged.values()].sort((a, b) => b.savedAt - a.savedAt)
+  } catch {
+    return fromMemory()
+  }
+}

@@ -22,6 +22,16 @@ const mocks = vi.hoisted(() => ({
   reload: vi.fn(),
 }))
 
+const coreMocks = vi.hoisted(() => ({
+  detectPlatformSupport: vi.fn(),
+}))
+
+// R-#254: la creación sondea el dispositivo por su cuenta (el hook todavía no tiene
+// billetera que inspeccionar), así que el test controla ese sondeo.
+vi.mock('@learn-tg/pdj-wallet', () => ({
+  detectPlatformSupport: coreMocks.detectPlatformSupport,
+}))
+
 vi.mock('@learn-tg/pdj-wallet-next', () => ({
   // Misma regla que el paquete (R-#251): clave de 8+ caracteres.
   isValidPassword: (value: string) => value.trim().length >= 8,
@@ -112,6 +122,7 @@ describe('WalletDialog (R-#244)', () => {
     mocks.error = null
     mocks.biometricAvailable = false
     mocks.biometricEnabled = false
+    coreMocks.detectPlatformSupport.mockResolvedValue({ webauthn: false, userVerifying: false, prf: null })
   })
 
   it('creates the wallet and shows the 12 words with a confirmation', async () => {
@@ -209,6 +220,56 @@ describe('WalletDialog (R-#244)', () => {
 
     expect(mocks.enableBiometric).toHaveBeenCalledWith('12345678')
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
+  // R-#254: la creación ofrece la huella por el sondeo del propio diálogo, sin
+  // depender de que el hook ya conozca el soporte (antes de crear no hay billetera).
+  it('offers the fingerprint during creation from its own device probe', async () => {
+    coreMocks.detectPlatformSupport.mockResolvedValue({ webauthn: true, userVerifying: true, prf: true })
+    mocks.create.mockResolvedValue({
+      walletInfo: { address: ADDRESS },
+      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
+    })
+    mocks.enableBiometric.mockResolvedValue(undefined)
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    await fillPassword()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-create'))
+    })
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-words-done'))
+    })
+    await waitFor(() => expect(screen.getByTestId('wallet-create-biometric')).toBeInTheDocument())
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-words-peek'))
+    })
+    await completeBackup()
+
+    expect(mocks.enableBiometric).toHaveBeenCalledWith('12345678')
+  })
+
+  it('tells the user when the fingerprint could not be saved during creation', async () => {
+    coreMocks.detectPlatformSupport.mockResolvedValue({ webauthn: true, userVerifying: true, prf: true })
+    mocks.create.mockResolvedValue({
+      walletInfo: { address: ADDRESS },
+      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
+    })
+    mocks.enableBiometric.mockRejectedValue(new Error('NotAllowedError'))
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    await fillPassword()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-create'))
+    })
+    await completeBackup()
+
+    expect(screen.getByTestId('wallet-create-biometric-notice')).toBeInTheDocument()
   })
 
   it('keeps the password-only path when the device cannot verify the user', async () => {

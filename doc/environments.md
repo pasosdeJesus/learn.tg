@@ -340,6 +340,52 @@ fastest path for a one-off UI probe.
 Note: `page.waitForTimeout()` no longer exists in the bundled Puppeteer
 (24.x); use a small `sleep()` helper.
 
+### HTTPS local (opcional, nginx)
+
+`http://localhost` ya es contexto seguro para Chrome (service worker y WebAuthn
+funcionan sin TLS: medido el 2026-09-21, el desbloqueo con passkey se completó en
+`http://localhost:4000`), así que los specs corren en HTTP. HTTPS solo hace falta
+para probar desde otro dispositivo, o para reproducir el proxy del dev site
+(`Host $http_host` y el upgrade de `/_next/hmr`, ver `doc/siwe-auth-flow.md` §4).
+Alternativa sin root: `pnpm dev` (HTTPS en `:4300` con el certificado de `.cert/`).
+Con nginx hay que agregar a `/etc/nginx/nginx.conf`, dentro del bloque `http {}`
+(requiere root: `doas nginx -t && doas nginx -s reload`):
+
+```nginx
+server {
+    listen       4300 ssl;          # authorize() ya permite localhost:4300
+    server_name  localhost;
+    ssl_certificate      /var/www/adJ-ia/learn.tg/.cert/cert.pem;
+    ssl_certificate_key  /var/www/adJ-ia/learn.tg/.cert/llave.pem;
+
+    location / {
+        proxy_pass         http://127.0.0.1:4000;   # bin/dev o bin/start
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade $http_upgrade;   # /_next/hmr (sin esto Next 16 no hidrata)
+        proxy_set_header   Connection "upgrade";
+        proxy_set_header   Host $http_host;         # NO $host: el puerto entra en el SIWE
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+    }
+}
+```
+
+Notas para OpenBSD/adJ: el nginx del paquete usa `/var/www` como prefijo (los
+`error_log` y temporales relativos se resuelven ahí) y necesita root, así que un
+nginx de usuario no sirve; el certificado debe ser legible por el usuario de nginx;
+y cualquier puerto distinto de `4300` hay que agregarlo al allowlist de
+`authorize()` (no producción: `localhost`, `localhost:4000`, `localhost:4300`).
+Prueba:
+
+```sh
+SITE_URL=https://localhost:4300 IPDES=localhost PUERTOPRU=4300 CHAIN_ID=11142220 \
+  CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=header-wallet-dialog
+```
+
+Cambiar `$http_host` por `$host` en ese bloque es la forma de reproducir el fallo
+`DOMAIN_MISMATCH` documentado en `doc/siwe-auth-flow.md` §4.
+
 ## Contract addresses
 
 Contract addresses are **not** read from `.env`. They come from:

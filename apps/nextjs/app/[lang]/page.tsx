@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { logger } from '@pasosdejesus/m/debug'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useWalletProvider } from '@/lib/hooks/useWalletProvider'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 
 import { CourseStatistics } from '@/components/CourseStatistics'
@@ -47,6 +48,10 @@ interface CourseExtra {
 
 export default function Page({ params }: PageProps) {
   const { address } = useAuthAddress()
+  // R-#254: con la billetera de la aplicación como proveedor efectivo, la
+  // billetera ya lista CELO/USDT/SLEARN en su panel y no soporta
+  // `wallet_watchAsset`, así que el botón "agregar SLEARN" del sitio no hacía nada.
+  const { isInApp } = useWalletProvider()
   const { data: session, status: sessionStatus } = useSession()
   const { wallet, ready, authedGet } = useAuthedApi()
   const { toast } = useToast()
@@ -335,9 +340,11 @@ export default function Page({ params }: PageProps) {
               { label: lang === 'es' ? 'Canjear en stable-sl' : 'Redeem on stable-sl', href: 'https://stable-sl.pdJ.app' },
             ]}
           />
-          <div className="mt-2">
-            <AddSlearnButton lang={lang} />
-          </div>
+          {!isInApp && (
+            <div className="mt-2">
+              <AddSlearnButton lang={lang} />
+            </div>
+          )}
         </div>
       </div>
     </section>

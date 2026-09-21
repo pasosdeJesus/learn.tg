@@ -53,6 +53,22 @@ React layer) and the **external** wallet (`ConnectWalletButton`,
 provider — the in-app one while it is unlocked, otherwise the injected one —
 and every wallet hook goes through it.
 
+### Detecting the in-app provider (R-#254)
+
+UI that must behave differently can tell which wallet is in use without a request:
+
+| Where | How |
+|-------|-----|
+| React | `useWalletProvider().isInApp` — the effective provider is the in-app wallet (true while it is unlocked) |
+| React | `useAuthAddress().isInAppUnlocked` / `inAppAddress` — the in-app wallet is unlocked, regardless of the session |
+| Provider | `provider.isPdJWallet === true` (`packages/pdj-wallet/src/provider.ts`) — the flag a library can read on `window.ethereum` when the in-app wallet is the injected one |
+| Hook | `useInAppWallet().status` — `no-wallet` / `locked` / `unlocked` |
+
+`wallet_watchAsset` is **not** implemented by the in-app provider: its panel always
+lists CELO, USDT and SLEARN, so "add token to wallet" buttons are pointless there.
+The home page hides its `AddSlearnButton` when `isInApp` is true (the operator
+reported on 2026-09-21 that pressing it did nothing with the in-app wallet).
+
 ## Components
 
 ### ConnectWalletButton (`components/ConnectWalletButton.tsx`)
