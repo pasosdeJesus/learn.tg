@@ -35,6 +35,25 @@ async function bodyLength(page) {
   return page.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().length)
 }
 
+/**
+ * Espera a que la página tenga contenido real (encabezado + guía). Sin esto se
+ * medía `bodyLength` inmediatamente después del `reload` y daba ~130 caracteres
+ * (sólo el shell, antes de hidratar), lo que hacía fallar el spec aunque la guía
+ * sí estuviera cacheada (medido 2026-09-21 en el dev site).
+ */
+async function waitBodyContent(page, timeout, label) {
+  try {
+    await page.waitForFunction(
+      () => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().length > 200,
+      { timeout },
+    )
+    return true
+  } catch {
+    console.log(`  [!] sin contenido (>200 caracteres) tras ${label}`)
+    return false
+  }
+}
+
 async function main() {
   const t0 = performance.now()
   resetFailures()
@@ -61,9 +80,13 @@ async function main() {
 
   const registration = await page.evaluate(async () => {
     if (!('serviceWorker' in navigator)) return null
+    // 60 s: en la primera visita el worker instala su precache (43 KB + chunks) y
+    // en una VM lenta / con la red ocupada eso pasaba de los 10 s anteriores, así
+    // que el spec se saltaba con "sin service worker registrado" aunque el sitio
+    // sí lo tuviera (medido 2026-09-21 en el dev site).
     const ready = await Promise.race([
       navigator.serviceWorker.ready.catch(() => null),
-      new Promise((resolve) => setTimeout(() => resolve(null), 10000)),
+      new Promise((resolve) => setTimeout(() => resolve(null), 60000)),
     ])
     return ready ? (ready.active?.scriptURL || 'registered') : null
   })
@@ -91,17 +114,17 @@ async function main() {
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.waitForFunction(() => !!navigator.serviceWorker?.controller, { timeout })
   ok('La página está controlada por el service worker')
+  await waitBodyContent(page, timeout, 'la recarga controlada por el SW')
 
   // 2. Sin conexión: la guía debe seguir leyéndose desde la caché.
   await page.setOfflineMode(true)
-  let offlineLength = 0
   try {
     await page.reload({ waitUntil: 'domcontentloaded' })
-    offlineLength = await bodyLength(page)
   } catch (error) {
-    offlineLength = 0
     console.log(`  [!] La recarga sin conexión falló: ${error.message}`)
   }
+  await waitBodyContent(page, 30000, 'la recarga sin conexión')
+  const offlineLength = await bodyLength(page)
 
   if (offlineLength > 200) ok(`La guía sigue visible sin conexión (${offlineLength} caracteres)`)
   else fail(`La guía no se pudo leer sin conexión (${offlineLength} caracteres)`)
@@ -113,6 +136,7 @@ async function main() {
   // 3. Vuelve la conexión.
   await page.setOfflineMode(false)
   await page.reload({ waitUntil: 'domcontentloaded' })
+  await waitBodyContent(page, timeout, 'volver a estar en línea')
   const backOnline = await bodyLength(page)
   if (backOnline > 200) ok('Con conexión la guía vuelve a cargarse')
   else fail(`Con conexión la guía quedó vacía (${backOnline} caracteres)`)

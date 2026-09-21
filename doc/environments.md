@@ -308,10 +308,34 @@ CHROME_PATH=/usr/local/bin/chrome IPDES=localhost PUERTOPRU=4000 CHAIN_ID=111422
 ```
 
 `SITE_URL` + `NEXT_PUBLIC_AUTH_URL` are the alternative to `IPDES`/`PUERTOPRU`.
-The specs under `e2e/specs` accept the same overrides, but they are written
-against the dev site (registered wallet, rewards, claims), so for UI work the
-throwaway script is usually faster — and the fastest reproducible check for the
-in-app wallet is `make test-e2e-spec SPEC=in-app-wallet` against the dev site.
+
+**The E2E specs also run against the local instance** (no dev-site deploy needed).
+The helper of `m` fixes `base` as `https://${IPDES}:${PUERTOPRU}`, so each spec
+resolves its target with `e2e/helpers/site-target.mjs` (`resolveSiteTarget(env)`),
+which honours `SITE_URL` and derives `host`/`domainPort` from it (the SIWE must
+sign the host you actually visit, R-#233). Recipe:
+
+```sh
+cd apps/nextjs
+NEXT_PUBLIC_PWA_DISABLE=1 bin/dev            # http://localhost:4000
+bin/warmup-local.mjs                          # 24 rutas, secuencial
+SITE_URL=http://localhost:4000 IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 \
+  CHROME_PATH=/usr/local/bin/chrome node e2e/specs/<spec>.spec.mjs
+```
+
+Return the exit code: a spec that prints `❌` and exits 0 is a bug of the spec
+(`doc/e2e-testing.md`). Measured 2026-09-21 on this VM (all of them exit 0):
+`header-wallet-dialog`, `in-app-wallet`, `auth-session`, `diag-session`,
+`church-persistence`, `nav-session-diag`, `ux-mobile-menu`, `connect-wallet-flow`,
+`wallet-event-disconnect`, `fresh-wallet-first-connect`. Whose fail locally and
+why: `profile-data` and `admin-dashboard` hit the navigation race known from
+https://github.com/pasosdeJesus/learn.tg/issues/213
+(`Execution context was destroyed`), `town-autocomplete` needs data/keys the dev
+site has (`Failed to fetch`), `offline-guide` needs a production build and
+`offline-crossword` leaves one answer queued locally (the replay needs the rewards
+stack). So: **use local for the UI/session specs** and the dev site for the specs
+that write on-chain or need the deployed content; the throwaway script remains the
+fastest path for a one-off UI probe.
 
 Note: `page.waitForTimeout()` no longer exists in the bundled Puppeteer
 (24.x); use a small `sleep()` helper.

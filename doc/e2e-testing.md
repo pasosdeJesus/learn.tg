@@ -108,10 +108,17 @@ Detalles que cuestan tiempo si se ignoran:
 
 - **`SITE_URL` es obligatorio**: el helper de `m` arma `base` como
   `https://${IPDES}:${PUERTOPRU}` (fijo), así que sin `SITE_URL` el spec navega a
-  `https://localhost:4000` y muere con `ERR_SSL_PROTOCOL_ERROR`. Los specs de
-  billetera ya lo respetaban; desde 2026-09-20 también `pastor-journey`,
-  `header-wallet-dialog`, `donate-campaign-celo-modal`, `in-app-wallet` y
-  `premium-course-checkout`.
+  `https://localhost:4000` y muere con `ERR_SSL_PROTOCOL_ERROR`. Desde 2026-09-21
+  **todos** los specs resuelven su destino con
+  `e2e/helpers/site-target.mjs` (`resolveSiteTarget(env)`), que respeta `SITE_URL`
+  y deriva `host`/`domainPort` (el SIWE firma el host que se visita). Antes lo
+  hacían sólo `pastor-journey`, `header-wallet-dialog`,
+  `donate-campaign-celo-modal`, `in-app-wallet` y `premium-course-checkout`.
+  Medido el 2026-09-21 en local: 10 specs en verde (`header-wallet-dialog`,
+  `in-app-wallet`, `auth-session`, `diag-session`, `church-persistence`,
+  `nav-session-diag`, `ux-mobile-menu`, `connect-wallet-flow`,
+  `wallet-event-disconnect`, `fresh-wallet-first-connect`); ver
+  `doc/environments.md` §4 para los que requieren el dev site y por qué.
 - **No uses `bin/warmup.mjs` contra local**: su pasada 2 dispara 55 requests en
   paralelo y en esta VM (1 CPU, límite de datos del chroot) mata al `next dev`
   con `Fatal error ... Check failed: (result.ptr) != nullptr`. Para local usa
@@ -358,7 +365,7 @@ PROD_SPECS=1 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=prod-land
 | `prod-landing-to-profile.spec.mjs` | Production landing page → wallet connect → profile save flow |
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
 | `offline-crossword.spec.mjs` | R-#242: crossword filled, submitted offline → queued (`offline-pending`), survives a reload, and drains when the connection returns (no service worker needed) |
-| `offline-guide.spec.mjs` | R-#241: guide readable offline from the PWA cached page (skips when the site serves the development worker) |
+| `offline-guide.spec.mjs` | R-#241: guide readable offline from the PWA cached page (needs a production build; on the deployed `make prod` build it reports 0 failures) |
 | `in-app-wallet.spec.mjs` | R-#245: in-app wallet created in `/en/test/wallet`, unlocked, SIWE and session cookie (skips when the page is not deployed) |
 | `header-wallet-dialog.spec.mjs` | R-#245: the real header + wallet modal flow — create → close → reopen must start fresh → unlock from the header → SIWE → the header **keeps the session after a reload** → `✕` returns to signed-out |
 | `donate-unlock-dialog.spec.mjs` | R-#244: with an in-app session and the wallet locked, the donation modal's unlock button must open the wallet dialog **on top** with the PIN form, and unlocking must remove the notice |

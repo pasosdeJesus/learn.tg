@@ -103,9 +103,12 @@ site data before debugging anything else.
   offline banner, install prompt, guide cache, submission queue).
 - Manual: `doc/pdj-wallet-testing.md` §4 (service worker, manifest, offline page)
   and §5 (offline crossword).
-- The full E2E suite runs against the deployed dev site, so PWA behaviour is not
-  covered there yet: `e2e/specs/in-app-wallet.spec.mjs` is the first step in that
-  direction and skips when `/en/test/wallet` is not deployed.
+- The full E2E suite covers the PWA on the deployed **production** build:
+  `make test-e2e-offline` runs `offline-guide` (service worker registers and
+  controls the page, guide served from `learntg-pages` offline, banner, and back
+  online) and `offline-crossword` (queue end to end), both reported green on
+  2026-09-21. A `next dev` instance still cannot test offline (next-pwa forces
+  `NetworkOnly`); use `make all` + `bin/start` locally or the deployed site.
 
 ## Generated files and how to retire the worker
 

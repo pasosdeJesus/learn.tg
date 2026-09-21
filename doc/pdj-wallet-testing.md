@@ -188,14 +188,23 @@ captured from the browser context.
 
 `e2e/specs/offline-guide.spec.mjs` visits `/en/gdcluster/guide1` online, goes
 offline, reloads and checks that the guide is still readable and that the
-offline banner shows. It needs the service worker, so it **skips** when the PWA
-is not deployed:
+offline banner shows. It needs the service worker (a **production build**: the
+deployed site, or `make all` + `bin/start` locally) and it **skips** when the site
+has none:
 
 ```sh
 cd apps/nextjs
 make test-e2e-offline      # = SPEC=offline: corre offline-guide y offline-crossword
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=offline-guide
 ```
+
+Medido el 2026-09-21 contra el dev site con el build de `make prod`: los dos specs
+en **0 failures** (el worker se registra y controla la página, la guía se sirve de
+`learntg-pages` sin conexión, 289 caracteres, con el banner, y vuelve a cargar al
+recuperar la conexión). En local con `make all` + `bin/start` y
+`SITE_URL=http://localhost:4000` el spec también recorre el camino completo, pero
+la guía sale corta porque el curso GD es premium y la billetera local no tiene
+entitlement.
 
 ## 4. Manual: service worker, manifest and offline
 
