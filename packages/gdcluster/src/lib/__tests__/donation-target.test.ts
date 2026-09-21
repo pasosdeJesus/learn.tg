@@ -124,7 +124,7 @@ describe('getDistributionFromResponse', () => {
   })
 })
 
-describe('campaignDonorSplit (REQ/223 §3.3)', () => {
+describe('campaignDonorSplit (https://github.com/pasosdeJesus/learn.tg/issues/223 §3.3)', () => {
   it('defaults to cashback ON: campaign 90% + 10% SLEARN cashback (from the donation)', () => {
     const split = campaignDonorSplit(100, {}, 22)
     expect(split.campaignUSD).toBe(90)
@@ -190,7 +190,7 @@ describe('splitRawAmount', () => {
   })
 })
 
-describe('campaign donations (REQ/223)', () => {
+describe('campaign donations (https://github.com/pasosdeJesus/learn.tg/issues/223)', () => {
   const campaign: PaymentTarget = { type: 'campaign-donation', slug: 'lensenia' }
 
   it('resolves the campaign config from the registry', () => {
@@ -239,7 +239,7 @@ describe('campaign donations (REQ/223)', () => {
     expect(en.splitInfo).toContain('10% comes back to you as SLEARN cashback')
     const enOff = getTargetCopy('en', campaign, { pdjSharePct: 10, receiveCashback: false })
     expect(enOff.splitInfo).toContain('90% goes to the Lensenia Water Well campaign and 10% to pdJ (your choice)')
-    // Sin cashback marcado no debe mencionarse el SLEARN de cashback (REQ/223)
+    // Sin cashback marcado no debe mencionarse el SLEARN de cashback (https://github.com/pasosdeJesus/learn.tg/issues/223)
     expect(enOff.splitInfo).not.toContain('cashback')
     const esOff = getTargetCopy('es', campaign, { pdjSharePct: 5, receiveCashback: false })
     expect(esOff.splitInfo).toContain('95% va a la campaña Pozo de Agua Lensenia y 5% a pdJ (tu elección)')
@@ -267,7 +267,7 @@ describe('campaign donations (REQ/223)', () => {
   })
 })
 
-describe('CELO nativo como token de donación (REQ/223)', () => {
+describe('CELO nativo como token de donación (https://github.com/pasosdeJesus/learn.tg/issues/223)', () => {
   it('is enabled in mainnet and testnet donationTokens with native config', () => {
     const cfg = getCampaignConfig('lensenia')!
     expect(cfg.donationTokens).toContain('celo')

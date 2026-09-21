@@ -24,6 +24,7 @@ import {
   initTestEnv, launchBrowser, newPage,
   resetFailures, fail, ok, summary, short,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 function loadEnvCredentials() {
   for (const envPath of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env'), path.join(process.cwd(), '.env')]) {
@@ -156,7 +157,9 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout, chainId } = env
+  const { timeout, chainId } = env
+  // SITE_URL permite un `bin/dev` local (HTTP).
+  const { base } = resolveSiteTarget(env)
   console.log(`Wallet: ${short(creds.addr)} | ${base}\n`)
 
   const browser = await launchBrowser(env.headless)
@@ -222,7 +225,7 @@ async function main() {
     () => window.ethereum.emitDiag('accountsChanged', []))
   if (!r3) {
     // Bajo carga el debounce + re-chequeo de eth_accounts puede no alcanzar el
-    // poll; reintentar una vez (REQ/224).
+    // poll; reintentar una vez (https://github.com/pasosdeJesus/learn.tg/issues/224).
     await page.evaluate(() => window.ethereum.setDisconnected(true))
     r3 = await emitAndCheck(page, 'accountsChanged([]) real (reintento)',
       () => window.ethereum.emitDiag('accountsChanged', []))

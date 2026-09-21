@@ -2,7 +2,7 @@ import { SessionProvider } from 'next-auth/react'
 import * as React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { beforeEach, describe, it, expect, vi } from 'vitest'
+import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const useSessionMock = vi.fn((..._args: unknown[]) => ({
@@ -61,6 +61,10 @@ describe('Header', () => {
     useSessionMock.mockReturnValue({ data: null, status: 'unauthenticated' })
   })
 
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('renders logo and title in English', () => {
     renderWithProviders(<Header lang="en" />)
     expect(screen.getByAltText('logo')).toBeInTheDocument()
@@ -98,5 +102,38 @@ describe('Header', () => {
     expect(hrefs).toContain('/en/profile')
     expect(hrefs).toContain('/en') // Courses (R-#231)
     expect(hrefs).toContain('/en/donations/lensenia') // donación vive en el menú
+  })
+
+  // R-#255: el menú ☰ muestra Admin sólo al verificador, en su idioma.
+  it('verifier wallet: menu includes Admin (Spanish)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_VERIFIER_WALLET', '0xAAA, 0x123 ')
+    useSessionMock.mockReturnValue({
+      data: { user: { name: 'Test User' }, address: '0x123' },
+      status: 'authenticated',
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    } as never)
+    renderWithProviders(<Header lang="es" />)
+    const hrefs = await openMenuHrefs()
+    expect(hrefs).toContain('/es/admin')
+  })
+
+  it('non-verifier wallet: no Admin entry', async () => {
+    vi.stubEnv('NEXT_PUBLIC_VERIFIER_WALLET', '0xAAA')
+    useSessionMock.mockReturnValue({
+      data: { user: { name: 'Test User' }, address: '0x123' },
+      status: 'authenticated',
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    } as never)
+    renderWithProviders(<Header lang="en" />)
+    const hrefs = await openMenuHrefs()
+    expect(hrefs).toContain('/en/profile')
+    expect(hrefs).not.toContain('/en/admin')
+  })
+
+  it('guest: no Admin entry even when the wallet is a verifier', async () => {
+    vi.stubEnv('NEXT_PUBLIC_VERIFIER_WALLET', '0x123')
+    renderWithProviders(<Header lang="en" />)
+    const hrefs = await openMenuHrefs()
+    expect(hrefs).not.toContain('/en/admin')
   })
 })

@@ -12,6 +12,7 @@ import {
   simulateSIWE,
   short,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 async function main() {
   const t0 = performance.now()
@@ -20,7 +21,8 @@ async function main() {
   // firmaría con la cadena mainnet (42220) → SIWE CredentialsSignin.
   process.env.CHAIN_ID = process.env.CHAIN_ID || '11142220'
   const env = await initTestEnv()
-  const { base, timeout, account, chainId, host, domainPort } = env
+  const { timeout, account, chainId } = env
+  const { base, host, domainPort } = resolveSiteTarget(env)
   const guidePath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide3'
 
   console.log(`Wallet: ${short(account.address)} | ${base} (chain: ${chainId})`)

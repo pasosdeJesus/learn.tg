@@ -1,6 +1,6 @@
 import { Kysely, sql } from 'kysely'
 
-// REQ/223: recepción de G$ (GoodDollar) en donaciones de campaña — Celo
+// https://github.com/pasosdeJesus/learn.tg/issues/223: recepción de G$ (GoodDollar) en donaciones de campaña — Celo
 // mainnet, 0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A (18 decimals).
 export async function up(db: Kysely<any>): Promise<void> {
   await sql`

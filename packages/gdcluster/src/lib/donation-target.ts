@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 
-// REQ #223 (https://github.com/pasosdeJesus/learn.tg/issues/223): destinos de
+// https://github.com/pasosdeJesus/learn.tg/issues/223 (https://github.com/pasosdeJesus/learn.tg/issues/223): destinos de
 // donación y reparto. Los destinos cluster/country usan ClusterFundsV2
 // (80/10/10); los destinos `campaign` (p. ej. Lensenia) NO usan contrato: el
 // backend reenvía automáticamente la parte de la campaña a la billetera
@@ -13,12 +13,12 @@ export interface CampaignDonation { type: 'campaign-donation'; slug: string }
 
 export type PaymentTarget = CourseDonation | ClusterDonation | CountryDonation | CampaignDonation
 
-/** Opciones por donación (REQ/223 §3.3) — solo destinos `campaign` */
+/** Opciones por donación (https://github.com/pasosdeJesus/learn.tg/issues/223 §3.3) — solo destinos `campaign` */
 export interface CampaignDonorOptions {
   /** SLEARN cashback (10% del valor) on/off. Default true.
    * Sale DE LA MISMA donación (como en cluster/country 80/10/10): se retiene
    * el 10% en USDT como reserva y se entrega vía `SLEARN.mintAndReserve`
-   * (REQ/223). La campaña recibe (100 − pdjSharePct − 10)% cuando está ON. */
+   * (https://github.com/pasosdeJesus/learn.tg/issues/223). La campaña recibe (100 − pdjSharePct − 10)% cuando está ON. */
   receiveCashback?: boolean
   /** % de la donación que va a pdJ (0–10, tope CAMPAIGN_PDJ_MAX_PCT). */
   pdjSharePct?: number
@@ -60,7 +60,7 @@ export interface CampaignConfig {
   wallet: Address
   goalUSD: number
   pasosdejesusUrl: string
-  /** criptos aceptados en recepción (Celo mainnet) — ver REQ/223 §2 */
+  /** criptos aceptados en recepción (Celo mainnet) — ver https://github.com/pasosdeJesus/learn.tg/issues/223 §2 */
   donationTokens: string[]
   /** red de prueba (Celo Sepolia): tokens y criptos aceptadas para testear */
   testnet?: {
@@ -77,7 +77,7 @@ const PDJ_TREASURY_ENV = 'NEXT_PUBLIC_PDJ_TREASURY_ADDRESS'
  * CELO nativo: la misma moneda en ambas redes (no es ERC-20, se reenvía por
  * valor). Constante a nivel de módulo para que `getCampaignDonationToken` devuelva
  * siempre el mismo objeto: un literal nuevo en cada llamada cambiaba la identidad
- * del token y disparaba el efecto de precio del modal en bucle (REQ/223).
+ * del token y disparaba el efecto de precio del modal en bucle (https://github.com/pasosdeJesus/learn.tg/issues/223).
  */
 export const NATIVE_CELO_TOKEN: CampaignToken = {
   key: 'celo',
@@ -89,7 +89,7 @@ export const NATIVE_CELO_TOKEN: CampaignToken = {
 }
 
 /**
- * Registro de campañas. Las direcciones están verificadas (REQ/223 §8):
+ * Registro de campañas. Las direcciones están verificadas (https://github.com/pasosdeJesus/learn.tg/issues/223 §8):
  * Celo/AVAX/Base en Blockscout/avascan/RPC (2026-09).
  */
 export const CAMPAIGN_CONFIGS: CampaignConfig[] = [
@@ -101,7 +101,7 @@ export const CAMPAIGN_CONFIGS: CampaignConfig[] = [
     pasosdejesusUrl: 'https://pasosdejesus.org/lensenia',
     donationTokens: ['usdt', 'usdc', 'xaut0', 'gdoll', 'celo'],
     // Celo Sepolia (pruebas): USDT Mock (apps/.env) + CELO nativo para probar
-    // el flujo nativo en el dev site (REQ/223 — USDC/XAUt0/G$ solo mainnet
+    // el flujo nativo en el dev site (https://github.com/pasosdeJesus/learn.tg/issues/223 — USDC/XAUt0/G$ solo mainnet
     // hasta tener direcciones de test verificadas)
     testnet: {
       donationTokens: ['usdt', 'celo'],
@@ -135,7 +135,7 @@ export const CAMPAIGN_CONFIGS: CampaignConfig[] = [
       {
         chain: 'base', chainId: 8453, rpcDefault: 'https://mainnet.base.org',
         tokens: [
-          // REQ/223: en Base solo USDC por ahora (no hay XAUt0 nativo; USDT bridged fuera)
+          // https://github.com/pasosdeJesus/learn.tg/issues/223: en Base solo USDC por ahora (no hay XAUt0 nativo; USDT bridged fuera)
           { key: 'usdc', symbol: 'USDC', address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', decimals: 6, peggedUsd: true },
         ],
       },
@@ -189,7 +189,7 @@ export function getPdJTreasuryAddress(): string | undefined {
 }
 
 /**
- * Reparto de una donación a campaña (REQ/223 §3.3): el 100% de la donación se
+ * Reparto de una donación a campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 §3.3): el 100% de la donación se
  * divide entre la campaña, pdJ y el cashback SLEARN (que SALE de la misma
  * donación, como en los flujos cluster/country — no se suma por encima):
  *   - cashback ON: campaña (100 − pdjSharePct − 10)%, pdJ pdjSharePct%,
@@ -325,7 +325,7 @@ export function getTargetCopy(lang: string, target: PaymentTarget, options: Camp
       const name = cfg ? (lang === 'es' ? cfg.name.es : cfg.name.en) : target.slug
       const receiveCashback = options.receiveCashback !== false
       const pdjSharePct = Math.min(CAMPAIGN_PDJ_MAX_PCT, Math.max(0, Math.round(options.pdjSharePct ?? 0)))
-      // El cashback sale de la misma donación (REQ/223 §3.3): la campaña recibe
+      // El cashback sale de la misma donación (https://github.com/pasosdeJesus/learn.tg/issues/223 §3.3): la campaña recibe
       // (100 − pdj − 10)% cuando está ON, igual que en cluster/country (80/10/10).
       const campaignNet = receiveCashback ? 100 - pdjSharePct - CAMPAIGN_CASHBACK_PCT : 100 - pdjSharePct
       const enTxt = pdjSharePct > 0

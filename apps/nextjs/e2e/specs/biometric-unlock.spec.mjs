@@ -213,6 +213,7 @@ async function main() {
   await sleep(5000)
 
   let enableButton = false
+  let alreadyEnrolled = false
   if (await openDialog(page)) {
     // El diálogo carga su estado del hook (IndexedDB + detección de plataforma)
     // después de abrirse: en `next dev` tarda, así que se espera la oferta en vez
@@ -220,9 +221,17 @@ async function main() {
     for (let i = 0; i < 20; i++) {
       enableButton = await exists(page, '[data-testid="wallet-enable-biometric"]')
       if (enableButton) break
+      // R-#254: la creación ya registra la huella cuando el dispositivo puede
+      // verificarlo, así que aquí el diálogo pide el gesto en vez de ofrecerlo.
+      alreadyEnrolled = await exists(page, '[data-testid="wallet-unlock-biometric"]')
+      if (alreadyEnrolled) break
       await sleep(1000)
     }
-    if (enableButton) {
+    if (alreadyEnrolled) {
+      enableButton = true
+      ok('La huella quedó registrada durante la creación de la billetera (R-#254)')
+      await closeDialog(page)
+    } else if (enableButton) {
       await page.type('[data-testid="wallet-password"]', password)
       await page.click('[data-testid="wallet-enable-biometric"]')
       // El ok() no puede ser incondicional (lo era y ocultaba fallos): se espera la

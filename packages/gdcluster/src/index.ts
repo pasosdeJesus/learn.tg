@@ -26,7 +26,7 @@ export interface GdclusterBackendDeps {
   getWalletClient: () => any
   getBackendWalletLower: () => string
   sendTxAndWait: (walletClient: any, publicClient: any, args: any) => Promise<`0x${string}`>
-  /** Envío de CELO nativo (sendTransaction con value) — donaciones de campaña en CELO (REQ/223) */
+  /** Envío de CELO nativo (sendTransaction con value) — donaciones de campaña en CELO (https://github.com/pasosdeJesus/learn.tg/issues/223) */
   sendNativeTxAndWait?: (walletClient: any, publicClient: any, args: any) => Promise<`0x${string}`>
   fetchTxWithReceipt: (hash: `0x${string}`, timeoutMs?: number) => Promise<{ receipt: any; tx: any }>
   SLEARN_RATE: number
@@ -45,7 +45,7 @@ export interface GdclusterDeps {
     wallet: string,
   ) => Promise<{ usuario_id: number; billetera: string } | null>
   /**
-   * Alerta in-app a TODOS los verificadores (REQ/223 — patrón "billetera del
+   * Alerta in-app a TODOS los verificadores (https://github.com/pasosdeJesus/learn.tg/issues/223 — patrón "billetera del
    * backend como intermediaria"): p. ej. un reenvío de donación pendiente.
    * Idempotente por (type, refKey). La inyecta el host (D2) — el motor no
    * conoce la lista de verificadores ni la tabla de notificaciones.

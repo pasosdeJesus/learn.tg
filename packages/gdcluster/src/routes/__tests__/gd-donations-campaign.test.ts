@@ -3,7 +3,7 @@ import { encodeFunctionData, type Address } from 'viem'
 import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
 import { verifyCampaignDonation } from '../gd-donations'
 
-// REQ/223 §4.1 — la verificación de donación a campaña reenvía AUTOMÁTICA e
+// https://github.com/pasosdeJesus/learn.tg/issues/223 §4.1 — la verificación de donación a campaña reenvía AUTOMÁTICA e
 // INMEDIATAMENTE la parte de la campaña a la billetera destino (y la parte
 // pdJ a la tesorería), registra el split en el ledger y entrega el cashback
 // SLEARN opcional (mint) cuando el donante lo elige. Este archivo cubre el
@@ -13,7 +13,7 @@ const DONOR = '0x1111111111111111111111111111111111111111'
 const BACKEND = '0x2222222222222222222222222222222222222222'
 const CAMPAIGN_WALLET = '0x9c7218a253d1565fc5f2149ba51f0f55f0f27f07'
 const TREASURY = '0x3333333333333333333333333333333333333333'
-const USDT_TOKEN = '0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e' // Celo mainnet (REQ/223 §8)
+const USDT_TOKEN = '0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e' // Celo mainnet (https://github.com/pasosdeJesus/learn.tg/issues/223 §8)
 const SLEARN_TOKEN = '0x27fd41bea85c39254f2b12789eb37a1543152cc1'
 const AMOUNT = 100_000_000n // 100 USDT (6 decimals)
 
@@ -140,7 +140,7 @@ describe('verifyCampaignDonation', () => {
   })
 })
 
-describe('verifyCampaignDonation — auto-forward retries (REQ/223)', () => {
+describe('verifyCampaignDonation — auto-forward retries (https://github.com/pasosdeJesus/learn.tg/issues/223)', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_ADDRESS = BACKEND
     process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = TREASURY
@@ -179,7 +179,7 @@ describe('verifyCampaignDonation — auto-forward retries (REQ/223)', () => {
     expect(db.insertInto).toHaveBeenCalledTimes(1)
     const inserted = db.insertInto.mock.results[0].value.values.mock.calls[0][0]
     expect(inserted.metadata.forwardPending).toBe(true)
-    // Alerta a los verificadores (patrón billetera intermediaria, REQ/223)
+    // Alerta a los verificadores (patrón billetera intermediaria, https://github.com/pasosdeJesus/learn.tg/issues/223)
     expect(deps.notifyVerifiers).toHaveBeenCalledWith(expect.objectContaining({
       type: 'funds_forward_pending',
       refKey: 'campaign:lensenia:0x' + '22'.repeat(32),
@@ -188,7 +188,7 @@ describe('verifyCampaignDonation — auto-forward retries (REQ/223)', () => {
   })
 })
 
-describe('verifyCampaignDonation — donor comment (REQ/223)', () => {
+describe('verifyCampaignDonation — donor comment (https://github.com/pasosdeJesus/learn.tg/issues/223)', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_ADDRESS = BACKEND
     process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = TREASURY

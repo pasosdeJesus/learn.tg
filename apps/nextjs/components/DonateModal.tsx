@@ -51,7 +51,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     : null)
 
   const isCampaign = effectiveTarget?.type === 'campaign-donation'
-  // REQ/223: el cashback SLEARN es opt-in — por omisión NO está marcado (el
+  // https://github.com/pasosdeJesus/learn.tg/issues/223: el cashback SLEARN es opt-in — por omisión NO está marcado (el
   // donante decide recibirlo; evita confusiones y deshabilitados al cambiar de
   // token).
   const [receiveCashback, setReceiveCashback] = useState(false)
@@ -91,7 +91,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address) || undefined
   const cId = effectiveTarget?.type === 'course-donation' ? effectiveTarget.courseId : null
 
-  // Tokens de pago de un destino `campaign` (REQ/223): mainnet = cfg.donationTokens
+  // Tokens de pago de un destino `campaign` (https://github.com/pasosdeJesus/learn.tg/issues/223): mainnet = cfg.donationTokens
   // (USDT/USDC/XAUt0), testnet = cfg.testnet (USDT Mock). La dirección/decimals
   // se resuelve del registro (con override NEXT_PUBLIC_USDT_ADDRESS en USDT).
   const campaignCfg = isCampaign && effectiveTarget?.type === 'campaign-donation'
@@ -230,7 +230,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
         payload.receiveCashback = effectiveCashback
         payload.pdjSharePct = pdjSharePct
       }
-      // Comentario del donante (REQ/223): disponible para todos los destinos
+      // Comentario del donante (https://github.com/pasosdeJesus/learn.tg/issues/223): disponible para todos los destinos
       // (curso, clúster, país y campaña); el backend lo guarda en el ledger.
       if (comment.trim()) payload.comment = comment.trim()
       const { data } = await authedPost<any>(endpoint, payload)

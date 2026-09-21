@@ -3,7 +3,7 @@
 /**
  * Pastor bonus verification smoke test (HTTP).
  *
- * Verifies the admin-side pieces of the 44 SLEARN pastor bonus (REQ #192 +
+ * Verifies the admin-side pieces of the 22 SLEARN pastor bonus (https://github.com/pasosdeJesus/learn.tg/issues/192 +
  * R-#162 notifications):
  *   1. Verifier can list eligible pastors, and all have profile score > 90.
  *   2. GET /api/notifications returns { notifications, unread }.

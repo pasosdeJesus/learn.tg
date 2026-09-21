@@ -177,6 +177,89 @@ describe('WalletDialog (R-#244)', () => {
     expect(localStorage.getItem('learn.tg.wallet.backupConfirmed')).toBe('1')
   })
 
+  // R-#254: en un dispositivo que puede verificar al usuario, la creación ofrece
+  // la huella y la engancha al confirmar el respaldo, con la clave todavía en
+  // memoria (no se vuelve a pedir).
+  it('enrolls the fingerprint during creation when the device supports it', async () => {
+    mocks.biometricAvailable = true
+    mocks.create.mockResolvedValue({
+      walletInfo: { address: ADDRESS },
+      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
+    })
+    mocks.enableBiometric.mockResolvedValue(undefined)
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    await fillPassword()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-create'))
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-words-done'))
+    })
+    expect(screen.getByTestId('wallet-create-biometric')).toBeChecked()
+
+    // Volver a mostrar la frase: `completeBackup` la lee para responder.
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-words-peek'))
+    })
+    await completeBackup()
+
+    expect(mocks.enableBiometric).toHaveBeenCalledWith('12345678')
+    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
+  it('keeps the password-only path when the device cannot verify the user', async () => {
+    mocks.biometricAvailable = false
+    mocks.create.mockResolvedValue({
+      walletInfo: { address: ADDRESS },
+      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
+    })
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    await fillPassword()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-create'))
+    })
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-words-done'))
+    })
+
+    expect(screen.queryByTestId('wallet-create-biometric')).not.toBeInTheDocument()
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-words-peek'))
+    })
+    await completeBackup()
+    expect(mocks.enableBiometric).not.toHaveBeenCalled()
+    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
+  it('still signs in when the fingerprint gesture is cancelled during creation', async () => {
+    mocks.biometricAvailable = true
+    mocks.create.mockResolvedValue({
+      walletInfo: { address: ADDRESS },
+      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
+    })
+    mocks.enableBiometric.mockRejectedValue(new Error('NotAllowedError'))
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    await fillPassword()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-create'))
+    })
+    await completeBackup()
+
+    expect(mocks.enableBiometric).toHaveBeenCalled()
+    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
   // El respaldo no se da por hecho: con una palabra equivocada no se firma y se
   // puede volver a ver la frase.
   it('does not sign in when a backup word is wrong', async () => {

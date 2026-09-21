@@ -40,7 +40,7 @@ export async function retrySpec(run, { attempts = 2, delayMs = 20000, label = 's
 
 /**
  * Navegación con reintentos: el dev site saturado responde con timeouts
- * (`Navigation timeout …`) en la suite completa (REQ/224).
+ * (`Navigation timeout …`) en la suite completa (https://github.com/pasosdeJesus/learn.tg/issues/224).
  */
 export async function gotoWithRetry(page, url, {
   waitUntil = 'domcontentloaded',

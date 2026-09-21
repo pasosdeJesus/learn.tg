@@ -8,6 +8,7 @@ import {
   initTestEnv, launchBrowser, newPage,
   simulateSIWE, safeNavigate,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 async function main() {
   if (!process.env.IPDES) process.env.IPDES = 'learn.tg'
@@ -15,7 +16,9 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout, account, host, domainPort, chainId } = env
+  const { timeout, account, chainId } = env
+  // SITE_URL permite un `bin/dev` local (HTTP) con el SIWE bien atado.
+  const { base, host, domainPort } = resolveSiteTarget(env)
   console.log(`Wallet: ${account.address.slice(0,10)}... | ${base}\n`)
   const browser = await launchBrowser(env.headless)
 

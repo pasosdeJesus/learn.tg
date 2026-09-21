@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Diagnóstico REQ/229: el PATCH de iglesia (verificador) ya no debe fallar con
+// Diagnóstico https://github.com/pasosdeJesus/learn.tg/issues/229: el PATCH de iglesia (verificador) ya no debe fallar con
 // `null value in column "pastor_whatsapp" violates not-null constraint` al
 // guardar cambios. Simula el payload del formulario con pastor_whatsapp vacío.
 //
@@ -89,13 +89,13 @@ async function main() {
   })
   const txt = await res.text()
   console.log(`PATCH name (pastor_whatsapp vacío): ${res.status} ${txt.slice(0, 200).replace(/\s+/g, ' ')}`)
-  if (res.status !== 200) { console.error('❌ REQ/229 NO resuelto'); process.exit(1) }
+  if (res.status !== 200) { console.error('❌ https://github.com/pasosdeJesus/learn.tg/issues/229 NO resuelto'); process.exit(1) }
 
   const det2Res = await fetch(`${SITE}/api/admin/church/${id}?${q}`, { headers: { Cookie: cookies } })
   const det2 = await det2Res.json()
   console.log(`verificación: name="${det2.name}" pastor_whatsapp="${det2.pastor_whatsapp}" (se conserva)`)
   if (det2.name !== det.name) { console.error('❌ el nombre no se conservó'); process.exit(1) }
-  console.log('✅ REQ/229 OK (el PATCH con campos NOT NULL vacíos no rompe)')
+  console.log('✅ https://github.com/pasosdeJesus/learn.tg/issues/229 OK (el PATCH con campos NOT NULL vacíos no rompe)')
 }
 
 main().catch((e) => { console.error('FATAL', e); process.exit(1) })

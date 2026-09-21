@@ -68,6 +68,11 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   const [localError, setLocalError] = useState<string | null>(null)
   const [biometricPassword, setBiometricPassword] = useState('')
   const [passwordFallback, setPasswordFallback] = useState(false)
+  // R-#254: durante la creación se ofrece la huella y la clave se conserva sólo
+  // hasta confirmar el respaldo, para sellar la billetera sin volver a pedirla
+  // (nunca se pinta ni se guarda en disco).
+  const [createBiometric, setCreateBiometric] = useState(true)
+  const createPasswordRef = useRef('')
   const autoGestureTried = useRef(false)
   const [busy, setBusy] = useState(false)
 
@@ -86,6 +91,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       biometricHint: 'Uses the fingerprint or Face ID of this device. Your password is the backup.',
       biometricOn: 'Fingerprint unlock is on',
       biometricOff: 'Turn off fingerprint unlock',
+      biometricCreate: 'Also unlock with my fingerprint or Face ID',
       noWebauthn: 'This device cannot verify your fingerprint or Face ID.',
       noPrf: 'This device cannot store the biometric unlock. Use your password.',
       noBiometric: 'There is no fingerprint unlock saved on this device.',
@@ -141,6 +147,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       biometricHint: 'Usa la huella o Face ID de este dispositivo. Tu clave es el respaldo.',
       biometricOn: 'Desbloqueo con huella activado',
       biometricOff: 'Desactivar el desbloqueo con huella',
+      biometricCreate: 'Desbloquear también con mi huella o Face ID',
       noWebauthn: 'Este dispositivo no puede verificar tu huella o Face ID.',
       noPrf: 'Este dispositivo no puede guardar el desbloqueo por huella. Usa tu clave.',
       noBiometric: 'No hay un desbloqueo por huella guardado en este dispositivo.',
@@ -200,6 +207,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setShowWords(true)
     setLocalError(null)
     setPasswordFallback(false)
+    createPasswordRef.current = ''
+    setCreateBiometric(true)
     autoGestureTried.current = false
     setBusy(false)
   }, [open])
@@ -254,6 +263,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setBusy(true)
     try {
       const result = await create(password)
+      createPasswordRef.current = password
       setRecovery(result.mnemonic)
       setVerifyPositions(pickVerifyPositions(result.mnemonic.trim().split(' ').length))
       setVerifyInputs({})
@@ -354,8 +364,10 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   }, [biometricPassword, enableBiometric, t, translateError])
 
   // R-#249: las 3 palabras deben coincidir con la frase; sólo entonces se marca el
-  // respaldo como confirmado y se firma. `signIn` ya cierra el diálogo.
-  const handleVerifyBackup = useCallback(() => {
+  // respaldo como confirmado y se firma. R-#254: con la clave todavía en memoria, si
+  // el dispositivo puede verificar al usuario se engancha la huella aquí (un gesto
+  // cancelado no puede perder la billetera: se sigue con la clave).
+  const handleVerifyBackup = useCallback(async () => {
     if (!recovery) return
     setLocalError(null)
     const result = verifyWords(recovery.trim().split(' '), verifyInputs)
@@ -366,8 +378,20 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     }
     setVerifyError(false)
     markBackupConfirmed()
+    const passwordForBiometric = createPasswordRef.current
+    createPasswordRef.current = ''
+    if (createBiometric && biometricAvailable && !biometricEnabled && passwordForBiometric) {
+      setBusy(true)
+      try {
+        await enableBiometric(passwordForBiometric)
+      } catch {
+        // La huella no se pudo guardar: la clave sigue siendo el respaldo.
+      } finally {
+        setBusy(false)
+      }
+    }
     void signIn()
-  }, [recovery, signIn, verifyInputs])
+  }, [biometricAvailable, biometricEnabled, createBiometric, enableBiometric, recovery, signIn, verifyInputs])
 
   const handleDelete = useCallback(async () => {
     setLocalError(null)
@@ -493,6 +517,22 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                   <p role="alert" className="text-sm text-red-700" data-testid="wallet-verify-error">
                     {t('verifyWrong')}
                   </p>
+                )}
+                {/* R-#254: en un dispositivo que puede verificar al usuario, la creación
+                    pide también la huella; sin esa capacidad no se ofrece nada. */}
+                {biometricAvailable && !biometricEnabled && (
+                  <div className="space-y-1" data-testid="wallet-create-biometric-block">
+                    <p className="text-xs text-gray-500">{t('biometricHint')}</p>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        data-testid="wallet-create-biometric"
+                        checked={createBiometric}
+                        onChange={(event) => setCreateBiometric(event.target.checked)}
+                      />
+                      {t('biometricCreate')}
+                    </label>
+                  </div>
                 )}
                 <Button
                   variant="outline"
@@ -652,7 +692,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                 {t('wordsDone')}
               </Button>
             ) : (
-              <Button data-testid="wallet-verify" onClick={handleVerifyBackup} disabled={busy}>
+              <Button data-testid="wallet-verify" onClick={() => { void handleVerifyBackup() }} disabled={busy}>
                 {busy ? t('signingIn') : t('verifySubmit')}
               </Button>
             )

@@ -1,6 +1,6 @@
 'use server'
 
-// REQ/223: transparencia de campañas. Consulta el ledger (subcategoria
+// https://github.com/pasosdeJesus/learn.tg/issues/223: transparencia de campañas. Consulta el ledger (subcategoria
 // 'campaign') y agrega: total por cripto donada, split campaña/pdJ/cashback en
 // USD, pendiente de reenvío y las últimas donaciones con sus opciones.
 import { getCampaignConfig, type CampaignConfig } from '../lib/donation-target'

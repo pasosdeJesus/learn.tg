@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// R-#227 Fase 2 (CSRF/origin checks, ver doc/api-security.md y REQ/227 §4.3):
+// R-#227 Fase 2 (CSRF/origin checks, ver doc/api-security.md y https://github.com/pasosdeJesus/learn.tg/issues/227 §4.3):
 // las APIs autenticadas por cookie necesitan protección CSRF en métodos no
 // seguros. Los navegadores modernos mandan siempre `Sec-Fetch-Site`; se
 // rechaza `cross-site` (y `same-site` no se confía: subdominios hermanos).

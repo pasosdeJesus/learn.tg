@@ -77,7 +77,7 @@ describe('isEligiblePastor', () => {
   })
 
   it('documents the bonus constants', () => {
-    expect(BONUS_AMOUNT).toBe(44)
+    expect(BONUS_AMOUNT).toBe(22)
     expect(ELIGIBLE_COUNTRIES).toEqual([170, 694])
     expect(MIN_SCORE_FOR_BONUS).toBe(90)
   })
@@ -172,7 +172,7 @@ describe('awardPastorBonus', () => {
     expect(result).toEqual({ awarded: false, reason: 'churches fund not configured' })
   })
 
-  it('rejects when the churches fund balance is below the 44 SLEARN bonus', async () => {
+  it('rejects when the churches fund balance is below the 22 SLEARN bonus', async () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce(eligiblePastorRow())
       .mockResolvedValueOnce(null) // no existing pastor_bonus
@@ -183,7 +183,7 @@ describe('awardPastorBonus', () => {
     expect(result.reason).toContain('insufficient fund')
   })
 
-  it('transfers 44 SLEARN, records the transaction, verification log, and notification', async () => {
+  it('transfers 22 SLEARN, records the transaction, verification log, and notification', async () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce(eligiblePastorRow())
       .mockResolvedValueOnce(null) // no existing pastor_bonus
@@ -193,10 +193,10 @@ describe('awardPastorBonus', () => {
     const result = await awardPastorBonus(db, 1)
 
     expect(result).toEqual({ awarded: true, hash: '0xPASTORBONUSHASH12345678901234567890' })
-    // Transfer of 44.00 SLEARN (2 decimals) to the pastor wallet
+    // Transfer of 22.00 SLEARN (2 decimals) to the pastor wallet
     expect(walletClient.writeContract).toHaveBeenCalledWith(expect.objectContaining({
       functionName: 'transfer',
-      args: [PASTOR_WALLET, 4400n],
+      args: [PASTOR_WALLET, 2200n],
     }))
     expect(publicClient.waitForTransactionReceipt).toHaveBeenCalledWith({ hash: '0xPASTORBONUSHASH12345678901234567890' })
     // transaction + verification_log + notifications rows

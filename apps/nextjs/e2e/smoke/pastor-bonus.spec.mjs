@@ -3,7 +3,7 @@
 /**
  * Pastor bonus smoke test (HTTP).
  *
- * Verifies the churches-fund surface for the 44 SLEARN pastor bonus (REQ #192):
+ * Verifies the churches-fund surface for the 22 SLEARN pastor bonus (https://github.com/pasosdeJesus/learn.tg/issues/192):
  *   1. GET /api/churches/fund returns the fund balance (SLEARN + USDT).
  *   2. The SLEARN balance is > 0 (churches wallet funded on Sepolia).
  *   3. The pastor landing page renders (EN + ES).

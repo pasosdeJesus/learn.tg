@@ -1,8 +1,8 @@
 'use client'
 
-// Botón "Donate now" de campaña (REQ/223 §3.1): abre el DonateModal existente
+// Botón "Donate now" de campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 §3.1): abre el DonateModal existente
 // con destino `campaign-donation` (slug) y las opciones por donación
-// (cashback SLEARN on/off + % a pdJ, REQ/223 §3.3).
+// (cashback SLEARN on/off + % a pdJ, https://github.com/pasosdeJesus/learn.tg/issues/223 §3.3).
 
 import { useState, useMemo } from 'react'
 import { DonateModal } from '../DonateModal'

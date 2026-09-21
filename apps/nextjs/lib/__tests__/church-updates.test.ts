@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildChurchUpdates, CHURCH_NOT_NULL_FIELDS } from '../church-updates'
 import { buildSafeUpdates } from '../safe-updates'
 
-// REQ/229 — al editar una iglesia (p. ej. solo el nombre) los campos NOT NULL
+// https://github.com/pasosdeJesus/learn.tg/issues/229 — al editar una iglesia (p. ej. solo el nombre) los campos NOT NULL
 // vacíos no deben convertirse en null (era la causa del 500 not-null violation
 // en pastor_whatsapp).
 

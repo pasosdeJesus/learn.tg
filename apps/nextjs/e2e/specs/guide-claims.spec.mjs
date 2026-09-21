@@ -13,6 +13,7 @@ import {
   simulateSIWE, waitForText,
   short,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 import { createWalletClient, createPublicClient, http, parseEther } from 'viem'
 import { celo } from 'viem/chains'
@@ -53,7 +54,8 @@ async function main() {
   const t0 = performance.now()
   resetFailures()
   const env = await initTestEnv()
-  const { base, timeout, account, chainId, host, domainPort } = env
+  const { timeout, account, chainId } = env
+  const { base, host, domainPort } = resolveSiteTarget(env)
   const guidePath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide3'
   const backendAddress = process.env.NEXT_PUBLIC_CELOUBI_ADDRESS
 

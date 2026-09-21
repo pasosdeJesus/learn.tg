@@ -463,8 +463,8 @@ async function main() {
       if (usdtShown !== null && usdtShown > 0) ok(`El panel muestra el saldo USDT real: ${usdtShown}`)
       else fail(`El panel muestra el saldo USDT como ${usdtShown ?? 'nada'}`)
 
-      // Recibir: QR con la dirección.
-      await page.click('[data-testid="wallet-panel-receive"]').catch(() => {})
+      // Recibir: QR con la dirección (R-#254: vive en su pestaña).
+      await page.click('[data-testid="wallet-panel-tab-receive"]').catch(() => {})
       await sleep(1200)
       if (await exists(page, '[data-testid="wallet-panel-qr"]')) ok('El panel muestra el QR para recibir')
       else fail('El panel no mostró el QR para recibir')
@@ -477,6 +477,9 @@ async function main() {
       else console.log(`  [!] El botón de copiar quedó en "${copyText.trim()}"`)
 
       // Enviar: la validación rechaza una dirección inválida antes de firmar.
+      // R-#254: el formulario vive en su pestaña.
+      await page.click('[data-testid="wallet-panel-tab-send"]').catch(() => {})
+      await sleep(600)
       await page.type('[data-testid="wallet-panel-to"]', 'no-es-direccion').catch(() => {})
       await page.type('[data-testid="wallet-panel-amount"]', '0.1').catch(() => {})
       await sleep(1500)

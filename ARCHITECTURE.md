@@ -359,7 +359,7 @@ See [Admin API](apps/nextjs/app/api/admin/) for endpoint details.
   Guarantees (migration `20260901074316_church_principal_roles`): partial unique
   index `one_principal_per_church` (max one principal per church) + trigger
   `trg_sync_church_principal` (keeps `church.pastor_id` in sync with the
-  principal). The 44 SLEARN welcome bonus is paid **only** to the verified
+  principal). The 22 SLEARN welcome bonus is paid **only** to the verified
   principal (`pastor-bonus.ts`), once per church.
 
 ##### `credential_emission` + `credential_metadata` (SBT cache)
@@ -441,7 +441,7 @@ Single source of truth for all value movements — both on-chain (USDT, SLEARN, 
 - `id`: Primary key
 - `usuario_id`: Foreign key to `usuario`
 - `wallet`: Wallet address that signed the transaction
-- `type`: Operation type — `scholarship` (crossword reward), `donation` (user gave value), `donation_reward` (SLEARN cashback for donating), `pay-course` (premium course payment), `ubi-claim` (CELO basic income), `conversion` (SLEARN ↔ Learning Points), `pastor_bonus` (44 SLEARN pastor bonus), `referral_reward` / `referral_bonus` (referral incentives)
+- `type`: Operation type — `scholarship` (crossword reward), `donation` (user gave value), `donation_reward` (SLEARN cashback for donating), `pay-course` (premium course payment), `ubi-claim` (CELO basic income), `conversion` (SLEARN ↔ Learning Points), `pastor_bonus` (22 SLEARN pastor bonus), `referral_reward` / `referral_bonus` (referral incentives)
 - `crypto`: Asset — `usdt`, `slearn`, `celo`, `learningpoints`
 - `amount`: Human-readable amount (e.g., 10.00 USDT, 5.50 SLEARN)
 - `balance_impact`: Net effect on user's balance — negative for outflows (donations), positive for inflows (rewards, scholarships)

@@ -7,7 +7,7 @@ import { retryPendingCampaignForwards } from './gd-donations'
 import type { GdclusterDeps } from '../index'
 
 /**
- * Balance multi-cadena de una campaña (REQ/223 §4.1 — presentación):
+ * Balance multi-cadena de una campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 §4.1 — presentación):
  * lee los saldos on-chain REALES de la billetera destino en Celo, AVAX y Base
  * (incluye ahorros previos de la billetera, no solo recaudación de la
  * campaña). El ledger (`transaction`, subcategoria='campaign') aporta el
@@ -66,7 +66,7 @@ export async function campaignBalance(deps: GdclusterDeps, params?: Record<strin
   }
 
   // Reintento oportunista (fire-and-forget): el próximo visitante de la página
-  // reintenta los reenvíos pendientes sin necesidad de un scheduler (REQ/223 §6.1).
+  // reintenta los reenvíos pendientes sin necesidad de un scheduler (https://github.com/pasosdeJesus/learn.tg/issues/223 §6.1).
   void retryPendingCampaignForwards(deps, slug).catch((e: any) => {
     console.error('[CampaignBalance] retry pending forwards failed:', e?.message || e)
   })

@@ -6,11 +6,11 @@
 //   2. Verifier wallet (from apps/.env) signs in and verifies the pastor's
 //      data + church registration via the admin API.
 //   3. Pastor signs back in, claims CELO UBI in Web3 & UBI guide 3, and
-//      checks for the 44 SLEARN welcome bonus.
+//      checks for the 22 SLEARN welcome bonus.
 //
 // PREREQUISITE: the verifier wallet (PRIVATE_KEY / NEXT_PUBLIC_ADDRESS in
 // apps/.env) must be whitelisted as a verifier on the dev server, and the
-// churches fund wallet must hold SLEARN for the 44 SLEARN bonus transfer.
+// churches fund wallet must hold SLEARN for the 22 SLEARN bonus transfer.
 //
 // Execution:
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg PUERTOPRU=9001 \
@@ -107,7 +107,7 @@ function loadEnvValue(key) {
 }
 
 /**
- * El bono de 44 SLEARN a pastores (y el resto de pagos del curso) sale del fondo
+ * El bono de 22 SLEARN a pastores (y el resto de pagos del curso) sale del fondo
  * de iglesias, así que antes del bono la billetera emisora (el verificador,
  * `PRIVATE_KEY`) le entrega su SLEARN dejando solo una reserva de 15 (`E2E_SENDER_RESERVE_SLEARN`):
  * el fondo acumula lo de las corridas anteriores y el emisor conserva lo que
@@ -286,7 +286,7 @@ async function main() {
   const base = process.env.SITE_URL || env.base
   const timeout = 120000
 
-  // El bono de 44 SLEARN (Step 3) se paga desde el fondo de iglesias: la
+  // El bono de 22 SLEARN (Step 3) se paga desde el fondo de iglesias: la
   // billetera emisora le entrega todo su SLEARN antes de que el verificador lo
   // otorgue, así el fondo no depende del saldo que dejaron las corridas previas.
   try {
@@ -453,7 +453,7 @@ async function main() {
     )
     if (churchVerifyRes?.success) {
       ok('Church registration verified')
-      if (churchVerifyRes.bonus?.awarded) ok(`44 SLEARN bonus awarded (tx ${churchVerifyRes.bonus.hash})`)
+      if (churchVerifyRes.bonus?.awarded) ok(`22 SLEARN bonus awarded (tx ${churchVerifyRes.bonus.hash})`)
       else if (churchVerifyRes.bonus?.reason) console.log(`  [!] Bonus not awarded: ${churchVerifyRes.bonus.reason}`)
     } else {
       fail(`Church registration verification failed: ${JSON.stringify(churchVerifyRes).slice(0, 140)}`)
@@ -475,9 +475,9 @@ async function main() {
   else console.log('  [!] No UBI claim button text found (may already be claimed today)')
 
   // ════════════════════════════════════════════════════════════════
-  // Step 5: Check profile score + 44 SLEARN bonus
+  // Step 5: Check profile score + 22 SLEARN bonus
   // ════════════════════════════════════════════════════════════════
-  console.log('\n── Step 5: Score + 44 SLEARN bonus ──')
+  console.log('\n── Step 5: Score + 22 SLEARN bonus ──')
   const finalProfile = await page.evaluate(async () => {
     const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
     const url = `/api/profile?walletAddress=${encodeURIComponent(addr)}`
@@ -488,7 +488,7 @@ async function main() {
   if (score > 90) ok(`Profile score ${score} (> 90 — pastor bonus eligible)`)
   else fail(`Profile score ${score} (expected > 90)`)
 
-  // The 44 SLEARN bonus is awarded on-chain by the verifier/admin flow and
+  // The 22 SLEARN bonus is awarded on-chain by the verifier/admin flow and
   // depends on the churches fund holding SLEARN. Detect it via the
   // transaction/notification path.
   const txRes = await page.evaluate(async (userId) => {
@@ -496,7 +496,7 @@ async function main() {
     return r.ok ? r.json() : null
   }, pastorUserId)
   const hasBonus = txRes && JSON.stringify(txRes).includes('pastor_bonus')
-  if (hasBonus) ok('44 SLEARN pastor bonus recorded')
+  if (hasBonus) ok('22 SLEARN pastor bonus recorded')
   else console.log('  [!] No pastor_bonus transaction yet (requires funded churches fund + verifier award step)')
 
   // ════════════════════════════════════════════════════════════════
@@ -545,7 +545,7 @@ async function main() {
     ok('Pastor funded with CELO gas')
 
     // 2. Fetch the course price (SL → 39.60 SLEARN) and pay exactly that.
-    //    The 44 SLEARN bonus is more than the price; the pastor keeps the rest.
+    //    The 22 SLEARN bonus is more than the price; the pastor keeps the rest.
     const priceRes = await page.evaluate(async (courseId) => {
       const addr = localStorage.getItem('learn.tg.sessionAddress') || ''
       const r = await fetch(`/api/courses/premium/price?courseId=${courseId}&walletAddress=${encodeURIComponent(addr)}`)

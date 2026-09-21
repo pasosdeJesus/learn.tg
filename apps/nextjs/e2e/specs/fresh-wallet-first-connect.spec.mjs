@@ -27,6 +27,7 @@ import {
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 import { gotoWithRetry, retry } from '../helpers/retry.mjs'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
@@ -72,7 +73,9 @@ async function main() {
   const t0 = performance.now()
   resetFailures()
   const env = await initTestEnv()
-  const { base, timeout } = env
+  const { timeout } = env
+  // SITE_URL permite un `bin/dev` local (HTTP).
+  const { base } = resolveSiteTarget(env)
 
   const pk = generatePrivateKey()
   const account = privateKeyToAccount(pk)

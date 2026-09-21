@@ -74,7 +74,7 @@ export async function POST(req: Request) {
 | `credentials.ts` | `mintCourseCredential` — SBT mint wrapper (off-chain cache, on-chain dedupe, Celo L2 nonce retry) |
 | `config.ts` | `IS_PRODUCTION` (from `NEXT_PUBLIC_AUTH_URL`) |
 | `donate-utils.ts` | Re-export of `@pasosdejesus/usdt/lib/donate-utils` (first local→shared graduation) |
-| `pastor-bonus.ts` | `isEligiblePastor` (pastor, CO/SL, score > 90) + `awardPastorBonus` (44 SLEARN) |
+| `pastor-bonus.ts` | `isEligiblePastor` (pastor, CO/SL, score > 90) + `awardPastorBonus` (22 SLEARN) |
 | `premium-pricing.ts` | `calculatePremiumPriceUsdt` (HDI-linear, 0.7↔3 USDT calibration), `calculatePremiumPriceSlearn` (10% discount) |
 | `replay-protection.ts` | `checkReplayAttack` (hash reuse in `transaction`), `getBlockWithRetry` |
 | `sle-rate.ts` | `getSLEUSDRate` (currently hardcoded 22; TODO: live rate from stable-sl.pdj.app) |

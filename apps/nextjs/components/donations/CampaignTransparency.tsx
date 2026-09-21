@@ -1,6 +1,6 @@
 'use client'
 
-// Transparencia de la campaña (REQ/223): agregados del ledger (total por
+// Transparencia de la campaña (https://github.com/pasosdeJesus/learn.tg/issues/223): agregados del ledger (total por
 // cripto, split campaña/pdJ/cashback, pendiente de reenvío) y últimas
 // donaciones con sus opciones. Datos públicos vía
 // GET /api/donations/{slug}/transparency.

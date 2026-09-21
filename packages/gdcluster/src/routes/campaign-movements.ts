@@ -1,5 +1,5 @@
 /**
- * Historial de movimientos de la billetera de una campaña (REQ/223 —
+ * Historial de movimientos de la billetera de una campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 —
  * transparencia): lee transacciones y token-transfers de los explorers
  * públicos (Blockscout) de Celo y Base (Avalanche, cuando el explorer
  * responda). Etiqueta contrapartes contrato con su nombre (p. ej. piscinas
@@ -37,7 +37,7 @@ function cacheGet(key: string) {
 }
 
 /**
- * Invalida la caché de movimientos de una campaña (REQ/223): al registrarse una
+ * Invalida la caché de movimientos de una campaña (https://github.com/pasosdeJesus/learn.tg/issues/223): al registrarse una
  * donación (o completarse un reenvío pendiente) el próximo GET debe servirse
  * fresco — si no, el resumen/historial seguiría mostrando la lista vieja
  * durante hasta 60 s aunque la UI recargue.
@@ -86,12 +86,12 @@ interface Movement {
   counterpartyName: string | null
   contract: boolean
   tag: 'pool' | 'xaut' | null
-  /** Comentario del donante (REQ/223), adjuntado al movimiento entrante del reenvío de su donación */
+  /** Comentario del donante (https://github.com/pasosdeJesus/learn.tg/issues/223), adjuntado al movimiento entrante del reenvío de su donación */
   comment?: string | null
 }
 
 /**
- * REQ/223 — enriquece los movimientos entrantes de la billetera de la campaña
+ * https://github.com/pasosdeJesus/learn.tg/issues/223 — enriquece los movimientos entrantes de la billetera de la campaña
  * con el comentario del donante (transparencia de la procedencia de los fondos).
  * Une por hash: el ledger guarda el hash del reenvío a la billetera de la
  * campaña en `metadata.campaignForwardHash` (verify de campaña), y ese mismo

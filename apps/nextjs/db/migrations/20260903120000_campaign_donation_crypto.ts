@@ -1,7 +1,7 @@
 import { Kysely, sql } from 'kysely'
 
-// REQ/223: el ledger registra donaciones a campañas. USDC y XAUt0 (Celo
-// mainnet, direcciones verificadas en REQ/223 §8) se reciben vía
+// https://github.com/pasosdeJesus/learn.tg/issues/223: el ledger registra donaciones a campañas. USDC y XAUt0 (Celo
+// mainnet, direcciones verificadas en https://github.com/pasosdeJesus/learn.tg/issues/223 §8) se reciben vía
 // /api/donations/[slug]/verify; amplía el CHECK de `transaction.crypto`.
 export async function up(db: Kysely<any>): Promise<void> {
   await sql`

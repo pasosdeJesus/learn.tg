@@ -9,6 +9,7 @@ import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary, short,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
 
 function loadEnvCredentials() {
@@ -67,7 +68,8 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, chainId } = env
+  const { chainId } = env
+  const { base } = resolveSiteTarget(env)
   const timeout = 180000
   const wallet = creds.addr
 

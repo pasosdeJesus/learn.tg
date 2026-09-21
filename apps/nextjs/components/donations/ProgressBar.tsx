@@ -1,6 +1,6 @@
 'use client'
 
-// Barra de progreso hacia la meta de la campaña (REQ/223 §3.1)
+// Barra de progreso hacia la meta de la campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 §3.1)
 
 interface ProgressBarProps {
   raisedUSD: number | null

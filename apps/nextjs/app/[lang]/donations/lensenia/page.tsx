@@ -1,7 +1,7 @@
 'use client'
 
-// REQ #223 — página de donación de la campaña Lensenia Water Well.
-// Estructura (REQ/223 §3.1): header, progreso, breakdown multi-cadena,
+// https://github.com/pasosdeJesus/learn.tg/issues/223 — página de donación de la campaña Lensenia Water Well.
+// Estructura (https://github.com/pasosdeJesus/learn.tg/issues/223 §3.1): header, progreso, breakdown multi-cadena,
 // donar, claim Learn.tg-UBI + GoodDollar (guía 3) y otras formas de donar.
 
 import { use, useState, useMemo } from 'react'
@@ -94,7 +94,7 @@ export default function Page({ params }: PageProps) {
           </a>
         </section>
 
-        {/* REQ/223: movimientos recientes de la billetera de la campaña.
+        {/* https://github.com/pasosdeJesus/learn.tg/issues/223: movimientos recientes de la billetera de la campaña.
             key={refreshTick}: al cerrar el modal de éxito de una donación se
             remonta (refetch) igual que BalanceDisplay. */}
         <div className="mt-6">

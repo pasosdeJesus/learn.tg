@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * E2E Test: Real donation to a campaign in NATIVE CELO (REQ/223) on the dev
+ * E2E Test: Real donation to a campaign in NATIVE CELO (https://github.com/pasosdeJesus/learn.tg/issues/223) on the dev
  * site (Celo Sepolia). Validates the native flow:
  *   1. SIWE sign-in (test wallet from apps/.env)
  *   2. Campaign wallet CELO balance BEFORE
@@ -133,7 +133,7 @@ async function campaignCeloBalance(client) {
 }
 
 async function main() {
-  console.log('E2E: Real campaign donation in NATIVE CELO (REQ/223) — dev (Celo Sepolia)\n')
+  console.log('E2E: Real campaign donation in NATIVE CELO (https://github.com/pasosdeJesus/learn.tg/issues/223) — dev (Celo Sepolia)\n')
 
   const creds = loadEnvCredentials()
   if (!creds) { console.error('No credentials found'); process.exit(1) }

@@ -6,7 +6,7 @@ import SLEARNAbi from '../abis/SLEARN.json'
 import { getSlearnAddress } from './deployments'
 import { IS_PRODUCTION } from './config'
 
-export const BONUS_AMOUNT = 44
+export const BONUS_AMOUNT = 22
 export const ELIGIBLE_COUNTRIES = [170, 694] // Colombia, Sierra Leone
 export const MIN_SCORE_FOR_BONUS = 90
 
@@ -57,7 +57,7 @@ export async function awardPastorBonus(
 
   if (!pastor) return { awarded: false, reason: 'pastor not found' }
   if (!isEligiblePastor(pastor as BonusUser)) return { awarded: false, reason: 'not eligible' }
-  // El bono de 44 SLEARN es SOLO para el pastor principal (church.pastor_id),
+  // El bono de 22 SLEARN es SOLO para el pastor principal (church.pastor_id),
   // confirmado por el verificador (verified_church_relationship='pastor').
   if (pastor.verified_church_relationship !== 'pastor') return { awarded: false, reason: 'not verified as lead pastor' }
   if (pastor.church_pastor_id !== userId) return { awarded: false, reason: 'not the lead pastor of the church' }
@@ -147,10 +147,10 @@ export async function awardPastorBonus(
   await db.insertInto('notifications').values({
     usuario_id: userId,
     type: 'pastor_bonus',
-    title: isEnglish ? '44 SLEARN bonus received' : 'Bono de 44 SLEARN recibido',
+    title: isEnglish ? '22 SLEARN bonus received' : 'Bono de 22 SLEARN recibido',
     content: isEnglish
-      ? 'Congratulations! You received 44 SLEARN to pay for the Global Disciples course. Now, to use those SLEARN, you need a little CELO to pay the network fee (gas). Do not worry — the free Web3 & UBI course teaches you how to claim free CELO every day (0.2 CELO/day). Take that course first, claim your CELO, and then come back here to pay for the GD course with your 44 SLEARN.'
-      : '¡Felicidades! Has recibido 44 SLEARN para pagar el curso de Discípulos Globales. Ahora, para usar esos SLEARN, necesitas tener un poco de CELO para pagar la comisión de la red (gas). No te preocupes — el curso gratuito Web3 & UBI te enseña cómo reclamar CELO gratis todos los días (0.2 CELO/día). Toma ese curso primero, reclama tu CELO, y luego regresa aquí para pagar el curso GD con tus 44 SLEARN.',
+      ? 'Congratulations! You received 22 SLEARN as a welcome bonus towards the Global Disciples course. Now, to use those SLEARN, you need a little CELO to pay the network fee (gas). Do not worry — the free Web3 & UBI course teaches you how to claim free CELO every day (0.2 CELO/day). Take that course first, claim your CELO, and then come back here to pay for the GD course (you can complete the price with SLEARN earned in the crosswords or with USDT).'
+      : '¡Felicidades! Has recibido 22 SLEARN como bono de bienvenida para el curso de Discípulos Globales. Ahora, para usar esos SLEARN, necesitas tener un poco de CELO para pagar la comisión de la red (gas). No te preocupes — el curso gratuito Web3 & UBI te enseña cómo reclamar CELO gratis todos los días (0.2 CELO/día). Toma ese curso primero, reclama tu CELO, y luego regresa aquí para pagar el curso GD (puedes completar el precio con SLEARN de los crucigramas o con USDT).',
     link: explorerUrl,
     is_read: false,
     created_at: new Date(),

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * E2E Test: Real donation to a campaign (REQ/223 — Lensenia water well).
+ * E2E Test: Real donation to a campaign (https://github.com/pasosdeJesus/learn.tg/issues/223 — Lensenia water well).
  *
  * HTTP + on-chain (no browser). Validates the campaign donation flow:
  *   1. SIWE sign-in (test wallet from apps/.env)
@@ -156,7 +156,7 @@ let usdtAddr = ''
 let slearnAddr = ''
 
 async function main() {
-  console.log(`E2E: Real donation to campaign "${CAMPAIGN_SLUG}" (REQ/223)\n`)
+  console.log(`E2E: Real donation to campaign "${CAMPAIGN_SLUG}" (https://github.com/pasosdeJesus/learn.tg/issues/223)\n`)
 
   const creds = loadEnvCredentials()
   if (!creds) { console.error('No credentials found'); process.exit(1) }

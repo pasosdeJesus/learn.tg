@@ -1,6 +1,6 @@
 'use client'
 
-// Historial de movimientos de la billetera de la campaña (REQ/223): datos
+// Historial de movimientos de la billetera de la campaña (https://github.com/pasosdeJesus/learn.tg/issues/223): datos
 // públicos vía GET /api/donations/{slug}/movements (explorers Celo/Base/Avax).
 // Muestra las más recientes (limit) y enlaza al historial completo.
 

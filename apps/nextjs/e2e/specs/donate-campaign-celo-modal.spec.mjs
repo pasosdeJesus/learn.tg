@@ -1,5 +1,5 @@
 // E2E Test: Donation modal — donate NATIVE CELO to the Lensenia campaign
-// (REQ/223). Uses the real dev wallet + real RPC bridge for eth_sendTransaction
+// (https://github.com/pasosdeJesus/learn.tg/issues/223). Uses the real dev wallet + real RPC bridge for eth_sendTransaction
 // (the standard E2E mock returns a fake hash, which would fail the on-chain
 // verify). Validates:
 //   1. Donation page → Donate now opens the modal

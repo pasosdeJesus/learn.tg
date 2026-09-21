@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { retryPendingCampaignForwards } from '../gd-donations'
 
-// REQ/223 §6.1: reintento oportunista de reenvíos pendientes — el balance GET
+// https://github.com/pasosdeJesus/learn.tg/issues/223 §6.1: reintento oportunista de reenvíos pendientes — el balance GET
 // vuelve a enviar las filas con metadata.forwardPending y actualiza los hashes.
 
 const BACKEND = '0x2222222222222222222222222222222222222222'

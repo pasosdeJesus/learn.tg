@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { attachDonorComments, campaignMovements, invalidateCampaignMovements } from '../campaign-movements'
 import { getCampaignConfig } from '../../lib/donation-target'
 
-// REQ/223 — los movimientos de la billetera de la campaña muestran el
+// https://github.com/pasosdeJesus/learn.tg/issues/223 — los movimientos de la billetera de la campaña muestran el
 // comentario del donante: el ledger guarda el hash del reenvío a la billetera
 // de la campaña en metadata.campaignForwardHash (verify), y ese mismo hash
 // aparece como transferencia entrante en el explorer.

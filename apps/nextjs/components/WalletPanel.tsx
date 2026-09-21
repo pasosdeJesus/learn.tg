@@ -12,6 +12,7 @@ import {
 } from '@pasosdejesus/m/shadcn-components/ui/dialog'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@pasosdejesus/m/shadcn-components/ui/tabs'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { createComponentT } from '@/lib/hooks/useTranslation'
@@ -111,7 +112,9 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
   })
   const [loadingBalances, setLoadingBalances] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [showReceive, setShowReceive] = useState(false)
+  // R-#254: el panel se organiza en pestañas (saldos, recibir, enviar,
+  // coleccionables) para que en el teléfono no haya que recorrer una sola página.
+  const [tab, setTab] = useState('balances')
   const [token, setToken] = useState<SendToken>('CELO')
   const [to, setTo] = useState('')
   const [amount, setAmount] = useState('')
@@ -132,9 +135,9 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
           copied: 'Copied',
           balances: 'Balances',
           receive: 'Receive',
-          hideQr: 'Hide QR',
           receiveHint: 'Scan this code or share your address to receive funds on Celo.',
           send: 'Send',
+          tabCollectibles: 'Collectibles',
           token: 'Token',
           destination: 'Destination address',
           amount: 'Amount',
@@ -143,8 +146,7 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
           sending: 'Sending…',
           done: 'Sent',
           viewTx: 'View transaction',
-          nfts: 'Collectibles (Celo)',
-          loadNfts: 'Show my collectibles',
+          retryNfts: 'Try again',
           noNfts: 'No collectibles found for this wallet.',
           nftsError: 'Collectibles are not available right now.',
           lockNow: 'Disconnect and lock',
@@ -165,9 +167,9 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
           copied: 'Copiada',
           balances: 'Saldos',
           receive: 'Recibir',
-          hideQr: 'Ocultar QR',
           receiveHint: 'Escanea este código o comparte tu dirección para recibir fondos en Celo.',
           send: 'Enviar',
+          tabCollectibles: 'Coleccionables',
           token: 'Token',
           destination: 'Dirección destino',
           amount: 'Monto',
@@ -176,8 +178,7 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
           sending: 'Enviando…',
           done: 'Enviado',
           viewTx: 'Ver transacción',
-          nfts: 'Coleccionables (Celo)',
-          loadNfts: 'Ver mis coleccionables',
+          retryNfts: 'Reintentar',
           noNfts: 'No se encontraron coleccionables para esta billetera.',
           nftsError: 'Los coleccionables no están disponibles ahora.',
           lockNow: 'Desconectar y bloquear',
@@ -234,6 +235,8 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
   useEffect(() => {
     if (!open) return
     void loadBalances()
+    // Cada apertura empieza en la primera pestaña, como una app de billetera (R-#254).
+    setTab('balances')
     setTxHash(null)
     setSendError(null)
     setNfts(null)
@@ -264,6 +267,16 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
       setNfLoading(false)
     }
   }, [address])
+
+  // R-#254: los coleccionables se piden al abrir su pestaña, no al abrir el panel
+  // (es una llamada al explorador y no siempre interesa).
+  const handleTabChange = useCallback(
+    (value: string) => {
+      setTab(value)
+      if (value === 'collectibles' && nfts === null && !nfLoading) void loadNfts()
+    },
+    [loadNfts, nfLoading, nfts],
+  )
 
   const handleCopy = useCallback(async () => {
     try {
@@ -366,53 +379,55 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
             </Button>
           </div>
 
-          <div>
-            <p className="mb-1 text-sm font-medium">{t('balances')}</p>
-            <ul className="divide-y rounded border" data-testid="wallet-panel-balances">
-              {TOKENS.map((item) => (
-                <li key={item} className="flex items-center justify-between px-3 py-2 text-sm">
-                  <span>{item}</span>
-                  <span className="font-mono" data-testid={`wallet-panel-balance-${item}`}>
-                    {loadingBalances && balances[item] === null
-                      ? '…'
-                      : formatTokenAmount(balances[item], TOKEN_DECIMALS[item])}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-1 text-xs text-gray-500">
-              <a
-                href={`${explorerAddressBase(NETWORK)}/address/${checksummed(address)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Blockscout
-              </a>
-            </p>
-          </div>
+          <Tabs value={tab} onValueChange={handleTabChange}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="balances" data-testid="wallet-panel-tab-balances">
+                {t('balances')}
+              </TabsTrigger>
+              <TabsTrigger value="receive" data-testid="wallet-panel-tab-receive">
+                {t('receive')}
+              </TabsTrigger>
+              <TabsTrigger value="send" data-testid="wallet-panel-tab-send">
+                {t('send')}
+              </TabsTrigger>
+              <TabsTrigger value="collectibles" data-testid="wallet-panel-tab-collectibles">
+                {t('tabCollectibles')}
+              </TabsTrigger>
+            </TabsList>
 
-          <div>
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid="wallet-panel-receive"
-              onClick={() => setShowReceive((value) => !value)}
-            >
-              {showReceive ? t('hideQr') : t('receive')}
-            </Button>
-            {showReceive && (
-              <div className="mt-2 space-y-2 text-center" data-testid="wallet-panel-qr">
-                <div className="inline-block rounded bg-white p-3">
-                  <QRCodeSVG value={checksummed(address)} size={148} />
-                </div>
-                <p className="text-xs text-gray-500">{t('receiveHint')}</p>
+            <TabsContent value="balances">
+              <ul className="divide-y rounded border" data-testid="wallet-panel-balances">
+                {TOKENS.map((item) => (
+                  <li key={item} className="flex items-center justify-between px-3 py-2 text-sm">
+                    <span>{item}</span>
+                    <span className="font-mono" data-testid={`wallet-panel-balance-${item}`}>
+                      {loadingBalances && balances[item] === null
+                        ? '…'
+                        : formatTokenAmount(balances[item], TOKEN_DECIMALS[item])}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1 text-xs text-gray-500">
+                <a
+                  href={`${explorerAddressBase(NETWORK)}/address/${checksummed(address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  Blockscout
+                </a>
+              </p>
+            </TabsContent>
+
+            <TabsContent value="receive" className="space-y-2 text-center">
+              <div className="inline-block rounded bg-white p-3" data-testid="wallet-panel-qr">
+                <QRCodeSVG value={checksummed(address)} size={148} />
               </div>
-            )}
-          </div>
+              <p className="text-xs text-gray-500">{t('receiveHint')}</p>
+            </TabsContent>
 
-          <div className="space-y-2 rounded border p-3">
-            <p className="text-sm font-medium">{t('send')}</p>
+            <TabsContent value="send" className="space-y-2 rounded border p-3">
             {locked && <p className="text-sm text-amber-700">{t('needWallet')}</p>}
             <label className="block space-y-1">
               <span className="text-xs text-gray-500">{t('token')}</span>
@@ -480,26 +495,27 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
             <Button data-testid="wallet-panel-send" onClick={() => { void handleSend() }} disabled={!canSend}>
               {sending ? t('sending') : t('sendNow')}
             </Button>
-          </div>
+            </TabsContent>
 
-          <div>
-            <p className="mb-1 text-sm font-medium">{t('nfts')}</p>
-            {nfts === null && !nfLoading && (
-              <Button
-                variant="outline"
-                size="sm"
-                data-testid="wallet-panel-load-nfts"
-                onClick={() => { void loadNfts() }}
-              >
-                {t('loadNfts')}
-              </Button>
-            )}
-            {nfLoading && <p className="text-sm text-gray-500">…</p>}
-            {nfts !== null && nfts.length === 0 && (
-              <p className="text-sm text-gray-500" data-testid="wallet-panel-no-nfts">
-                {nftsError ? t('nftsError') : t('noNfts')}
-              </p>
-            )}
+            <TabsContent value="collectibles" className="space-y-2">
+              {nfLoading && <p className="text-sm text-gray-500">…</p>}
+              {nfts !== null && nfts.length === 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500" data-testid="wallet-panel-no-nfts">
+                    {nftsError ? t('nftsError') : t('noNfts')}
+                  </p>
+                  {nftsError && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      data-testid="wallet-panel-load-nfts"
+                      onClick={() => { void loadNfts() }}
+                    >
+                      {t('retryNfts')}
+                    </Button>
+                  )}
+                </div>
+              )}
             {nfts !== null && nfts.length > 0 && (
               <ul className="grid grid-cols-3 gap-2" data-testid="wallet-panel-nfts">
                 {nfts.map((nft, index) => (
@@ -517,7 +533,8 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
                 ))}
               </ul>
             )}
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="mt-2 flex justify-between gap-2">

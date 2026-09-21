@@ -12,12 +12,15 @@ import {
   resetFailures, fail, ok, summary, short, simulateSIWE,
 } from '@pasosdejesus/m/e2e'
 import { gotoWithRetry } from '../helpers/retry.mjs'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 async function main() {
   const t0 = performance.now()
   resetFailures()
   const env = await initTestEnv()
-  const { base, timeout, account, chainId, host, domainPort } = env
+  const { timeout, account, chainId } = env
+  // SITE_URL permite un `bin/dev` local (HTTP) con el SIWE bien atado.
+  const { base, host, domainPort } = resolveSiteTarget(env)
   const browser = await launchBrowser(env.headless)
   const page = await newPage(browser, account.address, 120000)
   await page.setViewport({ width: 375, height: 700 }) // móvil (R-#228/#230)

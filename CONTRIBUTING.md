@@ -48,16 +48,22 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
 3. **Make your changes** following the style guides
 4. **Run tests in directory `apps/nextjs`**: `make type` and `make test`
    - `make type` checks TypeScript in source files; `make type-source` checks test files too
-   - `make test` runs the app sub-targets in sequence plus `test-packages` (parallel-safe, sin coverage)
+   - `make test` runs the app sub-targets in sequence plus `test-packages` and
+     `test-engines` (parallel-safe, sin coverage)
    - `make coverage` runs all tests with coverage (lento, usa más memoria)
    - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.
    - **`pdj-wallet` packages** (`packages/pdj-wallet`, `packages/pdj-wallet-next`):
      `make test-pdj-wallet`, `make test-pdj-wallet-next` or `make test-packages`
-     (34 + 21 tests, ~25 s; each package also has its own `Makefile`). See
+     (63 + 24 tests, ~35 s; each package also has its own `Makefile`). See
      [doc/pdj-wallet-testing.md](doc/pdj-wallet-testing.md).
-   - **Engine tests** (`packages/rewards`, `packages/gdcluster`): run in isolation with
-     `pnpm --filter @learn-tg/rewards test` / `pnpm --filter @learn-tg/gdcluster test`
-     (vitest con deps mock; ver guía `m/doc/engines.md`)
+   - **Engine tests** (`packages/rewards`, `packages/gdcluster`): `make test-engines`
+     (or `make test-rewards` / `make test-gdcluster`), 56 + 91 tests, ~45 s; each
+     engine brings its own `vitest.config.ts` with the aliases to
+     `apps/nextjs/node_modules`.
+     Do NOT run `pnpm test` inside the packages: corepack resolves pnpm v11 there
+     and breaks the repo (see [doc/pnpm.md](doc/pnpm.md)); the `test` script of each
+     `package.json` is kept for that reason only as documentation. Engine guide:
+     `m/doc/engines.md`
    - E2E tests: `make test-smoke` (HTTP) or `bin/m test:e2e` (Puppeteer), with shortcuts
      `make test-e2e-wallet` (billetera in-app) and `make test-e2e-offline` (PWA offline).
      See [doc/e2e-testing.md](doc/e2e-testing.md)

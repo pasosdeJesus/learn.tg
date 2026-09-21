@@ -12,13 +12,15 @@ import {
   simulateSIWE, checkSessionFull, checkPartialLogin,
   waitForText, short,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 import { gotoWithRetry } from '../helpers/retry.mjs'
 
 async function main() {
   const t0 = performance.now()
   resetFailures()
   const env = await initTestEnv()
-  const { base, timeout, account, chainId, host, domainPort } = env
+  const { timeout, account, chainId } = env
+  const { base, host, domainPort } = resolveSiteTarget(env)
 
   console.log(`Wallet: ${short(account.address)} | ${base}\n`)
   const browser = await launchBrowser(env.headless)

@@ -8,6 +8,7 @@ import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 import * as fs from 'fs'
 import * as path from 'path'
 // R-#239: the pdj-wallet core signs (setupSIWEMock retired).
@@ -57,7 +58,8 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, chainId } = env
+  const { chainId } = env
+  const { base } = resolveSiteTarget(env)
   const timeout = 120000
   const wallet = creds.addr
   console.log(`Wallet: ${wallet.slice(0,10)}... | ${base}\n`)

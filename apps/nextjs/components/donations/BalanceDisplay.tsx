@@ -1,6 +1,6 @@
 'use client'
 
-// Balance multi-cadena de la campaña (REQ/223 §4.1 presentación):
+// Balance multi-cadena de la campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 §4.1 presentación):
 // lee GET /api/donations/{slug}/balance (saldos on-chain de la billetera
 // destino en Celo, AVAX y Base, incluye ahorros previos).
 

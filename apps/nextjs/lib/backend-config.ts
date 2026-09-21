@@ -121,7 +121,7 @@ export async function sendTxAndWait(
 }
 
 /**
- * Envío de CELO nativo (donaciones de campaña en CELO, REQ/223): usa
+ * Envío de CELO nativo (donaciones de campaña en CELO, https://github.com/pasosdeJesus/learn.tg/issues/223): usa
  * sendTransaction (to + value) en vez de writeContract, y espera el receipt.
  */
 export async function sendNativeTxAndWait(

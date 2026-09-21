@@ -294,7 +294,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
       const data = await adminFetch(`/api/admin/user/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: bodyJson })
       if (data?.bonus?.awarded) {
         toast({
-          title: lang === 'es' ? '✅ Bono de 44 SLEARN enviado al pastor' : '✅ 44 SLEARN bonus sent to pastor',
+          title: lang === 'es' ? '✅ Bono de 22 SLEARN enviado al pastor' : '✅ 22 SLEARN bonus sent to pastor',
           description: (
             <a href={txExplorerUrl(data.bonus.hash)} target="_blank" rel="noopener noreferrer" className="underline">
               {lang === 'es' ? 'Ver transacción' : 'View transaction'} ↗
@@ -588,7 +588,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
       const data = await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       if (data?.bonus?.awarded) {
         toast({
-          title: lang === 'es' ? '✅ Bono de 44 SLEARN enviado al pastor' : '✅ 44 SLEARN bonus sent to pastor',
+          title: lang === 'es' ? '✅ Bono de 22 SLEARN enviado al pastor' : '✅ 22 SLEARN bonus sent to pastor',
           description: (
             <a href={txExplorerUrl(data.bonus.hash)} target="_blank" rel="noopener noreferrer" className="underline">
               {lang === 'es' ? 'Ver transacción' : 'View transaction'} ↗

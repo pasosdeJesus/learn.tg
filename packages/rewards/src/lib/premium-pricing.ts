@@ -1,4 +1,4 @@
-// Premium course pricing logic (REQ #128)
+// Premium course pricing logic (https://github.com/pasosdeJesus/learn.tg/issues/128)
 // Pure functions so they are unit-testable without DB or on-chain access.
 
 export const DEFAULT_SLEARN_RATE = 22

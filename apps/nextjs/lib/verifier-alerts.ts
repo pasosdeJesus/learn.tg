@@ -1,6 +1,6 @@
 import type { Kysely } from 'kysely'
 
-// Alertas in-app a los verificadores (REQ/223 — patrón "billetera del backend
+// Alertas in-app a los verificadores (https://github.com/pasosdeJesus/learn.tg/issues/223 — patrón "billetera del backend
 // como intermediaria"): cuando una operación deja fondos pendientes en la
 // billetera del backend (p. ej. un reenvío de donación que no logró hash), se
 // notifica a TODOS los verificadores configurados; cuando la operación se

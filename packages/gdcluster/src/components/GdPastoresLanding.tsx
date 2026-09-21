@@ -55,7 +55,7 @@ export function GdPastoresLanding({ lang, deps }: { lang: string; deps: GdPastor
   const profileUrl = `/${lang}/profile`
   const rankingUrl = `/${lang}/gdcluster/ranking`
 
-  // Churches fund (44 SLEARN bonus source)
+  // Churches fund (22 SLEARN bonus source)
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -207,13 +207,13 @@ export function GdPastoresLanding({ lang, deps }: { lang: string; deps: GdPastor
       ? 'Invitación a pastores de Colombia y Sierra Leona'
       : 'An invitation to pastors in Sierra Leone and Colombia',
     intro: es
-      ? 'El curso de GD se puede pagar en SLEARN. Para darte la bienvenida, learn.tg te regala 44 SLEARN (= US$2) al cumplir los requisitos.'
-      : 'The GD course can be paid in SLEARN. To welcome you, learn.tg gives you 44 SLEARN (= US$2) once you meet the requirements.',
+      ? 'El curso de GD se puede pagar en SLEARN. Para darte la bienvenida, learn.tg te regala 22 SLEARN (= US$1) al cumplir los requisitos.'
+      : 'The GD course can be paid in SLEARN. To welcome you, learn.tg gives you 22 SLEARN (= US$1) once you meet the requirements.',
     requirements: es ? 'Requisitos' : 'Requirements',
     claimedTitle: es ? 'Ya reclamaste tu bono' : 'You already claimed your bonus',
     claimedDesc: es
-      ? 'Usted ya cumplió los requisitos y reclamó su bono de 44 SLEARN.'
-      : 'You already met the requirements and claimed your 44 SLEARN bonus.',
+      ? 'Usted ya cumplió los requisitos y reclamó su bono de 22 SLEARN.'
+      : 'You already met the requirements and claimed your 22 SLEARN bonus.',
     claimedTx: es ? 'La transacción fue' : 'The transaction was',
     autoNote: es
       ? 'El bono se acredita automáticamente cuando se verifican tus datos y el registro de tu iglesia.'
@@ -257,8 +257,8 @@ export function GdPastoresLanding({ lang, deps }: { lang: string; deps: GdPastor
       ? 'Lo que te falta para superar 90 puntos'
       : 'What you still need to exceed 90 points',
     analysisIntro: es
-      ? 'Para recibir el bono de 44 SLEARN debes superar 90 puntos. Te falta completar:'
-      : 'To receive the 44 SLEARN bonus you must exceed 90 points. You still need to complete:',
+      ? 'Para recibir el bono de 22 SLEARN debes superar 90 puntos. Te falta completar:'
+      : 'To receive the 22 SLEARN bonus you must exceed 90 points. You still need to complete:',
     analysisMandatory: es ? 'obligatorio' : 'mandatory',
     analysisOptional: es ? 'recomendado' : 'recommended',
     analysisCurrent: es ? 'Puntaje actual' : 'Current score',
@@ -338,8 +338,8 @@ export function GdPastoresLanding({ lang, deps }: { lang: string; deps: GdPastor
                   {es ? 'perfil' : 'profile'}
                 </Link>
                 {es
-                  ? ' (tus datos y los de tu iglesia) y propón una fecha de entrevista. Si suministras toda la información tendrás más de 90 puntos y, una vez se verifiquen los documentos que envías, ganarás 44 SLEARN automáticamente.'
-                  : ' (your data and your church) and propose an interview date. If you supply all the information you will have more than 90 points, and once the documents you send are verified you will earn 44 SLEARN automatically.'}
+                  ? ' (tus datos y los de tu iglesia) y propón una fecha de entrevista. Si suministras toda la información tendrás más de 90 puntos y, una vez se verifiquen los documentos que envías, ganarás 22 SLEARN automáticamente.'
+                  : ' (your data and your church) and propose an interview date. If you supply all the information you will have more than 90 points, and once the documents you send are verified you will earn 22 SLEARN automatically.'}
               </li>
               <li>
                 {es

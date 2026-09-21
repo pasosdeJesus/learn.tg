@@ -3,7 +3,7 @@ import { encodeFunctionData, type Address } from 'viem'
 import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
 import { verifyCampaignDonation } from '../gd-donations'
 
-// REQ/223 + testnet: el flujo de donación a campaña es consciente de red.
+// https://github.com/pasosdeJesus/learn.tg/issues/223 + testnet: el flujo de donación a campaña es consciente de red.
 // En Celo Sepolia (chainId 11142220) se usan los tokens de `cfg.testnet`
 // (hoy solo USDT Mock, 0x7d7a…) y se reenvía a la misma billetera destino.
 

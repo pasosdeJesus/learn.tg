@@ -132,7 +132,7 @@ export default function Page({ params }: PageProps) {
     return () => { cancelled = true }
   }, [course, address])
 
-  // Global Disciples courses: show remaining churches fund (44 SLEARN pastor bonus).
+  // Global Disciples courses: show remaining churches fund (22 SLEARN pastor bonus).
   useEffect(() => {
     if (!isGd) return
     let cancelled = false

@@ -12,6 +12,7 @@ import {
 } from '@pasosdejesus/m/e2e'
 // R-#239: the pdj-wallet core signs (setupSIWEMock retired).
 import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -43,7 +44,9 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout, chainId } = env
+  const { timeout, chainId } = env
+  // SITE_URL permite un `bin/dev` local (HTTP).
+  const { base } = resolveSiteTarget(env)
   console.log(`Wallet: ${envCreds.addr.slice(0,10)}... | ${base}\n`)
 
   const browser = await launchBrowser(env.headless)

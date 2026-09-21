@@ -1,6 +1,6 @@
 'use client'
 
-// REQ/223 — explorador público de donaciones: detalle de las donaciones a
+// https://github.com/pasosdeJesus/learn.tg/issues/223 — explorador público de donaciones: detalle de las donaciones a
 // bóvedas de curso, fondos de clúster/país y campañas, con el comentario del
 // donante (procedencia de los fondos). Datos del ledger vía GET /api/donations
 // (público, sin datos personales). Soporta enlaces directos con filtros:

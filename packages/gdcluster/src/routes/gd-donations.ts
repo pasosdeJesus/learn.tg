@@ -22,7 +22,7 @@ import type { GdclusterDeps } from '../index'
 
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 
-// Alertas a verificadores (REQ/223 — patrón "billetera del backend como
+// Alertas a verificadores (https://github.com/pasosdeJesus/learn.tg/issues/223 — patrón "billetera del backend como
 // intermediaria"): type/refKey genéricos; cada operación que deja fondos
 // pendientes en la billetera del backend usa el mecanismo de
 // apps/nextjs/lib/verifier-alerts.ts vía deps D2 (notifyVerifiers /
@@ -246,7 +246,7 @@ export async function donationHistory(deps: GdclusterDeps, req: NextRequest) {
 }
 
 /**
- * Verifica una donación a una campaña (REQ/223 §4.1) — Celo mainnet only.
+ * Verifica una donación a una campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 §4.1) — Celo mainnet only.
  *
  * Flujo: el donante envió el token a la billetera del backend (vía DonateModal
  * / useContractPayment). Aquí se verifica el transfer on-chain y se:
@@ -264,7 +264,7 @@ export async function donationHistory(deps: GdclusterDeps, req: NextRequest) {
  *
  * La restricción `(crypto, hash)` UNIQUE impide duplicar filas (replay).
  *
- * Consciente de red (REQ/223 + testnet): en mainnet (42220) se aceptan los
+ * Consciente de red (https://github.com/pasosdeJesus/learn.tg/issues/223 + testnet): en mainnet (42220) se aceptan los
  * tokens de `cfg.donationTokens` (USDT/USDC/XAUt0; USDC/XAUt0 registran filas
  * `transaction.crypto` = 'usdc'/'xaut0', migración 20260903120000); en Celo
  * Sepolia (11142220) solo los de `cfg.testnet` (hoy USDT Mock). El valor USD
@@ -381,7 +381,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     // El MOVIMIENTO de fondos no depende del precio (el split va en unidades
     // crudas del token); solo la metadata USD de transparencia. Si el proveedor
     // de precios falla (p. ej. CoinGecko 429) se degrada sin bloquear la
-    // donación (REQ/223) — antes devolvía 400 y tumbaba donaciones en CELO.
+    // donación (https://github.com/pasosdeJesus/learn.tg/issues/223) — antes devolvía 400 y tumbaba donaciones en CELO.
     let price: number | null = null
     try {
       price = await getTokenUsdPrice({ key: payCfg.key, peggedUsd: payCfg.peggedUsd, coingeckoId: payCfg.coingeckoId })
@@ -552,7 +552,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
 
     // Donación registrada (con reenvío o pendiente): el próximo GET de
     // movimientos/balance debe servirse fresco, sin esperar el TTL de 60 s
-    // (REQ/223 — al cerrar el modal de éxito la página recarga las secciones).
+    // (https://github.com/pasosdeJesus/learn.tg/issues/223 — al cerrar el modal de éxito la página recarga las secciones).
     invalidateCampaignMovements(slug)
 
     // Fondos pendientes en la billetera del backend (patrón intermediaria):
@@ -579,7 +579,7 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
 }
 
 /**
- * Reintento oportunista de reenvíos pendientes de campaña (REQ/223 §4.1).
+ * Reintento oportunista de reenvíos pendientes de campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 §4.1).
  * Busca en el ledger filas con `metadata.forwardPending=true` (reenvío fallido
  * tras los intentos inline) y las reenvía con la billetera del backend,
  * actualizando la fila con los hashes. Se invoca al leer el balance (GET) —

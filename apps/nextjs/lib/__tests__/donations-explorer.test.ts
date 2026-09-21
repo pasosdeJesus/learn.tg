@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { donationType, donationDestinationLabel, summarizeDonation } from '../donations-explorer'
 
-// REQ/223 — explorador de donaciones: resumen por fila del ledger (destino sin
+// https://github.com/pasosdeJesus/learn.tg/issues/223 — explorador de donaciones: resumen por fila del ledger (destino sin
 // datos personales, comentario del donante, monto/cripto/hash).
 
 describe('donations-explorer', () => {

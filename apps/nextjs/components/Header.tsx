@@ -13,6 +13,17 @@ import { WalletSelector } from '@/components/WalletSelector'
 import { NotificationsBell } from '@/components/NotificationsBell'
 import { UserLanguageSync } from '@/components/UserLanguageSync'
 
+/**
+ * Wallets with the verifier role (R-#255): the same source the admin pages use.
+ * Read inside the component so a test (or a build) can change the env var.
+ */
+function verifierWallets(): string[] {
+  return (process.env.NEXT_PUBLIC_VERIFIER_WALLET || '')
+    .split(',')
+    .map((wallet) => wallet.trim().toLowerCase())
+    .filter(Boolean)
+}
+
 export default function Header({ lang: langProp = 'en' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -28,6 +39,9 @@ export default function Header({ lang: langProp = 'en' }) {
 
   const sessionAddress = (session as any)?.address as string | undefined || localAddr || undefined
   const isAuthenticated = !!sessionAddress
+  // R-#255: sólo el verificador ve el acceso al panel de administración. La página
+  // /{lang}/admin vuelve a comprobarlo; esto es comodidad, no un control de acceso.
+  const isVerifier = !!sessionAddress && verifierWallets().includes(sessionAddress.toLowerCase())
 
   // Local translations (title + menu icon)
   const t = useMemo(() => createComponentT(lang, {
@@ -61,6 +75,7 @@ export default function Header({ lang: langProp = 'en' }) {
   const menuItems = isAuthenticated
     ? [
         { key: 'navProfile', href: `/${lang}/profile`, emoji: '👤' },
+        ...(isVerifier ? [{ key: 'navAdmin', href: `/${lang}/admin`, emoji: '🛠️' }] : []),
         ...baseItems,
         { key: 'navDonateLensenia', href: `/${lang}/donations/lensenia`, emoji: '💧' },
       ]

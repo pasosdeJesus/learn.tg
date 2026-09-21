@@ -15,6 +15,7 @@ import {
   initTestEnv, launchBrowser, newPage,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 function loadEnvCredentials() {
   for (const envPath of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env'), path.join(process.cwd(), '.env')]) {
@@ -45,7 +46,8 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout } = env
+  const { timeout } = env
+  const { base } = resolveSiteTarget(env)
 
   const browser = await launchBrowser(env.headless)
   const page = await newPage(browser, creds?.addr, timeout)

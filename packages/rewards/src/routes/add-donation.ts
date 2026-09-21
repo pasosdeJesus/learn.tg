@@ -45,7 +45,7 @@ export async function addDonation(deps: RewardsDeps, req: NextRequest) {
     const requestJson = await req.json()
     const { walletAddress, donationAmountUSD, slearnDonationAmount, usdtHash, slearnHash, courseId, comment } = requestJson
 
-    // Comentario opcional del donante (REQ/223; procedencia de los fondos):
+    // Comentario opcional del donante (https://github.com/pasosdeJesus/learn.tg/issues/223; procedencia de los fondos):
     // máx 200 chars, sin saltos de línea; se guarda en el ledger.
     const donorComment = typeof comment === 'string' ? comment.replace(/\s+/g, ' ').trim().slice(0, 200) : undefined
     const commentSuffix = donorComment ? `\ncomment: ${donorComment}` : ''

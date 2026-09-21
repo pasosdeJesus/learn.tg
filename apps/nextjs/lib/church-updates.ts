@@ -1,4 +1,4 @@
-// Columnas NOT NULL de `church` editables por el admin (REQ/229). Ver
+// Columnas NOT NULL de `church` editables por el admin (https://github.com/pasosdeJesus/learn.tg/issues/229). Ver
 // `lib/safe-updates.ts` para la regla (un campo vacío en NOT NULL se conserva,
 // no se envía como null).
 

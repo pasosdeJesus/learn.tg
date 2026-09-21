@@ -101,13 +101,36 @@ describe('WalletPanel (R-#249)', () => {
 
   it('shows a QR code for receiving', async () => {
     renderPanel()
-    fireEvent.click(screen.getByTestId('wallet-panel-receive'))
+    // R-#254: el QR vive en su pestaña.
+    fireEvent.click(screen.getByTestId('wallet-panel-tab-receive'))
     const qr = screen.getByTestId('qr')
     expect(qr).toHaveAttribute('data-value', ADDRESS)
   })
 
+  // R-#254: los coleccionables NO se piden al abrir el panel. La activación de la
+  // pestaña no se puede comprobar aquí: `@pasosdejesus/m/test-utils` sustituye los
+  // primitivos de Radix por stubs sin estado, así que el cambio de pestaña se cubre
+  // en el navegador (`in-app-wallet-payments.spec.mjs`).
+  it('does not request the collectibles when the panel opens', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [{ metadata: { name: 'SBT #1', image: 'https://example.test/1.png' }, token: { name: 'PdJCredentials' } }],
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    try {
+      renderPanel()
+      await waitFor(() => expect(mocks.getBalance).toHaveBeenCalled())
+      expect(fetchMock).not.toHaveBeenCalled()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('validates the destination, the amount and the balance before sending', async () => {
     renderPanel()
+    fireEvent.click(screen.getByTestId('wallet-panel-tab-send'))
     await waitFor(() => expect(screen.getByTestId('wallet-panel-send')).toBeDisabled())
 
     // Dirección inválida
@@ -133,6 +156,7 @@ describe('WalletPanel (R-#249)', () => {
 
   it('sends native CELO through the wallet client', async () => {
     renderPanel()
+    fireEvent.click(screen.getByTestId('wallet-panel-tab-send'))
     await waitFor(() => expect(mocks.getBalance).toHaveBeenCalled())
 
     await act(async () => {
@@ -153,6 +177,7 @@ describe('WalletPanel (R-#249)', () => {
 
   it('sends an ERC-20 with its decimals', async () => {
     renderPanel()
+    fireEvent.click(screen.getByTestId('wallet-panel-tab-send'))
     await waitFor(() => expect(mocks.readContract).toHaveBeenCalled())
 
     await act(async () => {
@@ -177,6 +202,7 @@ describe('WalletPanel (R-#249)', () => {
   it('does not let a locked wallet send', async () => {
     mocks.status = 'locked'
     renderPanel()
+    fireEvent.click(screen.getByTestId('wallet-panel-tab-send'))
     expect(screen.getByTestId('wallet-panel-send')).toBeDisabled()
     expect(screen.getByText(/unlock your in-app wallet to send/i)).toBeInTheDocument()
   })

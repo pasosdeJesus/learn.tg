@@ -4,7 +4,7 @@ import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
 import { verifyCampaignDonation } from '../gd-donations'
 import { clearPriceCache } from '../../lib/token-prices'
 
-// REQ/223: recepción multi-token en mainnet (Celo 42220). USDC es estable
+// https://github.com/pasosdeJesus/learn.tg/issues/223: recepción multi-token en mainnet (Celo 42220). USDC es estable
 // (pegged, sin fetch); XAUt0 se cotiza por CoinGecko (tether-gold). Las filas
 // del ledger usan `transaction.crypto` = 'usdc'/'xaut0' (migración
 // 20260903120000).
@@ -55,7 +55,7 @@ function buildDeps(tokenAddr: string, amount: bigint) {
 const req = (body: Record<string, unknown>) => ({ json: async () => body }) as any
 const params = { slug: 'lensenia' }
 
-describe('verifyCampaignDonation — multi-token mainnet (REQ/223)', () => {
+describe('verifyCampaignDonation — multi-token mainnet (https://github.com/pasosdeJesus/learn.tg/issues/223)', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_ADDRESS = BACKEND
     process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = BACKEND
@@ -110,7 +110,7 @@ describe('verifyCampaignDonation — multi-token mainnet (REQ/223)', () => {
     expect(inserted.amount).toBe(2)
   })
 
-  it('sigue con la donación sin metadata USD cuando el precio no se puede obtener (REQ/223)', async () => {
+  it('sigue con la donación sin metadata USD cuando el precio no se puede obtener (https://github.com/pasosdeJesus/learn.tg/issues/223)', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false })))
     const { deps, db, sendTxAndWait } = buildDeps(XAUT0_MAINNET, 1_000_000n)
     const res = await verifyCampaignDonation(deps, req({

@@ -1,6 +1,6 @@
 'use client'
 
-// REQ/223: historial completo de movimientos de la billetera de la campaña
+// https://github.com/pasosdeJesus/learn.tg/issues/223: historial completo de movimientos de la billetera de la campaña
 // Lensenia (todas las cadenas visibles por explorer público).
 
 import { use } from 'react'

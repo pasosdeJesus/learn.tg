@@ -121,7 +121,7 @@ Detalles que cuestan tiempo si se ignoran:
   el trabajo de webpack (los specs offline se saltan en dev de todos modos).
 - **Fallos que solo aparecen en local** suelen ser del entorno local: medido
   `PATCH /api/admin/church/[id]` → 500, y con el diagnóstico de la sección
-  siguiente la causa resultó ser **on-chain**: el bono de 44 SLEARN se firma con
+  siguiente la causa resultó ser **on-chain**: el bono de 22 SLEARN se firma con
   la llave de `CHURCHES_WALLET_PRIVATE_KEY` y en el `apps/.env` local esa llave es
   la de prueba (`0x84272a6d…`), que **no** está en la lista de transferencias
   autorizadas del SLEARN (`authorizedTransfers(0x84272a6d…) = false` en Sepolia),
@@ -163,7 +163,7 @@ bin/warmup.mjs                   # SITE_URL por defecto (learn.tg:9001)
 SITE_URL=https://learn.tg bin/warmup.mjs   # producción
 ```
 
-Incluye las rutas de las donaciones a campaña (REQ/223):
+Incluye las rutas de las donaciones a campaña (https://github.com/pasosdeJesus/learn.tg/issues/223):
 `/en/donations/lensenia`, `/api/donations/lensenia/balance` y
 `/api/donations/lensenia/verify` (la página compila los client chunks y los
 route handlers del motor `gdcluster`).
@@ -218,12 +218,12 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
 | `prerequisites.spec.mjs` | Wallet registration + verifier check + profile setup + self-verify → ≥50 score |
 | `referral-payout.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
-| `referral-premium.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 44 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
+| `referral-premium.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 22 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
 | `rails-auth.spec.mjs` | Rails API calls (public course endpoints) in ES and EN |
 | `verification-timezone.spec.mjs` | Verification availability API: timezone handling, 7-day window |
 | `donate-course.spec.mjs` | Course donation endpoint (`/api/add-donation`): validation paths (400/401) |
 | `donate-gd.spec.mjs` | GD cluster/country donation endpoint (`/api/gdcluster/donations/verify`): validation paths (400/401/403) |
-| `donate-campaign.spec.mjs` | Campaign donation (REQ/223, `/api/donations/{slug}/verify` + balance): 404/400/401, bounds de `pdjSharePct` y forma del balance multi-cadena |
+| `donate-campaign.spec.mjs` | Campaign donation (https://github.com/pasosdeJesus/learn.tg/issues/223, `/api/donations/{slug}/verify` + balance): 404/400/401, bounds de `pdjSharePct` y forma del balance multi-cadena |
 | `rails-health.spec.mjs` | Health check del backend Rails del dev site (`NEXT_PUBLIC_API_BASE/proyectosfinancieros.json`): 200 con cursos → UP; error de red/502 → DOWN (exit 1). Correr antes de las suites que dependen de Rails |
 
 ### Current Status (2026-07-28)
@@ -363,15 +363,16 @@ PROD_SPECS=1 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=prod-land
 | `header-wallet-dialog.spec.mjs` | R-#245: the real header + wallet modal flow — create → close → reopen must start fresh → unlock from the header → SIWE → the header **keeps the session after a reload** → `✕` returns to signed-out |
 | `donate-unlock-dialog.spec.mjs` | R-#244: with an in-app session and the wallet locked, the donation modal's unlock button must open the wallet dialog **on top** with the PIN form, and unlocking must remove the notice |
 | `biometric-unlock.spec.mjs` | R-#246: drives the real header + dialog with a **CDP virtual authenticator (`hasPrf`)** — create → enable fingerprint → reload → one gesture unlocks → the donation modal stops asking to unlock |
-| `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 44 SLEARN bonus check |
-| `donate-campaign-real.spec.mjs` | **Real donation to a campaign (REQ/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), **ronda C con cashback ON (10 USDT @ pdJ 5%)**: campaña neta 85% (8.50), pdJ 5%, cashback 22.00 SLEARN vía `mintAndReserve` (+saldo on-chain del donante y del `learnTgReserve`), balance de la billetera campaña y filas en user-transactions (deltas vs baseline, acumulativo en dev) |
-| `donate-campaign-celo-real.spec.mjs` | **Real donation in native CELO (REQ/223):** `sendTransaction` (value) al backend → `verify` con `payToken='celo'` (verify por `tx.value`) → auto-forward nativo 100% y 90/10, balance CELO on-chain y filas `crypto=celo` |
-| `donate-campaign-celo-modal.spec.mjs` | **Donation modal in native CELO (REQ/223, UI real):** RPC bridge real (eth_sendTransaction) sobre el mock de SIWE; selector muestra CELO, hint "Donable (máx., menos gas)", dona CELO y verifica el incremento on-chain de la billetera campaña |
+| `pastor-journey.spec.mjs` | New pastor full journey: connect → fill Sierra Leone profile → verifier verifies via admin API → claim UBI → 22 SLEARN bonus check |
+| `donate-campaign-real.spec.mjs` | **Real donation to a campaign (https://github.com/pasosdeJesus/learn.tg/issues/223):** transfer USDT testnet → `donations/lensenia/verify` → auto-forward inmediato (100% y 90/10 campaña/pdJ), **ronda C con cashback ON (10 USDT @ pdJ 5%)**: campaña neta 85% (8.50), pdJ 5%, cashback 22.00 SLEARN vía `mintAndReserve` (+saldo on-chain del donante y del `learnTgReserve`), balance de la billetera campaña y filas en user-transactions (deltas vs baseline, acumulativo en dev) |
+| `donate-campaign-celo-real.spec.mjs` | **Real donation in native CELO (https://github.com/pasosdeJesus/learn.tg/issues/223):** `sendTransaction` (value) al backend → `verify` con `payToken='celo'` (verify por `tx.value`) → auto-forward nativo 100% y 90/10, balance CELO on-chain y filas `crypto=celo` |
+| `donate-campaign-celo-modal.spec.mjs` | **Donation modal in native CELO (https://github.com/pasosdeJesus/learn.tg/issues/223, UI real):** RPC bridge real (eth_sendTransaction) sobre el mock de SIWE; selector muestra CELO, hint "Donable (máx., menos gas)", dona CELO y verifica el incremento on-chain de la billetera campaña |
 | `fresh-wallet-first-connect.spec.mjs` | **Billetera NUEVA conectada por primera vez (sesión fría #5719):** crea una billetera, la registra por SIWE y verifica que la página de cursos **no consulte `/api/scholarship` en anónimo** (causa del "cooldown" falso y del 0% de avance) y que la tarjeta muestre el estado real. La lista de cursos la sirve la app (`/api/course-catalog`, R-#233 §4.4), same-origin. |
 
 ### Current Status (2026-08-24)
 
-**21 browser specs.** New specs cover the 2026-08 regressions: interview date
+**21 browser specs at that date** (37 browser specs and 20 HTTP smoke specs
+measured 2026-09-20). New specs cover the 2026-08 regressions: interview date
 (timestamptz migration), verified-city purchase gate, session fallback, and
 the vault donation with both cryptos:
 
@@ -398,7 +399,7 @@ time out on SIWE under suite load (passes solo).
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
 | `donate-campaign-real` | Motor de campañas desplegado (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_ADDRESS`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` en el dev (billetera única). La ronda C (cashback ON) requiere MINTER_ROLE de SLEARN en el backend (otorgado en el SLEARN Sepolia del dev) + CELO en la billetera de prueba para el gas; las rondas A/B (cashback OFF) no lo requieren |
 | `church-selector-diag` | Session cookie auth (`lib/authenticateUser.ts`, session only) |
-| `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, shown by `/api/churches/fund`) with **≥44 SLEARN** for the pastor bonus; otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when `/api/churches/fund` reports a low balance |
+| `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, shown by `/api/churches/fund`) with **≥22 SLEARN** for the pastor bonus; otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when `/api/churches/fund` reports a low balance |
 
 ### Verifying the new-wallet "cooldown" fix on production
 
@@ -502,7 +503,7 @@ default. This server runs locally or on the dev VM with the latest code.
 > SPEC=…`) export `IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220` so the
 > documented default really is the dev site; the `prod-*` specs force
 > `learn.tg:443 / 42220` themselves. Running a spec directly with `node
-> e2e/specs/x.spec.mjs` **requires those envs** (REQ/224).
+> e2e/specs/x.spec.mjs` **requires those envs** (https://github.com/pasosdeJesus/learn.tg/issues/224).
 
 Under a full 30-spec run the shared 16G dev VM saturates and navigation can time
 out; `e2e/helpers/retry.mjs` provides `gotoWithRetry()`/`retry()` (used by the

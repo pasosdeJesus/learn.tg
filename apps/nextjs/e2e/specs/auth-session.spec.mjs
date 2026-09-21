@@ -20,6 +20,7 @@ import {
   newIncognitoPage,
   short,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 async function main() {
   const t0 = performance.now()
@@ -30,7 +31,8 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout, account, chainId, host, domainPort } = env
+  const { timeout, account, chainId } = env
+  const { base, host, domainPort } = resolveSiteTarget(env)
 
   console.log(`Wallet: ${short(account.address)} | ${base}\n`)
   const browser = await launchBrowser(env.headless)

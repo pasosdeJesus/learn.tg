@@ -1,4 +1,4 @@
-// Explorador de donaciones (REQ/223): resumen de una fila del ledger
+// Explorador de donaciones (https://github.com/pasosdeJesus/learn.tg/issues/223): resumen de una fila del ledger
 // (`transaction`, type='donation') para la API pública y la página
 // /[lang]/donations. Se descarta la metadata cruda (contiene direcciones y el
 // desglose interno) y solo se expone: destino, comentario del donante (si lo

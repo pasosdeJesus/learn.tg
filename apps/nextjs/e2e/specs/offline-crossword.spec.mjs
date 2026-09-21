@@ -14,6 +14,7 @@ import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 
 const GUIDE_PATH = '/en/gdcluster/guide1/test'
@@ -110,7 +111,8 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { base, timeout, chainId } = env
+  const { timeout, chainId } = env
+  const { base } = resolveSiteTarget(env)
 
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()

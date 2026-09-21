@@ -35,6 +35,7 @@ const common: TranslationSet = {
     navTransparency: 'Transparency',
     navDonateLensenia: 'Donate · Lensenia',
     navReferrals: 'Referrals',
+    navAdmin: 'Admin', // R-#255
     privacyPolicy: 'Privacy Policy',
     termsOfService: 'Terms of Service',
     churchDirectory: 'Church Directory',
@@ -83,6 +84,7 @@ const common: TranslationSet = {
     navTransparency: 'Transparencia',
     navDonateLensenia: 'Donar · Lensenia',
     navReferrals: 'Referidos',
+    navAdmin: 'Admin', // R-#255
     privacyPolicy: 'Política de Privacidad',
     termsOfService: 'Términos de Servicio',
     churchDirectory: 'Directorio de Iglesias',

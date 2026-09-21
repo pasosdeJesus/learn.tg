@@ -1,4 +1,4 @@
-// Construcción segura de los campos a actualizar en un PATCH (REQ/229).
+// Construcción segura de los campos a actualizar en un PATCH (https://github.com/pasosdeJesus/learn.tg/issues/229).
 //
 // Bug de clase: convertir `''`/`undefined` a `null` en TODAS las columnas rompe
 // las columnas `NOT NULL` (p. ej. `church.pastor_whatsapp` al guardar solo el

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
@@ -75,9 +75,10 @@ describe('devErrorDetail', () => {
   })
 
   it('no filtra detalles en producción', () => {
-    const previo = process.env.NODE_ENV
-    process.env.NODE_ENV = 'production'
+    // `process.env.NODE_ENV` es read-only para TypeScript: `vi.stubEnv` lo
+    // cambia en tiempo de ejecución y `unstubEnvs` restaura el valor previo.
+    vi.stubEnv('NODE_ENV', 'production')
     expect(devErrorDetail(new Error('secreto'))).toBeUndefined()
-    process.env.NODE_ENV = previo
+    vi.unstubAllEnvs()
   })
 })

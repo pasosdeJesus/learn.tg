@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { campaignTransparency } from '../gd-campaign-transparency'
 
-// REQ/223: el dashboard de transparencia agrega el ledger de campaña
+// https://github.com/pasosdeJesus/learn.tg/issues/223: el dashboard de transparencia agrega el ledger de campaña
 // (totales por cripto, split campaña/pdJ/cashback, pendiente) y últimas filas.
 
 function buildDb(rows: any[]) {

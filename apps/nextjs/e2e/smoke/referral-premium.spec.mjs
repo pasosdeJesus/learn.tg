@@ -9,7 +9,7 @@
  *   1. Referidor (wallet de apps/.env, verificador) → código de referido
  *   2. Pastor REFERIDO (billetera nueva, SIWE) → claim del código
  *   3. Pastor completa perfil Sierra Leone + verificación admin + iglesia
- *      (bonus 44 SLEARN si el fondo de iglesias tiene fondos)
+ *      (bonus 22 SLEARN si el fondo de iglesias tiene fondos)
  *   4. Pastor paga el curso GD (gas + transfer SLEARN + POST purchase)
  *   5. Historial del referidor (GET /api/referral/history) →
  *        - Form 1: `referral_reward` = 10% que processPayment ruteó a la
@@ -183,7 +183,7 @@ async function apiPatch(reqPath, params, body, cookies) {
 // ── Main ────────────────────────────────────────────────────────────
 
 /**
- * El bono de 44 SLEARN del pastor lo paga el fondo de iglesias. Se rellena
+ * El bono de 22 SLEARN del pastor lo paga el fondo de iglesias. Se rellena
  * desde la billetera de prueba (PRIVATE_KEY del verificador) cuando está bajo,
  * para que el spec no dependa del saldo que dejaron corridas anteriores (sin
  * bono el pastor no tiene SLEARN y la compra del curso revierte).
@@ -227,7 +227,7 @@ async function main() {
   const { pk: referrerPk, addr: referrerAddr } = creds
 
   try {
-    // El bono de 44 SLEARN (paso 3) sale del fondo de iglesias: asegurarlo
+    // El bono de 22 SLEARN (paso 3) sale del fondo de iglesias: asegurarlo
     // antes de que el verificador lo otorgue.
     try {
       await ensureChurchesFund(referrerPk)
@@ -280,7 +280,7 @@ async function main() {
     // ════════════════════════════════════════════════════════════
     // 4. Perfil Sierra Leone del pastor + verificación admin + iglesia
     // ════════════════════════════════════════════════════════════
-    console.log('── 4. Perfil SL + verificación + iglesia (44 SLEARN) ──')
+    console.log('── 4. Perfil SL + verificación + iglesia (22 SLEARN) ──')
     await apiPatch('/api/profile',
       { walletAddress: pastorAddr, token: pastor.token },
       {
@@ -331,8 +331,8 @@ async function main() {
     if (churchId) {
       await apiPatch(`/api/admin/user/${pastorUserId}`, { wallet: referrerAddr, token: referrer.token }, { church_id: churchId }, referrer.cookies).catch(() => {})
       const chVerify = await apiPatch(`/api/admin/church/${churchId}`, { wallet: referrerAddr, token: referrer.token }, { registration_verified: true }, referrer.cookies).catch(() => ({}))
-      if (chVerify?.bonus?.awarded) ok(`44 SLEARN bonus (tx ${String(chVerify.bonus.hash).slice(0, 10)}...)`)
-      else console.log(`  [!] Bonus 44 SLEARN no otorgado: ${chVerify?.bonus?.reason || '(sin fondos del fondo de iglesias?)'}`)
+      if (chVerify?.bonus?.awarded) ok(`22 SLEARN bonus (tx ${String(chVerify.bonus.hash).slice(0, 10)}...)`)
+      else console.log(`  [!] Bonus 22 SLEARN no otorgado: ${chVerify?.bonus?.reason || '(sin fondos del fondo de iglesias?)'}`)
     }
 
     const scoreCheck = await apiGet('/api/profile', { walletAddress: pastorAddr, token: pastor.token }, pastor.cookies)

@@ -5,7 +5,7 @@ import {
   resolveVerifierAlert,
 } from '../verifier-alerts'
 
-// REQ/223 — alertas a verificadores para operaciones con la billetera del
+// https://github.com/pasosdeJesus/learn.tg/issues/223 — alertas a verificadores para operaciones con la billetera del
 // backend como intermediaria: notificación idempotente a todos los
 // verificadores y auto-marcado como leída cuando la operación se resuelve.
 

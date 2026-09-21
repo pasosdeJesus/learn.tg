@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { verifyCampaignDonation } from '../gd-donations'
 import { clearPriceCache } from '../../lib/token-prices'
 
-// REQ/223: donaciones de campaña en CELO nativo — el verify lee tx.value del
+// https://github.com/pasosdeJesus/learn.tg/issues/223: donaciones de campaña en CELO nativo — el verify lee tx.value del
 // receipt (no es ERC-20) y el reenvío usa sendTransaction (to+value) vía
 // deps.backend.sendNativeTxAndWait.
 
@@ -50,7 +50,7 @@ function buildDeps(value: bigint) {
 const req = (body: Record<string, unknown>) => ({ json: async () => body }) as any
 const params = { slug: 'lensenia' }
 
-describe('verifyCampaignDonation — CELO nativo (REQ/223)', () => {
+describe('verifyCampaignDonation — CELO nativo (https://github.com/pasosdeJesus/learn.tg/issues/223)', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_ADDRESS = BACKEND
     process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = TREASURY

@@ -61,7 +61,7 @@ const PUBLIC_ENDPOINTS = [
   'course-catalog',       // R-#233 §4.4: catálogo público de cursos leído
                           // directo de la BD compartida (sin token ni CORS)
   'credential',           // public credential verification
-  'donations',            // explorador público de donaciones (REQ/223): solo
+  'donations',            // explorador público de donaciones (https://github.com/pasosdeJesus/learn.tg/issues/223): solo
                           // nusuario + monto/hash on-chain + comentario del
                           // donante; no expone nombre real ni metadata interna
   'metrics/health',

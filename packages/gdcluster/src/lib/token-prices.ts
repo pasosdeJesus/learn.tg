@@ -1,5 +1,5 @@
 /**
- * Precio USD de tokens de campaña (REQ/223 §4.1): los tokens pegados
+ * Precio USD de tokens de campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 §4.1): los tokens pegados
  * (USDT/USDC ≈ 1 USD) no consultan API; el resto se cotiza por CoinGecko
  * (`coingeckoId`) con caché TTL (5 min) y caída ante fallos de red.
  */

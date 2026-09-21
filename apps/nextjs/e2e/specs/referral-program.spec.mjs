@@ -22,6 +22,7 @@ import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
+import { resolveSiteTarget } from '../helpers/site-target.mjs'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
 import { gotoWithRetry, retry } from '../helpers/retry.mjs'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
@@ -77,7 +78,8 @@ async function main() {
   process.env.TEST_PRIVATE_KEY = creds.pk
 
   const env = await initTestEnv()
-  const { base, timeout } = env
+  const { timeout } = env
+  const { base } = resolveSiteTarget(env)
   console.log(`Referidor: ${creds.addr.slice(0, 10)}... | ${base} (chain: ${CHAIN_ID})`)
 
   const browser = await launchBrowser()
@@ -207,7 +209,7 @@ async function main() {
   // Autentica al referido (SIWE; la billetera nueva se auto-registra). Cada
   // intento usa una página nueva: `exposeFunction('__signSiwe')` no se puede
   // re-registrar en la misma página y el primer intento puede abortarse por la
-  // navegación de /ref (REQ/224).
+  // navegación de /ref (https://github.com/pasosdeJesus/learn.tg/issues/224).
   pageB = await retry(async () => {
     const p = await browser.newPage()
     await setupE2EAuth(p, refAddr, refPk, CHAIN_ID, base)

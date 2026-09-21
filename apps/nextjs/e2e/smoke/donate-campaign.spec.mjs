@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Smoke test: Campaign donation endpoints (REQ/223) —
+ * Smoke test: Campaign donation endpoints (https://github.com/pasosdeJesus/learn.tg/issues/223) —
  *   GET  /api/donations/{slug}/balance   (balance multi-cadena)
  *   POST /api/donations/{slug}/verify    (verificación de donación a campaña)
  *
@@ -79,7 +79,7 @@ async function getAuthToken(base, account) {
 }
 
 async function main() {
-  console.log('Smoke: Campaign donation endpoints (REQ/223)\n')
+  console.log('Smoke: Campaign donation endpoints (https://github.com/pasosdeJesus/learn.tg/issues/223)\n')
 
   const creds = loadEnvCredentials()
   if (!creds) { console.error('No credentials found'); process.exit(1) }

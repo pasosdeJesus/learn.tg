@@ -30,9 +30,9 @@ any other suite:
 ```sh
 cd apps/nextjs
 
-make test-packages          # los dos paquetes (34 + 21 tests, ~25 s)
-make test-pdj-wallet        # solo el core (25 tests, ~12 s)
-make test-pdj-wallet-next   # solo React; compila el core antes (~10 s)
+make test-packages          # los dos paquetes (63 + 24 tests, ~35 s)
+make test-pdj-wallet        # solo el core (63 tests, ~21 s)
+make test-pdj-wallet-next   # solo React; compila el core antes (~12 s)
 ```
 
 Equivalentes directos (si prefieres el comando crudo):
@@ -47,10 +47,10 @@ cd apps/nextjs
 
 Y dentro de cada paquete hay `Makefile` (`make test`, `make build`, `make install`).
 
-Expected: `44 passed` (core) y `24 passed` (next). `make test` (la suite completa)
+Expected (medido 2026-09-20): `63 passed` (core) y `24 passed` (next). `make test` (la suite completa)
 ya incluye `test-packages`.
 
-Lo que cubre el core sobre R-#246 (14 de esos 39): sellado de la clave con el
+Lo que cubre el core sobre R-#246: sellado de la clave con el
 secreto PRF y comprobación de que el registro guardado **no contiene la clave
 privada**, desbloqueo con un gesto, determinismo entre recargas (misma sal → mismo
 secreto), el PIN como respaldo, `auth-failed` con un secreto que no coincide,

@@ -92,7 +92,7 @@ format:
 # necesitan.
 test:
 	@ulimit -d 8000000 2>/dev/null || true; \
-	$(MAKE) test-lib test-hooks test-api test-components test-pages test-db test-packages
+	$(MAKE) test-lib test-hooks test-api test-components test-pages test-db test-packages test-engines
 
 test-lib:
 	pnpm vitest run lib/__tests__
@@ -137,6 +137,19 @@ test-pdj-wallet-next: pdj-wallet-dist
 	pnpm vitest run --root ../../packages/pdj-wallet-next
 
 test-packages: test-pdj-wallet test-pdj-wallet-next
+
+# Motores de negocio (packages/rewards, packages/gdcluster): cada uno trae su
+# vitest.config.ts con los alias a apps/nextjs/node_modules (R-#252), así que
+# corren desde aquí sin instalar nada. El script `test` de cada package.json hace
+# lo mismo, pero invocado con `pnpm` dentro del paquete (corepack resuelve pnpm
+# v11, que rompe este repo: ver doc/pnpm.md).
+test-engines: test-rewards test-gdcluster
+
+test-rewards:
+	pnpm vitest run --root ../../packages/rewards --config ../../packages/rewards/vitest.config.ts
+
+test-gdcluster: test-rewards
+	pnpm vitest run --root ../../packages/gdcluster --config ../../packages/gdcluster/vitest.config.ts
 
 # ── Coverage (lento, incluye todos los tests) ────────────────────────────
 
