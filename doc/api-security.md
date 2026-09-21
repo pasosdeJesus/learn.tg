@@ -63,6 +63,13 @@ Non-browser clients with neither header pass: a CSRF attacker needs a browser
 (which always sends `Sec-Fetch-Site`), so there is no ambient-credentials
 bypass. NextAuth keeps its own internal CSRF for `/api/auth/*`.
 
+> **Complementary control — CSP:** the origin checks stop cross-site requests, but
+> nothing stops foreign script from *running* in the `learn.tg` origin (XSS,
+> compromised dependency), which is what the in-app wallet needs to reach the key.
+> The agreed policy, its rollout and how to change it are in [csp.md](csp.md); the
+> app does **not** serve a `Content-Security-Policy` header yet
+> (https://github.com/pasosdeJesus/learn.tg/issues/247).
+
 ## 2. The route audit script
 
 `apps/nextjs/bin/audit-api-auth.mjs` statically scans every `route.ts` under

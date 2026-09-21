@@ -115,8 +115,8 @@ Detalles que cuestan tiempo si se ignoran:
   hacían sólo `pastor-journey`, `header-wallet-dialog`,
   `donate-campaign-celo-modal`, `in-app-wallet` y `premium-course-checkout`.
   Medido el 2026-09-21 en local: 10 specs en verde (`header-wallet-dialog`,
-  `in-app-wallet`, `auth-session`, `diag-session`, `church-persistence`,
-  `nav-session-diag`, `ux-mobile-menu`, `connect-wallet-flow`,
+  `in-app-wallet`, `auth-session`, `church-persistence`,
+  `ux-mobile-menu`, `connect-wallet-flow`,
   `wallet-event-disconnect`, `fresh-wallet-first-connect`); ver
   `doc/environments.md` §4 para los que requieren el dev site y por qué.
 - **No uses `bin/warmup.mjs` contra local**: su pasada 2 dispara 55 requests en
@@ -215,14 +215,13 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 
 | Spec | What it tests |
 |------|---------------|
-| `auth-cookies.spec.mjs` | SIWE auth + session cookie + profile score update |
-| `auth-ux.spec.mjs` | Landing page before/after auth, Connect Wallet button presence |
 | `caldav-completa.spec.mjs` | CalDAV full cycle: create event, list, verify, delete (Radicale) |
 | `caldav-http.spec.mjs` | CalDAV connectivity: PROPFIND, OPTIONS to Radicale |
 | `celo-claim.spec.mjs` | Full crossword → submit → scholarship claim flow |
 | `full-journey.spec.mjs` | All endpoints: CSRF, SIWE, session, profile, crossword, UBI, signout |
 | `landing-page.spec.mjs` | `/en` and `/es` return 200, no "Failed to load courses" error |
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
+| `transparency.spec.mjs` | Panel de transparencia: `/en/transparency` y `/es/transparency` responden 200 y `/api/transparency` cumple el contrato documentado (`data`, `totals`, `rules`; reservas y relación de cobertura cuando las lecturas on-chain responden) |
 | `prerequisites.spec.mjs` | Wallet registration + verifier check + profile setup + self-verify → ≥50 score |
 | `referral-payout.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
 | `referral-premium.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 22 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
@@ -233,28 +232,18 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `donate-campaign.spec.mjs` | Campaign donation (https://github.com/pasosdeJesus/learn.tg/issues/223, `/api/donations/{slug}/verify` + balance): 404/400/401, bounds de `pdjSharePct` y forma del balance multi-cadena |
 | `rails-health.spec.mjs` | Health check del backend Rails del dev site (`NEXT_PUBLIC_API_BASE/proyectosfinancieros.json`): 200 con cursos → UP; error de red/502 → DOWN (exit 1). Correr antes de las suites que dependen de Rails |
 
-### Current Status (2026-07-28)
+### Current Status (2026-09-21)
 
-**10 smokes** (más las donaciones `donate-course`, `donate-gd` y
-`donate-campaign`). `leaderboard.spec.mjs` fails on profileScore explanation text
-not rendered (minor content issue). The Rails course endpoints are public
-(R-#233), so no credential is needed for `rails-auth.spec.mjs`.
-`caldav-*` smokes skip gracefully when `CALDAV_URL` is not set.
+**19 smokes** (medido 2026-09-21). `leaderboard.spec.mjs` puede fallar por el
+texto explicativo del profile score no renderizado (contenido menor). Las rutas
+de cursos de Rails son públicas (R-#233), así que `rails-auth.spec.mjs` no
+necesita credencial. Los `caldav-*` se saltan si `CALDAV_URL` no está definido.
 
-### Known Limitation: Client-Rendered Auth UI
-
-`auth-ux.spec.mjs` checks for "Connect Wallet" button absence and wallet
-address presence via raw HTTP response. Since `ConnectWalletButton`,
-`WalletEventListener`, and `Header` are all client-rendered (React
-`useSession`), these elements don't appear in the server-side HTML.
-
-The test currently shows:
-```
-"Connect Wallet" absent: ❌
-Wallet address visible: ❌
-```
-These are **false negatives** — the UI works correctly in the browser.
-Full verification requires Puppeteer E2E specs (see below).
+Los smokes que sólo informaban (nunca fallaban el run) se retiraron el 2026-09-21:
+`auth-ux` (comprobaba marcadores de UI client-rendered por HTTP crudo y no podía
+fallar) y `auth-cookies` (informe con un puntaje 52 hardcodeado; su cobertura
+—SIWE, cookie de sesión, perfil— la dan `prerequisites`, `full-journey` y los
+specs de navegador). Para UI autenticada usa los specs Puppeteer.
 
 ## Wallet Prerequisites for Browser Specs
 
@@ -317,7 +306,7 @@ builds the SIWE message in Node, signs it with the core and posts the callback
 inside the page so the NextAuth session cookie lands in the browser jar.
 
 This replaced the `setupSIWEMock` / `simulateSIWE` helpers of
-`@pasosdejesus/m/e2e` in `connect-wallet-flow`, `full-flow`, `diag-session`,
+`@pasosdejesus/m/e2e` in `connect-wallet-flow`, `full-flow`,
 `town-autocomplete` and `prod-landing-to-profile` (2026-09-15).
 `e2e/helpers/siwe-wallet-mock.mjs` (a local copy, unused) was deleted.
 
@@ -357,9 +346,7 @@ PROD_SPECS=1 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=prod-land
 | `auth-session.spec.mjs` | Session persistence across navigation |
 | `celo-ubi-claim-sepolia.spec.mjs` | CELO UBI claim on Sepolia testnet |
 | `church-persistence.spec.mjs` | Church data persistence in profile |
-| `diag-session.spec.mjs` | Session diagnostic info |
 | `guide-claims.spec.mjs` | Guide completion and claim flow |
-| `nav-session-diag.spec.mjs` | Navigation + session diagnostics |
 | `profile-data.spec.mjs` | Profile data loading and display |
 | `admin-dashboard.spec.mjs` | Admin dashboard: widgets load, APIs respond, user/church detail, PATCH |
 | `prod-landing-to-profile.spec.mjs` | Production landing page → wallet connect → profile save flow |
@@ -378,8 +365,9 @@ PROD_SPECS=1 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=prod-land
 
 ### Current Status (2026-08-24)
 
-**21 browser specs at that date** (37 browser specs and 20 HTTP smoke specs
-measured 2026-09-20). New specs cover the 2026-08 regressions: interview date
+**21 browser specs at that date** (34 browser specs and 19 HTTP smoke specs
+measured 2026-09-21, tras retirar los `*-diag` y los dos smokes que sólo
+informaban). New specs cover the 2026-08 regressions: interview date
 (timestamptz migration), verified-city purchase gate, session fallback, and
 the vault donation with both cryptos:
 
@@ -388,7 +376,6 @@ the vault donation with both cryptos:
 || `premium-course-checkout.spec.mjs` | GD checkout UI (Buy button → CheckoutModal → slider). Creates a fresh eligible pastor via API, so it never depends on the fixture wallet's purchase state |
 || `interview-date.spec.mjs` | Booking a 2PM interview stores/displays the exact instant (timestamptz regression: 2PM → "05:00 AM" bug) |
 || `verified-city-gate.spec.mjs` | Purchase eligibility: unverified pastor NOT eligible (`verified_city_required`), verified pastor eligible |
-|| `church-selector-diag.spec.mjs` | Session-cookie auth in `authenticateUser` + `ChurchSelector` options/assigned church |
 || `vault-both-donate.spec.mjs` | Vault donation with BOTH USDT+SLEARN through `/api/add-donation` (sends real testnet tokens to the dev backend) |
 || `gas-insufficient-panel.spec.mjs` | Donación sin CELO para gas → el modal se reemplaza por el panel "Se necesita CELO" (EN/ES) con enlace al curso Web3 & UBI (Guía 2) y botón Cerrar; regresión con CELO suficiente (formulario se mantiene). Mockea `eth_getBalance` |
 
@@ -405,7 +392,6 @@ time out on SIWE under suite load (passes solo).
 | `verified-city-gate`, `premium-course-checkout` | Verifier wallet (`apps/.env`) whitelisted; eligibility = verified worship city |
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
 | `donate-campaign-real` | Motor de campañas desplegado (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_ADDRESS`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` en el dev (billetera única). La ronda C (cashback ON) requiere MINTER_ROLE de SLEARN en el backend (otorgado en el SLEARN Sepolia del dev) + CELO en la billetera de prueba para el gas; las rondas A/B (cashback OFF) no lo requieren |
-| `church-selector-diag` | Session cookie auth (`lib/authenticateUser.ts`, session only) |
 | `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, shown by `/api/churches/fund`) with **≥22 SLEARN** for the pastor bonus; otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when `/api/churches/fund` reports a low balance |
 
 ### Verifying the new-wallet "cooldown" fix on production
@@ -539,16 +525,15 @@ CalDAV smokes skip gracefully when these are not set:
 
 ## CI / Automated Testing
 
-In CI, only smoke tests run (no display server). Puppeteer specs require
-a graphical environment or `xvfb` and a Chrome binary.
+**No CI runs the smoke or browser specs today.** The wiring is:
 
-```sh
-# CI pipeline (smoke only)
-make test-smoke
+| Pipeline | What it runs | File |
+|----------|--------------|------|
+| Public GitHub CI | `pnpm test -- --exclude **/api/**` (API route tests need the private submodule), `make test-packages` and `node bin/audit-api-auth.mjs` | `.github/workflows/ci.yml` |
+| GitLab CI | the Rails app only (rspec/minitest + PostGIS) | `servidor/.gitlab-ci.yml` |
 
-# Full pipeline (needs display + Chrome)
-CHROME_PATH=/usr/bin/google-chrome make test-e2e
-```
+So `make test-smoke` and `make test-e2e` are run by hand (or by the agent) against
+the dev site; browser specs additionally need a display/`xvfb` and a Chrome binary.
 
 ## OpenBSD / adJ Specifics
 
@@ -565,7 +550,6 @@ CHROME_PATH=/usr/bin/google-chrome make test-e2e
 | SSL errors | Self-signed cert | Tests use `rejectUnauthorized: false` |
 | "CHROME_PATH not set" | No Chrome binary | Install chromium, set env var |
 | Smoke `celo-claim` fails with "24 hours" | Test wallet cooldown | Wait 24h or use different wallet |
-| Smoke `auth-ux` shows address ❌ | Client-rendered components | Use Puppeteer specs for UI verification |
 | Chrome hangs on OpenBSD | Zombie Puppeteer processes | `rm -rf /tmp/puppeteer*` and retry |
 | CalDAV smokes skipped | `CALDAV_URL` not set | Set env vars if CalDAV testing is needed |
 | `full-flow.spec.mjs` UBI claim fails | Test wallet profile score < 50 | Run `bin/m test:e2e prerequisites` to set up |

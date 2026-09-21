@@ -10,7 +10,7 @@
  */
 import { fromBase64, toBase64, wipe } from './crypto.js'
 import { runInDb, STORE_BIOMETRIC } from './storage/idb.js'
-import { deriveWrappingKey, toArrayBuffer } from './web-authn.js'
+import { deriveWrappingKey, signalUnknownCredential, toArrayBuffer } from './web-authn.js'
 
 const KEY = 'current'
 const IV_BYTES = 12
@@ -56,6 +56,17 @@ export async function writeBiometricRecord(record: BiometricRecord): Promise<voi
 
 export async function deleteBiometricRecord(): Promise<void> {
   await runInDb<undefined>(STORE_BIOMETRIC, 'readwrite', (store) => store.delete(KEY))
+}
+
+/**
+ * Drops the sealed copy **and** tells the authenticator the passkey is gone
+ * (R-#246 §14 item 1). Used when the user turns the gesture off or deletes the
+ * wallet: before this, the orphan passkey stayed in the OS list.
+ */
+export async function forgetBiometricCredential(): Promise<void> {
+  const record = await readBiometricRecord().catch(() => null)
+  if (record?.credentialId) await signalUnknownCredential(record.credentialId)
+  await deleteBiometricRecord().catch(() => undefined)
 }
 
 /** Encrypts `privateKey` with the key derived from the PRF secret of `prfSalt`. */

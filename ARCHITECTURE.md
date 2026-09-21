@@ -211,6 +211,10 @@ The platform features two distinct reward mechanisms, demonstrating our principl
     4. If checks pass, the contract calculates and transfers USDT and SLEARN rewards to the student's wallet.
     5. When 100% of guides in a course are completed, `mintCourseCredential()` issues an SBT via `PasosDeJesusCredentials.sol`.
 
+> The full pipeline (validation, grading against `answer_fib`, vault call, delta
+> detection, credential minting, GD routing and referral attribution) is documented
+> in [`apps/nextjs/app/api/doc/crossword-reward-flow.md`](apps/nextjs/app/api/doc/crossword-reward-flow.md).
+
 ### 2. Universal Basic Income (UBI) Claims in CELO
 - **Trigger:** A user initiates a UBI claim via the `/api/claim-celo-ubi` endpoint.
 - **Process:**

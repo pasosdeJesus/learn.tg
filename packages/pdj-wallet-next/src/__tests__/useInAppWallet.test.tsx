@@ -15,6 +15,8 @@ const walletMock = vi.hoisted(() => ({
   lockWallet: vi.fn(),
   deleteWallet: vi.fn(),
   getInAppWalletProvider: vi.fn(),
+  // R-#236: avisa a quien esté suscrito al proveedor cuando la billetera se bloquea.
+  emitAccountsChanged: vi.fn(),
 }))
 
 vi.mock('@learn-tg/pdj-wallet', () => walletMock)

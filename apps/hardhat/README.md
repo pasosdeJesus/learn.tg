@@ -104,6 +104,13 @@ The deployment JSON is the single source of truth. Scripts read from it directly
 The Next.js frontend uses `@pasosdejesus/m/blockchain/deployments`
 (`readDeployment()`) or `@pasosdejesus/mpdj/blockchain/ecosystem-addresses`.
 
+> **`deployments/` is gitignored** (see the repo `.gitignore`): it is a deploy
+> artifact, so a fresh clone or another machine does not have it, and everything
+> that reads an address (the app at runtime, the verify/smoke scripts) needs those
+> files present there. A missing file fails at runtime, not at build time: e.g.
+> `getClusterFundsAddress()` (`packages/gdcluster/src/lib/gd-cluster-routing.ts`)
+> throws `ClusterFundsV2 not deployed — address not found`.
+
 Example reading a deployment in a script:
 ```typescript
 import * as path from "path"

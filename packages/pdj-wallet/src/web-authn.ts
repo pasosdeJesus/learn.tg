@@ -257,3 +257,49 @@ export async function assertUserVerification(
     ['encrypt', 'decrypt'],
   )
 }
+
+/** rpId used by the passkeys of this wallet (the page's host). */
+function relyingPartyId(): string {
+  const location = (globalThis as { location?: { hostname?: string } }).location
+  return location?.hostname || 'localhost'
+}
+
+/**
+ * Tells the authenticator that a passkey is gone (R-#246 §14 item 1, adopted from
+ * Rabby: `signalUnknownCredential`). Without it, disabling the biometric unlock or
+ * deleting the wallet left the passkey orphaned in the OS list until the user
+ * removed it by hand.
+ *
+ * Best effort: the API only exists in Chrome 132+ and must never break the caller.
+ */
+export async function signalUnknownCredential(
+  credentialId: string,
+  rpId: string = relyingPartyId(),
+): Promise<void> {
+  if (!credentialId) return
+  const signal = (
+    globalThis as {
+      PublicKeyCredential?: {
+        signalUnknownCredential?: (options: { rpId: string; credentialId: string }) => Promise<void>
+      }
+    }
+  ).PublicKeyCredential?.signalUnknownCredential
+  if (typeof signal !== 'function') return
+  try {
+    await signal({ rpId, credentialId })
+  } catch {
+    // el passkey queda huérfano, como antes de este cambio
+  }
+}
+
+/**
+ * True when a WebAuthn/signing failure means "the user cancelled" (R-#246 §14
+ * item 4). We used to match only `NotAllowedError`, so an abort surfaced as an
+ * unknown error.
+ */
+export function isUserCancelledError(error: unknown): boolean {
+  const name = (error as { name?: string })?.name?.toLowerCase() ?? ''
+  if (name === 'notallowederror' || name === 'aborterror') return true
+  const message = error instanceof Error ? error.message : String(error ?? '')
+  return /cancel|abort|notallowed/i.test(message)
+}

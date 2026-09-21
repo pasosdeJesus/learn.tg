@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { verifyMessage } from 'viem'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { extractDestination, getInAppWalletProvider } from '../provider'
-import { importWallet, lockWallet } from '../wallet'
+import { currentLockEpoch, importWallet, lockWallet } from '../wallet'
 import { MemoryStorage } from '../storage/memory'
 import { CHAIN_IDS } from '../types'
 
@@ -146,5 +146,28 @@ describe('getInAppWalletProvider', () => {
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+  // R-#236: la billetera de la aplicación se ata a una red al crearla, así que no
+  // puede cambiar de cadena. Antes devolvía `null` (éxito) sin cambiar nada y el
+  // llamador creía que había cambiado.
+  it('wallet_switchEthereumChain accepts its own chain and rejects another', async () => {
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage: new MemoryStorage() })
+    const provider = getInAppWalletProvider()!
+    const own = `0x${CHAIN_IDS.celoSepolia.toString(16)}`
+    expect(
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: own }] }),
+    ).toBeNull()
+    await expect(
+      provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1' }] }),
+    ).rejects.toMatchObject({ code: 4902 })
+  })
+
+  // R-#246 §14 item 3: la generación de bloqueo sube al bloquear o borrar, y el
+  // proveedor la compara alrededor del gesto (assertStillUnlocked).
+  it('bumps the lock generation when the wallet locks', async () => {
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage: new MemoryStorage() })
+    const before = currentLockEpoch()
+    await lockWallet()
+    expect(currentLockEpoch()).toBe(before + 1)
   })
 })

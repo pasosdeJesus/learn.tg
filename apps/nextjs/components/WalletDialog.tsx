@@ -12,7 +12,7 @@ import {
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
 import { isValidPassword, useInAppWallet } from '@learn-tg/pdj-wallet-next'
-import { detectPlatformSupport } from '@learn-tg/pdj-wallet'
+import { detectPlatformSupport, getUnlockPreference, setUnlockPreference, clearUnlockPreference, isUserCancelledError } from '@learn-tg/pdj-wallet'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
@@ -119,8 +119,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       close: 'Close',
       signIn: 'Sign in',
       signingIn: 'Signing in...',
-      recoveryTitle: 'Write down these 12 words',
-      recoveryDescription: 'They are the only way to recover your wallet on another device. Nobody else can see them: keep them offline.',
+      recoveryTitle: 'Write down these 12 words on paper',
+      recoveryDescription: 'They are the only way to recover your wallet on another device. Write them on paper, in order, and keep that paper somewhere safe: whoever has these 12 words owns the funds of this wallet. Do not share them and do not keep them as a screenshot or a digital note.',
       copy: 'Copy',
       copied: 'Copied',
       recoveryConfirm: 'I saved them, sign in',
@@ -176,8 +176,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       close: 'Cerrar',
       signIn: 'Ingresar',
       signingIn: 'Ingresando...',
-      recoveryTitle: 'Anota estas 12 palabras',
-      recoveryDescription: 'Son la única forma de recuperar tu billetera en otro dispositivo. Nadie más puede verlas: guárdalas sin conexión.',
+      recoveryTitle: 'Anota estas 12 palabras en papel',
+      recoveryDescription: 'Son la única forma de recuperar tu billetera en otro dispositivo. Escríbelas en papel, en orden, y guarda ese papel en un lugar seguro: quien tenga estas 12 palabras tiene los fondos de esta billetera. No las compartas ni las guardes como captura de pantalla o nota digital.',
       copy: 'Copiar',
       copied: 'Copiado',
       recoveryConfirm: 'Ya las guardé, ingresar',
@@ -251,7 +251,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     if (code === 'no-webauthn') return t('noWebauthn')
     if (code === 'no-prf') return t('noPrf')
     if (code === 'no-biometric') return t('noBiometric')
-    if (code === 'NotAllowedError') return t('biometricCancelled')
+    // R-#246 §14 item 4: `AbortError`/"cancel" también son cancelaciones, no sólo
+    // `NotAllowedError`.
+    if (code === 'NotAllowedError' || isUserCancelledError(raw)) return t('biometricCancelled')
     // R-#251: `importWallet` valida BIP39 antes de derivar; una frase con un error
     // de dedo derivaría otra billetera (vacía) sin este aviso.
     if (code === 'invalid-mnemonic') return t('invalidMnemonic')
@@ -345,6 +347,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
+      // R-#246 §14 item 2: si el usuario rechaza el gesto, se recuerda para no
+      // volver a lanzarlo automáticamente al abrir el diálogo.
+      setUnlockPreference('password')
       setPasswordFallback(true)
       setBusy(false)
     }
@@ -358,6 +363,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setBusy(true)
     try {
       await enableBiometric(password)
+      setUnlockPreference('biometric')
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
@@ -370,6 +376,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setBusy(true)
     try {
       await disableBiometric()
+      clearUnlockPreference()
     } catch (e) {
       setLocalError(translateError(e))
     } finally {
@@ -385,6 +392,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setBusy(true)
     try {
       await enableBiometric(biometricPassword)
+      setUnlockPreference('biometric')
       setBiometricPassword('')
     } catch (e) {
       setLocalError(translateError(e))
@@ -414,6 +422,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       setBusy(true)
       try {
         await enableBiometric(passwordForBiometric)
+        setUnlockPreference('biometric')
       } catch {
         // La huella no se pudo guardar: la clave sigue siendo el respaldo, pero el
         // usuario debe enterarse (antes se fallaba en silencio).
@@ -464,6 +473,12 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   useEffect(() => {
     if (!open || !showUnlock || !biometricEnabled) return
     if (autoGestureTried.current) return
+    // R-#246 §14 item 2: respeta al usuario que eligió escribir la clave.
+    if (getUnlockPreference() === 'password') {
+      autoGestureTried.current = true
+      setPasswordFallback(true)
+      return
+    }
     autoGestureTried.current = true
     void handleUnlockWithBiometric()
   }, [open, showUnlock, biometricEnabled, handleUnlockWithBiometric])

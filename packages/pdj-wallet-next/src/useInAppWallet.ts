@@ -6,6 +6,7 @@ import {
   deleteWallet,
   detectPlatformSupport,
   disableBiometricUnlock,
+  emitAccountsChanged,
   enableBiometricUnlock,
   getInAppWalletProvider,
   getWalletInfo,
@@ -264,11 +265,14 @@ export function useInAppWallet(): UseInAppWalletResult {
 
   const lock = useCallback(async () => {
     await lockWallet()
+    // R-#236: quien esté suscrito al proveedor se entera de que la sesión terminó.
+    emitAccountsChanged([])
     setState({ status: 'locked', lockReason: 'user' })
   }, [])
 
   const remove = useCallback(async () => {
     await deleteWallet()
+    emitAccountsChanged([])
     setState({ walletInfo: null, status: 'no-wallet', biometricEnabled: false, lockReason: 'deleted' })
   }, [])
 
@@ -281,6 +285,7 @@ export function useInAppWallet(): UseInAppWalletResult {
     if (snapshot.status !== 'unlocked') return
     const lockForIdle = () => {
       void lockWallet()
+      emitAccountsChanged([])
       setState({ status: 'locked', lockReason: 'idle' })
     }
     let timer = window.setTimeout(lockForIdle, INACTIVITY_LOCK_MS)

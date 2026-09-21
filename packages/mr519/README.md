@@ -33,6 +33,12 @@ registerMr519({
 })
 ```
 
+The parameterised routes are reachable through the same registry:
+`getEngineHandler` matches the templates an engine registers (`GET /forms/[id]`,
+`POST /forms/[id]/responses`), so `GET /api/engine/mr519/forms/3` reaches
+`makeGetFormById`. Before 2026-09-21 only exact keys matched and those routes
+answered 404 (tests: `apps/nextjs/app/api/engine/__tests__/mr519-forms.test.ts`).
+
 ## Exports
 
 No package `exports` map — the package is consumed as **TypeScript source**
@@ -53,6 +59,25 @@ tiny, has no contract/ABI layer, and is only consumed by this app.
 
 ## Testing
 
-The engine has no test suite of its own (no vitest in devDependencies). Its
-routes are exercised through the host app's API tests in `apps/nextjs`
-(`make test-api`).
+The package has no vitest suite of its own (deliberate: D2 makes the route
+factories injectable — see ARCHITECTURE.md). What exists today is the registry test
+in the host app, `apps/nextjs/app/api/engine/__tests__/route.test.ts` (4 cases:
+`mr519` and `mr519-admin` registered, unknown engine/path → null), plus the
+end-to-end surface through `/api/engine/mr519/*`. **Adding a form-definition test
+(list, by-id with fields/options, submission inserting `respuestafor` +
+`valorcampo`) is the outstanding gap** before the first course uses it.
+
+## Why it exists (roadmap)
+
+The engine is kept **on purpose**, not as dormant code: courses that require a
+purchase (or a verification step) need to **characterise the person who pays** —
+today the Global Disciples course (pastor/cluster data) and next the Small Business
+Development course (https://github.com/pasosdeJesus/learn.tg/issues/257). Instead of
+a bespoke form per course, the definition lives in the database and `DynamicForm`
+renders it, so a new characterisation form is data, not code.
+
+Current state (verified 2026-09-21): the infrastructure is ready and registered, but
+**no page uses `DynamicForm` yet**; the pending items are tracked in
+https://github.com/pasosdeJesus/learn.tg/issues/204 (course gate before rendering,
+`nombreinterno` validation, `ancho`/`columna`/`fila` grid layout, `PUT` to update a
+form).

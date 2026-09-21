@@ -1,7 +1,7 @@
-import { decryptSecret, encryptSecret, fromBase64 } from './crypto.js'
+import { decryptSecret, encryptSecret, fromBase64, calibrateIterations, KDF_ITERATIONS_FLOOR } from './crypto.js'
 import { IndexedDBStorage } from './storage/indexeddb.js'
 import {
-  deleteBiometricRecord,
+  forgetBiometricCredential,
   newPrfSalt,
   readBiometricRecord,
   sealWithPrfSecret,
@@ -70,6 +70,47 @@ async function decryptRecord(record: StoredWallet, password: string): Promise<Wa
 
 let unlocked: UnlockedState | null = null
 
+/**
+ * Work factor for this device, measured once per session (R-#251). The count is
+ * stored in the record, so it is only needed when writing one.
+ */
+let calibratedIterations: number | null = null
+
+async function targetIterations(): Promise<number> {
+  if (calibratedIterations !== null) return calibratedIterations
+  try {
+    calibratedIterations = await calibrateIterations()
+  } catch {
+    calibratedIterations = KDF_ITERATIONS_FLOOR
+  }
+  return calibratedIterations
+}
+
+/**
+ * R-#251: si el registro quedó con un factor de trabajo por debajo del que este
+ * dispositivo puede sostener, se vuelve a cifrar al desbloquear (el texto plano está
+ * en memoria justo entonces). Nunca impide desbloquear.
+ */
+async function upgradeRecordIfNeeded(
+  adapter: StorageAdapter,
+  record: StoredWallet,
+  secret: WalletSecret,
+  password: string,
+): Promise<void> {
+  try {
+    const target = await targetIterations()
+    if (!Number.isFinite(record.kdf.iterations) || record.kdf.iterations >= target) return
+    const upgraded = await encryptSecret(
+      serializeSecret(secret.privateKey, secret.mnemonic),
+      password,
+      target,
+    )
+    await adapter.set(buildRecord(record.address, record.chain, record.createdAt, upgraded))
+  } catch {
+    // el registro anterior sigue siendo válido y desbloqueable
+  }
+}
+
 function browserStorage(): StorageAdapter {
   const idb = (globalThis as { indexedDB?: unknown }).indexedDB
   if (!idb) {
@@ -127,7 +168,11 @@ async function persist(
 ): Promise<WalletInfo> {
   const account = accountFromPrivateKey(privateKey)
   const createdAt = Date.now()
-  const secret = await encryptSecret(serializeSecret(privateKey, mnemonic), password)
+  const secret = await encryptSecret(
+    serializeSecret(privateKey, mnemonic),
+    password,
+    await targetIterations(),
+  )
   const info: WalletInfo = { address: account.address, chain, createdAt }
   await storage.set(buildRecord(info.address, chain, createdAt, secret))
   unlocked = { privateKey, account, info }
@@ -175,6 +220,8 @@ export async function unlockWallet(password: string, storage?: StorageAdapter): 
   }
   const info: WalletInfo = { address: record.address, chain: record.chain, createdAt: record.createdAt }
   unlocked = { privateKey, account, info }
+  // R-#251: re-cifrado silencioso si el registro quedó por debajo del objetivo.
+  await upgradeRecordIfNeeded(adapter, record, secret, password)
   return info
 }
 
@@ -275,10 +322,24 @@ export async function unlockWithBiometric(storage?: StorageAdapter): Promise<Wal
 
 /** Forgets the biometric unlock (the password keeps working). */
 export async function disableBiometricUnlock(): Promise<void> {
-  await deleteBiometricRecord().catch(() => undefined)
+  // R-#246 §14 item 1: además de borrar el sello, se avisa al autenticador para que
+  // la passkey no quede huérfana en la lista del sistema.
+  await forgetBiometricCredential()
+}
+
+let lockEpoch = 0
+
+/**
+ * Generation bumped on every lock (R-#246 §14 item 3). The provider captures it
+ * before asking for the gesture and aborts the signature if it changed meanwhile:
+ * a transaction approved before the wallet locked must not be broadcast after.
+ */
+export function currentLockEpoch(): number {
+  return lockEpoch
 }
 
 export async function lockWallet(): Promise<void> {
+  lockEpoch++
   unlocked = null
   // Un bloqueo vuelve a pedir el gesto en el próximo movimiento de fondos.
   clearUserVerification()
@@ -287,10 +348,12 @@ export async function lockWallet(): Promise<void> {
 export async function deleteWallet(storage?: StorageAdapter): Promise<void> {
   const adapter = resolveStorage(storage)
   await adapter.delete()
+  lockEpoch++
   unlocked = null
   clearUserVerification()
-  // The sealed copy belongs to a wallet that no longer exists.
-  await deleteBiometricRecord().catch(() => undefined)
+  // The sealed copy belongs to a wallet that no longer exists (and the passkey is
+  // signalled as gone, R-#246 §14 item 1).
+  await forgetBiometricCredential()
 }
 
 export async function hasWallet(storage?: StorageAdapter): Promise<boolean> {

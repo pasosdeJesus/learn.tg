@@ -15,7 +15,7 @@ import path from 'path';
 // Cualquier cambio en los endpoints de la API debe ser desplegado primero en https://learn.tg:9001
 // antes de ejecutar este script para validación.
 
-// Funciones para manejo de cookies (de test-auth-cookies.mjs)
+// Funciones para manejo de cookies (la credencial es la cookie de sesión, R-#233)
 function parseCookieHeader(cookieHeader) {
   // cookieHeader es un string 'name=value; attr1=val1; attr2=val2'
   // Retorna solo 'name=value'

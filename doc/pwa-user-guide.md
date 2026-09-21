@@ -28,6 +28,10 @@ from the browser menu.
 
 - Open the pages you plan to read while you have signal: the course list, the
   guide, and the crossword.
+- The **course list** also works offline: the app shows the last list it downloaded
+  while you had signal and warns "You are offline: showing the saved course list."
+  (it is the saved copy, not a fresh one). To see courses you never loaded before,
+  you need a connection.
 - With no signal, open the app: pages you already visited are shown from a saved
   copy, and a yellow banner reminds you that you are offline
   ("You are offline. Your progress will be saved locally.").
@@ -42,6 +46,10 @@ from the browser menu.
   connection. When you are back online the answer is checked and you get a
   **notification**: "correct" with the scholarship (USDT/SLEARN) if you qualify, or
   the crossword words that have a problem so you can try again.
+- If sending the saved answer is **rejected** for a reason that retrying will not
+  fix (for example, you do not have the 50 profile points yet), the page shows the
+  reason instead of keeping the answer in the queue: fix it (complete your profile)
+  and submit the crossword again.
 
 **Which courses can be read offline (planned).** The free courses and the courses
 you have paid for, with their crosswords, without having to open each page first.
@@ -55,9 +63,10 @@ You do not need to install a wallet app to use learn.tg.
 
 1. Open the app and choose **Use in-app wallet** (while the app checks whether a
    wallet already exists the button just says **In-app wallet**).
-2. Create a wallet with a **password (8 or more characters)**. Write down the
-   recovery phrase it shows: it is the only way to recover the wallet if you lose
-   the phone.
+2. Create a wallet with a **password (8 or more characters)**. Write the recovery
+   phrase **on paper, in order**, and keep that paper somewhere safe: whoever has
+   those 12 words owns the funds of the wallet. It is the only way to recover the
+   wallet if you lose the phone (do not keep it as a screenshot or a digital note).
 3. Write down the 12 words it shows, then type the **3 words** it asks for
    (random positions) and press **Confirm and sign in**: the app signs the message
    for you with the wallet it just created. If you close the window before

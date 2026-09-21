@@ -325,8 +325,8 @@ SITE_URL=http://localhost:4000 IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 
 
 Return the exit code: a spec that prints `❌` and exits 0 is a bug of the spec
 (`doc/e2e-testing.md`). Measured 2026-09-21 on this VM (all of them exit 0):
-`header-wallet-dialog`, `in-app-wallet`, `auth-session`, `diag-session`,
-`church-persistence`, `nav-session-diag`, `ux-mobile-menu`, `connect-wallet-flow`,
+`header-wallet-dialog`, `in-app-wallet`, `auth-session`,
+`church-persistence`, `ux-mobile-menu`, `connect-wallet-flow`,
 `wallet-event-disconnect`, `fresh-wallet-first-connect`. Whose fail locally and
 why: `profile-data` and `admin-dashboard` hit the navigation race known from
 https://github.com/pasosdeJesus/learn.tg/issues/213
@@ -397,6 +397,13 @@ Contract addresses are **not** read from `.env`. They come from:
   `apps/hardhat/deployments/<Contract>/<network>.json` — vaults
   (`LearnTGVaults` V3/V4/V5), `ClusterFunds` (V1) y `ClusterFundsV2` (https://github.com/pasosdeJesus/learn.tg/issues/214;
   la app opera con V2)
+
+> `apps/hardhat/deployments/` está en `.gitignore` (artefacto de despliegue): un clon
+> nuevo no trae esos JSON y sin el archivo de la red `getClusterFundsAddress()`
+> (`packages/gdcluster/src/lib/gd-cluster-routing.ts`) lanza
+> `ClusterFundsV2 not deployed — address not found` (no es error de compilación).
+> Detalle y direcciones conocidas en
+> [apps/hardhat/README.md](../apps/hardhat/README.md) §Deployment Addresses.
 
 ## Notes
 
@@ -479,7 +486,7 @@ que la integración):
 
 ```sh
 cd apps/nextjs
-make test-packages          # pdj-wallet + pdj-wallet-next (63 + 24, ~35 s)
+make test-packages          # pdj-wallet + pdj-wallet-next (90 + 24, ~50 s)
 make test-pdj-wallet        # solo el core
 make test-pdj-wallet-next   # solo React (compila el core por ti)
 ```

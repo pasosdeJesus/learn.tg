@@ -50,19 +50,52 @@ export async function getEngineHandler(
   await ensureEnginesLoaded()
   const eng = registry().get(engineName)
   if (!eng) return null
-  const key = `${method} /${path.join('/')}`
-  const loader = eng[key]
+  const loader = findLoader(eng, method, path)
   if (!loader) return null
   try {
     return await loader()
   } catch (e) {
     // Graceful fallback (e.g. test context where next/server is unavailable):
     // the engine is registered, but its route could not be loaded.
-    console.warn(`[engines] Handler load failed for ${engineName} ${key}:`, e)
+    console.warn(
+      `[engines] Handler load failed for ${engineName} ${method} /${path.join('/')}:`,
+      e,
+    )
     return (async () =>
       new Response(JSON.stringify({ error: 'Engine handler unavailable' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       })) as HandlerFn
   }
+}
+
+/**
+ * Resolves an engine loader: the exact key first, then the `[param]` templates a
+ * package may register (`GET /forms/[id]`, `POST /forms/[id]/responses`).
+ *
+ * Without the template match the parameterised routes of `mr519` were unreachable
+ * through `/api/engine/[engname]/[...path]` (the built key, `GET /forms/3`, did not
+ * exist), so the engine only served its listing.
+ * https://github.com/pasosdeJesus/learn.tg/issues/204
+ */
+function findLoader(
+  eng: EngineHandlers,
+  method: string,
+  path: string[],
+): (() => Promise<HandlerFn>) | undefined {
+  const exact = eng[`${method} /${path.join('/')}`]
+  if (exact) return exact
+
+  for (const [key, loader] of Object.entries(eng)) {
+    const [keyMethod, keyPath] = key.split(' ')
+    if (keyMethod !== method || !keyPath) continue
+    const template = keyPath.replace(/^\//, '').split('/')
+    if (template.length !== path.length) continue
+    const matches = template.every(
+      (segment, i) =>
+        (segment.startsWith('[') && segment.endsWith(']')) || segment === path[i],
+    )
+    if (matches) return loader
+  }
+  return undefined
 }

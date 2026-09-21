@@ -24,12 +24,21 @@ const mocks = vi.hoisted(() => ({
 
 const coreMocks = vi.hoisted(() => ({
   detectPlatformSupport: vi.fn(),
+  unlockPreference: null as string | null,
 }))
 
 // R-#254: la creación sondea el dispositivo por su cuenta (el hook todavía no tiene
 // billetera que inspeccionar), así que el test controla ese sondeo.
+// R-#246 §14: preferencia de desbloqueo y detección de cancelación.
 vi.mock('@learn-tg/pdj-wallet', () => ({
   detectPlatformSupport: coreMocks.detectPlatformSupport,
+  getUnlockPreference: () => coreMocks.unlockPreference,
+  setUnlockPreference: (value: string) => { coreMocks.unlockPreference = value },
+  clearUnlockPreference: () => { coreMocks.unlockPreference = null },
+  isUserCancelledError: (error: unknown) =>
+    /cancel|abort|notallowed/i.test(
+      error instanceof Error ? `${error.name} ${error.message}` : String(error ?? ''),
+    ),
 }))
 
 vi.mock('@learn-tg/pdj-wallet-next', () => ({
@@ -123,6 +132,7 @@ describe('WalletDialog (R-#244)', () => {
     mocks.biometricAvailable = false
     mocks.biometricEnabled = false
     coreMocks.detectPlatformSupport.mockResolvedValue({ webauthn: false, userVerifying: false, prf: null })
+    coreMocks.unlockPreference = null
   })
 
   it('creates the wallet and shows the 12 words with a confirmation', async () => {
@@ -140,6 +150,10 @@ describe('WalletDialog (R-#244)', () => {
     expect(mocks.create).toHaveBeenCalledWith('12345678')
     const words = screen.getByTestId('wallet-recovery-words')
     expect(words.querySelectorAll('li')).toHaveLength(12)
+    // R-#251 (decisión del operador, 2026-09-21): el respaldo pide escribirlas en
+    // papel y avisa de que quien tenga las 12 palabras tiene los fondos.
+    expect(screen.getByText(/on paper/i)).toBeInTheDocument()
+    expect(screen.getByText(/owns the funds/i)).toBeInTheDocument()
     // Todavía no firma: primero se respaldan las palabras y se verifica (R-#249)
     expect(mocks.signInWithInAppWallet).not.toHaveBeenCalled()
     expect(screen.getByTestId('wallet-words-done')).toBeInTheDocument()

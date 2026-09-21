@@ -47,14 +47,16 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
 2. **Create a branch** from `main`: `git checkout -b feature/my-feature`
 3. **Make your changes** following the style guides
 4. **Run tests in directory `apps/nextjs`**: `make type` and `make test`
-   - `make type` checks TypeScript in source files; `make type-source` checks test files too
+   - `make type` runs `pnpm typecheck` = `tsc --noEmit` **plus** `tsc --noEmit -p
+     tsconfig.test.json`, so it checks source **and** test files;
+     `make type-source` is source only and `make type-check-tests` tests only
    - `make test` runs the app sub-targets in sequence plus `test-packages` and
      `test-engines` (parallel-safe, sin coverage)
    - `make coverage` runs all tests with coverage (lento, usa más memoria)
    - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.
    - **`pdj-wallet` packages** (`packages/pdj-wallet`, `packages/pdj-wallet-next`):
      `make test-pdj-wallet`, `make test-pdj-wallet-next` or `make test-packages`
-     (63 + 24 tests, ~35 s; each package also has its own `Makefile`). See
+     (90 + 24 tests, ~50 s; each package also has its own `Makefile`). See
      [doc/pdj-wallet-testing.md](doc/pdj-wallet-testing.md).
    - **Engine tests** (`packages/rewards`, `packages/gdcluster`): `make test-engines`
      (or `make test-rewards` / `make test-gdcluster`), 56 + 91 tests, ~45 s; each

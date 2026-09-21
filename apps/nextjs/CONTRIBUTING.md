@@ -20,7 +20,7 @@ This document defines the documentation and testing policies for the Next.js app
 | Type | Location | Purpose | Example |
 |------|----------|---------|---------|
 | Directory index | `lib/README.md`, `db/README.md`, `app/api/README.md` | Brief map of what's in the directory, references to `doc/` for complex topics | |
-| Feature/protocol | `doc/<feature>.md` | Self-contained document that can be understood without reading the codebase. Potentially reusable in other projects. | `doc/crossword-reward-flow.md` |
+| Feature/protocol | `doc/<feature>.md` | Self-contained document that can be understood without reading the codebase. Potentially reusable in other projects. | `app/api/doc/crossword-reward-flow.md` (the API lives in a submodule, so its protocol docs live with it) |
 | Module comments | Top of `.ts` files with complex logic | Protocol details, design rationale, external references. | `lib/reward-routing.ts` |
 
 ### Decision Criterion: `doc/` vs. Inline Comment
@@ -59,6 +59,18 @@ This document defines the documentation and testing policies for the Next.js app
 | Hooks (`lib/hooks/`) | 60-70% | Medium |
 | UI components (`components/`) | 30-50% | Low |
 
+### Full vs `light` component tests
+
+Two files may exist for the same component on purpose:
+
+| File | Scope | Why |
+|------|-------|-----|
+| `Component.test.tsx` | Exhaustive (every state, env validation, i18n) | The reference suite for the component |
+| `Component.light.test.tsx` | One behaviour, minimal mocks | The **fast loop**: the full modal suites are slow, so a regression that matters (e.g. "the locked wallet notice and its unlock button") has a seconds-long test. Add one instead of growing the heavy file when that is all you need to pin down |
+
+`DonateModal` has both (29 + 3 cases) and `CheckoutModal` only the light one
+(4 cases). Keep the naming so the intent stays visible.
+
 ### What to Test First
 
 1. **Money-touching code** — crossword rewards, Learning Points, balance, signatures.
@@ -74,7 +86,10 @@ session persistence, UBI claims, crossword puzzles.
 
 - **Dependencies:** `puppeteer-core` (devDependency in `apps/nextjs/package.json`).
   No separate install needed — just `pnpm install`.
-- **Helpers:** `@pasosdejesus/m/e2e` provides `launchBrowser`, `simulateSIWE`, etc.
+- **Helpers:** `@pasosdejesus/m/e2e` provides `launchBrowser`, `initTestEnv`,
+  `ok`/`fail`/`summary`. The SIWE mock is the **core wallet running in Node**
+  (`e2e/helpers/in-app-wallet.mjs`, R-#239): `simulateSIWE`/`setupSIWEMock` are no
+  longer used by the specs (see `doc/e2e-testing.md`).
 - **Ejecución:**
   ```bash
   # Smoke (HTTP, fast, no Chrome)
@@ -89,6 +104,9 @@ session persistence, UBI claims, crossword puzzles.
 - **OpenBSD:** Requiere `--ozone-platform=headless` para Chrome 141+.
   Limpiar `/tmp/puppeteer*` entre ejecuciones si Chrome se cuelga.
 
+Ojo: `make type` cubre fuente **y** pruebas (ver el README raíz). `auth-session.spec.mjs`
+valida el ciclo de sesión:
+
 | Test | Qué valida |
 |------|-----------|
 | Test 1 | `/en` sin auth → NO muestra "Partial login" |
@@ -97,33 +115,12 @@ session persistence, UBI claims, crossword puzzles.
 
 Exit code > 0 si algún test falla (compatible con CI).
 
-### On-chain / eligibility specs (2026-08+)
+### On-chain / eligibility specs
 
-Varios specs en `e2e/specs/` hacen setup on-chain o de elegibilidad vía API y
-requieren el servidor de desarrollo bien configurado:
-
-| Spec | Prerequisito del dev server |
-|------|-----------------------------|
-| `interview-date.spec.mjs` | Migración `proposed_date_of_interview → timestamptz` aplicada en la BD dev (columna `date` rompe la hora: 2PM → 5AM) |
-| `verified-city-gate.spec.mjs` | Compra de cursos pagos exige ciudad de culto verificada (`verified_city_id` o `verified_place_of_worship_location`) |
-| `premium-course-checkout.spec.mjs` | Crea un pastor nuevo elegible vía API (perfil SL + verificación del verificador) — no depende de la wallet fixture |
-| `church-selector-diag.spec.mjs` | Valida la autenticación por cookie de sesión en `authenticateUser` y el `ChurchSelector` |
-| `vault-both-donate.spec.mjs` | Donación USDT+SLEARN al vault del curso vía `/api/add-donation`; transfiere tokens de prueba reales al backend dev |
-| `guide-claims.spec.mjs` | El reclamo puede rechazarse por cooldown/score — el spec lo trata como OK |
-
-**Experiencia: lag de forno y gas del backend.** forno (canónico) a veces
-retrasa indexar receipts recién minados; `lib/backend-config.ts` expone
-`fetchTxWithReceipt`, que hace polling round-robin en varios RPCs
-(forno/ankr/drpc/publicnode). La verificación de donaciones y compras lo usa.
-En mainnet el backend wallet (`NEXT_PUBLIC_ADDRESS`) también necesita CELO para
-el gas de `processPayment`/`processCountryDonation` — si se agota, el modal
-muestra "could not be found"/errores 500 aunque las tx del usuario sí se minen
-(ver `doc/runbook.md` §3).
-
-**Specs flaky (conocidos).** `admin-dashboard` (flicker por compilación en
-frío) y `guide-claims` (botón UBI tarda tras deploy) pueden fallar en la suite
-completa pero pasan individualmente; esperan contenido estable o hasta 30s.
-`full-flow` puede dar timeout de SIWE bajo carga de suite (pasa solo).
+Documented **once** in [`doc/e2e-testing.md`](../../doc/e2e-testing.md) — do not
+duplicate it here: see *Dev-server prerequisites for on-chain specs* (migrations,
+funded wallets, `MINTER_ROLE`, churches fund balance), *Estabilidad* (retries and
+the known flaky specs) and *Troubleshooting* (forno receipt lag, backend wallet gas).
 
 ### Tools
 
@@ -153,10 +150,15 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
+**Suite size (medido 2026-09-21):** `make test` = **969 passed / 6 skipped, 0
+failed** en 135 archivos — `test-lib` 203, `test-hooks` 83, `test-api` 203,
+`test-components` 169, `test-pages` 47, `test-db` 3, `test-pdj-wallet` 90,
+`test-pdj-wallet-next` 24, `test-rewards` 56, `test-gdcluster` 91.
+
 | Layer | Statements | Notes |
 |-------|-----------|-------|
 | Core lib/ (crypto, scores, guide-utils, etc.) | 88-100% | Excellent. Edge cases: nonces, retries, errors |
-| API Routes (check-crossword, update-scores, scholarship, etc.) | 12 routes tested | Missing: `transparency`, `user-transactions/[id]` |
+| API Routes (`app/api`, in the submodule) | 32 route test dirs | Sin prueba unitaria propia: `church`, `churches`, `cluster`, `course-catalog`, `courses`, `donations`, `gdcluster`, `referral`, `referrals`, `towns` — los que viven en motores (`gdcluster`, `cluster`, `referrals`, `donations`, `churches`) están cubiertos por `packages/rewards`/`packages/gdcluster`, `towns`/`course-catalog` por los specs `town-autocomplete` y `fresh-wallet-first-connect`, y las rutas con parámetros de `mr519` por `app/api/engine/__tests__/mr519-forms.test.ts` |
 | Hooks (useFetchData, useApiData, useGuideData, useSort, etc.) | 75-100% | Newer hooks (useScholarshipData, useGuideNavigation) now tested |
 | UI Components (shadcn) | 96-100% | Structural tests: render, props, className, refs |
 | Custom components (Header, Footer, DonateModal, etc.) | 90-100% | Complex modals and wallet flows covered |

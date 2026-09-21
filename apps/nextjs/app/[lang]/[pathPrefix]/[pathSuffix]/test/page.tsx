@@ -49,7 +49,7 @@ export default function Page({
   const { data: session } = useSession()
   const { ready, mismatch, authedGet, authedPost } = useAuthedApi()
   // R-#241/R-#242: respuestas que no pudieron enviarse sin conexión.
-  const { isOffline, pending, enqueue } = useOfflineQueue()
+  const { isOffline, pending, enqueue, lastRejection, clearLastRejection } = useOfflineQueue()
   const { data: hash, writeContract } = useWriteContract()
   const publicClient = usePublicClient()
   const parameters = use(params)
@@ -408,6 +408,7 @@ export default function Page({
       submit: 'Enviar respuesta',
       offlineQueued: 'Sin conexión: tu respuesta quedó guardada y se enviará sola cuando vuelvas a tener conexión.',
       offlineQueuedLowScore: 'Sin conexión: tu respuesta quedó guardada y se enviará sola cuando vuelvas a tener conexión. Ojo: tu perfil tiene {{0}} puntos y necesitas {{1}} o más para recibir beca; completa tu perfil y podrás reclamarla.',
+      offlineRejected: 'No se pudo validar tu respuesta guardada: {{0}}',
       offlinePending: 'respuesta(s) guardada(s) sin conexión, pendiente(s) de enviar.',
     },
     en: {
@@ -422,9 +423,24 @@ export default function Page({
       submit: 'Submit answer',
       offlineQueued: 'You are offline: your answer was saved and will be sent automatically when the connection returns.',
       offlineQueuedLowScore: 'You are offline: your answer was saved and will be sent automatically when the connection returns. Note: your profile has {{0}} points and you need {{1}} or more to receive a scholarship; complete your profile and you will be able to claim it.',
+      offlineRejected: 'Your saved answer could not be validated: {{0}}',
       offlinePending: 'answer(s) saved offline, waiting to be sent.',
     },
   }
+
+  // R-#242: cuando la cola reproduce una respuesta guardada y el servidor la
+  // rechaza (p. ej. perfil por debajo de 50 puntos), la página lo cuenta. Antes el
+  // motivo se quedaba en la cola y el usuario no se enteraba.
+  useEffect(() => {
+    if (!lastRejection?.url.includes('check-crossword')) return
+    setFlashWarning(
+      uiMsg[locale].offlineRejected.replace(
+        '{{0}}',
+        lastRejection.message || `HTTP ${lastRejection.status}`,
+      ),
+    )
+    clearLastRejection()
+  }, [lastRejection, locale, clearLastRejection])
 
   if (loading || isLoading) {
     return <div className="p-10 mt-10">{t('loading')}</div>

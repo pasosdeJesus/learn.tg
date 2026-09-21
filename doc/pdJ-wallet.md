@@ -13,9 +13,14 @@ the app and read guides offline, see [pwa-user-guide.md](pwa-user-guide.md).
 1. Open the app and choose **Use in-app wallet** (while it checks whether a wallet
    already exists, the button just says **In-app wallet**).
 2. Choose a **password of at least 8 characters** and repeat it. There is no
-   6-digit PIN: a short password is too easy to guess.
-3. The app shows **12 words**. Write them down on paper and keep them offline:
-   they are the **only** way to recover your wallet if you lose the phone.
+   6-digit PIN: a short password is too easy to guess. That is the decided policy
+   (operator, 2026-09-21): **8 characters minimum, no PIN**, no extra blocklist of
+   "weak" passwords, and **no "unlock with the 12 words" shortcut** — the 3-word
+   quiz of step 4 is the help for the user, and the recovery is importing the wallet.
+3. The app shows **12 words**. Write them **on paper, in order**, and keep that
+   paper somewhere safe: whoever has those 12 words owns the funds of the wallet.
+   Never share them and do not keep them as a screenshot or a digital note. They are
+   the **only** way to recover your wallet if you lose the phone.
 4. It then asks you to type **3 of those words** (it picks random positions). This
    proves you really wrote them down; type them and press **Confirm and sign in**.
    If you did not copy them, press **Show the words again**.

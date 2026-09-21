@@ -69,6 +69,18 @@ lists CELO, USDT and SLEARN, so "add token to wallet" buttons are pointless ther
 The home page hides its `AddSlearnButton` when `isInApp` is true (the operator
 reported on 2026-09-21 that pressing it did nothing with the in-app wallet).
 
+### Provider robustness (R-#236, R-#246 §14)
+
+| Behaviour | Where | Notes |
+|-----------|-------|-------|
+| Preferred unlock method | `packages/pdj-wallet/src/preferences.ts` (`pdj-wallet:unlockPreference`) | Choosing the password stops the automatic gesture on later opens; enrolling it again records `biometric` |
+| Lock generation | `currentLockEpoch()` + `assertStillUnlocked()` (provider) | A lock (idle, ✕, delete) bumps the generation: a signature approved before it is not signed nor broadcast after it |
+| Passkey cleanup | `signalUnknownCredential()` via `forgetBiometricCredential()` | Disabling the gesture or deleting the wallet tells the authenticator the passkey is gone (Chrome 132+) |
+| Cancellation | `isUserCancelledError()` | `NotAllowedError`, `AbortError` and `cancel*` all read as "the user cancelled" in the dialog |
+| Provider events | `provider.on('accountsChanged'|'disconnect', …)` | Emitted when the wallet locks or is deleted (module-level registry, so a subscriber survives the provider being recreated); `chainChanged` never fires: the wallet is bound to one chain at creation |
+| Chain switch | `wallet_switchEthereumChain` | Returns `null` only for its own chain; another chain answers **4902** (before: a silent success that misled the caller) |
+| KDF calibration | `calibrateIterations()` in `crypto.ts` | Measures one derivation and scales it to ~400 ms, clamped to [600 000, 5 000 000]; the count lives in the record and an older record is re-encrypted on unlock |
+
 ## Components
 
 ### ConnectWalletButton (`components/ConnectWalletButton.tsx`)

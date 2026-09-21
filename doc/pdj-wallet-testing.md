@@ -30,8 +30,8 @@ any other suite:
 ```sh
 cd apps/nextjs
 
-make test-packages          # los dos paquetes (63 + 24 tests, ~35 s)
-make test-pdj-wallet        # solo el core (63 tests, ~21 s)
+make test-packages          # los dos paquetes (90 + 24 tests, ~50 s)
+make test-pdj-wallet        # solo el core (90 tests, ~48 s)
 make test-pdj-wallet-next   # solo React; compila el core antes (~12 s)
 ```
 
@@ -47,7 +47,7 @@ cd apps/nextjs
 
 Y dentro de cada paquete hay `Makefile` (`make test`, `make build`, `make install`).
 
-Expected (medido 2026-09-20): `63 passed` (core) y `24 passed` (next). `make test` (la suite completa)
+Expected (medido 2026-09-21): `90 passed` (core) y `24 passed` (next). `make test` (la suite completa)
 ya incluye `test-packages`.
 
 Lo que cubre el core sobre R-#246: sellado de la clave con el
@@ -84,15 +84,17 @@ cd apps/nextjs
 make test-hooks test-components
 ```
 
-Expected: `lib/hooks/__tests__` 74 passed / 2 skipped (44 s) and
-`components/__tests__` 136 passed / 3 skipped (85 s) — numbers as of 2026-09-18;
-the full `make test` is 628 passed / 6 skipped in 368 s, and most of that time is
-jsdom environment setup per test file, not the assertions.
+Expected (medido 2026-09-21): `make test-hooks` 83 passed / 2 skipped (12 archivos)
+y `make test-components` 169 passed / 3 skipped (21 archivos, incluye
+`components/ui/__tests__` y `providers/__tests__`). La suite completa `make test`
+da **969 passed / 6 skipped en 135 archivos** (0 fallas), y la mayor parte del
+tiempo es el montaje de jsdom por archivo, no las aserciones.
 
 What these cover:
 
-- `useAuthAddress` precedence (`sessionAddress || inAppAddress || storedAddress`)
-  and the `inAppAddress` / `isInAppUnlocked` fields.
+- `useAuthAddress` solo se **mockea** (`useGuideData`); su precedencia
+  (`sessionAddress || inAppAddress || storedAddress`) y los campos `inAppAddress` /
+  `isInAppUnlocked` **no** los cubre ninguna prueba directa todavía.
 - `WalletSelector` states (mocked `useInAppWallet`) and its use from `Header`
   and `Layout` (both tests mock `@/components/WalletSelector`).
 - `useOfflineStatus` and `OfflineBanner` (3 tests each).

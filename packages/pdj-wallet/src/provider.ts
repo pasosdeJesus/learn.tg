@@ -1,8 +1,36 @@
-import { getUnlockedAccount, getUnlockedInfo, signMessage, signTransaction, signTypedData } from './wallet.js'
+import { getUnlockedAccount, getUnlockedInfo, currentLockEpoch, signMessage, signTransaction, signTypedData } from './wallet.js'
 import { isKnownDestination, rememberDestination } from './destinations.js'
 import { readBiometricRecord } from './biometric.js'
-import { assertUserVerification, hasRecentUserVerification } from './web-authn.js'
+import { assertUserVerification, hasRecentUserVerification, isUserCancelledError } from './web-authn.js'
 import { CHAIN_IDS, type Eip1193Provider, type Eip1193RequestArgs } from './types.js'
+
+/**
+ * Event registry of the in-app provider (R-#236). The provider object is created
+ * on demand (`getInAppWalletProvider()` returns null while locked), so the registry
+ * lives at module level: a dapp that subscribed before a lock still gets the notice.
+ *
+ * `accountsChanged` fires with `[]` when a request finds the wallet locked or
+ * deleted; `chainChanged` never fires because the wallet is bound to one chain at
+ * creation (that is what `wallet_switchEthereumChain` answers with 4902).
+ */
+type ProviderListener = (payload: unknown) => void
+const listeners = new Map<string, Set<ProviderListener>>()
+
+function emit(event: string, payload?: unknown): void {
+  for (const listener of listeners.get(event) ?? []) {
+    try {
+      listener(payload)
+    } catch {
+      // un listener roto no puede tumbar la billetera
+    }
+  }
+}
+
+/** Dapps that subscribed: the wallet left the session (lock or delete). */
+export function emitAccountsChanged(accounts: string[]): void {
+  emit('accountsChanged', accounts)
+  if (accounts.length === 0) emit('disconnect', { code: 4900, message: 'The in-app wallet locked' })
+}
 
 export interface ProviderOptions {
   rpcUrl?: string
@@ -17,6 +45,18 @@ export interface ProviderOptions {
 /** Error shape wallets use for "the user rejected the request". */
 function userRejected(): Error {
   return Object.assign(new Error('User rejected the request'), { code: 4001 })
+}
+
+/**
+ * R-#246 §14 item 3: a signature approved before the wallet locked must not go
+ * through after. The lock bumps a generation and signing checks it around the
+ * gesture.
+ */
+function assertStillUnlocked(epoch: number): void {
+  if (currentLockEpoch() === epoch) return
+  // R-#236: avisar a quien esté suscrito, además de abortar la firma.
+  emitAccountsChanged([])
+  throw userRejected()
 }
 
 const ERC20_TRANSFER = '0xa9059cbb'
@@ -66,6 +106,10 @@ export async function requireFundsConfirmation(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     if (message === 'no-webauthn') return
+    // R-#246 §14 item 4: la cancelación se detecta por nombre/mensaje (`AbortError`,
+    // `cancel*`) y no sólo por `NotAllowedError`; para el llamador EIP-1193 todo
+    // termina en el mismo 4001.
+    void isUserCancelledError(error)
     throw userRejected()
   }
 }
@@ -161,8 +205,21 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
         case 'net_version':
           return String(CHAIN_IDS[info.chain])
 
-        case 'wallet_switchEthereumChain':
-          return null
+        case 'wallet_switchEthereumChain': {
+          const [target] = (params ?? []) as [{ chainId?: string }]
+          const requested = Number.parseInt(String(target?.chainId ?? ''), 16)
+          const current = CHAIN_IDS[info.chain]
+          if (requested === current) return null
+          // R-#236: la billetera de la aplicación se ata a una red al crearla, así
+          // que no puede cambiar de cadena. Devolver `null` sin cambiar engañaba al
+          // llamador; EIP-1193 usa 4902 para "cadena desconocida".
+          throw Object.assign(
+            new Error(
+              `Unrecognized chain ID ${String(target?.chainId)}. The in-app wallet is fixed to chain ${current}.`,
+            ),
+            { code: 4902 },
+          )
+        }
 
         case 'personal_sign': {
           const [data] = (params ?? []) as [string, string]
@@ -174,18 +231,22 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
           const [, json] = (params ?? []) as [string, string]
           // R-#246 (L1): una firma EIP-712 también mueve fondos (permiso EIP-2612,
           // `TransferWithAuthorization` EIP-3009 de USDC): mismo gesto fresco.
+          const epoch = currentLockEpoch()
           if (options.requireUserVerification !== false) {
             await requireFundsConfirmation()
           }
+          assertStillUnlocked(epoch)
           return signTypedData(JSON.parse(json) as never)
         }
 
         case 'eth_signTransaction': {
           const [tx] = (params ?? []) as [Record<string, unknown>]
           // R-#246 (L1): firma cruda que el llamador puede transmitir después.
+          const epoch = currentLockEpoch()
           if (options.requireUserVerification !== false) {
             await requireFundsConfirmation()
           }
+          assertStillUnlocked(epoch)
           const filled = options.rpcUrl ? await fillTransaction(options.rpcUrl, tx) : tx
           return signTransaction(filled as never)
         }
@@ -199,11 +260,16 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
           }
           const destination = extractDestination(tx)
           // R-#246/R-#253: mover fondos exige verificación; un destino nuevo siempre.
+          const epoch = currentLockEpoch()
           if (options.requireUserVerification !== false) {
             await requireFundsConfirmation({ destination })
           }
+          assertStillUnlocked(epoch)
           const filled = await fillTransaction(options.rpcUrl, tx)
           const raw = await signTransaction(filled as never)
+          // R-#246 §14 item 3: si la billetera se bloqueó mientras se completaba la
+          // transacción, no se transmite nada.
+          assertStillUnlocked(epoch)
           const hash = await forwardToRpc(options.rpcUrl, 'eth_sendRawTransaction', [raw])
           // Se recuerda sólo tras transmitir: la próxima vez a esa dirección no
           // vuelve a pedir el gesto dentro de la ventana.
@@ -220,9 +286,18 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
       }
     },
 
-    on(): void {},
+    // EIP-1193: `on` returns the provider so calls can be chained.
+    on(event: string, listener: ProviderListener): Eip1193Provider {
+      const set = listeners.get(event) ?? new Set<ProviderListener>()
+      set.add(listener)
+      listeners.set(event, set)
+      return provider
+    },
 
-    removeListener(): void {},
+    removeListener(event: string, listener: ProviderListener): Eip1193Provider {
+      listeners.get(event)?.delete(listener)
+      return provider
+    },
   }
 
   return provider

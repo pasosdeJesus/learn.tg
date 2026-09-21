@@ -17,7 +17,8 @@ https://github.com/pasosdeJesus/learn.tg/issues/243 (install + docs).
 | Offline indicator | `components/OfflineBanner.tsx` + `lib/hooks/useOfflineStatus.ts` | Mounted in `components/Layout.tsx` |
 | Install prompt | `components/InstallPrompt.tsx` | `beforeinstallprompt`; dismissal stored for 7 days |
 | Offline guide copy | `lib/offline-guide-db.ts` + `lib/hooks/useCachedGuide.ts` | Markdown in IndexedDB, used by the guide page |
-| Offline submissions | `lib/offline-queue-db.ts` + `lib/hooks/useOfflineQueue.ts` | Generic queue (url + body), replayed on `online` |
+| Offline course list | `lib/offline-catalog.ts` | Last catalog fetched while online (`localStorage`, `learn.tg.coursesCache.<lang>`); when the fetch fails the course page shows it and toasts "You are offline: showing the saved course list." (operator request 2026-09-21). It only covers "visited once online": the full offline download of courses is https://github.com/pasosdeJesus/learn.tg/issues/256 |
+| Offline submissions | `lib/offline-queue-db.ts` + `lib/hooks/useOfflineQueue.ts` | Generic queue (url + body), replayed on `online`; a server rejection (4xx) is exposed as `lastRejection` so the page tells the user instead of leaving the answer queued silently |
 
 The diligent-records app served by the same Next app keeps its own manifest
 (`public/manifest.json`) and cache entry; do not remove them.

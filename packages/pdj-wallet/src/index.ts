@@ -4,6 +4,7 @@ export {
   unlockWallet,
   lockWallet,
   deleteWallet,
+  currentLockEpoch,
   hasWallet,
   getWalletInfo,
   isValidPassword,
@@ -26,6 +27,7 @@ export {
   readBiometricRecord,
   writeBiometricRecord,
   deleteBiometricRecord,
+  forgetBiometricCredential,
   sealWithPrfSecret,
   unsealWithPrfSecret,
 } from './biometric.js'
@@ -41,10 +43,24 @@ export {
   markUserVerified,
   clearUserVerification,
   hasRecentUserVerification,
+  signalUnknownCredential,
+  isUserCancelledError,
 } from './web-authn.js'
 
+export {
+  type UnlockPreference,
+  getUnlockPreference,
+  setUnlockPreference,
+  clearUnlockPreference,
+} from './preferences.js'
+
 export { signSIWE } from './siwe.js'
-export { getInAppWalletProvider, extractDestination, requireFundsConfirmation } from './provider.js'
+export {
+  getInAppWalletProvider,
+  extractDestination,
+  requireFundsConfirmation,
+  emitAccountsChanged,
+} from './provider.js'
 export type { ProviderOptions } from './provider.js'
 export { isKnownDestination, rememberDestination, clearDestinations } from './destinations.js'
 
@@ -60,7 +76,16 @@ export {
   type PrivateKey,
 } from './signer.js'
 
-export { encryptSecret, decryptSecret, KDF_ITERATIONS } from './crypto.js'
+export {
+  encryptSecret,
+  decryptSecret,
+  KDF_ITERATIONS,
+  KDF_ITERATIONS_FLOOR,
+  KDF_ITERATIONS_CEILING,
+  KDF_BUDGET_MS,
+  calibrateIterations,
+  normalizePassword,
+} from './crypto.js'
 
 export { MemoryStorage } from './storage/memory.js'
 export { IndexedDBStorage } from './storage/indexeddb.js'

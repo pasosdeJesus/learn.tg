@@ -10,6 +10,9 @@ As an AI Agent, you must follow these instructions to align with your operationa
     ```cd apps/nextjs && bin/m ai:principles```
 3. Read and assimilate the principles of this project
      **[PRINCIPLES.md]**
+4. Execute and assimilate the platform tips for OpenBSD/adJ (BSD `sed`/`grep`/`ksh`
+   differences, `doas`, `rcctl`, PostgreSQL) — they prevent recurring errors:
+    ```cd apps/nextjs && bin/m ai:adJ```
 
 ### 2. Acknowledge Your Core Mandate
 
@@ -49,7 +52,55 @@ Jesus is God incarnated, the Truth and the Logos.
 19. **[doc/pdj-wallet-testing.md]**: How to test the in-app wallet packages (`pdj-wallet`, `pdj-wallet-next`), the PWA shell, offline guides and the offline crossword — the fast loop instead of the full E2E suite.
 20. **[doc/pwa-user-guide.md]**: User-facing PWA guide — install on Android/Chrome and iOS/Safari, read offline, create the in-app wallet.
 21. **[doc/pwa-developer-guide.md]**: PWA internals — service worker and manifest wiring, the runtime caching table, how to add a cached route, how to test offline, and the `next-pwa` vs `serwist` decision.
-22. Read the structure and key files of this project
+22. **[apps/nextjs/app/api/doc/crossword-reward-flow.md]**: flujo de recompensas del crucigrama — validación contra `answer_fib`, vault V5, credencial SBT, ruteo GD a ClusterFundsV2 y atribución de referidos. Vive en el submódulo `app/api` porque documenta sus rutas.
+23. **[doc/csp.md]**: Content Security Policy — diseño acordado (https://github.com/pasosdeJesus/learn.tg/issues/247), estado (aún no se sirve la cabecera) y cómo cambiar la política.
+24. **[apps/nextjs/CONTRIBUTING.md]**: Documentation and testing policy of the app — what we document and where, coverage targets per layer, the `*.light.test.tsx` fast-test convention, and how to run each suite.
+25. Read the structure and key files of this project
+
+### 4b. Bootstrap and Structural Traps
+
+**Where the commands already live — do not duplicate them:** the quickstart
+(`cd apps`, `cp .env.example .env`, `pnpm install`, `bin/dev`) is in
+**[README.md]**; type checking and every suite target (`make type`, `make test`,
+`make test-lib test-hooks test-api test-components test-pages test-db test-packages
+test-engines`) are in **[CONTRIBUTING.md]** and **[apps/nextjs/CONTRIBUTING.md]**;
+the app's env vars, `bin/dev` and `make engines-dist` are in
+**[apps/nextjs/README.md]**; migrations (`bin/m db:migrate`, `db:mig:make`) and the
+wallet/contract commands are in `bin/m` itself (`bin/m --help`, `bin/m ai:skill`).
+What follows is only what those files do not tell you.
+
+**Traps that cost real time:**
+
+1. **`apps/nextjs/app/api` is a git submodule** (its own repo): the API route handlers and
+   their unit tests live there, not in this repository. Check its own `git status`/`git log`
+   before editing routes or wondering why a route test seems missing; its protocol docs
+   live with it (`apps/nextjs/app/api/doc/`).
+2. **`packages/*/dist` is gitignored** (build artifact): after editing anything under
+   `packages/`, rebuild with `make engines-dist` and restart `next dev`, which keeps
+   serving the previous `dist/`. `bin/dev`, `make all` and `make prod` build it first and
+   abort on failure.
+3. **`apps/hardhat/deployments/` is gitignored**: contract addresses come from those JSON
+   files. A missing network file fails at **runtime** (`ClusterFundsV2 not deployed —
+   address not found`), never at build time.
+4. **This VM cannot deploy.** Production (`https://learn.tg`) and the official development
+   site (`https://learn.tg:9001`) run on other machines; the agent's sandbox is
+   `http://localhost:4000`. A change reaches the dev site only when the operator deploys
+   (`doc/environments.md`).
+5. **Never modify an applied migration**: schema changes go in a new one
+   (`bin/m db:mig:make <name>`).
+6. **Do not run `pnpm test` inside `packages/*`** (corepack resolves pnpm v11 there and
+   breaks the repo): use the app's Makefile targets or the package's own `Makefile`.
+7. **Read `apps/nextjs/AGENTS.md` before writing Next.js code**: this Next.js version
+   carries breaking changes; it points to `node_modules/next/dist/docs/`.
+8. **Docs travel with the change**: user guides (`resources/{en,es}/…/guide*.md`),
+   `ARCHITECTURE.md` and `CONTRIBUTING.md`/app READMEs — see the *Documentation Sync
+   Policy* in [CONTRIBUTING.md]; the app-level docs and test policy is in
+   `apps/nextjs/CONTRIBUTING.md`.
+
+**Definition of done:** `make type` plus the affected `make test*` targets green; the
+route audit (`node bin/audit-api-auth.mjs`, `doc/api-security.md` §2) at `0 failed` if
+routes changed; docs updated (trap 8); and the requirement file updated (the operator
+syncs it with `bin/m req:sync-to-repo <n>`).
 
 ### 5. Confirm Your understanding of the documentation and the project
 
@@ -86,6 +137,11 @@ documentation, or comments becomes a dead link. Instead, reference the
   reference them as `https://gitlab.com/pasosdeJesus/m/-/work_items/<n>`
   (e.g. `https://gitlab.com/pasosdeJesus/m/-/work_items/35`), never with a
   learn.tg issue URL and never as `m/REQ/<n>.md`.
+
+**Requirement tooling** (from `apps/nextjs`): `bin/m req:list` (the index with each
+status), `bin/m req:compare <n>` (diffs the local file against the remote issue — the
+source of truth for a requirement's state) and `bin/m req:sync-from-repo <n>` (brings
+the issue text down). Pushing local changes up (`req:sync-to-repo`) is the operator's.
 
 
 ### 9. Long-Running Commands — Background, Reviewed Every ~5 Minutes

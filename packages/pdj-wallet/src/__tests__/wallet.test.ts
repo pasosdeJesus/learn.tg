@@ -13,6 +13,8 @@ import {
   unlockWallet,
 } from '../wallet'
 import { MemoryStorage } from '../storage/memory'
+import { KDF_ITERATIONS_FLOOR, encryptSecret } from '../crypto'
+import { privateKeyFromMnemonic } from '../signer'
 import { isValidMnemonic } from '../signer'
 import { signSIWE } from '../siwe'
 
@@ -55,6 +57,32 @@ describe('wallet', () => {
 
   // R-#251: la billetera se protege con una clave de 8+ caracteres y se desbloquea
   // con ella.
+  // R-#251: un registro viejo (o creado en un equipo más rápido/más lento) se
+  // vuelve a cifrar al desbloquear si quedó por debajo del objetivo del dispositivo.
+  it('upgrades the work factor of an old record when it is unlocked', async () => {
+    const legacy = new MemoryStorage()
+    const secret = await encryptSecret(
+      JSON.stringify({ v: 1, privateKey: privateKeyFromMnemonic(HARDHAT_MNEMONIC) }),
+      password,
+      1000,
+    )
+    await legacy.set({
+      version: 1,
+      address: HARDHAT_ADDRESS,
+      chain: 'celoSepolia',
+      createdAt: Date.now(),
+      kdf: secret.kdf,
+      cipher: secret.cipher,
+    })
+
+    expect((await unlockWallet(password, legacy)).address).toBe(HARDHAT_ADDRESS)
+
+    const upgraded = await legacy.get()
+    expect(upgraded!.kdf.iterations).toBeGreaterThanOrEqual(KDF_ITERATIONS_FLOOR)
+    // Y sigue abriendo con la misma clave después del re-cifrado.
+    await lockWallet()
+    expect((await unlockWallet(password, legacy)).address).toBe(HARDHAT_ADDRESS)
+  })
   it('accepts a passphrase of 8+ characters and unlocks with it', async () => {
     const { walletInfo } = await createWallet({ password: 'correct horse', storage })
     expect(walletInfo.address).toMatch(/^0x[a-fA-F0-9]{40}$/)
