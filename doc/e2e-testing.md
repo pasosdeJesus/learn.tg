@@ -120,11 +120,15 @@ Detalles que cuestan tiempo si se ignoran:
   (`in-app-wallet-payments`, medido 2026-09-20); `NEXT_PUBLIC_PWA_DISABLE=1` baja
   el trabajo de webpack (los specs offline se saltan en dev de todos modos).
 - **Fallos que solo aparecen en local** suelen ser del entorno local: medido
-  `PATCH /api/admin/church/[id]` → 500 sin log del route, porque el overlay de
-  errores del `next dev` también falla (`invalid type: boolean \`false\`, expected
-  enum CodeFrameColorMode`). Si un paso falla en local y pasa en el dev site,
-  revisa antes el servidor local (base de datos sin migrar, `next dev`) que el
-  código.
+  `PATCH /api/admin/church/[id]` → 500, y con el diagnóstico de la sección
+  siguiente la causa resultó ser **on-chain**: el bono de 44 SLEARN se firma con
+  la llave de `CHURCHES_WALLET_PRIVATE_KEY` y en el `apps/.env` local esa llave es
+  la de prueba (`0x84272a6d…`), que **no** está en la lista de transferencias
+  autorizadas del SLEARN (`authorizedTransfers(0x84272a6d…) = false` en Sepolia),
+  mientras que la billetera real del fondo (`0x01a72816…`, la que usa el dev site)
+  sí (`true`). El contrato revierte con `SLEARN: neither sender nor receiver
+  authorized`. Si un paso falla en local y pasa en el dev site, revisa antes las
+  llaves/el servidor local (base de datos sin migrar, `next dev`) que el código.
 
 ### Diagnóstico de errores del servidor
 

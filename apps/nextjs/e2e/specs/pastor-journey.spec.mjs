@@ -107,18 +107,20 @@ function loadEnvValue(key) {
 }
 
 /**
- * The 44 SLEARN pastor bonus is paid from the churches fund. Top it up from the
- * local test wallet (the verifier PRIVATE_KEY) when it runs low, so the spec
- * does not depend on the balance left behind by earlier runs.
+ * El bono de 44 SLEARN a pastores (y el resto de pagos del curso) sale del fondo
+ * de iglesias, así que antes del bono la billetera emisora (el verificador,
+ * `PRIVATE_KEY`) le entrega su SLEARN dejando solo una reserva de 15 (`E2E_SENDER_RESERVE_SLEARN`):
+ * el fondo acumula lo de las corridas anteriores y el emisor conserva lo que
+ * gastan otras specs (antes solo se recargaba hasta 60 SLEARN y el sobrante
+ * quedaba en el emisor).
  */
-async function ensureChurchesFund(env, verifier) {
+async function sendAllSlearnToChurchesFund(env, verifier) {
   const res = await axios.get(`${SITE}/api/churches/fund`, { httpsAgent })
   const fund = res.data?.address
   const slearnAddress = res.data?.slearnAddress || env.slearn
-  const balance = Number(res.data?.slearnBalance || 0)
-  const needed = 60
-  console.log(`Churches fund ${short(fund)}: ${balance} SLEARN`)
-  if (!fund || !slearnAddress || balance >= needed) return
+  const reported = Number(res.data?.slearnBalance || 0)
+  console.log(`Churches fund ${short(fund)}: ${reported} SLEARN`)
+  if (!fund || !slearnAddress) return
 
   const rpc = env.rpc || process.env.NEXT_PUBLIC_RPC_URL || loadEnvValue('NEXT_PUBLIC_RPC_URL') || 'https://forno.celo-sepolia.celo-testnet.org'
   const account = privateKeyToAccount(verifier.pk)
@@ -131,17 +133,31 @@ async function ensureChurchesFund(env, verifier) {
   const own = await client.readContract({
     address: slearnAddress, abi: balanceOfAbi, functionName: 'balanceOf', args: [account.address],
   })
-  const missing = parseUnits(String(needed - balance), 2)
-  if (own < missing) {
-    console.log(`  [!] Churches fund low (${balance} SLEARN) and the test wallet holds ${Number(own) / 100} SLEARN — top up the fund manually`)
+  console.log(`  Emisor ${short(account.address)}: ${Number(own) / 100} SLEARN`)
+  // Se envía todo menos la reserva: 15 SLEARN por defecto, que es más de lo que
+  // gastan las otras specs desde esta billetera (`vault-both-donate` transfiere
+  // 10 SLEARN). `E2E_SENDER_RESERVE_SLEARN` la cambia; 0 = enviar todo.
+  const reserve = parseUnits(String(process.env.E2E_SENDER_RESERVE_SLEARN || '15'), 2)
+  const amount = own > reserve ? own - reserve : 0n
+  if (amount === 0n) {
+    console.log(`  (reserva ${Number(reserve) / 100} SLEARN; nada que enviar al fondo de iglesias)`)
+    return
+  }
+  // En el dev site el emisor puede ser la propia billetera del fondo: ahí la
+  // transferencia sería a sí misma y no aporta nada.
+  if (account.address.toLowerCase() === String(fund).toLowerCase()) {
+    console.log('  (el emisor ya es la billetera del fondo; no se transfiere)')
     return
   }
 
   const hash = await wallet.writeContract({
-    address: slearnAddress, abi: slearnTransferAbi, functionName: 'transfer', args: [fund, missing],
+    address: slearnAddress, abi: slearnTransferAbi, functionName: 'transfer', args: [fund, amount],
   })
   await client.waitForTransactionReceipt({ hash, timeout: 120000 })
-  console.log(`  Funded churches fund with ${needed - balance} SLEARN (tx ${short(hash)})`)
+  const after = await client.readContract({
+    address: slearnAddress, abi: balanceOfAbi, functionName: 'balanceOf', args: [fund],
+  })
+  console.log(`  Enviados ${Number(amount) / 100} SLEARN al fondo (ahora ${Number(after) / 100} SLEARN, tx ${short(hash)})`)
 }
 
 function updateCookies(current, setCookieHeaders) {
@@ -270,10 +286,11 @@ async function main() {
   const base = process.env.SITE_URL || env.base
   const timeout = 120000
 
-  // The 44 SLEARN pastor bonus (Step 3) is paid from the churches fund: make
-  // sure it can afford it before the verifier awards it.
+  // El bono de 44 SLEARN (Step 3) se paga desde el fondo de iglesias: la
+  // billetera emisora le entrega todo su SLEARN antes de que el verificador lo
+  // otorgue, así el fondo no depende del saldo que dejaron las corridas previas.
   try {
-    await ensureChurchesFund(env, verifier)
+    await sendAllSlearnToChurchesFund(env, verifier)
   } catch (e) {
     console.log(`  [!] Could not verify/fund the churches fund: ${e.message}`)
   }
