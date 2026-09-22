@@ -217,6 +217,16 @@ async function main() {
   // 4. Browser: Buy button + CheckoutModal
   const browser = await launchBrowser(env.headless)
   const page = await newPage(browser, addr, 120000)
+  // Diagnóstico del flujo de compra: sin esto, un fallo dentro del modal solo
+  // dejaba "Result screen did not appear" sin causa (medido 2026-09-21: la compra
+  // con 100% SLEARN no llegaba a la pantalla de resultado y no había ni error).
+  const pageErrors = []
+  page.on('pageerror', (e) => pageErrors.push(`pageerror: ${e.message}`))
+  page.on('console', (m) => { if (m.type() === 'error') pageErrors.push(`console: ${String(m.text()).slice(0, 200)}`) })
+  page.on('response', (r) => {
+    const u = r.url()
+    if (u.includes('/api/') && r.status() >= 400) pageErrors.push(`http ${r.status()} ${u.slice(u.indexOf('/api/'))}`)
+  })
   await setupE2EAuth(page, addr, pk, chainId, base)
   await gotoWithRetry(page, `${base}/en/gdcluster`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
@@ -338,6 +348,8 @@ async function main() {
         let resultTitle = false
         let txHref = null
         let gasPanel = false
+        let lastSnippet = ''
+        const snapshots = []
         for (let i = 0; i < 60 && !resultTitle && !gasPanel; i++) {
           await new Promise(r => setTimeout(r, 2000))
           const st = await page.evaluate(() => {
@@ -345,18 +357,32 @@ async function main() {
             const link = Array.from(document.querySelectorAll('a')).find(a => (a.getAttribute('href') || '').includes('/tx/'))
             return {
               result: txt.includes('Course purchased') || txt.includes('Curso comprado'),
-              gas: txt.includes('Se necesita CELO') || txt.includes('Needs CELO') || txt.includes('You need'),
+              // Copias exactas del GasInsufficientPanel (components/GasInsufficientPanel.tsx).
+              // Antes se miraba también 'You need', que coincide con los avisos de USDT del
+              // CheckoutModal ('You need to add USDT…', 'You need X more USDT…'): el 2026-09-21
+              // eso reportó "el wallet no pudo pagar (gas)" cuando el panel real podía ser otro.
+              gas: txt.includes('Se necesita CELO') || txt.includes('CELO is needed'),
+              snippet: txt.replace(/\s+/g, ' ').slice(0, 300),
               href: link ? link.getAttribute('href') : null,
             }
           })
           resultTitle = st.result
           txHref = st.href || txHref
           gasPanel = st.gas
+          lastSnippet = st.snippet || lastSnippet
+          if (snapshots.length < 6 && st.snippet !== snapshots[snapshots.length - 1]) snapshots.push(st.snippet)
         }
 
         if (resultTitle) ok('Result screen shown after the purchase')
-        else if (gasPanel) console.log('  [SKIP] the wallet could not pay (gas/balance panel shown)')
-        else fail('Result screen did not appear after the purchase')
+        else if (gasPanel) console.log(`  [SKIP] el wallet no tiene CELO para el gas (panel "CELO is needed"). Texto: ${lastSnippet}`)
+        else {
+          fail(`Result screen did not appear after the purchase. Texto: ${lastSnippet}`)
+          snapshots.forEach((sn, i) => console.log(`  [snapshot ${i}] ${sn}`))
+          if (pageErrors.length) {
+            console.log('  [page errors]')
+            pageErrors.slice(-12).forEach(e => console.log(`    ${e}`))
+          }
+        }
 
         if (resultTitle) {
           if (txHref && /\/tx\/0x/.test(txHref)) ok(`Result screen links the transaction (${txHref.slice(-12)})`)

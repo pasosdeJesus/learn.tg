@@ -32,7 +32,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
   const data = apiData?.data || []
   const totals = apiData?.totals
   const reserves = apiData?.reserves
-  const premium = apiData?.premium
+  const premiumSlearn = apiData?.premiumSlearn
   const rules = apiData?.rules || []
 
   // Translation helper
@@ -50,10 +50,10 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
       churchesWallet: 'Churches Wallet',
       coverage: 'Coverage',
       coverageTarget: 'Target: 120%',
-      premium: 'Premium course payments',
-      premiumNote: 'Paid course purchases recorded on-chain, by course.',
-      premiumPurchases: 'Purchases',
-      premiumPaid: 'Paid',
+      premiumSlearn: 'SLEARN in course payments',
+      premiumSlearnNote: 'What learners pay in SLEARN to take a paid course is burned (the reserve releases USDT) and part of it is minted back to them as a reward. It moves supply and coverage, so it belongs to this panel; course revenue is learn.tg accounting and is not published here.',
+      slearnBurned: 'Burned in course payments',
+      slearnMinted: 'Minted as course rewards',
       viewLeaderboard: 'View Leaderboard',
     },
     es: {
@@ -70,10 +70,10 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
       explorer: 'Explorador',
       coverage: 'Cobertura',
       coverageTarget: 'Meta: 120%',
-      premium: 'Pagos de cursos premium',
-      premiumNote: 'Compras de cursos de pago registradas en la cadena, por curso.',
-      premiumPurchases: 'Compras',
-      premiumPaid: 'Pagado',
+      premiumSlearn: 'SLEARN en pagos de cursos',
+      premiumSlearnNote: 'El SLEARN que un estudiante paga por un curso de pago se quema (la reserva libera USDT) y una parte se le acuña como recompensa. Mueve suministro y cobertura, así que pertenece a este panel; la facturación por curso es contabilidad de learn.tg y no se publica aquí.',
+      slearnBurned: 'Quemado en pagos de cursos',
+      slearnMinted: 'Acuñado como recompensas de cursos',
       viewLeaderboard: 'Ver Tabla de Clasificación',
     },
   }), [lang])
@@ -164,39 +164,19 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
         </div>
       )}
 
-      {premium && premium.courses.length > 0 && (
+      {premiumSlearn && (premiumSlearn.burned > 0 || premiumSlearn.minted > 0) && (
         <div className="rounded-xl border bg-card p-6">
-          <h2 className="text-lg font-semibold mb-1">{t('premium')}</h2>
-          <p className="text-sm text-muted-foreground mb-4">{t('premiumNote')}</p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="py-2">{t('premiumPaid')}</th>
-                  <th className="py-2 text-right">{t('premiumPurchases')}</th>
-                  <th className="py-2 text-right">USDT</th>
-                  <th className="py-2 text-right">SLEARN</th>
-                </tr>
-              </thead>
-              <tbody>
-                {premium.courses.map((c) => (
-                  <tr key={c.courseId} className="border-t">
-                    <td className="py-2">{c.titulo || `#${c.courseId}`}</td>
-                    <td className="py-2 text-right">{c.purchases}</td>
-                    <td className="py-2 text-right">{c.usdt.toFixed(2)}</td>
-                    <td className="py-2 text-right">{c.slearn.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t font-semibold">
-                  <td className="py-2">Total</td>
-                  <td className="py-2 text-right">{premium.totalPurchases}</td>
-                  <td className="py-2 text-right">{premium.totalUSDT.toFixed(2)}</td>
-                  <td className="py-2 text-right">{premium.totalSLEARN.toFixed(2)}</td>
-                </tr>
-              </tfoot>
-            </table>
+          <h2 className="text-lg font-semibold mb-1">{t('premiumSlearn')}</h2>
+          <p className="text-sm text-muted-foreground mb-4">{t('premiumSlearnNote')}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div className="text-sm text-muted-foreground">{t('slearnBurned')}</div>
+              <div className="text-2xl font-bold">{premiumSlearn.burned.toFixed(2)} SLEARN</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">{t('slearnMinted')}</div>
+              <div className="text-2xl font-bold">{premiumSlearn.minted.toFixed(2)} SLEARN</div>
+            </div>
           </div>
         </div>
       )}

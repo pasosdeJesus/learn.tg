@@ -99,6 +99,15 @@ Among the auth patterns, `getToken(` recognizes routes that authorize directly
 with the NextAuth JWT from the session cookie and return 401 without it. A route
 using `getToken(` must still reject when the cookie/subject is missing.
 
+**Blind spot to keep in mind:** the audit reads the `route.ts` file, so it only
+sees DB access written **in that file**. A route whose SQL lives in `lib/` (or in
+an engine) and that does not call an auth helper matches neither pattern and
+**passes unnoticed**: `GET /api/metrics` was public that way (its query is in
+`lib/metrics/queries`) until 2026-09-21, when it was given `authenticateAdmin`.
+When a route is a thin wrapper over a `lib/` function, check it by hand: if it
+returns database data, it must authenticate or be declared public in
+`PUBLIC_ENDPOINTS` with a reason.
+
 ### When to run it
 
 - After **adding, removing, or modifying any `app/api/**/route.ts`** that

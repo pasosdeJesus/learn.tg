@@ -5,6 +5,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { CalendarWidget } from '@/components/admin/CalendarWidget'
 import { PendingWidget, RecentUsersWidget, RecentChurchesWidget } from '@/components/admin/AdminWidgets'
+import { PremiumPurchasesWidget } from '@/components/admin/PremiumPurchasesWidget'
 import Link from 'next/link'
 
 type PageProps = { params: Promise<{ lang: string }> }
@@ -76,6 +77,7 @@ export default function AdminDashboard({ params }: PageProps) {
         <div className="space-y-6">
           <RecentUsersWidget lang={lang} t={t} onUserModalClose={bumpChurches} />
           <RecentChurchesWidget lang={lang} t={t} key={churchKey} />
+          <PremiumPurchasesWidget lang={lang} />
         </div>
       </div>
       <div className="mt-6 flex gap-4">

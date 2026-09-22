@@ -90,36 +90,24 @@ async function main() {
     }
   }
 
-  // Test 4: premium payments are part of the public accounting
-  // (https://github.com/pasosdeJesus/learn.tg/issues/128 §9). The block degrades
-  // like `reserves`: absent means the deployed build does not aggregate it yet.
-  console.log('── Test 4: premium course payments ──')
+  // Test 4: SLEARN flows of course payments (https://github.com/pasosdeJesus/learn.tg/issues/128
+  // §9). El panel público solo publica lo que los pagos mueven en SLEARN (quemado y acuñado);
+  // la contabilidad comercial por curso vive en `/api/admin/premium-purchases` (solo
+  // verificadores). Degrada como `reserves`: ausente = build sin el cambio.
+  console.log('-- Test 4: SLEARN flows of course payments --')
   if (!body) {
     fail('skipped: no API body')
-  } else if (!body.premium) {
+  } else if (!body.premiumSlearn) {
     ok('no premium aggregate (deployed build predates it) — deploy to verify')
   } else {
-    const p = body.premium
-    const numbers = ['totalPurchases', 'totalUSDT', 'totalSLEARN']
-    const bad = numbers.filter((k) => typeof p[k] !== 'number' || Number.isNaN(p[k]) || p[k] < 0)
-    if (bad.length === 0) ok(`totals are numbers (${p.totalPurchases} purchases, ${p.totalUSDT} USDT, ${p.totalSLEARN} SLEARN)`)
-    else fail(`bad premium totals: ${bad.join(', ')}`)
+    const p = body.premiumSlearn
+    const bad = ['burned', 'minted'].filter((k) => typeof p[k] !== 'number' || Number.isNaN(p[k]) || p[k] < 0)
+    if (bad.length === 0) ok(`SLEARN flows are non-negative numbers (burned ${p.burned}, minted ${p.minted})`)
+    else fail(`bad SLEARN flow values: ${bad.join(', ')}`)
 
-    if (!Array.isArray(p.courses)) {
-      fail('courses is not an array')
-    } else {
-      const sum = (key) => p.courses.reduce((acc, c) => acc + Number(c[key] || 0), 0)
-      const purchases = p.courses.reduce((acc, c) => acc + Number(c.purchases || 0), 0)
-      const rounds = (n) => Math.round(n * 100) / 100
-      if (purchases === p.totalPurchases && rounds(sum('usdt')) === rounds(p.totalUSDT) && rounds(sum('slearn')) === rounds(p.totalSLEARN)) {
-        ok('per-course rows add up to the totals')
-      } else {
-        fail(`per-course rows (${purchases}, ${rounds(sum('usdt'))}, ${rounds(sum('slearn'))}) do not add up to the totals (${p.totalPurchases}, ${p.totalUSDT}, ${p.totalSLEARN})`)
-      }
-      const badCourse = p.courses.find((c) => typeof c.courseId !== 'number' || typeof c.purchases !== 'number')
-      if (badCourse) fail(`bad course row: ${JSON.stringify(badCourse)}`)
-      else ok(`course rows are well formed (${p.courses.length})`)
-    }
+    // La facturación por curso NO debe publicarse aquí (decisión del operador, 2026-09-21).
+    if (body.premium === undefined) ok('per-course revenue is not published on the public panel')
+    else fail('per-course premium accounting is still public (should live in /api/admin/premium-purchases)')
   }
 
   console.log(`\n${passed} passed / ${failed} failed`)

@@ -436,8 +436,28 @@ Contract addresses are **not** read from `.env`. They come from:
 
 La misma máquina aloja **producción** (`https://learn.tg`) y **desarrollo**
 (`https://learn.tg:9001`) con **16G RAM + 16G swap** y otras aplicaciones.
-Reglas para no tumbarla (lección https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8: un `next build` con 15 workers
-× heap grande derribó el dev server por OOM):
+
+### Dos modos para servir el sitio de desarrollo
+
+`learn.tg:9001` puede correr de dos maneras y **no son equivalentes**:
+
+| Modo | Cómo se arranca | Ventaja | Desventaja |
+|---|---|---|---|
+| **Dev server** | `bin/dev` (`next dev`, con HTTPS) | **Los errores son más legibles y se ubican en las fuentes**: traza y overlay de Next apuntando al archivo y la línea, más HMR al editar | **No permite probar la parte offline** (`next-pwa` fuerza `NetworkOnly`: el service worker se registra pero no hay caché de páginas ni fallback `/offline`), **es lento** (compila cada ruta bajo demanda) y **exige warmup** |
+| **Build de producción** | `make all` + `bin/start` (o `make prod`, que compila y arranca) | Es el **comportamiento real**: las rutas salen compiladas del build (rápido, **sin warmup**) y el PWA funciona de verdad (service worker, offline, instalación, `make test-e2e-offline`) | **Los errores llegan minificados y sin la ubicación en las fuentes**, así que para diagnosticar hay que apoyarse en el log del servidor (`instrumentation.ts` → `/tmp/learn-tg-server-errors.log`, `SERVER_ERROR_LOG`; ver `doc/e2e-testing.md` §Diagnóstico de errores del servidor) |
+
+**Regla práctica:** elige por lo que estés verificando. Si la duda es **offline, service worker, instalación o
+rendimiento real**, usa el build de producción (`make all` + `bin/start`) — y no hace falta warmup. Si la duda es
+**un error del servidor o del render y quieres la traza con archivo y línea**, usa `bin/dev`, sabiendo que ahí la
+parte offline no se puede probar, que va lento y que hay que calentar con
+`bin/warmup.mjs`. `bin/warmup-local.mjs` (secuencial) es el equivalente para un `bin/dev` en
+`localhost:4000`; no uses `bin/warmup.mjs` contra local (su pasada en paralelo tumba al `next dev` de esta VM,
+ver `doc/e2e-testing.md`).
+
+### Reglas para no tumbar la máquina
+
+(Lección https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8: un `next build` con 15 workers × heap grande
+derribó el dev server por OOM.)
 
 1. **NO compilar mientras el dev site sirve requests ni mientras corre la
    suite E2E.** `make all`/`make prod` verifican con `build-guard` que no haya
@@ -449,13 +469,16 @@ Reglas para no tumbarla (lección https://gitlab.com/pasosdeJesus/m/-/work_items
 3. **La suite E2E agrega carga al dev site** (SIWE + claims + páginas). Correr
    en horas de bajo tráfico de prod, o desde la VM de desarrollo (ya tiene
    Chromium en `/usr/local/bin/chrome`), con `PUERTOPRU=9001 CHAIN_ID=11142220`.
-4. **Secuencia recomendada al desplegar cambios en dev:**
-   1. Detener el dev server (`pkill -f 'next dev'` o el servicio).
-   2. `make all` (compila sin competencia de memoria).
-   3. Arrancar el dev server (`bin/dev` o servicio).
-   4. `bin/warmup` (compila rutas en caliente).
-   5. `make test-smoke` y luego `make test-e2e` (m 0.20.1+ rota billeteras y
-      pausa entre specs; ver `E2E_SPEC_DELAY_MS`).
+4. **Secuencia recomendada al desplegar cambios en dev** (modo build de producción):
+   1. Detener el servidor del dev site (`pkill -f 'next dev'` o el servicio).
+   2. `make all` (compila sin competencia de memoria; incluye `engines-dist`, obligatorio si cambió `packages/`).
+   3. Arrancar (`bin/start`, `make prod` o el servicio).
+   4. `make test-smoke` y luego `make test-e2e` (m 0.20.1+ rota billeteras y
+      pausa entre specs; ver `E2E_SPEC_DELAY_MS`). Aplicar las migraciones pendientes del sitio
+      (`bin/m db:migrate`) en la misma ventana que el despliegue.
+
+   Si en cambio el dev site se sirve con **dev server** (`bin/dev`), después de arrancar hay que
+   **calentar con `bin/warmup.mjs`** antes de los specs (paso que en el modo build no existe).
 
 ## Motores locales (packages/) y pruebas E2E
 
@@ -499,7 +522,7 @@ Cada paquete tiene su propio `Makefile` (`make test`, `make build`, `make instal
 ### E2E contra el sitio de desarrollo
 
 ```sh
-node bin/warmup.mjs      # pre-compila ~34 rutas (compilación ≠ ausencia de respuesta)
+node bin/warmup.mjs      # solo si el sitio se sirve con dev server; pre-compila ~34 rutas (compilación ≠ ausencia de respuesta)
 ```
 - **Smoke directo** (con `node`, no `bin/m`: el CLI recarga `.env` con
   `override:true` y pisa `NEXT_PUBLIC_AUTH_URL`):

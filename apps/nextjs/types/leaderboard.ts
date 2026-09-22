@@ -80,16 +80,11 @@ export interface TransparencyResponse {
     adminTestSLEARN: number
     vaultSLEARN: number
   }
-  premium?: {
-    totalPurchases: number
-    totalUSDT: number
-    totalSLEARN: number
-    courses: Array<{
-      courseId: number
-      titulo: string | null
-      purchases: number
-      usdt: number
-      slearn: number
-    }>
+  // Flujos de SLEARN en los pagos de cursos (lo que se quema y lo que se acuña como
+  // recompensa): lo que el panel de transparencia puede publicar sin abrir la
+  // contabilidad comercial de learn.tg, que vive en `/api/admin/premium-purchases`.
+  premiumSlearn?: {
+    burned: number
+    minted: number
   }
 }

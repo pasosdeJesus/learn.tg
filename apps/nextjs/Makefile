@@ -109,6 +109,7 @@ test-components:
 test-pages:
 	pnpm vitest run app/__tests__ \
 		'app/[lang]/__tests__' \
+		'app/[lang]/metrics/tests' \
 		'app/[lang]/profile/__tests__' \
 		'app/[lang]/[pathPrefix]/__tests__' \
 		'app/[lang]/[pathPrefix]/[pathSuffix]/__tests__' \

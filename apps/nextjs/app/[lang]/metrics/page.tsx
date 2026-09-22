@@ -6,9 +6,19 @@
 
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
+import { getServerSession } from 'next-auth'
 import { getAllMetrics } from '@/lib/metrics/queries'
+import { authOptions } from '@/app/api/auth/auth-options'
 import { createTranslator } from '@pasosdejesus/m/i18n'
 import type { TranslationSet } from '@pasosdejesus/m/i18n'
+
+// Panel interno: solo verificadores. Antes era público (la página calculaba los
+// datos en el servidor sin verificar nada y `/api/metrics` tenía la autenticación
+// comentada). Mismo criterio que `/api/admin/*` (doc/api-security.md).
+const VERIFIER_WALLETS = (process.env.NEXT_PUBLIC_VERIFIER_WALLET || '')
+  .split(',')
+  .map((w) => w.trim().toLowerCase())
+  .filter(Boolean)
 
 const pageT: TranslationSet = {
   en: {
@@ -74,6 +84,24 @@ interface Props {
 
 export default async function MetricsDashboardPage({ params }: Props) {
   const { lang } = await params
+  const session = await getServerSession(authOptions)
+  const wallet = String((session as { address?: string } | null)?.address || '').toLowerCase()
+  if (VERIFIER_WALLETS.length === 0 || !VERIFIER_WALLETS.includes(wallet)) {
+    const es = lang === 'es'
+    return (
+      <div className="container mx-auto py-16 px-4 text-center">
+        <p className="text-lg font-semibold">
+          🔒 {es ? 'Acceso restringido a verificadores' : 'Verifier access required'}
+        </p>
+        <p className="text-sm text-gray-500 mt-2">
+          {es
+            ? 'Inicia sesión con una billetera verificadora para ver este panel.'
+            : 'Sign in with a verifier wallet to see this dashboard.'}
+        </p>
+      </div>
+    )
+  }
+
   const t = createTranslator(lang, pageT)
   const metrics = await getAllMetrics()
   const { completionRate, retention, timeBetweenGuides, userGrowth, gameEngagement, goodDollarClaims, lastUpdated } = metrics

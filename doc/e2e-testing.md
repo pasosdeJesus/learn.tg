@@ -54,7 +54,8 @@ al correrla sola**: son fallos **ambientales, no defectos de producto**.
 separado hasta `E2E_RETRIES` veces (`bin/e2e-retry.mjs`), de modo que un fallo
 transitorio no envenene el resultado. Úsalo para la verificación final; usa
 `make test-e2e` cuando quieras la foto cruda. Antes de cualquiera, calienta el dev
-site (`bin/warmup.mjs`).
+site (`bin/warmup.mjs`) **si se sirve con dev server**; con un build de producción no hace falta (ver
+`doc/environments.md` §Dos modos para servir el sitio de desarrollo).
 
 **Un spec solo se reporta verde si sale con el código correcto.** El runner
 (`@pasosdejesus/m/dist/tasks/e2e.js:116`) decide por el exit code, y `fail()`
@@ -160,10 +161,12 @@ llegan a la consola. Desde entonces:
 
 ## Dev-server warmup: `bin/warmup.mjs`
 
-Tras un deploy, Next.js compila cada ruta bajo demanda y el primer request es
-lentísimo (timeouts en la suite). `apps/nextjs/bin/warmup.mjs` toca las páginas
-y APIs clave **antes** de correr los specs: pasada 1 secuencial (compila con
-timeout generoso por ruta), pasada 2 en paralelo (caché caliente, verifica
+Aplica **solo cuando el sitio se sirve con el dev server** (`bin/dev`, `next dev`): ahí Next compila cada
+ruta bajo demanda y el primer request es lentísimo (timeouts en la suite). Con el dev site servido desde un
+**build de producción** (`make all` + `bin/start`, o `make prod`) las rutas salen compiladas del build y el
+warmup **no hace falta** (ver `doc/environments.md` §Dos modos para servir el sitio de desarrollo).
+`apps/nextjs/bin/warmup.mjs` toca las páginas y APIs clave **antes** de correr los specs: pasada 1
+secuencial (compila con timeout generoso por ruta), pasada 2 en paralelo (caché caliente, verifica
 tiempos).
 
 ```sh
@@ -225,7 +228,7 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
 | `premium-price.spec.mjs` | Precio del curso premium por país (https://github.com/pasosdeJesus/learn.tg/issues/128 §4.2): crea dos perfiles (Sierra Leona y Colombia) y compara `/api/courses/premium/price` — HDI alto paga más, el SLEARN conserva el 10% y los montos caen en la calibración (SL ~0.70, CO ~3.00). HTTP, sin Chrome ni fondos |
 | `premium-purchase.spec.mjs` | Camino del dinero de una compra premium por HTTP (https://github.com/pasosdeJesus/learn.tg/issues/128 §4.2): pastor nuevo verificado → precio → transferencias del pastor al backend del sitio → `POST /api/courses/premium/purchase` → `processPayment` on-chain, distribución, acceso al curso y fila en `mine`. **Apagado por defecto**: sin `PURCHASE=1` solo comprueba precio y autenticación. Con `PURCHASE=1 SLEARN_PCT=0\|50\|100` gasta fondos de prueba y pide el pago a la billetera que publica `/api/churches/fund` (el dev site colapsa todos los roles en una) |
-| `transparency.spec.mjs` | Panel de transparencia: `/en/transparency` y `/es/transparency` responden 200 y `/api/transparency` cumple el contrato documentado (`data`, `totals`, `rules`; reservas y relación de cobertura cuando las lecturas on-chain responden) |
+| `transparency.spec.mjs` | Panel de transparencia: `/en/transparency` y `/es/transparency` responden 200 y `/api/transparency` cumple el contrato documentado (`data`, `totals`, `rules`; reservas y relación de cobertura cuando las lecturas on-chain responden; `premiumSlearn` con los flujos de SLEARN de los pagos de cursos y **sin** la contabilidad por curso, que es interna) |
 | `prerequisites.spec.mjs` | Wallet registration + verifier check + profile setup + self-verify → ≥50 score |
 | `referral-payout.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
 | `referral-premium.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 22 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
