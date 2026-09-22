@@ -150,15 +150,15 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
-**Suite size (medido 2026-09-21):** `make test` = **969 passed / 6 skipped, 0
-failed** en 135 archivos — `test-lib` 203, `test-hooks` 83, `test-api` 203,
-`test-components` 169, `test-pages` 47, `test-db` 3, `test-pdj-wallet` 90,
+**Suite size (medido 2026-09-21):** `make test` = **995 passed / 6 skipped, 0
+failed** en 140 archivos — `test-lib` 207, `test-hooks` 83, `test-api` 220,
+`test-components` 174, `test-pages` 47, `test-db` 3, `test-pdj-wallet` 90,
 `test-pdj-wallet-next` 24, `test-rewards` 56, `test-gdcluster` 91.
 
 | Layer | Statements | Notes |
 |-------|-----------|-------|
 | Core lib/ (crypto, scores, guide-utils, etc.) | 88-100% | Excellent. Edge cases: nonces, retries, errors |
-| API Routes (`app/api`, in the submodule) | 32 route test dirs | Sin prueba unitaria propia: `church`, `churches`, `cluster`, `course-catalog`, `courses`, `donations`, `gdcluster`, `referral`, `referrals`, `towns` — los que viven en motores (`gdcluster`, `cluster`, `referrals`, `donations`, `churches`) están cubiertos por `packages/rewards`/`packages/gdcluster`, `towns`/`course-catalog` por los specs `town-autocomplete` y `fresh-wallet-first-connect`, y las rutas con parámetros de `mr519` por `app/api/engine/__tests__/mr519-forms.test.ts` |
+| API Routes (`app/api`, in the submodule) | 35 route test dirs | Sin prueba unitaria propia: `church`, `churches`, `cluster`, `course-catalog`, `courses/premium/purchase`, `donations`, `gdcluster`, `referral`, `referrals`, `towns` — los que viven en motores (`gdcluster`, `cluster`, `referrals`, `donations`, `churches`) están cubiertos por `packages/rewards`/`packages/gdcluster`, `towns`/`course-catalog` por los specs `town-autocomplete` y `fresh-wallet-first-connect`, `courses/premium/purchase` por su spec E2E y las rutas con parámetros de `mr519` por `app/api/engine/__tests__/mr519-forms.test.ts` |
 | Hooks (useFetchData, useApiData, useGuideData, useSort, etc.) | 75-100% | Newer hooks (useScholarshipData, useGuideNavigation) now tested |
 | UI Components (shadcn) | 96-100% | Structural tests: render, props, className, refs |
 | Custom components (Header, Footer, DonateModal, etc.) | 90-100% | Complex modals and wallet flows covered |

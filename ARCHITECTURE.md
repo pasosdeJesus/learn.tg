@@ -531,6 +531,7 @@ Communications between users, and between pdJ and users, are **confidential by d
 3. **API responses never include message content** — only metadata (timestamps, status, participant IDs).
 4. **Private notes and internal communications** use the messaging system (R-#162), not free-text columns on entity tables.
 5. **User-facing text fields** (cluster names, course descriptions, public profiles) may be plaintext — they are intentionally public.
+6. **Christian affiliation is private by default** (https://github.com/pasosdeJesus/learn.tg/issues/259): whether a learner completed Christian-related courses is never published unless they opt in, no credential (SBT) is minted for those courses without that opt-in, and the learner can revoke any SBT they hold. The course flag lives in `cor1440_gen_proyectofinanciero.contenido_cristiano` and the two visibility switches on `usuario`.
 
 ### Sensitive data that MUST be encrypted or excluded
 

@@ -10,6 +10,7 @@ import { getUniversalLink } from '@selfxyz/core'
 import { SelfAppBuilder } from '@selfxyz/qrcode'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { ReferralProfileSection } from '@/components/ReferralProfileSection'
+import { PremiumCoursesSection } from '@/components/PremiumCoursesSection'
 
 import { Button } from '@/components/ui/button'
 import CircularProgress from '@/components/ui/circular-progress'
@@ -1264,6 +1265,7 @@ export default function ProfileForm({ params }: PageProps) {
         </div>
       </div>
       <ReferralProfileSection lang={lang} />
+      <PremiumCoursesSection lang={lang} />
     </div>
   )
 }

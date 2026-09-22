@@ -5116,7 +5116,8 @@ CREATE TABLE public.notifications (
     content text,
     link character varying(500),
     is_read boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL
+    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL,
+    ref_key character varying(100)
 );
 
 
@@ -5150,7 +5151,7 @@ CREATE TABLE public.premium_course_usuario (
     course_id integer NOT NULL,
     purchased_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     usdt_amount_paid numeric(10,2),
-    slearn_amount_paid integer,
+    slearn_amount_paid numeric(10,2),
     transaction_hash character varying(66) NOT NULL,
     expires_at timestamp without time zone
 );
@@ -7610,6 +7611,13 @@ CREATE INDEX msip_ubicacionpre_tsitio_id_idx ON public.msip_ubicacionpre USING b
 --
 
 CREATE INDEX msip_ubicacionpre_vereda_id_idx ON public.msip_ubicacionpre USING btree (vereda_id);
+
+
+--
+-- Name: notifications_type_ref_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notifications_type_ref_key_idx ON public.notifications USING btree (type, ref_key);
 
 
 --

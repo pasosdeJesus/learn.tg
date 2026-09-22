@@ -89,6 +89,10 @@ export default function Page({ params }: PageProps) {
   const [gdEligible, setGdEligible] = useState<boolean | null>(null)
   const [gdReason, setGdReason] = useState<string | null>(null)
   const [fundSlearn, setFundSlearn] = useState<string | null>(null)
+  // Precio del curso premium, para mostrarlo junto al botón (§2.1 de
+  // https://github.com/pasosdeJesus/learn.tg/issues/128): antes solo se veía
+  // dentro del modal de compra.
+  const [premiumPrice, setPremiumPrice] = useState<{ usdt: number; slearn: number } | null>(null)
 
   const isGd =
     course?.prefijoRuta === '/gdcluster' || course?.prefijoRuta === '/redgd'
@@ -131,6 +135,25 @@ export default function Page({ params }: PageProps) {
     })()
     return () => { cancelled = true }
   }, [course, address])
+
+  // Precio (USDT y SLEARN con el 10% de descuento) para el botón de compra.
+  useEffect(() => {
+    if (!course || !address || Number(course.porPagar) <= 0 || hasPurchased) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await authedGet<any>(`/api/courses/premium/price?courseId=${course.id}`)
+        if (cancelled) return
+        setPremiumPrice({
+          usdt: Number(res.data?.priceUSDT),
+          slearn: Number(res.data?.priceSLEARN),
+        })
+      } catch {
+        if (!cancelled) setPremiumPrice(null)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [course, address, hasPurchased])
 
   // Global Disciples courses: show remaining churches fund (22 SLEARN pastor bonus).
   useEffect(() => {
@@ -248,6 +271,19 @@ export default function Page({ params }: PageProps) {
                     >
                       {course.idioma === 'en' ? 'Buy this course' : 'Comprar este curso'}
                     </button>
+                  )}
+                  {!hasPurchased && gdEligible !== false && premiumPrice && premiumPrice.usdt > 0 && (
+                    <span data-testid="premium-price" className="text-xs text-gray-600">
+                      {premiumPrice.usdt.toFixed(2)} USDT
+                      {premiumPrice.slearn > 0 && (
+                        <>
+                          {' · '}
+                          {course.idioma === 'en'
+                            ? `or ${premiumPrice.slearn.toFixed(2)} SLEARN (10% off)`
+                            : `o ${premiumPrice.slearn.toFixed(2)} SLEARN (10% dto.)`}
+                        </>
+                      )}
+                    </span>
                   )}
                 </div>
               )}

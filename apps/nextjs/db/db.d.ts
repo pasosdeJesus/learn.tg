@@ -1361,6 +1361,7 @@ export interface Notifications {
   id: Generated<number>;
   is_read: Generated<boolean>;
   link: string | null;
+  ref_key: string | null;
   title: string | null;
   type: string | null;
   usuario_id: number | null;
@@ -1371,7 +1372,7 @@ export interface PremiumCourseUsuario {
   expires_at: Timestamp | null;
   id: Generated<number>;
   purchased_at: Generated<Timestamp | null>;
-  slearn_amount_paid: number | null;
+  slearn_amount_paid: Numeric | null;
   transaction_hash: string;
   usdt_amount_paid: Numeric | null;
   usuario_id: number;

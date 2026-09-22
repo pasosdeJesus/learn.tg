@@ -228,7 +228,11 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
     })
 
     const usdtPaid = Number(formatUnits(onChainUsdtAmount, usdtDecimals))
-    const slearnPaid = Math.round(Number(formatUnits(onChainSlearnAmount, deps.backend.SLEARN_DECIMALS)) * 100)
+    // SLEARN legibles (2 decimales), como `usdtPaid` y como `transaction.amount`:
+    // `premium_course_usuario.slearn_amount_paid` es DECIMAL(10,2) desde la
+    // migración 20260921180000 (antes era INTEGER en centésimas y cada lector
+    // tenía que dividir por 100). Ver https://github.com/pasosdeJesus/learn.tg/issues/128.
+    const slearnPaid = Math.round(Number(formatUnits(onChainSlearnAmount, deps.backend.SLEARN_DECIMALS)) * 100) / 100
 
     // Clean distribution computed from the percentages actually passed to
     // SLEARN.processPayment (https://github.com/pasosdeJesus/learn.tg/issues/128) — what the success dialog should show.

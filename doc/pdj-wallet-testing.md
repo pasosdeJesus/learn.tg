@@ -85,9 +85,9 @@ make test-hooks test-components
 ```
 
 Expected (medido 2026-09-21): `make test-hooks` 83 passed / 2 skipped (12 archivos)
-y `make test-components` 169 passed / 3 skipped (21 archivos, incluye
+y `make test-components` 174 passed / 3 skipped (22 archivos, incluye
 `components/ui/__tests__` y `providers/__tests__`). La suite completa `make test`
-da **969 passed / 6 skipped en 135 archivos** (0 fallas), y la mayor parte del
+da **995 passed / 6 skipped en 140 archivos** (0 fallas), y la mayor parte del
 tiempo es el montaje de jsdom por archivo, no las aserciones.
 
 What these cover:

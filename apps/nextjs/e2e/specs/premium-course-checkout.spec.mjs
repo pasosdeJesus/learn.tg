@@ -1,10 +1,25 @@
-// E2E Test: Premium course checkout UI
-// Verifies that a premium course (GD) shows a "Buy this course" button and
-// opens the CheckoutModal with the price.
+// E2E Test: Premium course checkout
+// Verifies that a premium course (GD) shows a "Buy this course" button **with its
+// price**, opens the CheckoutModal with the USDT/SLEARN split, and — optionally —
+// completes a real purchase and checks the result screen, the course access and
+// the purchase in the profile. Covers
+// https://github.com/pasosdeJesus/learn.tg/issues/128 §2.1-§2.3 and §4.2.
 //
 // Uses a fresh pastor wallet made eligible via the API (Sierra Leone profile
 // + verifier confirmation of the worship location), so the Buy button is
 // always shown regardless of what the fixture wallet has purchased.
+//
+// The payment mixes of §4.2 need a funded wallet. A fresh wallet starts empty
+// and a (user, course) purchase cannot be repeated, so funding is explicit:
+//
+//   SLEARN_PCT=100 FUND_FRESH=1 …  # 100% SLEARN
+//   SLEARN_PCT=0   FUND_FRESH=1 …  # 100% USDT
+//   SLEARN_PCT=50  FUND_FRESH=1 …  # mixed 50/50
+//
+// FUND_FRESH=1 transfers testnet USDT/SLEARN (+ gas CELO) from the fixture wallet
+// to the fresh one, so it spends dev funds: run the three mixes on purpose, not
+// on every suite run. Without it the spec still checks the price, the modal and
+// the slider, and reports the purchase steps as skipped.
 //
 // Execution:
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220 \
@@ -16,6 +31,8 @@ import https from 'https'
 import axios from 'axios'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
+import { createPublicClient, createWalletClient, http, parseEther, parseUnits } from 'viem'
+import { celoSepolia } from 'viem/chains'
 import {
   initTestEnv, launchBrowser, newPage,
   resetFailures, fail, ok, summary, short,
@@ -25,8 +42,20 @@ import { gotoWithRetry } from '../helpers/retry.mjs'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
+const SLEARN_PCT = Number(process.env.SLEARN_PCT ?? '100') // 0 | 50 | 100
+const FUND_FRESH = process.env.FUND_FRESH === '1'
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 const httpsAgent = new https.Agent({ rejectUnauthorized: false })
+
+const ERC20_TRANSFER = [{
+  name: 'transfer', type: 'function',
+  inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }],
+  outputs: [{ type: 'bool' }],
+}, {
+  name: 'balanceOf', type: 'function', stateMutability: 'view',
+  inputs: [{ name: 'owner', type: 'address' }],
+  outputs: [{ type: 'uint256' }],
+}]
 
 function loadEnvCredentials() {
   for (const envPath of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env'), path.join(process.cwd(), '.env')]) {
@@ -34,10 +63,68 @@ function loadEnvCredentials() {
       const c = fs.readFileSync(envPath, 'utf8')
       const pk = c.match(/PRIVATE_KEY="([^"]+)"/)?.[1] || c.match(/PRIVATE_KEY=(\S+)/)?.[1]
       const addr = c.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
-      if (pk && addr) return { pk, addr }
+      const usdt = c.match(/NEXT_PUBLIC_USDT_ADDRESS="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_USDT_ADDRESS=(\S+)/)?.[1]
+      const slearn = c.match(/NEXT_PUBLIC_SLEARN_ADDRESS="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_SLEARN_ADDRESS=(\S+)/)?.[1]
+      const rpc = c.match(/NEXT_PUBLIC_RPC_URL="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_RPC_URL=(\S+)/)?.[1]
+      if (pk && addr) return { pk, addr, usdt, slearn, rpc }
     }
   }
   return null
+}
+
+// Fund the fresh wallet from the fixture (testnet), only what this mix needs so
+// the fixture's SLEARN is not drained (other specs, e.g. vault-both-donate, also
+// spend from it). Returns null when the fixture cannot cover the mix.
+async function fundFreshWallet(fixture, to, need) {
+  const account = privateKeyToAccount(fixture.pk)
+  const wallet = createWalletClient({
+    account,
+    chain: celoSepolia,
+    transport: http(fixture.rpc),
+  })
+  const read = createPublicClient({ chain: celoSepolia, transport: http(fixture.rpc) })
+
+  const [usdtBal, slearnBal] = await Promise.all([
+    read.readContract({ address: fixture.usdt, abi: ERC20_TRANSFER, functionName: 'balanceOf', args: [fixture.addr] }),
+    read.readContract({ address: fixture.slearn, abi: ERC20_TRANSFER, functionName: 'balanceOf', args: [fixture.addr] }),
+  ])
+  const usdtHave = Number(usdtBal) / 1e6
+  const slearnHave = Number(slearnBal) / 100
+  if (usdtHave < need.usdt || slearnHave < need.slearn) {
+    console.log(`  [SKIP] fixture funds insufficient: has ${usdtHave.toFixed(2)} USDT / ${slearnHave.toFixed(2)} SLEARN, needs ${need.usdt} / ${need.slearn}`)
+    return null
+  }
+
+  // Las transferencias se envían esperando cada recibo: sin eso la segunda reutiliza
+  // el nonce de la primera y el RPC la rechaza ("nonce too low", medido 2026-09-21).
+  const send = async (fn) => {
+    const hash = await fn()
+    await read.waitForTransactionReceipt({ hash })
+    return hash
+  }
+  const gas = await send(() => wallet.sendTransaction({ to, value: parseEther('0.05') }))
+  const usdt = need.usdt > 0
+    ? await send(() => wallet.writeContract({
+        address: fixture.usdt, abi: ERC20_TRANSFER, functionName: 'transfer',
+        args: [to, parseUnits(String(need.usdt), 6)],
+      }))
+    : null
+  const slearn = need.slearn > 0
+    ? await send(() => wallet.writeContract({
+        address: fixture.slearn, abi: ERC20_TRANSFER, functionName: 'transfer',
+        args: [to, parseUnits(String(need.slearn), 2)],
+      }))
+    : null
+  return { gas, usdt, slearn }
+}
+
+// What this mix costs, with a 15% margin for rounding and gas.
+function mixNeeds(priceUSDT, priceSLEARN, pct) {
+  const round2 = (n) => Math.ceil(n * 100) / 100
+  return {
+    usdt: Math.max(round2(priceUSDT * ((100 - pct) / 100) * 1.15), 0.5),
+    slearn: round2(priceSLEARN * (pct / 100) * 1.15),
+  }
 }
 
 function updateCookies(current, setCookieHeaders) {
@@ -163,6 +250,19 @@ async function main() {
     console.log('  [page dump] ' + JSON.stringify(dump))
   }
 
+  // §2.1: the price (USDT + SLEARN) is shown next to the Buy button, not only
+  // inside the modal. It arrives with the price request, hence the wait.
+  let priceText = null
+  for (let i = 0; i < 15 && !priceText; i++) {
+    await new Promise(r => setTimeout(r, 1000))
+    priceText = await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="premium-price"]')
+      return el ? (el.textContent || '').trim() : null
+    })
+  }
+  if (priceText && /USDT/.test(priceText)) ok(`Price next to the buy button: ${priceText}`)
+  else fail(`Price not shown next to the buy button (got: ${JSON.stringify(priceText)})`)
+
   const clicked = await page.evaluate(() => {
     const buttons = Array.from(document.querySelectorAll('button'))
     const btn = buttons.find((b) => (b.textContent || '').includes('Buy this course'))
@@ -183,19 +283,134 @@ async function main() {
   if (modalVisible) ok('Checkout modal opened')
   else fail('Checkout modal did not open')
 
-  // Slider (USDT/SLEARN split) present and functional
-  const sliderInfo = await page.evaluate(() => {
+  // Slider (USDT/SLEARN split) present and functional: it is moved to the mix
+  // this run covers (SLEARN_PCT).
+  const sliderInfo = await page.evaluate((pct) => {
     const range = document.querySelector('input[type="range"]')
     if (!range) return null
     const before = range.value
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
-    setter.call(range, '100')
+    setter.call(range, String(pct))
     range.dispatchEvent(new Event('input', { bubbles: true }))
     range.dispatchEvent(new Event('change', { bubbles: true }))
     return { before, after: range.value, min: range.min, max: range.max }
-  })
-  if (sliderInfo) ok(`Slider present (${sliderInfo.min}–${sliderInfo.max}, moved ${sliderInfo.before}→${sliderInfo.after})`)
+  }, SLEARN_PCT)
+  if (sliderInfo) ok(`Slider present (${sliderInfo.min}–${sliderInfo.max}, moved ${sliderInfo.before}→${sliderInfo.after} for ${SLEARN_PCT}% SLEARN)`)
   else fail('Slider not found in modal')
+
+  // ── Purchase (§4.2) ─────────────────────────────────────────────────────
+  // Only with FUND_FRESH=1: a fresh wallet is empty, so it is funded from the
+  // fixture wallet with testnet tokens (see the header).
+  const fundNeeded = FUND_FRESH
+  if (!fundNeeded) {
+    console.log(`  [SKIP] purchase steps (${SLEARN_PCT}% SLEARN): rerun with FUND_FRESH=1 to fund the fresh wallet and buy for real`)
+  } else {
+    try {
+      // Precio real de este pastor (SL) para pedirle a la fixture solo lo que la
+      // mezcla necesita.
+      const priceRes = await axios.get(
+        `${SITE}/api/courses/premium/price?courseId=10&walletAddress=${encodeURIComponent(addr)}`,
+        { httpsAgent, headers: { Cookie: s.cookies } },
+      )
+      const need = mixNeeds(Number(priceRes.data.priceUSDT), Number(priceRes.data.priceSLEARN), SLEARN_PCT)
+      console.log(`  [mix] ${SLEARN_PCT}% SLEARN → funding ${need.usdt} USDT + ${need.slearn} SLEARN`)
+
+      const hashes = await fundFreshWallet(verifier, addr, need)
+      if (!hashes) {
+        console.log(`  [SKIP] purchase steps: top up the fixture wallet and rerun with SLEARN_PCT=${SLEARN_PCT} FUND_FRESH=1`)
+      } else {
+        ok(`Fresh wallet funded from the fixture (${short(hashes.gas)}…)`)
+        await new Promise(r => setTimeout(r, 8000)) // let the funding settle
+
+        const purchaseClicked = await page.evaluate(() => {
+          const buttons = Array.from(document.querySelectorAll('button'))
+          const btn = buttons.find((b) => {
+            const txt = (b.textContent || '').trim()
+            return (txt === 'Purchase' || txt === 'Comprar') && !b.disabled
+          })
+          if (btn) { btn.click(); return true }
+          return false
+        })
+        if (purchaseClicked) ok('Purchase button clicked')
+        else fail('Purchase button not found/clickable in the modal')
+
+        // Result screen: title + transaction link (§2.2)
+        let resultTitle = false
+        let txHref = null
+        let gasPanel = false
+        for (let i = 0; i < 60 && !resultTitle && !gasPanel; i++) {
+          await new Promise(r => setTimeout(r, 2000))
+          const st = await page.evaluate(() => {
+            const txt = document.body.textContent || ''
+            const link = Array.from(document.querySelectorAll('a')).find(a => (a.getAttribute('href') || '').includes('/tx/'))
+            return {
+              result: txt.includes('Course purchased') || txt.includes('Curso comprado'),
+              gas: txt.includes('Se necesita CELO') || txt.includes('Needs CELO') || txt.includes('You need'),
+              href: link ? link.getAttribute('href') : null,
+            }
+          })
+          resultTitle = st.result
+          txHref = st.href || txHref
+          gasPanel = st.gas
+        }
+
+        if (resultTitle) ok('Result screen shown after the purchase')
+        else if (gasPanel) console.log('  [SKIP] the wallet could not pay (gas/balance panel shown)')
+        else fail('Result screen did not appear after the purchase')
+
+        if (resultTitle) {
+          if (txHref && /\/tx\/0x/.test(txHref)) ok(`Result screen links the transaction (${txHref.slice(-12)})`)
+          else fail('Result screen has no transaction link')
+
+          // OK closes the modal and reloads the page
+          await page.evaluate(() => {
+            const buttons = Array.from(document.querySelectorAll('button'))
+            const okBtn = buttons.find(b => ['OK', 'Listo', 'Close', 'Cerrar', 'Continue'].includes((b.textContent || '').trim()))
+            if (okBtn) okBtn.click()
+          })
+          await new Promise(r => setTimeout(r, 8000))
+
+          // Access after the purchase + the state on the course page
+          await gotoWithRetry(page, `${base}/en/gdcluster`, { waitUntil: 'domcontentloaded', timeout: 120000 })
+          await new Promise(r => setTimeout(r, 5000))
+          const purchased = await page.evaluate(() => {
+            const txt = document.body.innerText || ''
+            return txt.includes('Purchased') || txt.includes('Comprado')
+          })
+          if (purchased) ok('Course page shows the course as purchased')
+          else fail('Course page does not show the course as purchased')
+
+          // §2.3: the purchase is listed in the profile
+          await gotoWithRetry(page, `${base}/en/profile`, { waitUntil: 'domcontentloaded', timeout: 120000 })
+          let listed = false
+          for (let i = 0; i < 30 && !listed; i++) {
+            await new Promise(r => setTimeout(r, 1500))
+            listed = await page.evaluate(() => {
+              const el = document.querySelector('[data-testid="premium-courses"]')
+              return !!el && (el.textContent || '').includes('Global Disciples')
+            })
+          }
+          if (listed) ok('The purchase is listed in the profile ("My premium courses")')
+          else fail('The purchase is not listed in the profile')
+
+          // §4.2: the guide is accessible after the purchase
+          await gotoWithRetry(page, `${base}/en/gdcluster/guide1`, { waitUntil: 'domcontentloaded', timeout: 120000 })
+          await new Promise(r => setTimeout(r, 5000))
+          const guideState = await page.evaluate(() => {
+            const txt = document.body.innerText || ''
+            return {
+              wall: txt.includes('Buy this course') || txt.includes('Comprar este curso'),
+              len: txt.length,
+            }
+          })
+          if (!guideState.wall && guideState.len > 500) ok(`Guide accessible after the purchase (${guideState.len} chars)`)
+          else fail(`Guide not accessible after the purchase (wall=${guideState.wall}, len=${guideState.len})`)
+        }
+      }
+    } catch (e) {
+      fail(`Purchase flow failed: ${e?.shortMessage || e?.message || e}`)
+    }
+  }
 
   await browser.close()
   const elapsed = ((performance.now() - t0) / 1000).toFixed(1)

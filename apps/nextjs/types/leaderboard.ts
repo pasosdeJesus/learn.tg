@@ -80,4 +80,16 @@ export interface TransparencyResponse {
     adminTestSLEARN: number
     vaultSLEARN: number
   }
+  premium?: {
+    totalPurchases: number
+    totalUSDT: number
+    totalSLEARN: number
+    courses: Array<{
+      courseId: number
+      titulo: string | null
+      purchases: number
+      usdt: number
+      slearn: number
+    }>
+  }
 }

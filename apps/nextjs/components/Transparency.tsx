@@ -32,6 +32,7 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
   const data = apiData?.data || []
   const totals = apiData?.totals
   const reserves = apiData?.reserves
+  const premium = apiData?.premium
   const rules = apiData?.rules || []
 
   // Translation helper
@@ -49,6 +50,10 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
       churchesWallet: 'Churches Wallet',
       coverage: 'Coverage',
       coverageTarget: 'Target: 120%',
+      premium: 'Premium course payments',
+      premiumNote: 'Paid course purchases recorded on-chain, by course.',
+      premiumPurchases: 'Purchases',
+      premiumPaid: 'Paid',
       viewLeaderboard: 'View Leaderboard',
     },
     es: {
@@ -65,6 +70,10 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
       explorer: 'Explorador',
       coverage: 'Cobertura',
       coverageTarget: 'Meta: 120%',
+      premium: 'Pagos de cursos premium',
+      premiumNote: 'Compras de cursos de pago registradas en la cadena, por curso.',
+      premiumPurchases: 'Compras',
+      premiumPaid: 'Pagado',
       viewLeaderboard: 'Ver Tabla de Clasificación',
     },
   }), [lang])
@@ -151,6 +160,43 @@ export function Transparency({ initialData, lang = 'en' }: TransparencyProps) {
               <div className="text-xl font-bold text-emerald-600">${reserves.churchesWalletUSDT.toFixed(2)} USDT</div>
               <div className="text-sm font-medium text-amber-600">{reserves.churchesWalletSLEARN.toFixed(2)} SLEARN</div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {premium && premium.courses.length > 0 && (
+        <div className="rounded-xl border bg-card p-6">
+          <h2 className="text-lg font-semibold mb-1">{t('premium')}</h2>
+          <p className="text-sm text-muted-foreground mb-4">{t('premiumNote')}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                  <th className="py-2">{t('premiumPaid')}</th>
+                  <th className="py-2 text-right">{t('premiumPurchases')}</th>
+                  <th className="py-2 text-right">USDT</th>
+                  <th className="py-2 text-right">SLEARN</th>
+                </tr>
+              </thead>
+              <tbody>
+                {premium.courses.map((c) => (
+                  <tr key={c.courseId} className="border-t">
+                    <td className="py-2">{c.titulo || `#${c.courseId}`}</td>
+                    <td className="py-2 text-right">{c.purchases}</td>
+                    <td className="py-2 text-right">{c.usdt.toFixed(2)}</td>
+                    <td className="py-2 text-right">{c.slearn.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t font-semibold">
+                  <td className="py-2">Total</td>
+                  <td className="py-2 text-right">{premium.totalPurchases}</td>
+                  <td className="py-2 text-right">{premium.totalUSDT.toFixed(2)}</td>
+                  <td className="py-2 text-right">{premium.totalSLEARN.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
       )}

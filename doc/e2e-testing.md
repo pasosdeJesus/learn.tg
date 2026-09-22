@@ -130,11 +130,13 @@ Detalles que cuestan tiempo si se ignoran:
   `PATCH /api/admin/church/[id]` → 500, y con el diagnóstico de la sección
   siguiente la causa resultó ser **on-chain**: el bono de 22 SLEARN se firma con
   la llave de `CHURCHES_WALLET_PRIVATE_KEY` y en el `apps/.env` local esa llave es
-  la de prueba (`0x84272a6d…`), que **no** está en la lista de transferencias
-  autorizadas del SLEARN (`authorizedTransfers(0x84272a6d…) = false` en Sepolia),
-  mientras que la billetera real del fondo (`0x01a72816…`, la que usa el dev site)
-  sí (`true`). El contrato revierte con `SLEARN: neither sender nor receiver
-  authorized`. Si un paso falla en local y pasa en el dev site, revisa antes las
+  la de prueba (`0x84272a6d…`). En ese momento esa llave **no** estaba en la lista
+  de transferencias autorizadas del SLEARN (`authorizedTransfers(0x84272a6d…) = false`
+  en Sepolia: la causa del revert), mientras que la billetera real del fondo
+  (`0x01a72816…`, la que usa el dev site) sí (`true`). El contrato revierte con `SLEARN: neither sender nor receiver
+  authorized`. **Actualizado 2026-09-21:** medida hoy, `authorizedTransfers(0x84272a6d…) = true` en el SLEARN de
+  Sepolia `0x9fBa3A2Ca0275c4D7A3eA341923f8c531e913BFA`, así que la fixture ya puede enviar SLEARN (y de hecho las
+  mezclas 50/50 y 100% del smoke `premium-purchase` corrieron desde ella). Si un paso falla en local y pasa en el dev site, revisa antes las
   llaves/el servidor local (base de datos sin migrar, `next dev`) que el código.
 
 ### Diagnóstico de errores del servidor
@@ -221,6 +223,8 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `full-journey.spec.mjs` | All endpoints: CSRF, SIWE, session, profile, crossword, UBI, signout |
 | `landing-page.spec.mjs` | `/en` and `/es` return 200, no "Failed to load courses" error |
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
+| `premium-price.spec.mjs` | Precio del curso premium por país (https://github.com/pasosdeJesus/learn.tg/issues/128 §4.2): crea dos perfiles (Sierra Leona y Colombia) y compara `/api/courses/premium/price` — HDI alto paga más, el SLEARN conserva el 10% y los montos caen en la calibración (SL ~0.70, CO ~3.00). HTTP, sin Chrome ni fondos |
+| `premium-purchase.spec.mjs` | Camino del dinero de una compra premium por HTTP (https://github.com/pasosdeJesus/learn.tg/issues/128 §4.2): pastor nuevo verificado → precio → transferencias del pastor al backend del sitio → `POST /api/courses/premium/purchase` → `processPayment` on-chain, distribución, acceso al curso y fila en `mine`. **Apagado por defecto**: sin `PURCHASE=1` solo comprueba precio y autenticación. Con `PURCHASE=1 SLEARN_PCT=0\|50\|100` gasta fondos de prueba y pide el pago a la billetera que publica `/api/churches/fund` (el dev site colapsa todos los roles en una) |
 | `transparency.spec.mjs` | Panel de transparencia: `/en/transparency` y `/es/transparency` responden 200 y `/api/transparency` cumple el contrato documentado (`data`, `totals`, `rules`; reservas y relación de cobertura cuando las lecturas on-chain responden) |
 | `prerequisites.spec.mjs` | Wallet registration + verifier check + profile setup + self-verify → ≥50 score |
 | `referral-payout.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
@@ -234,7 +238,7 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 
 ### Current Status (2026-09-21)
 
-**19 smokes** (medido 2026-09-21). `leaderboard.spec.mjs` puede fallar por el
+**21 smokes** (medido 2026-09-21). `leaderboard.spec.mjs` puede fallar por el
 texto explicativo del profile score no renderizado (contenido menor). Las rutas
 de cursos de Rails son públicas (R-#233), así que `rails-auth.spec.mjs` no
 necesita credencial. Los `caldav-*` se saltan si `CALDAV_URL` no está definido.
@@ -365,7 +369,7 @@ PROD_SPECS=1 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=prod-land
 
 ### Current Status (2026-08-24)
 
-**21 browser specs at that date** (34 browser specs and 19 HTTP smoke specs
+**21 browser specs at that date** (34 browser specs and 21 HTTP smoke specs
 measured 2026-09-21, tras retirar los `*-diag` y los dos smokes que sólo
 informaban). New specs cover the 2026-08 regressions: interview date
 (timestamptz migration), verified-city purchase gate, session fallback, and
@@ -373,7 +377,7 @@ the vault donation with both cryptos:
 
 || Spec | What it tests |
 ||------|---------------|
-|| `premium-course-checkout.spec.mjs` | GD checkout UI (Buy button → CheckoutModal → slider). Creates a fresh eligible pastor via API, so it never depends on the fixture wallet's purchase state |
+|| `premium-course-checkout.spec.mjs` | GD checkout: precio junto al botón Buy (USDT + SLEARN, `data-testid="premium-price"`) → modal → slider. Con `FUND_FRESH=1` además **compra de verdad** (`SLEARN_PCT=100\|0\|50`, fondos de prueba transferidos desde la wallet fixture al pastor nuevo) y verifica el estado de éxito con el hash, "Purchased", la compra listada en el perfil y el acceso a `guide1`; sin `FUND_FRESH=1` esos pasos se informan como saltados (gastan fondos del dev). Crea su propio pastor elegible vía API, así que no depende del estado de compra de la wallet fixture |
 || `interview-date.spec.mjs` | Booking a 2PM interview stores/displays the exact instant (timestamptz regression: 2PM → "05:00 AM" bug) |
 || `verified-city-gate.spec.mjs` | Purchase eligibility: unverified pastor NOT eligible (`verified_city_required`), verified pastor eligible |
 || `vault-both-donate.spec.mjs` | Vault donation with BOTH USDT+SLEARN through `/api/add-donation` (sends real testnet tokens to the dev backend) |
@@ -389,7 +393,7 @@ time out on SIWE under suite load (passes solo).
 | Spec | Requires on the dev server |
 |------|----------------------------|
 | `interview-date` | `proposed_date_of_interview` migrated to `timestamptz` (see `db/migrations/20260822000000_proposed_interview_timestamptz.ts`) |
-| `verified-city-gate`, `premium-course-checkout` | Verifier wallet (`apps/.env`) whitelisted; eligibility = verified worship city |
+| `verified-city-gate`, `premium-course-checkout` | Verifier wallet (`apps/.env`) whitelisted; eligibility = verified worship city. `premium-course-checkout` con `FUND_FRESH=1` necesita además que la wallet fixture tenga USDT (≥3), SLEARN y CELO para gas, porque financia al pastor nuevo. Medido 2026-09-21: con el precio actual (SL: 0.70 USDT / 13.86 SLEARN) la mezcla al 100% pide **15.94 SLEARN** y la 50/50 **7.97** (cada una con 15% de margen); el smoke `premium-purchase` documenta las tres mezclas |
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
 | `donate-campaign-real` | Motor de campañas desplegado (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_ADDRESS`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` en el dev (billetera única). La ronda C (cashback ON) requiere MINTER_ROLE de SLEARN en el backend (otorgado en el SLEARN Sepolia del dev) + CELO en la billetera de prueba para el gas; las rondas A/B (cashback OFF) no lo requieren |
 | `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, shown by `/api/churches/fund`) with **≥22 SLEARN** for the pastor bonus; otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when `/api/churches/fund` reports a low balance |

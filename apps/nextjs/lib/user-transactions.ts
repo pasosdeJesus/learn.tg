@@ -10,6 +10,12 @@ export interface UserTransaction {
   date: Date | string
   hash: string | null
   descripcion: string | null
+  // Agrupación lógica del movimiento y su detalle: `categoria` agrupa ('payment',
+  // 'donation', 'cashback'…) y `subcategoria` precisa ('course_purchase',
+  // 'cluster', 'country'). Sin ellas, una compra de curso pagada en USDT y SLEARN
+  // se veía como dos filas indistinguibles de cualquier otro pago.
+  categoria: string | null
+  subcategoria: string | null
 }
 
 export async function getUserTransactions(db: Kysely<DB>, usuarioId: number) {
@@ -24,7 +30,9 @@ export async function getUserTransactions(db: Kysely<DB>, usuarioId: number) {
       'balance_impact',
       'date',
       'hash',
-      'descripcion'
+      'descripcion',
+      'categoria',
+      'subcategoria'
     ])
     .orderBy('date', 'desc')
     .execute()
