@@ -153,8 +153,8 @@ describe('OfflineCourseDownload', () => {
     await waitFor(() => expect(screen.getByText('Download for offline')).toBeInTheDocument())
   })
 
-  it('revalidates a copy older than 24 h and tells the user when it changed', async () => {
-    hooks.record = { ...SAVED, downloadedAt: Date.now() - 25 * 60 * 60 * 1000 }
+  it('revalidates a copy older than a week and tells the user when it changed', async () => {
+    hooks.record = { ...SAVED, downloadedAt: Date.now() - 8 * 24 * 60 * 60 * 1000 }
     hooks.revalidateCourse.mockResolvedValue({ updated: true, course: SAVED })
 
     render(<OfflineCourseDownload {...BASE_PROPS} />)

@@ -20,11 +20,15 @@ import { deleteGuide, saveGuide } from '@/lib/offline-guide-db'
  * afiliación en un teléfono compartido, incluso sin conexión.
  */
 
-export const REVALIDATION_MS = 24 * 60 * 60 * 1000
+// 7 días (decisión del operador, 2026-09-23): la copia descargada vale una semana,
+// igual que la caché de páginas del service worker; antes se revalidaba a diario.
+export const REVALIDATION_MS = 7 * 24 * 60 * 60 * 1000
 
 export interface DownloadedPuzzle {
-  grid: unknown
-  placements: unknown[]
+  // Payload de GET /api/crossword tal cual (celdas y pistas, sin respuestas): se
+  // guarda y se vuelve a usar sin transformarlo, así que el tipo es opaco aquí.
+  grid: any
+  placements: any[]
 }
 
 export interface DownloadedGuide {
@@ -80,7 +84,7 @@ export function approximateBytes(parts: string[]): number {
 }
 
 /**
- * ¿La copia tiene más de 24 h? Cuando no hay conexión no se revalida: el dato
+ * ¿La copia tiene más de una semana? Cuando no hay conexión no se revalida: el dato
  * solo decide si conviene refrescar la próxima vez que haya red.
  */
 export function isStale(course: Pick<DownloadedCourse, 'downloadedAt'>, now: number = Date.now()): boolean {
@@ -190,6 +194,17 @@ export async function deleteDownloadedCourses(
  */
 export async function saveCourseGuide(key: string, suffix: string, markdown: string): Promise<void> {
   await saveGuide(`${key}/${suffix}`, markdown)
+}
+
+/**
+ * El crucigrama guardado de una guía descargada (R-#256 §3.3), para poder
+ * resolverlo sin conexión aunque nunca se haya abierto en línea. Es el payload
+ * **sin respuestas** que sirvió `GET /api/crossword`.
+ */
+export async function getStoredPuzzle(key: string, suffix: string): Promise<DownloadedPuzzle | null> {
+  const course = await getDownloadedCourse(key)
+  const guide = course?.guides.find((item) => item.suffix === suffix)
+  return guide?.puzzle ?? null
 }
 
 /**

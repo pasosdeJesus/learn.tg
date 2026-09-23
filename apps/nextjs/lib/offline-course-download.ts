@@ -5,6 +5,7 @@ import {
   computeRevision,
   courseKey,
   getDownloadedCourse,
+  isStale,
   saveCourseGuide,
   saveDownloadedCourse,
   type DownloadedCourse,
@@ -43,8 +44,7 @@ export interface DownloadOptions {
   /** GET autenticado (`authedGet` de `useAuthedApi`). */
   get: <T = any>(url: string) => Promise<{ data: T }>
   wallet: string | null
-  onProgress?: (progress: DownloadProgress) => void
-}
+  onProgress?: (progress: DownloadProgress) => void}
 
 interface GuideResponse {
   markdown?: string
@@ -98,7 +98,12 @@ export async function downloadCourse(
   for (const suffix of descriptor.guides) {
     // Deja el documento de la guía en la caché del service worker para poder
     // abrirla sin conexión aunque nunca se haya visitado (ver `warmPageCache`).
-    await warmPageCache(`/${descriptor.lang}/${descriptor.prefix.replace(/^\/+/, '')}/${suffix}`)
+    // Las dos páginas de la guía: la guía y su crucigrama. Sin la segunda, el
+    // crucigrama descargado no abre sin conexión (el operador lo reportó el
+    // 2026-09-23: la guía 3 con red apagada caía en "You are offline").
+    const basePath = `/${descriptor.lang}/${descriptor.prefix.replace(/^\/+/, '')}/${suffix}`
+    await warmPageCache(basePath)
+    await warmPageCache(`${basePath}/test`)
 
     const guideResponse = await get<GuideResponse>(
       `/api/guide?courseId=${descriptor.courseId}&lang=${descriptor.lang}` +
@@ -171,4 +176,143 @@ export async function revalidateCourse(
   } catch {
     return { updated: false, course: null }
   }
+}
+
+/** Motivos por los que un curso no se descarga (se informan al usuario). */
+export type SkipReason = 'privacy' | 'not-purchased' | 'already-current'
+
+export interface SyncResult {
+  downloaded: string[]
+  skipped: { key: string; reason: SkipReason }[]
+  failed: { key: string; error: string }[]
+}
+
+interface CatalogCourse {
+  id: number
+  prefijoRuta?: string | null
+  idioma?: string | null
+  titulo?: string | null
+  porPagar?: string | number | null
+  contenido_cristiano?: boolean | null
+  sinBilletera?: boolean | null
+}
+
+/**
+ * Cursos que este estudiante puede leer (y que conviene tener sin conexión).
+ *
+ * Reglas, todas en el servidor y respetadas aquí:
+ * - un curso **de contenido cristiano** solo cuenta si el dueño encendió el
+ *   interruptor de R-#259 (el teléfono no debe revelar la afiliación por sí solo);
+ * - un curso **de pago** solo cuenta si esta billetera lo compró;
+ * - el resto de cursos del catálogo del idioma, sí.
+ *
+ * Devuelve también los omitidos con su motivo, para poder decirlo en la interfaz.
+ */
+export async function listAccessibleCourses(
+  get: DownloadOptions['get'],
+  options: { lang: string; authenticated: boolean },
+): Promise<{ courses: CourseDescriptor[]; skipped: { prefix: string; reason: SkipReason }[]; total: number }> {
+  const { lang, authenticated } = options
+  const skipped: { prefix: string; reason: SkipReason }[] = []
+
+  const catalog = await get<CatalogCourse[]>(`/api/course-catalog?filtro[busidioma]=${encodeURIComponent(lang)}`)
+  const catalogCourses: CatalogCourse[] = Array.isArray(catalog.data) ? catalog.data : []
+  if (catalogCourses.length === 0) return { courses: [], skipped, total: 0 }
+
+  let publicCourses = true
+  let publicChristianCourses = false
+  let purchased = new Set<number>()
+  if (authenticated) {
+    try {
+      const settings = await get<{ publicCourses?: boolean; publicChristianCourses?: boolean }>('/api/settings')
+      publicCourses = settings.data?.publicCourses !== false
+      publicChristianCourses = settings.data?.publicChristianCourses === true
+    } catch {
+      // sin ajustes legibles se asume el default de R-#259 (no publicar cristianos)
+    }
+    try {
+      const mine = await get<{ courses?: { course_id: number }[] }>('/api/courses/premium/mine')
+      purchased = new Set((mine.data?.courses || []).map((c) => Number(c.course_id)))
+    } catch {
+      // sin la lista de compras, los cursos de pago quedan fuera (no se descargan)
+    }
+  }
+
+  const courses: CourseDescriptor[] = []
+  for (const course of catalogCourses) {
+    const prefix = String(course.prefijoRuta || '').replace(/^\/+/, '')
+    const courseId = Number(course.id)
+    if (!prefix || !courseId) continue
+    const isPremium = Number(course.porPagar || 0) > 0
+    const contenidoCristiano = course.contenido_cristiano === true
+
+    if (contenidoCristiano && !(publicCourses && publicChristianCourses)) {
+      skipped.push({ prefix, reason: 'privacy' })
+      continue
+    }
+    if (isPremium && !purchased.has(courseId)) {
+      skipped.push({ prefix, reason: 'not-purchased' })
+      continue
+    }
+
+    try {
+      const detail = await get<{ guias?: { sufijoRuta?: string }[] }>(`/api/course-catalog/${courseId}`)
+      const guides = (detail.data?.guias || [])
+        .map((guide) => String(guide.sufijoRuta || ''))
+        .filter((suffix) => suffix.length > 0)
+      if (guides.length === 0) continue
+      courses.push({
+        courseId,
+        lang: String(course.idioma || lang),
+        prefix,
+        titulo: course.titulo ?? null,
+        contenidoCristiano,
+        isPremium,
+        guides,
+      })
+    } catch {
+      // un curso que no se puede leer (detalle no disponible) simplemente no entra
+    }
+  }
+
+  return { courses, skipped, total: catalogCourses.length }
+}
+
+/**
+ * Descarga **todos** los cursos a los que el estudiante tiene acceso, para que
+ * ninguna guía accesible falte sin conexión (pedido del operador, 2026-09-23).
+ *
+ * Es idempotente y barato de repetir: si la copia ya está al día (misma lista de
+ * guías y sin caducar) se omite, así que puede correr sola cada vez que la app
+ * abre con conexión. Un fallo en un curso no detiene los demás.
+ */
+export async function downloadAllAccessible(
+  get: DownloadOptions['get'],
+  options: { lang: string; wallet: string | null; authenticated: boolean; onProgress?: (progress: { done: number; total: number; label: string }) => void },
+): Promise<SyncResult> {
+  const { lang, wallet, authenticated, onProgress } = options
+  const result: SyncResult = { downloaded: [], skipped: [], failed: [] }
+
+  const { courses } = await listAccessibleCourses(get, { lang, authenticated })
+  let done = 0
+  for (const descriptor of courses) {
+    const key = courseKey(descriptor.lang, descriptor.prefix)
+    onProgress?.({ done, total: courses.length, label: descriptor.prefix })
+    const previous = await getDownloadedCourse(key)
+    const sameGuides = previous?.guides.map((guide) => guide.suffix).join(',') === descriptor.guides.join(',')
+    if (previous && sameGuides && !isStale(previous)) {
+      result.skipped.push({ key, reason: 'already-current' })
+      done++
+      continue
+    }
+    try {
+      await downloadCourse(descriptor, { get, wallet })
+      result.downloaded.push(key)
+    } catch (error) {
+      result.failed.push({ key, error: error instanceof Error ? error.message : String(error) })
+    }
+    done++
+    onProgress?.({ done, total: courses.length, label: descriptor.prefix })
+  }
+  return result
 }

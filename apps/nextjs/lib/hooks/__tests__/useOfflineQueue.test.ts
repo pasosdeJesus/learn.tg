@@ -89,4 +89,25 @@ describe('useOfflineQueue (R-#241/R-#242)', () => {
     expect(fetchMock).not.toHaveBeenCalled()
     expect(result.current.pending).toBe(1)
   })
+
+  // R-#242: el hook vive en el layout (`OfflineQueueSync`) y también en la página
+  // del crucigrama; dos instancias drenando a la vez enviarían la misma respuesta
+  // dos veces (y la beca podría pagarse dos veces).
+  it('sends each queued answer only once when two instances flush together', async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const first = renderHook(() => useOfflineQueue())
+    const second = renderHook(() => useOfflineQueue())
+    await act(async () => {
+      await first.result.current.enqueue('/api/check-crossword', { guideId: 6 })
+    })
+
+    await act(async () => {
+      await Promise.all([first.result.current.flush(), second.result.current.flush()])
+    })
+
+    expect(fetchMock.mock.calls.filter(([url]: any[]) => url === '/api/check-crossword')).toHaveLength(1)
+    expect(await listPending()).toHaveLength(0)
+  })
 })

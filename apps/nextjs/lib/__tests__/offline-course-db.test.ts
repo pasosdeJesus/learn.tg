@@ -74,10 +74,12 @@ describe('offline-course-db (R-#256)', () => {
     expect(await getGuide('en/gdcluster/guide1')).toBeNull()
   })
 
-  it('revalidates after 24 h and keeps the copy before that', () => {
-    const now = 10 * 24 * 60 * 60 * 1000
+  it('revalidates after 7 days and keeps the copy before that', () => {
+    const now = 30 * 24 * 60 * 60 * 1000
+    const day = 24 * 60 * 60 * 1000
     expect(isStale({ downloadedAt: now - 1000 }, now)).toBe(false)
-    expect(isStale({ downloadedAt: now - 24 * 60 * 60 * 1000 }, now)).toBe(true)
+    expect(isStale({ downloadedAt: now - 6 * day }, now)).toBe(false)
+    expect(isStale({ downloadedAt: now - 8 * day }, now)).toBe(true)
   })
 
   it('compares revisions and computes a stable hash', () => {

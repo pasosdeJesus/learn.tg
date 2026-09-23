@@ -9,6 +9,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { useOfflineQueue } from '@/lib/hooks/useOfflineQueue'
 import { getProfileScore, profileScoreBelowMinimum, MIN_PROFILE_SCORE_FOR_SCHOLARSHIP } from '@/lib/offline-profile'
+import { courseKey, getStoredPuzzle } from '@/lib/offline-course-db'
 import { usePublicClient } from '@/lib/hooks/useWallet'
 import { useWriteContract } from '@/lib/hooks/useWriteContract'
 
@@ -163,7 +164,27 @@ export default function Page({
           inputRefs.current = response.data.grid.map(() => [])
         } catch (err: any) {
           console.error(err)
-          setFlashError(err.message)
+          // R-#256 §3.3: sin conexión (o si el servidor no responde) se usa el
+          // crucigrama **descargado** de esta guía, que es el que se guardó sin
+          // respuestas. Antes la página solo mostraba el error y el puzzle
+          // descargado no se podía abrir (el operador lo reportó el 2026-09-23).
+          const stored = await getStoredPuzzle(courseKey(lang, pathPrefix), pathSuffix).catch(() => null)
+          if (stored?.grid && stored?.placements) {
+            console.log('Using the downloaded puzzle (offline)')
+            const offlineState = {
+              grid: stored.grid,
+              placements: stored.placements,
+              courseId: course.id,
+              guideId: guideNumber,
+            }
+            setGrid(offlineState.grid)
+            setPlacements(offlineState.placements)
+            setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
+            localStorage.setItem(storageKey, JSON.stringify(offlineState))
+            inputRefs.current = stored.grid.map(() => [])
+          } else {
+            setFlashError(err.message)
+          }
         } finally {
           setIsLoading(false)
         }

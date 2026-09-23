@@ -90,8 +90,12 @@ const pwaConfig: PWAConfig = {
         // descargada (medido en el sitio de desarrollo el 2026-09-22).
         matchOptions: { ignoreVary: true },
         expiration: {
-          maxEntries: 60,
-          maxAgeSeconds: 24 * 60 * 60, // 24 horas
+          // 7 días (decisión del operador, 2026-09-23): las guías descargadas deben
+          // seguir abriendo sin conexión más de un día, y `maxEntries` tiene que
+          // caber todas las guías de todos los cursos accesibles (10 cursos, 4-6
+          // guías, con la página de guía y la del crucigrama por guía).
+          maxEntries: 200,
+          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 días
         },
       },
     },
@@ -102,8 +106,13 @@ const pwaConfig: PWAConfig = {
       options: {
         cacheName: 'learntg-api-get',
         networkTimeoutSeconds: 5,
+        // R-#256: la descarga de un curso pide `/api/guide` y `/api/crossword` de
+        // cada guía; con 200 entradas caben todas las guías accesibles. La copia
+        // durable es el store `guides` de IndexedDB, así que 1 h de TTL aquí no
+        // limita la lectura sin conexión (y la página del curso cae al registro
+        // descargado cuando esta caché ya caducó).
         expiration: {
-          maxEntries: 100,
+          maxEntries: 200,
           maxAgeSeconds: 60 * 60, // 1 hora
         },
       },

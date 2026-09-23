@@ -41,6 +41,9 @@ interface CredentialRow {
 interface SettingsResponse {
   publicCourses: boolean
   publicChristianCourses: boolean
+  /** El estado inicial del interruptor cristiano se deriva del pais (migracion 20260923150546). */
+  persecutionCountry?: boolean
+  country?: string | null
   credentials: CredentialRow[]
 }
 
@@ -55,6 +58,8 @@ export default function SettingsPage({ params }: PageProps) {
 
   const [publicCourses, setPublicCourses] = useState(true)
   const [publicChristian, setPublicChristian] = useState(false)
+  const [persecutionCountry, setPersecutionCountry] = useState(false)
+  const [country, setCountry] = useState<string | null>(null)
   const [credentials, setCredentials] = useState<CredentialRow[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -69,6 +74,8 @@ export default function SettingsPage({ params }: PageProps) {
       publicCoursesHelp: 'Your completed courses appear in your public profile and in the leaderboard.',
       christianTitle: 'Publish my courses with Christian content',
       christianHelp: 'Some courses teach about following Jesus. Publishing them shows the world that you studied them.',
+      defaultOff: 'In your country declaring your faith can be dangerous, so this starts turned off. You can still turn it on if it is safe for you.',
+      defaultOn: 'Your country does not persecute Christians, so this starts turned on. You can turn it off whenever you want.',
       warningTitle: 'Before you turn this on',
       warning: 'Your wallet address and its credentials are public, permanent and enumerable: anyone who looks at your wallet can see that you completed a course about Jesus, and that cannot be undone. In some countries and families that is dangerous. Turn this on only if it is safe for you.',
       credentialsTitle: 'My credentials',
@@ -98,6 +105,8 @@ export default function SettingsPage({ params }: PageProps) {
       publicCoursesHelp: 'Tus cursos completados aparecen en tu perfil público y en la tabla de líderes.',
       christianTitle: 'Publicar mis cursos con contenido cristiano',
       christianHelp: 'Algunos cursos enseñan sobre seguir a Jesús. Publicarlos muestra al mundo que los estudiaste.',
+      defaultOff: 'En tu país declarar tu fe puede ser peligroso, por eso esto empieza apagado. Puedes encenderlo si es seguro para ti.',
+      defaultOn: 'En tu país no se persigue a los cristianos, por eso esto empieza encendido. Puedes apagarlo cuando quieras.',
       warningTitle: 'Antes de encender esto',
       warning: 'Tu dirección de billetera y sus credenciales son públicas, permanentes y enumerables: cualquiera que mire tu billetera puede ver que completaste un curso sobre Jesús, y eso no se puede deshacer. En algunos países y familias eso es peligroso. Enciéndelo solo si es seguro para ti.',
       credentialsTitle: 'Mis credenciales',
@@ -128,6 +137,8 @@ export default function SettingsPage({ params }: PageProps) {
       const res = await authedGet<SettingsResponse>('/api/settings')
       setPublicCourses(res.data.publicCourses)
       setPublicChristian(res.data.publicChristianCourses)
+      setPersecutionCountry(res.data.persecutionCountry === true)
+      setCountry(res.data.country ?? null)
       setCredentials(res.data.credentials || [])
     } catch {
       toast({ title: t('loadFailed'), variant: 'destructive' })
@@ -243,6 +254,17 @@ export default function SettingsPage({ params }: PageProps) {
           <div>
             <div className="font-medium text-gray-800">{t('christianTitle')}</div>
             <p className="text-sm text-gray-600 mt-1">{t('christianHelp')}</p>
+            {/* El estado inicial depende del país (migración 20260923150546): se
+                explica para que no parezca una decisión ya tomada por la persona. */}
+            {persecutionCountry ? (
+              <p className="mt-1 text-xs text-gray-500" data-testid="christian-default-note">
+                {t('defaultOff')}
+              </p>
+            ) : publicChristian ? (
+              <p className="mt-1 text-xs text-gray-500" data-testid="christian-default-note">
+                {t('defaultOn')}
+              </p>
+            ) : null}
           </div>
           <Switch
             checked={publicChristian}

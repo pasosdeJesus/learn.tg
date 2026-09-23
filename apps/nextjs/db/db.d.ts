@@ -1101,6 +1101,10 @@ export interface MsipOrgsocialSectororgsocial {
 export interface MsipPais {
   alfa2: string | null;
   alfa3: string | null;
+  /**
+   * Este pais ya se evaluo para persecucion de cristianos (R-#259): mientras sea false el pais no cambia el estado inicial del interruptor
+   */
+  clasificado_cristianos: Generated<boolean>;
   codiso: number | null;
   created_at: Timestamp | null;
   div1: string | null;
@@ -1117,6 +1121,10 @@ export interface MsipPais {
   nombreiso_frances: string | null;
   nombreiso_ingles: string | null;
   observaciones: string | null;
+  /**
+   * El gobierno de este pais persigue a los cristianos (R-#259): estado inicial de usuario.mostrar_cursos_cristianos_publico
+   */
+  persigue_cristianos: Generated<boolean>;
   svgcdalto: number | null;
   svgcdancho: number | null;
   svgcdx: number | null;
@@ -1473,7 +1481,7 @@ export interface Usuario {
   lastgooddollarverification: Timestamp | null;
   learningscore_deprecated: number | null;
   locked_at: Timestamp | null;
-  mostrar_cursos_cristianos_publico: Generated<boolean>;
+  mostrar_cursos_cristianos_publico: boolean | null;
   mostrar_cursos_publico: Generated<boolean>;
   nombre: string | null;
   nusuario: string;

@@ -14,6 +14,7 @@ import { CourseDonation } from '@/components/CourseDonation'
 import { SlearnInfo, AddSlearnButton } from '@pasosdejesus/mpdj/blockchain'
 import { saveCourseCatalog, getCourseCatalog } from '@/lib/offline-catalog'
 import { saveProfileScore } from '@/lib/offline-profile'
+import { OfflineDownloadAll } from '@/components/OfflineDownloadAll'
 import { CompletedProgress } from '@/components/ui/completed-progress'
 
 type PageProps = {
@@ -262,6 +263,10 @@ export default function Page({ params }: PageProps) {
         </div>
       )}
       <div className="max-w-6xl mx-auto">
+        {/* R-#256: cuántos cursos están guardados en el teléfono y el botón para
+            bajarlos todos con progreso (el operador reportó que no encontraba
+            ninguna forma de descargar los cursos completos). */}
+        <OfflineDownloadAll lang={lang} />
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
           {courses.map((course) => {
             const extra = extCourses.get(course.id)

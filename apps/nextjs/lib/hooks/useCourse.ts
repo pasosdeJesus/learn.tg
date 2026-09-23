@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
+import { courseKey, getDownloadedCourse } from '@/lib/offline-course-db'
 import type { Course, Guide } from './guideTypes'
 
 interface UseCourseProps {
@@ -79,9 +80,30 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
       } as Course
       setCourse(fullCourse)
     } catch (e: unknown) {
-      console.error('Failed to fetch course data:', e)
-      setError(e instanceof Error ? e.message : String(e))
-      setCourse(null)
+      // R-#256 §3.7: sin conexión el catálogo no responde, pero el curso puede
+      // estar **descargado**. Se arma con el registro guardado para que la página
+      // del curso y la de cada guía funcionen (el operador reportó el 2026-09-23
+      // que offline no podía entrar a un curso ya visitado).
+      const downloaded = await getDownloadedCourse(courseKey(lang, pathPrefix)).catch(() => null)
+      if (downloaded) {
+        setError(null)
+        setCourse({
+          id: String(downloaded.courseId),
+          titulo: downloaded.titulo || downloaded.prefix,
+          idioma: downloaded.lang,
+          prefijoRuta: `/${downloaded.prefix}`,
+          guias: downloaded.guides.map((guide) => ({ titulo: guide.suffix, sufijoRuta: guide.suffix })),
+          conBilletera: false,
+          sinBilletera: true,
+          creditosMd: '',
+          porPagar: downloaded.isPremium ? '1' : undefined,
+          contenido_cristiano: downloaded.contenidoCristiano,
+        } as Course)
+      } else {
+        console.error('Failed to fetch course data:', e)
+        setError(e instanceof Error ? e.message : String(e))
+        setCourse(null)
+      }
     } finally {
       setLoading(false)
     }

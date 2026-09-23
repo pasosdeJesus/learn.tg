@@ -358,8 +358,8 @@ export default function Page({ params }: PageProps) {
                     <>
                       {' · '}
                       {course.idioma === 'en'
-                        ? `funds ~${Math.floor(Number(fundSlearn) / 44)} more pastors`
-                        : `financia ~${Math.floor(Number(fundSlearn) / 44)} pastores más`}
+                        ? `funds ~${Math.floor(Number(fundSlearn) / 22)} more pastors`
+                        : `financia ~${Math.floor(Number(fundSlearn) / 22)} pastores más`}
                     </>
                   )}
                 </p>

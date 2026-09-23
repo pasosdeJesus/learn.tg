@@ -51,15 +51,22 @@ from the browser menu.
   reason instead of keeping the answer in the queue: fix it (complete your profile)
   and submit the crossword again.
 
-**Which courses you can download.** The free courses and the courses you have paid
-for, with their crosswords, without having to open each page first. On the course
-page press **Download for offline**: the app shows how much space it will take,
-lets you delete the copy, and when you are online (at least once every 24 hours)
-checks whether the content changed and updates the copy. A downloaded course
-appears on the offline page with all its guides. Courses about following Jesus
-(R-#259) are only downloaded if you turned on *Publish courses with Christian
-content* in **Privacy**; if you turn it off, or you disconnect the wallet, the app
-deletes those copies from the phone.
+**Your courses are saved for you.** While you are online the app downloads **all the
+courses you can read** — the free ones and the ones you have paid for, with their
+crosswords — without having to open each page first. On the course list you can see how
+many courses are saved on this device and press **Download all my courses** to do it
+again (for example after installing the app on a new phone); the course page also has
+**Download for offline** for one course, with the space it takes and a way to delete it.
+The copy is kept for **7 days**; when you are online again the app checks whether the
+content changed and updates it. A downloaded course appears on the offline page with
+all its guides, and you can read any of them and solve their crosswords without a
+connection: your answers are saved and reviewed when the connection returns, and the
+app tells you the result. Courses about following Jesus (R-#259) are only downloaded if
+you turned on *Publish courses with Christian content* in **Privacy**; if you turn it
+off, or you disconnect the wallet, the app deletes those copies from the phone. That
+switch starts **off if you are in a country where the government persecutes Christians**
+and **on in the rest**, so a course about Jesus is visible by default where that is not
+dangerous; the Privacy page tells you which case applies and you can always change it.
 
 ## The wallet inside the app
 

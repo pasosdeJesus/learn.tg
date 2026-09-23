@@ -69,8 +69,8 @@ in a `next/script` with `strategy="afterInteractive"`.
 | `/[lang]/diligent-records*` | NetworkFirst | `diligent-cache` | 30 days |
 | `/_next/static/*` | CacheFirst | `diligent-static` | 7 days |
 | `/img/*`, `/icons/*` (png/jpg/jpeg/svg/webp/gif) | CacheFirst | `learntg-images` | 30 days |
-| `/en/*` and `/es/*` (pages) | NetworkFirst (5 s) | `learntg-pages` | 24 h |
-| `/api/*` GET | NetworkFirst (5 s) | `learntg-api-get` | 1 h |
+| `/en/*` and `/es/*` (pages, con `ignoreVary`) | NetworkFirst (5 s) | `learntg-pages` | **7 días** (200 entradas) |
+| `/api/*` GET | NetworkFirst (5 s) | `learntg-api-get` | 1 h (200 entradas) |
 | `/api/*` POST/PATCH/DELETE | NetworkOnly | - | never cached |
 
 `fallbacks.document = '/offline'` shows the offline page when a navigation is not
@@ -105,6 +105,37 @@ shows) and its crossword (via `GET /api/crossword`, which already strips the
 solution: cells with `letter: ''` and placements with `word: '-'`). The `courses`
 store keeps one record per course and language with the guide list, the puzzles,
 the revision hash, the size and the wallet that downloaded it.
+
+**Everything accessible is saved automatically** (operator decision, 2026-09-23): the
+app downloads in the background **every course the student can read**, not only the one
+being visited:
+
+- free courses, always;
+- paid courses, only if this wallet bought them (`/api/courses/premium/mine`);
+- Christian-content courses, only with the R-#259 switch on;
+- copies that are already current (same guide list, not expired) are skipped, so
+  repeating the sync is cheap.
+
+`OfflineLibrarySync` does it (invisible, mounted in `components/Layout.tsx`, once per
+session) and `OfflineDownloadAll` is the visible control with progress and a summary of
+what was left out (on the course list; the operator reported there was no way to
+download everything). The logic lives in `lib/offline-course-download.ts`
+(`listAccessibleCourses`, `downloadAllAccessible`). A copy is good for **7 days**
+(`REVALIDATION_MS`), like the page cache.
+
+When something is missing while offline, each page falls back to the stored copy:
+
+| Page | Fallback |
+|---|---|
+| Course list | `lib/offline-catalog.ts` (`localStorage`) |
+| Course (`/[lang]/[pathPrefix]`) | the downloaded record (`useCourse`), so it still links its guides |
+| Guide | `useCachedGuide` → `guides` store |
+| Crossword (`.../test`) | the `puzzle` of the downloaded record (never carries answers) |
+
+`components/OfflineQueueSync.tsx` (also in the layout) drains the offline answer queue
+on **any** page and reports the result with a toast: the queue used to drain only
+inside the crossword page, so reconnecting from the course list showed nothing
+(operator report, 2026-09-23).
 
 Rules that must stay true when touching it:
 

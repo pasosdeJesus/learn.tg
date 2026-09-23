@@ -54,6 +54,8 @@ function settings(overrides: Record<string, unknown> = {}) {
   return {
     publicCourses: true,
     publicChristianCourses: false,
+    persecutionCountry: false,
+    country: 'Colombia',
     credentials: CREDENTIALS,
     ...overrides,
   }
@@ -160,5 +162,33 @@ describe('Settings (privacy) page', () => {
     await waitFor(() => expect(screen.getByText('Could not load your settings.')).toBeInTheDocument())
     expect(apiMocks.authedGet).not.toHaveBeenCalled()
     apiMocks.address = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
+  })
+
+  // El estado inicial del interruptor cristiano depende del pais (migracion
+  // 20260923150546): la pagina lo dice para que no parezca decidido por la persona.
+  it('explains that the switch starts off in a country that persecutes Christians', async () => {
+    apiMocks.authedGet.mockResolvedValue({
+      data: settings({ persecutionCountry: true, publicChristianCourses: false, country: 'Corea del Norte' }),
+    })
+
+    await renderPage()
+
+    expect(screen.getByTestId('christian-default-note')).toHaveTextContent(/starts turned off/)
+  })
+
+  it('explains the country-based default when it starts on', async () => {
+    apiMocks.authedGet.mockResolvedValue({
+      data: settings({ persecutionCountry: false, publicChristianCourses: true }),
+    })
+
+    await renderPage()
+
+    expect(screen.getByTestId('christian-default-note')).toHaveTextContent(/starts turned on/)
+  })
+
+  it('does not explain a default while the switch is off in a country without persecution', async () => {
+    await renderPage()
+
+    expect(screen.queryByTestId('christian-default-note')).not.toBeInTheDocument()
   })
 })

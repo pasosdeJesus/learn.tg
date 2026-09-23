@@ -18,6 +18,12 @@ vi.mock('@/lib/hooks/useWallet')
 vi.mock('@/lib/hooks/useWriteContract')
 vi.mock('@/lib/hooks/useGuideData')
 vi.mock('axios')
+// R-#256: el crucigrama descargado (sin respuestas) se usa cuando la petición falla.
+const offlineCourseMocks = vi.hoisted(() => ({ getStoredPuzzle: vi.fn() }))
+vi.mock('@/lib/offline-course-db', () => ({
+  courseKey: (lang: string, prefix: string) => `${lang}/${prefix}`,
+  getStoredPuzzle: offlineCourseMocks.getStoredPuzzle,
+}))
 vi.mock('next/navigation', () => ({
   useParams: () => ({ 
     lang: 'en',
@@ -147,6 +153,7 @@ describe('Crossword Page', () => {
     vi.mocked(useWriteContract).mockReturnValue({ data: null, writeContract: vi.fn() } as any)
     vi.mocked(axios.get).mockResolvedValue({ data: mockCrosswordData })
     vi.mocked(axios.post).mockResolvedValue({ data: {} })
+    offlineCourseMocks.getStoredPuzzle.mockResolvedValue(null)
   })
 
   afterEach(() => {
@@ -285,6 +292,28 @@ describe('Crossword Page', () => {
             expect(screen.getByText('Correct!')).toBeInTheDocument();
             expect(screen.getByText('0x123abc')).toBeInTheDocument();
             expect(localStorage.removeItem).toHaveBeenCalled();
+        });
+    });
+
+    // R-#256 §3.3: sin conexión se usa el crucigrama **descargado** de esa guía; el
+    // operador reportó el 2026-09-23 que el puzzle descargado caía en "You are
+    // offline" porque la página solo mostraba el error de la petición.
+    it('uses the downloaded puzzle when the crossword request fails', async () => {
+        localStorageMock.getItem.mockReturnValue(null);
+        vi.mocked(axios.get).mockRejectedValue(new Error('Network error'));
+        offlineCourseMocks.getStoredPuzzle.mockResolvedValue({
+          grid: [
+            [{ letter: '', number: 1, isBlocked: false, userInput: '', belongsToWords: [1] }],
+          ],
+          placements: [
+            { word: '-', row: 0, col: 0, direction: 'across', number: 1, clue: 'Pista descargada' },
+          ],
+        });
+
+        render(<Suspense fallback={<div>Loading...</div>}><Page params={mockParams} /></Suspense>);
+
+        await waitFor(() => {
+            expect(screen.getByText('Pista descargada')).toBeInTheDocument();
         });
     });
   });

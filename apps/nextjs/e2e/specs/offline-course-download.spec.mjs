@@ -178,23 +178,13 @@ async function main() {
 
   // 4. Sin conexión, abrir la guía nunca visitada.
   //
-  // Antes de navegar se comprueba el **mecanismo**: el HTML de Next trae
-  // `Vary: rsc, next-router-state-tree, …`, así que la caché solo acierta si la
-  // regla `/(en|es)/*` usa `matchOptions.ignoreVary` (R-#256). Si el despliegue
-  // todavía no lo trae, la navegación cae en `/offline` y este spec lo diría como
-  // fallo; se prefiere OMITIR con el motivo exacto y decir qué desplegar.
-  const varyBlocks = await page.evaluate(async (guidePath) => {
-    try {
-      const cache = await window.caches.open('learntg-pages')
-      const res = await cache.match(guidePath)
-      if (!res) return 'sin copia en learntg-pages'
-      return /rsc|next-router/.test(res.headers.get('vary') || '') ? 'vary' : 'ok'
-    } catch (error) {
-      return `error: ${error.message}`
-    }
-  }, NEVER_VISITED_PATH)
-  if (varyBlocks === 'vary') {
-    console.log('[SKIP] el HTML cacheado trae `Vary: rsc, next-router-*` y el despliegue aún no usa `matchOptions.ignoreVary` en la regla `/(en|es)/*` de `next.config.ts`: sin eso la navegación sin conexión no acierta en la caché (cae en /offline). Recompila y reinicia el sitio con este árbol para verificar la lectura offline de una guía nunca visitada.')
+  // El HTML de Next trae `Vary: rsc, next-router-state-tree, …`, así que la caché
+  // solo acierta si la regla `/(en|es)/*` usa `matchOptions.ignoreVary` (R-#256).
+  // Eso se comprueba en el worker **desplegado** (`/sw.js`), no en la respuesta
+  // cacheada (que siempre trae `Vary`): si falta, la navegación cae en `/offline` y
+  // se OMITE con el motivo exacto en vez de fallar por un despliegue viejo.
+  if (!/ignoreVary/.test(swSource)) {
+    console.log('[SKIP] el worker desplegado no declara `matchOptions.ignoreVary` en la regla `/(en|es)/*` de `next.config.ts`: sin eso la navegación sin conexión no acierta en la caché (cae en /offline). Recompila y reinicia el sitio con este árbol para verificar la lectura offline de una guía nunca visitada.')
     await browser.close()
     process.exit(0)
   }
@@ -216,12 +206,67 @@ async function main() {
     offlineText = await page.evaluate(() => document.body?.innerText || '')
   }
 
-  if (/You are offline/.test(offlineText)) {
+  // La página de respaldo (`app/offline/page.tsx`) se reconoce por su frase propia,
+  // **no** por "You are offline": ese texto también está en el banner de cada página
+  // (`components/OfflineBanner.tsx`) y confundirlo hacía fallar el spec aunque la
+  // guía se leyera bien (la guía sin conexión muestra "Showing the saved copy").
+  const isFallback = /Your progress is saved and will sync when the connection returns/.test(offlineText)
+  const looksLikeGuide = /Showing the saved copy|Comprehension Questions|Introduction/.test(offlineText)
+  if (isFallback) {
     fail('Sin conexión se sirvió la página de respaldo /offline en vez de la guía descargada')
-  } else if (/Comprehension Questions/i.test(offlineText)) {
-    ok('La guía nunca visitada se lee sin conexión (con sus preguntas de comprensión)')
+  } else if (looksLikeGuide) {
+    ok('La guía nunca visitada se lee sin conexión (desde la copia guardada)')
   } else {
     fail(`La guía sin conexión no mostró su contenido (${offlineText.replace(/\s+/g, ' ').slice(0, 160)})`)
+  }
+
+  // 5. Y su **crucigrama** también: la página `/test` usa el crucigrama descargado
+  // cuando `GET /api/crossword` no responde (el operador reportó el 2026-09-23 que
+  // el puzzle descargado caía en "You are offline").
+  //
+  // Esa página necesita su propio documento en caché; la descarga lo calienta desde
+  // el 2026-09-23. Si el despliegue es anterior, se OMITE con el motivo en vez de
+  // fallar por una versión vieja del sitio.
+  const testPageCached = await page.evaluate(async (path) => {
+    try {
+      const cache = await window.caches.open('learntg-pages')
+      return !!(await cache.match(path))
+    } catch {
+      return false
+    }
+  }, `${NEVER_VISITED_PATH}/test`)
+  if (!testPageCached) {
+    console.log('[SKIP] el despliegue no calienta la página del crucigrama (`/test`) al descargar el curso: falta desplegar el cambio del 2026-09-23 para verificar que el puzzle descargado abre sin conexión.')
+    const failures = summary(t0)
+    await browser.close()
+    process.exit(failures > 0 ? 1 : 0)
+  }
+
+  try {
+    await page.goto(`${base}${NEVER_VISITED_PATH}/test`, { waitUntil: 'domcontentloaded' })
+  } catch (error) {
+    console.log(`  [!] La navegación sin conexión al crucigrama falló: ${error.message}`)
+  }
+  let puzzleState = { cells: 0, text: '' }
+  try {
+    await page.waitForSelector('input[data-row]', { timeout: 30000 })
+    puzzleState = await page.evaluate(() => ({
+      cells: document.querySelectorAll('input[data-row]').length,
+      text: document.body.innerText,
+    }))
+  } catch {
+    puzzleState = await page.evaluate(() => ({
+      cells: document.querySelectorAll('input[data-row]').length,
+      text: document.body?.innerText || '',
+    }))
+  }
+
+  if (/Your progress is saved and will sync when the connection returns/.test(puzzleState.text)) {
+    fail('Sin conexión el crucigrama descargado mostró la página de respaldo /offline')
+  } else if (puzzleState.cells > 0) {
+    ok(`El crucigrama descargado se abre sin conexión (${puzzleState.cells} celdas)`)
+  } else {
+    fail(`El crucigrama descargado no se abrió sin conexión (${puzzleState.text.replace(/\s+/g, ' ').slice(0, 160)})`)
   }
 
   await page.setOfflineMode(false)

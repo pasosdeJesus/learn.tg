@@ -17,6 +17,12 @@ vi.mock('@/lib/hooks/useAuthAddress', () => ({
 }))
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 
+const offlineCourseMocks = vi.hoisted(() => ({ getDownloadedCourse: vi.fn() }))
+vi.mock('@/lib/offline-course-db', () => ({
+  courseKey: (lang: string, prefix: string) => `${lang}/${String(prefix).split('/').filter(Boolean).join('/')}`,
+  getDownloadedCourse: offlineCourseMocks.getDownloadedCourse,
+}))
+
 // Import hook after mocks
 import { useGuideData } from '../useGuideData'
 
@@ -71,6 +77,7 @@ describe('useGuideData', () => {
     useSessionMock.mockReturnValue({ data: mockSession, status: 'authenticated' })
     vi.mocked(useAuthAddress).mockReturnValue({ address: '0x123', sessionAddress: '0x123', storedAddress: '0x123', inAppAddress: undefined, isInAppUnlocked: false, isAuthenticated: true, isSessionLoading: false, isWalletAvailable: true, isWalletCheckComplete: true })
     getCsrfTokenMock.mockResolvedValue('mock-csrf-token')
+    offlineCourseMocks.getDownloadedCourse.mockResolvedValue(null)
 
     // Default axios.get implementation
     axiosGetMock.mockImplementation((url: string) => {
@@ -332,5 +339,45 @@ describe('useGuideData', () => {
     expect(guideStatusCalled).toBe(false)
     expect(result.current.course?.guias[0].completed).toBe(false)
     expect(result.current.course?.guias[1].completed).toBe(false)
+  })
+
+  // R-#256 §3.7: sin conexión el catálogo no responde; si el curso está descargado,
+  // la página del curso (y la de sus guías) se arma con el registro guardado.
+  it('falls back to the downloaded course when the catalog fails', async () => {
+    axiosGetMock.mockRejectedValue(new Error('Network error'))
+    offlineCourseMocks.getDownloadedCourse.mockResolvedValue({
+      key: 'en/test',
+      courseId: 105,
+      lang: 'en',
+      prefix: 'test',
+      titulo: 'Curso descargado',
+      contenidoCristiano: false,
+      isPremium: false,
+      wallet: '0x123',
+      downloadedAt: Date.now(),
+      revision: 'x',
+      guides: [{ suffix: 'guide1', puzzle: null }, { suffix: 'guide2', puzzle: null }],
+      bytes: 10,
+    })
+
+    const { result } = renderHook(() => useGuideData({ lang: 'en', pathPrefix: 'test' }))
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(result.current.error).toBe(null)
+    expect(result.current.course?.titulo).toBe('Curso descargado')
+    expect(result.current.course?.guias.map((guide) => guide.sufijoRuta)).toEqual(['guide1', 'guide2'])
+  })
+
+  it('reports the error when the catalog fails and the course was never downloaded', async () => {
+    axiosGetMock.mockRejectedValue(new Error('Network error'))
+    offlineCourseMocks.getDownloadedCourse.mockResolvedValue(null)
+
+    const { result } = renderHook(() => useGuideData({ lang: 'en', pathPrefix: 'test' }))
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(result.current.course).toBe(null)
+    expect(result.current.error).toBeTruthy()
   })
 })

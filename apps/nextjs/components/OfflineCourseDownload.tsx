@@ -24,7 +24,7 @@ import { downloadCourse, revalidateCourse } from '@/lib/offline-course-download'
  *   (§3.6b: el teléfono no debe revelar la afiliación por sí solo).
  * - Muestra el espacio que ocupa, avisa cuando el dispositivo va corto de espacio
  *   y permite eliminar la copia.
- * - Al abrir con conexión, revalida si la copia tiene más de 24 h y avisa si el
+ * - Al abrir con conexión, revalida si la copia tiene más de una semana y avisa si el
  *   curso cambió.
  */
 
@@ -179,7 +179,7 @@ export function OfflineCourseDownload({
     setMessage(t('canceled'))
   }, [key, refreshRecord, t])
 
-  // Revalidación (R-#256 §3.6): con conexión y una copia de más de 24 h, se
+  // Revalidación (R-#256 §3.6): con conexión y una copia de más de una semana, se
   // refresca en segundo plano y se avisa si el contenido cambió.
   useEffect(() => {
     if (!ready || !record || busy) return
