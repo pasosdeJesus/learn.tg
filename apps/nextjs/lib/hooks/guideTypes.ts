@@ -22,6 +22,8 @@ export interface Course {
   resumenMd?: string
   ampliaMd?: string
   porPagar?: string
+  /** Contenido cristiano (https://github.com/pasosdeJesus/learn.tg/issues/259): decide la visibilidad pública y la descarga sin conexión. */
+  contenido_cristiano?: boolean
   imagen?: string
   altImagen?: string
   enlaceImagen?: string

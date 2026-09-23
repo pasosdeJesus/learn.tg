@@ -14,6 +14,7 @@
 
 import { newKyselyPostgresql } from '../.config/kysely.config'
 import { mintCourseCredential } from '@learn-tg/rewards/lib/credentials'
+import { canMintPublicly } from '@learn-tg/rewards/lib/course-privacy'
 import { sql } from 'kysely'
 
 async function main() {
@@ -23,10 +24,12 @@ async function main() {
 
   // Find all courses with published guides
   const courses = await sql<any>`
-    SELECT DISTINCT proyectofinanciero_id AS course_id
-    FROM cor1440_gen_actividadpf
-    WHERE "sufijoRuta" IS NOT NULL
-    AND "sufijoRuta" <> ''
+    SELECT DISTINCT a.proyectofinanciero_id AS course_id,
+           c.contenido_cristiano
+    FROM cor1440_gen_actividadpf a
+    JOIN cor1440_gen_proyectofinanciero c ON c.id = a.proyectofinanciero_id
+    WHERE a."sufijoRuta" IS NOT NULL
+    AND a."sufijoRuta" <> ''
   `.execute(db)
 
   console.log(`📚 Found ${courses.rows.length} courses with published guides`)
@@ -34,6 +37,7 @@ async function main() {
   let totalMinted = 0
   let totalSkipped = 0
   let totalErrors = 0
+  let totalPrivacySkipped = 0
 
   for (const course of courses.rows) {
     const courseId = course.course_id
@@ -53,9 +57,12 @@ async function main() {
       SELECT
         gu.usuario_id,
         COUNT(*)::int AS completed,
-        bu.billetera AS wallet
+        bu.billetera AS wallet,
+        u.mostrar_cursos_publico,
+        u.mostrar_cursos_cristianos_publico
       FROM guide_usuario gu
       JOIN billetera_usuario bu ON bu.usuario_id = gu.usuario_id
+      JOIN usuario u ON u.id = gu.usuario_id
       WHERE gu.actividadpf_id IN (
         SELECT id FROM cor1440_gen_actividadpf
         WHERE proyectofinanciero_id = ${courseId}
@@ -63,7 +70,7 @@ async function main() {
         AND "sufijoRuta" <> ''
       )
       AND gu.points = 1
-      GROUP BY gu.usuario_id, bu.billetera
+      GROUP BY gu.usuario_id, bu.billetera, u.mostrar_cursos_publico, u.mostrar_cursos_cristianos_publico
       HAVING COUNT(*)::int >= ${totalCount}
     `.execute(db)
 
@@ -85,6 +92,19 @@ async function main() {
 
       if (existing) {
         totalSkipped++
+        continue
+      }
+
+      // Privacidad de la afiliación cristiana
+      // (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.4): este script
+      // retroactivo tampoco puede marcar a alguien que nunca pidió publicar un
+      // curso cristiano. Se cuenta aparte para que se vea en el resumen.
+      if (!canMintPublicly({
+        contenido_cristiano: course.contenido_cristiano === true,
+        mostrar_cursos_publico: c.mostrar_cursos_publico,
+        mostrar_cursos_cristianos_publico: c.mostrar_cursos_cristianos_publico,
+      })) {
+        totalPrivacySkipped++
         continue
       }
 
@@ -113,6 +133,7 @@ async function main() {
   console.log(`\n📊 Summary:`)
   console.log(`   Minted:  ${totalMinted}`)
   console.log(`   Skipped: ${totalSkipped}`)
+  console.log(`   Privacy skipped: ${totalPrivacySkipped}`)
   console.log(`   Errors:  ${totalErrors}`)
 }
 

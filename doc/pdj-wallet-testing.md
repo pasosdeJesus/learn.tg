@@ -236,6 +236,17 @@ cache and precache in development, so there is no offline to test (see
    the app shell (`components/Layout.tsx`).
 8. Check that `/api/*` POST/PATCH/DELETE are never served from cache
    (`NetworkOnly`).
+9. **Downloaded course (R-#256)**, automated in
+   `e2e/specs/offline-course-download.spec.mjs` (skips itself when the feature is
+   not deployed): on `/en/web3-and-ubi` (free, non-Christian) press "Download for
+   offline", wait for the confirmation, then with the network off open
+   `/en/web3-and-ubi/guide4` — a guide **never** visited online. The spec also
+   reads the IndexedDB record to check that the stored crossword carries no
+   answers. Manually: DevTools > Application > IndexedDB > `learn-tg-offline`,
+   stores `courses` (one record per course and language: guides, wallet, revision,
+   size) and `guides` (the HTML of each guide). Deleting the wallet or
+   disconnecting must remove the copies of paid and Christian courses while the
+   `pending` store keeps its queued answers.
 
 To discard stale cached pages after deploying changes: DevTools > Application >
 Storage > "Clear site data", or unregister the service worker.
@@ -243,6 +254,12 @@ Storage > "Clear site data", or unregister the service worker.
 ## 5. Manual: offline crossword (R-#242)
 
 No service worker needed: this works on a dev server too.
+**Automatizado** en `e2e/specs/offline-crossword.spec.mjs` (0 fallas el 2026-09-21 contra el dev
+site): resuelve el crucigrama con las respuestas de `resources/en/gdcluster/guide1.md`, lo envía
+sin conexión, comprueba la cola en IndexedDB, la ve drenarse al volver la conexión y **afirma la
+recompensa** — el servidor responde 200 y paga (medido: 0.75 USDT + 3.75 SLEARN) con
+`guide_usuario.points` pasando de 0 a 1 (`/api/guide-status` antes y después). Los pasos de abajo
+quedan como el procedimiento humano:
 
 1. Open `https://learn.tg:9001/en/gdcluster/guide1/test` while online; the puzzle
    is stored in `localStorage` (`crossword-state-<address>`).

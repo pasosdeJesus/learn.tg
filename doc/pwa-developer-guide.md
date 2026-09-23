@@ -18,6 +18,7 @@ https://github.com/pasosdeJesus/learn.tg/issues/243 (install + docs).
 | Install prompt | `components/InstallPrompt.tsx` | `beforeinstallprompt`; dismissal stored for 7 days |
 | Offline guide copy | `lib/offline-guide-db.ts` + `lib/hooks/useCachedGuide.ts` | Markdown in IndexedDB, used by the guide page |
 | Offline course list | `lib/offline-catalog.ts` | Last catalog fetched while online (`localStorage`, `learn.tg.coursesCache.<lang>`); when the fetch fails the course page shows it and toasts "You are offline: showing the saved course list." (operator request 2026-09-21). It only covers "visited once online": the full offline download of courses is https://github.com/pasosdeJesus/learn.tg/issues/256 |
+| **Downloaded courses** | `lib/offline-course-db.ts` (store `courses`), `lib/offline-course-download.ts`, `components/OfflineCourseDownload.tsx` | R-#256: an explicit per-course download (all guides + their crosswords, no answers). The guide HTML lives in the existing `guides` store, so the guide page reads it unchanged; the record keeps the entitlement snapshot (wallet), the revision and the size. `/offline` lists the downloaded courses and their guides |
 | Offline submissions | `lib/offline-queue-db.ts` + `lib/hooks/useOfflineQueue.ts` | Generic queue (url + body), replayed on `online`; a server rejection (4xx) is exposed as `lastRejection` so the page tells the user instead of leaving the answer queued silently |
 
 The diligent-records app served by the same Next app keeps its own manifest
@@ -76,9 +77,43 @@ in a `next/script` with `strategy="afterInteractive"`.
 in any cache. Workbox only serves a fallback it precached, which is why
 `additionalManifestEntries` lists `/offline` explicitly.
 
+Consequence for a **downloaded** course (R-#256): a guide that was never opened
+online has no entry in `learntg-pages`, so offline navigation to it falls back to
+`/offline` even though its content is in IndexedDB. The download therefore warms
+that cache with an explicit `fetch()` of each guide URL (`warmPageCache` in
+`lib/offline-course-download.ts`): the `/(en|es)/*` rule matches by URL, so the
+request lands in `learntg-pages` exactly like a navigation would.
+
 Mind the trade-off: caching `/api/*` GET responses keeps wallet-scoped data in
 the device cache for an hour. If a future endpoint must never be stored, give it
 its own entry **before** the generic one with `handler: 'NetworkOnly'`.
+
+## Downloaded courses (R-#256)
+
+`components/OfflineCourseDownload.tsx` (inside the course page) downloads a whole
+course: every published guide (via `GET /api/guide`, the same HTML the guide page
+shows) and its crossword (via `GET /api/crossword`, which already strips the
+solution: cells with `letter: ''` and placements with `word: '-'`). The `courses`
+store keeps one record per course and language with the guide list, the puzzles,
+the revision hash, the size and the wallet that downloaded it.
+
+Rules that must stay true when touching it:
+
+1. **Never store the solution.** The puzzle payload is what the API returns; do not
+   add the answers "to validate offline" (validation happens server-side, on
+   reconnect, and is derived from the guide markdown — see `lib/guide-answers.ts`).
+2. **Paid courses are per wallet.** `belongsToWallet()` gates reading, and
+   `/offline` skips a copy downloaded with another wallet.
+3. **Christian courses need the privacy switch** (R-#259 §3.3/§3.6b): a
+   `contenido_cristiano` course offers no download unless the learner enabled
+   "publish courses with Christian content", and the local copy is deleted when
+   that switch goes off, when the wallet is disconnected and when the wallet is
+   deleted (`clearPrivateCourseCopies()`), so an inspected phone does not reveal
+   the affiliation on its own.
+4. **Queued answers survive**: cleanup removes the course and its guides, never the
+   `pending` store (R-#240 §4b item 9).
+5. **Revalidation**: with a connection, a copy older than 24 h is downloaded again
+   in the background and the user is told when the revision changed.
 
 ## Adding a cached route
 
@@ -107,9 +142,13 @@ site data before debugging anything else.
 - The full E2E suite covers the PWA on the deployed **production** build:
   `make test-e2e-offline` runs `offline-guide` (service worker registers and
   controls the page, guide served from `learntg-pages` offline, banner, and back
-  online) and `offline-crossword` (queue end to end), both reported green on
-  2026-09-21. A `next dev` instance still cannot test offline (next-pwa forces
-  `NetworkOnly`); use `make all` + `bin/start` locally or the deployed site.
+  online), `offline-crossword` (queue end to end) and `offline-course-download`
+  (R-#256: download `/en/web3-and-ubi`, check the stored crossword has no
+  answers, open a guide never visited online with the network off). All three
+  reported green on 2026-09-21/22. A `next dev` instance still cannot test offline
+  (next-pwa forces `NetworkOnly`); use `make all` + `bin/start` locally or the
+  deployed site. `offline-course-download` skips itself when the feature is not
+  deployed yet (no download button, no worker).
 
 ## Generated files and how to retire the worker
 

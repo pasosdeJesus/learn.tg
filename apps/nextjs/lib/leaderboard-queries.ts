@@ -27,9 +27,21 @@ export async function buildLeaderboardQuery(
     .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
     .leftJoin('transaction as t', 'u.id', 't.usuario_id')
     .leftJoin(
-      (eb) => eb.selectFrom('credential_emission')
-        .select(['usuario_id', eb.fn.countAll<number>().as('cnt')])
-        .groupBy('usuario_id')
+      // `sbt_count` cuenta solo lo que el dueño publica (R-#259): credenciales no
+      // revocadas, de cursos que el estudiante permite mostrar (y, en los marcados
+      // `contenido_cristiano`, solo si habilitó esa categoría). El ranking es una
+      // superficie pública como cualquier otra.
+      (eb) => eb.selectFrom('credential_emission as e')
+        .innerJoin('usuario as u2', 'u2.id', 'e.usuario_id')
+        .leftJoin('cor1440_gen_proyectofinanciero as c', 'c.id', 'e.course_id')
+        .select(['e.usuario_id', eb.fn.countAll<number>().as('cnt')])
+        .where('e.revoked_at', 'is', null)
+        .where('u2.mostrar_cursos_publico', '=', true)
+        .where((w) => w.or([
+          w('c.contenido_cristiano', '=', false),
+          w('u2.mostrar_cursos_cristianos_publico', '=', true),
+        ]))
+        .groupBy('e.usuario_id')
         .as('ce_counts'),
       (join) => join.onRef('ce_counts.usuario_id', '=', 'u.id')
     )

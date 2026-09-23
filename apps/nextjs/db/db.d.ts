@@ -501,6 +501,7 @@ export interface Cor1440GenProyectofinanciero {
   chain_id: Generated<number | null>;
   compromisos: string | null;
   conBilletera: boolean | null;
+  contenido_cristiano: Generated<boolean>;
   contract_address: string | null;
   created_at: Timestamp | null;
   creditoImagen: string | null;
@@ -621,6 +622,8 @@ export interface CredentialEmission {
   hash: string | null;
   id: Generated<number>;
   is_premium: Generated<boolean>;
+  revoke_hash: string | null;
+  revoked_at: Timestamp | null;
   token_id: number;
   usuario_id: number;
 }
@@ -1470,6 +1473,8 @@ export interface Usuario {
   lastgooddollarverification: Timestamp | null;
   learningscore_deprecated: number | null;
   locked_at: Timestamp | null;
+  mostrar_cursos_cristianos_publico: Generated<boolean>;
+  mostrar_cursos_publico: Generated<boolean>;
   nombre: string | null;
   nusuario: string;
   oficina_id: number | null;

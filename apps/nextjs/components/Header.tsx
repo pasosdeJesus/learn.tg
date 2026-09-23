@@ -75,6 +75,7 @@ export default function Header({ lang: langProp = 'en' }) {
   const menuItems = isAuthenticated
     ? [
         { key: 'navProfile', href: `/${lang}/profile`, emoji: '👤' },
+        { key: 'navSettings', href: `/${lang}/settings`, emoji: '🔒' },
         ...(isVerifier ? [{ key: 'navAdmin', href: `/${lang}/admin`, emoji: '🛠️' }] : []),
         ...baseItems,
         { key: 'navDonateLensenia', href: `/${lang}/donations/lensenia`, emoji: '💧' },

@@ -8,6 +8,7 @@ import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletDialog } from '@/components/WalletDialog'
 import { WalletPanel } from '@/components/WalletPanel'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { clearPrivateCourseCopies } from '@/lib/offline-course-db'
 import { useExternalProvider } from '@/lib/external-provider'
 import { OPEN_IN_APP_WALLET_DIALOG } from '@/lib/in-app-wallet-dialog'
 import { createComponentT } from '@/lib/hooks/useTranslation'
@@ -80,6 +81,10 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
 
   const disconnect = useCallback(async () => {
     localStorage.removeItem('learn.tg.sessionAddress')
+    // R-#256 §3.5/§3.6b: al desconectar no deben quedar en el dispositivo los
+    // cursos de pago (el derecho no se puede comprobar) ni los de contenido
+    // cristiano (el interruptor vive en la sesión).
+    await clearPrivateCourseCopies().catch(() => {})
     await lock()
     await signOut({ redirect: true, callbackUrl: `/${lang}` })
   }, [lang, lock])

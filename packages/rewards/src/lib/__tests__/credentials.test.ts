@@ -3,7 +3,14 @@ import { mockCredentialsWithRefs, mockDeploymentsWithRefs } from '@pasosdejesus/
 
 let sharedDb: any
 
-vi.mock('kysely', () => ({ Kysely: vi.fn(), PostgresDialect: vi.fn() }))
+// `sql` es un tagged template en producción; aquí solo hace falta que devuelva
+// algo con `execute()` para las consultas agregadas (cursos completados).
+const sqlMocks = vi.hoisted(() => ({ mockSqlExecute: vi.fn() }))
+vi.mock('kysely', () => ({
+  Kysely: vi.fn(),
+  PostgresDialect: vi.fn(),
+  sql: vi.fn(() => ({ execute: sqlMocks.mockSqlExecute })),
+}))
 
 // Credentials module — with refs for assertions
 const credRefs = vi.hoisted(() => ({} as Record<string, any>))
@@ -27,9 +34,10 @@ const mockMintCourseWithRetry = credRefs.mintCourseWithRetry
 const mockGetCeloCredentialsAddress = depRefs.getCeloCredentialsAddress
 
 const mockWaitForTxReceipt = vi.fn().mockResolvedValue({ status: 'success' })
+const mockWalletClient = { chain: { id: 11142220 }, account: { address: '0xbackend' } }
 vi.mock('viem', () => ({
   createPublicClient: vi.fn(() => ({ waitForTransactionReceipt: mockWaitForTxReceipt })),
-  createWalletClient: vi.fn(),
+  createWalletClient: vi.fn(() => mockWalletClient),
   http: vi.fn(),
 }))
 vi.mock('viem/accounts', () => ({
@@ -39,18 +47,22 @@ vi.mock('viem/chains', () => ({ celo: { id: 42220 }, celoSepolia: { id: 11142220
 vi.mock('@learn-tg/rewards/lib/config', () => ({ IS_PRODUCTION: false }))
 
 const originalEnv = { ...process.env }
-import { mintCourseCredential } from '../credentials'
+import { mintCourseCredential, revokeCourseCredential, completedCoursesWithoutCredential } from '../credentials'
 
 function createMockDb(executeTakeFirstValues: any[]) {
   let callIdx = 0
   const self: any = {
     _insertInto: null as string | null,
+    _updateTable: null as string | null,
     selectFrom() { return self },
     select() { return self },
     where() { return self },
     orderBy() { return self },
     innerJoin() { return self },
+    leftJoin() { return self },
     insertInto(table: string) { self._insertInto = table; return self },
+    updateTable(table: string) { self._updateTable = table; return self },
+    set() { return self },
     values() { return self },
     onConflict() { return self },
     doNothing() { return self },
@@ -156,5 +168,84 @@ describe('mintCourseCredential', () => {
 
     expect(result).toBeNull()
     expect(mockMintCourseWithRetry).not.toHaveBeenCalled()
+  })
+})
+
+// Auto-revocación (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.5).
+// El contrato exige MINTER_ROLE, que es la billetera del backend.
+describe('revokeCourseCredential', () => {
+  const WALLET = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
+  const CONTRACT = '0x593f4486Fc7F3403e01a9c71E90ceE5DaD84A439'
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+    process.env.NEXT_PUBLIC_RPC_URL = 'http://localhost:8545'
+    mockGetCeloCredentialsAddress.mockReturnValue(CONTRACT)
+    credRefs.revokeCredential.mockResolvedValue('0xmockrevoketx')
+  })
+  afterEach(() => { process.env = { ...originalEnv } })
+
+  it('burns on chain and marks the emission as revoked', async () => {
+    sharedDb = createMockDb([{ numUpdatedRows: 1n }])
+
+    const result = await revokeCourseCredential(sharedDb, 191, 3, WALLET)
+
+    expect(result.txHash).toBe('0xmockrevoketx')
+    expect(credRefs.revokeCredential).toHaveBeenCalledWith(
+      mockWalletClient,
+      CONTRACT,
+      WALLET,
+      3,
+      1,
+    )
+    expect(mockWaitForTxReceipt).toHaveBeenCalled()
+    expect(sharedDb._updateTable).toBe('credential_emission')
+  })
+
+  it('fails loudly when the user has no emission row to revoke', async () => {
+    sharedDb = createMockDb([{ numUpdatedRows: 0n }])
+
+    await expect(revokeCourseCredential(sharedDb, 191, 3, WALLET))
+      .rejects.toThrow('Credential emission row not found for this user')
+  })
+
+  it('throws when the contract address is not configured', async () => {
+    sharedDb = createMockDb([])
+    mockGetCeloCredentialsAddress.mockReturnValue(null)
+
+    await expect(revokeCourseCredential(sharedDb, 191, 3, WALLET))
+      .rejects.toThrow('Credentials contract not configured')
+  })
+})
+
+// Base del opt-in tardío: cursos completados al 100% sin credencial
+// (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.4).
+describe('completedCoursesWithoutCredential', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    sqlMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
+  })
+
+  it('maps rows and flags Christian content as a boolean', async () => {
+    sqlMocks.mockSqlExecute.mockResolvedValue({
+      rows: [
+        { course_id: 10, titulo: 'Global Disciples', contenido_cristiano: true },
+        { course_id: '7', titulo: null, contenido_cristiano: false },
+      ],
+    })
+
+    const courses = await completedCoursesWithoutCredential({} as any, 191)
+
+    expect(courses).toEqual([
+      { courseId: 10, titulo: 'Global Disciples', contenido_cristiano: true },
+      { courseId: 7, titulo: null, contenido_cristiano: false },
+    ])
+  })
+
+  it('returns an empty list when there is nothing pending', async () => {
+    sqlMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
+
+    await expect(completedCoursesWithoutCredential({} as any, 191)).resolves.toEqual([])
   })
 })

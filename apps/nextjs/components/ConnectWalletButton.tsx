@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { clearPrivateCourseCopies } from '@/lib/offline-course-db'
 import { getExternalProvider } from '@/lib/external-provider'
 import { logger } from '@pasosdejesus/m/debug'
 
@@ -270,6 +271,9 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
   async function handleDisconnect() {
     localStorage.removeItem('learn.tg.sessionAddress')
     setLocalAddr(null)
+    // R-#256 §3.5/§3.6b: sin sesión no deben quedar copias de cursos de pago ni
+    // de contenido cristiano en el dispositivo.
+    await clearPrivateCourseCopies().catch(() => {})
     // Use NextAuth's signOut which properly clears cookies + redirects
     const { signOut } = await import('next-auth/react')
     await signOut({ redirect: false })

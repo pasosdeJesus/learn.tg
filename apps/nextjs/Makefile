@@ -111,6 +111,7 @@ test-pages:
 		'app/[lang]/__tests__' \
 		'app/[lang]/metrics/tests' \
 		'app/[lang]/profile/__tests__' \
+		'app/[lang]/settings/tests' \
 		'app/[lang]/[pathPrefix]/__tests__' \
 		'app/[lang]/[pathPrefix]/[pathSuffix]/__tests__' \
 		'app/[lang]/[pathPrefix]/[pathSuffix]/test/__tests__'

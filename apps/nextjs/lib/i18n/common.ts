@@ -30,6 +30,7 @@ const common: TranslationSet = {
     confirm: 'Confirm',
     // R-#180: Navigation & Footer
     navProfile: 'Profile',
+    navSettings: 'Privacy', // R-#259
     navCourses: 'Courses', // R-#231
     navLeaderboard: 'Leaderboard',
     navTransparency: 'Transparency',
@@ -79,6 +80,7 @@ const common: TranslationSet = {
     confirm: 'Confirmar',
     // R-#180: Navigation & Footer
     navProfile: 'Perfil',
+    navSettings: 'Privacidad', // R-#259
     navCourses: 'Cursos', // R-#231
     navLeaderboard: 'Tabla de Líderes',
     navTransparency: 'Transparencia',

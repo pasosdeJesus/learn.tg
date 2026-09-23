@@ -47,6 +47,14 @@ Rules:
    must gate that field behind admin credentials explicitly passed by the
    caller (`wallet`+`token`), never via the browser session cookie of a
    public page.
+6. **A public list must not reveal that something is hidden.** Per-user privacy
+   switches (https://github.com/pasosdeJesus/learn.tg/issues/259) filter the
+   public surfaces; when the owner hides their data, return an **empty list** (or
+   `404`, as `GET /api/credential/wallet/[wallet]` does), never a shorter list
+   next to a total that would let the reader deduce the difference. The rule and
+   its single implementation are in `packages/rewards/src/lib/course-privacy.ts`
+   (re-exported by `apps/nextjs/lib/privacy-visibility.ts`); a new query that
+   publishes credentials (`credential_emission`) must apply it.
 
 ## 1b. CSRF / origin checks for mutations (R-#227 §4.3)
 

@@ -19,6 +19,7 @@ import { CourseDonation } from '@/components/CourseDonation'
 import { CourseStatistics } from '@/components/CourseStatistics'
 import { CheckoutModal } from '@/components/CheckoutModal'
 import { MaintenanceBanner } from '@/components/MaintenanceBanner'
+import { OfflineCourseDownload } from '@/components/OfflineCourseDownload'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { useScholarshipData } from '@/lib/hooks/useScholarshipData'
 
@@ -331,6 +332,17 @@ export default function Page({ params }: PageProps) {
                 dangerouslySetInnerHTML={{ __html: contentsHtml }}
               />
             </div>
+
+            <OfflineCourseDownload
+              lang={lang}
+              courseId={parseInt(course.id)}
+              prefix={pathPrefix}
+              titulo={course.titulo}
+              contenidoCristiano={course.contenido_cristiano === true}
+              isPremium={Number(course.porPagar) > 0}
+              guides={course.guias.map((guia) => guia.sufijoRuta).filter(Boolean)}
+              canRead={Number(course.porPagar) <= 0 || hasPurchased}
+            />
 
             {isGd && fundSlearn !== null && (
               <div className="px-6 py-4 rounded-xl bg-white text-gray-800 shadow">

@@ -51,11 +51,15 @@ from the browser menu.
   reason instead of keeping the answer in the queue: fix it (complete your profile)
   and submit the crossword again.
 
-**Which courses can be read offline (planned).** The free courses and the courses
-you have paid for, with their crosswords, without having to open each page first.
-When you are online —at least once every 24 hours— the app checks whether that
-content changed and updates the copy on your phone. The app will say how much
-space it takes and let you delete it.
+**Which courses you can download.** The free courses and the courses you have paid
+for, with their crosswords, without having to open each page first. On the course
+page press **Download for offline**: the app shows how much space it will take,
+lets you delete the copy, and when you are online (at least once every 24 hours)
+checks whether the content changed and updates the copy. A downloaded course
+appears on the offline page with all its guides. Courses about following Jesus
+(R-#259) are only downloaded if you turned on *Publish courses with Christian
+content* in **Privacy**; if you turn it off, or you disconnect the wallet, the app
+deletes those copies from the phone.
 
 ## The wallet inside the app
 

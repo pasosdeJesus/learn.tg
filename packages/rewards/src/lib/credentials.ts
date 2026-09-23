@@ -5,15 +5,17 @@
 
 import {
   createPublicClient,
+  createWalletClient,
   http,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
-import type { Kysely } from 'kysely'
+import { sql, type Kysely } from 'kysely'
 import {
   getTokenIdByCourseId,
   hasCredentialOnChain,
   mintCourseWithRetry,
+  revokeCredential,
 } from '@pasosdejesus/mpdj/blockchain'
 import { getCeloCredentialsAddress } from '@pasosdejesus/m/blockchain/deployments'
 import path from 'path'
@@ -154,4 +156,109 @@ export async function mintCourseCredential(
     .execute()
 
   return { txHash: hash, tokenId: Number(tokenId), isPremium }
+}
+
+/**
+ * Revoca (quema) una credencial ya emitida y lo anota en `credential_emission`
+ * (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.5).
+ *
+ * El contrato exige `MINTER_ROLE` — la misma billetera del backend que acuña,
+ * `process.env.PRIVATE_KEY`. La marca local (`revoked_at` + `revoke_hash`) es la
+ * que quita la credencial de todas las superficies públicas: la cadena no se
+ * puede consultar sin un indexador, y las consultas leen PostgreSQL.
+ *
+ * `usuarioId` + `tokenId` identifican la fila del dueño: la ruta solo puede
+ * revocar credenciales propias.
+ */
+export async function revokeCourseCredential(
+  db: Kysely<any>,
+  usuarioId: number,
+  tokenId: number,
+  walletAddress: string,
+): Promise<{ txHash: string }> {
+  const contractAddress = getContractAddress()
+  const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
+  const chain = getChain()
+  const publicClient = createPublicClient({ chain, transport: http(getRpcUrl()) }) as any
+  const walletClient = createWalletClient({
+    account,
+    chain,
+    transport: http(getRpcUrl()),
+  }) as any
+
+  // Un SBT de curso siempre es amount = 1 (ver `_validateMint` del contrato).
+  const txHash = await revokeCredential(
+    walletClient,
+    contractAddress,
+    walletAddress as `0x${string}`,
+    Number(tokenId),
+    1,
+  )
+  await publicClient.waitForTransactionReceipt({
+    hash: txHash as `0x${string}`,
+    timeout: 120_000,
+  })
+
+  const updated = await db
+    .updateTable('credential_emission')
+    .set({ revoked_at: new Date(), revoke_hash: txHash } as any)
+    .where('usuario_id', '=', usuarioId)
+    .where('token_id', '=', Number(tokenId))
+    .where('revoked_at', 'is', null)
+    .executeTakeFirst()
+
+  if (Number(updated?.numUpdatedRows ?? 0) === 0) {
+    throw new Error('Credential emission row not found for this user')
+  }
+
+  return { txHash }
+}
+
+export interface CompletedCourse {
+  courseId: number
+  titulo: string | null
+  contenido_cristiano: boolean
+}
+
+/**
+ * Cursos que el estudiante completó al 100% (todas las guías publicadas con
+ * `points = 1`) y que todavía no tienen credencial emitida.
+ *
+ * Es la base del opt-in tardío: al encender el interruptor de contenido cristiano
+ * en `/[lang]/settings` se ofrecen las credenciales de los cursos cristianos ya
+ * completados, que no se acuñaron por privacidad.
+ */
+export async function completedCoursesWithoutCredential(
+  db: Kysely<any>,
+  usuarioId: number,
+): Promise<CompletedCourse[]> {
+  const result = await sql`
+    SELECT c.id AS course_id,
+           c.titulo,
+           c.contenido_cristiano,
+           COUNT(a.id) AS total_guides,
+           COUNT(gu.id) AS completed_guides
+    FROM cor1440_gen_proyectofinanciero c
+    JOIN cor1440_gen_actividadpf a
+      ON a.proyectofinanciero_id = c.id
+     AND a."sufijoRuta" IS NOT NULL
+     AND a."sufijoRuta" <> ''
+    LEFT JOIN guide_usuario gu
+      ON gu.actividadpf_id = a.id
+     AND gu.usuario_id = ${usuarioId}
+     AND gu.points = 1
+    WHERE NOT EXISTS (
+      SELECT 1 FROM credential_emission e
+      WHERE e.usuario_id = ${usuarioId} AND e.course_id = c.id
+    )
+    GROUP BY c.id, c.titulo, c.contenido_cristiano
+    HAVING COUNT(a.id) > 0 AND COUNT(a.id) = COUNT(gu.id)
+    ORDER BY c.id
+  `.execute(db)
+
+  return result.rows.map((r: any) => ({
+    courseId: Number(r.course_id),
+    titulo: r.titulo ?? null,
+    contenido_cristiano: r.contenido_cristiano === true,
+  }))
 }

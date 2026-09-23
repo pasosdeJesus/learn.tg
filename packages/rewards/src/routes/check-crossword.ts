@@ -33,6 +33,8 @@ import LearnTGVaultsV5Abi from '../abis/LearnTGVaultsV5.json'
 import { callWriteFun } from '../lib/crypto'
 import { IS_PRODUCTION } from '../lib/config'
 import { mintCourseCredential } from '../lib/credentials'
+import { canMintPublicly, coursePrivacyFlags } from '../lib/course-privacy'
+import { answersForPlacements, guideAnswersFromDisk } from '../lib/guide-answers'
 import { getActiveVault, type VaultVersion } from '../lib/deployments'
 
 interface WordPlacement {
@@ -98,6 +100,7 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         invalidGuide: 'ID de guía inválido',
         invalidGrid: 'Estructura de cuadrícula inválida',
         invalidPlacements: 'Estructura de colocaciones inválida',
+        invalidPuzzle: 'No se pudieron verificar las respuestas de este crucigrama. Abre de nuevo la guía para recargarlo.',
       },
       en: {
         atLeast50:
@@ -121,6 +124,7 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         invalidGuide: 'Invalid guide ID',
         invalidGrid: 'Invalid grid structure',
         invalidPlacements: 'Invalid placements structure',
+        invalidPuzzle: 'The answers of this puzzle could not be verified. Open the guide again to reload it.',
       },
     }
 
@@ -149,14 +153,49 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
     }
     const { usuario, billetera: billeteraUsuario } = auth
 
-    const words = billeteraUsuario.answer_fib
+    // Respuestas esperadas.
+    //
+    // El camino online usa `billetera_usuario.answer_fib`, que `GET /api/crossword`
+    // sobrescribe con cada crucigrama que sirve. Offline —o cuando se resuelve un
+    // crucigrama descargado que nunca se abrió en línea— esa columna puede ser la
+    // de otro crucigrama, así que las respuestas se derivan del Markdown de la guía
+    // y se emparejan por la pista, no por el orden
+    // (https://github.com/pasosdeJesus/learn.tg/issues/256 §3.4).
+    let words = billeteraUsuario.answer_fib
       ? billeteraUsuario.answer_fib.split(' | ')
       : []
-    for (let i = 0; i < words.length; i++) {
+
+    const guideAnswers = await guideAnswersFromDisk(db, courseId, guideId)
+
+    // El crucigrama servido usa `min(preguntas, 5)` preguntas distintas (ver
+    // `GET /api/crossword`). Comprobarlo evita que un cliente envíe una sola
+    // palabra —o la misma pista repetida— y cobre la recompensa sin resolver.
+    if (guideAnswers.length > 0) {
+      const expected = Math.min(guideAnswers.length, 5)
+      const clues = placements.map((placement: any) => String(placement?.clue ?? '').replace(/\s+/g, ' ').trim())
+      if (placements.length !== expected || new Set(clues).size !== placements.length) {
+        return NextResponse.json({ error: msg[locale].invalidPuzzle }, { status: 422 })
+      }
+    }
+
+    const derived = answersForPlacements(guideAnswers, placements)
+    if (derived) {
+      words = derived
+    } else if (words.length !== placements.length) {
+      // Sin respuestas confiables no se califica: marcar como incorrecta una
+      // respuesta correcta sería peor que pedir que se recargue el crucigrama.
+      return NextResponse.json({ error: msg[locale].invalidPuzzle }, { status: 422 })
+    }
+
+    for (let i = 0; i < placements.length; i++) {
       let nrow = placements[i].row
       let ncol = placements[i].col
       const dir = placements[i].direction
       const word = words[i]
+      if (!word) {
+        if (!mistakesInCW.includes(i + 1)) mistakesInCW.push(i + 1)
+        continue
+      }
       for (let j = 0; j < word.length; j++) {
         if (
           nrow >= grid.length ||
@@ -316,7 +355,15 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
 
         const completedCount = completedGuides?.count || 0
         console.log(`[credential] course=${courseId} user=${billeteraUsuario.usuario_id} completed=${completedCount}/${totalPublished} wallet=${walletAddress}`)
-        if (completedCount >= totalPublished && totalPublished > 0) {
+        // Privacidad de la afiliación cristiana (https://github.com/pasosdeJesus/learn.tg/issues/259):
+        // en un curso marcado `contenido_cristiano` NO se acuña mientras el estudiante
+        // no haya habilitado publicar esa categoría. El progreso, la nota y la beca no
+        // se tocan; cuando encienda el interruptor, la acuñación se ofrece desde
+        // `/[lang]/settings` (opt-in tardío).
+        const courseFlags = await coursePrivacyFlags(db, courseId, billeteraUsuario.usuario_id)
+        if (completedCount >= totalPublished && totalPublished > 0 && !canMintPublicly(courseFlags)) {
+          console.log(`[credential] No se acuña: curso cristiano sin permiso de publicación (R-#259) user=${billeteraUsuario.usuario_id} course=${courseId}`)
+        } else if (completedCount >= totalPublished && totalPublished > 0) {
           console.log(`[credential] 100% reached, attempting mint for course=${courseId}`)
           try {
             const result = await mintCourseCredential(

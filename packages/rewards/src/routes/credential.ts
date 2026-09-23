@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { RewardsDeps } from '../index'
+import { visibilityFromUser } from '../lib/course-privacy'
 
 /**
  * GET /api/credential/[tokenId] — metadata ERC-1155 (público).
@@ -138,18 +139,35 @@ export async function credentialByWallet(
       return NextResponse.json({ error: 'No activity' }, { status: 404 })
     }
 
-    // SBTs earned
-    const sbts = await db
-      .selectFrom('credential_emission as e')
-      .innerJoin('cor1440_gen_proyectofinanciero as c', 'c.id', 'e.course_id')
-      .select([
-        'e.token_id as tokenId',
-        'c.titulo as name',
-        'e.emitted_at as earnedAt',
-      ])
-      .where('e.usuario_id', '=', billetera.usuario_id)
-      .orderBy('e.emitted_at', 'asc')
-      .execute()
+    // SBTs earned. Esta ruta es pública por billetera: aplica la misma regla de
+    // privacidad que el perfil público
+    // (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.2) — credenciales
+    // no revocadas, del dueño que publica, y de contenido cristiano solo si
+    // habilitó esa categoría.
+    const owner = await db
+      .selectFrom('usuario')
+      .select(['mostrar_cursos_publico', 'mostrar_cursos_cristianos_publico'])
+      .where('id', '=', billetera.usuario_id)
+      .executeTakeFirst()
+    const { publicCourses, publicChristianCourses } = visibilityFromUser(owner as never)
+
+    let sbts: any[] = []
+    if (publicCourses) {
+      let sbtQuery: any = db
+        .selectFrom('credential_emission as e')
+        .innerJoin('cor1440_gen_proyectofinanciero as c', 'c.id', 'e.course_id')
+        .select([
+          'e.token_id as tokenId',
+          'c.titulo as name',
+          'e.emitted_at as earnedAt',
+        ])
+        .where('e.usuario_id', '=', billetera.usuario_id)
+        .where('e.revoked_at', 'is', null)
+      if (!publicChristianCourses) {
+        sbtQuery = sbtQuery.where('c.contenido_cristiano', '=', false)
+      }
+      sbts = await sbtQuery.orderBy('e.emitted_at', 'asc').execute()
+    }
 
     // Donation totals from transaction table
     const donationRow = await db
@@ -170,13 +188,23 @@ export async function credentialByWallet(
       ? (firstSbtDate < firstDonationDate ? firstSbtDate : firstDonationDate)
       : (firstSbtDate || firstDonationDate)
 
-    // Premium credential count (for stable-sl tier determination)
-    const premiumRow = await db
-      .selectFrom('credential_emission')
-      .select(db.fn.countAll<number>().as('count'))
-      .where('usuario_id', '=', billetera.usuario_id)
-      .where('is_premium', '=', true)
-      .executeTakeFirst()
+    // Premium credential count (for stable-sl tier determination). También pasa
+    // por la regla de privacidad: un curso premium puede ser de contenido
+    // cristiano, y contar uno solo ya revelaría la afiliación.
+    let premiumRow: any = null
+    if (publicCourses) {
+      let q: any = db
+        .selectFrom('credential_emission as e')
+        .leftJoin('cor1440_gen_proyectofinanciero as c', 'c.id', 'e.course_id')
+        .select(db.fn.countAll<number>().as('count'))
+        .where('e.usuario_id', '=', billetera.usuario_id)
+        .where('e.is_premium', '=', true)
+        .where('e.revoked_at', 'is', null)
+      if (!publicChristianCourses) {
+        q = q.where('c.contenido_cristiano', '=', false)
+      }
+      premiumRow = await q.executeTakeFirst()
+    }
 
     if (sbts.length === 0 && !donationRow?.donationCount) {
       return NextResponse.json({ error: 'No activity' }, { status: 404 })

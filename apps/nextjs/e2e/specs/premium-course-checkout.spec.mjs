@@ -228,6 +228,33 @@ async function main() {
     if (u.includes('/api/') && r.status() >= 400) pageErrors.push(`http ${r.status()} ${u.slice(u.indexOf('/api/'))}`)
   })
   await setupE2EAuth(page, addr, pk, chainId, base)
+
+  // Compra real (§4.2): el mock de `setupE2EAuth` devuelve un hash falso (`0xcdcd…`)
+  // y receipts simulados, y el backend rechaza la compra con razón ("Backend
+  // verification failed: Transaction receipt … could not be found", medido
+  // 2026-09-21). Con `FUND_FRESH=1` se expone un puente real que firma y difunde con
+  // la llave del pastor nuevo; el spec lo **enciende justo antes de pagar**
+  // (`window.__e2eRealRpc`), porque antes de financiar la billetera el saldo real es
+  // 0 y el modal mostraría el panel de gas en vez del formulario.
+  if (FUND_FRESH) {
+    const rpcUrl = verifier.rpc || 'https://forno.celo-sepolia.celo-testnet.org'
+    const userPublic = createPublicClient({ chain: celoSepolia, transport: http(rpcUrl) })
+    const userWallet = createWalletClient({
+      account: privateKeyToAccount(pk), chain: celoSepolia, transport: http(rpcUrl),
+    })
+    await page.exposeFunction('__rpcReal', async (method, params) => {
+      if (method === 'eth_sendTransaction') {
+        const tx = params[0] || {}
+        return userWallet.sendTransaction({
+          to: tx.to,
+          value: BigInt(tx.value || '0x0'),
+          ...(tx.data && tx.data !== '0x' ? { data: tx.data } : {}),
+        })
+      }
+      return userPublic.request({ method, params })
+    })
+  }
+
   await gotoWithRetry(page, `${base}/en/gdcluster`, { waitUntil: 'domcontentloaded' , timeout: 120000 })
 
   // Wait for the course page to finish loading (cold on-demand compilation can
@@ -331,6 +358,10 @@ async function main() {
       } else {
         ok(`Fresh wallet funded from the fixture (${short(hashes.gas)}…)`)
         await new Promise(r => setTimeout(r, 8000)) // let the funding settle
+
+        // A partir de aquí se paga de verdad: el puente real responde los saldos, el
+        // gas, los receipts y el envío (ver el bloque de `__rpcReal` más arriba).
+        await page.evaluate(() => { window.__e2eRealRpc = true })
 
         const purchaseClicked = await page.evaluate(() => {
           const buttons = Array.from(document.querySelectorAll('button'))

@@ -2786,7 +2786,8 @@ CREATE TABLE public.cor1440_gen_proyectofinanciero (
     "creditosMd" character varying(5000),
     "porPagar" double precision,
     chain_id integer DEFAULT 42220,
-    contract_address character varying(255)
+    contract_address character varying(255),
+    contenido_cristiano boolean DEFAULT false NOT NULL
 );
 
 
@@ -3036,7 +3037,9 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL
+    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
+    revoked_at timestamp with time zone,
+    revoke_hash character varying(66)
 );
 
 
@@ -3073,7 +3076,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -5116,7 +5119,7 @@ CREATE TABLE public.notifications (
     content text,
     link character varying(500),
     is_read boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT '2026-08-16 18:21:31.035-05'::timestamp with time zone NOT NULL,
     ref_key character varying(100)
 );
 
@@ -5312,7 +5315,7 @@ CREATE TABLE public.transaction (
     synced boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
     CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'usdc'::text, 'xaut0'::text, 'gdoll'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'donation_reward'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying, 'conversion'::character varying, 'pastor_bonus'::character varying, 'referral_reward'::character varying, 'referral_bonus'::character varying])::text[])))
+    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('donation_reward'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text, ('conversion'::character varying)::text, ('pastor_bonus'::character varying)::text, ('referral_reward'::character varying)::text, ('referral_bonus'::character varying)::text])))
 );
 
 
@@ -5450,10 +5453,12 @@ CREATE TABLE public.usuario (
     registration character varying(50),
     registration_photo text,
     denomination character varying(100),
+    mostrar_cursos_publico boolean DEFAULT true NOT NULL,
+    mostrar_cursos_cristianos_publico boolean DEFAULT false NOT NULL,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
-    CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[])))),
+    CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY (ARRAY[('pastor'::character varying)::text, ('co_pastor'::character varying)::text, ('leader'::character varying)::text, ('member'::character varying)::text])))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1)),
-    CONSTRAINT usuario_verified_church_relationship_check CHECK (((verified_church_relationship IS NULL) OR ((verified_church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[]))))
+    CONSTRAINT usuario_verified_church_relationship_check CHECK (((verified_church_relationship IS NULL) OR ((verified_church_relationship)::text = ANY (ARRAY[('pastor'::character varying)::text, ('co_pastor'::character varying)::text, ('leader'::character varying)::text, ('member'::character varying)::text]))))
 );
 
 
@@ -7306,6 +7311,13 @@ CREATE INDEX idx_admin_solves_pending ON public.admin_solves USING btree (type, 
 
 
 --
+-- Name: idx_credential_emission_revoked_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_credential_emission_revoked_at ON public.credential_emission USING btree (revoked_at);
+
+
+--
 -- Name: idx_gdcontact_cluster_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7338,6 +7350,13 @@ CREATE INDEX idx_premium_course_usuario_course ON public.premium_course_usuario 
 --
 
 CREATE INDEX idx_premium_course_usuario_usuario ON public.premium_course_usuario USING btree (usuario_id);
+
+
+--
+-- Name: idx_proyectofinanciero_contenido_cristiano; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_proyectofinanciero_contenido_cristiano ON public.cor1440_gen_proyectofinanciero USING btree (contenido_cristiano);
 
 
 --

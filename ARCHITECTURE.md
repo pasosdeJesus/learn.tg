@@ -532,6 +532,7 @@ Communications between users, and between pdJ and users, are **confidential by d
 4. **Private notes and internal communications** use the messaging system (R-#162), not free-text columns on entity tables.
 5. **User-facing text fields** (cluster names, course descriptions, public profiles) may be plaintext — they are intentionally public.
 6. **Christian affiliation is private by default** (https://github.com/pasosdeJesus/learn.tg/issues/259): whether a learner completed Christian-related courses is never published unless they opt in, no credential (SBT) is minted for those courses without that opt-in, and the learner can revoke any SBT they hold. The course flag lives in `cor1440_gen_proyectofinanciero.contenido_cristiano` and the two visibility switches on `usuario`.
+7. **What is downloaded to the device follows the same switches** (https://github.com/pasosdeJesus/learn.tg/issues/256): the explicit offline store (`learn-tg-offline`) keeps a downloaded Christian course only while the learner's visibility switch is on, paid courses only for the wallet that downloaded them, and disconnecting the wallet or deleting it removes those copies. The device must not reveal the affiliation on its own, and queued (unsent) answers are never deleted by that cleanup.
 
 ### Sensitive data that MUST be encrypted or excluded
 

@@ -17,6 +17,7 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
 import { markBackupConfirmed, pickVerifyPositions, verifyWords } from '@/lib/wallet-backup'
+import { clearPrivateCourseCopies } from '@/lib/offline-course-db'
 
 interface WalletDialogProps {
   lang?: string
@@ -440,6 +441,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     try {
       await remove()
       localStorage.removeItem('learn.tg.sessionAddress')
+      // R-#256 §3.5/§3.6b: sin billetera no quedan copias de cursos de pago ni
+      // de contenido cristiano en el dispositivo.
+      await clearPrivateCourseCopies().catch(() => {})
       onOpenChange(false)
     } catch (e) {
       setLocalError(translateError(e))

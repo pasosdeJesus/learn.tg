@@ -33,6 +33,15 @@ async function injectMock(page, address, privateKey, chainId) {
         if (method === 'personal_sign') return window.__signSiwe(params[0])
         if (method === 'wallet_switchEthereumChain') return null
         if (method === 'wallet_addEthereumChain') return null
+        // Puente RPC real **opt-in** (`window.__e2eRealRpc = true`): los specs que pagan
+        // de verdad lo encienden y el mock deja de devolver el hash falso (`0xcdcd…`) y
+        // los receipts simulados, que el backend rechaza con razón ("Transaction receipt
+        // … could not be found"). Se lee al invocar, no al inyectar, así que el spec
+        // puede encenderlo a mitad de la página (p. ej. después de financiar la
+        // billetera). El spec expone `__rpcReal` con `page.exposeFunction`.
+        if (window.__e2eRealRpc && typeof window.__rpcReal === 'function') {
+          return window.__rpcReal(method, params || [])
+        }
         if (method === 'eth_sendTransaction') return '0x' + 'cd'.repeat(32)
         // Overrides de los specs (gas-insufficient-panel). Se leen al invocar, no al
         // inyectar: viem enlaza `provider.request` al construir el cliente

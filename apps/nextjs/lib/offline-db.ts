@@ -1,9 +1,13 @@
 'use client'
 
 export const OFFLINE_DB_NAME = 'learn-tg-offline'
-export const OFFLINE_DB_VERSION = 1
+// v2: se agrega `courses` (descarga completa de un curso, R-#256). El upgrade
+// crea el store sin tocar `guides` ni `pending` (las colas sin enviar no se
+// pierden: R-#240 §4b item 9).
+export const OFFLINE_DB_VERSION = 2
 export const GUIDE_STORE = 'guides'
 export const PENDING_STORE = 'pending'
+export const COURSE_STORE = 'courses'
 
 export function hasIndexedDB(): boolean {
   return typeof indexedDB !== 'undefined'
@@ -19,6 +23,9 @@ function open(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(PENDING_STORE)) {
         db.createObjectStore(PENDING_STORE, { keyPath: 'id' })
+      }
+      if (!db.objectStoreNames.contains(COURSE_STORE)) {
+        db.createObjectStore(COURSE_STORE, { keyPath: 'key' })
       }
     }
     request.onsuccess = () => resolve(request.result)

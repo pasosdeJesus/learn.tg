@@ -193,8 +193,10 @@ make test-pdj-wallet-next # Only packages/pdj-wallet-next (compila el core antes
 
 # ── E2E shortcuts ──
 make test-e2e-wallet   # SPEC=in-app-wallet (billetera in-app, R-#245)
-make test-e2e-offline  # SPEC=offline (guía + crucigrama offline, R-#241/R-#242)
+make test-e2e-offline  # SPEC=offline (guía + crucigrama + descarga del curso, R-#241/R-#242/R-#256)
 make test-e2e-pwa      # los tres del MVP PWA
+# make test-e2e-spec SPEC=privacy-settings  # R-#259: interruptores de privacidad vs perfil público
+# make test-e2e-spec SPEC=offline-course-download  # R-#256: descarga del curso (ya entra en test-e2e-offline)
 
 # ── Type checking ──
 make type           # TypeScript check (source + test files)

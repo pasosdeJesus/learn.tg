@@ -23,6 +23,13 @@ Rules for writing course guides (content in `resources/{lang}/{course}/`).
   parentheses: `(answer)`. Answers are case-insensitive and accent-insensitive
   — the system normalizes both before comparison.
 - The answer in parentheses is what the crossword system uses to validate.
+- **The parenthesis is also the offline contract** (R-#256): when a learner solves a
+  downloaded crossword and submits it after reconnecting, the server derives the
+  expected answers from this markdown, matching each clue (the question text) with its
+  answer. Keep one question per numbered item (a question may wrap to the next line),
+  keep `___` in the body and the answer in the **last** parentheses of the item, and do
+  not put a `)` inside the answer: a guide that breaks the format makes its crossword
+  unverifiable offline.
 - Never put instructions or extra text inside the parentheses — they are
   reserved for the answer only. Put instructions in the question body.
 - Use words, not digits: `(onehundred)` not `(100)`. Join compound words:

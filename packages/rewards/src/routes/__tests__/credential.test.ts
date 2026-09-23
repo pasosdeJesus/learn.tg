@@ -2,10 +2,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
-import { credentialByTokenId } from '../credential'
+import { credentialByTokenId, credentialByWallet } from '../credential'
 
 const {
   mockExecuteTakeFirst,
+  mockExecute,
   setupMocks,
   resetMocks,
   setupCommonResponses,
@@ -129,5 +130,82 @@ describe('credentialByTokenId (motor rewards)', () => {
     mockExecuteTakeFirst.mockRejectedValueOnce(new Error('DB crash'))
     const res = await credentialByTokenId(deps, buildRequest('1'), { tokenId: '1' })
     expect(res.status).toBe(500)
+  })
+})
+
+// `GET /api/credential/wallet/[wallet]` es público y lista SBTs: aplica la misma
+// regla de privacidad que el perfil público
+// (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.2).
+describe('credentialByWallet (motor rewards)', () => {
+  const WALLET = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMocks()
+    setupCommonResponses()
+  })
+
+  function buildRequest(wallet: string): NextRequest {
+    return new NextRequest(`http://localhost/api/credential/wallet/${wallet}`)
+  }
+
+  it('returns 400 for a malformed wallet', async () => {
+    const res = await credentialByWallet(deps, buildRequest('0xabc'), { wallet: '0xabc' })
+    expect(res.status).toBe(400)
+    expect(mockExecuteTakeFirst).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the wallet has no account', async () => {
+    mockExecuteTakeFirst.mockResolvedValue(null)
+
+    const res = await credentialByWallet(deps, buildRequest(WALLET), { wallet: WALLET })
+
+    expect(res.status).toBe(404)
+  })
+
+  it('does not query credentials at all when the owner turned publishing off', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ usuario_id: 191 }) // billetera
+      .mockResolvedValueOnce({ mostrar_cursos_publico: false }) // dueño
+      .mockResolvedValueOnce({ donationCount: 2 }) // donaciones
+
+    const res = await credentialByWallet(deps, buildRequest(WALLET), { wallet: WALLET })
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(mockExecute).not.toHaveBeenCalled()
+    expect(body.sbts).toEqual([])
+    expect(body.premiumSbtCount).toBe(0)
+  })
+
+  it('answers 404 (never a shorter list) when everything is hidden', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ usuario_id: 191 })
+      .mockResolvedValueOnce({ mostrar_cursos_publico: false })
+      .mockResolvedValueOnce(null) // sin donaciones
+
+    const res = await credentialByWallet(deps, buildRequest(WALLET), { wallet: WALLET })
+
+    expect(res.status).toBe(404)
+  })
+
+  it('lists the SBTs and the premium count when the owner publishes', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ usuario_id: 191 })
+      .mockResolvedValueOnce({ mostrar_cursos_publico: true, mostrar_cursos_cristianos_publico: true })
+      .mockResolvedValueOnce({ totalDonated: '5.00', donationCount: 2, firstDonation: '2026-09-01' })
+      .mockResolvedValueOnce({ count: 1 })
+    mockExecute.mockResolvedValue([
+      { tokenId: 3, name: 'Global Disciples', earnedAt: '2026-09-20T10:00:00.000Z' },
+    ])
+
+    const res = await credentialByWallet(deps, buildRequest(WALLET), { wallet: WALLET })
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.sbts).toHaveLength(1)
+    expect(body.premiumSbtCount).toBe(1)
+    // La actividad más antigua es la donación del 2026-09-01
+    expect(body.firstActivity).toBe('2026-09-01')
   })
 })

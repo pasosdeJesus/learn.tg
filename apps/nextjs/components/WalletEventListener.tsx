@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { signOut } from 'next-auth/react'
 import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { clearPrivateCourseCopies } from '@/lib/offline-course-db'
 import { getExternalProvider } from '@/lib/external-provider'
 
 /**
@@ -34,6 +35,9 @@ export function WalletEventListener() {
     wasInAppUnlocked.current = false
     if (lockReason === 'idle') return
     localStorage.removeItem('learn.tg.sessionAddress')
+    // R-#256 §3.5/§3.6b: al cerrar/borrar la billetera no deben quedar en el
+    // dispositivo los cursos de pago ni los de contenido cristiano.
+    void clearPrivateCourseCopies().catch(() => {})
     signOut({ redirect: true, callbackUrl: '/' })
   }, [inAppStatus, lockReason])
 
@@ -86,6 +90,7 @@ export function WalletEventListener() {
         }
         // User disconnected from wallet
         localStorage.removeItem('learn.tg.sessionAddress')
+        void clearPrivateCourseCopies().catch(() => {})
         signOut({ redirect: true, callbackUrl: '/' })
       }
     }
@@ -101,6 +106,7 @@ export function WalletEventListener() {
         return
       }
       localStorage.removeItem('learn.tg.sessionAddress')
+      void clearPrivateCourseCopies().catch(() => {})
       signOut({ redirect: true, callbackUrl: '/' })
     }
 
