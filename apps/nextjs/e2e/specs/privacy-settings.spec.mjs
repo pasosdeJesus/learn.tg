@@ -16,12 +16,15 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import {
-  initTestEnv, launchBrowser, newPage,
+  initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 
 const LANG = 'en'
+// Contraseña del mock de la billetera en memoria (los specs la usan así, R-#239).
+const WALLET_PASSWORD = '12345678'
 
 function loadEnvCredentials() {
   for (const envPath of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env'), path.join(process.cwd(), '.env')]) {
@@ -71,20 +74,47 @@ async function main() {
   const { base } = resolveSiteTarget(env)
 
   const browser = await launchBrowser(env.headless)
-  const page = await newPage(browser, creds?.addr, timeout)
   if (!creds?.addr) {
     console.log('[SKIP] sin billetera de prueba en .env')
     await browser.close()
     process.exit(0)
   }
 
+  // La página de privacidad solo pinta los interruptores con una identidad
+  // resuelta (sesión NextAuth): se entra con el núcleo real de la billetera, como
+  // en los demás specs (R-#239), y no con el mock genérico de `newPage`.
+  const page = await browser.newPage()
+  await page.setDefaultNavigationTimeout(120000)
+  await installCoreWalletMock(page, {
+    privateKey: creds.pk,
+    address: creds.addr,
+    chainId: env.chainId,
+    password: WALLET_PASSWORD,
+  })
+
   try {
+    await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
+    await signInWithCoreWallet(page, {
+      privateKey: creds.pk,
+      address: creds.addr,
+      chainId: env.chainId,
+      baseUrl: base,
+      password: WALLET_PASSWORD,
+    })
+    ok('Sesión iniciada con el núcleo de la billetera')
+
     await page.goto(`${base}/${LANG}/settings`, { waitUntil: 'domcontentloaded' })
     const switchLabel = 'Publish my completed courses'
-    const present = await page.evaluate(
-      (aria) => !!document.querySelector(`[role="switch"][aria-label="${aria}"]`),
-      switchLabel,
-    )
+    // La página es un componente de cliente: los interruptores aparecen cuando
+    // responde `GET /api/settings`, así que hay que esperarlos antes de concluir
+    // que la función no está desplegada.
+    let present = false
+    try {
+      await page.waitForSelector(`[role="switch"][aria-label="${switchLabel}"]`, { timeout: 30000 })
+      present = true
+    } catch {
+      present = false
+    }
     if (!present) {
       console.log('[SKIP] no hay interruptores de privacidad en /settings — R-#259 no está desplegada todavía')
       await browser.close()
@@ -92,10 +122,12 @@ async function main() {
     }
     ok('La página de privacidad muestra los interruptores')
 
-    const profile = await page.evaluate(async () => {
-      const res = await fetch('/api/profile')
+    const profile = await page.evaluate(async (wallet) => {
+      // `/api/profile` exige la pista de identidad en la URL (`walletAddress`); la
+      // credencial sigue siendo la cookie de sesión (R-#233 Fase 2).
+      const res = await fetch(`/api/profile?walletAddress=${encodeURIComponent(wallet)}`, { credentials: 'same-origin' })
       return res.ok ? res.json() : null
-    })
+    }, creds.addr)
     const userId = profile?.id || profile?.userId
     if (!userId) {
       fail('No se pudo obtener el id del estudiante de prueba (/api/profile)')

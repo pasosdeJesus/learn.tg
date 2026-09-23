@@ -80,6 +80,15 @@ const pwaConfig: PWAConfig = {
       options: {
         cacheName: 'learntg-pages',
         networkTimeoutSeconds: 5,
+        // `ignoreVary` es imprescindible (R-#256): el HTML de Next trae
+        // `Vary: rsc, next-router-state-tree, next-router-prefetch,
+        // next-router-segment-prefetch`, así que las cabeceras de la **petición**
+        // forman parte de la clave de caché. La descarga de un curso calienta la
+        // caché con un `fetch()` normal y luego la navegación sin conexión llega
+        // con otras cabeceras: sin `ignoreVary` no hay acierto, el handler falla y
+        // el respaldo `fallbacks.document` sirve `/offline` en vez de la guía
+        // descargada (medido en el sitio de desarrollo el 2026-09-22).
+        matchOptions: { ignoreVary: true },
         expiration: {
           maxEntries: 60,
           maxAgeSeconds: 24 * 60 * 60, // 24 horas

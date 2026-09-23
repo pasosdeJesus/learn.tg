@@ -20,9 +20,13 @@ import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-w
 // El crucigrama de una guía se resuelve leyendo el **Markdown local** de esa guía
 // (las mismas respuestas que el servidor deriva desde 2026-09-22, R-#256 §3.4): antes
 // había una lista fija de la guía 1 y cualquier cambio de guía o de pregunta rompía el
-// spec. La guía la elige el spec entre las que todavía no pagaron las dos becas, porque
-// el botón de envío se deshabilita, por diseño, una vez pagadas (R-#242).
-const GUIDE_ORDER = { lang: 'en', prefix: 'gdcluster' }
+// spec. La guía la elige el spec entre las que todavía no pagaron las dos becas y cuyo
+// crucigrama sirve el sitio, porque el botón de envío se deshabilita, por diseño, una
+// vez pagadas las dos (R-#242).
+// Curso: `web3-and-ubi` (gratuito, sin contenido cristiano, con crucigramas en el sitio
+// desplegado). `gdcluster` no sirve de objetivo estable: su guía 1 ya tiene las dos
+// becas pagadas para la billetera de prueba y el despliegue no sirve las demás.
+const GUIDE_ORDER = { lang: 'en', prefix: 'web3-and-ubi' }
 
 /** Preguntas y respuestas del Markdown local de una guía (mismo formato que remark). */
 function answersFromGuideFile(lang, prefix, suffix) {
@@ -263,12 +267,14 @@ async function main() {
       if (status.receivedScholarship && status.receivedSlearnScholarship) continue
       // Además debe haber crucigrama: el sitio desplegado puede tener una copia de
       // `resources/` distinta de la de este árbol de trabajo (guías sin preguntas).
-      const puzzle = await page.evaluate(async ({ prefix, lang, guide }) => {
-        const res = await fetch(`/api/crossword?lang=${lang}&prefix=${prefix}&guide=${guide}`, { credentials: 'same-origin' })
+      // Sin `walletAddress` la ruta responde 200 con la cuadrícula vacía (exige
+      // sesión), así que hay que pasar la billetera como lo hace la página.
+      const puzzle = await page.evaluate(async ({ prefix, lang, guide, wallet }) => {
+        const res = await fetch(`/api/crossword?lang=${lang}&prefix=${prefix}&guide=${guide}&walletAddress=${encodeURIComponent(wallet)}`, { credentials: 'same-origin' })
         if (!res.ok) return 0
         const body = await res.json().catch(() => null)
         return (body?.placements || []).length
-      }, { prefix: GUIDE_ORDER.prefix, lang: GUIDE_ORDER.lang, guide: targets.guides[index] })
+      }, { prefix: GUIDE_ORDER.prefix, lang: GUIDE_ORDER.lang, guide: targets.guides[index], wallet: creds.addr })
       if (puzzle === 0) continue
       guideNumber = index + 1
       guideSuffix = targets.guides[index]

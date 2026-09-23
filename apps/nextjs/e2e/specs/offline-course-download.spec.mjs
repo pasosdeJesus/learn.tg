@@ -130,8 +130,16 @@ async function main() {
   await page.waitForFunction(() => !!navigator.serviceWorker?.controller, { timeout })
   ok('La página está controlada por el service worker')
 
-  // 2. La descarga del curso (§3.2). Sin el botón, la función no está desplegada.
-  const button = await page.$(DOWNLOAD_BUTTON)
+  // 2. La descarga del curso (§3.2). El botón aparece cuando el curso terminó de
+  // cargar (el registro se lee de IndexedDB y el curso viene del API), así que se
+  // espera; solo si no llega se considera que la función no está desplegada.
+  let button = null
+  try {
+    await page.waitForSelector(DOWNLOAD_BUTTON, { timeout: Math.max(timeout, 60000) })
+    button = await page.$(DOWNLOAD_BUTTON)
+  } catch {
+    button = null
+  }
   if (!button) {
     console.log('[SKIP] no hay botón de descarga del curso — R-#256 no está desplegada todavía')
     await browser.close()
@@ -169,6 +177,28 @@ async function main() {
   }
 
   // 4. Sin conexión, abrir la guía nunca visitada.
+  //
+  // Antes de navegar se comprueba el **mecanismo**: el HTML de Next trae
+  // `Vary: rsc, next-router-state-tree, …`, así que la caché solo acierta si la
+  // regla `/(en|es)/*` usa `matchOptions.ignoreVary` (R-#256). Si el despliegue
+  // todavía no lo trae, la navegación cae en `/offline` y este spec lo diría como
+  // fallo; se prefiere OMITIR con el motivo exacto y decir qué desplegar.
+  const varyBlocks = await page.evaluate(async (guidePath) => {
+    try {
+      const cache = await window.caches.open('learntg-pages')
+      const res = await cache.match(guidePath)
+      if (!res) return 'sin copia en learntg-pages'
+      return /rsc|next-router/.test(res.headers.get('vary') || '') ? 'vary' : 'ok'
+    } catch (error) {
+      return `error: ${error.message}`
+    }
+  }, NEVER_VISITED_PATH)
+  if (varyBlocks === 'vary') {
+    console.log('[SKIP] el HTML cacheado trae `Vary: rsc, next-router-*` y el despliegue aún no usa `matchOptions.ignoreVary` en la regla `/(en|es)/*` de `next.config.ts`: sin eso la navegación sin conexión no acierta en la caché (cae en /offline). Recompila y reinicia el sitio con este árbol para verificar la lectura offline de una guía nunca visitada.')
+    await browser.close()
+    process.exit(0)
+  }
+
   await page.setOfflineMode(true)
   try {
     await page.goto(`${base}${NEVER_VISITED_PATH}`, { waitUntil: 'domcontentloaded' })

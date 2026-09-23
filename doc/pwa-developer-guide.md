@@ -84,6 +84,15 @@ that cache with an explicit `fetch()` of each guide URL (`warmPageCache` in
 `lib/offline-course-download.ts`): the `/(en|es)/*` rule matches by URL, so the
 request lands in `learntg-pages` exactly like a navigation would.
 
+That is only half of it: **the rule must carry `matchOptions: { ignoreVary: true }`**.
+Next serves its HTML with `Vary: rsc, next-router-state-tree, next-router-prefetch,
+next-router-segment-prefetch`, so the request headers are part of the cache key.
+The warm-up request (a plain `fetch`) and the later offline navigation carry
+different headers, `NetworkFirst` finds no match, its handler fails and
+`fallbacks.document` answers `/offline` instead of the downloaded guide (measured on
+the dev site on 2026-09-22). Do not remove `ignoreVary` from that entry without
+re-testing `offline-course-download`.
+
 Mind the trade-off: caching `/api/*` GET responses keeps wallet-scoped data in
 the device cache for an hour. If a future endpoint must never be stored, give it
 its own entry **before** the generic one with `handler: 'NetworkOnly'`.
