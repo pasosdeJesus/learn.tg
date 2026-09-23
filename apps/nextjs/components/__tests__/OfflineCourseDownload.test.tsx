@@ -51,7 +51,7 @@ const SAVED = {
   lang: 'en',
   prefix: 'web3-and-ubi',
   titulo: 'Web3 and UBI',
-  contenidoCristiano: false,
+  contenidoSensible: false,
   isPremium: false,
   wallet: null,
   downloadedAt: Date.now(),
@@ -65,7 +65,7 @@ const BASE_PROPS = {
   courseId: 3,
   prefix: 'web3-and-ubi',
   titulo: 'Web3 and UBI',
-  contenidoCristiano: false,
+  contenidoSensible: false,
   isPremium: false,
   guides: ['guide1', 'guide2'],
   canRead: true,
@@ -77,7 +77,7 @@ describe('OfflineCourseDownload', () => {
     hooks.address = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
     hooks.ready = true
     hooks.record = null
-    hooks.authedGet.mockResolvedValue({ data: { publicCourses: true, publicChristianCourses: false } })
+    hooks.authedGet.mockResolvedValue({ data: { publicCourses: true, publicSensitiveCourses: false } })
     hooks.downloadCourse.mockResolvedValue(SAVED)
     hooks.revalidateCourse.mockResolvedValue({ updated: false, course: null })
   })
@@ -95,27 +95,27 @@ describe('OfflineCourseDownload', () => {
     expect(hooks.downloadCourse).not.toHaveBeenCalled()
   })
 
-  it('offers nothing for a Christian course while the switch is off', async () => {
+  it('offers nothing for a sensitive course while the switch is off', async () => {
     const { container } = render(
-      <OfflineCourseDownload {...BASE_PROPS} contenidoCristiano />,
+      <OfflineCourseDownload {...BASE_PROPS} contenidoSensible />,
     )
 
     await waitFor(() => expect(hooks.authedGet).toHaveBeenCalledWith('/api/settings'))
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('offers the download for a Christian course once the switch is on', async () => {
-    hooks.authedGet.mockResolvedValue({ data: { publicCourses: true, publicChristianCourses: true } })
+  it('offers the download for a sensitive course once the switch is on', async () => {
+    hooks.authedGet.mockResolvedValue({ data: { publicCourses: true, publicSensitiveCourses: true } })
 
-    render(<OfflineCourseDownload {...BASE_PROPS} contenidoCristiano />)
+    render(<OfflineCourseDownload {...BASE_PROPS} contenidoSensible />)
 
     expect(await screen.findByText('Download for offline')).toBeInTheDocument()
   })
 
-  it('does not offer a Christian course download to an anonymous visitor', async () => {
+  it('does not offer a sensitive course download to an anonymous visitor', async () => {
     hooks.address = undefined
     const { container } = render(
-      <OfflineCourseDownload {...BASE_PROPS} contenidoCristiano />,
+      <OfflineCourseDownload {...BASE_PROPS} contenidoSensible />,
     )
 
     await waitFor(() => expect(hooks.authedGet).not.toHaveBeenCalled())

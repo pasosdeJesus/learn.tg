@@ -14,7 +14,7 @@ const DESCRIPTOR = {
   lang: 'en',
   prefix: '/gdcluster',
   titulo: 'Global Disciples',
-  contenidoCristiano: true,
+  contenidoSensible: true,
   isPremium: true,
   guides: ['guide1', 'guide2'],
 }
@@ -56,7 +56,7 @@ describe('downloadCourse (R-#256)', () => {
     expect(course.prefix).toBe('gdcluster')
     expect(course.wallet).toBe(WALLET)
     expect(course.isPremium).toBe(true)
-    expect(course.contenidoCristiano).toBe(true)
+    expect(course.contenidoSensible).toBe(true)
     expect(course.guides.map((g) => g.suffix)).toEqual(['guide1', 'guide2'])
     expect(course.revision).toMatch(/^[0-9a-z]+$/)
     expect(course.bytes).toBeGreaterThan(0)

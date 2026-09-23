@@ -227,19 +227,19 @@ describe('completedCoursesWithoutCredential', () => {
     sqlMocks.mockSqlExecute.mockResolvedValue({ rows: [] })
   })
 
-  it('maps rows and flags Christian content as a boolean', async () => {
+  it('maps rows and flags sensitive content as a boolean', async () => {
     sqlMocks.mockSqlExecute.mockResolvedValue({
       rows: [
-        { course_id: 10, titulo: 'Global Disciples', contenido_cristiano: true },
-        { course_id: '7', titulo: null, contenido_cristiano: false },
+        { course_id: 10, titulo: 'Global Disciples', contenido_sensible: true },
+        { course_id: '7', titulo: null, contenido_sensible: false },
       ],
     })
 
     const courses = await completedCoursesWithoutCredential({} as any, 191)
 
     expect(courses).toEqual([
-      { courseId: 10, titulo: 'Global Disciples', contenido_cristiano: true },
-      { courseId: 7, titulo: null, contenido_cristiano: false },
+      { courseId: 10, titulo: 'Global Disciples', contenido_sensible: true },
+      { courseId: 7, titulo: null, contenido_sensible: false },
     ])
   })
 

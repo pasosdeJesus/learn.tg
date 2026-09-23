@@ -238,14 +238,14 @@ cache and precache in development, so there is no offline to test (see
    (`NetworkOnly`).
 9. **Downloaded course (R-#256)**, automated in
    `e2e/specs/offline-course-download.spec.mjs` (skips itself when the feature is
-   not deployed): on `/en/web3-and-ubi` (free, non-Christian) press "Download for
+   not deployed): on `/en/web3-and-ubi` (free, non-category-B) press "Download for
    offline", wait for the confirmation, then with the network off open
    `/en/web3-and-ubi/guide4` — a guide **never** visited online. The spec also
    reads the IndexedDB record to check that the stored crossword carries no
    answers. Manually: DevTools > Application > IndexedDB > `learn-tg-offline`,
    stores `courses` (one record per course and language: guides, wallet, revision,
    size) and `guides` (the HTML of each guide). Deleting the wallet or
-   disconnecting must remove the copies of paid and Christian courses while the
+   disconnecting must remove the copies of paid and category B courses while the
    `pending` store keeps its queued answers.
 
 To discard stale cached pages after deploying changes: DevTools > Application >

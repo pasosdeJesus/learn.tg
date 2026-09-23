@@ -2,8 +2,8 @@
 // E2E: descarga completa de un curso y lectura sin conexión de una guía que
 // nunca se abrió en línea (https://github.com/pasosdeJesus/learn.tg/issues/256).
 //
-// Curso de prueba: `/en/web3-and-ubi` — gratuito y **sin** contenido cristiano
-// (así no depende del interruptor de privacidad de R-#259; un curso cristiano
+// Curso de prueba: `/en/web3-and-ubi` — gratuito y **sin** contenido sensible
+// (así no depende del interruptor de privacidad de R-#259; un curso sensible
 // solo se descarga con ese interruptor encendido).
 //
 // Requiere la rama con el PWA y la descarga desplegadas en el sitio de

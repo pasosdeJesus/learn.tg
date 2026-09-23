@@ -26,7 +26,7 @@ function record(overrides: Partial<DownloadedCourse> = {}): DownloadedCourse {
     lang: 'en',
     prefix: 'gdcluster',
     titulo: 'Global Disciples',
-    contenidoCristiano: true,
+    contenidoSensible: true,
     isPremium: true,
     wallet: '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c',
     downloadedAt: Date.now(),
@@ -101,13 +101,13 @@ describe('offline-course-db (R-#256)', () => {
   })
 
   it('deletes copies by category (disconnect, wallet deletion, privacy switch)', async () => {
-    await saveDownloadedCourse(record({ key: 'en/gdcluster', isPremium: true, contenidoCristiano: true }))
+    await saveDownloadedCourse(record({ key: 'en/gdcluster', isPremium: true, contenidoSensible: true }))
     await saveDownloadedCourse(record({
       key: 'en/web3-and-ubi',
       prefix: 'web3-and-ubi',
       courseId: 3,
       isPremium: false,
-      contenidoCristiano: false,
+      contenidoSensible: false,
     }))
 
     const deleted = await deleteDownloadedCourses({ premium: true })
@@ -117,26 +117,26 @@ describe('offline-course-db (R-#256)', () => {
     expect(await getDownloadedCourse('en/web3-and-ubi')).not.toBeNull()
   })
 
-  it('deletes only the Christian copies of this wallet when the switch goes off', async () => {
+  it('deletes only the sensitive copies of this wallet when the switch goes off', async () => {
     const WALLET = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
     await saveDownloadedCourse(record({
-      key: 'en/cristiano',
-      prefix: 'cristiano',
-      contenidoCristiano: true,
+      key: 'en/sensible',
+      prefix: 'sensible',
+      contenidoSensible: true,
       isPremium: false,
       wallet: WALLET,
     }))
     await saveDownloadedCourse(record({
       key: 'en/tecnico',
       prefix: 'tecnico',
-      contenidoCristiano: false,
+      contenidoSensible: false,
       isPremium: false,
       wallet: WALLET,
     }))
 
-    const deleted = await deleteDownloadedCourses({ christian: true })
+    const deleted = await deleteDownloadedCourses({ sensitive: true })
 
-    expect(deleted).toEqual(['en/cristiano'])
+    expect(deleted).toEqual(['en/sensible'])
     expect(await getDownloadedCourse('en/tecnico')).not.toBeNull()
   })
 })

@@ -192,7 +192,7 @@ describe('credentialByWallet (motor rewards)', () => {
   it('lists the SBTs and the premium count when the owner publishes', async () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ usuario_id: 191 })
-      .mockResolvedValueOnce({ mostrar_cursos_publico: true, mostrar_cursos_cristianos_publico: true })
+      .mockResolvedValueOnce({ mostrar_cursos_publico: true, mostrar_cursos_sensibles_publico: true })
       .mockResolvedValueOnce({ totalDonated: '5.00', donationCount: 2, firstDonation: '2026-09-01' })
       .mockResolvedValueOnce({ count: 1 })
     mockExecute.mockResolvedValue([

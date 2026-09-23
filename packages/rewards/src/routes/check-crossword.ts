@@ -355,14 +355,14 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
 
         const completedCount = completedGuides?.count || 0
         console.log(`[credential] course=${courseId} user=${billeteraUsuario.usuario_id} completed=${completedCount}/${totalPublished} wallet=${walletAddress}`)
-        // Privacidad de la afiliación cristiana (https://github.com/pasosdeJesus/learn.tg/issues/259):
-        // en un curso marcado `contenido_cristiano` NO se acuña mientras el estudiante
+        // Privacidad de la afiliación sensible (https://github.com/pasosdeJesus/learn.tg/issues/259):
+        // en un curso marcado `contenido_sensible` NO se acuña mientras el estudiante
         // no haya habilitado publicar esa categoría. El progreso, la nota y la beca no
         // se tocan; cuando encienda el interruptor, la acuñación se ofrece desde
         // `/[lang]/settings` (opt-in tardío).
         const courseFlags = await coursePrivacyFlags(db, courseId, billeteraUsuario.usuario_id)
         if (completedCount >= totalPublished && totalPublished > 0 && !canMintPublicly(courseFlags)) {
-          console.log(`[credential] No se acuña: curso cristiano sin permiso de publicación (R-#259) user=${billeteraUsuario.usuario_id} course=${courseId}`)
+          console.log(`[credential] No se acuña: curso sensible sin permiso de publicación (R-#259) user=${billeteraUsuario.usuario_id} course=${courseId}`)
         } else if (completedCount >= totalPublished && totalPublished > 0) {
           console.log(`[credential] 100% reached, attempting mint for course=${courseId}`)
           try {

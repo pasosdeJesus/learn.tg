@@ -1372,10 +1372,10 @@ CREATE FUNCTION public.transaction_lowercase_wallet_fn() RETURNS trigger
 
 
 --
--- Name: usuario_visibilidad_cristiana_por_pais(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: usuario_visibilidad_sensible_por_region(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.usuario_visibilidad_cristiana_por_pais() RETURNS trigger
+CREATE FUNCTION public.usuario_visibilidad_sensible_por_region() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
     BEGIN
@@ -1389,17 +1389,17 @@ CREATE FUNCTION public.usuario_visibilidad_cristiana_por_pais() RETURNS trigger
         RETURN NEW;
       END IF;
 
-      -- Un valor explícito al crear la cuenta se respeta: el estado del país solo
-      -- llena la ausencia de decisión.
-      IF TG_OP = 'INSERT' AND NEW.mostrar_cursos_cristianos_publico IS NOT NULL THEN
+      -- Un valor explícito al crear la cuenta se respeta: el estado de la región
+      -- solo llena la ausencia de decisión.
+      IF TG_OP = 'INSERT' AND NEW.mostrar_cursos_sensibles_publico IS NOT NULL THEN
         RETURN NEW;
       END IF;
 
-      SELECT CASE WHEN p.clasificado_cristianos
-                  THEN NOT COALESCE(p.persigue_cristianos, false)
+      SELECT CASE WHEN p.tipo_region IS NOT NULL
+                  THEN p.tipo_region = 1
                   ELSE NULL
              END
-        INTO NEW.mostrar_cursos_cristianos_publico
+        INTO NEW.mostrar_cursos_sensibles_publico
         FROM msip_pais p
        WHERE p.id = NEW.pais_id;
 
@@ -2824,7 +2824,7 @@ CREATE TABLE public.cor1440_gen_proyectofinanciero (
     "porPagar" double precision,
     chain_id integer DEFAULT 42220,
     contract_address character varying(255),
-    contenido_cristiano boolean DEFAULT false NOT NULL
+    contenido_sensible boolean DEFAULT false NOT NULL
 );
 
 
@@ -4540,8 +4540,8 @@ CREATE TABLE public.msip_pais (
     svgroty double precision,
     indicativo character varying(10),
     timezone character varying(63),
-    persigue_cristianos boolean DEFAULT false NOT NULL,
-    clasificado_cristianos boolean DEFAULT false NOT NULL,
+    tipo_region smallint,
+    CONSTRAINT msip_pais_tipo_region_check CHECK ((tipo_region = ANY (ARRAY[1, 2]))),
     CONSTRAINT pais_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion)))
 );
 
@@ -5493,7 +5493,7 @@ CREATE TABLE public.usuario (
     registration_photo text,
     denomination character varying(100),
     mostrar_cursos_publico boolean DEFAULT true NOT NULL,
-    mostrar_cursos_cristianos_publico boolean,
+    mostrar_cursos_sensibles_publico boolean,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY (ARRAY[('pastor'::character varying)::text, ('co_pastor'::character varying)::text, ('leader'::character varying)::text, ('member'::character varying)::text])))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1)),
@@ -7392,10 +7392,10 @@ CREATE INDEX idx_premium_course_usuario_usuario ON public.premium_course_usuario
 
 
 --
--- Name: idx_proyectofinanciero_contenido_cristiano; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proyectofinanciero_contenido_sensible; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_proyectofinanciero_contenido_cristiano ON public.cor1440_gen_proyectofinanciero USING btree (contenido_cristiano);
+CREATE INDEX idx_proyectofinanciero_contenido_sensible ON public.cor1440_gen_proyectofinanciero USING btree (contenido_sensible);
 
 
 --
@@ -7896,17 +7896,17 @@ CREATE TRIGGER trg_sync_church_principal AFTER INSERT OR UPDATE OF church_id, ch
 
 
 --
--- Name: usuario usuario_visibilidad_cristiana_bi; Type: TRIGGER; Schema: public; Owner: -
+-- Name: usuario usuario_visibilidad_sensible_bi; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER usuario_visibilidad_cristiana_bi BEFORE INSERT ON public.usuario FOR EACH ROW EXECUTE FUNCTION public.usuario_visibilidad_cristiana_por_pais();
+CREATE TRIGGER usuario_visibilidad_sensible_bi BEFORE INSERT ON public.usuario FOR EACH ROW EXECUTE FUNCTION public.usuario_visibilidad_sensible_por_region();
 
 
 --
--- Name: usuario usuario_visibilidad_cristiana_bu; Type: TRIGGER; Schema: public; Owner: -
+-- Name: usuario usuario_visibilidad_sensible_bu; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER usuario_visibilidad_cristiana_bu BEFORE UPDATE OF pais_id ON public.usuario FOR EACH ROW EXECUTE FUNCTION public.usuario_visibilidad_cristiana_por_pais();
+CREATE TRIGGER usuario_visibilidad_sensible_bu BEFORE UPDATE OF pais_id ON public.usuario FOR EACH ROW EXECUTE FUNCTION public.usuario_visibilidad_sensible_por_region();
 
 
 --

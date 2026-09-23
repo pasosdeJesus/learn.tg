@@ -97,7 +97,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
           sinBilletera: true,
           creditosMd: '',
           porPagar: downloaded.isPremium ? '1' : undefined,
-          contenido_cristiano: downloaded.contenidoCristiano,
+          contenido_sensible: downloaded.contenidoSensible,
         } as Course)
       } else {
         console.error('Failed to fetch course data:', e)

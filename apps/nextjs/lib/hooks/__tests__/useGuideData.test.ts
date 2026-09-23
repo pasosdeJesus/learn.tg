@@ -351,7 +351,7 @@ describe('useGuideData', () => {
       lang: 'en',
       prefix: 'test',
       titulo: 'Curso descargado',
-      contenidoCristiano: false,
+      contenidoSensible: false,
       isPremium: false,
       wallet: '0x123',
       downloadedAt: Date.now(),

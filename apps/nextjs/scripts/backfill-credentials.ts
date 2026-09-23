@@ -25,7 +25,7 @@ async function main() {
   // Find all courses with published guides
   const courses = await sql<any>`
     SELECT DISTINCT a.proyectofinanciero_id AS course_id,
-           c.contenido_cristiano
+           c.contenido_sensible
     FROM cor1440_gen_actividadpf a
     JOIN cor1440_gen_proyectofinanciero c ON c.id = a.proyectofinanciero_id
     WHERE a."sufijoRuta" IS NOT NULL
@@ -59,7 +59,7 @@ async function main() {
         COUNT(*)::int AS completed,
         bu.billetera AS wallet,
         u.mostrar_cursos_publico,
-        u.mostrar_cursos_cristianos_publico
+        u.mostrar_cursos_sensibles_publico
       FROM guide_usuario gu
       JOIN billetera_usuario bu ON bu.usuario_id = gu.usuario_id
       JOIN usuario u ON u.id = gu.usuario_id
@@ -70,7 +70,7 @@ async function main() {
         AND "sufijoRuta" <> ''
       )
       AND gu.points = 1
-      GROUP BY gu.usuario_id, bu.billetera, u.mostrar_cursos_publico, u.mostrar_cursos_cristianos_publico
+      GROUP BY gu.usuario_id, bu.billetera, u.mostrar_cursos_publico, u.mostrar_cursos_sensibles_publico
       HAVING COUNT(*)::int >= ${totalCount}
     `.execute(db)
 
@@ -95,14 +95,14 @@ async function main() {
         continue
       }
 
-      // Privacidad de la afiliación cristiana
+      // Privacidad de la afiliación sensible
       // (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.4): este script
       // retroactivo tampoco puede marcar a alguien que nunca pidió publicar un
-      // curso cristiano. Se cuenta aparte para que se vea en el resumen.
+      // curso sensible. Se cuenta aparte para que se vea en el resumen.
       if (!canMintPublicly({
-        contenido_cristiano: course.contenido_cristiano === true,
+        contenido_sensible: course.contenido_sensible === true,
         mostrar_cursos_publico: c.mostrar_cursos_publico,
-        mostrar_cursos_cristianos_publico: c.mostrar_cursos_cristianos_publico,
+        mostrar_cursos_sensibles_publico: c.mostrar_cursos_sensibles_publico,
       })) {
         totalPrivacySkipped++
         continue

@@ -278,7 +278,7 @@ duplicated routes. Implemented (2026-08-31, migration
 
 **Domain model:**
 
-- `clustergd` (existing) gains `pseudonym` (privacy in persecution contexts),
+- `clustergd` (existing) gains `pseudonym` (privacy in restricted regions),
   `status` (`pending` | `active` | `disbanded`), and `leader_church_id`.
 - Membership stays church-based: `church_clustergd`. New table
   `cluster_invitation` (unique per cluster + pastor, status
@@ -531,15 +531,15 @@ Communications between users, and between pdJ and users, are **confidential by d
 3. **API responses never include message content** — only metadata (timestamps, status, participant IDs).
 4. **Private notes and internal communications** use the messaging system (R-#162), not free-text columns on entity tables.
 5. **User-facing text fields** (cluster names, course descriptions, public profiles) may be plaintext — they are intentionally public.
-6. **Christian affiliation is private by default** (https://github.com/pasosdeJesus/learn.tg/issues/259): whether a learner completed Christian-related courses is never published unless they opt in, no credential (SBT) is minted for those courses without that opt-in, and the learner can revoke any SBT they hold. The course flag lives in `cor1440_gen_proyectofinanciero.contenido_cristiano` and the two visibility switches on `usuario`. The initial state of the Christian-content switch depends on the country: `msip_pais.persigue_cristianos` marks the countries whose government persecutes Christians (Open Doors World Watch List 2026, score >= 72: 29 countries, migration `20260923152923`; the rest are classified as non-persecuting) and a trigger materialises the switch once the country is known and classified (off in a persecuting country, on elsewhere); while the country is unknown or unclassified the switch stays undecided (`NULL`, read as do-not-publish), a change of country recomputes it automatically and the learner can change it by hand afterwards (that value stays while the country does not change; migration `20260923155642`).
-7. **What is downloaded to the device follows the same switches** (https://github.com/pasosdeJesus/learn.tg/issues/256): the explicit offline store (`learn-tg-offline`) keeps a downloaded Christian course only while the learner's visibility switch is on, paid courses only for the wallet that downloaded them, and disconnecting the wallet or deleting it removes those copies. The device must not reveal the affiliation on its own, and queued (unsent) answers are never deleted by that cleanup.
+6. **Category B content is private by default** (https://github.com/pasosdeJesus/learn.tg/issues/259): whether a learner completed category B courses is never published unless they opt in, no credential (SBT) is minted for those courses without that opt-in, and the learner can revoke any SBT they hold. The course flag lives in `cor1440_gen_proyectofinanciero.contenido_sensible` and the two visibility switches on `usuario`. The initial state of the category B switch depends on the country: `msip_pais.tipo_region` classifies the country (1 = region type 1, 2 = region type 2, `NULL` = unclassified; migration `20260923152923`, whose list and source live in the private `.crushrules`) and a trigger materialises the switch once the country is known and classified (off in a region-type-2 country, on elsewhere); while the country is unknown or unclassified the switch stays undecided (`NULL`, read as do-not-publish), a change of country recomputes it automatically and the learner can change it by hand afterwards (that value stays while the country does not change; migration `20260923155642`).
+7. **What is downloaded to the device follows the same switches** (https://github.com/pasosdeJesus/learn.tg/issues/256): the explicit offline store (`learn-tg-offline`) keeps a downloaded category B course only while the learner's visibility switch is on, paid courses only for the wallet that downloaded them, and disconnecting the wallet or deleting it removes those copies. The device must not reveal the affiliation on its own, and queued (unsent) answers are never deleted by that cleanup.
 
 ### Sensitive data that MUST be encrypted or excluded
 
 | Data | Handling |
 |------|----------|
 | Pastor names, WhatsApp, ID documents | Encrypted (R-#153) |
-| Church locations in persecution contexts | Encrypted or stored as country-only |
+| Church locations in restricted regions | Encrypted or stored as country-only |
 | GD contact notes, internal pdJ notes | R-#162 messaging (Phase 2), not in entity tables |
 | Private messages between users | R-#162 encrypted messages |
 | Donor identities (if anonymous) | Wallet address only, no personal data |

@@ -29,7 +29,7 @@ export async function buildLeaderboardQuery(
     .leftJoin(
       // `sbt_count` cuenta solo lo que el dueño publica (R-#259): credenciales no
       // revocadas, de cursos que el estudiante permite mostrar (y, en los marcados
-      // `contenido_cristiano`, solo si habilitó esa categoría). El ranking es una
+      // `contenido_sensible`, solo si habilitó esa categoría). El ranking es una
       // superficie pública como cualquier otra.
       (eb) => eb.selectFrom('credential_emission as e')
         .innerJoin('usuario as u2', 'u2.id', 'e.usuario_id')
@@ -38,8 +38,8 @@ export async function buildLeaderboardQuery(
         .where('e.revoked_at', 'is', null)
         .where('u2.mostrar_cursos_publico', '=', true)
         .where((w) => w.or([
-          w('c.contenido_cristiano', '=', false),
-          w('u2.mostrar_cursos_cristianos_publico', '=', true),
+          w('c.contenido_sensible', '=', false),
+          w('u2.mostrar_cursos_sensibles_publico', '=', true),
         ]))
         .groupBy('e.usuario_id')
         .as('ce_counts'),

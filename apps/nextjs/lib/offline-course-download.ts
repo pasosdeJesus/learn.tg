@@ -28,7 +28,7 @@ export interface CourseDescriptor {
   /** Prefijo de ruta del curso tal como vive en la URL (`gdcluster`). */
   prefix: string
   titulo: string | null
-  contenidoCristiano: boolean
+  contenidoSensible: boolean
   isPremium: boolean
   /** Sufijos de ruta de las guías, en orden (`guide1`, `guide2`, ...). */
   guides: string[]
@@ -146,7 +146,7 @@ export async function downloadCourse(
     lang: descriptor.lang,
     prefix: descriptor.prefix.replace(/^\/+/, ''),
     titulo: descriptor.titulo,
-    contenidoCristiano: descriptor.contenidoCristiano,
+    contenidoSensible: descriptor.contenidoSensible,
     isPremium: descriptor.isPremium,
     wallet: wallet ? wallet.toLowerCase() : null,
     downloadedAt: Date.now(),
@@ -193,7 +193,7 @@ interface CatalogCourse {
   idioma?: string | null
   titulo?: string | null
   porPagar?: string | number | null
-  contenido_cristiano?: boolean | null
+  contenido_sensible?: boolean | null
   sinBilletera?: boolean | null
 }
 
@@ -201,7 +201,7 @@ interface CatalogCourse {
  * Cursos que este estudiante puede leer (y que conviene tener sin conexión).
  *
  * Reglas, todas en el servidor y respetadas aquí:
- * - un curso **de contenido cristiano** solo cuenta si el dueño encendió el
+ * - un curso **de contenido sensible** solo cuenta si el dueño encendió el
  *   interruptor de R-#259 (el teléfono no debe revelar la afiliación por sí solo);
  * - un curso **de pago** solo cuenta si esta billetera lo compró;
  * - el resto de cursos del catálogo del idioma, sí.
@@ -220,15 +220,15 @@ export async function listAccessibleCourses(
   if (catalogCourses.length === 0) return { courses: [], skipped, total: 0 }
 
   let publicCourses = true
-  let publicChristianCourses = false
+  let publicSensitiveCourses = false
   let purchased = new Set<number>()
   if (authenticated) {
     try {
-      const settings = await get<{ publicCourses?: boolean; publicChristianCourses?: boolean }>('/api/settings')
+      const settings = await get<{ publicCourses?: boolean; publicSensitiveCourses?: boolean }>('/api/settings')
       publicCourses = settings.data?.publicCourses !== false
-      publicChristianCourses = settings.data?.publicChristianCourses === true
+      publicSensitiveCourses = settings.data?.publicSensitiveCourses === true
     } catch {
-      // sin ajustes legibles se asume el default de R-#259 (no publicar cristianos)
+      // sin ajustes legibles se asume el default de R-#259 (no publicar contenido sensible)
     }
     try {
       const mine = await get<{ courses?: { course_id: number }[] }>('/api/courses/premium/mine')
@@ -244,9 +244,9 @@ export async function listAccessibleCourses(
     const courseId = Number(course.id)
     if (!prefix || !courseId) continue
     const isPremium = Number(course.porPagar || 0) > 0
-    const contenidoCristiano = course.contenido_cristiano === true
+    const contenidoSensible = course.contenido_sensible === true
 
-    if (contenidoCristiano && !(publicCourses && publicChristianCourses)) {
+    if (contenidoSensible && !(publicCourses && publicSensitiveCourses)) {
       skipped.push({ prefix, reason: 'privacy' })
       continue
     }
@@ -266,7 +266,7 @@ export async function listAccessibleCourses(
         lang: String(course.idioma || lang),
         prefix,
         titulo: course.titulo ?? null,
-        contenidoCristiano,
+        contenidoSensible,
         isPremium,
         guides,
       })

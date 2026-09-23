@@ -81,12 +81,12 @@ describe('buildLeaderboardQuery — privacy of the SBT count', () => {
     expect(sub.whereCalls).toContainEqual(['u2.mostrar_cursos_publico', '=', true])
   })
 
-  it('accepts a non-Christian course OR the Christian opt-in', async () => {
+  it('accepts a non-sensitive course OR the sensitive opt-in', async () => {
     const { sub } = await build()
 
     expect(sub.orCalls).toEqual([
-      ['c.contenido_cristiano', '=', false],
-      ['u2.mostrar_cursos_cristianos_publico', '=', true],
+      ['c.contenido_sensible', '=', false],
+      ['u2.mostrar_cursos_sensibles_publico', '=', true],
     ])
   })
 })

@@ -17,7 +17,7 @@ import { downloadAllAccessible, listAccessibleCourses, type SyncResult } from '@
  *
  * - cursos gratuitos, siempre;
  * - cursos de pago, solo si esta billetera los compró;
- * - cursos de contenido cristiano, solo con el interruptor de R-#259 encendido
+ * - cursos de contenido sensible, solo con el interruptor de R-#259 encendido
  *   (el teléfono no debe revelar la afiliación por sí solo).
  *
  * Es idempotente y barato: las copias al día se omiten, así que puede correr cada

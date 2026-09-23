@@ -7,7 +7,7 @@
 // reexporta para que las rutas del host usen un único nombre y una sola regla.
 //
 // Un SBT en la billetera es público, permanente y enumerable: por eso una
-// credencial de un curso `contenido_cristiano` no se publica hasta que el dueño
+// credencial de un curso `contenido_sensible` no se publica hasta que el dueño
 // habilita esa categoría, y una credencial revocada (`revoked_at`) nunca se publica.
 export {
   visibilityFromUser,

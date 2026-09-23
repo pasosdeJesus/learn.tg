@@ -338,7 +338,7 @@ export default function Page({ params }: PageProps) {
               courseId={parseInt(course.id)}
               prefix={pathPrefix}
               titulo={course.titulo}
-              contenidoCristiano={course.contenido_cristiano === true}
+              contenidoSensible={course.contenido_sensible === true}
               isPremium={Number(course.porPagar) > 0}
               guides={course.guias.map((guia) => guia.sufijoRuta).filter(Boolean)}
               canRead={Number(course.porPagar) <= 0 || hasPurchased}

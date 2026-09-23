@@ -36,7 +36,7 @@ const CREDENTIALS = [
     revokedAt: null,
     revokeHash: null,
     courseName: 'Global Disciples',
-    christianContent: true,
+    sensitiveContent: true,
   },
   {
     tokenId: 7,
@@ -46,15 +46,15 @@ const CREDENTIALS = [
     revokedAt: '2026-09-21T10:00:00.000Z',
     revokeHash: '0xdead',
     courseName: 'Web3 and UBI',
-    christianContent: false,
+    sensitiveContent: false,
   },
 ]
 
 function settings(overrides: Record<string, unknown> = {}) {
   return {
     publicCourses: true,
-    publicChristianCourses: false,
-    persecutionCountry: false,
+    publicSensitiveCourses: false,
+    restrictedRegion: false,
     country: 'Colombia',
     credentials: CREDENTIALS,
     ...overrides,
@@ -78,7 +78,7 @@ describe('Settings (privacy) page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     apiMocks.authedGet.mockResolvedValue({ data: settings() })
-    apiMocks.authedPatch.mockResolvedValue({ data: settings({ publicChristianCourses: true }) })
+    apiMocks.authedPatch.mockResolvedValue({ data: settings({ publicSensitiveCourses: true }) })
     apiMocks.authedPost.mockResolvedValue({ data: { minted: [], skipped: [] } })
   })
 
@@ -103,15 +103,15 @@ describe('Settings (privacy) page', () => {
     await renderPage()
 
     const publicSwitch = screen.getByLabelText('Publish my completed courses')
-    const christianSwitch = screen.getByLabelText('Publish my courses with Christian content')
+    const sensitiveSwitch = screen.getByLabelText('Publish my courses with Christian content')
 
     expect(publicSwitch).toHaveAttribute('data-state', 'checked')
-    expect(christianSwitch).toHaveAttribute('data-state', 'unchecked')
+    expect(sensitiveSwitch).toHaveAttribute('data-state', 'unchecked')
   })
 
-  it('warns about the risk as soon as Christian publishing is on', async () => {
+  it('warns about the risk as soon as sensitive publishing is on', async () => {
     apiMocks.authedGet.mockResolvedValue({
-      data: settings({ publicChristianCourses: true }),
+      data: settings({ publicSensitiveCourses: true }),
     })
 
     await renderPage()
@@ -121,7 +121,7 @@ describe('Settings (privacy) page', () => {
     expect(screen.getByText('Issue pending credentials')).toBeInTheDocument()
   })
 
-  it('does not warn while the Christian switch is off', async () => {
+  it('does not warn while the sensitive switch is off', async () => {
     await renderPage()
 
     expect(screen.queryByText('Before you turn this on')).not.toBeInTheDocument()
@@ -135,7 +135,7 @@ describe('Settings (privacy) page', () => {
 
     await waitFor(() => expect(apiMocks.authedPatch).toHaveBeenCalledWith(
       '/api/settings',
-      { mostrarCursosCristianosPublico: true },
+      { mostrarCursosSensiblesPublico: true },
     ))
   })
 
@@ -144,13 +144,13 @@ describe('Settings (privacy) page', () => {
 
     await renderPage()
 
-    const christianSwitch = screen.getByLabelText('Publish my courses with Christian content')
-    fireEvent.click(christianSwitch)
+    const sensitiveSwitch = screen.getByLabelText('Publish my courses with Christian content')
+    fireEvent.click(sensitiveSwitch)
 
     await waitFor(() => expect(apiMocks.toast).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Could not save your settings.' }),
     ))
-    await waitFor(() => expect(christianSwitch).toHaveAttribute('data-state', 'unchecked'))
+    await waitFor(() => expect(sensitiveSwitch).toHaveAttribute('data-state', 'unchecked'))
   })
 
   it('does not query the API while nobody is connected', async () => {
@@ -164,31 +164,32 @@ describe('Settings (privacy) page', () => {
     apiMocks.address = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
   })
 
-  // El estado inicial del interruptor cristiano depende del pais (migracion
-  // 20260923150546): la pagina lo dice para que no parezca decidido por la persona.
-  it('explains that the switch starts off in a country that persecutes Christians', async () => {
+  // El estado inicial del interruptor sensible depende de la region del pais
+  // (migracion 20260923150546): la pagina lo dice para que no parezca decidido
+  // por la persona.
+  it('explains that the switch starts off in a restricted region (type 2)', async () => {
     apiMocks.authedGet.mockResolvedValue({
-      data: settings({ persecutionCountry: true, publicChristianCourses: false, country: 'Corea del Norte' }),
+      data: settings({ restrictedRegion: true, publicSensitiveCourses: false, country: 'Corea del Norte' }),
     })
 
     await renderPage()
 
-    expect(screen.getByTestId('christian-default-note')).toHaveTextContent(/starts turned off/)
+    expect(screen.getByTestId('sensitive-default-note')).toHaveTextContent(/starts turned off/)
   })
 
   it('explains the country-based default when it starts on', async () => {
     apiMocks.authedGet.mockResolvedValue({
-      data: settings({ persecutionCountry: false, publicChristianCourses: true }),
+      data: settings({ restrictedRegion: false, publicSensitiveCourses: true }),
     })
 
     await renderPage()
 
-    expect(screen.getByTestId('christian-default-note')).toHaveTextContent(/starts turned on/)
+    expect(screen.getByTestId('sensitive-default-note')).toHaveTextContent(/starts turned on/)
   })
 
-  it('does not explain a default while the switch is off in a country without persecution', async () => {
+  it('does not explain a default while the switch is off in an unrestricted region', async () => {
     await renderPage()
 
-    expect(screen.queryByTestId('christian-default-note')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('sensitive-default-note')).not.toBeInTheDocument()
   })
 })

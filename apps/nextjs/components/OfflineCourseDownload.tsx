@@ -19,7 +19,7 @@ import { downloadCourse, revalidateCourse } from '@/lib/offline-course-download'
  *
  * - Solo se ofrece cuando la billetera puede leer el curso (gratuito, o comprado
  *   por esta billetera).
- * - Un curso con `contenido_cristiano` solo se descarga con el interruptor de
+ * - Un curso con `contenido_sensible` solo se descarga con el interruptor de
  *   R-#259 encendido; si está apagado no se ofrece y la copia local se borra
  *   (§3.6b: el teléfono no debe revelar la afiliación por sí solo).
  * - Muestra el espacio que ocupa, avisa cuando el dispositivo va corto de espacio
@@ -33,7 +33,7 @@ interface OfflineCourseDownloadProps {
   courseId: number
   prefix: string
   titulo: string | null
-  contenidoCristiano: boolean
+  contenidoSensible: boolean
   isPremium: boolean
   /** Sufijos de ruta de las guías publicadas, en orden. */
   guides: string[]
@@ -52,14 +52,14 @@ export function OfflineCourseDownload({
   courseId,
   prefix,
   titulo,
-  contenidoCristiano,
+  contenidoSensible,
   isPremium,
   guides,
   canRead,
 }: OfflineCourseDownloadProps) {
   const { authedGet, ready, wallet } = useAuthedApi()
   const [record, setRecord] = useState<DownloadedCourse | null>(null)
-  const [christianVisible, setChristianVisible] = useState(false)
+  const [sensitiveVisible, setSensitiveVisible] = useState(false)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(0)
   const [total, setTotal] = useState(0)
@@ -100,37 +100,37 @@ export function OfflineCourseDownload({
     lang,
     prefix,
     titulo,
-    contenidoCristiano,
+    contenidoSensible,
     isPremium,
     guides,
-  }), [courseId, lang, prefix, titulo, contenidoCristiano, isPremium, guides])
+  }), [courseId, lang, prefix, titulo, contenidoSensible, isPremium, guides])
 
   const refreshRecord = useCallback(async () => {
     setRecord(await getDownloadedCourse(key))
   }, [key])
 
   // El interruptor de privacidad solo existe para quien tiene sesión; para un
-  // visitante anónimo un curso cristiano no se descarga (§3.6b).
+  // visitante anónimo un curso sensible no se descarga (§3.6b).
   useEffect(() => {
-    if (!ready || !contenidoCristiano) return
+    if (!ready || !contenidoSensible) return
     if (!wallet) {
-      setChristianVisible(false)
+      setSensitiveVisible(false)
       return
     }
     let cancelled = false
     ;(async () => {
       try {
-        const res = await authedGet<{ publicCourses: boolean; publicChristianCourses: boolean }>('/api/settings')
+        const res = await authedGet<{ publicCourses: boolean; publicSensitiveCourses: boolean }>('/api/settings')
         if (cancelled) return
-        setChristianVisible(
-          res.data?.publicCourses !== false && res.data?.publicChristianCourses === true,
+        setSensitiveVisible(
+          res.data?.publicCourses !== false && res.data?.publicSensitiveCourses === true,
         )
       } catch {
-        if (!cancelled) setChristianVisible(false)
+        if (!cancelled) setSensitiveVisible(false)
       }
     })()
     return () => { cancelled = true }
-  }, [ready, wallet, contenidoCristiano, authedGet])
+  }, [ready, wallet, contenidoSensible, authedGet])
 
   useEffect(() => {
     void refreshRecord()
@@ -198,7 +198,7 @@ export function OfflineCourseDownload({
   if (!canRead) return null
   // Sin curso resuelto (ni prefijo) no hay nada que descargar.
   if (!prefix || !courseId || guides.length === 0) return null
-  if (contenidoCristiano && !christianVisible) return null
+  if (contenidoSensible && !sensitiveVisible) return null
 
   const visible = record && belongsToWallet(record, wallet)
 

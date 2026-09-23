@@ -23,7 +23,7 @@ import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-w
 // spec. La guía la elige el spec entre las que todavía no pagaron las dos becas y cuyo
 // crucigrama sirve el sitio, porque el botón de envío se deshabilita, por diseño, una
 // vez pagadas las dos (R-#242).
-// Curso: `web3-and-ubi` (gratuito, sin contenido cristiano, con crucigramas en el sitio
+// Curso: `web3-and-ubi` (gratuito, sin contenido sensible, con crucigramas en el sitio
 // desplegado). `gdcluster` no sirve de objetivo estable: su guía 1 ya tiene las dos
 // becas pagadas para la billetera de prueba y el despliegue no sirve las demás.
 const GUIDE_ORDER = { lang: 'en', prefix: 'web3-and-ubi' }

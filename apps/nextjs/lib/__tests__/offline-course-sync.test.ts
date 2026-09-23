@@ -4,20 +4,20 @@ import { deleteDownloadedCourses, getDownloadedCourse, saveDownloadedCourse } fr
 
 // Sincronización de **todo lo accesible** (R-#256, pedido del operador 2026-09-23:
 // offline solo estaba la guía visitada). Reglas: gratuitos siempre; de pago solo si
-// esta billetera los compró; de contenido cristiano solo con el interruptor de
+// esta billetera los compró; de contenido sensible solo con el interruptor de
 // R-#259 encendido.
 
 const WALLET = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
 
 const CATALOG = [
-  { id: 105, prefijoRuta: '/web3-and-ubi', idioma: 'en', titulo: 'Web3 and UBI', porPagar: null, contenido_cristiano: false },
-  { id: 2, prefijoRuta: '/a-relationship-with-Jesus', idioma: 'en', titulo: 'A relationship with Jesus', porPagar: null, contenido_cristiano: true },
-  { id: 10, prefijoRuta: '/gdcluster', idioma: 'en', titulo: 'Global Disciples', porPagar: 1, contenido_cristiano: true },
-  { id: 103, prefijoRuta: '/save-in-dollars-on-OKX', idioma: 'en', titulo: 'OKX', porPagar: 1, contenido_cristiano: false },
+  { id: 105, prefijoRuta: '/web3-and-ubi', idioma: 'en', titulo: 'Web3 and UBI', porPagar: null, contenido_sensible: false },
+  { id: 2, prefijoRuta: '/a-relationship-with-Jesus', idioma: 'en', titulo: 'A relationship with Jesus', porPagar: null, contenido_sensible: true },
+  { id: 10, prefijoRuta: '/gdcluster', idioma: 'en', titulo: 'Global Disciples', porPagar: 1, contenido_sensible: true },
+  { id: 103, prefijoRuta: '/save-in-dollars-on-OKX', idioma: 'en', titulo: 'OKX', porPagar: 1, contenido_sensible: false },
 ]
 
 interface FakeOptions {
-  publicChristianCourses?: boolean
+  publicSensitiveCourses?: boolean
   purchased?: number[]
   failDetailFor?: number[]
 }
@@ -26,7 +26,7 @@ function makeGet(options: FakeOptions = {}) {
   return vi.fn(async (url: string) => {
     if (url.startsWith('/api/course-catalog?')) return { data: CATALOG }
     if (url === '/api/settings') {
-      return { data: { publicCourses: true, publicChristianCourses: options.publicChristianCourses === true } }
+      return { data: { publicCourses: true, publicSensitiveCourses: options.publicSensitiveCourses === true } }
     }
     if (url === '/api/courses/premium/mine') {
       return { data: { courses: (options.purchased || []).map((course_id) => ({ course_id })) } }
@@ -44,7 +44,7 @@ function makeGet(options: FakeOptions = {}) {
 }
 
 describe('listAccessibleCourses (R-#256)', () => {
-  it('takes the free non-Christian courses and leaves the rest out with a reason', async () => {
+  it('takes the free non-sensitive courses and leaves the rest out with a reason', async () => {
     const { courses, skipped, total } = await listAccessibleCourses(makeGet() as any, { lang: 'en', authenticated: true })
 
     expect(total).toBe(4)
@@ -57,9 +57,9 @@ describe('listAccessibleCourses (R-#256)', () => {
     ]))
   })
 
-  it('includes Christian courses when the learner turned the switch on', async () => {
+  it('includes sensitive courses when the learner turned the switch on', async () => {
     const { courses } = await listAccessibleCourses(
-      makeGet({ publicChristianCourses: true }) as any,
+      makeGet({ publicSensitiveCourses: true }) as any,
       { lang: 'en', authenticated: true },
     )
 
@@ -75,7 +75,7 @@ describe('listAccessibleCourses (R-#256)', () => {
     expect(courses.map((course) => course.prefix)).toEqual(['web3-and-ubi', 'save-in-dollars-on-OKX'])
   })
 
-  it('never includes a Christian paid course without the switch, even if purchased', async () => {
+  it('never includes a sensitive paid course without the switch, even if purchased', async () => {
     const { courses, skipped } = await listAccessibleCourses(
       makeGet({ purchased: [10] }) as any,
       { lang: 'en', authenticated: true },
@@ -85,7 +85,7 @@ describe('listAccessibleCourses (R-#256)', () => {
     expect(skipped).toContainEqual({ prefix: 'gdcluster', reason: 'privacy' })
   })
 
-  it('for an anonymous visitor only the free non-Christian courses count', async () => {
+  it('for an anonymous visitor only the free non-sensitive courses count', async () => {
     const { courses } = await listAccessibleCourses(makeGet() as any, { lang: 'en', authenticated: false })
 
     expect(courses.map((course) => course.prefix)).toEqual(['web3-and-ubi'])
@@ -113,7 +113,7 @@ describe('downloadAllAccessible (R-#256)', () => {
   })
 
   it('downloads every accessible course', async () => {
-    const get = makeGet({ publicChristianCourses: true, purchased: [103] })
+    const get = makeGet({ publicSensitiveCourses: true, purchased: [103] })
 
     const result = await downloadAllAccessible(get as any, options())
 
@@ -138,12 +138,12 @@ describe('downloadAllAccessible (R-#256)', () => {
   })
 
   it('keeps going when one course fails', async () => {
-    const get = makeGet({ publicChristianCourses: true })
+    const get = makeGet({ publicSensitiveCourses: true })
     // El curso gratuito falla al descargar sus guías
     get.mockImplementation(async (url: string) => {
       if (url.startsWith('/api/guide?')) throw new Error('offline')
       if (url.startsWith('/api/course-catalog?')) return { data: CATALOG }
-      if (url === '/api/settings') return { data: { publicCourses: true, publicChristianCourses: true } }
+      if (url === '/api/settings') return { data: { publicCourses: true, publicSensitiveCourses: true } }
       if (url === '/api/courses/premium/mine') return { data: { courses: [] } }
       if (/^\/api\/course-catalog\/\d+$/.test(url)) return { data: { guias: [{ sufijoRuta: 'guide1' }] } }
       throw new Error('unexpected')
@@ -163,7 +163,7 @@ describe('downloadAllAccessible (R-#256)', () => {
       lang: 'en',
       prefix: 'web3-and-ubi',
       titulo: 'Web3 and UBI',
-      contenidoCristiano: false,
+      contenidoSensible: false,
       isPremium: false,
       wallet: WALLET,
       downloadedAt: Date.now(),

@@ -217,15 +217,15 @@ export async function revokeCourseCredential(
 export interface CompletedCourse {
   courseId: number
   titulo: string | null
-  contenido_cristiano: boolean
+  contenido_sensible: boolean
 }
 
 /**
  * Cursos que el estudiante completó al 100% (todas las guías publicadas con
  * `points = 1`) y que todavía no tienen credencial emitida.
  *
- * Es la base del opt-in tardío: al encender el interruptor de contenido cristiano
- * en `/[lang]/settings` se ofrecen las credenciales de los cursos cristianos ya
+ * Es la base del opt-in tardío: al encender el interruptor de contenido sensible
+ * en `/[lang]/settings` se ofrecen las credenciales de los cursos sensibles ya
  * completados, que no se acuñaron por privacidad.
  */
 export async function completedCoursesWithoutCredential(
@@ -235,7 +235,7 @@ export async function completedCoursesWithoutCredential(
   const result = await sql`
     SELECT c.id AS course_id,
            c.titulo,
-           c.contenido_cristiano,
+           c.contenido_sensible,
            COUNT(a.id) AS total_guides,
            COUNT(gu.id) AS completed_guides
     FROM cor1440_gen_proyectofinanciero c
@@ -251,7 +251,7 @@ export async function completedCoursesWithoutCredential(
       SELECT 1 FROM credential_emission e
       WHERE e.usuario_id = ${usuarioId} AND e.course_id = c.id
     )
-    GROUP BY c.id, c.titulo, c.contenido_cristiano
+    GROUP BY c.id, c.titulo, c.contenido_sensible
     HAVING COUNT(a.id) > 0 AND COUNT(a.id) = COUNT(gu.id)
     ORDER BY c.id
   `.execute(db)
@@ -259,6 +259,6 @@ export async function completedCoursesWithoutCredential(
   return result.rows.map((r: any) => ({
     courseId: Number(r.course_id),
     titulo: r.titulo ?? null,
-    contenido_cristiano: r.contenido_cristiano === true,
+    contenido_sensible: r.contenido_sensible === true,
   }))
 }

@@ -112,7 +112,7 @@ being visited:
 
 - free courses, always;
 - paid courses, only if this wallet bought them (`/api/courses/premium/mine`);
-- Christian-content courses, only with the R-#259 switch on;
+- category B courses, only with the R-#259 switch on;
 - copies that are already current (same guide list, not expired) are skipped, so
   repeating the sync is cheap.
 
@@ -144,9 +144,9 @@ Rules that must stay true when touching it:
    reconnect, and is derived from the guide markdown — see `lib/guide-answers.ts`).
 2. **Paid courses are per wallet.** `belongsToWallet()` gates reading, and
    `/offline` skips a copy downloaded with another wallet.
-3. **Christian courses need the privacy switch** (R-#259 §3.3/§3.6b): a
-   `contenido_cristiano` course offers no download unless the learner enabled
-   "publish courses with Christian content", and the local copy is deleted when
+3. **category B courses need the privacy switch** (R-#259 §3.3/§3.6b): a
+   `contenido_sensible` course offers no download unless the learner enabled
+   the category B switch, and the local copy is deleted when
    that switch goes off, when the wallet is disconnected and when the wallet is
    deleted (`clearPrivateCourseCopies()`), so an inspected phone does not reveal
    the affiliation on its own.

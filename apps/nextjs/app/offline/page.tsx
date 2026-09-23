@@ -19,7 +19,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
  *
  * R-#256: lista primero los **cursos descargados completos** (con todas sus
  * guías, hayan sido abiertas o no). Un curso de pago descargado con otra
- * billetera no se lista, y un curso con `contenido_cristiano` solo existe en el
+ * billetera no se lista, y un curso con `contenido_sensible` solo existe en el
  * store mientras el interruptor de privacidad de R-#259 está encendido (el
  * registro se borra al apagarlo): así el teléfono no revela la afiliación por sí
  * solo.

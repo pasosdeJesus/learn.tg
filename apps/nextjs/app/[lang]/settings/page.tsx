@@ -17,7 +17,7 @@ import {
   AlertDialogTrigger,
 } from '@pasosdejesus/m/shadcn-components/ui/alert-dialog'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
-import { clearPrivateCourseCopies } from '@/lib/offline-course-db'
+import { clearRestrictedCourseCopies } from '@/lib/offline-course-db'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 // Ajustes de privacidad del estudiante
@@ -25,8 +25,8 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 //
 // Dos interruptores y la lista de credenciales propias. Los valores por defecto
 // son deliberados: publicar cursos completados sí (comportamiento histórico),
-// publicar contenido cristiano no (una billetera es pública y enumerable; en un
-// contexto de persecución esa marca no se puede deshacer).
+// publicar contenido sensible (categoría B) no (una billetera es pública y
+// enumerable, y esa marca no se puede deshacer una vez publicada).
 
 interface CredentialRow {
   tokenId: number
@@ -35,14 +35,14 @@ interface CredentialRow {
   isPremium: boolean
   revokedAt: string | null
   courseName: string | null
-  christianContent: boolean
+  sensitiveContent: boolean
 }
 
 interface SettingsResponse {
   publicCourses: boolean
-  publicChristianCourses: boolean
-  /** El estado inicial del interruptor cristiano se deriva del pais (migracion 20260923150546). */
-  persecutionCountry?: boolean
+  publicSensitiveCourses: boolean
+  /** El estado inicial del interruptor se deriva de la region del pais (migracion 20260923150546). */
+  restrictedRegion?: boolean
   country?: string | null
   credentials: CredentialRow[]
 }
@@ -57,8 +57,8 @@ export default function SettingsPage({ params }: PageProps) {
   const { authedGet, authedPatch, authedPost, ready, wallet } = useAuthedApi()
 
   const [publicCourses, setPublicCourses] = useState(true)
-  const [publicChristian, setPublicChristian] = useState(false)
-  const [persecutionCountry, setPersecutionCountry] = useState(false)
+  const [publicSensitive, setPublicSensitive] = useState(false)
+  const [restrictedRegion, setRestrictedRegion] = useState(false)
   const [country, setCountry] = useState<string | null>(null)
   const [credentials, setCredentials] = useState<CredentialRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -72,8 +72,8 @@ export default function SettingsPage({ params }: PageProps) {
       intro: 'You decide what learn.tg publishes about you.',
       publicCoursesTitle: 'Publish my completed courses',
       publicCoursesHelp: 'Your completed courses appear in your public profile and in the leaderboard.',
-      christianTitle: 'Publish my courses with Christian content',
-      christianHelp: 'Some courses teach about following Jesus. Publishing them shows the world that you studied them.',
+      sensitiveTitle: 'Publish my courses with Christian content',
+      sensitiveHelp: 'Some courses teach about following Jesus. Publishing them shows the world that you studied them.',
       defaultOff: 'In your country declaring your faith can be dangerous, so this starts turned off. You can still turn it on if it is safe for you.',
       defaultOn: 'Your country does not persecute Christians, so this starts turned on. You can turn it off whenever you want.',
       warningTitle: 'Before you turn this on',
@@ -103,8 +103,8 @@ export default function SettingsPage({ params }: PageProps) {
       intro: 'Tú decides qué publica learn.tg sobre ti.',
       publicCoursesTitle: 'Publicar mis cursos completados',
       publicCoursesHelp: 'Tus cursos completados aparecen en tu perfil público y en la tabla de líderes.',
-      christianTitle: 'Publicar mis cursos con contenido cristiano',
-      christianHelp: 'Algunos cursos enseñan sobre seguir a Jesús. Publicarlos muestra al mundo que los estudiaste.',
+      sensitiveTitle: 'Publicar mis cursos con contenido cristiano',
+      sensitiveHelp: 'Algunos cursos enseñan sobre seguir a Jesús. Publicarlos muestra al mundo que los estudiaste.',
       defaultOff: 'En tu país declarar tu fe puede ser peligroso, por eso esto empieza apagado. Puedes encenderlo si es seguro para ti.',
       defaultOn: 'En tu país no se persigue a los cristianos, por eso esto empieza encendido. Puedes apagarlo cuando quieras.',
       warningTitle: 'Antes de encender esto',
@@ -136,8 +136,8 @@ export default function SettingsPage({ params }: PageProps) {
     try {
       const res = await authedGet<SettingsResponse>('/api/settings')
       setPublicCourses(res.data.publicCourses)
-      setPublicChristian(res.data.publicChristianCourses)
-      setPersecutionCountry(res.data.persecutionCountry === true)
+      setPublicSensitive(res.data.publicSensitiveCourses)
+      setRestrictedRegion(res.data.restrictedRegion === true)
       setCountry(res.data.country ?? null)
       setCredentials(res.data.credentials || [])
     } catch {
@@ -156,32 +156,32 @@ export default function SettingsPage({ params }: PageProps) {
     load()
   }, [ready, wallet, load])
 
-  const save = useCallback(async (patch: { mostrarCursosPublico?: boolean; mostrarCursosCristianosPublico?: boolean }) => {
+  const save = useCallback(async (patch: { mostrarCursosPublico?: boolean; mostrarCursosSensiblesPublico?: boolean }) => {
     setSaving(true)
-    const previous = { publicCourses, publicChristian }
+    const previous = { publicCourses, publicSensitive }
     if (typeof patch.mostrarCursosPublico === 'boolean') setPublicCourses(patch.mostrarCursosPublico)
-    if (typeof patch.mostrarCursosCristianosPublico === 'boolean') setPublicChristian(patch.mostrarCursosCristianosPublico)
+    if (typeof patch.mostrarCursosSensiblesPublico === 'boolean') setPublicSensitive(patch.mostrarCursosSensiblesPublico)
     try {
       const res = await authedPatch<SettingsResponse>('/api/settings', patch)
       setPublicCourses(res.data.publicCourses)
-      setPublicChristian(res.data.publicChristianCourses)
+      setPublicSensitive(res.data.publicSensitiveCourses)
       // R-#256 §3.6b: apagar el interruptor o dejar de publicar cursos también
-      // borra del dispositivo las copias descargadas de cursos cristianos y de
+      // borra del dispositivo las copias descargadas de cursos sensibles y de
       // pago, para que un teléfono compartido no revele la afiliación.
-      if (patch.mostrarCursosCristianosPublico === false || patch.mostrarCursosPublico === false) {
-        await clearPrivateCourseCopies().catch(() => {})
+      if (patch.mostrarCursosSensiblesPublico === false || patch.mostrarCursosPublico === false) {
+        await clearRestrictedCourseCopies().catch(() => {})
       }
       toast({ title: t('saved') })
       return true
     } catch {
       setPublicCourses(previous.publicCourses)
-      setPublicChristian(previous.publicChristian)
+      setPublicSensitive(previous.publicSensitive)
       toast({ title: t('saveFailed'), variant: 'destructive' })
       return false
     } finally {
       setSaving(false)
     }
-  }, [authedPatch, publicCourses, publicChristian, t, toast])
+  }, [authedPatch, publicCourses, publicSensitive, t, toast])
 
   const mintMissing = useCallback(async () => {
     setMinting(true)
@@ -252,29 +252,29 @@ export default function SettingsPage({ params }: PageProps) {
 
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="font-medium text-gray-800">{t('christianTitle')}</div>
-            <p className="text-sm text-gray-600 mt-1">{t('christianHelp')}</p>
+            <div className="font-medium text-gray-800">{t('sensitiveTitle')}</div>
+            <p className="text-sm text-gray-600 mt-1">{t('sensitiveHelp')}</p>
             {/* El estado inicial depende del país (migración 20260923150546): se
                 explica para que no parezca una decisión ya tomada por la persona. */}
-            {persecutionCountry ? (
-              <p className="mt-1 text-xs text-gray-500" data-testid="christian-default-note">
+            {restrictedRegion ? (
+              <p className="mt-1 text-xs text-gray-500" data-testid="sensitive-default-note">
                 {t('defaultOff')}
               </p>
-            ) : publicChristian ? (
-              <p className="mt-1 text-xs text-gray-500" data-testid="christian-default-note">
+            ) : publicSensitive ? (
+              <p className="mt-1 text-xs text-gray-500" data-testid="sensitive-default-note">
                 {t('defaultOn')}
               </p>
             ) : null}
           </div>
           <Switch
-            checked={publicChristian}
+            checked={publicSensitive}
             disabled={saving || !publicCourses}
-            onCheckedChange={(checked) => save({ mostrarCursosCristianosPublico: checked })}
-            aria-label={t('christianTitle')}
+            onCheckedChange={(checked) => save({ mostrarCursosSensiblesPublico: checked })}
+            aria-label={t('sensitiveTitle')}
           />
         </div>
 
-        {publicChristian && (
+        {publicSensitive && (
           <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
             <div className="font-medium flex items-center gap-2 mb-1">
               <ShieldAlert className="h-4 w-4" />
@@ -284,7 +284,7 @@ export default function SettingsPage({ params }: PageProps) {
           </div>
         )}
 
-        {publicChristian && (
+        {publicSensitive && (
           <div className="rounded-md border border-gray-200 p-4">
             <div className="font-medium text-gray-800">{t('mintTitle')}</div>
             <p className="text-sm text-gray-600 mt-1 mb-3">{t('mintHelp')}</p>

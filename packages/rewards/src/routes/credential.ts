@@ -142,14 +142,14 @@ export async function credentialByWallet(
     // SBTs earned. Esta ruta es pública por billetera: aplica la misma regla de
     // privacidad que el perfil público
     // (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.2) — credenciales
-    // no revocadas, del dueño que publica, y de contenido cristiano solo si
+    // no revocadas, del dueño que publica, y de contenido sensible solo si
     // habilitó esa categoría.
     const owner = await db
       .selectFrom('usuario')
-      .select(['mostrar_cursos_publico', 'mostrar_cursos_cristianos_publico'])
+      .select(['mostrar_cursos_publico', 'mostrar_cursos_sensibles_publico'])
       .where('id', '=', billetera.usuario_id)
       .executeTakeFirst()
-    const { publicCourses, publicChristianCourses } = visibilityFromUser(owner as never)
+    const { publicCourses, publicSensitiveCourses } = visibilityFromUser(owner as never)
 
     let sbts: any[] = []
     if (publicCourses) {
@@ -163,8 +163,8 @@ export async function credentialByWallet(
         ])
         .where('e.usuario_id', '=', billetera.usuario_id)
         .where('e.revoked_at', 'is', null)
-      if (!publicChristianCourses) {
-        sbtQuery = sbtQuery.where('c.contenido_cristiano', '=', false)
+      if (!publicSensitiveCourses) {
+        sbtQuery = sbtQuery.where('c.contenido_sensible', '=', false)
       }
       sbts = await sbtQuery.orderBy('e.emitted_at', 'asc').execute()
     }
@@ -190,7 +190,7 @@ export async function credentialByWallet(
 
     // Premium credential count (for stable-sl tier determination). También pasa
     // por la regla de privacidad: un curso premium puede ser de contenido
-    // cristiano, y contar uno solo ya revelaría la afiliación.
+    // sensible, y contar uno solo ya revelaría la afiliación.
     let premiumRow: any = null
     if (publicCourses) {
       let q: any = db
@@ -200,8 +200,8 @@ export async function credentialByWallet(
         .where('e.usuario_id', '=', billetera.usuario_id)
         .where('e.is_premium', '=', true)
         .where('e.revoked_at', 'is', null)
-      if (!publicChristianCourses) {
-        q = q.where('c.contenido_cristiano', '=', false)
+      if (!publicSensitiveCourses) {
+        q = q.where('c.contenido_sensible', '=', false)
       }
       premiumRow = await q.executeTakeFirst()
     }
