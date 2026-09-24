@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
-import { courseKey, getDownloadedCourse } from '@/lib/offline-course-db'
+import { courseKey, getDownloadedCourse, type DownloadedCourse } from '@/lib/offline-course-db'
 import type { Course, Guide } from './guideTypes'
 
 interface UseCourseProps {
@@ -17,6 +17,15 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // R-#256: lo que ya está en pantalla no se borra si el dispositivo se queda sin
+  // conexión y el effect vuelve a correr. Medido en E2E el 2026-09-24: al pasar a
+  // offline la sesión cae, `useCourse` volvía a correr, no encontraba copia
+  // descargada y vaciaba el curso, así que el crucigrama perdía la cuadrícula y el
+  // botón de envío quedaba deshabilitado. Se recuerda en un ref porque `course` no
+  // está en las dependencias de `fetchCourse`.
+  const hasCourseRef = useRef(false)
+  useEffect(() => { hasCourseRef.current = course !== null }, [course])
+
   const fetchCourse = useCallback(async () => {
     // Partial login (session vs localStorage mismatch): do not fetch.
     if (mismatch) {
@@ -29,6 +38,37 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
 
     setLoading(true)
     setError(null)
+
+    // R-#256 §3.7: el curso puede estar **descargado**. Se arma con el registro
+    // guardado para que la página del curso y la de cada guía funcionen sin red
+    // (el operador reportó el 2026-09-23 que offline no podía entrar a un curso ya
+    // visitado, y la medición E2E del 2026-09-24 mostró que la guía descargada no
+    // llegaba a pintarse).
+    const loadFromDevice = async (cause?: unknown) => {
+      const downloaded = await getDownloadedCourse(courseKey(lang, pathPrefix)).catch(() => null)
+      if (downloaded) {
+        setError(null)
+        setCourse(courseFromDownloaded(downloaded))
+        return
+      }
+      if (cause !== undefined) console.error('Failed to fetch course data:', cause)
+      // Sin copia descargada: no se borra el curso que ya se está mostrando.
+      if (hasCourseRef.current) return
+      setError(cause instanceof Error ? cause.message : cause === undefined ? 'Offline' : String(cause))
+      setCourse(null)
+    }
+
+    // Sin conexión no hay nada que pedir: el curso sale del dispositivo.
+    // Se lee `navigator.onLine` (síncrono) y `useOfflineStatus` **no** entra en las
+    // dependencias: si el dispositivo se queda sin conexión después de cargar,
+    // volver a correr borraba el curso que ya estaba en pantalla y la página se
+    // quedaba sin contenido (medido en E2E el 2026-09-24).
+    const offline = typeof navigator !== 'undefined' && !navigator.onLine
+    if (offline) {
+      await loadFromDevice()
+      setLoading(false)
+      return
+    }
 
     try {
       // R-#233 §4.4: public course list/detail served by Next directly from the
@@ -80,30 +120,7 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
       } as Course
       setCourse(fullCourse)
     } catch (e: unknown) {
-      // R-#256 §3.7: sin conexión el catálogo no responde, pero el curso puede
-      // estar **descargado**. Se arma con el registro guardado para que la página
-      // del curso y la de cada guía funcionen (el operador reportó el 2026-09-23
-      // que offline no podía entrar a un curso ya visitado).
-      const downloaded = await getDownloadedCourse(courseKey(lang, pathPrefix)).catch(() => null)
-      if (downloaded) {
-        setError(null)
-        setCourse({
-          id: String(downloaded.courseId),
-          titulo: downloaded.titulo || downloaded.prefix,
-          idioma: downloaded.lang,
-          prefijoRuta: `/${downloaded.prefix}`,
-          guias: downloaded.guides.map((guide) => ({ titulo: guide.suffix, sufijoRuta: guide.suffix })),
-          conBilletera: false,
-          sinBilletera: true,
-          creditosMd: '',
-          porPagar: downloaded.isPremium ? '1' : undefined,
-          contenido_sensible: downloaded.contenidoSensible,
-        } as Course)
-      } else {
-        console.error('Failed to fetch course data:', e)
-        setError(e instanceof Error ? e.message : String(e))
-        setCourse(null)
-      }
+      await loadFromDevice(e)
     } finally {
       setLoading(false)
     }
@@ -114,6 +131,26 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
   }, [fetchCourse])
 
   return { course, loading, error }
+}
+
+/**
+ * Curso a partir del registro descargado (R-#256): sin conexión la página del
+ * curso debe listar **todas** las guías descargadas (no solo la visitada) y la
+ * página de guía resolver su número y su ruta.
+ */
+function courseFromDownloaded(downloaded: DownloadedCourse): Course {
+  return {
+    id: String(downloaded.courseId),
+    titulo: downloaded.titulo || downloaded.prefix,
+    idioma: downloaded.lang,
+    prefijoRuta: `/${downloaded.prefix}`,
+    guias: downloaded.guides.map((guide) => ({ titulo: guide.suffix, sufijoRuta: guide.suffix })),
+    conBilletera: false,
+    sinBilletera: true,
+    creditosMd: '',
+    porPagar: downloaded.isPremium ? '1' : undefined,
+    contenido_sensible: downloaded.contenidoSensible,
+  } as Course
 }
 
 interface GuideStatus {

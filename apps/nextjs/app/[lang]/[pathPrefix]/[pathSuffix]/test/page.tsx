@@ -125,8 +125,10 @@ export default function Page({
         setIsLoading(false)
         return
       }
-      // Wait until the identity is resolved (cold session #5719).
-      if (!ready) return
+      // Wait until the identity is resolved (cold session #5719). R-#256: sin
+      // conexión la sesión no se resuelve (su petición no sale) y el crucigrama
+      // sale del store del dispositivo, así que no se espera a `ready`.
+      if (!ready && !offline) return
       if (!course || !guideNumber || (!address && !offline)) {
         setIsLoading(false);
         return;

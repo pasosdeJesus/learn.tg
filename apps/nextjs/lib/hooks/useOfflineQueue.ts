@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import {
   dequeueSubmission,
   enqueueSubmission,
@@ -48,14 +48,46 @@ export interface UseOfflineQueueResult {
  */
 let activeFlush: Promise<number> | null = null
 
+/**
+ * Contador de pendientes compartido por todas las instancias (R-#242).
+ *
+ * El hook vive en el layout (`OfflineQueueSync`) y también en la página del
+ * crucigrama, y el drenado es único para toda la app (`activeFlush`): la
+ * instancia que drena no es necesariamente la que muestra el contador. Con un
+ * `useState` por instancia la página seguía mostrando "1 respuesta pendiente" con
+ * la cola ya vacía en IndexedDB (medido en E2E el 2026-09-24). El contador es un
+ * estado de módulo observable, así que todas las instancias coinciden con el
+ * store.
+ */
+let sharedPending = 0
+const pendingListeners = new Set<() => void>()
+
+function setSharedPending(value: number) {
+  if (value === sharedPending) return
+  sharedPending = value
+  for (const listener of pendingListeners) listener()
+}
+
+function subscribePending(listener: () => void) {
+  pendingListeners.add(listener)
+  return () => {
+    pendingListeners.delete(listener)
+  }
+}
+
+function getPendingSnapshot() {
+  return sharedPending
+}
+
 export function useOfflineQueue(): UseOfflineQueueResult {
   const { isOffline } = useOfflineStatus()
-  const [pending, setPending] = useState(0)
+  // R-#242: contador compartido (ver `sharedPending`), no un estado por instancia.
+  const pending = useSyncExternalStore(subscribePending, getPendingSnapshot, () => 0)
   const [lastRejection, setLastRejection] = useState<UseOfflineQueueResult['lastRejection']>(null)
   const [lastResult, setLastResult] = useState<UseOfflineQueueResult['lastResult']>(null)
 
   const refresh = useCallback(async () => {
-    setPending(await pendingCount())
+    setSharedPending(await pendingCount())
   }, [])
 
   const enqueue = useCallback(async (url: string, body: unknown) => {

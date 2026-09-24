@@ -59,6 +59,10 @@ export default function Page() {
   // R-#241: copia sin conexión de esta guía (Markdown en IndexedDB).
   const { isOffline, isFromCache, markFromCache, getCached, save } =
     useCachedGuide(`${lang}/${pathPrefix}/${pathSuffix}`)
+  // R-#256: `navigator.onLine` es síncrono y `useOfflineStatus` actualiza su
+  // estado en un effect, así que sin esto el primer pase del effect creería estar
+  // en línea. La copia guardada es la que pinta la página sin conexión.
+  const offlineNow = isOffline || (typeof navigator !== 'undefined' && !navigator.onLine)
 
 
   const htmlDeMd = useCallback((md: string) => {
@@ -145,11 +149,15 @@ export default function Page() {
 
   useEffect(() => {
     setIsClient(true)
-    if (!ready) return
+    // Orden en línea: esperar a que la identidad se resuelva (sesión fría #5719).
+    // R-#256: sin conexión no hay identidad que resolver (la petición de sesión no
+    // sale) y la guía sale del store del dispositivo, así que no se espera a
+    // `ready` para no dejar la página en blanco.
+    if (!ready && !offlineNow) return
     if (course && guideNumber > 0) {
         const fetchGuideContent = async () => {
             try {
-                if (isOffline) {
+                if (offlineNow) {
                     const cached = await getCached()
                     if (cached) {
                         setGuideHtml(htmlDeMd(cached))

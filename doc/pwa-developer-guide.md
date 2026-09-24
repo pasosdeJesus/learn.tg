@@ -140,6 +140,15 @@ When something is missing while offline, each page falls back to the stored copy
 | Guide | `useCachedGuide` → `guides` store |
 | Crossword (`.../test`) | the `puzzle` of the downloaded record (never carries answers) |
 
+**Offline the identity must not be awaited.** `useSession()` does not settle without a
+connection, so `useAuthedApi` treats "offline" as resolved (it derives the identity from
+the local data) and both pages stop waiting for `ready`. Otherwise `ready` stayed false,
+`useCourse` never loaded the stored course, and the guide markdown and the puzzle never
+reached the screen: the page shell came from the `learntg-pages` cache and only the
+content was missing (measured 2026-09-24, `offline-course-download`). `useCourse` also
+reads `navigator.onLine` synchronously, so the first pass of its effect does not attempt
+the network while `useOfflineStatus` is still updating its state.
+
 `components/OfflineQueueSync.tsx` (also in the layout) drains the offline answer queue
 on **any** page and reports the result with a toast: the queue used to drain only
 inside the crossword page, so reconnecting from the course list showed nothing

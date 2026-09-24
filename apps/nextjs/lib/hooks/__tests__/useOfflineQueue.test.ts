@@ -110,4 +110,30 @@ describe('useOfflineQueue (R-#241/R-#242)', () => {
     expect(fetchMock.mock.calls.filter(([url]: any[]) => url === '/api/check-crossword')).toHaveLength(1)
     expect(await listPending()).toHaveLength(0)
   })
+
+  // R-#242: el contador es un estado de módulo compartido. La instancia que drena
+  // la cola puede ser la del layout (`OfflineQueueSync`), no la de la página; con
+  // un `useState` por instancia la página seguía mostrando "1 pendiente" con
+  // IndexedDB vacío (defecto medido en E2E el 2026-09-24).
+  it('shares the pending count between instances when the other one drains', async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const page = renderHook(() => useOfflineQueue())
+    const layout = renderHook(() => useOfflineQueue())
+    await act(async () => {
+      await page.result.current.enqueue('/api/check-crossword', { guideId: 7 })
+    })
+    expect(page.result.current.pending).toBe(1)
+    expect(layout.result.current.pending).toBe(1)
+
+    // Drena la instancia del layout, como hace `OfflineQueueSync` al reconectar.
+    await act(async () => { await layout.result.current.flush() })
+
+    expect(await listPending()).toHaveLength(0)
+    // La instancia de la página lo ve sin volver a pedirlo. Éste es el defecto:
+    // antes se quedaba en 1 aunque el store ya estuviera vacío.
+    expect(page.result.current.pending).toBe(0)
+    expect(layout.result.current.pending).toBe(0)
+  })
 })

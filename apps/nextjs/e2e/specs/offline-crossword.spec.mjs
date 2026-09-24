@@ -198,6 +198,25 @@ async function clickSubmit(page) {
   return false
 }
 
+/**
+ * Diagnóstico del envío (R-#242): cuántas celdas hay, cuántas tienen letra y qué
+ * botones existen con su estado. Se imprime cuando el botón de envío no se puede
+ * pulsar, para distinguir "la cuadrícula se vació" de "el botón no está".
+ */
+async function submitDiagnostics(page) {
+  return page.evaluate(() => {
+    const cells = Array.from(document.querySelectorAll('input[data-row]'))
+    return {
+      cells: cells.length,
+      filled: cells.filter((el) => (el.value || '') !== '').length,
+      buttons: Array.from(document.querySelectorAll('button')).map(
+        (el) => `${(el.textContent || '').trim().slice(0, 24)}${el.disabled ? ' [disabled]' : ''}`,
+      ),
+      text: (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 200),
+    }
+  })
+}
+
 async function main() {
   const t0 = performance.now()
   resetFailures()
@@ -387,6 +406,7 @@ async function main() {
   // 4. Submitting offline must queue, not fail
   const submitted = await clickSubmit(page)
   if (!submitted) {
+    console.log(`  [diag] ${JSON.stringify(await submitDiagnostics(page))}`)
     // El botón se deshabilita, por diseño, cuando las dos becas de la guía ya se
     // pagaron (R-#242). La guía se eligió sin becas al inicio, así que llegar aquí
     // significa que el estado no es el esperado: se OMITE con el motivo a la vista
@@ -417,6 +437,11 @@ async function main() {
   // 6. The queue is replayed (the page listens for `online`) y el servidor procesa la
   // entrega: es lo que exige R-#242 ("rewards processed after sync"). Se captura la
   // respuesta del replay para afirmarlo (antes solo se veía que la cola se vaciaba).
+  //
+  // Regresión (2026-09-24): el indicador de la página y el store deben coincidir. El
+  // contador de `useOfflineQueue` es un estado de módulo (el hook vive también en el
+  // layout): con un `useState` por instancia la página se quedaba en "1 pendiente"
+  // con IndexedDB ya vacío, y el spec fallaba de forma estable.
   const replayResponses = []
   let replayRequest = null
   page.on('request', (r) => {

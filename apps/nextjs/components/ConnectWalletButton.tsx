@@ -236,8 +236,9 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         throw new Error(`Authentication failed (${cbRes.status})`)
       }
 
-      // Set localStorage — survives NextAuth's useSession() glitch (#5719)
-      localStorage.setItem('learn.tg.sessionAddress', checksummedAddress)
+      // Set localStorage — survives NextAuth's useSession() glitch (#5719).
+      // R-#256: en minúsculas, como `session.address` (doc/siwe-auth-flow.md §3).
+      localStorage.setItem('learn.tg.sessionAddress', checksummedAddress.toLowerCase())
       // R-#233 Fase 2: no hay token de API que guardar. La cookie de sesión
       // (HttpOnly) es la única credencial y las llamadas API la usan solas.
       // Referido: si el usuario llegó por un enlace /ref/{CODE}, reclámalo

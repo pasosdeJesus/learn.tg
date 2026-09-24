@@ -55,7 +55,12 @@ export async function signInWithInAppWallet(provider: Eip1193Provider): Promise<
   })
   if (!callback.ok) throw new Error('auth-failed' satisfies InAppSignInError)
 
-  const checksummed = getAddress(account)
-  localStorage.setItem('learn.tg.sessionAddress', checksummed)
-  return checksummed
+  // R-#256: el fallback se guarda en **minúsculas**, como `session.address` y todo
+  // el resto de la app (doc/siwe-auth-flow.md §3). Guardarlo con checksum EIP-55
+  // hacía que, sin sesión (por ejemplo sin conexión), la identidad cambiara de
+  // forma: la clave `crossword-state-${address}` y las llamadas autenticadas
+  // dejaban de coincidir y el estado guardado no se encontraba.
+  const normalized = account.toLowerCase()
+  localStorage.setItem('learn.tg.sessionAddress', normalized)
+  return normalized
 }

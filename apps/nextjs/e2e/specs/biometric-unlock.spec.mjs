@@ -100,6 +100,54 @@ async function dumpWalletDb(page) {
   }
 }
 
+/**
+ * Qué dice el dispositivo sobre verificar al usuario. El spec lo imprime cuando no
+ * encuentra la oferta de huella: distingue "el dispositivo no puede" (CDP sin
+ * authenticator virtual, WebView sin WebAuthn) de "la UI no la ofreció".
+ */
+async function deviceCapability(page) {
+  return page
+    .evaluate(async () => {
+      const out = { publicKeyCredential: typeof PublicKeyCredential !== 'undefined' }
+      try {
+        out.userVerifying = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+      } catch (e) {
+        out.userVerifying = `error: ${String(e).slice(0, 80)}`
+      }
+      try {
+        const caps = await PublicKeyCredential.getClientCapabilities?.()
+        out.prf = caps?.['extension:prf'] ?? caps?.['extension:hmacCreateSecret'] ?? null
+      } catch (e) {
+        out.prf = `error: ${String(e).slice(0, 80)}`
+      }
+      return out
+    })
+    .catch((e) => ({ error: String(e) }))
+}
+
+/**
+ * Arranque limpio (R-#246): el spec **crea** la billetera desde cero, así que no
+ * puede depender de lo que quedó de una corrida anterior: con una billetera ya
+ * guardada el paso 1 se salta la creación (y con ella el sellado de la huella de
+ * R-#254), y el operador veía una dirección in-app distinta en cada corrida
+ * (2026-09-24). Se borra el registro de la billetera y la preferencia de
+ * desbloqueo, y se recarga para que el hook la resuelva de nuevo.
+ */
+async function resetWalletState(page) {
+  await page.evaluate(async () => {
+    try { localStorage.removeItem('learn.tg.sessionAddress') } catch { /* bloqueado */ }
+    try { localStorage.removeItem('pdj-wallet:unlockPreference') } catch { /* bloqueado */ }
+    await new Promise((resolve) => {
+      const request = indexedDB.deleteDatabase('learn-tg-pdj-wallet')
+      request.onsuccess = () => resolve()
+      request.onerror = () => resolve()
+      request.onblocked = () => resolve()
+    })
+  })
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await sleep(3000)
+}
+
 async function header(page) {
   try {
     return await page.evaluate(() => {
@@ -185,6 +233,8 @@ async function main() {
   // 1. Crear la billetera en la cabecera y firmar
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
   await sleep(6000)
+  // R-#246: partir de cero; ver `resetWalletState`.
+  await resetWalletState(page)
   if (!(await exists(page, '[data-testid="wallet-selector-in-app"]'))) {
     if (!(await openDialog(page))) {
       fail('La cabecera no abrió el diálogo de la billetera')
@@ -197,6 +247,16 @@ async function main() {
         await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 60000 })
         ok('Billetera in-app creada')
         await completeBackupVerification(page)
+      } else if (await exists(page, '[data-testid="wallet-unlock"]')) {
+        // El `deleteDatabase` puede quedar bloqueado y dejar la billetera anterior
+        // (bloqueada): se desbloquea y el spec sigue con el paso 2.
+        console.log('  [i] el borrado no eliminó la billetera anterior: se desbloquea la existente')
+        await page.type('[data-testid="wallet-password"]', password)
+        await page.click('[data-testid="wallet-unlock"]')
+        for (let i = 0; i < 20; i++) {
+          if ((await header(page)).signedIn) break
+          await sleep(1500)
+        }
       } else {
         await closeDialog(page)
       }
@@ -214,6 +274,7 @@ async function main() {
 
   let enableButton = false
   let alreadyEnrolled = false
+  let autoUnlocked = false
   if (await openDialog(page)) {
     // El diálogo carga su estado del hook (IndexedDB + detección de plataforma)
     // después de abrirse: en `next dev` tarda, así que se espera la oferta en vez
@@ -225,12 +286,29 @@ async function main() {
       // verificarlo, así que aquí el diálogo pide el gesto en vez de ofrecerlo.
       alreadyEnrolled = await exists(page, '[data-testid="wallet-unlock-biometric"]')
       if (alreadyEnrolled) break
+      // Y con el gesto ya arrancando (pide la huella al abrir) puede completarse
+      // ANTES de que alcancemos a ver el botón: el diálogo se cierra. Sin esta
+      // señal el spec fallaba con "El diálogo no ofreció activar el desbloqueo
+      // por huella" aunque la huella sí estaba activa (medido 2026-09-24).
+      const dialogOpen = await exists(page, '[data-testid="wallet-dialog"]')
+      const lockedUi =
+        (await exists(page, '[data-testid="wallet-unlock"]')) ||
+        (await exists(page, '[data-testid="wallet-unlock-biometric"]'))
+      if (!dialogOpen || !lockedUi) {
+        autoUnlocked = true
+        break
+      }
       await sleep(1000)
     }
-    if (alreadyEnrolled) {
+    if (alreadyEnrolled || autoUnlocked) {
       enableButton = true
       ok('La huella quedó registrada durante la creación de la billetera (R-#254)')
-      await closeDialog(page)
+      // La firma con la sesión ya existente cierra el modal sin recargar.
+      if (await exists(page, '[data-testid="wallet-dialog"]')) await closeDialog(page)
+      for (let i = 0; i < 20; i++) {
+        if ((await header(page)).signedIn) break
+        await sleep(1500)
+      }
     } else if (enableButton) {
       await page.type('[data-testid="wallet-password"]', password)
       await page.click('[data-testid="wallet-enable-biometric"]')
@@ -263,6 +341,9 @@ async function main() {
   }
 
   if (!enableButton) {
+    const capability = await deviceCapability(page)
+    console.log(`  [diag] dispositivo: ${JSON.stringify(capability)}`)
+    console.log(`  [diag] IndexedDB: ${JSON.stringify(await dumpWalletDb(page))}`)
     fail(`El diálogo no ofreció activar el desbloqueo por huella (cabecera: "${(await header(page)).button}")`)
   }
 

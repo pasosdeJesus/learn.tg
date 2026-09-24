@@ -17,11 +17,17 @@ import { useCallback, useEffect, useState } from 'react'
 import axios, { type AxiosRequestConfig } from 'axios'
 import { useSession } from 'next-auth/react'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useOfflineStatus } from '@/lib/hooks/useOfflineStatus'
 
 export function useAuthedApi() {
   const { data: session, status } = useSession()
   const { address, sessionAddress, storedAddress, isWalletAvailable, isWalletCheckComplete } =
     useAuthAddress()
+  // R-#256: sin conexión la sesión no puede resolverse (`useSession` se queda en
+  // `loading` porque su petición tampoco sale), pero el dispositivo ya conoce la
+  // identidad localmente. Esperarla dejaría `ready` en falso para siempre y la
+  // copia descargada (guía, crucigrama) nunca se pintaría.
+  const { isOffline } = useOfflineStatus()
 
   // localStorage is only readable after mount (R-#218: reading it during the
   // first render breaks hydration). Until then the identity is unknown, so
@@ -42,8 +48,9 @@ export function useAuthedApi() {
   // The identity is unresolved while the component has not mounted (localStorage
   // not readable yet) or the session status has not settled and no address is
   // known from localStorage. In both cases pages must wait (ready=false)
-  // instead of firing an anonymous request during the first render.
-  const identityPending = !mounted || (status === 'loading' && !storedAddress)
+  // instead of firing an anonymous request during the first render. Offline the
+  // session never settles, so waiting must stop: the local copy is the source.
+  const identityPending = !mounted || (status === 'loading' && !storedAddress && !isOffline)
   // While a connected user's address is not resolved yet (or the identities
   // mismatch), pages must wait (ready=false) instead of querying anonymously.
   const ready = !mismatch && !identityPending && (!!wallet || !connectedHint)
