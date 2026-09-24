@@ -106,4 +106,29 @@ describe('Guide page offline (R-#256)', () => {
     expect(authedGet).not.toHaveBeenCalled()
     expect(document.body.textContent).toContain('Showing the saved copy')
   })
+
+  // R-#241/R-#256: la guía visitada de un curso que **no** se puede descargar (de pago
+  // o sensible) tiene que seguir leyéndose sin conexión. Antes el gate de
+  // `course`/`myGuide` mostraba "Error: Offline" con el Markdown ya en el dispositivo
+  // (medido 2026-09-24 en el sitio de desarrollo con `offline-guide`).
+  it('paints the stored guide when the course could not be resolved offline', async () => {
+    vi.mocked(useGuideData).mockReturnValue({
+      course: null,
+      loading: false,
+      error: 'Offline',
+      myGuide: null,
+      guideNumber: 0,
+      nextGuidePath: '',
+      previousGuidePath: '',
+      coursePath: '',
+    } as never)
+
+    render(<Page />)
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('SAVED-GUIDE-MARKDOWN')
+    })
+    expect(document.body.textContent).toContain('Showing the saved copy')
+    expect(document.body.textContent).not.toContain('Error: Offline')
+  })
 })

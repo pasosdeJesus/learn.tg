@@ -148,4 +148,27 @@ describe('Crossword page offline (R-#256)', () => {
     })
     expect(apiMocks.authedGet).not.toHaveBeenCalled()
   })
+
+  // R-#256: sin sesión, `/api/crossword` responde 200 con la cuadrícula vacía (sin
+  // pistas). Eso no es un crucigrama guardado: la página debe decirlo en vez de pintar
+  // un tablero sin celdas (medido 2026-09-24 en el sitio de desarrollo).
+  it('treats a stored puzzle without placements as missing', async () => {
+    offlineMocks.getStoredPuzzle.mockResolvedValue({
+      grid: [[{ letter: '', isBlocked: true, userInput: '', belongsToWords: [] }]],
+      placements: [],
+    })
+
+    await act(async () => {
+      render(
+        <Suspense fallback={<div>Loading…</div>}>
+          <Page params={params} />
+        </Suspense>,
+      )
+    })
+
+    await waitFor(() => {
+      expect(document.body.textContent).toMatch(/no saved crossword for this guide/i)
+    })
+    expect(document.querySelectorAll('input[data-row]').length).toBe(0)
+  })
 })

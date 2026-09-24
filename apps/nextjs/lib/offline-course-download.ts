@@ -138,10 +138,20 @@ export async function downloadCourse(
         `/api/crossword?courseId=${descriptor.courseId}&lang=${descriptor.lang}` +
         `&prefix=${encodeURIComponent(descriptor.prefix)}&guide=${encodeURIComponent(suffix)}`,
       )
-      if (Array.isArray(puzzleResponse.data?.grid) && Array.isArray(puzzleResponse.data?.placements)) {
+      // R-#256: un crucigrama **con pistas** o ninguno. Sin sesión, `/api/crossword`
+      // responde 200 con la cuadrícula vacía y "conecta tu billetera"; guardar eso
+      // pintaba un crucigrama sin celdas al abrirlo sin conexión (medido 2026-09-24 en
+      // el sitio de desarrollo). Con `puzzle: null` la página dice que no hay
+      // crucigrama guardado, que es la verdad.
+      const placements = puzzleResponse.data?.placements
+      if (
+        Array.isArray(puzzleResponse.data?.grid) &&
+        Array.isArray(placements) &&
+        placements.length > 0
+      ) {
         puzzle = {
           grid: puzzleResponse.data.grid,
-          placements: puzzleResponse.data.placements,
+          placements,
         }
       }
     } catch {

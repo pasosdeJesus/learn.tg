@@ -93,6 +93,27 @@ describe('downloadCourse (R-#256)', () => {
     expect(course.guides.every((g) => g.puzzle === null)).toBe(true)
   })
 
+  // R-#256: sin sesión, `/api/crossword` responde 200 con la cuadrícula vacía y
+  // "conecta tu billetera" (medido 2026-09-24 en el sitio de desarrollo). Eso no es un
+  // crucigrama: guardarlo pintaba una cuadrícula sin celdas al abrirlo sin conexión.
+  it('does not store a puzzle without placements (200 with an empty grid)', async () => {
+    const get = vi.fn(async (url: string) => {
+      if (url.startsWith('/api/guide?')) return { data: { markdown: '<p>guía</p>' } }
+      return {
+        data: {
+          grid: [[{ letter: '', isBlocked: true, userInput: '', belongsToWords: [] }]],
+          placements: [],
+          message: 'To solve the puzzle, please connect your web3 Wallet',
+        },
+      }
+    })
+
+    const course = await downloadCourse(DESCRIPTOR, { get: get as any, wallet: WALLET })
+
+    expect(course.guides).toHaveLength(2)
+    expect(course.guides.every((g) => g.puzzle === null)).toBe(true)
+  })
+
   it('fails instead of saving half a course when a guide is missing', async () => {
     const get = vi.fn(async (url: string) => {
       if (url.includes('guide=guide1')) return { data: { markdown: '<p>ok</p>' } }

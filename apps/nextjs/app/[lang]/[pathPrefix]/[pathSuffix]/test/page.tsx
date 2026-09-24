@@ -144,7 +144,10 @@ export default function Page({
           // R-#256 §3.3: sin conexión se usa el crucigrama **descargado**, que es el
           // que se guardó sin respuestas; la respuesta se encola (R-#242).
           const stored = await getStoredPuzzle(courseKey(lang, pathPrefix), pathSuffix).catch(() => null)
-          if (!stored?.grid || !stored?.placements) return false
+          // R-#256: un crucigrama sin pistas no es un crucigrama (una copia guardada
+          // sin sesión, o de un despliegue que no sirve el puzzle): se trata como
+          // ausente para decir la verdad en vez de pintar una cuadrícula vacía.
+          if (!stored?.grid || !stored?.placements?.length) return false
           const offlineState = {
             grid: stored.grid,
             placements: stored.placements,

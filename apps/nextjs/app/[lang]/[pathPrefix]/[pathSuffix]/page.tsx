@@ -216,9 +216,53 @@ export default function Page() {
     }
   }, [course, guideNumber, lang, pathPrefix, pathSuffix, htmlDeMd, address, session?.address, ready, authedGet, isOffline, getCached, save, markFromCache])
 
+  // R-#241/R-#256: sin conexión la copia guardada es la fuente y se lee **sin**
+  // esperar a que el curso se resuelva. Un curso de pago o de contenido sensible no
+  // se descarga, así que `useCourse` no puede reconstruirlo y el gate de
+  // `course`/`myGuide` dejaba la página en "Error: Offline" aunque el texto ya
+  // estuviera en el dispositivo (medido 2026-09-24 en el sitio de desarrollo con
+  // `offline-guide`).
+  useEffect(() => {
+    if (!offlineNow) return
+    let cancelled = false
+    void (async () => {
+      const cached = await getCached()
+      if (cancelled || !cached) return
+      setGuideHtml(htmlDeMd(cached))
+      markFromCache(true)
+    })()
+    return () => { cancelled = true }
+  }, [offlineNow, getCached, htmlDeMd, markFromCache])
+
 
   if (loading) {
     return <div className="p-10 mt-10">{t('loading')}</div>
+  }
+
+  // Copia guardada de una guía ya visitada, sin conexión: se pinta aunque el curso
+  // y la guía no se hayan podido resolver (ver el efecto de arriba).
+  if (offlineNow && guideHtml && (!course || !myGuide)) {
+    return (
+      <article className="mt-8 pt-2 dark:bg-gray-100 dark:text-gray-800" aria-label="Guide content">
+        <header className="container p-2 px-8 md:px-16 mx-auto pt-16 space-y-1">
+          <h3 className="pb-1 text-1xl font-bold md:text-1xl text-center">
+            {course?.titulo || `/${pathPrefix}/${pathSuffix}`}
+          </h3>
+        </header>
+        <div className="overflow-x-auto">
+          <p className="px-3 md:px-16 text-sm text-amber-800">
+            {lang === 'es'
+              ? 'Mostrando la copia guardada: tu dispositivo está sin conexión.'
+              : 'Showing the saved copy: your device is offline.'}
+          </p>
+          <section
+            className="py-3 px-3 md:px-16 text-1xl md:text-1xl text-justify **:list-inside"
+            dangerouslySetInnerHTML={{ __html: guideHtml }}
+            aria-label="Guide text"
+          />
+        </div>
+      </article>
+    )
   }
 
   if (error) {

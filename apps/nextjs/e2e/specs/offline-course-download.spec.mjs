@@ -17,14 +17,16 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import {
-  initTestEnv, launchBrowser, newPage,
+  initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 
 const COURSE_PATH = '/en/web3-and-ubi'
 const NEVER_VISITED_PATH = '/en/web3-and-ubi/guide4'
 const READY_TEXT = 'You can read this course without a connection'
+const password = '12345678'
 
 function loadEnvCredentials() {
   for (const envPath of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env'), path.join(process.cwd(), '.env')]) {
@@ -91,11 +93,22 @@ async function main() {
   if (!process.env.CHAIN_ID) process.env.CHAIN_ID = '11142220'
 
   const env = await initTestEnv()
-  const { timeout } = env
+  const { timeout, chainId } = env
   const { base } = resolveSiteTarget(env)
 
   const browser = await launchBrowser(env.headless)
-  const page = await newPage(browser, creds?.addr, timeout)
+  const page = await browser.newPage()
+  await page.setDefaultNavigationTimeout(120000)
+
+  // R-#256: la descarga guarda también el crucigrama del curso, y `/api/crossword`
+  // exige **sesión**: sin ella responde 200 con la cuadrícula vacía y "conecta tu
+  // billetera", así que el crucigrama guardado quedaba sin celdas y esa mitad del
+  // spec no se podía verificar (medido 2026-09-24 en el sitio de desarrollo). Se
+  // ingresa como lo haría el estudiante.
+  await installCoreWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId, password })
+  await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
+  await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base, password })
+  ok('Signed in with the pdj-wallet core (session cookie)')
 
   // 1. El curso en línea.
   await page.goto(`${base}${COURSE_PATH}`, { waitUntil: 'domcontentloaded' })
@@ -162,6 +175,14 @@ async function main() {
   if (answers.length === 0) ok('El crucigrama guardado no lleva respuestas (celdas ni colocaciones)')
   else fail(`El crucigrama guardado incluye respuestas: ${answers.slice(0, 5).join(', ')}`)
 
+  // Un crucigrama **sin pistas** no se guarda (R-#256): sirve para elegir la guía de
+  // la comprobación sin conexión y para omitir el spec con un motivo claro cuando el
+  // despliegue no sirve crucigramas de este curso.
+  const guidesWithPuzzle = (stored?.record?.guides ?? [])
+    .filter((guide) => (guide.puzzle?.placements ?? []).length > 0)
+  if (guidesWithPuzzle.length > 0) ok(`El curso trae ${guidesWithPuzzle.length} crucigrama(s) con pistas`)
+  else console.log('  [i] el curso descargado no trae crucigramas con pistas')
+
   if ((stored?.guideKeys ?? []).some((key) => key === 'en/web3-and-ubi/guide4')) {
     ok('La guía nunca visitada quedó guardada con su contenido')
   } else {
@@ -216,6 +237,17 @@ async function main() {
   // cuando `GET /api/crossword` no responde (el operador reportó el 2026-09-23 que
   // el puzzle descargado caía en "You are offline").
   //
+  // Se usa una guía cuyo crucigrama **sí** se descargó (con pistas): un despliegue que
+  // no sirve crucigramas de este curso no permite verificar esta mitad, así que se
+  // OMITE con el motivo en vez de fallar.
+  if (guidesWithPuzzle.length === 0) {
+    console.log('[SKIP] el curso descargado no trae ningún crucigrama con pistas (el sitio no sirve crucigramas para estas guías): la lectura del crucigrama sin conexión no se puede verificar aquí.')
+    const failures = summary(t0)
+    await browser.close()
+    process.exit(failures > 0 ? 1 : 0)
+  }
+  const CROSSWORD_PATH = `${COURSE_PATH}/${guidesWithPuzzle[0].suffix}/test`
+
   // Esa página necesita su propio documento en caché; la descarga lo calienta desde
   // el 2026-09-23. Si el despliegue es anterior, se OMITE con el motivo en vez de
   // fallar por una versión vieja del sitio.
@@ -226,7 +258,7 @@ async function main() {
     } catch {
       return false
     }
-  }, `${NEVER_VISITED_PATH}/test`)
+  }, CROSSWORD_PATH)
   if (!testPageCached) {
     console.log('[SKIP] el despliegue no calienta la página del crucigrama (`/test`) al descargar el curso: falta desplegar el cambio del 2026-09-23 para verificar que el puzzle descargado abre sin conexión.')
     const failures = summary(t0)
@@ -235,7 +267,7 @@ async function main() {
   }
 
   try {
-    await page.goto(`${base}${NEVER_VISITED_PATH}/test`, { waitUntil: 'domcontentloaded' })
+    await page.goto(`${base}${CROSSWORD_PATH}`, { waitUntil: 'domcontentloaded' })
   } catch (error) {
     console.log(`  [!] La navegación sin conexión al crucigrama falló: ${error.message}`)
   }
