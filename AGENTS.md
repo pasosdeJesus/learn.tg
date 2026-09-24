@@ -109,7 +109,7 @@ What follows is only what those files do not tell you.
    and never explain them. Read `.crushrules` before renaming, adding or documenting any
    of them (or writing that context into `REQ/`); never `git add`, commit, copy or quote
    the file. A private audit script reads that file and the project vocabulary
-   (`node /var/www/adJ-ia/tmp/audit-crushrules.mjs`, referenced from `.crushrules`): it
+   (`node audit-crushrules.mjs`, referenced from `.crushrules`): it
    fails on any writing system the project does not use (the way a model "translating"
    something shows up), on the sensitive vocabulary outside its allowlist and on
    `.crushrules` becoming tracked. Run it before reporting work as done.
