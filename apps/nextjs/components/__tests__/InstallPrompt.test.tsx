@@ -67,4 +67,52 @@ describe('InstallPrompt (R-#243)', () => {
     render(<InstallPrompt lang="en" />)
     expect(screen.queryByTestId('install-prompt')).not.toBeInTheDocument()
   })
+
+  // iPhone: Safari no dispara `beforeinstallprompt`, así que sin instrucciones el
+  // estudiante no ve nunca cómo instalar (reporte del operador, 2026-09-23).
+  describe('iOS/Safari', () => {
+    const original = navigator.userAgent
+
+    function setUserAgent(value: string) {
+      Object.defineProperty(navigator, 'userAgent', { value, configurable: true })
+    }
+
+    beforeEach(() => {
+      Object.defineProperty(document, 'ontouchend', { value: null, configurable: true })
+    })
+
+    it('gives the Share instructions on Safari for iPhone', async () => {
+      setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1')
+
+      render(<InstallPrompt lang="en" />)
+
+      const banner = await screen.findByTestId('install-prompt')
+      expect(banner).toHaveTextContent(/Add to Home Screen/i)
+      // No hay evento que disparar: no se ofrece un botón "Install" inútil.
+      expect(screen.queryByTestId('install-accept')).not.toBeInTheDocument()
+      expect(screen.getByTestId('install-dismiss')).toBeInTheDocument()
+    })
+
+    it('stays silent on Chrome for iOS (no Add to Home Screen there)', async () => {
+      setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) CriOS/120.0 Mobile/15E148 Safari/604.1')
+
+      const { container } = render(<InstallPrompt lang="en" />)
+
+      await act(async () => {})
+      expect(container).toBeEmptyDOMElement()
+    })
+
+    it('stays silent when the app already runs installed (standalone)', async () => {
+      setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1')
+      Object.defineProperty(navigator, 'standalone', { value: true, configurable: true })
+
+      const { container } = render(<InstallPrompt lang="en" />)
+
+      await act(async () => {})
+      expect(container).toBeEmptyDOMElement()
+
+      setUserAgent(original)
+      Object.defineProperty(navigator, 'standalone', { value: undefined, configurable: true })
+    })
+  })
 })

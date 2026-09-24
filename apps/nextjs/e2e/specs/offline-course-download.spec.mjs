@@ -24,7 +24,6 @@ import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 const COURSE_PATH = '/en/web3-and-ubi'
 const NEVER_VISITED_PATH = '/en/web3-and-ubi/guide4'
-const DOWNLOAD_BUTTON = '[data-testid="offline-course-download"] button'
 const READY_TEXT = 'You can read this course without a connection'
 
 function loadEnvCredentials() {
@@ -130,31 +129,24 @@ async function main() {
   await page.waitForFunction(() => !!navigator.serviceWorker?.controller, { timeout })
   ok('La página está controlada por el service worker')
 
-  // 2. La descarga del curso (§3.2). El botón aparece cuando el curso terminó de
-  // cargar (el registro se lee de IndexedDB y el curso viene del API), así que se
-  // espera; solo si no llega se considera que la función no está desplegada.
-  let button = null
-  try {
-    await page.waitForSelector(DOWNLOAD_BUTTON, { timeout: Math.max(timeout, 60000) })
-    button = await page.$(DOWNLOAD_BUTTON)
-  } catch {
-    button = null
-  }
-  if (!button) {
-    console.log('[SKIP] no hay botón de descarga del curso — R-#256 no está desplegada todavía')
-    await browser.close()
-    process.exit(0)
-  }
-
-  await button.click()
+  // 2. La sincronización del curso (§3.2), **automática**: no hay botón de descarga
+  // (decisión del operador, 2026-09-23); al abrir el curso con conexión se guarda
+  // solo. Se espera a que la página lo confirme; si no llega, la función no está
+  // desplegada todavía.
   try {
     await page.waitForFunction(
       (text) => (document.body?.innerText || '').includes(text),
       { timeout: Math.max(timeout, 180000) },
       READY_TEXT,
     )
-    ok('El curso quedó descargado (la página lo confirma)')
+    ok('El curso quedó guardado sin pulsar nada (la página lo confirma)')
   } catch {
+    const hasPanel = await page.$('[data-testid="offline-course-download"]')
+    if (!hasPanel) {
+      console.log('[SKIP] no está el panel de descarga del curso — R-#256 no está desplegada todavía')
+      await browser.close()
+      process.exit(0)
+    }
     fail(`La descarga no terminó a tiempo (no apareció "${READY_TEXT}")`)
   }
 

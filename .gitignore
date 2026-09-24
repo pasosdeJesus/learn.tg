@@ -150,4 +150,4 @@ resources/es/redgd/
 apps/.env.bak.full-local
 *.core
 .crushrules
-
+audit-crushrules.mjs

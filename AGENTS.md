@@ -56,11 +56,11 @@ Jesus is God incarnated, the Truth and the Logos.
 23. **[doc/csp.md]**: Content Security Policy — diseño acordado (https://github.com/pasosdeJesus/learn.tg/issues/247), estado (aún no se sirve la cabecera) y cómo cambiar la política.
 24. **[apps/nextjs/CONTRIBUTING.md]**: Documentation and testing policy of the app — what we document and where, coverage targets per layer, the `*.light.test.tsx` fast-test convention, and how to run each suite.
 25. Read the structure and key files of this project
-26. **[.crushrules]** (repository root): **local only and gitignored — never commit it.**
-    Private domain context and the only place where the neutral vocabulary of the
-    sensitive features is explained (`contenido_sensible` / category B, `tipo_region` /
-    region type 1-2). Consult it before renaming, adding or documenting those terms; see
-    §4b trap 9.
+26. **[.crushrules]** (repository root): **local and gitignored — never commit it.** The
+    private domain context and the only place where the neutral vocabulary of the
+    sensitive features is explained (`contenido_sensible`/category B,
+    `tipo_region`/region 1-2). Consult it before renaming, adding or documenting those
+    terms — see §4b trap 9.
 
 ### 4b. Bootstrap and Structural Traps
 
@@ -101,21 +101,24 @@ What follows is only what those files do not tell you.
    `ARCHITECTURE.md` and `CONTRIBUTING.md`/app READMEs — see the *Documentation Sync
    Policy* in [CONTRIBUTING.md]; the app-level docs and test policy is in
    `apps/nextjs/CONTRIBUTING.md`.
-9. **`.crushrules` — private domain vocabulary, never commit it**: the repository root
-   carries a **local, gitignored** `.crushrules` (`.gitignore` lists it) that holds the
-   project's private domain context. It is the **only** place where the vocabulary of
-   the sensitive course category (`contenido_sensible`, category B) and of the country
-   classification (`msip_pais.tipo_region`, region type 1/2, migration
-   `20260923152923`) is explained. Sources, requirements and developer documentation use
-   those neutral terms, and the meaning must not move into the repository. Read
-   `.crushrules` before renaming, adding or documenting any of those terms (and before
-   writing the private domain context into `REQ/`), and never `git add`, commit, copy or
-   quote the file. 
+9. **`.crushrules` is private and stays out of Git**: the repo root carries a **local,
+   gitignored** `.crushrules` with the project's private domain context, and it is the
+   **only** place where the neutral vocabulary of the sensitive features is explained
+   (`contenido_sensible`/category B, `msip_pais.tipo_region`/region 1-2, migration
+   `20260923152923`). Sources, requirements and developer documentation use those terms
+   and never explain them. Read `.crushrules` before renaming, adding or documenting any
+   of them (or writing that context into `REQ/`); never `git add`, commit, copy or quote
+   the file. A private audit script reads that file and the project vocabulary
+   (`node /var/www/adJ-ia/tmp/audit-crushrules.mjs`, referenced from `.crushrules`): it
+   fails on any writing system the project does not use (the way a model "translating"
+   something shows up), on the sensitive vocabulary outside its allowlist and on
+   `.crushrules` becoming tracked. Run it before reporting work as done.
 
 **Definition of done:** `make type` plus the affected `make test*` targets green; the
 route audit (`node bin/audit-api-auth.mjs`, `doc/api-security.md` §2) at `0 failed` if
-routes changed; docs updated (trap 8); and the requirement file updated (the operator
-syncs it with `bin/m req:sync-to-repo <n>`).
+routes changed; the private audit of trap 9 at `0 findings` when files or requirements
+changed; docs updated (trap 8); and the requirement file updated (the operator syncs it
+with `bin/m req:sync-to-repo <n>`).
 
 ### 5. Confirm Your understanding of the documentation and the project
 

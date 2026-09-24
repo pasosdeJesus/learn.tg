@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { downloadCourse, revalidateCourse } from '../offline-course-download'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { downloadCourse, revalidateCourse, PAGE_CACHE_NAME } from '../offline-course-download'
 import { deleteDownloadedCourses, getDownloadedCourse } from '../offline-course-db'
 import { getGuide } from '../offline-guide-db'
 
@@ -143,5 +145,38 @@ describe('revalidateCourse (R-#256 §3.6)', () => {
     expect(result.updated).toBe(false)
     expect(result.course).toBeNull()
     expect(await getDownloadedCourse('en/gdcluster')).not.toBeNull()
+  })
+})
+
+// El documento de la guía y el de su crucigrama tienen que quedar en la misma caché
+// que lee la regla de `next.config.ts`: sin eso, abrir la guía descargada sin conexión
+// cae en `/offline`. El operador lo reportó con un iPhone el 2026-09-23 (ahí el
+// service worker todavía no controlaba la página, así que el `fetch` solo no bastaba).
+describe('warmPageCache (R-#256)', () => {
+  const put = vi.fn(async (_request: Request, _response?: Response) => undefined)
+  const open = vi.fn(async () => ({ put }))
+
+  beforeEach(async () => {
+    put.mockClear()
+    open.mockClear()
+    Object.defineProperty(window, 'caches', { value: { open }, configurable: true })
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<html>guía</html>', { status: 200 })))
+    await deleteDownloadedCourses({})
+  })
+
+  it('stores the guide page and its crossword page in the pages cache', async () => {
+    await downloadCourse(DESCRIPTOR, { get: makeGet() as any, wallet: WALLET })
+
+    expect(open).toHaveBeenCalledWith(PAGE_CACHE_NAME)
+    const urls = put.mock.calls.map((call) => String((call[0] as Request).url))
+    expect(urls.some((url) => url.endsWith('/en/gdcluster/guide1'))).toBe(true)
+    expect(urls.some((url) => url.endsWith('/en/gdcluster/guide1/test'))).toBe(true)
+  })
+
+  it('keeps the cache name in sync with next.config.ts', () => {
+    const config = readFileSync(join(__dirname, '..', '..', 'next.config.ts'), 'utf8')
+    const pagesRule = /\(en\|es\)[\s\S]*?cacheName:\s*'([^']+)'/.exec(config)
+
+    expect(pagesRule?.[1]).toBe(PAGE_CACHE_NAME)
   })
 })

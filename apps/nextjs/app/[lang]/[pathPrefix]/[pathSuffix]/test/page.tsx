@@ -114,6 +114,12 @@ export default function Page({
 
   useEffect(() => {
     const loadCrossword = async () => {
+      // Sin conexión no se puede (ni hace falta) comprobar la billetera contra el
+      // servidor: el crucigrama sale del dispositivo y la respuesta se encola
+      // (R-#242). El operador lo pidió el 2026-09-23 tras probar en Android ("en
+      // modo sin conexión los requisitos de billetera podrían bajarse, al menos con
+      // la billetera in-app").
+      const offline = typeof navigator !== 'undefined' && !navigator.onLine
       // Partial login: do not fetch with a mismatched identity.
       if (mismatch) {
         setIsLoading(false)
@@ -121,7 +127,7 @@ export default function Page({
       }
       // Wait until the identity is resolved (cold session #5719).
       if (!ready) return
-      if (!course || !guideNumber || !address) {
+      if (!course || !guideNumber || (!address && !offline)) {
         setIsLoading(false);
         return;
       }
@@ -131,6 +137,35 @@ export default function Page({
       const savedStateJSON = localStorage.getItem(storageKey)
 
       const fetchAndSetNewCrossword = async () => {
+        /** El crucigrama descargado de esta guía (sin respuestas), si está. */
+        const useStoredCrossword = async (): Promise<boolean> => {
+          // R-#256 §3.3: sin conexión se usa el crucigrama **descargado**, que es el
+          // que se guardó sin respuestas; la respuesta se encola (R-#242).
+          const stored = await getStoredPuzzle(courseKey(lang, pathPrefix), pathSuffix).catch(() => null)
+          if (!stored?.grid || !stored?.placements) return false
+          const offlineState = {
+            grid: stored.grid,
+            placements: stored.placements,
+            courseId: course.id,
+            guideId: guideNumber,
+          }
+          setGrid(offlineState.grid)
+          setPlacements(offlineState.placements)
+          setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
+          localStorage.setItem(storageKey, JSON.stringify(offlineState))
+          inputRefs.current = stored.grid.map(() => [])
+          return true
+        }
+
+        // Sin conexión no hay nada que pedir: el crucigrama está en el dispositivo.
+        if (offline) {
+          console.log('Offline: using the downloaded puzzle')
+          const ok = await useStoredCrossword()
+          if (!ok) setFlashError(uiMsg[locale].offlineNoPuzzle)
+          setIsLoading(false)
+          return
+        }
+
         console.log('Fetching new crossword')
         try {
           // Standard mechanism: same-origin, identity hint only, no token (R-#233).
@@ -164,27 +199,11 @@ export default function Page({
           inputRefs.current = response.data.grid.map(() => [])
         } catch (err: any) {
           console.error(err)
-          // R-#256 §3.3: sin conexión (o si el servidor no responde) se usa el
-          // crucigrama **descargado** de esta guía, que es el que se guardó sin
-          // respuestas. Antes la página solo mostraba el error y el puzzle
-          // descargado no se podía abrir (el operador lo reportó el 2026-09-23).
-          const stored = await getStoredPuzzle(courseKey(lang, pathPrefix), pathSuffix).catch(() => null)
-          if (stored?.grid && stored?.placements) {
-            console.log('Using the downloaded puzzle (offline)')
-            const offlineState = {
-              grid: stored.grid,
-              placements: stored.placements,
-              courseId: course.id,
-              guideId: guideNumber,
-            }
-            setGrid(offlineState.grid)
-            setPlacements(offlineState.placements)
-            setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
-            localStorage.setItem(storageKey, JSON.stringify(offlineState))
-            inputRefs.current = stored.grid.map(() => [])
-          } else {
-            setFlashError(err.message)
-          }
+          // Si el servidor no responde (o se cae la conexión a mitad), se usa el
+          // crucigrama descargado. Antes la página solo mostraba el error y el
+          // puzzle descargado no se podía abrir (reporte del operador, 2026-09-23).
+          const ok = await useStoredCrossword()
+          if (!ok) setFlashError(err.message)
         } finally {
           setIsLoading(false)
         }
@@ -431,6 +450,7 @@ export default function Page({
       offlineQueuedLowScore: 'Sin conexión: tu respuesta quedó guardada y se enviará sola cuando vuelvas a tener conexión. Ojo: tu perfil tiene {{0}} puntos y necesitas {{1}} o más para recibir beca; completa tu perfil y podrás reclamarla.',
       offlineRejected: 'No se pudo validar tu respuesta guardada: {{0}}',
       offlinePending: 'respuesta(s) guardada(s) sin conexión, pendiente(s) de enviar.',
+      offlineNoPuzzle: 'Sin conexión no hay un crucigrama guardado para esta guía. Ábrelo una vez con conexión (o descarga el curso) y vuelve a intentarlo.',
     },
     en: {
       across: 'Across',
@@ -446,6 +466,7 @@ export default function Page({
       offlineQueuedLowScore: 'You are offline: your answer was saved and will be sent automatically when the connection returns. Note: your profile has {{0}} points and you need {{1}} or more to receive a scholarship; complete your profile and you will be able to claim it.',
       offlineRejected: 'Your saved answer could not be validated: {{0}}',
       offlinePending: 'answer(s) saved offline, waiting to be sent.',
+      offlineNoPuzzle: 'You are offline and there is no saved crossword for this guide. Open it once with a connection (or download the course) and try again.',
     },
   }
 

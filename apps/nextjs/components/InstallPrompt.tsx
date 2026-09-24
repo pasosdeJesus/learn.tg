@@ -11,6 +11,25 @@ interface BeforeInstallPromptEvent extends Event {
 const DISMISS_KEY = 'learn.tg.installPromptDismissedAt'
 const DISMISS_DAYS = 7
 
+/**
+ * iOS/Safari nunca dispara `beforeinstallprompt`: para que el estudiante de iPhone
+ * vea que la app se puede instalar, se le dan las instrucciones del menú Compartir
+ * (reporte del operador, 2026-09-23: "en un iPhone con Safari no veo botón para
+ * instalar"). Se excluyen los navegadores de iOS que no son Safari (Chrome, Firefox,
+ * Edge, Opera) porque no ofrecen "Añadir a pantalla de inicio".
+ */
+export function isIosSafari(): boolean {
+  if (typeof navigator === 'undefined' || typeof window === 'undefined') return false
+  const ua = navigator.userAgent
+  // iPadOS 13+ se presenta como Macintosh, pero con pantalla táctil.
+  const ios = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document)
+  if (!ios) return false
+  if (/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)) return false
+  const standalone = (navigator as any).standalone === true ||
+    (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches)
+  return !standalone
+}
+
 interface InstallPromptProps {
   lang?: string
 }
@@ -22,6 +41,7 @@ interface InstallPromptProps {
  */
 export function InstallPrompt({ lang = 'en' }: InstallPromptProps) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null)
+  const [iosHint, setIosHint] = useState(false)
   const [dismissed, setDismissed] = useState(false)
 
   const t = useMemo(() => createComponentT(lang, {
@@ -29,11 +49,13 @@ export function InstallPrompt({ lang = 'en' }: InstallPromptProps) {
       text: 'Install Learn.tg on your home screen',
       install: 'Install',
       later: 'Not now',
+      iosText: 'To install Learn.tg on your iPhone: tap Share and then "Add to Home Screen".',
     },
     es: {
       text: 'Instala Learn.tg en tu pantalla de inicio',
       install: 'Instalar',
       later: 'Ahora no',
+      iosText: 'Para instalar Learn.tg en tu iPhone: toca Compartir y luego "AÃ±adir a pantalla de inicio".',
     },
   }), [lang])
 
@@ -59,6 +81,7 @@ export function InstallPrompt({ lang = 'en' }: InstallPromptProps) {
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall)
     window.addEventListener('appinstalled', onInstalled)
+    if (isIosSafari()) setIosHint(true)
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstall)
       window.removeEventListener('appinstalled', onInstalled)
@@ -81,7 +104,9 @@ export function InstallPrompt({ lang = 'en' }: InstallPromptProps) {
     setDismissed(true)
   }, [])
 
-  if (!deferred || dismissed) return null
+  if (dismissed) return null
+  // iOS: instrucciones (no hay evento que disparar); el resto: el evento del navegador.
+  if (!deferred && !iosHint) return null
 
   return (
     <div
@@ -89,15 +114,17 @@ export function InstallPrompt({ lang = 'en' }: InstallPromptProps) {
       role="status"
       className="bg-emerald-50 text-emerald-900 text-sm px-3 py-2 flex flex-wrap items-center justify-center gap-3"
     >
-      <span>{t('text')}</span>
-      <button
-        type="button"
-        data-testid="install-accept"
-        onClick={() => { void install() }}
-        className="px-3 py-1 rounded bg-emerald-700 text-white"
-      >
-        {t('install')}
-      </button>
+      <span>{iosHint && !deferred ? t('iosText') : t('text')}</span>
+      {!iosHint && (
+        <button
+          type="button"
+          data-testid="install-accept"
+          onClick={() => { void install() }}
+          className="px-3 py-1 rounded bg-emerald-700 text-white"
+        >
+          {t('install')}
+        </button>
+      )}
       <button
         type="button"
         data-testid="install-dismiss"

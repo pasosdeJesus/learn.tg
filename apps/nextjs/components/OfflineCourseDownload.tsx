@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import {
@@ -11,11 +12,13 @@ import {
   courseKey,
   type DownloadedCourse,
 } from '@/lib/offline-course-db'
-import { downloadCourse, revalidateCourse } from '@/lib/offline-course-download'
+import { revalidateCourse } from '@/lib/offline-course-download'
 
 /**
- * Botón "descargar el curso para leerlo sin conexión"
- * (https://github.com/pasosdeJesus/learn.tg/issues/256 §3.2).
+ * Guarda el curso para leerlo sin conexión, **sin botón**: al abrir la página con
+ * conexión se sincroniza sola y el efecto se cuenta con un aviso
+ * (https://github.com/pasosdeJesus/learn.tg/issues/256 §3.2; pedido del operador,
+ * 2026-09-23: iPhone Safari, el botón de descargar no bastaba).
  *
  * - Solo se ofrece cuando la billetera puede leer el curso (gratuito, o comprado
  *   por esta billetera).
@@ -58,7 +61,11 @@ export function OfflineCourseDownload({
   canRead,
 }: OfflineCourseDownloadProps) {
   const { authedGet, ready, wallet } = useAuthedApi()
+  const { toast } = useToast()
   const [record, setRecord] = useState<DownloadedCourse | null>(null)
+  // Hasta leer el store no se sabe si hay copia: sin esto la sincronización
+  // dispararía con `record === null` y volvería a bajar una copia al día.
+  const [recordLoaded, setRecordLoaded] = useState(false)
   const [sensitiveVisible, setSensitiveVisible] = useState(false)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(0)
@@ -68,25 +75,29 @@ export function OfflineCourseDownload({
 
   const t = useMemo(() => createComponentT(lang, {
     en: {
-      download: 'Download for offline',
-      downloading: 'Downloading',
       remove: 'Remove download',
       removeConfirm: 'Remove the offline copy of this course? It will be downloaded again the next time you ask.',
       courseFiles: 'Saved on this device',
       offlineReady: 'You can read this course without a connection',
-      updated: 'This course was updated: the saved copy was refreshed',
+      preparing: 'Preparing this course for offline reading',
+      toastTitle: 'Preparing this course for offline reading',
+      toastProgress: 'Saving guides and crosswords {{0}}/{{1}}',
+      toastSaved: 'Course saved for offline reading',
+      toastUpdated: 'The course changed: the saved copy was refreshed',
       failed: 'The course could not be downloaded. Check your connection and try again.',
       lowSpace: 'Your device is running out of space; the download may fail.',
       canceled: 'Download removed',
     },
     es: {
-      download: 'Descargar para leer sin conexión',
-      downloading: 'Descargando',
-      remove: 'Eliminar la descarga',
+            remove: 'Eliminar la descarga',
       removeConfirm: '¿Eliminar la copia sin conexión de este curso? Se volverá a descargar la próxima vez que lo pidas.',
       courseFiles: 'Guardado en este dispositivo',
       offlineReady: 'Puedes leer este curso sin conexión',
-      updated: 'Este curso cambió: la copia guardada se actualizó',
+      preparing: 'Preparando este curso para leerlo sin conexión',
+      toastTitle: 'Preparando este curso para leerlo sin conexión',
+      toastProgress: 'Guardando guías y crucigramas {{0}}/{{1}}',
+      toastSaved: 'Curso guardado para leerlo sin conexión',
+      toastUpdated: 'Este curso cambió: la copia guardada se actualizó',
       failed: 'No se pudo descargar el curso. Revisa tu conexión e inténtalo de nuevo.',
       lowSpace: 'A tu dispositivo le queda poco espacio; la descarga podría fallar.',
       canceled: 'Descarga eliminada',
@@ -107,6 +118,7 @@ export function OfflineCourseDownload({
 
   const refreshRecord = useCallback(async () => {
     setRecord(await getDownloadedCourse(key))
+    setRecordLoaded(true)
   }, [key])
 
   // El interruptor de privacidad solo existe para quien tiene sesión; para un
@@ -151,27 +163,53 @@ export function OfflineCourseDownload({
       .catch(() => { /* el navegador no lo soporta */ })
   }, [record])
 
-  const download = useCallback(async () => {
+  const announce = useRef<ReturnType<typeof toast> | null>(null)
+  const attemptedSync = useRef(false)
+
+  /**
+   * Trae el curso (o refresca la copia caducada) contando el avance en un aviso.
+   * Es automático: el estudiante no pide la descarga (pedido del operador, 2026-09-23).
+   */
+  const runSync = useCallback(async () => {
     setBusy(true)
     setMessage('')
     setDone(0)
-    setTotal(guides.length * 2)
+    const totalSteps = guides.length * 2
+    setTotal(totalSteps)
+    announce.current = toast({
+      title: t('toastTitle'),
+      description: t('toastProgress', '0', String(totalSteps)),
+    })
     try {
-      await downloadCourse(descriptor, {
+      const previous = await getDownloadedCourse(key)
+      const result = await revalidateCourse(descriptor, {
         get: authedGet,
         wallet,
         onProgress: (progress) => {
           setDone(progress.done)
           setTotal(progress.total)
+          announce.current?.update({ id: announce.current.id, description: t('toastProgress', String(progress.done), String(progress.total)) })
         },
       })
+      if (result.course) {
+        announce.current?.update({
+          id: announce.current.id,
+          title: previous && result.updated ? t('toastUpdated') : t('toastSaved'),
+          description: '',
+        })
+      } else {
+        setMessage(t('failed'))
+        announce.current?.update({ id: announce.current.id, title: t('failed'), variant: 'destructive' })
+      }
       await refreshRecord()
     } catch {
       setMessage(t('failed'))
+      announce.current?.update({ id: announce.current.id, title: t('failed'), variant: 'destructive' })
     } finally {
+      announce.current = null
       setBusy(false)
     }
-  }, [descriptor, authedGet, wallet, guides.length, refreshRecord, t])
+  }, [descriptor, authedGet, wallet, guides.length, key, refreshRecord, t, toast])
 
   const remove = useCallback(async () => {
     await deleteDownloadedCourse(key)
@@ -179,21 +217,20 @@ export function OfflineCourseDownload({
     setMessage(t('canceled'))
   }, [key, refreshRecord, t])
 
-  // Revalidación (R-#256 §3.6): con conexión y una copia de más de una semana, se
-  // refresca en segundo plano y se avisa si el contenido cambió.
+  // Sincronización automática (R-#256 §3.6): con conexión, si no hay copia o la
+  // copia caducó, se guarda sola y se avisa si el contenido cambió. Un solo intento
+  // por montaje: si el servidor falla, no se reintenta en bucle.
   useEffect(() => {
-    if (!ready || !record || busy) return
+    if (!ready || busy || !recordLoaded || attemptedSync.current) return
     if (typeof navigator !== 'undefined' && !navigator.onLine) return
-    if (!isStale(record)) return
-    let cancelled = false
-    ;(async () => {
-      const result = await revalidateCourse(descriptor, { get: authedGet, wallet })
-      if (cancelled || !result.updated) return
-      setMessage(t('updated'))
-      await refreshRecord()
-    })()
-    return () => { cancelled = true }
-  }, [ready, record, busy, descriptor, authedGet, wallet, refreshRecord, t])
+    // Una copia de otra billetera (o de pago sin derecho) no cuenta como propia:
+    // se vuelve a guardar para esta.
+    if (record && belongsToWallet(record, wallet) && !isStale(record)) return
+    if (!canRead || !prefix || !courseId || guides.length === 0) return
+    if (contenidoSensible && !sensitiveVisible) return
+    attemptedSync.current = true
+    void runSync()
+  }, [ready, busy, recordLoaded, record, canRead, prefix, courseId, guides.length, contenidoSensible, sensitiveVisible, runSync])
 
   if (!canRead) return null
   // Sin curso resuelto (ni prefijo) no hay nada que descargar.
@@ -205,14 +242,9 @@ export function OfflineCourseDownload({
   return (
     <div className="px-6 py-4 rounded-xl bg-white text-gray-800 shadow" data-testid="offline-course-download">
       {!visible && (
-        <button
-          type="button"
-          onClick={download}
-          disabled={busy || guides.length === 0}
-          className="w-full rounded bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-        >
-          {busy ? `${t('downloading')} (${done}/${total})` : t('download')}
-        </button>
+        <p className="text-sm text-gray-700">
+          {busy ? `${t('toastTitle')} ${done}/${total}` : t('preparing')}
+        </p>
       )}
 
       {visible && (

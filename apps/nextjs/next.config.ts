@@ -64,6 +64,21 @@ const pwaConfig: PWAConfig = {
       },
     },
     {
+      // Imágenes optimizadas por `next/image` (`/_next/image?url=…`): sin esta
+      // regla no las cachea ninguna otra (el patrón de `/_next/static/*` exige
+      // extensión al final) y la lista de cursos quedaba sin imágenes sin conexión
+      // (reporte del operador, iPhone, 2026-09-23).
+      urlPattern: /^https?:\/\/[^\/]+\/_next\/image.*$/,
+      handler: 'CacheFirst' as const,
+      options: {
+        cacheName: 'learntg-images',
+        expiration: {
+          maxEntries: 200,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 días
+        },
+      },
+    },
+    {
       urlPattern: /^https?:\/\/[^\/]+\/(img|icons)\/.*\.(png|jpg|jpeg|svg|webp|gif)$/,
       handler: 'CacheFirst' as const,
       options: {

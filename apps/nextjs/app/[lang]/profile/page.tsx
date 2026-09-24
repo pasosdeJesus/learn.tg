@@ -707,6 +707,18 @@ export default function ProfileForm({ params }: PageProps) {
     side === 'front' ? 'id_photo_front' : side === 'back' ? 'id_photo_back' : 'registration_photo'
 
   const handlePhotoUpload = async (side: 'front' | 'back' | 'registration', file: File) => {
+    // El servidor acepta hasta 5 MB (/api/user/id-photo). Avisar aquí evita el viaje
+    // y explica el caso típico del iPhone: una foto de la fototeca pesa más que la
+    // que toma la cámara (reporte del operador, 2026-09-23).
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: lang === 'es'
+          ? 'La foto pesa más de 5 MB. Prueba con una más pequeña o toma la foto con la cámara.'
+          : 'The photo is larger than 5 MB. Try a smaller one or take it with the camera.',
+        variant: 'destructive',
+      })
+      return
+    }
     setUploadingPhoto(side)
     logger.info('handlePhotoUpload start', 'Profile')
     logger.info('side=' + side + ' fileSize=' + file.size + ' fileName=' + file.name, 'Profile')

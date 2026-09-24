@@ -27,7 +27,10 @@ export default function RootLayoutClient({
   const isDiligentRecords = pathname?.includes('/diligent-records') || false;
   
   return (
-    <ErrorBoundary>
+    // `key={pathname}`: un error de una ruta no debe dejar la app atrapada en la página
+    // de error al navegar a otra (reporte del operador, 2026-09-23: sin conexión, al
+    // abrir el crucigrama solo decía "Connection Error" y no se podía salir).
+    <ErrorBoundary key={pathname}>
     <AppProvider>
       <ReferralCodeCapture />
       <ServiceWorkerRegistrar />

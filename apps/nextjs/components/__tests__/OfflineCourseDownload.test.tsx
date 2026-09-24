@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
-// Botón de descarga para leer un curso sin conexión
+// Sincronización automática del curso para leerlo sin conexión
 // (https://github.com/pasosdeJesus/learn.tg/issues/256 §3.2/§3.6b).
+//
+// Decisión del operador (2026-09-23, tras probar en un iPhone): no hay botón de
+// descarga; al abrir el curso con conexión se guarda solo y el efecto se cuenta
+// con un aviso.
 const hooks = vi.hoisted(() => ({
   address: '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c' as string | undefined,
   ready: true,
@@ -12,6 +16,8 @@ const hooks = vi.hoisted(() => ({
   revalidateCourse: vi.fn(),
   record: null as any,
   deleteDownloadedCourse: vi.fn(),
+  toast: vi.fn(),
+  toastUpdate: vi.fn(),
 }))
 
 vi.mock('@/lib/hooks/useAuthedApi', () => ({
@@ -27,6 +33,10 @@ vi.mock('@/lib/hooks/useTranslation', () => ({
     const dict = translations?.en || {}
     return (key: string) => dict[key] || key
   },
+}))
+
+vi.mock('@pasosdejesus/m/shadcn-components/ui/use-toast', () => ({
+  useToast: () => ({ toast: hooks.toast }),
 }))
 
 vi.mock('@/lib/offline-course-db', async () => {
@@ -80,39 +90,49 @@ describe('OfflineCourseDownload', () => {
     hooks.authedGet.mockResolvedValue({ data: { publicCourses: true, publicSensitiveCourses: false } })
     hooks.downloadCourse.mockResolvedValue(SAVED)
     hooks.revalidateCourse.mockResolvedValue({ updated: false, course: null })
+    hooks.toast.mockReturnValue({ id: 'toast-1', dismiss: vi.fn(), update: hooks.toastUpdate })
   })
 
-  it('offers the download for a course the wallet can read', async () => {
+  it('syncs the course automatically for a course the wallet can read', async () => {
     render(<OfflineCourseDownload {...BASE_PROPS} />)
 
-    expect(await screen.findByText('Download for offline')).toBeInTheDocument()
+    await waitFor(() => expect(hooks.revalidateCourse).toHaveBeenCalledTimes(1))
+    expect(hooks.revalidateCourse.mock.calls[0][0]).toMatchObject({
+      courseId: 3,
+      prefix: 'web3-and-ubi',
+      guides: ['guide1', 'guide2'],
+    })
+    expect(hooks.toast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Preparing this course for offline reading' }),
+    )
   })
 
   it('renders nothing when the course is not readable', () => {
     const { container } = render(<OfflineCourseDownload {...BASE_PROPS} canRead={false} />)
 
     expect(container).toBeEmptyDOMElement()
-    expect(hooks.downloadCourse).not.toHaveBeenCalled()
+    expect(hooks.revalidateCourse).not.toHaveBeenCalled()
   })
 
-  it('offers nothing for a sensitive course while the switch is off', async () => {
+  it('syncs nothing for a sensitive course while the switch is off', async () => {
     const { container } = render(
       <OfflineCourseDownload {...BASE_PROPS} contenidoSensible />,
     )
 
     await waitFor(() => expect(hooks.authedGet).toHaveBeenCalledWith('/api/settings'))
     expect(container).toBeEmptyDOMElement()
+    expect(hooks.revalidateCourse).not.toHaveBeenCalled()
   })
 
-  it('offers the download for a sensitive course once the switch is on', async () => {
+  it('syncs a sensitive course once the switch is on', async () => {
     hooks.authedGet.mockResolvedValue({ data: { publicCourses: true, publicSensitiveCourses: true } })
 
     render(<OfflineCourseDownload {...BASE_PROPS} contenidoSensible />)
 
-    expect(await screen.findByText('Download for offline')).toBeInTheDocument()
+    await waitFor(() => expect(hooks.revalidateCourse).toHaveBeenCalledTimes(1))
   })
 
-  it('does not offer a sensitive course download to an anonymous visitor', async () => {
+  it('syncs nothing for a sensitive course for an anonymous visitor', async () => {
     hooks.address = undefined
     const { container } = render(
       <OfflineCourseDownload {...BASE_PROPS} contenidoSensible />,
@@ -120,26 +140,21 @@ describe('OfflineCourseDownload', () => {
 
     await waitFor(() => expect(hooks.authedGet).not.toHaveBeenCalled())
     expect(container).toBeEmptyDOMElement()
+    expect(hooks.revalidateCourse).not.toHaveBeenCalled()
   })
 
-  it('downloads the course and then shows the space it takes', async () => {
-    // La descarga deja el registro en el store: el componente lo relee al terminar.
-    hooks.downloadCourse.mockImplementation(async () => {
+  it('keeps the copy, reports it and then shows the space it takes', async () => {
+    // La sincronización deja el registro en el store: el componente lo relee al terminar.
+    hooks.revalidateCourse.mockImplementation(async () => {
       hooks.record = SAVED
-      return SAVED
+      return { updated: false, course: SAVED }
     })
 
     render(<OfflineCourseDownload {...BASE_PROPS} />)
 
-    fireEvent.click(await screen.findByText('Download for offline'))
-
-    await waitFor(() => expect(hooks.downloadCourse).toHaveBeenCalledTimes(1))
-    expect(hooks.downloadCourse.mock.calls[0][0]).toMatchObject({
-      courseId: 3,
-      prefix: 'web3-and-ubi',
-      guides: ['guide1', 'guide2'],
-    })
-
+    await waitFor(() => expect(hooks.toastUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Course saved for offline reading' }),
+    ))
     await waitFor(() => expect(screen.getByText('You can read this course without a connection')).toBeInTheDocument())
     expect(screen.getByText('4 KB')).toBeInTheDocument()
     expect(screen.getByText('Remove download')).toBeInTheDocument()
@@ -150,20 +165,25 @@ describe('OfflineCourseDownload', () => {
 
     render(<OfflineCourseDownload {...BASE_PROPS} isPremium />)
 
-    await waitFor(() => expect(screen.getByText('Download for offline')).toBeInTheDocument())
+    // Se sincroniza (la copia no es de esta billetera) pero no se ofrece eliminarla.
+    await waitFor(() => expect(hooks.revalidateCourse).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByTestId('offline-course-download')).toBeInTheDocument())
+    expect(screen.queryByText('Remove download')).not.toBeInTheDocument()
   })
 
-  it('revalidates a copy older than a week and tells the user when it changed', async () => {
+  it('refreshes a copy older than a week and tells the user when it changed', async () => {
     hooks.record = { ...SAVED, downloadedAt: Date.now() - 8 * 24 * 60 * 60 * 1000 }
     hooks.revalidateCourse.mockResolvedValue({ updated: true, course: SAVED })
 
     render(<OfflineCourseDownload {...BASE_PROPS} />)
 
     await waitFor(() => expect(hooks.revalidateCourse).toHaveBeenCalled())
-    expect(await screen.findByText('This course was updated: the saved copy was refreshed')).toBeInTheDocument()
+    await waitFor(() => expect(hooks.toastUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'The course changed: the saved copy was refreshed' }),
+    ))
   })
 
-  it('does not revalidate a fresh copy', async () => {
+  it('does not sync a fresh copy', async () => {
     hooks.record = SAVED
 
     render(<OfflineCourseDownload {...BASE_PROPS} />)

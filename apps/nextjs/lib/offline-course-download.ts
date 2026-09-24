@@ -65,14 +65,30 @@ interface PuzzleResponse {
  * serviría de poco. La regla está indexada por URL, así que un `fetch` de la
  * página la deja en la caché igual que una navegación.
  *
- * Es best-effort: sin service worker (o si falla) la descarga sigue siendo útil
- * para las guías que el estudiante ya abrió con conexión.
+ * Es best-effort: sin `caches` (o si falla) la descarga sigue siendo útil para las
+ * guías que el estudiante ya abrió con conexión.
  */
+/**
+ * Caché de documentos de `next.config.ts` (`runtimeCaching`): si allí cambia el
+ * nombre, cambia aquí (lo verifica `offline-course-download.test.ts`).
+ */
+export const PAGE_CACHE_NAME = 'learntg-pages'
+
 async function warmPageCache(url: string): Promise<void> {
   if (typeof window === 'undefined') return
-  if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return
   try {
-    await fetch(url, { credentials: 'same-origin', redirect: 'follow' })
+    const response = await fetch(url, { credentials: 'same-origin', redirect: 'follow' })
+    if (!response.ok) return
+    // Se guarda también a mano, sin depender de que el service worker controle la
+    // página: en la primera visita (y en iOS/Safari, reporte del operador del
+    // 2026-09-23) `navigator.serviceWorker.controller` es `null`, el `fetch` no
+    // pasaba por el worker y la guía descargada caía en `/offline`. La regla de
+    // `next.config.ts` lee esta misma caché por URL, así que la entrada manual
+    // sirve igual que una navegación (y si el worker ya controla, no estorba).
+    if ('caches' in window) {
+      const cache = await caches.open(PAGE_CACHE_NAME)
+      await cache.put(new Request(new URL(url, window.location.href).toString()), response)
+    }
   } catch {
     // sin caché cálida; la guía se leerá solo si ya se visitó
   }
@@ -288,31 +304,60 @@ export async function listAccessibleCourses(
  */
 export async function downloadAllAccessible(
   get: DownloadOptions['get'],
-  options: { lang: string; wallet: string | null; authenticated: boolean; onProgress?: (progress: { done: number; total: number; label: string }) => void },
+  options: {
+    lang: string
+    wallet: string | null
+    authenticated: boolean
+    onProgress?: (progress: { done: number; total: number; label: string }) => void
+    /**
+     * Se llama antes de descargar: cuántos cursos hay, cuántos **faltan** (los que no
+     * están al día) y cuántos pasos (guías y crucigramas) hay que traer. El aviso de
+     * progreso solo aparece si `pending > 0`, para no interrumpir a quien ya lo tiene
+     * todo guardado.
+     */
+    onStart?: (info: { total: number; pending: number; steps: number }) => void
+  },
 ): Promise<SyncResult> {
-  const { lang, wallet, authenticated, onProgress } = options
+  const { lang, wallet, authenticated, onProgress, onStart } = options
   const result: SyncResult = { downloaded: [], skipped: [], failed: [] }
 
   const { courses } = await listAccessibleCourses(get, { lang, authenticated })
-  let done = 0
+
+  const pending: typeof courses = []
   for (const descriptor of courses) {
     const key = courseKey(descriptor.lang, descriptor.prefix)
-    onProgress?.({ done, total: courses.length, label: descriptor.prefix })
     const previous = await getDownloadedCourse(key)
     const sameGuides = previous?.guides.map((guide) => guide.suffix).join(',') === descriptor.guides.join(',')
-    if (previous && sameGuides && !isStale(previous)) {
+    if (previous && sameGuides && !isStale(previous)) continue
+    pending.push(descriptor)
+  }
+  // El contador que ve el estudiante es de **pasos** (una guía y su crucigrama),
+  // no de cursos: es lo que pidió el operador ("1/60 … 60/60", 2026-09-23).
+  const steps = pending.reduce((sum, descriptor) => sum + descriptor.guides.length * 2, 0)
+  onStart?.({ total: courses.length, pending: pending.length, steps })
+
+  let stepsDone = 0
+  for (const descriptor of courses) {
+    const key = courseKey(descriptor.lang, descriptor.prefix)
+    if (!pending.includes(descriptor)) {
       result.skipped.push({ key, reason: 'already-current' })
-      done++
       continue
     }
+    const base = stepsDone
     try {
-      await downloadCourse(descriptor, { get, wallet })
+      await downloadCourse(descriptor, {
+        get,
+        wallet,
+        onProgress: (progress) => {
+          onProgress?.({ done: base + progress.done, total: steps, label: descriptor.prefix })
+        },
+      })
       result.downloaded.push(key)
     } catch (error) {
       result.failed.push({ key, error: error instanceof Error ? error.message : String(error) })
     }
-    done++
-    onProgress?.({ done, total: courses.length, label: descriptor.prefix })
+    stepsDone += descriptor.guides.length * 2
+    onProgress?.({ done: stepsDone, total: steps, label: descriptor.prefix })
   }
   return result
 }

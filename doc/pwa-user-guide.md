@@ -53,10 +53,12 @@ from the browser menu.
 
 **Your courses are saved for you.** While you are online the app downloads **all the
 courses you can read** — the free ones and the ones you have paid for, with their
-crosswords — without having to open each page first. On the course list you can see how
-many courses are saved on this device and press **Download all my courses** to do it
-again (for example after installing the app on a new phone); the course page also has
-**Download for offline** for one course, with the space it takes and a way to delete it.
+crosswords — without having to open each page first, and without pressing anything: when
+there is something to save or update, a notice tells you how many guides it is checking
+(“Checking what is missing or out of date 3/12”), and the course list shows how many
+courses are already saved on this device. If you want to check again, tap **Check now**;
+on the course page the same notice appears for that course, with the space it takes and a
+way to delete the copy.
 The copy is kept for **7 days**; when you are online again the app checks whether the
 content changed and updates it. A downloaded course appears on the offline page with
 all its guides, and you can read any of them and solve their crosswords without a

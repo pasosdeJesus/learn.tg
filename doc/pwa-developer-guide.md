@@ -69,6 +69,7 @@ in a `next/script` with `strategy="afterInteractive"`.
 | `/[lang]/diligent-records*` | NetworkFirst | `diligent-cache` | 30 days |
 | `/_next/static/*` | CacheFirst | `diligent-static` | 7 days |
 | `/img/*`, `/icons/*` (png/jpg/jpeg/svg/webp/gif) | CacheFirst | `learntg-images` | 30 days |
+| `/_next/image?url=…` (lo que sirve `next/image`) | CacheFirst | `learntg-images` | 30 days |
 | `/en/*` and `/es/*` (pages, con `ignoreVary`) | NetworkFirst (5 s) | `learntg-pages` | **7 días** (200 entradas) |
 | `/api/*` GET | NetworkFirst (5 s) | `learntg-api-get` | 1 h (200 entradas) |
 | `/api/*` POST/PATCH/DELETE | NetworkOnly | - | never cached |
@@ -80,9 +81,13 @@ in any cache. Workbox only serves a fallback it precached, which is why
 Consequence for a **downloaded** course (R-#256): a guide that was never opened
 online has no entry in `learntg-pages`, so offline navigation to it falls back to
 `/offline` even though its content is in IndexedDB. The download therefore warms
-that cache with an explicit `fetch()` of each guide URL (`warmPageCache` in
-`lib/offline-course-download.ts`): the `/(en|es)/*` rule matches by URL, so the
-request lands in `learntg-pages` exactly like a navigation would.
+that cache with an explicit `fetch()` of each guide URL and **also writes the
+response into `learntg-pages` itself** (`warmPageCache` in
+`lib/offline-course-download.ts`, `PAGE_CACHE_NAME`): the `/(en|es)/*` rule matches
+by URL, so the entry works exactly like a navigation would. The direct `cache.put`
+is what makes it reliable on iOS/Safari, where the first visit is not controlled by
+the service worker and the plain `fetch()` never passed through it (the downloaded
+guide fell into `/offline`; operator report, iPhone, 2026-09-23).
 
 That is only half of it: **the rule must carry `matchOptions: { ignoreVary: true }`**.
 Next serves its HTML with `Vary: rsc, next-router-state-tree, next-router-prefetch,
@@ -116,12 +121,15 @@ being visited:
 - copies that are already current (same guide list, not expired) are skipped, so
   repeating the sync is cheap.
 
-`OfflineLibrarySync` does it (invisible, mounted in `components/Layout.tsx`, once per
-session) and `OfflineDownloadAll` is the visible control with progress and a summary of
-what was left out (on the course list; the operator reported there was no way to
-download everything). The logic lives in `lib/offline-course-download.ts`
-(`listAccessibleCourses`, `downloadAllAccessible`). A copy is good for **7 days**
-(`REVALIDATION_MS`), like the page cache.
+`OfflineLibrarySync` does it (mounted in `components/Layout.tsx`, once per session) and
+announces the progress **only when something is really missing** ("Checking what is
+missing or out of date 1/12"), because `downloadAllAccessible` reports the pending
+courses first (`onStart`). `OfflineDownloadAll` is the visible control on the course list:
+the count of saved courses and a discreet **Check now** link (no download button:
+operator decision, 2026-09-23, after testing on an iPhone). The per-course sync
+(`OfflineCourseDownload.tsx`) works the same way in the course page. The logic lives in
+`lib/offline-course-download.ts` (`listAccessibleCourses`, `downloadAllAccessible`). A
+copy is good for **7 days** (`REVALIDATION_MS`), like the page cache.
 
 When something is missing while offline, each page falls back to the stored copy:
 
