@@ -14,7 +14,7 @@ import { createPublicClient, createWalletClient, http, formatUnits } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 import LearnTGVaultsV3Abi from '../../abis/LearnTGVaultsV3.json' with { type: 'json' }
-import { getV4Address } from './_contract-addresses'
+import { getV4Address } from './_lib/contract-addresses'
 
 type Address = `0x${string}`
 
