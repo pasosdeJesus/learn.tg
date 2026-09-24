@@ -29,7 +29,12 @@ function loadEnvCredentials() {
   return null
 }
 
-const GUIDE_PATH = '/en/gdcluster/guide1'
+// Curso **gratuito** a propósito: R-#241 es "una guía ya visitada sigue legible sin
+// conexión", y para que exista copia hay que haber podido leerla en línea. Con
+// `/en/gdcluster/guide1` (premium) un visitante anónimo recibía 401 en `/api/guide`
+// (medido 2026-09-24 en el sitio de desarrollo), así que no había Markdown guardado y
+// el spec pasaba (o fallaba) midiendo la página `/offline` de respaldo, no la guía.
+const GUIDE_PATH = '/en/web3-and-ubi/guide1'
 
 async function bodyLength(page) {
   return page.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().length)
@@ -125,9 +130,20 @@ async function main() {
   }
   await waitBodyContent(page, 30000, 'la recarga sin conexión')
   const offlineLength = await bodyLength(page)
+  const offlineText = await page.evaluate(() => document.body?.innerText || '')
 
-  if (offlineLength > 200) ok(`La guía sigue visible sin conexión (${offlineLength} caracteres)`)
-  else fail(`La guía no se pudo leer sin conexión (${offlineLength} caracteres)`)
+  // La página de respaldo (`app/offline/page.tsx`) es más larga que 200 caracteres, así
+  // que medir solo la longitud daba por buena la guía cuando en realidad se servía
+  // `/offline` (reporte del análisis del 2026-09-24: los "289 caracteres" de 2026-09-21
+  // eran la de respaldo). Se reconoce por su frase propia.
+  const isFallback = /Your progress is saved and will sync when the connection returns/.test(offlineText)
+  if (isFallback) {
+    fail('Sin conexión se sirvió la página de respaldo /offline en vez de la guía guardada')
+  } else if (offlineLength > 200) {
+    ok(`La guía sigue visible sin conexión (${offlineLength} caracteres)`)
+  } else {
+    fail(`La guía no se pudo leer sin conexión (${offlineLength} caracteres)`)
+  }
 
   const banner = await page.$('[data-testid="offline-banner"]')
   if (banner) ok('Se muestra el banner de sin conexión')
