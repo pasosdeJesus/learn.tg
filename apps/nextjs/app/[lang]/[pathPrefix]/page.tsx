@@ -368,6 +368,13 @@ export default function Page({ params }: PageProps) {
               contenidoSensible={course.contenido_sensible === true}
               isPremium={Number(course.porPagar) > 0}
               guides={course.guias.map((guia) => guia.sufijoRuta).filter(Boolean) as string[]}
+              // El índice sin conexión muestra el título guardado, no `guide1`
+              // (operador, 2026-09-25).
+              guideTitles={Object.fromEntries(
+                course.guias
+                  .filter((guia) => guia.sufijoRuta)
+                  .map((guia) => [String(guia.sufijoRuta), guia.titulo ?? null]),
+              )}
               // Sin conexión la copia descargada ES la prueba de acceso: solo se guarda
               // si el curso se podía leer con esa billetera (`belongsToWallet` la
               // separa por dirección) y sin red no hay forma de volver a comprobarlo.

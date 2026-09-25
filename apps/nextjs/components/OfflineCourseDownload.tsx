@@ -40,6 +40,9 @@ interface OfflineCourseDownloadProps {
   isPremium: boolean
   /** Sufijos de ruta de las guías publicadas, en orden. */
   guides: string[]
+  /** Título de cada guía por sufijo, para que el índice sin conexión muestre el
+   * título y no `guide1` (operador, 2026-09-25). */
+  guideTitles?: Record<string, string | null>
   /** R-#256 §3.10: presentación del curso, para que la copia sin conexión tenga el
    * subtítulo y el resumen. */
   subtitulo?: string | null
@@ -68,6 +71,7 @@ export function OfflineCourseDownload({
   contenidoSensible,
   isPremium,
   guides,
+  guideTitles,
   subtitulo,
   resumenMd,
   guideStatus,
@@ -127,11 +131,12 @@ export function OfflineCourseDownload({
     contenidoSensible,
     isPremium,
     guides,
+    guideTitles,
     // R-#256 §3.10: la presentación y el avance al descargar quedan en el registro.
     subtitulo: subtitulo ?? null,
     resumenMd: resumenMd ?? null,
     guideStatus,
-  }), [courseId, lang, prefix, titulo, contenidoSensible, isPremium, guides, subtitulo, resumenMd, guideStatus])
+  }), [courseId, lang, prefix, titulo, contenidoSensible, isPremium, guides, guideTitles, subtitulo, resumenMd, guideStatus])
 
   const refreshRecord = useCallback(async () => {
     setRecord(await getDownloadedCourse(key))

@@ -160,7 +160,8 @@ function courseFromDownloaded(downloaded: DownloadedCourse): Course {
     idioma: downloaded.lang,
     prefijoRuta: `/${downloaded.prefix}`,
     guias: downloaded.guides.map((guide) => ({
-      titulo: guide.suffix,
+      // El título guardado con la copia; el sufijo de ruta sólo como último recurso.
+      titulo: guide.titulo || guide.suffix,
       sufijoRuta: guide.suffix,
       completed: guide.completed,
       receivedScholarship: guide.receivedScholarship,

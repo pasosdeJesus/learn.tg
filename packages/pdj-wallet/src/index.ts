@@ -47,13 +47,6 @@ export {
   isUserCancelledError,
 } from './web-authn.js'
 
-export {
-  type UnlockPreference,
-  getUnlockPreference,
-  setUnlockPreference,
-  clearUnlockPreference,
-} from './preferences.js'
-
 export { signSIWE } from './siwe.js'
 export {
   getInAppWalletProvider,

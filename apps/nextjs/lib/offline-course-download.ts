@@ -32,6 +32,12 @@ export interface CourseDescriptor {
   isPremium: boolean
   /** Sufijos de ruta de las guías, en orden (`guide1`, `guide2`, ...). */
   guides: string[]
+  /**
+   * Título de cada guía por sufijo. Se guarda con la copia para que el índice sin
+   * conexión muestre el título y no el sufijo de ruta (reporte del operador,
+   * 2026-09-25). Un llamador que no lo conozca puede omitirlo.
+   */
+  guideTitles?: Record<string, string | null>
   /** R-#256 §3.10: presentación del curso (subtítulo y resumen) para que la copia
    * sin conexión no sea un cascarón vacío. */
   subtitulo?: string | null
@@ -174,7 +180,12 @@ export async function downloadCourse(
 
     await saveCourseGuide(key, suffix, markdown)
     contents.push(markdown)
-    downloadedGuides.push({ suffix, puzzle, ...(descriptor.guideStatus?.[suffix] ?? {}) })
+    downloadedGuides.push({
+      suffix,
+      titulo: descriptor.guideTitles?.[suffix] ?? null,
+      puzzle,
+      ...(descriptor.guideStatus?.[suffix] ?? {}),
+    })
   }
 
   const course: DownloadedCourse = {
@@ -295,11 +306,19 @@ export async function listAccessibleCourses(
     }
 
     try {
-      const detail = await get<{ guias?: { sufijoRuta?: string }[] }>(`/api/course-catalog/${courseId}`)
-      const guides = (detail.data?.guias || [])
+      const detail = await get<{ guias?: { sufijoRuta?: string; titulo?: string | null }[] }>(`/api/course-catalog/${courseId}`)
+      const detailGuides = detail.data?.guias || []
+      const guides = detailGuides
         .map((guide) => String(guide.sufijoRuta || ''))
         .filter((suffix) => suffix.length > 0)
       if (guides.length === 0) continue
+      // Título por sufijo: sin conexión el índice del curso y el de `/offline` deben
+      // mostrar el título de la guía, no su sufijo de ruta (operador, 2026-09-25).
+      const guideTitles: Record<string, string | null> = {}
+      for (const guide of detailGuides) {
+        const suffix = String(guide.sufijoRuta || '')
+        if (suffix) guideTitles[suffix] = guide.titulo ?? null
+      }
       courses.push({
         courseId,
         lang: String(course.idioma || lang),
@@ -308,6 +327,7 @@ export async function listAccessibleCourses(
         contenidoSensible,
         isPremium,
         guides,
+        guideTitles,
       })
     } catch {
       // un curso que no se puede leer (detalle no disponible) simplemente no entra
@@ -351,7 +371,12 @@ export async function downloadAllAccessible(
     const key = courseKey(descriptor.lang, descriptor.prefix)
     const previous = await getDownloadedCourse(key)
     const sameGuides = previous?.guides.map((guide) => guide.suffix).join(',') === descriptor.guides.join(',')
-    if (previous && sameGuides && !isStale(previous)) continue
+    // Una copia sin títulos (descargada antes de que se guardaran, 2026-09-25) se
+    // refresca sola: si no, el índice seguiría mostrando `guide1` en vez del título.
+    const titlesKnown = !descriptor.guideTitles || previous?.guides.every(
+      (guide) => (guide.titulo ?? null) === (descriptor.guideTitles?.[guide.suffix] ?? null),
+    )
+    if (previous && sameGuides && titlesKnown && !isStale(previous)) continue
     pending.push(descriptor)
   }
   // El contador que ve el estudiante es de **pasos** (una guía y su crucigrama),

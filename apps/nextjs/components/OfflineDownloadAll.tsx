@@ -36,6 +36,27 @@ const AUTO_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000
 // dos corridas en paralelo descargarían lo mismo dos veces.
 let syncInFlight = false
 
+/**
+ * Por qué la sincronización automática está en pausa. `saveData` es el ahorro de datos
+ * del navegador y `slow` una red 2G: bajar decenas de guías con un plan limitado no es
+ * una decisión que la app deba tomar sola.
+ */
+export type ConnectionHold = 'saveData' | 'slow' | null
+
+/**
+ * El freno de conexión actual (decisión del operador, 2026-09-25: el freno **no** puede
+ * ser silencioso). Se lee en el momento para que el control visible pueda decirlo y el
+ * enlace "Check now" siga disponible como acción explícita del estudiante.
+ */
+export function connectionHold(): ConnectionHold {
+  if (typeof navigator === 'undefined') return null
+  const connection = (navigator as any)?.connection
+  if (!connection) return null
+  if (connection.saveData === true) return 'saveData'
+  if (['slow-2g', '2g'].includes(String(connection.effectiveType || ''))) return 'slow'
+  return null
+}
+
 export interface OfflineLibrarySyncState {
   syncing: boolean
   done: number
@@ -46,6 +67,10 @@ export interface OfflineLibrarySyncState {
   last: SyncResult | null
   savedCount: number
   error: string
+  /** La identidad (sesión/billetera) ya está resuelta: no se lanzan peticiones anónimas. */
+  ready: boolean
+  /** Motivo por el que la sincronización automática está en pausa (`null` si no lo está). */
+  hold: ConnectionHold
   sync: () => Promise<SyncResult | null>
 }
 
@@ -59,6 +84,17 @@ export function useOfflineLibrarySync(lang: string): OfflineLibrarySyncState {
   const [last, setLast] = useState<SyncResult | null>(null)
   const [savedCount, setSavedCount] = useState(0)
   const [error, setError] = useState('')
+  const [hold, setHold] = useState<ConnectionHold>(null)
+
+  // El freno se relee cuando el navegador cambia de red (o el usuario apaga el ahorro de
+  // datos): así el aviso desaparece y la sincronización automática arranca sola.
+  useEffect(() => {
+    const read = () => setHold(connectionHold())
+    read()
+    const connection = (navigator as any)?.connection
+    connection?.addEventListener?.('change', read)
+    return () => connection?.removeEventListener?.('change', read)
+  }, [])
 
   const refreshSaved = useCallback(async () => {
     try {
@@ -95,7 +131,13 @@ export function useOfflineLibrarySync(lang: string): OfflineLibrarySyncState {
       })
       setLast(result)
       await refreshSaved()
-      try { sessionStorage.setItem(SYNC_STAMP_KEY, String(Date.now())) } catch { /* almacenamiento bloqueado */ }
+      // Solo se marca como sincronizado si **nada** falló. Marcarlo con fallos dejaba
+      // la biblioteca a medias y sin reintento durante 6 h (operador, 2026-09-25: en
+      // el teléfono, al entrar a `/en` no se bajaba nada y solo se descargaba el
+      // curso que se abría).
+      if (result.failed.length === 0) {
+        try { sessionStorage.setItem(SYNC_STAMP_KEY, String(Date.now())) } catch { /* almacenamiento bloqueado */ }
+      }
       return result
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -106,7 +148,7 @@ export function useOfflineLibrarySync(lang: string): OfflineLibrarySyncState {
     }
   }, [authedGet, lang, wallet, refreshSaved])
 
-  return { syncing, done, total, pending, label, last, savedCount, error, sync }
+  return { syncing, done, total, pending, label, last, savedCount, error, ready, hold, sync }
 }
 
 /** Cuántos cursos accesibles hay y cuántos no (para poder decirlo al usuario). */
@@ -174,7 +216,7 @@ function useOfflineStrings(lang: string) {
  * aviso reemplaza al botón de descargar).
  */
 export function OfflineLibrarySync({ lang }: { lang: string }) {
-  const { sync, syncing, done, total, pending, last, error } = useOfflineLibrarySync(lang)
+  const { sync, syncing, done, total, pending, last, error, ready, hold } = useOfflineLibrarySync(lang)
   const { toast } = useToast()
   const t = useOfflineStrings(lang)
   const attempted = useRef(false)
@@ -182,19 +224,26 @@ export function OfflineLibrarySync({ lang }: { lang: string }) {
 
   useEffect(() => {
     if (attempted.current || syncing) return
+    // Esperar a que la identidad esté resuelta (R-#227): antes de eso `authedGet`
+    // viaja sin `walletAddress` y cada guía responde 401, así que la sincronización
+    // completa fallaba en silencio al abrir la lista de cursos (operador,
+    // 2026-09-25). Con `ready` en falso no se marca el intento: el efecto vuelve a
+    // correr cuando la sesión se resuelve.
+    if (!ready) return
     if (typeof navigator !== 'undefined' && !navigator.onLine) return
-    // Respetar el ahorro de datos y las redes muy lentas: la sincronización baja
-    // todas las guías accesibles (decenas de peticiones) y en un teléfono con plan
-    // limitado conviene dejarla al control explícito.
-    const connection = (navigator as any)?.connection
-    if (connection?.saveData === true) return
-    if (['slow-2g', '2g'].includes(String(connection?.effectiveType || ''))) return
+    // Respetar el ahorro de datos y las redes muy lentas: la sincronización baja todas
+    // las guías accesibles (decenas de peticiones) y en un teléfono con plan limitado
+    // conviene dejarla al control explícito. El freno **no** es silencioso: el control
+    // visible de la lista de cursos lo explica y su enlace fuerza la verificación
+    // (decisión del operador, 2026-09-25). Se lee el freno en el momento (y no sólo el
+    // estado `hold`): en el primer paso del efecto el estado todavía es `null`.
+    if (connectionHold()) return
     let lastRun = 0
     try { lastRun = Number(sessionStorage.getItem(SYNC_STAMP_KEY) || 0) } catch { /* idem */ }
     if (lastRun && Date.now() - lastRun < AUTO_SYNC_INTERVAL_MS) return
     attempted.current = true
     void sync()
-  }, [sync, syncing])
+  }, [hold, ready, sync, syncing])
 
   // Progreso: se abre el aviso cuando hay algo que traer y se actualiza con el
   // contador (`1/60` … `60/60`), y se cierra con el resumen al terminar.
@@ -211,21 +260,29 @@ export function OfflineLibrarySync({ lang }: { lang: string }) {
   }, [syncing, pending, done, total, toast, t])
 
   useEffect(() => {
-    if (syncing || !notice.current) return
-    notice.current.update({
-      id: notice.current.id,
-      description: last ? summarize(last, t) : error,
-      variant: error ? 'destructive' : 'default',
-    })
-    notice.current = null
-  }, [syncing, last, error, t])
+    if (syncing) return
+    if (notice.current) {
+      notice.current.update({
+        id: notice.current.id,
+        description: last ? summarize(last, t) : error,
+        variant: error ? 'destructive' : 'default',
+      })
+      notice.current = null
+      return
+    }
+    // Un fallo que no llegó a contar guías (por ejemplo, la consulta del catálogo)
+    // no abría ningún aviso: el estudiante no sabía por qué no se descargaba nada.
+    if (error) {
+      toast({ title: t('toastTitle'), description: error, variant: 'destructive' })
+    }
+  }, [syncing, last, error, toast, t])
 
   return null
 }
 
 /** Control visible: cuántas páginas hay guardadas, el estado y el resumen. */
 export function OfflineDownloadAll({ lang }: { lang: string }) {
-  const { syncing, done, total, pending, last, savedCount, error, sync } = useOfflineLibrarySync(lang)
+  const { syncing, done, total, pending, last, savedCount, error, ready, hold, sync } = useOfflineLibrarySync(lang)
   const { toast } = useToast()
   const summaryT = useOfflineStrings(lang)
   const t = useMemo(() => createComponentT(lang, {
@@ -238,6 +295,7 @@ export function OfflineDownloadAll({ lang }: { lang: string }) {
       privacy: 'not published (Christian content)',
       notPurchased: 'not purchased',
       error: 'Could not save the courses',
+      paused: 'Paused: your connection is on data saver or is very slow. Tap "Check now" to download anyway.',
     },
     es: {
       title: 'Cursos en este dispositivo',
@@ -248,6 +306,7 @@ export function OfflineDownloadAll({ lang }: { lang: string }) {
       privacy: 'sin publicar (contenido cristiano)',
       notPurchased: 'sin comprar',
       error: 'No se pudieron guardar los cursos',
+      paused: 'En pausa: tu conexión está en ahorro de datos o es muy lenta. Toca "Verificar ahora" para descargar igualmente.',
     },
   }), [lang])
 
@@ -260,6 +319,9 @@ export function OfflineDownloadAll({ lang }: { lang: string }) {
       toast({ title: t('waiting') })
       return
     }
+    // Con la identidad sin resolver la petición viaja anónima y el servidor responde
+    // 401 por cada guía; mejor esperar (botón deshabilitado) que fallar en silencio.
+    if (!ready) return
     const result = await sync()
     if (result) {
       toast({
@@ -268,7 +330,7 @@ export function OfflineDownloadAll({ lang }: { lang: string }) {
     } else {
       toast({ title: t('error'), variant: 'destructive' })
     }
-  }, [offline, sync, t, toast, summaryT])
+  }, [offline, ready, sync, t, toast, summaryT])
 
   return (
     <div
@@ -282,7 +344,7 @@ export function OfflineDownloadAll({ lang }: { lang: string }) {
         <button
           type="button"
           onClick={onSync}
-          disabled={syncing}
+          disabled={syncing || !ready}
           className="text-xs text-emerald-800 underline disabled:opacity-50"
         >
           {syncing && total > 0 ? `${t('syncing')} ${done}/${total}` : t('check')}
@@ -292,6 +354,12 @@ export function OfflineDownloadAll({ lang }: { lang: string }) {
       {last && (
         <p className="mt-1 text-center text-xs text-gray-500">
           {summarize(last, summaryT)}
+        </p>
+      )}
+
+      {!syncing && hold && (
+        <p className="mt-1 text-center text-xs text-amber-700" data-testid="offline-connection-hold">
+          {t('paused')}
         </p>
       )}
 

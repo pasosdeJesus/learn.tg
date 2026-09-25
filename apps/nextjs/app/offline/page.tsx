@@ -103,19 +103,20 @@ export default function OfflinePage() {
                     {t('refreshed')}: {new Date(course.downloadedAt).toLocaleDateString(lang === 'es' ? 'es' : 'en')}
                   </span>
                 </p>
-                <ul className="ml-4 mt-1 space-y-1">
-                  {course.guides.map((guide) => (
+                <ol className="ml-4 mt-1 space-y-1 list-none p-0">
+                  {course.guides.map((guide, index) => (
                     <li key={guide.suffix}>
+                      <span className="font-semibold">{index + 1}.</span>{' '}
                       <Link
                         href={`/${course.key}/${guide.suffix}`}
                         className="underline"
                         data-testid={`offline-guide-${course.key}/${guide.suffix}`}
                       >
-                        /{course.key}/{guide.suffix}
+                        {guide.titulo || guide.suffix}
                       </Link>
                     </li>
                   ))}
-                </ul>
+                </ol>
               </li>
             ))}
           </ul>

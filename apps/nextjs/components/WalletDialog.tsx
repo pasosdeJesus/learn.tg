@@ -12,7 +12,7 @@ import {
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
 import { isValidPassword, useInAppWallet } from '@learn-tg/pdj-wallet-next'
-import { detectPlatformSupport, getUnlockPreference, setUnlockPreference, clearUnlockPreference, isUserCancelledError } from '@learn-tg/pdj-wallet'
+import { detectPlatformSupport, isUserCancelledError } from '@learn-tg/pdj-wallet'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
@@ -348,9 +348,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
-      // R-#246 §14 item 2: si el usuario rechaza el gesto, se recuerda para no
-      // volver a lanzarlo automáticamente al abrir el diálogo.
-      setUnlockPreference('password')
+      // Decisión del operador (2026-09-25): una cancelación no debe silenciar el gesto
+      // en las próximas aperturas; sólo se ofrece la clave como respaldo inmediato.
       setPasswordFallback(true)
       setBusy(false)
     }
@@ -364,7 +363,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setBusy(true)
     try {
       await enableBiometric(password)
-      setUnlockPreference('biometric')
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
@@ -377,7 +375,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setBusy(true)
     try {
       await disableBiometric()
-      clearUnlockPreference()
     } catch (e) {
       setLocalError(translateError(e))
     } finally {
@@ -393,7 +390,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setBusy(true)
     try {
       await enableBiometric(biometricPassword)
-      setUnlockPreference('biometric')
       setBiometricPassword('')
     } catch (e) {
       setLocalError(translateError(e))
@@ -423,7 +419,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       setBusy(true)
       try {
         await enableBiometric(passwordForBiometric)
-        setUnlockPreference('biometric')
       } catch {
         // La huella no se pudo guardar: la clave sigue siendo el respaldo, pero el
         // usuario debe enterarse (antes se fallaba en silencio).
@@ -474,15 +469,12 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   const gestureOnly = showUnlock && biometricEnabled && !passwordFallback
   // Al abrir con una passkey registrada se pide el gesto directamente, en lugar
   // de mostrar un campo de password que invita a escribir cuando un toque bastaba.
+  // Decisión del operador (2026-09-25): el gesto se pide siempre al abrir; si se
+  // cancela, o si el dispositivo no tiene huella guardada, la clave queda de respaldo.
+  // Sólo apagar el desbloqueo con huella (que borra la passkey) lo evita.
   useEffect(() => {
     if (!open || !showUnlock || !biometricEnabled) return
     if (autoGestureTried.current) return
-    // R-#246 §14 item 2: respeta al usuario que eligió escribir la clave.
-    if (getUnlockPreference() === 'password') {
-      autoGestureTried.current = true
-      setPasswordFallback(true)
-      return
-    }
     autoGestureTried.current = true
     void handleUnlockWithBiometric()
   }, [open, showUnlock, biometricEnabled, handleUnlockWithBiometric])

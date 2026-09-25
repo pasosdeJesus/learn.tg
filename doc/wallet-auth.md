@@ -73,7 +73,7 @@ reported on 2026-09-21 that pressing it did nothing with the in-app wallet).
 
 | Behaviour | Where | Notes |
 |-----------|-------|-------|
-| Preferred unlock method | `packages/pdj-wallet/src/preferences.ts` (`pdj-wallet:unlockPreference`) | Choosing the password stops the automatic gesture on later opens; enrolling it again records `biometric` |
+| Gesture first | `WalletDialog` auto-attempt effect | With a passkey enrolled the dialog asks for the gesture as it opens (no field, no extra tap); a cancelled gesture or a device without one falls back to the password field. Decision of 2026-09-25: the "preferred method" memory (`pdj-wallet:unlockPreference`) was removed, so one cancellation no longer silences the gesture on later opens |
 | Lock generation | `currentLockEpoch()` + `assertStillUnlocked()` (provider) | A lock (idle, ✕, delete) bumps the generation: a signature approved before it is not signed nor broadcast after it |
 | Passkey cleanup | `signalUnknownCredential()` via `forgetBiometricCredential()` | Disabling the gesture or deleting the wallet tells the authenticator the passkey is gone (Chrome 132+) |
 | Cancellation | `isUserCancelledError()` | `NotAllowedError`, `AbortError` and `cancel*` all read as "the user cancelled" in the dialog |

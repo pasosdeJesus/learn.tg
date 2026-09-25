@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
@@ -10,6 +10,7 @@ import '@testing-library/jest-dom'
 // verificación se pide con un enlace discreto ("Check now").
 const hooks = vi.hoisted(() => ({
   wallet: '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c' as string | null,
+  ready: true as boolean,
   toast: vi.fn(),
   downloadAllAccessible: vi.fn(),
   listDownloadedCourses: vi.fn(),
@@ -18,7 +19,7 @@ const hooks = vi.hoisted(() => ({
 vi.mock('@/lib/hooks/useAuthedApi', () => ({
   useAuthedApi: () => ({
     authedGet: vi.fn(),
-    ready: true,
+    ready: hooks.ready,
     wallet: hooks.wallet,
     mismatch: false,
   }),
@@ -46,6 +47,7 @@ describe('OfflineDownloadAll (R-#256)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     hooks.wallet = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
+    hooks.ready = true
     hooks.listDownloadedCourses.mockResolvedValue([{ key: 'en/web3-and-ubi' }, { key: 'en/gdcluster' }])
     hooks.downloadAllAccessible.mockResolvedValue({
       downloaded: ['en/web3-and-ubi'],
@@ -56,6 +58,42 @@ describe('OfflineDownloadAll (R-#256)', () => {
       failed: [],
     })
     try { sessionStorage.clear() } catch { /* jsdom sin almacenamiento */ }
+  })
+
+  // El freno por ahorro de datos o red 2G no puede ser silencioso: el control visible lo
+  // explica y su enlace sigue permitiendo descargar (decisión del operador, 2026-09-25).
+  describe('connection hold', () => {
+    function setConnection(value: { saveData?: boolean; effectiveType?: string }) {
+      Object.defineProperty(window.navigator, 'connection', {
+        value: { addEventListener: vi.fn(), removeEventListener: vi.fn(), ...value },
+        configurable: true,
+      })
+    }
+
+    afterEach(() => {
+      // jsdom no trae `navigator.connection`
+      delete (window.navigator as { connection?: unknown }).connection
+    })
+
+    it('explains the pause and still allows a manual check', async () => {
+      setConnection({ saveData: true })
+
+      render(<OfflineDownloadAll lang="en" />)
+
+      expect(await screen.findByTestId('offline-connection-hold')).toHaveTextContent(/data saver/i)
+
+      fireEvent.click(screen.getByText('Check now'))
+      await waitFor(() => expect(hooks.downloadAllAccessible).toHaveBeenCalledTimes(1))
+    })
+
+    it('does not sync automatically while the connection is held', async () => {
+      setConnection({ effectiveType: '2g' })
+
+      render(<OfflineLibrarySync lang="en" />)
+
+      await waitFor(() => expect(hooks.listDownloadedCourses).toHaveBeenCalled())
+      expect(hooks.downloadAllAccessible).not.toHaveBeenCalled()
+    })
   })
 
   it('shows how many courses are saved on the device', async () => {
@@ -105,6 +143,32 @@ describe('OfflineDownloadAll (R-#256)', () => {
 
     await waitFor(() => expect(hooks.downloadAllAccessible).toHaveBeenCalledTimes(1))
     expect(sessionStorage.getItem('learn.tg.offlineLibrarySyncedAt')).toBeTruthy()
+  })
+
+  // Con la identidad sin resolver cada guía responde 401: la sincronización tiene que
+  // esperar en vez de fallar en silencio (operador, 2026-09-25: al entrar a `/en` no se
+  // descargaba nada y solo se bajaba el curso que se abría).
+  it('waits for the identity before syncing the library', async () => {
+    hooks.ready = false
+    render(<OfflineLibrarySync lang="en" />)
+
+    await waitFor(() => expect(hooks.listDownloadedCourses).toHaveBeenCalled())
+    expect(hooks.downloadAllAccessible).not.toHaveBeenCalled()
+    expect(sessionStorage.getItem('learn.tg.offlineLibrarySyncedAt')).toBeNull()
+  })
+
+  // Un fallo parcial no puede sellar la marca de 6 h: la biblioteca quedaría a medias y
+  // sin reintento hasta la siguiente sesión.
+  it('does not stamp the interval when a course could not be saved', async () => {
+    hooks.downloadAllAccessible.mockResolvedValue({
+      downloaded: [],
+      skipped: [],
+      failed: [{ key: 'en/gdcluster', error: '401' }],
+    })
+    render(<OfflineLibrarySync lang="en" />)
+
+    await waitFor(() => expect(hooks.downloadAllAccessible).toHaveBeenCalledTimes(1))
+    expect(sessionStorage.getItem('learn.tg.offlineLibrarySyncedAt')).toBeNull()
   })
 
   it('announces the progress only when something is really missing', async () => {

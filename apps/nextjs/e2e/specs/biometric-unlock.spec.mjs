@@ -130,13 +130,12 @@ async function deviceCapability(page) {
  * puede depender de lo que quedó de una corrida anterior: con una billetera ya
  * guardada el paso 1 se salta la creación (y con ella el sellado de la huella de
  * R-#254), y el operador veía una dirección in-app distinta en cada corrida
- * (2026-09-24). Se borra el registro de la billetera y la preferencia de
- * desbloqueo, y se recarga para que el hook la resuelva de nuevo.
+ * (2026-09-24). Se borra el registro de la billetera y se recarga para que el hook
+ * la resuelva de nuevo.
  */
 async function resetWalletState(page) {
   await page.evaluate(async () => {
     try { localStorage.removeItem('learn.tg.sessionAddress') } catch { /* bloqueado */ }
-    try { localStorage.removeItem('pdj-wallet:unlockPreference') } catch { /* bloqueado */ }
     await new Promise((resolve) => {
       const request = indexedDB.deleteDatabase('learn-tg-pdj-wallet')
       request.onsuccess = () => resolve()

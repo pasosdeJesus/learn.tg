@@ -30,8 +30,8 @@ any other suite:
 ```sh
 cd apps/nextjs
 
-make test-packages          # los dos paquetes (90 + 24 tests, ~50 s)
-make test-pdj-wallet        # solo el core (90 tests, ~48 s)
+make test-packages          # los dos paquetes (85 + 24 tests, ~50 s)
+make test-pdj-wallet        # solo el core (85 tests, ~48 s)
 make test-pdj-wallet-next   # solo React; compila el core antes (~12 s)
 ```
 
@@ -84,10 +84,10 @@ cd apps/nextjs
 make test-hooks test-components
 ```
 
-Expected (medido 2026-09-21): `make test-hooks` 83 passed / 2 skipped (12 archivos)
-y `make test-components` 178 passed / 3 skipped (23 archivos, incluye
+Expected (medido 2026-09-25): `make test-hooks` 91 passed / 2 skipped (13 archivos)
+y `make test-components` 201 passed / 3 skipped (26 archivos, incluye
 `components/ui/__tests__` y `providers/__tests__`). La suite completa `make test`
-da **1006 passed / 6 skipped en 143 archivos** (0 fallas), y la mayor parte del
+da **1148 passed / 6 skipped en 161 archivos** (0 fallas), y la mayor parte del
 tiempo es el montaje de jsdom por archivo, no las aserciones.
 
 What these cover:

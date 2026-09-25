@@ -70,9 +70,29 @@ describe('downloadCourse (R-#256)', () => {
     expect(progress).toEqual([0, 1, 2, 3, 4])
   })
 
-  it('never stores the crossword solution', async () => {
+  // Operador, 2026-09-25: sin conexión el índice del curso y el de `/offline` mostraban
+  // `guide1`, `guide2`… en lugar del título de la guía.
+  it('stores each guide title so the offline index can show it', async () => {
+    const course = await downloadCourse(
+      { ...DESCRIPTOR, guideTitles: { guide1: 'What is a cluster?', guide2: 'Your first three churches' } },
+      { get: makeGet() as any, wallet: WALLET },
+    )
+
+    expect(course.guides.map((guide) => guide.titulo)).toEqual([
+      'What is a cluster?',
+      'Your first three churches',
+    ])
+    expect((await getDownloadedCourse('en/gdcluster'))?.guides[1].titulo).toBe('Your first three churches')
+  })
+
+  it('leaves the title empty when the descriptor does not know it', async () => {
     const course = await downloadCourse(DESCRIPTOR, { get: makeGet() as any, wallet: WALLET })
 
+    expect(course.guides.map((guide) => guide.titulo)).toEqual([null, null])
+  })
+
+  it('never stores the crossword solution', async () => {
+    const course = await downloadCourse(DESCRIPTOR, { get: makeGet() as any, wallet: WALLET })
     for (const guide of course.guides) {
       const placements = guide.puzzle?.placements as any[]
       const grid = guide.puzzle?.grid as any[][]

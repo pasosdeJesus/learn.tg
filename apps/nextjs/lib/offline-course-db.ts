@@ -37,6 +37,12 @@ export interface DownloadedPuzzle {
 export interface DownloadedGuide {
   /** Sufijo de ruta de la guía (`guide1`, `guia1`): la clave de `guides` es `key` + '/' + suffix. */
   suffix: string
+  /**
+   * Título de la guía como lo muestra la página del curso. Sin conexión no hay a
+   * quién preguntárselo, y sin él el índice mostraba el sufijo de ruta (`guide1`) en
+   * lugar del título (reporte del operador, 2026-09-25).
+   */
+  titulo?: string | null
   /** Crucigrama con celdas y pistas, nunca la solución. */
   puzzle: DownloadedPuzzle | null
   /**

@@ -58,11 +58,15 @@ there is something to save or update, a notice tells you how many guides it is c
 (“Checking what is missing or out of date 3/12”), and the course list shows how many
 courses are already saved on this device. If you want to check again, tap **Check now**;
 on the course page the same notice appears for that course, with the space it takes and a
-way to delete the copy.
+way to delete the copy. If your phone is set to save data (or your connection is very
+slow), the app **does not download by itself** and tells you so on the course list: the
+download is dozens of files, so it waits for your **Check now** instead of spending your
+data plan.
 A saved course **never expires while you are offline**: you can read it any day you are
 without a connection. When you are online the app checks once a day whether the content
 changed and updates it. A downloaded course appears on the offline page with
-all its guides, and you can read any of them and solve their crosswords without a
+all its guides numbered and with their titles (even the ones you never opened), and you
+can read any of them and solve their crosswords without a
 connection: your answers are saved and reviewed when the connection returns, and the
 app tells you the result — and it also stays in your **notifications** (the bell), so you
 can see it even if you had already left that page. Without a connection the course page

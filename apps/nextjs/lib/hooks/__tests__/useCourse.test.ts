@@ -30,7 +30,7 @@ const downloadedCourse = {
   downloadedAt: Date.now(),
   revision: 'r1',
   guides: [
-    { suffix: 'guide1', puzzle: null, completed: true, receivedScholarship: true },
+    { suffix: 'guide1', titulo: 'What is a cluster?', puzzle: null, completed: true, receivedScholarship: true },
     { suffix: 'guide4', puzzle: null },
   ],
   bytes: 1024,
@@ -85,6 +85,12 @@ describe('useCourse offline (R-#256)', () => {
       completed: true,
       receivedScholarship: true,
     })
+    // El título guardado con la copia, no el sufijo de ruta: sin conexión el índice
+    // mostraba `guide1` (operador, 2026-09-25). Una copia sin título cae al sufijo.
+    expect(result.current.course?.guias?.map((guide) => guide.titulo)).toEqual([
+      'What is a cluster?',
+      'guide4',
+    ])
     expect(authedGet).not.toHaveBeenCalled()
   })
 

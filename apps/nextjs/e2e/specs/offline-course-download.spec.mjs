@@ -171,6 +171,16 @@ async function main() {
   if (stored?.record?.guides?.length > 0) ok(`El curso trae ${stored.record.guides.length} guías (todas, no solo las visitadas)`)
   else fail('El curso guardado no trae guías')
 
+  // El índice sin conexión (página del curso y `/offline`) muestra `1. <título>`, no el
+  // sufijo de ruta (`guide1`): el título tiene que viajar con la copia (operador, 2026-09-25).
+  const storedGuides = stored?.record?.guides ?? []
+  const titledGuides = storedGuides.filter((guide) => (guide.titulo ?? '').length > 0)
+  if (titledGuides.length > 0 && titledGuides.length === storedGuides.length) {
+    ok(`Las ${titledGuides.length} guías guardan su título para el índice sin conexión`)
+  } else {
+    fail(`El registro no guarda el título de todas las guías (${titledGuides.length}/${storedGuides.length})`)
+  }
+
   const answers = puzzleHasNoAnswers(stored?.record)
   if (answers.length === 0) ok('El crucigrama guardado no lleva respuestas (celdas ni colocaciones)')
   else fail(`El crucigrama guardado incluye respuestas: ${answers.slice(0, 5).join(', ')}`)

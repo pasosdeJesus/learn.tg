@@ -24,17 +24,13 @@ const mocks = vi.hoisted(() => ({
 
 const coreMocks = vi.hoisted(() => ({
   detectPlatformSupport: vi.fn(),
-  unlockPreference: null as string | null,
 }))
 
 // R-#254: la creación sondea el dispositivo por su cuenta (el hook todavía no tiene
 // billetera que inspeccionar), así que el test controla ese sondeo.
-// R-#246 §14: preferencia de desbloqueo y detección de cancelación.
+// R-#246 §14: detección de cancelación del gesto.
 vi.mock('@learn-tg/pdj-wallet', () => ({
   detectPlatformSupport: coreMocks.detectPlatformSupport,
-  getUnlockPreference: () => coreMocks.unlockPreference,
-  setUnlockPreference: (value: string) => { coreMocks.unlockPreference = value },
-  clearUnlockPreference: () => { coreMocks.unlockPreference = null },
   isUserCancelledError: (error: unknown) =>
     /cancel|abort|notallowed/i.test(
       error instanceof Error ? `${error.name} ${error.message}` : String(error ?? ''),
@@ -132,7 +128,6 @@ describe('WalletDialog (R-#244)', () => {
     mocks.biometricAvailable = false
     mocks.biometricEnabled = false
     coreMocks.detectPlatformSupport.mockResolvedValue({ webauthn: false, userVerifying: false, prf: null })
-    coreMocks.unlockPreference = null
   })
 
   it('creates the wallet and shows the 12 words with a confirmation', async () => {
@@ -397,6 +392,31 @@ describe('WalletDialog (R-#244)', () => {
     await waitFor(() => expect(mocks.unlockWithBiometric).toHaveBeenCalled())
     expect(mocks.unlock).not.toHaveBeenCalled()
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
+  })
+
+  // Decisión del operador (2026-09-25): una cancelación no deja la clave como camino
+  // principal; en la siguiente apertura se vuelve a pedir el gesto de inmediato.
+  it('asks for the gesture again on the next open after a cancelled one', async () => {
+    mocks.status = 'locked'
+    mocks.walletInfo = { address: ADDRESS }
+    mocks.biometricEnabled = true
+    mocks.unlockWithBiometric.mockRejectedValue(new Error('NotAllowedError'))
+    const first = renderDialog()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/cancelled/i)
+    })
+    expect(screen.getByTestId('wallet-password')).toBeInTheDocument()
+    first.unmount()
+
+    mocks.unlockWithBiometric.mockReset()
+    mocks.unlockWithBiometric.mockResolvedValue({ address: ADDRESS })
+    mocks.getProvider.mockReturnValue({ request: vi.fn() })
+    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
+    renderDialog()
+
+    await waitFor(() => expect(mocks.unlockWithBiometric).toHaveBeenCalledTimes(1))
+    expect(screen.queryByTestId('wallet-password')).not.toBeInTheDocument()
   })
 
   // R-#246: el gesto no es el único camino. Si se cancela, el password queda a un

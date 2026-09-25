@@ -167,10 +167,10 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
-**Suite size (medido 2026-09-21):** `make test` = **1006 passed / 6 skipped, 0
-failed** en 143 archivos — `test-lib` 207, `test-hooks` 83, `test-api` 224,
-`test-components` 178, `test-pages` 50, `test-db` 3, `test-pdj-wallet` 90,
-`test-pdj-wallet-next` 24, `test-rewards` 56, `test-gdcluster` 91.
+**Suite size (medido 2026-09-25):** `make test` = **1148 passed / 6 skipped, 0
+failed** en 161 archivos — `test-lib` 256, `test-hooks` 91, `test-api` 246,
+`test-components` 201, `test-pages` 69, `test-db` 3, `test-pdj-wallet` 85,
+`test-pdj-wallet-next` 24, `test-rewards` 82, `test-gdcluster` 91.
 
 | Layer | Statements | Notes |
 |-------|-----------|-------|

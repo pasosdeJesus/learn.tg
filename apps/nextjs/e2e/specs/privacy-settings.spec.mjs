@@ -182,11 +182,14 @@ async function main() {
       // `/api/profile` exige la pista de identidad en la URL (`walletAddress`); la
       // credencial sigue siendo la cookie de sesión (R-#233 Fase 2).
       const res = await fetch(`/api/profile?walletAddress=${encodeURIComponent(wallet)}`, { credentials: 'same-origin' })
-      return res.ok ? res.json() : null
+      // El código HTTP importa: 429 es el límite del dev site por billetera/IP (varias
+      // corridas seguidas) y 401 es que la cookie de sesión no llegó.
+      if (!res.ok) return { status: res.status }
+      return res.json()
     }, creds.addr)
     const userId = profile?.id || profile?.userId
     if (!userId) {
-      fail('No se pudo obtener el id del estudiante de prueba (/api/profile)')
+      fail(`No se pudo obtener el id del estudiante de prueba (/api/profile → HTTP ${profile?.status ?? 'sin respuesta'})`)
       throw new Error('no user id')
     }
 

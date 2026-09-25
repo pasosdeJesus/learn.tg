@@ -35,7 +35,7 @@ function makeGet(options: FakeOptions = {}) {
     if (detail) {
       const id = Number(detail[1])
       if ((options.failDetailFor || []).includes(id)) throw new Error('offline')
-      return { data: { guias: [{ sufijoRuta: 'guide1' }, { sufijoRuta: 'guide2' }] } }
+      return { data: { guias: [{ sufijoRuta: 'guide1', titulo: 'What is a cluster?' }, { sufijoRuta: 'guide2', titulo: 'Your first three churches' }] } }
     }
     if (url.startsWith('/api/guide?')) return { data: { markdown: '<p>guía</p>' } }
     if (url.startsWith('/api/crossword?')) return { data: { grid: [[]], placements: [] } }
@@ -50,6 +50,12 @@ describe('listAccessibleCourses (R-#256)', () => {
     expect(total).toBe(4)
     expect(courses.map((course) => course.prefix)).toEqual(['web3-and-ubi'])
     expect(courses[0].guides).toEqual(['guide1', 'guide2'])
+    // El título por sufijo viaja con el descriptor para que el índice sin conexión
+    // muestre el título y no `guide1` (operador, 2026-09-25).
+    expect(courses[0].guideTitles).toEqual({
+      guide1: 'What is a cluster?',
+      guide2: 'Your first three churches',
+    })
     expect(skipped).toEqual(expect.arrayContaining([
       { prefix: 'a-relationship-with-Jesus', reason: 'privacy' },
       { prefix: 'gdcluster', reason: 'privacy' },
@@ -145,7 +151,7 @@ describe('downloadAllAccessible (R-#256)', () => {
       if (url.startsWith('/api/course-catalog?')) return { data: CATALOG }
       if (url === '/api/settings') return { data: { publicCourses: true, publicSensitiveCourses: true } }
       if (url === '/api/courses/premium/mine') return { data: { courses: [] } }
-      if (/^\/api\/course-catalog\/\d+$/.test(url)) return { data: { guias: [{ sufijoRuta: 'guide1' }] } }
+      if (/^\/api\/course-catalog\/\d+$/.test(url)) return { data: { guias: [{ sufijoRuta: 'guide1', titulo: 'Guía' }] } }
       throw new Error('unexpected')
     })
 
@@ -155,8 +161,32 @@ describe('downloadAllAccessible (R-#256)', () => {
     expect(result.downloaded).toEqual([])
   })
 
-  it('drops a copy whose guide list changed (a new guide must be downloaded)', async () => {
+  // Una copia descargada antes de que se guardaran los títulos (2026-09-25) se refresca
+  // sola: si no, el índice sin conexión seguiría mostrando `guide1` para siempre.
+  it('refreshes a copy that has the guides but no titles', async () => {
     const get = makeGet()
+    await saveDownloadedCourse({
+      key: 'en/web3-and-ubi',
+      courseId: 105,
+      lang: 'en',
+      prefix: 'web3-and-ubi',
+      titulo: 'Web3 and UBI',
+      contenidoSensible: false,
+      isPremium: false,
+      wallet: WALLET,
+      downloadedAt: Date.now(),
+      revision: 'vieja',
+      guides: [{ suffix: 'guide1', puzzle: null }, { suffix: 'guide2', puzzle: null }],
+      bytes: 10,
+    } as any)
+
+    const result = await downloadAllAccessible(get as any, options())
+
+    expect(result.downloaded).toContain('en/web3-and-ubi')
+    expect((await getDownloadedCourse('en/web3-and-ubi'))?.guides[0].titulo).toBe('What is a cluster?')
+  })
+
+  it('drops a copy whose guide list changed (a new guide must be downloaded)', async () => {    const get = makeGet()
     await saveDownloadedCourse({
       key: 'en/web3-and-ubi',
       courseId: 105,

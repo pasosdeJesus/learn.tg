@@ -125,19 +125,42 @@ being visited:
 - free courses, always;
 - paid courses, only if this wallet bought them (`/api/courses/premium/mine`);
 - category B courses, only with the R-#259 switch on;
-- copies that are already current (same guide list, not expired) are skipped, so
-  repeating the sync is cheap.
+- copies that are already current (same guide list and same guide titles, not expired)
+  are skipped, so repeating the sync is cheap.
 
 `OfflineLibrarySync` does it (mounted in `components/Layout.tsx`, once per session) and
 announces the progress **only when something is really missing** ("Checking what is
 missing or out of date 1/12"), because `downloadAllAccessible` reports the pending
-courses first (`onStart`). `OfflineDownloadAll` is the visible control on the course list:
-the count of saved courses and a discreet **Check now** link (no download button:
-operator decision, 2026-09-23, after testing on an iPhone). The per-course sync
-(`OfflineCourseDownload.tsx`) works the same way in the course page. The logic lives in
-`lib/offline-course-download.ts` (`listAccessibleCourses`, `downloadAllAccessible`). Con
-red la copia se revalida cada **24 h** (`REVALIDATION_MS`) y, si cambió, se refresca; sin
-red la copia **no caduca** y se sigue leyendo.
+courses first (`onStart`). Two rules keep that automatic sync honest (operator report,
+2026-09-25 — on a phone nothing was downloaded when opening `/en` and only the course
+that was opened was saved):
+
+- **It waits for the identity** (`useAuthedApi().ready`). Before the session/wallet is
+  resolved `authedGet` travels without `walletAddress` and every `/api/guide` answers
+  401, so the whole sync failed silently; the "Check now" control is disabled until then.
+- **A partial failure does not stamp the 6 h interval** (`learn.tg.offlineLibrarySyncedAt`
+  is only written when `failed` is empty) and a failure that never got to count guides
+  raises a toast instead of staying silent.
+- **The connection hold is not silent.** With the browser's data saver on
+  (`navigator.connection.saveData`) or a 2g/slow-2g network the automatic sync does not
+  run — a deliberate pause, so a limited plan is not spent on dozens of requests — but
+  the course list says so (`connectionHold()` in `OfflineDownloadAll.tsx`, notice
+  `offline-connection-hold`, EN/ES) and the **Check now** link still downloads: that is
+  an explicit request from the student. When the connection changes the hold is re-read
+  (`connection.change`), so the automatic sync resumes by itself.
+
+`OfflineDownloadAll` is the visible control on the course list: the count of saved courses
+and a discreet **Check now** link (no download button: operator decision, 2026-09-23,
+after testing on an iPhone). The per-course sync (`OfflineCourseDownload.tsx`) works the
+same way in the course page. The logic lives in `lib/offline-course-download.ts`
+(`listAccessibleCourses`, `downloadAllAccessible`). Con red la copia se revalida cada
+**24 h** (`REVALIDATION_MS`) y, si cambió, se refresca; sin red la copia **no caduca** y se
+sigue leyendo.
+
+The record keeps the **title of each guide** (`DownloadedGuide.titulo`, filled from
+`guideTitles` of the descriptor): offline the course outline and the `/offline` list show
+`1. <title>`, `2. <title>` …, not the route suffix (`guide1`). A copy downloaded before
+that field existed is refreshed by the next sync (the skip check compares titles too).
 
 When something is missing while offline, each page falls back to the stored copy:
 
