@@ -87,7 +87,6 @@ export default function Page({ params }: PageProps) {
 
   const [htmlSummary, setHtmlSummary] = useState('')
   const [htmlExtended, setHtmlExtended] = useState('')
-  const [contentsHtml, setContentsHtml] = useState('')
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [hasPurchased, setHasPurchased] = useState(false)
   const [gdEligible, setGdEligible] = useState<boolean | null>(null)
@@ -193,29 +192,6 @@ export default function Page({ params }: PageProps) {
       setHtmlSummary(htmlDeMd(course.resumenMd))
       // @ts-ignore
       setHtmlExtended(htmlDeMd(course.ampliaMd))
-
-      // Numeración explícita dentro del texto: el reseteo de Tailwind pone
-      // `list-style: none` y `padding: 0`, así que el marcador de un <ol> queda
-      // fuera de la caja y el contenedor lo recorta (el operador reportó que no
-      // se veía la numeración de las guías, 2026-09-16).
-      let guias = "<ol class='list-none space-y-1 p-0 m-0 text-primary-foreground'>\n"
-      let guideIndex = 0
-      for (const guia of course.guias) {
-        guideIndex += 1
-        guias += `<li><span class="font-semibold">${guideIndex}.</span> `
-        if (guia.sufijoRuta) {
-          guias +=
-            `<a href='/${lang}/${pathPrefix}/${guia.sufijoRuta}' style='text-decoration: underline'>${guia.titulo}</a>`
-          if (guia.completed) guias += ' ✅'
-          if (guia.receivedScholarship) guias += ' 💵'
-          if (guia.receivedSlearnScholarship) guias += ` <img src="/img/slearn-icon.svg" alt="SLEARN" style="width:20px;height:20px;display:inline;vertical-align:middle" />`
-        } else {
-          guias += guia.titulo
-        }
-        guias += '</li>\n'
-      }
-      guias += '</ol>\n'
-      setContentsHtml(guias)
     }
   }, [course, lang, pathPrefix])
 
@@ -340,10 +316,34 @@ export default function Page({ params }: PageProps) {
                   ? 'Course contents'
                   : 'Contenido del curso'}
               </h2>
-              <div
-                className="list-decimal text-justify space-y-2"
-                dangerouslySetInnerHTML={{ __html: contentsHtml }}
-              />
+              {/* La numeración y el título van como texto con el color heredado del panel.
+                  La versión anterior inyectaba HTML con `text-primary-foreground`
+                  (#ffffff) sobre el panel blanco, así que el índice entero era invisible,
+                  en línea y sin conexión (reporte del operador, 2026-09-25). El reset de
+                  Tailwind oculta los marcadores del <ol>, por eso el número es explícito. */}
+              <ol className="list-none space-y-2 p-0 m-0 text-justify">
+                {course.guias.map((guia, index) => (
+                  <li key={`${guia.sufijoRuta || 'guia'}-${index}`}>
+                    <span className="font-semibold">{index + 1}.</span>{' '}
+                    {guia.sufijoRuta ? (
+                      <a className="underline" href={`/${lang}/${pathPrefix}/${guia.sufijoRuta}`}>
+                        {guia.titulo}
+                      </a>
+                    ) : (
+                      guia.titulo
+                    )}
+                    {guia.completed ? ' ✅' : ''}
+                    {guia.receivedScholarship ? ' 💵' : ''}
+                    {guia.receivedSlearnScholarship ? (
+                      <img
+                        src="/img/slearn-icon.svg"
+                        alt="SLEARN"
+                        style={{ width: 20, height: 20, display: 'inline', verticalAlign: 'middle' }}
+                      />
+                    ) : null}
+                  </li>
+                ))}
+              </ol>
             </div>
 
             <OfflineCourseDownload

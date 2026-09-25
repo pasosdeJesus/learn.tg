@@ -14,7 +14,8 @@ End-to-end testing for learn.tg uses `@pasosdejesus/m`'s test runner
 | `make test-e2e-<name>` | Single browser spec by filename pattern | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-wallet` | Atajo: `SPEC=in-app-wallet` (billetera in-app, R-#245) | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-biometric` | Atajo: `SPEC=biometric-unlock` (desbloqueo por huella, R-#246) | ✅ | `https://learn.tg:9001` |
-| `make test-e2e-offline` | Atajo: `SPEC=offline` (offline-guide + offline-crossword) | ✅ | `https://learn.tg:9001` |
+| `make test-e2e-offline` | Atajo: `SPEC=offline` (offline-guide + offline-crossword + offline-course-download) | ✅ | `https://learn.tg:9001` |
+| `make test-e2e-two-courses` | Atajo: `SPEC=offline-two-courses` (dos cursos con billetera nueva, R-#242) | ✅ | `https://learn.tg:9001` |
 | `make test-packages` | Unit tests de `packages/pdj-wallet{,−next}` | ❌ | local |
 | `bin/m test:e2e` | Browser specs (falls back to smoke if none found) | ✅ | ⚠️ **`https://learn.tg` (producción)** |
 | `bin/m test:e2e --smoke` | Smoke only | ❌ | `https://learn.tg:9001` |
@@ -359,6 +360,7 @@ PROD_SPECS=1 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=prod-land
 | `prod-landing-to-profile.spec.mjs` | Production landing page → wallet connect → profile save flow |
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
 | `offline-crossword.spec.mjs` | R-#242: crossword **solved** and submitted offline → queued (`offline-pending`, counter and IndexedDB in agreement), survives a reload, drains when the connection returns, the server answers 200 and pays the scholarship, the guide goes to completed and the outcome is left as an `offline_answer` notice (step 9, matched by `ref_key`) (no service worker needed) |
+| `offline-two-courses.spec.mjs` | R-#242 (+ el enfriamiento **por curso** de `LearnTGVaultsV5`): una **billetera nueva** que el propio spec registra por SIWE y lleva a `profilescore >= 50` (perfil del dueño + los campos que confirma el verificador); carga **en línea** las guías y los crucigramas de **dos cursos diferentes**, envía los dos **sin conexión** (dos pestañas, la misma cola) y **los dos deben pagar** al volver la conexión — pagar el primero no puede bloquear el segundo. Se omite (nunca falla) si el sitio no tiene dos cursos elegibles o si la billetera de `apps/.env` no es la verificadora del sitio |
 | `offline-guide.spec.mjs` | R-#241: guide readable offline from the PWA cached page (needs a production build; on the deployed `make prod` build it reports 0 failures) |
 | `in-app-wallet.spec.mjs` | R-#245: in-app wallet created in `/en/test/wallet`, unlocked, SIWE and session cookie (skips when the page is not deployed) |
 | `header-wallet-dialog.spec.mjs` | R-#245: the real header + wallet modal flow — create → close → reopen must start fresh → unlock from the header → SIWE → the header **keeps the session after a reload** → `✕` returns to signed-out |

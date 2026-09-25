@@ -47,6 +47,9 @@ export async function signInWithInAppWallet(provider: Eip1193Provider): Promise<
     signature,
     redirect: 'false',
     json: 'true',
+    // R-#246 §8: `userevent` registra con qué billetera se inició sesión
+    // (`in-app`, `eip6963:<rdns>` o `window.ethereum`).
+    walletSource: 'in-app',
   })
   const callback = await fetch('/api/auth/callback/credentials', {
     method: 'POST',

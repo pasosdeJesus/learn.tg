@@ -82,6 +82,16 @@ OKX Wallet's embedded browser which uses multiple user-agent formats.
 | `siwe_wrong_network` | ChainId mismatch | Track wrong-network errors |
 | `siwe_auth_success` | After successful auth | Track successful logins |
 
+`siwe_auth_attempt` and `siwe_auth_success` carry **`wallet_source`** in `event_data`
+(https://github.com/pasosdeJesus/learn.tg/issues/246 §8): `in-app`, `window.ethereum` or
+`eip6963:<rdns>` (`eip6963:io.metamask.mobile`). The client only *hints* it — the in-app
+sign-in sends `in-app` (`lib/in-app-siwe.ts`) and `ConnectWalletButton` sends what
+`externalWalletSource()` resolved from `window.ethereum` vs the EIP-6963 announcements
+(`lib/external-provider.ts`) — and `sanitizeWalletSource()` in `auth-options.ts` validates
+it against that short allowlist, storing `unknown` for anything else. This answers the open
+question "do wallet browsers announce through EIP-6963?" with real sign-ins instead of
+another manual round.
+
 ### Session
 
 JWT-based (`strategy: 'jwt'`). Token contains `sub` = wallet address.

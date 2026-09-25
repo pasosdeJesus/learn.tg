@@ -10,7 +10,7 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { clearRestrictedCourseCopies } from '@/lib/offline-course-db'
-import { getExternalProvider } from '@/lib/external-provider'
+import { getExternalProvider, externalWalletSource } from '@/lib/external-provider'
 import { logger } from '@pasosdejesus/m/debug'
 
 interface ExtendedSession {
@@ -222,6 +222,10 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         signature: sig,
         redirect: 'false',
         json: 'true',
+        // R-#246 §8: el servidor registra en `userevent` de dónde salió la billetera
+        // (`eip6963:<rdns>` o `window.ethereum`); es lo que responde la pregunta
+        // abierta sobre los navegadores de billetera sin otro round manual.
+        walletSource: externalWalletSource(),
       })
       console.log('[debug-wallet] Fetching /api/auth/callback/credentials')
       const cbRes = await fetch('/api/auth/callback/credentials', {

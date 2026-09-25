@@ -335,6 +335,14 @@ describe('Course List Page Component', () => {
     expect(parent2?.textContent).not.toMatch(/✅/)
     expect(parent2?.textContent).not.toMatch(/💵/)
     expect(parent2?.innerHTML).not.toContain('slearn-icon.svg')
+
+    // Regresión (operador, 2026-09-25): el índice con la numeración se inyectaba como HTML
+    // con la clase `text-primary-foreground` (#ffffff) sobre el panel blanco, así que no se
+    // veía ni en línea ni sin conexión. Número y título deben usar el color del panel.
+    const outline = parent1?.closest('ol')
+    expect(outline).not.toBeNull()
+    expect(outline?.className ?? '').not.toContain('text-primary-foreground')
+    expect(outline?.innerHTML ?? '').not.toContain('text-primary-foreground')
   })
 
   it('does not call guide-status API when no session', async () => {

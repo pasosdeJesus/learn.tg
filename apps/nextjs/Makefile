@@ -222,5 +222,12 @@ test-e2e-biometric:
 test-e2e-offline:
 	$(MAKE) test-e2e-spec SPEC=offline
 
+# R-#242: dos cursos distintos con una billetera NUEVA (la registra y la hace elegible
+# el propio spec) y los dos crucigramas enviados sin conexión. Se corre aparte de
+# `test-e2e-offline` porque tarda más: crea la billetera, sube el perfil a 50 puntos y
+# espera dos drenados de la cola.
+test-e2e-two-courses:
+	$(MAKE) test-e2e-spec SPEC=offline-two-courses
+
 # Todo el PWA del MVP (R-#244): billetera in-app + guía offline + crucigrama offline
 test-e2e-pwa: test-e2e-wallet test-e2e-offline

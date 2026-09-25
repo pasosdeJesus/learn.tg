@@ -50,6 +50,28 @@ export async function checkCrosswordGet(): Promise<Response> {
   return NextResponse.json({ error: 'Expecting POST request' }, { status: 400 })
 }
 
+/**
+ * Tiempo que falta del enfriamiento de **este** curso
+ * (`studentCooldowns(courseId, student)` del contrato V5, 1 día). Devuelve `''` si el
+ * contrato no lo entrega: el mensaje queda sin el dato, nunca con uno inventado.
+ */
+async function remainingCooldownText(
+  vaultContract: any,
+  courseIdArg: bigint,
+  walletAddress: Address,
+): Promise<string> {
+  try {
+    const last = (await vaultContract.read.studentCooldowns([courseIdArg, walletAddress])) as bigint
+    if (!last || last === 0n) return ''
+    const elapsed = BigInt(Math.floor(Date.now() / 1000)) - last
+    const left = 86400n - elapsed
+    if (left <= 0n) return ''
+    return ` (${Math.ceil(Number(left) / 3600)} h)`
+  } catch {
+    return ''
+  }
+}
+
 export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
 
   const removeAccents = (s: string) =>
@@ -82,7 +104,7 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         atLeast50:
           'No se enviaron resultados al blockchain. Necesita al menos 50 puntos en su perfil para recibir beca',
         cannotSubmit:
-          'Estás es un periodo de espera de 24 horas desde tu último envío para este curso. No puedes enviar resultado para beca en este momento.',
+          'Estás en un periodo de espera de 24 horas para este curso{{0}}. Los demás cursos no se ven afectados: puedes enviar el crucigrama de otro curso.',
         contractError: 'No se pudo conectar con el contrato de becas.',
         correctPoint: '¡Respuesta correcta! ',
         correct:
@@ -106,7 +128,7 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         atLeast50:
           'The results were not sent to the blockchain. You need at least 50 points in your profile to receive scholarship',
         cannotSubmit:
-          'You are in a waiting period of 24 hours since your last submission. You cannot submit a scholarship result at this time.',
+          'You are in a waiting period of 24 hours for this course{{0}}. Other courses are not affected: you can submit the crossword of another course.',
         contractError: 'Could not connect to scholarship contract.',
         correct:
           'Your result has been submitted for scholarship, please waith 24 hours before submitting again answers for this course.',
@@ -632,7 +654,13 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
             retMessage += '\n' + msg[locale].submitError
           } 
         } else {
-          retMessage += '\n' + msg[locale].cannotSubmit
+          // El enfriamiento del contrato es **por curso** (`studentCooldowns[courseId][student]`
+          // y `studentCanSubmit(courseId, student)`, LearnTGVaultsV5.sol), así que este
+          // mensaje sólo aplica al curso que se está enviando. Se dice el tiempo que falta y
+          // que los demás cursos no se ven afectados: antes el texto no lo aclaraba y quedaba
+          // la impresión de que bloqueaba todos los cursos (reporte del operador, 2026-09-25).
+          const left = await remainingCooldownText(vaultContract, courseIdArg, walletAddress as Address)
+          retMessage += '\n' + msg[locale].cannotSubmit.replace('{{0}}', left)
         }
       } else {
         retMessage += `\nThere is not vault for the course (${courseId})`

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  externalWalletSource,
   getAnnouncedProviders,
   getExternalProvider,
   resetExternalProviderForTests,
@@ -75,5 +76,24 @@ describe('external provider discovery (R-#246)', () => {
     announce(PROVIDER_A, 'io.rabby', 'Rabby Wallet')
     announce(PROVIDER_B, 'io.rabby', 'Rabby Wallet')
     expect(getAnnouncedProviders()).toHaveLength(1)
+  })
+
+  // R-#246 §8: de dónde salió la billetera es lo que se registra en `userevent`
+  // (`wallet_source`) al iniciar sesión; así se responde la pregunta abierta sobre
+  // EIP-6963 con los usuarios reales y sin otro round manual.
+  describe('source recorded for userevent', () => {
+    it('reports window.ethereum when the browser injects it', () => {
+      ;(window as { ethereum?: unknown }).ethereum = PROVIDER_A
+      expect(externalWalletSource()).toBe('window.ethereum')
+    })
+
+    it('reports the rdns of the announced provider', () => {
+      announce(PROVIDER_A, 'io.metamask.mobile', 'MetaMask')
+      expect(externalWalletSource()).toBe('eip6963:io.metamask.mobile')
+    })
+
+    it('reports unknown when there is no provider', () => {
+      expect(externalWalletSource()).toBe('unknown')
+    })
   })
 })

@@ -30,9 +30,19 @@ export interface AnnouncedProvider {
 export interface ExternalProviderState {
   provider: Eip1193Provider | null
   announced: AnnouncedProvider[]
+  /**
+   * De dónde salió el proveedor elegido (R-#246 §8: la pregunta abierta era si los
+   * navegadores de billetera de verdad lo anuncian por EIP-6963 o si queda el
+   * `window.ethereum` clásico). Se registra en `userevent` al iniciar sesión.
+   */
+  source: ExternalProviderSource
+  /** rdns del anuncio elegido (`io.metamask.mobile`, `io.rabby`, ...); `null` si es `window.ethereum`. */
+  rdns: string | null
 }
 
-const EMPTY: ExternalProviderState = { provider: null, announced: [] }
+export type ExternalProviderSource = 'window.ethereum' | 'eip6963' | null
+
+const EMPTY: ExternalProviderState = { provider: null, announced: [], source: null, rdns: null }
 
 let state: ExternalProviderState = EMPTY
 let started = false
@@ -53,10 +63,12 @@ function choose(): void {
   if (state.provider) return
   const direct = injected()
   if (direct) {
-    emit({ provider: direct })
+    emit({ provider: direct, source: 'window.ethereum', rdns: null })
     return
   }
-  if (state.announced[0]) emit({ provider: state.announced[0].provider })
+  if (state.announced[0]) {
+    emit({ provider: state.announced[0].provider, source: 'eip6963', rdns: state.announced[0].rdns })
+  }
 }
 
 function start(): void {
@@ -124,6 +136,21 @@ export function getExternalProvider(): Eip1193Provider | null {
   return state.provider
 }
 
+/**
+ * Valor para `userevent.wallet_source` cuando la sesión se inicia con una billetera
+ * inyectada (R-#246 §8): `eip6963:<rdns>` si llegó por anuncio, `window.ethereum` si es
+ * el objeto clásico y `unknown` si no hay proveedor todavía. Lo consume
+ * `ConnectWalletButton` al firmar el SIWE y `sanitizeWalletSource` lo valida en el
+ * servidor antes de guardarlo.
+ */
+export function externalWalletSource(): string {
+  start()
+  choose()
+  if (state.source === 'eip6963') return state.rdns ? `eip6963:${state.rdns}` : 'eip6963:unknown'
+  if (state.source === 'window.ethereum') return 'window.ethereum'
+  return 'unknown'
+}
+
 export function getAnnouncedProviders(): AnnouncedProvider[] {
   start()
   return state.announced
@@ -140,11 +167,16 @@ export function useExternalProvider(): {
   provider: Eip1193Provider | null
   announced: AnnouncedProvider[]
   available: boolean
+  /** De dónde salió el proveedor elegido (R-#246 §8). */
+  source: ExternalProviderSource
+  rdns: string | null
 } {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   return {
     provider: snapshot.provider,
     announced: snapshot.announced,
     available: snapshot.provider !== null,
+    source: snapshot.source,
+    rdns: snapshot.rdns,
   }
 }
