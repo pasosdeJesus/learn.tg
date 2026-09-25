@@ -88,6 +88,9 @@ const mockGuideData = {
   coursePath: '/en/course1',
   nextGuidePath: '',
   previousGuidePath: '',
+  // R-#256 §3.10: el curso puede venir de la copia del dispositivo (sin conexión).
+  fromDevice: false,
+  downloadedAt: null,
   totalGuides: null,
   vaultCreated: null,
   scholarshipPerGuide: null,

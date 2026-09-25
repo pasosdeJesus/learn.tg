@@ -341,7 +341,19 @@ export default function Page() {
         </div>
         )}
         <aside className="flex flex-col space-y-4 items-center justify-center w-full" aria-label="Interactive buttons">
-          {isClient && showGoodDollarButton && (
+          {/* R-#256 §3.10: reclamar GoodDollar o UBI depende de la cadena; sin conexión
+              se dice el motivo en una línea en vez de ofrecer un botón que fallaría. */}
+          {isClient && offlineNow && (showGoodDollarButton || showCeloUbiButton) && (
+            <p
+              className="text-xs text-amber-800 bg-amber-50 px-3 py-1.5 rounded"
+              data-testid="offline-chain-actions"
+            >
+              {course.idioma === 'es'
+                ? 'Reclamar GoodDollar o UBI necesita conexión.'
+                : 'Claiming GoodDollar or UBI needs a connection.'}
+            </p>
+          )}
+          {isClient && !offlineNow && showGoodDollarButton && (
             <SafeRender fallback={
               <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded">
                 {course.idioma === 'es'
@@ -354,7 +366,7 @@ export default function Page() {
               />
             </SafeRender>
           )}
-          {isClient && showCeloUbiButton && 
+          {isClient && !offlineNow && showCeloUbiButton && 
             <CeloUbiButton 
             lang={course.idioma}
             />

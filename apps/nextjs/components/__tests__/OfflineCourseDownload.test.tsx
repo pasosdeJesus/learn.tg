@@ -160,6 +160,25 @@ describe('OfflineCourseDownload', () => {
     expect(screen.getByText('Remove download')).toBeInTheDocument()
   })
 
+  // R-#256 §3.10: sin conexión el panel muestra el avance **del momento de la descarga**
+  // con su fecha, para que el estudiante sepa que es una foto y no el estado actual.
+  it('shows the progress snapshot of the saved copy', async () => {
+    hooks.record = {
+      ...SAVED,
+      guides: [
+        { suffix: 'guide1', puzzle: null, completed: true, receivedScholarship: true },
+        { suffix: 'guide2', puzzle: null, completed: false },
+      ],
+    }
+
+    render(<OfflineCourseDownload {...BASE_PROPS} />)
+
+    const snapshot = await screen.findByTestId('offline-progress')
+    expect(snapshot.textContent).toContain('Progress as of')
+    expect(snapshot.textContent).toContain('1/2')
+    expect(snapshot.textContent).toContain('guides completed')
+  })
+
   it('does not show a paid copy downloaded with another wallet', async () => {
     hooks.record = { ...SAVED, isPremium: true, wallet: '0xotra' }
 
@@ -171,8 +190,10 @@ describe('OfflineCourseDownload', () => {
     expect(screen.queryByText('Remove download')).not.toBeInTheDocument()
   })
 
-  it('refreshes a copy older than a week and tells the user when it changed', async () => {
-    hooks.record = { ...SAVED, downloadedAt: Date.now() - 8 * 24 * 60 * 60 * 1000 }
+  // Con un día de vigencia (REVALIDATION_MS, aclaración del 2026-09-24) una copia de 25 h
+  // se refresca al abrir con red; sin red no caduca y se sigue leyendo.
+  it('refreshes a copy older than a day and tells the user when it changed', async () => {
+    hooks.record = { ...SAVED, downloadedAt: Date.now() - 25 * 60 * 60 * 1000 }
     hooks.revalidateCourse.mockResolvedValue({ updated: true, course: SAVED })
 
     render(<OfflineCourseDownload {...BASE_PROPS} />)

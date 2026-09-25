@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import Page from '../page'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
@@ -130,5 +130,45 @@ describe('Guide page offline (R-#256)', () => {
     })
     expect(document.body.textContent).toContain('Showing the saved copy')
     expect(document.body.textContent).not.toContain('Error: Offline')
+  })
+
+  // R-#256 §3.10: reclamar GoodDollar/UBI depende de la cadena. Si la guía se leyó en
+  // línea (el botón quedó marcado) y luego se pierde la conexión, el botón se sustituye
+  // por el motivo en una línea en vez de ofrecer uno que fallaría al pulsarlo.
+  it('replaces the GoodDollar/UBI buttons with a one-line reason offline', async () => {
+    const withUbi = { data: { markdown: '# Guía\n\n{CeloUbiButton}\n\n1. Q ___ (a)' } }
+
+    // 1) En línea: la página marca que la guía trae el botón de UBI.
+    Object.defineProperty(window.navigator, 'onLine', { value: true, configurable: true })
+    vi.mocked(useCachedGuide).mockReturnValue({
+      isOffline: false,
+      isFromCache: false,
+      markFromCache: vi.fn(),
+      getCached,
+      save: vi.fn(),
+      remove: vi.fn(),
+    })
+    authedGet.mockResolvedValue(withUbi)
+    vi.mocked(useAuthedApi).mockReturnValue({ ready: true, mismatch: false, authedGet } as never)
+
+    const { rerender } = render(<Page />)
+    await waitFor(() => expect(screen.getByTestId('celo-ubi-button')).toBeInTheDocument())
+
+    // 2) Se pierde la conexión: el botón no se ofrece, se explica por qué.
+    Object.defineProperty(window.navigator, 'onLine', { value: false, configurable: true })
+    vi.mocked(useCachedGuide).mockReturnValue({
+      isOffline: true,
+      isFromCache: true,
+      markFromCache: vi.fn(),
+      getCached,
+      save: vi.fn(),
+      remove: vi.fn(),
+    })
+    rerender(<Page />)
+
+    await waitFor(() =>
+      expect(screen.getByTestId('offline-chain-actions')).toHaveTextContent('needs a connection'),
+    )
+    expect(screen.queryByTestId('celo-ubi-button')).not.toBeInTheDocument()
   })
 })

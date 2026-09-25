@@ -32,6 +32,17 @@ export interface CourseDescriptor {
   isPremium: boolean
   /** Sufijos de ruta de las guías, en orden (`guide1`, `guide2`, ...). */
   guides: string[]
+  /** R-#256 §3.10: presentación del curso (subtítulo y resumen) para que la copia
+   * sin conexión no sea un cascarón vacío. */
+  subtitulo?: string | null
+  resumenMd?: string | null
+  /** R-#256 §3.10: avance de cada guía al descargar, por sufijo. Un llamador que no
+   * lo conozca (p. ej. la sincronización de la biblioteca) puede omitirlo. */
+  guideStatus?: Record<string, {
+    completed?: boolean
+    receivedScholarship?: boolean
+    receivedSlearnScholarship?: boolean
+  }>
 }
 
 export interface DownloadProgress {
@@ -163,7 +174,7 @@ export async function downloadCourse(
 
     await saveCourseGuide(key, suffix, markdown)
     contents.push(markdown)
-    downloadedGuides.push({ suffix, puzzle })
+    downloadedGuides.push({ suffix, puzzle, ...(descriptor.guideStatus?.[suffix] ?? {}) })
   }
 
   const course: DownloadedCourse = {
@@ -172,6 +183,8 @@ export async function downloadCourse(
     lang: descriptor.lang,
     prefix: descriptor.prefix.replace(/^\/+/, ''),
     titulo: descriptor.titulo,
+    subtitulo: descriptor.subtitulo ?? null,
+    resumenMd: descriptor.resumenMd ?? null,
     contenidoSensible: descriptor.contenidoSensible,
     isPremium: descriptor.isPremium,
     wallet: wallet ? wallet.toLowerCase() : null,

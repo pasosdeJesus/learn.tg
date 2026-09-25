@@ -46,6 +46,30 @@ async function publicCredentials(base, userId) {
   return Array.isArray(body.credentials) ? body.credentials : null
 }
 
+/**
+ * Apariencia del interruptor: estado, color de la pista y posicion del pulgar.
+ *
+ * `data-state` es un atributo y cambia aunque el CSS no exista; por eso el operador
+ * reporto un toast "Saved" con el control aparentemente inerte (R-#259). Tailwind v4
+ * mueve el pulgar con la propiedad `translate` (no `transform`), asi que hay que leer
+ * las dos.
+ */
+async function switchVisual(page, label) {
+  return page.evaluate((aria) => {
+    const root = document.querySelector(`[role="switch"][aria-label="${aria}"]`)
+    if (!root) return null
+    const thumb = root.firstElementChild
+    const rootStyle = getComputedStyle(root)
+    const thumbStyle = thumb ? getComputedStyle(thumb) : null
+    return {
+      state: root.getAttribute('data-state'),
+      trackBackground: rootStyle.backgroundColor,
+      thumbTranslate: thumbStyle?.translate ?? null,
+      thumbTransform: thumbStyle?.transform ?? null,
+    }
+  }, label)
+}
+
 /** Espera a que el switch cambie de estado en el servidor (el guardado es asíncrono). */
 async function waitForSwitch(page, label, expected) {
   await page.waitForFunction(
@@ -135,8 +159,34 @@ async function main() {
     }
 
     // 1. Apagar la publicación de cursos completados.
+    const before = await switchVisual(page, switchLabel)
     await page.click(`[role="switch"][aria-label="${switchLabel}"]`)
     await waitForSwitch(page, switchLabel, 'unchecked')
+    // El estado (atributo) y el guardado pueden estar bien y el control verse inerte:
+    // las clases del `Switch` viven en `@pasosdejesus/m` y Tailwind v4 no escanea
+    // `node_modules` sin un `@source` en `app/globals.css` (R-#259). Se comprueba el
+    // cambio visual, no solo el atributo, para que la regresion no vuelva en silencio.
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    const after = await switchVisual(page, switchLabel)
+    if (
+      after.thumbTranslate !== before.thumbTranslate ||
+      after.thumbTransform !== before.thumbTransform
+    ) {
+      ok(`El pulgar se movio al apagar (${before.thumbTranslate} → ${after.thumbTranslate})`)
+    } else {
+      fail(
+        `El pulgar no se movio (${before.thumbTranslate}): ` +
+          'falta el CSS del Switch (¿@source de @pasosdejesus/m en app/globals.css?)',
+      )
+    }
+    if (after.trackBackground !== before.trackBackground) {
+      ok(`La pista cambio de color (${before.trackBackground} → ${after.trackBackground})`)
+    } else {
+      fail(
+        `La pista no cambio de color (${before.trackBackground}): ` +
+          'falta el CSS del Switch (¿@source de @pasosdejesus/m en app/globals.css?)',
+      )
+    }
 
     let credentials = await publicCredentials(base, userId)
     if (credentials === null) fail('El perfil público no respondió mientras la publicación estaba apagada')

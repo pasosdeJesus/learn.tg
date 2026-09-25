@@ -486,6 +486,9 @@ describe('Course Introduction Page', () => {
     nextGuidePath: '',
     previousGuidePath: '',
     coursePath: '/en/course1',
+    // R-#256 §3.10: la página distingue si el curso salió de la copia del dispositivo.
+    fromDevice: false,
+    downloadedAt: null,
     refreshCourseData: vi.fn(() => Promise.resolve()),
   }
 

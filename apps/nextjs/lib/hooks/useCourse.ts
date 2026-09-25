@@ -16,6 +16,11 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // R-#256 §3.10: `true` cuando el curso se armó con la copia del dispositivo. La
+  // página lo usa para decir que el avance es el de la descarga y para no ofrecer las
+  // acciones que necesitan la red (donar, reclamar UBI).
+  const [fromDevice, setFromDevice] = useState(false)
+  const [downloadedAt, setDownloadedAt] = useState<number | null>(null)
 
   // R-#256: lo que ya está en pantalla no se borra si el dispositivo se queda sin
   // conexión y el effect vuelve a correr. Medido en E2E el 2026-09-24: al pasar a
@@ -49,11 +54,15 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
       if (downloaded) {
         setError(null)
         setCourse(courseFromDownloaded(downloaded))
+        setFromDevice(true)
+        setDownloadedAt(downloaded.downloadedAt)
         return
       }
       if (cause !== undefined) console.error('Failed to fetch course data:', cause)
       // Sin copia descargada: no se borra el curso que ya se está mostrando.
       if (hasCourseRef.current) return
+      setFromDevice(false)
+      setDownloadedAt(null)
       setError(cause instanceof Error ? cause.message : cause === undefined ? 'Offline' : String(cause))
       setCourse(null)
     }
@@ -119,6 +128,8 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
         guias: guidesWithStatus,
       } as Course
       setCourse(fullCourse)
+      setFromDevice(false)
+      setDownloadedAt(null)
     } catch (e: unknown) {
       await loadFromDevice(e)
     } finally {
@@ -130,21 +141,31 @@ export function useCourse({ lang, pathPrefix }: UseCourseProps) {
     fetchCourse()
   }, [fetchCourse])
 
-  return { course, loading, error }
+  return { course, loading, error, fromDevice, downloadedAt }
 }
 
 /**
  * Curso a partir del registro descargado (R-#256): sin conexión la página del
  * curso debe listar **todas** las guías descargadas (no solo la visitada) y la
- * página de guía resolver su número y su ruta.
+ * página de guía resolver su número y su ruta. La presentación (subtítulo y
+ * resumen) y el avance de cada guía son los del **momento de la descarga**, para
+ * que la página no sea un cascarón vacío sin conexión (§3.10).
  */
 function courseFromDownloaded(downloaded: DownloadedCourse): Course {
   return {
     id: String(downloaded.courseId),
     titulo: downloaded.titulo || downloaded.prefix,
+    subtitulo: downloaded.subtitulo ?? undefined,
+    resumenMd: downloaded.resumenMd ?? undefined,
     idioma: downloaded.lang,
     prefijoRuta: `/${downloaded.prefix}`,
-    guias: downloaded.guides.map((guide) => ({ titulo: guide.suffix, sufijoRuta: guide.suffix })),
+    guias: downloaded.guides.map((guide) => ({
+      titulo: guide.suffix,
+      sufijoRuta: guide.suffix,
+      completed: guide.completed,
+      receivedScholarship: guide.receivedScholarship,
+      receivedSlearnScholarship: guide.receivedSlearnScholarship,
+    })),
     conBilletera: false,
     sinBilletera: true,
     creditosMd: '',

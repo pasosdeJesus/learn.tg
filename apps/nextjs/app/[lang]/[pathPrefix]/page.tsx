@@ -44,6 +44,9 @@ export default function Page({ params }: PageProps) {
     course,
     loading,
     error,
+    // R-#256 §3.10: el curso vino de la copia del dispositivo (sin conexión).
+    fromDevice,
+    downloadedAt,
   } = useGuideData({
     lang,
     pathPrefix,
@@ -338,9 +341,23 @@ export default function Page({ params }: PageProps) {
               courseId={parseInt(course.id)}
               prefix={pathPrefix}
               titulo={course.titulo}
+              subtitulo={course.subtitulo}
+              resumenMd={course.resumenMd}
+              guideStatus={Object.fromEntries(
+                course.guias
+                  .filter((guia) => guia.sufijoRuta)
+                  .map((guia) => [
+                    String(guia.sufijoRuta),
+                    {
+                      completed: guia.completed,
+                      receivedScholarship: guia.receivedScholarship,
+                      receivedSlearnScholarship: guia.receivedSlearnScholarship,
+                    },
+                  ]),
+              )}
               contenidoSensible={course.contenido_sensible === true}
               isPremium={Number(course.porPagar) > 0}
-              guides={course.guias.map((guia) => guia.sufijoRuta).filter(Boolean)}
+              guides={course.guias.map((guia) => guia.sufijoRuta).filter(Boolean) as string[]}
               canRead={Number(course.porPagar) <= 0 || hasPurchased}
             />
 
@@ -389,18 +406,32 @@ export default function Page({ params }: PageProps) {
               scholarshipPaid={sData.scholarshipPaid}
           scholarshipPaidSlearn={sData.scholarshipPaidSlearn}
             />
-            {sData.vaultCreated && sData.vaultBalance !== null && (
-              <CourseDonation
-                lang={lang}
-                vaultBalance={sData.vaultBalance}
-                vaultBalanceSlearn={sData.vaultBalanceSlearn}
-                courseId={parseInt(course.id)}
-                isLoggedIn={!!session?.address}
-                onDonationSuccess={(courseId) => {
-                  fetchScholarship()
-                  startCountdownRefresh()
-                }}
-              />
+            {fromDevice ? (
+              // R-#256 §3.10: sin conexión no se ofrecen las acciones que dependen de la
+              // cadena (donar, reclamar UBI): se dice el motivo en una línea y vuelven
+              // cuando hay red.
+              <p
+                className="px-6 py-4 rounded-xl bg-amber-50 text-sm text-amber-800"
+                data-testid="offline-chain-actions"
+              >
+                {course?.idioma === 'es'
+                  ? `Estás viendo la copia guardada: para donar o reclamar UBI necesitas conexión. El avance es el del ${downloadedAt ? new Date(downloadedAt).toLocaleDateString('es') : 'momento de la descarga'}.`
+                  : `You are seeing the saved copy: donating or claiming UBI needs a connection. The progress shown is the one from ${downloadedAt ? new Date(downloadedAt).toLocaleDateString('en') : 'the download'}.`}
+              </p>
+            ) : (
+              sData.vaultCreated && sData.vaultBalance !== null && (
+                <CourseDonation
+                  lang={lang}
+                  vaultBalance={sData.vaultBalance}
+                  vaultBalanceSlearn={sData.vaultBalanceSlearn}
+                  courseId={parseInt(course.id)}
+                  isLoggedIn={!!session?.address}
+                  onDonationSuccess={(courseId) => {
+                    fetchScholarship()
+                    startCountdownRefresh()
+                  }}
+                />
+              )
             )}
           </aside>
         </div>

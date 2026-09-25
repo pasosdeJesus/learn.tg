@@ -219,6 +219,9 @@ async function submitDiagnostics(page) {
 
 async function main() {
   const t0 = performance.now()
+  // Reloj de pared del inicio: sirve para no aceptar un aviso viejo de otra corrida
+  // como prueba de la de ahora (el aviso lo inserta el servidor con `new Date()`).
+  const startedAtMs = Date.now()
   resetFailures()
 
   const creds = loadEnvCredentials()
@@ -506,6 +509,46 @@ async function main() {
     const newSlearn = !statusBefore?.receivedSlearnScholarship && statusAfter.receivedSlearnScholarship
     ok(`La recompensa quedó registrada: guía completada${wasCompleted ? ' (ya lo estaba antes)' : ' (pasó de pendiente a completada)'}`
       + `${newScholarship ? ' + beca USDT nueva' : ''}${newSlearn ? ' + beca SLEARN nueva' : ''}`)
+  }
+
+  // 9. El resultado queda además como **aviso duradero** (R-#242): cuando la cola se
+  // drena el estudiante puede estar en otra página, o haber cerrado la app, así que el
+  // aviso en pantalla no llega; `check-crossword` inserta entonces una notificación
+  // `offline_answer`, idempotente por el momento en que se guardó la respuesta
+  // (`ref_key`). Se comprueba contra el servidor (no en la UI del navegador).
+  let queuedSavedAt = null
+  if (replayRequest) {
+    try { queuedSavedAt = Number(JSON.parse(replayRequest).offlineSavedAt) } catch { /* no era JSON */ }
+  }
+  const notice = await page.evaluate(async (wallet) => {
+    const res = await fetch(`/api/notifications?walletAddress=${encodeURIComponent(wallet)}`, {
+      credentials: 'same-origin',
+    })
+    if (!res.ok) return { error: res.status }
+    const body = await res.json()
+    const list = Array.isArray(body.notifications) ? body.notifications : []
+    const found = list.find((n) => n.type === 'offline_answer')
+    return { notice: found || null, total: list.length }
+  }, creds.addr)
+
+  if (notice.error) {
+    fail(`No se pudieron leer las notificaciones (HTTP ${notice.error})`)
+  } else if (!notice.notice) {
+    fail(`No quedó el aviso offline_answer en las notificaciones (${notice.total} avisos)`)
+  } else if (Number.isFinite(queuedSavedAt) && queuedSavedAt) {
+    const expected = `offline_answer:${queuedSavedAt}`
+    if (notice.notice.ref_key !== expected) {
+      fail(`El aviso no corresponde a esta entrega (ref_key ${notice.notice.ref_key} ≠ ${expected})`)
+    } else {
+      ok(`Quedó el aviso duradero de la respuesta guardada ("${String(notice.notice.title)}")`)
+    }
+  } else {
+    const createdAt = new Date(notice.notice.created_at).getTime()
+    if (!Number.isFinite(createdAt) || createdAt < startedAtMs - 60000) {
+      fail(`El aviso offline_answer es anterior a esta corrida (${notice.notice.created_at})`)
+    } else {
+      ok(`Quedó el aviso duradero de la respuesta guardada ("${String(notice.notice.title)}")`)
+    }
   }
 
   const failures = summary(t0)

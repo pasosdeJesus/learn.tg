@@ -40,6 +40,16 @@ interface OfflineCourseDownloadProps {
   isPremium: boolean
   /** Sufijos de ruta de las guías publicadas, en orden. */
   guides: string[]
+  /** R-#256 §3.10: presentación del curso, para que la copia sin conexión tenga el
+   * subtítulo y el resumen. */
+  subtitulo?: string | null
+  resumenMd?: string | null
+  /** R-#256 §3.10: avance de cada guía al descargar, por sufijo. */
+  guideStatus?: Record<string, {
+    completed?: boolean
+    receivedScholarship?: boolean
+    receivedSlearnScholarship?: boolean
+  }>
   /** El curso (y su contenido) es legible por quien está navegando. */
   canRead: boolean
 }
@@ -58,6 +68,9 @@ export function OfflineCourseDownload({
   contenidoSensible,
   isPremium,
   guides,
+  subtitulo,
+  resumenMd,
+  guideStatus,
   canRead,
 }: OfflineCourseDownloadProps) {
   const { authedGet, ready, wallet } = useAuthedApi()
@@ -114,7 +127,11 @@ export function OfflineCourseDownload({
     contenidoSensible,
     isPremium,
     guides,
-  }), [courseId, lang, prefix, titulo, contenidoSensible, isPremium, guides])
+    // R-#256 §3.10: la presentación y el avance al descargar quedan en el registro.
+    subtitulo: subtitulo ?? null,
+    resumenMd: resumenMd ?? null,
+    guideStatus,
+  }), [courseId, lang, prefix, titulo, contenidoSensible, isPremium, guides, subtitulo, resumenMd, guideStatus])
 
   const refreshRecord = useCallback(async () => {
     setRecord(await getDownloadedCourse(key))
@@ -238,6 +255,13 @@ export function OfflineCourseDownload({
   if (contenidoSensible && !sensitiveVisible) return null
 
   const visible = record && belongsToWallet(record, wallet)
+  // R-#256 §3.10: la copia guarda el avance del momento de la descarga; se muestra con
+  // su fecha para que el estudiante sepa que es una foto, no el estado actual.
+  const savedGuides = record?.guides ?? []
+  const completedGuides = savedGuides.filter((guide) => guide.completed).length
+  const savedOn = record
+    ? new Date(record.downloadedAt).toLocaleDateString(lang === 'es' ? 'es' : 'en')
+    : ''
 
   return (
     <div className="px-6 py-4 rounded-xl bg-white text-gray-800 shadow" data-testid="offline-course-download">
@@ -253,8 +277,19 @@ export function OfflineCourseDownload({
           <p className="text-xs text-gray-500">
             {t('courseFiles')}: <span className="font-semibold">{formatBytes(record.bytes)}</span>
             {' · '}
-            {new Date(record.downloadedAt).toLocaleDateString(lang === 'es' ? 'es' : 'en')}
+            {savedOn}
           </p>
+          {savedGuides.length > 0 && (
+            <p className="text-xs text-gray-500" data-testid="offline-progress">
+              {lang === 'es' ? 'Avance al ' : 'Progress as of '}
+              {savedOn}
+              {': '}
+              <span className="font-semibold">
+                {completedGuides}/{savedGuides.length}
+              </span>
+              {lang === 'es' ? ' guías completadas' : ' guides completed'}
+            </p>
+          )}
           <button
             type="button"
             onClick={remove}

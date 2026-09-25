@@ -64,7 +64,11 @@ without a connection. When you are online the app checks once a day whether the 
 changed and updates it. A downloaded course appears on the offline page with
 all its guides, and you can read any of them and solve their crosswords without a
 connection: your answers are saved and reviewed when the connection returns, and the
-app tells you the result. Courses about following Jesus (R-#259) are only downloaded if
+app tells you the result — and it also stays in your **notifications** (the bell), so you
+can see it even if you had already left that page. Without a connection the course page
+still shows what the course is about and the progress you had **on the day you saved it**
+(with that date); what you cannot do offline is donate or claim UBI, and the app says so
+instead of showing buttons that would fail. Courses about following Jesus (R-#259) are only downloaded if
 you turned on *Publish courses with Christian content* in **Privacy**; if you turn it
 off, or you disconnect the wallet, the app deletes those copies from the phone. That
 switch starts **off if you are in a country where the government persecutes Christians**

@@ -22,13 +22,15 @@ const downloadedCourse = {
   lang: 'en',
   prefix: 'web3-and-ubi',
   titulo: 'Web3 and UBI',
+  subtitulo: 'Your guide to collecting UBI',
+  resumenMd: '<p>Introducción del curso</p>',
   contenidoSensible: false,
   isPremium: false,
   wallet: null,
   downloadedAt: Date.now(),
   revision: 'r1',
   guides: [
-    { suffix: 'guide1', puzzle: null },
+    { suffix: 'guide1', puzzle: null, completed: true, receivedScholarship: true },
     { suffix: 'guide4', puzzle: null },
   ],
   bytes: 1024,
@@ -67,6 +69,16 @@ describe('useCourse offline (R-#256)', () => {
       'guide1',
       'guide4',
     ])
+    // R-#256 §3.10: presentación y avance del momento de la descarga.
+    expect(result.current.fromDevice).toBe(true)
+    expect(result.current.downloadedAt).toBe(downloadedCourse.downloadedAt)
+    expect(result.current.course?.subtitulo).toBe('Your guide to collecting UBI')
+    expect(result.current.course?.resumenMd).toBe('<p>Introducción del curso</p>')
+    expect(result.current.course?.guias?.[0]).toMatchObject({
+      sufijoRuta: 'guide1',
+      completed: true,
+      receivedScholarship: true,
+    })
     expect(authedGet).not.toHaveBeenCalled()
   })
 
@@ -93,6 +105,9 @@ describe('useCourse offline (R-#256)', () => {
     expect(authedGet).toHaveBeenCalled()
     expect(result.current.error).toBeNull()
     expect(result.current.course?.guias).toHaveLength(2)
+    // La copia del dispositivo se marca como tal para que la página diga que el
+    // avance y las acciones son los de la descarga (§3.10).
+    expect(result.current.fromDevice).toBe(true)
   })
 
   // Regresión medida en E2E el 2026-09-24: al pasar a sin conexión con el curso ya

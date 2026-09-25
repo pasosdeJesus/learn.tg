@@ -1,5 +1,20 @@
 @import 'tailwindcss';
 
+/* Tailwind v4 arma las clases con los archivos que escanea y **no escanea
+   `node_modules`**: las clases que solo existen dentro de un paquete nunca se generan.
+   La app importa `Button`, `Switch`, `Table`, `Dialog`, `Input`, `Tabs`, `Toaster` y
+   `AlertDialog` de `@pasosdejesus/m` (JS compilado), asi que sus utilidades faltaban en
+   el CSS desplegado (37 utilidades, 27 de ellas recuperadas por este `@source`).
+   El caso visible: el `Switch` de privacidad en `/{lang}/settings` guardaba bien el
+   valor y cambiaba `data-state`, pero su pulgar nunca recibia
+   `data-[state=checked]:translate-x-5` ni su pista `bg-primary`/`bg-input`, de modo que
+   el control **se veia inerte** (reporte del operador, 2026-09-24: "se ve toast Saved
+   pero no se ve cambio en el control"). Los estilos que la app define por su cuenta
+   (`components/ui/*`, `.animate-in` mas abajo) no dependen de esto.
+   `lib/__tests__/tailwind-sources.test.ts` compila este archivo con el mismo plugin que
+   usa Next y falla si la clase del pulgar no sale. */
+@source '../node_modules/@pasosdejesus/m/dist/shadcn_components';
+
 /* ================================
    🎨 Diseño Global Moderno & Profesional
 ================================== */

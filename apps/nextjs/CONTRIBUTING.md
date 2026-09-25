@@ -44,6 +44,23 @@ This document defines the documentation and testing policies for the Next.js app
 
 ---
 
+## Styling (Tailwind v4)
+
+Tailwind v4 derives the classes from the files it scans, and **it does not scan
+`node_modules`**: classes written only inside a dependency are never generated. The
+shared UI (`Switch`, `Dialog`, `Toast`, …) comes from `@pasosdejesus/m` and ships as
+JavaScript, so `app/globals.css` declares `@source '../node_modules/@pasosdejesus/m/dist/shadcn_components'`
+to add it to the scan. Without that line the markup is right and the attributes change
+(`data-state=checked`) while the control still looks inert — the privacy switches did
+exactly that, with the value saved correctly in the API.
+
+When you add a component from another package, add its directory as an `@source` too.
+`lib/__tests__/tailwind-sources.test.ts` resolves every `@source` and compiles the CSS
+with the same PostCSS plugin Next uses, so a missing entry fails `make test-lib`
+instead of being found by hand in a browser.
+
+---
+
 ## Testing Policy
 
 ### Principles

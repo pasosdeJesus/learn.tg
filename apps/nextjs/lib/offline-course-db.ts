@@ -39,6 +39,13 @@ export interface DownloadedGuide {
   suffix: string
   /** Crucigrama con celdas y pistas, nunca la solución. */
   puzzle: DownloadedPuzzle | null
+  /**
+   * R-#256 §3.10: avance de la guía **en el momento de la descarga**, para que la
+   * página del curso muestre sus estadísticas sin conexión en vez de quedar vacía.
+   */
+  completed?: boolean
+  receivedScholarship?: boolean
+  receivedSlearnScholarship?: boolean
 }
 
 export interface DownloadedCourse {
@@ -48,6 +55,10 @@ export interface DownloadedCourse {
   /** Prefijo de ruta del curso, sin la barra inicial (`gdcluster`). */
   prefix: string
   titulo: string | null
+  /** Presentación del curso (R-#256 §3.10): subtítulo y resumen, tal como los
+   * muestra la página del curso. Sin conexión la página no queda vacía. */
+  subtitulo?: string | null
+  resumenMd?: string | null
   contenidoSensible: boolean
   isPremium: boolean
   /** Billetera que descargó: un curso de pago no se lee con otra billetera. */

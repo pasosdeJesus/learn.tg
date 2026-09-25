@@ -415,7 +415,15 @@ export default function Page({
       // y se reintenta al recuperar la conexión (R-#241/R-#242).
       if (!error?.response) {
         try {
-          await enqueue('/api/check-crossword', payload)
+          // R-#242: la marca `offlineSavedAt` (y la ruta, para el aviso) le dicen al
+          // servidor que esta entrega se guardó sin conexión, para que deje el
+          // resultado también en la campana (`notifications`): la cola se drena
+          // cuando el estudiante puede ya no estar en esta página.
+          await enqueue('/api/check-crossword', {
+            ...payload,
+            offlineSavedAt: Date.now(),
+            guidePath: `/${lang}/${pathPrefix}/${pathSuffix}/test`,
+          })
           // R-#242: sin conexión el servidor no puede decir si el perfil llega a
           // los 50 puntos que exige la beca. Con el último puntaje guardado se
           // avisa **antes** de encolar, en vez de descubrirlo al reconectar.

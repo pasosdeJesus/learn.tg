@@ -18,8 +18,8 @@ https://github.com/pasosdeJesus/learn.tg/issues/243 (install + docs).
 | Install prompt | `components/InstallPrompt.tsx` | `beforeinstallprompt`; dismissal stored for 7 days |
 | Offline guide copy | `lib/offline-guide-db.ts` + `lib/hooks/useCachedGuide.ts` | Markdown in IndexedDB, used by the guide page |
 | Offline course list | `lib/offline-catalog.ts` | Last catalog fetched while online (`localStorage`, `learn.tg.coursesCache.<lang>`); when the fetch fails the course page shows it and toasts "You are offline: showing the saved course list." (operator request 2026-09-21). It only covers "visited once online": the full offline download of courses is https://github.com/pasosdeJesus/learn.tg/issues/256 |
-| **Downloaded courses** | `lib/offline-course-db.ts` (store `courses`), `lib/offline-course-download.ts`, `components/OfflineCourseDownload.tsx` | R-#256: an explicit per-course download (all guides + their crosswords, no answers). The guide HTML lives in the existing `guides` store, so the guide page reads it unchanged; the record keeps the entitlement snapshot (wallet), the revision and the size. `/offline` lists the downloaded courses and their guides |
-| Offline submissions | `lib/offline-queue-db.ts` + `lib/hooks/useOfflineQueue.ts` | Generic queue (url + body), replayed on `online`; a server rejection (4xx) is exposed as `lastRejection` so the page tells the user instead of leaving the answer queued silently |
+| **Downloaded courses** | `lib/offline-course-db.ts` (store `courses`), `lib/offline-course-download.ts`, `components/OfflineCourseDownload.tsx` | R-#256: an explicit per-course download (all guides + their crosswords, no answers). The guide HTML lives in the existing `guides` store, so the guide page reads it unchanged; the record keeps the entitlement snapshot (wallet), the **course presentation** (subtitle + summary) and the **progress snapshot with its date**, so the course page is not an empty shell offline (§3.10), plus the revision and the size. `/offline` lists the downloaded courses and their guides |
+| Offline submissions | `lib/offline-queue-db.ts` + `lib/hooks/useOfflineQueue.ts` | Generic queue (url + body), replayed on `online`; a server rejection (4xx) is exposed as `lastRejection` so the page tells the user instead of leaving the answer queued silently. The queued body carries `offlineSavedAt` (R-#242), so `/api/check-crossword` also leaves the result in `notifications` (`lib/offline-answer-notice.ts`) and the bell shows it even if the student already left the page |
 
 The diligent-records app served by the same Next app keeps its own manifest
 (`public/manifest.json`) and cache entry; do not remove them.
@@ -144,9 +144,9 @@ When something is missing while offline, each page falls back to the stored copy
 | Page | Fallback |
 |---|---|
 | Course list | `lib/offline-catalog.ts` (`localStorage`) |
-| Course (`/[lang]/[pathPrefix]`) | the downloaded record (`useCourse`), so it still links its guides |
-| Guide | `useCachedGuide` → `guides` store |
-| Crossword (`.../test`) | the `puzzle` of the downloaded record (never carries answers) |
+| Course (`/[lang]/[pathPrefix]`) | the downloaded record (`useCourse`), so it still links its guides, shows its presentation and the progress of the download (with its date, `data-testid="offline-progress"`), and **replaces the chain actions** (donate, UBI) with a one-line reason (`offline-chain-actions`, R-#256 §3.10) |
+| Guide | `useCachedGuide` → `guides` store; offline the cached Markdown is painted even if the course could not be resolved (a paid or sensitive course is never downloaded), and the GoodDollar/UBI buttons are replaced by the one-line reason |
+| Crossword (`.../test`) | the `puzzle` of the downloaded record (never carries answers); a stored puzzle without clues is treated as missing |
 
 **Offline the identity must not be awaited.** `useSession()` does not settle without a
 connection, so `useAuthedApi` treats "offline" as resolved (it derives the identity from

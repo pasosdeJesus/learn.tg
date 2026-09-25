@@ -203,6 +203,34 @@ async function main() {
   }
 
   await page.setOfflineMode(true)
+
+  // 3b. R-#256 §3.10: la página del **curso** tampoco queda vacía sin conexión: la copia
+  // guarda la presentación (subtítulo + introducción) y el avance del momento de la
+  // descarga, con su fecha, y no ofrece las acciones que dependen de la cadena.
+  try {
+    await page.goto(`${base}${COURSE_PATH}`, { waitUntil: 'domcontentloaded' })
+    await page.waitForFunction(
+      () => !!document.querySelector('[data-testid="offline-progress"]'),
+      { timeout: 30000 },
+    )
+    const courseOffline = await page.evaluate(() => ({
+      progress: (document.querySelector('[data-testid="offline-progress"]')?.textContent || '').trim(),
+      characters: (document.body?.innerText || '').length,
+      chainNotice: !!document.querySelector('[data-testid="offline-chain-actions"]'),
+    }))
+    if (/Progress as of \d/.test(courseOffline.progress)) {
+      ok(`La página del curso sin conexión muestra el avance guardado (${courseOffline.progress})`)
+    } else {
+      fail(`La página del curso sin conexión no mostró el avance guardado (${courseOffline.progress})`)
+    }
+    if (courseOffline.characters > 400) ok(`La página del curso sin conexión no quedó vacía (${courseOffline.characters} caracteres)`)
+    else fail(`La página del curso sin conexión quedó vacía (${courseOffline.characters} caracteres)`)
+    if (courseOffline.chainNotice) ok('Sin conexión no se ofrecen donar ni UBI (se explica el motivo)')
+    else fail('Sin conexión la página del curso no advirtió que donar/UBI necesitan conexión')
+  } catch (error) {
+    fail(`La página del curso sin conexión falló: ${error.message}`)
+  }
+
   try {
     await page.goto(`${base}${NEVER_VISITED_PATH}`, { waitUntil: 'domcontentloaded' })
   } catch (error) {

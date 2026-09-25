@@ -167,6 +167,39 @@ describe('revalidateCourse (R-#256 §3.6)', () => {
     expect(result.course).toBeNull()
     expect(await getDownloadedCourse('en/gdcluster')).not.toBeNull()
   })
+
+  // R-#256 §3.10: la copia guarda la **presentación** del curso y el **avance al
+  // descargar**, para que la página del curso no sea un cascarón vacío sin conexión.
+  it('keeps the course presentation and the progress snapshot', async () => {
+    const course = await downloadCourse(
+      {
+        ...DESCRIPTOR,
+        subtitulo: 'Your guide to collecting UBI',
+        resumenMd: '<p>Introducción del curso</p>',
+        guideStatus: {
+          guide1: { completed: true, receivedScholarship: true, receivedSlearnScholarship: false },
+          guide2: { completed: false },
+        },
+      },
+      { get: makeGet() as any, wallet: WALLET },
+    )
+
+    expect(course.subtitulo).toBe('Your guide to collecting UBI')
+    expect(course.resumenMd).toBe('<p>Introducción del curso</p>')
+    expect(course.guides[0]).toMatchObject({
+      suffix: 'guide1',
+      completed: true,
+      receivedScholarship: true,
+      receivedSlearnScholarship: false,
+    })
+    expect(course.guides[1]).toMatchObject({ suffix: 'guide2', completed: false })
+
+    // Y la copia releída del store conserva la presentación y el avance
+    const stored = await getDownloadedCourse('en/gdcluster')
+    expect(stored?.resumenMd).toBe('<p>Introducción del curso</p>')
+    expect(stored?.guides[0].completed).toBe(true)
+    expect(stored?.guides[0].receivedScholarship).toBe(true)
+  })
 })
 
 // El documento de la guía y el de su crucigrama tienen que quedar en la misma caché
