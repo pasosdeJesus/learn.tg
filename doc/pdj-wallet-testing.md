@@ -30,8 +30,8 @@ any other suite:
 ```sh
 cd apps/nextjs
 
-make test-packages          # los dos paquetes (85 + 24 tests, ~50 s)
-make test-pdj-wallet        # solo el core (85 tests, ~48 s)
+make test-packages          # los dos paquetes (~50 s)
+make test-pdj-wallet        # solo el core (~48 s)
 make test-pdj-wallet-next   # solo React; compila el core antes (~12 s)
 ```
 
@@ -47,8 +47,9 @@ cd apps/nextjs
 
 Y dentro de cada paquete hay `Makefile` (`make test`, `make build`, `make install`).
 
-Expected (medido 2026-09-21): `90 passed` (core) y `24 passed` (next). `make test` (la suite completa)
-ya incluye `test-packages`.
+Expected: los dos paquetes pasan (0 fallas). `make test` (la suite completa) ya incluye
+`test-packages`; el tamaño vigente y el conteo por objetivo están en
+[`apps/nextjs/CONTRIBUTING.md`](../apps/nextjs/CONTRIBUTING.md) (§Coverage Status).
 
 Lo que cubre el core sobre R-#246: sellado de la clave con el
 secreto PRF y comprobación de que el registro guardado **no contiene la clave
@@ -84,11 +85,10 @@ cd apps/nextjs
 make test-hooks test-components
 ```
 
-Expected (medido 2026-09-25): `make test-hooks` 91 passed / 2 skipped (13 archivos)
-y `make test-components` 201 passed / 3 skipped (26 archivos, incluye
-`components/ui/__tests__` y `providers/__tests__`). La suite completa `make test`
-da **1148 passed / 6 skipped en 161 archivos** (0 fallas), y la mayor parte del
-tiempo es el montaje de jsdom por archivo, no las aserciones.
+Expected: los objetivos pasan (0 fallas). La mayor parte del tiempo es el montaje de jsdom
+por archivo, no las aserciones. El tamaño vigente de la suite y el conteo por objetivo
+están en **un solo lugar**:
+[`apps/nextjs/CONTRIBUTING.md`](../apps/nextjs/CONTRIBUTING.md) (§Coverage Status).
 
 What these cover:
 

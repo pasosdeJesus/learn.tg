@@ -51,15 +51,18 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
      tsconfig.test.json`, so it checks source **and** test files;
      `make type-source` is source only and `make type-check-tests` tests only
    - `make test` runs the app sub-targets in sequence plus `test-packages` and
-     `test-engines` (parallel-safe, sin coverage)
+     `test-engines` (parallel-safe, sin coverage). **El tamaño de la suite y el conteo
+     por objetivo viven en un solo lugar:**
+     [apps/nextjs/CONTRIBUTING.md §Coverage Status](apps/nextjs/CONTRIBUTING.md). No
+     repita esos números en otros documentos (se quedan viejos).
    - `make coverage` runs all tests with coverage (lento, usa más memoria)
    - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.
    - **`pdj-wallet` packages** (`packages/pdj-wallet`, `packages/pdj-wallet-next`):
      `make test-pdj-wallet`, `make test-pdj-wallet-next` or `make test-packages`
-     (85 + 24 tests, ~50 s; each package also has its own `Makefile`). See
+     (~50 s; each package also has its own `Makefile`). See
      [doc/pdj-wallet-testing.md](doc/pdj-wallet-testing.md).
    - **Engine tests** (`packages/rewards`, `packages/gdcluster`): `make test-engines`
-     (or `make test-rewards` / `make test-gdcluster`), 82 + 91 tests, ~45 s; each
+     (or `make test-rewards` / `make test-gdcluster`), ~45 s; each
      engine brings its own `vitest.config.ts` with the aliases to
      `apps/nextjs/node_modules`.
      Do NOT run `pnpm test` inside the packages: corepack resolves pnpm v11 there
