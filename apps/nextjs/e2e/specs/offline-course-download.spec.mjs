@@ -228,6 +228,16 @@ async function main() {
     if (courseOffline.chainNotice) ok('Sin conexión no se ofrecen donar ni UBI (se explica el motivo)')
     else fail('Sin conexión la página del curso no advirtió que donar/UBI necesitan conexión')
   } catch (error) {
+    // Un tiempo de espera agotado no dice qué se vio: sin este volcado, "Waiting failed"
+    // no distingue entre la página de respaldo `/offline`, una página vacía o un panel
+    // que no se pintó por no considerarse la copia como legible (E2E 2026-09-25).
+    const diagnostics = await page.evaluate(() => ({
+      text: (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 180),
+      downloadPanel: !!document.querySelector('[data-testid="offline-course-download"]'),
+      chainNotice: !!document.querySelector('[data-testid="offline-chain-actions"]'),
+      testids: [...document.querySelectorAll('[data-testid]')].map((e) => e.getAttribute('data-testid')).slice(0, 25),
+    })).catch(() => null)
+    console.log(`  [diagnóstico] ${JSON.stringify(diagnostics)}`)
     fail(`La página del curso sin conexión falló: ${error.message}`)
   }
 

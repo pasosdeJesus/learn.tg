@@ -72,6 +72,12 @@ describe('useCourse offline (R-#256)', () => {
     // R-#256 §3.10: presentación y avance del momento de la descarga.
     expect(result.current.fromDevice).toBe(true)
     expect(result.current.downloadedAt).toBe(downloadedCourse.downloadedAt)
+    // Las páginas deciden si el curso es legible con `Number(course.porPagar) <= 0` y el
+    // catálogo devuelve `null` en los gratuitos (`Number(null)` es 0). Con `undefined`
+    // eso es `NaN`, y sin conexión la página del curso se veía sin derecho a leerlo y
+    // escondía la copia descargada (E2E 2026-09-25: el avance guardado no aparecía).
+    expect(Number(result.current.course?.porPagar)).toBe(0)
+    expect(Number.isNaN(Number(result.current.course?.porPagar))).toBe(false)
     expect(result.current.course?.subtitulo).toBe('Your guide to collecting UBI')
     expect(result.current.course?.resumenMd).toBe('<p>Introducción del curso</p>')
     expect(result.current.course?.guias?.[0]).toMatchObject({

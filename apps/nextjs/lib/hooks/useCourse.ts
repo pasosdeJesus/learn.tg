@@ -169,7 +169,11 @@ function courseFromDownloaded(downloaded: DownloadedCourse): Course {
     conBilletera: false,
     sinBilletera: true,
     creditosMd: '',
-    porPagar: downloaded.isPremium ? '1' : undefined,
+    // `null` (no `undefined`) para los gratuitos: la pagina decide con
+    // `Number(course.porPagar) <= 0` y `Number(undefined)` es `NaN`, asi que sin
+    // conexion la copia descargada quedaba como "sin derecho a leer" y la pagina no
+    // mostraba ni la presentacion ni el avance (medido en E2E el 2026-09-25).
+    porPagar: downloaded.isPremium ? '1' : null,
     contenido_sensible: downloaded.contenidoSensible,
   } as Course
 }

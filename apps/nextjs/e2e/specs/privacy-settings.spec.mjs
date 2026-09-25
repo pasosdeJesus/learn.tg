@@ -70,17 +70,49 @@ async function switchVisual(page, label) {
   }, label)
 }
 
-/** Espera a que el switch cambie de estado en el servidor (el guardado es asíncrono). */
-async function waitForSwitch(page, label, expected) {
-  await page.waitForFunction(
-    (aria, state) => {
+/** Estado del interruptor, con el aviso de si está deshabilitado mientras guarda. */
+async function switchState(page, label) {
+  return page.evaluate(
+    (aria) => {
       const element = document.querySelector(`[role="switch"][aria-label="${aria}"]`)
-      return element?.getAttribute('data-state') === state
+      return element ? `${element.getAttribute('data-state')}${element.disabled ? ' (disabled)' : ''}` : 'ausente'
     },
-    { timeout: 15000 },
     label,
-    expected,
-  )
+  ).catch(() => 'no se pudo leer')
+}
+
+/** Espera (sin fallar) a que el switch llegue al estado pedido. */
+async function waitForSwitch(page, label, expected, timeout = 15000) {
+  try {
+    await page.waitForFunction(
+      (aria, state) => {
+        const element = document.querySelector(`[role="switch"][aria-label="${aria}"]`)
+        return element?.getAttribute('data-state') === state
+      },
+      { timeout },
+      label,
+      expected,
+    )
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Pulsa el interruptor y espera el estado nuevo; el clic se reintenta porque el
+ * `waitForSelector` del spec encuentra el HTML pero React puede no haber hidratado
+ * todavía, y entonces el primer clic no hace nada (el caso se vio el 2026-09-25 como un
+ * tiempo de espera de 15 s que el `process.exit` del `finally` convertía en "spec verde").
+ */
+async function toggleSwitch(page, label, expected) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await page.click(`[role="switch"][aria-label="${label}"]`)
+    if (await waitForSwitch(page, label, expected, attempt === 1 ? 15000 : 8000)) return true
+    console.log(`  [!] el interruptor no llegó a "${expected}" (intento ${attempt})`)
+  }
+  fail(`El interruptor no llegó a "${expected}": se quedó en "${await switchState(page, label)}"`)
+  return false
 }
 
 async function main() {
@@ -160,15 +192,16 @@ async function main() {
 
     // 1. Apagar la publicación de cursos completados.
     const before = await switchVisual(page, switchLabel)
-    await page.click(`[role="switch"][aria-label="${switchLabel}"]`)
-    await waitForSwitch(page, switchLabel, 'unchecked')
+    const turnedOff = await toggleSwitch(page, switchLabel, 'unchecked')
     // El estado (atributo) y el guardado pueden estar bien y el control verse inerte:
     // las clases del `Switch` viven en `@pasosdejesus/m` y Tailwind v4 no escanea
     // `node_modules` sin un `@source` en `app/globals.css` (R-#259). Se comprueba el
     // cambio visual, no solo el atributo, para que la regresion no vuelva en silencio.
     await new Promise((resolve) => setTimeout(resolve, 500))
     const after = await switchVisual(page, switchLabel)
-    if (
+    if (!turnedOff) {
+      fail('No se pudo apagar el interruptor: no se comprueba el cambio visual')
+    } else if (
       after.thumbTranslate !== before.thumbTranslate ||
       after.thumbTransform !== before.thumbTransform
     ) {
@@ -194,12 +227,16 @@ async function main() {
     else fail(`El perfil público sigue listando ${credentials.length} credenciales`)
 
     // 2. Volver a encenderla: lo publicado vuelve (los interruptores son reversibles).
-    await page.click(`[role="switch"][aria-label="${switchLabel}"]`)
-    await waitForSwitch(page, switchLabel, 'checked')
+    await toggleSwitch(page, switchLabel, 'checked')
     await new Promise((resolve) => setTimeout(resolve, 1500))
     credentials = await publicCredentials(base, userId)
     if (credentials === null) fail('El perfil público no respondió al volver a publicar')
     else ok(`Con la publicación encendida el perfil público responde (${credentials.length} credenciales visibles)`)
+  } catch (error) {
+    // Sin este `catch`, el `process.exit` del `finally` se lleva por delante la
+    // excepción: el spec salía con 0 fallos y sin decir qué pasó (2026-09-24, un
+    // `waitForSwitch` que expiraba se veía como "spec verde").
+    fail(`El spec se interrumpió: ${error?.message || error}`)
   } finally {
     // Restaurar el interruptor al estado por defecto aunque algo haya fallado.
     try {

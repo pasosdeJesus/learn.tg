@@ -144,7 +144,7 @@ When something is missing while offline, each page falls back to the stored copy
 | Page | Fallback |
 |---|---|
 | Course list | `lib/offline-catalog.ts` (`localStorage`) |
-| Course (`/[lang]/[pathPrefix]`) | the downloaded record (`useCourse`), so it still links its guides, shows its presentation and the progress of the download (with its date, `data-testid="offline-progress"`), and **replaces the chain actions** (donate, UBI) with a one-line reason (`offline-chain-actions`, R-#256 §3.10) |
+| Course (`/[lang]/[pathPrefix]`) | the downloaded record (`useCourse`), so it still links its guides, shows its presentation and the progress of the download (with its date, `data-testid="offline-progress"`), and **replaces the chain actions** (donate, UBI) with a one-line reason (`offline-chain-actions`, R-#256 §3.10). A stored copy is itself the proof of access — `belongsToWallet` keeps it tied to its address and without a network the purchase cannot be checked again — so the copy panel and the "Available offline" badge (`offline-purchased`) are painted even for a paid course, instead of a "Buy this course" button that could not work (2026-09-25: the record kept `porPagar` as `undefined`, and the page decides readability with `Number(porPagar) <= 0`, which is `NaN` for `undefined`) |
 | Guide | `useCachedGuide` → `guides` store; offline the cached Markdown is painted even if the course could not be resolved (a paid or sensitive course is never downloaded), and the GoodDollar/UBI buttons are replaced by the one-line reason |
 | Crossword (`.../test`) | the `puzzle` of the downloaded record (never carries answers); a stored puzzle without clues is treated as missing |
 

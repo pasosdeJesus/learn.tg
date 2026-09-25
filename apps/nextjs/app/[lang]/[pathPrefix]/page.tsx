@@ -256,7 +256,17 @@ export default function Page({ params }: PageProps) {
                   <span className="inline-block text-xs font-semibold uppercase tracking-wide bg-amber-100 text-amber-800 px-2 py-1 rounded">
                     {course.idioma === 'en' ? 'Premium course' : 'Curso premium'}
                   </span>
-                  {hasPurchased ? (
+                  {fromDevice ? (
+                    // Sin conexión no se puede volver a comprobar la compra: la copia
+                    // descargada (con todas sus guías) es la prueba, así que no se
+                    // ofrece un botón de compra que no puede funcionar (§3.10).
+                    <span
+                      className="inline-block rounded bg-green-100 px-4 py-1 text-sm font-semibold text-green-800"
+                      data-testid="offline-purchased"
+                    >
+                      {course.idioma === 'en' ? 'Available offline' : 'Disponible sin conexión'}
+                    </span>
+                  ) : hasPurchased ? (
                     <span className="inline-block rounded bg-green-100 px-4 py-1 text-sm font-semibold text-green-800">
                       {course.idioma === 'en' ? 'Purchased' : 'Comprado'}
                     </span>
@@ -358,7 +368,12 @@ export default function Page({ params }: PageProps) {
               contenidoSensible={course.contenido_sensible === true}
               isPremium={Number(course.porPagar) > 0}
               guides={course.guias.map((guia) => guia.sufijoRuta).filter(Boolean) as string[]}
-              canRead={Number(course.porPagar) <= 0 || hasPurchased}
+              // Sin conexión la copia descargada ES la prueba de acceso: solo se guarda
+              // si el curso se podía leer con esa billetera (`belongsToWallet` la
+              // separa por dirección) y sin red no hay forma de volver a comprobarlo.
+              // Con `canRead` en falso el panel no se pinta y la página del curso se
+              // queda sin la presentación ni el avance guardados (§3.10).
+              canRead={fromDevice || Number(course.porPagar) <= 0 || hasPurchased}
             />
 
             {isGd && fundSlearn !== null && (

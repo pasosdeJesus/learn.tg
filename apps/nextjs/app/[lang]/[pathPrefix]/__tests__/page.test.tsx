@@ -584,4 +584,42 @@ describe('Course Introduction Page', () => {
       expect(screen.getByText(/Donate to course #1/i)).toBeInTheDocument()
     })
   })
+
+  // R-#256 §3.10: sin conexión la copia descargada **es** la prueba de acceso (solo se
+  // guarda si el curso se podía leer, y la dirección la separa `belongsToWallet`), así
+  // que el panel de la copia se pinta aunque no haya red para volver a comprobar la
+  // compra. Con `canRead` en falso el componente devolvía null y la página del curso se
+  // quedaba sin presentación, sin avance y sin el aviso de que donar/UBI necesitan
+  // conexión (medido en el E2E del 2026-09-25 en un curso con `porPagar: null`).
+  it('shows the downloaded copy offline even for a paid course (no purchase check)', async () => {
+    useGuideDataMock.mockReturnValue({
+      ...mockGuideData,
+      fromDevice: true,
+      downloadedAt: Date.now(),
+      course: { ...mockCourseData, porPagar: '1' },
+    })
+    renderWithProviders(<Page params={mockParams} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('offline-course-download')).toBeInTheDocument()
+    })
+    // Y no se ofrece comprar un curso que ya está descargado: la compra no se puede
+    // comprobar sin red (el botón quedaba muerto).
+    expect(screen.getByTestId('offline-purchased')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Buy this course/i })).not.toBeInTheDocument()
+  })
+
+  it('hides the downloaded copy for a paid course without purchase while online', async () => {
+    useGuideDataMock.mockReturnValue({
+      ...mockGuideData,
+      fromDevice: false,
+      course: { ...mockCourseData, porPagar: '1' },
+    })
+    renderWithProviders(<Page params={mockParams} />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Course contents/i)).toBeInTheDocument()
+    })
+    expect(screen.queryByTestId('offline-course-download')).not.toBeInTheDocument()
+  })
 })
