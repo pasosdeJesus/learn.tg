@@ -59,8 +59,9 @@ there is something to save or update, a notice tells you how many guides it is c
 courses are already saved on this device. If you want to check again, tap **Check now**;
 on the course page the same notice appears for that course, with the space it takes and a
 way to delete the copy.
-The copy is kept for **7 days**; when you are online again the app checks whether the
-content changed and updates it. A downloaded course appears on the offline page with
+A saved course **never expires while you are offline**: you can read it any day you are
+without a connection. When you are online the app checks once a day whether the content
+changed and updates it. A downloaded course appears on the offline page with
 all its guides, and you can read any of them and solve their crosswords without a
 connection: your answers are saved and reviewed when the connection returns, and the
 app tells you the result. Courses about following Jesus (R-#259) are only downloaded if

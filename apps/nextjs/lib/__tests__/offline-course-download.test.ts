@@ -200,4 +200,20 @@ describe('warmPageCache (R-#256)', () => {
 
     expect(pagesRule?.[1]).toBe(PAGE_CACHE_NAME)
   })
+
+  // Aclaración del operador (2026-09-24): **sin red la copia no caduca** (todo el tiempo
+  // que el estudiante esté desconectado) y **con red se revalida cada 24 h**
+  // (`REVALIDATION_MS`). Un TTL por edad en las reglas que sostienen la lectura sin
+  // conexión (la página, los chunks que la hidratan y las imágenes) volvería a dejar una
+  // guía guardada sin poder abrirse a la semana; este test lo detiene.
+  it('has no age expiry on the rules that support offline reading', () => {
+    const config = readFileSync(join(__dirname, '..', '..', 'next.config.ts'), 'utf8')
+    const rules = config.split("cacheName: '")
+
+    for (const cacheName of [PAGE_CACHE_NAME, 'diligent-static', 'learntg-images']) {
+      const matching = rules.filter((rule) => rule.startsWith(cacheName))
+      expect(matching.length).toBeGreaterThan(0)
+      for (const rule of matching) expect(rule).not.toMatch(/maxAgeSeconds/)
+    }
+  })
 })

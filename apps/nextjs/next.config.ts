@@ -58,8 +58,11 @@ const pwaConfig: PWAConfig = {
       options: {
         cacheName: 'diligent-static',
         expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 días
+          // Sin caducidad por edad (decisión del operador, 2026-09-24): una guía
+          // descargada tiene que seguir abriéndose sin conexión todo el tiempo que el
+          // estudiante esté sin red, y sin estos chunks (JS/CSS) la página guardada no
+          // se hidrata y se ve vacía. `maxEntries` sigue acotando el tamaño.
+          maxEntries: 300,
         },
       },
     },
@@ -73,8 +76,9 @@ const pwaConfig: PWAConfig = {
       options: {
         cacheName: 'learntg-images',
         expiration: {
+          // Sin caducidad por edad: las imágenes de un curso guardado no deben
+          // desaparecer por estar semanas sin conexión.
           maxEntries: 200,
-          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 días
         },
       },
     },
@@ -85,7 +89,6 @@ const pwaConfig: PWAConfig = {
         cacheName: 'learntg-images',
         expiration: {
           maxEntries: 150,
-          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 días
         },
       },
     },
@@ -105,12 +108,14 @@ const pwaConfig: PWAConfig = {
         // descargada (medido en el sitio de desarrollo el 2026-09-22).
         matchOptions: { ignoreVary: true },
         expiration: {
-          // 7 días (decisión del operador, 2026-09-23): las guías descargadas deben
-          // seguir abriendo sin conexión más de un día, y `maxEntries` tiene que
-          // caber todas las guías de todos los cursos accesibles (10 cursos, 4-6
-          // guías, con la página de guía y la del crucigrama por guía).
+          // **Sin caducidad por edad** (decisión del operador, 2026-09-24): las guías
+          // guardadas tienen que abrirse sin conexión **todo el tiempo que el
+          // estudiante esté sin red**, no una semana. `maxEntries` acota la caché y
+          // tiene que caber todas las guías de todos los cursos accesibles (10 cursos,
+          // 4-6 guías, con la página de guía y la del crucigrama por guía); la
+          // detección de novedades cuando hay red la hace la app cada 24 h
+          // (`REVALIDATION_MS`), no el TTL de la caché.
           maxEntries: 200,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 días
         },
       },
     },

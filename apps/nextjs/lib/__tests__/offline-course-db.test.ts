@@ -74,12 +74,17 @@ describe('offline-course-db (R-#256)', () => {
     expect(await getGuide('en/gdcluster/guide1')).toBeNull()
   })
 
-  it('revalidates after 7 days and keeps the copy before that', () => {
+  // R-#256/#240 (aclaración del operador, 2026-09-24): con red se revalida cada 24 h;
+  // sin red la copia no caduca (no depende de este intervalo para leerse).
+  it('revalidates after 24 hours and keeps the copy before that', () => {
     const now = 30 * 24 * 60 * 60 * 1000
-    const day = 24 * 60 * 60 * 1000
+    const hour = 60 * 60 * 1000
     expect(isStale({ downloadedAt: now - 1000 }, now)).toBe(false)
-    expect(isStale({ downloadedAt: now - 6 * day }, now)).toBe(false)
-    expect(isStale({ downloadedAt: now - 8 * day }, now)).toBe(true)
+    expect(isStale({ downloadedAt: now - 23 * hour }, now)).toBe(false)
+    expect(isStale({ downloadedAt: now - 25 * hour }, now)).toBe(true)
+    // Una copia de hace meses sigue siendo legible: `isStale` solo decide si se
+    // vuelve a mirar el servidor cuando hay conexión, no si la copia sirve.
+    expect(isStale({ downloadedAt: now - 400 * 24 * hour }, now)).toBe(true)
   })
 
   it('compares revisions and computes a stable hash', () => {

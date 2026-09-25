@@ -20,9 +20,12 @@ import { deleteGuide, saveGuide } from '@/lib/offline-guide-db'
  * afiliación en un teléfono compartido, incluso sin conexión.
  */
 
-// 7 días (decisión del operador, 2026-09-23): la copia descargada vale una semana,
-// igual que la caché de páginas del service worker; antes se revalidaba a diario.
-export const REVALIDATION_MS = 7 * 24 * 60 * 60 * 1000
+// 24 horas (aclaración del operador, 2026-09-24): **con red** se comprueba cada día si
+// hay novedades y se refresca la copia; **sin red** la copia no caduca: se lee todo el
+// tiempo que el estudiante esté desconectado. La caché de páginas del service worker ya
+// no caduca por edad por lo mismo (ver `next.config.ts`); este intervalo solo decide
+// cuándo se vuelve a mirar el servidor.
+export const REVALIDATION_MS = 24 * 60 * 60 * 1000
 
 export interface DownloadedPuzzle {
   // Payload de GET /api/crossword tal cual (celdas y pistas, sin respuestas): se

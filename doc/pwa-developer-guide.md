@@ -67,12 +67,19 @@ in a `next/script` with `strategy="afterInteractive"`.
 | Pattern | Handler | Cache | Lifetime |
 |---------|---------|-------|----------|
 | `/[lang]/diligent-records*` | NetworkFirst | `diligent-cache` | 30 days |
-| `/_next/static/*` | CacheFirst | `diligent-static` | 7 days |
-| `/img/*`, `/icons/*` (png/jpg/jpeg/svg/webp/gif) | CacheFirst | `learntg-images` | 30 days |
-| `/_next/image?url=…` (lo que sirve `next/image`) | CacheFirst | `learntg-images` | 30 days |
-| `/en/*` and `/es/*` (pages, con `ignoreVary`) | NetworkFirst (5 s) | `learntg-pages` | **7 días** (200 entradas) |
+| `/_next/static/*` | CacheFirst | `diligent-static` | sin caducidad por edad (300 entradas) |
+| `/img/*`, `/icons/*` (png/jpg/jpeg/svg/webp/gif) | CacheFirst | `learntg-images` | sin caducidad por edad (150 entradas) |
+| `/_next/image?url=…` (lo que sirve `next/image`) | CacheFirst | `learntg-images` | sin caducidad por edad (200 entradas) |
+| `/en/*` and `/es/*` (pages, con `ignoreVary`) | NetworkFirst (5 s) | `learntg-pages` | **sin caducidad por edad** (200 entradas) |
 | `/api/*` GET | NetworkFirst (5 s) | `learntg-api-get` | 1 h (200 entradas) |
 | `/api/*` POST/PATCH/DELETE | NetworkOnly | - | never cached |
+
+> **Sin caducidad por edad** (decisión del operador, 2026-09-24): una guía guardada
+> tiene que abrirse sin conexión **todo el tiempo que el estudiante esté sin red**, no
+> una semana. Los `maxEntries` acotan el tamaño (LRU); lo que caduca es la
+> **comprobación de novedades**, que la app hace cada 24 h **si hay red**
+> (`REVALIDATION_MS`). Si se quitara el `_next/static` de la caché, la página guardada
+> se serviría sin sus chunks y se vería vacía.
 
 `fallbacks.document = '/offline'` shows the offline page when a navigation is not
 in any cache. Workbox only serves a fallback it precached, which is why
@@ -128,8 +135,9 @@ courses first (`onStart`). `OfflineDownloadAll` is the visible control on the co
 the count of saved courses and a discreet **Check now** link (no download button:
 operator decision, 2026-09-23, after testing on an iPhone). The per-course sync
 (`OfflineCourseDownload.tsx`) works the same way in the course page. The logic lives in
-`lib/offline-course-download.ts` (`listAccessibleCourses`, `downloadAllAccessible`). A
-copy is good for **7 days** (`REVALIDATION_MS`), like the page cache.
+`lib/offline-course-download.ts` (`listAccessibleCourses`, `downloadAllAccessible`). Con
+red la copia se revalida cada **24 h** (`REVALIDATION_MS`) y, si cambió, se refresca; sin
+red la copia **no caduca** y se sigue leyendo.
 
 When something is missing while offline, each page falls back to the stored copy:
 
