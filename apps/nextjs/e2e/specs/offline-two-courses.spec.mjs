@@ -240,11 +240,27 @@ async function main() {
   await pages[1].setDefaultNavigationTimeout(120000)
 
   const plans = []
-  // Replays observados en **las dos** pestañas: la cola la puede drenar cualquiera de
-  // las dos (el candado que la hace única es de módulo, o sea por pestaña), así que el
-  // replay de cada curso se identifica por el `courseId` que lleva el cuerpo enviado y no
-  // por la pestaña que lo vio.
+  // La cola la puede drenar cualquiera de las dos pestañas (el candado que la hace única
+  // es de módulo, o sea por pestaña), así que el replay de cada curso se identifica por el
+  // `courseId` del cuerpo enviado y **no** por la pestaña que lo vio; por eso se escuchan
+  // las dos desde el principio y no solo la del curso que se está enviando.
   const replays = []
+  const watchReplays = (target) => {
+    target.on('response', (response) => {
+      if (!response.url().includes('/api/check-crossword')) return
+      let request = null
+      try { request = JSON.parse(response.request().postData() || 'null') } catch { /* sin cuerpo */ }
+      response.json()
+        .then((body) => replays.push({ status: response.status(), body, request }))
+        .catch(() => replays.push({ status: response.status(), body: null, request }))
+    })
+  }
+  for (const target of pages) watchReplays(target)
+
+  // Curso por curso: en línea se carga la guía y su crucigrama; **sin conexión** se envía,
+  // una pestaña por curso (cada crucigrama vive en su página) y las dos comparten la cola.
+  // Secuencial y con trazas: un `evaluate` colgado se ve como "Runtime.callFunctionOn
+  // timed out" y sin los pasos no se sabe cuál fue (medido el 2026-09-25).
   for (const [index, candidate] of candidates.entries()) {
     const target = pages[index]
     const coursePath = `/${LANG}/${candidate.prefix}`
@@ -252,6 +268,7 @@ async function main() {
     const testPath = `${guidePath}/test`
 
     // En línea: la guía (su Markdown) y su crucigrama.
+    console.log(`  [i] ${candidate.prefix}: guía y crucigrama en línea`)
     await target.goto(`${base}${guidePath}`, { waitUntil: 'domcontentloaded' })
     await sleep(1500)
     const online = await openCrosswordOnline(target, `${base}${testPath}`, { timeout })
@@ -294,42 +311,43 @@ async function main() {
     ok(`${candidate.prefix}: guía en línea con ${online.cells} celdas, ${filled} rellenas` +
       ` [antes] completada=${!!statusBefore?.completed} becaUSDT=${!!statusBefore?.receivedScholarship}`)
 
+    // Sin conexión: se envía desde su página y tiene que quedar en la cola.
+    console.log(`  [i] ${candidate.prefix}: sin conexión (emulando)`)
+    await target.setOfflineMode(true)
+    await sleep(1500)
+    console.log(`  [i] ${candidate.prefix}: pulsando "Enviar respuesta"`)
+    const submitted = await clickSubmit(target)
+    console.log(`  [i] ${candidate.prefix}: enviar=${submitted}`)
+    if (!submitted) {
+      console.log(`  [diag ${candidate.prefix}] ${JSON.stringify(await submitDiagnostics(target))}`)
+      fail(`El botón de envío de ${candidate.prefix} estaba deshabilitado sin conexión`)
+    } else {
+      let pending = 0
+      for (let wait = 0; wait < 15; wait++) {
+        await sleep(1000)
+        pending = await pendingCount(target)
+        if (pending > 0) break
+      }
+      if (pending > 0) ok(`${candidate.prefix}: respuesta encolada sin conexión (indicador ${pending})`)
+      else fail(`${candidate.prefix}: no apareció el indicador de pendientes tras enviar sin conexión`)
+    }
     plans.push({ candidate, target, testPath, statusBefore })
   }
 
-  // ── 4. Sin conexión: los dos crucigramas se envían y quedan en la cola ─
-  for (const plan of plans) {
-    plan.target.on('response', (response) => {
-      if (!response.url().includes('/api/check-crossword')) return
-      let request = null
-      try { request = JSON.parse(response.request().postData() || 'null') } catch { /* sin cuerpo */ }
-      response.json()
-        .then((body) => replays.push({ status: response.status(), body, request }))
-        .catch(() => replays.push({ status: response.status(), body: null, request }))
-    })
-    await plan.target.setOfflineMode(true)
-  }
-  await sleep(1500)
-
-  for (const plan of plans) {
-    const submitted = await clickSubmit(plan.target)
-    if (!submitted) {
-      console.log(`  [diag ${plan.candidate.prefix}] ${JSON.stringify(await submitDiagnostics(plan.target))}`)
-      fail(`El botón de envío de ${plan.candidate.prefix} estaba deshabilitado sin conexión`)
-    }
-  }
-  await sleep(3000)
-
-  const pendingA = await pendingCount(plans[0].target)
-  const pendingB = await pendingCount(plans[1].target)
-  const queued = await pendingInIndexedDb(plans[0].target)
-  if (pendingA > 0 && pendingB > 0 && queued >= 2) {
-    ok(`Los dos crucigramas quedaron encolados sin conexión (indicadores ${pendingA} y ${pendingB}, IndexedDB ${queued})`)
+  // ── 4. Lo que ya está en la cola ─────────────────────────────────────
+  // No se exige que estén las dos: al cargar en línea la segunda pestaña, su
+  // `OfflineQueueSync` puede drenar la respuesta del primer curso (el candado entre
+  // pestañas evita un drenado simultáneo, no uno posterior). Lo que importa se verifica
+  // contra el servidor en el paso 5.
+  const queued = await pendingInIndexedDb(pages[0])
+  if (queued > 0) {
+    console.log(`  [i] respuestas esperando en la cola: ${queued}`)
   } else {
-    fail(`La cola no tiene las dos respuestas (indicadores ${pendingA}/${pendingB}, IndexedDB ${queued})`)
+    fail('La cola de IndexedDB quedó vacía antes de reconectar')
   }
 
   // ── 5. En línea otra vez: la cola se drena y **los dos cursos pagan** ──
+  console.log('  [i] reconectando: la cola debe drenarse y pagar los dos cursos')
   for (const plan of plans) {
     await plan.target.setOfflineMode(false)
     await plan.target.evaluate(() => window.dispatchEvent(new Event('online')))
@@ -350,50 +368,42 @@ async function main() {
 
   for (const plan of plans) {
     const { candidate } = plan
-    // Replay de **este curso**: el último cuyo cuerpo lleve su `courseId`.
-    const mine = replays.filter((item) => Number(item.request?.courseId) === candidate.courseId)
-    const last = mine[mine.length - 1]
-    if (!last) {
-      fail(`No se observó el replay de ${candidate.prefix} a /api/check-crossword`)
-      continue
-    }
-    if (last.status !== 200 || last.body?.error) {
-      fail(`El replay de ${candidate.prefix} fue rechazado (HTTP ${last.status}): ${JSON.stringify(last.body).slice(0, 160)}`)
-      continue
-    }
-    const usdt = Number(last.body?.scholarshipUsdt || 0)
-    const slearn = Number(last.body?.scholarshipSlearn || 0)
-    if (usdt > 0 || slearn > 0) {
-      ok(`${candidate.prefix}: beca pagada al reconectar (${usdt} USDT + ${slearn} SLEARN)`)
-    } else {
-      fail(`${candidate.prefix}: el replay fue 200 pero sin beca: ${JSON.stringify(last.body).slice(0, 200)}`)
-    }
-
+    // La prueba es el **servidor**: la guía completada con las dos becas. El detalle de
+    // los replays se reporta, pero un replay repetido que el contrato rechaza por su
+    // enfriamiento de 24 h no es un fallo del producto si la beca ya quedó pagada.
     const after = await guideStatus(plan.target, learner.addr, candidate.courseId, candidate.guideNumber).catch(() => null)
     if (!after || after.error) {
       fail(`No se pudo leer el estado de ${candidate.prefix} tras el replay: ${JSON.stringify(after)}`)
       continue
     }
-    if (after.completed && after.receivedScholarship && after.receivedSlearnScholarship) {
-      ok(`${candidate.prefix}: la guía quedó completada con las dos becas (USDT y SLEARN)`)
+    const mine = replays.filter((item) => Number(item.request?.courseId) === candidate.courseId)
+    const paidReplay = mine.find((item) =>
+      Number(item.body?.scholarshipUsdt || 0) > 0 || Number(item.body?.scholarshipSlearn || 0) > 0)
+    plan.paid = !!(after.completed && after.receivedScholarship && after.receivedSlearnScholarship)
+
+    if (plan.paid) {
+      const usdt = Number(paidReplay?.body?.scholarshipUsdt || 0)
+      const slearn = Number(paidReplay?.body?.scholarshipSlearn || 0)
+      ok(`${candidate.prefix}: guía completada con las dos becas` +
+        (paidReplay ? ` (replay: ${usdt} USDT + ${slearn} SLEARN)` : ' (el pago lo observó la otra pestaña)'))
     } else {
       fail(`${candidate.prefix}: la guía quedó incompleta (completed=${!!after.completed}` +
         ` becaUSDT=${!!after.receivedScholarship} becaSLEARN=${!!after.receivedSlearnScholarship})`)
+    }
+    if (mine.length === 0) {
+      console.log(`  [i] ${candidate.prefix}: no se observó su replay (¿lo drenó la otra pestaña?)`)
+    } else if (!paidReplay) {
+      console.log(`  [i] ${candidate.prefix}: replays sin beca: ${mine.map((item) => JSON.stringify(item.body).slice(0, 140)).join(' | ')}`)
     }
   }
 
   // El enfriamiento es por curso: haber pagado en el primero no puede haber bloqueado el
   // segundo (es la regresión que este spec existe para fijar).
-  const paidCourses = new Set(
-    replays
-      .filter((item) => item.status === 200 && !item.body?.error &&
-        (Number(item.body?.scholarshipUsdt || 0) > 0 || Number(item.body?.scholarshipSlearn || 0) > 0))
-      .map((item) => Number(item.request?.courseId)),
-  )
-  if (paidCourses.size === 2) {
+  const paid = plans.filter((plan) => plan.paid)
+  if (paid.length === 2) {
     ok('Dos cursos diferentes pagaron beca en la misma sesión (el enfriamiento es por curso, no por billetera)')
   } else {
-    fail(`Solo ${paidCourses.size} de 2 cursos pagaron: el enfriamiento no debe bloquear otro curso`)
+    fail(`Solo ${paid.length} de 2 cursos pagaron: el enfriamiento no debe bloquear otro curso`)
   }
 
   const seconds = ((performance.now() - t0) / 1000).toFixed(1)

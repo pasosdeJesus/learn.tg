@@ -61,6 +61,34 @@ describe('useOfflineQueue (R-#241/R-#242)', () => {
     expect(result.current.pending).toBe(1)
   })
 
+  // El candado de módulo (`activeFlush`) es por pestaña: con dos pestañas abiertas las dos
+  // drenaban la misma respuesta guardada (medido en el E2E de dos cursos contra el sitio de
+  // desarrollo, 2026-09-25: la segunda entrega recibía el enfriamiento de 24 h porque la
+  // primera ya había pagado). `navigator.locks` lo cubre entre pestañas.
+  it('does not send anything when another tab holds the drain lock', async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    // `ifAvailable: true` con el candado tomado: el callback recibe `null`.
+    vi.stubGlobal('navigator', {
+      ...window.navigator,
+      onLine: true,
+      locks: {
+        request: vi.fn(async (_name: string, _opts: unknown, cb: (lock: unknown) => Promise<unknown>) => cb(null)),
+      },
+    })
+
+    const { result } = renderHook(() => useOfflineQueue())
+    await act(async () => {
+      await result.current.enqueue('/api/check-crossword', { guideId: 5 })
+    })
+    let sent = -1
+    await act(async () => { sent = await result.current.flush() })
+
+    expect(sent).toBe(0)
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(result.current.pending).toBe(1)
+  })
+
   it('keeps the answer queued when there is no network', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('Failed to fetch') }))
 

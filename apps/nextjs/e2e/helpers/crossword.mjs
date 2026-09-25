@@ -123,19 +123,24 @@ export async function pendingCount(page) {
   })
 }
 
-/** Pulsa "Enviar respuesta" si está habilitado. Devuelve `false` si no se pudo. */
+/**
+ * Pulsa "Enviar respuesta" si está habilitado. Devuelve `false` si no se pudo.
+ *
+ * Se resuelve con **un solo `evaluate`** (y un `click()` del DOM, que React atiende
+ * igual): con `page.$$('button')` más un `evaluate` por botón, un `evaluate` colgado deja
+ * el spec esperando el timeout de protocolo sin decir en qué botón (medido 2026-09-25
+ * contra el sitio de desarrollo).
+ */
 export async function clickSubmit(page) {
-  const buttons = await page.$$('button')
-  for (const button of buttons) {
-    const text = ((await button.evaluate((el) => el.textContent)) || '').trim()
-    if (/^(Submit answer|Enviar respuesta)$/.test(text)) {
-      const disabled = await button.evaluate((el) => el.disabled)
-      if (disabled) return false
-      await button.click()
-      return true
-    }
-  }
-  return false
+  return page.evaluate(() => {
+    const button = Array.from(document.querySelectorAll('button')).find((el) =>
+      /^(Submit answer|Enviar respuesta)$/.test((el.textContent || '').trim()),
+    )
+    if (!button) return false
+    if (button.disabled) return false
+    button.click()
+    return true
+  })
 }
 
 /**
