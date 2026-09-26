@@ -61,6 +61,32 @@ describe('useOfflineQueue (R-#241/R-#242)', () => {
     expect(result.current.pending).toBe(1)
   })
 
+  // Opción A de https://github.com/pasosdeJesus/learn.tg/issues/234 §4.9: si el servidor no
+  // reconoce la sesión (401/403) la respuesta **no** se descarta ni gasta intentos. Antes
+  // `registerAttempt` la borraba a los 5 intentos, y el estudiante perdía su trabajo por
+  // estar sin red más que la vida de la sesión.
+  it('keeps the answer and asks to sign in again when the session is gone (401)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false,
+      status: 401,
+      clone: () => ({ json: async () => ({ error: 'Unauthorized' }) }),
+    })))
+
+    const { result } = renderHook(() => useOfflineQueue())
+    await act(async () => {
+      await result.current.enqueue('/api/check-crossword', { guideId: 6 })
+    })
+    // Más intentos que `MAX_ATTEMPTS` (5): con el comportamiento anterior la respuesta ya
+    // se habría descartado.
+    for (let attempt = 0; attempt < 7; attempt++) {
+      await act(async () => { await result.current.flush() })
+    }
+
+    expect(result.current.pending).toBe(1)
+    expect(result.current.lastRejection?.needsSignIn).toBe(true)
+    expect(result.current.lastRejection?.status).toBe(401)
+  })
+
   // El candado de módulo (`activeFlush`) es por pestaña: con dos pestañas abiertas las dos
   // drenaban la misma respuesta guardada (medido en el E2E de dos cursos contra el sitio de
   // desarrollo, 2026-09-25: la segunda entrega recibía el enfriamiento de 24 h porque la

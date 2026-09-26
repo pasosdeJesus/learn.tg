@@ -20,8 +20,11 @@ export interface UseOfflineQueueResult {
    * Último rechazo del servidor al reproducir una respuesta guardada (R-#242):
    * 4xx significa que reintentar no ayuda, así que la página debe contarlo (p. ej.
    * "necesitas 50 puntos") en vez de dejarlo en la cola en silencio.
+   * `needsSignIn` marca el caso en que el servidor no reconoce la sesión (401/403):
+   * entonces la respuesta **no** se descarta ni gasta intentos, y hay que avisar que
+   * hay que volver a firmar.
    */
-  lastRejection: { url: string; status: number; message?: string } | null
+  lastRejection: { url: string; status: number; message?: string; needsSignIn?: boolean } | null
   clearLastRejection: () => void
   /**
    * Última respuesta **procesada** del servidor al reproducir algo guardado
@@ -56,6 +59,16 @@ let activeFlush: Promise<number> | null = null
  * primera ya había pagado la beca, y el mismo envío se procesaba dos veces).
  */
 const FLUSH_LOCK = 'learn-tg-offline-drain'
+
+/**
+ * El servidor no reconoce la sesión (cookie vencida o ausente). No se gasta intento ni se
+ * descarta la respuesta: `registerAttempt` la borra a los `MAX_ATTEMPTS` (5) y perder el
+ * trabajo del estudiante por estar sin red más que la vida de la sesión no es aceptable
+ * (decisión del operador, 2026-09-25 — opción A de
+ * https://github.com/pasosdeJesus/learn.tg/issues/234 §4.9). Se conserva y se avisa que hay
+ * que volver a firmar.
+ */
+const AUTH_STATUSES = [401, 403]
 
 interface WebLocksLike {
   request(
@@ -175,6 +188,12 @@ export function useOfflineQueue(): UseOfflineQueueResult {
               message = body?.error || body?.message
             } catch {
               // respuesta sin JSON: queda el código de estado
+            }
+            if (AUTH_STATUSES.includes(response.status)) {
+              // Sin sesión: se conserva en la cola (sin gastar intentos) y se corta el
+              // drenado para no insistir. El aviso lo dan la página y el toast global.
+              setLastRejection({ url: item.url, status: response.status, message, needsSignIn: true })
+              break
             }
             setLastRejection({ url: item.url, status: response.status, message })
             await registerAttempt(item.id)

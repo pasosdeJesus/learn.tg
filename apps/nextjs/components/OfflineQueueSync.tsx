@@ -24,12 +24,14 @@ export function OfflineQueueSync({ lang }: { lang: string }) {
       incorrect: 'Your saved answer was reviewed: there are words to fix.',
       noReward: 'No new scholarship this time.',
       rejected: 'Your saved answer could not be accepted',
+      needsSignIn: 'Your saved answers are still waiting: sign in again to send them.',
     },
     es: {
       correct: 'Se revisó tu respuesta guardada: ¡correcta!',
       incorrect: 'Se revisó tu respuesta guardada: hay palabras por corregir.',
       noReward: 'Esta vez no hubo beca nueva.',
       rejected: 'No se pudo aceptar tu respuesta guardada',
+      needsSignIn: 'Tus respuestas guardadas siguen esperando: vuelve a firmar para enviarlas.',
     },
   })
 
@@ -51,10 +53,14 @@ export function OfflineQueueSync({ lang }: { lang: string }) {
 
   useEffect(() => {
     if (!lastRejection) return
+    // Sin sesión válida (401/403) la respuesta sigue guardada: es una invitación a firmar
+    // de nuevo, no un rechazo del contenido.
     toast({
-      title: t('rejected'),
-      description: lastRejection.message || `HTTP ${lastRejection.status}`,
-      variant: 'destructive',
+      title: lastRejection.needsSignIn ? t('needsSignIn') : t('rejected'),
+      description: lastRejection.needsSignIn
+        ? undefined
+        : lastRejection.message || `HTTP ${lastRejection.status}`,
+      variant: lastRejection.needsSignIn ? 'default' : 'destructive',
     })
     clearLastRejection()
   }, [lastRejection, clearLastRejection, t, toast])

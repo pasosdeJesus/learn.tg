@@ -462,6 +462,7 @@ export default function Page({
       offlineQueued: 'Sin conexión: tu respuesta quedó guardada y se enviará sola cuando vuelvas a tener conexión.',
       offlineQueuedLowScore: 'Sin conexión: tu respuesta quedó guardada y se enviará sola cuando vuelvas a tener conexión. Ojo: tu perfil tiene {{0}} puntos y necesitas {{1}} o más para recibir beca; completa tu perfil y podrás reclamarla.',
       offlineRejected: 'No se pudo validar tu respuesta guardada: {{0}}',
+      offlineNeedsSignIn: 'Tu respuesta guardada sigue esperando: vuelve a firmar y se enviará sola.',
       offlinePending: 'respuesta(s) guardada(s) sin conexión, pendiente(s) de enviar.',
       offlineNoPuzzle: 'Sin conexión no hay un crucigrama guardado para esta guía. Ábrelo una vez con conexión (o descarga el curso) y vuelve a intentarlo.',
     },
@@ -478,6 +479,7 @@ export default function Page({
       offlineQueued: 'You are offline: your answer was saved and will be sent automatically when the connection returns.',
       offlineQueuedLowScore: 'You are offline: your answer was saved and will be sent automatically when the connection returns. Note: your profile has {{0}} points and you need {{1}} or more to receive a scholarship; complete your profile and you will be able to claim it.',
       offlineRejected: 'Your saved answer could not be validated: {{0}}',
+      offlineNeedsSignIn: 'Your saved answer is still waiting: sign in again and it will be sent.',
       offlinePending: 'answer(s) saved offline, waiting to be sent.',
       offlineNoPuzzle: 'You are offline and there is no saved crossword for this guide. Open it once with a connection (or download the course) and try again.',
     },
@@ -486,13 +488,18 @@ export default function Page({
   // R-#242: cuando la cola reproduce una respuesta guardada y el servidor la
   // rechaza (p. ej. perfil por debajo de 50 puntos), la página lo cuenta. Antes el
   // motivo se quedaba en la cola y el usuario no se enteraba.
+  // Si el rechazo es por sesión (401/403) la respuesta **no** se descarta: se dice que
+  // hay que volver a firmar (decisión del operador, 2026-09-25,
+  // https://github.com/pasosdeJesus/learn.tg/issues/234 §4.9).
   useEffect(() => {
     if (!lastRejection?.url.includes('check-crossword')) return
     setFlashWarning(
-      uiMsg[locale].offlineRejected.replace(
-        '{{0}}',
-        lastRejection.message || `HTTP ${lastRejection.status}`,
-      ),
+      lastRejection.needsSignIn
+        ? uiMsg[locale].offlineNeedsSignIn
+        : uiMsg[locale].offlineRejected.replace(
+            '{{0}}',
+            lastRejection.message || `HTTP ${lastRejection.status}`,
+          ),
     )
     clearLastRejection()
   }, [lastRejection, locale, clearLastRejection])

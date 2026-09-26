@@ -41,6 +41,11 @@ from the browser menu.
   when the connection comes back. The page shows how many answers are waiting
   ("1 answer saved offline, waiting to be sent."). Do not delete the app before
   the answers are sent.
+- **Nothing is thrown away if your session ended.** If the app cannot send a saved
+  answer because you are no longer signed in, the answer **stays saved** and the app
+  tells you to sign in again ("Your saved answers are still waiting: sign in again to
+  send them."); it is sent as soon as you do. You do not have to solve the crossword
+  again.
 - **The review happens online:** offline the app only shows the puzzle and takes
   your answer; the app does not tell you whether it is right while you have no
   connection. When you are back online the answer is checked and you get a
