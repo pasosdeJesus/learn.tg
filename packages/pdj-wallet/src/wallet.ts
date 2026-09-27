@@ -369,6 +369,29 @@ export async function getWalletInfo(storage?: StorageAdapter): Promise<WalletInf
 }
 
 /**
+ * Cambia la red de la billetera in-app (Celo Sepolia ↔ Celo).
+ *
+ * La llave es la misma en cualquier red: lo único que cambia es la red que la billetera
+ * declara (`eth_chainId`, `net_version` y el `chainId` de las transacciones). Antes la
+ * billetera quedaba atada a la red con la que se creó y `wallet_switchEthereumChain`
+ * respondía 4902, así que una billetera creada en el sitio de desarrollo (Celo Sepolia) no
+ * podía pagar en producción (Celo); reporte del operador, 2026-09-27.
+ *
+ * No toca el secreto cifrado (el sello biométrico sigue válido: solo cubre `cipher`/`kdf`).
+ */
+export async function setWalletChain(chain: ChainName, storage?: StorageAdapter): Promise<WalletInfo> {
+  const adapter = resolveStorage(storage)
+  const record = await adapter.get()
+  if (!record) throw new Error('There is no in-app wallet')
+  const nextChain = assertChain(chain)
+  const info: WalletInfo = { address: record.address, chain: nextChain, createdAt: record.createdAt }
+  if (record.chain !== nextChain) await adapter.set({ ...record, chain: nextChain })
+  // La sesión desbloqueada tiene que ver la red nueva sin volver a desbloquear.
+  if (unlocked) unlocked = { ...unlocked, info }
+  return info
+}
+
+/**
  * password-protected export. Both read the stored record with the password and have no
  * side effects on the session (the wallet may stay locked). The caller is
  * responsible for whatever it does with the secret.

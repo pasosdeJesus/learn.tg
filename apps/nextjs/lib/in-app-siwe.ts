@@ -3,8 +3,7 @@
 import { SiweMessage } from 'siwe'
 import { getAddress } from 'viem'
 import type { Eip1193Provider } from '@learn-tg/pdj-wallet'
-
-const CHAIN_IDS: Record<string, number> = { celo: 42220, celoSepolia: 11142220 }
+import { getAppChain } from '@/lib/app-chain'
 
 export type InAppSignInError = 'no-accounts' | 'no-csrf' | 'auth-failed'
 
@@ -25,14 +24,17 @@ export async function signInWithInAppWallet(provider: Eip1193Provider): Promise<
   const { csrfToken } = (await csrfResponse.json()) as { csrfToken?: string }
   if (!csrfToken) throw new Error('no-csrf' satisfies InAppSignInError)
 
-  const network = process.env.NEXT_PUBLIC_NETWORK || 'celoSepolia'
+  // La red del mensaje es la de la app (`getAppChain()`), no la que declara la
+  // billetera: es la que el servidor espera (`auth-options.ts` compara con
+  // `IS_PRODUCTION ? 42220 : 11142220`) y la de los pagos. Firmar no depende de la
+  // red, así que una billetera creada en Celo Sepolia puede iniciar sesión aquí.
   const message = new SiweMessage({
     domain: window.location.host,
     address: getAddress(account),
     statement: 'Sign in to Learn through games.',
     uri: window.location.origin,
     version: '1',
-    chainId: CHAIN_IDS[network] ?? 11142220,
+    chainId: getAppChain().id,
     nonce: csrfToken,
   }).prepareMessage()
 

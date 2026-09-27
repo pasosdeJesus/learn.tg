@@ -10,6 +10,7 @@ import {
   isValidPassword,
   lockWallet,
   signMessage,
+  setWalletChain,
   unlockWallet,
 } from '../wallet'
 import { MemoryStorage } from '../storage/memory'
@@ -172,6 +173,33 @@ describe('wallet', () => {
     ].join('\n')
     const signature = await signSIWE(message)
     expect(await verifyMessage({ address: HARDHAT_ADDRESS, message, signature })).toBe(true)
+  })
+
+  // 2026-09-27 (reporte del operador): la billetera in-app quedaba atada a la red con la
+  // que se creó, así que una creada en el sitio de desarrollo (Celo Sepolia) no podía
+  // pagar en producción (Celo). La llave sirve en cualquier red: sólo cambia la red que
+  // la billetera declara.
+  it('switches the declared chain without invalidating the secret', async () => {
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
+    expect((await getWalletInfo(storage))?.chain).toBe('celoSepolia')
+
+    const info = await setWalletChain('celo', storage)
+    expect(info.chain).toBe('celo')
+    expect((await getWalletInfo(storage))?.chain).toBe('celo')
+    // La sesión desbloqueada ve la red nueva (el `eth_chainId` del proveedor sale de ahí).
+    expect(await signMessage('hola')).toMatch(/^0x/)
+
+    // El secreto no se toca: la misma contraseña vuelve a desbloquear la billetera.
+    await lockWallet()
+    const unlocked = await unlockWallet(password, storage)
+    expect(unlocked.address).toBe(HARDHAT_ADDRESS)
+    expect(unlocked.chain).toBe('celo')
+  })
+
+  it('rejects an unsupported chain and a switch with no wallet', async () => {
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
+    await expect(setWalletChain('optimism' as never, storage)).rejects.toThrow(/unsupported chain/i)
+    await expect(setWalletChain('celo', new MemoryStorage())).rejects.toThrow(/no in-app wallet/i)
   })
 
   it('deletes the wallet and locks it', async () => {

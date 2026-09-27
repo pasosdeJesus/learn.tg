@@ -203,6 +203,16 @@ proxy_set_header Host $http_host;   # NOT $host
 This only matters on non-default ports (`:9001`); production (`:443`) is
 unaffected because `$host` and `$http_host` are both `learn.tg`.
 
+### 5. The message chain ID is the app's chain, not the wallet's
+
+`authorize()` rejects any `chainId` other than the one the site runs on
+(`IS_PRODUCTION ? 42220 : 11142220`). Both clients send exactly that: the external
+wallet flow reads the (already switched) `eth_chainId`, and the in-app flow builds the
+message with `getAppChain().id` (`lib/in-app-siwe.ts`). It is **not** the network the
+in-app wallet declares: signing does not depend on the network, so a wallet created on
+Celo Sepolia can sign in on production and pay there after the payment's chain
+pre-flight (`lib/ensure-chain.ts`, operator report 2026-09-27).
+
 ## Code References
 
 | Component | File | Key Lines |

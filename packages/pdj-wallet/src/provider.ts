@@ -1,8 +1,8 @@
-import { getUnlockedAccount, getUnlockedInfo, currentLockEpoch, signMessage, signTransaction, signTypedData } from './wallet.js'
+import { getUnlockedAccount, getUnlockedInfo, currentLockEpoch, setWalletChain, signMessage, signTransaction, signTypedData } from './wallet.js'
 import { isKnownDestination, rememberDestination } from './destinations.js'
 import { readBiometricRecord } from './biometric.js'
 import { assertUserVerification, hasRecentUserVerification, isUserCancelledError } from './web-authn.js'
-import { CHAIN_IDS, type Eip1193Provider, type Eip1193RequestArgs } from './types.js'
+import { CHAIN_IDS, type ChainName, type Eip1193Provider, type Eip1193RequestArgs, type StorageAdapter, type WalletInfo } from './types.js'
 
 /**
  * Event registry of the in-app provider (R-#236). The provider object is created
@@ -10,8 +10,11 @@ import { CHAIN_IDS, type Eip1193Provider, type Eip1193RequestArgs } from './type
  * lives at module level: a dapp that subscribed before a lock still gets the notice.
  *
  * `accountsChanged` fires with `[]` when a request finds the wallet locked or
- * deleted; `chainChanged` never fires because the wallet is bound to one chain at
- * creation (that is what `wallet_switchEthereumChain` answers with 4902).
+ * deleted; `chainChanged` fires when `wallet_switchEthereumChain` changes the network
+ * the in-app wallet declares (Celo Sepolia ↔ Celo, `setWalletChain`): the key is the
+ * same on any chain, but R-#236 bound the wallet to the network it was created with, so
+ * a wallet created on the development site could not pay on production (operator report,
+ * 2026-09-27).
  */
 type ProviderListener = (payload: unknown) => void
 const listeners = new Map<string, Set<ProviderListener>>()
@@ -40,6 +43,12 @@ export interface ProviderOptions {
    * user. On by default when a passkey is enrolled; set to `false` in tests.
    */
   requireUserVerification?: boolean
+  /**
+   * Wallet storage, so `wallet_switchEthereumChain` can persist the network it
+   * changes to. Defaults to the browser one (IndexedDB), the same store the app
+   * unlocks the wallet from.
+   */
+  storage?: StorageAdapter
 }
 
 /** Error shape wallets use for "the user rejected the request". */
@@ -190,6 +199,14 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
   const info = getUnlockedInfo()
   if (!account || !info) return null
 
+  /**
+   * La red sí puede cambiar en caliente (`wallet_switchEthereumChain`), así que se lee
+   * de nuevo en cada petición: `info` quedó capturado al crear el proveedor y, si no,
+   * `eth_chainId` seguiría respondiendo la red vieja después del cambio y viem volvería
+   * a lanzar `ChainMismatchError` al pagar (reporte del operador, 2026-09-27).
+   */
+  const currentInfo = (): WalletInfo => getUnlockedInfo() ?? info
+
   const provider: Eip1193Provider = {
     isPdJWallet: true,
 
@@ -200,25 +217,40 @@ export function getInAppWalletProvider(options: ProviderOptions = {}): Eip1193Pr
           return [account.address]
 
         case 'eth_chainId':
-          return `0x${CHAIN_IDS[info.chain].toString(16)}`
+          return `0x${CHAIN_IDS[currentInfo().chain].toString(16)}`
 
         case 'net_version':
-          return String(CHAIN_IDS[info.chain])
+          return String(CHAIN_IDS[currentInfo().chain])
 
         case 'wallet_switchEthereumChain': {
           const [target] = (params ?? []) as [{ chainId?: string }]
           const requested = Number.parseInt(String(target?.chainId ?? ''), 16)
-          const current = CHAIN_IDS[info.chain]
-          if (requested === current) return null
-          // R-#236: la billetera de la aplicación se ata a una red al crearla, así
-          // que no puede cambiar de cadena. Devolver `null` sin cambiar engañaba al
-          // llamador; EIP-1193 usa 4902 para "cadena desconocida".
-          throw Object.assign(
-            new Error(
-              `Unrecognized chain ID ${String(target?.chainId)}. The in-app wallet is fixed to chain ${current}.`,
-            ),
-            { code: 4902 },
+          const name = (Object.keys(CHAIN_IDS) as ChainName[]).find(
+            (candidate) => CHAIN_IDS[candidate] === requested,
           )
+          if (!name) {
+            // EIP-1193: 4902 = cadena desconocida (no la conocemos, no es que no
+            // podamos cambiar: Celo Sepolia y Celo sí se pueden).
+            throw Object.assign(new Error(`Unrecognized chain ID ${String(target?.chainId)}`), {
+              code: 4902,
+            })
+          }
+          if (requested !== CHAIN_IDS[currentInfo().chain]) {
+            await setWalletChain(name, options.storage)
+            emit('chainChanged', `0x${requested.toString(16)}`)
+          }
+          return null
+        }
+
+        case 'wallet_addEthereumChain': {
+          // Las dos redes que conocemos ya están "agregadas": se acepta sin hacer nada
+          // (las inyectadas lo usan para completar el cambio de red).
+          const [target] = (params ?? []) as [{ chainId?: string }]
+          const requested = Number.parseInt(String(target?.chainId ?? ''), 16)
+          if ((Object.values(CHAIN_IDS) as number[]).includes(requested)) return null
+          throw Object.assign(new Error(`Unrecognized chain ID ${String(target?.chainId)}`), {
+            code: 4902,
+          })
         }
 
         case 'personal_sign': {

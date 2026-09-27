@@ -18,6 +18,14 @@ stack locally.
 | Wallets | one per role (below) | single wallet for all roles |
 | Data | real users | development data |
 
+**La red decide qué billetera sirve.** La app fija su red con `NEXT_PUBLIC_NETWORK`
+(`lib/app-chain.ts` → `getAppChain()`). Una billetera **in-app** puede cambiar de red
+(`wallet_switchEthereumChain` mueve la red que declara entre Celo y Celo Sepolia: la llave es
+la misma), así que una billetera creada en el sitio de desarrollo **sí puede pagar** en
+producción desde que el pago hace el pre-flight de red (`lib/ensure-chain.ts`). El pre-flight
+también cambia la red de una billetera externa cuando puede y, si el cambio no se aplica, lo
+explica en el modal en vez de dejar caer el error de viem (reporte del operador, 2026-09-27).
+
 The Rails admin app listens on a **different port per environment** (both under
 `https://learn.tg`, behind nginx): **`:3250` in production** and **`:3500` in
 development**. The dev port is the one used by the frontend quickstart proxy

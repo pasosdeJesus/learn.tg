@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { verifyMessage } from 'viem'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { extractDestination, getInAppWalletProvider } from '../provider'
-import { currentLockEpoch, importWallet, lockWallet } from '../wallet'
+import { currentLockEpoch, getWalletInfo, importWallet, lockWallet } from '../wallet'
 import { MemoryStorage } from '../storage/memory'
 import { CHAIN_IDS } from '../types'
 
@@ -147,18 +147,65 @@ describe('getInAppWalletProvider', () => {
       vi.unstubAllGlobals()
     }
   })
-  // R-#236: la billetera de la aplicación se ata a una red al crearla, así que no
-  // puede cambiar de cadena. Antes devolvía `null` (éxito) sin cambiar nada y el
-  // llamador creía que había cambiado.
-  it('wallet_switchEthereumChain accepts its own chain and rejects another', async () => {
-    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage: new MemoryStorage() })
-    const provider = getInAppWalletProvider()!
-    const own = `0x${CHAIN_IDS.celoSepolia.toString(16)}`
+  // 2026-09-27 (reporte del operador): una billetera creada en Celo Sepolia no podía
+  // pagar en Celo porque `wallet_switchEthereumChain` respondía 4902 (R-#236 la ataba a
+  // la red de creación). La llave sirve en cualquier red: el cambio se aplica, se avisa
+  // `chainChanged` y `eth_chainId` responde la red nueva (viem lee ahí para su
+  // `assertCurrentChain`, así que sin eso el pago volvía a fallar con ChainMismatchError).
+  it('wallet_switchEthereumChain switches to the other known chain and emits chainChanged', async () => {
+    const storage = new MemoryStorage()
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
+    const provider = getInAppWalletProvider({ storage })!
+    const changes: unknown[] = []
+    provider.on('chainChanged', (payload) => changes.push(payload))
+    const celoHex = `0x${CHAIN_IDS.celo.toString(16)}`
+
     expect(
-      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: own }] }),
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: celoHex }] }),
     ).toBeNull()
+    expect(await provider.request({ method: 'eth_chainId' })).toBe(celoHex)
+    expect(await provider.request({ method: 'net_version' })).toBe(String(CHAIN_IDS.celo))
+    expect(changes).toEqual([celoHex])
+    expect((await getWalletInfo(storage))?.chain).toBe('celo')
+  })
+
+  it('returns null when asked for the chain it is already on, without emitting', async () => {
+    const storage = new MemoryStorage()
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
+    const provider = getInAppWalletProvider({ storage })!
+    const changes: unknown[] = []
+    provider.on('chainChanged', (payload) => changes.push(payload))
+
+    expect(
+      await provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: `0x${CHAIN_IDS.celoSepolia.toString(16)}` }],
+      }),
+    ).toBeNull()
+    expect(changes).toEqual([])
+  })
+
+  it('wallet_switchEthereumChain rejects an unknown chain with 4902', async () => {
+    const storage = new MemoryStorage()
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
+    const provider = getInAppWalletProvider({ storage })!
     await expect(
       provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1' }] }),
+    ).rejects.toMatchObject({ code: 4902 })
+  })
+
+  it('wallet_addEthereumChain accepts the known chains and rejects another', async () => {
+    const storage = new MemoryStorage()
+    await importWallet({ mnemonic: HARDHAT_MNEMONIC, password: password, storage })
+    const provider = getInAppWalletProvider({ storage })!
+    expect(
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [{ chainId: `0x${CHAIN_IDS.celo.toString(16)}` }],
+      }),
+    ).toBeNull()
+    await expect(
+      provider.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x1' }] }),
     ).rejects.toMatchObject({ code: 4902 })
   })
 

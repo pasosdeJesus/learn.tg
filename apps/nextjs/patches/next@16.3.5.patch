@@ -1,0 +1,43 @@
+diff --git a/dist/esm/shared/lib/errors/code-frame.js b/dist/esm/shared/lib/errors/code-frame.js
+index c1c3823..81f81d8 100644
+--- a/dist/esm/shared/lib/errors/code-frame.js
++++ b/dist/esm/shared/lib/errors/code-frame.js
+@@ -6,6 +6,13 @@ import { getBindingsSync } from '../../../build/swc';
+     // Default to the terminal width
+     if (options.maxWidth === undefined) {
+         options.maxWidth = process.stdout.columns;
++    }
++    // El binding WASM (openbsd/adJ) deserializa `color` como el enum
++    // `None|Error|Warning|Info`: un booleano lo hace fallar con
++    // "invalid type: boolean, expected enum CodeFrameColorMode".
++    if (typeof options.color === 'boolean') {
++        options.color = options.color ? 'Error' : 'None';
++    }
+     return getBindingsSync().codeFrameColumns(file, location, options);
+ }
+ 
+diff --git a/dist/shared/lib/errors/code-frame.js b/dist/shared/lib/errors/code-frame.js
+index ce407ad..680b6a6 100644
+--- a/dist/shared/lib/errors/code-frame.js
++++ b/dist/shared/lib/errors/code-frame.js
+@@ -6,12 +6,20 @@ Object.defineProperty(exports, "codeFrameColumns", {
+     enumerable: true,
+     get: function() {
+         return codeFrameColumns;
++    }
+ });
+ const _swc = require("../../../build/swc");
+ function codeFrameColumns(file, location, options = {}) {
+     // Default to the terminal width
+     if (options.maxWidth === undefined) {
+         options.maxWidth = process.stdout.columns;
++    }
++    // El binding WASM (openbsd/adJ) deserializa `color` como el enum
++    // `None|Error|Warning|Info`: un booleano lo hace fallar con
++    // "invalid type: boolean, expected enum CodeFrameColorMode".
++    if (typeof options.color === 'boolean') {
++        options.color = options.color ? 'Error' : 'None';
++    }
+     return (0, _swc.getBindingsSync)().codeFrameColumns(file, location, options);
+ }
+ 

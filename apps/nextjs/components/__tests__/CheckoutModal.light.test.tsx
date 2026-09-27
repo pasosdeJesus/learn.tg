@@ -125,4 +125,18 @@ describe('CheckoutModal (light)', () => {
     )
     expect(screen.queryByText(/Purchase course/i)).not.toBeInTheDocument()
   })
+
+  // El modal se monta cerrado y sólo después se abre. Un hook declarado después del
+  // `if (!isOpen) return null` cambia el número de hooks entre esos dos renders y React
+  // lanza "Rendered more hooks than during the previous render": el pre-flight de red
+  // (`handlePay`) tuvo que subir arriba por eso.
+  it('se abre cuando el padre lo monta cerrado y luego lo abre', async () => {
+    const { rerender } = render(
+      <CheckoutModal courseId={1} lang="en" isOpen={false} onClose={() => {}} />,
+    )
+    rerender(
+      <CheckoutModal courseId={1} lang="en" isOpen={true} onClose={() => {}} onSuccess={() => {}} />,
+    )
+    expect(await screen.findByText(/Purchase course/i)).toBeInTheDocument()
+  })
 })

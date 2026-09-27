@@ -130,7 +130,10 @@
       "sharp",
       "unrs-resolver",
       "utf-8-validate"
-    ]
+    ],
+    "patchedDependencies": {
+      "next@16.3.5": "patches/next@16.3.5.patch"
+    }
   },
   "packageManager": "pnpm@10.34.5"
 }

@@ -7,6 +7,9 @@ import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
+import { ensureWalletChain, WrongChainError } from '@/lib/ensure-chain'
+import { getAppChain } from '@/lib/app-chain'
+import { useWalletProvider } from '@/lib/hooks/useWalletProvider'
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { erc20Abi, formatDisplay } from '@learn-tg/rewards/lib/donate-utils'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
@@ -70,6 +73,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       noGasHint: 'From guide 3 of the Web3 & UBI course you can request Learn.tg-UBI paid in CELO to cover gas costs.',
       gasWarn: 'Gas estimation failed, proceed at your own risk',
       estimating: 'estimating...',
+      wrongChain: 'Your wallet is on another network. Switch it to Celo and try again.',
+      wrongChainInApp: 'We could not switch your in-app wallet to the Celo network. Try again, or pay with an external wallet on the Celo network.',
     },
     es: {
       title: 'Comprar curso',
@@ -100,6 +105,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       noGasHint: 'Desde la guia 3 del curso Web3 & UBI puedes pedir Learn.tg-UBI que se paga en CELO y te permite cubrir costos de gas.',
       gasWarn: 'Fallo al estimar gas, continue bajo su propio riesgo',
       estimating: 'estimando...',
+      wrongChain: 'Tu billetera está en otra red. Cámbiala a Celo e inténtalo de nuevo.',
+      wrongChainInApp: 'No pudimos cambiar tu billetera de la app a la red Celo. Inténtalo de nuevo, o paga con una billetera externa en la red Celo.',
     },
   }), [lang])
 
@@ -112,6 +119,9 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   const { authedGet, authedPost } = useAuthedApi()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
+  const { provider: walletProvider } = useWalletProvider()
+  // Mensaje del pre-flight de red (distinto del error del pago).
+  const [chainError, setChainError] = useState<string | null>(null)
   const { toast } = useToast()
 
   // R-#246 (2026-09-19): con la huella registrada el gesto se pide al abrir el
@@ -303,6 +313,25 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     }
   }, [paymentError, lang, toast])
 
+  // Pre-flight de red antes de pagar (reporte del operador, 2026-09-27): con la billetera
+  // en otra red viem lanzaba "The current chain of the wallet (id: 11142220) does not match
+  // the target chain for the transaction (id: 42220 – Celo)", que no dice qué hacer. Se
+  // intenta cambiar la red (la billetera in-app también puede: la misma llave sirve en
+  // Celo y en Celo Sepolia) y sólo si el cambio no se aplica se explica al estudiante.
+  //
+  // Debe declararse **antes** del `if (!isOpen) return null`: un hook después de esa salida
+  // temprana cambia el número de hooks entre renders.
+  const handlePay = useCallback(async () => {
+    setChainError(null)
+    try {
+      await ensureWalletChain(walletClient as never, getAppChain(), walletProvider)
+    } catch (error) {
+      setChainError(error instanceof WrongChainError && error.isInApp ? t('wrongChainInApp') : t('wrongChain'))
+      return
+    }
+    await executePayment()
+  }, [executePayment, t, walletClient, walletProvider])
+
   if (!isOpen) return null
 
   const busy = paymentState === 'paying' || paymentState === 'confirming'
@@ -408,7 +437,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
           )}
         </div>
 
-        {paymentError && (
+        {(paymentError || chainError) && (
           <div className="mt-4 rounded border border-red-300 bg-red-50 p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-red-700">{t('error')}</span>
@@ -416,7 +445,10 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
                 {t('copyError')}
               </button>
             </div>
-            <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-xs text-red-800">{paymentError}</pre>
+            <pre
+              className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-xs text-red-800"
+              data-testid="checkout-error"
+            >{paymentError || chainError}</pre>
           </div>
         )}
 
@@ -442,7 +474,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
 
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>{t('cancel')}</Button>
-          <Button onClick={executePayment} disabled={purchaseDisabled}>
+          <Button onClick={() => { void handlePay() }} disabled={purchaseDisabled}>
             {busy ? t('processing') : t('purchase')}
           </Button>
         </div>

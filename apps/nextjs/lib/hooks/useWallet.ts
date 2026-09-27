@@ -2,13 +2,12 @@
 
 import { useMemo } from 'react'
 import { createPublicClient, createWalletClient, custom, http } from 'viem'
-import { celo, celoSepolia } from 'viem/chains'
-import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useWalletProvider } from '@/lib/hooks/useWalletProvider'
 import { getRpcUrl } from '@/lib/rpc-url'
+import { getAppChain } from '@/lib/app-chain'
 
-const chain = IS_PRODUCTION ? celo : celoSepolia
+const chain = getAppChain()
 
 /**
  * Replacement for wagmi's usePublicClient.

@@ -110,6 +110,13 @@ What these cover:
   notice appears, the old message does not, and the
   `data-testid="wallet-unlock-request"` button dispatches
   `learn-tg:open-in-app-wallet-dialog`.
+- Pre-flight de red antes de pagar: `lib/__tests__/ensure-chain.test.ts` (5) y su
+  integración con el proveedor de la billetera in-app
+  `lib/__tests__/ensure-chain-in-app.test.ts` (2, con `// @vitest-environment node`
+  porque hace cifrado real). Cubre el reporte del operador del 2026-09-27: una billetera
+  creada en Celo Sepolia cambia de red y termina pagando en Celo. Es la forma de cubrirlo
+  sin mover fondos en mainnet (el sitio de desarrollo corre en Celo Sepolia, así que su
+  red no discrepa de la billetera y el E2E no reproduce el desajuste).
 
 If a hook test fails to resolve `@learn-tg/pdj-wallet`, the aliases at the top
 of `apps/nextjs/vitest.config.ts` are missing (the linked
