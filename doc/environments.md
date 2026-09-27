@@ -487,6 +487,12 @@ derribó el dev server por OOM.)
 
    Si en cambio el dev site se sirve con **dev server** (`bin/dev`), después de arrancar hay que
    **calentar con `bin/warmup.mjs`** antes de los specs (paso que en el modo build no existe).
+5. **Parche de Next para OpenBSD** (`patches/next@16.3.5.patch`,
+   https://github.com/pasosdeJesus/learn.tg/issues/267): lo aplica `pnpm install` (el de
+   `make all`) y `make all`/`make prod` verifican con `next-patch-check` que quedó puesto;
+   si falta, abortan con instrucciones (`make next-patch` lo aplica y comprueba). No es un
+   paso de despliegue aparte y no cambia el sitio en ejecución: sólo evita que un error de
+   `next dev` o de `next build` se reporte como el fallo del binding WASM.
 
 ## Motores locales (packages/) y pruebas E2E
 

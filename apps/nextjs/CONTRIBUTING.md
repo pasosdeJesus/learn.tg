@@ -224,7 +224,16 @@ make coverage       # pnpm coverage with v8 provider
 
 # ── Interactive ──
 pnpm test:ui        # Interactive Vitest UI
+
+# ── Entorno OpenBSD (Next 16) ──
+make next-patch       # Re-aplica el parche de Next (pnpm install) y comprueba que quedó
+make next-patch-check # Sólo comprueba (falla si node_modules trae el parche viejo)
 ```
+
+El parche de Next (`patches/next@16.3.5.patch`, R-#267) se aplica **solo** con
+`pnpm install`; `make next-patch` es para aplicarlo a mano y comprobarlo, y
+`make all`/`make prod` ya lo verifican antes de compilar. Para regenerarlo, ver
+REQ/267 §6 (nunca editar `node_modules` a mano).
 
 **Why sub-targets?** On OpenBSD, running all tests at once via `pnpm coverage`
 can hit esbuild memory limits. The sub-targets run isolated Vitest processes

@@ -1,42 +1,51 @@
 diff --git a/dist/esm/shared/lib/errors/code-frame.js b/dist/esm/shared/lib/errors/code-frame.js
-index c1c3823..81f81d8 100644
 --- a/dist/esm/shared/lib/errors/code-frame.js
 +++ b/dist/esm/shared/lib/errors/code-frame.js
-@@ -6,6 +6,13 @@ import { getBindingsSync } from '../../../build/swc';
-     // Default to the terminal width
+@@ -7,6 +7,22 @@
      if (options.maxWidth === undefined) {
          options.maxWidth = process.stdout.columns;
-+    }
+     }
 +    // El binding WASM (openbsd/adJ) deserializa `color` como el enum
-+    // `None|Error|Warning|Info`: un booleano lo hace fallar con
-+    // "invalid type: boolean, expected enum CodeFrameColorMode".
-+    if (typeof options.color === 'boolean') {
-+        options.color = options.color ? 'Error' : 'None';
++    // `None|Error|Warning|Info` y `maxWidth` como numero: Next le pasa `false`/
++    // `true` y `maxWidth: undefined`, y el binding lanza
++    // ("invalid type: boolean `false`, expected enum CodeFrameColorMode" /
++    // "invalid type: unit value, expected usize").
++    // `color: false` se borra (el default de ambas rutas es "sin color"); el
++    // enum del binding nativo NO tiene `None`, asi que mandar 'None' romperia ahí.
++    if (options.color === false) {
++        delete options.color;
++    } else if (options.color === true) {
++        options.color = 'Error';
++    }
++    // `process.stdout.columns` no existe cuando la salida no es una terminal.
++    if (typeof options.maxWidth !== 'number') {
++        options.maxWidth = 100;
 +    }
      return getBindingsSync().codeFrameColumns(file, location, options);
  }
  
 diff --git a/dist/shared/lib/errors/code-frame.js b/dist/shared/lib/errors/code-frame.js
-index ce407ad..680b6a6 100644
 --- a/dist/shared/lib/errors/code-frame.js
 +++ b/dist/shared/lib/errors/code-frame.js
-@@ -6,12 +6,20 @@ Object.defineProperty(exports, "codeFrameColumns", {
-     enumerable: true,
-     get: function() {
-         return codeFrameColumns;
-+    }
- });
- const _swc = require("../../../build/swc");
- function codeFrameColumns(file, location, options = {}) {
-     // Default to the terminal width
+@@ -14,6 +14,22 @@
      if (options.maxWidth === undefined) {
          options.maxWidth = process.stdout.columns;
-+    }
+     }
 +    // El binding WASM (openbsd/adJ) deserializa `color` como el enum
-+    // `None|Error|Warning|Info`: un booleano lo hace fallar con
-+    // "invalid type: boolean, expected enum CodeFrameColorMode".
-+    if (typeof options.color === 'boolean') {
-+        options.color = options.color ? 'Error' : 'None';
++    // `None|Error|Warning|Info` y `maxWidth` como numero: Next le pasa `false`/
++    // `true` y `maxWidth: undefined`, y el binding lanza
++    // ("invalid type: boolean `false`, expected enum CodeFrameColorMode" /
++    // "invalid type: unit value, expected usize").
++    // `color: false` se borra (el default de ambas rutas es "sin color"); el
++    // enum del binding nativo NO tiene `None`, asi que mandar 'None' romperia ahí.
++    if (options.color === false) {
++        delete options.color;
++    } else if (options.color === true) {
++        options.color = 'Error';
++    }
++    // `process.stdout.columns` no existe cuando la salida no es una terminal.
++    if (typeof options.maxWidth !== 'number') {
++        options.maxWidth = 100;
 +    }
      return (0, _swc.getBindingsSync)().codeFrameColumns(file, location, options);
  }

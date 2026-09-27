@@ -9,6 +9,10 @@
  * `SERVER_ERROR_LOG` (por defecto `/tmp/learn-tg-server-errors.log`) — ver
  * `lib/server-errors.ts`.
  *
+ * El overlay ya se arregla con el parche de Next
+ * (https://github.com/pasosdeJesus/learn.tg/issues/267), pero este registro se
+ * queda: también cubre lo que no pasa por el overlay.
+ *
  * Se registra también `unhandledRejection` / `uncaughtException` porque los
  * fallos de las rutas de streaming y de las promesas sueltas no pasan por
  * `onRequestError`.

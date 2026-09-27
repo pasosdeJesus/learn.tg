@@ -146,7 +146,14 @@ Detalles que cuestan tiempo si se ignoran:
 Un 500 puede quedarse sin causa visible: en `next dev` el overlay de errores a
 veces no se pinta (medido 2026-09-20: `invalid type: boolean \`false\`, expected
 enum CodeFrameColorMode`) y ni el `console.error` del route ni la página de error
-llegan a la consola. Desde entonces:
+llegan a la consola. **La causa de fondo está parcheada** desde el 2026-09-27
+(https://github.com/pasosdeJesus/learn.tg/issues/267):
+`apps/nextjs/patches/next@16.3.5.patch` normaliza las opciones antes de llegar al
+binding WASM: `color: false` se borra (el enum del binding nativo no tiene `None`),
+`color: true` → `'Error'` y `maxWidth: undefined` → `100`; así el
+overlay vuelve a pintar el error; para regenerar el parche, ver R-#267 §6.
+
+Además, desde el 2026-09-20:
 
 - `apps/nextjs/instrumentation.ts` (`onRequestError` + `unhandledRejection` /
   `uncaughtException`) registra todo error del servidor, incluidas las rutas de

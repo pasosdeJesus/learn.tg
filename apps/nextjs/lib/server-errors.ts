@@ -9,6 +9,10 @@
  * además de stderr, y `instrumentation.ts` lo usa para los errores de request que
  * escapan a los `try/catch` de las rutas.
  *
+ * El overlay ya se arregla con el parche de Next
+ * (https://github.com/pasosdeJesus/learn.tg/issues/267), pero este registro se
+ * queda: también cubre las rutas de streaming y las promesas sueltas.
+ *
  * Solo se usa en el servidor.
  *
  * Importante: NO importar `fs` con `import`. `instrumentation.ts` también se

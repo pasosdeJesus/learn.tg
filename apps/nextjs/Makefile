@@ -62,7 +62,7 @@ pwa-kill-switch:
 all: build-guard engines-dist engines-assets pwa-clean
 	rm -rf .next
 	pnpm i
-	$(MAKE) swc-wasm
+	$(MAKE) next-patch-check swc-wasm
 	# Máquina real: 16G RAM + swap, otras apps. 15 workers × heap grande = OOM.
 	# 8 workers × 2048 MB (webpack.parallelism en next.config.ts, https://gitlab.com/pasosdeJesus/m/-/work_items/35 gate).
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
@@ -163,7 +163,7 @@ coverage:
 dev:
 	./bin/dev
 
-prod: build-guard engines-dist engines-assets swc-wasm pwa-clean
+prod: build-guard engines-dist engines-assets next-patch-check swc-wasm pwa-clean
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
 	./bin/start > prod.log 2>&1 &
 
@@ -173,6 +173,35 @@ prod: build-guard engines-dist engines-assets swc-wasm pwa-clean
 swc-wasm:
 	mkdir -p node_modules/next/wasm/@next/swc-wasm-nodejs
 	cp node_modules/@next/swc-wasm-nodejs/wasm.js node_modules/@next/swc-wasm-nodejs/wasm_bg.wasm node_modules/next/wasm/@next/swc-wasm-nodejs/
+
+# Parche de Next 16 para OpenBSD (https://github.com/pasosdeJesus/learn.tg/issues/267):
+# sin bindings nativos el code-frame va por el binding WASM, que espera `color` como
+# enum (`None|Error|Warning|Info`) y `maxWidth` numérico, y Next le pasa `false` /
+# `undefined`. Sin el parche, cualquier 500 en `next dev` se reporta como
+# "invalid type: boolean `false`, expected enum CodeFrameColorMode" (o "unit value")
+# y la causa real no se ve.
+#
+# Se aplica SOLO: `pnpm install` lo toma de `pnpm.patchedDependencies`
+# (`patches/next@16.3.5.patch`, con su hash en pnpm-lock.yaml). Este target sirve
+# para aplicarlo a mano y comprobar que quedó; para REGENERAR el parche ver
+# REQ/267 §6 (no editar node_modules a mano: pnpm usa enlaces duros y el store
+# queda sucio, ERR_PNPM_PATCH_FAILED).
+.PHONY: next-patch next-patch-check
+next-patch:
+	pnpm install --frozen-lockfile
+	@$(MAKE) next-patch-check
+
+next-patch-check:
+	@for f in node_modules/next/dist/shared/lib/errors/code-frame.js \
+	          node_modules/next/dist/esm/shared/lib/errors/code-frame.js; do \
+	  grep -q "maxWidth !== 'number'" "$$f" 2>/dev/null || { \
+	    echo "ERROR: el parche de Next no está aplicado en $$f"; \
+	    echo "  Aplícalo con: cd apps/nextjs && pnpm install"; \
+	    echo "  Si pnpm falla con ERR_PNPM_PATCH_FAILED: ver REQ/267 §6."; \
+	    exit 1; \
+	  }; \
+	done
+	@echo "[next-patch] aplicado (patches/next@16.3.5.patch)"
 
 # ── E2E Tests ───────────────────────────────────────────────────────────
 
