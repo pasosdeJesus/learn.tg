@@ -179,6 +179,9 @@ function summarize(
   if (privacy) parts.push(`${privacy} ${t('privacy')}`)
   const notPurchased = result.skipped.filter((item) => item.reason === 'not-purchased').length
   if (notPurchased) parts.push(`${notPurchased} ${t('notPurchased')}`)
+  // Un curso que el sitio ya no presenta pierde su copia (R-#268): se dice, para
+  // que la desaparición de la biblioteca no sea un misterio.
+  if (result.removed?.length) parts.push(`${result.removed.length} ${t('removed')}`)
   if (result.failed.length) parts.push(`${result.failed.length} ${t('failed')}`)
   return parts.join(' · ') || t('nothingToDo')
 }
@@ -194,6 +197,7 @@ function useOfflineStrings(lang: string) {
       nothingToDo: 'everything was already saved',
       privacy: 'not published (Christian content)',
       notPurchased: 'not purchased',
+      removed: 'no longer available',
       failed: 'could not be saved',
     },
     es: {
@@ -204,6 +208,7 @@ function useOfflineStrings(lang: string) {
       nothingToDo: 'todo estaba ya guardado',
       privacy: 'sin publicar (contenido cristiano)',
       notPurchased: 'sin comprar',
+      removed: 'ya no disponibles',
       failed: 'no se pudieron guardar',
     },
   }), [lang])

@@ -90,6 +90,13 @@ const pwaConfig: PWAConfig = {
         expiration: {
           maxEntries: 150,
         },
+        // Las figuras de una guía descargada las guarda la app a mano
+        // (`warmImageCache` en `lib/offline-course-download.ts`); si esas reglas
+        // marcaran `Vary`, la petición del `<img>` no encontraría la entrada. Aquí
+        // no hay negociación de contenido (archivo estático), así que ignorarla es
+        // seguro — y sin esto la guía guardada se abría sin conexión pero sin sus
+        // imágenes (reporte del operador, 2026-09-27).
+        matchOptions: { ignoreVary: true },
       },
     },
     {

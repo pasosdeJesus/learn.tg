@@ -20,6 +20,6 @@ Brief map of each module. For complex features (crossword rewards, auth), see `d
 | `user-transactions.ts` | User transaction history queries |
 | `authenticateUser.ts` | Session-cookie auth helper for API routes |
 | `donate-utils.ts` | `parseUserAmount`, `formatDisplay`, `erc20Abi` for donations |
-| `hooks/` | React hooks: `useApiData`, `useFetchData`, `useGuideData`, `useSort`, `useTranslation`, `useScholarshipData`, `useGuideNavigation`, `useGasEstimation` |
+| `hooks/` | React hooks: `useApiData`, `useFetchData`, `useGuideData`, `useSort`, `useTranslation`, `useScholarshipData`, `useGuideNavigation`, `useGasEstimation`, `useContractPayment` (donation/purchase transfers, serialized so USDT and SLEARN do not collide on the nonce) |
 | `metrics/queries.ts` | Aggregated metrics queries for the dashboard |
 | `__tests__/` | Unit tests for all modules above |

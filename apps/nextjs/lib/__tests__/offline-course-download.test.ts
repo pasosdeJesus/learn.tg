@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { downloadCourse, revalidateCourse, PAGE_CACHE_NAME } from '../offline-course-download'
+import { downloadCourse, revalidateCourse, PAGE_CACHE_NAME, IMAGE_CACHE_NAME, guideImageUrls } from '../offline-course-download'
 import { deleteDownloadedCourses, getDownloadedCourse } from '../offline-course-db'
 import { getGuide } from '../offline-guide-db'
 
@@ -222,36 +222,77 @@ describe('revalidateCourse (R-#256 §3.6)', () => {
   })
 })
 
-// El documento de la guía y el de su crucigrama tienen que quedar en la misma caché
-// que lee la regla de `next.config.ts`: sin eso, abrir la guía descargada sin conexión
-// cae en `/offline`. El operador lo reportó con un iPhone el 2026-09-23 (ahí el
-// service worker todavía no controlaba la página, así que el `fetch` solo no bastaba).
-describe('warmPageCache (R-#256)', () => {
-  const put = vi.fn(async (_request: Request, _response?: Response) => undefined)
-  const open = vi.fn(async () => ({ put }))
+// El documento del curso, el de cada guía y el de su crucigrama tienen que quedar en
+// la misma caché que lee la regla de `next.config.ts`: sin eso, abrir la guía
+// descargada sin conexión cae en `/offline`. El operador lo reportó con un iPhone el
+// 2026-09-23 (ahí el service worker todavía no controlaba la página, así que el
+// `fetch` solo no bastaba) y otra vez el 2026-09-27 (la página del **curso** caía en
+// "You are offline" con la lista de cursos guardados en vez del curso).
+describe('warming the offline caches (R-#256, R-#268)', () => {
+  const puts = new Map<string, string[]>()
+  const open = vi.fn(async (cacheName: string) => ({
+    put: async (request: Request) => {
+      const urls = puts.get(cacheName) ?? []
+      urls.push(String(request.url))
+      puts.set(cacheName, urls)
+    },
+  }))
+  const fetchMock = vi.fn(async (_input: RequestInfo | URL) => new Response('<html>guía</html>', { status: 200 }))
 
   beforeEach(async () => {
-    put.mockClear()
+    puts.clear()
     open.mockClear()
+    fetchMock.mockClear()
     Object.defineProperty(window, 'caches', { value: { open }, configurable: true })
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('<html>guía</html>', { status: 200 })))
+    vi.stubGlobal('fetch', fetchMock)
     await deleteDownloadedCourses({})
   })
 
-  it('stores the guide page and its crossword page in the pages cache', async () => {
+  it('stores the course page, the guide page and its crossword page in the pages cache', async () => {
     await downloadCourse(DESCRIPTOR, { get: makeGet() as any, wallet: WALLET })
 
     expect(open).toHaveBeenCalledWith(PAGE_CACHE_NAME)
-    const urls = put.mock.calls.map((call) => String((call[0] as Request).url))
-    expect(urls.some((url) => url.endsWith('/en/gdcluster/guide1'))).toBe(true)
-    expect(urls.some((url) => url.endsWith('/en/gdcluster/guide1/test'))).toBe(true)
+    const pages = puts.get(PAGE_CACHE_NAME) ?? []
+    expect(pages.some((url) => url.endsWith('/en/gdcluster'))).toBe(true)
+    expect(pages.some((url) => url.endsWith('/en/gdcluster/guide1'))).toBe(true)
+    expect(pages.some((url) => url.endsWith('/en/gdcluster/guide1/test'))).toBe(true)
   })
 
-  it('keeps the cache name in sync with next.config.ts', () => {
+  // Operador, 2026-09-27: la guía descargada se abría sin conexión pero **sin sus
+  // figuras**, porque nunca se habían pedido y no estaban en ninguna caché.
+  it('stores the figures of every guide in the images cache', async () => {
+    const get = vi.fn(async (url: string) => {
+      if (url.startsWith('/api/guide?')) {
+        return {
+          data: {
+            // Lo que entrega /api/guide: el Markdown ya convertido a HTML.
+            markdown: '<p><img alt="Drawing of Jesus walking on the lake" title="Jesús camina" ' +
+              'src="/img/camina_sobre_el_agua.jpg"></p>\n' +
+              '<p><a href="https://www.youtube.com/embed/57CTbB-u9kc">' +
+              '<img src="https://img.youtube.com/vi/57CTbB-u9kc.jpg" alt="video"></a></p>',
+          },
+        }
+      }
+      if (url.startsWith('/api/crossword?')) return { data: { grid: [[]], placements: [] } }
+      throw new Error(`unexpected ${url}`)
+    })
+
+    await downloadCourse(DESCRIPTOR, { get: get as any, wallet: WALLET })
+
+    const images = puts.get(IMAGE_CACHE_NAME) ?? []
+    expect(images.some((url) => url.endsWith('/img/camina_sobre_el_agua.jpg'))).toBe(true)
+    // La miniatura de YouTube no la cachea ninguna regla del service worker
+    const fetched = fetchMock.mock.calls.map((call) => String(call[0]))
+    expect(fetched).toContain('/img/camina_sobre_el_agua.jpg')
+    expect(fetched.some((url) => url.includes('img.youtube.com'))).toBe(false)
+  })
+
+  it('keeps the cache names in sync with next.config.ts', () => {
     const config = readFileSync(join(__dirname, '..', '..', 'next.config.ts'), 'utf8')
     const pagesRule = /\(en\|es\)[\s\S]*?cacheName:\s*'([^']+)'/.exec(config)
 
     expect(pagesRule?.[1]).toBe(PAGE_CACHE_NAME)
+    expect(config).toContain(`cacheName: '${IMAGE_CACHE_NAME}'`)
   })
 
   // Aclaración del operador (2026-09-24): **sin red la copia no caduca** (todo el tiempo
@@ -268,5 +309,41 @@ describe('warmPageCache (R-#256)', () => {
       expect(matching.length).toBeGreaterThan(0)
       for (const rule of matching) expect(rule).not.toMatch(/maxAgeSeconds/)
     }
+  })
+})
+
+describe('guideImageUrls (R-#268)', () => {
+  it('takes the local figures of the HTML and leaves the external ones out', () => {
+    const urls = guideImageUrls([
+      '<p><img alt="Drawing of Jesus walking on the lake" title="Jesús camina" src="/img/camina_sobre_el_agua.jpg"></p>',
+      '<p><img src="/img/2025/bitcoin-3012035.png" alt="bitcoin"></p>',
+      '<p><img src="/icons/learntg-192x192.png" alt="icono"></p>',
+      '<p><img src="/_next/image?url=%2Fimg%2Fx.jpg&amp;w=640&amp;q=75" alt="optimizada"></p>',
+      '<p><a href="https://www.youtube.com/embed/x"><img src="https://img.youtube.com/vi/x.jpg" alt="video"></a></p>',
+      '<p><img src="https://example.com/figura.jpg" alt="otra"></p>',
+      '<p><img src="/pdf/guia.pdf" alt="no es figura"></p>',
+    ].join('\n'))
+
+    expect(urls).toEqual([
+      '/img/camina_sobre_el_agua.jpg',
+      '/img/2025/bitcoin-3012035.png',
+      '/icons/learntg-192x192.png',
+      '/_next/image?url=%2Fimg%2Fx.jpg&w=640&q=75',
+    ])
+  })
+
+  // Si el servidor llegara a entregar el Markdown sin convertir, la figura se guarda
+  // igual: la forma de la respuesta no debe decidir si hay imagen sin conexión.
+  it('also reads the Markdown form', () => {
+    expect(guideImageUrls('![figura](/img/x.jpg "título")')).toEqual(['/img/x.jpg'])
+  })
+
+  it('repeats a figure once, not once per mention', () => {
+    expect(guideImageUrls('<img src="/img/x.jpg"><img alt="b" src="/img/x.jpg">'))
+      .toEqual(['/img/x.jpg'])
+  })
+
+  it('finds nothing in a guide without figures', () => {
+    expect(guideImageUrls('<p>guía sin figuras</p>')).toEqual([])
   })
 })

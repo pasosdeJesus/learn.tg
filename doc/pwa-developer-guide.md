@@ -68,7 +68,7 @@ in a `next/script` with `strategy="afterInteractive"`.
 |---------|---------|-------|----------|
 | `/[lang]/diligent-records*` | NetworkFirst | `diligent-cache` | 30 days |
 | `/_next/static/*` | CacheFirst | `diligent-static` | sin caducidad por edad (300 entradas) |
-| `/img/*`, `/icons/*` (png/jpg/jpeg/svg/webp/gif) | CacheFirst | `learntg-images` | sin caducidad por edad (150 entradas) |
+| `/img/*`, `/icons/*` (png/jpg/jpeg/svg/webp/gif) | CacheFirst | `learntg-images` | sin caducidad por edad (150 entradas), con `ignoreVary` |
 | `/_next/image?url=…` (lo que sirve `next/image`) | CacheFirst | `learntg-images` | sin caducidad por edad (200 entradas) |
 | `/en/*` and `/es/*` (pages, con `ignoreVary`) | NetworkFirst (5 s) | `learntg-pages` | **sin caducidad por edad** (200 entradas) |
 | `/api/*` GET | NetworkFirst (5 s) | `learntg-api-get` | 1 h (200 entradas) |
@@ -88,13 +88,23 @@ in any cache. Workbox only serves a fallback it precached, which is why
 Consequence for a **downloaded** course (R-#256): a guide that was never opened
 online has no entry in `learntg-pages`, so offline navigation to it falls back to
 `/offline` even though its content is in IndexedDB. The download therefore warms
-that cache with an explicit `fetch()` of each guide URL and **also writes the
-response into `learntg-pages` itself** (`warmPageCache` in
-`lib/offline-course-download.ts`, `PAGE_CACHE_NAME`): the `/(en|es)/*` rule matches
-by URL, so the entry works exactly like a navigation would. The direct `cache.put`
-is what makes it reliable on iOS/Safari, where the first visit is not controlled by
-the service worker and the plain `fetch()` never passed through it (the downloaded
-guide fell into `/offline`; operator report, iPhone, 2026-09-23).
+that cache with an explicit `fetch()` of the course page, each guide URL and each
+crossword, and **also writes the response into `learntg-pages` itself**
+(`warmPageCache` in `lib/offline-course-download.ts`, `PAGE_CACHE_NAME`): the
+`/(en|es)/*` rule matches by URL, so the entry works exactly like a navigation
+would. The course page was missing from that warm-up until 2026-09-27 (operator
+report: offline, `/en/a-relationship-with-Jesus` showed "You are offline" and the
+saved course list instead of the course presentation and its guides). The direct
+`cache.put` is what makes it reliable on iOS/Safari, where the first visit is not
+controlled by the service worker and the plain `fetch()` never passed through it
+(the downloaded guide fell into `/offline`; operator report, iPhone, 2026-09-23).
+
+The **figures of each guide** are warmed the same way (`warmImageCache`,
+`IMAGE_CACHE_NAME = 'learntg-images'`, urls taken from the guide Markdown by
+`guideImageUrls`): a downloaded guide that was never opened online had its images in
+no cache, so offline it opened without its pictures (operator report, 2026-09-27).
+Only local paths covered by a rule are warmed (`/img/…`, `/icons/…`,
+`/_next/image?…`); external thumbnails, such as YouTube's, are left alone.
 
 That is only half of it: **the rule must carry `matchOptions: { ignoreVary: true }`**.
 Next serves its HTML with `Vary: rsc, next-router-state-tree, next-router-prefetch,
@@ -104,6 +114,12 @@ different headers, `NetworkFirst` finds no match, its handler fails and
 `fallbacks.document` answers `/offline` instead of the downloaded guide (measured on
 the dev site on 2026-09-22). Do not remove `ignoreVary` from that entry without
 re-testing `offline-course-download`.
+
+The hand-warmed **images** need it too: the `<img>` request and the warm-up `fetch()`
+carry different `Accept` headers, and the `/img|icons/` rule serves static files with
+no content negotiation, so ignoring `Vary` there cannot return the wrong bytes
+(2026-09-27). The `/_next/image` rule is left alone: those responses do depend on
+`Accept` (avif/webp/jpeg).
 
 Mind the trade-off: caching `/api/*` GET responses keeps wallet-scoped data in
 the device cache for an hour. If a future endpoint must never be stored, give it
@@ -126,7 +142,16 @@ being visited:
 - paid courses, only if this wallet bought them (`/api/courses/premium/mine`);
 - category B courses, only with the R-#259 switch on;
 - copies that are already current (same guide list and same guide titles, not expired)
-  are skipped, so repeating the sync is cheap.
+  are skipped, so repeating the sync is cheap;
+- a copy whose course **is no longer in the catalog** is deleted
+  (`pruneUnavailableCourses`, R-#268): a deactivated course is not shown in
+  `/[lang]` either, and it used to stay in the offline library forever (operator
+  report, 2026-09-27: `/offline` still listed "GoodDollar"). The catalog is
+  requested with the same filter as the course list (`filtro[busconBilletera]=true`
+  when there is a session), so a course with both flags off is never downloaded in
+  the first place. Nothing is pruned without a session, and a course that is still
+  published but this wallet cannot read (not purchased, or category B with the
+  switch off) keeps its copy, because it does arrive in the list, with its reason.
 
 `OfflineLibrarySync` does it (mounted in `components/Layout.tsx`, once per session) and
 announces the progress **only when something is really missing** ("Checking what is
@@ -202,6 +227,9 @@ Rules that must stay true when touching it:
    `pending` store (R-#240 §4b item 9).
 5. **Revalidation**: with a connection, a copy older than 24 h is downloaded again
    in the background and the user is told when the revision changed.
+6. **Nothing is read offline that the site does not publish**: the catalog query
+   carries the same filter as the course list, and a course that disappeared from the
+   catalog loses its copy (R-#268).
 
 ## Adding a cached route
 

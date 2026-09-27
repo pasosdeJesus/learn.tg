@@ -4,8 +4,10 @@ import {
   approximateBytes,
   computeRevision,
   courseKey,
+  deleteDownloadedCourse,
   getDownloadedCourse,
   isStale,
+  listDownloadedCourses,
   saveCourseGuide,
   saveDownloadedCourse,
   type DownloadedCourse,
@@ -112,6 +114,63 @@ async function warmPageCache(url: string): Promise<void> {
 }
 
 /**
+ * Caché de imágenes de `next.config.ts` (`runtimeCaching`): si allí cambia el
+ * nombre, cambia aquí (lo verifica `offline-course-download.test.ts`).
+ */
+export const IMAGE_CACHE_NAME = 'learntg-images'
+
+/**
+ * Imágenes que muestra una guía y que el service worker puede servir sin conexión:
+ * las reglas de `next.config.ts` cubren `/img/…`, `/icons/…` y `/_next/image?…`.
+ * Las externas (p. ej. las miniaturas de YouTube) quedan fuera: ninguna regla las
+ * cachea.
+ *
+ * `GET /api/guide` entrega el contenido ya convertido a **HTML** (`<img src="…">`),
+ * así que se leen los `<img>` y también la sintaxis Markdown, por si el servidor
+ * llegara a entregarla sin convertir. El orden de los atributos no es fijo.
+ */
+export function guideImageUrls(guide: string): string[] {
+  const urls = new Set<string>()
+  const add = (url: string | undefined) => {
+    if (!url) return
+    const decoded = url.replace(/&amp;/g, '&')
+    if (/^\/(img|icons)\/.*\.(png|jpg|jpeg|svg|webp|gif)$/i.test(decoded) || decoded.startsWith('/_next/image?')) {
+      urls.add(decoded)
+    }
+  }
+
+  for (const tag of guide.matchAll(/<img\b[^>]*>/gi)) {
+    const src = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(tag[0])
+    add(src?.[1] ?? src?.[2])
+  }
+  for (const match of guide.matchAll(/!\[[^\]]*\]\(\s*<?([^)\s>]+)/g)) {
+    add(match[1])
+  }
+  return [...urls]
+}
+
+/**
+ * Deja una imagen de la guía en la misma caché que leen las reglas del service
+ * worker, con el mismo truco que `warmPageCache` (guardar a mano, porque en la
+ * primera visita la página puede no estar controlada por el worker). El operador
+ * reportó el 2026-09-27 que la guía descargada se abría sin conexión pero **sin
+ * sus figuras**: nunca se habían pedido, así que no estaban en ninguna caché.
+ */
+async function warmImageCache(url: string): Promise<void> {
+  if (typeof window === 'undefined') return
+  try {
+    const response = await fetch(url, { credentials: 'same-origin' })
+    if (!response.ok) return
+    if ('caches' in window) {
+      const cache = await caches.open(IMAGE_CACHE_NAME)
+      await cache.put(new Request(new URL(url, window.location.href).toString()), response)
+    }
+  } catch {
+    // sin la figura en caché: la guía se lee igual, solo falta esa imagen
+  }
+}
+
+/**
  * Descarga el curso completo. Lanza si el servidor no entrega alguna guía, para
  * no guardar una copia a medias que parecería completa.
  */
@@ -127,6 +186,13 @@ export async function downloadCourse(
   const downloadedGuides: DownloadedGuide[] = []
   const contents: string[] = []
 
+  const coursePath = `/${descriptor.lang}/${descriptor.prefix.replace(/^\/+/, '')}`
+  // La página del **curso** también se calienta: sin ella, abrir el curso sin
+  // conexión caía en el respaldo `/offline` con la lista de cursos guardados en
+  // vez de la presentación del curso y sus guías (reporte del operador,
+  // 2026-09-27: `/en/a-relationship-with-Jesus` mostraba "You are offline").
+  await warmPageCache(coursePath)
+
   onProgress?.({ done, total, stage: 'guide' })
   for (const suffix of descriptor.guides) {
     // Deja el documento de la guía en la caché del service worker para poder
@@ -134,7 +200,7 @@ export async function downloadCourse(
     // Las dos páginas de la guía: la guía y su crucigrama. Sin la segunda, el
     // crucigrama descargado no abre sin conexión (el operador lo reportó el
     // 2026-09-23: la guía 3 con red apagada caía en "You are offline").
-    const basePath = `/${descriptor.lang}/${descriptor.prefix.replace(/^\/+/, '')}/${suffix}`
+    const basePath = `${coursePath}/${suffix}`
     await warmPageCache(basePath)
     await warmPageCache(`${basePath}/test`)
 
@@ -145,6 +211,11 @@ export async function downloadCourse(
     const markdown = guideResponse.data?.markdown
     if (!markdown) {
       throw new Error(`Guide ${suffix} could not be downloaded`)
+    }
+    // Las figuras de la guía se guardan con ella: sin esto la guía se abría sin
+    // conexión pero sin sus imágenes (reporte del operador, 2026-09-27).
+    for (const image of guideImageUrls(markdown)) {
+      await warmImageCache(image)
     }
     done++
     onProgress?.({ done, total, stage: 'guide' })
@@ -235,6 +306,24 @@ export interface SyncResult {
   downloaded: string[]
   skipped: { key: string; reason: SkipReason }[]
   failed: { key: string; error: string }[]
+  /**
+   * Copias que se borraron porque su curso ya no se presenta en el sitio
+   * (desactivado o retirado del catálogo del idioma): R-#268.
+   */
+  removed: string[]
+}
+
+export interface AccessibleCourses {
+  courses: CourseDescriptor[]
+  skipped: { prefix: string; reason: SkipReason }[]
+  total: number
+  /**
+   * Prefijos que trae el catálogo del idioma, tengan o no derecho de lectura.
+   * `downloadAllAccessible` los usa para borrar la copia de un curso que ya no se
+   * presenta (R-#268). Solo es confiable con sesión: el catálogo anónimo es otro
+   * (`sinBilletera`).
+   */
+  catalogPrefixes: string[]
 }
 
 interface CatalogCourse {
@@ -261,13 +350,25 @@ interface CatalogCourse {
 export async function listAccessibleCourses(
   get: DownloadOptions['get'],
   options: { lang: string; authenticated: boolean },
-): Promise<{ courses: CourseDescriptor[]; skipped: { prefix: string; reason: SkipReason }[]; total: number }> {
+): Promise<AccessibleCourses> {
   const { lang, authenticated } = options
   const skipped: { prefix: string; reason: SkipReason }[] = []
 
-  const catalog = await get<CatalogCourse[]>(`/api/course-catalog?filtro[busidioma]=${encodeURIComponent(lang)}`)
+  // El mismo filtro que la lista de cursos del sitio (`app/[lang]/page.tsx`): con
+  // billetera conectada solo se presentan los cursos `conBilletera`. Sin ese filtro
+  // el endpoint devolvía **todos** los cursos del idioma —incluidos los
+  // desactivados, que tienen las dos banderas en falso y no se ven en el sitio— y
+  // se descargaban (reporte del operador, 2026-09-27: `/offline` listaba
+  // "GoodDollar", un curso desactivado).
+  const catalogUrl =
+    `/api/course-catalog?filtro[busidioma]=${encodeURIComponent(lang)}` +
+    (authenticated ? '&filtro[busconBilletera]=true' : '')
+  const catalog = await get<CatalogCourse[]>(catalogUrl)
   const catalogCourses: CatalogCourse[] = Array.isArray(catalog.data) ? catalog.data : []
-  if (catalogCourses.length === 0) return { courses: [], skipped, total: 0 }
+  const catalogPrefixes = catalogCourses
+    .map((course) => String(course.prefijoRuta || '').replace(/^\/+/, ''))
+    .filter((prefix) => prefix.length > 0)
+  if (catalogCourses.length === 0) return { courses: [], skipped, total: 0, catalogPrefixes: [] }
 
   let publicCourses = true
   let publicSensitiveCourses = false
@@ -334,7 +435,32 @@ export async function listAccessibleCourses(
     }
   }
 
-  return { courses, skipped, total: catalogCourses.length }
+  return { courses, skipped, total: catalogCourses.length, catalogPrefixes }
+}
+
+/**
+ * Borra las copias de cursos que ya no se presentan en el sitio: un curso
+ * desactivado (o retirado del catálogo del idioma) no debe seguir en la biblioteca
+ * sin conexión (reporte del operador, 2026-09-27: `/offline` seguía listando
+ * "GoodDollar", un curso desactivado que ya no se ve en `/en/`).
+ *
+ * Solo se borra por **ausencia en el catálogo**, nunca por falta de derecho: un
+ * curso de pago no comprado o de contenido sensible con el interruptor apagado sí
+ * llega en la lista (con su motivo), así que su copia no se toca aquí.
+ */
+export async function pruneUnavailableCourses(
+  lang: string,
+  catalogPrefixes: string[],
+): Promise<string[]> {
+  const available = new Set(catalogPrefixes)
+  const deleted: string[] = []
+  for (const course of await listDownloadedCourses()) {
+    if (course.lang !== lang) continue
+    if (available.has(course.prefix)) continue
+    await deleteDownloadedCourse(course.key)
+    deleted.push(course.key)
+  }
+  return deleted
 }
 
 /**
@@ -362,9 +488,17 @@ export async function downloadAllAccessible(
   },
 ): Promise<SyncResult> {
   const { lang, wallet, authenticated, onProgress, onStart } = options
-  const result: SyncResult = { downloaded: [], skipped: [], failed: [] }
+  const result: SyncResult = { downloaded: [], skipped: [], failed: [], removed: [] }
 
-  const { courses } = await listAccessibleCourses(get, { lang, authenticated })
+  const { courses, catalogPrefixes } = await listAccessibleCourses(get, { lang, authenticated })
+
+  // Un curso desactivado ya no se presenta en el sitio: su copia tampoco queda en
+  // la biblioteca sin conexión (R-#268). Sin sesión no se borra nada: el catálogo
+  // anónimo es otro (`sinBilletera`) y no hay con qué comparar. Un catálogo vacío
+  // (o ilegible) tampoco borra: sin prefijos no hay nada que comparar.
+  if (authenticated && catalogPrefixes.length > 0) {
+    result.removed = await pruneUnavailableCourses(lang, catalogPrefixes)
+  }
 
   const pending: typeof courses = []
   for (const descriptor of courses) {

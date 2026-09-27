@@ -105,6 +105,36 @@ describe('listAccessibleCourses (R-#256)', () => {
 
     expect(courses).toEqual([])
   })
+
+  // R-#268: el catálogo se pide con el mismo filtro que la lista del sitio. Sin él
+  // el endpoint devolvía todos los cursos del idioma, incluidos los desactivados
+  // (banderas `conBilletera`/`sinBilletera` en falso), que no se presentan en /en/.
+  it('asks the catalog for the same courses the site shows', async () => {
+    const authed = makeGet()
+    await listAccessibleCourses(authed as any, { lang: 'en', authenticated: true })
+
+    expect(authed.mock.calls[0][0])
+      .toBe('/api/course-catalog?filtro[busidioma]=en&filtro[busconBilletera]=true')
+
+    const anonymous = makeGet()
+    await listAccessibleCourses(anonymous as any, { lang: 'en', authenticated: false })
+
+    expect(anonymous.mock.calls[0][0]).toBe('/api/course-catalog?filtro[busidioma]=en')
+  })
+
+  // R-#268: los prefijos del catálogo son lo que permite borrar la copia de un curso
+  // que ya no se presenta.
+  it('reports every catalog prefix, readable or not', async () => {
+    const { catalogPrefixes, total } = await listAccessibleCourses(
+      makeGet() as any,
+      { lang: 'en', authenticated: true },
+    )
+
+    expect(total).toBe(4)
+    expect(catalogPrefixes).toEqual([
+      'web3-and-ubi', 'a-relationship-with-Jesus', 'gdcluster', 'save-in-dollars-on-OKX',
+    ])
+  })
 })
 
 describe('downloadAllAccessible (R-#256)', () => {
@@ -207,5 +237,91 @@ describe('downloadAllAccessible (R-#256)', () => {
     expect(result.downloaded).toContain('en/web3-and-ubi')
     expect((await getDownloadedCourse('en/web3-and-ubi'))?.guides.map((guide) => guide.suffix))
       .toEqual(['guide1', 'guide2'])
+  })
+
+  // Operador, 2026-09-27: `/offline` seguía listando "GoodDollar", un curso
+  // desactivado que ya no se presenta en /en/. Un curso que no está en el catálogo
+  // pierde su copia.
+  it('removes the copy of a course that is no longer in the catalog', async () => {
+    const get = makeGet()
+    await saveDownloadedCourse({
+      key: 'en/gooddollar',
+      courseId: 99,
+      lang: 'en',
+      prefix: 'gooddollar',
+      titulo: 'GoodDollar',
+      contenidoSensible: false,
+      isPremium: false,
+      wallet: WALLET,
+      downloadedAt: Date.now(),
+      revision: 'vieja',
+      guides: [{ suffix: 'guide1', puzzle: null }],
+      bytes: 10,
+    } as any)
+
+    const result = await downloadAllAccessible(get as any, options())
+
+    expect(result.removed).toEqual(['en/gooddollar'])
+    expect(await getDownloadedCourse('en/gooddollar')).toBeNull()
+  })
+
+  // La copia se borra por **ausencia en el catálogo**, no por falta de derecho: un
+  // curso que sigue publicado pero que esta billetera no puede leer (no comprado,
+  // contenido sensible con el interruptor apagado) conserva su copia.
+  it('keeps the copies of courses that are still published but not readable', async () => {
+    const get = makeGet()
+    for (const [key, prefix] of [
+      ['en/gdcluster', 'gdcluster'],
+      ['en/save-in-dollars-on-OKX', 'save-in-dollars-on-OKX'],
+    ]) {
+      await saveDownloadedCourse({
+        key,
+        courseId: 1,
+        lang: 'en',
+        prefix,
+        titulo: prefix,
+        contenidoSensible: prefix === 'gdcluster',
+        isPremium: true,
+        wallet: WALLET,
+        downloadedAt: Date.now(),
+        revision: 'vieja',
+        guides: [{ suffix: 'guide1', puzzle: null }],
+        bytes: 10,
+      } as any)
+    }
+
+    const result = await downloadAllAccessible(get as any, options())
+
+    expect(result.removed).toEqual([])
+    expect(await getDownloadedCourse('en/gdcluster')).not.toBeNull()
+    expect(await getDownloadedCourse('en/save-in-dollars-on-OKX')).not.toBeNull()
+  })
+
+  // Sin sesión el catálogo que llega es el anónimo (`sinBilletera`): no sirve para
+  // decidir qué copias sobran, así que no se borra nada.
+  it('removes nothing without a session', async () => {
+    await saveDownloadedCourse({
+      key: 'en/gooddollar',
+      courseId: 99,
+      lang: 'en',
+      prefix: 'gooddollar',
+      titulo: 'GoodDollar',
+      contenidoSensible: false,
+      isPremium: false,
+      wallet: WALLET,
+      downloadedAt: Date.now(),
+      revision: 'vieja',
+      guides: [{ suffix: 'guide1', puzzle: null }],
+      bytes: 10,
+    } as any)
+
+    const result = await downloadAllAccessible(makeGet() as any, {
+      lang: 'en',
+      wallet: null,
+      authenticated: false,
+    })
+
+    expect(result.removed).toEqual([])
+    expect(await getDownloadedCourse('en/gooddollar')).not.toBeNull()
   })
 })
