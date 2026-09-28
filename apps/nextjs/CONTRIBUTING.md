@@ -167,9 +167,9 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
-**Suite size (medido 2026-09-27):** `make test` = **1189 passed / 6 skipped, 0
-failed** en 164 archivos — `test-lib` 279, `test-hooks` 93, `test-api` 249,
-`test-components` 209, `test-pages` 69, `test-db` 3, `test-pdj-wallet` 90,
+**Suite size (medido 2026-09-28):** `make test` = **1196 passed / 6 skipped, 0
+failed** en 164 archivos — `test-lib` 283, `test-hooks` 93, `test-api` 249,
+`test-components` 212, `test-pages` 69, `test-db` 3, `test-pdj-wallet` 90,
 `test-pdj-wallet-next` 24, `test-rewards` 82, `test-gdcluster` 91.
 
 | Layer | Statements | Notes |
@@ -230,10 +230,11 @@ make next-patch       # Re-aplica el parche de Next (pnpm install) y comprueba q
 make next-patch-check # Sólo comprueba (falla si node_modules trae el parche viejo)
 ```
 
-El parche de Next (`patches/next@16.3.5.patch`, R-#267) se aplica **solo** con
+El parche de Next (`patches/next@16.3.5.patch`,
+https://github.com/pasosdeJesus/learn.tg/issues/267) se aplica **solo** con
 `pnpm install`; `make next-patch` es para aplicarlo a mano y comprobarlo, y
-`make all`/`make prod` ya lo verifican antes de compilar. Para regenerarlo, ver
-REQ/267 §6 (nunca editar `node_modules` a mano).
+`make all`/`make prod` ya lo verifican antes de compilar. Para regenerarlo, ver el
+issue (nunca editar `node_modules` a mano).
 
 **Why sub-targets?** On OpenBSD, running all tests at once via `pnpm coverage`
 can hit esbuild memory limits. The sub-targets run isolated Vitest processes

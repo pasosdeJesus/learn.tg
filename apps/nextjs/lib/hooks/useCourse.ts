@@ -157,6 +157,14 @@ function courseFromDownloaded(downloaded: DownloadedCourse): Course {
     titulo: downloaded.titulo || downloaded.prefix,
     subtitulo: downloaded.subtitulo ?? undefined,
     resumenMd: downloaded.resumenMd ?? undefined,
+    // R-#268: la página del curso muestra también la descripción ampliada y la figura del
+    // curso (con su texto alternativo, enlace y crédito); sin conexión quedaban en blanco
+    // aunque las guías y el avance sí estuvieran (reporte del operador, 2026-09-27).
+    ampliaMd: downloaded.ampliaMd ?? undefined,
+    imagen: downloaded.imagen ?? undefined,
+    altImagen: downloaded.altImagen ?? undefined,
+    enlaceImagen: downloaded.enlaceImagen ?? undefined,
+    creditoImagen: downloaded.creditoImagen ?? undefined,
     idioma: downloaded.lang,
     prefijoRuta: `/${downloaded.prefix}`,
     guias: downloaded.guides.map((guide) => ({

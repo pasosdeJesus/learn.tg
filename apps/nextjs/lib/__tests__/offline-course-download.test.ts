@@ -190,8 +190,7 @@ describe('revalidateCourse (R-#256 §3.6)', () => {
 
   // R-#256 §3.10: la copia guarda la **presentación** del curso y el **avance al
   // descargar**, para que la página del curso no sea un cascarón vacío sin conexión.
-  it('keeps the course presentation and the progress snapshot', async () => {
-    const course = await downloadCourse(
+  it('keeps the course presentation and the progress snapshot', async () => {    const course = await downloadCourse(
       {
         ...DESCRIPTOR,
         subtitulo: 'Your guide to collecting UBI',
@@ -219,6 +218,34 @@ describe('revalidateCourse (R-#256 §3.6)', () => {
     expect(stored?.resumenMd).toBe('<p>Introducción del curso</p>')
     expect(stored?.guides[0].completed).toBe(true)
     expect(stored?.guides[0].receivedScholarship).toBe(true)
+  })
+
+  // R-#268: la página del curso muestra además la **descripción ampliada** y la **figura**
+  // del curso (con texto alternativo, enlace y crédito). Sin guardarlas, la copia sin
+  // conexión mostraba las guías y el avance pero ni la presentación ni la imagen
+  // (reporte del operador, 2026-09-27).
+  it('keeps the extended description and the course figure', async () => {
+    const course = await downloadCourse(
+      {
+        ...DESCRIPTOR,
+        subtitulo: 'Your guide to collecting UBI',
+        resumenMd: '<p>Introducción del curso</p>',
+        ampliaMd: '<p>Más sobre el curso</p>',
+        imagen: '/img/2025/web3_ubi.png',
+        altImagen: 'Helping Hands Heart Prismatic 3',
+        enlaceImagen: 'https://openclipart.org/detail/305888',
+        creditoImagen: ' GDJ Public Domain',
+      },
+      { get: makeGet() as any, wallet: WALLET },
+    )
+
+    expect(course).toMatchObject({
+      ampliaMd: '<p>Más sobre el curso</p>',
+      imagen: '/img/2025/web3_ubi.png',
+      altImagen: 'Helping Hands Heart Prismatic 3',
+      enlaceImagen: 'https://openclipart.org/detail/305888',
+      creditoImagen: ' GDJ Public Domain',
+    })
   })
 })
 
@@ -285,6 +312,20 @@ describe('warming the offline caches (R-#256, R-#268)', () => {
     const fetched = fetchMock.mock.calls.map((call) => String(call[0]))
     expect(fetched).toContain('/img/camina_sobre_el_agua.jpg')
     expect(fetched.some((url) => url.includes('img.youtube.com'))).toBe(false)
+  })
+
+  // R-#268: la figura del curso (la que la página muestra en su presentación) también se
+  // guarda con la copia; una URL externa no se intenta (ninguna regla la cachea).
+  it('stores the figure of the course in the images cache', async () => {
+    const descriptor = { ...DESCRIPTOR, imagen: '/img/2025/web3_ubi.png' }
+    const withExternal = { ...descriptor, altImagen: 'x', enlaceImagen: 'https://example.com/foto.png' }
+
+    await downloadCourse(withExternal, { get: makeGet() as any, wallet: WALLET })
+
+    const images = puts.get(IMAGE_CACHE_NAME) ?? []
+    expect(images.some((url) => url.endsWith('/img/2025/web3_ubi.png'))).toBe(true)
+    const fetched = fetchMock.mock.calls.map((call) => String(call[0]))
+    expect(fetched).not.toContain('https://example.com/foto.png')
   })
 
   it('keeps the cache names in sync with next.config.ts', () => {

@@ -24,6 +24,11 @@ const downloadedCourse = {
   titulo: 'Web3 and UBI',
   subtitulo: 'Your guide to collecting UBI',
   resumenMd: '<p>Introducción del curso</p>',
+  ampliaMd: '<p>Más sobre el curso</p>',
+  imagen: '/img/2025/web3_ubi.png',
+  altImagen: 'Helping Hands Heart Prismatic 3',
+  enlaceImagen: 'https://openclipart.org/detail/305888',
+  creditoImagen: ' GDJ Public Domain',
   contenidoSensible: false,
   isPremium: false,
   wallet: null,
@@ -80,6 +85,14 @@ describe('useCourse offline (R-#256)', () => {
     expect(Number.isNaN(Number(result.current.course?.porPagar))).toBe(false)
     expect(result.current.course?.subtitulo).toBe('Your guide to collecting UBI')
     expect(result.current.course?.resumenMd).toBe('<p>Introducción del curso</p>')
+    // R-#268: la presentación incluye la figura del curso y la descripción ampliada; sin
+    // conexión la página del curso las mostraba en blanco (reporte del operador,
+    // 2026-09-27).
+    expect(result.current.course?.imagen).toBe('/img/2025/web3_ubi.png')
+    expect(result.current.course?.altImagen).toBe('Helping Hands Heart Prismatic 3')
+    expect(result.current.course?.enlaceImagen).toBe('https://openclipart.org/detail/305888')
+    expect(result.current.course?.creditoImagen).toBe(' GDJ Public Domain')
+    expect(result.current.course?.ampliaMd).toBe('<p>Más sobre el curso</p>')
     expect(result.current.course?.guias?.[0]).toMatchObject({
       sufijoRuta: 'guide1',
       completed: true,

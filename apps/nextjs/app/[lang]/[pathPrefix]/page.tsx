@@ -353,6 +353,13 @@ export default function Page({ params }: PageProps) {
               titulo={course.titulo}
               subtitulo={course.subtitulo}
               resumenMd={course.resumenMd}
+              // R-#268: la presentación incluye la descripción ampliada y la figura del
+              // curso; se guardan con la copia para que sin conexión no queden en blanco.
+              ampliaMd={course.ampliaMd}
+              imagen={course.imagen}
+              altImagen={course.altImagen}
+              enlaceImagen={course.enlaceImagen}
+              creditoImagen={course.creditoImagen}
               guideStatus={Object.fromEntries(
                 course.guias
                   .filter((guia) => guia.sufijoRuta)

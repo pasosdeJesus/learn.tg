@@ -47,6 +47,14 @@ interface OfflineCourseDownloadProps {
    * subtítulo y el resumen. */
   subtitulo?: string | null
   resumenMd?: string | null
+  /** R-#268: la página del curso muestra además la descripción ampliada y su figura
+   * (con texto alternativo, enlace y crédito); se guardan con la copia para que sin
+   * conexión la presentación no quede en blanco. */
+  ampliaMd?: string | null
+  imagen?: string | null
+  altImagen?: string | null
+  enlaceImagen?: string | null
+  creditoImagen?: string | null
   /** R-#256 §3.10: avance de cada guía al descargar, por sufijo. */
   guideStatus?: Record<string, {
     completed?: boolean
@@ -74,6 +82,11 @@ export function OfflineCourseDownload({
   guideTitles,
   subtitulo,
   resumenMd,
+  ampliaMd,
+  imagen,
+  altImagen,
+  enlaceImagen,
+  creditoImagen,
   guideStatus,
   canRead,
 }: OfflineCourseDownloadProps) {
@@ -135,8 +148,14 @@ export function OfflineCourseDownload({
     // R-#256 §3.10: la presentación y el avance al descargar quedan en el registro.
     subtitulo: subtitulo ?? null,
     resumenMd: resumenMd ?? null,
+    // R-#268: con la presentación viaja la figura del curso y su descripción ampliada.
+    ampliaMd: ampliaMd ?? null,
+    imagen: imagen ?? null,
+    altImagen: altImagen ?? null,
+    enlaceImagen: enlaceImagen ?? null,
+    creditoImagen: creditoImagen ?? null,
     guideStatus,
-  }), [courseId, lang, prefix, titulo, contenidoSensible, isPremium, guides, guideTitles, subtitulo, resumenMd, guideStatus])
+  }), [courseId, lang, prefix, titulo, contenidoSensible, isPremium, guides, guideTitles, subtitulo, resumenMd, ampliaMd, imagen, altImagen, enlaceImagen, creditoImagen, guideStatus])
 
   const refreshRecord = useCallback(async () => {
     setRecord(await getDownloadedCourse(key))

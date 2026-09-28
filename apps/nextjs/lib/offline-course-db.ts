@@ -65,6 +65,17 @@ export interface DownloadedCourse {
    * muestra la página del curso. Sin conexión la página no queda vacía. */
   subtitulo?: string | null
   resumenMd?: string | null
+  /**
+   * R-#268: la página del curso también muestra una **descripción ampliada** y su
+   * **imagen** (con texto alternativo, enlace y crédito). Sin esto la copia sin conexión
+   * se veía con las guías y el avance pero **sin la presentación ni la figura del curso**
+   * (reporte del operador, 2026-09-27).
+   */
+  ampliaMd?: string | null
+  imagen?: string | null
+  altImagen?: string | null
+  enlaceImagen?: string | null
+  creditoImagen?: string | null
   contenidoSensible: boolean
   isPremium: boolean
   /** Billetera que descargó: un curso de pago no se lee con otra billetera. */

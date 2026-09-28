@@ -10,7 +10,7 @@ import { deleteDownloadedCourses, getDownloadedCourse, saveDownloadedCourse } fr
 const WALLET = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
 
 const CATALOG = [
-  { id: 105, prefijoRuta: '/web3-and-ubi', idioma: 'en', titulo: 'Web3 and UBI', porPagar: null, contenido_sensible: false },
+  { id: 105, prefijoRuta: '/web3-and-ubi', idioma: 'en', titulo: 'Web3 and UBI', subtitulo: 'Your guide to collecting daily crypto UBI', resumenMd: '<p>Introducción del curso</p>', porPagar: null, contenido_sensible: false },
   { id: 2, prefijoRuta: '/a-relationship-with-Jesus', idioma: 'en', titulo: 'A relationship with Jesus', porPagar: null, contenido_sensible: true },
   { id: 10, prefijoRuta: '/gdcluster', idioma: 'en', titulo: 'Global Disciples', porPagar: 1, contenido_sensible: true },
   { id: 103, prefijoRuta: '/save-in-dollars-on-OKX', idioma: 'en', titulo: 'OKX', porPagar: 1, contenido_sensible: false },
@@ -23,7 +23,9 @@ interface FakeOptions {
 }
 
 function makeGet(options: FakeOptions = {}) {
-  return vi.fn(async (url: string) => {
+  // Se fija la firma (`{ data: any }`): sin eso TypeScript infiere la unión de todas las
+  // respuestas y las implementaciones por prueba dejan de encajar con ella.
+  return vi.fn<(url: string) => Promise<{ data: any }>>(async (url: string) => {
     if (url.startsWith('/api/course-catalog?')) return { data: CATALOG }
     if (url === '/api/settings') {
       return { data: { publicCourses: true, publicSensitiveCourses: options.publicSensitiveCourses === true } }
@@ -35,7 +37,17 @@ function makeGet(options: FakeOptions = {}) {
     if (detail) {
       const id = Number(detail[1])
       if ((options.failDetailFor || []).includes(id)) throw new Error('offline')
-      return { data: { guias: [{ sufijoRuta: 'guide1', titulo: 'What is a cluster?' }, { sufijoRuta: 'guide2', titulo: 'Your first three churches' }] } }
+      return {
+        data: {
+          guias: [{ sufijoRuta: 'guide1', titulo: 'What is a cluster?' }, { sufijoRuta: 'guide2', titulo: 'Your first three churches' }],
+          // R-#268: la presentación y la figura del curso también viajan en el detalle.
+          ampliaMd: '<p>Más sobre el curso</p>',
+          imagen: '/img/2025/web3_ubi.png',
+          altImagen: 'Helping Hands Heart Prismatic 3',
+          enlaceImagen: 'https://openclipart.org/detail/305888',
+          creditoImagen: ' GDJ Public Domain',
+        },
+      }
     }
     if (url.startsWith('/api/guide?')) return { data: { markdown: '<p>guía</p>' } }
     if (url.startsWith('/api/crossword?')) return { data: { grid: [[]], placements: [] } }
@@ -135,6 +147,23 @@ describe('listAccessibleCourses (R-#256)', () => {
       'web3-and-ubi', 'a-relationship-with-Jesus', 'gdcluster', 'save-in-dollars-on-OKX',
     ])
   })
+
+  // R-#268: la sincronización automática también guarda la presentación y la figura del
+  // curso; sin esto la página del curso sin conexión mostraba las guías y el avance pero
+  // ni la presentación ni la imagen (reporte del operador, 2026-09-27).
+  it('carries the course presentation and figure in the descriptor', async () => {
+    const { courses } = await listAccessibleCourses(makeGet() as any, { lang: 'en', authenticated: true })
+
+    expect(courses[0]).toMatchObject({
+      subtitulo: 'Your guide to collecting daily crypto UBI',
+      resumenMd: '<p>Introducción del curso</p>',
+      ampliaMd: '<p>Más sobre el curso</p>',
+      imagen: '/img/2025/web3_ubi.png',
+      altImagen: 'Helping Hands Heart Prismatic 3',
+      enlaceImagen: 'https://openclipart.org/detail/305888',
+      creditoImagen: ' GDJ Public Domain',
+    })
+  })
 })
 
 describe('downloadAllAccessible (R-#256)', () => {
@@ -193,8 +222,7 @@ describe('downloadAllAccessible (R-#256)', () => {
 
   // Una copia descargada antes de que se guardaran los títulos (2026-09-25) se refresca
   // sola: si no, el índice sin conexión seguiría mostrando `guide1` para siempre.
-  it('refreshes a copy that has the guides but no titles', async () => {
-    const get = makeGet()
+  it('refreshes a copy that has the guides but no titles', async () => {    const get = makeGet()
     await saveDownloadedCourse({
       key: 'en/web3-and-ubi',
       courseId: 105,
@@ -237,6 +265,38 @@ describe('downloadAllAccessible (R-#256)', () => {
     expect(result.downloaded).toContain('en/web3-and-ubi')
     expect((await getDownloadedCourse('en/web3-and-ubi'))?.guides.map((guide) => guide.suffix))
       .toEqual(['guide1', 'guide2'])
+  })
+
+  // R-#268: una copia con las guías al día pero **sin la presentación** (descargada antes
+  // del 2026-09-27) se refresca sola; si no, la página del curso seguiría sin presentación
+  // ni figura hasta que la copia caducara (24 h).
+  it('refreshes a copy that has the guides but no presentation', async () => {
+    const get = makeGet()
+    await saveDownloadedCourse({
+      key: 'en/web3-and-ubi',
+      courseId: 105,
+      lang: 'en',
+      prefix: 'web3-and-ubi',
+      titulo: 'Web3 and UBI',
+      contenidoSensible: false,
+      isPremium: false,
+      wallet: WALLET,
+      downloadedAt: Date.now(),
+      revision: 'vieja',
+      guides: [
+        { suffix: 'guide1', puzzle: null, titulo: 'What is a cluster?' },
+        { suffix: 'guide2', puzzle: null, titulo: 'Your first three churches' },
+      ],
+      bytes: 10,
+    } as any)
+
+    const result = await downloadAllAccessible(get as any, options())
+
+    expect(result.downloaded).toContain('en/web3-and-ubi')
+    const stored = await getDownloadedCourse('en/web3-and-ubi')
+    expect(stored?.imagen).toBe('/img/2025/web3_ubi.png')
+    expect(stored?.ampliaMd).toBe('<p>Más sobre el curso</p>')
+    expect(stored?.subtitulo).toBe('Your guide to collecting daily crypto UBI')
   })
 
   // Operador, 2026-09-27: `/offline` seguía listando "GoodDollar", un curso

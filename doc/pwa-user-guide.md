@@ -84,9 +84,10 @@ switch starts **off if you are in a country where the government persecutes Chri
 and **on in the rest**, so a course about Jesus is visible by default where that is not
 dangerous; the Privacy page tells you which case applies and you can always change it.
 The **course page, its guides and their pictures** are saved with the copy, so a course
-you saved opens offline with the figures its guides show. If a course is withdrawn from
-the site, its saved copy is deleted from the device (the notice says "no longer
-available"), because the app only keeps what the site still publishes.
+you saved opens offline with its presentation (title, description and course picture) and
+with the figures its guides show. If a course is withdrawn from the site, its saved copy is
+deleted from the device (the notice says "no longer available"), because the app only keeps
+what the site still publishes.
 
 ## The wallet inside the app
 

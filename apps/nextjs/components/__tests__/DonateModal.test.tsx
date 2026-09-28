@@ -2,6 +2,7 @@ import React from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import DonateModal from '../DonateModal'
+import { WrongChainError } from '@/lib/ensure-chain'
 import { parseUserAmount, formatDisplay } from '@learn-tg/rewards/lib/donate-utils'
 
 // El barrel @pasosdejesus/m/debug (DebugConsole.js) crashea el worker de Node en
@@ -57,6 +58,14 @@ vi.mock('@/lib/hooks/useWallet', () => ({
   usePublicClient: () => mockUsePublicClient(),
   useWalletClient: () => mockUseWalletClient(),
 }))
+
+// R-#266: pre-flight de red antes de enviar. Se mockea sólo `ensureWalletChain` y se
+// conserva el `WrongChainError` real (el componente lo distingue con `instanceof`).
+const mockEnsureWalletChain = vi.fn()
+vi.mock('@/lib/ensure-chain', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/ensure-chain')>('@/lib/ensure-chain')
+  return { ...actual, ensureWalletChain: (...args: unknown[]) => mockEnsureWalletChain(...args) }
+})
 
 // R-#244: los modales consultan el estado de la billetera de la aplicación.
 const mockInAppStatus = vi.fn(() => 'no-wallet')
@@ -127,6 +136,9 @@ describe('DonateModal', () => {
     mockWaitForTransactionReceipt.mockResolvedValue({ status: 'success' })
     mockWriteContract.mockResolvedValue('0xhash')
     mockBiometric.mockReturnValue({ enabled: false, available: false })
+    // El pre-flight de red pasa por omisión: las pruebas que lo quieren fallar lo
+    // configuran ellas mismas (R-#266).
+    mockEnsureWalletChain.mockResolvedValue(undefined)
   })
 
   afterEach(() => {
@@ -444,6 +456,57 @@ describe('DonateModal', () => {
       await waitFor(() => {
         expect(screen.getByText(/Transaction failed/i)).toBeInTheDocument()
       })
+    })
+  })
+
+  // R-#266: el desajuste de red se explica antes de enviar, en vez de dejar caer el
+  // "The current chain of the wallet (id: X) does not match the target chain…" de viem
+  // (reporte del operador del 2026-09-27 al donar al curso 103 desde producción con una
+  // billetera creada en el sitio de desarrollo).
+  describe('Chain pre-flight', () => {
+    const donate = async () => {
+      await waitFor(() => {
+        const input = screen.getByLabelText(/Amount \(USDT\)/i)
+        fireEvent.change(input, { target: { value: '10' } })
+      })
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^Donate$/i })).not.toBeDisabled()
+      })
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /^Donate$/i }))
+      })
+    }
+
+    it('explains the mismatch of an in-app wallet and sends nothing', async () => {
+      mockEnsureWalletChain.mockRejectedValue(new WrongChainError(11142220, 42220, true))
+      await waitFor(() => renderModal())
+
+      await donate()
+
+      await waitFor(() => {
+        expect(screen.getByText(/could not switch your in-app wallet to the Celo network/i)).toBeInTheDocument()
+      })
+      expect(mockWriteContract).not.toHaveBeenCalled()
+    })
+
+    it('explains the mismatch of an external wallet', async () => {
+      mockEnsureWalletChain.mockRejectedValue(new WrongChainError(11142220, 42220, false))
+      await waitFor(() => renderModal())
+
+      await donate()
+
+      await waitFor(() => {
+        expect(screen.getByText(/Your wallet is on another network/i)).toBeInTheDocument()
+      })
+      expect(mockWriteContract).not.toHaveBeenCalled()
+    })
+
+    it('checks the chain before paying', async () => {
+      await waitFor(() => renderModal())
+
+      await donate()
+
+      await waitFor(() => expect(mockEnsureWalletChain).toHaveBeenCalledTimes(1))
     })
   })
 

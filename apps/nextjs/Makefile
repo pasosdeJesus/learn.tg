@@ -184,8 +184,8 @@ swc-wasm:
 # Se aplica SOLO: `pnpm install` lo toma de `pnpm.patchedDependencies`
 # (`patches/next@16.3.5.patch`, con su hash en pnpm-lock.yaml). Este target sirve
 # para aplicarlo a mano y comprobar que quedó; para REGENERAR el parche ver
-# REQ/267 §6 (no editar node_modules a mano: pnpm usa enlaces duros y el store
-# queda sucio, ERR_PNPM_PATCH_FAILED).
+# https://github.com/pasosdeJesus/learn.tg/issues/267 (no editar node_modules a mano:
+# pnpm usa enlaces duros y el store queda sucio, ERR_PNPM_PATCH_FAILED).
 .PHONY: next-patch next-patch-check
 next-patch:
 	pnpm install --frozen-lockfile
@@ -197,7 +197,7 @@ next-patch-check:
 	  grep -q "maxWidth !== 'number'" "$$f" 2>/dev/null || { \
 	    echo "ERROR: el parche de Next no está aplicado en $$f"; \
 	    echo "  Aplícalo con: cd apps/nextjs && pnpm install"; \
-	    echo "  Si pnpm falla con ERR_PNPM_PATCH_FAILED: ver REQ/267 §6."; \
+	    echo "  Si pnpm falla con ERR_PNPM_PATCH_FAILED: ver https://github.com/pasosdeJesus/learn.tg/issues/267."; \
 	    exit 1; \
 	  }; \
 	done

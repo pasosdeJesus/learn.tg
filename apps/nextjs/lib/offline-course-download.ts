@@ -44,6 +44,13 @@ export interface CourseDescriptor {
    * sin conexión no sea un cascarón vacío. */
   subtitulo?: string | null
   resumenMd?: string | null
+  /** R-#268: descripción ampliada, figura del curso y sus créditos, también parte de la
+   * presentación que la página del curso muestra sin conexión. */
+  ampliaMd?: string | null
+  imagen?: string | null
+  altImagen?: string | null
+  enlaceImagen?: string | null
+  creditoImagen?: string | null
   /** R-#256 §3.10: avance de cada guía al descargar, por sufijo. Un llamador que no
    * lo conozca (p. ej. la sincronización de la biblioteca) puede omitirlo. */
   guideStatus?: Record<string, {
@@ -120,10 +127,18 @@ async function warmPageCache(url: string): Promise<void> {
 export const IMAGE_CACHE_NAME = 'learntg-images'
 
 /**
- * Imágenes que muestra una guía y que el service worker puede servir sin conexión:
- * las reglas de `next.config.ts` cubren `/img/…`, `/icons/…` y `/_next/image?…`.
- * Las externas (p. ej. las miniaturas de YouTube) quedan fuera: ninguna regla las
- * cachea.
+ * ¿La regla de imágenes de `next.config.ts` puede servir esta URL sin conexión?
+ * Cubre `/img/…`, `/icons/…` y `/_next/image?…`; las externas (p. ej. las miniaturas
+ * de YouTube) quedan fuera porque ninguna regla las cachea.
+ */
+export function isCacheableImage(url: string | null | undefined): url is string {
+  if (!url) return false
+  const decoded = url.replace(/&amp;/g, '&')
+  return /^\/(img|icons)\/.*\.(png|jpg|jpeg|svg|webp|gif)$/i.test(decoded) || decoded.startsWith('/_next/image?')
+}
+
+/**
+ * Imágenes que muestra una guía y que el service worker puede servir sin conexión.
  *
  * `GET /api/guide` entrega el contenido ya convertido a **HTML** (`<img src="…">`),
  * así que se leen los `<img>` y también la sintaxis Markdown, por si el servidor
@@ -132,11 +147,7 @@ export const IMAGE_CACHE_NAME = 'learntg-images'
 export function guideImageUrls(guide: string): string[] {
   const urls = new Set<string>()
   const add = (url: string | undefined) => {
-    if (!url) return
-    const decoded = url.replace(/&amp;/g, '&')
-    if (/^\/(img|icons)\/.*\.(png|jpg|jpeg|svg|webp|gif)$/i.test(decoded) || decoded.startsWith('/_next/image?')) {
-      urls.add(decoded)
-    }
+    if (isCacheableImage(url)) urls.add(url.replace(/&amp;/g, '&'))
   }
 
   for (const tag of guide.matchAll(/<img\b[^>]*>/gi)) {
@@ -192,6 +203,10 @@ export async function downloadCourse(
   // vez de la presentación del curso y sus guías (reporte del operador,
   // 2026-09-27: `/en/a-relationship-with-Jesus` mostraba "You are offline").
   await warmPageCache(coursePath)
+  // La figura del curso también: la página del curso la muestra junto con la
+  // presentación, así que sin conexión quedaba en blanco (reporte del operador,
+  // 2026-09-27).
+  if (isCacheableImage(descriptor.imagen)) await warmImageCache(descriptor.imagen)
 
   onProgress?.({ done, total, stage: 'guide' })
   for (const suffix of descriptor.guides) {
@@ -267,6 +282,14 @@ export async function downloadCourse(
     titulo: descriptor.titulo,
     subtitulo: descriptor.subtitulo ?? null,
     resumenMd: descriptor.resumenMd ?? null,
+    // R-#268: sin la descripción ampliada y la figura del curso la copia sin conexión
+    // mostraba las guías y el avance pero no la presentación (reporte del operador,
+    // 2026-09-27).
+    ampliaMd: descriptor.ampliaMd ?? null,
+    imagen: descriptor.imagen ?? null,
+    altImagen: descriptor.altImagen ?? null,
+    enlaceImagen: descriptor.enlaceImagen ?? null,
+    creditoImagen: descriptor.creditoImagen ?? null,
     contenidoSensible: descriptor.contenidoSensible,
     isPremium: descriptor.isPremium,
     wallet: wallet ? wallet.toLowerCase() : null,
@@ -331,6 +354,8 @@ interface CatalogCourse {
   prefijoRuta?: string | null
   idioma?: string | null
   titulo?: string | null
+  subtitulo?: string | null
+  resumenMd?: string | null
   porPagar?: string | number | null
   contenido_sensible?: boolean | null
   sinBilletera?: boolean | null
@@ -407,7 +432,14 @@ export async function listAccessibleCourses(
     }
 
     try {
-      const detail = await get<{ guias?: { sufijoRuta?: string; titulo?: string | null }[] }>(`/api/course-catalog/${courseId}`)
+      const detail = await get<{
+        guias?: { sufijoRuta?: string; titulo?: string | null }[]
+        ampliaMd?: string | null
+        imagen?: string | null
+        altImagen?: string | null
+        enlaceImagen?: string | null
+        creditoImagen?: string | null
+      }>(`/api/course-catalog/${courseId}`)
       const detailGuides = detail.data?.guias || []
       const guides = detailGuides
         .map((guide) => String(guide.sufijoRuta || ''))
@@ -429,6 +461,16 @@ export async function listAccessibleCourses(
         isPremium,
         guides,
         guideTitles,
+        // R-#268: la presentación y la figura vienen del detalle del curso; sin esto
+        // la copia de la sincronización automática se veía sin presentación ni imagen
+        // (reporte del operador, 2026-09-27).
+        subtitulo: course.subtitulo ?? null,
+        resumenMd: course.resumenMd ?? null,
+        ampliaMd: detail.data?.ampliaMd ?? null,
+        imagen: detail.data?.imagen ?? null,
+        altImagen: detail.data?.altImagen ?? null,
+        enlaceImagen: detail.data?.enlaceImagen ?? null,
+        creditoImagen: detail.data?.creditoImagen ?? null,
       })
     } catch {
       // un curso que no se puede leer (detalle no disponible) simplemente no entra
@@ -510,7 +552,15 @@ export async function downloadAllAccessible(
     const titlesKnown = !descriptor.guideTitles || previous?.guides.every(
       (guide) => (guide.titulo ?? null) === (descriptor.guideTitles?.[guide.suffix] ?? null),
     )
-    if (previous && sameGuides && titlesKnown && !isStale(previous)) continue
+    // R-#268: lo mismo con la presentación y la figura del curso (copias anteriores al
+    // 2026-09-27): sin esto la página del curso seguiría sin presentación ni imagen hasta
+    // que la copia caducara (24 h).
+    const presentationKnown =
+      (previous?.subtitulo ?? null) === (descriptor.subtitulo ?? null) &&
+      (previous?.resumenMd ?? null) === (descriptor.resumenMd ?? null) &&
+      (previous?.ampliaMd ?? null) === (descriptor.ampliaMd ?? null) &&
+      (previous?.imagen ?? null) === (descriptor.imagen ?? null)
+    if (previous && sameGuides && titlesKnown && presentationKnown && !isStale(previous)) continue
     pending.push(descriptor)
   }
   // El contador que ve el estudiante es de **pasos** (una guía y su crucigrama),

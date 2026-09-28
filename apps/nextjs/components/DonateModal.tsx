@@ -11,6 +11,9 @@ import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
+import { ensureWalletChain, WrongChainError } from '@/lib/ensure-chain'
+import { getAppChain } from '@/lib/app-chain'
+import { useWalletProvider } from '@/lib/hooks/useWalletProvider'
 import { TransactionStatus } from '@/components/ui/TransactionStatus'
 import { GasInsufficientPanel } from '@/components/GasInsufficientPanel'
 // donation-target vive en el motor gdcluster (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3); los componentes
@@ -62,6 +65,10 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const [nativeGasCost, setNativeGasCost] = useState<bigint>(0n)
   const [sendingNative, setSendingNative] = useState(false)
   const [nativeError, setNativeError] = useState<string | null>(null)
+  // R-#266: si el pre-flight de red no puede dejar la billetera en la red de la app se
+  // explica aquí, en vez de dejar caer el ChainMismatchError de viem (reporte del
+  // operador del 2026-09-27 donando al curso 103 desde producción).
+  const [chainError, setChainError] = useState<string | null>(null)
   const recipientAddress = (effectiveTarget
     ? getTargetRecipient(effectiveTarget)
     : process.env.NEXT_PUBLIC_ADDRESS || '') as Address | undefined
@@ -75,6 +82,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const { authedPost } = useAuthedApi()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
+  const { provider: walletProvider } = useWalletProvider()
   const [usdtDecimals, setUsdtDecimals] = useState<number>(+(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6))
   const [usdtBalance, setUsdtBalance] = useState<bigint>(0n)
   const [slearnBalance, setSlearnBalance] = useState<bigint>(0n)
@@ -334,6 +342,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const t = createComponentT(lang || 'en', {
     en: {
       connectSign: 'Connect and sign with your wallet to donate',
+      wrongChain: 'Your wallet is on another network. Switch it to Celo and try again.',
+      wrongChainInApp: 'We could not switch your in-app wallet to the Celo network. Try again, or donate with an external wallet on the Celo network.',
       inAppLocked: 'Your in-app wallet is locked. Unlock it with your password to donate.',
       inAppLockedGesture: 'Your in-app wallet is locked. Confirm with your fingerprint or Face ID to donate.',
       unlockInApp: 'Unlock your in-app wallet',
@@ -380,6 +390,8 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     },
     es: {
       connectSign: 'Conecta y firma con tu billetera para donar',
+      wrongChain: 'Tu billetera está en otra red. Cámbiala a Celo e inténtalo de nuevo.',
+      wrongChainInApp: 'No pudimos cambiar tu billetera de la app a la red Celo. Inténtalo de nuevo, o dona con una billetera externa en la red Celo.',
       inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala con tu password para donar.',
       inAppLockedGesture: 'Tu billetera está bloqueada. Confirma con tu huella o Face ID para donar.',
       unlockInApp: 'Desbloquear tu billetera',
@@ -448,7 +460,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     parseUserAmountSafe(amount, usdtDecimals) > usdtBalance ||
     parseUserAmountSafe(slearnAmount, SLEARN_DECIMALS) > slearnBalance
   )
-  const displayError = paymentError || nativeError
+  const displayError = chainError || paymentError || nativeError
   const donateDisabled = isSubmitting || !hasAnyAmount || ercOverBalance ||
     // El precio USD desconocido solo bloquea tokens volátiles ERC-20 (p. ej.
     // XAUt0). En CELO nativo el reparto real lo calcula el backend en CELO, así
@@ -554,10 +566,21 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     ;(window as any).__donationInFlight = v
   }
 
-  const handleDonateClick = () => {
-    setDonationInFlight(true)
+  const handleDonateClick = async () => {
     diagMark('donateClick', { isNative: isNativePay, target: effectiveTarget?.type })
-    if (isNativePay) void handleNativeDonate(); else executePayment()
+    // R-#266: pre-flight de red antes de enviar. viem lanza `ChainMismatchError` cuando la
+    // billetera está en otra red (una billetera creada en el sitio de desarrollo pagando en
+    // producción, reporte del operador del 2026-09-27); se intenta el cambio —la billetera
+    // in-app también puede— y sólo si no se aplica se explica con claridad.
+    setChainError(null)
+    try {
+      await ensureWalletChain(walletClient as never, getAppChain(), walletProvider)
+    } catch (error) {
+      setChainError(error instanceof WrongChainError && error.isInApp ? t('wrongChainInApp') : t('wrongChain'))
+      return
+    }
+    setDonationInFlight(true)
+    if (isNativePay) void handleNativeDonate(); else await executePayment()
   }
 
   return (
