@@ -25,7 +25,7 @@ import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
-import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
+import { chooseWalletProtection, completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
 const password = '12345678'
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -243,6 +243,7 @@ async function main() {
         await page.type('[data-testid="wallet-password"]', password)
         await page.type('[data-testid="wallet-password-confirm"]', password)
         await page.click('[data-testid="wallet-create"]')
+        await chooseWalletProtection(page)
         await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 60000 })
         ok('Billetera in-app creada')
         await completeBackupVerification(page)
@@ -281,8 +282,9 @@ async function main() {
     for (let i = 0; i < 20; i++) {
       enableButton = await exists(page, '[data-testid="wallet-enable-biometric"]')
       if (enableButton) break
-      // R-#254: la creación ya registra la huella cuando el dispositivo puede
-      // verificarlo, así que aquí el diálogo pide el gesto en vez de ofrecerlo.
+      // En builds anteriores a R-#269 la creación ya registraba la huella (casilla
+      // bajo las 12 palabras), así que aquí el diálogo pide el gesto en vez de
+      // ofrecerlo.
       alreadyEnrolled = await exists(page, '[data-testid="wallet-unlock-biometric"]')
       if (alreadyEnrolled) break
       // Y con el gesto ya arrancando (pide la huella al abrir) puede completarse

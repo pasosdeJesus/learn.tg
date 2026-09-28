@@ -16,15 +16,23 @@ the app and read guides offline, see [pwa-user-guide.md](pwa-user-guide.md).
    6-digit PIN: a short password is too easy to guess. That is the decided policy
    (operator, 2026-09-21): **8 characters minimum, no PIN**, no extra blocklist of
    "weak" passwords, and **no "unlock with the 12 words" shortcut** — the 3-word
-   quiz of step 4 is the help for the user, and the recovery is importing the wallet.
-3. The app shows **12 words**. Write them **on paper, in order**, and keep that
+   quiz of step 5 is the help for the user, and the recovery is importing the wallet.
+   Use the **eye** at the right of each field to check what you typed before
+   continuing.
+3. The app asks **how you want to unlock this wallet**:
+   - **With my fingerprint or Face ID (recommended)**, already selected when your
+     phone can check it, or
+   - **Only with the password**.
+   In both cases the password keeps working as a backup, and you type it only once:
+   with the gesture, the app seals the wallet with the password you just wrote.
+4. The app shows **12 words**. Write them **on paper, in order**, and keep that
    paper somewhere safe: whoever has those 12 words owns the funds of the wallet.
    Never share them and do not keep them as a screenshot or a digital note. They are
    the **only** way to recover your wallet if you lose the phone.
-4. It then asks you to type **3 of those words** (it picks random positions). This
+5. It then asks you to type **3 of those words** (it picks random positions). This
    proves you really wrote them down; type them and press **Confirm and sign in**.
    If you did not copy them, press **Show the words again**.
-5. The app signs you in with the wallet it just created.
+6. The app signs you in with the wallet it just created.
 
 Your password is never sent anywhere: it only unlocks the wallet stored
 (encrypted) on your phone.

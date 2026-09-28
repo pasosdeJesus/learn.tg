@@ -320,6 +320,16 @@ await waitForExternalConnect(page)   // R-#238: header = WalletSelector; this cl
 builds the SIWE message in Node, signs it with the core and posts the callback
 inside the page so the NextAuth session cookie lands in the browser jar.
 
+Specs that drive the **create/import dialog in the browser** answer its protection
+step with `chooseWalletProtection(page, { gesture })` (R-#269): right after the
+password the dialog asks **how to unlock the wallet** — the gesture (fingerprint/Face
+ID) is the default and "only with the password" is the alternative — and without an
+answer the flow never reaches the 12 words. The helper waits for the step and is
+tolerant with builds where it does not exist (it returns `false`), so a spec keeps
+passing against the deployed site until the change lands; `gesture: true` keeps the
+default option for the specs that exercise the passkey (`biometric-unlock` answers
+"password only" during creation and enrols the gesture in its own second step).
+
 This replaced the `setupSIWEMock` / `simulateSIWE` helpers of
 `@pasosdejesus/m/e2e` in `connect-wallet-flow`, `full-flow`,
 `town-autocomplete` and `prod-landing-to-profile` (2026-09-15).

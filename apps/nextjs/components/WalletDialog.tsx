@@ -14,6 +14,7 @@ import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
 import { isValidPassword, useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { detectPlatformSupport, isUserCancelledError } from '@learn-tg/pdj-wallet'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { PasswordInput } from '@/components/PasswordInput'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
 import { markBackupConfirmed, pickVerifyPositions, verifyWords } from '@/lib/wallet-backup'
@@ -70,11 +71,20 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   const [localError, setLocalError] = useState<string | null>(null)
   const [biometricPassword, setBiometricPassword] = useState('')
   const [passwordFallback, setPasswordFallback] = useState(false)
-  // R-#254: durante la creación se ofrece la huella y la clave se conserva sólo
-  // hasta confirmar el respaldo, para sellar la billetera sin volver a pedirla
-  // (nunca se pinta ni se guarda en disco).
-  const [createBiometric, setCreateBiometric] = useState(true)
+  // R-#254: durante la creación la clave se conserva sólo hasta confirmar el respaldo,
+  // para sellar la billetera sin volver a pedirla (nunca se pinta ni se guarda en
+  // disco).
   const createPasswordRef = useRef('')
+  /**
+   * Elección explícita tras teclear la clave (reporte del operador, 2026-09-28): antes
+   * era una casilla dentro del paso de las 12 palabras y se pasaba por alto. Mientras el
+   * paso está abierto no se muestran ni las palabras ni el formulario.
+   */
+  const [protectStep, setProtectStep] = useState(false)
+  /** Por omisión el gesto: es el método habitual cuando el dispositivo lo soporta. */
+  const [protectChoice, setProtectChoice] = useState<'gesture' | 'password'>('gesture')
+  /** `true` cuando el paso viene de una importación (al terminar hay que firmar). */
+  const [protectSignsIn, setProtectSignsIn] = useState(false)
   // R-#254: antes de crear la billetera el hook no conoce el soporte del
   // dispositivo (lo calcula cuando encuentra una billetera), así que la creación lo
   // sondea aquí. Sin esto la huella nunca se ofrecía al crear (reportado el
@@ -99,7 +109,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       biometricHint: 'Uses the fingerprint or Face ID of this device. Your password is the backup.',
       biometricOn: 'Fingerprint unlock is on',
       biometricOff: 'Turn off fingerprint unlock',
-      biometricCreate: 'Also unlock with my fingerprint or Face ID',
       biometricCreateFailed: 'The fingerprint could not be saved. Your password still works; you can turn the gesture on later from the wallet.',
       noWebauthn: 'This device cannot verify your fingerprint or Face ID.',
       noPrf: 'This device cannot store the biometric unlock. Use your password.',
@@ -112,6 +121,13 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       lockedDescriptionGesture: 'Confirm with your fingerprint or Face ID to sign in. No password to type.',
       password: 'Password (8+ characters)',
       passwordConfirm: 'Repeat the password',
+      passwordShow: 'Show the password',
+      passwordHide: 'Hide the password',
+      protectTitle: 'How do you want to unlock this wallet?',
+      protectHint: 'The password is always the backup. If this device can check your fingerprint or face, you can leave the gesture as the usual way in.',
+      protectGesture: 'With my fingerprint or Face ID (recommended)',
+      protectPassword: 'Only with the password',
+      protectContinue: 'Continue',
       mnemonic: 'Recovery phrase (12 words)',
       create: 'Create wallet',
       import: 'Import wallet',
@@ -156,7 +172,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       biometricHint: 'Usa la huella o Face ID de este dispositivo. Tu clave es el respaldo.',
       biometricOn: 'Desbloqueo con huella activado',
       biometricOff: 'Desactivar el desbloqueo con huella',
-      biometricCreate: 'Desbloquear también con mi huella o Face ID',
       biometricCreateFailed: 'No se pudo guardar la huella. Tu clave sigue funcionando y puedes activar el gesto después desde la billetera.',
       noWebauthn: 'Este dispositivo no puede verificar tu huella o Face ID.',
       noPrf: 'Este dispositivo no puede guardar el desbloqueo por huella. Usa tu clave.',
@@ -169,6 +184,13 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       lockedDescriptionGesture: 'Confirma con tu huella o Face ID para ingresar. No hay que escribir la clave.',
       password: 'Clave (8+ caracteres)',
       passwordConfirm: 'Repite la clave',
+      passwordShow: 'Mostrar la clave',
+      passwordHide: 'Ocultar la clave',
+      protectTitle: '¿Cómo quieres desbloquear esta billetera?',
+      protectHint: 'La clave siempre queda de respaldo. Si este dispositivo puede verificar tu huella o tu rostro, puedes dejar el gesto como la forma habitual de entrar.',
+      protectGesture: 'Con mi huella o Face ID (recomendado)',
+      protectPassword: 'Solo con la clave',
+      protectContinue: 'Continuar',
       mnemonic: 'Frase de recuperación (12 palabras)',
       create: 'Crear billetera',
       import: 'Importar billetera',
@@ -218,7 +240,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setLocalError(null)
     setPasswordFallback(false)
     createPasswordRef.current = ''
-    setCreateBiometric(true)
+    setProtectStep(false)
+    setProtectChoice('gesture')
+    setProtectSignsIn(false)
     setBiometricNotice(null)
     autoGestureTried.current = false
     setBusy(false)
@@ -304,12 +328,17 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       setShowWords(true)
       setPassword('')
       setConfirm('')
+      // R-#269/2026-09-28: con el dispositivo capaz de verificar al usuario, el paso
+      // siguiente es elegir cómo desbloquear (gesto por omisión o sólo la clave).
+      setProtectChoice('gesture')
+      setProtectSignsIn(false)
+      setProtectStep(canOfferBiometric && !biometricEnabled)
     } catch (e) {
       setLocalError(translateError(e))
     } finally {
       setBusy(false)
     }
-  }, [confirm, create, password, t, translateError])
+  }, [biometricEnabled, canOfferBiometric, confirm, create, password, t, translateError])
 
   const handleImport = useCallback(async () => {
     setLocalError(null)
@@ -317,12 +346,50 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     setBusy(true)
     try {
       await importExisting({ password, mnemonic: mnemonic.trim() })
+      createPasswordRef.current = password
+      // La misma elección que al crear: importar también deja la clave en memoria.
+      setProtectChoice('gesture')
+      setProtectSignsIn(true)
+      if (canOfferBiometric && !biometricEnabled) {
+        setBusy(false)
+        setProtectStep(true)
+        return
+      }
       await signIn()
     } catch (e) {
       setLocalError(translateError(e))
       setBusy(false)
     }
-  }, [importExisting, mnemonic, password, signIn, t, translateError])
+  }, [biometricEnabled, canOfferBiometric, importExisting, mnemonic, password, signIn, t, translateError])
+
+  /**
+   * Cierra el paso de protección: sella la billetera con el gesto cuando se eligió
+   * (la clave sigue en memoria del formulario, no se pide otra vez) y continúa el flujo
+   * (las 12 palabras al crear, la firma al importar). Si el gesto falla, se avisa y el
+   * paso se queda abierto para poder seguir sólo con la clave.
+   */
+  const handleProtect = useCallback(async () => {
+    setLocalError(null)
+    setBiometricNotice(null)
+    const passwordForBiometric = createPasswordRef.current || password
+    if (protectChoice === 'gesture' && passwordForBiometric) {
+      setBusy(true)
+      try {
+        await enableBiometric(passwordForBiometric)
+      } catch {
+        setBiometricNotice(t('biometricCreateFailed'))
+        setBusy(false)
+        return
+      }
+      setBusy(false)
+    }
+    createPasswordRef.current = ''
+    setProtectStep(false)
+    if (protectSignsIn) {
+      setProtectSignsIn(false)
+      await signIn()
+    }
+  }, [enableBiometric, password, protectChoice, protectSignsIn, signIn, t])
 
   const handleUnlock = useCallback(async () => {
     setLocalError(null)
@@ -399,9 +466,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   }, [biometricPassword, enableBiometric, t, translateError])
 
   // R-#249: las 3 palabras deben coincidir con la frase; sólo entonces se marca el
-  // respaldo como confirmado y se firma. R-#254: con la clave todavía en memoria, si
-  // el dispositivo puede verificar al usuario se engancha la huella aquí (un gesto
-  // cancelado no puede perder la billetera: se sigue con la clave).
+  // respaldo como confirmado y se firma. El gesto ya se eligió y selló en el paso de
+  // protección (reporte del operador, 2026-09-28), así que aquí la clave ya no se
+  // necesita.
   const handleVerifyBackup = useCallback(async () => {
     if (!recovery) return
     setLocalError(null)
@@ -413,22 +480,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     }
     setVerifyError(false)
     markBackupConfirmed()
-    const passwordForBiometric = createPasswordRef.current
     createPasswordRef.current = ''
-    if (createBiometric && canOfferBiometric && !biometricEnabled && passwordForBiometric) {
-      setBusy(true)
-      try {
-        await enableBiometric(passwordForBiometric)
-      } catch {
-        // La huella no se pudo guardar: la clave sigue siendo el respaldo, pero el
-        // usuario debe enterarse (antes se fallaba en silencio).
-        setBiometricNotice(t('biometricCreateFailed'))
-      } finally {
-        setBusy(false)
-      }
-    }
     void signIn()
-  }, [biometricEnabled, canOfferBiometric, createBiometric, enableBiometric, recovery, signIn, t, verifyInputs])
+  }, [recovery, signIn, verifyInputs])
 
   const handleDelete = useCallback(async () => {
     setLocalError(null)
@@ -487,22 +541,26 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       <DialogContent data-testid="wallet-dialog">
         <DialogHeader>
           <DialogTitle>
-            {showRecovery
-              ? t('recoveryTitle')
-              : booting
-                ? t('title')
-                : showUnlock
-                  ? t('lockedTitle')
-                  : mode === 'create' ? t('createTitle') : t('importTitle')}
+            {protectStep
+              ? t('protectTitle')
+              : showRecovery
+                ? t('recoveryTitle')
+                : booting
+                  ? t('title')
+                  : showUnlock
+                    ? t('lockedTitle')
+                    : mode === 'create' ? t('createTitle') : t('importTitle')}
           </DialogTitle>
           <DialogDescription>
-            {showRecovery
-              ? t('recoveryDescription')
-              : booting
-                ? t('checking')
-                : showUnlock
-                  ? gestureOnly ? t('lockedDescriptionGesture') : t('lockedDescription')
-                  : mode === 'create' ? t('createDescription') : t('importDescription')}
+            {protectStep
+              ? t('protectHint')
+              : showRecovery
+                ? t('recoveryDescription')
+                : booting
+                  ? t('checking')
+                  : showUnlock
+                    ? gestureOnly ? t('lockedDescriptionGesture') : t('lockedDescription')
+                    : mode === 'create' ? t('createDescription') : t('importDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -515,7 +573,45 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
           </div>
         )}
 
-        {showRecovery ? (
+        {protectStep ? (
+          // R-#269/2026-09-28: elección explícita justo después de la clave. El gesto
+          // (passkey/PRF) queda por omisión cuando el dispositivo puede verificar al
+          // usuario; "sólo la clave" sigue disponible y la clave es siempre el respaldo.
+          <div className="py-4 space-y-3" data-testid="wallet-protect">
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="radio"
+                name="wallet-protect"
+                data-testid="wallet-protect-gesture"
+                checked={protectChoice === 'gesture'}
+                onChange={() => setProtectChoice('gesture')}
+              />
+              {t('protectGesture')}
+            </label>
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="radio"
+                name="wallet-protect"
+                data-testid="wallet-protect-password"
+                checked={protectChoice === 'password'}
+                onChange={() => setProtectChoice('password')}
+              />
+              {t('protectPassword')}
+            </label>
+            {biometricNotice && (
+              <p className="text-xs text-amber-700" data-testid="wallet-protect-notice">
+                {biometricNotice}
+              </p>
+            )}
+            <Button
+              data-testid="wallet-protect-continue"
+              onClick={() => { void handleProtect() }}
+              disabled={busy}
+            >
+              {t('protectContinue')}
+            </Button>
+          </div>
+        ) : showRecovery ? (
           <div className="py-4 space-y-3">
             {showWords ? (
               <>
@@ -560,27 +656,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                   <p role="alert" className="text-sm text-red-700" data-testid="wallet-verify-error">
                     {t('verifyWrong')}
                   </p>
-                )}
-                {/* R-#254: en un dispositivo que puede verificar al usuario, la creación
-                    pide también la huella; sin esa capacidad no se ofrece nada. */}
-                {canOfferBiometric && !biometricEnabled && (
-                  <div className="space-y-1" data-testid="wallet-create-biometric-block">
-                    <p className="text-xs text-gray-500">{t('biometricHint')}</p>
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        data-testid="wallet-create-biometric"
-                        checked={createBiometric}
-                        onChange={(event) => setCreateBiometric(event.target.checked)}
-                      />
-                      {t('biometricCreate')}
-                    </label>
-                    {biometricNotice && (
-                      <p className="text-xs text-amber-700" data-testid="wallet-create-biometric-notice">
-                        {biometricNotice}
-                      </p>
-                    )}
-                  </div>
                 )}
                 <Button
                   variant="outline"
@@ -633,13 +708,14 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
             {!gestureOnly && (!hasWallet || showUnlock) && (
               <label className="block space-y-1">
                 <span className="text-sm font-medium">{t('password')}</span>
-                <Input
-                  type="password"
+                <PasswordInput
                   inputMode="text"
                   autoComplete="off"
                   data-testid="wallet-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
+                  showLabel={t('passwordShow')}
+                  hideLabel={t('passwordHide')}
                 />
               </label>
             )}
@@ -647,13 +723,14 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
             {!showUnlock && !hasWallet && mode === 'create' && (
               <label className="block space-y-1">
                 <span className="text-sm font-medium">{t('passwordConfirm')}</span>
-                <Input
-                  type="password"
+                <PasswordInput
                   inputMode="text"
                   autoComplete="off"
                   data-testid="wallet-password-confirm"
                   value={confirm}
                   onChange={(event) => setConfirm(event.target.value)}
+                  showLabel={t('passwordShow')}
+                  hideLabel={t('passwordHide')}
                 />
               </label>
             )}
@@ -701,13 +778,14 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                 <p className="text-xs text-gray-500" data-testid="wallet-biometric-hint">
                   {t('biometricHint')}
                 </p>
-                <Input
-                  type="password"
+                <PasswordInput
                   inputMode="text"
                   autoComplete="off"
                   data-testid="wallet-biometric-password"
                   value={biometricPassword}
                   onChange={(event) => setBiometricPassword(event.target.value)}
+                  showLabel={t('passwordShow')}
+                  hideLabel={t('passwordHide')}
                 />
                 <Button
                   variant="default"

@@ -27,7 +27,7 @@ import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
-import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
+import { chooseWalletProtection, completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
 const password = '12345678'
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -113,6 +113,7 @@ async function signInFromHeader(page, base) {
       await page.type('[data-testid="wallet-password"]', password)
       await page.type('[data-testid="wallet-password-confirm"]', password)
       await page.click('[data-testid="wallet-create"]')
+      await chooseWalletProtection(page)
       await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 60000 })
       ok('Billetera in-app creada')
       // "Guardé las palabras, ingresar" firma el SIWE y recarga

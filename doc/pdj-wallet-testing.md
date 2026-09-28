@@ -168,20 +168,22 @@ SITE_URL=http://localhost:4000 IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 
 `e2e/specs/biometric-unlock.spec.mjs` (R-#246) cubre el desbloqueo por huella con
 un **authenticator virtual de Chrome por CDP** (`WebAuthn.addVirtualAuthenticator`
 con `hasPrf: true`, que auto-verifica al usuario como haría Face ID): crea la
-billetera desde la cabecera, activa "desbloquear con huella la próxima vez",
-recarga —la clave salió de memoria— y comprueba que **un gesto** deja la billetera
-lista y que el modal de donación deja de pedir desbloqueo.
+billetera desde la cabecera (y responde "sólo con la clave" en el paso de protección
+de R-#269, para dejar el gesto a este spec), activa "desbloquear con huella la próxima
+vez", recarga —la clave salió de memoria— y comprueba que **un gesto** deja la
+billetera lista y que el modal de donación deja de pedir desbloqueo.
 
 El spec parte de una **billetera limpia**: `resetWalletState()` borra el registro de
 la billetera y la preferencia de desbloqueo antes de crearla, porque con una
 billetera heredada el flujo de creación (y con él el sellado de la huella de
 R-#254) no se ejecutaba y la corrida no era determinista (medido 2026-09-24).
-También acepta como válida la huella que la **propia creación** ya selló: con el
-authenticator virtual el gesto arranca al abrir el diálogo y se completa antes de
-que el botón alcance a verse. Cuando no encuentra ninguna señal imprime la
-capacidad del dispositivo (`isUserVerifyingPlatformAuthenticatorAvailable()`,
-`getClientCapabilities()`) para distinguir "el dispositivo no puede" de "la UI no
-lo ofreció".
+También acepta como válida la huella que la **propia creación** ya selló: en builds
+anteriores a R-#269 el sellado ocurría en el paso de las 12 palabras, sin pregunta
+explícita, y con el authenticator virtual el gesto arranca al abrir el diálogo y se
+completa antes de que el botón alcance a verse. Cuando no encuentra ninguna señal
+imprime la capacidad del dispositivo
+(`isUserVerifyingPlatformAuthenticatorAvailable()`, `getClientCapabilities()`) para
+distinguir "el dispositivo no puede" de "la UI no lo ofreció".
 
 ```sh
 cd apps/nextjs

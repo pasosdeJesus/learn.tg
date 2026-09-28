@@ -18,7 +18,7 @@ import {
   initTestEnv, launchBrowser, newPage,
   resetFailures, fail, ok, summary, short,
 } from '@pasosdejesus/m/e2e'
-import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
+import { chooseWalletProtection, completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
 const password = '12345678'
 
@@ -85,6 +85,7 @@ async function main() {
   await page.type('[data-testid="wallet-password"]', password)
   await page.type('[data-testid="wallet-password-confirm"]', password)
   await page.click('[data-testid="wallet-create"]')
+  await chooseWalletProtection(page)
   await waitForStatus(page, 'unlocked', timeout)
   const address = await page.$eval('[data-testid="wallet-address"]', (el) => el.textContent)
   if (/^0x[0-9a-fA-F]{40}$/.test(address || '')) ok(`Wallet created: ${short(address)}`)

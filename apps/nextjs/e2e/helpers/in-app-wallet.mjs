@@ -266,6 +266,25 @@ export async function useExternalWalletInHeader(page, { timeout = 30000, interva
 }
 
 /**
+ * Answers the dialog's protection step when it appears (operator report, 2026-09-28):
+ * right after typing the password the dialog asks whether to unlock with the password
+ * only or with the gesture (fingerprint/face), and leaves the gesture as the default.
+ * Without this answer, a Chrome with a virtual authenticator (PRF) never reaches the
+ * 12 words.
+ *
+ * It is tolerant with earlier builds, where the step does not exist; `gesture: true`
+ * keeps the gesture option (the default one) for the specs that exercise that path.
+ * Returns whether the step was present.
+ */
+export async function chooseWalletProtection(page, { gesture = false, timeout = 5000 } = {}) {
+  const step = await page.waitForSelector('[data-testid="wallet-protect"]', { timeout }).catch(() => null)
+  if (!step) return false
+  if (!gesture) await page.click('[data-testid="wallet-protect-password"]').catch(() => {})
+  await page.click('[data-testid="wallet-protect-continue"]').catch(() => {})
+  return true
+}
+
+/**
  * Completa la confirmación del respaldo (R-#249): lee las 12 palabras de la
  * pantalla, pulsa "ya las anoté" y responde las tres posiciones que pide.
  *

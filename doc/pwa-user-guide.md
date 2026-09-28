@@ -95,15 +95,21 @@ You do not need to install a wallet app to use learn.tg.
 
 1. Open the app and choose **Use in-app wallet** (while the app checks whether a
    wallet already exists the button just says **In-app wallet**).
-2. Create a wallet with a **password (8 or more characters)**. Write the recovery
-   phrase **on paper, in order**, and keep that paper somewhere safe: whoever has
-   those 12 words owns the funds of the wallet. It is the only way to recover the
-   wallet if you lose the phone (do not keep it as a screenshot or a digital note).
-3. Write down the 12 words it shows, then type the **3 words** it asks for
+2. Create a wallet with a **password (8 or more characters)**. Use the **eye** at the
+   right of the field to check what you typed before continuing.
+3. The app asks **how you want to unlock this wallet**. If your phone can check your
+   fingerprint or face, the recommended option (**With my fingerprint or Face ID**) is
+   already selected; otherwise choose **Only with the password**. In both cases the
+   password keeps working as a backup, and you type it only once.
+4. Write the recovery phrase **on paper, in order**, and keep that paper somewhere
+   safe: whoever has those 12 words owns the funds of the wallet. It is the only way to
+   recover the wallet if you lose the phone (do not keep it as a screenshot or a
+   digital note).
+5. Write down the 12 words it shows, then type the **3 words** it asks for
    (random positions) and press **Confirm and sign in**: the app signs the message
    for you with the wallet it just created. If you close the window before
    pressing it, open the wallet again with **Sign in with in-app wallet**.
-4. To stop using it, choose **Disconnect**. To use another wallet (for example
+6. To stop using it, choose **Disconnect**. To use another wallet (for example
    MetaMask/OneKey instead), choose **Use external wallet**.
 
 The full walkthrough (receive, send, collectibles) is in
@@ -111,13 +117,13 @@ The full walkthrough (receive, send, collectibles) is in
 
 If your phone can unlock with a fingerprint or Face ID, learn.tg offers
 **unlock with fingerprint**: one touch opens the wallet and you do not type the
-password again. The password keeps working as a backup, and if you cancel the
-fingerprint prompt the app lets you type the password instead. The wallet stays
-unlocked while you use it and locks itself after an hour without activity; the first
-time you send money to an address it asks for the fingerprint to confirm, and then
-not again for 15 minutes **to that same address** (a new address always asks, and
-after the wallet locks itself it asks again). Both options are in the same window,
-and you can turn the fingerprint on or off at any time.
+password again. It is offered while you create the wallet, and you can turn it on or
+off later from the wallet itself. The password keeps working as a backup, and if you
+cancel the fingerprint prompt the app lets you type the password instead. The wallet
+stays unlocked while you use it and locks itself after an hour without activity; the
+first time you send money to an address it asks for the fingerprint to confirm, and
+then not again for 15 minutes **to that same address** (a new address always asks, and
+after the wallet locks itself it asks again). Both options are in the same window.
 
 Your password is never sent anywhere: it only unlocks the wallet stored
 (encrypted) on your phone. If you forget the password, restore the wallet with the

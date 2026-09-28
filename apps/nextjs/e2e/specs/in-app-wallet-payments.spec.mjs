@@ -22,7 +22,7 @@ import {
   initTestEnv, launchBrowser, newIncognitoContext,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
-import { completeBackupVerification } from '../helpers/in-app-wallet.mjs'
+import { chooseWalletProtection, completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
@@ -142,6 +142,7 @@ async function createInAppWallet(page, base) {
   await page.type('[data-testid="wallet-password"]', password)
   await page.type('[data-testid="wallet-password-confirm"]', password)
   await page.click('[data-testid="wallet-create"]')
+  await chooseWalletProtection(page)
   await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 90000 })
   await completeBackupVerification(page)
   for (let i = 0; i < 30; i++) {

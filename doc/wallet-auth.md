@@ -133,6 +133,12 @@ step, unlock an existing wallet, delete the wallet, and finish with the SIWE
 sign-in (`lib/in-app-siwe.ts`, same POST to `/api/auth/callback/credentials` as
 the external wallet, then a reload so NextAuth reads the session cookie).
 
+Every password field is a `PasswordInput` (`components/PasswordInput.tsx`), with the
+**eye** to reveal what was typed (R-#269): the password cannot be recovered (only the
+12 words can) and it is asked again on every unlock and on the enrolment, so a typo is
+expensive. The button is `type="button"` (it never submits the form) and carries
+`aria-pressed` plus the accessible name.
+
 Two behaviours came out of the operator's manual testing on 2026-09-15:
 
 - The creation used to happen inside the header through `InAppWalletSetup`,
@@ -174,8 +180,15 @@ even with a passkey registered. Now:
 
 - Locked, no passkey, device can verify: the primary action is "desbloquear con
   huella" (it types the PIN once and seals the key) and the secondary is "seguir
-  usando solo el PIN"; the same primary treatment applies right after creating the
-  wallet.
+  usando solo el PIN".
+- **Creating or importing asks explicitly (R-#269).** Right after the password the
+  dialog shows the `wallet-protect` step: "con mi huella o Face ID (recomendado)"
+  checked by default and "solo con la clave" as the alternative; the password (still
+  in memory, `createPasswordRef`) seals the key, so it is never typed twice, and a
+  failed enrolment leaves the step open with a notice instead of failing silently.
+  The password is the backup in both cases, and the step is skipped when the device
+  cannot verify the user or a passkey is already enrolled. Before this it was a
+  checkbox under the 12 words, which the operator overlooked on the phone.
 - Locked with a passkey: the dialog **asks for the gesture as it opens** and shows
   only "usar el PIN" as the escape; the PIN field appears only if the gesture is
   cancelled or fails, together with "reintentar huella".
