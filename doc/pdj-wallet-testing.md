@@ -198,6 +198,27 @@ billetera, y el `window.location.reload()` posterior aterrizaba con la clave
 fuera de memoria (billetera bloqueada otra vez): un ciclo en el que la donación
 nunca se podía completar.
 
+**Receta local (esta VM sí puede servir):** `bin/dev` levanta
+`http://localhost:4000` y los specs aceptan `SITE_URL`, así que se pueden correr
+**sin desplegar** (`doc/environments.md`). Medido el 2026-09-28 con `next dev`:
+
+```sh
+cd apps/nextjs && bin/dev            # en segundo plano
+export SITE_URL=http://localhost:4000 IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220
+export CHROME_PATH=/usr/local/bin/chrome
+node e2e/specs/in-app-wallet.spec.mjs          # 0 failures (75 s)
+node e2e/specs/header-wallet-dialog.spec.mjs   # 0 failures (144 s)
+node e2e/specs/biometric-unlock.spec.mjs       # 0 failures (85 s)
+```
+
+Dos avisos de la corrida local: (1) la **primera** visita a cada ruta compila bajo
+demanda y puede agotar el `timeout` de 60 s de un `waitForFunction` (medido: la
+primera corrida de `in-app-wallet` falló en el SIWE y la segunda pasó; conviene
+calentar la página antes o repetir); (2) `donate-unlock-dialog` **no** se puede
+correr en local porque el botón "Donar a este curso" sólo aparece en una página de
+curso con **bóveda creada** (`sData.vaultCreated`) y la base local no tiene bóvedas:
+el paso final falla por entorno, no por código.
+
 `e2e/specs/offline-crossword.spec.mjs` (R-#242) fills the crossword at
 `/en/gdcluster/guide1/test`, submits it offline, checks the `offline-pending`
 indicator, reloads and waits for the queue to drain. It needs **no** service
