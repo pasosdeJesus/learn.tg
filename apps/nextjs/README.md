@@ -168,6 +168,16 @@ Then edit `.env` with your values. Key variables:
 - `pnpm typecheck`: Checks the project for TypeScript errors.
 - `pnpm format`: Formats the code with Prettier.
 
+### Next.js patch (OpenBSD)
+
+`patches/next@16.3.5.patch` (https://github.com/pasosdeJesus/learn.tg/issues/267)
+fixes `codeFrameColumns` so a 500 shows its real cause instead of crashing. It is
+applied **only** by `pnpm install` (declared in `pnpm.patchedDependencies`); never
+edit `node_modules` by hand. `make next-patch` re-applies it with `pnpm install` and
+then checks it, `make next-patch-check` only checks (it fails if the installed
+`node_modules` has the old code), and `make all`/`make prod` verify it before
+building. To regenerate it, see the requirement §6 and `CONTRIBUTING.md`.
+
 ## Available Pages and Routing
 
 The application uses Next.js's App Router. Here are the main user-facing pages:

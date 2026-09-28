@@ -61,8 +61,8 @@ importers:
         specifier: ^0.22.0
         version: 0.22.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
       '@pasosdejesus/usdt':
-        specifier: ^0.1.2
-        version: 0.1.2(@pasosdejesus/m@0.22.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(react@19.2.8)(viem@2.55.11(typescript@5.9.3))
+        specifier: ^0.1.3
+        version: 0.1.3(@pasosdejesus/m@0.22.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(react@19.2.8)(viem@2.55.11(typescript@5.9.3))
       '@typechain/ethers-v6':
         specifier: ^0.5.0
         version: 0.5.1(ethers@6.17.0)(typechain@8.3.2(typescript@5.9.3))(typescript@5.9.3)
@@ -611,8 +611,8 @@ packages:
     resolution: {integrity: sha512-5X0r2cQQZGGGTu7FVqiG6h5fY5RLbqwKrQDam0o2hT6FB2xH7dm/4tA3ocQZ/0qze400JUBT0JUqQQHVucfsmw==}
     hasBin: true
 
-  '@pasosdejesus/usdt@0.1.2':
-    resolution: {integrity: sha512-qjc1LYwkY+ft8bDA2E5g42zLmLyY1vxi01VyefiFLf7cFqmxEXhONjOaPT43xkRB/SuNFQtFRC4vg67TQhqEtg==}
+  '@pasosdejesus/usdt@0.1.3':
+    resolution: {integrity: sha512-kczXvTW1lvSb9XsQUQ5IDmXV9j0+86qsL5yibqly8QdbbGpSIhiwAz/AfCtKSRDfdkS30XpHjRTfq0rgUCnJ7A==}
     peerDependencies:
       '@pasosdejesus/m': ^0.22.0
       react: '>=18.0.0'
@@ -3127,7 +3127,7 @@ snapshots:
       - supports-color
       - viem
 
-  '@pasosdejesus/usdt@0.1.2(@pasosdejesus/m@0.22.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(react@19.2.8)(viem@2.55.11(typescript@5.9.3))':
+  '@pasosdejesus/usdt@0.1.3(@pasosdejesus/m@0.22.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(react@19.2.8)(viem@2.55.11(typescript@5.9.3))':
     dependencies:
       '@pasosdejesus/m': 0.22.0(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
       react: 19.2.8
