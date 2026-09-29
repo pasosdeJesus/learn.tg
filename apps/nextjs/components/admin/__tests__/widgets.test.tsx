@@ -2,7 +2,7 @@
 // Verifies widgets don't silently fail (the .then(r => r.json()) bug)
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock adminFetch to return data directly (as it does in production — returns parsed JSON)
@@ -30,7 +30,7 @@ vi.mock('@/components/shared/PhotoUpload', () => ({
   PhotoUpload: (props: any) => React.createElement('span', {
     'data-testid': 'photo-upload',
     'data-side': props.side,
-    'data-readonly': String(!!props.readOnly),
+    'data-userid': String(props.userId),
   }),
 }))
 
@@ -201,12 +201,14 @@ describe('UserEditModal — church data depends on whether the church is registe
       expect(screen.getByTestId('user-pastor-registration')).toBeTruthy()
     })
     const bloque = screen.getByTestId('user-pastor-registration').textContent || ''
-    expect(bloque).toContain('REG-12345')
-    expect(bloque).toContain('Anglican')
-    // El documento se muestra en solo lectura (el pastor lo declara, no el verificador).
+    expect(bloque).toContain('Registration number')
+    // El verificador puede corregirlos (R-#152) y el documento se puede reemplazar.
+    expect((screen.getByTestId('user-registration') as HTMLInputElement).value).toBe('REG-12345')
+    expect((screen.getByTestId('user-denomination') as HTMLInputElement).value).toBe('Anglican')
     const foto = screen.getAllByTestId('photo-upload').find(el => el.getAttribute('data-side') === 'registration')
     expect(foto).toBeTruthy()
-    expect(foto!.getAttribute('data-readonly')).toBe('true')
+    expect(foto!.getAttribute('data-userid')).toBe('1')
+    expect(screen.getByTestId('user-registration-delete')).toBeTruthy()
   })
 
   it('shows the church registration block for a co-pastor too', async () => {
@@ -226,7 +228,53 @@ describe('UserEditModal — church data depends on whether the church is registe
     await waitFor(() => {
       expect(screen.getByTestId('user-pastor-registration')).toBeTruthy()
     })
-    expect(screen.getByTestId('user-pastor-registration').textContent || '').toContain('REG-99999')
+    expect((screen.getByTestId('user-registration') as HTMLInputElement).value).toBe('REG-99999')
+  })
+
+  it('offers to create the church from the declared name and country, even without pastor contact', async () => {
+    mockAdminFetch.mockResolvedValue({})
+
+    await act(async () => {
+      render(React.createElement(UserEditModal, {
+        lang: 'en', t,
+        user: {
+          id: 1, nombre: 'Ana', church_relationship: 'pastor', pais_id: 694,
+          place_of_worship: 'Iglesia Nueva', place_of_worship_location: 'Freetown',
+        } as any,
+        onClose: () => {}, onSaved: () => {},
+      }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Create Church')).toBeTruthy()
+    })
+  })
+
+  it('saves the registration number and denomination the verifier edits', async () => {
+    mockAdminFetch.mockResolvedValue({})
+
+    await act(async () => {
+      render(React.createElement(UserEditModal, {
+        lang: 'en', t,
+        user: { id: 1, nombre: 'Ana', church_relationship: 'pastor', registration: 'REG-1', denomination: 'Anglican' } as any,
+        onClose: () => {}, onSaved: () => {},
+      }))
+    })
+
+    await waitFor(() => expect(screen.getByTestId('user-registration')).toBeTruthy())
+    fireEvent.change(screen.getByTestId('user-registration'), { target: { value: 'REG-777' } })
+    fireEvent.change(screen.getByTestId('user-denomination'), { target: { value: 'Methodist' } })
+    await act(async () => {
+      fireEvent.click(screen.getByText('save'))
+    })
+
+    await waitFor(() => {
+      const patch = mockAdminFetch.mock.calls.find((c: any[]) => c[1]?.method === 'PATCH')
+      expect(patch).toBeTruthy()
+      const body = JSON.parse((patch as any[])[1].body)
+      expect(body.registration).toBe('REG-777')
+      expect(body.denomination).toBe('Methodist')
+    })
   })
 
   it('hides the church registration block when the user is not a pastor', async () => {

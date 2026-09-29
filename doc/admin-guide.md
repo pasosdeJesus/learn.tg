@@ -43,7 +43,7 @@ standalone page). It is the place where a profile gets verified.
      of Worship*), and adds a block with the **pastor name and WhatsApp** so you
      can contact the pastor. For a lead pastor or co-pastor it also shows the
      **registration number, the denomination and the registration document
-     (read-only)**.
+     (editable by the verifier)**.
    - **Church already registered**: the modal shows only the church's canonical
      **name and location** and hides the declaration and the pastor contact.
 3. **Assign Church** (`ChurchSelector`): pick the existing church of that
@@ -66,7 +66,7 @@ standalone page). It is the place where a profile gets verified.
    (Christians: `church_id` + verified church role; others: verified place of
    worship). Saving recalculates the score (`recalculateProfileScore`).
 8. **ID documents**: front and back photos (Sierra Leone). The registration
-   document is shown in the pastor block above, read-only.
+   document is shown in the pastor block above, and can be replaced or deleted there.
 
 ## All Churches (`/{lang}/admin/churches`)
 
@@ -93,7 +93,9 @@ Confirming `registration_verified` is what unlocks the **22 SLEARN pastor bonus*
   absent, never "shorter".
 - **The pastor declares, the verifier confirms.** The registration number and
   denomination are edited by the pastor in their profile; the modal shows them
-  read-only. If a correction is needed, ask the pastor to fix it.
+  **editable by the verifier** (number, denomination and the document), so a pastor who
+  cannot upload it does not block the process. The pastor declares it first from the
+  profile.
 
 ## Where it lives
 

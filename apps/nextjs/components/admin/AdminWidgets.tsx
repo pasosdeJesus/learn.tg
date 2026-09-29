@@ -186,6 +186,9 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   const [saving, setSaving] = useState(false)
   const [creatingChurch, setCreatingChurch] = useState(false)
   const [registeredChurch, setRegisteredChurch] = useState<ChurchItem | null>(null)
+  // El documento de registro se puede reemplazar/borrar desde aquí (R-#152): el
+  // verificador ayuda al pastor que no logró subirlo o corrige el archivo.
+  const [registrationPhoto, setRegistrationPhoto] = useState<string | null>(null)
   const [churchRefresh, setChurchRefresh] = useState(0)
   const [msg, setMsg] = useState('')
   const { toast } = useToast()
@@ -228,6 +231,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.proposed_date_of_interview = dbTimestampToLocalInput(user.proposed_date_of_interview)
     initial.conducted_date_of_interview = dbTimestampToLocalInput(user.conducted_date_of_interview)
     setForm(initial)
+    setRegistrationPhoto(user.registration_photo || null)
   }, [user])
 
   // Con iglesia registrada el verificador ve los datos canónicos de esa iglesia
@@ -277,6 +281,24 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   })
   const setF = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
 
+  // El verificador puede borrar el documento de registro (R-#152): por ejemplo si el
+  // pastor subió el archivo equivocado. Se autentica con la sesión y `userId`.
+  const handleDeleteRegistration = async () => {
+    try {
+      const caller = typeof window === 'undefined' ? '' : localStorage.getItem('learn.tg.sessionAddress') || ''
+      const res = await fetch('/api/user/id-photo', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: caller, side: 'registration', userId: user.id }),
+      })
+      if (!res.ok) throw new Error(String(res.status))
+      setRegistrationPhoto(null)
+      setMsg(lang === 'es' ? 'Documento eliminado' : 'Document deleted')
+    } catch {
+      setMsg(lang === 'es' ? 'No se pudo eliminar el documento' : 'The document could not be deleted')
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     const body: Record<string, any> = {}
@@ -284,6 +306,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
       'position_israel_gaza',
       'passport_name', 'passport_nationality',
       'place_of_worship', 'place_of_worship_location', 'church_id', 'church_relationship',
+      'registration', 'denomination',
       'city_id',
       'proposed_date_of_interview', 'conducted_date_of_interview']) {
       if (form[k] !== undefined) body[k] = form[k] || null
@@ -461,10 +484,12 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
           />
         </div>
         {(() => {
-          const hasPastorInfo = (form.pastor_name || form.pastor_whatsapp) && !form.church_id
           const hasChurchName = form.place_of_worship
           const countryId = form.pais_id ? Number(form.pais_id) : null
-          if (!hasPastorInfo || !hasChurchName || !countryId) return null
+          // El contacto del pastor ya no es requisito para ofrecer crearla: el pastor
+          // puede no haberlo declarado (y ahora se muestra en su propio bloque).
+          // Lo que la iglesia necesita es nombre y país.
+          if (!hasChurchName || !countryId || form.church_id) return null
           return (
             <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
               <p className="text-xs text-gray-700 mb-2">
@@ -491,6 +516,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                         name: form.place_of_worship,
                         pastor_name: form.pastor_name,
                         pastor_whatsapp: form.pastor_whatsapp,
+                        denomination: form.denomination || null,
                         country_id: countryId,
                         city_name: form.place_of_worship_location || null,
                       }),
@@ -534,18 +560,32 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
           // desde su perfil; aquí el verificador lo revisa (y se copia a la iglesia al
           // asignarla). El pastor lo declara, el verificador no lo reemplaza.
           <div className="bg-gray-50 border rounded p-3 space-y-2" data-testid="user-pastor-registration">
-            <p className="text-xs text-gray-500">{lang === 'es' ? 'Registro de la iglesia (declarado por el pastor)' : 'Church registration (declared by the pastor)'}</p>
-            <p className="text-sm"><strong>{lang === 'es' ? 'Número' : 'Number'}:</strong> {form.registration || '…'}</p>
-            {form.denomination ? <p className="text-sm"><strong>{lang === 'es' ? 'Denominación' : 'Denomination'}:</strong> {form.denomination}</p> : null}
+            <p className="text-xs text-gray-500">{lang === 'es' ? 'Registro de la iglesia (lo declara el pastor; el verificador puede corregirlo)' : 'Church registration (declared by the pastor; the verifier can correct it)'}</p>
+            <label className="block text-xs text-gray-500">{lang === 'es' ? 'Número de registro' : 'Registration number'}
+              <input type="text" data-testid="user-registration" value={form.registration || ''}
+                onChange={e => setF('registration', e.target.value)}
+                className="mt-0.5 w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white" />
+            </label>
+            <label className="block text-xs text-gray-500">{lang === 'es' ? 'Denominación' : 'Denomination'}
+              <input type="text" data-testid="user-denomination" value={form.denomination || ''}
+                onChange={e => setF('denomination', e.target.value)}
+                className="mt-0.5 w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white" />
+            </label>
             <PhotoUpload
               label={lang === 'es' ? 'Documento de registro' : 'Registration document'}
-              existingPath={user.registration_photo || null}
+              existingPath={registrationPhoto}
               userId={user.id}
-              walletAddress={user.billetera || ''}
               side="registration"
               lang={lang}
-              readOnly
+              onUploaded={(path) => setRegistrationPhoto(path || null)}
             />
+            {registrationPhoto ? (
+              <button type="button" data-testid="user-registration-delete"
+                onClick={() => { void handleDeleteRegistration() }}
+                className="text-xs text-red-600 hover:underline">
+                {lang === 'es' ? 'Eliminar documento' : 'Delete document'}
+              </button>
+            ) : null}
           </div>
         )}
         <div>
@@ -577,7 +617,6 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
               label={lang === 'es' ? 'Foto Frontal' : 'Front Photo'}
               existingPath={(user as any).id_photo_front || null}
               userId={user.id}
-              walletAddress={user.billetera || ''}
               side="front"
               lang={lang}
             />
@@ -585,7 +624,6 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
               label={lang === 'es' ? 'Foto Reverso' : 'Back Photo'}
               existingPath={(user as any).id_photo_back || null}
               userId={user.id}
-              walletAddress={user.billetera || ''}
               side="back"
               lang={lang}
             />

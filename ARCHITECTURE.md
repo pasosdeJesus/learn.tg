@@ -351,8 +351,9 @@ Verifiers access `/en/admin` to manage users and churches. Key features:
   shows only that church's canonical name and location and hides the declared church
   data and the pastor contact. For a lead pastor (`church_relationship = 'pastor'`)
   the modal also shows the **church registration number and document** the pastor
-  declared on their profile (`usuario.registration` / `usuario.registration_photo`),
-  read-only; assigning a church copies those to the `church` record.
+  declared on their profile (`usuario.registration` / `usuario.registration_photo`);
+  the verifier can correct the number and the denomination and upload, replace or
+  delete the document, and assigning a church copies those to the `church` record.
 - **Church Edit Modal**: Edit church details, view members, delete (soft-delete)
 - **Calendar**: Verifier availability managed via CalDAV (Radicale)
 

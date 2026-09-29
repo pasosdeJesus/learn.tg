@@ -83,10 +83,12 @@ In the admin user modal (`components/admin/AdminWidgets.tsx`):
 
 - **No church yet** (`usuario.church_id` NULL): the modal shows the declared
   church name and town, the **pastor name and WhatsApp** and, for a
-  pastor/co-pastor, the **registration number and document (read-only)**. The
-  yellow panel calls `POST /api/admin/churches` (name, country, city, pastor name
-  and WhatsApp; the route also accepts `denomination`, which the modal does not
-  send) and assigns the new record.
+  pastor/co-pastor, the **registration number and document**. The number and the
+  denomination are editable, and the document can be uploaded, replaced or deleted
+  (an admin does it for a pastor who could not upload it). The
+  yellow panel calls `POST /api/admin/churches` (name, country, city, pastor name and
+  WhatsApp, denomination) and assigns the new record. The panel asks only for the church
+  name and the country; the pastor contact is optional.
 - **Church already registered**: the modal shows the canonical name and location
   and hides the declaration (see [admin-guide.md](admin-guide.md)).
 
@@ -153,17 +155,19 @@ of worship, 7 interview.
   `userId`, or the wallet must be a verifier in `NEXT_PUBLIC_VERIFIER_WALLET`).
 - Church registration documents served by
   `GET /api/admin/church/[id]/registration-photo` are admin-only.
-- The verifier sees the pastor's declaration read-only in the modal: the pastor
-  declares, the verifier does not edit it (`ADMIN_EDITABLE_FIELDS` in
-  `app/api/admin/user/[id]/route.ts` excludes `registration`, `registration_photo`
-  and `denomination`).
+- The verifier **can correct** the pastor's declaration: `registration` and
+  `denomination` are in `ADMIN_EDITABLE_FIELDS` (`app/api/admin/user/[id]/route.ts`),
+  and the document can be uploaded, replaced or deleted with
+  `POST`/`DELETE /api/user/id-photo` (`userId` names the pastor; the session is the
+  verifier's). The pastor declares it first from the profile; the verifier fixes it
+  when the pastor cannot.
 
 ## Endpoints
 
 | Endpoint | Auth | Purpose |
 |---|---|---|
 | `PATCH /api/profile` | authenticated (owner) | The learner declares or edits the declaration |
-| `POST /api/user/id-photo`, `DELETE /api/user/id-photo` | authenticated (owner) | Upload/delete the `front`, `back` and `registration` documents |
+| `POST /api/user/id-photo`, `DELETE /api/user/id-photo` | owner or admin | Upload/delete the `front`, `back` and `registration` documents (an admin passes the `userId`) |
 | `GET /api/user/id-photo/[userId]` | owner or admin | Serve a document |
 | `GET /api/admin/user/[id]` | admin | Read the declaration (registration, document, denomination included) |
 | `PATCH /api/admin/user/[id]` | admin | Assign the church (copies the registration data) and verify fields |
@@ -181,9 +185,10 @@ of worship, 7 interview.
    registration data (that is the assignment in step 2). Decide whether to remove
    it in favour of the admin route.
 2. **`POST /api/admin/churches` does not accept `registration` or
-   `registration_photo`** (it does accept `denomination`, but the admin modal does
-   not send it). They reach the church only through the copy on assignment
-   (step 2.4-2.5), which requires the verifier to save the user modal after
-   creating the church.
-3. **The verifier cannot edit the declaration** (`registration`,
-   `denomination`) from the modal; only the pastor can, from the profile.
+   `registration_photo`.** They reach the church only through the copy on assignment
+   (step 2.4-2.5), which requires the verifier to save the user modal after creating
+   the church.
+3. **`registration_photo` is only set through an upload.** The verifier modal and the
+   profile upload it (owner or admin); the path is never accepted from a request body.
+   Replacing the document with a different extension leaves the old file behind
+   (harmless, but a cleanup is pending).
