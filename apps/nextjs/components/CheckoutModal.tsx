@@ -17,6 +17,7 @@ import { GasInsufficientPanel } from '@/components/GasInsufficientPanel'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
+import { useExternalProvider } from '@/lib/external-provider'
 
 const SLEARN_DECIMALS = 2
 
@@ -66,6 +67,9 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       resultTx: 'View transaction',
       resultOk: 'OK',
       insufficient: 'You need to add USDT to your wallet to buy this course. Complete crosswords and claim your daily UBI to help gather the funds.',
+      createInApp: 'Create or import an in-app wallet',
+      createInAppHint: 'You need a wallet to buy. Create one inside learn.tg: it lives on this device and you unlock it with a password.',
+      orExternal: 'or connect your external wallet from the top menu',
       needMoreUsdt: 'You need {{0}} more USDT to complete the purchase.',
       yourCelo: 'Your CELO (gas)',
       enoughGas: 'Enough gas estimated',
@@ -98,6 +102,9 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       resultTx: 'Ver transacción',
       resultOk: 'OK',
       insufficient: 'Necesitas poner USDT en tu billetera para comprar este curso. Completa crucigramas y reclama tu UBI diario para ayudar a reunir los fondos.',
+      createInApp: 'Crear o importar la billetera de la aplicación',
+      createInAppHint: 'Para comprar necesitas una billetera. Créala dentro de learn.tg: vive en este dispositivo y la desbloqueas con una clave.',
+      orExternal: 'o conecta tu billetera externa desde el menú de arriba',
       needMoreUsdt: 'Necesitas {{0}} USDT más para completar la compra.',
       yourCelo: 'Tu CELO (gas)',
       enoughGas: 'Gas suficiente estimado',
@@ -120,6 +127,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const { provider: walletProvider } = useWalletProvider()
+  const { available: externalAvailable } = useExternalProvider()
   // Mensaje del pre-flight de red (distinto del error del pago).
   const [chainError, setChainError] = useState<string | null>(null)
   const { toast } = useToast()
@@ -469,6 +477,21 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
             >
               {biometricEnabled ? t('unlockInAppGesture') : t('unlockInApp')}
             </button>
+          </div>
+        )}
+
+        {(!address || !walletClient) && inAppStatus !== 'locked' && (
+          <div className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800" data-testid="wallet-missing">
+            {t('createInAppHint')}
+            <button
+              type="button"
+              data-testid="wallet-create-request"
+              onClick={openInAppWalletDialog}
+              className="ml-2 underline font-medium"
+            >
+              {t('createInApp')}
+            </button>
+            {externalAvailable && <span className="block text-xs mt-1">{t('orExternal')}</span>}
           </div>
         )}
 

@@ -392,6 +392,27 @@ describe('WalletDialog (R-#244)', () => {
   })
 
   // Importar también deja la clave en memoria: la misma elección, sin volver a pedirla.
+  // R-#270 §3.2: la puerta para importar la frase (y conservar la dirección e
+  // historial) debe estar a la vista al crear, con la guía de migración.
+  it('offers to import a recovery phrase while creating, with the guide link', () => {
+    renderDialog()
+
+    expect(screen.getByTestId('wallet-import-offer')).toHaveTextContent(/already have a wallet/i)
+    expect(screen.getByTestId('wallet-switch-import')).toHaveTextContent(/import/i)
+
+    fireEvent.click(screen.getByTestId('wallet-switch-import'))
+
+    expect(screen.getByTestId('wallet-mnemonic')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-import-security')).toHaveTextContent(/never leaves this device/i)
+    expect(screen.getByTestId('wallet-migration-guide')).toHaveAttribute('href', '/en/migration-in-app-wallet')
+  })
+
+  it('links the Spanish migration guide in Spanish', () => {
+    renderDialog('es')
+    fireEvent.click(screen.getByTestId('wallet-switch-import'))
+    expect(screen.getByTestId('wallet-migration-guide')).toHaveAttribute('href', '/es/migracion-billetera-app')
+  })
+
   it('asks how to unlock after importing', async () => {
     mocks.biometricAvailable = true
     mocks.importExisting.mockResolvedValue({ address: ADDRESS })

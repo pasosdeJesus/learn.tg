@@ -95,6 +95,9 @@ You do not need to install a wallet app to use learn.tg.
 
 1. Open the app and choose **Use in-app wallet** (while the app checks whether a
    wallet already exists the button just says **In-app wallet**).
+   > **Already have a wallet in MetaMask, Rabby, OKX, OneKey or Brave?** You can import
+   > its recovery phrase and keep the same address, history and scholarships: see
+   > `/en/migration-in-app-wallet` (or `/es/migracion-billetera-app`).
 2. Create a wallet with a **password (8 or more characters)**. Use the **eye** at the
    right of the field to check what you typed before continuing.
 3. The app asks **how you want to unlock this wallet**. If your phone can check your

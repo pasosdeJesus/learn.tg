@@ -35,6 +35,25 @@ describe('InAppWalletSetup', () => {
     expect(screen.getByTestId('recovery-warning').textContent).toMatch(/recovery phrase/i)
   })
 
+  // R-#270 §3.2: importar la frase (y conservar la dirección) debe estar a la vista.
+  it('offers to import while creating, with the guide link when the app provides it', async () => {
+    render(<InAppWalletSetup migrationHref="/en/migration-in-app-wallet" />)
+    await waitFor(() => expect(screen.getByTestId('in-app-wallet-setup')).toBeTruthy())
+
+    expect(screen.getByTestId('import-hint').textContent).toMatch(/already have a wallet/i)
+    fireEvent.click(screen.getByTestId('switch-to-import'))
+
+    expect(screen.getByTestId('import-security').textContent).toMatch(/never leaves this device/i)
+    expect(screen.getByTestId('migration-guide').getAttribute('href')).toBe('/en/migration-in-app-wallet')
+  })
+
+  it('does not invent a guide link when the app does not provide one', async () => {
+    render(<InAppWalletSetup />)
+    await waitFor(() => expect(screen.getByTestId('in-app-wallet-setup')).toBeTruthy())
+    fireEvent.click(screen.getByTestId('switch-to-import'))
+    expect(screen.queryByTestId('migration-guide')).toBeNull()
+  })
+
   it('creates a wallet and shows the recovery phrase', async () => {
     walletMock.createWallet.mockResolvedValue({ walletInfo: INFO, mnemonic: 'alpha beta gamma' })
     const onDone = vi.fn()

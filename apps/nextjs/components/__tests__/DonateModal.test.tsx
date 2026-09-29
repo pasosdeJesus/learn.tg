@@ -187,20 +187,22 @@ describe('DonateModal', () => {
   })
 
   describe('Wallet connection states', () => {
-    it('shows connect wallet message when no address', async () => {
+    it('offers to create an in-app wallet when there is no address', async () => {
       mockUseAccount.mockReturnValue({ address: undefined })
       await waitFor(() => {
         renderModal()
-        expect(screen.getByText(/Connect and sign with your wallet to donate/i)).toBeInTheDocument()
+        expect(screen.getByText(/You need a wallet to donate/i)).toBeInTheDocument()
       })
+      expect(screen.getByTestId('wallet-create-request')).toHaveTextContent(/create or import an in-app wallet/i)
     })
 
-    it('shows connect wallet message when no wallet client', async () => {
+    it('offers to create an in-app wallet when there is no wallet client', async () => {
       mockUseWalletClient.mockReturnValue({ data: undefined })
       await waitFor(() => {
         renderModal()
-        expect(screen.getByText(/Connect and sign with your wallet to donate/i)).toBeInTheDocument()
+        expect(screen.getByText(/You need a wallet to donate/i)).toBeInTheDocument()
       })
+      expect(screen.getByTestId('wallet-create-request')).toBeInTheDocument()
     })
 
     // R-#244: con la billetera in-app bloqueada no hay wallet client aunque haya
@@ -212,7 +214,7 @@ describe('DonateModal', () => {
         renderModal()
         expect(screen.getByText(/in-app wallet is locked/i)).toBeInTheDocument()
       })
-      expect(screen.queryByText(/Connect and sign with your wallet to donate/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/You need a wallet to donate/i)).not.toBeInTheDocument()
 
       const opened = vi.fn()
       window.addEventListener('learn-tg:open-in-app-wallet-dialog', opened)

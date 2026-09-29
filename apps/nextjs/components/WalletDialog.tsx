@@ -123,6 +123,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       passwordConfirm: 'Repeat the password',
       passwordShow: 'Show the password',
       passwordHide: 'Hide the password',
+      importOffer: 'Already have a wallet? Import your recovery phrase and keep the same address, history and scholarships.',
+      importSecurity: 'Your recovery phrase never leaves this device. learn.tg never sees it.',
+      migrationGuide: 'Step-by-step guide (MetaMask, Rabby, OKX, OneKey, Brave)',
       protectTitle: 'How do you want to unlock this wallet?',
       protectHint: 'The password is always the backup. If this device can check your fingerprint or face, you can leave the gesture as the usual way in.',
       protectGesture: 'With my fingerprint or Face ID (recommended)',
@@ -186,6 +189,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       passwordConfirm: 'Repite la clave',
       passwordShow: 'Mostrar la clave',
       passwordHide: 'Ocultar la clave',
+      importOffer: '¿Ya tienes billetera? Importa tu frase de recuperación y conserva la misma dirección, tu historial y tus becas.',
+      importSecurity: 'Tu frase de recuperación nunca sale de este dispositivo. learn.tg no la ve.',
+      migrationGuide: 'Guía paso a paso (MetaMask, Rabby, OKX, OneKey, Brave)',
       protectTitle: '¿Cómo quieres desbloquear esta billetera?',
       protectHint: 'La clave siempre queda de respaldo. Si este dispositivo puede verificar tu huella o tu rostro, puedes dejar el gesto como la forma habitual de entrar.',
       protectGesture: 'Con mi huella o Face ID (recomendado)',
@@ -535,6 +541,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   // El error del hook también se traduce: los códigos del camino biométrico
   // (`NotAllowedError`, `no-prf`…) no son texto para el usuario.
   const message = localError ?? (error ? translateError(error) : null)
+  // R-#270 §3.3.2: la guía servida por idioma (el diálogo no adivina la ruta).
+  const migrationHref = lang === 'es' ? '/es/migracion-billetera-app' : '/en/migration-in-app-wallet'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -690,6 +698,29 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                   {t('import')}
                 </Button>
               </div>
+            )}
+
+            {!showUnlock && !hasWallet && mode === 'create' && (
+              <p className="text-xs text-gray-600" data-testid="wallet-import-offer">
+                {t('importOffer')}{' '}
+                <button
+                  type="button"
+                  className="underline font-medium text-blue-600"
+                  data-testid="wallet-switch-import"
+                  onClick={() => setMode('import')}
+                >
+                  {t('import')}
+                </button>
+              </p>
+            )}
+
+            {!showUnlock && !hasWallet && mode === 'import' && (
+              <p className="text-xs text-gray-600" data-testid="wallet-import-security">
+                {t('importSecurity')}{' '}
+                <a href={migrationHref} className="underline text-blue-600" data-testid="wallet-migration-guide">
+                  {t('migrationGuide')}
+                </a>
+              </p>
             )}
 
             {!showUnlock && !hasWallet && mode === 'import' && (

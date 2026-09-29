@@ -8,6 +8,11 @@ the app and read guides offline, see [pwa-user-guide.md](pwa-user-guide.md).
 > [wallet-auth.md](wallet-auth.md); the library itself is in
 > [`packages/pdj-wallet/README.md`](../packages/pdj-wallet/README.md).
 
+> **Already have an external wallet** (MetaMask, Rabby, OKX, OneKey, Brave)? You can
+> bring it inside learn.tg and keep the same address, history and scholarships:
+> [Move your wallet into learn.tg](migration-in-app-wallet/en.md) (served as
+> `/en/migration-in-app-wallet` and `/es/migracion-billetera-app`).
+
 ## Create your wallet
 
 1. Open the app and choose **Use in-app wallet** (while it checks whether a wallet

@@ -7,6 +7,7 @@ import { getUniversalLink } from '@selfxyz/core'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { isWalletBrowser } from '@/lib/wallet-browser'
 import { logger } from '@pasosdejesus/m/debug'
 import {
   Dialog,
@@ -38,15 +39,9 @@ export function QRCodeDialog({
   const { toast } = useToast()
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
   const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
-  // Brave se detecta primero porque su wallet inyecta isMetaMask=true por compatibilidad
-  const isBrave = ua.includes('brave') || typeof (navigator as any).brave !== 'undefined'
-  const isWalletBrowser = !isBrave && typeof window !== 'undefined' && (
-    ['okx', 'onekey', 'metamask', 'trust wallet'].some(p => ua.includes(p)) ||
-    (window as any).ethereum?.isOneKey === true ||
-    (window as any).ethereum?.isOkxWallet === true ||
-    (window as any).ethereum?.isMetaMask === true ||
-    ua.includes('; wv')
-  )
+  // El navegador integrado de una billetera (R-#246 §3) vive en `lib/wallet-browser.ts`
+  // para que el diálogo de la billetera y los modales de pago usen la misma regla.
+  const walletBrowser = isWalletBrowser()
 
   useEffect(() => {
     if (open !== prevOpenRef.current) {
@@ -59,11 +54,11 @@ export function QRCodeDialog({
         logger.info('DIAG: uaIncludesBrave=' + ua.includes('brave') + ' navigator.brave=' + typeof (navigator as any).brave, 'SelfVerify')
         logger.info('DIAG: uaIncludesWv=' + ua.includes('; wv') + ' uaIncludesMetaMask=' + ua.includes('metamask') + ' uaIncludesOneKey=' + ua.includes('onekey') + ' uaIncludesOKX=' + ua.includes('okx'), 'SelfVerify')
         logger.info('DIAG: ethereum.isMetaMask=' + ((window as any).ethereum?.isMetaMask) + ' ethereum.isOneKey=' + ((window as any).ethereum?.isOneKey) + ' ethereum.isOkxWallet=' + ((window as any).ethereum?.isOkxWallet), 'SelfVerify')
-        logger.info('DIAG: isWalletBrowser=' + isWalletBrowser, 'SelfVerify')
+        logger.info('DIAG: isWalletBrowser=' + walletBrowser, 'SelfVerify')
       }
       prevOpenRef.current = open
     }
-  }, [open, selfApp, isMobile, isWalletBrowser, ua])
+  }, [open, selfApp, isMobile, walletBrowser, ua])
 
   const handleCancel = () => {
     logger.info('QR dialog cancelled by user', 'SelfVerify')
@@ -156,12 +151,12 @@ export function QRCodeDialog({
                   />
                 </React.Suspense>
               )}
-              {isMobile && !isWalletBrowser && (
+              {isMobile && !walletBrowser && (
                 <Button onClick={handleOpenSelf} type="button" className="w-full" size="lg">
                   {t('openSelf')}
                 </Button>
               )}
-              {isMobile && isWalletBrowser && (
+              {isMobile && walletBrowser && (
                 <div className="space-y-3">
                   <React.Suspense fallback={<div className="text-center py-4 text-muted-foreground">Loading QR code...</div>}>
                     <SelfQRcodeWrapper

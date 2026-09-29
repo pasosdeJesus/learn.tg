@@ -20,6 +20,9 @@ const MESSAGES = {
     unlock: 'Unlock',
     wrongPassword: 'Wrong password',
     useInAppWallet: 'Use in-app wallet',
+    alreadyHave: 'Already have a wallet? Import your recovery phrase to keep your history.',
+    importSecurity: 'Your recovery phrase never leaves this device.',
+    migrationGuide: 'Step-by-step guide',
   },
   es: {
     createTitle: 'Crear billetera en la aplicación',
@@ -40,6 +43,9 @@ const MESSAGES = {
     unlock: 'Desbloquear',
     wrongPassword: 'Clave incorrecta',
     useInAppWallet: 'Usar billetera de la aplicación',
+    alreadyHave: '¿Ya tienes billetera? Importa tu frase de recuperación para conservar tu historial.',
+    importSecurity: 'Tu frase de recuperación nunca sale de este dispositivo.',
+    migrationGuide: 'Guía paso a paso',
   },
 } as const
 

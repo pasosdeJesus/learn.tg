@@ -14,6 +14,7 @@ import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
 import { ensureWalletChain, WrongChainError } from '@/lib/ensure-chain'
 import { getAppChain } from '@/lib/app-chain'
 import { useWalletProvider } from '@/lib/hooks/useWalletProvider'
+import { useExternalProvider } from '@/lib/external-provider'
 import { TransactionStatus } from '@/components/ui/TransactionStatus'
 import { GasInsufficientPanel } from '@/components/GasInsufficientPanel'
 // donation-target vive en el motor gdcluster (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3); los componentes
@@ -83,6 +84,7 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const { provider: walletProvider } = useWalletProvider()
+  const { available: externalAvailable } = useExternalProvider()
   const [usdtDecimals, setUsdtDecimals] = useState<number>(+(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6))
   const [usdtBalance, setUsdtBalance] = useState<bigint>(0n)
   const [slearnBalance, setSlearnBalance] = useState<bigint>(0n)
@@ -342,6 +344,9 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const t = createComponentT(lang || 'en', {
     en: {
       connectSign: 'Connect and sign with your wallet to donate',
+      createInApp: 'Create or import an in-app wallet',
+      createInAppHint: 'You need a wallet to donate. Create one inside learn.tg: it lives on this device and you unlock it with a password.',
+      orExternal: 'or connect your external wallet from the top menu',
       wrongChain: 'Your wallet is on another network. Switch it to Celo and try again.',
       wrongChainInApp: 'We could not switch your in-app wallet to the Celo network. Try again, or donate with an external wallet on the Celo network.',
       inAppLocked: 'Your in-app wallet is locked. Unlock it with your password to donate.',
@@ -390,6 +395,9 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     },
     es: {
       connectSign: 'Conecta y firma con tu billetera para donar',
+      createInApp: 'Crear o importar la billetera de la aplicación',
+      createInAppHint: 'Para donar necesitas una billetera. Créala dentro de learn.tg: vive en este dispositivo y la desbloqueas con una clave.',
+      orExternal: 'o conecta tu billetera externa desde el menú de arriba',
       wrongChain: 'Tu billetera está en otra red. Cámbiala a Celo e inténtalo de nuevo.',
       wrongChainInApp: 'No pudimos cambiar tu billetera de la app a la red Celo. Inténtalo de nuevo, o dona con una billetera externa en la red Celo.',
       inAppLocked: 'Tu billetera de la aplicación está bloqueada. Desbloquéala con tu password para donar.',
@@ -627,7 +635,18 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
             <h2 className="text-xl font-semibold mb-4">{tCopy?.title || t('donateToCourse')}</h2>
 
         {(!address || !walletClient) && inAppStatus !== 'locked' && (
-          <div className="text-sm text-red-600 mb-4">{t('connectSign')}</div>
+          <div className="text-sm text-amber-800 bg-amber-100 rounded p-3 mb-4" data-testid="wallet-missing">
+            {t('createInAppHint')}
+            <button
+              type="button"
+              data-testid="wallet-create-request"
+              onClick={openInAppWalletDialog}
+              className="ml-2 underline font-medium"
+            >
+              {t('createInApp')}
+            </button>
+            {externalAvailable && <span className="block text-xs mt-1">{t('orExternal')}</span>}
+          </div>
         )}
         {!walletClient && inAppStatus === 'locked' && (
           <div className="text-sm text-amber-800 bg-amber-100 rounded p-3 mb-4">

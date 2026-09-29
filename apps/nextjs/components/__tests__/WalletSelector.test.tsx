@@ -66,6 +66,7 @@ import { WalletSelector } from '../WalletSelector'
 import { OPEN_IN_APP_WALLET_DIALOG } from '@/lib/in-app-wallet-dialog'
 
 const ADDRESS = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'
+const ORIGINAL_UA = navigator.userAgent
 
 describe('WalletSelector (R-#238/R-#244)', () => {
   beforeEach(() => {
@@ -79,6 +80,7 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     mocks.panelAddress = ''
     mocks.externalAvailable = false
     window.history.pushState({}, '', '/en')
+    Object.defineProperty(navigator, 'userAgent', { value: ORIGINAL_UA, configurable: true })
     Object.defineProperty(window, 'ethereum', { value: undefined, configurable: true })
   })
 
@@ -185,22 +187,36 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     expect(screen.getByTestId('wallet-dialog-open')).toBeInTheDocument()
   })
 
-  // R-#246 §3 (2026-09-19): en un navegador que ya trae billetera inyectada
-  // (OKX, Rabby, MetaMask…) la de la aplicación solo se ofrece si el URL la pide
-  // con `?iappwallet=1`; sin billetera inyectada sigue siendo el único camino.
-  it('offers the in-app wallet only without an injected wallet (or with ?iappwallet=1)', () => {
+  // R-#270 §3.1: la billetera de la aplicación es la opción por defecto; la externa
+  // manda sólo en el navegador propio de una billetera (R-#246 §3).
+  it('defaults to the in-app wallet with an injected provider, and to the external one in a wallet browser', () => {
     mocks.externalAvailable = false
     render(<WalletSelector lang="en" />)
     expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/use in-app wallet/i)
     expect(screen.queryByTestId('wallet-use-external')).not.toBeInTheDocument()
 
+    // Chrome de escritorio con extensión inyectada: NO es navegador de billetera.
     cleanup()
     mocks.externalAvailable = true
+    render(<WalletSelector lang="en" />)
+    expect(screen.getByTestId('wallet-selector')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-open-dialog')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-use-external')).toHaveTextContent(/use external wallet/i)
+    expect(screen.getByTestId('wallet-import-hint')).toHaveTextContent(/import your recovery phrase/i)
+
+    // Navegador propio de MetaMask: manda la externa, con la in-app como alternativa.
+    cleanup()
+    Object.defineProperty(navigator, 'userAgent', { value: 'Mozilla/5.0 (Linux; Android 13) MetaMask/7.0', configurable: true })
     render(<WalletSelector lang="en" />)
     expect(screen.getByTestId('wallet-selector-external')).toBeInTheDocument()
     expect(screen.getByTestId('connect-wallet-btn')).toBeInTheDocument()
     expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
+    expect(screen.getByTestId('wallet-browser-note')).toBeInTheDocument()
 
+    fireEvent.click(screen.getByTestId('wallet-use-in-app'))
+    expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/use in-app wallet/i)
+
+    // `?iappwallet=1` fuerza la in-app incluso en un navegador de billetera.
     cleanup()
     window.history.pushState({}, '', '/en?iappwallet=1')
     render(<WalletSelector lang="en" />)

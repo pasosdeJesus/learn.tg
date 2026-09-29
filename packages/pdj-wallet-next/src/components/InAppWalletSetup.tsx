@@ -8,9 +8,11 @@ import { useInAppWallet } from '../useInAppWallet.js'
 export interface InAppWalletSetupProps {
   lang?: Lang
   onDone?: (address: `0x${string}`) => void
+  /** La aplicación decide a qué guía de migración apuntar; el paquete no fija rutas. */
+  migrationHref?: string
 }
 
-export function InAppWalletSetup({ lang = 'en', onDone }: InAppWalletSetupProps) {
+export function InAppWalletSetup({ lang = 'en', onDone, migrationHref }: InAppWalletSetupProps) {
   const { create, importExisting, error } = useInAppWallet()
   const [mode, setMode] = useState<'create' | 'import'>('create')
   const [password, setPassword] = useState('')
@@ -68,8 +70,28 @@ export function InAppWalletSetup({ lang = 'en', onDone }: InAppWalletSetupProps)
         </button>
       </div>
 
+      {mode === 'create' && (
+        <p data-testid="import-hint">
+          {t(lang, 'alreadyHave')}{' '}
+          <button type="button" data-testid="switch-to-import" onClick={() => setMode('import')}>
+            {t(lang, 'import')}
+          </button>
+        </p>
+      )}
+
       {mode === 'import' && (
         <>
+          <p data-testid="import-security">
+            {t(lang, 'importSecurity')}
+            {migrationHref && (
+              <>
+                {' '}
+                <a href={migrationHref} data-testid="migration-guide">
+                  {t(lang, 'migrationGuide')}
+                </a>
+              </>
+            )}
+          </p>
           <label>
             {t(lang, 'mnemonic')}
             <textarea

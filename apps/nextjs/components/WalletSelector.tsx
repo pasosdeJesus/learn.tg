@@ -10,6 +10,7 @@ import { WalletPanel } from '@/components/WalletPanel'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { clearRestrictedCourseCopies } from '@/lib/offline-course-db'
 import { useExternalProvider } from '@/lib/external-provider'
+import { isWalletBrowser } from '@/lib/wallet-browser'
 import { OPEN_IN_APP_WALLET_DIALOG } from '@/lib/in-app-wallet-dialog'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
@@ -55,6 +56,8 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       useExternal: 'Use external wallet',
       disconnect: 'Disconnect',
       openWallet: 'In-app wallet options',
+      walletBrowserNote: 'In this browser the in-app wallet has no fingerprint or Face ID: you would unlock it with the password.',
+      haveWalletImport: 'Already have a wallet? Import your recovery phrase',
     },
     es: {
       useInApp: 'Usar billetera de la aplicación',
@@ -64,6 +67,8 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       useExternal: 'Usar billetera externa',
       disconnect: 'Desconectar',
       openWallet: 'Opciones de la billetera de la aplicación',
+      walletBrowserNote: 'En este navegador la billetera de la aplicación no tiene huella ni Face ID: la desbloquearías con la clave.',
+      haveWalletImport: '¿Ya tienes billetera? Importa tu frase de recuperación',
     },
   }), [lang])
 
@@ -96,13 +101,24 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   // billetera de la aplicación se conserva su interfaz para no dejarla inaccesible.
   // El estado va aquí arriba (antes de los `return` de abajo) para que el número de
   // hooks no cambie entre renders.
+  // R-#270 §3.1: la billetera de la aplicación es la opción por defecto; la externa
+  // manda sólo dentro del navegador propio de una billetera (R-#246 §3), donde el
+  // usuario ya vive con esa billetera. El contacto del navegador se lee al montar
+  // para no romper la hidratación, y el usuario puede pedir la in-app con
+  // `?iappwallet=1` o con el botón secundario.
   const [inAppRequested, setInAppRequested] = useState(false)
+  const [inAppChosen, setInAppChosen] = useState(false)
+  const [walletBrowser, setWalletBrowser] = useState(false)
   useEffect(() => {
     if (typeof window === 'undefined') return
     setInAppRequested(new URLSearchParams(window.location.search).get('iappwallet') === '1')
+    setWalletBrowser(isWalletBrowser())
   }, [])
   const hasInAppWallet = status === 'locked' || status === 'unlocked'
-  const offerInApp = !externalAvailable || inAppRequested || hasInAppWallet
+  // El navegador de una billetera conserva la del dispositivo como principal, salvo
+  // que el URL pida la in-app, el usuario la elija o ya tenga una en este equipo.
+  const externalPrimary = externalAvailable && walletBrowser && !inAppRequested && !inAppChosen && !hasInAppWallet
+  const migrationHref = lang === 'es' ? '/es/migracion-billetera-app' : '/en/migration-in-app-wallet'
 
   if (external) {
     return <ConnectWalletButton lang={lang} />
@@ -170,10 +186,26 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
 
   return (
     <div
-      data-testid={offerInApp ? 'wallet-selector' : 'wallet-selector-external'}
+      data-testid={externalPrimary ? 'wallet-selector-external' : 'wallet-selector'}
       className="flex items-center gap-2"
     >
-      {offerInApp ? (
+      {externalPrimary ? (
+        <>
+          <ConnectWalletButton lang={lang} />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-gray-600 hover:bg-gray-100"
+            data-testid="wallet-use-in-app"
+            onClick={() => setInAppChosen(true)}
+          >
+            {t('useInApp')}
+          </Button>
+          <span className="text-[10px] text-gray-500 max-w-[16rem]" data-testid="wallet-browser-note">
+            {t('walletBrowserNote')}
+          </span>
+        </>
+      ) : (
         <>
           <Button size="sm" data-testid="wallet-open-dialog" disabled={booting} onClick={() => setDialogOpen(true)}>
             {label}
@@ -189,9 +221,18 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
               {t('useExternal')}
             </Button>
           )}
+          {/* R-#270 §3.1: con una billetera inyectada a la vista, la puerta para
+              conservar la dirección e historial debe estar a un clic. */}
+          {externalAvailable && (
+            <a
+              href={migrationHref}
+              className="text-[10px] text-blue-600 hover:underline max-w-[14rem]"
+              data-testid="wallet-import-hint"
+            >
+              {t('haveWalletImport')}
+            </a>
+          )}
         </>
-      ) : (
-        <ConnectWalletButton lang={lang} />
       )}
       <WalletDialog lang={lang} open={dialogOpen} onOpenChange={setDialogOpen} sessionAddress={sessionAddress} />
     </div>
