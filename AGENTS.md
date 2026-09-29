@@ -55,8 +55,10 @@ Jesus is God incarnated, the Truth and the Logos.
 22. **[apps/nextjs/app/api/doc/crossword-reward-flow.md]**: flujo de recompensas del crucigrama — validación contra `answer_fib`, vault V5, credencial SBT, ruteo GD a ClusterFundsV2 y atribución de referidos. Vive en el submódulo `app/api` porque documenta sus rutas.
 23. **[doc/csp.md]**: Content Security Policy — diseño acordado (https://github.com/pasosdeJesus/learn.tg/issues/247), estado (aún no se sirve la cabecera) y cómo cambiar la política.
 24. **[apps/nextjs/CONTRIBUTING.md]**: Documentation and testing policy of the app — what we document and where, coverage targets per layer, the `*.light.test.tsx` fast-test convention, and how to run each suite.
-25. Read the structure and key files of this project
-26. **[.crushrules]** (repository root): **local and gitignored — never commit it.** The
+25. **[doc/church-registration.md]**: protocol for church registration and pastors — the declaration on the profile, how the verifier creates or assigns the church, the copy of the registration data, the 22 SLEARN pastor bonus and the document privacy rules.
+26. **[doc/admin-guide.md]**: manual for the verifier dashboard (`/{lang}/admin`) — widgets, the user modal (church data by registration state, verification checkboxes and profile score), churches and the day-to-day tasks.
+27. Read the structure and key files of this project
+28. **[.crushrules]** (repository root): **local and gitignored — never commit it.** The
     private domain context and the only place where the neutral vocabulary of the
     sensitive features is explained (`contenido_sensible`/category B,
     `tipo_region`/region 1-2). Consult it before renaming, adding or documenting those

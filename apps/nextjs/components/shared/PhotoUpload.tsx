@@ -7,12 +7,14 @@ interface PhotoUploadProps {
   existingPath?: string | null
   userId: number | string
   walletAddress?: string
-  side: 'front' | 'back'
+  side: 'front' | 'back' | 'registration'
   lang?: string
   onUploaded?: (path: string) => void
+  /** Solo lectura: muestra el documento sin ofrecer reemplazarlo (verificador). */
+  readOnly?: boolean
 }
 
-export function PhotoUpload({ label, existingPath, userId, walletAddress, side, lang, onUploaded }: PhotoUploadProps) {
+export function PhotoUpload({ label, existingPath, userId, walletAddress, side, lang, onUploaded, readOnly = false }: PhotoUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const isEs = lang === 'es'
@@ -57,14 +59,20 @@ export function PhotoUpload({ label, existingPath, userId, walletAddress, side, 
       <label className="block text-xs text-gray-500 mb-1">{label}</label>
       {photoUrl ? (
         <div className="flex items-center gap-2">
-          <a href={photoUrl} target="_blank" rel="noopener noreferrer">
+          <a href={photoUrl} target="_blank" rel="noopener noreferrer" data-testid="photo-link">
             <img src={photoUrl} alt={label} className="h-16 w-12 object-cover rounded border hover:opacity-80 cursor-pointer" />
           </a>
-          <label className="text-xs text-blue-600 cursor-pointer hover:underline">
-            {isEs ? 'Cambiar' : 'Change'}
-            <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
-          </label>
+          {!readOnly && (
+            <label className="text-xs text-blue-600 cursor-pointer hover:underline">
+              {isEs ? 'Cambiar' : 'Change'}
+              <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
+            </label>
+          )}
         </div>
+      ) : readOnly ? (
+        <span className="text-xs text-gray-500" data-testid="photo-missing">
+          {isEs ? 'Sin documento' : 'No document'}
+        </span>
       ) : (
         <label className="inline-block text-xs text-blue-600 cursor-pointer hover:underline">
           {uploading ? (isEs ? 'Subiendo...' : 'Uploading...') : (isEs ? 'Seleccionar archivo' : 'Choose file')}

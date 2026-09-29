@@ -104,7 +104,7 @@ test-api:
 	pnpm vitest run app/api
 
 test-components:
-	pnpm vitest run components/__tests__ components/ui/__tests__ providers/__tests__
+	pnpm vitest run components/__tests__ components/admin/__tests__ components/ui/__tests__ providers/__tests__
 
 test-pages:
 	pnpm vitest run app/__tests__ \

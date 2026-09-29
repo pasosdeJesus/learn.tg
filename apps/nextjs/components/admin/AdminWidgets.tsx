@@ -28,6 +28,7 @@ export interface UserItem {
   passport_name?: string; passport_nationality?: number | string
   place_of_worship?: string
   pastor_name?: string; pastor_whatsapp?: string
+  registration?: string; registration_photo?: string; denomination?: string
   verified_whatsapp?: string; verified_telegram?: string; verified_email?: string
   verified_city_id?: number | string; verified_place_of_worship?: string
   verified_church_relationship?: string
@@ -35,7 +36,7 @@ export interface UserItem {
 
 export interface ChurchItem {
   id: number; name?: string; pastor_name?: string; pastor_whatsapp?: string
-  pastor_telegram?: string; city_name?: string; denomination?: string
+  pastor_telegram?: string; city_name?: string; city_db_name?: string; denomination?: string
   country_name?: string; registration?: string; registration_photo?: string; registration_verified?: boolean
   created_at?: string
 }
@@ -184,6 +185,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   const [form, setForm] = useState<Record<string, any>>({})
   const [saving, setSaving] = useState(false)
   const [creatingChurch, setCreatingChurch] = useState(false)
+  const [registeredChurch, setRegisteredChurch] = useState<ChurchItem | null>(null)
   const [churchRefresh, setChurchRefresh] = useState(0)
   const [msg, setMsg] = useState('')
   const { toast } = useToast()
@@ -220,11 +222,27 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.pastor_name = user.pastor_name || ''
     initial.pastor_whatsapp = user.pastor_whatsapp || ''
     initial.church_relationship = user.church_relationship || ''
+    initial.registration = user.registration || ''
+    initial.denomination = user.denomination || ''
     initial.church_id = user.church_id || ''
     initial.proposed_date_of_interview = dbTimestampToLocalInput(user.proposed_date_of_interview)
     initial.conducted_date_of_interview = dbTimestampToLocalInput(user.conducted_date_of_interview)
     setForm(initial)
   }, [user])
+
+  // Con iglesia registrada el verificador ve los datos canónicos de esa iglesia
+  // (nombre y ubicación) en vez de la declaración del usuario, y no ve el contacto
+  // del pastor: ese contacto solo se necesita mientras la iglesia no exista.
+  useEffect(() => {
+    const id = form.church_id ? Number(form.church_id) : null
+    if (!id) { setRegisteredChurch(null); return }
+    if (registeredChurch?.id === id) return
+    let cancelled = false
+    adminFetch(`/api/admin/church/${id}`)
+      .then((ch: ChurchItem) => { if (!cancelled) setRegisteredChurch(ch) })
+      .catch(() => { if (!cancelled) setRegisteredChurch(null) })
+    return () => { cancelled = true }
+  }, [form.church_id, registeredChurch?.id])
 
   // Checkbox checked = verified value is a non-empty, non-boolean string
   const isChecked = (key: string) => {
@@ -384,29 +402,50 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             </div>
           </div>
         </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Ciudad del Lugar de Culto' : 'City of Place of Worship'}</label>
-          <TownAutocomplete
-            value={form.place_of_worship_location || ''}
-            cityId={form.city_id ? Number(form.city_id) : null}
-            countryId={form.pais_id ? Number(form.pais_id) : null}
-            lang={lang}
-            placeholder={lang === 'es'
-              ? 'Escribe al menos 2 letras y elige de la lista (ej: Free… → Freetown)'
-              : 'Type at least 2 letters and pick from the list (e.g. Free… → Freetown)'}
-            onChange={(cityId, cityName) => {
-              setF('place_of_worship_location', cityName)
-              setF('city_id', cityId != null ? String(cityId) : '')
-              if (isChecked('verified_place_of_worship')) setF('verified_place_of_worship', '')
-            }}
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Lugar de Culto' : 'Place of Worship'}</label>
-          <input type="text" value={form.place_of_worship || ''} onChange={e => setF('place_of_worship', e.target.value)}
-            className="w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white"
-            placeholder={lang === 'es' ? 'Nombre de iglesia/mezquita...' : 'Church/mosque name...'} />
-        </div>
+        {form.church_id ? (
+          // Iglesia ya registrada: solo los datos canónicos (nombre y ubicación).
+          <div className="bg-gray-50 border rounded p-3 text-sm" data-testid="user-church-registered">
+            <p className="text-xs text-gray-500 mb-1">{lang === 'es' ? 'Iglesia registrada' : 'Registered church'}</p>
+            <p><strong>{lang === 'es' ? 'Nombre' : 'Name'}:</strong> {registeredChurch?.name || '…'}</p>
+            <p><strong>{lang === 'es' ? 'Ciudad' : 'City'}:</strong> {registeredChurch?.city_name || registeredChurch?.city_db_name || '…'}</p>
+            {registeredChurch?.country_name ? <p><strong>{lang === 'es' ? 'País' : 'Country'}:</strong> {registeredChurch.country_name}</p> : null}
+          </div>
+        ) : (
+          // Iglesia aún no registrada: la declaración del usuario, más el contacto
+          // del pastor para poder crearla.
+          <>
+            <div>
+              <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Ciudad del Lugar de Culto' : 'City of Place of Worship'}</label>
+              <TownAutocomplete
+                value={form.place_of_worship_location || ''}
+                cityId={form.city_id ? Number(form.city_id) : null}
+                countryId={form.pais_id ? Number(form.pais_id) : null}
+                lang={lang}
+                placeholder={lang === 'es'
+                  ? 'Escribe al menos 2 letras y elige de la lista (ej: Free… → Freetown)'
+                  : 'Type at least 2 letters and pick from the list (e.g. Free… → Freetown)'}
+                onChange={(cityId, cityName) => {
+                  setF('place_of_worship_location', cityName)
+                  setF('city_id', cityId != null ? String(cityId) : '')
+                  if (isChecked('verified_place_of_worship')) setF('verified_place_of_worship', '')
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Lugar de Culto' : 'Place of Worship'}</label>
+              <input type="text" value={form.place_of_worship || ''} onChange={e => setF('place_of_worship', e.target.value)}
+                className="w-full border rounded px-2 py-1 text-sm text-gray-900 bg-white"
+                placeholder={lang === 'es' ? 'Nombre de iglesia/mezquita...' : 'Church/mosque name...'} />
+            </div>
+            {(form.pastor_name || form.pastor_whatsapp) ? (
+              <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm" data-testid="user-pastor-info">
+                <p className="text-xs text-gray-500 mb-1">{lang === 'es' ? 'Pastor (iglesia aún no registrada)' : 'Pastor (church not registered yet)'}</p>
+                {form.pastor_name ? <p><strong>Pastor:</strong> {form.pastor_name}</p> : null}
+                {form.pastor_whatsapp ? <p><strong>WhatsApp:</strong> {form.pastor_whatsapp}</p> : null}
+              </div>
+            ) : null}
+          </>
+        )}
         <div>
           <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Asignar Iglesia' : 'Assign Church'}</label>
           <ChurchSelector
@@ -415,17 +454,9 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             cityId={null}
             lang={lang}
             refreshKey={churchRefresh}
-            onChange={async (id, name) => {
+            onChange={(id, name) => {
               setF('church_id', String(id || ''))
               if (name) setF('place_of_worship', name)
-              // Auto-fill pastor info from church
-              if (id) {
-                try {
-                  const church = await adminFetch(`/api/admin/church/${id}`)
-                  if (church.pastor_name) setF('pastor_name', church.pastor_name)
-                  if (church.pastor_whatsapp) setF('pastor_whatsapp', church.pastor_whatsapp)
-                } catch {}
-              }
             }}
           />
         </div>
@@ -498,6 +529,25 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
           <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Rol en Iglesia' : 'Church Role'}</label>
           <ChurchRoleSelect value={form.church_relationship || null} onChange={v => setF('church_relationship', v || '')} lang={lang} />
         </div>
+        {(form.church_relationship === 'pastor' || form.church_relationship === 'co_pastor') && (
+          // R-#152/R-#192: el registro de la iglesia lo declara el pastor (o co-pastor)
+          // desde su perfil; aquí el verificador lo revisa (y se copia a la iglesia al
+          // asignarla). El pastor lo declara, el verificador no lo reemplaza.
+          <div className="bg-gray-50 border rounded p-3 space-y-2" data-testid="user-pastor-registration">
+            <p className="text-xs text-gray-500">{lang === 'es' ? 'Registro de la iglesia (declarado por el pastor)' : 'Church registration (declared by the pastor)'}</p>
+            <p className="text-sm"><strong>{lang === 'es' ? 'Número' : 'Number'}:</strong> {form.registration || '…'}</p>
+            {form.denomination ? <p className="text-sm"><strong>{lang === 'es' ? 'Denominación' : 'Denomination'}:</strong> {form.denomination}</p> : null}
+            <PhotoUpload
+              label={lang === 'es' ? 'Documento de registro' : 'Registration document'}
+              existingPath={user.registration_photo || null}
+              userId={user.id}
+              walletAddress={user.billetera || ''}
+              side="registration"
+              lang={lang}
+              readOnly
+            />
+          </div>
+        )}
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('verifiedFields')}</h4>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">

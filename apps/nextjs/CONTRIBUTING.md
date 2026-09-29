@@ -167,9 +167,9 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
-**Suite size (medido 2026-09-28):** `make test` = **1199 passed / 6 skipped, 0
-failed** en 164 archivos — `test-lib` 283, `test-hooks` 93, `test-api` 249,
-`test-components` 215, `test-pages` 69, `test-db` 3, `test-pdj-wallet` 90,
+**Suite size (medido 2026-09-29):** `make test` = **1215 passed / 6 skipped, 0
+failed** en 166 archivos — `test-lib` 283, `test-hooks` 93, `test-api` 254,
+`test-components` 226, `test-pages` 69, `test-db` 3, `test-pdj-wallet` 90,
 `test-pdj-wallet-next` 24, `test-rewards` 82, `test-gdcluster` 91.
 
 | Layer | Statements | Notes |
@@ -201,7 +201,7 @@ make test           # Run all tests (app sub-targets + test-packages, in sequenc
 make test-lib       # Only lib/__tests__
 make test-hooks     # Only lib/hooks/__tests__
 make test-api       # Only app/api
-make test-components # Only components/__tests__ + components/ui/__tests__ + providers/__tests__
+make test-components # Only components/__tests__ + components/admin/__tests__ + components/ui/__tests__ + providers/__tests__
 make test-pages     # Only app/__tests__ + app/[lang]/**/__tests__
 make test-db        # Only db/__tests__
 make test-packages  # Only packages/pdj-wallet + packages/pdj-wallet-next

@@ -344,10 +344,21 @@ Verifiers access `/en/admin` to manage users and churches. Key features:
 - **Pending Verifications**: Users who requested interviews
 - **Recent Users / Churches**: Quick access to recently modified records
 - **User Edit Modal**: Edit profile fields, verify data (checkboxes), assign churches, schedule interviews
+- **Church data in the user modal**: while the user's church is not in the `church`
+  table yet (`usuario.church_id` empty) the modal shows the declared church name and
+  the autocompleted city, plus the **pastor name and WhatsApp** so the verifier can
+  contact the pastor and create the church; once the church is registered the modal
+  shows only that church's canonical name and location and hides the declared church
+  data and the pastor contact. For a lead pastor (`church_relationship = 'pastor'`)
+  the modal also shows the **church registration number and document** the pastor
+  declared on their profile (`usuario.registration` / `usuario.registration_photo`),
+  read-only; assigning a church copies those to the `church` record.
 - **Church Edit Modal**: Edit church details, view members, delete (soft-delete)
 - **Calendar**: Verifier availability managed via CalDAV (Radicale)
 
-See [Admin API](apps/nextjs/app/api/admin/) for endpoint details.
+See [Admin API](apps/nextjs/app/api/admin/) for endpoint details. Verifier manual:
+[doc/admin-guide.md](doc/admin-guide.md); church and pastor protocol:
+[doc/church-registration.md](doc/church-registration.md).
 
 ### Additional Database Tables
 
