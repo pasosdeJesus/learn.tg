@@ -66,6 +66,7 @@ import { WalletSelector } from '../WalletSelector'
 import { OPEN_IN_APP_WALLET_DIALOG } from '@/lib/in-app-wallet-dialog'
 
 const ADDRESS = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'
+const DESKTOP_CHROME = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36'
 const ORIGINAL_UA = navigator.userAgent
 
 describe('WalletSelector (R-#238/R-#244)', () => {
@@ -195,9 +196,12 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/use in-app wallet/i)
     expect(screen.queryByTestId('wallet-use-external')).not.toBeInTheDocument()
 
-    // Chrome de escritorio con extensión inyectada: NO es navegador de billetera.
+    // Chrome de escritorio con la extensión inyectada (`isMetaMask`): NO es el navegador
+    // propio de la billetera, así que la in-app sigue siendo la principal (R-#270 §11.1).
     cleanup()
     mocks.externalAvailable = true
+    Object.defineProperty(navigator, 'userAgent', { value: DESKTOP_CHROME, configurable: true })
+    Object.defineProperty(window, 'ethereum', { value: { isMetaMask: true }, configurable: true })
     render(<WalletSelector lang="en" />)
     expect(screen.getByTestId('wallet-selector')).toBeInTheDocument()
     expect(screen.getByTestId('wallet-open-dialog')).toBeInTheDocument()

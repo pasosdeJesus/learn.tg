@@ -36,25 +36,28 @@ function loadEnvCredentials() {
 // el spec pasaba (o fallaba) midiendo la página `/offline` de respaldo, no la guía.
 const GUIDE_PATH = '/en/web3-and-ubi/guide1'
 
-async function bodyLength(page) {
-  return page.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().length)
+/** Caracteres de la sección de la guía (0 si no está o está vacía). */
+async function guideChars(page) {
+  return page.evaluate(() => (document.querySelector('[aria-label="Guide text"]')?.textContent || '').trim().length)
 }
 
 /**
- * Espera a que la página tenga contenido real (encabezado + guía). Sin esto se
- * medía `bodyLength` inmediatamente después del `reload` y daba ~130 caracteres
- * (sólo el shell, antes de hidratar), lo que hacía fallar el spec aunque la guía
- * sí estuviera cacheada (medido 2026-09-21 en el dev site).
+ * Espera a que la **guía** esté pintada: la sección `[aria-label="Guide text"]` con
+ * texto, o su aviso de copia guardada. Antes bastaba con que el cuerpo pasara de 200
+ * caracteres, pero el shell (encabezado, banner, botones) ya los supera: el umbral
+ * significaba "más que el shell", no "la guía es legible" (R-#270 §11.2).
  */
-async function waitBodyContent(page, timeout, label) {
+async function waitGuideContent(page, timeout, label) {
   try {
     await page.waitForFunction(
-      () => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().length > 200,
+      () =>
+        !!(document.querySelector('[aria-label="Guide text"]')?.textContent || '').trim() ||
+        /Showing the saved copy|Comprehension Questions|Introduction/.test(document.body?.innerText || ''),
       { timeout },
     )
     return true
   } catch {
-    console.log(`  [!] sin contenido (>200 caracteres) tras ${label}`)
+    console.log(`  [!] sin la guía pintada tras ${label}`)
     return false
   }
 }
@@ -78,10 +81,7 @@ async function main() {
 
   // 1. Visita online: registra el service worker y cachea la guía.
   await page.goto(`${base}${GUIDE_PATH}`, { waitUntil: 'domcontentloaded' })
-  await page.waitForFunction(
-    () => (document.body?.innerText || '').length > 200,
-    { timeout },
-  )
+  await waitGuideContent(page, timeout, 'la primera visita en línea')
 
   const registration = await page.evaluate(async () => {
     if (!('serviceWorker' in navigator)) return null
@@ -119,7 +119,7 @@ async function main() {
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.waitForFunction(() => !!navigator.serviceWorker?.controller, { timeout })
   ok('La página está controlada por el service worker')
-  await waitBodyContent(page, timeout, 'la recarga controlada por el SW')
+  await waitGuideContent(page, timeout, 'la recarga controlada por el SW')
 
   // 2. Sin conexión: la guía debe seguir leyéndose desde la caché.
   await page.setOfflineMode(true)
@@ -128,21 +128,22 @@ async function main() {
   } catch (error) {
     console.log(`  [!] La recarga sin conexión falló: ${error.message}`)
   }
-  await waitBodyContent(page, 30000, 'la recarga sin conexión')
-  const offlineLength = await bodyLength(page)
+  await waitGuideContent(page, 30000, 'la recarga sin conexión')
+  const offlineChars = await guideChars(page)
   const offlineText = await page.evaluate(() => document.body?.innerText || '')
 
-  // La página de respaldo (`app/offline/page.tsx`) es más larga que 200 caracteres, así
-  // que medir solo la longitud daba por buena la guía cuando en realidad se servía
+  // La página de respaldo (`app/offline/page.tsx`) se reconoce por su frase propia, no
+  // por su tamaño: medir la longitud daba por buena la guía cuando en realidad se servía
   // `/offline` (reporte del análisis del 2026-09-24: los "289 caracteres" de 2026-09-21
-  // eran la de respaldo). Se reconoce por su frase propia.
+  // eran la de respaldo).
   const isFallback = /Your progress is saved and will sync when the connection returns/.test(offlineText)
+  const guideReadable = offlineChars > 0 || /Showing the saved copy|Comprehension Questions|Introduction/.test(offlineText)
   if (isFallback) {
     fail('Sin conexión se sirvió la página de respaldo /offline en vez de la guía guardada')
-  } else if (offlineLength > 200) {
-    ok(`La guía sigue visible sin conexión (${offlineLength} caracteres)`)
+  } else if (guideReadable) {
+    ok(`La guía sigue visible sin conexión (${offlineChars} caracteres en la sección de la guía)`)
   } else {
-    fail(`La guía no se pudo leer sin conexión (${offlineLength} caracteres)`)
+    fail(`La guía no se pudo leer sin conexión (${offlineChars} caracteres en la sección de la guía)`)
   }
 
   const banner = await page.$('[data-testid="offline-banner"]')
@@ -152,10 +153,10 @@ async function main() {
   // 3. Vuelve la conexión.
   await page.setOfflineMode(false)
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await waitBodyContent(page, timeout, 'volver a estar en línea')
-  const backOnline = await bodyLength(page)
-  if (backOnline > 200) ok('Con conexión la guía vuelve a cargarse')
-  else fail(`Con conexión la guía quedó vacía (${backOnline} caracteres)`)
+  await waitGuideContent(page, timeout, 'volver a estar en línea')
+  const backOnline = await guideChars(page)
+  if (backOnline > 0) ok('Con conexión la guía vuelve a cargarse')
+  else fail(`Con conexión la guía quedó vacía (${backOnline} caracteres en la sección de la guía)`)
 
   const failures = summary(t0)
   await browser.close()

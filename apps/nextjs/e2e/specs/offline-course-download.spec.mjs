@@ -110,10 +110,12 @@ async function main() {
   await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base, password })
   ok('Signed in with the pdj-wallet core (session cookie)')
 
-  // 1. El curso en línea.
+  // 1. El curso en línea. La página está lista cuando pinta su título (`h1`), no cuando
+  // el cuerpo pasa de 200 caracteres: el shell (encabezado, banner, botones) ya los
+  // supera por sí solo (R-#270 §11.2).
   await page.goto(`${base}${COURSE_PATH}`, { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
-    () => (document.body?.innerText || '').length > 200,
+    () => (document.querySelector('h1')?.innerText || '').trim().length > 0,
     { timeout },
   )
 
@@ -258,8 +260,16 @@ async function main() {
   }
   let offlineText = ''
   try {
+    // Se espera a la **guía**, no a un umbral de caracteres: el shell ya pasaba de 200
+    // y el spec leía la página antes de que la copia guardada se pintara (R-#270 §11.2).
+    // El marcador conserva la frase de `/offline` para que el diagnóstico siga
+    // distinguiendo las dos páginas.
     await page.waitForFunction(
-      () => (document.body?.innerText || '').length > 200,
+      () =>
+        !!(document.querySelector('[aria-label="Guide text"]')?.textContent || '').trim() ||
+        /Showing the saved copy|Comprehension Questions|Introduction|Your progress is saved and will sync when the connection returns/.test(
+          document.body?.innerText || '',
+        ),
       { timeout: 30000 },
     )
     offlineText = await page.evaluate(() => document.body.innerText)
