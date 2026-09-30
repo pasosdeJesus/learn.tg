@@ -18,16 +18,23 @@ export interface BonusUser {
   verified_city_id: number | null
   verified_church_relationship: string | null
   verified_place_of_worship: string | null
-  position_israel_gaza: string | null
   profilescore?: number | null
   billetera?: string | null
 }
 
+/**
+ * Elegibilidad del bono de bienvenida (R-#192; decisión del operador del 2026-09-30):
+ * cualquier pastor principal verificado de un país piloto con el perfil completo.
+ *
+ * La posición sobre Israel/Gaza **no** decide el bono: es un regalo de bienvenida que
+ * acerca al pastor y a su comunidad. Quien no cumpla esa respuesta simplemente no puede
+ * comprar el curso Global Disciples (`canPurchaseGDCourse`, motivo `gd_non_zionist`), que
+ * es la ruta de trabajo, no el bono.
+ */
 export function isEligiblePastor(user: BonusUser): boolean {
   return (
     user.church_relationship === 'pastor' &&
     !!user.pais_id && ELIGIBLE_COUNTRIES.includes(user.pais_id) &&
-    user.position_israel_gaza === 'no' &&
     (user.profilescore ?? 0) > MIN_SCORE_FOR_BONUS
   )
 }
@@ -44,7 +51,6 @@ export async function awardPastorBonus(
       'usuario.church_relationship', 'usuario.pais_id',
       'usuario.verified_whatsapp', 'usuario.verified_email', 'usuario.verified_city_id',
       'usuario.verified_church_relationship', 'usuario.verified_place_of_worship',
-      'usuario.position_israel_gaza',
       'usuario.profilescore',
       'usuario.idioma',
       'bw.billetera',
@@ -128,7 +134,7 @@ export async function awardPastorBonus(
     date: new Date(),
     created_at: new Date(),
     updated_at: new Date(),
-    metadata: JSON.stringify({ source: 'churches_fund', reason: 'Verified non-Zionist lead pastor bonus', ...(pastor.church_id != null ? { church_id: pastor.church_id } : {}) }),
+    metadata: JSON.stringify({ source: 'churches_fund', reason: 'Verified lead pastor welcome bonus', ...(pastor.church_id != null ? { church_id: pastor.church_id } : {}) }),
   } as any).execute()
 
   await db.insertInto('verification_log').values({
@@ -147,10 +153,10 @@ export async function awardPastorBonus(
   await db.insertInto('notifications').values({
     usuario_id: userId,
     type: 'pastor_bonus',
-    title: isEnglish ? '22 SLEARN bonus received' : 'Bono de 22 SLEARN recibido',
+    title: isEnglish ? '22 SLEARN welcome bonus received' : 'Bono de bienvenida de 22 SLEARN recibido',
     content: isEnglish
-      ? 'Congratulations! You received 22 SLEARN as a welcome bonus towards the Global Disciples course. Now, to use those SLEARN, you need a little CELO to pay the network fee (gas). Do not worry — the free Web3 & UBI course teaches you how to claim free CELO every day (0.2 CELO/day). Take that course first, claim your CELO, and then come back here to pay for the GD course (you can complete the price with SLEARN earned in the crosswords or with USDT).'
-      : '¡Felicidades! Has recibido 22 SLEARN como bono de bienvenida para el curso de Discípulos Globales. Ahora, para usar esos SLEARN, necesitas tener un poco de CELO para pagar la comisión de la red (gas). No te preocupes — el curso gratuito Web3 & UBI te enseña cómo reclamar CELO gratis todos los días (0.2 CELO/día). Toma ese curso primero, reclama tu CELO, y luego regresa aquí para pagar el curso GD (puedes completar el precio con SLEARN de los crucigramas o con USDT).',
+      ? "Congratulations! You received 22 SLEARN as a welcome bonus for being a verified lead pastor in learn.tg. You can use SLEARN in the platform's paid courses. To spend it you need a little CELO for the network fee (gas). Do not worry: the free Web3 & UBI course teaches you how to claim free CELO every day (0.2 CELO/day)."
+      : '¡Felicidades! Has recibido 22 SLEARN como bono de bienvenida por ser pastor principal verificado en learn.tg. Puedes usar los SLEARN en los cursos de pago de la plataforma. Para gastarlos necesitas un poco de CELO para la comisión de la red (gas). No te preocupes: el curso gratuito Web3 & UBI te enseña cómo reclamar CELO gratis todos los días (0.2 CELO/día).',
     link: explorerUrl,
     is_read: false,
     created_at: new Date(),

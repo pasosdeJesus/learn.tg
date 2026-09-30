@@ -125,11 +125,16 @@ index `one_principal_per_church` allows one `usuario.church_relationship =
 only when all of these hold:
 
 - `church_relationship = 'pastor'` and the country is 170 (Colombia) or 694
-  (Sierra Leone), `position_israel_gaza = 'no'` and `profilescore > 90`;
+  (Sierra Leone), with `profilescore > 90`;
 - `verified_church_relationship = 'pastor'` (the verifier confirmed the role);
 - the user is `church.pastor_id`;
 - `church.registration_verified = true`;
 - the user has a wallet.
+
+The bonus is a welcome gift for the pastor and their community, so it does
+**not** depend on the Israel/Gaza answer (operator decision, 2026-09-30, R-#192).
+That answer only gates the **Global Disciples course** itself
+(`canPurchaseGDCourse`, reason `gd_non_zionist`).
 
 Dedupe is **per church**, not per user: the bonus is paid once per church even
 if the lead pastor changes.

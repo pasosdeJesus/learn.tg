@@ -22,6 +22,11 @@ export interface GdPastoresLandingDeps {
   isProduction: boolean
 }
 
+// SLEARN del bono de bienvenida al pastor (BONUS_AMOUNT en
+// `@learn-tg/rewards/lib/pastor-bonus`; se repite aquí porque ese módulo arrastra viem
+// y el ABI de SLEARN al paquete del cliente, R-#192).
+const BONUS_SLEARN = 22
+
 // Labels aligned with SCORE_RULES order (lib/score-rules.ts, core)
 const SCORE_LABELS = [
   { en: 'Name verified (matches passport)', es: 'Nombre verificado (coincide con el pasaporte)' },
@@ -121,7 +126,7 @@ export function GdPastoresLanding({ lang, deps }: { lang: string; deps: GdPastor
   }, [])
 
   const remainingPastors =
-    fundSlearn !== null ? Math.floor(Number(fundSlearn) / 44) : null
+    fundSlearn !== null ? Math.floor(Number(fundSlearn) / BONUS_SLEARN) : null
 
   // Situation detection
   const score = profile?.profilescore != null ? Number(profile.profilescore) : null
@@ -178,7 +183,11 @@ export function GdPastoresLanding({ lang, deps }: { lang: string; deps: GdPastor
     {
       key: 'nonZionist',
       met: !!profile && profile.position_israel_gaza === 'no',
-      label: es ? 'No ser sionista' : 'Not be a zionist',
+      // Requisito del **curso** GD (`canPurchaseGDCourse`), no del bono de 22 SLEARN
+      // (R-#192, 2026-09-30): el bono es para todo pastor principal verificado.
+      label: es
+        ? 'No ser sionista (requisito del curso GD)'
+        : 'Not be a zionist (requirement of the GD course)',
     },
     {
       key: 'pastor',
@@ -207,8 +216,8 @@ export function GdPastoresLanding({ lang, deps }: { lang: string; deps: GdPastor
       ? 'Invitación a pastores de Colombia y Sierra Leona'
       : 'An invitation to pastors in Sierra Leone and Colombia',
     intro: es
-      ? 'El curso de GD se puede pagar en SLEARN. Para darte la bienvenida, learn.tg te regala 22 SLEARN (= US$1) al cumplir los requisitos.'
-      : 'The GD course can be paid in SLEARN. To welcome you, learn.tg gives you 22 SLEARN (= US$1) once you meet the requirements.',
+      ? 'El curso de GD se puede pagar en SLEARN. Para darte la bienvenida, learn.tg regala 22 SLEARN (= US$1) a todo pastor principal verificado.'
+      : 'The GD course can be paid in SLEARN. To welcome you, learn.tg gives 22 SLEARN (= US$1) to every verified lead pastor.',
     requirements: es ? 'Requisitos' : 'Requirements',
     claimedTitle: es ? 'Ya reclamaste tu bono' : 'You already claimed your bonus',
     claimedDesc: es

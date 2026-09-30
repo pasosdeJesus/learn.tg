@@ -32,9 +32,10 @@ const PASTOR_WALLET = '0xPASTOR12345678901234567890123456789012345'
 
 function eligiblePastorRow(overrides: Record<string, any> = {}): Record<string, any> {
   return {
+    // `position_israel_gaza` no aparece a propósito: el bono no depende de ella
+    // (R-#192, 2026-09-30). Quien la responda 'yes' sigue sin poder comprar el curso GD.
     church_relationship: 'pastor',
     pais_id: 694,
-    position_israel_gaza: 'no',
     profilescore: 95,
     verified_whatsapp: '23212345678',
     verified_email: 'pastor@example.com',
@@ -67,8 +68,9 @@ describe('isEligiblePastor', () => {
     expect(isEligiblePastor(eligiblePastorRow({ pais_id: null }) as BonusUser)).toBe(false)
   })
 
-  it('rejects pastors whose position on Israel/Gaza is not "no"', () => {
-    expect(isEligiblePastor(eligiblePastorRow({ position_israel_gaza: 'yes' }) as BonusUser)).toBe(false)
+  it('accepts a Zionist pastor as well: the bonus does not depend on the Israel/Gaza answer', () => {
+    expect(isEligiblePastor(eligiblePastorRow({ position_israel_gaza: 'yes' }) as BonusUser)).toBe(true)
+    expect(isEligiblePastor(eligiblePastorRow({ position_israel_gaza: null }) as BonusUser)).toBe(true)
   })
 
   it('rejects pastors with profile score at or below the threshold', () => {
@@ -201,5 +203,18 @@ describe('awardPastorBonus', () => {
     expect(publicClient.waitForTransactionReceipt).toHaveBeenCalledWith({ hash: '0xPASTORBONUSHASH12345678901234567890' })
     // transaction + verification_log + notifications rows
     expect(mockExecute).toHaveBeenCalledTimes(3)
+  })
+
+  it('awards the welcome bonus to a Zionist lead pastor too (GD access, not the bonus, carries that filter)', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce(eligiblePastorRow({ position_israel_gaza: 'yes' }))
+      .mockResolvedValueOnce(null) // no existing pastor_bonus
+    mockExecute.mockResolvedValue([])
+    const { db, walletClient } = buildDeps()
+
+    const result = await awardPastorBonus(db, 1)
+
+    expect(result.awarded).toBe(true)
+    expect(walletClient.writeContract).toHaveBeenCalledTimes(1)
   })
 })
