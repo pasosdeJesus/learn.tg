@@ -240,6 +240,7 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `prerequisites.spec.mjs` | Wallet registration + verifier check + profile setup + self-verify → ≥50 score |
 | `referral-payout.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 2): referred wallet → claim → profile ≥50 → perfect missional crossword → `referral_reward` 10% in history (SKIP si la billetera de referidos no tiene fondos) |
 | `referral-premium.spec.mjs` | Referral payout (https://github.com/pasosdeJesus/learn.tg/issues/163 Form 1 + Form 3): referred PASTOR → claim → perfil SL verificado → iglesia (bonus 22 SLEARN) → compra curso GD → `referral_reward` 10% + `referral_bonus` 1 USDT en history (SKIP si la billetera de referidos no tiene fondos) |
+| `admin-referrer.spec.mjs` | Corrección del referidor desde el admin (https://github.com/pasosdeJesus/learn.tg/issues/163 §7.1): SIWE como verificador → lee el usuario con referidor (código propio, "referido por", recompensas pagadas) → valida auto-referencia y referidor inexistente (400) → repetir el actual no cambia nada → cambia a otro referidor y **restaura el original** (SKIP si la billetera no es verificadora o ningún usuario tiene referidor) |
 | `rails-auth.spec.mjs` | Rails API calls (public course endpoints) in ES and EN |
 | `verification-timezone.spec.mjs` | Verification availability API: timezone handling, 7-day window |
 | `donate-course.spec.mjs` | Course donation endpoint (`/api/add-donation`): validation paths (400/401) |
@@ -247,9 +248,10 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `donate-campaign.spec.mjs` | Campaign donation (https://github.com/pasosdeJesus/learn.tg/issues/223, `/api/donations/{slug}/verify` + balance): 404/400/401, bounds de `pdjSharePct` y forma del balance multi-cadena |
 | `rails-health.spec.mjs` | Health check del backend Rails del dev site (`NEXT_PUBLIC_API_BASE/proyectosfinancieros.json`): 200 con cursos → UP; error de red/502 → DOWN (exit 1). Correr antes de las suites que dependen de Rails |
 
-### Current Status (2026-09-21)
+### Current Status (2026-09-30)
 
-**21 smokes** (medido 2026-09-21). `leaderboard.spec.mjs` puede fallar por el
+**23 smokes** (`ls e2e/smoke/*.spec.mjs | wc -l`, medido 2026-09-30; eran 21 el
+2026-09-21). `leaderboard.spec.mjs` puede fallar por el
 texto explicativo del profile score no renderizado (contenido menor). Las rutas
 de cursos de Rails son públicas (R-#233), así que `rails-auth.spec.mjs` no
 necesita credencial. Los `caldav-*` se saltan si `CALDAV_URL` no está definido.
