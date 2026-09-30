@@ -14,6 +14,7 @@ Send the **short** one first; keep the long one for when the person answers.
 Import your recovery phrase into learn.tg's wallet and keep the same address.
 
 📖 Guide: https://learn.tg/en/migration-in-app-wallet
+(Mobile: do it in Chrome, or Safari on iPhone, not inside the wallet's own browser.)
 ```
 
 ## Short, Spanish
@@ -24,6 +25,7 @@ Import your recovery phrase into learn.tg's wallet and keep the same address.
 Importa tu frase semilla en la billetera de learn.tg y sigues con la misma dirección.
 
 📖 Guía: https://learn.tg/es/migracion-billetera-app
+(En el celular: hazlo en Chrome, o Safari si es iPhone, no dentro del navegador de la billetera.)
 ```
 
 ## Long, English
@@ -37,7 +39,7 @@ If you use MetaMask, Rabby, OKX or another wallet, you can import your recovery 
 1️⃣ Open your external wallet.
 2️⃣ Settings → Security → Reveal recovery phrase.
 3️⃣ Copy the 12 words.
-4️⃣ On learn.tg, tap "Use in-app wallet" → "Import wallet".
+4️⃣ Open learn.tg in Chrome (or Safari on iPhone), tap "Use in-app wallet" → "Import wallet".
 5️⃣ Paste the 12 words and create a password.
 
 ⚠️ Important:
@@ -59,7 +61,7 @@ Si tienes MetaMask, Rabby, OKX u otra billetera, puedes importar tu frase semill
 1️⃣ Abre tu billetera externa.
 2️⃣ Configuración → Seguridad → Revelar frase de recuperación.
 3️⃣ Copia las 12 palabras.
-4️⃣ En learn.tg, toca "Usar billetera de la aplicación" → "Importar billetera".
+4️⃣ Abre learn.tg en Chrome (o Safari si es iPhone), toca "Usar billetera de la aplicación" → "Importar billetera".
 5️⃣ Pega las 12 palabras y crea una clave.
 
 ⚠️ Importante:

@@ -93,6 +93,13 @@ what the site still publishes.
 
 You do not need to install a wallet app to use learn.tg.
 
+> **Which browser:** the in-app wallet lives inside the learn.tg page, so create it in a
+> normal browser: **Chrome** on Android, **Safari** on iPhone/iPad. Do not create it from
+> inside the browser of another wallet (MetaMask, Rabby, OKX, OneKey): there the page
+> offers the external wallet first and the fingerprint/Face ID unlock is not available.
+> If you already have a wallet elsewhere, see
+> [migration-in-app-wallet](migration-in-app-wallet/en.md).
+
 1. Open the app and choose **Use in-app wallet** (while the app checks whether a
    wallet already exists the button just says **In-app wallet**).
    > **Already have a wallet in MetaMask, Rabby, OKX, OneKey or Brave?** You can import

@@ -29,6 +29,10 @@ empezar.
 - Importar una billetera creada en otra parte **no** mueve tus fondos: quedan en la
   misma dirección, que ahora también está dentro de learn.tg.
 
+> **Dónde y cuánto tarda:** hazlo en **Chrome** (Android) o **Safari** (iPhone),
+> **no** dentro del navegador de MetaMask/OKX/OneKey/Rabby. Necesitas las 12 palabras de
+> tu billetera y unos 5 minutos.
+
 ## Exporta la frase de recuperación de tu billetera
 
 | Billetera | Dónde |
@@ -42,15 +46,40 @@ empezar.
 El texto exacto cambia con la versión de cada aplicación: busca
 "revelar", "respaldo" o "frase de recuperación" dentro de **Configuración → Seguridad**.
 
+## Con qué navegador
+
+La billetera de la aplicación **no** es otra aplicación que se instala: vive dentro de
+la página de learn.tg. Por eso la importas en un navegador normal del teléfono:
+
+| Teléfono | Navegador |
+|---|---|
+| Android | **Chrome** (el navegador que ya usas) |
+| iPhone / iPad | **Safari** |
+
+- **No** lo hagas dentro del navegador de MetaMask, Rabby, OKX u OneKey (el que se abre
+  cuando abres una página desde la billetera): ahí la página te ofrece primero la
+  billetera externa y **no está disponible el desbloqueo con huella o Face ID**, así que
+  escribirías la clave cada vez.
+- También puedes instalar learn.tg y usar la billetera ahí: en Chrome, menú (⋮) →
+  **Instalar aplicación**; en Safari, **Compartir** → **Añadir a pantalla de inicio**.
+
 ## Impórtala en learn.tg
 
-1. Abre learn.tg y toca **Usar billetera de la aplicación**.
-2. Elige **Importar billetera** y pega las 12 palabras.
-3. Crea una **clave** (8 caracteres o más). La usarás cada vez que desbloquees la
+Necesitas las 12 palabras del paso anterior. Si tu billetera externa está en un
+computador, **escríbelas a mano** en el teléfono: no las mandes por WhatsApp, correo ni
+ningún mensaje, ni siquiera a ti mismo.
+
+1. Abre **learn.tg en Chrome** (Android) o **Safari** (iPhone).
+2. Toca **Usar billetera de la aplicación**.
+3. Elige **Importar una billetera existente** (el botón dice **Importar billetera**) y
+   pega las 12 palabras en **Frase de recuperación**.
+4. Crea una **clave** (8 caracteres o más). La usarás cada vez que desbloquees la
    billetera en este dispositivo.
-4. Elige **cómo quieres desbloquearla**: con tu huella o Face ID (recomendado) o solo
+5. Elige **cómo quieres desbloquearla**: con tu huella o Face ID (recomendado) o solo
    con la clave. La clave sigue funcionando en los dos casos.
-5. Confirma tu respaldo: la aplicación te pide **3 de las 12 palabras**.
+6. Confirma tu respaldo: la aplicación te pide **3 de las 12 palabras**. Con eso te
+   inicia sesión con la misma dirección, así que tu progreso, tus becas, tus
+   credenciales y tus referidos siguen ahí.
 
 ## Dos cosas que sorprenden
 
