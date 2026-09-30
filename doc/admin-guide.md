@@ -67,6 +67,16 @@ standalone page). It is the place where a profile gets verified.
    worship). Saving recalculates the score (`recalculateProfileScore`).
 8. **ID documents**: front and back photos (Sierra Leone). The registration
    document is shown in the pastor block above, and can be replaced or deleted there.
+9. **Referrals** (`Referidos`, R-#163): shows the user's own **referral code** (the
+   one others type to be referred by them; read-only, because it already travels in
+   sent links) and **who referred them** (`#id username (name)`) or *none*. The
+   field below accepts the referrer's **user id, username or referral code** (empty
+   removes the referrer) to fix a wrong declaration; the same rules as the claim
+   endpoint apply (no self-referral, the referrer must not be a newer account) and
+   the change is recorded in `verification_log` as `update_referrer`. When that
+   referrer already received rewards for this user, the modal says so: changing the
+   referrer **does not move** what was already paid, only what comes next
+   (`lib/referral-admin.ts`).
 
 ## All Churches (`/{lang}/admin/churches`)
 

@@ -32,6 +32,13 @@ export interface UserItem {
   verified_whatsapp?: string; verified_telegram?: string; verified_email?: string
   verified_city_id?: number | string; verified_place_of_worship?: string
   verified_church_relationship?: string
+  // Referidos (R-#163): código propio del usuario y quién lo refirió.
+  referral?: {
+    code?: string | null
+    referrer?: { id: number; nusuario?: string | null; nombre?: string | null } | null
+    claimed_at?: string | null
+    rewards_paid?: { count: number; usdt: number; slearn: number }
+  }
 }
 
 export interface ChurchItem {
@@ -230,6 +237,8 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     initial.church_id = user.church_id || ''
     initial.proposed_date_of_interview = dbTimestampToLocalInput(user.proposed_date_of_interview)
     initial.conducted_date_of_interview = dbTimestampToLocalInput(user.conducted_date_of_interview)
+    // Referidor actual (R-#163), como id para el campo editable.
+    initial.referrer = user.referral?.referrer ? String(user.referral.referrer.id) : ''
     setForm(initial)
     setRegistrationPhoto(user.registration_photo || null)
   }, [user])
@@ -329,6 +338,10 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
         body[f.key] = v || null
       }
     }
+    // El referidor solo se envía si el verificador lo cambió; el resto se guarda como
+    // está (R-#163). El valor vacío equivale a "sin referidor".
+    const currentReferrer = user.referral?.referrer ? String(user.referral.referrer.id) : ''
+    if ((form.referrer || '') !== currentReferrer) body.referrer = form.referrer || null
     try {
       const bodyJson = JSON.stringify(body)
       console.log('[UserEditModal] Saving:', { city_id: body.city_id, verified_city_id: body.verified_city_id, fullBody: bodyJson.slice(0, 200) })
@@ -628,6 +641,41 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
               lang={lang}
             />
           </div>
+        </div>
+        {/* Referidos (R-#163): el código propio (como referidor), quién lo refirió y la
+            corrección del referidor. El código no se edita: ya viaja en enlaces enviados. */}
+        <div className="border-t pt-3" data-testid="user-referral">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">{lang === 'es' ? 'Referidos' : 'Referrals'}</h4>
+          <p className="text-xs text-gray-600 mb-1">
+            {lang === 'es' ? 'Código como referidor: ' : 'Code as referrer: '}
+            <span className="font-mono">{user.referral?.code || '-'}</span>
+            <span className="ml-1 text-gray-400">{lang === 'es' ? '(no editable)' : '(read-only)'}</span>
+          </p>
+          <p className="text-xs text-gray-600 mb-2" data-testid="user-referred-by">
+            {lang === 'es' ? 'Referido por: ' : 'Referred by: '}
+            {user.referral?.referrer
+              ? `#${user.referral.referrer.id} ${user.referral.referrer.nusuario || ''}${user.referral.referrer.nombre ? ` (${user.referral.referrer.nombre})` : ''}`
+              : (lang === 'es' ? 'sin referidor' : 'none')}
+          </p>
+          {((user.referral?.rewards_paid?.count) ?? 0) > 0 && (
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2" data-testid="user-referral-paid">
+              {lang === 'es'
+                ? `Ese referidor ya recibió ${(user.referral?.rewards_paid?.count) ?? 0} recompensa(s): cambiar el referidor no las mueve, solo cambia a quién se le pagará lo futuro.`
+                : `That referrer already received ${(user.referral?.rewards_paid?.count) ?? 0} reward(s): changing the referrer does not move them, it only changes who gets the future ones.`}
+            </p>
+          )}
+          <label className="block text-xs text-gray-600 mb-1">
+            {lang === 'es'
+              ? 'Cambiar referidor (id, usuario o código; vacío = sin referidor)'
+              : 'Change referrer (id, username or code; empty = none)'}
+          </label>
+          <input
+            type="text"
+            data-testid="user-referrer"
+            value={form.referrer || ''}
+            onChange={(e) => setF('referrer', e.target.value)}
+            className="w-full border rounded px-2 py-1 text-sm font-mono"
+          />
         </div>
         {msg && <p className={`text-sm text-center ${msg === t('saveSuccess') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
         <div className="flex justify-end gap-2">

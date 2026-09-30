@@ -253,6 +253,10 @@ wallet. The contract never calculates the per-referrer split.
 
 **Tables:** `referralcode` (unique per user, created on first use) and
 `referralrelationship` (referrer ↔ referred, claimed once, `referral_claimed_at`).
+A verifier can correct the referrer from the admin user modal
+(`PATCH /api/admin/user/[id]` with `referrer` = user id, username or code; empty
+removes it; guards in `lib/referral-admin.ts`, change logged in `verification_log`).
+Changing it does not move rewards already paid: the payout is keyed by `referred_id`.
 
 **Endpoints (core, `apps/nextjs/app/api/referral/*`):** `code` (GET),
 `stats` (GET), `history` (GET), `claim` (POST, one-time), `share` (POST),

@@ -299,3 +299,84 @@ describe('UserEditModal — church data depends on whether the church is registe
     expect(registro).toHaveLength(0)
   })
 })
+
+// Referidos (https://github.com/pasosdeJesus/learn.tg/issues/163): el verificador ve el
+// código del usuario como referidor y quién lo refirió, y puede corregir el referidor.
+describe('UserEditModal — referidos', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  const withReferral = {
+    id: 42, nombre: 'Ana',
+    referral: {
+      code: 'ABC123',
+      referrer: { id: 5, nusuario: 'juan', nombre: 'Juan Perez' },
+      claimed_at: '2026-09-13T10:00:00Z',
+      rewards_paid: { count: 2, usdt: 0.1, slearn: 0.2 },
+    },
+  }
+
+  it('shows the code, who referred the user, the paid rewards and the current referrer', async () => {
+    mockAdminFetch.mockResolvedValue({})
+
+    await act(async () => {
+      render(React.createElement(UserEditModal, {
+        lang: 'en', t, user: withReferral as any,
+        onClose: () => {}, onSaved: () => {},
+      }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-referral')).toBeTruthy()
+    })
+    const block = screen.getByTestId('user-referral').textContent || ''
+    expect(block).toContain('ABC123')
+    expect(screen.getByTestId('user-referred-by').textContent).toContain('#5 juan (Juan Perez)')
+    // Aviso: las recompensas ya pagadas no se mueven al cambiar el referidor.
+    expect(screen.getByTestId('user-referral-paid')).toBeTruthy()
+    expect((screen.getByTestId('user-referrer') as HTMLInputElement).value).toBe('5')
+  })
+
+  it('shows "sin referidor" and an empty field when the user has no referrer', async () => {
+    mockAdminFetch.mockResolvedValue({})
+
+    await act(async () => {
+      render(React.createElement(UserEditModal, {
+        lang: 'en', t,
+        user: { id: 42, nombre: 'Ana', referral: { code: null, referrer: null, rewards_paid: { count: 0, usdt: 0, slearn: 0 } } } as any,
+        onClose: () => {}, onSaved: () => {},
+      }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-referral')).toBeTruthy()
+    })
+    expect(screen.getByTestId('user-referred-by').textContent).toContain('none')
+    expect((screen.getByTestId('user-referrer') as HTMLInputElement).value).toBe('')
+    expect(screen.queryByTestId('user-referral-paid')).toBeNull()
+  })
+
+  it('sends the new referrer on save, and nothing when it was not touched', async () => {
+    mockAdminFetch.mockResolvedValue({})
+
+    await act(async () => {
+      render(React.createElement(UserEditModal, {
+        lang: 'en', t, user: withReferral as any,
+        onClose: () => {}, onSaved: () => {},
+      }))
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('user-referrer')).toBeTruthy()
+    })
+
+    fireEvent.change(screen.getByTestId('user-referrer'), { target: { value: 'juan' } })
+    await act(async () => {
+      fireEvent.click(screen.getByText('save'))
+    })
+
+    const patch = mockAdminFetch.mock.calls.find(
+      (call) => String(call[0]).includes('/api/admin/user/42'),
+    )
+    expect(patch).toBeTruthy()
+    expect(JSON.parse(String((patch![1] as RequestInit).body)).referrer).toBe('juan')
+  })
+})
