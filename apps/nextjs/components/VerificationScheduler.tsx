@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@pasosdejesus/m/shadcn-components/ui/dialog'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-import { parseDbTimestamp } from '@/lib/date-utils'
+import { parseDbTimestamp, dateKeyInTimezone } from '@/lib/date-utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Slot {
@@ -103,6 +103,12 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
   const dayHeaders = lang === 'es' ? DAYS_ES : DAYS_EN
   const tz = timezone || DEFAULT_TIMEZONE
   const tzLabel = getTimezoneLabel(tz)
+
+  // Cada celda del calendario representa un día **en `tz`** (la zona del verificador),
+  // no en la zona del dispositivo: el mediodía local es un instante estable de ese día
+  // (a mediodía, ±12h de desplazamiento no cambian la fecha en la mayoría de zonas).
+  const dayKeyFor = (year: number, month: number, day: number) =>
+    dateKeyInTimezone(new Date(year, month, day, 12, 0, 0), tz)
 
   const t = createComponentT(lang, {
     en: {
@@ -258,15 +264,18 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
   const slotsByDate = useMemo(() => {
     const map: Record<string, Slot[]> = {}
     for (const s of slots) {
-      const dateKey = s.start.slice(0, 10)
+      // El día del cupo se toma en `tz`; antes se cortaba el ISO (día UTC) y no coincidía
+      // con la celda del calendario en dispositivos con otra zona (cupos de la tarde
+      // invisibles, medido 2026-09-30).
+      const dateKey = dateKeyInTimezone(s.start, tz)
       if (!map[dateKey]) map[dateKey] = []
       map[dateKey].push(s)
     }
     return map
-  }, [slots])
+  }, [slots, tz])
 
   const selectedDateKey = selectedDate
-    ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
+    ? dayKeyFor(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
     : null
   const daySlots = selectedDateKey ? (slotsByDate[selectedDateKey] || []) : []
 
@@ -277,7 +286,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
   const isCurrentMonth = viewDate.getMonth() === today.getMonth() && viewDate.getFullYear() === today.getFullYear()
   const isNextMonth = viewDate.getMonth() === (today.getMonth() + 1) % 12 && viewDate.getFullYear() === today.getFullYear() + (today.getMonth() === 11 ? 1 : 0)
 
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const todayKey = dateKeyInTimezone(new Date(), tz)
 
   const formatTime = (iso: string) =>
     formatInZone(new Date(iso), lang, tz, {
@@ -361,7 +370,7 @@ export function VerificationScheduler({ lang = 'en', interviewDate, timezone, co
               {calendarDays.map((day, i) => {
                 if (day === null) return <div key={`empty-${i}`} />
 
-                const dateKey = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                const dateKey = dayKeyFor(viewDate.getFullYear(), viewDate.getMonth(), day)
                 const hasSlots = !!slotsByDate[dateKey]
                 const isPastDate = dateKey < todayKey
                 const isSel = dateKey === selectedDateKey

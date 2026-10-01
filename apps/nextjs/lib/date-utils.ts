@@ -30,3 +30,25 @@ export function dbTimestampToLocalInput(s?: string | null): string {
   if (!d) return ''
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
 }
+
+/**
+ * Calendar day (`YYYY-MM-DD`) of an instant **in a given IANA timezone**.
+ *
+ * Needed when a screen shows a schedule in a fixed timezone (the verifier's, by
+ * default `UTC`) while the device may be in another: slicing the ISO string takes the
+ * UTC day, which after ~19:00 on a UTC-5 device is already the next day, so the slot's
+ * day did not match the calendar cell's day and the cell never lit up (evening slots
+ * invisible in `VerificationScheduler`). Cells and slots must both use this helper.
+ */
+export function dateKeyInTimezone(instant: Date | string, tz: string): string {
+  const d = typeof instant === 'string' ? new Date(instant) : instant
+  if (Number.isNaN(d.getTime())) return ''
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(d)
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
+  return `${part('year')}-${part('month')}-${part('day')}`
+}

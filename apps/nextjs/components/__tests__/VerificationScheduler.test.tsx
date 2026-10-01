@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { VerificationScheduler } from '../VerificationScheduler'
+import { dateKeyInTimezone } from '@/lib/date-utils'
 
 const mockUseSession = vi.fn(() => ({
   data: { address: '0x123', user: { name: 'Test' } },
@@ -165,8 +166,16 @@ describe('VerificationScheduler', () => {
   })
 
   it('shows available dates after slots load', async () => {
-    const slotStart = new Date(Date.now() + 86400000).toISOString()
-    const slotEnd = new Date(Date.now() + 86400000 + 1800000).toISOString()
+    // El calendario abre en el mes actual y compara por día en la zona que muestra
+    // (UTC por defecto). Un cupo "mañana" se sale del mes el último día del mes y su
+    // casilla no existe, así que ese día se usa hoy al mediodía: la prueba fallaba solo
+    // el último día de cada mes (medido 2026-09-30).
+    const todayKey = dateKeyInTimezone(new Date(), 'UTC')
+    const tomorrow = new Date(Date.now() + 86400000)
+    const sameMonth = dateKeyInTimezone(tomorrow, 'UTC').slice(0, 7) === todayKey.slice(0, 7)
+    const start = sameMonth ? tomorrow : new Date(`${todayKey}T12:00:00Z`)
+    const slotStart = start.toISOString()
+    const slotEnd = new Date(start.getTime() + 1800000).toISOString()
 
     ;(global.fetch as any).mockResolvedValue({
       ok: true,
