@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { zeroAddress } from 'viem'
 import GoodDollarClaimButton from '../GoodDollarClaimButton'
 
 // --- Mocks --- //
@@ -43,55 +44,64 @@ vi.mock('@pasosdejesus/m/shadcn-components/ui/use-toast', () => ({
   useToast: mockUseToast,
 }))
 
-// Mock de SDKs
-const { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance } = vi.hoisted(
-  () => {
-    const mockUseIdentitySDK = vi.fn()
-    const mockClaimSDKInstance = { claim: vi.fn() }
-    const mockClaimSDK = vi.fn(() => mockClaimSDKInstance)
-    return { mockUseIdentitySDK, mockClaimSDK, mockClaimSDKInstance }
-  },
-)
-
-vi.mock('@goodsdks/citizen-sdk', () => ({
-  ClaimSDK: mockClaimSDK,
-  IdentitySDK: vi.fn(),
-}))
-
-vi.mock('@goodsdks/react-hooks', () => ({
-  useIdentitySDK: mockUseIdentitySDK,
-}))
-
-// Mock de next-auth/react
-const { mockUseSession } = vi.hoisted(() => {
-  const mockUseSession = vi.fn()
-  return { mockUseSession }
+// The protocol is read through usePublicClient; the write goes through useWriteContract.
+// The citizen-sdk is no longer part of the claim path (R-#275).
+const {
+  mockUseSession,
+  mockUseAuthAddress,
+  mockReadContract,
+  mockGetCode,
+  mockSignMessage,
+  mockWriteContract,
+  mockUseInAppWallet,
+  mockUsePublicClient,
+  mockUseWalletClient,
+  mockUseWriteContract,
+  mockOpenInAppWalletDialog,
+  mockAssign,
+  mockState,
+} = vi.hoisted(() => {
+  const mockState = {
+    whitelistedRoot: '0x1111111111111111111111111111111111111111',
+    entitlement: 5n as bigint,
+  }
+  const mockGetCode = vi.fn()
+  const mockReadContract = vi.fn(async ({ functionName }: { functionName: string }) => {
+    if (functionName === 'getWhitelistedRoot') return mockState.whitelistedRoot
+    if (functionName === 'checkEntitlement') return mockState.entitlement
+    if (functionName === 'paused') return false
+    if (functionName === 'decimals') return 18
+    return null
+  })
+  return {
+    mockUseSession: vi.fn(),
+    mockUseAuthAddress: vi.fn(),
+    mockReadContract,
+    mockGetCode,
+    mockSignMessage: vi.fn(),
+    mockWriteContract: vi.fn(),
+    mockUseInAppWallet: vi.fn(),
+    mockUsePublicClient: vi.fn(),
+    mockUseWalletClient: vi.fn(),
+    mockUseWriteContract: vi.fn(),
+    mockOpenInAppWalletDialog: vi.fn(),
+    mockAssign: vi.fn(),
+    mockState,
+  }
 })
+
 vi.mock('next-auth/react', () => ({
   useSession: mockUseSession,
 }))
-
-// Mock de wagmi
-const { mockUseAccount, mockUsePublicClient, mockUseWalletClient } = vi.hoisted(
-  () => {
-    const mockUseAccount = vi.fn()
-    const mockUsePublicClient = vi.fn()
-    const mockUseWalletClient = vi.fn()
-    return { mockUseAccount, mockUsePublicClient, mockUseWalletClient }
-  },
-)
 vi.mock('@/lib/hooks/useAuthAddress', () => ({
-  useAuthAddress: mockUseAccount,
+  useAuthAddress: mockUseAuthAddress,
 }))
 vi.mock('@/lib/hooks/useWallet', () => ({
   usePublicClient: mockUsePublicClient,
   useWalletClient: mockUseWalletClient,
 }))
-
-// Mock de la billetera in-app (R-#271)
-const { mockUseInAppWallet, mockOpenInAppWalletDialog } = vi.hoisted(() => ({
-  mockUseInAppWallet: vi.fn(),
-  mockOpenInAppWalletDialog: vi.fn(),
+vi.mock('@/lib/hooks/useWriteContract', () => ({
+  useWriteContract: mockUseWriteContract,
 }))
 vi.mock('@learn-tg/pdj-wallet-next', () => ({
   useInAppWallet: mockUseInAppWallet,
@@ -107,48 +117,38 @@ describe('GoodDollarClaimButton', () => {
   const mockAddress = '0x1234567890123456789012345678901234567890'
 
   beforeEach(() => {
-    // Reset mocks and state before each test
     vi.clearAllMocks()
-    mockConfig.IS_PRODUCTION = true // Default to production environment
-    // Set environment variable for CELO network
+    mockConfig.IS_PRODUCTION = true
     vi.stubEnv('NEXT_PUBLIC_NETWORK', 'celo')
 
-    // Default mocks for a successful use case
+    mockState.whitelistedRoot = '0x1111111111111111111111111111111111111111'
+    mockState.entitlement = 5n
+
     mockUseSession.mockReturnValue({
-      data: {
-        address: mockAddress,
-        user: { token: 'mock-token' },
-      },
+      data: { address: mockAddress, user: { token: 'mock-token' } },
       status: 'authenticated',
     })
-    mockUseAccount.mockReturnValue({
-      address: mockAddress,
-      isConnected: true,
-    })
-    mockUsePublicClient.mockReturnValue({} as any)
-    mockUseWalletClient.mockReturnValue({ data: {} as any })
+    mockUseAuthAddress.mockReturnValue({ address: mockAddress, isConnected: true })
+    mockGetCode.mockResolvedValue('0x6000')
+    mockUsePublicClient.mockReturnValue({ readContract: mockReadContract, getCode: mockGetCode })
+    mockSignMessage.mockResolvedValue('0xdeadbeef')
+    mockUseWalletClient.mockReturnValue({ data: { signMessage: mockSignMessage } })
+    mockWriteContract.mockResolvedValue('0xhash')
+    mockUseWriteContract.mockReturnValue({ writeContract: mockWriteContract, data: undefined })
     mockUseInAppWallet.mockReturnValue({ status: 'unlocked', biometricEnabled: false })
-    
-    // NEW API: returns { sdk, loading, error }
-    mockUseIdentitySDK.mockReturnValue({ 
-      sdk: { getWhitelistedRoot: vi.fn() }, 
-      loading: false, 
-      error: null 
-    })
-    
-    mockClaimSDKInstance.claim.mockResolvedValue({ txHash: '0xmocktxhash' })
 
-    // Global mocks — fetch still needed for API call
-    global.window.fetch = vi.fn(() =>
-      Promise.resolve({ 
-        ok: true, 
-        json: () => Promise.resolve({ success: true, claimNumber: 5 }) 
-      } as any),
-    )
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      writable: true,
+      value: {
+        href: 'https://learn.tg/en/web3-and-ubi/guide4',
+        pathname: '/en/web3-and-ubi/guide4',
+        assign: mockAssign,
+      },
+    })
   })
 
   afterEach(() => {
-    // Ensure mock state is reset after each test
     mockConfig.IS_PRODUCTION = true
     vi.unstubAllEnvs()
   })
@@ -164,73 +164,75 @@ describe('GoodDollarClaimButton', () => {
 
   it('shows connect wallet message when there is no session', () => {
     mockUseSession.mockReturnValue({ data: null, status: 'unauthenticated' })
-    mockUseAccount.mockReturnValue({ address: undefined, isConnected: false })
+    mockUseAuthAddress.mockReturnValue({ address: undefined, isConnected: false })
 
     render(<GoodDollarClaimButton lang="en" />)
 
-    expect(
-      screen.getByText(/Connect your wallet to claim/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Connect your wallet to claim/i)).toBeInTheDocument()
     expect(screen.getByRole('button')).toBeDisabled()
   })
 
-  it('displays loading state while claiming', async () => {
-    render(<GoodDollarClaimButton lang="en" />)
-    fireEvent.click(screen.getByRole('button'))
-
-    expect(await screen.findByText(/Claiming.../i)).toBeInTheDocument()
-    // Check that the claim function was actually called
-    expect(mockClaimSDKInstance.claim).toHaveBeenCalledTimes(1)
-  })
-
-  it('shows success toast on successful claim', async () => {
-    render(<GoodDollarClaimButton lang="en" />)
-    fireEvent.click(screen.getByRole('button'))
-
-    await waitFor(() => {
-      expect(mockToastFn).toHaveBeenCalledWith({
-        title: 'Claim successful',
-      })
-    })
-
-    const button = screen.getByRole('button', {
-      name: /Sign up with GoodDollar or Claim UBI/i,
-    })
-    expect(button).not.toBeDisabled()
-  })
-
-  it('shows an error toast when claim fails', async () => {
-    const error = new Error('Network error')
-    mockClaimSDKInstance.claim.mockRejectedValue(error)
+  it('claims directly on-chain when whitelisted and entitled (R-#275)', async () => {
     render(<GoodDollarClaimButton lang="en" />)
 
-    fireEvent.click(screen.getByRole('button'))
+    const button = screen.getByTestId('gooddollar-claim-button')
+    await waitFor(() => expect(button).toHaveAttribute('data-action', 'direct-claim'))
 
-    await waitFor(() => {
-      expect(mockToastFn).toHaveBeenCalledWith(expect.objectContaining({
-        title: expect.stringContaining('Claim failed'),
-        variant: 'destructive',
-      }))
-    })
+    fireEvent.click(button)
+
+    await waitFor(() =>
+      expect(mockWriteContract).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: '0x43d72Ff17701B2DA814620735C39C620Ce0ea4A1',
+          functionName: 'claim',
+        }),
+      ),
+    )
+    await waitFor(() => expect(mockToastFn).toHaveBeenCalledWith({ title: 'Claim successful' }))
+    expect(mockSignMessage).not.toHaveBeenCalled()
   })
 
-  it('in development (Celo Sepolia) GoodDollar is not available: no claim, honest reason', () => {
-    // GoodDollar UBI no existe en Celo Sepolia (el SDK soporta 50/122/42220):
-    // el botón lo dice y no intenta reclamar en vez de fingir que sí.
-    mockConfig.IS_PRODUCTION = false
+  it('signs the fixed FV message and opens GoodID when not whitelisted, without writing', async () => {
+    mockState.whitelistedRoot = zeroAddress
 
     render(<GoodDollarClaimButton lang="en" />)
 
-    expect(screen.getByText(/GoodDollar UBI is only on Celo mainnet/i)).toBeInTheDocument()
-    expect(screen.getByRole('button')).toBeDisabled()
-    expect(mockClaimSDKInstance.claim).not.toHaveBeenCalled()
+    const button = screen.getByTestId('gooddollar-claim-button')
+    await waitFor(() => expect(button).toHaveAttribute('data-action', 'verify'))
+
+    fireEvent.click(button)
+
+    await waitFor(() =>
+      expect(mockSignMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('request verifying your account') }),
+      ),
+    )
+    await waitFor(() =>
+      expect(mockAssign).toHaveBeenCalledWith(expect.stringContaining('goodid.gooddollar.org')),
+    )
+    expect(mockWriteContract).not.toHaveBeenCalled()
   })
 
-  it('accepts custom button text', () => {
-    render(<GoodDollarClaimButton lang="en" buttonText="Custom Text" />)
-    expect(
-      screen.getByRole('button', { name: /Custom Text/i }),
-    ).toBeInTheDocument()
+  it('says you already claimed today instead of offering a doomed claim', async () => {
+    mockState.entitlement = 0n
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    const button = screen.getByTestId('gooddollar-claim-button')
+    await waitFor(() => expect(button).toHaveAttribute('data-action', 'nothing-today'))
+    expect(screen.getByRole('button', { name: /You already claimed today/i })).toBeDisabled()
+    expect(mockWriteContract).not.toHaveBeenCalled()
+  })
+
+  it('stops with a message when the protocol changed, instead of failing silently', async () => {
+    mockGetCode.mockResolvedValue(undefined)
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    await waitFor(() =>
+      expect(screen.getByText(/GoodDollar changed something on its side/i)).toBeInTheDocument(),
+    )
+    expect(mockWriteContract).not.toHaveBeenCalled()
   })
 
   it('offers to unlock a locked in-app wallet instead of blaming testnet (R-#271)', () => {
@@ -245,7 +247,7 @@ describe('GoodDollarClaimButton', () => {
 
     fireEvent.click(button)
     expect(mockOpenInAppWalletDialog).toHaveBeenCalledTimes(1)
-    expect(mockClaimSDKInstance.claim).not.toHaveBeenCalled()
+    expect(mockWriteContract).not.toHaveBeenCalled()
   })
 
   it('uses the gesture wording when biometric is enabled', () => {
@@ -267,5 +269,56 @@ describe('GoodDollarClaimButton', () => {
     expect(screen.getByText(/cannot sign the GoodDollar verification/i)).toBeInTheDocument()
     expect(screen.queryByText(/Not available on testnet/i)).not.toBeInTheDocument()
     expect(screen.getByRole('button')).toBeDisabled()
+  })
+
+  it('in development (Celo Sepolia) GoodDollar is not available: no claim, honest reason', async () => {
+    mockConfig.IS_PRODUCTION = false
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    expect(screen.getByText(/only on Celo mainnet/i)).toBeInTheDocument()
+    expect(screen.getByRole('button')).toBeDisabled()
+    expect(screen.queryByText(/testnet/i)).not.toBeInTheDocument()
+
+    const button = screen.getByTestId('gooddollar-claim-button')
+    await waitFor(() => expect(button).toHaveAttribute('data-action', 'unsupported-chain'))
+    expect(mockWriteContract).not.toHaveBeenCalled()
+  })
+
+  it('displays loading state while claiming', async () => {
+    mockWriteContract.mockReturnValue(new Promise(() => {}))
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    const button = screen.getByTestId('gooddollar-claim-button')
+    await waitFor(() => expect(button).toHaveAttribute('data-action', 'direct-claim'))
+
+    fireEvent.click(button)
+    expect(await screen.findByText(/Claiming.../i)).toBeInTheDocument()
+  })
+
+  it('shows an error toast when the claim fails', async () => {
+    mockWriteContract.mockRejectedValue(new Error('Network error'))
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    const button = screen.getByTestId('gooddollar-claim-button')
+    await waitFor(() => expect(button).toHaveAttribute('data-action', 'direct-claim'))
+
+    fireEvent.click(button)
+
+    await waitFor(() =>
+      expect(mockToastFn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Claim failed'),
+          variant: 'destructive',
+        }),
+      ),
+    )
+  })
+
+  it('accepts custom button text', () => {
+    render(<GoodDollarClaimButton lang="en" buttonText="Custom Text" />)
+    expect(screen.getByRole('button', { name: /Custom Text/i })).toBeInTheDocument()
   })
 })

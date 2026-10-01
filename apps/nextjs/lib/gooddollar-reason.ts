@@ -34,8 +34,12 @@ export interface GoodDollarReasonInput {
   hasWalletClient: boolean
   /** Estado de la billetera in-app. */
   inAppStatus?: 'loading' | 'no-wallet' | 'locked' | 'unlocked' | null
-  /** El SDK de identidad se pudo construir. */
-  hasIdentitySDK: boolean
+  /**
+   * El proveedor de GoodDollar está disponible. Opcional: desde R-#275 el botón ya
+   * no construye el `citizen-sdk` (lee el protocolo directo), así que no lo pasa y se
+   * asume disponible. Se conserva para quien todavía dependa del SDK.
+   */
+  hasIdentitySDK?: boolean
   /** Construir el SDK lanzó. */
   sdkError?: unknown
   /** Red de la app (`getAppChain().id`). */
@@ -46,7 +50,7 @@ export function resolveGoodDollarReason(input: GoodDollarReasonInput): GoodDolla
   if (!input.hasAddress) return 'no-wallet'
   if (input.inAppStatus === 'locked') return 'locked'
   if (input.sdkError) return 'sdk-error'
-  if (!input.hasWalletClient || !input.hasIdentitySDK) return 'provider-unsupported'
+  if (!input.hasWalletClient || input.hasIdentitySDK === false) return 'provider-unsupported'
   if (input.chainId != null && !GOODDOLLAR_SUPPORTED_CHAIN_IDS.includes(input.chainId)) {
     return 'network-unsupported'
   }
