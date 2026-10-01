@@ -3,8 +3,12 @@
 import { ClaimSDK, IdentitySDK } from '@goodsdks/citizen-sdk'
 import { useSession } from 'next-auth/react'
 import { useState, useMemo } from 'react'
+import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
+import { getAppChain } from '@/lib/app-chain'
+import { isGoodDollarReady, resolveGoodDollarReason } from '@/lib/gooddollar-reason'
 
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
@@ -22,6 +26,7 @@ export default function GoodDollarClaimButton({
 }: GoodDollarClaimButtonProps) {
   const { address } = useAuthAddress()
   const { data: session } = useSession()
+  const { status: inAppStatus, biometricEnabled } = useInAppWallet()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const { toast } = useToast()
@@ -29,17 +34,20 @@ export default function GoodDollarClaimButton({
 
   const sdkEnv = IS_PRODUCTION ? 'production' : 'development'
 
-  const identitySDK = useMemo(() => {
-    if (typeof window === 'undefined' || !publicClient || !walletClient || !address) return null
+  const { identitySDK, sdkError } = useMemo(() => {
+    if (typeof window === 'undefined' || !publicClient || !walletClient || !address) {
+      return { identitySDK: null, sdkError: null }
+    }
     try {
-      return new IdentitySDK({
+      const sdk = new IdentitySDK({
         account: address as `0x${string}`,
         publicClient: publicClient as any,
         walletClient: walletClient as any,
         env: sdkEnv as any,
       })
-    } catch {
-      return null
+      return { identitySDK: sdk, sdkError: null }
+    } catch (error) {
+      return { identitySDK: null, sdkError: error }
     }
   }, [publicClient, walletClient, address, sdkEnv])
 
@@ -50,7 +58,13 @@ export default function GoodDollarClaimButton({
       signUp: 'Sign up with GoodDollar or Claim UBI',
       claiming: 'Claiming...',
       connectPrompt: 'Connect your wallet to claim',
-      testnetUnavailable: 'Not available on testnet',
+      inAppLocked: 'Your in-app wallet is locked. Unlock it with your password to verify with GoodDollar.',
+      inAppLockedGesture: 'Your in-app wallet is locked. Confirm with your fingerprint or Face ID to verify with GoodDollar.',
+      unlockInApp: 'Unlock your in-app wallet',
+      unlockInAppGesture: 'Unlock with fingerprint or Face ID',
+      providerUnsupported: 'This wallet cannot sign the GoodDollar verification here. Try an external wallet (MetaMask, Rabby).',
+      networkUnsupported: 'GoodDollar UBI is only on Celo mainnet (and Fuse/XDC). On this network use learn.tg-UBI (CELO).',
+      sdkUnavailable: 'GoodDollar is not available right now. Try again later.',
     },
     es: {
       claimSuccess: 'Reclamo exitoso',
@@ -58,13 +72,31 @@ export default function GoodDollarClaimButton({
       signUp: 'Regístrate con GoodDollar o reclama UBI',
       claiming: 'Reclamando...',
       connectPrompt: 'Conecta tu billetera para reclamar',
-      testnetUnavailable: 'No opera en testnet',
+      inAppLocked: 'Tu billetera in-app está bloqueada. Desbloquéala con tu contraseña para verificar con GoodDollar.',
+      inAppLockedGesture: 'Tu billetera in-app está bloqueada. Confirma con tu huella o Face ID para verificar con GoodDollar.',
+      unlockInApp: 'Desbloquear tu billetera',
+      unlockInAppGesture: 'Desbloquear con huella o Face ID',
+      providerUnsupported: 'Esta billetera no puede firmar la verificación de GoodDollar aquí. Prueba una billetera externa (MetaMask, Rabby).',
+      networkUnsupported: 'El UBI de GoodDollar es solo en la red principal de Celo (y Fuse/XDC). En esta red usa learn.tg-UBI (CELO).',
+      sdkUnavailable: 'GoodDollar no está disponible en este momento. Inténtalo más tarde.',
     },
   }), [lang])
 
+  const reason = resolveGoodDollarReason({
+    hasAddress: !!(session?.address && address),
+    hasWalletClient: !!walletClient,
+    inAppStatus,
+    hasIdentitySDK: !!identitySDK,
+    sdkError,
+    chainId: getAppChain().id,
+  })
+
   const handleClaim = async () => {
-    if (!session?.address || !publicClient || !walletClient || !identitySDK) {
-      toast({ title: t('connectPrompt'), variant: 'destructive' })
+    if (reason === 'locked') {
+      openInAppWalletDialog()
+      return
+    }
+    if (!isGoodDollarReady(reason) || !session?.address || !publicClient || !walletClient || !identitySDK) {
       return
     }
 
@@ -89,24 +121,36 @@ export default function GoodDollarClaimButton({
     }
   }
 
-  const hasWallet = !!(session && address)
-  const isReady = hasWallet && !!identitySDK
+  const hintText =
+    reason === 'no-wallet'
+      ? t('connectPrompt')
+      : reason === 'provider-unsupported'
+        ? t('providerUnsupported')
+        : reason === 'network-unsupported'
+          ? t('networkUnsupported')
+          : reason === 'sdk-error'
+            ? t('sdkUnavailable')
+            : ''
 
-  // Wallet connected but SDK unavailable → likely testnet
-  const hintText = !hasWallet
-    ? t('connectPrompt')
-    : !identitySDK
-      ? t('testnetUnavailable')
-      : ''
+  const label =
+    reason === 'locked'
+      ? biometricEnabled
+        ? t('unlockInAppGesture')
+        : t('unlockInApp')
+      : isClaiming
+        ? t('claiming')
+        : buttonText || t('signUp')
 
   return (
     <Button
       onClick={handleClaim}
-      disabled={isClaiming || !isReady}
+      disabled={isClaiming || (!isGoodDollarReady(reason) && reason !== 'locked')}
       variant="default"
       size="sm"
+      data-testid="gooddollar-claim-button"
+      data-reason={reason}
     >
-      {isClaiming ? t('claiming') : buttonText || t('signUp')}
+      {label}
       {hintText && (
         <span className="block text-xs text-gray-500 mt-1">{hintText}</span>
       )}

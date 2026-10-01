@@ -342,6 +342,18 @@ await writeContract({
 })
 ```
 
+## Consumers that need a signer: treat "locked" as a state
+
+A third-party SDK that needs an EIP-1193 provider (GoodDollar's
+`@goodsdks/citizen-sdk` is the current one) must not assume the wallet is usable
+just because the session exists: after a reload the in-app wallet is **locked** and
+`useWalletClient()` returns nothing. Ask for the unlock dialog with
+`openInAppWalletDialog()` (`lib/in-app-wallet-dialog.ts`, the same event the
+payment modals dispatch) and name *that* as the reason instead of guessing — the
+GoodDollar button used to say "Not available on testnet" on mainnet
+([R-#271](https://github.com/pasosdeJesus/learn.tg/issues/271)).
+`lib/gooddollar-reason.ts` is the pure picker behind that decision.
+
 ## localStorage Convention
 
 One key is managed by the auth system:
@@ -391,5 +403,6 @@ NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The former
 | `packages/pdj-wallet-next` | `useInAppWallet`, `InAppWalletSetup`, `InAppWalletUnlock` |
 | `lib/hooks/useWallet.ts` | usePublicClient + useWalletClient (viem, no wagmi) |
 | `lib/hooks/useWriteContract.ts` | useWriteContract via eth_sendTransaction |
+| `lib/gooddollar-reason.ts` | Why a signer-based SDK (GoodDollar) can or cannot run, and the unlock path (R-#271) |
 | `doc/siwe-auth-flow.md` | SIWE handshake protocol (NextAuth backend) |
 | https://github.com/pasosdeJesus/learn.tg/issues/186 | Full migration specification and history |

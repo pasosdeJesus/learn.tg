@@ -80,67 +80,71 @@ async function main() {
     ok('carga limpia de /en sin ChunkLoadError (control)')
   }
 
+  // La causa es el PRECACHE de Workbox (`workbox-precache-*`), no la caché runtime
+  // `learntg-pages` (NetworkFirst, que sí revalida). Buscamos `/en` solo ahí.
   const precache = await page.evaluate(async () => {
     const names = await caches.keys()
     for (const n of names) {
+      if (!n.startsWith('workbox-precache')) continue
       const c = await caches.open(n)
       const keys = await c.keys()
       if (keys.some((k) => new URL(k.url).pathname === '/en')) return n
     }
     return null
   })
+
   if (!precache) {
-    fail('no hay una entrada precacheada de /en (revisar additionalManifestEntries en next.config.ts)')
-    await browser.close()
-    process.exit(summary(t0) > 0 ? 1 : 0)
-  }
-  ok(`/en está precacheado en ${precache}`)
-
-  // ── Reproducción: shell precacheado que apunta a un chunk inexistente ──
-  // Se toma el HTML real y se cambia el nombre del chunk de la página por uno que
-  // no existe (como el `2233-…js` que el deploy removió), más un marcador para
-  // saber si el SW sirvió nuestra copia.
-  const stale = html
-    .replace(/page-[0-9a-f]+\.js/g, DEAD_CHUNK)
-    .replace('</body>', `<div id="stale-marker">${MARKER}</div></body>`)
-  if (!stale.includes(DEAD_CHUNK)) fail('no se pudo fabricar el shell viejo (no se encontró un chunk "page-*.js")')
-
-  await page.evaluate(async (html) => {
-    const names = await caches.keys()
-    for (const n of names) {
-      const c = await caches.open(n)
-      const keys = await c.keys()
-      if (keys.some((k) => new URL(k.url).pathname === '/en')) {
-        await c.put('/en', new Response(html, { headers: { 'Content-Type': 'text/html' } }))
-      }
-    }
-  }, stale)
-
-  const page2 = await browser.newPage()
-  const errs2 = []
-  page2.on('console', (m) => { if (m.type() === 'error') errs2.push(m.text().slice(0, 200)) })
-  page2.on('pageerror', (e) => errs2.push(`pageerror: ${e.message.slice(0, 200)}`))
-  await page2.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout: env.timeout }).catch(() => {})
-  await sleep(3000)
-  const servedStale = await page2.evaluate((m) => (document.documentElement?.outerHTML || '').includes(m), MARKER)
-  const body2 = await page2.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 160))
-  const chunkErr = errs2.find((e) => /ChunkLoadError|Loading chunk/i.test(e))
-  const stuckLoading = /Loading\.\.\./.test(body2)
-
-  // Todos los chunks reales existen (arriba), así que un ChunkLoadError solo puede
-  // venir del shell precacheado que apunta al chunk ausente que inyectamos.
-  if (chunkErr) {
-    fail(`el shell precacheado se sirvió y su chunk ausente rompió la carga → ${chunkErr} (es el "This page couldn't load" que reportó el operador)`)
-  } else if (servedStale) {
-    fail('el service worker sirvió el shell precacheado de /en SIN revalidar contra la red: causa del "This page couldn\'t load" tras un deploy')
+    ok('/en ya no se precachea: el shell se sirve por NetworkFirst y revalida (fix de R-#272 §10)')
   } else {
-    ok('una pestaña nueva revalidó /en contra la red (no sirvió el shell precacheado)')
-  }
+    ok(`/en sigue precacheado en ${precache} (causa viva)`)
 
-  if (stuckLoading) {
-    ok('sin hidratar, la página queda en el "Loading..." del SSR (segundo síntoma reproducido)')
+    // ── Reproducción: shell precacheado que apunta a un chunk inexistente ──
+    // Se toma el HTML real y se cambia el nombre del chunk de la página por uno que
+    // no existe (como el `2233-…js` que el deploy removió), más un marcador para
+    // saber si el SW sirvió nuestra copia.
+    const stale = html
+      .replace(/page-[0-9a-f]+\.js/g, DEAD_CHUNK)
+      .replace('</body>', `<div id="stale-marker">${MARKER}</div></body>`)
+    if (!stale.includes(DEAD_CHUNK)) fail('no se pudo fabricar el shell viejo (no se encontró un chunk "page-*.js")')
+
+    await page.evaluate(async ({ staleHtml }) => {
+      const names = await caches.keys()
+      for (const n of names) {
+        if (!n.startsWith('workbox-precache')) continue
+        const c = await caches.open(n)
+        const keys = await c.keys()
+        if (keys.some((k) => new URL(k.url).pathname === '/en')) {
+          await c.put('/en', new Response(staleHtml, { headers: { 'Content-Type': 'text/html' } }))
+        }
+      }
+    }, { staleHtml: stale })
+
+    const page2 = await browser.newPage()
+    const errs2 = []
+    page2.on('console', (m) => { if (m.type() === 'error') errs2.push(m.text().slice(0, 200)) })
+    page2.on('pageerror', (e) => errs2.push(`pageerror: ${e.message.slice(0, 200)}`))
+    await page2.goto(`${base}/en`, { waitUntil: 'domcontentloaded', timeout: env.timeout }).catch(() => {})
+    await sleep(3000)
+    const servedStale = await page2.evaluate((m) => (document.documentElement?.outerHTML || '').includes(m), MARKER)
+    const body2 = await page2.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 160))
+    const chunkErr = errs2.find((e) => /ChunkLoadError|Loading chunk/i.test(e))
+    const stuckLoading = /Loading\.\.\./.test(body2)
+    await page2.close()
+
+    // Todos los chunks reales existen (arriba), así que un ChunkLoadError solo puede
+    // venir del shell precacheado que apunta al chunk ausente que inyectamos.
+    if (chunkErr) {
+      fail(`el shell precacheado se sirvió y su chunk ausente rompió la carga → ${chunkErr} (el "This page couldn't load" del operador)`)
+    } else if (servedStale) {
+      fail('el service worker sirvió el shell precacheado de /en SIN revalidar contra la red: causa del "This page couldn\'t load" tras un deploy')
+    } else {
+      ok('una pestaña nueva revalidó /en contra la red (no sirvió el shell precacheado)')
+    }
+
+    if (stuckLoading) {
+      ok('sin hidratar, la página queda en el "Loading..." del SSR (segundo síntoma reproducido)')
+    }
   }
-  await page2.close()
 
   await clearCaches(page)
   await browser.close()

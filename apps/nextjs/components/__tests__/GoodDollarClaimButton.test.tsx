@@ -88,6 +88,19 @@ vi.mock('@/lib/hooks/useWallet', () => ({
   useWalletClient: mockUseWalletClient,
 }))
 
+// Mock de la billetera in-app (R-#271)
+const { mockUseInAppWallet, mockOpenInAppWalletDialog } = vi.hoisted(() => ({
+  mockUseInAppWallet: vi.fn(),
+  mockOpenInAppWalletDialog: vi.fn(),
+}))
+vi.mock('@learn-tg/pdj-wallet-next', () => ({
+  useInAppWallet: mockUseInAppWallet,
+}))
+vi.mock('@/lib/in-app-wallet-dialog', () => ({
+  openInAppWalletDialog: mockOpenInAppWalletDialog,
+  OPEN_IN_APP_WALLET_DIALOG: 'learn-tg:open-in-app-wallet-dialog',
+}))
+
 // --- Tests --- //
 
 describe('GoodDollarClaimButton', () => {
@@ -114,6 +127,7 @@ describe('GoodDollarClaimButton', () => {
     })
     mockUsePublicClient.mockReturnValue({} as any)
     mockUseWalletClient.mockReturnValue({ data: {} as any })
+    mockUseInAppWallet.mockReturnValue({ status: 'unlocked', biometricEnabled: false })
     
     // NEW API: returns { sdk, loading, error }
     mockUseIdentitySDK.mockReturnValue({ 
@@ -200,18 +214,16 @@ describe('GoodDollarClaimButton', () => {
     })
   })
 
-  it('works in development environment', async () => {
-    // Arrange: Simulate non-production environment
+  it('in development (Celo Sepolia) GoodDollar is not available: no claim, honest reason', () => {
+    // GoodDollar UBI no existe en Celo Sepolia (el SDK soporta 50/122/42220):
+    // el botón lo dice y no intenta reclamar en vez de fingir que sí.
     mockConfig.IS_PRODUCTION = false
 
-    // Act
     render(<GoodDollarClaimButton lang="en" />)
-    fireEvent.click(screen.getByRole('button'))
 
-    // Assert: Check that it actually calls claim (no longer blocked)
-    await waitFor(() => {
-        expect(mockClaimSDKInstance.claim).toHaveBeenCalled()
-    })
+    expect(screen.getByText(/GoodDollar UBI is only on Celo mainnet/i)).toBeInTheDocument()
+    expect(screen.getByRole('button')).toBeDisabled()
+    expect(mockClaimSDKInstance.claim).not.toHaveBeenCalled()
   })
 
   it('accepts custom button text', () => {
@@ -219,5 +231,41 @@ describe('GoodDollarClaimButton', () => {
     expect(
       screen.getByRole('button', { name: /Custom Text/i }),
     ).toBeInTheDocument()
+  })
+
+  it('offers to unlock a locked in-app wallet instead of blaming testnet (R-#271)', () => {
+    mockUseInAppWallet.mockReturnValue({ status: 'locked', biometricEnabled: false })
+    mockUseWalletClient.mockReturnValue({ data: null })
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    const button = screen.getByRole('button', { name: /Unlock your in-app wallet/i })
+    expect(button).not.toBeDisabled()
+    expect(screen.queryByText(/Not available on testnet/i)).not.toBeInTheDocument()
+
+    fireEvent.click(button)
+    expect(mockOpenInAppWalletDialog).toHaveBeenCalledTimes(1)
+    expect(mockClaimSDKInstance.claim).not.toHaveBeenCalled()
+  })
+
+  it('uses the gesture wording when biometric is enabled', () => {
+    mockUseInAppWallet.mockReturnValue({ status: 'locked', biometricEnabled: true })
+    mockUseWalletClient.mockReturnValue({ data: null })
+
+    render(<GoodDollarClaimButton lang="es" />)
+    expect(
+      screen.getByRole('button', { name: /Desbloquear con huella o Face ID/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('names an unsupported provider instead of testnet when there is no signer', () => {
+    mockUseInAppWallet.mockReturnValue({ status: 'no-wallet', biometricEnabled: false })
+    mockUseWalletClient.mockReturnValue({ data: null })
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    expect(screen.getByText(/cannot sign the GoodDollar verification/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Not available on testnet/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('button')).toBeDisabled()
   })
 })
