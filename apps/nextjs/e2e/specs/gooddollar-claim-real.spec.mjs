@@ -55,7 +55,6 @@ import { celo } from 'viem/chains'
 const IDENTITY = '0xC361A6E67822a0EDc17D899227dd9FC50BD62F42'
 const UBISCHEME = '0x43d72Ff17701B2DA814620735C39C620Ce0ea4A1'
 const DEFAULT_RPC = process.env.CELO_RPC_URL || 'https://forno.celo.org'
-const GUIDE_PATH = process.env.GOODDOLLAR_GUIDE_PATH || '/en/web3-and-ubi/guide4'
 
 const identityAbi = parseAbi([
   'function getWhitelistedRoot(address) view returns (address)',
@@ -64,7 +63,101 @@ const ubiAbi = parseAbi([
   'function checkEntitlement(address) view returns (uint256)',
 ])
 
+const DEFAULT_GUIDE_PATHS =
+  '/en/web3-and-ubi/guide4,/en/web3-and-ubi/guide3,/en/web3-and-ubi/guide5,/en/web3-and-ubi/guide2'
+
+/**
+ * Guías donde puede estar el botón. El placeholder `{GoodDollarButton}` vive en la
+ * guía que el renumerado del 2026-09-30 movió de `guide3` a `guide4`: un sitio sin
+ * ese renumerado (producción vieja) lo tiene en `guide3`. Se prueban en orden y se
+ * usa la primera que lo muestre. Override: `GOODDOLLAR_GUIDE_PATHS` (lista) o
+ * `GOODDOLLAR_GUIDE_PATH` (una sola).
+ */
+const GUIDE_PATHS = (process.env.GOODDOLLAR_GUIDE_PATHS
+  || process.env.GOODDOLLAR_GUIDE_PATH
+  || DEFAULT_GUIDE_PATHS)
+  .split(',').map((s) => s.trim()).filter(Boolean)
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * Localiza el botón en el DOM. El build nuevo lo marca con
+ * `data-testid="gooddollar-claim-button"`; un build anterior (la producción de hoy)
+ * NO trae testid, así que se cae al texto del botón (EN/ES).
+ */
+const findClaimButton = () => {
+  const byTestId = document.querySelector('[data-testid="gooddollar-claim-button"]')
+  const node = byTestId || [...document.querySelectorAll('button')].find((b) =>
+    /Sign up with GoodDollar or Claim UBI|Regístrate con GoodDollar o reclama UBI/i.test(b.innerText || ''),
+  )
+  if (!node) return null
+  return {
+    byTestId: !!byTestId,
+    reason: node.getAttribute('data-reason') || 'unknown',
+    disabled: !!node.disabled,
+  }
+}
+
+const clickClaimButton = () => {
+  const node = document.querySelector('[data-testid="gooddollar-claim-button"]') || [...document.querySelectorAll('button')].find((b) =>
+    /Sign up with GoodDollar or Claim UBI|Regístrate con GoodDollar o reclama UBI/i.test(b.innerText || ''),
+  )
+  if (node) node.click()
+  return !!node
+}
+
+/**
+ * Captura la respuesta REAL de `/api/guide` (la misma que pide la página, con
+ * sesión) para saber si esa guía trae el placeholder `{GoodDollarButton}`. Así no
+ * se supone nada sobre el contenido desplegado: se mide.
+ */
+function attachGuideProbe(page) {
+  const responses = []
+  page.on('response', async (res) => {
+    if (!res.url().includes('/api/guide')) return
+    let markdown = null
+    let message = null
+    try {
+      const body = await res.json()
+      markdown = body?.markdown ?? null
+      message = body?.message ?? null
+    } catch { /* sin JSON */ }
+    responses.push({
+      path: new URL(res.url()).pathname + new URL(res.url()).search,
+      status: res.status(),
+      hasButton: typeof markdown === 'string' && markdown.includes('{GoodDollarButton}'),
+      hasMarkdown: typeof markdown === 'string' && markdown.length > 0,
+      message,
+    })
+  })
+  return responses
+}
+
+/** Recorre las guías candidatas y devuelve la primera que muestre el botón. */
+async function findGoodDollarGuide(page, base, timeout, probe) {
+  const tried = []
+  for (const path of GUIDE_PATHS) {
+    const from = probe.length
+    await gotoWithRetry(page, `${base}${path}`, { waitUntil: 'domcontentloaded', timeout }).catch(() => {})
+    let info = null
+    for (let i = 0; i < 20 && !info; i++) {
+      await sleep(1000)
+      info = await page.evaluate(findClaimButton)
+    }
+    await sleep(1500) // deja llegar la respuesta de /api/guide si iba detrás
+    const got = probe.slice(from)
+    const withButton = got.find((r) => r.hasButton)
+    if (info || withButton) {
+      return { path, info: info || { reason: 'unknown', disabled: null }, tried, guide: withButton || got[0] || null }
+    }
+    const api = got.length
+      ? `${got[0].status} markdown=${got[0].hasMarkdown} hasButton=${got[0].hasButton}${got[0].message ? ` message=${JSON.stringify(got[0].message)}` : ''}`
+      : 'sin respuesta de /api/guide'
+    const seen = await page.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 120))
+    tried.push(`${path} → /api/guide: ${api} | pantalla: ${JSON.stringify(seen)}`)
+  }
+  return { path: null, info: null, tried, guide: null }
+}
 
 /** Espera a que la sesión de la billetera in-app quede establecida (SIWE automático). */
 async function waitForInAppSession(page, address, timeoutMs) {
@@ -188,6 +281,7 @@ async function main() {
   const page = await browser.newPage()
   const pageErrors = []
   page.on('pageerror', (e) => pageErrors.push(e.message.slice(0, 200)))
+  const guideProbe = attachGuideProbe(page)
   let claimTxHash = ''
 
   try {
@@ -235,25 +329,16 @@ async function main() {
       await page.evaluate(() => { window.__e2eRealRpc = true })
     }
 
-    await gotoWithRetry(page, `${base}${GUIDE_PATH}`, { waitUntil: 'domcontentloaded', timeout: env.timeout })
-
-    // Esperar el botón (la guía trae el placeholder `{GoodDollarButton}`).
-    // En el build nuevo el botón trae `data-reason`; en un build anterior (p. ej. la
-    // producción de hoy) no existe, así que se acepta `unknown` y se intenta igual.
-    let info = null
-    for (let i = 0; i < 40 && !info; i++) {
-      await sleep(1000)
-      info = await page.evaluate(() => {
-        const el = document.querySelector('[data-testid="gooddollar-claim-button"]')
-        if (!el) return null
-        return { reason: el.getAttribute('data-reason') || 'unknown', disabled: el.disabled }
-      })
-    }
-    if (!info) {
-      await fail(`no apareció el botón de GoodDollar en ${GUIDE_PATH} (¿cambió la guía o el placeholder?)`)
+    const found = await findGoodDollarGuide(page, base, env.timeout, guideProbe)
+    if (!found.info) {
+      await fail(`no apareció el botón de GoodDollar en ninguna de estas guías. Detalle (respuesta real de /api/guide): ${found.tried.join(' | ')}`)
       throw new Error('no button')
     }
-    ok(`botón de GoodDollar presente (data-reason = ${info.reason}, disabled = ${info.disabled})`)
+    const { info } = found
+    const guideNote = found.guide
+      ? ` | /api/guide ${found.guide.status} markdown=${found.guide.hasMarkdown} hasButton=${found.guide.hasButton}`
+      : ''
+    ok(`botón de GoodDollar encontrado en ${found.path} (data-reason = ${info.reason}, disabled = ${info.disabled})${guideNote}`)
 
     if (info.reason !== 'ready' && info.reason !== 'unknown') {
       await fail(`el botón no está listo para reclamar: data-reason = ${info.reason} (la spec esperaba "ready")`)
@@ -271,7 +356,11 @@ async function main() {
     })
     page.on('popup', (p) => { if (/goodid/i.test(p.url())) goodIdOpened = true })
 
-    await page.click('[data-testid="gooddollar-claim-button"]')
+    const clicked = await page.evaluate(clickClaimButton)
+    if (!clicked) {
+      await fail('el botón desapareció antes del clic')
+      throw new Error('no clickable')
+    }
 
     const successRe = /Claim successful|Reclamo exitoso/i
     const failedRe = /Claim failed|Reclamo fallido/i
