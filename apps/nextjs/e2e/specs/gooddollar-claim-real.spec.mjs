@@ -231,24 +231,30 @@ async function main() {
     await gotoWithRetry(page, `${base}${GUIDE_PATH}`, { waitUntil: 'domcontentloaded', timeout: env.timeout })
 
     // Esperar el botón (la guía trae el placeholder `{GoodDollarButton}`).
-    let reason = null
-    for (let i = 0; i < 40 && !reason; i++) {
+    // En el build nuevo el botón trae `data-reason`; en un build anterior (p. ej. la
+    // producción de hoy) no existe, así que se acepta `unknown` y se intenta igual.
+    let info = null
+    for (let i = 0; i < 40 && !info; i++) {
       await sleep(1000)
-      reason = await page.evaluate(() => {
+      info = await page.evaluate(() => {
         const el = document.querySelector('[data-testid="gooddollar-claim-button"]')
         if (!el) return null
-        return el.getAttribute('data-reason') || 'no-reason'
+        return { reason: el.getAttribute('data-reason') || 'unknown', disabled: el.disabled }
       })
     }
-    if (!reason) {
+    if (!info) {
       await fail(`no apareció el botón de GoodDollar en ${GUIDE_PATH} (¿cambió la guía o el placeholder?)`)
       throw new Error('no button')
     }
-    ok(`botón de GoodDollar presente (data-reason = ${reason})`)
+    ok(`botón de GoodDollar presente (data-reason = ${info.reason}, disabled = ${info.disabled})`)
 
-    if (reason !== 'ready') {
-      await fail(`el botón no está listo para reclamar: data-reason = ${reason} (la spec esperaba "ready")`)
+    if (info.reason !== 'ready' && info.reason !== 'unknown') {
+      await fail(`el botón no está listo para reclamar: data-reason = ${info.reason} (la spec esperaba "ready")`)
       throw new Error('not ready')
+    }
+    if (info.disabled) {
+      await fail(`el botón está deshabilitado (data-reason = ${info.reason}): con un build anterior eso puede ser el SDK sin proveedor (billetera bloqueada)`)
+      throw new Error('disabled')
     }
 
     // Por si la whitelist on-chain estuviera desfasada y el flujo abra GoodID.

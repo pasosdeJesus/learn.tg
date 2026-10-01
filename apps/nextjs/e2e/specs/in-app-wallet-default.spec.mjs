@@ -157,12 +157,21 @@ async function main() {
     await importPage.click('[data-testid="wallet-mode-import"]')
     await importPage.waitForSelector('[data-testid="wallet-mnemonic"]', { timeout: env.timeout })
 
-  const dialog = await importPage.evaluate(() => ({
-    security: !!document.querySelector('[data-testid="wallet-import-security"]'),
-    guide: document.querySelector('[data-testid="wallet-migration-guide"]')?.getAttribute('href') || null,
-  }))
+  const dialog = await importPage.evaluate(() => {
+    const importButton = document.querySelector('[data-testid="wallet-import"]')
+    return {
+      security: !!document.querySelector('[data-testid="wallet-import-security"]'),
+      guide: document.querySelector('[data-testid="wallet-migration-guide"]')?.getAttribute('href') || null,
+      privateKeyField: !!document.querySelector('[data-testid="wallet-private-key"]'),
+      importDisabled: importButton ? importButton.disabled : null,
+    }
+  })
   if (dialog.security && dialog.guide === '/en/migration-in-app-wallet') ok('el diálogo explica que la frase no sale del dispositivo y enlaza la guía')
   else fail(`el diálogo de importación no trae el aviso o la guía (${JSON.stringify(dialog)})`)
+
+  // R-#270 §13: también se puede importar la llave privada, y el botón no se habilita vacío.
+  if (dialog.privateKeyField && dialog.importDisabled === true) ok('el diálogo ofrece importar con llave privada y no deja importar en vacío')
+  else fail(`falta el campo de llave privada o el botón se habilita vacío (${JSON.stringify(dialog)})`)
 
   await importPage.type('[data-testid="wallet-mnemonic"]', HARDHAT_MNEMONIC)
   await importPage.type('[data-testid="wallet-password"]', PASSWORD)
