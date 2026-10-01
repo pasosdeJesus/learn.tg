@@ -344,8 +344,7 @@ await writeContract({
 
 ## Consumers that need a signer: treat "locked" as a state
 
-A third-party SDK that needs an EIP-1193 provider (GoodDollar's
-`@goodsdks/citizen-sdk` is the current one) must not assume the wallet is usable
+A consumer that needs an EIP-1193 provider must not assume the wallet is usable
 just because the session exists: after a reload the in-app wallet is **locked** and
 `useWalletClient()` returns nothing. Ask for the unlock dialog with
 `openInAppWalletDialog()` (`lib/in-app-wallet-dialog.ts`, the same event the
@@ -353,6 +352,17 @@ payment modals dispatch) and name *that* as the reason instead of guessing — t
 GoodDollar button used to say "Not available on testnet" on mainnet
 ([R-#271](https://github.com/pasosdeJesus/learn.tg/issues/271)).
 `lib/gooddollar-reason.ts` is the pure picker behind that decision.
+
+**The GoodDollar claim reads the protocol directly** (R-#275,
+https://github.com/pasosdeJesus/learn.tg/issues/275): `lib/gooddollar-protocol.ts`
+holds the Celo mainnet addresses, ABIs, the fixed face-verification message and the
+GoodID link builder, and `GoodDollarClaimButton` reads `IdentityV2.getWhitelistedRoot`
++ `UBIScheme.checkEntitlement` and writes `UBIScheme.claim()` — the reference is the
+official wallet ([GoodDollar/GoodWallet](https://github.com/GoodDollar/GoodWallet),
+`src/gooddollar/`). `@goodsdks/citizen-sdk` is **out of the claim path**: it added its
+own verification-freshness gate that blocked a whitelisted, entitled address; it stays
+installed only so `lib/__tests__/gooddollar-protocol.test.ts` can cross-check the
+constants.
 
 ## localStorage Convention
 
@@ -403,6 +413,7 @@ NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The former
 | `packages/pdj-wallet-next` | `useInAppWallet`, `InAppWalletSetup`, `InAppWalletUnlock` |
 | `lib/hooks/useWallet.ts` | usePublicClient + useWalletClient (viem, no wagmi) |
 | `lib/hooks/useWriteContract.ts` | useWriteContract via eth_sendTransaction |
-| `lib/gooddollar-reason.ts` | Why a signer-based SDK (GoodDollar) can or cannot run, and the unlock path (R-#271) |
+| `lib/gooddollar-reason.ts` | Why a signer-based flow (GoodDollar) can or cannot run, and the unlock path (R-#271) |
+| `lib/gooddollar-protocol.ts` | GoodDollar protocol in one place: Celo addresses/ABIs, FV message, GoodID link, action resolver and change detector (R-#275) |
 | `doc/siwe-auth-flow.md` | SIWE handshake protocol (NextAuth backend) |
 | https://github.com/pasosdeJesus/learn.tg/issues/186 | Full migration specification and history |
