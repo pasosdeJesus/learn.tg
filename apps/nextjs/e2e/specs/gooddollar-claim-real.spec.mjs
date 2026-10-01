@@ -349,12 +349,26 @@ async function main() {
       throw new Error('disabled')
     }
 
-    // Por si la whitelist on-chain estuviera desfasada y el flujo abra GoodID.
+    // Por si la whitelist on-chain no alcanzara y el flujo abra la verificación GoodID.
     let goodIdOpened = false
+    const popupUrls = []
+    const sdkLogs = []
     page.on('framenavigated', (f) => {
-      if (f === page.mainFrame() && /goodid/i.test(f.url())) goodIdOpened = true
+      if (f === page.mainFrame() && /goodid/i.test(f.url())) {
+        goodIdOpened = true
+        popupUrls.push(`main → ${f.url()}`)
+      }
     })
-    page.on('popup', (p) => { if (/goodid/i.test(p.url())) goodIdOpened = true })
+    page.on('popup', (p) => {
+      popupUrls.push(`popup → ${p.url()}`)
+      if (/goodid/i.test(p.url())) goodIdOpened = true
+    })
+    page.on('console', (m) => {
+      const t = m.text()
+      if (/gooddollar|goodid|verif|facetec|whitelist|identity|claim/i.test(t)) {
+        sdkLogs.push(`${m.type()}: ${t.slice(0, 160)}`)
+      }
+    })
 
     const clicked = await page.evaluate(clickClaimButton)
     if (!clicked) {
@@ -378,11 +392,16 @@ async function main() {
     }
 
     if (outcome === 'verification') {
-      await fail('el flujo abrió la verificación de GoodID: la dirección no tiene la whitelist vigente (hazla verificar y reintenta)')
+      await fail(
+        'el flujo abrió la verificación de GoodID (la verificación facial FaceTec es manual). '
+        + `popups: ${popupUrls.join(' | ') || 'ninguno'}`
+        + ` | tx: ${claimTxHash || 'no enviada'}`
+        + ` | SDK: ${sdkLogs.slice(0, 4).join(' || ') || 'sin avisos'}`,
+      )
     } else if (outcome === 'failed') {
-      await fail(`el botón reportó un fallo (revisa el toast/consola). pageErrors: ${pageErrors.slice(0, 2).join(' | ')}`)
+      await fail(`el botón reportó un fallo (revisa el toast/consola). pageErrors: ${pageErrors.slice(0, 2).join(' | ')} | SDK: ${sdkLogs.slice(0, 3).join(' || ')}`)
     } else if (outcome === 'timeout') {
-      await fail(`no se confirmó el reclamo (tx: ${claimTxHash || 'no capturada'}). ¿Gas insuficiente o RPC lento?`)
+      await fail(`no se confirmó el reclamo (tx: ${claimTxHash || 'no capturada'}). popups: ${popupUrls.join(' | ') || 'ninguno'} | SDK: ${sdkLogs.slice(0, 3).join(' || ') || 'sin avisos'}`)
     } else {
       ok(`reclamo confirmado (${outcome}${claimTxHash ? `, tx ${claimTxHash}` : ''})`)
       if (claimTxHash) console.log(`  https://celoscan.io/tx/${claimTxHash}`)
