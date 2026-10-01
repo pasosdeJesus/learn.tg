@@ -491,6 +491,37 @@ Single source of truth for all value movements — both on-chain (USDT, SLEARN, 
 
 ---
 
+## Dates and Times (storage and display)
+
+Rule: **everything is stored as UTC and shown in the user's timezone**, where "the user's
+timezone" is the one of their **declared location**, not the device's.
+
+- **Instants the user sees** (an interview date, a transaction, an event) live in a
+  `timestamptz` column and travel as ISO strings with a timezone marker. The interview
+  columns were migrated to `timestamptz` (`20260822000000_proposed_interview_timestamptz`)
+  because the original `date` column shifted the hour (2PM → 5AM).
+- **`timestamp without time zone` columns are a wall clock**: write them with
+  `toDbTimestamp()` (`apps/nextjs/lib/date-utils.ts`), which serializes UTC. A raw
+  `new Date()` inserted by the driver stores the **writing machine's** wall clock, which
+  is how the 2PM → 5AM shift appeared.
+- **The user's timezone comes from the profile**: `department_timezone` first, then
+  `country_timezone` (`msip_pais.timezone`; Colombia `America/Bogota`, Sierra Leone
+  `Africa/Freetown`). When it is unknown the UI falls back to `UTC` **and says so**
+  (`VerificationScheduler` prints "All times are in UTC (GMT+00:00)").
+- **The verifier's working hours** are defined in the verifier's own zone
+  (`VERIFIER_TIMEZONE`, default `America/Bogota`) and the availability API converts
+  instants without depending on the machine's zone
+  (`apps/nextjs/app/api/verification/availability/route.ts`).
+- **Deliberate exceptions, where the device zone *is* the user's zone**: the
+  `datetime-local` inputs the verifier fills (`dbTimestampToLocalInput`) and the
+  verifier's own agenda (`components/admin/CalendarWidget.tsx`).
+- **A day in a calendar must be computed in the displayed zone**, never by slicing an ISO
+  string (that gives the UTC day): `dateKeyInTimezone()` (`lib/date-utils.ts`) is the
+  helper. Before 2026-09-30 the day cells used the device zone while the slots used the
+  UTC day, so evening slots lit no cell in `VerificationScheduler`.
+
+---
+
 ## Cache Update Triggers
 
 **Policy:** Derived/cached data (scores, aggregates, rankings) must be kept fresh via **database triggers**, not periodic cron jobs or application-level timers. A cache row is stale only between the start and commit of the triggering transaction — never longer.

@@ -19,67 +19,35 @@ Recuerda, es mejor ahorrar tu cripto con el tiempo y convertir una cantidad mayo
 
 ### **Ruta 1: Exchange y mercado P2P (funciona con tu billetera dentro de learn.tg)**
 
-Puedes enviar lo que tienes en tu billetera a un exchange como **Binance** u **OKX** y
-venderlo allí por el dinero que usas todos los días. En resumen:
+Puedes enviar lo que tienes en tu billetera a un exchange y venderlo allí por el dinero
+que usas todos los días. Las redes importan, así que revísalas antes de enviar:
+
+*   **OKX** recibe **CELO**, y solo por la **red CELO**.
+*   **Binance** recibe **USDT y CELO**, y los dos por la **red CELO**.
+
+En resumen:
 
 1. Crea tu cuenta en el exchange y completa su verificación (te pedirán documento de
    identidad y una selfie).
-2. En el exchange abre **Depositar**, elige la moneda (por ejemplo CELO) y revisa que
-   acepte la red **Celo**; copia la **dirección de depósito** que te muestre.
-   *   **Cuidado:** cada red tiene su propia dirección. Si el exchange no lista la red
-       Celo para esa moneda, **no la envíes ahí**: los fondos se perderían.
+2. En el exchange abre **Depositar**, elige la moneda (**CELO**, o **USDT** en Binance)
+   y elige la red **CELO**; copia la **dirección de depósito** que te muestre.
+   *   **Cuidado:** cada red tiene su propia dirección. Envía **solo por la red CELO**:
+       por otra red los fondos se perderían.
 3. En learn.tg abre el **panel de la billetera** (el botón de arriba con tu dirección) y
    toca **Enviar**. Pega la dirección, escribe la cantidad y confirma con tu huella o tu
    clave.
 4. Cuando lleguen los fondos, véndelos en el exchange por USDT o por tu moneda local.
 5. Para sacar el dinero usa el **mercado P2P** del exchange: allí le vendes tus USDT a
-   otra persona y recibes el pago en tu banco o en tu cuenta de dinero móvil.
-
-El mercado P2P te deja comparar precios entre varios vendedores antes de aceptar uno.
+   otra persona y recibes el pago en tu banco o en tu cuenta de dinero móvil, al precio
+   que elijas entre varios vendedores.
 
 ---
 
-### **Ruta 2 — Para Usuarios en Sierra Leona: Usando stable-sl.pdJ.app**
+### **Ruta 2 — Sierra Leona: stable-sl (en renovación)**
 
-Para una experiencia sin problemas en Sierra Leona, recomendamos **stable-sl.pdJ.app**.
-Este servicio está diseñado para funcionar directamente con Leones de Sierra Leona y dinero móvil. Antes de comenzar, mira un video corto del proceso:
-
-[![Video que muestra el funcionamiento de stable-sl.pdJ.app](https://youtube.com/shorts/Gy9Fgruebx0)](https://youtube.com/shorts/Gy9Fgruebx0)
-
-> **Próximamente:** podrás cambiar con stable-sl **dentro de learn.tg**, desde la misma
-> billetera que usas en este curso, sin visitar otro sitio.
-
-#### **Guía Paso a Paso para cambiar cripto por SLE:**
-
-**Paso 1: Abre el servicio y conecta tu billetera**
-1. En **Chrome** (Android) o **Safari** (iPhone) ve a **[stable-sl.pdJ.app](https://stable-sl.pdj.app/)**.
-2. Conecta tu billetera cuando el sitio te lo pida (la billetera que usas en learn.tg).
-
-**Paso 2: Envía Tus Tokens de IBU**
-1. Escribe tu nombre y número de teléfono de Orange (Nota: actualmente este servicio 
-   solo admite Orange Money).
-2. Selecciona la cripto que vas a cambiar por SLE (por ejemplo, CELO)
-3. Presiona el botón **Vender**
-
-**Paso 3: Establece la cantidad y continúa
-1. Escribe la cantidad de cripto que quieres vender y espera unos segundos para ver
-   una cotización que informa cuánto SLE recibirás
-2. Si estás de acuerdo con el precio, presiona el botón Continuar (puedes comparar con las
-   tasas oficiales, por ejemplo, en [Coinmarketcap](https://coinmarketcap.com/) y
-   con las tasas de mercado en los mercados P2P de OKX y Binance).
- 
-**Paso 4: Confirma la transacción**
-1. Revisa los detalles, verifica que escribiste correctamente tu número de teléfono
-   y que está registrado a tu nombre
-  (porque el SLE se enviará a ese número si coincide con tu nombre).
-2. Presiona el botón Confirmar
-
-**Paso 5: Espera tu SLE**
-1. Toma una captura de pantalla que muestre los detalles de la operación y el número de
-   transacción
-2. Espera unos minutos para recibir tu SLE
-3. Si tienes algún problema, utiliza el botón de soporte en el sitio o
-   contacta al equipo a través de Telegram en +57 3165383162
+**stable-sl.pdJ.app está en renovación** (octubre de 2026), así que su paso a paso no
+se publica aquí por ahora. Cuando el servicio vuelva, la idea es que puedas hacer este
+cambio **dentro de learn.tg**, con la misma billetera que usas en este curso.
 
 ---
 
@@ -100,11 +68,10 @@ Este servicio está diseñado para funcionar directamente con Leones de Sierra L
     de tu país. (vender)
 2.  Un servicio de rampa de entrada te permite ___ cripto con el
     dinero fiduciario de tu país (comprar)
-3. stable-sl.pdJ.app es el ___ de rampa de entrada y salida recomendado en 
-   Sierra Leona. (servicio)
-4. También es posible comprar y vender cripto por dinero fiduciario usando el mercado P2P
-   de ___ como OKX y Binance. (exchanges)
-5. Para pagar comisiones de transacción en la red Celo necesitas tener ___ en tu billetera. (CELO)
-6. Después de confirmar una transacción en stable-sl.pdJ.app, debes tomar una ___ de los detalles. (captura)
-7. Antes de enviar fondos a un exchange, revisa que la dirección de depósito acepte la moneda en la red ___. (Celo)
-8. Próximamente podrás cambiar con stable-sl directamente desde tu ___ dentro de learn.tg. (billetera)
+3. OKX recibe CELO, y solo por la red ___. (CELO)
+4. Entre OKX y Binance, ___ es el que recibe USDT por la red CELO. (Binance)
+5. En la pantalla de depósito del exchange copias la ___ de depósito de tu cuenta. (dirección)
+6. Para pagar comisiones de transacción en la red Celo necesitas tener ___ en tu billetera. (CELO)
+7. Para sacar tu dinero le vendes tu cripto a otra persona en el mercado ___ del
+   exchange. (P2P)
+8. stable-sl está en ___ y podrás usarlo después desde dentro de learn.tg. (renovación)

@@ -431,6 +431,8 @@ Contract addresses are **not** read from `.env`. They come from:
   `20260822000000_proposed_interview_timestamptz`); la columna `date` original
   rompe la hora (2PM → 5AM). Aplicar en la BD dev con
   `bin/m db:console "ALTER TABLE usuario ALTER COLUMN proposed_date_of_interview TYPE TIMESTAMPTZ USING (proposed_date_of_interview::timestamp AT TIME ZONE 'UTC');"`.
+  La política completa de fechas y horas (almacenamiento UTC, zona del perfil para
+  mostrar, excepciones) está en [ARCHITECTURE.md §Dates and Times](../ARCHITECTURE.md#dates-and-times-storage-and-display).
 - **Dev SLEARN roles:** para donaciones al vault/país en dev, el backend dev
   (`0x01a728…`) debe tener `MINTER_ROLE` en SLEARN Sepolia y ClusterFundsV2
   dev (`0xcA9c6A…`) también (el cashback de donaciones usa

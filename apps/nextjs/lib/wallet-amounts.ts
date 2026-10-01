@@ -111,9 +111,14 @@ export function explorerAddressBase(network: string | undefined): string {
 /**
  * Blockscout v2 endpoint listing the NFTs of an address (Celo only, the scope of
  * the panel). No API key: the explorer is public.
+ *
+ * The path is **`/nft`** (singular) with `type` as a repeated-ish list: `/nfts`
+ * answers **400** and the collectibles tab showed "No collectibles found" for
+ * wallets that do have credentials (measured 2026-10-01 against
+ * `celo-sepolia.blockscout.com` for a wallet with four ERC-1155 credentials).
  */
 export function explorerApiNftsUrl(address: string, network: string | undefined): string {
-  return `${explorerAddressBase(network)}/api/v2/addresses/${address}/nfts?type=ERC-721,ERC-1155`
+  return `${explorerAddressBase(network)}/api/v2/addresses/${address}/nft?type=ERC-721,ERC-1155`
 }
 
 /** Block explorer link for a transaction hash on the configured network. */

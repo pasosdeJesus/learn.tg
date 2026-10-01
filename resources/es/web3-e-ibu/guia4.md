@@ -1,14 +1,15 @@
-# Guía 4: Reclama Tu IBU Diario - GoodDollar y Learn.tg-IBU
+# Guía 4: Reclama Tu IBU Diario - Learn.tg-IBU y GoodDollar
 
-## 1. ¿Qué son GoodDollar (G$), CELO y Learn.tg-IBU?
+## 1. ¿Qué son CELO, Learn.tg-IBU y GoodDollar (G$)?
 
-GoodDollar (G$) y CELO son criptomonedas que operan en la
-**blockchain de Celo**.
+**El IBU de learn.tg es el principal de este curso:** es un IBU exclusivo en learn.tg que
+entrega **tokens CELO** a personas (especialmente en Sierra Leona), está patrocinado por
+**Pasos de Jesús** y lo reclamas aquí, desde tu billetera dentro de learn.tg.
 
-*   **GoodDollar** es también un protocolo global de IBU apoyado por empresas como 
-    eToro.
-*   **Learn.tg-IBU** es un IBU exclusivo en learn.tg que entrega **tokens CELO** a 
-    personas (especialmente en Sierra Leona) y que está patrocinado por **Pasos de Jesús**.
+**GoodDollar (G$)** es un segundo protocolo de IBU, global, apoyado por empresas como
+eToro. Su reclamo depende del servicio de GoodDollar.
+
+Ambos son criptomonedas que operan en la **blockchain de Celo**.
 
 Para asegurar la equidad y evitar que una persona reclame varias veces, ambos 
 sistemas de IBU utilizan **mecanismos anti-sybil**:
@@ -31,7 +32,7 @@ ganas — y entre más alta tu puntuación de perfil, más CELO recibes diariame
 *   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 Nuevos Leones). Puedes ahorrar durante varios días antes de convertir.
 *   **IBU de CELO:** Hasta 0.20 CELO diario, dependiendo de tu puntuación de perfil. Con 50 puntos, recibes 0.10 CELO.
 
-**💡 Consejo:** Varios adultos en un hogar pueden reclamar, cada uno con su propia billetera, todo gestionable desde **una única billetera dentro de learn.tg**.
+**💡 Consejo:** Cuando tengas suficiente, cambia una cantidad mayor en vez de muchas pequeñas.
 
 ### Una Estrategia para Tu IBU: Ahorra y Crece
 
@@ -92,10 +93,10 @@ En la **Guía 5** aprenderás a **convertir tus G$ o CELO en Leones** a través 
 
 ## 5. Comprensión de Lectura
 
-1. ___ es una criptomoneda y un protocolo que te permite reclamar diariamente un poco de dinero gratis. (GoodDollar)
+1. El IBU principal de este curso se llama learn.tg-IBU y paga en tokens ___. (CELO)
 2. Para demostrar que eres una persona única para GoodDollar, necesitas hacer una ___ facial cada 6 meses. (verificación)
 3. Suponiendo que los tipos de cambio se mantengan constantes como se presenta en esta guía, necesitarías reclamar el IBU de GoodDollar durante al menos ___ días para tener 1 SLE. (cuatro)
-4. Es posible reclamar el IBU de varios ___ en tu hogar desde una única billetera dentro de learn.tg, lo que facilita transferir los fondos a una sola cuenta. (adultos)
+4. Tu identidad también se verifica con self.xyz y con una ___ con verificadores de learn.tg. (entrevista)
 5. Para reclamar el IBU de CELO en learn.tg necesitas al menos ___ puntos en tu puntuación de perfil. (cincuenta)
 6. Puedes reclamar el IBU de GoodDollar y de learn.tg una vez al ___ . (día)
 

@@ -39,6 +39,15 @@ parte de arriba de learn.tg, junto con tus saldos, donde también puedes recibir
 
 ---
 
+### **Paso 4: Tus coleccionables**
+
+Cuando completas el **100% de un curso** ganas un **coleccionable** (una credencial, también
+llamada SBT): una insignia digital que prueba que lo terminaste. Los ves en el panel de la
+billetera, en **Coleccionables**; no se pueden transferir ni vender, y aparecen en tu perfil
+público.
+
+---
+
 ### **¿Ya tienes una billetera en otra parte?**
 
 Si usas MetaMask, Rabby, OKX, OneKey o Brave puedes **importar su frase de recuperación** y
@@ -72,3 +81,4 @@ crucigramas, **sin conexión**:
 6. Para recibir fondos compartes tu dirección ___, la que empieza con 0x. (publica)
 7. Sin conexión todavía puedes leer tus guías y resolver sus ___. (crucigramas)
 8. Una respuesta resuelta sin conexión se envía sola cuando vuelve la ___. (conexion)
+9. Cuando completas el 100% de un curso ganas un coleccionable, también llamado ___. (SBT)

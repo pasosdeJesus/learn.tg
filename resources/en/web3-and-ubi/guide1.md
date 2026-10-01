@@ -1,7 +1,7 @@
 ### Introduction
 
 **Universal Basic Income (UBI)** is a  regular, unconditional payment given 
-to all members of a community to help cover basic needs.  This course will walk you through how to receive two kinds of digital UBI: GoodDollar and learn.tg-UBI.
+to all members of a community to help cover basic needs.  This course will walk you through how to receive digital UBI. The main one for you here is **learn.tg-UBI**, which you claim on this site and which pays in CELO; **GoodDollar** is the other one, also taught in this course.
 
 **Bonus Opportunity:** Each lesson on learn.tg features a scholarship vault!
 When you answer all comprehension questions correctly in a guide, you become
@@ -63,8 +63,8 @@ does two key things:
     (like this platform).
 
 To prevent fraud and ensure UBI reaches unique individuals, your identity must
-be verified. This is done through a **facial verification process** with a
-project like **GoodDollar**.
+be verified. That is done with **self.xyz** (if you have a passport) and with an
+**interview with learn.tg verifiers**.
 
 For each blockchain, your Web3 wallet manages a unique set of keys:
 * **Your Public Address**: This is like your bank account number. Share it 
@@ -72,9 +72,10 @@ For each blockchain, your Web3 wallet manages a unique set of keys:
 * **Your Private Key (Seed Phrase)**: This is a 12-24 word master password. 
   Anyone who knows it owns your wallet and all its funds. Never share it.
 
-> **Why it matters for you:** Your wallet stores your funds, while the facial
-> verification with GoodDollar secures your unique identity for claiming UBI.
-> Together, they ensure a fair and secure system for everyone.
+> **Why it matters for you:** Your wallet stores your funds, while the
+> verification with self.xyz and the verifier interview secure your unique
+> identity for claiming UBI. Together, they ensure a fair and secure system for
+> everyone.
 
 
 #### 4. On-Ramp & Off-Ramp (The Bridge to Your Money)

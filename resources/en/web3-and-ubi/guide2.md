@@ -35,6 +35,15 @@ learn.tg, together with your balances, where you can also receive and send.
 
 ---
 
+### **Step 4: Your collectibles**
+
+When you complete **100% of a course** you earn a **collectible** (a credential, also called
+an SBT): a digital badge that proves you finished it. You will find them in the wallet panel,
+under **Collectibles**; they cannot be transferred or sold, and they appear on your public
+profile.
+
+---
+
 ### **Already have a wallet elsewhere?**
 
 If you use MetaMask, Rabby, OKX, OneKey or Brave you can **import its recovery phrase** and
@@ -67,3 +76,4 @@ you can read your guides, and even solve their crosswords, with **no connection*
 6. To receive funds you share your ___ address, the one that starts with 0x. (public)
 7. Without a connection you can still read your guides and solve their ___. (crosswords)
 8. An answer solved offline is sent by itself when the ___ comes back. (connection)
+9. When you complete 100% of a course you earn a collectible, also called ___. (SBT)

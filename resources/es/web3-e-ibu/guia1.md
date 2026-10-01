@@ -1,7 +1,7 @@
 ### Introducción
 
 **El Ingreso Básico Universal (IBU)** es un pago regular e incondicional que se otorga 
-a todos los miembros de una comunidad para ayudar a cubrir sus necesidades básicas. Este curso te guiará para que aprendas a recibir dos tipos de IBU digital: GoodDollar y learn.tg-IBU.
+a todos los miembros de una comunidad para ayudar a cubrir sus necesidades básicas. Este curso te guiará para que aprendas a recibir el IBU digital. El principal para ti aquí es el **IBU de learn.tg**, que se reclama en este sitio y paga en CELO; **GoodDollar** es el otro, también explicado en este curso.
 
 **Oportunidad Adicional:** ¡Cada lección en learn.tg cuenta con una bóveda de becas!
 Cuando respondes correctamente todas las preguntas de comprensión de una guía, te vuelves
@@ -63,8 +63,8 @@ Hace dos cosas clave:
     (como esta plataforma).
 
 Para prevenir el fraude y asegurar que el IBU llegue a individuos únicos, tu identidad debe
-ser verificada. Esto se hace a través de un **proceso de verificación facial** con un
-proyecto como **GoodDollar**.
+ser verificada. Eso se hace con **self.xyz** (si tienes pasaporte) y con una
+**entrevista con verificadores de learn.tg**.
 
 Para cada blockchain, tu billetera Web3 gestiona un conjunto único de claves:
 * **Tu Dirección Pública**: Es como tu número de cuenta bancaria. Compártela
@@ -73,8 +73,8 @@ Para cada blockchain, tu billetera Web3 gestiona un conjunto único de claves:
   Cualquiera que la sepa es dueño de tu billetera y de todos sus fondos. Nunca la compartas.
 
 > **Por qué es importante para ti:** Tu billetera almacena tus fondos, mientras que la
-> verificación facial con GoodDollar asegura tu identidad única para reclamar el IBU.
-> Juntos, garantizan un sistema justo y seguro para todos.
+> verificación con self.xyz y la entrevista con verificadores aseguran tu identidad única
+> para reclamar el IBU. Juntas, garantizan un sistema justo y seguro para todos.
 
 
 #### 4. Rampa de Entrada y Salida (El Puente hacia Tu Dinero)

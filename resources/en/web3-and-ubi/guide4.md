@@ -1,12 +1,13 @@
-## 1. What are GoodDollar (G$), CELO and Learn.tg-UBI ?
+## 1. What are CELO, Learn.tg-UBI and GoodDollar (G$)?
 
-GoodDollar (G$) and CELO are cryptocurrencies that operate on the
-**Celo blockchain**.
+**Learn.tg-UBI is the main UBI of this course:** it is an exclusive UBI on learn.tg that
+gives **CELO tokens** to people (specially in Sierra Leone), is sponsored by **Pasos de
+Jesús**, and you claim it here, from your wallet inside learn.tg.
 
-*   **GoodDollar** is also a global UBI protocol supported by companies like 
-    eToro.
-*   **Learn.tg-UBI** is an exclusive UBI on learn.tg that gives **CELO tokens** to 
-    people (specially in Sierra Leone) and that is sponsored by **Pasos de Jesús**.
+**GoodDollar (G$)** is a second, global UBI protocol supported by companies like eToro.
+Its claim depends on GoodDollar's own service.
+
+Both are cryptocurrencies that operate on the **Celo blockchain**.
 
 To ensure fairness and prevent one person from claiming multiple times, both 
 UBI systems use **anti-sybil mechanisms**:
@@ -30,7 +31,7 @@ daily.
 *   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 New Leones). You can save up over several days before converting.
 *   **CELO UBI:** Up to 0.20 CELO daily, depending on your profile score. With 50 points, you receive 0.10 CELO.
 
-**💡 Tip:** Multiple adults in a household can claim, each with their own wallet, all manageable from **a single wallet inside learn.tg**.
+**💡 Tip:** When you have enough, change a bigger amount instead of many small ones.
 
 ### A Strategy for Your UBI: Save and Grow
 
@@ -91,10 +92,10 @@ In **Guide 5** you will learn how to **convert your G$ or CELO into Leones** thr
 
 ## 5. Reading Comprehension
 
-1. ___ is a cryptocurrency and a protocol that allows you to claim daily a little of free money daily. (GoodDollar)
+1. The main UBI of this course is called learn.tg-UBI and it pays in ___ tokens. (CELO)
 2. To prove that your are a unique person for GoodDollar, you need to do facial ___ every 6 months. (verification)
 3. Assuming the exchange rates remain constant as presented in this guide, you would need to claim GoodDollar UBI for at least ___ days to have 1 SLE. (four)
-4. It is possible to claim the UBI of multiple ___ in your household from a single wallet inside learn.tg, which makes it easier to transfer funds only one account. (adults)
+4. Your identity is also verified with self.xyz and with an ___ with learn.tg verifiers. (interview)
 5. To claim learn.tg CELO UBI you need at least ___ points in your profile score. (fifty)
 6. You can claim GoodDollar and learn.tg UBI once per ___ . (day)
 

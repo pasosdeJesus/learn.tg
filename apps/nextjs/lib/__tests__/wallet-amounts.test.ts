@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   TOKEN_DECIMALS,
+  explorerApiNftsUrl,
   explorerTxUrl,
   formatTokenAmount,
   parseTokenAmount,
@@ -12,6 +13,14 @@ const SELF = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 const OTHER = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8'
 
 describe('wallet-amounts (R-#249)', () => {
+  it('arma la URL de coleccionables con /nft (no /nfts, que responde 400)', () => {
+    expect(explorerApiNftsUrl(SELF, 'celo')).toBe(
+      `https://celo.blockscout.com/api/v2/addresses/${SELF}/nft?type=ERC-721,ERC-1155`,
+    )
+    expect(explorerApiNftsUrl(SELF, 'celoSepolia')).toBe(
+      `https://celo-sepolia.blockscout.com/api/v2/addresses/${SELF}/nft?type=ERC-721,ERC-1155`,
+    )
+  })
   it('formats with the token decimals and trims zeros', () => {
     expect(formatTokenAmount(1_000_000n, TOKEN_DECIMALS.USDT)).toBe('1')
     expect(formatTokenAmount(1_500_000n, TOKEN_DECIMALS.USDT)).toBe('1.5')
