@@ -47,3 +47,47 @@ export function clearCourseCatalog(lang: string): void {
     // idem
   }
 }
+
+const EXTRA_KEY = (lang: string) => `learn.tg.courseExtrasCache.${lang}`
+
+export interface CachedCourseExtras<T> {
+  extras: Array<[number, T]>
+  savedAt: number
+}
+
+/**
+ * Último avance por curso visto con conexión (https://github.com/pasosdeJesus/learn.tg/issues/272).
+ * Permite que los tres círculos de la tarjeta tengan algo que mostrar sin conexión
+ * (USDT/SLEARN solo verde o gris, nunca amarillo: el saldo de la bóveda no se conoce).
+ */
+export function saveCourseExtras<T>(lang: string, extras: Map<number, T>): void {
+  if (!(extras instanceof Map) || extras.size === 0) return
+  try {
+    localStorage.setItem(
+      EXTRA_KEY(lang),
+      JSON.stringify({ extras: Array.from(extras.entries()), savedAt: Date.now() }),
+    )
+  } catch {
+    // almacenamiento bloqueado: sin respaldo, pero nada se rompe
+  }
+}
+
+export function getCourseExtras<T>(lang: string): Map<number, T> | null {
+  try {
+    const raw = localStorage.getItem(EXTRA_KEY(lang))
+    if (raw === null) return null
+    const parsed = JSON.parse(raw) as CachedCourseExtras<T>
+    if (!Array.isArray(parsed?.extras)) return null
+    return new Map(parsed.extras)
+  } catch {
+    return null
+  }
+}
+
+export function clearCourseExtras(lang: string): void {
+  try {
+    localStorage.removeItem(EXTRA_KEY(lang))
+  } catch {
+    // idem
+  }
+}

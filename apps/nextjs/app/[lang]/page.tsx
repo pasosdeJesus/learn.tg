@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { use, useEffect, useState, useRef } from 'react'
+import { use, useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { logger } from '@pasosdejesus/m/debug'
@@ -9,13 +9,15 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useWalletProvider } from '@/lib/hooks/useWalletProvider'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 
-import { CourseStatistics } from '@/components/CourseStatistics'
-import { CourseDonation } from '@/components/CourseDonation'
+import { CourseProgressCircles } from '@/components/CourseProgressCircles'
 import { SlearnInfo, AddSlearnButton } from '@pasosdejesus/mpdj/blockchain'
-import { saveCourseCatalog, getCourseCatalog } from '@/lib/offline-catalog'
+import {
+  saveCourseCatalog, getCourseCatalog, saveCourseExtras, getCourseExtras,
+} from '@/lib/offline-catalog'
 import { saveProfileScore } from '@/lib/offline-profile'
 import { OfflineDownloadAll } from '@/components/OfflineDownloadAll'
 import { CompletedProgress } from '@/components/ui/completed-progress'
+import { useOfflineStatus } from '@/lib/hooks/useOfflineStatus'
 
 type PageProps = {
   params: Promise<{
@@ -58,39 +60,21 @@ export default function Page({ params }: PageProps) {
   const { data: session, status: sessionStatus } = useSession()
   const { wallet, ready, authedGet } = useAuthedApi()
   const { toast } = useToast()
+  const { isOffline } = useOfflineStatus()
 
   const [courses, setCourses] = useState<Course[]>([])
   const [extCourses, setExtCourses] = useState<Map<number, CourseExtra>>(
     new Map(),
   )
-  const [countdown, setCountdown] = useState(0)
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const countdownCourseRef = useRef(0)
-
-  const startCountdownRefresh = (courseId: number) => {
-    setCountdown(6)
-    countdownCourseRef.current = courseId
-    let n = 6
-    if (countdownRef.current) clearInterval(countdownRef.current)
-    countdownRef.current = setInterval(() => {
-      n--
-      if (n <= 0) {
-        if (countdownRef.current) clearInterval(countdownRef.current)
-        countdownRef.current = null
-        setCountdown(0)
-        refreshCourseVault(countdownCourseRef.current)
-      } else {
-        setCountdown(n)
-      }
-    }, 1000)
-  }
-
-  useEffect(() => {
-    return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
-  }, [])
 
   const parameters = use(params)
   const { lang } = parameters
+
+  useEffect(() => {
+    if (courses.length > 0 && extCourses.size === courses.length) {
+      saveCourseExtras(lang, extCourses)
+    }
+  }, [extCourses, courses, lang])
 
   useEffect(() => {
     if (
@@ -193,6 +177,8 @@ export default function Page({ params }: PageProps) {
               (c.prefijoRuta !== '/gdcluster' && c.prefijoRuta !== '/redgd') || christian,
             ),
           )
+          const cachedExtras = getCourseExtras<CourseExtra>(lang)
+          if (cachedExtras) setExtCourses(cachedExtras)
           toast({
             title: lang === 'es'
               ? 'Sin conexión: mostrando la lista de cursos guardada.'
@@ -222,51 +208,23 @@ export default function Page({ params }: PageProps) {
     )
   }
 
-  const refreshCourseVault = async (courseId: number) => {
-    if (!wallet) return
-    try {
-      const response2 = await authedGet<any>(`/api/scholarship?courseId=${courseId}`)
-      if (response2.data && !response2.data.message) {
-        const extraData: CourseExtra = {
-          vaultCreated: response2.data.vaultCreated,
-          vaultBalance: +response2.data.vaultBalance,
-          vaultBalanceSlearn: +response2.data.vaultBalanceSlearn,
-          amountPerGuide: +response2.data.amountPerGuide,
-          amountPerGuideSlearn: +response2.data.amountPerGuideSlearn,
-          canSubmit: response2.data.canSubmit,
-          percentageCompleted: response2.data.percentageCompleted,
-          percentagePaid: response2.data.percentagePaid,
-          profileScore: response2.data.profileScore,
-          totalGuides: response2.data.totalGuides,
-          completedGuides: response2.data.completedGuides,
-          paidGuidesUSDT: response2.data.paidGuidesUSDT ?? 0,
-          paidGuidesSLEARN: response2.data.paidGuidesSLEARN ?? 0,
-          scholarshipPaidSlearn: response2.data.amountScholarshipSlearn ?? 0,
-        }
-        setExtCourses((prevMap) =>
-          new Map(prevMap.set(response2.data.courseId, extraData)),
-        )
-      }
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
   return (
     <section
       aria-label="Courses grid"
       className="bg-gradient-to-br from-white via-gray-50 to-gray-100 py-12 px-6"
     >
-      {countdown > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 shadow-lg rounded-lg px-6 py-3 text-sm text-gray-700 animate-pulse">
-          {lang === 'es' ? `Actualizando en ${countdown}…` : `Refreshing in ${countdown}…`}
-        </div>
-      )}
       <div className="max-w-6xl mx-auto">
         {/* R-#256: cuántos cursos están guardados en el teléfono y el botón para
             bajarlos todos con progreso (el operador reportó que no encontraba
             ninguna forma de descargar los cursos completos). */}
         <OfflineDownloadAll lang={lang} />
+        {courses.length > 0 && (
+          <p className="mb-4 text-sm text-gray-600">
+            {lang === 'es'
+              ? `${courses.length} ${courses.length === 1 ? 'curso' : 'cursos'}`
+              : `${courses.length} ${courses.length === 1 ? 'course' : 'courses'}`}
+          </p>
+        )}
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
           {courses.map((course) => {
             const extra = extCourses.get(course.id)
@@ -274,13 +232,13 @@ export default function Page({ params }: PageProps) {
             return (
               <article
                 key={course.id}
-                className="flex flex-col bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 border border-gray-200"
+                className="relative flex flex-col bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200"
               >
                 <a
                   href={`/${course.idioma}${course.prefijoRuta}`}
                   className="flex flex-col flex-grow"
                 >
-                  <figure className="img-course">
+                  <figure className="img-course rounded-t-2xl overflow-hidden">
                     {course.imagen && course.imagen.startsWith('/') && (
                       <Image
                         className="w-full h-[17rem] pt-2 object-cover"
@@ -295,50 +253,33 @@ export default function Page({ params }: PageProps) {
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">
                       {course.titulo}
                     </h3>
-                    <p className="text-sm text-gray-600 line-clamp-3">
+                    <p className="text-sm text-gray-600 line-clamp-2">
                       {course.subtitulo}
                     </p>
                   </header>
-                  <footer>
-                    {extra && 
-                       <CourseStatistics
-                         lang={lang} 
-                         full={false}
-                         address={session?.address}
-                         profileScore={extra.profileScore}
-                         scholarshipPerGuide={extra.amountPerGuide}
-                         scholarshipPerGuideSlearn={extra.amountPerGuideSlearn}
-                         vaultBalance={extra.vaultBalance}
-                         vaultBalanceSlearn={extra.vaultBalanceSlearn}
-                         percentagePaid={extra.percentagePaid}
-                         canSubmit={extra.canSubmit}
-                         percentageCompleted={extra.percentageCompleted}
-                         totalGuides={extra.totalGuides}
-                         completedGuides={extra.completedGuides}
-                         paidGuidesUSDT={extra.paidGuidesUSDT}
-                         paidGuidesSLEARN={extra.paidGuidesSLEARN}
-                         scholarshipPaidSlearn={extra.scholarshipPaidSlearn}
-                      />
-                    }
-                    <div className="px-5 pb-5">
-                      {/* Botón "Ir al curso" (el span está dentro del <a> de la
-                          tarjeta: toda la tarjeta navega al curso) */}
-                      <span className="block w-full rounded bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">
-                        {lang === 'es' ? 'Ir al curso' : 'Go to course'}
-                      </span>
-                    </div>
-                  </footer>
+                  {/* Botón "Ir al curso" (el span está dentro del <a> de la
+                      tarjeta: toda la tarjeta navega al curso) */}
+                  <div className="mt-auto px-5 pb-8">
+                    <span className="block w-full rounded bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700">
+                      {lang === 'es' ? 'Ir al curso' : 'Go to course'}
+                    </span>
+                  </div>
                 </a>
-                {extra && extra.vaultCreated && (
-                  <CourseDonation
-                    lang={lang}
-                    vaultBalance={extra.vaultBalance}
-                    vaultBalanceSlearn={extra.vaultBalanceSlearn}
-                    courseId={course.id}
-                    isLoggedIn={!!session?.address}
-                    onDonationSuccess={(courseId) => { refreshCourseVault(courseId); startCountdownRefresh(courseId) }}
-                    showDonateButton={false}
-                  />
+                {extra && (
+                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 flex translate-y-1/2 justify-center">
+                    <CourseProgressCircles
+                      lang={lang}
+                      offline={isOffline}
+                      totalGuides={extra.totalGuides}
+                      completedGuides={extra.completedGuides}
+                      paidGuidesUSDT={extra.paidGuidesUSDT}
+                      paidGuidesSLEARN={extra.paidGuidesSLEARN}
+                      vaultBalance={extra.vaultBalance}
+                      vaultBalanceSlearn={extra.vaultBalanceSlearn}
+                      amountPerGuide={extra.amountPerGuide}
+                      amountPerGuideSlearn={extra.amountPerGuideSlearn}
+                    />
+                  </div>
                 )}
               </article>
             )
