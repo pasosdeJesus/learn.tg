@@ -559,8 +559,11 @@ async function main() {
     console.log('  [!] No se pudo registrar la huella: se omite C2')
   }
 
-  // ── 6. Bug D: en un navegador con billetera inyectada no se ofrece la de la
-  //        aplicación, salvo con ?iappwallet=1.
+  // ── 6. Bug D: en el navegador propio de una billetera (OKX/Rabby/MetaMask) no se
+  //        ofrece la de la aplicación, salvo con ?iappwallet=1 (R-#246 §3, R-#270
+  //        §3.1). Un Chrome de escritorio con una extensión inyectada NO es un
+  //        navegador de billetera (R-#270 §11.1): ese caso lo fija
+  //        in-app-wallet-default.spec.mjs.
   // Contexto de incógnito: el perfil de la corrida YA tiene una billetera in-app, y
   // con ella el selector la conserva por diseño (no se puede dejar inaccesible).
   const incognito = await newIncognitoContext(browser)
@@ -568,7 +571,11 @@ async function main() {
   await externalPage.setDefaultNavigationTimeout(120000)
   await externalPage.evaluateOnNewDocument(() => {
     const provider = {
+      // Un proveedor real de OKX se anuncia por EIP-6963 y además deja su bandera
+      // en `window.ethereum`; el detector no lee el anuncio, así que la bandera es
+      // la que decide (R-#246 §3).
       isMetaMask: true,
+      isOkxWallet: true,
       request: async () => null,
       on: () => {},
       removeListener: () => {},
@@ -585,7 +592,7 @@ async function main() {
   const externalOnly = await exists(externalPage, '[data-testid="wallet-selector-external"]')
   const inAppShown = await exists(externalPage, '[data-testid="wallet-open-dialog"]')
   if (externalOnly && !inAppShown) {
-    ok('Con billetera inyectada solo se ofrece la externa (D)')
+    ok('En el navegador de una billetera solo se ofrece la externa (D)')
   } else {
     const diag = await externalPage.evaluate(() => ({
       eth: typeof window.ethereum !== 'undefined',
