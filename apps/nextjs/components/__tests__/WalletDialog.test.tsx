@@ -441,6 +441,47 @@ describe('WalletDialog (R-#244)', () => {
     expect(screen.queryByTestId('wallet-protect')).not.toBeInTheDocument()
   })
 
+  // R-#270 §3.2: la importación acepta la llave privada además de la frase.
+  it('imports with a private key when only that is given', async () => {
+    const KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d'
+    mocks.importExisting.mockResolvedValue({ address: ADDRESS })
+    renderDialog()
+
+    fireEvent.click(screen.getByTestId('wallet-mode-import'))
+    expect(screen.getByTestId('wallet-private-key')).toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('wallet-private-key'), { target: { value: KEY } })
+    await fillPassword()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-import'))
+    })
+
+    await waitFor(() =>
+      expect(mocks.importExisting).toHaveBeenCalledWith({ password: '12345678', privateKey: KEY }),
+    )
+  })
+
+  it('rejects filling both the recovery phrase and the private key', async () => {
+    renderDialog()
+
+    fireEvent.click(screen.getByTestId('wallet-mode-import'))
+    fireEvent.change(screen.getByTestId('wallet-mnemonic'), { target: { value: 'one two three' } })
+    fireEvent.change(screen.getByTestId('wallet-private-key'), { target: { value: '0xabc' } })
+    await fillPassword()
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wallet-import'))
+    })
+
+    expect(mocks.importExisting).not.toHaveBeenCalled()
+    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/either the recovery phrase or the private key/i)
+  })
+
+  it('keeps the import button disabled until one secret is typed', () => {
+    renderDialog()
+
+    fireEvent.click(screen.getByTestId('wallet-mode-import'))
+    expect(screen.getByTestId('wallet-import')).toBeDisabled()
+  })
+
   // El respaldo no se da por hecho: con una palabra equivocada no se firma y se
   // puede volver a ver la frase.
   it('does not sign in when a backup word is wrong', async () => {

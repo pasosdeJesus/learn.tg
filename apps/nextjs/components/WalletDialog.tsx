@@ -61,6 +61,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [mnemonic, setMnemonic] = useState('')
+  const [privateKey, setPrivateKey] = useState('')
   const [recovery, setRecovery] = useState<string | null>(null)
   // R-#249: verificación de 3 palabras del respaldo (antes sólo se pulsaba
   // "ya las guardé", que no probaba nada).
@@ -101,7 +102,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       createTitle: 'Create a wallet',
       createDescription: 'It is created on this device and protected with a password. No wallet app is needed.',
       importTitle: 'Import a wallet',
-      importDescription: 'Use the 12 words or the private key of a wallet you already have.',
+      importDescription: 'Use the recovery phrase (12 words) or the private key of a wallet you already have. Just one of the two.',
       lockedTitle: 'Unlock your in-app wallet',
       lockedDescription: 'Enter your password to sign in.',
       biometricUnlock: 'Unlock with fingerprint',
@@ -123,8 +124,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       passwordConfirm: 'Repeat the password',
       passwordShow: 'Show the password',
       passwordHide: 'Hide the password',
-      importOffer: 'Already have a wallet? Import your recovery phrase and keep the same address, history and scholarships.',
-      importSecurity: 'Your recovery phrase never leaves this device. learn.tg never sees it.',
+      importOffer: 'Already have a wallet? Import your recovery phrase or private key and keep the same address, history and scholarships.',
+      importSecurity: 'Your recovery phrase or private key never leaves this device. learn.tg never sees it.',
       migrationGuide: 'Step-by-step guide (MetaMask, Rabby, OKX, OneKey, Brave)',
       protectTitle: 'How do you want to unlock this wallet?',
       protectHint: 'The password is always the backup. If this device can check your fingerprint or face, you can leave the gesture as the usual way in.',
@@ -132,6 +133,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       protectPassword: 'Only with the password',
       protectContinue: 'Continue',
       mnemonic: 'Recovery phrase (12 words)',
+      privateKey: 'Private key (0x…)',
+      importNeedsOne: 'Enter the recovery phrase or the private key.',
+      importBoth: 'Use either the recovery phrase or the private key, not both.',
       create: 'Create wallet',
       import: 'Import wallet',
       unlock: 'Unlock',
@@ -167,7 +171,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       createTitle: 'Crear una billetera',
       createDescription: 'Se crea en este dispositivo y se protege con una clave. No necesitas una aplicación de billetera.',
       importTitle: 'Importar una billetera',
-      importDescription: 'Usa las 12 palabras o la clave privada de una billetera que ya tengas.',
+      importDescription: 'Usa la frase de recuperación (12 palabras) o la clave privada de una billetera que ya tengas. Solo una de las dos.',
       lockedTitle: 'Desbloquea tu billetera',
       lockedDescription: 'Escribe tu clave para ingresar.',
       biometricUnlock: 'Desbloquear con huella',
@@ -189,8 +193,8 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       passwordConfirm: 'Repite la clave',
       passwordShow: 'Mostrar la clave',
       passwordHide: 'Ocultar la clave',
-      importOffer: '¿Ya tienes billetera? Importa tu frase de recuperación y conserva la misma dirección, tu historial y tus becas.',
-      importSecurity: 'Tu frase de recuperación nunca sale de este dispositivo. learn.tg no la ve.',
+      importOffer: '¿Ya tienes billetera? Importa tu frase de recuperación o tu clave privada y conserva la misma dirección, tu historial y tus becas.',
+      importSecurity: 'Tu frase de recuperación o clave privada nunca sale de este dispositivo. learn.tg no las ve.',
       migrationGuide: 'Guía paso a paso (MetaMask, Rabby, OKX, OneKey, Brave)',
       protectTitle: '¿Cómo quieres desbloquear esta billetera?',
       protectHint: 'La clave siempre queda de respaldo. Si este dispositivo puede verificar tu huella o tu rostro, puedes dejar el gesto como la forma habitual de entrar.',
@@ -198,6 +202,9 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       protectPassword: 'Solo con la clave',
       protectContinue: 'Continuar',
       mnemonic: 'Frase de recuperación (12 palabras)',
+      privateKey: 'Clave privada (0x…)',
+      importNeedsOne: 'Escribe la frase de recuperación o la clave privada.',
+      importBoth: 'Usa la frase de recuperación o la clave privada, no las dos.',
       create: 'Crear billetera',
       import: 'Importar billetera',
       unlock: 'Desbloquear',
@@ -348,10 +355,18 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
 
   const handleImport = useCallback(async () => {
     setLocalError(null)
+    const phrase = mnemonic.trim()
+    const key = privateKey.trim()
+    if (!phrase && !key) { setLocalError(t('importNeedsOne')); return }
+    if (phrase && key) { setLocalError(t('importBoth')); return }
     if (!isValidPassword(password)) { setLocalError(t('passwordTooShort')); return }
     setBusy(true)
     try {
-      await importExisting({ password, mnemonic: mnemonic.trim() })
+      await importExisting({
+        password,
+        ...(phrase ? { mnemonic: phrase } : {}),
+        ...(key ? { privateKey: key as `0x${string}` } : {}),
+      })
       createPasswordRef.current = password
       // La misma elección que al crear: importar también deja la clave en memoria.
       setProtectChoice('gesture')
@@ -366,7 +381,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       setLocalError(translateError(e))
       setBusy(false)
     }
-  }, [biometricEnabled, canOfferBiometric, importExisting, mnemonic, password, signIn, t, translateError])
+  }, [biometricEnabled, canOfferBiometric, importExisting, mnemonic, privateKey, password, signIn, t, translateError])
 
   /**
    * Cierra el paso de protección: sella la billetera con el gesto cuando se eligió
@@ -734,6 +749,18 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
               </label>
             )}
 
+            {!showUnlock && !hasWallet && mode === 'import' && (
+              <label className="block space-y-1">
+                <span className="text-sm font-medium">{t('privateKey')}</span>
+                <Input
+                  data-testid="wallet-private-key"
+                  placeholder="0x…"
+                  value={privateKey}
+                  onChange={(event) => setPrivateKey(event.target.value)}
+                />
+              </label>
+            )}
+
             {/* El password se pide para desbloquear una billetera existente o para crear
                 una nueva; nunca cuando el gesto reemplaza al password. */}
             {!gestureOnly && (!hasWallet || showUnlock) && (
@@ -933,7 +960,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                   {busy ? '...' : t('create')}
                 </Button>
               ) : (
-                <Button data-testid="wallet-import" onClick={() => { void handleImport() }} disabled={busy || !mnemonic.trim()}>
+                <Button data-testid="wallet-import" onClick={() => { void handleImport() }} disabled={busy || (!mnemonic.trim() && !privateKey.trim())}>
                   {busy ? t('signingIn') : t('import')}
                 </Button>
               )}
