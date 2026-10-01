@@ -52,7 +52,7 @@ export default function Page({ params }: PageProps) {
     },
   }), [lang])
 
-  const guidePath = lang === 'es' ? 'web3-e-ibu/guia3' : 'web3-and-ubi/guide3'
+  const guidePath = lang === 'es' ? 'web3-e-ibu/guia4' : 'web3-and-ubi/guide4'
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">

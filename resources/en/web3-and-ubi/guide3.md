@@ -1,116 +1,102 @@
-## 1. What are GoodDollar (G$), CELO and Learn.tg-UBI ?
+## How to Earn Scholarships on learn.tg
 
-GoodDollar (G$) and CELO are cryptocurrencies that operate on the
-**Celo blockchain**.
+This guide explains how the scholarship system works — what you need, how
+much you can earn, and the rules that apply.
 
-*   **GoodDollar** is also a global UBI protocol supported by companies like 
-    eToro.
-*   **Learn.tg-UBI** is an exclusive UBI on learn.tg that gives **CELO tokens** to 
-    people (specially in Sierra Leone) and that is sponsored by **Pasos de Jesús**.
+### What You Need
 
-To ensure fairness and prevent one person from claiming multiple times, both 
-UBI systems use **anti-sybil mechanisms**:
-*   **GoodDollar:** Requires unique **facial verification** every 6 months.
-*   **Learn.tg-UBI:** You need at least **50 points** in your profile score.
+Before you can receive scholarships, you must have:
 
-**How to increase your profile score?**
+1. **A connected wallet** — set up in Guide 2.
+2. **At least 50 profile score points** — see the breakdown below.
+3. **A perfect crossword score** — all answers must be correct.
 
-See **[Guide 2b — How to Earn Scholarships](../guide2b)** for the full
-profile score breakdown, scholarship formula, and tips to reach 50+ points.
+### Profile Score Breakdown
 
-**🎓 Earn SLEARN while you learn:** Every time you complete a guide and pass
-its crossword, you earn **up to 1 SLEARN token** (depending on your profile
-score) in addition to any USDT scholarship.
-SLEARN can be saved to pay for premium courses or exchanged for Leones via
-[stable-sl.pdJ.app](https://stable-sl.pdj.app/). The more you learn, the more
-you earn — and the higher your profile score, the more CELO UBI you receive
-daily.
+Your profile score is what unlocks scholarships and UBI. The higher your
+score, the more you earn per guide. Complete your profile to reach up to
+100 points:
 
-**Approximate daily value:**
-*   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 New Leones). You can save up over several days before converting.
-*   **CELO UBI:** Up to 0.20 CELO daily, depending on your profile score. With 50 points, you receive 0.10 CELO.
+| What to verify | Points | How |
+|---------------|:------:|------|
+| Name | 26 | Your name must match your passport name |
+| Country | 24 | Your country must match your passport nationality |
+| Email | 9 | Set your email and have a verifier confirm it |
+| WhatsApp or Telegram | 9 | Add your number and have a verifier confirm it |
+| Location (department, city) | 9 | Select your town and have a verifier confirm it |
+| Place of worship | 9 | Declare your church/mosque and have a verifier confirm it |
+| GoodDollar verification | 7 | Complete facial verification on your profile |
+| Interview with verifier | 7 | Schedule and attend a verification interview —
+   go to your profile and click "Request Verification" to open a calendar |
+| **Total** | **100** | |
 
-**💡 Tip:** Multiple adults in a household can claim, each with their own wallet, all manageable from **a single wallet app (Rabby or MetaMask)**.
+You can manage your profile at your [profile page](/en/profile).
 
-### A Strategy for Your UBI: Save and Grow
+### How Much You Earn
 
-As you can see, the daily UBI amounts are small. While they add up over time, converting very small amounts to cash can be inefficient due to transaction fees.
+The scholarship amount depends on two things: the vault's per-guide amount
+and your profile score.
 
-A powerful strategy is to **save your UBI** for several days or weeks.
+```
+Scholarship = (amountPerGuide × profileScore) / 100
+```
 
-To accelerate your savings, you can **combine your UBI with other earnings** on learn.tg. For example, completing crossword puzzles on the platform rewards you with **up to 1 USDT** (depending on your profile score). By saving your G$, CELO, and adding your USDT earnings, you can accumulate a more significant amount to convert to cash when you need it.
+If a course vault is configured with **1 USDT** and **1 SLEARN** per guide,
+and your profile score is **75**:
 
----
+- You receive: **0.75 USDT** and **0.75 SLEARN** per perfect crossword.
+- With 50 points: **0.50 USDT** and **0.50 SLEARN**.
+- With 100 points: **1.00 USDT** and **1.00 SLEARN**.
 
-## 2. Step 1: Verify Your Identity with GoodDollar
+Both USDT and SLEARN are paid from the course vault. It is possible to
+receive only one of them if the vault only has funds for one.
 
-**Facial verification** ensures your wallet belongs to a **unique real adult (over 18 years old)**.
+### Important Rules
 
-**How it works:**
-1.  You'll use your smartphone's camera to record a short video of your face.
-2.  GoodDollar's system extracts your facial features and compares them with a centralized database to avoid duplicates.
-3.  **Your facial data is stored securely** and is linked to your wallet address but not to other personal information (like your name).
+- **24-hour cooldown:** After submitting a crossword for a course, you must
+  wait 24 hours before submitting another one in the same course.
+- **Vault balance:** Scholarships are paid from vaults funded by donors. If a
+  vault has no funds, you will not receive a scholarship even with a perfect
+  score.
+- **Non-perfect submissions** do not trigger the cooldown and you can try
+  again immediately.
+- **SLEARN** can be saved to pay for premium courses, and soon after you
+  complete Premium courses you will be able to exchange SLEARN for Leones
+  or for USDT via [stable-sl.pdJ.app](https://stable-sl.pdj.app/).
+  See the [SLEARN Whitepaper](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md) for details.
 
-**Process requirements:**
-*   **Time:** About 10 minutes. Done **once** (then every 6 months).
-*   **Location:** Good lighting.
-*   **Note:** With Rabby Wallet or MetaMask, you may need to allow camera access several times (around 5) at the beginning.
+### Course Credentials (SBTs)
 
-**Reference video:**
+When you complete **100% of the guides** in a course (all crosswords passed),
+you receive a **Soul-Bound Token (SBT)** — a non-transferable digital badge
+that proves you mastered the course. It appears on your public profile and
+contributes to your leaderboard ranking. Think of it as a certificate of
+completion, permanently recorded on the Celo blockchain.
 
-[![Video showing facial verification of GoodDollar](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI) 
+### Your Action Step
 
+1.  Go to your **[profile page](/en/profile)** and fill in your name, country,
+    email, WhatsApp or Telegram, town, and place of worship.
+2.  Click **"Request Verification"** on your profile to schedule an interview
+    with a verifier — this gives you 7 extra profile score points.
+3.  Complete the **GoodDollar facial verification** — in Guide 3 you will
+    find the button to start this process. It gives you 7 profile score points.
+4.  Aim for at least **50 profile score points** — at this level you already
+    start receiving scholarships.
 
-**At the end of this guide you'll find the button to start your GoodDollar verification.**
+### Comprehension Questions
 
----
-
-## 3. Step 2: Claim Your Daily UBI
-
-Once verified, you can claim daily through your **Web3 wallet** (like **Rabby** or MetaMask, which you set up in Guide 2).
-
-*   **GoodDollar (G$):** You can claim on <https://learn.tg> or the official app at <https://gooddapp.org>.
-*   **CELO UBI:** You can only claim it on **this site (learn.tg)**.
-
-**Daily process:** Open the app, click to claim, and the funds are added to your wallet.
-
-**The buttons at the end of this guide will allow you to claim both UBIs.**
-
----
-
-## 4. Next Steps
-
-Congratulations! By completing this guide you have:
-1.  Understood the value and purpose of GoodDollar and CELO UBI.
-2.  Learned how the anti-sybil verifications work.
-3.  Prepared to verify your identity and claim your first funds.
-
-In **Guide 4** you will learn how to **convert your G$ or CELO into Leones** through local services to use your UBI in the daily economy.
-
----
-
-## 5. Reading Comprehension
-
-1. ___ is a cryptocurrency and a protocol that allows you to claim daily a little of free money daily. (GoodDollar)
-2. To prove that your are a unique person for GoodDollar, you need to do facial ___ every 6 months. (verification)
-3. Assuming the exchange rates remain constant as presented in this guide, you would need to claim GoodDollar UBI for at least ___ days to have 1 SLE. (four)
-4. It is possible to claim the UBI of multiple ___ in your household from a single wallet app (Rabby or MetaMask), which makes it easier to transfer funds only one account. (adults)
-5. To claim learn.tg CELO UBI you need at least ___ points in your profile score. (fifty)
-6. You can claim GoodDollar and learn.tg UBI once per ___ . (day)
-
-
-
-{CeloUbiButton}
-
-{GoodDollarButton}
-
----
-
-### **Did you claim your UBI? Now take the crossword!**
-
-Now that your wallet is connected and you've learned how to claim UBI, go back
-to **Guide 1** and complete the crossword puzzle. It will test your knowledge
-of all three guides — and you'll earn a **1 USDT scholarship** for a perfect score.
-
-**[← Back to Guide 1](../guide1)**
-
+1. You need at least ___ profile score points to receive scholarships. (fifty)
+2. The scholarship formula is (amountPerGuide × profileScore) divided by ___ — write the number as two words joined. (onehundred)
+3. After submitting a crossword, you must wait ___ hours before submitting
+   another one in the same course — write the number as two words joined. (twentyfour)
+4. If a vault has no funds from donors, you will receive ___ even with a
+   perfect score. (nothing)
+5. The contract that pays scholarships allows receiving only one of the two
+   rewards if the vault only has funds for one — this is called a ___ payment.
+   (partial)
+6. Scholarships are paid from vaults funded by ___ . (donors)
+7. To earn the full amount per guide, you need a profile score of ___ — write
+   the number as two words joined. (onehundred)
+8. If you submit a crossword with mistakes, the cooldown is ___ triggered.
+   (not)

@@ -1,94 +1,69 @@
-### **Introduction**
+### **Your wallet lives inside learn.tg**
 
-Your **Web3 wallet** is your personal gateway to the blockchain. It's like a 
-digital passport and bank account in one, allowing you to securely receive, 
-store, and manage your digital UBI and your identification.
+Your **Web3 wallet** is your digital passport and your bank account in one: it receives,
+stores and manages your UBI and your identification. In this course you do **not** install
+anything: you create it **inside learn.tg**, in the browser of your phone (**Chrome** on
+Android, **Safari** on iPhone).
 
-For this course we use **Rabby Wallet** — a mobile and browser wallet that
-supports the Celo network (which powers our UBI projects). Install it from
-<a href="https://rabby.io/" target="_blank">rabby.io</a> (mobile app or browser
-extension). If you already use MetaMask, you can keep it — the steps below are
-the same.
-
-Your wallet’s security depends entirely on one thing: your 
-**Secret Recovery Phrase**. As the master key to your digital assets, whoever 
-possesses it has full control.
+> **Where:** the wallet lives in the learn.tg page, so use Chrome or Safari. Do not create
+> it inside the browser of another wallet app (MetaMask, Rabby, OKX, OneKey): there the
+> fingerprint or Face ID unlock is not available.
 
 ---
 
-### **Step-by-Step: Installing Rabby Wallet**
+### **Step 1: Create your wallet**
 
-#### **Step 1: Install the Wallet**
-*  Install **Rabby Wallet** on your smartphone (Google Play or App Store) or
-   the browser extension from <a href="https://rabby.io/" target="_blank">rabby.io</a>.
+1.  Open [learn.tg](https://learn.tg) and press **Use in-app wallet**.
+2.  Choose **Create wallet** and type a **password** of 8 characters or more. You will use
+    it to unlock the wallet on this device.
+3.  Choose how you want to unlock it: with your **fingerprint or Face ID** (recommended)
+    or only with the password. The password keeps working as a backup.
 
-#### **Step 2: Create a New Wallet**
-*   Open **Rabby Wallet** and choose to **create a new wallet**.
-*   You will be prompted to set a strong password or biometric method
-    for daily access to this device.
+### **Step 2: Write down your Secret Recovery Phrase (THE MOST IMPORTANT STEP)**
 
-#### **Step 3: Secure Your Secret Recovery Phrase (THE MOST IMPORTANT STEP)**
-*   The wallet will generate a unique **12-word Secret Recovery Phrase**.
-*   **Write these 12 words down on paper, in the exact order shown.**
-*   **⚠️ Critical Security Rules:**
-    *   **NEVER** save it as a screenshot, digital note, or email.
-    *   **NEVER** share it with anyone for any reason.
-    *   Store the paper in a safe, physical place.
-*   Confirm you have written it down correctly by selecting the words in order.
+*   The wallet generates **12 words**: your **Secret Recovery Phrase**. Write them **on
+    paper, in the exact order shown**, and keep that paper in a safe, physical place.
+*   **NEVER** keep it as a screenshot, a note or an email. **NEVER** share it with anyone:
+    whoever has those 12 words controls your funds.
+*   The app asks you to type **3 of the 12 words** to confirm that you wrote them down.
 
-The procedure is presented in this video (the steps are the same in Rabby):
+### **Step 3: See your public address**
 
-[![Video showing how to create a web3 wallet](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
-
-
-#### **Step 4: Access Your Wallet**
-* Your wallet is now ready! You will see your wallet's **public address** 
-  (a long string starting with `0x...`). This is like your account number—you can share it to receive funds.
-
-{walletAddress}
+Your **public address** (a long string starting with `0x...`) is like your account number:
+you share it to receive funds. You will find it in the wallet panel, at the top of
+learn.tg, together with your balances, where you can also receive and send.
 
 ---
 
-### **Connecting to the Celo Network**
-To interact with GoodDollar and learn.tg, your wallet needs to be connected to the Celo network.
+### **Already have a wallet elsewhere?**
 
-The easiest way is to add Celo automatically:
-
-1.  In your wallet's built-in browser, go to **[chainlist.org](https://chainlist.org)**.
-2.  Search for **"Celo"**.
-3.  Tap **"Connect Wallet"** on the Celo entry — the wallet will prompt you to
-    approve adding the network.
-4.  Once added, switch to the Celo network from the network selector.
+If you use MetaMask, Rabby, OKX, OneKey or Brave you can **import its recovery phrase** and
+keep the same address (same funds, same progress, same scholarships and referrals): see the
+[migration guide](/en/migration-in-app-wallet).
 
 ---
 
-### **Next Step: Continue with Your Wallet**
+### **Studying without a connection**
 
-Now that your wallet is set up, to continue this course and claim UBI or
-crossword rewards you must use your wallet's built-in browser:
+learn.tg works like an app, and it saves your courses: while you have signal, install it
+from the browser menu (**Install app** in Chrome, **Add to Home Screen** in Safari). Then
+you can read your guides, and even solve their crosswords, with **no connection**:
 
-1.  Open your **wallet** on your smartphone.
-2.  Use the wallet's browser (look for "Discover" or "Browser" in the menu).
-3.  Go to **[learn.tg](https://learn.tg)** and connect your wallet.
-4.  Sign the message when prompted — this verifies you own the wallet.
-5.  Once connected, continue to the next guide to verify your identity and
-    start claiming your UBI.
-
-> **Why?** Only your wallet's browser can sign transactions. Without it,
-> you cannot claim UBI or receive rewards for completing crossword puzzles.
+*   Your answer is saved on the phone and sent by itself when the connection comes back.
+    The result arrives in your **notifications** (correct, or the words with a problem).
+*   Donating or claiming UBI does need a connection, and the app tells you so.
+*   The wallet **locks when the page reloads**: it is not lost, you unlock it again with
+    your fingerprint or your password.
 
 ---
 
 ### **Comprehension Questions**
 
-1. You must never ___ your Secret Recovery Phrase. (share)
-2. You can share your public address with someone who will send you crypto 
-   and it is also like your ___ number in the blockchain. (account)
-3. In order to receive UBI from GoodDollar or from Learn.tg your wallet must be
-   connected to the ___ blockchain.  (CELO)
-4. Your wallet includes two parts: (1) your public address that you
-   can share to receive funds and (2) your private address associated with a
-   secret recovery phrase that you cannot share because whoever controls the 
-   secret recovery phrase has ___ control of the assets in your wallet. (full)
-5. The Secret Recovery Phrase has ___ words that you must write down in order. (twelve)
-6. You should write your Secret Recovery Phrase on ___ and keep it in a safe place. (paper)
+1. You create your wallet inside learn.tg, in Chrome or ___. (safari)
+2. The password must have at least ___ characters, written as a word. (eight)
+3. The wallet gives you a Secret Recovery Phrase of ___ words. (twelve)
+4. You must write your phrase on ___ and keep it in a safe place. (paper)
+5. Whoever has your 12 words has control of your ___. (funds)
+6. To receive funds you share your ___ address, the one that starts with 0x. (public)
+7. Without a connection you can still read your guides and solve their ___. (crosswords)
+8. An answer solved offline is sent by itself when the ___ comes back. (connection)

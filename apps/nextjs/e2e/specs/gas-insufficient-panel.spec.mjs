@@ -11,8 +11,8 @@
 //       el formulario NO es reemplazado por el panel (regresión de la carrera
 //       de gas: la estimación corría con celo=0 antes de cargar el saldo)
 //   2. Sin CELO (mock eth_getBalance → 100 wei) → el panel aparece de inmediato
-//      al abrir (EN), con enlace a /en/web3-and-ubi/guide3; Cerrar cierra
-//   3. Panel en español (ranking /es) con enlace a /es/web3-e-ibu/guia3
+//      al abrir (EN), con enlace a /en/web3-and-ubi/guide4; Cerrar cierra
+//   3. Panel en español (ranking /es) con enlace a /es/web3-e-ibu/guia4
 //
 // PREREQUISITE: the wallet (PRIVATE_KEY / NEXT_PUBLIC_ADDRESS in apps/.env)
 // must be registered on the dev server.
@@ -275,7 +275,7 @@ async function main() {
     const a = [...document.querySelectorAll('a')].find(x => (x.textContent || '').includes('Web3 & UBI course'))
     return a ? a.getAttribute('href') : null
   })
-  if (courseLink === '/en/web3-and-ubi/guide3') ok(`Enlace a la guía de reclamar CELO correcto: ${courseLink}`)
+  if (courseLink === '/en/web3-and-ubi/guide4') ok(`Enlace a la guía de reclamar CELO correcto: ${courseLink}`)
   else { console.log(`  Link: ${courseLink}`); fail('Enlace a la guía de reclamar CELO incorrecto') }
   if (await closeModal(page)) ok('Cerrar cierra el panel/modal')
   else fail('El modal no se cerró con Cerrar')
@@ -303,7 +303,7 @@ async function main() {
     const a = [...document.querySelectorAll('a')].find(x => (x.textContent || '').includes('curso Web3 & UBI'))
     return a ? a.getAttribute('href') : null
   })
-  if (esLink === '/es/web3-e-ibu/guia3') ok(`Enlace español a la guía de reclamar CELO correcto: ${esLink}`)
+  if (esLink === '/es/web3-e-ibu/guia4') ok(`Enlace español a la guía de reclamar CELO correcto: ${esLink}`)
   else { console.log(`  Link: ${esLink}`); fail('Enlace español incorrecto') }
   await esPage.close()
 

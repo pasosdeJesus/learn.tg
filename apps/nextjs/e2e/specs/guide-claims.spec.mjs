@@ -4,7 +4,7 @@
 //
 // Execution:
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg \
-//     GUIDE_CLAIM_PATH=/en/web3-and-ubi/guide3 \
+//     GUIDE_CLAIM_PATH=/en/web3-and-ubi/guide4 \
 //     node e2e/specs/guide-claims.spec.mjs
 
 import {
@@ -56,7 +56,7 @@ async function main() {
   const env = await initTestEnv()
   const { timeout, account, chainId } = env
   const { base, host, domainPort } = resolveSiteTarget(env)
-  const guidePath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide3'
+  const guidePath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide4'
   const backendAddress = process.env.NEXT_PUBLIC_CELOUBI_ADDRESS
 
   console.log(`Wallet: ${short(account.address)} | ${base}`)

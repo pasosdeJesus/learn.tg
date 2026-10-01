@@ -18,7 +18,7 @@ const URLS = [
   '/en/donations/lensenia',
   '/en/gdcluster',
   '/en/redgd',
-  '/en/web3-and-ubi/guide3',
+  '/en/web3-and-ubi/guide4',
   '/en/referrals',
   '/api/auth/csrf',
   '/api/auth/providers',

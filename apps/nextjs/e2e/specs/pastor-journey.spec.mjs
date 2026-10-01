@@ -465,7 +465,7 @@ async function main() {
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 4: Pastor claims UBI (guide 3) ──')
   // The browser still holds the pastor session (Step 1-2). Navigate to guide 3.
-  await navAndWait(page, `${base}/en/web3-and-ubi/guide3`, timeout)
+  await navAndWait(page, `${base}/en/web3-and-ubi/guide4`, timeout)
   await new Promise(r => setTimeout(r, 4000))
 
   const hasUbiBtn = await page.evaluate(() =>

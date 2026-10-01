@@ -281,7 +281,7 @@ cache and precache in development, so there is no offline to test (see
    `e2e/specs/offline-course-download.spec.mjs` (skips itself when the feature is
    not deployed): on `/en/web3-and-ubi` (free, non-category-B) press "Download for
    offline", wait for the confirmation, then with the network off open
-   `/en/web3-and-ubi/guide4` — a guide **never** visited online. The spec also
+   `/en/web3-and-ubi/guide5` — a guide **never** visited online. The spec also
    reads the IndexedDB record to check that the stored crossword carries no
    answers. Manually: DevTools > Application > IndexedDB > `learn-tg-offline`,
    stores `courses` (one record per course and language: guides, wallet, revision,

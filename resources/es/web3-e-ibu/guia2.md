@@ -1,97 +1,74 @@
-# Guía 2: Tu Identidad Digital - Configurando Tu Billetera Web3
-
+# Guía 2: Tu billetera vive dentro de learn.tg
 
 ### **Introducción**
 
-Tu **billetera Web3** es tu puerta de entrada personal a la blockchain. Es como un 
-pasaporte digital y una cuenta bancaria en uno, permitiéndote recibir, 
-almacenar y gestionar de forma segura tu IBU digital y tu identificación.
+Tu **billetera Web3** es tu pasaporte digital y tu cuenta bancaria en uno: recibe, guarda
+y administra tu IBU y tu identificación. En este curso **no** instalas nada: la creas
+**dentro de learn.tg**, en el navegador de tu teléfono (**Chrome** en Android, **Safari**
+en iPhone).
 
-Para este curso usamos la **Billetera Rabby** — una billetera móvil y de
-navegador que soporta la red Celo (que impulsa nuestros proyectos de IBU).
-Instálala desde <a href="https://rabby.io/" target="_blank">rabby.io</a>
-(app móvil o extensión de navegador). Si ya usas MetaMask, puedes seguir con
-ella — los pasos siguientes son los mismos.
-
-La seguridad de tu billetera depende enteramente de una cosa: tu 
-**Frase de Recuperación Secreta**. Como la llave maestra de tus activos digitales, quien la 
-posea tiene el control total.
+> **Dónde:** la billetera vive en la página de learn.tg, así que usa Chrome o Safari. No la
+> crees dentro del navegador de otra aplicación de billetera (MetaMask, Rabby, OKX,
+> OneKey): ahí no está disponible el desbloqueo con huella o Face ID.
 
 ---
 
-### **Paso a Paso: Instalando la Billetera Rabby**
+### **Paso 1: Crea tu billetera**
 
-#### **Paso 1: Instala la Billetera**
-*  Instala **Rabby Wallet** en tu smartphone (Google Play o App Store) o la
-   extensión de navegador desde <a href="https://rabby.io/" target="_blank">rabby.io</a>.
+1.  Abre [learn.tg](https://learn.tg) y toca **Usar billetera de la aplicación**.
+2.  Elige **Crear billetera** y escribe una **clave** de 8 caracteres o más. La usarás para
+    desbloquear la billetera en este dispositivo.
+3.  Elige cómo quieres desbloquearla: con tu **huella o Face ID** (recomendado) o solo con
+    la clave. La clave sigue funcionando como respaldo.
 
-#### **Paso 2: Crea una Nueva Billetera**
-*   Abre **Rabby Wallet** y elige **crear una nueva billetera**.
-*   Se te pedirá que establezcas una contraseña segura o un método biométrico
-    para el acceso diario en este dispositivo.
+### **Paso 2: Escribe tu Frase de Recuperación Secreta (EL PASO MÁS IMPORTANTE)**
 
-#### **Paso 3: Asegura Tu Frase de Recuperación Secreta (EL PASO MÁS IMPORTANTE)**
-*   La billetera generará una **Frase de Recuperación Secreta de 12 palabras** única.
-*   **Apunta estas 12 palabras en un papel, en el orden exacto en que se muestran.**
-*   **⚠️ Reglas Críticas de Seguridad:**
-    *   **NUNCA** la guardes como una captura de pantalla, nota digital o correo electrónico.
-    *   **NUNCA** la compartas con nadie por ningún motivo.
-    *   Guarda el papel en un lugar físico y seguro.
-*   Confirma que la has escrito correctamente seleccionando las palabras en orden.
+*   La billetera genera **12 palabras**: tu **Frase de Recuperación Secreta**. Escríbelas
+    **en papel, en el orden exacto en que se muestran**, y guarda ese papel en un lugar
+    físico y seguro.
+*   **NUNCA** la guardes como captura de pantalla, nota o correo. **NUNCA** la compartas
+    con nadie: quien tenga esas 12 palabras controla tus fondos.
+*   La aplicación te pide escribir **3 de las 12 palabras** para confirmar que las
+    anotaste.
 
-El procedimiento se presenta en este video (los pasos son los mismos en Rabby):
+### **Paso 3: Mira tu dirección pública**
 
-[![Video que muestra cómo crear una billetera web3](https://img.youtube.com/vi/57CTbB-u9kc.jpg)](https://www.youtube.com/embed/57CTbB-u9kc)
-
-
-#### **Paso 4: Accede a Tu Billetera**
-* ¡Tu billetera ya está lista! Verás la **dirección pública** de tu billetera 
-  (una cadena larga que comienza con `0x...`). Esto es como tu número de cuenta, puedes compartirlo para recibir fondos.
-
-{walletAddress}
+Tu **dirección pública** (una cadena larga que empieza con `0x...`) es como tu número de
+cuenta: la compartes para recibir fondos. La encuentras en el panel de la billetera, en la
+parte de arriba de learn.tg, junto con tus saldos, donde también puedes recibir y enviar.
 
 ---
 
-### **Conectándose a la Red Celo**
-Para interactuar con GoodDollar y learn.tg, tu billetera necesita estar conectada a la red Celo.
+### **¿Ya tienes una billetera en otra parte?**
 
-La forma más fácil es agregar Celo automáticamente:
-
-1.  En el navegador integrado de tu billetera, ve a **[chainlist.org](https://chainlist.org)**.
-2.  Busca **"Celo"**.
-3.  Toca **"Connect Wallet"** en la entrada de Celo — la billetera te pedirá que
-    apruebes agregar la red.
-4.  Una vez agregada, cambia a la red Celo desde el selector de redes.
+Si usas MetaMask, Rabby, OKX, OneKey o Brave puedes **importar su frase de recuperación** y
+conservar la misma dirección (mismos fondos, mismo progreso, mismas becas y referidos):
+mira la [guía de migración](/es/migracion-billetera-app).
 
 ---
 
-### **Siguiente Paso: Continúa con Tu Billetera**
+### **Estudiar sin conexión**
 
-Ahora que tu billetera está configurada, para continuar este curso y reclamar
-IBU o becas de crucigramas debes usar el navegador integrado de tu billetera:
+learn.tg funciona como una aplicación y guarda tus cursos: mientras tengas señal,
+instálala desde el menú del navegador (**Instalar aplicación** en Chrome, **Añadir a
+pantalla de inicio** en Safari). Después puedes leer tus guías, y hasta resolver sus
+crucigramas, **sin conexión**:
 
-1.  Abre tu **billetera** en tu smartphone.
-2.  Usa el navegador de la billetera (busca "Discover" o "Navegador" en el menú).
-3.  Ve a **[learn.tg](https://learn.tg)** y conecta tu billetera.
-4.  Firma el mensaje cuando se te solicite — esto verifica que eres dueño de la billetera.
-5.  Una vez conectado, continúa a la siguiente guía para verificar tu identidad y
-    comenzar a reclamar tu IBU.
-
-> **¿Por qué?** Solo el navegador de tu billetera puede firmar transacciones. Sin él,
-> no puedes reclamar IBU ni recibir recompensas por completar crucigramas.
+*   Tu respuesta queda guardada en el teléfono y se envía sola cuando vuelve la conexión.
+    El resultado llega a tus **notificaciones** (correcto, o las palabras con problema).
+*   Donar o reclamar IBU sí necesitan conexión, y la aplicación te lo dice.
+*   La billetera **se bloquea al recargar la página**: no se pierde, la desbloqueas otra
+    vez con tu huella o tu clave.
 
 ---
 
 ### **Preguntas de Comprensión**
 
-1. Nunca debes ___ tu Frase de Recuperación Secreta. (compartir)
-2. Puedes compartir tu dirección pública con alguien que te enviará criptomonedas 
-   y también es como tu número de ___ en la blockchain. (cuenta)
-3. Para recibir IBU de GoodDollar o de Learn.tg, tu billetera debe estar
-   conectada a la blockchain de ___.  (CELO)
-4. Tu billetera incluye dos partes: (1) tu dirección pública que puedes
-   compartir para recibir fondos y (2) tu dirección privada asociada con una
-   frase de recuperación secreta que no puedes compartir porque quien controla la 
-   frase de recuperación secreta tiene el control ___ de los activos en tu billetera. (total)
-5. La Frase de Recuperación Secreta tiene ___ palabras que debes escribir en orden. (doce)
-6. Debes escribir tu Frase de Recuperación Secreta en ___ y guardarla en un lugar seguro. (papel)
+1. Creas tu billetera dentro de learn.tg, en Chrome o ___. (safari)
+2. La clave debe tener al menos ___ caracteres, escrito con palabras. (ocho)
+3. La billetera te da una Frase de Recuperación Secreta de ___ palabras. (doce)
+4. Debes escribir tu frase en ___ y guardarla en un lugar seguro. (papel)
+5. Quien tenga tus 12 palabras controla tus ___. (fondos)
+6. Para recibir fondos compartes tu dirección ___, la que empieza con 0x. (publica)
+7. Sin conexión todavía puedes leer tus guías y resolver sus ___. (crucigramas)
+8. Una respuesta resuelta sin conexión se envía sola cuando vuelve la ___. (conexion)

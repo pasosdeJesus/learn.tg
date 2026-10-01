@@ -94,9 +94,11 @@ Leones and digital assets.
 
 ### Your Action Step
 
-1.  If you do not have a Web3 wallet yet, install **Rabby Wallet** or
-    **MetaMask** on your smartphone (from Google Play or App Store). The next
-    guide will walk you through setup in detail.
+1.  You do not need to install any wallet app: in the **next guide** you will create
+    your wallet **inside learn.tg**, free, and it stays on your phone. If you already
+    have a wallet somewhere else (MetaMask, Rabby, OKX, OneKey or Brave) you can import
+    its recovery phrase and keep the same address: see the
+    [migration guide](/en/migration-in-app-wallet).
 2.  Bookmark **[learn.tg](https://learn.tg)** — this is where you will learn,
     earn rewards, and claim your UBI.
 3.  Bookmark **[stable-sl.pdJ.app](https://stable-sl.pdj.app)** — this will be

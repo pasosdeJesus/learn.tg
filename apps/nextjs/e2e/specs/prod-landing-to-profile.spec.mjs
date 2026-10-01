@@ -182,7 +182,7 @@ async function main() {
     await new Promise(r => setTimeout(r, 4000))
     ok('Opened Guide 3')
   } else {
-    await navAndWait(page, `${base}/en/web3-and-ubi/guide3`, timeout)
+    await navAndWait(page, `${base}/en/web3-and-ubi/guide4`, timeout)
     ok('Navigated to Guide 3 directly')
   }
 

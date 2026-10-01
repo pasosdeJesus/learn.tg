@@ -24,7 +24,7 @@ import { resolveSiteTarget } from '../helpers/site-target.mjs'
 import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 
 const COURSE_PATH = '/en/web3-and-ubi'
-const NEVER_VISITED_PATH = '/en/web3-and-ubi/guide4'
+const NEVER_VISITED_PATH = '/en/web3-and-ubi/guide5'
 const READY_TEXT = 'You can read this course without a connection'
 const password = '12345678'
 
@@ -195,7 +195,7 @@ async function main() {
   if (guidesWithPuzzle.length > 0) ok(`El curso trae ${guidesWithPuzzle.length} crucigrama(s) con pistas`)
   else console.log('  [i] el curso descargado no trae crucigramas con pistas')
 
-  if ((stored?.guideKeys ?? []).some((key) => key === 'en/web3-and-ubi/guide4')) {
+  if ((stored?.guideKeys ?? []).some((key) => key === 'en/web3-and-ubi/guide5')) {
     ok('La guía nunca visitada quedó guardada con su contenido')
   } else {
     fail(`No se guardó el contenido de la guía nunca visitada (${(stored?.guideKeys ?? []).join(', ')})`)

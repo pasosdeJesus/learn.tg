@@ -110,8 +110,8 @@ export const CAMPAIGN_CONFIGS: CampaignConfig[] = [
       ],
     },
     guide3: {
-      en: 'web3-and-ubi/guide3',
-      es: 'web3-e-ibu/guia3',
+      en: 'web3-and-ubi/guide4',
+      es: 'web3-e-ibu/guia4',
     },
     chains: [
       {

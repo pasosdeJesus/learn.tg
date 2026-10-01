@@ -1,86 +1,114 @@
-# Guía 4: Tu Puente hacia el Efectivo - Usando Rampas de Entrada y Salida
+# Guía 4: Reclama Tu IBU Diario - GoodDollar y Learn.tg-IBU
 
-### **Introducción**
+## 1. ¿Qué son GoodDollar (G$), CELO y Learn.tg-IBU?
 
-Para usar tu IBU digital en la vida diaria, necesitas convertirlo a tu moneda
-local. Dependiendo de tu país, esto se puede hacer de diferentes maneras:
-* Podría haber servicios que se conecten directamente a tu banco para convertir fácilmente
-(como Coinbase en EE. UU.).
-* Podría haber mercados para comprar y vender de persona a persona, o mercados P2P de exchanges como OKX y Binance (ver el curso sobre OKX en https://learn.tg/es/ahorra-en-dolares-en-okx).
-* Podría haber servicios llamados **rampas de entrada** y **rampas de salida**
-    *   **Rampa de Entrada (On-Ramp):** Un servicio que convierte tu moneda local (como USD, EUR o
-    SLE) **en** criptomoneda.
-    *   **Rampa de Salida (Off-Ramp):** Un servicio que convierte tu criptomoneda **de vuelta a** tu
-    moneda local.
+GoodDollar (G$) y CELO son criptomonedas que operan en la
+**blockchain de Celo**.
 
-La siguiente sección proporciona instrucciones específicas para usuarios en **Sierra
-Leona**. Recuerda, es mejor ahorrar tu cripto con el tiempo y convertir una cantidad mayor para que la transacción valga la pena.
+*   **GoodDollar** es también un protocolo global de IBU apoyado por empresas como 
+    eToro.
+*   **Learn.tg-IBU** es un IBU exclusivo en learn.tg que entrega **tokens CELO** a 
+    personas (especialmente en Sierra Leona) y que está patrocinado por **Pasos de Jesús**.
 
----
+Para asegurar la equidad y evitar que una persona reclame varias veces, ambos 
+sistemas de IBU utilizan **mecanismos anti-sybil**:
+*   **GoodDollar:** Requiere una **verificación facial** única cada 6 meses.
+*   **Learn.tg-IBU:** Necesitas al menos **50 puntos** en tu puntuación de perfil.
 
-### **Para Usuarios en Sierra Leona: Usando stable-sl.pdJ.app**
+**¿Cómo aumentar tu puntuación de perfil?**
 
-Para una experiencia sin problemas en Sierra Leona, recomendamos **stable-sl.pdJ.app**.
-Este servicio está diseñado para funcionar directamente con Leones de Sierra Leona y dinero móvil. Antes de comenzar, mira un video corto del proceso:
+Consulta la **[Guía 3 — Cómo Ganar Becas](../guia3)** para ver el desglose
+completo de puntuación, la fórmula de becas y consejos para llegar a 50+ puntos.
 
-[![Video que muestra el funcionamiento de stable-sl.pdJ.app](https://youtube.com/shorts/Gy9Fgruebx0)](https://youtube.com/shorts/Gy9Fgruebx0)
+**🎓 Gana SLEARN mientras aprendes:** Cada vez que completes una guía y pases
+su crucigrama, ganas **hasta 1 token SLEARN** (dependiendo tu puntaje de perfil)
+además de cualquier beca en USDT.
+SLEARN se puede ahorrar para pagar cursos premium o cambiar por Leones mediante
+[stable-sl.pdJ.app](https://stable-sl.pdj.app/). Mientras más aprendes, más
+ganas — y entre más alta tu puntuación de perfil, más CELO recibes diariamente.
 
-#### **Guía Paso a Paso para cambiar cripto por SLE:**
+**Valor diario aproximado:**
+*   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 Nuevos Leones). Puedes ahorrar durante varios días antes de convertir.
+*   **IBU de CELO:** Hasta 0.20 CELO diario, dependiendo de tu puntuación de perfil. Con 50 puntos, recibes 0.10 CELO.
 
-**Paso 1: Conecta tu billetera**
-1. Abre tu billetera (**Rabby** o MetaMask). Si estás usando la app de la
-   billetera, asegúrate de estar en modo Web3 — presiona "Web3" en la parte
-   superior (ver Guía 2 para configurar la billetera).
-2. Usando la función de búsqueda de la billetera web3, ve a **[stable-sl.pdJ.app](https://stable-sl.pdj.app/)**.
+**💡 Consejo:** Varios adultos en un hogar pueden reclamar, cada uno con su propia billetera, todo gestionable desde **una única billetera dentro de learn.tg**.
 
-**Paso 2: Envía Tus Tokens de IBU**
-1. Escribe tu nombre y número de teléfono de Orange (Nota: actualmente este servicio 
-   solo admite Orange Money).
-2. Selecciona la cripto que vas a cambiar por SLE (por ejemplo, CELO)
-3. Presiona el botón **Vender**
+### Una Estrategia para Tu IBU: Ahorra y Crece
 
-**Paso 3: Establece la cantidad y continúa
-1. Escribe la cantidad de cripto que quieres vender y espera unos segundos para ver
-   una cotización que informa cuánto SLE recibirás
-2. Si estás de acuerdo con el precio, presiona el botón Continuar (puedes comparar con las
-   tasas oficiales, por ejemplo, en [Coinmarketcap](https://coinmarketcap.com/) y
-   con las tasas de mercado en los mercados P2P de OKX y Binance).
- 
-**Paso 4: Confirma la transacción**
-1. Revisa los detalles, verifica que escribiste correctamente tu número de teléfono
-   y que está registrado a tu nombre
-  (porque el SLE se enviará a ese número si coincide con tu nombre).
-2. Presiona el botón Confirmar
+Como puedes ver, las cantidades diarias de IBU son pequeñas. Aunque se suman con el tiempo, convertir cantidades muy pequeñas a efectivo puede ser ineficiente debido a las comisiones por transacción.
 
-**Paso 5: Espera tu SLE**
-1. Toma una captura de pantalla que muestre los detalles de la operación y el número de
-   transacción
-2. Espera unos minutos para recibir tu SLE
-3. Si tienes algún problema, utiliza el botón de soporte en el sitio o
-   contacta al equipo a través de Telegram en +57 3165383162
+Una estrategia poderosa es **ahorrar tu IBU** durante varios días o semanas.
+
+Para acelerar tus ahorros, puedes **combinar tu IBU con otras ganancias** en learn.tg. Por ejemplo, completar crucigramas en la plataforma te recompensa con **hasta 1 USDT** (dependiendo de tu puntaje de perfil). Al ahorrar tus G$, CELO y sumar tus ganancias de USDT, puedes acumular una cantidad más significativa para convertir a efectivo cuando lo necesites.
 
 ---
 
-### **Consideraciones Importantes**
-*   **Comisiones:** Se aplican pequeñas comisiones de transacción para la red y los servicios de conversión
-    , necesitas tener una pequeña cantidad de CELO en tu billetera para pagar
-    las tarifas de red (aproximadamente 0.001 CELO por transacción, así que 1
-    CELO alcanza para cientos de transacciones).
-*   **Tasas:** Los tipos de cambio varían. Siempre verifica la cantidad final que
-    recibirás.
-*   **Seguridad:** Solo usa servicios de buena reputación. Verifica dos veces las URL de los sitios web y
-    nunca compartas la Frase de Recuperación Secreta de tu billetera.
+## 2. Paso 1: Verifica Tu Identidad con GoodDollar
+
+La **verificación facial** asegura que tu billetera pertenece a un **adulto real y único (mayor de 18 años)**.
+
+**Cómo funciona:**
+1.  Usarás la cámara de tu smartphone para grabar un video corto de tu cara.
+2.  El sistema de GoodDollar extrae tus rasgos faciales y los compara con una base de datos centralizada para evitar duplicados.
+3.  **Tus datos faciales se almacenan de forma segura** y están vinculados a la dirección de tu billetera, pero no a otra información personal (como tu nombre).
+
+**Requisitos del proceso:**
+*   **Tiempo:** Unos 10 minutos. Se hace **una vez** (luego cada 6 meses).
+*   **Ubicación:** Buena iluminación.
+*   **Nota:** En el navegador es posible que necesites permitir el acceso a la cámara varias veces (alrededor de 5) al principio.
+
+**Video de referencia:**
+
+[![Video que muestra la verificación facial de GoodDollar](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI) 
+
+
+**Al final de esta guía encontrarás el botón para iniciar tu verificación con GoodDollar.**
 
 ---
 
-### **Preguntas de Comprensión**
-1.  Un servicio de rampa de salida te permite ___ tu cripto y recibir dinero fiduciario
-    de tu país. (vender)
-2.  Un servicio de rampa de entrada te permite ___ cripto con el
-    dinero fiduciario de tu país (comprar)
-3. stable-sl.pdJ.app es el ___ de rampa de entrada y salida recomendado en 
-   Sierra Leona. (servicio)
-4. También es posible comprar y vender cripto por dinero fiduciario usando el mercado P2P
-   de ___ como OKX y Binance. (exchanges)
-5. Para pagar comisiones de transacción en la red Celo necesitas tener ___ en tu billetera. (CELO)
-6. Después de confirmar una transacción en stable-sl.pdJ.app, debes tomar una ___ de los detalles. (captura)
+## 3. Paso 2: Reclama Tu IBU Diario
+
+Una vez verificado, puedes reclamar diariamente a través de tu **billetera dentro de learn.tg** (la que creaste en la Guía 2).
+
+*   **GoodDollar (G$):** Puedes reclamar en <https://learn.tg> o en la aplicación oficial en <https://gooddapp.org>.
+*   **IBU de CELO:** Solo puedes reclamarlo en **este sitio (learn.tg)**.
+
+**Proceso diario:** Abre la aplicación, haz clic para reclamar y los fondos se añadirán a tu billetera.
+
+**Los botones al final de esta guía te permitirán reclamar ambos IBUs.**
+
+---
+
+## 4. Próximos Pasos
+
+¡Felicidades! Al completar esta guía has:
+1.  Comprendido el valor y el propósito del IBU de GoodDollar y CELO.
+2.  Aprendido cómo funcionan las verificaciones anti-sybil.
+3.  Preparado para verificar tu identidad y reclamar tus primeros fondos.
+
+En la **Guía 5** aprenderás a **convertir tus G$ o CELO en Leones** a través de servicios locales para usar tu IBU en la economía diaria.
+
+---
+
+## 5. Comprensión de Lectura
+
+1. ___ es una criptomoneda y un protocolo que te permite reclamar diariamente un poco de dinero gratis. (GoodDollar)
+2. Para demostrar que eres una persona única para GoodDollar, necesitas hacer una ___ facial cada 6 meses. (verificación)
+3. Suponiendo que los tipos de cambio se mantengan constantes como se presenta en esta guía, necesitarías reclamar el IBU de GoodDollar durante al menos ___ días para tener 1 SLE. (cuatro)
+4. Es posible reclamar el IBU de varios ___ en tu hogar desde una única billetera dentro de learn.tg, lo que facilita transferir los fondos a una sola cuenta. (adultos)
+5. Para reclamar el IBU de CELO en learn.tg necesitas al menos ___ puntos en tu puntuación de perfil. (cincuenta)
+6. Puedes reclamar el IBU de GoodDollar y de learn.tg una vez al ___ . (día)
+
+
+
+{CeloUbiButton}
+
+{GoodDollarButton}
+
+---
+
+### **¿Ya reclamaste tu IBU? ¡Ahora haz el crucigrama!**
+
+Ahora que tu billetera está conectada y has aprendido a reclamar IBU, resuelve el
+crucigrama de esta guía. Con un puntaje perfecto ganas la **beca** del curso
+(USDT y SLEARN, dependiendo de tu puntaje de perfil).

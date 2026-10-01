@@ -17,7 +17,7 @@ interface GasInsufficientPanelProps {
 export function GasInsufficientPanel({ lang, onClose, diag }: GasInsufficientPanelProps) {
   const isEs = lang === 'es'
   // Guía de reclamar CELO (UBI) del curso Web3 & UBI: guide3 (EN) / guia3 (ES)
-  const courseHref = isEs ? `/${lang}/web3-e-ibu/guia3` : `/${lang}/web3-and-ubi/guide3`
+  const courseHref = isEs ? `/${lang}/web3-e-ibu/guia4` : `/${lang}/web3-and-ubi/guide4`
 
   return (
     <div className="text-center py-4">

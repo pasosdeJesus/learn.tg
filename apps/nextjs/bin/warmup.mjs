@@ -34,7 +34,7 @@ const URLS = [
   '/en/web3-and-ubi',
   '/en/user-transactions/191',
   // Páginas que tocan los specs E2E (guías, clúster, redgd, referidos)
-  '/en/web3-and-ubi/guide3',
+  '/en/web3-and-ubi/guide4',
   '/en/redgd',
   '/en/cluster/1',
   '/en/referrals',

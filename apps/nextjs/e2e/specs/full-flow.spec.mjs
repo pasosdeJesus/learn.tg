@@ -571,7 +571,7 @@ async function main() {
   // ════════════════════════════════════════════════════════════════
   console.log('\n── Step 11: UBI Claim ──')
   await ensureSessionAlive(page)
-  const ubiPath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide3'
+  const ubiPath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide4'
 
   // Navigate and wait for client-rendered buttons (CeloUbiButton, GoodDollarButton)
   // These are React components that only render after hydration + session check

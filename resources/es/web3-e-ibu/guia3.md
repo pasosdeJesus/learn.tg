@@ -1,116 +1,101 @@
-# Guía 3: Reclama Tu IBU Diario - GoodDollar y Learn.tg-IBU
+## Cómo Ganar Becas en learn.tg
 
-## 1. ¿Qué son GoodDollar (G$), CELO y Learn.tg-IBU?
+Esta guía explica cómo funciona el sistema de becas — qué necesitas, cuánto
+puedes ganar y las reglas que aplican.
 
-GoodDollar (G$) y CELO son criptomonedas que operan en la
-**blockchain de Celo**.
+### Lo que Necesitas
 
-*   **GoodDollar** es también un protocolo global de IBU apoyado por empresas como 
-    eToro.
-*   **Learn.tg-IBU** es un IBU exclusivo en learn.tg que entrega **tokens CELO** a 
-    personas (especialmente en Sierra Leona) y que está patrocinado por **Pasos de Jesús**.
+Antes de poder recibir becas, debes tener:
 
-Para asegurar la equidad y evitar que una persona reclame varias veces, ambos 
-sistemas de IBU utilizan **mecanismos anti-sybil**:
-*   **GoodDollar:** Requiere una **verificación facial** única cada 6 meses.
-*   **Learn.tg-IBU:** Necesitas al menos **50 puntos** en tu puntuación de perfil.
+1. **Una billetera conectada** — configurada en la Guía 2.
+2. **Al menos 50 puntos de perfil** — mira el desglose abajo.
+3. **Un crucigrama perfecto** — todas las respuestas correctas.
 
-**¿Cómo aumentar tu puntuación de perfil?**
+### Puntuación de Perfil
 
-Consulta la **[Guía 2b — Cómo Ganar Becas](../guia2b)** para ver el desglose
-completo de puntuación, la fórmula de becas y consejos para llegar a 50+ puntos.
+Tu puntuación de perfil es lo que desbloquea becas e IBU. Mientras más alta,
+más ganas por guía. Completa tu perfil para llegar hasta 100 puntos:
 
-**🎓 Gana SLEARN mientras aprendes:** Cada vez que completes una guía y pases
-su crucigrama, ganas **hasta 1 token SLEARN** (dependiendo tu puntaje de perfil)
-además de cualquier beca en USDT.
-SLEARN se puede ahorrar para pagar cursos premium o cambiar por Leones mediante
-[stable-sl.pdJ.app](https://stable-sl.pdj.app/). Mientras más aprendes, más
-ganas — y entre más alta tu puntuación de perfil, más CELO recibes diariamente.
+| Qué verificar | Puntos | Cómo |
+|--------------|:------:|------|
+| Nombre | 26 | Tu nombre debe coincidir con el de tu pasaporte |
+| País | 24 | Tu país debe coincidir con tu nacionalidad del pasaporte |
+| Correo | 9 | Configura tu correo y pide a un verificador que lo confirme |
+| WhatsApp o Telegram | 9 | Agrega tu número y pide a un verificador que lo confirme |
+| Ubicación (departamento, ciudad) | 9 | Selecciona tu población y pide a un verificador que confirme |
+| Lugar de culto | 9 | Declara tu iglesia/mezquita y pide a un verificador que confirme |
+| Verificación GoodDollar | 7 | Completa la verificación facial en tu perfil |
+| Entrevista con verificador | 7 | Agenda y asiste a una entrevista de verificación —
+   ve a tu perfil y haz clic en "Solicitar Verificación" para abrir un calendario |
+| **Total** | **100** | |
 
-**Valor diario aproximado:**
-*   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 Nuevos Leones). Puedes ahorrar durante varios días antes de convertir.
-*   **IBU de CELO:** Hasta 0.20 CELO diario, dependiendo de tu puntuación de perfil. Con 50 puntos, recibes 0.10 CELO.
+Puedes gestionar tu perfil en tu [página de perfil](/es/profile).
 
-**💡 Consejo:** Varios adultos en un hogar pueden reclamar, cada uno con su propia billetera, todo gestionable desde **una única aplicación de billetera (Rabby o MetaMask)**.
+### Cuánto Ganas
 
-### Una Estrategia para Tu IBU: Ahorra y Crece
+La beca depende de dos cosas: el monto por guía de la bóveda y tu puntuación
+de perfil.
 
-Como puedes ver, las cantidades diarias de IBU son pequeñas. Aunque se suman con el tiempo, convertir cantidades muy pequeñas a efectivo puede ser ineficiente debido a las comisiones por transacción.
+```
+Beca = (montoPorGuía × puntuaciónPerfil) / 100
+```
 
-Una estrategia poderosa es **ahorrar tu IBU** durante varios días o semanas.
+Si la bóveda de un curso está configurada con **1 USDT** y **1 SLEARN** por
+guía, y tu puntuación es **75**:
 
-Para acelerar tus ahorros, puedes **combinar tu IBU con otras ganancias** en learn.tg. Por ejemplo, completar crucigramas en la plataforma te recompensa con **hasta 1 USDT** (dependiendo de tu puntaje de perfil). Al ahorrar tus G$, CELO y sumar tus ganancias de USDT, puedes acumular una cantidad más significativa para convertir a efectivo cuando lo necesites.
+- Recibes: **0.75 USDT** y **0.75 SLEARN** por crucigrama perfecto.
+- Con 50 puntos: **0.50 USDT** y **0.50 SLEARN**.
+- Con 100 puntos: **1.00 USDT** y **1.00 SLEARN**.
 
----
+Tanto USDT como SLEARN se pagan de la bóveda del curso. Es posible recibir
+solo uno de ellos si la bóveda solo tiene fondos para uno.
 
-## 2. Paso 1: Verifica Tu Identidad con GoodDollar
+### Reglas Importantes
 
-La **verificación facial** asegura que tu billetera pertenece a un **adulto real y único (mayor de 18 años)**.
+- **Espera de 24 horas:** Después de enviar un crucigrama en un curso, debes
+  esperar 24 horas antes de enviar otro en el mismo curso.
+- **Saldo de la bóveda:** Las becas se pagan de bóvedas financiadas por
+  donantes. Si una bóveda no tiene fondos, no recibirás beca aunque tengas
+  puntuación perfecta.
+- **Envíos no perfectos** no activan la espera y puedes intentar de nuevo
+  inmediatamente.
+- **SLEARN** se puede ahorrar para pagar cursos premium, y pronto después de
+  completar cursos Premium podrás cambiar SLEARN por Leones o por USDT
+  mediante [stable-sl.pdJ.app](https://stable-sl.pdj.app/).
+  Consulta el [Whitepaper de SLEARN](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md).
 
-**Cómo funciona:**
-1.  Usarás la cámara de tu smartphone para grabar un video corto de tu cara.
-2.  El sistema de GoodDollar extrae tus rasgos faciales y los compara con una base de datos centralizada para evitar duplicados.
-3.  **Tus datos faciales se almacenan de forma segura** y están vinculados a la dirección de tu billetera, pero no a otra información personal (como tu nombre).
+### Credenciales del Curso (SBTs)
 
-**Requisitos del proceso:**
-*   **Tiempo:** Unos 10 minutos. Se hace **una vez** (luego cada 6 meses).
-*   **Ubicación:** Buena iluminación.
-*   **Nota:** Con Rabby Wallet o MetaMask, es posible que necesites permitir el acceso a la cámara varias veces (alrededor de 5) al principio.
+Cuando completas el **100% de las guías** de un curso (todos los crucigramas
+aprobados), recibes un **Soul-Bound Token (SBT)** — una insignia digital no
+transferible que prueba que dominaste el curso. Aparece en tu perfil público
+y contribuye a tu posición en la tabla de líderes. Es como un certificado de
+finalización, registrado permanentemente en la blockchain de Celo.
 
-**Video de referencia:**
+### Tu Paso de Acción
 
-[![Video que muestra la verificación facial de GoodDollar](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI) 
+1.  Ve a tu **[página de perfil](/es/profile)** y completa tu nombre, país,
+    correo, WhatsApp o Telegram, municipio y lugar de culto.
+2.  Haz clic en **"Solicitar Verificación"** en tu perfil para agendar una
+    entrevista con un verificador — esto te da 7 puntos extra.
+3.  Completa la **verificación facial de GoodDollar** — en la Guía 3
+    encontrarás el botón para iniciar este proceso. Te da 7 puntos de perfil.
+4.  Apunta a al menos **50 puntos** de perfil — con este nivel ya empiezas a
+    recibir becas.
 
+### Preguntas de Comprensión
 
-**Al final de esta guía encontrarás el botón para iniciar tu verificación con GoodDollar.**
-
----
-
-## 3. Paso 2: Reclama Tu IBU Diario
-
-Una vez verificado, puedes reclamar diariamente a través de tu **billetera Web3** (como **Rabby** o MetaMask, que configuraste en la Guía 2).
-
-*   **GoodDollar (G$):** Puedes reclamar en <https://learn.tg> o en la aplicación oficial en <https://gooddapp.org>.
-*   **IBU de CELO:** Solo puedes reclamarlo en **este sitio (learn.tg)**.
-
-**Proceso diario:** Abre la aplicación, haz clic para reclamar y los fondos se añadirán a tu billetera.
-
-**Los botones al final de esta guía te permitirán reclamar ambos IBUs.**
-
----
-
-## 4. Próximos Pasos
-
-¡Felicidades! Al completar esta guía has:
-1.  Comprendido el valor y el propósito del IBU de GoodDollar y CELO.
-2.  Aprendido cómo funcionan las verificaciones anti-sybil.
-3.  Preparado para verificar tu identidad y reclamar tus primeros fondos.
-
-En la **Guía 4** aprenderás a **convertir tus G$ o CELO en Leones** a través de servicios locales para usar tu IBU en la economía diaria.
-
----
-
-## 5. Comprensión de Lectura
-
-1. ___ es una criptomoneda y un protocolo que te permite reclamar diariamente un poco de dinero gratis. (GoodDollar)
-2. Para demostrar que eres una persona única para GoodDollar, necesitas hacer una ___ facial cada 6 meses. (verificación)
-3. Suponiendo que los tipos de cambio se mantengan constantes como se presenta en esta guía, necesitarías reclamar el IBU de GoodDollar durante al menos ___ días para tener 1 SLE. (cuatro)
-4. Es posible reclamar el IBU de varios ___ en tu hogar desde una única aplicación de billetera (Rabby o MetaMask), lo que facilita transferir los fondos a una sola cuenta. (adultos)
-5. Para reclamar el IBU de CELO en learn.tg necesitas al menos ___ puntos en tu puntuación de perfil. (cincuenta)
-6. Puedes reclamar el IBU de GoodDollar y de learn.tg una vez al ___ . (día)
-
-
-
-{CeloUbiButton}
-
-{GoodDollarButton}
-
----
-
-### **¿Ya reclamaste tu IBU? ¡Ahora haz el crucigrama!**
-
-Ahora que tu billetera está conectada y has aprendido a reclamar IBU, regresa a
-la **Guía 1** y completa el crucigrama. Pondrá a prueba tu conocimiento
-de las tres guías — y ganarás una **beca de hasta 1 USDT** (dependiendo de tu puntaje de perfil) si lo resuelves perfecto.
-
-**[← Volver a la Guía 1](../guia1)**
+1. Necesitas al menos ___ puntos de perfil para recibir becas. (cincuenta)
+2. La fórmula de la beca es (montoPorGuía × puntuaciónPerfil) dividido por ___ . (cien)
+3. Después de enviar un crucigrama, debes esperar ___ horas antes de enviar
+   otro en el mismo curso. (veinticuatro)
+4. Si una bóveda no tiene fondos de donantes, recibirás ___ aunque tengas
+   puntuación perfecta. (nada)
+5. El contrato que paga las becas permite recibir solo una de las dos
+   recompensas si la bóveda solo tiene fondos para una — esto se llama un
+   pago ___ . (parcial)
+6. Las becas se pagan de bóvedas financiadas por ___ . (donantes)
+7. Para ganar el monto completo por guía, necesitas una puntuación de perfil
+   de ___ . (cien)
+8. Si envías un crucigrama con errores, la espera de 24 horas ___ se activa.
+   (no)

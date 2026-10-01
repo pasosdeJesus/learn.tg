@@ -3,7 +3,7 @@
 //
 // Execution:
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg:9001 CHAIN_ID=11142220 \
-//     GUIDE_CLAIM_PATH=/en/web3-and-ubi/guide3 \
+//     GUIDE_CLAIM_PATH=/en/web3-and-ubi/guide4 \
 //     node e2e/specs/celo-ubi-claim-sepolia.spec.mjs
 
 import {
@@ -23,7 +23,7 @@ async function main() {
   const env = await initTestEnv()
   const { timeout, account, chainId } = env
   const { base, host, domainPort } = resolveSiteTarget(env)
-  const guidePath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide3'
+  const guidePath = process.env.GUIDE_CLAIM_PATH || '/en/web3-and-ubi/guide4'
 
   console.log(`Wallet: ${short(account.address)} | ${base} (chain: ${chainId})`)
   console.log(`Guide: ${guidePath}\n`)

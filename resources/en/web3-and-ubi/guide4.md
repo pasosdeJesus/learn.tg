@@ -1,86 +1,114 @@
-### **Introduction**
+## 1. What are GoodDollar (G$), CELO and Learn.tg-UBI ?
 
-To use your digital UBI in daily life, you need to convert it into your local
-currency. Depending on your country this can be done in different ways:
-* There could be services that can connect directly to your bank to convert easily
-(like Coinbase in USA).
-* There could be markets to buy and sell person to person, or P2P markets of exchanges like OKX and Binance (see the course about OKX at https://learn.tg/en/save-in-dollars-on-OKX).
-* There could be services called **on-ramps** and **off-ramps**
-    *   **On-Ramp:** A service that converts your local currency (like USD, EUR, or
-    SLE) **into** cryptocurrency.
-    *   **Off-Ramp:** A service that converts your cryptocurrency **back into** your
-    local currency.
+GoodDollar (G$) and CELO are cryptocurrencies that operate on the
+**Celo blockchain**.
 
-The following section provides specific instructions for users in **Sierra
-Leone**. Remember, it is best to save your crypto over time and convert a larger amount to make the transaction worthwhile.
+*   **GoodDollar** is also a global UBI protocol supported by companies like 
+    eToro.
+*   **Learn.tg-UBI** is an exclusive UBI on learn.tg that gives **CELO tokens** to 
+    people (specially in Sierra Leone) and that is sponsored by **Pasos de Jesús**.
 
----
+To ensure fairness and prevent one person from claiming multiple times, both 
+UBI systems use **anti-sybil mechanisms**:
+*   **GoodDollar:** Requires unique **facial verification** every 6 months.
+*   **Learn.tg-UBI:** You need at least **50 points** in your profile score.
 
-### **For Users in Sierra Leone: Using stable-sl.pdJ.app**
+**How to increase your profile score?**
 
-For a seamless experience in Sierra Leone, we recommend **stable-sl.pdJ.app**.
-This service is designed to work directly with Sierra Leonean Leones and mobile
-money. Before  you start watch a short video of the process:
+See **[Guide 3 — How to Earn Scholarships](../guide3)** for the full
+profile score breakdown, scholarship formula, and tips to reach 50+ points.
 
-[![Video showing operation of stable-sl.pdJ.app](https://youtube.com/shorts/Gy9Fgruebx0)](https://youtube.com/shorts/Gy9Fgruebx0)
+**🎓 Earn SLEARN while you learn:** Every time you complete a guide and pass
+its crossword, you earn **up to 1 SLEARN token** (depending on your profile
+score) in addition to any USDT scholarship.
+SLEARN can be saved to pay for premium courses or exchanged for Leones via
+[stable-sl.pdJ.app](https://stable-sl.pdj.app/). The more you learn, the more
+you earn — and the higher your profile score, the more CELO UBI you receive
+daily.
 
-#### **Step-by-Step Guide to change crypto for SLE:**
+**Approximate daily value:**
+*   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 New Leones). You can save up over several days before converting.
+*   **CELO UBI:** Up to 0.20 CELO daily, depending on your profile score. With 50 points, you receive 0.10 CELO.
 
-**Step 1: Connect your wallet**
-1. Open your wallet (**Rabby** or MetaMask). If you are using the wallet app,
-   make sure you are in Web3 mode — tap "Web3" at the top (see Guide 2 for
-   wallet setup).
-2. Using the search function of the web3 wallet go to **[stable-sl.pdJ.app](https://stable-sl.pdj.app/)**.
+**💡 Tip:** Multiple adults in a household can claim, each with their own wallet, all manageable from **a single wallet inside learn.tg**.
 
-**Step 2: Send Your UBI Tokens**
-1. Type your name and Orange phone number (Note: currently this service 
-   only supports Orange Money).
-2. Select the crypto that you are going to change to SLE (e.g CELO)
-3. Push the button **Sell**
+### A Strategy for Your UBI: Save and Grow
 
-**Step 3: Set the amount and continue
-1. Type the amount of crypto you want to sell and wait some seconds to see
-   a quote informing how much SLE you will receive
-2. If you agree with the price push the Continue button (you can compare with the
-   official rates for example at [Coinmarketcap](https://coinmarketcap.com/) and
-   with the market rates in P2P markets of OKX and Binance ).
- 
-**Step 4: Confirm the transaction**
-1. Review the details, check that you typed correctly your phone number
-   and that it is registered in your name
-  (because the SLE will be sent to that number if it matches your name).
-2. Push the Confirm button
+As you can see, the daily UBI amounts are small. While they add up over time, converting very small amounts to cash can be inefficient due to transaction fees.
 
-**Step 5: Wait for your SLE**
-1. Take a screenshot that shows details of the operation and the transaction
-   number
-2. Wait some minutes for your SLE
-3. If you have any issue please use the support button on the site or
-   contact the team via Telegram at +57 3165383162
+A powerful strategy is to **save your UBI** for several days or weeks.
+
+To accelerate your savings, you can **combine your UBI with other earnings** on learn.tg. For example, completing crossword puzzles on the platform rewards you with **up to 1 USDT** (depending on your profile score). By saving your G$, CELO, and adding your USDT earnings, you can accumulate a more significant amount to convert to cash when you need it.
 
 ---
 
-### **Important Considerations**
-*   **Fees:** Small transaction fees apply for the network and conversion
-    services, you need to have a small amount of CELO in your wallet to pay
-    for network fees (approximately 0.001 CELO per transaction, so 1 CELO is
-    enough for hundreds of transactions).
-*   **Rates:** Exchange rates vary. Always check the final amount you will
-    receive.
-*   **Security:** Only use reputable services. Double-check website URLs and
-    never share your wallet's Secret Recovery Phrase.
+## 2. Step 1: Verify Your Identity with GoodDollar
+
+**Facial verification** ensures your wallet belongs to a **unique real adult (over 18 years old)**.
+
+**How it works:**
+1.  You'll use your smartphone's camera to record a short video of your face.
+2.  GoodDollar's system extracts your facial features and compares them with a centralized database to avoid duplicates.
+3.  **Your facial data is stored securely** and is linked to your wallet address but not to other personal information (like your name).
+
+**Process requirements:**
+*   **Time:** About 10 minutes. Done **once** (then every 6 months).
+*   **Location:** Good lighting.
+*   **Note:** In the browser you may need to allow camera access several times (around 5) at the beginning.
+
+**Reference video:**
+
+[![Video showing facial verification of GoodDollar](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI) 
+
+
+**At the end of this guide you'll find the button to start your GoodDollar verification.**
 
 ---
 
-### **Comprehension Questions**
-1.  An off-ramp service allows you to ___ your crypto and receive fiat money
-    of your country. (sell)
-2.  An on-ramp service allows you to ___ crypto with the
-    fiat money of your country (buy)
-3. stable-sl.pdJ.app is the recommended on-ramp and off-ramp ___ in 
-   Sierra Leone. (service)
-4. It is also possible to buy and sell crypto for fiat using the P2P market
-   of ___ like OKX and Binance. (exchanges)
-5. To pay transaction fees on the Celo network you need to have ___ in your wallet. (CELO)
-6. After confirming a transaction on stable-sl.pdJ.app, you should take a ___ of the details. (screenshot)
+## 3. Step 2: Claim Your Daily UBI
+
+Once verified, you can claim daily through your **wallet inside learn.tg** (the one you created in Guide 2).
+
+*   **GoodDollar (G$):** You can claim on <https://learn.tg> or the official app at <https://gooddapp.org>.
+*   **CELO UBI:** You can only claim it on **this site (learn.tg)**.
+
+**Daily process:** Open the app, click to claim, and the funds are added to your wallet.
+
+**The buttons at the end of this guide will allow you to claim both UBIs.**
+
+---
+
+## 4. Next Steps
+
+Congratulations! By completing this guide you have:
+1.  Understood the value and purpose of GoodDollar and CELO UBI.
+2.  Learned how the anti-sybil verifications work.
+3.  Prepared to verify your identity and claim your first funds.
+
+In **Guide 5** you will learn how to **convert your G$ or CELO into Leones** through local services to use your UBI in the daily economy.
+
+---
+
+## 5. Reading Comprehension
+
+1. ___ is a cryptocurrency and a protocol that allows you to claim daily a little of free money daily. (GoodDollar)
+2. To prove that your are a unique person for GoodDollar, you need to do facial ___ every 6 months. (verification)
+3. Assuming the exchange rates remain constant as presented in this guide, you would need to claim GoodDollar UBI for at least ___ days to have 1 SLE. (four)
+4. It is possible to claim the UBI of multiple ___ in your household from a single wallet inside learn.tg, which makes it easier to transfer funds only one account. (adults)
+5. To claim learn.tg CELO UBI you need at least ___ points in your profile score. (fifty)
+6. You can claim GoodDollar and learn.tg UBI once per ___ . (day)
+
+
+
+{CeloUbiButton}
+
+{GoodDollarButton}
+
+---
+
+### **Did you claim your UBI? Now take the crossword!**
+
+Now that your wallet is connected and you've learned how to claim UBI, answer the
+crossword of this guide. With a perfect score you earn the **scholarship** of the course
+(USDT and SLEARN, depending on your profile score).
 

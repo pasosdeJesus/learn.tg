@@ -43,19 +43,23 @@ Rules for writing course guides (content in `resources/{lang}/{course}/`).
 
 - Markdown files in `resources/{lang}/{prefijoRuta}/`.
 - Filename matches `sufijoRuta` in the database (e.g., `guide1.md`,
-  `guia2b.md`).
+  `guia2.md`).
 - English content in `resources/en/`, Spanish in `resources/es/`.
 - Keep both language versions synchronized.
-- Use absolute URLs for cross-references: `[Guide 2b](../guide2b)`.
+- Cross-reference the other guides of the course with a relative link
+  (`[Guide 3](../guide3)`); pages outside the course with an absolute path
+  (`/en/migration-in-app-wallet`).
+- Guide URLs (`/{lang}/{prefijoRuta}/{sufijoRuta}`) are hardcoded in a few places
+  (`GasInsufficientPanel`, `donation-target`, the cluster and referral pages, the E2E
+  specs): renumbering a guide means updating those references too.
 
 ## Database
 
 - Each guide is a row in `cor1440_gen_actividadpf` linked to a course via
   `proyectofinanciero_id`.
-- `nombrecorto` controls ordering (text sort). Match the existing naming
-  pattern of the course. If existing guides use `guide1`, `guide2`, `guide3`,
-  use `guide2b` to insert between 2 and 3. If they use `1`, `2`, `3`, use
-  `25`.
+- `nombrecorto` controls ordering (text sort). **Always plain numbers** (`guide1`,
+  `guide2`, `guia3`…): to insert a guide in the middle, **renumber the ones that
+  follow** (`guide2b` was the old letter-suffix convention and is no longer used).
 - `sufijoRuta` must match the filename without extension.
 - To add a guide between existing ones, use a migration (`bin/m db:mig:make`).
   See [How to Create a Course](how-to-create-a-course.md) for the full course

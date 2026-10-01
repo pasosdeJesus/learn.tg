@@ -207,7 +207,7 @@ The platform features two distinct reward mechanisms, demonstrating our principl
     1. The Next.js backend validates the answer.
     2. If correct, it calls the `payScholarship()` function on the `LearnTGVaultsV5.sol` contract (handler en el motor `@learn-tg/rewards`).
     3. The contract verifies on-chain that the user has a `profileScore` of at least 50, has not already been rewarded for the guide, and has respected the 24-hour cooldown period.
-       The `profileScore` breakdown and scholarship formula are documented in the user-facing course: [Web3 & UBI — Guide 2b](resources/en/web3-and-ubi/guide2b.md).
+       The `profileScore` breakdown and scholarship formula are documented in the user-facing course: [Web3 & UBI — Guide 3](resources/en/web3-and-ubi/guide3.md).
     4. If checks pass, the contract calculates and transfers USDT and SLEARN rewards to the student's wallet.
     5. When 100% of guides in a course are completed, `mintCourseCredential()` issues an SBT via `PasosDeJesusCredentials.sol`.
 

@@ -94,9 +94,11 @@ Leones y activos digitales.
 
 ### Tu Paso de Acción
 
-1.  Si aún no tienes una billetera Web3, instala **Rabby Wallet** o
-    **MetaMask** en tu smartphone (desde Google Play o App Store). La siguiente
-    guía te explicará la configuración en detalle.
+1.  No necesitas instalar ninguna aplicación de billetera: en la **siguiente guía**
+    crearás tu billetera **dentro de learn.tg**, gratis, y queda en tu teléfono. Si ya
+    tienes una billetera en otra parte (MetaMask, Rabby, OKX, OneKey o Brave) puedes
+    importar su frase de recuperación y conservar la misma dirección: mira la
+    [guía de migración](/es/migracion-billetera-app).
 2.  Marca como favorito **[learn.tg](https://learn.tg)** — aquí aprenderás,
     ganarás recompensas y reclamarás tu IBU.
 3.  Marca como favorito **[stable-sl.pdJ.app](https://stable-sl.pdj.app)** —

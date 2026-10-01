@@ -1032,7 +1032,7 @@ async function runTest() {
     generateUXReport(allAnalyses);
 
     // 7. Visitar guía de CELO UBI
-    console.log('\nPASO 7: Visiting CELO UBI guide (web3-and-ubi/guide3)...');
+    console.log('\nPASO 7: Visiting CELO UBI guide (web3-and-ubi/guide4)...');
     const guideResponse = await apiClient.get('/api/guide', {
       params: {
         lang: LANG,
