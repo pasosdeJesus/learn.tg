@@ -1,25 +1,41 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, act } from '@testing-library/react'
 import { ServiceWorkerRegistrar } from '../ServiceWorkerRegistrar'
+import { CHUNK_RELOAD_KEY } from '@/lib/sw-recovery'
 
 describe('ServiceWorkerRegistrar (R-#240)', () => {
   const register = vi.fn(() => Promise.resolve({} as ServiceWorkerRegistration))
   const unregister = vi.fn(() => Promise.resolve(true))
   const cachesDelete = vi.fn(() => Promise.resolve(true))
+  const reload = vi.fn()
+  const swListeners: Record<string, (() => void) | undefined> = {}
+  let controller: object | null = {}
 
   beforeEach(() => {
     register.mockClear()
     unregister.mockClear()
     cachesDelete.mockClear()
+    reload.mockClear()
+    Object.keys(swListeners).forEach((k) => delete swListeners[k])
+    controller = {}
     Object.defineProperty(window.navigator, 'serviceWorker', {
       value: {
         register,
         getRegistrations: vi.fn(() => Promise.resolve([{ unregister }])),
+        get controller() { return controller },
+        addEventListener: vi.fn((type: string, fn: () => void) => { swListeners[type] = fn }),
+        removeEventListener: vi.fn(),
       },
       configurable: true,
     })
     vi.stubGlobal('caches', { keys: vi.fn(() => Promise.resolve(['learntg-pages'])), delete: cachesDelete })
+    Object.defineProperty(window, 'location', {
+      value: { href: 'http://localhost/en', reload },
+      writable: true,
+      configurable: true,
+    })
+    window.sessionStorage.clear()
     vi.stubEnv('NEXT_PUBLIC_PWA_ENABLED', '1')
     vi.stubEnv('NEXT_PUBLIC_PWA_DISABLE', '')
   })
@@ -78,5 +94,57 @@ describe('ServiceWorkerRegistrar (R-#240)', () => {
     register.mockReturnValueOnce(Promise.reject(new Error('offline')))
     expect(() => render(<ServiceWorkerRegistrar />)).not.toThrow()
     await Promise.resolve()
+  })
+
+  it('reloads once when the controller changes and a controller already existed', () => {
+    render(<ServiceWorkerRegistrar />)
+    act(() => { swListeners['controllerchange']?.() })
+    expect(reload).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not reload on the first install (no previous controller)', () => {
+    controller = null
+    render(<ServiceWorkerRegistrar />)
+    act(() => { swListeners['controllerchange']?.() })
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it('reloads once on a ChunkLoadError and does not loop', () => {
+    render(<ServiceWorkerRegistrar />)
+    act(() => {
+      window.dispatchEvent(new ErrorEvent('error', { error: new Error('ChunkLoadError: Loading chunk 911 failed.') }))
+    })
+    expect(reload).toHaveBeenCalledTimes(1)
+    expect(window.sessionStorage.getItem(CHUNK_RELOAD_KEY)).not.toBeNull()
+
+    act(() => {
+      window.dispatchEvent(new ErrorEvent('error', { error: new Error('ChunkLoadError: Loading chunk 911 failed.') }))
+    })
+    expect(reload).toHaveBeenCalledTimes(1)
+  })
+
+  it('ignores unrelated errors', () => {
+    render(<ServiceWorkerRegistrar />)
+    act(() => {
+      window.dispatchEvent(new ErrorEvent('error', { error: new Error('TypeError: boom') }))
+    })
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it('removes its listeners on unmount', () => {
+    const removeSpy = vi.fn()
+    Object.defineProperty(window.navigator, 'serviceWorker', {
+      value: {
+        register,
+        getRegistrations: vi.fn(() => Promise.resolve([])),
+        controller: {},
+        addEventListener: vi.fn(),
+        removeEventListener: removeSpy,
+      },
+      configurable: true,
+    })
+    const { unmount } = render(<ServiceWorkerRegistrar />)
+    unmount()
+    expect(removeSpy).toHaveBeenCalledWith('controllerchange', expect.any(Function))
   })
 })

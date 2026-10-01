@@ -33,12 +33,14 @@ const pwaConfig: PWAConfig = {
   } as PWAConfig['fallbacks'],
   additionalManifestEntries: [
     { url: '/offline', revision: null },
-    // R-#240 §4b: el armazón de la lista de cursos queda precacheado para que el
-    // menú ☰ → Courses funcione sin conexión (el operador lo reportó el
-    // 2026-09-21: mostraba la página de respaldo). Los datos los aporta
-    // `lib/offline-catalog.ts`.
-    { url: '/en', revision: null },
-    { url: '/es', revision: null },
+    // R-#240 §4b precacheaba también `/en` y `/es` (revision: null) para que el
+    // menú ☰ → Courses funcionara sin conexión desde la primera visita. Esa
+    // entrada NUNCA se revalidaba (Workbox sirve el precache cache-first) y tras
+    // un deploy el armazón del build anterior quedaba apuntando a chunks que ya
+    // no existían → ChunkLoadError y "This page couldn't load" en una pestaña
+    // nueva (reproducido el 2026-10-01, REQ/272 §10). Ahora `/en` y `/es` pasan
+    // por la regla NetworkFirst de más abajo; sin conexión siguen sirviéndose
+    // desde `learntg-pages` después de la primera visita online.
   ],
   runtimeCaching: [
     {
@@ -100,7 +102,10 @@ const pwaConfig: PWAConfig = {
       },
     },
     {
-      urlPattern: /^https?:\/\/[^\/]+\/(en|es)\/.*/,
+      // `/en`, `/es`, `/en/…`, `/es/…` y sus query strings (`?iappwallet=1`,
+      // `?debug=1`): antes `/(en|es)\/.*` dejaba fuera `/en` y `/es` a secas
+      // (los servía el precache, ya retirado por R-#272 §10).
+      urlPattern: /^https?:\/\/[^\/]+\/(en|es)(\/|\?|$)/,
       handler: 'NetworkFirst' as const,
       options: {
         cacheName: 'learntg-pages',

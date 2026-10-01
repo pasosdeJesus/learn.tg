@@ -70,7 +70,7 @@ in a `next/script` with `strategy="afterInteractive"`.
 | `/_next/static/*` | CacheFirst | `diligent-static` | sin caducidad por edad (300 entradas) |
 | `/img/*`, `/icons/*` (png/jpg/jpeg/svg/webp/gif) | CacheFirst | `learntg-images` | sin caducidad por edad (150 entradas), con `ignoreVary` |
 | `/_next/image?url=…` (lo que sirve `next/image`) | CacheFirst | `learntg-images` | sin caducidad por edad (200 entradas) |
-| `/en/*` and `/es/*` (pages, con `ignoreVary`) | NetworkFirst (5 s) | `learntg-pages` | **sin caducidad por edad** (200 entradas) |
+| `/en`, `/es` y sus subrutas (pages, con `ignoreVary`; también con query string) | NetworkFirst (5 s) | `learntg-pages` | **sin caducidad por edad** (200 entradas) |
 | `/api/*` GET | NetworkFirst (5 s) | `learntg-api-get` | 1 h (200 entradas) |
 | `/api/*` POST/PATCH/DELETE | NetworkOnly | - | never cached |
 
@@ -84,6 +84,17 @@ in a `next/script` with `strategy="afterInteractive"`.
 `fallbacks.document = '/offline'` shows the offline page when a navigation is not
 in any cache. Workbox only serves a fallback it precached, which is why
 `additionalManifestEntries` lists `/offline` explicitly.
+
+`/en` and `/es` must **not** go back into `additionalManifestEntries` (they were
+there until 2026-10-01, R-#240 §4b): Workbox serves the precache cache-first and a
+`revision: null` entry is never revalidated, so after a deploy the previous build's
+shell kept pointing at chunks that no longer existed → `ChunkLoadError` and "This
+page couldn't load" in a new tab (reproduced by `e2e/specs/sw-stale-shell.spec.mjs`,
+REQ/272 §10). As a runtime NetworkFirst entry they revalidate online and still work
+offline from `learntg-pages` after the first visit. The client also recovers on its
+own: `components/ServiceWorkerRegistrar.tsx` reloads once when the controller changes
+(only if one already existed) and once on a `ChunkLoadError`, guarded by
+`sessionStorage` (`lib/sw-recovery.ts`) so a persistent failure does not loop.
 
 Consequence for a **downloaded** course (R-#256): a guide that was never opened
 online has no entry in `learntg-pages`, so offline navigation to it falls back to
