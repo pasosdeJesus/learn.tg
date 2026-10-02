@@ -40,7 +40,7 @@
 //   PROD_SPECS=1 GOODDOLLAR_WALLET=external GOODDOLLAR_PRIVATE_KEY=0x... ... bin/m test:e2e gooddollar-claim-real
 
 import {
-  initTestEnv, launchBrowser,
+  initTestEnv, launchBrowser, newIncognitoContext,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
@@ -94,7 +94,9 @@ const findClaimButton = () => {
   return {
     byTestId: !!byTestId,
     reason: node.getAttribute('data-reason') || 'unknown',
+    action: node.getAttribute('data-action') || 'unknown',
     disabled: !!node.disabled,
+    text: (node.innerText || '').replace(/\s+/g, ' ').slice(0, 200),
   }
 }
 
@@ -159,17 +161,61 @@ async function findGoodDollarGuide(page, base, timeout, probe) {
   return { path: null, info: null, tried, guide: null }
 }
 
-/** Espera a que la sesión de la billetera in-app quede establecida (SIWE automático). */
+/**
+ * Espera a que la sesión de la billetera in-app quede establecida. El SIWE de la
+ * importación hace `window.location.reload()`, así que se miran las dos señales que
+ * deja: la cabecera (`wallet-selector-in-app`, que el componente decide por
+ * `sessionAddress`) y la propia clave en `localStorage`.
+ */
 async function waitForInAppSession(page, address, timeoutMs) {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    const session = await page
-      .evaluate(() => (localStorage.getItem('learn.tg.sessionAddress') || '').toLowerCase())
-      .catch(() => '')
-    if (session === address.toLowerCase()) return true
+    const state = await page
+      .evaluate(() => ({
+        stored: (localStorage.getItem('learn.tg.sessionAddress') || '').toLowerCase(),
+        header: !!document.querySelector('[data-testid="wallet-selector-in-app"]'),
+      }))
+      .catch(() => ({ stored: '', header: false }))
+    if (state.stored === address.toLowerCase() || state.header) return true
     await sleep(1000)
   }
   return false
+}
+
+/**
+ * Desbloquea la billetera in-app por la UI. Tras el SIWE la página recarga y la clave
+ * sale de memoria, así que queda bloqueada: sin desbloquear, el botón de GoodDollar
+ * se queda en `data-reason="locked"` y sólo ofrece el diálogo.
+ */
+async function unlockInAppWallet(page) {
+  const { TEST_PASSWORD } = await import('../helpers/in-app-wallet.mjs')
+  await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
+  await page.waitForSelector('[data-testid="wallet-password"]', { timeout: 8000 }).catch(() => null)
+  await page.type('[data-testid="wallet-password"]', TEST_PASSWORD).catch(() => {})
+  await page.click('[data-testid="wallet-unlock"]').catch(() => {})
+  await sleep(2500)
+}
+
+/**
+ * Espera a que el botón quede listo (`reason=ready`) y resuelva su acción: la lectura
+ * on-chain es asíncrona, así que al aparecer el nodo el estado todavía es `idle`. Si
+ * la billetera quedó bloqueada se desbloquea hasta 3 veces. Un build sin
+ * `data-action` se devuelve tal cual: esa parte no se puede medir y la spec lo reporta.
+ */
+async function waitForReadyButton(page, timeoutMs, unlockFn) {
+  const deadline = Date.now() + timeoutMs
+  let unlocks = 0
+  let info = await page.evaluate(findClaimButton)
+  while (info && Date.now() < deadline) {
+    if (info.byTestId && info.reason === 'ready' && info.action !== 'idle') return info
+    if (info.byTestId && info.reason === 'locked' && unlocks < 3) {
+      unlocks++
+      await unlockFn()
+    }
+    await sleep(1000)
+    info = await page.evaluate(findClaimButton)
+  }
+  return info
 }
 
 /** Importa la mnemónica en la billetera in-app de learn.tg por la UI y la desbloquea. */
@@ -277,8 +323,12 @@ async function main() {
   }
 
   // ── Navegador ──
+  // Contexto de incógnito (perfil limpio) en vez de borrar `localStorage` en cada
+  // documento: el SIWE de la importación recarga la página, y un
+  // `evaluateOnNewDocument` que limpiara al arrancar borraría la sesión recién creada.
   const browser = await launchBrowser()
-  const page = await browser.newPage()
+  const context = await newIncognitoContext(browser)
+  const page = await context.newPage()
   const pageErrors = []
   page.on('pageerror', (e) => pageErrors.push(e.message.slice(0, 200)))
   const guideProbe = attachGuideProbe(page)
@@ -286,9 +336,6 @@ async function main() {
 
   try {
     if (mode === 'in-app') {
-      await page.evaluateOnNewDocument(
-        "try { localStorage.clear(); indexedDB.deleteDatabase('learn-tg-pdj-wallet') } catch (e) {}",
-      )
       await gotoWithRetry(page, `${base}/en`, { waitUntil: 'domcontentloaded', timeout: env.timeout })
       await sleep(2500)
       await importInAppWallet(page, {
@@ -334,11 +381,19 @@ async function main() {
       await fail(`no apareció el botón de GoodDollar en ninguna de estas guías. Detalle (respuesta real de /api/guide): ${found.tried.join(' | ')}`)
       throw new Error('no button')
     }
-    const { info } = found
+    const info = await waitForReadyButton(page, 60000, () => unlockInAppWallet(page))
     const guideNote = found.guide
       ? ` | /api/guide ${found.guide.status} markdown=${found.guide.hasMarkdown} hasButton=${found.guide.hasButton}`
       : ''
-    ok(`botón de GoodDollar encontrado en ${found.path} (data-reason = ${info.reason}, disabled = ${info.disabled})${guideNote}`)
+    ok(`botón de GoodDollar encontrado en ${found.path} (data-reason = ${info.reason}, data-action = ${info.action}, disabled = ${info.disabled})${guideNote}`)
+
+    if (info.byTestId && info.action !== 'direct-claim') {
+      await fail(
+        `una dirección verificada y con beca debe resolver a "direct-claim", pero resolvió a "${info.action}". `
+        + `texto: ${JSON.stringify(info.text)}`,
+      )
+      throw new Error('wrong action')
+    }
 
     if (info.reason !== 'ready' && info.reason !== 'unknown') {
       await fail(`el botón no está listo para reclamar: data-reason = ${info.reason} (la spec esperaba "ready")`)

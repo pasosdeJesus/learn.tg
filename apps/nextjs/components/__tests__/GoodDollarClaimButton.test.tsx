@@ -201,7 +201,18 @@ describe('GoodDollarClaimButton', () => {
         }),
       ),
     )
-    await waitFor(() => expect(mockToastFn).toHaveBeenCalledWith({ title: 'Claim successful' }))
+    await waitFor(() =>
+      expect(mockToastFn).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Claim successful' }),
+      ),
+    )
+    const toastArg = mockToastFn.mock.calls[mockToastFn.mock.calls.length - 1][0] as {
+      duration: number
+      description: { props: { href: string; children: string } }
+    }
+    expect(toastArg.duration).toBe(Infinity)
+    expect(toastArg.description.props.href).toBe('https://celo.blockscout.com/tx/0xhash')
+    expect(toastArg.description.props.children).toBe('View transaction')
     expect(mockSignMessage).not.toHaveBeenCalled()
   })
 
@@ -224,6 +235,37 @@ describe('GoodDollarClaimButton', () => {
       expect(mockAssign).toHaveBeenCalledWith(expect.stringContaining('goodid.gooddollar.org')),
     )
     expect(mockWriteContract).not.toHaveBeenCalled()
+  })
+
+  // GoodID responde "Login information is missing" si el mensaje firmado lleva la
+  // dirección en minúsculas (medido 2026-10-02 con Chrome): el mensaje debe llevar la
+  // forma EIP-55 y el enlace el mismo `account`.
+  it('signs the FV message with the EIP-55 address and sends it as account', async () => {
+    mockState.whitelistedRoot = zeroAddress
+    const lower = '0x2e2c4ac19c93d0984840cdd8e7f77500e2ef978e'
+    const checksummed = '0x2e2c4AC19c93d0984840cDD8E7f77500e2ef978e'
+    mockUseSession.mockReturnValue({ data: { address: lower }, status: 'authenticated' })
+    mockUseAuthAddress.mockReturnValue({ address: lower, isConnected: true })
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    const button = screen.getByTestId('gooddollar-claim-button')
+    await waitFor(() => expect(button).toHaveAttribute('data-action', 'verify'))
+
+    fireEvent.click(button)
+
+    await waitFor(() =>
+      expect(mockSignMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining(checksummed) }),
+      ),
+    )
+    const signed = mockSignMessage.mock.calls[mockSignMessage.mock.calls.length - 1][0] as {
+      message: string
+    }
+    expect(signed.message).not.toContain(lower)
+    await waitFor(() =>
+      expect(mockAssign).toHaveBeenCalledWith(expect.stringContaining(`account=${checksummed}`)),
+    )
   })
 
   it('says you already claimed today instead of offering a doomed claim', async () => {

@@ -25,7 +25,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import {
-  initTestEnv, launchBrowser,
+  initTestEnv, launchBrowser, newIncognitoContext,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
@@ -171,31 +171,72 @@ async function findGoodDollarGuide(page, base, timeout, probe) {
 }
 
 /**
- * Espera a que el botón resuelva su acción (la lectura on-chain es asíncrona: al
- * aparecer el nodo el estado todavía es `idle`). Un build sin `data-action` se
- * devuelve tal cual: esa parte no se puede medir y la spec lo reporta.
+ * Espera a que el botón quede listo (`reason=ready`) y resuelva su acción: la lectura
+ * on-chain es asíncrona, así que al aparecer el nodo el estado todavía es `idle`. Si
+ * la billetera quedó bloqueada se desbloquea hasta 3 veces. Un build sin
+ * `data-action` se devuelve tal cual: esa parte no se puede medir y la spec lo reporta.
  */
-async function waitForAction(page, timeoutMs) {
+async function waitForReadyButton(page, timeoutMs, unlockFn) {
   const deadline = Date.now() + timeoutMs
+  let unlocks = 0
   let info = await page.evaluate(findClaimButton)
-  while (info && info.byTestId && info.action === 'idle' && Date.now() < deadline) {
+  while (info && Date.now() < deadline) {
+    if (info.byTestId && info.reason === 'ready' && info.action !== 'idle') return info
+    if (info.byTestId && info.reason === 'locked' && unlocks < 3) {
+      unlocks++
+      await unlockFn()
+    }
     await sleep(1000)
     info = await page.evaluate(findClaimButton)
   }
   return info
 }
 
-/** Espera a que la sesión de la billetera in-app quede establecida (SIWE automático). */
+/**
+ * Espera a que la sesión de la billetera in-app quede establecida. El SIWE de la
+ * importación hace `window.location.reload()`, así que se miran las dos señales que
+ * deja: la cabecera (`wallet-selector-in-app`, que el componente decide por
+ * `sessionAddress`) y la propia clave en `localStorage`.
+ */
 async function waitForInAppSession(page, address, timeoutMs) {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    const session = await page
-      .evaluate(() => (localStorage.getItem('learn.tg.sessionAddress') || '').toLowerCase())
-      .catch(() => '')
-    if (session === address.toLowerCase()) return true
+    const state = await page
+      .evaluate(() => ({
+        stored: (localStorage.getItem('learn.tg.sessionAddress') || '').toLowerCase(),
+        header: !!document.querySelector('[data-testid="wallet-selector-in-app"]'),
+      }))
+      .catch(() => ({ stored: '', header: false }))
+    if (state.stored === address.toLowerCase() || state.header) return true
     await sleep(1000)
   }
   return false
+}
+
+/**
+ * Desbloquea la billetera in-app por la UI. Tras el SIWE la página recarga y la clave
+ * sale de memoria, así que queda bloqueada: sin desbloquear, el botón de GoodDollar
+ * se queda en `data-reason="locked"` y sólo ofrece el diálogo.
+ */
+async function unlockInAppWallet(page) {
+  const { TEST_PASSWORD } = await import('../helpers/in-app-wallet.mjs')
+  await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
+  await page.waitForSelector('[data-testid="wallet-password"]', { timeout: 8000 }).catch(() => null)
+  await page.type('[data-testid="wallet-password"]', TEST_PASSWORD).catch(() => {})
+  await page.click('[data-testid="wallet-unlock"]').catch(() => {})
+  await sleep(2500)
+}
+
+/** Resumen de la pantalla para el diagnóstico cuando un paso no encuentra algo. */
+async function pageState(page) {
+  return page
+    .evaluate(() => ({
+      url: location.href,
+      hasOpenDialog: !!document.querySelector('[data-testid="wallet-open-dialog"]'),
+      hasImportMode: !!document.querySelector('[data-testid="wallet-mode-import"]'),
+      text: (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 240),
+    }))
+    .catch((e) => ({ url: '?', error: String(e?.message || e) }))
 }
 
 /** Importa la llave privada en la billetera in-app de learn.tg por la UI y la desbloquea. */
@@ -291,8 +332,12 @@ async function main() {
   console.log(`  CELO para gas: ${balance} (irrelevante: esta spec no envía transacciones)`)
 
   // ── Navegador ──
+  // Contexto de incógnito (perfil limpio) en vez de borrar `localStorage` en cada
+  // documento: el SIWE de la importación recarga la página, y un
+  // `evaluateOnNewDocument` que limpiara al arrancar borraría la sesión recién creada.
   const browser = await launchBrowser()
-  const page = await browser.newPage()
+  const context = await newIncognitoContext(browser)
+  const page = await context.newPage()
   const pageErrors = []
   page.on('pageerror', (e) => pageErrors.push(e.message.slice(0, 200)))
   const guideProbe = attachGuideProbe(page)
@@ -308,22 +353,26 @@ async function main() {
 
   try {
     if (mode === 'in-app') {
-      await page.evaluateOnNewDocument(
-        "try { localStorage.clear(); indexedDB.deleteDatabase('learn-tg-pdj-wallet') } catch (e) {}",
-      )
       await gotoWithRetry(page, `${base}/en`, { waitUntil: 'domcontentloaded', timeout: env.timeout })
       await sleep(2500)
-      await importInAppWallet(page, {
-        mnemonic: mnemonic ? mnemonic.trim() : null,
-        privateKey: mnemonic ? null : pk,
-        timeout: env.timeout,
-      })
+      try {
+        await importInAppWallet(page, {
+          mnemonic: mnemonic ? mnemonic.trim() : null,
+          privateKey: mnemonic ? null : pk,
+          timeout: env.timeout,
+        })
+      } catch (e) {
+        const state = await pageState(page)
+        await fail(`no se pudo importar la billetera in-app: ${e?.message || e}. Pantalla: ${JSON.stringify(state)}`)
+        throw e
+      }
       const signedIn = await waitForInAppSession(page, account.address, 60000)
       if (!signedIn) {
-        await fail('la billetera in-app se importó pero la sesión SIWE no quedó establecida')
+        const state = await pageState(page)
+        await fail(`la billetera in-app se importó pero la sesión SIWE no quedó establecida. Pantalla: ${JSON.stringify(state)}`)
         throw new Error('no session')
       }
-      ok('billetera in-app importada, desbloqueada y sesión iniciada')
+      ok('billetera in-app importada y sesión empezada (la página recarga tras el SIWE y la billetera queda bloqueada)')
     } else {
       await setupE2EAuth(page, account.address, pk, chainId, base)
       ok('sesión SIWE con la billetera externa (mock con firma real)')
@@ -356,7 +405,7 @@ async function main() {
       await fail(`no apareció el botón de GoodDollar en ninguna de estas guías. Detalle (respuesta real de /api/guide): ${found.tried.join(' | ')}`)
       throw new Error('no button')
     }
-    const info = await waitForAction(page, 45000)
+    const info = await waitForReadyButton(page, 60000, () => unlockInAppWallet(page))
     const guideNote = found.guide
       ? ` | /api/guide ${found.guide.status} markdown=${found.guide.hasMarkdown} hasButton=${found.guide.hasButton}`
       : ''
@@ -430,6 +479,24 @@ async function main() {
     const sent = claimTxHash || rpcSends.join(' | ')
     if (outcome === 'goodid') {
       ok(`se abrió GoodID: ${goodIdUrl.slice(0, 120)}`)
+      // GoodID valida la firma al entrar: si el mensaje FV no lleva la dirección en su
+      // forma EIP-55 (checksummed) responde "Login information is missing" (medido
+      // 2026-10-02). Se espera a que la app pinte y se exige la pantalla de verificación.
+      let goodIdText = ''
+      for (let i = 0; i < 20; i++) {
+        await sleep(1000)
+        goodIdText = await page.evaluate(() => document.body?.innerText || '').catch(() => '')
+        if (/FACE VERIFICATION|WALLET LINKED|Login information is missing/i.test(goodIdText)) break
+      }
+      if (/Login information is missing/i.test(goodIdText)) {
+        await fail(
+          'GoodID rechazó la firma con "Login information is missing" '
+          + '(el mensaje FV debe llevar la dirección EIP-55, no en minúsculas). '
+          + `texto: ${JSON.stringify(goodIdText.replace(/\s+/g, ' ').slice(0, 200))}`,
+        )
+      } else {
+        ok('GoodID aceptó la firma (verificación facial, no "Login information is missing")')
+      }
       if (sent) {
         await fail(`se envió una transacción con una dirección no verificada: ${sent}`)
       } else {

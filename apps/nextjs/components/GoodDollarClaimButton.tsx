@@ -15,7 +15,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { zeroAddress } from 'viem'
+import { getAddress, zeroAddress } from 'viem'
 import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useWriteContract } from '@/lib/hooks/useWriteContract'
@@ -24,6 +24,7 @@ import { useWalletProvider } from '@/lib/hooks/useWalletProvider'
 import { ensureWalletChain, WrongChainError } from '@/lib/ensure-chain'
 import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
 import { getAppChain } from '@/lib/app-chain'
+import { explorerTxUrl } from '@/lib/wallet-amounts'
 import { isGoodDollarReady, resolveGoodDollarReason } from '@/lib/gooddollar-reason'
 import {
   GOODDOLLAR_ADDRESSES,
@@ -98,6 +99,7 @@ export default function GoodDollarClaimButton({
     en: {
       claimSuccess: 'Claim successful',
       claimFailed: 'Claim failed: {{0}}',
+      viewTx: 'View transaction',
       signUp: 'Sign up with GoodDollar or Claim UBI',
       claiming: 'Claiming...',
       connectPrompt: 'Connect your wallet to claim',
@@ -120,6 +122,7 @@ export default function GoodDollarClaimButton({
     es: {
       claimSuccess: 'Reclamo exitoso',
       claimFailed: 'Reclamo fallido: {{0}}',
+      viewTx: 'Ver transacción',
       signUp: 'Regístrate con GoodDollar o reclama UBI',
       claiming: 'Reclamando...',
       connectPrompt: 'Conecta tu billetera para reclamar',
@@ -268,7 +271,26 @@ export default function GoodDollarClaimButton({
           functionName: 'claim',
         })
         logger.info(`claim sent: ${String(hash)}`, 'gooddollar')
-        toast({ title: t('claimSuccess') })
+        // El reclamo de GoodDollar solo existe en Celo mainnet (42220), así que el
+        // enlace apunta siempre al Blockscout de mainnet, no al de la red de la app.
+        toast({
+          title: t('claimSuccess'),
+          // Queda abierto hasta que el usuario lo cierre (Radix no arranca el
+          // temporizador con `duration: Infinity`), para que alcance a tocar el
+          // enlace de la transacción en el teléfono.
+          duration: Infinity,
+          description: (
+            <a
+              href={explorerTxUrl(String(hash), 'celo')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+              data-testid="gooddollar-claim-tx-link"
+            >
+              {t('viewTx')}
+            </a>
+          ),
+        })
         setAction('nothing-today')
         return
       }
@@ -277,16 +299,21 @@ export default function GoodDollarClaimButton({
       // learn.tg carries no profile first name at this point; GoodWallet sends the
       // profile name, we send the account (https://github.com/pasosdeJesus/learn.tg/issues/275 §5).
       if (!walletClient) return
+      // El mensaje DEBE llevar la dirección en su forma EIP-55 (checksummed): con la
+      // dirección en minúsculas GoodID responde "Login information is missing" (medido
+      // 2026-10-02). `useAuthAddress()` entrega minúsculas, así que se normaliza aquí;
+      // GoodWallet firma igual (`signer.address`, que viem ya da checksummed).
+      const account = getAddress(address)
       const fvsig = await walletClient.signMessage({
-        account: address as `0x${string}`,
-        message: goodDollarFvMessage(address),
+        account: account as `0x${string}`,
+        message: goodDollarFvMessage(account),
       })
       window.location.assign(
         buildGoodIdVerificationUrl({
-          account: address,
+          account,
           chainId: GOODDOLLAR_CHAIN_ID,
           fvsig,
-          firstname: address,
+          firstname: account,
           returnUrl: window.location.href,
         }),
       )
