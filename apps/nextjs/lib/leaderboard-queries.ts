@@ -10,6 +10,15 @@ const UBI_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'ubi-claim' 
 const DONATIONS_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'donation' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`.as('donations_usdt')
 const DONATIONS_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'donation' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`
 const SBT_FIELD = sql<number>`COALESCE(ce_counts.cnt, 0)`.as('sbt_count')
+// R-#278: los marcos que la pagina del curso dibuja frente a cada guia (chulo,
+// beca USDT, beca SLEARN), contados por usuario. `verdes` es la suma de los tres y
+// es la medida principal del ranking. Mismo criterio que `/api/guide-status`
+// (`points > 0`, `amountpaid > 0`, y una transaccion `scholarship`/`slearn` con
+// `metadata->>'guideId'` = actividadpf_id).
+const GUIDE_APPROVED_FIELD = sql<number>`COALESCE(gu_counts.approved, 0)`.as('guide_approved')
+const GUIDE_USDT_FIELD = sql<number>`COALESCE(gu_counts.usdt, 0)`.as('guide_usdt')
+const GUIDE_SLEARN_FIELD = sql<number>`COALESCE(gu_counts.slearn, 0)`.as('guide_slearn')
+const VERDES_FIELD = sql<number>`(COALESCE(gu_counts.approved, 0) + COALESCE(gu_counts.usdt, 0) + COALESCE(gu_counts.slearn, 0))`.as('verdes')
 const SLEARN_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.balance_impact ELSE 0 END), 2), 0)`.as('slearn_balance')
 const SLEARN_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.balance_impact ELSE 0 END), 2), 0)`
 const SLEARN_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'slearn' AND t.balance_impact > 0 THEN u.id END)`.as('totalUsersWithSLEARN')
@@ -19,7 +28,7 @@ export async function buildLeaderboardQuery(
   params: LeaderboardQueryParams,
   includeReligion: boolean = false
 ) {
-  const { sortBy = 'slearn_balance', sortOrder = 'desc', country, page = 1, limit = 50 } = params
+  const { sortBy = 'verdes', sortOrder = 'desc', country, page = 1, limit = 50 } = params
   const offset = (page - 1) * limit
 
   let query: any = db
@@ -45,6 +54,29 @@ export async function buildLeaderboardQuery(
         .as('ce_counts'),
       (join) => join.onRef('ce_counts.usuario_id', '=', 'u.id')
     )
+    .leftJoin(
+      // R-#278: los conteos de guias por usuario. Misma regla de visibilidad que
+      // `ce_counts` (R-#259): un curso de categoria B solo cuenta si el dueno
+      // publica esa categoria.
+      (eb) => eb.selectFrom('guide_usuario as gu')
+        .innerJoin('cor1440_gen_actividadpf as a', 'a.id', 'gu.actividadpf_id')
+        .leftJoin('cor1440_gen_proyectofinanciero as c', 'c.id', 'a.proyectofinanciero_id')
+        .innerJoin('usuario as u2', 'u2.id', 'gu.usuario_id')
+        .select([
+          'gu.usuario_id',
+          sql<number>`COUNT(DISTINCT gu.actividadpf_id) FILTER (WHERE gu.points > 0)`.as('approved'),
+          sql<number>`COUNT(DISTINCT gu.actividadpf_id) FILTER (WHERE gu.amountpaid > 0)`.as('usdt'),
+          sql<number>`COUNT(DISTINCT gu.actividadpf_id) FILTER (WHERE EXISTS (SELECT 1 FROM transaction t2 WHERE t2.usuario_id = gu.usuario_id AND t2.type = 'scholarship' AND t2.crypto = 'slearn' AND t2.metadata->>'guideId' = gu.actividadpf_id::text))`.as('slearn'),
+        ])
+        .where('u2.mostrar_cursos_publico', '=', true)
+        .where((w) => w.or([
+          w('c.contenido_sensible', '=', false),
+          w('u2.mostrar_cursos_sensibles_publico', '=', true),
+        ]))
+        .groupBy('gu.usuario_id')
+        .as('gu_counts'),
+      (join) => join.onRef('gu_counts.usuario_id', '=', 'u.id')
+    )
 
   if (includeReligion) {
     query = query.leftJoin('religion as r', 'u.religion_id', 'r.id')
@@ -61,10 +93,17 @@ export async function buildLeaderboardQuery(
     UBI_FIELD,
     DONATIONS_FIELD,
     SBT_FIELD,
+    GUIDE_APPROVED_FIELD,
+    GUIDE_USDT_FIELD,
+    GUIDE_SLEARN_FIELD,
+    VERDES_FIELD,
     sql<number>`COUNT(*) OVER()`.as('total_count'),
   ]
 
-  let groupFields: any[] = ['u.id', 'u.nusuario', 'p.alfa2', 'p.nombre', 'u.profilescore', 'ce_counts.cnt']
+  let groupFields: any[] = [
+    'u.id', 'u.nusuario', 'p.alfa2', 'p.nombre', 'u.profilescore', 'ce_counts.cnt',
+    'gu_counts.approved', 'gu_counts.usdt', 'gu_counts.slearn',
+  ]
 
   if (includeReligion) {
     selectFields.push('r.nombre as religion_nombre')
@@ -87,6 +126,10 @@ export async function buildLeaderboardQuery(
                         sortBy === 'scholarship_usdt' ? sql`scholarship_usdt` :
                         sortBy === 'ubi_celo' ? sql`ubi_celo` :
                         sortBy === 'sbt_count' ? sql`sbt_count` :
+                        sortBy === 'guide_approved' ? sql`guide_approved` :
+                        sortBy === 'guide_usdt' ? sql`guide_usdt` :
+                        sortBy === 'guide_slearn' ? sql`guide_slearn` :
+                        sortBy === 'verdes' ? sql`verdes` :
                         sql`donations_usdt`
     query = query.orderBy(orderByField, sortOrder)
   }
@@ -201,6 +244,10 @@ export async function getLeaderboardData(
       ubi_celo: Number(row.ubi_celo),
       donations_usdt: Number(row.donations_usdt),
       sbt_count: Number(row.sbt_count),
+      guide_approved: Number(row.guide_approved),
+      guide_usdt: Number(row.guide_usdt),
+      guide_slearn: Number(row.guide_slearn),
+      verdes: Number(row.verdes),
       religion: row.religion_nombre,
     })),
     totals,

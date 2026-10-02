@@ -9,11 +9,17 @@ export interface LeaderboardRow {
   ubi_celo: number
   donations_usdt: number
   sbt_count?: number
+  // R-#278: marcos por guía (aprobada, beca USDT, beca SLEARN) y su suma (`verdes`,
+  // la medida principal del ranking).
+  guide_approved: number
+  guide_usdt: number
+  guide_slearn: number
+  verdes: number
   religion?: string | null
 }
 
 export interface LeaderboardQueryParams {
-  sortBy?: 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
+  sortBy?: 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'verdes'
   sortOrder?: 'asc' | 'desc'
   country?: string
   page?: number

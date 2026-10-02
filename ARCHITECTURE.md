@@ -480,6 +480,8 @@ Single source of truth for all value movements — both on-chain (USDT, SLEARN, 
 
 **Usage in leaderboard:** Leaderboard metrics aggregate this table — SLEARN net balance via `SUM(balance_impact)`, scholarships via `SUM(amount) WHERE type='scholarship'`, donations via `SUM(amount) WHERE type='donation'`. The leaderboard does not filter by `subcategoria`, showing total user donation activity regardless of destination.
 
+**Guide counts (https://github.com/pasosdeJesus/learn.tg/issues/278):** the board also counts, per student, the marks the course page draws in front of each guide — **approved** (`guide_usuario.points > 0`), **paid in USDT** (`guide_usuario.amountpaid > 0`) and **paid in SLEARN** (a `transaction` row with `type = 'scholarship'`, `crypto = 'slearn'` and `metadata->>'guideId'` equal to the guide). Their **sum** is the main measure (`verdes`, shown as "Greens"/"Verdes") and the default order. All courses count, free and paid, and the counts apply the R-#259 visibility rule like `sbt_count` (`lib/leaderboard-queries.ts`).
+
 ### Data Flow Notes
 1. User wallet connection creates/updates `billetera_usuario`; the credential is the NextAuth session cookie — there is no token column (R-#233 Phase 2)
 2. Course and guide data is served by the Next.js app (`/api/course-catalog`, `/api/guide`), which queries the above tables

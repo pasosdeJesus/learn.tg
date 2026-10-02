@@ -18,7 +18,7 @@ import { formatUSDT, formatCELO } from '@/lib/format'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { LeaderboardRow } from '@/types/leaderboard'
 
-export type SortField = 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count'
+export type SortField = 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'verdes'
 export type SortOrder = 'asc' | 'desc'
 
 interface LeaderboardTableProps {
@@ -60,8 +60,8 @@ export function LeaderboardTable({
 }: LeaderboardTableProps) {
   // Translation helper
   const t = useMemo(() => createComponentT(lang, {
-    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', profileScore: 'Profile Score', slearn: 'SLEARN', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', sbt: 'SBTs', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithSLEARN: 'Users with SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {{0}} of {{1}} users', previous: 'Previous', pageOf: 'Page {{0}} of {{1}}', next: 'Next' },
-    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', profileScore: 'Puntaje de Perfil', slearn: 'SLEARN', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', sbt: 'SBTs', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithSLEARN: 'Usuarios con SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {{0}} de {{1}} usuarios', previous: 'Anterior', pageOf: 'Página {{0}} de {{1}}', next: 'Siguiente' },
+    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', profileScore: 'Profile Score', slearn: 'SLEARN', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', sbt: 'SBTs', verdes: 'Greens', guidesApproved: 'Approved', guidesUsdt: 'Paid USDT', guidesSlearn: 'Paid SLEARN', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithSLEARN: 'Users with SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {{0}} of {{1}} users', previous: 'Previous', pageOf: 'Page {{0}} of {{1}}', next: 'Next' },
+    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', profileScore: 'Puntaje de Perfil', slearn: 'SLEARN', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', sbt: 'SBTs', verdes: 'Verdes', guidesApproved: 'Aprobadas', guidesUsdt: 'Pagadas USDT', guidesSlearn: 'Pagadas SLEARN', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithSLEARN: 'Usuarios con SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {{0}} de {{1}} usuarios', previous: 'Anterior', pageOf: 'Página {{0}} de {{1}}', next: 'Siguiente' },
   }), [lang])
 
   const handleSort = (field: SortField) => {
@@ -119,6 +119,18 @@ export function LeaderboardTable({
                 <TableHead>{t('religion')}</TableHead>
               )}
               <TableHead className="text-right">
+                <SortableHeader field="verdes">{t('verdes')}</SortableHeader>
+              </TableHead>
+              <TableHead className="text-right">
+                <SortableHeader field="guide_approved">{t('guidesApproved')}</SortableHeader>
+              </TableHead>
+              <TableHead className="text-right">
+                <SortableHeader field="guide_usdt">{t('guidesUsdt')}</SortableHeader>
+              </TableHead>
+              <TableHead className="text-right">
+                <SortableHeader field="guide_slearn">{t('guidesSlearn')}</SortableHeader>
+              </TableHead>
+              <TableHead className="text-right">
                 <SortableHeader field="profilescore">
                   {t('profileScore')}
                 </SortableHeader>
@@ -162,6 +174,10 @@ export function LeaderboardTable({
                   {canViewReligion && (
                     <TableCell><div className="h-4 bg-muted rounded w-16"></div></TableCell>
                   )}
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
@@ -171,7 +187,7 @@ export function LeaderboardTable({
               ))
             ) : data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={14} className="text-center py-8 text-muted-foreground">
                   {t('noData')}
                 </TableCell>
               </TableRow>
@@ -198,6 +214,18 @@ export function LeaderboardTable({
                   {canViewReligion && (
                     <TableCell>{row.religion || '-'}</TableCell>
                   )}
+                  <TableCell className="text-right font-mono font-bold text-emerald-700">
+                    {row.verdes ?? 0}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {row.guide_approved ?? 0}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {row.guide_usdt ?? 0}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {row.guide_slearn ?? 0}
+                  </TableCell>
                   <TableCell className="text-right font-mono">
                     {row.profilescore ?? '-'}
                   </TableCell>
