@@ -155,7 +155,16 @@ async function forwardToRpc(
     result?: unknown
     error?: { message?: string; code?: number }
   }
-  if (json.error) throw new Error(json.error.message ?? `${method} failed`)
+  if (json.error) {
+    // El método va en el mensaje: "Invalid params" a secas no dice *qué* llamada
+    // falló (el reclamo de GoodDollar con la billetera in-app falló por
+    // `eth_getTransactionCount` sin `from` y el error no lo delataba).
+    throw new Error(
+      `${method} failed${json.error.code != null ? ` (${json.error.code})` : ''}: ${
+        json.error.message ?? 'unknown error'
+      }`,
+    )
+  }
   return json.result
 }
 

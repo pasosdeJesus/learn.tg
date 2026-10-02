@@ -20,6 +20,8 @@ import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useWriteContract } from '@/lib/hooks/useWriteContract'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { useWalletProvider } from '@/lib/hooks/useWalletProvider'
+import { ensureWalletChain, WrongChainError } from '@/lib/ensure-chain'
 import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
 import { getAppChain } from '@/lib/app-chain'
 import { isGoodDollarReady, resolveGoodDollarReason } from '@/lib/gooddollar-reason'
@@ -47,6 +49,31 @@ export interface GoodDollarClaimButtonProps {
   buttonText?: string
 }
 
+/**
+ * Resumen de un error (viem incluido) para el diagnóstico en consola: `message`
+ * suele ser genérico ("Invalid params"); `shortMessage`, `details` y `cause`
+ * dicen qué falló y por qué.
+ */
+function describeError(error: unknown): string {
+  const err = error as
+    | {
+        name?: string
+        shortMessage?: string
+        details?: string
+        message?: string
+        cause?: { message?: string } | string
+      }
+    | null
+  const cause = typeof err?.cause === 'string' ? err.cause : err?.cause?.message
+  return JSON.stringify({
+    name: err?.name,
+    shortMessage: err?.shortMessage,
+    details: err?.details,
+    message: err?.message,
+    cause,
+  })
+}
+
 type ButtonAction = GoodDollarAction | 'idle'
 
 export default function GoodDollarClaimButton({
@@ -58,6 +85,7 @@ export default function GoodDollarClaimButton({
   const { status: inAppStatus, biometricEnabled } = useInAppWallet()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
+  const { provider: walletProvider } = useWalletProvider()
   const { writeContract } = useWriteContract()
   const { toast } = useToast()
 
@@ -79,6 +107,8 @@ export default function GoodDollarClaimButton({
       providerUnsupported: 'This wallet cannot sign the GoodDollar verification here. Try an external wallet (MetaMask, Rabby).',
       networkUnsupported: 'GoodDollar UBI is only on Celo mainnet (and Fuse/XDC). On this network use learn.tg-UBI (CELO).',
       sdkUnavailable: 'GoodDollar is not available right now. Try again later.',
+      wrongChain: 'Your wallet is on another network. Switch it to Celo and try again.',
+      wrongChainInApp: 'We could not switch your in-app wallet to the Celo network. Try again, or use a wallet on the Celo network.',
       nothingToday: 'You already claimed today. Come back tomorrow.',
       verifyNeeded: 'GoodDollar needs a one-time face verification. We will open GoodID and come back here.',
       verifyFailed: 'GoodDollar could not verify you: {{0}}',
@@ -99,6 +129,8 @@ export default function GoodDollarClaimButton({
       providerUnsupported: 'Esta billetera no puede firmar la verificación de GoodDollar aquí. Prueba una billetera externa (MetaMask, Rabby).',
       networkUnsupported: 'El UBI de GoodDollar es solo en la red principal de Celo (y Fuse/XDC). En esta red usa learn.tg-UBI (CELO).',
       sdkUnavailable: 'GoodDollar no está disponible en este momento. Inténtalo más tarde.',
+      wrongChain: 'Tu billetera está en otra red. Cámbiala a Celo e inténtalo de nuevo.',
+      wrongChainInApp: 'No pudimos cambiar tu billetera de la app a la red Celo. Inténtalo de nuevo, o usa una billetera en la red Celo.',
       nothingToday: 'Ya reclamaste hoy. Vuelve mañana.',
       verifyNeeded: 'GoodDollar pide una verificación facial única. Abrimos GoodID y volvemos aquí.',
       verifyFailed: 'GoodDollar no pudo verificarte: {{0}}',
@@ -192,9 +224,18 @@ export default function GoodDollarClaimButton({
           })) as bigint
         }
         if (cancelled) return
-        setAction(resolveGoodDollarAction({ chainId, whitelisted, entitlement }))
-      } catch {
-        if (!cancelled) setNotice(t('sdkUnavailable'))
+        const resolved = resolveGoodDollarAction({ chainId, whitelisted, entitlement })
+        console.info(
+          `[gooddollar] action=${resolved} chain=${chainId} whitelisted=${whitelisted} entitlement=${entitlement.toString()} root=${root}`,
+        )
+        setAction(resolved)
+      } catch (error) {
+        if (!cancelled) {
+          console.error(
+            `[gooddollar] read failed: address=${address} chain=${getAppChain().id} ${describeError(error)}`,
+          )
+          setNotice(t('sdkUnavailable'))
+        }
       }
     })()
     return () => {
@@ -212,12 +253,18 @@ export default function GoodDollarClaimButton({
 
     setIsClaiming(true)
     try {
+      // R-#266: la billetera puede estar en la otra red (p. ej. una billetera in-app
+      // creada en el sitio de desarrollo): se cambia antes de firmar o se dice por qué
+      // no se pudo, en vez de dejar caer el ChainMismatchError de viem.
+      await ensureWalletChain(walletClient as never, getAppChain(), walletProvider)
+
       if (action === 'direct-claim') {
-        await writeContract({
+        const hash = await writeContract({
           address: GOODDOLLAR_ADDRESSES.ubi,
           abi: GOODDOLLAR_UBI_ABI,
           functionName: 'claim',
         })
+        console.info(`[gooddollar] claim sent: ${String(hash)}`)
         toast({ title: t('claimSuccess') })
         setAction('nothing-today')
         return
@@ -241,12 +288,27 @@ export default function GoodDollarClaimButton({
         }),
       )
     } catch (e: any) {
-      console.error('GoodDollar claim error:', e)
-      toast({ title: t('claimFailed', e?.message || 'Unknown error'), variant: 'destructive' })
+      if (e instanceof WrongChainError) {
+        console.error(
+          `[gooddollar] wrong chain: address=${address} current=${e.currentChainId} target=${e.targetChainId} inApp=${e.isInApp}`,
+        )
+        toast({
+          title: e.isInApp ? t('wrongChainInApp') : t('wrongChain'),
+          variant: 'destructive',
+        })
+        return
+      }
+      console.error(
+        `[gooddollar] claim failed: action=${action} address=${address} chain=${getAppChain().id} ${describeError(e)}`,
+      )
+      toast({
+        title: t('claimFailed', e?.shortMessage || e?.message || 'Unknown error'),
+        variant: 'destructive',
+      })
     } finally {
       setIsClaiming(false)
     }
-  }, [reason, action, session?.address, address, walletClient, writeContract, toast, t])
+  }, [reason, action, session?.address, address, walletClient, walletProvider, writeContract, toast, t])
 
   const reasonHint =
     reason === 'no-wallet'

@@ -57,6 +57,7 @@ const {
   mockUsePublicClient,
   mockUseWalletClient,
   mockUseWriteContract,
+  mockUseWalletProvider,
   mockOpenInAppWalletDialog,
   mockAssign,
   mockState,
@@ -84,6 +85,7 @@ const {
     mockUsePublicClient: vi.fn(),
     mockUseWalletClient: vi.fn(),
     mockUseWriteContract: vi.fn(),
+    mockUseWalletProvider: vi.fn(),
     mockOpenInAppWalletDialog: vi.fn(),
     mockAssign: vi.fn(),
     mockState,
@@ -102,6 +104,9 @@ vi.mock('@/lib/hooks/useWallet', () => ({
 }))
 vi.mock('@/lib/hooks/useWriteContract', () => ({
   useWriteContract: mockUseWriteContract,
+}))
+vi.mock('@/lib/hooks/useWalletProvider', () => ({
+  useWalletProvider: mockUseWalletProvider,
 }))
 vi.mock('@learn-tg/pdj-wallet-next', () => ({
   useInAppWallet: mockUseInAppWallet,
@@ -135,6 +140,7 @@ describe('GoodDollarClaimButton', () => {
     mockUseWalletClient.mockReturnValue({ data: { signMessage: mockSignMessage } })
     mockWriteContract.mockResolvedValue('0xhash')
     mockUseWriteContract.mockReturnValue({ writeContract: mockWriteContract, data: undefined })
+    mockUseWalletProvider.mockReturnValue({ provider: null, isInApp: false, isInAppUnlocked: false, externalAvailable: false })
     mockUseInAppWallet.mockReturnValue({ status: 'unlocked', biometricEnabled: false })
 
     Object.defineProperty(window, 'location', {
@@ -338,5 +344,33 @@ describe('GoodDollarClaimButton', () => {
   it('accepts custom button text', () => {
     render(<GoodDollarClaimButton lang="en" buttonText="Custom Text" />)
     expect(screen.getByRole('button', { name: /Custom Text/i })).toBeInTheDocument()
+  })
+
+  it('asks to change the network when the wallet is on another chain (R-#266)', async () => {
+    mockUseWalletProvider.mockReturnValue({ provider: { isPdJWallet: true }, isInApp: true, isInAppUnlocked: true, externalAvailable: false })
+    mockUseWalletClient.mockReturnValue({
+      data: {
+        signMessage: mockSignMessage,
+        getChainId: vi.fn().mockResolvedValue(11142220),
+        switchChain: vi.fn().mockRejectedValue(new Error('cannot switch')),
+        addChain: vi.fn().mockRejectedValue(new Error('cannot add')),
+      },
+    })
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    const button = screen.getByTestId('gooddollar-claim-button')
+    await waitFor(() => expect(button).toHaveAttribute('data-action', 'direct-claim'))
+    fireEvent.click(button)
+
+    await waitFor(() =>
+      expect(mockToastFn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('could not switch your in-app wallet'),
+          variant: 'destructive',
+        }),
+      ),
+    )
+    expect(mockWriteContract).not.toHaveBeenCalled()
   })
 })
