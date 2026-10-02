@@ -48,7 +48,11 @@ export interface GoodDollarReasonInput {
 
 export function resolveGoodDollarReason(input: GoodDollarReasonInput): GoodDollarReason {
   if (!input.hasAddress) return 'no-wallet'
-  if (input.inAppStatus === 'locked') return 'locked'
+  // Una billetera in-app bloqueada solo bloquea cuando es el proveedor efectivo:
+  // con una billetera externa conectada `hasWalletClient` es true y el reclamo corre
+  // por ella (reporte del operador, 2026-10-01: OKX conectada en escritorio y el
+  // botón igual ofrecía desbloquear la in-app).
+  if (input.inAppStatus === 'locked' && !input.hasWalletClient) return 'locked'
   if (input.sdkError) return 'sdk-error'
   if (!input.hasWalletClient || input.hasIdentitySDK === false) return 'provider-unsupported'
   if (input.chainId != null && !GOODDOLLAR_SUPPORTED_CHAIN_IDS.includes(input.chainId)) {

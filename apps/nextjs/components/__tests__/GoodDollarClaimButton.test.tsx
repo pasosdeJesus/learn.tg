@@ -250,6 +250,24 @@ describe('GoodDollarClaimButton', () => {
     expect(mockWriteContract).not.toHaveBeenCalled()
   })
 
+  it('uses the connected external wallet even when the in-app one is locked (operator report)', async () => {
+    // OKX conectada en escritorio con una billetera in-app bloqueada de antes:
+    // el botón no debe decir "unlock in-app", debe reclamar con la externa.
+    mockUseInAppWallet.mockReturnValue({ status: 'locked', biometricEnabled: false })
+
+    render(<GoodDollarClaimButton lang="en" />)
+
+    const button = screen.getByTestId('gooddollar-claim-button')
+    await waitFor(() => expect(button).toHaveAttribute('data-action', 'direct-claim'))
+    expect(
+      screen.queryByRole('button', { name: /Unlock your in-app wallet/i }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(button)
+    await waitFor(() => expect(mockWriteContract).toHaveBeenCalledTimes(1))
+    expect(mockOpenInAppWalletDialog).not.toHaveBeenCalled()
+  })
+
   it('uses the gesture wording when biometric is enabled', () => {
     mockUseInAppWallet.mockReturnValue({ status: 'locked', biometricEnabled: true })
     mockUseWalletClient.mockReturnValue({ data: null })

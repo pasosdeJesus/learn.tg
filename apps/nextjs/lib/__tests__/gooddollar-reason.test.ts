@@ -35,6 +35,14 @@ describe('resolveGoodDollarReason', () => {
     expect(reason).toBe('locked')
   })
 
+  it('with an external wallet connected it does not say locked (operator report)', () => {
+    // OKX conectada en escritorio con una billetera in-app bloqueada de antes:
+    // el proveedor efectivo es la externa, así que el reclamo corre por ella.
+    expect(
+      resolveGoodDollarReason({ ...ready, inAppStatus: 'locked', hasWalletClient: true }),
+    ).toBe('ready')
+  })
+
   it('reports an SDK construction error instead of blaming the network', () => {
     expect(
       resolveGoodDollarReason({ ...ready, hasIdentitySDK: false, sdkError: new Error('boom') }),
