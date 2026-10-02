@@ -106,6 +106,26 @@ describe('OfflineDownloadAll (R-#256)', () => {
     expect(screen.queryByText('Download all my courses')).not.toBeInTheDocument()
   })
 
+  // Operador (2026-10-02): en `/en` la cuenta se repetía ("Courses on this device: 4"
+  // y aparte "4 courses"); con el total del catálogo la línea dice cuántos de cuántos.
+  it('states how many of the total courses are saved when the total is known', async () => {
+    render(<OfflineDownloadAll lang="en" totalCourses={4} />)
+
+    await waitFor(() => expect(hooks.listDownloadedCourses).toHaveBeenCalled())
+    expect(screen.getByTestId('offline-download-all')).toHaveTextContent(
+      '2 out of 4 courses saved for reading offline',
+    )
+  })
+
+  it('uses the same combined wording in Spanish', async () => {
+    render(<OfflineDownloadAll lang="es" totalCourses={4} />)
+
+    await waitFor(() => expect(hooks.listDownloadedCourses).toHaveBeenCalled())
+    expect(screen.getByTestId('offline-download-all')).toHaveTextContent(
+      '2 de 4 cursos guardados para leer sin conexión',
+    )
+  })
+
   it('reports the result of a manual check', async () => {
     render(<OfflineDownloadAll lang="en" />)
 

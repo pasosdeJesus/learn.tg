@@ -286,7 +286,7 @@ export function OfflineLibrarySync({ lang }: { lang: string }) {
 }
 
 /** Control visible: cuántas páginas hay guardadas, el estado y el resumen. */
-export function OfflineDownloadAll({ lang }: { lang: string }) {
+export function OfflineDownloadAll({ lang, totalCourses }: { lang: string; totalCourses?: number }) {
   const { syncing, done, total, pending, last, savedCount, error, ready, hold, sync } = useOfflineLibrarySync(lang)
   const { toast } = useToast()
   const summaryT = useOfflineStrings(lang)
@@ -294,6 +294,7 @@ export function OfflineDownloadAll({ lang }: { lang: string }) {
     en: {
       title: 'Courses on this device',
       ready: 'saved for reading offline',
+      outOf: '{{0}} out of {{1}} courses saved for reading offline',
       check: 'Check now',
       syncing: 'Checking',
       waiting: 'Waiting for a connection',
@@ -305,6 +306,7 @@ export function OfflineDownloadAll({ lang }: { lang: string }) {
     es: {
       title: 'Cursos en este dispositivo',
       ready: 'guardados para leer sin conexión',
+      outOf: '{{0}} de {{1}} cursos guardados para leer sin conexión',
       check: 'Verificar ahora',
       syncing: 'Verificando',
       waiting: 'Esperando conexión',
@@ -344,7 +346,13 @@ export function OfflineDownloadAll({ lang }: { lang: string }) {
     >
       <div className="flex flex-wrap items-center justify-center gap-3">
         <span className="text-gray-600">
-          {t('title')}: <span className="font-semibold">{savedCount}</span> {t('ready')}
+          {totalCourses != null && totalCourses > 0 ? (
+            t('outOf', String(savedCount), String(totalCourses))
+          ) : (
+            <>
+              {t('title')}: <span className="font-semibold">{savedCount}</span> {t('ready')}
+            </>
+          )}
         </span>
         <button
           type="button"

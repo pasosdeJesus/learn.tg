@@ -228,15 +228,9 @@ export default function Page({ params }: PageProps) {
       <div className="max-w-6xl mx-auto">
         {/* R-#256: cuántos cursos están guardados en el teléfono y el botón para
             bajarlos todos con progreso (el operador reportó que no encontraba
-            ninguna forma de descargar los cursos completos). */}
-        <OfflineDownloadAll lang={lang} />
-        {courses.length > 0 && (
-          <p className="mb-4 text-sm text-gray-600">
-            {lang === 'es'
-              ? `${courses.length} ${courses.length === 1 ? 'curso' : 'cursos'}`
-              : `${courses.length} ${courses.length === 1 ? 'course' : 'courses'}`}
-          </p>
-        )}
+            ninguna forma de descargar los cursos completos). La cuenta va en esta
+            misma línea para no repetirla (operador, 2026-10-02). */}
+        <OfflineDownloadAll lang={lang} totalCourses={courses.length} />
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
           {courses.map((course) => {
             const extra = extCourses.get(course.id)
