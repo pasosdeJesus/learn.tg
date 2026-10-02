@@ -146,14 +146,16 @@ export default function Page({ params }: PageProps) {
                 amountPerGuide: +response2.data.amountPerGuide,
                 amountPerGuideSlearn: +response2.data.amountPerGuideSlearn,
                 canSubmit: response2.data.canSubmit,
-                percentageCompleted: response2.data.percentageCompleted,
-                percentagePaid: response2.data.percentagePaid,
-                profileScore: response2.data.profileScore,
-                totalGuides: response2.data.totalGuides,
-                completedGuides: response2.data.completedGuides,
-                paidGuidesUSDT: response2.data.paidGuidesUSDT ?? 0,
-                paidGuidesSLEARN: response2.data.paidGuidesSLEARN ?? 0,
-                scholarshipPaidSlearn: response2.data.amountScholarshipSlearn ?? 0,
+                percentageCompleted: Number(response2.data.percentageCompleted) || 0,
+                percentagePaid: Number(response2.data.percentagePaid) || 0,
+                profileScore: Number(response2.data.profileScore) || 0,
+                // Kysely `countAll` devuelve el conteo como cadena: convertir a
+                // número para que los anillos comparen bien (como el detalle).
+                totalGuides: Number(response2.data.totalGuides) || 0,
+                completedGuides: Number(response2.data.completedGuides) || 0,
+                paidGuidesUSDT: Number(response2.data.paidGuidesUSDT) || 0,
+                paidGuidesSLEARN: Number(response2.data.paidGuidesSLEARN) || 0,
+                scholarshipPaidSlearn: Number(response2.data.amountScholarshipSlearn) || 0,
               }
 
               setExtCourses((prevMap) =>

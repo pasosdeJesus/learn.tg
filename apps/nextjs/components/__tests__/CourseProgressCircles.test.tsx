@@ -29,7 +29,7 @@ describe('CourseProgressCircles', () => {
     expect(screen.getByTestId('progress-icon-slearn')).toBeInTheDocument()
   })
 
-  it('draws one arc per signal that has progress', () => {
+  it('draws one solid ring per signal (no partial arcs)', () => {
     render(
       <CourseProgressCircles
         {...props}
@@ -43,9 +43,13 @@ describe('CourseProgressCircles', () => {
       />,
     )
 
-    expect(screen.getByTestId('progress-arc-check')).toBeInTheDocument()
-    expect(screen.getByTestId('progress-arc-usdt')).toBeInTheDocument()
-    expect(screen.getByTestId('progress-arc-slearn')).toBeInTheDocument()
+    expect(screen.getByTestId('progress-ring-check')).toBeInTheDocument()
+    expect(screen.getByTestId('progress-ring-usdt')).toBeInTheDocument()
+    expect(screen.getByTestId('progress-ring-slearn')).toBeInTheDocument()
+
+    expect(screen.queryByTestId('progress-arc-check')).toBeNull()
+    expect(screen.queryByTestId('progress-arc-usdt')).toBeNull()
+    expect(screen.queryByTestId('progress-arc-slearn')).toBeNull()
   })
 
   it('colours the check circle green at 100% and yellow otherwise', () => {

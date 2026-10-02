@@ -72,6 +72,7 @@ in a `next/script` with `strategy="afterInteractive"`.
 | `/_next/image?url=…` (lo que sirve `next/image`) | CacheFirst | `learntg-images` | sin caducidad por edad (200 entradas) |
 | `/en`, `/es` y sus subrutas (pages, con `ignoreVary`; también con query string) | NetworkFirst (5 s) | `learntg-pages` | **sin caducidad por edad** (200 entradas) |
 | `/api/*` GET | NetworkFirst (5 s) | `learntg-api-get` | 1 h (200 entradas) |
+| `GET /api/scholarship` | NetworkOnly | - | **never cached** — wallet-scoped progress (USDT/SLEARN paid, vault balance); the generic rule served a stale list (gray rings) while the detail was fresh (operator report, 2026-10-01) |
 | `/api/*` POST/PATCH/DELETE | NetworkOnly | - | never cached |
 
 > **Sin caducidad por edad** (decisión del operador, 2026-09-24): una guía guardada

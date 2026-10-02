@@ -132,6 +132,19 @@ const pwaConfig: PWAConfig = {
       },
     },
     {
+      // El avance del curso (becas USDT/SLEARN, saldo de la bóveda, guías pagadas)
+      // es dato **por billetera y cambiante**: nunca se sirve del caché. La regla
+      // genérica de `/api/*` lo cacheaba (NetworkFirst 5 s) y, como esta ruta hace
+      // lecturas on-chain que a veces tardan más de 5 s, la lista de cursos
+      // mostraba el estado viejo (anillos grises) mientras el detalle traía el
+      // fresco (reporte del operador, 2026-10-01). Sin conexión la app usa su
+      // propia copia (`lib/offline-catalog.ts`).
+      urlPattern: ({ url, request }) =>
+        url.pathname === '/api/scholarship' && request.method === 'GET',
+      handler: 'NetworkOnly' as const,
+      options: {},
+    },
+    {
       urlPattern: ({ url, request }) =>
         url.pathname.startsWith('/api/') && request.method === 'GET',
       handler: 'NetworkFirst' as const,

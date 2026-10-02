@@ -75,8 +75,11 @@ function Ring({
   label: string
 }) {
   const radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
 
+  // Anillo **sólido** en el color del estado (verde: todo hecho; amarillo: hay
+  // algo para reclamar; gris: falta algo pero no hay nada que reclamar). Antes se
+  // dibujaba un arco con el avance parcial, que era más difícil de interpretar
+  // para el estudiante (petición del operador, 2026-10-01).
   return (
     <span
       role="img"
@@ -90,30 +93,15 @@ function Ring({
     >
       <svg width={size} height={size} className="transform -rotate-90">
         <circle
-          data-testid={`progress-bg-${signal.key}`}
+          data-testid={`progress-ring-${signal.key}`}
           cx={size / 2}
           cy={size / 2}
           r={radius}
           strokeWidth={strokeWidth}
-          className="text-gray-200"
+          className={signal.colorClass}
           fill="transparent"
           stroke="currentColor"
         />
-        {signal.ratio > 0 && (
-          <circle
-            data-testid={`progress-arc-${signal.key}`}
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            strokeWidth={strokeWidth}
-            className={signal.colorClass}
-            fill="transparent"
-            stroke="currentColor"
-            strokeDasharray={circumference}
-            strokeDashoffset={circumference * (1 - signal.ratio)}
-            strokeLinecap="round"
-          />
-        )}
       </svg>
       <span className="absolute flex items-center justify-center">{icon(signal.key, size)}</span>
     </span>
