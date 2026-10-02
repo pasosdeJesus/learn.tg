@@ -252,6 +252,15 @@ test-e2e-biometric:
 test-e2e-collectibles:
 	$(MAKE) test-e2e-spec SPEC=wallet-panel-collectibles
 
+# R-#275: una dirección NO verificada debe resolver a `verify` (abrir GoodID) y no
+# enviar un `claim()` condenado. Corre contra producción (Celo mainnet) y por defecto
+# usa la billetera de `apps/.env`. NO envía transacciones. Override con
+# GOODDOLLAR_PRIVATE_KEY / GOODDOLLAR_MNEMONIC / SITE_URL.
+test-e2e-gooddollar-not-whitelisted:
+	PROD_SPECS=1 SITE_URL=$${SITE_URL:-https://learn.tg} \
+	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-443} CHAIN_ID=$${CHAIN_ID:-42220} \
+	./bin/m test:e2e gooddollar-not-whitelisted
+
 test-e2e-offline:
 	$(MAKE) test-e2e-spec SPEC=offline
 

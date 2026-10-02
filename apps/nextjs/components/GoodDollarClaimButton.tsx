@@ -42,6 +42,7 @@ import {
 
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
+import { logger } from '@pasosdejesus/m/debug'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 export interface GoodDollarClaimButtonProps {
@@ -225,14 +226,16 @@ export default function GoodDollarClaimButton({
         }
         if (cancelled) return
         const resolved = resolveGoodDollarAction({ chainId, whitelisted, entitlement })
-        console.info(
-          `[gooddollar] action=${resolved} chain=${chainId} whitelisted=${whitelisted} entitlement=${entitlement.toString()} root=${root}`,
+        logger.info(
+          `action=${resolved} chain=${chainId} whitelisted=${whitelisted} entitlement=${entitlement.toString()} root=${root}`,
+          'gooddollar',
         )
         setAction(resolved)
       } catch (error) {
         if (!cancelled) {
-          console.error(
-            `[gooddollar] read failed: address=${address} chain=${getAppChain().id} ${describeError(error)}`,
+          logger.error(
+            `read failed: address=${address} chain=${getAppChain().id} ${describeError(error)}`,
+            'gooddollar',
           )
           setNotice(t('sdkUnavailable'))
         }
@@ -264,7 +267,7 @@ export default function GoodDollarClaimButton({
           abi: GOODDOLLAR_UBI_ABI,
           functionName: 'claim',
         })
-        console.info(`[gooddollar] claim sent: ${String(hash)}`)
+        logger.info(`claim sent: ${String(hash)}`, 'gooddollar')
         toast({ title: t('claimSuccess') })
         setAction('nothing-today')
         return
@@ -289,8 +292,9 @@ export default function GoodDollarClaimButton({
       )
     } catch (e: any) {
       if (e instanceof WrongChainError) {
-        console.error(
-          `[gooddollar] wrong chain: address=${address} current=${e.currentChainId} target=${e.targetChainId} inApp=${e.isInApp}`,
+        logger.error(
+          `wrong chain: address=${address} current=${e.currentChainId} target=${e.targetChainId} inApp=${e.isInApp}`,
+          'gooddollar',
         )
         toast({
           title: e.isInApp ? t('wrongChainInApp') : t('wrongChain'),
@@ -298,8 +302,9 @@ export default function GoodDollarClaimButton({
         })
         return
       }
-      console.error(
-        `[gooddollar] claim failed: action=${action} address=${address} chain=${getAppChain().id} ${describeError(e)}`,
+      logger.error(
+        `claim failed: action=${action} address=${address} chain=${getAppChain().id} ${describeError(e)}`,
+        'gooddollar',
       )
       toast({
         title: t('claimFailed', e?.shortMessage || e?.message || 'Unknown error'),

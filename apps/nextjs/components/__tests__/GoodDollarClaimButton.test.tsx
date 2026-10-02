@@ -44,6 +44,13 @@ vi.mock('@pasosdejesus/m/shadcn-components/ui/use-toast', () => ({
   useToast: mockUseToast,
 }))
 
+// El barrel @pasosdejesus/m/debug crashea el worker de Node en OpenBSD (mismo
+// workaround que `app/[lang]/[pathPrefix]/__tests__/page.test.tsx`); el botón solo
+// lo usa para loguear el diagnóstico.
+vi.mock('@pasosdejesus/m/debug', () => ({
+  logger: { info: vi.fn(), error: vi.fn(), success: vi.fn(), warning: vi.fn(), debug: vi.fn() },
+}))
+
 // The protocol is read through usePublicClient; the write goes through useWriteContract.
 // The citizen-sdk is no longer part of the claim path (R-#275).
 const {
