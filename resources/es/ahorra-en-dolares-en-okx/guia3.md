@@ -40,7 +40,7 @@ como esta (dApp que permite conexión a una billetera),
 necesitarás bien la billetera en tu celular o si prefieres usar tu computador
 instala la extension OKX Wallet en tu navegador:
 
-* [Chrome y Brave](https://chrome.google.com/webstore/detail/okx-wallet/mcohilncbfahbmgdjkbpemcciiolgcge)
+* [Chrome y Brave](https://chromewebstore.google.com/detail/okx-wallet/mcohilncbfahbmgdjkbpemcciiolgcge)
 * [Edge](https://microsoftedge.microsoft.com/addons/detail/okx-wallet/pbpjkcldjiffchgbbndmhojiacbgflha)
 
 ### 3. Ingresa a este sitio

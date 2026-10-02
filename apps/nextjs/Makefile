@@ -248,6 +248,10 @@ test-e2e-wallet:
 test-e2e-biometric:
 	$(MAKE) test-e2e-spec SPEC=biometric-unlock
 
+# R-#249: la billetera in-app muestra sus coleccionables (credenciales/SBT) en el panel.
+test-e2e-collectibles:
+	$(MAKE) test-e2e-spec SPEC=wallet-panel-collectibles
+
 test-e2e-offline:
 	$(MAKE) test-e2e-spec SPEC=offline
 

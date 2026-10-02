@@ -165,7 +165,45 @@ Es riesgoso el trading con cripto-activos que no son estabales
 moneda estable).
 
 
-## 7. Coprensión de lectura
+## 7. Evita perder fondos al transferir criptomonedas
+
+Dos historias tristes nos recuerdan que se pierden fondos cuando se envían a
+combinaciones `blockchain + token` que no están soportadas:
+
+* Un usuario envió 15 USDG en la blockchain de Ethereum desde su cuenta de
+  exchange OKX a su cuenta de Binance, pero no puede usar los fondos en Binance
+  (le piden $20 para ayudar).
+* Un usuario envió unos USDT que tenía en la blockchain CELO al exchange OKX.
+  Los fondos aparecen como "no negociables" y OKX le pide $1 para enviarlos a una
+  billetera.
+
+Esto se puede prevenir.
+
+### La regla
+**Primero revisa la página de depósito del exchange receptor.** Si tu combinación
+exacta no aparece, **no envíes.** Conviértelo primero en OKX (ver la sección 6).
+
+### Pasos de seguridad
+1. En el exchange receptor, ve al depósito de tu token.
+2. Elige tu blockchain (p. ej. Base, Celo).
+3. **Si aparece una dirección → está soportada. Si no → DETENTE.**
+4. **Prueba primero con una cantidad mínima** (p. ej. $0.30).
+
+### Matriz de soporte (verificar en la aplicación)
+*Estado: 2026-10-01*
+
+
+| Blockchain | Cripto | OKX | Binance | 
+| :--- | :----: | :----: | -----: |
+|  CELO  | CELO | ✅ | ✅ |
+|  CELO  | USDT | ❌ | ✅ |
+|  CELO  | GoodDollar | ❌ | ❌ |
+|  Ethereum | USDG | ✅ | ❌ |
+|  Base | USDT | ✅ | ✅ |
+
+**Usa pares ampliamente soportados. Si dudas, convierte primero.**
+
+## 8. Coprensión de lectura
 
 1. ___ es un stablecoin que puedes comprar y ahorrar en OKX. (USDT)
 2. El mercado ___ en la aplicación OKX le permite comprar y vender USDT. (P2P)

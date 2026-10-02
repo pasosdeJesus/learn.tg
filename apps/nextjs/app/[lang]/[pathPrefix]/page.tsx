@@ -91,6 +91,11 @@ export default function Page({ params }: PageProps) {
   const [hasPurchased, setHasPurchased] = useState(false)
   const [gdEligible, setGdEligible] = useState<boolean | null>(null)
   const [gdReason, setGdReason] = useState<string | null>(null)
+  // R-#161/R-#192: un usuario que no tenga la religión del curso o que no haya
+  // declarado una posición no sionista no ve siquiera la presentación del curso GD
+  // (la lista lo oculta y aquí se bloquea la página). `/gdcluster/ranking` es otra
+  // ruta y sigue pública.
+  const [gdVisible, setGdVisible] = useState<boolean | null>(null)
   const [fundSlearn, setFundSlearn] = useState<string | null>(null)
   // Precio del curso premium, para mostrarlo junto al botón (§2.1 de
   // https://github.com/pasosdeJesus/learn.tg/issues/128): antes solo se veía
@@ -99,6 +104,32 @@ export default function Page({ params }: PageProps) {
 
   const isGd =
     course?.prefijoRuta === '/gdcluster' || course?.prefijoRuta === '/redgd'
+
+  // GD presentation visibility: same rule as the course list (`app/[lang]/page.tsx`).
+  useEffect(() => {
+    if (!isGd) return
+    if (!address) {
+      setGdVisible(false)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await authedGet<{
+          religion_id?: number
+          position_israel_gaza?: string | null
+        }>('/api/profile')
+        if (cancelled) return
+        setGdVisible(
+          Number(res.data?.religion_id) === 2 &&
+            res.data?.position_israel_gaza === 'no',
+        )
+      } catch {
+        if (!cancelled) setGdVisible(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [isGd, address])
 
   // Check whether the authenticated user already purchased this premium course.
   useEffect(() => {
@@ -208,6 +239,11 @@ export default function Page({ params }: PageProps) {
         Partial login. Please disconnect your wallet and connect and sign again.
       </div>
     )
+  }
+
+  // Global Disciples: hidden from non-eligible users, presentation included.
+  if (isGd && gdVisible === false) {
+    return <div className="p-10 mt-10">{t('notFound')}</div>
   }
 
   return (

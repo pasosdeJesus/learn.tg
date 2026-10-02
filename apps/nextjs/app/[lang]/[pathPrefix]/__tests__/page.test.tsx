@@ -553,6 +553,26 @@ describe('Course Introduction Page', () => {
     await waitFor(() => { expect(screen.getByText('Course not found.')).toBeInTheDocument() })
   })
 
+  // R-#161/R-#192: la presentación del curso GD no se muestra a quien no declaró
+  // una posición no sionista (ni a quien no respondió). El ranking es otra ruta.
+  it('blocks the GD presentation when the position is not non-Zionist (R-#161)', async () => {
+    useGuideDataMock.mockReturnValue({
+      ...mockGuideData,
+      course: { ...mockCourseData, id: '10', prefijoRuta: '/gdcluster', titulo: 'Global Disciples' },
+    })
+    axiosGet.mockReset()
+    axiosGet.mockImplementation((url: string) => {
+      if (url.includes('/api/profile')) {
+        return Promise.resolve({ data: { religion_id: 2, position_israel_gaza: null } })
+      }
+      return Promise.resolve({ data: [] })
+    })
+    await act(async () => {
+      renderWithProviders(<Page params={mockParams} />)
+    })
+    await waitFor(() => { expect(screen.getByText('Course not found.')).toBeInTheDocument() })
+  })
+
   it('should display scholarship information when eligible', async () => {
     renderWithProviders(<Page params={mockParams} />)
 

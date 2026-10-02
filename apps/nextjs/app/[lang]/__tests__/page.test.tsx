@@ -312,4 +312,61 @@ describe('Main Page Component', () => {
     expect(listUrl).toMatch(/walletAddress=0x123/)
     expect(listUrl).not.toMatch(/[?&]token=/)
   })
+
+  // R-#161/R-#192: el curso GD es para iglesias no sionistas; un usuario que
+  // declaró apoyar a Israel en el genocidio en Gaza no lo ve (ni lo puede comprar).
+  const gdCourses = [
+    {
+      id: '10',
+      idioma: 'en',
+      prefijoRuta: '/gdcluster',
+      imagen: '/gd.jpg',
+      titulo: 'Global Disciples',
+      subtitulo: 'Pilot course',
+    },
+  ]
+
+  it('no muestra el curso Global Disciples a un sionista (R-#161)', async () => {
+    axiosGet
+      .mockResolvedValueOnce({ data: { religion_id: 2, position_israel_gaza: 'yes' } }) // perfil
+      .mockResolvedValueOnce({ data: gdCourses as Course[] }) // cursos
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
+    await waitFor(() => expect(axiosGet).toHaveBeenCalled())
+    expect(screen.queryByText(/Global Disciples/i)).not.toBeInTheDocument()
+  })
+
+  it('sí muestra el curso Global Disciples si la posición no es sionista (R-#161)', async () => {
+    axiosGet
+      .mockResolvedValueOnce({ data: { religion_id: 2, position_israel_gaza: 'no' } }) // perfil
+      .mockResolvedValueOnce({ data: gdCourses as Course[] }) // cursos
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
+    await waitFor(() => expect(screen.getByText(/Global Disciples/i)).toBeInTheDocument())
+  })
+
+  it('no muestra el curso Global Disciples si no se respondió la pregunta (R-#161)', async () => {
+    axiosGet
+      .mockResolvedValueOnce({ data: { religion_id: 2 } }) // perfil sin position_israel_gaza
+      .mockResolvedValueOnce({ data: gdCourses as Course[] }) // cursos
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
+    await waitFor(() => expect(axiosGet).toHaveBeenCalled())
+    expect(screen.queryByText(/Global Disciples/i)).not.toBeInTheDocument()
+  })
 })

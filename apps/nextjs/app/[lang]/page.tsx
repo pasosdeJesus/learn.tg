@@ -96,16 +96,26 @@ export default function Page({ params }: PageProps) {
         (wallet ? `&filtro[busconBilletera]=true` : '')
       console.log('[courses] fetching:', listBaseUrl)
 
-      let christian = false
+      // Global Disciples courses (gdcluster/redgd) are only shown to Christians
+      // who explicitly declared a **non-Zionist** position (they do NOT support
+      // Israel in the Gaza genocide): a Zionist or a user who has not answered the
+      // question does not see the course at all (it is a course for non-Zionist
+      // churches; the purchase gate is `canPurchaseGDCourse`).
+      let gdVisible = false
       if (wallet) {
-        // Global Disciples courses (gdcluster/redgd) are only shown to Christians.
         try {
-          const profileRes = await authedGet<{ religion_id?: number; profilescore?: number }>('/api/profile')
-          christian = Number(profileRes.data?.religion_id) === 2
+          const profileRes = await authedGet<{
+            religion_id?: number
+            profilescore?: number
+            position_israel_gaza?: string | null
+          }>('/api/profile')
+          gdVisible =
+            Number(profileRes.data?.religion_id) === 2 &&
+            profileRes.data?.position_israel_gaza === 'no'
           // R-#242: último puntaje conocido, para poder avisar sin conexión.
           saveProfileScore(profileRes.data?.profilescore)
         } catch {
-          christian = false
+          gdVisible = false
         }
       }
 
@@ -113,10 +123,10 @@ export default function Page({ params }: PageProps) {
         const response = await authedGet<Course[]>(listBaseUrl)
         if (response.data) {
           const courseInfo = (Array.isArray(response.data) ? response.data : (response.data as any).proyectosfinancieros || (response.data as any).data || [])
-            // Global Disciples courses are only shown to Christians.
+            // Global Disciples courses are only shown to eligible users (see above).
             .filter((c: Course) =>
               (c.prefijoRuta !== '/gdcluster' && c.prefijoRuta !== '/redgd') ||
-              christian,
+              gdVisible,
             )
           console.log(courseInfo)
           setCourses(courseInfo)
@@ -176,7 +186,7 @@ export default function Page({ params }: PageProps) {
         if (cached && cached.courses.length > 0) {
           setCourses(
             cached.courses.filter((c: Course) =>
-              (c.prefijoRuta !== '/gdcluster' && c.prefijoRuta !== '/redgd') || christian,
+              (c.prefijoRuta !== '/gdcluster' && c.prefijoRuta !== '/redgd') || gdVisible,
             ),
           )
           const cachedExtras = getCourseExtras<CourseExtra>(lang)
