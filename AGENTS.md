@@ -103,18 +103,7 @@ What follows is only what those files do not tell you.
    `ARCHITECTURE.md` and `CONTRIBUTING.md`/app READMEs — see the *Documentation Sync
    Policy* in [CONTRIBUTING.md]; the app-level docs and test policy is in
    `apps/nextjs/CONTRIBUTING.md`.
-9. **`.crushrules` is private and stays out of Git**: the repo root carries a **local,
-   gitignored** `.crushrules` with the project's private domain context, and it is the
-   **only** place where the neutral vocabulary of the sensitive features is explained
-   (`contenido_sensible`/category B, `msip_pais.tipo_region`/region 1-2, migration
-   `20260923152923`). Sources, requirements and developer documentation use those terms
-   and never explain them. Read `.crushrules` before renaming, adding or documenting any
-   of them (or writing that context into `REQ/`); never `git add`, commit, copy or quote
-   the file. A private audit script reads that file and the project vocabulary
-   (`node audit-crushrules.mjs`, referenced from `.crushrules`): it
-   fails on any writing system the project does not use (the way a model "translating"
-   something shows up), on the sensitive vocabulary outside its allowlist and on
-   `.crushrules` becoming tracked. Run it before reporting work as done.
+9. **`.crushrules`**
 
 **Definition of done:** `make type` plus the affected `make test*` targets green; the
 route audit (`node bin/audit-api-auth.mjs`, `doc/api-security.md` §2) at `0 failed` if
