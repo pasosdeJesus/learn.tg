@@ -91,7 +91,7 @@ there until 2026-10-01, R-#240 §4b): Workbox serves the precache cache-first an
 `revision: null` entry is never revalidated, so after a deploy the previous build's
 shell kept pointing at chunks that no longer existed → `ChunkLoadError` and "This
 page couldn't load" in a new tab (reproduced by `e2e/specs/sw-stale-shell.spec.mjs`,
-REQ/272 §10). As a runtime NetworkFirst entry they revalidate online and still work
+https://github.com/pasosdeJesus/learn.tg/issues/272 §10). As a runtime NetworkFirst entry they revalidate online and still work
 offline from `learntg-pages` after the first visit. The client also recovers on its
 own: `components/ServiceWorkerRegistrar.tsx` reloads once when the controller changes
 (only if one already existed) and once on a `ChunkLoadError`, guarded by

@@ -91,6 +91,9 @@ class GlobalMockKysely {
   with() { return this }
   onConflict() { return this }
   doNothing() { return this }
+  // Una subconsulta se usa como tabla (`db.selectFrom(base.as('lb'))`): el puesto
+  // canonico del perfil envuelve la base del ranking (R-#278).
+  as() { return this }
   executeTakeFirst() { return mockExecuteTakeFirst() }
   executeTakeFirstOrThrow() { return mockExecuteTakeFirst() }
   execute() { return mockExecute() }

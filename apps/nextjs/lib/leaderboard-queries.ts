@@ -11,26 +11,32 @@ const DONATIONS_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'donat
 const DONATIONS_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'donation' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`
 const SBT_FIELD = sql<number>`COALESCE(ce_counts.cnt, 0)`.as('sbt_count')
 // R-#278: los marcos que la pagina del curso dibuja frente a cada guia (chulo,
-// beca USDT, beca SLEARN), contados por usuario. `verdes` es la suma de los tres y
+// beca USDT, beca SLEARN), contados por usuario. `guide_score` es la suma de los tres y
 // es la medida principal del ranking. Mismo criterio que `/api/guide-status`
 // (`points > 0`, `amountpaid > 0`, y una transaccion `scholarship`/`slearn` con
 // `metadata->>'guideId'` = actividadpf_id).
 const GUIDE_APPROVED_FIELD = sql<number>`COALESCE(gu_counts.approved, 0)`.as('guide_approved')
 const GUIDE_USDT_FIELD = sql<number>`COALESCE(gu_counts.usdt, 0)`.as('guide_usdt')
 const GUIDE_SLEARN_FIELD = sql<number>`COALESCE(gu_counts.slearn, 0)`.as('guide_slearn')
-const VERDES_FIELD = sql<number>`(COALESCE(gu_counts.approved, 0) + COALESCE(gu_counts.usdt, 0) + COALESCE(gu_counts.slearn, 0))`.as('verdes')
+const GUIDE_SCORE_WHERE = sql`(COALESCE(gu_counts.approved, 0) + COALESCE(gu_counts.usdt, 0) + COALESCE(gu_counts.slearn, 0))`
+const GUIDE_SCORE_FIELD = sql<number>`${GUIDE_SCORE_WHERE}`.as('guide_score')
+
 const SLEARN_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.balance_impact ELSE 0 END), 2), 0)`.as('slearn_balance')
 const SLEARN_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.balance_impact ELSE 0 END), 2), 0)`
 const SLEARN_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'slearn' AND t.balance_impact > 0 THEN u.id END)`.as('totalUsersWithSLEARN')
 
-export async function buildLeaderboardQuery(
-  db: Kysely<DB>,
-  params: LeaderboardQueryParams,
-  includeReligion: boolean = false
-) {
-  const { sortBy = 'verdes', sortOrder = 'desc', country, page = 1, limit = 50 } = params
-  const offset = (page - 1) * limit
+// Orden canonico del ranking (R-#278): una sola definicion, compartida por la
+// columna Rank del tablero y por el puesto del perfil (`/api/user/[id]`), para que los
+// dos numeros no puedan divergir. `u.id` es unico, asi que el orden es total: dentro de
+// un empate la pagina ya no depende del planificador y la paginacion no repite ni salta
+// usuarios. `COALESCE(profilescore, -1)` equivale a `DESC NULLS LAST`.
+const CANONICAL_ORDER_SQL = sql`${GUIDE_SCORE_WHERE} DESC, ${DONATIONS_WHERE} DESC, COALESCE(u.profilescore, -1) DESC, ${SLEARN_WHERE} DESC, u.id ASC`
+const CANONICAL_RANK_FIELD = sql<number>`ROW_NUMBER() OVER (ORDER BY ${CANONICAL_ORDER_SQL})`.as('canonical_rank')
 
+// Base del ranking: los usuarios con sus agregados, la regla de visibilidad (R-#259) y
+// el puesto canonico. La comparten el tablero y el puesto del perfil, para que un cambio
+// en las reglas o en el orden no pueda aplicarse a uno y no al otro.
+function baseLeaderboardQuery(db: Kysely<DB>, includeReligion: boolean) {
   let query: any = db
     .selectFrom('usuario as u')
     .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
@@ -96,7 +102,8 @@ export async function buildLeaderboardQuery(
     GUIDE_APPROVED_FIELD,
     GUIDE_USDT_FIELD,
     GUIDE_SLEARN_FIELD,
-    VERDES_FIELD,
+    GUIDE_SCORE_FIELD,
+    CANONICAL_RANK_FIELD,
     sql<number>`COUNT(*) OVER()`.as('total_count'),
   ]
 
@@ -115,11 +122,32 @@ export async function buildLeaderboardQuery(
     .groupBy(groupFields)
     .where('u.excluir_leaderboard', 'is not', true)
 
+  return query
+}
+
+export async function buildLeaderboardQuery(
+  db: Kysely<DB>,
+  params: LeaderboardQueryParams,
+  includeReligion: boolean = false
+) {
+  const { sortBy = 'guide_score', sortOrder = 'desc', country, page = 1, limit = 50 } = params
+  const offset = (page - 1) * limit
+
+  let query: any = baseLeaderboardQuery(db, includeReligion)
+
   if (country) {
     query = query.where('p.alfa2', '=', country)
   }
 
-  if (sortBy === 'profilescore') {
+  if (sortBy === 'guide_score' && sortOrder !== 'asc') {
+    // El orden por defecto de la pagina es el canonico (R-#278): asi los puestos de la
+    // columna Rank se leen 1, 2, 3... y el orden visible coincide con el orden del puesto.
+    query = query
+      .orderBy(sql`guide_score`, 'desc')
+      .orderBy(sql`donations_usdt`, 'desc')
+      .orderBy(sql`COALESCE(u.profilescore, -1)`, 'desc')
+      .orderBy(sql`slearn_balance`, 'desc')
+  } else if (sortBy === 'profilescore') {
     query = query.orderBy(sql`profilescore`, sortOrder === 'asc' ? sql`asc nulls first` : sql`desc nulls last`)
   } else {
     const orderByField = sortBy === 'slearn_balance' ? sql`slearn_balance` :
@@ -129,13 +157,40 @@ export async function buildLeaderboardQuery(
                         sortBy === 'guide_approved' ? sql`guide_approved` :
                         sortBy === 'guide_usdt' ? sql`guide_usdt` :
                         sortBy === 'guide_slearn' ? sql`guide_slearn` :
-                        sortBy === 'verdes' ? sql`verdes` :
+                        sortBy === 'guide_score' ? sql`guide_score` :
                         sql`donations_usdt`
     query = query.orderBy(orderByField, sortOrder)
   }
+
+  // Desempate determinista (R-#278): sin el, el orden entre empates lo decide el
+  // planificador y la paginacion puede repetir o saltar usuarios.
+  query = query.orderBy('u.id', 'asc')
+
   query = query.limit(limit).offset(offset)
 
   return query
+}
+
+// Puesto canonico de un usuario. La base se envuelve para poder filtrar al usuario
+// DESPUES de calcular `ROW_NUMBER()`: si el filtro fuera dentro de la base el puesto
+// seria siempre 1. Asi el perfil usa exactamente el mismo orden y las mismas reglas
+// (exclusion y visibilidad R-#259) que el tablero.
+export function buildLeaderboardRankQuery(db: Kysely<DB>, userId: number): any {
+  const base: any = baseLeaderboardQuery(db, false)
+
+  return db
+    .selectFrom(base.as('lb'))
+    .select([sql<number>`"lb"."canonical_rank"`.as('rank')])
+    .where(sql<boolean>`"lb"."usuario_id" = ${userId}`)
+}
+
+export async function getUserLeaderboardRank(
+  db: Kysely<DB>,
+  userId: number
+): Promise<number | null> {
+  const row = await buildLeaderboardRankQuery(db, userId).executeTakeFirst()
+  const rank = row?.rank
+  return rank == null ? null : Number(rank)
 }
 
 export async function getCountriesQuery(db: Kysely<DB>) {
@@ -247,7 +302,8 @@ export async function getLeaderboardData(
       guide_approved: Number(row.guide_approved),
       guide_usdt: Number(row.guide_usdt),
       guide_slearn: Number(row.guide_slearn),
-      verdes: Number(row.verdes),
+      guide_score: Number(row.guide_score),
+      canonical_rank: Number(row.canonical_rank),
       religion: row.religion_nombre,
     })),
     totals,

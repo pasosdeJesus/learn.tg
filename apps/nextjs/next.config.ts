@@ -38,7 +38,7 @@ const pwaConfig: PWAConfig = {
     // entrada NUNCA se revalidaba (Workbox sirve el precache cache-first) y tras
     // un deploy el armazón del build anterior quedaba apuntando a chunks que ya
     // no existían → ChunkLoadError y "This page couldn't load" en una pestaña
-    // nueva (reproducido el 2026-10-01, REQ/272 §10). Ahora `/en` y `/es` pasan
+    // nueva (reproducido el 2026-10-01, https://github.com/pasosdeJesus/learn.tg/issues/272 §10). Ahora `/en` y `/es` pasan
     // por la regla NetworkFirst de más abajo; sin conexión siguen sirviéndose
     // desde `learntg-pages` después de la primera visita online.
   ],

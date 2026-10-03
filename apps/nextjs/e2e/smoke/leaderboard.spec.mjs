@@ -31,7 +31,7 @@ const EXPECTED_SPANISH = {
     ubi: 'UBI (CELO)',
     donations: 'Donaciones (USDT)',
     // R-#278
-    greens: 'Verdes',
+    guideScore: 'Puntaje en Guías',
     guidesApproved: 'Aprobadas',
     guidesUsdt: 'Pagadas USDT',
     guidesSlearn: 'Pagadas SLEARN'
@@ -59,7 +59,7 @@ const EXPECTED_ENGLISH = {
     ubi: 'UBI (CELO)',
     donations: 'Donations (USDT)',
     // R-#278
-    greens: 'Greens',
+    guideScore: 'Guide Score',
     guidesApproved: 'Approved',
     guidesUsdt: 'Paid USDT',
     guidesSlearn: 'Paid SLEARN'
@@ -159,13 +159,13 @@ async function testLeaderboardAPI(lang) {
   try {
     // Probar endpoint básico
     // R-#278: se consulta con el `sortBy` que usa la página por omisión, para que un
-    // despliegue con el submódulo `app/api` viejo (que no conoce `verdes`) falle aquí.
+    // despliegue con el submódulo `app/api` viejo (que no conoce `guide_score`) falle aquí.
     const response = await apiClient.get('/api/leaderboard', {
       params: {
         lang,
         page: 1,
         limit: 10,
-        sortBy: 'verdes',
+        sortBy: 'guide_score',
         sortOrder: 'desc'
       }
     });
@@ -190,15 +190,15 @@ async function testLeaderboardAPI(lang) {
       }
 
       // R-#278: conteos por guía y su suma, en cada fila.
-      const GUIDE_FIELDS = ['guide_approved', 'guide_usdt', 'guide_slearn', 'verdes'];
+      const GUIDE_FIELDS = ['guide_approved', 'guide_usdt', 'guide_slearn', 'guide_score'];
       const first = data.data?.[0];
       const hasGuideCounts =
         !!first && GUIDE_FIELDS.every((field) => typeof first[field] === 'number');
-      const sumsOk = !!first && first.verdes === first.guide_approved + first.guide_usdt + first.guide_slearn;
+      const sumsOk = !!first && first.guide_score === first.guide_approved + first.guide_usdt + first.guide_slearn;
       console.log(`   • Conteos por guía (R-#278): ${hasGuideCounts ? '✅' : '❌'}`);
       if (data.data?.length && hasGuideCounts) {
         console.log(
-          `     - ${first.username}: aprobadas=${first.guide_approved} USDT=${first.guide_usdt} SLEARN=${first.guide_slearn} verdes=${first.verdes} ${sumsOk ? '✅' : '❌ (no suma)'}`,
+          `     - ${first.username}: aprobadas=${first.guide_approved} USDT=${first.guide_usdt} SLEARN=${first.guide_slearn} guide_score=${first.guide_score} ${sumsOk ? '✅' : '❌ (no suma)'}`,
         );
       }
       if (data.data?.length && (!hasGuideCounts || !sumsOk)) {

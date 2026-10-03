@@ -9,9 +9,9 @@ type HandlerFn = (req: NextRequest, ctx: { params: Record<string, string> }) => 
 type EngineHandlers = Record<string, () => Promise<HandlerFn>>
 
 // Engine registry backed by the generic globalThis registry from
-// @pasosdejesus/m/engine (https://gitlab.com/pasosdeJesus/m/-/work_items/35, https://gitlab.com/pasosdeJesus/m/-/work_items/44). Lazy accessor so the static import
-// below (which self-registers engines) can run before this module finishes
-// evaluating (circular import is safe: registerEngine is a hoisted function).
+// @pasosdejesus/m/engine (https://gitlab.com/pasosdeJesus/m/-/work_items/35, https://gitlab.com/pasosdeJesus/m/-/work_items/44). Lazy accessor so the deferred import
+// below (which registers the engines once the host calls them) can run before this
+// module finishes evaluating (circular import is safe: registerEngine is a hoisted function).
 function registry() {
   return createRegistry<EngineHandlers>('learn-tg:engine')
 }
@@ -24,10 +24,11 @@ export function registerEngine(engineName: string, handlers: EngineHandlers): vo
 }
 
 // ── Auto-register engines ───────────────────────────────────
-// Each engine package self-registers via registerEngine on import
-// (see packages/mr519/src/server/register.ts). Loaded lazily to avoid a
-// circular import: a static import here would evaluate before this module's
-// body, so `registerEngine` would be undefined inside the engine.
+// Each engine package exposes a `register<Engine>(deps)` entry point
+// (see packages/mr519/src/server/register.ts) that calls registerEngine with
+// the host's injected deps (D2). Loaded lazily to avoid a circular import: a
+// static import here would evaluate before this module's body, so
+// `registerEngine` would be undefined inside the engine.
 let enginesLoaded = false
 async function ensureEnginesLoaded(): Promise<void> {
   if (enginesLoaded) return
