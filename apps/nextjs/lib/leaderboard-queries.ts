@@ -33,10 +33,20 @@ const SLEARN_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'slear
 const CANONICAL_ORDER_SQL = sql`${GUIDE_SCORE_WHERE} DESC, ${DONATIONS_WHERE} DESC, COALESCE(u.profilescore, -1) DESC, ${SLEARN_WHERE} DESC, u.id ASC`
 const CANONICAL_RANK_FIELD = sql<number>`ROW_NUMBER() OVER (ORDER BY ${CANONICAL_ORDER_SQL})`.as('canonical_rank')
 
+// Igual, pero sobre un conjunto que incluye a quienes se excluyeron del tablero: la
+// particion los separa, asi que el puesto de quien si aparece no cambia y el de quien se
+// excluyo queda aparte (la ruta del perfil lo publica como `null`). El perfil lo necesita
+// para poder publicar el puntaje en guias tambien de un usuario excluido.
+const CANONICAL_RANK_ANY_FIELD = sql<number>`ROW_NUMBER() OVER (PARTITION BY (u.excluir_leaderboard IS NOT TRUE) ORDER BY ${CANONICAL_ORDER_SQL})`.as('canonical_rank')
+
 // Base del ranking: los usuarios con sus agregados, la regla de visibilidad (R-#259) y
 // el puesto canonico. La comparten el tablero y el puesto del perfil, para que un cambio
 // en las reglas o en el orden no pueda aplicarse a uno y no al otro.
-function baseLeaderboardQuery(db: Kysely<DB>, includeReligion: boolean) {
+function baseLeaderboardQuery(
+  db: Kysely<DB>,
+  includeReligion: boolean,
+  { includeOptedOut = false }: { includeOptedOut?: boolean } = {},
+) {
   let query: any = db
     .selectFrom('usuario as u')
     .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
@@ -103,7 +113,7 @@ function baseLeaderboardQuery(db: Kysely<DB>, includeReligion: boolean) {
     GUIDE_USDT_FIELD,
     GUIDE_SLEARN_FIELD,
     GUIDE_SCORE_FIELD,
-    CANONICAL_RANK_FIELD,
+    includeOptedOut ? CANONICAL_RANK_ANY_FIELD : CANONICAL_RANK_FIELD,
     sql<number>`COUNT(*) OVER()`.as('total_count'),
   ]
 
@@ -120,7 +130,12 @@ function baseLeaderboardQuery(db: Kysely<DB>, includeReligion: boolean) {
   query = query
     .select(selectFields)
     .groupBy(groupFields)
-    .where('u.excluir_leaderboard', 'is not', true)
+
+  // El tablero deja fuera a quien se excluyo del ranking; el perfil necesita su puntaje en
+  // guias de todas formas, por eso la opcion.
+  if (!includeOptedOut) {
+    query = query.where('u.excluir_leaderboard', 'is not', true)
+  }
 
   return query
 }
@@ -171,26 +186,32 @@ export async function buildLeaderboardQuery(
   return query
 }
 
-// Puesto canonico de un usuario. La base se envuelve para poder filtrar al usuario
-// DESPUES de calcular `ROW_NUMBER()`: si el filtro fuera dentro de la base el puesto
-// seria siempre 1. Asi el perfil usa exactamente el mismo orden y las mismas reglas
-// (exclusion y visibilidad R-#259) que el tablero.
-export function buildLeaderboardRankQuery(db: Kysely<DB>, userId: number): any {
-  const base: any = baseLeaderboardQuery(db, false)
+// Puesto canonico y puntaje en guias de un usuario. La base se envuelve para poder filtrar
+// al usuario DESPUES de calcular `ROW_NUMBER()`: si el filtro fuera dentro de la base el
+// puesto seria siempre 1. Asi el perfil usa exactamente el mismo orden y las mismas reglas
+// de visibilidad (R-#259) que el tablero, y el puntaje no se puede calcular de dos formas
+// distintas. Es una sola consulta para las dos cifras.
+export function buildUserLeaderboardStatsQuery(db: Kysely<DB>, userId: number): any {
+  const base: any = baseLeaderboardQuery(db, false, { includeOptedOut: true })
 
   return db
     .selectFrom(base.as('lb'))
-    .select([sql<number>`"lb"."canonical_rank"`.as('rank')])
+    .select([
+      sql<number>`"lb"."canonical_rank"`.as('rank'),
+      sql<number>`"lb"."guide_score"`.as('guide_score'),
+    ])
     .where(sql<boolean>`"lb"."usuario_id" = ${userId}`)
 }
 
-export async function getUserLeaderboardRank(
+export async function getUserLeaderboardStats(
   db: Kysely<DB>,
   userId: number
-): Promise<number | null> {
-  const row = await buildLeaderboardRankQuery(db, userId).executeTakeFirst()
-  const rank = row?.rank
-  return rank == null ? null : Number(rank)
+): Promise<{ rank: number | null; guideScore: number }> {
+  const row = await buildUserLeaderboardStatsQuery(db, userId).executeTakeFirst()
+  return {
+    rank: row?.rank == null ? null : Number(row.rank),
+    guideScore: Number(row?.guide_score ?? 0),
+  }
 }
 
 export async function getCountriesQuery(db: Kysely<DB>) {

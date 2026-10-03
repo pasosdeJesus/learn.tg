@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { Kysely, PostgresDialect } from 'kysely'
-import { buildLeaderboardQuery, buildLeaderboardRankQuery } from '../leaderboard-queries'
+import { buildLeaderboardQuery, buildUserLeaderboardStatsQuery } from '../leaderboard-queries'
 
 // `vitest.setup.ts` mockea `kysely` para toda la suite; aquí se necesita el real para
 // **compilar** el SQL (no se ejecuta contra ninguna base).
@@ -50,6 +50,12 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     )
   })
 
+  it('leaves the opted-out users out of the board (R-#278)', async () => {
+    const { sql } = await compiled()
+
+    expect(sql).toContain('"u"."excluir_leaderboard" is not true')
+  })
+
   it('ranks by the canonical order by default (R-#278)', async () => {
     const { sql } = await compiled()
 
@@ -79,17 +85,20 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     expect(sql).toContain('u.id ASC) as "canonical_rank"')
   })
 
-  it('computes one user rank from the same canonical order (R-#278)', async () => {
-    const sql = (buildLeaderboardRankQuery(makeDb(), 631) as any).compile().sql as string
+  it('computes the rank and the guide score of one user from the same query (R-#278)', async () => {
+    const sql = (buildUserLeaderboardStatsQuery(makeDb(), 631) as any).compile().sql as string
 
     // La base se envuelve y el usuario se filtra DESPUES de calcular el puesto: por eso
     // el parametro del usuario es el septimo ($1..$6 los consumen los predicados de
     // visibilidad de la base) y no el primero.
     expect(sql).toContain('as "lb"')
     expect(sql).toContain('where "lb"."usuario_id" = $7')
-    expect(sql).toContain('select "lb"."canonical_rank" as "rank"')
-    expect(sql).toContain('ROW_NUMBER() OVER (ORDER BY')
-    expect(sql).toContain('guide_score')
+    expect(sql).toContain('select "lb"."canonical_rank" as "rank", "lb"."guide_score" as "guide_score"')
+    expect(sql).toContain('ROW_NUMBER() OVER (PARTITION BY (u.excluir_leaderboard IS NOT TRUE) ORDER BY')
     expect(sql).toContain('u.id ASC) as "canonical_rank"')
+    // El perfil publica el puntaje en guias tambien de quien se excluyo del tablero: el
+    // filtro de exclusion no puede estar en la base de esta consulta (si lo estuviera, su
+    // puntaje seria 0). El tablero si lo lleva.
+    expect(sql).not.toContain('"u"."excluir_leaderboard" is not true')
   })
 })
