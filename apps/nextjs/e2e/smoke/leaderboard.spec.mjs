@@ -29,7 +29,12 @@ const EXPECTED_SPANISH = {
     profileScore: 'Puntaje de Perfil',
     scholarship: 'Beca (USDT)',
     ubi: 'UBI (CELO)',
-    donations: 'Donaciones (USDT)'
+    donations: 'Donaciones (USDT)',
+    // R-#278
+    greens: 'Verdes',
+    guidesApproved: 'Aprobadas',
+    guidesUsdt: 'Pagadas USDT',
+    guidesSlearn: 'Pagadas SLEARN'
   },
   explanations: {
     // profileScore: Client-rendered, not in server HTML — skipped
@@ -52,7 +57,12 @@ const EXPECTED_ENGLISH = {
     profileScore: 'Profile Score',
     scholarship: 'Scholarship (USDT)',
     ubi: 'UBI (CELO)',
-    donations: 'Donations (USDT)'
+    donations: 'Donations (USDT)',
+    // R-#278
+    greens: 'Greens',
+    guidesApproved: 'Approved',
+    guidesUsdt: 'Paid USDT',
+    guidesSlearn: 'Paid SLEARN'
   },
   explanations: {
     // profileScore: Not in server HTML (rendered client-side) — skipped
@@ -148,12 +158,14 @@ async function testLeaderboardAPI(lang) {
 
   try {
     // Probar endpoint básico
+    // R-#278: se consulta con el `sortBy` que usa la página por omisión, para que un
+    // despliegue con el submódulo `app/api` viejo (que no conoce `verdes`) falle aquí.
     const response = await apiClient.get('/api/leaderboard', {
       params: {
         lang,
         page: 1,
         limit: 10,
-        sortBy: 'slearn_balance',
+        sortBy: 'verdes',
         sortOrder: 'desc'
       }
     });
@@ -175,6 +187,22 @@ async function testLeaderboardAPI(lang) {
         console.log(`     - Límite: ${data.pagination.limit}`);
         console.log(`     - Total: ${data.pagination.total}`);
         console.log(`     - Total páginas: ${data.pagination.totalPages}`);
+      }
+
+      // R-#278: conteos por guía y su suma, en cada fila.
+      const GUIDE_FIELDS = ['guide_approved', 'guide_usdt', 'guide_slearn', 'verdes'];
+      const first = data.data?.[0];
+      const hasGuideCounts =
+        !!first && GUIDE_FIELDS.every((field) => typeof first[field] === 'number');
+      const sumsOk = !!first && first.verdes === first.guide_approved + first.guide_usdt + first.guide_slearn;
+      console.log(`   • Conteos por guía (R-#278): ${hasGuideCounts ? '✅' : '❌'}`);
+      if (data.data?.length && hasGuideCounts) {
+        console.log(
+          `     - ${first.username}: aprobadas=${first.guide_approved} USDT=${first.guide_usdt} SLEARN=${first.guide_slearn} verdes=${first.verdes} ${sumsOk ? '✅' : '❌ (no suma)'}`,
+        );
+      }
+      if (data.data?.length && (!hasGuideCounts || !sumsOk)) {
+        return { success: false, error: 'faltan los campos de R-#278 o la suma no cuadra' };
       }
 
       return { success: true, data };
