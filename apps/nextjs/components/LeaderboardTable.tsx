@@ -18,7 +18,7 @@ import { formatUSDT, formatCELO } from '@/lib/format'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { LeaderboardRow } from '@/types/leaderboard'
 
-export type SortField = 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'guide_score'
+export type SortField = 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'referral_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'guide_score'
 export type SortOrder = 'asc' | 'desc'
 
 interface LeaderboardTableProps {
@@ -60,8 +60,8 @@ export function LeaderboardTable({
 }: LeaderboardTableProps) {
   // Translation helper
   const t = useMemo(() => createComponentT(lang, {
-    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', profileScore: 'Profile Score', slearn: 'SLEARN', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', sbt: 'SBTs', guideScore: 'Guide Score', guidesApproved: 'Approved', guidesUsdt: 'Paid USDT', guidesSlearn: 'Paid SLEARN', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithSLEARN: 'Users with SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {{0}} of {{1}} users', previous: 'Previous', pageOf: 'Page {{0}} of {{1}}', next: 'Next' },
-    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', profileScore: 'Puntaje de Perfil', slearn: 'SLEARN', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', sbt: 'SBTs', guideScore: 'Puntaje en Guías', guidesApproved: 'Aprobadas', guidesUsdt: 'Pagadas USDT', guidesSlearn: 'Pagadas SLEARN', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithSLEARN: 'Usuarios con SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {{0}} de {{1}} usuarios', previous: 'Anterior', pageOf: 'Página {{0}} de {{1}}', next: 'Siguiente' },
+    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', profileScore: 'Profile Score', slearn: 'SLEARN', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', sbt: 'SBTs', guideScore: 'Guide Score', guidesApproved: 'Approved', guidesUsdt: 'Paid USDT', guidesSlearn: 'Paid SLEARN', referrals: 'Referrals', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithSLEARN: 'Users with SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {{0}} of {{1}} users', previous: 'Previous', pageOf: 'Page {{0}} of {{1}}', next: 'Next' },
+    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', profileScore: 'Puntaje de Perfil', slearn: 'SLEARN', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', sbt: 'SBTs', guideScore: 'Puntaje en Guías', guidesApproved: 'Aprobadas', guidesUsdt: 'Pagadas USDT', guidesSlearn: 'Pagadas SLEARN', referrals: 'Referidos', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithSLEARN: 'Usuarios con SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {{0}} de {{1}} usuarios', previous: 'Anterior', pageOf: 'Página {{0}} de {{1}}', next: 'Siguiente' },
   }), [lang])
 
   const handleSort = (field: SortField) => {
@@ -161,6 +161,11 @@ export function LeaderboardTable({
                   {t('sbt')}
                 </SortableHeader>
               </TableHead>
+              <TableHead className="text-right">
+                <SortableHeader field="referral_count">
+                  {t('referrals')}
+                </SortableHeader>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -183,11 +188,12 @@ export function LeaderboardTable({
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
+                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
                 </TableRow>
               ))
             ) : data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={14} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={15} className="text-center py-8 text-muted-foreground">
                   {t('noData')}
                 </TableCell>
               </TableRow>
@@ -243,6 +249,9 @@ export function LeaderboardTable({
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {row.sbt_count ?? 0}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {row.referral_count ?? 0}
                   </TableCell>
                 </TableRow>
               ))

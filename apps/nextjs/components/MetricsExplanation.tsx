@@ -9,7 +9,7 @@ export function MetricsExplanation({ lang }: MetricsExplanationProps) {
   const t = useMemo(() => createComponentT(lang, {
     en: {
       rank: 'Rank',
-      rankDesc: 'is the canonical position: the Guide Score first, then donations, then profile score, then SLEARN, and finally the user id. It does not change with the column you sort by.',
+      rankDesc: 'is the canonical position: the Guide Score first, then donations, then profile score, then SLEARN, and finally the user id (referrals are not part of it). It does not change with the column you sort by.',
       learningPoints: 'Learning Points',
       learningPointsDesc: 'are earned by completing crosswords and giving donations.',
       scholarship: 'Scholarship (USDT)',
@@ -26,10 +26,12 @@ export function MetricsExplanation({ lang }: MetricsExplanationProps) {
       guidesUsdtDesc: 'are the guides whose USDT scholarship was paid.',
       guidesSlearn: 'Guides paid in SLEARN',
       guidesSlearnDesc: 'are the guides whose SLEARN scholarship was paid.',
+      referrals: 'Referrals',
+      referralsDesc: 'is how many people signed up with their referral code.',
     },
     es: {
       rank: 'Posición',
-      rankDesc: 'es el puesto canónico: primero el Puntaje en Guías, luego donaciones, luego el puntaje de perfil, luego SLEARN y por último el id del usuario. No cambia con la columna por la que ordene.',
+      rankDesc: 'es el puesto canónico: primero el Puntaje en Guías, luego donaciones, luego el puntaje de perfil, luego SLEARN y por último el id del usuario (los referidos no forman parte de ese orden). No cambia con la columna por la que ordene.',
       learningPoints: 'Puntos de Aprendizaje',
       learningPointsDesc: 'se ganan completando crucigramas y haciendo donaciones.',
       scholarship: 'Beca (USDT)',
@@ -46,6 +48,8 @@ export function MetricsExplanation({ lang }: MetricsExplanationProps) {
       guidesUsdtDesc: 'son las guías cuya beca en USDT se pagó.',
       guidesSlearn: 'Guías pagadas en SLEARN',
       guidesSlearnDesc: 'son las guías cuya beca en SLEARN se pagó.',
+      referrals: 'Referidos',
+      referralsDesc: 'es cuántas personas se registraron con su código de referido.',
     },
   }), [lang])
   return (
@@ -85,6 +89,10 @@ export function MetricsExplanation({ lang }: MetricsExplanationProps) {
       <p>
         <strong>{t('guidesSlearn')}</strong>{' '}
         {t('guidesSlearnDesc')}
+      </p>
+      <p>
+        <strong>{t('referrals')}</strong>{' '}
+        {t('referralsDesc')}
       </p>
     </div>
   )

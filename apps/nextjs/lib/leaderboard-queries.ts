@@ -10,6 +10,11 @@ const UBI_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'ubi-claim' 
 const DONATIONS_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'donation' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`.as('donations_usdt')
 const DONATIONS_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'donation' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`
 const SBT_FIELD = sql<number>`COALESCE(ce_counts.cnt, 0)`.as('sbt_count')
+// Referidos (https://github.com/pasosdeJesus/learn.tg/issues/163): cuantos usuarios lo
+// nombraron como referidor (el total, sin distinguir pendientes de completados). Es un
+// conteo, no un monto, y no forma parte del orden canonico: el puesto sigue siendo el de
+// guias (`guide_score`).
+const REFERRAL_COUNT_FIELD = sql<number>`COALESCE(rr_counts.cnt, 0)`.as('referral_count')
 // R-#278: los marcos que la pagina del curso dibuja frente a cada guia (chulo,
 // beca USDT, beca SLEARN), contados por usuario. `guide_score` es la suma de los tres y
 // es la medida principal del ranking. Mismo criterio que `/api/guide-status`
@@ -93,6 +98,15 @@ function baseLeaderboardQuery(
         .as('gu_counts'),
       (join) => join.onRef('gu_counts.usuario_id', '=', 'u.id')
     )
+    .leftJoin(
+      // Los referidos se cuentan en su propia subconsulta (agrupada por referidor) para no
+      // fanear los demas agregados: el join con `transaction` ya multiplica filas.
+      (eb) => eb.selectFrom('referralrelationship as rr')
+        .select(['rr.referrer_id', eb.fn.countAll<number>().as('cnt')])
+        .groupBy('rr.referrer_id')
+        .as('rr_counts'),
+      (join) => join.onRef('rr_counts.referrer_id', '=', 'u.id')
+    )
 
   if (includeReligion) {
     query = query.leftJoin('religion as r', 'u.religion_id', 'r.id')
@@ -109,6 +123,7 @@ function baseLeaderboardQuery(
     UBI_FIELD,
     DONATIONS_FIELD,
     SBT_FIELD,
+    REFERRAL_COUNT_FIELD,
     GUIDE_APPROVED_FIELD,
     GUIDE_USDT_FIELD,
     GUIDE_SLEARN_FIELD,
@@ -119,7 +134,7 @@ function baseLeaderboardQuery(
 
   let groupFields: any[] = [
     'u.id', 'u.nusuario', 'p.alfa2', 'p.nombre', 'u.profilescore', 'ce_counts.cnt',
-    'gu_counts.approved', 'gu_counts.usdt', 'gu_counts.slearn',
+    'gu_counts.approved', 'gu_counts.usdt', 'gu_counts.slearn', 'rr_counts.cnt',
   ]
 
   if (includeReligion) {
@@ -320,6 +335,7 @@ export async function getLeaderboardData(
       ubi_celo: Number(row.ubi_celo),
       donations_usdt: Number(row.donations_usdt),
       sbt_count: Number(row.sbt_count),
+      referral_count: Number(row.referral_count),
       guide_approved: Number(row.guide_approved),
       guide_usdt: Number(row.guide_usdt),
       guide_slearn: Number(row.guide_slearn),

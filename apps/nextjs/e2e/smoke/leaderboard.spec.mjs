@@ -34,7 +34,9 @@ const EXPECTED_SPANISH = {
     guideScore: 'Puntaje en Guías',
     guidesApproved: 'Aprobadas',
     guidesUsdt: 'Pagadas USDT',
-    guidesSlearn: 'Pagadas SLEARN'
+    guidesSlearn: 'Pagadas SLEARN',
+    // R-#163: referidos
+    referrals: 'Referidos'
   },
   explanations: {
     // profileScore: Client-rendered, not in server HTML — skipped
@@ -62,7 +64,9 @@ const EXPECTED_ENGLISH = {
     guideScore: 'Guide Score',
     guidesApproved: 'Approved',
     guidesUsdt: 'Paid USDT',
-    guidesSlearn: 'Paid SLEARN'
+    guidesSlearn: 'Paid SLEARN',
+    // R-#163: referrals
+    referrals: 'Referrals'
   },
   explanations: {
     // profileScore: Not in server HTML (rendered client-side) — skipped
@@ -190,7 +194,7 @@ async function testLeaderboardAPI(lang) {
       }
 
       // R-#278: conteos por guía y su suma, en cada fila.
-      const GUIDE_FIELDS = ['guide_approved', 'guide_usdt', 'guide_slearn', 'guide_score'];
+      const GUIDE_FIELDS = ['guide_approved', 'guide_usdt', 'guide_slearn', 'guide_score', 'referral_count'];
       const first = data.data?.[0];
       const hasGuideCounts =
         !!first && GUIDE_FIELDS.every((field) => typeof first[field] === 'number');

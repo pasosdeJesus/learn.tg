@@ -484,6 +484,8 @@ Single source of truth for all value movements — both on-chain (USDT, SLEARN, 
 
 **Canonical order and rank (follow-up of https://github.com/pasosdeJesus/learn.tg/issues/278, 2026-10-02):** the ranking has **one** definition of its order — `guide_score` desc, donations desc, `profilescore` desc, SLEARN balance desc and, as the final tiebreak, `usuario.id` asc (which makes the order total, so pagination is stable). The same definition produces the board's **Rank** column (`ROW_NUMBER()` over that order, so the number does not depend on the column the visitor sorts by) and the position the profile shows (`/api/user/[id]`), which used to count users by `learningscore_deprecated` and therefore disagreed with the board. Both read it from `lib/leaderboard-queries.ts`, and `learningscore_deprecated` is no longer used for ranking (it is refreshed only by `scripts/blockchain-sync.ts`).
 
+**Referrals column (https://github.com/pasosdeJesus/learn.tg/issues/163, 2026-10-02):** the board also lists, per student, the **total** number of users they referred (`referralrelationship` where the user is the referrer), computed in its own subquery grouped by referrer so the join cannot multiply the rows of `transaction`. It is a plain column: it is **not** part of the canonical order, so it never moves a student's Rank. The detail (pending, completed, payouts) stays in `/api/referral/stats`, which authenticates the owner.
+
 ### Data Flow Notes
 1. User wallet connection creates/updates `billetera_usuario`; the credential is the NextAuth session cookie — there is no token column (R-#233 Phase 2)
 2. Course and guide data is served by the Next.js app (`/api/course-catalog`, `/api/guide`), which queries the above tables

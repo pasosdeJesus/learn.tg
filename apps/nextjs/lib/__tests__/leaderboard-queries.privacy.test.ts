@@ -50,6 +50,18 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     )
   })
 
+  it('counts the referrals of each student, apart from the aggregates (R-#163)', async () => {
+    const { sql } = await compiled()
+
+    // Conteo propio, agrupado por referidor: no puede fanear los demas agregados.
+    expect(sql).toContain('from "referralrelationship" as "rr"')
+    expect(sql).toContain('group by "rr"."referrer_id"')
+    expect(sql).toContain('as "rr_counts"')
+    expect(sql).toContain('COALESCE(rr_counts.cnt, 0) as "referral_count"')
+    // El puesto se sigue ordenando por guias: los referidos son una columna mas.
+    expect(sql).not.toMatch(/rr_counts\.cnt\)? DESC/)
+  })
+
   it('leaves the opted-out users out of the board (R-#278)', async () => {
     const { sql } = await compiled()
 
