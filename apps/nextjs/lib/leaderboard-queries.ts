@@ -315,12 +315,15 @@ export async function getCountriesQuery(db: Kysely<DB>) {
     .innerJoin('usuario as u', 'u.pais_id', 'p.id')
     .where('p.alfa2', 'is not', null)
     .where('u.excluir_leaderboard', 'is not', true)
+    // El filtro solo ofrece paises de region tipo 1 (R-#278 §4): un pais es tipo 1 o tipo 2
+    // (`msip_pais.tipo_region`), y los de tipo 2 no tienen filas en el tablero.
+    .where(sql<boolean>`COALESCE(p.tipo_region, 1) <> 2`)
     .select(['p.alfa2', 'p.nombre'])
     .distinct()
     .orderBy('p.nombre', 'asc')
 }
 
-export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
+export function buildLeaderboardTotalsQuery(db: Kysely<DB>, country?: string) {
   let query: any = db
     .selectFrom('usuario as u')
     .leftJoin('transaction as t', 'u.id', 't.usuario_id')
@@ -330,24 +333,30 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
     query = query
       .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
       .where('p.alfa2', '=', country)
+      // El tablero es solo de region tipo 1 (R-#278 §4). Un pais entero es tipo 1 o tipo 2,
+      // asi que filtrar un pais tipo 2 deja las filas vacias; sin este filtro su total
+      // revelaria a su unico estudiante.
+      .where(sql<boolean>`COALESCE(p.tipo_region, 1) <> 2`)
   }
 
-  const result = await query
-    .select([
-      sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
-      SLEARN_USER_COUNT,
-      SLEARN_WHERE.as('totalSLEARNBalance'),
-      SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
-      UBI_WHERE.as('totalUBICELO'),
-      DONATIONS_WHERE.as('totalDonationsUSDT'),
-      // Referidos (R-#163): el total de la plataforma (o del pais filtrado). La columna por
-      // fila tambien se publica (R-#278 §2).
-      sql<number>`(SELECT COUNT(*) FROM referralrelationship rr
-        INNER JOIN usuario ur ON ur.id = rr.referrer_id
-        LEFT JOIN msip_pais up ON up.id = ur.pais_id
-        WHERE ur.excluir_leaderboard IS NOT TRUE${country ? sql` AND up.alfa2 = ${country}` : sql``})`.as('totalReferrals'),
-    ])
-    .executeTakeFirst()
+  return query.select([
+    sql<number>`COUNT(DISTINCT u.id)`.as('totalUsers'),
+    SLEARN_USER_COUNT,
+    SLEARN_WHERE.as('totalSLEARNBalance'),
+    SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
+    UBI_WHERE.as('totalUBICELO'),
+    DONATIONS_WHERE.as('totalDonationsUSDT'),
+    // Referidos (R-#163): el total de la plataforma (o del pais filtrado). La columna por
+    // fila tambien se publica (R-#278 §2).
+    sql<number>`(SELECT COUNT(*) FROM referralrelationship rr
+      INNER JOIN usuario ur ON ur.id = rr.referrer_id
+      LEFT JOIN msip_pais up ON up.id = ur.pais_id
+      WHERE ur.excluir_leaderboard IS NOT TRUE${country ? sql` AND up.alfa2 = ${country} AND COALESCE(up.tipo_region, 1) <> 2` : sql``})`.as('totalReferrals'),
+  ])
+}
+
+export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
+  const result = await buildLeaderboardTotalsQuery(db, country).executeTakeFirst()
 
   return {
     totalUsers: Number(result?.totalUsers || 0),
@@ -360,12 +369,15 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
   }
 }
 
-export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
-  const results = await db
+export function buildLeaderboardTotalsByCountryQuery(db: Kysely<DB>) {
+  return db
     .selectFrom('usuario as u')
     .leftJoin('transaction as t', 'u.id', 't.usuario_id')
     .leftJoin('msip_pais as p', 'u.pais_id', 'p.id')
     .where('u.excluir_leaderboard', 'is not', true)
+    // El desglose por pais es del tablero (region tipo 1, R-#278 §4): un pais tipo 2 no
+    // aparece, para que su total no senale a su unico estudiante.
+    .where(sql<boolean>`COALESCE(p.tipo_region, 1) <> 2`)
     .select([
       sql<string>`COALESCE(p.alfa2, 'ZZ')`.as('alfa2'),
       sql<string>`COALESCE(p.nombre, 'Sin pa\u00eds')`.as('nombre'),
@@ -378,7 +390,10 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
     ])
     .groupBy([sql`COALESCE(p.alfa2, 'ZZ')`, sql`COALESCE(p.nombre, 'Sin pa\u00eds')`])
     .orderBy(sql`COALESCE(p.nombre, 'Sin pa\u00eds')`, 'asc')
-    .execute()
+}
+
+export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
+  const results = await buildLeaderboardTotalsByCountryQuery(db).execute()
 
   return results.map(row => ({
     alfa2: row.alfa2,

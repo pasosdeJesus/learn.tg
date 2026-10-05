@@ -1,6 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { Kysely, PostgresDialect } from 'kysely'
-import { buildLeaderboardQuery, buildUserLeaderboardStatsQuery } from '../leaderboard-queries'
+import {
+  buildLeaderboardQuery,
+  buildUserLeaderboardStatsQuery,
+  getCountriesQuery,
+  buildLeaderboardTotalsQuery,
+  buildLeaderboardTotalsByCountryQuery,
+} from '../leaderboard-queries'
 
 // `vitest.setup.ts` mockea `kysely` para toda la suite; aquí se necesita el real para
 // **compilar** el SQL (no se ejecuta contra ninguna base).
@@ -142,5 +148,38 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     expect(sql).toContain('"u"."excluir_leaderboard" is not true')
     expect(sql).toContain('COALESCE(p.tipo_region, 1) <> 2')
     expect(sql).not.toContain('limit')
+  })
+})
+
+// El tablero es solo de region tipo 1 (R-#278 §4), y sus superficies de pais (el filtro,
+// los totales de un pais filtrado y el desglose de transparencia) tambien: si no, el total
+// de un pais de region tipo 2 revelaria a su unico estudiante.
+describe('the country surfaces stay region type 1 only (R-#278 §4)', () => {
+  it('lists only region type 1 countries in the filter', async () => {
+    const query = await getCountriesQuery(makeDb())
+    const { sql } = (query as any).compile() as { sql: string }
+
+    expect(sql).toContain('COALESCE(p.tipo_region, 1) <> 2')
+  })
+
+  it('applies the filter to the totals of one country', () => {
+    const { sql } = (buildLeaderboardTotalsQuery(makeDb(), 'CO') as any).compile() as { sql: string }
+
+    expect(sql).toContain('COALESCE(p.tipo_region, 1) <> 2')
+    // El total de referidos del pais filtrado sigue la misma regla.
+    expect(sql).toContain('COALESCE(up.tipo_region, 1) <> 2')
+    expect(sql).toMatch(/"p"\."alfa2" = \$\d+/)
+  })
+
+  it('keeps the platform-wide totals whole (no country filter)', () => {
+    const { sql } = (buildLeaderboardTotalsQuery(makeDb()) as any).compile() as { sql: string }
+
+    expect(sql).not.toContain('tipo_region')
+  })
+
+  it('leaves region type 2 countries out of the transparency breakdown', () => {
+    const { sql } = (buildLeaderboardTotalsByCountryQuery(makeDb()) as any).compile() as { sql: string }
+
+    expect(sql).toContain('COALESCE(p.tipo_region, 1) <> 2')
   })
 })
