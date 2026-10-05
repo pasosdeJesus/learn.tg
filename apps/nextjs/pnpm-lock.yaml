@@ -229,8 +229,8 @@ importers:
         specifier: ^0.22.3
         version: 0.22.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
       '@pasosdejesus/mpdj':
-        specifier: ^0.2.7
-        version: 0.2.7(@pasosdejesus/m@0.22.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(next@16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7)(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.6)(jiti@2.7.0)(jsdom@27.4.0(@noble/hashes@2.4.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.51.2)(tsx@4.23.15))
+        specifier: ^0.2.9
+        version: 0.2.9(@pasosdejesus/m@0.22.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(next@16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7)(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.6)(jiti@2.7.0)(jsdom@27.4.0(@noble/hashes@2.4.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.51.2)(tsx@4.23.15))
       '@pasosdejesus/usdt':
         specifier: ^0.1.3
         version: 0.1.3(@pasosdejesus/m@0.22.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(react@19.3.0)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
@@ -855,8 +855,8 @@ packages:
       '@casl/ability': ^4.0.0 || ^5.1.0 || ^6.0.0
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@coinbase/cdp-sdk@1.57.0':
-    resolution: {integrity: sha512-SaOlyVgJzaIuuA+r2e+OEcQA2ncFyUT1sAGCqqAxXHQQxwOcea8N2r4NnnBAde0V0EEhDonJonuPBQFE0TBzmw==}
+  '@coinbase/cdp-sdk@1.57.1':
+    resolution: {integrity: sha512-p47gw/5WNJ2Js+MMSQ1U1ocUY0UNnVvrjAxcrYt6YEcmVAUuz56L7Sg025tdutzH1BP+yU/jG9lDr/0AkTVvNw==}
     peerDependencies:
       '@x402/core': ^2.25.0
       '@x402/evm': ^2.25.0
@@ -2040,8 +2040,8 @@ packages:
     resolution: {integrity: sha512-nNhAmpIJAw2stRp5vjy4C2YPX4LBY71Kf9lZvuxatWR8vO2RVXK+GF0T7JEdNLigog1wwMuFQAszxRYqSSCU7g==}
     hasBin: true
 
-  '@pasosdejesus/mpdj@0.2.7':
-    resolution: {integrity: sha512-PY2bNnpffm7H941ZMIvBjeegbu+qiiip1Z343b72AHhoI3C48E4AxnYhQ0Vdaw29d1jRsVPXEIKrxDyordqfsg==}
+  '@pasosdejesus/mpdj@0.2.9':
+    resolution: {integrity: sha512-CffNvORe3KgHq07F3cZ8qAVA0q0Nt5I6+ud8yM3kdlkoBp1YfT7RutCLhMlLoHwCsGUZnixdonWwhO3oWFQm2Q==}
     peerDependencies:
       '@pasosdejesus/m': '>=0.16.0'
       next: '>=15.0.0'
@@ -2715,8 +2715,8 @@ packages:
     peerDependencies:
       rollup: ^1.20.0||^2.0.0
 
-  '@rollup/wasm-node@4.63.5':
-    resolution: {integrity: sha512-RRgnG3u8+hOCkgvgXDZDR1Vfg8IerYgltlJYWeKSuv2npISR+ED1E7qcq8+PyzftjdVCufsmgbg2idwmhvs/4w==}
+  '@rollup/wasm-node@4.64.0':
+    resolution: {integrity: sha512-Z/de+MVpPvzOf55PE1oihpipLVt1VFP/OmtZvKQtsWaxatzqpQ2CfvFgVkQ/QaZ5TAMO+Taed2gpbBfzmM+wFQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -3839,6 +3839,11 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  acorn@8.19.0:
+    resolution: {integrity: sha512-oJlA3XiRm7Cyk6qFD2Jn8ak9B7jSy0qy00ADO3+8dpT0LSjFihQYv4C02LFCSYJV3Q37xYwwRy5m+IpIiUzqWw==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
   addressparser@1.0.1:
     resolution: {integrity: sha512-aQX7AISOMM7HFE0iZ3+YnD07oIeJqWGVnJ+ZIKaBZAk03ftmVYVqsGas/rbXKR21n4D/hKCSHypvcyOkds/xzg==}
 
@@ -4796,6 +4801,10 @@ packages:
     resolution: {integrity: sha512-nGXts5znJzmWPu+mIE9izCOzdg63oJca2mDzGWWTth7sr4aCToKcoyFVBQwN75Ij5Pf6p510EwkTqViTRzDV+w==}
     engines: {node: '>=10.13.0'}
 
+  enhanced-resolve@5.26.0:
+    resolution: {integrity: sha512-9vhedylFonb2YGogzUKX6+Ja72gOJbN1QHAqdrvqLwhdl/QWbKopzoUC9EbQNVsAns/bx/4uyqalrQAoy1IByw==}
+    engines: {node: '>=10.13.0'}
+
   entities@8.1.0:
     resolution: {integrity: sha512-kxL7msIffSuh9aaFAMD7rxAIuTRMAHMeBtgHW2yUdWw732ZNh4MehkF2gdjvtdmikkaIP9bFDDJOPlsvm7avrA==}
     engines: {node: '>=20.19.0'}
@@ -5426,8 +5435,8 @@ packages:
   hmac-drbg@1.0.1:
     resolution: {integrity: sha512-Tti3gMqLdZfhOQY1Mzf/AanLiqh1WTiJgEj26ZuYQ9fbkLomzGchCws4FyrSd4VkpBfiNhaE1On+lOz894jvXg==}
 
-  hono@4.13.10:
-    resolution: {integrity: sha512-dQuLsa5oO+47QVMVMaaD9cIv8ctmVtK1iRvwWngkfloFJMeFeuoUFDswIqZGxmGX3hrRzREgEArjkK9OgsQEhA==}
+  hono@4.13.13:
+    resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
     engines: {node: '>=16.9.0'}
 
   hoopy@0.1.4:
@@ -5973,11 +5982,11 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  libbase64@1.3.1:
-    resolution: {integrity: sha512-1b9LXEjEtXj35YKOR9RqNKBootlb37qbIzmqiw4MsP52cjOsfR6i/AYU1Y8qN4kV2TJQmLJ5aiXn45qI6h+Szw==}
+  libbase64@1.3.2:
+    resolution: {integrity: sha512-fFCoI0ceXhTu/0QiJ6Uf6BV9k7X/8QW2/D4BR1vw3BPrHcIjLbGLH+U7inQ4SeWrfNCOmpGE09Qt4XjSFfus0g==}
 
-  libmime@5.4.6:
-    resolution: {integrity: sha512-Cgx1vHd76GTwDaLNsl0K44CjNFfhkX/1bMcoruoWr8Ugcl0/zMw7x/8NpZERIOcpGyzlQo10tOEw9goGsv2Wlg==}
+  libmime@5.4.7:
+    resolution: {integrity: sha512-r1ENu4wMVSB52AAORwaW4L/MeQJr9rryzHLRpcjud3zcUPWXh1Xkgn+tAqL8oTnRO/LW7y5xxPBE20ta5amtMA==}
 
   libqp@2.1.2:
     resolution: {integrity: sha512-rp+U80tl9Os4K7GnVbPzPRmghPu6eqB8rcF+ontvNAnoga0JhMFG/bkTD/reC8yoznKMgOc5/ttZHJasiWeFPw==}
@@ -9349,7 +9358,7 @@ snapshots:
 
   '@base-org/account@2.4.0(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.3.0))(utf-8-validate@5.0.10)(zod@4.6.5)':
     dependencies:
-      '@coinbase/cdp-sdk': 1.57.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@coinbase/cdp-sdk': 1.57.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@noble/hashes': 1.4.0
       clsx: 1.2.1
       eventemitter3: 5.0.1
@@ -9386,7 +9395,7 @@ snapshots:
       '@casl/ability': 6.8.1
       react: 19.3.0
 
-  '@coinbase/cdp-sdk@1.57.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@coinbase/cdp-sdk@1.57.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@solana-program/system': 0.10.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))
       '@solana-program/token': 0.9.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))
@@ -10713,7 +10722,7 @@ snapshots:
       - supports-color
       - viem
 
-  '@pasosdejesus/mpdj@0.2.7(@pasosdejesus/m@0.22.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(next@16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7)(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.6)(jiti@2.7.0)(jsdom@27.4.0(@noble/hashes@2.4.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.51.2)(tsx@4.23.15))':
+  '@pasosdejesus/mpdj@0.2.9(@pasosdejesus/m@0.22.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(next@16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7)(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.6)(jiti@2.7.0)(jsdom@27.4.0(@noble/hashes@2.4.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))(terser@5.51.2)(tsx@4.23.15))':
     dependencies:
       '@pasosdejesus/m': 0.22.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
       next: 16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7)(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -11683,39 +11692,39 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@rollup/plugin-babel@5.3.1(@babel/core@7.29.7)(@rollup/wasm-node@4.63.5)':
+  '@rollup/plugin-babel@5.3.1(@babel/core@7.29.7)(@rollup/wasm-node@4.64.0)':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/helper-module-imports': 7.29.7
-      '@rollup/pluginutils': 3.1.0(@rollup/wasm-node@4.63.5)
-      rollup: '@rollup/wasm-node@4.63.5'
+      '@rollup/pluginutils': 3.1.0(@rollup/wasm-node@4.64.0)
+      rollup: '@rollup/wasm-node@4.64.0'
     transitivePeerDependencies:
       - supports-color
 
-  '@rollup/plugin-node-resolve@11.2.1(@rollup/wasm-node@4.63.5)':
+  '@rollup/plugin-node-resolve@11.2.1(@rollup/wasm-node@4.64.0)':
     dependencies:
-      '@rollup/pluginutils': 3.1.0(@rollup/wasm-node@4.63.5)
+      '@rollup/pluginutils': 3.1.0(@rollup/wasm-node@4.64.0)
       '@types/resolve': 1.17.1
       builtin-modules: 3.3.0
       deepmerge: 4.3.1
       is-module: 1.0.0
       resolve: 1.22.12
-      rollup: '@rollup/wasm-node@4.63.5'
+      rollup: '@rollup/wasm-node@4.64.0'
 
-  '@rollup/plugin-replace@2.4.2(@rollup/wasm-node@4.63.5)':
+  '@rollup/plugin-replace@2.4.2(@rollup/wasm-node@4.64.0)':
     dependencies:
-      '@rollup/pluginutils': 3.1.0(@rollup/wasm-node@4.63.5)
+      '@rollup/pluginutils': 3.1.0(@rollup/wasm-node@4.64.0)
       magic-string: 0.25.9
-      rollup: '@rollup/wasm-node@4.63.5'
+      rollup: '@rollup/wasm-node@4.64.0'
 
-  '@rollup/pluginutils@3.1.0(@rollup/wasm-node@4.63.5)':
+  '@rollup/pluginutils@3.1.0(@rollup/wasm-node@4.64.0)':
     dependencies:
       '@types/estree': 0.0.39
       estree-walker: 1.0.1
       picomatch: 2.3.2
-      rollup: '@rollup/wasm-node@4.63.5'
+      rollup: '@rollup/wasm-node@4.64.0'
 
-  '@rollup/wasm-node@4.63.5':
+  '@rollup/wasm-node@4.64.0':
     dependencies:
       '@types/estree': 1.0.9
     optionalDependencies:
@@ -13530,7 +13539,7 @@ snapshots:
       addressparser: 1.0.1
       atob: 2.1.2
       circomlibjs: 0.1.7(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      libmime: 5.4.6
+      libmime: 5.4.7
       localforage: 1.10.0
       node-forge: 1.4.0
       pako: 2.2.0
@@ -13571,15 +13580,17 @@ snapshots:
       typescript: 5.9.3
       zod: 4.6.5
 
-  acorn-import-phases@1.0.4(acorn@8.18.0):
+  acorn-import-phases@1.0.4(acorn@8.19.0):
     dependencies:
-      acorn: 8.18.0
+      acorn: 8.19.0
 
   acorn-jsx@5.3.2(acorn@8.18.0):
     dependencies:
       acorn: 8.18.0
 
   acorn@8.18.0: {}
+
+  acorn@8.19.0: {}
 
   addressparser@1.0.1: {}
 
@@ -14532,6 +14543,11 @@ snapshots:
       graceful-fs: 4.2.11
       tapable: 2.3.3
 
+  enhanced-resolve@5.26.0:
+    dependencies:
+      graceful-fs: 4.2.11
+      tapable: 2.3.3
+
   entities@8.1.0: {}
 
   env-paths@2.2.1: {}
@@ -15213,7 +15229,7 @@ snapshots:
     dependencies:
       magic-string: 0.30.21
       mlly: 1.8.2
-      rollup: '@rollup/wasm-node@4.63.5'
+      rollup: '@rollup/wasm-node@4.64.0'
 
   flat-cache@4.0.1:
     dependencies:
@@ -15471,7 +15487,7 @@ snapshots:
       minimalistic-assert: 1.0.1
       minimalistic-crypto-utils: 1.0.1
 
-  hono@4.13.10: {}
+  hono@4.13.13: {}
 
   hoopy@0.1.4: {}
 
@@ -15983,13 +15999,13 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  libbase64@1.3.1: {}
+  libbase64@1.3.2: {}
 
-  libmime@5.4.6:
+  libmime@5.4.7:
     dependencies:
       encoding-japanese: 2.4.0
       iconv-lite: 0.7.3
-      libbase64: 1.3.1
+      libbase64: 1.3.2
       libqp: 2.1.2
 
   libqp@2.1.2: {}
@@ -17153,7 +17169,7 @@ snapshots:
   porto@0.2.35(@tanstack/react-query@5.103.1(react@19.3.0))(@types/react@19.3.0)(@wagmi/core@2.22.1(@tanstack/query-core@5.103.1)(@types/react@19.3.0)(react@19.3.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.3.0))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(react@19.3.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.3.0))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))(wagmi@2.19.5(@tanstack/query-core@5.103.1)(@tanstack/react-query@5.103.1(react@19.3.0))(@types/react@19.3.0)(bufferutil@4.1.0)(preact-render-to-string@5.2.6)(react@19.3.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))(zod@4.6.5)):
     dependencies:
       '@wagmi/core': 2.22.1(@tanstack/query-core@5.103.1)(@types/react@19.3.0)(react@19.3.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.3.0))(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
-      hono: 4.13.10
+      hono: 4.13.13
       idb-keyval: 6.3.0
       mipd: 0.0.7(typescript@5.9.3)
       ox: 0.9.17(typescript@5.9.3)(zod@4.6.5)
@@ -17618,11 +17634,11 @@ snapshots:
     dependencies:
       glob: 7.2.3
 
-  rollup-plugin-terser@7.0.2(@rollup/wasm-node@4.63.5):
+  rollup-plugin-terser@7.0.2(@rollup/wasm-node@4.64.0):
     dependencies:
       '@babel/code-frame': 7.29.7
       jest-worker: 26.6.2
-      rollup: '@rollup/wasm-node@4.63.5'
+      rollup: '@rollup/wasm-node@4.64.0'
       serialize-javascript: 4.0.0
       terser: 5.51.2
 
@@ -18316,7 +18332,7 @@ snapshots:
       picocolors: 1.1.1
       postcss-load-config: 6.0.1(jiti@2.7.0)(postcss@8.5.28)(tsx@4.23.15)
       resolve-from: 5.0.0
-      rollup: '@rollup/wasm-node@4.63.5'
+      rollup: '@rollup/wasm-node@4.64.0'
       source-map: 0.7.6
       sucrase: 3.35.1
       tinyexec: 0.3.2
@@ -18701,7 +18717,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.7)
       picomatch: 4.0.7
       postcss: 8.5.28
-      rollup: '@rollup/wasm-node@4.63.5'
+      rollup: '@rollup/wasm-node@4.64.0'
       tinyglobby: 0.2.17
     optionalDependencies:
       '@types/node': 24.13.6
@@ -18851,11 +18867,11 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
-      acorn: 8.18.0
-      acorn-import-phases: 1.0.4(acorn@8.18.0)
+      acorn: 8.19.0
+      acorn-import-phases: 1.0.4(acorn@8.19.0)
       browserslist: 4.29.0
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.25.1
+      enhanced-resolve: 5.26.0
       es-module-lexer: 2.3.2
       eslint-scope: 5.1.1
       events: 3.3.0
@@ -18966,9 +18982,9 @@ snapshots:
       '@babel/core': 7.29.7
       '@babel/preset-env': 7.29.7(@babel/core@7.29.7)
       '@babel/runtime': 7.29.7
-      '@rollup/plugin-babel': 5.3.1(@babel/core@7.29.7)(@rollup/wasm-node@4.63.5)
-      '@rollup/plugin-node-resolve': 11.2.1(@rollup/wasm-node@4.63.5)
-      '@rollup/plugin-replace': 2.4.2(@rollup/wasm-node@4.63.5)
+      '@rollup/plugin-babel': 5.3.1(@babel/core@7.29.7)(@rollup/wasm-node@4.64.0)
+      '@rollup/plugin-node-resolve': 11.2.1(@rollup/wasm-node@4.64.0)
+      '@rollup/plugin-replace': 2.4.2(@rollup/wasm-node@4.64.0)
       '@surma/rollup-plugin-off-main-thread': 2.2.3
       ajv: 8.20.0
       common-tags: 1.8.2
@@ -18977,8 +18993,8 @@ snapshots:
       glob: 7.2.3
       lodash: 4.18.1
       pretty-bytes: 5.6.0
-      rollup: '@rollup/wasm-node@4.63.5'
-      rollup-plugin-terser: 7.0.2(@rollup/wasm-node@4.63.5)
+      rollup: '@rollup/wasm-node@4.64.0'
+      rollup-plugin-terser: 7.0.2(@rollup/wasm-node@4.64.0)
       source-map: 0.8.0
       stringify-object: 3.3.0
       strip-comments: 2.0.1
