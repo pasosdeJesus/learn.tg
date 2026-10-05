@@ -123,6 +123,9 @@ class GlobalMockKysely {
     min: vi.fn(() => ({ as: vi.fn(() => ({})) })),
   }
 }
+// `sql.raw(...)` se usa en `lib/leaderboard-queries.ts` para los pesos de `platform_score`
+// (literales en el SQL, sin parametros), y el mock compartido de `sql` no lo trae.
+;(mockSql as any).raw = (value: string) => value
 vi.mock('kysely', () => ({
   Kysely: GlobalMockKysely,
   PostgresDialect: vi.fn(),

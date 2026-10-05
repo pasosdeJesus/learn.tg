@@ -9,7 +9,7 @@ export function MetricsExplanation({ lang }: MetricsExplanationProps) {
   const t = useMemo(() => createComponentT(lang, {
     en: {
       rank: 'Rank',
-      rankDesc: 'is the canonical position: the Guide Score first, then donations, then profile score, then SLEARN, and finally the user id (referrals are not part of it). It does not change with the column you sort by.',
+      rankDesc: 'is the canonical position: Platform Score first, then the user id (referrals are part of the score). It does not change with the column you sort by.',
       learningPoints: 'Learning Points',
       learningPointsDesc: 'are earned by completing crosswords and giving donations.',
       scholarship: 'Scholarship (USDT)',
@@ -19,6 +19,8 @@ export function MetricsExplanation({ lang }: MetricsExplanationProps) {
       donations: 'Donations (USDT)',
       donationsDesc: 'are contributions made to support the platform.',
       guideScore: 'Guide Score',
+      platformScore: 'Platform Score',
+      platformScoreDesc: 'is the main ranking measure: a weighted sum of six normalized components (guide score 35%, referrals 15%, donations 15%, credentials 15%, SLEARN 10%, profile score 10%). Each one is scaled 0-100 with min-max over ln(1 + value), so it moves with the rest of the board.',
       guideScoreDesc: 'is the sum of the approved guides and the guides paid in USDT and in SLEARN (the main ranking measure).',
       guidesApproved: 'Approved guides',
       guidesApprovedDesc: 'are the guides the student passed (the checkmark).',
@@ -31,7 +33,7 @@ export function MetricsExplanation({ lang }: MetricsExplanationProps) {
     },
     es: {
       rank: 'Posición',
-      rankDesc: 'es el puesto canónico: primero el Puntaje en Guías, luego donaciones, luego el puntaje de perfil, luego SLEARN y por último el id del usuario (los referidos no forman parte de ese orden). No cambia con la columna por la que ordene.',
+      rankDesc: 'es el puesto canónico: primero el Puntaje de Plataforma y luego el id del usuario (los referidos son parte del puntaje). No cambia con la columna por la que ordene.',
       learningPoints: 'Puntos de Aprendizaje',
       learningPointsDesc: 'se ganan completando crucigramas y haciendo donaciones.',
       scholarship: 'Beca (USDT)',
@@ -41,6 +43,8 @@ export function MetricsExplanation({ lang }: MetricsExplanationProps) {
       donations: 'Donaciones (USDT)',
       donationsDesc: 'son contribuciones hechas para apoyar la plataforma.',
       guideScore: 'Puntaje en Guías',
+      platformScore: 'Puntaje de Plataforma',
+      platformScoreDesc: 'es la medida principal del ranking: una suma ponderada de seis componentes normalizados (puntaje en guías 35%, referidos 15%, donaciones 15%, credenciales 15%, SLEARN 10%, puntaje de perfil 10%). Cada uno se escala 0-100 con min-max sobre ln(1 + valor), así que se mueve con el resto del tablero.',
       guideScoreDesc: 'es la suma de las guías aprobadas y de las guías pagadas en USDT y en SLEARN (la medida principal del ranking).',
       guidesApproved: 'Guías aprobadas',
       guidesApprovedDesc: 'son las guías que el estudiante aprobó (el chulo).',
@@ -73,6 +77,10 @@ export function MetricsExplanation({ lang }: MetricsExplanationProps) {
       <p>
         <strong>{t('donations')}</strong>{' '}
         {t('donationsDesc')}
+      </p>
+      <p>
+        <strong>{t('platformScore')}</strong>{' '}
+        {t('platformScoreDesc')}
       </p>
       <p>
         <strong>{t('guideScore')}</strong>{' '}

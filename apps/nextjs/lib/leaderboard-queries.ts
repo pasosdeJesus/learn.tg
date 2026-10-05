@@ -2,7 +2,7 @@ import { Kysely, sql } from 'kysely'
 import type { DB } from '@/db/db.d'
 import type { LeaderboardQueryParams } from '@/types/leaderboard'
 
-// Shared SQL field definitions used across leaderboard queries
+// ── Campos de la base (L1) ───────────────────────────────────────────────
 const SCHOLARSHIP_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'scholarship' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`.as('scholarship_usdt')
 const SCHOLARSHIP_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'scholarship' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`
 const UBI_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'ubi-claim' AND t.crypto = 'celo' THEN t.amount ELSE 0 END), 2), 0)`.as('ubi_celo')
@@ -11,42 +11,76 @@ const DONATIONS_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'donat
 const DONATIONS_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.type = 'donation' AND t.crypto = 'usdt' THEN t.amount ELSE 0 END), 2), 0)`
 const SBT_FIELD = sql<number>`COALESCE(ce_counts.cnt, 0)`.as('sbt_count')
 // Referidos (https://github.com/pasosdeJesus/learn.tg/issues/163): cuantos usuarios lo
-// nombraron como referidor (el total, sin distinguir pendientes de completados). Es un
-// conteo, no un monto, y no forma parte del orden canonico: el puesto sigue siendo el de
-// guias (`guide_score`).
+// nombraron como referidor (el total, sin distinguir pendientes de completados).
 const REFERRAL_COUNT_FIELD = sql<number>`COALESCE(rr_counts.cnt, 0)`.as('referral_count')
-// R-#278: los marcos que la pagina del curso dibuja frente a cada guia (chulo,
-// beca USDT, beca SLEARN), contados por usuario. `guide_score` es la suma de los tres y
-// es la medida principal del ranking. Mismo criterio que `/api/guide-status`
-// (`points > 0`, `amountpaid > 0`, y una transaccion `scholarship`/`slearn` con
-// `metadata->>'guideId'` = actividadpf_id).
+// R-#278 §2: los marcos que la pagina del curso dibuja frente a cada guia (chulo, beca
+// USDT, beca SLEARN), contados por usuario. `guide_score` es su suma. Mismo criterio que
+// `/api/guide-status` (`points > 0`, `amountpaid > 0`, y una transaccion
+// `scholarship`/`slearn` con `metadata->>'guideId'` = actividadpf_id).
 const GUIDE_APPROVED_FIELD = sql<number>`COALESCE(gu_counts.approved, 0)`.as('guide_approved')
 const GUIDE_USDT_FIELD = sql<number>`COALESCE(gu_counts.usdt, 0)`.as('guide_usdt')
 const GUIDE_SLEARN_FIELD = sql<number>`COALESCE(gu_counts.slearn, 0)`.as('guide_slearn')
 const GUIDE_SCORE_WHERE = sql`(COALESCE(gu_counts.approved, 0) + COALESCE(gu_counts.usdt, 0) + COALESCE(gu_counts.slearn, 0))`
 const GUIDE_SCORE_FIELD = sql<number>`${GUIDE_SCORE_WHERE}`.as('guide_score')
-
 const SLEARN_FIELD = sql<number>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.balance_impact ELSE 0 END), 2), 0)`.as('slearn_balance')
 const SLEARN_WHERE = sql<string>`COALESCE(ROUND(SUM(CASE WHEN t.crypto = 'slearn' THEN t.balance_impact ELSE 0 END), 2), 0)`
 const SLEARN_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'slearn' AND t.balance_impact > 0 THEN u.id END)`.as('totalUsersWithSLEARN')
+// Region del dueño de la fila (no la del visitante). Sin clasificar (`tipo_region` NULL)
+// se trata como region tipo 1: no se oculta nada.
+const TIPO_REGION_FIELD = sql<number>`COALESCE(p.tipo_region, 1)`.as('tipo_region')
 
-// Orden canonico del ranking (R-#278): una sola definicion, compartida por la
-// columna Rank del tablero y por el puesto del perfil (`/api/user/[id]`), para que los
-// dos numeros no puedan divergir. `u.id` es unico, asi que el orden es total: dentro de
-// un empate la pagina ya no depende del planificador y la paginacion no repite ni salta
-// usuarios. `COALESCE(profilescore, -1)` equivale a `DESC NULLS LAST`.
-const CANONICAL_ORDER_SQL = sql`${GUIDE_SCORE_WHERE} DESC, ${DONATIONS_WHERE} DESC, COALESCE(u.profilescore, -1) DESC, ${SLEARN_WHERE} DESC, u.id ASC`
-const CANONICAL_RANK_FIELD = sql<number>`ROW_NUMBER() OVER (ORDER BY ${CANONICAL_ORDER_SQL})`.as('canonical_rank')
+// ── platform_score (§10) ────────────────────────────────────────────────
+// Pesos de los seis componentes. Se interpolan como texto (`sql.raw`) para no
+// introducir parametros en la lista de seleccion: eso desplazaria los `$1..$N` de los
+// joins y romperia las aserciones sobre el SQL generado.
+const W_GUIDE = sql.raw('0.35')
+const W_REFERRAL = sql.raw('0.15')
+const W_DONATIONS = sql.raw('0.15')
+const W_SBT = sql.raw('0.15')
+const W_SLEARN = sql.raw('0.10')
+const W_PROFILE = sql.raw('0.10')
+// Peso disponible cuando el dueño esta en region tipo 2: su puntaje omite
+// `referral_count` y `profilescore`, que estan ocultos, y renormaliza para seguir en 0-100.
+const W_VISIBLE_REGION_2 = sql.raw('0.75')
 
-// Igual, pero sobre un conjunto que incluye a quienes se excluyeron del tablero: la
-// particion los separa, asi que el puesto de quien si aparece no cambia y el de quien se
-// excluyo queda aparte (la ruta del perfil lo publica como `null`). El perfil lo necesita
-// para poder publicar el puntaje en guias tambien de un usuario excluido.
-const CANONICAL_RANK_ANY_FIELD = sql<number>`ROW_NUMBER() OVER (PARTITION BY (u.excluir_leaderboard IS NOT TRUE) ORDER BY ${CANONICAL_ORDER_SQL})`.as('canonical_rank')
+/**
+ * Normaliza un componente a 0..1 con min-max sobre `ln(1 + x)`.
+ *
+ *   c(x) = ln(1 + max(x, 0))                                  (comprime la cola)
+ *   n(x) = (c(x) - min c(x)) / (max c(x) - min c(x))
+ *
+ * Se eligio sobre `percent_rank()` porque en las variables sesgadas (referidos,
+ * donaciones, SBT) el percentil convertia el peso en un bonus binario: el primer
+ * referido saltaba al percentil maximo. `COALESCE(..., 0)` cubre el componente plano
+ * (max = min) y la poblacion de una sola fila: aportan 0, no NaN.
+ */
+const normSql = (column: any) => sql<number>`COALESCE((ln(1 + GREATEST(${column}, 0)) - MIN(ln(1 + GREATEST(${column}, 0))) OVER ()) / NULLIF(MAX(ln(1 + GREATEST(${column}, 0))) OVER () - MIN(ln(1 + GREATEST(${column}, 0))) OVER (), 0), 0)`
 
-// Base del ranking: los usuarios con sus agregados, la regla de visibilidad (R-#259) y
-// el puesto canonico. La comparten el tablero y el puesto del perfil, para que un cambio
-// en las reglas o en el orden no pueda aplicarse a uno y no al otro.
+const NORMALIZED_FIELDS = [
+  normSql(sql`"lb"."guide_score"`).as('n_guide'),
+  normSql(sql`"lb"."referral_count"`).as('n_referral'),
+  normSql(sql`"lb"."donations_usdt"`).as('n_donations'),
+  normSql(sql`"lb"."sbt_count"`).as('n_sbt'),
+  normSql(sql`"lb"."slearn_balance"`).as('n_slearn'),
+  normSql(sql`"lb"."profilescore"`).as('n_profile'),
+]
+
+/**
+ * `platform_score`: suma ponderada (0-100) de los seis componentes normalizados.
+ * Es el criterio principal del ranking. En region tipo 2 omite los componentes ocultos
+ * (`referral_count`, `profilescore`) y renormaliza, para que el orden publicado de esa
+ * fila no dependa de datos que la plataforma no publica.
+ */
+const platformScoreSql = () => sql<number>`ROUND((100 * (CASE WHEN "lb"."tipo_region" = 2
+  THEN (${W_GUIDE} * "lb"."n_guide" + ${W_DONATIONS} * "lb"."n_donations" + ${W_SBT} * "lb"."n_sbt" + ${W_SLEARN} * "lb"."n_slearn") / ${W_VISIBLE_REGION_2}
+  ELSE (${W_GUIDE} * "lb"."n_guide" + ${W_REFERRAL} * "lb"."n_referral" + ${W_DONATIONS} * "lb"."n_donations" + ${W_SBT} * "lb"."n_sbt" + ${W_SLEARN} * "lb"."n_slearn" + ${W_PROFILE} * "lb"."n_profile")
+END))::numeric, 2)`
+
+// ── L1: agregados por usuario ────────────────────────────────────────────
+// Poblacion del tablero (`excluir_leaderboard IS NOT TRUE`), o incluyendo a los
+// excluidos (`includeOptedOut`) para poder publicar su puntaje en guias en el perfil.
+// **Sin filtro de pais**: el filtro se aplica despues de las ventanas, para que el
+// puntaje y el puesto de un estudiante no dependan del filtro del visitante.
 function baseLeaderboardQuery(
   db: Kysely<DB>,
   includeReligion: boolean,
@@ -76,7 +110,7 @@ function baseLeaderboardQuery(
       (join) => join.onRef('ce_counts.usuario_id', '=', 'u.id')
     )
     .leftJoin(
-      // R-#278: los conteos de guias por usuario. Misma regla de visibilidad que
+      // R-#278 §2: los conteos de guias por usuario. Misma regla de visibilidad que
       // `ce_counts` (R-#259): un curso de categoria B solo cuenta si el dueno
       // publica esa categoria.
       (eb) => eb.selectFrom('guide_usuario as gu')
@@ -117,6 +151,7 @@ function baseLeaderboardQuery(
     'u.nusuario as username',
     'p.alfa2 as pais_alfa2',
     'p.nombre as pais_nombre',
+    TIPO_REGION_FIELD,
     'u.profilescore',
     SLEARN_FIELD,
     SCHOLARSHIP_FIELD,
@@ -128,13 +163,12 @@ function baseLeaderboardQuery(
     GUIDE_USDT_FIELD,
     GUIDE_SLEARN_FIELD,
     GUIDE_SCORE_FIELD,
-    includeOptedOut ? CANONICAL_RANK_ANY_FIELD : CANONICAL_RANK_FIELD,
-    sql<number>`COUNT(*) OVER()`.as('total_count'),
   ]
 
-  let groupFields: any[] = [
-    'u.id', 'u.nusuario', 'p.alfa2', 'p.nombre', 'u.profilescore', 'ce_counts.cnt',
-    'gu_counts.approved', 'gu_counts.usdt', 'gu_counts.slearn', 'rr_counts.cnt',
+  const groupFields: any[] = [
+    'u.id', 'u.nusuario', 'p.alfa2', 'p.nombre', 'p.tipo_region', 'u.profilescore',
+    'ce_counts.cnt', 'gu_counts.approved', 'gu_counts.usdt', 'gu_counts.slearn',
+    'rr_counts.cnt',
   ]
 
   if (includeReligion) {
@@ -142,12 +176,10 @@ function baseLeaderboardQuery(
     groupFields.push('r.nombre')
   }
 
-  query = query
-    .select(selectFields)
-    .groupBy(groupFields)
+  query = query.select(selectFields).groupBy(groupFields)
 
-  // El tablero deja fuera a quien se excluyo del ranking; el perfil necesita su puntaje en
-  // guias de todas formas, por eso la opcion.
+  // El tablero deja fuera a quien se excluyo del ranking; el perfil necesita su puntaje
+  // en guias de todas formas, por eso la opcion.
   if (!includeOptedOut) {
     query = query.where('u.excluir_leaderboard', 'is not', true)
   }
@@ -155,65 +187,98 @@ function baseLeaderboardQuery(
   return query
 }
 
+// ── L2: normalizacion de los seis componentes (§10) ──────────────────────
+// Las ventanas se calculan sobre la poblacion completa de L1, antes de cualquier filtro.
+function normalizedLeaderboardQuery(
+  db: Kysely<DB>,
+  includeReligion: boolean,
+  opts: { includeOptedOut?: boolean } = {},
+) {
+  const base: any = baseLeaderboardQuery(db, includeReligion, opts)
+  return db.selectFrom(base.as('lb')).selectAll('lb').select(NORMALIZED_FIELDS)
+}
+
+// ── L3: platform_score y puesto canonico ────────────────────────────────
+// El puesto es la posicion global en el orden canonico
+// (`platform_score DESC, usuario_id ASC`), asi que no depende de la columna por la que
+// el visitante ordene ni del filtro de pais.
+function scoredLeaderboardQuery(
+  db: Kysely<DB>,
+  includeReligion: boolean,
+  opts: { includeOptedOut?: boolean } = {},
+) {
+  const normalized: any = normalizedLeaderboardQuery(db, includeReligion, opts)
+  return db
+    .selectFrom(normalized.as('lb'))
+    .selectAll('lb')
+    .select([
+      platformScoreSql().as('platform_score'),
+      sql<number>`ROW_NUMBER() OVER (ORDER BY ${platformScoreSql()} DESC, "lb"."usuario_id" ASC)`.as('canonical_rank'),
+    ])
+}
+
+// ── L4: la consulta del tablero ─────────────────────────────────────────
 export async function buildLeaderboardQuery(
   db: Kysely<DB>,
   params: LeaderboardQueryParams,
   includeReligion: boolean = false
 ) {
-  const { sortBy = 'guide_score', sortOrder = 'desc', country, page = 1, limit = 50 } = params
+  const { sortBy = 'platform_score', sortOrder = 'desc', country, page = 1, limit = 50 } = params
   const offset = (page - 1) * limit
 
-  let query: any = baseLeaderboardQuery(db, includeReligion)
+  const scored: any = scoredLeaderboardQuery(db, includeReligion)
+
+  let query: any = db
+    .selectFrom(scored.as('lb'))
+    .selectAll('lb')
+    .select(sql<number>`COUNT(*) OVER()`.as('total_count'))
 
   if (country) {
-    query = query.where('p.alfa2', '=', country)
+    query = query.where('pais_alfa2', '=', country)
   }
 
-  if (sortBy === 'guide_score' && sortOrder !== 'asc') {
-    // El orden por defecto de la pagina es el canonico (R-#278): asi los puestos de la
-    // columna Rank se leen 1, 2, 3... y el orden visible coincide con el orden del puesto.
-    query = query
-      .orderBy(sql`guide_score`, 'desc')
-      .orderBy(sql`donations_usdt`, 'desc')
-      .orderBy(sql`COALESCE(u.profilescore, -1)`, 'desc')
-      .orderBy(sql`slearn_balance`, 'desc')
-  } else if (sortBy === 'profilescore') {
+  if (sortBy === 'profilescore') {
     query = query.orderBy(sql`profilescore`, sortOrder === 'asc' ? sql`asc nulls first` : sql`desc nulls last`)
   } else {
-    const orderByField = sortBy === 'slearn_balance' ? sql`slearn_balance` :
-                        sortBy === 'scholarship_usdt' ? sql`scholarship_usdt` :
-                        sortBy === 'ubi_celo' ? sql`ubi_celo` :
-                        sortBy === 'sbt_count' ? sql`sbt_count` :
-                        sortBy === 'guide_approved' ? sql`guide_approved` :
-                        sortBy === 'guide_usdt' ? sql`guide_usdt` :
-                        sortBy === 'guide_slearn' ? sql`guide_slearn` :
-                        sortBy === 'guide_score' ? sql`guide_score` :
-                        sql`donations_usdt`
-    query = query.orderBy(orderByField, sortOrder)
+    // Lista blanca explicita: el nombre recibido no se interpola crudo (la ruta lo valida
+    // con zod, pero la funcion tambien se usa desde los tests).
+    const SORT_FIELDS: Record<string, any> = {
+      platform_score: sql`platform_score`,
+      guide_score: sql`guide_score`,
+      referral_count: sql`referral_count`,
+      guide_approved: sql`guide_approved`,
+      guide_usdt: sql`guide_usdt`,
+      guide_slearn: sql`guide_slearn`,
+      slearn_balance: sql`slearn_balance`,
+      scholarship_usdt: sql`scholarship_usdt`,
+      ubi_celo: sql`ubi_celo`,
+      donations_usdt: sql`donations_usdt`,
+      sbt_count: sql`sbt_count`,
+    }
+    query = query.orderBy(SORT_FIELDS[sortBy] ?? SORT_FIELDS.platform_score, sortOrder)
   }
 
-  // Desempate determinista (R-#278): sin el, el orden entre empates lo decide el
-  // planificador y la paginacion puede repetir o saltar usuarios.
-  query = query.orderBy('u.id', 'asc')
+  // Desempate determinista: sin el, el orden entre empates lo decide el planificador y la
+  // paginacion puede repetir o saltar usuarios.
+  query = query.orderBy(sql`usuario_id`, 'asc')
 
   query = query.limit(limit).offset(offset)
 
   return query
 }
 
-// Puesto canonico y puntaje en guias de un usuario. La base se envuelve para poder filtrar
-// al usuario DESPUES de calcular `ROW_NUMBER()`: si el filtro fuera dentro de la base el
-// puesto seria siempre 1. Asi el perfil usa exactamente el mismo orden y las mismas reglas
-// de visibilidad (R-#259) que el tablero, y el puntaje no se puede calcular de dos formas
-// distintas. Es una sola consulta para las dos cifras.
+// ── Perfil ──────────────────────────────────────────────────────────────
+// Puesto y puntaje de un usuario: la misma consulta del tablero, filtrada al usuario
+// DESPUES de calcular las ventanas (si el filtro fuera dentro, el puesto seria 1).
 export function buildUserLeaderboardStatsQuery(db: Kysely<DB>, userId: number): any {
-  const base: any = baseLeaderboardQuery(db, false, { includeOptedOut: true })
+  const scored: any = scoredLeaderboardQuery(db, false)
 
   return db
-    .selectFrom(base.as('lb'))
+    .selectFrom(scored.as('lb'))
     .select([
       sql<number>`"lb"."canonical_rank"`.as('rank'),
       sql<number>`"lb"."guide_score"`.as('guide_score'),
+      sql<number>`"lb"."platform_score"`.as('platform_score'),
     ])
     .where(sql<boolean>`"lb"."usuario_id" = ${userId}`)
 }
@@ -221,14 +286,30 @@ export function buildUserLeaderboardStatsQuery(db: Kysely<DB>, userId: number): 
 export async function getUserLeaderboardStats(
   db: Kysely<DB>,
   userId: number
-): Promise<{ rank: number | null; guideScore: number }> {
+): Promise<{ rank: number | null; guideScore: number; platformScore: number | null }> {
   const row = await buildUserLeaderboardStatsQuery(db, userId).executeTakeFirst()
   return {
     rank: row?.rank == null ? null : Number(row.rank),
     guideScore: Number(row?.guide_score ?? 0),
+    platformScore: row?.platform_score == null ? null : Number(row.platform_score),
   }
 }
 
+// Puntaje en guias de un usuario que se excluyo del tablero: no tiene puesto (no esta en
+// la poblacion) pero su trabajo si se publica. Es la unica cifra del tablero que no
+// depende de la poblacion, asi que se puede leer sola.
+export async function getUserGuideScore(db: Kysely<DB>, userId: number): Promise<number> {
+  const base: any = baseLeaderboardQuery(db, false, { includeOptedOut: true })
+  const row = await db
+    .selectFrom(base.as('lb'))
+    .select([sql<number>`"lb"."guide_score"`.as('guide_score')])
+    .where(sql<boolean>`"lb"."usuario_id" = ${userId}`)
+    .executeTakeFirst()
+
+  return Number(row?.guide_score ?? 0)
+}
+
+// ── Catalogos y totales ─────────────────────────────────────────────────
 export async function getCountriesQuery(db: Kysely<DB>) {
   return db
     .selectFrom('msip_pais as p')
@@ -305,6 +386,12 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
   }))
 }
 
+// §10.4: en region tipo 2 el tablero y el perfil ocultan el numero de referidos, el
+// puntaje de plataforma y el puntaje de perfil. La fila sigue visible con el resto.
+export function hidesPrivateMetrics(tipoRegion: unknown): boolean {
+  return Number(tipoRegion) === 2
+}
+
 export async function getLeaderboardData(
   db: Kysely<DB>,
   params: LeaderboardQueryParams,
@@ -324,25 +411,29 @@ export async function getLeaderboardData(
   const totals = await getLeaderboardTotals(db, params.country)
 
   return {
-    data: rows.map((row: any) => ({
-      usuario_id: row.usuario_id,
-      username: row.username,
-      pais_alfa2: row.pais_alfa2,
-      pais_nombre: row.pais_nombre,
-      profilescore: row.profilescore != null ? Number(row.profilescore) : null,
-      slearn_balance: Number(row.slearn_balance),
-      scholarship_usdt: Number(row.scholarship_usdt),
-      ubi_celo: Number(row.ubi_celo),
-      donations_usdt: Number(row.donations_usdt),
-      sbt_count: Number(row.sbt_count),
-      referral_count: Number(row.referral_count),
-      guide_approved: Number(row.guide_approved),
-      guide_usdt: Number(row.guide_usdt),
-      guide_slearn: Number(row.guide_slearn),
-      guide_score: Number(row.guide_score),
-      canonical_rank: Number(row.canonical_rank),
-      religion: row.religion_nombre,
-    })),
+    data: rows.map((row: any) => {
+      const hidden = hidesPrivateMetrics(row.tipo_region)
+      return {
+        usuario_id: row.usuario_id,
+        username: row.username,
+        pais_alfa2: row.pais_alfa2,
+        pais_nombre: row.pais_nombre,
+        profilescore: hidden ? null : (row.profilescore != null ? Number(row.profilescore) : null),
+        slearn_balance: Number(row.slearn_balance),
+        scholarship_usdt: Number(row.scholarship_usdt),
+        ubi_celo: Number(row.ubi_celo),
+        donations_usdt: Number(row.donations_usdt),
+        sbt_count: Number(row.sbt_count),
+        referral_count: hidden ? null : Number(row.referral_count),
+        guide_approved: Number(row.guide_approved),
+        guide_usdt: Number(row.guide_usdt),
+        guide_slearn: Number(row.guide_slearn),
+        guide_score: Number(row.guide_score),
+        platform_score: hidden ? null : Number(row.platform_score),
+        canonical_rank: Number(row.canonical_rank),
+        religion: row.religion_nombre,
+      }
+    }),
     totals,
     pagination: {
       page,

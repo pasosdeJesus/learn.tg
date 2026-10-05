@@ -9,15 +9,18 @@ export interface LeaderboardRow {
   ubi_celo: number
   donations_usdt: number
   sbt_count?: number
-  // Referidos (R-#163): total de usuarios que lo nombraron como referidor. Es un conteo y
-  // no forma parte del orden canonico del puesto.
-  referral_count?: number
+  // Referidos (R-#163): total de usuarios que lo nombraron como referidor. `null` cuando
+  // la plataforma lo oculta (region tipo 2, R-#278 §10.4).
+  referral_count?: number | null
   // R-#278: marcos por guía (aprobada, beca USDT, beca SLEARN) y su suma (`guide_score`,
   // la medida principal del ranking).
   guide_approved: number
   guide_usdt: number
   guide_slearn: number
   guide_score: number
+  // R-#278 §10: criterio principal del ranking (suma ponderada de seis componentes
+  // normalizados). `null` cuando la plataforma lo oculta (region tipo 2).
+  platform_score?: number | null
   // Puesto canonico del estudiante (ROW_NUMBER() sobre el orden canonico compartido
   // con el perfil, R-#278). No depende del orden que el visitante elija.
   canonical_rank?: number
@@ -25,7 +28,7 @@ export interface LeaderboardRow {
 }
 
 export interface LeaderboardQueryParams {
-  sortBy?: 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'referral_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'guide_score'
+  sortBy?: 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'referral_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'guide_score' | 'platform_score'
   sortOrder?: 'asc' | 'desc'
   country?: string
   page?: number

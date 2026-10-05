@@ -58,8 +58,6 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     expect(sql).toContain('group by "rr"."referrer_id"')
     expect(sql).toContain('as "rr_counts"')
     expect(sql).toContain('COALESCE(rr_counts.cnt, 0) as "referral_count"')
-    // El puesto se sigue ordenando por guias: los referidos son una columna mas.
-    expect(sql).not.toMatch(/rr_counts\.cnt\)? DESC/)
   })
 
   it('leaves the opted-out users out of the board (R-#278)', async () => {
@@ -68,49 +66,64 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     expect(sql).toContain('"u"."excluir_leaderboard" is not true')
   })
 
-  it('ranks by the canonical order by default (R-#278)', async () => {
+  it('normalizes the six components with min-max over ln(1 + x) (R-#278 §10)', async () => {
     const { sql } = await compiled()
 
-    // Puntaje en Guías, donaciones, puntaje de perfil, SLEARN y `id` como desempate: el mismo
-    // orden con el que se calcula el puesto, para que la pagina se lea 1, 2, 3...
-    expect(sql).toContain(
-      'order by guide_score desc, donations_usdt desc, COALESCE(u.profilescore, -1) desc, slearn_balance desc, "u"."id" asc',
-    )
+    // Un solo criterio de normalizacion para los seis componentes.
+    for (const col of ['guide_score', 'referral_count', 'donations_usdt', 'sbt_count', 'slearn_balance', 'profilescore']) {
+      expect(sql).toContain(`ln(1 + GREATEST("lb"."${col}", 0))`)
+      expect(sql).toContain(`MIN(ln(1 + GREATEST("lb"."${col}", 0))) OVER ()`)
+      expect(sql).toContain(`MAX(ln(1 + GREATEST("lb"."${col}", 0))) OVER ()`)
+    }
+    // Los pesos, y el caso de region tipo 2 que renormaliza sobre los visibles (0.75).
+    expect(sql).toContain('0.35 * "lb"."n_guide"')
+    expect(sql).toContain('0.15 * "lb"."n_referral"')
+    expect(sql).toContain('0.10 * "lb"."n_profile"')
+    expect(sql).toContain('CASE WHEN "lb"."tipo_region" = 2')
+    expect(sql).toContain('/ 0.75')
+    expect(sql).toContain('as "platform_score"')
+  })
+
+  it('leaves the region of the owner in the row, with NULL as region type 1 (R-#278 §10.4)', async () => {
+    const { sql } = await compiled()
+
+    expect(sql).toContain('COALESCE(p.tipo_region, 1) as "tipo_region"')
+  })
+
+  it('ranks by platform_score, tie-broken by the user id (R-#278 §10.3)', async () => {
+    const { sql } = await compiled()
+
+    expect(sql).toContain('order by platform_score desc, usuario_id asc')
   })
 
   it('honors the requested sort field, still broken by user id', async () => {
     const { sql } = await compiled({ sortBy: 'guide_approved' })
 
-    expect(sql).toContain('order by guide_approved desc, "u"."id" asc')
+    expect(sql).toContain('order by guide_approved desc, usuario_id asc')
   })
 
-  it('exposes the canonical position as a window function (R-#278)', async () => {
+  it('exposes the canonical position as a window function (R-#278 §10.3)', async () => {
     const { sql } = await compiled()
 
     expect(sql).toContain('ROW_NUMBER() OVER (ORDER BY')
     expect(sql).toContain('as "canonical_rank"')
-    // El orden del puesto es el canonico, no el que pidio el visitante.
-    expect(sql).toContain(
-      `ROW_NUMBER() OVER (ORDER BY (COALESCE(gu_counts.approved, 0) + COALESCE(gu_counts.usdt, 0) + COALESCE(gu_counts.slearn, 0)) DESC`,
-    )
-    expect(sql).toMatch(/COALESCE\(u\.profilescore, -1\) DESC, COALESCE\(ROUND\(SUM\(CASE WHEN t\.crypto = 'slearn'/)
-    expect(sql).toContain('u.id ASC) as "canonical_rank"')
+    // El puesto ordena por el puntaje de plataforma (el mismo que la columna), y el `id`
+    // es el unico desempate.
+    expect(sql).toContain('ASC) as "canonical_rank"')
+    expect(sql).toContain('DESC, "lb"."usuario_id" ASC) as "canonical_rank"')
   })
 
-  it('computes the rank and the guide score of one user from the same query (R-#278)', async () => {
+  it('computes the rank, the guide score and the platform score of one user (R-#278 §10)', async () => {
     const sql = (buildUserLeaderboardStatsQuery(makeDb(), 631) as any).compile().sql as string
 
-    // La base se envuelve y el usuario se filtra DESPUES de calcular el puesto: por eso
-    // el parametro del usuario es el septimo ($1..$6 los consumen los predicados de
-    // visibilidad de la base) y no el primero.
+    // El usuario se filtra DESPUES de las ventanas: si el filtro fuera dentro, su puesto
+    // seria 1. Por eso el parametro del usuario es el septimo ($1..$6 los consumen los
+    // predicados de visibilidad de la base).
     expect(sql).toContain('as "lb"')
     expect(sql).toContain('where "lb"."usuario_id" = $7')
-    expect(sql).toContain('select "lb"."canonical_rank" as "rank", "lb"."guide_score" as "guide_score"')
-    expect(sql).toContain('ROW_NUMBER() OVER (PARTITION BY (u.excluir_leaderboard IS NOT TRUE) ORDER BY')
-    expect(sql).toContain('u.id ASC) as "canonical_rank"')
-    // El perfil publica el puntaje en guias tambien de quien se excluyo del tablero: el
-    // filtro de exclusion no puede estar en la base de esta consulta (si lo estuviera, su
-    // puntaje seria 0). El tablero si lo lleva.
-    expect(sql).not.toContain('"u"."excluir_leaderboard" is not true')
+    expect(sql).toContain('"lb"."canonical_rank" as "rank", "lb"."guide_score" as "guide_score", "lb"."platform_score" as "platform_score"')
+    // La poblacion del perfil es la del tablero: la misma consulta, sin el filtro de pais.
+    expect(sql).toContain('"u"."excluir_leaderboard" is not true')
+    expect(sql).not.toContain('limit')
   })
 })
