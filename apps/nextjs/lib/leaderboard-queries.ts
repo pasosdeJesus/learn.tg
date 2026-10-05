@@ -15,8 +15,9 @@ const SBT_FIELD = sql<number>`COALESCE(ce_counts.cnt, 0)`.as('sbt_count')
 const REFERRAL_COUNT_FIELD = sql<number>`COALESCE(rr_counts.cnt, 0)`.as('referral_count')
 // R-#278 §2: los marcos que la pagina del curso dibuja frente a cada guia (chulo, beca
 // USDT, beca SLEARN), contados por usuario. `guide_score` es su suma. Mismo criterio que
-// `/api/guide-status` (`points > 0`, `amountpaid > 0`, y una transaccion
-// `scholarship`/`slearn` con `metadata->>'guideId'` = actividadpf_id).
+// `/api/guide-status` (`points > 0` y una transaccion `scholarship` con el `crypto` del
+// token y `metadata->>'guideId'` = actividadpf_id). Desde R-#279 el marco de USDT se
+// decide por la transaccion, no por `amountpaid` (esa columna mezcla USDT y SLEARN).
 const GUIDE_APPROVED_FIELD = sql<number>`COALESCE(gu_counts.approved, 0)`.as('guide_approved')
 const GUIDE_USDT_FIELD = sql<number>`COALESCE(gu_counts.usdt, 0)`.as('guide_usdt')
 const GUIDE_SLEARN_FIELD = sql<number>`COALESCE(gu_counts.slearn, 0)`.as('guide_slearn')
@@ -114,7 +115,7 @@ function baseLeaderboardQuery(
         .select([
           'gu.usuario_id',
           sql<number>`COUNT(DISTINCT gu.actividadpf_id) FILTER (WHERE gu.points > 0)`.as('approved'),
-          sql<number>`COUNT(DISTINCT gu.actividadpf_id) FILTER (WHERE gu.amountpaid > 0)`.as('usdt'),
+          sql<number>`COUNT(DISTINCT gu.actividadpf_id) FILTER (WHERE EXISTS (SELECT 1 FROM transaction t2 WHERE t2.usuario_id = gu.usuario_id AND t2.type = 'scholarship' AND t2.crypto = 'usdt' AND t2.metadata->>'guideId' = gu.actividadpf_id::text))`.as('usdt'),
           sql<number>`COUNT(DISTINCT gu.actividadpf_id) FILTER (WHERE EXISTS (SELECT 1 FROM transaction t2 WHERE t2.usuario_id = gu.usuario_id AND t2.type = 'scholarship' AND t2.crypto = 'slearn' AND t2.metadata->>'guideId' = gu.actividadpf_id::text))`.as('slearn'),
         ])
         .where('u2.mostrar_cursos_publico', '=', true)

@@ -105,9 +105,7 @@ export async function scholarshipStatus(deps: RewardsDeps, req: NextRequest) {
         const result: any = await sql`
           SELECT 
             COUNT(a.id) as total_guides,
-            COUNT(CASE WHEN gu.points > 0 THEN 1 END) as completed_guides,
-            COUNT(CASE WHEN gu.amountpaid > 0 THEN 1 END) as paid_guides,
-            SUM(gu.amountpaid) as total_amount_paid
+            COUNT(CASE WHEN gu.points > 0 THEN 1 END) as completed_guides
           FROM cor1440_gen_actividadpf AS a
           LEFT JOIN guide_usuario AS gu ON a.id = gu.actividadpf_id 
           AND gu.usuario_id = ${billeteraUsuario.usuario_id}
@@ -118,18 +116,9 @@ export async function scholarshipStatus(deps: RewardsDeps, req: NextRequest) {
         if (result.rows.length > 0) {
           totalGuides = Number(result.rows[0].total_guides || 0)
           completedGuides = Number(result.rows[0].completed_guides || 0)
-          paidGuides = Number(result.rows[0].paid_guides || 0)
-          if (totalGuides > 0) {
-            percentageCompleted = (completedGuides * 100.0) / totalGuides
-            percentagePaid = (paidGuides * 100.0) / totalGuides
-          } else {
-            percentageCompleted = 0
-            percentagePaid = 0
-          }
-          const totalAmountPaid = result.rows[0].total_amount_paid
-          if (totalAmountPaid) {
-            amountScholarship = +formatUnits(BigInt(totalAmountPaid), usdtDecimals)
-          }
+          percentageCompleted = totalGuides > 0
+            ? (completedGuides * 100.0) / totalGuides
+            : 0
         }
 
         // Query SLEARN scholarship total from transaction table
@@ -149,17 +138,23 @@ export async function scholarshipStatus(deps: RewardsDeps, req: NextRequest) {
           console.error('Error fetching SLEARN scholarship total:', e)
         }
 
-        // Count guides with USDT and SLEARN payments separately from transaction table
+        // R-#279: "guias pagadas en USDT" y el monto salen de `transaction`
+        // (crypto = 'usdt'), no de `guide_usuario.amountpaid` (esa columna mezcla el monto
+        // de USDT y el de SLEARN, asi que un pago solo-SLEARN la dejaba > 0).
         try {
-          const usdtCount: any = await db
+          const usdtAgg: any = await db
             .selectFrom('transaction')
-            .select(db.fn.countAll<number>().as('count'))
+            .select([
+              db.fn.countAll<number>().as('count'),
+              db.fn.sum('amount').as('total'),
+            ])
             .where('usuario_id', '=', billeteraUsuario.usuario_id)
             .where('crypto', '=', 'usdt')
             .where('type', '=', 'scholarship')
             .where(sql`metadata->>'courseId'`, '=', String(courseIdNumber))
             .executeTakeFirst()
-          paidGuidesUSDT = usdtCount?.count || 0
+          paidGuidesUSDT = Number(usdtAgg?.count || 0)
+          amountScholarship = Number(usdtAgg?.total || 0)
 
           const slearnCount: any = await db
             .selectFrom('transaction')
@@ -170,6 +165,11 @@ export async function scholarshipStatus(deps: RewardsDeps, req: NextRequest) {
             .where(sql`metadata->>'courseId'`, '=', String(courseIdNumber))
             .executeTakeFirst()
           paidGuidesSLEARN = slearnCount?.count || 0
+
+          // R-#279: el total de guias con beca pagada del curso y su porcentaje se basan
+          // en las guias con beca USDT real.
+          paidGuides = paidGuidesUSDT
+          percentagePaid = totalGuides > 0 ? (paidGuides * 100.0) / totalGuides : 0
         } catch (e) {
           console.error('Error fetching paid guide counts:', e)
         }

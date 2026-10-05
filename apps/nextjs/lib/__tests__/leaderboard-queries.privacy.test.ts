@@ -48,9 +48,11 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     const { sql } = await compiled()
 
     expect(sql).toContain('COUNT(DISTINCT gu.actividadpf_id) FILTER (WHERE gu.points > 0) as "approved"')
-    expect(sql).toContain('COUNT(DISTINCT gu.actividadpf_id) FILTER (WHERE gu.amountpaid > 0) as "usdt"')
+    // R-#279: USDT y SLEARN se deciden por la transaccion, no por `amountpaid`.
+    expect(sql).toMatch(/t2\.type = 'scholarship' AND t2\.crypto = 'usdt'/)
     expect(sql).toMatch(/t2\.type = 'scholarship' AND t2\.crypto = 'slearn'/)
     expect(sql).toMatch(/t2\.metadata->>'guideId' = gu\.actividadpf_id::text/)
+    expect(sql).not.toContain('gu.amountpaid > 0')
     expect(sql).toContain(
       '(COALESCE(gu_counts.approved, 0) + COALESCE(gu_counts.usdt, 0) + COALESCE(gu_counts.slearn, 0)) as "guide_score"',
     )
