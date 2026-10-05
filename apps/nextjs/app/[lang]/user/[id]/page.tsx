@@ -14,6 +14,9 @@ interface ProfileData {
   id: number
   name: string
   guide_score: number
+  platform_score: number | null
+  referral_count: number
+  profilescore: number | null
   memberSince: string
   wallets: { address: string; addedAt: string }[]
   credentials: {
@@ -51,6 +54,7 @@ export default function PublicProfilePage({ params }: PageProps) {
       memberSince: 'Member since',
       learningScore: 'Learning Score',
       guideScore: 'Guide Score',
+      platformScore: 'Platform Score',
       referrals: 'Referrals',
       profileScore: 'Profile Score',
       wallets: 'Wallets',
@@ -78,6 +82,7 @@ export default function PublicProfilePage({ params }: PageProps) {
       notFound: 'Usuario no encontrado',
       memberSince: 'Miembro desde',
       guideScore: 'Puntaje en Guías',
+      platformScore: 'Puntaje de Plataforma',
       referrals: 'Referidos',
       profileScore: 'Puntaje de Perfil',
       wallets: 'Billeteras',
@@ -189,12 +194,25 @@ export default function PublicProfilePage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Scores. El puntaje de plataforma, el de perfil y los referidos no se publican por
-          fila: solo en agregados (R-#278 §4.1) */}
+      {/* Scores */}
       <div className="grid grid-cols-2 gap-4 mb-8">
+        {profile.platform_score != null && (
+          <div className="bg-white rounded-xl border p-4 text-center">
+            <p className="text-2xl font-bold text-amber-600">{profile.platform_score}</p>
+            <p className="text-xs text-gray-500 mt-1">{t('platformScore')}</p>
+          </div>
+        )}
         <div className="bg-white rounded-xl border p-4 text-center">
           <p className="text-2xl font-bold text-emerald-600">{profile.guide_score ?? 0}</p>
           <p className="text-xs text-gray-500 mt-1">{t('guideScore')}</p>
+        </div>
+        <div className="bg-white rounded-xl border p-4 text-center">
+          <p className="text-2xl font-bold text-purple-600">{profile.profilescore ?? '—'}</p>
+          <p className="text-xs text-gray-500 mt-1">{t('profileScore')}</p>
+        </div>
+        <div className="bg-white rounded-xl border p-4 text-center">
+          <p className="text-2xl font-bold text-sky-600">{profile.referral_count ?? '—'}</p>
+          <p className="text-xs text-gray-500 mt-1">{t('referrals')}</p>
         </div>
         {profile.leaderboardRank && (
           <div className="bg-white rounded-xl border p-4 text-center">

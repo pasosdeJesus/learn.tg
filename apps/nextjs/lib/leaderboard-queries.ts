@@ -39,9 +39,6 @@ const W_DONATIONS = sql.raw('0.15')
 const W_SBT = sql.raw('0.15')
 const W_SLEARN = sql.raw('0.10')
 const W_PROFILE = sql.raw('0.10')
-// Peso disponible cuando el dueño esta en region tipo 2: su puntaje omite
-// `referral_count` y `profilescore`, que estan ocultos, y renormaliza para seguir en 0-100.
-const W_VISIBLE_REGION_2 = sql.raw('0.75')
 
 /**
  * Normaliza un componente a 0..1 con min-max sobre `ln(1 + x)`.
@@ -67,14 +64,11 @@ const NORMALIZED_FIELDS = [
 
 /**
  * `platform_score`: suma ponderada (0-100) de los seis componentes normalizados.
- * Es el criterio principal del ranking. En region tipo 2 omite los componentes ocultos
- * (`referral_count`, `profilescore`) y renormaliza, para que el orden publicado de esa
- * fila no dependa de datos que la plataforma no publica.
+ * Es el criterio principal del ranking y se publica por fila. La poblacion del tablero
+ * deja fuera la region tipo 2 (ver `baseLeaderboardQuery`), asi que la misma formula vale
+ * para todas las filas publicadas.
  */
-const platformScoreSql = () => sql<number>`ROUND((100 * (CASE WHEN "lb"."tipo_region" = 2
-  THEN (${W_GUIDE} * "lb"."n_guide" + ${W_DONATIONS} * "lb"."n_donations" + ${W_SBT} * "lb"."n_sbt" + ${W_SLEARN} * "lb"."n_slearn") / ${W_VISIBLE_REGION_2}
-  ELSE (${W_GUIDE} * "lb"."n_guide" + ${W_REFERRAL} * "lb"."n_referral" + ${W_DONATIONS} * "lb"."n_donations" + ${W_SBT} * "lb"."n_sbt" + ${W_SLEARN} * "lb"."n_slearn" + ${W_PROFILE} * "lb"."n_profile")
-END))::numeric, 2)`
+const platformScoreSql = () => sql<number>`ROUND((100 * (${W_GUIDE} * "lb"."n_guide" + ${W_REFERRAL} * "lb"."n_referral" + ${W_DONATIONS} * "lb"."n_donations" + ${W_SBT} * "lb"."n_sbt" + ${W_SLEARN} * "lb"."n_slearn" + ${W_PROFILE} * "lb"."n_profile"))::numeric, 2)`
 
 // ── L1: agregados por usuario ────────────────────────────────────────────
 // Poblacion del tablero (`excluir_leaderboard IS NOT TRUE`), o incluyendo a los
@@ -84,7 +78,7 @@ END))::numeric, 2)`
 function baseLeaderboardQuery(
   db: Kysely<DB>,
   includeReligion: boolean,
-  { includeOptedOut = false }: { includeOptedOut?: boolean } = {},
+  { includeOptedOut = false, includeRestrictedRegions = false }: { includeOptedOut?: boolean; includeRestrictedRegions?: boolean } = {},
 ) {
   let query: any = db
     .selectFrom('usuario as u')
@@ -184,6 +178,13 @@ function baseLeaderboardQuery(
     query = query.where('u.excluir_leaderboard', 'is not', true)
   }
 
+  // El ranking es solo de region tipo 1 (R-#278 §4): la region tipo 2 (la del pais del
+  // dueño; sin clasificar = tipo 1) no aparece en el tablero. `getUserGuideScore` la
+  // incluye: el puntaje en guias de un estudiante es suyo, no del ranking.
+  if (!includeRestrictedRegions) {
+    query = query.where(sql<boolean>`COALESCE(p.tipo_region, 1) <> 2`)
+  }
+
   return query
 }
 
@@ -192,7 +193,7 @@ function baseLeaderboardQuery(
 function normalizedLeaderboardQuery(
   db: Kysely<DB>,
   includeReligion: boolean,
-  opts: { includeOptedOut?: boolean } = {},
+  opts: { includeOptedOut?: boolean; includeRestrictedRegions?: boolean } = {},
 ) {
   const base: any = baseLeaderboardQuery(db, includeReligion, opts)
   return db.selectFrom(base.as('lb')).selectAll('lb').select(NORMALIZED_FIELDS)
@@ -205,7 +206,7 @@ function normalizedLeaderboardQuery(
 function scoredLeaderboardQuery(
   db: Kysely<DB>,
   includeReligion: boolean,
-  opts: { includeOptedOut?: boolean } = {},
+  opts: { includeOptedOut?: boolean; includeRestrictedRegions?: boolean } = {},
 ) {
   const normalized: any = normalizedLeaderboardQuery(db, includeReligion, opts)
   return db
@@ -238,15 +239,15 @@ export async function buildLeaderboardQuery(
   }
 
   // Lista blanca explicita: el nombre recibido no se interpola crudo (la ruta lo valida
-  // con zod, pero la funcion tambien se usa desde los tests). `profilescore` y
-  // `referral_count` no estan: no se publican por fila (§4.1), asi que tampoco se ordena
-  // por ellos (el orden los revelaria).
+  // con zod, pero la funcion tambien se usa desde los tests).
   const SORT_FIELDS: Record<string, any> = {
     platform_score: sql`platform_score`,
     guide_score: sql`guide_score`,
     guide_approved: sql`guide_approved`,
     guide_usdt: sql`guide_usdt`,
     guide_slearn: sql`guide_slearn`,
+    profilescore: sql`profilescore`,
+    referral_count: sql`referral_count`,
     slearn_balance: sql`slearn_balance`,
     scholarship_usdt: sql`scholarship_usdt`,
     ubi_celo: sql`ubi_celo`,
@@ -265,9 +266,9 @@ export async function buildLeaderboardQuery(
 }
 
 // ── Perfil ──────────────────────────────────────────────────────────────
-// Puesto y puntaje en guias de un usuario: la misma consulta del tablero, filtrada al
-// usuario DESPUES de calcular las ventanas (si el filtro fuera dentro, el puesto seria 1).
-// El `platform_score` no se devuelve: solo ordena (R-#278 §4.1).
+// Puesto, puntaje en guias y puntaje de plataforma de un usuario: la misma consulta del
+// tablero, filtrada al usuario DESPUES de calcular las ventanas (si el filtro fuera dentro,
+// el puesto seria 1). Un usuario de region tipo 2 no tiene fila: no esta en la poblacion.
 export function buildUserLeaderboardStatsQuery(db: Kysely<DB>, userId: number): any {
   const scored: any = scoredLeaderboardQuery(db, false)
 
@@ -276,6 +277,7 @@ export function buildUserLeaderboardStatsQuery(db: Kysely<DB>, userId: number): 
     .select([
       sql<number>`"lb"."canonical_rank"`.as('rank'),
       sql<number>`"lb"."guide_score"`.as('guide_score'),
+      sql<number>`"lb"."platform_score"`.as('platform_score'),
     ])
     .where(sql<boolean>`"lb"."usuario_id" = ${userId}`)
 }
@@ -283,19 +285,20 @@ export function buildUserLeaderboardStatsQuery(db: Kysely<DB>, userId: number): 
 export async function getUserLeaderboardStats(
   db: Kysely<DB>,
   userId: number
-): Promise<{ rank: number | null; guideScore: number }> {
+): Promise<{ rank: number | null; guideScore: number; platformScore: number | null }> {
   const row = await buildUserLeaderboardStatsQuery(db, userId).executeTakeFirst()
   return {
     rank: row?.rank == null ? null : Number(row.rank),
     guideScore: Number(row?.guide_score ?? 0),
+    platformScore: row?.platform_score == null ? null : Number(row.platform_score),
   }
 }
 
-// Puntaje en guias de un usuario que se excluyo del tablero: no tiene puesto (no esta en
-// la poblacion) pero su trabajo si se publica. Es la unica cifra del tablero que no
+// Puntaje en guias de un usuario que no esta en el tablero (se excluyo o es de region tipo
+// 2): no tiene puesto, pero su trabajo si se publica. Es la unica cifra del tablero que no
 // depende de la poblacion, asi que se puede leer sola.
 export async function getUserGuideScore(db: Kysely<DB>, userId: number): Promise<number> {
-  const base: any = baseLeaderboardQuery(db, false, { includeOptedOut: true })
+  const base: any = baseLeaderboardQuery(db, false, { includeOptedOut: true, includeRestrictedRegions: true })
   const row = await db
     .selectFrom(base.as('lb'))
     .select([sql<number>`"lb"."guide_score"`.as('guide_score')])
@@ -337,8 +340,8 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
       SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
       UBI_WHERE.as('totalUBICELO'),
       DONATIONS_WHERE.as('totalDonationsUSDT'),
-      // Referidos (R-#163): el total de la plataforma (o del pais filtrado) es el unico
-      // lugar donde el numero se publica; por fila ya no sale (R-#278 §4.1).
+      // Referidos (R-#163): el total de la plataforma (o del pais filtrado). La columna por
+      // fila tambien se publica (R-#278 §2).
       sql<number>`(SELECT COUNT(*) FROM referralrelationship rr
         INNER JOIN usuario ur ON ur.id = rr.referrer_id
         LEFT JOIN msip_pais up ON up.id = ur.pais_id
@@ -413,15 +416,18 @@ export async function getLeaderboardData(
         username: row.username,
         pais_alfa2: row.pais_alfa2,
         pais_nombre: row.pais_nombre,
+        profilescore: row.profilescore != null ? Number(row.profilescore) : null,
         slearn_balance: Number(row.slearn_balance),
         scholarship_usdt: Number(row.scholarship_usdt),
         ubi_celo: Number(row.ubi_celo),
         donations_usdt: Number(row.donations_usdt),
         sbt_count: Number(row.sbt_count),
+        referral_count: Number(row.referral_count),
         guide_approved: Number(row.guide_approved),
         guide_usdt: Number(row.guide_usdt),
         guide_slearn: Number(row.guide_slearn),
         guide_score: Number(row.guide_score),
+        platform_score: Number(row.platform_score),
         canonical_rank: Number(row.canonical_rank),
         religion: row.religion_nombre,
       })),

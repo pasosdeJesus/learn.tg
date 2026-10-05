@@ -75,13 +75,26 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
       expect(sql).toContain(`MIN(ln(1 + GREATEST("lb"."${col}", 0))) OVER ()`)
       expect(sql).toContain(`MAX(ln(1 + GREATEST("lb"."${col}", 0))) OVER ()`)
     }
-    // Los pesos, y el caso de region tipo 2 que renormaliza sobre los visibles (0.75).
-    expect(sql).toContain('0.35 * "lb"."n_guide"')
-    expect(sql).toContain('0.15 * "lb"."n_referral"')
-    expect(sql).toContain('0.10 * "lb"."n_profile"')
-    expect(sql).toContain('CASE WHEN "lb"."tipo_region" = 2')
-    expect(sql).toContain('/ 0.75')
+    // La suma ponderada de los seis componentes (la misma para toda la poblacion: la
+    // region tipo 2 no entra).
+    for (const term of [
+      '0.35 * "lb"."n_guide"',
+      '0.15 * "lb"."n_referral"',
+      '0.15 * "lb"."n_donations"',
+      '0.15 * "lb"."n_sbt"',
+      '0.10 * "lb"."n_slearn"',
+      '0.10 * "lb"."n_profile"',
+    ]) {
+      expect(sql).toContain(term)
+    }
+    expect(sql).not.toContain('CASE WHEN "lb"."tipo_region"')
     expect(sql).toContain('as "platform_score"')
+  })
+
+  it('keeps only region type 1 in the board population (R-#278 §4)', async () => {
+    const { sql } = await compiled()
+
+    expect(sql).toContain('COALESCE(p.tipo_region, 1) <> 2')
   })
 
   it('leaves the region of the owner in the row, with NULL as region type 1 (R-#278 §4)', async () => {
@@ -113,16 +126,21 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     expect(sql).toContain('DESC, "lb"."usuario_id" ASC) as "canonical_rank"')
   })
 
-  it('computes the rank and the guide score of one user, without publishing the score (R-#278 §4.1)', async () => {
+  it('lets the visitor sort by the referral count too (R-#163)', async () => {
+    const { sql } = await compiled({ sortBy: 'referral_count' })
+
+    expect(sql).toContain('order by referral_count desc, usuario_id asc')
+  })
+
+  it('computes the rank, the guide score and the platform score of one user (R-#278 §4)', async () => {
     const sql = (buildUserLeaderboardStatsQuery(makeDb(), 631) as any).compile().sql as string
 
     expect(sql).toContain('as "lb"')
     expect(sql).toContain('where "lb"."usuario_id" = $7')
-    expect(sql).toContain('"lb"."canonical_rank" as "rank", "lb"."guide_score" as "guide_score"')
-    // El puntaje de plataforma ordena, pero no se devuelve.
-    expect(sql).not.toContain('"lb"."platform_score" as')
+    expect(sql).toContain('"lb"."canonical_rank" as "rank", "lb"."guide_score" as "guide_score", "lb"."platform_score" as "platform_score"')
     expect(sql).toContain('ROW_NUMBER() OVER (ORDER BY')
     expect(sql).toContain('"u"."excluir_leaderboard" is not true')
+    expect(sql).toContain('COALESCE(p.tipo_region, 1) <> 2')
     expect(sql).not.toContain('limit')
   })
 })

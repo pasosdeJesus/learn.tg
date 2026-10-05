@@ -35,7 +35,8 @@ const EXPECTED_SPANISH = {
     guidesApproved: 'Aprobadas',
     guidesUsdt: 'Pagadas USDT',
     guidesSlearn: 'Pagadas SLEARN',
-    // R-#163: referidos (solo agregado, R-#278 §4.1)
+    platformScore: 'Puntaje de Plataforma',
+    // R-#163: columna de referidos por fila (R-#278 §4)
     referrals: 'Referidos'
   },
   explanations: {
@@ -65,7 +66,8 @@ const EXPECTED_ENGLISH = {
     guidesApproved: 'Approved',
     guidesUsdt: 'Paid USDT',
     guidesSlearn: 'Paid SLEARN',
-    // R-#163: referrals (aggregate only, R-#278 §4.1)
+    platformScore: 'Platform Score',
+    // R-#163: referrals column per row (R-#278 §4)
     referrals: 'Referrals'
   },
   explanations: {
@@ -199,6 +201,14 @@ async function testLeaderboardAPI(lang) {
       const hasGuideCounts =
         !!first && GUIDE_FIELDS.every((field) => typeof first[field] === 'number');
       const sumsOk = !!first && first.guide_score === first.guide_approved + first.guide_usdt + first.guide_slearn;
+      // R-#278 §4: el puntaje de plataforma, el de perfil y los referidos se publican por fila
+      // (la poblacion del tablero deja fuera la region tipo 2).
+      const ROW_FIELDS = ['platform_score', 'profilescore', 'referral_count'];
+      const hasRowFields = !!first && ROW_FIELDS.every((field) => first[field] !== undefined);
+      console.log(`   • Puntaje de plataforma, de perfil y referidos (R-#278 §4): ${hasRowFields ? '✅' : '❌'}`);
+      if (data.data?.length && !hasRowFields) {
+        return { success: false, error: 'faltan platform_score, profilescore o referral_count' };
+      }
       console.log(`   • Conteos por guía (R-#278): ${hasGuideCounts ? '✅' : '❌'}`);
       if (data.data?.length && hasGuideCounts) {
         console.log(
