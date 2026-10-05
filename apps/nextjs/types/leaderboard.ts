@@ -3,32 +3,25 @@ export interface LeaderboardRow {
   username: string
   pais_alfa2: string | null
   pais_nombre: string | null
-  profilescore: number | null
   slearn_balance: number
   scholarship_usdt: number
   ubi_celo: number
   donations_usdt: number
   sbt_count?: number
-  // Referidos (R-#163): total de usuarios que lo nombraron como referidor. `null` cuando
-  // la plataforma lo oculta (region tipo 2, R-#278 §10.4).
-  referral_count?: number | null
-  // R-#278: marcos por guía (aprobada, beca USDT, beca SLEARN) y su suma (`guide_score`,
-  // la medida principal del ranking).
+  // R-#278: marcos por guía (aprobada, beca USDT, beca SLEARN) y su suma (`guide_score`),
+  // uno de los componentes del ranking (§4).
   guide_approved: number
   guide_usdt: number
   guide_slearn: number
   guide_score: number
-  // R-#278 §10: criterio principal del ranking (suma ponderada de seis componentes
-  // normalizados). `null` cuando la plataforma lo oculta (region tipo 2).
-  platform_score?: number | null
   // Puesto canonico del estudiante (ROW_NUMBER() sobre el orden canonico compartido
-  // con el perfil, R-#278). No depende del orden que el visitante elija.
+  // con el perfil, R-#278 §4). No depende del orden que el visitante elija.
   canonical_rank?: number
   religion?: string | null
 }
 
 export interface LeaderboardQueryParams {
-  sortBy?: 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'referral_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'guide_score' | 'platform_score'
+  sortBy?: 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'guide_score' | 'platform_score'
   sortOrder?: 'asc' | 'desc'
   country?: string
   page?: number
@@ -45,6 +38,8 @@ export interface LeaderboardResponse {
     totalScholarshipUSDT: number
     totalUBICELO: number
     totalDonationsUSDT: number
+    // Referidos (R-#163): el único lugar público donde se publica el número (§4.1).
+    totalReferrals: number
   }
   pagination: {
     page: number

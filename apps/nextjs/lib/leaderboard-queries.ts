@@ -29,7 +29,7 @@ const SLEARN_USER_COUNT = sql<number>`COUNT(DISTINCT CASE WHEN t.crypto = 'slear
 // se trata como region tipo 1: no se oculta nada.
 const TIPO_REGION_FIELD = sql<number>`COALESCE(p.tipo_region, 1)`.as('tipo_region')
 
-// ── platform_score (§10) ────────────────────────────────────────────────
+// ── platform_score (§4) ────────────────────────────────────────────────
 // Pesos de los seis componentes. Se interpolan como texto (`sql.raw`) para no
 // introducir parametros en la lista de seleccion: eso desplazaria los `$1..$N` de los
 // joins y romperia las aserciones sobre el SQL generado.
@@ -187,7 +187,7 @@ function baseLeaderboardQuery(
   return query
 }
 
-// ── L2: normalizacion de los seis componentes (§10) ──────────────────────
+// ── L2: normalizacion de los seis componentes (§4) ──────────────────────
 // Las ventanas se calculan sobre la poblacion completa de L1, antes de cualquier filtro.
 function normalizedLeaderboardQuery(
   db: Kysely<DB>,
@@ -237,26 +237,23 @@ export async function buildLeaderboardQuery(
     query = query.where('pais_alfa2', '=', country)
   }
 
-  if (sortBy === 'profilescore') {
-    query = query.orderBy(sql`profilescore`, sortOrder === 'asc' ? sql`asc nulls first` : sql`desc nulls last`)
-  } else {
-    // Lista blanca explicita: el nombre recibido no se interpola crudo (la ruta lo valida
-    // con zod, pero la funcion tambien se usa desde los tests).
-    const SORT_FIELDS: Record<string, any> = {
-      platform_score: sql`platform_score`,
-      guide_score: sql`guide_score`,
-      referral_count: sql`referral_count`,
-      guide_approved: sql`guide_approved`,
-      guide_usdt: sql`guide_usdt`,
-      guide_slearn: sql`guide_slearn`,
-      slearn_balance: sql`slearn_balance`,
-      scholarship_usdt: sql`scholarship_usdt`,
-      ubi_celo: sql`ubi_celo`,
-      donations_usdt: sql`donations_usdt`,
-      sbt_count: sql`sbt_count`,
-    }
-    query = query.orderBy(SORT_FIELDS[sortBy] ?? SORT_FIELDS.platform_score, sortOrder)
+  // Lista blanca explicita: el nombre recibido no se interpola crudo (la ruta lo valida
+  // con zod, pero la funcion tambien se usa desde los tests). `profilescore` y
+  // `referral_count` no estan: no se publican por fila (§4.1), asi que tampoco se ordena
+  // por ellos (el orden los revelaria).
+  const SORT_FIELDS: Record<string, any> = {
+    platform_score: sql`platform_score`,
+    guide_score: sql`guide_score`,
+    guide_approved: sql`guide_approved`,
+    guide_usdt: sql`guide_usdt`,
+    guide_slearn: sql`guide_slearn`,
+    slearn_balance: sql`slearn_balance`,
+    scholarship_usdt: sql`scholarship_usdt`,
+    ubi_celo: sql`ubi_celo`,
+    donations_usdt: sql`donations_usdt`,
+    sbt_count: sql`sbt_count`,
   }
+  query = query.orderBy(SORT_FIELDS[sortBy] ?? SORT_FIELDS.platform_score, sortOrder)
 
   // Desempate determinista: sin el, el orden entre empates lo decide el planificador y la
   // paginacion puede repetir o saltar usuarios.
@@ -268,8 +265,9 @@ export async function buildLeaderboardQuery(
 }
 
 // ── Perfil ──────────────────────────────────────────────────────────────
-// Puesto y puntaje de un usuario: la misma consulta del tablero, filtrada al usuario
-// DESPUES de calcular las ventanas (si el filtro fuera dentro, el puesto seria 1).
+// Puesto y puntaje en guias de un usuario: la misma consulta del tablero, filtrada al
+// usuario DESPUES de calcular las ventanas (si el filtro fuera dentro, el puesto seria 1).
+// El `platform_score` no se devuelve: solo ordena (R-#278 §4.1).
 export function buildUserLeaderboardStatsQuery(db: Kysely<DB>, userId: number): any {
   const scored: any = scoredLeaderboardQuery(db, false)
 
@@ -278,7 +276,6 @@ export function buildUserLeaderboardStatsQuery(db: Kysely<DB>, userId: number): 
     .select([
       sql<number>`"lb"."canonical_rank"`.as('rank'),
       sql<number>`"lb"."guide_score"`.as('guide_score'),
-      sql<number>`"lb"."platform_score"`.as('platform_score'),
     ])
     .where(sql<boolean>`"lb"."usuario_id" = ${userId}`)
 }
@@ -286,12 +283,11 @@ export function buildUserLeaderboardStatsQuery(db: Kysely<DB>, userId: number): 
 export async function getUserLeaderboardStats(
   db: Kysely<DB>,
   userId: number
-): Promise<{ rank: number | null; guideScore: number; platformScore: number | null }> {
+): Promise<{ rank: number | null; guideScore: number }> {
   const row = await buildUserLeaderboardStatsQuery(db, userId).executeTakeFirst()
   return {
     rank: row?.rank == null ? null : Number(row.rank),
     guideScore: Number(row?.guide_score ?? 0),
-    platformScore: row?.platform_score == null ? null : Number(row.platform_score),
   }
 }
 
@@ -341,6 +337,12 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
       SCHOLARSHIP_WHERE.as('totalScholarshipUSDT'),
       UBI_WHERE.as('totalUBICELO'),
       DONATIONS_WHERE.as('totalDonationsUSDT'),
+      // Referidos (R-#163): el total de la plataforma (o del pais filtrado) es el unico
+      // lugar donde el numero se publica; por fila ya no sale (R-#278 §4.1).
+      sql<number>`(SELECT COUNT(*) FROM referralrelationship rr
+        INNER JOIN usuario ur ON ur.id = rr.referrer_id
+        LEFT JOIN msip_pais up ON up.id = ur.pais_id
+        WHERE ur.excluir_leaderboard IS NOT TRUE${country ? sql` AND up.alfa2 = ${country}` : sql``})`.as('totalReferrals'),
     ])
     .executeTakeFirst()
 
@@ -351,6 +353,7 @@ export async function getLeaderboardTotals(db: Kysely<DB>, country?: string) {
     totalScholarshipUSDT: Number(result?.totalScholarshipUSDT || 0),
     totalUBICELO: Number(result?.totalUBICELO || 0),
     totalDonationsUSDT: Number(result?.totalDonationsUSDT || 0),
+    totalReferrals: Number(result?.totalReferrals || 0),
   }
 }
 
@@ -386,12 +389,6 @@ export async function getLeaderboardTotalsByCountry(db: Kysely<DB>) {
   }))
 }
 
-// §10.4: en region tipo 2 el tablero y el perfil ocultan el numero de referidos, el
-// puntaje de plataforma y el puntaje de perfil. La fila sigue visible con el resto.
-export function hidesPrivateMetrics(tipoRegion: unknown): boolean {
-  return Number(tipoRegion) === 2
-}
-
 export async function getLeaderboardData(
   db: Kysely<DB>,
   params: LeaderboardQueryParams,
@@ -411,29 +408,23 @@ export async function getLeaderboardData(
   const totals = await getLeaderboardTotals(db, params.country)
 
   return {
-    data: rows.map((row: any) => {
-      const hidden = hidesPrivateMetrics(row.tipo_region)
-      return {
+    data: rows.map((row: any) => ({
         usuario_id: row.usuario_id,
         username: row.username,
         pais_alfa2: row.pais_alfa2,
         pais_nombre: row.pais_nombre,
-        profilescore: hidden ? null : (row.profilescore != null ? Number(row.profilescore) : null),
         slearn_balance: Number(row.slearn_balance),
         scholarship_usdt: Number(row.scholarship_usdt),
         ubi_celo: Number(row.ubi_celo),
         donations_usdt: Number(row.donations_usdt),
         sbt_count: Number(row.sbt_count),
-        referral_count: hidden ? null : Number(row.referral_count),
         guide_approved: Number(row.guide_approved),
         guide_usdt: Number(row.guide_usdt),
         guide_slearn: Number(row.guide_slearn),
         guide_score: Number(row.guide_score),
-        platform_score: hidden ? null : Number(row.platform_score),
         canonical_rank: Number(row.canonical_rank),
         religion: row.religion_nombre,
-      }
-    }),
+      })),
     totals,
     pagination: {
       page,

@@ -18,7 +18,7 @@ import { formatUSDT, formatCELO } from '@/lib/format'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { LeaderboardRow } from '@/types/leaderboard'
 
-export type SortField = 'profilescore' | 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'referral_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'guide_score' | 'platform_score'
+export type SortField = 'slearn_balance' | 'scholarship_usdt' | 'ubi_celo' | 'donations_usdt' | 'sbt_count' | 'guide_approved' | 'guide_usdt' | 'guide_slearn' | 'guide_score' | 'platform_score'
 export type SortOrder = 'asc' | 'desc'
 
 interface LeaderboardTableProps {
@@ -43,6 +43,8 @@ interface LeaderboardTableProps {
     totalScholarshipUSDT: number
     totalUBICELO: number
     totalDonationsUSDT: number
+    // Referidos (R-#163): se publican solo como agregado (R-#278 §4.1).
+    totalReferrals?: number
   }
 }
 
@@ -60,8 +62,8 @@ export function LeaderboardTable({
 }: LeaderboardTableProps) {
   // Translation helper
   const t = useMemo(() => createComponentT(lang, {
-    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', profileScore: 'Profile Score', slearn: 'SLEARN', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', sbt: 'SBTs', guideScore: 'Guide Score', guidesApproved: 'Approved', guidesUsdt: 'Paid USDT', guidesSlearn: 'Paid SLEARN', referrals: 'Referrals', platformScore: 'Platform Score', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithSLEARN: 'Users with SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {{0}} of {{1}} users', previous: 'Previous', pageOf: 'Page {{0}} of {{1}}', next: 'Next' },
-    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', profileScore: 'Puntaje de Perfil', slearn: 'SLEARN', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', sbt: 'SBTs', guideScore: 'Puntaje en Guías', guidesApproved: 'Aprobadas', guidesUsdt: 'Pagadas USDT', guidesSlearn: 'Pagadas SLEARN', referrals: 'Referidos', platformScore: 'Puntaje de Plataforma', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithSLEARN: 'Usuarios con SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {{0}} de {{1}} usuarios', previous: 'Anterior', pageOf: 'Página {{0}} de {{1}}', next: 'Siguiente' },
+    en: { rank: 'Rank', user: 'User', ctry: 'Ctry', country: 'Country', religion: 'Religion', slearn: 'SLEARN', scholarship: 'Scholarship (USDT)', ubi: 'UBI (CELO)', donations: 'Donations (USDT)', sbt: 'SBTs', guideScore: 'Guide Score', guidesApproved: 'Approved', guidesUsdt: 'Paid USDT', guidesSlearn: 'Paid SLEARN', referrals: 'Referrals', noData: 'No data available', unknown: 'Unknown', totalUsers: 'Total Users', usersWithSLEARN: 'Users with SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Scholarships', donationsLabel: 'Donations', showing: 'Showing {{0}} of {{1}} users', previous: 'Previous', pageOf: 'Page {{0}} of {{1}}', next: 'Next' },
+    es: { rank: 'Posición', user: 'Usuario', ctry: 'País', country: 'País', religion: 'Religión', slearn: 'SLEARN', scholarship: 'Beca (USDT)', ubi: 'UBI (CELO)', donations: 'Donaciones (USDT)', sbt: 'SBTs', guideScore: 'Puntaje en Guías', guidesApproved: 'Aprobadas', guidesUsdt: 'Pagadas USDT', guidesSlearn: 'Pagadas SLEARN', referrals: 'Referidos', noData: 'No hay datos disponibles', unknown: 'Desconocido', totalUsers: 'Total Usuarios', usersWithSLEARN: 'Usuarios con SLEARN', totalSLEARN: 'Total SLEARN', scholarships: 'Becas', donationsLabel: 'Donaciones', showing: 'Mostrando {{0}} de {{1}} usuarios', previous: 'Anterior', pageOf: 'Página {{0}} de {{1}}', next: 'Siguiente' },
   }), [lang])
 
   const handleSort = (field: SortField) => {
@@ -119,9 +121,6 @@ export function LeaderboardTable({
                 <TableHead>{t('religion')}</TableHead>
               )}
               <TableHead className="text-right">
-                <SortableHeader field="platform_score">{t('platformScore')}</SortableHeader>
-              </TableHead>
-              <TableHead className="text-right">
                 <SortableHeader field="guide_score">{t('guideScore')}</SortableHeader>
               </TableHead>
               <TableHead className="text-right">
@@ -132,11 +131,6 @@ export function LeaderboardTable({
               </TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="guide_slearn">{t('guidesSlearn')}</SortableHeader>
-              </TableHead>
-              <TableHead className="text-right">
-                <SortableHeader field="profilescore">
-                  {t('profileScore')}
-                </SortableHeader>
               </TableHead>
               <TableHead className="text-right">
                 <SortableHeader field="slearn_balance">
@@ -164,11 +158,6 @@ export function LeaderboardTable({
                   {t('sbt')}
                 </SortableHeader>
               </TableHead>
-              <TableHead className="text-right">
-                <SortableHeader field="referral_count">
-                  {t('referrals')}
-                </SortableHeader>
-              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -185,19 +174,17 @@ export function LeaderboardTable({
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
-                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-20 ml-auto"></div></TableCell>
-                  <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
                   <TableCell className="text-right"><div className="h-4 bg-muted rounded w-12 ml-auto"></div></TableCell>
                 </TableRow>
               ))
             ) : data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={16} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
                   {t('noData')}
                 </TableCell>
               </TableRow>
@@ -224,9 +211,6 @@ export function LeaderboardTable({
                   {canViewReligion && (
                     <TableCell>{row.religion || '-'}</TableCell>
                   )}
-                  <TableCell className="text-right font-mono font-bold text-amber-700">
-                    {row.platform_score ?? '-'}
-                  </TableCell>
                   <TableCell className="text-right font-mono font-bold text-emerald-700">
                     {row.guide_score ?? 0}
                   </TableCell>
@@ -238,9 +222,6 @@ export function LeaderboardTable({
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {row.guide_slearn ?? 0}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {row.profilescore ?? '-'}
                   </TableCell>
                   <TableCell className="text-right font-mono text-emerald-600">
                     {row.slearn_balance?.toFixed(2) ?? '0.00'}
@@ -256,9 +237,6 @@ export function LeaderboardTable({
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {row.sbt_count ?? 0}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {row.referral_count ?? '-'}
                   </TableCell>
                 </TableRow>
               ))
@@ -292,6 +270,11 @@ export function LeaderboardTable({
           <div className="p-3 rounded-md border bg-muted/30">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('donationsLabel')}</div>
             <div className="text-lg font-bold">{formatUSDT(totals.totalDonationsUSDT)}</div>
+          </div>
+          {/* R-#163: el numero de referidos se publica solo aqui, como agregado (§4.1) */}
+          <div className="p-3 rounded-md border bg-muted/30">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('referrals')}</div>
+            <div className="text-lg font-bold">{totals.totalReferrals ?? 0}</div>
           </div>
         </div>
       )}

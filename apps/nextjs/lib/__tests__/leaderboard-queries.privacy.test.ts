@@ -66,7 +66,7 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     expect(sql).toContain('"u"."excluir_leaderboard" is not true')
   })
 
-  it('normalizes the six components with min-max over ln(1 + x) (R-#278 §10)', async () => {
+  it('normalizes the six components with min-max over ln(1 + x) (R-#278 §4)', async () => {
     const { sql } = await compiled()
 
     // Un solo criterio de normalizacion para los seis componentes.
@@ -84,13 +84,13 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     expect(sql).toContain('as "platform_score"')
   })
 
-  it('leaves the region of the owner in the row, with NULL as region type 1 (R-#278 §10.4)', async () => {
+  it('leaves the region of the owner in the row, with NULL as region type 1 (R-#278 §4)', async () => {
     const { sql } = await compiled()
 
     expect(sql).toContain('COALESCE(p.tipo_region, 1) as "tipo_region"')
   })
 
-  it('ranks by platform_score, tie-broken by the user id (R-#278 §10.3)', async () => {
+  it('ranks by platform_score, tie-broken by the user id (R-#278 §4)', async () => {
     const { sql } = await compiled()
 
     expect(sql).toContain('order by platform_score desc, usuario_id asc')
@@ -102,7 +102,7 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     expect(sql).toContain('order by guide_approved desc, usuario_id asc')
   })
 
-  it('exposes the canonical position as a window function (R-#278 §10.3)', async () => {
+  it('exposes the canonical position as a window function (R-#278 §4)', async () => {
     const { sql } = await compiled()
 
     expect(sql).toContain('ROW_NUMBER() OVER (ORDER BY')
@@ -113,16 +113,15 @@ describe('buildLeaderboardQuery — privacy and the guide counts (R-#278)', () =
     expect(sql).toContain('DESC, "lb"."usuario_id" ASC) as "canonical_rank"')
   })
 
-  it('computes the rank, the guide score and the platform score of one user (R-#278 §10)', async () => {
+  it('computes the rank and the guide score of one user, without publishing the score (R-#278 §4.1)', async () => {
     const sql = (buildUserLeaderboardStatsQuery(makeDb(), 631) as any).compile().sql as string
 
-    // El usuario se filtra DESPUES de las ventanas: si el filtro fuera dentro, su puesto
-    // seria 1. Por eso el parametro del usuario es el septimo ($1..$6 los consumen los
-    // predicados de visibilidad de la base).
     expect(sql).toContain('as "lb"')
     expect(sql).toContain('where "lb"."usuario_id" = $7')
-    expect(sql).toContain('"lb"."canonical_rank" as "rank", "lb"."guide_score" as "guide_score", "lb"."platform_score" as "platform_score"')
-    // La poblacion del perfil es la del tablero: la misma consulta, sin el filtro de pais.
+    expect(sql).toContain('"lb"."canonical_rank" as "rank", "lb"."guide_score" as "guide_score"')
+    // El puntaje de plataforma ordena, pero no se devuelve.
+    expect(sql).not.toContain('"lb"."platform_score" as')
+    expect(sql).toContain('ROW_NUMBER() OVER (ORDER BY')
     expect(sql).toContain('"u"."excluir_leaderboard" is not true')
     expect(sql).not.toContain('limit')
   })
