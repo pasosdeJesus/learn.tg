@@ -13,6 +13,7 @@ export function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [loading, setLoading] = useState(true)
   const [showBlock, setShowBlock] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   const fetchEvents = () => {
     setLoading(true)
@@ -31,9 +32,17 @@ export function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
 
   const handleDelete = async (uid: string) => {
     setDeleting(uid)
-    await fetch(`/api/admin/calendar/block?uid=${encodeURIComponent(uid)}`, { method: 'DELETE' })
-    setDeleting(null)
-    fetchEvents()
+    setError('')
+    try {
+      // R-#280: por `adminFetch` (agrega el wallet del verificador y falla si la
+      // respuesta no es OK); el `fetch` crudo iba sin wallet y el API respondia 403.
+      await adminFetch(`/api/admin/calendar/block?uid=${encodeURIComponent(uid)}`, { method: 'DELETE' })
+    } catch (e: any) {
+      setError(e?.message || String(e))
+    } finally {
+      setDeleting(null)
+      fetchEvents()
+    }
   }
 
   const formatDate = (d: string) => {
@@ -55,6 +64,8 @@ export function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
       </div>
 
       {showBlock && <BlockTimeDialog lang={lang} t={t} onClose={() => setShowBlock(false)} onSaved={() => { setShowBlock(false); fetchEvents() }} />}
+
+      {error && <p className="text-red-600 text-xs mb-2">{error}</p>}
 
       {loading ? <p className="text-gray-500 text-sm">{t('loading')}</p>
         : events.length === 0 ? <p className="text-gray-500 text-sm">{t('noEvents')}</p>
@@ -86,17 +97,25 @@ export function BlockTimeDialog({ lang, t, onClose, onSaved }: { lang: string; t
   const [end, setEnd] = useState('')
   const [summary, setSummary] = useState('Blocked')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSave = async () => {
     if (!start || !end) return
     setSaving(true)
-    await fetch('/api/admin/calendar/block', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ summary, start: new Date(start).toISOString(), end: new Date(end).toISOString() }),
-    })
-    setSaving(false)
-    onSaved()
+    setError('')
+    try {
+      // R-#280: `adminFetch` agrega el wallet del verificador (el `fetch` crudo daba 403).
+      await adminFetch('/api/admin/calendar/block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary, start: new Date(start).toISOString(), end: new Date(end).toISOString() }),
+      })
+      onSaved()
+    } catch (e: any) {
+      setError(e?.message || String(e))
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -115,6 +134,7 @@ export function BlockTimeDialog({ lang, t, onClose, onSaved }: { lang: string; t
           <input type="text" value={summary} onChange={e => setSummary(e.target.value)} className="w-full border rounded px-3 py-1.5 text-sm" />
         </div>
       </div>
+      {error && <p className="text-red-600 text-xs mt-3">{error}</p>}
       <div className="flex justify-end gap-2 mt-4">
         <button onClick={onClose} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">{t('cancel')}</button>
         <button onClick={handleSave} disabled={saving || !start || !end} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">

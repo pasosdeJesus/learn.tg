@@ -373,16 +373,16 @@ if [ -n "$ICON_PATH" ]; then
   ICON_FULL="public/img/credential/$ICON_PATH"
   echo "  Register credential type (run manually in apps/nextjs):"
   if [ -n "$COURSE_ID" ]; then
-    echo "  bin/m credentials:register-type --network $NETWORK --site learn.tg --type course_completion --display \"$COURSE_NAME\" --soulbound true --course-id $COURSE_ID --icon $ICON_FULL"
+    echo "  bin/m eng:credentials:register-type --network $NETWORK --site learn.tg --type course_completion --display \"$COURSE_NAME\" --soulbound true --course-id $COURSE_ID --icon $ICON_FULL"
   else
-    echo "  bin/m credentials:register-type --network $NETWORK --site learn.tg --type course_completion --display \"$COURSE_NAME\" --soulbound true --course-id <ID> --icon $ICON_FULL"
+    echo "  bin/m eng:credentials:register-type --network $NETWORK --site learn.tg --type course_completion --display \"$COURSE_NAME\" --soulbound true --course-id <ID> --icon $ICON_FULL"
   fi
 else
   echo "  Register credential type (run manually in apps/nextjs):"
   if [ -n "$COURSE_ID" ]; then
-    echo "  bin/m credentials:register-type --network $NETWORK --site learn.tg --type course_completion --display \"$COURSE_NAME\" --soulbound true --course-id $COURSE_ID"
+    echo "  bin/m eng:credentials:register-type --network $NETWORK --site learn.tg --type course_completion --display \"$COURSE_NAME\" --soulbound true --course-id $COURSE_ID"
   else
-    echo "  bin/m credentials:register-type --network $NETWORK --site learn.tg --type course_completion --display \"$COURSE_NAME\" --soulbound true --course-id <ID>"
+    echo "  bin/m eng:credentials:register-type --network $NETWORK --site learn.tg --type course_completion --display \"$COURSE_NAME\" --soulbound true --course-id <ID>"
   fi
 fi
 
@@ -390,7 +390,7 @@ fi
 
 echo ""
 echo "[4/5] Sync metadata (run manually in apps/nextjs):"
-echo "  bin/m credentials:sync-cache --network $NETWORK"
+echo "  bin/m eng:credentials:sync-cache --network $NETWORK"
 
 echo ""
 echo "========================================"
@@ -401,5 +401,5 @@ echo "    1. Review migration: cat db/migrations/${MIGRATION_NAME}.ts"
 echo "    2. Run migrations:  bin/m db:migrate"
 echo "    3. Run the vault + credential commands above"
 echo "    4. Write actual guide content in resources/$LANG/$PREFIX/"
-echo "    5. Verify: bin/m credentials:list-types --network $NETWORK"
+echo "    5. Verify: bin/m eng:credentials:list-types --network $NETWORK"
 echo "========================================"

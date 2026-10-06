@@ -129,7 +129,7 @@ Each premium course that issues credentials must be registered exactly once.
 cd apps/nextjs
 
 # Course 1 — Una relación con Jesús (free)
-bin/m credentials:register-type \
+bin/m eng:credentials:register-type \
   --network celoSepolia \
   --site learn.tg \
   --type course_completion \
@@ -139,7 +139,7 @@ bin/m credentials:register-type \
   --icon public/img/credential/source/relacion-con-jesus.svg
 
 # Course 103 — Web3 & UBI (free)
-bin/m credentials:register-type \
+bin/m eng:credentials:register-type \
   --network celoSepolia \
   --site learn.tg \
   --type course_completion \
@@ -149,7 +149,7 @@ bin/m credentials:register-type \
   --icon public/img/credential/source/web3-and-ubi.svg
 
 # Course 104 — Ahorra en dólares en OKX (free)
-bin/m credentials:register-type \
+bin/m eng:credentials:register-type \
   --network celoSepolia \
   --site learn.tg \
   --type course_completion \
@@ -178,7 +178,7 @@ After registering types, sync the `credential_metadata` table:
 
 ```bash
 cd apps/nextjs
-bin/m credentials:sync-cache --network celoSepolia
+bin/m eng:credentials:sync-cache --network celoSepolia
 ```
 
 This reads the contract and updates `credential_metadata` with `name`, `type`,
@@ -191,7 +191,7 @@ This reads the contract and updates `credential_metadata` with `name`, `type`,
 So wallets and explorers can resolve metadata:
 
 ```bash
-bin/m credentials:set-site-uri \
+bin/m eng:credentials:set-site-uri \
   --network celoSepolia \
   --site learn.tg \
   --uri "https://learn.tg/api/credential"
@@ -205,7 +205,7 @@ bin/m credentials:set-site-uri \
 
 ```bash
 # List registered types
-bin/m credentials:list-types --network celoSepolia
+bin/m eng:credentials:list-types --network celoSepolia
 
 # Verify metadata endpoint
 curl https://learn.tg/api/credential/14.json
@@ -234,24 +234,25 @@ a student completes 100% of a course's guides. The flow:
 
 ```bash
 # Recompose image for an existing token
-bin/m credentials:recompose-image \
+bin/m eng:credentials:recompose-image \
   --token-id 14 \
   --network celoSepolia \
+  --site learn.tg \
   --icon public/img/credential/source/new-icon.svg
 
 # Grant MINTER_ROLE to a wallet (requires DEFAULT_ADMIN_ROLE)
-bin/m credentials:grant-minter \
+bin/m eng:credentials:grant-minter \
   --network celoSepolia \
   --address 0x...
 
 # Revoke credential
-bin/m credentials:revoke-credential \
+bin/m eng:credentials:revoke-credential \
   --network celoSepolia \
   --token-id 14 \
   --address 0x...
 
 # Set max supply
-bin/m credentials:set-max-supply \
+bin/m eng:credentials:set-max-supply \
   --network celoSepolia \
   --token-id 14 \
   --max 1000

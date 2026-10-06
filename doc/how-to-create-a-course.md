@@ -248,7 +248,7 @@ Register the SBT credential type on the `PasosDeJesusCredentials` contract:
 ```bash
 cd apps/nextjs
 
-bin/m credentials:register-type \
+bin/m eng:credentials:register-type \
   --network celo \
   --site learn.tg \
   --type course_completion \
@@ -266,7 +266,7 @@ For premium courses, add `--premium`.
 
 ```bash
 cd apps/nextjs
-bin/m credentials:sync-cache --network celo
+bin/m eng:credentials:sync-cache --network celo
 ```
 
 ---
@@ -275,7 +275,7 @@ bin/m credentials:sync-cache --network celo
 
 ```bash
 # List registered credential types — find your tokenId
-bin/m credentials:list-types --network celo
+bin/m eng:credentials:list-types --network celo
 
 # Verify metadata endpoint
 curl https://learn.tg/api/credential/{tokenId}
@@ -296,8 +296,8 @@ bin/m wallet:call --name admin --to <VAULT_V5> \
 | Guide content | `resources/{lang}/{prefijoRuta}/{sufijoRuta}.md` | 400-600 words, 3-5 crossword questions |
 | Vault | `LearnTGVaultsV5.createVault(id, usdt, slearn)` | `bin/m wallet:send` (review first) |
 | SBT icon | `public/img/credential/source/` | 512×512 SVG |
-| Credential type | `PasosDeJesusCredentials.registerCredentialType` | `bin/m credentials:register-type` (review first) |
-| Metadata sync | DB `credential_metadata` | `bin/m credentials:sync-cache` |
+| Credential type | `PasosDeJesusCredentials.registerCredentialType` | `bin/m eng:credentials:register-type` (review first) |
+| Metadata sync | DB `credential_metadata` | `bin/m eng:credentials:sync-cache` |
 
 ---
 
