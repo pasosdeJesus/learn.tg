@@ -401,7 +401,8 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
               <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Religión' : 'Religion'}</label>
               <ReligionSelect value={form.religion_id ? Number(form.religion_id) : null} onChange={v => setF('religion_id', String(v || ''))} lang={lang} />
             </div>
-            <div>
+            {isChristian && (
+            <div data-testid="position-gaza">
               <label className="block text-xs text-gray-500 mb-0.5">
                 {lang === 'es' ? 'Posición sobre Israel y Gaza (sionismo)' : 'Position on Israel and Gaza (Zionism)'}
               </label>
@@ -423,6 +424,7 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
                 </label>
               </div>
             </div>
+            )}
             <InputField label="Email" value={form.email} onChange={v => setF('email', v)} />
             <InputField label="WhatsApp" value={form.whatsapp} onChange={v => setF('whatsapp', v)} />
             <InputField label="Telegram" value={form.telegram} onChange={v => setF('telegram', v)} />

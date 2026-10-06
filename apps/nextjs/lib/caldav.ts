@@ -179,5 +179,8 @@ export async function deleteEvent(uid: string): Promise<boolean> {
     headers: { 'Authorization': authHeader() },
   })
 
-  return res.status === 200 || res.status === 204
+  // 404/410: el recurso ya no está (otro verificador lo borró, o es un segundo
+  // intento tras un borrado que sí se aplicó). Borrar es idempotente; tratarlo
+  // como error mostraba "Failed to delete event" sobre algo ya borrado (R-#280).
+  return res.status === 200 || res.status === 204 || res.status === 404 || res.status === 410
 }

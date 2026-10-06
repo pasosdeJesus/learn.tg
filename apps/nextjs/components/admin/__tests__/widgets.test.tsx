@@ -423,6 +423,9 @@ describe('UserEditModal — display name and church controls by religion (R-#281
     expect(screen.queryByTestId('church-assign')).toBeNull()
     expect(screen.queryByTestId('church-role')).toBeNull()
     expect(screen.queryByTestId('church-create')).toBeNull()
+    // La posición sobre Israel/Gaza es una pregunta para cristianos en /profile;
+    // el modal la oculta para el resto (coordinado con profile/page.tsx).
+    expect(screen.queryByTestId('position-gaza')).toBeNull()
     // El lugar de culto declarado se conserva para todos (R-#281 §3).
     expect(screen.getByText('City of Place of Worship')).toBeTruthy()
   })
@@ -446,5 +449,6 @@ describe('UserEditModal — display name and church controls by religion (R-#281
     })
     expect(screen.getByTestId('church-role')).toBeTruthy()
     expect(screen.getByTestId('church-create')).toBeTruthy()
+    expect(screen.getByTestId('position-gaza')).toBeTruthy()
   })
 })

@@ -15,7 +15,7 @@ itself (data model, copying rules, pastor bonus) is in
 
 | Widget | Shows | Actions |
 |---|---|---|
-| **My Calendar** | Verifier availability, blocked slots and booked interviews (CalDAV/Radicale) | Block time, open an interview |
+| **My Calendar** | Verifier availability, blocked slots and booked interviews (CalDAV/Radicale) | Block time, open an interview, delete a slot (✕, with a confirmation toast) |
 | **Pending Verifications** | Users with a proposed interview date and no conducted date | Click a row to open the user modal |
 | **Recent Users** | Last 20 users by `updated_at` | Click a row to open the user modal |
 | **Recent Churches** | Last churches created | Click a row to open the church modal |
@@ -37,7 +37,8 @@ standalone page). It is the place where a profile gets verified.
 
 1. **Profile fields**: the public **display name** (`nusuario`, read-only — it is what
    the public profile and the leaderboard publish), the real name, email, WhatsApp,
-   Telegram, country, religion, position on Israel/Gaza, passport name and nationality.
+   Telegram, country, religion, position on Israel/Gaza (shown **only for Christians**,
+   like `/profile`), passport name and nationality.
 2. **Church data depends on whether the church exists** (`usuario.church_id`):
    - **Church not in the `church` table yet**: the modal keeps the declared
      church name (*Place of Worship*) and the autocompleted town (*City of Place

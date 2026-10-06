@@ -142,6 +142,7 @@ export default function AdminUserDetail({ params }: PageProps) {
           </select>
         </div>
 
+        {Number(user.religion_id) === 2 && (
         <div>
           <label className="block text-sm font-medium text-gray-700">{t('positionGaza')}</label>
           <div className="flex gap-4 mt-1">
@@ -159,6 +160,7 @@ export default function AdminUserDetail({ params }: PageProps) {
             </label>
           </div>
         </div>
+        )}
 
         <div className="border-t pt-4">
           <h2 className="font-semibold mb-3">{t('verified')}</h2>

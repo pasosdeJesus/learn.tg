@@ -145,6 +145,19 @@ const pwaConfig: PWAConfig = {
       options: {},
     },
     {
+      // El panel de verificador (R-#280): `/api/admin/*` es dato por verificador
+      // y cambiante, y la regla genérica de `/api/*` lo cacheaba (NetworkFirst
+      // 5 s). Tras borrar una cita, el listado de CalDAV tarda ~16 s (una
+      // petición por evento), así que el re-listado inmediato superaba los 5 s y
+      // el service worker devolvía la lista cacheada: la cita borrada reaparecía
+      // hasta recargar. Nunca se sirve del caché (tampoco deja datos de usuarios
+      // en la caché del dispositivo).
+      urlPattern: ({ url, request }) =>
+        url.pathname.startsWith('/api/admin/') && request.method === 'GET',
+      handler: 'NetworkOnly' as const,
+      options: {},
+    },
+    {
       urlPattern: ({ url, request }) =>
         url.pathname.startsWith('/api/') && request.method === 'GET',
       handler: 'NetworkFirst' as const,

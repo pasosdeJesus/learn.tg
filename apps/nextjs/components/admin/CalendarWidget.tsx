@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { Modal } from './Modal'
 import { adminFetch } from '@/lib/admin-fetch'
 
@@ -14,6 +15,7 @@ export function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
   const [showBlock, setShowBlock] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const { toast } = useToast()
 
   const fetchEvents = () => {
     setLoading(true)
@@ -37,11 +39,17 @@ export function CalendarWidget({ lang, t }: { lang: string; t: TFunc }) {
       // R-#280: por `adminFetch` (agrega el wallet del verificador y falla si la
       // respuesta no es OK); el `fetch` crudo iba sin wallet y el API respondia 403.
       await adminFetch(`/api/admin/calendar/block?uid=${encodeURIComponent(uid)}`, { method: 'DELETE' })
+      // La fila se quita ya y no se re-consulta: el listado de CalDAV tarda ~16 s
+      // (una peticion por evento), asi que un re-listado inmediato traia la cita
+      // borrada de vuelta. La proxima carga reconcilia.
+      setEvents(prev => prev.filter(e => e.uid !== uid))
+      toast({ title: t('eventDeleted') })
     } catch (e: any) {
-      setError(e?.message || String(e))
+      const message = e?.message || String(e)
+      setError(message)
+      toast({ title: t('eventDeleteError'), description: message, variant: 'destructive' })
     } finally {
       setDeleting(null)
-      fetchEvents()
     }
   }
 
@@ -98,6 +106,7 @@ export function BlockTimeDialog({ lang, t, onClose, onSaved }: { lang: string; t
   const [summary, setSummary] = useState('Blocked')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const { toast } = useToast()
 
   const handleSave = async () => {
     if (!start || !end) return
@@ -110,9 +119,12 @@ export function BlockTimeDialog({ lang, t, onClose, onSaved }: { lang: string; t
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ summary, start: new Date(start).toISOString(), end: new Date(end).toISOString() }),
       })
+      toast({ title: t('blockSaved') })
       onSaved()
     } catch (e: any) {
-      setError(e?.message || String(e))
+      const message = e?.message || String(e)
+      setError(message)
+      toast({ title: t('blockError'), description: message, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
