@@ -19,7 +19,7 @@ itself (data model, copying rules, pastor bonus) is in
 | **Pending Verifications** | Users with a proposed interview date and no conducted date | Click a row to open the user modal |
 | **Recent Users** | Last 20 users by `updated_at` | Click a row to open the user modal |
 | **Recent Churches** | Last churches created | Click a row to open the church modal |
-| **Premium Purchases** | Purchases per course (count, USDT, SLEARN, total) | Read-only |
+| **Premium Purchases** | Purchases per course (count, USDT, SLEARN, total) | Click a course to open the list of people **enrolled** (who bought it) |
 
 Links at the bottom go to **All Users** (`/{lang}/admin/users`) and **All
 Churches** (`/{lang}/admin/churches`).
