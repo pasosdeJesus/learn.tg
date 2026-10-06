@@ -103,19 +103,23 @@ export async function listEvents(): Promise<CalDavEvent[]> {
             headers: { 'Authorization': authHeader() },
           })
           if (!icsRes.ok) return null
-          return await icsRes.text()
+          return { uid, ics: await icsRes.text() }
         } catch {
           return null
         }
       }),
     )
-    for (const ics of fetched) {
-      if (!ics) continue
+    for (const item of fetched) {
+      if (!item) continue
       try {
-        const parsed = parseICalendar(ics)
+        const parsed = parseICalendar(item.ics)
         if (parsed) {
+          // R-#280: el id del evento es el nombre del recurso (`{uid}.ics`), que es
+          // lo que `deleteEvent` borra; no el `UID:` interno del .ics, que puede no
+          // coincidir con el nombre (p. ej. bloqueos creados por el panel). Asi el
+          // borrado siempre apunta al recurso que existe.
           events.push({
-            uid: parsed.uid,
+            uid: item.uid,
             start: parseCalDate(parsed.dtstart),
             end: parseCalDate(parsed.dtend),
             summary: parsed.summary,

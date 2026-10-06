@@ -376,6 +376,7 @@ PROD_SPECS=1 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=prod-land
 | `guide-claims.spec.mjs` | Guide completion and claim flow |
 | `profile-data.spec.mjs` | Profile data loading and display |
 | `admin-dashboard.spec.mjs` | Admin dashboard: widgets load, APIs respond, user/church detail, PATCH |
+| `admin-calendar-delete.spec.mjs` | R-#280: the calendar delete through the app API — verifier SIWE → `POST /api/admin/calendar/block` → the block appears in `GET /api/admin/calendar/events` under the **same** uid → `DELETE` → it is gone → a second `DELETE` is idempotent (200, not 502). Needs the `.env` wallet to be a verifier |
 | `prod-landing-to-profile.spec.mjs` | Production landing page → wallet connect → profile save flow |
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
 | `offline-crossword.spec.mjs` | R-#242: crossword **solved** and submitted offline → queued (`offline-pending`, counter and IndexedDB in agreement), survives a reload, drains when the connection returns, the server answers 200 and pays the scholarship, the guide goes to completed and the outcome is left as an `offline_answer` notice (step 9, matched by `ref_key`) (no service worker needed) |
