@@ -86,7 +86,7 @@
     "@pasosdejesus/contract-test": "^0.1.4",
     "@pasosdejesus/edr": "^0.1.2",
     "@pasosdejesus/m": "^0.22.3",
-    "@pasosdejesus/mpdj": "^0.2.9",
+    "@pasosdejesus/mpdj": "^0.2.10",
     "@pasosdejesus/usdt": "^0.1.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^6.9.1",
