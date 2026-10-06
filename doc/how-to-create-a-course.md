@@ -236,6 +236,10 @@ inkscape source.jpg --export-plain-svg \
 ### 4.2 Requirements
 
 - `viewBox="0 0 512 512"`
+- The artwork must **fill the viewBox**, centered and with a small margin, like the other
+  course icons (`web3_ubi.svg`, `gdcluster.svg`). The composer scales the whole 512×512
+  box into the badge's safe square, so a drawing that sits in a corner or covers only part
+  of the box comes out small and off-center (learn.tg#195).
 - No `<script>`, `foreignObject`, external URLs
 - 50–50,000 characters
 

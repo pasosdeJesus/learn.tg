@@ -238,7 +238,7 @@ describe('UserEditModal — church data depends on whether the church is registe
       render(React.createElement(UserEditModal, {
         lang: 'en', t,
         user: {
-          id: 1, nombre: 'Ana', church_relationship: 'pastor', pais_id: 694,
+          id: 1, nombre: 'Ana', church_relationship: 'pastor', religion_id: 2, pais_id: 694,
           place_of_worship: 'Iglesia Nueva', place_of_worship_location: 'Freetown',
         } as any,
         onClose: () => {}, onSaved: () => {},
@@ -378,5 +378,73 @@ describe('UserEditModal — referidos', () => {
     )
     expect(patch).toBeTruthy()
     expect(JSON.parse(String((patch![1] as RequestInit).body)).referrer).toBe('juan')
+  })
+})
+
+// R-#281 (https://github.com/pasosdeJesus/learn.tg/issues/281): el verificador ve el
+// nombre público del usuario y los controles de iglesia solo aparecen para cristianos
+// (usuario.religion_id = 2).
+describe('UserEditModal — display name and church controls by religion (R-#281)', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('shows the public display name (nusuario) read-only', async () => {
+    mockAdminFetch.mockResolvedValue({})
+
+    await act(async () => {
+      render(React.createElement(UserEditModal, {
+        lang: 'en', t,
+        user: { id: 1, nombre: 'Ana Perez', nusuario: 'ana', religion_id: 2 } as any,
+        onClose: () => {}, onSaved: () => {},
+      }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-display-name').textContent).toContain('ana')
+    })
+  })
+
+  it('hides the church controls for a non-Christian religion and keeps the place of worship', async () => {
+    mockAdminFetch.mockResolvedValue({})
+
+    await act(async () => {
+      render(React.createElement(UserEditModal, {
+        lang: 'en', t,
+        user: {
+          id: 1, nombre: 'Ana', religion_id: 1, pais_id: 694,
+          place_of_worship: 'Mezquita', place_of_worship_location: 'Freetown',
+        } as any,
+        onClose: () => {}, onSaved: () => {},
+      }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Church/mosque name...')).toBeTruthy()
+    })
+    expect(screen.queryByTestId('church-assign')).toBeNull()
+    expect(screen.queryByTestId('church-role')).toBeNull()
+    expect(screen.queryByTestId('church-create')).toBeNull()
+    // El lugar de culto declarado se conserva para todos (R-#281 §3).
+    expect(screen.getByText('City of Place of Worship')).toBeTruthy()
+  })
+
+  it('shows the three church controls for a Christian', async () => {
+    mockAdminFetch.mockResolvedValue({})
+
+    await act(async () => {
+      render(React.createElement(UserEditModal, {
+        lang: 'en', t,
+        user: {
+          id: 1, nombre: 'Ana', religion_id: 2, pais_id: 694,
+          place_of_worship: 'Iglesia Nueva', place_of_worship_location: 'Freetown',
+        } as any,
+        onClose: () => {}, onSaved: () => {},
+      }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('church-assign')).toBeTruthy()
+    })
+    expect(screen.getByTestId('church-role')).toBeTruthy()
+    expect(screen.getByTestId('church-create')).toBeTruthy()
   })
 })

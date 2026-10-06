@@ -35,8 +35,9 @@ Table with ID, name (and email), wallet, country, church, score and actions
 Opened from any user row or from a user id (`/{lang}/admin/user/{id}` is the
 standalone page). It is the place where a profile gets verified.
 
-1. **Profile fields**: name, email, WhatsApp, Telegram, country, religion,
-   position on Israel/Gaza, passport name and nationality.
+1. **Profile fields**: the public **display name** (`nusuario`, read-only — it is what
+   the public profile and the leaderboard publish), the real name, email, WhatsApp,
+   Telegram, country, religion, position on Israel/Gaza, passport name and nationality.
 2. **Church data depends on whether the church exists** (`usuario.church_id`):
    - **Church not in the `church` table yet**: the modal keeps the declared
      church name (*Place of Worship*) and the autocompleted town (*City of Place
@@ -46,6 +47,11 @@ standalone page). It is the place where a profile gets verified.
      (editable by the verifier)**.
    - **Church already registered**: the modal shows only the church's canonical
      **name and location** and hides the declaration and the pastor contact.
+
+   The church controls (items 3, 4 and 6) appear **only for Christians**
+   (`usuario.religion_id = 2`, R-#281). For any other religion the modal hides
+   *Assign Church*, *Church Role* and the yellow create panel; the place-of-worship
+   declaration stays for everyone (it feeds the profile score).
 3. **Assign Church** (`ChurchSelector`): pick the existing church of that
    community. Saving with a `church_id` copies the pastor's registration number,
    denomination and document to the church (only when the church is missing

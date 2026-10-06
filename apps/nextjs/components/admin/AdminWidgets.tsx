@@ -365,6 +365,11 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
     setSaving(false)
   }
 
+  // R-#281: los controles de iglesia (asignarla, su rol y crearla a partir de lo
+  // declarado) solo aplican a cristianos (usuario.religion_id = 2, ver
+  // doc/church-registration.md). El lugar de culto declarado se conserva para todos.
+  const isChristian = Number(form.religion_id) === 2
+
   return (
     <Modal title={`${t('editUser')}: ${user.nombre || user.nusuario || user.id}`} onClose={onClose}>
       <div className="space-y-4">
@@ -381,6 +386,13 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
           <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('profileFields')}</h4>
           <div className="grid grid-cols-2 gap-2">
             <InputField label={t('name')} value={form.nombre} onChange={v => setF('nombre', v)} />
+            <div>
+              <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Nombre público' : 'Display name'}</label>
+              <div data-testid="user-display-name"
+                className="w-full border rounded px-2 py-1 text-sm text-gray-500 bg-gray-50">
+                {user.nusuario || '—'}
+              </div>
+            </div>
             <div>
               <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'País' : 'Country'}</label>
               <CountrySelect value={form.pais_id || null} onChange={v => setF('pais_id', String(v || ''))} lang={lang} />
@@ -482,29 +494,32 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             ) : null}
           </>
         )}
-        <div>
-          <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Asignar Iglesia' : 'Assign Church'}</label>
-          <ChurchSelector
-            value={form.church_id ? Number(form.church_id) : null}
-            countryId={form.pais_id ? Number(form.pais_id) : null}
-            cityId={null}
-            lang={lang}
-            refreshKey={churchRefresh}
-            onChange={(id, name) => {
-              setF('church_id', String(id || ''))
-              if (name) setF('place_of_worship', name)
-            }}
-          />
-        </div>
+        {isChristian && (
+          <div data-testid="church-assign">
+            <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Asignar Iglesia' : 'Assign Church'}</label>
+            <ChurchSelector
+              value={form.church_id ? Number(form.church_id) : null}
+              countryId={form.pais_id ? Number(form.pais_id) : null}
+              cityId={null}
+              lang={lang}
+              refreshKey={churchRefresh}
+              onChange={(id, name) => {
+                setF('church_id', String(id || ''))
+                if (name) setF('place_of_worship', name)
+              }}
+            />
+          </div>
+        )}
         {(() => {
           const hasChurchName = form.place_of_worship
           const countryId = form.pais_id ? Number(form.pais_id) : null
           // El contacto del pastor ya no es requisito para ofrecer crearla: el pastor
           // puede no haberlo declarado (y ahora se muestra en su propio bloque).
           // Lo que la iglesia necesita es nombre y país.
-          if (!hasChurchName || !countryId || form.church_id) return null
+          // R-#281: crear la iglesia a partir de lo declarado solo aplica a cristianos.
+          if (!isChristian || !hasChurchName || !countryId || form.church_id) return null
           return (
-            <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-3" data-testid="church-create">
               <p className="text-xs text-gray-700 mb-2">
                 {lang === 'es'
                   ? 'El usuario suministró esta información de iglesia. ¿Crearla?'
@@ -564,10 +579,12 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
           <InputField label={lang === 'es' ? 'Entrevista Propuesta' : 'Proposed Interview'} value={form.proposed_date_of_interview || ''} onChange={v => setF('proposed_date_of_interview', v)} type="datetime-local" />
           <InputField label={lang === 'es' ? 'Entrevista Realizada' : 'Conducted Interview'} value={form.conducted_date_of_interview || ''} onChange={v => setF('conducted_date_of_interview', v)} type="datetime-local" />
         </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Rol en Iglesia' : 'Church Role'}</label>
-          <ChurchRoleSelect value={form.church_relationship || null} onChange={v => setF('church_relationship', v || '')} lang={lang} />
-        </div>
+        {isChristian && (
+          <div data-testid="church-role">
+            <label className="block text-xs text-gray-500 mb-0.5">{lang === 'es' ? 'Rol en Iglesia' : 'Church Role'}</label>
+            <ChurchRoleSelect value={form.church_relationship || null} onChange={v => setF('church_relationship', v || '')} lang={lang} />
+          </div>
+        )}
         {(form.church_relationship === 'pastor' || form.church_relationship === 'co_pastor') && (
           // R-#152/R-#192: el registro de la iglesia lo declara el pastor (o co-pastor)
           // desde su perfil; aquí el verificador lo revisa (y se copia a la iglesia al
