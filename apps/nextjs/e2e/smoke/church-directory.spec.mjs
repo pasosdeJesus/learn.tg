@@ -60,6 +60,24 @@ async function main() {
   else if ((sl.data?.churches || []).every((c) => c.countryAlfa2 === 'SL')) ok('country=SL filter consistent')
   else fail('country=SL returned a church from another country')
 
+  // 4b. Facets (countries/denominations) and the denomination multi-select filter
+  const countries = list.data?.countries
+  const denominations = list.data?.denominations
+  if (Array.isArray(countries) && Array.isArray(denominations)) {
+    ok(`facets: ${countries.length} countries, ${denominations.length} denominations`)
+  } else {
+    fail('countries/denominations facets missing')
+  }
+  if (denominations && denominations.length > 0) {
+    const one = await api.get(`/api/directory/churches?denomination=${encodeURIComponent(denominations[0])}`)
+    const rows = one.data?.churches || []
+    if (one.status === 200 && rows.every((c) => c.denomination === denominations[0])) {
+      ok(`denomination filter (${denominations[0]}) consistent`)
+    } else {
+      fail(`denomination filter (${denominations[0]}) inconsistent`)
+    }
+  }
+
   // 5. Auth: claim requires a session, admin listing requires a verifier
   const claim = await api.post('/api/directory/churches/1/claim')
   if (claim.status === 401) ok('claim without a session → 401')

@@ -27,9 +27,18 @@ export interface DirectoryEntry {
 
 export interface DirectoryFilters {
   country?: string
-  denomination?: string
+  denominations?: string[]
   page?: number
   limit?: number
+}
+
+export interface DirectoryResult {
+  churches: DirectoryEntry[]
+  total: number
+  page: number
+  limit: number
+  countries: { alfa2: string; nombre: string }[]
+  denominations: string[]
 }
 
 interface RawChurch {
@@ -98,24 +107,37 @@ function toEntry(row: RawChurch, activityScore: number | null): DirectoryEntry {
 /**
  * Paginated directory. The activity normalization is computed over the **whole**
  * main population (never the filtered view), then the filters and pagination are
- * applied — so a church's `activity_score` does not change with the visit.
+ * applied — so a church's `activity_score` does not change with the visit. The
+ * `countries`/`denominations` facets come from the whole population too (the
+ * filter options do not shrink as you filter).
  */
 export async function getDirectory(
   db: Kysely<DB>,
   filters: DirectoryFilters = {},
-): Promise<{ churches: DirectoryEntry[]; total: number; page: number; limit: number }> {
-  const { country, denomination, page = 1, limit = 24 } = filters
+): Promise<DirectoryResult> {
+  const { country, denominations, page = 1, limit = 24 } = filters
   const population = (await mainListQuery(db).execute()) as unknown as RawChurch[]
   const scores = computeActivityScores(population)
+
+  const countriesMap = new Map<string, string>()
+  const denominationsSet = new Set<string>()
+  for (const r of population) {
+    if (r.country_alfa2) countriesMap.set(r.country_alfa2, r.country_name || r.country_alfa2)
+    if (r.denomination) denominationsSet.add(r.denomination)
+  }
+  const countries = [...countriesMap.entries()]
+    .map(([alfa2, nombre]) => ({ alfa2, nombre }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+  const allDenominations = [...denominationsSet].sort((a, b) => a.localeCompare(b))
 
   let rows = population
   if (country) {
     const c = country.toLowerCase()
     rows = rows.filter((r) => (r.country_alfa2 || '').toLowerCase() === c || String(r.church_id) === country)
   }
-  if (denomination) {
-    const d = denomination.toLowerCase()
-    rows = rows.filter((r) => (r.denomination || '').toLowerCase().includes(d))
+  if (denominations && denominations.length > 0) {
+    const set = new Set(denominations.map((d) => d.toLowerCase()))
+    rows = rows.filter((r) => set.has((r.denomination || '').toLowerCase()))
   }
   rows = [...rows].sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 
@@ -127,6 +149,8 @@ export async function getDirectory(
     total,
     page,
     limit,
+    countries,
+    denominations: allDenominations,
   }
 }
 

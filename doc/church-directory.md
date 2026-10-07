@@ -33,6 +33,12 @@ a **region type 1** country — the API decides it (`GET /api/settings` →
 `directoryVisible`). Guests, users without a country and region type 2 users do not
 see the link.
 
+The directory UI mirrors the leaderboard: the **country selector is the shared
+`CountryFilter`** (`@learn-tg/gdcluster`, the same the leaderboard uses) and the
+**denomination** is a multi-select (checkbox dropdown). `GET /api/directory/churches`
+returns the `countries` and `denominations` facets over the whole population and
+accepts repeated `denomination` parameters (`?denomination=A&denomination=B`).
+
 ## Activity score (`activity_score`)
 
 Reuses the six R-#278 components aggregated **per church** in
