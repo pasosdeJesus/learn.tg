@@ -72,6 +72,9 @@ const PUBLIC_ENDPOINTS = [
   'user/[id]',            // perfil público de solo lectura (no expone nombre real)
   'referral/lookup',      // landing pública /[lang]/ref/{CODE}: resuelve código de
                           // referido (solo nusuario/nombre, sin la billetera)
+  'directory/churches',   // R-#164: directorio público de iglesias (solo región tipo 1;
+                          // la región tipo 2 nunca se publica). El reclamo
+                          // (`/claim`) exige sesión igual.
 ]
 
 // Advisory: endpoints NO admin-only que seleccionan el `nombre` real de un

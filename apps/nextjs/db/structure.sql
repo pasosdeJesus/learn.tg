@@ -1189,6 +1189,159 @@ CREATE FUNCTION public.msip_ubicacionpre_tras_crear_vereda() RETURNS trigger
 
 
 --
+-- Name: refresh_church_activity_cache(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.refresh_church_activity_cache(p_church_id integer DEFAULT NULL::integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+      INSERT INTO churchactivitycache (
+        church_id, guide_score_sum, referral_count_sum, donations_usdt_sum,
+        sbt_count_sum, slearn_balance_sum, profilescore_sum, amount_member, updated_at)
+      SELECT
+        m.church_id,
+        COALESCE(SUM(m.guide_score), 0),
+        COALESCE(SUM(m.referral_count), 0),
+        COALESCE(SUM(m.donations_usdt), 0),
+        COALESCE(SUM(m.sbt_count), 0),
+        COALESCE(SUM(m.slearn_balance), 0),
+        COALESCE(SUM(m.profilescore), 0),
+        COUNT(*),
+        NOW()
+      FROM (
+        SELECT
+          u.church_id,
+          COALESCE(u.profilescore, 0) AS profilescore,
+          COALESCE((
+            SELECT COUNT(DISTINCT gu.actividadpf_id)
+            FROM guide_usuario gu
+            JOIN cor1440_gen_actividadpf a ON a.id = gu.actividadpf_id
+            LEFT JOIN cor1440_gen_proyectofinanciero c ON c.id = a.proyectofinanciero_id
+            WHERE gu.usuario_id = u.id AND gu.points > 0
+              AND (c.contenido_sensible = FALSE OR u.mostrar_cursos_sensibles_publico = TRUE)
+          ), 0)
+          + COALESCE((
+            SELECT COUNT(DISTINCT gu.actividadpf_id)
+            FROM guide_usuario gu
+            JOIN cor1440_gen_actividadpf a ON a.id = gu.actividadpf_id
+            LEFT JOIN cor1440_gen_proyectofinanciero c ON c.id = a.proyectofinanciero_id
+            WHERE gu.usuario_id = u.id
+              AND (c.contenido_sensible = FALSE OR u.mostrar_cursos_sensibles_publico = TRUE)
+              AND EXISTS (
+                SELECT 1 FROM transaction t
+                WHERE t.usuario_id = gu.usuario_id AND t.type = 'scholarship'
+                  AND t.crypto = 'usdt' AND t.metadata->>'guideId' = gu.actividadpf_id::text)
+          ), 0)
+          + COALESCE((
+            SELECT COUNT(DISTINCT gu.actividadpf_id)
+            FROM guide_usuario gu
+            JOIN cor1440_gen_actividadpf a ON a.id = gu.actividadpf_id
+            LEFT JOIN cor1440_gen_proyectofinanciero c ON c.id = a.proyectofinanciero_id
+            WHERE gu.usuario_id = u.id
+              AND (c.contenido_sensible = FALSE OR u.mostrar_cursos_sensibles_publico = TRUE)
+              AND EXISTS (
+                SELECT 1 FROM transaction t
+                WHERE t.usuario_id = gu.usuario_id AND t.type = 'scholarship'
+                  AND t.crypto = 'slearn' AND t.metadata->>'guideId' = gu.actividadpf_id::text)
+          ), 0) AS guide_score,
+          COALESCE((SELECT COUNT(*) FROM referralrelationship rr WHERE rr.referrer_id = u.id), 0) AS referral_count,
+          COALESCE((SELECT SUM(t.amount) FROM transaction t
+                    WHERE t.usuario_id = u.id AND t.type = 'donation' AND t.crypto = 'usdt'), 0) AS donations_usdt,
+          COALESCE((
+            SELECT COUNT(*)
+            FROM credential_emission ce
+            LEFT JOIN cor1440_gen_proyectofinanciero c ON c.id = ce.course_id
+            WHERE ce.usuario_id = u.id AND ce.revoked_at IS NULL
+              AND (c.contenido_sensible = FALSE OR u.mostrar_cursos_sensibles_publico = TRUE)
+          ), 0) AS sbt_count,
+          COALESCE((SELECT SUM(t.balance_impact) FROM transaction t
+                    WHERE t.usuario_id = u.id AND t.crypto = 'slearn'), 0) AS slearn_balance
+        FROM usuario u
+        JOIN church ch ON ch.id = u.church_id
+        WHERE u.church_id IS NOT NULL
+          AND u.excluir_leaderboard IS NOT TRUE
+          AND (p_church_id IS NULL OR u.church_id = p_church_id)
+      ) m
+      GROUP BY m.church_id
+      ON CONFLICT (church_id) DO UPDATE SET
+        guide_score_sum = EXCLUDED.guide_score_sum,
+        referral_count_sum = EXCLUDED.referral_count_sum,
+        donations_usdt_sum = EXCLUDED.donations_usdt_sum,
+        sbt_count_sum = EXCLUDED.sbt_count_sum,
+        slearn_balance_sum = EXCLUDED.slearn_balance_sum,
+        profilescore_sum = EXCLUDED.profilescore_sum,
+        amount_member = EXCLUDED.amount_member,
+        updated_at = NOW();
+    END;
+    $$;
+
+
+--
+-- Name: refresh_church_reputation(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.refresh_church_reputation(p_church_id integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+    DECLARE
+      v_positives INTEGER := 0;
+      v_penalty INTEGER := 0;
+      v_cap BOOLEAN := FALSE;
+      v_reg_verified BOOLEAN := FALSE;
+    BEGIN
+      SELECT COALESCE(c.registration_verified, FALSE) INTO v_reg_verified
+      FROM church c WHERE c.id = p_church_id;
+      IF NOT FOUND THEN
+        RETURN;
+      END IF;
+
+      IF v_reg_verified THEN v_positives := v_positives + 10; END IF;
+      IF EXISTS (
+        SELECT 1 FROM usuario u
+        WHERE u.church_id = p_church_id AND u.church_relationship = 'pastor'
+          AND u.verified_church_relationship = 'pastor'
+      ) THEN v_positives := v_positives + 20; END IF;
+
+      SELECT EXISTS (
+        SELECT 1 FROM reputationevidence e
+        JOIN pastorreputation pr ON pr.id = e.pastorreputation_id
+        JOIN usuario u ON u.id = pr.usuario_id
+        WHERE u.church_id = p_church_id AND e.resolved_at IS NULL
+          AND e.evidence_reason IN ('dishonesty', 'sexual_abuse')
+          AND u.church_relationship IN ('pastor', 'co_pastor')
+      ) INTO v_cap;
+
+      IF NOT v_cap THEN
+        IF EXISTS (
+          SELECT 1 FROM usuario u
+          WHERE u.church_id = p_church_id AND u.church_relationship = 'leader'
+            AND EXISTS (SELECT 1 FROM reputationevidence e
+                        JOIN pastorreputation pr ON pr.id = e.pastorreputation_id
+                        WHERE pr.usuario_id = u.id AND e.resolved_at IS NULL)
+        ) THEN v_penalty := v_penalty + 20; END IF;
+        IF EXISTS (
+          SELECT 1 FROM usuario u
+          WHERE u.church_id = p_church_id AND u.church_relationship = 'member'
+            AND EXISTS (SELECT 1 FROM reputationevidence e
+                        JOIN pastorreputation pr ON pr.id = e.pastorreputation_id
+                        WHERE pr.usuario_id = u.id AND e.resolved_at IS NULL)
+        ) THEN v_penalty := v_penalty + 10; END IF;
+      END IF;
+
+      INSERT INTO churchreputation (church_id, reputation_score, updated_at)
+      VALUES (
+        p_church_id,
+        CASE WHEN v_cap THEN LEAST(v_positives - v_penalty, -50) ELSE v_positives - v_penalty END,
+        NOW()
+      )
+      ON CONFLICT (church_id) DO UPDATE
+        SET reputation_score = EXCLUDED.reputation_score, updated_at = NOW();
+    END;
+    $$;
+
+
+--
 -- Name: soundexesp(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1372,6 +1525,74 @@ CREATE FUNCTION public.transaction_lowercase_wallet_fn() RETURNS trigger
 
 
 --
+-- Name: trg_church_reputation_refresh(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.trg_church_reputation_refresh() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+      PERFORM refresh_church_reputation(NEW.id);
+      RETURN NEW;
+    END;
+    $$;
+
+
+--
+-- Name: trg_reputationevidence_refresh(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.trg_reputationevidence_refresh() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    DECLARE
+      v_usuario INTEGER;
+      v_church INTEGER;
+    BEGIN
+      SELECT pr.usuario_id INTO v_usuario FROM pastorreputation pr
+        WHERE pr.id = COALESCE(NEW.pastorreputation_id, OLD.pastorreputation_id);
+      SELECT u.church_id INTO v_church FROM usuario u WHERE u.id = v_usuario;
+      IF v_church IS NOT NULL THEN
+        PERFORM refresh_church_reputation(v_church);
+      END IF;
+      RETURN COALESCE(NEW, OLD);
+    END;
+    $$;
+
+
+--
+-- Name: trg_user_church_activity_refresh(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.trg_user_church_activity_refresh() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    DECLARE
+      v_user INTEGER;
+      v_church INTEGER;
+    BEGIN
+      IF TG_TABLE_NAME = 'usuario' THEN
+        v_user := COALESCE(NEW.id, OLD.id);
+      ELSIF TG_TABLE_NAME = 'referralrelationship' THEN
+        v_user := COALESCE(NEW.referrer_id, OLD.referrer_id);
+      ELSE
+        v_user := COALESCE(NEW.usuario_id, OLD.usuario_id);
+      END IF;
+      SELECT u.church_id INTO v_church FROM usuario u WHERE u.id = v_user;
+      IF v_church IS NOT NULL THEN
+        PERFORM refresh_church_activity_cache(v_church);
+      END IF;
+      IF TG_TABLE_NAME = 'usuario' AND TG_OP = 'UPDATE' THEN
+        IF OLD.church_id IS NOT NULL AND OLD.church_id IS DISTINCT FROM NEW.church_id THEN
+          PERFORM refresh_church_activity_cache(OLD.church_id);
+        END IF;
+      END IF;
+      RETURN COALESCE(NEW, OLD);
+    END;
+    $$;
+
+
+--
 -- Name: usuario_visibilidad_sensible_por_region(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1518,7 +1739,10 @@ CREATE TABLE public.church (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     merged_into_id integer,
-    deleted_at timestamp with time zone
+    deleted_at timestamp with time zone,
+    is_listed boolean DEFAULT true NOT NULL,
+    listing_reason character varying(50),
+    consent_public boolean DEFAULT true NOT NULL
 );
 
 
@@ -1573,6 +1797,55 @@ CREATE SEQUENCE public.church_id_seq
 --
 
 ALTER SEQUENCE public.church_id_seq OWNED BY public.church.id;
+
+
+--
+-- Name: churchactivitycache; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.churchactivitycache (
+    church_id integer NOT NULL,
+    guide_score_sum numeric DEFAULT 0 NOT NULL,
+    referral_count_sum numeric DEFAULT 0 NOT NULL,
+    donations_usdt_sum numeric DEFAULT 0 NOT NULL,
+    sbt_count_sum numeric DEFAULT 0 NOT NULL,
+    slearn_balance_sum numeric DEFAULT 0 NOT NULL,
+    profilescore_sum numeric DEFAULT 0 NOT NULL,
+    amount_member integer DEFAULT 0 NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: churchreputation; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.churchreputation (
+    id integer NOT NULL,
+    church_id integer NOT NULL,
+    reputation_score integer DEFAULT 0 NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: churchreputation_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.churchreputation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: churchreputation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.churchreputation_id_seq OWNED BY public.churchreputation.id;
 
 
 --
@@ -5184,6 +5457,38 @@ ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 
 --
+-- Name: pastorreputation; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pastorreputation (
+    id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    reputation_score integer DEFAULT 0 NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: pastorreputation_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pastorreputation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pastorreputation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pastorreputation_id_seq OWNED BY public.pastorreputation.id;
+
+
+--
 -- Name: premium_course_usuario; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5321,6 +5626,81 @@ CREATE SEQUENCE public.religion_id_seq
 --
 
 ALTER SEQUENCE public.religion_id_seq OWNED BY public.religion.id;
+
+
+--
+-- Name: reputationevidence; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reputationevidence (
+    id integer NOT NULL,
+    pastorreputation_id integer NOT NULL,
+    evidence_reason character varying(50) NOT NULL,
+    evidence_notes text,
+    recorded_by integer NOT NULL,
+    recorded_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    notified_at timestamp without time zone,
+    reply_received_at timestamp without time zone,
+    resolved_at timestamp without time zone,
+    resolved_by integer,
+    resolution_notes text,
+    CONSTRAINT reputationevidence_reason_check CHECK (((evidence_reason)::text = ANY ((ARRAY['dishonesty'::character varying, 'sexual_abuse'::character varying, 'zionism'::character varying, 'other'::character varying])::text[])))
+);
+
+
+--
+-- Name: reputationevidence_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.reputationevidence_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: reputationevidence_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.reputationevidence_id_seq OWNED BY public.reputationevidence.id;
+
+
+--
+-- Name: reputationevidencefile; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reputationevidencefile (
+    id integer NOT NULL,
+    reputationevidence_id integer NOT NULL,
+    file_path character varying(255) NOT NULL,
+    file_name character varying(255) NOT NULL,
+    file_mime character varying(100),
+    file_size integer,
+    uploaded_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: reputationevidencefile_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.reputationevidencefile_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: reputationevidencefile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.reputationevidencefile_id_seq OWNED BY public.reputationevidencefile.id;
 
 
 --
@@ -5572,6 +5952,13 @@ ALTER TABLE ONLY public.church ALTER COLUMN id SET DEFAULT nextval('public.churc
 --
 
 ALTER TABLE ONLY public.church_clustergd ALTER COLUMN id SET DEFAULT nextval('public.church_clustergd_id_seq'::regclass);
+
+
+--
+-- Name: churchreputation id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.churchreputation ALTER COLUMN id SET DEFAULT nextval('public.churchreputation_id_seq'::regclass);
 
 
 --
@@ -6142,6 +6529,13 @@ ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: pastorreputation id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pastorreputation ALTER COLUMN id SET DEFAULT nextval('public.pastorreputation_id_seq'::regclass);
+
+
+--
 -- Name: premium_course_usuario id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -6167,6 +6561,20 @@ ALTER TABLE ONLY public.referralrelationship ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY public.religion ALTER COLUMN id SET DEFAULT nextval('public.religion_id_seq'::regclass);
+
+
+--
+-- Name: reputationevidence id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reputationevidence ALTER COLUMN id SET DEFAULT nextval('public.reputationevidence_id_seq'::regclass);
+
+
+--
+-- Name: reputationevidencefile id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reputationevidencefile ALTER COLUMN id SET DEFAULT nextval('public.reputationevidencefile_id_seq'::regclass);
 
 
 --
@@ -6252,6 +6660,30 @@ ALTER TABLE ONLY public.church_clustergd
 
 ALTER TABLE ONLY public.church
     ADD CONSTRAINT church_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: churchactivitycache churchactivitycache_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.churchactivitycache
+    ADD CONSTRAINT churchactivitycache_pkey PRIMARY KEY (church_id);
+
+
+--
+-- Name: churchreputation churchreputation_church_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.churchreputation
+    ADD CONSTRAINT churchreputation_church_id_key UNIQUE (church_id);
+
+
+--
+-- Name: churchreputation churchreputation_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.churchreputation
+    ADD CONSTRAINT churchreputation_pkey PRIMARY KEY (id);
 
 
 --
@@ -7167,6 +7599,22 @@ ALTER TABLE ONLY public.notifications
 
 
 --
+-- Name: pastorreputation pastorreputation_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pastorreputation
+    ADD CONSTRAINT pastorreputation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pastorreputation pastorreputation_usuario_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pastorreputation
+    ADD CONSTRAINT pastorreputation_usuario_id_key UNIQUE (usuario_id);
+
+
+--
 -- Name: premium_course_usuario premium_course_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7228,6 +7676,22 @@ ALTER TABLE ONLY public.referralrelationship
 
 ALTER TABLE ONLY public.religion
     ADD CONSTRAINT religion_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: reputationevidence reputationevidence_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reputationevidence
+    ADD CONSTRAINT reputationevidence_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: reputationevidencefile reputationevidencefile_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reputationevidencefile
+    ADD CONSTRAINT reputationevidencefile_pkey PRIMARY KEY (id);
 
 
 --
@@ -7889,6 +8353,55 @@ CREATE TRIGGER tras_crear_o_actualizar_ubicacionpre BEFORE INSERT OR UPDATE OF p
 
 
 --
+-- Name: credential_emission trg_church_activity_credential_emission; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_church_activity_credential_emission AFTER INSERT OR DELETE OR UPDATE ON public.credential_emission FOR EACH ROW EXECUTE FUNCTION public.trg_user_church_activity_refresh();
+
+
+--
+-- Name: guide_usuario trg_church_activity_guide_usuario; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_church_activity_guide_usuario AFTER INSERT OR DELETE OR UPDATE ON public.guide_usuario FOR EACH ROW EXECUTE FUNCTION public.trg_user_church_activity_refresh();
+
+
+--
+-- Name: referralrelationship trg_church_activity_referralrelationship; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_church_activity_referralrelationship AFTER INSERT OR DELETE OR UPDATE ON public.referralrelationship FOR EACH ROW EXECUTE FUNCTION public.trg_user_church_activity_refresh();
+
+
+--
+-- Name: transaction trg_church_activity_transaction; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_church_activity_transaction AFTER INSERT OR DELETE OR UPDATE ON public.transaction FOR EACH ROW EXECUTE FUNCTION public.trg_user_church_activity_refresh();
+
+
+--
+-- Name: usuario trg_church_activity_usuario; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_church_activity_usuario AFTER INSERT OR UPDATE OF church_id, excluir_leaderboard, profilescore, mostrar_cursos_sensibles_publico, mostrar_cursos_publico ON public.usuario FOR EACH ROW EXECUTE FUNCTION public.trg_user_church_activity_refresh();
+
+
+--
+-- Name: church trg_church_reputation_refresh; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_church_reputation_refresh AFTER INSERT OR UPDATE OF registration_verified ON public.church FOR EACH ROW EXECUTE FUNCTION public.trg_church_reputation_refresh();
+
+
+--
+-- Name: reputationevidence trg_reputationevidence_refresh; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_reputationevidence_refresh AFTER INSERT OR UPDATE ON public.reputationevidence FOR EACH ROW EXECUTE FUNCTION public.trg_reputationevidence_refresh();
+
+
+--
 -- Name: usuario trg_sync_church_principal; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -7963,6 +8476,22 @@ ALTER TABLE ONLY public.church
 
 ALTER TABLE ONLY public.church
     ADD CONSTRAINT church_pastor_id_fkey FOREIGN KEY (pastor_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: churchactivitycache churchactivitycache_church_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.churchactivitycache
+    ADD CONSTRAINT churchactivitycache_church_id_fkey FOREIGN KEY (church_id) REFERENCES public.church(id);
+
+
+--
+-- Name: churchreputation churchreputation_church_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.churchreputation
+    ADD CONSTRAINT churchreputation_church_id_fkey FOREIGN KEY (church_id) REFERENCES public.church(id);
 
 
 --
@@ -9238,6 +9767,14 @@ ALTER TABLE ONLY public.notifications
 
 
 --
+-- Name: pastorreputation pastorreputation_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pastorreputation
+    ADD CONSTRAINT pastorreputation_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
+
+
+--
 -- Name: msip_persona persona_id_pais_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -9323,6 +9860,38 @@ ALTER TABLE ONLY public.referralrelationship
 
 ALTER TABLE ONLY public.referralrelationship
     ADD CONSTRAINT referralrelationship_referrer_id_fkey FOREIGN KEY (referrer_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: reputationevidence reputationevidence_pastorreputation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reputationevidence
+    ADD CONSTRAINT reputationevidence_pastorreputation_id_fkey FOREIGN KEY (pastorreputation_id) REFERENCES public.pastorreputation(id);
+
+
+--
+-- Name: reputationevidence reputationevidence_recorded_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reputationevidence
+    ADD CONSTRAINT reputationevidence_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES public.usuario(id);
+
+
+--
+-- Name: reputationevidence reputationevidence_resolved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reputationevidence
+    ADD CONSTRAINT reputationevidence_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES public.usuario(id);
+
+
+--
+-- Name: reputationevidencefile reputationevidencefile_reputationevidence_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reputationevidencefile
+    ADD CONSTRAINT reputationevidencefile_reputationevidence_id_fkey FOREIGN KEY (reputationevidence_id) REFERENCES public.reputationevidence(id);
 
 
 --

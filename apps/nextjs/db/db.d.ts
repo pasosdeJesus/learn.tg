@@ -59,6 +59,7 @@ export interface Church {
   city_id: number | null;
   city_name: string | null;
   cluster_wallet: string | null;
+  consent_public: Generated<boolean>;
   country_id: number;
   created_at: Generated<Timestamp | null>;
   created_by: number;
@@ -66,6 +67,8 @@ export interface Church {
   denomination: string | null;
   department_id: number | null;
   id: Generated<number>;
+  is_listed: Generated<boolean>;
+  listing_reason: string | null;
   merged_into_id: number | null;
   municipality_id: number | null;
   name: string;
@@ -79,12 +82,31 @@ export interface Church {
   updated_at: Generated<Timestamp | null>;
 }
 
+export interface Churchactivitycache {
+  amount_member: Generated<number>;
+  church_id: number;
+  donations_usdt_sum: Generated<Numeric>;
+  guide_score_sum: Generated<Numeric>;
+  profilescore_sum: Generated<Numeric>;
+  referral_count_sum: Generated<Numeric>;
+  sbt_count_sum: Generated<Numeric>;
+  slearn_balance_sum: Generated<Numeric>;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface ChurchClustergd {
   church_id: number;
   clustergd_id: number;
   id: Generated<number>;
   joined_at: Generated<Timestamp | null>;
   left_at: Timestamp | null;
+}
+
+export interface Churchreputation {
+  church_id: number;
+  id: Generated<number>;
+  reputation_score: Generated<number>;
+  updated_at: Generated<Timestamp>;
 }
 
 export interface Clustergd {
@@ -1374,6 +1396,13 @@ export interface Notifications {
   usuario_id: number | null;
 }
 
+export interface Pastorreputation {
+  id: Generated<number>;
+  reputation_score: Generated<number>;
+  updated_at: Generated<Timestamp>;
+  usuario_id: number;
+}
+
 export interface PremiumCourseUsuario {
   course_id: number;
   expires_at: Timestamp | null;
@@ -1413,6 +1442,30 @@ export interface Religion {
   nombre: string;
   observaciones: string | null;
   updated_at: Timestamp;
+}
+
+export interface Reputationevidence {
+  evidence_notes: string | null;
+  evidence_reason: string;
+  id: Generated<number>;
+  notified_at: Timestamp | null;
+  pastorreputation_id: number;
+  recorded_at: Generated<Timestamp>;
+  recorded_by: number;
+  reply_received_at: Timestamp | null;
+  resolution_notes: string | null;
+  resolved_at: Timestamp | null;
+  resolved_by: number | null;
+}
+
+export interface Reputationevidencefile {
+  file_mime: string | null;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  id: Generated<number>;
+  reputationevidence_id: number;
+  uploaded_at: Generated<Timestamp>;
 }
 
 export interface SchemaMigrations {
@@ -1537,6 +1590,8 @@ export interface DB {
   billetera_usuario: BilleteraUsuario;
   church: Church;
   church_clustergd: ChurchClustergd;
+  churchactivitycache: Churchactivitycache;
+  churchreputation: Churchreputation;
   cluster_invitation: ClusterInvitation;
   clustergd: Clustergd;
   clustergd_history: ClustergdHistory;
@@ -1655,10 +1710,13 @@ export interface DB {
   msip_vereda: MsipVereda;
   nonce: Nonce;
   notifications: Notifications;
+  pastorreputation: Pastorreputation;
   premium_course_usuario: PremiumCourseUsuario;
   referralcode: Referralcode;
   referralrelationship: Referralrelationship;
   religion: Religion;
+  reputationevidence: Reputationevidence;
+  reputationevidencefile: Reputationevidencefile;
   schema_migrations: SchemaMigrations;
   transaction: Transaction;
   userevent: Userevent;

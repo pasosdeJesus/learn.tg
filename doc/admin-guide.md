@@ -30,6 +30,17 @@ Table with ID, name (and email), wallet, country, church, score and actions
 (`View Profile`, `Edit`). Search looks in username, name, email and wallet with a
 300 ms debounce; the page shows 50 rows at a time.
 
+## Reputation (`/{lang}/admin/reputation`)
+
+Records and resolves **private** reputation evidence (R-#164 §2.4,
+[church-directory.md](church-directory.md)). You enter a pastor's user id, a
+reason (`dishonesty`, `sexual_abuse`, `zionism`, `other`), private notes and **at
+least one file**; the evidence is stored privately and starts the private-first
+process. A **different** verifier must resolve it (nobody is judge in their own
+cause). What is **published** follows the process: a church appears in the
+directory's "not recommended" section only after strong, unanswered evidence,
+never with a crime label. Region type 2 churches are never published.
+
 ## The user modal (verification)
 
 Opened from any user row or from a user id (`/{lang}/admin/user/{id}` is the
