@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { ReputationBadge } from '@/components/directory/ReputationBadge'
 import type { DirectoryEntry } from '@/lib/church-directory'
 
 type PageProps = { params: Promise<{ lang: string; id: string }> }
@@ -55,7 +56,7 @@ export default function ChurchDetailPage({ params }: PageProps) {
   if (loading) return <div className="container mx-auto py-8 px-4"><p className="text-gray-500">{t('loading')}</p></div>
   if (missing || !church) return <div className="container mx-auto py-8 px-4"><p className="text-gray-500">{t('notFound')}</p></div>
 
-  const isNotRecommended = church.activityScore == null && church.reputationScore === 0
+  const isNotRecommended = church.reputationKey === 'not_recommended'
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-2xl">
@@ -68,7 +69,7 @@ export default function ChurchDetailPage({ params }: PageProps) {
       {isNotRecommended && <p className="text-amber-700 text-sm mb-4">{t('notRecommended')}</p>}
 
       <dl className="grid grid-cols-2 gap-2 text-sm">
-        <dt className="text-gray-500">{t('reputation')}</dt><dd>{church.reputationScore}</dd>
+        <dt className="text-gray-500">{t('reputation')}</dt><dd><ReputationBadge reputationKey={church.reputationKey} lang={lang} /></dd>
         <dt className="text-gray-500">{t('activity')}</dt><dd>{church.activityScore ?? '—'}</dd>
         <dt className="text-gray-500">{t('members')}</dt><dd>{church.amountMember ?? '—'}</dd>
         <dt className="text-gray-500">{t('pastor')}</dt>

@@ -11,6 +11,8 @@ import { computeActivityScores } from './church-activity'
 //     sección, sin número de posición y con `activity_score`/`amount_member` ocultos;
 //   - el resto (registrada/verificada, listada, sin caso activo) → lista principal.
 
+export type ReputationKey = 'good' | 'good_no_pastor' | 'not_recommended'
+
 export interface DirectoryEntry {
   id: number
   name: string
@@ -21,13 +23,18 @@ export interface DirectoryEntry {
   pastorId: number | null
   pastorName: string | null
   reputationScore: number
+  reputationKey: ReputationKey
   activityScore: number | null
   amountMember: number | null
 }
 
+export type DirectorySortKey = 'reputation' | 'activity' | 'members' | 'church'
+
 export interface DirectoryFilters {
   country?: string
   denominations?: string[]
+  sort?: DirectorySortKey
+  order?: 'asc' | 'desc'
   page?: number
   limit?: number
 }
@@ -51,6 +58,7 @@ interface RawChurch {
   pastor_id: number | null
   pastor_nusuario: string | null
   reputation_score: number | null
+  has_lead_pastor: boolean | null
   amount_member: number | null
   guide_score_sum: number | string | null
   referral_count_sum: number | string | null
@@ -74,6 +82,7 @@ function baseSelect(db: Kysely<DB>) {
       'cr.reputation_score', 'cac.amount_member',
       'cac.guide_score_sum', 'cac.referral_count_sum', 'cac.donations_usdt_sum',
       'cac.sbt_count_sum', 'cac.slearn_balance_sum', 'cac.profilescore_sum',
+      sql<boolean>`EXISTS (SELECT 1 FROM usuario u WHERE u.church_id = ch.id AND u.church_relationship = 'pastor' AND u.verified_church_relationship = 'pastor')`.as('has_lead_pastor'),
     ])
     .where('ch.deleted_at', 'is', null)
     .where(sql<boolean>`COALESCE(p.tipo_region, 1) <> 2`)
@@ -88,7 +97,13 @@ function mainListQuery(db: Kysely<DB>) {
     .where(sql<boolean>`COALESCE(cr.reputation_score, 0) >= 0`)
 }
 
-function toEntry(row: RawChurch, activityScore: number | null): DirectoryEntry {
+function reputationKeyFor(score: number, hasLeadPastor: boolean, notRecommended: boolean): ReputationKey {
+  if (notRecommended || score < 0) return 'not_recommended'
+  return hasLeadPastor ? 'good' : 'good_no_pastor'
+}
+
+function toEntry(row: RawChurch, activityScore: number | null, notRecommended = false): DirectoryEntry {
+  const score = Number(row.reputation_score ?? 0)
   return {
     id: Number(row.church_id),
     name: row.name,
@@ -98,24 +113,63 @@ function toEntry(row: RawChurch, activityScore: number | null): DirectoryEntry {
     denomination: row.denomination,
     pastorId: row.pastor_id,
     pastorName: row.pastor_nusuario,
-    reputationScore: Number(row.reputation_score ?? 0),
+    reputationScore: score,
+    reputationKey: reputationKeyFor(score, !!row.has_lead_pastor, notRecommended),
     activityScore,
     amountMember: row.amount_member == null ? null : Number(row.amount_member),
   }
 }
 
+// Default order (R-#164): reputation, then activity, then members (descending),
+// with the id ascending as the final tie-breaker. A chosen `sort` becomes the
+// primary key; the rest follow the same chain.
+function sortValue(key: DirectorySortKey | 'id', r: RawChurch, scores: Map<number, number>): number | string {
+  switch (key) {
+    case 'reputation': return Number(r.reputation_score ?? 0)
+    case 'activity': return scores.get(Number(r.church_id)) ?? 0
+    case 'members': return Number(r.amount_member ?? 0)
+    case 'id': return Number(r.church_id)
+    case 'church': return (r.name || '').toLowerCase()
+  }
+}
+
+function orderRows(
+  rows: RawChurch[],
+  scores: Map<number, number>,
+  sort: DirectorySortKey,
+  order: 'asc' | 'desc',
+): RawChurch[] {
+  const chain: { key: DirectorySortKey | 'id'; dir: 'asc' | 'desc' }[] = []
+  if (sort === 'church') chain.push({ key: 'church', dir: order })
+  else chain.push({ key: sort, dir: order })
+  for (const k of ['reputation', 'activity', 'members'] as const) {
+    if (k !== sort) chain.push({ key: k, dir: 'desc' })
+  }
+  chain.push({ key: 'id', dir: 'asc' })
+
+  return [...rows].sort((a, b) => {
+    for (const { key, dir } of chain) {
+      const va = sortValue(key, a, scores)
+      const vb = sortValue(key, b, scores)
+      const cmp = typeof va === 'string' ? va.localeCompare(vb as string) : (va as number) - (vb as number)
+      if (cmp !== 0) return dir === 'asc' ? cmp : -cmp
+    }
+    return 0
+  })
+}
+
 /**
  * Paginated directory. The activity normalization is computed over the **whole**
- * main population (never the filtered view), then the filters and pagination are
- * applied — so a church's `activity_score` does not change with the visit. The
- * `countries`/`denominations` facets come from the whole population too (the
- * filter options do not shrink as you filter).
+ * main population (never the filtered view), then the filters, ordering and
+ * pagination are applied — so a church's `activity_score` does not change with the
+ * visit. The `countries`/`denominations` facets come from the whole population too
+ * (the filter options do not shrink as you filter).
  */
 export async function getDirectory(
   db: Kysely<DB>,
   filters: DirectoryFilters = {},
 ): Promise<DirectoryResult> {
-  const { country, denominations, page = 1, limit = 24 } = filters
+  const { country, denominations, sort = 'reputation', order = 'desc', page = 1, limit = 24 } = filters
   const population = (await mainListQuery(db).execute()) as unknown as RawChurch[]
   const scores = computeActivityScores(population)
 
@@ -139,7 +193,7 @@ export async function getDirectory(
     const set = new Set(denominations.map((d) => d.toLowerCase()))
     rows = rows.filter((r) => set.has((r.denomination || '').toLowerCase()))
   }
-  rows = [...rows].sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+  rows = orderRows(rows, scores, sort, order)
 
   const total = rows.length
   const start = Math.max(0, (page - 1) * limit)
@@ -161,7 +215,7 @@ export async function getNotRecommended(db: Kysely<DB>): Promise<DirectoryEntry[
     .execute()) as unknown as RawChurch[]
   return rows
     .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-    .map((r) => ({ ...toEntry(r, null), reputationScore: 0, amountMember: null }))
+    .map((r) => ({ ...toEntry(r, null, true), reputationScore: 0, amountMember: null }))
 }
 
 /**
@@ -180,7 +234,7 @@ export async function getChurchDetail(db: Kysely<DB>, id: number): Promise<Direc
   if (!listingReason) return null
 
   if (listingReason.listing_reason === 'not_recommended') {
-    return { ...toEntry(row, null), reputationScore: 0, amountMember: null }
+    return { ...toEntry(row, null, true), reputationScore: 0, amountMember: null }
   }
   if (listingReason.registration_verified !== true || listingReason.is_listed !== true || listingReason.listing_reason) {
     return null

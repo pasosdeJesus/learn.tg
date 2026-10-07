@@ -4,7 +4,8 @@ import { use, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { CountryFilter } from '@learn-tg/gdcluster/components/CountryFilter'
-import type { DirectoryEntry } from '@/lib/church-directory'
+import { ReputationBadge } from '@/components/directory/ReputationBadge'
+import type { DirectoryEntry, DirectorySortKey } from '@/lib/church-directory'
 
 type PageProps = { params: Promise<{ lang: string }> }
 type TFunc = (k: string) => string
@@ -23,6 +24,13 @@ export default function ChurchDirectoryPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true)
   const [country, setCountry] = useState<string | null>(null)
   const [denominations, setDenominations] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState<DirectorySortKey>('reputation')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+
+  const handleSort = (field: DirectorySortKey) => {
+    if (field === sortBy) setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))
+    else { setSortBy(field); setSortOrder(field === 'church' ? 'asc' : 'desc') }
+  }
 
   const t = createComponentT(lang, {
     en: {
@@ -46,7 +54,7 @@ export default function ChurchDirectoryPage({ params }: PageProps) {
   })
 
   useEffect(() => {
-    const qs = new URLSearchParams({ not_recommended: '1' })
+    const qs = new URLSearchParams({ not_recommended: '1', sort: sortBy, order: sortOrder })
     if (country) qs.set('country', country)
     for (const d of denominations) qs.append('denomination', d)
     setLoading(true)
@@ -64,7 +72,7 @@ export default function ChurchDirectoryPage({ params }: PageProps) {
       })
       .catch(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [country, denominations.join(',')])
+  }, [country, denominations.join(','), sortBy, sortOrder])
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl space-y-6">
@@ -97,11 +105,11 @@ export default function ChurchDirectoryPage({ params }: PageProps) {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b text-left text-xs uppercase tracking-wider text-gray-400">
                 <tr>
-                  <th className="px-3 py-2">{t('church')}</th>
+                  <th className="px-3 py-2"><SortHeader field="church" label={t('church')} sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
                   <th className="px-3 py-2 hidden sm:table-cell">{t('pastor')}</th>
-                  <th className="px-3 py-2 text-right">{t('reputation')}</th>
-                  <th className="px-3 py-2 text-right">{t('activity')}</th>
-                  <th className="px-3 py-2 text-right">{t('members')}</th>
+                  <th className="px-3 py-2 text-right"><SortHeader field="reputation" label={t('reputation')} sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
+                  <th className="px-3 py-2 text-right"><SortHeader field="activity" label={t('activity')} sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
+                  <th className="px-3 py-2 text-right"><SortHeader field="members" label={t('members')} sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} /></th>
                 </tr>
               </thead>
               <tbody>
@@ -118,7 +126,7 @@ export default function ChurchDirectoryPage({ params }: PageProps) {
                         ? <Link href={`/${lang}/user/${c.pastorId}`} className="text-blue-600 hover:underline">{c.pastorName || `#${c.pastorId}`}</Link>
                         : '—'}
                     </td>
-                    <td className="px-3 py-2 text-right text-xs">{c.reputationScore}</td>
+                    <td className="px-3 py-2 text-right"><ReputationBadge reputationKey={c.reputationKey} lang={lang} /></td>
                     <td className="px-3 py-2 text-right text-xs">{c.activityScore ?? '—'}</td>
                     <td className="px-3 py-2 text-right text-xs">{c.amountMember ?? '—'}</td>
                   </tr>
@@ -155,6 +163,25 @@ export default function ChurchDirectoryPage({ params }: PageProps) {
         </div>
       )}
     </div>
+  )
+}
+
+/** Clickable column header: requests that column as the sort key (toggles asc/desc). */
+function SortHeader({
+  field, label, sortBy, sortOrder, onSort,
+}: {
+  field: DirectorySortKey
+  label: string
+  sortBy: DirectorySortKey
+  sortOrder: 'asc' | 'desc'
+  onSort: (f: DirectorySortKey) => void
+}) {
+  const active = sortBy === field
+  return (
+    <button type="button" onClick={() => onSort(field)} className="inline-flex items-center gap-1 hover:text-gray-600 uppercase">
+      {label}
+      {active && <span className="text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>}
+    </button>
   )
 }
 

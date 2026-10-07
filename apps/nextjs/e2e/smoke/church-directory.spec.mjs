@@ -32,11 +32,13 @@ async function main() {
     else if (!Array.isArray(notRecommended)) fail('notRecommended is not an array')
     else ok(`list → 200 (total=${total}, notRecommended=${notRecommended.length})`)
 
+    const valid = new Set(['good', 'good_no_pastor', 'not_recommended'])
     const bad = (churches || []).find(
-      (c) => c.id == null || !c.name || c.reputationScore == null || !('activityScore' in c),
+      (c) => c.id == null || !c.name || c.reputationScore == null
+        || !('activityScore' in c) || !valid.has(c.reputationKey),
     )
     if (bad) fail(`entry missing fields: ${JSON.stringify(bad).slice(0, 120)}`)
-    else ok(`all ${churches.length} entries have id/name/reputationScore/activityScore`)
+    else ok(`all ${churches.length} entries have id/name/reputationKey/activityScore`)
   }
 
   // 2. Detail of the first church
@@ -77,6 +79,12 @@ async function main() {
       fail(`denomination filter (${denominations[0]}) inconsistent`)
     }
   }
+
+  // 4c. Ordering: sort=members desc keeps members non-increasing
+  const sorted = await api.get('/api/directory/churches?sort=members&order=desc')
+  const mems = (sorted.data?.churches || []).map((c) => Number(c.amountMember ?? 0))
+  if (sorted.status === 200 && mems.every((m, i) => i === 0 || mems[i - 1] >= m)) ok('sort=members desc is non-increasing')
+  else fail('sort=members desc is not ordered')
 
   // 5. Auth: claim requires a session, admin listing requires a verifier
   const claim = await api.post('/api/directory/churches/1/claim')
