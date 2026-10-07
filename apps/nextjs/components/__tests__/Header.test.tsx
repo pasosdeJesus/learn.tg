@@ -1,6 +1,6 @@
 import { SessionProvider } from 'next-auth/react'
 import * as React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -63,6 +63,7 @@ describe('Header', () => {
 
   afterEach(() => {
     vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
   })
 
   it('renders logo and title in English', () => {
@@ -87,6 +88,49 @@ describe('Header', () => {
     expect(hrefs).not.toContain('/en/profile') // sin sesión → sin Profile
     expect(hrefs).toContain('/en/leaderboard')
     expect(hrefs).toContain('/en/transparency')
+  })
+
+  // R-#164: el directorio se ofrece sólo a autenticados verificados en país tipo 1.
+  it('guest: the church directory is hidden', async () => {
+    renderWithProviders(<Header lang="en" />)
+    const hrefs = await openMenuHrefs()
+    expect(hrefs).not.toContain('/en/directory/churches')
+  })
+
+  it('verified in a region-1 country: the directory is shown', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ directoryVisible: true }),
+    })))
+    useSessionMock.mockReturnValue({
+      data: { user: { name: 'Test User' }, address: '0x123' },
+      status: 'authenticated',
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    } as never)
+    renderWithProviders(<Header lang="en" />)
+    fireEvent.click(screen.getByRole('button', { name: /Menu/ }))
+    await waitFor(() => {
+      const hrefs = screen.queryAllByRole('link').map((l) => l.getAttribute('href'))
+      expect(hrefs).toContain('/en/directory/churches')
+    })
+  })
+
+  it('region type 2 or unverified: the church directory is hidden', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ directoryVisible: false }),
+    })))
+    useSessionMock.mockReturnValue({
+      data: { user: { name: 'Test User' }, address: '0x123' },
+      status: 'authenticated',
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    } as never)
+    renderWithProviders(<Header lang="en" />)
+    fireEvent.click(screen.getByRole('button', { name: /Menu/ }))
+    await waitFor(() => {
+      const hrefs = screen.queryAllByRole('link').map((l) => l.getAttribute('href'))
+      expect(hrefs).not.toContain('/en/directory/churches')
+    })
   })
 
   // R-#230

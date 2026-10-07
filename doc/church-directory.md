@@ -27,6 +27,12 @@ and pastors. Full design: https://github.com/pasosdeJesus/learn.tg/issues/164.
 | Resolve a case | `POST /api/admin/reputation/evidence/[evidenceId]/resolve` | verifier (other) |
 | Evidence file | `GET /api/admin/reputation/evidence/[evidenceId]/file` | verifier |
 
+The ☰ menu shows the **Church directory** link only for a signed-in user who is
+**verified** (the verifier confirmed their place of worship/city) **and** lives in
+a **region type 1** country — the API decides it (`GET /api/settings` →
+`directoryVisible`). Guests, users without a country and region type 2 users do not
+see the link.
+
 ## Activity score (`activity_score`)
 
 Reuses the six R-#278 components aggregated **per church** in

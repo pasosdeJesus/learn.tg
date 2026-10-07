@@ -230,6 +230,7 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 |------|---------------|
 | `caldav-completa.spec.mjs` | CalDAV full cycle: create event, list, verify, delete (Radicale) |
 | `caldav-http.spec.mjs` | CalDAV connectivity: PROPFIND, OPTIONS to Radicale |
+| `church-directory.spec.mjs` | R-#164: public church directory — `GET /api/directory/churches` shape (churches/total/notRecommended), detail and 404, `country` filter consistency, claim without a session → 401, admin list without a verifier → 403 and `/en/directory/churches` → 200 |
 | `celo-claim.spec.mjs` | Full crossword → submit → scholarship claim flow |
 | `full-journey.spec.mjs` | All endpoints: CSRF, SIWE, session, profile, crossword, UBI, signout |
 | `landing-page.spec.mjs` | `/en` and `/es` return 200, no "Failed to load courses" error |

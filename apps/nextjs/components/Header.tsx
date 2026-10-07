@@ -39,6 +39,22 @@ export default function Header({ lang: langProp = 'en' }) {
 
   const sessionAddress = (session as any)?.address as string | undefined || localAddr || undefined
   const isAuthenticated = !!sessionAddress
+  // R-#164: el directorio de iglesias se ofrece sólo a quien está autenticado,
+  // verificado y vive en un país de región tipo 1. El API lo decide
+  // (`/api/settings.directoryVisible`): invitado, sin país o país tipo 2 → no.
+  const [directoryVisible, setDirectoryVisible] = useState(false)
+  useEffect(() => {
+    setDirectoryVisible(false)
+    if (!sessionAddress || typeof window === 'undefined') return
+    let cancelled = false
+    try {
+      fetch(`/api/settings?walletAddress=${encodeURIComponent(sessionAddress)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (!cancelled && d) setDirectoryVisible(!!d.directoryVisible) })
+        .catch(() => { /* ignore */ })
+    } catch { /* relative URL / offline in tests */ }
+    return () => { cancelled = true }
+  }, [sessionAddress])
   // R-#255: sólo el verificador ve el acceso al panel de administración. La página
   // /{lang}/admin vuelve a comprobarlo; esto es comodidad, no un control de acceso.
   const isVerifier = !!sessionAddress && verifierWallets().includes(sessionAddress.toLowerCase())
@@ -70,6 +86,8 @@ export default function Header({ lang: langProp = 'en' }) {
     { key: 'navCourses', href: `/${lang}`, emoji: '📚' }, // R-#231
     { key: 'navLeaderboard', href: `/${lang}/leaderboard`, emoji: '🏆' },
     { key: 'navTransparency', href: `/${lang}/transparency`, emoji: '📊' },
+    // R-#164: directorio de iglesias; sólo para quien está verificado en un país de región tipo 1.
+    ...(directoryVisible ? [{ key: 'churchDirectory', href: `/${lang}/directory/churches`, emoji: '⛪' }] : []),
     { key: 'navReferrals', href: lang === 'es' ? '/es/referidos' : `/${lang}/referrals`, emoji: '🤝' },
   ]
   const menuItems = isAuthenticated

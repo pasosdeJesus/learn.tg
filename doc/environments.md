@@ -273,6 +273,11 @@ cd apps/nextjs
 bin/dev          # Next.js on http://localhost:4000 (PORT in apps/.env)
 ```
 
+- **`ulimit -d` must be ≥ 7 GB** and `bin/dev` enforces it (it aborts
+  otherwise). The agent's shell (mvdan/sh) does **not** support `ulimit -d`
+  ("unsupported builtin"), so start it through the system `ksh`:
+  `/bin/ksh -c 'ulimit -d 7340032; exec bin/dev'`. In an interactive ksh,
+  `ulimit -d 7340032 && bin/dev` works directly.
 - **Open `localhost`, not `127.0.0.1`.** `authorize()` in
   `app/api/auth/auth-options.ts` accepts `learn.tg`, `learntg.pdj.app` and their
   `:9001`, plus — outside production — `localhost`, `localhost:4000` and
