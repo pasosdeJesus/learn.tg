@@ -89,8 +89,9 @@ matrix (Chromium 96–99 was still present for Opera).
 
 ## 5. Violation collector
 
-`app/api/csp-report` (Phase 1) logs `document-uri`, `violated-directive` and
-`blocked-uri` to the server output. It **never** logs the full URL query string: it
+`app/api/csp-report` (kept in Phase 2 to catch regressions) logs `document-uri`,
+`violated-directive` and `blocked-uri` to the server output. It **never** logs the full
+URL query string: it
 can carry a wallet address (`?walletAddress=0x…`). It is a **public** endpoint (the
 browser posts it without credentials, `application/csp-report`), it stores no PII and
 it is declared as public in `bin/audit-api-auth.mjs` with that reason — see
@@ -99,7 +100,7 @@ it is declared as public in `bin/audit-api-auth.mjs` with that reason — see
 Open decision: log only, or persist a `csp_violation` event in `userevent` (which
 already exists).
 
-## 6. How to know it is safe to enforce
+## 6. How it was validated (and how to re-validate)
 
 1. Ship report-only and read the reports.
 2. Drive the app on the dev site with the existing E2E specs (landing, course,
@@ -123,8 +124,9 @@ already exists).
 4. Re-run the wallet E2E specs (`make test-e2e-wallet`, `make test-e2e-biometric`,
    `make test-e2e-offline`) on the dev site.
 5. A regression test must fail if the header disappears (a future `next.config.ts`
-   or `middleware.ts` edit can drop it silently): assert the header on production in
-   a smoke spec, or add a unit test on the middleware response.
+   or `middleware.ts` edit can drop it silently): `app/__tests__/middleware.test.ts`
+   asserts the enforcing header and its directives on the middleware response (runs in
+   `make test-pages` and CI).
 
 ## 8. Open questions
 
