@@ -12,11 +12,10 @@ const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 const TRUSTED_FETCH_SITE = new Set(['same-origin', 'none'])
 
 // R-#247 (https://github.com/pasosdeJesus/learn.tg/issues/247): Content Security
-// Policy servida en **Report-Only** mientras se recolectan las violaciones
-// (doc/csp.md). Fase 1: el navegador recibe `Content-Security-Policy-Report-Only`,
-// así que nada se bloquea; el header "enforcing" se pone solo en el *request*, que
-// es como Next.js extrae el nonce y lo inyecta en sus scripts. Así el reporte queda
-// honesto (los scripts que Next marca con el nonce no se reportan).
+// Policy. Fase 2 (doc/csp.md): el navegador recibe `Content-Security-Policy`
+// (enforcing). El header tambien va en el *request* para que Next.js extraiga el
+// nonce y lo inyecte en sus scripts; `report-uri` sigue activo para registrar
+// regresiones. El nonce exige render dinámico (ver app/layout.tsx).
 const CSP_REPORT_URI = '/api/csp-report'
 const CSP_CONNECT_SRC = [
   "'self'",
@@ -31,15 +30,30 @@ const CSP_CONNECT_SRC = [
   'https://goodserver.gooddollar.org',
 ]
 
+const CSP_IMG_SRC = [
+  "'self'",
+  'data:',
+  'blob:',
+  'https://img.youtube.com',
+  'https://i.ytimg.com',
+  'https://celo.blockscout.com',
+  'https://celo-sepolia.blockscout.com',
+  'https://i.postimg.cc',
+]
+
+const CSP_FRAME_SRC = ["'self'", 'https://www.youtube.com']
+
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV === 'development'
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    `img-src ${CSP_IMG_SRC.join(' ')}`,
     "font-src 'self'",
     `connect-src ${CSP_CONNECT_SRC.join(' ')}`,
+    `frame-src ${CSP_FRAME_SRC.join(' ')}`,
+    "media-src 'self' blob:",
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "frame-ancestors 'none'",
@@ -72,9 +86,9 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // 2. CSP Report-Only (R-#247). El nonce va en el request para que Next.js lo
-  //    inyecte en sus scripts; al navegador solo le llega el header Report-Only,
-  //    de modo que nada se bloquea mientras el recolector aprende.
+  // 2. CSP enforcing (R-#247). El nonce va en el request para que Next.js lo
+  //    inyecte en sus scripts; el navegador recibe la política enforcing y
+  //    `report-uri` registra cualquier violación.
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
   const policy = buildCsp(nonce)
 
@@ -83,7 +97,7 @@ export function middleware(req: NextRequest) {
   requestHeaders.set('Content-Security-Policy', policy)
 
   const res = NextResponse.next({ request: { headers: requestHeaders } })
-  res.headers.set('Content-Security-Policy-Report-Only', policy)
+  res.headers.set('Content-Security-Policy', policy)
   return res
 }
 

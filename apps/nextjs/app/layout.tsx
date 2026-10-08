@@ -6,6 +6,13 @@ import './globals.css'
 
 import RootLayoutClient from './RootLayoutClient'
 
+// R-#247 (doc/csp.md): the CSP nonce needs a per-request render. Forcing dynamic
+// rendering in the root layout guarantees Next.js injects the nonce into its
+// scripts on every route. Only `/`, `/offline` and `/es/referidos` were static
+// (the `[lang]` routes are already dynamic: no `generateStaticParams`), so the
+// cost is limited to those three pages.
+export const dynamic = 'force-dynamic'
+
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
   subsets: ['latin'],

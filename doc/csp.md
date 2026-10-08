@@ -1,11 +1,12 @@
 # Content Security Policy (CSP) for learn.tg
 
-**Status: Phase 1 (Report-Only) implemented 2026-10-08.** `apps/nextjs/middleware.ts`
-serves `Content-Security-Policy-Report-Only` on every route and the collector
-`app/api/csp-report` is live; **nothing is enforced yet**. The design below is the
-policy agreed in https://github.com/pasosdeJesus/learn.tg/issues/247 (2026-09-18).
-Read this together with [api-security.md](api-security.md) (route auth and origin
-checks).
+**Status: enforced (Phase 2) 2026-10-08.** `apps/nextjs/middleware.ts` serves
+`Content-Security-Policy` on every route (per-request nonce; `report-uri`
+`/api/csp-report` still collects regressions) and the root layout forces dynamic
+rendering (`app/layout.tsx`) so Next.js injects the nonce. Phase 1 (Report-Only) ran
+on the development site first. The policy is in §4; the design comes from
+https://github.com/pasosdeJesus/learn.tg/issues/247 (2026-09-18). Read this with
+[api-security.md](api-security.md) (route auth and origin checks).
 
 ## 1. Why
 
@@ -32,23 +33,23 @@ own, (2) a compromised dependency in the bundle, or (3) a poisoned build/asset.
 | `X-Frame-Options` | `SAMEORIGIN` |
 | `X-XSS-Protection` | `1; mode=block` (deprecated, no effect in modern browsers) |
 | `Referrer-Policy` | `origin-when-cross-origin` |
-| `Content-Security-Policy-Report-Only` | the §4 policy, built by `middleware.ts` with a per-request nonce (Phase 1, 2026-10-08) |
+| `Content-Security-Policy` | the §4 policy, built by `middleware.ts` with a per-request nonce (enforced, 2026-10-08) |
 
-The static headers live in `apps/nextjs/next.config.ts`; the Report-Only CSP is set by
-`middleware.ts`, which needs a per-request nonce. `frame-ancestors 'none'` (Report-Only)
-does not replace `X-Frame-Options` until enforcement.
+The static headers live in `apps/nextjs/next.config.ts`; the CSP is set by
+`middleware.ts`, which needs a per-request nonce. `frame-ancestors 'none'` now replaces
+`X-Frame-Options`.
 
 ## 3. Rollout phases
 
-**Phase 1 — report only** (nothing breaks) — **done 2026-10-08**: live on all routes,
-collector at `/api/csp-report`; enforcement still pending:
+**Phase 1 — report only** (nothing breaks) — **done 2026-10-08**: it ran on the
+development site first, with the collector at `/api/csp-report`.
 
 ```
 Content-Security-Policy-Report-Only: <policy>; report-uri /api/csp-report
 ```
 
-**Phase 2 — enforce** once the report shows only known-good sources, keeping the
-collector to catch regressions.
+**Phase 2 — enforce** — **done 2026-10-08**: the response header is
+`Content-Security-Policy`; `report-uri /api/csp-report` stays to catch regressions.
 
 **Phase 3 — Trusted Types** (`require-trusted-types-for 'script'`) as a separate
 step: the guide body and the course outline use `dangerouslySetInnerHTML`.
@@ -59,15 +60,21 @@ checks) because a per-request nonce is needed for Next's inline hydration script
 
 ## 4. Starting policy
 
+Built by `buildCsp()` in `apps/nextjs/middleware.ts`. The nonce needs a per-request
+render, so the root layout forces dynamic rendering (`app/layout.tsx`): every page is
+server-rendered and Next.js injects the nonce into its scripts. The policy is:
+
 | Directive | Value | Why |
 |---|---|---|
 | `default-src` | `'self'` | Baseline deny |
 | `script-src` | `'self' 'nonce-<per request>' 'strict-dynamic'` | Next injects inline hydration scripts; `strict-dynamic` keeps dynamic imports working without listing every chunk |
 | `style-src` | `'self' 'unsafe-inline'` | Tailwind + React inline styles; removing it is a later, separate step (far less dangerous than in `script-src`) |
-| `img-src` | `'self' data: blob:` | Icons, QR codes, credential SVGs |
+| `img-src` | `'self' data: blob:` + `img.youtube.com`, `i.ytimg.com`, `celo.blockscout.com`, `celo-sepolia.blockscout.com`, `i.postimg.cc` | Icons, QR codes, credential SVGs, guide thumbnails and wallet collectibles |
 | `font-src` | `'self'` | System fonts |
 | `connect-src` | `'self'` + the Celo RPC hosts (`forno.celo.org`, `forno.celo-sepolia.celo-testnet.org`, `rpc.ankr.com`, `celo.drpc.org`, `celo-sepolia.drpc.org`, `celo-rpc.publicnode.com`, `celo-sepolia-rpc.publicnode.com`, `1rpc.io`) + `goodserver.gooddollar.org` | `fetch`/XHR and WebSocket |
 | `worker-src` | `'self' blob:` | `public/sw.js` and Next's workers |
+| `frame-src` | `'self' https://www.youtube.com` | YouTube embeds in guides |
+| `media-src` | `'self' blob:` | Local/blobb media |
 | `manifest-src` | `'self'` | `public/manifest.webmanifest` |
 | `frame-ancestors` | `'none'` | Replaces `X-Frame-Options` (no legitimate embedding is known; the Rails admin is out of scope) |
 | `base-uri` | `'self'` | Prevents `<base>` hijacking |
