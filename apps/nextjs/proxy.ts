@@ -112,7 +112,12 @@ export function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: '/((?!_next/static|_next/image|favicon.ico).*)',
+      // `sw.js` is excluded: a service worker takes its CSP from its own script
+      // response, and it must be able to cache cross-origin images (credential
+      // SBTs served from learn.tg / sivel.xyz / stable-sl.pdj.app) for offline.
+      // Restricting it with this policy breaks those images (the SW intercepts
+      // the page's <img> and its fetch is refused). The page keeps the full CSP.
+      source: '/((?!_next/static|_next/image|favicon.ico|sw.js).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

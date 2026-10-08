@@ -62,7 +62,16 @@ checks) because a per-request nonce is needed for Next's inline hydration script
 
 Built by `buildCsp()` in `apps/nextjs/proxy.ts`. The nonce needs a per-request
 render, so the root layout forces dynamic rendering (`app/layout.tsx`): every page is
-server-rendered and Next.js injects the nonce into its scripts. The policy is:
+server-rendered and Next.js injects the nonce into its scripts.
+
+The **service worker** (`/sw.js`) is deliberately **excluded** from the matcher: a worker
+takes its CSP from the response of its own script, and the SW must be able to cache
+cross-origin images (the credential SBTs served from `learn.tg` / `sivel.xyz` /
+`stable-sl.pdj.app`) for offline use; restricting it with this policy made the SW's
+`fetch` fail and, because the SW intercepts the page's `<img>`, the images did not show.
+The page keeps the full CSP.
+
+The policy is:
 
 | Directive | Value | Why |
 |---|---|---|
