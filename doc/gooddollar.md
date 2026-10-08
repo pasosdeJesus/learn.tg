@@ -165,17 +165,19 @@ GoodDollar can change its contracts or the FV message without notice.
 installed SDK. When the SDK updates, run the tests and update the constants here and
 in `lib/gooddollar-protocol.ts` together.
 
-## 8. Pending (needs a human)
+## 8. Status and follow-ups
 
-1. A real `direct-claim` on mainnet with a **verified** address, with a little CELO
-   for gas (the reference run cost about 0.065 CELO) and the operator's explicit
-   authorization to spend.
-2. The `verify` path end to end with a real face (FaceTec cannot be automated): after
+Closed on production (2026-10-08): the operator ran the two manual checks that cannot
+be automated, and both work —
+
+1. A real `direct-claim` on mainnet with a **verified** address (a little CELO for
+   gas; the reference run cost about 0.065 CELO).
+2. The `verify` path end to end with a real face (FaceTec cannot be automated):
    GoodID returns `verified=true`, learn.tg calls `syncWhitelist`, re-reads, and the
-   profile should get `lastgooddollarverification` (7 points). Open question: whether
-   `goodserver.gooddollar.org/syncWhitelist/{address}` works from a plain browser
-   `fetch` and whether the CSP `connect-src` must allow that origin
-   (https://github.com/pasosdeJesus/learn.tg/issues/247).
+   profile gets `lastgooddollarverification` (7 points).
+
+Not blocking, still open:
+
 3. `firstname` for the GoodID link: today the account is sent; if a profile name is
    wanted it has to come from the session.
 4. Divvi attribution (`GD_DATASUFFIX`) is dropped by the direct claim; out of scope,
