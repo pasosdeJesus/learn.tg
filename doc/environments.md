@@ -7,13 +7,18 @@ Operational map of the environments (sites), wallets, and local run modes for
 learn.tg. Read this before editing `apps/.env`, deploying, or running the
 stack locally.
 
+> **Rails is not needed to run learn.tg.** Neither the live site, local
+> development, nor the test suites use it (R-#233): the catalog, auth and rewards
+> are served by Next.js. Rails is a **separate application** kept only as an
+> on-demand backoffice; see *Rails backoffice* below.
+
 ## Environments
 
 | | Production | Development |
 |---|---|---|
 | URL | `https://learn.tg` | `https://learn.tg:9001` |
 | Celo network | `celo` (chain 42220) | `celoSepolia` (chain 11142220) |
-| Rails admin API | `https://learn.tg:3250/learntg-admin` | `https://learn.tg:3500/learntg-admin` |
+| Rails admin API (optional) | `https://learn.tg:3250/learntg-admin` | `https://learn.tg:3500/learntg-admin` |
 | Next.js API | same host | same host (`:9001`) |
 | Wallets | one per role (below) | single wallet for all roles |
 | Data | real users | development data |
@@ -31,7 +36,9 @@ The Rails admin app listens on a **different port per environment** (both under
 development**. The dev port is the one used by the frontend quickstart proxy
 (`NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin`). The course list and
 detail are served by the app itself (`/api/course-catalog`, R-#233 §4.4), so the
-public site no longer depends on those Rails ports.
+public site no longer depends on those Rails ports. Rails is therefore a
+**separate, optional application**: run it only for backoffice (MSIP/Devise)
+work; neither the site nor its tests need it (see *Rails backoffice*).
 
 Chain IDs confirmed by the E2E suites: specs targeting `https://learn.tg`
 report `chain: 42220` (mainnet), specs targeting `https://learn.tg:9001`
@@ -113,6 +120,16 @@ wallets:
 
 ## Local run modes
 
+Rails is **not** a mode here: learn.tg runs on Next.js alone and neither the
+site nor its tests use Rails (see *Rails backoffice* below). Pick the lightest
+mode that covers your change:
+
+| Mode | Needs | Use it for |
+|---|---|---|
+| 1. Frontend-only (proxy) | Node only | UI work; `/api` proxied to the dev site |
+| 2. Next-only (no Rails) | DB | API, auth and rewards against the shared PostgreSQL |
+| 3. Local browser / PWA | Node (+ Chrome) | Service worker, offline, install prompt |
+
 ### 1. Frontend-only (proxy to development) — light
 
 Run only the Next.js client and proxy API requests to the development site.
@@ -134,85 +151,7 @@ local frontend uses the remote dev backend for courses, auth, and rewards.
 Useful for UI-only frontend work. No database, no Rails, no blockchain writes
 needed locally.
 
-### 2. Full stack (Rails + Next.js, no proxy) — heavy
-
-Run the Rails backend and Next.js locally, pointing the frontend at the local
-Rails instance. Useful for testing backend+frontend changes together.
-
-Verified on this VM (adJ/OpenBSD 7.8, Ruby 3.4.9, PostgreSQL 17.9). The
-database `learntg_des` already exists (132 tables); the DB credentials come
-from `apps/.env` (`PGUSER=learntg`, `PGPASSWORD`, `PGDATABASE=learntg_des`).
-
-Setup steps, in order:
-
-```sh
-# 1. servidor/.env from the plantilla, using apps/.env DB data
-cd servidor
-cp .env.plantilla .env
-# edit: BD_CLAVE=<PGPASSWORD from apps/.env>, BD_USUARIO=learntg,
-#       BD_DES=learntg_des, BD_SERVIDOR=/var/www/var/run/postgresql,
-#       DIRAP=/var/www/adJ-ia/learn.tg/servidor/, IPDES=127.0.0.1
-
-# 2. Install native gems (bundler install fails at `chown root:bin`; use
-#    `doas gem install -N --install-dir <BUNDLE_PATH>/ruby/3.4/ ...`, which
-#    works from any shell). Native gems: bcrypt bootsnap libxml-ruby pg puma
-#    nio4r unicorn kgio raindrops sassc ffi msgpack redcarpet bindex
-#    websocket-driver etc.
-doas gem install -N --install-dir /var/www/adJ-ia/bundler/ruby/3.4/ bcrypt -v 3.1.22
-doas gem install -N --install-dir /var/www/adJ-ia/bundler/ruby/3.4/ pg -v 1.6.3
-doas gem install -N --install-dir /var/www/adJ-ia/bundler/ruby/3.4/ libxml-ruby -v 5.0.6
-# ... (zsh users may use the `gemil` helper instead; not required)
-
-# 3. rbsecp256k1 needs autotools + GNU libtool:
-doas pkg_add -I autoconf-2.69p3 automake-1.16.5p0 metaauto-1.0p4 libtool-2.4.2p3
-AUTOMAKE_VERSION=1.16 AUTOCONF_VERSION=2.69 doas gem install -N --install-dir /var/www/adJ-ia/bundler/ruby/3.4/ rbsecp256k1 -v 6.0.0
-bundle check   # -> "The Gemfile's dependencies are satisfied"
-
-# 4. JS deps + asset build
-CXX=c++ yarn install
-bundle exec bin/rails msip:enlaces_motores   # engine asset symlinks
-yarn build:css                                # postcss -> app/assets/builds/application.css
-yarn build                                    # esbuild -> app/assets/builds/*.js
-bundle exec bin/rails assets:precompile
-
-# 5. Run the server (must be via `bundle exec`; dotenv lives in the bundle
-#    path, not the system gem path). Use R=f to skip the heavy setup steps.
-ulimit -d 7340032 && R=f bundle exec ./bin/corre
-# -> Puma on http://127.0.0.1:3000, admin at /learntg-admin
-
-# in apps/.env switch the frontend to local endpoints (verified):
-#   NEXT_PUBLIC_API_URL=                    (empty -> Next.js serves /api itself)
-#   NEXT_PUBLIC_API_BASE=http://localhost:3000/learntg-admin
-#   NEXT_PUBLIC_SELF_ENDPOINT=http://localhost:4000/api/self-verify
-#   (course list/detail come from Next: /api/course-catalog — R-#233 §4.4)
-#   NEXT_PUBLIC_AUTH_URL=http://localhost:4000
-#   NEXTAUTH_URL=http://localhost:4000
-cd ../nextjs && bin/dev   # http://localhost:4000
-```
-
-Important details discovered while verifying:
-
-- **`ulimit -d` must be >= 7 GB** (`bin/dev` in `apps/nextjs` enforces this;
-  `bin/corre` does not, but Rails + assets need the memory).
-- **`bin/corre` must run via `bundle exec`** — plain `./bin/corre` fails with
-  `cannot load such file -- dotenv` because `BUNDLE_DISABLE_SHARED_GEMS=true`
-  puts gems in `/var/www/adJ-ia/bundler`, not the system path.
-- **No asset load-path config needed.** sprockets-rails auto-adds every
-  existing directory under `app/assets/` to the load path at boot
-  (`existent_directories`). So once `yarn build` creates `app/assets/builds/`,
-  `stylesheet_link_tag "application"` resolves to the built `application.css`.
-  Just start the server *after* `yarn build` (the normal `bin/corre` flow
-  already does). `R=f` skips `yarn build`, so a fresh-checkout `R=f` run 500s
-  until `yarn build:css` + `yarn build` run once and the server restarts.
-- **`R=f` skips asset building**, so the first run needs the `msip:enlaces_motores`
-  + `yarn build:css` + `yarn build` steps done manually (or run `bin/corre`
-  without `R=f` once).
-
-This mode is memory/CPU intensive and not pre-provisioned in the shared VM:
-no `servidor/.env`, no DB credentials in env, native gems and JS deps missing.
-It must be set up once before first run.
-
-### 3. Next-only (no Rails) — how the site runs today
+### 2. Next-only (no Rails) — how the site runs today
 
 Since R-#233 (Phase 1 + §4.4 + Phase 2, 2026-09-15) the **public site does not
 call Rails at runtime**: the course catalog comes from Next
@@ -258,7 +197,7 @@ that used it for data fixes or `usuarios#foto`, and any email sent from Rails
 (Devise resets). Verifier work is unaffected: it lives in the Next admin UI
 (`/{lang}/admin` → `/api/admin/*`, e.g. `/api/admin/check-verifier`).
 
-### 4. Local browser / PWA testing (`bin/dev` + Chrome)
+### 3. Local browser / PWA testing (`bin/dev` + Chrome)
 
 The app (and most of the PWA) can be exercised in a local browser without
 deploying to the dev site. This is how the service worker registration, the
@@ -305,9 +244,9 @@ bin/dev          # Next.js on http://localhost:4000 (PORT in apps/.env)
   in `../../.cert/` (`llave.pem`, `cert.pem`). A phone on the LAN still needs its
   host added to the `authorize()` allowlist, or the SIWE check rejects it.
 - What the local instance talks to comes from `apps/.env`: with
-  `NEXT_PUBLIC_API_URL` empty it serves `/api` from the shared PostgreSQL DB (run
-  mode 3); set `NEXT_PUBLIC_API_URL=https://learn.tg:9001/api` to proxy to the
-  development site instead (run mode 1).
+  `NEXT_PUBLIC_API_URL` empty it serves `/api` from the shared PostgreSQL DB
+  (run mode 2); set `NEXT_PUBLIC_API_URL=https://learn.tg:9001/api` to proxy to
+  the development site instead (run mode 1).
 
 **Driving the browser from Node.** The E2E helpers (`@pasosdejesus/m/e2e`)
 resolve from `apps/nextjs`, so a throwaway script placed inside the app
@@ -398,6 +337,78 @@ SITE_URL=https://localhost:4300 IPDES=localhost PUERTOPRU=4300 CHAIN_ID=11142220
 
 Cambiar `$http_host` por `$host` en ese bloque es la forma de reproducir el fallo
 `DOMAIN_MISMATCH` documentado en `doc/siwe-auth-flow.md` §4.
+
+## Rails backoffice (separate application, optional)
+
+`servidor/` (Ruby on Rails) is **not** part of running learn.tg and **not** a
+local mode of it: the platform runs on Next.js alone (R-#233) and neither the
+site nor its tests run or require Rails. It is a **separate application**, kept
+only as an on-demand backoffice (MSIP UI + Devise, data fixes, `usuarios#foto`,
+its historical migrations). Run it only for that work.
+
+Verified on this VM (adJ/OpenBSD 7.8, Ruby 3.4.9, PostgreSQL 17.9). The
+database `learntg_des` already exists (132 tables); the DB credentials come
+from `apps/.env` (`PGUSER=learntg`, `PGPASSWORD`, `PGDATABASE=learntg_des`).
+
+Setup steps, in order:
+
+```sh
+# 1. servidor/.env from the plantilla, using apps/.env DB data
+cd servidor
+cp .env.plantilla .env
+# edit: BD_CLAVE=<PGPASSWORD from apps/.env>, BD_USUARIO=learntg,
+#       BD_DES=learntg_des, BD_SERVIDOR=/var/www/var/run/postgresql,
+#       DIRAP=/var/www/adJ-ia/learn.tg/servidor/, IPDES=127.0.0.1
+
+# 2. Install native gems (bundler install fails at `chown root:bin`; use
+#    `doas gem install -N --install-dir <BUNDLE_PATH>/ruby/3.4/ ...`, which
+#    works from any shell). Native gems: bcrypt bootsnap libxml-ruby pg puma
+#    nio4r unicorn kgio raindrops sassc ffi msgpack redcarpet bindex
+#    websocket-driver etc.
+doas gem install -N --install-dir /var/www/adJ-ia/bundler/ruby/3.4/ bcrypt -v 3.1.22
+doas gem install -N --install-dir /var/www/adJ-ia/bundler/ruby/3.4/ pg -v 1.6.3
+doas gem install -N --install-dir /var/www/adJ-ia/bundler/ruby/3.4/ libxml-ruby -v 5.0.6
+# ... (zsh users may use the `gemil` helper instead; not required)
+
+# 3. rbsecp256k1 needs autotools + GNU libtool:
+doas pkg_add -I autoconf-2.69p3 automake-1.16.5p0 metaauto-1.0p4 libtool-2.4.2p3
+AUTOMAKE_VERSION=1.16 AUTOCONF_VERSION=2.69 doas gem install -N --install-dir /var/www/adJ-ia/bundler/ruby/3.4/ rbsecp256k1 -v 6.0.0
+bundle check   # -> "The Gemfile's dependencies are satisfied"
+
+# 4. JS deps + asset build
+CXX=c++ yarn install
+bundle exec bin/rails msip:enlaces_motores   # engine asset symlinks
+yarn build:css                                # postcss -> app/assets/builds/application.css
+yarn build                                    # esbuild -> app/assets/builds/*.js
+bundle exec bin/rails assets:precompile
+
+# 5. Run the server (must be via `bundle exec`; dotenv lives in the bundle
+#    path, not the system gem path). Use R=f to skip the heavy setup steps.
+ulimit -d 7340032 && R=f bundle exec ./bin/corre
+# -> Puma on http://127.0.0.1:3000, admin at /learntg-admin
+```
+
+Important details discovered while verifying:
+
+- **`ulimit -d` must be >= 7 GB** (`bin/corre` needs the memory for Rails +
+  assets; `bin/dev` enforces the same limit for Next).
+- **`bin/corre` must run via `bundle exec`** — plain `./bin/corre` fails with
+  `cannot load such file -- dotenv` because `BUNDLE_DISABLE_SHARED_GEMS=true`
+  puts gems in `/var/www/adJ-ia/bundler`, not the system path.
+- **No asset load-path config needed.** sprockets-rails auto-adds every
+  existing directory under `app/assets/` to the load path at boot
+  (`existent_directories`). So once `yarn build` creates `app/assets/builds/`,
+  `stylesheet_link_tag "application"` resolves to the built `application.css`.
+  Just start the server *after* `yarn build` (the normal `bin/corre` flow
+  already does). `R=f` skips `yarn build`, so a fresh-checkout `R=f` run 500s
+  until `yarn build:css` + `yarn build` run once and the server restarts.
+- **`R=f` skips asset building**, so the first run needs the `msip:enlaces_motores`
+  + `yarn build:css` + `yarn build` steps done manually (or run `bin/corre`
+  without `R=f` once).
+
+This setup is memory/CPU intensive and not pre-provisioned in the shared VM:
+no `servidor/.env`, no DB credentials in env, native gems and JS deps missing.
+It must be set up once before first run.
 
 ## Contract addresses
 
@@ -515,7 +526,7 @@ cd apps/nextjs
 make engines-dist        # compila dist de packages/{rewards,gdcluster} (rewards primero)
 make engines-assets      # copia assets de los motores a public/ (p.ej. gdcluster.svg)
 make engines-sync-abis   # tras regenerar abis en hardhat: copia a src/abis/ y recompila
-bin/dev                  # ya ejecuta engines-dist automáticamente; Next en :4000 (modo 2 local)
+bin/dev                  # ya ejecuta engines-dist automáticamente; Next en :4000
 ```
 
 `engines-dist` también compila `pdj-wallet` y `pdj-wallet-next`. El motor
@@ -563,4 +574,4 @@ node bin/warmup.mjs      # solo si el sitio se sirve con dev server; pre-compila
 - **Retries**: `e2e/helpers/retry.mjs` (`retry`/`retrySpec`); los specs de claim
   reconectan la billetera (limpiar sesión + re-SIWE) si el botón no aparece.
 - Rails admin del dev: `https://learn.tg:3500/learntg-admin` (404 si Puma/nginx
-  caído); local full-stack: Puma en `127.0.0.1:3000`.
+  caído); backoffice local: Puma en `127.0.0.1:3000`.

@@ -362,7 +362,7 @@ official wallet ([GoodDollar/GoodWallet](https://github.com/GoodDollar/GoodWalle
 `src/gooddollar/`). `@goodsdks/citizen-sdk` is **out of the claim path**: it added its
 own verification-freshness gate that blocked a whitelisted, entitled address; it stays
 installed only so `lib/__tests__/gooddollar-protocol.test.ts` can cross-check the
-constants.
+constants. Full analysis and maintenance notes: [GoodDollar UBI](gooddollar.md).
 
 ## localStorage Convention
 
@@ -415,5 +415,6 @@ NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The former
 | `lib/hooks/useWriteContract.ts` | useWriteContract via eth_sendTransaction |
 | `lib/gooddollar-reason.ts` | Why a signer-based flow (GoodDollar) can or cannot run, and the unlock path (R-#271) |
 | `lib/gooddollar-protocol.ts` | GoodDollar protocol in one place: Celo addresses/ABIs, FV message, GoodID link, action resolver and change detector (R-#275) |
+| [doc/gooddollar.md](gooddollar.md) | GoodDollar UBI direct claim: the citizen-sdk gate, the GoodWallet reference analysis, protocol constants and maintenance (R-#275) |
 | `doc/siwe-auth-flow.md` | SIWE handshake protocol (NextAuth backend) |
 | https://github.com/pasosdeJesus/learn.tg/issues/186 | Full migration specification and history |
