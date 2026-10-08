@@ -1,14 +1,10 @@
-// Página de pastores RedGD — el componente vive en el motor gdcluster
-// (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §13, GdPastoresLanding con deps inyectadas D2); la app consume el
-// adapter del host (lib/gdcluster-ui.tsx).
-import { use } from 'react'
-import { GdPastoresLandingHost } from '@/lib/gdcluster-ui'
+// R-#283: the pastor landing moved to /{lang}/pastor. This old RedGD path redirects
+// there (only the GD course itself keeps using the /redgd course path).
+import { redirect } from 'next/navigation'
 
-type PageProps = {
-  params: Promise<{ lang: string }>
-}
+type PageProps = { params: Promise<{ lang: string }> }
 
-export default function Page({ params }: PageProps) {
-  const { lang } = use(params)
-  return <GdPastoresLandingHost lang={lang} />
+export default async function Page({ params }: PageProps) {
+  const { lang } = await params
+  redirect(`/${lang}/pastor`)
 }

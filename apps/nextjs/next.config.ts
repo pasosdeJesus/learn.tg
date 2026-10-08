@@ -202,6 +202,16 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   experimental: {
   },
+  async redirects() {
+    // R-#283: the pastor landing moved from the GD paths to /{lang}/pastor.
+    return [
+      {
+        source: '/:lang(en|es)/:group(gdcluster|redgd)/:p(pastor|pastors|pastores)',
+        destination: '/:lang/pastor',
+        permanent: true,
+      },
+    ]
+  },
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
     console.log('**[next.config] NEXT_PUBLIC_API_URL:', apiUrl || '(empty, API served locally)')

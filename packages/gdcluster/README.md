@@ -46,7 +46,7 @@ export async function GET(req: Request) {
 | `.` (`dist/index.js`) | `createGdclusterApp(deps)` factory (18 route entries), interfaces, re-exports of `lib/*` |
 | `./register` | Registers the `reward:route-destination` hook (side-effect import) |
 | `./lib/*` | `gd-utils`, `gd-cluster-routing`, `donation-target` |
-| `./components/*` | Client components (`ClusterPage`, `RankingClient`, `GdPastoresLanding`, `ReferralsPage`, `CountryFilter`, `CountryFlag`) |
+| `./components/*` | Client components (`ClusterPage`, `RankingClient`, `ReferralsPage`, `CountryFilter`, `CountryFlag`) |
 
 ## Route index (`createGdclusterApp`)
 
@@ -85,7 +85,6 @@ export async function GET(req: Request) {
 |-----------|---------|
 | `ClusterPage` | Cluster detail: members, rename, join code, leave, history |
 | `RankingClient` | Clusters/Countries leaderboard tabs with USDT/SLEARN fund columns |
-| `GdPastoresLanding` | Pastor landing: score rules, verification status, eligibility |
 | `ReferralsPage` | Referral wallet balance, my code, stats, history (consumes **core** APIs `/api/referrals/fund`, `/api/referral/code\|stats\|history`) |
 | `CountryFilter` | Country select filter (shadcn) |
 | `CountryFlag` | ISO alpha-2 → flag emoji with tooltip |

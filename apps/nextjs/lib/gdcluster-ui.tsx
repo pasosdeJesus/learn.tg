@@ -4,26 +4,16 @@
 // re-exporta estos wrappers desde las páginas.
 'use client'
 
-import { GdPastoresLanding } from '@learn-tg/gdcluster/components/GdPastoresLanding'
 import { RankingClient } from '@learn-tg/gdcluster/components/RankingClient'
 import { ClusterPage } from '@learn-tg/gdcluster/components/ClusterPage'
 import ReferralsPage from '@learn-tg/gdcluster/components/ReferralsPage'
 
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
-import { SCORE_RULES } from '@/lib/score-rules'
-import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { adminAuthParams } from '@/lib/admin-fetch'
 import { useSession, getCsrfToken } from 'next-auth/react'
 import DonateModal from '@/components/DonateModal'
 import { Button } from '@/components/ui/button'
 import { ReferralQr } from '@/components/ReferralQr'
-
-export const GdPastoresLandingHost = (p: { lang: string }) => (
-  <GdPastoresLanding
-    {...p}
-    deps={{ useAuthAddress, scoreRules: SCORE_RULES, isProduction: IS_PRODUCTION }}
-  />
-)
 
 export const RankingClientHost = (p: { lang: string }) => (
   <RankingClient {...p} deps={{ adminAuthParams, DonateModal }} />

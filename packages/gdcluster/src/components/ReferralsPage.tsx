@@ -191,7 +191,8 @@ export default function ReferralsPage({ params, deps }: PageProps & { deps?: Ref
 
   // CTA múltiple para quien ya tiene el programa activado: invitar pastores
   // (landing del programa) y enviar una invitación personal por WhatsApp.
-  const pastorsHref = es ? `/${lang}/redgd/pastores` : `/${lang}/gdcluster/pastors`
+  // R-#283: the pastor landing moved to /{lang}/pastor.
+  const pastorsHref = `/${lang}/pastor`
   const waMessage = es
     ? `¡Hola! Te invito a aprender en learn.tg: aprendes jugando y ganas recompensas en criptomonedas. Únete con mi invitación: ${base}/${lang}/ref/${code}`
     : `Hi! I invite you to learn on learn.tg: you learn through games and earn crypto rewards. Join with my invitation: ${base}/${lang}/ref/${code}`

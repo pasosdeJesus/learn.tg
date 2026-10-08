@@ -24,8 +24,8 @@ const MESSAGES: Record<string, [en: string, es: string]> = {
     'Este curso requiere una ciudad de culto verificada.',
   ],
   gd_non_zionist: [
-    'This course is restricted to non-Zionists (those who answered no to supporting Israel in the Gaza genocide in the Profile question).',
-    'Este curso está restringido a no sionistas (quienes respondieron que no apoyan a Israel en el genocidio de Gaza en la pregunta del Perfil).',
+    'This course is not available for your profile yet.',
+    'Este curso aún no está disponible para tu perfil.',
   ],
   auth_required: [
     'Authentication required for premium course',

@@ -231,6 +231,8 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `caldav-completa.spec.mjs` | CalDAV full cycle: create event, list, verify, delete (Radicale) |
 | `caldav-http.spec.mjs` | CalDAV connectivity: PROPFIND, OPTIONS to Radicale |
 | `church-directory.spec.mjs` | R-#164: public church directory — `GET /api/directory/churches` shape (churches/total/notRecommended), detail and 404, `country` filter consistency, claim without a session → 401, admin list without a verifier → 403 and `/en/directory/churches` → 200 |
+| `pastor-bonus.spec.mjs` | R-#192/R-#283: churches fund (`GET /api/churches/fund` address + SLEARN/USDT balances), the public pastor landing at `/en/pastor` and `/es/pastor` (200 + "Welcome, pastor"/"Bienvenido, pastor") and the legacy GD paths `/…/gdcluster/pastors` + `/…/redgd/pastores` → 308 to `/{lang}/pastor` |
+| `pastor-bonus-verify.spec.mjs` | Admin side of the 22 SLEARN bonus: verifier SIWE → `GET /api/admin/pastor-bonus` lists only pastors whose role is verified (`verified_church_relationship='pastor'`, R-#283 — no country/score gate) → notifications, the church `registration_photo` field and the churches fund (SKIP if the `.env` wallet is not a verifier) |
 | `celo-claim.spec.mjs` | Full crossword → submit → scholarship claim flow |
 | `full-journey.spec.mjs` | All endpoints: CSRF, SIWE, session, profile, crossword, UBI, signout |
 | `landing-page.spec.mjs` | `/en` and `/es` return 200, no "Failed to load courses" error |
@@ -249,9 +251,10 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `donate-campaign.spec.mjs` | Campaign donation (https://github.com/pasosdeJesus/learn.tg/issues/223, `/api/donations/{slug}/verify` + balance): 404/400/401, bounds de `pdjSharePct` y forma del balance multi-cadena |
 | `rails-health.spec.mjs` | Health check del backend Rails del dev site (`NEXT_PUBLIC_API_BASE/proyectosfinancieros.json`): 200 con cursos → UP; error de red/502 → DOWN (exit 1). Correr antes de las suites que dependen de Rails |
 
-### Current Status (2026-09-30)
+### Current Status (2026-10-07)
 
-**23 smokes** (`ls e2e/smoke/*.spec.mjs | wc -l`, medido 2026-09-30; eran 21 el
+**24 smokes** (`ls e2e/smoke/*.spec.mjs | wc -l`, medido 2026-10-07; eran 23 el
+2026-09-30 y 21 el
 2026-09-21). `leaderboard.spec.mjs` puede fallar por el
 texto explicativo del profile score no renderizado (contenido menor). Las rutas
 de cursos de Rails son públicas (R-#233), así que `rails-auth.spec.mjs` no

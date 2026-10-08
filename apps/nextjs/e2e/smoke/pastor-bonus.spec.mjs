@@ -73,7 +73,7 @@ async function main() {
 
   // 2. Pastor landing page (public)
   console.log('\n2. Pastor landing page')
-  for (const path of ['/en/gdcluster/pastors', '/es/redgd/pastores']) {
+  for (const path of ['/en/pastor', '/es/pastor']) {
     try {
       const res = await axios.get(`${BASE_URL}${path}`, {
         httpsAgent,
@@ -81,11 +81,37 @@ async function main() {
         maxRedirects: 0,
       })
       const text = String(res.data || '')
-      const needle = path.startsWith('/es') ? 'pastores de Colombia' : 'An invitation to pastors'
+      const needle = path.startsWith('/es') ? 'Bienvenido, pastor' : 'Welcome, pastor'
       if (res.status === 200 && text.includes(needle)) ok(`landing ${path} 200 + title`)
       else fail(`landing ${path}`, `status ${res.status}, title=${text.includes(needle)}`)
     } catch (e) {
       fail(`landing ${path}`, `${e.response?.status || e.message}`)
+    }
+  }
+
+  // 3. Old GD pastor paths redirect to /{lang}/pastor (R-#283)
+  console.log('\n3. Legacy pastor paths redirect')
+  for (const [path, target] of [
+    ['/en/gdcluster/pastors', '/en/pastor'],
+    ['/en/redgd/pastores', '/en/pastor'],
+    ['/es/gdcluster/pastors', '/es/pastor'],
+    ['/es/redgd/pastores', '/es/pastor'],
+  ]) {
+    try {
+      const res = await axios.get(`${BASE_URL}${path}`, {
+        httpsAgent,
+        headers: { 'User-Agent': 'PastorBonus-E2E-Test/1.0' },
+        maxRedirects: 0,
+      })
+      fail(`redirect ${path}`, `expected a redirect, got ${res.status}`)
+    } catch (e) {
+      const status = e.response?.status
+      const location = String(e.response?.headers?.location || '')
+      if ((status === 301 || status === 308) && location === target) {
+        ok(`redirect ${path} -> ${target}`)
+      } else {
+        fail(`redirect ${path}`, `status ${status}, location=${location}`)
+      }
     }
   }
 

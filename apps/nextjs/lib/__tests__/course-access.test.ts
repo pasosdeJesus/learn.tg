@@ -178,7 +178,8 @@ describe('courseAccessReasonText', () => {
     expect(courseAccessReasonText('gd_pilot_countries', 'es')).toContain('países piloto')
     expect(courseAccessReasonText('verified_city_required', 'es')).toContain('ciudad de culto verificada')
     expect(courseAccessReasonText('premium_purchase_required', 'es')).toContain('curso premium')
-    expect(courseAccessReasonText('gd_non_zionist', 'es')).toContain('no sionistas')
+    expect(courseAccessReasonText('gd_non_zionist', 'es')).toContain('no está disponible')
+    expect(courseAccessReasonText('gd_non_zionist', 'en')).not.toMatch(/zionist/i)
     expect(courseAccessReasonText('auth_required', 'es')).toContain('autenticación')
   })
 

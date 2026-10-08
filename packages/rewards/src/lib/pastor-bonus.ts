@@ -7,8 +7,6 @@ import { getSlearnAddress } from './deployments'
 import { IS_PRODUCTION } from './config'
 
 export const BONUS_AMOUNT = 22
-export const ELIGIBLE_COUNTRIES = [170, 694] // Colombia, Sierra Leone
-export const MIN_SCORE_FOR_BONUS = 90
 
 export interface BonusUser {
   church_relationship: string | null
@@ -23,20 +21,14 @@ export interface BonusUser {
 }
 
 /**
- * Elegibilidad del bono de bienvenida (R-#192; decisión del operador del 2026-09-30):
- * cualquier pastor principal verificado de un país piloto con el perfil completo.
- *
- * La posición sobre Israel/Gaza **no** decide el bono: es un regalo de bienvenida que
- * acerca al pastor y a su comunidad. Quien no cumpla esa respuesta simplemente no puede
- * comprar el curso Global Disciples (`canPurchaseGDCourse`, motivo `gd_non_zionist`), que
- * es la ruta de trabajo, no el bono.
+ * Elegibilidad del bono de bienvenida (R-#283): **todo pastor** cuyo rol (sus
+ * datos) y el registro de su iglesia estén verificados. Sin restricción de país ni
+ * de puntaje; el bono se paga mientras el fondo de iglesias tenga SLEARN
+ * (`awardPastorBonus` comprueba el resto: pastor principal de la iglesia, registro
+ * verificado, billetera y saldo del fondo).
  */
 export function isEligiblePastor(user: BonusUser): boolean {
-  return (
-    user.church_relationship === 'pastor' &&
-    !!user.pais_id && ELIGIBLE_COUNTRIES.includes(user.pais_id) &&
-    (user.profilescore ?? 0) > MIN_SCORE_FOR_BONUS
-  )
+  return user.church_relationship === 'pastor' && user.verified_church_relationship === 'pastor'
 }
 
 export async function awardPastorBonus(
@@ -62,10 +54,9 @@ export async function awardPastorBonus(
     .executeTakeFirst()
 
   if (!pastor) return { awarded: false, reason: 'pastor not found' }
+  // `isEligiblePastor` ya exige el rol verificado por el verificador; el bono
+  // sigue siendo SOLO para el pastor principal de la iglesia (`church.pastor_id`).
   if (!isEligiblePastor(pastor as BonusUser)) return { awarded: false, reason: 'not eligible' }
-  // El bono de 22 SLEARN es SOLO para el pastor principal (church.pastor_id),
-  // confirmado por el verificador (verified_church_relationship='pastor').
-  if (pastor.verified_church_relationship !== 'pastor') return { awarded: false, reason: 'not verified as lead pastor' }
   if (pastor.church_pastor_id !== userId) return { awarded: false, reason: 'not the lead pastor of the church' }
   if (pastor.registration_verified !== true) return { awarded: false, reason: 'church not verified' }
   if (!pastor.billetera) return { awarded: false, reason: 'no wallet' }

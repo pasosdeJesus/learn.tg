@@ -5,7 +5,8 @@
  *
  * Verifies the admin-side pieces of the 22 SLEARN pastor bonus (https://github.com/pasosdeJesus/learn.tg/issues/192 +
  * R-#162 notifications):
- *   1. Verifier can list eligible pastors, and all have profile score > 90.
+ *   1. Verifier can list eligible pastors, and all have their role verified as pastor
+ *      (R-#283: no country and no profile-score gate).
  *   2. GET /api/notifications returns { notifications, unread }.
  *   3. Admin church detail includes `registration_photo`.
  *   4. GET /api/churches/fund returns the churches fund balance.
@@ -147,15 +148,15 @@ async function main() {
     process.exit(1)
   }
 
-  // 2. Eligible pastors (score > 90)
-  console.log('\n── Test 2: Eligible pastors (profile score > 90) ──')
+  // 2. Eligible pastors (R-#283: verified role, no country/score gate)
+  console.log('\n── Test 2: Eligible pastors (verified role) ──')
   try {
     const data = await apiGet('/api/admin/pastor-bonus', { wallet: addr, token }, cookies)
     const pastors = data.pastors || []
     ok(`pastor-bonus endpoint 200 (bonusAmount=${data.bonusAmount})`)
-    const below = pastors.filter(p => (p.profilescore ?? 0) <= 90)
-    if (below.length === 0) ok(`all ${pastors.length} listed pastors have score > 90`)
-    else fail(`${below.length} pastor(s) listed with score <= 90`)
+    const notVerified = pastors.filter(p => p.verified_church_relationship !== 'pastor')
+    if (notVerified.length === 0) ok(`all ${pastors.length} listed pastors are verified as pastor`)
+    else fail(`${notVerified.length} pastor(s) listed without a verified role`)
   } catch (e) {
     fail(`pastor-bonus failed: ${e.response?.status || e.message}`)
   }

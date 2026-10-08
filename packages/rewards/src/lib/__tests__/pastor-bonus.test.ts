@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPublicClient, createWalletClient } from 'viem'
 import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
-import { BONUS_AMOUNT, ELIGIBLE_COUNTRIES, MIN_SCORE_FOR_BONUS, isEligiblePastor, awardPastorBonus, type BonusUser } from '../pastor-bonus'
+import { BONUS_AMOUNT, isEligiblePastor, awardPastorBonus, type BonusUser } from '../pastor-bonus'
 
 const { mockExecuteTakeFirst, mockExecute, setupMocks, resetMocks, setupCommonResponses } = apiDbMocks
 
@@ -52,7 +52,7 @@ function eligiblePastorRow(overrides: Record<string, any> = {}): Record<string, 
 }
 
 describe('isEligiblePastor', () => {
-  it('returns true for a verified pastor in an eligible country', () => {
+  it('returns true for a verified pastor (role verified)', () => {
     expect(isEligiblePastor(eligiblePastorRow() as BonusUser)).toBe(true)
   })
 
@@ -60,28 +60,28 @@ describe('isEligiblePastor', () => {
     expect(isEligiblePastor(eligiblePastorRow({ church_relationship: 'member' }) as BonusUser)).toBe(false)
   })
 
-  it('rejects pastors outside the eligible countries', () => {
-    expect(isEligiblePastor(eligiblePastorRow({ pais_id: 45 }) as BonusUser)).toBe(false)
+  it('rejects a pastor whose role is not verified', () => {
+    expect(isEligiblePastor(eligiblePastorRow({ verified_church_relationship: null }) as BonusUser)).toBe(false)
+    expect(isEligiblePastor(eligiblePastorRow({ verified_church_relationship: 'co_pastor' }) as BonusUser)).toBe(false)
   })
 
-  it('rejects pastors with no country', () => {
-    expect(isEligiblePastor(eligiblePastorRow({ pais_id: null }) as BonusUser)).toBe(false)
+  // R-#283: the bonus is for every pastor (no pilot-country restriction)
+  it('does not depend on the country', () => {
+    expect(isEligiblePastor(eligiblePastorRow({ pais_id: 45 }) as BonusUser)).toBe(true)
+    expect(isEligiblePastor(eligiblePastorRow({ pais_id: null }) as BonusUser)).toBe(true)
   })
 
-  it('accepts a Zionist pastor as well: the bonus does not depend on the Israel/Gaza answer', () => {
+  it('does not depend on the profile score', () => {
+    expect(isEligiblePastor(eligiblePastorRow({ profilescore: 0 }) as BonusUser)).toBe(true)
+  })
+
+  it('does not depend on the Israel/Gaza answer', () => {
     expect(isEligiblePastor(eligiblePastorRow({ position_israel_gaza: 'yes' }) as BonusUser)).toBe(true)
     expect(isEligiblePastor(eligiblePastorRow({ position_israel_gaza: null }) as BonusUser)).toBe(true)
   })
 
-  it('rejects pastors with profile score at or below the threshold', () => {
-    expect(isEligiblePastor(eligiblePastorRow({ profilescore: MIN_SCORE_FOR_BONUS }) as BonusUser)).toBe(false)
-    expect(isEligiblePastor(eligiblePastorRow({ profilescore: 0 }) as BonusUser)).toBe(false)
-  })
-
-  it('documents the bonus constants', () => {
+  it('documents the bonus constant', () => {
     expect(BONUS_AMOUNT).toBe(22)
-    expect(ELIGIBLE_COUNTRIES).toEqual([170, 694])
-    expect(MIN_SCORE_FOR_BONUS).toBe(90)
   })
 })
 
@@ -139,11 +139,11 @@ describe('awardPastorBonus', () => {
     expect(walletClient.writeContract).not.toHaveBeenCalled()
   })
 
-  it('rejects when the user is not verified as lead pastor (co_pastor)', async () => {
+  it('rejects a co_pastor (role not verified as pastor)', async () => {
     mockExecuteTakeFirst.mockResolvedValue(eligiblePastorRow({ verified_church_relationship: 'co_pastor' }))
     const { db, walletClient } = buildDeps()
     const result = await awardPastorBonus(db, 1)
-    expect(result).toEqual({ awarded: false, reason: 'not verified as lead pastor' })
+    expect(result).toEqual({ awarded: false, reason: 'not eligible' })
     expect(walletClient.writeContract).not.toHaveBeenCalled()
   })
 

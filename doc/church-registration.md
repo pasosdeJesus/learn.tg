@@ -124,17 +124,19 @@ index `one_principal_per_church` allows one `usuario.church_relationship =
 `packages/rewards/src/lib/pastor-bonus.ts`, `BONUS_AMOUNT = 22` SLEARN. Paid
 only when all of these hold:
 
-- `church_relationship = 'pastor'` and the country is 170 (Colombia) or 694
-  (Sierra Leone), with `profilescore > 90`;
-- `verified_church_relationship = 'pastor'` (the verifier confirmed the role);
+- `church_relationship = 'pastor'` with `verified_church_relationship = 'pastor'`
+  (the verifier confirmed the role and their data);
 - the user is `church.pastor_id`;
 - `church.registration_verified = true`;
 - the user has a wallet.
 
-The bonus is a welcome gift for the pastor and their community, so it does
-**not** depend on the Israel/Gaza answer (operator decision, 2026-09-30, R-#192).
-That answer only gates the **Global Disciples course** itself
-(`canPurchaseGDCourse`, reason `gd_non_zionist`).
+R-#283: there is **no country** (`pais_id`) and **no profile score** threshold:
+the welcome bonus is for **every** verified pastor while the churches fund has
+SLEARN. The Israel/Gaza answer does not decide the bonus; it only gates the
+**Global Disciples course** itself (`canPurchaseGDCourse`, reason
+`gd_non_zionist`). That course is **not announced publicly**: it is presented
+only in the app to eligible pastors (the public pastor landing lives at
+`/{lang}/pastor` and no longer mentions the course).
 
 Dedupe is **per church**, not per user: the bonus is paid once per church even
 if the lead pastor changes.
