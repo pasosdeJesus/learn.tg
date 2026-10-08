@@ -146,7 +146,7 @@ apps/nextjs/public/img/credential/generated
 apps/nextjs/public/img/credential/*png
 resources/en/
 servidor/.bundle
-resources/es/redgd/
+resources/es/
 apps/.env.bak.full-local
 *.core
 .crushrules
