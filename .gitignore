@@ -151,3 +151,5 @@ apps/.env.bak.full-local
 *.core
 .crushrules
 audit-crushrules.mjs
+apps/uploads
+servidor/app/views/msip/hogar/_local.html.erb

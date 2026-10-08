@@ -1,3 +1,9 @@
 [submodule "apps/nextjs/app/api"]
 	path = apps/nextjs/app/api
 	url = https://gitlab.com/vtamara/learn.tg-api.git
+[submodule "resources/en/gdcluster"]
+	path = resources/en/gdcluster
+	url = git@gitlab.com:vtamara/gdcluster.git
+[submodule "resources/en/redgd"]
+	path = resources/en/redgd
+	url = git@gitlab.com:vtamara/redgd.git

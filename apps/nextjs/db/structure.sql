@@ -5734,7 +5734,7 @@ CREATE TABLE public.transaction (
     synced boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
     CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'usdc'::text, 'xaut0'::text, 'gdoll'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('donation_reward'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text, ('conversion'::character varying)::text, ('pastor_bonus'::character varying)::text, ('referral_reward'::character varying)::text, ('referral_bonus'::character varying)::text])))
+    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'donation_reward'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying, 'conversion'::character varying, 'pastor_bonus'::character varying, 'referral_reward'::character varying, 'referral_bonus'::character varying])::text[])))
 );
 
 
@@ -5875,9 +5875,9 @@ CREATE TABLE public.usuario (
     mostrar_cursos_publico boolean DEFAULT true NOT NULL,
     mostrar_cursos_sensibles_publico boolean,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
-    CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY (ARRAY[('pastor'::character varying)::text, ('co_pastor'::character varying)::text, ('leader'::character varying)::text, ('member'::character varying)::text])))),
+    CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[])))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1)),
-    CONSTRAINT usuario_verified_church_relationship_check CHECK (((verified_church_relationship IS NULL) OR ((verified_church_relationship)::text = ANY (ARRAY[('pastor'::character varying)::text, ('co_pastor'::character varying)::text, ('leader'::character varying)::text, ('member'::character varying)::text]))))
+    CONSTRAINT usuario_verified_church_relationship_check CHECK (((verified_church_relationship IS NULL) OR ((verified_church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[]))))
 );
 
 
