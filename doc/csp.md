@@ -77,12 +77,12 @@ matrix (Chromium 96–99 was still present for Opera).
 
 ## 5. Violation collector
 
-`app/api/csp-report` (Phase 1) logs `document-uri`, `violated-directive` and
-`blocked-uri`. It must **never** log the full URL query string: it can carry a
-wallet address (`?walletAddress=0x…`). It is a **public** endpoint (the browser
-posts it without credentials, `application/csp-report`), it stores no PII and it is
-declared as public in `bin/audit-api-auth.mjs` with that reason — see
-[api-security.md](api-security.md) §1.
+`app/api/csp-report` (Phase 1, **not implemented yet**) will log `document-uri`,
+`violated-directive` and `blocked-uri`. It must **never** log the full URL query
+string: it can carry a wallet address (`?walletAddress=0x…`). It will be a **public**
+endpoint (the browser posts it without credentials, `application/csp-report`), it
+stores no PII and it must be declared as public in `bin/audit-api-auth.mjs` with that
+reason — see [api-security.md](api-security.md) §1.
 
 Open decision: log only, or persist a `csp_violation` event in `userevent` (which
 already exists).

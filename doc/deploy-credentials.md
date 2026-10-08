@@ -46,12 +46,14 @@ For purpose 2, just update the `imagen` field in `cor1440_gen_proyectofinanciero
 - **No** `<script>`, `foreignObject`, external URLs, `data:image/svg+xml`
 - Content between 50 and 50000 characters
 
-| SVG file to create                                    | From                                        |
+| SVG icon in `public/img/credential/source/`           | From                                        |
 |------------------------------------------------------|----------------------------------------------|
-| `public/img/credential/source/relacion-con-jesus.svg`| `public/img/Jn6_col.jpg`                     |
-| `public/img/credential/source/gooddollar.svg`        | download from `https://learn.tg/en/gooddollar/gooddollar-darkblue.png` |
-| `public/img/credential/source/web3-and-ubi.svg`      | `public/img/2025/web3_ubi.png`              |
-| `public/img/credential/source/ahorra-en-okx.svg`     | `public/img/OKX_Logo.svg`                   |
+| `relacion-con-Jesus.svg`                             | `public/img/Jn6_col.jpg` (ES course 1)      |
+| `a-relationship-with-Jesus.svg`                      | `public/img/Jn6_col.jpg` (EN course 2)      |
+| `web3_ubi.svg`                                       | `public/img/2025/web3_ubi.png`              |
+| `ahorra-en-okx.svg`                                  | `public/img/OKX_Logo.svg`                   |
+| `gdcluster.svg`                                      | Global Disciples course icon                |
+| (goodDollar)                                         | no SVG in the repo; source is `/en/gooddollar/gooddollar-darkblue.png` |
 
 #### Conversion methods
 
@@ -61,7 +63,7 @@ For purpose 2, just update the `imagen` field in `cor1440_gen_proyectofinanciero
 # For JPG/PNG
 inkscape public/img/Jn6_col.jpg \
   --export-plain-svg \
-  --export-filename=public/img/credential/source/relacion-con-jesus.svg
+  --export-filename=public/img/credential/source/relacion-con-Jesus.svg
 
 # Then edit SVG to ensure viewBox="0 0 512 512"
 ```
@@ -71,7 +73,7 @@ inkscape public/img/Jn6_col.jpg \
 ```bash
 convert public/img/Jn6_col.jpg \
   -resize 512x512 \
-  public/img/credential/source/relacion-con-jesus.svg
+  public/img/credential/source/relacion-con-Jesus.svg
 ```
 
 **For OKX_Logo.svg (resize):**
@@ -94,12 +96,12 @@ Once the SVGs are created, update the `imagen` field in the database so
 ```sql
 -- Course 1/2: Una relación con Jesús
 UPDATE cor1440_gen_proyectofinanciero
-SET imagen = '/img/credential/source/relacion-con-jesus.svg'
+SET imagen = '/img/credential/source/relacion-con-Jesus.svg'
 WHERE id IN (1, 2);
 
 -- Course 103: Web3 & UBI
 UPDATE cor1440_gen_proyectofinanciero
-SET imagen = '/img/credential/source/web3-and-ubi.svg'
+SET imagen = '/img/credential/source/web3_ubi.svg'
 WHERE id = 103;
 
 -- Course 104: Ahorra en dólares en OKX
@@ -107,10 +109,7 @@ UPDATE cor1440_gen_proyectofinanciero
 SET imagen = '/img/credential/source/ahorra-en-okx.svg'
 WHERE id = 104;
 
--- Course 102: goodDollar
-UPDATE cor1440_gen_proyectofinanciero
-SET imagen = '/img/credential/source/gooddollar.svg'
-WHERE id = 102;
+-- Course 102: goodDollar — no SVG icon in the repo yet; add one before setting `imagen`.
 ```
 
 **Advantages of using SVGs as covers:**
@@ -136,7 +135,7 @@ bin/m eng:credentials:register-type \
   --display "Una relación con Jesús" \
   --soulbound true \
   --course-id 1 \
-  --icon public/img/credential/source/relacion-con-jesus.svg
+  --icon public/img/credential/source/relacion-con-Jesus.svg
 
 # Course 103 — Web3 & UBI (free)
 bin/m eng:credentials:register-type \
@@ -146,7 +145,7 @@ bin/m eng:credentials:register-type \
   --display "Web3 & UBI" \
   --soulbound true \
   --course-id 103 \
-  --icon public/img/credential/source/web3-and-ubi.svg
+  --icon public/img/credential/source/web3_ubi.svg
 
 # Course 104 — Ahorra en dólares en OKX (free)
 bin/m eng:credentials:register-type \
@@ -224,7 +223,8 @@ a student completes 100% of a course's guides. The flow:
 
 1. Detects `percentagecompleted >= 100`
 2. Checks `credential_emission` (off-chain) to prevent duplicates
-3. Calls `mintCourseSBT()` from `@pasosdejesus/m/blockchain`
+3. Calls `mintCourseCredential()` (the `@learn-tg/rewards` engine), which delegates to
+   `@pasosdejesus/mpdj/blockchain` (`mintCourseWithRetry`)
 4. Records in `credential_emission` with `usuario_id`, `course_id`,
    `token_id`, `chain_id`, `is_premium`, `hash`
 
@@ -262,7 +262,7 @@ bin/m eng:credentials:set-max-supply \
 
 ## References
 
-- [I130.md](../I130.md) — Credential integration issue
+- [R-#130](https://github.com/pasosdeJesus/learn.tg/issues/130) — Credential integration issue
 - [R-#26](https://github.com/pasosdeJesus/sivel3/issues/26) — PasosDeJesusCredentials contract
 - [R-#33](https://github.com/pasosdeJesus/sivel3/issues/33) — `@pasosdejesus/m/blockchain` library
 - [`@pasosdejesus/m/src/blockchain/README.md`](../apps/nextjs/node_modules/@pasosdejesus/m/src/blockchain/README.md)

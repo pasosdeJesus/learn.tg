@@ -219,7 +219,7 @@ The platform features two distinct reward mechanisms, demonstrating our principl
 - **Trigger:** A user initiates a UBI claim via the `/api/claim-celo-ubi` endpoint.
 - **Process:**
     1. The Next.js backend verifies the user's eligibility (e.g., wallet, `profileScore`, potential cooldowns).
-    2. It then calls the `claim()` function on the `CeloUBI.sol` contract.
+    2. It then calls the `claim()` function on the `CeloUbi.sol` contract.
     3. The contract validates the claim conditions (such as cooldown periods) on-chain.
     4. Upon successful validation, it transfers a set amount of CELO to the user's wallet.
 
