@@ -71,7 +71,7 @@ server-rendered and Next.js injects the nonce into its scripts. The policy is:
 | `style-src` | `'self' 'unsafe-inline'` | Tailwind + React inline styles; removing it is a later, separate step (far less dangerous than in `script-src`) |
 | `img-src` | `'self' data: blob:` + `img.youtube.com`, `i.ytimg.com`, `celo.blockscout.com`, `celo-sepolia.blockscout.com`, `i.postimg.cc` | Icons, QR codes, credential SVGs, guide thumbnails and wallet collectibles |
 | `font-src` | `'self'` | System fonts |
-| `connect-src` | `'self'` + the Celo RPC hosts (`forno.celo.org`, `forno.celo-sepolia.celo-testnet.org`, `rpc.ankr.com`, `celo.drpc.org`, `celo-sepolia.drpc.org`, `celo-rpc.publicnode.com`, `celo-sepolia-rpc.publicnode.com`, `1rpc.io`) + `goodserver.gooddollar.org` | `fetch`/XHR and WebSocket |
+| `connect-src` | `'self'` + the Celo RPC hosts (`forno.celo.org`, `forno.celo-sepolia.celo-testnet.org`, `rpc.ankr.com`, `celo.drpc.org`, `celo-sepolia.drpc.org`, `lb.drpc.org`, `celo-rpc.publicnode.com`, `celo-sepolia-rpc.publicnode.com`, `1rpc.io`, `celo-mainnet.g.alchemy.com`, `celo-sepolia.g.alchemy.com` — **track `NEXT_PUBLIC_RPC_URL`**) + `goodserver.gooddollar.org` + the Blockscout APIs (`celo.blockscout.com`, `celo-sepolia.blockscout.com`, for the wallet collectibles) | `fetch`/XHR and WebSocket |
 | `worker-src` | `'self' blob:` | `public/sw.js` and Next's workers |
 | `frame-src` | `'self' https://www.youtube.com` | YouTube embeds in guides |
 | `media-src` | `'self' blob:` | Local/blobb media |

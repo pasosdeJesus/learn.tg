@@ -34,6 +34,7 @@ describe('middleware CSP (R-#247)', () => {
     expect(csp).toContain('https://www.youtube.com')
     expect(csp).toContain('https://forno.celo.org')
     expect(csp).toContain('https://goodserver.gooddollar.org')
+    expect(csp).toContain('https://celo.blockscout.com')
   })
 
   it('generates a fresh nonce per request', () => {

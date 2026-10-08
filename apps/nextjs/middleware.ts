@@ -27,7 +27,12 @@ const CSP_CONNECT_SRC = [
   'https://celo-rpc.publicnode.com',
   'https://celo-sepolia-rpc.publicnode.com',
   'https://1rpc.io',
+  'https://lb.drpc.org',
+  'https://celo-mainnet.g.alchemy.com',
+  'https://celo-sepolia.g.alchemy.com',
   'https://goodserver.gooddollar.org',
+  'https://celo.blockscout.com',
+  'https://celo-sepolia.blockscout.com',
 ]
 
 const CSP_IMG_SRC = [
