@@ -15,6 +15,11 @@ The platform currently features **crossword puzzles** as the primary interactive
 Course guides are Markdown files in `resources/{lang}/{prefijoRuta}/guide*.md`.
 They contain comprehension questions as numbered lists ending with `(answer)`:
 
+> **Some courses ship as private submodules.** The Global Disciples course is kept
+> in its own private repositories, mounted as git submodules at
+> `resources/en/gdcluster` (EN) and `resources/es/redgd` (ES); a clone needs
+> `--recurse-submodules` (or `git submodule update --init`) to include that content.
+
 ```markdown
 1. The Celo native cryptocurrency is called ___ . (CELO)
 ```

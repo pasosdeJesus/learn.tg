@@ -1,10 +1,11 @@
 # Content Security Policy (CSP) for learn.tg
 
-**Status: not implemented.** As of 2026-09-21 the app serves **no**
-`Content-Security-Policy` header; what follows is the design agreed in
-https://github.com/pasosdeJesus/learn.tg/issues/247 (2026-09-18) plus the
-instructions for changing the policy once it is live. Read this together with
-[api-security.md](api-security.md) (route auth and origin checks).
+**Status: Phase 1 (Report-Only) implemented 2026-10-08.** `apps/nextjs/middleware.ts`
+serves `Content-Security-Policy-Report-Only` on every route and the collector
+`app/api/csp-report` is live; **nothing is enforced yet**. The design below is the
+policy agreed in https://github.com/pasosdeJesus/learn.tg/issues/247 (2026-09-18).
+Read this together with [api-security.md](api-security.md) (route auth and origin
+checks).
 
 ## 1. Why
 
@@ -31,12 +32,16 @@ own, (2) a compromised dependency in the bundle, or (3) a poisoned build/asset.
 | `X-Frame-Options` | `SAMEORIGIN` |
 | `X-XSS-Protection` | `1; mode=block` (deprecated, no effect in modern browsers) |
 | `Referrer-Policy` | `origin-when-cross-origin` |
+| `Content-Security-Policy-Report-Only` | the §4 policy, built by `middleware.ts` with a per-request nonce (Phase 1, 2026-10-08) |
 
-No CSP, no `frame-ancestors`, no nonce.
+The static headers live in `apps/nextjs/next.config.ts`; the Report-Only CSP is set by
+`middleware.ts`, which needs a per-request nonce. `frame-ancestors 'none'` (Report-Only)
+does not replace `X-Frame-Options` until enforcement.
 
 ## 3. Rollout phases
 
-**Phase 1 — report only, on the development site** (nothing breaks):
+**Phase 1 — report only** (nothing breaks) — **done 2026-10-08**: live on all routes,
+collector at `/api/csp-report`; enforcement still pending:
 
 ```
 Content-Security-Policy-Report-Only: <policy>; report-uri /api/csp-report
@@ -61,7 +66,7 @@ checks) because a per-request nonce is needed for Next's inline hydration script
 | `style-src` | `'self' 'unsafe-inline'` | Tailwind + React inline styles; removing it is a later, separate step (far less dangerous than in `script-src`) |
 | `img-src` | `'self' data: blob:` | Icons, QR codes, credential SVGs |
 | `font-src` | `'self'` | System fonts |
-| `connect-src` | `'self'` + the RPC hosts (`https://forno.celo.org`, `https://forno.celo-sepolia.celo-testnet.org`) + the Alchemy endpoints used for campaign balances | `fetch`/XHR and WebSocket |
+| `connect-src` | `'self'` + the Celo RPC hosts (`forno.celo.org`, `forno.celo-sepolia.celo-testnet.org`, `rpc.ankr.com`, `celo.drpc.org`, `celo-sepolia.drpc.org`, `celo-rpc.publicnode.com`, `celo-sepolia-rpc.publicnode.com`, `1rpc.io`) + `goodserver.gooddollar.org` | `fetch`/XHR and WebSocket |
 | `worker-src` | `'self' blob:` | `public/sw.js` and Next's workers |
 | `manifest-src` | `'self'` | `public/manifest.webmanifest` |
 | `frame-ancestors` | `'none'` | Replaces `X-Frame-Options` (no legitimate embedding is known; the Rails admin is out of scope) |
@@ -77,12 +82,12 @@ matrix (Chromium 96–99 was still present for Opera).
 
 ## 5. Violation collector
 
-`app/api/csp-report` (Phase 1, **not implemented yet**) will log `document-uri`,
-`violated-directive` and `blocked-uri`. It must **never** log the full URL query
-string: it can carry a wallet address (`?walletAddress=0x…`). It will be a **public**
-endpoint (the browser posts it without credentials, `application/csp-report`), it
-stores no PII and it must be declared as public in `bin/audit-api-auth.mjs` with that
-reason — see [api-security.md](api-security.md) §1.
+`app/api/csp-report` (Phase 1) logs `document-uri`, `violated-directive` and
+`blocked-uri` to the server output. It **never** logs the full URL query string: it
+can carry a wallet address (`?walletAddress=0x…`). It is a **public** endpoint (the
+browser posts it without credentials, `application/csp-report`), it stores no PII and
+it is declared as public in `bin/audit-api-auth.mjs` with that reason — see
+[api-security.md](api-security.md) §1.
 
 Open decision: log only, or persist a `csp_violation` event in `userevent` (which
 already exists).

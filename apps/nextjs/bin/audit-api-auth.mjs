@@ -52,6 +52,8 @@ const FILE_PATTERNS = [
 
 // Known public endpoints (no auth needed)
 const PUBLIC_ENDPOINTS = [
+  'csp-report',           // R-#247: recolector de violaciones CSP; el navegador
+                          // lo postea sin credenciales (doc/csp.md §5). No guarda PII.
   'countries',
   'religions',
   'towns',

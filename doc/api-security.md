@@ -74,9 +74,10 @@ bypass. NextAuth keeps its own internal CSRF for `/api/auth/*`.
 > **Complementary control — CSP:** the origin checks stop cross-site requests, but
 > nothing stops foreign script from *running* in the `learn.tg` origin (XSS,
 > compromised dependency), which is what the in-app wallet needs to reach the key.
-> The agreed policy, its rollout and how to change it are in [csp.md](csp.md); the
-> app does **not** serve a `Content-Security-Policy` header yet
-> (https://github.com/pasosdeJesus/learn.tg/issues/247).
+> Since 2026-10-08 `middleware.ts` also serves
+> `Content-Security-Policy-Report-Only` on every route (Phase 1, nothing enforced)
+> with the collector `app/api/csp-report`; the policy, its rollout and how to change
+> it are in [csp.md](csp.md) (https://github.com/pasosdeJesus/learn.tg/issues/247).
 
 ## 2. The route audit script
 

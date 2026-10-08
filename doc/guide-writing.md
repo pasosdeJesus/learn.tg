@@ -46,6 +46,9 @@ Rules for writing course guides (content in `resources/{lang}/{course}/`).
   `guia2.md`).
 - English content in `resources/en/`, Spanish in `resources/es/`.
 - Keep both language versions synchronized.
+- Some courses live in a private repository mounted as a git submodule
+  (`resources/en/gdcluster` for the Global Disciples EN course, `resources/es/redgd`
+  for the ES one); clone with `--recurse-submodules` to get their guides.
 - Cross-reference the other guides of the course with a relative link
   (`[Guide 3](../guide3)`); pages outside the course with an absolute path
   (`/en/migration-in-app-wallet`).
