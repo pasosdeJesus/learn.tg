@@ -5,5 +5,5 @@
 	path = resources/en/gdcluster
 	url = git@gitlab.com:vtamara/gdcluster.git
 [submodule "resources/en/redgd"]
-	path = resources/en/redgd
+	path = resources/es/redgd
 	url = git@gitlab.com:vtamara/redgd.git
