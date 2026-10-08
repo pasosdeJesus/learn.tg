@@ -153,3 +153,4 @@ apps/.env.bak.full-local
 audit-crushrules.mjs
 apps/uploads
 servidor/app/views/msip/hogar/_local.html.erb
+uploads
