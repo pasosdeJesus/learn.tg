@@ -59,7 +59,7 @@ Rules:
 ## 1b. CSRF / origin checks for mutations (R-#227 §4.3)
 
 Cookie-authenticated APIs need CSRF protection on unsafe methods
-(`POST`/`PUT`/`PATCH`/`DELETE`). `apps/nextjs/middleware.ts` rejects:
+(`POST`/`PUT`/`PATCH`/`DELETE`). `apps/nextjs/proxy.ts` rejects:
 
 - `Sec-Fetch-Site` header = `cross-site` or `same-site` → **403** (browsers
   always send it; `same-site` is not trusted because sibling subdomains could
@@ -74,7 +74,7 @@ bypass. NextAuth keeps its own internal CSRF for `/api/auth/*`.
 > **Complementary control — CSP:** the origin checks stop cross-site requests, but
 > nothing stops foreign script from *running* in the `learn.tg` origin (XSS,
 > compromised dependency), which is what the in-app wallet needs to reach the key.
-> Since 2026-10-08 `middleware.ts` serves `Content-Security-Policy` (enforced) on
+> Since 2026-10-08 `proxy.ts` serves `Content-Security-Policy` (enforced) on
 > every route with a per-request nonce, keeping `report-uri /api/csp-report` to
 > collect regressions; the policy and how to change it are in [csp.md](csp.md)
 > (https://github.com/pasosdeJesus/learn.tg/issues/247).

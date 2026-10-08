@@ -39,11 +39,12 @@ const CSP_IMG_SRC = [
   "'self'",
   'data:',
   'blob:',
-  'https://img.youtube.com',
-  'https://i.ytimg.com',
-  'https://celo.blockscout.com',
-  'https://celo-sepolia.blockscout.com',
-  'https://i.postimg.cc',
+  // Any HTTPS image. The wallet collectibles come from arbitrary NFT projects:
+  // Blockscout returns each token's image from its own host (pdJ credentials from
+  // learn.tg/sivel.xyz/stable-sl.pdj.app, Uniswap/Ubeswap/etc. from theirs), so an
+  // allowlist is whack-a-mole. Images are not a script vector; scripts stay
+  // restricted by `script-src` below.
+  'https:',
 ]
 
 const CSP_FRAME_SRC = ["'self'", 'https://www.youtube.com']
@@ -70,7 +71,9 @@ function buildCsp(nonce: string): string {
   ].join('; ')
 }
 
-export function middleware(req: NextRequest) {
+// R-#227 §4.3 + R-#247 (doc/csp.md). Next 16 renamed `middleware.ts` to `proxy.ts`
+// (the function is `proxy`); same API.
+export function proxy(req: NextRequest) {
   // 1. CSRF/origin guard for unsafe API methods (R-#227 §4.3).
   if (UNSAFE_METHODS.has(req.method.toUpperCase())) {
     const secFetchSite = req.headers.get('sec-fetch-site')

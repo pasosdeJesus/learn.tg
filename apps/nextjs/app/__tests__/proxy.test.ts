@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import { NextRequest } from 'next/server'
-import { middleware } from '../../middleware'
+import { proxy } from '../../proxy'
 
 // R-#247 (doc/csp.md §7.5): the CSP must not disappear silently. A future edit to
-// `middleware.ts` (or a move to `next.config.ts`) that drops the header must fail
-// here instead of shipping unprotected.
+// `proxy.ts` (or a move to `next.config.ts`) that drops the header must fail here
+// instead of shipping unprotected.
 
 function run(path: string, method = 'GET', headers: Record<string, string> = {}) {
   const req = new NextRequest(`https://learn.tg${path}`, { method, headers })
-  return middleware(req)
+  return proxy(req)
 }
 
-describe('middleware CSP (R-#247)', () => {
+describe('proxy CSP (R-#247)', () => {
   it('serves an enforcing Content-Security-Policy on a page', () => {
     const csp = run('/en').headers.get('content-security-policy')
     expect(csp).toBeTruthy()
@@ -28,11 +28,11 @@ describe('middleware CSP (R-#247)', () => {
     expect(res.headers.get('content-security-policy-report-only')).toBeNull()
   })
 
-  it('includes the external hosts the app relies on', () => {
+  it('includes the sources the app relies on', () => {
     const csp = run('/en').headers.get('content-security-policy') || ''
-    expect(csp).toContain('https://img.youtube.com')
-    expect(csp).toContain('https://www.youtube.com')
-    expect(csp).toContain('https://forno.celo.org')
+    expect(csp).toContain("img-src 'self' data: blob: https:") // arbitrary NFT hosts
+    expect(csp).toContain('https://www.youtube.com') // frame-src
+    expect(csp).toContain('https://forno.celo.org') // connect-src
     expect(csp).toContain('https://goodserver.gooddollar.org')
     expect(csp).toContain('https://celo.blockscout.com')
   })

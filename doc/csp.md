@@ -1,6 +1,6 @@
 # Content Security Policy (CSP) for learn.tg
 
-**Status: enforced (Phase 2) 2026-10-08.** `apps/nextjs/middleware.ts` serves
+**Status: enforced (Phase 2) 2026-10-08.** `apps/nextjs/proxy.ts` serves
 `Content-Security-Policy` on every route (per-request nonce; `report-uri`
 `/api/csp-report` still collects regressions) and the root layout forces dynamic
 rendering (`app/layout.tsx`) so Next.js injects the nonce. Phase 1 (Report-Only) ran
@@ -33,10 +33,10 @@ own, (2) a compromised dependency in the bundle, or (3) a poisoned build/asset.
 | `X-Frame-Options` | `SAMEORIGIN` |
 | `X-XSS-Protection` | `1; mode=block` (deprecated, no effect in modern browsers) |
 | `Referrer-Policy` | `origin-when-cross-origin` |
-| `Content-Security-Policy` | the §4 policy, built by `middleware.ts` with a per-request nonce (enforced, 2026-10-08) |
+| `Content-Security-Policy` | the §4 policy, built by `proxy.ts` with a per-request nonce (enforced, 2026-10-08) |
 
 The static headers live in `apps/nextjs/next.config.ts`; the CSP is set by
-`middleware.ts`, which needs a per-request nonce. `frame-ancestors 'none'` now replaces
+`proxy.ts`, which needs a per-request nonce. `frame-ancestors 'none'` now replaces
 `X-Frame-Options`.
 
 ## 3. Rollout phases
@@ -54,13 +54,13 @@ Content-Security-Policy-Report-Only: <policy>; report-uri /api/csp-report
 **Phase 3 — Trusted Types** (`require-trusted-types-for 'script'`) as a separate
 step: the guide body and the course outline use `dangerouslySetInnerHTML`.
 
-The policy is served by **`middleware.ts`** (it already exists for the CSRF/origin
+The policy is served by **`proxy.ts`** (it already exists for the CSRF/origin
 checks) because a per-request nonce is needed for Next's inline hydration scripts;
 `next.config.ts`'s static `headers()` cannot generate one.
 
 ## 4. Starting policy
 
-Built by `buildCsp()` in `apps/nextjs/middleware.ts`. The nonce needs a per-request
+Built by `buildCsp()` in `apps/nextjs/proxy.ts`. The nonce needs a per-request
 render, so the root layout forces dynamic rendering (`app/layout.tsx`): every page is
 server-rendered and Next.js injects the nonce into its scripts. The policy is:
 
@@ -69,7 +69,7 @@ server-rendered and Next.js injects the nonce into its scripts. The policy is:
 | `default-src` | `'self'` | Baseline deny |
 | `script-src` | `'self' 'nonce-<per request>' 'strict-dynamic'` | Next injects inline hydration scripts; `strict-dynamic` keeps dynamic imports working without listing every chunk |
 | `style-src` | `'self' 'unsafe-inline'` | Tailwind + React inline styles; removing it is a later, separate step (far less dangerous than in `script-src`) |
-| `img-src` | `'self' data: blob:` + `img.youtube.com`, `i.ytimg.com`, `celo.blockscout.com`, `celo-sepolia.blockscout.com`, `i.postimg.cc` | Icons, QR codes, credential SVGs, guide thumbnails and wallet collectibles |
+| `img-src` | `'self' data: blob: https:` | Icons, QR codes, credential SVGs, guide thumbnails and wallet collectibles. The collectibles are NFTs from **arbitrary** projects (Blockscout returns each token's image from its own host: the shared credentials contract serves pdJ credentials from `learn.tg`/`sivel.xyz`/`stable-sl.pdj.app`, and Uniswap/Ubeswap/… from theirs), so a host allowlist is whack-a-mole. Images are not a script vector, which is why only `img-src` is broad |
 | `font-src` | `'self'` | System fonts |
 | `connect-src` | `'self'` + the Celo RPC hosts (`forno.celo.org`, `forno.celo-sepolia.celo-testnet.org`, `rpc.ankr.com`, `celo.drpc.org`, `celo-sepolia.drpc.org`, `lb.drpc.org`, `celo-rpc.publicnode.com`, `celo-sepolia-rpc.publicnode.com`, `1rpc.io`, `celo-mainnet.g.alchemy.com`, `celo-sepolia.g.alchemy.com` — **track `NEXT_PUBLIC_RPC_URL`**) + `goodserver.gooddollar.org` + the Blockscout APIs (`celo.blockscout.com`, `celo-sepolia.blockscout.com`, for the wallet collectibles) | `fetch`/XHR and WebSocket |
 | `worker-src` | `'self' blob:` | `public/sw.js` and Next's workers |
@@ -124,14 +124,14 @@ already exists).
 4. Re-run the wallet E2E specs (`make test-e2e-wallet`, `make test-e2e-biometric`,
    `make test-e2e-offline`) on the dev site.
 5. A regression test must fail if the header disappears (a future `next.config.ts`
-   or `middleware.ts` edit can drop it silently): `app/__tests__/middleware.test.ts`
-   asserts the enforcing header and its directives on the middleware response (runs in
+   or `proxy.ts` edit can drop it silently): `app/__tests__/proxy.test.ts`
+   asserts the enforcing header and its directives on the proxy response (runs in
    `make test-pages` and CI).
 
 ## 8. Open questions
 
-1. Policy in `middleware.ts` (dynamic, nonce) vs `next.config.ts` (static): the
-   nonce requires the middleware path — confirmed, the middleware already exists.
+1. Policy in `proxy.ts` (dynamic, nonce) vs `next.config.ts` (static): the
+   nonce requires the proxy path — confirmed, the proxy already exists.
 2. Do we need `'unsafe-eval'` in production (viem/ethers, QR library)? Measure, do
    not assume.
 3. Collector: log only, or `userevent`?
