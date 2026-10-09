@@ -14,7 +14,7 @@ import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@pasosdejesus/m/shadcn-components/ui/tabs'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
-import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import {
   TOKEN_DECIMALS,
@@ -22,6 +22,7 @@ import {
   explorerApiNftsUrl,
   explorerTxUrl,
   formatTokenAmount,
+  normalizeNftImage,
   parseTokenAmount,
   validateSend,
   type SendToken,
@@ -255,7 +256,7 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
       setNfts(
         (json.items || []).map((item) => ({
           name: item.metadata?.name,
-          image: item.metadata?.image,
+          image: normalizeNftImage(item.metadata?.image),
           collection: item.token?.name,
         })),
       )

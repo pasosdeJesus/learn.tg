@@ -22,12 +22,7 @@
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220 \
 //     bin/m test:e2e sw-stale-shell
 
-import {
-  initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
-import { gotoWithRetry } from '../helpers/retry.mjs'
+import { fail, gotoWithRetry, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const MARKER = 'STALE-SHELL-MARKER'

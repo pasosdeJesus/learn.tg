@@ -7,13 +7,7 @@
 //     GUIDE_CLAIM_PATH=/en/web3-and-ubi/guide4 \
 //     node e2e/specs/guide-claims.spec.mjs
 
-import {
-  initTestEnv, launchBrowser, newPage,
-  resetFailures, fail, ok, summary,
-  simulateSIWE, waitForText,
-  short,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { fail, initTestEnv, launchBrowser, newPage, ok, resetFailures, resolveSiteTarget, short, simulateSIWE, summary, waitForText } from '@pasosdejesus/m/e2e'
 
 import { createWalletClient, createPublicClient, http, parseEther } from 'viem'
 import { celo } from 'viem/chains'

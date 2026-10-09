@@ -6,13 +6,9 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
-// R-#239: the pdj-wallet core signs (setupSIWEMock retired).
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
+// R-#239: the shared wallet core (`@pasosdejesus/m/wallet`) signs (setupSIWEMock retired).
 import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -52,7 +48,7 @@ async function main() {
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
 
-  // Full mock with real signing by the pdj-wallet core (survives reloads)
+  // Full mock with real signing by the shared wallet core (survives reloads)
   await installCoreWalletMock(page, { privateKey: envCreds.pk, address: envCreds.addr, chainId })
 
   // ── Test 1: Connect Wallet on landing ──

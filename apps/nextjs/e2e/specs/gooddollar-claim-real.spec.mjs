@@ -8,9 +8,9 @@
 //     llave privada** en la billetera de learn.tg por la UI, la desbloquea y reclama
 //     con ella. Es el camino que queremos que funcione de verdad. Pasa
 //     `GOODDOLLAR_MNEMONIC` (cuenta #1) o `GOODDOLLAR_PRIVATE_KEY`.
-//     Este modo sí necesita el paquete de la billetera instalado:
-//       (cd packages/pdj-wallet && pnpm install)
-//     porque el helper E2E lo importa desde Node (R-#239, doc/environments.md).
+//     Este modo usa el núcleo compartido `@pasosdejesus/m/wallet` (ya instalado
+//     en `apps/nextjs/node_modules`), porque el helper E2E lo importa desde Node
+//     (R-#239, doc/environments.md).
 //     El proveedor in-app habla con el RPC configurado del sitio: las lecturas y el
 //     envío son reales, sin puente extra.
 //
@@ -39,13 +39,8 @@
 //   # modo externo:
 //   PROD_SPECS=1 GOODDOLLAR_WALLET=external GOODDOLLAR_PRIVATE_KEY=0x... ... bin/m test:e2e gooddollar-claim-real
 
-import {
-  initTestEnv, launchBrowser, newIncognitoContext,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
+import { fail, gotoWithRetry, initTestEnv, launchBrowser, newIncognitoContext, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
-import { gotoWithRetry } from '../helpers/retry.mjs'
 import { createPublicClient, createWalletClient, http, parseAbi, zeroAddress } from 'viem'
 import { mnemonicToAccount, privateKeyToAccount } from 'viem/accounts'
 import { celo } from 'viem/chains'
@@ -220,10 +215,10 @@ async function waitForReadyButton(page, timeoutMs, unlockFn) {
 
 /** Importa la mnemónica en la billetera in-app de learn.tg por la UI y la desbloquea. */
 async function importInAppWallet(page, { mnemonic, privateKey, timeout }) {
-  // Import diferido a propósito: `in-app-wallet.mjs` carga `@learn-tg/pdj-wallet`
-  // (→ `viem`), que en Node resuelve desde `packages/pdj-wallet/node_modules` y sólo
-  // está tras un `pnpm install` dentro del paquete. El modo `external` no debe
-  // necesitarlo, así que el helper se carga únicamente cuando se usa la in-app.
+  // Import diferido a propósito: `in-app-wallet.mjs` carga `@pasosdejesus/m/wallet`
+  // (→ `viem`), que en Node resuelve desde `apps/nextjs/node_modules`. El modo
+  // `external` no debe necesitarlo, así que el helper se carga únicamente cuando se
+  // usa la in-app.
   const { chooseWalletProtection, TEST_PASSWORD } = await import('../helpers/in-app-wallet.mjs')
   for (let attempt = 0; attempt < 15; attempt++) {
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})

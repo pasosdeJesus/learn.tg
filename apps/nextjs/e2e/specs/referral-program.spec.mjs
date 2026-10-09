@@ -18,13 +18,8 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { fail, gotoWithRetry, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, retry, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-import { gotoWithRetry, retry } from '../helpers/retry.mjs'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)

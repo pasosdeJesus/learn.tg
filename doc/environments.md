@@ -67,7 +67,8 @@ code with the new app (or vice versa). That mismatch is a **runtime** error, not
 compile one. Measured 2026-09-20: after a deploy the dev site could not create an
 in-app wallet (the e2e specs waited forever for the recovery words and the test page
 logged "The password must have at least 8 characters") because the deployed
-`pdj-wallet-next` still passed `pin` to the renamed `pdj-wallet` core, which expects
+the wallet React layer still passed `pin` to the renamed core
+(`@pasosdejesus/m/wallet`), which expects
 `password`; rebuilding the engines fixed it. If a wallet spec fails right after a
 deploy, check `engines-dist` before the code.
 
@@ -263,7 +264,7 @@ CHROME_PATH=/usr/local/bin/chrome IPDES=localhost PUERTOPRU=4000 CHAIN_ID=111422
 
 **The E2E specs also run against the local instance** (no dev-site deploy needed).
 The helper of `m` fixes `base` as `https://${IPDES}:${PUERTOPRU}`, so each spec
-resolves its target with `e2e/helpers/site-target.mjs` (`resolveSiteTarget(env)`),
+resolves its target with `resolveSiteTarget(env)` (`@pasosdejesus/m/e2e`),
 which honours `SITE_URL` and derives `host`/`domainPort` from it (the SIWE must
 sign the host you actually visit, R-#233). Recipe:
 
@@ -529,24 +530,11 @@ make engines-sync-abis   # tras regenerar abis en hardhat: copia a src/abis/ y r
 bin/dev                  # ya ejecuta engines-dist automáticamente; Next en :4000
 ```
 
-`engines-dist` también compila `pdj-wallet` y `pdj-wallet-next`. El motor
-`pdj-wallet` además necesita **sus propias dependencias** (`pnpm install` dentro
-de `packages/pdj-wallet`): los specs E2E lo importan desde Node (R-#239) y Node
-ESM resuelve `viem` desde la carpeta del paquete, no desde `apps/nextjs`. Su
-build usa `moduleResolution: nodenext` (extensiones `.js` explícitas en `dist/`)
-por la misma razón.
-
-Pruebas unitarias de esos dos paquetes (viven en el Makefile de la app, igual
-que la integración):
-
-```sh
-cd apps/nextjs
-make test-packages          # pdj-wallet + pdj-wallet-next (~50 s)
-make test-pdj-wallet        # solo el core
-make test-pdj-wallet-next   # solo React (compila el core por ti)
-```
-
-Cada paquete tiene su propio `Makefile` (`make test`, `make build`, `make install`).
+`engines-dist` compila los motores de negocio en `packages/`. La billetera in-app ya
+no vive en learn.tg: su núcleo (`@pasosdejesus/m/wallet`, `m/REQ/14`) y su capa React
+(`@pasosdejesus/m/wallet/next`, `m/REQ/37`) se consumen **por versión** desde
+`apps/nextjs/node_modules`, así que no hay que compilarlos ni instalar nada aparte.
+Sus pruebas unitarias corren en el repo `m` (`pnpm -r test`).
 
 `build-guard` (en `make all`/`make prod`) aborta si el dev server está activo
 (no compilar mientras sirve: máquina compartida, ver arriba).
@@ -571,7 +559,7 @@ node bin/warmup.mjs      # solo si el sitio se sirve con dev server; pre-compila
   sitio), soporta `TEST_PRIVATE_KEYS` (multi-billetera), y el runner rota
   `WALLET_INDEX` por spec. Billeteras extra deben estar registradas en el sitio
   (SIWE 401 si no).
-- **Retries**: `e2e/helpers/retry.mjs` (`retry`/`retrySpec`); los specs de claim
+- **Retries**: `@pasosdejesus/m/e2e` (`retry`/`retrySpec`); los specs de claim
   reconectan la billetera (limpiar sesión + re-SIWE) si el botón no aparece.
 - Rails admin del dev: `https://learn.tg:3500/learntg-admin` (404 si Puma/nginx
   caído); backoffice local: Puma en `127.0.0.1:3000`.

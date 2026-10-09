@@ -24,13 +24,8 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  initTestEnv, launchBrowser, newIncognitoContext,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
+import { fail, gotoWithRetry, initTestEnv, launchBrowser, newIncognitoContext, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
-import { gotoWithRetry } from '../helpers/retry.mjs'
 import { createPublicClient, createWalletClient, http, parseAbi, zeroAddress } from 'viem'
 import { mnemonicToAccount, privateKeyToAccount } from 'viem/accounts'
 import { celo } from 'viem/chains'
@@ -241,10 +236,10 @@ async function pageState(page) {
 
 /** Importa la llave privada en la billetera in-app de learn.tg por la UI y la desbloquea. */
 async function importInAppWallet(page, { mnemonic, privateKey, timeout }) {
-  // Import diferido a propósito: `in-app-wallet.mjs` carga `@learn-tg/pdj-wallet`
-  // (→ `viem`), que en Node resuelve desde `packages/pdj-wallet/node_modules` y sólo
-  // está tras un `pnpm install` dentro del paquete. El modo `external` no debe
-  // necesitarlo, así que el helper se carga únicamente cuando se usa la in-app.
+  // Import diferido a propósito: `in-app-wallet.mjs` carga `@pasosdejesus/m/wallet`
+  // (→ `viem`), que en Node resuelve desde `apps/nextjs/node_modules`. El modo
+  // `external` no debe necesitarlo, así que el helper se carga únicamente cuando se
+  // usa la in-app.
   const { chooseWalletProtection, TEST_PASSWORD } = await import('../helpers/in-app-wallet.mjs')
   for (let attempt = 0; attempt < 15; attempt++) {
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})

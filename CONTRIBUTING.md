@@ -50,17 +50,16 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
    - `make type` runs `pnpm typecheck` = `tsc --noEmit` **plus** `tsc --noEmit -p
      tsconfig.test.json`, so it checks source **and** test files;
      `make type-source` is source only and `make type-check-tests` tests only
-   - `make test` runs the app sub-targets in sequence plus `test-packages` and
-     `test-engines` (parallel-safe, sin coverage). **El tamaño de la suite y el conteo
+   - `make test` runs the app sub-targets in sequence plus `test-engines` (parallel-safe,
+     sin coverage). **El tamaño de la suite y el conteo
      por objetivo viven en un solo lugar:**
      [apps/nextjs/CONTRIBUTING.md §Coverage Status](apps/nextjs/CONTRIBUTING.md). No
      repita esos números en otros documentos (se quedan viejos).
    - `make coverage` runs all tests with coverage (lento, usa más memoria)
    - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.
-   - **`pdj-wallet` packages** (`packages/pdj-wallet`, `packages/pdj-wallet-next`):
-     `make test-pdj-wallet`, `make test-pdj-wallet-next` or `make test-packages`
-     (~50 s; each package also has its own `Makefile`). See
-     [doc/pdj-wallet-testing.md](doc/pdj-wallet-testing.md).
+   - **In-app wallet** (`@pasosdejesus/m/wallet` core and `@pasosdejesus/m/wallet/next`
+     React layer, `m/REQ/14` and `m/REQ/37`): consumed by version; its unit tests run in
+     the `m` repo (`pnpm -r test`). See [doc/pdj-wallet-testing.md](doc/pdj-wallet-testing.md).
    - **Engine tests** (`packages/rewards`, `packages/gdcluster`): `make test-engines`
      (or `make test-rewards` / `make test-gdcluster`), ~45 s; each
      engine brings its own `vitest.config.ts` with the aliases to

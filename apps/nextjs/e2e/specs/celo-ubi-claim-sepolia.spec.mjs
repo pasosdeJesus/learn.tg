@@ -6,13 +6,7 @@
 //     GUIDE_CLAIM_PATH=/en/web3-and-ubi/guide4 \
 //     node e2e/specs/celo-ubi-claim-sepolia.spec.mjs
 
-import {
-  initTestEnv, launchBrowser, newPage,
-  resetFailures, fail, ok, summary,
-  simulateSIWE,
-  short,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { fail, initTestEnv, launchBrowser, newPage, ok, resetFailures, resolveSiteTarget, short, simulateSIWE, summary } from '@pasosdejesus/m/e2e'
 
 async function main() {
   const t0 = performance.now()

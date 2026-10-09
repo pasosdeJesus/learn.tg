@@ -15,11 +15,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 
 const LANG = 'en'

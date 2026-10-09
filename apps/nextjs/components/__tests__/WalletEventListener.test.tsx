@@ -21,7 +21,7 @@ vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: { address: '0xabcd' }, status: 'authenticated' }),
 }))
 
-vi.mock('@learn-tg/pdj-wallet-next', () => ({
+vi.mock('@pasosdejesus/m/wallet/next', () => ({
   useInAppWallet: () => ({ status: mocks.inAppStatus, lockReason: mocks.lockReason }),
 }))
 

@@ -16,7 +16,7 @@ build-guard:
 # git. Compilar antes del build — un checkout fresco no resuelve
 # @learn-tg/{rewards,gdcluster} sin esto. Orden: rewards antes que gdcluster.
 engines-dist:
-	@for e in pdj-wallet pdj-wallet-next rewards gdcluster; do \
+	@for e in rewards gdcluster; do \
 	  if [ -d "../../packages/$$e" ]; then \
 	    echo "[engines-dist] compilando packages/$$e"; \
 	    (cd "../../packages/$$e" && ../../apps/nextjs/node_modules/.bin/tsc -b) || exit 1; \
@@ -26,7 +26,7 @@ engines-dist:
 # Sync de ABIs (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): los motores guardan COPIA en src/abis/. Al
 # regenerar abis en hardhat, copiar y recompilar.
 engines-sync-abis:
-	@for e in pdj-wallet pdj-wallet-next rewards gdcluster; do \
+	@for e in rewards gdcluster; do \
 	  if [ -d "../../packages/$$e/src/abis" ]; then \
 	    echo "[engines-sync-abis] abis -> packages/$$e/src/abis"; \
 	    cp -f abis/*.json "../../packages/$$e/src/abis/" 2>/dev/null || true; \
@@ -92,7 +92,7 @@ format:
 # necesitan.
 test:
 	@ulimit -d 8000000 2>/dev/null || true; \
-	$(MAKE) test-lib test-hooks test-api test-components test-pages test-db test-packages test-engines
+	$(MAKE) test-lib test-hooks test-api test-components test-pages test-db test-engines
 
 test-lib:
 	pnpm vitest run lib/__tests__
@@ -120,25 +120,12 @@ test-db:
 	pnpm vitest run db/__tests__
 
 # ── Paquetes (unit tests de los motores en packages/) ─────────────────────
-# Cada paquete trae su propio vitest.config.ts (con los alias a
-# apps/nextjs/node_modules), así que se ejecutan desde aquí y no hace falta
-# instalar nada para correrlos. `pnpm install` dentro del paquete solo hace
-# falta para importar `dist/` desde Node (E2E, R-#239), porque Node resuelve
-# `viem` desde esa carpeta. Ver doc/pdj-wallet-testing.md.
+# Los motores en packages/ (rewards, gdcluster, mr519) traen su propio
+# vitest.config.ts (con los alias a apps/nextjs/node_modules), así que se ejecutan
+# desde aquí. La billetera in-app ya no vive aquí: su núcleo
+# (`@pasosdejesus/m/wallet`) y su capa React (`@pasosdejesus/m/wallet/next`,
+# `m/REQ/37`) se consumen por versión. Ver doc/pdj-wallet-testing.md.
 
-test-pdj-wallet:
-	pnpm vitest run --root ../../packages/pdj-wallet
-
-# El paquete Next resuelve el core por alias a `packages/pdj-wallet/dist`, así que
-# hay que compilarlo antes. Solo el core (no engines-dist): así esta regla no
-# depende de los otros motores ni de sus node_modules.
-pdj-wallet-dist:
-	(cd ../../packages/pdj-wallet && ../../apps/nextjs/node_modules/.bin/tsc -b)
-
-test-pdj-wallet-next: pdj-wallet-dist
-	pnpm vitest run --root ../../packages/pdj-wallet-next
-
-test-packages: test-pdj-wallet test-pdj-wallet-next
 
 # Motores de negocio (packages/rewards, packages/gdcluster): cada uno trae su
 # vitest.config.ts con los alias a apps/nextjs/node_modules (R-#252), así que
@@ -224,13 +211,12 @@ test-e2e:
 
 # Corre la suite y reintenta los specs que fallen. Los fallos contra el dev site
 # son de carga/timing (la misma spec pasa sola), no de producto; ver
-# doc/e2e-testing.md y bin/e2e-retry.mjs.
+# doc/e2e-testing.md. El reintento lo hace `m` (`m/REQ/49` P3).
 #   E2E_RETRIES=3 make test-e2e-retry
 test-e2e-retry:
 	E2E_SPEC_DELAY_MS=12000 \
-	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-9001} CHAIN_ID=$${CHAIN_ID:-11142220} \
-	E2E_RETRIES=$${E2E_RETRIES:-2} \
-	node bin/e2e-retry.mjs
+	IPDES=${IPDES:-learn.tg} PUERTOPRU=${PUERTOPRU:-9001} CHAIN_ID=${CHAIN_ID:-11142220} \
+	./bin/m test:e2e --retry ${E2E_RETRIES:-2}
 
 # Run a specific E2E spec (OpenBSD make no soporta pattern rules `%`)
 #   make test-e2e-spec SPEC=cluster-formation

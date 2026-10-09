@@ -29,7 +29,7 @@ const coreMocks = vi.hoisted(() => ({
 // R-#254: la creación sondea el dispositivo por su cuenta (el hook todavía no tiene
 // billetera que inspeccionar), así que el test controla ese sondeo.
 // R-#246 §14: detección de cancelación del gesto.
-vi.mock('@learn-tg/pdj-wallet', () => ({
+vi.mock('@pasosdejesus/m/wallet', () => ({
   detectPlatformSupport: coreMocks.detectPlatformSupport,
   isUserCancelledError: (error: unknown) =>
     /cancel|abort|notallowed/i.test(
@@ -37,7 +37,7 @@ vi.mock('@learn-tg/pdj-wallet', () => ({
     ),
 }))
 
-vi.mock('@learn-tg/pdj-wallet-next', () => ({
+vi.mock('@pasosdejesus/m/wallet/next', () => ({
   // Misma regla que el paquete (R-#251): clave de 8+ caracteres.
   isValidPassword: (value: string) => value.trim().length >= 8,
   useInAppWallet: () => ({

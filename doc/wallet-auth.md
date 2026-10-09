@@ -4,13 +4,10 @@ How wallet connection, SIWE authentication, and transaction signing work in
 learn.tg after removing RainbowKit + wagmi (R-#186).
 
 > **Scope:** this is the **learn.tg app** integration (its components, hooks and
-> SIWE session). The wallet packages have their own docs:
-> [`packages/pdj-wallet/README.md`](../packages/pdj-wallet/README.md) (library API)
-> and [`packages/pdj-wallet/ARCHITECTURE.md`](../packages/pdj-wallet/ARCHITECTURE.md)
-> (core design), plus
-> [`packages/pdj-wallet-next/README.md`](../packages/pdj-wallet-next/README.md)
-> (React hooks/components) and
-> [`packages/pdj-wallet-next/ARCHITECTURE.md`](../packages/pdj-wallet-next/ARCHITECTURE.md).
+> SIWE session). The in-app wallet is shared from `m`: the core
+> `@pasosdejesus/m/wallet` (`m/REQ/14`) and the React layer
+> `@pasosdejesus/m/wallet/next` (`m/REQ/37`); its architecture and package READMEs
+> live in the `m` repo (`m/doc/identidad-multibilletera.md`).
 > For the end user, see [pdJ-wallet.md](pdJ-wallet.md).
 
 ## Architecture
@@ -47,7 +44,7 @@ user identity. Wallet connection state (wagmi) is no longer tracked
 separately.
 
 **Two wallets (R-#244 MVP):** `WalletSelector` lets the user pick between the
-**in-app wallet** (`packages/pdj-wallet` core + `packages/pdj-wallet-next`
+**in-app wallet** (`@pasosdejesus/m/wallet` core + `@pasosdejesus/m/wallet/next`
 React layer) and the **external** wallet (`ConnectWalletButton`,
 `window.ethereum`). `useWalletProvider()` resolves the effective EIP-1193
 provider — the in-app one while it is unlocked, otherwise the injected one —
@@ -61,7 +58,7 @@ UI that must behave differently can tell which wallet is in use without a reques
 |-------|-----|
 | React | `useWalletProvider().isInApp` — the effective provider is the in-app wallet (true while it is unlocked) |
 | React | `useAuthAddress().isInAppUnlocked` / `inAppAddress` — the in-app wallet is unlocked, regardless of the session |
-| Provider | `provider.isPdJWallet === true` (`packages/pdj-wallet/src/provider.ts`) — the flag a library can read on `window.ethereum` when the in-app wallet is the injected one |
+| Provider | `provider.isPdJWallet === true` (`@pasosdejesus/m/wallet`, `provider.ts`) — the flag a library can read on `window.ethereum` when the in-app wallet is the injected one |
 | Hook | `useInAppWallet().status` — `no-wallet` / `locked` / `unlocked` |
 
 `wallet_watchAsset` is **not** implemented by the in-app provider: its panel always
@@ -165,7 +162,7 @@ to that wallet.
 https://github.com/pasosdeJesus/learn.tg/issues/246).** The decrypted key lives in
 module memory, so a reload locks the wallet again. With the dialog the user can
 register a **passkey** and let the wallet key be stored **sealed with the PRF
-secret** of that credential (`packages/pdj-wallet/src/biometric.ts`): from then on
+secret** of that credential (`@pasosdejesus/m/wallet`, `biometric.ts`): from then on
 one Face ID / fingerprint gesture decrypts it, and the PIN remains the fallback
 and the 12 words the recovery. Nothing is stored in plaintext —
 `PublicKeyCredential`/`prf` do not exist in the in-app browsers of Rabby,
@@ -198,7 +195,7 @@ even with a passkey registered. Now:
 
 **Moving funds asks for a gesture (layer L1), at most once an hour.** Even inside
 an unlocked session, `eth_sendTransaction` on the in-app provider calls
-`requireFundsConfirmation()` (`packages/pdj-wallet/src/provider.ts`), which asks
+`requireFundsConfirmation()` (`@pasosdejesus/m/wallet`, `provider.ts`), which asks
 the device to verify the user before signing; a cancelled prompt rejects with code
 `4001` and nothing is broadcast. The gate also covers `eth_signTypedData_v4` and
 `eth_signTransaction`, because an EIP-2612 permit or an EIP-3009
@@ -210,8 +207,8 @@ request goes through, because the layer needs hardware.
 **Grace window + new destinations (R-#253).** Once the user verified with the device
 — an L1 assertion or an L2 biometric unlock — a transfer **to an address already
 used** does not ask again within `USER_VERIFICATION_GRACE_MS` (**15 minutes**,
-`packages/pdj-wallet/src/web-authn.ts`); a **new destination always asks**, even
-inside the window (`packages/pdj-wallet/src/destinations.ts`, per-wallet in
+`@pasosdejesus/m/wallet`, `web-authn.ts`); a **new destination always asks**, even
+inside the window (`@pasosdejesus/m/wallet`, `destinations.ts`, per-wallet in
 `localStorage`, remembered only after a successful broadcast).
 `lockWallet()`/`deleteWallet()` clear the window, so the idle auto-lock makes the
 next move prompt again. Trade-off accepted by the operator: on a stolen *unlocked*
@@ -371,7 +368,7 @@ One key is managed by the auth system:
 | Key | Purpose | Set by | Cleared by |
 |-----|---------|--------|------------|
 | `learn.tg.sessionAddress` | Wallet address for UI persistence | `ConnectWalletButton` / `WalletSelector` on connect | `WalletEventListener` on disconnect/session loss |
-| IndexedDB `learn-tg-pdj-wallet` → `wallet` | Encrypted in-app wallet (AES-256-GCM + PBKDF2 600k) | `pdj-wallet` `createWallet` / `importWallet` | `deleteWallet` (WalletSelector → Disconnect) |
+| IndexedDB `learn-tg-pdj-wallet` → `wallet` | Encrypted in-app wallet (AES-256-GCM + PBKDF2 600k) | `@pasosdejesus/m/wallet` `createWallet` / `importWallet` | `deleteWallet` (WalletSelector → Disconnect) |
 
 It survives NextAuth's `useSession()` losing state on client-side
 navigation (bug #5719), ensuring the UI doesn't flash "Connect Wallet"
@@ -409,8 +406,8 @@ NextAuth session cookie (HttpOnly JWT, `sub` = wallet). The former
 | `components/WalletEventListener.tsx` | Wallet event listener + session-based auth cleanup |
 | `lib/hooks/useAuthAddress.ts` | Unified hook: session ∥ in-app wallet ∥ localStorage |
 | `lib/hooks/useWalletProvider.ts` | Effective EIP-1193 provider (in-app while unlocked, else window.ethereum) |
-| `packages/pdj-wallet` | Core: create/import/unlock/sign, AES-256-GCM storage, EIP-1193 provider |
-| `packages/pdj-wallet-next` | `useInAppWallet`, `InAppWalletSetup`, `InAppWalletUnlock` |
+| `@pasosdejesus/m/wallet` | Core (consumed by version): create/import/unlock/sign, AES-256-GCM storage, EIP-1193 provider |
+| `@pasosdejesus/m/wallet/next` | `useInAppWallet`, `InAppWalletSetup`, `InAppWalletUnlock` |
 | `lib/hooks/useWallet.ts` | usePublicClient + useWalletClient (viem, no wagmi) |
 | `lib/hooks/useWriteContract.ts` | useWriteContract via eth_sendTransaction |
 | `lib/gooddollar-reason.ts` | Why a signer-based flow (GoodDollar) can or cannot run, and the unlock path (R-#271) |

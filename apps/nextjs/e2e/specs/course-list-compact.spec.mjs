@@ -11,13 +11,8 @@
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220 \
 //     bin/m test:e2e course-list-compact
 
-import {
-  initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
+import { fail, gotoWithRetry, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, retry, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
-import { gotoWithRetry, retry } from '../helpers/retry.mjs'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)

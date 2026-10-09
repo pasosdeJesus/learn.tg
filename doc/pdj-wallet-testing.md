@@ -1,7 +1,7 @@
-# Testing the pdj-wallet packages and the PWA
+# Testing the in-app wallet and the PWA
 
-How to test the in-app wallet (`packages/pdj-wallet`,
-`packages/pdj-wallet-next`), its integration in learn.tg, and the PWA shell
+How to test the in-app wallet (the React layer `@pasosdejesus/m/wallet/next` over the
+shared core `@pasosdejesus/m/wallet`), its integration in learn.tg, and the PWA shell
 (service worker, manifest, offline fallback).
 
 Specs: https://github.com/pasosdeJesus/learn.tg/issues/245 (testing plan),
@@ -21,37 +21,18 @@ buttons, and paste the report into
 https://github.com/pasosdeJesus/learn.tg/issues/246 §8. It is the input for the
 three-layer unlock design (PIN, WebAuthn gesture, WebAuthn PRF).
 
-## 1. Unit: the packages
+## 1. Unit: the wallet (in `m`)
 
-Both packages ship their own `vitest.config.ts` (a plain object with an alias
-map onto `apps/nextjs/node_modules`), and the app's Makefile exposes them like
-any other suite:
+The in-app wallet no longer lives in learn.tg: the core is `@pasosdejesus/m/wallet`
+(`m/REQ/14`) and the React layer `@pasosdejesus/m/wallet/next` (`m/REQ/37`). Both are
+consumed **by version**; their unit suites run in the `m` repo (`packages/m`,
+`pnpm -r test`), so learn.tg has no package unit target anymore.
 
-```sh
-cd apps/nextjs
-
-make test-packages          # los dos paquetes (~50 s)
-make test-pdj-wallet        # solo el core (~48 s)
-make test-pdj-wallet-next   # solo React; compila el core antes (~12 s)
-```
-
-Equivalentes directos (si prefieres el comando crudo):
-
-```sh
-cd apps/nextjs
-./node_modules/.bin/vitest run --root ../../packages/pdj-wallet \
-  --config ../../packages/pdj-wallet/vitest.config.ts
-./node_modules/.bin/vitest run --root ../../packages/pdj-wallet-next \
-  --config ../../packages/pdj-wallet-next/vitest.config.ts
-```
-
-Y dentro de cada paquete hay `Makefile` (`make test`, `make build`, `make install`).
-
-Expected: los dos paquetes pasan (0 fallas). `make test` (la suite completa) ya incluye
-`test-packages`; el tamaño vigente y el conteo por objetivo están en
+What learn.tg exercises here is the integration (below) and the app's own tests. The
+current size and per-target count live in
 [`apps/nextjs/CONTRIBUTING.md`](../apps/nextjs/CONTRIBUTING.md) (§Coverage Status).
 
-Lo que cubre el core sobre R-#246: sellado de la clave con el
+Lo que cubre el núcleo (`m`) sobre R-#246: sellado de la clave con el
 secreto PRF y comprobación de que el registro guardado **no contiene la clave
 privada**, desbloqueo con un gesto, determinismo entre recargas (misma sal → mismo
 secreto), el PIN como respaldo, `auth-failed` con un secreto que no coincide,
@@ -61,18 +42,16 @@ gesto en `eth_sendTransaction`, no lo pide en lecturas ni en `personal_sign`, un
 gesto cancelado rechaza con código `4001` sin transmitir, sin passkey deja pasar la
 transacción y se puede desactivar con `requireUserVerification: false`.
 
-En `pdj-wallet-next` tres pruebas cubren el auto-lock por inactividad: tras
+En `@pasosdejesus/m/wallet/next` tres pruebas cubren el auto-lock por inactividad: tras
 `INACTIVITY_LOCK_MS` (una hora) sin actividad la clave se suelta con
 `lockReason: 'idle'`, la actividad real de un teléfono lo reinicia
 (`visibilitychange` llega a `document`, no a `window` — el defecto de R-#246), y el
 ✕ de la cabecera marca `'user'`.
 
-The core package declares its own dependencies (`viem`, `vitest`, `fake-indexeddb`,
-`typescript`): run `pnpm install` inside `packages/pdj-wallet` once (`make -C
-../../packages/pdj-wallet install`). That is also what enables the
-`IndexedDBStorage` test, which used to self-skip because `fake-indexeddb` was not
-installed (2026-09-15: now it runs). It is also needed to import the built core
-from Node (E2E, R-#239).
+The core lives in `m`: its dependencies (`viem` and `fake-indexeddb`) resolve from
+the app's `node_modules`, so there is nothing to install here. The
+`IndexedDBStorage` behavior and the Node-side import of the built core (E2E,
+R-#239) come from `@pasosdejesus/m/wallet`.
 
 `pnpm test` inside a package goes through corepack, which resolves pnpm 11 here
 while the repo is pinned to pnpm 10; los targets del Makefile y los comandos de
@@ -118,11 +97,10 @@ What these cover:
   sin mover fondos en mainnet (el sitio de desarrollo corre en Celo Sepolia, así que su
   red no discrepa de la billetera y el E2E no reproduce el desajuste).
 
-If a hook test fails to resolve `@learn-tg/pdj-wallet`, the aliases at the top
-of `apps/nextjs/vitest.config.ts` are missing (the linked
-`packages/pdj-wallet-next/dist/*.js` imports the core as a bare specifier, which
-Vite cannot resolve from outside the app root). Order matters:
-`@learn-tg/pdj-wallet-next` must be listed before `@learn-tg/pdj-wallet`.
+If a hook test fails to resolve `@pasosdejesus/m/wallet/next` (or the core), the
+aliases at the top of `apps/nextjs/vitest.config.ts` are missing. Order matters:
+`@pasosdejesus/m/wallet/next` and `@pasosdejesus/m/wallet/storage` must be listed
+before `@pasosdejesus/m/wallet`.
 
 ## 3. Minimal E2E
 
@@ -330,7 +308,7 @@ quedan como el procedimiento humano:
 
 | Layer | Time | Memory |
 |-------|------|--------|
-| Package units (both) | ~15 s | <1 GB |
+| Package units (React layer) | ~15 s | <1 GB |
 | Integration (`make test-hooks test-components`) | ~2 min | <1 GB |
 | Minimal E2E | ~30 s | <1 GB |
 | Manual PWA / offline guide / offline crossword | minutes | - |

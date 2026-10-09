@@ -4,6 +4,7 @@ import {
   explorerApiNftsUrl,
   explorerTxUrl,
   formatTokenAmount,
+  normalizeNftImage,
   parseTokenAmount,
   shortAddress,
   validateSend,
@@ -21,6 +22,17 @@ describe('wallet-amounts (R-#249)', () => {
       `https://celo-sepolia.blockscout.com/api/v2/addresses/${SELF}/nft?type=ERC-721,ERC-1155`,
     )
   })
+
+  it('normaliza imágenes ipfs:// y ar:// a un gateway https que el navegador sí carga', () => {
+    expect(normalizeNftImage('ipfs://bafybeihk56hr55ov4tj6kqowsnt6tadz7qnyz5lo5dg5lpd5kqboobldbq')).toBe(
+      'https://ipfs.io/ipfs/bafybeihk56hr55ov4tj6kqowsnt6tadz7qnyz5lo5dg5lpd5kqboobldbq',
+    )
+    expect(normalizeNftImage('ipfs://ipfs/QmXyz')).toBe('https://ipfs.io/ipfs/QmXyz')
+    expect(normalizeNftImage('ar://abc123')).toBe('https://arweave.net/abc123')
+    expect(normalizeNftImage('https://sivel.xyz/img/x.png')).toBe('https://sivel.xyz/img/x.png')
+    expect(normalizeNftImage(undefined)).toBeUndefined()
+  })
+
   it('formats with the token decimals and trims zeros', () => {
     expect(formatTokenAmount(1_000_000n, TOKEN_DECIMALS.USDT)).toBe('1')
     expect(formatTokenAmount(1_500_000n, TOKEN_DECIMALS.USDT)).toBe('1.5')

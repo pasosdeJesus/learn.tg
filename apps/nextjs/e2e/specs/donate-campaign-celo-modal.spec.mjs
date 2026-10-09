@@ -13,11 +13,8 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  initTestEnv, launchBrowser, resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, retry, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-import { retry } from '../helpers/retry.mjs'
 import { createPublicClient, createWalletClient, http, parseUnits, formatEther, formatUnits } from 'viem'
 import { celoSepolia } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'

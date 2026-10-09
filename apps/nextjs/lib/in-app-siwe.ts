@@ -2,7 +2,7 @@
 
 import { SiweMessage } from 'siwe'
 import { getAddress } from 'viem'
-import type { Eip1193Provider } from '@learn-tg/pdj-wallet'
+import type { Eip1193Provider } from '@pasosdejesus/m/wallet'
 import { getAppChain } from '@/lib/app-chain'
 
 export type InAppSignInError = 'no-accounts' | 'no-csrf' | 'auth-failed'

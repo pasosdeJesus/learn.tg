@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import { useState, useEffect } from 'react'
 import { logger } from '@pasosdejesus/m/debug'
-import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { useExternalProvider } from '@/lib/external-provider'
 
 interface ExtendedSession extends Session {

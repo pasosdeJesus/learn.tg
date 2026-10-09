@@ -10,7 +10,8 @@ https://github.com/pasosdeJesus/learn.tg/issues/247 (2026-09-18). Read this with
 
 ## 1. Why
 
-The in-app wallet (`packages/pdj-wallet`) keeps a private key **in the page**: unlock,
+The in-app wallet (`@pasosdejesus/m/wallet`, the shared core consumed by learn.tg)
+keeps a private key **in the page**: unlock,
 SIWE signature and fund movement are all JavaScript running in the `learn.tg`
 origin. A CSP is the only control that stops foreign script from running there in
 the first place; the three layers of

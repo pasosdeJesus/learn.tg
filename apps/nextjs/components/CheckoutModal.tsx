@@ -15,7 +15,7 @@ import { erc20Abi, formatDisplay } from '@learn-tg/rewards/lib/donate-utils'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { GasInsufficientPanel } from '@/components/GasInsufficientPanel'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
-import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
 import { useExternalProvider } from '@/lib/external-provider'
 

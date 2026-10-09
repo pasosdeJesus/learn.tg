@@ -1,4 +1,4 @@
-// R-#239: the real `@learn-tg/pdj-wallet` core (running in Node) replaces the
+// R-#239: the real `@pasosdejesus/m/wallet` core (running in Node) replaces the
 // `setupSIWEMock` / `simulateSIWE` mocks of `@pasosdejesus/m/e2e`.
 //
 // The core owns the key and does the signing; the page only gets a thin
@@ -33,8 +33,8 @@ import {
   lockWallet,
   signSIWE,
   unlockWallet,
-} from '@learn-tg/pdj-wallet'
-import { FileStorage } from '@learn-tg/pdj-wallet/storage'
+} from '@pasosdejesus/m/wallet'
+import { FileStorage } from '@pasosdejesus/m/wallet/storage'
 
 export const TEST_PASSWORD = '12345678'
 
@@ -115,7 +115,7 @@ export async function installCoreWalletMock(page, { privateKey, address, chainId
         if (method === 'eth_accounts') return [addr]
         if (method === 'eth_requestAccounts') return [addr]
         // The only method that really does something: signing is delegated to the
-        // pdj-wallet core in Node.
+        // shared wallet core in Node.
         if (method === 'personal_sign') return window.__pdjWalletSign(params[0])
         if (method === 'eth_signTypedData_v4') return window.__pdjWalletSign(params[1])
         if (method === 'wallet_switchEthereumChain') return null

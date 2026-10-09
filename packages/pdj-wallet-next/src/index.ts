@@ -1,5 +1,0 @@
-export { useInAppWallet, type InAppWalletStatus, type UseInAppWalletResult } from './useInAppWallet.js'
-export { InAppWalletSetup, type InAppWalletSetupProps } from './components/InAppWalletSetup.js'
-export { InAppWalletUnlock, type InAppWalletUnlockProps } from './components/InAppWalletUnlock.js'
-export { t, type Lang, type MessageKey } from './i18n.js'
-export { isValidPassword } from '@learn-tg/pdj-wallet'

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { signOut } from 'next-auth/react'
-import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletDialog } from '@/components/WalletDialog'

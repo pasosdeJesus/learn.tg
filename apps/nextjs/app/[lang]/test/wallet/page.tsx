@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { isValidPassword, useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { isValidPassword, useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'

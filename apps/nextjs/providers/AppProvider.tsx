@@ -8,6 +8,8 @@
 
 import { useMemo } from 'react'
 import { SessionProvider } from 'next-auth/react'
+// learn.tg's in-app wallet namespaces (`m/REQ/37`): must run before the wallet is used.
+import '@/lib/in-app-wallet-config'
 import { WalletEventListener } from '@/components/WalletEventListener'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 

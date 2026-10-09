@@ -5,8 +5,8 @@ MetaMask, OneKey or any other wallet app. This guide is for using it. To install
 the app and read guides offline, see [pwa-user-guide.md](pwa-user-guide.md).
 
 > Are you a developer? The components, hooks and backup internals are in
-> [wallet-auth.md](wallet-auth.md); the library itself is in
-> [`packages/pdj-wallet/README.md`](../packages/pdj-wallet/README.md).
+> [wallet-auth.md](wallet-auth.md); the core is the shared wallet
+> `@pasosdejesus/m/wallet` (`m/REQ/14`).
 
 > **Already have an external wallet** (MetaMask, Rabby, OKX, OneKey, Brave)? You can
 > bring it inside learn.tg and keep the same address, history and scholarships:

@@ -25,7 +25,7 @@ const mocks = vi.hoisted(() => ({
 mocks.publicClient = { getBalance: mocks.getBalance, readContract: mocks.readContract }
 mocks.walletClient = { sendTransaction: mocks.sendTransaction, writeContract: mocks.writeContract }
 
-vi.mock('@learn-tg/pdj-wallet-next', () => ({
+vi.mock('@pasosdejesus/m/wallet/next', () => ({
   useInAppWallet: () => ({ status: mocks.status }),
 }))
 

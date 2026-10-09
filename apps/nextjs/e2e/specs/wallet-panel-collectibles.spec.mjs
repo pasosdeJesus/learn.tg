@@ -19,11 +19,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  initTestEnv, launchBrowser, newIncognitoContext,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { fail, initTestEnv, launchBrowser, newIncognitoContext, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 

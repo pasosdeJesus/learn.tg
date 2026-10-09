@@ -17,8 +17,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { createWalletClient, custom } from 'viem'
 import { celo } from 'viem/chains'
-import { getInAppWalletProvider, getWalletInfo, importWallet, lockWallet } from '@learn-tg/pdj-wallet'
-import { MemoryStorage } from '@learn-tg/pdj-wallet'
+import { getInAppWalletProvider, getWalletInfo, importWallet, lockWallet } from '@pasosdejesus/m/wallet'
+import { MemoryStorage } from '@pasosdejesus/m/wallet'
 import { ensureWalletChain } from '@/lib/ensure-chain'
 
 const HARDHAT_MNEMONIC = 'test test test test test test test test test test test junk'

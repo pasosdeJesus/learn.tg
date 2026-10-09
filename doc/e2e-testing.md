@@ -16,11 +16,12 @@ End-to-end testing for learn.tg uses `@pasosdejesus/m`'s test runner
 | `make test-e2e-biometric` | Atajo: `SPEC=biometric-unlock` (desbloqueo por huella, R-#246) | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-offline` | Atajo: `SPEC=offline` (offline-guide + offline-crossword + offline-course-download) | ✅ | `https://learn.tg:9001` |
 | `make test-e2e-two-courses` | Atajo: `SPEC=offline-two-courses` (dos cursos con billetera nueva, R-#242) | ✅ | `https://learn.tg:9001` |
-| `make test-packages` | Unit tests de `packages/pdj-wallet{,−next}` | ❌ | local |
 | `bin/m test:e2e` | Browser specs (falls back to smoke if none found) | ✅ | ⚠️ **`https://learn.tg` (producción)** |
 | `bin/m test:e2e --smoke` | Smoke only | ❌ | `https://learn.tg:9001` |
 | `bin/m test:e2e <pattern>` | Specific spec(s) matching filename | ✅ | ⚠️ **`https://learn.tg` (producción)** |
 | `bin/m test:e2e --grep <filter>` | Filter specs by test name | ❌ | `https://learn.tg:9001` |
+| `bin/m test:e2e --retry <N>` | Re-run each failed spec on its own (`m/REQ/49` P3) | ✅ | `https://learn.tg:9001` |
+| `bin/m test:e2e:summary <log…>` | Per-spec results of one or more logs, side by side (`m/REQ/49` P4) | ❌ | local |
 
 Override target: `SITE_URL=https://learn.tg bin/m test:e2e`
 
@@ -52,8 +53,8 @@ VM de 1 CPU. Bajo esa carga algunas specs fallan por timing (una carrera de
 navegación, un RPC lento, una ruta compilando bajo demanda) y la **misma spec pasa
 al correrla sola**: son fallos **ambientales, no defectos de producto**.
 `make test-e2e-retry` corre la suite y vuelve a correr cada spec fallida por
-separado hasta `E2E_RETRIES` veces (`bin/e2e-retry.mjs`), de modo que un fallo
-transitorio no envenene el resultado. Úsalo para la verificación final; usa
+separado (`bin/m test:e2e --retry $E2E_RETRIES`, `m/REQ/49` P3), de modo que un
+fallo transitorio no envenene el resultado. Úsalo para la verificación final; usa
 `make test-e2e` cuando quieras la foto cruda. Antes de cualquiera, calienta el dev
 site (`bin/warmup.mjs`) **si se sirve con dev server**; con un build de producción no hace falta (ver
 `doc/environments.md` §Dos modos para servir el sitio de desarrollo).
@@ -66,24 +67,25 @@ aprobado** aunque su último renglón diga `❌ 1 failures`. Medido el 2026-09-2
 `pastor-journey.spec.mjs` falló la compra del curso y el runner lo dio por bueno
 (no se reintentó). Regla: terminar siempre con
 `const failures = summary(t0); process.exit(failures > 0 ? 1 : 0)`.
-`bin/e2e-retry.mjs` además lee los bloques de la primera pasada y trata como
-fallida cualquier spec cuyo resumen diga `❌ N failures` con N > 0, así que un
-spec mal terminado igual se reintenta.
+El reintento de `m` (`--retry`) es **por exit code**: un spec mal terminado (que
+llama `fail()` sin `process.exit(1)`) no se reintenta, así que la regla de arriba
+no es opcional.
 
-### Comparar dos corridas: `bin/e2e-summary.mjs`
+### Comparar dos corridas: `bin/m test:e2e:summary`
 
 Para distinguir un fallo de producto de uno ambiental conviene correr lo mismo en
 otro entorno (por ejemplo un servidor local) y comparar:
 
 ```sh
 cd apps/nextjs
-node bin/e2e-summary.mjs /tmp/e2e-retry-site2.log /tmp/e2e-local.log
+./bin/m test:e2e:summary /tmp/e2e-retry-site2.log /tmp/e2e-local.log
 ```
 
-Imprime una fila por spec con `ok`, `FALLA`, `SKIP` o `?` (arrancó y no dejó
-resumen), y marca con `<-- difiere` las filas cuyo estado cambia entre corridas:
-un spec que falla en el dev site y pasa en local apunta al entorno del sitio, no
-al código.
+`--retry` escribe `<E2E_LOG_DIR>/e2e-<timestamp>.log` (por defecto `/tmp`) con una
+línea `[e2e-result] <spec> <ok|fail|skip>` por spec. `summary` lee esas líneas (o el
+formato humano) e imprime los resultados lado a lado, marcando los specs que
+difieren entre corridas: un spec que falla en el dev site y pasa en local apunta al
+entorno del sitio, no al código.
 
 **No corras dos suites a la vez.** Ambas usan la misma billetera (`apps/.env`)
 sobre la misma cadena: dos corridas simultáneas compiten por los nonces y por el
@@ -112,7 +114,7 @@ Detalles que cuestan tiempo si se ignoran:
   `https://${IPDES}:${PUERTOPRU}` (fijo), así que sin `SITE_URL` el spec navega a
   `https://localhost:4000` y muere con `ERR_SSL_PROTOCOL_ERROR`. Desde 2026-09-21
   **todos** los specs resuelven su destino con
-  `e2e/helpers/site-target.mjs` (`resolveSiteTarget(env)`), que respeta `SITE_URL`
+  `resolveSiteTarget(env)` de `@pasosdejesus/m/e2e`, que respeta `SITE_URL`
   y deriva `host`/`domainPort` (el SIWE firma el host que se visita). Antes lo
   hacían sólo `pastor-journey`, `header-wallet-dialog`,
   `donate-campaign-celo-modal`, `in-app-wallet` y `premium-course-checkout`.
@@ -308,7 +310,7 @@ Requires `CHROME_PATH` set (OpenBSD: `/usr/local/bin/chrome`).
 
 ### Wallet in the specs (R-#239)
 
-The wallet is the real `@learn-tg/pdj-wallet` **core running in Node**, not a
+The wallet is the real `@pasosdejesus/m/wallet` **core running in Node**, not a
 mock: `e2e/helpers/in-app-wallet.mjs` imports the key from `apps/.env` (or creates
 a fresh one) with `FileStorage`, exposes a thin `window.ethereum` shim in the page
 and bridges `personal_sign` to the core (`signSIWE`).
@@ -341,9 +343,9 @@ This replaced the `setupSIWEMock` / `simulateSIWE` helpers of
 `town-autocomplete` and `prod-landing-to-profile` (2026-09-15).
 `e2e/helpers/siwe-wallet-mock.mjs` (a local copy, unused) was deleted.
 
-Requirements for Node: the package needs its own `node_modules`
-(`cd packages/pdj-wallet && pnpm install`) and its `dist/` built
-(`make engines-dist`), because Node ESM resolves `viem` from the package folder.
+Requirements for Node: the core comes from `@pasosdejesus/m` (installed in
+`apps/nextjs/node_modules`), so nothing extra has to be built; Node ESM resolves
+`viem` from the app's `node_modules`.
 
 Run with: `bin/m test:e2e` (without `--smoke`) or `make test-e2e`
 
@@ -534,7 +536,7 @@ default. This server runs locally or on the dev VM with the latest code.
 > e2e/specs/x.spec.mjs` **requires those envs** (https://github.com/pasosdeJesus/learn.tg/issues/224).
 
 Under a full 30-spec run the shared 16G dev VM saturates and navigation can time
-out; `e2e/helpers/retry.mjs` provides `gotoWithRetry()`/`retry()` (used by the
+out; `@pasosdejesus/m/e2e` provides `gotoWithRetry()`/`retry()` (used by the
 flaky specs) and specs skip gracefully when an environment prerequisite is
 missing (testnet CELO balance, mainnet stress opt-in `PROD_STRESS=1`, no courses
 listed on `/en`).
@@ -564,7 +566,7 @@ CalDAV smokes skip gracefully when these are not set:
 
 | Pipeline | What it runs | File |
 |----------|--------------|------|
-| Public GitHub CI | `pnpm test -- --exclude **/api/**` (API route tests need the private submodule), `make test-packages` and `node bin/audit-api-auth.mjs` | `.github/workflows/ci.yml` |
+| Public GitHub CI | `pnpm test -- --exclude **/api/**` (API route tests need the private submodule) and `node bin/audit-api-auth.mjs` | `.github/workflows/ci.yml` |
 | GitLab CI | the Rails app only (rspec/minitest + PostGIS) | `servidor/.gitlab-ci.yml` |
 
 So `make test-smoke` and `make test-e2e` are run by hand (or by the agent) against

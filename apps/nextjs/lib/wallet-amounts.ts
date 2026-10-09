@@ -121,6 +121,21 @@ export function explorerApiNftsUrl(address: string, network: string | undefined)
   return `${explorerAddressBase(network)}/api/v2/addresses/${address}/nft?type=ERC-721,ERC-1155`
 }
 
+/**
+ * Some NFT metadata `image` fields are non-HTTP URIs a browser cannot fetch
+ * directly (measured: a Celo collectible came back as `ipfs://bafy…`). Map the
+ * common decentralised schemes to an HTTPS gateway the browser can load (and the
+ * CSP allows). Anything else passes through unchanged.
+ */
+export function normalizeNftImage(image: string | undefined | null): string | undefined {
+  if (!image) return undefined
+  const ipfs = /^ipfs:\/\/(?:ipfs\/)?(.+)$/i.exec(image)
+  if (ipfs) return `https://ipfs.io/ipfs/${ipfs[1]}`
+  const ar = /^ar:\/\/(.+)$/i.exec(image)
+  if (ar) return `https://arweave.net/${ar[1]}`
+  return image
+}
+
 /** Block explorer link for a transaction hash on the configured network. */
 export function explorerTxUrl(hash: string, network: string | undefined): string {
   return `${explorerAddressBase(network)}/tx/${hash}`

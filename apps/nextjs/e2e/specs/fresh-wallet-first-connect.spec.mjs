@@ -22,13 +22,8 @@
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg \
 //     PUERTOPRU=443 CHAIN_ID=42220 SITE_URL=https://learn.tg bin/m test:e2e fresh-wallet-first-connect
 
-import {
-  initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
+import { fail, gotoWithRetry, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, retry, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
-import { gotoWithRetry, retry } from '../helpers/retry.mjs'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)

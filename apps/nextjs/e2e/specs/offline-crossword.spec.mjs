@@ -6,15 +6,11 @@
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg PUERTOPRU=9001 \
 //   CHAIN_ID=11142220 node e2e/specs/offline-crossword.spec.mjs
 //
-// The wallet is the real `@learn-tg/pdj-wallet` core running in Node (R-#239).
+// The wallet is the real `@pasosdejesus/m/wallet` core running in Node (R-#239).
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 import {
   answersFromGuideFile, clickSubmit, fillSolved, pendingCount, pendingInIndexedDb,
@@ -102,7 +98,7 @@ async function main() {
   await installCoreWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId, password: password })
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
   await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base, password: password })
-  ok('Signed in with the pdj-wallet core (session cookie)')
+  ok('Signed in with the shared wallet core (session cookie)')
 
   // Se elige la guía cuyas dos becas **no** estén pagadas: una vez pagadas, el botón
   // de envío queda deshabilitado por diseño (R-#242) y no se podría verificar la cola.

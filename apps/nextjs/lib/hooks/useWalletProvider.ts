@@ -1,7 +1,7 @@
 'use client'
 
-import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
-import type { Eip1193Provider } from '@learn-tg/pdj-wallet'
+import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
+import type { Eip1193Provider } from '@pasosdejesus/m/wallet'
 import { useMemo } from 'react'
 import { useExternalProvider } from '@/lib/external-provider'
 import { getRpcUrl } from '@/lib/rpc-url'

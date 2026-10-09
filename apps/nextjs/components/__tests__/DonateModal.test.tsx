@@ -71,7 +71,7 @@ vi.mock('@/lib/ensure-chain', async () => {
 const mockInAppStatus = vi.fn(() => 'no-wallet')
 // R-#246: el aviso nombra el gesto cuando el dispositivo puede verificar al usuario.
 const mockBiometric = vi.fn(() => ({ enabled: false, available: false }))
-vi.mock('@learn-tg/pdj-wallet-next', () => ({
+vi.mock('@pasosdejesus/m/wallet/next', () => ({
   useInAppWallet: () => {
     const { enabled, available } = mockBiometric()
     return {

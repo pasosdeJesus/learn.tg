@@ -6,14 +6,7 @@
 //   make test-e2e-profile-data
 //   or: CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg node e2e/specs/profile-data.spec.mjs
 
-import {
-  initTestEnv, launchBrowser, newPage,
-  resetFailures, fail, ok, summary,
-  simulateSIWE, checkSessionFull, checkPartialLogin,
-  waitForText, short,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
-import { gotoWithRetry } from '../helpers/retry.mjs'
+import { checkPartialLogin, checkSessionFull, fail, gotoWithRetry, initTestEnv, launchBrowser, newPage, ok, resetFailures, resolveSiteTarget, short, simulateSIWE, summary, waitForText } from '@pasosdejesus/m/e2e'
 
 async function main() {
   const t0 = performance.now()

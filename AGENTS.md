@@ -49,7 +49,7 @@ Jesus is God incarnated, the Truth and the Logos.
 16. **[apps/nextjs/node_modules/@pasosdejesus/m/src/debug/README.md]**: DebugConsole — floating debug panel for MiniPay/embedded browsers. Use `logger.info/error(tag)` instead of `console.log`. Appears in bottom-right corner when `NEXT_PUBLIC_M_DEBUGGER_CONSOLE=1`.
 17. **[doc/environments.md]**: Environments, wallets, and local run modes — production (`https://learn.tg`, one wallet per role) vs development (`https://learn.tg:9001`, single wallet), the local `.env` test wallet, the local run modes (Next-only, frontend-only proxy, browser/PWA), the separate optional Rails backoffice, and where contract addresses come from.
 18. **[doc/api-security.md]**: API route security rules (public vs authenticated vs admin-only) and the route audit (`apps/nextjs/bin/audit-api-auth.mjs`) — run it after touching any `app/api` route.
-19. **[doc/pdj-wallet-testing.md]**: How to test the in-app wallet packages (`pdj-wallet`, `pdj-wallet-next`), the PWA shell, offline guides and the offline crossword — the fast loop instead of the full E2E suite.
+19. **[doc/pdj-wallet-testing.md]**: How to test the in-app wallet (consumed from `m`: core `@pasosdejesus/m/wallet`, React layer `@pasosdejesus/m/wallet/next`), the PWA shell, offline guides and the offline crossword — the fast loop instead of the full E2E suite.
 20. **[doc/pwa-user-guide.md]**: User-facing PWA guide — install on Android/Chrome and iOS/Safari, read offline, create the in-app wallet.
 21. **[doc/pwa-developer-guide.md]**: PWA internals — service worker and manifest wiring, the runtime caching table, how to add a cached route, how to test offline, and the `next-pwa` vs `serwist` decision.
 22. **[apps/nextjs/app/api/doc/crossword-reward-flow.md]**: flujo de recompensas del crucigrama — validación contra `answer_fib`, vault V5, credencial SBT, ruteo GD a ClusterFundsV2 y atribución de referidos. Vive en el submódulo `app/api` porque documenta sus rutas.
@@ -69,7 +69,7 @@ Jesus is God incarnated, the Truth and the Logos.
 **Where the commands already live — do not duplicate them:** the quickstart
 (`cd apps`, `cp .env.example .env`, `pnpm install`, `bin/dev`) is in
 **[README.md]**; type checking and every suite target (`make type`, `make test`,
-`make test-lib test-hooks test-api test-components test-pages test-db test-packages
+`make test-lib test-hooks test-api test-components test-pages test-db
 test-engines`) are in **[CONTRIBUTING.md]** and **[apps/nextjs/CONTRIBUTING.md]**;
 the app's env vars, `bin/dev` and `make engines-dist` are in
 **[apps/nextjs/README.md]**; migrations (`bin/m db:migrate`, `db:mig:make`) and the

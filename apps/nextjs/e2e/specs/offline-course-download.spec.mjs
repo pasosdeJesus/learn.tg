@@ -16,11 +16,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 
 const COURSE_PATH = '/en/web3-and-ubi'
@@ -108,7 +104,7 @@ async function main() {
   await installCoreWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId, password })
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
   await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base, password })
-  ok('Signed in with the pdj-wallet core (session cookie)')
+  ok('Signed in with the shared wallet core (session cookie)')
 
   // 1. El curso en línea. La página está lista cuando pinta su título (`h1`), no cuando
   // el cuerpo pasa de 200 caracteres: el shell (encabezado, banner, botones) ya los

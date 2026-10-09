@@ -7,12 +7,7 @@
 //   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg PUERTOPRU=9001 \
 //     CHAIN_ID=11142220 node e2e/specs/ux-mobile-menu.spec.mjs
 
-import {
-  initTestEnv, launchBrowser, newPage,
-  resetFailures, fail, ok, summary, short, simulateSIWE,
-} from '@pasosdejesus/m/e2e'
-import { gotoWithRetry } from '../helpers/retry.mjs'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { fail, gotoWithRetry, initTestEnv, launchBrowser, newPage, ok, resetFailures, resolveSiteTarget, short, simulateSIWE, summary } from '@pasosdejesus/m/e2e'
 
 async function main() {
   const t0 = performance.now()

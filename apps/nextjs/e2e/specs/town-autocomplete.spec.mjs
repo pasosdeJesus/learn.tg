@@ -4,14 +4,10 @@
 // Execution:
 //   CHROME_PATH=/usr/local/bin/chrome bin/m test:e2e town-autocomplete
 
-import {
-  initTestEnv, launchBrowser,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 import * as fs from 'fs'
 import * as path from 'path'
-// R-#239: the pdj-wallet core signs (setupSIWEMock retired).
+// R-#239: the shared wallet core (`@pasosdejesus/m/wallet`) signs (setupSIWEMock retired).
 import { installCoreWalletMock } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {

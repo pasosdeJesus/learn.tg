@@ -16,7 +16,7 @@
 import { useSession } from 'next-auth/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getAddress, zeroAddress } from 'viem'
-import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useWriteContract } from '@/lib/hooks/useWriteContract'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'

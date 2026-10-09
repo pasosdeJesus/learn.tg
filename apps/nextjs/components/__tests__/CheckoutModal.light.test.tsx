@@ -54,7 +54,7 @@ vi.mock('@/lib/hooks/useWallet', () => ({
 }))
 
 // R-#244: el modal consulta el estado de la billetera de la aplicación.
-vi.mock('@learn-tg/pdj-wallet-next', () => ({
+vi.mock('@pasosdejesus/m/wallet/next', () => ({
   useInAppWallet: () => ({ status: h.inAppStatus }),
 }))
 

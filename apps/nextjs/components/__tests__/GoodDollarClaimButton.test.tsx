@@ -115,7 +115,7 @@ vi.mock('@/lib/hooks/useWriteContract', () => ({
 vi.mock('@/lib/hooks/useWalletProvider', () => ({
   useWalletProvider: mockUseWalletProvider,
 }))
-vi.mock('@learn-tg/pdj-wallet-next', () => ({
+vi.mock('@pasosdejesus/m/wallet/next', () => ({
   useInAppWallet: mockUseInAppWallet,
 }))
 vi.mock('@/lib/in-app-wallet-dialog', () => ({

@@ -14,7 +14,7 @@ vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: mocks.session, status: mocks.sessionStatus }),
 }))
 
-vi.mock('@learn-tg/pdj-wallet-next', () => ({
+vi.mock('@pasosdejesus/m/wallet/next', () => ({
   useInAppWallet: () => ({ status: mocks.inAppStatus, walletInfo: mocks.inAppWalletInfo }),
 }))
 

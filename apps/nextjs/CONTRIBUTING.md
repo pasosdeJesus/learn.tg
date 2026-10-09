@@ -167,10 +167,10 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
-**Suite size (measured 2026-10-08):** `make test` = **1385 passed / 6 skipped, 0
-failed** in 182 files — `test-lib` 377, `test-hooks` 93, `test-api` 277,
-`test-components` 272, `test-pages` 73, `test-db` 3, `test-pdj-wallet` 90,
-`test-pdj-wallet-next` 26, `test-rewards` 83, `test-gdcluster` 91.
+**Suite size (measured 2026-10-09):** `make test` = **1275 passed / 6 skipped, 0
+failed** in 169 files — `test-lib` 378, `test-hooks` 93, `test-api` 277,
+`test-components` 272, `test-pages` 78, `test-db` 3, `test-rewards` 83,
+`test-gdcluster` 91.
 
 | Layer | Statements | Notes |
 |-------|-----------|-------|
@@ -197,16 +197,13 @@ failed** in 182 files — `test-lib` 377, `test-hooks` 93, `test-api` 277,
 # From apps/nextjs/
 
 # ── Fast (no coverage, parallel-safe sub-targets) ──
-make test           # Run all tests (app sub-targets + test-packages, in sequence)
+make test           # Run all tests (app sub-targets + test-engines, in sequence)
 make test-lib       # Only lib/__tests__
 make test-hooks     # Only lib/hooks/__tests__
 make test-api       # Only app/api
 make test-components # Only components/__tests__ + components/admin/__tests__ + components/ui/__tests__ + providers/__tests__
 make test-pages     # Only app/__tests__ + app/[lang]/**/__tests__
 make test-db        # Only db/__tests__
-make test-packages  # Only packages/pdj-wallet + packages/pdj-wallet-next
-make test-pdj-wallet      # Only packages/pdj-wallet (core, ~12 s)
-make test-pdj-wallet-next # Only packages/pdj-wallet-next (compila el core antes)
 
 # ── E2E shortcuts ──
 make test-e2e-wallet   # SPEC=in-app-wallet (billetera in-app, R-#245)

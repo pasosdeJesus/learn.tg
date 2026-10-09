@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   externalAvailable: false,
 }))
 
-vi.mock('@learn-tg/pdj-wallet-next', () => ({
+vi.mock('@pasosdejesus/m/wallet/next', () => ({
   useInAppWallet: () => ({ status: mocks.status, lock: mocks.lock, getProvider: () => null }),
 }))
 

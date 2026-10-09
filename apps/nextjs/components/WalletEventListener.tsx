@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { signOut } from 'next-auth/react'
-import { useInAppWallet } from '@learn-tg/pdj-wallet-next'
+import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { clearRestrictedCourseCopies } from '@/lib/offline-course-db'
 import { getExternalProvider } from '@/lib/external-provider'
 

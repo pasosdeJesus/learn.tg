@@ -4,7 +4,7 @@
 // The dependencies are resolved from the app (`apps/nextjs/node_modules`) on
 // purpose: the engine is consumed through its `exports` map and this monorepo
 // installs the deps once, in the app. Same pattern as
-// `packages/pdj-wallet/vitest.config.ts`.
+// `packages/rewards/vitest.config.ts`.
 const appModules = new URL('../../apps/nextjs/node_modules/', import.meta.url).pathname
 
 export default {

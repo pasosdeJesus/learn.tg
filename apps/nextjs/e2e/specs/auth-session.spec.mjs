@@ -12,15 +12,7 @@
 // valid connector (EIP-6963). Test verifies guard behavior via
 // simulated SIWE + page navigation.
 
-import {
-  initTestEnv, launchBrowser, newPage,
-  resetFailures, fail, ok, summary,
-  checkSessionFull, simulateSIWE, checkPartialLogin,
-  safeNavigate, clearBrowserCache, waitForText, newIncognitoContext,
-  newIncognitoPage,
-  short,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
+import { checkPartialLogin, checkSessionFull, clearBrowserCache, fail, initTestEnv, launchBrowser, newIncognitoContext, newIncognitoPage, newPage, ok, resetFailures, resolveSiteTarget, safeNavigate, short, simulateSIWE, summary, waitForText } from '@pasosdejesus/m/e2e'
 
 async function main() {
   const t0 = performance.now()

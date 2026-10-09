@@ -33,12 +33,8 @@ import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from 'viem/accounts'
 import { createPublicClient, createWalletClient, http, parseEther, parseUnits } from 'viem'
 import { celoSepolia } from 'viem/chains'
-import {
-  initTestEnv, launchBrowser, newPage,
-  resetFailures, fail, ok, summary, short,
-} from '@pasosdejesus/m/e2e'
+import { fail, gotoWithRetry, initTestEnv, launchBrowser, newPage, ok, resetFailures, short, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-import { gotoWithRetry } from '../helpers/retry.mjs'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)

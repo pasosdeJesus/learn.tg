@@ -10,13 +10,8 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  initTestEnv, launchBrowser, short,
-  resetFailures, fail, ok, summary,
-} from '@pasosdejesus/m/e2e'
-import { resolveSiteTarget } from '../helpers/site-target.mjs'
-import { retrySpec } from '../helpers/retry.mjs'
-// R-#239: the pdj-wallet core signs (setupSIWEMock retired).
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, retrySpec, short, summary } from '@pasosdejesus/m/e2e'
+// R-#239: the shared wallet core (`@pasosdejesus/m/wallet`) signs (setupSIWEMock retired).
 import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {
