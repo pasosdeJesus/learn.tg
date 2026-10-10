@@ -308,25 +308,32 @@ Puppeteer-based tests using `@pasosdejesus/m/e2e`'s test harness
 (`initTestEnv`, `launchBrowser`, `ok`/`fail`/`summary`).
 Requires `CHROME_PATH` set (OpenBSD: `/usr/local/bin/chrome`).
 
-### Wallet in the specs (R-#239)
+### Wallet in the specs (R-#239 / R-#284)
 
-The wallet is the real `@pasosdejesus/m/wallet` **core running in Node**, not a
-mock: `e2e/helpers/in-app-wallet.mjs` imports the key from `apps/.env` (or creates
-a fresh one) with `FileStorage`, exposes a thin `window.ethereum` shim in the page
-and bridges `personal_sign` to the core (`signSIWE`).
+The wallet **mock** is `@pasosdejesus/m/e2e`'s `setupFullWalletMock` (`m/REQ/14` +
+`m/REQ/49` P8): it signs `personal_sign`/`eth_signTypedData_v4` for real (viem) and
+announces an EIP-6963 provider (plus `window.ethereum`). Without `rpcUrl` the reads and
+`eth_sendTransaction` are mock; shape them with `fakeCallResult`/`fakeCelo`/
+`fakeTxHash`/`fakeReceipt`.
 
 ```js
-import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
+import { setupFullWalletMock } from '@pasosdejesus/m/e2e'
+import { waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
 
-await installCoreWalletMock(page, { privateKey: pk, address: addr, chainId })  // before goto
+await setupFullWalletMock(page, { privateKey: pk, address: addr, chainId })  // before goto
 await page.goto(`${base}/`)
 await waitForExternalConnect(page)   // R-#238: header = WalletSelector; this clicks
                                      // "Use external wallet" until Connect shows up
 ```
 
-`signInWithCoreWallet(page, { privateKey, baseUrl, chainId })` skips the UI: it
-builds the SIWE message in Node, signs it with the core and posts the callback
-inside the page so the NextAuth session cookie lands in the browser jar.
+`signInWithCoreWallet(page, { privateKey, address, chainId, baseUrl })` (local helper)
+skips the UI: it builds the SIWE message in Node, signs it with viem and posts the
+callback inside the page so the NextAuth session cookie lands in the browser jar.
+
+`e2e/helpers/in-app-wallet.mjs` keeps only what is app-specific: that SIWE sign-in and
+the `WalletDialog`/header UI drivers (`chooseWalletProtection`,
+`completeBackupVerification`, `waitForExternalConnect`). The wallet mock no longer
+lives there: it comes from `m` by version (`m/REQ/284`).
 
 Specs that drive the **create/import dialog in the browser** answer its protection
 step with `chooseWalletProtection(page, { gesture })` (R-#269): right after the
@@ -343,9 +350,8 @@ This replaced the `setupSIWEMock` / `simulateSIWE` helpers of
 `town-autocomplete` and `prod-landing-to-profile` (2026-09-15).
 `e2e/helpers/siwe-wallet-mock.mjs` (a local copy, unused) was deleted.
 
-Requirements for Node: the core comes from `@pasosdejesus/m` (installed in
-`apps/nextjs/node_modules`), so nothing extra has to be built; Node ESM resolves
-`viem` from the app's `node_modules`.
+Requirements for Node: the helper imports `viem`/`viem/accounts`/`siwe` from
+`apps/nextjs/node_modules`, so there is nothing to build.
 
 Run with: `bin/m test:e2e` (without `--smoke`) or `make test-e2e`
 

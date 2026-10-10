@@ -61,6 +61,7 @@ import {
 } from '@pasosdejesus/m/test-utils/radix-mocks';
 import { apiAuthMocks } from '@pasosdejesus/m/test-utils/rainbowkit-mocks';
 import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks';
+import { silenceConsole } from '@pasosdejesus/m/test-utils/console';
 console.log('Vitest setup loaded');
 
 // Setup default implementations for auth mocks
@@ -68,64 +69,12 @@ const { mocks, setupDefaultImplementations } = apiAuthMocks;
 setupDefaultImplementations()
 
 // Kysely + pg mocks at module scope — vi.mock() MUST be at module scope
-// for vitest to hoist it. Using apiDbMocks mock functions so tests can
-// control behavior via mockExecuteTakeFirst, mockExecute, etc.
-const { mockExecuteTakeFirst, mockExecute, mockSqlExecute, mockSql, mockPgPool } = apiDbMocks
-class GlobalMockKysely {
-  selectFrom() { return this }
-  where() { return this }
-  selectAll() { return this }
-  select(..._args: any[]) { return this }
-  orderBy() { return this }
-  limit() { return this }
-  groupBy() { return this }
-  having() { return this }
-  leftJoin() { return this }
-  innerJoin() { return this }
-  insertInto() { return this }
-  values() { return this }
-  returningAll() { return this }
-  updateTable() { return this }
-  set() { return this }
-  deleteFrom() { return this }
-  with() { return this }
-  onConflict() { return this }
-  doNothing() { return this }
-  // Una subconsulta se usa como tabla (`db.selectFrom(base.as('lb'))`): el puesto
-  // canonico del perfil envuelve la base del ranking (R-#278).
-  as() { return this }
-  executeTakeFirst() { return mockExecuteTakeFirst() }
-  executeTakeFirstOrThrow() { return mockExecuteTakeFirst() }
-  execute() { return mockExecute() }
-  transaction() {
-    const self = this
-    return {
-      execute: async (callback: any) => {
-        const mockTrx = new GlobalMockKysely()
-        return callback(mockTrx)
-      }
-    }
-  }
-  getExecutor() {
-    return {
-      executeQuery: (query: any) => mockSqlExecute(query),
-      provideConnection: async (callback: any) => callback({}),
-      releaseConnection: () => {},
-      transformQuery: (query: any, transformer: any) => query,
-      compileQuery: (query: any, ctx: any) => ({ sql: '', parameters: [] }),
-    }
-  }
-  fn = {
-    countAll: vi.fn(() => ({ as: vi.fn(() => ({})) })),
-    sum: vi.fn(() => ({ as: vi.fn(() => ({})) })),
-    avg: vi.fn(() => ({ as: vi.fn(() => ({})) })),
-    max: vi.fn(() => ({ as: vi.fn(() => ({})) })),
-    min: vi.fn(() => ({ as: vi.fn(() => ({})) })),
-  }
-}
-// `sql.raw(...)` se usa en `lib/leaderboard-queries.ts` para los pesos de `platform_score`
-// (literales en el SQL, sin parametros), y el mock compartido de `sql` no lo trae.
-;(mockSql as any).raw = (value: string) => value
+// for vitest to hoist it.
+// `m` (`m/REQ/49` U1) publishes the wired mock class: it shares its mock
+// functions with `apiDbMocks`, so `apiDbMocks.mockExecuteTakeFirst` (etc.)
+// reflect the DB calls the code actually makes. Replaces learn.tg's
+// hand-written `GlobalMockKysely`.
+const { MockKysely: GlobalMockKysely, mockSql, mockPgPool } = apiDbMocks
 vi.mock('kysely', () => ({
   Kysely: GlobalMockKysely,
   PostgresDialect: vi.fn(),
@@ -312,9 +261,9 @@ vi.mock('next-auth/react', () => {
   }
 });
 
-const originalError = console.error;
-const originalLog = console.log;
-const originalWarn = console.warn;
+// Silences expected console noise (`m/REQ/49` U2). No `restore()`: the wrapper
+// must survive the whole run. Args it cannot stringify (e.g. a module namespace)
+// are simply not matched.
 const NOISY_PATTERNS = [
   'ECONNREFUSED',
   'crossword GET req=',
@@ -329,25 +278,7 @@ const NOISY_PATTERNS = [
   'Failed to fetch guide data:',
   'Error fetching scholarship amount:',
 ];
-
-function shouldSilence(arg: any) {
-  return typeof arg === 'string' && NOISY_PATTERNS.some((p) => arg.includes(p));
-}
-
-console.error = (...args: any[]) => {
-  if (args.some(shouldSilence)) return;
-  originalError(...args);
-};
-
-console.log = (...args: any[]) => {
-  if (args.some(shouldSilence)) return;
-  originalLog(...args);
-};
-
-console.warn = (...args: any[]) => {
-  if (args.some(shouldSilence)) return;
-  originalWarn(...args);
-};
+silenceConsole(NOISY_PATTERNS);
 
 vi.mock('lz-string', () => {
   const mockCompress = vi.fn((input: string) => input)

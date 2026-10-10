@@ -16,8 +16,8 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
-import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, setupFullWalletMock, summary } from '@pasosdejesus/m/e2e'
+import { signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 
 const COURSE_PATH = '/en/web3-and-ubi'
 const NEVER_VISITED_PATH = '/en/web3-and-ubi/guide5'
@@ -101,9 +101,9 @@ async function main() {
   // billetera", así que el crucigrama guardado quedaba sin celdas y esa mitad del
   // spec no se podía verificar (medido 2026-09-24 en el sitio de desarrollo). Se
   // ingresa como lo haría el estudiante.
-  await installCoreWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId, password })
+  await setupFullWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId })
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
-  await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base, password })
+  await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base })
   ok('Signed in with the shared wallet core (session cookie)')
 
   // 1. El curso en línea. La página está lista cuando pinta su título (`h1`), no cuando

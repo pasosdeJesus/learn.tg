@@ -11,9 +11,9 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, short, summary } from '@pasosdejesus/m/e2e'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, setupFullWalletMock, short, summary } from '@pasosdejesus/m/e2e'
 // R-#239: the shared wallet core (`@pasosdejesus/m/wallet`) signs (setupSIWEMock retired).
-import { installCoreWalletMock, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
+import { waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -102,7 +102,7 @@ async function main() {
   const page = await browser.newPage()
 
   // Full mock: SIWE + balances + transactions
-  await installCoreWalletMock(page, { privateKey: envCreds.pk, address: envCreds.addr, chainId })
+  await setupFullWalletMock(page, { privateKey: envCreds.pk, address: envCreds.addr, chainId })
 
   // ════════════════════════════════════════════════════════════════
   // Step 1: Landing — Connect Wallet visible

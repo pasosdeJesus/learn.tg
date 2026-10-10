@@ -1,181 +1,45 @@
-// R-#239: the real `@pasosdejesus/m/wallet` core (running in Node) replaces the
-// `setupSIWEMock` / `simulateSIWE` mocks of `@pasosdejesus/m/e2e`.
+// R-#239 / R-#284: helpers shared by the specs that sign in with the in-app wallet.
 //
-// The core owns the key and does the signing; the page only gets a thin
-// EIP-1193 shim whose `personal_sign` asks Node for a signature over the bridge
-// (same mechanism as the old mock, different signer).
+// The wallet **mock** now comes from `@pasosdejesus/m/e2e` (`setupFullWalletMock`,
+// `m/REQ/14` + `m/REQ/49` P8): it signs `personal_sign`/`eth_signTypedData_v4` for real
+// and announces an EIP-6963 provider. This file keeps only what is app-specific:
 //
-// Usage (before page.goto):
+//   - `signInWithCoreWallet`: SIWE + NextAuth (CSRF + callback + cookie), signing with
+//     the private key (viem) instead of re-importing it into the wallet core.
+//   - the UI drivers of `WalletDialog` (`chooseWalletProtection`,
+//     `completeBackupVerification`) and of the header (`waitForExternalConnect`,
+//     `useExternalWalletInHeader`).
 //
-//   import { installCoreWalletMock } from '../helpers/in-app-wallet.mjs'
-//   const wallet = await installCoreWalletMock(page, {
-//     privateKey: envCreds.pk, address: envCreds.addr, chainId,
-//   })
+// Usage:
+//
+//   import { setupFullWalletMock } from '@pasosdejesus/m/e2e'
+//   import { signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
+//   await setupFullWalletMock(page, { privateKey, address, chainId })   // before goto
 //   await page.goto(url)
-//
-// Or drive only Node-side (no browser shim):
-//
-//   const wallet = await importTestWallet(privateKey)
-//   await signSIWEForTest(message)          // the core signs
-//
-// The wallet is stored with `FileStorage` (a JSON file with the encrypted
-// record) in a temporary directory, so no browser IndexedDB is involved.
+//   await signInWithCoreWallet(page, { privateKey, address, chainId, baseUrl })
 
-import { mkdtemp } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import { getAddress } from 'viem'
-import {
-  createWallet,
-  deleteWallet,
-  exportPrivateKey,
-  importWallet,
-  lockWallet,
-  signSIWE,
-  unlockWallet,
-} from '@pasosdejesus/m/wallet'
-import { FileStorage } from '@pasosdejesus/m/wallet/storage'
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
 export const TEST_PASSWORD = '12345678'
 
-async function tempWalletPath() {
-  const dir = await mkdtemp(join(tmpdir(), 'pdj-wallet-e2e-'))
-  return join(dir, 'wallet.json')
-}
-
-/** Creates a brand-new core wallet (mnemonic) in a temp file. */
-export async function createTestWallet({ password = TEST_PASSWORD, chain = 'celoSepolia' } = {}) {
-  const path = await tempWalletPath()
-  const storage = new FileStorage(path)
-  const { walletInfo, mnemonic } = await createWallet({ password, chain, storage })
-  return {
-    address: walletInfo.address,
-    mnemonic,
-    privateKey: await exportPrivateKey(password, storage),
-    path,
-    storage,
-  }
-}
-
-/** Imports an existing key (e.g. the one in `apps/.env`) into the core. */
-export async function importTestWallet(privateKey, { password = TEST_PASSWORD, chain = 'celoSepolia' } = {}) {
-  const path = await tempWalletPath()
-  const storage = new FileStorage(path)
-  const walletInfo = await importWallet({ privateKey, password, chain, storage })
-  return {
-    address: walletInfo.address,
-    privateKey,
-    path,
-    storage,
-  }
-}
-
-/** Re-opens a wallet created by `createTestWallet`/`importTestWallet`. */
-export async function unlockTestWallet(path, password = TEST_PASSWORD) {
-  const storage = new FileStorage(path)
-  return unlockWallet(password, storage)
-}
-
-export async function lockTestWallet() {
-  await lockWallet()
-}
-
-export async function deleteTestWallet(path) {
-  await deleteWallet(new FileStorage(path))
-}
-
-/** Signs a SIWE message with the unlocked core wallet. */
-export async function signSIWEForTest(message) {
-  return signSIWE(message)
+/** A brand-new key pair (viem), e.g. to sign in with a wallet that has no history. */
+export function createTestWallet() {
+  const privateKey = generatePrivateKey()
+  return { privateKey, address: privateKeyToAccount(privateKey).address }
 }
 
 /**
- * Installs a read-only-ish `window.ethereum` shim that signs through the core
- * wallet held in Node. Must be called before `page.goto()`.
- */
-export async function installCoreWalletMock(page, { privateKey, address, chainId = 11142220, password = TEST_PASSWORD }) {
-  const wallet = privateKey
-    ? await importTestWallet(privateKey, { password, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
-    : await createTestWallet({ password, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
-
-  const selectedAddress = address || wallet.address
-  const hexChainId = `0x${chainId.toString(16)}`
-
-  // Bridge: the page asks Node (the core) for the signature.
-  await page.exposeFunction('__pdjWalletSign', async (message) => signSIWEForTest(message))
-
-  await page.evaluateOnNewDocument((addr, cid) => {
-    const provider = {
-      isMetaMask: true,
-      isPdJWallet: false,
-      chainId: cid,
-      selectedAddress: addr,
-      request: async ({ method, params }) => {
-        if (method === 'eth_chainId') return cid
-        if (method === 'eth_accounts') return [addr]
-        if (method === 'eth_requestAccounts') return [addr]
-        // The only method that really does something: signing is delegated to the
-        // shared wallet core in Node.
-        if (method === 'personal_sign') return window.__pdjWalletSign(params[0])
-        if (method === 'eth_signTypedData_v4') return window.__pdjWalletSign(params[1])
-        if (method === 'wallet_switchEthereumChain') return null
-        if (method === 'wallet_addEthereumChain') return null
-        if (method === 'eth_sendTransaction') return `0x${'cd'.repeat(32)}`
-        if (method === 'eth_getBalance') return '0x0DE0B6B3A7640000'
-        if (method === 'eth_blockNumber') return '0x1312D00'
-        if (method === 'eth_gasPrice') return '0x12A05F20'
-        if (method === 'eth_estimateGas') return '0x7A120'
-        if (method === 'eth_call') {
-          const data = params[0]?.data || ''
-          return data.startsWith('0x70a08231')
-            ? '0x00000000000000000000000000000000000000000000003635C9ADC5DEA00000'
-            : `0x${'0'.repeat(64)}`
-        }
-        if (method === 'eth_getTransactionReceipt') {
-          return { status: '0x1', blockNumber: '0x1312D01', logs: [], transactionHash: `0x${'cd'.repeat(32)}` }
-        }
-        return null
-      },
-      on: () => {},
-      removeListener: () => {},
-    }
-
-    window.ethereum = provider
-    const announce = () => {
-      window.dispatchEvent(
-        new CustomEvent('eip6963:announceProvider', {
-          detail: {
-            info: {
-              uuid: crypto.randomUUID(),
-              name: 'pdj-wallet core (E2E)',
-              icon: '',
-              rdns: 'app.pdj.wallet.e2e',
-            },
-            provider,
-          },
-        }),
-      )
-    }
-    announce()
-    window.addEventListener('load', announce)
-  }, selectedAddress, hexChainId)
-
-  return { ...wallet, address: selectedAddress }
-}
-
-/**
- * Signs in without clicking the UI: builds the SIWE message in Node, signs it
- * with the core and posts the callback inside the page so the NextAuth session
+ * Signs in without clicking the UI: builds the SIWE message in Node, signs it with
+ * the private key and posts the callback inside the page so the NextAuth session
  * cookie lands in the browser jar (R-#233 Phase 2: the cookie is the credential).
  */
-export async function signInWithCoreWallet(page, { privateKey, address, chainId = 11142220, baseUrl, password = TEST_PASSWORD }) {
-  const wallet = privateKey
-    ? await importTestWallet(privateKey, { password, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
-    : await createTestWallet({ password, chain: chainId === 42220 ? 'celo' : 'celoSepolia' })
+export async function signInWithCoreWallet(page, { privateKey, address, chainId = 11142220, baseUrl }) {
+  const account = privateKeyToAccount(privateKey)
 
   // SIWE needs a checksummed address in the message; the app keeps the lowercase
   // form for its comparisons.
-  const checksummed = getAddress(address || wallet.address)
+  const checksummed = getAddress(address || account.address)
   const { SiweMessage } = await import('siwe')
   const url = new URL(baseUrl)
   const domain = url.port ? `${url.hostname}:${url.port}` : url.hostname
@@ -196,7 +60,7 @@ export async function signInWithCoreWallet(page, { privateKey, address, chainId 
     nonce: csrfToken,
   }).prepareMessage()
 
-  const signature = await signSIWEForTest(message)
+  const signature = await account.signMessage({ message })
 
   const result = await page.evaluate(
     async ({ csrfToken, message, signature }) => {
@@ -226,8 +90,9 @@ export async function signInWithCoreWallet(page, { privateKey, address, chainId 
     throw new Error(`SIWE sign-in failed: ${result.status} ${result.body}`)
   }
 
-  return { sessionAddress: checksummed.toLowerCase(), status: result.status, wallet }
+  return { sessionAddress: checksummed.toLowerCase(), status: result.status }
 }
+
 /**
  * R-#238/R-#244: the header now shows `WalletSelector`, which offers the in-app
  * wallet first and the external one behind "Use external wallet". Specs written

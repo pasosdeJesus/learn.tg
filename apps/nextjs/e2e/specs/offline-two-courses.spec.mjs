@@ -25,9 +25,9 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, setupFullWalletMock, summary } from '@pasosdejesus/m/e2e'
 import {
-  createTestWallet, installCoreWalletMock, signInWithCoreWallet,
+  createTestWallet, signInWithCoreWallet,
 } from '../helpers/in-app-wallet.mjs'
 import {
   answersFromGuideFile, clickSubmit, fillSolved, openCrosswordOnline,
@@ -156,15 +156,15 @@ async function main() {
   await page.setDefaultNavigationTimeout(120000)
 
   // ── 1. La billetera NUEVA ─────────────────────────────────────────────
-  // `installCoreWalletMock` sin llave crea una; se crea antes para conocer la
-  // dirección y pasarla también al SIWE (si no, cada llamada crearía otra).
+  // `setupFullWalletMock` necesita la llave; se genera antes para conocer la
+  // dirección y pasarla también al SIWE.
   const wallet = await createTestWallet()
   const learner = { pk: wallet.privateKey, addr: wallet.address }
   console.log(`\nBilletera nueva: ${learner.addr} | sitio ${base}\n`)
 
-  await installCoreWalletMock(page, { privateKey: learner.pk, address: learner.addr, chainId, password: WALLET_PASSWORD })
+  await setupFullWalletMock(page, { privateKey: learner.pk, address: learner.addr, chainId })
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
-  await signInWithCoreWallet(page, { privateKey: learner.pk, address: learner.addr, chainId, baseUrl: base, password: WALLET_PASSWORD })
+  await signInWithCoreWallet(page, { privateKey: learner.pk, address: learner.addr, chainId, baseUrl: base })
   ok('Billetera nueva registrada por SIWE (sesión creada en la prueba)')
 
   const mine = await apiGet(page, `/api/profile?walletAddress=${encodeURIComponent(learner.addr)}`)
@@ -193,9 +193,9 @@ async function main() {
   const verifierContext = await browser.createBrowserContext()
   const verifierPage = await verifierContext.newPage()
   await verifierPage.setDefaultNavigationTimeout(120000)
-  await installCoreWalletMock(verifierPage, { privateKey: verifier.pk, address: verifier.addr, chainId, password: WALLET_PASSWORD })
+  await setupFullWalletMock(verifierPage, { privateKey: verifier.pk, address: verifier.addr, chainId })
   await verifierPage.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
-  await signInWithCoreWallet(verifierPage, { privateKey: verifier.pk, address: verifier.addr, chainId, baseUrl: base, password: WALLET_PASSWORD })
+  await signInWithCoreWallet(verifierPage, { privateKey: verifier.pk, address: verifier.addr, chainId, baseUrl: base })
   const isVerifier = await apiGet(verifierPage, `/api/admin/check-verifier?wallet=${encodeURIComponent(verifier.addr)}`)
   if (isVerifier.body?.isVerifier !== true) {
     console.log('[SKIP] la billetera de `apps/.env` no es verificadora en este sitio: no se pueden confirmar los campos del perfil')

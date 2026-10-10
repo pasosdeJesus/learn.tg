@@ -4,11 +4,10 @@
 // Execution:
 //   CHROME_PATH=/usr/local/bin/chrome bin/m test:e2e town-autocomplete
 
-import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, setupFullWalletMock, summary } from '@pasosdejesus/m/e2e'
 import * as fs from 'fs'
 import * as path from 'path'
 // R-#239: the shared wallet core (`@pasosdejesus/m/wallet`) signs (setupSIWEMock retired).
-import { installCoreWalletMock } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -63,7 +62,7 @@ async function main() {
   const browser = await launchBrowser(env.headless)
   const page = await browser.newPage()
   await page.setDefaultNavigationTimeout(timeout)
-  await installCoreWalletMock(page, { privateKey: creds.pk, address: wallet, chainId })
+  await setupFullWalletMock(page, { privateKey: creds.pk, address: wallet, chainId })
 
   // ── Test 1: Town API returns Freetown ──
   console.log('── Test 1: /api/towns/search?country=694&q=free ──')

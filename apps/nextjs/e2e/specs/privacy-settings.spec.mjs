@@ -15,8 +15,8 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
-import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, setupFullWalletMock, summary } from '@pasosdejesus/m/e2e'
+import { signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 
 const LANG = 'en'
 // Contraseña del mock de la billetera en memoria (los specs la usan así, R-#239).
@@ -137,11 +137,10 @@ async function main() {
   // en los demás specs (R-#239), y no con el mock genérico de `newPage`.
   const page = await browser.newPage()
   await page.setDefaultNavigationTimeout(120000)
-  await installCoreWalletMock(page, {
+  await setupFullWalletMock(page, {
     privateKey: creds.pk,
     address: creds.addr,
     chainId: env.chainId,
-    password: WALLET_PASSWORD,
   })
 
   try {
@@ -151,7 +150,6 @@ async function main() {
       address: creds.addr,
       chainId: env.chainId,
       baseUrl: base,
-      password: WALLET_PASSWORD,
     })
     ok('Sesión iniciada con el núcleo de la billetera')
 

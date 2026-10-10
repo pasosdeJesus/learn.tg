@@ -10,8 +10,8 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
-import { installCoreWalletMock, signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
+import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, setupFullWalletMock, summary } from '@pasosdejesus/m/e2e'
+import { signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 import {
   answersFromGuideFile, clickSubmit, fillSolved, pendingCount, pendingInIndexedDb,
   sleep, solveCrossword, submitDiagnostics,
@@ -95,9 +95,9 @@ async function main() {
   const page = await browser.newPage()
   await page.setDefaultNavigationTimeout(120000)
 
-  await installCoreWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId, password: password })
+  await setupFullWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId })
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
-  await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base, password: password })
+  await signInWithCoreWallet(page, { privateKey: creds.pk, address: creds.addr, chainId, baseUrl: base })
   ok('Signed in with the shared wallet core (session cookie)')
 
   // Se elige la guía cuyas dos becas **no** estén pagadas: una vez pagadas, el botón
