@@ -57,8 +57,9 @@ Jesus is God incarnated, the Truth and the Logos.
 24. **[apps/nextjs/CONTRIBUTING.md]**: Documentation and testing policy of the app — what we document and where, coverage targets per layer, the `*.light.test.tsx` fast-test convention, and how to run each suite.
 25. **[doc/church-registration.md]**: protocol for church registration and pastors — the declaration on the profile, how the verifier creates or assigns the church, the copy of the registration data, the 22 SLEARN pastor bonus and the document privacy rules.
 26. **[doc/admin-guide.md]**: manual for the verifier dashboard (`/{lang}/admin`) — widgets, the user modal (church data by registration state, verification checkboxes and profile score), churches and the day-to-day tasks.
-27. Read the structure and key files of this project
-28. **[.crushrules]** (repository root): **local and gitignored — never commit it.** The
+27. **[doc/usuario-model.md]**: the `usuario` model and the base model (R-#260 Part B) — what is base (msip 2.2) vs learn.tg's extension, the base version in use, the three restrictive drifts aligned on 2026-10-10 and how the conformance is checked (`make db-check`, `make test-db`).
+28. Read the structure and key files of this project
+29. **[.crushrules]** (repository root): **local and gitignored — never commit it.** The
     private domain context and the only place where the neutral vocabulary of the
     sensitive features is explained (`contenido_sensible`/category B,
     `tipo_region`/region 1-2). Consult it before renaming, adding or documenting those

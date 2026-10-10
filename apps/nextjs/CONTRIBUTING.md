@@ -167,9 +167,9 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
-**Suite size (measured 2026-10-09):** `make test` = **1275 passed / 6 skipped, 0
-failed** in 169 files — `test-lib` 378, `test-hooks` 93, `test-api` 277,
-`test-components` 272, `test-pages` 78, `test-db` 3, `test-rewards` 83,
+**Suite size (measured 2026-10-10):** `make test` = **1277 passed / 6 skipped, 0
+failed** in 170 files: `test-lib` 378, `test-hooks` 93, `test-api` 277,
+`test-components` 272, `test-pages` 78, `test-db` 5, `test-rewards` 83,
 `test-gdcluster` 91.
 
 | Layer | Statements | Notes |
@@ -204,6 +204,7 @@ make test-api       # Only app/api
 make test-components # Only components/__tests__ + components/admin/__tests__ + components/ui/__tests__ + providers/__tests__
 make test-pages     # Only app/__tests__ + app/[lang]/**/__tests__
 make test-db        # Only db/__tests__
+make db-check       # Base model conformance against the live DB (R-#260 Part B; non-zero on drift)
 
 # ── E2E shortcuts ──
 make test-e2e-wallet   # SPEC=in-app-wallet (billetera in-app, R-#245)

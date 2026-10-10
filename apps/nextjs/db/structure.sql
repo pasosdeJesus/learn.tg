@@ -3347,7 +3347,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     revoked_at timestamp with time zone,
     revoke_hash character varying(66)
 );
@@ -3386,7 +3386,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -4176,7 +4176,7 @@ CREATE TABLE public.msip_centropoblado (
     fechadeshabilitacion date,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
-    municipio_id integer,
+    municipio_id integer NOT NULL,
     id integer DEFAULT nextval('public.msip_centropoblado_id_seq'::regclass) NOT NULL,
     observaciones character varying(5000) COLLATE public.es_co_utf_8,
     ultvigenciaini date,
@@ -4585,7 +4585,7 @@ CREATE TABLE public.msip_municipio (
     fechadeshabilitacion date,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
-    departamento_id integer,
+    departamento_id integer NOT NULL,
     id integer DEFAULT nextval('public.msip_municipio_id_seq'::regclass) NOT NULL,
     observaciones character varying(5000) COLLATE public.es_co_utf_8,
     codreg integer,
@@ -5431,7 +5431,7 @@ CREATE TABLE public.notifications (
     content text,
     link character varying(500),
     is_read boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT '2026-08-16 18:21:31.035-05'::timestamp with time zone NOT NULL,
     ref_key character varying(100)
 );
 
@@ -5734,7 +5734,7 @@ CREATE TABLE public.transaction (
     synced boolean DEFAULT true NOT NULL,
     wallet character varying(42) NOT NULL,
     CONSTRAINT transaction_crypto_check CHECK (((crypto)::text = ANY (ARRAY['usdt'::text, 'usdc'::text, 'xaut0'::text, 'gdoll'::text, 'celo'::text, 'learningpoints'::text, 'slearn'::text]))),
-    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY ((ARRAY['scholarship'::character varying, 'donation'::character varying, 'donation_reward'::character varying, 'pay-course'::character varying, 'ubi-claim'::character varying, 'conversion'::character varying, 'pastor_bonus'::character varying, 'referral_reward'::character varying, 'referral_bonus'::character varying])::text[])))
+    CONSTRAINT transaction_tipo_check CHECK (((type)::text = ANY (ARRAY[('scholarship'::character varying)::text, ('donation'::character varying)::text, ('donation_reward'::character varying)::text, ('pay-course'::character varying)::text, ('ubi-claim'::character varying)::text, ('conversion'::character varying)::text, ('pastor_bonus'::character varying)::text, ('referral_reward'::character varying)::text, ('referral_bonus'::character varying)::text])))
 );
 
 
@@ -5829,7 +5829,7 @@ CREATE TABLE public.usuario (
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     failed_attempts integer DEFAULT 0,
-    unlock_token character varying(255),
+    unlock_token character varying(64),
     locked_at timestamp without time zone,
     oficina_id integer,
     tema_id integer,
@@ -5875,9 +5875,9 @@ CREATE TABLE public.usuario (
     mostrar_cursos_publico boolean DEFAULT true NOT NULL,
     mostrar_cursos_sensibles_publico boolean,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
-    CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[])))),
+    CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY (ARRAY[('pastor'::character varying)::text, ('co_pastor'::character varying)::text, ('leader'::character varying)::text, ('member'::character varying)::text])))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1)),
-    CONSTRAINT usuario_verified_church_relationship_check CHECK (((verified_church_relationship IS NULL) OR ((verified_church_relationship)::text = ANY ((ARRAY['pastor'::character varying, 'co_pastor'::character varying, 'leader'::character varying, 'member'::character varying])::text[]))))
+    CONSTRAINT usuario_verified_church_relationship_check CHECK (((verified_church_relationship IS NULL) OR ((verified_church_relationship)::text = ANY (ARRAY[('pastor'::character varying)::text, ('co_pastor'::character varying)::text, ('leader'::character varying)::text, ('member'::character varying)::text]))))
 );
 
 

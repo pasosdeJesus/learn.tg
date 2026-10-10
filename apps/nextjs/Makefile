@@ -119,6 +119,12 @@ test-pages:
 test-db:
 	pnpm vitest run db/__tests__
 
+# R-#260 Part B: conformidad de la base viva contra el modelo base publicado
+# (`m/REQ/46`). Necesita base de datos (PGHOST/PGDATABASE/PGUSER/PGPASSWORD) y sale
+# con código distinto de cero si hay drift. La mitad unitaria corre en `test-db`.
+db-check:
+	./bin/m db:check
+
 # ── Paquetes (unit tests de los motores en packages/) ─────────────────────
 # Los motores en packages/ (rewards, gdcluster, mr519) traen su propio
 # vitest.config.ts (con los alias a apps/nextjs/node_modules), así que se ejecutan

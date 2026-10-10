@@ -894,7 +894,7 @@ export interface MsipCentropoblado {
   id: Generated<number>;
   latitud: number | null;
   longitud: number | null;
-  municipio_id: number | null;
+  municipio_id: number;
   nombre: string;
   observaciones: string | null;
   svgcdalto: number | null;
@@ -1047,7 +1047,7 @@ export interface MsipMundepSinorden {
 export interface MsipMunicipio {
   codreg: number | null;
   created_at: Timestamp | null;
-  departamento_id: number | null;
+  departamento_id: number;
   fechacreacion: Generated<Timestamp>;
   fechadeshabilitacion: Timestamp | null;
   id: Generated<number>;
