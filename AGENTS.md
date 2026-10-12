@@ -184,7 +184,21 @@ searchers) instead of the system-installed BSD `grep`. Those tools respect the
 project filters (`.gitignore`, tracked-file scope) and skip `node_modules/`,
 `dist/`, `.next/` and other non-project paths, so results stay relevant and
 fast. Reserve the raw system `grep` for cases where you deliberately need to
-look inside ignored directories.
+look inside ignored directories. Note that BSD `grep` has no `\|` alternation in
+basic regex and no `-B`/`-A`, so use `grep -E` for alternation.
+
+### 11. Communication and Credential Hygiene
+
+- **Never give orders to the human operator**: ask or suggest, do not instruct —
+  "¿Le pides al agente de `m` que…?" rather than "Dile al agente de `m` que…".
+- **No emojis**: OpenBSD terminals do not render them. Use text indicators
+  (`[OK]`, `[FAIL]`, `[SKIP]`, `[DONE]`, `[WARN]`, `[INFO]`, `[TODO]`). The E2E runner of
+  `@pasosdejesus/m/e2e` prints its own `ok`/`fail` pictographs: that is package output, do
+  not edit it.
+- **Credentials**: `apps/.env` holds the **local/test** wallet (`PRIVATE_KEY`,
+  `NEXT_PUBLIC_ADDRESS`) and is gitignored. Never commit it, never print its contents, and
+  never put a real (funded, mainnet) key there: production keys stay with the operator's
+  wallet (`doc/environments.md`).
 
 ---
 
