@@ -63,11 +63,18 @@ before the server starts.
 
 **The deploy must rebuild the engines.** `packages/*/dist` (and the vendored
 `packages/generated/*/dist`) is not in git: `make all`
-/ `make prod` run `engines-dist` first, and a build that skips it serves stale engine
+/ `make prod` run `pnpm i` and then `engines-dist` before the build, and a build that
+skips it serves stale engine
 code with the new app (or vice versa). `engines-dist` compiles the app's engines
 (`rewards`, `gdcluster`) **and** the copies vendored from `m` (`generated/msip`,
 `generated/wallet`, R-#285/R-#265) — a fresh checkout fails to resolve
-`generated-msip` / `generated-wallet` without it. That mismatch is a **runtime**
+`generated-msip` / `generated-wallet` without it. **`pnpm i` must run before
+`engines-dist`**: `generated-wallet` imports `generated-msip`, which only resolves
+through the `node_modules` link that the install creates
+(`link:packages/generated/msip`); compiling first fails with
+`TS2307: Cannot find module 'generated-msip'`. Measured 2026-10-15: the dev site's
+`make all` failed there because `engines-dist` used to run before the recipe's
+`pnpm i` (fixed in the Makefile). That mismatch is a **runtime**
 error, not a
 compile one. Measured 2026-09-20: after a deploy the dev site could not create an
 in-app wallet (the e2e specs waited forever for the recovery words and the test page

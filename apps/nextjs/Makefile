@@ -68,9 +68,15 @@ pwa-kill-switch:
 	@echo "[pwa-kill-switch] public/sw.js <- scripts/pwa-kill-switch.js"
 	@cp scripts/pwa-kill-switch.js public/sw.js
 
-all: build-guard engines-dist engines-assets pwa-clean
+all: build-guard engines-assets pwa-clean
 	rm -rf .next
+	# `pnpm i` ANTES de compilar motores: los vendorizados (`packages/generated/wallet`)
+	# importan `generated-msip`, que sólo existe como enlace en `node_modules` tras
+	# instalar (link:packages/generated/msip). Compilar antes de instalar falla con
+	# TS2307 "Cannot find module 'generated-msip'" (visto en el sitio de desarrollo,
+	# 2026-10-15).
 	pnpm i
+	$(MAKE) engines-dist
 	$(MAKE) next-patch-check swc-wasm
 	# Máquina real: 16G RAM + swap, otras apps. 15 workers × heap grande = OOM.
 	# 8 workers × 2048 MB (webpack.parallelism en next.config.ts, https://gitlab.com/pasosdeJesus/m/-/work_items/35 gate).
@@ -177,7 +183,9 @@ coverage:
 dev:
 	./bin/dev
 
-prod: build-guard engines-dist engines-assets next-patch-check swc-wasm pwa-clean
+prod: build-guard engines-assets pwa-clean
+	pnpm i
+	$(MAKE) engines-dist next-patch-check swc-wasm
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
 	./bin/start > prod.log 2>&1 &
 
