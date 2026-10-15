@@ -22,6 +22,15 @@ engines-dist:
 	    (cd "../../packages/$$e" && ../../apps/nextjs/node_modules/.bin/tsc -b) || exit 1; \
 	  fi; \
 	done
+	@# Motores vendorizados de `m` (R-#285/R-#265): `packages/generated/<motor>` también
+	@# se consumen vía dist/ (dist/ no está en git). Orden: msip antes que wallet (el
+	@# motor `wallet` importa `generated-msip`).
+	@for e in msip wallet; do \
+	  if [ -d "packages/generated/$$e" ]; then \
+	    echo "[engines-dist] compilando packages/generated/$$e"; \
+	    (cd "packages/generated/$$e" && ../../../node_modules/.bin/tsc -b) || exit 1; \
+	  fi; \
+	done
 
 # Sync de ABIs (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): los motores guardan COPIA en src/abis/. Al
 # regenerar abis en hardhat, copiar y recompilar.

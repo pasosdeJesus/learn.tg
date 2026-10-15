@@ -61,9 +61,14 @@ development site and is **not** a place for the operator's manual testing.
 `dist/` would otherwise be served along the new app), so a broken engine surfaces
 before the server starts.
 
-**The deploy must rebuild the engines.** `packages/*/dist` is not in git: `make all`
+**The deploy must rebuild the engines.** `packages/*/dist` (and the vendored
+`packages/generated/*/dist`) is not in git: `make all`
 / `make prod` run `engines-dist` first, and a build that skips it serves stale engine
-code with the new app (or vice versa). That mismatch is a **runtime** error, not a
+code with the new app (or vice versa). `engines-dist` compiles the app's engines
+(`rewards`, `gdcluster`) **and** the copies vendored from `m` (`generated/msip`,
+`generated/wallet`, R-#285/R-#265) — a fresh checkout fails to resolve
+`generated-msip` / `generated-wallet` without it. That mismatch is a **runtime**
+error, not a
 compile one. Measured 2026-09-20: after a deploy the dev site could not create an
 in-app wallet (the e2e specs waited forever for the recovery words and the test page
 logged "The password must have at least 8 characters") because the deployed
