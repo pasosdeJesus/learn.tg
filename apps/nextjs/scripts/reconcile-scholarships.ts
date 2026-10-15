@@ -286,7 +286,10 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
   let missing = 0
   let inserted = 0
   let withoutHash = 0
+  let dbOnly = 0
   let errors = 0
+  let processed = 0
+  let lastProgress = 0
 
   for (const batch of chunk(candidates, concurrency)) {
     await Promise.all(
@@ -300,10 +303,20 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
           })) as readonly [bigint, bigint, boolean]
           checked++
           const onChain = { usdt: status[0], slearn: status[1] }
+          const recorded = await recordedScholarshipTokens(db, c.usuario_id, c.guide_id)
+
+          // Sentido inverso (sólo informe, nunca borra): la base dice pagado y la cadena no.
+          const dbOnlyTokens = (['usdt', 'slearn'] as ScholarshipToken[]).filter(
+            (token) => recorded[token] && onChain[token] === 0n,
+          )
+          if (dbOnlyTokens.length > 0) {
+            dbOnly++
+            console.log(`  [WARN] user=${c.usuario_id} curso=${c.course_id} guía=${c.guide_id} ${c.billetera}: la base tiene fila de ${dbOnlyTokens.join(', ')} y la cadena no lo registra`)
+          }
+
           if (onChain.usdt === 0n && onChain.slearn === 0n) return
           paidOnChain++
 
-          const recorded = await recordedScholarshipTokens(db, c.usuario_id, c.guide_id)
           const tokens = missingScholarshipTokens(onChain, recorded)
           if (tokens.length === 0) return
           missing++
@@ -337,11 +350,16 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
         }
       }),
     )
+    processed += batch.length
+    if (processed - lastProgress >= 100 || processed === candidates.length) {
+      console.log(`  … ${processed}/${candidates.length}`)
+      lastProgress = processed
+    }
   }
 
   await db.destroy()
   console.log(
-    `\nRevisados ${checked} | con pago en la cadena ${paidOnChain} | con fila faltante ${missing} | sin hash encontrado ${withoutHash} | insertadas ${inserted} | errores ${errors}`,
+    `\nRevisados ${checked} | con pago en la cadena ${paidOnChain} | con fila faltante ${missing} | sin hash encontrado ${withoutHash} | base sin respaldo en la cadena ${dbOnly} | insertadas ${inserted} | errores ${errors}`,
   )
   if (!fix && missing > 0) console.log('Vuelve a correr con --fix para escribir las filas faltantes.')
   process.exit(errors > 0 && inserted === 0 ? 1 : 0)
