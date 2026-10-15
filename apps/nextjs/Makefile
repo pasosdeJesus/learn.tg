@@ -250,8 +250,8 @@ test-e2e:
 #   E2E_RETRIES=3 make test-e2e-retry
 test-e2e-retry:
 	E2E_SPEC_DELAY_MS=12000 \
-	IPDES=${IPDES:-learn.tg} PUERTOPRU=${PUERTOPRU:-9001} CHAIN_ID=${CHAIN_ID:-11142220} \
-	./bin/m test:e2e --retry ${E2E_RETRIES:-2}
+	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-9001} CHAIN_ID=$${CHAIN_ID:-11142220} \
+	./bin/m test:e2e --retry $${E2E_RETRIES:-2}
 
 # Run a specific E2E spec (OpenBSD make no soporta pattern rules `%`)
 #   make test-e2e-spec SPEC=cluster-formation

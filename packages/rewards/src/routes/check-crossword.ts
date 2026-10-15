@@ -35,6 +35,7 @@ import { IS_PRODUCTION } from '../lib/config'
 import { mintCourseCredential } from '../lib/credentials'
 import { canMintPublicly, coursePrivacyFlags } from '../lib/course-privacy'
 import { answersForPlacements, guideAnswersFromDisk } from '../lib/guide-answers'
+import { recordedScholarshipTokens, recordMissingScholarshipRows } from '../lib/scholarship-records'
 import { getActiveVault, type VaultVersion } from '../lib/deployments'
 
 interface WordPlacement {
@@ -461,25 +462,28 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
             const paidUSDTBefore = BigInt(statusBefore[0])
             const paidSlearnBefore = BigInt(statusBefore[1])
 
-            // Safety net: check DB if both already paid, skip on-chain call
+            // R-#279 / R-#265: la cadena es la autoridad sobre "ya pagada". Si un token
+            // ya se pagó pero su fila local falta (pagos anteriores al registro por
+            // token, o migrados de V4 a V5), se escribe la fila que falta para que el
+            // ícono del curso y esta comprobación lo recuerden. Si ya se pagaron AMBOS
+            // tokens no se llama al contrato: evita la tx no-op
+            // `ScholarshipAlreadyPaid` y se avisa al estudiante que ya la recibió.
             if (mistakesInCW.length == 0) {
-              const dbUSDT = await db.selectFrom('transaction')
-                .select(db.fn.countAll<number>().as('c'))
-                .where('usuario_id', '=', billeteraUsuario.usuario_id)
-                .where('crypto', '=', 'usdt')
-                .where('type', '=', 'scholarship')
-                .where(sql`metadata->>'guideId'`, '=', String(actividadpfId))
-                .executeTakeFirst()
-              const dbSLEARN = await db.selectFrom('transaction')
-                .select(db.fn.countAll<number>().as('c'))
-                .where('usuario_id', '=', billeteraUsuario.usuario_id)
-                .where('crypto', '=', 'slearn')
-                .where('type', '=', 'scholarship')
-                .where(sql`metadata->>'guideId'`, '=', String(actividadpfId))
-                .executeTakeFirst()
-              const bothPaidInDB = (dbUSDT && dbUSDT.c > 0) && (dbSLEARN && dbSLEARN.c > 0)
-              if (bothPaidInDB && paidUSDTBefore > 0n && paidSlearnBefore > 0n) {
-                console.log(`Skipping payScholarship: both already paid for user=${billeteraUsuario.usuario_id} guide=${actividadpfId}`)
+              const recorded = await recordedScholarshipTokens(db, billeteraUsuario.usuario_id, actividadpfId)
+              const backfilled = await recordMissingScholarshipRows(db, {
+                usuarioId: billeteraUsuario.usuario_id,
+                wallet: walletAddress,
+                courseId,
+                guideId: actividadpfId,
+                onChain: { usdt: paidUSDTBefore, slearn: paidSlearnBefore },
+                recorded,
+                usdtDecimals: +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6),
+              })
+              if (backfilled.length > 0) {
+                console.log(`Backfilled scholarship rows for user=${billeteraUsuario.usuario_id} guide=${actividadpfId}: ${backfilled.map((r) => `${r.crypto}=${r.amount}`).join(', ')}`)
+              }
+              if (paidUSDTBefore > 0n && paidSlearnBefore > 0n) {
+                console.log(`Skipping payScholarship: both already paid on-chain for user=${billeteraUsuario.usuario_id} guide=${actividadpfId}`)
                 retMessage += '\n' + msg[locale].scholarshipPaid
                 return NextResponse.json({ message: retMessage, mistakesInCW, scholarshipResult: null, alreadyPaid: true }, { status: 200 })
               }
