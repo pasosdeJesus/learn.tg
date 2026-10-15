@@ -30,9 +30,10 @@
 import dotenv from 'dotenv'
 dotenv.config({ path: '../.env' })
 
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { createPublicClient, http, type Address } from 'viem'
-import { newKyselyPostgresql } from '../.config/kysely.config'
-import { getActiveVault } from '@learn-tg/rewards/lib/deployments'
+import { newKyselyPostgresql } from '../.config/kysely-db'
 import {
   missingScholarshipTokens,
   recordedScholarshipTokens,
@@ -207,11 +208,17 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
   const blockscout = process.env.BLOCKSCOUT_API_URL || DEFAULT_BLOCKSCOUT[network]
   const usdtDecimals = +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6)
 
-  const { address: vault, version } = await getActiveVault()
-  if (version !== 'V5') {
-    console.error(`[FAIL] el vault activo es ${version}; la reconciliación por guía necesita V5`)
+  // El vault se lee del despliegue (como `scripts/verify-v5-migration.ts`) y no del motor
+  // `rewards`, para que el script dependa sólo de lo que la app resuelve (`viem`, `kysely`)
+  // y no de los imports en runtime del `dist` del motor (que en el servidor no tiene
+  // `node_modules` propio).
+  const deploymentFile = path.join(process.cwd(), '..', 'hardhat', 'deployments', 'LearnTGVaults', 'V5', `${network}.json`)
+  if (!fs.existsSync(deploymentFile)) {
+    console.error(`[FAIL] no hay despliegue V5 para ${network}: ${deploymentFile}`)
     process.exit(1)
   }
+  const vault = JSON.parse(fs.readFileSync(deploymentFile, 'utf8')).address as Address
+  const version = 'V5'
 
   const publicClient = createPublicClient({ transport: http(rpc) })
   // Direcciones de los tokens **del vault** (no del .env): así el filtro del explorador

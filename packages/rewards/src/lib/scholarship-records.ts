@@ -12,8 +12,7 @@
 // Aquí, cuando la cadena dice que un token ya se pagó y no hay fila, se escribe. La
 // cadena es la autoridad; esto sólo pone al día el registro local.
 
-import { sql, type Kysely } from 'kysely'
-import { formatUnits } from 'viem'
+import type { Kysely } from 'kysely'
 
 export type ScholarshipToken = 'usdt' | 'slearn'
 
@@ -41,7 +40,13 @@ export function missingScholarshipTokens(
   return missing
 }
 
-/** Qué tokens ya tienen fila de beca (`type='scholarship'`) para (usuario, guía). */
+/**
+ * Qué tokens ya tienen fila de beca (`type='scholarship'`) para (usuario, guía).
+ *
+ * El filtro por `metadata->>'guideId'` se hace en JS (no con `sql`) a propósito: así el
+ * `dist` de esta lib **no importa `kysely` en runtime**, y se puede usar desde un script
+ * suelto (`tsx`) sin que el motor tenga `node_modules` propio.
+ */
 export async function recordedScholarshipTokens(
   db: Kysely<any>,
   usuarioId: number,
@@ -49,14 +54,23 @@ export async function recordedScholarshipTokens(
 ): Promise<RecordedTokens> {
   const rows = await db
     .selectFrom('transaction')
-    .select('crypto')
+    .select(['crypto', 'metadata'])
     .where('usuario_id', '=', usuarioId)
     .where('type', '=', 'scholarship')
     .where('crypto', 'in', ['usdt', 'slearn'])
-    .where(sql`metadata->>'guideId'`, '=', String(guideId))
     .execute()
-  const cryptos = new Set((rows as Array<{ crypto: string }>).map((row) => row.crypto))
+  const cryptos = new Set(
+    (rows as Array<{ crypto: string; metadata: unknown }>)
+      .filter((row) => String((row.metadata as { guideId?: unknown } | null)?.guideId) === String(guideId))
+      .map((row) => row.crypto),
+  )
   return { usdt: cryptos.has('usdt'), slearn: cryptos.has('slearn') }
+}
+
+/** Entero con decimales → número (USDT 6, SLEARN 2). Sin `viem`, por el mismo motivo. */
+function toDecimal(raw: bigint, decimals: number): number {
+  const divisor = 10n ** BigInt(decimals)
+  return Number(raw / divisor) + Number(raw % divisor) / Number(divisor)
 }
 
 export interface RecordMissingArgs {
@@ -96,7 +110,7 @@ export async function recordMissingScholarshipRows(
   for (const token of missing) {
     const raw = token === 'usdt' ? args.onChain.usdt : args.onChain.slearn
     const decimals = token === 'usdt' ? usdtDecimals : slearnDecimals
-    const amount = parseFloat(formatUnits(raw, decimals))
+    const amount = toDecimal(raw, decimals)
     await db
       .insertInto('transaction')
       .values({
