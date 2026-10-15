@@ -3,8 +3,8 @@ import { Kysely, sql } from 'kysely';
 // R-#260 Part B - align learn.tg's database with the base model (msip 2.2).
 // https://github.com/pasosdeJesus/learn.tg/issues/260
 //
-// `bin/m db:check` reported three *restrictive* drifts against the published
-// baseline (`@pasosdejesus/m/base-model`, https://gitlab.com/pasosdeJesus/m/-/work_items/46):
+// `bin/m eng:check` (formerly `db:check`) reported three *restrictive* drifts
+// against the published baseline (the `msip` engine, https://gitlab.com/pasosdeJesus/m/-/work_items/46):
 // the authoritative schema of msip 2.2 (`msip-2.2/test/dummy/db/structure.sql`)
 // declares
 //   - `usuario.unlock_token` as `character varying(64)`,

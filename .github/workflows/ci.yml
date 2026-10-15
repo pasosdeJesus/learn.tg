@@ -39,3 +39,10 @@ jobs:
       - name: Run API route security audit (static, no server/DB needed)
         run: node bin/audit-api-auth.mjs
         working-directory: ./apps/nextjs
+
+      # R-#285: los manifiestos de motor (m-engine.generated.ts) deben cuadrar con
+      # sus fuentes y su intención. Estático, sin servidor ni base de datos. Se corre
+      # desde la raíz porque desde `apps/nextjs` sólo se ve el `msip` vendorizado.
+      - name: Verify engine manifests (static, no server/DB needed)
+        run: cd ../.. && apps/nextjs/bin/m eng:verify
+        working-directory: ./apps/nextjs

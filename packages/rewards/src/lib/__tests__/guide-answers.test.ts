@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'fs'
-import path from 'path'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { answersForPlacements, parseFillInTheBlank } from '../guide-answers'
 
 // Respuestas derivadas del Markdown de la guía

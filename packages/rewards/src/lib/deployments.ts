@@ -1,6 +1,6 @@
 'use server'
 
-import * as path from 'path'
+import * as path from 'node:path'
 import { getContractAddress, readDeployment } from '@pasosdejesus/m/blockchain/deployments'
 
 function getNetwork(): string {

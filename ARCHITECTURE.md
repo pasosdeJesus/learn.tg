@@ -143,6 +143,7 @@ peer dep, D2 dependency injection, D3 hooks):
 | **`@learn-tg/gdcluster`** | curso GD completo: `/api/gdcluster/*`, `/api/cluster/*`, `/api/churches/search`; `lib/{gd-utils,gd-cluster-routing,donation-target}`; hook `reward:route-destination` (`src/register.ts`); componentes `{ClusterPage,RankingClient,ReferralsPage,CountryFilter,CountryFlag}` (la landing de pastores, neutral, vive en el core: `components/PastorLanding.tsx`, ruta `/{lang}/pastor`, R-#283); contracts + deployments `ClusterFunds(V2)` con hardhat aislado (`contracts/`) | core, rewards, mr519, `@pasosdejesus/usdt` |
 | **`@learn-tg/mr519`** | dynamic forms (`mr519_gen_*`, `DynamicForm`) | core (auth, DB) |
 | **`@pasosdejesus/usdt`** (shared, en `m`) | hooks de pago compartidos: `useContractPayment`, `useGasEstimation` (1ª graduación local→shared, adoptado por learn.tg y sivel3) | `m` |
+| **`generated-msip`** / **`generated-wallet`** (vendorizados de `m`, R-#285/R-#265) | modelo base (`usuario` + catálogos geográficos) y la billetera del usuario (`billetera_usuario`/`billetera_invitada`, N billeteras, `m/REQ/50`); se copian con `bin/m eng:sync <checkout>/packages/<motor> --vendor --out packages/generated/<motor>` y se consumen compilados (`dist/`) vía `link:packages/generated/<motor>`; puente de datos `lib/wallet-engine.ts`, vista `WalletPanel` | `m` (motores privados, no publicados) |
 
 **Engine documentation:** each engine package carries its own `README.md`
 (what it provides and how to use it) and `ARCHITECTURE.md` (design decisions,

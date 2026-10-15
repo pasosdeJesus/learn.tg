@@ -1,0 +1,51 @@
+{
+  "name": "generated-wallet",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Copia vendorizada de @pasosdejesus/wallet v0.1.0, generada por `bin/m eng:sync --vendor`; no editar a mano.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./model": {
+      "import": "./dist/model.js",
+      "types": "./dist/model.d.ts"
+    },
+    "./next": {
+      "import": "./dist/components/index.js",
+      "types": "./dist/components/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "npx tsc -b",
+    "typecheck": "npx tsc -b --pretty false",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "generated-msip": "*",
+    "@pasosdejesus/m": "*",
+    "qrcode.react": "^4.2.0",
+    "viem": "^2.55.11"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  }
+}

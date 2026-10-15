@@ -43,11 +43,25 @@ export interface ArInternalMetadata {
   value: string | null;
 }
 
+export interface BilleteraInvitada {
+  cancelled_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  direccion_invitada: string;
+  expires_at: Generated<Timestamp>;
+  id: Generated<Int8>;
+  invited_by: number | null;
+  updated_at: Generated<Timestamp>;
+  used_at: Timestamp | null;
+  usuario_id: number;
+}
+
 export interface BilleteraUsuario {
   answer_fib: string | null;
   billetera: string;
   created_at: Timestamp;
   id: Generated<Int8>;
+  linked_at: Generated<Timestamp>;
+  linked_by: string | null;
   nonce: string | null;
   nonce_expires_at: Timestamp | null;
   updated_at: Timestamp;
@@ -866,7 +880,7 @@ export interface MsipAnexo {
   adjunto_file_size: number;
   adjunto_updated_at: Timestamp | null;
   created_at: Timestamp | null;
-  descripcion: string | null;
+  descripcion: string;
   id: Generated<number>;
   updated_at: Timestamp | null;
 }
@@ -1035,8 +1049,8 @@ export interface MsipGrupoper {
 }
 
 export interface MsipGrupoUsuario {
-  grupo_id: Int8;
-  usuario_id: Int8;
+  grupo_id: number;
+  usuario_id: number;
 }
 
 export interface MsipMundepSinorden {
@@ -1109,7 +1123,7 @@ export interface MsipOrgsocialPersona {
   correo: string | null;
   created_at: Timestamp;
   id: Generated<Int8>;
-  orgsocial_id: number | null;
+  orgsocial_id: number;
   perfilorgsocial_id: number | null;
   persona_id: number;
   updated_at: Timestamp;
@@ -1587,6 +1601,7 @@ export interface ViewUserScores {
 export interface DB {
   admin_solves: AdminSolves;
   ar_internal_metadata: ArInternalMetadata;
+  billetera_invitada: BilleteraInvitada;
   billetera_usuario: BilleteraUsuario;
   church: Church;
   church_clustergd: ChurchClustergd;

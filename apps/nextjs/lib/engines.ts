@@ -33,12 +33,13 @@ let enginesLoaded = false
 async function ensureEnginesLoaded(): Promise<void> {
   if (enginesLoaded) return
   enginesLoaded = true
-  // mr519 recibe sus deps inyectadas (D2, https://gitlab.com/pasosdeJesus/m/-/work_items/35 §10.3): db/auth del core.
+  // mr519 recibe sus deps inyectadas (D2, https://gitlab.com/pasosdeJesus/m/-/work_items/35 §10.3): db/auth y el registro del core.
   await import('@learn-tg/mr519/src/server/register').then((m) =>
     m.registerMr519({
       db: () => newKyselyPostgresql(),
       authenticateUser,
       authenticateAdmin,
+      registerEngine,
     })
   )
 }

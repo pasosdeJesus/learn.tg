@@ -168,10 +168,13 @@ describe('WalletPanel (R-#249)', () => {
       fireEvent.click(screen.getByTestId('wallet-panel-send'))
     })
 
-    expect(mocks.sendTransaction).toHaveBeenCalledWith({
-      to: OTHER,
-      value: 500_000_000_000_000_000n,
-    })
+    // El motor añade `account` (la dirección que firma) además de to/value.
+    expect(mocks.sendTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: OTHER,
+        value: 500_000_000_000_000_000n,
+      }),
+    )
     expect(screen.getByTestId('wallet-panel-sent')).toBeInTheDocument()
   })
 

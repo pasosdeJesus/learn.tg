@@ -115,7 +115,10 @@ export default defineConfig({
     // .pnpm contiene archivos *.test.* que no deben recolectarse.
     // `**/contracts/test/**`: los tests del hardhat aislado del gdcluster se
     // ejecutan con `node run-tests.mjs`, no bajo vitest.
-    exclude: ['e2e/**', '**/node_modules/**', '**/contracts/test/**'],
+    // `packages/**`: `apps/nextjs/packages` enlaza a los motores (R-#285, el
+    // `msip` vendorizado y los motores propios); sus tests corren con sus propios
+    // targets (`make test-engines`, `test-db`), no en la recolección de la app.
+    exclude: ['e2e/**', '**/node_modules/**', '**/contracts/test/**', 'packages/**'],
   },
   esbuild: {
     jsx: 'automatic',

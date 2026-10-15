@@ -14,7 +14,11 @@
     "next": ">=15.0.0",
     "react": ">=18.0.0",
     "viem": ">=2.0.0",
-    "kysely": ">=0.28.0"
+    "kysely": ">=0.28.0",
+    "@pasosdejesus/m": ">=0.28.0",
+    "@learn-tg/rewards": ">=0.1.0",
+    "axios": ">=1.0.0",
+    "lucide-react": ">=0.400.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.41",

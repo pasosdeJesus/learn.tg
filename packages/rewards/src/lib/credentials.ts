@@ -18,7 +18,7 @@ import {
   revokeCredential,
 } from '@pasosdejesus/mpdj/blockchain'
 import { getCeloCredentialsAddress } from '@pasosdejesus/m/blockchain/deployments'
-import path from 'path'
+import path from 'node:path'
 import { IS_PRODUCTION } from './config'
 
 const CREDENTIALS_DEPLOYMENTS_DIR = path.join(

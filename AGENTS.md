@@ -57,7 +57,7 @@ Jesus is God incarnated, the Truth and the Logos.
 24. **[apps/nextjs/CONTRIBUTING.md]**: Documentation and testing policy of the app — what we document and where, coverage targets per layer, the `*.light.test.tsx` fast-test convention, and how to run each suite.
 25. **[doc/church-registration.md]**: protocol for church registration and pastors — the declaration on the profile, how the verifier creates or assigns the church, the copy of the registration data, the 22 SLEARN pastor bonus and the document privacy rules.
 26. **[doc/admin-guide.md]**: manual for the verifier dashboard (`/{lang}/admin`) — widgets, the user modal (church data by registration state, verification checkboxes and profile score), churches and the day-to-day tasks.
-27. **[doc/usuario-model.md]**: the `usuario` model and the base model (R-#260 Part B) — what is base (msip 2.2) vs learn.tg's extension, the base version in use, the three restrictive drifts aligned on 2026-10-10 and how the conformance is checked (`make db-check`, `make test-db`).
+27. **[doc/usuario-model.md]**: the `usuario` model and the base model (R-#260 Part B) — what is base (msip 2.2) vs learn.tg's extension, the base version in use, the three restrictive drifts aligned on 2026-10-10 and how the conformance is checked (`make eng-check`, `make test-db`).
 28. Read the structure and key files of this project
 29. **[.crushrules]** (repository root): **local and gitignored — never commit it.** The
     private domain context and the only place where the neutral vocabulary of the
@@ -105,8 +105,18 @@ What follows is only what those files do not tell you.
    Policy* in [CONTRIBUTING.md]; the app-level docs and test policy is in
    `apps/nextjs/CONTRIBUTING.md`.
 9. **`.crushrules`**
+10. **Engines are declared, not copied (R-#285).** Each engine ships an `m-engine.json`
+   (intention) plus `src/m-engine.generated.ts` (derived: regenerate with
+   `bin/m eng:sync`, guard with `bin/m eng:verify`). The base model (`msip`) is
+   **vendored** at `apps/nextjs/packages/generated/msip` (derived: `bin/m eng:sync
+   <m>/packages/msip --vendor`, then recompile with `tsc -b`) and consumed as
+   `generated-msip` (`apps/nextjs/tsconfig.json` and `vitest.config.ts` exclude
+   `packages`). `make eng-check` runs from the app (msip + live DB); `make eng-verify`
+   runs from the repo root (the app's own engines live at `packages/`). Editing an
+   engine without regenerating it breaks `eng:verify` (`doc/usuario-model.md`).
 
-**Definition of done:** `make type` plus the affected `make test*` targets green; the
+**Definition of done:** `make type` plus the affected `make test*` targets green;
+`bin/m eng:verify` and `make eng-check` green when engines or the model change; the
 route audit (`node bin/audit-api-auth.mjs`, `doc/api-security.md` §2) at `0 failed` if
 routes changed; the private audit of trap 9 at `0 findings` when files or requirements
 changed; docs updated (trap 8); and the requirement file updated (the operator syncs it

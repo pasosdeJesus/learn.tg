@@ -75,11 +75,17 @@ setupDefaultImplementations()
 // reflect the DB calls the code actually makes. Replaces learn.tg's
 // hand-written `GlobalMockKysely`.
 const { MockKysely: GlobalMockKysely, mockSql, mockPgPool } = apiDbMocks
-vi.mock('kysely', () => ({
-  Kysely: GlobalMockKysely,
-  PostgresDialect: vi.fn(),
-  sql: mockSql,
-}))
+// Se conserva el resto real de `kysely` (p. ej. `CompiledQuery`, que usa el puente
+// `lib/wallet-engine.ts` del motor `wallet`), y sólo se interceptan `Kysely`/`sql`.
+vi.mock('kysely', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('kysely')>()
+  return {
+    ...actual,
+    Kysely: GlobalMockKysely,
+    PostgresDialect: vi.fn(),
+    sql: mockSql,
+  }
+})
 vi.mock('pg', () => ({ Pool: mockPgPool }))
 
 // Mock deployment readers (uses fs/path, not available in jsdom).

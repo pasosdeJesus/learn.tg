@@ -154,3 +154,6 @@ audit-crushrules.mjs
 apps/uploads
 servidor/app/views/msip/hogar/_local.html.erb
 uploads
+
+# Vendored engines (R-#285): derived copy, regenerate with `bin/m eng:sync --vendor`
+apps/nextjs/packages/generated/*/tsconfig.tsbuildinfo

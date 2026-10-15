@@ -194,7 +194,7 @@ async function main() {
     // Use backend wallet to sign, but approve for learnTgReserve address
     // We need the learnTgReserve wallet to sign this. If it's the same as backend, skip.
     console.log(`    ⚠️ learnTgReserve differs from backend — approve manually:`)
-    console.log(`       bin/m wallet:approve --name learntgreserve --token ${usdtAddr} --spender ${slearnAddr} --amount max`)
+    console.log(`       bin/m eng:opwallet:approve --name learntgreserve --token ${usdtAddr} --spender ${slearnAddr} --amount max`)
   } else {
     console.log(`  learnTgReserve is backend — already approved`)
   }
@@ -203,7 +203,7 @@ async function main() {
   // from stableSlReserve when user redeems SLEARN for Leone
   if (stableSlReserve.toLowerCase() !== backend.toLowerCase()) {
     console.log(`\n⚠️ stableSlReserve differs from backend — approve manually:`)
-    console.log(`       bin/m wallet:approve --name stableslreserve --token ${usdtAddr} --spender ${slearnAddr} --amount max`)
+    console.log(`       bin/m eng:opwallet:approve --name stableslreserve --token ${usdtAddr} --spender ${slearnAddr} --amount max`)
   }
 
   console.log("\n✅ All configured. Remaining manual approvals (see doc/runbook.md §2):")

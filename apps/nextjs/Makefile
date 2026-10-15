@@ -92,7 +92,7 @@ format:
 # necesitan.
 test:
 	@ulimit -d 8000000 2>/dev/null || true; \
-	$(MAKE) test-lib test-hooks test-api test-components test-pages test-db test-engines
+	$(MAKE) test-lib test-hooks test-api test-components test-pages test-db test-engines eng-verify
 
 test-lib:
 	pnpm vitest run lib/__tests__
@@ -109,6 +109,7 @@ test-components:
 test-pages:
 	pnpm vitest run app/__tests__ \
 		'app/[lang]/__tests__' \
+		'app/[lang]/church/**/__tests__' \
 		'app/[lang]/metrics/tests' \
 		'app/[lang]/profile/__tests__' \
 		'app/[lang]/settings/tests' \
@@ -119,11 +120,22 @@ test-pages:
 test-db:
 	pnpm vitest run db/__tests__
 
-# R-#260 Part B: conformidad de la base viva contra el modelo base publicado
-# (`m/REQ/46`). Necesita base de datos (PGHOST/PGDATABASE/PGUSER/PGPASSWORD) y sale
-# con código distinto de cero si hay drift. La mitad unitaria corre en `test-db`.
-db-check:
-	./bin/m db:check
+# R-#260 Part B / R-#285: conformidad de la base viva y de los motores contra el
+# motor `msip` y el modelo base (https://gitlab.com/pasosdeJesus/m/-/work_items/46).
+# Necesita base de datos (PGHOST/PGDATABASE/PGUSER/PGPASSWORD) y sale con código
+# distinto de cero si hay drift. La mitad unitaria corre en `test-db`.
+eng-check:
+	./bin/m eng:check
+
+# R-#285: los manifiestos de motor (m-engine.generated.ts) cuadran con sus fuentes y
+# su intención, y ningún motor importa lo que no declara. Sin base de datos.
+# Correr desde la raíz del repo: `m` descubre los motores subiendo hasta `packages/`
+# y desde la app sólo ve el `msip` vendorizado (`apps/nextjs/packages/generated`),
+# no los motores propios (en `packages/` de la raíz). Además, desde `apps/nextjs`
+# `isMotorDir` confunde la app con un motor (tiene `m-engine.json` y
+# `db/structure.sql`).
+eng-verify:
+	cd ../.. && apps/nextjs/bin/m eng:verify
 
 # ── Paquetes (unit tests de los motores en packages/) ─────────────────────
 # Los motores en packages/ (rewards, gdcluster, mr519) traen su propio

@@ -76,6 +76,7 @@
   ],
   "exclude": [
     "node_modules",
+    "packages",
     "**/__tests__/**"
   ]
 }

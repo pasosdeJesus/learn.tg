@@ -30,7 +30,7 @@ Contact the SLEARN admin with:
 ### 2.2 Admin grants the role
 
 ```bash
-bin/m wallet:send --name admin --to <SLEARN_ADDRESS> \
+bin/m eng:opwallet:send --name admin --to <SLEARN_ADDRESS> \
   --function "grantRole(bytes32,address)" \
   --args "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6,<YOUR_BACKEND>"
 ```
@@ -40,7 +40,7 @@ bin/m wallet:send --name admin --to <SLEARN_ADDRESS> \
 ### 2.3 Verify MINTER_ROLE
 
 ```bash
-bin/m wallet:call --name admin --to <SLEARN_ADDRESS> \
+bin/m eng:opwallet:call --name admin --to <SLEARN_ADDRESS> \
   --function "hasRole(bytes32,address)" \
   --args "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6,<YOUR_BACKEND>"
 ```

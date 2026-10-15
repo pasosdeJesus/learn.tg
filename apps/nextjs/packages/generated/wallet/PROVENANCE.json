@@ -1,0 +1,6 @@
+{
+  "motor": "@pasosdejesus/wallet",
+  "version": "0.1.0",
+  "source": "/var/www/adJ-ia/m/packages/wallet",
+  "sha256": "1c2411a1f4399c993742a36347ea1189e395ddf6c94e4fb0a77bc40f3970620f"
+}

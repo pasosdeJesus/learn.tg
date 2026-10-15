@@ -20,8 +20,13 @@ export default defineConfig({
       port: 5432,
     }),
   }),
+  // `allowUnorderedMigrations`: el motor `wallet` trae su migracion con un sello fijo
+  // temprano (`20260101000000_wallet_model.ts`) que ordena antes que migraciones ya
+  // aplicadas; es idempotente (`IF NOT EXISTS`) y en bases existentes es una no-op.
+  // https://github.com/pasosdeJesus/learn.tg/issues/265
   migrations: {
     migrationFolder: '../db/migrations',
     getMigrationPrefix: getKnexTimestampPrefix,
+    allowUnorderedMigrations: true,
   },
 })

@@ -1,0 +1,11 @@
+{
+  "mount": { "api": "/api/wallet", "route": "/wallet" },
+  "provides": ["auth", "wallet"],
+  "engines": {
+    "msip": {
+      "package": "@pasosdejesus/msip",
+      "tables": ["usuario"],
+      "columns": { "usuario": ["id", "nombre", "nusuario", "email"] }
+    }
+  }
+}

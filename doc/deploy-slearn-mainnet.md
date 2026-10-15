@@ -136,7 +136,7 @@ Expected: SLEARN shows name/symbol/rate/supply, V3 shows VERSION=3/owner/balance
 
 ```bash
 # Before configuring, pause to prevent any interaction.
-bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --function "pause()" --network celo
+bin/m eng:opwallet:send --name admin --to <SLEARN_ADDRESS> --function "pause()" --network celo
 ```
 
 ---
@@ -175,13 +175,13 @@ Per `doc/runbook.md` §2:
 
 ```bash
 # Backend wallet
-bin/m wallet:approve --name backend --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
+bin/m eng:opwallet:approve --name backend --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
 
 # learnTgReserve (L2)
-bin/m wallet:approve --name learntgreserve --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
+bin/m eng:opwallet:approve --name learntgreserve --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
 
 # stableSlReserve (S2)
-bin/m wallet:approve --name stableslreserve --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
+bin/m eng:opwallet:approve --name stableslreserve --token <USDT_ADDRESS> --spender <SLEARN_ADDRESS> --amount 115792089237316195423570985008687907853269984665640564039457584007913129639935 --network celo
 ```
 
 ---
@@ -237,16 +237,16 @@ npx tsx scripts/convert-learningpoints-to-slearn.ts
 After conversion, transfer `DEFAULT_ADMIN_ROLE` to a cold wallet. The backend keeps only
 `MINTER_ROLE` + `BURNER_ROLE`. See `doc/runbook.md` §5.
 
-> **Prerequisite:** Import wallets via `bin/m wallet:import --name admin --private-key <ADMIN_KEY>`
+> **Prerequisite:** Import wallets via `bin/m eng:opwallet:import --name admin --private-key <ADMIN_KEY>`
 
-> **Prerequisite:** Import wallets via `bin/m wallet:import --name admin --private-key <ADMIN_KEY>`
+> **Prerequisite:** Import wallets via `bin/m eng:opwallet:import --name admin --private-key <ADMIN_KEY>`
 
 ```bash
 # Grant DEFAULT_ADMIN_ROLE to cold wallet
-bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --function "grantRole(bytes32,address)" --args "<DEFAULT_ADMIN_ROLE>,<COLD_WALLET>" --network celo
+bin/m eng:opwallet:send --name admin --to <SLEARN_ADDRESS> --function "grantRole(bytes32,address)" --args "<DEFAULT_ADMIN_ROLE>,<COLD_WALLET>" --network celo
 
 # Renounce DEFAULT_ADMIN_ROLE from backend
-bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --function "renounceRole(bytes32,address)" --args "<DEFAULT_ADMIN_ROLE>,<BACKEND_WALLET>" --network celo
+bin/m eng:opwallet:send --name admin --to <SLEARN_ADDRESS> --function "renounceRole(bytes32,address)" --args "<DEFAULT_ADMIN_ROLE>,<BACKEND_WALLET>" --network celo
 ```
 
 > Replace `0x000...000` with the actual `DEFAULT_ADMIN_ROLE` hash from Blockscout → Read Contract.
@@ -257,7 +257,7 @@ bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --function "renounceRole(by
 
 ```bash
 # Unpause SLEARN
-bin/m wallet:send --name admin --to <SLEARN_ADDRESS> --function "unpause()" --network celo
+bin/m eng:opwallet:send --name admin --to <SLEARN_ADDRESS> --function "unpause()" --network celo
 ```
 
 ### Then monitor:

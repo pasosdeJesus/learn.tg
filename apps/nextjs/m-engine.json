@@ -1,0 +1,19 @@
+{
+  "engines": {
+    "generated-msip": {
+      "tables": [
+        "usuario",
+        "msip_pais",
+        "msip_departamento",
+        "msip_municipio",
+        "msip_centropoblado"
+      ]
+    },
+    "generated-wallet": {
+      "tables": [
+        "billetera_usuario",
+        "billetera_invitada"
+      ]
+    }
+  }
+}

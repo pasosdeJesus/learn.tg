@@ -1,0 +1,4 @@
+{
+  "provides": ["scholarship", "ubi-claim", "donation", "premium-course"],
+  "requires": ["auth", "wallet"]
+}

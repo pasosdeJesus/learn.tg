@@ -200,7 +200,7 @@ cd apps/hardhat
 
 # Amounts in smallest units: USDT = 6 decimals, SLEARN = 2 decimals
 # Example: 1.0 USDT + 1.0 SLEARN per guide for course ID 5
-bin/m wallet:send --name admin --to <VAULT_V5> \
+bin/m eng:opwallet:send --name admin --to <VAULT_V5> \
   --function "createVault(uint256,uint256,uint256)" \
   --args "5,1000000,100"
 ```
@@ -208,7 +208,7 @@ bin/m wallet:send --name admin --to <VAULT_V5> \
 ### 3.2 Set per-guide amounts (if vault already exists)
 
 ```bash
-bin/m wallet:send --name admin --to <VAULT_V5> \
+bin/m eng:opwallet:send --name admin --to <VAULT_V5> \
   --function "setAmountPerGuide(uint256,uint256,uint256)" \
   --args "5,1000000,100"
 ```
@@ -285,7 +285,7 @@ bin/m eng:credentials:list-types --network celo
 curl https://learn.tg/api/credential/{tokenId}
 
 # Check vault exists and has correct amounts
-bin/m wallet:call --name admin --to <VAULT_V5> \
+bin/m eng:opwallet:call --name admin --to <VAULT_V5> \
   --function "vaults(uint256)" --args "5" --network celo
 ```
 
@@ -298,7 +298,7 @@ bin/m wallet:call --name admin --to <VAULT_V5> \
 | Scaffold course | `scripts/create-course.sh` | `./scripts/create-course.sh "Name" en "prefix" 4 "1.0" "1.0" ["icon.svg"] [id]` |
 | Course + guide records | Migration → `bin/m db:migrate` | Review then run |
 | Guide content | `resources/{lang}/{prefijoRuta}/{sufijoRuta}.md` | 400-600 words, 3-5 crossword questions |
-| Vault | `LearnTGVaultsV5.createVault(id, usdt, slearn)` | `bin/m wallet:send` (review first) |
+| Vault | `LearnTGVaultsV5.createVault(id, usdt, slearn)` | `bin/m eng:opwallet:send` (review first) |
 | SBT icon | `public/img/credential/source/` | 512×512 SVG |
 | Credential type | `PasosDeJesusCredentials.registerCredentialType` | `bin/m eng:credentials:register-type` (review first) |
 | Metadata sync | DB `credential_metadata` | `bin/m eng:credentials:sync-cache` |

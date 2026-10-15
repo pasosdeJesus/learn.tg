@@ -1,0 +1,6 @@
+{
+  "motor": "@pasosdejesus/msip",
+  "version": "1.1.0",
+  "source": "/var/www/adJ-ia/m/packages/msip",
+  "sha256": "02cef10204be8c5f807efe2b25b1e9970579f5eca14d52481c02bfb271774b37"
+}

@@ -10,8 +10,8 @@
 //
 // El formato es el que documenta `lib/remarkFillInTheBlank.mjs`: una lista
 // ordenada donde cada elemento incluye `___` y termina en ` (respuesta)`.
-import { readFile } from 'fs/promises'
-import path from 'path'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import { sql, type Kysely } from 'kysely'
 
 export interface FillInTheBlank {

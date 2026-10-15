@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Loader2 } from 'lucide-react'
+import { Loader2, BadgeCheck } from 'lucide-react'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 
 type PageProps = {
@@ -15,6 +15,7 @@ type PageProps = {
 const tEn = {
   back: 'Back to home',
   pastor: 'Pastor: ',
+  verified: 'Verified',
   cluster: 'Cluster',
   churches: 'Churches',
   formed: 'Formed',
@@ -26,6 +27,7 @@ const tEn = {
 const tEs: typeof tEn = {
   back: 'Volver al inicio',
   pastor: 'Pastor: ',
+  verified: 'Verificada',
   cluster: 'Clúster',
   churches: 'Iglesias',
   formed: 'Formado',
@@ -43,6 +45,7 @@ interface ChurchData {
   city_name: string | null
   pastor_name: string | null
   cluster_wallet: string | null
+  registration_verified?: boolean
   created_at: string
   cluster: {
     id: number
@@ -99,6 +102,15 @@ export default function ChurchPage({ params }: PageProps) {
 
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{church.name}</h1>
+        {church.registration_verified && (
+          <span
+            data-testid="church-verified-badge"
+            className="inline-flex items-center gap-1 rounded-full bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 text-xs font-medium mb-3"
+          >
+            <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('verified')}
+          </span>
+        )}
         {church.city_name && (
           <p className="text-gray-500 mb-4">{church.city_name}</p>
         )}

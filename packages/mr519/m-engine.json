@@ -1,0 +1,4 @@
+{
+  "mount": { "api": "/api/engine" },
+  "provides": ["dynamic-forms"]
+}

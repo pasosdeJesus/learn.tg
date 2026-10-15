@@ -1679,6 +1679,35 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
+-- Name: billetera_invitada_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.billetera_invitada_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: billetera_invitada; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.billetera_invitada (
+    id bigint DEFAULT nextval('public.billetera_invitada_id_seq'::regclass) NOT NULL,
+    direccion_invitada character varying(60) NOT NULL,
+    usuario_id integer NOT NULL,
+    invited_by integer,
+    used_at timestamp without time zone,
+    cancelled_at timestamp without time zone,
+    expires_at timestamp without time zone DEFAULT (now() + '30 days'::interval) NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: billetera_usuario; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1690,7 +1719,9 @@ CREATE TABLE public.billetera_usuario (
     updated_at timestamp(6) without time zone NOT NULL,
     answer_fib character varying,
     nonce character varying(255),
-    nonce_expires_at timestamp with time zone
+    nonce_expires_at timestamp with time zone,
+    linked_at timestamp without time zone DEFAULT now() NOT NULL,
+    linked_by character varying(60)
 );
 
 
@@ -4082,7 +4113,7 @@ ALTER SEQUENCE public.mr519_gen_valorcampo_id_seq OWNED BY public.mr519_gen_valo
 
 CREATE TABLE public.msip_anexo (
     id integer NOT NULL,
-    descripcion character varying(1500) COLLATE public.es_co_utf_8,
+    descripcion character varying(1500) NOT NULL COLLATE public.es_co_utf_8,
     adjunto_file_name character varying(255) NOT NULL,
     adjunto_content_type character varying(255) NOT NULL,
     adjunto_file_size integer NOT NULL,
@@ -4525,8 +4556,8 @@ ALTER SEQUENCE public.msip_grupo_id_seq OWNED BY public.msip_grupo.id;
 --
 
 CREATE TABLE public.msip_grupo_usuario (
-    usuario_id bigint NOT NULL,
-    grupo_id bigint NOT NULL
+    usuario_id integer NOT NULL,
+    grupo_id integer NOT NULL
 );
 
 
@@ -4741,7 +4772,7 @@ ALTER SEQUENCE public.msip_orgsocial_id_seq OWNED BY public.msip_orgsocial.id;
 CREATE TABLE public.msip_orgsocial_persona (
     id bigint NOT NULL,
     persona_id integer NOT NULL,
-    orgsocial_id integer,
+    orgsocial_id integer NOT NULL,
     perfilorgsocial_id integer,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
@@ -6639,6 +6670,14 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 
 --
+-- Name: billetera_invitada billetera_invitada_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billetera_invitada
+    ADD CONSTRAINT billetera_invitada_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: billetera_usuario billetera_usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7751,6 +7790,27 @@ ALTER TABLE ONLY public.verification_log
 
 
 --
+-- Name: billetera_invitada_pendiente_direccion_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX billetera_invitada_pendiente_direccion_idx ON public.billetera_invitada USING btree (direccion_invitada) WHERE ((used_at IS NULL) AND (cancelled_at IS NULL));
+
+
+--
+-- Name: billetera_invitada_pendiente_usuario_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX billetera_invitada_pendiente_usuario_idx ON public.billetera_invitada USING btree (usuario_id, direccion_invitada) WHERE ((used_at IS NULL) AND (cancelled_at IS NULL));
+
+
+--
+-- Name: billetera_usuario_usuario_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX billetera_usuario_usuario_id_idx ON public.billetera_usuario USING btree (usuario_id);
+
+
+--
 -- Name: cor1440_gen_actividad_id_actividadpf_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8428,6 +8488,14 @@ CREATE TRIGGER usuario_visibilidad_sensible_bu BEFORE UPDATE OF pais_id ON publi
 
 ALTER TABLE ONLY public.cor1440_gen_actividad
     ADD CONSTRAINT actividad_regionsjr_id_fkey FOREIGN KEY (oficina_id) REFERENCES public.msip_oficina(id);
+
+
+--
+-- Name: billetera_invitada billetera_invitada_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billetera_invitada
+    ADD CONSTRAINT billetera_invitada_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
 
 
 --

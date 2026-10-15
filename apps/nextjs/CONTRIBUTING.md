@@ -197,14 +197,15 @@ failed** in 170 files: `test-lib` 378, `test-hooks` 93, `test-api` 277,
 # From apps/nextjs/
 
 # ── Fast (no coverage, parallel-safe sub-targets) ──
-make test           # Run all tests (app sub-targets + test-engines, in sequence)
+make test           # Run all tests (app sub-targets + test-engines + eng-verify, in sequence)
 make test-lib       # Only lib/__tests__
 make test-hooks     # Only lib/hooks/__tests__
 make test-api       # Only app/api
 make test-components # Only components/__tests__ + components/admin/__tests__ + components/ui/__tests__ + providers/__tests__
 make test-pages     # Only app/__tests__ + app/[lang]/**/__tests__
 make test-db        # Only db/__tests__
-make db-check       # Base model conformance against the live DB (R-#260 Part B; non-zero on drift)
+make eng-verify     # Engine manifests vs sources/intention (R-#285; no DB)
+make eng-check      # Engine + base model conformance against the live DB (R-#260/R-#285; non-zero on drift)
 
 # ── E2E shortcuts ──
 make test-e2e-wallet   # SPEC=in-app-wallet (billetera in-app, R-#245)

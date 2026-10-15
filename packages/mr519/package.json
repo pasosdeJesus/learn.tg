@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "peerDependencies": {
-    "next": ">=15.0.0"
+    "next": ">=15.0.0",
+    "react": ">=18.0.0",
+    "kysely": ">=0.28.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.41",
