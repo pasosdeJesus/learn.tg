@@ -2,15 +2,16 @@ import { ethers } from "hardhat";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
+import { tokenAddresses } from "./lib/token-addresses";
 dotenv.config({ path: "../.env" });
 
 async function main() {
   const SLEARN = await ethers.getContractFactory("SLEARN");
 
-  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS;
-  if (!usdtAddress) throw new Error("NEXT_PUBLIC_USDT_ADDRESS not found in env");
+  // USDT y red desde `mpdj` (por red), no del `.env`.
+  const { network, usdt: usdtAddress } = await tokenAddresses();
+  if (!usdtAddress) throw new Error("USDT address not found (mpdj USDT_ADDRESSES / NEXT_PUBLIC_USDT_ADDRESS)");
 
-  const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia";
   console.log(`Deploying SLEARN to ${network} with USDT: ${usdtAddress}`);
 
   const slearn = await SLEARN.deploy(usdtAddress);

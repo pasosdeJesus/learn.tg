@@ -2,15 +2,16 @@ import { ethers } from "hardhat"
 import dotenv from "dotenv"
 import * as fs from "fs"
 import * as path from "path"
+import { tokenAddresses } from "./lib/token-addresses"
 dotenv.config({ path: "../.env" })
 
 async function main() {
   const LearnTGVaultsV5 = await ethers.getContractFactory("contracts/LearnTGVaultsV5.sol:LearnTGVaultsV5")
 
-  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS
-  if (!usdtAddress) throw new Error("NEXT_PUBLIC_USDT_ADDRESS not found in env")
+  // USDT y red desde `mpdj` (por red), no del `.env`.
+  const { network, usdt: usdtAddress } = await tokenAddresses()
+  if (!usdtAddress) throw new Error("USDT address not found (mpdj USDT_ADDRESSES / NEXT_PUBLIC_USDT_ADDRESS)")
 
-  const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia"
   const slearnFile = path.join(__dirname, "..", "deployments", "SLEARN", `${network}.json`)
   if (!fs.existsSync(slearnFile)) {
     throw new Error(`SLEARN deployment not found at ${slearnFile}. Deploy SLEARN first.`)

@@ -95,8 +95,9 @@ export interface RecordMissingArgs {
 /**
  * Escribe las filas `transaction` que faltan para una guía ya pagada en la cadena.
  * Idempotente respecto a `recorded`: no duplica tokens ya registrados. El `hash` queda
- * nulo (el pago original lo hizo un vault anterior; el hash histórico lo completa
- * `scripts/blockchain-sync.ts` al escanear eventos). Devuelve lo insertado.
+ * nulo salvo que lo aporte el llamador (el pago original lo hizo un vault anterior); el
+ * hash histórico lo completa `apps/nextjs/scripts/reconcile-scholarships.ts` por
+ * dirección. Devuelve lo insertado.
  */
 export async function recordMissingScholarshipRows(
   db: Kysely<any>,

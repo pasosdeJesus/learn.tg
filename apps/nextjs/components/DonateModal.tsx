@@ -10,6 +10,11 @@ import { erc20Abi, parseUserAmountSafe, formatDisplay, safeParseFloat } from '@l
 import { useGasEstimation } from '@/lib/hooks/useGasEstimation'
 import { useContractPayment } from '@/lib/hooks/useContractPayment'
 import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
+import {
+  resolveNetwork,
+  SLEARN_ADDRESSES,
+  USDT_ADDRESSES,
+} from '@pasosdejesus/mpdj/blockchain/ecosystem-addresses'
 import { openInAppWalletDialog } from '@/lib/in-app-wallet-dialog'
 import { ensureWalletChain, WrongChainError } from '@/lib/ensure-chain'
 import { getAppChain } from '@/lib/app-chain'
@@ -97,13 +102,15 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
   const [resultCashback, setResultCashback] = useState(0)
   const [resultDistribution, setResultDistribution] = useState<DistributionItem[]>([])
 
-  const envUsdtAddress = (process.env.NEXT_PUBLIC_USDT_ADDRESS as Address) || undefined
-  const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address) || undefined
+  // Direcciones de token por red desde `mpdj` (mainnet canónicas, sin depender del `.env`).
+  const tokenNetwork = resolveNetwork()
+  const envUsdtAddress = USDT_ADDRESSES[tokenNetwork] as Address | undefined
+  const slearnAddress = SLEARN_ADDRESSES[tokenNetwork] as Address | undefined
   const cId = effectiveTarget?.type === 'course-donation' ? effectiveTarget.courseId : null
 
   // Tokens de pago de un destino `campaign` (https://github.com/pasosdeJesus/learn.tg/issues/223): mainnet = cfg.donationTokens
   // (USDT/USDC/XAUt0), testnet = cfg.testnet (USDT Mock). La dirección/decimals
-  // se resuelve del registro (con override NEXT_PUBLIC_USDT_ADDRESS en USDT).
+  // se resuelve del registro (el fallback de USDT/SLEARN sale de `mpdj`, por red).
   const campaignCfg = isCampaign && effectiveTarget?.type === 'campaign-donation'
     ? getCampaignConfig(effectiveTarget.slug)
     : undefined

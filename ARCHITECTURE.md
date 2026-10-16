@@ -183,9 +183,12 @@ data flow, contracts):
 1.  **Frontend (Next.js):** A user connects their wallet and signs a message
    (SIWE).
 2.  **Next.js API:** Validates the signature and creates the NextAuth
-  **session cookie** (HttpOnly JWT, `sub` = wallet). That cookie is the only
-  credential (R-#233 Phase 2): no API token is issued or stored, and the CSRF
-  token is only the SIWE handshake nonce.
+  **session cookie** (HttpOnly JWT: `sub` = the wallet that signed in,
+  `usuarioId` = the account, `sessionEpoch` = its session epoch, R-#265/R-#250).
+  That cookie is the only credential (R-#233 Phase 2): no API token is issued or
+  stored, and the CSRF token is only the SIWE handshake nonce. `authenticateUser`
+  accepts any wallet of the account and rejects a bumped epoch, so one
+  `UPDATE usuario SET session_epoch = session_epoch + 1` revokes every session.
 3.  **Backend Communication:** every call is same-origin to the Next.js API,
    which authorizes with the session cookie (`authenticateUser` /
    `authenticateAdmin`):
@@ -443,8 +446,12 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 - `updated_at`: Last update timestamp
 
 ##### `billetera_usuario` (wallet linking)
+- Owned by the `generated-wallet` engine (R-#265 / m/REQ/50): a user may hold **N** wallets
+  (`UNIQUE` on `billetera`, none on `usuario_id`), linked/unlinked through the engine.
 - `billetera`: Wallet address (case-insensitive)
 - `usuario_id`: Foreign key to `usuario`
+- `linked_at` / `linked_by`: when and from which wallet the link was made (the oldest is the
+  account's public address; there is no principal wallet)
 - `answer_fib`: Stores correct crossword answers (pipe-separated ` | `) recorded when the guide is served (`/api/guide`)
 
 ##### `guide_usuario` (per-guide progress)

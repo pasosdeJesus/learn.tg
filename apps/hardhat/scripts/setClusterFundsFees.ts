@@ -12,6 +12,7 @@ import { ethers } from "hardhat";
 import * as fs from "fs";
 import * as path from "path";
 import dotenv from "dotenv";
+import { tokenAddresses } from "./lib/token-addresses";
 dotenv.config({ path: "../.env" });
 
 async function main() {
@@ -34,7 +35,7 @@ async function main() {
   console.log(`Fee wallets: ${cfg.wallets.length}, percentages: ${cfg.percentages}`);
 
   // Grant MINTER_ROLE on SLEARN to ClusterFunds
-  const slearnAddr = process.env.NEXT_PUBLIC_SLEARN_ADDRESS;
+  const slearnAddr = (await tokenAddresses()).slearn;
   if (slearnAddr) {
     const slearn = await ethers.getContractAt("SLEARN", slearnAddr, signer);
     const MINTER_ROLE = await slearn.MINTER_ROLE();

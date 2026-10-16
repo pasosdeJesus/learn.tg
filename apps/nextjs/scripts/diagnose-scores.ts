@@ -1,4 +1,4 @@
-import { newKyselyPostgresql } from '../.config/kysely.config'
+import { newKyselyPostgresql } from '../.config/kysely-db.ts'
 import { sql } from 'kysely'
 
 async function diagnoseUser(userId: number) {

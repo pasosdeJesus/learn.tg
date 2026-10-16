@@ -119,8 +119,20 @@ lives in the modal below.
 | `no-wallet` | "Use in-app wallet" (opens `WalletDialog`) plus "Use external wallet" when `window.ethereum` exists |
 | `locked` | "Unlock your in-app wallet" (opens `WalletDialog`) |
 | `unlocked` without a session | "Sign in with in-app wallet" (opens `WalletDialog`, which runs the SIWE) |
-| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out) |
+| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out) + "Link active wallet" (R-#265, see below) |
 | external chosen | Defers to `ConnectWalletButton` (existing flow, preserved) |
+
+### LinkWalletButton (`components/LinkWalletButton.tsx`)
+
+R-#265 §3.2: adds another wallet to the **account** of the current session. There is no
+wallet picker — the operator's decision (2026-10-15) is that the **active** wallet signs:
+the in-app one when unlocked, otherwise the connected external one (`getExternalProvider()`).
+`lib/wallet-link.ts` resolves it (`detectActiveWalletSigner`, which discards the session's
+own wallet, so the control only acts when a *different* wallet is active) and signs a SIWE
+with the NextAuth `csrfToken` as nonce; the POST goes to `/api/wallet/link`, where
+`lib/siwe-server.ts` re-verifies domain/chain/nonce and the `wallet` engine does the link.
+The messages explain each outcome (linked, already in the account, no wallet, owned by
+another account, cancelled).
 
 ### WalletDialog (`components/WalletDialog.tsx`)
 

@@ -15,10 +15,13 @@ blockchain keys) must authenticate the caller. Three classes exist:
 | **authenticated** | Any logged-in user (NextAuth session cookie) | `authenticateUser(db, wallet)` from `lib/authenticateUser.ts` |
 | **admin-only** | Only verifier/admin wallets | `authenticateAdmin(db, wallet)` from `lib/admin-auth.ts` |
 
-> **Auth model (R-#227 + R-#233 Fase 2):** `authenticateUser` validates the
-> NextAuth session cookie (JWT, `sub` == requested wallet, lowercase) and that is
+> **Auth model (R-#227 + R-#233 Fase 2, extended by R-#265/R-#250):**
+> `authenticateUser` validates the NextAuth session cookie (JWT) and that is
 > the **only** credential: the `walletAddress` argument is an untrusted identity
-> hint that must match the session subject. The former
+> hint that must be a wallet of the token's account (`usuarioId`), and the
+> account's `session_epoch` must still match the token (bumping it revokes every
+> session). A legacy token without `usuarioId`/`sessionEpoch` keeps the old rule
+> (`sub` == hint). The former
 > `billetera_usuario.token` path was removed (2026-09-15) together with
 > `GET /api/auth/token`, `lib/auth-token.ts` and the `learn.tg.authToken`
 > localStorage entry: no client stores or sends a token and the column is

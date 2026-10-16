@@ -1567,6 +1567,7 @@ export interface Usuario {
   reset_password_sent_at: Timestamp | null;
   reset_password_token: string | null;
   rol: Generated<number | null>;
+  session_epoch: Generated<number>;
   sign_in_count: Generated<number>;
   telegram: string | null;
   tema_id: number | null;

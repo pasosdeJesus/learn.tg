@@ -44,6 +44,14 @@ async function sessionCookie(sub: string): Promise<string> {
   })
 }
 
+/** Token con las reclamaciones extra de R-#265 §3.8 / R-#250 (`usuarioId`, época). */
+async function sessionCookieWith(claims: Record<string, unknown>): Promise<string> {
+  return encode({
+    token: claims,
+    secret: process.env.NEXTAUTH_SECRET as string,
+  })
+}
+
 describe('authenticateUser (session-only, R-#233 Fase 2)', () => {
   beforeEach(async () => {
     resetMocks()
@@ -86,5 +94,43 @@ describe('authenticateUser (session-only, R-#233 Fase 2)', () => {
   it('rejects when the wallet hint is missing', async () => {
     const auth = await authenticateUser(mockDb())
     expect(auth).toBeNull()
+  })
+
+  // R-#265 §3.8: la sesión identifica la **cuenta**, no la billetera.
+  it('accepts any wallet of the account the session belongs to', async () => {
+    cookieValue = await sessionCookieWith({ sub: '0xaaa1111', usuarioId: 42 })
+    // La pista (0xbbb2222) es otra billetera de la MISMA cuenta 42.
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ id: 2, billetera: '0xbbb2222', usuario_id: 42 })
+      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor', session_epoch: 0 })
+    const auth = await authenticateUser(mockDb(), '0xbbb2222')
+    expect(auth).not.toBeNull()
+    expect(auth!.usuario.id).toBe(42)
+  })
+
+  it('rejects a wallet hint that is not part of the session account', async () => {
+    cookieValue = await sessionCookieWith({ sub: '0xaaa1111', usuarioId: 42 })
+    mockExecuteTakeFirst.mockResolvedValueOnce({ id: 3, billetera: '0xbbb2222', usuario_id: 99 })
+    const auth = await authenticateUser(mockDb(), '0xbbb2222')
+    expect(auth).toBeNull()
+  })
+
+  // R-#250: subir la época corta todas las sesiones de la cuenta.
+  it('rejects a session whose epoch was revoked', async () => {
+    cookieValue = await sessionCookieWith({ sub: '0xaaa1111', usuarioId: 42, sessionEpoch: 0 })
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ id: 2, billetera: '0xbbb2222', usuario_id: 42 })
+      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor', session_epoch: 3 })
+    const auth = await authenticateUser(mockDb(), '0xbbb2222')
+    expect(auth).toBeNull()
+  })
+
+  it('accepts a session whose epoch matches', async () => {
+    cookieValue = await sessionCookieWith({ sub: '0xaaa1111', usuarioId: 42, sessionEpoch: 3 })
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ id: 2, billetera: '0xbbb2222', usuario_id: 42 })
+      .mockResolvedValueOnce({ id: 42, nombre: 'Pastor', session_epoch: 3 })
+    const auth = await authenticateUser(mockDb(), '0xbbb2222')
+    expect(auth).not.toBeNull()
   })
 })

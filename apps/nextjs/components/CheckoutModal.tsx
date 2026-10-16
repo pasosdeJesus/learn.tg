@@ -2,6 +2,11 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { type Address } from 'viem'
+import {
+  resolveNetwork,
+  SLEARN_ADDRESSES,
+  USDT_ADDRESSES,
+} from '@pasosdejesus/mpdj/blockchain/ecosystem-addresses'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { usePublicClient, useWalletClient } from '@/lib/hooks/useWallet'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
@@ -150,8 +155,10 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   const [celoBalance, setCeloBalance] = useState(0n)
   const [dataLoaded, setDataLoaded] = useState(false)
 
-  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as Address | undefined
-  const slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS as Address | undefined
+  // Direcciones de token por red desde `mpdj` (mainnet canónicas, sin depender del `.env`).
+  const tokenNetwork = resolveNetwork()
+  const usdtAddress = USDT_ADDRESSES[tokenNetwork] as Address | undefined
+  const slearnAddress = SLEARN_ADDRESSES[tokenNetwork] as Address | undefined
   const backendWalletAddress = process.env.NEXT_PUBLIC_ADDRESS as Address | undefined
 
   // Fetch price + balances when opened

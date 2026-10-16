@@ -1,11 +1,11 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 /**
  * reconcile-scholarships.ts
  *
  * Reconcilia las becas de crucigrama con la cadena **sin escanear bloques**: recorre las
  * direcciones que ya están en la base (`billetera_usuario` × `guide_usuario`) y, por cada
- * (curso, guía, billetera) con la guía completada, lee `getStudentGuideStatus` del vault
- * activo. Si la cadena dice que un token se pagó y no hay su fila en `transaction`
+ * (curso, guía, billetera) con la guía completada, lee `getStudentGuideStatus` del vault V5.
+ * Si la cadena dice que un token se pagó y no hay su fila en `transaction`
  * (pagos anteriores al registro por token de https://github.com/pasosdeJesus/learn.tg/issues/279,
  * o migrados de vaults anteriores), la escribe **con el hash de la transacción que la pagó**
  * (la prueba on-chain), recuperado del índice del explorador por dirección.
@@ -17,23 +17,34 @@
  * los vaults históricos (V3/V4) sin listarlos a mano. Si un hash no aparece, se reporta
  * (no se inventa).
  *
+ * Se corre con **`node` simple** (Node ≥ 22.18 quita los tipos solo), no con `tsx`: tsx
+ * resuelve la condición `types` de `viem` y termina cargando `_types/*.js` (que no
+ * existen) → `ERR_MODULE_NOT_FOUND`. Por eso no hay imports relativos sin extensión: si
+ * se agregan, hay que escribir `'./x.ts'` (el tsconfig ya permite
+ * `allowImportingTsExtensions`).
+ *
  * Uso:
  *   cd apps/nextjs
- *   pnpm tsx scripts/reconcile-scholarships.ts                 # informe (no escribe)
- *   pnpm tsx scripts/reconcile-scholarships.ts --fix           # escribe lo que falte
- *   pnpm tsx scripts/reconcile-scholarships.ts --fix --wallet 0x… --course 2 --limit 200
+ *   node scripts/reconcile-scholarships.ts                 # informe (no escribe)
+ *   node scripts/reconcile-scholarships.ts --fix           # escribe lo que falte
+ *   node scripts/reconcile-scholarships.ts --fix --wallet 0x… --course 2 --limit 200
  *
  * Variables: `BLOCKSCOUT_API_URL` sobreescribe el explorador (por defecto Celo mainnet o
  * Celo Sepolia según `NEXT_PUBLIC_NETWORK`).
  */
 
-import dotenv from 'dotenv'
-dotenv.config({ path: '../.env' })
-
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import dotenv from 'dotenv'
+import { Kysely, PostgresDialect } from 'kysely'
+import pg from 'pg'
 import { createPublicClient, http, type Address } from 'viem'
-import { newKyselyPostgresql } from '../.config/kysely-db'
+import {
+  resolveNetwork,
+  SLEARN_ADDRESSES,
+  USDT_ADDRESSES,
+} from '@pasosdejesus/mpdj/blockchain/ecosystem-addresses'
 import {
   missingScholarshipTokens,
   recordedScholarshipTokens,
@@ -41,8 +52,14 @@ import {
   type ScholarshipToken,
 } from '@learn-tg/rewards/lib/scholarship-records'
 
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+const APP_DIR = path.join(HERE, '..')
+
+// `.env` de la app (apps/.env), como `scripts/verify-v5-migration.ts`.
+dotenv.config({ path: path.join(APP_DIR, '..', '.env') })
+
 // Sólo lo que el script lee del vault; evita depender del ABI completo.
-const statusAbi = [
+const STATUS_ABI = [
   {
     name: 'getStudentGuideStatus',
     type: 'function',
@@ -137,8 +154,7 @@ async function walletHashIndex(
       for (const item of body?.items ?? []) {
         const to = String(item?.to?.hash ?? '').toLowerCase()
         if (to !== walletLower) continue
-        const hash = item?.transaction_hash
-        if (hash) seenTx.add(hash)
+        if (item?.transaction_hash) seenTx.add(item.transaction_hash)
       }
       const next = body?.next_page_params
       url = next
@@ -172,11 +188,27 @@ async function walletHashIndex(
   return index
 }
 
+/** Kysely sobre PG* del `.env` (igual que `../.config/kysely-db.ts`). */
+function newKyselyPostgresql(): Kysely<any> {
+  const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true'
+  return new Kysely({
+    dialect: new PostgresDialect({
+      pool: new pg.Pool({
+        host: process.env.PGHOST,
+        database: isTest ? (process.env.PGDATABASE_TEST || process.env.PGDATABASE) : process.env.PGDATABASE,
+        user: isTest ? (process.env.PGUSER_TEST || process.env.PGUSER) : process.env.PGUSER,
+        password: isTest ? (process.env.PGPASSWORD_TEST || process.env.PGPASSWORD) : process.env.PGPASSWORD,
+        port: 5432,
+      }),
+    }),
+  })
+}
+
 async function main() {
   const args = process.argv.slice(2)
   if (args.includes('--help')) {
     console.log(`
-Uso: pnpm tsx scripts/reconcile-scholarships.ts [OPCIONES]
+Uso: node scripts/reconcile-scholarships.ts [OPCIONES]
 
   --fix             Escribe en la base las filas de beca que falten (por defecto sólo informa)
   --wallet 0x…      Limita a una billetera
@@ -209,27 +241,26 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
   const usdtDecimals = +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6)
 
   // El vault se lee del despliegue (como `scripts/verify-v5-migration.ts`) y no del motor
-  // `rewards`, para que el script dependa sólo de lo que la app resuelve (`viem`, `kysely`)
-  // y no de los imports en runtime del `dist` del motor (que en el servidor no tiene
-  // `node_modules` propio).
-  const deploymentFile = path.join(process.cwd(), '..', 'hardhat', 'deployments', 'LearnTGVaults', 'V5', `${network}.json`)
+  // `rewards`, para que el script dependa sólo de lo que la app resuelve.
+  const deploymentFile = path.join(APP_DIR, '..', 'hardhat', 'deployments', 'LearnTGVaults', 'V5', `${network}.json`)
   if (!fs.existsSync(deploymentFile)) {
     console.error(`[FAIL] no hay despliegue V5 para ${network}: ${deploymentFile}`)
     process.exit(1)
   }
   const vault = JSON.parse(fs.readFileSync(deploymentFile, 'utf8')).address as Address
-  const version = 'V5'
 
   const publicClient = createPublicClient({ transport: http(rpc) })
-  // Direcciones de los tokens **del vault** (no del .env): así el filtro del explorador
-  // es el correcto para la red, aunque el .env apunte a otra.
-  const [vaultUsdt, vaultSlearn] = (
-    await Promise.all([
-      publicClient.readContract({ address: vault, abi: statusAbi, functionName: 'usdtToken' }),
-      publicClient.readContract({ address: vault, abi: statusAbi, functionName: 'slearnToken' }),
-    ])
-  ).map((value) => String(value))
-  const tokenAddresses = [vaultUsdt, vaultSlearn]
+  // Direcciones de token desde `mpdj` (`ecosystem-addresses`, por red), no del `.env`.
+  const mpdjNetwork = resolveNetwork()
+  const usdtAddress = USDT_ADDRESSES[mpdjNetwork]
+  const slearnAddress = SLEARN_ADDRESSES[mpdjNetwork]
+  const tokenAddresses = [usdtAddress, slearnAddress]
+  // Contraste con las del propio vault: si no coinciden, el filtro del explorador (o el
+  // panel) estaría mirando otro token.
+  const [vaultUsdt, vaultSlearn] = await Promise.all([
+    publicClient.readContract({ address: vault, abi: STATUS_ABI, functionName: 'usdtToken' }),
+    publicClient.readContract({ address: vault, abi: STATUS_ABI, functionName: 'slearnToken' }),
+  ])
 
   const db = newKyselyPostgresql()
 
@@ -255,21 +286,19 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
 
   // Diagnóstico del entorno: sirve para cazar desajustes de red/token (el panel de la
   // billetera usa NEXT_PUBLIC_*; el script y el vault usan lo que la cadena dice).
-  const envUsdt = process.env.NEXT_PUBLIC_USDT_ADDRESS ?? '(sin definir)'
-  const envSlearn = process.env.NEXT_PUBLIC_SLEARN_ADDRESS ?? '(sin definir)'
-  const mismatch = (a: string, b: string) => a.toLowerCase() === b.toLowerCase() ? 'ok' : '<-- NO COINCIDE'
+  const mismatch = (a: string, b: string) => (a.toLowerCase() === b.toLowerCase() ? 'ok' : '<-- NO COINCIDE')
   console.log('Entorno:')
   console.log(`  NEXT_PUBLIC_NETWORK        ${process.env.NEXT_PUBLIC_NETWORK ?? '(sin definir)'} → red ${network}`)
   console.log(`  PGDATABASE                 ${process.env.PGDATABASE ?? '(sin definir)'}`)
   console.log(`  NEXT_PUBLIC_RPC_URL        ${safeOrigin(rpc)}`)
   console.log(`  explorador                 ${noHashes ? '(omitido por --no-hashes)' : blockscout}`)
-  console.log(`  USDT  env                 ${envUsdt}`)
-  console.log(`  USDT  vault.usdtToken()   ${vaultUsdt}   ${envUsdt === '(sin definir)' ? '' : mismatch(envUsdt, vaultUsdt)}`)
-  console.log(`  SLEARN env                ${envSlearn}`)
-  console.log(`  SLEARN vault.slearnToken()${vaultSlearn}   ${envSlearn === '(sin definir)' ? '' : mismatch(envSlearn, vaultSlearn)}`)
+  console.log(`  USDT   mpdj  USDT_ADDRESSES[red]   ${usdtAddress}`)
+  console.log(`  USDT   vault.usdtToken()           ${vaultUsdt}   ${mismatch(usdtAddress, String(vaultUsdt))}`)
+  console.log(`  SLEARN mpdj  SLEARN_ADDRESSES[red] ${slearnAddress}`)
+  console.log(`  SLEARN vault.slearnToken()         ${vaultSlearn}   ${mismatch(slearnAddress, String(vaultSlearn))}`)
   console.log('')
 
-  console.log(`Vault ${version} ${vault} | red ${network} | explorador ${noHashes ? '(omitido)' : blockscout}`)
+  console.log(`Vault V5 ${vault} | red ${network} | explorador ${noHashes ? '(omitido)' : blockscout}`)
   console.log(`Candidatos (curso, guía, billetera) con guía completada: ${candidates.length}`)
   console.log(fix ? 'Modo: --fix (escribe lo que falte)\n' : 'Modo: informe (no escribe); usa --fix para escribir\n')
 
@@ -304,7 +333,7 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
         try {
           const status = (await publicClient.readContract({
             address: vault,
-            abi: statusAbi,
+            abi: STATUS_ABI,
             functionName: 'getStudentGuideStatus',
             args: [BigInt(c.course_id), BigInt(c.guide_id), c.billetera as Address],
           })) as readonly [bigint, bigint, boolean]
@@ -349,7 +378,9 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
             usdtDecimals,
           })
           inserted += rows.length
-          const detail = rows.map((r) => `${r.crypto}=${r.amount}${entry[r.crypto] ? ` @${entry[r.crypto]!.slice(0, 10)}…` : ' (sin hash)'}`).join(', ')
+          const detail = rows
+            .map((r) => `${r.crypto}=${r.amount}${entry[r.crypto] ? ` @${entry[r.crypto]!.slice(0, 10)}…` : ' (sin hash)'}`)
+            .join(', ')
           console.log(`  [FIX ] ${label} → ${detail}`)
         } catch (e: unknown) {
           errors++

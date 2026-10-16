@@ -17,6 +17,25 @@ vi.mock('@learn-tg/rewards/lib/deployments', () => ({
   getV2Address: vi.fn().mockReturnValue('0xV212345678901234567890123456789012345678'),
 }))
 
+// Las direcciones de USDT/SLEARN salen de `mpdj` (por red); mutables para poder probar el
+// caso "falta la dirección de USDT".
+const tokenAddrs = vi.hoisted(() => ({
+  usdt: '0x0000000000000000000000000000000000000002' as string | undefined,
+  slearn: '0xSLEARN123456789012345678901234567890123456' as string | undefined,
+}))
+
+vi.mock('@pasosdejesus/mpdj/blockchain/ecosystem-addresses', () => ({
+  resolveNetwork: () => 'celoSepolia',
+  USDT_ADDRESSES: {
+    get celo() { return tokenAddrs.usdt },
+    get celoSepolia() { return tokenAddrs.usdt },
+  },
+  SLEARN_ADDRESSES: {
+    get celo() { return tokenAddrs.slearn },
+    get celoSepolia() { return tokenAddrs.slearn },
+  },
+}))
+
 // Mock @/components/ui/button
 vi.mock('@pasosdejesus/m/shadcn-components/ui/button', () => ({
   Button: React.forwardRef(({ children, onClick, disabled, variant, size, className, ...props }: any, ref: any) => (
@@ -102,6 +121,9 @@ describe('DonateModal', () => {
     Object.keys(defaultEnv).forEach(key => {
       ;(process.env as any)[key] = (defaultEnv as any)[key]
     })
+    // Direcciones de token (mpdj) por defecto de cada prueba
+    tokenAddrs.usdt = defaultEnv.NEXT_PUBLIC_USDT_ADDRESS
+    tokenAddrs.slearn = defaultEnv.NEXT_PUBLIC_SLEARN_ADDRESS
 
     // Default wagmi mocks
     mockUseAccount.mockReturnValue({ address: defaultAddress })
@@ -261,6 +283,8 @@ describe('DonateModal', () => {
     })
 
     it('shows missing contract env vars when USDT address is missing', async () => {
+      // La dirección de USDT viene de `mpdj`; sin ella el modal avisa.
+      tokenAddrs.usdt = undefined
       delete (process.env as any).NEXT_PUBLIC_USDT_ADDRESS
       await waitFor(() => {
         renderModal()

@@ -91,6 +91,7 @@ const NOMBRE_ADVISORY_ALLOW = {
   'user/verified-data': 'devuelve pseudónimo, no el nombre real',
   'verify': 'respuesta sin nombre (name=passport_name solo a partners autorizados)',
   'verification/book': 'usa el nombre propio del autenticado para el evento CalDAV (solo admins lo ven); la respuesta no lo incluye',
+  'wallet/link': 'usa el nombre propio del autenticado solo como `linked_by` del motor; la respuesta devuelve billeteras, nunca el nombre',
 }
 // 'nombre' real de usuario: usuario.nombre / u.nombre o 'nombre' en un select
 // (para Kysely/raw). Combinado con que el archivo mencione la tabla usuario

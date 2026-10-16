@@ -71,17 +71,31 @@ async function authenticateBySession(
       dbg(`${tag} Session fallback: token has no sub`)
       return null
     }
-    if (address.toLowerCase() !== (walletAddress || '').toLowerCase()) {
-      dbg(`${tag} Session fallback: wallet mismatch ${address.toLowerCase().slice(0, 10)}... != ${(walletAddress || '').slice(0, 10)}...`)
+    const hint = (walletAddress || '').toLowerCase()
+    if (!hint) {
+      dbg(`${tag} Session fallback: no wallet hint`)
+      return null
+    }
+
+    // R-#265 §3.8: la sesión identifica la **cuenta** (`usuarioId`), no la billetera.
+    // Cualquier billetera de esa cuenta sirve como pista. Un token anterior a este
+    // cambio (sin `usuarioId`) queda atado a la billetera exacta que firmó.
+    const claimedUserId = typeof payload?.usuarioId === 'number' ? payload.usuarioId : null
+    if (claimedUserId == null && address.toLowerCase() !== hint) {
+      dbg(`${tag} Session fallback: wallet mismatch ${address.toLowerCase().slice(0, 10)}... != ${hint.slice(0, 10)}...`)
       return null
     }
     const billetera = await db
       .selectFrom('billetera_usuario')
-      .where('billetera', '=', walletAddress!.toLowerCase())
+      .where('billetera', '=', hint)
       .selectAll()
       .executeTakeFirst()
     if (!billetera) {
       dbg(`${tag} Session fallback: billetera not found`)
+      return null
+    }
+    if (claimedUserId != null && billetera.usuario_id !== claimedUserId) {
+      dbg(`${tag} Session fallback: wallet ${hint.slice(0, 10)}... is not part of account ${claimedUserId}`)
       return null
     }
     const usuario = await db
@@ -93,6 +107,16 @@ async function authenticateBySession(
       dbg(`${tag} Session fallback: usuario not found`)
       return null
     }
+
+    // R-#250: subir `usuario.session_epoch` corta todas sus sesiones (teléfono perdido
+    // o compartido). Un token sin época (anterior al cambio) no se rechaza.
+    const claimedEpoch = typeof payload?.sessionEpoch === 'number' ? payload.sessionEpoch : null
+    const currentEpoch = Number((usuario as { session_epoch?: number }).session_epoch ?? 0)
+    if (claimedEpoch != null && claimedEpoch !== currentEpoch) {
+      dbg(`${tag} Session fallback: session epoch ${claimedEpoch} != ${currentEpoch}`)
+      return null
+    }
+
     dbg(`${tag} AUTH OK via session cookie — userId: ${usuario.id}`)
     return { usuario: usuario as any, billetera }
   } catch (e: any) {

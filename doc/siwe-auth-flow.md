@@ -8,7 +8,7 @@ How wallet-based authentication works in learn.tg — from wallet connection to 
 
 ## Overview
 
-The platform uses **Sign-In With Ethereum (SIWE)** for passwordless authentication. NextAuth's JWT session (cookie, `sub` = wallet address) is the identity for both UI-level checks and API authorization (session-first, R-#227; session-only, R-#233 Phase 2) and is the **only** credential. The SIWE nonce (NextAuth CSRF token) is used **only** as the handshake nonce, never as a persistent credential.
+The platform uses **Sign-In With Ethereum (SIWE)** for passwordless authentication. NextAuth's JWT session (cookie; `sub` = the wallet that signed in, `usuarioId` = the account, `sessionEpoch` = its session epoch) is the identity for both UI-level checks and API authorization (session-first, R-#227; session-only, R-#233 Phase 2) and is the **only** credential. The SIWE nonce (NextAuth CSRF token) is used **only** as the handshake nonce, never as a persistent credential.
 
 ## Flow
 
@@ -94,8 +94,20 @@ another manual round.
 
 ### Session
 
-JWT-based (`strategy: 'jwt'`). Token contains `sub` = wallet address.
-No server-side session store needed.
+JWT-based (`strategy: 'jwt'`), with an explicit lifetime of 30 days (`maxAge`) refreshed
+once a day (`updateAge`). No server-side session store is needed for the session itself:
+the token carries
+
+| Claim | Meaning |
+|---|---|
+| `sub` | The wallet address that signed in (checksummed); the request's hint. |
+| `usuarioId` | The **account** the session belongs to (R-#265 §3.8: the identity is the account, not the wallet). |
+| `sessionEpoch` | The account's `usuario.session_epoch` at sign-in. Bumping it (`UPDATE usuario SET session_epoch = session_epoch + 1`) revokes **every** session of that account (R-#250; a lost or shared phone). |
+
+`authenticateUser()` accepts a request whose `walletAddress` hint is **any** wallet of
+the token's account (`usuarioId`), and rejects it when the epoch no longer matches. A
+token minted before these claims existed (no `usuarioId`/`sessionEpoch`) keeps the old
+behaviour: the hint must equal `sub`.
 
 ## Key Design Decisions
 
@@ -107,7 +119,8 @@ not a DB token:
 - `authorize()` verifies the SIWE message whose nonce is the CSRF token
   (standard handshake), then creates the JWT session (`sub` = wallet).
 - `authenticateUser()` validates the **session cookie** (JWT signed with
-  `NEXTAUTH_SECRET`, `sub` == requested wallet, lowercase); that is the only
+  `NEXTAUTH_SECRET`; the `walletAddress` hint must be a wallet of the token's account and
+  the account's `session_epoch` must match); that is the only
   credential (no DB fallback since R-#233 Fase 2).
 - The CSRF token is **never** persisted as an API credential.
 
@@ -138,7 +151,7 @@ not a DB token:
 | Layer | Mechanism | Purpose |
 |-------|-----------|---------|
 | **UI / session** | NextAuth JWT cookie (`session.address`) | Is the user logged in? Which address? |
-| **API authorization** | session cookie (`sub` == `walletAddress`) | Is this request authorized? |
+| **API authorization** | session cookie (`walletAddress` is a wallet of the token's account; `sessionEpoch` matches) | Is this request authorized? |
 
 The frontend checks `session.address` to decide page visibility. Data-changing
 API calls are cookie-authenticated; `walletAddress` travels only as an identity
@@ -170,8 +183,9 @@ guide content (`app/[lang]/[pathPrefix]/[pathSuffix]/page.tsx`), which previousl
 gated the fetch on `session?.address` and showed `401 auth_required` for
 premium guides under a cold session.
 
-**Order inside `authenticateUser()`:** the session cookie must be valid and its
-`sub` must equal the requested wallet; anything else is a 401. Debug
+**Order inside `authenticateUser()`:** the session cookie must be valid; its
+`walletAddress` hint must belong to the token's account (`usuarioId`) and the account's
+`session_epoch` must still match the token; anything else is a 401. Debug
 tracing of the decision is gated behind `DEBUG_AUTH=1` (no PII). See
 `lib/authenticateUser.ts`.
 
@@ -213,6 +227,17 @@ in-app wallet declares: signing does not depend on the network, so a wallet crea
 Celo Sepolia can sign in on production and pay there after the payment's chain
 pre-flight (`lib/ensure-chain.ts`, operator report 2026-09-27).
 
+### 6. Linking a second wallet signs with the active wallet
+
+Linking another wallet to the account (R-#265 §3.2) uses the same SIWE handshake, but the
+signature comes from the **active** wallet: the in-app one when unlocked, otherwise the
+connected external one (`lib/wallet-link.ts` `detectActiveWalletSigner`). The session's own
+wallet is discarded (it is already in the account), so the control only does something when
+a *different* wallet is active. The server verifies the message with the same
+domain/chain/nonce policy (`lib/siwe-server.ts`) and then delegates to the `wallet` engine;
+it never trusts the client's claim (`signatureVerified: true` is set by the route only after
+a successful verification).
+
 ## Code References
 
 | Component | File | Key Lines |
@@ -220,5 +245,7 @@ pre-flight (`lib/ensure-chain.ts`, operator report 2026-09-27).
 | SIWE verification + DB upsert | `app/api/auth/auth-options.ts` | `authorize()` function, ~lines 40-240 |
 | Session callback (lowercase) | `app/api/auth/auth-options.ts` | `callbacks.session`, ~line 242 |
 | API auth (session only) | `lib/authenticateUser.ts` | Full file |
+| Server-side SIWE verification (shared policy) | `lib/siwe-server.ts` | Full file |
+| Wallet linking (routes + client) | `app/api/wallet/link/route.ts`, `lib/wallet-link.ts`, `components/LinkWalletButton.tsx` | Full file |
 | CSRF/origin middleware | `apps/nextjs/middleware.ts` | Full file |
 | Frontend auth guard pattern | `app/[lang]/profile/page.tsx` | `useEffect` at ~line 256 |

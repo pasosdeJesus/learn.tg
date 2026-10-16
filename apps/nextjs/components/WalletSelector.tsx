@@ -7,6 +7,7 @@ import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletDialog } from '@/components/WalletDialog'
 import { WalletPanel } from '@/components/WalletPanel'
+import { LinkWalletButton } from '@/components/LinkWalletButton'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { clearRestrictedCourseCopies } from '@/lib/offline-course-db'
 import { useExternalProvider } from '@/lib/external-provider'
@@ -121,7 +122,14 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   const migrationHref = lang === 'es' ? '/es/migracion-billetera-app' : '/en/migration-in-app-wallet'
 
   if (external) {
-    return <ConnectWalletButton lang={lang} />
+    return (
+      <div className="flex items-center gap-2">
+        <ConnectWalletButton lang={lang} />
+        {/* R-#265 §3.2: con la billetera externa activa también se puede enlazar otra
+            (p. ej. la de la aplicación desbloqueada) a la misma cuenta. */}
+        <LinkWalletButton lang={lang} />
+      </div>
+    )
   }
 
   if (signedIn) {
@@ -157,6 +165,9 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
           >
             ✕
           </Button>
+          {/* R-#265 §3.2: enlaza la billetera **activa** (la de la app desbloqueada o la
+              externa conectada) a la misma cuenta, firmando con ella. */}
+          <LinkWalletButton lang={lang} />
         </div>
         {/* Con sesión iniciada la billetera queda bloqueada tras recargar, así que
             el diálogo tiene que seguir montado: es el único que atiende

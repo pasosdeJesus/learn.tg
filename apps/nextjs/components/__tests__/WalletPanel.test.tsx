@@ -38,6 +38,21 @@ vi.mock('qrcode.react', () => ({
   QRCodeSVG: ({ value }: { value: string }) => React.createElement('div', { 'data-testid': 'qr', 'data-value': value }),
 }))
 
+// Las direcciones de USDT/SLEARN salen de `mpdj` (por red). Se fijan aquí para que el
+// test no dependa de la red del `.env` que se leyó al importar el módulo.
+vi.mock('@pasosdejesus/mpdj/blockchain/ecosystem-addresses', () => ({
+  resolveNetwork: () => 'celoSepolia',
+  USDT_ADDRESSES: { celo: '0x0000000000000000000000000000000000000002', celoSepolia: '0x0000000000000000000000000000000000000002' },
+  SLEARN_ADDRESSES: { celo: '0x0000000000000000000000000000000000000003', celoSepolia: '0x0000000000000000000000000000000000000003' },
+}))
+
+// R-#265: el panel lista las billeteras de la cuenta; se aísla el cliente de la API
+// para que la prueba no toque la red (el `fetch` global queda para coleccionables).
+vi.mock('@/lib/wallet-account', () => ({
+  fetchAccountWallets: vi.fn().mockResolvedValue(null),
+  unlinkAccountWalletRequest: vi.fn(),
+}))
+
 import { WalletPanel } from '../WalletPanel'
 
 function renderPanel(props: Partial<React.ComponentProps<typeof WalletPanel>> = {}) {

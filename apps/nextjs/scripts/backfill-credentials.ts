@@ -12,7 +12,7 @@
  * and transaction confirmation.
  */
 
-import { newKyselyPostgresql } from '../.config/kysely.config'
+import { newKyselyPostgresql } from '../.config/kysely-db.ts'
 import { mintCourseCredential } from '@learn-tg/rewards/lib/credentials'
 import { canMintPublicly } from '@learn-tg/rewards/lib/course-privacy'
 import { sql } from 'kysely'

@@ -2,19 +2,21 @@ import { ethers } from "hardhat";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
+import { tokenAddresses } from "./lib/token-addresses";
 dotenv.config({ path: "../.env" });
 
 async function main() {
   const ClusterFunds = await ethers.getContractFactory("ClusterFunds");
 
-  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS;
-  const slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS;
+  // Direcciones desde `mpdj` (por red), no del `.env`.
+  const { usdt: usdtAddress, slearn: slearnAddress } = await tokenAddresses();
   const pdjTreasury = process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS || process.env.PDJ_TREASURY_ADDRESS;
   const [deployer] = await ethers.getSigners();
   const initialOwner = await deployer.getAddress();
 
-  if (!usdtAddress) throw new Error("NEXT_PUBLIC_USDT_ADDRESS not found in env");
-  if (!slearnAddress) throw new Error("NEXT_PUBLIC_SLEARN_ADDRESS not found in env");
+  // En Sepolia `mpdj` toma la dirección del `.env`; sin ella el deploy iría con `undefined`.
+  if (!usdtAddress) throw new Error("USDT address not found (mpdj USDT_ADDRESSES / NEXT_PUBLIC_USDT_ADDRESS)");
+  if (!slearnAddress) throw new Error("SLEARN address not found (mpdj SLEARN_ADDRESSES / NEXT_PUBLIC_SLEARN_ADDRESS)");
 
   const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia";
   console.log(`Deploying ClusterFunds to ${network}`);

@@ -5905,6 +5905,7 @@ CREATE TABLE public.usuario (
     denomination character varying(100),
     mostrar_cursos_publico boolean DEFAULT true NOT NULL,
     mostrar_cursos_sensibles_publico boolean,
+    session_epoch integer DEFAULT 0 NOT NULL,
     CONSTRAINT usuario_check CHECK (((fechadeshabilitacion IS NULL) OR (fechadeshabilitacion >= fechacreacion))),
     CONSTRAINT usuario_church_relationship_check CHECK (((church_relationship IS NULL) OR ((church_relationship)::text = ANY (ARRAY[('pastor'::character varying)::text, ('co_pastor'::character varying)::text, ('leader'::character varying)::text, ('member'::character varying)::text])))),
     CONSTRAINT usuario_rol_check CHECK ((rol >= 1)),

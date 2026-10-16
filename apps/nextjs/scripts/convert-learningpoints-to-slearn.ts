@@ -7,7 +7,7 @@
  */
 import dotenv from 'dotenv'
 dotenv.config({ path: '../.env' })
-import { newKyselyPostgresql } from '../.config/kysely.config'
+import { newKyselyPostgresql } from '../.config/kysely-db.ts'
 import type { Address } from 'viem'
 import {
   createPublicClient,

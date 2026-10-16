@@ -15,6 +15,13 @@ vi.mock('@learn-tg/rewards/lib/deployments', () => ({
   getV2Address: vi.fn().mockReturnValue('0xV212345678901234567890123456789012345678'),
 }))
 
+// Las direcciones de USDT/SLEARN salen de `mpdj` (por red); se fijan aquí.
+vi.mock('@pasosdejesus/mpdj/blockchain/ecosystem-addresses', () => ({
+  resolveNetwork: () => 'celoSepolia',
+  USDT_ADDRESSES: { celo: '0x0000000000000000000000000000000000000002', celoSepolia: '0x0000000000000000000000000000000000000002' },
+  SLEARN_ADDRESSES: { celo: '0xSLEARN123456789012345678901234567890123456', celoSepolia: '0xSLEARN123456789012345678901234567890123456' },
+}))
+
 vi.mock('@pasosdejesus/m/shadcn-components/ui/button', () => ({
   Button: React.forwardRef(({ children, onClick, disabled, ...props }: any, ref: any) => (
     <button ref={ref} onClick={onClick} disabled={disabled} {...props}>

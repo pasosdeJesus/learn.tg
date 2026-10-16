@@ -9,6 +9,7 @@ import { ethers } from "hardhat"
 import dotenv from "dotenv"
 import * as fs from "fs"
 import * as path from "path"
+import { tokenAddresses } from "./lib/token-addresses"
 dotenv.config({ path: "../.env" })
 
 async function main() {
@@ -167,7 +168,7 @@ async function main() {
 
   // Approve SLEARN contract to spend backend's USDT and SLEARN
   const maxUint = ethers.MaxUint256
-  const usdtAddr = process.env.NEXT_PUBLIC_USDT_ADDRESS!
+  const usdtAddr = (await tokenAddresses()).usdt
   const usdt = await ethers.getContractAt("@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20", usdtAddr)
 
   console.log(`  USDT.approve(SLEARN, max) from backend...`)

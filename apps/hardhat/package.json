@@ -29,6 +29,7 @@
   "dependencies": {
     "@nomicfoundation/hardhat-ignition": "0.15.0",
     "@openzeppelin/contracts": "^5.4.0",
+    "@pasosdejesus/mpdj": "^0.2.12",
     "dotenv": "^17.2.3",
     "tsx": "^4.21.0",
     "viem": "^2.40.0"

@@ -1,16 +1,35 @@
+/**
+ * [OBSOLETO desde 2026-10-15 — R-#286 §5]
+ *
+ * Backfill **histórico** de `transaction`/`guide_usuario` escaneando bloques de los
+ * vaults **V3** (y de `CeloUbi`), vía RPC o Etherscan.
+ *
+ * Por qué no usarlo:
+ *  - Su parte de becas quedó superada por `scripts/reconcile-scholarships.ts`, que
+ *    concilia **por dirección** (sin escanear bloques) contra el vault activo y con el
+ *    hash del explorador como prueba.
+ *  - Apunta sólo al vault **V3** (`getV3Address`); la plataforma usa V5.
+ *  - No corre con el toolchain actual: importa `viem` (roto bajo `tsx`, ver
+ *    `reconcile-scholarships.ts`) y el `dist` de un motor (que `node` simple no
+ *    resuelve por sus imports sin extensión).
+ *
+ * Su única capacidad sin reemplazo es el backfill de reclamos de `CeloUbi`. Si se
+ * necesita, reimplementarlo con el enfoque por dirección de
+ * `reconcile-scholarships.ts`. Pendiente de borrar cuando eso exista.
+ */
 
 import { createPublicClient, http, decodeEventLog, formatUnits, Log } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
-import { newKyselyPostgresql } from '../.config/kysely.config'
-import LearnTGVaultsAbi from '../abis/LearnTGVaults.json'
-import CeloUbiAbi from '../abis/CeloUbi.json'
+import { newKyselyPostgresql } from '../.config/kysely-db.ts'
+import LearnTGVaultsAbi from '../abis/LearnTGVaults.json' with { type: 'json' }
+import CeloUbiAbi from '../abis/CeloUbi.json' with { type: 'json' }
 import * as dotenv from 'dotenv'
 import path from 'path'
 import { sql } from 'kysely'
-import { refreshUserLearningScore } from '../lib/scores'
+import { refreshUserLearningScore } from '../lib/scores.ts'
 import axios from 'axios'
 import type { Insertable } from 'kysely'
-import type { GuideUsuario, Transaction } from '../db/db.d'
+import type { GuideUsuario, Transaction } from '../db/db.d.ts'
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') })
 

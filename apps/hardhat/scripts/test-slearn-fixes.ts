@@ -9,6 +9,7 @@ import { celo, celoSepolia } from 'viem/chains'
 import dotenv from 'dotenv'
 import * as fs from 'fs'
 import * as path from 'path'
+import { tokenAddresses } from './lib/token-addresses'
 dotenv.config({ path: '../.env' })
 
 const network = process.env.NEXT_PUBLIC_NETWORK || 'celoSepolia'
@@ -18,7 +19,6 @@ const vaultFile = path.join(__dirname, '..', 'deployments', 'LearnTGVaults', 'V3
 
 const SLEARN_ADDR = JSON.parse(fs.readFileSync(slearnFile, 'utf8')).address as `0x${string}`
 const VAULT_ADDR = JSON.parse(fs.readFileSync(vaultFile, 'utf8')).address as `0x${string}`
-const USDT_ADDR = process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}`
 const RPC = process.env.NEXT_PUBLIC_RPC_URL || 'https://forno.celo-sepolia.celo-testnet.org'
 const testCourseId = 998n
 
@@ -82,6 +82,8 @@ function check(name: string, condition: boolean, detail?: string) {
 }
 
 async function main() {
+  // USDT desde `mpdj` (por red), no del `.env`.
+  const USDT_ADDR = (await tokenAddresses()).usdt
   console.log('=== SLEARN Fixes E2E Test ===')
   console.log('Backend:', account.address)
   console.log('SLEARN:', SLEARN_ADDR, 'Vault:', VAULT_ADDR)
