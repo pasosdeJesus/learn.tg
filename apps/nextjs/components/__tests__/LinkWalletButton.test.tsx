@@ -71,7 +71,7 @@ describe('LinkWalletButton (R-#265 §3.2)', () => {
     await click()
 
     expect(mocks.linkActiveWallet).not.toHaveBeenCalled()
-    expect(screen.getByTestId('wallet-link-message')).toHaveTextContent(/already part of your account/i)
+    expect(screen.getByTestId('wallet-link-message')).toHaveTextContent(/already in your account/i)
   })
 
   it('explains when there is no wallet able to sign', async () => {
@@ -80,7 +80,7 @@ describe('LinkWalletButton (R-#265 §3.2)', () => {
 
     await click()
 
-    expect(screen.getByTestId('wallet-link-message')).toHaveTextContent(/unlock the in-app wallet/i)
+    expect(screen.getByTestId('wallet-link-message')).toHaveTextContent(/no wallet can sign yet/i)
   })
 
   it('reports a wallet that belongs to another account', async () => {
@@ -96,12 +96,21 @@ describe('LinkWalletButton (R-#265 §3.2)', () => {
     expect(screen.getByTestId('wallet-link-message')).toHaveTextContent(/belongs to another account/i)
   })
 
+  it('explains a cancelled access request', async () => {
+    mocks.detectActiveWalletSigner.mockResolvedValue({ ok: false, reason: 'cancelled' })
+    render(<LinkWalletButton lang="en" />)
+
+    await click()
+
+    expect(screen.getByTestId('wallet-link-message')).toHaveTextContent(/did not grant access/i)
+  })
+
   it('uses Spanish when the language is es', async () => {
     mocks.detectActiveWalletSigner.mockResolvedValue({ ok: false, reason: 'is-session-wallet' })
     render(<LinkWalletButton lang="es" />)
 
-    expect(screen.getByTestId('wallet-link')).toHaveTextContent(/vincular billetera activa/i)
+    expect(screen.getByTestId('wallet-link')).toHaveTextContent(/vincular otra billetera/i)
     await click()
-    expect(screen.getByTestId('wallet-link-message')).toHaveTextContent(/ya es parte de tu cuenta/i)
+    expect(screen.getByTestId('wallet-link-message')).toHaveTextContent(/ya está en tu cuenta/i)
   })
 })

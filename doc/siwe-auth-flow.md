@@ -230,10 +230,13 @@ pre-flight (`lib/ensure-chain.ts`, operator report 2026-09-27).
 ### 6. Linking a second wallet signs with the active wallet
 
 Linking another wallet to the account (R-#265 §3.2) uses the same SIWE handshake, but the
-signature comes from the **active** wallet: the in-app one when unlocked, otherwise the
-connected external one (`lib/wallet-link.ts` `detectActiveWalletSigner`). The session's own
-wallet is discarded (it is already in the account), so the control only does something when
-a *different* wallet is active. The server verifies the message with the same
+signature comes from the **active** wallet: the in-app one when unlocked and not the
+session's, otherwise the connected external one (`lib/wallet-link.ts`
+`detectActiveWalletSigner`). The session's own wallet is discarded (it is already in the
+account), so the control only does something when a *different* wallet is active. Enabling
+a browser wallet does **not** grant the site access, so when `eth_accounts` is empty the
+external wallet is asked with `eth_requestAccounts` (operator report, 2026-10-16); a
+rejection is reported as a cancellation. The server verifies the message with the same
 domain/chain/nonce policy (`lib/siwe-server.ts`) and then delegates to the `wallet` engine;
 it never trusts the client's claim (`signatureVerified: true` is set by the route only after
 a successful verification).

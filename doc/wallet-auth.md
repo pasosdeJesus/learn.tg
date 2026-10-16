@@ -119,20 +119,29 @@ lives in the modal below.
 | `no-wallet` | "Use in-app wallet" (opens `WalletDialog`) plus "Use external wallet" when `window.ethereum` exists |
 | `locked` | "Unlock your in-app wallet" (opens `WalletDialog`) |
 | `unlocked` without a session | "Sign in with in-app wallet" (opens `WalletDialog`, which runs the SIWE) |
-| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out) + "Link active wallet" (R-#265, see below) |
+| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out) + "Link another wallet" (R-#265, see below) |
 | external chosen | Defers to `ConnectWalletButton` (existing flow, preserved) |
 
 ### LinkWalletButton (`components/LinkWalletButton.tsx`)
 
-R-#265 §3.2: adds another wallet to the **account** of the current session. There is no
-wallet picker — the operator's decision (2026-10-15) is that the **active** wallet signs:
-the in-app one when unlocked, otherwise the connected external one (`getExternalProvider()`).
-`lib/wallet-link.ts` resolves it (`detectActiveWalletSigner`, which discards the session's
-own wallet, so the control only acts when a *different* wallet is active) and signs a SIWE
-with the NextAuth `csrfToken` as nonce; the POST goes to `/api/wallet/link`, where
-`lib/siwe-server.ts` re-verifies domain/chain/nonce and the `wallet` engine does the link.
-The messages explain each outcome (linked, already in the account, no wallet, owned by
-another account, cancelled).
+R-#265 §3.2: adds another wallet to the **account** of the current session (label "Link
+another wallet" / "Vincular otra billetera"). There is no wallet picker — the operator's
+decision (2026-10-15) is that the **active** wallet signs. `lib/wallet-link.ts`
+(`detectActiveWalletSigner`) resolves it in this order:
+
+1. the **in-app** wallet, when unlocked **and** not the session's (no extension is bothered
+   when the case is already solved);
+2. otherwise the **external** wallet (`getExternalProvider()`: EIP-6963 / `window.ethereum`).
+   Enabling an extension does **not** grant the site access, so when `eth_accounts` returns
+   `[]` the wallet is asked with `eth_requestAccounts` (the operator hit this on 2026-10-16:
+   OneKey was active but the button answered "that wallet is already in your account");
+3. the session's own wallet never signs (it is already in the account).
+
+The SIWE uses the NextAuth `csrfToken` as nonce and the POST goes to `/api/wallet/link`,
+where `lib/siwe-server.ts` re-verifies domain/chain/nonce and the `wallet` engine does the
+link. The messages explain each outcome (linked, already in the account, no wallet, owned by
+another account, cancelled). `e2e/specs/wallet-link-second-wallet.spec.mjs` covers the whole
+flow with a mock external wallet whose accounts stay empty until `eth_requestAccounts`.
 
 ### WalletDialog (`components/WalletDialog.tsx`)
 

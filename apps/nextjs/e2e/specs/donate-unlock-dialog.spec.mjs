@@ -140,7 +140,13 @@ async function signInFromHeader(page, base) {
  * Abre el modal de donación del curso y devuelve lo que muestra: si aparece el
  * aviso de billetera bloqueada y el texto del modal.
  */
-async function openDonateModal(page, base, urls = [`${base}/en/gdcluster`, `${base}/en`]) {
+// El botón de donación vive en la **página de un curso** (`CourseDonation`, con
+// `vaultBalance` cargado); `/en/gdcluster` resuelve a una página de curso inexistente
+// ("Course not found") y `/en` no lo tiene, así que la lista empieza por un curso real.
+async function openDonateModal(
+  page, base,
+  urls = [`${base}/en/a-relationship-with-Jesus`, `${base}/en/gdcluster`, `${base}/en`],
+) {
   for (const url of urls) {
     // La app puede navegar por su cuenta; no es motivo para abortar el spec.
     await page.goto(url, { waitUntil: 'domcontentloaded' }).catch(() => {})
@@ -307,6 +313,7 @@ async function main() {
     const currentUrl = locked.url()
     const reopened = await openDonateModal(locked, base, [
       currentUrl,
+      `${base}/en/a-relationship-with-Jesus`,
       `${base}/en/gdcluster`,
       `${base}/en`,
     ])

@@ -453,6 +453,12 @@ async function main() {
     } else {
       ok('La píldora abre el panel de la billetera (R-#249)')
 
+      // El panel abre en la pestaña "Cuentas" cuando la cuenta tiene billeteras
+      // (R-#265: N billeteras por cuenta), y Radix sólo monta la pestaña activa, así
+      // que hay que entrar a "Saldos" antes de leerlos (antes era la pestaña inicial).
+      await page.click('[data-testid="wallet-panel-tab-balances"]').catch(() => {})
+      await sleep(800)
+
       // Saldos reales del panel (se fondeó 1 USDT a esta billetera).
       let usdtShown = null
       for (let i = 0; i < 15; i++) {

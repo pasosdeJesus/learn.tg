@@ -29,27 +29,27 @@ export function LinkWalletButton({ lang = 'en', onLinked }: LinkWalletButtonProp
 
   const t = createComponentT(lang, {
     en: {
-      link: 'Link active wallet',
+      link: 'Link another wallet',
       linking: 'Linking…',
       linked: 'Wallet linked to your account.',
       needSession: 'Sign in first.',
-      noWallet: 'Unlock the in-app wallet or connect an external one first.',
-      isSessionWallet: 'That wallet is already part of your account.',
+      noWallet: 'No wallet can sign yet. Unlock your in-app wallet, or install and enable a browser wallet (OneKey, MetaMask, Rabby…) and press again.',
+      isSessionWallet: 'That wallet is already in your account. To add another: unlock your in-app wallet, or connect a different wallet in your browser and press again.',
+      cancelled: 'The wallet did not grant access, or the signature was cancelled.',
       owned: 'That wallet belongs to another account.',
       invalid: 'The signature could not be verified. Try again.',
-      cancelled: 'The signature was cancelled.',
       failed: 'The wallet could not be linked. Try again.',
     },
     es: {
-      link: 'Vincular billetera activa',
+      link: 'Vincular otra billetera',
       linking: 'Vinculando…',
       linked: 'Billetera vinculada a tu cuenta.',
       needSession: 'Inicia sesión primero.',
-      noWallet: 'Desbloquea la billetera de la aplicación o conecta una externa primero.',
-      isSessionWallet: 'Esa billetera ya es parte de tu cuenta.',
+      noWallet: 'Ninguna billetera puede firmar todavía. Desbloquea tu billetera de la aplicación, o instala y activa una billetera del navegador (OneKey, MetaMask, Rabby…) y vuelve a pulsar.',
+      isSessionWallet: 'Esa billetera ya está en tu cuenta. Para agregar otra: desbloquea tu billetera de la aplicación, o conecta una billetera distinta en el navegador y vuelve a pulsar.',
+      cancelled: 'La billetera no concedió acceso o se canceló la firma.',
       owned: 'Esa billetera pertenece a otra cuenta.',
       invalid: 'No se pudo verificar la firma. Intenta de nuevo.',
-      cancelled: 'Se canceló la firma.',
       failed: 'No se pudo vincular la billetera. Intenta de nuevo.',
     },
   })
@@ -72,7 +72,13 @@ export function LinkWalletButton({ lang = 'en', onLinked }: LinkWalletButtonProp
         sessionAddress: sessionWallet,
       })
       if (!resolution.ok) {
-        setMessage(resolution.reason === 'no-wallet' ? t('noWallet') : t('isSessionWallet'))
+        setMessage(
+          resolution.reason === 'no-wallet'
+            ? t('noWallet')
+            : resolution.reason === 'cancelled'
+              ? t('cancelled')
+              : t('isSessionWallet'),
+        )
         return
       }
       const result = await linkActiveWallet({ signer: resolution.signer, sessionWallet })
