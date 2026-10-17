@@ -5532,7 +5532,8 @@ CREATE TABLE public.premium_course_usuario (
     usdt_amount_paid numeric(10,2),
     slearn_amount_paid numeric(10,2),
     transaction_hash character varying(66) NOT NULL,
-    expires_at timestamp without time zone
+    expires_at timestamp without time zone,
+    billetera character varying(60)
 );
 
 
@@ -7908,6 +7909,13 @@ CREATE INDEX idx_m_hdi_pais_id ON public.m_hdi USING btree (pais_id);
 --
 
 CREATE INDEX idx_m_hdi_year ON public.m_hdi USING btree (year);
+
+
+--
+-- Name: idx_premium_course_usuario_billetera; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_premium_course_usuario_billetera ON public.premium_course_usuario USING btree (billetera);
 
 
 --

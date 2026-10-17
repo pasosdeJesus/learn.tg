@@ -96,9 +96,15 @@ async function injectMock(page, address, privateKey, chainId) {
 export async function setupE2EAuth(page, address, privateKey, chainId, baseUrl) {
   await injectMock(page, address, privateKey, chainId)
 
-  // Navigate to baseUrl so fetch() calls resolve to the right origin
-  // Use networkidle0 to wait for HMR, fonts, etc.
-  await page.goto(baseUrl, { waitUntil: 'networkidle0', timeout: 60000 })
+  // Navigate to baseUrl so fetch() calls resolve to the right origin.
+  // networkidle0 espera HMR, fuentes y prefetch; en `next dev` la compilación
+  // perezosa puede mantener la red ocupada más de un minuto, así que al vencer
+  // se reintenta con `domcontentloaded` (las llamadas siguientes esperan solas).
+  try {
+    await page.goto(baseUrl, { waitUntil: 'networkidle0', timeout: 45000 })
+  } catch {
+    await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
+  }
   await new Promise(r => setTimeout(r, 2000))
 
   // Run SIWE programmatically inside the page

@@ -277,10 +277,13 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
 
     // Idempotent: the user may already own the course (UNIQUE(usuario_id, course_id)).
     // The payment is still recorded in `transaction`; the enrollment is kept.
+    // `billetera` es la que pagó (la que autenticó y transfirió), no una elegida
+    // después: una cuenta puede tener N billeteras (R-#265).
     await db.insertInto('premium_course_usuario').values({
       usuario_id: usuario.id, course_id: courseIdNum,
       usdt_amount_paid: usdtPaid, slearn_amount_paid: slearnPaid,
       transaction_hash: processPaymentHash,
+      billetera: walletAddress.toLowerCase(),
     }).onConflict((oc) => oc.columns(['usuario_id', 'course_id']).doNothing()).execute()
 
     return NextResponse.json({

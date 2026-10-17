@@ -1419,6 +1419,7 @@ export interface Pastorreputation {
 }
 
 export interface PremiumCourseUsuario {
+  billetera: string | null;
   course_id: number;
   expires_at: Timestamp | null;
   id: Generated<number>;

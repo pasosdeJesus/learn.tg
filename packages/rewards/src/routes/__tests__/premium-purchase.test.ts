@@ -35,9 +35,13 @@ const SLEARN_AMOUNT = 2200n // 22 SLEARN
 
 // MockKysely does not implement the onConflict()/doNothing() insert chain used
 // by the premium enrollment insert — extend it locally.
+// `values()` guarda lo insertado: la compra debe registrar la billetera que pagó.
+const insertedRows: any[] = []
+
 class PremiumDb extends apiDbMocks.MockKysely {
   onConflict(): this { return this }
   doNothing(): this { return this }
+  values(row: any): this { insertedRows.push(row); return this }
 }
 
 function buildDeps(overrides: Record<string, any> = {}): any {
@@ -91,6 +95,7 @@ describe('premiumPurchase (motor rewards)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetMocks()
+    insertedRows.length = 0
     setupCommonResponses()
     vi.stubEnv('NEXT_PUBLIC_AUTH_URL', 'http://localhost:4000')
     vi.stubEnv('NEXT_PUBLIC_RPC_URL', 'http://localhost:8545')
@@ -216,6 +221,13 @@ describe('premiumPurchase (motor rewards)', () => {
     )
     // pay-course (usdt) + donation_reward cashback + premium_course_usuario enrollment
     expect(mockExecute).toHaveBeenCalledTimes(3)
+    // La compra queda con la billetera que pagó (R-#265: la cuenta puede tener N).
+    const enrollment = insertedRows.find((row: any) => row.course_id === 1)
+    expect(enrollment).toEqual(expect.objectContaining({
+      usuario_id: 1,
+      billetera: WALLET.toLowerCase(),
+      transaction_hash: '0xPROCESSPAYMENTHASH12345678901234567890',
+    }))
     // distribution is 50/10/10/5/10/5 + vault remainder = 10%
     const cashback = json.distribution.find((d: any) => d.destination === 'cashback')
     expect(cashback.amount).toBeCloseTo(5.5, 2) // 2.5 USDT × 10% × rate 22
