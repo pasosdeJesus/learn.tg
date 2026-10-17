@@ -149,6 +149,10 @@ const DEFAULT_MESSAGES: Record<WalletLang, WalletPanelMessages> = {
   },
 }
 
+export type WalletPanelTab = 'accounts' | 'balances' | 'receive' | 'send' | 'collectibles'
+
+const DEFAULT_TAB_ORDER: WalletPanelTab[] = ['accounts', 'balances', 'receive', 'send', 'collectibles']
+
 export interface WalletPanelProps {
   lang?: WalletLang
   messages?: Partial<WalletPanelMessages>
@@ -172,6 +176,14 @@ export interface WalletPanelProps {
   features?: WalletPanelFeatures
   /** Sobrecarga la fila de una billetera de la cuenta. */
   renderWallet?: (wallet: WalletPanelWallet) => ReactNode
+  /**
+   * Orden de las pestañas visibles (las que falten van al final, en el orden por
+   * defecto). Por defecto: cuentas primero. Un consumidor que quiera la cuenta al
+   * final pasa `['balances','receive','send','accounts','collectibles']`.
+   */
+  tabOrder?: WalletPanelTab[]
+  /** Contenido extra al final de la pestaña "Cuentas" (vincular, invitar…). */
+  accountsActions?: ReactNode
 }
 
 export function WalletPanel({
@@ -192,6 +204,8 @@ export function WalletPanel({
   fetchNfts,
   features,
   renderWallet,
+  tabOrder,
+  accountsActions,
 }: WalletPanelProps) {
   const text = { ...DEFAULT_MESSAGES[lang], ...messages }
   const [copied, setCopied] = useState(false)
@@ -212,13 +226,17 @@ export function WalletPanel({
   const showReceive = features?.receive !== false && !!address
   const showSend = features?.send !== false && !!address && tokens.length > 0
   const showCollectibles = features?.collectibles !== false && !!address
-  const tabs = [
+  const visibleTabs = [
     showAccounts && 'accounts',
     showBalances && 'balances',
     showReceive && 'receive',
     showSend && 'send',
     showCollectibles && 'collectibles',
-  ].filter(Boolean) as string[]
+  ].filter(Boolean) as WalletPanelTab[]
+  const tabs = (tabOrder ?? DEFAULT_TAB_ORDER).filter((item) => visibleTabs.includes(item))
+  for (const item of DEFAULT_TAB_ORDER) {
+    if (visibleTabs.includes(item) && !tabs.includes(item)) tabs.push(item)
+  }
   const [tab, setTab] = useState<string>(tabs[0] ?? '')
 
   const selected = tokens.find((item) => item.symbol === token) ?? tokens[0]
@@ -379,11 +397,11 @@ export function WalletPanel({
 
           <Tabs value={tab} onValueChange={handleTabChange}>
             <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${tabs.length || 1}, minmax(0, 1fr))` }}>
-              {showAccounts && <TabsTrigger value="accounts" data-testid="wallet-panel-tab-accounts">{text.accounts}</TabsTrigger>}
-              {showBalances && <TabsTrigger value="balances" data-testid="wallet-panel-tab-balances">{text.balances}</TabsTrigger>}
-              {showReceive && <TabsTrigger value="receive" data-testid="wallet-panel-tab-receive">{text.receive}</TabsTrigger>}
-              {showSend && <TabsTrigger value="send" data-testid="wallet-panel-tab-send">{text.send}</TabsTrigger>}
-              {showCollectibles && <TabsTrigger value="collectibles" data-testid="wallet-panel-tab-collectibles">{text.collectibles}</TabsTrigger>}
+              {tabs.map((value) => (
+                <TabsTrigger key={value} value={value} data-testid={`wallet-panel-tab-${value}`}>
+                  {text[value]}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
             {showAccounts && (
@@ -416,6 +434,11 @@ export function WalletPanel({
                     </li>
                   ))}
                 </ul>
+                {accountsActions && (
+                  <div className="mt-3 space-y-2" data-testid="wallet-panel-accounts-actions">
+                    {accountsActions}
+                  </div>
+                )}
               </TabsContent>
             )}
 

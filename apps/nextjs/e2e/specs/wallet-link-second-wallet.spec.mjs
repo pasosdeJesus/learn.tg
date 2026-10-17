@@ -162,6 +162,15 @@ async function main() {
   }
   ok(`Sesión con la billetera de la aplicación: "${(await header(page)).signedIn}"`)
 
+  // R-#265 (2026-10-17): vincular vive en la sección de billeteras del perfil (y en la
+  // pestaña "Cuentas" del panel). El perfil no exige desbloquear la billetera, así que
+  // es el camino estable para el E2E.
+  await page.goto(`${base}/en/profile`, { waitUntil: 'domcontentloaded' })
+  for (let i = 0; i < 45; i++) {
+    if (await exists(page, '[data-testid="account-wallet-actions"]')) break
+    await sleep(1000)
+  }
+
   // ── 2. Estado del reporte: la extensión existe pero SIN permiso del sitio ──
   await page.evaluate(() => {
     const provider = window.ethereum
@@ -185,7 +194,7 @@ async function main() {
 
   // ── 3. Vincular: debe firmar la externa (y pedirle permiso primero) ────────
   if (!(await exists(page, '[data-testid="wallet-link"]'))) {
-    fail('La cabecera no ofrece "Vincular otra billetera" con la sesión abierta')
+    fail('El perfil no ofrece "Vincular otra billetera" con la sesión abierta')
   } else {
     await page.click('[data-testid="wallet-link"]').catch(() => {})
     let message = ''

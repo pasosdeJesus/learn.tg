@@ -85,8 +85,13 @@ Your progress, scores, privacy settings and the list of badges belong to **your 
 not to a single address. You can add another wallet (an old MetaMask wallet, the wallet of
 another phone…) and both reach the same account.
 
+You manage those wallets from the **Accounts** tab of the wallet panel (fourth tab) and from
+the profile, section **Wallets in this account**.
+
 - **On this device**, with both wallets available: choose **Link another wallet**
-  (*Vincular otra billetera*). The wallet that signs is the **active** one: your in-app
+  (*Vincular otra billetera*). It only appears when the app detects another wallet besides
+  the connected one (the in-app wallet, another account of the browser wallet, or a second
+  browser wallet). The wallet that signs is the **active** one: your in-app
   wallet when it is unlocked, otherwise the browser wallet you connected.
 - **From another device**: choose **Invite a wallet** (*Invitar billetera*), type the other
   wallet's address and send the invitation. On the other phone, open learn.tg and sign in

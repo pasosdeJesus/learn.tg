@@ -121,17 +121,27 @@ The body is overridden with `renderBody` to keep learn.tg's flows.
 | `no-wallet` | "Connect Wallet" → modal: **Use in-app wallet** (opens `WalletDialog`) plus **Use external wallet** (`ConnectWalletButton`, full chain + SIWE) when a provider exists |
 | `locked` | Same modal: "Unlock your in-app wallet" (opens `WalletDialog`) |
 | `unlocked` without a session | Same modal: "Sign in with in-app wallet" (opens `WalletDialog`, which runs the SIWE) |
-| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out) + "Link another wallet" + "Invite a wallet" (R-#265) |
+| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out); the pill opens `WalletPanel` (or `WalletDialog` when the wallet is locked) |
 | wallet browser | The modal lists the external wallet **first** (`data-external-primary="true"` on `[data-testid="wallet-selector"]`), with the in-app one as the alternative and the WebAuthn note |
 
 The modal also offers "import your recovery phrase" (R-#270 §3.1). `WalletDialog` stays
 mounted with a session because it is the only listener of
 `learn.tg:open-in-app-wallet-dialog` (the unlock button of the donation/purchase modals).
 
+**Link and invite live in the account, not in the header** (operator preference, 2026-10-17):
+the **Accounts** tab — fourth in `WalletPanel` (`tabOrder={['balances','receive','send','accounts','collectibles']}`)
+— and the profile's "Wallets in this account" section. `components/AccountWalletActions.tsx`
+composes both and only renders "Link another wallet" when `lib/wallet-availability.ts`
+detects another wallet: the in-app one when it is not the session's, another permitted
+account on the external provider, a second EIP-6963 provider, or an external wallet while
+the session is the in-app one.
+
 ### LinkWalletButton (`components/LinkWalletButton.tsx`)
 
 R-#265 §3.2: adds another wallet to the **account** of the current session (label "Link
-another wallet" / "Vincular otra billetera"). There is no wallet picker — the operator's
+another wallet" / "Vincular otra billetera"). It is rendered by `AccountWalletActions` in
+the Accounts tab and the profile, and only when another wallet is detected (see
+`lib/wallet-availability.ts`). There is no wallet picker — the operator's
 decision (2026-10-15) is that the **active** wallet signs. `lib/wallet-link.ts`
 (`detectActiveWalletSigner`) resolves it in this order:
 
@@ -152,9 +162,9 @@ flow with a mock external wallet whose accounts stay empty until `eth_requestAcc
 ### InviteWalletControl (`components/InviteWalletControl.tsx`)
 
 R-#265 §3.2, the **between-devices** case: `LinkWalletButton` needs both wallets in the same
-browser; the invitation covers the wallet that signs later, on its own device. It sits next
-to the link control in the header and lets the learner paste an address, invite it, list the
-**pending invitations** of the account and cancel them.
+browser; the invitation covers the wallet that signs later, on its own device. It sits with
+the link control in the Accounts tab of `WalletPanel` and in the profile, and lets the learner
+paste an address, invite it, list the **pending invitations** of the account and cancel them.
 
 - The inviter must be a verified profile: `lib/wallet-invite-policy.ts`
   (`INVITER_MIN_PROFILE_SCORE = 50`, the same bar as the on-chain rewards) and

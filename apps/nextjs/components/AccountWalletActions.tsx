@@ -1,0 +1,69 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
+import { getExternalProvider, useExternalProvider } from '@/lib/external-provider'
+import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { hasAnotherWallet } from '@/lib/wallet-availability'
+import { LinkWalletButton } from '@/components/LinkWalletButton'
+import { InviteWalletControl } from '@/components/InviteWalletControl'
+
+interface AccountWalletActionsProps {
+  lang?: string
+  /** Refresca la lista de billeteras tras vincular o invitar. */
+  onChanged?: () => void
+}
+
+/**
+ * Acciones de la cuenta con varias billeteras (R-#265 §3.2): **vincular** la billetera
+ * activa y **invitar** una dirección. Viven en la pestaña "Cuentas" del panel de la
+ * billetera y en el perfil, no en la cabecera.
+ *
+ * "Vincular otra billetera" sólo se muestra si `hasAnotherWallet()` detecta una
+ * billetera distinta de la conectada: la de la aplicación, otra cuenta de la externa o
+ * un segundo proveedor. Así el botón no promete algo que el dispositivo no tiene.
+ */
+export function AccountWalletActions({ lang = 'en', onChanged }: AccountWalletActionsProps) {
+  const { status, walletInfo } = useInAppWallet()
+  const { address, sessionAddress } = useAuthAddress()
+  const { available: externalAvailable, announced } = useExternalProvider()
+  const [externalAccounts, setExternalAccounts] = useState<string[]>([])
+
+  // Cuentas que el sitio ya puede usar sin abrir el diálogo de la billetera externa.
+  useEffect(() => {
+    const provider = getExternalProvider()
+    if (!provider) {
+      setExternalAccounts([])
+      return
+    }
+    let cancelled = false
+    provider
+      .request({ method: 'eth_accounts' })
+      .then((accounts) => {
+        if (!cancelled && Array.isArray(accounts)) setExternalAccounts(accounts as string[])
+      })
+      .catch(() => {
+        if (!cancelled) setExternalAccounts([])
+      })
+    return () => { cancelled = true }
+  }, [externalAvailable])
+
+  const sessionWallet = sessionAddress || address || ''
+  const showLink = hasAnotherWallet({
+    sessionAddress: sessionWallet,
+    inAppAddress: walletInfo?.address,
+    hasInAppWallet: status === 'locked' || status === 'unlocked',
+    externalAvailable,
+    externalAccounts,
+    announcedCount: announced.length,
+  })
+
+  if (!sessionWallet) return null
+
+  return (
+    <div className="flex flex-col items-start gap-2" data-testid="account-wallet-actions">
+      {showLink && <LinkWalletButton lang={lang} onLinked={onChanged} align="start" />}
+      <InviteWalletControl lang={lang} onChanged={onChanged} align="start" />
+    </div>
+  )
+}

@@ -8,8 +8,6 @@ import { WalletConnect, type WalletConnectBodyContext } from 'generated-wallet/n
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletDialog } from '@/components/WalletDialog'
 import { WalletPanel } from '@/components/WalletPanel'
-import { LinkWalletButton } from '@/components/LinkWalletButton'
-import { InviteWalletControl } from '@/components/InviteWalletControl'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { clearRestrictedCourseCopies } from '@/lib/offline-course-db'
 import { useExternalProvider } from '@/lib/external-provider'
@@ -28,9 +26,9 @@ interface WalletSelectorProps {
  * (`generated-wallet/next`) abre el modal de elección (in-app o externa), con el cuerpo
  * sobrecargado para learn.tg (`WalletDialog` para crear/importar/desbloquear/ingresar y
  * `ConnectWalletButton` para la red + SIWE externas). Con sesión muestra la dirección
- * corta, "Desconectar", "Vincular otra billetera" e "Invitar billetera"; la píldora abre
- * el panel o el diálogo. En el navegador de una billetera la externa va primero dentro
- * del modal (`?iappwallet=1` invierte la prioridad).
+ * corta, "Desconectar" y la píldora que abre el panel o el diálogo; vincular e invitar
+ * viven en la pestaña "Cuentas" del panel y en el perfil. En el navegador de una
+ * billetera la externa va primero dentro del modal (`?iappwallet=1` invierte la prioridad).
  */
 export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   const { status, lock } = useInAppWallet()
@@ -166,12 +164,6 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
           >
             ✕
           </Button>
-          {/* R-#265 §3.2: enlaza la billetera **activa** (la de la app desbloqueada o la
-              externa conectada) a la misma cuenta, firmando con ella. */}
-          <LinkWalletButton lang={lang} />
-          {/* R-#265 §3.2: caso entre dispositivos: invita una **dirección** y lista
-              las invitaciones pendientes de la cuenta. */}
-          <InviteWalletControl lang={lang} />
         </div>
         {/* Con sesión iniciada la billetera queda bloqueada tras recargar, así que
             el diálogo tiene que seguir montado: es el único que atiende

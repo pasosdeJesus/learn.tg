@@ -15,6 +15,8 @@ interface InviteWalletControlProps {
   lang?: string
   /** Se dispara cuando cambia la lista de invitaciones (por ejemplo, al aceptar otra). */
   onChanged?: () => void
+  /** Alineación dentro del contenedor (la cabecera usaba `end`). */
+  align?: 'start' | 'end'
 }
 
 function shortAddress(address: string): string {
@@ -29,7 +31,7 @@ function shortAddress(address: string): string {
  * al entrar. La invitación se lista y se puede cancelar (liberar el cupo de la dirección).
  * La cuenta que invita debe tener perfil suficiente (`lib/wallet-invite-policy.ts`).
  */
-export function InviteWalletControl({ lang = 'en', onChanged }: InviteWalletControlProps) {
+export function InviteWalletControl({ lang = 'en', onChanged, align = 'start' }: InviteWalletControlProps) {
   const { sessionAddress } = useAuthAddress()
   const sessionWallet = sessionAddress || ''
   const [open, setOpen] = useState(false)
@@ -135,7 +137,7 @@ export function InviteWalletControl({ lang = 'en', onChanged }: InviteWalletCont
   if (!sessionWallet) return null
 
   return (
-    <span className="relative flex flex-col items-end gap-1">
+    <span className={`relative flex flex-col ${align === 'start' ? 'items-start' : 'items-end'} gap-1`}>
       <Button
         variant="ghost"
         size="sm"
@@ -150,7 +152,7 @@ export function InviteWalletControl({ lang = 'en', onChanged }: InviteWalletCont
       {open && (
         <div
           data-testid="wallet-invite-panel"
-          className="absolute right-0 top-full z-50 mt-1 w-72 rounded-md border border-gray-200 bg-white p-3 text-left shadow-lg"
+          className={`absolute ${align === 'start' ? 'left-0' : 'right-0'} top-full z-50 mt-1 w-72 rounded-md border border-gray-200 bg-white p-3 text-left shadow-lg`}
         >
           <label className="block text-xs font-medium text-gray-700" htmlFor="wallet-invite-address">
             {t('addressLabel')}

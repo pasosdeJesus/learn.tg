@@ -13,6 +13,8 @@ interface LinkWalletButtonProps {
   lang?: string
   /** Se dispara con un enlace exitoso, para refrescar la lista de billeteras. */
   onLinked?: () => void
+  /** Alineación dentro del contenedor (la cabecera usaba `end`). */
+  align?: 'start' | 'end'
 }
 
 /**
@@ -21,7 +23,7 @@ interface LinkWalletButtonProps {
  * cuenta de la sesión. No hay selector: la decisión es que firme la activa; si la activa
  * es la propia billetera de la sesión, se explica que ya está en la cuenta.
  */
-export function LinkWalletButton({ lang = 'en', onLinked }: LinkWalletButtonProps) {
+export function LinkWalletButton({ lang = 'en', onLinked, align = 'start' }: LinkWalletButtonProps) {
   const { status, walletInfo, getProvider } = useInAppWallet()
   const { address, sessionAddress } = useAuthAddress()
   const [busy, setBusy] = useState(false)
@@ -102,7 +104,7 @@ export function LinkWalletButton({ lang = 'en', onLinked }: LinkWalletButtonProp
   }
 
   return (
-    <span className="flex flex-col items-end gap-1">
+    <span className={`flex flex-col ${align === 'start' ? 'items-start' : 'items-end'} gap-1`}>
       <Button
         variant="ghost"
         size="sm"
@@ -115,7 +117,7 @@ export function LinkWalletButton({ lang = 'en', onLinked }: LinkWalletButtonProp
       </Button>
       {message && (
         <span
-          className="max-w-[220px] text-right text-[10px] text-gray-500"
+          className={`max-w-[220px] ${align === 'start' ? 'text-left' : 'text-right'} text-[10px] text-gray-500`}
           data-testid="wallet-link-message"
         >
           {message}

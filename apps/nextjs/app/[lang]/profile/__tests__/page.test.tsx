@@ -66,6 +66,11 @@ describe('Profile Page', () => {
       useWalletClient: () => ({ data: null }),
     }))
 
+    // R-#265: la sección de billeteras tiene sus propias pruebas; aquí se aísla.
+    vi.mock('@/components/AccountWalletActions', () => ({
+      AccountWalletActions: () => React.createElement('div', { 'data-testid': 'account-wallet-actions-mock' }),
+    }))
+
     vi.mock('react', async () => {
       const actual = await vi.importActual('react')
       return {

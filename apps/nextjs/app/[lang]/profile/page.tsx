@@ -11,6 +11,7 @@ import { SelfAppBuilder } from '@selfxyz/qrcode'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { ReferralProfileSection } from '@/components/ReferralProfileSection'
 import { PremiumCoursesSection } from '@/components/PremiumCoursesSection'
+import { AccountWalletActions } from '@/components/AccountWalletActions'
 
 import { Button } from '@/components/ui/button'
 import CircularProgress from '@/components/ui/circular-progress'
@@ -163,7 +164,9 @@ export default function ProfileForm({ params }: PageProps) {
       connectionIssue: '\n\nPlease check your internet connection and try again.',
       errorLabel: 'Error: ', scoreRequired: '50+ required for scholarships', fullNameVerified: 'Full Name ( Verified:', updateInfo: 'Update your profile information below',
       verificationWarning: 'To maintain your verification and profile score, keep the information already verified as you provided during verification',
-      displayNamePrivacy: 'Do not use your real name, surname, specific location, or any personally identifying information.' },
+      displayNamePrivacy: 'Do not use your real name, surname, specific location, or any personally identifying information.',
+      walletsTitle: 'Wallets in this account',
+      walletsHint: 'Link the active wallet or invite another address so both reach this same account.' },
     es: { editProfile: 'Edición del Perfil', profileScore: 'Puntaje de Perfil', displayName: 'Nombre por presentar', religion: 'Religión', selectReligion: 'Elige tu religión', churchRelationship: 'Relación con la Iglesia', selectChurchRelationship: 'Selecciona tu rol', churchRelationshipPastor: 'Pastor', churchRelationshipLeader: 'Líder/Anciano', churchRelationshipMember: 'Miembro', placeOfWorshipAddress: 'Dirección de tu lugar de culto', searchPlace: 'Escribe para buscar lugar...', placeOfWorshipName: 'Nombre de tu lugar de culto', placeOfWorshipNamePlaceholder: 'Nombre o iglesia', contactNotice: 'Ocasionalmente enviaremos anuncios sobre la plataforma a tu correo, WhatsApp o Telegram. Si no deseas recibirlos, no suministres esa información.', countryVerified: 'País (Verificado:', selectCountry: 'Selecciona tu país', uniquenessGoodDollar: 'Unicidad con GoodDollar verificada:', saving: 'Guardando', saveChanges: 'Guardar Cambios', verifySelf: 'Verificar con self', updateScores: 'Actualizar puntajes', deleteVerifiedData: 'Eliminar Datos Verificados',
       viewCredentials: 'Ver mis credenciales públicas',
       saveFailed: 'Fallo al guardar el perfil.',
@@ -172,7 +175,9 @@ export default function ProfileForm({ params }: PageProps) {
       connectionIssue: '\n\nPor favor, revisa tu conexi\u00f3n a internet e int\u00e9ntalo de nuevo.',
       errorLabel: 'Error: ', scoreRequired: 'Requiere 50+ para becas', fullNameVerified: 'Nombre completo ( Verificado:', updateInfo: 'Actualiza la informacion de tu perfil a continuacion',
       verificationWarning: 'Para mantener tu verificación y puntaje de perfil, conserva la información ya verificada como la suministraste durante la verificación',
-      displayNamePrivacy: 'No uses tu nombre real, apellido, ubicación específica ni información que te identifique personalmente.' },
+      displayNamePrivacy: 'No uses tu nombre real, apellido, ubicación específica ni información que te identifique personalmente.',
+      walletsTitle: 'Billeteras de esta cuenta',
+      walletsHint: 'Vincula la billetera activa o invita otra dirección para que ambas lleguen a esta misma cuenta.' },
   }), [lang])
 
   const isSavingField = (f: string) => savingFields.has(f)
@@ -1273,6 +1278,15 @@ export default function ProfileForm({ params }: PageProps) {
             </div>
 
           </form>
+        </div>
+      </div>
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm mt-6">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900">{t('walletsTitle')}</h2>
+          <p className="text-gray-600 mt-1">{t('walletsHint')}</p>
+        </div>
+        <div className="p-6">
+          <AccountWalletActions lang={lang} />
         </div>
       </div>
       <ReferralProfileSection lang={lang} />

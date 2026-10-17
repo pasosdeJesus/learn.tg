@@ -261,9 +261,9 @@ wallet opens learn.tg on its own device, signs and accepts.
    `message`/`signature`** in `/api/auth/callback/credentials`: one signature serves to
    accept and to sign in (`lib/wallet-invitations.ts`, called from `lib/in-app-siwe.ts`
    and `components/ConnectWalletButton.tsx`).
-4. The inviter can list and cancel pending invitations from the header
-   (`components/InviteWalletControl.tsx` → `GET /api/wallet` `invitations`,
-   `POST /api/wallet/cancel`).
+4. The inviter can list and cancel pending invitations from the wallet panel's **Accounts**
+   tab and from the profile (`components/InviteWalletControl.tsx` → `GET /api/wallet`
+   `invitations`, `POST /api/wallet/cancel`).
 
 Endpoint details live in `apps/nextjs/app/api/doc/API.md` (`## Wallet`).
 

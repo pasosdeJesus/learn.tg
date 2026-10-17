@@ -20,6 +20,7 @@ import {
   unlinkAccountWalletRequest,
   type AccountWallet,
 } from '@/lib/wallet-account'
+import { AccountWalletActions } from '@/components/AccountWalletActions'
 
 /**
  * `WalletPanel` de learn.tg — **envoltorio** del panel del motor `wallet` de `m`
@@ -123,6 +124,12 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
       publicClient={publicClient as never}
       walletClient={(unlocked ? (walletClient ?? null) : null) as never}
       network={process.env.NEXT_PUBLIC_NETWORK}
+      // R-#265 §3.2 (preferencia del operador, 2026-10-17): la cuenta con sus acciones
+      // (vincular/invitar) es la **cuarta** pestaña, después de saldos, recibir y enviar.
+      tabOrder={['balances', 'receive', 'send', 'accounts', 'collectibles']}
+      accountsActions={
+        address ? <AccountWalletActions lang={language} onChanged={refreshWallets} /> : undefined
+      }
     />
   )
 }

@@ -53,6 +53,12 @@ vi.mock('@/lib/wallet-account', () => ({
   unlinkAccountWalletRequest: vi.fn(),
 }))
 
+// R-#265: las acciones de la cuenta (vincular/invitar) tienen su propia prueba.
+vi.mock('@/components/AccountWalletActions', () => ({
+  AccountWalletActions: () =>
+    React.createElement('div', { 'data-testid': 'account-actions-mock' }),
+}))
+
 import { WalletPanel } from '../WalletPanel'
 
 function renderPanel(props: Partial<React.ComponentProps<typeof WalletPanel>> = {}) {
@@ -89,6 +95,23 @@ describe('WalletPanel (R-#249)', () => {
       expect(screen.getByTestId('wallet-panel-balance-SLEARN')).toHaveTextContent('0')
     })
     expect(screen.getByTestId('wallet-panel-address')).toHaveTextContent(ADDRESS)
+  })
+
+  // R-#265 §3.2 (preferencia del operador, 2026-10-17): "Cuentas" es la cuarta
+  // pestaña y contiene vincular/invitar.
+  it('puts Accounts fourth and renders the link/invite actions inside it', async () => {
+    renderPanel()
+
+    const triggers = await screen.findAllByTestId(/wallet-panel-tab-/)
+    expect(triggers.map((item) => item.getAttribute('data-testid'))).toEqual([
+      'wallet-panel-tab-balances',
+      'wallet-panel-tab-receive',
+      'wallet-panel-tab-send',
+      'wallet-panel-tab-accounts',
+      'wallet-panel-tab-collectibles',
+    ])
+    fireEvent.mouseDown(screen.getByTestId('wallet-panel-tab-accounts'))
+    await waitFor(() => expect(screen.getByTestId('account-actions-mock')).toBeTruthy())
   })
 
   // R-#249: una lectura caída no puede borrar las otras dos.

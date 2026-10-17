@@ -9,7 +9,7 @@
 //
 // Comprueba:
 //   1. A (cuenta de prueba del `.env`, perfil verificado) invita la dirección desde la
-//      cabecera y la invitación queda pendiente.
+//      sección de billeteras del perfil y la invitación queda pendiente.
 //   2. B entra con esa billetera en otro contexto: el primer callback falla, el cliente
 //      acepta la invitación (diálogo de confirmación) y el reintento abre la sesión.
 //   3. `GET /api/wallet` de B lista las dos billeteras de la cuenta.
@@ -85,7 +85,7 @@ async function waitForText(page, selector, pattern, attempts = 30) {
   return page.$eval(selector, (el) => el.innerText).catch(() => '')
 }
 
-/** La cabecera se hidrata tarde: esperar el control de invitación. */
+/** El perfil se hidrata tarde: esperar el control de invitación. */
 async function waitForInviteControl(page) {
   for (let i = 0; i < 45; i++) {
     if (await page.$('[data-testid="wallet-invite-toggle"]').catch(() => null)) return true
@@ -142,11 +142,12 @@ async function main() {
       chainId: env.chainId,
       baseUrl: base,
     })
-    // Recarga para que la cabecera hidrate con la sesión.
-    await pageA.goto(`${base}/${LANG}`, { waitUntil: 'domcontentloaded' })
+    // La invitación vive en la sección de billeteras del perfil (R-#265, 2026-10-17):
+    // así no hace falta desbloquear la billetera de la aplicación para verla.
+    await pageA.goto(`${base}/${LANG}/profile`, { waitUntil: 'domcontentloaded' })
 
     if (!(await waitForInviteControl(pageA))) {
-      console.log('[SKIP] la cabecera no ofrece invitar billeteras (función no desplegada)')
+      console.log('[SKIP] el perfil no ofrece invitar billeteras (función no desplegada)')
       await ctxA.close()
       process.exit(0)
     }
@@ -165,7 +166,7 @@ async function main() {
     if (!/invitation created|invitaci[oó]n creada/i.test(message)) {
       fail(`La invitación no se creó: "${message}"`)
     } else {
-      ok(`Invitación creada desde la cabecera: "${message}"`)
+      ok(`Invitación creada desde el perfil: "${message}"`)
     }
 
     const inviterView = await accountWallets(pageA, creds.addr)
