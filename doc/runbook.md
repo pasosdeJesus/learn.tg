@@ -68,7 +68,7 @@ bin/m eng:opwallet:send --name admin --to <SLEARN> --function "grantRole(bytes32
 bin/m eng:opwallet:send --name admin --to <SLEARN> --function "revokeRole(bytes32,address)" --args "<ROLE_HASH>,<addr>"
 ```
 
-## 3. Backend wallet gas (CELO) — incident 2026-08-24
+## 5. Backend wallet gas (CELO) — incident 2026-08-24
 
 En mainnet el backend wallet (`NEXT_PUBLIC_ADDRESS`, signer `0x358643…`) firma
 `processPayment`/`processCountryDonation`. Si se queda sin CELO, el navegador
@@ -81,15 +81,18 @@ minaron (los tokens llegan al backend pero la donación/compra no se procesa).
   con 10-20 CELO hay holgura para cientos de operaciones.
 - Monitorear el saldo junto con las métricas de donaciones/compras.
 
-## 4. ClusterFundsV2 permissions (mainnet)
+## 6. ClusterFundsV2 permissions (mainnet)
 
 - `authorizedTransfers[V2] = true` y `MINTER_ROLE` otorgado en SLEARN mainnet
   (el cashback de donaciones usa `SLEARN.mintAndReserve`, que exige MINTER).
 - El backend wallet también debe tener `MINTER_ROLE` en SLEARN (lo usa
   `processPayment`).
-- Verificación read-only: `scripts/verify-mainnet-v2.cjs` (apps/nextjs).
+- Verificación read-only, sin escribir nada:
+  `bin/m eng:opwallet:call --name admin --network celo --to 0x27fd41Bea85C39254f2B12789eB37a1543152CC1 --function "authorizedTransfers(address)" --args "<V2>"` (debe dar `true`).
+  En <https://celo.blockscout.com> se revisan también `owner`, `donorCashbackPct`,
+  `getFeeConfig` y los saldos por país de ClusterFundsV2 (y que V1 quede en 0).
 
-## 5. RPC lag (forno)
+## 7. RPC lag (forno)
 
 forno (canónico) a veces retrasa indexar receipts recién minados. El backend
 usa `fetchTxWithReceipt` (lib/backend-config.ts) que hace polling round-robin

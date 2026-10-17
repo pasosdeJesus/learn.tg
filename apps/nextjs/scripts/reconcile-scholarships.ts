@@ -250,17 +250,17 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
   const vault = JSON.parse(fs.readFileSync(deploymentFile, 'utf8')).address as Address
 
   const publicClient = createPublicClient({ transport: http(rpc) })
-  // Direcciones de token desde `mpdj` (`ecosystem-addresses`, por red), no del `.env`.
+  // Direcciones de token: la autoridad es el propio vault (`usdtToken()`/`slearnToken()`).
+  // El mapa de `mpdj` sale de `NEXT_PUBLIC_USDT_ADDRESS`/`NEXT_PUBLIC_SLEARN_ADDRESS` y en
+  // un despliegue sin esas variables queda `undefined`; se usa sólo para contrastar.
   const mpdjNetwork = resolveNetwork()
   const usdtAddress = USDT_ADDRESSES[mpdjNetwork]
   const slearnAddress = SLEARN_ADDRESSES[mpdjNetwork]
-  const tokenAddresses = [usdtAddress, slearnAddress]
-  // Contraste con las del propio vault: si no coinciden, el filtro del explorador (o el
-  // panel) estaría mirando otro token.
   const [vaultUsdt, vaultSlearn] = await Promise.all([
     publicClient.readContract({ address: vault, abi: STATUS_ABI, functionName: 'usdtToken' }),
     publicClient.readContract({ address: vault, abi: STATUS_ABI, functionName: 'slearnToken' }),
   ])
+  const tokenAddresses = [String(vaultUsdt), String(vaultSlearn)]
 
   const db = newKyselyPostgresql()
 
@@ -285,17 +285,22 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
   if (limit > 0) candidates = candidates.slice(0, limit)
 
   // Diagnóstico del entorno: sirve para cazar desajustes de red/token (el panel de la
-  // billetera usa NEXT_PUBLIC_*; el script y el vault usan lo que la cadena dice).
-  const mismatch = (a: string, b: string) => (a.toLowerCase() === b.toLowerCase() ? 'ok' : '<-- NO COINCIDE')
+  // billetera usa NEXT_PUBLIC_*; el script y el vault usan lo que la cadena dice). Las
+  // variables pueden faltar en un despliegue; eso no detiene el script: manda el vault.
+  const mismatch = (a: string | undefined, b: string | undefined) => {
+    if (!a || !b) return '(sin definir en el entorno)'
+    return a.toLowerCase() === b.toLowerCase() ? 'ok' : '<-- NO COINCIDE'
+  }
   console.log('Entorno:')
   console.log(`  NEXT_PUBLIC_NETWORK        ${process.env.NEXT_PUBLIC_NETWORK ?? '(sin definir)'} → red ${network}`)
   console.log(`  PGDATABASE                 ${process.env.PGDATABASE ?? '(sin definir)'}`)
   console.log(`  NEXT_PUBLIC_RPC_URL        ${safeOrigin(rpc)}`)
   console.log(`  explorador                 ${noHashes ? '(omitido por --no-hashes)' : blockscout}`)
-  console.log(`  USDT   mpdj  USDT_ADDRESSES[red]   ${usdtAddress}`)
+  console.log(`  USDT   mpdj  USDT_ADDRESSES[red]   ${usdtAddress ?? '(sin definir)'}`)
   console.log(`  USDT   vault.usdtToken()           ${vaultUsdt}   ${mismatch(usdtAddress, String(vaultUsdt))}`)
-  console.log(`  SLEARN mpdj  SLEARN_ADDRESSES[red] ${slearnAddress}`)
+  console.log(`  SLEARN mpdj  SLEARN_ADDRESSES[red] ${slearnAddress ?? '(sin definir)'}`)
   console.log(`  SLEARN vault.slearnToken()         ${vaultSlearn}   ${mismatch(slearnAddress, String(vaultSlearn))}`)
+  console.log('  (las direcciones que se usan para el explorador son las del vault)')
   console.log('')
 
   console.log(`Vault V5 ${vault} | red ${network} | explorador ${noHashes ? '(omitido)' : blockscout}`)

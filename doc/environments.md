@@ -466,10 +466,10 @@ Contract addresses are **not** read from `.env`. They come from:
   (`0x01a728…`) debe tener `MINTER_ROLE` en SLEARN Sepolia y ClusterFundsV2
   dev (`0xcA9c6A…`) también (el cashback de donaciones usa
   `SLEARN.mintAndReserve`). En mainnet ya están otorgados (ver
-  [runbook.md](runbook.md) §4).
+  [runbook.md](runbook.md) §6).
 - **RPC:** forno a veces retrasa indexar receipts recién minados; el backend
   usa `fetchTxWithReceipt` (multi-RPC: forno/ankr/drpc/publicnode). Ver
-  [runbook.md](runbook.md) §5.
+  [runbook.md](runbook.md) §7.
 
 ## Operación en la máquina compartida (prod + dev, 16G RAM)
 

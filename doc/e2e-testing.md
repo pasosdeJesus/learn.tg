@@ -602,7 +602,7 @@ the dev site; browser specs additionally need a display/`xvfb` and a Chrome bina
 | CalDAV smokes skipped | `CALDAV_URL` not set | Set env vars if CalDAV testing is needed |
 | `full-flow.spec.mjs` UBI claim fails | Test wallet profile score < 50 | Run `bin/m test:e2e prerequisites` to set up |
 | "Transaction … could not be found" en donación/compra | forno no indexa receipts recién minados | Ya mitigado con `fetchTxWithReceipt` (multi-RPC) en `lib/backend-config.ts`; verifica que el deploy incluya el rebuild |
-| Donación/compra falla con 500 y "exceeds the balance" en el servidor | Backend wallet sin CELO para gas | Funde `NEXT_PUBLIC_ADDRESS` con CELO (ver `doc/runbook.md` §3) |
+| Donación/compra falla con 500 y "exceeds the balance" en el servidor | Backend wallet sin CELO para gas | Funde `NEXT_PUBLIC_ADDRESS` con CELO (ver `doc/runbook.md` §5) |
 | `premium-course-checkout` sin botón Buy | La wallet no es elegible (compra/eligibilidad) | El spec ahora crea su propio pastor elegible vía API; si falla, revisa la verificación de ciudad en el dev server |
 | `interview-date` muestra otra hora | Migración timestamptz no aplicada en la BD dev | Aplica `db/migrations/20260822000000_proposed_interview_timestamptz.ts` |
 

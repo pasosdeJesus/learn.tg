@@ -223,19 +223,21 @@ bin/setSlearnPerCourse
 
 > Keeps current USDT amount per guide. Skips courses with no vault or already configured.
 
-### 5.4 Run Learning Points → SLEARN conversion
+### 5.4 Learning Points → SLEARN conversion (one-time, already run)
 
-```bash
-cd apps/nextjs
-npx tsx scripts/convert-learningpoints-to-slearn.ts
-```
+The 1:1 conversion of `usuario.learningscore_deprecated` to SLEARN was a **one-time**
+go-live step; it ran before this section was frozen and its script
+(`convert-learningpoints-to-slearn.ts`) was removed on 2026-10-17. Its result stays
+auditable in `transaction` (`type = 'conversion'`, one row per converted user, with the
+mint hash and the wallet).
 
-> Idempotent — safe to re-run.
+Do not mint conversions again: the current rewards flow pays through the vaults
+(`payScholarship`, `processPayment`), not from the deprecated score.
 
 ### 5.5 Transfer Admin to Cold Wallet
 
-After conversion, transfer `DEFAULT_ADMIN_ROLE` to a cold wallet. The backend keeps only
-`MINTER_ROLE` + `BURNER_ROLE`. See `doc/runbook.md` §5.
+After the steps above, transfer `DEFAULT_ADMIN_ROLE` to a cold wallet. The backend keeps only
+`MINTER_ROLE` + `BURNER_ROLE`. See `doc/runbook.md` §4 (key rotation).
 
 > **Prerequisite:** Import wallets via `bin/m eng:opwallet:import --name admin --private-key <ADMIN_KEY>`
 
@@ -265,7 +267,7 @@ bin/m eng:opwallet:send --name admin --to <SLEARN_ADDRESS> --function "unpause()
 - [ ] Crosswords pay in USDT via `payScholarship`
 - [ ] Leaderboard shows SLEARN balances
 - [ ] Transparency dashboard shows SLEARN supply
-- [ ] `learnTgReserve` balance within 100–1000 USDT range (runbook §3)
+- [ ] `learnTgReserve` balance within 100–1000 USDT range (runbook §1)
 
 ---
 
@@ -275,7 +277,7 @@ If anything goes wrong:
 - `SLEARN.pause()` — disables all operations
 - `LearnTGVaultsV3.emergencyWithdrawUSDT/emergencyWithdrawSLEARN` — owner withdraws all funds
 
-Full disaster recovery: `doc/runbook.md` §6.
+Emergency procedures: `doc/runbook.md` §3.
 
 ---
 
