@@ -102,13 +102,23 @@ async function inspectChoice(page) {
   const trigger = await page.$('[data-testid="connect-wallet"]')
   if (!trigger) return null
   await trigger.click().catch(() => {})
-  // El primer modal abre chunks perezosos (Radix, el motor): en el sitio recién
-  // desplegado puede tardar. Esperar a que `role="dialog"` exista en vez de un fijo.
+  // El primer modal abre chunks perezosos (Radix, el motor) y el cuerpo espera a que
+  // resuelvan la billetera de la aplicación y la sesión (`booting`): con el modal ya
+  // abierto puede mostrar "loading" un instante. Se insiste en el disparador (el primer
+  // clic puede caer antes de la hidratación) y se espera la acción in-app del cuerpo.
+  let open = false
   for (let i = 0; i < 20; i++) {
-    const open = await page
+    open = await page
       .evaluate(() => !!document.querySelector('[role="dialog"]'))
       .catch(() => false)
-    if (open) break
+    if (open) {
+      const body = await page
+        .evaluate(() => !!document.querySelector('[role="dialog"] [data-testid="wallet-open-dialog"]'))
+        .catch(() => false)
+      if (body) break
+    } else {
+      await page.click('[data-testid="connect-wallet"]').catch(() => {})
+    }
     await sleep(500)
   }
   return page
