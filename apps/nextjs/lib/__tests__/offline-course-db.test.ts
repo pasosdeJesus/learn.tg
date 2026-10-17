@@ -105,6 +105,20 @@ describe('offline-course-db (R-#256)', () => {
     expect(belongsToWallet({ isPremium: false, wallet: null }, null)).toBe(true)
   })
 
+  // R-#265 §3.3: la copia pertenece a la cuenta; cualquier billetera de la cuenta la lee.
+  it('reads a paid copy from any wallet of the account', () => {
+    const FIRST = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
+    const SECOND = '0x1111111111111111111111111111111111111111'
+    const copy = { isPremium: true, wallet: FIRST, wallets: [FIRST, SECOND] }
+
+    expect(belongsToWallet(copy, SECOND.toUpperCase())).toBe(true)
+    expect(belongsToWallet(copy, [FIRST, SECOND])).toBe(true)
+    expect(belongsToWallet(copy, '0x3333333333333333333333333333333333333333')).toBe(false)
+    expect(belongsToWallet(copy, [])).toBe(false)
+    // Una copia antigua (sin la lista) sigue aceptando solo su billetera.
+    expect(belongsToWallet({ isPremium: true, wallet: FIRST }, SECOND)).toBe(false)
+  })
+
   it('deletes copies by category (disconnect, wallet deletion, privacy switch)', async () => {
     await saveDownloadedCourse(record({ key: 'en/gdcluster', isPremium: true, contenidoSensible: true }))
     await saveDownloadedCourse(record({

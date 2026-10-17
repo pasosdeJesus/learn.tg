@@ -8,6 +8,7 @@ import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletDialog } from '@/components/WalletDialog'
 import { WalletPanel } from '@/components/WalletPanel'
 import { LinkWalletButton } from '@/components/LinkWalletButton'
+import { InviteWalletControl } from '@/components/InviteWalletControl'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { clearRestrictedCourseCopies } from '@/lib/offline-course-db'
 import { useExternalProvider } from '@/lib/external-provider'
@@ -128,6 +129,7 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
         {/* R-#265 §3.2: con la billetera externa activa también se puede enlazar otra
             (p. ej. la de la aplicación desbloqueada) a la misma cuenta. */}
         <LinkWalletButton lang={lang} />
+        <InviteWalletControl lang={lang} />
       </div>
     )
   }
@@ -168,6 +170,9 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
           {/* R-#265 §3.2: enlaza la billetera **activa** (la de la app desbloqueada o la
               externa conectada) a la misma cuenta, firmando con ella. */}
           <LinkWalletButton lang={lang} />
+          {/* R-#265 §3.2: caso entre dispositivos: invita una **dirección** y lista
+              las invitaciones pendientes de la cuenta. */}
+          <InviteWalletControl lang={lang} />
         </div>
         {/* Con sesión iniciada la billetera queda bloqueada tras recargar, así que
             el diálogo tiene que seguir montado: es el único que atiende

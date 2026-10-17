@@ -180,7 +180,11 @@ export async function awardReferralRewards(opts: {
   const referrer = await db.selectFrom('usuario as u')
     .innerJoin('billetera_usuario as bw', 'bw.usuario_id', 'u.id')
     .select(['bw.billetera as billetera', 'u.idioma'])
-    .where('u.id', '=', referrerId).executeTakeFirst()
+    .where('u.id', '=', referrerId)
+    // R-#265 §3.3: la recompensa va a la **última** billetera de la cuenta (el
+    // vínculo más reciente); con N billeteras dejar que el motor elija era azaroso.
+    .orderBy('bw.id', 'desc')
+    .executeTakeFirst()
   if (!referrer?.billetera) return
 
   const isEnglish = (referrer.idioma || '').toLowerCase().startsWith('en')

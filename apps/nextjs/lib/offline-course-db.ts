@@ -80,6 +80,14 @@ export interface DownloadedCourse {
   isPremium: boolean
   /** Billetera que descargó: un curso de pago no se lee con otra billetera. */
   wallet: string | null
+  /**
+   * R-#265 §3.3: la cuenta puede tener **N** billeteras; la copia guarda la lista
+   * conocida al descargar, así cualquier billetera de la misma cuenta la lee sin
+   * conexión (no hay red para preguntar por ella).
+   */
+  wallets?: string[] | null
+  /** R-#265 §3.3: cuenta dueña de la copia (las billeteras son atributos de ella). */
+  usuarioId?: number | null
   downloadedAt: number
   /** Hash del contenido descargado, para detectar cambios en el servidor. */
   revision: string
@@ -130,15 +138,24 @@ export function revisionChanged(course: Pick<DownloadedCourse, 'revision'>, remo
 /**
  * Un curso de pago descargado con otra billetera no se lee (R-#256 §3.5): la
  * copia se puede borrar sin tocar el progreso ni las guías sin enviar.
+ *
+ * R-#265 §3.3: con N billeteras por cuenta, la copia acepta **cualquiera** de las
+ * billeteras de la cuenta. El registro guarda la lista conocida al descargar
+ * (`wallets`), así la comprobación funciona sin conexión; `wallet` sigue siendo el
+ * respaldo de las copias antiguas. `wallet` también puede llegar como lista.
  */
 export function belongsToWallet(
-  course: Pick<DownloadedCourse, 'isPremium' | 'wallet'>,
-  wallet: string | null | undefined,
+  course: Pick<DownloadedCourse, 'isPremium' | 'wallet' | 'wallets'>,
+  wallet: string | readonly string[] | null | undefined,
 ): boolean {
   if (!course.isPremium) return true
-  if (!course.wallet) return false
-  if (!wallet) return false
-  return course.wallet.toLowerCase() === wallet.toLowerCase()
+  const current = Array.isArray(wallet) ? wallet : wallet ? [wallet] : []
+  const owned = [
+    ...(course.wallet ? [course.wallet] : []),
+    ...((course.wallets ?? []) as string[]),
+  ].map((entry) => entry.toLowerCase())
+  if (owned.length === 0 || current.length === 0) return false
+  return current.some((entry) => owned.includes(entry.toLowerCase()))
 }
 
 export async function saveDownloadedCourse(course: DownloadedCourse): Promise<void> {

@@ -315,7 +315,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
         onOpenChange(false)
         return
       }
-      await signInWithInAppWallet(provider)
+      await signInWithInAppWallet(provider, { lang: lang === 'es' ? 'es' : 'en' })
       onOpenChange(false)
       // NextAuth lee la cookie de sesión al montar (mismo patrón que
       // ConnectWalletButton: `update()` no es fiable tras el callback).
@@ -324,7 +324,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       setLocalError(translateError(e))
       setBusy(false)
     }
-  }, [getProvider, onOpenChange, sessionAddress, t, translateError, walletInfo])
+  }, [getProvider, lang, onOpenChange, sessionAddress, t, translateError, walletInfo])
 
   const handleCreate = useCallback(async () => {
     setLocalError(null)

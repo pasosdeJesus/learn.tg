@@ -13,6 +13,7 @@ import {
   type DownloadedCourse,
   type DownloadedGuide,
 } from '@/lib/offline-course-db'
+import { fetchAccountWallets } from '@/lib/wallet-account'
 
 /**
  * Descarga (y revalida) el contenido de un curso para leerlo sin conexión
@@ -274,6 +275,14 @@ export async function downloadCourse(
     })
   }
 
+  // R-#265 §3.3: la copia pertenece a la **cuenta**, no a una billetera. Se guarda
+  // la lista conocida al descargar para que cualquier billetera de la cuenta la lea
+  // sin conexión (ahí no hay red para preguntar por las demás).
+  const account = wallet ? await fetchAccountWallets(wallet).catch(() => null) : null
+  const wallets = account && account.length > 0
+    ? account.map((entry) => entry.billetera.toLowerCase())
+    : wallet ? [wallet.toLowerCase()] : null
+
   const course: DownloadedCourse = {
     key,
     courseId: descriptor.courseId,
@@ -293,6 +302,8 @@ export async function downloadCourse(
     contenidoSensible: descriptor.contenidoSensible,
     isPremium: descriptor.isPremium,
     wallet: wallet ? wallet.toLowerCase() : null,
+    wallets,
+    usuarioId: account?.[0]?.usuario_id ?? null,
     downloadedAt: Date.now(),
     revision: computeRevision(contents),
     guides: downloadedGuides,

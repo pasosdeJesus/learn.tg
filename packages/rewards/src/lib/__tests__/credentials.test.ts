@@ -62,7 +62,7 @@ function createMockDb(executeTakeFirstValues: any[]) {
     leftJoin() { return self },
     insertInto(table: string) { self._insertInto = table; return self },
     updateTable(table: string) { self._updateTable = table; return self },
-    set() { return self },
+    set(values: any) { self._set = values; return self },
     values() { return self },
     onConflict() { return self },
     doNothing() { return self },
@@ -97,6 +97,54 @@ describe('mintCourseCredential', () => {
 
     expect(result).toBeNull()
     expect(mockMintCourseWithRetry).not.toHaveBeenCalled()
+  })
+
+  // R-#265 §3.7: una credencial revocada NO se resucita en el flujo automático; el
+  // re-acuñado es una acción explícita del admin (`allowRemint`).
+  it('does not resurrect a revoked credential without allowRemint', async () => {
+    sharedDb = createMockDb([{ id: 1, revoked_at: '2026-10-01T00:00:00Z' }])
+
+    const result = await mintCourseCredential(sharedDb, 1, 3, '0x123')
+
+    expect(result).toBeNull()
+    expect(mockMintCourseWithRetry).not.toHaveBeenCalled()
+  })
+
+  it('re-mints a revoked credential to another wallet with allowRemint', async () => {
+    sharedDb = createMockDb([
+      { id: 7, revoked_at: '2026-10-01T00:00:00Z' }, // emisión revocada
+      { is_premium: false }, // metadata
+    ])
+
+    const result = await mintCourseCredential(sharedDb, 1, 3, '0xNEWWALLET', { allowRemint: true })
+
+    expect(result!.txHash).toBe('0xabctransactionhash123')
+    expect(mockMintCourseWithRetry).toHaveBeenCalledWith(
+      expect.objectContaining({ userAddress: '0xNEWWALLET' }),
+    )
+    // Reutiliza la fila (el UNIQUE es usuario+curso): no inserta una segunda.
+    expect(sharedDb._insertInto).toBeNull()
+    expect(sharedDb._updateTable).toBe('credential_emission')
+    expect(sharedDb._set).toEqual(
+      expect.objectContaining({ billetera: '0xnewwallet', revoked_at: null, revoke_hash: null }),
+    )
+  })
+
+  it('re-mint resets the row when the target wallet already holds the SBT on-chain', async () => {
+    sharedDb = createMockDb([
+      { id: 7, revoked_at: '2026-10-01T00:00:00Z' },
+      { is_premium: false },
+    ])
+    mockHasCredentialOnChain.mockResolvedValue(true)
+
+    const result = await mintCourseCredential(sharedDb, 1, 3, '0xNEWWALLET', { allowRemint: true })
+
+    expect(result).toBeNull()
+    expect(mockMintCourseWithRetry).not.toHaveBeenCalled()
+    expect(sharedDb._updateTable).toBe('credential_emission')
+    expect(sharedDb._set).toEqual(
+      expect.objectContaining({ billetera: '0xnewwallet', revoked_at: null }),
+    )
   })
 
   it('returns null when already on-chain (backfills cache)', async () => {

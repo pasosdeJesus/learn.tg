@@ -199,6 +199,15 @@ data flow, contracts):
     - Rails is an on-demand backoffice only (R-#233): the public site sends it
   no credential.
 
+4.  **The account, not the wallet, is the identity** (R-#265). A learner may link **N
+    wallets** to one account: `POST /api/wallet/link` (the active wallet signs a SIWE in
+    the act) or `POST /api/wallet/invite` → `POST /api/wallet/accept` (the invited wallet
+    signs later, on its own device; its plain sign-in is refused so the consent is
+    explicit, and one signature serves to accept and to sign in). The session cookie
+    identifies the **account** (`usuarioId` + `sessionEpoch`); `walletAddress` is only a
+    hint that must belong to it. Payouts go to the connected wallet, credentials to the
+    wallet that completed the course and bonuses to the last used wallet.
+
 **Key Point:** the platform is **Next-only at runtime** (R-#233). The shared
 PostgreSQL database is the integration point, the Next.js server handles answer
 validation and blockchain interactions, and Rails remains available as a
@@ -453,6 +462,14 @@ The PostgreSQL database is shared between the Rails backend and Next.js backend.
 - `linked_at` / `linked_by`: when and from which wallet the link was made (the oldest is the
   account's public address; there is no principal wallet)
 - `answer_fib`: Stores correct crossword answers (pipe-separated ` | `) recorded when the guide is served (`/api/guide`)
+
+##### `billetera_invitada` (pending invitations)
+- Owned by the same `wallet` engine: an address invited to join an account
+  (`direccion_invitada`, `usuario_id`, `expires_at` 30 days, `used_at`, `cancelled_at`),
+  with **partial** unique indexes while pending, so a cancelled or expired invitation can
+  be re-sent and the row stays for audit.
+- `POST /api/wallet/invite` (verified inviter), `accept` (the invited wallet's SIWE, double
+  step: probe then confirm) and `cancel` (idempotent). See `doc/siwe-auth-flow.md` §7.
 
 ##### `guide_usuario` (per-guide progress)
 - `usuario_id`, `actividadpf_id`: Composite primary key

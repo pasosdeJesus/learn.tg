@@ -11,6 +11,7 @@ import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { clearRestrictedCourseCopies } from '@/lib/offline-course-db'
 import { getExternalProvider, externalWalletSource } from '@/lib/external-provider'
+import { invitationPrompt, resolveInvitationAfterAuthFailure } from '@/lib/wallet-invitations'
 import { logger } from '@pasosdejesus/m/debug'
 
 interface ExtendedSession {
@@ -227,17 +228,35 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         // abierta sobre los navegadores de billetera sin otro round manual.
         walletSource: externalWalletSource(),
       })
+      const bodyString = body.toString()
       console.log('[debug-wallet] Fetching /api/auth/callback/credentials')
       const cbRes = await fetch('/api/auth/callback/credentials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
+        body: bodyString,
       })
       console.log('[debug-wallet] Callback fetch returned. Status:', cbRes.status)
 
       if (!cbRes.ok) {
-        const text = await cbRes.text()
-        throw new Error(`Authentication failed (${cbRes.status})`)
+        // R-#265 §3.2: una billetera **invitada** no crea su propia cuenta en un
+        // ingreso normal. Se consulta la invitación (sólo se la revela a quien firma),
+        // se pide confirmación explícita y, si acepta, se enlaza y se reintenta el
+        // callback con la MISMA firma.
+        const outcome = await resolveInvitationAfterAuthFailure({
+          message: msgStr,
+          signature: sig,
+          confirm: (invitedBy) =>
+            window.confirm(invitationPrompt(lang === 'es' ? 'es' : 'en', invitedBy)),
+        })
+        if (outcome !== 'accepted') {
+          throw new Error(`Authentication failed (${cbRes.status})`)
+        }
+        const retried = await fetch('/api/auth/callback/credentials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: bodyString,
+        })
+        if (!retried.ok) throw new Error(`Authentication failed (${retried.status})`)
       }
 
       // Set localStorage — survives NextAuth's useSession() glitch (#5719).

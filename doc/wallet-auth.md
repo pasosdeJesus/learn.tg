@@ -143,6 +143,26 @@ link. The messages explain each outcome (linked, already in the account, no wall
 another account, cancelled). `e2e/specs/wallet-link-second-wallet.spec.mjs` covers the whole
 flow with a mock external wallet whose accounts stay empty until `eth_requestAccounts`.
 
+### InviteWalletControl (`components/InviteWalletControl.tsx`)
+
+R-#265 §3.2, the **between-devices** case: `LinkWalletButton` needs both wallets in the same
+browser; the invitation covers the wallet that signs later, on its own device. It sits next
+to the link control in the header and lets the learner paste an address, invite it, list the
+**pending invitations** of the account and cancel them.
+
+- The inviter must be a verified profile: `lib/wallet-invite-policy.ts`
+  (`INVITER_MIN_PROFILE_SCORE = 50`, the same bar as the on-chain rewards) and
+  `POST /api/wallet/invite` answers `403` otherwise.
+- The invited wallet's plain sign-in is **refused** (`authorize()` does not create an
+  account for a wallet with a pending invitation), so the client probes the invitation after
+  the failed credentials POST, asks for explicit consent and, when accepted, links and
+  **retries with the same signature**. The decision lives in `lib/wallet-invitations.ts` and
+  is called from `lib/in-app-siwe.ts` (in-app) and `components/ConnectWalletButton.tsx`
+  (external); the SIWE message, its domain/chain/nonce and the probe endpoint are described
+  in [siwe-auth-flow.md](siwe-auth-flow.md) §7.
+- A cancellable invitation releases the partial unique index, so the same address can be
+  invited again (`POST /api/wallet/cancel`, idempotent).
+
 ### WalletDialog (`components/WalletDialog.tsx`)
 
 Modal with the whole in-app flow (it does not belong in the header): create or

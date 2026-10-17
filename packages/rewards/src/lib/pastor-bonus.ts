@@ -51,6 +51,10 @@ export async function awardPastorBonus(
       'ch.id as church_id',
     ])
     .where('usuario.id', '=', userId)
+    // R-#265 §3.3: el bono va a la **última** billetera usada/enlazada de la cuenta
+    // (no hay una marca de "último uso"; el id más alto es el vínculo más reciente y
+    // es determinista con N billeteras).
+    .orderBy('bw.id', 'desc')
     .executeTakeFirst()
 
   if (!pastor) return { awarded: false, reason: 'pastor not found' }

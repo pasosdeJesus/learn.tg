@@ -29,6 +29,8 @@ export {
   acceptWalletInvitation,
   cancelAccountInvitation,
   listWallets,
+  listInvitations,
+  findPendingInvitation,
   getUserByWallet,
   WalletNotVerifiedError,
   WalletOwnedByOtherError,

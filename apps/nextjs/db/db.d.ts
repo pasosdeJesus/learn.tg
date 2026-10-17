@@ -652,6 +652,7 @@ export interface Cor1440GenTipomoneda {
 }
 
 export interface CredentialEmission {
+  billetera: string | null;
   chain_id: Generated<string>;
   course_id: number;
   emitted_at: Generated<Timestamp>;

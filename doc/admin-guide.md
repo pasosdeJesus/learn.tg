@@ -109,6 +109,23 @@ Confirming `registration_verified` is what unlocks the **22 SLEARN pastor bonus*
 (once per church; the conditions are in
 [church-registration.md](church-registration.md) §4).
 
+## Wallets and credentials
+
+The user modal ends with **Wallets and credentials** (R-#265). It lists every wallet of the
+account (an account may have several: the in-app one plus external ones) and every course
+credential (SBT), with the wallet that **holds** it.
+
+- A credential is minted to the wallet that completed the course. Losing or exposing that
+  wallet does not lose the account (progress, scores and privacy switches follow the user),
+  but an attacker holding the key would appear as the holder of the SBT.
+- **Revoke** burns the credential of the compromised wallet (`POST
+  /api/admin/credentials/revoke`); then choose another wallet **of the same account** and
+  **Re-mint** (`POST /api/admin/credentials/re-mint`). Both actions are logged
+  (`userevent`: `admin_credential_revoke`, `admin_credential_remint`).
+- The automatic flow never re-mints a credential the learner revoked on purpose; only this
+  explicit admin action does. Historical emissions may show no wallet (the column was
+  added on 2026-10-16 and is not invented for old rows).
+
 ## Rules to keep in mind
 
 - **Documents are private.** Identity and registration files are never in

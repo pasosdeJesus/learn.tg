@@ -3380,7 +3380,8 @@ CREATE TABLE public.credential_emission (
     hash character varying(66),
     emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     revoked_at timestamp with time zone,
-    revoke_hash character varying(66)
+    revoke_hash character varying(66),
+    billetera character varying(60)
 );
 
 
@@ -7858,6 +7859,13 @@ CREATE UNIQUE INDEX cor1440_gen_actividad_proyectofinanciero_unico ON public.cor
 --
 
 CREATE UNIQUE INDEX cor1440_gen_datointermedioti_pmindicadorpf_llaves_idx ON public.cor1440_gen_datointermedioti_pmindicadorpf USING btree (datointermedioti_id, pmindicadorpf_id);
+
+
+--
+-- Name: credential_emission_billetera_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX credential_emission_billetera_idx ON public.credential_emission USING btree (billetera);
 
 
 --

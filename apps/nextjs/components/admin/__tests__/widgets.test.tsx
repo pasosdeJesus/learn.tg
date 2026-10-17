@@ -374,7 +374,9 @@ describe('UserEditModal — referidos', () => {
     })
 
     const patch = mockAdminFetch.mock.calls.find(
-      (call) => String(call[0]).includes('/api/admin/user/42'),
+      (call) =>
+        String(call[0]).includes('/api/admin/user/42') &&
+        (call[1] as RequestInit | undefined)?.method === 'PATCH',
     )
     expect(patch).toBeTruthy()
     expect(JSON.parse(String((patch![1] as RequestInit).body)).referrer).toBe('juan')

@@ -241,6 +241,32 @@ domain/chain/nonce policy (`lib/siwe-server.ts`) and then delegates to the `wall
 it never trusts the client's claim (`signatureVerified: true` is set by the route only after
 a successful verification).
 
+### 7. Invitations: the wallet that signs later, on its own device
+
+`POST /api/wallet/link` needs **both** wallets in the same browser, in the act. The
+invitation (R-#265 §3.2) covers the other case: account A invites an **address**; that
+wallet opens learn.tg on its own device, signs and accepts.
+
+1. The inviter needs a verified profile: `lib/wallet-invite-policy.ts` uses the profile
+   score (≥ 50, the same bar as the on-chain rewards) and `POST /api/wallet/invite`
+   answers `403` otherwise.
+2. The invited wallet's **plain sign-in is refused**: `authorize()` does not create an
+   account for a wallet with a pending invitation
+   (`findPendingInvitation`, `app/api/auth/auth-options.ts`), otherwise the wallet would
+   silently join the inviter's account or the invitation would become unusable. Legacy or
+   expired invitations do not block.
+3. The client sees the failed credentials POST and **probes** `POST /api/wallet/accept`
+   without `confirm` (only whoever controls the address learns who invited it), asks for
+   explicit consent and, if accepted, links the wallet and **retries the same
+   `message`/`signature`** in `/api/auth/callback/credentials`: one signature serves to
+   accept and to sign in (`lib/wallet-invitations.ts`, called from `lib/in-app-siwe.ts`
+   and `components/ConnectWalletButton.tsx`).
+4. The inviter can list and cancel pending invitations from the header
+   (`components/InviteWalletControl.tsx` → `GET /api/wallet` `invitations`,
+   `POST /api/wallet/cancel`).
+
+Endpoint details live in `apps/nextjs/app/api/doc/API.md` (`## Wallet`).
+
 ## Code References
 
 | Component | File | Key Lines |
@@ -250,5 +276,6 @@ a successful verification).
 | API auth (session only) | `lib/authenticateUser.ts` | Full file |
 | Server-side SIWE verification (shared policy) | `lib/siwe-server.ts` | Full file |
 | Wallet linking (routes + client) | `app/api/wallet/link/route.ts`, `lib/wallet-link.ts`, `components/LinkWalletButton.tsx` | Full file |
+| Wallet invitations (routes + client) | `app/api/wallet/{invite,accept,cancel}/route.ts`, `lib/wallet-account.ts`, `lib/wallet-invitations.ts`, `components/InviteWalletControl.tsx` | Full file |
 | CSRF/origin middleware | `apps/nextjs/middleware.ts` | Full file |
 | Frontend auth guard pattern | `app/[lang]/profile/page.tsx` | `useEffect` at ~line 256 |

@@ -11,6 +11,7 @@ import { dbTimestampToLocalInput } from '@/lib/date-utils'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { IS_PRODUCTION } from '@learn-tg/rewards/lib/config'
 import { CalendarWidget } from './CalendarWidget'
+import { AdminCredentialsSection, type AdminCredentialItem, type AdminWalletItem } from './AdminCredentialsSection'
 import { VERIFIED_FIELDS_CONFIG } from '@/lib/score-rules'
 
 type TFunc = (k: string) => string
@@ -39,6 +40,9 @@ export interface UserItem {
     claimed_at?: string | null
     rewards_paid?: { count: number; usdt: number; slearn: number }
   }
+  // R-#265: N billeteras por cuenta y credenciales (la credencial sigue a la billetera).
+  wallets?: AdminWalletItem[]
+  credentials?: AdminCredentialItem[]
 }
 
 export interface ChurchItem {
@@ -198,7 +202,25 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
   const [registrationPhoto, setRegistrationPhoto] = useState<string | null>(null)
   const [churchRefresh, setChurchRefresh] = useState(0)
   const [msg, setMsg] = useState('')
+  // R-#265: las listas del panel no traen las billeteras ni las credenciales; se
+  // piden al abrir el modal para poder revocar/re-acuñar la de una billetera perdida.
+  const [accountWallets, setAccountWallets] = useState<AdminWalletItem[]>(user.wallets || [])
+  const [accountCredentials, setAccountCredentials] = useState<AdminCredentialItem[]>(user.credentials || [])
   const { toast } = useToast()
+
+  useEffect(() => {
+    let cancelled = false
+    adminFetch<{ wallets?: AdminWalletItem[]; credentials?: AdminCredentialItem[] }>(
+      `/api/admin/user/${user.id}`,
+    )
+      .then((data) => {
+        if (cancelled) return
+        setAccountWallets(data.wallets || [])
+        setAccountCredentials(data.credentials || [])
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [user.id])
 
   useEffect(() => {
     const initial: Record<string, any> = {}
@@ -696,6 +718,15 @@ export function UserEditModal({ lang, t, user, onClose, onSaved }: { lang: strin
             className="w-full border rounded px-2 py-1 text-sm font-mono"
           />
         </div>
+        {/* R-#265: billeteras de la cuenta y credenciales; el verificador puede revocar
+            el SBT de una billetera perdida o comprometida y re-acuñarlo a otra de la
+            misma cuenta. */}
+        <AdminCredentialsSection
+          lang={lang}
+          userId={user.id}
+          wallets={accountWallets}
+          credentials={accountCredentials}
+        />
         {msg && <p className={`text-sm text-center ${msg === t('saveSuccess') ? 'text-green-600' : 'text-red-600'}`}>{msg}</p>}
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">{t('cancel')}</button>

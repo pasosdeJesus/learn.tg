@@ -79,6 +79,30 @@ with whoever is going to send you funds (on the Celo network).
 The app refuses an invalid address, an address that is yours, or an amount larger
 than your balance, before asking you to confirm anything.
 
+## Use more than one wallet in the same account
+
+Your progress, scores, privacy settings and the list of badges belong to **your account**,
+not to a single address. You can add another wallet (an old MetaMask wallet, the wallet of
+another phone…) and both reach the same account.
+
+- **On this device**, with both wallets available: choose **Link another wallet**
+  (*Vincular otra billetera*). The wallet that signs is the **active** one: your in-app
+  wallet when it is unlocked, otherwise the browser wallet you connected.
+- **From another device**: choose **Invite a wallet** (*Invitar billetera*), type the other
+  wallet's address and send the invitation. On the other phone, open learn.tg and sign in
+  with that wallet: the app says which account invited it and asks whether to join. If you
+  accept, the wallet is added. Pending invitations are listed there and can be cancelled.
+  To invite, your profile needs **at least 50 points** (the same verified profile the
+  rewards require).
+- **What follows the account:** progress, scores, privacy switches, your referral code and
+  the list of badges (the profile shows the badges held by **every** wallet of the
+  account).
+- **What stays in each wallet:** the money. Scholarships and claims are paid to the wallet
+  you are using at that moment, and a badge is minted to the wallet that completed the
+  course. Losing one wallet does not lose the account, and a stolen wallet cannot move a
+  badge (they are soulbound).
+- **Remove a wallet** from the wallet panel; the account always keeps at least one.
+
 ## Stop using it
 
 - **Disconnect** signs you out on this device. To use another wallet instead,

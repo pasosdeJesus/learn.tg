@@ -26,6 +26,8 @@ const AUTH_PATTERNS = [
   'recoverAddress',    // ECDSA signature verification (e.g., /api/verify)
   'verifySignature',   // generic signature check
   'verifyMessage',     // message signature verification
+  'verifySiweMessage', // SIWE (EIP-4361) verificado en el servidor: /api/wallet/accept
+                       // autentica por la firma de la billetera invitada, no por sesión
   'SelfBackendVerifier', // ZK proof verification (e.g., /api/self-verify)
   'getToken(',         // sesión (R-#227/R-#233): JWT de la cookie NextAuth
                        // (la cookie es la única credencial; no hay token de API)

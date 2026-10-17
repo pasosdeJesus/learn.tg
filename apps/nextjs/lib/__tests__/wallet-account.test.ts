@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   fetchAccountWallets,
+  fetchAccountInvitations,
+  inviteWalletAddress,
+  cancelInvitationRequest,
+  probeInvitation,
+  acceptInvitationRequest,
   unlinkAccountWalletRequest,
   linkAccountWallet,
 } from '@/lib/wallet-account'
@@ -85,6 +90,105 @@ describe('wallet-account (R-#265 / m#50)', () => {
   it('reports a wallet already owned by another account', async () => {
     vi.stubGlobal('fetch', vi.fn(() => respond(409, { error: 'owned' })))
     expect(await linkAccountWallet({ walletAddress: '0xAAA', message: 'm', signature: 's' })).toEqual({
+      ok: false,
+      reason: 'owned-by-other',
+    })
+  })
+
+  it('fetches the pending invitations of the account', async () => {
+    const invitations = [
+      { id: 1, direccion_invitada: '0xccc', usuario_id: 7, expires_at: '2026-11-01T00:00:00Z' },
+    ]
+    const fetchMock = vi.fn(() => respond(200, { wallets: WALLETS, invitations }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await fetchAccountInvitations('0xAAA')).toEqual(invitations)
+    expect(fetchMock).toHaveBeenCalledWith('/api/wallet?walletAddress=0xAAA')
+  })
+
+  it('returns null invitations without a session', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => respond(401, { error: 'Unauthorized' })))
+    expect(await fetchAccountInvitations('0xAAA')).toBeNull()
+  })
+
+  it('invites an address to the account', async () => {
+    const invitations = [{ id: 2, direccion_invitada: '0xccc', usuario_id: 7 }]
+    const fetchMock = vi.fn(() => respond(200, { invited: '0xccc', invitations }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await inviteWalletAddress('0xAAA', '0xCCC')
+
+    expect(result).toEqual({ ok: true, invitations })
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/wallet/invite',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ walletAddress: '0xAAA', address: '0xCCC' }),
+      }),
+    )
+  })
+
+  it('distinguishes an unverified inviter from a conflict', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => respond(403, { error: 'Inviter not verified' })))
+    expect(await inviteWalletAddress('0xAAA', '0xCCC')).toEqual({
+      ok: false,
+      reason: 'unverified',
+    })
+
+    vi.stubGlobal('fetch', vi.fn(() => respond(409, { error: 'pending' })))
+    expect(await inviteWalletAddress('0xAAA', '0xCCC')).toEqual({
+      ok: false,
+      reason: 'conflict',
+    })
+  })
+
+  it('cancels a pending invitation and returns the remaining list', async () => {
+    const fetchMock = vi.fn(() => respond(200, { cancelled: true, invitations: [] }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await cancelInvitationRequest('0xAAA', '0xCCC')).toEqual({
+      ok: true,
+      cancelled: true,
+      invitations: [],
+    })
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/wallet/cancel',
+      expect.objectContaining({ body: JSON.stringify({ walletAddress: '0xAAA', address: '0xCCC' }) }),
+    )
+  })
+
+  it('probes a pending invitation without accepting it', async () => {
+    const fetchMock = vi.fn(() => respond(200, { pending: true, invitedBy: 'ana' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await probeInvitation('m', 's')).toEqual({ ok: true, invitedBy: 'ana', expiresAt: null })
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/wallet/accept',
+      expect.objectContaining({ body: JSON.stringify({ message: 'm', signature: 's' }) }),
+    )
+  })
+
+  it('reports no invitation when the wallet is not invited', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => respond(404, { code: 'no-invitation' })))
+    expect(await probeInvitation('m', 's')).toEqual({ ok: false, reason: 'no-invitation' })
+  })
+
+  it('accepts the invitation with explicit consent', async () => {
+    const fetchMock = vi.fn(() => respond(200, { accepted: true, invitedBy: 'ana' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await acceptInvitationRequest('m', 's')).toEqual({ ok: true, invitedBy: 'ana' })
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/wallet/accept',
+      expect.objectContaining({
+        body: JSON.stringify({ message: 'm', signature: 's', confirm: true }),
+      }),
+    )
+  })
+
+  it('reports an invitation that belonged to another account', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => respond(409, { code: 'owned-by-other' })))
+    expect(await acceptInvitationRequest('m', 's')).toEqual({
       ok: false,
       reason: 'owned-by-other',
     })

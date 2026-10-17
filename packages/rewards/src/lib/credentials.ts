@@ -56,24 +56,31 @@ function getContractAddress(): `0x${string}` {
  * 7. Record emission in credential_emission
  *
  * Returns { txHash, tokenId, isPremium } on success, null if already minted.
+ *
+ * `allowRemint` (R-#265 §3.7): an explicit admin re-mint after revoking the credential
+ * of a lost or compromised wallet. It is **not** the default: an automatic caller
+ * (the crossword) must never re-mint a credential the learner revoked on purpose
+ * (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.5).
  */
 export async function mintCourseCredential(
   db: Kysely<any>,
   usuarioId: number,
   courseId: number,
   walletAddress: string,
+  options: { allowRemint?: boolean } = {},
 ): Promise<{ txHash: string; tokenId: number; isPremium: boolean } | null> {
   const contractAddress = getContractAddress()
   const chainId = getChainId()
+  const holder = walletAddress.toLowerCase()
 
   // 1. Off-chain cache check
-  const alreadyEmitted = await db
+  const existing = await db
     .selectFrom('credential_emission')
-    .select('id')
+    .select(['id', 'revoked_at'])
     .where('usuario_id', '=', usuarioId)
     .where('course_id', '=', courseId)
     .executeTakeFirst()
-  if (alreadyEmitted) return null
+  if (existing && (!options.allowRemint || !existing.revoked_at)) return null
 
   // 2. Resolve tokenId from courseId
   const publicClient = createPublicClient({
@@ -105,6 +112,20 @@ export async function mintCourseCredential(
       .where('token_id', '=', Number(tokenId))
       .executeTakeFirst()
     const isPremium = meta?.is_premium ?? false
+    if (existing) {
+      // Re-acuñado explícito sobre una billetera que ya lo tiene en cadena: la fila
+      // vuelve a reflejar la billetera vigente y deja de estar revocada.
+      await db.updateTable('credential_emission')
+        .set({
+          billetera: holder,
+          revoked_at: null,
+          revoke_hash: null,
+          emitted_at: new Date(),
+        } as any)
+        .where('id', '=', existing.id)
+        .execute()
+      return null
+    }
     await db.insertInto('credential_emission')
       .values({
         usuario_id: usuarioId,
@@ -112,6 +133,7 @@ export async function mintCourseCredential(
         token_id: Number(tokenId),
         chain_id: chainId,
         is_premium: isPremium,
+        billetera: holder,
         emitted_at: new Date(),
       } as any)
       .onConflict((oc: any) => oc.columns(['usuario_id', 'course_id', 'chain_id']).doNothing())
@@ -143,17 +165,33 @@ export async function mintCourseCredential(
     .where('token_id', '=', Number(tokenId))
     .executeTakeFirst()
   const isPremium = meta?.is_premium ?? false
-  await db.insertInto('credential_emission')
-    .values({
-      usuario_id: usuarioId,
-      course_id: courseId,
-      token_id: Number(tokenId),
-      chain_id: chainId,
-      is_premium: isPremium,
-      hash: hash,
-      emitted_at: new Date(),
-    } as any)
-    .execute()
+  if (existing) {
+    await db.updateTable('credential_emission')
+      .set({
+        token_id: Number(tokenId),
+        is_premium: isPremium,
+        hash: hash,
+        billetera: holder,
+        revoked_at: null,
+        revoke_hash: null,
+        emitted_at: new Date(),
+      } as any)
+      .where('id', '=', existing.id)
+      .execute()
+  } else {
+    await db.insertInto('credential_emission')
+      .values({
+        usuario_id: usuarioId,
+        course_id: courseId,
+        token_id: Number(tokenId),
+        chain_id: chainId,
+        is_premium: isPremium,
+        hash: hash,
+        billetera: holder,
+        emitted_at: new Date(),
+      } as any)
+      .execute()
+  }
 
   return { txHash: hash, tokenId: Number(tokenId), isPremium }
 }

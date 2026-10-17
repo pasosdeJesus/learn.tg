@@ -4,8 +4,18 @@ import { SiweMessage } from 'siwe'
 import { getAddress } from 'viem'
 import type { Eip1193Provider } from '@pasosdejesus/m/wallet'
 import { getAppChain } from '@/lib/app-chain'
+import { invitationPrompt, resolveInvitationAfterAuthFailure } from '@/lib/wallet-invitations'
 
 export type InAppSignInError = 'no-accounts' | 'no-csrf' | 'auth-failed'
+
+export interface InAppSignInOptions {
+  lang?: 'en' | 'es'
+  /**
+   * Decide si la billetera se une a la cuenta que la invitó (R-#265 §3.2).
+   * Por defecto se pregunta con `window.confirm` (el consentimiento es explícito).
+   */
+  confirmInvitation?: (invitedBy: string | null) => boolean | Promise<boolean>
+}
 
 /**
  * Signs in with the in-app wallet (SIWE) using the same endpoints as
@@ -13,9 +23,17 @@ export type InAppSignInError = 'no-accounts' | 'no-csrf' | 'auth-failed'
  * only has to POST the signed message and remember the address for the cold
  * session fallback (#5719).
  *
+ * When the callback rejects the wallet because it has a pending **invitation**
+ * (R-#265 §3.2: an invited wallet must not create its own account on a plain
+ * sign-in), it probes the invitation, asks for explicit confirmation, links the
+ * wallet and retries the callback with the **same** signature.
+ *
  * Throws `InAppSignInError` codes so callers can translate them.
  */
-export async function signInWithInAppWallet(provider: Eip1193Provider): Promise<string> {
+export async function signInWithInAppWallet(
+  provider: Eip1193Provider,
+  options: InAppSignInOptions = {},
+): Promise<string> {
   const accounts = (await provider.request({ method: 'eth_accounts' })) as string[]
   const account = accounts?.[0]
   if (!account) throw new Error('no-accounts' satisfies InAppSignInError)
@@ -43,22 +61,44 @@ export async function signInWithInAppWallet(provider: Eip1193Provider): Promise<
     params: [message, account],
   })) as string
 
-  const body = new URLSearchParams({
-    csrfToken,
-    message,
-    signature,
-    redirect: 'false',
-    json: 'true',
-    // R-#246 §8: `userevent` registra con qué billetera se inició sesión
-    // (`in-app`, `eip6963:<rdns>` o `window.ethereum`).
-    walletSource: 'in-app',
-  })
-  const callback = await fetch('/api/auth/callback/credentials', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString(),
-  })
-  if (!callback.ok) throw new Error('auth-failed' satisfies InAppSignInError)
+  const postCredentials = () => {
+    const body = new URLSearchParams({
+      csrfToken,
+      message,
+      signature,
+      redirect: 'false',
+      json: 'true',
+      // R-#246 §8: `userevent` registra con qué billetera se inició sesión
+      // (`in-app`, `eip6963:<rdns>` o `window.ethereum`).
+      walletSource: 'in-app',
+    })
+    return fetch('/api/auth/callback/credentials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    })
+  }
+
+  let callback = await postCredentials()
+  if (!callback.ok) {
+    // R-#265 §3.2: el callback rechaza una billetera **invitada** para que no cree
+    // su propia cuenta; si la invitación existe se pregunta y, al aceptar, se
+    // enlaza y se reintenta con la misma firma.
+    const lang = options.lang === 'es' ? 'es' : 'en'
+    const outcome = await resolveInvitationAfterAuthFailure({
+      message,
+      signature,
+      confirm:
+        options.confirmInvitation ??
+        ((invitedBy) => window.confirm(invitationPrompt(lang, invitedBy))),
+    })
+    if (outcome === 'accepted') {
+      callback = await postCredentials()
+      if (!callback.ok) throw new Error('auth-failed' satisfies InAppSignInError)
+    } else {
+      throw new Error('auth-failed' satisfies InAppSignInError)
+    }
+  }
 
   // R-#256: el fallback se guarda en **minúsculas**, como `session.address` y todo
   // el resto de la app (doc/siwe-auth-flow.md §3). Guardarlo con checksum EIP-55
