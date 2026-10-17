@@ -102,7 +102,15 @@ async function inspectChoice(page) {
   const trigger = await page.$('[data-testid="connect-wallet"]')
   if (!trigger) return null
   await trigger.click().catch(() => {})
-  await sleep(900)
+  // El primer modal abre chunks perezosos (Radix, el motor): en el sitio recién
+  // desplegado puede tardar. Esperar a que `role="dialog"` exista en vez de un fijo.
+  for (let i = 0; i < 20; i++) {
+    const open = await page
+      .evaluate(() => !!document.querySelector('[role="dialog"]'))
+      .catch(() => false)
+    if (open) break
+    await sleep(500)
+  }
   return page
     .evaluate(() => {
       const dialog = document.querySelector('[role="dialog"]')

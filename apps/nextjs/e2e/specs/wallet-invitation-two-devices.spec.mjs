@@ -210,7 +210,9 @@ async function main() {
     const invitedView = await accountWallets(pageB, invitedAddress)
     const expected = [creds.addr.toLowerCase(), invitedAddress.toLowerCase()]
     const got = invitedView.wallets || []
-    if (invitedView.status === 200 && expected.every((wallet) => got.includes(wallet)) && got.length === 2) {
+    // La cuenta de prueba puede tener billeteras de corridas anteriores: lo que importa
+    // es que la invitada y la del invitador estén, no un conteo exacto.
+    if (invitedView.status === 200 && expected.every((wallet) => got.includes(wallet)) && got.length >= 2) {
       ok('Desde el otro dispositivo, la cuenta muestra las dos billeteras')
     } else {
       fail(`GET /api/wallet en el dispositivo invitado = ${JSON.stringify(invitedView)}`)
@@ -222,6 +224,22 @@ async function main() {
     } else {
       fail(`La invitación sigue pendiente: ${JSON.stringify(invitationAfter.invitations)}`)
     }
+
+    // Limpieza: desvincular la billetera invitada deja la cuenta de prueba como estaba
+    // (el spec crea una billetera nueva en cada corrida). No es parte del producto que
+    // se prueba: si falla, se avisa y no se marca la spec como fallida.
+    const cleanup = await pageA
+      .evaluate(async ({ wallet, invited }) => {
+        const res = await fetch('/api/wallet/unlink', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletAddress: wallet, address: invited }),
+        })
+        return { status: res.status, body: await res.json().catch(() => null) }
+      }, { wallet: creds.addr, invited: invitedAddress })
+      .catch(() => ({ status: 0 }))
+    if (cleanup.status === 200) ok('La billetera invitada se desvinculó (limpieza)')
+    else console.log(`  [!] no se pudo limpiar la billetera invitada: ${cleanup.status}`)
 
     await ctxB.close()
     await ctxA.close()

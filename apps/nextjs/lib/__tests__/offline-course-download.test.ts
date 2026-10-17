@@ -70,6 +70,28 @@ describe('downloadCourse (R-#256)', () => {
     expect(progress).toEqual([0, 1, 2, 3, 4])
   })
 
+  // R-#265 §3.3: la copia pertenece a la **cuenta**; se guarda la lista de billeteras
+  // conocida al descargar para que cualquier billetera de la cuenta la lea sin conexión.
+  it('records the account wallet snapshot for offline reads', async () => {
+    const OTHER = '0x1111111111111111111111111111111111111111'
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        wallets: [
+          { billetera: WALLET, usuario_id: 7 },
+          { billetera: OTHER, usuario_id: 7 },
+        ],
+      }),
+    })))
+    try {
+      const course = await downloadCourse(DESCRIPTOR, { get: makeGet() as any, wallet: WALLET })
+      expect(course.wallets).toEqual([WALLET, OTHER])
+      expect(course.usuarioId).toBe(7)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   // Operador, 2026-09-25: sin conexión el índice del curso y el de `/offline` mostraban
   // `guide1`, `guide2`… en lugar del título de la guía.
   it('stores each guide title so the offline index can show it', async () => {
