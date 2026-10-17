@@ -133,11 +133,13 @@ async function main() {
         const n = det.body?.students?.length
         const matches = det.status === 200 && n === Number(c.purchases)
         const hasFields = (det.body?.students || []).every(s => s.id != null && (s.nombre || s.nusuario))
-        if (matches && hasFields) {
+        // R-#265: cada compra trae la billetera que pagó (minúsculas, 0x + 40 hex).
+        const hasWallets = (det.body?.students || []).every(s => /^0x[0-9a-f]{40}$/.test(String(s.billetera || '')))
+        if (matches && hasFields && hasWallets) {
           ok(`course #${c.courseId} "${c.titulo}": ${n} enrolled = ${c.purchases} purchases`)
         } else {
           allOk = false
-          fail(`course #${c.courseId}: detail ${det.status}, ${n} enrolled vs ${c.purchases} purchases, fields=${hasFields}`)
+          fail(`course #${c.courseId}: detail ${det.status}, ${n} enrolled vs ${c.purchases} purchases, fields=${hasFields}, wallets=${hasWallets}`)
         }
       }
       if (allOk) ok(`checked ${withPurchases.length} paid course(s)`)
