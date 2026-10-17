@@ -16,7 +16,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "@openzeppelin/contracts": "^5.4.0",
-    "@pasosdejesus/contract-test": "^0.1.3",
+    "@pasosdejesus/contract-test": "^0.1.5",
     "chai": "^4.2.0",
     "dotenv": "^17.2.3",
     "ethers": "^6.15.0",

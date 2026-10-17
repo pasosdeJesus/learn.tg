@@ -59,6 +59,12 @@ async function sessionAddress(page) {
 // El click se pierde si la página aún no hidrató: insistir hasta que abra.
 async function openDialog(page) {
   for (let i = 0; i < 20; i++) {
+    // R-#265 §3.9: sin sesión el header muestra `WalletConnect`; la acción in-app
+    // vive dentro de su modal de elección.
+    if (!(await page.$('[data-testid="wallet-open-dialog"]'))) {
+      await page.click('[data-testid="connect-wallet"]').catch(() => {})
+      await sleep(700)
+    }
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
     await sleep(700)
     if (await page.$('[data-testid="wallet-dialog"]')) return true
@@ -167,8 +173,14 @@ async function main() {
 
   // 4. Lo que reportó el operador: al recargar NO debe volver a pedir desbloqueo
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await sleep(4000)
-  const afterReload = await header(page)
+  // El sitio de desarrollo (y sobre todo `next dev` local) puede tardar en resolver
+  // la identidad (`useSession` + fallback de localStorage): esperar a que la cabecera
+  // pinte la sesión en vez de fiarse de un tiempo fijo.
+  let afterReload = await header(page)
+  for (let i = 0; i < 20 && !afterReload.signedIn; i++) {
+    await sleep(1500)
+    afterReload = await header(page)
+  }
   const addressAfterReload = await sessionAddress(page)
   if (afterReload.signedIn) ok(`La sesión se mantiene tras recargar: "${afterReload.signedIn}"`)
   else fail(

@@ -37,6 +37,12 @@ async function exists(page, selector) {
 /** El click se pierde si la página aún no hidrató: insistir hasta que abra. */
 async function openDialog(page) {
   for (let i = 0; i < 25; i++) {
+    // R-#265 §3.9: sin sesión el header muestra `WalletConnect`; la acción in-app
+    // vive dentro de su modal de elección.
+    if (!(await exists(page, '[data-testid="wallet-open-dialog"]'))) {
+      await page.click('[data-testid="connect-wallet"]').catch(() => {})
+      await sleep(700)
+    }
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
     await sleep(700)
     if (await exists(page, '[data-testid="wallet-dialog"]')) return true

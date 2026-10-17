@@ -84,6 +84,11 @@ async function bodyText(page) {
 
 async function openDialog(page) {
   for (let i = 0; i < 25; i++) {
+    // R-#265 §3.9: la acción in-app vive dentro del modal del motor `WalletConnect`.
+    if (!(await exists(page, '[data-testid="wallet-open-dialog"]'))) {
+      await page.click('[data-testid="connect-wallet"]').catch(() => {})
+      await sleep(700)
+    }
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
     await sleep(700)
     if (await exists(page, '[data-testid="wallet-dialog"]')) return true
@@ -595,26 +600,62 @@ async function main() {
   })
   await externalPage.goto(`${base}/en`, { waitUntil: 'domcontentloaded' }).catch(() => {})
   await sleep(5000)
-  const externalOnly = await exists(externalPage, '[data-testid="wallet-selector-external"]')
-  const inAppShown = await exists(externalPage, '[data-testid="wallet-open-dialog"]')
-  if (externalOnly && !inAppShown) {
-    ok('En el navegador de una billetera solo se ofrece la externa (D)')
+  // R-#265 §3.9: un solo botón "Conectar" y un modal de elección. En el navegador de
+  // una billetera la externa va primero; la in-app sigue disponible (preferencia del
+  // operador), ya no hay una cabecera de solo-externa.
+  const priority = await externalPage
+    .evaluate(() => document.querySelector('[data-testid="wallet-selector"]')?.getAttribute('data-external-primary'))
+    .catch(() => null)
+  const hasTrigger = await exists(externalPage, '[data-testid="connect-wallet"]')
+  if (hasTrigger && priority === 'true') {
+    ok('En el navegador de una billetera la externa va primero en el modal (D)')
   } else {
     const diag = await externalPage.evaluate(() => ({
       eth: typeof window.ethereum !== 'undefined',
       testids: [...document.querySelectorAll('[data-testid^="wallet-"]')].map((e) => e.getAttribute('data-testid')),
     })).catch(() => null)
     console.log(`  [diag] ${JSON.stringify(diag)}`)
-    if (!externalOnly && !inAppShown) console.log('  [!] El selector no se renderizó: revisar (D)')
-    else fail('Con billetera inyectada todavía se ofrece la billetera de la aplicación (D)')
+    if (!hasTrigger) console.log('  [!] El selector no se renderizó: revisar (D)')
+    else fail(`Prioridad inesperada en el navegador de una billetera (data-external-primary=${priority}) (D)`)
+  }
+  const choice = await externalPage
+    .evaluate(() => {
+      document.querySelector('[data-testid="connect-wallet"]')?.click()
+      return true
+    })
+    .catch(() => false)
+  await sleep(900)
+  const offered = await externalPage
+    .evaluate(() => {
+      const dialog = document.querySelector('[role="dialog"]')
+      return {
+        inApp: !!dialog?.querySelector('[data-testid="wallet-open-dialog"]'),
+        external: !!dialog?.querySelector('[data-testid="wallet-use-external"]'),
+      }
+    })
+    .catch(() => ({ inApp: false, external: false }))
+  if (choice && offered.inApp && offered.external) {
+    ok('El modal ofrece la billetera in-app y la externa (D)')
+  } else {
+    fail(`El modal no ofrece ambas opciones (${JSON.stringify(offered)}) (D)`)
   }
 
   await externalPage.goto(`${base}/en?iappwallet=1`, { waitUntil: 'domcontentloaded' }).catch(() => {})
   await sleep(5000)
-  if (await exists(externalPage, '[data-testid="wallet-open-dialog"]')) {
-    ok('Con ?iappwallet=1 la billetera de la aplicación se ofrece (D)')
+  const forcedPriority = await externalPage
+    .evaluate(() => document.querySelector('[data-testid="wallet-selector"]')?.getAttribute('data-external-primary'))
+    .catch(() => null)
+  await externalPage
+    .evaluate(() => document.querySelector('[data-testid="connect-wallet"]')?.click())
+    .catch(() => {})
+  await sleep(900)
+  const forcedInApp = await externalPage
+    .evaluate(() => !!document.querySelector('[role="dialog"] [data-testid="wallet-open-dialog"]'))
+    .catch(() => false)
+  if (forcedPriority === 'false' && forcedInApp) {
+    ok('Con ?iappwallet=1 la billetera de la aplicación va primero (D)')
   } else {
-    fail('?iappwallet=1 no ofreció la billetera de la aplicación (D)')
+    fail(`?iappwallet=1 no puso la billetera de la aplicación primero (data-external-primary=${forcedPriority}) (D)`)
   }
   await externalPage.close()
   await incognito.close().catch(() => {})

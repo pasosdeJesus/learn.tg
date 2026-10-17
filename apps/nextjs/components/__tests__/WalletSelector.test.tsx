@@ -62,6 +62,20 @@ vi.mock('@/components/ConnectWalletButton', () => ({
   ConnectWalletButton: () => React.createElement('div', { 'data-testid': 'connect-wallet-btn' }),
 }))
 
+// R-#265 §3.9: el header usa `WalletConnect` del motor `wallet`; el cuerpo se
+// sobrecarga con `renderBody`. El mock lo pinta directamente para probar las acciones.
+vi.mock('generated-wallet/next', () => ({
+  WalletConnect: ({ renderBody }: any) =>
+    React.createElement(
+      'div',
+      { 'data-testid': 'wallet-connect' },
+      React.createElement('button', { 'data-testid': 'connect-wallet' }),
+      renderBody
+        ? renderBody({ lang: 'en', close: () => {}, connectExternal: async () => {}, externalError: null })
+        : null,
+    ),
+}))
+
 import { WalletSelector } from '../WalletSelector'
 import { OPEN_IN_APP_WALLET_DIALOG } from '@/lib/in-app-wallet-dialog'
 
@@ -194,7 +208,7 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     mocks.externalAvailable = false
     render(<WalletSelector lang="en" />)
     expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/use in-app wallet/i)
-    expect(screen.queryByTestId('wallet-use-external')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('connect-wallet-btn')).not.toBeInTheDocument()
 
     // Chrome de escritorio con la extensión inyectada (`isMetaMask`): NO es el navegador
     // propio de la billetera, así que la in-app sigue siendo la principal (R-#270 §11.1).
@@ -205,31 +219,28 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     render(<WalletSelector lang="en" />)
     expect(screen.getByTestId('wallet-selector')).toBeInTheDocument()
     expect(screen.getByTestId('wallet-open-dialog')).toBeInTheDocument()
-    expect(screen.getByTestId('wallet-use-external')).toHaveTextContent(/use external wallet/i)
+    // R-#265 §3.9: la elección externa vive dentro del `WalletConnect` del motor y
+    // delega en `ConnectWalletButton` (flujo real de red + SIWE).
+    expect(screen.getByTestId('connect-wallet-btn')).toBeInTheDocument()
     expect(screen.getByTestId('wallet-import-hint')).toHaveTextContent(/import your recovery phrase/i)
 
-    // Navegador propio de MetaMask: manda la externa, con la in-app como alternativa.
+    // Navegador propio de MetaMask: la externa va primero en el modal, con la in-app
+    // como alternativa (preferencia del operador: un solo botón + un modal).
     cleanup()
     Object.defineProperty(navigator, 'userAgent', { value: 'Mozilla/5.0 (Linux; Android 13) MetaMask/7.0', configurable: true })
     render(<WalletSelector lang="en" />)
-    expect(screen.getByTestId('wallet-selector-external')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-selector')).toHaveAttribute('data-external-primary', 'true')
     expect(screen.getByTestId('connect-wallet-btn')).toBeInTheDocument()
-    expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
+    expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/use in-app wallet/i)
     expect(screen.getByTestId('wallet-browser-note')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByTestId('wallet-use-in-app'))
-    expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/use in-app wallet/i)
-
-    // `?iappwallet=1` fuerza la in-app incluso en un navegador de billetera.
+    // `?iappwallet=1` vuelve a poner la in-app primero incluso en un navegador de billetera.
     cleanup()
     window.history.pushState({}, '', '/en?iappwallet=1')
     render(<WalletSelector lang="en" />)
-    const external = screen.getByTestId('wallet-use-external')
-    expect(external).toHaveTextContent(/use external wallet/i)
-    expect(screen.getByTestId('wallet-open-dialog')).toBeInTheDocument()
-
-    fireEvent.click(external)
+    expect(screen.getByTestId('wallet-selector')).toHaveAttribute('data-external-primary', 'false')
     expect(screen.getByTestId('connect-wallet-btn')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-open-dialog')).toBeInTheDocument()
   })
 
   // Si este dispositivo ya tiene billetera de la aplicación, su interfaz se
@@ -249,12 +260,12 @@ describe('WalletSelector (R-#238/R-#244)', () => {
 
   // R-#238: mientras el estado es 'loading' no se sabe si hay billetera; decir
   // "Use in-app wallet" (o "Unlock") confundía al operador.
-  it('shows a neutral, disabled button while the wallet status is loading', () => {
+  it('shows a neutral message while the wallet status is loading', () => {
     mocks.status = 'loading'
     render(<WalletSelector lang="en" />)
 
-    expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/^In-app wallet$/i)
-    expect(screen.getByTestId('wallet-open-dialog')).toBeDisabled()
+    expect(screen.getByTestId('wallet-connect')).toHaveTextContent(/^In-app wallet$/i)
+    expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
   })
 
   it('does not ask to unlock while the NextAuth session is still loading', () => {
@@ -264,7 +275,7 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     mocks.isSessionLoading = true
     render(<WalletSelector lang="en" />)
 
-    expect(screen.getByTestId('wallet-open-dialog')).toHaveTextContent(/^In-app wallet$/i)
-    expect(screen.getByTestId('wallet-open-dialog')).toBeDisabled()
+    expect(screen.getByTestId('wallet-connect')).toHaveTextContent(/^In-app wallet$/i)
+    expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
   })
 })

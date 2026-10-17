@@ -100,32 +100,127 @@ export async function signInWithCoreWallet(page, { privateKey, address, chainId 
  * external path before looking for the "Connect Wallet" button. Returns true as
  * soon as "Connect Wallet" is on screen.
  */
+/** Clicks a button (by text) inside the open engine WalletConnect dialog. */
+async function clickExternalInsideDialog(page) {
+  return page
+    .evaluate(() => {
+      const dialog = document.querySelector('[role="dialog"]')
+      if (!dialog) return false
+      const button = [...dialog.querySelectorAll('button')].find((candidate) =>
+        /connect wallet|conectar billetera/i.test(candidate.textContent || ''),
+      )
+      if (!button) return false
+      button.click()
+      return true
+    })
+    .catch(() => false)
+}
+
+/** Clicks "Connect Wallet" by text, wherever it is (legacy header). */
+async function clickConnectByText(page) {
+  return page
+    .evaluate(() => {
+      const button = [...document.querySelectorAll('button')].find((candidate) =>
+        /connect wallet|conectar billetera/i.test(candidate.textContent || ''),
+      )
+      if (!button) return false
+      button.click()
+      return true
+    })
+    .catch(() => false)
+}
+
+/**
+ * Returns true when a connect entry point is on screen. It does **not** click:
+ * R-#265 §3.9 moved the choice into the engine `WalletConnect` modal, so the
+ * caller must use `connectExternalWallet()` to actually sign in.
+ */
 export async function waitForExternalConnect(page, { timeout = 45000, interval = 1500 } = {}) {
   const deadline = Date.now() + timeout
   while (Date.now() < deadline) {
-    const connectVisible = await page.evaluate(
-      () =>
-        document.body.textContent?.includes('Connect Wallet') ||
-        document.body.textContent?.includes('Conectar Billetera'),
-    )
-    if (connectVisible) return true
-    const external = await page.$('[data-testid="wallet-use-external"]')
-    if (external) await external.click().catch(() => {})
+    const visible = await page
+      .evaluate(
+        () =>
+          !!document.querySelector('[data-testid="connect-wallet"]') ||
+          !!document.querySelector('[data-testid="wallet-use-external"]') ||
+          [...document.querySelectorAll('button')].some((candidate) =>
+            /connect wallet|conectar billetera/i.test(candidate.textContent || ''),
+          ),
+      )
+      .catch(() => false)
+    if (visible) return true
     await new Promise((resolve) => setTimeout(resolve, interval))
   }
   return false
 }
 
-/** Clicks "Use external wallet" in the header (once the header has hydrated). */
-export async function useExternalWalletInHeader(page, { timeout = 30000, interval = 1000 } = {}) {
+/**
+ * Connects the **external** wallet: opens the engine `WalletConnect` choice modal
+ * (R-#265 §3.9) and clicks the external `ConnectWalletButton` inside; on a legacy
+ * header it clicks "Use external wallet" and then "Connect Wallet".
+ */
+export async function connectExternalWallet(page, { timeout = 60000, interval = 1500 } = {}) {
   const deadline = Date.now() + timeout
   while (Date.now() < deadline) {
-    const external = await page.$('[data-testid="wallet-use-external"]')
-    if (external) {
-      await external.click()
-      return true
+    const trigger = await page.$('[data-testid="connect-wallet"]')
+    if (trigger) {
+      // Abre el modal una sola vez: volver a pulsar el trigger con el modal abierto
+      // cierra el diálogo (el clic cae en el overlay de Radix).
+      if (!(await page.$('[role="dialog"]'))) {
+        await trigger.click().catch(() => {})
+        await new Promise((resolve) => setTimeout(resolve, 600))
+      }
+      for (let i = 0; i < 10; i++) {
+        if (await clickExternalInsideDialog(page)) return true
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
+    } else {
+      const external = await page.$('[data-testid="wallet-use-external"]')
+      if (external) {
+        await external.click().catch(() => {})
+        await new Promise((resolve) => setTimeout(resolve, 700))
+        if (await clickConnectByText(page)) return true
+      } else if (await clickConnectByText(page)) {
+        return true
+      }
     }
     await new Promise((resolve) => setTimeout(resolve, interval))
+  }
+  return false
+}
+
+/** Backwards-compatible alias: opens the choice and signs in with the external wallet. */
+export async function useExternalWalletInHeader(page, options = {}) {
+  return connectExternalWallet(page, options)
+}
+
+/**
+ * Opens learn.tg's `WalletDialog`: clicks the in-app action when it is already in the
+ * header (signed-in pill or legacy header); otherwise opens the engine `WalletConnect`
+ * choice modal (R-#265 §3.9) and clicks the in-app action inside it.
+ */
+export async function openWalletDialog(page, { timeout = 45000, interval = 500 } = {}) {
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    const direct = await page.$('[data-testid="wallet-open-dialog"]')
+    if (direct) {
+      await direct.click().catch(() => {})
+      return true
+    }
+    // Abre el modal una sola vez (volver a pulsar el trigger lo cierra).
+    if (!(await page.$('[role="dialog"]'))) {
+      const trigger = await page.$('[data-testid="connect-wallet"]')
+      if (trigger) await trigger.click().catch(() => {})
+      await new Promise((resolve) => setTimeout(resolve, interval))
+    }
+    for (let i = 0; i < 8; i++) {
+      const inside = await page.$('[data-testid="wallet-open-dialog"]')
+      if (inside) {
+        await inside.click().catch(() => {})
+        return true
+      }
+      await new Promise((resolve) => setTimeout(resolve, interval))
+    }
   }
   return false
 }

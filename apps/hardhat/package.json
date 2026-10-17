@@ -10,9 +10,9 @@
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "@nomicfoundation/hardhat-verify": "^2.0.11",
     "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@pasosdejesus/contract-test": "^0.1.4",
+    "@pasosdejesus/contract-test": "^0.1.5",
     "@pasosdejesus/edr": "^0.1.2",
-    "@pasosdejesus/m": "^0.22.0",
+    "@pasosdejesus/m": "^0.31.1",
     "@pasosdejesus/usdt": "^0.1.3",
     "@typechain/ethers-v6": "^0.5.0",
     "@typechain/hardhat": "^9.1.0",
@@ -29,7 +29,7 @@
   "dependencies": {
     "@nomicfoundation/hardhat-ignition": "0.15.0",
     "@openzeppelin/contracts": "^5.4.0",
-    "@pasosdejesus/mpdj": "^0.2.12",
+    "@pasosdejesus/mpdj": "^0.2.15",
     "dotenv": "^17.2.3",
     "tsx": "^4.21.0",
     "viem": "^2.40.0"
@@ -62,7 +62,7 @@
       "@ethereumjs/common": "^10.1.2",
       "@ethereumjs/util": "^10.1.2",
       "@ethereumjs/tx": "^10.1.2",
-      "@pasosdejesus/m": "^0.22.0"
+      "@pasosdejesus/m": "^0.31.1"
     },
     "onlyBuiltDependencies": [
       "esbuild",

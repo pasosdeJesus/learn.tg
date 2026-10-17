@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 (async () => {
   try { await import('@pasosdejesus/mpdj') } catch {}
+  // `@pasosdejesus/contract-test` auto-registers `contract:test`. `m` >= 0.31.1
+  // discovers plugins by `m-engine.json` and this package declares `mEngine: true`
+  // instead (0.1.5), so it is loaded explicitly here until that is fixed upstream.
+  try { await import('@pasosdejesus/contract-test') } catch {}
   await import('@pasosdejesus/m/m')
 })()

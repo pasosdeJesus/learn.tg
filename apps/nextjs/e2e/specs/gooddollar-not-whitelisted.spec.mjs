@@ -228,6 +228,7 @@ async function pageState(page) {
     .evaluate(() => ({
       url: location.href,
       hasOpenDialog: !!document.querySelector('[data-testid="wallet-open-dialog"]'),
+      hasConnect: !!document.querySelector('[data-testid="connect-wallet"]'),
       hasImportMode: !!document.querySelector('[data-testid="wallet-mode-import"]'),
       text: (document.body?.innerText || '').replace(/\s+/g, ' ').slice(0, 240),
     }))
@@ -242,6 +243,11 @@ async function importInAppWallet(page, { mnemonic, privateKey, timeout }) {
   // usa la in-app.
   const { chooseWalletProtection, TEST_PASSWORD } = await import('../helpers/in-app-wallet.mjs')
   for (let attempt = 0; attempt < 15; attempt++) {
+    // R-#265 §3.9: la acción in-app vive dentro del modal del motor `WalletConnect`.
+    if (!(await page.$('[data-testid="wallet-open-dialog"]'))) {
+      await page.click('[data-testid="connect-wallet"]').catch(() => {})
+      await sleep(700)
+    }
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
     const opened = await page
       .waitForSelector('[data-testid="wallet-mode-import"]', { timeout: 5000 })

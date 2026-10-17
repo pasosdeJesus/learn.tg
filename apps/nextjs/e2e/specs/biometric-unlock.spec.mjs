@@ -153,7 +153,11 @@ async function header(page) {
       const inApp = document.querySelector('[data-testid="wallet-selector-in-app"]')
       return {
         signedIn: (inApp?.innerText || '').replace(/\s+/g, ' ').trim() || null,
-        button: (document.querySelector('[data-testid="wallet-open-dialog"]')?.innerText || '').trim() || null,
+        button: (
+          document.querySelector('[data-testid="wallet-open-dialog"]')?.innerText ||
+          document.querySelector('[data-testid="connect-wallet"]')?.innerText ||
+          ''
+        ).trim() || null,
       }
     })
   } catch {
@@ -163,6 +167,11 @@ async function header(page) {
 
 async function openDialog(page) {
   for (let i = 0; i < 25; i++) {
+    // R-#265 §3.9: la acción in-app vive dentro del modal del motor `WalletConnect`.
+    if (!(await exists(page, '[data-testid="wallet-open-dialog"]'))) {
+      await page.click('[data-testid="connect-wallet"]').catch(() => {})
+      await sleep(700)
+    }
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
     await sleep(700)
     if (await exists(page, '[data-testid="wallet-dialog"]')) return true

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { signOut } from 'next-auth/react'
 import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
+import { WalletConnect, type WalletConnectBodyContext } from 'generated-wallet/next'
 import { ConnectWalletButton } from '@/components/ConnectWalletButton'
 import { WalletDialog } from '@/components/WalletDialog'
 import { WalletPanel } from '@/components/WalletPanel'
@@ -21,21 +22,21 @@ interface WalletSelectorProps {
 }
 
 /**
- * Entrada de la cabecera para elegir billetera (R-#238/R-#244).
+ * Entrada de la cabecera para la billetera (R-#238/R-#244/R-#265 §3.9).
  *
- * La cabecera solo muestra el estado: un botón que abre `WalletDialog` (crear,
- * importar, desbloquear e ingresar con SIWE) o, cuando ya hay sesión con la
- * billetera de la aplicación, la dirección corta y "Desconectar". La ruta externa
- * sigue delegando en `ConnectWalletButton`, y solo se ofrece si existe
- * `window.ethereum` (en la app instalada, o en un teléfono sin billetera, no lo
- * hay: ese es justamente el caso que resuelve la billetera propia).
+ * Sin sesión muestra **un solo** botón "Conectar": `WalletConnect` del motor `wallet`
+ * (`generated-wallet/next`) abre el modal de elección (in-app o externa), con el cuerpo
+ * sobrecargado para learn.tg (`WalletDialog` para crear/importar/desbloquear/ingresar y
+ * `ConnectWalletButton` para la red + SIWE externas). Con sesión muestra la dirección
+ * corta, "Desconectar", "Vincular otra billetera" e "Invitar billetera"; la píldora abre
+ * el panel o el diálogo. En el navegador de una billetera la externa va primero dentro
+ * del modal (`?iappwallet=1` invierte la prioridad).
  */
 export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   const { status, lock } = useInAppWallet()
   const { address, sessionAddress, inAppAddress, isInAppUnlocked, isSessionLoading } = useAuthAddress()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
-  const [external, setExternal] = useState(false)
   // R-#246: la billetera inyectada se detecta por EIP-6963 (Rabby, MetaMask y
   // OneKey móviles no definen `window.ethereum`), así que ya no se decide durante
   // el render ni con un solo evento `ethereum#initialized`.
@@ -56,6 +57,11 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       unlockInApp: 'Unlock your in-app wallet',
       signInInApp: 'Sign in with in-app wallet',
       useExternal: 'Use external wallet',
+      connect: 'Connect Wallet',
+      walletTitle: 'Wallet',
+      inAppHint: 'Create a wallet inside the app — no installation needed.',
+      externalHint: 'Or connect a wallet you already have (Rabby, MetaMask…).',
+      signInHint: 'The wallet is unlocked: sign in to use your account.',
       disconnect: 'Disconnect',
       openWallet: 'In-app wallet options',
       walletBrowserNote: 'In this browser the in-app wallet has no fingerprint or Face ID: you would unlock it with the password.',
@@ -67,6 +73,11 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       unlockInApp: 'Desbloquear tu billetera',
       signInInApp: 'Ingresar con la billetera de la aplicación',
       useExternal: 'Usar billetera externa',
+      connect: 'Conectar Billetera',
+      walletTitle: 'Billetera',
+      inAppHint: 'Crea una billetera dentro de la aplicación, sin instalar nada.',
+      externalHint: 'O conecta una billetera que ya tengas (Rabby, MetaMask…).',
+      signInHint: 'La billetera está desbloqueada: ingresa para usar tu cuenta.',
       disconnect: 'Desconectar',
       openWallet: 'Opciones de la billetera de la aplicación',
       walletBrowserNote: 'En este navegador la billetera de la aplicación no tiene huella ni Face ID: la desbloquearías con la clave.',
@@ -109,7 +120,6 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   // para no romper la hidratación, y el usuario puede pedir la in-app con
   // `?iappwallet=1` o con el botón secundario.
   const [inAppRequested, setInAppRequested] = useState(false)
-  const [inAppChosen, setInAppChosen] = useState(false)
   const [walletBrowser, setWalletBrowser] = useState(false)
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -118,21 +128,10 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   }, [])
   const hasInAppWallet = status === 'locked' || status === 'unlocked'
   // El navegador de una billetera conserva la del dispositivo como principal, salvo
-  // que el URL pida la in-app, el usuario la elija o ya tenga una en este equipo.
-  const externalPrimary = externalAvailable && walletBrowser && !inAppRequested && !inAppChosen && !hasInAppWallet
+  // que el URL pida la in-app o ya tenga una en este equipo. `externalPrimary` ahora
+  // sólo ordena las opciones dentro del modal (externa primero), no cambia la cabecera.
+  const externalPrimary = externalAvailable && walletBrowser && !inAppRequested && !hasInAppWallet
   const migrationHref = lang === 'es' ? '/es/migracion-billetera-app' : '/en/migration-in-app-wallet'
-
-  if (external) {
-    return (
-      <div className="flex items-center gap-2">
-        <ConnectWalletButton lang={lang} />
-        {/* R-#265 §3.2: con la billetera externa activa también se puede enlazar otra
-            (p. ej. la de la aplicación desbloqueada) a la misma cuenta. */}
-        <LinkWalletButton lang={lang} />
-        <InviteWalletControl lang={lang} />
-      </div>
-    )
-  }
 
   if (signedIn) {
     // R-#249: con la billetera desbloqueada la píldora abre el PANEL (saldos,
@@ -194,62 +193,93 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   // todavía no se sabe si hay billetera o sesión: decir "Use in-app wallet" o
   // "Unlock your in-app wallet" confunde (reportado el 2026-09-15).
   const booting = status === 'loading' || isSessionLoading
-  const label = booting
-    ? t('loadingInApp')
-    : isInAppUnlocked
-      ? t('signInInApp')
-      : status === 'locked' ? t('unlockInApp') : t('useInApp')
+
+  // R-#265 §3.9 y preferencia del operador (2026-10-17): **un solo** botón "Conectar"
+  // en la cabecera y **un modal** de elección (in-app o externa) del motor `wallet`
+  // (`generated-wallet/next`), en vez de varios botones. El cuerpo se sobrecarga
+  // (`renderBody`) para conservar el flujo de learn.tg: `WalletDialog` (creación,
+  // importación, 12 palabras, ingreso) y `ConnectWalletButton` (red + SIWE externos).
+  // En el navegador propio de una billetera la externa va primero; en el resto, la
+  // in-app (R-#270 §3.1). La cabecera con sesión (panel, desvincular, invitar) sigue
+  // aparte porque es específica de la app.
+  const renderConnectBody = (ctx: WalletConnectBodyContext) => {
+    if (booting) {
+      return <p className="text-sm text-gray-600">{t('loadingInApp')}</p>
+    }
+    const inAppAction = (
+      <div className="space-y-2">
+        <p className="text-sm text-gray-600">
+          {hasInAppWallet
+            ? (status === 'locked' ? t('unlockInApp') : t('signInHint'))
+            : t('inAppHint')}
+        </p>
+        <Button
+          className="w-full"
+          data-testid="wallet-open-dialog"
+          onClick={() => { ctx.close(); setDialogOpen(true) }}
+        >
+          {hasInAppWallet
+            ? (status === 'locked' ? t('unlockInApp') : t('signInInApp'))
+            : t('useInApp')}
+        </Button>
+      </div>
+    )
+    const externalAction = externalAvailable ? (
+      <div className="space-y-2" data-testid="wallet-use-external">
+        <p className="text-xs text-gray-500">{t('externalHint')}</p>
+        <ConnectWalletButton lang={lang} />
+      </div>
+    ) : null
+    return (
+      <div className="space-y-4">
+        {externalPrimary ? (
+          <>{externalAction}{inAppAction}</>
+        ) : (
+          <>{inAppAction}{externalAction}</>
+        )}
+        {externalAvailable && (
+          /* R-#270 §3.1: conservar la dirección e historial, a un clic. */
+          <a
+            href={migrationHref}
+            className="block text-xs text-blue-600 hover:underline"
+            data-testid="wallet-import-hint"
+          >
+            {t('haveWalletImport')}
+          </a>
+        )}
+        {walletBrowser && (
+          <p className="text-[11px] text-gray-500" data-testid="wallet-browser-note">
+            {t('walletBrowserNote')}
+          </p>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div
-      data-testid={externalPrimary ? 'wallet-selector-external' : 'wallet-selector'}
+      data-testid="wallet-selector"
+      data-external-primary={externalPrimary ? 'true' : 'false'}
       className="flex items-center gap-2"
     >
-      {externalPrimary ? (
-        <>
-          <ConnectWalletButton lang={lang} />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs text-gray-600 hover:bg-gray-100"
-            data-testid="wallet-use-in-app"
-            onClick={() => setInAppChosen(true)}
-          >
-            {t('useInApp')}
-          </Button>
-          <span className="text-[10px] text-gray-500 max-w-[16rem]" data-testid="wallet-browser-note">
-            {t('walletBrowserNote')}
-          </span>
-        </>
-      ) : (
-        <>
-          <Button size="sm" data-testid="wallet-open-dialog" disabled={booting} onClick={() => setDialogOpen(true)}>
-            {label}
-          </Button>
-          {externalAvailable && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-gray-600 hover:bg-gray-100"
-              data-testid="wallet-use-external"
-              onClick={() => setExternal(true)}
-            >
-              {t('useExternal')}
-            </Button>
-          )}
-          {/* R-#270 §3.1: con una billetera inyectada a la vista, la puerta para
-              conservar la dirección e historial debe estar a un clic. */}
-          {externalAvailable && (
-            <a
-              href={migrationHref}
-              className="text-[10px] text-blue-600 hover:underline max-w-[14rem]"
-              data-testid="wallet-import-hint"
-            >
-              {t('haveWalletImport')}
-            </a>
-          )}
-        </>
-      )}
+      <WalletConnect
+        lang={lang === 'es' ? 'es' : 'en'}
+        messages={{
+          connect: t('connect'),
+          title: t('walletTitle'),
+          inAppBtn: t('useInApp'),
+          external: t('useExternal'),
+          inAppHint: t('inAppHint'),
+          externalHint: t('externalHint'),
+          signIn: t('signInInApp'),
+          signInHint: t('signInHint'),
+          loading: t('loadingInApp'),
+        }}
+        isConnected={false}
+        externalAvailable={externalAvailable}
+        onSignIn={() => setDialogOpen(true)}
+        renderBody={renderConnectBody}
+      />
       <WalletDialog lang={lang} open={dialogOpen} onOpenChange={setDialogOpen} sessionAddress={sessionAddress} />
     </div>
   )

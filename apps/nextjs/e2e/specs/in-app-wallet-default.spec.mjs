@@ -45,11 +45,10 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const SELECTORS = () => ({
   inAppPrimary: !!document.querySelector('[data-testid="wallet-selector"]'),
-  externalPrimary: !!document.querySelector('[data-testid="wallet-selector-external"]'),
-  useExternal: !!document.querySelector('[data-testid="wallet-use-external"]'),
-  importHint: !!document.querySelector('[data-testid="wallet-import-hint"]'),
-  useInApp: !!document.querySelector('[data-testid="wallet-use-in-app"]'),
-  browserNote: !!document.querySelector('[data-testid="wallet-browser-note"]'),
+  // R-#265 §3.9: `externalPrimary` ya no cambia la cabecera (un solo botón); ordena
+  // las opciones dentro del modal y se publica como atributo.
+  externalPrimary:
+    document.querySelector('[data-testid="wallet-selector"]')?.getAttribute('data-external-primary') === 'true',
   openDialog: !!document.querySelector('[data-testid="wallet-open-dialog"]'),
 })
 
@@ -79,6 +78,12 @@ async function openCase(browser, env, base, { ua, inject, path = '/en', cleanWal
  *  que React hidrate el botón. */
 async function openWalletDialog(page) {
   for (let attempt = 0; attempt < 15; attempt++) {
+    // R-#265 §3.9: sin sesión el header muestra `WalletConnect`; la acción in-app
+    // vive dentro de su modal de elección.
+    if (!(await page.$('[data-testid="wallet-open-dialog"]'))) {
+      await page.click('[data-testid="connect-wallet"]').catch(() => {})
+      await sleep(700)
+    }
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
     const opened = await page
       .waitForSelector('[data-testid="wallet-mode-import"]', { timeout: 5000 })
@@ -87,6 +92,32 @@ async function openWalletDialog(page) {
     if (opened) return true
   }
   return false
+}
+
+/**
+ * R-#265 §3.9: la elección in-app/externa vive en el modal del motor `WalletConnect`.
+ * Lo abre y lee qué ofrece; `null` cuando la cabecera todavía no montó el botón.
+ */
+async function inspectChoice(page) {
+  const trigger = await page.$('[data-testid="connect-wallet"]')
+  if (!trigger) return null
+  await trigger.click().catch(() => {})
+  await sleep(900)
+  return page
+    .evaluate(() => {
+      const dialog = document.querySelector('[role="dialog"]')
+      const buttons = dialog ? [...dialog.querySelectorAll('button')] : []
+      return {
+        open: !!dialog,
+        openDialog: !!dialog?.querySelector('[data-testid="wallet-open-dialog"]'),
+        importHint: !!dialog?.querySelector('[data-testid="wallet-import-hint"]'),
+        browserNote: !!dialog?.querySelector('[data-testid="wallet-browser-note"]'),
+        external: buttons.some((button) =>
+          /connect wallet|conectar billetera/i.test(button.textContent || ''),
+        ),
+      }
+    })
+    .catch(() => null)
 }
 
 async function main() {
@@ -110,28 +141,35 @@ async function main() {
   }
   console.log(`Billetera in-app por defecto | ${base}\n`)
 
-  if (s1.inAppPrimary && s1.openDialog) ok('sin proveedor: se ofrece la billetera de la aplicación')
-  else fail(`sin proveedor: no se ofrece la billetera de la aplicación (${JSON.stringify(s1)})`)
-  if (s1.useExternal) fail('sin proveedor NO debería ofrecerse la billetera externa')
-  else ok('sin proveedor: la externa no se ofrece')
+  if (s1.inAppPrimary) {
+    const c1 = await inspectChoice(noProvider)
+    if (c1?.openDialog) ok('sin proveedor: se ofrece la billetera de la aplicación')
+    else fail(`sin proveedor: no se ofrece la billetera de la aplicación (${JSON.stringify({ s1, c1 })})`)
+    if (c1?.external) fail('sin proveedor NO debería ofrecerse la billetera externa')
+    else ok('sin proveedor: la externa no se ofrece')
+  } else {
+    fail(`sin proveedor: no se ofrece la billetera de la aplicación (${JSON.stringify(s1)})`)
+  }
   await noProvider.close()
 
   // 2. Proveedor de una extensión en un navegador común: la in-app sigue siendo la
   //    principal (la marca del navegador propio de la billetera está en el UA, no en
   //    `isMetaMask`; R-#270 §11.1).
   const { page: withInjected, state: s2 } = await openCase(browser, env, base, { ua: DESKTOP_UA, inject: INJECTED_PROVIDER })
-  if (s2.inAppPrimary && s2.useExternal) ok('con proveedor (extensión en un navegador común): la in-app es la principal y la externa es secundaria')
-  else fail(`con proveedor (extensión en un navegador común): prioridad inesperada (${JSON.stringify(s2)})`)
-  if (s2.importHint) ok('se ofrece importar la frase para conservar la dirección')
+  const c2 = await inspectChoice(withInjected)
+  if (s2.inAppPrimary && c2?.external) ok('con proveedor (extensión en un navegador común): la in-app es la principal y la externa es secundaria')
+  else fail(`con proveedor (extensión en un navegador común): prioridad inesperada (${JSON.stringify({ s2, c2 })})`)
+  if (c2?.importHint) ok('se ofrece importar la frase para conservar la dirección')
   else fail('no se ofrece importar la frase con un proveedor a la vista')
   await withInjected.close()
 
-  // 3. Navegador propio de una billetera (la marca va en el UA): manda la externa, con
-  //    la in-app secundaria.
+  // 3. Navegador propio de una billetera (la marca va en el UA): la externa va primero
+  //    en el modal, con la in-app como alternativa.
   const { page: walletBrowser, state: s3 } = await openCase(browser, env, base, { ua: WALLET_BROWSER_UA, inject: INJECTED_PROVIDER })
-  if (s3.externalPrimary && s3.useInApp) ok('en el navegador de una billetera: manda la externa y la in-app queda secundaria')
-  else fail(`en el navegador de una billetera: prioridad inesperada (${JSON.stringify(s3)})`)
-  if (s3.browserNote) ok('se avisa que ahí no hay huella ni Face ID')
+  const c3 = await inspectChoice(walletBrowser)
+  if (s3.externalPrimary && c3?.external && c3?.openDialog) ok('en el navegador de una billetera: la externa va primero y la in-app queda alternativa')
+  else fail(`en el navegador de una billetera: prioridad inesperada (${JSON.stringify({ s3, c3 })})`)
+  if (c3?.browserNote) ok('se avisa que ahí no hay huella ni Face ID')
   else fail('falta el aviso de WebAuthn/L1 en el navegador de una billetera')
   await walletBrowser.close()
 
@@ -139,8 +177,13 @@ async function main() {
   const { page: forced, state: s4 } = await openCase(browser, env, base, {
     ua: WALLET_BROWSER_UA, inject: INJECTED_PROVIDER, path: '/en?iappwallet=1',
   })
-  if (s4.inAppPrimary && s4.openDialog) ok('`?iappwallet=1` fuerza la billetera de la aplicación')
-  else fail(`\`?iappwallet=1\` no forzó la billetera de la aplicación (${JSON.stringify(s4)})`)
+  if (s4.inAppPrimary) {
+    const c4 = await inspectChoice(forced)
+    if (c4?.openDialog) ok('`?iappwallet=1` fuerza la billetera de la aplicación')
+    else fail(`\`?iappwallet=1\` no forzó la billetera de la aplicación (${JSON.stringify({ s4, c4 })})`)
+  } else {
+    fail(`\`?iappwallet=1\` no forzó la billetera de la aplicación (${JSON.stringify(s4)})`)
+  }
   await forced.close()
 
   // 4. Importar una mnemónica conocida conserva la dirección (ruta BIP44 estándar).

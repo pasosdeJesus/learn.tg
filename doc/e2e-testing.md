@@ -318,13 +318,18 @@ announces an EIP-6963 provider (plus `window.ethereum`). Without `rpcUrl` the re
 
 ```js
 import { setupFullWalletMock } from '@pasosdejesus/m/e2e'
-import { waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
+import { connectExternalWallet } from '../helpers/in-app-wallet.mjs'
 
 await setupFullWalletMock(page, { privateKey: pk, address: addr, chainId })  // before goto
 await page.goto(`${base}/`)
-await waitForExternalConnect(page)   // R-#238: header = WalletSelector; this clicks
-                                     // "Use external wallet" until Connect shows up
+await connectExternalWallet(page)   // R-#265 §3.9: header = WalletConnect; opens the
+                                    // choice modal and signs with the external wallet
 ```
+
+`waitForExternalConnect(page)` only **checks** that a connect entry point is on screen
+(the engine `WalletConnect` trigger or the legacy header). Use `connectExternalWallet` to
+actually sign in, and `openWalletDialog(page)` to open learn.tg's in-app dialog (it opens
+the engine choice modal first when there is no session).
 
 `signInWithCoreWallet(page, { privateKey, address, chainId, baseUrl })` (local helper)
 skips the UI: it builds the SIWE message in Node, signs it with viem and posts the

@@ -30,7 +30,7 @@ import {
 } from '@pasosdejesus/m/e2e'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 import {
-  signInWithCoreWallet, useExternalWalletInHeader, waitForExternalConnect,
+  connectExternalWallet, signInWithCoreWallet,
 } from '../helpers/in-app-wallet.mjs'
 
 const LANG = 'en'
@@ -188,16 +188,12 @@ async function main() {
     })
 
     await pageB.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
-    await useExternalWalletInHeader(pageB)
-    if (!(await waitForExternalConnect(pageB))) {
-      fail('El dispositivo invitado no llegó al botón de conectar la billetera externa')
+    // R-#265 §3.9: el helper abre el modal del motor `WalletConnect` y firma con la
+    // billetera externa. Ese primer callback falla (hay invitación pendiente); el
+    // cliente consulta, confirma, acepta y reintenta con la misma firma.
+    if (!(await connectExternalWallet(pageB))) {
+      fail('El dispositivo invitado no pudo iniciar el flujo de la billetera externa')
     } else {
-      await pageB.evaluate(() => {
-        const button = [...document.querySelectorAll('button')]
-          .find((candidate) => /connect wallet|conectar billetera/i.test(candidate.textContent || ''))
-        button?.click()
-      })
-
       let address = null
       for (let i = 0; i < 90; i++) {
         await sleep(1000)

@@ -8,7 +8,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, setupFullWalletMock, summary } from '@pasosdejesus/m/e2e'
 // R-#239: the shared wallet core (`@pasosdejesus/m/wallet`) signs (setupSIWEMock retired).
-import { waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
+import { connectExternalWallet, waitForExternalConnect } from '../helpers/in-app-wallet.mjs'
 
 function loadEnvCredentials() {
   const envPaths = [
@@ -63,16 +63,9 @@ async function main() {
 
   // ── Test 2: Click Connect → SIWE → reload → address ──
   console.log('\n── Test 2: Click Connect → SIWE flow ──')
-  const buttons = await page.$$('button')
-  let clicked = false
-  for (const btn of buttons) {
-    const text = await page.evaluate(el => el.textContent, btn).catch(() => null)
-    if (text?.includes('Connect') || text?.includes('Conectar')) {
-      await btn.click().catch(() => {})
-      clicked = true
-      break
-    }
-  }
+  // R-#265 §3.9: el header usa `WalletConnect` del motor; el helper abre la elección
+  // y firma con la billetera externa.
+  const clicked = await connectExternalWallet(page)
   if (!clicked) { fail('Connect button not found'); await browser.close(); process.exit(1) }
   ok('Clicked Connect Wallet')
 

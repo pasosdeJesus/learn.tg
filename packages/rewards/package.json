@@ -14,8 +14,8 @@
     "react": ">=18.0.0",
     "viem": ">=2.0.0",
     "kysely": ">=0.28.0",
-    "@pasosdejesus/m": ">=0.28.0",
-    "@pasosdejesus/mpdj": ">=0.2.12",
+    "@pasosdejesus/m": ">=0.31.1",
+    "@pasosdejesus/mpdj": ">=0.2.15",
     "@pasosdejesus/usdt": ">=0.1.3",
     "dotenv": ">=16.0.0"
   },

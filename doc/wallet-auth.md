@@ -43,12 +43,12 @@ learn.tg after removing RainbowKit + wagmi (R-#186).
 user identity. Wallet connection state (wagmi) is no longer tracked
 separately.
 
-**Two wallets (R-#244 MVP):** `WalletSelector` lets the user pick between the
-**in-app wallet** (`@pasosdejesus/m/wallet` core + `@pasosdejesus/m/wallet/next`
-React layer) and the **external** wallet (`ConnectWalletButton`,
-`window.ethereum`). `useWalletProvider()` resolves the effective EIP-1193
-provider — the in-app one while it is unlocked, otherwise the injected one —
-and every wallet hook goes through it.
+**Two wallets (R-#244 MVP):** the header shows **one** "Connect Wallet" button
+(`WalletConnect` from the `wallet` engine, R-#265 §3.9) whose modal lets the user pick
+between the **in-app wallet** (`@pasosdejesus/m/wallet` core + `@pasosdejesus/m/wallet/next`
+React layer) and the **external** wallet (`ConnectWalletButton`, `window.ethereum`).
+`useWalletProvider()` resolves the effective EIP-1193 provider — the in-app one while it is
+unlocked, otherwise the injected one — and every wallet hook goes through it.
 
 ### Detecting the in-app provider (R-#254)
 
@@ -111,16 +111,22 @@ Custom connect/disconnect button. Replaces RainbowKit's `ConnectButton`.
 
 ### WalletSelector (`components/WalletSelector.tsx`)
 
-Mounted in `Header` (R-#238). The header only shows the state; the whole flow
-lives in the modal below.
+Mounted in `Header` (R-#238/R-#265 §3.9). Without a session the header shows **one**
+button: `WalletConnect` from the engine (`generated-wallet/next`), whose dialog is the
+place to choose (operator decision, 2026-10-17: one modal, not several header buttons).
+The body is overridden with `renderBody` to keep learn.tg's flows.
 
 | State | UI |
 |-------|----|
-| `no-wallet` | "Use in-app wallet" (opens `WalletDialog`) plus "Use external wallet" when `window.ethereum` exists |
-| `locked` | "Unlock your in-app wallet" (opens `WalletDialog`) |
-| `unlocked` without a session | "Sign in with in-app wallet" (opens `WalletDialog`, which runs the SIWE) |
-| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out) + "Link another wallet" (R-#265, see below) |
-| external chosen | Defers to `ConnectWalletButton` (existing flow, preserved) |
+| `no-wallet` | "Connect Wallet" → modal: **Use in-app wallet** (opens `WalletDialog`) plus **Use external wallet** (`ConnectWalletButton`, full chain + SIWE) when a provider exists |
+| `locked` | Same modal: "Unlock your in-app wallet" (opens `WalletDialog`) |
+| `unlocked` without a session | Same modal: "Sign in with in-app wallet" (opens `WalletDialog`, which runs the SIWE) |
+| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out) + "Link another wallet" + "Invite a wallet" (R-#265) |
+| wallet browser | The modal lists the external wallet **first** (`data-external-primary="true"` on `[data-testid="wallet-selector"]`), with the in-app one as the alternative and the WebAuthn note |
+
+The modal also offers "import your recovery phrase" (R-#270 §3.1). `WalletDialog` stays
+mounted with a session because it is the only listener of
+`learn.tg:open-in-app-wallet-dialog` (the unlock button of the donation/purchase modals).
 
 ### LinkWalletButton (`components/LinkWalletButton.tsx`)
 

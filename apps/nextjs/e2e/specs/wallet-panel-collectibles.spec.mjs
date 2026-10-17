@@ -78,6 +78,11 @@ async function chooseProtection(page) {
 
 async function importInAppWallet(page, privateKey) {
   for (let attempt = 0; attempt < 15; attempt++) {
+    // R-#265 §3.9: la acción in-app vive dentro del modal del motor `WalletConnect`.
+    if (!(await page.$('[data-testid="wallet-open-dialog"]'))) {
+      await page.click('[data-testid="connect-wallet"]').catch(() => {})
+      await sleep(700)
+    }
     await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
     const opened = await page
       .waitForSelector('[data-testid="wallet-mode-import"]', { timeout: 5000 })
