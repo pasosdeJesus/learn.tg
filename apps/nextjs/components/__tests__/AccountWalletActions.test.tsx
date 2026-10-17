@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -88,6 +88,24 @@ describe('AccountWalletActions (R-#265 §3.2)', () => {
     mocks.sessionAddress = undefined
     const { container } = render(<AccountWalletActions lang="en" />)
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('ofrece desbloquear desde el panel cuando la billetera está bloqueada', () => {
+    mocks.status = 'locked'
+    mocks.inAppAddress = B
+    const onUnlock = vi.fn()
+    render(<AccountWalletActions lang="en" onUnlock={onUnlock} />)
+
+    fireEvent.click(screen.getByTestId('wallet-unlock-from-panel'))
+    expect(onUnlock).toHaveBeenCalled()
+  })
+
+  it('no ofrece desbloquear con la billetera desbloqueada', () => {
+    mocks.status = 'unlocked'
+    mocks.inAppAddress = B
+    render(<AccountWalletActions lang="en" onUnlock={vi.fn()} />)
+
+    expect(screen.queryByTestId('wallet-unlock-from-panel')).toBeNull()
   })
 
   it('alinea las acciones al inicio del contenedor', () => {

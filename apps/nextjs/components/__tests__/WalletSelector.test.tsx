@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   dialogOpen: false,
   panelOpen: false,
   panelAddress: '',
+  onRequestUnlock: undefined as (() => void) | undefined,
   externalAvailable: false,
 }))
 
@@ -44,9 +45,10 @@ vi.mock('@/lib/external-provider', () => ({
 }))
 
 vi.mock('@/components/WalletPanel', () => ({
-  WalletPanel: ({ open, address }: { open: boolean; address: string }) => {
+  WalletPanel: ({ open, address, onRequestUnlock }: { open: boolean; address: string; onRequestUnlock?: () => void }) => {
     mocks.panelOpen = open
     mocks.panelAddress = address
+    mocks.onRequestUnlock = onRequestUnlock
     return open ? React.createElement('div', { 'data-testid': 'wallet-panel-open' }) : null
   },
 }))
@@ -149,22 +151,22 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     render(<WalletSelector lang="en" />)
 
     expect(screen.getByTestId('wallet-selector-in-app')).toHaveTextContent(/0xf39f…2266/)
-    // R-#246: la dirección es también la entrada al panel (antes con sesión no
-    // había forma de abrir el diálogo, y por tanto de activar la huella).
+    // R-#246/R-#265: la dirección es la entrada al panel; con la billetera bloqueada
+    // el panel se abre igual y ofrece desbloquear (antes pedía desbloquear dos veces).
     const pill = screen.getByTestId('wallet-open-dialog')
     expect(pill).toHaveTextContent(/0xf39f…2266/)
     await act(async () => {
       fireEvent.click(pill)
     })
-    expect(screen.getByTestId('wallet-dialog-open')).toBeInTheDocument()
+    expect(screen.getByTestId('wallet-panel-open')).toBeInTheDocument()
   })
 
   // R-#244: con sesión y billetera bloqueada el encabezado muestra la dirección,
   // pero el diálogo debe seguir montado: es el único que atiende el evento de los
   // modales de donación/compra (reportado el 2026-09-16: el botón no hacía nada).
-  // R-#249: la píldora abre el PANEL con la billetera desbloqueada y el diálogo de
-  // desbloqueo cuando está bloqueada.
-  it('opens the panel when the wallet is unlocked and the dialog when it is locked', async () => {
+  // R-#249/R-#265: la píldora abre siempre el panel; cuando la billetera está
+  // bloqueada el panel pide desbloquear a través de `onRequestUnlock`.
+  it('opens the panel with a session and asks for unlock from the panel when locked', async () => {
     mocks.status = 'unlocked'
     mocks.isInAppUnlocked = true
     mocks.inAppAddress = ADDRESS
@@ -186,8 +188,13 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-open-dialog'))
     })
+    expect(screen.getByTestId('wallet-panel-open')).toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-dialog-open')).not.toBeInTheDocument()
+    // El panel ofrece desbloquear; eso abre el diálogo.
+    await act(async () => {
+      mocks.onRequestUnlock?.()
+    })
     expect(screen.getByTestId('wallet-dialog-open')).toBeInTheDocument()
-    expect(screen.queryByTestId('wallet-panel-open')).not.toBeInTheDocument()
   })
 
   it('opens the dialog from the outside event while showing a session', async () => {

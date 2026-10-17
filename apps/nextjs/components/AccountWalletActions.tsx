@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { getExternalProvider, useExternalProvider } from '@/lib/external-provider'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
+import { createComponentT } from '@/lib/hooks/useTranslation'
 import { hasAnotherWallet } from '@/lib/wallet-availability'
 import { LinkWalletButton } from '@/components/LinkWalletButton'
 import { InviteWalletControl } from '@/components/InviteWalletControl'
@@ -12,6 +14,8 @@ interface AccountWalletActionsProps {
   lang?: string
   /** Refresca la lista de billeteras tras vincular o invitar. */
   onChanged?: () => void
+  /** Abre el diálogo de la billetera para desbloquearla (firmar). */
+  onUnlock?: () => void
 }
 
 /**
@@ -23,11 +27,15 @@ interface AccountWalletActionsProps {
  * billetera distinta de la conectada: la de la aplicación, otra cuenta de la externa o
  * un segundo proveedor. Así el botón no promete algo que el dispositivo no tiene.
  */
-export function AccountWalletActions({ lang = 'en', onChanged }: AccountWalletActionsProps) {
+export function AccountWalletActions({ lang = 'en', onChanged, onUnlock }: AccountWalletActionsProps) {
   const { status, walletInfo } = useInAppWallet()
   const { address, sessionAddress } = useAuthAddress()
   const { available: externalAvailable, announced } = useExternalProvider()
   const [externalAccounts, setExternalAccounts] = useState<string[]>([])
+  const t = createComponentT(lang, {
+    en: { unlock: 'Unlock your in-app wallet' },
+    es: { unlock: 'Desbloquear tu billetera' },
+  })
 
   // Cuentas que el sitio ya puede usar sin abrir el diálogo de la billetera externa.
   useEffect(() => {
@@ -62,6 +70,17 @@ export function AccountWalletActions({ lang = 'en', onChanged }: AccountWalletAc
 
   return (
     <div className="flex flex-col items-start gap-2" data-testid="account-wallet-actions">
+      {status === 'locked' && onUnlock && (
+        <Button
+          variant="outline"
+          size="sm"
+          data-testid="wallet-unlock-from-panel"
+          onClick={onUnlock}
+          className="text-xs"
+        >
+          {t('unlock')}
+        </Button>
+      )}
       {showLink && <LinkWalletButton lang={lang} onLinked={onChanged} align="start" />}
       <InviteWalletControl lang={lang} onChanged={onChanged} align="start" />
     </div>

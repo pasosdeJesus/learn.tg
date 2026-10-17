@@ -14,7 +14,6 @@ import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
 import { isValidPassword, useInAppWallet } from '@pasosdejesus/m/wallet/next'
 import { detectPlatformSupport, isUserCancelledError } from '@pasosdejesus/m/wallet'
 import { createComponentT } from '@/lib/hooks/useTranslation'
-import { useSession } from 'next-auth/react'
 import { PasswordInput } from '@/components/PasswordInput'
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
@@ -58,7 +57,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     remove,
     getProvider,
   } = useInAppWallet()
-  const { update: updateSession } = useSession()
   const [mode, setMode] = useState<'create' | 'import'>('create')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -319,17 +317,17 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       }
       await signInWithInAppWallet(provider, { lang: lang === 'es' ? 'es' : 'en' })
       onOpenChange(false)
-      // Refresca la sesión **sin recargar** la página: la recarga saca la clave de la
-      // memoria y el usuario tenía que desbloquear dos veces (la segunda para ver el
-      // panel; reportado el 2026-10-17). `update()` re-consulta `/api/auth/session`,
-      // donde ya está la cookie que dejó el callback.
-      await updateSession()
-      setBusy(false)
+      // La recarga es necesaria: `update()` de next-auth 4 devuelve sin hacer nada
+      // cuando todavía no hay sesión (`react/index.js`: `if (loading || !session)
+      // return`), así que la cabecera seguiría mostrando "Conectar". La clave sale de
+      // memoria al recargar; para que la píldora no vuelva a pedir desbloqueo, abre el
+      // panel directamente y este ofrece "Desbloquear" (reportado el 2026-10-17).
+      window.location.reload()
     } catch (e) {
       setLocalError(translateError(e))
       setBusy(false)
     }
-  }, [getProvider, lang, onOpenChange, sessionAddress, t, translateError, updateSession, walletInfo])
+  }, [getProvider, lang, onOpenChange, sessionAddress, t, translateError, walletInfo])
 
   const handleCreate = useCallback(async () => {
     setLocalError(null)

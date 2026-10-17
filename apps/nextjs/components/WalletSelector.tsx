@@ -32,7 +32,7 @@ interface WalletSelectorProps {
  */
 export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   const { status, lock } = useInAppWallet()
-  const { address, sessionAddress, inAppAddress, isInAppUnlocked, isSessionLoading } = useAuthAddress()
+  const { address, sessionAddress, inAppAddress, isSessionLoading } = useAuthAddress()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
   // R-#246: la billetera inyectada se detecta por EIP-6963 (Rabby, MetaMask y
@@ -132,13 +132,12 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   const migrationHref = lang === 'es' ? '/es/migracion-billetera-app' : '/en/migration-in-app-wallet'
 
   if (signedIn) {
-    // R-#249: con la billetera desbloqueada la píldora abre el PANEL (saldos,
-    // recibir, enviar, coleccionables); bloqueada abre el diálogo de desbloqueo, que
-    // es el único camino a la clave.
-    const openWalletUi = () => {
-      if (isInAppUnlocked) setPanelOpen(true)
-      else setDialogOpen(true)
-    }
+    // R-#249/R-#265 (2026-10-17): con sesión la píldora abre **siempre** el panel
+    // (saldos, recibir, enviar, coleccionables y la pestaña Cuentas). Antes, con la
+    // billetera bloqueada abría el diálogo de desbloqueo: tras el SIWE la recarga deja
+    // la clave fuera de memoria, así que el usuario desbloqueaba dos veces. Ahora el
+    // panel ofrece "Desbloquear" cuando hace falta firmar.
+    const openWalletUi = () => setPanelOpen(true)
     return (
       <>
         <div data-testid="wallet-selector-in-app" className="flex items-center gap-2">
@@ -176,6 +175,7 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
           onOpenChange={setPanelOpen}
           address={inAppAddress || shownAddress || ''}
           onLock={() => { void disconnect() }}
+          onRequestUnlock={() => setDialogOpen(true)}
         />
       </>
     )

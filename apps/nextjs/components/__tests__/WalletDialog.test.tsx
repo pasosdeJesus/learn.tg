@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
   remove: vi.fn(),
   getProvider: vi.fn(),
   signInWithInAppWallet: vi.fn(),
-  updateSession: vi.fn(),
+  reload: vi.fn(),
 }))
 
 const coreMocks = vi.hoisted(() => ({
@@ -61,11 +61,13 @@ vi.mock('@/lib/in-app-siwe', () => ({
   signInWithInAppWallet: mocks.signInWithInAppWallet,
 }))
 
-// R-#265: tras el SIWE se refresca la sesión sin recargar (la recarga sacaba la
-// clave de la memoria y obligaba a desbloquear dos veces).
-vi.mock('next-auth/react', () => ({
-  useSession: () => ({ update: mocks.updateSession }),
-}))
+// La recarga es intencional: `update()` de next-auth 4 no hace nada sin sesión previa
+// (la cabecera no se enteraría del SIWE). La UX del doble desbloqueo se resuelve en
+// `WalletSelector` abriendo el panel y ofreciendo desbloquear desde ahí.
+Object.defineProperty(window, 'location', {
+  value: { ...window.location, reload: mocks.reload },
+  configurable: true,
+})
 
 import { WalletDialog } from '../WalletDialog'
 
@@ -194,7 +196,7 @@ describe('WalletDialog (R-#244)', () => {
     const positions = await completeBackup()
     expect(positions).toHaveLength(3)
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-    expect(mocks.updateSession).toHaveBeenCalled()
+    expect(mocks.reload).toHaveBeenCalled()
     expect(localStorage.getItem('learn.tg.wallet.backupConfirmed')).toBe('1')
   })
 
@@ -675,7 +677,7 @@ describe('WalletDialog (R-#244)', () => {
 
     expect(mocks.unlock).toHaveBeenCalledWith('12345678')
     expect(mocks.signInWithInAppWallet).not.toHaveBeenCalled()
-    expect(mocks.updateSession).not.toHaveBeenCalled()
+    expect(mocks.reload).not.toHaveBeenCalled()
   })
 
   it('shows the error reported by the hook', () => {

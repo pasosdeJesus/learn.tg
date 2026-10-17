@@ -121,12 +121,18 @@ The body is overridden with `renderBody` to keep learn.tg's flows.
 | `no-wallet` | "Connect Wallet" → modal: **Use in-app wallet** (opens `WalletDialog`) plus **Use external wallet** (`ConnectWalletButton`, full chain + SIWE) when a provider exists |
 | `locked` | Same modal: "Unlock your in-app wallet" (opens `WalletDialog`) |
 | `unlocked` without a session | Same modal: "Sign in with in-app wallet" (opens `WalletDialog`, which runs the SIWE) |
-| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out); the pill opens `WalletPanel` (or `WalletDialog` when the wallet is locked) |
+| unlocked **and** session matches | Short address + "Disconnect" (clears `sessionAddress`, locks the wallet, signs out); the pill opens `WalletPanel` **always** (see below) |
 | wallet browser | The modal lists the external wallet **first** (`data-external-primary="true"` on `[data-testid="wallet-selector"]`), with the in-app one as the alternative and the WebAuthn note |
 
 The modal also offers "import your recovery phrase" (R-#270 §3.1). `WalletDialog` stays
 mounted with a session because it is the only listener of
 `learn.tg:open-in-app-wallet-dialog` (the unlock button of the donation/purchase modals).
+
+**The pill always opens the panel** (2026-10-17). Before, a locked wallet made it open
+`WalletDialog`; after the SIWE the reload drops the key (next-auth 4's `update()` returns
+early when there is no session yet, so the reload is required for the header to see it) and
+the learner had to unlock twice to reach the panel. Now `WalletPanel` opens read-only and its
+Accounts tab offers "Unlock your in-app wallet" (`onRequestUnlock` → `WalletDialog`).
 
 **Link and invite live in the account, not in the header** (operator preference, 2026-10-17):
 the **Accounts** tab — fourth in `WalletPanel` (`tabOrder={['balances','receive','send','accounts','collectibles']}`)

@@ -39,6 +39,8 @@ interface WalletPanelProps {
   address: string
   /** Desconectar la billetera y cerrar la sesión, como el ✕ de la cabecera. */
   onLock?: () => void
+  /** Abrir el diálogo de la billetera (desbloquear) desde el panel. */
+  onRequestUnlock?: () => void
 }
 
 /** Textos que learn.tg ya mostraba y difieren de los del motor. */
@@ -68,7 +70,7 @@ function learnTgTokens(): WalletToken[] {
   ]
 }
 
-export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }: WalletPanelProps) {
+export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock, onRequestUnlock }: WalletPanelProps) {
   const language = lang === 'es' ? 'es' : 'en'
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
@@ -128,7 +130,9 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock }
       // (vincular/invitar) es la **cuarta** pestaña, después de saldos, recibir y enviar.
       tabOrder={['balances', 'receive', 'send', 'accounts', 'collectibles']}
       accountsActions={
-        address ? <AccountWalletActions lang={language} onChanged={refreshWallets} /> : undefined
+        address
+          ? <AccountWalletActions lang={language} onChanged={refreshWallets} onUnlock={onRequestUnlock} />
+          : undefined
       }
     />
   )
