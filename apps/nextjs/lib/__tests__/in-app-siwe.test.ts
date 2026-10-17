@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+// El inicio de sesión usa `signIn()` de next-auth/react (refresca el SessionProvider);
+// aquí se aísla y se simulan sus intentos: el 1ro rechazado (invitación), el 2do OK.
+const authMocks = vi.hoisted(() => ({ signIn: vi.fn() }))
+vi.mock('next-auth/react', () => ({
+  signIn: (...args: unknown[]) => authMocks.signIn(...args),
+}))
+
 import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 
 // El mock global de `siwe` (vitest.setup.ts) no implementa `prepareMessage`, que es
@@ -41,13 +48,15 @@ describe('signInWithInAppWallet — invitación pendiente (R-#265 §3.2)', () =>
     callbackCalls = 0
     acceptBodies = []
     window.localStorage.clear()
+    authMocks.signIn.mockReset()
+    authMocks.signIn.mockImplementation(async () => {
+      callbackCalls++
+      return callbackCalls === 1
+        ? { ok: false, status: 401, error: 'CredentialsSignin', url: null }
+        : { ok: true, status: 200, error: null, url: '/en' }
+    })
     fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
       if (url === '/api/auth/csrf') return respond(200, { csrfToken: 'abcdef12' })
-      if (url === '/api/auth/callback/credentials') {
-        callbackCalls++
-        // Primer intento: rechazado (hay invitación). Segundo: aceptado.
-        return respond(callbackCalls === 1 ? 401 : 200, {})
-      }
       if (url === '/api/wallet/accept') {
         const body = JSON.parse(String(init?.body || '{}')) as Record<string, unknown>
         acceptBodies.push(body)
@@ -97,15 +106,15 @@ describe('signInWithInAppWallet — invitación pendiente (R-#265 §3.2)', () =>
   })
 
   it('keeps the happy path untouched (no probe when the callback succeeds)', async () => {
-    fetchMock.mockImplementation(async (url: string) => {
-      if (url === '/api/auth/csrf') return respond(200, { csrfToken: 'abcdef12' })
-      if (url === '/api/auth/callback/credentials') return respond(200, {})
-      throw new Error(`no debería llamarse ${url}`)
+    authMocks.signIn.mockImplementation(async () => {
+      callbackCalls++
+      return { ok: true, status: 200, error: null, url: '/en' }
     })
 
     const address = await signInWithInAppWallet(makeProvider() as any)
 
     expect(address).toBe(ADDRESS)
+    expect(callbackCalls).toBe(1)
     expect(acceptBodies).toHaveLength(0)
     expect(window.localStorage.getItem('learn.tg.sessionAddress')).toBe(ADDRESS)
   })

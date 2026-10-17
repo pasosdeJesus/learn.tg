@@ -2,6 +2,7 @@
 
 import { SiweMessage } from 'siwe'
 import { getAddress } from 'viem'
+import { signIn } from 'next-auth/react'
 import type { Eip1193Provider } from '@pasosdejesus/m/wallet'
 import { getAppChain } from '@/lib/app-chain'
 import { invitationPrompt, resolveInvitationAfterAuthFailure } from '@/lib/wallet-invitations'
@@ -61,26 +62,23 @@ export async function signInWithInAppWallet(
     params: [message, account],
   })) as string
 
-  const postCredentials = () => {
-    const body = new URLSearchParams({
-      csrfToken,
-      message,
-      signature,
-      redirect: 'false',
-      json: 'true',
-      // R-#246 §8: `userevent` registra con qué billetera se inició sesión
-      // (`in-app`, `eip6963:<rdns>` o `window.ethereum`).
-      walletSource: 'in-app',
-    })
-    return fetch('/api/auth/callback/credentials', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-    })
-  }
+  const attempt = () => signIn('credentials', {
+    redirect: false,
+    message,
+    signature,
+    // R-#246 §8: `userevent` registra con qué billetera se inició sesión
+    // (`in-app`, `eip6963:<rdns>` o `window.ethereum`).
+    walletSource: 'in-app',
+  })
 
-  let callback = await postCredentials()
-  if (!callback.ok) {
+  // `signIn()` de next-auth/react **refresca el SessionProvider** después de un
+  // callback exitoso con `redirect: false` (`react/index.js` llama a
+  // `__NEXTAUTH._getSession({ event: 'storage' })`). Postear a mano el callback
+  // obligaba a recargar la página para que la cabecera viera la sesión, y la recarga
+  // saca la clave de la memoria (R-#265, doble desbloqueo). Ver el bug abierto de v4
+  // https://github.com/nextauthjs/next-auth/issues/13173.
+  let result = await attempt()
+  if (!result?.ok || result.error) {
     // R-#265 §3.2: el callback rechaza una billetera **invitada** para que no cree
     // su propia cuenta; si la invitación existe se pregunta y, al aceptar, se
     // enlaza y se reintenta con la misma firma.
@@ -93,8 +91,8 @@ export async function signInWithInAppWallet(
         ((invitedBy) => window.confirm(invitationPrompt(lang, invitedBy))),
     })
     if (outcome === 'accepted') {
-      callback = await postCredentials()
-      if (!callback.ok) throw new Error('auth-failed' satisfies InAppSignInError)
+      result = await attempt()
+      if (!result?.ok || result.error) throw new Error('auth-failed' satisfies InAppSignInError)
     } else {
       throw new Error('auth-failed' satisfies InAppSignInError)
     }

@@ -317,12 +317,10 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       }
       await signInWithInAppWallet(provider, { lang: lang === 'es' ? 'es' : 'en' })
       onOpenChange(false)
-      // La recarga es necesaria: `update()` de next-auth 4 devuelve sin hacer nada
-      // cuando todavía no hay sesión (`react/index.js`: `if (loading || !session)
-      // return`), así que la cabecera seguiría mostrando "Conectar". La clave sale de
-      // memoria al recargar; para que la píldora no vuelva a pedir desbloqueo, abre el
-      // panel directamente y este ofrece "Desbloquear" (reportado el 2026-10-17).
-      window.location.reload()
+      // Sin recarga: `signInWithInAppWallet` usa `signIn()` de next-auth/react, que
+      // refresca el SessionProvider después del callback (ver `lib/in-app-siwe.ts`).
+      // La clave sigue en memoria, así que la píldora abre el panel desbloqueado.
+      setBusy(false)
     } catch (e) {
       setLocalError(translateError(e))
       setBusy(false)

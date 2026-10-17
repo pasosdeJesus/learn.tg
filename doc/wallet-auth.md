@@ -91,11 +91,13 @@ Custom connect/disconnect button. Replaces RainbowKit's `ConnectButton`.
 3. Get CSRF token from `/api/auth/csrf`
 4. Build SIWE message with EIP-55 checksummed address (`getAddress()`)
 5. Sign via `window.ethereum.request({ method: 'personal_sign', ... })`
-6. POST to `/api/auth/callback/credentials`
+6. `signIn('credentials', { redirect: false, message, signature })` from
+   `next-auth/react`: it POSTs to `/api/auth/callback/credentials` and then calls
+   `__NEXTAUTH._getSession({ event: 'storage' })`, so the SessionProvider is updated
+   **without reloading** the page (a reload would drop the in-app key from memory)
 7. Store `sessionAddress` in localStorage (cold-session fallback for
    `useSession()`, #5719). There is no API token: the NextAuth session cookie
    (HttpOnly) is the credential (R-#233 Fase 2)
-8. Reload page (NextAuth reads session cookie on mount)
 
 **Disconnect flow:**
 1. Remove `sessionAddress` from localStorage
@@ -128,11 +130,16 @@ The modal also offers "import your recovery phrase" (R-#270 §3.1). `WalletDialo
 mounted with a session because it is the only listener of
 `learn.tg:open-in-app-wallet-dialog` (the unlock button of the donation/purchase modals).
 
-**The pill always opens the panel** (2026-10-17). Before, a locked wallet made it open
-`WalletDialog`; after the SIWE the reload drops the key (next-auth 4's `update()` returns
-early when there is no session yet, so the reload is required for the header to see it) and
-the learner had to unlock twice to reach the panel. Now `WalletPanel` opens read-only and its
-Accounts tab offers "Unlock your in-app wallet" (`onRequestUnlock` → `WalletDialog`).
+**The pill always opens the panel** (2026-10-17). The SIWE now goes through
+`signIn('credentials', { redirect: false })` of `next-auth/react`, which refreshes the
+SessionProvider after the callback (it calls `__NEXTAUTH._getSession({ event: 'storage' })`),
+so the page no longer reloads and the in-app key stays in memory. Calling `update()`
+instead does **not** work in next-auth 4 when there is no session yet
+(`if (loading || !session) return`, an open v4 bug:
+[#13173](https://github.com/nextauthjs/next-auth/issues/13173)); posting the callback by
+hand forced a reload and a second unlock. `WalletPanel` also opens read-only when the
+wallet is locked and its Accounts tab offers "Unlock your in-app wallet"
+(`onRequestUnlock` → `WalletDialog`).
 
 **Link and invite live in the account, not in the header** (operator preference, 2026-10-17):
 the **Accounts** tab — fourth in `WalletPanel` (`tabOrder={['balances','receive','send','accounts','collectibles']}`)
@@ -190,8 +197,8 @@ paste an address, invite it, list the **pending invitations** of the account and
 Modal with the whole in-app flow (it does not belong in the header): create or
 import with a PIN, show the **12 words for manual backup** with a confirmation
 step, unlock an existing wallet, delete the wallet, and finish with the SIWE
-sign-in (`lib/in-app-siwe.ts`, same POST to `/api/auth/callback/credentials` as
-the external wallet, then a reload so NextAuth reads the session cookie).
+sign-in (`lib/in-app-siwe.ts`, same `signIn()` of `next-auth/react` as the external
+wallet, which refreshes the session without reloading).
 
 Every password field is a `PasswordInput` (`components/PasswordInput.tsx`), with the
 **eye** to reveal what was typed (R-#269): the password cannot be recovered (only the
@@ -217,9 +224,9 @@ Three behaviours came out of the operator's manual testing on 2026-09-16
 (https://github.com/pasosdeJesus/learn.tg/issues/244): the modal is also mounted
 when the header already shows a session — it is the only listener of
 `learn-tg:open-in-app-wallet-dialog`, so without it the "unlock" button of the
-donation and purchase modals did nothing — and unlocking skips the SIWE (and the
-reload that would lock the wallet again) when the session cookie already belongs
-to that wallet.
+donation and purchase modals did nothing — and unlocking skips the SIWE when the
+session cookie already belongs to that wallet (this used to force a reload that locked
+the wallet again).
 
 **Biometric unlock (layer L2 of
 https://github.com/pasosdeJesus/learn.tg/issues/246).** The decrypted key lives in

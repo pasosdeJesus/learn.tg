@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { SiweMessage } from 'siwe'
 import { getAddress } from 'viem'
 import { Loader2 } from 'lucide-react'
@@ -216,28 +216,24 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       })) as string
       console.log('[debug-wallet] Signature received')
 
-      // 5. POST to NextAuth credentials callback
-      const body = new URLSearchParams({
-        csrfToken,
+      // 5. NextAuth: `signIn()` refresca el SessionProvider después del callback
+      // (`react/index.js` llama a `__NEXTAUTH._getSession({event:'storage'})`), así que
+      // no hace falta recargar la página. Postear a mano el callback obligaba a
+      // recargar para que la cabecera viera la sesión. Ver
+      // https://github.com/nextauthjs/next-auth/issues/13173.
+      const attempt = () => signIn('credentials', {
+        redirect: false,
         message: msgStr,
         signature: sig,
-        redirect: 'false',
-        json: 'true',
         // R-#246 §8: el servidor registra en `userevent` de dónde salió la billetera
         // (`eip6963:<rdns>` o `window.ethereum`); es lo que responde la pregunta
         // abierta sobre los navegadores de billetera sin otro round manual.
         walletSource: externalWalletSource(),
       })
-      const bodyString = body.toString()
-      console.log('[debug-wallet] Fetching /api/auth/callback/credentials')
-      const cbRes = await fetch('/api/auth/callback/credentials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: bodyString,
-      })
-      console.log('[debug-wallet] Callback fetch returned. Status:', cbRes.status)
+      let result = await attempt()
+      console.log('[debug-wallet] signIn returned. Status:', result?.status)
 
-      if (!cbRes.ok) {
+      if (!result?.ok || result.error) {
         // R-#265 §3.2: una billetera **invitada** no crea su propia cuenta en un
         // ingreso normal. Se consulta la invitación (sólo se la revela a quien firma),
         // se pide confirmación explícita y, si acepta, se enlaza y se reintenta el
@@ -249,14 +245,12 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
             window.confirm(invitationPrompt(lang === 'es' ? 'es' : 'en', invitedBy)),
         })
         if (outcome !== 'accepted') {
-          throw new Error(`Authentication failed (${cbRes.status})`)
+          throw new Error(`Authentication failed (${result?.status ?? 'unknown'})`)
         }
-        const retried = await fetch('/api/auth/callback/credentials', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: bodyString,
-        })
-        if (!retried.ok) throw new Error(`Authentication failed (${retried.status})`)
+        result = await attempt()
+        if (!result?.ok || result.error) {
+          throw new Error(`Authentication failed (${result?.status ?? 'unknown'})`)
+        }
       }
 
       // Set localStorage — survives NextAuth's useSession() glitch (#5719).
@@ -279,10 +273,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
           // No bloquea el login; el código se puede reclamar luego en /referrals
         }
       }
-      // Reload page so NextAuth reads the session cookie on mount.
-      // update() from useSession() is unreliable after SIWE callback.
-      console.log('[debug-wallet] Reloading page...')
-      window.location.reload()
+      // Sin recarga: `signIn()` ya refrescó el SessionProvider (ver arriba).
     } catch (err: any) {
       console.error('ConnectWalletButton error:', err)
       const msg = err?.code === 4001 ? t('cancelled') : t('failed')

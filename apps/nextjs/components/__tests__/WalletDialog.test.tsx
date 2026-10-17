@@ -61,9 +61,8 @@ vi.mock('@/lib/in-app-siwe', () => ({
   signInWithInAppWallet: mocks.signInWithInAppWallet,
 }))
 
-// La recarga es intencional: `update()` de next-auth 4 no hace nada sin sesión previa
-// (la cabecera no se enteraría del SIWE). La UX del doble desbloqueo se resuelve en
-// `WalletSelector` abriendo el panel y ofreciendo desbloquear desde ahí.
+// `signIn()` de next-auth/react refresca la sesión sin recargar; el mock queda para
+// comprobar que el diálogo **no** recarga (la clave sigue en memoria).
 Object.defineProperty(window, 'location', {
   value: { ...window.location, reload: mocks.reload },
   configurable: true,
@@ -196,7 +195,8 @@ describe('WalletDialog (R-#244)', () => {
     const positions = await completeBackup()
     expect(positions).toHaveLength(3)
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-    expect(mocks.reload).toHaveBeenCalled()
+    // `signIn()` de next-auth/react refresca la sesión: ya no se recarga la página.
+    expect(mocks.reload).not.toHaveBeenCalled()
     expect(localStorage.getItem('learn.tg.wallet.backupConfirmed')).toBe('1')
   })
 
