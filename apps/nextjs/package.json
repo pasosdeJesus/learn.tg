@@ -83,7 +83,7 @@
     "@next/swc-wasm-nodejs": "16.3.1",
     "@pasosdejesus/contract-test": "^0.1.5",
     "@pasosdejesus/edr": "^0.1.2",
-    "@pasosdejesus/m": "^0.31.1",
+    "@pasosdejesus/m": "^0.31.2",
     "@pasosdejesus/mpdj": "^0.2.15",
     "@pasosdejesus/usdt": "^0.1.3",
     "@tailwindcss/postcss": "^4.3.3",

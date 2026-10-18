@@ -396,9 +396,22 @@ export function WalletPanel({
           )}
 
           <Tabs value={tab} onValueChange={handleTabChange}>
-            <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${tabs.length || 1}, minmax(0, 1fr))` }}>
+            {/*
+              Pestañas desplazables: con `grid` de columnas iguales el texto de
+              "Collectibles"/"Coleccionables" no cabe en un móvil (whitespace-nowrap
+              desborda la celda y se monta sobre la pestaña siguiente), y una etiqueta
+              corta ("Send"/"Enviar") parece tener más aire que las demás. Con `flex`
+              cada pestaña conserva su ancho natural y el mismo padding; si no caben,
+              la barra se desplaza en horizontal.
+            */}
+            <TabsList className="flex w-full justify-start overflow-x-auto">
               {tabs.map((value) => (
-                <TabsTrigger key={value} value={value} data-testid={`wallet-panel-tab-${value}`}>
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="shrink-0 px-2.5 text-xs sm:px-3 sm:text-sm"
+                  data-testid={`wallet-panel-tab-${value}`}
+                >
                   {text[value]}
                 </TabsTrigger>
               ))}

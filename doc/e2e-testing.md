@@ -20,7 +20,7 @@ End-to-end testing for learn.tg uses `@pasosdejesus/m`'s test runner
 | `bin/m test:e2e --smoke` | Smoke only | ❌ | `https://learn.tg:9001` |
 | `bin/m test:e2e <pattern>` | Specific spec(s) matching filename | ✅ | ⚠️ **`https://learn.tg` (producción)** |
 | `bin/m test:e2e --grep <filter>` | Filter specs by test name | ❌ | `https://learn.tg:9001` |
-| `bin/m test:e2e '**/*.spec.mjs' --retry <N>` | Re-run each failed spec on its own (`m/REQ/49` P3); the pattern must come **before** the flag (see below) | ✅ | `https://learn.tg:9001` |
+| `bin/m test:e2e --retry <N>` | Re-run each failed spec on its own (`m/REQ/49` P3; flag-first fixed in `@pasosdejesus/m@0.31.2`, `m/REQ/59`) | ✅ | `https://learn.tg:9001` |
 | `bin/m test:e2e:summary <log…>` | Per-spec results of one or more logs, side by side (`m/REQ/49` P4) | ❌ | local |
 
 Override target: `SITE_URL=https://learn.tg bin/m test:e2e`
@@ -53,19 +53,11 @@ VM de 1 CPU. Bajo esa carga algunas specs fallan por timing (una carrera de
 navegación, un RPC lento, una ruta compilando bajo demanda) y la **misma spec pasa
 al correrla sola**: son fallos **ambientales, no defectos de producto**.
 `make test-e2e-retry` corre la suite y vuelve a correr cada spec fallida por
-separado (`bin/m test:e2e '**/*.spec.mjs' --retry $E2E_RETRIES`, `m/REQ/49` P3), de
-modo que un fallo transitorio no envenene el resultado. Úsalo para la verificación
-final; usa `make test-e2e` cuando quieras la foto cruda. Antes de cualquiera,
-calienta el dev site (`bin/warmup.mjs`) **si se sirve con dev server**; con un build
-de producción no hace falta (ver `doc/environments.md` §Dos modos para servir el
-sitio de desarrollo).
-
-> **El patrón va antes del flag.** `m` llama `runE2e(arg, argv.slice(3))` y el
-> runner re-inserta el patrón cuando empieza con `--`: con `test:e2e --retry 2`
-> los argumentos quedan `['--retry','--retry','2']`, `getFlag('--retry')` lee
-> `'--retry'` y `parseInt` da `NaN` → **0 reintentos** (medido el 2026-10-17: un
-> spec falló y no se reintentó). El target del Makefile ya pasa
-> `'**/*.spec.mjs'` delante; si invocas `bin/m` a mano, haz lo mismo.
+separado (`bin/m test:e2e --retry $E2E_RETRIES`, `m/REQ/49` P3), de modo que un
+fallo transitorio no envenene el resultado. Úsalo para la verificación final; usa
+`make test-e2e` cuando quieras la foto cruda. Antes de cualquiera, calienta el dev
+site (`bin/warmup.mjs`) **si se sirve con dev server**; con un build de producción no
+hace falta (ver `doc/environments.md` §Dos modos para servir el sitio de desarrollo).
 
 **Un spec solo se reporta verde si sale con el código correcto.** El runner
 (`@pasosdejesus/m/dist/tasks/e2e.js:116`) decide por el exit code, y `fail()`

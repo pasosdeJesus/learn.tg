@@ -149,6 +149,11 @@ detects another wallet: the in-app one when it is not the session's, another per
 account on the external provider, a second EIP-6963 provider, or an external wallet while
 the session is the in-app one.
 
+The panel's tab bar is a **horizontal scroll** (`flex` + `overflow-x-auto`, each trigger
+with its natural width) instead of equal grid columns: with five labels,
+`Collectibles`/`Coleccionables` did not fit on a 360-dp Android screen (A54) and overlapped
+the next tab, while short labels looked padded unevenly (operator, 2026-10-17).
+
 ### LinkWalletButton (`components/LinkWalletButton.tsx`)
 
 R-#265 §3.2: adds another wallet to the **account** of the current session (label "Link

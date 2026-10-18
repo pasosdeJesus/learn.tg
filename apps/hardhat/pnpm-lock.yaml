@@ -8,7 +8,7 @@ overrides:
   '@ethereumjs/common': ^10.1.2
   '@ethereumjs/util': ^10.1.2
   '@ethereumjs/tx': ^10.1.2
-  '@pasosdejesus/m': ^0.31.1
+  '@pasosdejesus/m': ^0.31.2
 
 importers:
 
@@ -22,7 +22,7 @@ importers:
         version: 5.6.1
       '@pasosdejesus/mpdj':
         specifier: ^0.2.15
-        version: 0.2.15(@pasosdejesus/m@0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(next@16.4.1(@types/node@26.1.2)(react-dom@19.3.1(react@19.2.8))(react@19.2.8))(react@19.2.8)(vitest@5.0.5(@types/node@26.1.2)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.8)))
+        version: 0.2.15(@pasosdejesus/m@0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(next@16.4.1(@types/node@26.1.2)(react-dom@19.3.1(react@19.2.8))(react@19.2.8))(react@19.2.8)(vitest@5.0.5(@types/node@26.1.2)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.8)))
       dotenv:
         specifier: ^17.2.3
         version: 17.4.2
@@ -56,16 +56,16 @@ importers:
         version: 2.2.3(ethers@6.17.0)(hardhat@2.29.0(ts-node@10.9.2(@types/node@26.1.2)(typescript@5.9.3))(typescript@5.9.3))
       '@pasosdejesus/contract-test':
         specifier: ^0.1.5
-        version: 0.1.5(@pasosdejesus/m@0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
+        version: 0.1.5(@pasosdejesus/m@0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
       '@pasosdejesus/edr':
         specifier: ^0.1.2
         version: 0.1.2
       '@pasosdejesus/m':
-        specifier: ^0.31.1
-        version: 0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
+        specifier: ^0.31.2
+        version: 0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
       '@pasosdejesus/usdt':
         specifier: ^0.1.3
-        version: 0.1.3(@pasosdejesus/m@0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(react@19.2.8)(viem@2.55.11(typescript@5.9.3))
+        version: 0.1.3(@pasosdejesus/m@0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(react@19.2.8)(viem@2.55.11(typescript@5.9.3))
       '@typechain/ethers-v6':
         specifier: ^0.5.0
         version: 0.5.1(ethers@6.17.0)(typechain@8.3.2(typescript@5.9.3))(typescript@5.9.3)
@@ -829,21 +829,21 @@ packages:
   '@pasosdejesus/contract-test@0.1.5':
     resolution: {integrity: sha512-LHEDmeHcDUbmZ83Gph36QUOrXl1vrx/ygoepQL53kc+fGyQaCLVynuCVjEvDxiA7fdCbeu/e8GQ/oOoAYJacfw==}
     peerDependencies:
-      '@pasosdejesus/m': ^0.31.1
+      '@pasosdejesus/m': ^0.31.2
       ethers: ^6
       viem: ^2
 
   '@pasosdejesus/edr@0.1.2':
     resolution: {integrity: sha512-TTOWqtLmircMUrkA5AknUXOh2I5UpLCnXI01ywtqLs5HnB7T5Ce4xwzJYdBW7n6ub4lE8GHtfEeimYxXp3rVdg==}
 
-  '@pasosdejesus/m@0.31.1':
-    resolution: {integrity: sha512-RlcBBHv5L8tE7xRWLCHcSrLQ5BYRoHk+GByQ2cEYBRr3zJLqUVgxmJ0efjMjh4Y/EOUicAESvV5aSF7REo7zVg==}
+  '@pasosdejesus/m@0.31.2':
+    resolution: {integrity: sha512-PAN4++JZt04BVA0pCu8z5lHAU+WOjJ4nsmv/wxkpQOJbCQyAJc7ydyC/RGO72EyZF4kiPwGQT9XvjAkCO8zirw==}
     hasBin: true
 
   '@pasosdejesus/mpdj@0.2.15':
     resolution: {integrity: sha512-QgOw1XLxlxrFAaMH5vlSVMnLl/MA4BQvWCRgpjWj+oPQ7Yr+gCEDnhjCDVfFE8j2JJSKnOgrLa+Y7GDGXYLc2A==}
     peerDependencies:
-      '@pasosdejesus/m': ^0.31.1
+      '@pasosdejesus/m': ^0.31.2
       next: '>=15.0.0'
       react: '>=18.0.0'
       vitest: '>=2.1.9'
@@ -851,7 +851,7 @@ packages:
   '@pasosdejesus/usdt@0.1.3':
     resolution: {integrity: sha512-kczXvTW1lvSb9XsQUQ5IDmXV9j0+86qsL5yibqly8QdbbGpSIhiwAz/AfCtKSRDfdkS30XpHjRTfq0rgUCnJ7A==}
     peerDependencies:
-      '@pasosdejesus/m': ^0.31.1
+      '@pasosdejesus/m': ^0.31.2
       react: '>=18.0.0'
       viem: '>=2.0.0'
 
@@ -1243,8 +1243,8 @@ packages:
   base-x@3.0.11:
     resolution: {integrity: sha512-xz7wQ8xDhdyP7tQxwdteLYeFfS68tSMNCZ/Y37WJ4bhGfKPpqEIlmIyueQHqOyoPhE6xNUqjzRr8ra0eF9VRvA==}
 
-  baseline-browser-mapping@2.11.28:
-    resolution: {integrity: sha512-br0LOmjJqr6Rt4AEkadbcNf67Zpo7EPwKsWbjnRrJIa1QYFHQBqM4C7F2WTbV8ahTEcg1Eo+Y0aWjjORInYFyA==}
+  baseline-browser-mapping@2.11.29:
+    resolution: {integrity: sha512-YeesxhUmR4h5y5V8KF8iBCqJb8YFrBJ++XBTeGcWIaQOYXGN19JM0FoiOjAhwuDoln8owMgXcWBmgHtYSkky2w==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -2167,8 +2167,8 @@ packages:
     resolution: {integrity: sha512-123qHRfJBmo2jXDbo/a5YOQrJoHF/GNQTLzQ5+IdK5pWpceK17yRc6ozlWd25FxvGKQbIUs91fDFkXmDHTKcyA==}
     engines: {node: 20 || >=22}
 
-  lru-cache@11.5.2:
-    resolution: {integrity: sha512-4pfM1Ff0x50o0tQwb5ucw/RzNyD0/YJME6IVcStalZuMWxdt3sR3huStTtxz4PUmvZfRguvDejasvQ2kifR11g==}
+  lru-cache@11.5.3:
+    resolution: {integrity: sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg==}
     engines: {node: 20 || >=22}
 
   lru_map@0.3.3:
@@ -3867,10 +3867,10 @@ snapshots:
 
   '@oxc-project/types@0.154.0': {}
 
-  '@pasosdejesus/contract-test@0.1.5(@pasosdejesus/m@0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))':
+  '@pasosdejesus/contract-test@0.1.5(@pasosdejesus/m@0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))':
     dependencies:
       '@pasosdejesus/edr': 0.1.2
-      '@pasosdejesus/m': 0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
+      '@pasosdejesus/m': 0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
       ethers: 6.17.0
       glob: 13.0.6
       mocha: 11.8.0
@@ -3892,30 +3892,30 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@pasosdejesus/m@0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))':
+  '@pasosdejesus/m@0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))':
     dependencies:
       dotenv: 17.4.2
       execa: 9.6.1
       glob: 13.0.6
       picocolors: 1.1.1
     optionalDependencies:
-      '@pasosdejesus/contract-test': 0.1.5(@pasosdejesus/m@0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
+      '@pasosdejesus/contract-test': 0.1.5(@pasosdejesus/m@0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
       '@pasosdejesus/edr': 0.1.2
     transitivePeerDependencies:
       - ethers
       - supports-color
       - viem
 
-  '@pasosdejesus/mpdj@0.2.15(@pasosdejesus/m@0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(next@16.4.1(@types/node@26.1.2)(react-dom@19.3.1(react@19.2.8))(react@19.2.8))(react@19.2.8)(vitest@5.0.5(@types/node@26.1.2)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.8)))':
+  '@pasosdejesus/mpdj@0.2.15(@pasosdejesus/m@0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(next@16.4.1(@types/node@26.1.2)(react-dom@19.3.1(react@19.2.8))(react@19.2.8))(react@19.2.8)(vitest@5.0.5(@types/node@26.1.2)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.8)))':
     dependencies:
-      '@pasosdejesus/m': 0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
+      '@pasosdejesus/m': 0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
       next: 16.4.1(@types/node@26.1.2)(react-dom@19.3.1(react@19.2.8))(react@19.2.8)
       react: 19.2.8
       vitest: 5.0.5(@types/node@26.1.2)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.8))
 
-  '@pasosdejesus/usdt@0.1.3(@pasosdejesus/m@0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(react@19.2.8)(viem@2.55.11(typescript@5.9.3))':
+  '@pasosdejesus/usdt@0.1.3(@pasosdejesus/m@0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3)))(react@19.2.8)(viem@2.55.11(typescript@5.9.3))':
     dependencies:
-      '@pasosdejesus/m': 0.31.1(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
+      '@pasosdejesus/m': 0.31.2(ethers@6.17.0)(viem@2.55.11(typescript@5.9.3))
       react: 19.2.8
       viem: 2.55.11(typescript@5.9.3)
 
@@ -4260,7 +4260,7 @@ snapshots:
     dependencies:
       safe-buffer: 5.2.1
 
-  baseline-browser-mapping@2.11.28: {}
+  baseline-browser-mapping@2.11.29: {}
 
   binary-extensions@2.3.0: {}
 
@@ -5297,7 +5297,7 @@ snapshots:
 
   lru-cache@11.0.2: {}
 
-  lru-cache@11.5.2: {}
+  lru-cache@11.5.3: {}
 
   lru_map@0.3.3: {}
 
@@ -5443,7 +5443,7 @@ snapshots:
     dependencies:
       '@next/env': 16.4.1
       '@swc/helpers': 0.5.23
-      baseline-browser-mapping: 2.11.28
+      baseline-browser-mapping: 2.11.29
       caniuse-lite: 1.0.30001816
       postcss: 8.5.23
       react: 19.2.8
@@ -5561,7 +5561,7 @@ snapshots:
 
   path-scurry@2.0.2:
     dependencies:
-      lru-cache: 11.5.2
+      lru-cache: 11.5.3
       minipass: 7.1.3
 
   path-type@4.0.0: {}

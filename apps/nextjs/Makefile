@@ -246,18 +246,14 @@ test-e2e:
 
 # Corre la suite y reintenta los specs que fallen. Los fallos contra el dev site
 # son de carga/timing (la misma spec pasa sola), no de producto; ver
-# doc/e2e-testing.md. El reintento lo hace `m` (`m/REQ/49` P3).
+# doc/e2e-testing.md. El reintento lo hace `m` (`m/REQ/49` P3); desde
+# `@pasosdejesus/m@0.31.2` acepta el flag también como primer argumento
+# (`m/REQ/59`).
 #   E2E_RETRIES=3 make test-e2e-retry
-#
-# El patrón va PRIMERO a propósito: `m` llama `runE2e(arg, argv.slice(3))` y el
-# runner re-inserta el patrón si empieza con `--`; con `test:e2e --retry 2` queda
-# `['--retry','--retry','2']`, `getFlag('--retry')` lee `'--retry'` → NaN → **0
-# reintentos** (medido 2026-10-17: la suite falló 1 spec y no reintentó). Con el
-# patrón delante, `--retry` cae en su posición y se lee el número.
 test-e2e-retry:
 	E2E_SPEC_DELAY_MS=12000 \
 	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-9001} CHAIN_ID=$${CHAIN_ID:-11142220} \
-	./bin/m test:e2e '**/*.spec.mjs' --retry $${E2E_RETRIES:-2}
+	./bin/m test:e2e --retry $${E2E_RETRIES:-2}
 
 # Run a specific E2E spec (OpenBSD make no soporta pattern rules `%`)
 #   make test-e2e-spec SPEC=cluster-formation
