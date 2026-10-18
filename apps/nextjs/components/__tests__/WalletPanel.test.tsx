@@ -97,9 +97,9 @@ describe('WalletPanel (R-#249)', () => {
     expect(screen.getByTestId('wallet-panel-address')).toHaveTextContent(ADDRESS)
   })
 
-  // R-#265 §3.2 (preferencia del operador, 2026-10-17): "Cuentas" es la cuarta
-  // pestaña y contiene vincular/invitar.
-  it('puts Accounts fourth and renders the link/invite actions inside it', async () => {
+  // R-#265 §3.2 (preferencia del operador, ajustada el 2026-10-17 tras verlo en
+  // producción): "Cuentas" es la **última** (quinta) pestaña y contiene vincular/invitar.
+  it('puts Accounts last and renders the link/invite actions inside it', async () => {
     renderPanel()
 
     const triggers = await screen.findAllByTestId(/wallet-panel-tab-/)
@@ -107,8 +107,8 @@ describe('WalletPanel (R-#249)', () => {
       'wallet-panel-tab-balances',
       'wallet-panel-tab-receive',
       'wallet-panel-tab-send',
-      'wallet-panel-tab-accounts',
       'wallet-panel-tab-collectibles',
+      'wallet-panel-tab-accounts',
     ])
     fireEvent.mouseDown(screen.getByTestId('wallet-panel-tab-accounts'))
     await waitFor(() => expect(screen.getByTestId('account-actions-mock')).toBeTruthy())

@@ -85,7 +85,7 @@ Your progress, scores, privacy settings and the list of badges belong to **your 
 not to a single address. You can add another wallet (an old MetaMask wallet, the wallet of
 another phone…) and both reach the same account.
 
-You manage those wallets from the **Accounts** tab of the wallet panel (fourth tab) and from
+You manage those wallets from the **Accounts** tab of the wallet panel (last tab) and from
 the profile, section **Wallets in this account**.
 
 - **On this device**, with both wallets available: choose **Link another wallet**

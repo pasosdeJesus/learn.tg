@@ -142,7 +142,7 @@ wallet is locked and its Accounts tab offers "Unlock your in-app wallet"
 (`onRequestUnlock` → `WalletDialog`).
 
 **Link and invite live in the account, not in the header** (operator preference, 2026-10-17):
-the **Accounts** tab — fourth in `WalletPanel` (`tabOrder={['balances','receive','send','accounts','collectibles']}`)
+the **Accounts** tab — last (fifth) in `WalletPanel` (`tabOrder={['balances','receive','send','collectibles','accounts']}`)
 — and the profile's "Wallets in this account" section. `components/AccountWalletActions.tsx`
 composes both and only renders "Link another wallet" when `lib/wallet-availability.ts`
 detects another wallet: the in-app one when it is not the session's, another permitted

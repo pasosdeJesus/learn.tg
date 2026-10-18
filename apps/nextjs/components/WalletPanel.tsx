@@ -126,9 +126,10 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock, 
       publicClient={publicClient as never}
       walletClient={(unlocked ? (walletClient ?? null) : null) as never}
       network={process.env.NEXT_PUBLIC_NETWORK}
-      // R-#265 §3.2 (preferencia del operador, 2026-10-17): la cuenta con sus acciones
-      // (vincular/invitar) es la **cuarta** pestaña, después de saldos, recibir y enviar.
-      tabOrder={['balances', 'receive', 'send', 'accounts', 'collectibles']}
+      // R-#265 §3.2 (preferencia del operador, 2026-10-17; ajustada al verla en
+      // producción): la cuenta con sus acciones (vincular/invitar) es la **última**
+      // pestaña, después de saldos, recibir, enviar y coleccionables.
+      tabOrder={['balances', 'receive', 'send', 'collectibles', 'accounts']}
       accountsActions={
         address
           ? <AccountWalletActions lang={language} onChanged={refreshWallets} onUnlock={onRequestUnlock} />
