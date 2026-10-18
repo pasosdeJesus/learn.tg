@@ -210,6 +210,38 @@ describe('Main Page Component', () => {
     expect(scholarshipCall).toMatch(/\/api\/scholarship/)
   })
 
+  // Bug de producción (2026-10-17): al reconectar la billetera de la aplicación la
+  // dirección ya se conoce (billetera o localStorage) pero la cookie de sesión
+  // todavía no existe. Consultar ahí devolvía "Authentication failed." y la
+  // portada mostraba un toast destructivo por cada curso.
+  it('no consulta endpoints autenticados si la dirección se conoce sin sesión', async () => {
+    useSessionMock.mockReturnValue({ data: null as unknown as SessionLike, status: 'unauthenticated' })
+    useAccountMock.mockReturnValue({
+      address: '0x123',
+      isConnected: true,
+      sessionAddress: '0x123',
+      storedAddress: '0x123',
+      isAuthenticated: true,
+      isWalletAvailable: true,
+    })
+    const courses = [
+      { id: 1, idioma: 'en', prefijoRuta: '/c', imagen: '/i.jpg', titulo: 'C', subtitulo: 's' },
+      { id: 2, idioma: 'en', prefijoRuta: '/d', imagen: '/j.jpg', titulo: 'D', subtitulo: 't' },
+    ]
+    axiosGet.mockResolvedValue({ data: courses })
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={<div />}>
+          <Page {...defaultProps} />
+        </Suspense>,
+      )
+    })
+    await waitFor(() => expect(axiosGet).toHaveBeenCalled())
+    const urls = (axiosGet.mock.calls as unknown[][]).map((call) => String(call[0]))
+    expect(urls.some((url) => url.includes('/api/scholarship'))).toBe(false)
+    expect(urls.some((url) => url.includes('/api/profile'))).toBe(false)
+  })
+
   it('tolera errores de API sin colapsar', async () => {
     axiosGet.mockRejectedValueOnce(new Error('API Error'))
     await act(async () => {

@@ -180,6 +180,13 @@ Requirements:
   to that host). `NEXT_PUBLIC_API_BASE` is unused by app code.
 - The shared PostgreSQL DB is the integration point; new schema changes are
   Next-side migrations (`bin/m db:migrate`).
+- **One PostgreSQL pool per process.** `.config/kysely-db.ts` builds a single
+  `Kysely` over one `pg.Pool`, kept on `globalThis` so it survives `next dev` module
+  reloads and is shared by every route bundle (`PG_POOL_MAX`, default 10; idle 30 s,
+  connect timeout 10 s). Routes must **never** call `db.destroy()`: it would close the
+  shared pool (`Cannot use a pool after calling end on the pool`). A pool per request
+  (the previous pattern) exhausted PostgreSQL's connections under load; see
+  `@pasosdejesus/m`'s `wba` README, "Connection lifecycle".
 
 Rails is kept only as an on-demand backoffice (MSIP UI + Devise on `:3250`
 prod / `:3500` dev, `usuarios#foto`, its historical migrations). The

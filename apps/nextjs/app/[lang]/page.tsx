@@ -88,6 +88,18 @@ export default function Page({ params }: PageProps) {
       // session is "cold" (#5719) — that produced the false "cooldown"/0%.
       if (!ready) return
 
+      // A wallet address can be known before the session cookie exists: the
+      // in-app wallet was just unlocked, or the operator reconnected. The
+      // wallet-scoped endpoints would then answer "Authentication failed." for
+      // every course and the page would toast it once per course. Wait for the
+      // session; this effect re-runs when `sessionStatus` changes.
+      const walletScoped = !!wallet && sessionStatus === 'authenticated'
+      if (wallet && !walletScoped) {
+        logger.info(
+          `[courses] wallet known but session=${sessionStatus}; wallet-scoped requests deferred`, 'Courses',
+        )
+      }
+
       // R-#233 §4.4: public course list served by Next directly from the shared
       // DB. The standard hook adds the identity hint (`walletAddress`); there is
       // no token in the URL and no CORS.
@@ -102,7 +114,7 @@ export default function Page({ params }: PageProps) {
       // question does not see the course at all (it is a course for non-Zionist
       // churches; the purchase gate is `canPurchaseGDCourse`).
       let gdVisible = false
-      if (wallet) {
+      if (walletScoped) {
         try {
           const profileRes = await authedGet<{
             religion_id?: number
@@ -134,6 +146,9 @@ export default function Page({ params }: PageProps) {
           saveCourseCatalog(lang, courseInfo)
 
           if (!Array.isArray(courseInfo) || courseInfo.length === 0) return
+          // No session yet: the rings stay empty until it settles, instead of
+          // firing one unauthenticated request per course.
+          if (!walletScoped) return
 
           courseInfo.forEach(async (course: Course) => {
             try {
@@ -141,11 +156,14 @@ export default function Page({ params }: PageProps) {
                 `/api/scholarship?courseId=${course.id}`,
               )
               if (response2.data.message) {
-                console.error(
-                  'Error message received:',
-                  response2.data.message,
-                )
-                toast({ title: response2.data.message, variant: 'destructive' })
+                const message = String(response2.data.message).trim()
+                console.error('Error message received:', message)
+                // A session that is still settling is not a user-facing error.
+                if (/^Authentication failed\.?$/i.test(message)) {
+                  logger.info('[courses] ignored transient auth message: ' + message, 'Courses')
+                  return
+                }
+                toast({ title: message, variant: 'destructive' })
                 return
               }
 
@@ -172,6 +190,12 @@ export default function Page({ params }: PageProps) {
                 new Map(prevMap.set(response2.data.courseId, extraData)),
               )
             } catch (error) {
+              const status = (error as { response?: { status?: number } })
+                ?.response?.status
+              if (status === 401) {
+                logger.info('[courses] scholarship 401 (session not ready): ' + String(error), 'Courses')
+                return
+              }
               toast({ title: String(error), variant: 'destructive' })
               console.error(error)
             }
@@ -203,7 +227,7 @@ export default function Page({ params }: PageProps) {
     }
 
     configure()
-  }, [ready, wallet, lang, authedGet])
+  }, [ready, wallet, lang, authedGet, sessionStatus])
 
   if (sessionStatus === 'loading') {
     return <div className="p-10 mt-10 text-center">Loading...</div>

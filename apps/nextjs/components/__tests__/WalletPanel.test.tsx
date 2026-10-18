@@ -192,6 +192,24 @@ describe('WalletPanel (R-#249)', () => {
     )
   })
 
+  // Bug de producción (2026-10-17): tras reconectar la billetera de la aplicación
+  // queda bloqueada. La pestaña Enviar sólo deshabilitaba el botón; debe explicar
+  // el motivo y ofrecer desbloquear ahí mismo.
+  it('explains the locked wallet and offers to unlock from the send tab', async () => {
+    mocks.status = 'locked'
+    const onRequestUnlock = vi.fn()
+    renderPanel({ onRequestUnlock })
+    fireEvent.click(screen.getByTestId('wallet-panel-tab-send'))
+    await waitFor(() =>
+      expect(screen.getByTestId('wallet-panel-locked')).toHaveTextContent(/unlock/i),
+    )
+    expect(screen.getByTestId('wallet-panel-send')).toBeDisabled()
+    // El aviso genérico de campo vacío no tapa el motivo real.
+    expect(screen.queryByTestId('wallet-panel-error')).toBeNull()
+    fireEvent.click(screen.getByTestId('wallet-panel-unlock'))
+    expect(onRequestUnlock).toHaveBeenCalled()
+  })
+
   it('sends native CELO through the wallet client', async () => {
     renderPanel()
     fireEvent.click(screen.getByTestId('wallet-panel-tab-send'))

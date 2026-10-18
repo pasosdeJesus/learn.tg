@@ -276,6 +276,10 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
       // Sin recarga: `signIn()` ya refrescó el SessionProvider (ver arriba).
     } catch (err: any) {
       console.error('ConnectWalletButton error:', err)
+      logger.error(
+        `connect failed: code=${err?.code ?? 'none'} message=${err?.message ?? String(err)}`,
+        'wallet',
+      )
       const msg = err?.code === 4001 ? t('cancelled') : t('failed')
       setError(msg)
     } finally {

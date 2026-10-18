@@ -130,6 +130,7 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock, 
       // producción): la cuenta con sus acciones (vincular/invitar) es la **última**
       // pestaña, después de saldos, recibir, enviar y coleccionables.
       tabOrder={['balances', 'receive', 'send', 'collectibles', 'accounts']}
+      onRequestUnlock={onRequestUnlock}
       accountsActions={
         address
           ? <AccountWalletActions lang={language} onChanged={refreshWallets} onUnlock={onRequestUnlock} />

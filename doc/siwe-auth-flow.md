@@ -183,6 +183,26 @@ guide content (`app/[lang]/[pathPrefix]/[pathSuffix]/page.tsx`), which previousl
 gated the fetch on `session?.address` and showed `401 auth_required` for
 premium guides under a cold session.
 
+**The address is not the session.** After unlocking or reconnecting the in-app
+wallet, `useAuthAddress()` already knows the address (wallet or localStorage) while
+the NextAuth cookie still does not exist; `authenticateUser()` only accepts the
+cookie, so a wallet-scoped fetch in that window is unauthenticated. The courses
+page used to request `/api/scholarship` for every visible course and the route
+answered `200` with `"Authentication failed."` in `retMessage`, which the page
+turned into one destructive toast per course (operator report, 2026-10-17). The
+page now waits for `useSession().status === 'authenticated'` before calling
+`/api/profile` and `/api/scholarship`; the effect re-runs when the status changes,
+and a lingering auth-only `retMessage` is logged instead of toasted.
+
+**Diagnostics when the cause is different.** The gate, the skipped request, the
+ignored auth message and a `401` are logged through `logger` with source
+`Courses`; `useScholarshipData` logs `scholarship skipped: courseId=… target=…
+ready=…` and any `message`/failure with source `scholarship`. In-app SIWE logs
+`signIn: status=… ok=… error=…` (and the retry after linking an invitation) with
+source `in-app-siwe`, and `WalletDialog` logs each caught error as
+`wallet-dialog`. They reach the browser console always and the DebugConsole when
+`NEXT_PUBLIC_M_DEBUGGER_CONSOLE=1` (see `doc/pdj-wallet-testing.md`).
+
 **Order inside `authenticateUser()`:** the session cookie must be valid; its
 `walletAddress` hint must belong to the token's account (`usuarioId`) and the account's
 `session_epoch` must still match the token; anything else is a 401. Debug

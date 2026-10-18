@@ -114,6 +114,9 @@ What follows is only what those files do not tell you.
    `packages`). `make eng-check` runs from the app (msip + live DB); `make eng-verify`
    runs from the repo root (the app's own engines live at `packages/`). Editing an
    engine without regenerating it breaks `eng:verify` (`doc/usuario-model.md`).
+   When re-vendoring, **pass the motor path** (`eng:sync /path/to/m/packages/<motor>
+   --vendor`, e.g. `/var/www/adJ-ia/m/packages/wallet`): the bare name resolves the
+   already-vendored copy as the source, whose first action is deleting that folder.
 
 **Definition of done:** `make type` plus the affected `make test*` targets green;
 `bin/m eng:verify` and `make eng-check` green when engines or the model change; the

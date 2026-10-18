@@ -6,6 +6,9 @@ import { signIn } from 'next-auth/react'
 import type { Eip1193Provider } from '@pasosdejesus/m/wallet'
 import { getAppChain } from '@/lib/app-chain'
 import { invitationPrompt, resolveInvitationAfterAuthFailure } from '@/lib/wallet-invitations'
+import { logger } from '@pasosdejesus/m/debug'
+
+const TAG = 'in-app-siwe'
 
 export type InAppSignInError = 'no-accounts' | 'no-csrf' | 'auth-failed'
 
@@ -37,11 +40,17 @@ export async function signInWithInAppWallet(
 ): Promise<string> {
   const accounts = (await provider.request({ method: 'eth_accounts' })) as string[]
   const account = accounts?.[0]
-  if (!account) throw new Error('no-accounts' satisfies InAppSignInError)
+  if (!account) {
+    logger.error('sign-in failed: the provider exposed no accounts', TAG)
+    throw new Error('no-accounts' satisfies InAppSignInError)
+  }
 
   const csrfResponse = await fetch('/api/auth/csrf')
   const { csrfToken } = (await csrfResponse.json()) as { csrfToken?: string }
-  if (!csrfToken) throw new Error('no-csrf' satisfies InAppSignInError)
+  if (!csrfToken) {
+    logger.error(`sign-in failed: no csrf token (status=${csrfResponse.status})`, TAG)
+    throw new Error('no-csrf' satisfies InAppSignInError)
+  }
 
   // La red del mensaje es la de la app (`getAppChain()`), no la que declara la
   // billetera: es la que el servidor espera (`auth-options.ts` compara con
@@ -78,6 +87,7 @@ export async function signInWithInAppWallet(
   // saca la clave de la memoria (R-#265, doble desbloqueo). Ver el bug abierto de v4
   // https://github.com/nextauthjs/next-auth/issues/13173.
   let result = await attempt()
+  logger.info(`signIn: status=${result?.status ?? 'none'} ok=${String(result?.ok)} error=${result?.error ?? 'none'}`, TAG)
   if (!result?.ok || result.error) {
     // R-#265 §3.2: el callback rechaza una billetera **invitada** para que no cree
     // su propia cuenta; si la invitación existe se pregunta y, al aceptar, se
@@ -92,8 +102,13 @@ export async function signInWithInAppWallet(
     })
     if (outcome === 'accepted') {
       result = await attempt()
-      if (!result?.ok || result.error) throw new Error('auth-failed' satisfies InAppSignInError)
+      logger.info(`signIn retry: status=${result?.status ?? 'none'} ok=${String(result?.ok)} error=${result?.error ?? 'none'}`, TAG)
+      if (!result?.ok || result.error) {
+        logger.error(`sign-in failed after linking the invitation: status=${result?.status ?? 'none'} error=${result?.error ?? 'none'}`, TAG)
+        throw new Error('auth-failed' satisfies InAppSignInError)
+      }
     } else {
+      logger.error(`sign-in rejected and invitation not accepted (${outcome})`, TAG)
       throw new Error('auth-failed' satisfies InAppSignInError)
     }
   }

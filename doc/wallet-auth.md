@@ -321,6 +321,19 @@ from Blockscout.
   reserves 0.01 CELO for the fee on native transfers.
 - Signing goes through the wallet provider, so it inherits the L1 gesture gate
   (`requireFundsConfirmation`) described above.
+- The **Send** tab always states why it cannot send: `needWallet` when the wallet
+  is locked (with an **Unlock wallet** button wired to the same wallet dialog),
+  otherwise the `validateSend()` reason (invalid address/amount, insufficient
+  funds, missing CELO for the fee, unknown balance + refresh). The generic
+  "invalid address" is suppressed while locked so it does not hide the real
+  reason (operator report, 2026-10-17: the disabled button gave no explanation).
+- **Diagnostics** go to `logger` (console + DebugConsole with `?debug=1` or
+  `NEXT_PUBLIC_M_DEBUGGER_CONSOLE=1`), never to the user: tag `wallet-panel` logs
+  panel open (`address`, tokens), signer availability (`MISSING (locked or no
+  provider)`), blocked/started/failed sends (token, amount, `validateSend` reason,
+  error code/message), per-token balance read failures and Max refusals. The wallet
+  dialog logs every caught error as `wallet-dialog` (cancellations go through
+  `info`), so a translated message still leaves the raw cause visible.
 - Collectibles use `explorerApiNftsUrl` (Blockscout, no key) and degrade silently:
   a failing section never touches the balances.
 

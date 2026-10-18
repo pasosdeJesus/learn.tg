@@ -21,6 +21,7 @@ import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { Badge } from '@pasosdejesus/m/shadcn-components/ui/badge'
 import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@pasosdejesus/m/shadcn-components/ui/tabs'
+import { logger } from '@pasosdejesus/m/debug'
 import type { WalletLang } from './WalletConnect.js'
 import {
   checksummed, explorerAddressUrl, explorerApiNftsUrl, explorerTxUrl,
@@ -41,6 +42,9 @@ const ERC20_ABI = [
 
 /** CELO que debe quedar para pagar la comisión (0.01 CELO). */
 const GAS_RESERVE_WEI = 10_000_000_000_000_000n
+
+/** Etiqueta de los diagnósticos en la DebugConsole (`NEXT_PUBLIC_M_DEBUGGER_CONSOLE=1`). */
+const TAG = 'wallet-panel'
 
 export interface WalletToken {
   symbol: string
@@ -101,6 +105,7 @@ export interface WalletPanelMessages {
   nftsError: string
   close: string
   needWallet: string
+  unlock: string
   errAddress: string
   errAmount: string
   errInsufficient: string
@@ -124,6 +129,7 @@ const DEFAULT_MESSAGES: Record<WalletLang, WalletPanelMessages> = {
     viewTx: 'View transaction', retryNfts: 'Try again',
     noNfts: 'No collectibles found for this wallet.', nftsError: 'Collectibles are not available right now.',
     close: 'Close', needWallet: 'Unlock the wallet to send funds.',
+    unlock: 'Unlock wallet',
     errAddress: 'That address is not valid.', errAmount: 'Enter an amount greater than zero.',
     errInsufficient: 'Not enough funds for that amount.', errSelf: 'That is this wallet address.',
     errNoGas: 'Set aside some native token for the network fee.',
@@ -141,6 +147,7 @@ const DEFAULT_MESSAGES: Record<WalletLang, WalletPanelMessages> = {
     viewTx: 'Ver transacción', retryNfts: 'Reintentar',
     noNfts: 'No se encontraron coleccionables para esta billetera.', nftsError: 'Los coleccionables no están disponibles ahora.',
     close: 'Cerrar', needWallet: 'Desbloquea la billetera para enviar fondos.',
+    unlock: 'Desbloquear billetera',
     errAddress: 'Esa dirección no es válida.', errAmount: 'Escribe un monto mayor que cero.',
     errInsufficient: 'No hay fondos suficientes para ese monto.', errSelf: 'Esa es la dirección de esta billetera.',
     errNoGas: 'Deja algo de token nativo para la comisión de red.',
@@ -184,6 +191,11 @@ export interface WalletPanelProps {
   tabOrder?: WalletPanelTab[]
   /** Contenido extra al final de la pestaña "Cuentas" (vincular, invitar…). */
   accountsActions?: ReactNode
+  /**
+   * Desbloquear la billetera desde la pestaña Enviar. Sin esto, una billetera
+   * bloqueada solo explica el motivo y el usuario tiene que buscarlo en Cuentas.
+   */
+  onRequestUnlock?: () => void
 }
 
 export function WalletPanel({
@@ -206,6 +218,7 @@ export function WalletPanel({
   renderWallet,
   tabOrder,
   accountsActions,
+  onRequestUnlock,
 }: WalletPanelProps) {
   const text = { ...DEFAULT_MESSAGES[lang], ...messages }
   const [copied, setCopied] = useState(false)
@@ -244,7 +257,10 @@ export function WalletPanel({
   const isNative = !selected?.address
 
   const loadBalances = useCallback(async () => {
-    if (!publicClient || !address) return
+    if (!publicClient || !address) {
+      logger.info(`balances skipped: publicClient=${publicClient ? 'yes' : 'NO'} address=${address ? 'yes' : 'NO'}`, TAG)
+      return
+    }
     setLoadingBalances(true)
     try {
       const owner = address as `0x${string}`
@@ -260,6 +276,12 @@ export function WalletPanel({
         const result = results[index]
         next[item.symbol] = result.status === 'fulfilled' ? ((result.value as bigint | null) ?? null) : null
       })
+      const failures = results
+        .map((result, index) => result.status === 'rejected'
+          ? `${tokens[index]?.symbol ?? `token#${index}`}: ${String(result.reason)}`
+          : null)
+        .filter((item): item is string => item !== null)
+      if (failures.length > 0) logger.error(`balance read failed — ${failures.join(' | ')}`, TAG)
       setBalances(next)
     } finally {
       setLoadingBalances(false)
@@ -285,7 +307,8 @@ export function WalletPanel({
         image: normalizeNftImage(item.metadata?.image),
         collection: item.token?.name,
       })))
-    } catch {
+    } catch (error) {
+      logger.error(`collectibles failed: ${String(error)}`, TAG)
       setNfts([])
       setNftsError(true)
     } finally {
@@ -301,9 +324,18 @@ export function WalletPanel({
     setNfts(null)
     setNftsError(false)
     setTab(tabs[0] ?? '')
+    logger.info(`open: address=${address ? shortAddress(address) : 'none'} tokens=${tokens.map((item) => item.symbol).join(',') || 'none'}`, TAG)
     void loadBalances()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
+
+  // Diagnóstico del estado que explica por qué Enviar no responde: sin firmante
+  // la pestaña está bloqueada (needWallet), con firmante el motivo lo da
+  // `validateSend`. Aparece en la DebugConsole de la PWA/MiniPay.
+  useEffect(() => {
+    if (!open) return
+    logger.info(`signer ${walletClient ? 'available' : 'MISSING (locked or no provider)'} for ${address ? shortAddress(address) : 'no address'}`, TAG)
+  }, [open, walletClient, address])
 
   const handleTabChange = useCallback((value: string) => {
     setTab(value)
@@ -320,13 +352,15 @@ export function WalletPanel({
     }
   }, [address])
 
+  const locked = !walletClient
   const parsedAmount = parseTokenAmount(amount, decimals)
   const validationError = validateSend({
     to, amount: parsedAmount, balance: balances[token] ?? null, isNative, selfAddress: address,
     gasCost: isNative ? gasReserveWei : 0n,
   })
   const errorText = useMemo(() => {
-    if (!validationError) return null
+    // Bloqueada: el motivo real es `needWallet`, no un campo a medio llenar.
+    if (locked || !validationError) return null
     if (validationError === 'invalid-address') return text.errAddress
     if (validationError === 'invalid-amount') return text.errAmount
     if (validationError === 'insufficient') return text.errInsufficient
@@ -334,19 +368,33 @@ export function WalletPanel({
     if (validationError === 'self') return text.errSelf
     if (validationError === 'no-gas') return text.errNoGas
     return text.errGeneric
-  }, [text, validationError])
+  }, [locked, text, validationError])
 
   const handleMax = useCallback(() => {
     const balance = balances[token]
-    if (balance === null || balance === undefined) return
+    if (balance === null || balance === undefined) {
+      logger.info(`max blocked: balance unknown for ${token}`, TAG)
+      return
+    }
     // Saldo ≤ reserva de gas: no hay monto utilizable (V9).
-    if (isNative && balance <= gasReserveWei) return
+    if (isNative && balance <= gasReserveWei) {
+      logger.info(`max blocked: ${balance.toString()} wei <= gas reserve ${gasReserveWei.toString()}`, TAG)
+      return
+    }
     const usable = isNative ? balance - gasReserveWei : balance
     setAmount(formatTokenAmount(usable, decimals, decimals))
   }, [balances, decimals, gasReserveWei, isNative, token])
 
   const handleSend = useCallback(async () => {
-    if (!walletClient || validationError || parsedAmount === null) return
+    if (!walletClient || validationError || parsedAmount === null) {
+      logger.info(
+        `send blocked: signer=${walletClient ? 'yes' : 'NO'} validation=${validationError ?? 'none'} amount=${parsedAmount === null ? 'null' : parsedAmount.toString()} token=${selected?.symbol ?? '?'}`, TAG,
+      )
+      return
+    }
+    logger.info(
+      `send start: token=${selected?.symbol ?? '?'} native=${isNative} to=${to.trim()} amount=${parsedAmount.toString()}`, TAG,
+    )
     setSending(true)
     setSendError(null)
     try {
@@ -364,13 +412,13 @@ export function WalletPanel({
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       const code = (error as { code?: number })?.code
+      logger.error(`send failed: code=${code ?? 'none'} message=${message}`, TAG)
       setSendError(code === 4001 || /rejected/i.test(message) ? text.errCancelled : text.errGeneric)
     } finally {
       setSending(false)
     }
   }, [address, isNative, loadBalances, parsedAmount, selected, text, to, validationError, walletClient])
 
-  const locked = !walletClient
   const canSend = !locked && !sending && !validationError && parsedAmount !== null
   const canUnlink = wallets.length > 1
 
@@ -481,7 +529,16 @@ export function WalletPanel({
 
             {showSend && (
               <TabsContent value="send" className="space-y-2 rounded border p-3">
-                {locked && <p className="text-sm text-amber-700">{text.needWallet}</p>}
+                {locked && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-amber-700" data-testid="wallet-panel-locked">{text.needWallet}</p>
+                    {onRequestUnlock && (
+                      <Button variant="outline" size="sm" data-testid="wallet-panel-unlock" onClick={onRequestUnlock}>
+                        {text.unlock}
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <label className="block space-y-1">
                   <span className="text-xs text-muted-foreground">{text.token}</span>
                   <select data-testid="wallet-panel-token" className="w-full rounded border px-2 py-1 text-sm"

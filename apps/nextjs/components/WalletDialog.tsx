@@ -19,6 +19,7 @@ import { signInWithInAppWallet } from '@/lib/in-app-siwe'
 import { getRpcUrl } from '@/lib/rpc-url'
 import { markBackupConfirmed, pickVerifyPositions, verifyWords } from '@/lib/wallet-backup'
 import { clearRestrictedCourseCopies } from '@/lib/offline-course-db'
+import { logger } from '@pasosdejesus/m/debug'
 
 interface WalletDialogProps {
   lang?: string
@@ -283,6 +284,13 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
 
   const translateError = useCallback((raw: unknown) => {
     const code = raw instanceof Error ? raw.message : String(raw)
+    // Diagnóstico para la DebugConsole: el texto traducido oculta la causa real
+    // (código del proveedor, rechazo del callback, biometría). Una cancelación
+    // del usuario no es un error.
+    const cancelled = code === 'NotAllowedError' || isUserCancelledError(raw)
+    const detail = `wallet dialog ${cancelled ? 'cancelled' : 'error'}: ${code}${raw instanceof Error && raw.name ? ` (${raw.name})` : ''}`
+    if (cancelled) logger.info(detail, 'wallet-dialog')
+    else logger.error(detail, 'wallet-dialog')
     if (code === 'no-accounts') return t('noAccounts')
     if (code === 'no-csrf') return t('noCsrf')
     if (code === 'auth-failed') return t('authFailed')

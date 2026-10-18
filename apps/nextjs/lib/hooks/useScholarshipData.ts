@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { logger } from '@pasosdejesus/m/debug'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 
 export interface ScholarshipData {
@@ -42,9 +43,17 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
 
   const fetchScholarship = useCallback(async () => {
     // Wait for the identity and never query anonymously for a connected user.
-    if (!courseId || !target || !ready) return
+    if (!courseId || !target || !ready) {
+      logger.info(
+        `scholarship skipped: courseId=${courseId ?? 'none'} target=${target ? 'yes' : 'none'} ready=${ready}`, 'scholarship',
+      )
+      return
+    }
     try {
       const { data: res } = await authedGet<any>(`/api/scholarship?courseId=${courseId}`)
+      // Un `message` significa que la ruta no pudo calcular el avance (auth
+      // transitoria o configuración). Queda en la DebugConsole para diagnosticar.
+      if (res.message) logger.info('scholarship message: ' + String(res.message).trim(), 'scholarship')
       setData({
         vaultCreated: res.vaultCreated != null ? Boolean(res.vaultCreated) : null,
         vaultBalance: res.vaultBalance != null ? Number(res.vaultBalance) : null,
@@ -64,6 +73,8 @@ export function useScholarshipData({ courseId, address }: UseScholarshipDataProp
         profileScore: res.profileScore != null ? Number(res.profileScore) : null,
       })
     } catch (e) {
+      const status = (e as { response?: { status?: number } })?.response?.status
+      logger.error(`scholarship failed: status=${status ?? 'none'} ${String(e)}`, 'scholarship')
       console.error('Failed to fetch scholarship data:', e)
     }
   }, [courseId, target, ready, authedGet])
