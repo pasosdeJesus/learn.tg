@@ -1,0 +1,28 @@
+# Configuración de pnpm para `apps/hardhat`.
+#
+# No declara `packages:`: el app se instala solo. Este archivo existe porque
+# pnpm 11 ya no lee el campo `pnpm` de package.json (overrides,
+# onlyBuiltDependencies).
+
+# EDR/ethereumjs 10 en OpenBSD/adJ: una sola copia de cada paquete.
+overrides:
+  '@ethereumjs/common': ^10.1.2
+  '@ethereumjs/util': ^10.1.2
+  '@ethereumjs/tx': ^10.1.2
+  '@pasosdejesus/m': ^0.31.2
+
+# pnpm 11 falla con ERR_PNPM_IGNORED_BUILDS si un paquete con script de
+# instalación no está aquí (reemplaza `pnpm.onlyBuiltDependencies`).
+allowBuilds:
+  '@pasosdejesus/m': true
+  bufferutil: true
+  esbuild: true
+  keccak: true
+  secp256k1: true
+  utf-8-validate: true
+
+# Política de cadena de suministro de pnpm 11: ventana de 24 h para los paquetes
+# de terceros, con exclusión de los propios recién publicados.
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - '@pasosdejesus/*'

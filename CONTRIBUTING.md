@@ -18,8 +18,9 @@ All project documentation, REQ files, commit messages, and code comments must be
 
 ## 🚀 Development Setup
 
-> **pnpm version:** This project requires **pnpm v10**. pnpm v11 breaks React 19
-> tests. The version is pinned via `packageManager` in `package.json` and
+> **pnpm version:** This project requires **pnpm v11.28.6**. The version is pinned via
+> `packageManager` in `package.json`; on pnpm 11 the settings (`overrides`,
+> `allowBuilds`, `patchedDependencies`, `minimumReleaseAge`) live in
 > `pnpm-workspace.yaml`.
 
 ### Frontend Only (quickest — no backend required)
@@ -64,9 +65,9 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
      (or `make test-rewards` / `make test-gdcluster`), ~45 s; each
      engine brings its own `vitest.config.ts` with the aliases to
      `apps/nextjs/node_modules`.
-     Do NOT run `pnpm test` inside the packages: corepack resolves pnpm v11 there
-     and breaks the repo (see [doc/pnpm.md](doc/pnpm.md)); the `test` script of each
-     `package.json` is kept for that reason only as documentation. Engine guide:
+     Do NOT run `pnpm test` inside the packages: use the app's Makefile targets,
+     which wire the aliases to `apps/nextjs/node_modules`; the `test` script of each
+     `package.json` is kept as documentation. Engine guide:
      `m/doc/engines.md`
    - E2E tests: `make test-smoke` (HTTP) or `bin/m test:e2e` (Puppeteer), with shortcuts
      `make test-e2e-wallet` (billetera in-app) and `make test-e2e-offline` (PWA offline).

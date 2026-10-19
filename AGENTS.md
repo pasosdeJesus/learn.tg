@@ -96,8 +96,9 @@ What follows is only what those files do not tell you.
    (`doc/environments.md`).
 5. **Never modify an applied migration**: schema changes go in a new one
    (`bin/m db:mig:make <name>`).
-6. **Do not run `pnpm test` inside `packages/*`** (corepack resolves pnpm v11 there and
-   breaks the repo): use the app's Makefile targets or the package's own `Makefile`.
+6. **Do not run `pnpm test` inside `packages/*`** (no workspace configuration there; the
+   engine tests need the aliases to `apps/nextjs/node_modules`): use the app's Makefile
+   targets or the package's own `Makefile`.
 7. **Read `apps/nextjs/AGENTS.md` before writing Next.js code**: this Next.js version
    carries breaking changes; it points to `node_modules/next/dist/docs/`.
 8. **Docs travel with the change**: user guides (`resources/{en,es}/…/guide*.md`),

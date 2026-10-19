@@ -57,18 +57,5 @@
     "sync:abis": "node sync-abis.mjs"
   },
   "author": "pasosdeJesus",
-  "pnpm": {
-    "overrides": {
-      "@ethereumjs/common": "^10.1.2",
-      "@ethereumjs/util": "^10.1.2",
-      "@ethereumjs/tx": "^10.1.2",
-      "@pasosdejesus/m": "^0.31.2"
-    },
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "keccak",
-      "secp256k1"
-    ]
-  },
-  "packageManager": "pnpm@10.34.5"
+  "packageManager": "pnpm@11.28.6"
 }

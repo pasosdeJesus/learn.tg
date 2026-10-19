@@ -112,28 +112,5 @@
     "typescript": "^5.9.3",
     "vitest": "^3.2.7"
   },
-  "pnpm": {
-    "overrides": {
-      "@parcel/watcher": "npm:@parcel/watcher-wasm",
-      "rollup": "npm:@rollup/wasm-node",
-      "lightningcss": "npm:lightningcss-wasm",
-      "@tailwindcss/oxide": "npm:@tailwindcss/oxide-wasm32-wasi",
-      "qr": "0.5.5"
-    },
-    "onlyBuiltDependencies": [
-      "@pasosdejesus/m",
-      "@swc/core",
-      "blake-hash",
-      "bufferutil",
-      "esbuild",
-      "keccak",
-      "sharp",
-      "unrs-resolver",
-      "utf-8-validate"
-    ],
-    "patchedDependencies": {
-      "next@16.3.5": "patches/next@16.3.5.patch"
-    }
-  },
-  "packageManager": "pnpm@10.34.5"
+  "packageManager": "pnpm@11.28.6"
 }

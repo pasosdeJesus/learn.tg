@@ -451,8 +451,9 @@ Contract addresses are **not** read from `.env`. They come from:
 
 ## Notes
 
-- pnpm is pinned to v10 (`packageManager: pnpm@10.34.5`); pnpm v11 breaks
-  React 19 tests.
+- pnpm is pinned to v11.28.6 (`packageManager`); its settings (`overrides`,
+  `allowBuilds`, `patchedDependencies`, `minimumReleaseAge`) live in
+  `pnpm-workspace.yaml`.
 - The E2E suites default to `https://learn.tg:9001`; override with
   `SITE_URL` / `NEXT_PUBLIC_AUTH_URL`. Production-targeting specs exist
   (chain 42220).

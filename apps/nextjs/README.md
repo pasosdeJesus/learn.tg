@@ -172,7 +172,8 @@ Then edit `.env` with your values. Key variables:
 
 `patches/next@16.3.5.patch` (https://github.com/pasosdeJesus/learn.tg/issues/267)
 fixes `codeFrameColumns` so a 500 shows its real cause instead of crashing. It is
-applied **only** by `pnpm install` (declared in `pnpm.patchedDependencies`); never
+applied **only** by `pnpm install` (declared in `patchedDependencies` of
+`pnpm-workspace.yaml`); never
 edit `node_modules` by hand. `make next-patch` re-applies it with `pnpm install` and
 then checks it, `make next-patch-check` only checks (it fails if the installed
 `node_modules` has the old code), and `make all`/`make prod` verify it before

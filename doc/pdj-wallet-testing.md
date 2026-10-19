@@ -53,9 +53,8 @@ the app's `node_modules`, so there is nothing to install here. The
 `IndexedDBStorage` behavior and the Node-side import of the built core (E2E,
 R-#239) come from `@pasosdejesus/m/wallet`.
 
-`pnpm test` inside a package goes through corepack, which resolves pnpm 11 here
-while the repo is pinned to pnpm 10; los targets del Makefile y los comandos de
-arriba evitan eso.
+`pnpm test` inside a package lacks the app's workspace/alias configuration;
+los targets del Makefile y los comandos de arriba evitan eso.
 
 ## 2. Integration in learn.tg
 

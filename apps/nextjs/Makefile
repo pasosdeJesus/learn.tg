@@ -163,8 +163,8 @@ eng-verify:
 # Motores de negocio (packages/rewards, packages/gdcluster): cada uno trae su
 # vitest.config.ts con los alias a apps/nextjs/node_modules (R-#252), así que
 # corren desde aquí sin instalar nada. El script `test` de cada package.json hace
-# lo mismo, pero invocado con `pnpm` dentro del paquete (corepack resuelve pnpm
-# v11, que rompe este repo: ver doc/pnpm.md).
+# lo mismo, pero conviene usar estos targets: enlazan los alias a
+# apps/nextjs/node_modules (ver doc/pnpm.md).
 test-engines: test-rewards test-gdcluster
 
 test-rewards:
@@ -203,7 +203,8 @@ swc-wasm:
 # "invalid type: boolean `false`, expected enum CodeFrameColorMode" (o "unit value")
 # y la causa real no se ve.
 #
-# Se aplica SOLO: `pnpm install` lo toma de `pnpm.patchedDependencies`
+# Se aplica SOLO: `pnpm install` lo toma de `patchedDependencies`
+# en `pnpm-workspace.yaml`
 # (`patches/next@16.3.5.patch`, con su hash en pnpm-lock.yaml). Este target sirve
 # para aplicarlo a mano y comprobar que quedó; para REGENERAR el parche ver
 # https://github.com/pasosdeJesus/learn.tg/issues/267 (no editar node_modules a mano:
