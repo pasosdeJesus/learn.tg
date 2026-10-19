@@ -24,10 +24,11 @@ All project documentation, REQ files, commit messages, and code comments must be
 > `pnpm-workspace.yaml`.
 
 > **Clone with submodules:** use `git clone --recurse-submodules` (or run
-> `git submodule update --init` afterwards). `apps/nextjs/app/api`,
+> `git submodule update --init` afterwards). `apps/nextjs/app/api` (private API),
 > `resources/en/gdcluster` and `resources/es/redgd` are submodules, and the
 > clone also needs the empty directory `packages/gdcluster/db/migrations`,
-> which git does not version and the GDCluster engine expects.
+> which git does not version; without it `eng:verify` (part of `make test`)
+> reports the generated manifest as stale.
 
 ### Frontend Only (quickest — no backend required)
 

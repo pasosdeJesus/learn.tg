@@ -94,10 +94,13 @@ via `@pasosdejesus/m/blockchain/deployments` (`readDeployment`) — never `.env`
 
 ## Database
 
-The engine declares `db/migrations` in `engine.json` but the directory is
-**empty**: the schema (`clustergd`, `church_clustergd`, plus `referralcode` /
-`referralrelationship` for the referral graph) is owned by the core and the
-Rails backend. The engine only reads/writes through the injected `db`.
+The generated manifest (`src/m-engine.generated.ts`) declares `db/migrations`
+but the directory is **empty**: the schema (`clustergd`, `church_clustergd`,
+plus `referralcode` / `referralrelationship` for the referral graph) is owned by
+the core and the Rails backend. The engine only reads/writes through the
+injected `db`. Because git does not track empty directories, a fresh clone must
+create it (`mkdir -p packages/gdcluster/db/migrations`) so that `eng:verify`
+(part of `make test`) does not report the generated manifest as stale.
 
 ## Relationship with other engines
 

@@ -20,10 +20,13 @@ End-to-end testing for learn.tg uses `@pasosdejesus/m`'s test runner
 | `bin/m test:e2e --smoke` | Smoke only | ❌ | `https://learn.tg:9001` |
 | `bin/m test:e2e <pattern>` | Specific spec(s) matching filename | ✅ | ⚠️ **`https://learn.tg` (producción)** |
 | `bin/m test:e2e --grep <filter>` | Filter specs by test name | ❌ | `https://learn.tg:9001` |
-| `bin/m test:e2e --retry <N>` | Re-run each failed spec on its own (`m/REQ/49` P3; flag-first fixed in `@pasosdejesus/m@0.31.2`, `m/REQ/59`) | ✅ | `https://learn.tg:9001` |
+| `bin/m test:e2e --retry <N>` | Re-run each failed spec on its own (`m/REQ/49` P3, `m/REQ/59`) | ✅ | `https://learn.tg:9001` |
 | `bin/m test:e2e:summary <log…>` | Per-spec results of one or more logs, side by side (`m/REQ/49` P4) | ❌ | local |
 
 Override target: `SITE_URL=https://learn.tg bin/m test:e2e`
+
+Un **patrón** debe ir antes de las banderas: `bin/m test:e2e <patrón> --smoke`.
+Si se pasa después de `--smoke`, el runner lo ignora y corre todos los smokes.
 
 Chrome path: `CHROME_PATH=/usr/local/bin/chrome bin/m test:e2e`
 

@@ -33,5 +33,11 @@ minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - '@pasosdejesus/*'
 
+# @selfxyz/common@0.0.9 (SDK de Self Protocol) declara `node-forge` desde un
+# tarball de GitHub (remicolin/forge). pnpm 10 lo instalaba; pnpm 11 lo bloquea
+# por defecto (`blockExoticSubdeps`). Se permite para conservar el lockfile y el
+# comportamiento que ya tenía el proyecto.
+blockExoticSubdeps: false
+
 patchedDependencies:
   next@16.3.5: patches/next@16.3.5.patch
