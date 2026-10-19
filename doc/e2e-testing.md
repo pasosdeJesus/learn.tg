@@ -237,6 +237,7 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `pastor-bonus-verify.spec.mjs` | Admin side of the 22 SLEARN bonus: verifier SIWE → `GET /api/admin/pastor-bonus` lists only pastors whose role is verified (`verified_church_relationship='pastor'`, R-#283 — no country/score gate) → notifications, the church `registration_photo` field and the churches fund (SKIP if the `.env` wallet is not a verifier) |
 | `celo-claim.spec.mjs` | Full crossword → submit → scholarship claim flow |
 | `full-journey.spec.mjs` | All endpoints: CSRF, SIWE, session, profile, crossword, UBI, signout |
+| `multiwallet-rules.spec.mjs` | R-#265: vincular una billetera nueva a la cuenta y comprobar que el UBI se reclama una vez por cuenta al día, que una guía no se paga dos veces (la nueva recibe `alreadyPaid` con el mensaje de otra billetera) y que desvincular informa `revoked`/`revokeFailures`; la billetera se desvincula siempre al final. Mueve UBI de testnet si la cuenta no reclamó ese día; SKIP sin `apps/.env` o sin guía pagada resoluble (`make test-smoke-multiwallet`) |
 | `landing-page.spec.mjs` | `/en` and `/es` return 200, no "Failed to load courses" error |
 | `leaderboard.spec.mjs` | Leaderboard page + API in ES and EN |
 | `premium-price.spec.mjs` | Precio del curso premium por país (https://github.com/pasosdeJesus/learn.tg/issues/128 §4.2): crea dos perfiles (Sierra Leona y Colombia) y compara `/api/courses/premium/price` — HDI alto paga más, el SLEARN conserva el 10% y los montos caen en la calibración (SL ~0.70, CO ~3.00). HTTP, sin Chrome ni fondos |
@@ -253,9 +254,10 @@ Run with: `make test-smoke` or `bin/m test:e2e --smoke`
 | `donate-campaign.spec.mjs` | Campaign donation (https://github.com/pasosdeJesus/learn.tg/issues/223, `/api/donations/{slug}/verify` + balance): 404/400/401, bounds de `pdjSharePct` y forma del balance multi-cadena |
 | `rails-health.spec.mjs` | Health check del backend Rails del dev site (`NEXT_PUBLIC_API_BASE/proyectosfinancieros.json`): 200 con cursos → UP; error de red/502 → DOWN (exit 1). Correr antes de las suites que dependen de Rails |
 
-### Current Status (2026-10-07)
+### Current Status (2026-10-19)
 
-**24 smokes** (`ls e2e/smoke/*.spec.mjs | wc -l`, medido 2026-10-07; eran 23 el
+**25 smokes** (`ls e2e/smoke/*.spec.mjs | wc -l`, medido 2026-10-19; eran 24 el
+2026-10-07, 23 el
 2026-09-30 y 21 el
 2026-09-21). `leaderboard.spec.mjs` puede fallar por el
 texto explicativo del profile score no renderizado (contenido menor). Las rutas

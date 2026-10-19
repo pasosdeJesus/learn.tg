@@ -231,6 +231,14 @@ next-patch-check:
 test-smoke:
 	./bin/m test:e2e --smoke
 
+# R-#265: reglas multibilletera (UBI por cuenta, beca por cuenta y guía,
+# desvincular con revocación). Mueve UBI de testnet si la cuenta no reclamó ese
+# día y usa la billetera de apps/.env. Se salta sin credenciales o sin una guía
+# pagada resoluble.
+#   make test-smoke-multiwallet
+test-smoke-multiwallet:
+	SITE_URL=$${SITE_URL:-https://learn.tg:9001} ./bin/m test:e2e multiwallet-rules --smoke
+
 # Full E2E tests (Puppeteer + Chrome, requires CHROME_PATH)
 # 12s de aire entre specs: el dev site (16G compartido) limita por wallet/IP
 # (429) y bajo carga los specs de timing flaquean (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8).
