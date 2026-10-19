@@ -1,5 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 // `vitest.setup.ts` mockea `kysely` y `pg` para las rutas; aquí se prueba el pool
 // real, así que se deshacen esos mocks en este archivo.
@@ -51,5 +53,24 @@ describe('newKyselyPostgresql — un pool por proceso', () => {
 
     expect(second).not.toBe(first)
     expect(g.__learntgPool).not.toBe(firstPool)
+  })
+
+  // Guardia de la regresión del 2026-10-19: `app/api/verify/route.ts` hacía
+  // `await db.destroy()` en un `finally`, lo que destruía el driver **compartido** y
+  // dejaba todas las rutas con base de datos en 500 ("driver has already been
+  // destroyed") hasta reiniciar el proceso. Una ruta nunca debe destruir el pool.
+  it('ninguna ruta de app/api destruye el pool compartido', () => {
+    const routeFiles = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const full = join(dir, entry.name)
+        if (entry.isDirectory()) return entry.name === '__tests__' ? [] : routeFiles(full)
+        return entry.name === 'route.ts' ? [full] : []
+      })
+
+    const offenders = routeFiles(join(process.cwd(), 'app', 'api'))
+      .filter((file) => /\.destroy\s*\(/.test(readFileSync(file, 'utf8')))
+      .map((file) => file.replace(`${process.cwd()}/`, ''))
+
+    expect(offenders).toEqual([])
   })
 })

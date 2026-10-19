@@ -54,6 +54,9 @@ solo uno de ellos si la bóveda solo tiene fondos para uno.
 
 - **Espera de 24 horas:** Después de enviar un crucigrama en un curso, debes
   esperar 24 horas antes de enviar otro en el mismo curso.
+- **Una recompensa por cuenta:** la beca de una guía se paga una sola vez por
+  cuenta, así que otra billetera vinculada a tu cuenta no puede cobrarla de
+  nuevo; el UBI en CELO se reclama una vez por cuenta al día.
 - **Saldo de la bóveda:** Las becas se pagan de bóvedas financiadas por
   donantes. Si una bóveda no tiene fondos, no recibirás beca aunque tengas
   puntuación perfecta.

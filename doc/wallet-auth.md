@@ -154,6 +154,17 @@ with its natural width) instead of equal grid columns: with five labels,
 `Collectibles`/`Coleccionables` did not fit on a 360-dp Android screen (A54) and overlapped
 the next tab, while short labels looked padded unevenly (operator, 2026-10-17).
 
+**Unlinking revokes the credentials of that wallet** (R-#265 §3.3, operator decision
+2026-10-18). `POST /api/wallet/unlink` removes the secondary wallet and **then** burns, on
+chain, the course SBTs minted to it (`revokeCourseCredential`); doing it after the unlink
+means a refused operation (`409`, last wallet) burns nothing. The response carries
+`revoked` and `revokeFailures`, both logged in `userevent`, so a verifier can retry
+(`POST /api/admin/credentials/revoke`) or re-mint to another wallet of the account. The
+Accounts tab states it (`components/AccountWalletActions.tsx`, `showUnlinkWarning`) and
+`WalletPanel` calls `reconcileDownloadedCourses()` with the response so the offline copies
+stop accepting the removed wallet (and are deleted only when no wallet of the account can
+read them).
+
 ### LinkWalletButton (`components/LinkWalletButton.tsx`)
 
 R-#265 §3.2: adds another wallet to the **account** of the current session (label "Link

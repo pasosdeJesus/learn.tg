@@ -34,7 +34,7 @@ export async function fetchAccountWallets(walletAddress: string): Promise<Accoun
 }
 
 export type UnlinkResult =
-  | { ok: true; wallets: AccountWallet[] }
+  | { ok: true; wallets: AccountWallet[]; usuarioId?: number }
   | { ok: false; reason: 'unauthorized' | 'last-wallet' | 'invalid' | 'error' }
 
 /**
@@ -54,7 +54,14 @@ export async function unlinkAccountWalletRequest(
     if (res.status === 401) return { ok: false, reason: 'unauthorized' }
     if (res.status === 409) return { ok: false, reason: 'last-wallet' }
     if (!res.ok) return { ok: false, reason: 'error' }
-    return { ok: true, wallets: await readWallets(res) }
+    // R-#265 §3.3: además de las billeteras que quedan, el servidor devuelve la cuenta
+    // para que el cliente decida qué copias sin conexión siguen siendo legibles.
+    const data = (await res.json().catch(() => null)) as
+      | { wallets?: unknown; usuarioId?: unknown }
+      | null
+    const wallets = Array.isArray(data?.wallets) ? (data!.wallets as AccountWallet[]) : []
+    const usuarioId = Number(data?.usuarioId)
+    return { ok: true, wallets, usuarioId: Number.isInteger(usuarioId) ? usuarioId : undefined }
   } catch {
     return { ok: false, reason: 'error' }
   }

@@ -8,6 +8,13 @@ import { IS_PRODUCTION } from '../lib/config'
 import type { RewardsDeps } from '../index'
 
 const PROFILE_SCORE_THRESHOLD = 50
+/**
+ * R-#265 §3.3 (decisión del operador, 2026-10-18): el UBI se reclama **una vez por
+ * cuenta al día**. El contrato limita por dirección (`COOLDOWN_PERIOD`, 24 h por
+ * billetera), así que sin esta comprobación una cuenta con N billeteras cobraría N
+ * veces el mismo día.
+ */
+const UBI_COOLDOWN_MS = 24 * 60 * 60 * 1000
 
 /** POST /api/claim-celo-ubi — reclamo de UBI (CELO). Auth + DB inyectados (D2). */
 export async function claimCeloUbi(deps: RewardsDeps, request: NextRequest): Promise<Response> {
@@ -30,6 +37,29 @@ export async function claimCeloUbi(deps: RewardsDeps, request: NextRequest): Pro
 
     if (user.profilescore === null || user.profilescore < PROFILE_SCORE_THRESHOLD) {
       return NextResponse.json({ message: `Profile score must be at least ${PROFILE_SCORE_THRESHOLD}` }, { status: 403 })
+    }
+
+    // R-#265 §3.3: una sola vez por cuenta al día (24 h desde el último reclamo
+    // confirmado, venga de la billetera que venga). La fila `ubi-claim` la escribe
+    // este mismo handler solo cuando el evento `Claimed` se confirma.
+    const lastClaim = await db
+      .selectFrom('transaction')
+      .select('created_at')
+      .where('usuario_id', '=', user.id)
+      .where('type', '=', 'ubi-claim')
+      .orderBy('created_at', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    const lastClaimAt = lastClaim?.created_at ? new Date(lastClaim.created_at as any).getTime() : 0
+    const sinceLastClaim = Date.now() - lastClaimAt
+    if (lastClaimAt > 0 && sinceLastClaim < UBI_COOLDOWN_MS) {
+      const remainingMs = UBI_COOLDOWN_MS - sinceLastClaim
+      const hours = Math.floor(remainingMs / 3_600_000)
+      const minutes = Math.floor((remainingMs % 3_600_000) / 60_000)
+      const message = lang === 'es'
+        ? `El UBI se reclama una sola vez por cuenta al día. Inténtalo de nuevo en aproximadamente ${hours} hora(s) y ${minutes} minuto(s).`
+        : `UBI can be claimed only once per account per day. Please try again in about ${hours} hour(s) and ${minutes} minute(s).`
+      return NextResponse.json({ message }, { status: 429 })
     }
 
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL

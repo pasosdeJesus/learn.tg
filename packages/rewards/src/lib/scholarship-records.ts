@@ -19,6 +19,8 @@ export type ScholarshipToken = 'usdt' | 'slearn'
 export interface RecordedTokens {
   usdt: boolean
   slearn: boolean
+  /** Billeteras que ya recibieron (al menos un token de) la beca de esa guía. */
+  wallets: string[]
 }
 
 export interface ScholarshipRow {
@@ -54,17 +56,39 @@ export async function recordedScholarshipTokens(
 ): Promise<RecordedTokens> {
   const rows = await db
     .selectFrom('transaction')
-    .select(['crypto', 'metadata'])
+    .select(['crypto', 'metadata', 'wallet'])
     .where('usuario_id', '=', usuarioId)
     .where('type', '=', 'scholarship')
     .where('crypto', 'in', ['usdt', 'slearn'])
     .execute()
-  const cryptos = new Set(
-    (rows as Array<{ crypto: string; metadata: unknown }>)
-      .filter((row) => String((row.metadata as { guideId?: unknown } | null)?.guideId) === String(guideId))
-      .map((row) => row.crypto),
-  )
-  return { usdt: cryptos.has('usdt'), slearn: cryptos.has('slearn') }
+  const forGuide = (rows as Array<{ crypto: string; metadata: unknown; wallet?: string | null }>)
+    .filter((row) => String((row.metadata as { guideId?: unknown } | null)?.guideId) === String(guideId))
+  const cryptos = new Set(forGuide.map((row) => row.crypto))
+  const wallets = [...new Set(
+    forGuide
+      .map((row) => String(row.wallet ?? '').toLowerCase())
+      .filter(Boolean),
+  )]
+  return { usdt: cryptos.has('usdt'), slearn: cryptos.has('slearn'), wallets }
+}
+
+/**
+ * R-#265 §3.3 (decisión del operador, 2026-10-18): una guía se paga **una vez por
+ * cuenta**. Devuelve la billetera distinta de la conectada que ya recibió la beca de
+ * esa guía, o `null`. Una entrega parcial sigue completándose desde la misma
+ * billetera (USDT y SLEARN se pagan por separado), pero otra billetera de la cuenta
+ * no puede cobrarla de nuevo.
+ */
+export function paidToOtherWallet(
+  wallets: readonly string[],
+  currentWallet: string,
+): string | null {
+  const current = String(currentWallet ?? '').toLowerCase()
+  for (const wallet of wallets) {
+    const entry = String(wallet ?? '').toLowerCase()
+    if (entry && entry !== current) return entry
+  }
+  return null
 }
 
 /** Entero con decimales → número (USDT 6, SLEARN 2). Sin `viem`, por el mismo motivo. */

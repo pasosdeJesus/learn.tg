@@ -233,6 +233,15 @@ The platform features two distinct reward mechanisms, demonstrating our principl
 > detection, credential minting, GD routing and referral attribution) is documented
 > in [`apps/nextjs/app/api/doc/crossword-reward-flow.md`](apps/nextjs/app/api/doc/crossword-reward-flow.md).
 
+**One award per account (R-#265).** Because an account may hold several wallets
+(https://github.com/pasosdeJesus/learn.tg/issues/265), the anti-double-pay rule is measured
+per **account**, not per address: before paying, `check-crossword` looks at the
+`transaction` rows of the guide for that user and refuses when another wallet of the
+account already received it (`paidToOtherWallet` in
+`packages/rewards/src/lib/scholarship-records.ts`). A partial payment is still completed
+from the same wallet (USDT and SLEARN are paid independently); a different wallet of the
+account cannot collect the guide again. The response explains it in the user's language.
+
 ### 2. Universal Basic Income (UBI) Claims in CELO
 - **Trigger:** A user initiates a UBI claim via the `/api/claim-celo-ubi` endpoint.
 - **Process:**
@@ -240,6 +249,12 @@ The platform features two distinct reward mechanisms, demonstrating our principl
     2. It then calls the `claim()` function on the `CeloUbi.sol` contract.
     3. The contract validates the claim conditions (such as cooldown periods) on-chain.
     4. Upon successful validation, it transfers a set amount of CELO to the user's wallet.
+
+**One claim per account per day (R-#265).** The contract's cooldown is per address, so the
+backend also refuses a claim when the account already has a confirmed `ubi-claim`
+`transaction` in the previous 24 hours (`packages/rewards/src/routes/claim-celo-ubi.ts`),
+whichever wallet of the account made it. The limit is written in the user guide
+([Guide 3](resources/en/web3-and-ubi/guide3.md)).
 
 ### 3. Referral Program (https://github.com/pasosdeJesus/learn.tg/issues/163)
 

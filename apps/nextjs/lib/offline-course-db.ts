@@ -236,6 +236,44 @@ export async function deleteDownloadedCourses(
 }
 
 /**
+ * R-#265 §3.3: tras desvincular una billetera la copia de un curso de pago sigue
+ * siendo legible por la **cuenta** (la compra es del usuario, no de la dirección).
+ * La lista guardada al descargar deja de aceptar la billetera desvinculada, y la
+ * copia se borra solo si ya no queda ninguna billetera de la cuenta que pueda leerla
+ * (por ejemplo, una copia antigua que no registró la cuenta y se bajó con la
+ * billetera desvinculada). Las respuestas en cola no se tocan.
+ */
+export async function reconcileDownloadedCourses(
+  accountWallets: readonly string[],
+  accountUserId?: number | null,
+): Promise<{ updated: string[]; deleted: string[] }> {
+  const current = [...new Set(
+    accountWallets.map((wallet) => String(wallet ?? '').toLowerCase()).filter(Boolean),
+  )]
+  const updated: string[] = []
+  const deleted: string[] = []
+  for (const course of await listDownloadedCourses()) {
+    if (!course.isPremium) continue
+    const sameAccount = accountUserId != null
+      && course.usuarioId != null
+      && Number(course.usuarioId) === Number(accountUserId)
+    if (!sameAccount && !belongsToWallet(course, current)) {
+      await deleteDownloadedCourse(course.key)
+      deleted.push(course.key)
+      continue
+    }
+    const wallet = (course.wallet || '').toLowerCase()
+    await saveDownloadedCourse({
+      ...course,
+      wallets: current,
+      wallet: current.includes(wallet) ? wallet : current[0] ?? null,
+    })
+    updated.push(course.key)
+  }
+  return { updated, deleted }
+}
+
+/**
  * Guarda el contenido de una guía y la registra en el curso. El `markdown` es el
  * HTML que sirve `GET /api/guide` (lo mismo que cachea `useCachedGuide`), así que
  * la página de guía lo lee sin cambios.

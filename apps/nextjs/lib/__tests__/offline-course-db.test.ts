@@ -8,6 +8,7 @@ import {
   getDownloadedCourse,
   isStale,
   listDownloadedCourses,
+  reconcileDownloadedCourses,
   revisionChanged,
   saveCourseGuide,
   saveDownloadedCourse,
@@ -157,5 +158,61 @@ describe('offline-course-db (R-#256)', () => {
 
     expect(deleted).toEqual(['en/sensible'])
     expect(await getDownloadedCourse('en/tecnico')).not.toBeNull()
+  })
+})
+
+// R-#265 §3.3: al desvincular una billetera la copia de un curso de pago sigue
+// siendo de la cuenta; sólo se borra cuando ya no queda ninguna billetera que la lea.
+describe('reconcileDownloadedCourses (R-#265)', () => {
+  const FIRST = '0x84272a6dd0d5fe9ea2ab28cf96e72f4f7da00c5c'
+  const SECOND = '0x1111111111111111111111111111111111111111'
+
+  beforeEach(async () => {
+    await deleteDownloadedCourses({})
+  })
+
+  it('keeps a paid copy of the account and drops the unlinked wallet from its snapshot', async () => {
+    await saveDownloadedCourse(record({
+      key: 'en/gdcluster',
+      wallet: FIRST,
+      wallets: [FIRST, SECOND],
+      usuarioId: 7,
+    }))
+
+    const result = await reconcileDownloadedCourses([SECOND], 7)
+
+    expect(result.deleted).toEqual([])
+    expect(result.updated).toEqual(['en/gdcluster'])
+    const copy = await getDownloadedCourse('en/gdcluster')
+    expect(copy?.wallets).toEqual([SECOND])
+    expect(belongsToWallet(copy!, FIRST)).toBe(false)
+    expect(belongsToWallet(copy!, SECOND)).toBe(true)
+  })
+
+  it('deletes a copy whose only wallet is no longer part of the account', async () => {
+    // Copia anterior a `usuarioId`: se reconoce por la billetera.
+    await saveDownloadedCourse(record({ key: 'en/old', wallet: FIRST, usuarioId: null }))
+
+    const result = await reconcileDownloadedCourses([SECOND], 7)
+
+    expect(result.deleted).toEqual(['en/old'])
+    expect(await getDownloadedCourse('en/old')).toBeNull()
+  })
+
+  it('leaves free courses alone', async () => {
+    await saveDownloadedCourse(record({
+      key: 'en/web3-and-ubi',
+      prefix: 'web3-and-ubi',
+      courseId: 3,
+      isPremium: false,
+      wallet: FIRST,
+      usuarioId: null,
+    }))
+
+    const result = await reconcileDownloadedCourses([SECOND], 7)
+
+    expect(result.updated).toEqual([])
+    expect(result.deleted).toEqual([])
+    expect(await getDownloadedCourse('en/web3-and-ubi')).not.toBeNull()
   })
 })

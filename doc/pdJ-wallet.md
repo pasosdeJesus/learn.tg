@@ -106,7 +106,14 @@ the profile, section **Wallets in this account**.
   you are using at that moment, and a badge is minted to the wallet that completed the
   course. Losing one wallet does not lose the account, and a stolen wallet cannot move a
   badge (they are soulbound).
-- **Remove a wallet** from the wallet panel; the account always keeps at least one.
+- **One reward per account:** a guide's scholarship is paid **once per account** (another
+  wallet of yours cannot collect it again) and the CELO UBI is claimed **once per account
+  per day**.
+- **Remove a wallet** from the wallet panel; the account always keeps at least one. Removing
+  it **revokes the badges (SBT) minted to that wallet** on the blockchain: your account keeps
+  the progress and the proof, and a verifier can re-mint the badge to another wallet of the
+  account. Copies of paid courses downloaded with the removed wallet stay readable while the
+  account has another wallet.
 
 ## Stop using it
 

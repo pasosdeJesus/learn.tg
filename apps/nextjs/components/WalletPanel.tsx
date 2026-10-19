@@ -20,6 +20,7 @@ import {
   unlinkAccountWalletRequest,
   type AccountWallet,
 } from '@/lib/wallet-account'
+import { reconcileDownloadedCourses } from '@/lib/offline-course-db'
 import { AccountWalletActions } from '@/components/AccountWalletActions'
 
 /**
@@ -105,7 +106,14 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock, 
 
   const handleUnlink = useCallback(async (walletToUnlink: string) => {
     const result = await unlinkAccountWalletRequest(address, walletToUnlink)
-    if (result.ok) setAccountWallets(result.wallets)
+    if (!result.ok) return
+    setAccountWallets(result.wallets)
+    // R-#265 §3.3: el servidor revoca las credenciales de la billetera desvinculada.
+    // Aquí se actualiza qué billeteras de la cuenta pueden leer cada copia sin conexión.
+    void reconcileDownloadedCourses(
+      result.wallets.map((wallet) => wallet.billetera),
+      result.usuarioId,
+    ).catch(() => {})
   }, [address])
 
   const tokens = useMemo(learnTgTokens, [])
@@ -133,7 +141,7 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock, 
       onRequestUnlock={onRequestUnlock}
       accountsActions={
         address
-          ? <AccountWalletActions lang={language} onChanged={refreshWallets} onUnlock={onRequestUnlock} />
+          ? <AccountWalletActions lang={language} onChanged={refreshWallets} onUnlock={onRequestUnlock} showUnlinkWarning />
           : undefined
       }
     />

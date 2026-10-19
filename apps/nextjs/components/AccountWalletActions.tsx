@@ -16,6 +16,8 @@ interface AccountWalletActionsProps {
   onChanged?: () => void
   /** Abre el diálogo de la billetera para desbloquearla (firmar). */
   onUnlock?: () => void
+  /** Muestra el aviso de qué pasa al desvincular (sólo donde existe "Desvincular"). */
+  showUnlinkWarning?: boolean
 }
 
 /**
@@ -26,15 +28,32 @@ interface AccountWalletActionsProps {
  * "Vincular otra billetera" sólo se muestra si `hasAnotherWallet()` detecta una
  * billetera distinta de la conectada: la de la aplicación, otra cuenta de la externa o
  * un segundo proveedor. Así el botón no promete algo que el dispositivo no tiene.
+ *
+ * R-#265 §3.3 (decisión del operador, 2026-10-18): al desvincular una billetera se
+ * **revocan** las credenciales (SBT) emitidas a ella; el aviso se muestra junto a las
+ * acciones cuando el llamador lo pide (`showUnlinkWarning`, sólo en el panel).
  */
-export function AccountWalletActions({ lang = 'en', onChanged, onUnlock }: AccountWalletActionsProps) {
+export function AccountWalletActions({
+  lang = 'en',
+  onChanged,
+  onUnlock,
+  showUnlinkWarning = false,
+}: AccountWalletActionsProps) {
   const { status, walletInfo } = useInAppWallet()
   const { address, sessionAddress } = useAuthAddress()
   const { available: externalAvailable, announced } = useExternalProvider()
   const [externalAccounts, setExternalAccounts] = useState<string[]>([])
   const t = createComponentT(lang, {
-    en: { unlock: 'Unlock your in-app wallet' },
-    es: { unlock: 'Desbloquear tu billetera' },
+    en: {
+      unlock: 'Unlock your in-app wallet',
+      unlinkWarning:
+        'Removing a wallet revokes, on chain, the course credentials (SBT) minted to it. Your account keeps the proof and a verifier can re-mint it to another wallet.',
+    },
+    es: {
+      unlock: 'Desbloquear tu billetera',
+      unlinkWarning:
+        'Desvincular una billetera revoca en la cadena las credenciales (SBT) de cursos emitidas a ella. La cuenta conserva la prueba y el verificador puede reacuñarla a otra billetera.',
+    },
   })
 
   // Cuentas que el sitio ya puede usar sin abrir el diálogo de la billetera externa.
@@ -83,6 +102,11 @@ export function AccountWalletActions({ lang = 'en', onChanged, onUnlock }: Accou
       )}
       {showLink && <LinkWalletButton lang={lang} onLinked={onChanged} align="start" />}
       <InviteWalletControl lang={lang} onChanged={onChanged} align="start" />
+      {showUnlinkWarning && (
+        <p className="text-xs text-muted-foreground" data-testid="wallet-unlink-warning">
+          {t('unlinkWarning')}
+        </p>
+      )}
     </div>
   )
 }

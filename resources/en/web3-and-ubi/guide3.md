@@ -55,6 +55,9 @@ receive only one of them if the vault only has funds for one.
 
 - **24-hour cooldown:** After submitting a crossword for a course, you must
   wait 24 hours before submitting another one in the same course.
+- **One reward per account:** a guide's scholarship is paid once per account,
+  so a second wallet linked to your account cannot collect it again; the CELO
+  UBI is claimed once per account per day.
 - **Vault balance:** Scholarships are paid from vaults funded by donors. If a
   vault has no funds, you will not receive a scholarship even with a perfect
   score.

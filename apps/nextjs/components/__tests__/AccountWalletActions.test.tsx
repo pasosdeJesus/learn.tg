@@ -112,4 +112,16 @@ describe('AccountWalletActions (R-#265 §3.2)', () => {
     render(<AccountWalletActions lang="es" />)
     expect(screen.getByTestId('invite-mock').getAttribute('data-align')).toBe('start')
   })
+
+  // R-#265 §3.3 (decisión del operador, 2026-10-18): desvincular revoca los SBT de la
+  // billetera; el panel lo avisa y el perfil (que no desvincula) no lo muestra.
+  it('avisa que desvincular revoca las credenciales', () => {
+    render(<AccountWalletActions lang="es" showUnlinkWarning />)
+    expect(screen.getByTestId('wallet-unlink-warning').textContent).toMatch(/revoca/i)
+  })
+
+  it('no muestra el aviso de desvincular donde no se desvincula', () => {
+    render(<AccountWalletActions lang="es" />)
+    expect(screen.queryByTestId('wallet-unlink-warning')).toBeNull()
+  })
 })
