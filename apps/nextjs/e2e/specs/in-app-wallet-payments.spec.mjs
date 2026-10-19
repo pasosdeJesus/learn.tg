@@ -496,7 +496,12 @@ async function main() {
       await page.type('[data-testid="wallet-panel-amount"]', '0.1').catch(() => {})
       await sleep(1500)
       const validation = await text(page, '[data-testid="wallet-panel-error"]')
+      // R-#265/R-#254: con la billetera bloqueada el panel muestra el motivo real
+      // (`wallet-panel-locked`, "desbloquea para enviar") en vez de un error de campo;
+      // el envío queda deshabilitado igual. La aserción de validación no aplica.
+      const lockedPanel = await exists(page, '[data-testid="wallet-panel-locked"]')
       if (validation) ok('El panel valida la dirección destino antes de firmar')
+      else if (lockedPanel) console.log('  [!] billetera bloqueada: se omite la validación de la dirección')
       else fail('El panel no avisó de una dirección destino inválida')
       const sentDisabled = await page
         .$eval('[data-testid="wallet-panel-send"]', (el) => el.disabled)

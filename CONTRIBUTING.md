@@ -23,6 +23,12 @@ All project documentation, REQ files, commit messages, and code comments must be
 > `allowBuilds`, `patchedDependencies`, `minimumReleaseAge`) live in
 > `pnpm-workspace.yaml`.
 
+> **Clone with submodules:** use `git clone --recurse-submodules` (or run
+> `git submodule update --init` afterwards). `apps/nextjs/app/api`,
+> `resources/en/gdcluster` and `resources/es/redgd` are submodules, and the
+> clone also needs the empty directory `packages/gdcluster/db/migrations`,
+> which git does not version and the GDCluster engine expects.
+
 ### Frontend Only (quickest — no backend required)
 
 See [apps/nextjs/README.md](apps/nextjs/README.md) for the quick start.
@@ -59,7 +65,8 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
    - `make coverage` runs all tests with coverage (lento, usa más memoria)
    - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.
    - **In-app wallet** (`@pasosdejesus/m/wallet` core and `@pasosdejesus/m/wallet/next`
-     React layer, `m/REQ/14` and `m/REQ/37`): consumed by version; its unit tests run in
+     React layer, https://gitlab.com/pasosdeJesus/m/-/work_items/14 and
+     https://gitlab.com/pasosdeJesus/m/-/work_items/37): consumed by version; its unit tests run in
      the `m` repo (`pnpm -r test`). See [doc/pdj-wallet-testing.md](doc/pdj-wallet-testing.md).
    - **Engine tests** (`packages/rewards`, `packages/gdcluster`): `make test-engines`
      (or `make test-rewards` / `make test-gdcluster`), ~45 s; each
