@@ -391,7 +391,7 @@ async function main() {
       slearn: refDist.filter(d => d.crypto === 'slearn').reduce((s, d) => s + Number(d.amount), 0),
     }
     if (refDist.length > 0) ok(`Distribución referral: ${expectedForm1.slearn.toFixed(2)} SLEARN · ${expectedForm1.usdt.toFixed(2)} USDT`)
-    else console.log('  [!] Sin items "referral" en la distribución de la compra')
+    else console.log(`  [!] Sin items "referral" en la distribución de la compra: ${JSON.stringify(purchaseBody).slice(0, 400)}`)
 
     // ════════════════════════════════════════════════════════════
     // 6. Historial del referidor: Form 1 (10%) + Form 3 (1 USDT)
