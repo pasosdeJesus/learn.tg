@@ -9,7 +9,7 @@ overrides:
   '@ethereumjs/common': ^10.1.2
   '@ethereumjs/util': ^10.1.2
   '@ethereumjs/tx': ^10.1.2
-  '@pasosdejesus/m': ^0.34.0
+  '@pasosdejesus/m': ^0.35.0
 
 # pnpm 11 falla con ERR_PNPM_IGNORED_BUILDS si un paquete con script de
 # instalación no está aquí (reemplaza `pnpm.onlyBuiltDependencies`).

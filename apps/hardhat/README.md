@@ -106,6 +106,14 @@ The deployment JSON is the single source of truth. Scripts read from it directly
 The Next.js frontend uses `@pasosdejesus/m/blockchain/deployments`
 (`readDeployment()`) or `@pasosdejesus/mpdj/blockchain/ecosystem-addresses`.
 
+Check that every address the sources read exists here (read-only, no network).
+Run it from the **repo root**; from an app it reports "no contract app" and
+gives a false green:
+
+```sh
+apps/nextjs/bin/m contract:checkdeploy
+```
+
 > **`deployments/` is gitignored** (see the repo `.gitignore`): it is a deploy
 > artifact, so a fresh clone or another machine does not have it, and everything
 > that reads an address (the app at runtime, the verify/smoke scripts) needs those
