@@ -1,20 +1,23 @@
 import { ethers } from "hardhat";
+import * as fs from "fs";
+import * as path from "path";
 
 async function main() {
-  // Get the MockUSDT address from environment variables
-  const mockUSDTAddress = process.env.MOCK_USDT_ADDRESS;
-  
-  if (!mockUSDTAddress) {
-    throw new Error("MOCK_USDT_ADDRESS not found in environment variables");
+  // Dirección desde el despliegue guardado por `deployMockUSDT`.
+  const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia";
+  const file = path.join(__dirname, "..", "deployments", "MockUSDT", `${network}.json`);
+  if (!fs.existsSync(file)) {
+    throw new Error(`MockUSDT deployment not found at ${file}. Deploy it first (bin/deployMockUSDT).`);
   }
-  
+  const { address: mockUSDTAddress } = JSON.parse(fs.readFileSync(file, "utf8"));
+
   // Get the contract factory for MockUSDT
   const MockUSDT = await ethers.getContractFactory("MockUSDT");
   
   // Connect to the deployed contract
   const mockUSDT = MockUSDT.attach(mockUSDTAddress);
   
-  console.log("Verifying MockUSDT deployment at:", mockUSDTAddress);
+  console.log(`Verifying MockUSDT deployment at: ${mockUSDTAddress} (${network})`);
   
   // Check token details
   const name = await mockUSDT.name();

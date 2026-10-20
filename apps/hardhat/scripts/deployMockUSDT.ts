@@ -1,4 +1,7 @@
 import { ethers } from "hardhat";
+import * as fs from "fs";
+import * as path from "path";
+import { tokenAddresses } from "./lib/token-addresses";
 
 async function main() {
   // Get the contract factory for MockUSDT
@@ -7,7 +10,9 @@ async function main() {
   console.log("Deploying MockUSDT token...");
   
   // Deploy the contract
-  const mockUSDT = await MockUSDT.deploy();
+  const deployer = (await ethers.getSigners())[0];
+  const deployerAddress = await deployer.getAddress();
+  const mockUSDT = await MockUSDT.deploy(deployerAddress);
   
   // Wait for the deployment transaction to be mined
   await mockUSDT.waitForDeployment();
@@ -17,8 +22,6 @@ async function main() {
   
   // Mint 1,000,000 tokens to the deployer (owner)
   // USDT has 6 decimals, so we need to multiply by 10^6
-  const deployer = (await ethers.getSigners())[0];
-  const deployerAddress = await deployer.getAddress();
   const amount = ethers.parseUnits("10000000000", 6); // 10,000,000,000 tokens with 6 decimals
   
   console.log("Minting 10,000,000,000 tokens to:", deployerAddress);
@@ -35,10 +38,24 @@ async function main() {
   const totalSupply = await mockUSDT.totalSupply();
   console.log("Total supply:", ethers.formatUnits(totalSupply, 6), "MUSDT");
   
-  // Save the deployment address to .env file
+  // Save the deployment (source of truth for the verify/test scripts)
+  const { network } = await tokenAddresses();
+  const dir = path.join(__dirname, "..", "deployments", "MockUSDT");
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, `${network}.json`);
+  const deployment = {
+    contract: "MockUSDT",
+    address: mockUSDTAddress,
+    chainId: Number((await ethers.provider.getNetwork()).chainId),
+    network,
+    owner: deployerAddress,
+    deployedAt: new Date().toISOString(),
+  };
+  fs.writeFileSync(file, JSON.stringify(deployment, null, 2));
   console.log("Deployment completed successfully!");
-  console.log("Add this line to your .env file:");
-  console.log(`MOCK_USDT_ADDRESS="${mockUSDTAddress}"`);
+  console.log(`Deployment saved to ${file}`);
+  console.log("To use this token instead of the canonical Sepolia USDT, add:");
+  console.log(`NEXT_PUBLIC_USDT_TESTNET="${mockUSDTAddress}"`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

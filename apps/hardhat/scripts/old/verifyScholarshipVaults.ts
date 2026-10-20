@@ -30,7 +30,7 @@ async function main() {
       console.log("Contract is already verified on CeloScan!");
     } else if (error.message.includes("no API token was found")) {
       console.log("API token issue. Let's check the hardhat config and .env file.");
-      console.log("Make sure CELOSCAN_API_KEY is set correctly in your .env file.");
+      console.log("Make sure BLOCKSCOUT_API_KEY is set correctly in your .env file.");
     } else {
       console.error("Error verifying contract:", error.message);
     }
