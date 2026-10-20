@@ -51,8 +51,8 @@ async function extractAmountsFromReceipt(deps: GdclusterDeps, txHash: string, ba
     throw new Error('Transaction not found or failed')
   }
 
-  const usdtAddr = (process.env.NEXT_PUBLIC_USDT_ADDRESS || '').toLowerCase()
-  const slearnAddr = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS || '').toLowerCase()
+  const usdtAddr = (process.env.NEXT_PUBLIC_USDT_TESTNET || '').toLowerCase()
+  const slearnAddr = (process.env.NEXT_PUBLIC_SLEARN_TESTNET || '').toLowerCase()
 
   let usdtAmount = 0n
   let slearnAmount = 0n
@@ -125,8 +125,8 @@ export async function verifyDonation(deps: GdclusterDeps, req: NextRequest) {
       return deps.backend.sendTxAndWait(wallet, pub, { ...args, chain, nonce: nonce++ })
     }
 
-    const usdtAddr = (process.env.NEXT_PUBLIC_USDT_ADDRESS || '') as Address
-    const slearnAddr = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS || '') as Address
+    const usdtAddr = (process.env.NEXT_PUBLIC_USDT_TESTNET || '') as Address
+    const slearnAddr = (process.env.NEXT_PUBLIC_SLEARN_TESTNET || '') as Address
 
     if (usdtAmount > 0n) {
       await sendWithNonce({
@@ -448,12 +448,12 @@ export async function verifyCampaignDonation(deps: GdclusterDeps, req: NextReque
     // minter consumió el USDT entre el transfer y el mint); al reintentar se
     // vuelve a transferir el 10% — el USDT extra solo engrosa la reserva, sin
     // doble mint.
-    const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_ADDRESS || '') as Address | undefined
+    const slearnAddress = (process.env.NEXT_PUBLIC_SLEARN_TESTNET || '') as Address | undefined
     let reserveHash: string | undefined
     let mintHash: string | undefined
     if (split.receiveCashback && split.cashbackSlearn > 0) {
       if (!slearnAddress) {
-        return NextResponse.json({ error: 'NEXT_PUBLIC_SLEARN_ADDRESS not configured (needed for the SLEARN cashback)' }, { status: 500 })
+        return NextResponse.json({ error: 'NEXT_PUBLIC_SLEARN_TESTNET not configured (needed for the SLEARN cashback)' }, { status: 500 })
       }
       const reserveAndMint = async () => {
         const rr = await attemptWithRetry('cashback reserve transfer', transferArgs(slearnAddress, reserveRaw))

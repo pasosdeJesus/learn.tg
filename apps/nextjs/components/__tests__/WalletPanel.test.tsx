@@ -71,8 +71,8 @@ describe('WalletPanel (R-#249)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.status = 'unlocked'
-    process.env.NEXT_PUBLIC_USDT_ADDRESS = USDT
-    process.env.NEXT_PUBLIC_SLEARN_ADDRESS = SLEARN
+    process.env.NEXT_PUBLIC_USDT_TESTNET = USDT
+    process.env.NEXT_PUBLIC_SLEARN_TESTNET = SLEARN
     mocks.getBalance.mockResolvedValue(1_500_000_000_000_000_000n) // 1.5 CELO
     mocks.readContract.mockImplementation(({ address }: { address: string }) =>
       Promise.resolve(address === USDT ? 2_000_000n : 0n),

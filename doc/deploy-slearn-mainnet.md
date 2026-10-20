@@ -35,7 +35,9 @@
 
 ```bash
 cd apps/hardhat
-NEXT_PUBLIC_USDT_ADDRESS=0x7d7a73c8c0D00Fdf8b54b1a6dB6eBDEcdBa78aE8 bin/deploySLEARN
+# USDT se resuelve por red desde `mpdj` (Sepolia: `NEXT_PUBLIC_USDT_TESTNET`,
+# por defecto la canónica 0x0d13…56a6). No hace falta pasarla a mano.
+bin/deploySLEARN
 ```
 
 → Address saved to `deployments/SLEARN/celoSepolia.json`.
@@ -51,7 +53,7 @@ bin/contractVerificationSLEARN
 ### 1.3 Deploy LearnTGVaultsV3
 
 ```bash
-NEXT_PUBLIC_USDT_ADDRESS=0x7d7a73c8c0D00Fdf8b54b1a6dB6eBDEcdBa78aE8 bin/deployLearnTGVaultsV3
+bin/deployLearnTGVaultsV3
 ```
 
 → Address saved to `deployments/LearnTGVaults/V3/celoSepolia.json`.
@@ -94,9 +96,8 @@ Expected: **17/17 passed**.
 
 ```bash
 cd apps/hardhat
-NEXT_PUBLIC_NETWORK=celo \
-NEXT_PUBLIC_USDT_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e \
-bin/deploySLEARN
+# Mainnet: `mpdj` resuelve la USDT canónica de Celo; no se pasa variable de token.
+NEXT_PUBLIC_NETWORK=celo bin/deploySLEARN
 ```
 
 → Address saved to `deployments/SLEARN/celo.json`.
@@ -110,9 +111,7 @@ NEXT_PUBLIC_NETWORK=celo bin/contractVerificationSLEARN
 ### 2.3 Deploy LearnTGVaultsV3
 
 ```bash
-NEXT_PUBLIC_NETWORK=celo \
-NEXT_PUBLIC_USDT_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e \
-bin/deployLearnTGVaultsV3
+NEXT_PUBLIC_NETWORK=celo bin/deployLearnTGVaultsV3
 ```
 
 Address saved to `deployments/LearnTGVaults/V3/celo.json`.
@@ -195,9 +194,11 @@ Set mainnet config. V3 and SLEARN addresses come from `lib/deployments.ts`
 
 ```
 NEXT_PUBLIC_NETWORK=celo
-NEXT_PUBLIC_USDT_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e
 NEXT_PUBLIC_DEPLOYED_AT_V2=<current V2 address>
 ```
+
+Con `NEXT_PUBLIC_NETWORK=celo` la USDT sale de las direcciones canónicas de `mpdj`;
+`NEXT_PUBLIC_USDT_TESTNET` sólo aplica a Celo Sepolia.
 
 ### 5.2 Run V2→V3 migration
 

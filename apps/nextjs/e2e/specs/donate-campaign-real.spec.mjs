@@ -23,7 +23,7 @@
  *
  * Prerequisites on the dev server (see doc/e2e-testing.md):
  *   - Campaign engine deployed (donations/[slug]/verify, network-aware)
- *   - NEXT_PUBLIC_USDT_ADDRESS = dev MockUSDT (apps/.env)
+ *   - NEXT_PUBLIC_USDT_TESTNET = dev MockUSDT (apps/.env)
  *   - NEXT_PUBLIC_PDJ_TREASURY_ADDRESS set (dev: single wallet)
  *   - Round C requires MINTER_ROLE on SLEARN + learnTgReserve (dev Sepolia)
  *
@@ -179,10 +179,10 @@ async function main() {
     'https://celo-sepolia.drpc.org',
     'https://celo-sepolia-rpc.publicnode.com',
   ].filter(Boolean)
-  usdtAddr = process.env.NEXT_PUBLIC_USDT_ADDRESS
-  slearnAddr = process.env.NEXT_PUBLIC_SLEARN_ADDRESS
+  usdtAddr = process.env.NEXT_PUBLIC_USDT_TESTNET
+  slearnAddr = process.env.NEXT_PUBLIC_SLEARN_TESTNET
   console.log(`  USDT (dev Mock): ${usdtAddr}`)
-  if (!slearnAddr) console.log('  (NEXT_PUBLIC_SLEARN_ADDRESS no configurado — ronda C sin chequeo de saldo SLEARN)')
+  if (!slearnAddr) console.log('  (NEXT_PUBLIC_SLEARN_TESTNET no configurado — ronda C sin chequeo de saldo SLEARN)')
   console.log(`Wallet: ${account.address.slice(0, 10)}... | ${SITE}\n`)
 
   let publicClient = null

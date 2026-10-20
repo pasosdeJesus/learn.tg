@@ -191,7 +191,7 @@ async function apiPatch(reqPath, params, body, cookies) {
 async function ensureChurchesFund(pk) {
   const res = await axios.get(`${SITE}/api/churches/fund`, { httpsAgent })
   const fund = res.data?.address
-  const slearnAddress = res.data?.slearnAddress || process.env.NEXT_PUBLIC_SLEARN_ADDRESS || loadEnvValue('NEXT_PUBLIC_SLEARN_ADDRESS')
+  const slearnAddress = res.data?.slearnAddress || process.env.NEXT_PUBLIC_SLEARN_TESTNET || loadEnvValue('NEXT_PUBLIC_SLEARN_TESTNET')
   const balance = Number(res.data?.slearnBalance || 0)
   const needed = 60
   console.log(`Fondo de iglesias ${fund ? fund.slice(0, 10) + '...' : '(desconocido)'}: ${balance} SLEARN`)
@@ -344,7 +344,7 @@ async function main() {
     // ════════════════════════════════════════════════════════════
     console.log('── 5. Compra del curso GD ──')
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || loadEnvValue('NEXT_PUBLIC_RPC_URL') || 'https://forno.celo-sepolia.celo-testnet.org'
-    let slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS || loadEnvValue('NEXT_PUBLIC_SLEARN_ADDRESS')
+    let slearnAddress = process.env.NEXT_PUBLIC_SLEARN_TESTNET || loadEnvValue('NEXT_PUBLIC_SLEARN_TESTNET')
     let backendWallet = referrerAddr
     try {
       const fundRes = await axios.get(`${SITE}/api/churches/fund`, { httpsAgent })

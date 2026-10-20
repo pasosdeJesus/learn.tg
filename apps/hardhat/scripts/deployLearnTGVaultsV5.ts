@@ -10,7 +10,7 @@ async function main() {
 
   // USDT y red desde `mpdj` (por red), no del `.env`.
   const { network, usdt: usdtAddress } = await tokenAddresses()
-  if (!usdtAddress) throw new Error("USDT address not found (mpdj USDT_ADDRESSES / NEXT_PUBLIC_USDT_ADDRESS)")
+  if (!usdtAddress) throw new Error("USDT address not found (mpdj USDT_ADDRESSES / NEXT_PUBLIC_USDT_TESTNET)")
 
   const slearnFile = path.join(__dirname, "..", "deployments", "SLEARN", `${network}.json`)
   if (!fs.existsSync(slearnFile)) {

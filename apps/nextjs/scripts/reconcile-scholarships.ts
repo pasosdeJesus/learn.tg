@@ -251,7 +251,7 @@ hash (la prueba on-chain), siempre por dirección. No escanea bloques.
 
   const publicClient = createPublicClient({ transport: http(rpc) })
   // Direcciones de token: la autoridad es el propio vault (`usdtToken()`/`slearnToken()`).
-  // El mapa de `mpdj` sale de `NEXT_PUBLIC_USDT_ADDRESS`/`NEXT_PUBLIC_SLEARN_ADDRESS` y en
+  // El mapa de `mpdj` sale de `NEXT_PUBLIC_USDT_TESTNET`/`NEXT_PUBLIC_SLEARN_TESTNET` y en
   // un despliegue sin esas variables queda `undefined`; se usa sólo para contrastar.
   const mpdjNetwork = resolveNetwork()
   const usdtAddress = USDT_ADDRESSES[mpdjNetwork]

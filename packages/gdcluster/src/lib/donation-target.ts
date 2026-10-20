@@ -161,14 +161,14 @@ export function getCampaignDonationToken(cfg: CampaignConfig, key: string, mainn
     base = cfg.testnet?.tokens.find((t) => t.key === key)
   }
   if (!base) return undefined
-  // USDT: la dirección del servidor (NEXT_PUBLIC_USDT_ADDRESS, la misma que usa
+  // USDT: la dirección del servidor (NEXT_PUBLIC_USDT_TESTNET, la misma que usa
   // el DonateModal y los receipts) tiene prioridad sobre el registro — así el
   // testnet de desarrollo (dev MockUSDT) coincide aunque difiera del ejemplo.
-  if (key === 'usdt' && process.env.NEXT_PUBLIC_USDT_ADDRESS) {
+  if (key === 'usdt' && process.env.NEXT_PUBLIC_USDT_TESTNET) {
     const dec = Number(process.env.NEXT_PUBLIC_USDT_DECIMALS)
     return {
       ...base,
-      address: process.env.NEXT_PUBLIC_USDT_ADDRESS,
+      address: process.env.NEXT_PUBLIC_USDT_TESTNET,
       decimals: Number.isFinite(dec) ? dec : base.decimals,
     }
   }

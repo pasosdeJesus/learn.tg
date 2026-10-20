@@ -212,20 +212,20 @@ importers:
         specifier: 16.3.1
         version: 16.3.1
       '@pasosdejesus/contract-test':
-        specifier: ^0.1.5
-        version: 0.1.5(@pasosdejesus/m@0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
+        specifier: ^0.1.6
+        version: 0.1.6(@pasosdejesus/m@0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
       '@pasosdejesus/edr':
         specifier: ^0.1.2
         version: 0.1.2(supports-color@8.1.1)
       '@pasosdejesus/m':
-        specifier: ^0.32.0
-        version: 0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
+        specifier: ^0.34.0
+        version: 0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
       '@pasosdejesus/mpdj':
-        specifier: ^0.2.15
-        version: 0.2.15(@pasosdejesus/m@0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(next@16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)(vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.6)(jiti@2.7.0)(jsdom@27.4.0(@noble/hashes@2.4.0)(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.15))
+        specifier: ^0.3.0
+        version: 0.3.0(@pasosdejesus/m@0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(next@16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)(vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.6)(jiti@2.7.0)(jsdom@27.4.0(@noble/hashes@2.4.0)(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.15))
       '@pasosdejesus/usdt':
         specifier: ^0.1.3
-        version: 0.1.3(@pasosdejesus/m@0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(react@19.3.0)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
+        version: 0.1.3(@pasosdejesus/m@0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(react@19.3.0)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
       '@tailwindcss/postcss':
         specifier: ^4.3.3
         version: 4.3.3
@@ -2025,22 +2025,22 @@ packages:
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
 
-  '@pasosdejesus/contract-test@0.1.5':
-    resolution: {integrity: sha512-LHEDmeHcDUbmZ83Gph36QUOrXl1vrx/ygoepQL53kc+fGyQaCLVynuCVjEvDxiA7fdCbeu/e8GQ/oOoAYJacfw==}
+  '@pasosdejesus/contract-test@0.1.6':
+    resolution: {integrity: sha512-o7B0GLGeNTrJfdNAy2erhZX7oKlmM3FVxhLvqXxQrmmH5IG4E0w+vhCPv18RmhV2t+rDOlrCWDT7QrmyZO+35w==}
     peerDependencies:
-      '@pasosdejesus/m': '>=0.16.0'
+      '@pasosdejesus/m': ^0.34.0
       ethers: ^6
       viem: ^2
 
   '@pasosdejesus/edr@0.1.2':
     resolution: {integrity: sha512-TTOWqtLmircMUrkA5AknUXOh2I5UpLCnXI01ywtqLs5HnB7T5Ce4xwzJYdBW7n6ub4lE8GHtfEeimYxXp3rVdg==}
 
-  '@pasosdejesus/m@0.32.0':
-    resolution: {integrity: sha512-SVpb1IUy3SWBbUl7cvCAIRwLbt77EkfWNpnkTJXgBk5y8doLpxKeOI5Oe0mURXqxv8kwlYFQESUvOVVxSpqodg==}
+  '@pasosdejesus/m@0.34.0':
+    resolution: {integrity: sha512-bFHNgg7CGDyW/Tc3kGInHQhFgcieyinvD5F7zCExMW39uTp5T1mgVkD0eiTMFBo6jRm3cETzQx3fHB2w2pGZVw==}
     hasBin: true
 
-  '@pasosdejesus/mpdj@0.2.15':
-    resolution: {integrity: sha512-QgOw1XLxlxrFAaMH5vlSVMnLl/MA4BQvWCRgpjWj+oPQ7Yr+gCEDnhjCDVfFE8j2JJSKnOgrLa+Y7GDGXYLc2A==}
+  '@pasosdejesus/mpdj@0.3.0':
+    resolution: {integrity: sha512-3KAg+vB3R5BEwEI7h6tbEWTz5ov9no8gg9j+myo/BomcvL52eyZa+TzLOiYTDd0d8LkHSUoCstzW3tqpGDE/bQ==}
     peerDependencies:
       '@pasosdejesus/m': '>=0.16.0'
       next: '>=15.0.0'
@@ -10684,10 +10684,10 @@ snapshots:
 
   '@panva/hkdf@1.2.1': {}
 
-  '@pasosdejesus/contract-test@0.1.5(@pasosdejesus/m@0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))':
+  '@pasosdejesus/contract-test@0.1.6(@pasosdejesus/m@0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))':
     dependencies:
       '@pasosdejesus/edr': 0.1.2(supports-color@8.1.1)
-      '@pasosdejesus/m': 0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
+      '@pasosdejesus/m': 0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
       ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       glob: 13.0.6
       mocha: 11.8.0
@@ -10709,30 +10709,30 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@pasosdejesus/m@0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))':
+  '@pasosdejesus/m@0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))':
     dependencies:
       dotenv: 17.4.2
       execa: 9.6.1
       glob: 13.0.6
       picocolors: 1.1.1
     optionalDependencies:
-      '@pasosdejesus/contract-test': 0.1.5(@pasosdejesus/m@0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
+      '@pasosdejesus/contract-test': 0.1.6(@pasosdejesus/m@0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
       '@pasosdejesus/edr': 0.1.2(supports-color@8.1.1)
     transitivePeerDependencies:
       - ethers
       - supports-color
       - viem
 
-  '@pasosdejesus/mpdj@0.2.15(@pasosdejesus/m@0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(next@16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)(vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.6)(jiti@2.7.0)(jsdom@27.4.0(@noble/hashes@2.4.0)(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.15))':
+  '@pasosdejesus/mpdj@0.3.0(@pasosdejesus/m@0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(next@16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)(vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.6)(jiti@2.7.0)(jsdom@27.4.0(@noble/hashes@2.4.0)(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.15))':
     dependencies:
-      '@pasosdejesus/m': 0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
+      '@pasosdejesus/m': 0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
       next: 16.3.5(patch_hash=79fe6952dbee3780515c6a06b9e2f8a2606e46c446ff84e27e79c58c9cd601fb)(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@24.13.6)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.6)(jiti@2.7.0)(jsdom@27.4.0(@noble/hashes@2.4.0)(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.15)
 
-  '@pasosdejesus/usdt@0.1.3(@pasosdejesus/m@0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(react@19.3.0)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))':
+  '@pasosdejesus/usdt@0.1.3(@pasosdejesus/m@0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)))(react@19.3.0)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))':
     dependencies:
-      '@pasosdejesus/m': 0.32.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
+      '@pasosdejesus/m': 0.34.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(supports-color@8.1.1)(viem@2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5))
       react: 19.3.0
       viem: 2.55.11(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.5)
 

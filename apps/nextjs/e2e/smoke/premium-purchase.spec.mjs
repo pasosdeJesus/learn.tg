@@ -50,7 +50,7 @@ function loadFixture() {
     if (!fs.existsSync(envPath)) continue
     const c = fs.readFileSync(envPath, 'utf8')
     const g = (k) => c.match(new RegExp(`${k}="?([^"\\n]+)"?`))?.[1]
-    const fixture = { pk: g('PRIVATE_KEY'), addr: g('NEXT_PUBLIC_ADDRESS'), usdt: g('NEXT_PUBLIC_USDT_ADDRESS'), slearn: g('NEXT_PUBLIC_SLEARN_ADDRESS'), rpc: g('NEXT_PUBLIC_RPC_URL') }
+    const fixture = { pk: g('PRIVATE_KEY'), addr: g('NEXT_PUBLIC_ADDRESS'), usdt: g('NEXT_PUBLIC_USDT_TESTNET'), slearn: g('NEXT_PUBLIC_SLEARN_TESTNET'), rpc: g('NEXT_PUBLIC_RPC_URL') }
     if (fixture.pk && fixture.addr && fixture.usdt && fixture.slearn && fixture.rpc) return fixture
   }
   return null

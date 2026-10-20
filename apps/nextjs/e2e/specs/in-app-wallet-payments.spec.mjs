@@ -46,8 +46,8 @@ function loadEnv() {
       return {
         pk,
         addr: g('NEXT_PUBLIC_ADDRESS'),
-        usdt: g('NEXT_PUBLIC_USDT_ADDRESS'),
-        slearn: g('NEXT_PUBLIC_SLEARN_ADDRESS'),
+        usdt: g('NEXT_PUBLIC_USDT_TESTNET'),
+        slearn: g('NEXT_PUBLIC_SLEARN_TESTNET'),
         rpc: g('NEXT_PUBLIC_RPC_URL'),
       }
     }

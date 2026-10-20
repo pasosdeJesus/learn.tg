@@ -7,14 +7,14 @@ dotenv.config({ path: path.resolve(__dirname, "../../../apps/.env") });
 async function main() {
   const ClusterFundsV2 = await ethers.getContractFactory("ClusterFundsV2");
 
-  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS;
-  const slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS;
+  const usdtAddress = process.env.NEXT_PUBLIC_USDT_TESTNET;
+  const slearnAddress = process.env.NEXT_PUBLIC_SLEARN_TESTNET;
   const pdjTreasury = process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS || process.env.PDJ_TREASURY_ADDRESS;
   const [deployer] = await ethers.getSigners();
   const initialOwner = await deployer.getAddress();
 
-  if (!usdtAddress) throw new Error("NEXT_PUBLIC_USDT_ADDRESS not found in env");
-  if (!slearnAddress) throw new Error("NEXT_PUBLIC_SLEARN_ADDRESS not found in env");
+  if (!usdtAddress) throw new Error("NEXT_PUBLIC_USDT_TESTNET not found in env");
+  if (!slearnAddress) throw new Error("NEXT_PUBLIC_SLEARN_TESTNET not found in env");
 
   const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia";
   console.log(`Deploying ClusterFundsV2 to ${network}`);

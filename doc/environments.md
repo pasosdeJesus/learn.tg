@@ -442,6 +442,12 @@ Contract addresses are **not** read from `.env`. They come from:
   (`LearnTGVaults` V3/V4/V5), `ClusterFunds` (V1) y `ClusterFundsV2` (https://github.com/pasosdeJesus/learn.tg/issues/214;
   la app opera con V2)
 
+> En Celo Sepolia esas direcciones se pueden forzar con
+> `NEXT_PUBLIC_SLEARN_TESTNET` y `NEXT_PUBLIC_USDT_TESTNET` (en mainnet mandan las
+> canónicas). Los nombres viejos `NEXT_PUBLIC_{SLEARN,USDT}_ADDRESS` los ignora
+> `mpdj` >= 0.3.0; `make all` corre `bin/m env:check`, que avisa si quedó el nombre
+> viejo en `apps/.env`.
+
 > `apps/hardhat/deployments/` está en `.gitignore` (artefacto de despliegue): un clon
 > nuevo no trae esos JSON y sin el archivo de la red `getClusterFundsAddress()`
 > (`packages/gdcluster/src/lib/gd-cluster-routing.ts`) lanza

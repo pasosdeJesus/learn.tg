@@ -59,7 +59,7 @@ describe('verifyCampaignDonation — multi-token mainnet (https://github.com/pas
   beforeEach(() => {
     process.env.NEXT_PUBLIC_ADDRESS = BACKEND
     process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = BACKEND
-    delete process.env.NEXT_PUBLIC_USDT_ADDRESS
+    delete process.env.NEXT_PUBLIC_USDT_TESTNET
   })
   afterEach(() => {
     vi.unstubAllGlobals()

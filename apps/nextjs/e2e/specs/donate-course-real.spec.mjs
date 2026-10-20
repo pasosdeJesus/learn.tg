@@ -149,8 +149,8 @@ async function main() {
     'https://celo-sepolia.drpc.org',
     'https://celo-sepolia-rpc.publicnode.com',
   ].filter(Boolean)
-  const usdtAddr = process.env.NEXT_PUBLIC_USDT_ADDRESS
-  const slearnAddr = process.env.NEXT_PUBLIC_SLEARN_ADDRESS
+  const usdtAddr = process.env.NEXT_PUBLIC_USDT_TESTNET
+  const slearnAddr = process.env.NEXT_PUBLIC_SLEARN_TESTNET
   console.log(`Wallet: ${account.address.slice(0, 10)}... | ${SITE}\n`)
 
   const auth = await siweSignIn(SITE, account)

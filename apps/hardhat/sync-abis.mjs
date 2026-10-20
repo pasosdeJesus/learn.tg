@@ -77,9 +77,9 @@ try {
   const slearnAddr = readDeploymentAddress('SLEARN')
   if (slearnAddr) {
     let envContent = fs.readFileSync(ENV_FILE, 'utf8')
-    envContent = updateEnvVar(envContent, 'NEXT_PUBLIC_SLEARN_ADDRESS', slearnAddr)
+    envContent = updateEnvVar(envContent, 'NEXT_PUBLIC_SLEARN_TESTNET', slearnAddr)
     fs.writeFileSync(ENV_FILE, envContent)
-    console.log(`  Synced NEXT_PUBLIC_SLEARN_ADDRESS=${slearnAddr}`)
+    console.log(`  Synced NEXT_PUBLIC_SLEARN_TESTNET=${slearnAddr}`)
   }
 
   console.log("✅ Sync complete!")

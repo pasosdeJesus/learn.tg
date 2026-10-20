@@ -112,7 +112,10 @@ async function mintWithRetry(
 ): Promise<`0x${string}`> {
   const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
   const client = createWalletClient({ chain: celo, transport: http(), account })
-  const slearn = process.env.NEXT_PUBLIC_SLEARN_ADDRESS as `0x${string}`
+  // Direcciones por red (canónicas en mainnet, override en Sepolia) desde `mpdj`:
+  // import { SLEARN_ADDRESSES, USDT_ADDRESSES, resolveNetwork } from '@pasosdejesus/mpdj/blockchain/ecosystem-addresses'
+  const slearn = SLEARN_ADDRESSES[resolveNetwork()]
+  const usdt = USDT_ADDRESSES[resolveNetwork()]
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     // Step 1: Transfer USDT to SLEARN contract (adds to shared pool)
@@ -166,6 +169,7 @@ async function mintWithRetry(
 import { createWalletClient, http, parseAbi } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo } from 'viem/chains'
+import { SLEARN_ADDRESSES, USDT_ADDRESSES, resolveNetwork } from '@pasosdejesus/mpdj/blockchain/ecosystem-addresses'
 
 const SLEARN_ABI = parseAbi([
   'function mintAndReserve(address to, uint256 usdtAmount) external returns (uint256)',
@@ -179,8 +183,8 @@ const USDT_ABI = parseAbi([
 async function mintWithReserve(donor: `0x${string}`, usdtAmount: bigint) {
   const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
   const client = createWalletClient({ chain: celo, transport: http(), account })
-  const slearn = process.env.NEXT_PUBLIC_SLEARN_ADDRESS as `0x${string}`
-  const usdt = process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}`
+  const slearn = SLEARN_ADDRESSES[resolveNetwork()]
+  const usdt = USDT_ADDRESSES[resolveNetwork()]
 
   // Step 1 (REQUIRED FIRST): Transfer USDT from your backend to SLEARN contract.
   // mintAndReserve pulls USDT from the contract's balance, so the contract
@@ -217,6 +221,7 @@ await mintWithReserve('0xdonor...', 100_000000n) // 100 USDT (6 decimals)
 ```typescript
 import { createPublicClient, http, parseAbi } from 'viem'
 import { celo } from 'viem/chains'
+import { SLEARN_ADDRESSES, resolveNetwork } from '@pasosdejesus/mpdj/blockchain/ecosystem-addresses'
 
 const BALANCE_ABI = parseAbi([
   'function balanceOf(address) view returns (uint256)',
@@ -225,7 +230,7 @@ const BALANCE_ABI = parseAbi([
 async function getSlearnBalance(wallet: `0x${string}`): Promise<number> {
   const client = createPublicClient({ chain: celo, transport: http() })
   const balance = await client.readContract({
-    address: process.env.NEXT_PUBLIC_SLEARN_ADDRESS as `0x${string}`,
+    address: SLEARN_ADDRESSES[resolveNetwork()],
     abi: BALANCE_ABI,
     functionName: 'balanceOf',
     args: [wallet],

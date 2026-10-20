@@ -36,7 +36,7 @@ function loadEnv() {
   const g = (k) => env.match(new RegExp(`${k}=\"?([^\"\\n]+)\"?`))?.[1]
   return {
     pk: g('PRIVATE_KEY'), addr: g('NEXT_PUBLIC_ADDRESS'),
-    usdt: g('NEXT_PUBLIC_USDT_ADDRESS'), slearn: g('NEXT_PUBLIC_SLEARN_ADDRESS'),
+    usdt: g('NEXT_PUBLIC_USDT_TESTNET'), slearn: g('NEXT_PUBLIC_SLEARN_TESTNET'),
     backend: g('NEXT_PUBLIC_ADDRESS'), rpc: g('NEXT_PUBLIC_RPC_URL'),
   }
 }

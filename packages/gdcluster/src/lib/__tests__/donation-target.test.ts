@@ -201,12 +201,12 @@ describe('campaign donations (https://github.com/pasosdeJesus/learn.tg/issues/22
     expect(cfg!.chains.map((c) => c.chain)).toEqual(['celo', 'avax', 'base'])
   })
 
-  it('prefers NEXT_PUBLIC_USDT_ADDRESS for the donation token (dev server may differ from the registry example)', () => {
+  it('prefers NEXT_PUBLIC_USDT_TESTNET for the donation token (dev server may differ from the registry example)', () => {
     const cfg = getCampaignConfig('lensenia')!
-    const prevAddr = process.env.NEXT_PUBLIC_USDT_ADDRESS
+    const prevAddr = process.env.NEXT_PUBLIC_USDT_TESTNET
     const prevDec = process.env.NEXT_PUBLIC_USDT_DECIMALS
     try {
-      process.env.NEXT_PUBLIC_USDT_ADDRESS = '0x0d130F97fB5349656F95ad3Ab46BC0b34a8556a6'
+      process.env.NEXT_PUBLIC_USDT_TESTNET = '0x0d130F97fB5349656F95ad3Ab46BC0b34a8556a6'
       delete process.env.NEXT_PUBLIC_USDT_DECIMALS
       const mainnet = getCampaignDonationToken(cfg, 'usdt', true)!
       const testnet = getCampaignDonationToken(cfg, 'usdt', false)!
@@ -214,8 +214,8 @@ describe('campaign donations (https://github.com/pasosdeJesus/learn.tg/issues/22
       expect(testnet.address).toBe('0x0d130F97fB5349656F95ad3Ab46BC0b34a8556a6')
       expect(testnet.decimals).toBe(6)
     } finally {
-      if (prevAddr === undefined) delete process.env.NEXT_PUBLIC_USDT_ADDRESS
-      else process.env.NEXT_PUBLIC_USDT_ADDRESS = prevAddr
+      if (prevAddr === undefined) delete process.env.NEXT_PUBLIC_USDT_TESTNET
+      else process.env.NEXT_PUBLIC_USDT_TESTNET = prevAddr
       if (prevDec === undefined) delete process.env.NEXT_PUBLIC_USDT_DECIMALS
       else process.env.NEXT_PUBLIC_USDT_DECIMALS = prevDec
     }

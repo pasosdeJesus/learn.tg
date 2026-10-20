@@ -15,8 +15,8 @@ async function main() {
   const initialOwner = await deployer.getAddress();
 
   // En Sepolia `mpdj` toma la dirección del `.env`; sin ella el deploy iría con `undefined`.
-  if (!usdtAddress) throw new Error("USDT address not found (mpdj USDT_ADDRESSES / NEXT_PUBLIC_USDT_ADDRESS)");
-  if (!slearnAddress) throw new Error("SLEARN address not found (mpdj SLEARN_ADDRESSES / NEXT_PUBLIC_SLEARN_ADDRESS)");
+  if (!usdtAddress) throw new Error("USDT address not found (mpdj USDT_ADDRESSES / NEXT_PUBLIC_USDT_TESTNET)");
+  if (!slearnAddress) throw new Error("SLEARN address not found (mpdj SLEARN_ADDRESSES / NEXT_PUBLIC_SLEARN_TESTNET)");
 
   const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia";
   console.log(`Deploying ClusterFunds to ${network}`);

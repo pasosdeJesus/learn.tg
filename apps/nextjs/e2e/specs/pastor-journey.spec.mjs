@@ -508,7 +508,7 @@ async function main() {
   // Read live contract addresses from the dev server — the local .env may point
   // to a stale deployment (the SLEARN was re-deployed, and the backend wallet
   // differs from the local test wallet).
-  let slearnAddress = process.env.NEXT_PUBLIC_SLEARN_ADDRESS || loadEnvValue('NEXT_PUBLIC_SLEARN_ADDRESS')
+  let slearnAddress = process.env.NEXT_PUBLIC_SLEARN_TESTNET || loadEnvValue('NEXT_PUBLIC_SLEARN_TESTNET')
   let backendWallet = verifier.addr
   try {
     const fundRes = await axios.get(`${SITE}/api/churches/fund`, { httpsAgent })

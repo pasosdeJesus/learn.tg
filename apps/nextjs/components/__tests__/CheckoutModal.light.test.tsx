@@ -83,9 +83,9 @@ vi.mock('@/lib/hooks/useContractPayment', () => ({
 describe('CheckoutModal (light)', () => {
   beforeEach(() => {
     ;(process as any).env.NEXT_PUBLIC_ADDRESS = '0xBACKEND123456789012345678901234567890123456'
-    ;(process as any).env.NEXT_PUBLIC_SLEARN_ADDRESS =
+    ;(process as any).env.NEXT_PUBLIC_SLEARN_TESTNET =
       '0xSLEARN123456789012345678901234567890123456'
-    ;(process as any).env.NEXT_PUBLIC_USDT_ADDRESS =
+    ;(process as any).env.NEXT_PUBLIC_USDT_TESTNET =
       '0x0000000000000000000000000000000000000002'
     ;(process as any).env.NEXT_PUBLIC_USDT_DECIMALS = '6'
     h.walletClient = { data: { writeContract: vi.fn().mockResolvedValue('0xhash') } }

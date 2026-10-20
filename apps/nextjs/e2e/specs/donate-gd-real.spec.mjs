@@ -166,7 +166,7 @@ async function main() {
     'https://celo-sepolia.drpc.org',
     'https://celo-sepolia-rpc.publicnode.com',
   ].filter(Boolean)
-  const usdtAddr = process.env.NEXT_PUBLIC_USDT_ADDRESS
+  const usdtAddr = process.env.NEXT_PUBLIC_USDT_TESTNET
   console.log(`Wallet: ${account.address.slice(0, 10)}... | ${SITE}\n`)
 
   // ── 0. Country fund BEFORE ──

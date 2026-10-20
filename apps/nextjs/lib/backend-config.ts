@@ -90,7 +90,10 @@ export function getBackendWalletLower(): string {
 export async function getUsdtAddress(): Promise<Address | undefined> {
   const { USDT_ADDRESSES } = await import('@pasosdejesus/mpdj/blockchain/ecosystem-addresses')
   const chainKey = IS_PRODUCTION ? 'celo' : 'celoSepolia'
-  return (USDT_ADDRESSES[chainKey] || process.env.NEXT_PUBLIC_USDT_ADDRESS) as Address | undefined
+  // En Sepolia la variable de entorno manda (como en `mpdj`); en mainnet sólo
+  // valen las direcciones canónicas.
+  const testnetOverride = IS_PRODUCTION ? undefined : process.env.NEXT_PUBLIC_USDT_TESTNET
+  return (testnetOverride || USDT_ADDRESSES[chainKey]) as Address | undefined
 }
 
 export function getUsdtDecimals(): number {

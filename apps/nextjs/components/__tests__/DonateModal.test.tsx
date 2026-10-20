@@ -106,8 +106,8 @@ const BACKEND_WALLET = '0xBACKEND123456789012345678901234567890123456'
 describe('DonateModal', () => {
   const defaultEnv = {
     NEXT_PUBLIC_ADDRESS: BACKEND_WALLET,
-    NEXT_PUBLIC_SLEARN_ADDRESS: '0xSLEARN123456789012345678901234567890123456',
-    NEXT_PUBLIC_USDT_ADDRESS: '0x0000000000000000000000000000000000000002',
+    NEXT_PUBLIC_SLEARN_TESTNET: '0xSLEARN123456789012345678901234567890123456',
+    NEXT_PUBLIC_USDT_TESTNET: '0x0000000000000000000000000000000000000002',
     NEXT_PUBLIC_USDT_DECIMALS: '6',
   }
 
@@ -122,8 +122,8 @@ describe('DonateModal', () => {
       ;(process.env as any)[key] = (defaultEnv as any)[key]
     })
     // Direcciones de token (mpdj) por defecto de cada prueba
-    tokenAddrs.usdt = defaultEnv.NEXT_PUBLIC_USDT_ADDRESS
-    tokenAddrs.slearn = defaultEnv.NEXT_PUBLIC_SLEARN_ADDRESS
+    tokenAddrs.usdt = defaultEnv.NEXT_PUBLIC_USDT_TESTNET
+    tokenAddrs.slearn = defaultEnv.NEXT_PUBLIC_SLEARN_TESTNET
 
     // Default wagmi mocks
     mockUseAccount.mockReturnValue({ address: defaultAddress })
@@ -285,7 +285,7 @@ describe('DonateModal', () => {
     it('shows missing contract env vars when USDT address is missing', async () => {
       // La dirección de USDT viene de `mpdj`; sin ella el modal avisa.
       tokenAddrs.usdt = undefined
-      delete (process.env as any).NEXT_PUBLIC_USDT_ADDRESS
+      delete (process.env as any).NEXT_PUBLIC_USDT_TESTNET
       await waitFor(() => {
         renderModal()
         expect(screen.getByText(/Missing contract env vars/i)).toBeInTheDocument()

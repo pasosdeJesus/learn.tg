@@ -69,6 +69,7 @@ pwa-kill-switch:
 	@cp scripts/pwa-kill-switch.js public/sw.js
 
 all: build-guard engines-assets pwa-clean
+	./bin/m env:check
 	rm -rf .next
 	# `pnpm i` ANTES de compilar motores: los vendorizados (`packages/generated/wallet`)
 	# importan `generated-msip`, que sólo existe como enlace en `node_modules` tras
@@ -255,9 +256,7 @@ test-e2e:
 
 # Corre la suite y reintenta los specs que fallen. Los fallos contra el dev site
 # son de carga/timing (la misma spec pasa sola), no de producto; ver
-# doc/e2e-testing.md. El reintento lo hace `m` (`m/REQ/49` P3); desde
-# `@pasosdejesus/m@0.31.2` acepta el flag también como primer argumento
-# (`m/REQ/59`).
+# doc/e2e-testing.md. El reintento lo hace `m` (`m/REQ/49` P3).
 #   E2E_RETRIES=3 make test-e2e-retry
 test-e2e-retry:
 	E2E_SPEC_DELAY_MS=12000 \

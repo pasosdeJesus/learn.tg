@@ -10,7 +10,7 @@ async function main() {
 
   // USDT y red desde `mpdj` (por red), no del `.env`.
   const { network, usdt: usdtAddress } = await tokenAddresses();
-  if (!usdtAddress) throw new Error("USDT address not found (mpdj USDT_ADDRESSES / NEXT_PUBLIC_USDT_ADDRESS)");
+  if (!usdtAddress) throw new Error("USDT address not found (mpdj USDT_ADDRESSES / NEXT_PUBLIC_USDT_TESTNET)");
 
   // Read SLEARN address from deployment
   const slearnFile = path.join(__dirname, "..", "deployments", "SLEARN", `${network}.json`);
@@ -49,7 +49,7 @@ async function main() {
   // Update .env
   console.log(`\nAdd to .env:`);
   console.log(`NEXT_PUBLIC_DEPLOYED_AT_V3="${addr}"`);
-  console.log(`NEXT_PUBLIC_SLEARN_ADDRESS="${slearnAddress}"`);
+  console.log(`NEXT_PUBLIC_SLEARN_TESTNET="${slearnAddress}"`);
 }
 
 main().catch((error) => {

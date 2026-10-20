@@ -79,10 +79,12 @@ All commands run from `apps/hardhat/`. The network is determined by `NEXT_PUBLIC
 
 ### Mainnet override
 
+USDT is resolved per network by `mpdj` (`scripts/lib/token-addresses.ts`): on Celo
+mainnet it uses the canonical address, so no token variable is needed. Only on Celo
+Sepolia can it be overridden with `NEXT_PUBLIC_USDT_TESTNET`.
+
 ```sh
-NEXT_PUBLIC_NETWORK=celo \
-NEXT_PUBLIC_USDT_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e \
-bin/deploySLEARN
+NEXT_PUBLIC_NETWORK=celo bin/deploySLEARN
 ```
 
 ## Deployment Addresses

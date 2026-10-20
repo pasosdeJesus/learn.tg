@@ -67,8 +67,8 @@ describe('verifyCampaignDonation', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_ADDRESS = BACKEND
     process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = TREASURY
-    process.env.NEXT_PUBLIC_USDT_ADDRESS = USDT_TOKEN
-    process.env.NEXT_PUBLIC_SLEARN_ADDRESS = SLEARN_TOKEN
+    process.env.NEXT_PUBLIC_USDT_TESTNET = USDT_TOKEN
+    process.env.NEXT_PUBLIC_SLEARN_TESTNET = SLEARN_TOKEN
   })
 
   it('rejects unknown campaigns', async () => {
@@ -144,8 +144,8 @@ describe('verifyCampaignDonation — auto-forward retries (https://github.com/pa
   beforeEach(() => {
     process.env.NEXT_PUBLIC_ADDRESS = BACKEND
     process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = TREASURY
-    process.env.NEXT_PUBLIC_USDT_ADDRESS = USDT_TOKEN
-    process.env.NEXT_PUBLIC_SLEARN_ADDRESS = SLEARN_TOKEN
+    process.env.NEXT_PUBLIC_USDT_TESTNET = USDT_TOKEN
+    process.env.NEXT_PUBLIC_SLEARN_TESTNET = SLEARN_TOKEN
   })
 
   it('retries once when the forward fails and then succeeds', async () => {
@@ -192,8 +192,8 @@ describe('verifyCampaignDonation — donor comment (https://github.com/pasosdeJe
   beforeEach(() => {
     process.env.NEXT_PUBLIC_ADDRESS = BACKEND
     process.env.NEXT_PUBLIC_PDJ_TREASURY_ADDRESS = TREASURY
-    process.env.NEXT_PUBLIC_USDT_ADDRESS = USDT_TOKEN
-    process.env.NEXT_PUBLIC_SLEARN_ADDRESS = SLEARN_TOKEN
+    process.env.NEXT_PUBLIC_USDT_TESTNET = USDT_TOKEN
+    process.env.NEXT_PUBLIC_SLEARN_TESTNET = SLEARN_TOKEN
   })
 
   it('stores a sanitized provenance comment in metadata and descripcion', async () => {

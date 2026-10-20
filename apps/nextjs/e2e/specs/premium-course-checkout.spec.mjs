@@ -59,8 +59,8 @@ function loadEnvCredentials() {
       const c = fs.readFileSync(envPath, 'utf8')
       const pk = c.match(/PRIVATE_KEY="([^"]+)"/)?.[1] || c.match(/PRIVATE_KEY=(\S+)/)?.[1]
       const addr = c.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
-      const usdt = c.match(/NEXT_PUBLIC_USDT_ADDRESS="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_USDT_ADDRESS=(\S+)/)?.[1]
-      const slearn = c.match(/NEXT_PUBLIC_SLEARN_ADDRESS="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_SLEARN_ADDRESS=(\S+)/)?.[1]
+      const usdt = c.match(/NEXT_PUBLIC_USDT_TESTNET="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_USDT_TESTNET=(\S+)/)?.[1]
+      const slearn = c.match(/NEXT_PUBLIC_SLEARN_TESTNET="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_SLEARN_TESTNET=(\S+)/)?.[1]
       const rpc = c.match(/NEXT_PUBLIC_RPC_URL="([^"]+)"/)?.[1] || c.match(/NEXT_PUBLIC_RPC_URL=(\S+)/)?.[1]
       if (pk && addr) return { pk, addr, usdt, slearn, rpc }
     }
