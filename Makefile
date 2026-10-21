@@ -37,3 +37,8 @@ engines-dist:
 check:
 	@./apps/web/bin/m m:check
 	@./apps/web/bin/m contract:checkdeploy
+
+# Solo la estructura (sin revisar los JSON de deployments, que dependen de la
+# máquina: los artefactos son gitignored y no están en todos los clones).
+check-structure:
+	@./apps/web/bin/m m:check
