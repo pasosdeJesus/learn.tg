@@ -73,9 +73,8 @@ all: build-guard engines-assets pwa-clean
 	rm -rf .next
 	# `pnpm i` ANTES de compilar motores: los vendorizados (`packages/generated/wallet`)
 	# importan `generated-msip`, que sólo existe como enlace en `node_modules` tras
-	# instalar (link:packages/generated/msip). Compilar antes de instalar falla con
-	# TS2307 "Cannot find module 'generated-msip'" (visto en el sitio de desarrollo,
-	# 2026-10-15).
+	# instalar (miembro del workspace `packages/generated/msip`). Compilar antes de
+	# instalar falla con TS2307 "Cannot find module 'generated-msip'".
 	pnpm i
 	$(MAKE) engines-dist
 	$(MAKE) next-patch-check swc-wasm
