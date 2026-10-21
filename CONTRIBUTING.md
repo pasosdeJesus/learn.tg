@@ -20,11 +20,15 @@ All project documentation, REQ files, commit messages, and code comments must be
 
 > **pnpm version:** This project requires **pnpm v11.28.6**. The version is pinned via
 > `packageManager` in `package.json`; on pnpm 11 the settings (`overrides`,
-> `allowBuilds`, `patchedDependencies`, `minimumReleaseAge`) live in
-> `pnpm-workspace.yaml`.
+> `allowBuilds`, `patchedDependencies`, `minimumReleaseAge`, `catalog`) live in
+> the root `pnpm-workspace.yaml`.
+>
+> **Install from the root:** `pnpm install` at the repository root (single
+> workspace, one `pnpm-lock.yaml`). Do not install inside an app; the apps share
+> `packages/*` and `packages/generated/*`.
 
 > **Clone with submodules:** use `git clone --recurse-submodules` (or run
-> `git submodule update --init` afterwards). `apps/nextjs/app/api` (private API),
+> `git submodule update --init` afterwards). `apps/web/app/api` (private API),
 > `resources/en/gdcluster` and `resources/es/redgd` are submodules, and the
 > clone also needs the empty directory `packages/gdcluster/db/migrations`,
 > which git does not version; without it `eng:verify` (part of `make test`)
@@ -32,7 +36,7 @@ All project documentation, REQ files, commit messages, and code comments must be
 
 ### Frontend Only (quickest — no backend required)
 
-See [apps/nextjs/README.md](apps/nextjs/README.md) for the quick start.
+See [apps/web/README.md](apps/web/README.md) for the quick start.
 Requires only Node.js, pnpm, and a web3 wallet. No database or Rails setup.
 
 > **Note:** Write operations (scholarship, crossword submissions, learning
@@ -44,24 +48,24 @@ Requires only Node.js, pnpm, and a web3 wallet. No database or Rails setup.
 See instructions in [servidor/README.md](servidor/README.md)
 
 ### Frontend (Next.js App)
-See instructions in [apps/nextjs/README.md](apps/nextjs/README.md)
+See instructions in [apps/web/README.md](apps/web/README.md)
 
 ### Documentation & Testing Policies
-For detailed documentation and testing policies for the Next.js app, see [apps/nextjs/CONTRIBUTING.md](apps/nextjs/CONTRIBUTING.md).
+For detailed documentation and testing policies for the Next.js app, see [apps/web/CONTRIBUTING.md](apps/web/CONTRIBUTING.md).
 
 ## 🔄 Contributing Process
 
 1. **Fork** the repository
 2. **Create a branch** from `main`: `git checkout -b feature/my-feature`
 3. **Make your changes** following the style guides
-4. **Run tests in directory `apps/nextjs`**: `make type` and `make test`
+4. **Run tests in directory `apps/web`**: `make type` and `make test`
    - `make type` runs `pnpm typecheck` = `tsc --noEmit` **plus** `tsc --noEmit -p
      tsconfig.test.json`, so it checks source **and** test files;
      `make type-source` is source only and `make type-check-tests` tests only
    - `make test` runs the app sub-targets in sequence plus `test-engines` (parallel-safe,
      sin coverage). **El tamaño de la suite y el conteo
      por objetivo viven en un solo lugar:**
-     [apps/nextjs/CONTRIBUTING.md §Coverage Status](apps/nextjs/CONTRIBUTING.md). No
+     [apps/web/CONTRIBUTING.md §Coverage Status](apps/web/CONTRIBUTING.md). No
      repita esos números en otros documentos (se quedan viejos).
    - `make coverage` runs all tests with coverage (lento, usa más memoria)
    - Individual targets: `make test-lib`, `make test-api`, `make test-pages`, etc.
@@ -72,15 +76,15 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
    - **Engine tests** (`packages/rewards`, `packages/gdcluster`): `make test-engines`
      (or `make test-rewards` / `make test-gdcluster`), ~45 s; each
      engine brings its own `vitest.config.ts` with the aliases to
-     `apps/nextjs/node_modules`.
+     `apps/web/node_modules`.
      Do NOT run `pnpm test` inside the packages: use the app's Makefile targets,
-     which wire the aliases to `apps/nextjs/node_modules`; the `test` script of each
+     which wire the aliases to `apps/web/node_modules`; the `test` script of each
      `package.json` is kept as documentation. Engine guide:
      `m/doc/engines.md`
    - E2E tests: `make test-smoke` (HTTP) or `bin/m test:e2e` (Puppeteer), with shortcuts
      `make test-e2e-wallet` (billetera in-app) and `make test-e2e-offline` (PWA offline).
      See [doc/e2e-testing.md](doc/e2e-testing.md)
-   - See [apps/nextjs/CONTRIBUTING.md](apps/nextjs/CONTRIBUTING.md) for details
+   - See [apps/web/CONTRIBUTING.md](apps/web/CONTRIBUTING.md) for details
 5. **Commit** with clear messages: `git commit -m "feat: add feature X"`
 6. **Push** and create a **Pull Request**
 
@@ -98,18 +102,18 @@ For detailed documentation and testing policies for the Next.js app, see [apps/n
   - The only exception is before the first deploy to production, and only with explicit authorization
 - **Tests**: Try to include tests for new functionality
 - **Commits**: Use [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`
-- **Type checking**: Code at `apps/nextjs` must pass `make type` without errors
-- **API route security**: Every route under `apps/nextjs/app/api` that touches
+- **Type checking**: Code at `apps/web` must pass `make type` without errors
+- **API route security**: Every route under `apps/web/app/api` that touches
   the DB or files must authenticate (`authenticateUser`/`authenticateAdmin`)
   or be declared public with a reason. Before opening a PR that touches API
-  routes run `cd apps/nextjs && node bin/audit-api-auth.mjs` (must end with
+  routes run `cd apps/web && node bin/audit-api-auth.mjs` (must end with
   `0 failed`). Rules in [doc/api-security.md](doc/api-security.md).
 
 ## 🔗 Smart Contracts
 
-The active scholarship contract is **LearnTGVaultsV5** (`apps/hardhat/contracts/LearnTGVaultsV5.sol`) — deployed on Celo, with flexible split (student/referrer/learnTg). V4 y V3 are legacy (en migración a V5). The scholarship formula in all versions is `(amountPerGuide × profileScore) / 100`, requiring profile score ≥ 50. USDT and SLEARN are paid independently (partial payments). CELO UBI is handled by `CeloUbi.sol` with `MAX_REWARD = 0.2 CELO` and formula `(0.2 × profileScore) / 100`. Cluster/country funds GD: `ClusterFundsV2.sol` (https://github.com/pasosdeJesus/learn.tg/issues/214; V1 legacy).
+The active scholarship contract is **LearnTGVaultsV5** (`apps/contracts/contracts/LearnTGVaultsV5.sol`) — deployed on Celo, with flexible split (student/referrer/learnTg). V4 y V3 are legacy (en migración a V5). The scholarship formula in all versions is `(amountPerGuide × profileScore) / 100`, requiring profile score ≥ 50. USDT and SLEARN are paid independently (partial payments). CELO UBI is handled by `CeloUbi.sol` with `MAX_REWARD = 0.2 CELO` and formula `(0.2 × profileScore) / 100`. Cluster/country funds GD: `ClusterFundsV2.sol` (https://github.com/pasosdeJesus/learn.tg/issues/214; V1 legacy).
 
-See [apps/hardhat/README.md](apps/hardhat/README.md) for deploy, verify, and smoke-test commands.
+See [apps/contracts/README.md](apps/contracts/README.md) for deploy, verify, and smoke-test commands.
 
 ## 📚 Documentation Sync Policy
 

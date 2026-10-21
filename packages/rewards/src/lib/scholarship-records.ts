@@ -120,7 +120,7 @@ export interface RecordMissingArgs {
  * Escribe las filas `transaction` que faltan para una guía ya pagada en la cadena.
  * Idempotente respecto a `recorded`: no duplica tokens ya registrados. El `hash` queda
  * nulo salvo que lo aporte el llamador (el pago original lo hizo un vault anterior); el
- * hash histórico lo completa `apps/nextjs/scripts/reconcile-scholarships.ts` por
+ * hash histórico lo completa `apps/web/scripts/reconcile-scholarships.ts` por
  * dirección. Devuelve lo insertado.
  */
 export async function recordMissingScholarshipRows(

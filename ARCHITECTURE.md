@@ -104,14 +104,14 @@ graph TD
 - **Based on:** MSIP and cor1440_gen frameworks
 - **Authentication:** No longer an auth boundary. The public course data it used to serve under a token is now public (R-#233); the nextjs app authorizes with its own NextAuth session cookie, so Rails receives no credential from it.
 
-### 2. **Frontend and minor backend: Next.js (apps/nextjs/)**
+### 2. **Frontend and minor backend: Next.js (apps/web/)**
 - **Framework:** Next.js with React + TypeScript.
 - **UI Components:** Utilizes Radix UI for building a flexible and accessible component library. Shared utilities and CLI tooling from `@pasosdejesus/m` (i18n, WBA metrics, E2E test harness, debug console, Kysely mocks, shadcn components, blockchain helpers).
 - **Purpose:** User interface, content delivery, and user authentication.
 - **Authentication:** Implements Sign-In With Ethereum (SIWE) with a custom `window.ethereum`-based wallet layer (no RainbowKit, no wagmi). See [SIWE Auth Flow](doc/siwe-auth-flow.md) and [Wallet Auth](doc/wallet-auth.md) for details.
-- **Note:** For a detailed technical breakdown of the Next.js application, refer to the `README.md` file within the `apps/nextjs` directory.
+- **Note:** For a detailed technical breakdown of the Next.js application, refer to the `README.md` file within the `apps/web` directory.
 
-### 3. **Smart Contracts: Hardhat (apps/hardhat/)**
+### 3. **Smart Contracts: Hardhat (apps/contracts/)**
 - **Language:** Solidity (^0.8.24)
 - **Network:** Celo (mainnet) & Celo Sepolia (testnet)
 - **Contracts:**
@@ -123,14 +123,14 @@ graph TD
       The rewards engine delegates to `@pasosdejesus/mpdj/blockchain`
       (`mintCourseWithRetry`/`hasCredentialOnChain`) and resolves the address via
       `@pasosdejesus/m/blockchain/deployments` (`getCeloCredentialsAddress`) from
-      `apps/hardhat/deployments/PasosDeJesusCredentials/{network}.json`, with env
+      `apps/contracts/deployments/PasosDeJesusCredentials/{network}.json`, with env
       fallback `NEXT_PUBLIC_PDJCREDENTIALS_CELO_ADDRESS`. See
       [doc/deploy-credentials.md](doc/deploy-credentials.md).
     - `ClusterFunds.sol` / `ClusterFundsV2.sol`: cluster/country funds y donaciones GD (V2 operativo, https://github.com/pasosdeJesus/learn.tg/issues/214).
 
 ### 4. **Web3 Engines (packages/)**
 
-The Next.js app is split into a **core** (apps/nextjs) plus self-contained
+The Next.js app is split into a **core** (apps/web) plus self-contained
 **engines** (`packages/*`), each compiled to `dist/` with `tsc` and consumed via
 its `exports` map (never re-transpiled by Next/SWC). Design: `m` repo https://gitlab.com/pasosdeJesus/m/-/work_items/35;
 developer guide: `m` repo `doc/engines.md`. Architecture decisions (D1 next as
@@ -138,7 +138,7 @@ peer dep, D2 dependency injection, D3 hooks):
 
 | Engine | Purpose | Handlers / libs / UI | Depends on |
 |--------|---------|-----------------|------------|
-| **core** (apps/nextjs) | auth SIWE/wallet, guides/crossword UI, scoring, metrics, admin, profiles, catalogs, notifications | `app/api/*` restantes + adapters `lib/{rewards-app,gdcluster-app,gdcluster-ui}.tsx` | — |
+| **core** (apps/web) | auth SIWE/wallet, guides/crossword UI, scoring, metrics, admin, profiles, catalogs, notifications | `app/api/*` restantes + adapters `lib/{rewards-app,gdcluster-app,gdcluster-ui}.tsx` | — |
 | **`@learn-tg/rewards`** | on-chain rewards: `check-crossword`, `claim-celo-ubi`, `add-donation`, `scholarship`, `credential/*`, `ubi-report*`, `slearn`, `churches/fund`, `referrals/fund`, `courses/premium/purchase` + `lib/{crypto,deployments,donate-utils,pastor-bonus,sle-rate,verify-transfer,replay-protection,credentials,premium-pricing,config}` | core (DB, auth, metrics, backend-config inyectados) |
 | **`@learn-tg/gdcluster`** | curso GD completo: `/api/gdcluster/*`, `/api/cluster/*`, `/api/churches/search`; `lib/{gd-utils,gd-cluster-routing,donation-target}`; hook `reward:route-destination` (`src/register.ts`); componentes `{ClusterPage,RankingClient,ReferralsPage,CountryFilter,CountryFlag}` (la landing de pastores, neutral, vive en el core: `components/PastorLanding.tsx`, ruta `/{lang}/pastor`, R-#283); contracts + deployments `ClusterFunds(V2)` con hardhat aislado (`contracts/`) | core, rewards, mr519, `@pasosdejesus/usdt` |
 | **`@learn-tg/mr519`** | dynamic forms (`mr519_gen_*`, `DynamicForm`) | core (auth, DB) |
@@ -166,12 +166,15 @@ data flow, contracts):
 - **Engine registry**: `lib/engines.ts` uses `createRegistry('learn-tg:engine')`
   from `@pasosdejesus/m/engine`; `mr519` self-registers on lazy load
   (`getEngineHandler` → `ensureEnginesLoaded`).
-- **Build**: `bin/dev` and `make all/prod` compile `packages/*` → `dist/` first
-  (`engines-dist`); dist is not in git. Webpack resolution falls back to the
+- **Build**: `make all` from the repo root installs the single workspace
+  (`apps/*`, `packages/*`, `packages/generated/*`), runs `env:check`, compiles the
+  engines (`packages/*` → `dist/`, `engines-dist`) and then `pnpm -r build`
+  (web + contracts); `bin/dev` in `apps/web` installs and compiles its engines
+  first too. `dist/` is not in git. Webpack resolution falls back to the
   app's `node_modules` (`next.config.ts`). The gdcluster engine also carries an
   isolated Hardhat project (`packages/gdcluster/contracts/`: `hardhat.config.ts`,
   deploy/verify scripts, `run-tests.mjs`, `test/ClusterFunds.test.ts` — 7 tests).
-  `contract:test` (from `apps/nextjs`) runs `apps/hardhat/test` — green (80 tests:
+  `contract:test` (from `apps/web`) runs `apps/contracts/test` — green (80 tests:
   34 V2 + 24 V5 + 15 CeloUbi + 7 ClusterFunds) with `@pasosdejesus/edr` ≥ 0.1.2
   (fix `block.timestamp` en `eth_call`).
   See `m` https://gitlab.com/pasosdeJesus/m/-/work_items/35 for pitfalls (webpack parallelism, heap limits, vendored loadable alias).
@@ -231,7 +234,7 @@ The platform features two distinct reward mechanisms, demonstrating our principl
 
 > The full pipeline (validation, grading against `answer_fib`, vault call, delta
 > detection, credential minting, GD routing and referral attribution) is documented
-> in [`apps/nextjs/app/api/doc/crossword-reward-flow.md`](apps/nextjs/app/api/doc/crossword-reward-flow.md).
+> in [`apps/web/app/api/doc/crossword-reward-flow.md`](apps/web/app/api/doc/crossword-reward-flow.md).
 
 **One award per account (R-#265).** Because an account may hold several wallets
 (https://github.com/pasosdeJesus/learn.tg/issues/265), the anti-double-pay rule is measured
@@ -291,7 +294,7 @@ A verifier can correct the referrer from the admin user modal
 removes it; guards in `lib/referral-admin.ts`, change logged in `verification_log`).
 Changing it does not move rewards already paid: the payout is keyed by `referred_id`.
 
-**Endpoints (core, `apps/nextjs/app/api/referral/*`):** `code` (GET),
+**Endpoints (core, `apps/web/app/api/referral/*`):** `code` (GET),
 `stats` (GET), `history` (GET), `claim` (POST, one-time), `share` (POST),
 `lookup` (GET, public, powers the `/ref/{CODE}` landing). The referral wallet
 on-chain balance is served by the rewards engine at `/api/referrals/fund`.
@@ -394,7 +397,7 @@ Verifiers access `/en/admin` to manage users and churches. Key features:
 - **Church Edit Modal**: Edit church details, view members, delete (soft-delete)
 - **Calendar**: Verifier availability managed via CalDAV (Radicale)
 
-See [Admin API](apps/nextjs/app/api/admin/) for endpoint details. Verifier manual:
+See [Admin API](apps/web/app/api/admin/) for endpoint details. Verifier manual:
 [doc/admin-guide.md](doc/admin-guide.md); church and pastor protocol:
 [doc/church-registration.md](doc/church-registration.md).
 
@@ -426,7 +429,7 @@ See [Admin API](apps/nextjs/app/api/admin/) for endpoint details. Verifier manua
 In line with our principle of **transparency**, the project uses a robust, server-side-only metrics system to ensure data integrity and prevent client-side event manipulation.
 
 -   **Core Principle**: The backend is the single source of truth. Events are not tracked by the client; they are recorded by the server as a side-effect of API calls being successfully processed. For example, a `guide_view` event is recorded when the `/api/guide` endpoint serves the guide content.
--   **Implementation**: The logic is handled within the Next.js backend. For detailed implementation, data flow, and the philosophy behind this approach, please refer to the `README.md` file in the `apps/nextjs` directory.
+-   **Implementation**: The logic is handled within the Next.js backend. For detailed implementation, data flow, and the philosophy behind this approach, please refer to the `README.md` file in the `apps/web` directory.
 
 The existing **Metrics Dashboard** (`/metrics`) visualizes this reliable, server-recorded data.
 
@@ -552,7 +555,7 @@ timezone" is the one of their **declared location**, not the device's.
   columns were migrated to `timestamptz` (`20260822000000_proposed_interview_timestamptz`)
   because the original `date` column shifted the hour (2PM → 5AM).
 - **`timestamp without time zone` columns are a wall clock**: write them with
-  `toDbTimestamp()` (`apps/nextjs/lib/date-utils.ts`), which serializes UTC. A raw
+  `toDbTimestamp()` (`apps/web/lib/date-utils.ts`), which serializes UTC. A raw
   `new Date()` inserted by the driver stores the **writing machine's** wall clock, which
   is how the 2PM → 5AM shift appeared.
 - **The user's timezone comes from the profile**: `department_timezone` first, then
@@ -562,7 +565,7 @@ timezone" is the one of their **declared location**, not the device's.
 - **The verifier's working hours** are defined in the verifier's own zone
   (`VERIFIER_TIMEZONE`, default `America/Bogota`) and the availability API converts
   instants without depending on the machine's zone
-  (`apps/nextjs/app/api/verification/availability/route.ts`).
+  (`apps/web/app/api/verification/availability/route.ts`).
 - **Deliberate exceptions, where the device zone *is* the user's zone**: the
   `datetime-local` inputs the verifier fills (`dbTimestampToLocalInput`) and the
   verifier's own agenda (`components/admin/CalendarWidget.tsx`).
@@ -679,12 +682,12 @@ GET /api/gd/contact/:clusterId
 
 ### Smart Contract Addresses
 
-Contract addresses are stored as JSON files in `apps/hardhat/deployments/{Contract}/{network}.json` —
+Contract addresses are stored as JSON files in `apps/contracts/deployments/{Contract}/{network}.json` —
 the primary source for vaults, SLEARN, and ClusterFunds. Legacy/testnet contracts use documented
 env fallbacks (see below). Deployment JSONs present in this repo:
 
 ```
-apps/hardhat/deployments/
+apps/contracts/deployments/
   SLEARN/{network}.json
   LearnTGVaults/V4/{network}.json
   LearnTGVaults/V5/{network}.json
@@ -705,7 +708,7 @@ Address resolution per contract:
   sivel3 ecosystem tooling; not committed here) with env fallback
   `NEXT_PUBLIC_PDJCREDENTIALS_CELO_ADDRESS`.
 
-**Reading addresses in scripts** (`apps/hardhat/scripts/`):
+**Reading addresses in scripts** (`apps/contracts/scripts/`):
 
 ```typescript
 import * as path from "path"
@@ -715,7 +718,7 @@ const file = path.join(__dirname, "..", "deployments", "ClusterFunds", `${networ
 const { address } = JSON.parse(fs.readFileSync(file, "utf8"))
 ```
 
-**Reading addresses in Next.js backend** (`apps/nextjs/`):
+**Reading addresses in Next.js backend** (`apps/web/`):
 
 Use `@pasosdejesus/m/blockchain/deployments`:
 
@@ -723,7 +726,7 @@ Use `@pasosdejesus/m/blockchain/deployments`:
 import { readDeployment } from "@pasosdejesus/m/blockchain/deployments"
 const network = process.env.NEXT_PUBLIC_NETWORK || "celoSepolia"
 const deployment = readDeployment(network,
-  path.join(process.cwd(), "..", "hardhat", "deployments"),
+  path.join(process.cwd(), "..", "contracts", "deployments"),
   { contract: "ClusterFunds" }
 )
 const address = deployment?.address

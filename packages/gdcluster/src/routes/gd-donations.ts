@@ -25,7 +25,7 @@ const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a
 // Alertas a verificadores (https://github.com/pasosdeJesus/learn.tg/issues/223 — patrón "billetera del backend como
 // intermediaria"): type/refKey genéricos; cada operación que deja fondos
 // pendientes en la billetera del backend usa el mecanismo de
-// apps/nextjs/lib/verifier-alerts.ts vía deps D2 (notifyVerifiers /
+// apps/web/lib/verifier-alerts.ts vía deps D2 (notifyVerifiers /
 // resolveVerifierAlert).
 const FORWARD_PENDING_ALERT_TYPE = 'funds_forward_pending'
 

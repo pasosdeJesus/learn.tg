@@ -43,13 +43,13 @@ The platform consists of three main components working in unison:
 1.  **Backend ([servidor/](servidor/))**: A **Ruby on Rails** application 
   that serves as the administrative hub for managing courses, users, and 
   content.
-2.  **Frontend ([apps/nextjs/](apps/nextjs/))**: A **Next.js** application 
+2.  **Frontend ([apps/web/](apps/web/))**: A **Next.js** application 
   that provides the user interface, handles user authentication via crypto 
   wallets (SIWE), and delivers educational content. On-chain business logic is
   split into **Web3 engines** (`packages/rewards`, `packages/gdcluster`,
   `packages/mr519`) compiled to `dist/` — see [ARCHITECTURE.md](ARCHITECTURE.md)
   §Web3 Engines.
-3.  **Smart Contracts ([apps/hardhat/](apps/hardhat/))**: **Solidity** 
+3.  **Smart Contracts ([apps/contracts/](apps/contracts/))**: **Solidity** 
   contracts deployed on the Celo network to manage and distribute USDT 
   rewards transparently and securely.
 
@@ -62,14 +62,14 @@ For a detailed technical overview, please see
 
 ```sh
 git clone <repo-url>
-cd apps
-cp .env.example .env
-# Edit .env:
+cd learn.tg
+cp apps/.env.example apps/.env
+# Edit apps/.env:
 #   NEXT_PUBLIC_API_URL=https://learn.tg:9001/api
 #   NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin
 #   NEXTAUTH_SECRET=<any-random-string>  # dev only; for production: openssl rand -base64 32
 pnpm install
-bin/dev
+cd apps/web && bin/dev
 ```
 
 Open [http://localhost:4000](http://localhost:4000). No database or Rails setup needed.
@@ -85,7 +85,7 @@ All API requests are proxied to the live server.
 To set up the Rails backend and smart contracts as well, see:
 - [CONTRIBUTING.md](CONTRIBUTING.md)
 - [servidor/README.md](servidor/README.md)
-- [apps/hardhat/README.md](apps/hardhat/README.md)
+- [apps/contracts/README.md](apps/contracts/README.md)
 
 ## 🤖 For AI Agents
 

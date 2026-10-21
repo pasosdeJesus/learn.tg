@@ -34,7 +34,7 @@
 ### 1.1 Deploy SLEARN
 
 ```bash
-cd apps/hardhat
+cd apps/contracts
 # USDT se resuelve por red desde `mpdj` (Sepolia: `NEXT_PUBLIC_USDT_TESTNET`,
 # por defecto la canónica 0x0d13…56a6). No hace falta pasarla a mano.
 bin/deploySLEARN
@@ -95,7 +95,7 @@ Expected: **17/17 passed**.
 ### 2.1 Deploy SLEARN
 
 ```bash
-cd apps/hardhat
+cd apps/contracts
 # Mainnet: `mpdj` resuelve la USDT canónica de Celo; no se pasa variable de token.
 NEXT_PUBLIC_NETWORK=celo bin/deploySLEARN
 ```
@@ -203,7 +203,7 @@ Con `NEXT_PUBLIC_NETWORK=celo` la USDT sale de las direcciones canónicas de `mp
 ### 5.2 Run V2→V3 migration
 
 ```bash
-cd apps/nextjs
+cd apps/web
 npx tsx db/migrations/20260531000000_contract-to-v3.ts
 ```
 
@@ -218,7 +218,7 @@ This script:
 After migration, each course vault exists with `amountPerGuideSlearn=0`. Set 1 SLEARN per guide:
 
 ```bash
-cd apps/hardhat
+cd apps/contracts
 bin/setSlearnPerCourse
 ```
 

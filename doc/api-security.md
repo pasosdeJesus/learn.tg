@@ -1,6 +1,6 @@
 # API Security Rules & Route Audit
 
-Scope: the Next.js API routes under `apps/nextjs/app/api/**` (route handlers that
+Scope: the Next.js API routes under `apps/web/app/api/**` (route handlers that
 touch the database or files). Rails (`servidor/`) and Web3 engines
 (`packages/*`) have their own policies.
 
@@ -56,13 +56,13 @@ Rules:
    `404`, as `GET /api/credential/wallet/[wallet]` does), never a shorter list
    next to a total that would let the reader deduce the difference. The rule and
    its single implementation are in `packages/rewards/src/lib/course-privacy.ts`
-   (re-exported by `apps/nextjs/lib/privacy-visibility.ts`); a new query that
+   (re-exported by `apps/web/lib/privacy-visibility.ts`); a new query that
    publishes credentials (`credential_emission`) must apply it.
 
 ## 1b. CSRF / origin checks for mutations (R-#227 §4.3)
 
 Cookie-authenticated APIs need CSRF protection on unsafe methods
-(`POST`/`PUT`/`PATCH`/`DELETE`). `apps/nextjs/proxy.ts` rejects:
+(`POST`/`PUT`/`PATCH`/`DELETE`). `apps/web/proxy.ts` rejects:
 
 - `Sec-Fetch-Site` header = `cross-site` or `same-site` → **403** (browsers
   always send it; `same-site` is not trusted because sibling subdomains could
@@ -84,11 +84,11 @@ bypass. NextAuth keeps its own internal CSRF for `/api/auth/*`.
 
 ## 2. The route audit script
 
-`apps/nextjs/bin/audit-api-auth.mjs` statically scans every `route.ts` under
+`apps/web/bin/audit-api-auth.mjs` statically scans every `route.ts` under
 `app/api` and classifies each sensitive endpoint (DB or file access):
 
 ```sh
-cd apps/nextjs && node bin/audit-api-auth.mjs
+cd apps/web && node bin/audit-api-auth.mjs
 ```
 
 | Marker | Meaning |

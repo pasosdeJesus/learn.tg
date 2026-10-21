@@ -1,11 +1,11 @@
 // Vitest config for the `@learn-tg/gdcluster` engine (R-#252: the `test` script of
 // package.json points here).
 //
-// The dependencies are resolved from the app (`apps/nextjs/node_modules`) on
+// The dependencies are resolved from the app (`apps/web/node_modules`) on
 // purpose: the engine is consumed through its `exports` map and this monorepo
 // installs the deps once, in the app. Same pattern as
 // `packages/rewards/vitest.config.ts`.
-const appModules = new URL('../../apps/nextjs/node_modules/', import.meta.url).pathname
+const appModules = new URL('../../apps/web/node_modules/', import.meta.url).pathname
 
 export default {
   resolve: {

@@ -22,7 +22,7 @@ import path from 'node:path'
 import { IS_PRODUCTION } from './config'
 
 const CREDENTIALS_DEPLOYMENTS_DIR = path.join(
-  process.cwd(), '..', 'hardhat', 'deployments', 'PasosDeJesusCredentials'
+  process.cwd(), '..', 'contracts', 'deployments', 'PasosDeJesusCredentials'
 )
 
 function getChain() {

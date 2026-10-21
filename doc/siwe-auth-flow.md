@@ -285,7 +285,7 @@ wallet opens learn.tg on its own device, signs and accepts.
    tab and from the profile (`components/InviteWalletControl.tsx` → `GET /api/wallet`
    `invitations`, `POST /api/wallet/cancel`).
 
-Endpoint details live in `apps/nextjs/app/api/doc/API.md` (`## Wallet`).
+Endpoint details live in `apps/web/app/api/doc/API.md` (`## Wallet`).
 
 ## Code References
 
@@ -297,5 +297,5 @@ Endpoint details live in `apps/nextjs/app/api/doc/API.md` (`## Wallet`).
 | Server-side SIWE verification (shared policy) | `lib/siwe-server.ts` | Full file |
 | Wallet linking (routes + client) | `app/api/wallet/link/route.ts`, `lib/wallet-link.ts`, `components/LinkWalletButton.tsx` | Full file |
 | Wallet invitations (routes + client) | `app/api/wallet/{invite,accept,cancel}/route.ts`, `lib/wallet-account.ts`, `lib/wallet-invitations.ts`, `components/InviteWalletControl.tsx` | Full file |
-| CSRF/origin middleware | `apps/nextjs/middleware.ts` | Full file |
+| CSRF/origin middleware | `apps/web/middleware.ts` | Full file |
 | Frontend auth guard pattern | `app/[lang]/profile/page.tsx` | `useEffect` at ~line 256 |

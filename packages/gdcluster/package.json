@@ -16,7 +16,7 @@
     "viem": ">=2.0.0",
     "kysely": ">=0.28.0",
     "@pasosdejesus/m": ">=0.31.1",
-    "@learn-tg/rewards": ">=0.1.0",
+    "@learn-tg/rewards": "workspace:*",
     "axios": ">=1.0.0",
     "lucide-react": ">=0.400.0"
   },
@@ -26,9 +26,11 @@
     "next": "^16.3.1",
     "typescript": "^5.9.3",
     "viem": "^2.55.0",
-    "vitest": "^3.2.7"
+    "vitest": "^3.2.7",
+    "react": "catalog:",
+    "@types/react": "catalog:"
   },
   "scripts": {
-    "test": "cd ../../apps/nextjs && pnpm vitest run --root ../../packages/gdcluster --config \"$(pwd)/vitest.config.ts\""
+    "test": "cd ../../apps/web && pnpm vitest run --root ../../packages/gdcluster --config \"$(pwd)/vitest.config.ts\""
   }
 }

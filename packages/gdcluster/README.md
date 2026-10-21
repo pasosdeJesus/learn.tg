@@ -23,7 +23,7 @@ flows in [ARCHITECTURE.md](ARCHITECTURE.md).
 ## Usage
 
 The engine is instantiated once by the host adapter
-(`apps/nextjs/lib/gdcluster-app.ts`) with injected dependencies, and the
+(`apps/web/lib/gdcluster-app.ts`) with injected dependencies, and the
 server process registers its hook side-effect via `import
 '@learn-tg/gdcluster/register'`:
 
@@ -112,7 +112,7 @@ through the `@pasosdejesus/contract-test` runner.
 ## Testing
 
 ```sh
-# from apps/nextjs
+# from apps/web
 pnpm --filter @learn-tg/gdcluster test          # engine unit tests (vitest)
 bin/m contract:test                             # contract tests (EthereumJS fallback on OpenBSD)
 ```

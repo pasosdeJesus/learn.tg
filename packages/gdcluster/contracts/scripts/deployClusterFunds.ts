@@ -1,6 +1,6 @@
 // Deploy de ClusterFunds desde el motor gdcluster (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 6).
 // Escribe el deployment en contracts/deployments/ClusterFunds/<network>.json
-// (copias en el motor; apps/hardhat conserva las suyas para producción).
+// (copias en el motor; apps/contracts conserva las suyas para producción).
 import { ethers } from 'hardhat'
 import dotenv from 'dotenv'
 import * as fs from 'fs'

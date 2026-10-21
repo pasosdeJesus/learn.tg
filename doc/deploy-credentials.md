@@ -7,9 +7,9 @@
 
 1. `PasosDeJesusCredentials` contract deployed and verified on Celo / Celo Sepolia
    (see [R-#26](https://github.com/pasosdeJesus/sivel3/issues/26)).
-2. Deployment files in `apps/hardhat/deployments/PasosDeJesusCredentials/`
+2. Deployment files in `apps/contracts/deployments/PasosDeJesusCredentials/`
    (`celo.json`, `celoSepolia.json`, etc.).
-3. `@pasosdejesus/m` >= 0.5.3 installed (`apps/nextjs/node_modules/@pasosdejesus/m`).
+3. `@pasosdejesus/m` >= 0.5.3 installed (`apps/web/node_modules/@pasosdejesus/m`).
 4. Wallet with `MINTER_ROLE` on the contract for `credentials:register-type`
    (the `PRIVATE_KEY` env variable in `.env`).
 
@@ -20,7 +20,7 @@
 ### 1.1 Create source directory
 
 ```bash
-mkdir -p apps/nextjs/public/img/credential/source
+mkdir -p apps/web/public/img/credential/source
 ```
 
 ### 1.2 Current courses and their images
@@ -125,7 +125,7 @@ Each premium course that issues credentials must be registered exactly once.
 `tokenId` is assigned sequentially by the contract.
 
 ```bash
-cd apps/nextjs
+cd apps/web
 
 # Course 1 — Una relación con Jesús (free)
 bin/m eng:credentials:register-type \
@@ -176,7 +176,7 @@ bin/m eng:credentials:register-type \
 After registering types, sync the `credential_metadata` table:
 
 ```bash
-cd apps/nextjs
+cd apps/web
 bin/m eng:credentials:sync-cache --network celoSepolia
 ```
 
@@ -265,4 +265,4 @@ bin/m eng:credentials:set-max-supply \
 - [R-#130](https://github.com/pasosdeJesus/learn.tg/issues/130) — Credential integration issue
 - [R-#26](https://github.com/pasosdeJesus/sivel3/issues/26) — PasosDeJesusCredentials contract
 - [R-#33](https://github.com/pasosdeJesus/sivel3/issues/33) — `@pasosdejesus/m/blockchain` library
-- [`@pasosdejesus/m/src/blockchain/README.md`](../apps/nextjs/node_modules/@pasosdejesus/m/src/blockchain/README.md)
+- [`@pasosdejesus/m/src/blockchain/README.md`](../apps/web/node_modules/@pasosdejesus/m/src/blockchain/README.md)

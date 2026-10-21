@@ -17,23 +17,23 @@
     "composite": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "types": ["node"],
-    "typeRoots": ["../../apps/nextjs/node_modules/@types"],
+    "typeRoots": ["../../apps/web/node_modules/@types"],
     // Puente de resolución (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): learn.tg no es workspace pnpm y el
     // motor no tiene node_modules propio; las deps las resuelve el node_modules
     // de la app. Al publicarse (graduación local→shared) se eliminan.
     "paths": {
-      "next/*": ["../../apps/nextjs/node_modules/next/*"],
-      "next": ["../../apps/nextjs/node_modules/next"],
-      "kysely": ["../../apps/nextjs/node_modules/kysely"],
-      "viem": ["../../apps/nextjs/node_modules/viem"],
-      "viem/accounts": ["../../apps/nextjs/node_modules/viem/_types/accounts/index.d.ts"],
-      "viem/chains": ["../../apps/nextjs/node_modules/viem/_types/chains/index.d.ts"],
-      "axios": ["../../apps/nextjs/node_modules/axios"],
-      "lucide-react": ["../../apps/nextjs/node_modules/lucide-react"],
-      "@pasosdejesus/m/shadcn-components/*": ["../../apps/nextjs/node_modules/@pasosdejesus/m/dist/shadcn_components/*"],
-      "@pasosdejesus/m/*": ["../../apps/nextjs/node_modules/@pasosdejesus/m/dist/*"],
-      "@pasosdejesus/usdt/*": ["../../apps/nextjs/node_modules/@pasosdejesus/usdt/dist/*"],
-      "@learn-tg/rewards/*": ["../../apps/nextjs/node_modules/@learn-tg/rewards/dist/*"]
+      "next/*": ["../../apps/web/node_modules/next/*"],
+      "next": ["../../apps/web/node_modules/next"],
+      "kysely": ["../../apps/web/node_modules/kysely"],
+      "viem": ["../../apps/web/node_modules/viem"],
+      "viem/accounts": ["../../apps/web/node_modules/viem/_types/accounts/index.d.ts"],
+      "viem/chains": ["../../apps/web/node_modules/viem/_types/chains/index.d.ts"],
+      "axios": ["../../apps/web/node_modules/axios"],
+      "lucide-react": ["../../apps/web/node_modules/lucide-react"],
+      "@pasosdejesus/m/shadcn-components/*": ["../../apps/web/node_modules/@pasosdejesus/m/dist/shadcn_components/*"],
+      "@pasosdejesus/m/*": ["../../apps/web/node_modules/@pasosdejesus/m/dist/*"],
+      "@pasosdejesus/usdt/*": ["../../apps/web/node_modules/@pasosdejesus/usdt/dist/*"],
+      "@learn-tg/rewards/*": ["../../apps/web/node_modules/@learn-tg/rewards/dist/*"]
     }
   },
   "include": ["src/**/*", "src/**/*.json"],

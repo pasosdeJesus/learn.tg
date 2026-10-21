@@ -44,7 +44,7 @@ When no icon path is provided, `credentials:register-type` generates a default c
 ### Examples
 
 ```bash
-cd apps/nextjs
+cd apps/web
 
 # English course, auto-generated ID, no icon:
 ./scripts/create-course.sh "Global Disciples" en "global-disciples" 4 "1.0" "1.0"
@@ -196,7 +196,7 @@ Each course needs a vault on the `LearnTGVaultsV5` contract that defines how muc
 ### 3.1 Create the vault
 
 ```bash
-cd apps/hardhat
+cd apps/contracts
 
 # Amounts in smallest units: USDT = 6 decimals, SLEARN = 2 decimals
 # Example: 1.0 USDT + 1.0 SLEARN per guide for course ID 5
@@ -223,14 +223,14 @@ Each course needs a 512×512 SVG icon for the credential badge and course cover.
 
 ### 4.1 Create the source SVG
 
-Place in `apps/nextjs/public/img/credential/source/`:
+Place in `apps/web/public/img/credential/source/`:
 
 ```bash
-mkdir -p apps/nextjs/public/img/credential/source
+mkdir -p apps/web/public/img/credential/source
 
 # If converting from JPG/PNG:
 inkscape source.jpg --export-plain-svg \
-  --export-filename=apps/nextjs/public/img/credential/source/global-disciples.svg
+  --export-filename=apps/web/public/img/credential/source/global-disciples.svg
 ```
 
 ### 4.2 Requirements
@@ -250,7 +250,7 @@ inkscape source.jpg --export-plain-svg \
 Register the SBT credential type on the `PasosDeJesusCredentials` contract:
 
 ```bash
-cd apps/nextjs
+cd apps/web
 
 bin/m eng:credentials:register-type \
   --network celo \
@@ -269,7 +269,7 @@ For premium courses, add `--premium`.
 ## 6. Sync Metadata Cache
 
 ```bash
-cd apps/nextjs
+cd apps/web
 bin/m eng:credentials:sync-cache --network celo
 ```
 

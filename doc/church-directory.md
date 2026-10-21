@@ -59,6 +59,6 @@ What is **published** follows §2.4, not the internal score.
 
 - `lib/__tests__/church-activity.test.ts` — normalization (min-max over
   `ln(1+x)`, weights, flat components).
-- `cd apps/nextjs && node bin/audit-api-auth.mjs` — the directory routes are
+- `cd apps/web && node bin/audit-api-auth.mjs` — the directory routes are
   public, the reputation routes admin-only.
 - Migrations: `bin/m db:migrate` (applied on the local DB 2026-10-07).

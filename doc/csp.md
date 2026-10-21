@@ -1,6 +1,6 @@
 # Content Security Policy (CSP) for learn.tg
 
-**Status: enforced (Phase 2) 2026-10-08.** `apps/nextjs/proxy.ts` serves
+**Status: enforced (Phase 2) 2026-10-08.** `apps/web/proxy.ts` serves
 `Content-Security-Policy` on every route (per-request nonce; `report-uri`
 `/api/csp-report` still collects regressions) and the root layout forces dynamic
 rendering (`app/layout.tsx`) so Next.js injects the nonce. Phase 1 (Report-Only) ran
@@ -24,7 +24,7 @@ own, (2) a compromised dependency in the bundle, or (3) a poisoned build/asset.
 
 ## 2. What the app sends today
 
-`apps/nextjs/next.config.ts` → `headers()` (static, for every path):
+`apps/web/next.config.ts` → `headers()` (static, for every path):
 
 | Header | Value |
 |---|---|
@@ -36,7 +36,7 @@ own, (2) a compromised dependency in the bundle, or (3) a poisoned build/asset.
 | `Referrer-Policy` | `origin-when-cross-origin` |
 | `Content-Security-Policy` | the §4 policy, built by `proxy.ts` with a per-request nonce (enforced, 2026-10-08) |
 
-The static headers live in `apps/nextjs/next.config.ts`; the CSP is set by
+The static headers live in `apps/web/next.config.ts`; the CSP is set by
 `proxy.ts`, which needs a per-request nonce. `frame-ancestors 'none'` now replaces
 `X-Frame-Options`.
 
@@ -61,7 +61,7 @@ checks) because a per-request nonce is needed for Next's inline hydration script
 
 ## 4. Starting policy
 
-Built by `buildCsp()` in `apps/nextjs/proxy.ts`. The nonce needs a per-request
+Built by `buildCsp()` in `apps/web/proxy.ts`. The nonce needs a per-request
 render, so the root layout forces dynamic rendering (`app/layout.tsx`): every page is
 server-rendered and Next.js injects the nonce into its scripts.
 

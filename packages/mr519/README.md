@@ -20,7 +20,7 @@ rendered client-side by `DynamicForm`. It is the smallest of the three engines
 ## Usage
 
 The host registers the engine lazily on first access through the engine
-registry (`apps/nextjs/lib/engines.ts`, `ensureEnginesLoaded` →
+registry (`apps/web/lib/engines.ts`, `ensureEnginesLoaded` →
 `getEngineHandler`). The engine self-registers by importing the source directly:
 
 ```typescript
@@ -37,7 +37,7 @@ The parameterised routes are reachable through the same registry:
 `getEngineHandler` matches the templates an engine registers (`GET /forms/[id]`,
 `POST /forms/[id]/responses`), so `GET /api/engine/mr519/forms/3` reaches
 `makeGetFormById`. Before 2026-09-21 only exact keys matched and those routes
-answered 404 (tests: `apps/nextjs/app/api/engine/__tests__/mr519-forms.test.ts`).
+answered 404 (tests: `apps/web/app/api/engine/__tests__/mr519-forms.test.ts`).
 
 ## Exports
 
@@ -61,7 +61,7 @@ tiny, has no contract/ABI layer, and is only consumed by this app.
 
 The package has no vitest suite of its own (deliberate: D2 makes the route
 factories injectable — see ARCHITECTURE.md). What exists today is the registry test
-in the host app, `apps/nextjs/app/api/engine/__tests__/route.test.ts` (4 cases:
+in the host app, `apps/web/app/api/engine/__tests__/route.test.ts` (4 cases:
 `mr519` and `mr519-admin` registered, unknown engine/path → null), plus the
 end-to-end surface through `/api/engine/mr519/*`. **Adding a form-definition test
 (list, by-id with fields/options, submission inserting `respuestafor` +

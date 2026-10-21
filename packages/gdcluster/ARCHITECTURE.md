@@ -15,7 +15,7 @@ dispatches through.
 ### D1 — Hook registration (`reward:route-destination`)
 
 `src/register.ts` registers the `reward:route-destination` hook via
-`@pasosdejesus/m/plugin`. The core (`apps/nextjs/lib/reward-routing.ts`) runs
+`@pasosdejesus/m/plugin`. The core (`apps/web/lib/reward-routing.ts`) runs
 all registered hooks with `runHooks` before processing a reward; the gdcluster
 handler checks `isGDCourse(courseId)` (courses 10/11) and, if matched, sets:
 
@@ -40,7 +40,7 @@ framework bindings.
 
 ### D3 — Owned contracts subproject
 
-Unlike `rewards` (which consumes contracts from `apps/hardhat`), gdcluster
+Unlike `rewards` (which consumes contracts from `apps/contracts`), gdcluster
 ships its own isolated Hardhat project under `contracts/` with `ClusterFunds`
 and `ClusterFundsV2`. This was chosen so the cluster-fund domain can evolve
 independently (https://github.com/pasosdeJesus/learn.tg/issues/214) without touching the main hardhat app; ABI sync and
@@ -108,14 +108,14 @@ create it (`mkdir -p packages/gdcluster/db/migrations`) so that `eng:verify`
 |--------|----------|
 | `@learn-tg/rewards` | registers the hook that rewards **consumes**; uses rewards' `verifyTransfer`/replay-protection libs |
 | `@learn-tg/mr519` | `engine.json` declares a requirement; no hard coupling at runtime |
-| core (apps/nextjs) | adapter `lib/gdcluster-app.ts`, dispatcher `lib/reward-routing.ts`, `import '@learn-tg/gdcluster/register'` in the server process |
+| core (apps/web) | adapter `lib/gdcluster-app.ts`, dispatcher `lib/reward-routing.ts`, `import '@learn-tg/gdcluster/register'` in the server process |
 
 ## Build & test
 
 ```sh
-# engine (from apps/nextjs)
+# engine (from apps/web)
 pnpm --filter @learn-tg/gdcluster test
 
 # contracts (EthereumJS fallback on OpenBSD/adJ)
-cd apps/nextjs && bin/m contract:test
+cd apps/web && bin/m contract:test
 ```

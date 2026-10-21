@@ -1,0 +1,19 @@
+{
+  "name": "learn-tg",
+  "private": true,
+  "description": "Learn.tg — cursos con juegos y becas sobre Celo",
+  "packageManager": "pnpm@11.28.6",
+  "devDependencies": {
+    "typescript": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
+  },
+  "scripts": {
+    "dev": "pnpm --dir apps/web dev",
+    "build": "pnpm -r --if-present build",
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck"
+  }
+}

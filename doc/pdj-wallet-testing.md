@@ -30,7 +30,7 @@ consumed **by version**; their unit suites run in the `m` repo (`packages/m`,
 
 What learn.tg exercises here is the integration (below) and the app's own tests. The
 current size and per-target count live in
-[`apps/nextjs/CONTRIBUTING.md`](../apps/nextjs/CONTRIBUTING.md) (§Coverage Status).
+[`apps/web/CONTRIBUTING.md`](../apps/web/CONTRIBUTING.md) (§Coverage Status).
 
 Lo que cubre el núcleo (`m`) sobre R-#246: sellado de la clave con el
 secreto PRF y comprobación de que el registro guardado **no contiene la clave
@@ -53,20 +53,20 @@ the app's `node_modules`, so there is nothing to install here. The
 `IndexedDBStorage` behavior and the Node-side import of the built core (E2E,
 R-#239) come from `@pasosdejesus/m/wallet`.
 
-`pnpm test` inside a package lacks the app's workspace/alias configuration;
-los targets del Makefile y los comandos de arriba evitan eso.
+`pnpm test` inside a package runs its own script, which forwards to `apps/web` with
+the aliases; the Makefile targets and the commands above are the direct path.
 
 ## 2. Integration in learn.tg
 
 ```sh
-cd apps/nextjs
+cd apps/web
 make test-hooks test-components
 ```
 
 Expected: los objetivos pasan (0 fallas). La mayor parte del tiempo es el montaje de jsdom
 por archivo, no las aserciones. El tamaño vigente de la suite y el conteo por objetivo
 están en **un solo lugar**:
-[`apps/nextjs/CONTRIBUTING.md`](../apps/nextjs/CONTRIBUTING.md) (§Coverage Status).
+[`apps/web/CONTRIBUTING.md`](../apps/web/CONTRIBUTING.md) (§Coverage Status).
 
 What these cover:
 
@@ -97,7 +97,7 @@ What these cover:
   red no discrepa de la billetera y el E2E no reproduce el desajuste).
 
 If a hook test fails to resolve `@pasosdejesus/m/wallet/next` (or the core), the
-aliases at the top of `apps/nextjs/vitest.config.ts` are missing. Order matters:
+aliases at the top of `apps/web/vitest.config.ts` are missing. Order matters:
 `@pasosdejesus/m/wallet/next` and `@pasosdejesus/m/wallet/storage` must be listed
 before `@pasosdejesus/m/wallet`.
 
@@ -109,7 +109,7 @@ unlocks it, signs in with SIWE and checks the session cookie. On the dev site
 instead of failing where that page is not deployed:
 
 ```sh
-cd apps/nextjs
+cd apps/web
 make test-e2e-wallet                                        # = SPEC=in-app-wallet
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=in-app-wallet
 ```
@@ -123,7 +123,7 @@ in-app wallet"), then disconnects with `✕`. It passes in ~32 s against the dev
 site.
 
 ```sh
-cd apps/nextjs
+cd apps/web
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=header-wallet-dialog
 ```
 
@@ -136,7 +136,7 @@ Acepta `SITE_URL` para apuntar a un servidor local (`next dev -p 4000` sirve
 HTTP, mientras que `initTestEnv()` siempre arma `https://`).
 
 ```sh
-cd apps/nextjs
+cd apps/web
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=donate-unlock-dialog
 SITE_URL=http://localhost:4000 IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 \
   CHROME_PATH=/usr/local/bin/chrome ./bin/m test:e2e donate-unlock-dialog
@@ -163,7 +163,7 @@ imprime la capacidad del dispositivo
 distinguir "el dispositivo no puede" de "la UI no lo ofreció".
 
 ```sh
-cd apps/nextjs
+cd apps/web
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=biometric-unlock
 ```
 
@@ -180,7 +180,7 @@ nunca se podía completar.
 **sin desplegar** (`doc/environments.md`). Medido el 2026-09-28 con `next dev`:
 
 ```sh
-cd apps/nextjs && bin/dev            # en segundo plano
+cd apps/web && bin/dev            # en segundo plano
 export SITE_URL=http://localhost:4000 IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220
 export CHROME_PATH=/usr/local/bin/chrome
 node e2e/specs/in-app-wallet.spec.mjs          # 0 failures (75 s)
@@ -213,7 +213,7 @@ deployed site, or `make all` + `bin/start` locally) and it **skips** when the si
 has none:
 
 ```sh
-cd apps/nextjs
+cd apps/web
 make test-e2e-offline      # = SPEC=offline: corre offline-guide y offline-crossword
 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=offline-guide
 ```

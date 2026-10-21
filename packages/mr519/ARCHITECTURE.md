@@ -81,4 +81,4 @@ Admin API Authentication rules in the root ARCHITECTURE.md).
 
 ## Testing
 
-No own suite; covered by host API tests (`apps/nextjs`, `make test-api`).
+No own suite; covered by host API tests (`apps/web`, `make test-api`).

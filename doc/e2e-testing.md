@@ -33,7 +33,7 @@ Chrome path: `CHROME_PATH=/usr/local/bin/chrome bin/m test:e2e`
 ### ⚠️ `bin/m test:e2e` directo apunta a PRODUCCIÓN
 
 Los atajos de `make` exportan
-`IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220` (`apps/nextjs/Makefile:184`),
+`IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220` (`apps/web/Makefile:184`),
 por eso llegan al sitio de desarrollo. `bin/m test:e2e` **sin esos tres
 variables** usa los valores por defecto de `initTestEnv()`
 (`@pasosdejesus/m/dist/e2e/env.js`): host `learn.tg`, puerto `443` y
@@ -42,7 +42,7 @@ variables** usa los valores por defecto de `initTestEnv()`
 Consecuencia medida (2026-09-16): corriendo `./bin/m test:e2e
 premium-course-checkout` sin variables, el spec firmaba SIWE con cadena `42220`
 contra un sitio que espera `11142220`; `auth-options.ts` descarta el mensaje por
-red equivocada (`return null`, `apps/nextjs/app/api/auth/auth-options.ts:129`) y el
+red equivocada (`return null`, `apps/web/app/api/auth/auth-options.ts:129`) y el
 callback responde **401 CredentialsSignin**. El spec falla con "Buy button not
 visible" porque no hay sesión, no por un defecto del producto. Con
 `make test-e2e-spec SPEC=premium-course-checkout` (variables exportadas) pasa.
@@ -80,7 +80,7 @@ Para distinguir un fallo de producto de uno ambiental conviene correr lo mismo e
 otro entorno (por ejemplo un servidor local) y comparar:
 
 ```sh
-cd apps/nextjs
+cd apps/web
 ./bin/m test:e2e:summary /tmp/e2e-retry-site2.log /tmp/e2e-local.log
 ```
 
@@ -101,7 +101,7 @@ Sirve para separar un fallo de producto de uno del entorno del dev site (paso de
 nginx, RPC, carga remota). Preparación:
 
 ```sh
-cd apps/nextjs
+cd apps/web
 # apps/.env debe estar en modo "pila completa": NEXT_PUBLIC_API_URL vacío
 # (Next sirve /api y habla con Postgres vía Kysely; NO necesita Rails para esto).
 NEXT_PUBLIC_PWA_DISABLE=1 bin/dev            # http://localhost:4000
@@ -153,14 +153,14 @@ veces no se pinta (medido 2026-09-20: `invalid type: boolean \`false\`, expected
 enum CodeFrameColorMode`) y ni el `console.error` del route ni la página de error
 llegan a la consola. **La causa de fondo está parcheada** desde el 2026-09-27
 (https://github.com/pasosdeJesus/learn.tg/issues/267):
-`apps/nextjs/patches/next@16.3.5.patch` normaliza las opciones antes de llegar al
+`apps/web/patches/next@16.3.5.patch` normaliza las opciones antes de llegar al
 binding WASM: `color: false` se borra (el enum del binding nativo no tiene `None`),
 `color: true` → `'Error'` y `maxWidth: undefined` → `100`; así el
 overlay vuelve a pintar el error; para regenerar el parche, ver R-#267 §6.
 
 Además, desde el 2026-09-20:
 
-- `apps/nextjs/instrumentation.ts` (`onRequestError` + `unhandledRejection` /
+- `apps/web/instrumentation.ts` (`onRequestError` + `unhandledRejection` /
   `uncaughtException`) registra todo error del servidor, incluidas las rutas de
   streaming, en `stderr` **y** en un archivo.
 - El archivo es `/tmp/learn-tg-server-errors.log` (`SERVER_ERROR_LOG` lo cambia);
@@ -178,12 +178,12 @@ Aplica **solo cuando el sitio se sirve con el dev server** (`bin/dev`, `next dev
 ruta bajo demanda y el primer request es lentísimo (timeouts en la suite). Con el dev site servido desde un
 **build de producción** (`make all` + `bin/start`, o `make prod`) las rutas salen compiladas del build y el
 warmup **no hace falta** (ver `doc/environments.md` §Dos modos para servir el sitio de desarrollo).
-`apps/nextjs/bin/warmup.mjs` toca las páginas y APIs clave **antes** de correr los specs: pasada 1
+`apps/web/bin/warmup.mjs` toca las páginas y APIs clave **antes** de correr los specs: pasada 1
 secuencial (compila con timeout generoso por ruta), pasada 2 en paralelo (caché caliente, verifica
 tiempos).
 
 ```sh
-cd apps/nextjs
+cd apps/web
 bin/warmup.mjs                   # SITE_URL por defecto (learn.tg:9001)
 SITE_URL=https://learn.tg bin/warmup.mjs   # producción
 ```
@@ -304,7 +304,7 @@ It performs the full setup via HTTP API calls:
 | 5 | `GET /api/profile` | Confirms `profilescore ≥ 50` (77 pts expected) |
 
 The wallet in `apps/.env` must already be registered and have verifier
-privileges on the dev server. See [Developer Wallet Whitelist](../apps/nextjs/README.md#developer-wallet-whitelist)
+privileges on the dev server. See [Developer Wallet Whitelist](../apps/web/README.md#developer-wallet-whitelist)
 in the Next.js README.
 
 ## Browser Specs (`e2e/specs/`)
@@ -361,7 +361,7 @@ This replaced the `setupSIWEMock` / `simulateSIWE` helpers of
 `e2e/helpers/siwe-wallet-mock.mjs` (a local copy, unused) was deleted.
 
 Requirements for Node: the helper imports `viem`/`viem/accounts`/`siwe` from
-`apps/nextjs/node_modules`, so there is nothing to build.
+`apps/web/node_modules`, so there is nothing to build.
 
 Run with: `bin/m test:e2e` (without `--smoke`) or `make test-e2e`
 
@@ -382,7 +382,7 @@ profile and cancels/reschedules a real interview), so it is **excluded from the
 default suite**: it self-skips unless `PROD_SPECS=1` is set.
 
 ```sh
-cd apps/nextjs
+cd apps/web
 PROD_SPECS=1 CHROME_PATH=/usr/local/bin/chrome make test-e2e-spec SPEC=prod-landing-to-profile
 ```
 
@@ -473,7 +473,7 @@ course list and check "A relationship with Jesus" shows the real state (not
 "cooldown"), then reconnect and confirm it does not change.
 
 Note: `packages/*/dist` is **gitignored** — on the deploy machine rebuild the
-engines after `pull` (`cd packages/<engine> && ../../apps/nextjs/node_modules/.bin/tsc -b`)
+engines after `pull` (`cd packages/<engine> && ../../apps/web/node_modules/.bin/tsc -b`)
 before verifying, otherwise the `canSubmit: null` change in `packages/rewards`
 is not live.
 
@@ -533,7 +533,7 @@ The mock survives page reloads (injected via `evaluateOnNewDocument`).
 
 ### Requirements
 
-- `puppeteer-core` (devDependency in `apps/nextjs/package.json`)
+- `puppeteer-core` (devDependency in `apps/web/package.json`)
 - `CHROME_PATH` set: `/usr/local/bin/chromium` (OpenBSD) or equivalent
 - Test wallet in `apps/.env`: `PRIVATE_KEY` + `NEXT_PUBLIC_ADDRESS`
 - Dev server running on `https://learn.tg:9001` (or set `IPDES` env var)
@@ -616,4 +616,4 @@ the dev site; browser specs additionally need a display/`xvfb` and a Chrome bina
 - [SIWE Auth Flow](siwe-auth-flow.md) — Authentication protocol
 - [Wallet Auth](wallet-auth.md) — Custom wallet implementation (no wagmi)
 - https://github.com/pasosdeJesus/learn.tg/issues/179 — E2E testing infrastructure spec
-- [apps/nextjs/CONTRIBUTING.md](../apps/nextjs/CONTRIBUTING.md) — Testing policy and coverage targets
+- [apps/web/CONTRIBUTING.md](../apps/web/CONTRIBUTING.md) — Testing policy and coverage targets

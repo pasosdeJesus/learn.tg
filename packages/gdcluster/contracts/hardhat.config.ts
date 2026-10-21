@@ -1,17 +1,17 @@
 // Hardhat config del motor gdcluster (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.6 / Fase 6 — contratos
 // aislados). Configuración mínima: solo compilación + redes; sin plugins de
 // verify/ignition (evita deps innecesarias; verify se hace con los scripts de
-// apps/hardhat). learn.tg no es workspace pnpm: hardhat/ethers/chai se
-// resuelven desde el node_modules de apps/hardhat vía symlink (run-tests.mjs).
+// apps/contracts). learn.tg no es workspace pnpm: hardhat/ethers/chai se
+// resuelven desde el node_modules de apps/contracts vía symlink (run-tests.mjs).
 import { config as dotEnvConfig } from 'dotenv'
 import path from 'path'
 import { HardhatUserConfig } from 'hardhat/config'
 // Expone hre.ethers (lo usan scripts/test de deploy). Resuelto desde el
-// node_modules de apps/hardhat (symlink).
+// node_modules de apps/contracts (symlink).
 import '@nomicfoundation/hardhat-ethers'
 
 // El .env del proyecto vive en apps/.env (jerarquía de m: ../../ → ../ → .);
-// misma convención que apps/hardhat (que usa ../.env desde apps/hardhat).
+// misma convención que apps/contracts (que usa ../.env desde apps/contracts).
 dotEnvConfig({ path: path.resolve(__dirname, '../../../apps/.env') })
 
 const config: HardhatUserConfig = {

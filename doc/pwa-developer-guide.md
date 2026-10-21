@@ -264,7 +264,7 @@ site data before debugging anything else.
 
 ## Testing
 
-- Unit: `cd apps/nextjs && make test-hooks test-components` (offline status,
+- Unit: `cd apps/web && make test-hooks test-components` (offline status,
   offline banner, install prompt, guide cache, submission queue).
 - Manual: `doc/pdj-wallet-testing.md` §4 (service worker, manifest, offline page)
   and §5 (offline crossword).

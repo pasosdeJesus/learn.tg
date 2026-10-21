@@ -13,7 +13,7 @@ re-transpiled by Next/SWC).
 ### D1 — `next` as peer dependency
 
 The engine never imports `next`; it receives plain `Request`/`Response` and
-returns route handlers. The host (apps/nextjs) wires them into the App Router.
+returns route handlers. The host (apps/web) wires them into the App Router.
 `next` is a peerDependency so the engine stays testable outside Next.
 
 ### D2 — Dependency injection
@@ -31,7 +31,7 @@ interface RewardsDeps {
 }
 ```
 
-The host adapter `apps/nextjs/lib/rewards-app.ts` instantiates the engine once
+The host adapter `apps/web/lib/rewards-app.ts` instantiates the engine once
 (singleton) and the app routes re-export its handlers. The engine never
 imports core logic — the core injects it (inverted dependencies, D3).
 
@@ -104,7 +104,7 @@ country fund before the vault split. The rewards engine calls
 
 ## Address resolution
 
-- Vaults: `apps/hardhat/deployments/LearnTGVaults/V{4,5}/<network>.json`
+- Vaults: `apps/contracts/deployments/LearnTGVaults/V{4,5}/<network>.json`
   (`getV4Address`/`getV5Address`).
 - SLEARN: `@pasosdejesus/mpdj/blockchain/ecosystem-addresses` first, then
   `SLEARN/<network>.json`.
@@ -128,6 +128,6 @@ Never add `NEXT_PUBLIC_*_ADDRESS` env vars for derived deployment addresses.
 # compile to dist/ (done by bin/dev and make all/prod)
 tsc -p tsconfig.json
 
-# tests (from apps/nextjs)
+# tests (from apps/web)
 pnpm --filter @learn-tg/rewards test
 ```

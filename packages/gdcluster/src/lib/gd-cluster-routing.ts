@@ -75,7 +75,7 @@ export async function getClusterFundsAddress(): Promise<Address> {
     import('path'),
   ])
   const network = process.env.NEXT_PUBLIC_NETWORK === 'celo' ? 'celo' : 'celoSepolia'
-  const deploymentsDir = path.join(process.cwd(), '..', 'hardhat', 'deployments')
+  const deploymentsDir = path.join(process.cwd(), '..', 'contracts', 'deployments')
   const deployment = readDeployment(network, deploymentsDir, { contract: 'ClusterFundsV2' })
   if (!deployment?.address) throw new Error('ClusterFundsV2 not deployed — address not found')
   return deployment.address as Address

@@ -76,14 +76,14 @@ Two details that mattered in the browser (2026-10-02):
 
 | Piece | File |
 |---|---|
-| The protocol in one place: addresses, ABIs, selectors, G$ decimals, FV message, GoodID link builder, `resolveGoodDollarAction()`, `detectProtocolChange()`, `parseGoodIdReturn()` | `apps/nextjs/lib/gooddollar-protocol.ts` |
-| Why the button can or cannot act (`ready`, `no-wallet`, `locked`, `provider-unsupported`, `network-unsupported`, `sdk-error`) | `apps/nextjs/lib/gooddollar-reason.ts` |
-| The button: reads the protocol, resolves the action, writes `claim()` or redirects to GoodID; `data-reason`, `data-action`, `data-testid` | `apps/nextjs/components/GoodDollarClaimButton.tsx` |
-| Cross-checks every constant against the installed official SDK | `apps/nextjs/lib/__tests__/gooddollar-protocol.test.ts` |
-| The four actions, the button states, no SDK mocks | `apps/nextjs/components/__tests__/GoodDollarClaimButton.test.tsx` |
-| Direct-claim reference for cron (checks whitelist and entitlement, signs and broadcasts `claim()`, `--dry-run` to only read) | `apps/nextjs/scripts/claim-gooddollar-ubi.mjs` |
-| E2E, production only: unverified wallet resolves to `verify` and opens GoodID without sending a transaction | `apps/nextjs/e2e/specs/gooddollar-not-whitelisted.spec.mjs` |
-| E2E, production only: verified wallet resolves to `direct-claim` and claims | `apps/nextjs/e2e/specs/gooddollar-claim-real.spec.mjs` |
+| The protocol in one place: addresses, ABIs, selectors, G$ decimals, FV message, GoodID link builder, `resolveGoodDollarAction()`, `detectProtocolChange()`, `parseGoodIdReturn()` | `apps/web/lib/gooddollar-protocol.ts` |
+| Why the button can or cannot act (`ready`, `no-wallet`, `locked`, `provider-unsupported`, `network-unsupported`, `sdk-error`) | `apps/web/lib/gooddollar-reason.ts` |
+| The button: reads the protocol, resolves the action, writes `claim()` or redirects to GoodID; `data-reason`, `data-action`, `data-testid` | `apps/web/components/GoodDollarClaimButton.tsx` |
+| Cross-checks every constant against the installed official SDK | `apps/web/lib/__tests__/gooddollar-protocol.test.ts` |
+| The four actions, the button states, no SDK mocks | `apps/web/components/__tests__/GoodDollarClaimButton.test.tsx` |
+| Direct-claim reference for cron (checks whitelist and entitlement, signs and broadcasts `claim()`, `--dry-run` to only read) | `apps/web/scripts/claim-gooddollar-ubi.mjs` |
+| E2E, production only: unverified wallet resolves to `verify` and opens GoodID without sending a transaction | `apps/web/e2e/specs/gooddollar-not-whitelisted.spec.mjs` |
+| E2E, production only: verified wallet resolves to `direct-claim` and claims | `apps/web/e2e/specs/gooddollar-claim-real.spec.mjs` |
 
 ## 4. Protocol constants (Celo mainnet)
 
@@ -135,7 +135,7 @@ Unit (make sure the protocol constants still match the installed SDK and the but
 resolves the four actions):
 
 ```sh
-cd apps/nextjs
+cd apps/web
 make type
 make test-lib test-components
 ```

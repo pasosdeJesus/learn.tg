@@ -2,7 +2,7 @@
 //
 // Implementación canónica: vive en el motor porque el motor la necesita y no
 // puede importar alias internos del host (`@/`). La app la reexporta desde
-// `apps/nextjs/lib/privacy-visibility.ts`, así que hay una sola regla.
+// `apps/web/lib/privacy-visibility.ts`, así que hay una sola regla.
 //
 // Un SBT en la billetera es público, permanente y enumerable: quien lo mira sabe
 // que esa persona completó un curso sensible. Por eso, en un curso marcado

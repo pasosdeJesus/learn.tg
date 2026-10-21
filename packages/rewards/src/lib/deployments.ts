@@ -8,7 +8,7 @@ function getNetwork(): string {
 }
 
 function getDeploymentsDir(): string {
-  return path.join(process.cwd(), '..', 'hardhat', 'deployments')
+  return path.join(process.cwd(), '..', 'contracts', 'deployments')
 }
 
 export async function getV3Address(): Promise<`0x${string}`> {

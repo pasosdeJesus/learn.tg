@@ -25,9 +25,11 @@
     "next": "^16.3.1",
     "typescript": "^5.9.3",
     "viem": "^2.55.0",
-    "vitest": "^3.2.7"
+    "vitest": "^3.2.7",
+    "react": "catalog:",
+    "@types/react": "catalog:"
   },
   "scripts": {
-    "test": "cd ../../apps/nextjs && pnpm vitest run --root ../../packages/rewards --config \"$(pwd)/vitest.config.ts\""
+    "test": "cd ../../apps/web && pnpm vitest run --root ../../packages/rewards --config \"$(pwd)/vitest.config.ts\""
   }
 }

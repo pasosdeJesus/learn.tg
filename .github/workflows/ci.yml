@@ -24,25 +24,24 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
-          cache-dependency-path: 'apps/nextjs/pnpm-lock.yaml'
+          cache-dependency-path: 'pnpm-lock.yaml'
 
-      - name: Install dependencies for Next.js app
+      - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: ./apps/nextjs
 
       - name: Run Public Test Suite (excluding private API)
         run: |
           echo "::warning::Running public-only test suite. API tests are excluded as they require the private repository, which is handled by the GitLab CI."
           pnpm test -- --exclude **/api/**
-        working-directory: ./apps/nextjs
+        working-directory: ./apps/web
 
       - name: Run API route security audit (static, no server/DB needed)
         run: node bin/audit-api-auth.mjs
-        working-directory: ./apps/nextjs
+        working-directory: ./apps/web
 
       # R-#285: los manifiestos de motor (m-engine.generated.ts) deben cuadrar con
       # sus fuentes y su intención. Estático, sin servidor ni base de datos. Se corre
-      # desde la raíz porque desde `apps/nextjs` sólo se ve el `msip` vendorizado.
+      # desde la raíz porque desde `apps/web` sólo se ve el `msip` vendorizado.
       - name: Verify engine manifests (static, no server/DB needed)
-        run: cd ../.. && apps/nextjs/bin/m eng:verify
-        working-directory: ./apps/nextjs
+        run: cd ../.. && apps/web/bin/m eng:verify
+        working-directory: ./apps/web

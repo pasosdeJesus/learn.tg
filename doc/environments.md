@@ -54,7 +54,7 @@ reaches the dev site **only when the operator deploys the branch**; until then t
 dev site keeps serving the previous build, so a fix can be in the tree and still
 not be visible in a manual test there.
 
-The agent's own sandbox is **`http://localhost:4000`** (`cd apps/nextjs &&
+The agent's own sandbox is **`http://localhost:4000`** (`cd apps/web &&
 bin/dev`, on this VM), used for unit/E2E/smoke checks. It is **not** the official
 development site and is **not** a place for the operator's manual testing.
 `bin/dev` runs `make engines-dist` first and **aborts on failure** (a stale
@@ -155,7 +155,7 @@ NEXT_PUBLIC_API_BASE=https://learn.tg:3500/learntg-admin
 ```
 
 ```sh
-cd apps/nextjs
+cd apps/web
 bin/dev          # Next.js on http://localhost:4000
 ```
 
@@ -228,7 +228,7 @@ it is not the official development site (`learn.tg:9001`, another machine, see
 *Who runs what* above) and the operator does not need it for manual testing.
 
 ```sh
-cd apps/nextjs
+cd apps/web
 bin/dev          # Next.js on http://localhost:4000 (PORT in apps/.env)
 ```
 
@@ -269,12 +269,12 @@ bin/dev          # Next.js on http://localhost:4000 (PORT in apps/.env)
   the development site instead (run mode 1).
 
 **Driving the browser from Node.** The E2E helpers (`@pasosdejesus/m/e2e`)
-resolve from `apps/nextjs`, so a throwaway script placed inside the app
+resolve from `apps/web`, so a throwaway script placed inside the app
 (`e2e/tmp-*.mjs`, not committed — see `e2e/tmp-hyd-probe.mjs`) can drive the local
 instance step by step:
 
 ```sh
-cd apps/nextjs
+cd apps/web
 CHROME_PATH=/usr/local/bin/chrome IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 \
   node e2e/tmp-mi-prueba.mjs
 ```
@@ -288,7 +288,7 @@ which honours `SITE_URL` and derives `host`/`domainPort` from it (the SIWE must
 sign the host you actually visit, R-#233). Recipe:
 
 ```sh
-cd apps/nextjs
+cd apps/web
 NEXT_PUBLIC_PWA_DISABLE=1 bin/dev            # http://localhost:4000
 bin/warmup-local.mjs                          # 24 rutas, secuencial
 SITE_URL=http://localhost:4000 IPDES=localhost PUERTOPRU=4000 CHAIN_ID=11142220 \
@@ -438,7 +438,7 @@ Contract addresses are **not** read from `.env`. They come from:
   (helper `deployments` en el motor `@learn-tg/rewards`, https://gitlab.com/pasosdeJesus/m/-/work_items/35 — `packages/rewards/src/lib/deployments.ts`)
 - `@pasosdejesus/mpdj/blockchain` — credentials (SBTs)
 - `@pasosdejesus/m/blockchain/deployments` (`readDeployment()`) reading
-  `apps/hardhat/deployments/<Contract>/<network>.json` — vaults
+  `apps/contracts/deployments/<Contract>/<network>.json` — vaults
   (`LearnTGVaults` V3/V4/V5), `ClusterFunds` (V1) y `ClusterFundsV2` (https://github.com/pasosdeJesus/learn.tg/issues/214;
   la app opera con V2)
 
@@ -448,18 +448,19 @@ Contract addresses are **not** read from `.env`. They come from:
 > `mpdj` >= 0.3.0; `make all` corre `bin/m env:check`, que avisa si quedó el nombre
 > viejo en `apps/.env`.
 
-> `apps/hardhat/deployments/` está en `.gitignore` (artefacto de despliegue): un clon
+> `apps/contracts/deployments/` está en `.gitignore` (artefacto de despliegue): un clon
 > nuevo no trae esos JSON y sin el archivo de la red `getClusterFundsAddress()`
 > (`packages/gdcluster/src/lib/gd-cluster-routing.ts`) lanza
 > `ClusterFundsV2 not deployed — address not found` (no es error de compilación).
 > Detalle y direcciones conocidas en
-> [apps/hardhat/README.md](../apps/hardhat/README.md) §Deployment Addresses.
+> [apps/contracts/README.md](../apps/contracts/README.md) §Deployment Addresses.
 
 ## Notes
 
 - pnpm is pinned to v11.28.6 (`packageManager`); its settings (`overrides`,
-  `allowBuilds`, `patchedDependencies`, `minimumReleaseAge`) live in
-  `pnpm-workspace.yaml`.
+  `allowBuilds`, `patchedDependencies`, `minimumReleaseAge`, `catalog`) live in the
+  root `pnpm-workspace.yaml` of the single workspace (`apps/*`, `packages/*`,
+  `packages/generated/*`), with one `pnpm-lock.yaml` at the root.
 - The E2E suites default to `https://learn.tg:9001`; override with
   `SITE_URL` / `NEXT_PUBLIC_AUTH_URL`. Production-targeting specs exist
   (chain 42220).
@@ -549,7 +550,7 @@ fresco hay que compilarlos; imports con `src/` quedan bloqueados por el exports
 map (error "not exported from package").
 
 ```sh
-cd apps/nextjs
+cd apps/web
 make engines-dist        # compila dist de packages/{rewards,gdcluster} (rewards primero)
 make engines-assets      # copia assets de los motores a public/ (p.ej. gdcluster.svg)
 make engines-sync-abis   # tras regenerar abis en hardhat: copia a src/abis/ y recompila
@@ -559,7 +560,7 @@ bin/dev                  # ya ejecuta engines-dist automáticamente; Next en :40
 `engines-dist` compila los motores de negocio en `packages/`. La billetera in-app ya
 no vive en learn.tg: su núcleo (`@pasosdejesus/m/wallet`, `m/REQ/14`) y su capa React
 (`@pasosdejesus/m/wallet/next`, `m/REQ/37`) se consumen **por versión** desde
-`apps/nextjs/node_modules`, así que no hay que compilarlos ni instalar nada aparte.
+`apps/web/node_modules`, así que no hay que compilarlos ni instalar nada aparte.
 Sus pruebas unitarias corren en el repo `m` (`pnpm -r test`).
 
 `build-guard` (en `make all`/`make prod`) aborta si el dev server está activo

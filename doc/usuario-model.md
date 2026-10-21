@@ -13,9 +13,9 @@ and **extends** it.
 The engine is **not published to npm** (it stays `private`, `m#40` D1), so learn.tg
 consumes a **vendored copy**:
 
-- **`apps/nextjs/packages/generated/msip`** — a traceable copy made with
+- **`packages/generated/msip`** — a traceable copy made with
   `bin/m eng:sync <ruta-al-checkout-de-m>/packages/msip --vendor` (run from
-  `apps/nextjs`, its default `--out`), carrying `PROVENANCE.json` (engine, version,
+  `apps/web`, its default `--out`), carrying `PROVENANCE.json` (engine, version,
   origin, `sha256`). It is **derived**: adopt an engine change by regenerating it
   (`eng:sync --vendor`), never by editing it.
 - **Compiled separately** (`tsc -b` → `dist/`, with the app's compiler, because the
@@ -23,14 +23,14 @@ consumes a **vendored copy**:
   `cd packages/generated/msip && ../../../node_modules/.bin/tsc -b`.
 - The app depends on it as **`generated-msip`** (`link:packages/generated/msip`);
   `lib/msip.ts` and `db/__tests__/msip.test.ts` import the model from there.
-- It lives under the **app** (`apps/nextjs/packages`) on purpose: `m` resolves the
+- It lives under the **app** (`apps/web/packages`) on purpose: `m` resolves the
   engine and measures drift from the **working directory**, while it discovers engines
   by walking **upward**. learn.tg's own engines live at the repository root
   (`packages/`), so the split (`make eng-check` from the app for `msip`; `make
   eng-verify` from the root for the app's engines) is why the app directory carries
-  the vendored copy. `apps/nextjs/tsconfig.json` and `vitest.config.ts` exclude
+  the vendored copy. `apps/web/tsconfig.json` and `vitest.config.ts` exclude
   `packages` so the copy is not compiled (`tsc`) or collected (`vitest`) as app code.
-- **`apps/nextjs/m-engine.json`** declares the base tables learn.tg reads
+- **`apps/web/m-engine.json`** declares the base tables learn.tg reads
   (`engines.generated-msip.tables`); `bin/m eng:check` fails if the code uses an
   undeclared base table.
 - **Drift** is measured against the `m` checkout:
@@ -73,7 +73,7 @@ The extensions fall in these groups:
 
 **Aligned on 2026-10-10** (R-#260 Part B): three *restrictive* drifts that the old
 five-table baseline reported, fixed by
-[`db/migrations/20261010022121_alinear_modelo_base_msip.ts`](../apps/nextjs/db/migrations/20261010022121_alinear_modelo_base_msip.ts)
+[`db/migrations/20261010022121_alinear_modelo_base_msip.ts`](../apps/web/db/migrations/20261010022121_alinear_modelo_base_msip.ts)
 (reversible; fails loudly instead of losing data):
 
 | Object | Base / msip 2.2 | learn.tg before |
@@ -84,7 +84,7 @@ five-table baseline reported, fixed by
 
 **Surfaced by R-#285** (the baseline grew from 5 to **40 tables**, so `eng:check` also
 sees the whole `msip_*` model) and **aligned on 2026-10-13** by
-[`db/migrations/20261013184146_alinear_modelo_base_msip_drifts.ts`](../apps/nextjs/db/migrations/20261013184146_alinear_modelo_base_msip_drifts.ts)
+[`db/migrations/20261013184146_alinear_modelo_base_msip_drifts.ts`](../apps/web/db/migrations/20261013184146_alinear_modelo_base_msip_drifts.ts)
 (reversible; the three tables had 0 rows, so nothing could be lost):
 
 | Object | Engine baseline | learn.tg before |
@@ -99,7 +99,7 @@ These are **msip auxiliary tables learn.tg does not use**; they are aligned anyw
 ## 3. How the conformance is checked
 
 ```sh
-cd apps/nextjs
+cd apps/web
 make eng-check          # bin/m eng:check (engine schemas, vendored drift, self-containment, live DB)
 make test-db            # unit half: declares the base version and the base tables
 bin/m eng:msip:baseline      # the published baseline DDL
@@ -124,7 +124,7 @@ developed here.
 
 ### 4.1 Base tables learn.tg reads
 
-Of the engine's 40 tables, learn.tg's code uses **five**, and `apps/nextjs/m-engine.json`
+Of the engine's 40 tables, learn.tg's code uses **five**, and `apps/web/m-engine.json`
 declares exactly those (`engines.generated-msip.tables`; `eng:check` fails if the code
 uses an undeclared base table and warns about a declared one that is unused):
 

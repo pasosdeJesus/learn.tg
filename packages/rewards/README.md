@@ -24,7 +24,7 @@ repo (`doc/engines.md`).
 
 ## Usage
 
-The engine is instantiated once by the host adapter (`apps/nextjs/lib/rewards-app.ts`)
+The engine is instantiated once by the host adapter (`apps/web/lib/rewards-app.ts`)
 with injected dependencies (DB, auth, metrics, backend-config), then app routes
 are thin re-exports:
 
@@ -85,12 +85,12 @@ export async function POST(req: Request) {
 `LearnTGVaultsV5` (scholarships, active), `CeloUbi` (UBI), `SLEARN`
 (`processPayment` for donations/premium), `PasosDeJesusCredentials` (SBTs, via
 `@pasosdejesus/mpdj/blockchain`). Addresses come from
-`apps/hardhat/deployments/<Contract>/<network>.json` (never `.env`).
+`apps/contracts/deployments/<Contract>/<network>.json` (never `.env`).
 
 ## Testing
 
 ```sh
-# from apps/nextjs
+# from apps/web
 pnpm --filter @learn-tg/rewards test
 ```
 
