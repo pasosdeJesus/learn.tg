@@ -10,8 +10,8 @@
 
 import { sql } from 'kysely'
 
-import { getCampaignConfig } from '../lib/donation-target'
-import type { GdclusterDeps } from '../index'
+import { getCampaignConfig } from '../lib/donation-target.js'
+import type { GdclusterDeps } from '../index.js'
 
 const TTL = 60_000
 const cache = new Map<string, { at: number; value: any }>()

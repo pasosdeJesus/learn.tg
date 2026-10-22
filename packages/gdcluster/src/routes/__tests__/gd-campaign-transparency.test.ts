@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { campaignTransparency } from '../gd-campaign-transparency'
+import { campaignTransparency } from '../gd-campaign-transparency.js'
 
 // https://github.com/pasosdeJesus/learn.tg/issues/223: el dashboard de transparencia agrega el ledger de campaña
 // (totales por cripto, split campaña/pdJ/cashback, pendiente) y últimas filas.

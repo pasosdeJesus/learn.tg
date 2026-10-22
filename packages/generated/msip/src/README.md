@@ -29,10 +29,10 @@ Consumers **keep** the model and **extend** it: extra columns, tables, indexes a
 not a deviation.
 
 Tutoriales paso a paso:
-- mínimo (catálogos): [`doc/msip-tutorial.md`](../../doc/msip-tutorial.md) y
-  [`doc/msip-demo.mjs`](../../doc/msip-demo.mjs);
+- mínimo (catálogos): [`doc/msip-tutorial.md`](../../../doc/msip-tutorial.md) y
+  [`doc/msip-demo.mjs`](../../../doc/msip-demo.mjs);
 - completo (proyecto nuevo con `m:create` + contabilidad multiusuario):
-  [`doc/msip-tutorial-contabilidad.md`](../../doc/msip-tutorial-contabilidad.md).
+  [`doc/msip-tutorial-contabilidad.md`](../../../doc/msip-tutorial-contabilidad.md).
 
 ## Usage
 

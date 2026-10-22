@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { callWriteFun } from '../crypto'
+import { callWriteFun } from '../crypto.js'
 
 // Mock viem modules
 const mockGetTransactionCount = vi.fn()

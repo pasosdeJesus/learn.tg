@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getSLEUSDRate } from '../sle-rate'
+import { getSLEUSDRate } from '../sle-rate.js'
 
 describe('getSLEUSDRate', () => {
   it('returns the current SLE/USD rate used for SLEARN conversions', async () => {

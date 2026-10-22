@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { encodeFunctionData, type Address } from 'viem'
 import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
-import { verifyCampaignDonation } from '../gd-donations'
+import { verifyCampaignDonation } from '../gd-donations.js'
 
 // https://github.com/pasosdeJesus/learn.tg/issues/223 §4.1 — la verificación de donación a campaña reenvía AUTOMÁTICA e
 // INMEDIATAMENTE la parte de la campaña a la billetera destino (y la parte

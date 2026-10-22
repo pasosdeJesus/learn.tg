@@ -1,15 +1,15 @@
 import type { NextRequest } from 'next/server'
 import type { Kysely } from 'kysely'
 
-import { rankingClusters, rankingCountries, rankingFunds } from './routes/gd-ranking'
-import { verifyDonation, donationHistory, verifyCampaignDonation } from './routes/gd-donations'
-import { campaignBalance } from './routes/campaign-balance'
-import { campaignTransparency } from './routes/gd-campaign-transparency'
-import { campaignMovements } from './routes/campaign-movements'
-import { createCluster, joinCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster'
-import { clusterStatus, clusterCandidates, listInvitations, acceptInvitation, rejectInvitation } from './routes/gd-invitations'
-import { adminListClusters, adminGetCluster, adminCreateCluster, adminUpdateCluster, adminDisbandCluster, adminAddMember, adminRemoveMember } from './routes/gd-admin-clusters'
-import { searchChurches } from './routes/gd-churches'
+import { rankingClusters, rankingCountries, rankingFunds } from './routes/gd-ranking.js'
+import { verifyDonation, donationHistory, verifyCampaignDonation } from './routes/gd-donations.js'
+import { campaignBalance } from './routes/campaign-balance.js'
+import { campaignTransparency } from './routes/gd-campaign-transparency.js'
+import { campaignMovements } from './routes/campaign-movements.js'
+import { createCluster, joinCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster.js'
+import { clusterStatus, clusterCandidates, listInvitations, acceptInvitation, rejectInvitation } from './routes/gd-invitations.js'
+import { adminListClusters, adminGetCluster, adminCreateCluster, adminUpdateCluster, adminDisbandCluster, adminAddMember, adminRemoveMember } from './routes/gd-admin-clusters.js'
+import { searchChurches } from './routes/gd-churches.js'
 
 export interface AuthUser {
   usuario: any
@@ -154,6 +154,6 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
 }
 
 // Re-exports de libs del motor para consumidores durante la migración
-export * from './lib/gd-utils'
-export * from './lib/donation-target'
-export * from './lib/gd-cluster-routing'
+export * from './lib/gd-utils.js'
+export * from './lib/donation-target.js'
+export * from './lib/gd-cluster-routing.js'

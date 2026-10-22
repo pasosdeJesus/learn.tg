@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
-import { premiumPurchase } from '../premium-purchase'
+import { premiumPurchase } from '../premium-purchase.js'
 
 const { mockExecuteTakeFirst, mockExecute, setupMocks, resetMocks, setupCommonResponses } = apiDbMocks
 

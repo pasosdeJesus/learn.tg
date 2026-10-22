@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { sql } from 'kysely'
-import type { RewardsDeps } from '../index'
+import type { RewardsDeps } from '../index.js'
 
 const EXCLUDED_WALLETS = [
   '0x204d050d301716d45eaa6807855cbf679c4f1dcf',

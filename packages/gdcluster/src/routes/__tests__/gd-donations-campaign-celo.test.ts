@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { verifyCampaignDonation } from '../gd-donations'
-import { clearPriceCache } from '../../lib/token-prices'
+import { verifyCampaignDonation } from '../gd-donations.js'
+import { clearPriceCache } from '../../lib/token-prices.js'
 
 // https://github.com/pasosdeJesus/learn.tg/issues/223: donaciones de campaña en CELO nativo — el verify lee tx.value del
 // receipt (no es ERC-20) y el reenvío usa sendTransaction (to+value) vía

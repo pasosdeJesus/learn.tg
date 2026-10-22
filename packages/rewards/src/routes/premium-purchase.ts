@@ -1,12 +1,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { type Address, formatUnits } from 'viem'
-import type { RewardsDeps } from '../index'
+import type { RewardsDeps } from '../index.js'
 import SLEARNAbi from '../abis/SLEARN.json'
-import { getSlearnAddress } from '../lib/deployments'
-import { SLEARN_DISCOUNT, calculatePremiumPriceUsdt } from '../lib/premium-pricing'
-import { verifyTransfer } from '../lib/verify-transfer'
-import { checkReplayAttack } from '../lib/replay-protection'
+import { getSlearnAddress } from '../lib/deployments.js'
+import { SLEARN_DISCOUNT, calculatePremiumPriceUsdt } from '../lib/premium-pricing.js'
+import { verifyTransfer } from '../lib/verify-transfer.js'
+import { checkReplayAttack } from '../lib/replay-protection.js'
 
 const PREMIUM_PCT = {
   pdJ: 50, reward: 10, missional: 10, ubi: 5, referral: 10, churches: 5,

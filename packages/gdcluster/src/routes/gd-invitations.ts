@@ -6,8 +6,8 @@ import {
   addClusterHistory,
   notifyUser,
   getClusterCandidates,
-} from '../lib/gd-utils'
-import type { GdclusterDeps } from '../index'
+} from '../lib/gd-utils.js'
+import type { GdclusterDeps } from '../index.js'
 
 // Rutas https://github.com/pasosdeJesus/learn.tg/issues/220: estado del pastor, candidatos e invitaciones de clúster.
 // La membresía sigue siendo por iglesia (`church_clustergd`); las invitaciones

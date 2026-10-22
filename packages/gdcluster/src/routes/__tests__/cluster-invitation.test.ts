@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
-import { acceptInvitation, rejectInvitation, clusterStatus } from '../gd-invitations'
-import type { GdclusterDeps } from '../../index'
+import { acceptInvitation, rejectInvitation, clusterStatus } from '../gd-invitations.js'
+import type { GdclusterDeps } from '../../index.js'
 
 const { mockExecuteTakeFirst, mockExecute, setupMocks, resetMocks, setupCommonResponses } = apiDbMocks
 

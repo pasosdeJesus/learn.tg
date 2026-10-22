@@ -47,7 +47,7 @@ vi.mock('viem/chains', () => ({ celo: { id: 42220 }, celoSepolia: { id: 11142220
 vi.mock('@learn-tg/rewards/lib/config', () => ({ IS_PRODUCTION: false }))
 
 const originalEnv = { ...process.env }
-import { mintCourseCredential, revokeCourseCredential, completedCoursesWithoutCredential } from '../credentials'
+import { mintCourseCredential, revokeCourseCredential, completedCoursesWithoutCredential } from '../credentials.js'
 
 function createMockDb(executeTakeFirstValues: any[]) {
   let callIdx = 0

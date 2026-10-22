@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@pasosdejesus/m/shadcn-components/ui/select'
-import { CountryFlag } from './CountryFlag'
+import { CountryFlag } from './CountryFlag.js'
 
 export interface Country {
   alfa2: string

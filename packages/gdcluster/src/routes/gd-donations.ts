@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { type Address } from 'viem'
-import { PILOT_COUNTRIES } from '../lib/gd-utils'
-import { getClusterFundsAddress } from '../lib/gd-cluster-routing'
+import { PILOT_COUNTRIES } from '../lib/gd-utils.js'
+import { getClusterFundsAddress } from '../lib/gd-cluster-routing.js'
 import ClusterFundsV2Abi from '../abis/ClusterFundsV2.json'
 import SLEARNAbi from '../abis/SLEARN.json'
 import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
@@ -15,10 +15,10 @@ import {
   getPdJTreasuryAddress,
   CAMPAIGN_CASHBACK_PCT,
   CAMPAIGN_PDJ_MAX_PCT,
-} from '../lib/donation-target'
-import { getTokenUsdPrice, round2 } from '../lib/token-prices'
-import { invalidateCampaignMovements } from './campaign-movements'
-import type { GdclusterDeps } from '../index'
+} from '../lib/donation-target.js'
+import { getTokenUsdPrice, round2 } from '../lib/token-prices.js'
+import { invalidateCampaignMovements } from './campaign-movements.js'
+import type { GdclusterDeps } from '../index.js'
 
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 

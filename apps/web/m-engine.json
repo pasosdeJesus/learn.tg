@@ -11,8 +11,7 @@
     },
     "generated-wallet": {
       "tables": [
-        "billetera_usuario",
-        "billetera_invitada"
+        "billetera_usuario"
       ]
     }
   }

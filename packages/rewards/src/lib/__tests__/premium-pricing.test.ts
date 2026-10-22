@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   calculatePremiumPriceUsdt,
   calculatePremiumPriceSlearn,
-} from '../premium-pricing'
+} from '../premium-pricing.js'
 
 describe('calculatePremiumPriceUsdt', () => {
   it('returns $0.70 for Sierra Leone (hdi 0.467)', () => {

@@ -100,12 +100,21 @@ These are **msip auxiliary tables learn.tg does not use**; they are aligned anyw
 
 ```sh
 cd apps/web
-make eng-check          # bin/m eng:check (engine schemas, vendored drift, self-containment, live DB)
+make eng-check          # bin/m eng:check --runtime (self-containment + LOAD_* + live DB),
+                        # then the same check from the repo root for vendored drift (--no-db)
 make test-db            # unit half: declares the base version and the base tables
 bin/m eng:msip:baseline      # the published baseline DDL
 bin/m eng:msip:verify --from-structure db/structure.sql   # baseline vs learn.tg's structure
 bin/m eng:verify             # engine manifests vs sources/intention (all engines)
 ```
+
+- **Do not run `eng:sync` from `apps/web`** (m 0.37.1, 2026-10-22). The app is a *consumer*, not an
+  engine; the command generates `apps/web/src/m-engine.generated.ts` from the whole
+  `db/structure.sql`, so `eng:check` counts every `msip_*` table as "used but not declared"
+  (35 `FAIL`). That file is derived and untracked: remove it and the check is green again with the
+  five declared base tables. Regenerating facts is for the engines (`packages/*`).
+- `make eng-check` needs a database (see below) and runs the vendored-copy drift from the repo root
+  because the copies (`packages/generated/*`) are not under the app.
 
 - `make eng-check` needs a database (`PGHOST`/`PGDATABASE`/`PGUSER`/`PGPASSWORD`) and
   grades `drift` (base missing/changed, fails) against `extra` (extension, reported).

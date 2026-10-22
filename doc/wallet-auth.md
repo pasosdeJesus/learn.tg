@@ -197,7 +197,11 @@ paste an address, invite it, list the **pending invitations** of the account and
 
 - The inviter must be a verified profile: `lib/wallet-invite-policy.ts`
   (`INVITER_MIN_PROFILE_SCORE = 50`, the same bar as the on-chain rewards) and
-  `POST /api/wallet/invite` answers `403` otherwise.
+  `POST /api/wallet/invite` answers `403` otherwise. **Exception (2026-10-21):** a
+  low-score account may invite an address that already belongs to a **verified account**
+  (profile score, Self passport or church verification) — e.g. a new in-app account
+  inviting the OKX wallet the user already had. The invited wallet still has to sign the
+  `accept`, so nothing is merged without its consent.
 - The invited wallet's plain sign-in is **refused** (`authorize()` does not create an
   account for a wallet with a pending invitation), so the client probes the invitation after
   the failed credentials POST, asks for explicit consent and, when accepted, links and

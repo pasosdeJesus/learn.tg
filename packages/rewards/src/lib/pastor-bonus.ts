@@ -3,8 +3,8 @@ import { createPublicClient, createWalletClient, http, parseUnits, formatUnits, 
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
 import SLEARNAbi from '../abis/SLEARN.json'
-import { getSlearnAddress } from './deployments'
-import { IS_PRODUCTION } from './config'
+import { getSlearnAddress } from './deployments.js'
+import { IS_PRODUCTION } from './config.js'
 
 export const BONUS_AMOUNT = 22
 

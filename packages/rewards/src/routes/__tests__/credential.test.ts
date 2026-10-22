@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
-import { credentialByTokenId, credentialByWallet } from '../credential'
+import { credentialByTokenId, credentialByWallet } from '../credential.js'
 
 const {
   mockExecuteTakeFirst,

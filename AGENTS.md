@@ -122,6 +122,21 @@ What follows is only what those files do not tell you.
    When re-vendoring, **pass the motor path** (`eng:sync /path/to/m/packages/<motor>
    --vendor`, e.g. `/var/www/adJ-ia/m/packages/wallet`): the bare name resolves the
    already-vendored copy as the source, whose first action is deleting that folder.
+   The same trap applies to the git form. From `m@0.37.0` add `--prepare` and it is one
+   command (it runs the workspace install and `tsc -b` on the copy):
+
+   ```sh
+   bin/m eng:sync --vendor --from-git <repo>#<motor>-vX.Y.Z \
+     --path packages/<motor> --out packages/generated/<motor> --prepare
+   bin/m eng:verify
+   ```
+
+   No manual edits and no second `eng:sync`: the copy gets `name: generated-<motor>`,
+   the sibling dependency as `workspace:*` (`generated-msip`) and the published ones as
+   `catalog:`. **Next-hosted engines declare `"host": "next"`** in `m-engine.json`
+   (`rewards`, `gdcluster`, `mr519` here): the CLI skips them instead of warning about
+   `next/*` imports. Without `--prepare`, run `pnpm install` and `make engines-dist`
+   yourself.
 
 **Definition of done:** `make type` plus the affected `make test*` targets green;
 `bin/m eng:verify` and `make eng-check` green when engines or the model change; the

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { encodeFunctionData, type Address } from 'viem'
 import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
-import { verifyCampaignDonation } from '../gd-donations'
-import { clearPriceCache } from '../../lib/token-prices'
+import { verifyCampaignDonation } from '../gd-donations.js'
+import { clearPriceCache } from '../../lib/token-prices.js'
 
 // https://github.com/pasosdeJesus/learn.tg/issues/223: recepción multi-token en mainnet (Celo 42220). USDC es estable
 // (pegged, sin fetch); XAUt0 se cotiza por CoinGecko (tether-gold). Las filas

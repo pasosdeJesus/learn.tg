@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { answersForPlacements, parseFillInTheBlank } from '../guide-answers'
+import { answersForPlacements, parseFillInTheBlank } from '../guide-answers.js'
 
 // Respuestas derivadas del Markdown de la guía
 // (https://github.com/pasosdeJesus/learn.tg/issues/256 §3.4).

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPublicClient, createWalletClient } from 'viem'
 import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 
-import { BONUS_AMOUNT, isEligiblePastor, awardPastorBonus, type BonusUser } from '../pastor-bonus'
+import { BONUS_AMOUNT, isEligiblePastor, awardPastorBonus, type BonusUser } from '../pastor-bonus.js'
 
 const { mockExecuteTakeFirst, mockExecute, setupMocks, resetMocks, setupCommonResponses } = apiDbMocks
 

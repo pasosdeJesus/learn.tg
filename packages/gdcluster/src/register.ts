@@ -1,5 +1,5 @@
 import { registerHook } from '@pasosdejesus/m/plugin'
-import { isGDCourse, resolveGDClusterDestination } from './lib/gd-cluster-routing'
+import { isGDCourse, resolveGDClusterDestination } from './lib/gd-cluster-routing.js'
 
 // Hook `reward:route-destination` (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §5.4).
 // Registrado por el motor `gdcluster` (Fase 3); el core solo llama

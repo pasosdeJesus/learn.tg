@@ -14,7 +14,7 @@
 import { Kysely, sql } from 'kysely'
 import type { Insertable } from 'kysely'
 import { NextRequest, NextResponse } from 'next/server'
-import type { RewardsDeps } from '../index'
+import type { RewardsDeps } from '../index.js'
 import { privateKeyToAccount } from 'viem/accounts'
 import {
   Address,
@@ -30,13 +30,13 @@ import { celo, celoSepolia } from 'viem/chains'
 
 import LearnTGVaultsV3Abi from '../abis/LearnTGVaultsV3.json'
 import LearnTGVaultsV5Abi from '../abis/LearnTGVaultsV5.json'
-import { callWriteFun } from '../lib/crypto'
-import { IS_PRODUCTION } from '../lib/config'
-import { mintCourseCredential } from '../lib/credentials'
-import { canMintPublicly, coursePrivacyFlags } from '../lib/course-privacy'
-import { answersForPlacements, guideAnswersFromDisk } from '../lib/guide-answers'
-import { paidToOtherWallet, recordedScholarshipTokens, recordMissingScholarshipRows } from '../lib/scholarship-records'
-import { getActiveVault, type VaultVersion } from '../lib/deployments'
+import { callWriteFun } from '../lib/crypto.js'
+import { IS_PRODUCTION } from '../lib/config.js'
+import { mintCourseCredential } from '../lib/credentials.js'
+import { canMintPublicly, coursePrivacyFlags } from '../lib/course-privacy.js'
+import { answersForPlacements, guideAnswersFromDisk } from '../lib/guide-answers.js'
+import { paidToOtherWallet, recordedScholarshipTokens, recordMissingScholarshipRows } from '../lib/scholarship-records.js'
+import { getActiveVault, type VaultVersion } from '../lib/deployments.js'
 
 interface WordPlacement {
   word: string

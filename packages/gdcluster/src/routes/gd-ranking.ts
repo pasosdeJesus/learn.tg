@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from 'kysely'
-import { PILOT_COUNTRIES } from '../lib/gd-utils'
-import type { GdclusterDeps } from '../index'
+import { PILOT_COUNTRIES } from '../lib/gd-utils.js'
+import type { GdclusterDeps } from '../index.js'
 
 // Ranking de clústeres y países para el curso Global Disciples (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3).
 

@@ -2,14 +2,14 @@ import type { NextRequest } from 'next/server'
 import type { Kysely } from 'kysely'
 import type { Address } from 'viem'
 
-import { credentialByTokenId, credentialByWallet } from './routes/credential'
-import { ubiReport, ubiReportWallet } from './routes/ubi'
-import { slearnMetadata, churchesFund, referralsFund } from './routes/funds'
-import { claimCeloUbi } from './routes/claim-celo-ubi'
-import { scholarshipStatus } from './routes/scholarship'
-import { addDonation } from './routes/add-donation'
-import { premiumPurchase } from './routes/premium-purchase'
-import { checkCrosswordGet, checkCrosswordPost } from './routes/check-crossword'
+import { credentialByTokenId, credentialByWallet } from './routes/credential.js'
+import { ubiReport, ubiReportWallet } from './routes/ubi.js'
+import { slearnMetadata, churchesFund, referralsFund } from './routes/funds.js'
+import { claimCeloUbi } from './routes/claim-celo-ubi.js'
+import { scholarshipStatus } from './routes/scholarship.js'
+import { addDonation } from './routes/add-donation.js'
+import { premiumPurchase } from './routes/premium-purchase.js'
+import { checkCrosswordGet, checkCrosswordPost } from './routes/check-crossword.js'
 
 export interface AuthUser {
   usuario: any
@@ -141,9 +141,9 @@ export function createRewardsApp(deps: RewardsDeps): Record<string, RouteHandler
 }
 
 // Re-exports de libs del motor para consumidores durante la migración
-export * from './lib/premium-pricing'
-export * from './lib/sle-rate'
-export * from './lib/donate-utils'
-export * from './lib/crypto'
-export * from './lib/deployments'
-export * from './lib/config'
+export * from './lib/premium-pricing.js'
+export * from './lib/sle-rate.js'
+export * from './lib/donate-utils.js'
+export * from './lib/crypto.js'
+export * from './lib/deployments.js'
+export * from './lib/config.js'

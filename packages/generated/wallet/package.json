@@ -1,9 +1,9 @@
 {
   "name": "generated-wallet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
-  "description": "Copia vendorizada de @pasosdejesus/wallet v0.1.0, generada por `bin/m eng:sync --vendor`; no editar a mano.",
+  "description": "Copia vendorizada de @pasosdejesus/wallet v0.1.1, generada por `bin/m eng:sync --vendor`; no editar a mano.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -28,9 +28,9 @@
   },
   "dependencies": {
     "generated-msip": "workspace:*",
-    "@pasosdejesus/m": "*",
+    "@pasosdejesus/m": "catalog:",
     "qrcode.react": "^4.2.0",
-    "viem": "^2.55.11"
+    "viem": "catalog:"
   },
   "peerDependencies": {
     "react": "^19",

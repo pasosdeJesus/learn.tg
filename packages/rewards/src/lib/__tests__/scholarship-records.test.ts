@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { missingScholarshipTokens, paidToOtherWallet } from '../scholarship-records'
+import { missingScholarshipTokens, paidToOtherWallet } from '../scholarship-records.js'
 
 // R-#279 / R-#265: cuando la cadena da un token por pagado y la base no tiene su fila,
 // hay que escribirla (para que el ícono del curso lo recuerde). La decisión es pura.

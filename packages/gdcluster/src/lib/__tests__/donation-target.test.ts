@@ -10,7 +10,7 @@ import {
   campaignDonorSplit,
   splitRawAmount,
   type PaymentTarget,
-} from '../donation-target'
+} from '../donation-target.js'
 
 describe('getDistributionBreakdown', () => {
   it('splits a course donation 35/35/10/5/5/5/5 (USDT side)', () => {

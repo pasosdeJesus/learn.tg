@@ -2,5 +2,7 @@
   "motor": "@pasosdejesus/msip",
   "version": "1.1.0",
   "source": "/var/www/adJ-ia/m/packages/msip",
-  "sha256": "02cef10204be8c5f807efe2b25b1e9970579f5eca14d52481c02bfb271774b37"
+  "sha256": "2107b5bf7a568d92494b06eeede809dc73ce3ac32c95a17510d7af89b5b0ccc1",
+  "hash": "payload",
+  "schemaSha256": "02cef10204be8c5f807efe2b25b1e9970579f5eca14d52481c02bfb271774b37"
 }

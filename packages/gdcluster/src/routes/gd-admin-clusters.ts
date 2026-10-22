@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from 'kysely'
-import { getChurchCluster, getClusterMembers, addClusterHistory } from '../lib/gd-utils'
-import type { GdclusterDeps } from '../index'
+import { getChurchCluster, getClusterMembers, addClusterHistory } from '../lib/gd-utils.js'
+import type { GdclusterDeps } from '../index.js'
 
 // Admin/verificador de clústeres (https://github.com/pasosdeJesus/learn.tg/issues/220 §5) — sobre los datos existentes
 // (`clustergd` + `church_clustergd` + `church`). El auth actual distingue

@@ -19,7 +19,7 @@ import {
 } from '@pasosdejesus/mpdj/blockchain'
 import { getCeloCredentialsAddress } from '@pasosdejesus/m/blockchain/deployments'
 import path from 'node:path'
-import { IS_PRODUCTION } from './config'
+import { IS_PRODUCTION } from './config.js'
 
 const CREDENTIALS_DEPLOYMENTS_DIR = path.join(
   process.cwd(), '..', 'contracts', 'deployments', 'PasosDeJesusCredentials'

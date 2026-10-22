@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import type { ComponentType } from 'react'
-import type { ClusterDonation, CountryDonation } from '../lib/donation-target'
+import type { ClusterDonation, CountryDonation } from '../lib/donation-target.js'
 
 // Deps del core inyectadas por el host (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §13.3/§13.6, D2): el motor no
 // importa `@/lib/admin-fetch` ni el DonateModal del core. `DonateModal` queda

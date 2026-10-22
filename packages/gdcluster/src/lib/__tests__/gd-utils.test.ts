@@ -20,7 +20,7 @@ import {
   getClusterMembers,
   getClusterHistory,
   addClusterHistory,
-} from '../gd-utils'
+} from '../gd-utils.js'
 
 describe('generateClusterCode', () => {
   it('returns a 6-character uppercase alphanumeric string', () => {

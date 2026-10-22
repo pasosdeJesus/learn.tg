@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { resolveGDClusterDestination, isGDCourse } from '../gd-cluster-routing'
+import { resolveGDClusterDestination, isGDCourse } from '../gd-cluster-routing.js'
 
 function mockDb(overrides: Record<string, any> = {}) {
   const db = {

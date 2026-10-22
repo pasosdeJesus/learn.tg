@@ -1,10 +1,10 @@
 import { createPublicClient, http, type Address } from 'viem'
 import { celo, avalanche, base } from 'viem/chains'
 import { erc20Abi } from '@learn-tg/rewards/lib/donate-utils'
-import { getCampaignConfig } from '../lib/donation-target'
-import { getTokenUsdPrice, round2 } from '../lib/token-prices'
-import { retryPendingCampaignForwards } from './gd-donations'
-import type { GdclusterDeps } from '../index'
+import { getCampaignConfig } from '../lib/donation-target.js'
+import { getTokenUsdPrice, round2 } from '../lib/token-prices.js'
+import { retryPendingCampaignForwards } from './gd-donations.js'
+import type { GdclusterDeps } from '../index.js'
 
 /**
  * Balance multi-cadena de una campaña (https://github.com/pasosdeJesus/learn.tg/issues/223 §4.1 — presentación):

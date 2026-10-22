@@ -139,8 +139,11 @@ test-db:
 # motor `msip` y el modelo base (https://gitlab.com/pasosdeJesus/m/-/work_items/46).
 # Necesita base de datos (PGHOST/PGDATABASE/PGUSER/PGPASSWORD) y sale con código
 # distinto de cero si hay drift. La mitad unitaria corre en `test-db`.
+# Desde la raíz se revisa además el drift de las copias vendorizadas (viven en
+# `packages/generated/*`, no en la app) y la carga (`--runtime`), sin base.
 eng-check:
-	./bin/m eng:check
+	./bin/m eng:check --runtime
+	cd ../.. && apps/web/bin/m eng:check --runtime --no-db
 
 # R-#285: los manifiestos de motor (m-engine.generated.ts) cuadran con sus fuentes y
 # su intención, y ningún motor importa lo que no declara. Sin base de datos.

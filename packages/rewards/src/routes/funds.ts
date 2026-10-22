@@ -3,8 +3,8 @@ import { createPublicClient, formatUnits, http, type Address } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 import SLEARNAbi from '../abis/SLEARN.json'
 import Erc20Abi from '../abis/IERC20.json'
-import { getSlearnAddress } from '../lib/deployments'
-import { IS_PRODUCTION } from '../lib/config'
+import { getSlearnAddress } from '../lib/deployments.js'
+import { IS_PRODUCTION } from '../lib/config.js'
 
 const slearnAbi = [
   { name: 'name', type: 'function', inputs: [], outputs: [{ type: 'string' }] },

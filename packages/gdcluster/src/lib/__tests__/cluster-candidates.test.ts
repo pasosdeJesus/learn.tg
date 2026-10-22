@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { getClusterCandidates } from '../gd-utils'
+import { getClusterCandidates } from '../gd-utils.js'
 
 // Mock de DB que registra las cláusulas WHERE por tabla/alias y devuelve
 // filas configuradas por consulta (patrón de gd-cluster-routing.test.ts).

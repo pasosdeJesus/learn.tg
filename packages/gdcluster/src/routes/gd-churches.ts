@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { GdclusterDeps } from '../index'
+import type { GdclusterDeps } from '../index.js'
 
 export async function searchChurches(deps: GdclusterDeps, req: NextRequest) {
   const { searchParams } = req.nextUrl

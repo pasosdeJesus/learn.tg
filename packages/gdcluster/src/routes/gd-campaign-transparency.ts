@@ -3,9 +3,9 @@
 // https://github.com/pasosdeJesus/learn.tg/issues/223: transparencia de campañas. Consulta el ledger (subcategoria
 // 'campaign') y agrega: total por cripto donada, split campaña/pdJ/cashback en
 // USD, pendiente de reenvío y las últimas donaciones con sus opciones.
-import { getCampaignConfig, type CampaignConfig } from '../lib/donation-target'
-import { round2 } from '../lib/token-prices'
-import type { GdclusterDeps } from '../index'
+import { getCampaignConfig, type CampaignConfig } from '../lib/donation-target.js'
+import { round2 } from '../lib/token-prices.js'
+import type { GdclusterDeps } from '../index.js'
 
 interface RowLike {
   date?: Date

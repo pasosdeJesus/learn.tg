@@ -11,12 +11,12 @@ import {
 import type { Address } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 import { sql } from 'kysely'
-import type { RewardsDeps } from '../index'
+import type { RewardsDeps } from '../index.js'
 
 import LearnTGVaultsV3Abi from '../abis/LearnTGVaultsV3.json'
 import LearnTGVaultsV5Abi from '../abis/LearnTGVaultsV5.json'
-import { IS_PRODUCTION } from '../lib/config'
-import { getActiveVault } from '../lib/deployments'
+import { IS_PRODUCTION } from '../lib/config.js'
+import { getActiveVault } from '../lib/deployments.js'
 
 export async function scholarshipStatus(deps: RewardsDeps, req: NextRequest) {
   console.log('** scholarship GET req=', req)

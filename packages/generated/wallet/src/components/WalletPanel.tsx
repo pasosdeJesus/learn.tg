@@ -424,7 +424,7 @@ export function WalletPanel({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-testid="wallet-panel" className="max-h-[90vh] overflow-y-auto sm:max-w-md">
+      <DialogContent data-testid="wallet-panel" className="max-h-[90vh] w-[calc(100vw-2rem)] overflow-x-hidden overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{text.title}</DialogTitle>
           <DialogDescription className="sr-only">{text.title}</DialogDescription>
@@ -445,14 +445,12 @@ export function WalletPanel({
 
           <Tabs value={tab} onValueChange={handleTabChange}>
             {/*
-              Pestañas desplazables: con `grid` de columnas iguales el texto de
-              "Collectibles"/"Coleccionables" no cabe en un móvil (whitespace-nowrap
-              desborda la celda y se monta sobre la pestaña siguiente), y una etiqueta
-              corta ("Send"/"Enviar") parece tener más aire que las demás. Con `flex`
-              cada pestaña conserva su ancho natural y el mismo padding; si no caben,
-              la barra se desplaza en horizontal.
+              Pestañas de ancho natural según su título (no todas iguales) que pasan a
+              otra fila cuando no caben: así se evita el scrollbar horizontal y que unas
+              se monten sobre otras. `h-auto min-h-10` deja crecer la barra; `shrink-0`
+              evita que una etiqueta larga se comprima.
             */}
-            <TabsList className="flex w-full justify-start overflow-x-auto">
+            <TabsList className="flex h-auto min-h-10 w-full flex-wrap justify-start gap-1">
               {tabs.map((value) => (
                 <TabsTrigger
                   key={value}

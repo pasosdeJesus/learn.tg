@@ -9,8 +9,8 @@ import {
   notifyUser,
   getClusterCandidates,
   PILOT_COUNTRIES,
-} from '../lib/gd-utils'
-import type { GdclusterDeps } from '../index'
+} from '../lib/gd-utils.js'
+import type { GdclusterDeps } from '../index.js'
 
 // Rutas de clústeres del curso Global Disciples (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3, https://github.com/pasosdeJesus/learn.tg/issues/220).
 

@@ -1,7 +1,7 @@
 import type { Address } from 'viem'
 import ClusterFundsV2Abi from '../abis/ClusterFundsV2.json'
 import Erc20Abi from '../abis/IERC20.json'
-import { PILOT_COUNTRIES } from './gd-utils'
+import { PILOT_COUNTRIES } from './gd-utils.js'
 
 const GD_COURSE_IDS = [10, 11]
 

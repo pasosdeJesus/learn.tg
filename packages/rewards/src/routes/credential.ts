@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { RewardsDeps } from '../index'
-import { visibilityFromUser } from '../lib/course-privacy'
+import type { RewardsDeps } from '../index.js'
+import { visibilityFromUser } from '../lib/course-privacy.js'
 
 /**
  * GET /api/credential/[tokenId] — metadata ERC-1155 (público).

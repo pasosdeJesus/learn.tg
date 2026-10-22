@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { canMintPublicly } from '../course-privacy'
+import { canMintPublicly } from '../course-privacy.js'
 
 // Espejo del helper de la app: la regla de acuñación en cursos sensibles
 // (https://github.com/pasosdeJesus/learn.tg/issues/259 §3.4).

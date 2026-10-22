@@ -1,11 +1,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { type Address, formatUnits } from 'viem'
-import type { RewardsDeps } from '../index'
+import type { RewardsDeps } from '../index.js'
 import SLEARNAbi from '../abis/SLEARN.json'
-import { getSlearnAddress } from '../lib/deployments'
-import { verifyTransfer } from '../lib/verify-transfer'
-import { checkReplayAttack } from '../lib/replay-protection'
+import { getSlearnAddress } from '../lib/deployments.js'
+import { verifyTransfer } from '../lib/verify-transfer.js'
+import { checkReplayAttack } from '../lib/replay-protection.js'
 
 const DONATION_PCT = {
   pdJ: 5, reward: 10, missional: 5, ubi: 2, referral: 3, churches: 5,

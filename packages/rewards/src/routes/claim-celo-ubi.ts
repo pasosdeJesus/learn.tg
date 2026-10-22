@@ -4,8 +4,8 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoSepolia } from 'viem/chains'
 import CeloUbiAbi from '../abis/CeloUbi.json'
 import type { Address } from 'viem'
-import { IS_PRODUCTION } from '../lib/config'
-import type { RewardsDeps } from '../index'
+import { IS_PRODUCTION } from '../lib/config.js'
+import type { RewardsDeps } from '../index.js'
 
 const PROFILE_SCORE_THRESHOLD = 50
 /**
