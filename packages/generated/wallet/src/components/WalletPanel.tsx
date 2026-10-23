@@ -424,7 +424,7 @@ export function WalletPanel({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-testid="wallet-panel" className="max-h-[90vh] w-[calc(100vw-2rem)] overflow-x-hidden overflow-y-auto sm:max-w-md">
+      <DialogContent data-testid="wallet-panel" className="max-h-[90vh] w-[min(40rem,calc(100vw-2rem))] max-w-[min(40rem,calc(100vw-2rem))] overflow-x-hidden overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{text.title}</DialogTitle>
           <DialogDescription className="sr-only">{text.title}</DialogDescription>
@@ -445,17 +445,17 @@ export function WalletPanel({
 
           <Tabs value={tab} onValueChange={handleTabChange}>
             {/*
-              Pestañas de ancho natural según su título (no todas iguales) que pasan a
-              otra fila cuando no caben: así se evita el scrollbar horizontal y que unas
-              se monten sobre otras. `h-auto min-h-10` deja crecer la barra; `shrink-0`
-              evita que una etiqueta larga se comprima.
+              Cuatro pestañas por fila; la quinta pasa a la segunda. El panel mide
+              hasta 40rem, pero en móviles se ajusta al viewport. `min-w-0` y
+              `overflow-hidden` permiten que una etiqueta larga termine en elipsis
+              en vez de montarse sobre la pestaña siguiente.
             */}
-            <TabsList className="flex h-auto min-h-10 w-full flex-wrap justify-start gap-1">
+            <TabsList className="grid h-auto min-h-10 w-full grid-cols-4 gap-1">
               {tabs.map((value) => (
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="shrink-0 px-2.5 text-xs sm:px-3 sm:text-sm"
+                  className="w-full min-w-0 overflow-hidden text-ellipsis px-2 text-xs sm:text-sm"
                   data-testid={`wallet-panel-tab-${value}`}
                 >
                   {text[value]}

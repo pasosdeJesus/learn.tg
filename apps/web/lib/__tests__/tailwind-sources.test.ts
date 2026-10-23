@@ -69,5 +69,12 @@ describe('tailwind-sources (R-#259)', () => {
     expect(compiled.css).toContain('.data-\\[state\\=checked\\]\\:translate-x-5')
     expect(compiled.css).toContain('.data-\\[state\\=checked\\]\\:bg-primary')
     expect(compiled.css).toContain('.data-\\[state\\=unchecked\\]\\:bg-input')
+
+    // Panel de la billetera (generated-wallet): sin el `@source` del motor, las
+    // pestañas no recibían la grilla de cuatro columnas ni la elipsis.
+    expect(compiled.css).toContain('.grid-cols-4')
+    expect(compiled.css).toContain('.text-ellipsis')
+    expect(compiled.css).toContain('min(40rem')
+    expect(compiled.css).toContain('calc(100vw - 2rem)')
   }, 60000)
 })

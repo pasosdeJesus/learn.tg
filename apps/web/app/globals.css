@@ -15,6 +15,11 @@
    usa Next y falla si la clase del pulgar no sale. */
 @source '../node_modules/@pasosdejesus/m/dist/shadcn_components';
 
+/* El panel de la billetera es la copia vendorizada `generated-wallet` (fuera de
+   `apps/web`, así que la detección automática de Tailwind no la ve). Sin este
+   `@source` no se generan las clases de sus pestañas ni el ancho del diálogo. */
+@source '../../../packages/generated/wallet/src';
+
 /* ================================
    🎨 Diseño Global Moderno & Profesional
 ================================== */
@@ -409,27 +414,4 @@ textarea,
   background: #f3f4f6;
   padding: 0 0.25rem;
   border-radius: 0.25rem;
-}
-
-/* Panel de la billetera (generated-wallet): el diálogo se quedaba en 28rem y las
-   cinco pestañas, con etiquetas largas, caían una por fila en pantallas angostas
-   (reporte del operador, 2026-10-23). Se ensancha el panel y se fijan cuatro
-   pestañas por fila; la quinta (Cuenta/Cuentas) pasa a la segunda fila. */
-[data-testid='wallet-panel'] {
-  width: min(40rem, calc(100vw - 2rem));
-  max-width: min(40rem, calc(100vw - 2rem));
-}
-
-[data-testid='wallet-panel'] [role='tablist'] {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  height: auto;
-}
-
-[data-testid='wallet-panel'] [role='tablist'] > button {
-  width: 100%;
-  min-width: 0;
-  padding-inline: 0.5rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }

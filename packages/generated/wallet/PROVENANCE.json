@@ -1,12 +1,12 @@
 {
   "motor": "@pasosdejesus/wallet",
-  "version": "0.1.1",
-  "source": "https://gitlab.com/pasosdeJesus/m.git#wallet-v0.1.1",
-  "sha256": "9028b90628140808661a94b86a979f4151af6e490d9d1398bae4035aad1a3f0e",
+  "version": "0.1.2",
+  "source": "https://gitlab.com/pasosdeJesus/m.git#wallet-v0.1.2",
+  "sha256": "2d0345b581e0d08d301e7309734b14b5ec4f40024d4455c78a110fc7c6027772",
   "hash": "payload",
   "schemaSha256": "1c2411a1f4399c993742a36347ea1189e395ddf6c94e4fb0a77bc40f3970620f",
   "kind": "git",
   "origin": "https://gitlab.com/pasosdeJesus/m.git",
-  "ref": "wallet-v0.1.1",
+  "ref": "wallet-v0.1.2",
   "path": "packages/wallet"
 }

@@ -1,9 +1,9 @@
 {
   "name": "generated-wallet",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
-  "description": "Copia vendorizada de @pasosdejesus/wallet v0.1.1, generada por `bin/m eng:sync --vendor`; no editar a mano.",
+  "description": "Copia vendorizada de @pasosdejesus/wallet v0.1.2, generada por `bin/m eng:sync --vendor`; no editar a mano.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
