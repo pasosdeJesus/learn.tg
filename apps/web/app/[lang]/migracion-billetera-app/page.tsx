@@ -3,9 +3,9 @@ import MigrationGuidePage from '@/components/migration/MigrationGuidePage'
 type PageProps = { params: Promise<{ lang: string }> }
 
 export const metadata = {
-  title: 'Pasa tu billetera a learn.tg',
+  title: 'Conserva tu cuenta verificada y agrega tu billetera de la aplicación',
   description:
-    'Importa tu frase de recuperación y conserva la misma dirección, tu historial, tus becas y tus referidos.',
+    'Une la billetera de la aplicación a tu cuenta verificada de learn.tg: pide desde tu perfil, acepta con tu billetera verificada y conserva una sola cuenta con tu historial.',
 }
 
 export default async function Page({ params }: PageProps) {

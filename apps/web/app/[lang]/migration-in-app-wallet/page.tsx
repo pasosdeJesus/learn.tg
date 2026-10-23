@@ -3,9 +3,9 @@ import MigrationGuidePage from '@/components/migration/MigrationGuidePage'
 type PageProps = { params: Promise<{ lang: string }> }
 
 export const metadata = {
-  title: 'Move your wallet into learn.tg',
+  title: 'Keep your verified account and add your in-app wallet',
   description:
-    'Import your recovery phrase and keep the same address, history, scholarships and referrals.',
+    'Join the in-app wallet to your verified learn.tg account: request it from your profile, accept with your verified wallet, and keep one account with your history.',
 }
 
 export default async function Page({ params }: PageProps) {

@@ -1,106 +1,74 @@
-# Move your wallet into learn.tg
+# Keep your verified account and add your in-app wallet
 
-**Keep your address, your history, your scholarships and your referrals.**
+**You do not start over, and nobody needs your recovery phrase.**
 
-If you already use MetaMask, Rabby, OKX, OneKey or Brave, you can bring that wallet
-*into* learn.tg: you import its **recovery phrase** (the 12 words) and keep the same
-address inside the app, with the same progress and the same funds. This page explains
-how, with the security warnings you need before you start.
+If a verifier already approved your account in learn.tg (the one with your old wallet:
+MetaMask, OKX, OneKey…) and you created a wallet inside the app, the app opened a
+**temporary account that is not verified**. You can join it to your verified account
+and keep a single account:
 
-> **Where, and how long:** do it in **Chrome** (Android) or **Safari** (iPhone), **not**
-> inside the browser of MetaMask/OKX/OneKey/Rabby. You need the 12 words of your wallet
-> and about 5 minutes.
+- your in-app wallet is added to the verified account;
+- the temporary account is deleted with its data;
+- your progress, scholarships, credentials, referrals, profile score and church
+  relationship stay in the verified account.
 
-> This is for **you**, not for learn.tg: the phrase is typed on your device and never
-> leaves it. Nobody from learn.tg (or anywhere else) needs it, ever.
-
-## Why migrate
-
-| Stays the same | Changes |
-|---|---|
-| The address (the same `0x…`) | The wallet now lives inside learn.tg |
-| Your funds (same address, same funds) | You unlock it with a password, and with your fingerprint or Face ID when the phone can check it |
-| Progress, scholarships, credentials, referrals | You do not need the wallet extension any more to use learn.tg |
+> **learn.tg never asks for your 12 words.** This route only needs your **public
+> address**. Never share the recovery phrase of a wallet you already use: legitimate
+> sites do not ask for it.
 
 ## Before you start
 
-- The **12 words** are the only way to recover your wallet. Write them **on paper, in
-  order**, and keep that paper somewhere safe.
-- **Do not** send them to anyone. Not to a friend, not to support, **not to learn.tg**.
-  Nobody legitimate will ever ask you for them.
-- **Do not** keep them as a screenshot, a photo, a note, an email or a chat message.
-- Importing a wallet created elsewhere does **not** move your funds: they stay on the
-  same address, which is now also inside learn.tg.
+- Be signed in on the **temporary in-app account**, the one that opened when you
+  created the wallet.
+- Have the **public address** of your verified wallet (the one that starts with `0x`).
+- The other account must be **verified**: profile score of 50 or more, Self passport,
+  or verified church relationship.
+- The temporary account must have no purchases, credentials or transactions. If it
+  already has any of those, ask a verifier to resolve it before continuing.
 
-## Export the recovery phrase from your wallet
+## Steps
 
-| Wallet | Where |
+1. **Ask to join.** In the in-app account open **Profile → Wallets in this account**
+   (or the **Accounts** tab of the wallet panel) and press **I already have a verified
+   account**.
+2. **Type the address** of your verified wallet and press **Send request**.
+3. **Accept with the verified wallet.** On the device that has that wallet, sign in to
+   learn.tg. Open **Profile → Wallets in this account** (or the wallet panel's
+   **Accounts** tab): under **Requests to join this account** press **Accept and add
+   the wallet** and sign with the verified wallet.
+4. **Sign in again on the in-app device** with the in-app wallet. Both wallets now
+   reach the same account.
+
+## What changes
+
+| Stays in the verified account | The temporary account |
 |---|---|
-| **MetaMask** | Settings → Security & Privacy → Reveal Secret Recovery Phrase |
-| **Rabby** | Settings → Security → Reveal Recovery Phrase |
-| **OKX Web3** | Settings → Security → Recovery Phrase |
-| **OneKey** | Settings → Backup → Recovery Phrase |
-| **Brave Wallet** | Settings → Backup → Reveal Recovery Phrase |
+| Progress, guides and crosswords | Is deleted with its data |
+| Scholarships, credentials (SBT) and referrals | Contributes only its wallet |
+| Profile score, church relationship and privacy switches | Cannot be recovered, nothing is merged from it |
 
-The exact wording changes with the version of each app: look for
-"reveal", "backup" or "recovery phrase" inside **Settings → Security**.
+The verified account is the one that survives. Nothing is copied from the temporary
+account and no funds move: the wallet only changes the account it belongs to.
 
-## Which browser
+## If something does not work
 
-The in-app wallet is **not** another app to install: it lives inside the learn.tg page.
-So you import it in a normal browser on your phone:
-
-| Phone | Browser |
-|---|---|
-| Android | **Chrome** (the browser you already use) |
-| iPhone / iPad | **Safari** |
-
-- **Do not** do it inside the browser of MetaMask, Rabby, OKX or OneKey (the one you
-  get when you open a page from inside the wallet app): there the page offers the
-  external wallet first, and **the fingerprint / Face ID unlock is not available**, so
-  you would type the password every time.
-- You can also install learn.tg and use the wallet there: in Chrome, menu (⋮) →
-  **Install app**; in Safari, **Share** → **Add to Home Screen**.
-
-## Import it into learn.tg
-
-You need the 12 words from the step above. If your external wallet is on a computer,
-**type them by hand** on the phone: do not send them by WhatsApp, email or any other
-message, not even to yourself.
-
-1. Open **learn.tg in Chrome** (Android) or **Safari** (iPhone).
-2. Press **Use in-app wallet**.
-3. Choose **Import an existing wallet** (the button says **Import wallet**) and paste
-   the 12 words in **Recovery phrase**.
-4. Create a **password** (8 characters or more). You will use it every time you unlock
-   the wallet on this device.
-5. Choose **how you want to unlock**: with your fingerprint or Face ID (recommended)
-   or only with the password. The password keeps working in both cases.
-6. Confirm your backup: the app asks for **3 of the 12 words**. It signs you in with the
-   same address, so your progress, your scholarships, your credentials and your
-   referrals are still there.
-
-## Two things that surprise people
-
-- **The wallet locks when the page reloads.** The key lives in memory only, so a reload
-  asks for the password or the gesture again. It is not lost and nothing was charged.
-- **Do not use two signers for the same address.** If both the imported wallet and the
-  external one can sign, you can get confused about which one sent what. Keep using the
-  external wallet for other apps if you like, but for **learn.tg use only the in-app
-  wallet** from now on.
-
-## If something goes wrong
-
-- **You forgot the password?** Restore the wallet with the 12 words (same flow, again).
-- **You lost the phone?** Restore the wallet with the 12 words on the new device.
-- **You lost the 12 words and the phone?** Nobody, including learn.tg, can recover the
-  wallet: those words are the wallet.
-- **You think someone saw your phrase?** Move your funds to a new wallet immediately
-  and write down its new phrase.
+- **“The account is not verified.”** The address you typed does not belong to a
+  verified account. Check the address or ask a verifier.
+- **“The account already holds transactions or credentials.”** The temporary account
+  has value; a verifier must resolve it before the request can be sent.
+- **I do not see the request on the verified account.** Sign in with the verified
+  wallet and open **Profile → Wallets in this account**. The request is also in the
+  wallet panel's **Accounts** tab. Check that you are in the right account.
+- **The signature was cancelled.** Repeat the accept and approve the signature in your
+  wallet.
+- A request expires after **30 days**. The temporary account can cancel it from the same
+  section where it was sent.
 
 ## Remember
 
-> - Your recovery phrase **never leaves your device**. learn.tg never sees it.
-> - **Never share** your recovery phrase with anyone. Not even with learn.tg.
-> - If you lose your recovery phrase, you lose access to your funds.
-> - Write it **on paper**. Do not store it in a photo, a note or an email.
+- **Never share your 12 words.** learn.tg does not need them for this route.
+- The **public address** is safe to share: it is how the verified account recognizes the
+  request.
+- Only the **verified wallet** can accept; it signs the authorization.
+- After joining, use the in-app wallet on this device and your verified wallet where you
+  already use it. Both reach the same account.

@@ -278,6 +278,29 @@ async function main() {
       fail(`Billeteras de la cuenta verificada: ${JSON.stringify(afterWallets).slice(0, 300)}`)
     }
 
+    // R-#288: el perfil debe listar las billeteras de la cuenta (no solo el panel).
+    await pageB.goto(`${base}/${LANG}/profile`, { waitUntil: 'domcontentloaded' })
+    const listReady = await pageB
+      .waitForSelector('[data-testid="account-wallet-list"]', { timeout: 30000 })
+      .catch(() => null)
+    if (!listReady) {
+      fail('El perfil no muestra la lista de billeteras de la cuenta')
+    } else {
+      const listed = await pageB.$$eval(
+        '[data-testid="account-wallet-list"] li',
+        (items) => items.map((item) => item.innerText.toLowerCase()),
+      )
+      const short = (addr) => `${addr.slice(0, 6)}…${addr.slice(-4)}`.toLowerCase()
+      if (
+        listed.some((text) => text.includes(short(verifiedAddress))) &&
+        listed.some((text) => text.includes(short(duplicateAddress)))
+      ) {
+        ok('El perfil lista las dos billeteras de la cuenta')
+      } else {
+        fail(`El perfil no lista ambas billeteras: ${JSON.stringify(listed)}`)
+      }
+    }
+
     const afterProfile = await api(pageB, `/api/profile?walletAddress=${verifiedAddress}`)
     if (
       afterProfile.status === 200 &&

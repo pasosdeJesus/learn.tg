@@ -177,8 +177,11 @@ async function main() {
   const c2 = await inspectChoice(withInjected)
   if (s2.inAppPrimary && c2?.external) ok('con proveedor (extensión en un navegador común): la in-app es la principal y la externa es secundaria')
   else fail(`con proveedor (extensión en un navegador común): prioridad inesperada (${JSON.stringify({ s2, c2 })})`)
-  if (c2?.importHint) ok('se ofrece importar la frase para conservar la dirección')
-  else fail('no se ofrece importar la frase con un proveedor a la vista')
+  // R-#288/2026-10-23: con una billetera externa a la vista ya NO se anuncia la
+  // importación de la frase (no es la ruta principal); el modo Import sigue
+  // disponible para quien lo busca.
+  if (c2?.importHint) fail('todavía se anuncia importar la frase de una billetera existente')
+  else ok('no se anuncia importar la frase aunque haya una billetera externa')
   await withInjected.close()
 
   // 3. Navegador propio de una billetera (la marca va en el UA): la externa va primero

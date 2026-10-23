@@ -12,8 +12,8 @@ describe('migration guide', () => {
   })
 
   it('reads both languages', async () => {
-    expect(await readMigrationGuide('en')).toMatch(/Move your wallet into learn\.tg/)
-    expect(await readMigrationGuide('es')).toMatch(/Pasa tu billetera a learn\.tg/)
+    expect(await readMigrationGuide('en')).toMatch(/Keep your verified account and add your in-app wallet/)
+    expect(await readMigrationGuide('es')).toMatch(/Conserva tu cuenta verificada y agrega tu billetera de la aplicación/)
   })
 
   it('converts the guide to HTML with headings and tables', async () => {

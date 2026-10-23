@@ -618,8 +618,11 @@ async function main() {
           break
         }
         if (dialogText.includes('cooldown') || dialogText.includes('enfriamiento') ||
-            dialogText.includes('already claimed') || dialogText.includes('ya reclamado')) {
-          ok('UBI: cooldown active (expected)')
+            dialogText.includes('already claimed') || dialogText.includes('ya reclamado') ||
+            // Límite diario por cuenta: repetir la suite el mismo día no es un defecto.
+            dialogText.includes('una sola vez por cuenta') ||
+            dialogText.includes('once per account') || dialogText.includes('once a day')) {
+          ok('UBI: cooldown/daily limit active (expected)')
           break
         }
         if (dialogText.includes('Error') || dialogText.includes('must be at least') ||

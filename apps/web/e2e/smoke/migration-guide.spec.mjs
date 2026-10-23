@@ -25,8 +25,8 @@ const BASE = (
 const TIMEOUT_MS = Number(process.env.MIGRATION_SMOKE_TIMEOUT_MS || '15000')
 
 const CASES = [
-  { path: '/en/migration-in-app-wallet', expected: /Move your wallet into learn\.tg/i },
-  { path: '/es/migracion-billetera-app', expected: /Pasa tu billetera a learn\.tg/i },
+  { path: '/en/migration-in-app-wallet', expected: /Keep your verified account and add your in-app wallet/i },
+  { path: '/es/migracion-billetera-app', expected: /Conserva tu cuenta verificada y agrega tu billetera de la aplicación/i },
 ]
 
 let failed = 0

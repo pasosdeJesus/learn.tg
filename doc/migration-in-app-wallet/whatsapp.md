@@ -9,43 +9,41 @@ Send the **short** one first; keep the long one for when the person answers.
 ## Short, English
 
 ```
-🔐 Do you use MetaMask, Rabby or OKX? You can use it on learn.tg without losing your history.
+🔐 Already have a verified account with MetaMask, Rabby or OKX? Keep it and use the in-app wallet too.
 
-Import your recovery phrase into learn.tg's wallet and keep the same address.
+No need to start over: request to join your verified account from Profile → Wallets in this account, and accept with your old wallet. Never share your 12 words.
 
 📖 Guide: https://learn.tg/en/migration-in-app-wallet
-(Mobile: do it in Chrome, or Safari on iPhone, not inside the wallet's own browser.)
 ```
 
 ## Short, Spanish
 
 ```
-🔐 ¿Tienes MetaMask, Rabby u OKX? Puedes usarla en learn.tg sin perder tu historial.
+🔐 ¿Ya tienes una cuenta verificada con MetaMask, Rabby u OKX? Consérvala y usa también la billetera de la aplicación.
 
-Importa tu frase semilla en la billetera de learn.tg y sigues con la misma dirección.
+No empieces de nuevo: pide unirte a tu cuenta verificada desde Perfil → Billeteras en esta cuenta y acepta con tu billetera anterior. Nunca compartas tus 12 palabras.
 
 📖 Guía: https://learn.tg/es/migracion-billetera-app
-(En el celular: hazlo en Chrome, o Safari si es iPhone, no dentro del navegador de la billetera.)
 ```
 
 ## Long, English
 
 ```
-🔐 Already have a Web3 wallet? You can use it on learn.tg without losing your history.
+🔐 Already have a verified account? Keep it and add your in-app wallet.
 
-If you use MetaMask, Rabby, OKX or another wallet, you can import your recovery phrase into learn.tg's wallet and keep the same address. That keeps your progress, scholarships and referrals.
+If a verifier already approved your account (the one with MetaMask, Rabby, OKX or OneKey) and you created a wallet inside learn.tg, the app opened a temporary account. You can join it to your verified account and keep a single account, with your progress, scholarships, credentials and referrals.
 
 📝 Steps:
-1️⃣ Open your external wallet.
-2️⃣ Settings → Security → Reveal recovery phrase.
-3️⃣ Copy the 12 words.
-4️⃣ Open learn.tg in Chrome (or Safari on iPhone), tap "Use in-app wallet" → "Import wallet".
-5️⃣ Paste the 12 words and create a password.
+1 Open the temporary in-app account.
+2 Go to Profile → Wallets in this account (or the Accounts tab of the wallet panel) and press "I already have a verified account".
+3 Type the public address of your verified wallet and send the request.
+4 On the device with that wallet, sign in to learn.tg, open Profile → Wallets in this account, press "Accept and add the wallet" and sign.
+5 Sign in again on the in-app device. Both wallets reach the same account.
 
 ⚠️ Important:
-- Never share your phrase with anyone. Not even with learn.tg.
-- Write it on paper. Do not keep it in photos or notes.
-- If you lose the phrase, you lose access to your funds.
+- learn.tg never needs your 12 words for this. Never share them with anyone.
+- The public address (0x…) is safe to share.
+- Only the verified wallet can accept, and it signs the authorization.
 
 📖 Full guide: https://learn.tg/en/migration-in-app-wallet
 ```
@@ -53,21 +51,21 @@ If you use MetaMask, Rabby, OKX or another wallet, you can import your recovery 
 ## Long, Spanish
 
 ```
-🔐 ¿Ya tienes una billetera Web3? Puedes usarla en learn.tg sin perder tu historial.
+🔐 ¿Ya tienes una cuenta verificada? Consérvala y agrega tu billetera de la aplicación.
 
-Si tienes MetaMask, Rabby, OKX u otra billetera, puedes importar tu frase semilla en la billetera de learn.tg y seguir usando la misma dirección. Así conservas tu progreso, becas y referidos.
+Si un verificador ya aprobó tu cuenta (la de MetaMask, Rabby, OKX u OneKey) y creaste una billetera dentro de learn.tg, la app abrió una cuenta temporal. Puedes unirla a tu cuenta verificada y quedarte con una sola cuenta, con tu progreso, becas, credenciales y referidos.
 
 📝 Pasos:
-1️⃣ Abre tu billetera externa.
-2️⃣ Configuración → Seguridad → Revelar frase de recuperación.
-3️⃣ Copia las 12 palabras.
-4️⃣ Abre learn.tg en Chrome (o Safari si es iPhone), toca "Usar billetera de la aplicación" → "Importar billetera".
-5️⃣ Pega las 12 palabras y crea una clave.
+1 Abre la cuenta temporal de la aplicación.
+2 Ve a Perfil → Billeteras en esta cuenta (o la pestaña Cuentas del panel) y presiona "Ya tengo una cuenta verificada".
+3 Escribe la dirección pública de tu billetera verificada y envía la solicitud.
+4 En el dispositivo con esa billetera, inicia sesión en learn.tg, abre Perfil → Billeteras en esta cuenta, presiona "Aceptar y agregar la billetera" y firma.
+5 Vuelve a ingresar en el dispositivo de la aplicación. Las dos billeteras llegan a la misma cuenta.
 
 ⚠️ Importante:
-- Nunca compartas tu frase con nadie. Ni con learn.tg.
-- Escríbela en papel. No la guardes en fotos ni en notas.
-- Si pierdes la frase, pierdes acceso a tus fondos.
+- learn.tg no necesita tus 12 palabras para esto. Nunca las compartas con nadie.
+- La dirección pública (0x…) se puede compartir.
+- Solo la billetera verificada puede aceptar, y ella firma la autorización.
 
 📖 Guía completa: https://learn.tg/es/migracion-billetera-app
 ```
