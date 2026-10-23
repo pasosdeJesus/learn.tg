@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   lock: vi.fn(),
   signOut: vi.fn(),
   sessionAddress: undefined as string | undefined,
+  storedAddress: undefined as string | undefined,
   inAppAddress: undefined as string | undefined,
   isInAppUnlocked: false,
   isSessionLoading: false,
@@ -31,6 +32,7 @@ vi.mock('@/lib/hooks/useAuthAddress', () => ({
   useAuthAddress: () => ({
     address: mocks.sessionAddress ?? mocks.inAppAddress,
     sessionAddress: mocks.sessionAddress,
+    storedAddress: mocks.storedAddress,
     inAppAddress: mocks.inAppAddress,
     isInAppUnlocked: mocks.isInAppUnlocked,
     isSessionLoading: mocks.isSessionLoading,
@@ -67,11 +69,11 @@ vi.mock('@/components/ConnectWalletButton', () => ({
 // R-#265 §3.9: el header usa `WalletConnect` del motor `wallet`; el cuerpo se
 // sobrecarga con `renderBody`. El mock lo pinta directamente para probar las acciones.
 vi.mock('generated-wallet/next', () => ({
-  WalletConnect: ({ renderBody }: any) =>
+  WalletConnect: ({ renderBody, messages }: any) =>
     React.createElement(
       'div',
       { 'data-testid': 'wallet-connect' },
-      React.createElement('button', { 'data-testid': 'connect-wallet' }),
+      React.createElement('button', { 'data-testid': 'connect-wallet' }, messages?.connect),
       renderBody
         ? renderBody({ lang: 'en', close: () => {}, connectExternal: async () => {}, externalError: null })
         : null,
@@ -90,6 +92,7 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     vi.clearAllMocks()
     mocks.status = 'no-wallet'
     mocks.sessionAddress = undefined
+    mocks.storedAddress = undefined
     mocks.inAppAddress = undefined
     mocks.isInAppUnlocked = false
     mocks.dialogOpen = false
@@ -139,6 +142,18 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     })
     expect(mocks.lock).toHaveBeenCalled()
     expect(mocks.signOut).toHaveBeenCalledWith({ redirect: true, callbackUrl: '/en' })
+  })
+
+  // R-#288: si la cookie de sesión se perdió (rotación, caducidad) pero la
+  // billetera ya se usó en este dispositivo, no mostrarla como conectada: ofrecer
+  // volver a firmar (reporte desde OneKey móvil, 2026-10-23).
+  it('offers to sign in again when the session is gone but the wallet was used here', () => {
+    mocks.status = 'no-wallet'
+    mocks.storedAddress = ADDRESS
+    render(<WalletSelector lang="en" />)
+
+    expect(screen.queryByTestId('wallet-selector-in-app')).toBeNull()
+    expect(screen.getByTestId('connect-wallet')).toHaveTextContent(/sign in again/i)
   })
 
   // Tras el SIWE la página recarga y la billetera queda bloqueada: la cabecera
@@ -229,7 +244,9 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     // R-#265 §3.9: la elección externa vive dentro del `WalletConnect` del motor y
     // delega en `ConnectWalletButton` (flujo real de red + SIWE).
     expect(screen.getByTestId('connect-wallet-btn')).toBeInTheDocument()
-    expect(screen.getByTestId('wallet-import-hint')).toHaveTextContent(/import your recovery phrase/i)
+    // La importación de frase no se anuncia en el modal de conexión: no es la ruta
+    // predeterminada (reporte del operador, 2026-10-23).
+    expect(screen.queryByTestId('wallet-import-hint')).toBeNull()
 
     // Navegador propio de MetaMask: la externa va primero en el modal, con la in-app
     // como alternativa (preferencia del operador: un solo botón + un modal).
@@ -271,7 +288,7 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     mocks.status = 'loading'
     render(<WalletSelector lang="en" />)
 
-    expect(screen.getByTestId('wallet-connect')).toHaveTextContent(/^In-app wallet$/i)
+    expect(screen.getByTestId('wallet-connect')).toHaveTextContent(/in-app wallet/i)
     expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
   })
 
@@ -282,7 +299,7 @@ describe('WalletSelector (R-#238/R-#244)', () => {
     mocks.isSessionLoading = true
     render(<WalletSelector lang="en" />)
 
-    expect(screen.getByTestId('wallet-connect')).toHaveTextContent(/^In-app wallet$/i)
+    expect(screen.getByTestId('wallet-connect')).toHaveTextContent(/in-app wallet/i)
     expect(screen.queryByTestId('wallet-open-dialog')).not.toBeInTheDocument()
   })
 })

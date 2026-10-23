@@ -128,7 +128,8 @@ describe('HandoverWalletControl (R-#288)', () => {
       receivedInvitations: [],
       verified: false,
     })
-    render(<HandoverWalletControl lang="es" />)
+    const onClose = vi.fn()
+    render(<HandoverWalletControl lang="es" onClose={onClose} />)
 
     await waitFor(() => expect(screen.getByTestId('handover-open')).toBeTruthy())
     fireEvent.click(screen.getByTestId('handover-open'))
@@ -147,6 +148,9 @@ describe('HandoverWalletControl (R-#288)', () => {
       ),
     )
     expect(screen.queryByTestId('handover-message')).toBeNull()
+    // El modal se cierra; el toast queda como única confirmación.
+    expect(onClose).toHaveBeenCalled()
+    expect(screen.queryByTestId('handover-form')).toBeNull()
   })
 
   it('does not offer the form on a verified account', async () => {

@@ -9,10 +9,15 @@ const mocks = vi.hoisted(() => ({
   fetchAccountInvitations: vi.fn(),
   inviteWalletAddress: vi.fn(),
   cancelInvitationRequest: vi.fn(),
+  toast: vi.fn(),
 }))
 
 vi.mock('@/lib/hooks/useAuthAddress', () => ({
   useAuthAddress: () => ({ sessionAddress: mocks.sessionAddress }),
+}))
+
+vi.mock('@pasosdejesus/m/shadcn-components/ui/use-toast', () => ({
+  useToast: () => ({ toast: mocks.toast }),
 }))
 
 vi.mock('@/lib/wallet-account', () => ({
@@ -39,9 +44,10 @@ describe('InviteWalletControl (R-#265 §3.2)', () => {
 
   afterEach(() => cleanup())
 
-  it('invites an address and shows it as pending', async () => {
+  it('invites an address, closes the panel and confirms with a toast', async () => {
     mocks.inviteWalletAddress.mockResolvedValue({ ok: true, invitations: [INVITATION] })
-    render(<InviteWalletControl lang="en" />)
+    const onClose = vi.fn()
+    render(<InviteWalletControl lang="en" onClose={onClose} />)
 
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-invite-toggle'))
@@ -54,8 +60,16 @@ describe('InviteWalletControl (R-#265 §3.2)', () => {
     })
 
     expect(mocks.inviteWalletAddress).toHaveBeenCalledWith('0xaaa', INVITATION.direccion_invitada)
-    expect(screen.getByTestId('wallet-invite-message')).toHaveTextContent(/invitation created/i)
-    expect(screen.getByTestId('wallet-invitation')).toHaveTextContent(/0xcccc…cccc/)
+    expect(mocks.toast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Invitation sent',
+        description: expect.stringMatching(/accept it when it signs in/i),
+      }),
+    )
+    expect(onClose).toHaveBeenCalled()
+    // El panel se cierra: la invitación queda en el contador del botón.
+    expect(screen.queryByTestId('wallet-invite-panel')).toBeNull()
+    expect(screen.getByTestId('wallet-invite-toggle')).toHaveTextContent('(1)')
   })
 
   it('explains that the inviter needs a verified profile', async () => {

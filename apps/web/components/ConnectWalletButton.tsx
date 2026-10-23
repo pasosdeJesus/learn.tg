@@ -51,6 +51,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
   const t = createComponentT(lang, {
     en: {
       connect: 'Connect Wallet',
+      signInAgain: 'Sign in again',
       disconnect: 'Disconnect',
       noWallet: isMobileUA
         ? 'No wallet detected here. If you have a wallet app (Rabby, MetaMask, OKX), open this page in the wallet\u2019s built-in browser.'
@@ -62,6 +63,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
     },
     es: {
       connect: 'Conectar Billetera',
+      signInAgain: 'Volver a ingresar',
       disconnect: 'Desconectar',
       noWallet: isMobileUA
         ? 'No se detectó billetera aquí. Si tienes una app de billetera (Rabby, MetaMask, OKX), abre esta página en el navegador integrado de la billetera.'
@@ -75,8 +77,13 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
 
   const { address, isWalletAvailable, isWalletCheckComplete } = useAuthAddress()
 
-  const sessionAddress = session?.address || localAddr || undefined
+  // La sesión (cookie) decide si está conectada; `localStorage` sólo sirve para
+  // ofrecer "Sign in again" cuando la billetera ya se usó aquí pero la sesión se
+  // perdió. Antes se mostraba la píldora de conectada con la dirección guardada,
+  // aunque no hubiera sesión (reporte desde OneKey móvil, 2026-10-23).
+  const sessionAddress = session?.address || undefined
   const showAsConnected = sessionAddress && isWalletAvailable
+  const staleSession = !sessionAddress && !!localAddr
 
   // Load localStorage address on mount (avoids SSR hydration mismatch)
   useEffect(() => {
@@ -353,7 +360,7 @@ export function ConnectWalletButton({ lang = 'en' }: ConnectWalletButtonProps) {
         className="text-sm"
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {t('connect')}
+        {staleSession ? t('signInAgain') : t('connect')}
       </Button>
       {error && (
         <span className="text-xs text-red-600 max-w-[200px] truncate" title={error}>

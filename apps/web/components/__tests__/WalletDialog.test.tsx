@@ -403,16 +403,15 @@ describe('WalletDialog (R-#244)', () => {
     expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
   })
 
-  // Importar también deja la clave en memoria: la misma elección, sin volver a pedirla.
-  // R-#270 §3.2: la puerta para importar la frase (y conservar la dirección e
-  // historial) debe estar a la vista al crear, con la guía de migración.
-  it('offers to import a recovery phrase while creating, with the guide link', () => {
+  // Importar sigue disponible, pero no se anuncia: no es la ruta predeterminada
+  // (reporte del operador, 2026-10-23). La opción vive en el selector de modo.
+  it('does not promote importing while creating; the mode stays available', () => {
     renderDialog()
 
-    expect(screen.getByTestId('wallet-import-offer')).toHaveTextContent(/already have a wallet/i)
-    expect(screen.getByTestId('wallet-switch-import')).toHaveTextContent(/import/i)
+    expect(screen.queryByTestId('wallet-import-offer')).toBeNull()
+    expect(screen.queryByTestId('wallet-switch-import')).toBeNull()
 
-    fireEvent.click(screen.getByTestId('wallet-switch-import'))
+    fireEvent.click(screen.getByTestId('wallet-mode-import'))
 
     expect(screen.getByTestId('wallet-mnemonic')).toBeInTheDocument()
     expect(screen.getByTestId('wallet-import-security')).toHaveTextContent(/never leaves this device/i)
@@ -421,7 +420,7 @@ describe('WalletDialog (R-#244)', () => {
 
   it('links the Spanish migration guide in Spanish', () => {
     renderDialog('es')
-    fireEvent.click(screen.getByTestId('wallet-switch-import'))
+    fireEvent.click(screen.getByTestId('wallet-mode-import'))
     expect(screen.getByTestId('wallet-migration-guide')).toHaveAttribute('href', '/es/migracion-billetera-app')
   })
 

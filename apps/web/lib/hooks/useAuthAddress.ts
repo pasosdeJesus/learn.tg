@@ -80,7 +80,14 @@ export function useAuthAddress() {
   // tras montar (effect), igual que el patrón de Header/ConnectWalletButton.
   useEffect(() => { setMounted(true) }, [])
 
-  const sessionAddress = session?.address || undefined
+  // R-#288: si el token no trae `address` (sesiones viejas o rotadas) el nombre de
+  // usuario es la billetera; usarlo evita que la cabecera vuelva a "Connect Wallet"
+  // mientras la cookie sigue siendo válida.
+  const sessionName = session?.user?.name
+  const sessionAddress = session?.address
+    || (typeof sessionName === 'string' && /^0x[0-9a-f]{40}$/i.test(sessionName)
+      ? sessionName.toLowerCase()
+      : undefined)
   const storedAddress = (typeof window !== 'undefined' && mounted)
     ? localStorage.getItem('learn.tg.sessionAddress') || undefined
     : undefined

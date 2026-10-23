@@ -56,8 +56,10 @@ billetera anterior (MetaMask, OKX, OneKey…), no tienes que empezar de nuevo:
 1. En la cuenta que usas ahora, abre la pestaña **Cuentas** del panel de la billetera (o
    **Billeteras en esta cuenta** en tu perfil) y elige **Ya tengo una cuenta verificada**.
 2. Escribe la dirección pública de tu **billetera existente y verificada** y envía la solicitud.
-3. Abre learn.tg con esa billetera antigua e inicia sesión. Tu perfil muestra
-   **Solicitudes para unirse a esta cuenta**: acepta y firma con esa billetera.
+3. Abre learn.tg con esa billetera verificada e inicia sesión. Entra a **Perfil** y abre
+   **Billeteras en esta cuenta** (también está en la pestaña **Cuentas** del panel de la
+   billetera). En **Solicitudes para unirse a esta cuenta** verás la solicitud: presiona
+   **Aceptar y agregar la billetera** y firma con esa billetera.
 4. Tu billetera in-app se agrega a la cuenta verificada y quedas con una sola cuenta.  Tu progreso, puntajes, insignias y código de referidos
    quedan intactos; vuelve a entrar en este dispositivo con la billetera in-app para verlos.
 

@@ -125,7 +125,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       passwordConfirm: 'Repeat the password',
       passwordShow: 'Show the password',
       passwordHide: 'Hide the password',
-      importOffer: 'Already have a wallet? Import your recovery phrase or private key and keep the same address, history and scholarships.',
       importSecurity: 'Your recovery phrase or private key never leaves this device. learn.tg never sees it.',
       migrationGuide: 'Step-by-step guide (MetaMask, Rabby, OKX, OneKey, Brave)',
       protectTitle: 'How do you want to unlock this wallet?',
@@ -194,7 +193,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       passwordConfirm: 'Repite la clave',
       passwordShow: 'Mostrar la clave',
       passwordHide: 'Ocultar la clave',
-      importOffer: '¿Ya tienes billetera? Importa tu frase de recuperación o tu clave privada y conserva la misma dirección, tu historial y tus becas.',
       importSecurity: 'Tu frase de recuperación o clave privada nunca sale de este dispositivo. learn.tg no las ve.',
       migrationGuide: 'Guía paso a paso (MetaMask, Rabby, OKX, OneKey, Brave)',
       protectTitle: '¿Cómo quieres desbloquear esta billetera?',
@@ -722,20 +720,6 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
                   {t('import')}
                 </Button>
               </div>
-            )}
-
-            {!showUnlock && !hasWallet && mode === 'create' && (
-              <p className="text-xs text-gray-600" data-testid="wallet-import-offer">
-                {t('importOffer')}{' '}
-                <button
-                  type="button"
-                  className="underline font-medium text-blue-600"
-                  data-testid="wallet-switch-import"
-                  onClick={() => setMode('import')}
-                >
-                  {t('import')}
-                </button>
-              </p>
             )}
 
             {!showUnlock && !hasWallet && mode === 'import' && (

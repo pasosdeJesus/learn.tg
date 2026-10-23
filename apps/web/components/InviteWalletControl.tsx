@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import {
@@ -17,6 +18,8 @@ interface InviteWalletControlProps {
   onChanged?: () => void
   /** Alineación dentro del contenedor (la cabecera usaba `end`). */
   align?: 'start' | 'end'
+  /** Cierra el modal que contiene el control (el toast queda como confirmación). */
+  onClose?: () => void
 }
 
 function shortAddress(address: string): string {
@@ -31,8 +34,14 @@ function shortAddress(address: string): string {
  * al entrar. La invitación se lista y se puede cancelar (liberar el cupo de la dirección).
  * La cuenta que invita debe tener perfil suficiente (`lib/wallet-invite-policy.ts`).
  */
-export function InviteWalletControl({ lang = 'en', onChanged, align = 'start' }: InviteWalletControlProps) {
+export function InviteWalletControl({
+  lang = 'en',
+  onChanged,
+  align = 'start',
+  onClose,
+}: InviteWalletControlProps) {
   const { sessionAddress } = useAuthAddress()
+  const { toast } = useToast()
   const sessionWallet = sessionAddress || ''
   const [open, setOpen] = useState(false)
   const [address, setAddress] = useState('')
@@ -48,8 +57,9 @@ export function InviteWalletControl({ lang = 'en', onChanged, align = 'start' }:
       sendInvite: 'Send invite',
       inviting: 'Inviting…',
       cancel: 'Cancel',
+      invitedTitle: 'Invitation sent',
       invited:
-        'Invitation created. That wallet can accept it when it signs in on its own device.',
+        'That wallet can accept it when it signs in on its own device, in "Requests to join this account".',
       unverified: 'Your profile needs at least 50 points before you can invite a wallet.',
       conflict: 'That wallet is already in an account or has a pending invitation.',
       invalid: 'Enter a valid wallet address.',
@@ -67,8 +77,9 @@ export function InviteWalletControl({ lang = 'en', onChanged, align = 'start' }:
       sendInvite: 'Enviar invitación',
       inviting: 'Invitando…',
       cancel: 'Cancelar',
+      invitedTitle: 'Invitación enviada',
       invited:
-        'Invitación creada. Esa billetera puede aceptarla cuando ingrese desde su propio dispositivo.',
+        'Esa billetera puede aceptarla cuando ingrese desde su propio dispositivo, en «Solicitudes para unirse a esta cuenta».',
       unverified: 'Tu perfil necesita al menos 50 puntos para invitar una billetera.',
       conflict: 'Esa billetera ya está en una cuenta o tiene una invitación pendiente.',
       invalid: 'Escribe una dirección de billetera válida.',
@@ -101,8 +112,11 @@ export function InviteWalletControl({ lang = 'en', onChanged, align = 'start' }:
     if (result.ok) {
       setInvitations(result.invitations)
       setAddress('')
-      setMessage(t('invited'))
+      setMessage('')
+      setOpen(false)
+      toast({ title: t('invitedTitle'), description: t('invited') })
       onChanged?.()
+      onClose?.()
     } else {
       setMessage(
         result.reason === 'unverified'
@@ -117,7 +131,7 @@ export function InviteWalletControl({ lang = 'en', onChanged, align = 'start' }:
       )
     }
     setBusy(false)
-  }, [address, onChanged, sessionWallet, t])
+  }, [address, onChanged, onClose, sessionWallet, t, toast])
 
   const handleCancel = useCallback(async (target: string) => {
     if (!sessionWallet) return

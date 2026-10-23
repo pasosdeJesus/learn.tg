@@ -32,7 +32,7 @@ interface WalletSelectorProps {
  */
 export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   const { status, lock } = useInAppWallet()
-  const { address, sessionAddress, inAppAddress, isSessionLoading } = useAuthAddress()
+  const { address, sessionAddress, storedAddress, inAppAddress, isSessionLoading } = useAuthAddress()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
   // R-#246: la billetera inyectada se detecta por EIP-6963 (Rabby, MetaMask y
@@ -56,6 +56,7 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       signInInApp: 'Sign in with in-app wallet',
       useExternal: 'Use external wallet',
       connect: 'Connect Wallet',
+      signInAgain: 'Sign in again',
       walletTitle: 'Wallet',
       inAppHint: 'Create a wallet inside the app — no installation needed.',
       externalHint: 'Or connect a wallet you already have (Rabby, MetaMask…).',
@@ -63,7 +64,6 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       disconnect: 'Disconnect',
       openWallet: 'In-app wallet options',
       walletBrowserNote: 'In this browser the in-app wallet has no fingerprint or Face ID: you would unlock it with the password.',
-      haveWalletImport: 'Already have a wallet? Import your recovery phrase',
     },
     es: {
       useInApp: 'Usar billetera de la aplicación',
@@ -72,6 +72,7 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       signInInApp: 'Ingresar con la billetera de la aplicación',
       useExternal: 'Usar billetera externa',
       connect: 'Conectar Billetera',
+      signInAgain: 'Volver a ingresar',
       walletTitle: 'Billetera',
       inAppHint: 'Crea una billetera dentro de la aplicación, sin instalar nada.',
       externalHint: 'O conecta una billetera que ya tengas (Rabby, MetaMask…).',
@@ -79,7 +80,6 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       disconnect: 'Desconectar',
       openWallet: 'Opciones de la billetera de la aplicación',
       walletBrowserNote: 'En este navegador la billetera de la aplicación no tiene huella ni Face ID: la desbloquearías con la clave.',
-      haveWalletImport: '¿Ya tienes billetera? Importa tu frase de recuperación',
     },
   }), [lang])
 
@@ -90,6 +90,10 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   // Mirar `isInAppUnlocked` aquí hacía que la cabecera volviera a pedir
   // "Unlock your in-app wallet" después de cada ingreso.
   const signedIn = !!sessionAddress
+  // Hay una billetera conocida (localStorage) pero la cookie de sesión ya no vale:
+  // no mostrarla como conectada; ofrecer volver a firmar (rotación, cookie caducada,
+  // etc.). Reporte del operador desde OneKey móvil, 2026-10-23.
+  const staleSession = !sessionAddress && !!storedAddress
   const shownAddress = sessionAddress || address || undefined
   const shortAddress = shownAddress
     ? `${shownAddress.slice(0, 6)}…${shownAddress.slice(-4)}`
@@ -129,7 +133,6 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   // que el URL pida la in-app o ya tenga una en este equipo. `externalPrimary` ahora
   // sólo ordena las opciones dentro del modal (externa primero), no cambia la cabecera.
   const externalPrimary = externalAvailable && walletBrowser && !inAppRequested && !hasInAppWallet
-  const migrationHref = lang === 'es' ? '/es/migracion-billetera-app' : '/en/migration-in-app-wallet'
 
   if (signedIn) {
     // R-#249/R-#265 (2026-10-17): con sesión la píldora abre **siempre** el panel
@@ -229,16 +232,6 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
         ) : (
           <>{inAppAction}{externalAction}</>
         )}
-        {externalAvailable && (
-          /* R-#270 §3.1: conservar la dirección e historial, a un clic. */
-          <a
-            href={migrationHref}
-            className="block text-xs text-blue-600 hover:underline"
-            data-testid="wallet-import-hint"
-          >
-            {t('haveWalletImport')}
-          </a>
-        )}
         {walletBrowser && (
           <p className="text-[11px] text-gray-500" data-testid="wallet-browser-note">
             {t('walletBrowserNote')}
@@ -257,7 +250,7 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
       <WalletConnect
         lang={lang === 'es' ? 'es' : 'en'}
         messages={{
-          connect: t('connect'),
+          connect: staleSession ? t('signInAgain') : t('connect'),
           title: t('walletTitle'),
           inAppBtn: t('useInApp'),
           external: t('useExternal'),

@@ -52,7 +52,10 @@ an older wallet (MetaMask, OKX, OneKey…), you do not have to start over:
 1. In the account you are using now, open the wallet panel **Accounts** tab (or
    **Wallets in this account** in your profile) and choose **I already have a verified account**.
 2. Type the address of your **existing, verified wallet** and send the request.
-3. Open learn.tg with that old wallet and sign in. Your profile shows **Requests to join this account**: accept and sign with that wallet.
+3. Open learn.tg with that verified wallet and sign in. Go to **Profile** and open
+   **Wallets in this account** (it is also in the **Accounts** tab of the wallet panel).
+   Under **Requests to join this account** you will see the request: press **Accept and
+   add the wallet** and sign with that wallet.
 4. Your in-app wallet is added to the verified account that becomes your single account. Your progress, scores, badges and referral code stay untouched; sign in on this device again with the in-app wallet to see them.
 
 ---

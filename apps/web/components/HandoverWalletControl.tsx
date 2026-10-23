@@ -24,6 +24,8 @@ interface HandoverWalletControlProps {
   onUnlock?: () => void
   /** Informa si la cuenta de la sesión está verificada (para ocultar acciones que no aplican). */
   onVerifiedChange?: (verified: boolean | null) => void
+  /** Cierra el modal que contiene el control (el toast queda como confirmación). */
+  onClose?: () => void
 }
 
 function shortAddress(address: string): string {
@@ -45,6 +47,7 @@ export function HandoverWalletControl({
   onChanged,
   onUnlock,
   onVerifiedChange,
+  onClose,
 }: HandoverWalletControlProps) {
   const { sessionAddress, address, inAppAddress, isInAppUnlocked } = useAuthAddress()
   const { provider } = useWalletProvider()
@@ -149,8 +152,10 @@ export function HandoverWalletControl({
     if (result.ok) {
       setTarget('')
       setMessage('')
+      setOpen(false)
       toast({ title: t('sentTitle'), description: t('sent') })
       onChanged?.()
+      onClose?.()
     } else {
       setMessage(
         result.reason === 'unverified'
@@ -165,7 +170,7 @@ export function HandoverWalletControl({
       )
     }
     setBusy(false)
-  }, [onChanged, sessionWallet, t, target])
+  }, [onChanged, onClose, sessionWallet, t, target, toast])
 
   const handleAccept = useCallback(async () => {
     if (!sessionWallet) { setMessage(t('unauthorized')); return }

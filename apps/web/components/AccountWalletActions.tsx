@@ -19,6 +19,8 @@ interface AccountWalletActionsProps {
   onUnlock?: () => void
   /** Muestra el aviso de qué pasa al desvincular (sólo donde existe "Desvincular"). */
   showUnlinkWarning?: boolean
+  /** Cierra el panel/modal tras invitar (el toast es la confirmación). */
+  onClose?: () => void
 }
 
 /**
@@ -39,6 +41,7 @@ export function AccountWalletActions({
   onChanged,
   onUnlock,
   showUnlinkWarning = false,
+  onClose,
 }: AccountWalletActionsProps) {
   const { status, walletInfo } = useInAppWallet()
   const { address, sessionAddress } = useAuthAddress()
@@ -107,7 +110,12 @@ export function AccountWalletActions({
       )}
       {showLink && <LinkWalletButton lang={lang} onLinked={onChanged} align="start" />}
       {verified !== false && (
-        <InviteWalletControl lang={lang} onChanged={onChanged} align="start" />
+        <InviteWalletControl
+          lang={lang}
+          onChanged={onChanged}
+          align="start"
+          onClose={onClose}
+        />
       )}
       {/* R-#288: la billetera in-app se agrega a la cuenta verificada y el duplicado se borra. */}
       <HandoverWalletControl
@@ -115,6 +123,7 @@ export function AccountWalletActions({
         onChanged={onChanged}
         onUnlock={onUnlock}
         onVerifiedChange={setVerified}
+        onClose={onClose}
       />
       {showUnlinkWarning && (
         <p className="text-xs text-muted-foreground" data-testid="wallet-unlink-warning">

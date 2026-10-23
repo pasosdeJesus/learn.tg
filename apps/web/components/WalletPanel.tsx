@@ -141,7 +141,15 @@ export function WalletPanel({ lang = 'en', open, onOpenChange, address, onLock, 
       onRequestUnlock={onRequestUnlock}
       accountsActions={
         address
-          ? <AccountWalletActions lang={language} onChanged={refreshWallets} onUnlock={onRequestUnlock} showUnlinkWarning />
+          ? (
+            <AccountWalletActions
+              lang={language}
+              onChanged={refreshWallets}
+              onUnlock={onRequestUnlock}
+              showUnlinkWarning
+              onClose={() => onOpenChange(false)}
+            />
+          )
           : undefined
       }
     />
