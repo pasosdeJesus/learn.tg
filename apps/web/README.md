@@ -211,6 +211,13 @@ The application uses Next.js's App Router. Here are the main user-facing pages:
     pnpm build
     ```
 
+    `pnpm build` uses `bin/build`, which raises the file-descriptor limit for
+    Next's output tracing. If the build still fails with
+    `EMFILE: too many open files` (for example `.../.next/export-marker.json`),
+    the **hard** limit is too low: raise `openfiles-cur`/`openfiles-max` in
+    `/etc/login.conf`, run `doas cap_mkdb /etc/login.conf`, and log in again.
+    Check with `ulimit -Hn` (needs at least 4096).
+
 2.  **Run in Production Mode:**
 
     The `bin/prod.sh` script is configured to build and start the application in production mode.

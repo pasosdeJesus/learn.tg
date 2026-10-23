@@ -14,7 +14,9 @@ env-check:
 # defecto en adJ/OpenBSD, así que el build sube a 7G. Los motores se compilan
 # antes (`dist/` está gitignored y la app los importa por su exports map).
 build: engines-dist
-	@sh -c 'ulimit -d 7340032 && pnpm -r --if-present build'
+	@sh -c 'ulimit -d 7340032; \
+	  for n in 8192 4096 2048 1024; do ulimit -n $$n 2>/dev/null && break; done; \
+	  pnpm -r --if-present build'
 
 test:
 	@echo "Running tests in apps/web..."

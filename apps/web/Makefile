@@ -81,7 +81,7 @@ all: build-guard engines-assets pwa-clean
 	$(MAKE) next-patch-check swc-wasm
 	# Máquina real: 16G RAM + swap, otras apps. 15 workers × heap grande = OOM.
 	# 8 workers × 2048 MB (webpack.parallelism en next.config.ts, https://gitlab.com/pasosdeJesus/m/-/work_items/35 gate).
-	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
+	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 sh bin/build
 
 type-source:
 	pnpm tsc --noEmit
@@ -190,7 +190,7 @@ dev:
 prod: build-guard engines-assets pwa-clean
 	(cd ../.. && pnpm i)
 	$(MAKE) engines-dist next-patch-check swc-wasm
-	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
+	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 sh bin/build
 	./bin/start > prod.log 2>&1 &
 
 # Next.js 16 SWC wasm fallback: OpenBSD has no native bindings and the

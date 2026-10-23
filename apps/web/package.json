@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 4300 --webpack --experimental-https --experimental-https-key ../../.cert/llave.pem --experimental-https-cert ../../.cert/cert.pem --experimental-https-ca /etc/ssl/cert.pem",
-    "build": "next build --webpack",
+    "build": "sh bin/build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
