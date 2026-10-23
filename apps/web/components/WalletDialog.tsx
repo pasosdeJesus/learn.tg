@@ -875,16 +875,12 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
         )}
 
         <DialogFooter>
-          {booting ? (
+          {protectStep ? null : booting ? (
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               {t('close')}
             </Button>
           ) : showRecovery ? (
-            showWords ? (
-              <Button data-testid="wallet-words-done-footer" onClick={() => setShowWords(false)} disabled={busy}>
-                {t('wordsDone')}
-              </Button>
-            ) : (
+            showWords ? null : (
               <Button data-testid="wallet-verify" onClick={() => { void handleVerifyBackup() }} disabled={busy}>
                 {busy ? t('signingIn') : t('verifySubmit')}
               </Button>

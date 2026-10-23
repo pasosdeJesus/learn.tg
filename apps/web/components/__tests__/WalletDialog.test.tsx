@@ -223,11 +223,20 @@ describe('WalletDialog (R-#244)', () => {
     // gesto ya elegido (método por omisión cuando el dispositivo puede verificar).
     await waitFor(() => expect(screen.getByTestId('wallet-protect')).toBeInTheDocument())
     expect(screen.getByTestId('wallet-protect-gesture')).toBeChecked()
+    // El paso de protección todavía no ha mostrado las palabras: su botón de
+    // respaldo no debe aparecer aquí (reportado el 2026-10-23).
+    expect(screen.queryByTestId('wallet-words-done')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('wallet-words-done-footer')).not.toBeInTheDocument()
 
     await act(async () => {
       fireEvent.click(screen.getByTestId('wallet-protect-continue'))
     })
     expect(mocks.enableBiometric).toHaveBeenCalledWith('12345678')
+
+    // Una sola acción para continuar tras escribir las palabras (sin duplicado en
+    // el pie del diálogo).
+    await waitFor(() => expect(screen.getByTestId('wallet-words-done')).toBeInTheDocument())
+    expect(screen.queryByTestId('wallet-words-done-footer')).not.toBeInTheDocument()
 
     await completeBackup()
 

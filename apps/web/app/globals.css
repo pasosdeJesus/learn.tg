@@ -410,3 +410,26 @@ textarea,
   padding: 0 0.25rem;
   border-radius: 0.25rem;
 }
+
+/* Panel de la billetera (generated-wallet): el diálogo se quedaba en 28rem y las
+   cinco pestañas, con etiquetas largas, caían una por fila en pantallas angostas
+   (reporte del operador, 2026-10-23). Se ensancha el panel y se fijan cuatro
+   pestañas por fila; la quinta (Cuenta/Cuentas) pasa a la segunda fila. */
+[data-testid='wallet-panel'] {
+  width: min(40rem, calc(100vw - 2rem));
+  max-width: min(40rem, calc(100vw - 2rem));
+}
+
+[data-testid='wallet-panel'] [role='tablist'] {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  height: auto;
+}
+
+[data-testid='wallet-panel'] [role='tablist'] > button {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
