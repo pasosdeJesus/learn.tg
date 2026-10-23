@@ -41,6 +41,9 @@ vi.mock('../InviteWalletControl', () => ({
   InviteWalletControl: (props: { align?: string }) =>
     React.createElement('span', { 'data-testid': 'invite-mock', 'data-align': props.align }),
 }))
+vi.mock('../HandoverWalletControl', () => ({
+  HandoverWalletControl: () => React.createElement('span', { 'data-testid': 'handover-mock' }),
+}))
 
 import { AccountWalletActions } from '../AccountWalletActions'
 
@@ -111,6 +114,13 @@ describe('AccountWalletActions (R-#265 §3.2)', () => {
   it('alinea las acciones al inicio del contenedor', () => {
     render(<AccountWalletActions lang="es" />)
     expect(screen.getByTestId('invite-mock').getAttribute('data-align')).toBe('start')
+  })
+
+  // R-#288: la billetera in-app se agrega a la cuenta verificada desde las acciones de la
+  // cuenta (panel y perfil).
+  it('ofrece el handover junto a las demás acciones de la cuenta', () => {
+    render(<AccountWalletActions lang="en" />)
+    expect(screen.getByTestId('handover-mock')).toBeTruthy()
   })
 
   // R-#265 §3.3 (decisión del operador, 2026-10-18): desvincular revoca los SBT de la

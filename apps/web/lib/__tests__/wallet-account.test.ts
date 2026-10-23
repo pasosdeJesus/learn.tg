@@ -8,6 +8,10 @@ import {
   acceptInvitationRequest,
   unlinkAccountWalletRequest,
   linkAccountWallet,
+  requestHandover,
+  cancelHandoverRequest,
+  fetchWalletOverview,
+  acceptHandoverRequest,
 } from '@/lib/wallet-account'
 
 const WALLETS = [
@@ -123,9 +127,68 @@ describe('wallet-account (R-#265 / m#50)', () => {
       '/api/wallet/invite',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ walletAddress: '0xAAA', address: '0xCCC' }),
+        body: JSON.stringify({ walletAddress: '0xAAA', address: '0xCCC', mode: 'link' }),
       }),
     )
+  })
+
+  it('requests a handover with mode=handover', async () => {
+    const fetchMock = vi.fn(() => respond(200, { invited: '0xccc', mode: 'handover' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await requestHandover('0xAAA', '0xCCC')
+
+    expect(result).toEqual({ ok: true, invitations: [] })
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/wallet/invite',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ walletAddress: '0xAAA', address: '0xCCC', mode: 'handover' }),
+      }),
+    )
+  })
+
+  it('reads received handover requests and the verified flag', async () => {
+    const receivedInvitations = [
+      {
+        id: 4,
+        direccion_invitada: '0xccc',
+        duplicate_id: 9,
+        duplicate_wallet: '0x999',
+      },
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => respond(200, { wallets: WALLETS, invitations: [], receivedInvitations, verified: true })),
+    )
+
+    expect(await fetchWalletOverview('0xAAA')).toEqual({
+      wallets: WALLETS,
+      invitations: [],
+      receivedInvitations,
+      verified: true,
+    })
+  })
+
+  it('dismisses a received request by id', async () => {
+    const fetchMock = vi.fn(() => respond(200, { cancelled: true, receivedInvitations: [] }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await cancelHandoverRequest('0xAAA', 4)).toEqual({ ok: true })
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/wallet/cancel',
+      expect.objectContaining({
+        body: JSON.stringify({ walletAddress: '0xAAA', receivedId: 4 }),
+      }),
+    )
+  })
+
+  it('reports a failed handover accept by its server code', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => respond(409, { code: 'duplicate-has-value' })))
+    expect(await acceptHandoverRequest('m', 's')).toEqual({
+      ok: false,
+      reason: 'duplicate-has-value',
+    })
   })
 
   it('distinguishes an unverified inviter from a conflict', async () => {

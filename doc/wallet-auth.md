@@ -199,9 +199,9 @@ paste an address, invite it, list the **pending invitations** of the account and
   (`INVITER_MIN_PROFILE_SCORE = 50`, the same bar as the on-chain rewards) and
   `POST /api/wallet/invite` answers `403` otherwise. **Exception (2026-10-21):** a
   low-score account may invite an address that already belongs to a **verified account**
-  (profile score, Self passport or church verification) — e.g. a new in-app account
-  inviting the OKX wallet the user already had. The invited wallet still has to sign the
-  `accept`, so nothing is merged without its consent.
+  (profile score, Self passport or church verification) — this is the *handover* path of
+  R-#288, where the verified account survives; see `HandoverWalletControl` below. The
+  invited wallet always signs the `accept`, so nothing is merged without its consent.
 - The invited wallet's plain sign-in is **refused** (`authorize()` does not create an
   account for a wallet with a pending invitation), so the client probes the invitation after
   the failed credentials POST, asks for explicit consent and, when accepted, links and
@@ -211,6 +211,30 @@ paste an address, invite it, list the **pending invitations** of the account and
   in [siwe-auth-flow.md](siwe-auth-flow.md) §7.
 - A cancellable invitation releases the partial unique index, so the same address can be
   invited again (`POST /api/wallet/cancel`, idempotent).
+
+### HandoverWalletControl (`components/HandoverWalletControl.tsx`)
+
+R-#288: the in-app wallet joins an **existing verified account** and the duplicate account
+it created is deleted. It lives with the account actions (Accounts tab and profile) and has
+two sides, decided by the server:
+
+- the **duplicate** (unverified in-app account) types the wallet address of the verified
+  account and sends the request (`POST /api/wallet/invite` with `mode: "handover"`);
+- the **verified** account sees the request (`GET /api/wallet` → `receivedInvitations`) and
+  accepts by signing a SIWE with the session wallet (`POST /api/wallet/accept` with
+  `confirm: true`). `lib/wallet-handover.ts` moves every wallet of the duplicate and deletes
+  its account in one transaction. It can also **dismiss** the request without signing
+  (`POST /api/wallet/cancel` with `receivedId`), which only matches rows addressed to one of
+  its own wallets.
+
+The mode is inferred at accept: a `link` invitation can never target an address that already
+has an account (the engine refuses it), so a pending invitation for a linked address is a
+handover. Nothing is merged: the operator confirmed (2026-10-22) that a duplicate holds no
+`transaction` rows, purchases or credentials. Anything of value in the duplicate (monetary
+rows, credentials, church/reputation/cluster data, referral relationships) makes the
+operation **refuse**; the reference list is read from `pg_constraint`, so a new foreign key
+to `usuario` cannot be forgotten. `apps/web/m-engine.json` declares `billetera_invitada`
+again because the app now writes the handover request and reads received ones.
 
 ### WalletDialog (`components/WalletDialog.tsx`)
 

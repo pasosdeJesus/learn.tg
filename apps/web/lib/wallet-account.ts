@@ -108,12 +108,13 @@ export type InviteResult =
 export async function inviteWalletAddress(
   walletAddress: string,
   address: string,
+  mode: 'link' | 'handover' = 'link',
 ): Promise<InviteResult> {
   try {
     const res = await fetch('/api/wallet/invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletAddress, address }),
+      body: JSON.stringify({ walletAddress, address, mode }),
     })
     if (res.status === 401) return { ok: false, reason: 'unauthorized' }
     if (res.status === 403) return { ok: false, reason: 'unverified' }
@@ -247,6 +248,136 @@ export async function linkAccountWallet(args: {
     if (res.status === 409) return { ok: false, reason: 'owned-by-other' }
     if (res.status === 400) return { ok: false, reason: 'invalid' }
     if (!res.ok) return { ok: false, reason: 'error' }
+    return { ok: true, wallets: await readWallets(res) }
+  } catch {
+    return { ok: false, reason: 'error' }
+  }
+}
+
+// ── R-#288: handover (the in-app wallet joins the verified account) ─────────────
+
+/** A handover request addressed to one of the account's wallets. */
+export interface ReceivedHandover {
+  id: number
+  direccion_invitada: string
+  expires_at?: string | null
+  duplicate_id: number
+  duplicate_nusuario?: string | null
+  /** The in-app wallet that asks to join (the duplicate's wallet). */
+  duplicate_wallet?: string | null
+}
+
+export interface WalletOverview {
+  wallets: AccountWallet[]
+  invitations: AccountInvitation[]
+  receivedInvitations: ReceivedHandover[]
+  /** The session account is verified (score, passport or church). */
+  verified: boolean
+}
+
+/** Wallets, sent invitations, received handover requests and the verified flag. */
+export async function fetchWalletOverview(
+  walletAddress: string,
+): Promise<WalletOverview | null> {
+  try {
+    const res = await fetch(`/api/wallet?walletAddress=${encodeURIComponent(walletAddress)}`)
+    if (!res.ok) return null
+    const data = (await res.json().catch(() => null)) as Record<string, unknown> | null
+    return {
+      wallets: Array.isArray(data?.wallets) ? (data!.wallets as AccountWallet[]) : [],
+      invitations: Array.isArray(data?.invitations)
+        ? (data!.invitations as AccountInvitation[])
+        : [],
+      receivedInvitations: Array.isArray(data?.receivedInvitations)
+        ? (data!.receivedInvitations as ReceivedHandover[])
+        : [],
+      verified: data?.verified === true,
+    }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * R-#288: request a handover. `address` is the wallet of the **verified** account;
+ * accepting it closes the current (in-app) account. The server refuses when the
+ * target is not linked, is not verified or the current account holds value.
+ */
+export async function requestHandover(
+  walletAddress: string,
+  address: string,
+): Promise<InviteResult> {
+  return inviteWalletAddress(walletAddress, address, 'handover')
+}
+
+export type HandoverResult =
+  | { ok: true; wallets: AccountWallet[] }
+  | {
+      ok: false
+      reason:
+        | 'no-invitation'
+        | 'target-not-verified'
+        | 'duplicate-has-value'
+        | 'same-account'
+        | 'invalid'
+        | 'error'
+    }
+
+type HandoverReason = Extract<HandoverResult, { ok: false }>['reason']
+
+const HANDOVER_REASONS: Record<string, HandoverReason> = {
+  'target-not-verified': 'target-not-verified',
+  'survivor-not-verified': 'target-not-verified',
+  'target-not-linked': 'invalid',
+  'duplicate-has-value': 'duplicate-has-value',
+  'duplicate-verified': 'duplicate-has-value',
+  'duplicate-is-verifier': 'duplicate-has-value',
+  'duplicate-not-found': 'invalid',
+  'duplicate-disabled': 'invalid',
+  'survivor-not-found': 'invalid',
+  'survivor-disabled': 'invalid',
+  'same-account': 'same-account',
+  'no-wallets': 'invalid',
+  'already-pending': 'error',
+  'already-completed': 'no-invitation',
+}
+
+/** Dismisses a received handover request (the account owns the addressed wallet). */
+export async function cancelHandoverRequest(
+  walletAddress: string,
+  requestId: number,
+): Promise<{ ok: boolean }> {
+  try {
+    const res = await fetch('/api/wallet/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletAddress, receivedId: requestId }),
+    })
+    if (res.status === 401) return { ok: false }
+    const data = (await res.json().catch(() => null)) as { cancelled?: unknown } | null
+    return { ok: res.ok && data?.cancelled === true }
+  } catch {
+    return { ok: false }
+  }
+}
+
+/** Accepts a handover request with a SIWE signature of the verified wallet. */
+export async function acceptHandoverRequest(
+  message: string,
+  signature: string,
+): Promise<HandoverResult> {
+  try {
+    const res = await fetch('/api/wallet/accept', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, signature, confirm: true }),
+    })
+    if (res.status === 404) return { ok: false, reason: 'no-invitation' }
+    const data = (await res.json().catch(() => null)) as { code?: unknown } | null
+    if (!res.ok) {
+      const code = typeof data?.code === 'string' ? data.code : ''
+      return { ok: false, reason: HANDOVER_REASONS[code] ?? 'error' }
+    }
     return { ok: true, wallets: await readWallets(res) }
   } catch {
     return { ok: false, reason: 'error' }

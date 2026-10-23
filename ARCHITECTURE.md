@@ -206,7 +206,11 @@ data flow, contracts):
     wallets** to one account: `POST /api/wallet/link` (the active wallet signs a SIWE in
     the act) or `POST /api/wallet/invite` → `POST /api/wallet/accept` (the invited wallet
     signs later, on its own device; its plain sign-in is refused so the consent is
-    explicit, and one signature serves to accept and to sign in). The session cookie
+    explicit, and one signature serves to accept and to sign in). When the invited address
+    **already belongs to a verified account** and the inviter is the unverified in-app
+    duplicate, the accept is a **handover** (R-#288): the verified account absorbs the
+    duplicate's wallets and the duplicate row is deleted; the duplicate must prove it holds
+    no value (`lib/wallet-handover.ts`). The session cookie
     identifies the **account** (`usuarioId` + `sessionEpoch`); `walletAddress` is only a
     hint that must belong to it. Payouts go to the connected wallet, credentials to the
     wallet that completed the course and bonuses to the last used wallet.

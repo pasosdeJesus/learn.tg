@@ -284,6 +284,15 @@ wallet opens learn.tg on its own device, signs and accepts.
 4. The inviter can list and cancel pending invitations from the wallet panel's **Accounts**
    tab and from the profile (`components/InviteWalletControl.tsx` → `GET /api/wallet`
    `invitations`, `POST /api/wallet/cancel`).
+5. **Handover (R-#288).** When the invited address **already belongs to an account**, the
+   same accept runs the handover instead of a link: the signing wallet (the verified one)
+   authorizes moving every wallet of the duplicate in-app account into its own account and
+   deleting the duplicate. The verified account's sign-in is **not** refused by the pending
+   invitation (`authorize()` only blocks the account creation of a wallet with no account),
+   and the received request is surfaced by `GET /api/wallet` (`receivedInvitations`) and
+   `components/HandoverWalletControl.tsx`. `lib/wallet-handover.ts` refuses when the
+   duplicate holds transactions, purchases, credentials, church/reputation/cluster data or
+   referral relationships.
 
 Endpoint details live in `apps/web/app/api/doc/API.md` (`## Wallet`).
 

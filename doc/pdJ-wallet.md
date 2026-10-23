@@ -115,6 +115,25 @@ the profile, section **Wallets in this account**.
   account. Copies of paid courses downloaded with the removed wallet stay readable while the
   account has another wallet.
 
+## I already have a verified account (and I started with the in-app wallet)
+
+If you created your wallet inside learn.tg but you already had a **verified** account with an
+older wallet (MetaMask, OKX, OneKey…), you do not have to start over:
+
+1. In the account you are using now (the new in-app one), open **Wallets in this account**
+   (profile) or the **Accounts** tab of the wallet panel and choose **I already have a
+   verified account** (*Ya tengo una cuenta verificada*).
+2. Type the **address of your old, verified wallet** and send the request.
+3. Open learn.tg with that old wallet (on the same phone or another one) and sign in. The
+   profile shows **Requests to join this account** (*Solicitudes para unirse a esta cuenta*):
+   accept and sign with that wallet.
+4. Your in-app wallet is added to the verified account and the new account is **deleted**
+   with its data. Your progress, scores, badges and referral code stay untouched. Then sign
+   in on the new device with the in-app wallet and you will see them.
+
+Only an **unverified** account with no transactions, purchases or badges can send this
+request. If your current account already holds any of those, ask a verifier to resolve it.
+
 ## Stop using it
 
 - **Disconnect** signs you out on this device. To use another wallet instead,

@@ -9,6 +9,7 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 import { hasAnotherWallet } from '@/lib/wallet-availability'
 import { LinkWalletButton } from '@/components/LinkWalletButton'
 import { InviteWalletControl } from '@/components/InviteWalletControl'
+import { HandoverWalletControl } from '@/components/HandoverWalletControl'
 
 interface AccountWalletActionsProps {
   lang?: string
@@ -102,6 +103,8 @@ export function AccountWalletActions({
       )}
       {showLink && <LinkWalletButton lang={lang} onLinked={onChanged} align="start" />}
       <InviteWalletControl lang={lang} onChanged={onChanged} align="start" />
+      {/* R-#288: la billetera in-app se agrega a la cuenta verificada y el duplicado se borra. */}
+      <HandoverWalletControl lang={lang} onChanged={onChanged} onUnlock={onUnlock} />
       {showUnlinkWarning && (
         <p className="text-xs text-muted-foreground" data-testid="wallet-unlink-warning">
           {t('unlinkWarning')}
