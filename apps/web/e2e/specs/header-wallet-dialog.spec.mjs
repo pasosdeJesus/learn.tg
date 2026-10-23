@@ -201,6 +201,26 @@ async function main() {
     }
   }
 
+  // 6. R-#288: sin sesión pero con la billetera recordada en el dispositivo, la
+  // cabecera no debe mentir con "Connect Wallet": ofrece volver a firmar. Antes
+  // `ConnectWalletButton` mostraba la píldora de conectada leyendo localStorage
+  // (reporte desde OneKey móvil, 2026-10-23).
+  if (addressAfterReload) {
+    await page.evaluate((addr) => localStorage.setItem('learn.tg.sessionAddress', addr), addressAfterReload)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    let stale = await header(page)
+    for (let i = 0; i < 12 && !/sign in again|volver a ingresar/i.test(stale.button || ''); i++) {
+      await sleep(1500)
+      stale = await header(page)
+    }
+    if (/sign in again|volver a ingresar/i.test(stale.button || '')) {
+      ok(`Sin sesión pero con billetera recordada, la cabecera ofrece "${stale.button}"`)
+    } else {
+      fail(`La cabecera muestra "${stale.button}" en vez de ofrecer volver a firmar`)
+    }
+    await page.evaluate(() => localStorage.removeItem('learn.tg.sessionAddress'))
+  }
+
   const failures = summary(t0)
   await browser.close()
   process.exit(failures > 0 ? 1 : 0)

@@ -160,10 +160,11 @@ async function main() {
     await pageA.waitForSelector('[data-testid="handover-address"]', { timeout: 15000 })
     await pageA.type('[data-testid="handover-address"]', verifiedAddress)
     await pageA.click('[data-testid="handover-send"]').catch(() => {})
-    // The banner is informative; the authoritative check is the pending invitation.
+    // El éxito cierra el formulario y aparece como toast; los errores siguen inline.
+    // La comprobación autoritativa es la invitación pendiente (más abajo).
     const sent = await waitForText(
       pageA,
-      '[data-testid="handover-message"]',
+      'body',
       /request sent|solicitud enviada|not verified|no está verificada|failed|no se pudo/i,
     )
     if (/not verified|no está verificada/i.test(sent)) {

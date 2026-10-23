@@ -12,6 +12,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { ReferralProfileSection } from '@/components/ReferralProfileSection'
 import { PremiumCoursesSection } from '@/components/PremiumCoursesSection'
 import { AccountWalletActions } from '@/components/AccountWalletActions'
+import { AccountWalletList } from '@/components/AccountWalletList'
 
 import { Button } from '@/components/ui/button'
 import CircularProgress from '@/components/ui/circular-progress'
@@ -148,9 +149,12 @@ export default function ProfileForm({ params }: PageProps) {
   const [placeOfWorshipName, setPlaceOfWorshipName] = useState('')
   const [cityDisplayName, setCityDisplayName] = useState('')
 
-  const { address } = useAuthAddress()
+  const { address, sessionAddress, inAppAddress } = useAuthAddress()
   const { data: session, status: sessionStatus } = useSession()
   const { toast } = useToast()
+  // R-#288: al vincular/invitar/aceptar, la lista de billeteras del perfil se
+  // vuelve a leer (antes solo se refrescaba la del panel).
+  const [walletRefresh, setWalletRefresh] = useState(0)
 
   const parameters = use(params)
   const { lang } = parameters
@@ -1285,8 +1289,18 @@ export default function ProfileForm({ params }: PageProps) {
           <h2 className="text-2xl font-bold text-gray-900">{t('walletsTitle')}</h2>
           <p className="text-gray-600 mt-1">{t('walletsHint')}</p>
         </div>
-        <div className="p-6">
-          <AccountWalletActions lang={lang} />
+        <div className="p-6 space-y-4">
+          <AccountWalletList
+            lang={lang}
+            address={address || ''}
+            refreshKey={walletRefresh}
+            sessionAddress={sessionAddress}
+            inAppAddress={inAppAddress}
+          />
+          <AccountWalletActions
+            lang={lang}
+            onChanged={() => setWalletRefresh((value) => value + 1)}
+          />
         </div>
       </div>
       <ReferralProfileSection lang={lang} />

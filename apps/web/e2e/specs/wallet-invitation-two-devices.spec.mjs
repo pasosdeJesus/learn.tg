@@ -156,17 +156,24 @@ async function main() {
     await pageA.waitForSelector('[data-testid="wallet-invite-address"]', { timeout: 15000 }).catch(() => {})
     await pageA.type('[data-testid="wallet-invite-address"]', invitedAddress)
     await pageA.click('[data-testid="wallet-invite-submit"]').catch(() => {})
-    const message = await waitForText(pageA, '[data-testid="wallet-invite-message"]', /invitation created|invitaci[oó]n creada|50 points|50 puntos/i, 30)
+    // La invitación ahora cierra el panel y confirma con un toast (el mensaje inline
+    // solo queda para errores), así que se espera el texto de la página.
+    const message = await waitForText(
+      pageA,
+      'body',
+      /invitation sent|invitaci[oó]n enviada|50 points|50 puntos|could not|no se pudo/i,
+      30,
+    )
 
     if (/50 points|50 puntos/i.test(message)) {
       console.log(`[SKIP] la cuenta de prueba no tiene perfil para invitar: "${message}"`)
       await ctxA.close()
       process.exit(0)
     }
-    if (!/invitation created|invitaci[oó]n creada/i.test(message)) {
-      fail(`La invitación no se creó: "${message}"`)
+    if (!/invitation sent|invitaci[oó]n enviada/i.test(message)) {
+      fail(`La invitación no se creó: "${message.slice(0, 300)}"`)
     } else {
-      ok(`Invitación creada desde el perfil: "${message}"`)
+      ok('Invitación creada desde el perfil (toast)')
     }
 
     const inviterView = await accountWallets(pageA, creds.addr)

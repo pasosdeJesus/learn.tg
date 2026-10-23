@@ -70,6 +70,9 @@ describe('Profile Page', () => {
     vi.mock('@/components/AccountWalletActions', () => ({
       AccountWalletActions: () => React.createElement('div', { 'data-testid': 'account-wallet-actions-mock' }),
     }))
+    vi.mock('@/components/AccountWalletList', () => ({
+      AccountWalletList: () => React.createElement('div', { 'data-testid': 'account-wallet-list-mock' }),
+    }))
 
     vi.mock('react', async () => {
       const actual = await vi.importActual('react')
