@@ -44,31 +44,16 @@ profile.
 
 ---
 
-### **Already have a wallet elsewhere?**
-
-If you use MetaMask, Rabby, OKX, OneKey or Brave you can **import its recovery phrase** and
-keep the same address (same funds, same progress, same scholarships and referrals): see the
-[migration guide](/en/migration-in-app-wallet).
-
----
-
 ### **Already had a verified account before creating this wallet?**
 
 If you created your wallet inside learn.tg but you already had a **verified** account with
 an older wallet (MetaMask, OKX, OneKey…), you do not have to start over:
 
 1. In the account you are using now, open the wallet panel **Accounts** tab (or
-   **Wallets in this account** in your profile) and choose **I already have a verified
-   account**.
-2. Type the address of your **old, verified wallet** and send the request.
-3. Open learn.tg with that old wallet and sign in. Your profile shows **Requests to join
-   this account**: accept and sign with that wallet.
-4. Your in-app wallet is added to the verified account and the account you created in step
-   1 is **deleted** with its data. Your progress, scores, badges and referral code stay
-   untouched; sign in on this device again with the in-app wallet to see them.
-
-This only works from an account that is **not verified** and has no paid purchases or
-badges. If your current account already has any of those, ask a verifier for help.
+   **Wallets in this account** in your profile) and choose **I already have a verified account**.
+2. Type the address of your **existing, verified wallet** and send the request.
+3. Open learn.tg with that old wallet and sign in. Your profile shows **Requests to join this account**: accept and sign with that wallet.
+4. Your in-app wallet is added to the verified account that becomes your single account. Your progress, scores, badges and referral code stay untouched; sign in on this device again with the in-app wallet to see them.
 
 ---
 

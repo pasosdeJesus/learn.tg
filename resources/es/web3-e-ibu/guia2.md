@@ -48,14 +48,6 @@ público.
 
 ---
 
-### **¿Ya tienes una billetera en otra parte?**
-
-Si usas MetaMask, Rabby, OKX, OneKey o Brave puedes **importar su frase de recuperación** y
-conservar la misma dirección (mismos fondos, mismo progreso, mismas becas y referidos):
-mira la [guía de migración](/es/migracion-billetera-app).
-
----
-
 ### **¿Ya tenías una cuenta verificada antes de crear esta billetera?**
 
 Si creaste tu billetera dentro de learn.tg pero ya tenías una cuenta **verificada** con una
@@ -63,15 +55,11 @@ billetera anterior (MetaMask, OKX, OneKey…), no tienes que empezar de nuevo:
 
 1. En la cuenta que usas ahora, abre la pestaña **Cuentas** del panel de la billetera (o
    **Billeteras en esta cuenta** en tu perfil) y elige **Ya tengo una cuenta verificada**.
-2. Escribe la dirección de tu **billetera antigua y verificada** y envía la solicitud.
+2. Escribe la dirección pública de tu **billetera existente y verificada** y envía la solicitud.
 3. Abre learn.tg con esa billetera antigua e inicia sesión. Tu perfil muestra
    **Solicitudes para unirse a esta cuenta**: acepta y firma con esa billetera.
-4. Tu billetera in-app se agrega a la cuenta verificada y la cuenta que creaste en el paso
-   1 se **borra** con sus datos. Tu progreso, puntajes, insignias y código de referidos
+4. Tu billetera in-app se agrega a la cuenta verificada y quedas con una sola cuenta.  Tu progreso, puntajes, insignias y código de referidos
    quedan intactos; vuelve a entrar en este dispositivo con la billetera in-app para verlos.
-
-Esto solo funciona desde una cuenta **sin verificar** y sin compras ni insignias. Si tu
-cuenta actual ya tiene algo de eso, pide ayuda a un verificador.
 
 ---
 
