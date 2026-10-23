@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { Input } from '@pasosdejesus/m/shadcn-components/ui/input'
+import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useWalletProvider } from '@/lib/hooks/useWalletProvider'
@@ -21,6 +22,8 @@ interface HandoverWalletControlProps {
   onChanged?: () => void
   /** Abre el diálogo de la billetera in-app para desbloquearla (firmar). */
   onUnlock?: () => void
+  /** Informa si la cuenta de la sesión está verificada (para ocultar acciones que no aplican). */
+  onVerifiedChange?: (verified: boolean | null) => void
 }
 
 function shortAddress(address: string): string {
@@ -37,9 +40,15 @@ function shortAddress(address: string): string {
  *   accepts by signing a SIWE with the session wallet. Accepting moves the in-app
  *   wallet into this account and deletes the duplicate account and its data.
  */
-export function HandoverWalletControl({ lang = 'en', onChanged, onUnlock }: HandoverWalletControlProps) {
+export function HandoverWalletControl({
+  lang = 'en',
+  onChanged,
+  onUnlock,
+  onVerifiedChange,
+}: HandoverWalletControlProps) {
   const { sessionAddress, address, inAppAddress, isInAppUnlocked } = useAuthAddress()
   const { provider } = useWalletProvider()
+  const { toast } = useToast()
   const sessionWallet = sessionAddress || address || ''
 
   const [received, setReceived] = useState<ReceivedHandover[]>([])
@@ -58,8 +67,9 @@ export function HandoverWalletControl({ lang = 'en', onChanged, onUnlock }: Hand
       placeholder: '0x…',
       send: 'Send request',
       sending: 'Sending…',
+      sentTitle: 'Request sent',
       sent:
-        'Request sent. Sign in with your verified wallet on its device (or switch to it) and accept there.',
+        'Now open learn.tg with your verified wallet and accept the request in "Requests to join this account".',
       pending: 'Requests to join this account',
       pendingHelp:
         'Accepting adds that wallet here and deletes the other account and its data.',
@@ -87,8 +97,9 @@ export function HandoverWalletControl({ lang = 'en', onChanged, onUnlock }: Hand
       placeholder: '0x…',
       send: 'Enviar solicitud',
       sending: 'Enviando…',
+      sentTitle: 'Solicitud enviada',
       sent:
-        'Solicitud enviada. Ingresa con tu billetera verificada en su dispositivo (o cambia a ella) y acepta allí.',
+        'Ahora abre learn.tg con tu billetera verificada y acepta la solicitud en «Solicitudes para unirse a esta cuenta».',
       pending: 'Solicitudes para unirse a esta cuenta',
       pendingHelp:
         'Al aceptar, esa billetera se agrega aquí y se borra la otra cuenta con sus datos.',
@@ -114,12 +125,15 @@ export function HandoverWalletControl({ lang = 'en', onChanged, onUnlock }: Hand
     if (!sessionWallet) {
       setReceived([])
       setVerified(null)
+      onVerifiedChange?.(null)
       return
     }
     const overview = await fetchWalletOverview(sessionWallet)
+    const nextVerified = overview?.verified ?? null
     setReceived(overview?.receivedInvitations ?? [])
-    setVerified(overview?.verified ?? null)
-  }, [sessionWallet])
+    setVerified(nextVerified)
+    onVerifiedChange?.(nextVerified)
+  }, [onVerifiedChange, sessionWallet])
 
   useEffect(() => {
     void refresh()
@@ -134,7 +148,8 @@ export function HandoverWalletControl({ lang = 'en', onChanged, onUnlock }: Hand
     const result = await requestHandover(sessionWallet, wallet)
     if (result.ok) {
       setTarget('')
-      setMessage(t('sent'))
+      setMessage('')
+      toast({ title: t('sentTitle'), description: t('sent') })
       onChanged?.()
     } else {
       setMessage(

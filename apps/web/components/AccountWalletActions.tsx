@@ -44,6 +44,10 @@ export function AccountWalletActions({
   const { address, sessionAddress } = useAuthAddress()
   const { available: externalAvailable, announced } = useExternalProvider()
   const [externalAccounts, setExternalAccounts] = useState<string[]>([])
+  // R-#288: una cuenta sin verificar no puede invitar (la invitación normal exige
+  // perfil); su acción es pedir unirse a la cuenta verificada. Así no se amontonan
+  // botones que no aplican (reporte del operador, 2026-10-23).
+  const [verified, setVerified] = useState<boolean | null>(null)
   const t = createComponentT(lang, {
     en: {
       unlock: 'Unlock your in-app wallet',
@@ -102,9 +106,16 @@ export function AccountWalletActions({
         </Button>
       )}
       {showLink && <LinkWalletButton lang={lang} onLinked={onChanged} align="start" />}
-      <InviteWalletControl lang={lang} onChanged={onChanged} align="start" />
+      {verified !== false && (
+        <InviteWalletControl lang={lang} onChanged={onChanged} align="start" />
+      )}
       {/* R-#288: la billetera in-app se agrega a la cuenta verificada y el duplicado se borra. */}
-      <HandoverWalletControl lang={lang} onChanged={onChanged} onUnlock={onUnlock} />
+      <HandoverWalletControl
+        lang={lang}
+        onChanged={onChanged}
+        onUnlock={onUnlock}
+        onVerifiedChange={setVerified}
+      />
       {showUnlinkWarning && (
         <p className="text-xs text-muted-foreground" data-testid="wallet-unlink-warning">
           {t('unlinkWarning')}

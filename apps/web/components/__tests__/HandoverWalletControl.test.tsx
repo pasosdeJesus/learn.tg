@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   acceptHandoverRequest: vi.fn(),
   cancelHandoverRequest: vi.fn(),
   signSiweForAddress: vi.fn(),
+  toast: vi.fn(),
 }))
 
 vi.mock('@/lib/hooks/useAuthAddress', () => ({
@@ -30,6 +31,10 @@ vi.mock('@/lib/hooks/useAuthAddress', () => ({
 
 vi.mock('@/lib/hooks/useWalletProvider', () => ({
   useWalletProvider: () => ({ provider: mocks.provider }),
+}))
+
+vi.mock('@pasosdejesus/m/shadcn-components/ui/use-toast', () => ({
+  useToast: () => ({ toast: mocks.toast }),
 }))
 
 vi.mock('@/lib/wallet-account', () => ({
@@ -131,7 +136,17 @@ describe('HandoverWalletControl (R-#288)', () => {
     fireEvent.click(screen.getByTestId('handover-send'))
 
     await waitFor(() => expect(mocks.requestHandover).toHaveBeenCalledWith(A, OLD))
-    expect(await screen.findByTestId('handover-message')).toHaveTextContent(/solicitud enviada/i)
+    // El éxito va como toast con la instrucción de aceptar en la billetera
+    // verificada (reporte del operador, 2026-10-23).
+    await waitFor(() =>
+      expect(mocks.toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Solicitud enviada',
+          description: expect.stringMatching(/ahora abre learn\.tg con tu billetera verificada/i),
+        }),
+      ),
+    )
+    expect(screen.queryByTestId('handover-message')).toBeNull()
   })
 
   it('does not offer the form on a verified account', async () => {

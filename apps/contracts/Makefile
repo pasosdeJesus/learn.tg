@@ -1,7 +1,7 @@
 .PHONY: build all type test clean prepadJ
 
 build:
-	pnpm install
+	(cd ../.. && pnpm install)
 	pnpm build
 
 all: build

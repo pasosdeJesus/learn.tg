@@ -12,7 +12,8 @@ if [ -n "$limit" ] && [ "$limit" != "unlimited" ]; then
 fi
 
 rm -rf .next
-pnpm install
+# Una sola instalación y un solo lockfile: siempre desde la raíz del workspace.
+(cd ../.. && pnpm install)
 
 # Motores (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): se consumen vía dist/ (exports map) y dist/ NO está
 # en git (artefacto de build). Compilar antes de servir — un checkout fresco

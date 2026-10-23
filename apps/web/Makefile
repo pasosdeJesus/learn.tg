@@ -71,11 +71,12 @@ pwa-kill-switch:
 all: build-guard engines-assets pwa-clean
 	./bin/m env:check
 	rm -rf .next
-	# `pnpm i` ANTES de compilar motores: los vendorizados (`packages/generated/wallet`)
-	# importan `generated-msip`, que sólo existe como enlace en `node_modules` tras
-	# instalar (miembro del workspace `packages/generated/msip`). Compilar antes de
-	# instalar falla con TS2307 "Cannot find module 'generated-msip'".
-	pnpm i
+	# `pnpm i` desde la RAÍZ del workspace (no desde la app): una instalación y un
+	# lockfile. Además va ANTES de compilar motores: los vendorizados
+	# (`packages/generated/wallet`) importan `generated-msip`, que sólo existe como
+	# enlace en `node_modules` tras instalar (miembro del workspace
+	# `packages/generated/msip`). Compilar antes falla con TS2307.
+	(cd ../.. && pnpm i)
 	$(MAKE) engines-dist
 	$(MAKE) next-patch-check swc-wasm
 	# Máquina real: 16G RAM + swap, otras apps. 15 workers × heap grande = OOM.
@@ -187,7 +188,7 @@ dev:
 	./bin/dev
 
 prod: build-guard engines-assets pwa-clean
-	pnpm i
+	(cd ../.. && pnpm i)
 	$(MAKE) engines-dist next-patch-check swc-wasm
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 pnpm exec next build --webpack
 	./bin/start > prod.log 2>&1 &
