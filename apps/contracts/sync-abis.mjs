@@ -8,7 +8,7 @@ dotenv.config({ path: '../.env' })
 
 // Configuration - directory files
 const HARDHAT_ARTIFACTS_PATH = './artifacts/contracts'
-const NEXTJS_ABI_PATH = '../nextjs/abis'
+const NEXTJS_ABI_PATH = '../web/abis'
 const ENV_FILE = '../.env'
 const DEPLOYMENTS_DIR = './deployments'
 

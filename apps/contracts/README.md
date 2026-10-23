@@ -150,4 +150,10 @@ To sync manually: `pnpm sync:abis`.
 ## OpenBSD / adJ
 
 Hardhat v3 is not supported. This project uses Hardhat v2.
-Run `bin/prepadJ.sh` before first use.
+
+`pnpm install` recreates `node_modules`, so the OpenBSD patch for
+`@nomicfoundation/solidity-analyzer` lives there only until the next install.
+`pnpm build` runs `bin/prepadJ.sh` automatically (it compiles the native addon and
+patches every installed copy); run it by hand with `pnpm prepadJ` when you only
+compiled, for example after a fresh clone or after `pnpm i`. It needs `corepack`
+(ships with Node) and Rust/cargo, and it skips itself on other operating systems.

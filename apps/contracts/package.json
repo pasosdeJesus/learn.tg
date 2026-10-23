@@ -37,9 +37,10 @@
   },
   "scripts": {
     "postinstall": "chmod +x sync-abis.mjs",
+    "prepadJ": "sh bin/prepadJ.sh",
     "compile": "hardhat clean && hardhat compile && node sync-abis.mjs",
     "tsc": "node_modules/.bin/tsc -p . && mkdir -p dist/typechain-types/ && cp typechain-types/*.d.ts dist/typechain-types/",
-    "build": "pnpm compile && pnpm tsc",
+    "build": "pnpm prepadJ && pnpm compile && pnpm tsc",
     "clean": "hardhat clean",
     "test": "node --import tsx run-tests.mjs",
     "deploy": "bin/deployLearnTGVaults",
