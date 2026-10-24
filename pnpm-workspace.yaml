@@ -9,11 +9,11 @@ packages:
 # Versión única por dependencia: las apps escriben `"catalog:"`.
 catalog:
   # ecosistema y motores
-  '@pasosdejesus/m': ^0.37.2
+  '@pasosdejesus/m': ^0.37.4
   '@pasosdejesus/mpdj': ^0.3.2
   '@pasosdejesus/usdt': ^0.1.3
-  '@pasosdejesus/contract-test': ^0.2.3
-  '@pasosdejesus/edr': ^0.2.0
+  '@pasosdejesus/contract-test': ^0.3.1
+  '@pasosdejesus/edr': ^0.2.1
   # compartidas por apps/web y apps/contracts
   typescript: 5.9.3
   viem: 2.55.11
@@ -62,7 +62,7 @@ overrides:
   '@ethereumjs/common': ^10.1.2
   '@ethereumjs/util': ^10.1.2
   '@ethereumjs/tx': ^10.1.2
-  '@pasosdejesus/m': ^0.37.2
+  '@pasosdejesus/m': ^0.37.4
 
 patchedDependencies:
   next@16.3.5: apps/web/patches/next@16.3.5.patch

@@ -328,6 +328,23 @@ async function main() {
       )
     }
 
+    // §12: el dispositivo in-app vuelve a firmar con su billetera (ahora de la
+    // cuenta verificada) y cae en ella.
+    await signInWithCoreWallet(pageA, {
+      privateKey: duplicatePk,
+      address: duplicateAddress,
+      chainId: env.chainId,
+      baseUrl: base,
+    })
+    const inAppAfter = await api(pageA, `/api/profile?walletAddress=${duplicateAddress.toLowerCase()}`)
+    if (inAppAfter.status === 200 && Number(inAppAfter.body?.id) === beforeId) {
+      ok('El dispositivo in-app vuelve a entrar y cae en la cuenta verificada')
+    } else {
+      fail(
+        `El dispositivo in-app no entró a la cuenta verificada: ${JSON.stringify(inAppAfter).slice(0, 200)}`,
+      )
+    }
+
     // ── Limpieza (salvo HANDOVER_KEEP=1) ───────────────────────────────────
     if (process.env.HANDOVER_KEEP === '1') {
       console.log('[INFO] HANDOVER_KEEP=1: se conserva la billetera adoptada')
