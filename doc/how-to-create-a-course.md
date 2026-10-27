@@ -137,7 +137,8 @@ resources/
 
 ### 2.2 Guide format
 
-Each guide should be **400-600 words** (~5-7 minutes to complete). Structure:
+Each guide should be **400-700 words** (~5-7 minutes to complete; the count is a guide,
+not a hard limit). Structure:
 
 ```markdown
 # Guide Title
@@ -182,7 +183,7 @@ Jesus | love | Sierra Leone | disciple | cluster
 | Pillar | Application |
 |--------|------------|
 | **Focus** | One clear learning objective per guide |
-| **Brevity** | 400-600 words, completable in ~7 minutes |
+| **Brevity** | 400-700 words, completable in ~7 minutes |
 | **Action** | Every guide ends with a concrete action |
 | **Joyful** | Informal, relational tone. Use emojis sparingly for warmth |
 | **Accessible** | Simple language, short sentences, avoid jargon |
@@ -297,7 +298,7 @@ bin/m eng:opwallet:call --name admin --to <VAULT_V5> \
 |------|-------|----------------|
 | Scaffold course | `scripts/create-course.sh` | `./scripts/create-course.sh "Name" en "prefix" 4 "1.0" "1.0" ["icon.svg"] [id]` |
 | Course + guide records | Migration → `bin/m db:migrate` | Review then run |
-| Guide content | `resources/{lang}/{prefijoRuta}/{sufijoRuta}.md` | 400-600 words, 3-5 crossword questions |
+| Guide content | `resources/{lang}/{prefijoRuta}/{sufijoRuta}.md` | 400-700 words, 3-5 crossword questions |
 | Vault | `LearnTGVaultsV5.createVault(id, usdt, slearn)` | `bin/m eng:opwallet:send` (review first) |
 | SBT icon | `public/img/credential/source/` | 512×512 SVG |
 | Credential type | `PasosDeJesusCredentials.registerCredentialType` | `bin/m eng:credentials:register-type` (review first) |

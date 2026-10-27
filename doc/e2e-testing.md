@@ -117,10 +117,16 @@ Exit code is `1` if any check fails; each spec prints its own `passed / failed`.
 | `transparency.spec.mjs` | `/en/transparency` and `/es/transparency` plus the `/api/transparency` contract (`data`, `totals`, `rules`) |
 | `verification-timezone.spec.mjs` | `/api/verification/availability` answers; with CalDAV unconfigured the `500` is informational, not a failure |
 | `pastor-bonus.spec.mjs` | Churches fund (`/api/churches/fund`, balances), `/en/pastor` and `/es/pastor`, and the legacy `gdcluster/pastors` → `/pastor` redirects |
+| `gd-cluster-status.spec.mjs` | R-#220: `/api/gdcluster/ranking/clusters` exposes the `status` of every cluster (pending/active, disbanded excluded), the country ranking answers, the ranking page renders, and `/api/admin/clusters` answers **403** without a session |
 
 Measured against `https://learn.tg` on 2026-10-27: **6/6 specs ok**
 (`landing-page` 3 checks, `transparency` 11, `pastor-bonus` 10, fund with
-184.56 SLEARN / 3.05 USDT).
+184.56 SLEARN / 3.05 USDT). `gd-cluster-status.spec.mjs` joined the set the same
+day for R-#220 and answered **6/6 ok** on production in a read-only run; note that
+the production ranking had **0 clusters** that day, so its `status` assertion was
+vacuous there. The real check is the dev-site run with a cluster created by
+`cluster-formation.spec.mjs`; until the R-#220 build is deployed the first check
+reports the missing `status` (the deployed build is the previous one).
 
 ### 2.2 What is deliberately NOT in the set
 
@@ -285,7 +291,7 @@ client chunks and route handlers.
 
 ## 4. Smoke tests (`e2e/smoke/`)
 
-HTTP only, no browser, runnable in CI and without a display server. 25 specs as
+HTTP only, no browser, runnable in CI and without a display server. 26 specs as
 of 2026-10-27.
 
 Run with `make test-smoke` (dev site) or `make test-smoke-prod` (production,
@@ -303,6 +309,7 @@ tokens or pays; `Data` = creates/deletes domain rows.
 | `transparency.spec.mjs` | — | `/en/transparency` and `/es/transparency` plus the `/api/transparency` contract (`data`, `totals`, `rules`; reserves and coverage when the on-chain reads answer; `premiumSlearn` without the per-course accounting, which is internal) |
 | `verification-timezone.spec.mjs` | — | `/api/verification/availability`: 7-day window and timezone echo (`America/Bogota`, `America/Caracas`, `UTC`); a `500` means CalDAV is not configured |
 | `pastor-bonus.spec.mjs` | — | R-#192/R-#283: churches fund (address + SLEARN/USDT), `/en/pastor` and `/es/pastor` landing, and the legacy `gdcluster/pastors` + `redgd/pastores` paths → `308` to `/{lang}/pastor` |
+| `gd-cluster-status.spec.mjs` | — | R-#220: `/api/gdcluster/ranking/clusters` exposes the `status` of every row (pending/active, disbanded excluded), `/api/gdcluster/ranking/countries` answers, `/en/gdcluster/ranking` renders, and `/api/admin/clusters` → **403** without a session |
 | `rails-health.spec.mjs` | — | Rails backend health (`NEXT_PUBLIC_API_BASE/proyectosfinancieros.json`): 200 with courses → UP; network error/502 → DOWN. Informative: exits 0 unless `RAILS_CHECK=1`. Production does not need Rails |
 | `caldav-http.spec.mjs` | — | CalDAV connectivity (PROPFIND/OPTIONS to Radicale) |
 | `church-directory.spec.mjs` | —* | R-#164: `GET /api/directory/churches` shape (`churches`/`total`/`notRecommended`), detail and 404, country filter, claim without session → 401, admin list without a verifier → 403, `/en/directory/churches` → 200. (*The POST/PATCH are expected to be rejected) |
@@ -424,7 +431,7 @@ and §2.4.
 | `celo-ubi-claim-sepolia.spec.mjs` | CELO UBI claim on Sepolia |
 | `church-persistence.spec.mjs` | Church data persistence in the profile |
 | `guide-claims.spec.mjs` | Guide completion and claim flow |
-| `cluster-formation.spec.mjs` | R-#220: cluster admin CRUD + ranking pseudonym + auth gating + the pastor's state/candidates. The invitation flow (accept/reject/activation at 3 churches) is covered by the engine's unit tests |
+| `cluster-formation.spec.mjs` | R-#220: admin list with search and status/country filters, cluster CRUD, member add/remove, `PUT` pseudonym + status, the **status field and column** in the ranking (API and UI), the admin clusters page (`/{lang}/admin/clusters`) and the disband (soft delete + exclusion from the ranking). The 3-pastor invitation flow (accept/reject/activation at 3 churches) is covered by the engine's unit tests; the steps that need that fixture print `[SKIP]` when it is missing |
 | `course-list-compact.spec.mjs` | R-#272: the course list (`/en`, `/es`) shows compact cards — image, title, description, "Go to course" and the three state circles on the border — without the stats paragraph or the donation row |
 | `profile-data.spec.mjs` | Profile data loading and display |
 | `admin-dashboard.spec.mjs` | Admin dashboard: widgets load, APIs respond, user/church detail, PATCH |

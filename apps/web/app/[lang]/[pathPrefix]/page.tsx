@@ -426,6 +426,28 @@ export default function Page({ params }: PageProps) {
               canRead={fromDevice || Number(course.porPagar) <= 0 || hasPurchased}
             />
 
+            {/* Formación de clústeres (R-#220): solo para estudiantes que ya
+                compraron el curso GD. La página /{lang}/cluster valida en el
+                backend que el pastor tenga el curso pagado antes de crear. */}
+            {isGd && hasPurchased && (
+              <div className="px-6 py-4 rounded-xl bg-white text-gray-800 shadow">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                  {course.idioma === 'en' ? 'Your cluster' : 'Tu clúster'}
+                </h3>
+                <p className="text-sm text-gray-700 mb-3">
+                  {course.idioma === 'en'
+                    ? 'Form your cluster, invite two pastors and follow the members.'
+                    : 'Forma tu clúster, invita a dos pastores y sigue a sus miembros.'}
+                </p>
+                <a
+                  href={`/${lang}/cluster`}
+                  className="inline-block rounded bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                >
+                  {course.idioma === 'en' ? 'Go to my cluster' : 'Ir a mi clúster'}
+                </a>
+              </div>
+            )}
+
             {isGd && fundSlearn !== null && (
               <div className="px-6 py-4 rounded-xl bg-white text-gray-800 shadow">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-2">

@@ -84,7 +84,7 @@ export async function GET(req: Request) {
 | Component | Purpose |
 |-----------|---------|
 | `ClusterPage` | Cluster detail: members, rename, join code, leave, history |
-| `RankingClient` | Clusters/Countries leaderboard tabs with USDT/SLEARN fund columns |
+| `RankingClient` | Clusters/Countries leaderboard tabs with USDT/SLEARN fund columns and the cluster status (pending/active) |
 | `ReferralsPage` | Referral wallet balance, my code, stats, history (consumes **core** APIs `/api/referrals/fund`, `/api/referral/code\|stats\|history`) |
 | `CountryFilter` | Country select filter (shadcn) |
 | `CountryFlag` | ISO alpha-2 → flag emoji with tooltip |
@@ -92,6 +92,10 @@ export async function GET(req: Request) {
 Components receive their data via **host-injected dependencies** (e.g.
 `useAuthAddress`, `useSession`, `getCsrfToken`, `Button`) — no hardcoded
 imports of core modules.
+
+The admin/verifier clusters screen (`/{lang}/admin/clusters`: table, search,
+status/country filters, edit and disband) is a **core** page: it consumes this
+engine's `/api/admin/clusters*` routes through `adminFetch`.
 
 ## Contracts subproject (`contracts/`)
 

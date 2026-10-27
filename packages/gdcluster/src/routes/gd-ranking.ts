@@ -10,13 +10,13 @@ export async function rankingClusters(deps: GdclusterDeps) {
 
     const rows = await sql<{
       id: number; name: string; pseudonym: string | null; display_name: string
-      code: string; country_id: number; wallet: string
+      code: string; country_id: number; wallet: string; status: string
       country_name: string | null; country_code: string | null; church_count: number
     }>`
       SELECT
         c.id, c.name, c.pseudonym,
         COALESCE(NULLIF(c.pseudonym, ''), c.name) AS display_name,
-        c.code, c.country_id, lead_church.cluster_wallet as wallet,
+        c.code, c.country_id, c.status, lead_church.cluster_wallet as wallet,
         p.nombre as country_name, p.alfa2 as country_code,
         COUNT(member_church.id)::int as church_count
       FROM clustergd c
@@ -26,7 +26,7 @@ export async function rankingClusters(deps: GdclusterDeps) {
       LEFT JOIN church member_church ON member_church.id = cc.church_id AND member_church.deleted_at IS NULL
       WHERE p.tipo_region = 1
         AND c.status != 'disbanded'
-      GROUP BY c.id, c.name, c.pseudonym, c.code, c.country_id, lead_church.cluster_wallet, p.nombre, p.alfa2
+      GROUP BY c.id, c.name, c.pseudonym, c.code, c.country_id, c.status, lead_church.cluster_wallet, p.nombre, p.alfa2
       ORDER BY c.id
     `.execute(db)
 

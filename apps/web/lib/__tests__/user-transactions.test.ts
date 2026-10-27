@@ -10,6 +10,7 @@ type Row = Record<string, any>
 
 function fakeDb(rows: Row[]) {
   const selected: string[][] = []
+  const wheres: any[][] = []
   const db: any = {
     selectFrom: vi.fn(() => {
       const q: any = {
@@ -17,14 +18,17 @@ function fakeDb(rows: Row[]) {
           selected.push(columns)
           return q
         },
-        where: () => q,
+        where: (...args: any[]) => {
+          wheres.push(args)
+          return q
+        },
         orderBy: () => q,
         execute: async () => rows,
       }
       return q
     }),
   }
-  return { db, selected }
+  return { db, selected, wheres }
 }
 
 const PURCHASE_ROWS: Row[] = [
@@ -78,5 +82,15 @@ describe('getUserTransactions', () => {
 
     expect(rows[0].categoria).toBeNull()
     expect(rows[0].subcategoria).toBeNull()
+  })
+
+  it('hides the treasury rows of the GD 10% (cluster_contribution)', async () => {
+    const { db, wheres } = fakeDb(PURCHASE_ROWS)
+
+    await getUserTransactions(db, 191)
+
+    // Decisión 2026-10-26 (R-#161/R-#289): el 10% enrutado al fondo no es un
+    // movimiento del usuario y no puede aparecer en su historial.
+    expect(wheres).toContainEqual(['type', '!=', 'cluster_contribution'])
   })
 })

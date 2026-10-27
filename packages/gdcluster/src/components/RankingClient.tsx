@@ -22,6 +22,7 @@ interface ClusterRow {
   id: number; name: string; pseudonym: string | null; display_name: string
   country_name: string | null
   country_code: string | null; church_count: number; wallet: string
+  status: string | null
 }
 
 interface CountryRow {
@@ -34,6 +35,7 @@ const T = {
     clustersTab: 'Clusters', countriesTab: 'Countries',
     cluster: 'Cluster', country: 'Country',
     churches: 'Churches', members: 'Members',
+    status: 'Status', pending: 'Pending', active: 'Active',
     fundUSDT: 'USDT Fund', fundSLEARN: 'SLEARN Fund',
     noData: 'No data yet.', loading: 'Loading...', donate: 'Donate',
   },
@@ -41,6 +43,7 @@ const T = {
     clustersTab: 'Clústeres', countriesTab: 'Países',
     cluster: 'Clúster', country: 'País',
     churches: 'Iglesias', members: 'Miembros',
+    status: 'Estado', pending: 'Pendiente', active: 'Activo',
     fundUSDT: 'Fondo USDT', fundSLEARN: 'Fondo SLEARN',
     noData: 'Aún no hay datos.', loading: 'Cargando...', donate: 'Donar',
   },
@@ -101,6 +104,7 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
                 <th className="px-3 py-2 text-left">{t('cluster')}</th>
                 <th className="px-3 py-2 text-left">{t('country')}</th>
                 <th className="px-3 py-2 text-center">{t('churches')}</th>
+                <th className="px-3 py-2 text-center">{t('status')}</th>
                 <th className="px-3 py-2 text-right">{t('fundUSDT')}</th>
                 <th className="px-3 py-2 text-right">{t('fundSLEARN')}</th>
                 <th className="px-3 py-2"></th>
@@ -108,7 +112,7 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
             </thead>
             <tbody>
               {clusters.length === 0 ? (
-                <tr><td colSpan={7} className="px-3 py-6 text-center text-gray-400">{t('noData')}</td></tr>
+                <tr><td colSpan={8} className="px-3 py-6 text-center text-gray-400">{t('noData')}</td></tr>
               ) : clusters.map((c, i) => (
                 <tr key={c.id} className="border-b hover:bg-blue-50">
                   <td className="px-3 py-2 font-mono text-xs text-gray-500">{i + 1}</td>
@@ -117,6 +121,11 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
                     {c.country_code ? `${flagEmoji(c.country_code)} ${c.country_name}` : c.country_name || '—'}
                   </td>
                   <td className="px-3 py-2 text-center text-xs">{c.church_count}</td>
+                  <td className="px-3 py-2 text-center text-xs">
+                    <span className={`inline-block rounded px-2 py-0.5 ${c.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                      {c.status === 'active' ? t('active') : t('pending')}
+                    </span>
+                  </td>
                   <td className="px-3 py-2 text-right text-xs">
                     {findClusterFunds(c.wallet)?.usdt_total.toFixed(2) || '0.00'}
                   </td>

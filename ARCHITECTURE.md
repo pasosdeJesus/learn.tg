@@ -240,6 +240,15 @@ The platform features two distinct reward mechanisms, demonstrating our principl
 > detection, credential minting, GD routing and referral attribution) is documented
 > in [`apps/web/app/api/doc/crossword-reward-flow.md`](apps/web/app/api/doc/crossword-reward-flow.md).
 
+**Insufficient vault funds (no deferral).** Each token (USDT and SLEARN) is paid
+independently, so a vault with funds for only one pays that one and the contract emits
+`ScholarshipInsufficientFunds` for the other. When a token cannot be paid, no
+`transaction` row is written, the guide stays completed and the course page does not
+mark that scholarship as received; **the platform does not queue a debt for an unpaid
+scholarship**. The behavior is stated to the student in Guide 3 of the GD course
+("Scholarship and the course vault"; it lives in one guide only, to keep the others
+short) and in [Web3 & UBI — Guide 3](resources/en/web3-and-ubi/guide3.md).
+
 **One award per account (R-#265).** Because an account may hold several wallets
 (https://github.com/pasosdeJesus/learn.tg/issues/265), the anti-double-pay rule is measured
 per **account**, not per address: before paying, `check-crossword` looks at the
@@ -387,6 +396,10 @@ Verifiers access `/en/admin` to manage users and churches. Key features:
 - **Pending Verifications**: Users who requested interviews
 - **Recent Users / Churches**: Quick access to recently modified records
 - **User Edit Modal**: Edit profile fields, verify data (checkboxes), assign churches, schedule interviews
+- **Clusters** (`/{lang}/admin/clusters`, https://github.com/pasosdeJesus/learn.tg/issues/220):
+  table of the GD clusters with search and status/country filters; edit
+  name/pseudonym/status and disband (soft delete). The public ranking also shows each
+  cluster's status (`pending`/`active`).
 - **Church data in the user modal**: while the user's church is not in the `church`
   table yet (`usuario.church_id` empty) the modal shows the declared church name and
   the autocompleted city, plus the **pastor name and WhatsApp** so the verifier can

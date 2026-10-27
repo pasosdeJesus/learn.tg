@@ -25,7 +25,7 @@ export default function AdminDashboard({ params }: PageProps) {
       title: 'Verification Dashboard', accessDenied: 'Access denied. Verifier wallet required.',
       loading: 'Loading...', recentUsers: 'Recent Users', recentChurches: 'Recent Churches',
       pendingVerifications: 'Pending Verifications', calendar: 'My Calendar',
-      allUsers: 'All Users →', allChurches: 'All Churches →',
+      allUsers: 'All Users →', allChurches: 'All Churches →', allClusters: 'All Clusters →',
       notConfigured: 'NEXT_PUBLIC_VERIFIER_WALLET not set',
       noEvents: 'No events', noPending: 'No pending verifications',
       noUsers: 'No users', noChurches: 'No churches',
@@ -45,7 +45,7 @@ export default function AdminDashboard({ params }: PageProps) {
       title: 'Panel de Verificación', accessDenied: 'Acceso denegado. Se requiere billetera de verificador.',
       loading: 'Cargando...', recentUsers: 'Usuarios Recientes', recentChurches: 'Iglesias Recientes',
       pendingVerifications: 'Verificaciones Pendientes', calendar: 'Mi Calendario',
-      allUsers: 'Todos los Usuarios →', allChurches: 'Todas las Iglesias →',
+      allUsers: 'Todos los Usuarios →', allChurches: 'Todas las Iglesias →', allClusters: 'Todos los Clústeres →',
       notConfigured: 'NEXT_PUBLIC_VERIFIER_WALLET no configurado',
       noEvents: 'Sin eventos', noPending: 'Sin verificaciones pendientes',
       noUsers: 'Sin usuarios', noChurches: 'Sin iglesias',
@@ -90,6 +90,9 @@ export default function AdminDashboard({ params }: PageProps) {
         </Link>
         <Link href={`/${lang}/admin/churches`} className="text-sm text-blue-600 hover:underline">
           🏛️ {t('allChurches')}
+        </Link>
+        <Link href={`/${lang}/admin/clusters`} className="text-sm text-blue-600 hover:underline">
+          🏘️ {t('allClusters')}
         </Link>
       </div>
     </div>

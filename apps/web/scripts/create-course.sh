@@ -94,7 +94,7 @@ for i in $(seq 1 "$NUM_GUIDES"); do
       cat > "$GUIDE_FILE" <<EOF
 # Guide $i — $COURSE_NAME
 
-> TODO: Write guide content (400-600 words).
+> TODO: Write guide content (400-700 words).
 > See doc/how-to-create-a-course.md for guidelines.
 
 ## Introduction
@@ -115,7 +115,7 @@ EOF
       cat > "$GUIDE_FILE" <<EOF
 # Guía $i — $COURSE_NAME
 
-> TODO: Escribir contenido de la guía (400-600 palabras).
+> TODO: Escribir contenido de la guía (400-700 palabras).
 > Ver doc/how-to-create-a-course.md para lineamientos.
 
 ## Introducción

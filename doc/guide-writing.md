@@ -5,8 +5,9 @@ Rules for writing course guides (content in `resources/{lang}/{course}/`).
 ## The Five Pillars (from PRINCIPLES.md)
 
 1. **Focus** — One clear learning objective per guide. No digressions.
-2. **Brevity** — 400-600 words, completable in 5-7 minutes. 3-5 comprehension
-   questions.
+2. **Brevity** — 400-700 words, completable in 5-7 minutes. The count is a guide,
+   not a hard limit: one objective and a single short session matter more.
+   3-5 comprehension questions.
 3. **Action** — Knowledge that leads to a tangible action or applicable skill.
 4. **Joyful Engagement** — Interactive, game-like. Learning as delightful
    discovery.

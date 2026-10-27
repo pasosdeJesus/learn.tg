@@ -254,7 +254,8 @@ test-smoke-multiwallet:
 #   SITE_URL=http://localhost:4000 make test-smoke-prod
 PROD_READONLY_SMOKES= landing-page.spec.mjs leaderboard.spec.mjs \
 	migration-guide.spec.mjs transparency.spec.mjs \
-	verification-timezone.spec.mjs pastor-bonus.spec.mjs
+	verification-timezone.spec.mjs pastor-bonus.spec.mjs \
+	gd-cluster-status.spec.mjs
 
 test-smoke-prod:
 	@failed=0; for s in $(PROD_READONLY_SMOKES); do \

@@ -109,6 +109,26 @@ Confirming `registration_verified` is what unlocks the **22 SLEARN pastor bonus*
 (once per church; the conditions are in
 [church-registration.md](church-registration.md) §4).
 
+## All Clusters (`/{lang}/admin/clusters`)
+
+Verifier view of the GD clusters (https://github.com/pasosdeJesus/learn.tg/issues/220
+§5). The table lists ID, name, pseudonym, code, country, leader church, member
+count and **status** (pending / active / disbanded), with a search box (name,
+pseudonym or code) and two filters: status and country.
+
+- **Edit** opens a dialog with the name, the pseudonym and the status
+  (`PUT /api/admin/clusters/{id}`). Renaming is rejected with **409** when another
+  cluster of the same country already uses that name.
+- **Disband** applies the soft delete (`DELETE /api/admin/clusters/{id}`): the
+  cluster leaves the public ranking and its history stays. A verifier can also
+  disband: the auth model has no separate admin role, and `authenticateAdmin`
+  only distinguishes verifiers (documented simplification in
+  `gd-admin-clusters.ts`).
+- Changes are recorded in `userevent` and `clustergd_history`.
+
+The public ranking (`/{lang}/gdcluster/ranking`, Clusters tab) also shows the
+status of each cluster, next to the pseudonym and the fund columns.
+
 ## Wallets and credentials
 
 The user modal ends with **Wallets and credentials** (R-#265). It lists every wallet of the
