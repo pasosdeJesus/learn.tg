@@ -74,55 +74,68 @@ describe('canPurchaseGDCourse', () => {
     expect(result.reason).toBe('gd_for_christians')
   })
 
-  it('denies Christians outside pilot countries', async () => {
-    // United States (not in pilot)
-    const db = mockDbSeq([userRow({ pais_id: 76 })])
+  it('denies Christians outside type 1 countries', async () => {
+    const db = mockDbSeq([userRow({ pais_id: 76 }), { tipo_region: 2 }])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result.access).toBe(false)
-    expect(result.reason).toBe('gd_pilot_countries')
+    expect(result.reason).toBe('gd_country_not_available')
+  })
+
+  it('denies Christians in unclassified countries', async () => {
+    const db = mockDbSeq([userRow({ pais_id: 76 }), { tipo_region: null }])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result.access).toBe(false)
+    expect(result.reason).toBe('gd_country_not_available')
   })
 
   it('denies Christians with no country set', async () => {
     const db = mockDbSeq([userRow({ pais_id: null })])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result.access).toBe(false)
+    expect(result.reason).toBe('gd_country_not_available')
   })
 
-  it('denies Christians in pilot country without a verified church city', async () => {
-    const db = mockDbSeq([userRow({ verified_city_id: null, verified_place_of_worship_location: null })])
+  it('denies Christians in a type 1 country without a verified church city', async () => {
+    const db = mockDbSeq([userRow({ verified_city_id: null, verified_place_of_worship_location: null }), { tipo_region: 1 }])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result.access).toBe(false)
     expect(result.reason).toBe('verified_city_required')
   })
 
   it('allows a text-only verified worship location (non-centro-poblado country)', async () => {
-    const db = mockDbSeq([userRow({ pais_id: PILOT_SIERRA_LEONE, verified_city_id: null, verified_place_of_worship_location: 'Freetown' })])
+    const db = mockDbSeq([userRow({ pais_id: PILOT_SIERRA_LEONE, verified_city_id: null, verified_place_of_worship_location: 'Freetown' }), { tipo_region: 1 }])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result.access).toBe(true)
   })
 
   it('denies when the Gaza answer is yes (supports Israel in the genocide)', async () => {
-    const db = mockDbSeq([userRow({ position_israel_gaza: 'yes' })])
+    const db = mockDbSeq([userRow({ position_israel_gaza: 'yes' }), { tipo_region: 1 }])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result.access).toBe(false)
     expect(result.reason).toBe('gd_non_zionist')
   })
 
   it('denies when the Gaza answer is null (unknown position)', async () => {
-    const db = mockDbSeq([userRow({ position_israel_gaza: null })])
+    const db = mockDbSeq([userRow({ position_israel_gaza: null }), { tipo_region: 1 }])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result.access).toBe(false)
     expect(result.reason).toBe('gd_non_zionist')
   })
 
   it('grants a verified Christian in Colombia who answered no to the Gaza question', async () => {
-    const db = mockDbSeq([userRow({ pais_id: PILOT_COLOMBIA, position_israel_gaza: 'no' })])
+    const db = mockDbSeq([userRow({ pais_id: PILOT_COLOMBIA, position_israel_gaza: 'no' }), { tipo_region: 1 }])
+    const result = await canPurchaseGDCourse(db, 42)
+    expect(result).toEqual({ access: true })
+  })
+
+  it('grants a verified Christian in another type 1 country', async () => {
+    const db = mockDbSeq([userRow({ pais_id: 76, position_israel_gaza: 'no' }), { tipo_region: 1 }])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result).toEqual({ access: true })
   })
 
   it('grants a verified Christian in Sierra Leone who answered no to the Gaza question', async () => {
-    const db = mockDbSeq([userRow({ pais_id: PILOT_SIERRA_LEONE, position_israel_gaza: 'no' })])
+    const db = mockDbSeq([userRow({ pais_id: PILOT_SIERRA_LEONE, position_israel_gaza: 'no' }), { tipo_region: 1 }])
     const result = await canPurchaseGDCourse(db, 42)
     expect(result).toEqual({ access: true })
   })
@@ -154,7 +167,7 @@ describe('canPurchasePremiumCourse (any paid course)', () => {
     expect(result.access).toBe(false)
   })
 
-  it('applies the GD pilot gates for GD courses', async () => {
+  it('applies the GD type 1 gates for GD courses', async () => {
     // GD course id=10; non-Christian → gd_for_christians, not the general gate
     const db = mockDbSeq([userRow({ religion_id: 3 })])
     const result = await canPurchasePremiumCourse(db, 42, 10)
@@ -175,7 +188,7 @@ describe('hasVerifiedWorshipCity', () => {
 describe('courseAccessReasonText', () => {
   it('translates known keys to Spanish', () => {
     expect(courseAccessReasonText('gd_for_christians', 'es')).toBe('Este curso es para cristianos.')
-    expect(courseAccessReasonText('gd_pilot_countries', 'es')).toContain('países piloto')
+    expect(courseAccessReasonText('gd_country_not_available', 'es')).toContain('no está disponible en tu país')
     expect(courseAccessReasonText('verified_city_required', 'es')).toContain('ciudad de culto verificada')
     expect(courseAccessReasonText('premium_purchase_required', 'es')).toContain('curso premium')
     expect(courseAccessReasonText('gd_non_zionist', 'es')).toContain('no está disponible')

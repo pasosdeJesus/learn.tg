@@ -68,6 +68,8 @@ export interface RewardsDeps {
   routeReward: (ctx: RewardRouteCtx) => Promise<void>
   // `routeToClusterFunds` sigue inyectada (lógica de ClusterFunds del GD
   // engine en Fase 3); el motor la ejecuta con el destino que resolvió el hook.
+  // El último argumento (opcional) registra el 10% en el ledger `transaction`
+  // (`type='cluster_contribution'`, https://github.com/pasosdeJesus/learn.tg/issues/161).
   routeToClusterFunds: (
     publicClient: any,
     walletClient: any,
@@ -78,7 +80,17 @@ export interface RewardsDeps {
     clusterSlearn: bigint,
     usdtAddress: `0x${string}`,
     slearnAddress: `0x${string}`,
-  ) => Promise<any>
+    ledger?: {
+      db: any
+      usuarioId: number
+      wallet: string
+      source: 'course' | 'guide'
+      courseId: number
+      guideId?: number | null
+      usdtDecimals: number
+      slearnDecimals: number
+    },
+  ) => Promise<{ usdtHash?: string; slearnHash?: string } | void>
   canPurchasePremiumCourse: (db: any, usuarioId: number, courseId: number) => Promise<{ access: boolean; reason?: string }>
   updateUserAndCoursePoints: (db: any, usuario: any, courseId: number, walletAddress: string, guideUsuario?: any) => Promise<number>
   // … más deps del core que rewards consume, se agregan conforme se portan rutas

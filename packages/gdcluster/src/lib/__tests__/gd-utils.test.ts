@@ -91,10 +91,11 @@ describe('generateUniqueClusterCode', () => {
 })
 
 describe('getPastorChurch', () => {
-  it('returns the church created by the given user', async () => {
-    const church = { id: 1, name: 'Iglesia Centro', created_by: 5 }
+  it('returns the church assigned to the pastor', async () => {
+    const church = { id: 1, name: 'Iglesia Centro', pastor_id: 5 }
     const mockDb = {
       selectFrom: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
       selectAll: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       executeTakeFirst: vi.fn().mockResolvedValue(church),
@@ -102,11 +103,13 @@ describe('getPastorChurch', () => {
 
     const result = await getPastorChurch(mockDb, 5)
     expect(result).toEqual(church)
+    expect(mockDb.innerJoin).toHaveBeenCalledWith('usuario as u', 'u.church_id', 'c.id')
   })
 
   it('returns null when user has no church', async () => {
     const mockDb = {
       selectFrom: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
       selectAll: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       executeTakeFirst: vi.fn().mockResolvedValue(null),

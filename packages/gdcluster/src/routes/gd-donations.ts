@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { type Address } from 'viem'
-import { PILOT_COUNTRIES } from '../lib/gd-utils.js'
 import { getClusterFundsAddress } from '../lib/gd-cluster-routing.js'
 import ClusterFundsV2Abi from '../abis/ClusterFundsV2.json'
 import SLEARNAbi from '../abis/SLEARN.json'
@@ -96,9 +95,9 @@ export async function verifyDonation(deps: GdclusterDeps, req: NextRequest) {
     const commentSuffix = donorComment ? `\ncomment: ${donorComment}` : ''
 
     if (countryCode) {
-      const country = await db.selectFrom('msip_pais').select('id').where('alfa2', '=', countryCode).executeTakeFirst()
-      if (!country || !PILOT_COUNTRIES.includes(country.id)) {
-        return NextResponse.json({ error: 'Donations are only available in Colombia and Sierra Leona during the pilot phase' }, { status: 403 })
+      const country = await db.selectFrom('msip_pais').select(['id', 'tipo_region']).where('alfa2', '=', countryCode).executeTakeFirst()
+      if (!country || country.tipo_region !== 1) {
+        return NextResponse.json({ error: 'Donations are available only in countries classified as type 1' }, { status: 403 })
       }
     }
 

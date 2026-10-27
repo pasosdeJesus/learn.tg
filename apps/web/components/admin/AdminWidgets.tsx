@@ -49,6 +49,7 @@ export interface ChurchItem {
   id: number; name?: string; pastor_name?: string; pastor_whatsapp?: string
   pastor_telegram?: string; city_name?: string; city_db_name?: string; denomination?: string
   country_name?: string; registration?: string; registration_photo?: string; registration_verified?: boolean
+  cluster_wallet?: string | null
   created_at?: string
 }
 
@@ -755,6 +756,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
       name: church.name || '', pastor_name: church.pastor_name || '', pastor_whatsapp: church.pastor_whatsapp || '',
       pastor_telegram: church.pastor_telegram || '', city_name: church.city_name || '', denomination: church.denomination || '',
       registration: church.registration || '', registration_photo: church.registration_photo || '', registration_verified: !!church.registration_verified,
+      cluster_wallet: church.cluster_wallet || '',
     })
     // Fetch church members
     adminFetch(`/api/admin/users?church_id=${church.id}`)
@@ -825,7 +827,13 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
           <InputField label="Telegram" value={form.pastor_telegram} onChange={v => setF('pastor_telegram', v)} />
           <InputField label={t('denomination')} value={form.denomination} onChange={v => setF('denomination', v)} />
           <InputField label={lang === 'es' ? 'Registro' : 'Registration'} value={form.registration} onChange={v => setF('registration', v)} />
+          <InputField label={lang === 'es' ? 'Billetera del clúster' : 'Cluster wallet'} value={form.cluster_wallet} onChange={v => setF('cluster_wallet', v)} />
         </div>
+        <p className="text-[11px] text-amber-700">
+          {lang === 'es'
+            ? 'Usa un multisig. Cambiar la billetera después de recibir fondos no mueve el fondo ya acreditado a la dirección anterior.'
+            : 'Use a multisig. Changing the wallet after funds arrive does not move the fund already credited to the old address.'}
+        </p>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={!!form.registration_verified} onChange={e => setF('registration_verified', e.target.checked)} className="rounded" />
           <span>{lang === 'es' ? 'Registro Verificado' : 'Registration Verified'}</span>

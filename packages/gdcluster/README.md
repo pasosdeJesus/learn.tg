@@ -15,7 +15,7 @@ flows in [ARCHITECTURE.md](ARCHITECTURE.md).
 |------------|----------|-------------|
 | Cluster funds | `gdcluster/ranking/clusters`, `gdcluster/ranking/countries`, `gdcluster/ranking/funds` (GET) | Public leaderboards of cluster/country funds with USDT/SLEARN balances |
 | GD donations | `gdcluster/donations/verify` (POST), `gdcluster/donations/history` (GET) | Verify USDT/SLEARN transfer receipt and credit the cluster/country fund; donation history |
-| Clusters | `cluster` (POST), `cluster/join` (POST), `cluster/[id]` (GET, PATCH), `cluster/[id]/leave` (POST) | Cluster lifecycle: pastor-only creation (pilot CO/SL, must own GD course), join by 6-char code, detail/rename, leave |
+| Clusters | `cluster` (POST), `cluster/join` (POST), `cluster/[id]` (GET, PATCH), `cluster/[id]/leave` (POST) | Cluster lifecycle: pastor-only creation (type 1 countries, must own GD course), join by 6-char code, detail/rename, leave |
 | Invitations | `cluster/status`, `cluster/candidates`, `cluster/invitations` (GET), `cluster/invitation/accept`, `cluster/invitation/reject` (POST) | https://github.com/pasosdeJesus/learn.tg/issues/220: pastor cluster state, candidates from the referral graph (https://github.com/pasosdeJesus/learn.tg/issues/163), accept/reject invitations |
 | Admin | `admin/clusters` (GET, POST), `admin/clusters/[id]` (GET, PUT, DELETE), `admin/clusters/[id]/members` (POST, DELETE) | Verifier/admin CRUD over `clustergd` / `church_clustergd` |
 | Churches | `churches/search` (GET) | Search churches by query parameter `q` |
@@ -75,8 +75,8 @@ export async function GET(req: Request) {
 
 | Module | Purpose |
 |--------|---------|
-| `gd-utils.ts` | `PILOT_COUNTRIES` (170 Colombia, 694 Sierra Leone); cluster code generation; DB helpers (`getPastorChurch`, `getChurchCluster`, `getClusterMembers`, `getClusterHistory`, `getClusterCandidates` from the `referralrelationship` graph) |
-| `gd-cluster-routing.ts` | `isGDCourse` (courses 10/11), `resolveGDClusterDestination` (cluster wallet → country → Sierra Leone fallback), `routeToClusterFunds` (sends the 10% split to `ClusterFundsV2`, 100% net) |
+| `gd-utils.ts` | `isType1Country` (`msip_pais.tipo_region = 1`); cluster code generation; DB helpers (`getPastorChurch`, `getChurchCluster`, `getClusterMembers`, `getClusterHistory`, `getClusterCandidates` from the `referralrelationship` graph) |
+| `gd-cluster-routing.ts` | `isGDCourse` (courses 10/11), `resolveGDClusterDestination` (cluster wallet → country → Sierra Leone fallback), `routeToClusterFunds` (sends the 10% split to `ClusterFundsV2`, 100% net, and returns both transfer hashes), `recordClusterContribution` (ledger row `transaction.type = 'cluster_contribution'`, one per token, idempotent on `(crypto, hash)`) |
 | `donation-target.ts` | `PaymentTarget` types (course/cluster/country), `getDistributionBreakdown`, `getTargetCopy`, `getTargetRecipient`, `getTargetEndpoint` (UI copy + split display) |
 
 ## Components (`src/components/`, all client)

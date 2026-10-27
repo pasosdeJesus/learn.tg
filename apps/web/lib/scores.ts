@@ -17,6 +17,9 @@ export async function refreshUserLearningScore(
     .selectFrom('transaction')
     .where('usuario_id', '=', userId)
     .where('crypto', '=', 'slearn')
+    // El 10% GD que sale hacia el fondo del clúster/país es un movimiento de
+    // tesorería, no un punto del usuario (decisión 2026-10-26, R-#161).
+    .where('type', '!=', 'cluster_contribution')
     .select(db.fn.sum('balance_impact').as('total_points'))
     .executeTakeFirst()
   

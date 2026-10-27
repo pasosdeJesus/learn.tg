@@ -15,9 +15,9 @@ const MESSAGES: Record<string, [en: string, es: string]> = {
     'This course is for Christians.',
     'Este curso es para cristianos.',
   ],
-  gd_pilot_countries: [
-    'This course is only available in pilot countries (Colombia, Sierra Leone).',
-    'Este curso solo está disponible en países piloto (Colombia, Sierra Leona).',
+  gd_country_not_available: [
+    'This course is not available in your country yet.',
+    'Este curso aún no está disponible en tu país.',
   ],
   verified_city_required: [
     'This course requires a verified city of worship.',

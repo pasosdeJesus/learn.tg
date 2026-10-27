@@ -117,6 +117,33 @@ describe('acceptInvitation (https://github.com/pasosdeJesus/learn.tg/issues/220)
     expect(mockExecute).not.toHaveBeenCalledTimes(0)
   })
 
+  it('keeps the cluster active when a fourth church joins (no maximum)', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ id: 20, name: 'Iglesia B', country_id: 694 }) // getPastorChurch
+      .mockResolvedValueOnce({ id: 10, clustergd_id: 3, invited_pastor_id: 5, invited_church_id: 20, invited_by_id: 1, status: 'pending' }) // invitation
+      .mockResolvedValueOnce(null) // existingMembership
+      .mockResolvedValueOnce({ id: 3, name: 'Esperanza', pseudonym: null, status: 'active', leader_church_id: 11 }) // already active
+    const membersRows = [
+      { church_id: 11, church_name: 'A', joined_at: new Date() },
+      { church_id: 12, church_name: 'B', joined_at: new Date() },
+      { church_id: 13, church_name: 'C', joined_at: new Date() },
+      { church_id: 20, church_name: 'D', joined_at: new Date() },
+    ]
+    mockExecute.mockReset()
+    // 1 update invitation · 2 insert church_clustergd · 3 history ·
+    // 4 getClusterMembers (4) · 5 notify invitador. No activation update.
+    const execQueue = [undefined, undefined, undefined, membersRows, undefined]
+    mockExecute.mockImplementation(() => Promise.resolve(execQueue.shift()))
+
+    const res = await acceptInvitation(buildDeps() as GdclusterDeps, post('/api/cluster/invitation/accept', {
+      walletAddress: WALLET, token: TOKEN, invitationId: 10,
+    }))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.activated).toBe(false)
+    expect(json.member_count).toBe(4)
+  })
+
   it('rejects an invitation already responded', async () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ id: 20, name: 'Iglesia B', country_id: 694 }) // church

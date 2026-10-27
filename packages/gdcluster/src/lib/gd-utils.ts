@@ -1,7 +1,21 @@
 import { Kysely, sql } from 'kysely'
 
-/** Pilot phase: only these countries can create clusters and receive donations */
-export const PILOT_COUNTRIES = [170, 694] // Colombia, Sierra Leona
+/**
+ * Type 1 = country without restrictions (`msip_pais.tipo_region = 1`).
+ * Unclassified (NULL) and type 2 stay closed until the operator classifies them.
+ */
+export async function isType1Country(
+  db: Kysely<any>,
+  countryId: number | null | undefined
+): Promise<boolean> {
+  if (!countryId) return false
+  const country = await db
+    .selectFrom('msip_pais')
+    .select('tipo_region')
+    .where('id', '=', countryId)
+    .executeTakeFirst()
+  return country?.tipo_region === 1
+}
 
 export interface Church {
   id: number
@@ -81,9 +95,12 @@ export async function getPastorChurch(
   userId: number
 ): Promise<Church | null> {
   const church = await db
-    .selectFrom('church')
-    .selectAll()
-    .where('created_by', '=', userId)
+    .selectFrom('church as c')
+    .innerJoin('usuario as u', 'u.church_id', 'c.id')
+    .selectAll('c')
+    .where('u.id', '=', userId)
+    .where('u.church_relationship', '=', 'pastor')
+    .where('c.deleted_at', 'is', null)
     .executeTakeFirst()
   return church as Church | null
 }
@@ -179,7 +196,7 @@ export async function notifyUser(
 
 /**
  * Candidatos a invitar a un clúster (https://github.com/pasosdeJesus/learn.tg/issues/220 §2.1):
- * 1. Pastores referidos por el líder (grafo #163) con iglesia declarada y
+ * 1. Pastores referidos por el líder (grafo #163) con iglesia registrada y
  *    verificada, mismo país, sin clúster actual.
  * 2. El referidor del líder, si es pastor (mismas condiciones).
  * Excluye al propio líder y a pastores ya en un clúster.
@@ -192,7 +209,7 @@ export async function getClusterCandidates(
 ): Promise<ClusterCandidate[]> {
   const base = (refQuery: any) =>
     refQuery
-      .innerJoin('church as c', 'c.created_by', 'u.id')
+      .innerJoin('church as c', 'c.id', 'u.church_id')
       .leftJoin('church_clustergd as cc', (jb: any) => jb.on('cc.church_id', '=', sql.ref('c.id')).on('cc.left_at', 'is', null))
       .select([
         'u.id as usuario_id', 'u.nombre', 'u.nusuario',
@@ -201,6 +218,7 @@ export async function getClusterCandidates(
       .where('u.church_relationship', '=', 'pastor')
       .where('u.fechadeshabilitacion', 'is', null)
       .where('c.registration_verified', '=', true)
+      .where('c.deleted_at', 'is', null)
       .where('c.country_id', '=', leaderCountryId)
       .where('c.id', '!=', leaderChurchId)
       .where('cc.church_id', 'is', null) // sin clúster actual

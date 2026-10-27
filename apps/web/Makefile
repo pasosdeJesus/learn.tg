@@ -244,6 +244,24 @@ test-smoke:
 test-smoke-multiwallet:
 	SITE_URL=$${SITE_URL:-https://learn.tg:9001} ./bin/m test:e2e multiwallet-rules --smoke
 
+# Pruebas de SOLO LECTURA, pensadas para correr contra PRODUCCIÓN
+# (https://learn.tg): únicamente GET públicos, sin sesión y sin billetera, así que
+# no crean usuarios ni sesiones, no mueven fondos y no escriben en la base.
+# NO se usa `--smoke` completo: varios smokes escriben (el login SIWE crea
+# usuario/sesión, donaciones y compras mueven fondos, los admin hacen PATCH).
+# Ver doc/e2e-testing.md §2 (Production: read-only checks).
+#   make test-smoke-prod
+#   SITE_URL=http://localhost:4000 make test-smoke-prod
+PROD_READONLY_SMOKES= landing-page.spec.mjs leaderboard.spec.mjs \
+	migration-guide.spec.mjs transparency.spec.mjs \
+	verification-timezone.spec.mjs pastor-bonus.spec.mjs
+
+test-smoke-prod:
+	@failed=0; for s in $(PROD_READONLY_SMOKES); do \
+	  echo "── [smoke-prod] $$s"; \
+	  SITE_URL=$${SITE_URL:-https://learn.tg} ./bin/m test:e2e "$$s" --smoke || failed=1; \
+	done; exit $$failed
+
 # Full E2E tests (Puppeteer + Chrome, requires CHROME_PATH)
 # 12s de aire entre specs: el dev site (16G compartido) limita por wallet/IP
 # (429) y bajo carga los specs de timing flaquean (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8).

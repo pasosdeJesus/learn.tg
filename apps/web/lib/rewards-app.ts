@@ -48,12 +48,14 @@ export const rewardsApp = createRewardsApp({
   routeReward,
   // `routeToClusterFunds` vive en el motor gdcluster (Fase 3); el host inyecta
   // `sendTxAndWait` del backend-config (D2) y conserva la firma de 9 args que
-  // el motor rewards espera.
-  routeToClusterFunds: (publicClient, walletClient, account, replayTx, destino, clusterUSDT, clusterSlearn, usdtAddress, slearnAddress) =>
+  // el motor rewards espera, más el contexto opcional del ledger del 10%
+  // (`type='cluster_contribution'`, https://github.com/pasosdeJesus/learn.tg/issues/161).
+  routeToClusterFunds: (publicClient, walletClient, account, replayTx, destino, clusterUSDT, clusterSlearn, usdtAddress, slearnAddress, ledger) =>
     gdRouteToClusterFunds(
       { sendTxAndWait },
       publicClient, walletClient, account, replayTx,
       destino, clusterUSDT, clusterSlearn, usdtAddress, slearnAddress,
+      ledger,
     ),
   canPurchasePremiumCourse,
   updateUserAndCoursePoints,

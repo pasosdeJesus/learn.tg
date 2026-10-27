@@ -37,6 +37,10 @@ const tEn = {
   churchJoined: 'Church joined',
   churchLeft: 'Church left',
   nameChanged: 'Name changed',
+  clusterWallet: 'Cluster wallet',
+  notConfigured: 'Not configured',
+  copy: 'Copy',
+  copied: 'Copied',
 }
 const tEs: typeof tEn = {
   back: 'Volver al inicio',
@@ -59,6 +63,10 @@ const tEs: typeof tEn = {
   churchJoined: 'Iglesia se unió',
   churchLeft: 'Iglesia salió',
   nameChanged: 'Nombre cambiado',
+  clusterWallet: 'Billetera del clúster',
+  notConfigured: 'Sin configurar',
+  copy: 'Copiar',
+  copied: 'Copiada',
 }
 const translations = { en: tEn, es: tEs }
 
@@ -66,6 +74,7 @@ const HISTORY_LABELS: Record<string, { en: string; es: string }> = {
   church_join: { en: 'Church joined', es: 'Iglesia se unió' },
   church_leave: { en: 'Church left', es: 'Iglesia salió' },
   name_change: { en: 'Name changed', es: 'Nombre cambiado' },
+  cluster_wallet_change: { en: 'Cluster wallet changed', es: 'Billetera del clúster cambiada' },
 }
 
 interface ClusterMember {
@@ -90,6 +99,7 @@ interface ClusterData {
   created_at: string
   member_count: number
   status: string
+  cluster_wallet: string | null
   members: ClusterMember[]
   history: ClusterHistory[]
 }
@@ -221,7 +231,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{cluster.name}</h1>
             <p className="text-sm text-gray-500 mt-1">
-              {cluster.status === 'Formed' ? `✅ ${t('formed')}` : `⏳ ${t('inProgress')}`}
+              {cluster.status === 'active' || cluster.status === 'Formed' ? `✅ ${t('formed')}` : `⏳ ${t('inProgress')}`}
               {' · '}
               {cluster.member_count} {t('churches')}
             </p>
@@ -259,6 +269,27 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
           <code className="text-lg font-mono font-bold text-gray-900 tracking-widest">
             {cluster.code}
           </code>
+        </div>
+
+        <div className="mb-6 p-3 bg-gray-50 rounded-md border border-gray-200 text-left">
+          <p className="text-sm text-gray-600 mb-1">{t('clusterWallet')}</p>
+          {cluster.cluster_wallet ? (
+            <div className="flex items-center gap-2">
+              <code className="text-xs font-mono break-all text-gray-900">{cluster.cluster_wallet}</code>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(cluster.cluster_wallet!)
+                  toast({ title: t('copied') })
+                }}
+                className="text-xs text-blue-600 hover:underline shrink-0"
+              >
+                {t('copy')}
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-500">{t('notConfigured')}</p>
+          )}
         </div>
 
         <h2 className="text-lg font-semibold text-gray-900 mb-3">

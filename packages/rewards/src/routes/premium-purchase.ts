@@ -181,7 +181,15 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
       if (clusterUSDT > 0n || clusterSlearn > 0n) {
         const destino = gdCtx.destino
         const replayTx = ((usdtHash || slearnHash) as string) as Address
-        await deps.routeToClusterFunds(publicClient, walletClient, walletClient.account, replayTx, destino, clusterUSDT, clusterSlearn, usdtAddress, slearnAddress)
+        await deps.routeToClusterFunds(publicClient, walletClient, walletClient.account, replayTx, destino, clusterUSDT, clusterSlearn, usdtAddress, slearnAddress, {
+          db,
+          usuarioId: usuario.id,
+          wallet: walletAddress,
+          source: 'course',
+          courseId: courseIdNum,
+          usdtDecimals,
+          slearnDecimals: deps.backend.SLEARN_DECIMALS,
+        })
         processUsdtAmount = onChainUsdtAmount - clusterUSDT
         processSlearnAmount = onChainSlearnAmount - clusterSlearn
       }

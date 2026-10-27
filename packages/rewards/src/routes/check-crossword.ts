@@ -633,7 +633,16 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
                       const destino = gdCtx?.destino
                       const usdtAddr = (await vaultContract.read.usdtToken()) as Address
                       const slearnAddr = (await vaultContract.read.slearnToken()) as Address
-                      await deps.routeToClusterFunds(publicClient, walletClient, account, tx, destino, learnTgUSDT, learnTgSlearn, usdtAddr, slearnAddr)
+                      await deps.routeToClusterFunds(publicClient, walletClient, account, tx, destino, learnTgUSDT, learnTgSlearn, usdtAddr, slearnAddr, {
+                        db,
+                        usuarioId: usuario.id,
+                        wallet: walletAddress,
+                        source: 'guide',
+                        courseId,
+                        guideId: actividadpfId,
+                        usdtDecimals,
+                        slearnDecimals,
+                      })
                     } catch (e: any) {
                       console.error(`[gd] Auto-route failed: ${e?.shortMessage || e?.message || e}`)
                       await sql`

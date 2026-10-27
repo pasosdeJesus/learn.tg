@@ -112,12 +112,18 @@ session persistence, UBI claims, crossword puzzles.
   # Smoke (HTTP, fast, no Chrome)
   make test-smoke
 
+  # Read-only smoke set against production (GET only, no session, no wallet)
+  make test-smoke-prod
+
   # Full E2E (Puppeteer + Chrome)
   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg make test-e2e
 
   # Single spec
   CHROME_PATH=/usr/local/bin/chrome IPDES=learn.tg node e2e/specs/auth-session.spec.mjs
   ```
+  Which suites are safe on production and which write is catalogued in
+  `doc/e2e-testing.md` §2 (Production: read-only checks) and in the *Writes*
+  column of the smoke index.
 - **OpenBSD:** Requiere `--ozone-platform=headless` para Chrome 141+.
   Limpiar `/tmp/puppeteer*` entre ejecuciones si Chrome se cuelga.
 

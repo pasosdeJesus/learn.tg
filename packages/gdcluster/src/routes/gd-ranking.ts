@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { sql } from 'kysely'
-import { PILOT_COUNTRIES } from '../lib/gd-utils.js'
 import type { GdclusterDeps } from '../index.js'
 
 // Ranking de clústeres y países para el curso Global Disciples (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3).
@@ -17,16 +16,17 @@ export async function rankingClusters(deps: GdclusterDeps) {
       SELECT
         c.id, c.name, c.pseudonym,
         COALESCE(NULLIF(c.pseudonym, ''), c.name) AS display_name,
-        c.code, c.country_id, ch.cluster_wallet as wallet,
+        c.code, c.country_id, lead_church.cluster_wallet as wallet,
         p.nombre as country_name, p.alfa2 as country_code,
-        COUNT(ch.id)::int as church_count
+        COUNT(member_church.id)::int as church_count
       FROM clustergd c
       LEFT JOIN msip_pais p ON p.id = c.country_id
-      LEFT JOIN church ch ON ch.country_id = c.country_id AND ch.deleted_at IS NULL
-      LEFT JOIN church_clustergd cc ON cc.church_id = ch.id AND cc.clustergd_id = c.id AND cc.left_at IS NULL
-      WHERE c.country_id = ANY(${PILOT_COUNTRIES})
+      LEFT JOIN church lead_church ON lead_church.id = c.leader_church_id
+      LEFT JOIN church_clustergd cc ON cc.clustergd_id = c.id AND cc.left_at IS NULL
+      LEFT JOIN church member_church ON member_church.id = cc.church_id AND member_church.deleted_at IS NULL
+      WHERE p.tipo_region = 1
         AND c.status != 'disbanded'
-      GROUP BY c.id, c.name, c.pseudonym, c.code, c.country_id, ch.cluster_wallet, p.nombre, p.alfa2
+      GROUP BY c.id, c.name, c.pseudonym, c.code, c.country_id, lead_church.cluster_wallet, p.nombre, p.alfa2
       ORDER BY c.id
     `.execute(db)
 
@@ -52,10 +52,11 @@ export async function rankingCountries(deps: GdclusterDeps) {
         COUNT(DISTINCT c.id)::int as cluster_count,
         COUNT(DISTINCT ch.id)::int as church_count
       FROM msip_pais p
-      LEFT JOIN clustergd c ON c.country_id = p.id
+      LEFT JOIN clustergd c ON c.country_id = p.id AND c.status != 'disbanded'
       LEFT JOIN church ch ON ch.country_id = p.id AND ch.deleted_at IS NULL
-      WHERE p.id = ANY(${PILOT_COUNTRIES})
+      WHERE p.tipo_region = 1
       GROUP BY p.id, p.nombre, p.alfa2
+      HAVING COUNT(DISTINCT c.id) > 0 OR COUNT(DISTINCT ch.id) > 0
       ORDER BY p.nombre
     `.execute(db)
 
@@ -69,8 +70,10 @@ export async function rankingCountries(deps: GdclusterDeps) {
 /**
  * GET /api/gdcluster/ranking/funds
  *
- * Accumulated funds (donations routed to clusters/countries) for the
- * Global Disciples landing page ranking section.
+ * Accumulated funds routed to clusters/countries for the Global Disciples
+ * landing page ranking section: direct donations and the 10% automatically
+ * routed from GD course purchases and guide scholarships
+ * (`transaction.type = 'cluster_contribution'`, credited 100% to the fund).
  */
 export async function rankingFunds(deps: GdclusterDeps) {
   try {
@@ -87,15 +90,15 @@ export async function rankingFunds(deps: GdclusterDeps) {
         p.nombre AS country_name,
         COALESCE(SUM(
           CASE WHEN t.crypto = 'usdt' THEN
-            CASE WHEN t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
+            CASE WHEN t.type = 'cluster_contribution' OR t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
           ELSE 0 END), 0)::float AS usdt_total,
         COALESCE(SUM(
           CASE WHEN t.crypto = 'slearn' THEN
-            CASE WHEN t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
+            CASE WHEN t.type = 'cluster_contribution' OR t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
           ELSE 0 END), 0)::float AS slearn_total
       FROM transaction t
       LEFT JOIN msip_pais p ON p.alfa2 = t.metadata->>'countryCode'
-      WHERE t.subcategoria = 'country' AND t.type = 'donation'
+      WHERE t.subcategoria = 'country' AND t.type IN ('donation', 'cluster_contribution')
       GROUP BY t.metadata->>'countryCode', p.nombre
     `.execute(db)
 
@@ -110,17 +113,17 @@ export async function rankingFunds(deps: GdclusterDeps) {
         cg.name AS cluster_name,
         COALESCE(SUM(
           CASE WHEN t.crypto = 'usdt' THEN
-            CASE WHEN t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
+            CASE WHEN t.type = 'cluster_contribution' OR t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
           ELSE 0 END), 0)::float AS usdt_total,
         COALESCE(SUM(
           CASE WHEN t.crypto = 'slearn' THEN
-            CASE WHEN t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
+            CASE WHEN t.type = 'cluster_contribution' OR t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
           ELSE 0 END), 0)::float AS slearn_total
       FROM transaction t
       LEFT JOIN church ch ON ch.cluster_wallet = t.metadata->>'clusterWallet'
       LEFT JOIN church_clustergd cc ON cc.church_id = ch.id AND cc.left_at IS NULL
       LEFT JOIN clustergd cg ON cg.id = cc.clustergd_id
-      WHERE t.subcategoria = 'cluster' AND t.type = 'donation'
+      WHERE t.subcategoria = 'cluster' AND t.type IN ('donation', 'cluster_contribution')
       GROUP BY t.metadata->>'clusterWallet', cg.name
     `.execute(db)
 

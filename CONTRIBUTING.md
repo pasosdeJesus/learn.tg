@@ -83,6 +83,7 @@ For detailed documentation and testing policies for the Next.js app, see [apps/w
      `m/doc/engines.md`
    - E2E tests: `make test-smoke` (HTTP) or `bin/m test:e2e` (Puppeteer), with shortcuts
      `make test-e2e-wallet` (billetera in-app) and `make test-e2e-offline` (PWA offline).
+     `make test-smoke-prod` runs the read-only subset against production (no writes).
      See [doc/e2e-testing.md](doc/e2e-testing.md)
    - See [apps/web/CONTRIBUTING.md](apps/web/CONTRIBUTING.md) for details
 5. **Commit** with clear messages: `git commit -m "feat: add feature X"`

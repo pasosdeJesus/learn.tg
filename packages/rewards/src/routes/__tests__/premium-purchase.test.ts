@@ -247,10 +247,18 @@ describe('premiumPurchase (motor rewards)', () => {
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.access).toBe(true)
-    // 10% routed to ClusterFundsV2 first
+    // 10% routed to ClusterFundsV2 first, with the ledger context (R-#161)
     expect(deps.routeToClusterFunds).toHaveBeenCalledWith(
       expect.anything(), expect.anything(), expect.anything(),
       USDT_HASH, 'SL', 250000n, 0n, USDT_ADDRESS, SLEARN_ADDRESS,
+      expect.objectContaining({
+        usuarioId: 1,
+        wallet: WALLET,
+        source: 'course',
+        courseId: 1,
+        usdtDecimals: USDT_DECIMALS,
+        slearnDecimals: SLEARN_DECIMALS,
+      }),
     )
     // processPayment receives the remaining 90% with 40% pdJ and 12% reward
     // split (GD: cashback ≈10% del original = 12% del 90% procesado, R-#214)

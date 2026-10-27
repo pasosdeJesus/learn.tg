@@ -8,6 +8,7 @@ function mockDb({ referredRows = [], referrerRows = [] }: {
   referrerRows?: Record<string, any>[]
 } = {}) {
   const allWhereCalls: string[][] = []
+  const joinCalls: any[][] = []
   // Cada selectFrom devuelve un builder con sus propias cláusulas WHERE; al
   // ejecutar decide las filas según si registró rr.referrer_id (consulta de
   // referidos) o rr.referred_id (consulta del referidor).
@@ -15,7 +16,7 @@ function mockDb({ referredRows = [], referrerRows = [] }: {
     selectFrom: vi.fn(() => {
       const localCalls: string[][] = []
       const builder: any = {
-        innerJoin: () => builder,
+        innerJoin: (...args: any[]) => { joinCalls.push(args); return builder },
         leftJoin: () => builder,
         select: () => builder,
         execute: vi.fn(async () => {
@@ -32,6 +33,7 @@ function mockDb({ referredRows = [], referrerRows = [] }: {
       return builder
     }),
     whereCalls: allWhereCalls,
+    joinCalls,
   }
   return db
 }
@@ -56,6 +58,9 @@ describe('getClusterCandidates (https://github.com/pasosdeJesus/learn.tg/issues/
     expect(candidates.map((c) => c.usuario_id)).toEqual([1, 2])
     expect(candidates[0]).toMatchObject({ nusuario: 'pastorA', church_name: 'Iglesia A' })
 
+    // La iglesia del pastor se resuelve por usuario.church_id, no por church.created_by
+    expect(db.joinCalls.filter(([tab, left, right]) => tab === 'church as c' && left === 'c.id' && right === 'u.church_id')).toHaveLength(2)
+
     // Filtros SQL aplicados en ambas consultas
     const filterCols = db.whereCalls.map(([col]) => col)
     expect(filterCols).toContain('rr.referrer_id')
@@ -63,6 +68,7 @@ describe('getClusterCandidates (https://github.com/pasosdeJesus/learn.tg/issues/
     expect(filterCols.filter((c) => c === 'u.church_relationship').length).toBe(2)
     expect(filterCols.filter((c) => c === 'c.country_id').length).toBe(2)
     expect(filterCols.filter((c) => c === 'c.registration_verified').length).toBe(2)
+    expect(filterCols.filter((c) => c === 'c.deleted_at').length).toBe(2)
     expect(filterCols.filter((c) => c === 'cc.church_id').length).toBe(2) // sin clúster
     expect(filterCols.filter((c) => c === 'u.fechadeshabilitacion').length).toBe(2)
     // Excluye la iglesia del líder

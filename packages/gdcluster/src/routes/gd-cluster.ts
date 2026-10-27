@@ -8,7 +8,7 @@ import {
   generateUniqueClusterCode,
   notifyUser,
   getClusterCandidates,
-  PILOT_COUNTRIES,
+  isType1Country,
 } from '../lib/gd-utils.js'
 import type { GdclusterDeps } from '../index.js'
 
@@ -42,15 +42,14 @@ export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
     const church = await getPastorChurch(db, user.id)
     if (!church) {
       return NextResponse.json(
-        { error: 'You must declare a church before creating a cluster' },
+        { error: 'Your church must be registered before creating a cluster' },
         { status: 400 }
       )
     }
 
-    // Pilot: only Colombia and Sierra Leona
-    if (!PILOT_COUNTRIES.includes(church.country_id)) {
+    if (!(await isType1Country(db, church.country_id))) {
       return NextResponse.json(
-        { error: 'Clusters are only available in Colombia and Sierra Leona during the pilot phase' },
+        { error: 'Clusters are available only in countries classified as type 1' },
         { status: 403 }
       )
     }
@@ -183,8 +182,15 @@ export async function joinCluster(deps: GdclusterDeps, req: NextRequest) {
     const church = await getPastorChurch(db, user.id)
     if (!church) {
       return NextResponse.json(
-        { error: 'You must declare a church before joining a cluster' },
+        { error: 'Your church must be registered before joining a cluster' },
         { status: 400 }
+      )
+    }
+
+    if (!(await isType1Country(db, church.country_id))) {
+      return NextResponse.json(
+        { error: 'Clusters are available only in countries classified as type 1' },
+        { status: 403 }
       )
     }
 
@@ -206,6 +212,13 @@ export async function joinCluster(deps: GdclusterDeps, req: NextRequest) {
       return NextResponse.json(
         { error: 'Cluster not found with this code' },
         { status: 404 }
+      )
+    }
+
+    if (cluster.status === 'disbanded') {
+      return NextResponse.json(
+        { error: 'This cluster has been disbanded' },
+        { status: 409 }
       )
     }
 
@@ -258,6 +271,9 @@ export async function getCluster(
 
     const members = await getClusterMembers(db, clusterId)
     const history = await getClusterHistory(db, clusterId)
+    const leaderChurch = cluster.leader_church_id
+      ? await db.selectFrom('church').select('cluster_wallet').where('id', '=', cluster.leader_church_id).executeTakeFirst()
+      : null
 
     return NextResponse.json({
       id: cluster.id,
@@ -267,6 +283,7 @@ export async function getCluster(
       country_id: cluster.country_id,
       created_at: cluster.created_at,
       leader_church_id: cluster.leader_church_id,
+      cluster_wallet: leaderChurch?.cluster_wallet ?? null,
       member_count: members.length,
       status: cluster.status ?? (members.length >= 3 ? 'active' : 'pending'),
       members,

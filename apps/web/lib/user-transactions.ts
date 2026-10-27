@@ -22,6 +22,9 @@ export async function getUserTransactions(db: Kysely<DB>, usuarioId: number) {
   const transactions = await db
     .selectFrom('transaction')
     .where('usuario_id', '=', usuarioId)
+    // El 10% GD enrutado al fondo del clúster/país es tesorería, no un
+    // movimiento del usuario (R-#161, decisión 2026-10-26).
+    .where('type', '!=', 'cluster_contribution')
     .select([
       'id',
       'type',

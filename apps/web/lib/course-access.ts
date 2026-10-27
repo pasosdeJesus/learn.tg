@@ -1,8 +1,7 @@
 import { Kysely } from 'kysely'
 import type { DB } from '@/db/db.d.ts'
-// Puente de migración (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3): PILOT_COUNTRIES e isGDCourse viven en el
-// motor gdcluster; el core aún los importa hasta resolver en Fase 4.
-import { PILOT_COUNTRIES } from '@learn-tg/gdcluster/lib/gd-utils'
+// Puente de migración (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3): isGDCourse vive en el
+// motor gdcluster; el core aún lo importa hasta resolver en Fase 4.
 import { isGDCourse } from '@learn-tg/gdcluster/lib/gd-cluster-routing'
 
 export interface AccessResult {
@@ -27,7 +26,7 @@ export function hasVerifiedWorshipCity(user: {
  * Check whether a user can access a specific course's guides.
  *
  * Guides are gated by purchase only (`premium_course_usuario`). Course-specific
- * eligibility (e.g. GD pilot) gates the *purchase*, not guide viewing — see
+ * eligibility (e.g. the GD type 1 country gate) gates the *purchase*, not guide viewing — see
  * `canPurchasePremiumCourse`.
  *
  * @param db    Kysely DB instance
@@ -78,7 +77,7 @@ export async function canAccessCourse(
  * self-reported — there is no country verification. The verifier-confirmed
  * church city (`verified_city_id` or `verified_place_of_worship_location`)
  * stands in for it, so every paid course purchase requires a verified worship
- * city. Global Disciples courses add the pilot gates on top
+ * city. Global Disciples courses add the type 1 country gate on top
  * (`canPurchaseGDCourse`).
  */
 export async function canPurchasePremiumCourse(
@@ -111,11 +110,11 @@ export async function canPurchasePremiumCourse(
 }
 
 /**
- * Global Disciples course purchase eligibility (pilot phase).
+ * Global Disciples course purchase eligibility (type 1 countries).
  *
  * A user can buy the GD course only if they are:
  *   - a Christian (`usuario.religion_id = 2`), and
- *   - in a pilot country (`usuario.pais_id` in Colombia or Sierra Leone), and
+ *   - in a country classified as type 1 (`msip_pais.tipo_region = 1`), and
  *   - verified in a church city (see `hasVerifiedWorshipCity`), and
  *   - non-Zionist: answered `no` to the single Gaza question in their own
  *     profile (`usuario.position_israel_gaza='no'`, i.e. does NOT support
@@ -135,10 +134,21 @@ export async function canPurchaseGDCourse(
     return { access: false, reason: 'gd_for_christians' }
   }
 
-  if (!user.pais_id || !PILOT_COUNTRIES.includes(user.pais_id)) {
+  if (!user.pais_id) {
     return {
       access: false,
-      reason: 'gd_pilot_countries',
+      reason: 'gd_country_not_available',
+    }
+  }
+  const country = await db
+    .selectFrom('msip_pais')
+    .select('tipo_region')
+    .where('id', '=', user.pais_id)
+    .executeTakeFirst()
+  if (country?.tipo_region !== 1) {
+    return {
+      access: false,
+      reason: 'gd_country_not_available',
     }
   }
 

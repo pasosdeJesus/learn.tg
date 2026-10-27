@@ -6,11 +6,11 @@ On-chain business logic lives in the engines (`packages/rewards`, `packages/gdcl
 
 | Module | Purpose |
 |--------|---------|
-| `scores.ts` | Learning score (`refreshUserLearningScore`), donation SLEARN, `updateUserAndCoursePoints` |
+| `scores.ts` | Learning score (`refreshUserLearningScore`, excludes the `cluster_contribution` treasury rows), donation SLEARN, `updateUserAndCoursePoints` |
 | `score-rules.ts` | Profile score rules (`SCORE_RULES`, `VERIFIED_FIELDS_CONFIG`) |
 | `guide-utils.ts` | Guide lookup by course/suffix, `actividadpf_id` resolution |
 | `course-progress.ts` | Course progress and available-guide helpers |
-| `course-access.ts` | Course access/purchase gates (`PILOT_COUNTRIES`, `isGDCourse`, `canPurchaseGDCourse`, bridged from the gdcluster engine) |
+| `course-access.ts` | Course access/purchase gates (`tipo_region` type 1 gate, `isGDCourse`, `canPurchaseGDCourse`, bridged from the gdcluster engine) |
 | `course-access-msg.ts` | EN/ES denial messages for the access gates |
 | `metrics-server.ts` | Server-side event recording to `userevent` |
 | `metrics/queries.ts` | Aggregated metrics queries for the dashboard |
@@ -24,7 +24,7 @@ On-chain business logic lives in the engines (`packages/rewards`, `packages/gdcl
 | `deeplink.ts` | Self app deeplink generation, open detection, store URLs |
 | `ability.ts` | CASL-based permission rules (currently: `view_religion` for rol=1) |
 | `leaderboard-queries.ts` | Leaderboard query builder with filtering, country totals (R-#278) |
-| `user-transactions.ts` | User transaction history queries |
+| `user-transactions.ts` | User transaction history queries (hides the `cluster_contribution` treasury rows) |
 | `authenticateUser.ts` | Session-cookie auth helper for API routes |
 | `admin-auth.ts` | Admin/verifier authentication for `/api/admin/*` |
 | `admin-fetch.ts` | Same-origin admin fetch helper (session cookie + wallet hint) |

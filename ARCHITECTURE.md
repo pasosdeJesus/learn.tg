@@ -339,8 +339,7 @@ duplicated routes. Implemented (2026-08-31, migration
 
 **Candidate selection** (`GET /api/cluster/candidates`): referred pastors from
 the https://github.com/pasosdeJesus/learn.tg/issues/163 referral
-graph first, then the leader's referrer if they are a pastor, same pilot
-country (CO/SL), declared + verified church, no current cluster, not self.
+graph first, then the leader's referrer if they are a pastor, same type 1 country, declared + verified church, no current cluster, not self.
 Fallback: invite by the existing 6-char code (`POST /api/cluster/join`).
 
 **Endpoints (gdcluster engine):** `POST /api/cluster` (extended: name +

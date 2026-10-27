@@ -161,7 +161,7 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
     } finally { setBusy(false) }
   }
 
-  const guideHref = es ? `/${lang}/web3-e-ibu/guia2` : `/${lang}/web3-and-ubi/guide2`
+  const guideHref = es ? `/${lang}/redgd/guia2` : `/${lang}/gdcluster/guide2`
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100">
