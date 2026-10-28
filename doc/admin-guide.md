@@ -129,14 +129,21 @@ pseudonym or code) and two filters: status and country.
 **The cluster wallet is not set here.** `church.cluster_wallet` (the address the 10%
 of GD purchases and guide scholarships is routed to) is configured by the **cluster
 initiator** on the cluster page `/{lang}/cluster/{id}`, which recommends a multisig
-wallet shared by the cluster's pastors. Changing it later does not move funds already
-credited to the old address. The verifier can still correct it in the church modal
-(*Cluster wallet*) when a cluster cannot do it, as a support path.
+wallet shared by the cluster's pastors. The verifier can still correct it in the church
+modal (*Cluster wallet*) when a cluster cannot do it, as a support path.
+
+**Changing it with funds in it asks first.** The `ClusterFundsV2` fund is indexed by
+the wallet address, so moving the wallet does not move the money: the old fund stays in
+the old address, disappears from the ranking and cannot be released from the cluster
+page. Both surfaces therefore answer **409 `cluster_wallet_has_funds`** when the current
+wallet still holds funds; the cluster page and the church modal show a confirmation and
+retry with `confirmMigrate: true`. The change is recorded in `clustergd_history` with
+the amounts left behind, and the `userevent` carries `funds_left`.
 
 ### Presenting the cluster to Global Disciples
 
 When the initiator requests the presentation (see
-[gd-presentation.md](gd-presentation.md)), the **GD** action appears for that cluster in
+guide 6 of the GD course), the **GD** action appears for that cluster in
 the table. The dialog shows the **proposed email** (To, subject and body, with a copy
 button) so you can copy, paste and edit it in your mail client; it also lets you mark the
 email as **sent** and record **GD's answer** and the **email or channel to continue**; the initiator gets an in-app notification and sees the answer on
@@ -145,6 +152,25 @@ contact or the channel GD suggests.
 
 The public ranking (`/{lang}/gdcluster/ranking`, Clusters tab) also shows the
 status of each cluster, next to the pseudonym and the fund columns.
+
+## Issues to resolve (`/{lang}/admin/solves`)
+
+The dashboard widget **Issues to resolve** counts the open rows of `admin_solves`,
+the queue the money routes fill when something fails **after** a transfer: the 10% of a
+GD course or guide scholarship that could not be recorded in `transaction`
+(`gd_cluster_ledger`) or could not be routed to the cluster fund (`gd_cluster_transfer`).
+Until 2026-10-28 nothing read that table, so an unrecorded 10% was invisible.
+
+The page lists ID, type, date, `metadata` and status, with filters by status
+(pending / resolved / all) and by type. Each row shows the raw metadata needed to check
+it (transaction hash, course, guide, user, amounts). **The platform does not retry by
+itself**: check the transfer on the explorer, record the missing ledger row if it
+corresponds, and then press **Mark resolved** with a short note. The resolution stores
+`solved_at`, `solved_by` (your account) and the note, and logs `admin_solve_resolved` in
+`userevent`.
+
+Endpoints: `GET /api/admin/solves?status=&type=&limit=` and
+`PUT /api/admin/solves/{id}` (`{ note }`), both verifier-only.
 
 ## Wallets and credentials
 

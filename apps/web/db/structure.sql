@@ -1643,7 +1643,9 @@ CREATE TABLE public.admin_solves (
     metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
     solved_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    solved_by integer,
+    note text
 );
 
 
@@ -7885,6 +7887,13 @@ CREATE INDEX credential_emission_usuario_idx ON public.credential_emission USING
 
 
 --
+-- Name: idx_admin_solves_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_admin_solves_created ON public.admin_solves USING btree (created_at DESC);
+
+
+--
 -- Name: idx_admin_solves_pending; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8513,6 +8522,14 @@ CREATE TRIGGER usuario_visibilidad_sensible_bu BEFORE UPDATE OF pais_id ON publi
 
 ALTER TABLE ONLY public.cor1440_gen_actividad
     ADD CONSTRAINT actividad_regionsjr_id_fkey FOREIGN KEY (oficina_id) REFERENCES public.msip_oficina(id);
+
+
+--
+-- Name: admin_solves admin_solves_solved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_solves
+    ADD CONSTRAINT admin_solves_solved_by_fkey FOREIGN KEY (solved_by) REFERENCES public.usuario(id);
 
 
 --

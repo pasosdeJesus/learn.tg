@@ -6,6 +6,7 @@ import { createComponentT } from '@/lib/hooks/useTranslation'
 import { CalendarWidget } from '@/components/admin/CalendarWidget'
 import { PendingWidget, RecentUsersWidget, RecentChurchesWidget } from '@/components/admin/AdminWidgets'
 import { PremiumPurchasesWidget } from '@/components/admin/PremiumPurchasesWidget'
+import { AdminSolvesWidget } from '@/components/admin/AdminSolvesWidget'
 import Link from 'next/link'
 
 type PageProps = { params: Promise<{ lang: string }> }
@@ -26,6 +27,7 @@ export default function AdminDashboard({ params }: PageProps) {
       loading: 'Loading...', recentUsers: 'Recent Users', recentChurches: 'Recent Churches',
       pendingVerifications: 'Pending Verifications', calendar: 'My Calendar',
       allUsers: 'All Users →', allChurches: 'All Churches →', allClusters: 'All Clusters →',
+      allIssues: 'Issues to resolve →',
       notConfigured: 'NEXT_PUBLIC_VERIFIER_WALLET not set',
       noEvents: 'No events', noPending: 'No pending verifications',
       noUsers: 'No users', noChurches: 'No churches',
@@ -46,6 +48,7 @@ export default function AdminDashboard({ params }: PageProps) {
       loading: 'Cargando...', recentUsers: 'Usuarios Recientes', recentChurches: 'Iglesias Recientes',
       pendingVerifications: 'Verificaciones Pendientes', calendar: 'Mi Calendario',
       allUsers: 'Todos los Usuarios →', allChurches: 'Todas las Iglesias →', allClusters: 'Todos los Clústeres →',
+      allIssues: 'Asuntos por resolver →',
       notConfigured: 'NEXT_PUBLIC_VERIFIER_WALLET no configurado',
       noEvents: 'Sin eventos', noPending: 'Sin verificaciones pendientes',
       noUsers: 'Sin usuarios', noChurches: 'Sin iglesias',
@@ -82,6 +85,7 @@ export default function AdminDashboard({ params }: PageProps) {
           <RecentUsersWidget lang={lang} t={t} onUserModalClose={bumpChurches} />
           <RecentChurchesWidget lang={lang} t={t} key={churchKey} />
           <PremiumPurchasesWidget lang={lang} />
+          <AdminSolvesWidget lang={lang} />
         </div>
       </div>
       <div className="mt-6 flex gap-4">
@@ -93,6 +97,9 @@ export default function AdminDashboard({ params }: PageProps) {
         </Link>
         <Link href={`/${lang}/admin/clusters`} className="text-sm text-blue-600 hover:underline">
           🏘️ {t('allClusters')}
+        </Link>
+        <Link href={`/${lang}/admin/solves`} className="text-sm text-blue-600 hover:underline">
+          {t('allIssues')}
         </Link>
       </div>
     </div>

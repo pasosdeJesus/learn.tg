@@ -107,7 +107,7 @@ describe('premiumPurchase (motor rewards)', () => {
       .mockResolvedValueOnce(null) // replay check: no existing tx
       .mockResolvedValueOnce(null) // alreadyOwned: no enrollment
       .mockResolvedValueOnce({ pais_id: 170 }) // user country
-      .mockResolvedValueOnce({ hdi: 0.467 }) // m_hdi → $0.70 price
+      .mockResolvedValueOnce({ hdi: 0.467 }) // m_hdi → $0.50 price
     mockExecute.mockResolvedValue([])
   })
 
@@ -180,13 +180,67 @@ describe('premiumPurchase (motor rewards)', () => {
   it('returns 400 when the payment is below the country price', async () => {
     decodeFunctionData.mockReturnValue({
       functionName: 'transfer',
-      args: [BACKEND_WALLET, 500000n], // 0.5 USDT < $0.70
+      args: [BACKEND_WALLET, 400000n], // 0.40 USDT < $0.50 (Sierra Leone anchor)
     })
     const res = await premiumPurchase(buildDeps(), createRequest({
       walletAddress: WALLET, token: TOKEN, courseId: 1, usdtHash: USDT_HASH,
     }))
     expect(res.status).toBe(400)
     expect((await res.json()).error).toContain('Insufficient payment')
+  })
+
+  // R-#161 §riesgos: la tasa SLEARN se leía con un fallback silencioso a 22; con un tipo
+  // real menor el pago se habría aceptado por debajo del precio.
+  it('answers 503 when the SLEARN rate cannot be read from the network', async () => {
+    decodeFunctionData.mockReturnValueOnce({ functionName: 'transfer', args: [BACKEND_WALLET, SLEARN_AMOUNT] })
+    const deps = buildDeps()
+    const publicClient = deps.backend.getPublicClient()
+    publicClient.readContract = vi.fn().mockRejectedValue(new Error('rpc down'))
+    deps.backend.fetchTxWithReceipt.mockImplementation(() => Promise.resolve(
+      { receipt: { status: 'success', to: SLEARN_ADDRESS, blockNumber: 100n }, tx: { from: WALLET, input: '0xa9059cbb' } },
+    ))
+    mockExecuteTakeFirst
+      .mockReset()
+      .mockResolvedValueOnce(null) // replay slearnHash
+      .mockResolvedValueOnce(null) // alreadyOwned
+
+    const res = await premiumPurchase(deps, createRequest({
+      walletAddress: WALLET, token: TOKEN, courseId: 1, slearnHash: SLEARN_HASH,
+    }))
+    expect(res.status).toBe(503)
+    expect((await res.json()).error).toMatch(/SLEARN exchange rate/i)
+    expect(deps.backend.sendTxAndWait).not.toHaveBeenCalled()
+  })
+
+  // Antes la falta de país/HDI caía en silencio a un precio de 2 USDT.
+  it('answers 400 when the buyer has no country to price the course', async () => {
+    mockExecuteTakeFirst
+      .mockReset()
+      .mockResolvedValueOnce(null) // replay usdtHash
+      .mockResolvedValueOnce(null) // alreadyOwned
+      .mockResolvedValueOnce(null) // usuario without pais_id
+
+    const res = await premiumPurchase(buildDeps(), createRequest({
+      walletAddress: WALLET, token: TOKEN, courseId: 1, usdtHash: USDT_HASH,
+    }))
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('Country not set in profile')
+    expect(insertedRows).toHaveLength(0)
+  })
+
+  it('answers 400 when the country has no HDI row', async () => {
+    mockExecuteTakeFirst
+      .mockReset()
+      .mockResolvedValueOnce(null) // replay usdtHash
+      .mockResolvedValueOnce(null) // alreadyOwned
+      .mockResolvedValueOnce({ pais_id: 170 }) // user country
+      .mockResolvedValueOnce(null) // no HDI
+
+    const res = await premiumPurchase(buildDeps(), createRequest({
+      walletAddress: WALLET, token: TOKEN, courseId: 1, usdtHash: USDT_HASH,
+    }))
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('No HDI data for country')
   })
 
   it('returns 403 when the user is not eligible to purchase the course', async () => {
@@ -289,7 +343,7 @@ describe('premiumPurchase (motor rewards)', () => {
       .mockResolvedValueOnce(null) // replay slearnHash
       .mockResolvedValueOnce(null) // alreadyOwned
       .mockResolvedValueOnce({ pais_id: 170 }) // user country
-      .mockResolvedValueOnce({ hdi: 0.467 }) // m_hdi → $0.70 price
+      .mockResolvedValueOnce({ hdi: 0.467 }) // m_hdi → $0.50 price
     deps.backend.fetchTxWithReceipt.mockImplementation((hash: string) => Promise.resolve(
       hash === USDT_HASH
         ? { receipt: { status: 'success', to: USDT_ADDRESS, blockNumber: 100n }, tx: { from: WALLET, input: '0xa9059cbb' } }

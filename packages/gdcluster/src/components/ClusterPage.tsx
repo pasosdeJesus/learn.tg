@@ -44,6 +44,7 @@ const tEn = {
   changeWallet: 'Change',
   walletHint: 'Use a multisig wallet (for example a Safe) shared by the cluster pastors as signers. Set it before funds arrive: changing it later does not move funds already credited.',
   walletSaved: 'Cluster wallet saved',
+  walletHasFunds: 'This cluster wallet already holds funds{{0}}. Changing it does NOT move them: the existing fund stays in the old address. Change it anyway?',
   gdTitle: 'Global Disciples',
   gdIntro: 'When the cluster and every pastor meet the conditions, the initiator can ask pdJ to present it to Global Disciples (GD). pdJ is not GD staff: it asks GD for the contact of the nearest program director or the channel to continue, and the cluster then talks directly with GD.',
   gdRequest: 'Request the presentation to Global Disciples',
@@ -92,6 +93,7 @@ const tEs: typeof tEn = {
   changeWallet: 'Cambiar',
   walletHint: 'Usa una billetera multisig (por ejemplo una Safe) con las billeteras de los pastores del clúster como firmantes. Configúrala antes de recibir fondos: cambiarla después no mueve los fondos ya acreditados.',
   walletSaved: 'Billetera del clúster guardada',
+  walletHasFunds: 'Esta billetera del clúster ya tiene fondos{{0}}. Cambiarla NO los mueve: el fondo existente queda en la billetera anterior. ¿Cambiarla de todos modos?',
   gdTitle: 'Global Disciples',
   gdIntro: 'Cuando el clúster y cada pastor cumplen las condiciones, el iniciador puede pedirle a pdJ que lo presente a Global Disciples (GD). pdJ no es personal de GD: le pide a GD el contacto del director de programa más cercano o el canal para continuar, y después el clúster habla directamente con GD.',
   gdRequest: 'Solicitar la presentación a Global Disciples',
@@ -307,16 +309,34 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
     }
   }
 
-  const handleWallet = async () => {
+  // El fondo de ClusterFundsV2 está indexado por la billetera: cambiarla con saldo deja
+  // los fondos viejos huérfanos (R-#161 §riesgos). La API responde 409 con
+  // `cluster_wallet_has_funds` y aquí se pide confirmación antes de reintentar.
+  const handleWallet = async (confirmMigrate = false) => {
     setSavingWallet(true)
     try {
       const res = await fetch(`/api/cluster/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address, clusterWallet: newWallet.trim() }),
+        body: JSON.stringify({
+          walletAddress: address,
+          clusterWallet: newWallet.trim(),
+          ...(confirmMigrate ? { confirmMigrate: true } : {}),
+        }),
       })
+      if (res.status === 409 && !confirmMigrate) {
+        const data = await res.json().catch(() => ({}))
+        if (data?.code === 'cluster_wallet_has_funds') {
+          const funds = data.funds ? ` (${data.funds.usdt} USDT / ${data.funds.slearn} SLEARN)` : ''
+          if (window.confirm(t('walletHasFunds').replace('{{0}}', funds))) {
+            setSavingWallet(false)
+            await handleWallet(true)
+          }
+          return
+        }
+      }
       if (!res.ok) {
-        const data = await res.json()
+        const data = await res.json().catch(() => ({}))
         throw new Error(data.error || 'Failed to save the wallet')
       }
       toast({ title: t('walletSaved') })

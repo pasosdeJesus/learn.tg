@@ -93,7 +93,7 @@ not break.
   church (`getPastorChurch(db, auth.usuario.id)`) and the membership; "is initiator" is
   `cluster.initiator_church_id === church.id`. The GD answer and contact email are shown
   only to the initiator, even to members of the same cluster
-  ([gd-presentation.md](gd-presentation.md)).
+  (guide 6 of the GD course states the same rule).
 
 ## 7. Endpoints
 

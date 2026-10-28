@@ -125,25 +125,47 @@ export async function premiumPurchase(deps: RewardsDeps, req: NextRequest) {
       }
     }
 
-    // Read current SLEARN rate
-    let rate = 22
-    try {
-      const r = (await publicClient.readContract({
-        address: slearnAddress, abi: SLEARNAbi as any, functionName: 'usdtToSlearnRate',
-      })) as bigint
-      rate = Number(r)
-    } catch {}
+    // Read current SLEARN rate — solo si el pago trae SLEARN. Antes caía en silencio a
+    // 22 si el RPC fallaba: con un tipo real de 10 el pago se habría aceptado por debajo
+    // del precio (R-#161 §riesgos). Si hace falta y no se puede leer, se rechaza.
+    let rate: number | null = null
+    if (onChainSlearnAmount > 0n) {
+      try {
+        const r = (await publicClient.readContract({
+          address: slearnAddress, abi: SLEARNAbi as any, functionName: 'usdtToSlearnRate',
+        })) as bigint
+        rate = Number(r)
+      } catch {
+        return NextResponse.json(
+          { error: 'Could not read the SLEARN exchange rate from the network. Try again in a moment.' },
+          { status: 503 },
+        )
+      }
+      if (!rate || rate <= 0) {
+        return NextResponse.json(
+          { error: 'The SLEARN exchange rate is not available. Try again in a moment.' },
+          { status: 503 },
+        )
+      }
+    }
 
     const usdtValue = Number(formatUnits(onChainUsdtAmount, usdtDecimals))
     const slearnValue = Number(formatUnits(onChainSlearnAmount, deps.backend.SLEARN_DECIMALS))
-    const totalValueUSDT = usdtValue + slearnValue / (rate * (1 - SLEARN_DISCOUNT))
+    const totalValueUSDT = rate === null
+      ? usdtValue
+      : usdtValue + slearnValue / (rate * (1 - SLEARN_DISCOUNT))
 
+    // El precio depende del país: sin país o sin HDI no hay precio con el que validar.
+    // Antes caía en silencio a 2 USDT, que aceptaba pagos por debajo del precio real.
     const userCountry = await db.selectFrom('usuario').select('pais_id').where('id', '=', usuario.id).executeTakeFirst()
-    let expectedPriceUSDT = 2
-    if (userCountry?.pais_id) {
-      const hdiRow = await db.selectFrom('m_hdi').select('hdi').where('pais_id', '=', userCountry.pais_id).orderBy('year', 'desc').executeTakeFirst()
-      if (hdiRow) expectedPriceUSDT = calculatePremiumPriceUsdt(Number(hdiRow.hdi))
+    if (!userCountry?.pais_id) {
+      return NextResponse.json({ error: 'Country not set in profile' }, { status: 400 })
     }
+    const hdiRow = await db.selectFrom('m_hdi').select('hdi').where('pais_id', '=', userCountry.pais_id).orderBy('year', 'desc').executeTakeFirst()
+    if (!hdiRow) {
+      return NextResponse.json({ error: 'No HDI data for country' }, { status: 400 })
+    }
+    const expectedPriceUSDT = calculatePremiumPriceUsdt(Number(hdiRow.hdi))
 
     // Eligibility gate for every paid course: the price depends on the
     // country, so the verifier-confirmed worship city is required; GD adds

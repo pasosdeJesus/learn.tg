@@ -31,7 +31,9 @@ export interface AdminSolves {
   created_at: Generated<Timestamp>;
   id: Generated<Int8>;
   metadata: Generated<Json>;
+  note: string | null;
   solved_at: Timestamp | null;
+  solved_by: number | null;
   type: string;
   updated_at: Generated<Timestamp>;
 }

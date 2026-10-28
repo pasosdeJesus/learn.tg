@@ -71,8 +71,9 @@ country fund before the vault split. The rewards engine calls
 
 ### Premium purchase (`courses/premium/purchase`)
 
-1. Price = `calculatePremiumPriceUsdt` (HDI-linear, 0.7↔3 USDT calibration);
-   SLEARN price = 10% discount (`calculatePremiumPriceSlearn`).
+1. Price = `calculatePremiumPriceUsdt` (HDI-linear with **Sierra Leone 0.50 and the
+   United States 3.00 as anchors**, no ceiling; Colombia is not an anchor anymore and
+   lands at 2.20); SLEARN price = 10% discount (`calculatePremiumPriceSlearn`).
 2. `SLEARN.processPayment` splits per `PREMIUM_PCT`
    (pdJ 50 / reward 10 / missional 10 / ubi 5 / referral 10 / churches 5 /
    course vault 10).

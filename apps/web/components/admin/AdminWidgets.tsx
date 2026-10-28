@@ -770,10 +770,13 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
 
   const setF = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }))
 
-  const handleSave = async () => {
+  // Cambiar `cluster_wallet` con saldo en el fondo deja los fondos viejos en la
+  // billetera anterior: la API responde 409 y aquí se pide confirmación explícita antes
+  // de reintentar con `confirmMigrate` (R-#161 §riesgos, R-#220 §4).
+  const handleSave = async (extra: Record<string, unknown> = {}) => {
     setSaving(true)
     try {
-      const data = await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      const data = await adminFetch(`/api/admin/church/${church.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, ...extra }) })
       if (data?.bonus?.awarded) {
         toast({
           title: lang === 'es' ? '✅ Bono de 22 SLEARN enviado al pastor' : '✅ 22 SLEARN bonus sent to pastor',
@@ -789,7 +792,16 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
       setMsg(t('saveSuccess'))
       setTimeout(onSaved, 800)
     } catch (e: any) {
-      setMsg(e.message || 'Error')
+      const text = e?.message || 'Error'
+      if (!extra.confirmMigrate && text === 'cluster_wallet_has_funds') {
+        const ok = window.confirm(lang === 'es'
+          ? 'Esta billetera de clúster ya tiene fondos. Cambiarla NO los mueve: quedarán en la billetera anterior. ¿Cambiarla de todos modos?'
+          : 'This cluster wallet already holds funds. Changing it does NOT move them: they stay in the previous wallet. Change it anyway?')
+        setSaving(false)
+        if (ok) await handleSave({ confirmMigrate: true })
+        return
+      }
+      setMsg(text)
     }
     setSaving(false)
   }
@@ -891,7 +903,7 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
           </button>
           <div className="flex gap-2">
             <button onClick={onClose} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">{t('cancel')}</button>
-            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+            <button onClick={() => handleSave()} disabled={saving} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
               {saving ? (lang === 'es' ? 'Guardando...' : 'Saving...') : t('save')}
             </button>
           </div>

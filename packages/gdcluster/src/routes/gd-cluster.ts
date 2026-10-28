@@ -11,6 +11,7 @@ import {
   getClusterCandidates,
   isType1Country,
 } from '../lib/gd-utils.js'
+import { readClusterFunds, hasFunds, summarizeFunds } from '../lib/cluster-funds.js'
 import type { GdclusterDeps } from '../index.js'
 
 // Rutas de clústeres del curso Global Disciples (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3, https://github.com/pasosdeJesus/learn.tg/issues/220).
@@ -321,7 +322,7 @@ export async function updateCluster(
   }
 
   try {
-    const { walletAddress, name, pseudonym, clusterWallet } = await req.json()
+    const { walletAddress, name, pseudonym, clusterWallet, confirmMigrate } = await req.json()
     const db = deps.db()
     const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) {
@@ -381,6 +382,36 @@ export async function updateCluster(
         .executeTakeFirst()
     }
 
+    // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: el fondo de
+    // `ClusterFundsV2` está indexado por la billetera, así que cambiarla con saldo deja
+    // los fondos viejos huérfanos (no se mueven, no se ven en el ranking y no se pueden
+    // liberar desde la página). Se bloquea el cambio salvo confirmación explícita.
+    let fundsSummary: ReturnType<typeof summarizeFunds> | null = null
+    let fundsUnchecked = false
+    if (normalizedWallet !== undefined && initiatorChurch) {
+      const previousWallet = initiatorChurch.cluster_wallet ?? null
+      if (normalizedWallet && previousWallet && normalizedWallet !== previousWallet) {
+        const balance = await readClusterFunds(deps, previousWallet)
+        if (balance === null) {
+          fundsUnchecked = true
+        } else if (hasFunds(balance)) {
+          fundsSummary = summarizeFunds(balance)
+          if (confirmMigrate !== true) {
+            return NextResponse.json(
+              {
+                error:
+                  'This cluster wallet already holds funds. Changing it does not move them: the existing fund stays in the old address. Confirm the change if that is what you want.',
+                code: 'cluster_wallet_has_funds',
+                previousWallet,
+                funds: fundsSummary,
+              },
+              { status: 409 }
+            )
+          }
+        }
+      }
+    }
+
     if (name !== undefined && (!name || name.length < 3 || name.length > 50)) {
       return NextResponse.json(
         { error: 'Cluster name must be between 3 and 50 characters' },
@@ -425,8 +456,18 @@ export async function updateCluster(
         .where('id', '=', initiatorChurch.id)
         .execute()
       if (previousWallet !== normalizedWallet) {
-        await addClusterHistory(db, clusterId, 'cluster_wallet_change', previousWallet, normalizedWallet, auth.usuario.id)
-        await logEvent(db, auth.usuario.id, 'cluster_wallet_change', { cluster_id: clusterId, wallet: normalizedWallet })
+        // La historia deja constancia de lo que quedó en la billetera anterior.
+        const historyValue = fundsSummary
+          ? `${normalizedWallet ?? ''} (confirmed with funds left in ${previousWallet ?? ''}: ${fundsSummary.usdt} USDT / ${fundsSummary.slearn} SLEARN)`
+          : normalizedWallet
+        await addClusterHistory(db, clusterId, 'cluster_wallet_change', previousWallet, historyValue, auth.usuario.id)
+        await logEvent(db, auth.usuario.id, 'cluster_wallet_change', {
+          cluster_id: clusterId,
+          wallet: normalizedWallet,
+          previous_wallet: previousWallet,
+          funds_left: fundsSummary,
+          funds_unchecked: fundsUnchecked,
+        })
       }
     }
 
@@ -437,6 +478,8 @@ export async function updateCluster(
       // Solo se informa cuando el cuerpo trajo la billetera: en un renombrado no
       // se consultó la fila de la iglesia iniciadora.
       ...(normalizedWallet !== undefined ? { cluster_wallet: normalizedWallet } : {}),
+      ...(fundsSummary ? { funds_left_in_previous_wallet: fundsSummary } : {}),
+      ...(fundsUnchecked ? { funds_unchecked: true } : {}),
     })
   } catch (error) {
     console.error('Error updating cluster:', error)

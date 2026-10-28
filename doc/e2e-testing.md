@@ -317,7 +317,7 @@ tokens or pays; `Data` = creates/deletes domain rows.
 | `admin-referrer.spec.mjs` | Session, Data | Referrer correction from the admin (R-#163 §7.1): read the user (own code, "referred by", rewards paid), validate self-referral and a non-existent referrer (400), re-submitting the current one changes nothing, change and **restore the original**. SKIP without a verifier wallet or any user with a referrer |
 | `rails-auth.spec.mjs` | Session | Rails API calls (public course endpoints) in ES and EN |
 | `premium-courses.spec.mjs` | Session, User | Course catalogue/purchase endpoints with a **fresh** wallet (its own SIWE): price, eligibility, purchase rejection paths |
-| `premium-price.spec.mjs` | Session, User | Price per country (R-#128 §4.2): creates two profiles (Sierra Leone and Colombia) and compares `/api/courses/premium/price` — high HDI pays more, SLEARN keeps 10%, amounts fall in the calibration (SL ~0.70, CO ~3.00). No Chrome, no funds |
+| `premium-price.spec.mjs` | Session, User | Price per country (R-#128 §4.2): creates two profiles (Sierra Leone and Colombia) and compares `/api/courses/premium/price` — high HDI pays more, SLEARN keeps 10%, amounts fall in the calibration (SL ~0.50, CO ~2.20). No Chrome, no funds |
 | `prerequisites.spec.mjs` | Session, Data | The wallet setup of §3.2 |
 | `donate-course.spec.mjs` | Session | Course donation endpoint `/api/add-donation`: validation paths (400/401) |
 | `donate-gd.spec.mjs` | Session | GD cluster/country donation `/api/gdcluster/donations/verify`: validation paths (400/401/403) |

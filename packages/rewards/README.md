@@ -75,7 +75,7 @@ export async function POST(req: Request) {
 | `config.ts` | `IS_PRODUCTION` (from `NEXT_PUBLIC_AUTH_URL`) |
 | `donate-utils.ts` | Re-export of `@pasosdejesus/usdt/lib/donate-utils` (first local→shared graduation) |
 | `pastor-bonus.ts` | `isEligiblePastor` (pastor, CO/SL, score > 90) + `awardPastorBonus` (22 SLEARN) |
-| `premium-pricing.ts` | `calculatePremiumPriceUsdt` (HDI-linear, 0.7↔3 USDT calibration), `calculatePremiumPriceSlearn` (10% discount) |
+| `premium-pricing.ts` | `calculatePremiumPriceUsdt` (HDI-linear between **Sierra Leone 0.50 and the United States 3.00**, no ceiling; Colombia lands at 2.20), `calculatePremiumPriceSlearn` (10% discount) |
 | `replay-protection.ts` | `checkReplayAttack` (hash reuse in `transaction`), `getBlockWithRetry` |
 | `sle-rate.ts` | `getSLEUSDRate` (currently hardcoded 22; TODO: live rate from stable-sl.pdj.app) |
 | `verify-transfer.ts` | `verifyTransfer` + `erc20TransferAbi` (decode ERC-20 transfer from receipt logs) |
