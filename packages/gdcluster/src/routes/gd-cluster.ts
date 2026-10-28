@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getAddress, isAddress } from 'viem'
 import {
   getPastorChurch,
   getChurchCluster,
@@ -97,7 +98,7 @@ export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
         name,
         pseudonym: pseudonym && String(pseudonym).trim() ? String(pseudonym).trim() : null,
         status: 'pending',
-        leader_church_id: church.id,
+        initiator_church_id: church.id,
         code,
         country_id: church.country_id,
       })
@@ -248,7 +249,7 @@ export async function joinCluster(deps: GdclusterDeps, req: NextRequest) {
 
 export async function getCluster(
   deps: GdclusterDeps,
-  _request: NextRequest,
+  request: NextRequest,
   params: Record<string, string>
 ) {
   const clusterId = parseInt(params?.id ?? '', 10)
@@ -271,9 +272,22 @@ export async function getCluster(
 
     const members = await getClusterMembers(db, clusterId)
     const history = await getClusterHistory(db, clusterId)
-    const leaderChurch = cluster.leader_church_id
-      ? await db.selectFrom('church').select('cluster_wallet').where('id', '=', cluster.leader_church_id).executeTakeFirst()
+    const initiatorChurch = cluster.initiator_church_id
+      ? await db.selectFrom('church').select('cluster_wallet').where('id', '=', cluster.initiator_church_id).executeTakeFirst()
       : null
+
+    // `isInitiator` se calcula para la billetera que consulta (opcional): la página
+    // del clúster lo usa para ofrecer la edición de la billetera solo al **iniciador
+    // del clúster** (https://github.com/pasosdeJesus/learn.tg/issues/220).
+    let isInitiator = false
+    const walletAddress = request.nextUrl.searchParams.get('walletAddress') || ''
+    if (walletAddress && deps.authenticateUser) {
+      const auth = await deps.authenticateUser(db, walletAddress)
+      if (auth) {
+        const church = await getPastorChurch(db, auth.usuario.id)
+        isInitiator = !!(church && cluster.initiator_church_id === church.id)
+      }
+    }
 
     return NextResponse.json({
       id: cluster.id,
@@ -282,8 +296,9 @@ export async function getCluster(
       code: cluster.code,
       country_id: cluster.country_id,
       created_at: cluster.created_at,
-      leader_church_id: cluster.leader_church_id,
-      cluster_wallet: leaderChurch?.cluster_wallet ?? null,
+      initiator_church_id: cluster.initiator_church_id,
+      cluster_wallet: initiatorChurch?.cluster_wallet ?? null,
+      isInitiator,
       member_count: members.length,
       status: cluster.status ?? (members.length >= 3 ? 'active' : 'pending'),
       members,
@@ -306,7 +321,7 @@ export async function updateCluster(
   }
 
   try {
-    const { walletAddress, name, pseudonym } = await req.json()
+    const { walletAddress, name, pseudonym, clusterWallet } = await req.json()
     const db = deps.db()
     const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) {
@@ -336,9 +351,34 @@ export async function updateCluster(
       return NextResponse.json({ error: 'Cluster not found' }, { status: 404 })
     }
 
-    // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: solo el líder edita nombre/pseudónimo.
-    if (cluster.leader_church_id && cluster.leader_church_id !== church.id) {
-      return NextResponse.json({ error: 'Only the cluster leader can edit the details' }, { status: 403 })
+    // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: solo el iniciador edita nombre/pseudónimo.
+    if (cluster.initiator_church_id && cluster.initiator_church_id !== church.id) {
+      return NextResponse.json({ error: 'Only the cluster initiator can edit the details' }, { status: 403 })
+    }
+
+    // Billetera del clúster (https://github.com/pasosdeJesus/learn.tg/issues/220):
+    // la fuente de verdad sigue siendo `church.cluster_wallet` de la iglesia iniciadora.
+    // La configura el iniciador del clúster y se recomienda una multisig con las
+    // billeteras de los pastores. Cambiarla no mueve los fondos ya acreditados
+    // (el fondo está indexado por la dirección anterior).
+    let normalizedWallet: string | null | undefined
+    let initiatorChurch: { id: number; cluster_wallet: string | null } | undefined
+    if (clusterWallet !== undefined) {
+      if (clusterWallet === null || clusterWallet === '') {
+        normalizedWallet = null
+      } else if (typeof clusterWallet === 'string' && isAddress(clusterWallet)) {
+        normalizedWallet = getAddress(clusterWallet)
+      } else {
+        return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 })
+      }
+      if (!cluster.initiator_church_id) {
+        return NextResponse.json({ error: 'The cluster has no initiator church' }, { status: 400 })
+      }
+      initiatorChurch = await db
+        .selectFrom('church')
+        .select(['id', 'cluster_wallet'])
+        .where('id', '=', cluster.initiator_church_id)
+        .executeTakeFirst()
     }
 
     if (name !== undefined && (!name || name.length < 3 || name.length > 50)) {
@@ -377,7 +417,27 @@ export async function updateCluster(
       await addClusterHistory(db, clusterId, 'pseudonym_change', cluster.pseudonym, updates.pseudonym as string | null, auth.usuario.id)
     }
 
-    return NextResponse.json({ success: true, name: updates.name ?? cluster.name, pseudonym: updates.pseudonym ?? cluster.pseudonym })
+    if (normalizedWallet !== undefined && initiatorChurch) {
+      const previousWallet = initiatorChurch.cluster_wallet ?? null
+      await db
+        .updateTable('church')
+        .set({ cluster_wallet: normalizedWallet, updated_at: new Date() })
+        .where('id', '=', initiatorChurch.id)
+        .execute()
+      if (previousWallet !== normalizedWallet) {
+        await addClusterHistory(db, clusterId, 'cluster_wallet_change', previousWallet, normalizedWallet, auth.usuario.id)
+        await logEvent(db, auth.usuario.id, 'cluster_wallet_change', { cluster_id: clusterId, wallet: normalizedWallet })
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      name: updates.name ?? cluster.name,
+      pseudonym: updates.pseudonym ?? cluster.pseudonym,
+      // Solo se informa cuando el cuerpo trajo la billetera: en un renombrado no
+      // se consultó la fila de la iglesia iniciadora.
+      ...(normalizedWallet !== undefined ? { cluster_wallet: normalizedWallet } : {}),
+    })
   } catch (error) {
     console.error('Error updating cluster:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -418,7 +478,7 @@ export async function leaveCluster(
     const cluster = await db.selectFrom('clustergd').selectAll().where('id', '=', clusterId).executeTakeFirst()
     if (!cluster) return NextResponse.json({ error: 'Cluster not found' }, { status: 404 })
 
-    const isLeader = cluster.leader_church_id === church.id
+    const isInitiator = cluster.initiator_church_id === church.id
 
     await db
       .updateTable('church_clustergd')
@@ -432,16 +492,16 @@ export async function leaveCluster(
 
     const remainingMembers = await getClusterMembers(db, clusterId)
 
-    if (isLeader) {
-      // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: el líder saliente transfiere el liderazgo al miembro más
+    if (isInitiator) {
+      // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: el iniciador saliente transfiere el rol al miembro más
       // antiguo o disuelve el clúster si no quedan miembros.
       if (remainingMembers.length >= 1) {
         await db
           .updateTable('clustergd')
-          .set({ leader_church_id: remainingMembers[0].church_id, updated_at: new Date() })
+          .set({ initiator_church_id: remainingMembers[0].church_id, updated_at: new Date() })
           .where('id', '=', clusterId)
           .execute()
-        await addClusterHistory(db, clusterId, 'leader_transfer', church.name, remainingMembers[0].church_name, auth.usuario.id)
+        await addClusterHistory(db, clusterId, 'initiator_transfer', church.name, remainingMembers[0].church_name, auth.usuario.id)
       } else {
         await db
           .updateTable('clustergd')
@@ -452,7 +512,7 @@ export async function leaveCluster(
         return NextResponse.json({ dissolved: true })
       }
     } else if (remainingMembers.length < 3 && cluster.status === 'active') {
-      // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: con < 3 miembros el clúster vuelve a pending (el líder
+      // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: con < 3 miembros el clúster vuelve a pending (el iniciador
       // puede invitar un reemplazo).
       await db
         .updateTable('clustergd')
@@ -462,9 +522,17 @@ export async function leaveCluster(
       await addClusterHistory(db, clusterId, 'status_change', 'active', 'pending', auth.usuario.id)
     }
 
-    return NextResponse.json({ success: true, leader_transferred: isLeader && remainingMembers.length >= 1, dissolved: isLeader && remainingMembers.length === 0 })
+    return NextResponse.json({ success: true, initiator_transferred: isInitiator && remainingMembers.length >= 1, dissolved: isInitiator && remainingMembers.length === 0 })
   } catch (error) {
     console.error('Error leaving cluster:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+// ── helpers ────────────────────────────────────────────────────────────────
+
+async function logEvent(db: any, usuarioId: number, eventType: string, eventData: unknown): Promise<void> {
+  await db.insertInto('userevent')
+    .values({ usuario_id: usuarioId, event_type: eventType, event_data: JSON.stringify(eventData), created_at: new Date() })
+    .execute()
 }

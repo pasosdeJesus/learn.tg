@@ -112,7 +112,7 @@ Confirming `registration_verified` is what unlocks the **22 SLEARN pastor bonus*
 ## All Clusters (`/{lang}/admin/clusters`)
 
 Verifier view of the GD clusters (https://github.com/pasosdeJesus/learn.tg/issues/220
-§5). The table lists ID, name, pseudonym, code, country, leader church, member
+§5). The table lists ID, name, pseudonym, code, country, initiator church, member
 count and **status** (pending / active / disbanded), with a search box (name,
 pseudonym or code) and two filters: status and country.
 
@@ -125,6 +125,23 @@ pseudonym or code) and two filters: status and country.
   only distinguishes verifiers (documented simplification in
   `gd-admin-clusters.ts`).
 - Changes are recorded in `userevent` and `clustergd_history`.
+
+**The cluster wallet is not set here.** `church.cluster_wallet` (the address the 10%
+of GD purchases and guide scholarships is routed to) is configured by the **cluster
+initiator** on the cluster page `/{lang}/cluster/{id}`, which recommends a multisig
+wallet shared by the cluster's pastors. Changing it later does not move funds already
+credited to the old address. The verifier can still correct it in the church modal
+(*Cluster wallet*) when a cluster cannot do it, as a support path.
+
+### Presenting the cluster to Global Disciples
+
+When the initiator requests the presentation (see
+[gd-presentation.md](gd-presentation.md)), the **GD** action appears for that cluster in
+the table. The dialog shows the **proposed email** (To, subject and body, with a copy
+button) so you can copy, paste and edit it in your mail client; it also lets you mark the
+email as **sent** and record **GD's answer** and the **email or channel to continue**; the initiator gets an in-app notification and sees the answer on
+the cluster page. pdJ is not GD staff: it only asks for the nearest program director's
+contact or the channel GD suggests.
 
 The public ranking (`/{lang}/gdcluster/ranking`, Clusters tab) also shows the
 status of each cluster, next to the pseudonym and the fund columns.

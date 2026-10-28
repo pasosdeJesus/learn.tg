@@ -58,7 +58,7 @@ export function GasInsufficientPanel({ lang, onClose, diag }: GasInsufficientPan
       <div className="flex gap-3 justify-center">
         <Link
           href={courseHref}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white! hover:bg-blue-700"
         >
           {isEs ? 'Ir al curso Web3 & UBI' : 'Go to the Web3 & UBI course'}
         </Link>

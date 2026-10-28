@@ -157,18 +157,18 @@ async function main() {
     const data = await churchesRes.json().catch(() => ({}))
     churches = Array.isArray(data) ? data : (data.churches || data.rows || [])
   }
-  const leaderChurch = churches.find((c) => c.registration_verified === true) || churches[0] || null
+  const initiatorChurch = churches.find((c) => c.registration_verified === true) || churches[0] || null
 
   let clusterId = null
-  if (!leaderChurch) {
+  if (!initiatorChurch) {
     console.log('  [SKIP] no churches on the dev site — cluster creation skipped')
   } else {
     const createRes = await authFetch(`${base}/api/admin/clusters?${q}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name, pseudonym: 'PseudonimoE2E', leaderChurchId: leaderChurch.id,
-        countryId: leaderChurch.country_id, memberChurchIds: [],
+        name, pseudonym: 'PseudonimoE2E', initiatorChurchId: initiatorChurch.id,
+        countryId: initiatorChurch.country_id, memberChurchIds: [],
       }),
     })
     const created = await createRes.json().catch(() => ({}))
@@ -193,11 +193,33 @@ async function main() {
     if (detailRes.status === 200 && detail.cluster?.name === name) ok(`GET /api/admin/clusters/[id] → 200 (${detail.cluster.name})`)
     else fail(`GET /api/admin/clusters/[id] → ${detailRes.status}`)
 
+    // R-#220: el detalle público marca si quien consulta es el iniciador (para ofrecer
+    // la edición de la billetera). El fixture es verificador y no es iniciador, así que
+    // solo puede comprobarse la rama negativa; la positiva está en los tests de ruta
+    // (`cluster-wallet.test.ts`).
+    const publicDetail = await authFetch(`${base}/api/cluster/${clusterId}?walletAddress=${wallet}`)
+      .then((r) => r.json()).catch(() => ({}))
+    if (publicDetail.isInitiator === false) ok('GET /api/cluster/[id] marks this viewer as non-initiator')
+    else fail(`GET /api/cluster/[id] viewer flag: isInitiator=${publicDetail.isInitiator}`)
+    if ('cluster_wallet' in publicDetail) ok(`GET /api/cluster/[id] exposes the cluster wallet (${publicDetail.cluster_wallet ?? 'not set'})`)
+    else fail('GET /api/cluster/[id] does not expose cluster_wallet')
+
+    // R-#161: presentación a Global Disciples. El fixture es verificador y no es
+    // miembro del clúster, así que solo se comprueban auth y permiso; el camino
+    // completo (3 pastores con curso, perfil > 90 e invitaciones) está en los tests
+    // de ruta `gd-presentation.test.ts`.
+    const gdNoAuth = await fetch(`${base}/api/cluster/${clusterId}/gd-presentation`)
+    if (gdNoAuth.status === 401) ok('GET /api/cluster/[id]/gd-presentation without a session → 401')
+    else fail(`GET /api/cluster/[id]/gd-presentation without a session → ${gdNoAuth.status}`)
+    const gdNonMember = await authFetch(`${base}/api/cluster/${clusterId}/gd-presentation?walletAddress=${wallet}`)
+    if (gdNonMember.status === 403) ok('GET /api/cluster/[id]/gd-presentation from a non-member → 403')
+    else fail(`GET /api/cluster/[id]/gd-presentation from a non-member → ${gdNonMember.status}`)
+
     // ══════════════════════════════════════════════════════════════
     // 6. Admin: add and remove a member church
     // ══════════════════════════════════════════════════════════════
     console.log('\n── 6. Admin: member add/remove ──')
-    const otherChurch = churches.find((c) => c.id !== leaderChurch.id) || null
+    const otherChurch = churches.find((c) => c.id !== initiatorChurch.id) || null
     if (!otherChurch) {
       console.log('  [SKIP] only one church on the dev site — member add/remove skipped')
     } else {
@@ -327,7 +349,11 @@ async function main() {
   }
 
   // ════════════════════════════════════════════════════════════════
-  // 12. Invitation: accept a nonexistent id → 404 (auth validation)
+  // 12. Invitation: accept a nonexistent id
+  // The handler resolves the caller's pastor church first: without a declared
+  // church it answers 400 ("Church not found") and only then can it look up the
+  // invitation (404). The .env fixture is a verifier with no church, so 400 is
+  // the expected answer here; 404 requires a pastor fixture.
   // ════════════════════════════════════════════════════════════════
   console.log('\n── 12. Invitation: accept nonexistent ──')
   const accRes = await authFetch(`${base}/api/cluster/invitation/accept`, {
@@ -335,8 +361,77 @@ async function main() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ walletAddress: wallet, invitationId: 999999 }),
   })
+  const accBody = await accRes.json().catch(() => ({}))
   if (accRes.status === 404) ok('POST /api/cluster/invitation/accept (nonexistent) → 404')
-  else { console.log(`  accept: ${accRes.status} ${(await accRes.text()).slice(0, 80)}`); fail(`accept → ${accRes.status}`) }
+  else if (accRes.status === 400 && accBody.error === 'Church not found') {
+    ok('SKIP: accept → 400 (the test wallet has no declared church; 404 needs a pastor fixture)')
+  }
+  else { console.log(`  accept: ${accRes.status} ${JSON.stringify(accBody).slice(0, 80)}`); fail(`accept → ${accRes.status}`) }
+
+  // ════════════════════════════════════════════════════════════════
+  // 13. UI: the GD course page links to the cluster only for a student who
+  // bought the course (the "Your cluster" card, visible with `hasPurchased`).
+  // ════════════════════════════════════════════════════════════════
+  console.log('\n── 13. UI: cluster entry point on the GD course page ──')
+  await navAndWait(page, `${base}/${lang}/gdcluster`, 180000)
+  await new Promise(r => setTimeout(r, 3000))
+  const courseUi = await page.evaluate(() => {
+    const link = document.querySelector('a[href$="/cluster"]')
+    const parse = (css) => {
+      const m = (css || '').match(/rgba?\(([^)]+)\)/)
+      if (!m) return null
+      const [r, g, b, a = 1] = m[1].split(',').map(Number)
+      return { r, g, b, a }
+    }
+    const lum = (c) => {
+      const f = (v) => {
+        const s = v / 255
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
+      }
+      return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b)
+    }
+    const background = (el) => {
+      for (let node = el; node; node = node.parentElement) {
+        const c = parse(getComputedStyle(node).backgroundColor)
+        if (c && c.a > 0) return c
+      }
+      return { r: 255, g: 255, b: 255, a: 1 }
+    }
+    let contrast = null
+    if (link) {
+      const fg = parse(getComputedStyle(link).color)
+      const bg = background(link)
+      if (fg) {
+        const l1 = lum(fg)
+        const l2 = lum(bg)
+        contrast = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
+      }
+    }
+    return {
+      text: document.body.textContent || '',
+      link: !!link,
+      contrast,
+      color: link ? getComputedStyle(link).color : null,
+      background: link ? getComputedStyle(link).backgroundColor : null,
+    }
+  })
+  const ownsCourse = /Purchased|Comprado/.test(courseUi.text)
+  const hasCard = /Your cluster|Tu clúster/.test(courseUi.text)
+  if (!ownsCourse) {
+    ok('SKIP: the test wallet does not own the GD course, so the card cannot be checked')
+  } else if (hasCard && courseUi.link) {
+    ok('The GD course page shows the "Your cluster" card, linked to /{lang}/cluster')
+    // Reporte del operador 2026-10-27: el texto del boton tomaba el morado del
+    // enlace (`a { color }` sin `@layer base` pisa `text-white`) y quedaba del
+    // mismo color que el fondo. Con `text-white!` el contraste sube.
+    if (courseUi.contrast !== null && courseUi.contrast >= 3) {
+      ok(`The card text is readable (contrast ${courseUi.contrast.toFixed(2)}:1, color ${courseUi.color} on ${courseUi.background})`)
+    } else {
+      fail(`The card text has no contrast (${courseUi.contrast?.toFixed(2)}:1, color ${courseUi.color} on ${courseUi.background})`)
+    }
+  } else {
+    fail(`The purchased GD course page is missing the cluster card (card=${hasCard}, link=${courseUi.link})`)
+  }
 
   await browser.close()
   const failures = summary(t0); process.exit(failures > 0 ? 1 : 0)

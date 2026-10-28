@@ -230,8 +230,7 @@ export function PastorLanding({ lang }: { lang: string }) {
                 <p className="text-sm font-semibold text-gray-500 mb-2">{t.nextStepLabel}</p>
                 <Link
                   href={nextStep.href}
-                  style={{ color: '#ffffff' }}
-                  className="inline-block rounded bg-primary px-8 py-3 text-base font-semibold hover:opacity-90"
+                  className="inline-block rounded bg-primary px-8 py-3 text-base font-semibold text-white! hover:opacity-90"
                 >
                   {nextStep.label}
                 </Link>

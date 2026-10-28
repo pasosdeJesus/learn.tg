@@ -196,16 +196,16 @@ export async function notifyUser(
 
 /**
  * Candidatos a invitar a un clúster (https://github.com/pasosdeJesus/learn.tg/issues/220 §2.1):
- * 1. Pastores referidos por el líder (grafo #163) con iglesia registrada y
+ * 1. Pastores referidos por el iniciador (grafo #163) con iglesia registrada y
  *    verificada, mismo país, sin clúster actual.
- * 2. El referidor del líder, si es pastor (mismas condiciones).
- * Excluye al propio líder y a pastores ya en un clúster.
+ * 2. El referidor del iniciador, si es pastor (mismas condiciones).
+ * Excluye al propio iniciador y a pastores ya en un clúster.
  */
 export async function getClusterCandidates(
   db: Kysely<any>,
   leaderUserId: number,
   leaderCountryId: number,
-  leaderChurchId: number
+  initiatorChurchId: number
 ): Promise<ClusterCandidate[]> {
   const base = (refQuery: any) =>
     refQuery
@@ -220,7 +220,7 @@ export async function getClusterCandidates(
       .where('c.registration_verified', '=', true)
       .where('c.deleted_at', 'is', null)
       .where('c.country_id', '=', leaderCountryId)
-      .where('c.id', '!=', leaderChurchId)
+      .where('c.id', '!=', initiatorChurchId)
       .where('cc.church_id', 'is', null) // sin clúster actual
       .execute()
 

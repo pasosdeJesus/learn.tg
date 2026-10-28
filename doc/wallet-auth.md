@@ -10,6 +10,13 @@ learn.tg after removing RainbowKit + wagmi (R-#186).
 > live in the `m` repo (`m/doc/identidad-multibilletera.md`).
 > For the end user, see [pdJ-wallet.md](pdJ-wallet.md).
 
+> **Agent checklist:** the non-negotiables (credential, invites, handover, key handling and
+> troubleshooting) are in [auth-wallet-invariants.md](auth-wallet-invariants.md).
+>
+> **Consumed vendored:** `packages/generated/wallet` (**0.1.2**). Never edit that copy:
+> re-vendor it with `bin/m eng:sync --vendor … --prepare` (AGENTS.md trap 10) and rebuild
+> the engines, or `bin/m eng:verify` fails.
+
 ## Architecture
 
 ```

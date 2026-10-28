@@ -50,7 +50,7 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
       reject: 'Reject invitation',
       inCluster: 'You are in cluster',
       members: 'Members',
-      leader: 'Leader',
+      initiator: 'Initiator',
       leave: 'Leave cluster',
       leaveConfirm: 'Leave this cluster?',
       details: 'View cluster details',
@@ -74,7 +74,7 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
       reject: 'Rechazar invitación',
       inCluster: 'Estás en el clúster',
       members: 'Miembros',
-      leader: 'Líder',
+      initiator: 'Iniciador',
       leave: 'Salir del clúster',
       leaveConfirm: '¿Salir de este clúster?',
       details: 'Ver detalles del clúster',
@@ -258,14 +258,14 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
                   {cluster.members?.map((m: any, i: number) => (
                     <li key={i} className="rounded bg-gray-50 border px-3 py-1.5 flex justify-between">
                       <span>{m.church_name}</span>
-                      {i === 0 && <span className="text-xs text-blue-600 font-medium">{t('leader')}</span>}
+                      {String(m.church_id) === String(cluster.initiator_church_id) || (i === 0 && !cluster.initiator_church_id) ? <span className="text-xs text-blue-600 font-medium">{t('initiator')}</span> : null}
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="flex gap-3">
                 <Link href={`/${lang}/cluster/${cluster.id}`}
-                  className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                  className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white! hover:bg-blue-700">
                   {t('details')}
                 </Link>
                 <button onClick={leave} disabled={busy}

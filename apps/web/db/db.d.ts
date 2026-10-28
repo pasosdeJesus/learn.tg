@@ -127,8 +127,16 @@ export interface Clustergd {
   code: string;
   country_id: number;
   created_at: Generated<Timestamp | null>;
+  gd_contact_email: string | null;
+  gd_requested_at: Timestamp | null;
+  gd_requested_by: number | null;
+  gd_response: string | null;
+  gd_response_at: Timestamp | null;
+  gd_response_by: number | null;
+  gd_sent_at: Timestamp | null;
+  gd_sent_by: number | null;
   id: Generated<number>;
-  leader_church_id: number | null;
+  initiator_church_id: number | null;
   name: string;
   pseudonym: string | null;
   status: Generated<string>;

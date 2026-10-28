@@ -149,7 +149,7 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
             <h1 className="text-2xl font-bold text-gray-900 mb-3">{t.invalidTitle}</h1>
             <p className="text-gray-600 mb-6">{t.invalidBody}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href={`/${lang}/profile`} className="inline-block rounded bg-blue-600 px-6 py-3 text-base font-semibold text-white hover:bg-blue-700">
+              <Link href={`/${lang}/profile`} className="inline-block rounded bg-blue-600 px-6 py-3 text-base font-semibold text-white! hover:bg-blue-700">
                 {t.goProfile}
               </Link>
               <Link href={`/${lang}`} className="inline-block rounded border border-gray-300 px-6 py-3 text-base font-medium text-gray-700 hover:bg-gray-50">
@@ -198,13 +198,13 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
                         href={metaMaskDeepLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block rounded bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 mb-3 ml-2"
+                        className="inline-block rounded bg-orange-500 px-4 py-2 text-sm font-semibold text-white! hover:bg-orange-600 mb-3 ml-2"
                       >
                         {t.openInMetaMask}
                       </a>
                     )}
                     <div>
-                      <Link href={courseRefHref} className="inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                      <Link href={courseRefHref} className="inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white! hover:bg-blue-700">
                         {t.goCourse}
                       </Link>
                     </div>
@@ -216,7 +216,7 @@ export default function RefPage({ params }: { params: Promise<{ lang: string; co
                 <p className="text-gray-600 mb-6">
                   {status === 'claimed' ? t.bodyClaimed : status === 'already' ? t.bodyAlready : t.activating}
                 </p>
-                <Link href={`/${lang}/profile`} className="inline-block rounded bg-blue-600 px-6 py-3 text-base font-semibold text-white hover:bg-blue-700">
+                <Link href={`/${lang}/profile`} className="inline-block rounded bg-blue-600 px-6 py-3 text-base font-semibold text-white! hover:bg-blue-700">
                   {t.goProfile}
                 </Link>
               </>

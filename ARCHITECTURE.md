@@ -332,12 +332,16 @@ duplicated routes. Implemented (2026-08-31, migration
 **Domain model:**
 
 - `clustergd` (existing) gains `pseudonym` (privacy in restricted regions),
-  `status` (`pending` | `active` | `disbanded`), and `leader_church_id`.
+  `status` (`pending` | `active` | `disbanded`), and `initiator_church_id` (renamed from `leader_church_id` on 2026-10-27).
 - Membership stays church-based: `church_clustergd`. New table
   `cluster_invitation` (unique per cluster + pastor, status
   `pending`/`accepted`/`rejected`/`expired`).
-- Funds stay on `ClusterFundsV2` via the **lead church's** `cluster_wallet`
-  (80% of GD donations); the column is not moved in this phase.
+- Funds stay on `ClusterFundsV2` via the **initiator church's** `cluster_wallet`
+  (80% of GD donations); the column is not moved in this phase. The **cluster initiator**
+  sets it from the cluster page, with a recommendation to use a multisig shared by the
+  cluster's pastors; changing it later does not move funds already credited (the fund is
+  keyed by the previous address). The verifier can still correct it in the church modal
+  (`PATCH /api/admin/church/[id]`) as a support path.
 
 **States:**
 

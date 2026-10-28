@@ -1585,7 +1585,7 @@ CREATE TABLE public.clustergd (
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     pseudonym character varying(100),
     status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
-    leader_church_id integer
+    initiator_church_id integer
 );
 
 
@@ -7932,11 +7932,11 @@ ALTER TABLE ONLY public.clustergd_history
 
 
 --
--- Name: clustergd clustergd_leader_church_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: clustergd clustergd_initiator_church_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.clustergd
-    ADD CONSTRAINT clustergd_leader_church_id_fkey FOREIGN KEY (leader_church_id) REFERENCES public.church(id);
+    ADD CONSTRAINT clustergd_initiator_church_id_fkey FOREIGN KEY (initiator_church_id) REFERENCES public.church(id);
 
 
 --

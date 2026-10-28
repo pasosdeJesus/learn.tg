@@ -163,7 +163,7 @@ export function CeloUbiButton({ lang = 'en' }: CeloUbiButtonProps) {
               </div>
               <Link
                 href={`/${lang}/profile`}
-                className="inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                className="inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white! hover:bg-blue-700"
               >
                 {t('profileButton')}
               </Link>

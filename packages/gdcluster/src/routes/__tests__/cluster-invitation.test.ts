@@ -53,7 +53,7 @@ describe('clusterStatus (https://github.com/pasosdeJesus/learn.tg/issues/220)', 
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ id: 20, name: 'Iglesia B', country_id: 694 }) // church
       .mockResolvedValueOnce({ clustergd_id: 3, joined_at: new Date(), left_at: null }) // membership
-      .mockResolvedValueOnce({ id: 3, name: 'Esperanza', pseudonym: null, code: 'ABC123', status: 'pending', leader_church_id: 20 })
+      .mockResolvedValueOnce({ id: 3, name: 'Esperanza', pseudonym: null, code: 'ABC123', status: 'pending', initiator_church_id: 20 })
     mockExecute.mockResolvedValue([
       { church_id: 20, church_name: 'Iglesia B', joined_at: new Date() },
     ])
@@ -61,7 +61,7 @@ describe('clusterStatus (https://github.com/pasosdeJesus/learn.tg/issues/220)', 
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.hasCluster).toBe(true)
-    expect(json.leader).toBe(true) // leader_church_id === church.id
+    expect(json.isInitiator).toBe(true) // initiator_church_id === initiator church
     expect(json.cluster.member_count).toBe(1)
   })
 })
@@ -79,7 +79,7 @@ describe('acceptInvitation (https://github.com/pasosdeJesus/learn.tg/issues/220)
       .mockResolvedValueOnce({ id: 20, name: 'Iglesia B', country_id: 694 }) // getPastorChurch
       .mockResolvedValueOnce({ id: 9, clustergd_id: 3, invited_pastor_id: 5, invited_church_id: 20, invited_by_id: 1, status: 'pending' }) // invitation
       .mockResolvedValueOnce(null) // existingMembership
-      .mockResolvedValueOnce({ id: 3, name: 'Esperanza', pseudonym: null, status: 'pending', leader_church_id: 11 }) // cluster
+      .mockResolvedValueOnce({ id: 3, name: 'Esperanza', pseudonym: null, status: 'pending', initiator_church_id: 11 }) // cluster
       .mockResolvedValueOnce({ created_by: 1 }) // leader's church → notify
     mockExecute.mockResolvedValue([])
     // getClusterMembers (execute on the select chain) → 3 members
@@ -101,7 +101,7 @@ describe('acceptInvitation (https://github.com/pasosdeJesus/learn.tg/issues/220)
     // Orden de ejecución en acceptInvitation:
     // 1 update cluster_invitation · 2 insert church_clustergd ·
     // 3 addClusterHistory · 4 getClusterMembers (→3) ·
-    // 5 update clustergd (active) · 6 history · 7 notify líder · 8 notify invitador
+    // 5 update clustergd (active) · 6 history · 7 notify iniciador · 8 notify invitador
     const execQueue = [undefined, undefined, undefined, membersRows, undefined, undefined, undefined, undefined]
     mockExecute.mockImplementation(() => Promise.resolve(execQueue.shift()))
 
@@ -122,7 +122,7 @@ describe('acceptInvitation (https://github.com/pasosdeJesus/learn.tg/issues/220)
       .mockResolvedValueOnce({ id: 20, name: 'Iglesia B', country_id: 694 }) // getPastorChurch
       .mockResolvedValueOnce({ id: 10, clustergd_id: 3, invited_pastor_id: 5, invited_church_id: 20, invited_by_id: 1, status: 'pending' }) // invitation
       .mockResolvedValueOnce(null) // existingMembership
-      .mockResolvedValueOnce({ id: 3, name: 'Esperanza', pseudonym: null, status: 'active', leader_church_id: 11 }) // already active
+      .mockResolvedValueOnce({ id: 3, name: 'Esperanza', pseudonym: null, status: 'active', initiator_church_id: 11 }) // already active
     const membersRows = [
       { church_id: 11, church_name: 'A', joined_at: new Date() },
       { church_id: 12, church_name: 'B', joined_at: new Date() },

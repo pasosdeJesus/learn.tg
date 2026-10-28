@@ -2,7 +2,8 @@
 
 How wallet-based authentication works in learn.tg — from wallet connection to API authorization.
 
-> **See also:** [wallet-auth.md](wallet-auth.md) for the UI components and hooks
+> **See also:** [auth-wallet-invariants.md](auth-wallet-invariants.md) for the short
+> agent checklist, and [wallet-auth.md](wallet-auth.md) for the UI components and hooks
 > (`ConnectWalletButton`, `useAuthAddress`, `useWriteContract`) that replaced
 > RainbowKit + wagmi (R-#186).
 

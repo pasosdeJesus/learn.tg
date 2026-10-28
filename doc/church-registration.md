@@ -43,7 +43,7 @@ creates or assigns the canonical `church`.
 | `name`, `country_id`, `department_id`, `municipality_id`, `city_id`, `city_name`, `address` | Identity and location. `city_name` is free text and mirrors the declarer's `place_of_worship_location` |
 | `pastor_name`, `pastor_whatsapp`, `pastor_telegram`, `pastor_id` | Contact and the lead pastor user (`usuario.id`) |
 | `denomination`, `registration`, `registration_photo`, `registration_verified` | Registration data and the verifier's confirmation of the document |
-| `cluster_wallet` | GD cluster funds (see https://github.com/pasosdeJesus/learn.tg/issues/220) |
+| `cluster_wallet` | GD cluster funds (see https://github.com/pasosdeJesus/learn.tg/issues/220); the **cluster initiator** sets it on the cluster page (recommended: a multisig shared by the pastors), and the verifier can correct it |
 | `created_by`, `created_at`, `updated_at`, `merged_into_id`, `deleted_at` | Provenance, merge and soft delete |
 
 ## Flow

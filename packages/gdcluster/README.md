@@ -83,7 +83,7 @@ export async function GET(req: Request) {
 
 | Component | Purpose |
 |-----------|---------|
-| `ClusterPage` | Cluster detail: members, rename, join code, leave, history |
+| `ClusterPage` | Cluster detail: members, rename, join code, leave, **cluster wallet** (the initiator sets it; multisig recommended, change logged) and history |
 | `RankingClient` | Clusters/Countries leaderboard tabs with USDT/SLEARN fund columns and the cluster status (pending/active) |
 | `ReferralsPage` | Referral wallet balance, my code, stats, history (consumes **core** APIs `/api/referrals/fund`, `/api/referral/code\|stats\|history`) |
 | `CountryFilter` | Country select filter (shadcn) |

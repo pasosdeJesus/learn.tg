@@ -59,6 +59,33 @@ When you add a component from another package, add its directory as an `@source`
 with the same PostCSS plugin Next uses, so a missing entry fails `make test-lib`
 instead of being found by hand in a browser.
 
+### Element rules beat Tailwind utilities (invisible text)
+
+`app/globals.css` still styles the bare elements (`a`, `button`, `h1`-`h4`, `code`,
+`figcaption`) with rules **outside any `@layer`**. Tailwind v4 puts the utilities in
+`@layer utilities`, and **unlayered CSS always wins over layered CSS**, so those
+element rules override utilities with no warning:
+
+- `a { color: var(--color-primary-300) }` beats `text-white`. An anchor like
+  `<a className="bg-primary text-white">` renders the **dark-purple link color over the
+  purple background: invisible**. This was reported on the "Go to my cluster" button
+  (operator, 2026-10-27) and had already been "fixed" in place with an inline
+  `style={{ color: '#ffffff' }}` in `PastorLanding`.
+- `a:hover { color: … }` also beats `hover:text-*`.
+- `button { padding: 0.6rem 1.2rem; border-radius; border-color }` beats `px-*`,
+  `py-*`, `rounded-*` and `border-*` on `<button>`. So a button's padding utilities are
+  silently ignored; do not rely on them to size a `<button>`.
+
+**Rule for anchors with a colored background**: use the important modifier,
+`text-white!` (Tailwind v4 syntax, suffix `!`), or an inline color. `<button>` elements
+are unaffected (the element rule sets no color).
+
+`lib/__tests__/anchor-contrast.test.ts` scans `app/` and `components/` and fails when a
+`<Link>`/`<a>` has a `bg-*` class and a non-important `text-white`. The structural fix
+(moving those element rules into `@layer base`) would make utilities win everywhere and
+change the size of every button and heading, so it needs a full visual pass first; it
+is not a drive-by change.
+
 ---
 
 ## Testing Policy
@@ -173,10 +200,10 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
-**Suite size (measured 2026-10-22):** `make test` = **1433 passed / 6 skipped, 0
-failed** in 192 files: `test-lib` 446, `test-hooks` 93, `test-api` 331,
-`test-components` 296, `test-pages` 79, `test-db` 5, `test-rewards` 92,
-`test-gdcluster` 91.
+**Suite size (measured 2026-10-27):** `make test` = **1503 passed / 6 skipped, 0
+failed** in 200 files: `test-lib` 461, `test-hooks` 93, `test-api` 344,
+`test-components` 313, `test-pages` 79, `test-db` 5, `test-rewards` 92,
+`test-gdcluster` 116.
 
 | Layer | Statements | Notes |
 |-------|-----------|-------|

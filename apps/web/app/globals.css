@@ -132,7 +132,18 @@ figcaption {
   margin-top: 0.25rem;
 }
 
-/* Links */
+/* Links
+   ATENCION: estas reglas de elemento NO estan en `@layer base`. Tailwind v4 emite las
+   utilidades en `@layer utilities` y **lo no estratificado gana siempre**, asi que
+   `a { color }` pisa `text-white`/`text-*` y `button { padding }` pisa `px-*`/`py-*`.
+   Caso real (operador, 2026-10-27): un `<a class="bg-primary text-white">` se veia con
+   el morado del enlace sobre el fondo morado, o sea texto invisible. En enlaces con
+   fondo de color usa `text-white!` (modificador importante de Tailwind v4) o un color
+   en linea; en botones no cuentes con las utilidades de padding.
+   Lo vigila `lib/__tests__/anchor-contrast.test.ts`.
+   El arreglo estructural (mover estas reglas a `@layer base`) haria que las utilidades
+   manden en toda la app y cambiaria el tamano de botones y titulos: exige una revision
+   visual completa, no lo hagas sin ella. */
 a {
   color: var(--color-primary-300);
   text-decoration: none;

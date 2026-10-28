@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from 'kysely'
-import { getChurchCluster, getClusterMembers, addClusterHistory } from '../lib/gd-utils.js'
+import { getChurchCluster, getClusterMembers, addClusterHistory, notifyUser } from '../lib/gd-utils.js'
 import type { GdclusterDeps } from '../index.js'
 
 // Admin/verificador de clústeres (https://github.com/pasosdeJesus/learn.tg/issues/220 §5) — sobre los datos existentes
@@ -37,14 +37,15 @@ export async function adminListClusters(deps: GdclusterDeps, req: NextRequest) {
 
     const rows = await sql<any>`
       SELECT
-        c.id, c.name, c.pseudonym, c.code, c.country_id, c.status, c.leader_church_id,
+        c.id, c.name, c.pseudonym, c.code, c.country_id, c.status, c.initiator_church_id,
+        c.gd_requested_at, c.gd_sent_at, c.gd_response, c.gd_contact_email,
         p.nombre AS country_name,
-        lc.name AS leader_church_name,
+        lc.name AS initiator_church_name,
         (SELECT COUNT(*) FROM church_clustergd cc WHERE cc.clustergd_id = c.id AND cc.left_at IS NULL)::int AS member_count,
         lc.cluster_wallet
       FROM clustergd c
       LEFT JOIN msip_pais p ON p.id = c.country_id
-      LEFT JOIN church lc ON lc.id = c.leader_church_id
+      LEFT JOIN church lc ON lc.id = c.initiator_church_id
       WHERE 1 = 1
         ${q ? sql`AND (c.name ILIKE ${'%' + q + '%'} OR c.pseudonym ILIKE ${'%' + q + '%'} OR c.code ILIKE ${'%' + q + '%'})` : sql``}
         ${country ? sql`AND c.country_id = ${Number(country)}` : sql``}
@@ -72,11 +73,11 @@ export async function adminGetCluster(deps: GdclusterDeps, req: NextRequest, par
     if (!cluster) return NextResponse.json({ error: 'Cluster not found' }, { status: 404 })
 
     const members = await getClusterMembers(db, clusterId)
-    const leader = cluster.leader_church_id
-      ? await db.selectFrom('church').selectAll().where('id', '=', cluster.leader_church_id).executeTakeFirst()
+    const initiatorChurch = cluster.initiator_church_id
+      ? await db.selectFrom('church').selectAll().where('id', '=', cluster.initiator_church_id).executeTakeFirst()
       : null
 
-    return NextResponse.json({ cluster: { ...cluster, members, leader_church: leader } })
+    return NextResponse.json({ cluster: { ...cluster, members, initiator_church: initiatorChurch } })
   } catch (error) {
     console.error('admin/clusters get error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -90,9 +91,9 @@ export async function adminCreateCluster(deps: GdclusterDeps, req: NextRequest) 
     if (!ctx) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     const { db, admin } = ctx
 
-    const { name, pseudonym, leaderChurchId, memberChurchIds = [], countryId, status = 'pending' } = await req.json()
+    const { name, pseudonym, initiatorChurchId, memberChurchIds = [], countryId, status = 'pending' } = await req.json()
     if (!name || name.length < 3 || name.length > 50) return badRequest('Cluster name must be between 3 and 50 characters')
-    if (!leaderChurchId || !countryId) return badRequest('leaderChurchId and countryId are required')
+    if (!initiatorChurchId || !countryId) return badRequest('initiatorChurchId and countryId are required')
 
     const existingName = await db.selectFrom('clustergd').select('id')
       .where('name', '=', name).where('country_id', '=', Number(countryId)).executeTakeFirst()
@@ -105,12 +106,12 @@ export async function adminCreateCluster(deps: GdclusterDeps, req: NextRequest) 
         code: await genCode(db),
         country_id: Number(countryId),
         status: status === 'active' || status === 'disbanded' ? status : 'pending',
-        leader_church_id: Number(leaderChurchId),
+        initiator_church_id: Number(initiatorChurchId),
       })
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    const churchIds = [Number(leaderChurchId), ...memberChurchIds.map((id: any) => Number(id))]
+    const churchIds = [Number(initiatorChurchId), ...memberChurchIds.map((id: any) => Number(id))]
     for (const churchId of new Set(churchIds)) {
       // church_clustergd no tiene constraint único (church_id, clustergd_id):
       // insert directo; el handler ya valida que las iglesias no estén en otro
@@ -142,7 +143,7 @@ export async function adminUpdateCluster(deps: GdclusterDeps, req: NextRequest, 
     const cluster = await db.selectFrom('clustergd').selectAll().where('id', '=', clusterId).executeTakeFirst()
     if (!cluster) return NextResponse.json({ error: 'Cluster not found' }, { status: 404 })
 
-    const { name, pseudonym, leaderChurchId, status } = await req.json()
+    const { name, pseudonym, initiatorChurchId, status, gdSent, gdResponse, gdContactEmail } = await req.json()
     const updates: Record<string, unknown> = { updated_at: new Date() }
     if (name !== undefined) {
       if (!name || name.length < 3 || name.length > 50) return badRequest('Cluster name must be between 3 and 50 characters')
@@ -152,8 +153,30 @@ export async function adminUpdateCluster(deps: GdclusterDeps, req: NextRequest, 
       updates.name = name
     }
     if (pseudonym !== undefined) updates.pseudonym = String(pseudonym).trim() ? String(pseudonym).trim() : null
-    if (leaderChurchId !== undefined) updates.leader_church_id = Number(leaderChurchId)
+    if (initiatorChurchId !== undefined) updates.initiator_church_id = Number(initiatorChurchId)
     if (status !== undefined) updates.status = status
+
+    // Presentación a Global Disciples (R-#161): pdJ marca el envío del correo y registra
+    // la respuesta y el correo/canal que GD indique. Solo sobre un clúster que ya pidió
+    // la presentación.
+    const touchesGd = gdSent !== undefined || gdResponse !== undefined || gdContactEmail !== undefined
+    if (touchesGd && !cluster.gd_requested_at) {
+      return badRequest('The cluster has not requested the presentation to Global Disciples')
+    }
+    if (gdSent === true && !cluster.gd_sent_at) {
+      updates.gd_sent_at = new Date()
+      updates.gd_sent_by = admin.usuario_id
+    }
+    if (gdContactEmail !== undefined) {
+      const email = String(gdContactEmail ?? '').trim()
+      updates.gd_contact_email = email ? email : null
+    }
+    if (gdResponse !== undefined) {
+      const text = String(gdResponse ?? '').trim()
+      updates.gd_response = text ? text : null
+      updates.gd_response_at = new Date()
+      updates.gd_response_by = admin.usuario_id
+    }
 
     await db.updateTable('clustergd').set(updates).where('id', '=', clusterId).execute()
     if (updates.name !== undefined && updates.name !== cluster.name) {
@@ -161,6 +184,36 @@ export async function adminUpdateCluster(deps: GdclusterDeps, req: NextRequest, 
     }
     if (updates.status !== undefined && updates.status !== cluster.status) {
       await addClusterHistory(db, clusterId, 'status_change', cluster.status, updates.status as string, admin.usuario_id)
+    }
+    if (gdSent === true && !cluster.gd_sent_at) {
+      await addClusterHistory(db, clusterId, 'gd_presentation_sent', null, 'sent', admin.usuario_id)
+      await logEvent(db, admin.usuario_id, 'gd_presentation_sent', { cluster_id: clusterId })
+    }
+    if (gdResponse !== undefined) {
+      await addClusterHistory(db, clusterId, 'gd_presentation_response', cluster.gd_response ?? null, updates.gd_response as string | null, admin.usuario_id)
+      await logEvent(db, admin.usuario_id, 'gd_presentation_response', { cluster_id: clusterId })
+      const initiator = cluster.initiator_church_id
+        ? await db
+            .selectFrom('church as c')
+            .innerJoin('usuario as u', 'u.church_id', 'c.id')
+            .select(['u.id as usuario_id', 'u.idioma as idioma'])
+            .where('c.id', '=', cluster.initiator_church_id)
+            .where('u.church_relationship', '=', 'pastor')
+            .executeTakeFirst()
+        : null
+      if (initiator?.usuario_id) {
+        const es = String(initiator.idioma || 'en').startsWith('es')
+        await notifyUser(
+          db,
+          Number(initiator.usuario_id),
+          'gd_presentation',
+          es ? 'Global Disciples respondió' : 'Global Disciples answered',
+          es
+            ? 'La página del clúster tiene la respuesta y el correo o canal para continuar directamente con Global Disciples.'
+            : 'The cluster page has the answer and the email or channel to continue directly with Global Disciples.',
+          `/${es ? 'es' : 'en'}/cluster/${clusterId}`,
+        )
+      }
     }
     await logEvent(db, admin.usuario_id, 'admin_cluster_updated', { cluster_id: clusterId, updates })
 

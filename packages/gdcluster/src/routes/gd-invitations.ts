@@ -15,7 +15,7 @@ import type { GdclusterDeps } from '../index.js'
 
 /**
  * GET /api/cluster/status — estado del pastor respecto a clústeres.
- * { hasCluster, clusterId, leader, cluster, pendingInvitations }
+ * { hasCluster, clusterId, isInitiator, initiator_church_id, cluster, pendingInvitations }
  */
 export async function clusterStatus(deps: GdclusterDeps, req: NextRequest) {
   try {
@@ -46,7 +46,11 @@ export async function clusterStatus(deps: GdclusterDeps, req: NextRequest) {
     return NextResponse.json({
       hasCluster: true,
       clusterId: membership.clustergd_id,
-      leader: cluster?.leader_church_id === church.id,
+      // Nombre visible del rol: **iniciador del clúster** (no "líder", para no
+      // confundirlo con el director de programa ni con el pastor principal de la
+      // iglesia). La columna sigue llamándose `initiator_church_id`.
+      isInitiator: cluster?.initiator_church_id === church.id,
+      initiator_church_id: cluster?.initiator_church_id ?? null,
       cluster: {
         id: cluster?.id,
         name: cluster?.name,
@@ -172,8 +176,8 @@ export async function acceptInvitation(deps: GdclusterDeps, req: NextRequest) {
       await db.updateTable('clustergd').set({ status: 'active', updated_at: new Date() }).where('id', '=', cluster.id).execute()
       await addClusterHistory(db, cluster.id, 'status_change', cluster.status, 'active', auth.usuario.id)
       activated = true
-      if (cluster.leader_church_id) {
-        const leader = await db.selectFrom('church').select('created_by').where('id', '=', cluster.leader_church_id).executeTakeFirst()
+      if (cluster.initiator_church_id) {
+        const leader = await db.selectFrom('church').select('created_by').where('id', '=', cluster.initiator_church_id).executeTakeFirst()
         if (leader?.created_by) {
           await notifyUser(
             db, leader.created_by, 'cluster_activated',

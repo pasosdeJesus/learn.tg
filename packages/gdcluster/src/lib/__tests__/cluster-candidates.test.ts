@@ -71,7 +71,7 @@ describe('getClusterCandidates (https://github.com/pasosdeJesus/learn.tg/issues/
     expect(filterCols.filter((c) => c === 'c.deleted_at').length).toBe(2)
     expect(filterCols.filter((c) => c === 'cc.church_id').length).toBe(2) // sin clúster
     expect(filterCols.filter((c) => c === 'u.fechadeshabilitacion').length).toBe(2)
-    // Excluye la iglesia del líder
+    // Excluye la iglesia del iniciador
     expect(db.whereCalls.filter(([col, , val]) => col === 'c.id' && val === '99').length).toBe(2)
   })
 

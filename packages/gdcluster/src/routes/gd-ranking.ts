@@ -16,17 +16,17 @@ export async function rankingClusters(deps: GdclusterDeps) {
       SELECT
         c.id, c.name, c.pseudonym,
         COALESCE(NULLIF(c.pseudonym, ''), c.name) AS display_name,
-        c.code, c.country_id, c.status, lead_church.cluster_wallet as wallet,
+        c.code, c.country_id, c.status, initiator_church.cluster_wallet as wallet,
         p.nombre as country_name, p.alfa2 as country_code,
         COUNT(member_church.id)::int as church_count
       FROM clustergd c
       LEFT JOIN msip_pais p ON p.id = c.country_id
-      LEFT JOIN church lead_church ON lead_church.id = c.leader_church_id
+      LEFT JOIN church initiator_church ON initiator_church.id = c.initiator_church_id
       LEFT JOIN church_clustergd cc ON cc.clustergd_id = c.id AND cc.left_at IS NULL
       LEFT JOIN church member_church ON member_church.id = cc.church_id AND member_church.deleted_at IS NULL
       WHERE p.tipo_region = 1
         AND c.status != 'disbanded'
-      GROUP BY c.id, c.name, c.pseudonym, c.code, c.country_id, c.status, lead_church.cluster_wallet, p.nombre, p.alfa2
+      GROUP BY c.id, c.name, c.pseudonym, c.code, c.country_id, c.status, initiator_church.cluster_wallet, p.nombre, p.alfa2
       ORDER BY c.id
     `.execute(db)
 

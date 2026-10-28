@@ -20,6 +20,7 @@ import { CourseStatistics } from '@/components/CourseStatistics'
 import { CheckoutModal } from '@/components/CheckoutModal'
 import { MaintenanceBanner } from '@/components/MaintenanceBanner'
 import { OfflineCourseDownload } from '@/components/OfflineCourseDownload'
+import { GdPresentationControl } from '@/components/GdPresentationControl'
 import { useGuideData } from '@/lib/hooks/useGuideData'
 import { useScholarshipData } from '@/lib/hooks/useScholarshipData'
 
@@ -441,10 +442,11 @@ export default function Page({ params }: PageProps) {
                 </p>
                 <a
                   href={`/${lang}/cluster`}
-                  className="inline-block rounded bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                  className="inline-block rounded bg-primary px-4 py-2 text-sm font-semibold text-white! hover:opacity-90"
                 >
                   {course.idioma === 'en' ? 'Go to my cluster' : 'Ir a mi clúster'}
                 </a>
+                <GdPresentationControl lang={lang} />
               </div>
             )}
 

@@ -7,6 +7,7 @@ import { campaignBalance } from './routes/campaign-balance.js'
 import { campaignTransparency } from './routes/gd-campaign-transparency.js'
 import { campaignMovements } from './routes/campaign-movements.js'
 import { createCluster, joinCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster.js'
+import { getPresentation, requestPresentation } from './routes/gd-presentation.js'
 import { clusterStatus, clusterCandidates, listInvitations, acceptInvitation, rejectInvitation } from './routes/gd-invitations.js'
 import { adminListClusters, adminGetCluster, adminCreateCluster, adminUpdateCluster, adminDisbandCluster, adminAddMember, adminRemoveMember } from './routes/gd-admin-clusters.js'
 import { searchChurches } from './routes/gd-churches.js'
@@ -118,6 +119,10 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
     },
     'cluster/[id]/leave': {
       POST: (req, params) => leaveCluster(deps, req as NextRequest, params!),
+    },
+    'cluster/[id]/gd-presentation': {
+      GET: (req, params) => getPresentation(deps, req as NextRequest, params!),
+      POST: (req, params) => requestPresentation(deps, req as NextRequest, params!),
     },
     'cluster/status': {
       GET: (req) => clusterStatus(deps, req as NextRequest),

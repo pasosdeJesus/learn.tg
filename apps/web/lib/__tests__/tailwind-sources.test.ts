@@ -76,5 +76,10 @@ describe('tailwind-sources (R-#259)', () => {
     expect(compiled.css).toContain('.text-ellipsis')
     expect(compiled.css).toContain('min(40rem')
     expect(compiled.css).toContain('calc(100vw - 2rem)')
+
+    // `a { color }` vive fuera de `@layer base` y pisa `text-white` (lo no
+    // estratificado gana): los enlaces con fondo usan `text-white!`, y esa utilidad
+    // debe generarse con `!important` o el texto queda del color del enlace.
+    expect(compiled.css).toMatch(/\.text-white\\!\s*\{[^}]*!important/)
   }, 60000)
 })

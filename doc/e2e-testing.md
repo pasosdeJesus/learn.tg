@@ -431,7 +431,7 @@ and §2.4.
 | `celo-ubi-claim-sepolia.spec.mjs` | CELO UBI claim on Sepolia |
 | `church-persistence.spec.mjs` | Church data persistence in the profile |
 | `guide-claims.spec.mjs` | Guide completion and claim flow |
-| `cluster-formation.spec.mjs` | R-#220: admin list with search and status/country filters, cluster CRUD, member add/remove, `PUT` pseudonym + status, the **status field and column** in the ranking (API and UI), the admin clusters page (`/{lang}/admin/clusters`) and the disband (soft delete + exclusion from the ranking). The 3-pastor invitation flow (accept/reject/activation at 3 churches) is covered by the engine's unit tests; the steps that need that fixture print `[SKIP]` when it is missing |
+| `cluster-formation.spec.mjs` | R-#220: admin list with search and status/country filters, cluster CRUD, member add/remove, `PUT` pseudonym + status, the **status field and column** in the ranking (API and UI), the admin clusters page (`/{lang}/admin/clusters`), the **"Your cluster" card** on the purchased GD course page, and the disband (soft delete + exclusion from the ranking). The 3-pastor invitation flow (accept/reject/activation at 3 churches) is covered by the engine's unit tests; the steps that need that fixture print `[SKIP]` when it is missing |
 | `course-list-compact.spec.mjs` | R-#272: the course list (`/en`, `/es`) shows compact cards — image, title, description, "Go to course" and the three state circles on the border — without the stats paragraph or the donation row |
 | `profile-data.spec.mjs` | Profile data loading and display |
 | `admin-dashboard.spec.mjs` | Admin dashboard: widgets load, APIs respond, user/church detail, PATCH |
