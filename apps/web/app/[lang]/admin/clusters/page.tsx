@@ -66,7 +66,7 @@ export default function AdminClustersPage({ params }: PageProps) {
       country: 'Country', initiatorChurch: 'Initiator church', members: 'Members',
       status: 'Status', actions: 'Actions', edit: 'Edit', disband: 'Disband',
       gd: 'GD', gdTitle: 'Presentation to Global Disciples', gdRequested: 'Requested',
-      gdEmailProposal: 'Email proposal (copy, paste and edit it in your mail client)',
+      gdEmailProposal: 'Suggested subject and body (copy, paste and edit them in your mail client)',
       gdCopyEmail: 'Copy the email', gdCopied: 'Copied', gdSent: 'Email sent to GD',
       gdResponse: 'Answer from GD (visible to the initiator)', gdContactEmail: 'Email or channel GD indicates',
       gdSaved: 'Saved', gdSaveError: 'Could not save the GD data',
@@ -84,7 +84,7 @@ export default function AdminClustersPage({ params }: PageProps) {
       country: 'País', initiatorChurch: 'Iglesia iniciadora', members: 'Miembros',
       status: 'Estado', actions: 'Acciones', edit: 'Editar', disband: 'Disolver',
       gd: 'GD', gdTitle: 'Presentación a Global Disciples', gdRequested: 'Solicitada',
-      gdEmailProposal: 'Propuesta de correo (cópiala, pégala y ajústala en tu cliente de correo)',
+      gdEmailProposal: 'Tema y cuerpo sugeridos (cópialos, pégalos y ajústalos en tu cliente de correo)',
       gdCopyEmail: 'Copiar el correo', gdCopied: 'Copiado', gdSent: 'Correo enviado a GD',
       gdResponse: 'Respuesta de GD (visible para el iniciador)', gdContactEmail: 'Correo o canal que indica GD',
       gdSaved: 'Guardado', gdSaveError: 'No se pudo guardar lo de GD',
@@ -159,8 +159,10 @@ export default function AdminClustersPage({ params }: PageProps) {
     setGdSaving(false)
   }
 
+  // Solo se sugiere el tema y el cuerpo: pdJ los copia y los envía desde su propio
+  // cliente de correo al contacto de GD que ya tenga. La aplicación no conoce esa
+  // dirección (decisión del operador, 2026-10-28; antes salía de NEXT_PUBLIC_GD_CONTACT_EMAIL).
   const gdEmailText = (cluster: any) => {
-    const to = process.env.NEXT_PUBLIC_GD_CONTACT_EMAIL || ''
     const subject = `Cluster ${cluster.name} (${cluster.code}) - presentation to Global Disciples`
     const members = (cluster.members || []).map((m: any) => m.church_name).join(', ')
     const body = [
@@ -179,8 +181,7 @@ export default function AdminClustersPage({ params }: PageProps) {
       '',
       'Thank you.',
     ].join('\n')
-    return `To: ${to}
-Subject: ${subject}
+    return `Subject: ${subject}
 
 ${body}`
   }

@@ -144,8 +144,9 @@ the amounts left behind, and the `userevent` carries `funds_left`.
 
 When the initiator requests the presentation (see
 guide 6 of the GD course), the **GD** action appears for that cluster in
-the table. The dialog shows the **proposed email** (To, subject and body, with a copy
-button) so you can copy, paste and edit it in your mail client; it also lets you mark the
+the table. The dialog shows a **suggested subject and body** (with a copy button) so you
+can copy, paste, edit and send them from your own mail client to the GD contact you already
+have — the app does not know or store that address; it also lets you mark the
 email as **sent** and record **GD's answer** and the **email or channel to continue**; the initiator gets an in-app notification and sees the answer on
 the cluster page. pdJ is not GD staff: it only asks for the nearest program director's
 contact or the channel GD suggests.

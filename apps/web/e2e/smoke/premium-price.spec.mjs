@@ -122,8 +122,10 @@ async function main() {
       else fail(`${label}: tipo implícito fuera de rango (${implied.toFixed(2)})`)
     }
 
-    if (sl.priceUSDT > 0 && sl.priceUSDT < 2 && co.priceUSDT > 2 && co.priceUSDT < 5) {
-      ok('los montos caen en el rango calibrado (SL ~0.70, CO ~3.00)')
+    // Anclas 2026-10-28: Sierra Leona 0,50 y Estados Unidos 3,00 (sin techo); Colombia
+    // queda entre las dos en 2,20.
+    if (sl.priceUSDT > 0 && sl.priceUSDT < 1 && Math.abs(co.priceUSDT - 2.2) < 0.2) {
+      ok(`los montos caen en la calibración (SL ${sl.priceUSDT} ≈ 0.50, CO ${co.priceUSDT} ≈ 2.20)`)
     } else {
       fail(`montos fuera de la calibración (SL ${sl.priceUSDT}, CO ${co.priceUSDT})`)
     }
