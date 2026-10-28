@@ -1,5 +1,6 @@
 #!/bin/sh
 
+ulimit -a
 d1=`dirname $0`
 d2=`dirname $d1`
 echo "======****===== Starting" >> prod.log
