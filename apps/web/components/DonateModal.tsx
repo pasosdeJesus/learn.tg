@@ -588,6 +588,11 @@ export function DonateModal({ courseId, target, isOpen, onClose, onSuccess, lang
     // producción, reporte del operador del 2026-09-27); se intenta el cambio —la billetera
     // in-app también puede— y sólo si no se aplica se explica con claridad.
     setChainError(null)
+    // Reporte del operador (2026-10-28, compra de curso): al reintentar, el error anterior
+    // seguía en pantalla mientras el pago avanzaba y parecía otro fallo. El `execute` del
+    // motor no limpia el error, así que se limpia aquí; mismo patrón en CheckoutModal.
+    setNativeError(null)
+    resetPayment()
     try {
       await ensureWalletChain(walletClient as never, getAppChain(), walletProvider)
     } catch (error) {

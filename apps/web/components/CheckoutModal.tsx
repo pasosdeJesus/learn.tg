@@ -65,6 +65,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       unlockInAppGesture: 'Unlock with fingerprint or Face ID',
       cancel: 'Cancel',
       processing: 'Processing...',
+      payingHint: 'Confirm the payment in your wallet.',
+      confirmingHint: 'Waiting for the network to confirm the transaction. This can take a minute; do not close this window.',
       success: 'Course purchased',
       copyError: 'Copy error',
       error: 'Error',
@@ -84,6 +86,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       estimating: 'estimating...',
       wrongChain: 'Your wallet is on another network. Switch it to Celo and try again.',
       wrongChainInApp: 'We could not switch your in-app wallet to the Celo network. Try again, or pay with an external wallet on the Celo network.',
+      networkError: 'We could not reach the network node to send the payment (the RPC did not answer). This is usually a momentary connection problem: check your connection, look in your wallet whether the transaction was already sent, and try again.',
     },
     es: {
       title: 'Comprar curso',
@@ -100,6 +103,8 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       unlockInAppGesture: 'Desbloquear con huella o Face ID',
       cancel: 'Cancelar',
       processing: 'Procesando...',
+      payingHint: 'Confirma el pago en tu billetera.',
+      confirmingHint: 'Esperando que la red confirme la transacción. Puede tardar un minuto; no cierres esta ventana.',
       success: 'Curso comprado',
       copyError: 'Copiar error',
       error: 'Error',
@@ -119,6 +124,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       estimating: 'estimando...',
       wrongChain: 'Tu billetera está en otra red. Cámbiala a Celo e inténtalo de nuevo.',
       wrongChainInApp: 'No pudimos cambiar tu billetera de la app a la red Celo. Inténtalo de nuevo, o paga con una billetera externa en la red Celo.',
+      networkError: 'No pudimos contactar el nodo de la red para enviar el pago (el RPC no respondió). Suele ser un problema momentáneo de conexión: revisa tu conexión, mira en tu billetera si la transacción ya se envió y vuelve a intentar.',
     },
   }), [lang])
 
@@ -298,6 +304,7 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
     state: paymentState,
     error: paymentError,
     execute: executePayment,
+    reset: resetPayment,
   } = useContractPayment({
     amount: usdtAmount,
     slearnAmount,
@@ -336,8 +343,14 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
   //
   // Debe declararse **antes** del `if (!isOpen) return null`: un hook después de esa salida
   // temprana cambia el número de hooks entre renders.
+  //
+  // Reporte del operador (2026-10-28): al reintentar la compra el error anterior seguía en
+  // pantalla mientras el pago avanzaba, y parecía que había vuelto a fallar. `reset()` del
+  // hook limpia estado y error antes de cada intento (el hook del motor no lo hace en
+  // `execute`), así el botón vuelve a "Procesando..." sin el mensaje viejo al lado.
   const handlePay = useCallback(async () => {
     setChainError(null)
+    resetPayment()
     try {
       await ensureWalletChain(walletClient as never, getAppChain(), walletProvider)
     } catch (error) {
@@ -345,12 +358,17 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
       return
     }
     await executePayment()
-  }, [executePayment, t, walletClient, walletProvider])
+  }, [executePayment, resetPayment, t, walletClient, walletProvider])
 
   if (!isOpen) return null
 
   const busy = paymentState === 'paying' || paymentState === 'confirming'
   const hasAmount = priceUSDT != null && priceSLEARN != null
+  // Error de red/RPC (no un rechazo de la billetera ni del contrato): viem lo deja como
+  // "Failed to fetch" o "An unknown RPC error occurred", que no dice qué hacer al
+  // estudiante. Se muestra una explicación y se conserva el detalle técnico para copiar
+  // (reporte del operador, 2026-10-28: compra desde una cuenta nueva).
+  const networkError = !!paymentError && /failed to fetch|networkerror|network error|rpc (request|error)|httperror|fetch failed|timeout/i.test(paymentError)
   // Sin CELO (menos de 0.01): el modal muestra la guía de inmediato
   const noCelo = celoBalance < 10_000_000_000_000_000n
   const purchaseDisabled = busy || priceUSDT == null || !canPay || (hasAmount && gasState === 'no-gas')
@@ -460,6 +478,11 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
                 {t('copyError')}
               </button>
             </div>
+            {networkError && (
+              <p className="mt-2 text-xs font-medium text-red-800" data-testid="checkout-network-error">
+                {t('networkError')}
+              </p>
+            )}
             <pre
               className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-xs text-red-800"
               data-testid="checkout-error"
@@ -508,6 +531,11 @@ export function CheckoutModal({ courseId, lang, isOpen, onClose, onSuccess }: Ch
             {busy ? t('processing') : t('purchase')}
           </Button>
         </div>
+        {busy && (
+          <p className="mt-2 text-right text-xs text-gray-500" data-testid="checkout-busy">
+            {paymentState === 'paying' ? t('payingHint') : t('confirmingHint')}
+          </p>
+        )}
           </>
         )}
       </div>

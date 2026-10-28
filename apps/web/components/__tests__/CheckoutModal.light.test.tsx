@@ -37,6 +37,12 @@ vi.mock('@pasosdejesus/m/shadcn-components/ui/use-toast', () => ({
 const h = vi.hoisted(() => ({
   walletClient: { data: { writeContract: vi.fn().mockResolvedValue('0xhash') } } as any,
   inAppStatus: 'no-wallet' as string,
+  payment: {
+    state: 'idle',
+    error: null as string | null,
+    execute: vi.fn(),
+    reset: vi.fn(),
+  },
 }))
 
 vi.mock('@/lib/hooks/useAuthAddress', () => ({
@@ -77,7 +83,16 @@ vi.mock('@/lib/hooks/useGasEstimation', () => ({
 }))
 
 vi.mock('@/lib/hooks/useContractPayment', () => ({
-  useContractPayment: () => ({ state: 'idle', error: null, execute: vi.fn() }),
+  useContractPayment: () => h.payment,
+}))
+
+// Sin billetera real en el entorno de prueba el pre-flight de red no puede cambiar de
+// cadena; se simula que ya estamos en Celo para poder observar el reintento completo.
+vi.mock('@/lib/ensure-chain', () => ({
+  ensureWalletChain: vi.fn().mockResolvedValue(undefined),
+  WrongChainError: class WrongChainError extends Error {
+    isInApp = false
+  },
 }))
 
 describe('CheckoutModal (light)', () => {
@@ -90,6 +105,7 @@ describe('CheckoutModal (light)', () => {
     ;(process as any).env.NEXT_PUBLIC_USDT_DECIMALS = '6'
     h.walletClient = { data: { writeContract: vi.fn().mockResolvedValue('0xhash') } }
     h.inAppStatus = 'no-wallet'
+    h.payment = { state: 'idle', error: null, execute: vi.fn(), reset: vi.fn() }
   })
 
   function renderModal() {
@@ -145,5 +161,69 @@ describe('CheckoutModal (light)', () => {
       <CheckoutModal courseId={1} lang="en" isOpen={true} onClose={() => {}} onSuccess={() => {}} />,
     )
     expect(await screen.findByText(/Purchase course/i)).toBeInTheDocument()
+  })
+
+  // Reporte del operador (2026-10-28): tras un error, al reintentar la compra el mensaje
+  // anterior seguía en pantalla ("pensé que había vuelto a fallar"). `handlePay` llama al
+  // `reset()` del hook antes de ejecutar.
+  it('limpia el error anterior al reintentar la compra', async () => {
+    h.payment = {
+      state: 'error',
+      error: 'Insufficient funds for gas',
+      execute: vi.fn(),
+      reset: vi.fn(),
+    }
+    renderModal()
+
+    const purchase = await screen.findByRole('button', { name: /^Purchase$/i })
+    await waitFor(() => expect(purchase).toBeEnabled())
+    expect(screen.getByTestId('checkout-error')).toHaveTextContent(/Insufficient funds/i)
+
+    fireEvent.click(purchase)
+
+    expect(h.payment.reset).toHaveBeenCalled()
+    await waitFor(() => expect(h.payment.execute).toHaveBeenCalled())
+  })
+
+  // El error de viem "An unknown RPC error occurred ... Failed to fetch" no dice qué hacer
+  // (compra desde una cuenta nueva, 2026-10-28): se añade una explicación en el idioma del
+  // estudiante y se conserva el detalle técnico para copiar.
+  it('explica un fallo de red/RPC y conserva el detalle técnico', async () => {
+    h.payment = {
+      state: 'error',
+      error: 'An unknown RPC error occurred.\n\nDetails: Failed to fetch',
+      execute: vi.fn(),
+      reset: vi.fn(),
+    }
+    renderModal()
+
+    const hint = await screen.findByTestId('checkout-network-error')
+    expect(hint).toHaveTextContent(/reach the network node/i)
+    expect(screen.getByTestId('checkout-error')).toHaveTextContent(/Failed to fetch/i)
+  })
+
+  it('no muestra la explicación de red para un rechazo de la billetera', async () => {
+    h.payment = {
+      state: 'error',
+      error: 'User rejected the request.',
+      execute: vi.fn(),
+      reset: vi.fn(),
+    }
+    renderModal()
+
+    expect(await screen.findByTestId('checkout-error')).toHaveTextContent(/User rejected/i)
+    expect(screen.queryByTestId('checkout-network-error')).not.toBeInTheDocument()
+  })
+
+  // "Se demoró mucho": el botón decía "Procesando…" pero no qué estaba esperando.
+  it('explica qué se está esperando mientras paga y mientras la red confirma', async () => {
+    h.payment = { state: 'paying', error: null, execute: vi.fn(), reset: vi.fn() }
+    const { unmount } = renderModal()
+    expect(await screen.findByTestId('checkout-busy')).toHaveTextContent(/Confirm the payment in your wallet/i)
+    unmount()
+
+    h.payment = { state: 'confirming', error: null, execute: vi.fn(), reset: vi.fn() }
+    renderModal()
+    expect(await screen.findByTestId('checkout-busy')).toHaveTextContent(/Waiting for the network/i)
   })
 })

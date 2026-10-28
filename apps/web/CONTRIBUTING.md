@@ -200,9 +200,9 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
-**Suite size (measured 2026-10-27):** `make test` = **1503 passed / 6 skipped, 0
+**Suite size (measured 2026-10-28):** `make test` = **1507 passed / 6 skipped, 0
 failed** in 200 files: `test-lib` 461, `test-hooks` 93, `test-api` 344,
-`test-components` 313, `test-pages` 79, `test-db` 5, `test-rewards` 92,
+`test-components` 317, `test-pages` 79, `test-db` 5, `test-rewards` 92,
 `test-gdcluster` 116.
 
 | Layer | Statements | Notes |
