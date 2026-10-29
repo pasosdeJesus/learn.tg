@@ -25,7 +25,7 @@ difficult to alter.
 
 ![Drawing of Bitcoin blockchain](/img/2025/bitcoin-3012035.png)
 
-[Representation of computer nodes inf Bitcoin blockchain by Tumisu](https://pixabay.com/illustrations/bitcoin-cryptocurrency-money-3012035/)
+[Representation of computer nodes in Bitcoin blockchain by Tumisu](https://pixabay.com/illustrations/bitcoin-cryptocurrency-money-3012035/)
 
 
 
@@ -49,8 +49,8 @@ native coin of a network or a token built on top of it.
 
 **SLEARN** is learn.tg's own utility token. You earn it by completing guides
 and passing crosswords, and you can use it to pay for premium courses on the
-platform. It can also be exchanged for Leones through
-[stable-sl.pdJ.app](https://stable-sl.pdj.app/).
+platform. It will be possible to exchange it for Leones or other crypto through
+[stable-sl.pdJ.app](https://stable-sl.pdJ.app/).
 Learn more in the [SLEARN Whitepaper](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md).
 
 
@@ -63,8 +63,8 @@ does two key things:
     (like this platform).
 
 To prevent fraud and ensure UBI reaches unique individuals, your identity must
-be verified. That is done with **self.xyz** (if you have a passport) and with an
-**interview with learn.tg verifiers**.
+be verified. That is done either with **self.xyz** (if you have a passport) or
+with an **interview with learn.tg verifiers**.
 
 For each blockchain, your Web3 wallet manages a unique set of keys:
 * **Your Public Address**: This is like your bank account number. Share it 
@@ -73,7 +73,7 @@ For each blockchain, your Web3 wallet manages a unique set of keys:
   Anyone who knows it owns your wallet and all its funds. Never share it.
 
 > **Why it matters for you:** Your wallet stores your funds, while the
-> verification with self.xyz and the verifier interview secure your unique
+> verification (with self.xyz or with a verifier interview) secure your unique
 > identity for claiming UBI. Together, they ensure a fair and secure system for
 > everyone.
 
@@ -86,9 +86,9 @@ cryptocurrency.
 *   **Off-Ramp:** Converts your cryptocurrency back into Leones for use in
     Sierra Leone.
 
-For this course, we will use <https://stable-sl.pdJ.app>, a service specifically
-designed for Sierra Leone. This platform makes it easy to convert between 
-Leones and digital assets.
+For this course, we will use <https://stable-sl.pdJ.app>, a service 
+specifically designed for Sierra Leone, currently under renovation. 
+This platform makes it easy to convert between Leones and digital assets.
 
 > **Why it matters for you:** This is how you will convert your digital UBI into
 > cash for your daily needs in Sierra Leone. 
@@ -102,7 +102,7 @@ Leones and digital assets.
     [migration guide](/en/migration-in-app-wallet).
 2.  Bookmark **[learn.tg](https://learn.tg)** — this is where you will learn,
     earn rewards, and claim your UBI.
-3.  Bookmark **[stable-sl.pdJ.app](https://stable-sl.pdj.app)** — this will be
+3.  Bookmark **[stable-sl.pdJ.app](https://stable-sl.pdJ.app)** — this will be
     your bridge to convert digital rewards into Leones when you are ready.
 
 ### Comprehension Questions:
@@ -122,6 +122,6 @@ Leones and digital assets.
 
 *   [GoodDollar Protocol](https://www.gooddollar.org/)
 *   [Celo Network](https://celo.org/)
-*   [Stable SL](https://stable-sl.pdj.app/)
+*   [Stable SL](https://stable-sl.pdJ.app/)  under renovation
 *   [A Simple Explanation of Web3](https://www.coinbase.com/learn/crypto-basics/what-is-web3)
 

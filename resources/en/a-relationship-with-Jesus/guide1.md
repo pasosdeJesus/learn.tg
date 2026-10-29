@@ -17,8 +17,8 @@
 
 > (Translation WEBUS)
 
-![Drawing of Jesus walking on the lake](/img/camina_sobre_el_agua.jpg "Jesús
-walking on teh sea")
+![Drawing of Jesus walking on the lake](/img/camina_sobre_el_agua.jpg "Jesus
+walking on the sea")
 
 [Jesus walks on the sea by Gustave Dore -- Public domain](https://commons.wikimedia.org/wiki/File:Jesus_walks_on_the_sea.jpg)
 
@@ -27,12 +27,12 @@ walking on teh sea")
 
 1. A landscape mentioned in this reading is ___ (mountain)
 2. Jesus had sent His disciples to ____ (Bethsaida)
-3. After sending away the people and His disciplies Jesus went to ___ (pray)
+3. After sending away the people and His disciples Jesus went to ___ (pray)
 4. Seeing His disciples distress Jesus came close to the boat where they were
    by ____ on the sea (walking)
 5. The disciples cried because they thought that the one walking on the lake
    was a ____ (ghost)
-6. As soon as the disciples got scared Jesus told them “Cheer up! Its i I!
+6. As soon as the disciples got scared Jesus told them “Cheer up! It is I!
    Don't be ____” (afraid)
 7. Then Jesus went into the boat with them the wind ____ (ceased)
 8. If you read the passage before this one in the Bible, it is about the

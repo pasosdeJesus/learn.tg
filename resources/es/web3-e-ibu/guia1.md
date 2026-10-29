@@ -1,12 +1,20 @@
 ### Introducción
 
-**El Ingreso Básico Universal (IBU)** es un pago regular e incondicional que se otorga 
-a todos los miembros de una comunidad para ayudar a cubrir sus necesidades básicas. Este curso te guiará para que aprendas a recibir el IBU digital. El principal para ti aquí es el **IBU de learn.tg**, que se reclama en este sitio y paga en CELO; **GoodDollar** es el otro, también explicado en este curso.
+**El Ingreso Básico Universal (IBU)** es un pago regular e incondicional que se
+otorga
+a todos los miembros de una comunidad para ayudar a cubrir sus necesidades
+básicas. Este curso te guiará para que aprendas a recibir el IBU digital. El
+principal para ti aquí es el **IBU de learn.tg**, que se reclama en este sitio y
+paga en CELO; **GoodDollar** es el otro, también explicado en este curso.
 
-**Oportunidad Adicional:** ¡Cada lección en learn.tg cuenta con una bóveda de becas!
-Cuando respondes correctamente todas las preguntas de comprensión de una guía, te vuelves
-elegible para recibir USDT de la bóveda de esa lección, siempre y cuando los donantes hayan
-contribuido para apoyar a los estudiantes del curso. ¡Incluso tú mismo puedes donar a las
+**Oportunidad Adicional:** ¡Cada lección en learn.tg cuenta con una bóveda de
+becas!
+Cuando respondes correctamente todas las preguntas de comprensión de una guía,
+te vuelves
+elegible para recibir USDT de la bóveda de esa lección, siempre y cuando los
+donantes hayan
+contribuido para apoyar a los estudiantes del curso. ¡Incluso tú mismo puedes
+donar a las
 bóvedas para apoyar a otros!
 
 Para recibir y usar este IBU digital, necesitarás comprender algunas
@@ -16,16 +24,20 @@ herramientas y conceptos clave, que te explicaremos en esta guía.
 
 
 #### 1. Blockchain (La Base)
-Una **blockchain** (o **red**) es un registro digital seguro, público y descentralizado que
-registra transacciones a través de Internet. Piensa en ella como una base de datos
-compartida que ninguna entidad única controla, lo que hace que los registros sean transparentes y muy
+Una **blockchain** (o **red**) es un registro digital seguro, público y
+descentralizado que
+registra transacciones a través de Internet. Piensa en ella como una base de
+datos
+compartida que ninguna entidad única controla, lo que hace que los registros
+sean transparentes y muy
 difíciles de alterar.
 
 *   **Ejemplos:** Bitcoin, Ethereum y **Celo**.
 
 ![Dibujo de la blockchain de Bitcoin](/img/2025/bitcoin-3012035.png)
 
-[Representación de nodos de computadora en la blockchain de Bitcoin por Tumisu](https://pixabay.com/illustrations/bitcoin-cryptocurrency-money-3012035/)
+[Representación de nodos de computadora en la blockchain de Bitcoin por
+Tumisu](https://pixabay.com/illustrations/bitcoin-cryptocurrency-money-3012035/)
 
 
 
@@ -34,93 +46,115 @@ difíciles de alterar.
 > prueba de manipulaciones.
 
 #### 2. Criptomoneda (El Activo Digital)
-Una **criptomoneda** (o simplemente **crypto**) es un activo digital diseñado para 
-funcionar como medio de intercambio en su blockchain específica. Puede ser la 
+Una **criptomoneda** (o simplemente **crypto**) es un activo digital diseñado
+para
+funcionar como medio de intercambio en su blockchain específica. Puede ser la
 moneda nativa de una red o un token construido sobre ella.
 
-*   **Moneda Nativa:** La moneda principal de una blockchain (por ejemplo, CELO en la red
+*   **Moneda Nativa:** La moneda principal de una blockchain (por ejemplo, CELO
+    en la red
     Celo).
-*   **Token:** Un activo digital construido sobre una blockchain existente (por ejemplo, GoodDollar
+*   **Token:** Un activo digital construido sobre una blockchain existente (por
+    ejemplo, GoodDollar
     **G$**, USDT y **SLEARN** en Celo).
 
 > **Por qué es importante para ti:** El IBU que reclames será en forma de
-> tokens de criptomoneda (G$ y CELO), mientras que las becas adicionales están en USDT
+> tokens de criptomoneda (G$ y CELO), mientras que las becas adicionales están
+> en USDT
 > y SLEARN — todos los cuales residen en la blockchain de Celo.
 
 **SLEARN** es el token de utilidad de learn.tg. Lo ganas completando guías
 y pasando crucigramas, y puedes usarlo para pagar cursos premium en la
-plataforma. También se puede cambiar por Leones mediante
-[stable-sl.pdJ.app](https://stable-sl.pdj.app/).
-Más información en el [Whitepaper de SLEARN](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md).
+plataforma. Será posible cambiarlo por Leones o por otras criptomonedas mediante
+[stable-sl.pdJ.app](https://stable-sl.pdJ.app/).
+Más información en el [Whitepaper de
+SLEARN](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md).
 
 
 #### 3. Billetera Web3 e Identidad Digital (Tu Pasaporte)
 Una **billetera Web3** es tu pasaporte digital para interactuar con blockchains.
 Hace dos cosas clave:
-1.  **Gestiona Tus Activos:** Almacena de forma segura las claves criptográficas que
+1.  **Gestiona Tus Activos:** Almacena de forma segura las claves criptográficas
+    que
     controlan tu dinero digital (como las criptomonedas).
-2.  **Gestiona Tu Identidad:** Demuestra quién eres a las aplicaciones web3 
+2.  **Gestiona Tu Identidad:** Demuestra quién eres a las aplicaciones web3
     (como esta plataforma).
 
-Para prevenir el fraude y asegurar que el IBU llegue a individuos únicos, tu identidad debe
-ser verificada. Eso se hace con **self.xyz** (si tienes pasaporte) y con una
-**entrevista con verificadores de learn.tg**.
+Para prevenir el fraude y asegurar que el IBU llegue a individuos únicos, tu
+identidad debe
+ser verificada. Eso se hace **ya sea con self.xyz** (si tienes pasaporte) **o
+con una
+entrevista con verificadores de learn.tg**.
 
 Para cada blockchain, tu billetera Web3 gestiona un conjunto único de claves:
 * **Tu Dirección Pública**: Es como tu número de cuenta bancaria. Compártela
   libremente para recibir fondos.
-* **Tu Clave Privada (Frase Semilla)**: Es una contraseña maestra de 12-24 palabras. 
-  Cualquiera que la sepa es dueño de tu billetera y de todos sus fondos. Nunca la compartas.
+* **Tu Clave Privada (Frase Semilla)**: Es una contraseña maestra de 12-24
+  palabras.
+  Cualquiera que la sepa es dueño de tu billetera y de todos sus fondos. Nunca
+  la compartas.
 
-> **Por qué es importante para ti:** Tu billetera almacena tus fondos, mientras que la
-> verificación con self.xyz y la entrevista con verificadores aseguran tu identidad única
+> **Por qué es importante para ti:** Tu billetera almacena tus fondos, mientras
+> que la
+> verificación (con self.xyz o con una entrevista con verificadores) asegura tu
+> identidad única
 > para reclamar el IBU. Juntas, garantizan un sistema justo y seguro para todos.
 
 
 #### 4. Rampa de Entrada y Salida (El Puente hacia Tu Dinero)
-Estos son servicios que actúan como un puente entre el dinero tradicional (fiat) y la
+Estos son servicios que actúan como un puente entre el dinero tradicional (fiat)
+y la
 criptomoneda.
 
-*   **Rampa de Entrada (On-Ramp):** Convierte tu moneda local (por ejemplo, Leones) en criptomoneda.
-*   **Rampa de Salida (Off-Ramp):** Convierte tu criptomoneda de nuevo en Leones para su uso en
+*   **Rampa de Entrada (On-Ramp):** Convierte tu moneda local (por ejemplo,
+    Leones) en criptomoneda.
+*   **Rampa de Salida (Off-Ramp):** Convierte tu criptomoneda de nuevo en Leones
+    para su uso en
     Sierra Leona.
 
-Para este curso, usaremos <https://stable-sl.pdJ.app>, un servicio específicamente
-diseñado para Sierra Leona. Esta plataforma facilita la conversión entre 
-Leones y activos digitales.
+Para este curso, usaremos <https://stable-sl.pdJ.app>, un servicio
+específicamente
+diseñado para Sierra Leona, actualmente en renovación.
+Esta plataforma facilita la conversión entre Leones y activos digitales.
 
 > **Por qué es importante para ti:** Así es como convertirás tu IBU digital en
-> efectivo para tus necesidades diarias en Sierra Leona. 
+> efectivo para tus necesidades diarias en Sierra Leona.
 
 ### Tu Paso de Acción
 
-1.  No necesitas instalar ninguna aplicación de billetera: en la **siguiente guía**
-    crearás tu billetera **dentro de learn.tg**, gratis, y queda en tu teléfono. Si ya
-    tienes una billetera en otra parte (MetaMask, Rabby, OKX, OneKey o Brave) puedes
+1.  No necesitas instalar ninguna aplicación de billetera: en la **siguiente
+    guía**
+    crearás tu billetera **dentro de learn.tg**, gratis, y queda en tu teléfono.
+Si ya
+    tienes una billetera en otra parte (MetaMask, Rabby, OKX, OneKey o Brave)
+puedes
     importar su frase de recuperación y conservar la misma dirección: mira la
     [guía de migración](/es/migracion-billetera-app).
 2.  Marca como favorito **[learn.tg](https://learn.tg)** — aquí aprenderás,
     ganarás recompensas y reclamarás tu IBU.
-3.  Marca como favorito **[stable-sl.pdJ.app](https://stable-sl.pdj.app)** —
+3.  Marca como favorito **[stable-sl.pdJ.app](https://stable-sl.pdJ.app)** —
     este será tu puente para convertir las recompensas digitales en Leones
     cuando estés listo.
 
 ### Preguntas de Comprensión:
 
-1. Una ___ es un registro digital seguro y descentralizado que registra todas las
-   transacciones (Blockchain)
+1. Una ___ es un registro digital seguro y descentralizado que registra todas
+   las transacciones (Blockchain)
 2. En la red Celo, la criptomoneda nativa se llama ___ (CELO)
-3. Tu Frase de Recuperación Secreta de 12-24 palabras gestionada por tu billetera representa 
+3. Tu Frase de Recuperación Secreta de 12-24 palabras gestionada por tu
+   billetera representa
    la clave ___ (Privada)
-4. El país al que se dirige específicamente el programa de IBU de learn.tg 
+4. El país al que se dirige específicamente el programa de IBU de learn.tg
    es ___ --elimina el espacio. (SierraLeona)
-5. El Ingreso Básico ___ (IBU) es un pago regular e incondicional que se otorga 
-   a todos los miembros de una comunidad para ayudar a cubrir las necesidades básicas. (Universal)
+5. El Ingreso Básico ___ (IBU) es un pago regular e incondicional que se otorga
+   a todos los miembros de una comunidad para ayudar a cubrir las 
+   necesidades básicas. (Universal)
 
 
 ### Referencias y Lecturas Adicionales
 
 *   [Protocolo GoodDollar](https://www.gooddollar.org/)
 *   [Red Celo](https://celo.org/)
-*   [Stable SL](https://stable-sl.pdj.app/)
-*   [Una Explicación Sencilla de Web3](https://www.coinbase.com/learn/crypto-basics/what-is-web3)
+*   [Stable SL](https://stable-sl.pdJ.app/) en renovación
+*   [Una Explicación Sencilla de
+    Web3](https://www.coinbase.com/learn/crypto-basics/what-is-web3)

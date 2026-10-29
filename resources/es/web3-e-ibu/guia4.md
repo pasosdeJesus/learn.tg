@@ -1,20 +1,22 @@
-# Guía 4: Reclama Tu IBU Diario - Learn.tg-IBU y GoodDollar
-
 ## 1. ¿Qué son CELO, Learn.tg-IBU y GoodDollar (G$)?
 
-**El IBU de learn.tg es el principal de este curso:** es un IBU exclusivo en learn.tg que
-entrega **tokens CELO** a personas (especialmente en Sierra Leona), está patrocinado por
+**El IBU de learn.tg es el principal de este curso:** es un IBU exclusivo en
+learn.tg que
+entrega **tokens CELO** a personas (especialmente en Sierra Leona), está
+patrocinado por
 **Pasos de Jesús** y lo reclamas aquí, desde tu billetera dentro de learn.tg.
 
-**GoodDollar (G$)** es un segundo protocolo de IBU, global, apoyado por empresas como
+**GoodDollar (G$)** es un segundo protocolo de IBU, global, apoyado por empresas
+como
 eToro. Su reclamo depende del servicio de GoodDollar.
 
 Ambos son criptomonedas que operan en la **blockchain de Celo**.
 
-Para asegurar la equidad y evitar que una persona reclame varias veces, ambos 
+Para asegurar la equidad y evitar que una persona reclame varias veces, ambos
 sistemas de IBU utilizan **mecanismos anti-sybil**:
 *   **GoodDollar:** Requiere una **verificación facial** única cada 6 meses.
-*   **Learn.tg-IBU:** Necesitas al menos **50 puntos** en tu puntuación de perfil.
+*   **Learn.tg-IBU:** Necesitas al menos **50 puntos** en tu puntuación de
+    perfil.
 
 **¿Cómo aumentar tu puntuación de perfil?**
 
@@ -22,59 +24,79 @@ Consulta la **[Guía 3 — Cómo Ganar Becas](../guia3)** para ver el desglose
 completo de puntuación, la fórmula de becas y consejos para llegar a 50+ puntos.
 
 **🎓 Gana SLEARN mientras aprendes:** Cada vez que completes una guía y pases
-su crucigrama, ganas **hasta 1 token SLEARN** (dependiendo tu puntaje de perfil)
+su crucigrama, ganas **hasta 1 token SLEARN** (dependiendo de tu puntaje de
+perfil)
 además de cualquier beca en USDT.
 SLEARN se puede ahorrar para pagar cursos premium o cambiar por Leones mediante
-[stable-sl.pdJ.app](https://stable-sl.pdj.app/). Mientras más aprendes, más
+[stable-sl.pdJ.app](https://stable-sl.pdJ.app/). Mientras más aprendes, más
 ganas — y entre más alta tu puntuación de perfil, más CELO recibes diariamente.
 
 **Valor diario aproximado:**
-*   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 Nuevos Leones). Puedes ahorrar durante varios días antes de convertir.
-*   **IBU de CELO:** Hasta 0.20 CELO diario, dependiendo de tu puntuación de perfil. Con 50 puntos, recibes 0.10 CELO.
+*   **GoodDollar:** ≈150 G$ (≈ $0.01 USD / ~0.25 Nuevos Leones). Puedes ahorrar
+    durante varios días antes de convertir.
+*   **IBU de CELO:** Hasta 0.20 CELO diario, dependiendo de tu puntuación de
+    perfil. Con 50 puntos, recibes 0.10 CELO.
 
-**💡 Consejo:** Cuando tengas suficiente, cambia una cantidad mayor en vez de muchas pequeñas.
+**💡 Consejo:** Cuando tengas suficiente, cambia una cantidad mayor en vez de
+muchas pequeñas.
 
 ### Una Estrategia para Tu IBU: Ahorra y Crece
 
-Como puedes ver, las cantidades diarias de IBU son pequeñas. Aunque se suman con el tiempo, convertir cantidades muy pequeñas a efectivo puede ser ineficiente debido a las comisiones por transacción.
+Como puedes ver, las cantidades diarias de IBU son pequeñas. Aunque se suman con
+el tiempo, convertir cantidades muy pequeñas a efectivo puede ser ineficiente
+debido a las comisiones por transacción.
 
 Una estrategia poderosa es **ahorrar tu IBU** durante varios días o semanas.
 
-Para acelerar tus ahorros, puedes **combinar tu IBU con otras ganancias** en learn.tg. Por ejemplo, completar crucigramas en la plataforma te recompensa con **hasta 1 USDT** (dependiendo de tu puntaje de perfil). Al ahorrar tus G$, CELO y sumar tus ganancias de USDT, puedes acumular una cantidad más significativa para convertir a efectivo cuando lo necesites.
+Para acelerar tus ahorros, puedes **combinar tu IBU con otras ganancias** en
+learn.tg. Por ejemplo, completar crucigramas en la plataforma te recompensa con
+**hasta 1 USDT** (dependiendo de tu puntaje de perfil). Al ahorrar tus G$, CELO
+y sumar tus ganancias de USDT, puedes acumular una cantidad más significativa
+para convertir a efectivo cuando lo necesites.
 
 ---
 
 ## 2. Paso 1: Verifica Tu Identidad con GoodDollar
 
-La **verificación facial** asegura que tu billetera pertenece a un **adulto real y único (mayor de 18 años)**.
+La **verificación facial** asegura que tu billetera pertenece a un **adulto real
+y único (mayor de 18 años)**.
 
 **Cómo funciona:**
 1.  Usarás la cámara de tu smartphone para grabar un video corto de tu cara.
-2.  El sistema de GoodDollar extrae tus rasgos faciales y los compara con una base de datos centralizada para evitar duplicados.
-3.  **Tus datos faciales se almacenan de forma segura** y están vinculados a la dirección de tu billetera, pero no a otra información personal (como tu nombre).
+2.  El sistema de GoodDollar extrae tus rasgos faciales y los compara con una
+    base de datos centralizada para evitar duplicados.
+3.  **Tus datos faciales se almacenan de forma segura** y están vinculados a la
+    dirección de tu billetera, pero no a otra información personal (como tu
+nombre).
 
 **Requisitos del proceso:**
 *   **Tiempo:** Unos 10 minutos. Se hace **una vez** (luego cada 6 meses).
 *   **Ubicación:** Buena iluminación.
-*   **Nota:** En el navegador es posible que necesites permitir el acceso a la cámara varias veces (alrededor de 5) al principio.
+*   **Nota:** En el navegador es posible que necesites permitir el acceso a la
+    cámara varias veces (alrededor de 5) al principio.
 
 **Video de referencia:**
 
-[![Video que muestra la verificación facial de GoodDollar](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI) 
+[![Video que muestra la verificación facial de
+GoodDollar](https://img.youtube.com/vi/sBAQF5oIxiI.jpg)](https://www.youtube.com/embed/sBAQF5oIxiI)
 
 
-**Al final de esta guía encontrarás el botón para iniciar tu verificación con GoodDollar.**
+**Al final de esta guía encontrarás el botón para iniciar tu verificación con
+GoodDollar.**
 
 ---
 
 ## 3. Paso 2: Reclama Tu IBU Diario
 
-Una vez verificado, puedes reclamar diariamente a través de tu **billetera dentro de learn.tg** (la que creaste en la Guía 2).
+Una vez verificado, puedes reclamar diariamente a través de tu **billetera
+dentro de learn.tg** (la que creaste en la Guía 2).
 
-*   **GoodDollar (G$):** Puedes reclamar en <https://learn.tg> o en la aplicación oficial en <https://gooddapp.org>.
+*   **GoodDollar (G$):** Puedes reclamar en <https://learn.tg> o en la
+    aplicación oficial en <https://gooddapp.org>.
 *   **IBU de CELO:** Solo puedes reclamarlo en **este sitio (learn.tg)**.
 
-**Proceso diario:** Abre la aplicación, haz clic para reclamar y los fondos se añadirán a tu billetera.
+**Proceso diario:** Abre la aplicación, haz clic para reclamar y los fondos se
+añadirán a tu billetera.
 
 **Los botones al final de esta guía te permitirán reclamar ambos IBUs.**
 
@@ -87,17 +109,24 @@ Una vez verificado, puedes reclamar diariamente a través de tu **billetera dent
 2.  Aprendido cómo funcionan las verificaciones anti-sybil.
 3.  Preparado para verificar tu identidad y reclamar tus primeros fondos.
 
-En la **Guía 5** aprenderás a **convertir tus G$ o CELO en Leones** a través de servicios locales para usar tu IBU en la economía diaria.
+En la **Guía 5** aprenderás a **convertir tus G$ o CELO en Leones** a través de
+servicios locales para usar tu IBU en la economía diaria.
 
 ---
 
 ## 5. Comprensión de Lectura
 
-1. El IBU principal de este curso se llama learn.tg-IBU y paga en tokens ___. (CELO)
-2. Para demostrar que eres una persona única para GoodDollar, necesitas hacer una ___ facial cada 6 meses. (verificación)
-3. Suponiendo que los tipos de cambio se mantengan constantes como se presenta en esta guía, necesitarías reclamar el IBU de GoodDollar durante al menos ___ días para tener 1 SLE. (cuatro)
-4. Tu identidad también se verifica con self.xyz y con una ___ con verificadores de learn.tg. (entrevista)
-5. Para reclamar el IBU de CELO en learn.tg necesitas al menos ___ puntos en tu puntuación de perfil. (cincuenta)
+1. El IBU principal de este curso se llama learn.tg-IBU y paga en tokens ___.
+   (CELO)
+2. Para demostrar que eres una persona única para GoodDollar, necesitas hacer
+   una ___ facial cada 6 meses. (verificación)
+3. Suponiendo que los tipos de cambio se mantengan constantes como se presenta
+   en esta guía, necesitarías reclamar el IBU de GoodDollar durante al menos ___
+días para tener 1 SLE. (cuatro)
+4. Tu identidad también se verifica con self.xyz y con una ___ con verificadores
+   de learn.tg. (entrevista)
+5. Para reclamar el IBU de CELO en learn.tg necesitas al menos ___ puntos en tu
+   puntuación de perfil. (cincuenta)
 6. Puedes reclamar el IBU de GoodDollar y de learn.tg una vez al ___ . (día)
 
 
@@ -110,6 +139,7 @@ En la **Guía 5** aprenderás a **convertir tus G$ o CELO en Leones** a través 
 
 ### **¿Ya reclamaste tu IBU? ¡Ahora haz el crucigrama!**
 
-Ahora que tu billetera está conectada y has aprendido a reclamar IBU, resuelve el
+Ahora que tu billetera está conectada y has aprendido a reclamar IBU, resuelve
+el
 crucigrama de esta guía. Con un puntaje perfecto ganas la **beca** del curso
 (USDT y SLEARN, dependiendo de tu puntaje de perfil).

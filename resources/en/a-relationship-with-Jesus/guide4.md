@@ -1,71 +1,71 @@
-> **26** Then an angel of the Lord spoke to Philip, saying, 
-  “Arise, and go toward the south to the way that goes down from 
-  Jerusalem to Gaza. This is a desert.” 
-  **27** He arose and went; and behold, there was a man of Ethiopia, 
-  a eunuch of great authority under Candace, queen of the Ethiopians, 
-  who was over all her treasure, who had come to Jerusalem to worship. 
-  **28** He was returning and sitting in his chariot, and was reading the 
-  prophet Isaiah.  
-  **29** The Spirit said to Philip, “Go near, and join yourself to this 
-  chariot.” 
-  **30** Philip ran to him, and heard him reading Isaiah the prophet, and 
-  said, “Do you understand what you are reading?”  
-  **31** He said, “How can I, unless someone explains it to me?” 
-  He begged Philip to come up and sit with him. 
-  **32** Now the passage of the Scripture which he was reading was this, 
+> **26** Un ángel del Señor habló a Felipe, diciendo: Levántate y ve hacia
+  el sur, por el camino que desciende de Jerusalén a Gaza, el cual es
+  desierto.
+  **27** Entonces él se levantó y fue. Y sucedió que un etíope, eunuco,
+  funcionario de Candace reina de los etíopes, el cual estaba sobre todos
+  sus tesoros, y había venido a Jerusalén para adorar,
+  **28** volvía sentado en su carro, y leyendo al profeta Isaías.
+  **29** Y el Espíritu dijo a Felipe: Acércate y júntate a ese carro.
+  **30** Acudiendo Felipe, le oyó que leía al profeta Isaías, y dijo:
+  Pero ¿entiendes lo que lees?
+  **31** Él dijo: ¿Y cómo podré, si alguno no me enseñare? Y rogó a Felipe
+  que subiese y se sentara con él.
+  **32** El pasaje de la Escritura que leía era este:
 
->> He was led as a sheep to the slaughter. 
-  As a lamb before his shearer is silent,
-  so he doesn’t open his mouth.
+>> Como oveja a la muerte fue llevado;
+   Y como cordero mudo delante del que lo trasquila,
+   Así no abrió su boca.
 
->> **33** In his humiliation, his judgment was taken away.
-  Who will declare His generation?
-  For his life is taken from the earth.
+>> **33** En su humillación no se le hizo justicia;
+   Mas su generación, ¿quién la contará?
+   Porque fue quitada de la tierra su vida.
 
-> **34** The eunuch answered Philip, “Who is the prophet talking about? 
-  About himself, or about someone else?” 
-  **35** Philip opened his mouth, and beginning from this Scripture, 
-  preached to him about Jesus. 
-  **36** As they went on the way, they came to some water; and the eunuch 
-  said, “Behold, here is water. What is keeping me from being baptized?” 
-  **37** Philip said, “If you believe with all your heart, you may.” 
-  He answered, “I believe that Jesus Christ is the Son of God.” 
-  **38** He commanded the chariot to stand still, and they both went 
-  down into the water, both Philip and the eunuch, and he baptized him. 
-  **39** When they came up out of the water, the Spirit of the Lord caught 
-  Philip away, and the eunuch didn’t see him any more, for he went on 
-  his way rejoicing.  
+> **34** Respondiendo el eunuco, dijo a Felipe: Te ruego que me digas:
+  ¿de quién dice el profeta esto; de sí mismo, o de algún otro?
+  **35** Entonces Felipe, abriendo su boca, y comenzando desde esta escritura,
+  le anunció el evangelio de Jesús.
+  **36** Y yendo por el camino, llegaron a cierta agua, y dijo el eunuco:
+  Aquí hay agua; ¿qué impide que yo sea bautizado?
+  **37** Felipe dijo: Si crees de todo corazón, bien puedes.
+  Y respondiendo, dijo: Creo que Jesucristo es el Hijo de Dios.
+  **38** Y mandó parar el carro; y descendieron ambos al agua, Felipe
+  y el eunuco, y le bautizó.
+  **39** Cuando subieron del agua, el Espíritu del Señor arrebató a
+  Felipe; y el eunuco no le vio más, y siguió gozoso su camino.
 
-> (Translation WEBUS).
+> (Biblia traducción Reina Valera 1960)
 
-![Drawing of Philip baptizing the eunuch](/img/felipe_bautiza_eunuco.jpg "Drawing of Philip baptizing the eunuch")
+![Cuadro de Felipe bautizando al eunuco](/img/felipe_bautiza_eunuco.jpg "Cuadro
+de Felipe bautizando al eunuco")
 
-[Drawing Philip baptising the ethiopina eunuch by Aelbert Cuyp --Public Domain](https://picryl.com/media/aelbert-cuyp-saint-philip-baptising-the-ethiopian-eunuch-ntiii-ang-515655-a00e41)
+[Cuadro de Felipe bautizando al eunuco de Aelbert Cuyp --Dominio
+Público](https://picryl.com/media/aelbert-cuyp-saint-philip-baptising-the-ethiopian-eunuch-ntiii-ang-515655-a00e41)
 
 
-## Reading comprehension
+## 1. Comprensión de lectura
 
-1. According to verse 26 an ___ spoke to Philip. (angel)
-2. The name of the queen of the ethiopians was ___. (Candace)
-3. The eunuch was reading the prophet ___. (Isaiah)
-4. In verse 29 the Spirit said to Philip to go ___ and join to the 
-   chariot. (near)
-5. Complete the sentence: "do you understand what you are ___?" (reading)
-6. In verse 31 the eunuch answers “How can I, unless someone ___ it to 
-   me?” (explains)
-7. According to the text the prophecy spoke about ___. (Jesus)
-8. Philip ___ the eunuch. (baptized)
-9. According to verse 39 the ___ of the Lord caught Philip away (Spirit)
+1. De acuerdo al versículo 26 un ___ le habló a Felipe. (ángel)
+2. El nombre de la reina de los etíopes era ___. (Candace)
+3. El eunuco estaba leyendo al profeta ___ --sin tilde. (Isaias)
+4. En el versículo 29 el Espíritu le dice a Felipe "___ y
+   júntate a ese carro." --sin tilde (Acercate)
+5. Completa la frase: ¿entiendes lo que ___? (lees)
+6. En el versículo 31 el eunuco responde "¿Y cómo podré, si alguno
+   no me ___? (enseñare)
+7. De acuerdo al texto la profecía hablaba de ___ --sin tilde. (Jesus)
+8. Felipe ___ al eunuco --sin tilde. (bautizo)
+9. De acuerdo al versículo 39 el ___ del Señor arrebató a Felipe --sin tilde.
+   (Espiritu)
 
-## Reflection
+## 2. Reflexión
 
-* The story of the Eunuch's conversion is a beautiful testimony of how the 
-  gospel of Jesus reaches people. What do you think when you hear the 
-  story of the eunuch and Philip? Share your ideas, it is very important to us.
+La historia de la conversión del eunuco es un testimonio bellísimo de
+cómo el evangelio de Jesucristo llega a las personas. ¿Qué piensas al
+escuchar la historia del eunuco y Felipe? Comparte tus ideas, es de
+suma importancia para nosotros.
 
-## Application
+## 3. Aplicación
 
-* How can you apply what this passage teaches to your life?
-* Memorization challenge:  _Philip said, “If you believe with all your heart, 
-  you may.” He answered, “I believe that Jesus Christ is the Son of 
-  God.”_ Acts 8:37
+* ¿Cómo puedes aplicar lo que este pasaje enseña a tu vida?
+* Desafío de memorización: _Felipe dijo: Si crees de todo corazón, bien puedes.
+  Y respondiendo, dijo: Creo que Jesucristo es el Hijo de Dios._ Hechos 8:37

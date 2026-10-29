@@ -14,19 +14,26 @@ Antes de poder recibir becas, debes tener:
 ### Puntuación de Perfil
 
 Tu puntuación de perfil es lo que desbloquea becas e IBU. Mientras más alta,
-más ganas por guía. Completa tu perfil para llegar hasta 100 puntos:
+más ganas por guía. Completa tu perfil para llegar hasta 100 puntos (los
+puntos de Nombre y País vienen de self.xyz, que lee tu pasaporte. Si no
+tienes pasaporte, la entrevista con el verificador puede confirmarlos):
 
 | Qué verificar | Puntos | Cómo |
 |--------------|:------:|------|
 | Nombre | 26 | Tu nombre debe coincidir con el de tu pasaporte |
 | País | 24 | Tu país debe coincidir con tu nacionalidad del pasaporte |
 | Correo | 9 | Configura tu correo y pide a un verificador que lo confirme |
-| WhatsApp o Telegram | 9 | Agrega tu número y pide a un verificador que lo confirme |
-| Ubicación (departamento, ciudad) | 9 | Selecciona tu población y pide a un verificador que confirme |
-| Lugar de culto | 9 | Declara tu iglesia/mezquita y pide a un verificador que confirme |
+| WhatsApp o Telegram | 9 | Agrega tu número y pide a un verificador que lo
+confirme |
+| Ubicación (departamento, ciudad) | 9 | Selecciona tu población y pide a un
+verificador que confirme |
+| Lugar de culto | 9 | Declara tu iglesia/mezquita y pide a un verificador que
+confirme |
 | Verificación GoodDollar | 7 | Completa la verificación facial en tu perfil |
-| Entrevista con verificador | 7 | Agenda y asiste a una entrevista de verificación —
-   ve a tu perfil y haz clic en "Solicitar Verificación" para abrir un calendario |
+| Entrevista con verificador | 7 | Agenda y asiste a una entrevista de
+verificación —
+   ve a tu perfil y haz clic en "Solicitar Verificación" para abrir un
+calendario |
 | **Total** | **100** | |
 
 Puedes gestionar tu perfil en tu [página de perfil](/es/profile).
@@ -64,8 +71,9 @@ solo uno de ellos si la bóveda solo tiene fondos para uno.
   inmediatamente.
 - **SLEARN** se puede ahorrar para pagar cursos premium, y pronto después de
   completar cursos Premium podrás cambiar SLEARN por Leones o por USDT
-  mediante [stable-sl.pdJ.app](https://stable-sl.pdj.app/).
-  Consulta el [Whitepaper de SLEARN](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md).
+  mediante [stable-sl.pdJ.app](https://stable-sl.pdJ.app/).
+  Consulta el [Whitepaper de
+SLEARN](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md).
 
 ### Credenciales del Curso (SBTs)
 
@@ -81,7 +89,7 @@ finalización, registrado permanentemente en la blockchain de Celo.
     correo, WhatsApp o Telegram, municipio y lugar de culto.
 2.  Haz clic en **"Solicitar Verificación"** en tu perfil para agendar una
     entrevista con un verificador — esto te da 7 puntos extra.
-3.  Completa la **verificación facial de GoodDollar** — en la Guía 3
+3.  Completa la **verificación facial de GoodDollar** — en la Guía 4
     encontrarás el botón para iniciar este proceso. Te da 7 puntos de perfil.
 4.  Apunta a al menos **50 puntos** de perfil — con este nivel ya empiezas a
     recibir becas.
@@ -89,7 +97,8 @@ finalización, registrado permanentemente en la blockchain de Celo.
 ### Preguntas de Comprensión
 
 1. Necesitas al menos ___ puntos de perfil para recibir becas. (cincuenta)
-2. La fórmula de la beca es (montoPorGuía × puntuaciónPerfil) dividido por ___ . (cien)
+2. La fórmula de la beca es (montoPorGuía × puntuaciónPerfil) dividido por ___ .
+   (cien)
 3. Después de enviar un crucigrama, debes esperar ___ horas antes de enviar
    otro en el mismo curso. (veinticuatro)
 4. Si una bóveda no tiene fondos de donantes, recibirás ___ aunque tengas

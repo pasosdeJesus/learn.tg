@@ -23,7 +23,7 @@ profile score breakdown, scholarship formula, and tips to reach 50+ points.
 its crossword, you earn **up to 1 SLEARN token** (depending on your profile
 score) in addition to any USDT scholarship.
 SLEARN can be saved to pay for premium courses or exchanged for Leones via
-[stable-sl.pdJ.app](https://stable-sl.pdj.app/). The more you learn, the more
+[stable-sl.pdJ.app](https://stable-sl.pdJ.app/). The more you learn, the more
 you earn — and the higher your profile score, the more CELO UBI you receive
 daily.
 
@@ -93,7 +93,7 @@ In **Guide 5** you will learn how to **convert your G$ or CELO into Leones** thr
 ## 5. Reading Comprehension
 
 1. The main UBI of this course is called learn.tg-UBI and it pays in ___ tokens. (CELO)
-2. To prove that your are a unique person for GoodDollar, you need to do facial ___ every 6 months. (verification)
+2. To prove that you are a unique person for GoodDollar, you need to do facial ___ every 6 months. (verification)
 3. Assuming the exchange rates remain constant as presented in this guide, you would need to claim GoodDollar UBI for at least ___ days to have 1 SLE. (four)
 4. Your identity is also verified with self.xyz and with an ___ with learn.tg verifiers. (interview)
 5. To claim learn.tg CELO UBI you need at least ___ points in your profile score. (fifty)

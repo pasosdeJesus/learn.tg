@@ -1,81 +1,114 @@
-# Guía 2: Tu billetera vive dentro de learn.tg
+### **Tu billetera vive dentro de learn.tg**
 
-### **Introducción**
-
-Tu **billetera Web3** es tu pasaporte digital y tu cuenta bancaria en uno: recibe, guarda
-y administra tu IBU y tu identificación. En este curso **no** instalas nada: la creas
-**dentro de learn.tg**, en el navegador de tu teléfono (**Chrome** en Android, **Safari**
+Tu **billetera Web3** es tu pasaporte digital y tu cuenta bancaria en uno:
+recibe, guarda
+y administra tu IBU y tu identificación. En este curso **no** instalas nada: la
+creas
+**dentro de learn.tg**, en el navegador de tu teléfono (**Chrome** en Android,
+**Safari**
 en iPhone).
 
-> **Dónde:** la billetera vive en la página de learn.tg, así que usa Chrome o Safari. No la
-> crees dentro del navegador de otra aplicación de billetera (MetaMask, Rabby, OKX,
+> **Dónde:** la billetera vive en la página de learn.tg, así que usa Chrome o
+> Safari. No la
+> crees dentro del navegador de otra aplicación de billetera (MetaMask, Rabby,
+> OKX,
 > OneKey): ahí no está disponible el desbloqueo con huella o Face ID.
 
 ---
 
 ### **Paso 1: Crea tu billetera**
 
-1.  Abre [learn.tg](https://learn.tg) y toca **Usar billetera de la aplicación**.
-2.  Elige **Crear billetera** y escribe una **clave** de 8 caracteres o más. La usarás para
+1.  Abre [learn.tg](https://learn.tg) y toca **Usar billetera de la
+    aplicación**.
+2.  Elige **Crear billetera** y escribe una **clave** de 8 caracteres o más. La
+    usarás para
     desbloquear la billetera en este dispositivo.
-3.  Elige cómo quieres desbloquearla: con tu **huella o Face ID** (recomendado) o solo con
+3.  Elige cómo quieres desbloquearla: con tu **huella o Face ID** (recomendado)
+    o solo con
     la clave. La clave sigue funcionando como respaldo.
 
-### **Paso 2: Escribe tu Frase de Recuperación Secreta (EL PASO MÁS IMPORTANTE)**
+### **Paso 2: Escribe tu Frase de Recuperación Secreta (EL PASO MÁS
+IMPORTANTE)**
 
-*   La billetera genera **12 palabras**: tu **Frase de Recuperación Secreta**. Escríbelas
-    **en papel, en el orden exacto en que se muestran**, y guarda ese papel en un lugar
+*   La billetera genera **12 palabras**: tu **Frase de Recuperación Secreta**.
+    Escríbelas
+    **en papel, en el orden exacto en que se muestran**, y guarda ese papel en
+un lugar
     físico y seguro.
-*   **NUNCA** la guardes como captura de pantalla, nota o correo. **NUNCA** la compartas
+*   **NUNCA** la guardes como captura de pantalla, nota o correo. **NUNCA** la
+    compartas
     con nadie: quien tenga esas 12 palabras controla tus fondos.
-*   La aplicación te pide escribir **3 de las 12 palabras** para confirmar que las
+*   La aplicación te pide escribir **3 de las 12 palabras** para confirmar que
+    las
     anotaste.
 
 ### **Paso 3: Mira tu dirección pública**
 
-Tu **dirección pública** (una cadena larga que empieza con `0x...`) es como tu número de
-cuenta: la compartes para recibir fondos. La encuentras en el panel de la billetera, en la
-parte de arriba de learn.tg, junto con tus saldos, donde también puedes recibir y enviar.
+Tu **dirección pública** (una cadena larga que empieza con `0x...`) es como tu
+número de
+cuenta: la compartes para recibir fondos. La encuentras en el panel de la
+billetera, en la
+parte de arriba de learn.tg, junto con tus saldos, donde también puedes recibir
+y enviar.
 
 ---
 
 ### **Paso 4: Tus coleccionables**
 
-Cuando completas el **100% de un curso** ganas un **coleccionable** (una credencial, también
-llamada SBT): una insignia digital que prueba que lo terminaste. Los ves en el panel de la
-billetera, en **Coleccionables**; no se pueden transferir ni vender, y aparecen en tu perfil
+Cuando completas el **100% de un curso** ganas un **coleccionable** (una
+credencial, también
+llamada SBT): una insignia digital que prueba que lo terminaste. Los ves en el
+panel de la
+billetera, en **Coleccionables**; no se pueden transferir ni vender, y aparecen
+en tu perfil
 público.
 
 ---
 
 ### **¿Ya tenías una cuenta verificada antes de crear esta billetera?**
 
-Si creaste tu billetera dentro de learn.tg pero ya tenías una cuenta **verificada** con una
+Si creaste tu billetera dentro de learn.tg pero ya tenías una cuenta
+**verificada** con una
 billetera anterior (MetaMask, OKX, OneKey…), no tienes que empezar de nuevo:
 
-1. En la cuenta que usas ahora, abre la pestaña **Cuentas** del panel de la billetera (o
-   **Billeteras en esta cuenta** en tu perfil) y elige **Ya tengo una cuenta verificada**.
-2. Escribe la dirección pública de tu **billetera existente y verificada** y envía la solicitud.
-3. Abre learn.tg con esa billetera verificada e inicia sesión. Entra a **Perfil** y abre
-   **Billeteras en esta cuenta** (también está en la pestaña **Cuentas** del panel de la
-   billetera). En **Solicitudes para unirse a esta cuenta** verás la solicitud: presiona
+1. En la cuenta que usas ahora, abre la pestaña **Cuentas** del panel de la
+   billetera (o
+   **Billeteras en esta cuenta** en tu perfil) y elige **Ya tengo una cuenta
+verificada**.
+2. Escribe la dirección pública de tu **billetera existente y verificada** y
+   envía la solicitud.
+3. Abre learn.tg con esa billetera verificada e inicia sesión. Entra a
+   **Perfil** y abre
+   **Billeteras en esta cuenta** (también está en la pestaña **Cuentas** del
+panel de la
+   billetera). En **Solicitudes para unirse a esta cuenta** verás la solicitud:
+presiona
    **Aceptar y agregar la billetera** y firma con esa billetera.
-4. Tu billetera in-app se agrega a la cuenta verificada y quedas con una sola cuenta.  Tu progreso, puntajes, insignias y código de referidos
-   quedan intactos; vuelve a entrar en este dispositivo con la billetera in-app para verlos.
+4. Tu billetera in-app se agrega a la cuenta verificada y quedas con una sola
+   cuenta. Tu
+   progreso, puntajes, insignias y código de referidos quedan intactos; vuelve a
+entrar en
+   este dispositivo con la billetera in-app para verlos.
 
 ---
 
 ### **Estudiar sin conexión**
 
-learn.tg funciona como una aplicación y guarda tus cursos: mientras tengas señal,
-instálala desde el menú del navegador (**Instalar aplicación** en Chrome, **Añadir a
-pantalla de inicio** en Safari). Después puedes leer tus guías, y hasta resolver sus
+learn.tg funciona como una aplicación y guarda tus cursos: mientras tengas
+señal,
+instálala desde el menú del navegador (**Instalar aplicación** en Chrome,
+**Añadir a
+pantalla de inicio** en Safari). Después puedes leer tus guías, y hasta resolver
+sus
 crucigramas, **sin conexión**:
 
-*   Tu respuesta queda guardada en el teléfono y se envía sola cuando vuelve la conexión.
-    El resultado llega a tus **notificaciones** (correcto, o las palabras con problema).
+*   Tu respuesta queda guardada en el teléfono y se envía sola cuando vuelve la
+    conexión.
+    El resultado llega a tus **notificaciones** (correcto, o las palabras con
+problema).
 *   Donar o reclamar IBU sí necesitan conexión, y la aplicación te lo dice.
-*   La billetera **se bloquea al recargar la página**: no se pierde, la desbloqueas otra
+*   La billetera **se bloquea al recargar la página**: no se pierde, la
+    desbloqueas otra
     vez con tu huella o tu clave.
 
 ---
@@ -87,7 +120,10 @@ crucigramas, **sin conexión**:
 3. La billetera te da una Frase de Recuperación Secreta de ___ palabras. (doce)
 4. Debes escribir tu frase en ___ y guardarla en un lugar seguro. (papel)
 5. Quien tenga tus 12 palabras controla tus ___. (fondos)
-6. Para recibir fondos compartes tu dirección ___, la que empieza con 0x. (publica)
+6. Para recibir fondos compartes tu dirección ___, la que empieza con 0x.
+   (publica)
 7. Sin conexión todavía puedes leer tus guías y resolver sus ___. (crucigramas)
-8. Una respuesta resuelta sin conexión se envía sola cuando vuelve la ___. (conexion)
-9. Cuando completas el 100% de un curso ganas un coleccionable, también llamado ___. (SBT)
+8. Una respuesta resuelta sin conexión se envía sola cuando vuelve la ___.
+   (conexion)
+9. Cuando completas el 100% de un curso ganas un coleccionable, también llamado
+   ___. (SBT)

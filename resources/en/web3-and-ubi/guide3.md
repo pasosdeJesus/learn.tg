@@ -15,7 +15,9 @@ Before you can receive scholarships, you must have:
 
 Your profile score is what unlocks scholarships and UBI. The higher your
 score, the more you earn per guide. Complete your profile to reach up to
-100 points:
+100 points (Name and Country points come from self.xyz, which reads your
+passport. If you do not have a passport, the verifier interview can confirm
+them.):
 
 | What to verify | Points | How |
 |---------------|:------:|------|
@@ -65,7 +67,7 @@ receive only one of them if the vault only has funds for one.
   again immediately.
 - **SLEARN** can be saved to pay for premium courses, and soon after you
   complete Premium courses you will be able to exchange SLEARN for Leones
-  or for USDT via [stable-sl.pdJ.app](https://stable-sl.pdj.app/).
+  or for USDT via [stable-sl.pdJ.app](https://stable-sl.pdJ.app/).
   See the [SLEARN Whitepaper](https://github.com/pasosdeJesus/learn.tg/blob/main/SLEARN-WHITEPAPER.md) for details.
 
 ### Course Credentials (SBTs)
@@ -82,7 +84,7 @@ completion, permanently recorded on the Celo blockchain.
     email, WhatsApp or Telegram, town, and place of worship.
 2.  Click **"Request Verification"** on your profile to schedule an interview
     with a verifier — this gives you 7 extra profile score points.
-3.  Complete the **GoodDollar facial verification** — in Guide 3 you will
+3.  Complete the **GoodDollar facial verification** — in Guide 4 you will
     find the button to start this process. It gives you 7 profile score points.
 4.  Aim for at least **50 profile score points** — at this level you already
     start receiving scholarships.

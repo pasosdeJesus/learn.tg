@@ -26,7 +26,7 @@
 ![Drawing Raising of Lazarus](/img/RaisingOfLazarusBloch.jpg "Drawing Raising of
 Lazarus")
 
-[Rising of Lazarus by Carl Bloch](https://commons.wikimedia.org/wiki/File:RaisingofLazarusBloch.jpg)
+[Raising of Lazarus by Carl Bloch](https://commons.wikimedia.org/wiki/File:RaisingofLazarusBloch.jpg)
 
 
 ## Reading comprehension. 
@@ -35,13 +35,13 @@ Lazarus")
 2. According to the reading, who goes out to meet Jesus? ___ (Martha)
 3. Complete the Jesus' answer in verse 23: `Your brother will ___ again´ (rise)
 4. Complete Martha's answer in verse 24: `I know that he will rise again in
-   the resurection at the ___ day.´ (last)
-5. Jesus said to him: I am the ___ and the life; He who· believes in me
+   the resurrection at the ___ day.´ (last)
+5. Jesus said to her: I am the ___ and the life; He who· believes in me
    will still live, even if he dies. (resurrection)
 6. What was the approximate distance in stadia between Bethany and 
    Jerusalem? ___ (fifteen)
-7. Knowing that Jesus was in Jerusalen before visiting Mary, Martha and 
-   Lazarus, in what town did Mary, Martha and Lazarus lived? ___ (Bethany)
+7. Knowing that Jesus was in Jerusalem before visiting Mary, Martha and 
+   Lazarus, in what town did Mary, Martha and Lazarus live? ___ (Bethany)
 
 ## Reflection
 
@@ -50,9 +50,10 @@ Lazarus")
   get close first, but He came to us out of love so that we could get 
   close to Him.
 
-## Aplication
+## Application
 
 * How can you apply what this passage teaches to your life?
-* Memorization challenge: _for they all saw him, and were troubled. Jesus 
-  said to her, “I am the resurrection and the life. He who believes in me 
-  will still live, even if he dies._ John 11:25
+* Memorization challenge: _Jesus said to her, “I am the resurrection 
+  and the life. He who believes in me will still live, even if he 
+  dies._ John 11:25
+
