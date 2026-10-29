@@ -1,6 +1,6 @@
 [submodule "apps/web/app/api"]
 	path = apps/web/app/api
-	url = https://gitlab.com/vtamara/learn.tg-api.git
+	url = git@gitlab.com:vtamara/learn.tg-api.git
 [submodule "resources/en/gdcluster"]
 	path = resources/en/gdcluster
 	url = git@gitlab.com:vtamara/gdcluster.git
