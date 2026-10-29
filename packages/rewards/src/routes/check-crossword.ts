@@ -35,6 +35,7 @@ import { IS_PRODUCTION } from '../lib/config.js'
 import { mintCourseCredential } from '../lib/credentials.js'
 import { canMintPublicly, coursePrivacyFlags } from '../lib/course-privacy.js'
 import { answersForPlacements, guideAnswersFromDisk } from '../lib/guide-answers.js'
+import { normalizeAnswer } from '../lib/normalize-answer.js'
 import { paidToOtherWallet, recordedScholarshipTokens, recordMissingScholarshipRows } from '../lib/scholarship-records.js'
 import { getActiveVault, type VaultVersion } from '../lib/deployments.js'
 
@@ -74,15 +75,6 @@ async function remainingCooldownText(
 }
 
 export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
-
-  const removeAccents = (s: string) =>
-    s
-      .replace(/á/gi, 'A')
-      .replace(/é/gi, 'E')
-      .replace(/í/gi, 'I')
-      .replace(/ó/gi, 'O')
-      .replace(/ú/gi, 'U')
-      .replace(/ü/gi, 'U')
 
   try {
     const mistakesInCW: number[] = []
@@ -227,11 +219,10 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         if (
           nrow >= grid.length ||
           ncol >= grid[nrow].length ||
-          removeAccents(grid[nrow][ncol].userInput.toUpperCase()) !=
-            removeAccents(word[j].toUpperCase())
+          normalizeAnswer(grid[nrow][ncol].userInput) != normalizeAnswer(word[j])
         ) {
           console.log(
-            `** Reviewing answer, problem in word ${i + 1} in position ${j}, received ${removeAccents(grid[nrow][ncol].userInput.toUpperCase())} but expected ${removeAccents(word[j].toUpperCase())}`,
+            `** Reviewing answer, problem in word ${i + 1} in position ${j}, received ${normalizeAnswer(grid[nrow][ncol].userInput)} but expected ${normalizeAnswer(word[j])}`,
           )
           if (!mistakesInCW.includes(i + 1)) {
             mistakesInCW.push(i + 1)

@@ -22,7 +22,10 @@ Rules for writing course guides (content in `resources/{lang}/{course}/`).
   3-5, not a heavy burden).
 - Each question ends with a blank `___` followed by the expected answer in
   parentheses: `(answer)`. Answers are case-insensitive and accent-insensitive
-  — the system normalizes both before comparison.
+  — the system normalizes both before comparison (`packages/rewards/src/lib/
+  normalize-answer.ts`): `pais` matches `país` and `ensena` matches `enseña`. Write the
+  answer with its correct spelling; the learner may type it without the accent or the
+  ñ.
 - The answer in parentheses is what the crossword system uses to validate.
 - **The parenthesis is also the offline contract** (R-#256): when a learner solves a
   downloaded crossword and submits it after reconnecting, the server derives the
