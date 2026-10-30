@@ -1,7 +1,7 @@
 
 # 1. Voluntary audit from KupiaSec
 
-We received the following email:
+We received the following email from sales@kupia.io
 
 Hi Vladimir,
 
@@ -63,22 +63,23 @@ what was reported and the crypto available in the contract.
 
 To correct the problem we have:
 
-1. Started the version 6 of the contract solving the accounting practice
-and with a policy to retire a vault
+1. Started the version 6 of the contract solving the accounting problems
+   and including a policy to retire a vault.
 2. Adjusted to 0 the value reported in the retired course 106
 
+With this the difference between the crypto available and the sum of what 
+is reported is less than 0.05 USDT that we guess could be due to 
+differences in rounding.
 
-With this the difference between the reporte crypto available and
-the sum of what is reported is less than 0.05 USDT that we think could
-be due to differences in rounding.
+To acknowledge you, we have just created a document:
+https://github.com/pasosdeJesus/learn.tg/blob/main/audit/KupiaSec.md
 
-learn.tg is far from being economically profitable, currently it is more
-a commitment from me and my experience of God. Unfortunately we don't have 
-the resources that a full audit form you deserves. We have just created
-a document to give you credit for you report at 
-
-If you want to do a partial audit for a small stipend (around US$50), we
-will try to raise that amount for you.
+As you can see at https://learn.tg/en/transparency our economy is tiny,
+learn.tg is far from being economically profitable, currently it is 
+a commitment from me and my experience with God. Unfortunately we don't
+count with the resources for a full audit from you. However if you want
+to do a partial audit for a tiny stipend (let's say 50 USDT), we will
+do our effort to raise that for you.
 
 
 Blessings
