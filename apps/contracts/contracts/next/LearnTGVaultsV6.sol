@@ -44,6 +44,10 @@ contract LearnTGVaultsV6 is ReentrancyGuard {
         uint256 amountPerGuideUsdt;
         uint256 amountPerGuideSlearn;
         bool exists;
+        // Once retired a course cannot take funds, pay or be repriced: the only
+        // operations left are retireCourse (to sweep whatever it still holds)
+        // and the emergency withdrawals.
+        bool retired;
     }
 
     mapping(uint256 => Vault) public vaults;
@@ -172,7 +176,8 @@ contract LearnTGVaultsV6 is ReentrancyGuard {
             balanceSlearn: 0,
             amountPerGuideUsdt: amountPerGuideUsdt,
             amountPerGuideSlearn: amountPerGuideSlearn,
-            exists: true
+            exists: true,
+            retired: false
         });
         emit VaultCreated(courseId, amountPerGuideUsdt, amountPerGuideSlearn);
     }
@@ -186,6 +191,7 @@ contract LearnTGVaultsV6 is ReentrancyGuard {
     function recordCourseFunds(uint256 courseId, uint256 usdtAmount, uint256 slearnAmount)
         external vaultExists(courseId) onlySlearnContract
     {
+        require(!vaults[courseId].retired, "Course is retired");
         vaults[courseId].balanceUsdt += usdtAmount;
         vaults[courseId].balanceSlearn += slearnAmount;
         totalRecordedUsdt += usdtAmount;
@@ -216,6 +222,7 @@ contract LearnTGVaultsV6 is ReentrancyGuard {
     ) external onlyOwner vaultExists(courseId) nonReentrant {
         require(courseId > 0 && guideId > 0 && student != address(0), "Invalid params");
         require(profileScore >= 50 && profileScore <= 100, "Score 50-100");
+        require(!vaults[courseId].retired, "Course is retired");
         require(!accountingBroken, "Accounting broken: reconcile first");
         require(studentCanSubmit(courseId, student), "In cooldown");
 
@@ -345,6 +352,7 @@ contract LearnTGVaultsV6 is ReentrancyGuard {
     function setVaultBalance(uint256 courseId, uint256 balanceUsdt, uint256 balanceSlearn)
         external onlyOwner vaultExists(courseId)
     {
+        require(!vaults[courseId].retired, "Course is retired: use retireCourse");
         Vault storage vault = vaults[courseId];
         totalRecordedUsdt = totalRecordedUsdt - vault.balanceUsdt + balanceUsdt;
         totalRecordedSlearn = totalRecordedSlearn - vault.balanceSlearn + balanceSlearn;
@@ -390,6 +398,7 @@ contract LearnTGVaultsV6 is ReentrancyGuard {
         vault.balanceSlearn = 0;
         vault.amountPerGuideUsdt = 0;
         vault.amountPerGuideSlearn = 0;
+        vault.retired = true;
 
         if (sentUsdt > 0) {
             require(usdtToken.transfer(owner, sentUsdt), "USDT transfer failed");
@@ -411,6 +420,7 @@ contract LearnTGVaultsV6 is ReentrancyGuard {
     function setAmountPerGuide(uint256 courseId, uint256 amountUsdt, uint256 amountSlearn)
         external onlyOwner vaultExists(courseId)
     {
+        require(!vaults[courseId].retired, "Course is retired");
         vaults[courseId].amountPerGuideUsdt = amountUsdt;
         vaults[courseId].amountPerGuideSlearn = amountSlearn;
         emit AmountPerGuideSet(courseId, amountUsdt, amountSlearn);

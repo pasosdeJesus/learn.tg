@@ -142,34 +142,50 @@ describe('canPurchaseGDCourse', () => {
 })
 
 describe('canPurchasePremiumCourse (any paid course)', () => {
+  // First query of the helper: the course's wallet flags.
+  const offeredCourse = { sinBilletera: true, conBilletera: false }
+
   it('denies a premium purchase without a verified worship city', async () => {
-    const db = mockDbSeq([userRow({ verified_city_id: null, verified_place_of_worship_location: null })])
+    const db = mockDbSeq([offeredCourse, userRow({ verified_city_id: null, verified_place_of_worship_location: null })])
     const result = await canPurchasePremiumCourse(db, 42, 5) // non-GD premium
     expect(result.access).toBe(false)
     expect(result.reason).toBe('verified_city_required')
   })
 
   it('allows a premium purchase with a numeric verified city', async () => {
-    const db = mockDbSeq([userRow({ verified_city_id: 47231, verified_place_of_worship_location: null })])
+    const db = mockDbSeq([offeredCourse, userRow({ verified_city_id: 47231, verified_place_of_worship_location: null })])
     const result = await canPurchasePremiumCourse(db, 42, 5)
     expect(result).toEqual({ access: true })
   })
 
   it('allows a premium purchase with a text verified worship location', async () => {
-    const db = mockDbSeq([userRow({ verified_city_id: null, verified_place_of_worship_location: 'Freetown' })])
+    const db = mockDbSeq([offeredCourse, userRow({ verified_city_id: null, verified_place_of_worship_location: 'Freetown' })])
     const result = await canPurchasePremiumCourse(db, 42, 5)
     expect(result).toEqual({ access: true })
   })
 
   it('rejects a user without any profile row', async () => {
-    const db = mockDbSeq([null])
+    const db = mockDbSeq([offeredCourse, null])
     const result = await canPurchasePremiumCourse(db, 42, 5)
     expect(result.access).toBe(false)
   })
 
+  it('rejects a course that is no longer offered (both wallet flags false)', async () => {
+    // This is how the retired course 106 is hidden from the catalog.
+    const db = mockDbSeq([{ sinBilletera: false, conBilletera: false }, userRow()])
+    const result = await canPurchasePremiumCourse(db, 42, 106)
+    expect(result).toEqual({ access: false, reason: 'course_not_offered' })
+  })
+
+  it('rejects an unknown course', async () => {
+    const db = mockDbSeq([null])
+    const result = await canPurchasePremiumCourse(db, 42, 999)
+    expect(result).toEqual({ access: false, reason: 'course_not_found' })
+  })
+
   it('applies the GD type 1 gates for GD courses', async () => {
     // GD course id=10; non-Christian → gd_for_christians, not the general gate
-    const db = mockDbSeq([userRow({ religion_id: 3 })])
+    const db = mockDbSeq([offeredCourse, userRow({ religion_id: 3 })])
     const result = await canPurchasePremiumCourse(db, 42, 10)
     expect(result.access).toBe(false)
     expect(result.reason).toBe('gd_for_christians')

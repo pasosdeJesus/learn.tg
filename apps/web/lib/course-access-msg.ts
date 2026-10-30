@@ -27,6 +27,14 @@ const MESSAGES: Record<string, [en: string, es: string]> = {
     'This course is not available for your profile yet.',
     'Este curso aún no está disponible para tu perfil.',
   ],
+  course_not_offered: [
+    'This course is no longer offered.',
+    'Este curso ya no se ofrece.',
+  ],
+  course_not_found: [
+    'Course not found.',
+    'Curso no encontrado.',
+  ],
   auth_required: [
     'Authentication required for premium course',
     'Se requiere autenticación para acceder al curso premium',

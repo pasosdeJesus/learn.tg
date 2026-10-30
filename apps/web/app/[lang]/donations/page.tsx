@@ -6,7 +6,8 @@
 // (público, sin datos personales). Soporta enlaces directos con filtros:
 // /{lang}/donations?type=course&courseId=3, ?type=country&countryCode=SL,
 // ?type=cluster&clusterWallet=0x...
-// Las campañas no están aquí: su detalle vive en /{lang}/donations/{slug}.
+// Las campañas no se listan aquí: preceden a learn.tg (que solo las difunde) y
+// su detalle vive en /{lang}/donations/{slug}.
 
 import { use, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -85,7 +86,9 @@ export default function DonationsExplorerPage({ params }: { params: Promise<{ la
       const res = await fetch(`/api/donations?${query()}`, { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
-      setDonations(json.donations || [])
+      // The campaign predates learn.tg: this explorer is for the platform's own
+      // vaults and funds, and campaign movements have their own page.
+      setDonations((json.donations || []).filter((d: Donation) => d.type !== 'campaign'))
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {

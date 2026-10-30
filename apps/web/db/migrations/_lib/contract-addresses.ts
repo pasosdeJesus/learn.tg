@@ -47,3 +47,7 @@ export function getV4Address(): `0x${string}` {
 export function getV5Address(): `0x${string}` {
   return vaultAddress('V5', 'NEXT_PUBLIC_DEPLOYED_AT_V5')
 }
+
+export function getV6Address(): `0x${string}` {
+  return vaultAddress('V6', 'NEXT_PUBLIC_DEPLOYED_AT_V6')
+}

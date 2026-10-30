@@ -106,6 +106,10 @@ const VAULT_ABI = [
     outputs: [{ type: 'uint256' }, { type: 'uint256' }, { type: 'uint256' }, { type: 'uint256' }, { type: 'bool' }],
   },
   { name: 'slearnToken', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'address' }] },
+]
+
+// V5 and V6 differ in the Vault struct: V6 appends `retired`.
+const VAULTS_ABI_V5 = [
   {
     name: 'vaults', type: 'function', stateMutability: 'view', inputs: [{ type: 'uint256' }],
     outputs: [
@@ -115,6 +119,21 @@ const VAULT_ABI = [
       { name: 'amountPerGuideUsdt', type: 'uint256' },
       { name: 'amountPerGuideSlearn', type: 'uint256' },
       { name: 'exists', type: 'bool' },
+    ],
+  },
+]
+
+const VAULTS_ABI_V6 = [
+  {
+    name: 'vaults', type: 'function', stateMutability: 'view', inputs: [{ type: 'uint256' }],
+    outputs: [
+      { name: 'courseId', type: 'uint256' },
+      { name: 'balanceUsdt', type: 'uint256' },
+      { name: 'balanceSlearn', type: 'uint256' },
+      { name: 'amountPerGuideUsdt', type: 'uint256' },
+      { name: 'amountPerGuideSlearn', type: 'uint256' },
+      { name: 'exists', type: 'bool' },
+      { name: 'retired', type: 'bool' },
     ],
   },
 ]
@@ -200,10 +219,11 @@ async function main() {
     publicClient.readContract({ address: slearnAddress, abi: ERC20_ABI, functionName: 'decimals' }),
   ])
 
+  const vaultsAbi = version !== null && Number(version) >= 6 ? VAULTS_ABI_V6 : VAULTS_ABI_V5
   const courses = []
   for (let id = 1; id <= args.maxCourseId; id++) {
     const vaultRow = await publicClient.readContract({
-      address: vault.address, abi: VAULT_ABI, functionName: 'vaults', args: [BigInt(id)], blockNumber,
+      address: vault.address, abi: vaultsAbi, functionName: 'vaults', args: [BigInt(id)], blockNumber,
     })
     if (!vaultRow[5]) continue
     courses.push({
@@ -212,6 +232,7 @@ async function main() {
       recordedSlearn: vaultRow[2],
       perGuideUsdt: vaultRow[3],
       perGuideSlearn: vaultRow[4],
+      retired: Boolean(vaultRow[6]),
     })
   }
 
@@ -285,6 +306,7 @@ async function main() {
       recordedSlearn: formatUnits(c.recordedSlearn, Number(slearnDecimals)),
       perGuideUsdt: formatUnits(c.perGuideUsdt, Number(usdtDecimals)),
       perGuideSlearn: formatUnits(c.perGuideSlearn, Number(slearnDecimals)),
+      retired: c.retired,
     })),
     totals: {
       recordedUsdt: formatUnits(recordedUsdt, Number(usdtDecimals)),
@@ -322,7 +344,7 @@ async function main() {
     for (const c of report.courses) {
       console.log(
         `${String(c.courseId).padEnd(7)} ${c.recordedUsdt.padStart(20)} ${c.recordedSlearn.padStart(21)}     ` +
-        `${c.perGuideUsdt}/${c.perGuideSlearn}`,
+        `${c.perGuideUsdt}/${c.perGuideSlearn}${c.retired ? '  (retirado)' : ''}`,
       )
     }
     console.log('')

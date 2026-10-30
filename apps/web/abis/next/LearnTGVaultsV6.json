@@ -1047,6 +1047,11 @@
         "internalType": "bool",
         "name": "exists",
         "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "retired",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",

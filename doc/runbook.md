@@ -70,6 +70,10 @@ bin/m eng:opwallet:call --name admin --to <SLEARN> --function "getMissionalCours
 
 # MIGRATION RULE: after any setVaultBalance (V4→V5 style migrations) or
 # emergencyWithdraw*, run the invariant check below and require it to pass.
+# NEVER re-run a migration that restores balances: setVaultBalance re-applies the
+# snapshot and rolls back whatever was recorded or paid in between. The V3→V4
+# migration was run twice on 2026-06-09/10 and that is where the 0.040910 USDT
+# that the V5 setup inherited came from (doc/LearnTGVaultsV6.md).
 # It exists because the books can claim more than the vault holds: course 106 kept
 # 8 USDT of bookkeeping from V2 to V5 after an emergency withdrawal took the tokens
 # (doc/LearnTGVaultsV6.md, R-#221).

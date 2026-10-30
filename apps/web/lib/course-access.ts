@@ -85,6 +85,24 @@ export async function canPurchasePremiumCourse(
   userId: number,
   courseId: number,
 ): Promise<AccessResult> {
+  // A course with both wallet flags in false is how a retired course is hidden
+  // from the catalog (`/api/course-catalog` filters on them), so it must not
+  // take a payment either: the USDT would land in the vault of a course nobody
+  // can take (and V6 would revert the settlement).
+  const course = await db
+    .selectFrom('cor1440_gen_proyectofinanciero')
+    .select(['sinBilletera', 'conBilletera'])
+    .where('id', '=', courseId)
+    .executeTakeFirst()
+
+  if (!course) {
+    return { access: false, reason: 'course_not_found' }
+  }
+
+  if (!course.sinBilletera && !course.conBilletera) {
+    return { access: false, reason: 'course_not_offered' }
+  }
+
   const user = await db
     .selectFrom('usuario')
     .select(['religion_id', 'pais_id', 'verified_city_id', 'verified_place_of_worship_location', 'position_israel_gaza'])

@@ -90,7 +90,7 @@ describe("LearnTGVaultsV6 accounting", function () {
   });
 
   describe("retireCourse", function () {
-    it("zeroes the books of a retired course and stops paying it", async function () {
+    it("zeroes the books, marks the course retired and refuses to pay it", async function () {
       const { vault, usdt, student } = await loadFixture(oneCourseFixture);
 
       await expect(vault.retireCourse(COURSE_ID, false)).to.emit(vault, "CourseRetired");
@@ -100,6 +100,7 @@ describe("LearnTGVaultsV6 accounting", function () {
       expect(retired.amountPerGuideUsdt).to.equal(0n);
       expect(retired.amountPerGuideSlearn).to.equal(0n);
       expect(retired.exists).to.equal(true);
+      expect(retired.retired).to.equal(true);
       expect(await vault.totalRecordedUsdt()).to.equal(0n);
       expect(await vault.totalRecordedSlearn()).to.equal(0n);
 
@@ -109,8 +110,24 @@ describe("LearnTGVaultsV6 accounting", function () {
           COURSE_ID, GUIDE_ID, student.address, true, PROFILE_SCORE,
           ZERO_ADDR, 0, 0, ZERO_ADDR, 0, 0
         )
-      ).to.emit(vault, "ScholarshipInsufficientFunds");
+      ).to.be.revertedWith("Course is retired");
       expect(await usdt.balanceOf(student.address)).to.equal(before);
+    });
+
+    it("does not let a retired course take funds or be repriced", async function () {
+      const { vault, slearnContract } = await loadFixture(oneCourseFixture);
+      await vault.setSlearnContractRole(slearnContract.address, true);
+      await vault.retireCourse(COURSE_ID, false);
+
+      await expect(
+        vault.connect(slearnContract).recordCourseFunds(COURSE_ID, 1n, 0n)
+      ).to.be.revertedWith("Course is retired");
+      await expect(
+        vault.setAmountPerGuide(COURSE_ID, AMOUNT_PER_GUIDE_USDT, AMOUNT_PER_GUIDE_SLEARN)
+      ).to.be.revertedWith("Course is retired");
+      await expect(
+        vault.setVaultBalance(COURSE_ID, 0n, 0n)
+      ).to.be.revertedWith("Course is retired: use retireCourse");
     });
 
     it("sends the backed balance to the owner when asked", async function () {

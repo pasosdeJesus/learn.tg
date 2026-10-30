@@ -5687,7 +5687,7 @@ CREATE TABLE public.reputationevidence (
     resolved_at timestamp without time zone,
     resolved_by integer,
     resolution_notes text,
-    CONSTRAINT reputationevidence_reason_check CHECK (((evidence_reason)::text = ANY ((ARRAY['dishonesty'::character varying, 'sexual_abuse'::character varying, 'zionism'::character varying, 'other'::character varying])::text[])))
+    CONSTRAINT reputationevidence_reason_check CHECK (((evidence_reason)::text = ANY (ARRAY[('dishonesty'::character varying)::text, ('sexual_abuse'::character varying)::text, ('zionism'::character varying)::text, ('other'::character varying)::text])))
 );
 
 
