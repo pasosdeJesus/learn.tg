@@ -1,0 +1,6 @@
+#!/bin/sh
+DIR=$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)
+. "$DIR/../.env" 2>/dev/null || true
+cd "$DIR" || exit 1
+echo "Deploying LearnTGVaultsV6 to ${NEXT_PUBLIC_NETWORK:-celoSepolia}..."
+node_modules/.bin/hardhat run scripts/next/deployLearnTGVaultsV6.ts --network ${NEXT_PUBLIC_NETWORK:-celoSepolia}
