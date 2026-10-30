@@ -1,11 +1,12 @@
 'use client'
 
 // https://github.com/pasosdeJesus/learn.tg/issues/223 — explorador público de donaciones: detalle de las donaciones a
-// bóvedas de curso, fondos de clúster/país y campañas, con el comentario del
-// donante (procedencia de los fondos). Datos del ledger vía GET /api/donations
+// bóvedas de curso y fondos de clúster/país, con el comentario del donante
+// (procedencia de los fondos). Datos del ledger vía GET /api/donations
 // (público, sin datos personales). Soporta enlaces directos con filtros:
 // /{lang}/donations?type=course&courseId=3, ?type=country&countryCode=SL,
-// ?type=cluster&clusterWallet=0x..., ?type=campaign&campaign=lensenia.
+// ?type=cluster&clusterWallet=0x...
+// Las campañas no están aquí: su detalle vive en /{lang}/donations/{slug}.
 
 import { use, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -23,7 +24,7 @@ interface Donation {
   comment: string | null
 }
 
-const FILTERS = ['all', 'course', 'cluster', 'country', 'campaign'] as const
+const FILTERS = ['all', 'course', 'cluster', 'country'] as const
 type Filter = typeof FILTERS[number]
 
 const explorerFor = (hash: string) => {
@@ -45,8 +46,8 @@ export default function DonationsExplorerPage({ params }: { params: Promise<{ la
   const t = useMemo(() => createComponentT(lang, {
     en: {
       title: 'Donations',
-      subtitle: 'Detail of donations to course vaults, cluster/country funds and campaigns, including the donor comment.',
-      filterAll: 'All', filterCourse: 'Courses', filterCluster: 'Clusters', filterCountry: 'Countries', filterCampaign: 'Campaigns',
+      subtitle: 'Detail of donations to course vaults and cluster/country funds, including the donor comment.',
+      filterAll: 'All', filterCourse: 'Courses', filterCluster: 'Clusters', filterCountry: 'Countries',
       date: 'Date', destination: 'Destination', donor: 'Donor', amount: 'Amount', comment: 'Comment', tx: 'Tx',
       none: 'No donations found for this filter.',
       loadFailed: 'Could not load donations. Try again later.',
@@ -56,8 +57,8 @@ export default function DonationsExplorerPage({ params }: { params: Promise<{ la
     },
     es: {
       title: 'Donaciones',
-      subtitle: 'Detalle de las donaciones a bóvedas de curso, fondos de clúster/país y campañas, incluido el comentario del donante.',
-      filterAll: 'Todas', filterCourse: 'Cursos', filterCluster: 'Clústeres', filterCountry: 'Países', filterCampaign: 'Campañas',
+      subtitle: 'Detalle de las donaciones a bóvedas de curso y fondos de clúster/país, incluido el comentario del donante.',
+      filterAll: 'Todas', filterCourse: 'Cursos', filterCluster: 'Clústeres', filterCountry: 'Países',
       date: 'Fecha', destination: 'Destino', donor: 'Donante', amount: 'Monto', comment: 'Comentario', tx: 'Tx',
       none: 'No hay donaciones para este filtro.',
       loadFailed: 'No se pudieron cargar las donaciones. Intenta más tarde.',
@@ -73,7 +74,6 @@ export default function DonationsExplorerPage({ params }: { params: Promise<{ la
     const courseId = sp.get('courseId'); if (courseId) parts.set('courseId', courseId)
     const clusterWallet = sp.get('clusterWallet'); if (clusterWallet) parts.set('clusterWallet', clusterWallet)
     const countryCode = sp.get('countryCode'); if (countryCode) parts.set('countryCode', countryCode)
-    const campaign = sp.get('campaign'); if (campaign) parts.set('campaign', campaign)
     parts.set('limit', '100')
     return parts.toString()
   }, [filter, sp])
@@ -96,7 +96,7 @@ export default function DonationsExplorerPage({ params }: { params: Promise<{ la
   useEffect(() => { load() }, [load])
 
   const filterLabel = (f: Filter) => t(
-    ({ all: 'filterAll', course: 'filterCourse', cluster: 'filterCluster', country: 'filterCountry', campaign: 'filterCampaign' } as Record<Filter, string>)[f]
+    ({ all: 'filterAll', course: 'filterCourse', cluster: 'filterCluster', country: 'filterCountry' } as Record<Filter, string>)[f]
   )
 
   return (
