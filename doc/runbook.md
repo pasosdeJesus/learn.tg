@@ -44,6 +44,14 @@ bin/m eng:opwallet:send --name admin --to <VAULT> --function "emergencyWithdrawU
 bin/m eng:opwallet:send --name admin --to <VAULT> --function "emergencyWithdrawSLEARN(uint256)" --args "<amount>"
 ```
 
+`emergencyWithdraw*` transfers the tokens and leaves every `vaults[id].balance*` untouched.
+That is how every migration empties the old vault (the same amount is sent to the new one
+seconds later), so the tokens stay in the fund: what stays behind is the bookkeeping. On
+2026-06-02 V2 was emptied with `emergencyWithdrawUsdt(8248137)` (block 68 480 390), the
+8.248137 went straight into V3, and the retired course 106 kept its 8 USDT of bookkeeping up
+to V5 (R-#221). Always run the §4 invariant check afterwards, and zero the courses that no
+longer exist (or set their balance to what the new vault actually received).
+
 ## 4. Routine
 
 ```bash
@@ -59,6 +67,24 @@ bin/m eng:opwallet:send --name minter --to <SLEARN> --function "addMissionalCour
 bin/m eng:opwallet:send --name minter --to <SLEARN> --function "removeMissionalCourse(uint256)" --args "<id>"
 # Verify no orphan missional courses (must have a vault):
 bin/m eng:opwallet:call --name admin --to <SLEARN> --function "getMissionalCourses()"
+
+# MIGRATION RULE: after any setVaultBalance (V4→V5 style migrations) or
+# emergencyWithdraw*, run the invariant check below and require it to pass.
+# It exists because the books can claim more than the vault holds: course 106 kept
+# 8 USDT of bookkeeping from V2 to V5 after an emergency withdrawal took the tokens
+# (doc/LearnTGVaultsV6.md, R-#221).
+
+# Accounting invariant of the scholarship vault (read-only; exit 1 on a gap).
+# `payScholarship` only compares a course's recorded balance with the contract's whole
+# balance, so if the recorded per-course balances add up to more than the tokens held the
+# last students in line are paid partially or not at all (R-#221).
+cd apps/web && make vault-check ARGS="--network celo --json"
+#   --vault <addr>          check another vault (default: deployments/LearnTGVaults/V5/<net>.json
+#                           or NEXT_PUBLIC_DEPLOYED_AT_V5)
+#   --max-course-id <n>     last course id to scan (default 120)
+# It also fails when SLEARN.learnTGVault and learnTGVaultSLEARN differ: the USDT half goes
+# to the first and the SLEARN half is minted to the second, while both amounts are recorded
+# on the first.
 
 # Rate
 bin/m eng:opwallet:send --name admin --to <SLEARN> --function "setUsdtToSlearnRate(uint256)" --args "<rate>"

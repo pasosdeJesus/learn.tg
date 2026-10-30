@@ -9,6 +9,7 @@ Deployed on Celo.
 |---|---|---|
 | **SLEARN** | `SLEARN.sol` | ERC-20 utility token, mixed payments, 3-tier reserve backing |
 | **LearnTGVaultsV5** | `LearnTGVaultsV5.sol` | Active — scholarship vaults (USDT + SLEARN), flexible split (referrer + learnTg), `guideId` = `actividadpf_id` |
+| **LearnTGVaultsV6** | `next/LearnTGVaultsV6.sol` | Next, **not deployed** — same interface as V5 plus self-enforcing accounting: `totalRecordedUsdt/Slearn` never above the tokens held, `retireCourse`, float-only emergency withdrawals, `forceEmergencyWithdraw*` + `accountingBroken`, `accountingState()` (`doc/LearnTGVaultsV6.md`, R-#221) |
 | **LearnTGVaultsV4** | `LearnTGVaultsV4.sol` | Legacy V4 — partial payments, being migrated to V5 |
 | **CeloUbi** | `CeloUbi.sol` | Universal Basic Income claims in CELO |
 | **ClusterFunds** | `ClusterFunds.sol` | Cluster/country fund management — USDT + SLEARN donations, GD contact release |
@@ -48,6 +49,7 @@ All commands run from `apps/contracts/`. The network is determined by `NEXT_PUBL
 |---|---|
 | `bin/deploySLEARN` | Deploy SLEARN token |
 | `bin/deployLearnTGVaultsV5` | Deploy V5 vaults |
+| `bin/next/deployLearnTGVaultsV6` | Deploy V6 vaults (accounting guard; not deployed yet) |
 | `bin/deployLearnTGVaultsV4` | Deploy V4 vaults (legacy) |
 | `bin/deployMockUSDT` | Deploy MockUSDT (testnet only) |
 | `bin/deployClusterFunds` | Deploy ClusterFunds |

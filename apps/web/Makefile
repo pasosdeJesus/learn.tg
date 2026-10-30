@@ -146,6 +146,15 @@ eng-check:
 	./bin/m eng:check --runtime
 	cd ../.. && apps/web/bin/m eng:check --runtime --no-db
 
+# Invariante contable de la bóveda de becas (LearnTGVaultsV5): la suma de los saldos
+# registrados por curso no debe superar los tokens que el contrato tiene. `payScholarship`
+# sólo compara el saldo del curso contra el total, así que un hueco deja sin pagar a las
+# últimas becas de la cola (R-#221). Sólo lecturas; sale con 1 si falla.
+#   make vault-check                                  # red de NEXT_PUBLIC_NETWORK
+#   make vault-check ARGS="--network celo --json"     # producción
+vault-check:
+	node bin/check-vault-balances.mjs $(ARGS)
+
 # R-#285: los manifiestos de motor (m-engine.generated.ts) cuadran con sus fuentes y
 # su intención, y ningún motor importa lo que no declara. Sin base de datos.
 # Correr desde la raíz del repo: `m` descubre los motores subiendo hasta `packages/`

@@ -63,14 +63,22 @@ try {
     const contractName = filename.replace('.json', '')
     const dirName = path.basename(path.dirname(filepath))
     if (!abis[contractName] || contractName === dirName) {
-      abis[contractName] = artifact.abi
+      abis[contractName] = { abi: artifact.abi, sourceName: artifact.sourceName || '' }
     }
   })
 
-  for (const [contractName, abi] of Object.entries(abis)) {
-    const abiPath = path.join(NEXTJS_ABI_PATH, `${contractName}.json`)
-    fs.writeFileSync(abiPath, JSON.stringify(abi, null, 2))
-    console.log(`  Copied ABI for ${contractName}`)
+  for (const [contractName, entry] of Object.entries(abis)) {
+    // Contracts under contracts/next/ are not deployed yet: their ABI lives in
+    // abis/next/ so the app cannot mistake it for the production one.
+    const isNext = entry.sourceName.includes('/next/')
+    const destDir = isNext ? path.join(NEXTJS_ABI_PATH, 'next') : NEXTJS_ABI_PATH
+    fs.mkdirSync(destDir, { recursive: true })
+    const abiPath = path.join(destDir, `${contractName}.json`)
+    fs.writeFileSync(abiPath, JSON.stringify(entry.abi, null, 2))
+    // Drop a stale flat copy left by an earlier sync.
+    const flatPath = path.join(NEXTJS_ABI_PATH, `${contractName}.json`)
+    if (isNext && fs.existsSync(flatPath)) fs.unlinkSync(flatPath)
+    console.log(`  Copied ABI for ${contractName}${isNext ? ' (next/)' : ''}`)
   }
 
   // 2. Sync deployment addresses to .env

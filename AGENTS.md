@@ -60,8 +60,9 @@ Jesus is God incarnated, the Truth and the Logos.
 27. **[doc/usuario-model.md]**: the `usuario` model and the base model (R-#260 Part B) — what is base (msip 2.2) vs learn.tg's extension, the base version in use, the three restrictive drifts aligned on 2026-10-10 and how the conformance is checked (`make eng-check`, `make test-db`).
 28. **[doc/auth-wallet-invariants.md]**: the short agent checklist for auth and wallets — the session cookie as the only credential, `walletAddress` as an untrusted hint, `session_epoch`, the account identity with N wallets, link/invite/accept/handover, the vendored in-app wallet (`generated-wallet` 0.1.2), the endpoint map and the troubleshooting table. Read it before touching anything that authenticates or pays.
 29. **`resources/{en,es}/gdcluster/guide6.md`**: the presentation to Global Disciples lives in the course itself — the five conditions (active cluster with 3+ churches, every lead pastor finished the 6 guides, profile > 90, one invited pastor and one member of the same church, cluster wallet set) and the initiator's request. pdJ's side (on-screen email proposal, sent/response fields, the answer the initiator sees) is in [doc/admin-guide.md] and in `packages/gdcluster` (no separate doc).
-30. Read the structure and key files of this project
-31. **[.crushrules]** (repository root): **local and gitignored — never commit it.** The
+30. **[doc/LearnTGVaultsV6.md]**: what the scholarship vault V6 adds (written in `apps/contracts/contracts/next/LearnTGVaultsV6.sol` with its tests in `apps/contracts/test/next/`, not deployed) — the global `totalRecordedUsdt/Slearn` guard that `setVaultBalance`, `recordCourseFunds`, `payScholarship`, `retireCourse` and `emergencyWithdraw*` respect, the `accountingState()` view, the test cases and the migration rule. Read it before a vault migration or an emergency withdrawal, and run `make vault-check` afterwards.
+31. Read the structure and key files of this project
+32. **[.crushrules]** (repository root): **local and gitignored — never commit it.** The
     private domain context and the only place where the neutral vocabulary of the
     sensitive features is explained (`contenido_sensible`/category B,
     `tipo_region`/region 1-2). Consult it before renaming, adding or documenting those
