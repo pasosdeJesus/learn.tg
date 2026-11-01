@@ -1893,6 +1893,18 @@ CREATE TABLE public.cluster_fund_vote (
 
 
 --
+-- Name: cluster_gd_approval; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cluster_gd_approval (
+    clustergd_id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    data_hash character varying(64) NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
 -- Name: cluster_invitation; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -6777,6 +6789,14 @@ ALTER TABLE ONLY public.cluster_fund_vote
 
 
 --
+-- Name: cluster_gd_approval cluster_gd_approval_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_gd_approval
+    ADD CONSTRAINT cluster_gd_approval_pkey PRIMARY KEY (clustergd_id, usuario_id);
+
+
+--
 -- Name: cluster_invitation cluster_invitation_cluster_pastor_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7869,6 +7889,13 @@ CREATE INDEX cluster_fund_vote_cluster_idx ON public.cluster_fund_vote USING btr
 
 
 --
+-- Name: cluster_gd_approval_cluster_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX cluster_gd_approval_cluster_idx ON public.cluster_gd_approval USING btree (clustergd_id);
+
+
+--
 -- Name: cor1440_gen_actividad_id_actividadpf_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8663,6 +8690,22 @@ ALTER TABLE ONLY public.cluster_fund_vote
 
 ALTER TABLE ONLY public.cluster_fund_vote
     ADD CONSTRAINT cluster_fund_vote_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
+
+
+--
+-- Name: cluster_gd_approval cluster_gd_approval_clustergd_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_gd_approval
+    ADD CONSTRAINT cluster_gd_approval_clustergd_id_fkey FOREIGN KEY (clustergd_id) REFERENCES public.clustergd(id);
+
+
+--
+-- Name: cluster_gd_approval cluster_gd_approval_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_gd_approval
+    ADD CONSTRAINT cluster_gd_approval_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
 
 
 --

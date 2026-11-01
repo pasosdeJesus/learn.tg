@@ -23,6 +23,8 @@ interface ClusterRow {
   country_name: string | null
   country_code: string | null; church_count: number; wallet: string
   status: string | null
+  gd_status?: string | null
+  fund_released_at?: string | null
 }
 
 interface CountryRow {
@@ -38,6 +40,7 @@ const T = {
     status: 'Status', pending: 'Pending', active: 'Active',
     fundUSDT: 'USDT Fund', fundSLEARN: 'SLEARN Fund',
     noData: 'No data yet.', loading: 'Loading...', donate: 'Donate',
+    presented: 'Presented to GD', inProcess: 'In process with pdJ', released: 'Fund released',
   },
   es: {
     clustersTab: 'Clústeres', countriesTab: 'Países',
@@ -46,8 +49,28 @@ const T = {
     status: 'Estado', pending: 'Pendiente', active: 'Activo',
     fundUSDT: 'Fondo USDT', fundSLEARN: 'Fondo SLEARN',
     noData: 'Aún no hay datos.', loading: 'Cargando...', donate: 'Donar',
+    presented: 'Presentado a GD', inProcess: 'En proceso con pdJ', released: 'Fondo liberado',
   },
 } as const
+
+const PRESENTED_STATUSES = ['sent', 'answered']
+const IN_PROCESS_STATUSES = ['requested', 'under_review', 'returned', 'approved']
+
+function isPresented(cluster: ClusterRow): boolean {
+  return !!cluster.gd_status && PRESENTED_STATUSES.includes(cluster.gd_status)
+}
+
+/** "Presentado/verificado" en verde; en proceso con pdJ en ámbar; si no, nada. */
+function gdLabel(cluster: ClusterRow, t: (key: keyof typeof T.en) => string): string | null {
+  if (isPresented(cluster)) return cluster.fund_released_at ? t('released') : t('presented')
+  if (cluster.gd_status && IN_PROCESS_STATUSES.includes(cluster.gd_status)) return t('inProcess')
+  return null
+}
+
+/** Los clústeres presentados a GD ya no reciben donaciones desde el ranking. */
+function acceptsDonations(cluster: ClusterRow): boolean {
+  return !isPresented(cluster) && !cluster.fund_released_at
+}
 
 export function RankingClient({ lang, deps }: { lang: string; deps: RankingClientDeps }) {
   const t = (key: keyof typeof T.en) =>
@@ -121,10 +144,15 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
                     {c.country_code ? `${flagEmoji(c.country_code)} ${c.country_name}` : c.country_name || '—'}
                   </td>
                   <td className="px-3 py-2 text-center text-xs">{c.church_count}</td>
-                  <td className="px-3 py-2 text-center text-xs">
+                  <td className="px-3 py-2 text-center text-xs space-y-1">
                     <span className={`inline-block rounded px-2 py-0.5 ${c.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
                       {c.status === 'active' ? t('active') : t('pending')}
                     </span>
+                    {gdLabel(c, t) && (
+                      <span className={`block rounded px-2 py-0.5 ${isPresented(c) ? 'bg-green-600 text-white' : 'bg-amber-100 text-amber-800'}`}>
+                        {gdLabel(c, t)}
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-right text-xs">
                     {findClusterFunds(c.wallet)?.usdt_total.toFixed(2) || '0.00'}
@@ -133,14 +161,18 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
                     {findClusterFunds(c.wallet)?.slearn_total.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-3 py-2 text-center">
-                    <button onClick={() => setDonateTarget({
-                      type: 'cluster-donation',
-                      clusterWallet: c.wallet,
-                      clusterName: c.display_name || c.name,
-                    })}
-                    className="text-xs text-blue-600 hover:underline px-2 py-1 rounded hover:bg-blue-50">
-                      {t('donate')}
-                    </button>
+                    {acceptsDonations(c) ? (
+                      <button onClick={() => setDonateTarget({
+                        type: 'cluster-donation',
+                        clusterWallet: c.wallet,
+                        clusterName: c.display_name || c.name,
+                      })}
+                      className="text-xs text-blue-600 hover:underline px-2 py-1 rounded hover:bg-blue-50">
+                        {t('donate')}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
                   </td>
                 </tr>
               ))}

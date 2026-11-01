@@ -169,6 +169,13 @@ export interface Clustergd {
   updated_at: Generated<Timestamp | null>;
 }
 
+export interface ClusterGdApproval {
+  clustergd_id: number;
+  created_at: Generated<Timestamp>;
+  data_hash: string;
+  usuario_id: number;
+}
+
 export interface ClustergdHistory {
   changed_by: number | null;
   clustergd_id: number;
@@ -1645,6 +1652,7 @@ export interface DB {
   churchactivitycache: Churchactivitycache;
   churchreputation: Churchreputation;
   cluster_fund_vote: ClusterFundVote;
+  cluster_gd_approval: ClusterGdApproval;
   cluster_invitation: ClusterInvitation;
   clustergd: Clustergd;
   clustergd_history: ClustergdHistory;

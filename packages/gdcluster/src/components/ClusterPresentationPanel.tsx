@@ -5,7 +5,8 @@ import { useCallback, useEffect, useState } from 'react'
 // Presupuesto del primer año, oferta del director y retiro del fondo del clúster
 // (https://github.com/pasosdeJesus/learn.tg/issues/161). El motor `gdcluster` expone el
 // estado de la presentación con los datos fijos y las claves de lo que falta; este panel
-// edita esos datos mientras no estén fijos y registra el Withdraw de cada pastor.
+// edita esos datos mientras no estén fijos y recoge la aprobación de cada pastor con la que
+// se solicita la revisión de pdJ (la liberación es automática cuando GD responde).
 //
 // Los PDF se suben a `/api/cluster/[id]/document` (el servidor los guarda fuera de
 // `public/`); el total y los números se envían a `/api/cluster/[id]/budget|director`.
@@ -27,30 +28,16 @@ type Presentation = {
     director_first_year_hours?: number | null
     director_fixed_at?: string | null
   } | null
+  wallet?: string | null
+  can_approve?: boolean
+  approvals?: {
+    pastors: number
+    approved: number
+    all_approved: boolean
+    voters: number[]
+  }
 }
 
-type WithdrawState = {
-  can_vote?: boolean
-  votes: {
-    pastors: number
-    voted: number
-    all_voted: boolean
-    votes: { usuario_id: number; nombre: string | null; created_at: string | null }[]
-  }
-  wallet: string | null
-  gd_status?: string | null
-  armed?: boolean
-  ranking_exited_at: string | null
-  fund_released_at: string | null
-  release: {
-    votes_complete: boolean
-    budget_reached: boolean
-    release_ready: boolean
-    budget: number | null
-    usdt: string | null
-    slearn: string | null
-  }
-}
 
 const LABELS: Record<string, { en: string; es: string }> = {
   budget: { en: 'First-year budget', es: 'Presupuesto del primer año' },
@@ -75,29 +62,16 @@ const LABELS: Record<string, { en: string; es: string }> = {
     es: 'La presentación fue solicitada: estos datos están fijos.',
   },
   viewPdf: { en: 'View PDF', es: 'Ver PDF' },
-  withdraw: { en: 'Withdraw the cluster fund', es: 'Retirar el fondo del clúster' },
-  withdrawHint: {
-    en: 'The withdrawal is total and happens when every pastor has pressed Withdraw; the buttons are enabled when Global Disciples answers. The first one takes the cluster out of the ranking (irreversible), but the 10% of purchases and scholarships keeps arriving until the fund is released.',
-    es: 'El retiro es total y procede cuando todos los pastores han pulsado Retirar; los botones se habilitan cuando Global Disciples responde. El primero saca al clúster del ranking (irreversible), pero el 10% de compras y becas sigue llegando hasta que el fondo se libere.',
+  approvals: { en: 'Pastors approval', es: 'Aprobación de los pastores' },
+  approvalsHint: {
+    en: 'Each pastor presses the button to confirm that they know and approve what will be sent to Global Disciples (first-year budget and director offer) and the cluster wallet. With every approval the initiator can request pdJ review.',
+    es: 'Cada pastor pulsa el botón para confirmar que conoce y aprueba lo que se enviará a Global Disciples (presupuesto del primer año y oferta del director) y la billetera del clúster. Con todas las aprobaciones el iniciador puede pedir la revisión de pdJ.',
   },
-  armedHint: {
-    en: 'The Withdraw buttons are enabled when Global Disciples answers.',
-    es: 'Los botones de Retirar se habilitan cuando Global Disciples responde.',
-  },
-  releasedAt: { en: 'Fund released', es: 'Fondo liberado' },
-  withdrawVotes: { en: '{{0}} of {{1}} pastors have pressed Withdraw', es: '{{0}} de {{1}} pastores han pulsado Withdraw' },
-  withdrawCast: { en: 'Press Withdraw', es: 'Pulsar Withdraw' },
-  withdrawDone: { en: 'Your Withdraw is recorded', es: 'Tu Withdraw quedó registrado' },
-  releasedHint: {
-    en: 'The fund was transferred to the cluster wallet. From now on the 10% of purchases and scholarships of these churches goes to the country fund.',
-    es: 'El fondo se entregó a la billetera del clúster. Desde ahora el 10% de compras y becas de estas iglesias va al fondo del país.',
-  },
-  rankingExit: { en: 'Out of the ranking since', es: 'Fuera del ranking desde' },
-  balance: { en: 'Fund balance', es: 'Saldo del fondo' },
-  missingData: {
-    en: 'To request the presentation the budget and the director offer must be complete:',
-    es: 'Para solicitar la presentación el presupuesto y la oferta del director deben estar completos:',
-  },
+  approvalsCount: { en: '{{0}} of {{1}} pastors approved', es: '{{0}} de {{1}} pastores aprobaron' },
+  approve: { en: 'I know and approve the data and the wallet', es: 'Conozco y apruebo los datos y la billetera' },
+  approvedNotice: { en: 'Your approval is recorded', es: 'Tu aprobación quedó registrada' },
+  approvalsComplete: { en: 'All the pastors approved: the initiator can request the presentation.', es: 'Todos los pastores aprobaron: el iniciador puede solicitar la presentación.' },
+  walletPending: { en: 'The cluster wallet is not set.', es: 'La billetera del clúster no está configurada.' },
   cancel: { en: 'Cancel the request', es: 'Cancelar la solicitud' },
   cancelHint: {
     en: 'You can cancel while pdJ has not reviewed it; the data are unlocked again.',
@@ -139,7 +113,6 @@ export function ClusterPresentationPanel({
   }
 
   const [presentation, setPresentation] = useState<Presentation | null>(null)
-  const [withdraw, setWithdraw] = useState<WithdrawState | null>(null)
   const [budget, setBudget] = useState('')
   const [directorPay, setDirectorPay] = useState('')
   const [directorHours, setDirectorHours] = useState('')
@@ -151,13 +124,9 @@ export function ClusterPresentationPanel({
     if (!address) return
     const query = `?walletAddress=${encodeURIComponent(address)}`
     try {
-      const [presentationRes, withdrawRes] = await Promise.all([
-        fetch(`/api/cluster/${clusterId}/gd-presentation${query}`),
-        fetch(`/api/cluster/${clusterId}/withdraw${query}`),
-      ])
+      const presentationRes = await fetch(`/api/cluster/${clusterId}/gd-presentation${query}`)
       const presentationData = presentationRes.ok ? await presentationRes.json() : null
       setPresentation(presentationData)
-      setWithdraw(withdrawRes.ok ? await withdrawRes.json() : null)
       setBudget(presentationData?.request?.first_year_budget != null ? String(presentationData.request.first_year_budget) : '')
       setDirectorPay(
         presentationData?.request?.director_first_year_pay != null ? String(presentationData.request.director_first_year_pay) : '',
@@ -169,7 +138,6 @@ export function ClusterPresentationPanel({
       )
     } catch {
       setPresentation(null)
-      setWithdraw(null)
     }
   }, [address, clusterId])
 
@@ -229,19 +197,19 @@ export function ClusterPresentationPanel({
     }
   }
 
-  const vote = async () => {
+  const approve = async () => {
     if (!address) return
-    setBusy('withdraw')
+    setBusy('approve')
     setError(null)
     try {
-      const res = await fetch(`/api/cluster/${clusterId}/withdraw`, {
+      const res = await fetch(`/api/cluster/${clusterId}/approval`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress: address }),
       })
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || tr('error'))
-      setWithdraw(await res.json())
-      setNotice(tr('withdrawDone'))
+      setNotice(tr('approvedNotice'))
+      await load()
       onChanged?.()
     } catch (err: any) {
       setError(err.message || tr('error'))
@@ -409,33 +377,23 @@ export function ClusterPresentationPanel({
       )}
 
       <section>
-        <h3 className="text-sm font-semibold text-gray-900">{tr('withdraw')}</h3>
-        <p className="text-xs text-gray-600 mb-2">{tr('withdrawHint')}</p>
-        {withdraw && (
+        <h3 className="text-sm font-semibold text-gray-900">{tr('approvals')}</h3>
+        <p className="text-xs text-gray-600 mb-2">{tr('approvalsHint')}</p>
+        {presentation && (
           <div className="text-xs text-gray-700 space-y-1">
-            <p>{tr('withdrawVotes', String(withdraw.votes.voted), String(withdraw.votes.pastors))}</p>
-            {withdraw.ranking_exited_at && (
-              <p className="text-amber-700">
-                {tr('rankingExit')} {new Date(withdraw.ranking_exited_at).toLocaleDateString(lang)}
-              </p>
+            {!presentation.wallet && <p className="text-amber-700">{tr('walletPending')}</p>}
+            {presentation.approvals && (
+              <p>{tr('approvalsCount', String(presentation.approvals.approved), String(presentation.approvals.pastors))}</p>
             )}
-            {withdraw.release.usdt !== null && (
-              <p>{tr('balance')}: {withdraw.release.usdt} USDT / {withdraw.release.slearn} SLEARN</p>
-            )}
-            {withdraw.fund_released_at ? (
-              <p className="font-semibold text-green-700">
-                {tr('releasedAt')}: {new Date(withdraw.fund_released_at).toLocaleDateString(lang)}. <span className="font-normal">{tr('releasedHint')}</span>
-              </p>
-            ) : !withdraw.armed ? (
-              <p className="text-gray-500">{tr('armedHint')}</p>
-            ) : null}
-            {withdraw.can_vote && (
+            {presentation.approvals?.all_approved ? (
+              <p className="font-semibold text-green-700">{tr('approvalsComplete')}</p>
+            ) : presentation.can_approve ? (
               <div className="pt-1">
-                <Button size="sm" onClick={vote} disabled={busy === 'withdraw'}>
-                  {tr('withdrawCast')}
+                <Button size="sm" onClick={approve} disabled={busy === 'approve' || !presentation.wallet}>
+                  {tr('approve')}
                 </Button>
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </section>

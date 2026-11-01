@@ -9,7 +9,7 @@ import { campaignMovements } from './routes/campaign-movements.js'
 import { createCluster, joinCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster.js'
 import { getPresentation, requestPresentation, updatePresentation, cancelPresentation } from './routes/gd-presentation.js'
 import { updateBudget, updateDirector } from './routes/gd-presentation-data.js'
-import { getWithdrawState, castWithdrawVote } from './routes/cluster-withdraw.js'
+import { approvePresentation, getApprovals } from './routes/cluster-approval.js'
 import { clusterStatus, clusterCandidates, listInvitations, acceptInvitation, rejectInvitation } from './routes/gd-invitations.js'
 import { adminListClusters, adminGetCluster, adminCreateCluster, adminUpdateCluster, adminDisbandCluster, adminAddMember, adminRemoveMember } from './routes/gd-admin-clusters.js'
 import { searchChurches } from './routes/gd-churches.js'
@@ -134,9 +134,9 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
     'cluster/[id]/director': {
       PUT: (req, params) => updateDirector(deps, req as NextRequest, params!),
     },
-    'cluster/[id]/withdraw': {
-      GET: (req, params) => getWithdrawState(deps, req as NextRequest, params!),
-      POST: (req, params) => castWithdrawVote(deps, req as NextRequest, params!),
+    'cluster/[id]/approval': {
+      GET: (req, params) => getApprovals(deps, req as NextRequest, params!),
+      POST: (req, params) => approvePresentation(deps, req as NextRequest, params!),
     },
     'cluster/status': {
       GET: (req) => clusterStatus(deps, req as NextRequest),

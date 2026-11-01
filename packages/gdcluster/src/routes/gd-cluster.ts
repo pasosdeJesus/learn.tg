@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAddress, isAddress } from 'viem'
 import {
   getPastorChurch,
   getChurchCluster,
@@ -11,7 +10,9 @@ import {
   getClusterCandidates,
   isType1Country,
 } from '../lib/gd-utils.js'
-import { readClusterFunds, hasFunds, summarizeFunds } from '../lib/cluster-funds.js'
+import { readClusterFunds, hasFunds, summarizeFunds, setClusterVerified } from '../lib/cluster-funds.js'
+import { checkWalletControl, validateClusterWallet } from '../lib/cluster-wallet.js'
+import { getClusterPastors } from '../lib/cluster-pastors.js'
 import type { GdclusterDeps } from '../index.js'
 
 // Rutas de clústeres del curso Global Disciples (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3, https://github.com/pasosdeJesus/learn.tg/issues/220).
@@ -363,12 +364,29 @@ export async function updateCluster(
     // billeteras de los pastores. Cambiarla no mueve los fondos ya acreditados
     // (el fondo está indexado por la dirección anterior).
     let normalizedWallet: string | null | undefined
+    let walletChecksummed = true
     let initiatorChurch: { id: number; cluster_wallet: string | null } | undefined
+    if (clusterWallet !== undefined && ['requested', 'under_review', 'approved', 'sent', 'answered'].includes(cluster.gd_status)) {
+      return NextResponse.json(
+        { error: 'The cluster wallet is fixed while the presentation is with pdJ or with Global Disciples', code: 'gd_fields_locked' },
+        { status: 409 },
+      )
+    }
     if (clusterWallet !== undefined) {
       if (clusterWallet === null || clusterWallet === '') {
         normalizedWallet = null
-      } else if (typeof clusterWallet === 'string' && isAddress(clusterWallet)) {
-        normalizedWallet = getAddress(clusterWallet)
+      } else if (typeof clusterWallet === 'string' && clusterWallet.trim()) {
+        const checked = await validateClusterWallet(clusterWallet)
+        if ('error' in checked) {
+          const message = checked.error === 'zero'
+            ? 'The cluster wallet cannot be the zero address'
+            : checked.error === 'platform'
+              ? 'That address belongs to the platform or to the contract: choose the cluster wallet (a multisig shared by the pastors is recommended)'
+              : 'Invalid wallet address'
+          return NextResponse.json({ error: message, code: `cluster_wallet_${checked.error}` }, { status: 400 })
+        }
+        normalizedWallet = checked.address
+        walletChecksummed = checked.checksummed
       } else {
         return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 })
       }
@@ -380,6 +398,7 @@ export async function updateCluster(
         .select(['id', 'cluster_wallet'])
         .where('id', '=', cluster.initiator_church_id)
         .executeTakeFirst()
+
     }
 
     // https://github.com/pasosdeJesus/learn.tg/issues/220 §4: el fondo de
@@ -411,6 +430,50 @@ export async function updateCluster(
         }
       }
     }
+
+      // La billetera tiene que ser una de las registradas en la cuenta del iniciador, o una
+      // multisig cuyos dueños incluyan alguna (lecturas, sin mover fondos).
+      if (normalizedWallet && normalizedWallet !== initiatorChurch?.cluster_wallet) {
+        // Billeteras registradas de cada pastor del clúster: la multisig tiene que tener
+        // un dueño por pastor y cada dueño una billetera de ESE pastor.
+        const pastors = await getClusterPastors(db, clusterId)
+        const pastorWallets: string[][] = []
+        for (const pastor of pastors) {
+          const rows = await db
+            .selectFrom('billetera_usuario')
+            .select('billetera')
+            .where('usuario_id', '=', pastor.usuario_id)
+            .execute()
+          pastorWallets.push((rows as any[]).map((row) => row.billetera).filter(Boolean))
+        }
+        const callerId = Number(auth.usuario.id)
+        const callerIndex = pastors.findIndex((pastor) => pastor.usuario_id === callerId)
+        let initiatorWallets = callerIndex >= 0 ? pastorWallets[callerIndex] : []
+        if (initiatorWallets.length === 0) {
+          const rows = await db
+            .selectFrom('billetera_usuario')
+            .select('billetera')
+            .where('usuario_id', '=', callerId)
+            .execute()
+          initiatorWallets = (rows as any[]).map((row) => row.billetera).filter(Boolean)
+        }
+        const control = await checkWalletControl(
+          deps.backend.getPublicClient(),
+          normalizedWallet,
+          initiatorWallets,
+          pastorWallets.length ? pastorWallets : [initiatorWallets],
+        )
+        if (!control.ok) {
+          const message = control.reason === 'not_initiator'
+            ? 'The cluster wallet must be one of the wallets registered in your account, or a multisig whose owners include one of them'
+            : control.reason === 'safe_without_initiator'
+              ? 'The multisig owners do not include a wallet registered in the initiator account'
+              : control.reason === 'safe_owners'
+                ? 'The multisig must have one owner per pastor of the cluster, and each owner must be a wallet registered in that pastor account'
+                : 'The cluster wallet could not be verified as a multisig or as one of your wallets; try again or use a wallet registered in your account'
+          return NextResponse.json({ error: message, code: `cluster_wallet_${control.reason}` }, { status: 400 })
+        }
+      }
 
     if (name !== undefined && (!name || name.length < 3 || name.length > 50)) {
       return NextResponse.json(
@@ -468,6 +531,15 @@ export async function updateCluster(
           funds_left: fundsSummary,
           funds_unchecked: fundsUnchecked,
         })
+        // "Presentada = verificada" está indexado por la dirección: si el clúster ya fue
+        // presentado a GD y cambia de billetera, la nueva debe quedar verificada.
+        if (normalizedWallet && ['sent', 'answered'].includes(cluster.gd_status)) {
+          try {
+            await setClusterVerified(deps as any, normalizedWallet)
+          } catch (error) {
+            console.error('cluster re-verification failed:', error instanceof Error ? error.message : String(error))
+          }
+        }
       }
     }
 
@@ -477,7 +549,7 @@ export async function updateCluster(
       pseudonym: updates.pseudonym ?? cluster.pseudonym,
       // Solo se informa cuando el cuerpo trajo la billetera: en un renombrado no
       // se consultó la fila de la iglesia iniciadora.
-      ...(normalizedWallet !== undefined ? { cluster_wallet: normalizedWallet } : {}),
+      ...(normalizedWallet !== undefined ? { cluster_wallet: normalizedWallet, wallet_checksummed: walletChecksummed } : {}),
       ...(fundsSummary ? { funds_left_in_previous_wallet: fundsSummary } : {}),
       ...(fundsUnchecked ? { funds_unchecked: true } : {}),
     })

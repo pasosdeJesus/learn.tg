@@ -38,7 +38,8 @@ export async function adminListClusters(deps: GdclusterDeps, req: NextRequest) {
     const rows = await sql<any>`
       SELECT
         c.id, c.name, c.pseudonym, c.code, c.country_id, c.status, c.initiator_church_id,
-        c.gd_requested_at, c.gd_sent_at, c.gd_response, c.gd_contact_email,
+        c.gd_status, c.gd_requested_at, c.gd_sent_at, c.gd_response, c.gd_contact_email,
+        c.gd_evaluation, c.gd_suggestions,
         p.nombre AS country_name,
         lc.name AS initiator_church_name,
         (SELECT COUNT(*) FROM church_clustergd cc WHERE cc.clustergd_id = c.id AND cc.left_at IS NULL)::int AS member_count,

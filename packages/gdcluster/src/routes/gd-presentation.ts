@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPastorChurch, getChurchCluster, addClusterHistory, notifyUser } from '../lib/gd-utils.js'
+import { setClusterVerified } from '../lib/cluster-funds.js'
+import { releaseOnAnswered } from '../lib/cluster-release.js'
 import {
   GD_PRESENTATION_STATUSES,
   canTransitionPresentation,
@@ -16,6 +18,10 @@ import type { GdclusterDeps } from '../index.js'
 // sugerencias, aprueba y envía; al registrar la respuesta de GD el estado queda
 // `answered`. El iniciador puede cancelar mientras el estado siga en `requested`.
 // La app no envía correos: pdJ copia el mensaje sugerido y lo envía desde su cliente.
+// **Presentada = verificada en el contrato** (decisión del operador, 2026-10-22): cuando pdJ
+// marca `sent`, el backend llama `ClusterFundsV2.setClusterVerification(wallet, true)`, de
+// modo que varios clústeres presentados quedan verificados a la vez y pdJ puede repartir el
+// fondo del país entre ellos (un solo clúster no se lleva todo).
 
 const LOCK_HISTORY: Record<string, string> = {
   requested: 'gd_presentation_requested',
@@ -77,10 +83,15 @@ export async function getPresentation(deps: GdclusterDeps, req: NextRequest, par
 
     const readiness = await getPresentationReadiness(db, clusterId)
     const request = readiness.request
+    const canApprove = ctx.isMember
+      && ctx.auth.usuario.church_relationship === 'pastor'
+      && !['under_review', 'approved', 'sent', 'answered'].includes(ctx.cluster.gd_status)
+      && !(readiness.approvals?.voters ?? []).includes(Number(ctx.auth.usuario.id))
     return NextResponse.json({
       ...readiness,
       isInitiator: ctx.isInitiator,
       isMember: ctx.isMember,
+      can_approve: canApprove,
       request: request
         ? {
             status: request.status,
@@ -257,6 +268,24 @@ export async function updatePresentation(deps: GdclusterDeps, req: NextRequest, 
       updates.gd_suggestions = text(suggestions) ?? cluster.gd_suggestions ?? null
     }
     if (status === 'sent') {
+      // Presentada en la base de datos = verificada en el contrato.
+      const wallet = await initiatorClusterWallet(db, cluster)
+      if (!wallet) {
+        return NextResponse.json(
+          { error: 'The cluster has no wallet: it cannot be verified in the contract', code: 'no_cluster_wallet' },
+          { status: 409 },
+        )
+      }
+      try {
+        await setClusterVerified(deps as any, wallet)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        console.error('cluster verification failed:', message)
+        return NextResponse.json(
+          { error: 'The cluster could not be verified in the contract', code: 'verification_failed', detail: message },
+          { status: 502 },
+        )
+      }
       updates.gd_sent_at = now
       updates.gd_sent_by = admin.usuario_id
     }
@@ -297,8 +326,15 @@ export async function updatePresentation(deps: GdclusterDeps, req: NextRequest, 
       }
     }
 
+    // Al responder GD se liberan los fondos (país repartido entre los presentados y el
+    // fondo del clúster a su billetera). Un fallo no deshace la respuesta registrada.
+    let release: { distribution: string | null; release: string | null; errors: string[] } | null = null
+    if (status === 'answered') {
+      release = await releaseOnAnswered(deps as any, db, { ...cluster, gd_status: 'answered' }, admin.usuario_id)
+    }
+
     const readiness = await getPresentationReadiness(db, clusterId)
-    return NextResponse.json({ success: true, request: readiness.request })
+    return NextResponse.json({ success: true, request: readiness.request, ...(release ? { release } : {}) })
   } catch (error) {
     console.error('gd-presentation update error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -345,6 +381,17 @@ export async function cancelPresentation(deps: GdclusterDeps, req: NextRequest, 
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+async function initiatorClusterWallet(db: any, cluster: any): Promise<string | null> {
+  if (!cluster.initiator_church_id) return null
+  const row = await db
+    .selectFrom('church')
+    .select('cluster_wallet')
+    .where('id', '=', cluster.initiator_church_id)
+    .executeTakeFirst()
+  return row?.cluster_wallet ?? null
+}
+
 
 function text(value: unknown): string | null | undefined {
   if (value === undefined) return undefined

@@ -58,6 +58,32 @@ export async function readClusterFunds(
   }
 }
 
+/**
+ * Marca el clúster como verificado en el contrato (`setClusterVerification`).
+ * "Presentada = verificada" (decisión del operador, 2026-10-22): se llama cuando pdJ
+ * presenta el clúster a Global Disciples (`sent`) y cuando cambia la billetera de un
+ * clúster ya presentado (el flag del contrato está indexado por la dirección).
+ */
+export async function setClusterVerified(
+  deps: { backend: { getPublicClient: () => any; getWalletClient: () => any; sendTxAndWait: (walletClient: any, publicClient: any, args: any) => Promise<`0x${string}`> } },
+  wallet: string,
+): Promise<`0x${string}`> {
+  const publicClient = deps.backend.getPublicClient()
+  const walletClient = deps.backend.getWalletClient()
+  const account = walletClient.account
+  const address = await getClusterFundsAddress()
+  const nonce = await publicClient.getTransactionCount({ address: account.address, blockTag: 'pending' })
+  return deps.backend.sendTxAndWait(walletClient, publicClient, {
+    address,
+    abi: ClusterFundsV2Abi as any,
+    functionName: 'setClusterVerification',
+    args: [wallet, true],
+    account,
+    chain: publicClient.chain,
+    nonce,
+  })
+}
+
 export function hasFunds(balance: ClusterFundsBalance | null): boolean {
   return !!balance && (balance.usdt > 0n || balance.slearn > 0n)
 }

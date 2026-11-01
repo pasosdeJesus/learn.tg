@@ -51,6 +51,9 @@ const tEn = {
   gdRequest: 'Request the presentation to Global Disciples',
   gdRequestSend: 'Send request',
   gdRequested: 'Presentation requested',
+  gdReturned: 'Returned by pdJ with suggestions',
+  gdApproved: 'Approved by pdJ',
+  gdAnswered: 'Global Disciples answered',
   gdSent: 'pdJ wrote to GD',
   gdResponse: 'Answer from Global Disciples',
   gdContactEmail: 'Email or channel to continue',
@@ -65,6 +68,8 @@ const tEn = {
   gdMissingActive: 'the cluster must be active',
   gdMissingMembers: 'at least 3 churches',
   gdMissingNoPastors: 'no pastors',
+  gdMissingWallet: 'the cluster wallet is not set',
+  gdMissingApprovals: 'the pastors have not approved the data',
 }
 const tEs: typeof tEn = {
   back: 'Volver al inicio',
@@ -100,6 +105,9 @@ const tEs: typeof tEn = {
   gdRequest: 'Solicitar la presentación a Global Disciples',
   gdRequestSend: 'Enviar solicitud',
   gdRequested: 'Presentación solicitada',
+  gdReturned: 'Devuelta por pdJ con sugerencias',
+  gdApproved: 'Aprobada por pdJ',
+  gdAnswered: 'Global Disciples respondió',
   gdSent: 'pdJ escribió a GD',
   gdResponse: 'Respuesta de Global Disciples',
   gdContactEmail: 'Correo o canal para continuar',
@@ -110,6 +118,8 @@ const tEs: typeof tEn = {
   gdMissingScore: 'el perfil debe ser mayor a 90',
   gdMissingInvitePastor: 'no ha invitado a un pastor',
   gdMissingInviteMember: 'no ha invitado a un miembro de su iglesia',
+  gdMissingWallet: 'la billetera del clúster no está configurada',
+  gdMissingApprovals: 'los pastores no han aprobado los datos',
   gdMissingNoPastor: 'sin pastor principal registrado',
   gdMissingActive: 'el clúster debe estar activo',
   gdMissingMembers: 'al menos 3 iglesias',
@@ -124,6 +134,21 @@ const HISTORY_LABELS: Record<string, { en: string; es: string }> = {
   leader_transfer: { en: 'Initiator changed (legacy)', es: 'Iniciador cambiado (antiguo)' },
   name_change: { en: 'Name changed', es: 'Nombre cambiado' },
   cluster_wallet_change: { en: 'Cluster wallet changed', es: 'Billetera del clúster cambiada' },
+  budget_updated: { en: 'First-year budget updated', es: 'Presupuesto del primer año actualizado' },
+  director_updated: { en: 'Director offer updated', es: 'Oferta del director actualizada' },
+  fund_withdraw_started: { en: 'Withdrawal started', es: 'Retiro iniciado' },
+  fund_withdraw_vote: { en: 'Pastor approved the withdrawal', es: 'Pastor aprobó el retiro' },
+  fund_released: { en: 'Cluster fund released', es: 'Fondo del clúster liberado' },
+  country_fund_released: { en: 'Country fund delivered', es: 'Fondo del país entregado' },
+  country_fund_redistributed: { en: 'Country fund distributed among the presented clusters', es: 'Fondo del país repartido entre los clústeres presentados' },
+  fund_release_failed: { en: 'Fund release failed', es: 'Falló la liberación del fondo' },
+  country_fund_failed: { en: 'Country fund could not be delivered', es: 'No se pudo entregar el fondo del país' },
+  gd_presentation_requested: { en: 'Presentation requested', es: 'Presentación solicitada' },
+  gd_presentation_returned: { en: 'Presentation returned by pdJ', es: 'Presentación devuelta por pdJ' },
+  gd_presentation_approved: { en: 'Presentation approved', es: 'Presentación aprobada' },
+  gd_presentation_sent: { en: 'Presentation sent to GD', es: 'Presentación enviada a GD' },
+  gd_presentation_answered: { en: 'GD answered', es: 'GD respondió' },
+  gd_presentation_cancelled: { en: 'Presentation cancelled', es: 'Presentación cancelada' },
 }
 
 interface ClusterMember {
@@ -171,6 +196,9 @@ interface PresentationRequestView {
   locked?: boolean
   requested_at: string | null
   sent_at: string | null
+  returned_at?: string | null
+  approved_at?: string | null
+  answered_at?: string | null
   response?: string | null
   contact_email?: string | null
   evaluation?: string | null
@@ -205,6 +233,8 @@ const CLUSTER_MISSING: Record<string, keyof typeof tEn> = {
   cluster_active: 'gdMissingActive',
   cluster_members: 'gdMissingMembers',
   no_pastors: 'gdMissingNoPastors',
+  cluster_wallet: 'gdMissingWallet',
+  approvals: 'gdMissingApprovals',
 }
 
 export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps: ClusterPageDeps }) {
@@ -537,10 +567,28 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
                   {t('gdRequested')}
                   {presentation.request.requested_at ? ` · ${new Date(presentation.request.requested_at).toLocaleDateString(lang)}` : ''}
                 </p>
+                {presentation.request.returned_at && (
+                  <p className="text-amber-700">
+                    {t('gdReturned')}
+                    {` · ${new Date(presentation.request.returned_at).toLocaleDateString(lang)}`}
+                  </p>
+                )}
+                {presentation.request.approved_at && (
+                  <p>
+                    {t('gdApproved')}
+                    {` · ${new Date(presentation.request.approved_at).toLocaleDateString(lang)}`}
+                  </p>
+                )}
                 {presentation.request.sent_at && (
                   <p>
                     {t('gdSent')}
                     {` · ${new Date(presentation.request.sent_at).toLocaleDateString(lang)}`}
+                  </p>
+                )}
+                {presentation.request.answered_at && (
+                  <p>
+                    {t('gdAnswered')}
+                    {` · ${new Date(presentation.request.answered_at).toLocaleDateString(lang)}`}
                   </p>
                 )}
                 {presentation.request.response && (

@@ -3,7 +3,15 @@ import { NextRequest } from 'next/server'
 import { apiDbMocks } from '@pasosdejesus/m/test-utils/kysely-mocks'
 import { getAddress } from 'viem'
 
+// El control de la billetera (registrada en la cuenta del iniciador o multisig con un
+// dueño registrado) hace lecturas a la cadena; aquí se aísla y se prueba aparte.
+vi.mock('../../lib/cluster-wallet.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../lib/cluster-wallet.js')>()),
+  checkWalletControl: vi.fn(async () => ({ ok: true, kind: 'eoa' })),
+}))
+
 import { updateCluster, getCluster } from '../gd-cluster.js'
+import { checkWalletControl } from '../../lib/cluster-wallet.js'
 import type { GdclusterDeps } from '../../index.js'
 
 // R-#220: la billetera del clúster (`church.cluster_wallet` de la iglesia iniciadora) la
@@ -77,8 +85,8 @@ describe('updateCluster — cluster wallet (R-#220)', () => {
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.cluster_wallet).toBe(getAddress(NEW))
-    // update clustergd + update church + history + userevent
-    expect(mockExecute).toHaveBeenCalledTimes(4)
+    // members + wallets of the initiator + update clustergd + update church + history + userevent
+    expect(mockExecute).toHaveBeenCalledTimes(6)
   })
 
   it('clears the wallet when the leader sends an empty value', async () => {
@@ -158,8 +166,23 @@ describe('updateCluster — cluster wallet (R-#220)', () => {
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.funds_left_in_previous_wallet.slearn).toBe('20')
-    // update clustergd + update church + history + userevent
-    expect(mockExecute).toHaveBeenCalledTimes(4)
+    // members + wallets of the initiator + update clustergd + update church + history + userevent
+    expect(mockExecute).toHaveBeenCalledTimes(6)
+  })
+
+  it('rejects a wallet that is neither from the initiator nor a multisig with a registered owner (400)', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce(CHURCH)
+      .mockResolvedValueOnce(MEMBERSHIP)
+      .mockResolvedValueOnce(CLUSTER)
+      .mockResolvedValueOnce({ id: 20, cluster_wallet: OLD })
+    mockExecute.mockResolvedValue([])
+    ;(checkWalletControl as any).mockResolvedValueOnce({ ok: false, reason: 'not_initiator' })
+    const res = await updateCluster(buildDeps() as GdclusterDeps, patch(3, { clusterWallet: NEW }), { id: '3' })
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toBe('cluster_wallet_not_initiator')
+    // Solo se leyeron miembros y billeteras: no se escribió nada.
+    expect(mockExecute).toHaveBeenCalledTimes(2)
   })
 
   it('flags the change as unchecked when the funds could not be read', async () => {

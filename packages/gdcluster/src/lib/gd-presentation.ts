@@ -1,5 +1,6 @@
 import { sql } from 'kysely'
 import { getClusterMembers } from './gd-utils.js'
+import { getClusterApprovals, presentationDataHash, type ClusterApprovals } from './cluster-approvals.js'
 
 // Condiciones para que el iniciador pida presentar el clúster a Global Disciples
 // (R-#161, decisión del operador 2026-10-27):
@@ -110,6 +111,10 @@ export interface PresentationReadiness {
   missing: string[]
   /** Campos del presupuesto/oferta que faltan para poder solicitar la presentación. */
   missing_data: string[]
+  /** Billetera del clúster (la de la iglesia iniciadora). */
+  wallet: string | null
+  /** Aprobaciones de los pastores para el hash vigente de los datos. */
+  approvals: ClusterApprovals
   request: PresentationRequest | null
 }
 
@@ -265,6 +270,24 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
   if (members.length < 3) missing.push('cluster_members')
   if (pastors.length === 0) missing.push('no_pastors')
 
+  // La billetera del clúster (la de la iglesia iniciadora) es condición de la guía 6:
+  // sin ella no se puede liberar el fondo, así que no se presenta el clúster.
+  const initiatorChurch = cluster.initiator_church_id
+    ? await db
+        .selectFrom('church')
+        .select('cluster_wallet')
+        .where('id', '=', cluster.initiator_church_id)
+        .executeTakeFirst()
+    : null
+  if (!initiatorChurch?.cluster_wallet) missing.push('cluster_wallet')
+
+  // Los pastores aprueban los cinco datos + la billetera; sin todas las aprobaciones el
+  // iniciador no puede pedir la revisión de pdJ.
+  const wallet = initiatorChurch?.cluster_wallet ?? null
+  const approvalHash = presentationDataHash(cluster, wallet)
+  const approvals = await getClusterApprovals(db, clusterId, approvalHash)
+  if (!approvals.all_approved) missing.push('approvals')
+
   const request: PresentationRequest = {
     status: (cluster.gd_status as GdPresentationStatus | null) ?? null,
     locked: presentationFieldsLocked(cluster.gd_status),
@@ -298,6 +321,8 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
     pastors,
     missing,
     missing_data: missingPresentationData(cluster),
+    wallet,
+    approvals,
     request: request.requested_at || request.status ? request : null,
   }
 }
