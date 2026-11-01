@@ -37,16 +37,21 @@ export async function resolveGDClusterDestination(
   usuarioId: number,
 ): Promise<GDDestination> {
   // 1. Try church cluster
+  // El 10 % sigue yendo al fondo del clúster mientras ese fondo exista, aunque el clúster
+  // haya salido del ranking (https://github.com/pasosdeJesus/learn.tg/issues/161). Solo
+  // cuando el fondo se entregó a la billetera del clúster (`fund_released_at`) deja de
+  // haber fondo de clúster y el 10 % pasa al fondo del país.
   const church = await db.selectFrom('church')
     .innerJoin('church_clustergd as cc', 'cc.church_id', 'church.id')
-    .select(['church.cluster_wallet', 'church.country_id'])
+    .innerJoin('clustergd as c', 'c.id', 'cc.clustergd_id')
+    .select(['church.cluster_wallet', 'church.country_id', 'c.fund_released_at'])
     .where('church.id', 'in',
       db.selectFrom('usuario').select('church_id').where('id', '=', usuarioId)
     )
     .where('cc.left_at', 'is', null)
     .executeTakeFirst()
 
-  if (church?.cluster_wallet) {
+  if (church?.cluster_wallet && !church.fund_released_at) {
     return { type: 'cluster', destination: church.cluster_wallet }
   }
 

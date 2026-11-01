@@ -26,6 +26,7 @@ export async function rankingClusters(deps: GdclusterDeps) {
       LEFT JOIN church member_church ON member_church.id = cc.church_id AND member_church.deleted_at IS NULL
       WHERE p.tipo_region = 1
         AND c.status != 'disbanded'
+        AND c.ranking_exited_at IS NULL
       GROUP BY c.id, c.name, c.pseudonym, c.code, c.country_id, c.status, initiator_church.cluster_wallet, p.nombre, p.alfa2
       ORDER BY c.id
     `.execute(db)

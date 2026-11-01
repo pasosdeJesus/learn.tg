@@ -8,7 +8,7 @@ pragma solidity ^0.8.24;
 // above the money: setVaultBalance, recordCourseFunds, payScholarship,
 // retireCourse and the emergency withdrawals all check the invariant. A forced
 // emergency withdrawal marks the accounting as broken and blocks payments until
-// the owner reconciles it. See doc/LearnTGVaultsV6.md.
+// the owner reconciles it. See R-#293 (https://github.com/pasosdeJesus/learn.tg/issues/293).
 // https://github.com/pasosdeJesus/learn.tg/issues/221
 
 interface IERC20 {

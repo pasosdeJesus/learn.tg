@@ -73,10 +73,10 @@ bin/m eng:opwallet:call --name admin --to <SLEARN> --function "getMissionalCours
 # NEVER re-run a migration that restores balances: setVaultBalance re-applies the
 # snapshot and rolls back whatever was recorded or paid in between. The V3→V4
 # migration was run twice on 2026-06-09/10 and that is where the 0.040910 USDT
-# that the V5 setup inherited came from (doc/LearnTGVaultsV6.md).
+# that the V5 setup inherited came from (R-#293).
 # It exists because the books can claim more than the vault holds: course 106 kept
 # 8 USDT of bookkeeping from V2 to V5 after an emergency withdrawal took the tokens
-# (doc/LearnTGVaultsV6.md, R-#221).
+# (R-#221, R-#293).
 
 # Accounting invariant of the scholarship vault (read-only; exit 1 on a gap).
 # `payScholarship` only compares a course's recorded balance with the contract's whole

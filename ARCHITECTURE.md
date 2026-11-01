@@ -342,6 +342,14 @@ duplicated routes. Implemented (2026-08-31, migration
   cluster's pastors; changing it later does not move funds already credited (the fund is
   keyed by the previous address). The verifier can still correct it in the church modal
   (`PATCH /api/admin/church/[id]`) as a support path.
+- **The 10% of the cluster's students** (course purchases and guide scholarships) goes to
+  the cluster fund while that fund exists, even after the cluster leaves the ranking. Once
+  the presentation to Global Disciples is `answered` and every pastor presses Withdraw,
+  `POST /api/cluster/[id]/withdraw` calls `releaseClusterFunds` and records
+  `clustergd.fund_released_at`; from then on `resolveGDClusterDestination` routes that 10%
+  to the country fund. Leaving the ranking only stops donations from the ranking. The
+  presentation states, the fixed budget/director data and the votes are in
+  `clustergd.gd_status` / `cluster_fund_vote` (see https://github.com/pasosdeJesus/learn.tg/issues/161).
 
 **States:**
 

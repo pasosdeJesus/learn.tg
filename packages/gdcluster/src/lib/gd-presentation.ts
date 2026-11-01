@@ -14,6 +14,54 @@ import { getClusterMembers } from './gd-utils.js'
 export const GD_COURSE_IDS = [10, 11]
 export const MIN_PROFILE_SCORE = 90 // estrictamente mayor: > 90
 
+// Estados de la presentación (https://github.com/pasosdeJesus/learn.tg/issues/161):
+// el iniciador solicita (`requested`), pdJ revisa (`under_review`), devuelve con
+// sugerencias (`returned`), aprueba (`approved`), envía a GD (`sent`) y registra la
+// respuesta (`answered`). `cancelled` es la retirada del iniciador antes de la revisión.
+export const GD_PRESENTATION_STATUSES = [
+  'requested',
+  'under_review',
+  'returned',
+  'approved',
+  'sent',
+  'answered',
+  'cancelled',
+] as const
+
+export type GdPresentationStatus = (typeof GD_PRESENTATION_STATUSES)[number]
+
+// Con estos estados los cinco campos quedan fijos (read-only). `returned` y
+// `cancelled` los desbloquean para que el iniciador los corrija o los vuelva a llenar.
+const LOCKING_STATUSES: GdPresentationStatus[] = [
+  'requested',
+  'under_review',
+  'approved',
+  'sent',
+  'answered',
+]
+
+const TRANSITIONS: Record<GdPresentationStatus, GdPresentationStatus[]> = {
+  requested: ['under_review', 'returned', 'cancelled'],
+  under_review: ['returned', 'approved', 'sent'],
+  returned: ['approved', 'under_review'],
+  approved: ['sent'],
+  sent: ['answered'],
+  answered: [],
+  cancelled: [],
+}
+
+export function presentationFieldsLocked(status: string | null | undefined): boolean {
+  return !!status && (LOCKING_STATUSES as string[]).includes(status)
+}
+
+export function canTransitionPresentation(
+  from: string | null | undefined,
+  to: string,
+): boolean {
+  if (!from) return false
+  return (TRANSITIONS[from as GdPresentationStatus] ?? []).includes(to as GdPresentationStatus)
+}
+
 export interface PastorCheck {
   usuario_id: number
   nombre: string | null
@@ -29,14 +77,29 @@ export interface PastorCheck {
 }
 
 export interface PresentationRequest {
+  status: GdPresentationStatus | null
+  locked: boolean
   requested_at: string | null
   requested_by: number | null
+  reviewed_at: string | null
+  returned_at: string | null
+  approved_at: string | null
   sent_at: string | null
   sent_by: number | null
+  answered_at: string | null
+  evaluation: string | null
+  suggestions: string | null
   response: string | null
   response_at: string | null
   response_by: number | null
   contact_email: string | null
+  first_year_budget: number | null
+  budget_draft_path: string | null
+  budget_fixed_at: string | null
+  director_offer_path: string | null
+  director_first_year_pay: number | null
+  director_first_year_hours: number | null
+  director_fixed_at: string | null
 }
 
 export interface PresentationReadiness {
@@ -45,7 +108,41 @@ export interface PresentationReadiness {
   member_churches: number
   pastors: PastorCheck[]
   missing: string[]
+  /** Campos del presupuesto/oferta que faltan para poder solicitar la presentación. */
+  missing_data: string[]
   request: PresentationRequest | null
+}
+
+/**
+ * Los cinco datos que se fijan al solicitar la presentación. Se devuelven como claves
+ * estables para que la UI y el error del POST usen el mismo vocabulario.
+ */
+export function missingPresentationData(cluster: {
+  first_year_budget?: unknown
+  budget_draft_path?: unknown
+  director_offer_path?: unknown
+  director_first_year_pay?: unknown
+  director_first_year_hours?: unknown
+}): string[] {
+  const missing: string[] = []
+  if (cluster.first_year_budget === null || cluster.first_year_budget === undefined || Number(cluster.first_year_budget) <= 0) {
+    missing.push('budget_total')
+  }
+  if (!cluster.budget_draft_path) missing.push('budget_pdf')
+  if (!cluster.director_offer_path) missing.push('director_offer_pdf')
+  if (cluster.director_first_year_pay === null || cluster.director_first_year_pay === undefined || Number(cluster.director_first_year_pay) <= 0) {
+    missing.push('director_pay')
+  }
+  if (cluster.director_first_year_hours === null || cluster.director_first_year_hours === undefined || Number(cluster.director_first_year_hours) <= 0) {
+    missing.push('director_hours')
+  }
+  return missing
+}
+
+function num(value: unknown): number | null {
+  if (value === null || value === undefined) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 function iso(value: unknown): string | null {
@@ -169,14 +266,29 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
   if (pastors.length === 0) missing.push('no_pastors')
 
   const request: PresentationRequest = {
+    status: (cluster.gd_status as GdPresentationStatus | null) ?? null,
+    locked: presentationFieldsLocked(cluster.gd_status),
     requested_at: iso(cluster.gd_requested_at),
     requested_by: cluster.gd_requested_by ?? null,
+    reviewed_at: iso(cluster.gd_reviewed_at),
+    returned_at: iso(cluster.gd_returned_at),
+    approved_at: iso(cluster.gd_approved_at),
     sent_at: iso(cluster.gd_sent_at),
     sent_by: cluster.gd_sent_by ?? null,
+    answered_at: iso(cluster.gd_answered_at),
+    evaluation: cluster.gd_evaluation ?? null,
+    suggestions: cluster.gd_suggestions ?? null,
     response: cluster.gd_response ?? null,
     response_at: iso(cluster.gd_response_at),
     response_by: cluster.gd_response_by ?? null,
     contact_email: cluster.gd_contact_email ?? null,
+    first_year_budget: num(cluster.first_year_budget),
+    budget_draft_path: cluster.budget_draft_path ?? null,
+    budget_fixed_at: iso(cluster.budget_fixed_at),
+    director_offer_path: cluster.director_offer_path ?? null,
+    director_first_year_pay: num(cluster.director_first_year_pay),
+    director_first_year_hours: num(cluster.director_first_year_hours),
+    director_fixed_at: iso(cluster.director_fixed_at),
   }
 
   return {
@@ -185,6 +297,7 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
     member_churches: members.length,
     pastors,
     missing,
-    request: request.requested_at ? request : null,
+    missing_data: missingPresentationData(cluster),
+    request: request.requested_at || request.status ? request : null,
   }
 }

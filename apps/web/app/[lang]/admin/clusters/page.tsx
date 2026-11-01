@@ -34,6 +34,20 @@ type Cluster = {
   gd_sent_at: string | null
   gd_response: string | null
   gd_contact_email: string | null
+  gd_status: string | null
+  gd_evaluation: string | null
+  gd_suggestions: string | null
+}
+
+// Estados de la presentación a GD (R-#161); el motor valida las transiciones.
+const GD_TRANSITIONS: Record<string, string[]> = {
+  requested: ['under_review', 'returned', 'cancelled'],
+  under_review: ['returned', 'approved', 'sent'],
+  returned: ['approved', 'under_review'],
+  approved: ['sent'],
+  sent: ['answered'],
+  answered: [],
+  cancelled: [],
 }
 
 const STATUSES = ['pending', 'active', 'disbanded'] as const
@@ -51,7 +65,7 @@ export default function AdminClustersPage({ params }: PageProps) {
   const [selected, setSelected] = useState<Cluster | null>(null)
   const [draft, setDraft] = useState({ name: '', pseudonym: '', status: 'pending' })
   const [gdCluster, setGdCluster] = useState<any | null>(null)
-  const [gdForm, setGdForm] = useState({ sent: false, response: '', contactEmail: '' })
+  const [gdForm, setGdForm] = useState({ status: '', evaluation: '', suggestions: '', response: '', contactEmail: '' })
   const [gdSaving, setGdSaving] = useState(false)
   const [gdCopied, setGdCopied] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -68,6 +82,11 @@ export default function AdminClustersPage({ params }: PageProps) {
       gd: 'GD', gdTitle: 'Presentation to Global Disciples', gdRequested: 'Requested',
       gdEmailProposal: 'Suggested subject and body (copy, paste and edit them in your mail client)',
       gdCopyEmail: 'Copy the email', gdCopied: 'Copied', gdSent: 'Email sent to GD',
+      gdMoveTo: 'Move the presentation to', gdSelectStatus: 'Choose the next state',
+      gdEvaluation: 'Evaluation (visible to the initiator)', gdSuggestions: 'Suggestions (visible to the initiator)',
+      gdStatusHelp: 'Sent means you already wrote to your GD contact; answered records the answer and the channel to continue.',
+      gdStatusRequested: 'Requested', gdStatusUnderReview: 'Under review', gdStatusReturned: 'Returned',
+      gdStatusApproved: 'Approved', gdStatusSent: 'Sent', gdStatusAnswered: 'Answered', gdStatusCancelled: 'Cancelled',
       gdResponse: 'Answer from GD (visible to the initiator)', gdContactEmail: 'Email or channel GD indicates',
       gdSaved: 'Saved', gdSaveError: 'Could not save the GD data',
       pending: 'Pending', active: 'Active', disbanded: 'Disbanded',
@@ -86,6 +105,11 @@ export default function AdminClustersPage({ params }: PageProps) {
       gd: 'GD', gdTitle: 'Presentación a Global Disciples', gdRequested: 'Solicitada',
       gdEmailProposal: 'Tema y cuerpo sugeridos (cópialos, pégalos y ajústalos en tu cliente de correo)',
       gdCopyEmail: 'Copiar el correo', gdCopied: 'Copiado', gdSent: 'Correo enviado a GD',
+      gdMoveTo: 'Mover la presentación a', gdSelectStatus: 'Elige el siguiente estado',
+      gdEvaluation: 'Evaluación (visible para el iniciador)', gdSuggestions: 'Sugerencias (visible para el iniciador)',
+      gdStatusHelp: 'Sent significa que ya escribiste a tu contacto en GD; answered registra la respuesta y el canal para continuar.',
+      gdStatusRequested: 'Solicitada', gdStatusUnderReview: 'En revisión', gdStatusReturned: 'Devuelta',
+      gdStatusApproved: 'Aprobada', gdStatusSent: 'Enviada', gdStatusAnswered: 'Respondida', gdStatusCancelled: 'Cancelada',
       gdResponse: 'Respuesta de GD (visible para el iniciador)', gdContactEmail: 'Correo o canal que indica GD',
       gdSaved: 'Guardado', gdSaveError: 'No se pudo guardar lo de GD',
       pending: 'Pendiente', active: 'Activo', disbanded: 'Disuelto',
@@ -97,6 +121,14 @@ export default function AdminClustersPage({ params }: PageProps) {
 
   const statusLabel = (value: string) =>
     value === 'active' ? t('active') : value === 'disbanded' ? t('disbanded') : t('pending')
+
+  const gdStatusLabel = (value: string) => {
+    const key: Record<string, any> = {
+      requested: 'gdStatusRequested', under_review: 'gdStatusUnderReview', returned: 'gdStatusReturned',
+      approved: 'gdStatusApproved', sent: 'gdStatusSent', answered: 'gdStatusAnswered', cancelled: 'gdStatusCancelled',
+    }
+    return key[value] ? t(key[value]) : value
+  }
 
   const fetchClusters = useCallback(async () => {
     setLoading(true)
@@ -127,7 +159,9 @@ export default function AdminClustersPage({ params }: PageProps) {
   const openGd = async (cluster: Cluster) => {
     setNotice('')
     setGdForm({
-      sent: !!cluster.gd_sent_at,
+      status: '',
+      evaluation: cluster.gd_evaluation || '',
+      suggestions: cluster.gd_suggestions || '',
       response: cluster.gd_response || '',
       contactEmail: cluster.gd_contact_email || '',
     })
@@ -144,10 +178,17 @@ export default function AdminClustersPage({ params }: PageProps) {
     if (!gdCluster) return
     setGdSaving(true)
     try {
-      await adminFetch(`/api/admin/clusters/${gdCluster.id}`, {
+      await adminFetch(`/api/cluster/${gdCluster.id}/gd-presentation`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gdSent: gdForm.sent, gdResponse: gdForm.response, gdContactEmail: gdForm.contactEmail }),
+        body: JSON.stringify({
+          walletAddress: address,
+          status: gdForm.status,
+          evaluation: gdForm.evaluation,
+          suggestions: gdForm.suggestions,
+          response: gdForm.response,
+          contactEmail: gdForm.contactEmail,
+        }),
       })
       setGdCluster(null)
       setNotice(t('gdSaved'))
@@ -335,7 +376,7 @@ ${body}`
           <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-bold mb-1">{t('gdTitle')}</h2>
             <p className="text-xs text-gray-500 mb-4">
-              {gdCluster.name} · {gdCluster.code} · {t('gdRequested')}: {gdCluster.gd_requested_at ? new Date(gdCluster.gd_requested_at).toLocaleString(lang) : '—'}
+              {gdCluster.name} · {gdCluster.code} · {gdStatusLabel(gdCluster.gd_status || 'requested')} · {t('gdRequested')}: {gdCluster.gd_requested_at ? new Date(gdCluster.gd_requested_at).toLocaleString(lang) : '—'}
             </p>
             <div className="space-y-3 text-sm">
               <div className="space-y-1">
@@ -347,10 +388,29 @@ ${body}`
                   {gdCopied ? t('gdCopied') : t('gdCopyEmail')}
                 </button>
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={gdForm.sent}
-                  onChange={e => setGdForm(f => ({ ...f, sent: e.target.checked }))} />
-                {t('gdSent')}
+              <label className="block text-sm">
+                <span className="text-gray-600">{t('gdMoveTo')}</span>
+                <select value={gdForm.status}
+                  onChange={e => setGdForm(f => ({ ...f, status: e.target.value }))}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm">
+                  <option value="">{t('gdSelectStatus')}</option>
+                  {(GD_TRANSITIONS[gdCluster.gd_status || ''] || []).map((next: string) => (
+                    <option key={next} value={next}>{gdStatusLabel(next)}</option>
+                  ))}
+                </select>
+                <span className="mt-1 block text-xs text-gray-500">{t('gdStatusHelp')}</span>
+              </label>
+              <label className="block text-sm">
+                <span className="text-gray-600">{t('gdEvaluation')}</span>
+                <textarea value={gdForm.evaluation} rows={2}
+                  onChange={e => setGdForm(f => ({ ...f, evaluation: e.target.value }))}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm" />
+              </label>
+              <label className="block text-sm">
+                <span className="text-gray-600">{t('gdSuggestions')}</span>
+                <textarea value={gdForm.suggestions} rows={3}
+                  onChange={e => setGdForm(f => ({ ...f, suggestions: e.target.value }))}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm" />
               </label>
               <label className="block text-sm">
                 <span className="text-gray-600">{t('gdContactEmail')}</span>

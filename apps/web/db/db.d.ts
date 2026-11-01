@@ -125,22 +125,46 @@ export interface Churchreputation {
   updated_at: Generated<Timestamp>;
 }
 
+export interface ClusterFundVote {
+  clustergd_id: number;
+  created_at: Generated<Timestamp>;
+  usuario_id: number;
+}
+
 export interface Clustergd {
+  budget_draft_path: string | null;
+  budget_fixed_at: Timestamp | null;
   code: string;
   country_id: number;
   created_at: Generated<Timestamp | null>;
+  director_first_year_hours: Numeric | null;
+  director_first_year_pay: Numeric | null;
+  director_fixed_at: Timestamp | null;
+  director_offer_path: string | null;
+  first_year_budget: Numeric | null;
+  fund_released_amount: Numeric | null;
+  fund_released_at: Timestamp | null;
+  fund_released_slearn: Numeric | null;
+  gd_answered_at: Timestamp | null;
+  gd_approved_at: Timestamp | null;
   gd_contact_email: string | null;
+  gd_evaluation: string | null;
   gd_requested_at: Timestamp | null;
   gd_requested_by: number | null;
   gd_response: string | null;
   gd_response_at: Timestamp | null;
   gd_response_by: number | null;
+  gd_returned_at: Timestamp | null;
+  gd_reviewed_at: Timestamp | null;
   gd_sent_at: Timestamp | null;
   gd_sent_by: number | null;
+  gd_status: string | null;
+  gd_suggestions: string | null;
   id: Generated<number>;
   initiator_church_id: number | null;
   name: string;
   pseudonym: string | null;
+  ranking_exited_at: Timestamp | null;
   status: Generated<string>;
   updated_at: Generated<Timestamp | null>;
 }
@@ -1620,6 +1644,7 @@ export interface DB {
   church_clustergd: ChurchClustergd;
   churchactivitycache: Churchactivitycache;
   churchreputation: Churchreputation;
+  cluster_fund_vote: ClusterFundVote;
   cluster_invitation: ClusterInvitation;
   clustergd: Clustergd;
   clustergd_history: ClustergdHistory;

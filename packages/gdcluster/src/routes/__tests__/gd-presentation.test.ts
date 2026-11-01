@@ -18,11 +18,12 @@ const state = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('../../lib/gd-presentation.js', () => ({
-  getPresentationReadiness: vi.fn(async () => state.readiness),
-}))
+vi.mock('../../lib/gd-presentation.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../lib/gd-presentation.js')>()
+  return { ...actual, getPresentationReadiness: vi.fn(async () => state.readiness) }
+})
 
-import { getPresentation, requestPresentation } from '../gd-presentation.js'
+import { getPresentation, requestPresentation, updatePresentation, cancelPresentation } from '../gd-presentation.js'
 import type { GdclusterDeps } from '../../index.js'
 
 const { mockExecuteTakeFirst, mockExecute, setupMocks, resetMocks, setupCommonResponses } = apiDbMocks
@@ -34,6 +35,14 @@ const OTHER_CHURCH = 21
 const CLUSTER = {
   id: 3, name: 'Esperanza', code: 'ABC123', country_id: 1, status: 'active',
   initiator_church_id: INITIATOR_CHURCH,
+  gd_status: null as string | null,
+  gd_requested_at: null as Date | null,
+  gd_sent_at: null as Date | null,
+  first_year_budget: 500,
+  budget_draft_path: 'cluster/3/budget.pdf',
+  director_offer_path: 'cluster/3/director.pdf',
+  director_first_year_pay: 180,
+  director_first_year_hours: 320,
 }
 
 function deps(overrides: Record<string, any> = {}): any {
@@ -47,9 +56,9 @@ function deps(overrides: Record<string, any> = {}): any {
   }
 }
 
-function viewer(churchId: number) {
+function viewer(churchId: number, cluster: Record<string, any> = {}) {
   mockExecuteTakeFirst
-    .mockResolvedValueOnce(CLUSTER) // clustergd
+    .mockResolvedValueOnce({ ...CLUSTER, ...cluster }) // clustergd
     .mockResolvedValueOnce({ id: churchId, name: 'Iglesia', country_id: 1 }) // getPastorChurch
     .mockResolvedValueOnce({ clustergd_id: 3, joined_at: new Date(), left_at: null }) // getChurchCluster
 }
@@ -118,7 +127,7 @@ describe('gd-presentation (R-#161)', () => {
   })
 
   it('is idempotent when the request already exists', async () => {
-    viewer(INITIATOR_CHURCH)
+    viewer(INITIATOR_CHURCH, { gd_status: 'requested', gd_requested_at: new Date() })
     state.readiness = {
       ...state.readiness,
       request: { requested_at: new Date().toISOString(), requested_by: 5, sent_at: null, sent_by: null, response: null, response_at: null, response_by: null, contact_email: null },
@@ -155,6 +164,67 @@ describe('gd-presentation (R-#161)', () => {
     expect(json.isInitiator).toBe(false)
     expect(json.request.response).toBeUndefined()
     expect(json.request.contact_email).toBeUndefined()
+  })
+
+  it('rejects the request (400) when the budget or the director offer is missing', async () => {
+    viewer(INITIATOR_CHURCH, { first_year_budget: null, director_offer_path: null })
+    const res = await requestPresentation(deps() as GdclusterDeps, post(), { id: '3' })
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.missing_data).toContain('budget_total')
+    expect(json.missing_data).toContain('director_offer_pdf')
+    expect(mockExecute).not.toHaveBeenCalled()
+  })
+
+  it('lets pdJ return the request with suggestions and unlocks the data', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ ...CLUSTER, gd_status: 'under_review', gd_requested_at: new Date() })
+      .mockResolvedValueOnce({ usuario_id: 5, idioma: 'es' })
+    mockExecute.mockResolvedValue([])
+    const admin = { usuario_id: 1, billetera: WALLET }
+    const req = new NextRequest('http://localhost/api/cluster/3/gd-presentation', {
+      method: 'PUT',
+      body: JSON.stringify({ walletAddress: WALLET, status: 'returned', evaluation: 'Falta el transporte', suggestions: 'Ajusta el total' }),
+    })
+    const res = await updatePresentation(deps({ authenticateAdmin: vi.fn().mockResolvedValue(admin) }) as GdclusterDeps, req, { id: '3' })
+    expect(res.status).toBe(200)
+    // update clustergd + history + userevent + notificación al iniciador
+    expect(mockExecute.mock.calls.length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('requires an admin to move the presentation state (403)', async () => {
+    const req = new NextRequest('http://localhost/api/cluster/3/gd-presentation', {
+      method: 'PUT',
+      body: JSON.stringify({ walletAddress: WALLET, status: 'under_review' }),
+    })
+    const res = await updatePresentation(deps({ authenticateAdmin: vi.fn().mockResolvedValue(null) }) as GdclusterDeps, req, { id: '3' })
+    expect(res.status).toBe(403)
+  })
+
+  it('rejects an invalid transition (409)', async () => {
+    mockExecuteTakeFirst.mockResolvedValueOnce({ ...CLUSTER, gd_status: 'requested', gd_requested_at: new Date() })
+    const req = new NextRequest('http://localhost/api/cluster/3/gd-presentation', {
+      method: 'PUT',
+      body: JSON.stringify({ walletAddress: WALLET, status: 'answered' }),
+    })
+    const res = await updatePresentation(deps({ authenticateAdmin: vi.fn().mockResolvedValue({ usuario_id: 1 }) }) as GdclusterDeps, req, { id: '3' })
+    expect(res.status).toBe(409)
+  })
+
+  it('lets the initiator cancel while pdJ has not reviewed it', async () => {
+    viewer(INITIATOR_CHURCH, { gd_status: 'requested', gd_requested_at: new Date() })
+    mockExecute.mockResolvedValue([])
+    const res = await cancelPresentation(deps() as GdclusterDeps, get(), { id: '3' })
+    expect(res.status).toBe(200)
+    expect((await res.json()).request.status).toBe('cancelled')
+    // update clustergd + history + userevent
+    expect(mockExecute).toHaveBeenCalledTimes(3)
+  })
+
+  it('rejects the cancel once pdJ is reviewing it (409)', async () => {
+    viewer(INITIATOR_CHURCH, { gd_status: 'under_review', gd_requested_at: new Date() })
+    const res = await cancelPresentation(deps() as GdclusterDeps, get(), { id: '3' })
+    expect(res.status).toBe(409)
   })
 
   it('rejects a viewer from outside the cluster (403)', async () => {

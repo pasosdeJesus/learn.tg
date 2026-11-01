@@ -1882,6 +1882,17 @@ ALTER SEQUENCE public.churchreputation_id_seq OWNED BY public.churchreputation.i
 
 
 --
+-- Name: cluster_fund_vote; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cluster_fund_vote (
+    clustergd_id integer NOT NULL,
+    usuario_id integer NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
 -- Name: cluster_invitation; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1938,7 +1949,26 @@ CREATE TABLE public.clustergd (
     gd_response text,
     gd_response_at timestamp with time zone,
     gd_response_by integer,
-    gd_contact_email text
+    gd_contact_email text,
+    gd_status character varying(20),
+    gd_reviewed_at timestamp with time zone,
+    gd_returned_at timestamp with time zone,
+    gd_approved_at timestamp with time zone,
+    gd_answered_at timestamp with time zone,
+    gd_evaluation text,
+    gd_suggestions text,
+    first_year_budget numeric(12,2),
+    budget_draft_path character varying(255),
+    budget_fixed_at timestamp with time zone,
+    director_offer_path character varying(255),
+    director_first_year_pay numeric(12,2),
+    director_first_year_hours numeric(8,2),
+    director_fixed_at timestamp with time zone,
+    ranking_exited_at timestamp with time zone,
+    fund_released_at timestamp with time zone,
+    fund_released_amount numeric(14,2),
+    fund_released_slearn numeric(14,2),
+    CONSTRAINT clustergd_gd_status_check CHECK (((gd_status IS NULL) OR ((gd_status)::text = ANY ((ARRAY['requested'::character varying, 'under_review'::character varying, 'returned'::character varying, 'approved'::character varying, 'sent'::character varying, 'answered'::character varying, 'cancelled'::character varying])::text[]))))
 );
 
 
@@ -1949,7 +1979,7 @@ CREATE TABLE public.clustergd (
 CREATE TABLE public.clustergd_history (
     id integer NOT NULL,
     clustergd_id integer NOT NULL,
-    event_type character varying(20) NOT NULL,
+    event_type character varying(40) NOT NULL,
     old_value text,
     new_value text,
     changed_by integer,
@@ -6739,6 +6769,14 @@ ALTER TABLE ONLY public.churchreputation
 
 
 --
+-- Name: cluster_fund_vote cluster_fund_vote_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_fund_vote
+    ADD CONSTRAINT cluster_fund_vote_pkey PRIMARY KEY (clustergd_id, usuario_id);
+
+
+--
 -- Name: cluster_invitation cluster_invitation_cluster_pastor_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7824,6 +7862,13 @@ CREATE INDEX billetera_usuario_usuario_id_idx ON public.billetera_usuario USING 
 
 
 --
+-- Name: cluster_fund_vote_cluster_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX cluster_fund_vote_cluster_idx ON public.cluster_fund_vote USING btree (clustergd_id);
+
+
+--
 -- Name: cor1440_gen_actividad_id_actividadpf_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8602,6 +8647,22 @@ ALTER TABLE ONLY public.churchactivitycache
 
 ALTER TABLE ONLY public.churchreputation
     ADD CONSTRAINT churchreputation_church_id_fkey FOREIGN KEY (church_id) REFERENCES public.church(id);
+
+
+--
+-- Name: cluster_fund_vote cluster_fund_vote_clustergd_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_fund_vote
+    ADD CONSTRAINT cluster_fund_vote_clustergd_id_fkey FOREIGN KEY (clustergd_id) REFERENCES public.clustergd(id);
+
+
+--
+-- Name: cluster_fund_vote cluster_fund_vote_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cluster_fund_vote
+    ADD CONSTRAINT cluster_fund_vote_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
 
 
 --

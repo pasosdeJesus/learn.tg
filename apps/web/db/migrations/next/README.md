@@ -11,7 +11,7 @@ The module was loaded once through `bin/m db:migrate` with the file in place: it
 resolves its imports (viem, ethers, the JSON ABIs, `_lib`) and stops at the preflight
 with `LearnTGVaults V6 not deployed — address not found`, as intended.
 
-Read `doc/LearnTGVaultsV6.md` and `REQ/221` first: this script exists because the
+Read R-#293 and R-#221 first: this script exists because the
 V3→V4 migration was run twice on 2026-06-09/10 and its `setVaultBalance` re-applied the
 snapshot, leaving 0.040910 USDT of extra books. Everything below is meant to make that
 impossible.

@@ -14,6 +14,7 @@ export const engine = {
   "views": {
     "components": [
       "ClusterPage",
+      "ClusterPresentationPanel",
       "CountryFilter",
       "CountryFlag",
       "RankingClient",

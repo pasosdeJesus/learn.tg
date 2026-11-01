@@ -5,7 +5,7 @@
 // cannot run it by accident. When the operator decides, it moves one level up and
 // `db:migrate` records it as applied.
 //
-// Design and rationale: `db/migrations/next/README.md`, `doc/LearnTGVaultsV6.md`,
+// Design and rationale: `db/migrations/next/README.md`, R-#293,
 // https://github.com/pasosdeJesus/learn.tg/issues/221
 //
 // Two rules and one accident guide every line here:

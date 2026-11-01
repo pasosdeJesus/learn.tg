@@ -5,6 +5,7 @@ import type { ComponentType } from 'react'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@pasosdejesus/m/shadcn-components/ui/use-toast'
+import { ClusterPresentationPanel } from './ClusterPresentationPanel.js'
 
 // Deps del core inyectadas por el host (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §13.3, D2 para componentes):
 // el motor no importa hooks del core ni next-auth. `lib/gdcluster-ui.tsx`
@@ -166,17 +167,30 @@ interface PresentationPastor {
 }
 
 interface PresentationRequestView {
+  status?: string | null
+  locked?: boolean
   requested_at: string | null
   sent_at: string | null
   response?: string | null
   contact_email?: string | null
+  evaluation?: string | null
+  suggestions?: string | null
+  first_year_budget?: number | null
+  budget_draft_path?: string | null
+  budget_fixed_at?: string | null
+  director_offer_path?: string | null
+  director_first_year_pay?: number | null
+  director_first_year_hours?: number | null
+  director_fixed_at?: string | null
 }
 
 interface PresentationView {
   ready: boolean
   pastors: PresentationPastor[]
   missing: string[]
+  missing_data?: string[]
   isInitiator: boolean
+  isMember?: boolean
   request: PresentationRequestView | null
 }
 
@@ -517,7 +531,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
                 {presentation.missing.map((key) => t(CLUSTER_MISSING[key] ?? 'gdMissingActive')).join(' · ')}
               </p>
             )}
-            {presentation.request ? (
+            {presentation.request && presentation.request.status !== 'cancelled' ? (
               <div className="text-xs text-gray-700 space-y-1">
                 <p>
                   {t('gdRequested')}
@@ -550,7 +564,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
                     className="mt-0.5"
                     checked={gdConfirmed}
                     onChange={(e) => setGdConfirmed(e.target.checked)}
-                    disabled={!presentation.ready}
+                    disabled={!presentation.ready || (presentation.missing_data?.length ?? 0) > 0}
                   />
                   <span>{t('gdRequest')}</span>
                 </label>
@@ -558,7 +572,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
                   <deps.Button
                     size="sm"
                     onClick={handlePresentationRequest}
-                    disabled={!gdConfirmed || !presentation.ready || requesting}
+                    disabled={!gdConfirmed || !presentation.ready || (presentation.missing_data?.length ?? 0) > 0 || requesting}
                   >
                     {t('gdRequestSend')}
                   </deps.Button>
@@ -566,6 +580,17 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
               </div>
             ) : null}
           </div>
+        )}
+
+        {isAuthenticated && presentation && (presentation.isInitiator || presentation.isMember) && (
+          <ClusterPresentationPanel
+            lang={lang}
+            clusterId={cluster.id}
+            address={address || null}
+            isInitiator={!!presentation.isInitiator}
+            onChanged={fetchPresentation}
+            Button={deps.Button}
+          />
         )}
 
         <h2 className="text-lg font-semibold text-gray-900 mb-3">
