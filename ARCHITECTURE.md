@@ -343,13 +343,17 @@ duplicated routes. Implemented (2026-08-31, migration
   keyed by the previous address). The verifier can still correct it in the church modal
   (`PATCH /api/admin/church/[id]`) as a support path.
 - **The 10% of the cluster's students** (course purchases and guide scholarships) goes to
-  the cluster fund while that fund exists, even after the cluster leaves the ranking. Once
-  the presentation to Global Disciples is `answered` and every pastor presses Withdraw,
-  `POST /api/cluster/[id]/withdraw` calls `releaseClusterFunds` and records
-  `clustergd.fund_released_at`; from then on `resolveGDClusterDestination` routes that 10%
-  to the country fund. Leaving the ranking only stops donations from the ranking. The
-  presentation states, the fixed budget/director data and the votes are in
-  `clustergd.gd_status` / `cluster_fund_vote` (see https://github.com/pasosdeJesus/learn.tg/issues/161).
+  the cluster fund while that fund exists. A cluster becomes **verified** in the contract
+  when pdJ presents it (`sent`, "presented = verified"); it stays in the ranking (shown in
+  green, without the Donate button). Every pastor approves the presentation (budget,
+  director's offer and wallet, bound to a SHA-256 of those data, so a change invalidates the
+  approval), the wallet is fixed from `requested`, and when pdJ records `answered` the
+  backend releases automatically: `redistributeCountryFunds` splits the country fund equally
+  among the presented/verified clusters and `releaseClusterFunds` sends the answered
+  cluster's fund to its wallet (`clustergd.fund_released_at`). From then on
+  `resolveGDClusterDestination` routes that 10% to the country fund. States, data and
+  approvals are in `clustergd.gd_status`, `cluster_gd_approval` and the budget/director
+  columns (see https://github.com/pasosdeJesus/learn.tg/issues/161).
 
 **States:**
 

@@ -112,13 +112,52 @@ with the NextAuth JWT from the session cookie and return 401 without it. A route
 using `getToken(` must still reject when the cookie/subject is missing.
 
 **Blind spot to keep in mind:** the audit reads the `route.ts` file, so it only
-sees DB access written **in that file**. A route whose SQL lives in `lib/` (or in
-an engine) and that does not call an auth helper matches neither pattern and
-**passes unnoticed**: `GET /api/metrics` was public that way (its query is in
+sees DB access written **in that file**. A route whose SQL lives in `lib/` and
+that does not call an auth helper matches neither pattern and **passes
+unnoticed**: `GET /api/metrics` was public that way (its query is in
 `lib/metrics/queries`) until 2026-09-21, when it was given `authenticateAdmin`.
 When a route is a thin wrapper over a `lib/` function, check it by hand: if it
 returns database data, it must authenticate or be declared public in
 `PUBLIC_ENDPOINTS` with a reason.
+
+### Engine re-exports (resolved since 2026-10-22)
+
+The routes that delegate to an engine (`packages/rewards`, `packages/gdcluster`,
+`packages/mr519`) are also thin files:
+
+```ts
+return gdclusterApp['cluster/[id]/approval'].POST!(request, await params)
+```
+
+The audit follows that re-export: it parses the engine registry in
+`packages/<engine>/src/index.ts`, maps the key and method to the handler in
+`src/routes/<file>.ts`, and classifies **each method** by the auth its handler (or
+its local helpers, via the call graph in that file) uses. The output marks those
+lines with `engine <name>` and counts them in the `engine:` total.
+
+- Engine handlers **without** auth fail the run unless the route is declared in
+  `ENGINE_PUBLIC_ROUTES` (key `'<METHOD> <engine>:<registry key>'`) with a reason.
+- The 401/403 contract of the cluster routes is covered by
+  `packages/gdcluster/src/routes/__tests__/route-auth.test.ts`.
+
+| Route | Method | Class | Who |
+|---|---|---|---|
+| `cluster/[id]/gd-presentation` | GET | authenticated | pastor member of the cluster or the initiator |
+| `cluster/[id]/gd-presentation` | POST | authenticated | only the initiator, with the five data, the wallet and every approval |
+| `cluster/[id]/gd-presentation` | PUT | **admin-only** | pdJ / verifier |
+| `cluster/[id]/gd-presentation` | DELETE | authenticated | only the initiator, while `requested` |
+| `cluster/[id]/approval` | GET / POST | authenticated | principal pastor of a member church |
+| `cluster/[id]/budget` | PUT | authenticated | only the initiator |
+| `cluster/[id]/director` | PUT | authenticated | only the initiator |
+| `cluster/[id]/document` | POST / DELETE | authenticated | only the initiator |
+| `cluster/[id]/document` | GET | authenticated | member, initiator or admin (private document) |
+| `admin/clusters*` | all | **admin-only** | verifier / pdJ |
+
+The public engine routes declared in `ENGINE_PUBLIC_ROUTES` are read-only:
+`check-crossword` GET (always 400), `churches/fund`, `credential/[tokenId]`,
+`credential/wallet/[wallet]`, `referrals/fund`, `slearn/metadata`, `ubi-report`,
+`ubi-report-wallet`, the campaign transparency endpoints
+(`donations/[slug]/balance|movements|transparency`) and `gdcluster/ranking/*`.
 
 ### When to run it
 

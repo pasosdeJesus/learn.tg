@@ -10,7 +10,7 @@ import {
   getClusterCandidates,
   isType1Country,
 } from '../lib/gd-utils.js'
-import { readClusterFunds, hasFunds, summarizeFunds, setClusterVerified } from '../lib/cluster-funds.js'
+import { readClusterFunds, hasFunds, summarizeFunds } from '../lib/cluster-funds.js'
 import { checkWalletControl, validateClusterWallet } from '../lib/cluster-wallet.js'
 import { getClusterPastors } from '../lib/cluster-pastors.js'
 import type { GdclusterDeps } from '../index.js'
@@ -531,15 +531,6 @@ export async function updateCluster(
           funds_left: fundsSummary,
           funds_unchecked: fundsUnchecked,
         })
-        // "Presentada = verificada" está indexado por la dirección: si el clúster ya fue
-        // presentado a GD y cambia de billetera, la nueva debe quedar verificada.
-        if (normalizedWallet && ['sent', 'answered'].includes(cluster.gd_status)) {
-          try {
-            await setClusterVerified(deps as any, normalizedWallet)
-          } catch (error) {
-            console.error('cluster re-verification failed:', error instanceof Error ? error.message : String(error))
-          }
-        }
       }
     }
 

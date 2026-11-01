@@ -125,12 +125,6 @@ export interface Churchreputation {
   updated_at: Generated<Timestamp>;
 }
 
-export interface ClusterFundVote {
-  clustergd_id: number;
-  created_at: Generated<Timestamp>;
-  usuario_id: number;
-}
-
 export interface Clustergd {
   budget_draft_path: string | null;
   budget_fixed_at: Timestamp | null;
@@ -164,7 +158,6 @@ export interface Clustergd {
   initiator_church_id: number | null;
   name: string;
   pseudonym: string | null;
-  ranking_exited_at: Timestamp | null;
   status: Generated<string>;
   updated_at: Generated<Timestamp | null>;
 }
@@ -1651,7 +1644,6 @@ export interface DB {
   church_clustergd: ChurchClustergd;
   churchactivitycache: Churchactivitycache;
   churchreputation: Churchreputation;
-  cluster_fund_vote: ClusterFundVote;
   cluster_gd_approval: ClusterGdApproval;
   cluster_invitation: ClusterInvitation;
   clustergd: Clustergd;

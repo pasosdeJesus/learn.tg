@@ -3,7 +3,7 @@
 // Usage: node bin/audit-api-auth.mjs
 // Rules and how to fix findings: doc/api-security.md (repo root)
 
-import { readFileSync, readdirSync, statSync, existsSync } from 'fs'
+import { readFileSync, readdirSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -111,6 +111,154 @@ const PUBLIC_ADMIN_DATA_NOTES = {
   'referral/lookup': '`nusuario` es público; el campo `nombre` solo se devuelve a admin',
 }
 
+// Rutas de `app/api` con auth por método (el archivo mezcla `authenticateUser` y
+// `authenticateAdmin`); la anotación aclara la clasificación gruesa del archivo.
+const CORE_METHOD_NOTES = {
+  'cluster/[id]/document': 'POST/DELETE: iniciador; GET: miembro/iniciador o admin',
+}
+
+// ── Rutas que delegan en un motor (`packages/*`) ─────────────────────────────
+// Los `route.ts` de `app/api` son re-exports delgados de los motores:
+//   return gdclusterApp['cluster/[id]/approval'].POST!(request, await params)
+// Esos archivos no tocan la BD, así que el escaneo simple no los veía (el punto
+// ciego de doc/api-security.md). Aquí se sigue el re-export hasta el handler del
+// motor y se clasifica **por método** con la auth que usa el handler o sus
+// ayudantes locales (grafo de llamadas dentro del archivo del motor).
+const REPO_ROOT = join(__dirname, '..', '..', '..')
+const ENGINE_ADAPTERS = {
+  gdclusterApp: join(REPO_ROOT, 'packages', 'gdcluster'),
+  rewardsApp: join(REPO_ROOT, 'packages', 'rewards'),
+  mr519App: join(REPO_ROOT, 'packages', 'mr519'),
+}
+
+// Rutas de motor que son públicas a propósito (sin auth), con su motivo.
+// Clave: '<MÉTODO> <motor>:<clave del registro>'.
+const ENGINE_PUBLIC_ROUTES = {
+  'GET rewards:check-crossword': 'GET no se usa: responde 400 "Expecting POST request"',
+  'GET rewards:churches/fund': 'saldo público de la billetera de iglesias (bono de pastores)',
+  'GET rewards:credential/[tokenId]': 'verificación pública de una credencial (SBT)',
+  'GET rewards:credential/wallet/[wallet]': 'credenciales de una billetera, con el filtro de privacidad de R-#259',
+  'GET rewards:referrals/fund': 'saldo público de la billetera de referidos',
+  'GET rewards:slearn/metadata': 'metadatos públicos del token SLEARN',
+  'GET rewards:ubi-report': 'reporte público de UBI (solo datos agregados)',
+  'GET rewards:ubi-report-wallet': 'reporte público de UBI por billetera',
+  'GET gdcluster:donations/[slug]/balance': 'transparencia pública de una campaña',
+  'GET gdcluster:donations/[slug]/movements': 'transparencia pública de una campaña',
+  'GET gdcluster:donations/[slug]/transparency': 'transparencia pública de una campaña',
+  'GET gdcluster:gdcluster/ranking/clusters': 'ranking público de clústeres (solo región tipo 1)',
+  'GET gdcluster:gdcluster/ranking/countries': 'ranking público de países',
+  'GET gdcluster:gdcluster/ranking/funds': 'saldos públicos del ranking',
+}
+
+const engineIndexCache = new Map()
+const engineSourceCache = new Map()
+
+function readEngineSource(engineDir, rel) {
+  const key = join(engineDir, rel)
+  if (!engineSourceCache.has(key)) {
+    try {
+      engineSourceCache.set(key, readFileSync(key, 'utf8'))
+    } catch {
+      engineSourceCache.set(key, null)
+    }
+  }
+  return engineSourceCache.get(key)
+}
+
+/** key → método → { fn, file } a partir del registro de `src/index.ts`. */
+function engineRegistry(engineDir) {
+  if (engineIndexCache.has(engineDir)) return engineIndexCache.get(engineDir)
+  const index = readEngineSource(engineDir, 'src/index.ts')
+  const registry = new Map()
+  if (index) {
+    const imports = new Map()
+    const importRe = /import\s*\{([\s\S]*?)\}\s*from\s*'\.\/routes\/([^']+)\.js'/g
+    let m
+    while ((m = importRe.exec(index))) {
+      for (const raw of m[1].split(',')) {
+        const name = raw.trim().split(/\s+as\s+/).pop().trim()
+        if (name) imports.set(name, `src/routes/${m[2]}.ts`)
+      }
+    }
+    const entryRe = /^    '([^']+)':\s*\{([\s\S]*?)\n    \}/gm
+    while ((m = entryRe.exec(index))) {
+      const methods = new Map()
+      const methodRe = /^\s*(GET|POST|PUT|PATCH|DELETE):\s*\([^)]*\)\s*=>\s*(\w+)\(/gm
+      let mm
+      while ((mm = methodRe.exec(m[2]))) {
+        methods.set(mm[1], { fn: mm[2], file: imports.get(mm[2]) || null })
+      }
+      registry.set(m[1], methods)
+    }
+  }
+  engineIndexCache.set(engineDir, registry)
+  return registry
+}
+
+/** Funciones locales del archivo del motor: nombre → cuerpo. */
+function engineFunctions(source) {
+  const fns = new Map()
+  const re = /(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(/g
+  let m
+  while ((m = re.exec(source))) {
+    const start = m.index
+    const close = source.indexOf('\n}\n', start)
+    fns.set(m[1], source.slice(start, close === -1 ? source.length : close + 3))
+  }
+  return fns
+}
+
+/** Clase de auth de un handler: 'admin' | 'user' | 'none' | 'unresolved'. */
+function handlerAuth(source, fnName) {
+  const fns = engineFunctions(source)
+  const seen = new Set()
+  const queue = [fnName]
+  let body = ''
+  while (queue.length) {
+    const name = queue.shift()
+    if (!name || seen.has(name)) continue
+    seen.add(name)
+    const text = fns.get(name)
+    if (!text) continue
+    body += text
+    const callRe = /\b(\w+)\s*\(/g
+    let m
+    while ((m = callRe.exec(text))) {
+      if (fns.has(m[1])) queue.push(m[1])
+    }
+  }
+  if (!body) return 'unresolved'
+  if (ADMIN_AUTH_PATTERNS.some((p) => body.includes(p)) || body.includes('requireAdmin')) return 'admin'
+  if (AUTH_PATTERNS.some((p) => body.includes(p))) return 'user'
+  return 'none'
+}
+
+/** Rutas de motor exportadas por un `route.ts` de `app/api`. */
+function engineRoutesOf(filePath) {
+  const content = readFileSync(filePath, 'utf8')
+  const found = []
+  const re = /(\w+App)\['([^']+)'\]\.(GET|POST|PUT|PATCH|DELETE)/g
+  let m
+  while ((m = re.exec(content))) {
+    found.push({ adapter: m[1], key: m[2], method: m[3] })
+  }
+  const routes = []
+  for (const hit of found) {
+    const engineDir = ENGINE_ADAPTERS[hit.adapter]
+    if (!engineDir) continue
+    const engine = hit.adapter.replace(/App$/, '')
+    const entry = engineRegistry(engineDir).get(hit.key)?.get(hit.method)
+    if (!entry?.file) {
+      routes.push({ engine, key: hit.key, method: hit.method, cls: 'unresolved' })
+      continue
+    }
+    const source = readEngineSource(engineDir, entry.file)
+    const cls = source ? handlerAuth(source, entry.fn) : 'unresolved'
+    routes.push({ engine, key: hit.key, method: hit.method, cls })
+  }
+  return routes
+}
+
 function findRouteFiles(dir) {
   const files = []
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -163,16 +311,26 @@ function main() {
   const advisories = []
   // Endpoints públicos que además usan chequeo de admin (dato admin-only)
   const publicWithAdminData = []
+  // Rutas delegadas a un motor
+  const engineRoutes = []
 
   for (const file of routeFiles) {
+    if (file.includes('__tests__')) continue
     const rel = classifyEndpoint(file)
+
+    // Re-exports de motores: se clasifican por método siguiendo el handler.
+    const delegated = engineRoutesOf(file)
+    if (delegated.length > 0) {
+      for (const route of delegated) engineRoutes.push({ ...route, rel })
+      continue
+    }
+
     const content = readFileSync(file, 'utf8')
     const usesDb = hasDb(content)
     const usesAuth = hasAuth(content)
     const usesAdmin = hasAdminAuth(content)
     const isPublicEp = isPublic(rel)
 
-    if (file.includes('__tests__')) continue
     const sensitive = usesDb || hasFileAccess(content)
     if (!sensitive) continue
 
@@ -199,11 +357,13 @@ function main() {
   }
   // Then admin-only endpoints
   for (const rel of adminOnly) {
-    console.log(`  🔒 ${rel} (admin-only)`)
+    const note = CORE_METHOD_NOTES[rel]
+    console.log(`  🔒 ${rel} (admin-only)${note ? ` — ${note}` : ''}`)
   }
   // Then authenticated
   for (const rel of authenticated) {
-    console.log(`  ✅ ${rel} (authenticated)`)
+    const note = CORE_METHOD_NOTES[rel]
+    console.log(`  ✅ ${rel} (authenticated)${note ? ` — ${note}` : ''}`)
   }
   // Then failures
   for (const rel of issues) {
@@ -220,9 +380,33 @@ function main() {
     }
   }
 
-  const passed = publics.length + authenticated.length + adminOnly.length
+  // Rutas de motor (re-exports), clasificadas por método
+  let engineFailed = 0
+  let engineWarnings = 0
+  if (engineRoutes.length > 0) console.log('')
+  for (const route of engineRoutes) {
+    const id = `${route.method} ${route.engine}:${route.key}`
+    if (route.cls === 'admin') {
+      console.log(`  🔒 ${route.rel} [${route.method}] (admin-only, engine ${route.engine})`)
+    } else if (route.cls === 'user') {
+      console.log(`  ✅ ${route.rel} [${route.method}] (authenticated, engine ${route.engine})`)
+    } else if (route.cls === 'none') {
+      if (ENGINE_PUBLIC_ROUTES[id]) {
+        console.log(`  ✅ ${route.rel} [${route.method}] (public, engine ${route.engine}) — ${ENGINE_PUBLIC_ROUTES[id]}`)
+      } else {
+        console.log(`  ❌ ${route.rel} [${route.method}] (engine ${route.engine}) — ENGINE HANDLER WITHOUT AUTH`)
+        engineFailed++
+        issues.push(`${route.rel} [${route.method}]`)
+      }
+    } else {
+      console.log(`  ⚠️  ${route.rel} [${route.method}] (engine ${route.engine}) — handler not resolved`)
+      engineWarnings++
+    }
+  }
+
+  const passed = publics.length + authenticated.length + adminOnly.length + engineRoutes.length - engineFailed - engineWarnings
   const failed = issues.length
-  console.log(`\n${passed} passed / ${failed} failed (public: ${publics.length}, admin-only: ${adminOnly.length}, authenticated: ${authenticated.length})${advisories.length ? ` — advisories nombre: ${advisories.length}` : ''}`)
+  console.log(`\n${passed} passed / ${failed} failed (public: ${publics.length}, admin-only: ${adminOnly.length}, authenticated: ${authenticated.length}, engine: ${engineRoutes.length})${advisories.length ? ` — advisories nombre: ${advisories.length}` : ''}${engineWarnings ? ` — engine warnings: ${engineWarnings}` : ''}`)
 
   if (failed > 0) {
     console.log('\nEndpoints needing auth:')

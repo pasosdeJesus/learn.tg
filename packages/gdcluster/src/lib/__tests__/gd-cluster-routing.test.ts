@@ -58,18 +58,6 @@ describe('resolveGDClusterDestination', () => {
     expect(result.destination).toBe('0xABCD')
   })
 
-  it('keeps routing to the cluster after it left the ranking, while the fund exists (R-#161)', async () => {
-    const db = mockDb({
-      churchResult: { cluster_wallet: '0xABCD', country_id: 170, ranking_exited_at: new Date() },
-      usuarioResult: { pais_id: 170 },
-      paisResult: { alfa2: 'CO', tipo_region: 1 },
-    })
-
-    const result = await resolveGDClusterDestination(db, 1)
-    expect(result.type).toBe('cluster')
-    expect(result.destination).toBe('0xABCD')
-  })
-
   it('should resolve to the country fund once the cluster fund was released (R-#161)', async () => {
     const db = mockDb({
       churchResult: { cluster_wallet: '0xABCD', country_id: 170, fund_released_at: new Date() },

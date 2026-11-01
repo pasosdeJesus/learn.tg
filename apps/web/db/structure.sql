@@ -1882,17 +1882,6 @@ ALTER SEQUENCE public.churchreputation_id_seq OWNED BY public.churchreputation.i
 
 
 --
--- Name: cluster_fund_vote; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.cluster_fund_vote (
-    clustergd_id integer NOT NULL,
-    usuario_id integer NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-
---
 -- Name: cluster_gd_approval; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1976,7 +1965,6 @@ CREATE TABLE public.clustergd (
     director_first_year_pay numeric(12,2),
     director_first_year_hours numeric(8,2),
     director_fixed_at timestamp with time zone,
-    ranking_exited_at timestamp with time zone,
     fund_released_at timestamp with time zone,
     fund_released_amount numeric(14,2),
     fund_released_slearn numeric(14,2),
@@ -6781,14 +6769,6 @@ ALTER TABLE ONLY public.churchreputation
 
 
 --
--- Name: cluster_fund_vote cluster_fund_vote_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.cluster_fund_vote
-    ADD CONSTRAINT cluster_fund_vote_pkey PRIMARY KEY (clustergd_id, usuario_id);
-
-
---
 -- Name: cluster_gd_approval cluster_gd_approval_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7882,13 +7862,6 @@ CREATE INDEX billetera_usuario_usuario_id_idx ON public.billetera_usuario USING 
 
 
 --
--- Name: cluster_fund_vote_cluster_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX cluster_fund_vote_cluster_idx ON public.cluster_fund_vote USING btree (clustergd_id);
-
-
---
 -- Name: cluster_gd_approval_cluster_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8674,22 +8647,6 @@ ALTER TABLE ONLY public.churchactivitycache
 
 ALTER TABLE ONLY public.churchreputation
     ADD CONSTRAINT churchreputation_church_id_fkey FOREIGN KEY (church_id) REFERENCES public.church(id);
-
-
---
--- Name: cluster_fund_vote cluster_fund_vote_clustergd_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.cluster_fund_vote
-    ADD CONSTRAINT cluster_fund_vote_clustergd_id_fkey FOREIGN KEY (clustergd_id) REFERENCES public.clustergd(id);
-
-
---
--- Name: cluster_fund_vote cluster_fund_vote_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.cluster_fund_vote
-    ADD CONSTRAINT cluster_fund_vote_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
 
 
 --
