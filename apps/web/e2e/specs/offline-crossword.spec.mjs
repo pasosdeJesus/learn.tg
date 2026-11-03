@@ -11,6 +11,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, setupFullWalletMock, summary } from '@pasosdejesus/m/e2e'
+import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
 import { signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 import {
   answersFromGuideFile, clickSubmit, fillSolved, pendingCount, pendingInIndexedDb,
@@ -39,17 +40,6 @@ async function guideStatus(page, address, courseId, guideNumber) {
   }, `/api/guide-status?courseId=${courseId}&guideNumber=${guideNumber}&walletAddress=${encodeURIComponent(address)}`)
 }
 
-function loadEnvCredentials() {
-  for (const envPath of [path.join(process.cwd(), '..', '.env'), path.join(process.cwd(), 'apps', '.env'), path.join(process.cwd(), '.env')]) {
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, 'utf8')
-      const pk = content.match(/PRIVATE_KEY="([^"]+)"/)?.[1] || content.match(/PRIVATE_KEY=(\S+)/)?.[1]
-      const addr = content.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
-      if (pk && addr) return { pk, addr }
-    }
-  }
-  return null
-}
 
 async function fillEveryCell(page) {
   // One cell per task: React batches the synthetic events of a single
@@ -80,7 +70,7 @@ async function main() {
   const startedAtMs = Date.now()
   resetFailures()
 
-  const creds = loadEnvCredentials()
+  const creds = loadSelectedWallet()
   if (!creds) { console.error('No credentials found in apps/.env'); process.exit(1) }
 
   if (!process.env.IPDES) process.env.IPDES = 'learn.tg'

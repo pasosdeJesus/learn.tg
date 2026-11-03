@@ -35,6 +35,8 @@ import { createPublicClient, createWalletClient, http, parseEther, parseUnits } 
 import { celoSepolia } from 'viem/chains'
 import { fail, gotoWithRetry, initTestEnv, launchBrowser, newPage, ok, resetFailures, short, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
+import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
+import { rememberWallet } from '../helpers/e2e-wallets-registry.mjs'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
@@ -186,9 +188,11 @@ async function main() {
   // el helper de m fija https, así que sin esto no se puede probar en local.
   const base = process.env.SITE_URL || env.base
 
-  // 1. Fresh eligible pastor wallet
-  const pk = generatePrivateKey()
-  const addr = privateKeyToAddress(pk)
+  // 1. Pastor wallet: la elegida con E2E_WALLET / --wallet (TEST_PASTOR1..3), o una
+  // nueva si no hay selector. La misma billetera compra el curso una sola vez.
+  const selected = loadSelectedWallet()
+  const pk = selected?.pk || generatePrivateKey()
+  const addr = selected?.address || privateKeyToAddress(pk)
   const testEmail = `checkout-${addr.slice(2, 10).toLowerCase()}@learn.tg`
   console.log(`Pastor: ${short(addr)} | ${base}`)
 
@@ -201,6 +205,15 @@ async function main() {
     place_of_worship_location: 'Freetown', church_relationship: 'pastor',
   }, auth, s.cookies)
 
+  // 2b. La billetera queda en el registro local (fuera de git) para que otras
+  // corridas la reutilicen en vez de crear una nueva.
+  rememberWallet({
+    privateKey: pk,
+    address: addr,
+    role: selected ? 'pastor' : 'member',
+    note: 'premium-course-checkout',
+  })
+
   // 3. Verifier confirms the worship location → eligible to buy GD
   const vAuth = await siweSignIn(verifier.pk, verifier.addr)
   const profile = await axios.get(`${SITE}/api/profile?walletAddress=${encodeURIComponent(addr)}`, { httpsAgent, headers: { Cookie: s.cookies } }).then(r => r.data)
@@ -209,6 +222,33 @@ async function main() {
     verified_place_of_worship: 'E2E Checkout Church',
     verified_church_relationship: 'pastor',
   }, { wallet: verifier.addr }, vAuth.cookies)
+
+  // 3b. Si la billetera elegida ya pagó el curso, no se repite la compra (la tabla
+  // es única por usuario+curso): se abre la guía para comprobar el acceso.
+  const mine = await axios
+    .get(`${SITE}/api/courses/premium/mine?walletAddress=${encodeURIComponent(addr)}`, { httpsAgent, headers: { Cookie: s.cookies } })
+    .then((r) => r.data)
+    .catch(() => ({}))
+  const ownsCourse = (mine.courses || []).some((row) => [10, 11].includes(Number(row.course_id)))
+  if (ownsCourse) {
+    const ownedBrowser = await launchBrowser(env.headless)
+    const ownedPage = await newPage(ownedBrowser, addr, 120000)
+    await setupE2EAuth(ownedPage, addr, pk, chainId, base)
+    await ownedPage.goto(`${base}/en/gdcluster/guide1`, { waitUntil: 'domcontentloaded' })
+    await ownedPage.waitForFunction(
+      () => (document.querySelector('[aria-label="Guide text"]')?.textContent || '').length > 200,
+      { timeout: 60000 },
+    ).catch(() => {})
+    const chars = await ownedPage.evaluate(
+      () => (document.querySelector('[aria-label="Guide text"]')?.textContent || '').trim().length,
+    )
+    if (chars > 200) ok(`ya tenía el curso: la guía abre (${chars} caracteres)`)
+    else fail('ya tenía el curso pero la guía no abre')
+    ok('compra por la UI omitida: la billetera ya pagó el curso')
+    await ownedBrowser.close()
+    summary()
+    return
+  }
 
   // 4. Browser: Buy button + CheckoutModal
   const browser = await launchBrowser(env.headless)

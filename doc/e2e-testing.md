@@ -87,6 +87,23 @@ CHROME_PATH=/usr/local/bin/chrome node e2e/specs/connect-wallet-flow.spec.mjs
 node e2e/smoke/leaderboard.spec.mjs
 ```
 
+### 1.4 Choosing the wallet (`E2E_WALLET`)
+
+Every spec that signs in gets its credentials from `e2e/helpers/e2e-wallet.mjs`.
+Without a selector it uses `PRIVATE_KEY` from `apps/.env` (the old behaviour);
+with `E2E_WALLET` (or `--wallet` on a direct run) it uses another one:
+
+```sh
+E2E_WALLET=TEST_PASTOR1 make test-e2e-spec SPEC=church-persistence
+E2E_WALLET=0x…           make test-e2e-spec SPEC=offline-crossword
+CHROME_PATH=/usr/local/bin/chrome node e2e/specs/cluster-page.spec.mjs --wallet TEST_PASTOR2
+```
+
+`TEST_PASTOR1..3_PRIVATE_KEY` live in `apps/.env` (gitignored) and are **testnet
+only**: each has gas (CELO) and the SLEARN for the Global Disciples course, so the
+same three pastors can be reused for the cluster flow (form, invite, approve,
+dissolve) instead of seeding new ones per run.
+
 ---
 
 ## 2. Production: read-only checks
@@ -348,8 +365,10 @@ hardcoded a score). Their coverage — SIWE, session cookie, profile — comes f
 ## 5. Browser specs (`e2e/specs/`)
 
 Puppeteer through `@pasosdejesus/m/e2e` (`initTestEnv`, `launchBrowser`,
-`ok`/`fail`/`summary`). 48 specs as of 2026-10-27. **They are not read-only**:
-they register wallets, complete profiles, claim UBI, donate and buy (see §2.2).
+`ok`/`fail`/`summary`). 49 specs as of 2026-11-03. **They are not read-only**:
+they register wallets, complete profiles, claim UBI, donate and buy (see §2.2),
+except `guide-citations.spec.mjs`, which only opens guides and reads their text
+(it checks that every guide keeps its `chapter:verse` citations).
 
 ### 5.1 Wallet in the specs (R-#239 / R-#284)
 

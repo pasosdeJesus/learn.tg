@@ -107,24 +107,6 @@ function solveCrossword(grid, placements) {
 
 // ── Env credentials (referidor = wallet de apps/.env, verificador) ──
 
-function loadEnvCredentials() {
-  const envPaths = [
-    path.join(process.cwd(), '..', '.env'),
-    path.join(process.cwd(), 'apps', '.env'),
-    path.join(process.cwd(), '.env'),
-  ]
-  for (const envPath of envPaths) {
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, 'utf8')
-      const pk = content.match(/PRIVATE_KEY="([^"]+)"/)?.[1] ||
-                 content.match(/PRIVATE_KEY=(\S+)/)?.[1]
-      const addr = content.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] ||
-                   content.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
-      if (pk && addr) return { pk, addr }
-    }
-  }
-  return null
-}
 
 // ── SIWE sign-in (registra la billetera si es nueva) ──
 
@@ -229,7 +211,7 @@ async function apiPatch(reqPath, params, body, cookies) {
 async function main() {
   console.log(`\nReferral payout E2E — target: ${SITE} (chain: ${CHAIN_ID})\n`)
 
-  const creds = loadEnvCredentials()
+  const creds = loadSelectedWallet()
   if (!creds) { console.error('[ERROR] No credentials found in apps/.env'); process.exit(1) }
   const { pk: referrerPk, addr: referrerAddr } = creds
 

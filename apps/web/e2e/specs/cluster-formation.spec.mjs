@@ -17,6 +17,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { initTestEnv, launchBrowser, ok, fail, summary, resetFailures, resolveSiteTarget } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
+import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
 
 // This spec WRITES (it creates, edits and disbands clusters), so it must never
 // default to production: without an explicit target it points to the dev site,
@@ -29,22 +30,6 @@ if (!process.env.IPDES && !process.env.SITE_URL) {
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
 
-function loadEnvCredentials() {
-  const envPaths = [
-    path.join(process.cwd(), '..', '.env'),
-    path.join(process.cwd(), 'apps', '.env'),
-    path.join(process.cwd(), '.env'),
-  ]
-  for (const envPath of envPaths) {
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, 'utf8')
-      const pk = content.match(/PRIVATE_KEY="([^"]+)"/)?.[1] || content.match(/PRIVATE_KEY=(\S+)/)?.[1]
-      const addr = content.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
-      if (pk && addr) return { pk, addr }
-    }
-  }
-  return null
-}
 
 async function navAndWait(page, url, timeout) {
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -69,7 +54,7 @@ async function main() {
   const t0 = performance.now()
   resetFailures()
 
-  const creds = loadEnvCredentials()
+  const creds = loadSelectedWallet()
   if (!creds) { console.error('No credentials found'); process.exit(1) }
   process.env.TEST_PRIVATE_KEY = creds.pk
 

@@ -12,6 +12,7 @@ import {
 } from '../lib/gd-utils.js'
 import { readClusterFunds, hasFunds, summarizeFunds } from '../lib/cluster-funds.js'
 import { checkWalletControl, validateClusterWallet } from '../lib/cluster-wallet.js'
+import { churchCompletedCluster } from '../lib/cluster-membership.js'
 import { getClusterPastors } from '../lib/cluster-pastors.js'
 import type { GdclusterDeps } from '../index.js'
 
@@ -68,6 +69,17 @@ export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
       return NextResponse.json(
         { error: 'You must take the Global Disciples course before creating a cluster' },
         { status: 403 }
+      )
+    }
+
+    const completed = await churchCompletedCluster(db, church.id)
+    if (completed) {
+      return NextResponse.json(
+        {
+          error: 'Your church belonged to a cluster that already received its funds and cannot take part in another one',
+          code: 'cluster_completed',
+        },
+        { status: 403 },
       )
     }
 
@@ -194,6 +206,17 @@ export async function joinCluster(deps: GdclusterDeps, req: NextRequest) {
       return NextResponse.json(
         { error: 'Clusters are available only in countries classified as type 1' },
         { status: 403 }
+      )
+    }
+
+    const completed = await churchCompletedCluster(db, church.id)
+    if (completed) {
+      return NextResponse.json(
+        {
+          error: 'Your church belonged to a cluster that already received its funds and cannot take part in another one',
+          code: 'cluster_completed',
+        },
+        { status: 403 },
       )
     }
 

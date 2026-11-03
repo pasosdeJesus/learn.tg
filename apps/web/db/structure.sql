@@ -5838,7 +5838,7 @@ ALTER SEQUENCE public.transaction_id_seq OWNED BY public.transaction.id;
 CREATE TABLE public.userevent (
     id bigint NOT NULL,
     usuario_id integer,
-    event_type character varying(30) NOT NULL,
+    event_type character varying(80) NOT NULL,
     event_data jsonb,
     created_at timestamp without time zone NOT NULL
 );

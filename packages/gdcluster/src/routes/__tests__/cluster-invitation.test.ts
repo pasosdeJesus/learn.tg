@@ -78,6 +78,7 @@ describe('acceptInvitation (https://github.com/pasosdeJesus/learn.tg/issues/220)
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ id: 20, name: 'Iglesia B', country_id: 694 }) // getPastorChurch
       .mockResolvedValueOnce({ id: 9, clustergd_id: 3, invited_pastor_id: 5, invited_church_id: 20, invited_by_id: 1, status: 'pending' }) // invitation
+      .mockResolvedValueOnce(null) // churchCompletedCluster (ningún clúster desembolsó)
       .mockResolvedValueOnce(null) // existingMembership
       .mockResolvedValueOnce({ id: 3, name: 'Esperanza', pseudonym: null, status: 'pending', initiator_church_id: 11 }) // cluster
       .mockResolvedValueOnce({ created_by: 1 }) // leader's church → notify
@@ -121,6 +122,7 @@ describe('acceptInvitation (https://github.com/pasosdeJesus/learn.tg/issues/220)
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ id: 20, name: 'Iglesia B', country_id: 694 }) // getPastorChurch
       .mockResolvedValueOnce({ id: 10, clustergd_id: 3, invited_pastor_id: 5, invited_church_id: 20, invited_by_id: 1, status: 'pending' }) // invitation
+      .mockResolvedValueOnce(null) // churchCompletedCluster (ningún clúster desembolsó)
       .mockResolvedValueOnce(null) // existingMembership
       .mockResolvedValueOnce({ id: 3, name: 'Esperanza', pseudonym: null, status: 'active', initiator_church_id: 11 }) // already active
     const membersRows = [

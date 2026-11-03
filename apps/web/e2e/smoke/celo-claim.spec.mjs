@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import axios from 'axios';
 import { createPublicClient, http } from 'viem';
+import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
 import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts';
 import { celoSepolia } from 'viem/chains';
 import https from 'https';
@@ -591,13 +592,15 @@ const QUESTION_ANSWER_PAIRS = [
 ];
 
 // --- Configuración ---
-// Usar billetera de entorno si existe, sino generar aleatoria
-let privateKey = process.env.PRIVATE_KEY;
+// La billetera se elige con E2E_WALLET / --wallet (p. ej. TEST_PASTOR1); si no,
+// `PRIVATE_KEY`; y si tampoco hay, se genera una aleatoria para la prueba.
+const selectedWallet = loadSelectedWallet()
+let privateKey = selectedWallet?.pk || process.env.PRIVATE_KEY
 if (!privateKey) {
-  console.log('ℹ️  PRIVATE_KEY no encontrada en entorno, generando billetera aleatoria para la prueba');
+  console.log('ℹ️  Sin billetera en el entorno, generando billetera aleatoria para la prueba');
   privateKey = generatePrivateKey();
 } else {
-  console.log('ℹ️  Usando billetera de entorno PRIVATE_KEY');
+  console.log(`ℹ️  Usando billetera ${selectedWallet?.variable || 'PRIVATE_KEY'}`);
 }
 const account = privateKeyToAccount(privateKey);
 let cookies = ''; // Para almacenar cookies de sesión

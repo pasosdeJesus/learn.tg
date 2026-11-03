@@ -7,6 +7,7 @@ import {
   notifyUser,
   getClusterCandidates,
 } from '../lib/gd-utils.js'
+import { churchCompletedCluster } from '../lib/cluster-membership.js'
 import type { GdclusterDeps } from '../index.js'
 
 // Rutas https://github.com/pasosdeJesus/learn.tg/issues/220: estado del pastor, candidatos e invitaciones de clúster.
@@ -151,6 +152,17 @@ export async function acceptInvitation(deps: GdclusterDeps, req: NextRequest) {
     }
     if (invitation.status !== 'pending') {
       return NextResponse.json({ error: 'Invitation already responded' }, { status: 400 })
+    }
+
+    const completed = await churchCompletedCluster(db, church.id)
+    if (completed) {
+      return NextResponse.json(
+        {
+          error: 'Your church belonged to a cluster that already received its funds and cannot take part in another one',
+          code: 'cluster_completed',
+        },
+        { status: 403 },
+      )
     }
 
     const existingMembership = await getChurchCluster(db, church.id)

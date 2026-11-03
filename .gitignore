@@ -148,6 +148,8 @@ resources/en/
 servidor/.bundle
 resources/es/
 apps/.env.bak.full-local
+# Billeteras de prueba que crean los specs (solo testnet, nunca se versionan)
+apps/.e2e-wallets.local.json
 *.core
 .crushrules
 audit-crushrules.mjs

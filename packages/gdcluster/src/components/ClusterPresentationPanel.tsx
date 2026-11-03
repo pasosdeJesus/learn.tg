@@ -79,6 +79,10 @@ const LABELS: Record<string, { en: string; es: string }> = {
   },
   evaluation: { en: 'pdJ evaluation', es: 'Evaluación de pdJ' },
   suggestions: { en: 'Suggestions', es: 'Sugerencias' },
+  missingData: {
+    en: 'Before requesting the presentation you must complete:',
+    es: 'Antes de solicitar la presentación debes completar:',
+  },
   error: { en: 'Could not save', es: 'No se pudo guardar' },
   upload: { en: 'Upload', es: 'Subir' },
   remove: { en: 'Remove', es: 'Quitar' },
@@ -108,7 +112,8 @@ export function ClusterPresentationPanel({
   Button: any
 }) {
   const tr = (key: keyof typeof LABELS, ...args: string[]) => {
-    const value = (lang === 'es' ? LABELS[key].es : LABELS[key].en) as string
+    const labels = LABELS[key] ?? { en: String(key), es: String(key) }
+    const value = (lang === 'es' ? labels.es : labels.en) as string
     return args.reduce((acc, arg, index) => acc.replace(`{{${index}}}`, arg), value)
   }
 
@@ -246,7 +251,7 @@ export function ClusterPresentationPanel({
           <p className="font-semibold mb-1">{tr('missingData')}</p>
           <ul className="list-disc ml-4">
             {missingData.map((key) => (
-              <li key={key}>{lang === 'es' ? MISSING[key]?.es : MISSING[key]?.en}</li>
+              <li key={key}>{lang === 'es' ? MISSING[key]?.es ?? key : MISSING[key]?.en ?? key}</li>
             ))}
           </ul>
         </div>

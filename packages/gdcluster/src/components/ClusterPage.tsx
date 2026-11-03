@@ -239,7 +239,7 @@ const CLUSTER_MISSING: Record<string, keyof typeof tEn> = {
 
 export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps: ClusterPageDeps }) {
   const t = (key: keyof typeof tEn) =>
-    (lang === 'es' ? translations.es[key] : translations.en[key])
+    (lang === 'es' ? translations.es[key] : translations.en[key]) ?? String(key)
   const { toast } = useToast()
   const { data: session } = deps.useSession()
   const { address } = deps.useAuthAddress()

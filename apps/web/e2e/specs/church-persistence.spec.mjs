@@ -8,26 +8,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
+import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
 
-function loadEnvCredentials() {
-  const envPaths = [
-    path.join(process.cwd(), '..', '.env'),
-    path.join(process.cwd(), 'apps', '.env'),
-    path.join(process.cwd(), '.env'),
-  ]
-  let pk, addr
-  for (const envPath of envPaths) {
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, 'utf8')
-      pk = pk || content.match(/PRIVATE_KEY="([^"]+)"/)?.[1] || content.match(/PRIVATE_KEY=(\S+)/)?.[1]
-      addr = addr || content.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
-    }
-  }
-  pk = pk || process.env.PRIVATE_KEY
-  addr = addr || process.env.NEXT_PUBLIC_ADDRESS
-  if (pk && addr) return { pk, addr }
-  return null
-}
 
 async function navAndWait(page, url, timeout) {
   await page.goto(url, { waitUntil: 'domcontentloaded' , timeout: 120000 })
@@ -44,7 +26,7 @@ async function main() {
   const t0 = performance.now()
   resetFailures()
 
-  const creds = loadEnvCredentials()
+  const creds = loadSelectedWallet()
   if (!creds) { console.error('No credentials found'); process.exit(1) }
   process.env.TEST_PRIVATE_KEY = creds.pk
 

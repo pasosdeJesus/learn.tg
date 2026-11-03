@@ -29,6 +29,7 @@ import {
   short,
 } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
+import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
 
 const slearnTransferAbi = [
   {
@@ -73,22 +74,6 @@ const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 const httpsAgent = new https.Agent({ rejectUnauthorized: false })
 
-function loadEnvCredentials() {
-  const envPaths = [
-    path.join(process.cwd(), '..', '.env'),
-    path.join(process.cwd(), 'apps', '.env'),
-    path.join(process.cwd(), '.env'),
-  ]
-  for (const envPath of envPaths) {
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, 'utf8')
-      const pk = content.match(/PRIVATE_KEY="([^"]+)"/)?.[1] || content.match(/PRIVATE_KEY=(\S+)/)?.[1]
-      const addr = content.match(/NEXT_PUBLIC_ADDRESS="([^"]+)"/)?.[1] || content.match(/NEXT_PUBLIC_ADDRESS=(\S+)/)?.[1]
-      if (pk && addr) return { pk, addr }
-    }
-  }
-  return null
-}
 
 function loadEnvValue(key) {
   const envPaths = [
@@ -263,7 +248,7 @@ async function main() {
   const t0 = performance.now()
   resetFailures()
 
-  const verifier = loadEnvCredentials()
+  const verifier = loadSelectedWallet()
   if (!verifier) { console.error('[ERROR] No verifier credentials found'); process.exit(1) }
 
   if (!process.env.IPDES) process.env.IPDES = 'learn.tg'
