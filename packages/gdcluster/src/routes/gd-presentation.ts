@@ -101,6 +101,11 @@ export async function getPresentation(deps: GdclusterDeps, req: NextRequest, par
             sent_at: request.sent_at,
             budget_fixed_at: request.budget_fixed_at,
             director_fixed_at: request.director_fixed_at,
+            first_year_budget: request.first_year_budget,
+            budget_draft_path: request.budget_draft_path,
+            director_offer_path: request.director_offer_path,
+            director_first_year_pay: request.director_first_year_pay,
+            director_first_year_hours: request.director_first_year_hours,
             ...(ctx.isInitiator
               ? {
                   reviewed_at: request.reviewed_at,
