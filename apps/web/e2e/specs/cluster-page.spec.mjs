@@ -69,6 +69,45 @@ async function ensureSecondWallet(page, base, primary, chainId) {
   return account.address
 }
 
+
+/** Escribe en los tres campos numéricos del panel (total, pago y horas). */
+async function fillPanelNumbers(page, values) {
+  return page.evaluate((vals) => {
+    const inputs = Array.from(document.querySelectorAll('input[type="number"]'))
+    if (inputs.length < 3) return false
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
+    inputs.slice(0, 3).forEach((input, index) => {
+      setter.call(input, String(vals[index]))
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    return true
+  }, values)
+}
+
+/** Pulsa el botón de guardar de una sección (0 presupuesto, 1 director). */
+async function clickSave(page, index) {
+  return page.evaluate((position) => {
+    const buttons = Array.from(document.querySelectorAll('button'))
+      .filter((b) => /^(save|guardar)$/i.test((b.textContent || '').trim()))
+    const button = buttons[position]
+    if (!button) return false
+    button.click()
+    return true
+  }, index)
+}
+
+/** Pulsa el botón de aprobación del pastor. */
+async function clickApprove(page) {
+  return page.evaluate(() => {
+    const buttons = Array.from(document.querySelectorAll('button'))
+    const button = buttons.find((b) => /i know and approve|conozco y apruebo/i.test(b.textContent || ''))
+    if (!button) return false
+    button.click()
+    return true
+  })
+}
+
 async function main() {
   const t0 = performance.now()
   resetFailures()
@@ -210,19 +249,32 @@ async function main() {
 
   // ── 3. Presupuesto y oferta del director ───────────────────────────
   console.log('\n── 3. Presupuesto y oferta del director ──')
-  const budget = await api(`/api/cluster/${clusterId}/budget`, {
-    method: 'PUT',
-    body: JSON.stringify({ walletAddress: wallet, firstYearBudget: 400 }),
-  })
-  if (budget.status === 200) ok('PUT budget → 200')
-  else fail(`PUT budget → ${budget.status} ${JSON.stringify(budget.body).slice(0, 120)}`)
+  // Por la UI: se escriben los tres campos y se pulsan los botones de guardar.
+  // Si el panel aún no está desplegado, se cae a la API y se avisa.
+  const filled = await fillPanelNumbers(page, [400, 180, 40])
+  if (filled) {
+    if (await clickSave(page, 0)) ok('guardar presupuesto (botón)')
+    else fail('no se encontró el botón de guardar del presupuesto')
+    await page.waitForTimeout(1500)
+    if (await clickSave(page, 1)) ok('guardar oferta del director (botón)')
+    else fail('no se encontró el botón de guardar del director')
+    await page.waitForTimeout(1500)
+  } else {
+    console.log('  [!] el panel no está en la página: se usan los endpoints (pendiente el despliegue)')
+    const budget = await api(`/api/cluster/${clusterId}/budget`, {
+      method: 'PUT',
+      body: JSON.stringify({ walletAddress: wallet, firstYearBudget: 400 }),
+    })
+    if (budget.status === 200) ok('PUT budget → 200')
+    else fail(`PUT budget → ${budget.status} ${JSON.stringify(budget.body).slice(0, 120)}`)
 
-  const director = await api(`/api/cluster/${clusterId}/director`, {
-    method: 'PUT',
-    body: JSON.stringify({ walletAddress: wallet, directorFirstYearPay: 180, directorFirstYearHours: 40 }),
-  })
-  if (director.status === 200) ok('PUT director → 200')
-  else fail(`PUT director → ${director.status} ${JSON.stringify(director.body).slice(0, 120)}`)
+    const director = await api(`/api/cluster/${clusterId}/director`, {
+      method: 'PUT',
+      body: JSON.stringify({ walletAddress: wallet, directorFirstYearPay: 180, directorFirstYearHours: 40 }),
+    })
+    if (director.status === 200) ok('PUT director → 200')
+    else fail(`PUT director → ${director.status} ${JSON.stringify(director.body).slice(0, 120)}`)
+  }
 
   const after = (await api(`/api/cluster/${clusterId}/gd-presentation?${qa}`)).body?.missing_data || []
   if (!after.includes('budget_total') && !after.includes('director_pay') && !after.includes('director_hours')) {
@@ -302,12 +354,19 @@ async function main() {
 
   // ── 5. Aprobación de pastores ──────────────────────────────────────
   console.log('\n── 5. Aprobación de pastores ──')
-  const approval = await api(`/api/cluster/${clusterId}/approval`, {
-    method: 'POST',
-    body: JSON.stringify({ walletAddress: wallet }),
-  })
-  if (approval.status === 200) ok('POST approval → 200')
-  else fail(`POST approval → ${approval.status} ${JSON.stringify(approval.body).slice(0, 160)}`)
+  await loadClusterPage()
+  if (await clickApprove(page)) {
+    ok('aprobación pulsada en la interfaz')
+    await page.waitForTimeout(2000)
+  } else {
+    console.log('  [!] botón de aprobación ausente: se usa el endpoint (pendiente el despliegue)')
+    const approval = await api(`/api/cluster/${clusterId}/approval`, {
+      method: 'POST',
+      body: JSON.stringify({ walletAddress: wallet }),
+    })
+    if (approval.status === 200) ok('POST approval → 200')
+    else fail(`POST approval → ${approval.status} ${JSON.stringify(approval.body).slice(0, 160)}`)
+  }
 
   const ready = (await api(`/api/cluster/${clusterId}/gd-presentation?${qa}`)).body || {}
   if (ready.approvals?.approved >= 1 && !(ready.missing || []).includes('approvals')) {
