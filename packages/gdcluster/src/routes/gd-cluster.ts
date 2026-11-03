@@ -14,6 +14,7 @@ import { readClusterFunds, hasFunds, summarizeFunds } from '../lib/cluster-funds
 import { checkWalletControl, validateClusterWallet } from '../lib/cluster-wallet.js'
 import { churchCompletedCluster } from '../lib/cluster-membership.js'
 import { getClusterPastors } from '../lib/cluster-pastors.js'
+import { MIN_CHURCHES } from '../lib/gd-presentation.js'
 import type { GdclusterDeps } from '../index.js'
 
 // Rutas de clústeres del curso Global Disciples (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3, https://github.com/pasosdeJesus/learn.tg/issues/220).
@@ -265,7 +266,21 @@ export async function joinCluster(deps: GdclusterDeps, req: NextRequest) {
 
     await addClusterHistory(db, cluster.id, 'church_join', null, church.name, user.id)
 
-    return NextResponse.json({ cluster })
+    // La guía 2 promete que el clúster queda activo con la tercera iglesia; unirse
+    // con el código debe activarlo igual que aceptar una invitación.
+    const members = await getClusterMembers(db, cluster.id)
+    let activated = false
+    if (members.length >= MIN_CHURCHES && cluster.status !== 'active') {
+      await db
+        .updateTable('clustergd')
+        .set({ status: 'active', updated_at: new Date() })
+        .where('id', '=', cluster.id)
+        .execute()
+      await addClusterHistory(db, cluster.id, 'status_change', cluster.status, 'active', user.id)
+      activated = true
+    }
+
+    return NextResponse.json({ cluster, activated, member_count: members.length })
   } catch (error) {
     console.error('Error joining cluster:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

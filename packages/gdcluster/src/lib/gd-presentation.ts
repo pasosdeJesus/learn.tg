@@ -14,6 +14,7 @@ import { getClusterApprovals, presentationDataHash, type ClusterApprovals } from
 
 export const GD_COURSE_IDS = [10, 11]
 export const MIN_PROFILE_SCORE = 90 // estrictamente mayor: > 90
+export const MIN_CHURCHES = 3
 
 // Estados de la presentación (https://github.com/pasosdeJesus/learn.tg/issues/161):
 // el iniciador solicita (`requested`), pdJ revisa (`under_review`), devuelve con
@@ -267,7 +268,7 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
   const missing: string[] = []
   const status = cluster.status ?? null
   if (status !== 'active') missing.push('cluster_active')
-  if (members.length < 3) missing.push('cluster_members')
+  if (members.length < MIN_CHURCHES) missing.push('cluster_members')
   if (pastors.length === 0) missing.push('no_pastors')
 
   // La billetera del clúster (la de la iglesia iniciadora) es condición de la guía 6:
