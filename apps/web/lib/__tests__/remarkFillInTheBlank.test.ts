@@ -304,4 +304,58 @@ describe('remarkFillInTheBlank', () => {
       answer: 'three'
     })
   })
+
+  it('gathers the text of a question split by inline formatting', () => {
+    const transformer = remarkFillInTheBlank({})
+    const vfile = { data: {} }
+
+    const mockTree: any = {
+      children: [
+        {
+          type: 'list',
+          ordered: true,
+          children: [
+            {
+              type: 'listItem',
+              children: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    { type: 'text', value: 'The budget is written ' },
+                    {
+                      type: 'strong',
+                      children: [{ type: 'text', value: 'before' }]
+                    },
+                    { type: 'text', value: ' choosing the ___ . (director)' }
+                  ]
+                }
+              ]
+            },
+            {
+              type: 'listItem',
+              children: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    { type: 'text', value: 'The stipend is a share of the ' },
+                    { type: 'emphasis', children: [{ type: 'text', value: 'total' }] },
+                    { type: 'text', value: ' budget. (share)' }
+                  ]
+                }
+              ]
+            }
+          ],
+          position: dummyPosition
+        }
+      ]
+    }
+
+    transformer(mockTree, vfile)
+
+    expect((vfile.data as any).fillInTheBlank).toHaveLength(1)
+    expect((vfile.data as any).fillInTheBlank[0]).toEqual({
+      clue: 'The budget is written before choosing the ___ .',
+      answer: 'director'
+    })
+  })
 })

@@ -1,11 +1,11 @@
 > **1** Therefore when the Lord knew that the Pharisees had heard that
   Jesus was making and baptizing more disciples than John
-  **2** (although Jesus himself didn´t baptize, but his disciples),
+  **2** (although Jesus himself didn't baptize, but his disciples),
   **3** he left Judea, and departed into Galilee.
   **4** He needed to pass through Samaria.
   **5** So he came to a city of Samaria, called Sychar, near the 
   parcel of ground that Jacob gave to his son, Joseph.
-  **6** Jacob´s well was there. Jesus therefore, being tired
+  **6** Jacob's well was there. Jesus therefore, being tired
   from his journey, sat down by the well. It was about the sixth hour
   Noon.
   **7** A woman of Samaria came to draw water. Jesus said to her,
@@ -15,7 +15,7 @@
   being a Jew, ask for a drink from me, a Samaritan woman?» 
   (For Jews have no dealings with Samaritans.)
   **10** Jesus answered her, «If you knew the gift of God, and who it is who
-  says to you, `Give me a drink,´ you would have asked him, and he would have
+  says to you, `Give me a drink,` you would have asked him, and he would have
   given you living water.»
   **11** The woman said to him, «Sir, you have nothing to draw with, and the
   well is deep. From where then have you that living water?
@@ -26,11 +26,11 @@
   **14** but whoever drinks of the water that I will give him will never
   thirst again; but the water that I will give him will become in him a well of
   water springing up to eternal life.»
-  **15** The woman said to him, «Sir, give me this water, so that I don´t get
+  **15** The woman said to him, «Sir, give me this water, so that I don't get
   thirsty, neither come all the way here to draw.»
   **16** Jesus said to her, «Go, call your husband, and come here.»
   **17** The woman answered, «I have no husband.» Jesus said to her,
-  «You said well, `I have no husband,´
+  «You said well, `I have no husband,`
   **18** for you have had five husbands; and he whom you now have is not 
   your husband. This you have said truly.»
   **19** The woman said to him, «Sir, I perceive that you are a prophet.
@@ -38,7 +38,7 @@
   Jews say that in Jerusalem is the place where people ought to worship.»
   **21** Jesus said to her, «Woman, believe me, the hour comes, when neither
   in this mountain, nor in Jerusalem, will you worship the Father.
-  **22** You worship that which you don´t know. We worship that which we know;
+  **22** You worship that which you don't know. We worship that which we know;
   for salvation is from the Jews.
   **23** But the hour comes, and now is, when the true worshippers will 
   worship the Father in spirit and truth, for the Father seeks such to be 

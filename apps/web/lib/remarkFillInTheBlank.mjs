@@ -12,7 +12,22 @@
  * The regex uses [^)]+ for the answer group so that parentheses
  * in the question body (e.g. formulas or asides) don't interfere —
  * only the last (text) on the line is captured as the answer.
+ *
+ * A question can carry inline formatting (bold, italics, links) and wrap
+ * over several lines: the text is gathered from every inline child, so a
+ * blank or the answer is found even when markdown splits them into
+ * different nodes.
  */
+function inlineText(node) {
+  if (!node) return ''
+  if (node.type == 'text' || node.type == 'inlineCode') return node.value
+  if (node.type == 'break') return ' '
+  if (Array.isArray(node.children)) {
+    return node.children.map(inlineText).join('')
+  }
+  return ''
+}
+
 export function remarkFillInTheBlank(options) {
   return function (tree, vfile) {
     let l = tree.children
@@ -29,8 +44,7 @@ export function remarkFillInTheBlank(options) {
         l[i].children[0].children.length > 0 &&
         l[i].children[0].children[0].type == 'paragraph' &&
         l[i].children[0].children[0].children.length > 0 &&
-        l[i].children[0].children[0].children[0].type == 'text' &&
-        (rm = l[i].children[0].children[0].children[0].value.match(re))
+        (rm = inlineText(l[i].children[0].children[0]).match(re))
       ) {
         let list = l[i].children
         for (let j = 0; j < list.length; j++) {
@@ -38,10 +52,9 @@ export function remarkFillInTheBlank(options) {
             list[j].type == 'listItem' &&
             list[j].children.length > 0 &&
             list[j].children[0].type == 'paragraph' &&
-            list[j].children[0].children.length > 0 &&
-            list[j].children[0].children[0].type == 'text'
+            list[j].children[0].children.length > 0
           ) {
-            rm = list[j].children[0].children[0].value.match(re)
+            rm = inlineText(list[j].children[0]).match(re)
             if (rm) {
               vfile.data.fillInTheBlank.push({
                 clue: rm[1],

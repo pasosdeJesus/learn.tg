@@ -2,14 +2,8 @@
 
 import { use, useEffect, useState, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import remarkDirective from 'remark-directive'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
-import rehypeStringify from 'rehype-stringify'
-import { unified } from 'unified'
 import { useMemo } from 'react'
+import { guideProcessor } from '@/lib/guide-markdown.mjs'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
@@ -208,13 +202,7 @@ export default function Page({ params }: PageProps) {
 
   const htmlDeMd = (md: string) => {
     if (!md) return ''
-    const processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(remarkRehype)
-      .use(rehypeStringify)
+    const processor = guideProcessor({ allowDangerousHtml: false })
     return processor.processSync(md).toString()
   }
 

@@ -98,6 +98,10 @@ In **Guide 5** you will learn how to **convert your G$ or CELO into Leones** thr
 4. Your identity is also verified with self.xyz and with an ___ with learn.tg verifiers. (interview)
 5. To claim learn.tg CELO UBI you need at least ___ points in your profile score. (fifty)
 6. You can claim GoodDollar and learn.tg UBI once per ___ . (day)
+7. Because the daily amounts are small, a good strategy is to ___ your UBI for
+   several days or weeks. (save)
+8. Completing crossword puzzles on the platform rewards up to 1 ___ of
+   scholarship. (USDT)
 
 
 

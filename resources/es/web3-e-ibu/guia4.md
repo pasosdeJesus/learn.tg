@@ -128,6 +128,9 @@ días para tener 1 SLE. (cuatro)
 5. Para reclamar el IBU de CELO en learn.tg necesitas al menos ___ puntos en tu
    puntuación de perfil. (cincuenta)
 6. Puedes reclamar el IBU de GoodDollar y de learn.tg una vez al ___ . (día)
+7. Como los montos diarios son pequeños, una buena estrategia es ___ tu IBU
+   durante varios días o semanas. (ahorrar)
+8. Completar crucigramas en la plataforma recompensa hasta 1 ___ de beca. (USDT)
 
 
 

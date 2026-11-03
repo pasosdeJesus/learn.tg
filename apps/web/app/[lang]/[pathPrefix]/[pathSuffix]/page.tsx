@@ -4,15 +4,8 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
-import remarkParse from 'remark-parse'
-import remarkGfm from 'remark-gfm'
-import remarkDirective from 'remark-directive'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkRehype from 'remark-rehype'
-import rehypeStringify from 'rehype-stringify'
-import { unified } from 'unified'
-import type { Processor } from 'unified'
 import { useMemo } from 'react'
+import { guideProcessor } from '@/lib/guide-markdown.mjs'
 import { createComponentT } from '@/lib/hooks/useTranslation'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
@@ -24,7 +17,6 @@ import GoodDollarClaimButton from '@/components/GoodDollarClaimButton'
 import { SafeRender } from '@/components/SafeRender'
 import { Button } from '@pasosdejesus/m/shadcn-components/ui/button'
 import { useGuideData } from '@/lib/hooks/useGuideData'
-import { remarkFillInTheBlank } from '@/lib/remarkFillInTheBlank.mjs'
 
 export default function Page() {
   const params = useParams()
@@ -79,14 +71,11 @@ export default function Page() {
         )
     }
 
-    const processor = (unified() as any)
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkDirective)
-      .use(remarkFrontmatter)
-      .use(remarkFillInTheBlank, { url: `${pathSuffix}/test`, lang: lang})
-      .use(remarkRehype, { allowDangerousHtml: true })
-      .use(rehypeStringify, { allowDangerousHtml: true })
+    const processor = guideProcessor({
+      url: `${pathSuffix}/test`,
+      lang: lang,
+      fillInTheBlank: true,
+    })
     const html = processor.processSync(processedMd).toString()
 
     if (typeof window !== 'undefined') {

@@ -46,6 +46,7 @@ Bloch](https://commons.wikimedia.org/wiki/File:RaisingofLazarusBloch.jpg)
 7. Sabiendo que Jesús estaba en Jerusalén antes de visitar a María,
    Marta y Lázaro, ¿en qué ciudad vivían María, Marta y
    Lázaro? ___ (Betania)
+8. ¿Quién se quedó en casa cuando Marta salió al encuentro de Jesús? ___ (María)
 
 ## 2. Reflexión
 

@@ -149,6 +149,9 @@ puedes
 5. El Ingreso Básico ___ (IBU) es un pago regular e incondicional que se otorga
    a todos los miembros de una comunidad para ayudar a cubrir las 
    necesidades básicas. (Universal)
+6. GoodDollar G$, USDT y SLEARN son ejemplos de ___ construidos sobre Celo. (tokens)
+7. Tu dirección pública funciona como tu número de ___ bancaria. (cuenta)
+8. La ficha que ganas al completar guías y crucigramas se llama ___. (SLEARN)
 
 
 ### Referencias y Lecturas Adicionales

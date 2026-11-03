@@ -12,6 +12,15 @@ import * as path from 'path'
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+/** Texto plano de una pista: las marcas de Markdown no llegan al servidor. */
+function plainClue(text) {
+  return text
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\*\*|`/g, '')
+    .replace(/\*/g, '')
+}
+
 /** Preguntas y respuestas del Markdown local de una guía (mismo formato que remark). */
 export function answersFromGuideFile(lang, prefix, suffix) {
   const file = path.join('..', '..', 'resources', lang, prefix, `${suffix}.md`)
@@ -21,7 +30,7 @@ export function answersFromGuideFile(lang, prefix, suffix) {
   const flush = () => {
     if (current === null) return
     const match = /^(.*___.*)\s+\(([^)]+)\)\s*$/s.exec(current.join('\n').trim())
-    if (match) pairs.push({ clue: match[1].trim(), answer: match[2].trim() })
+    if (match) pairs.push({ clue: plainClue(match[1]).trim(), answer: match[2].trim() })
     current = null
   }
   for (const line of lines) {

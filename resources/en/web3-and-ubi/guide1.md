@@ -116,6 +116,9 @@ This platform makes it easy to convert between Leones and digital assets.
    is ___ --remove the space. (SierraLeone)
 5. ___ Basic Income (UBI) is a  regular, unconditional payment given 
    to all members of a community to help covering basic needs. (Universal)
+6. GoodDollar G$, USDT and SLEARN are examples of ___ built on Celo. (tokens)
+7. Your public address works like your bank ___ number. (account)
+8. The token you earn by completing guides and crosswords is called ___. (SLEARN)
 
 
 ### References & Further Learning

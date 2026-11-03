@@ -162,8 +162,8 @@ A practical takeaway the learner can implement immediately.
 ---
 
 ## Crossword Puzzle (Comprehension Questions)
-3-5 questions that test understanding. Each answer becomes a cell
-in the crossword grid the student fills in.
+At least 8 questions that test understanding; the puzzle uses 5 of them,
+so each answer becomes either a cell or a spare clue for a later attempt.
 
 Answers are stored as pipe-separated text in `billetera_usuario.answer_fib`
 (e.g., `Jesus | love | Sierra Leone`).
@@ -171,7 +171,12 @@ Answers are stored as pipe-separated text in `billetera_usuario.answer_fib`
 
 ### 2.3 Crossword Puzzle
 
-Each guide must include **3-5 comprehension questions** that form the crossword puzzle assessment. Write **6 or more questions** in the guide content to provide variety when a user retakes; the platform randomly selects 3-5 per attempt. Answers are pipe-separated text stored in `billetera_usuario.answer_fib` by the Rails backend after guide viewing.
+Each guide must include **at least 8 comprehension questions**. The crossword
+takes up to **5 clues** per puzzle (`apps/web/app/api/crossword/route.ts`
+samples the guide's bank), so a larger bank gives more variety when a user
+retakes. Answers are pipe-separated text stored in
+`billetera_usuario.answer_fib` by the Next.js route when the puzzle is
+generated.
 
 Example:
 ```
@@ -298,7 +303,7 @@ bin/m eng:opwallet:call --name admin --to <VAULT_V5> \
 |------|-------|----------------|
 | Scaffold course | `scripts/create-course.sh` | `./scripts/create-course.sh "Name" en "prefix" 4 "1.0" "1.0" ["icon.svg"] [id]` |
 | Course + guide records | Migration → `bin/m db:migrate` | Review then run |
-| Guide content | `resources/{lang}/{prefijoRuta}/{sufijoRuta}.md` | 400-700 words, 3-5 crossword questions |
+| Guide content | `resources/{lang}/{prefijoRuta}/{sufijoRuta}.md` | 400-700 words, 8+ questions (5 per puzzle) |
 | Vault | `LearnTGVaultsV5.createVault(id, usdt, slearn)` | `bin/m eng:opwallet:send` (review first) |
 | SBT icon | `public/img/credential/source/` | 512×512 SVG |
 | Credential type | `PasosDeJesusCredentials.registerCredentialType` | `bin/m eng:credentials:register-type` (review first) |

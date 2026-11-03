@@ -69,7 +69,7 @@ público](https://en.wikipedia.org/wiki/Jacob%27s_Well#/media/File:Nablus_jacob_
    en ___ (verdad)
 8. En el versículo 25 la mujer dijo que el ___ vendría y les explicaría
    todas las cosas --sin tilde. (Mesias)
-9. Jesús dijo `Yo ___, el que habla contigo.´ (soy)
+9. Jesús dijo `Yo ___, el que habla contigo.` (soy)
 
 ## 2. Reflexión
 

@@ -15,30 +15,33 @@ Rules for writing course guides (content in `resources/{lang}/{course}/`).
 
 ## Comprehension Questions
 
-- Write **6 or more questions** per guide (recommended: 6-8) to provide
-  variety when a user retakes the guide. The platform randomly selects a
-  subset each time.
-- The user sees **at most 5 questions** per attempt (from PRINCIPLES.md:
-  3-5, not a heavy burden).
-- Each question ends with a blank `___` followed by the expected answer in
-  parentheses: `(answer)`. Answers are case-insensitive and accent-insensitive
-  — the system normalizes both before comparison (`packages/rewards/src/lib/
-  normalize-answer.ts`): `pais` matches `país` and `ensena` matches `enseña`. Write the
-  answer with its correct spelling; the learner may type it without the accent or the
-  ñ.
+- Write **8 or more questions** per guide (recommended: 8-10). The crossword
+  takes **at most 5 clues per puzzle** (`apps/web/app/api/crossword/route.ts`
+  samples the guide's bank), so the size of the bank decides how much a retake
+  varies: 5 questions give always the same puzzle, 6 give 6 combinations, 8 give
+  56 and 12 give 792.
+- The learner solves **at most 5 words** per attempt (from PRINCIPLES.md:
+  3-5 per session, not a heavy burden).
+- Each question includes a blank `___` and is followed by the expected answer 
+  in parentheses: `(answer)`. Answers are case-insensitive and 
+  accent-insensitive — the system normalizes both before comparison 
+  (`packages/rewards/src/lib/
+  normalize-answer.ts`): `pais` matches `país` and `ensena` matches `enseña`. 
+  Write the answer with its correct spelling; the learner may type it 
+  without the accent or the ñ.
 - The answer in parentheses is what the crossword system uses to validate.
-- **The parenthesis is also the offline contract** (R-#256): when a learner solves a
-  downloaded crossword and submits it after reconnecting, the server derives the
-  expected answers from this markdown, matching each clue (the question text) with its
-  answer. Keep one question per numbered item (a question may wrap to the next line),
-  keep `___` in the body and the answer in the **last** parentheses of the item, and do
-  not put a `)` inside the answer: a guide that breaks the format makes its crossword
-  unverifiable offline.
+- **The parenthesis is also the offline contract** (R-#256): when a learner 
+  solves a downloaded crossword and submits it after reconnecting, the 
+  server derives the expected answers from this markdown, matching each 
+  clue (the question text) with its answer. Keep one question per numbered 
+  item (a question may wrap to the next line),
+  keep `___` in the body and the answer in the **last** parentheses of the 
+  item, and do not put a `)` inside the answer: a guide that breaks the 
+  format makes its crossword unverifiable offline.
 - Never put instructions or extra text inside the parentheses — they are
   reserved for the answer only. Put instructions in the question body.
 - Use words, not digits: `(onehundred)` not `(100)`. Join compound words:
-  `(twentyfour)` not `(twenty-four)` or `(twenty four)`. In Spanish this is
-  natural (`veinticuatro`, `cien`).
+  `(SierraLeona)`, `(twentyfour)` not `(twenty-four)` or `(twenty four)`. 
 - Avoid technical jargon in questions. Instead of "With V4, partial payments
   are supported", say "The contract that pays scholarships allows receiving
   only one reward if funds are low — this is a ___ payment."

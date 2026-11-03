@@ -67,7 +67,7 @@ const QUESTION_ANSWER_PAIRS = [
   { clueSubstrings: ['After sending away the people', 'Jesus went to'], answer: 'pray' },
   { clueSubstrings: ['Seeing His disciples distress', 'came close to the boat', 'walking on the sea'], answer: 'walking' },
   { clueSubstrings: ['The disciples cried', 'thought that the one walking', 'was a ghost'], answer: 'ghost' },
-  { clueSubstrings: ['As soon as the disciples got scared', 'Cheer up! Its i I! Don\'t be', 'Don\'t be'], answer: 'afraid' },
+  { clueSubstrings: ['As soon as the disciples got scared', 'Cheer up! It is I! Don\'t be', 'Don\'t be'], answer: 'afraid' },
   { clueSubstrings: ['Then Jesus went into the boat', 'the wind ceased', 'wind'], answer: 'ceased' },
   { clueSubstrings: ['If you read the passage before', 'miraculous sharing of bread', 'their hearts were'], answer: 'hardened' },
 ]
