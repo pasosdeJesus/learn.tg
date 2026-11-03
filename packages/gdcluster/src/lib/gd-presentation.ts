@@ -323,6 +323,15 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
     missing_data: missingPresentationData(cluster),
     wallet,
     approvals,
-    request: request.requested_at || request.status ? request : null,
+    request:
+      request.requested_at ||
+      request.status ||
+      request.first_year_budget != null ||
+      request.budget_draft_path ||
+      request.director_offer_path ||
+      request.director_first_year_pay != null ||
+      request.director_first_year_hours != null
+        ? request
+        : null,
   }
 }

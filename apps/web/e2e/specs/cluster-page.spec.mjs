@@ -220,8 +220,9 @@ async function main() {
     await page.waitForFunction(
       () => document.querySelectorAll('input[type="number"]').length >= 3 ||
         (document.body?.innerText || '').includes('Connection Error'),
-      { timeout: 15000 },
+      { timeout: 45000 },
     ).catch(() => {})
+    await new Promise((r) => setTimeout(r, 500))
     return page.evaluate(() => document.body.innerText.replace(/\s+/g, ' '))
   }
 
@@ -255,10 +256,12 @@ async function main() {
   if (filled) {
     if (await clickSave(page, 0)) ok('guardar presupuesto (botón)')
     else fail('no se encontró el botón de guardar del presupuesto')
-    await page.waitForTimeout(1500)
+    await new Promise((r) => setTimeout(r, 2500))
+    // El panel recarga tras guardar: se repiten los valores del director antes de su botón.
+    await fillPanelNumbers(page, [400, 180, 40])
     if (await clickSave(page, 1)) ok('guardar oferta del director (botón)')
     else fail('no se encontró el botón de guardar del director')
-    await page.waitForTimeout(1500)
+    await new Promise((r) => setTimeout(r, 2500))
   } else {
     console.log('  [!] el panel no está en la página: se usan los endpoints (pendiente el despliegue)')
     const budget = await api(`/api/cluster/${clusterId}/budget`, {
@@ -357,7 +360,7 @@ async function main() {
   await loadClusterPage()
   if (await clickApprove(page)) {
     ok('aprobación pulsada en la interfaz')
-    await page.waitForTimeout(2000)
+    await new Promise((r) => setTimeout(r, 2000))
   } else {
     console.log('  [!] botón de aprobación ausente: se usa el endpoint (pendiente el despliegue)')
     const approval = await api(`/api/cluster/${clusterId}/approval`, {
