@@ -51,7 +51,7 @@ export function newKyselyPostgresql(): Kysely<DB> {
 
   const pool = new Pool({
     ...settings,
-    max: Number(process.env.PG_POOL_MAX ?? 10),
+    max: Number(process.env.PG_POOL_MAX ?? 20),
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
   })

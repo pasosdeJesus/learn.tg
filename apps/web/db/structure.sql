@@ -4,8 +4,8 @@
 
 \restrict
 
--- Dumped from database version 17.9
--- Dumped by pg_dump version 17.9
+-- Dumped from database version 18.6
+-- Dumped by pg_dump version 18.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2167,7 +2167,7 @@ CREATE SEQUENCE public.cor1440_gen_actividad_proyectofinanciero_id_seq
 
 CREATE TABLE public.cor1440_gen_actividad_proyectofinanciero (
     actividad_id integer NOT NULL,
-    proyectofinanciero_id integer NOT NULL,
+    proyectofinanciero_id integer CONSTRAINT cor1440_gen_actividad_proyectofi_proyectofinanciero_id_not_null NOT NULL,
     id integer DEFAULT nextval('public.cor1440_gen_actividad_proyectofinanciero_id_seq'::regclass) NOT NULL
 );
 
@@ -2573,8 +2573,8 @@ ALTER SEQUENCE public.cor1440_gen_datointermedioti_id_seq OWNED BY public.cor144
 
 CREATE TABLE public.cor1440_gen_datointermedioti_pmindicadorpf (
     id bigint NOT NULL,
-    datointermedioti_id integer NOT NULL,
-    pmindicadorpf_id integer NOT NULL,
+    datointermedioti_id integer CONSTRAINT cor1440_gen_datointermedioti_pmind_datointermedioti_id_not_null NOT NULL,
+    pmindicadorpf_id integer CONSTRAINT cor1440_gen_datointermedioti_pmindica_pmindicadorpf_id_not_null NOT NULL,
     valor double precision,
     rutaevidencia character varying(5000)
 );
@@ -2725,8 +2725,8 @@ ALTER SEQUENCE public.cor1440_gen_financiador_id_seq OWNED BY public.cor1440_gen
 --
 
 CREATE TABLE public.cor1440_gen_financiador_proyectofinanciero (
-    financiador_id integer NOT NULL,
-    proyectofinanciero_id integer NOT NULL
+    financiador_id integer CONSTRAINT cor1440_gen_financiador_proyectofinanci_financiador_id_not_null NOT NULL,
+    proyectofinanciero_id integer CONSTRAINT cor1440_gen_financiador_proyecto_proyectofinanciero_id_not_null NOT NULL
 );
 
 
@@ -3117,7 +3117,7 @@ ALTER SEQUENCE public.cor1440_gen_proyecto_id_seq OWNED BY public.cor1440_gen_pr
 
 CREATE TABLE public.cor1440_gen_proyecto_proyectofinanciero (
     proyecto_id integer NOT NULL,
-    proyectofinanciero_id integer NOT NULL
+    proyectofinanciero_id integer CONSTRAINT cor1440_gen_proyecto_proyectofin_proyectofinanciero_id_not_null NOT NULL
 );
 
 
@@ -3197,7 +3197,7 @@ ALTER SEQUENCE public.cor1440_gen_proyectofinanciero_id_seq OWNED BY public.cor1
 
 CREATE TABLE public.cor1440_gen_proyectofinanciero_usuario (
     id bigint NOT NULL,
-    proyectofinanciero_id integer NOT NULL,
+    proyectofinanciero_id integer CONSTRAINT cor1440_gen_proyectofinanciero_u_proyectofinanciero_id_not_null NOT NULL,
     usuario_id integer,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
@@ -3418,7 +3418,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
+    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
     revoked_at timestamp with time zone,
     revoke_hash character varying(66),
     billetera character varying(60)
@@ -3458,7 +3458,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -5503,7 +5503,7 @@ CREATE TABLE public.notifications (
     content text,
     link character varying(500),
     is_read boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT '2026-08-16 18:21:31.035-05'::timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL,
     ref_key character varying(100)
 );
 
