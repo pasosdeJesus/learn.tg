@@ -1,7 +1,7 @@
 import { formatUnits } from 'viem'
 import ClusterFundsV2Abi from '../abis/ClusterFundsV2.json'
 import { addClusterHistory } from './gd-utils.js'
-import { readClusterFunds } from './cluster-funds.js'
+import { readClusterFunds, setClusterVerified } from './cluster-funds.js'
 import { getClusterFundsAddress } from './gd-cluster-routing.js'
 
 // Liberación automática al responder Global Disciples
@@ -42,6 +42,9 @@ export async function redistributeCountryFund(
     .where('c.country_id', '=', cluster.country_id)
     .where('c.gd_status', 'in', ['sent', 'answered'])
     .where('c.status', '!=', 'disbanded')
+    // Un clúster que ya recibió sus fondos sale del proceso con GD: no vuelve a
+    // repartirse el fondo del país en la respuesta de otro clúster.
+    .where('c.fund_released_at', 'is', null)
     .execute()
   const wallets = Array.from(
     new Set((rows as any[]).map((row) => row.wallet).filter((wallet): wallet is string => !!wallet)),
@@ -187,6 +190,16 @@ export async function releaseOnAnswered(
   if (wallet) {
     try {
       release = await releaseClusterFund(deps.backend, db, cluster, wallet, usuarioId)
+      // Ya recibió sus fondos: sale del proceso con GD y el contrato deja de
+      // contarlo para los repartos siguientes del fondo del país.
+      try {
+        await setClusterVerified(deps, wallet, false)
+        await addClusterHistory(db, cluster.id, 'cluster_unverified', wallet, null, usuarioId)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        errors.push(`unverify: ${message}`)
+        await addClusterHistory(db, cluster.id, 'cluster_unverify_failed', wallet, message.slice(0, 200), usuarioId)
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       errors.push(`cluster: ${message}`)

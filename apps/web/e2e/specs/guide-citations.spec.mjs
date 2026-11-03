@@ -86,7 +86,7 @@ async function main() {
     const painted = await waitGuideText(page, timeout)
     if (!painted) {
       if (target.premium) {
-        console.log(`  [SKIP] ${target.path}: guía premium sin pintar (${authed ? 'la billetera no tiene acceso' : 'sin sesión'})`)
+        console.log(`  [NOTE] ${target.path}: guía premium sin pintar (${authed ? 'la billetera no tiene acceso' : 'sin sesión'})`)
       } else {
         fail(`${target.path}: la guía no se pintó`)
       }

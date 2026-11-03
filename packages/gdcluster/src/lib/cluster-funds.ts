@@ -63,10 +63,13 @@ export async function readClusterFunds(
  * "Presentada = verificada" (decisión del operador, 2026-10-22): se llama cuando pdJ
  * presenta el clúster a Global Disciples (`sent`) y cuando cambia la billetera de un
  * clúster ya presentado (el flag del contrato está indexado por la dirección).
+ * Con `verified = false` lo saca del conjunto: se usa cuando GD ya respondió y el fondo
+ * se liberó, para que un reparto posterior del fondo del país no lo vuelva a incluir.
  */
 export async function setClusterVerified(
   deps: { backend: { getPublicClient: () => any; getWalletClient: () => any; sendTxAndWait: (walletClient: any, publicClient: any, args: any) => Promise<`0x${string}`> } },
   wallet: string,
+  verified = true,
 ): Promise<`0x${string}`> {
   const publicClient = deps.backend.getPublicClient()
   const walletClient = deps.backend.getWalletClient()
@@ -77,7 +80,7 @@ export async function setClusterVerified(
     address,
     abi: ClusterFundsV2Abi as any,
     functionName: 'setClusterVerification',
-    args: [wallet, true],
+    args: [wallet, verified],
     account,
     chain: publicClient.chain,
     nonce,

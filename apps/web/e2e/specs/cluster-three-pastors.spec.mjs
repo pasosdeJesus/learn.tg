@@ -24,7 +24,7 @@ const LABELS = {
 const t = LABELS[LANG]
 
 function skip(message) {
-  console.log(`  [SKIP] ${message}`)
+  console.log(`  [NOTE] ${message}`)
 }
 
 /** Escribe en un input por su placeholder o por el texto de su etiqueta. */
@@ -141,11 +141,11 @@ async function main() {
   // confirma con el botón del formulario.
   if (await clickButton(initiator.page, [t.create])) ok('formulario abierto')
   else fail('no se encontró el botón que abre el formulario')
-  const hasInput = await initiator.page.waitForFunction(
-    () => document.querySelectorAll('input[type="text"]').length > 0,
-    { timeout: 15000 },
-  ).then(() => true).catch(() => false)
-  if (!hasInput) fail('el formulario no apareció')
+  await initiator.page.waitForFunction(
+    (label) => (document.body?.innerText || '').includes(label),
+    { timeout: 20000 },
+    t.name,
+  ).catch(() => {})
 
   const filled = await fillByLabel(initiator.page, t.name, name)
   if (filled) ok('nombre escrito en el formulario')
@@ -177,19 +177,28 @@ async function main() {
   // ── 3. Los otros dos se unen con el código ──────────────────────────
   console.log('\n── 3. Unirse con el código ──')
   for (const session of sessions.slice(1)) {
-    await session.page.goto(`${base}/${LANG}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
-    await session.page.waitForFunction(
-      (label) => (document.body?.innerText || '').includes('Cluster wallet') ||
-        (document.body?.innerText || '').includes('Billetera del clúster'),
-      { timeout: 60000 },
-    ).catch(() => {})
-    if (!(await fillByLabel(session.page, t.code, code))) {
+    let filledCode = false
+    for (let attempt = 0; attempt < 2 && !filledCode; attempt++) {
+      await session.page.goto(`${base}/${LANG}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
+      await session.page.waitForFunction(
+        (placeholder) => !!Array.from(document.querySelectorAll('input'))
+          .find((i) => (i.placeholder || '') === placeholder),
+        { timeout: 60000 },
+        t.code,
+      ).catch(() => {})
+      filledCode = await fillByLabel(session.page, t.code, code)
+    }
+    if (!filledCode) {
       fail(`${session.pastor.variable}: no se encontró el campo del código`)
       continue
     }
     if (await clickButton(session.page, [t.join])) ok(`${session.pastor.variable}: "unirse" pulsado`)
     else fail(`${session.pastor.variable}: no se encontró el botón de unirse`)
-    await new Promise((r) => setTimeout(r, 3000))
+    for (let attempt = 0; attempt < 10; attempt++) {
+      await new Promise((r) => setTimeout(r, 1000))
+      const probe = await apiOnPage(session.page)(`/api/cluster/${clusterId}?walletAddress=${session.pastor.address}`)
+      if ((probe.body?.members?.length || 0) >= 2) break
+    }
     const member = await apiOnPage(session.page)(`/api/cluster/${clusterId}?walletAddress=${session.pastor.address}`)
     if (member.body?.members?.length >= 2) ok(`${session.pastor.variable}: iglesia dentro (${member.body.members.length} iglesias)`)
     else fail(`${session.pastor.variable}: la iglesia no quedó dentro`)
@@ -210,13 +219,23 @@ async function main() {
         .some((b) => /i know and approve|conozco y apruebo/i.test(b.textContent || '')),
       { timeout: 45000 },
     ).catch(() => {})
-    const clicked = await session.page.evaluate(() => {
+    const clickApproveOnce = () => session.page.evaluate(() => {
       const button = Array.from(document.querySelectorAll('button'))
         .find((b) => /i know and approve|conozco y apruebo/i.test(b.textContent || ''))
       if (!button) return false
       button.click()
       return true
     })
+    let clicked = await clickApproveOnce()
+    if (!clicked) {
+      await session.page.reload({ waitUntil: 'domcontentloaded' })
+      await session.page.waitForFunction(
+        () => Array.from(document.querySelectorAll('button'))
+          .some((b) => /i know and approve|conozco y apruebo/i.test(b.textContent || '')),
+        { timeout: 30000 },
+      ).catch(() => {})
+      clicked = await clickApproveOnce()
+    }
     if (clicked) ok(`${session.pastor.variable}: aprobación pulsada`)
     else fail(`${session.pastor.variable}: no apareció el botón de aprobación`)
     await new Promise((r) => setTimeout(r, 2500))

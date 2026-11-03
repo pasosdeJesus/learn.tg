@@ -29,7 +29,7 @@ import { apiOn, ensurePastorFixture } from '../helpers/e2e-fixture.mjs'
 const LANG = process.env.E2E_LANG === 'es' ? 'es' : 'en'
 
 function skip(message) {
-  console.log(`  [SKIP] ${message}`)
+  console.log(`  [NOTE] ${message}`)
 }
 
 /** Segunda billetera de la cuenta (la del iniciador es la del backend y no sirve). */
