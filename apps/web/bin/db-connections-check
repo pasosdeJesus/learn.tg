@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# Aviso (no bloquea) cuando PostgreSQL no tiene margen para los pools de la app.
+#
+# Cada proceso de la app abre `PG_POOL_MAX` conexiones (10 por defecto en
+# `.config/kysely-db.ts`) y el sitio de desarrollo más la suite E2E suman varios
+# procesos. Si `max_connections` es pequeño, aparecen timeouts del pool
+# ("timeout exceeded when trying to connect"). Sin psql o sin base no dice nada.
+set -u
+
+command -v psql >/dev/null 2>&1 || exit 0
+
+max=$(psql -tAc 'SHOW max_connections' 2>/dev/null | tr -d ' ')
+case "$max" in
+  ''|*[!0-9]*) exit 0 ;;
+esac
+
+pool=${PG_POOL_MAX:-10}
+if [ "$max" -lt 200 ]; then
+  echo "[WARN] PostgreSQL max_connections=$max (<200)."
+  echo "       Cada proceso usa hasta PG_POOL_MAX=$pool conexiones y el sitio más los E2E"
+  echo "       abren varios procesos: considera max_connections=200 en postgresql.conf"
+  echo "       (y revisar 'idle in transaction' en pg_stat_activity)."
+fi
+exit 0

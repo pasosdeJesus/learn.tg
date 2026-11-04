@@ -542,12 +542,12 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
             {presentation.pastors.length > 0 && (
               <ul className="text-xs space-y-1 mb-2">
                 {presentation.pastors.map((pastor, i) => (
-                  <li key={i} className="flex justify-between gap-2">
-                    <span>
+                  <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                    <span className="min-w-0 break-words">
                       {pastor.church_name}
                       {pastor.nombre ? ` · ${pastor.nombre}` : ''}
                     </span>
-                    <span className={pastor.missing.length ? 'text-amber-700' : 'text-green-700'}>
+                    <span className={`min-w-0 break-words text-right ${pastor.missing.length ? 'text-amber-700' : 'text-green-700'}`}>
                       {pastor.missing.length
                         ? pastor.missing.map((key) => t(PASTOR_MISSING[key] ?? 'gdMissingCourse')).join(', ')
                         : t('gdOk')}

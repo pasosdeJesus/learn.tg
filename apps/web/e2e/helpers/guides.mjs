@@ -22,10 +22,21 @@ export async function completeGuide(page, base, { lang, prefix, suffix }) {
   const solved = solveCrossword(puzzleData.grid, puzzleData.placements, pairs)
   await fillSolved(page, solved)
   await clickSubmit(page)
-  await sleep(3000)
 
-  const text = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' '))
-  const accepted = /correct|correcta|bien hecho|well done|aciertos/i.test(text)
+  // El envío es asíncrono (la página muestra "Sending..."): se espera el resultado
+  // hasta 45 s en vez de un tiempo fijo.
+  let text = ''
+  let accepted = false
+  for (let attempt = 0; attempt < 45; attempt++) {
+    await sleep(1000)
+    text = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' '))
+    if (/sending|enviando/i.test(text)) continue
+    if (/correct|correcta|bien hecho|well done|aciertos|incorrect|incorrecta/i.test(text)) {
+      accepted = /correct|correcta|bien hecho|well done|aciertos/i.test(text)
+      break
+    }
+  }
+  await sleep(1500)
   return { accepted, cells, clues: puzzleData.placements.length, text: text.slice(0, 200) }
 }
 
@@ -36,11 +47,19 @@ export async function completeGuide(page, base, { lang, prefix, suffix }) {
 export async function completeGuides(page, base, { lang, prefix, suffixes }) {
   const results = []
   for (const suffix of suffixes) {
-    try {
-      results.push({ suffix, ...(await completeGuide(page, base, { lang, prefix, suffix })) })
-    } catch (error) {
-      results.push({ suffix, accepted: false, error: error instanceof Error ? error.message : String(error) })
+    let result = { suffix, accepted: false, error: 'sin intento' }
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const attemptResult = { suffix, ...(await completeGuide(page, base, { lang, prefix, suffix })) }
+        result = attemptResult
+        if (attemptResult.accepted) break
+      } catch (error) {
+        result = { suffix, accepted: false, error: error instanceof Error ? error.message : String(error) }
+      }
+      await sleep(3000)
     }
+    results.push(result)
+    await sleep(1500)
   }
   return results
 }

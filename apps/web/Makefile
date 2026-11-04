@@ -5,12 +5,18 @@
 # está ejecutando la suite E2E: 8 workers × 2048 MB todavía compiten con el
 # dev server y el resto de apps → OOM (https://gitlab.com/pasosdeJesus/m/-/work_items/35 §12.8). Detener `next dev` y los
 # specs E2E antes de `make all`/`make prod`.
-build-guard:
+build-guard: db-connections-check
 	@if pgrep -f '[n]ext d''ev' >/dev/null 2>&1; then \
 	  echo "ERROR: el sitio de desarrollo está activo (dev server corriendo)." ; \
 	  echo "Detén el dev server antes de compilar (misma máquina, 16G RAM)." ; \
 	  exit 1 ; \
 	fi
+
+# Aviso (no bloquea) cuando PostgreSQL no tiene margen para los pools de la app:
+# cada proceso abre `PG_POOL_MAX` conexiones y el sitio de desarrollo mas la suite
+# E2E suman varios procesos. Sin base o sin psql no dice nada.
+db-connections-check:
+	@sh bin/db-connections-check
 
 # Motores (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): consumidos vía dist/ (exports map); dist/ no está en
 # git. Compilar antes del build — un checkout fresco no resuelve

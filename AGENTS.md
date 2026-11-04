@@ -212,6 +212,14 @@ available for the human's questions and interaction.
    (`next dev`, `bin/start`) when the test is done.
 6. **Report periodically in the chat** (a short status line is enough) so the
    human always knows what is still running and what has finished.
+7. **Stay available in the foreground and say what you left running**: right after
+   sending a job to the background, tell the human what it is, the log file and the
+   expected duration, and state that you remain available for questions while it
+   runs. Never block the session waiting for it: keep working (docs, tests, the
+   requirement file) and **remind yourself to check the log every ~5 minutes** with
+   a short `tail -n`/`grep -c`, reporting whether it is still running, what it has
+   produced so far and what finished. The same applies to a long `next dev` or any
+   process left alive: announce it, keep the foreground free and close it when done.
 
 ### 10. Searching the Codebase — Prefer Project-Aware Tools
 
