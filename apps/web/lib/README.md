@@ -60,6 +60,7 @@ On-chain business logic lives in the engines (`packages/rewards`, `packages/gdcl
 | `sw-recovery.ts` | Service-worker recovery (reload on chunk load errors) |
 | `utils.ts` | `cn()` Tailwind class merge utility |
 | `offline-db.ts`, `offline-catalog.ts`, `offline-course-db.ts`, `offline-guide-db.ts`, `offline-queue-db.ts`, `offline-course-download.ts`, `offline-profile.ts`, `offline-answer-notice.ts` | Offline/PWA stores and sync (R-#241/R-#242/R-#256) |
+| `offline-submit.ts` | When a failed submission is queued for later: the device is offline or the request never reached the server, never a timeout or a 4xx/5xx (F-#295) |
 | `hooks/` | React hooks: `useApiData`, `useAuthedApi`, `useFetchData`, `useGuideData`, `useGuideNavigation`, `useSort`, `useTranslation`, `useScholarshipData`, `useCourse`, `useCachedGuide`, `useOfflineQueue`, `useOfflineStatus`, `useAuthAddress`, `useWalletProvider`, `useWallet`, `useWriteContract`, `useGasEstimation`, `useContractPayment` (donation/purchase transfers, serialized so USDT and SLEARN do not collide on the nonce) |
 | `__tests__/` | Unit tests for all modules above |
 

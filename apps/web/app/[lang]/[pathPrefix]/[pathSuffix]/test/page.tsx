@@ -9,6 +9,7 @@ import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { useOfflineQueue } from '@/lib/hooks/useOfflineQueue'
 import { getProfileScore, profileScoreBelowMinimum, MIN_PROFILE_SCORE_FOR_SCHOLARSHIP } from '@/lib/offline-profile'
+import { shouldQueueSubmission } from '@/lib/offline-submit'
 import { courseKey, getStoredPuzzle } from '@/lib/offline-course-db'
 import { usePublicClient } from '@/lib/hooks/useWallet'
 import { useWriteContract } from '@/lib/hooks/useWriteContract'
@@ -373,7 +374,10 @@ export default function Page({
     }
 
     try {
-      const response = await authedPost<any>('/api/check-crossword', payload)
+      // The server bounds the chain calls (~15 s) and answers even when the
+      // scholarship cannot be paid (F-#295); this client deadline only keeps the
+      // button from waiting forever if the site itself stops answering.
+      const response = await authedPost<any>('/api/check-crossword', payload, { timeout: 30000 })
 
       const uiMsg = {
         es: { problemWords: 'Problema(s) con la(s) palabra(s) ' },
@@ -398,7 +402,13 @@ export default function Page({
           // @ts-ignore
           myGuide.completed = true
         }
-        setFlashSuccess(response.data.message || '')
+        // F-#295: a credited guide whose scholarship could not be paid is a
+        // warning, not a success: the server's message says it will be retried.
+        if (response.data.scholarship === 'pending') {
+          setFlashWarning(response.data.message || '')
+        } else {
+          setFlashSuccess(response.data.message || '')
+        }
 
         console.log('[metrics] Game completion tracked server-side')
 
@@ -411,9 +421,11 @@ export default function Page({
         }
       }
     } catch (error: any) {
-      // Sin `response` el fallo es de red (sin conexión): se guarda la respuesta
-      // y se reintenta al recuperar la conexión (R-#241/R-#242).
-      if (!error?.response) {
+      // Only a device that is really offline (or a request that never reached the
+      // server) is kept for later: a slow server must end in a visible error with
+      // a retry, never in "you are offline" (F-#295 §3.2).
+      const online = typeof navigator === 'undefined' ? true : navigator.onLine
+      if (shouldQueueSubmission(online, error)) {
         try {
           // R-#242: la marca `offlineSavedAt` (y la ruta, para el aviso) le dicen al
           // servidor que esta entrega se guardó sin conexión, para que deje el
@@ -441,7 +453,10 @@ export default function Page({
         }
       }
       console.error(error)
-      setFlashError(error.response?.data?.error || error.message)
+      setFlashError(
+        error?.response?.data?.error ||
+          (error?.code === 'ECONNABORTED' ? uiMsg[locale].submitTimeout : error?.message),
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -457,6 +472,7 @@ export default function Page({
       returnGuide: 'Regresar a la guía',
       scholarshipPaid: 'La beca para este crucigrama ya ha sido pagada. Puedes resolverlo de nuevo, pero no recibirás otro pago.',
       scholarshipPaidPartial: 'Recibiste una beca. Aún puedes recibir la segunda.',
+      submitTimeout: 'El servidor tardó demasiado en responder. Tu respuesta no se guardó como pendiente: vuelve a enviarla.',
       sending: 'Enviando...',
       submit: 'Enviar respuesta',
       offlineQueued: 'Sin conexión: tu respuesta quedó guardada y se enviará sola cuando vuelvas a tener conexión.',
@@ -474,6 +490,7 @@ export default function Page({
       returnGuide: 'Return to guide',
       scholarshipPaid: 'The scholarship for this crossword has already been paid. You can solve it again, but you will not receive another payment.',
       scholarshipPaidPartial: 'Received one scholarship but you can receive a second one.',
+      submitTimeout: 'The server took too long to answer. Your answer was not saved as pending: please submit it again.',
       sending: 'Sending...',
       submit: 'Submit answer',
       offlineQueued: 'You are offline: your answer was saved and will be sent automatically when the connection returns.',

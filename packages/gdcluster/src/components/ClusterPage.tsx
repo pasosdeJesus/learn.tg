@@ -26,6 +26,7 @@ const tEn = {
   save: 'Save',
   cancel: 'Cancel',
   joinCode: 'Join code',
+  pendingChurches: 'Invite two more churches; with three you can complete the budget, the director offer and the approvals.',
   memberChurches: 'Member Churches',
   codePlaceholder: '6-char code',
   join: 'Join',
@@ -80,6 +81,7 @@ const tEs: typeof tEn = {
   save: 'Guardar',
   cancel: 'Cancelar',
   joinCode: 'Código para unirse',
+  pendingChurches: 'Invita dos iglesias más; con tres podrás completar el presupuesto, la oferta del director y las aprobaciones.',
   memberChurches: 'Iglesias Miembros',
   codePlaceholder: 'Código de 6 caracteres',
   join: 'Unirse',
@@ -479,9 +481,21 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
           <p className="text-sm text-gray-600 mb-1">
             {t('joinCode')}
           </p>
-          <code className="text-lg font-mono font-bold text-gray-900 tracking-widest">
-            {cluster.code}
-          </code>
+          <div className="flex items-center gap-2">
+            <code className="text-lg font-mono font-bold text-gray-900 tracking-widest">
+              {cluster.code}
+            </code>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(cluster.code)
+                toast({ title: t('copied') })
+              }}
+              className="text-xs text-blue-600 hover:underline shrink-0"
+            >
+              {t('copy')}
+            </button>
+          </div>
         </div>
 
         <div className="mb-6 p-3 bg-gray-50 rounded-md border border-gray-200 text-left">
@@ -630,7 +644,13 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
           </div>
         )}
 
-        {isAuthenticated && presentation && (presentation.isInitiator || presentation.isMember) && (
+        {presentation && (presentation.isInitiator || presentation.isMember) &&
+          (cluster.members?.length ?? 0) < 3 && (
+            <p className="text-xs text-gray-500 mb-4">{t('pendingChurches')}</p>
+          )}
+
+        {isAuthenticated && presentation && (presentation.isInitiator || presentation.isMember) &&
+          (cluster.members?.length ?? 0) >= 3 && (
           <ClusterPresentationPanel
             lang={lang}
             clusterId={cluster.id}
@@ -660,7 +680,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
           ))}
         </ul>
 
-        {isAuthenticated && (
+        {isAuthenticated && !presentation?.isInitiator && !presentation?.isMember && (
           <div className="border-t border-gray-200 pt-4 mb-6 space-y-3">
             <div className="flex gap-2">
               <input

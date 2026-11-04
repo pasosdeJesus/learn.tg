@@ -53,6 +53,10 @@ country fund before the vault split. The rewards engine calls
 3. On perfect score: determine active vault (`getActiveVault`: V5 → V4),
    call `callWriteFun` on `LearnTGVaultsV5.payScholarship` (student, guide,
    referrer fields — referrer unused for now, https://github.com/pasosdeJesus/learn.tg/issues/163 pays off-chain).
+   Every chain call is bounded (`withDeadline`, default 15 s) and the section is
+   non-fatal: the guide is already credited, so a slow or failing RPC answers
+   `scholarship: 'pending'` instead of hanging the request or returning an error
+   (F-#295; tests in `src/routes/__tests__/check-crossword.test.ts`).
 4. Record the payout in the `transaction` table (`type='scholarship'`,
    `crypto='usdt'|'slearn'`).
 5. On 100% course completion: `mintCourseCredential` (SBT via

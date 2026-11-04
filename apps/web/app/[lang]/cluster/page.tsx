@@ -43,6 +43,8 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
       name: 'Cluster name',
       pseudonym: 'Pseudonym (optional, shown publicly in the ranking)',
       candidates: 'Invite pastors (select up to 2)',
+      noCandidatesHelp: 'Candidates come from your referrals: pastors you invited to learn.tg or the pastor who invited you, in your country, with a verified church. Grow that list by sharing your referral link; until then, create the cluster and share the code.',
+      referralsLink: 'Go to referrals',
       noCandidates: 'You have no invitable pastors yet (referred pastors from the same country with a verified church). You can also share your 6-char cluster code after creating it.',
       creating: 'Creating…',
       invitePending: 'You have been invited to join cluster {{0}} by {{1}}.',
@@ -67,6 +69,8 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
       name: 'Nombre del clúster',
       pseudonym: 'Pseudónimo (opcional, se muestra públicamente en el ranking)',
       candidates: 'Invitar pastores (elige hasta 2)',
+      noCandidatesHelp: 'Los candidatos salen de tus referidos: pastores que invitaste a learn.tg o el pastor que te invitó, en tu país, con iglesia verificada. Amplía esa lista compartiendo tu enlace de referido; mientras tanto, crea el clúster y comparte el código.',
+      referralsLink: 'Ir a referidos',
       noCandidates: 'Aún no tienes pastores invitables (referidos del mismo país con iglesia verificada). También puedes compartir el código de 6 caracteres del clúster tras crearlo.',
       creating: 'Creando…',
       invitePending: 'Has sido invitado a unirte al clúster {{0}} por {{1}}.',
@@ -202,7 +206,13 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">{t('candidates')}</label>
                     {candidates.length === 0 ? (
-                      <p className="text-xs text-gray-500">{t('noCandidates')}</p>
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-500">{t('noCandidates')}</p>
+                        <p className="text-xs text-gray-600">{t('noCandidatesHelp')}</p>
+                        <a href={`/${lang}/referrals`} className="text-xs text-blue-600 hover:underline">
+                          {t('referralsLink')}
+                        </a>
+                      </div>
                     ) : (
                       <div className="space-y-1">
                         {candidates.map((c) => (

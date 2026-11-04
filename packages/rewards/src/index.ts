@@ -55,6 +55,34 @@ export interface RewardsBackendDeps {
   SLEARN_DECIMALS: number
 }
 
+/**
+ * Seam for the chain pieces of `check-crossword` (F-#295).
+ *
+ * Production builds the viem clients from the environment; the engine tests
+ * inject a fake vault contract and a payment that hangs, so the bounded,
+ * non-fatal scholarship section can be exercised without an RPC.
+ */
+export interface CrosswordChainDeps {
+  publicClient: any
+  walletClient: any
+  account?: any
+  getActiveVault: () => Promise<{ address: `0x${string}`; version: 'V5' | 'V4' }>
+  getVaultContract: (args: {
+    address: `0x${string}`
+    abi: any
+    publicClient: any
+    walletClient: any
+  }) => any
+  submitScholarship: (args: {
+    publicClient: any
+    account: any
+    write: any
+    callArgs: any[]
+  }) => Promise<`0x${string}`>
+  /** Deadline for every chain call of the submission (default 15 s). */
+  timeoutMs?: number
+}
+
 export interface RewardsDeps {
   db: () => Kysely<any>
   authenticateUser: (
@@ -93,6 +121,9 @@ export interface RewardsDeps {
   ) => Promise<{ usdtHash?: string; slearnHash?: string } | void>
   canPurchasePremiumCourse: (db: any, usuarioId: number, courseId: number) => Promise<{ access: boolean; reason?: string }>
   updateUserAndCoursePoints: (db: any, usuario: any, courseId: number, walletAddress: string, guideUsuario?: any) => Promise<number>
+  // Seam de cadena de `check-crossword` (F-#295): si falta, la ruta construye
+  // los clientes de viem desde el entorno (producción) y usa `getActiveVault`.
+  crosswordChain?: CrosswordChainDeps
   // … más deps del core que rewards consume, se agregan conforme se portan rutas
 }
 

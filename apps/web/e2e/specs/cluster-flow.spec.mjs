@@ -38,6 +38,26 @@ async function stateOf(page, clusterId, wallet) {
   return res.body || {}
 }
 
+
+/** Abre el formulario de GD del clúster en el panel del verificador (espera la fila). */
+async function openGdForm(verifierPage, base, lang, clusterId, gdLabel) {
+  await verifierPage.goto(`${base}/${lang}/admin/clusters`, { waitUntil: 'domcontentloaded' })
+  return verifierPage.waitForFunction(
+    ({ id, label }) => {
+      const row = Array.from(document.querySelectorAll('tbody tr'))
+        .find((r) => ((r.querySelector('td')?.textContent || '').trim()) === String(id))
+      if (!row) return false
+      const button = Array.from(row.querySelectorAll('button'))
+        .find((b) => (b.textContent || '').trim().toLowerCase() === label.toLowerCase())
+      if (!button) return false
+      button.click()
+      return true
+    },
+    { timeout: 60000 },
+    { id: clusterId, label: gdLabel },
+  ).then(() => true).catch(() => false)
+}
+
 async function main() {
   const t0 = performance.now()
   resetFailures()
@@ -126,20 +146,7 @@ async function main() {
 
   // ── 3. El verificador devuelve con sugerencias ──────────────────────
   console.log('\n── 3. Devolución del verificador ──')
-  await verifierPage.goto(`${base}/${LANG}/admin/clusters`, { waitUntil: 'domcontentloaded' })
-  await verifierPage.waitForFunction(
-    () => (document.body?.innerText || '').includes('Clusters'),
-    { timeout: 60000 },
-  ).catch(() => {})
-  const opened = await verifierPage.evaluate(({ gdLabel, id }) => {
-    const rows = Array.from(document.querySelectorAll('tbody tr'))
-    const row = rows.find((r) => ((r.querySelector('td')?.textContent || '').trim()) === String(id))
-    const button = Array.from(row?.querySelectorAll('button') || [])
-      .find((b) => (b.textContent || '').trim().toLowerCase() === gdLabel.toLowerCase())
-    if (!button) return false
-    button.click()
-    return true
-  }, { gdLabel: t.gd, id: clusterId })
+  const opened = await openGdForm(verifierPage, base, LANG, clusterId, t.gd)
   if (opened) ok('formulario de GD abierto')
   else fail('no se pudo abrir el formulario de GD')
 
@@ -221,17 +228,7 @@ async function main() {
   // ── 6. El verificador aprueba y marca `sent` ────────────────────────
   console.log('\n── 6. Aprobación y envío ──')
   for (const next of ['approved', 'sent']) {
-    await verifierPage.goto(`${base}/${LANG}/admin/clusters`, { waitUntil: 'domcontentloaded' })
-    await verifierPage.waitForFunction(() => (document.body?.innerText || '').includes('Clusters'), { timeout: 60000 }).catch(() => {})
-    const advanced = await verifierPage.evaluate(({ gdLabel, id }) => {
-      const rows = Array.from(document.querySelectorAll('tbody tr'))
-      const row = rows.find((r) => ((r.querySelector('td')?.textContent || '').trim()) === String(id))
-      const button = Array.from(row?.querySelectorAll('button') || [])
-        .find((b) => (b.textContent || '').trim().toLowerCase() === gdLabel.toLowerCase())
-      if (!button) return false
-      button.click()
-      return true
-    }, { gdLabel: t.gd, id: clusterId })
+    const advanced = await openGdForm(verifierPage, base, LANG, clusterId, t.gd)
     if (!advanced) {
       fail(`no se pudo abrir el formulario para ${next}`)
       break

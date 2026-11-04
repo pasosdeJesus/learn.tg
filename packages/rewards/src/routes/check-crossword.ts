@@ -48,6 +48,41 @@ interface WordPlacement {
   clue: string
 }
 
+/** How the scholarship part of a submission ended (F-#295). */
+export type ScholarshipState = 'paid' | 'pending' | 'already_paid' | 'not_paid'
+
+/** Rejection of a chain call that exceeded its deadline. */
+export class ChainDeadlineError extends Error {
+  constructor(
+    readonly label: string,
+    readonly ms: number,
+  ) {
+    super(`${label} exceeded its ${ms} ms deadline`)
+    this.name = 'ChainDeadlineError'
+  }
+}
+
+/**
+ * Races a chain call against a deadline so a silent RPC cannot keep the request
+ * open: the browser used to stay on "Sending..." while the guide was already
+ * credited (https://github.com/pasosdeJesus/learn.tg/issues/295).
+ */
+export function withDeadline<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new ChainDeadlineError(label, ms)), ms)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (error) => {
+        clearTimeout(timer)
+        reject(error)
+      },
+    )
+  })
+}
+
 export async function checkCrosswordGet(): Promise<Response> {
   return NextResponse.json({ error: 'Expecting POST request' }, { status: 400 })
 }
@@ -113,6 +148,8 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         scholarshipPaid: 'Ambas becas ya fueron pagadas para esta guía.',
         scholarshipOtherWallet:
           'La beca de esta guía ya fue pagada a otra billetera de tu cuenta. Una guía se paga una sola vez por cuenta.',
+        scholarshipRetry:
+          'La guía quedó contada. La beca no se pudo pagar ahora y se reintentará automáticamente.',
         invalidCourse: 'ID de curso inválido',
         invalidGuide: 'ID de guía inválido',
         invalidGrid: 'Estructura de cuadrícula inválida',
@@ -139,6 +176,8 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         scholarshipPaid: 'Both scholarships already paid for this guide.',
         scholarshipOtherWallet:
           'The scholarship of this guide was already paid to another wallet of your account. A guide is paid only once per account.',
+        scholarshipRetry:
+          'The guide was counted. The scholarship could not be paid now and will be retried automatically.',
         invalidCourse: 'Invalid course ID',
         invalidGuide: 'Invalid guide ID',
         invalidGrid: 'Invalid grid structure',
@@ -289,33 +328,45 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
       .execute()
 
     // --- Blockchain client setup (needed by credential minting and contract interaction) ---
+    const chain = deps.crosswordChain
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
-    const publicClient = createPublicClient({
-      chain: IS_PRODUCTION ? celo : celoSepolia,
-      transport: http(rpcUrl),
-    })
+    const chainTimeoutMs =
+      chain?.timeoutMs ?? +(process.env.SCHOLARSHIP_TIMEOUT_MS || 15000)
+    // Chain reads are bounded: when the RPC does not answer the request fails
+    // instead of hanging, which left the browser on "Sending" forever after the
+    // guide had already been credited (https://github.com/pasosdeJesus/learn.tg/issues/295).
+    const publicClient =
+      chain?.publicClient ??
+      createPublicClient({
+        chain: IS_PRODUCTION ? celo : celoSepolia,
+        transport: http(rpcUrl, { timeout: chainTimeoutMs, retryCount: 1 }),
+      })
 
-    const privateKey = process.env.PRIVATE_KEY as Hex | undefined
-    if (!privateKey) {
-      console.error(
-        'CRITICAL: PRIVATE_KEY is not set in environment variables.',
-      )
-      throw new Error('Server configuration error.')
+    let account: any = chain?.account
+    if (!account) {
+      const privateKey = process.env.PRIVATE_KEY as Hex | undefined
+      if (!privateKey) {
+        console.error(
+          'CRITICAL: PRIVATE_KEY is not set in environment variables.',
+        )
+        throw new Error('Server configuration error.')
+      }
+
+      try {
+        account = privateKeyToAccount(privateKey)
+      } catch (e) {
+        console.error('CRITICAL: Failed to load account from private key.', e)
+        throw new Error('Server configuration error.')
+      }
     }
 
-    let account
-    try {
-      account = privateKeyToAccount(privateKey)
-    } catch (e) {
-      console.error('CRITICAL: Failed to load account from private key.', e)
-      throw new Error('Server configuration error.')
-    }
-
-    const walletClient = createWalletClient({
-      account,
-      chain: IS_PRODUCTION ? celo : celoSepolia,
-      transport: http(rpcUrl),
-    })
+    const walletClient =
+      chain?.walletClient ??
+      createWalletClient({
+        account,
+        chain: IS_PRODUCTION ? celo : celoSepolia,
+        transport: http(rpcUrl, { timeout: chainTimeoutMs, retryCount: 1 }),
+      })
 
     if (mistakesInCW.length == 0) {
       let gUsuario: any;
@@ -415,116 +466,138 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
       )
     }
 
-    // Get active vault (latest version: V5 if deployed, else V4)
-    const { address: contractAddress, version: vaultVersion } = await getActiveVault()
-    const vaultAbi = vaultVersion === 'V5' ? (LearnTGVaultsV5Abi as any) : (LearnTGVaultsV3Abi as any)
-    const isV5 = vaultVersion === 'V5'
-
-    if (contractAddress) {
-      const vaultContract = getContract({
-        address: contractAddress,
-        abi: vaultAbi,
-        client: { public: publicClient, wallet: walletClient },
-      })
-      const courseIdArg = BigInt(courseId)
-      const guideIdArg = BigInt(actividadpfId)
-      const vaultArray: any = await vaultContract.read.vaults(
-        [courseIdArg]
+    // The scholarship section is bounded and non-fatal (F-#295): the guide is
+    // already credited above, so a slow or failing RPC must neither keep the
+    // request open nor turn a credited guide into an error. On failure the
+    // response says `scholarship: 'pending'` and the reason is recorded in the
+    // student's events so the operator can retry.
+    let scholarship: ScholarshipState = 'not_paid'
+    let scholarshipPendingReason: string | null = null
+    try {
+      // Get active vault (latest version: V5 if deployed, else V4)
+      const { address: contractAddress, version: vaultVersion } = await withDeadline(
+        (chain?.getActiveVault ?? getActiveVault)(),
+        chainTimeoutMs,
+        'getActiveVault',
       )
-      const vault = {
-        courseId: Number(vaultArray[0]),
-        balanceUsdt: Number(vaultArray[1]),
-        balanceSlearn: Number(vaultArray[2]),
-        amountPerGuideUsdt: Number(vaultArray[3]),
-        amountPerGuideSlearn: Number(vaultArray[4]),
-        exists: Boolean(vaultArray[5]),
-      }
-      if (vault.exists) {
-        const canSubmit = (await vaultContract.read.studentCanSubmit([
-          courseIdArg,
-          walletAddress as Address,
-        ])) as boolean
-        if (usuario.profilescore == null || usuario.profilescore < 50) {
-          retMessage += msg[locale].atLeast50
-        } else if (canSubmit) {
-          try {
-            // Read status BEFORE payment to calculate delta
-            const statusBefore: any = await vaultContract.read.getStudentGuideStatus([
-              courseIdArg,
-              guideIdArg,
-              walletAddress as Address,
-            ])
-            const paidUSDTBefore = BigInt(statusBefore[0])
-            const paidSlearnBefore = BigInt(statusBefore[1])
+      const vaultAbi = vaultVersion === 'V5' ? (LearnTGVaultsV5Abi as any) : (LearnTGVaultsV3Abi as any)
+      const isV5 = vaultVersion === 'V5'
 
-            // R-#279 / R-#265: la cadena es la autoridad sobre "ya pagada". Si un token
-            // ya se pagó pero su fila local falta (pagos anteriores al registro por
-            // token, o migrados de V4 a V5), se escribe la fila que falta para que el
-            // ícono del curso y esta comprobación lo recuerden. Si ya se pagaron AMBOS
-            // tokens no se llama al contrato: evita la tx no-op
-            // `ScholarshipAlreadyPaid` y se avisa al estudiante que ya la recibió.
-            if (mistakesInCW.length == 0) {
-              const recorded = await recordedScholarshipTokens(db, billeteraUsuario.usuario_id, actividadpfId)
-              // R-#265 §3.3 (decisión del operador, 2026-10-18): una guía se paga una
-              // sola vez por **cuenta**. El contrato limita por dirección, así que sin
-              // esta comprobación otra billetera de la misma cuenta volvería a cobrarla.
-              const otherWallet = paidToOtherWallet(recorded.wallets, walletAddress)
-              if (otherWallet) {
-                console.log(`Skipping payScholarship: guide already paid to another wallet of the account user=${billeteraUsuario.usuario_id} guide=${actividadpfId}`)
-                retMessage += '\n' + msg[locale].scholarshipOtherWallet
-                return NextResponse.json({ message: retMessage, mistakesInCW, scholarshipResult: null, alreadyPaid: true }, { status: 200 })
-              }
-              const backfilled = await recordMissingScholarshipRows(db, {
-                usuarioId: billeteraUsuario.usuario_id,
-                wallet: walletAddress,
-                courseId,
-                guideId: actividadpfId,
-                onChain: { usdt: paidUSDTBefore, slearn: paidSlearnBefore },
-                recorded,
-                usdtDecimals: +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6),
-              })
-              if (backfilled.length > 0) {
-                console.log(`Backfilled scholarship rows for user=${billeteraUsuario.usuario_id} guide=${actividadpfId}: ${backfilled.map((r) => `${r.crypto}=${r.amount}`).join(', ')}`)
-              }
-              if (paidUSDTBefore > 0n && paidSlearnBefore > 0n) {
-                console.log(`Skipping payScholarship: both already paid on-chain for user=${billeteraUsuario.usuario_id} guide=${actividadpfId}`)
-                retMessage += '\n' + msg[locale].scholarshipPaid
-                return NextResponse.json({ message: retMessage, mistakesInCW, scholarshipResult: null, alreadyPaid: true }, { status: 200 })
-              }
-            }
-
-            // GD course scholarship routing (10% to cluster/country fund via ClusterFunds)
-            let learnTgAddr: Address = '0x0000000000000000000000000000000000000000' as Address
-            let learnTgUSDT = 0n
-            let learnTgSlearn = 0n
-            let gdCtx: any = null
-            if (isV5) {
-              const fullUSDT = BigInt(vault.amountPerGuideUsdt)
-              const fullSlearn = BigInt(vault.amountPerGuideSlearn)
-              const score = BigInt(usuario.profilescore || 0)
-              const scholarUSDT = (fullUSDT * score) / 100n
-              const scholarSlearn = (fullSlearn * score) / 100n
-              // Hook §5.4: resuelve si el curso es GD y el split (10%) al fund.
-              gdCtx = {
-                db,
-                usuarioId: usuario.id,
-                courseId,
-                usdtAmount: scholarUSDT,
-                slearnAmount: scholarSlearn,
-              }
-              await deps.routeReward(gdCtx)
-              if (gdCtx.destino) {
-                learnTgUSDT = gdCtx.gdUsdtAmount ?? 0n
-                learnTgSlearn = gdCtx.gdSlearnAmount ?? 0n
-                learnTgAddr = gdCtx.gdAddr ?? ('0x0000000000000000000000000000000000000000' as Address)
-              }
-            }
-
-            const tx: Address = await callWriteFun(
+      if (contractAddress) {
+        const vaultContract = chain?.getVaultContract
+          ? chain.getVaultContract({
+              address: contractAddress,
+              abi: vaultAbi,
               publicClient,
-              account,
-              vaultContract.write.payScholarship,
-              isV5
+              walletClient,
+            })
+          : getContract({
+              address: contractAddress,
+              abi: vaultAbi,
+              client: { public: publicClient, wallet: walletClient },
+            })
+        const courseIdArg = BigInt(courseId)
+        const guideIdArg = BigInt(actividadpfId)
+        const vaultArray: any = await withDeadline(
+          vaultContract.read.vaults([courseIdArg]),
+          chainTimeoutMs,
+          'vaults',
+        )
+        const vault = {
+          courseId: Number(vaultArray[0]),
+          balanceUsdt: Number(vaultArray[1]),
+          balanceSlearn: Number(vaultArray[2]),
+          amountPerGuideUsdt: Number(vaultArray[3]),
+          amountPerGuideSlearn: Number(vaultArray[4]),
+          exists: Boolean(vaultArray[5]),
+        }
+        if (vault.exists) {
+          const canSubmit = (await withDeadline(
+            vaultContract.read.studentCanSubmit([courseIdArg, walletAddress as Address]),
+            chainTimeoutMs,
+            'studentCanSubmit',
+          )) as boolean
+          if (usuario.profilescore == null || usuario.profilescore < 50) {
+            retMessage += msg[locale].atLeast50
+          } else if (canSubmit) {
+            try {
+              // Read status BEFORE payment to calculate delta
+              const statusBefore: any = await withDeadline(
+                vaultContract.read.getStudentGuideStatus([
+                  courseIdArg,
+                  guideIdArg,
+                  walletAddress as Address,
+                ]),
+                chainTimeoutMs,
+                'getStudentGuideStatus',
+              )
+              const paidUSDTBefore = BigInt(statusBefore[0])
+              const paidSlearnBefore = BigInt(statusBefore[1])
+
+              // R-#279 / R-#265: la cadena es la autoridad sobre "ya pagada". Si un token
+              // ya se pagó pero su fila local falta (pagos anteriores al registro por
+              // token, o migrados de V4 a V5), se escribe la fila que falta para que el
+              // ícono del curso y esta comprobación lo recuerden. Si ya se pagaron AMBOS
+              // tokens no se llama al contrato: evita la tx no-op
+              // `ScholarshipAlreadyPaid` y se avisa al estudiante que ya la recibió.
+              if (mistakesInCW.length == 0) {
+                const recorded = await recordedScholarshipTokens(db, billeteraUsuario.usuario_id, actividadpfId)
+                // R-#265 §3.3 (decisión del operador, 2026-10-18): una guía se paga una
+                // sola vez por **cuenta**. El contrato limita por dirección, así que sin
+                // esta comprobación otra billetera de la misma cuenta volvería a cobrarla.
+                const otherWallet = paidToOtherWallet(recorded.wallets, walletAddress)
+                if (otherWallet) {
+                  console.log(`Skipping payScholarship: guide already paid to another wallet of the account user=${billeteraUsuario.usuario_id} guide=${actividadpfId}`)
+                  retMessage += '\n' + msg[locale].scholarshipOtherWallet
+                  return NextResponse.json({ message: retMessage, mistakesInCW, scholarshipResult: null, alreadyPaid: true, points: 1, scholarship: 'already_paid' }, { status: 200 })
+                }
+                const backfilled = await recordMissingScholarshipRows(db, {
+                  usuarioId: billeteraUsuario.usuario_id,
+                  wallet: walletAddress,
+                  courseId,
+                  guideId: actividadpfId,
+                  onChain: { usdt: paidUSDTBefore, slearn: paidSlearnBefore },
+                  recorded,
+                  usdtDecimals: +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6),
+                })
+                if (backfilled.length > 0) {
+                  console.log(`Backfilled scholarship rows for user=${billeteraUsuario.usuario_id} guide=${actividadpfId}: ${backfilled.map((r) => `${r.crypto}=${r.amount}`).join(', ')}`)
+                }
+                if (paidUSDTBefore > 0n && paidSlearnBefore > 0n) {
+                  console.log(`Skipping payScholarship: both already paid on-chain for user=${billeteraUsuario.usuario_id} guide=${actividadpfId}`)
+                  retMessage += '\n' + msg[locale].scholarshipPaid
+                  return NextResponse.json({ message: retMessage, mistakesInCW, scholarshipResult: null, alreadyPaid: true, points: 1, scholarship: 'already_paid' }, { status: 200 })
+                }
+              }
+
+              // GD course scholarship routing (10% to cluster/country fund via ClusterFunds)
+              let learnTgAddr: Address = '0x0000000000000000000000000000000000000000' as Address
+              let learnTgUSDT = 0n
+              let learnTgSlearn = 0n
+              let gdCtx: any = null
+              if (isV5) {
+                const fullUSDT = BigInt(vault.amountPerGuideUsdt)
+                const fullSlearn = BigInt(vault.amountPerGuideSlearn)
+                const score = BigInt(usuario.profilescore || 0)
+                const scholarUSDT = (fullUSDT * score) / 100n
+                const scholarSlearn = (fullSlearn * score) / 100n
+                // Hook §5.4: resuelve si el curso es GD y el split (10%) al fund.
+                gdCtx = {
+                  db,
+                  usuarioId: usuario.id,
+                  courseId,
+                  usdtAmount: scholarUSDT,
+                  slearnAmount: scholarSlearn,
+                }
+                await deps.routeReward(gdCtx)
+                if (gdCtx.destino) {
+                  learnTgUSDT = gdCtx.gdUsdtAmount ?? 0n
+                  learnTgSlearn = gdCtx.gdSlearnAmount ?? 0n
+                  learnTgAddr = gdCtx.gdAddr ?? ('0x0000000000000000000000000000000000000000' as Address)
+                }
+              }
+
+              const callArgs = isV5
                 ? [
                     courseIdArg,
                     guideIdArg,
@@ -544,151 +617,208 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
                     walletAddress as Address,
                     mistakesInCW.length == 0,
                     usuario.profilescore || 0,
-                  ],
-            )
-            // Record cooldown start event
-            try {
-              await deps.recordEvent({
-                event_type: 'cooldown_start',
-                event_data: {
-                  courseId: courseId,
-                  guideId: guideId,
-                },
-                usuario_id: usuario.id,
-              })
-            } catch (error) {
-              console.error('Failed to record cooldown_start event:', error)
-            }
-            // VERIFY AND RECORD AMOUNT — read status AFTER payment, compute delta
-            const statusAfter: any = await vaultContract.read.getStudentGuideStatus([
-              courseIdArg,
-              guideIdArg,
-              walletAddress as Address,
-            ])
-            const paidUSDTAfter = BigInt(statusAfter[0])
-            const paidSlearnAfter = BigInt(statusAfter[1])
-
-            scholarshipResult = tx
-            const paidUSDT = paidUSDTAfter - paidUSDTBefore
-            const paidSlearn = paidSlearnAfter - paidSlearnBefore
-            scholarshipPaidUsdt = paidUSDT > 0n
-              ? parseFloat(formatUnits(paidUSDT, +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6)))
-              : 0
-            scholarshipPaidSlearn = paidSlearn > 0n
-              ? parseFloat(formatUnits(paidSlearn, 2))
-              : 0
-
-            if (mistakesInCW.length == 0) {
-              retMessage += '\n' + msg[locale].correct
-
-              if (paidUSDT > 0 || paidSlearn > 0) {
-                const usdtDecimals = +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6)
-                const slearnDecimals = 2
-
-                await db.transaction().execute(async (trx) => {
-                  if (paidUSDT > 0) {
-                    const usdtAmount = parseFloat(formatUnits(paidUSDT, usdtDecimals))
-                    await trx.insertInto('transaction').values({
-                      usuario_id: usuario.id,
-  date: new Date(),
-                      type: 'scholarship',
-                      crypto: 'usdt',
-                      amount: usdtAmount,
-                      balance_impact: usdtAmount,
-                      hash: tx,
-                      wallet: walletAddress,
-                      metadata: { courseId: courseId, guideId: actividadpfId }
-                    }).execute()
-                    retMessage += '\n' + msg[locale].youReceived + ' ' + usdtAmount.toFixed(2) + ' USDT'
-                  }
-
-                  if (paidSlearn > 0) {
-                    const slearnAmount = parseFloat(formatUnits(paidSlearn, slearnDecimals))
-                    await trx.insertInto('transaction').values({
-                      usuario_id: usuario.id,
-  date: new Date(),
-                      type: 'scholarship',
-                      crypto: 'slearn',
-                      amount: slearnAmount,
-                      balance_impact: slearnAmount,
-                      hash: tx,
-                      wallet: walletAddress,
-                      metadata: { courseId: courseId, guideId: actividadpfId }
-                    }).execute()
-                    retMessage += '\n' + msg[locale].youReceivedSLEARN + ' ' + slearnAmount.toFixed(2) + ' SLEARN'
-                  }
-
-                  // GD course: auto-route 10% to cluster/country fund via ClusterFunds
-                  if (learnTgUSDT > 0n || learnTgSlearn > 0n) {
-                    try {
-                      const destino = gdCtx?.destino
-                      const usdtAddr = (await vaultContract.read.usdtToken()) as Address
-                      const slearnAddr = (await vaultContract.read.slearnToken()) as Address
-                      await deps.routeToClusterFunds(publicClient, walletClient, account, tx, destino, learnTgUSDT, learnTgSlearn, usdtAddr, slearnAddr, {
-                        db,
-                        usuarioId: usuario.id,
-                        wallet: walletAddress,
-                        source: 'guide',
-                        courseId,
-                        guideId: actividadpfId,
-                        usdtDecimals,
-                        slearnDecimals,
-                      })
-                    } catch (e: any) {
-                      console.error(`[gd] Auto-route failed: ${e?.shortMessage || e?.message || e}`)
-                      await sql`
-                        INSERT INTO admin_solves (type, metadata)
-                        VALUES ('gd_cluster_transfer', ${JSON.stringify({
-                          txHash: tx, courseId, guideId: actividadpfId,
-                          usuarioId: usuario.id,
-                          learnTgUSDT: learnTgUSDT.toString(),
-                          learnTgSlearn: learnTgSlearn.toString(),
-                        })}::jsonb)
-                      `.execute(trx)
-                    }
-                  }
-
-                  const totalPaidAmount = paidUSDTAfter > 0n
-                    ? paidUSDTAfter.toString()
-                    : paidSlearnAfter.toString()
-                  await trx
-                    .updateTable('guide_usuario')
-                    .set({ amountpaid: Number(totalPaidAmount) })
-                    .where('usuario_id', '=', billeteraUsuario.usuario_id)
-                    .where('actividadpf_id', '=', actividadpfId)
-                    .execute()
+                  ]
+              const tx: Address = await withDeadline(
+                chain?.submitScholarship
+                  ? chain.submitScholarship({
+                      publicClient,
+                      account,
+                      write: vaultContract.write.payScholarship,
+                      callArgs,
+                    })
+                  : callWriteFun(publicClient, account, vaultContract.write.payScholarship, callArgs),
+                chainTimeoutMs,
+                'payScholarship',
+              )
+              // Record cooldown start event
+              try {
+                await deps.recordEvent({
+                  event_type: 'cooldown_start',
+                  event_data: {
+                    courseId: courseId,
+                    guideId: guideId,
+                  },
+                  usuario_id: usuario.id,
                 })
+              } catch (error) {
+                console.error('Failed to record cooldown_start event:', error)
               }
+              // VERIFY AND RECORD AMOUNT — read status AFTER payment, compute delta
+              const statusAfter: any = await withDeadline(
+                vaultContract.read.getStudentGuideStatus([
+                  courseIdArg,
+                  guideIdArg,
+                  walletAddress as Address,
+                ]),
+                chainTimeoutMs,
+                'getStudentGuideStatus',
+              )
+              const paidUSDTAfter = BigInt(statusAfter[0])
+              const paidSlearnAfter = BigInt(statusAfter[1])
 
-            } else {
-              retMessage += '\n' + msg[locale].incorrect
-              if (paidUSDT > 0 || paidSlearn > 0) {
-                console.log("*** PROBLEM: payment was made for incorrect answer, tx=", tx)
+              scholarshipResult = tx
+              const paidUSDT = paidUSDTAfter - paidUSDTBefore
+              const paidSlearn = paidSlearnAfter - paidSlearnBefore
+              // Only a real delta means the scholarship was paid: an ineligible
+              // or unfunded vault answers the call without moving tokens.
+              scholarship = paidUSDT > 0n || paidSlearn > 0n ? 'paid' : 'not_paid'
+              scholarshipPaidUsdt = paidUSDT > 0n
+                ? parseFloat(formatUnits(paidUSDT, +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6)))
+                : 0
+              scholarshipPaidSlearn = paidSlearn > 0n
+                ? parseFloat(formatUnits(paidSlearn, 2))
+                : 0
+
+              if (mistakesInCW.length == 0) {
+                retMessage += '\n' + msg[locale].correct
+
+                if (paidUSDT > 0 || paidSlearn > 0) {
+                  const usdtDecimals = +(process.env.NEXT_PUBLIC_USDT_DECIMALS || 6)
+                  const slearnDecimals = 2
+
+                  await db.transaction().execute(async (trx) => {
+                    if (paidUSDT > 0) {
+                      const usdtAmount = parseFloat(formatUnits(paidUSDT, usdtDecimals))
+                      await trx.insertInto('transaction').values({
+                        usuario_id: usuario.id,
+    date: new Date(),
+                        type: 'scholarship',
+                        crypto: 'usdt',
+                        amount: usdtAmount,
+                        balance_impact: usdtAmount,
+                        hash: tx,
+                        wallet: walletAddress,
+                        metadata: { courseId: courseId, guideId: actividadpfId }
+                      }).execute()
+                      retMessage += '\n' + msg[locale].youReceived + ' ' + usdtAmount.toFixed(2) + ' USDT'
+                    }
+
+                    if (paidSlearn > 0) {
+                      const slearnAmount = parseFloat(formatUnits(paidSlearn, slearnDecimals))
+                      await trx.insertInto('transaction').values({
+                        usuario_id: usuario.id,
+    date: new Date(),
+                        type: 'scholarship',
+                        crypto: 'slearn',
+                        amount: slearnAmount,
+                        balance_impact: slearnAmount,
+                        hash: tx,
+                        wallet: walletAddress,
+                        metadata: { courseId: courseId, guideId: actividadpfId }
+                      }).execute()
+                      retMessage += '\n' + msg[locale].youReceivedSLEARN + ' ' + slearnAmount.toFixed(2) + ' SLEARN'
+                    }
+
+                    // GD course: auto-route 10% to cluster/country fund via ClusterFunds
+                    if (learnTgUSDT > 0n || learnTgSlearn > 0n) {
+                      try {
+                        const destino = gdCtx?.destino
+                        const usdtAddr = (await vaultContract.read.usdtToken()) as Address
+                        const slearnAddr = (await vaultContract.read.slearnToken()) as Address
+                        await deps.routeToClusterFunds(publicClient, walletClient, account, tx, destino, learnTgUSDT, learnTgSlearn, usdtAddr, slearnAddr, {
+                          db,
+                          usuarioId: usuario.id,
+                          wallet: walletAddress,
+                          source: 'guide',
+                          courseId,
+                          guideId: actividadpfId,
+                          usdtDecimals,
+                          slearnDecimals,
+                        })
+                      } catch (e: any) {
+                        console.error(`[gd] Auto-route failed: ${e?.shortMessage || e?.message || e}`)
+                        await sql`
+                          INSERT INTO admin_solves (type, metadata)
+                          VALUES ('gd_cluster_transfer', ${JSON.stringify({
+                            txHash: tx, courseId, guideId: actividadpfId,
+                            usuarioId: usuario.id,
+                            learnTgUSDT: learnTgUSDT.toString(),
+                            learnTgSlearn: learnTgSlearn.toString(),
+                          })}::jsonb)
+                        `.execute(trx)
+                      }
+                    }
+
+                    const totalPaidAmount = paidUSDTAfter > 0n
+                      ? paidUSDTAfter.toString()
+                      : paidSlearnAfter.toString()
+                    await trx
+                      .updateTable('guide_usuario')
+                      .set({ amountpaid: Number(totalPaidAmount) })
+                      .where('usuario_id', '=', billeteraUsuario.usuario_id)
+                      .where('actividadpf_id', '=', actividadpfId)
+                      .execute()
+                  })
+                }
+
+              } else {
+                retMessage += '\n' + msg[locale].incorrect
+                if (paidUSDT > 0 || paidSlearn > 0) {
+                  console.log("*** PROBLEM: payment was made for incorrect answer, tx=", tx)
+                }
               }
-            }
-          } catch (err) {
-            console.error('Error submitting transaction:', err)
-            retMessage += '\n' + msg[locale].submitError
-          } 
+            } catch (err: any) {
+              console.error('Error submitting transaction:', err)
+              if (scholarshipResult) {
+                // The payment was accepted; what failed is the post-payment read
+                // or the accounting, which the backfill repairs on a retry.
+                scholarship = 'paid'
+              } else {
+                scholarshipPendingReason =
+                  err instanceof ChainDeadlineError ? 'scholarship_timeout' : 'scholarship_failed'
+                scholarship = mistakesInCW.length == 0 ? 'pending' : 'not_paid'
+                if (scholarship === 'pending') retMessage += '\n' + msg[locale].scholarshipRetry
+              }
+            } 
+          } else {
+            // El enfriamiento del contrato es **por curso** (`studentCooldowns[courseId][student]`
+            // y `studentCanSubmit(courseId, student)`, LearnTGVaultsV5.sol), así que este
+            // mensaje sólo aplica al curso que se está enviando. Se dice el tiempo que falta y
+            // que los demás cursos no se ven afectados: antes el texto no lo aclaraba y quedaba
+            // la impresión de que bloqueaba todos los cursos (reporte del operador, 2026-09-25).
+            const left = await remainingCooldownText(vaultContract, courseIdArg, walletAddress as Address)
+            retMessage += '\n' + msg[locale].cannotSubmit.replace('{{0}}', left)
+          }
         } else {
-          // El enfriamiento del contrato es **por curso** (`studentCooldowns[courseId][student]`
-          // y `studentCanSubmit(courseId, student)`, LearnTGVaultsV5.sol), así que este
-          // mensaje sólo aplica al curso que se está enviando. Se dice el tiempo que falta y
-          // que los demás cursos no se ven afectados: antes el texto no lo aclaraba y quedaba
-          // la impresión de que bloqueaba todos los cursos (reporte del operador, 2026-09-25).
-          const left = await remainingCooldownText(vaultContract, courseIdArg, walletAddress as Address)
-          retMessage += '\n' + msg[locale].cannotSubmit.replace('{{0}}', left)
-        }
+          retMessage += `\nThere is not vault for the course (${courseId})`
+        } 
       } else {
-        retMessage += `\nThere is not vault for the course (${courseId})`
-      } 
-    } else {
-      retMessage += '\n' + msg[locale].contractError
+        retMessage += '\n' + msg[locale].contractError
+      }
+    } catch (err: any) {
+      scholarshipPendingReason =
+        err instanceof ChainDeadlineError ? 'scholarship_timeout' : 'scholarship_failed'
+      scholarship = mistakesInCW.length == 0 ? 'pending' : 'not_paid'
+      console.error(
+        `[scholarship] ${scholarshipPendingReason}: course=${courseId} guide=${actividadpfId} user=${billeteraUsuario.usuario_id}`,
+        err?.message || err,
+      )
+      if (scholarship === 'pending') retMessage += '\n' + msg[locale].scholarshipRetry
+    }
+
+    if (scholarship === 'pending' && scholarshipPendingReason) {
+      // Non-fatal for the learner, but the operator needs to know that a
+      // credited guide still owes its scholarship (F-#295).
+      try {
+        await deps.recordEvent({
+          event_type: 'scholarship_pending',
+          event_data: {
+            courseId,
+            guideId: actividadpfId,
+            reason: scholarshipPendingReason,
+          },
+          usuario_id: usuario.id,
+        })
+      } catch (error) {
+        console.error('Failed to record scholarship_pending event:', error)
+      }
     }
 
     return NextResponse.json(
       {
         mistakesInCW: mistakesInCW,
+        points: mistakesInCW.length == 0 ? 1 : 0,
+        scholarship,
         credentialMinted,
         credentialUserId: credentialMinted ? billeteraUsuario.usuario_id : null,
         message: retMessage,
