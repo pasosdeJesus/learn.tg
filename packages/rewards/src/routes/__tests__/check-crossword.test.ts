@@ -28,6 +28,8 @@ function createFakeDb(options: FakeOptions = {}) {
   const state = {
     guideCredits: 0,
     transactions: [] as Array<Record<string, any>>,
+    adminSolves: [] as Array<Record<string, any>>,
+    rawQueries: [] as any[],
   }
   const guides = options.guides ?? [
     { id: 101, nombrecorto: 'guide1', sufijoRuta: 'guide1' },
@@ -67,6 +69,7 @@ function createFakeDb(options: FakeOptions = {}) {
       values: (row: any) => {
         if (table === 'guide_usuario') state.guideCredits += 1
         if (table === 'transaction') state.transactions.push(row)
+        if (table === 'admin_solves') state.adminSolves.push(row)
         return chain
       },
       set: () => {
@@ -96,7 +99,10 @@ function createFakeDb(options: FakeOptions = {}) {
     getExecutor: () => ({
       transformQuery: (node: any) => node,
       compileQuery: (node: any) => node,
-      executeQuery: async () => ({ rows: guides }),
+      executeQuery: async (compiled: any) => {
+        state.rawQueries.push(compiled)
+        return { rows: guides }
+      },
     }),
     executeQuery: async () => ({ rows: guides }),
     fn: { countAll: () => ({ as: () => 'count' }) },
@@ -121,6 +127,8 @@ function createFakeVault(options: FakeVaultOptions = {}) {
       vaults: vi.fn(async () => [10n, 1_000_000_000n, 1_000_000n, 10_000_000n, 20_000n, true]),
       studentCanSubmit: vi.fn(async () => true),
       studentCooldowns: vi.fn(async () => 0n),
+      usdtToken: vi.fn(async () => '0x4444444444444444444444444444444444444444'),
+      slearnToken: vi.fn(async () => '0x5555555555555555555555555555555555555555'),
       getStudentGuideStatus: vi.fn(async () => (paid ? paidAfter : [0n, 0n])),
     },
     write: { payScholarship: vi.fn() },
@@ -146,7 +154,15 @@ function buildRequest(body: Record<string, unknown> = {}): NextRequest {
   })
 }
 
-function buildDeps(overrides: { db?: any; vault?: any; submitScholarship?: any; timeoutMs?: number } = {}) {
+function buildDeps(overrides: {
+  db?: any
+  vault?: any
+  submitScholarship?: any
+  timeoutMs?: number
+  routingTimeoutMs?: number
+  routeReward?: any
+  routeToClusterFunds?: any
+} = {}) {
   const fake = overrides.db ?? createFakeDb()
   const vault = overrides.vault ?? createFakeVault()
   const submitScholarship =
@@ -163,8 +179,8 @@ function buildDeps(overrides: { db?: any; vault?: any; submitScholarship?: any; 
     })),
     recordEvent: vi.fn(async () => {}),
     updateUserAndCoursePoints: vi.fn(async () => 1),
-    routeReward: vi.fn(async () => {}),
-    routeToClusterFunds: vi.fn(async () => ({})),
+    routeReward: overrides.routeReward ?? vi.fn(async () => {}),
+    routeToClusterFunds: overrides.routeToClusterFunds ?? vi.fn(async () => ({})),
     canPurchasePremiumCourse: vi.fn(async () => ({ access: true })),
     crosswordChain: {
       publicClient: {},
@@ -174,6 +190,7 @@ function buildDeps(overrides: { db?: any; vault?: any; submitScholarship?: any; 
       getVaultContract: () => vault,
       submitScholarship,
       timeoutMs: overrides.timeoutMs ?? 200,
+      routingTimeoutMs: overrides.routingTimeoutMs ?? overrides.timeoutMs ?? 200,
     },
   }
   return { deps, state: fake.state, vault, submitScholarship }
@@ -267,5 +284,37 @@ describe('checkCrosswordPost — scholarship section (engine)', () => {
     expect(state.guideCredits).toBe(0)
     expect(state.transactions).toEqual([])
     expect(deps.updateUserAndCoursePoints).not.toHaveBeenCalled()
+  })
+
+  // The GD routing sends the 10% to the cluster/country fund with two transfers
+  // that wait for receipts. The dev-site run of the E2E found it could hang the
+  // response after the scholarship was already paid (F-#295).
+  it('answers within the routing deadline when the GD 10% transfer hangs', async () => {
+    const hangingRouting = vi.fn(() => new Promise<never>(() => {}))
+    const routeReward = vi.fn(async (ctx: any) => {
+      ctx.destino = 'country'
+      ctx.gdUsdtAmount = 100_000n
+      ctx.gdSlearnAmount = 20n
+    })
+    const { deps, state } = buildDeps({
+      routeReward,
+      routeToClusterFunds: hangingRouting,
+      timeoutMs: 50,
+      routingTimeoutMs: 50,
+    })
+    const started = Date.now()
+
+    const res = await checkCrosswordPost(deps, buildRequest())
+    const elapsed = Date.now() - started
+    const json = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(json.scholarship).toBe('paid')
+    expect(json.scholarshipUsdt).toBe(1)
+    expect(elapsed).toBeLessThan(2000)
+    expect(routeReward).toHaveBeenCalledTimes(1)
+    expect(hangingRouting).toHaveBeenCalledTimes(1)
+    // The unpaid routing is left for the operator to retry.
+    expect(JSON.stringify(state.rawQueries)).toContain('admin_solves')
   })
 })

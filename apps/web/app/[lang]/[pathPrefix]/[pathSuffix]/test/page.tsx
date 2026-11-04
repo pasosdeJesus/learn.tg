@@ -377,7 +377,7 @@ export default function Page({
       // The server bounds the chain calls (~15 s) and answers even when the
       // scholarship cannot be paid (F-#295); this client deadline only keeps the
       // button from waiting forever if the site itself stops answering.
-      const response = await authedPost<any>('/api/check-crossword', payload, { timeout: 30000 })
+      const response = await authedPost<any>('/api/check-crossword', payload, { timeout: 45000 })
 
       const uiMsg = {
         es: { problemWords: 'Problema(s) con la(s) palabra(s) ' },

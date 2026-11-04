@@ -332,6 +332,11 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL
     const chainTimeoutMs =
       chain?.timeoutMs ?? +(process.env.SCHOLARSHIP_TIMEOUT_MS || 15000)
+    // The GD 10% routing sends two transfers and waits for their receipts; it gets
+    // its own budget so a slow chain does not cut a just-made payment, and a hang
+    // is recorded for retry instead of keeping the response open (F-#295).
+    const routingTimeoutMs =
+      chain?.routingTimeoutMs ?? +(process.env.SCHOLARSHIP_ROUTING_TIMEOUT_MS || 20000)
     // Chain reads are bounded: when the RPC does not answer the request fails
     // instead of hanging, which left the browser on "Sending" forever after the
     // guide had already been credited (https://github.com/pasosdeJesus/learn.tg/issues/295).
@@ -709,22 +714,37 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
                       retMessage += '\n' + msg[locale].youReceivedSLEARN + ' ' + slearnAmount.toFixed(2) + ' SLEARN'
                     }
 
-                    // GD course: auto-route 10% to cluster/country fund via ClusterFunds
+                    // GD course: auto-route 10% to cluster/country fund via ClusterFunds.
+                    // Also bounded (F-#295): the two transfers wait for receipts, so without
+                    // a deadline the response hung even though the guide was already paid.
+                    // The failure keeps the existing `admin_solves` retry path.
                     if (learnTgUSDT > 0n || learnTgSlearn > 0n) {
                       try {
                         const destino = gdCtx?.destino
-                        const usdtAddr = (await vaultContract.read.usdtToken()) as Address
-                        const slearnAddr = (await vaultContract.read.slearnToken()) as Address
-                        await deps.routeToClusterFunds(publicClient, walletClient, account, tx, destino, learnTgUSDT, learnTgSlearn, usdtAddr, slearnAddr, {
-                          db,
-                          usuarioId: usuario.id,
-                          wallet: walletAddress,
-                          source: 'guide',
-                          courseId,
-                          guideId: actividadpfId,
-                          usdtDecimals,
-                          slearnDecimals,
-                        })
+                        const usdtAddr = (await withDeadline(
+                          vaultContract.read.usdtToken(),
+                          routingTimeoutMs,
+                          'usdtToken',
+                        )) as Address
+                        const slearnAddr = (await withDeadline(
+                          vaultContract.read.slearnToken(),
+                          routingTimeoutMs,
+                          'slearnToken',
+                        )) as Address
+                        await withDeadline(
+                          deps.routeToClusterFunds(publicClient, walletClient, account, tx, destino, learnTgUSDT, learnTgSlearn, usdtAddr, slearnAddr, {
+                            db,
+                            usuarioId: usuario.id,
+                            wallet: walletAddress,
+                            source: 'guide',
+                            courseId,
+                            guideId: actividadpfId,
+                            usdtDecimals,
+                            slearnDecimals,
+                          }),
+                          routingTimeoutMs,
+                          'routeToClusterFunds',
+                        )
                       } catch (e: any) {
                         console.error(`[gd] Auto-route failed: ${e?.shortMessage || e?.message || e}`)
                         await sql`

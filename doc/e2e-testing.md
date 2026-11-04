@@ -365,7 +365,7 @@ hardcoded a score). Their coverage — SIWE, session cookie, profile — comes f
 ## 5. Browser specs (`e2e/specs/`)
 
 Puppeteer through `@pasosdejesus/m/e2e` (`initTestEnv`, `launchBrowser`,
-`ok`/`fail`/`summary`). 49 specs as of 2026-11-03. **They are not read-only**:
+`ok`/`fail`/`summary`). 50 specs as of 2026-11-04. **They are not read-only**:
 they register wallets, complete profiles, claim UBI, donate and buy (see §2.2),
 except `guide-citations.spec.mjs`, which only opens guides and reads their text
 (it checks that every guide keeps its `chapter:verse` citations).
@@ -450,6 +450,7 @@ and §2.4.
 | `celo-ubi-claim-sepolia.spec.mjs` | CELO UBI claim on Sepolia |
 | `church-persistence.spec.mjs` | Church data persistence in the profile |
 | `guide-claims.spec.mjs` | Guide completion and claim flow |
+| `crossword-submit-ends.spec.mjs` | F-#295: a crossword submission **always ends** — a wrong answer answers `200` with `points: 0` and `scholarship: 'not_paid'`, a correct one with `points: 1` and `scholarship` in `paid`/`already_paid`/`pending`/`not_paid`, both within `SUBMIT_BUDGET_MS` (45 s) and with the button leaving "Sending..." (~4 s each on the dev site; the GD course adds the two 10% transfers, bounded at 20 s). Walks `CROSSWORD_COURSES` (default `en/web3-and-ubi`, `en/a-relationship-with-Jesus`, `en/gdcluster`) until it finds a guide whose two scholarships are not paid; skips when there is none |
 | `cluster-formation.spec.mjs` | R-#220: admin list with search and status/country filters, cluster CRUD, member add/remove, `PUT` pseudonym + status, the **status field and column** in the ranking (API and UI), the admin clusters page (`/{lang}/admin/clusters`), the **"Your cluster" card** on the purchased GD course page, and the disband (soft delete + exclusion from the ranking). The 3-pastor invitation flow (accept/reject/activation at 3 churches) is covered by the engine's unit tests; the steps that need that fixture print `[SKIP]` when it is missing |
 | `course-list-compact.spec.mjs` | R-#272: the course list (`/en`, `/es`) shows compact cards — image, title, description, "Go to course" and the three state circles on the border — without the stats paragraph or the donation row |
 | `profile-data.spec.mjs` | Profile data loading and display |
@@ -507,6 +508,7 @@ time out on SIWE under suite load (passes alone).
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
 | `donate-campaign-real` | Campaign engine deployed (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_TESTNET`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` on the dev site (single-role wallet). Round C (cashback ON) needs MINTER_ROLE on the SLEARN of the dev site + CELO for gas; rounds A/B (cashback OFF) do not |
 | `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, published by `/api/churches/fund`) with **≥22 SLEARN** for the pastor bonus, otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when the balance is low |
+| `crossword-submit-ends` | A guide whose two scholarships are **not** paid for the wallet (the submit button is disabled once they are). Use `E2E_WALLET=TEST_PASTOR1` or add courses with `CROSSWORD_COURSES` when the default wallet exhausted them; the spec skips (`[SKIP]`) instead of failing |
 
 ---
 

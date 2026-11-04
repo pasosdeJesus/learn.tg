@@ -81,6 +81,8 @@ export interface CrosswordChainDeps {
   }) => Promise<`0x${string}`>
   /** Deadline for every chain call of the submission (default 15 s). */
   timeoutMs?: number
+  /** Deadline for the GD 10% routing (two transfers with receipts, default 20 s). */
+  routingTimeoutMs?: number
 }
 
 export interface RewardsDeps {
