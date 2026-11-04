@@ -34,7 +34,12 @@ const started = Date.now()
 const elapsed = () => Math.round((Date.now() - started) / 1000)
 
 function markerOf(html) {
-  return (html.match(/buildId["':\s]+"?([A-Za-z0-9_-]{6,})/) || [])[1]
+  // The page-specific chunk carries that route's own code, so it changes when the
+  // route changes; the first match used to be a shared chunk that survives most
+  // deploys, which made `--expect-build-change` wait for nothing (measured
+  // 2026-11-04: the site was redeployed and the marker never moved).
+  return (html.match(/\/page-([A-Za-z0-9_-]{6,})\.js/) || [])[1]
+    || (html.match(/buildId["':\s]+"?([A-Za-z0-9_-]{6,})/) || [])[1]
     || (html.match(/_next\/static\/chunks\/([A-Za-z0-9_-]+)\.js/) || [])[1]
     || null
 }
