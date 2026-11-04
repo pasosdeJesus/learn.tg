@@ -19,6 +19,8 @@ type Presentation = {
   ready: boolean
   isInitiator: boolean
   request: {
+    status?: string | null
+    locked?: boolean
     requested_at: string | null
     sent_at: string | null
     response?: string | null
@@ -112,7 +114,7 @@ export function GdPresentationControl({ lang }: { lang: string }) {
   return (
     <div className="mt-4 border-t border-gray-100 pt-3">
       <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('title')}</h4>
-      {presentation?.request ? (
+      {presentation?.request?.status ? (
         <div className="text-xs text-gray-700 space-y-1">
           <p>
             {t('requested')}

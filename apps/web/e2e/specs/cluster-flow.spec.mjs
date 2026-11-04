@@ -77,22 +77,23 @@ async function main() {
 
   // ── 2. El iniciador solicita la presentación (página del curso) ─────
   console.log('\n── 2. Solicitud del iniciador ──')
-  // La tarjeta "Your cluster" solo se pinta si el curso está comprado y el control
-  // necesita cargar el estado del clúster: se espera la tarjeta y la casilla, con
-  // una recarga de respaldo (la primera carga del curso es lenta).
-  const cardText = LANG === 'es' ? 'Tu clúster' : 'Your cluster'
+  // La solicitud se hace desde la página del clúster (el panel es del iniciador); el
+  // control de la página del curso solo sirve cuando aún no hay datos.
+  const requestLabel = LANG === 'es'
+    ? '¿Solicitar la presentación a Global Discip'
+    : 'Request the presentation to Global Discip'
   for (let attempt = 0; attempt < 2; attempt++) {
-    await initiator.page.goto(`${base}/${LANG}/${COURSE}`, { waitUntil: 'domcontentloaded' })
+    await initiator.page.goto(`${base}/${LANG}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
     await initiator.page.waitForFunction(
-      (text) => (document.body?.innerText || '').includes(text),
+      (label) => (document.body?.innerText || '').includes(label),
       { timeout: 90000 },
-      cardText,
+      requestLabel,
     ).catch(() => {})
     const hasCheckbox = await initiator.page.evaluate(
       () => !!document.querySelector('input[type="checkbox"]'),
     )
     if (hasCheckbox) break
-    console.log('  [retry] la tarjeta está pero el control aún no muestra la casilla')
+    console.log('  [retry] el panel aún no muestra la casilla de solicitud')
     await new Promise((r) => setTimeout(r, 5000))
   }
   const checked = await initiator.page.evaluate((label) => {
@@ -102,7 +103,7 @@ async function main() {
     if (!box || box.disabled) return false
     box.click()
     return true
-  }, t.requestBox)
+  }, requestLabel)
   if (checked) ok('casilla de la solicitud marcada')
   else fail('no se encontró la casilla de la solicitud')
 

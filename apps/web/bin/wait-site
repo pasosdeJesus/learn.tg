@@ -1,0 +1,87 @@
+#!/usr/bin/env node
+// Espera a que el sitio de desarrollo esté arriba y **mide cuánto tarda**.
+//
+// Uso:
+//   bin/wait-site                       # espera a que responda 200 (máx 15 min)
+//   bin/wait-site --expect-build-change # espera además un build nuevo (deploy real)
+//   bin/wait-site --url https://learn.tg --timeout 600 --interval 10
+//
+// Qué considera "arriba": una respuesta HTTP 200 de la página de clúster (sin
+// sesión), después de haber visto el sitio caído o lento. Si el sitio ya estaba
+// arriba al arrancar y no se pide un build nuevo, lo dice y termina.
+//
+// Pensado para el operador y para el agente: mientras corre en el fondo se puede
+// seguir trabajando, y al final imprime el tiempo total.
+
+const args = process.argv.slice(2)
+function arg(name, fallback) {
+  const index = args.indexOf(`--${name}`)
+  if (index >= 0 && args[index + 1]) return args[index + 1]
+  const inline = args.find((a) => a.startsWith(`--${name}=`))
+  return inline ? inline.slice(name.length + 3) : fallback
+}
+
+const BASE = (arg('url', process.env.SITE_URL || 'https://learn.tg:9001')).replace(/\/$/, '')
+const PATH = arg('path', '/en/cluster')
+const TIMEOUT = Number(arg('timeout', 900))
+const INTERVAL = Number(arg('interval', 10))
+const EXPECT_CHANGE = args.includes('--expect-build-change')
+const EXPECT_BUILD = arg('expect-build', '')
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
+const started = Date.now()
+const elapsed = () => Math.round((Date.now() - started) / 1000)
+
+function markerOf(html) {
+  return (html.match(/buildId["':\s]+"?([A-Za-z0-9_-]{6,})/) || [])[1]
+    || (html.match(/_next\/static\/chunks\/([A-Za-z0-9_-]+)\.js/) || [])[1]
+    || null
+}
+
+async function probe() {
+  const t0 = Date.now()
+  try {
+    const res = await fetch(`${BASE}${PATH}`, { headers: { 'user-agent': 'wait-site' } })
+    const html = res.status === 200 ? await res.text() : ''
+    return { status: res.status, ms: Date.now() - t0, marker: html ? markerOf(html) : null }
+  } catch (error) {
+    return { status: 0, ms: Date.now() - t0, error: error.message.slice(0, 60) }
+  }
+}
+
+const first = await probe()
+const initialMarker = first.marker
+let sawProblem = first.status !== 200
+console.log(`[t=0s] ${BASE}${PATH} → ${first.status || 'sin conexión'} (${first.ms} ms)${first.marker ? ` build ${first.marker}` : ''}`)
+
+if (first.status === 200 && !EXPECT_CHANGE) {
+  console.log(`El sitio ya estaba arriba (${first.ms} ms).`)
+  process.exit(0)
+}
+
+for (;;) {
+  if (elapsed() > TIMEOUT) {
+    console.log(`[FAIL] el sitio no quedó arriba en ${TIMEOUT} s.`)
+    process.exit(1)
+  }
+  await new Promise((r) => setTimeout(r, INTERVAL * 1000))
+  const state = await probe()
+  if (state.status !== 200) sawProblem = true
+  const changed = !!(state.marker && initialMarker && state.marker !== initialMarker)
+  const matchesExpected = !!(EXPECT_BUILD && state.marker === EXPECT_BUILD)
+  console.log(
+    `[t=${elapsed()}s] ${state.status || 'sin conexión'} (${state.ms} ms)` +
+      `${state.marker ? ` build ${state.marker}` : ''}${changed ? '  ← build nuevo' : ''}`,
+  )
+
+  const up = state.status === 200 && (sawProblem || EXPECT_CHANGE ? true : true)
+  if (up && !EXPECT_CHANGE && !EXPECT_BUILD) {
+    console.log(`\n[OK] sitio arriba en ${elapsed()} s (última respuesta ${state.ms} ms).`)
+    process.exit(0)
+  }
+  if (up && (changed || matchesExpected)) {
+    console.log(`\n[OK] build nuevo visible a los ${elapsed()} s.`)
+    process.exit(0)
+  }
+}

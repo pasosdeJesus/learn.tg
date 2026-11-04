@@ -561,7 +561,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
                 {presentation.missing.map((key) => t(CLUSTER_MISSING[key] ?? 'gdMissingActive')).join(' · ')}
               </p>
             )}
-            {presentation.request && presentation.request.status !== 'cancelled' ? (
+            {presentation.request?.status && presentation.request.status !== 'cancelled' ? (
               <div className="text-xs text-gray-700 space-y-1">
                 <p>
                   {t('gdRequested')}

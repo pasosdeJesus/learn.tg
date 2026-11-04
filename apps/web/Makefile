@@ -18,6 +18,13 @@ build-guard: db-connections-check
 db-connections-check:
 	@sh bin/db-connections-check
 
+# Espera a que el sitio de desarrollo vuelva a responder (el operador despliega
+# en otra máquina) y mide cuánto tarda. Con EXPECT_CHANGE=1 exige build nuevo.
+#   make wait-site
+#   EXPECT_CHANGE=1 TIMEOUT=1200 make wait-site
+wait-site:
+	@node bin/wait-site $${SITE_URL:+--url $$SITE_URL} $${EXPECT_CHANGE:+--expect-build-change} $${TIMEOUT:+--timeout $$TIMEOUT}
+
 # Motores (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): consumidos vía dist/ (exports map); dist/ no está en
 # git. Compilar antes del build — un checkout fresco no resuelve
 # @learn-tg/{rewards,gdcluster} sin esto. Orden: rewards antes que gdcluster.
