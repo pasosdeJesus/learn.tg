@@ -35,7 +35,7 @@ import { createPublicClient, createWalletClient, http, parseEther, parseUnits } 
 import { celoSepolia } from 'viem/chains'
 import { fail, gotoWithRetry, initTestEnv, launchBrowser, newPage, ok, resetFailures, short, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
-import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
+import { loadSelectedWallet, walletSelector } from '../helpers/e2e-wallet.mjs'
 import { rememberWallet } from '../helpers/e2e-wallets-registry.mjs'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
@@ -188,22 +188,42 @@ async function main() {
   // el helper de m fija https, así que sin esto no se puede probar en local.
   const base = process.env.SITE_URL || env.base
 
-  // 1. Pastor wallet: la elegida con E2E_WALLET / --wallet (TEST_PASTOR1..3), o una
-  // nueva si no hay selector. La misma billetera compra el curso una sola vez.
-  const selected = loadSelectedWallet()
-  const pk = selected?.pk || generatePrivateKey()
-  const addr = selected?.address || privateKeyToAddress(pk)
-  const testEmail = `checkout-${addr.slice(2, 10).toLowerCase()}@learn.tg`
-  console.log(`Pastor: ${short(addr)} | ${base}`)
+  // 1. Pastor wallet: **nueva por defecto**. Reutilizar la billetera compartida hace
+  // que la prueba dependa de su historia: el curso se compra una sola vez y el perfil
+  // no puede volverse pastor si su iglesia ya tiene pastor principal (409). La elegida
+  // con `E2E_WALLET` / `--wallet` se respeta; si el perfil la rechaza, se cae a una nueva.
+  const selector = walletSelector()
+  let selected = selector ? loadSelectedWallet() : null
+  let pk = selected?.pk || generatePrivateKey()
+  let addr = selected?.address || privateKeyToAddress(pk)
+  console.log(`Pastor: ${short(addr)}${selected ? ' (elegida)' : ' (nueva)'} | ${base}`)
 
-  // 2. Fill Sierra Leone profile (Christian, pilot country, non-Zionist)
-  const s = await siweSignIn(pk, addr)
-  const auth = { walletAddress: addr }
-  await apiPatch('/api/profile', {
-    nombre: 'E2E Checkout', email: testEmail, pais_id: 694, religion_id: 2,
-    position_israel_gaza: 'no', place_of_worship: 'E2E Checkout Church',
-    place_of_worship_location: 'Freetown', church_relationship: 'pastor',
-  }, auth, s.cookies)
+  const fillPastorProfile = async (key, address) => {
+    const email = `checkout-${address.slice(2, 10).toLowerCase()}@learn.tg`
+    const session = await siweSignIn(key, address)
+    // Sierra Leone (país piloto), cristiano y no sionista.
+    await apiPatch('/api/profile', {
+      nombre: 'E2E Checkout', email, pais_id: 694, religion_id: 2,
+      position_israel_gaza: 'no', place_of_worship: 'E2E Checkout Church',
+      place_of_worship_location: 'Freetown', church_relationship: 'pastor',
+    }, { walletAddress: address }, session.cookies)
+    return { email, session }
+  }
+
+  let pastorProfile
+  try {
+    pastorProfile = await fillPastorProfile(pk, addr)
+  } catch (error) {
+    const status = error?.response?.status
+    if (status !== 409) throw error
+    console.log('  [i] la billetera elegida no puede ser pastora (409: su iglesia ya tiene pastor principal): se usa una nueva')
+    selected = null
+    pk = generatePrivateKey()
+    addr = privateKeyToAddress(pk)
+    console.log(`Pastor: ${short(addr)} (nueva) | ${base}`)
+    pastorProfile = await fillPastorProfile(pk, addr)
+  }
+  const testEmail = pastorProfile.email
 
   // 2b. La billetera queda en el registro local (fuera de git) para que otras
   // corridas la reutilicen en vez de crear una nueva.
@@ -216,7 +236,7 @@ async function main() {
 
   // 3. Verifier confirms the worship location → eligible to buy GD
   const vAuth = await siweSignIn(verifier.pk, verifier.addr)
-  const profile = await axios.get(`${SITE}/api/profile?walletAddress=${encodeURIComponent(addr)}`, { httpsAgent, headers: { Cookie: s.cookies } }).then(r => r.data)
+  const profile = await axios.get(`${SITE}/api/profile?walletAddress=${encodeURIComponent(addr)}`, { httpsAgent, headers: { Cookie: pastorProfile.session.cookies } }).then(r => r.data)
   await apiPatch(`/api/admin/user/${profile.id}`, {
     verified_place_of_worship_location: 'Freetown',
     verified_place_of_worship: 'E2E Checkout Church',
@@ -226,7 +246,7 @@ async function main() {
   // 3b. Si la billetera elegida ya pagó el curso, no se repite la compra (la tabla
   // es única por usuario+curso): se abre la guía para comprobar el acceso.
   const mine = await axios
-    .get(`${SITE}/api/courses/premium/mine?walletAddress=${encodeURIComponent(addr)}`, { httpsAgent, headers: { Cookie: s.cookies } })
+    .get(`${SITE}/api/courses/premium/mine?walletAddress=${encodeURIComponent(addr)}`, { httpsAgent, headers: { Cookie: pastorProfile.session.cookies } })
     .then((r) => r.data)
     .catch(() => ({}))
   const ownsCourse = (mine.courses || []).some((row) => [10, 11].includes(Number(row.course_id)))

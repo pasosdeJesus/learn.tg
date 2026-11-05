@@ -11,7 +11,8 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, setupFullWalletMock, summary } from '@pasosdejesus/m/e2e'
-import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
+import { loadSelectedWallet, loadVerifierWallet } from '../helpers/e2e-wallet.mjs'
+import { createEligibleLearner } from '../helpers/eligible-wallet.mjs'
 import { signInWithCoreWallet } from '../helpers/in-app-wallet.mjs'
 import {
   answersFromGuideFile, clickSubmit, fillSolved, pendingCount, pendingInIndexedDb,
@@ -70,7 +71,7 @@ async function main() {
   const startedAtMs = Date.now()
   resetFailures()
 
-  const creds = loadSelectedWallet()
+  let creds = loadSelectedWallet()
   if (!creds) { console.error('No credentials found in apps/.env'); process.exit(1) }
 
   if (!process.env.IPDES) process.env.IPDES = 'learn.tg'
@@ -82,7 +83,7 @@ async function main() {
   const { base } = resolveSiteTarget(env)
 
   const browser = await launchBrowser(env.headless)
-  const page = await browser.newPage()
+  let page = await browser.newPage()
   await page.setDefaultNavigationTimeout(120000)
 
   await setupFullWalletMock(page, { privateKey: creds.pk, address: creds.addr, chainId })
@@ -106,58 +107,80 @@ async function main() {
     }, GUIDE_ORDER)
   }
 
-  let targets = null
-  let COURSE_ID = 0
-  let guideNumber = 0
-  let guideSuffix = null
-  let authErrors = 0
-  for (let attempt = 0; attempt < 3 && !guideNumber; attempt++) {
-    targets = await readTargets()
-    if (!targets || targets.guides.length === 0) {
-      console.log('[SKIP] no se pudo leer el curso de prueba (/api/course-catalog)')
+  // Se elige la guía cuyas dos becas **no** estén pagadas: una vez pagadas, el botón
+  // de envío queda deshabilitado por diseño (R-#242) y no se podría verificar la cola.
+  // La lectura puede fallar si la cookie de sesión aún no se propagó, así que se
+  // reintenta; con `null` la elección no sirve y quien llama decide (billetera nueva).
+  async function pickGuide() {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const targets = await readTargets()
+      if (!targets || targets.guides.length === 0) return { error: 'no se pudo leer el curso de prueba (/api/course-catalog)' }
+      const courseId = targets.courseId
+      // La cookie de sesión puede tardar un instante en llegar: se espera a que
+      // `/api/guide-status` responda (es el mismo endpoint que autentica la página).
+      let sessionReady = false
+      for (let wait = 0; wait < 10 && !sessionReady; wait++) {
+        const probe = await guideStatus(page, creds.addr, courseId, 1).catch(() => null)
+        sessionReady = !!probe && !probe.error
+        if (!sessionReady) await sleep(1500)
+      }
+      if (!sessionReady) continue
+      for (let index = 0; index < targets.guides.length; index++) {
+        const status = await guideStatus(page, creds.addr, courseId, index + 1).catch(() => null)
+        if (!status || status.error) continue
+        if (status.receivedScholarship && status.receivedSlearnScholarship) continue
+        // Además debe haber crucigrama: el sitio desplegado puede tener una copia de
+        // `resources/` distinta de la de este árbol de trabajo (guías sin preguntas).
+        // Sin `walletAddress` la ruta responde 200 con la cuadrícula vacía (exige
+        // sesión), así que hay que pasar la billetera como lo hace la página.
+        const puzzle = await page.evaluate(async ({ prefix, lang, guide, wallet }) => {
+          const res = await fetch(`/api/crossword?lang=${lang}&prefix=${prefix}&guide=${guide}&walletAddress=${encodeURIComponent(wallet)}`, { credentials: 'same-origin' })
+          if (!res.ok) return 0
+          const body = await res.json().catch(() => null)
+          return (body?.placements || []).length
+        }, { prefix: GUIDE_ORDER.prefix, lang: GUIDE_ORDER.lang, guide: targets.guides[index], wallet: creds.addr })
+        if (puzzle === 0) continue
+        return { courseId, guideNumber: index + 1, guideSuffix: targets.guides[index] }
+      }
+      return { error: 'ninguna guía de este curso sirve para la prueba' }
+    }
+    return { error: 'no se pudo autenticar contra /api/guide-status' }
+  }
+
+  let picked = await pickGuide()
+  if (!picked.guideSuffix) {
+    // La billetera compartida ya pagó las dos becas de todas las guías del curso de
+    // prueba (o su iglesia no deja completar el perfil): se usa una billetera NUEVA
+    // que la propia prueba registra y deja elegible, como `offline-two-courses`.
+    console.log(`  [info] ${picked.error}; se usa una billetera nueva`)
+    const fresh = await createEligibleLearner({
+      browser,
+      base,
+      chainId,
+      verifier: loadVerifierWallet(),
+      namePrefix: 'E2E Offline',
+      timeout,
+    })
+    if (fresh.skipped) {
+      console.log(`[SKIP] ${fresh.skipped}`)
       await browser.close()
       process.exit(0)
     }
-    COURSE_ID = targets.courseId
-    // La cookie de sesión puede tardar un instante en llegar: se espera a que
-    // `/api/guide-status` responda (es el mismo endpoint que autentica la página).
-    let sessionReady = false
-    for (let wait = 0; wait < 10 && !sessionReady; wait++) {
-      const probe = await guideStatus(page, creds.addr, COURSE_ID, 1).catch(() => null)
-      sessionReady = !!probe && !probe.error
-      if (!sessionReady) await sleep(1500)
-    }
-    if (!sessionReady) continue
-    authErrors = 0
-    for (let index = 0; index < targets.guides.length; index++) {
-      const status = await guideStatus(page, creds.addr, COURSE_ID, index + 1).catch(() => null)
-      if (!status || status.error) { authErrors++; continue }
-      if (status.receivedScholarship && status.receivedSlearnScholarship) continue
-      // Además debe haber crucigrama: el sitio desplegado puede tener una copia de
-      // `resources/` distinta de la de este árbol de trabajo (guías sin preguntas).
-      // Sin `walletAddress` la ruta responde 200 con la cuadrícula vacía (exige
-      // sesión), así que hay que pasar la billetera como lo hace la página.
-      const puzzle = await page.evaluate(async ({ prefix, lang, guide, wallet }) => {
-        const res = await fetch(`/api/crossword?lang=${lang}&prefix=${prefix}&guide=${guide}&walletAddress=${encodeURIComponent(wallet)}`, { credentials: 'same-origin' })
-        if (!res.ok) return 0
-        const body = await res.json().catch(() => null)
-        return (body?.placements || []).length
-      }, { prefix: GUIDE_ORDER.prefix, lang: GUIDE_ORDER.lang, guide: targets.guides[index], wallet: creds.addr })
-      if (puzzle === 0) continue
-      guideNumber = index + 1
-      guideSuffix = targets.guides[index]
-      break
-    }
+    await page.close().catch(() => {})
+    page = fresh.page
+    creds = fresh.learner
+    ok(`Billetera nueva elegible (${creds.addr.slice(0, 10)}…, ${fresh.score} puntos de perfil)`)
+    picked = await pickGuide()
   }
-  if (!guideNumber) {
-    if (authErrors === (targets?.guides.length ?? 0)) {
-      console.log('[SKIP] no se pudo autenticar contra /api/guide-status con la billetera de prueba (¿sitio sin desplegar o sesión SIWE no disponible?)')
-    } else {
-      console.log('[SKIP] ninguna guía de este curso sirve para la prueba: o ya pagó las dos becas (el botón se deshabilita por diseño) o el sitio desplegado no tiene su crucigrama. Usa otra billetera de prueba o despliega `resources/` actualizado.')
-    }
+  if (!picked.guideSuffix) {
+    console.log(`[SKIP] ${picked.error} (incluso con una billetera nueva). Usa ` +
+      '`CROSSWORD_GUIDES`/otra billetera o despliega `resources/` actualizado.')
     await browser.close()
     process.exit(0)
   }
+  const COURSE_ID = picked.courseId
+  const guideNumber = picked.guideNumber
+  const guideSuffix = picked.guideSuffix
 
   const guidePath = `/${GUIDE_ORDER.lang}/${GUIDE_ORDER.prefix}/${guideSuffix}/test`
   let pairs = []

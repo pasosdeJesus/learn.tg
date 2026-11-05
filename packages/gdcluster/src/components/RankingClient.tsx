@@ -21,7 +21,7 @@ export interface RankingClientDeps {
 interface ClusterRow {
   id: number; name: string; pseudonym: string | null; display_name: string
   country_name: string | null
-  country_code: string | null; church_count: number; wallet: string
+  country_code: string | null; church_count: number; wallet: string | null
   status: string | null
   gd_status?: string | null
   fund_released_at?: string | null
@@ -100,7 +100,8 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  const findClusterFunds = (wallet: string) => funds.clusters.find(f => f.cluster_wallet?.toLowerCase() === wallet.toLowerCase())
+  const findClusterFunds = (wallet?: string | null) =>
+    wallet ? funds.clusters.find((f) => f.cluster_wallet?.toLowerCase() === wallet.toLowerCase()) : undefined
   const findCountryFunds = (code: string) => funds.countries.find(f => f.country_code === code)
 
   if (loading) return <p className="text-gray-500">{t('loading')}</p>
@@ -155,16 +156,17 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
                     )}
                   </td>
                   <td className="px-3 py-2 text-right text-xs">
-                    {findClusterFunds(c.wallet)?.usdt_total.toFixed(2) || '0.00'}
+                    {(findClusterFunds(c.wallet)?.usdt_total ?? 0).toFixed(2)}
                   </td>
                   <td className="px-3 py-2 text-right text-xs">
-                    {findClusterFunds(c.wallet)?.slearn_total.toFixed(2) || '0.00'}
+                    {(findClusterFunds(c.wallet)?.slearn_total ?? 0).toFixed(2)}
                   </td>
                   <td className="px-3 py-2 text-center">
-                    {acceptsDonations(c) ? (
+                    {acceptsDonations(c) && c.wallet ? (
                       <button onClick={() => setDonateTarget({
                         type: 'cluster-donation',
-                        clusterWallet: c.wallet,
+                        // The button only renders when the cluster has a wallet.
+                        clusterWallet: c.wallet as string,
                         clusterName: c.display_name || c.name,
                       })}
                       className="text-xs text-blue-600 hover:underline px-2 py-1 rounded hover:bg-blue-50">
@@ -205,10 +207,10 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
                   <td className="px-3 py-2 text-center text-xs">{c.cluster_count}</td>
                   <td className="px-3 py-2 text-center text-xs">{c.church_count}</td>
                   <td className="px-3 py-2 text-right text-xs">
-                    {findCountryFunds(c.country_code || '')?.usdt_total.toFixed(2) || '0.00'}
+                    {(findCountryFunds(c.country_code || '')?.usdt_total ?? 0).toFixed(2)}
                   </td>
                   <td className="px-3 py-2 text-right text-xs">
-                    {findCountryFunds(c.country_code || '')?.slearn_total.toFixed(2) || '0.00'}
+                    {(findCountryFunds(c.country_code || '')?.slearn_total ?? 0).toFixed(2)}
                   </td>
                   <td className="px-3 py-2 text-center">
                     <button onClick={() => setDonateTarget({

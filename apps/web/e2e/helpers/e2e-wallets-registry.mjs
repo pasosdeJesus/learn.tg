@@ -73,3 +73,25 @@ export function oldestMembers({ count = 3, religionId = 2 } = {}) {
 export function oldestFreeWallet() {
   return oldestMembers({ count: 1 })[0] || null
 }
+
+/**
+ * Billeteras de un rol, de la más reciente a la más antigua, para reutilizarlas
+ * antes de crear una nueva (`markWalletUsed` deja el rastro de la última corrida).
+ */
+export function recentByRole(role, { count = 3 } = {}) {
+  return readRegistry()
+    .filter((row) => row.role === role)
+    .sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)))
+    .slice(0, count)
+}
+
+/** Deja rastro del último uso (y de datos observados, como `score`) en el JSON. */
+export function markWalletUsed(address, patch = {}) {
+  const rows = readRegistry()
+  const key = String(address).toLowerCase()
+  const row = rows.find((entry) => String(entry.address).toLowerCase() === key)
+  if (!row) return null
+  Object.assign(row, patch, { lastUsedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+  writeRegistry(rows)
+  return row
+}

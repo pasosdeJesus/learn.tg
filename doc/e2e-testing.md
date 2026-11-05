@@ -396,6 +396,11 @@ await connectExternalWallet(page)   // R-#265 §3.9: header = WalletConnect; ope
   helper) skips the UI: builds the SIWE message in Node, signs with viem and
   posts the callback inside the page, so the session cookie lands in the browser
   jar.
+- `e2e/helpers/eligible-wallet.mjs` (`createEligibleLearner`) makes a **new** wallet
+  ready to receive a scholarship: SIWE sign-in, profile with name and pilot country and
+  the verifier's confirmation of name and nationality, then reads `profilescore` back
+  and requires >= 50. Specs that pay use it when the shared wallet cannot (all guides
+  paid, or its church already has a lead pastor) instead of skipping or failing.
 - `e2e/helpers/in-app-wallet.mjs` keeps only what is app-specific: that SIWE
   sign-in and the dialog/header drivers (`chooseWalletProtection`,
   `completeBackupVerification`, `waitForExternalConnect`). The wallet mock comes
@@ -459,7 +464,7 @@ and §2.4.
 | `admin-course-enrolled.spec.mjs` | R-#282: the verifier lists people **enrolled** in a paid course — admin-only roster (403 without a wallet), 400/404 for bad ids, per-course detail matching `GET /api/admin/premium-purchases` 1:1, and the Premium purchases widget in `/{lang}/admin`. Needs a verifier wallet |
 | `prod-landing-to-profile.spec.mjs` | Production landing → wallet connect → profile save (writes, `PROD_SPECS=1`) |
 | `town-autocomplete.spec.mjs` | Town search API + profile autocomplete UI (Sierra Leone data) |
-| `offline-crossword.spec.mjs` | R-#242: crossword solved and submitted **offline** → queued (`offline-pending`, counter and IndexedDB agree) → survives a reload → drains when the connection returns → server 200 and the scholarship is paid → guide completed → outcome left as an `offline_answer` notice (matched by `ref_key`). No service worker needed |
+| `offline-crossword.spec.mjs` | R-#242: crossword solved and submitted **offline** → queued (`offline-pending`, counter and IndexedDB agree) → survives a reload → drains when the connection returns → server 200 and the scholarship is paid → guide completed → outcome left as an `offline_answer` notice (matched by `ref_key`). No service worker needed. When the shared wallet has already paid both scholarships of every guide of the test course, it registers a **new wallet** and takes it to `profilescore >= 50` (`e2e/helpers/eligible-wallet.mjs`) instead of skipping |
 | `offline-two-courses.spec.mjs` | R-#242 (+ `LearnTGVaultsV5` cooldown **per course**): a **new wallet** the spec registers by SIWE and takes to `profilescore >= 50`; loads the guides and crosswords of **two different courses online**, submits both **offline** (two tabs, one queue) and **both must pay** when the connection returns. Skips (never fails) without two eligible courses or without the verifier wallet |
 | `offline-guide.spec.mjs` | R-#241: guide readable offline from the PWA cached page (needs a production build; `0 failures` on the `make prod` build) |
 | `offline-course-download.spec.mjs` | R-#256: full course download and offline reading of a guide that was never opened online. Test course `/en/web3-and-ubi` (free, no sensitive content) |
@@ -483,7 +488,7 @@ and §2.4.
 | `donate-course-real.spec.mjs` | **Real donation to the GD course vault:** success dialog data from the backend response and the transactions recorded for the user |
 | `donate-gd-real.spec.mjs` | **Real donation to a GD country fund:** success dialog data, recorded transactions, and the country fund growing by exactly 80% of the donation |
 | `fresh-wallet-first-connect.spec.mjs` | **Brand-new wallet, cold session (#5719):** registers it by SIWE and checks the course page **never** queries `/api/scholarship` anonymously (cause of the false "cooldown" and 0% progress) and that the card shows the real state |
-| `premium-course-checkout.spec.mjs` | GD checkout: price next to the Buy button (USDT + SLEARN, `data-testid="premium-price"`) → modal → slider. With `FUND_FRESH=1` it also **buys for real** (`SLEARN_PCT=100\|0\|50`, test funds transferred from the fixture wallet to the new pastor) and verifies the success state with the hash, "Purchased", the purchase in the profile and access to `guide1`; without it those steps report as skipped. It creates its own eligible pastor, so it does not depend on the fixture wallet's purchase state |
+| `premium-course-checkout.spec.mjs` | GD checkout: price next to the Buy button (USDT + SLEARN, `data-testid="premium-price"`) → modal → slider. With `FUND_FRESH=1` it also **buys for real** (`SLEARN_PCT=100\|0\|50`, test funds transferred from the fixture wallet to the new pastor) and verifies the success state with the hash, "Purchased", the purchase in the profile and access to `guide1`; without it those steps report as skipped. It creates its own eligible pastor (a **new wallet by default**; `E2E_WALLET`/`--wallet` reuses the chosen one, and the spec falls back to a new one when the profile answers 409 "Church already has a lead pastor"), so it does not depend on the fixture wallet's purchase state |
 | `referral-program.spec.mjs` | R-#163 §14: the public referral landing, the CTA per state (score ≤ 90 → "Complete your profile"), the requirements checklist and the referral wallet fund |
 | `ux-mobile-menu.spec.mjs` | UX regressions R-#230/R-#231 (header + ☰ menu), R-#228 (horizontal scroll of guide tables), R-#217 (no woff2 preload warnings) and R-#218 (no hydration mismatch, footer with `/{lang}`) |
 | `sw-stale-shell.spec.mjs` | A stale course-list shell served by the service worker (ChunkLoadError on a chunk removed by a deploy) must recover, not show "This page couldn't load" |
