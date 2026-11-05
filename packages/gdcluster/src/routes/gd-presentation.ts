@@ -245,7 +245,11 @@ export async function updatePresentation(deps: GdclusterDeps, req: NextRequest, 
     if (status === 'cancelled') {
       return NextResponse.json({ error: 'Only the initiator can cancel the request' }, { status: 403 })
     }
-    if (!canTransitionPresentation(cluster.gd_status, status)) {
+    // Answering again is accepted only to retry a release that failed: the state
+    // stays answered and no money moved. Otherwise answered is terminal.
+    const retryRelease =
+      status === 'answered' && cluster.gd_status === 'answered' && !cluster.fund_released_at
+    if (!retryRelease && !canTransitionPresentation(cluster.gd_status, status)) {
       return NextResponse.json(
         { error: `Cannot move the presentation from ${cluster.gd_status ?? 'no status'} to ${status}` },
         { status: 409 },
@@ -302,11 +306,26 @@ export async function updatePresentation(deps: GdclusterDeps, req: NextRequest, 
       updates.gd_contact_email = text(contactEmail) ?? cluster.gd_contact_email ?? null
     }
 
-    await db.updateTable('clustergd').set(updates).where('id', '=', clusterId).execute()
-    await addClusterHistory(db, clusterId, LOCK_HISTORY[status], cluster.gd_status ?? null, status, admin.usuario_id)
-    await logEvent(db, admin.usuario_id, LOCK_HISTORY[status], { cluster_id: clusterId })
+    if (!retryRelease) {
+      // The current state is the lock: two simultaneous answered requests must not
+      // both release the fund (that would pay the cluster twice).
+      const update = db.updateTable('clustergd').set(updates).where('id', '=', clusterId)
+      const guarded =
+        cluster.gd_status == null
+          ? update.where('gd_status', 'is', null)
+          : update.where('gd_status', '=', cluster.gd_status)
+      const applied = await guarded.executeTakeFirst()
+      if (Number(applied?.numUpdatedRows ?? 0) === 0) {
+        return NextResponse.json(
+          { error: 'The presentation changed in another request: reload and try again', code: 'stale_status' },
+          { status: 409 },
+        )
+      }
+      await addClusterHistory(db, clusterId, LOCK_HISTORY[status], cluster.gd_status ?? null, status, admin.usuario_id)
+      await logEvent(db, admin.usuario_id, LOCK_HISTORY[status], { cluster_id: clusterId })
+    }
 
-    if (status === 'returned' || status === 'answered') {
+    if (!retryRelease && (status === 'returned' || status === 'answered')) {
       const initiator = await initiatorPastor(db, cluster)
       if (initiator?.usuario_id) {
         const es = String(initiator.idioma || 'en').startsWith('es')

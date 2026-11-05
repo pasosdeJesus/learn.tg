@@ -23,7 +23,19 @@ vi.mock('../../lib/gd-presentation.js', async (importOriginal) => {
   return { ...actual, getPresentationReadiness: vi.fn(async () => state.readiness) }
 })
 
+vi.mock('../../lib/cluster-release.js', () => ({
+  releaseOnAnswered: vi.fn(async () => ({ distribution: null, release: '0xrelease', errors: [] })),
+  redistributeCountryFund: vi.fn(async () => null),
+  releaseClusterFund: vi.fn(async () => '0xrelease'),
+}))
+
+vi.mock('../../lib/cluster-funds.js', () => ({
+  setClusterVerified: vi.fn(async () => '0xverify'),
+  readClusterFunds: vi.fn(async () => null),
+}))
+
 import { getPresentation, requestPresentation, updatePresentation, cancelPresentation } from '../gd-presentation.js'
+import { releaseOnAnswered } from '../../lib/cluster-release.js'
 import type { GdclusterDeps } from '../../index.js'
 
 const { mockExecuteTakeFirst, mockExecute, setupMocks, resetMocks, setupCommonResponses } = apiDbMocks
@@ -179,6 +191,7 @@ describe('gd-presentation (R-#161)', () => {
   it('lets pdJ return the request with suggestions and unlocks the data', async () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ ...CLUSTER, gd_status: 'under_review', gd_requested_at: new Date() })
+      .mockResolvedValueOnce({ numUpdatedRows: 1n }) // conditional update applied (the state is the lock)
       .mockResolvedValueOnce({ usuario_id: 5, idioma: 'es' })
     mockExecute.mockResolvedValue([])
     const admin = { usuario_id: 1, billetera: WALLET }
@@ -188,8 +201,9 @@ describe('gd-presentation (R-#161)', () => {
     })
     const res = await updatePresentation(deps({ authenticateAdmin: vi.fn().mockResolvedValue(admin) }) as GdclusterDeps, req, { id: '3' })
     expect(res.status).toBe(200)
-    // update clustergd + history + userevent + notificación al iniciador
-    expect(mockExecute.mock.calls.length).toBeGreaterThanOrEqual(4)
+    // history + userevent + notificación al iniciador (el UPDATE va por executeTakeFirst,
+    // porque es condicional al estado actual: el estado es el candado)
+    expect(mockExecute.mock.calls.length).toBeGreaterThanOrEqual(3)
   })
 
   it('requires an admin to move the presentation state (403)', async () => {
@@ -234,5 +248,76 @@ describe('gd-presentation (R-#161)', () => {
       .mockResolvedValueOnce({ clustergd_id: 99, joined_at: new Date(), left_at: null })
     const res = await getPresentation(deps() as GdclusterDeps, get(), { id: '3' })
     expect(res.status).toBe(403)
+  })
+  // Un pastor/clúster no puede recibir los recursos dos veces: al responder GD el
+  // estado queda en answered (terminal) y el fondo se libera una sola vez. Estas
+  // pruebas cubren la puerta de la ruta; el reparto y la liberación tienen las suyas
+  // en lib/__tests__/cluster-release.test.ts.
+  describe('answering Global Disciples releases the funds once (R-#161)', () => {
+    const adminDeps = () => deps({ authenticateAdmin: vi.fn().mockResolvedValue({ usuario_id: 1 }) })
+
+    function adminAnsweredRequest(): NextRequest {
+      return new NextRequest('http://localhost/api/cluster/3/gd-presentation', {
+        method: 'PUT',
+        body: JSON.stringify({ walletAddress: WALLET, status: 'answered', response: 'Yes' }),
+      })
+    }
+
+    it('releases once when moving sent -> answered', async () => {
+      vi.mocked(releaseOnAnswered).mockClear()
+      mockExecuteTakeFirst
+        .mockResolvedValueOnce({ ...CLUSTER, gd_status: 'sent', gd_requested_at: new Date() }) // clustergd
+        .mockResolvedValueOnce({ numUpdatedRows: 1n }) // conditional update applied
+      mockExecute.mockResolvedValue([])
+
+      const res = await updatePresentation(adminDeps() as GdclusterDeps, adminAnsweredRequest(), { id: '3' })
+
+      expect(res.status).toBe(200)
+      expect(vi.mocked(releaseOnAnswered)).toHaveBeenCalledTimes(1)
+    })
+
+    it('retries only the release when the answer is recorded but the fund was not released', async () => {
+      vi.mocked(releaseOnAnswered).mockClear()
+      mockExecuteTakeFirst.mockResolvedValueOnce({
+        ...CLUSTER,
+        gd_status: 'answered',
+        gd_requested_at: new Date(),
+        fund_released_at: null,
+      })
+
+      const res = await updatePresentation(adminDeps() as GdclusterDeps, adminAnsweredRequest(), { id: '3' })
+
+      expect(res.status).toBe(200)
+      expect(vi.mocked(releaseOnAnswered)).toHaveBeenCalledTimes(1)
+    })
+
+    it('refuses to answer again once the fund was released', async () => {
+      vi.mocked(releaseOnAnswered).mockClear()
+      mockExecuteTakeFirst.mockResolvedValueOnce({
+        ...CLUSTER,
+        gd_status: 'answered',
+        gd_requested_at: new Date(),
+        fund_released_at: new Date(),
+      })
+
+      const res = await updatePresentation(adminDeps() as GdclusterDeps, adminAnsweredRequest(), { id: '3' })
+
+      expect(res.status).toBe(409)
+      expect(vi.mocked(releaseOnAnswered)).not.toHaveBeenCalled()
+    })
+
+    it('refuses the second of two simultaneous answers (the state is the lock)', async () => {
+      vi.mocked(releaseOnAnswered).mockClear()
+      mockExecuteTakeFirst
+        .mockResolvedValueOnce({ ...CLUSTER, gd_status: 'sent', gd_requested_at: new Date() })
+        .mockResolvedValueOnce({ numUpdatedRows: 0n }) // another request moved it first
+
+      const res = await updatePresentation(adminDeps() as GdclusterDeps, adminAnsweredRequest(), { id: '3' })
+      const body = await res.json()
+
+      expect(res.status).toBe(409)
+      expect(body.code).toBe('stale_status')
+      expect(vi.mocked(releaseOnAnswered)).not.toHaveBeenCalled()
+    })
   })
 })

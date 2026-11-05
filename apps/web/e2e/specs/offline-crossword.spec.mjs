@@ -93,10 +93,8 @@ async function main() {
 
   // Se elige la guía cuyas dos becas **no** estén pagadas: una vez pagadas, el botón
   // de envío queda deshabilitado por diseño (R-#242) y no se podría verificar la cola.
-  // La lectura puede fallar si la cookie de sesión aún no se propagó, así que se
-  // reintenta: con `null` en todos los intentos se OMITE (nunca se falla por esto).
-  async function readTargets() {
-    return page.evaluate(async ({ prefix, lang }) => {
+  async function readTargets(p) {
+    return p.evaluate(async ({ prefix, lang }) => {
       const list = await (await fetch(`/api/course-catalog?filtro[busprefijoRuta]=/${prefix}&filtro[busidioma]=${lang}`, { credentials: 'same-origin' })).json()
       if (!Array.isArray(list) || list.length !== 1) return null
       const detail = await (await fetch(`/api/course-catalog/${list[0].id}`, { credentials: 'same-origin' })).json()
@@ -111,34 +109,34 @@ async function main() {
   // de envío queda deshabilitado por diseño (R-#242) y no se podría verificar la cola.
   // La lectura puede fallar si la cookie de sesión aún no se propagó, así que se
   // reintenta; con `null` la elección no sirve y quien llama decide (billetera nueva).
-  async function pickGuide() {
+  async function pickGuide(p, wallet) {
     for (let attempt = 0; attempt < 3; attempt++) {
-      const targets = await readTargets()
+      const targets = await readTargets(p)
       if (!targets || targets.guides.length === 0) return { error: 'no se pudo leer el curso de prueba (/api/course-catalog)' }
       const courseId = targets.courseId
       // La cookie de sesión puede tardar un instante en llegar: se espera a que
       // `/api/guide-status` responda (es el mismo endpoint que autentica la página).
       let sessionReady = false
       for (let wait = 0; wait < 10 && !sessionReady; wait++) {
-        const probe = await guideStatus(page, creds.addr, courseId, 1).catch(() => null)
+        const probe = await guideStatus(p, wallet, courseId, 1).catch(() => null)
         sessionReady = !!probe && !probe.error
         if (!sessionReady) await sleep(1500)
       }
       if (!sessionReady) continue
       for (let index = 0; index < targets.guides.length; index++) {
-        const status = await guideStatus(page, creds.addr, courseId, index + 1).catch(() => null)
+        const status = await guideStatus(p, wallet, courseId, index + 1).catch(() => null)
         if (!status || status.error) continue
         if (status.receivedScholarship && status.receivedSlearnScholarship) continue
         // Además debe haber crucigrama: el sitio desplegado puede tener una copia de
         // `resources/` distinta de la de este árbol de trabajo (guías sin preguntas).
         // Sin `walletAddress` la ruta responde 200 con la cuadrícula vacía (exige
         // sesión), así que hay que pasar la billetera como lo hace la página.
-        const puzzle = await page.evaluate(async ({ prefix, lang, guide, wallet }) => {
+        const puzzle = await p.evaluate(async ({ prefix, lang, guide, wallet }) => {
           const res = await fetch(`/api/crossword?lang=${lang}&prefix=${prefix}&guide=${guide}&walletAddress=${encodeURIComponent(wallet)}`, { credentials: 'same-origin' })
           if (!res.ok) return 0
           const body = await res.json().catch(() => null)
           return (body?.placements || []).length
-        }, { prefix: GUIDE_ORDER.prefix, lang: GUIDE_ORDER.lang, guide: targets.guides[index], wallet: creds.addr })
+        }, { prefix: GUIDE_ORDER.prefix, lang: GUIDE_ORDER.lang, guide: targets.guides[index], wallet })
         if (puzzle === 0) continue
         return { courseId, guideNumber: index + 1, guideSuffix: targets.guides[index] }
       }
@@ -147,12 +145,12 @@ async function main() {
     return { error: 'no se pudo autenticar contra /api/guide-status' }
   }
 
-  let picked = await pickGuide()
+  let picked = await pickGuide(page, creds.addr)
   if (!picked.guideSuffix) {
     // La billetera compartida ya pagó las dos becas de todas las guías del curso de
-    // prueba (o su iglesia no deja completar el perfil): se usa una billetera NUEVA
-    // que la propia prueba registra y deja elegible, como `offline-two-courses`.
-    console.log(`  [info] ${picked.error}; se usa una billetera nueva`)
+    // prueba (o su iglesia no deja completar el perfil): se **reutiliza** una
+    // billetera del registro local y, solo si ninguna sirve, se crea una nueva.
+    console.log(`  [info] ${picked.error}; se busca una billetera reutilizable`)
     const fresh = await createEligibleLearner({
       browser,
       base,
@@ -160,6 +158,14 @@ async function main() {
       verifier: loadVerifierWallet(),
       namePrefix: 'E2E Offline',
       timeout,
+      isUsable: async (candidatePage, candidateWallet) => {
+        const candidate = await pickGuide(candidatePage, candidateWallet.address)
+        if (candidate.guideSuffix) {
+          picked = candidate
+          return true
+        }
+        return false
+      },
     })
     if (fresh.skipped) {
       console.log(`[SKIP] ${fresh.skipped}`)
@@ -169,8 +175,11 @@ async function main() {
     await page.close().catch(() => {})
     page = fresh.page
     creds = fresh.learner
-    ok(`Billetera nueva elegible (${creds.addr.slice(0, 10)}…, ${fresh.score} puntos de perfil)`)
-    picked = await pickGuide()
+    ok(
+      `${fresh.reused ? 'Billetera reutilizada' : 'Billetera nueva'} elegible ` +
+        `(${creds.addr.slice(0, 10)}…, ${fresh.score} puntos de perfil)`,
+    )
+    if (!picked.guideSuffix) picked = await pickGuide(page, creds.addr)
   }
   if (!picked.guideSuffix) {
     console.log(`[SKIP] ${picked.error} (incluso con una billetera nueva). Usa ` +

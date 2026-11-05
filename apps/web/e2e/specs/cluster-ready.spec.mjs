@@ -8,7 +8,8 @@
 //   CHAIN_ID=11142220 node e2e/specs/cluster-ready.spec.mjs
 
 import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
-import { loadVerifierWallet, loadWalletCredentials } from '../helpers/e2e-wallet.mjs'
+import { loadVerifierWallet } from '../helpers/e2e-wallet.mjs'
+import { markClusterCompleted, resolveClusterPastors } from '../helpers/e2e-pastors.mjs'
 import { prepareReadyCluster } from '../helpers/cluster-ready-fixture.mjs'
 import { apiOn } from '../helpers/e2e-fixture.mjs'
 
@@ -18,7 +19,14 @@ async function main() {
   const t0 = performance.now()
   resetFailures()
 
-  const pastors = [1, 2, 3].map((n) => loadWalletCredentials({ variable: `TEST_PASTOR${n}` }))
+  // Pastors come from the local registry (reuse first, create only when needed);
+  // answering GD spends the ones it uses (`cluster_completed` is permanent).
+  const picked = resolveClusterPastors({ count: 3 })
+  const pastors = picked.pastors
+  if (picked.missing) {
+    console.log(`[SKIP] ${picked.reason}`)
+    process.exit(0)
+  }
   const verifier = loadVerifierWallet()
   if (pastors.some((p) => !p) || !verifier) {
     console.error('Faltan TEST_PASTOR1..3_PRIVATE_KEY o PRIVATE_KEY en apps/.env')

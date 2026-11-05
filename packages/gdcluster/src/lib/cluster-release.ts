@@ -209,5 +209,25 @@ export async function releaseOnAnswered(
     errors.push('cluster: no wallet')
   }
 
+  if (errors.length > 0) {
+    // Not silent: the answer is already recorded (answered) but the money did not
+    // move. The operator sees it in /{lang}/admin/solves, and repeating the answered
+    // transition retries only the release (it does not move the state again).
+    try {
+      await db.insertInto('admin_solves').values({
+        type: 'gd_release_failed',
+        metadata: JSON.stringify({
+          clusterId: cluster.id,
+          wallet,
+          distribution,
+          release,
+          errors,
+        }),
+      }).execute()
+    } catch (error) {
+      console.error('could not record gd_release_failed:', error instanceof Error ? error.message : error)
+    }
+  }
+
   return { distribution, release, errors }
 }

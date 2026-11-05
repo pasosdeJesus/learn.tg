@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { redistributeCountryFund } from '../cluster-release.js'
+import { redistributeCountryFund, releaseOnAnswered } from '../cluster-release.js'
 import { setClusterVerified } from '../cluster-funds.js'
 
 // Un clúster que ya recibió sus fondos sale del proceso con GD
@@ -70,5 +70,59 @@ describe('setClusterVerified (R-#161)', () => {
       false,
     )
     expect(calls[0].args).toEqual(['0x00000000000000000000000000000000000000bb', false])
+  })
+})
+
+describe('releaseOnAnswered (R-#161)', () => {
+  function failingBackend() {
+    return {
+      getPublicClient: () => {
+        throw new Error('chain down')
+      },
+      getWalletClient: () => {
+        throw new Error('chain down')
+      },
+      sendTxAndWait: async () => {
+        throw new Error('chain down')
+      },
+    }
+  }
+
+  function recordingDb(solves: any[]) {
+    const db: any = {
+      selectFrom: () => db,
+      select: () => db,
+      where: () => db,
+      executeTakeFirst: async () => ({ cluster_wallet: '0x00000000000000000000000000000000000000cc' }),
+      insertInto: (table: string) => ({
+        values: (values: any) => {
+          if (table === 'admin_solves') solves.push(values)
+          return { execute: async () => ({}) }
+        },
+      }),
+      updateTable: () => db,
+      set: () => db,
+      execute: async () => ({}),
+    }
+    return db
+  }
+
+  it('leaves the failure visible for the operator when the chain fails', async () => {
+    const solves: any[] = []
+    const result = await releaseOnAnswered(
+      { backend: failingBackend() } as any,
+      recordingDb(solves),
+      { id: 54, country_id: 694, initiator_church_id: 20 },
+      1,
+    )
+
+    // No money moved: distribution and release are null and the reasons are reported.
+    expect(result.distribution).toBeNull()
+    expect(result.release).toBeNull()
+    expect(result.errors.length).toBeGreaterThan(0)
+    // ...and the operator can see it in /{lang}/admin/solves instead of it being silent.
+    expect(solves).toHaveLength(1)
+    expect(solves[0].type).toBe('gd_release_failed')
+    expect(JSON.parse(solves[0].metadata).clusterId).toBe(54)
   })
 })

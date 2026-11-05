@@ -36,7 +36,8 @@ import { celoSepolia } from 'viem/chains'
 import { fail, gotoWithRetry, initTestEnv, launchBrowser, newPage, ok, resetFailures, short, summary } from '@pasosdejesus/m/e2e'
 import { setupE2EAuth } from '../helpers/e2e-auth.mjs'
 import { loadSelectedWallet, walletSelector } from '../helpers/e2e-wallet.mjs'
-import { rememberWallet } from '../helpers/e2e-wallets-registry.mjs'
+import { recentByRole, rememberWallet } from '../helpers/e2e-wallets-registry.mjs'
+import { markGdCourse } from '../helpers/e2e-pastors.mjs'
 
 const SITE = process.env.SITE_URL || 'https://learn.tg:9001'
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || '11142220', 10)
@@ -188,16 +189,12 @@ async function main() {
   // el helper de m fija https, así que sin esto no se puede probar en local.
   const base = process.env.SITE_URL || env.base
 
-  // 1. Pastor wallet: **nueva por defecto**. Reutilizar la billetera compartida hace
-  // que la prueba dependa de su historia: el curso se compra una sola vez y el perfil
-  // no puede volverse pastor si su iglesia ya tiene pastor principal (409). La elegida
-  // con `E2E_WALLET` / `--wallet` se respeta; si el perfil la rechaza, se cae a una nueva.
+  // 1. Pastor wallet: se **reutiliza** una del registro local (`apps/.e2e-wallets.local.json`)
+  // y solo se crea una nueva cuando ninguna sirve. Reutilizar la billetera compartida de
+  // `apps/.env` no sirve como regla: el curso se compra una sola vez y el perfil no puede
+  // volverse pastor si su iglesia ya tiene pastor principal (409). La elegida con
+  // `E2E_WALLET` / `--wallet` se respeta.
   const selector = walletSelector()
-  let selected = selector ? loadSelectedWallet() : null
-  let pk = selected?.pk || generatePrivateKey()
-  let addr = selected?.address || privateKeyToAddress(pk)
-  console.log(`Pastor: ${short(addr)}${selected ? ' (elegida)' : ' (nueva)'} | ${base}`)
-
   const fillPastorProfile = async (key, address) => {
     const email = `checkout-${address.slice(2, 10).toLowerCase()}@learn.tg`
     const session = await siweSignIn(key, address)
@@ -210,19 +207,67 @@ async function main() {
     return { email, session }
   }
 
-  let pastorProfile
-  try {
-    pastorProfile = await fillPastorProfile(pk, addr)
-  } catch (error) {
-    const status = error?.response?.status
-    if (status !== 409) throw error
-    console.log('  [i] la billetera elegida no puede ser pastora (409: su iglesia ya tiene pastor principal): se usa una nueva')
-    selected = null
-    pk = generatePrivateKey()
-    addr = privateKeyToAddress(pk)
-    console.log(`Pastor: ${short(addr)} (nueva) | ${base}`)
-    pastorProfile = await fillPastorProfile(pk, addr)
+  const candidates = []
+  if (selector) {
+    const chosen = loadSelectedWallet()
+    if (chosen) candidates.push({ privateKey: chosen.pk, address: chosen.address, from: 'E2E_WALLET' })
+  } else {
+    // With FUND_FRESH the point is to buy for a wallet that does not own the course
+    // yet (and whose church has not closed a cluster cycle): that is what turns a
+    // new purse into a cluster-initiator candidate for the other specs.
+    const pool = FUND_FRESH
+      ? [...recentByRole('member', { count: 3 }), ...recentByRole('pastor', { count: 3 })]
+          .filter((row) => !row.hasGdCourse && !row.clusterCompletedAt)
+      : [...recentByRole('pastor', { count: 3 }), ...recentByRole('member', { count: 3 })]
+    for (const row of pool) {
+      if (!candidates.some((c) => c.address === row.address)) candidates.push({ ...row, from: 'registro' })
+    }
   }
+  candidates.push({ privateKey: generatePrivateKey(), from: 'nueva' })
+
+  // Se prefiere una billetera que **no** haya comprado el curso (así la corrida
+  // ejercita el modal y el slider); si ninguna de las reutilizables cumple, se usa la
+  // primera que sí lo tenga (la prueba verifica el acceso) y de último recurso se crea.
+  let pk = null
+  let addr = null
+  let pastorProfile = null
+  let fallbackProfile = null
+  let fallbackWallet = null
+  for (const candidate of candidates) {
+    const key = candidate.privateKey
+    const address = candidate.address || privateKeyToAddress(key)
+    try {
+      const profile = await fillPastorProfile(key, address)
+      const mine = await axios
+        .get(`${SITE}/api/courses/premium/mine?walletAddress=${encodeURIComponent(address)}`, {
+          httpsAgent,
+          headers: { Cookie: profile.session.cookies },
+        })
+        .then((r) => r.data)
+        .catch(() => ({}))
+      const ownsCourse = (mine.courses || []).some((row) => [10, 11].includes(Number(row.course_id)))
+      if (ownsCourse && !fallbackProfile) {
+        fallbackProfile = profile
+        fallbackWallet = { key, address, from: candidate.from }
+        continue
+      }
+      pastorProfile = profile
+      pk = key
+      addr = address
+      console.log(`Pastor: ${short(addr)} (${candidate.from}${ownsCourse ? ', ya tenía el curso' : ''}) | ${base}`)
+      break
+    } catch (error) {
+      if (error?.response?.status !== 409) throw error
+      console.log(`  [i] ${short(address)} no puede ser pastora (409: su iglesia ya tiene pastor principal): siguiente`)
+    }
+  }
+  if (!pastorProfile && fallbackProfile) {
+    pastorProfile = fallbackProfile
+    pk = fallbackWallet.key
+    addr = fallbackWallet.address
+    console.log(`Pastor: ${short(addr)} (${fallbackWallet.from}, ya tenía el curso) | ${base}`)
+  }
+  if (!pastorProfile) throw new Error('ninguna billetera pudo quedar como pastor')
   const testEmail = pastorProfile.email
 
   // 2b. La billetera queda en el registro local (fuera de git) para que otras
@@ -230,7 +275,7 @@ async function main() {
   rememberWallet({
     privateKey: pk,
     address: addr,
-    role: selected ? 'pastor' : 'member',
+    role: 'pastor',
     note: 'premium-course-checkout',
   })
 
@@ -403,7 +448,7 @@ async function main() {
       // mezcla necesita.
       const priceRes = await axios.get(
         `${SITE}/api/courses/premium/price?courseId=10&walletAddress=${encodeURIComponent(addr)}`,
-        { httpsAgent, headers: { Cookie: s.cookies } },
+        { httpsAgent, headers: { Cookie: pastorProfile.session.cookies } },
       )
       const need = mixNeeds(Number(priceRes.data.priceUSDT), Number(priceRes.data.priceSLEARN), SLEARN_PCT)
       console.log(`  [mix] ${SLEARN_PCT}% SLEARN → funding ${need.usdt} USDT + ${need.slearn} SLEARN`)
@@ -472,6 +517,9 @@ async function main() {
         }
 
         if (resultTitle) {
+          // The registry remembers who owns the course: the cluster specs take the
+          // initiator from there (reuse before creating).
+          markGdCourse(addr)
           if (txHref && /\/tx\/0x/.test(txHref)) ok(`Result screen links the transaction (${txHref.slice(-12)})`)
           else fail('Result screen has no transaction link')
 
