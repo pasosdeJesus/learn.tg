@@ -46,6 +46,19 @@ and `ClusterFundsV2`. This was chosen so the cluster-fund domain can evolve
 independently (https://github.com/pasosdeJesus/learn.tg/issues/214) without touching the main hardhat app; ABI sync and
 deployment JSONs live with the package.
 
+### D4 — "Not ready" is explained, not just refused
+
+The presentation to Global Disciples needs five conditions on the cluster and
+four per lead pastor, plus the five data fields and the pastors' approvals.
+The `400` from `POST /api/cluster/[id]/gd-presentation` keeps the stable codes
+(`missing`, `missing_data`, `pastors[].missing`) for the interface and adds
+`reasons`: the same conditions in words ("finished 4 of 6 guides", "profile
+score is 70, it must be greater than 90"), with a per-pastor `reasons` array.
+`GET` (the readiness view) carries the same top-level `reasons`, so a verifier or
+an E2E run can read why a cluster is not ready without translating codes.
+`ClusterPage` shows them in the aviso, so the initiator knows what to do; a
+refusal without an explanation is a silent failure (2026-11-05).
+
 ## Data flow
 
 ### Cluster lifecycle

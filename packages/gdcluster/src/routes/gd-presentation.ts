@@ -7,6 +7,8 @@ import {
   canTransitionPresentation,
   getPresentationReadiness,
   missingPresentationData,
+  pastorMissingReasons,
+  presentationMissingReasons,
   type GdPresentationStatus,
 } from '../lib/gd-presentation.js'
 import type { GdclusterDeps } from '../index.js'
@@ -89,6 +91,10 @@ export async function getPresentation(deps: GdclusterDeps, req: NextRequest, par
       && !(readiness.approvals?.voters ?? []).includes(Number(ctx.auth.usuario.id))
     return NextResponse.json({
       ...readiness,
+      // Los motivos en palabras, igual que en el 400 del POST: el panel usa los
+      // códigos, pero quien mira la respuesta (verificador, E2E) necesita saber qué
+      // falta sin traducir códigos (2026-11-05).
+      reasons: presentationMissingReasons(readiness, readiness.missing_data),
       isInitiator: ctx.isInitiator,
       isMember: ctx.isMember,
       can_approve: canApprove,
@@ -167,15 +173,26 @@ export async function requestPresentation(deps: GdclusterDeps, req: NextRequest,
     const missingData = missingPresentationData(ctx.cluster)
     const readiness = await getPresentationReadiness(db, clusterId)
     if (!readiness.ready || missingData.length > 0) {
+      // El 400 se explica solo: además de los códigos (`missing`, `missing_data`),
+      // lleva los motivos en palabras para que el iniciador sepa qué hacer.
       return NextResponse.json(
         {
           error: 'The cluster is not ready to be presented',
+          code: 'not_ready',
+          reasons: presentationMissingReasons(readiness, missingData),
           missing: readiness.missing,
           missing_data: missingData,
           pastors: readiness.pastors.map((pastor) => ({
             usuario_id: pastor.usuario_id,
             church_name: pastor.church_name,
+            nombre: pastor.nombre,
+            guides_done: pastor.guides_done,
+            guides_total: pastor.guides_total,
+            profile_score: pastor.profile_score,
+            invited_pastor: pastor.invited_pastor,
+            invited_member: pastor.invited_member,
             missing: pastor.missing,
+            reasons: pastorMissingReasons(pastor),
           })),
         },
         { status: 400 },

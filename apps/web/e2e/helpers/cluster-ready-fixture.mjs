@@ -113,7 +113,8 @@ export async function openSession(browser, creds, base, timeout, chainId, attemp
 }
 
 /**
- * Prepara el clúster listo.
+ * Prepara el clúster listo. Con `solveGuides: false` se detiene antes de los
+ * crucigramas (el fondo queda vacío: sirve para probar la validación de la solicitud).
  * @returns {{clusterId:number, sessions:any[], verifierPage:any, ready:any}}
  */
 export async function prepareReadyCluster({
@@ -127,6 +128,7 @@ export async function prepareReadyCluster({
   log = () => {},
   fail = () => {},
   ok = () => {},
+  solveGuides = true,
 }) {
   const t = LABELS[lang === 'es' ? 'es' : 'en']
   const course = lang === 'es' ? { prefix: 'redgd', suffix: (n) => `guia${n}` } : { prefix: 'gdcluster', suffix: (n) => `guide${n}` }
@@ -263,20 +265,7 @@ export async function prepareReadyCluster({
   if (vault.ok) ok(`bóveda del curso con ${vault.balance.usdt.toFixed(2)} USDT / ${vault.balance.slearn.toFixed(2)} SLEARN`)
   else console.log(`  [WARN] bóveda del curso sin fondos suficientes: ${vault.reason || 'saldo bajo'}`)
 
-  // 4. Guías (secuencial: el sitio compartido se satura con varias pestañas)
-  const suffixes = [1, 2, 3, 4, 5, 6].map((n) => course.suffix(n))
-  for (const session of sessions) {
-    const results = await completeGuides(session.page, base, { lang, prefix: course.prefix, suffixes })
-    const done = results.filter((r) => r.accepted).length
-    if (done === suffixes.length) ok(`${session.pastor.variable}: 6/6 guías`)
-    else console.log(`  [WARN] ${session.pastor.variable}: ${done}/6 guías`)
-    await session.page.goto('about:blank').catch(() => {})
-  }
-  for (const session of sessions) {
-    await session.page.goto(`${base}/${lang}`, { waitUntil: 'domcontentloaded' }).catch(() => {})
-  }
-
-  // 5. Puntaje verificado e invitaciones
+  // 4. Puntaje verificado e invitaciones (antes de las guías: la beca necesita el puntaje)
   for (const session of sessions) {
     const profile = await apiOn(session.page, `/api/profile?walletAddress=${session.pastor.address}`)
     const user = profile.body || {}
@@ -335,6 +324,27 @@ export async function prepareReadyCluster({
   if (members === 3) ok('un miembro de la iglesia de cada pastor (invite_member)')
   else fail(`miembros preparados: ${members}/3`)
 
+  // 5. Guías (después del puntaje y las invitaciones: con la beca pagándose, el
+  // 10% del iniciador llega al fondo del clúster y lo registra en el contrato).
+  if (solveGuides) {
+    const suffixes = [1, 2, 3, 4, 5, 6].map((n) => course.suffix(n))
+    for (const session of sessions) {
+      const results = await completeGuides(session.page, base, { lang, prefix: course.prefix, suffixes })
+      const done = results.filter((r) => r.accepted).length
+      if (done === suffixes.length) ok(`${session.pastor.variable}: 6/6 guías`)
+      else {
+        const failed = results.filter((result) => !result.accepted)
+          .map((result) => `${result.suffix}: ${result.status ?? 'sin respuesta'} points=${result.points ?? '-'} ${result.scholarship ?? ''} ${result.error ?? ''}`)
+        console.log(`  [WARN] ${session.pastor.variable}: ${done}/6 guías · ${failed.join(' | ')}`)
+      }
+      await session.page.goto('about:blank').catch(() => {})
+    }
+    for (const session of sessions) {
+      await session.page.goto(`${base}/${lang}`, { waitUntil: 'domcontentloaded' }).catch(() => {})
+    }
+
+  }
+
   // 6. Aprobaciones
   for (const session of sessions) {
     await session.page.goto(`${base}/${lang}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
@@ -351,7 +361,13 @@ export async function prepareReadyCluster({
   const ready = presentation.body || {}
   log(`ready=${ready.ready} missing=${JSON.stringify(ready.missing)}`)
   if (ready.ready !== true || (ready.missing || []).length > 0) {
-    fail(`todavía no está listo: ${JSON.stringify({ missing: ready.missing, missing_data: ready.missing_data })}`)
+    // `missing` vacío con `ready=false` significa que falta algo **por pastor**
+    // (guides, puntaje, invitaciones): se imprime, y `reasons` lo dice en palabras
+    // (2026-11-05, antes el fallo no decía qué pastor ni qué le faltaba).
+    const blocking = (ready.pastors || [])
+      .filter((pastor) => (pastor.missing || []).length > 0)
+      .map((pastor) => ({ church: pastor.church_name, missing: pastor.missing, reasons: pastor.reasons }))
+    fail(`todavía no está listo: ${JSON.stringify({ missing: ready.missing, missing_data: ready.missing_data, reasons: ready.reasons, pastors: blocking })}`)
   }
 
   return { clusterId, sessions, verifierPage, verifierApi, ready }

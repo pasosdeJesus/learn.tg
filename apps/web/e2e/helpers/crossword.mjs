@@ -178,11 +178,29 @@ export async function submitDiagnostics(page) {
  */
 export async function openCrosswordOnline(page, url, { timeout = 30000 } = {}) {
   let puzzleData = null
+  // `GET /api/crossword` responde con un `code` cuando no puede construir el
+  // crucigrama (`guide_not_found`, `puzzle_unavailable`, ver 2026-11-05). Se guarda
+  // para que el fallo del guion diga **por qué** en vez de sólo "no apareció".
+  let failure = null
   const capture = (response) => {
     if (puzzleData || !response.url().includes('/api/crossword')) return
+    const status = response.status()
     response.json().then((body) => {
-      if (body && body.grid && body.placements) puzzleData = body
-    }).catch(() => {})
+      // Un tablero sin pistas no es un crucigrama: se trata como fallo para no
+      // intentar resolverlo (antes la ruta lo servía con 200, 2026-11-05).
+      if (body && body.grid && Array.isArray(body.placements) && body.placements.length > 0) {
+        puzzleData = body
+      } else {
+        failure = {
+          status,
+          code: body?.code ?? (body?.grid ? 'empty_board' : null),
+          error: body?.error ?? body?.message ?? null,
+          reason: body?.reason ?? null,
+        }
+      }
+    }).catch(() => {
+      failure = { status, code: null, error: null, reason: null }
+    })
   }
   page.on('response', capture)
 
@@ -194,5 +212,5 @@ export async function openCrosswordOnline(page, url, { timeout = 30000 } = {}) {
     if (cells.length === 0 && attempt === 0) await sleep(3000)
   }
   page.off('response', capture)
-  return { cells: cells.length, puzzleData }
+  return { cells: cells.length, puzzleData, failure }
 }

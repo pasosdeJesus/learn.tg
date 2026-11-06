@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
     member_churches: 3,
     pastors: [],
     missing: [] as string[],
+    missing_data: [] as string[],
     request: null as any,
   },
 }))
@@ -96,7 +97,7 @@ describe('gd-presentation (R-#161)', () => {
     setupCommonResponses()
     state.readiness = {
       ready: true, cluster_status: 'active', member_churches: 3,
-      pastors: [], missing: [], request: null,
+      pastors: [], missing: [], missing_data: [], request: null,
     }
   })
 
@@ -126,7 +127,37 @@ describe('gd-presentation (R-#161)', () => {
     const json = await res.json()
     expect(json.missing).toContain('cluster_active')
     expect(json.pastors[0].missing).toContain('invite_member')
+    // El 400 se explica solo: motivos en palabras, no sólo códigos.
+    expect(json.code).toBe('not_ready')
+    expect(json.reasons).toContain('The cluster is not active yet')
+    expect(json.reasons.join(' | ')).toMatch(/Iglesia \(A\).*member or leader of their own church/)
+    expect(json.pastors[0].reasons).toHaveLength(1)
     expect(mockExecute).not.toHaveBeenCalled()
+  })
+
+  it('explains missing guides, score and data in the 400', async () => {
+    viewer(INITIATOR_CHURCH, {
+      first_year_budget: null,
+      budget_draft_path: null,
+    })
+    state.readiness = {
+      ...state.readiness,
+      ready: false,
+      missing: ['approvals'],
+      pastors: [
+        { usuario_id: 5, nombre: 'Ana', church_id: 20, church_name: 'Esperanza', guides_done: 4, guides_total: 6, course_completed: false, profile_score: 70, invited_pastor: false, invited_member: true, missing: ['course', 'score', 'invite_pastor'] },
+      ],
+    }
+    const res = await requestPresentation(deps() as GdclusterDeps, post(), { id: '3' })
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.missing_data).toEqual(['budget_total', 'budget_pdf'])
+    const joined = json.reasons.join(' | ')
+    expect(joined).toMatch(/approved the presentation data/)
+    expect(joined).toMatch(/Esperanza \(Ana\): finished 4 of 6 guides/)
+    expect(joined).toMatch(/profile score is 70/)
+    expect(joined).toMatch(/has not invited a pastor or co-pastor/)
+    expect(joined).toMatch(/the first year budget/)
   })
 
   it('records the request when the initiator asks and the cluster is ready', async () => {
@@ -151,6 +182,24 @@ describe('gd-presentation (R-#161)', () => {
     expect(res.status).toBe(200)
     expect((await res.json()).alreadyRequested).toBe(true)
     expect(mockExecute).not.toHaveBeenCalled()
+  })
+
+  it('returns the readiness reasons in words in the GET view', async () => {
+    viewer(INITIATOR_CHURCH)
+    state.readiness = {
+      ...state.readiness,
+      ready: false,
+      missing: ['cluster_wallet'],
+      missing_data: ['budget_pdf'],
+    }
+    const res = await getPresentation(deps() as GdclusterDeps, get(), { id: '3' })
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.reasons).toEqual([
+      'The cluster wallet (the initiator church wallet) is not set',
+      'The presentation data is missing: the budget PDF',
+    ])
+    expect(json.missing).toEqual(['cluster_wallet'])
   })
 
   it('shows the GD answer only to the initiator', async () => {

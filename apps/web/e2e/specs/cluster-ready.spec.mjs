@@ -9,7 +9,7 @@
 
 import { fail, initTestEnv, launchBrowser, ok, resetFailures, resolveSiteTarget, summary } from '@pasosdejesus/m/e2e'
 import { loadVerifierWallet } from '../helpers/e2e-wallet.mjs'
-import { markClusterCompleted, resolveClusterPastors } from '../helpers/e2e-pastors.mjs'
+import { resolveClusterPastors } from '../helpers/e2e-pastors.mjs'
 import { prepareReadyCluster } from '../helpers/cluster-ready-fixture.mjs'
 import { apiOn } from '../helpers/e2e-fixture.mjs'
 
@@ -67,7 +67,10 @@ async function main() {
   if (body.ready === true && (body.missing || []).length === 0 && (body.missing_data || []).length === 0) {
     ok('el clúster está listo para presentarse')
   } else {
-    fail(`todavía no está listo: ${JSON.stringify({ missing: body.missing, missing_data: body.missing_data })}`)
+    const blocking = (body.pastors || [])
+      .filter((pastor) => (pastor.missing || []).length > 0)
+      .map((pastor) => ({ church: pastor.church_name, missing: pastor.missing, reasons: pastor.reasons }))
+    fail(`todavía no está listo: ${JSON.stringify({ missing: body.missing, missing_data: body.missing_data, reasons: body.reasons, pastors: blocking })}`)
   }
 
   console.log('\n── Limpieza ──')

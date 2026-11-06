@@ -145,6 +145,97 @@ export function missingPresentationData(cluster: {
   return missing
 }
 
+const DATA_LABELS: Record<string, string> = {
+  budget_total: 'the first year budget',
+  budget_pdf: 'the budget PDF',
+  director_offer_pdf: "the director's offer PDF",
+  director_pay: "the director's first year pay",
+  director_hours: "the director's first year hours",
+}
+
+/**
+ * Lo que le falta a un pastor, en palabras. Los códigos de `missing` son estables
+ * para la interfaz; esto es lo que se le puede leer a una persona (la ruta lo
+ * devuelve en el 400 y la página lo muestra en el aviso).
+ */
+export function pastorMissingReasons(pastor: PastorCheck): string[] {
+  const who = pastor.nombre ? `${pastor.church_name} (${pastor.nombre})` : pastor.church_name
+  const missing = pastor.missing ?? []
+  const reasons: string[] = []
+  if (missing.includes('no_pastor')) {
+    reasons.push(`${pastor.church_name}: no lead pastor is registered for this church`)
+  }
+  if (missing.includes('course')) {
+    const total = Number(pastor.guides_total) > 0 ? Number(pastor.guides_total) : 0
+    const done = Number(pastor.guides_done) > 0 ? Number(pastor.guides_done) : 0
+    if (done > 0 && total > 0) {
+      reasons.push(
+        `${who}: finished ${done} of ${total} guides of the Global Disciples course`,
+      )
+    } else if (done > 0) {
+      reasons.push(
+        `${who}: finished ${done} guides of the Global Disciples course, not all of them`,
+      )
+    } else {
+      reasons.push(`${who}: has not started the Global Disciples course`)
+    }
+  }
+  if (missing.includes('score')) {
+    reasons.push(
+      `${who}: profile score is ${pastor.profile_score}, it must be greater than ${MIN_PROFILE_SCORE}`,
+    )
+  }
+  if (missing.includes('invite_pastor')) {
+    reasons.push(`${who}: has not invited a pastor or co-pastor yet`)
+  }
+  if (missing.includes('invite_member')) {
+    reasons.push(`${who}: has not invited a member or leader of their own church yet`)
+  }
+  return reasons
+}
+
+/**
+ * Los motivos de "no listo" en palabras, para que el iniciador sepa qué hacer sin
+ * adivinar qué significa cada código. Antes la ruta sólo devolvía
+ * `missing`/`missing_data` (códigos) y el aviso decía "not ready" a secas.
+ */
+export function presentationMissingReasons(
+  readiness: Pick<PresentationReadiness, 'missing' | 'pastors'> & {
+    member_churches?: number
+  },
+  missingData: string[] = [],
+): string[] {
+  const missing = readiness.missing ?? []
+  const reasons: string[] = []
+  if (missing.includes('cluster_active')) {
+    reasons.push('The cluster is not active yet')
+  }
+  if (missing.includes('cluster_members')) {
+    const churches = Number(readiness.member_churches ?? 0)
+    reasons.push(`The cluster has ${churches} churches, it needs at least ${MIN_CHURCHES}`)
+  }
+  if (missing.includes('no_pastors')) {
+    reasons.push('No church in the cluster has a lead pastor registered')
+  }
+  if (missing.includes('cluster_wallet')) {
+    reasons.push('The cluster wallet (the initiator church wallet) is not set')
+  }
+  if (missing.includes('approvals')) {
+    reasons.push('The pastors have not approved the presentation data yet')
+  }
+  for (const pastor of readiness.pastors ?? []) {
+    reasons.push(...pastorMissingReasons(pastor))
+  }
+  if (missingData.length > 0) {
+    reasons.push(
+      `The presentation data is missing: ${missingData
+        .map((key) => DATA_LABELS[key] ?? key)
+        .join(', ')}`,
+    )
+  }
+  return reasons
+}
+
 function num(value: unknown): number | null {
   if (value === null || value === undefined) return null
   const parsed = Number(value)

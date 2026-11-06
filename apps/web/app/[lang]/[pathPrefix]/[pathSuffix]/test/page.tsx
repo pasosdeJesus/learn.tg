@@ -71,6 +71,11 @@ export default function Page({
   const [grid, setGrid] = useState<Cell[][]>([])
   const [placements, setPlacements] = useState<WordPlacement[]>([])
   const [flashError, setFlashError] = useState('')
+  // Un crucigrama que la ruta no pudo construir (guía sin preguntas, generador
+  // caído, guía inexistente) se dice aquí, con un botón para reintentar. Antes se
+  // pintaba una cuadrícula vacía sin explicación (falla silenciosa, 2026-11-05).
+  const [puzzleError, setPuzzleError] = useState('')
+  const [puzzleRetry, setPuzzleRetry] = useState(0)
   const [flashSuccess, setFlashSuccess] = useState('')
   const [flashWarning, setFlashWarning] = useState('')
   const [scholarshipTx, setScholarshipTx] = useState('')
@@ -167,7 +172,7 @@ export default function Page({
         if (offline) {
           console.log('Offline: using the downloaded puzzle')
           const ok = await useStoredCrossword()
-          if (!ok) setFlashError(uiMsg[locale].offlineNoPuzzle)
+          if (!ok) setPuzzleError(uiMsg[locale].offlineNoPuzzle)
           setIsLoading(false)
           return
         }
@@ -198,6 +203,7 @@ export default function Page({
 
           setGrid(newState.grid)
           setPlacements(newState.placements)
+          setPuzzleError('')
           setThisGuidePath(`/${lang}/${pathPrefix}/${pathSuffix}`)
           localStorage.setItem(storageKey, JSON.stringify(newState))
           console.log('[metrics] Game start tracked server-side')
@@ -209,7 +215,15 @@ export default function Page({
           // crucigrama descargado. Antes la página solo mostraba el error y el
           // puzzle descargado no se podía abrir (reporte del operador, 2026-09-23).
           const ok = await useStoredCrossword()
-          if (!ok) setFlashError(err.message)
+          if (!ok) {
+            // La ruta explica por qué no hay crucigrama (`guide_not_found`,
+            // `puzzle_unavailable`); axios solo diría "Request failed with status
+            // code 422", así que se prefiere el mensaje del cuerpo.
+            const detail = err?.response?.data?.error || err?.message || ''
+            setPuzzleError(
+              uiMsg[locale].puzzleUnavailable.replace('{{0}}', detail),
+            )
+          }
         } finally {
           setIsLoading(false)
         }
@@ -220,7 +234,9 @@ export default function Page({
           const savedState = JSON.parse(savedStateJSON)
           if (
             savedState.grid &&
-            savedState.placements &&
+            // Una copia sin pistas (la que se guardaba cuando la ruta respondía
+            // 200 con la cuadrícula vacía) no es un crucigrama: se descarta.
+            savedState.placements?.length > 0 &&
             savedState.courseId === course.id &&
             savedState.guideId === guideNumber
           ) {
@@ -247,7 +263,7 @@ export default function Page({
     
     }
     loadCrossword()
-  }, [course, guideNumber, address, session, ready, mismatch, lang, pathPrefix, pathSuffix, authedGet])
+  }, [course, guideNumber, address, session, ready, mismatch, lang, pathPrefix, pathSuffix, authedGet, puzzleRetry])
 
   // New useEffect for robust navigation
   useEffect(() => {
@@ -481,6 +497,8 @@ export default function Page({
       offlineNeedsSignIn: 'Tu respuesta guardada sigue esperando: vuelve a firmar y se enviará sola.',
       offlinePending: 'respuesta(s) guardada(s) sin conexión, pendiente(s) de enviar.',
       offlineNoPuzzle: 'Sin conexión no hay un crucigrama guardado para esta guía. Ábrelo una vez con conexión (o descarga el curso) y vuelve a intentarlo.',
+      puzzleUnavailable: 'No se pudo cargar el crucigrama de esta guía. {{0}}',
+      puzzleRetry: 'Reintentar',
     },
     en: {
       across: 'Across',
@@ -499,6 +517,8 @@ export default function Page({
       offlineNeedsSignIn: 'Your saved answer is still waiting: sign in again and it will be sent.',
       offlinePending: 'answer(s) saved offline, waiting to be sent.',
       offlineNoPuzzle: 'You are offline and there is no saved crossword for this guide. Open it once with a connection (or download the course) and try again.',
+      puzzleUnavailable: 'The crossword for this guide could not be loaded. {{0}}',
+      puzzleRetry: 'Try again',
     },
   }
 
@@ -646,6 +666,24 @@ export default function Page({
                   )}
                 </CardHeader>
                 <CardContent>
+                  {placements.length === 0 && (
+                    <div
+                      data-testid="puzzle-unavailable"
+                      className="flex flex-col items-center gap-3 p-6 text-center"
+                    >
+                      <p className="text-sm text-red-700 dark:text-red-800">
+                        {puzzleError || uiMsg[locale].offlineNoPuzzle}
+                      </p>
+                      <Button
+                        onClick={() => {
+                          setPuzzleError('')
+                          setPuzzleRetry((n) => n + 1)
+                        }}
+                      >
+                        {uiMsg[locale].puzzleRetry}
+                      </Button>
+                    </div>
+                  )}
                   <div className="grid gap-1 p-4 bg-muted rounded-lg overflow-auto">
                     {grid.map((row, rowIndex) => (
                       <div key={rowIndex} className="flex gap-1">

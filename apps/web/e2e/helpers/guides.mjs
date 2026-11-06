@@ -14,30 +14,76 @@ import { answersFromGuideFile, openCrosswordOnline, solveCrossword, fillSolved, 
  */
 export async function completeGuide(page, base, { lang, prefix, suffix }) {
   const url = `${base}/${lang}/${prefix}/${suffix}/test`
-  const { puzzleData, cells } = await openCrosswordOnline(page, url, { timeout: 45000 })
-  if (!puzzleData) throw new Error(`no apareció el crucigrama de ${lang}/${prefix}/${suffix}`)
+  const { puzzleData, cells, failure } = await openCrosswordOnline(page, url, { timeout: 45000 })
+  if (!puzzleData) {
+    // El servidor explica por qué no hay crucigrama; sin esto el fallo decía sólo
+    // "no apareció" y había que adivinar (2026-11-05).
+    const detail = failure
+      ? `HTTP ${failure.status}${failure.code ? ` ${failure.code}` : ''}${
+          failure.reason ? ` (${failure.reason})` : ''
+        }${failure.error ? `: ${String(failure.error).slice(0, 140)}` : ''}`
+      : 'sin respuesta de /api/crossword'
+    throw new Error(`no apareció el crucigrama de ${lang}/${prefix}/${suffix} — ${detail}`)
+  }
   if (cells === 0) throw new Error(`el crucigrama de ${suffix} no tiene celdas`)
 
   const pairs = answersFromGuideFile(lang, prefix, suffix)
   const solved = solveCrossword(puzzleData.grid, puzzleData.placements, pairs)
   await fillSolved(page, solved)
+  // El resultado se lee de la **respuesta de la API**, no del texto de la página: así
+  // "la guía quedó contada" (points=1) no se confunde con una beca pendiente (F-#295)
+  // ni con un error de red, y el reintento sabe qué pasó.
+  const submissions = []
+  const onResponse = (response) => {
+    if (!response.url().includes('/api/check-crossword')) return
+    const entry = { status: response.status(), body: null }
+    submissions.push(entry)
+    response.json().then((body) => { entry.body = body }).catch(() => {})
+  }
+  page.on('response', onResponse)
+
   await clickSubmit(page)
 
-  // El envío es asíncrono (la página muestra "Sending..."): se espera el resultado
-  // hasta 45 s en vez de un tiempo fijo.
-  let text = ''
-  let accepted = false
-  for (let attempt = 0; attempt < 45; attempt++) {
+  // Hasta 60 s: la entrega incluye la cadena (beca y 10% del clúster).
+  let outcome = null
+  for (let attempt = 0; attempt < 60 && !outcome; attempt++) {
     await sleep(1000)
-    text = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' '))
-    if (/sending|enviando/i.test(text)) continue
-    if (/correct|correcta|bien hecho|well done|aciertos|incorrect|incorrecta/i.test(text)) {
-      accepted = /correct|correcta|bien hecho|well done|aciertos/i.test(text)
-      break
+    const done = submissions.find((entry) => entry.body)
+    if (done) outcome = done
+  }
+  page.off('response', onResponse)
+
+  let text = await page.evaluate(() => document.body.innerText.replace(/s+/g, ' '))
+  await sleep(1000)
+  if (!text) text = ''
+
+  if (!outcome) {
+    // Sin respuesta: o la página no llegó a enviar (botón deshabilitado) o la petición
+    // se quedó sin contestar. El texto de la página dice cuál de las dos.
+    const stillSending = /sending|enviando/i.test(text)
+    return {
+      accepted: false,
+      cells,
+      clues: puzzleData.placements.length,
+      text: text.slice(0, 200),
+      error: stillSending ? 'la petición no respondió en 60 s' : 'no hubo respuesta de /api/check-crossword',
     }
   }
-  await sleep(1500)
-  return { accepted, cells, clues: puzzleData.placements.length, text: text.slice(0, 200) }
+
+  const body = outcome.body || {}
+  return {
+    accepted: outcome.status === 200 && Number(body.points) === 1,
+    cells,
+    clues: puzzleData.placements.length,
+    text: text.slice(0, 200),
+    status: outcome.status,
+    points: body.points,
+    scholarship: body.scholarship,
+    mistakes: body.mistakesInCW,
+    ...(outcome.status === 200
+      ? {}
+      : { error: `HTTP ${outcome.status}: ${String(body.error || body.message || '').slice(0, 140)}` }),
+  }
 }
 
 /**
@@ -48,7 +94,9 @@ export async function completeGuides(page, base, { lang, prefix, suffixes }) {
   const results = []
   for (const suffix of suffixes) {
     let result = { suffix, accepted: false, error: 'sin intento' }
-    for (let attempt = 0; attempt < 2; attempt++) {
+    // Tres intentos: con la beca pagándose la entrega tarda más y alguna guía se
+    // pierde bajo carga (la spec del clúster necesita las seis de cada pastor).
+    for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const attemptResult = { suffix, ...(await completeGuide(page, base, { lang, prefix, suffix })) }
         result = attemptResult
@@ -56,7 +104,9 @@ export async function completeGuides(page, base, { lang, prefix, suffixes }) {
       } catch (error) {
         result = { suffix, accepted: false, error: error instanceof Error ? error.message : String(error) }
       }
-      await sleep(3000)
+      // La primera guía de una corrida llega con la ruta fría en el sitio de desarrollo:
+      // se le da más aire antes del reintento.
+      await sleep(attempt === 0 ? 10000 : 3000)
     }
     results.push(result)
     await sleep(1500)

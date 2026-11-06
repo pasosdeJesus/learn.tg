@@ -404,7 +404,15 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id: string; deps
         body: JSON.stringify({ walletAddress: address }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || t('gdRequestError'))
+      if (!res.ok) {
+        // El 400 del servidor trae los motivos en palabras: se muestran para que el
+        // iniciador sepa qué falta en vez de leer sólo "not ready".
+        const reasons: string[] = Array.isArray(data.reasons) ? data.reasons : []
+        const head = data.error || t('gdRequestError')
+        throw new Error(
+          reasons.length ? `${head}: ${reasons.join('; ')}` : head,
+        )
+      }
       toast({ title: t('gdRequestSent') })
       setGdConfirmed(false)
       fetchPresentation()

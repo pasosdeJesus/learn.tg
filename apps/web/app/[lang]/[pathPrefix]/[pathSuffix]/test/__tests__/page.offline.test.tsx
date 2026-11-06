@@ -10,6 +10,11 @@ import { useGuideData } from '@/lib/hooks/useGuideData'
 const apiMocks = vi.hoisted(() => ({
   authedGet: vi.fn(),
   authedPost: vi.fn(),
+  // Estado del caso: el archivo prueba sobre todo sin conexión (R-#256), pero
+  // también el fallo del servidor en línea (2026-11-05).
+  online: false,
+  address: undefined as string | undefined,
+  ready: false,
 }))
 const offlineMocks = vi.hoisted(() => ({ getStoredPuzzle: vi.fn() }))
 const queueMocks = vi.hoisted(() => ({
@@ -21,11 +26,15 @@ vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: null, status: 'unauthenticated' }),
 }))
 vi.mock('@/lib/hooks/useAuthAddress', () => ({
-  useAuthAddress: () => ({ address: undefined, sessionAddress: undefined, storedAddress: undefined }),
+  useAuthAddress: () => ({
+    address: apiMocks.address,
+    sessionAddress: apiMocks.address,
+    storedAddress: apiMocks.address,
+  }),
 }))
 vi.mock('@/lib/hooks/useAuthedApi', () => ({
   useAuthedApi: () => ({
-    ready: false,
+    ready: apiMocks.ready,
     mismatch: false,
     authedGet: apiMocks.authedGet,
     authedPost: apiMocks.authedPost,
@@ -40,7 +49,7 @@ vi.mock('@/lib/hooks/useWriteContract', () => ({
 }))
 vi.mock('@/lib/hooks/useOfflineQueue', () => ({
   useOfflineQueue: () => ({
-    isOffline: true,
+    isOffline: !apiMocks.online,
     pending: 0,
     enqueue: queueMocks.enqueue,
     lastRejection: null,
@@ -84,6 +93,9 @@ describe('Crossword page offline (R-#256)', () => {
     // caso restauraría la cuadrícula del primero y no llegaría al store.
     localStorage.clear()
     Object.defineProperty(window.navigator, 'onLine', { value: false, configurable: true })
+    apiMocks.online = false
+    apiMocks.address = undefined
+    apiMocks.ready = false
     vi.mocked(useGuideData).mockReturnValue({
       course: {
         id: '7',
@@ -170,5 +182,79 @@ describe('Crossword page offline (R-#256)', () => {
       expect(document.body.textContent).toMatch(/no saved crossword for this guide/i)
     })
     expect(document.querySelectorAll('input[data-row]').length).toBe(0)
+  })
+
+  // 2026-11-05: `/api/crossword` ya no responde 200 con una cuadrícula vacía
+  // cuando no puede construir el crucigrama. La página dice el motivo del servidor
+  // y ofrece reintentar; antes quedaba un tablero sin pistas y sin explicación.
+  it('says why the server could not build the puzzle and offers to retry', async () => {
+    apiMocks.online = true
+    apiMocks.address = '0x1111111111111111111111111111111111111111'
+    apiMocks.ready = true
+    Object.defineProperty(window.navigator, 'onLine', { value: true, configurable: true })
+    offlineMocks.getStoredPuzzle.mockResolvedValue(null)
+    const failure: any = new Error('Request failed with status code 422')
+    failure.response = {
+      data: {
+        error: 'Guide en/web3-and-ubi/guide4 has no crossword questions',
+        code: 'puzzle_unavailable',
+      },
+    }
+    apiMocks.authedGet.mockRejectedValue(failure)
+
+    await act(async () => {
+      render(
+        <Suspense fallback={<div>Loading…</div>}>
+          <Page params={params} />
+        </Suspense>,
+      )
+    })
+
+    // El mensaje del servidor, no el "Request failed with status code 422" de axios.
+    await waitFor(() => {
+      expect(document.body.textContent).toMatch(/has no crossword questions/)
+    })
+    expect(document.body.textContent).toMatch(/could not be loaded/)
+    expect(apiMocks.authedGet).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      document.querySelector<HTMLButtonElement>('[data-testid="puzzle-unavailable"] button')?.click()
+    })
+    await waitFor(() => expect(apiMocks.authedGet).toHaveBeenCalledTimes(2))
+  })
+
+  it('paints the puzzle the server sends', async () => {
+    apiMocks.online = true
+    apiMocks.address = '0x1111111111111111111111111111111111111111'
+    apiMocks.ready = true
+    Object.defineProperty(window.navigator, 'onLine', { value: true, configurable: true })
+    offlineMocks.getStoredPuzzle.mockResolvedValue(null)
+    apiMocks.authedGet.mockResolvedValue({
+      data: {
+        grid: [
+          [
+            { letter: '', number: 1, isBlocked: false, userInput: '', belongsToWords: [1] },
+            { letter: '', isBlocked: true, userInput: '', belongsToWords: [] },
+          ],
+        ],
+        placements: [
+          { word: '-', row: 0, col: 0, direction: 'across', number: 1, clue: 'Server clue' },
+        ],
+        message: '',
+      },
+    })
+
+    await act(async () => {
+      render(
+        <Suspense fallback={<div>Loading…</div>}>
+          <Page params={params} />
+        </Suspense>,
+      )
+    })
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Server clue')
+    })
+    expect(document.querySelector('[data-testid="puzzle-unavailable"]')).toBeNull()
   })
 })
