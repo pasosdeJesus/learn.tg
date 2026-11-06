@@ -31,11 +31,14 @@ vi.mock('../../lib/cluster-release.js', () => ({
 
 vi.mock('../../lib/cluster-funds.js', () => ({
   setClusterVerified: vi.fn(async () => '0xverify'),
-  readClusterFunds: vi.fn(async () => null),
+  // The cluster fund is validated when the initiator presents it: by default it has
+  // money, so the request tests keep exercising the happy path.
+  readClusterFunds: vi.fn(async () => ({ usdt: 10000000n, slearn: 500n, exists: true, verified: false })),
 }))
 
 import { getPresentation, requestPresentation, updatePresentation, cancelPresentation } from '../gd-presentation.js'
 import { releaseOnAnswered } from '../../lib/cluster-release.js'
+import { readClusterFunds } from '../../lib/cluster-funds.js'
 import type { GdclusterDeps } from '../../index.js'
 
 const { mockExecuteTakeFirst, mockExecute, setupMocks, resetMocks, setupCommonResponses } = apiDbMocks
@@ -319,5 +322,46 @@ describe('gd-presentation (R-#161)', () => {
       expect(body.code).toBe('stale_status')
       expect(vi.mocked(releaseOnAnswered)).not.toHaveBeenCalled()
     })
+  })
+})
+// A cluster cannot be presented before its fund has money (operator decision,
+// 2026-11-05): the contract would not verify it and the failure would be silent.
+// The check runs when the initiator asks and again when pdJ sends it.
+describe('presenting a cluster requires money in its fund (R-#161)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetMocks()
+    setupCommonResponses()
+    mockExecute.mockResolvedValue([])
+  })
+
+  it('refuses the request when the fund is empty (409 cluster_fund_empty)', async () => {
+    vi.mocked(readClusterFunds).mockResolvedValueOnce({ usdt: 0n, slearn: 0n, exists: false, verified: false })
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ ...CLUSTER, gd_status: null, gd_requested_at: null })
+      .mockResolvedValueOnce({ id: INITIATOR_CHURCH, name: 'Iglesia', country_id: 1 })
+      .mockResolvedValueOnce({ clustergd_id: 3, joined_at: new Date(), left_at: null })
+      .mockResolvedValueOnce({ cluster_wallet: '0x00000000000000000000000000000000000000dd' })
+
+    const res = await requestPresentation(deps() as GdclusterDeps, post(), { id: '3' })
+    const body = await res.json()
+
+    expect(res.status).toBe(409)
+    expect(body.code).toBe('cluster_fund_empty')
+  })
+
+  it('answers 503 when the fund cannot be read', async () => {
+    vi.mocked(readClusterFunds).mockResolvedValueOnce(null)
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ ...CLUSTER, gd_status: null, gd_requested_at: null })
+      .mockResolvedValueOnce({ id: INITIATOR_CHURCH, name: 'Iglesia', country_id: 1 })
+      .mockResolvedValueOnce({ clustergd_id: 3, joined_at: new Date(), left_at: null })
+      .mockResolvedValueOnce({ cluster_wallet: '0x00000000000000000000000000000000000000dd' })
+
+    const res = await requestPresentation(deps() as GdclusterDeps, post(), { id: '3' })
+    const body = await res.json()
+
+    expect(res.status).toBe(503)
+    expect(body.code).toBe('cluster_fund_unreadable')
   })
 })

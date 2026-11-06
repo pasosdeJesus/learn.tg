@@ -404,6 +404,12 @@ await connectExternalWallet(page)   // R-#265 §3.9: header = WalletConnect; ope
   >= 50). Every wallet it touches is traced in that JSON (`role`, `note`, `score`,
   `lastUsedAt`). Specs that pay use it when the shared wallet cannot (all guides paid,
   or its church already has a lead pastor) instead of skipping or failing.
+- `e2e/helpers/course-vault.mjs` (`ensureCourseVault`) tops the course vault up (a real
+  donation from the fixture wallet) before the guides are solved. Without money in the vault a
+  guide is credited but the scholarship is not paid, so the 10% never reaches the cluster fund:
+  the cluster is not registered in `ClusterFundsV2` and presenting it cannot verify it
+  (`Cluster not found`). The fixture forms the cluster **and sets its wallet before** the
+  crosswords for the same reason: the 10% of the initiator's guides has to land in that fund.
 - `e2e/helpers/e2e-pastors.mjs` (`resolveClusterPastors`) picks the three pastors of a
   cluster from the same registry: the **initiator** needs `hasGdCourse` and no
   `clusterCompletedAt` (only the initiator must own the GD course), the other seats take any
@@ -528,6 +534,7 @@ time out on SIWE under suite load (passes alone).
 | `vault-both-donate` | Dev backend wallet (`0x01a728…`) with MINTER on dev SLEARN and CELO for gas; local `apps/.env` wallet with USDT+SLEARN |
 | `donate-campaign-real` | Campaign engine deployed (`donations/[slug]/verify`, network-aware); dev MockUSDT (`NEXT_PUBLIC_USDT_TESTNET`); `NEXT_PUBLIC_PDJ_TREASURY_ADDRESS` on the dev site (single-role wallet). Round C (cashback ON) needs MINTER_ROLE on the SLEARN of the dev site + CELO for gas; rounds A/B (cashback OFF) do not |
 | `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, published by `/api/churches/fund`) with **≥22 SLEARN** for the pastor bonus, otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when the balance is low |
+| `cluster-ready`, `cluster-flow`, `cluster-funds-once` | The course vault must have funds (the fixture donates with `ensureCourseVault`) and the cluster's wallet must exist **before** the guides, or the 10% never reaches the cluster fund and `sent` cannot verify the cluster |
 | `crossword-submit-ends` | A guide whose two scholarships are **not** paid for the wallet (the submit button is disabled once they are). Use `E2E_WALLET=TEST_PASTOR1` or add courses with `CROSSWORD_COURSES` when the default wallet exhausted them; the spec skips (`[SKIP]`) instead of failing |
 
 ---

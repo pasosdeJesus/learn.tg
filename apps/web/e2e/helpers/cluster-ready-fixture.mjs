@@ -17,6 +17,8 @@ import { apiOn } from './e2e-fixture.mjs'
 import { completeGuides } from './guides.mjs'
 import { rememberWallet } from './e2e-wallets-registry.mjs'
 
+import { ensureCourseVault } from './course-vault.mjs'
+
 export const PDF_PATH = '/tmp/e2e-cluster-budget.pdf'
 
 const LABELS = {
@@ -252,6 +254,14 @@ export async function prepareReadyCluster({
   } else {
     fail('no aparecieron los campos de PDF')
   }
+
+  // La beca sale de la bóveda del curso y el 10% del clúster solo se mueve si hay
+  // beca: con la bóveda vacía la guía se acredita pero el fondo del clúster nunca se
+  // registra en ClusterFundsV2 y la presentación no se puede verificar. Se asegura
+  // antes de resolver los crucigramas, con el clúster y su billetera YA creados.
+  const vault = await ensureCourseVault({ page: verifierPage, wallet: verifier.address, pk: verifier.pk })
+  if (vault.ok) ok(`bóveda del curso con ${vault.balance.usdt.toFixed(2)} USDT / ${vault.balance.slearn.toFixed(2)} SLEARN`)
+  else console.log(`  [WARN] bóveda del curso sin fondos suficientes: ${vault.reason || 'saldo bajo'}`)
 
   // 4. Guías (secuencial: el sitio compartido se satura con varias pestañas)
   const suffixes = [1, 2, 3, 4, 5, 6].map((n) => course.suffix(n))

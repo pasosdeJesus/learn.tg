@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPastorChurch, getChurchCluster, addClusterHistory, notifyUser } from '../lib/gd-utils.js'
-import { setClusterVerified } from '../lib/cluster-funds.js'
+import { readClusterFunds, setClusterVerified } from '../lib/cluster-funds.js'
 import { releaseOnAnswered } from '../lib/cluster-release.js'
 import {
   GD_PRESENTATION_STATUSES,
@@ -182,6 +182,32 @@ export async function requestPresentation(deps: GdclusterDeps, req: NextRequest,
       )
     }
 
+    // Presenting a cluster whose fund never received money is refused (operator
+    // decision, 2026-11-05): the contract cannot verify it (Cluster not found) and the
+    // answer would otherwise be a silent failure. The fund gets its money from the 10%
+    // of its churches' purchases and scholarships.
+    const clusterWalletForFund = await initiatorClusterWallet(db, ctx.cluster)
+    const fund = await readClusterFunds({ backend: deps.backend } as any, clusterWalletForFund)
+    if (!fund) {
+      return NextResponse.json(
+        {
+          error: 'The cluster fund could not be read: try again in a few minutes',
+          code: 'cluster_fund_unreadable',
+        },
+        { status: 503 },
+      )
+    }
+    if (!fund.exists || (fund.usdt === 0n && fund.slearn === 0n)) {
+      return NextResponse.json(
+        {
+          error:
+            "The cluster fund has no money yet. A cluster can be presented once its fund receives the 10% of its churches' course purchases and scholarships: share the cluster donation link or wait for the students.",
+          code: 'cluster_fund_empty',
+        },
+        { status: 409 },
+      )
+    }
+
     const now = new Date()
     await db
       .updateTable('clustergd')
@@ -290,6 +316,20 @@ export async function updatePresentation(deps: GdclusterDeps, req: NextRequest, 
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         console.error('cluster verification failed:', message)
+        if (/cluster not found/i.test(message)) {
+          // Defensive: the fund existed when the initiator asked, but the contract does
+          // not have it now. Refuse with the same validation instead of presenting a
+          // cluster that cannot be verified.
+          return NextResponse.json(
+            {
+              error:
+                'The cluster fund has no money in the contract: the cluster cannot be verified, so it cannot be presented.',
+              code: 'cluster_fund_empty',
+              detail: message.slice(0, 300),
+            },
+            { status: 409 },
+          )
+        }
         return NextResponse.json(
           { error: 'The cluster could not be verified in the contract', code: 'verification_failed', detail: message },
           { status: 502 },
@@ -358,7 +398,11 @@ export async function updatePresentation(deps: GdclusterDeps, req: NextRequest, 
     }
 
     const readiness = await getPresentationReadiness(db, clusterId)
-    return NextResponse.json({ success: true, request: readiness.request, ...(release ? { release } : {}) })
+    return NextResponse.json({
+      success: true,
+      request: readiness.request,
+      ...(release ? { release } : {}),
+    })
   } catch (error) {
     console.error('gd-presentation update error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
