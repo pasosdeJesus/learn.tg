@@ -42,6 +42,8 @@ suite writes.
 | `make test-e2e-pwa` | wallet + offline | yes | dev site |
 | `make test-e2e-gooddollar-not-whitelisted` | Browser check on mainnet, **no transactions** | yes | **production** |
 | `bin/m test:e2e:summary <log…>` | Compare the results of two or more runs | no | local files |
+| `make wait-site` | Wait until the dev site answers 200 | no | dev site `:9001` |
+| `EXPECT_CHANGE=1 make wait-site` | Wait for a **new build** (a real deploy) | no | dev site `:9001` |
 
 The browser targets (`test-e2e`, `test-e2e-retry`, `test-e2e-spec` and the
 shortcuts) export `IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220`; the smoke
@@ -303,6 +305,53 @@ https://github.com/pasosdeJesus/learn.tg/issues/223
 (`/en/donations/lensenia`, `/api/donations/lensenia/balance`,
 `/api/donations/lensenia/verify`) because they compile the `gdcluster` engine's
 client chunks and route handlers.
+
+### 3.5 Waiting for a deploy: `bin/wait-site`
+
+When the operator deploys the dev site, the site goes through 502/503 while the
+build is replaced and then comes back with a **new build id**. Running a spec too
+early measures the old code (or a half-served site) and the failure looks like a
+product bug. `bin/wait-site` is the waiting step: it probes the cluster page and
+exits when the site is usable again.
+
+```sh
+cd apps/web
+bin/wait-site                       # up? (max 15 min, exits at once if already up)
+bin/wait-site --expect-build-change  # up AND serving a different build than before
+bin/wait-site --url https://learn.tg --timeout 600 --interval 10
+EXPECT_CHANGE=1 TIMEOUT=1200 make wait-site   # same, through make
+```
+
+| Flag | Meaning |
+|------|---------|
+| `--url` (or `SITE_URL`) | Base URL, default `https://learn.tg:9001` |
+| `--path` | Page probed, default `/en/cluster` (exists without a session) |
+| `--timeout` | Seconds before giving up, default 900 |
+| `--interval` | Seconds between probes, default 10 |
+| `--expect-build-change` | Do not exit on the first 200: wait for a **new** build id |
+| `--expect-build <id>` | Wait for that exact build id (when the operator tells it) |
+
+It exits `0` when the site is up (and, with `--expect-build-change`, when the
+build changed), `1` on timeout, and prints one line per probe with the status, the
+latency and the build id, so the log shows how long the deploy took.
+
+**How the build id is read** (`markerOf`): the route's own `/page-<hash>.js`
+chunk, then `buildId`, then any `_next/static/chunks/<name>.js`. The first
+version took the first chunk of the page, which is shared and survives most
+deploys, so `--expect-build-change` waited for nothing (2026-11-04).
+
+**First 200 after a downtime counts as the new build** (fixed 2026-11-06): if the
+site was down or answering 502 when the script started there is no previous build
+id to compare with, and the old logic waited until the timeout even though the
+deploy had finished (measured: 502 … 200 at 85 s, and the script kept polling).
+
+A deploy is not confirmed by the build id alone: check the behaviour that should
+have changed. Cheapest probe, no session needed (it must answer `400` with a
+`code`, which the old version did not do):
+
+```sh
+node -e "process.env.NODE_TLS_REJECT_UNAUTHORIZED='0';fetch('https://learn.tg:9001/api/crossword?lang=en&prefix=gdcluster').then(async r=>console.log(r.status, await r.text()))"
+```
 
 ---
 
@@ -584,6 +633,36 @@ cd apps/web
 differ: one that fails on the dev site and passes locally points at the
 environment, not the code.
 
+### 6.1 Traps that look like product bugs (measured 2026-11-06)
+
+**The page may not request `/api/crossword` at all.** The guide page saves the
+puzzle in `localStorage` (`crossword-state-<wallet>`) and restores it on the next
+visit, so a helper that only accepts the network response reports "the crossword did
+not appear" while the board is on screen (it hit guide 1 for every pastor, three
+attempts each, on every cluster run). `openCrosswordOnline` now falls back to the
+stored state and says `[nota] <guide>: crucigrama restaurado del dispositivo`.
+When there is neither a response nor a stored puzzle, the error carries the status
+and `code` from the server, or the page text, the cell count and the stored entries,
+so the next failure is not a guess.
+
+**A guide whose two scholarships are already paid cannot be submitted.** The submit
+button is disabled by design; the helper counts it as done (`[nota] <guide>: la beca
+ya estaba pagada`) instead of as a failure. It does not affect readiness: the guide
+is already credited.
+
+**The cluster fund belongs to the initiator church wallet, and churches are reused.**
+`cluster-fund-guard` needs the fund to be **empty**, but a reused church keeps the
+`cluster_wallet` of its previous campaign, and that address may already hold the 10%
+of earlier purchases and scholarships. The spec reads `/api/gdcluster/ranking/funds`
+first and prints `[fondo] registro: … USDT / … SLEARN`; when the wallet already has
+money it reports `[NOTE]` (the acceptance is the correct behaviour) instead of
+failing, and the refusal itself stays covered by the route unit tests
+(`409 cluster_fund_empty`, `503 cluster_fund_unreadable`).
+
+**"Not ready" must say which pastor and what is missing.** `ready=false` with an
+empty `missing` means the block is per pastor; the readiness response now carries
+`reasons` (words) and `pastors[].reasons`, and the specs print the blocking pastors
+instead of `{"missing":[],"missing_data":[]}`.
 **Never run two suites at once.** Both use the same wallet (`apps/.env`) on the
 same chain: concurrent runs fight over nonces and shared state (church balance,
 premium course already bought) and produce failures that do not exist.

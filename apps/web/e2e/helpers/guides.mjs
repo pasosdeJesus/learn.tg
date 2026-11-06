@@ -14,15 +14,24 @@ import { answersFromGuideFile, openCrosswordOnline, solveCrossword, fillSolved, 
  */
 export async function completeGuide(page, base, { lang, prefix, suffix }) {
   const url = `${base}/${lang}/${prefix}/${suffix}/test`
-  const { puzzleData, cells, failure } = await openCrosswordOnline(page, url, { timeout: 45000 })
+  const { puzzleData, cells, failure, fromStore } = await openCrosswordOnline(page, url, { timeout: 45000 })
+  if (fromStore) {
+    console.log(`  [nota] ${suffix}: crucigrama restaurado del dispositivo (la página no pidió /api/crossword)`)
+  }
   if (!puzzleData) {
-    // El servidor explica por qué no hay crucigrama; sin esto el fallo decía sólo
-    // "no apareció" y había que adivinar (2026-11-05).
-    const detail = failure
-      ? `HTTP ${failure.status}${failure.code ? ` ${failure.code}` : ''}${
-          failure.reason ? ` (${failure.reason})` : ''
-        }${failure.error ? `: ${String(failure.error).slice(0, 140)}` : ''}`
-      : 'sin respuesta de /api/crossword'
+    // Por qué no hay crucigrama: el `code` del servidor (2026-11-05) o, si la página
+    // no llegó a pedirlo, la ruta y el texto que mostraba (2026-11-06).
+    let detail = 'sin respuesta de /api/crossword'
+    if (failure?.code === 'no_request') {
+      detail =
+        `la página no pidió /api/crossword en ${failure.reason || '?'} ` +
+        `(celdas ${failure.cells ?? 0}; guardado ${JSON.stringify(failure.stored ?? [])}): ` +
+        String(failure.error || '').slice(0, 140)
+    } else if (failure) {
+      detail = `HTTP ${failure.status}${failure.code ? ` ${failure.code}` : ''}${
+        failure.reason ? ` (${failure.reason})` : ''
+      }${failure.error ? `: ${String(failure.error).slice(0, 140)}` : ''}`
+    }
     throw new Error(`no apareció el crucigrama de ${lang}/${prefix}/${suffix} — ${detail}`)
   }
   if (cells === 0) throw new Error(`el crucigrama de ${suffix} no tiene celdas`)
@@ -30,6 +39,29 @@ export async function completeGuide(page, base, { lang, prefix, suffix }) {
   const pairs = answersFromGuideFile(lang, prefix, suffix)
   const solved = solveCrossword(puzzleData.grid, puzzleData.placements, pairs)
   await fillSolved(page, solved)
+
+  // Guía ya pagada por completo (las dos becas): el botón de enviar queda
+  // deshabilitado a propósito, no hay nada que ganar y no habrá respuesta de la API.
+  // Antes eso se contaba como fallo y ensuciaba el resultado de la corrida (medido
+  // 2026-11-06 con billeteras reutilizadas).
+  const alreadyPaid = await page.evaluate(() => {
+    const button = Array.from(document.querySelectorAll('button')).find((el) =>
+      /^(Submit answer|Enviar respuesta)$/.test((el.textContent || '').trim()),
+    )
+    const text = document.body.innerText || ''
+    return !!button?.disabled && /already been paid|ya ha sido pagada/i.test(text)
+  })
+  if (alreadyPaid) {
+    return {
+      accepted: true,
+      alreadyPaid: true,
+      cells,
+      clues: puzzleData.placements.length,
+      fromStore,
+      text: 'la beca de esta guía ya está pagada: no hay nada que enviar',
+    }
+  }
+
   // El resultado se lee de la **respuesta de la API**, no del texto de la página: así
   // "la guía quedó contada" (points=1) no se confunde con una beca pendiente (F-#295)
   // ni con un error de red, y el reintento sabe qué pasó.
@@ -107,6 +139,9 @@ export async function completeGuides(page, base, { lang, prefix, suffixes }) {
       // La primera guía de una corrida llega con la ruta fría en el sitio de desarrollo:
       // se le da más aire antes del reintento.
       await sleep(attempt === 0 ? 10000 : 3000)
+    }
+    if (result.alreadyPaid) {
+      console.log(`  [nota] ${suffix}: la beca ya estaba pagada, no hay nada que enviar`)
     }
     results.push(result)
     await sleep(1500)

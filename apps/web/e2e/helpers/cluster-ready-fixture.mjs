@@ -115,6 +115,10 @@ export async function openSession(browser, creds, base, timeout, chainId, attemp
 /**
  * Prepara el clúster listo. Con `solveGuides: false` se detiene antes de los
  * crucigramas (el fondo queda vacío: sirve para probar la validación de la solicitud).
+ * Con `fundVault: false` los crucigramas se resuelven **sin** fondear la bóveda: las
+ * guías se acreditan igual (el crédito va antes de la cadena, F-#295) pero no hay beca,
+ * así que el 10 % nunca llega al fondo del clúster y el fondo queda vacío sin dejar de
+ * estar el clúster listo: es lo que necesita el guardia de "fondo vacío".
  * @returns {{clusterId:number, sessions:any[], verifierPage:any, ready:any}}
  */
 export async function prepareReadyCluster({
@@ -129,6 +133,7 @@ export async function prepareReadyCluster({
   fail = () => {},
   ok = () => {},
   solveGuides = true,
+  fundVault = true,
 }) {
   const t = LABELS[lang === 'es' ? 'es' : 'en']
   const course = lang === 'es' ? { prefix: 'redgd', suffix: (n) => `guia${n}` } : { prefix: 'gdcluster', suffix: (n) => `guide${n}` }
@@ -208,6 +213,10 @@ export async function prepareReadyCluster({
 
   // 3. Billetera, presupuesto y oferta
   const existing = await apiOn(initiator.page, `/api/cluster/${clusterId}?walletAddress=${initiator.pastor.address}`)
+  // Con iglesias reutilizadas la billetera del clúster viene de una campaña anterior y
+  // puede tener dinero on-chain: quien necesite un fondo vacío (cluster-fund-guard)
+  // tiene que saber si la billetera es nueva o heredada.
+  let walletCreated = false
   if (existing.body?.cluster_wallet) {
     ok('billetera del clúster ya configurada')
   } else {
@@ -231,8 +240,10 @@ export async function prepareReadyCluster({
       method: 'PATCH',
       body: JSON.stringify({ walletAddress: initiator.pastor.address, clusterWallet: linked.address }),
     })
-    if (walletSet.status === 200) ok('billetera del clúster configurada')
-    else fail(`billetera del clúster → ${walletSet.status}`)
+    if (walletSet.status === 200) {
+      walletCreated = true
+      ok('billetera del clúster configurada')
+    } else fail(`billetera del clúster → ${walletSet.status}`)
   }
 
   await initiator.page.goto(`${base}/${lang}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
@@ -261,9 +272,15 @@ export async function prepareReadyCluster({
   // beca: con la bóveda vacía la guía se acredita pero el fondo del clúster nunca se
   // registra en ClusterFundsV2 y la presentación no se puede verificar. Se asegura
   // antes de resolver los crucigramas, con el clúster y su billetera YA creados.
-  const vault = await ensureCourseVault({ page: verifierPage, wallet: verifier.address, pk: verifier.pk })
-  if (vault.ok) ok(`bóveda del curso con ${vault.balance.usdt.toFixed(2)} USDT / ${vault.balance.slearn.toFixed(2)} SLEARN`)
-  else console.log(`  [WARN] bóveda del curso sin fondos suficientes: ${vault.reason || 'saldo bajo'}`)
+  // `fundVault: false` deja el fondo del clúster vacío a propósito (ver el comentario
+  // de `prepareReadyCluster`): lo usa `cluster-fund-guard`.
+  if (fundVault) {
+    const vault = await ensureCourseVault({ page: verifierPage, wallet: verifier.address, pk: verifier.pk })
+    if (vault.ok) ok(`bóveda del curso con ${vault.balance.usdt.toFixed(2)} USDT / ${vault.balance.slearn.toFixed(2)} SLEARN`)
+    else console.log(`  [WARN] bóveda del curso sin fondos suficientes: ${vault.reason || 'saldo bajo'}`)
+  } else {
+    console.log('  [nota] bóveda sin fondear a propósito: el fondo del clúster debe quedar vacío')
+  }
 
   // 4. Puntaje verificado e invitaciones (antes de las guías: la beca necesita el puntaje)
   for (const session of sessions) {
@@ -293,14 +310,22 @@ export async function prepareReadyCluster({
     }
   }
 
+  // `invite_pastor` se cumple por pastor: cada uno invita al siguiente. El `ok` solo
+  // se canta si las tres invitaciones respondieron 200; antes se anunciaba siempre y
+  // un rechazo quedaba invisible hasta el `ready=false` (2026-11-06).
+  const inviteFailures = []
   for (let i = 0; i < sessions.length; i++) {
     const referred = sessions[(i + 1) % sessions.length]
-    await verifierApi(`/api/admin/user/${referred.fixture.userId}`, {
+    const linked = await verifierApi(`/api/admin/user/${referred.fixture.userId}`, {
       method: 'PATCH',
       body: JSON.stringify({ referrer: String(sessions[i].fixture.userId) }),
     })
+    if (linked.status !== 200) {
+      inviteFailures.push(`${sessions[i].pastor.variable}→${referred.pastor.variable}: HTTP ${linked.status}`)
+    }
   }
-  ok('invitaciones entre pastores (invite_pastor)')
+  if (inviteFailures.length === 0) ok('invitaciones entre pastores (invite_pastor)')
+  else console.log(`  [WARN] invitaciones entre pastores: ${inviteFailures.join(' | ')}`)
 
   let members = 0
   for (const session of sessions) {
@@ -370,5 +395,5 @@ export async function prepareReadyCluster({
     fail(`todavía no está listo: ${JSON.stringify({ missing: ready.missing, missing_data: ready.missing_data, reasons: ready.reasons, pastors: blocking })}`)
   }
 
-  return { clusterId, sessions, verifierPage, verifierApi, ready }
+  return { clusterId, sessions, verifierPage, verifierApi, ready, walletCreated }
 }

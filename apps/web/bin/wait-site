@@ -73,7 +73,15 @@ for (;;) {
   await new Promise((r) => setTimeout(r, INTERVAL * 1000))
   const state = await probe()
   if (state.status !== 200) sawProblem = true
-  const changed = !!(state.marker && initialMarker && state.marker !== initialMarker)
+  // Sin marca inicial (el sitio estaba caído o devolvía 502 al arrancar) el primer
+  // 200 **ya es el build nuevo**: la marca no puede cambiar respecto de algo que no
+  // se vio, y antes `--expect-build-change` esperaba en vano hasta el timeout
+  // (medido 2026-11-06: 502 … 200 a los 85 s y el script seguía esperando).
+  const changed = state.marker
+    ? initialMarker
+      ? state.marker !== initialMarker
+      : sawProblem
+    : false
   const matchesExpected = !!(EXPECT_BUILD && state.marker === EXPECT_BUILD)
   console.log(
     `[t=${elapsed()}s] ${state.status || 'sin conexión'} (${state.ms} ms)` +

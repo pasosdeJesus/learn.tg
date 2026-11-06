@@ -212,5 +212,77 @@ export async function openCrosswordOnline(page, url, { timeout = 30000 } = {}) {
     if (cells.length === 0 && attempt === 0) await sleep(3000)
   }
   page.off('response', capture)
-  return { cells: cells.length, puzzleData, failure }
+
+  // La página **restaura** el crucigrama que guardó en el dispositivo
+  // (`crossword-state-<billetera>`) en vez de pedirlo otra vez: es el mismo que
+  // renderizó, así que sirve para resolverlo. Antes, cuando eso pasaba (guía 1 de
+  // cada pastor, medida 2026-11-06) el guion decía "no apareció el crucigrama"
+  // aunque el tablero estuviera en pantalla.
+  let fromStore = false
+  if (!puzzleData) {
+    const expectedGuide = Number((url.match(/\/guide(\d+)\/test/) || [])[1] || 0)
+    const stored = await page.evaluate((guideId) => {
+      for (const key of Object.keys(localStorage)) {
+        if (!key.startsWith('crossword-state')) continue
+        try {
+          const value = JSON.parse(localStorage.getItem(key) || 'null')
+          if (
+            Array.isArray(value?.grid) && value.grid.length > 0 &&
+            Array.isArray(value?.placements) && value.placements.length > 0 &&
+            (!guideId || Number(value.guideId) === Number(guideId))
+          ) {
+            return { grid: value.grid, placements: value.placements }
+          }
+        } catch {
+          // Entrada ilegible: se ignora.
+        }
+      }
+      return null
+    }, expectedGuide).catch(() => null)
+    if (stored) {
+      puzzleData = stored
+      fromStore = true
+      failure = null
+    }
+  }
+
+  if (!puzzleData && !failure) {
+    // Sin respuesta de `/api/crossword`: la página no llegó a pedirla. Se guarda lo
+    // que la página mostraba (¿"Connect Wallet"? ¿cargando? ¿un error?) y el
+    // crucigrama guardado en el dispositivo, que es lo que hay cuando la página
+    // restaura una copia en vez de pedirla (medido 2026-11-06: guía 1 de cada
+    // pastor, siempre la primera del recorrido).
+    const state = await page.evaluate(() => {
+      const stored = Object.keys(localStorage)
+        .filter((key) => key.startsWith('crossword-state'))
+        .map((key) => {
+          try {
+            const value = JSON.parse(localStorage.getItem(key) || 'null')
+            return {
+              key: key.replace('crossword-state-', '').slice(0, 10),
+              grid: Array.isArray(value?.grid) ? value.grid.length : null,
+              placements: Array.isArray(value?.placements) ? value.placements.length : null,
+              courseId: value?.courseId ?? null,
+              guideId: value?.guideId ?? null,
+            }
+          } catch {
+            return { key: key.slice(0, 10), grid: null, placements: null, courseId: null, guideId: null }
+          }
+        })
+      return {
+        path: location.pathname,
+        text: (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 200),
+        stored,
+      }
+    }).catch(() => ({ path: '', text: '', stored: [] }))
+    failure = {
+      status: 0,
+      code: 'no_request',
+      error: state.text || null,
+      reason: state.path || null,
+      cells: cells.length,
+      stored: state.stored,
+    }
+  }
+  return { cells: cells.length, puzzleData, failure, fromStore }
 }
