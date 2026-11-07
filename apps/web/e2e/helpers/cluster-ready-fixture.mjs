@@ -113,6 +113,39 @@ export async function openSession(browser, creds, base, timeout, chainId, attemp
 }
 
 /**
+ * Pastor nuevo para completar `invite_pastor`: una billetera reutilizada ya puede
+ * tener referidor (`PATCH` → 400) y entonces el pastor que invita se queda sin pastor
+ * entre sus referidos. Se crea una billetera, se registra y se marca como pastor,
+ * referida por `referrerId`; el `ok` del paso lo decide el resultado, no el intento.
+ */
+async function createReferredPastor({ browser, base, timeout, chainId, verifierApi, referrerId, paisId = 694 }) {
+  const key = generatePrivateKey()
+  const account = privateKeyToAccount(key)
+  const session = await openSession(browser, { pk: key, address: account.address, variable: 'referido' }, base, timeout, chainId)
+  try {
+    const profile = await apiOn(session.page, `/api/profile?walletAddress=${account.address}`)
+    const id = profile.body?.id
+    if (!id) return { ok: false, reason: `sin perfil (${profile.status})` }
+    // Sin `church_id`: la iglesia del pastor que invita ya tiene pastor principal y el
+    // PATCH responde 409 (REQ/161 §12). Para `invite_pastor` basta el rol, la iglesia no
+    // interviene en la comprobación.
+    const assigned = await verifierApi(`/api/admin/user/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ pais_id: paisId, religion_id: 2, church_relationship: 'pastor' }),
+    })
+    const referred = await verifierApi(`/api/admin/user/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ referrer: String(referrerId) }),
+    })
+    rememberWallet({ privateKey: key, address: account.address, role: 'pastor', note: 'cluster-ready-referral' })
+    return { ok: assigned.status === 200 && referred.status === 200, reason: `${assigned.status}/${referred.status}` }
+  } finally {
+    await session.page.goto('about:blank').catch(() => {})
+    await session.context.close().catch(() => {})
+  }
+}
+
+/**
  * Prepara el clúster listo. Con `solveGuides: false` se detiene antes de los
  * crucigramas (el fondo queda vacío: sirve para probar la validación de la solicitud).
  * Con `fundVault: false` los crucigramas se resuelven **sin** fondear la bóveda: las
@@ -321,7 +354,20 @@ export async function prepareReadyCluster({
       body: JSON.stringify({ referrer: String(sessions[i].fixture.userId) }),
     })
     if (linked.status !== 200) {
-      inviteFailures.push(`${sessions[i].pastor.variable}→${referred.pastor.variable}: HTTP ${linked.status}`)
+      // El referido ya tenía referidor (400) o no es pastor principal: se completa
+      // la invitación con un pastor nuevo en vez de dejar `invite_pastor` a medias.
+      const fallback = await createReferredPastor({
+        browser, base, timeout, chainId, verifierApi,
+        referrerId: sessions[i].fixture.userId,
+      })
+      if (fallback.ok) {
+        ok(`invitación de ${sessions[i].pastor.variable} completada con un pastor nuevo`)
+      } else {
+        inviteFailures.push(
+          `${sessions[i].pastor.variable}→${referred.pastor.variable}: HTTP ${linked.status} ` +
+            `(${JSON.stringify(linked.body).slice(0, 120)}; pastor nuevo: ${fallback.reason})`,
+        )
+      }
     }
   }
   if (inviteFailures.length === 0) ok('invitaciones entre pastores (invite_pastor)')

@@ -20,28 +20,49 @@ import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
 
 const LANG = process.env.E2E_LANG === 'es' ? 'es' : 'en'
 
-/** Estado del menú en el navegador: grupos presentes y enlaces de cada uno. */
-async function menuState(page) {
-  return page.evaluate(() => {
-    const menuButton = Array.from(document.querySelectorAll('button'))
-      .find((b) => (b.getAttribute('aria-label') || '') === 'Menu')
-    if (!menuButton) return { error: 'sin botón de menú' }
-    menuButton.click()
-    const groups = Array.from(document.querySelectorAll('[data-testid^="menu-group-"]')).map((el) => ({
+/** Abre el menú ☰ y espera a que React pinte los grupos (el invitado es lento). */
+async function openMenu(page, { attempts = 4 } = {}) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const found = await page.evaluate(() => {
+      const button = Array.from(document.querySelectorAll('button'))
+        .find((b) => (b.getAttribute('aria-label') || '') === 'Menu')
+      if (!button) return false
+      button.click()
+      return true
+    })
+    for (let wait = 0; wait < 10; wait++) {
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      const painted = await page.evaluate(
+        () => document.querySelectorAll('[data-testid^="menu-group-"]').length,
+      )
+      if (found && painted > 0) return true
+    }
+  }
+  return false
+}
+
+/** Grupos presentes en el menú abierto. */
+async function menuGroups(page) {
+  return page.evaluate(() =>
+    Array.from(document.querySelectorAll('[data-testid^="menu-group-"]')).map((el) => ({
       id: String(el.getAttribute('data-testid')).replace('menu-group-', ''),
       expanded: el.getAttribute('aria-expanded') === 'true',
       label: (el.textContent || '').trim(),
-    }))
-    return { groups }
-  })
+    })),
+  )
 }
 
 /** Abre un grupo y devuelve los hrefs de sus entradas. */
 async function openGroup(page, id) {
-  return page.evaluate((groupId) => {
+  const exists = await page.evaluate((groupId) => {
     const group = document.querySelector(`[data-testid="menu-group-${groupId}"]`)
-    if (!group) return null
+    if (!group) return false
     if (group.getAttribute('aria-expanded') !== 'true') group.click()
+    return true
+  }, id)
+  if (!exists) return null
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  return page.evaluate((groupId) => {
     const list = document.getElementById(`menu-group-${groupId}`)
     if (!list) return []
     return Array.from(list.querySelectorAll('a')).map((a) => a.getAttribute('href'))
@@ -65,13 +86,14 @@ async function main() {
     console.log('\n── 1. Invitado: Cursos y learn.tg, sin Mi cuenta ni GDCluster ──')
     const guest = await newPage(browser, undefined, env.timeout)
     await guest.goto(`${base}/${LANG}`, { waitUntil: 'domcontentloaded' })
-    const guestMenu = await menuState(guest)
-    if (guestMenu.error) fail(guestMenu.error)
-    const guestIds = (guestMenu.groups || []).map((g) => g.id)
+    const guestOpened = await openMenu(guest)
+    if (!guestOpened) fail('sin botón de menú')
+    const guestGroups = await menuGroups(guest)
+    const guestIds = guestGroups.map((g) => g.id)
     if (guestIds.includes('courses') && guestIds.includes('learntg')) {
       ok(`grupos del invitado: ${guestIds.join(', ')}`)
     } else {
-      fail(`faltan grupos del invitado: ${JSON.stringify(guestMenu.groups)}`)
+      fail(`faltan grupos del invitado: ${JSON.stringify(guestGroups)}`)
     }
     if (guestIds.includes('account')) fail('el invitado no debería ver "Mi cuenta"')
     if (guestIds.includes('gdcluster')) fail('el invitado no debería ver GDCluster')
@@ -103,10 +125,11 @@ async function main() {
     // El header pregunta perfil, catálogo y estado de clúster: se le deja responder.
     await new Promise((resolve) => setTimeout(resolve, 2500))
 
-    const menu = await menuState(page)
-    const ids = (menu.groups || []).map((g) => g.id)
+    await openMenu(page)
+    const groups = await menuGroups(page)
+    const ids = groups.map((g) => g.id)
     if (ids.includes('account')) ok('grupo "Mi cuenta" presente con sesión')
-    else fail(`sin "Mi cuenta" con sesión: ${JSON.stringify(menu.groups)}`)
+    else fail(`sin "Mi cuenta" con sesión: ${JSON.stringify(groups)}`)
 
     const account = await openGroup(page, 'account')
     if ((account || []).some((href) => href?.endsWith('/profile'))) {
@@ -141,7 +164,7 @@ async function main() {
     if (ids.includes('courses') || ids.includes('learntg')) {
       ok(`grupos disponibles: ${ids.join(', ')}`)
     } else {
-      fail(`menú sin los grupos básicos: ${JSON.stringify(menu.groups)}`)
+      fail(`menú sin los grupos básicos: ${JSON.stringify(groups)}`)
     }
   } finally {
     await browser.close()

@@ -35,25 +35,32 @@ function credentials(row) {
  * Picks `count` pastors for a cluster, reusing the registry.
  * @returns {{ pastors: any[], missing: number, reason?: string }}
  */
-export function resolveClusterPastors({ count = 3, destructive = false } = {}) {
+export function resolveClusterPastors({ count = 3, destructive = false, exclude = [] } = {}) {
+  // `exclude`: direcciones que no se deben tomar (los pastores que ya usó otro
+  // clúster en la misma corrida, p. ej. el reparto entre A y B).
   // Wallets owned by the other cluster specs are usually still inside a cluster (or
   // just left one): taking them makes the join fail with 409. They are excluded here;
   // the ones this helper creates are marked 'created for a cluster'.
   const ownedByAnotherClusterSpec = /^cluster-(page|ready|flow|three-pastors|funds-once)/
   const reusable = (row) => !ownedByAnotherClusterSpec.test(String(row.note || ''))
-  const pastors = recentByRole('pastor', { count: 50 }).filter(reusable)
+  const excluded = new Set(exclude.map((address) => String(address).toLowerCase()))
+  const free = (row) => !excluded.has(String(row.address).toLowerCase())
+  const pastors = recentByRole('pastor', { count: 50 }).filter(reusable).filter(free)
   // A spec that answers GD spends its pastors: it takes the ones reserved for that
   // (role 'pastor-burn') before touching the shared ones, so the rest of the suite
   // keeps a course-owning pastor to work with.
-  const burns = recentByRole('pastor-burn', { count: 50 }).filter((row) => !row.clusterCompletedAt)
+  const burns = recentByRole('pastor-burn', { count: 50 }).filter((row) => !row.clusterCompletedAt).filter(free)
   const pool = destructive ? [...burns, ...pastors] : pastors
   const withCourse = pool.filter((row) => row.hasGdCourse && !row.clusterCompletedAt)
   const spendable = pastors.filter((row) => !row.clusterCompletedAt && !withCourse.includes(row))
-  const members = recentByRole('member', { count: 50 }).filter((row) => !row.clusterCompletedAt && reusable(row))
+  const members = recentByRole('member', { count: 50 }).filter((row) => !row.clusterCompletedAt && reusable(row)).filter(free)
 
   const chosen = []
   if (withCourse.length > 0) chosen.push(withCourse[0])
-  for (const pool of [spendable, withCourse.slice(1), members]) {
+  // Los pastores con el curso son el recurso escaso (cada clúster necesita uno como
+  // iniciador): se gastan como **iniciadores**, no como simples puestos. Por eso los
+  // miembros se prueban antes que los demás pastores con curso.
+  for (const pool of [spendable, members, withCourse.slice(1)]) {
     for (const row of pool) {
       if (chosen.length >= count) break
       if (!chosen.some((entry) => entry.address === row.address)) chosen.push(row)
