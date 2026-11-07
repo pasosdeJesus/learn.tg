@@ -104,6 +104,9 @@ describe('GdPresentationControl (https://github.com/pasosdeJesus/learn.tg/issues
       jsonResponse({
         ...READY,
         request: {
+          // `request.status` decide el bloque (R-#161 §12): con sólo `requested_at`
+          // el control lo trataba como "sin solicitud".
+          status: 'requested',
           requested_at: '2026-10-27T12:00:00Z',
           sent_at: null,
           response: null,
@@ -139,6 +142,7 @@ describe('GdPresentationControl (https://github.com/pasosdeJesus/learn.tg/issues
       jsonResponse({
         ...READY,
         request: {
+          status: 'answered',
           requested_at: '2026-10-27T12:00:00Z',
           sent_at: '2026-10-28T09:00:00Z',
           response: 'We can meet in November.',

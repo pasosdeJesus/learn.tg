@@ -37,6 +37,14 @@ const common: TranslationSet = {
     navDonateLensenia: 'Donate · Lensenia',
     navReferrals: 'Referrals',
     navAdmin: 'Admin', // R-#255
+    // R-#161 §15: menú de dos niveles (grupos y sus entradas).
+    navMyAccount: 'My account',
+    navGdCluster: 'GDCluster / Redgd',
+    navGdRanking: 'Ranking',
+    navGdBudget: 'Budget',
+    navGdClusterMenu: 'Cluster',
+    navLearnTg: 'learn.tg',
+    navCourseList: 'Course list',
     privacyPolicy: 'Privacy Policy',
     termsOfService: 'Terms of Service',
     churchDirectory: 'Church Directory',
@@ -87,6 +95,13 @@ const common: TranslationSet = {
     navDonateLensenia: 'Donar · Lensenia',
     navReferrals: 'Referidos',
     navAdmin: 'Admin', // R-#255
+    navMyAccount: 'Mi cuenta',
+    navGdCluster: 'GDCluster / Redgd',
+    navGdRanking: 'Ranking',
+    navGdBudget: 'Presupuesto',
+    navGdClusterMenu: 'Clúster',
+    navLearnTg: 'learn.tg',
+    navCourseList: 'Lista de cursos',
     privacyPolicy: 'Política de Privacidad',
     termsOfService: 'Términos de Servicio',
     churchDirectory: 'Directorio de Iglesias',

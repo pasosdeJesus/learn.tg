@@ -23,9 +23,15 @@ const cluster = {
   initiator_church_id: 171,
   cluster_wallet: null,
   isInitiator: true,
-  member_count: 1,
+  member_count: 3,
   status: 'pending',
-  members: [{ church_id: 171, church_name: 'Cl 1 1', joined_at: '2026-11-03T03:17:52.514Z' }],
+  // El panel de presupuesto/oferta se pinta a partir de 3 iglesias (R-#161:
+  // presentar exige 3); con una sola el bloque de datos faltantes no aparece.
+  members: [
+    { church_id: 171, church_name: 'Cl 1 1', joined_at: '2026-11-03T03:17:52.514Z' },
+    { church_id: 172, church_name: 'Cl 2 2', joined_at: '2026-11-03T03:17:52.514Z' },
+    { church_id: 173, church_name: 'Cl 3 3', joined_at: '2026-11-03T03:17:52.514Z' },
+  ],
   history: [{ event_type: 'church_join', old_value: null, new_value: 'Cl 1 1', changed_by: 1166, created_at: '2026-11-03T03:17:52.518Z' }],
 }
 

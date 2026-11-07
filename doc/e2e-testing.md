@@ -414,7 +414,7 @@ hardcoded a score). Their coverage — SIWE, session cookie, profile — comes f
 ## 5. Browser specs (`e2e/specs/`)
 
 Puppeteer through `@pasosdejesus/m/e2e` (`initTestEnv`, `launchBrowser`,
-`ok`/`fail`/`summary`). 51 specs as of 2026-11-05. **They are not read-only**:
+`ok`/`fail`/`summary`). 52 specs as of 2026-11-06. **They are not read-only**:
 they register wallets, complete profiles, claim UBI, donate and buy (see §2.2),
 except `guide-citations.spec.mjs`, which only opens guides and reads their text
 (it checks that every guide keeps its `chapter:verse` citations).
@@ -547,6 +547,7 @@ and §2.4.
 | `wallet-invitation-two-devices.spec.mjs` | R-#265 §3.2: account A invites an **address**; that wallet opens the site in another browser context, signs and accepts on entry (a normal sign-in is rejected on purpose) |
 | `wallet-handover.spec.mjs` | R-#288: the in-app wallet is added to an existing **verified** account and the duplicate account (created by the in-app wallet) is deleted. Two isolated browser contexts |
 | `header-wallet-dialog.spec.mjs` | R-#245: real header + modal — create → close → reopen starts fresh → unlock from the header → SIWE → session survives a reload → `✕` returns to signed-out |
+| `header-navigation.spec.mjs` | R-#161 §15: the two-level ☰ menu — as a **guest** only `Courses` and `learn.tg` exist (no `My account`, no `GDCluster`) and each group opens with its links; **with a session** `My account` appears with Profile/Privacy/Referrals, and `GDCluster / Redgd` only when the profile is the one the server offers the course to (R-#194), with Ranking public, Budget with the purchase and Cluster with the pastor role. A section that does not apply is not rendered and no reason is shown |
 | `donate-unlock-dialog.spec.mjs` | R-#244: in-app session with the wallet locked — the donation modal's unlock button opens the wallet dialog **on top** with the PIN form, and unlocking removes the notice |
 | `biometric-unlock.spec.mjs` | R-#246: real header + dialog with a **CDP virtual authenticator (`hasPrf`)** — create → enable fingerprint → reload → one gesture unlocks → the donation modal stops asking to unlock |
 | `privacy-settings.spec.mjs` | R-#259: the two privacy switches of `/{lang}/settings` vs the public profile (`GET /api/user/<id>` without cookies) — off removes the credentials, on returns them, **and the switch is checked visually** (thumb moves, track changes colour; `data-state` alone changes even when the CSS is missing) |

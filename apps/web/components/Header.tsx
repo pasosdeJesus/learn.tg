@@ -26,6 +26,8 @@ function verifierWallets(): string[] {
 
 export default function Header({ lang: langProp = 'en' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  // Grupo abierto del menú de dos niveles (R-#161 §15); cerrado por omisión.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
   const menuRef = useRef<HTMLDivElement>(null)
   const { data: session } = useSession()
   const params = useParams()
@@ -43,14 +45,63 @@ export default function Header({ lang: langProp = 'en' }) {
   // verificado y vive en un país de región tipo 1. El API lo decide
   // (`/api/settings.directoryVisible`): invitado, sin país o país tipo 2 → no.
   const [directoryVisible, setDirectoryVisible] = useState(false)
+  // R-#161 §15: la sección GDCluster usa la **misma** señal con que `/[lang]` ya
+  // decide si el curso Global Disciples se ofrece a un perfil (R-#194): los campos
+  // `religion_id` y `position_israel_gaza` de `/api/profile`. Aquí no se decide
+  // elegibilidad: se reutiliza la decisión del servidor, y la compra y el rol de
+  // pastor se preguntan aparte. Si el curso no se le ofrece, la sección no se
+  // muestra y no se le dice por qué (es la admisión del programa, no una etiqueta
+  // sobre la persona).
+  const [gdOfferable, setGdOfferable] = useState(false)
+  const [gdHasCourse, setGdHasCourse] = useState(false)
+  const [gdIsPastor, setGdIsPastor] = useState(false)
   useEffect(() => {
     setDirectoryVisible(false)
-    if (!sessionAddress || typeof window === 'undefined') return
+    if (!sessionAddress || typeof window === 'undefined') {
+      setGdOfferable(false)
+      setGdHasCourse(false)
+      setGdIsPastor(false)
+      return
+    }
     let cancelled = false
+    const wallet = encodeURIComponent(sessionAddress)
     try {
-      fetch(`/api/settings?walletAddress=${encodeURIComponent(sessionAddress)}`)
+      fetch(`/api/settings?walletAddress=${wallet}`)
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => { if (!cancelled && d) setDirectoryVisible(!!d.directoryVisible) })
+        .catch(() => { /* ignore */ })
+
+      fetch(`/api/profile?walletAddress=${wallet}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (cancelled || !d) return
+          setGdOfferable(Number(d.religion_id) === 2 && d.position_israel_gaza === 'no')
+        })
+        .catch(() => { /* ignore */ })
+
+      fetch('/api/course-catalog?filtro[busconBilletera]=true')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((courses) => {
+          if (cancelled || !Array.isArray(courses)) return
+          // Cursos 10/11 (gdcluster, redgd): el id o el prefijo de ruta los identifica.
+          setGdHasCourse(
+            (courses as Array<{ id?: number | string; prefijoRuta?: string | null }>).some(
+              (course) => {
+                const prefix = String(course?.prefijoRuta || '').replace(/^\/+/, '')
+                return [10, 11].includes(Number(course?.id)) || ['gdcluster', 'redgd'].includes(prefix)
+              },
+            ),
+          )
+        })
+        .catch(() => { /* ignore */ })
+
+      fetch(`/api/cluster/status?walletAddress=${wallet}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (cancelled || !d) return
+          // `noChurch` es lo que el API responde a quien no es pastor principal.
+          setGdIsPastor(d.noChurch !== true)
+        })
         .catch(() => { /* ignore */ })
     } catch { /* relative URL / offline in tests */ }
     return () => { cancelled = true }
@@ -79,26 +130,69 @@ export default function Header({ lang: langProp = 'en' }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Menu items configuration. R-#230/#231: el menú ☰ se muestra también sin
-  // sesión (sin Profile); con sesión añade Profile y Donate (la gota 💧 suelta
-  // desaparece porque ya está aquí).
-  const baseItems = [
-    { key: 'navCourses', href: `/${lang}`, emoji: '📚' }, // R-#231
-    { key: 'navLeaderboard', href: `/${lang}/leaderboard`, emoji: '🏆' },
-    { key: 'navTransparency', href: `/${lang}/transparency`, emoji: '📊' },
-    // R-#164: directorio de iglesias; sólo para quien está verificado en un país de región tipo 1.
-    ...(directoryVisible ? [{ key: 'churchDirectory', href: `/${lang}/directory/churches`, emoji: '⛪' }] : []),
-    { key: 'navReferrals', href: lang === 'es' ? '/es/referidos' : `/${lang}/referrals`, emoji: '🤝' },
-  ]
-  const menuItems = isAuthenticated
-    ? [
+  // Menú de dos niveles (R-#161 §15). Cada grupo se abre con su botón
+  // (`aria-expanded`); lo que no aplica al visitante no se renderiza:
+  //   My account   → sólo con sesión (y Admin sólo el verificador)
+  //   Courses      → siempre
+  //   GDCluster    → sólo a quien el servidor ya le ofrece el curso (R-#194);
+  //                  Budget necesita la compra y Cluster además el rol de pastor
+  //   learn.tg     → siempre (el directorio de iglesias según R-#164)
+  // La gota 💧 suelta desaparece con sesión porque Donate vive en el último grupo
+  // (R-#230).
+  type MenuItem = { key: string; href: string; emoji: string }
+  type MenuGroup = { id: string; key: string; emoji: string; items: MenuItem[] }
+
+  const groups: MenuGroup[] = []
+  if (isAuthenticated) {
+    groups.push({
+      id: 'account',
+      key: 'navMyAccount',
+      emoji: '👤',
+      items: [
         { key: 'navProfile', href: `/${lang}/profile`, emoji: '👤' },
         { key: 'navSettings', href: `/${lang}/settings`, emoji: '🔒' },
+        { key: 'navReferrals', href: lang === 'es' ? '/es/referidos' : `/${lang}/referrals`, emoji: '🤝' },
         ...(isVerifier ? [{ key: 'navAdmin', href: `/${lang}/admin`, emoji: '🛠️' }] : []),
-        ...baseItems,
-        { key: 'navDonateLensenia', href: `/${lang}/donations/lensenia`, emoji: '💧' },
-      ]
-    : baseItems
+      ],
+    })
+  }
+
+  groups.push({
+    id: 'courses',
+    key: 'navCourses',
+    emoji: '📚',
+    items: [{ key: 'navCourseList', href: `/${lang}`, emoji: '📚' }],
+  })
+
+  if (gdOfferable) {
+    groups.push({
+      id: 'gdcluster',
+      key: 'navGdCluster',
+      emoji: '🌍',
+      items: [
+        { key: 'navGdRanking', href: `/${lang}/gdcluster/ranking`, emoji: '🏆' },
+        ...(gdHasCourse ? [{ key: 'navGdBudget', href: `/${lang}/gdcluster`, emoji: '💵' }] : []),
+        ...(gdIsPastor
+          ? [{ key: 'navGdClusterMenu', href: `/${lang}/cluster`, emoji: '🤝' }]
+          : []),
+      ],
+    })
+  }
+
+  groups.push({
+    id: 'learntg',
+    key: 'navLearnTg',
+    emoji: '🎓',
+    items: [
+      { key: 'navLeaderboard', href: `/${lang}/leaderboard`, emoji: '🏆' },
+      { key: 'navTransparency', href: `/${lang}/transparency`, emoji: '📊' },
+      // R-#164: directorio de iglesias; sólo para quien está verificado en un país de región tipo 1.
+      ...(directoryVisible
+        ? [{ key: 'churchDirectory', href: `/${lang}/directory/churches`, emoji: '⛪' }]
+        : []),
+      { key: 'navDonateLensenia', href: `/${lang}/donations/lensenia`, emoji: '💧' },
+    ],
+  })
 
   return (
     <header className="bg-white shadow-md">
@@ -138,18 +232,49 @@ export default function Header({ lang: langProp = 'en' }) {
 
                 {/* Dropdown menu */}
                 {isMenuOpen && (
-                  <div className="absolute left-0 mt-2 w-56 max-w-[calc(100vw-3rem)] bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-                    {menuItems.map((item) => (
-                      <Link
-                        key={item.key}
-                        href={item.href}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <span className="text-base">{item.emoji}</span>
-                        <span>{tCommon(item.key)}</span>
-                      </Link>
-                    ))}
+                  <div className="absolute left-0 mt-2 w-60 max-w-[calc(100vw-3rem)] bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                    {groups.map((group) => {
+                      const open = !!openGroups[group.id]
+                      return (
+                        <div key={group.id} className="border-b border-gray-100 last:border-b-0">
+                          <button
+                            type="button"
+                            aria-expanded={open}
+                            aria-controls={`menu-group-${group.id}`}
+                            data-testid={`menu-group-${group.id}`}
+                            onClick={() =>
+                              setOpenGroups((previous) => ({
+                                ...previous,
+                                [group.id]: !previous[group.id],
+                              }))
+                            }
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-100 transition-colors"
+                          >
+                            <span className="text-base">{group.emoji}</span>
+                            <span className="flex-1 text-left">{tCommon(group.key)}</span>
+                            <span aria-hidden="true" className="text-[0.65rem] text-gray-400">
+                              {open ? '▲' : '▼'}
+                            </span>
+                          </button>
+                          {open && (
+                            <ul id={`menu-group-${group.id}`} className="pb-1">
+                              {group.items.map((item) => (
+                                <li key={`${group.id}-${item.key}`}>
+                                  <Link
+                                    href={item.href}
+                                    className="flex items-center gap-3 pl-10 pr-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                    onClick={() => setIsMenuOpen(false)}
+                                  >
+                                    <span className="text-base">{item.emoji}</span>
+                                    <span>{tCommon(item.key)}</span>
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
