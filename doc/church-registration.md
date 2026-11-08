@@ -103,7 +103,8 @@ carries `church_id`:
 4. Copies `registration` and `denomination` **only if the church lacks them**.
 5. Copies the document file to `uploads/church/{churchId}/registration.{ext}`
    and stores `church/{churchId}/registration.{ext}` in
-   `church.registration_photo` (again, only if the church lacks one).
+   `church.registration_photo` (again, only if the church lacks one). The uploads
+   root is `apps/web/uploads`, the same base as the user and cluster documents.
 6. Clears `church.pastor_id` of the previous church when a pastor moves.
 
 Invariants (migration `20260901074316_church_principal_roles`): a partial unique

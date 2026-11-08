@@ -268,7 +268,39 @@ bin/m eng:credentials:register-type \
   --icon public/img/credential/source/global-disciples.svg
 ```
 
-For premium courses, add `--premium`.
+`register-type` comes from the `mpdj` plugin (a dependency of `apps/web`, imported by
+`bin/m`). Its commands are registered **only when**
+`apps/contracts/deployments/PasosDeJesusCredentials/` exists, so a clone without the
+deployments (that folder is gitignored) only sees `eng:credentials:setup`. With the
+deployments in place the full set is available: `register-type`, `sync-cache`,
+`list-types`, `mint`, `revoke-credential`, `recompose-image`, `grant-minter`.
+
+The flags that matter for the **credential metadata** (`credential_metadata`):
+
+| Flag | What it writes |
+|------|----------------|
+| `--course-id <id>` | the on-chain course id of the type; the project hook (`m-extensions/credentials.ts`) copies it to `credential_metadata.course_id` |
+| `--premium` | `credential_metadata.is_premium = true` (the "Premium" attribute and `premiumSbtCount`) |
+| `--icon <path>` | the icon used to compose the badge; the row keeps `img/credential/<tokenId>.png` as `image_url` |
+
+Without `--course-id` or `--premium` the row keeps `course_id = NULL` and
+`is_premium = false` — that is how the GD course ended up with a premium-less,
+course-less credential (fixed later by
+`db/migrations/20261107230447_credential_metadata_cursos_activos.ts`).
+
+The scaffold already covers both fields, so the values do not depend on remembering the
+flags:
+
+```bash
+# the scaffold takes the price and the token id of the credential type:
+./scripts/create-course.sh "Global Disciples" en "global-disciples" 6 "1.0" "5.0" \
+  "source/gdcluster.svg" --price 120 --token-id 13
+```
+
+`--price` sets `porPagar` (0 or omitted = free) and `--token-id` makes the migration
+create the `credential_metadata` row for that token on the network of
+`NEXT_PUBLIC_NETWORK` (`celo` or `celoSepolia`); without `--token-id` the migration
+still links an existing row by course title, deriving `is_premium` from `porPagar`.
 
 ---
 
@@ -279,6 +311,11 @@ cd apps/web
 bin/m eng:credentials:sync-cache --network celo
 ```
 
+Reads `tokenIdToCourseId` from the contract and refreshes `credential_metadata`; it also
+emits the hook that fills `course_id`. It needs the deployments folder like the rest of
+`eng:credentials:*`. The scaffold migration already writes `course_id` and
+`is_premium`, so the sync is a safety net rather than a required step.
+
 ---
 
 ## 7. Verify
@@ -286,6 +323,9 @@ bin/m eng:credentials:sync-cache --network celo
 ```bash
 # List registered credential types — find your tokenId
 bin/m eng:credentials:list-types --network celo
+
+# Metadata that the SBT serves (course_id and is_premium must be right):
+bin/m db:console "SELECT token_id, name, is_premium, course_id, image_url FROM credential_metadata ORDER BY token_id"
 
 # Verify metadata endpoint
 curl https://learn.tg/api/credential/{tokenId}
@@ -301,13 +341,13 @@ bin/m eng:opwallet:call --name admin --to <VAULT_V5> \
 
 | What | Where | Command/Example |
 |------|-------|----------------|
-| Scaffold course | `scripts/create-course.sh` | `./scripts/create-course.sh "Name" en "prefix" 4 "1.0" "1.0" ["icon.svg"] [id]` |
+| Scaffold course | `scripts/create-course.sh` | `./scripts/create-course.sh "Name" en "prefix" 4 "1.0" "1.0" ["icon.svg"] [id] [--price usd] [--token-id n]` |
 | Course + guide records | Migration → `bin/m db:migrate` | Review then run |
 | Guide content | `resources/{lang}/{prefijoRuta}/{sufijoRuta}.md` | 400-700 words, 8+ questions (5 per puzzle) |
 | Vault | `LearnTGVaultsV5.createVault(id, usdt, slearn)` | `bin/m eng:opwallet:send` (review first) |
 | SBT icon | `public/img/credential/source/` | 512×512 SVG |
-| Credential type | `PasosDeJesusCredentials.registerCredentialType` | `bin/m eng:credentials:register-type` (review first) |
-| Metadata sync | DB `credential_metadata` | `bin/m eng:credentials:sync-cache` |
+| Credential type | `PasosDeJesusCredentials.registerCredentialType` | `bin/m eng:credentials:register-type --course-id <id> [--premium]` (review first; needs the deployments folder) |
+| Credential metadata | DB `credential_metadata` (`course_id`, `is_premium`) | the scaffold migration; `bin/m eng:credentials:sync-cache` refreshes it from the contract |
 
 ---
 
