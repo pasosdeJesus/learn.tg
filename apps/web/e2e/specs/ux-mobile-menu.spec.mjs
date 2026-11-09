@@ -40,8 +40,9 @@ async function main() {
   const openMenu = async () => {
     // Reintentar el clic: con el dev bajo carga la hidratación puede llegar
     // tarde y el primer clic (React aún no enganchado) no abre el menú. Se
-    // considera abierto si aparece un enlace exclusivo del menú (Leaderboard,
-    // que no está en el footer).
+    // considera abierto cuando aparecen los botones de grupo del menú de dos
+    // niveles (R-#161 §15): ya no hay enlaces sueltos que sirvan de señal,
+    // porque cada grupo se expande aparte.
     for (let i = 0; i < 6; i++) {
       await page.evaluate(() => {
         const b = [...document.querySelectorAll('button')].find(x => (x.getAttribute('aria-label') || '') === 'Menu')
@@ -49,8 +50,21 @@ async function main() {
       })
       await new Promise(r => setTimeout(r, 1000))
       const opened = await page.evaluate(() =>
-        [...document.querySelectorAll('a[href]')].some(a => (a.getAttribute('href') || '').endsWith('/leaderboard')))
+        !!document.querySelector('[data-testid^="menu-group-"]'))
       if (opened) return
+    }
+  }
+  const expandGroups = async () => {
+    // Los enlaces viven dentro de cada grupo (Courses, My account, learn.tg…) y
+    // solo se renderizan al expandirlo. Se abren todos los que queden cerrados.
+    for (let i = 0; i < 5; i++) {
+      const collapsed = await page.evaluate(() => {
+        const pending = [...document.querySelectorAll('[data-testid^="menu-group-"][aria-expanded="false"]')]
+        pending.forEach((b) => b.click())
+        return pending.length
+      })
+      if (!collapsed) return
+      await new Promise(r => setTimeout(r, 800))
     }
   }
 
@@ -65,6 +79,7 @@ async function main() {
     if (s.menuBtn) { ok('☰ visible para invitado (R-#230)') } else { fail('☰ ausente para invitado') }
     if (s.droplet) { ok('Gota 💧 visible para invitado') } else { fail('Gota 💧 ausente para invitado') }
     await openMenu()
+    await expandGroups()
     // Bajo carga el menú puede aparecer/actualizarse tarde: sondear el enlace.
     let hs = await hrefs()
     for (let i = 0; i < 10 && !hs.includes('/en'); i++) {
@@ -106,6 +121,7 @@ async function main() {
     if (!s.droplet) { ok('Gota 💧 oculta con sesión (R-#230)') } else { fail('Gota 💧 aún visible con sesión') }
     if (s.menuBtn) { ok('☰ visible con sesión') } else { fail('☰ ausente con sesión') }
     await openMenu()
+    await expandGroups()
     const hs = await hrefs()
     if (hs.includes('/en/profile') && hs.includes('/en')) { ok('Menú con sesión: Profile + Courses (R-#230/R-#231)') } else { fail(`Menú con sesión inesperado: ${JSON.stringify(hs)}`) }
     if (hs.includes('/en/donations/lensenia')) { ok('Donación presente en el menú con sesión') }

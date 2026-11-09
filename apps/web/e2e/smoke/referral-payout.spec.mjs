@@ -37,6 +37,7 @@ import axios from 'axios'
 import https from 'https'
 import { SiweMessage } from 'siwe'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
+import { loadSelectedWallet } from '../helpers/e2e-wallet.mjs'
 
 // ── Config ──────────────────────────────────────────────────────────
 

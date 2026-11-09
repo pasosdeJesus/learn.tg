@@ -345,6 +345,14 @@ site was down or answering 502 when the script started there is no previous buil
 id to compare with, and the old logic waited until the timeout even though the
 deploy had finished (measured: 502 … 200 at 85 s, and the script kept polling).
 
+**A server-route-only deploy may not move the marker** (measured 2026-11-08): a
+change confined to route handlers under `app/api` (for example where a file is
+read from) leaves the page chunk of `/en/cluster` untouched, so
+`--expect-build-change` runs to its timeout while the site is already serving the
+new code. When the change is server-side, skip the marker and probe that
+behaviour instead (see the next paragraph); keep `--expect-build-change` for
+changes that reach the rendered page.
+
 A deploy is not confirmed by the build id alone: check the behaviour that should
 have changed. Cheapest probe, no session needed (it must answer `400` with a
 `code`, which the old version did not do):
