@@ -307,3 +307,27 @@ vi.mock('@goodsdks/citizen-sdk', () => {
 vi.mock('@goodsdks/react-hooks', () => ({
   useIdentitySDK: vi.fn(),
 }));
+
+// `@pasosdejesus/m/test-utils/radix-mocks` (imported above) registers its own
+// `@radix-ui/react-dialog` mock **without `Portal`**, and because that import runs after
+// the hoisted `vi.mock` calls it wins over the one below. Components that portal their
+// content (the vendored wallet, `@pasosdejesus/m/shadcn-components`) then fail with
+// `No "Portal" export is defined on the "@radix-ui/react-dialog" mock`. Re-register ours
+// at runtime (not hoisted) so it is the mock actually used.
+vi.doMock('@radix-ui/react-dialog', () => ({
+  Root: ({ open, children }: { open?: boolean; children: React.ReactNode }) =>
+    open ? React.createElement(React.Fragment, null, children) : null,
+  Trigger: ({ children }: { children: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
+  Portal: ({ children }: { children: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
+  Overlay: () => null,
+  Content: ({ children }: { children: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
+  Title: ({ children }: { children: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
+  Description: ({ children }: { children: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
+  Close: ({ children }: { children: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
+}))

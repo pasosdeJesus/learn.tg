@@ -14,12 +14,12 @@
     "noImplicitAny": false
   },
   "include": [
-    "./typechain-types", 
-    "./src", 
-    "./test", 
-    "./deploy", 
+    "./typechain-types",
+    "./src",
+    "./test",
+    "./deploy",
     "./types",
-    "hardhat.config.ts"
+    "./scripts/lib"
   ],
   "exclude": [
     "./node_modules/*"

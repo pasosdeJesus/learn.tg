@@ -1,4 +1,4 @@
-.PHONY: build all type test clean prepadJ
+.PHONY: build all type test clean
 
 build:
 	(cd ../.. && pnpm install)
@@ -14,6 +14,3 @@ test:
 
 clean:
 	pnpm clean
-
-prepadJ:
-	sh bin/prepadJ.sh

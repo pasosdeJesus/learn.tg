@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 | Module | Purpose |
 |--------|---------|
 | `crypto.ts` | `waitForReceiptWithRetry`, `callWriteFun` (contract writes with nonce retry from a pending pool) |
-| `deployments.ts` | `getV2/V3/V4/V5/SlearnAddress`, `getActiveVault` (V5 → V4 fallback) from hardhat deployment JSONs |
+| `deployments.ts` | `getV2/V3/V4/V5/SlearnAddress`, `getActiveVault` (V5 → V4 fallback) from the deployment JSONs |
 | `credentials.ts` | `mintCourseCredential` — SBT mint wrapper (off-chain cache, on-chain dedupe, Celo L2 nonce retry) |
 | `config.ts` | `IS_PRODUCTION` (from `NEXT_PUBLIC_AUTH_URL`) |
 | `donate-utils.ts` | Re-export of `@pasosdejesus/usdt/lib/donate-utils` (first local→shared graduation) |

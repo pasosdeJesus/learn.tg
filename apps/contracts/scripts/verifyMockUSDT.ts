@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from "./lib/ethers-cli";
 import * as fs from "fs";
 import * as path from "path";
 

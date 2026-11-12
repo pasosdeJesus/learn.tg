@@ -16,14 +16,16 @@
   - `reserveMultisig` (SL0 — Safe multisig, air-gapped)
   - `learnTgReserve` (L2 — hot reserve EOA)
   - `stableSlReserve` (S2 — hot reserve EOA for stable-sl)
-- [ ] Optimizer enabled in `hardhat.config.ts`:
+- [ ] Optimizer enabled in `m-contracts.config.ts` (pin 0.8.24, `viaIR`, `evmVersion paris`):
   ```typescript
-  solidity: {
-    version: '0.8.24',
-    settings: { optimizer: { enabled: true, runs: 200 } },
-  },
+  const config = {
+    solidity: '0.8.24',
+    optimizer: { enabled: true, runs: 200 },
+    viaIR: true,
+    evmVersion: 'paris',
+  }
   ```
-- [ ] Compiled with optimizer: `npx hardhat compile` (no size warning should appear)
+- [ ] Compiled with the project settings: `bin/m contract:compile` (no size warning should appear)
 
 ---
 

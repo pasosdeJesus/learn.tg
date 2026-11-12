@@ -6,7 +6,7 @@ The **Global Disciples engine** implements the GD program: cluster and country
 funds, donations, rankings, church search, pastor invitations, and the
 cluster/country routing of rewards from the `rewards` engine. It is a Web3
 engine (https://gitlab.com/pasosdeJesus/m/-/work_items/35, Fase 3; https://github.com/pasosdeJesus/learn.tg/issues/214 for ClusterFundsV2) with its own isolated
-Hardhat subproject for the `ClusterFunds` contracts. Design decisions and
+Solidity subproject for the `ClusterFunds` contracts. Design decisions and
 flows in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## What it provides
@@ -99,7 +99,9 @@ engine's `/api/admin/clusters*` routes through `adminFetch`.
 
 ## Contracts subproject (`contracts/`)
 
-Isolated Hardhat project `@learn-tg/gdcluster-contracts`:
+Isolated Solidity project `@learn-tg/gdcluster-contracts` (a pnpm workspace member
+since https://github.com/pasosdeJesus/learn.tg/issues/298, with its own `chai`,
+`solc@0.8.24` and `@openzeppelin/contracts`):
 
 | Contract | Purpose |
 |----------|---------|
@@ -108,10 +110,16 @@ Isolated Hardhat project `@learn-tg/gdcluster-contracts`:
 | `SLEARN.sol` | 2-decimal utility token (MINTER_ROLE auto-authorized), `mintAndReserve`, 3-tier reserve |
 | `_usdt_mock.sol` | MockUSDT (6 decimals), synced from the usdt engine |
 
-Deploy/verify scripts in `contracts/scripts/`, deployments written to
-`contracts/deployments/<Contract>/<network>.json`. Tests (chai + hardhat-ethers)
-in `contracts/test/ClusterFunds.test.ts` (7 tests), run via `run-tests.mjs`
-through the `@pasosdejesus/contract-test` runner.
+Compiled and tested without Hardhat (`m-contracts.config.ts`: pin 0.8.24, `viaIR`,
+`evmVersion paris`); deployments of these contracts are made from `apps/contracts`
+(`bin/deployClusterFunds`, `bin/deployClusterFundsV2`), which holds the same
+sources. Tests (chai) in `contracts/test/ClusterFunds.test.ts` (7 tests):
+
+```sh
+cd packages/gdcluster/contracts
+pnpm compile     # syncs _usdt_mock.sol and runs bin/m contract:compile
+pnpm test        # bin/m contract:test
+```
 
 ## Testing
 

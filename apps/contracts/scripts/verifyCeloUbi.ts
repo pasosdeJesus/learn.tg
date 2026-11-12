@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from "./lib/ethers-cli";
 import dotenv from "dotenv";
 dotenv.config({ path: "../.env" });
 

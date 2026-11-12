@@ -1,4 +1,0 @@
-#!/bin/sh
-
-. ./.env
-npx hardhat run scripts/deployLearnTGVaults.ts --network $NETWORK

@@ -153,13 +153,12 @@ with `bin/m req:sync-to-repo <n>`).
 Make a summary of this project and the relation you see between it and the
 framework and principles.
 
-## 6. Financial Constraint
+### 6. Financial Constraint
 
 Any token with real value in wallets whose private key is known by the agent
 cannot be spent by the agent except in something directly and recently ordered
 by the owner of the project. The agent must never autonomously transfer,
 swap, claim, or send real tokens without explicit, recent human authorization.
-
 
 ### 7. Git Operations — Restricted
 
@@ -188,7 +187,6 @@ documentation, or comments becomes a dead link. Instead, reference the
 status), `bin/m req:compare <n>` (diffs the local file against the remote issue — the
 source of truth for a requirement's state) and `bin/m req:sync-from-repo <n>` (brings
 the issue text down). Pushing local changes up (`req:sync-to-repo`) is the operator's.
-
 
 ### 9. Long-Running Commands — Background, Reviewed Every ~5 Minutes
 
@@ -244,10 +242,23 @@ basic regex and no `-B`/`-A`, so use `grep -E` for alternation.
   never put a real (funded, mainnet) key there: production keys stay with the operator's
   wallet (`doc/environments.md`).
 
+### 12. Model Guard — Only Flash, Never Pro
+
+Pro-class models are far too expensive for this project. Before doing any work in a
+session, call `crush_info` and read the `[model]` section (`large` / `small`).
+
+- If the active model identifier contains `flash`, proceed normally.
+- If it is anything else (`deepseek-reasoner`, "DeepSeek Thinking", any Pro/reasoning
+  model), **stop immediately**: do not call any other tool and reply only:
+  *"Estás en un modelo Pro (caro). Cambia a un modelo `flash` en
+  `~/.config/crush/crush.json` y vuelve a lanzar la tarea."*
+- If the model cannot be determined, stop and ask the operator to confirm it is Flash.
+
+The hard guarantee is the model catalogue in `~/.config/crush/crush.json` (only
+`deepseek-v4-flash` should be listed); this rule is the safety net for other machines.
+
 ---
 
 > "Con seguridad les digo, donde quiera que esta Buena Nueva se predique por
 > todo el mundo, y lo que ella ha hecho será dicho en conmemoración de ella."
 > (Marcos 14:9)
-
-

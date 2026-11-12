@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from "./lib/ethers-cli";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
@@ -7,7 +7,7 @@ dotenv.config({ path: "../.env" });
 /**
  * Migrate ClusterFunds (V1) country/cluster balances to ClusterFundsV2.
  *
- * Uses the PRIVATE_KEY from ../.env (loaded by hardhat.config.ts) — the
+ * Uses the PRIVATE_KEY from ../.env (loaded by the wrappers and by the scripts) — the
  * signer must be the OWNER of both contracts. Per doc/environments.md, the
  * backend wallet (owner) lives in the REMOTE dev server's own .env, distinct
  * from this repo's apps/.env — run this where the backend key is available.

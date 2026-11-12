@@ -5,14 +5,17 @@ packages:
   - 'apps/*'
   - 'packages/*'
   - 'packages/generated/*'
+  # Proyecto Solidity aislado del motor gdcluster: depende de `chai`, `solc` y
+  # `@openzeppelin/contracts` propios (antes resolvía por un symlink manual).
+  - 'packages/gdcluster/contracts'
 
 # Versión única por dependencia: las apps escriben `"catalog:"`.
 catalog:
   # ecosistema y motores
-  '@pasosdejesus/m': ^0.37.9
-  '@pasosdejesus/mpdj': ^0.3.3
+  '@pasosdejesus/m': ^0.37.19
+  '@pasosdejesus/mpdj': ^0.3.7
   '@pasosdejesus/usdt': ^0.1.3
-  '@pasosdejesus/contract-test': ^0.3.5
+  '@pasosdejesus/contract-test': ^0.3.8
   '@pasosdejesus/edr': ^0.2.1
   # compartidas por apps/web y apps/contracts
   typescript: 5.9.3
@@ -62,7 +65,7 @@ overrides:
   '@ethereumjs/common': ^10.1.2
   '@ethereumjs/util': ^10.1.2
   '@ethereumjs/tx': ^10.1.2
-  '@pasosdejesus/m': ^0.37.4
+  '@pasosdejesus/m': ^0.37.19
 
 patchedDependencies:
   next@16.3.5: apps/web/patches/next@16.3.5.patch

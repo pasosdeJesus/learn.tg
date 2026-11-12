@@ -6,9 +6,9 @@
  *
  * Usage:
  *   cd apps/contracts
- *   npx hardhat run scripts/setClusterFundsFees.ts --network celoSepolia
+ *   NEXT_PUBLIC_NETWORK=celoSepolia node --import tsx scripts/setClusterFundsFees.ts
  */
-import { ethers } from "hardhat";
+import { ethers } from "./lib/ethers-cli";
 import * as fs from "fs";
 import * as path from "path";
 import dotenv from "dotenv";

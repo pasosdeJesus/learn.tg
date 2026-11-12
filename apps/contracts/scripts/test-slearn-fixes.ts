@@ -1,7 +1,7 @@
 /**
  * E2E test: verifies SLEARN.sol fixes from prob-slearn1.md on Celo Sepolia.
  *
- * Run: npx hardhat run scripts/test-slearn-fixes.ts --network celoSepolia
+ * Run: bin/testSLEARN
  */
 import { createPublicClient, createWalletClient, http, parseUnits, formatUnits, parseEventLogs, encodeFunctionData } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'

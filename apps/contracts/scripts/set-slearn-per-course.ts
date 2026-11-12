@@ -2,10 +2,10 @@
  * Set SLEARN amount per guide for specified courses.
  * Keeps current USDT amountPerGuide, sets SLEARN to 1 per guide.
  *
- * Usage: hardhat run ... --network $NETWORK
+ * Usage: bin/setSlearnPerCourse
  *        Reads COURSE_IDS env var (space-separated).
  */
-import { ethers } from "hardhat"
+import { ethers } from "./lib/ethers-cli"
 import dotenv from "dotenv"
 import * as fs from "fs"
 import * as path from "path"
@@ -16,7 +16,7 @@ async function main() {
   const idsEnv = process.env.COURSE_IDS || ""
   const ids = idsEnv.split(/\s+/).filter(Boolean)
   if (ids.length === 0) {
-    console.error("Usage: COURSE_IDS='1 2 3' hardhat run ... --network $NETWORK")
+    console.error("Usage: COURSE_IDS='1 2 3' bin/setSlearnPerCourse")
     process.exit(1)
   }
 

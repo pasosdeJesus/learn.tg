@@ -2,7 +2,7 @@
  * Smoke test: verify LearnTGVaultsV3 contract is deployed and configured correctly.
  * Run: bin/verifyLearnTGVaultsV3
  */
-import { ethers } from "hardhat"
+import { ethers } from "./lib/ethers-cli"
 import dotenv from "dotenv"
 import * as fs from "fs"
 import * as path from "path"

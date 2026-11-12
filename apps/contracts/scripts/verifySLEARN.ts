@@ -2,7 +2,7 @@
  * Smoke test: verify SLEARN contract is deployed and configured correctly.
  * Run: bin/verifySLEARN
  */
-import { ethers } from "hardhat"
+import { ethers } from "./lib/ethers-cli"
 import dotenv from "dotenv"
 import * as fs from "fs"
 import * as path from "path"

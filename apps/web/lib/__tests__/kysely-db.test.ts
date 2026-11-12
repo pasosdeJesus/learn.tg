@@ -39,7 +39,7 @@ describe('newKyselyPostgresql — un pool por proceso', () => {
 
     expect(second).toBe(first)
     expect(g.__learntgPool).toBeInstanceOf(Pool)
-    expect(g.__learntgPool?.options.max).toBe(Number(process.env.PG_POOL_MAX ?? 10))
+    expect(g.__learntgPool?.options.max).toBe(Number(process.env.PG_POOL_MAX ?? 20))
   })
 
   it('recrea el pool si cambian los ajustes de conexión', () => {

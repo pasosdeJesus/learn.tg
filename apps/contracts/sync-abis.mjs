@@ -7,7 +7,7 @@ import dotenv from 'dotenv'
 dotenv.config({ path: '../.env' })
 
 // Configuration - directory files
-const HARDHAT_ARTIFACTS_PATH = './artifacts/contracts'
+const ARTIFACTS_PATH = './artifacts/contracts'
 const NEXTJS_ABI_PATH = '../web/abis'
 const ENV_FILE = '../.env'
 const DEPLOYMENTS_DIR = './deployments'
@@ -55,7 +55,7 @@ console.log("🔄 Syncing ABIs and addresses to React app...")
 
 try {
   // 1. Sync ABIs
-  const artifactFiles = walkDir(HARDHAT_ARTIFACTS_PATH)
+  const artifactFiles = walkDir(ARTIFACTS_PATH)
   const abis = {}
   artifactFiles.forEach(filepath => {
     const artifact = JSON.parse(fs.readFileSync(filepath, 'utf8'))

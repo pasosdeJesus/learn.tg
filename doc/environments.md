@@ -553,7 +553,7 @@ map (error "not exported from package").
 cd apps/web
 make engines-dist        # compila dist de packages/{rewards,gdcluster} (rewards primero)
 make engines-assets      # copia assets de los motores a public/ (p.ej. gdcluster.svg)
-make engines-sync-abis   # tras regenerar abis en hardhat: copia a src/abis/ y recompila
+make engines-sync-abis   # tras regenerar abis (bin/m contract:compile): copia a src/abis/ y recompila
 bin/dev                  # ya ejecuta engines-dist automáticamente; Next en :4000
 ```
 

@@ -1,4 +1,5 @@
 #!/bin/sh
-. ../.env 2>/dev/null || true
-cd "$(dirname "$0")/.." || exit 1
-node_modules/.bin/hardhat run scripts/verifyLearnTGVaultsV4.ts --network ${NEXT_PUBLIC_NETWORK:-celoSepolia}
+DIR=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+. "$DIR/../.env" 2>/dev/null || true
+cd "$DIR" || exit 1
+NEXT_PUBLIC_NETWORK="${NEXT_PUBLIC_NETWORK:-celoSepolia}" node --import tsx scripts/verifyLearnTGVaultsV4.ts

@@ -2,10 +2,9 @@
 // sync-usdt.mjs — copia MockUSDT.sol desde el motor usdt (@pasosdejesus/usdt,
 // https://gitlab.com/pasosdeJesus/m/-/work_items/35 §15.6) a <cwd>/contracts/_usdt_mock.sol.
 //
-// Hardhat no resuelve el link: externo del paquete (HH411 "is not installed"),
-// así que el build copia el .sol y compila el artifact localmente. La fuente
-// canónica es el motor; contracts/_usdt_mock.sol es un archivo GENERADO
-// (derivado, no se edita a mano).
+// El compilador no resuelve un `link:` externo al paquete, así que el build copia
+// el .sol y compila el artifact localmente. La fuente canónica es el motor;
+// contracts/_usdt_mock.sol es un archivo GENERADO (derivado, no se edita a mano).
 //
 // Funciona desde cualquier proyecto cuyo node_modules tenga el paquete
 // (apps/contracts con link:, o packages/<motor>/contracts con symlink al

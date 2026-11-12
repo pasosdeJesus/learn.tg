@@ -41,10 +41,11 @@ framework bindings.
 ### D3 — Owned contracts subproject
 
 Unlike `rewards` (which consumes contracts from `apps/contracts`), gdcluster
-ships its own isolated Hardhat project under `contracts/` with `ClusterFunds`
+ships its own isolated Solidity project under `contracts/` with `ClusterFunds`
 and `ClusterFundsV2`. This was chosen so the cluster-fund domain can evolve
-independently (https://github.com/pasosdeJesus/learn.tg/issues/214) without touching the main hardhat app; ABI sync and
-deployment JSONs live with the package.
+independently (https://github.com/pasosdeJesus/learn.tg/issues/214) without touching the main contracts app; the project
+compiles and tests with `bin/m contract:*` (no Hardhat, R-#298) and deployment
+JSONs live with `apps/contracts`.
 
 ### D4 — "Not ready" is explained, not just refused
 

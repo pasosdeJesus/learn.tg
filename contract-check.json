@@ -34,5 +34,8 @@
       "0xb9c0dba5c5aae5fe81b327ff895227ee7fc44d81",
       "0x84027f515c6a747690b590e9242ca296a38a2e97"
     ]
+  },
+  "allowMissingDeployments": {
+    "LearnTGVaults V6 celoSepolia": "R-#293: V6 is written and tested but not deployed"
   }
 }

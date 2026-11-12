@@ -1,0 +1,7 @@
+#!/bin/sh
+# Verify the source of a deployed contract (args come from its deployment JSON).
+#   bin/verify-source ClusterFundsV2 [--dry-run]
+DIR=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+. "$DIR/../.env" 2>/dev/null || true
+cd "$DIR" || exit 1
+NEXT_PUBLIC_NETWORK="${NEXT_PUBLIC_NETWORK:-celoSepolia}" node --import tsx scripts/verify-source.ts "$@"

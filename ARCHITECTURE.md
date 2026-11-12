@@ -172,11 +172,14 @@ data flow, contracts):
   (web + contracts); `bin/dev` in `apps/web` installs and compiles its engines
   first too. `dist/` is not in git. Webpack resolution falls back to the
   app's `node_modules` (`next.config.ts`). The gdcluster engine also carries an
-  isolated Hardhat project (`packages/gdcluster/contracts/`: `hardhat.config.ts`,
-  deploy/verify scripts, `run-tests.mjs`, `test/ClusterFunds.test.ts` — 7 tests).
-  `contract:test` (from `apps/web`) runs `apps/contracts/test` — green (80 tests:
-  34 V2 + 24 V5 + 15 CeloUbi + 7 ClusterFunds) with `@pasosdejesus/edr` ≥ 0.1.2
-  (fix `block.timestamp` en `eth_call`).
+  isolated Solidity project (`packages/gdcluster/contracts/`: `m-contracts.config.ts`,
+  `contracts/` and `test/ClusterFunds.test.ts` — 7 tests), a workspace member since
+  https://github.com/pasosdeJesus/learn.tg/issues/298.
+  Neither project uses Hardhat: `bin/m contract:compile` (pin 0.8.24, `evmVersion
+  paris`, `solc` from the project) writes the artifacts and `bin/m contract:test`
+  runs the suites (92 cases in `apps/contracts`: 34 vaults + 24 V5 + 15 CeloUbi +
+  7 ClusterFunds + 12 V6; 7 in the engine), with `@ethereumjs/vm` on OpenBSD and
+  `@pasosdejesus/edr` ≥ 0.1.2 elsewhere.
   See `m` https://gitlab.com/pasosdeJesus/m/-/work_items/35 for pitfalls (webpack parallelism, heap limits, vendored loadable alias).
 
 ---

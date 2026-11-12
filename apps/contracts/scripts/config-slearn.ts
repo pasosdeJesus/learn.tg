@@ -1,11 +1,11 @@
 /**
  * Configure SLEARN after deployment: set all addresses and grant roles.
- * Run: npx hardhat run scripts/config-slearn.ts --network celoSepolia
- *      NEXT_PUBLIC_NETWORK=celo npx hardhat run scripts/config-slearn.ts --network celo
+ * Run: bin/configSLEARN
+ *      NEXT_PUBLIC_NETWORK=celo bin/configSLEARN
  *
  * Reads addresses from apps/.env and contract addresses from deployments/.
  */
-import { ethers } from "hardhat"
+import { ethers } from "./lib/ethers-cli"
 import dotenv from "dotenv"
 import * as fs from "fs"
 import * as path from "path"
