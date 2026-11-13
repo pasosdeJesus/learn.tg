@@ -5,6 +5,7 @@ import {
   getClusterMembers,
   addClusterHistory,
   notifyUser,
+  logUserEvent,
   getClusterCandidates,
 } from '../lib/gd-utils.js'
 import { churchCompletedCluster } from '../lib/cluster-membership.js'
@@ -34,7 +35,7 @@ export async function clusterStatus(deps: GdclusterDeps, req: NextRequest) {
       .selectFrom('cluster_invitation as ci')
       .innerJoin('clustergd as c', 'c.id', 'ci.clustergd_id')
       .innerJoin('usuario as u', 'u.id', 'ci.invited_by_id')
-      .select(['ci.id', 'ci.clustergd_id', 'c.name as cluster_name', 'c.pseudonym', 'u.nombre as inviter_name'])
+      .select(['ci.id', 'ci.clustergd_id', 'c.name as cluster_name', 'c.slug', 'u.nombre as inviter_name'])
       .where('ci.invited_pastor_id', '=', auth.usuario.id)
       .where('ci.status', '=', 'pending')
       .execute()
@@ -43,6 +44,19 @@ export async function clusterStatus(deps: GdclusterDeps, req: NextRequest) {
 
     const cluster = await db.selectFrom('clustergd').selectAll().where('id', '=', membership.clustergd_id).executeTakeFirst()
     const members = await getClusterMembers(db, membership.clustergd_id)
+    const isInitiator = cluster?.initiator_church_id === church.id
+
+    // R-#299 §6: el iniciador ve las invitaciones del clúster con su estado para poder
+    // reinvitar una vez tras un rechazo. La membresía sigue siendo por iglesia.
+    const invitations = isInitiator
+      ? await db
+        .selectFrom('cluster_invitation as ci')
+        .innerJoin('church as c', 'c.id', 'ci.invited_church_id')
+        .select(['ci.id', 'ci.status', 'ci.invite_count', 'ci.origin', 'ci.invited_wallet', 'ci.created_at', 'ci.responded_at', 'c.name as church_name'])
+        .where('ci.clustergd_id', '=', membership.clustergd_id)
+        .orderBy('ci.created_at', 'asc')
+        .execute()
+      : []
 
     return NextResponse.json({
       hasCluster: true,
@@ -50,17 +64,17 @@ export async function clusterStatus(deps: GdclusterDeps, req: NextRequest) {
       // Nombre visible del rol: **iniciador del clúster** (no "líder", para no
       // confundirlo con el director de programa ni con el pastor principal de la
       // iglesia). La columna sigue llamándose `initiator_church_id`.
-      isInitiator: cluster?.initiator_church_id === church.id,
+      isInitiator,
       initiator_church_id: cluster?.initiator_church_id ?? null,
       cluster: {
         id: cluster?.id,
         name: cluster?.name,
-        pseudonym: cluster?.pseudonym,
-        code: cluster?.code,
+        slug: cluster?.slug,
         status: cluster?.status,
         member_count: members.length,
         members,
       },
+      invitations,
       pendingInvitations,
     })
   } catch (error) {
@@ -86,9 +100,9 @@ export async function clusterCandidates(deps: GdclusterDeps, req: NextRequest) {
     const candidates = await getClusterCandidates(db, auth.usuario.id, church.country_id, church.id)
     return NextResponse.json({
       candidates,
-      fallback: candidates.length < 2,
-      // Fallback: código de 6 chars del clúster (ruta existente /api/cluster/join)
-      hint: candidates.length < 2 ? 'invite-by-code' : null,
+      // R-#299: ya no hay respaldo por código de 6 caracteres: si no hay candidatos, la
+      // otra vía es invitar escribiendo la billetera.
+      hint: candidates.length < 2 ? 'invite-by-wallet' : null,
     })
   } catch (error) {
     console.error('cluster/candidates error:', error instanceof Error ? error.message : String(error))
@@ -180,6 +194,10 @@ export async function acceptInvitation(deps: GdclusterDeps, req: NextRequest) {
       .execute()
 
     await addClusterHistory(db, invitation.clustergd_id, 'church_join', null, church.name, auth.usuario.id)
+    await addClusterHistory(db, invitation.clustergd_id, 'invitation_accepted', church.name, church.name, auth.usuario.id)
+    await logUserEvent(db, auth.usuario.id, 'cluster_invitation_accepted', {
+      cluster_id: invitation.clustergd_id, invitation_id: invitation.id, church_id: church.id,
+    })
 
     const members = await getClusterMembers(db, invitation.clustergd_id)
     const cluster = await db.selectFrom('clustergd').selectAll().where('id', '=', invitation.clustergd_id).executeTakeFirst()
@@ -194,7 +212,7 @@ export async function acceptInvitation(deps: GdclusterDeps, req: NextRequest) {
           await notifyUser(
             db, leader.created_by, 'cluster_activated',
             'Cluster complete',
-            `Your cluster ${cluster.pseudonym || cluster.name} is complete (3 churches)!`,
+            `Your cluster ${cluster.slug} is complete (3 churches)!`,
             `/${auth.usuario.idioma?.startsWith('es') ? 'es' : 'en'}/cluster`
           )
         }
@@ -204,7 +222,7 @@ export async function acceptInvitation(deps: GdclusterDeps, req: NextRequest) {
     await notifyUser(
       db, invitation.invited_by_id, 'cluster_invitation_accepted',
       'Invitation accepted',
-      `${church.name} joined your cluster ${cluster?.pseudonym || cluster?.name}.`,
+      `${church.name} joined your cluster ${cluster?.slug}.`,
       `/${auth.usuario.idioma?.startsWith('es') ? 'es' : 'en'}/cluster`
     )
 
@@ -246,14 +264,20 @@ export async function rejectInvitation(deps: GdclusterDeps, req: NextRequest) {
       .execute()
 
     const cluster = await db.selectFrom('clustergd').selectAll().where('id', '=', invitation.clustergd_id).executeTakeFirst()
+    await addClusterHistory(db, invitation.clustergd_id, 'invitation_rejected', null, auth.usuario.nombre || null, auth.usuario.id)
+    await logUserEvent(db, auth.usuario.id, 'cluster_invitation_rejected', {
+      cluster_id: invitation.clustergd_id, invitation_id: invitation.id, invite_count: invitation.invite_count ?? 1,
+    })
     await notifyUser(
       db, invitation.invited_by_id, 'cluster_invitation_rejected',
       'Invitation rejected',
-      `${auth.usuario.nombre || 'A pastor'} rejected your invitation to cluster ${cluster?.pseudonym || cluster?.name}.`,
+      `${auth.usuario.nombre || 'A pastor'} rejected your invitation to cluster ${cluster?.slug}.`,
       `/${auth.usuario.idioma?.startsWith('es') ? 'es' : 'en'}/cluster`
     )
 
-    return NextResponse.json({ success: true })
+    // R-#299 §3: sólo se permite una reinvitación a ese mismo pastor (invite_count 1 → 2).
+    const inviteCount = Number(invitation.invite_count ?? 1)
+    return NextResponse.json({ success: true, can_reinvite: inviteCount < 2 })
   } catch (error) {
     console.error('cluster/invitation/reject error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

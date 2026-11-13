@@ -15,8 +15,8 @@ flows in [ARCHITECTURE.md](ARCHITECTURE.md).
 |------------|----------|-------------|
 | Cluster funds | `gdcluster/ranking/clusters`, `gdcluster/ranking/countries`, `gdcluster/ranking/funds` (GET) | Public leaderboards of cluster/country funds with USDT/SLEARN balances |
 | GD donations | `gdcluster/donations/verify` (POST), `gdcluster/donations/history` (GET) | Verify USDT/SLEARN transfer receipt and credit the cluster/country fund; donation history |
-| Clusters | `cluster` (POST), `cluster/join` (POST), `cluster/[id]` (GET, PATCH), `cluster/[id]/leave` (POST) | Cluster lifecycle: pastor-only creation (type 1 countries, must own GD course), join by 6-char code, detail/rename, leave |
-| Invitations | `cluster/status`, `cluster/candidates`, `cluster/invitations` (GET), `cluster/invitation/accept`, `cluster/invitation/reject` (POST) | https://github.com/pasosdeJesus/learn.tg/issues/220: pastor cluster state, candidates from the referral graph (https://github.com/pasosdeJesus/learn.tg/issues/163), accept/reject invitations |
+| Clusters | `cluster` (POST), `cluster/[id]` (GET, PATCH), `cluster/[id]/leave` (POST), `clusters` (GET), `clusters/[slug]` (GET) | Cluster lifecycle: pastor-only creation (type 1 countries, must own GD course, unique `name` and editable public `slug`), detail/alias-and-wallet edit, leave, and the **public** per-cluster page by slug (never the internal name) |
+| Invitations | `cluster/status`, `cluster/candidates`, `cluster/invitations` (GET), `cluster/invitation/accept`, `cluster/invitation/reject`, `cluster/invitation/wallet` (POST) | https://github.com/pasosdeJesus/learn.tg/issues/220 and R-#299: pastor cluster state, candidates from the referral graph (https://github.com/pasosdeJesus/learn.tg/issues/163), accept/reject (one re-invite after a rejection) and invitation **by wallet**, initiator only, with a uniform 422 `not_invitable` + `reason` |
 | Admin | `admin/clusters` (GET, POST), `admin/clusters/[id]` (GET, PUT, DELETE), `admin/clusters/[id]/members` (POST, DELETE) | Verifier/admin CRUD over `clustergd` / `church_clustergd` |
 | Churches | `churches/search` (GET) | Search churches by query parameter `q` |
 
@@ -43,9 +43,9 @@ export async function GET(req: Request) {
 
 | Export | Content |
 |--------|---------|
-| `.` (`dist/index.js`) | `createGdclusterApp(deps)` factory (18 route entries), interfaces, re-exports of `lib/*` |
+| `.` (`dist/index.js`) | `createGdclusterApp(deps)` factory (20 route entries), interfaces, re-exports of `lib/*` |
 | `./register` | Registers the `reward:route-destination` hook (side-effect import) |
-| `./lib/*` | `gd-utils`, `gd-cluster-routing`, `donation-target` |
+| `./lib/*` | `gd-utils`, `gd-cluster-routing`, `donation-target`, `slug` (`suggestSlug`, `validateSlug`, `slugWithId`) |
 | `./components/*` | Client components (`ClusterPage`, `RankingClient`, `ReferralsPage`, `CountryFilter`, `CountryFlag`) |
 
 ## Route index (`createGdclusterApp`)
@@ -58,7 +58,6 @@ export async function GET(req: Request) {
 | `gdcluster/donations/verify` | POST |
 | `gdcluster/donations/history` | GET |
 | `cluster` | POST |
-| `cluster/join` | POST |
 | `cluster/[id]` | GET, PATCH |
 | `cluster/[id]/leave` | POST |
 | `cluster/status` | GET |
@@ -66,6 +65,9 @@ export async function GET(req: Request) {
 | `cluster/invitations` | GET |
 | `cluster/invitation/accept` | POST |
 | `cluster/invitation/reject` | POST |
+| `cluster/invitation/wallet` | POST |
+| `clusters` | GET |
+| `clusters/[slug]` | GET |
 | `admin/clusters` | GET, POST |
 | `admin/clusters/[id]` | GET, PUT, DELETE |
 | `admin/clusters/[id]/members` | POST, DELETE |
@@ -75,7 +77,8 @@ export async function GET(req: Request) {
 
 | Module | Purpose |
 |--------|---------|
-| `gd-utils.ts` | `isType1Country` (`msip_pais.tipo_region = 1`); cluster code generation; DB helpers (`getPastorChurch`, `getChurchCluster`, `getClusterMembers`, `getClusterHistory`, `getClusterCandidates` from the `referralrelationship` graph) |
+| `gd-utils.ts` | `isType1Country` (`msip_pais.tipo_region = 1`); DB helpers (`getPastorChurch`, `getChurchCluster`, `getClusterMembers`, `getClusterHistory`, `getClusterCandidates` from the `referralrelationship` graph); `notifyUser` and `logUserEvent` (in-app notification and `userevent` mirror) |
+| `slug.ts` | Public alias: `suggestSlug` (initials of the words: `Cl 1 1` → `c11`), `validateSlug` (2-40, `[a-z0-9-]`, `slug_invalid`) and `slugWithId` (`<base>-<id>` when the derived slug collides) |
 | `gd-cluster-routing.ts` | `isGDCourse` (courses 10/11), `resolveGDClusterDestination` (cluster wallet → country → Sierra Leone fallback), `routeToClusterFunds` (sends the 10% split to `ClusterFundsV2`, 100% net, and returns both transfer hashes), `recordClusterContribution` (ledger row `transaction.type = 'cluster_contribution'`, one per token, idempotent on `(crypto, hash)`) |
 | `donation-target.ts` | `PaymentTarget` types (course/cluster/country), `getDistributionBreakdown`, `getTargetCopy`, `getTargetRecipient`, `getTargetEndpoint` (UI copy + split display) |
 

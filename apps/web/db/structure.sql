@@ -1905,7 +1905,11 @@ CREATE TABLE public.cluster_invitation (
     invited_by_id integer NOT NULL,
     status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    responded_at timestamp without time zone
+    responded_at timestamp without time zone,
+    invite_count integer DEFAULT 1 NOT NULL,
+    invited_wallet character varying(42),
+    origin character varying(20) DEFAULT 'candidates'::character varying NOT NULL,
+    response_note character varying(200)
 );
 
 
@@ -1936,11 +1940,9 @@ ALTER SEQUENCE public.cluster_invitation_id_seq OWNED BY public.cluster_invitati
 CREATE TABLE public.clustergd (
     id integer NOT NULL,
     name character varying(50) NOT NULL,
-    code character varying(6) NOT NULL,
     country_id integer NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    pseudonym character varying(100),
     status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
     initiator_church_id integer,
     gd_requested_at timestamp with time zone,
@@ -1968,6 +1970,7 @@ CREATE TABLE public.clustergd (
     fund_released_at timestamp with time zone,
     fund_released_amount numeric(14,2),
     fund_released_slearn numeric(14,2),
+    slug character varying(120) NOT NULL,
     CONSTRAINT clustergd_gd_status_check CHECK (((gd_status IS NULL) OR ((gd_status)::text = ANY ((ARRAY['requested'::character varying, 'under_review'::character varying, 'returned'::character varying, 'approved'::character varying, 'sent'::character varying, 'answered'::character varying, 'cancelled'::character varying])::text[]))))
 );
 
@@ -6793,14 +6796,6 @@ ALTER TABLE ONLY public.cluster_invitation
 
 
 --
--- Name: clustergd clustergd_code_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.clustergd
-    ADD CONSTRAINT clustergd_code_key UNIQUE (code);
-
-
---
 -- Name: clustergd_history clustergd_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7866,6 +7861,20 @@ CREATE INDEX billetera_usuario_usuario_id_idx ON public.billetera_usuario USING 
 --
 
 CREATE INDEX cluster_gd_approval_cluster_idx ON public.cluster_gd_approval USING btree (clustergd_id);
+
+
+--
+-- Name: clustergd_name_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX clustergd_name_unique ON public.clustergd USING btree (lower(btrim((name)::text)));
+
+
+--
+-- Name: clustergd_slug_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX clustergd_slug_unique ON public.clustergd USING btree (slug);
 
 
 --

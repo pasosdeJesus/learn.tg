@@ -148,6 +148,8 @@ const ENGINE_PUBLIC_ROUTES = {
   'GET gdcluster:gdcluster/ranking/clusters': 'ranking público de clústeres (solo región tipo 1)',
   'GET gdcluster:gdcluster/ranking/countries': 'ranking público de países',
   'GET gdcluster:gdcluster/ranking/funds': 'saldos públicos del ranking',
+  'GET gdcluster:clusters': 'R-#299: listado público de clústeres por alias (slug, estado, iglesias y total recaudado; nunca el nombre interno, pastores ni billeteras)',
+  'GET gdcluster:clusters/[slug]': 'R-#299: página pública de un clúster por alias, con el mismo criterio de privacidad',
 }
 
 const engineIndexCache = new Map()

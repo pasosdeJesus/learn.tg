@@ -43,7 +43,7 @@ export interface Church {
 export interface ClusterGD {
   id: number
   name: string
-  code: string
+  slug: string
   country_id: number
   created_at: Date
   updated_at: Date
@@ -61,33 +61,6 @@ export interface ClusterHistory {
   new_value: string | null
   changed_by: number | null
   created_at: Date
-}
-
-const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-
-export function generateClusterCode(): string {
-  let code = ''
-  for (let i = 0; i < 6; i++) {
-    code += CHARS.charAt(Math.floor(Math.random() * CHARS.length))
-  }
-  return code
-}
-
-export async function generateUniqueClusterCode(db: Kysely<any>): Promise<string> {
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const code = generateClusterCode()
-    const existing = await db
-      .selectFrom('clustergd')
-      .select('id')
-      .where('code', '=', code)
-      .executeTakeFirst()
-    if (!existing) return code
-  }
-  throw new Error('Could not generate unique cluster code after 10 attempts')
-}
-
-export function generateClusterCodeSync(): string {
-  return generateClusterCode()
 }
 
 export async function getPastorChurch(
@@ -191,6 +164,24 @@ export async function notifyUser(
   await db
     .insertInto('notifications')
     .values({ usuario_id: usuarioId, type, title, content, link, is_read: false, created_at: new Date() })
+    .execute()
+}
+
+/** Registro auditable en `userevent` (espejo de los eventos de `clustergd_history`). */
+export async function logUserEvent(
+  db: Kysely<any>,
+  usuarioId: number | null,
+  eventType: string,
+  eventData: unknown
+): Promise<void> {
+  await db
+    .insertInto('userevent')
+    .values({
+      usuario_id: usuarioId,
+      event_type: eventType,
+      event_data: JSON.stringify(eventData ?? null),
+      created_at: new Date(),
+    })
     .execute()
 }
 

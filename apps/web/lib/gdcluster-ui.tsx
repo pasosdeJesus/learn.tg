@@ -19,7 +19,7 @@ export const RankingClientHost = (p: { lang: string }) => (
   <RankingClient {...p} deps={{ adminAuthParams, DonateModal }} />
 )
 
-export const ClusterPageHost = (p: { lang: string; id: string }) => (
+export const ClusterPageHost = (p: { lang: string; id?: string }) => (
   <ClusterPage
     {...p}
     deps={{ useAuthAddress, useSession, getCsrfToken, Button }}

@@ -6,11 +6,13 @@ import { verifyDonation, donationHistory, verifyCampaignDonation } from './route
 import { campaignBalance } from './routes/campaign-balance.js'
 import { campaignTransparency } from './routes/gd-campaign-transparency.js'
 import { campaignMovements } from './routes/campaign-movements.js'
-import { createCluster, joinCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster.js'
+import { createCluster, getCluster, updateCluster, leaveCluster } from './routes/gd-cluster.js'
 import { getPresentation, requestPresentation, updatePresentation, cancelPresentation } from './routes/gd-presentation.js'
 import { updateBudget, updateDirector } from './routes/gd-presentation-data.js'
 import { approvePresentation, getApprovals } from './routes/cluster-approval.js'
 import { clusterStatus, clusterCandidates, listInvitations, acceptInvitation, rejectInvitation } from './routes/gd-invitations.js'
+import { inviteByWallet } from './routes/cluster-invitation-wallet.js'
+import { listClusters, getPublicCluster } from './routes/gd-public-clusters.js'
 import { adminListClusters, adminGetCluster, adminCreateCluster, adminUpdateCluster, adminDisbandCluster, adminAddMember, adminRemoveMember } from './routes/gd-admin-clusters.js'
 import { searchChurches } from './routes/gd-churches.js'
 
@@ -112,9 +114,6 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
     'cluster': {
       POST: (req) => createCluster(deps, req as NextRequest),
     },
-    'cluster/join': {
-      POST: (req) => joinCluster(deps, req as NextRequest),
-    },
     'cluster/[id]': {
       GET: (req, params) => getCluster(deps, req as NextRequest, params!),
       PATCH: (req, params) => updateCluster(deps, req as NextRequest, params!),
@@ -152,6 +151,16 @@ export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHan
     },
     'cluster/invitation/reject': {
       POST: (req) => rejectInvitation(deps, req as NextRequest),
+    },
+    'cluster/invitation/wallet': {
+      POST: (req) => inviteByWallet(deps, req as NextRequest),
+    },
+    // R-#299: superficie pública (nunca `name`, billeteras ni pastores).
+    'clusters': {
+      GET: () => listClusters(deps),
+    },
+    'clusters/[slug]': {
+      GET: (_req, params) => getPublicCluster(deps, params!),
     },
     'admin/clusters': {
       GET: (req) => adminListClusters(deps, req as NextRequest),

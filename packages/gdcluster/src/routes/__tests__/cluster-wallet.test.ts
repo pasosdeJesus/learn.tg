@@ -35,7 +35,7 @@ const NEW = '0x0e2a3e05bc9a16f5292a6170456a710cb89c6f72'
 const CHURCH = { id: 20, name: 'Iglesia iniciadora', country_id: 1, cluster_wallet: OLD }
 const MEMBERSHIP = { clustergd_id: 3, joined_at: new Date(), left_at: null }
 const CLUSTER = {
-  id: 3, name: 'Esperanza', pseudonym: null, code: 'ABC123', country_id: 1,
+  id: 3, name: 'Esperanza', slug: 'esp', country_id: 1,
   created_at: new Date(), initiator_church_id: 20, status: 'active',
 }
 

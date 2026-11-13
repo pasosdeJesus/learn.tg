@@ -32,7 +32,7 @@ const WALLET = '0x9994567890123456789012345678901234567890'
 const INITIATOR_CHURCH = 20
 
 const CLUSTER = {
-  id: 3, name: 'Esperanza', pseudonym: null, code: 'ABC123', country_id: 1,
+  id: 3, name: 'Esperanza', slug: 'esp', country_id: 1,
   status: 'active', initiator_church_id: INITIATOR_CHURCH,
   gd_requested_at: new Date('2026-10-27T12:00:00Z'), gd_sent_at: null,
   gd_response: null, gd_contact_email: null,
@@ -117,7 +117,7 @@ describe('admin/clusters (R-#220, R-#161)', () => {
       'gd_presentation',
       'Global Disciples respondió',
       expect.stringMatching(/respuesta y el correo/i),
-      '/es/cluster/3',
+      '/es/cluster',
     )
     // update + userevent de la respuesta + userevent del admin
     expect(mockExecute).toHaveBeenCalledTimes(3)

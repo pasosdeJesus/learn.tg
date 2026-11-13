@@ -16,8 +16,7 @@ const Button = ({ children, ...rest }: any) => <button {...rest}>{children}</but
 const cluster = {
   id: 52,
   name: 'Cl2',
-  pseudonym: 'Cl2',
-  code: 'GL8EZZ',
+  slug: 'cl2',
   country_id: 694,
   created_at: '2026-11-03T03:17:52.510Z',
   initiator_church_id: 171,

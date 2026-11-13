@@ -49,7 +49,7 @@ const INITIATOR_CHURCH = 20
 const OTHER_CHURCH = 21
 
 const CLUSTER = {
-  id: 3, name: 'Esperanza', code: 'ABC123', country_id: 1, status: 'active',
+  id: 3, name: 'Esperanza', country_id: 1, status: 'active',
   initiator_church_id: INITIATOR_CHURCH,
   gd_status: null as string | null,
   gd_requested_at: null as Date | null,

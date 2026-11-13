@@ -128,7 +128,6 @@ export interface Churchreputation {
 export interface Clustergd {
   budget_draft_path: string | null;
   budget_fixed_at: Timestamp | null;
-  code: string;
   country_id: number;
   created_at: Generated<Timestamp | null>;
   director_first_year_hours: Numeric | null;
@@ -157,7 +156,7 @@ export interface Clustergd {
   id: Generated<number>;
   initiator_church_id: number | null;
   name: string;
-  pseudonym: string | null;
+  slug: string;
   status: Generated<string>;
   updated_at: Generated<Timestamp | null>;
 }
@@ -183,10 +182,14 @@ export interface ClusterInvitation {
   clustergd_id: number;
   created_at: Generated<Timestamp | null>;
   id: Generated<number>;
+  invite_count: Generated<number>;
   invited_by_id: number;
   invited_church_id: number;
   invited_pastor_id: number;
+  invited_wallet: string | null;
+  origin: Generated<string>;
   responded_at: Timestamp | null;
+  response_note: string | null;
   status: Generated<string>;
 }
 

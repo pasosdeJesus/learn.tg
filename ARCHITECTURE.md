@@ -334,11 +334,18 @@ duplicated routes. Implemented (2026-08-31, migration
 
 **Domain model:**
 
-- `clustergd` (existing) gains `pseudonym` (privacy in restricted regions),
-  `status` (`pending` | `active` | `disbanded`), and `initiator_church_id` (renamed from `leader_church_id` on 2026-10-27).
+- `clustergd` has `status` (`pending` | `active` | `disbanded`), `initiator_church_id`
+  (renamed from `leader_church_id` on 2026-10-27) and, since R-#299, a public `slug`
+  (unique). The old `code` (6 characters) and `pseudonym` were dropped: **the slug is the
+  alias** the public pages show, `name` stays internal.
+- **Invitation is the only way in** (R-#299): the initiator invites by wallet from the
+  private page, the invited pastor answers Yes/No from a notification, and a rejection can
+  be retried only once (`cluster_invitation.invite_count` 1 → 2). `POST /api/cluster/join`
+  (join by code, no approval) no longer exists.
 - Membership stays church-based: `church_clustergd`. New table
   `cluster_invitation` (unique per cluster + pastor, status
-  `pending`/`accepted`/`rejected`/`expired`).
+  `pending`/`accepted`/`rejected`/`expired`), extended by R-#299 with `invite_count`,
+  `invited_wallet`, `origin` (`candidates`/`wallet`) and `response_note`.
 - Funds stay on `ClusterFundsV2` via the **initiator church's** `cluster_wallet`
   (80% of GD donations); the column is not moved in this phase. The **cluster initiator**
   sets it from the cluster page, with a recommendation to use a multisig shared by the
@@ -368,20 +375,38 @@ duplicated routes. Implemented (2026-08-31, migration
 **Candidate selection** (`GET /api/cluster/candidates`): referred pastors from
 the https://github.com/pasosdeJesus/learn.tg/issues/163 referral
 graph first, then the leader's referrer if they are a pastor, same type 1 country, declared + verified church, no current cluster, not self.
-Fallback: invite by the existing 6-char code (`POST /api/cluster/join`).
+The initiator can also type or paste the pastor's **wallet** (`POST
+/api/cluster/invitation/wallet`): the address is resolved to account → user and must be a
+lead pastor of a verified church in the cluster country. Every refusal answers the same
+422 `not_invitable` shape with a `reason` (`not_lead_pastor`, `church_not_verified`,
+`already_in_cluster`, `wrong_country`, `cluster_completed`, ...), so the endpoint cannot be
+used to find out which wallets belong to verified pastors.
 
-**Endpoints (gdcluster engine):** `POST /api/cluster` (extended: name +
-pseudonym + 2 invitations), `GET /api/cluster/candidates`,
-`GET /api/cluster/invitations`, `POST /api/cluster/invitation/accept|reject`,
-`POST /api/cluster/[id]/leave` (extended: leadership transfer or disband when
-the leader leaves), `PATCH /api/cluster/[id]` (leader-only name/pseudonym
-edit), and `/api/admin/clusters*` (admin: full CRUD + disband; verifier:
-view/edit, no disband).
+**Endpoints (gdcluster engine):** `POST /api/cluster` (name + optional editable slug + 2
+invitations), `GET /api/cluster/candidates`, `GET /api/cluster/invitations`,
+`POST /api/cluster/invitation/wallet` (initiator only), `POST
+/api/cluster/invitation/accept|reject`, `POST /api/cluster/[id]/leave` (leadership transfer
+or disband when the initiator leaves), `PATCH /api/cluster/[id]` (initiator-only **slug**
+and cluster wallet; `name` is not editable there), `GET /api/clusters` and `GET
+/api/clusters/[slug]` (public: slug, churches, total raised, status and release
+transaction; never the internal name, wallets or pastors), and `/api/admin/clusters*`
+(admin: full CRUD + disband, editing both `name` and `slug`; verifier: view/edit, no
+disband).
+
+**Unique identity:** `name` and `slug` are unique across learn.tg (unique indexes on
+`lower(btrim(name))` and `slug`); create, pastor-alias and admin-edit answer 409
+`name_taken` / `slug_taken`. A **derived** slug is never rejected: when `suggestSlug(name)`
+(initials of the words) is taken the cluster gets `<base>-<id>`; a **typed** slug is never
+rewritten.
 
 **Rules:** one cluster per church (409 via `getChurchCluster`); activation at
-3 members; in-app notifications on invite/accept/reject/activation/disband;
-public ranking shows the pseudonym when set; leader changes logged in
-`userevent` + `clustergd_history`.
+3 members; in-app notifications on invite/accept/reject/re-invite/activation/disband; the
+public ranking shows the slug and links each row to `/{lang}/clusters/[slug]`; every step
+(invitation sent/accepted/rejected/re-invited, alias change, initiator change, fund release)
+is logged in `clustergd_history` and mirrored in `userevent`. **UI:** the private page is a
+single `/{lang}/cluster` (creation, pending invitation with Yes/No, and the cluster itself);
+a cluster with fewer than three churches shows only the invitations card (for the initiator)
+and the history.
 
 **Out of scope:** multiple clusters per church, bulk invitations, external
 notifications, on-chain member-count activation.
@@ -416,9 +441,10 @@ Verifiers access `/en/admin` to manage users and churches. Key features:
 - **Recent Users / Churches**: Quick access to recently modified records
 - **User Edit Modal**: Edit profile fields, verify data (checkboxes), assign churches, schedule interviews
 - **Clusters** (`/{lang}/admin/clusters`, https://github.com/pasosdeJesus/learn.tg/issues/220):
-  table of the GD clusters with search and status/country filters; edit
-  name/pseudonym/status and disband (soft delete). The public ranking also shows each
-  cluster's status (`pending`/`active`).
+  table of the GD clusters with search and status/country filters; edit the internal
+  name, the public alias (`slug`) and the status, and disband (soft delete). The public
+  ranking shows each cluster's alias and status (`pending`/`active`) and links to its
+  public page `/{lang}/clusters/[slug]`.
 - **Church data in the user modal**: while the user's church is not in the `church`
   table yet (`usuario.church_id` empty) the modal shows the declared church name and
   the autocompleted city, plus the **pastor name and WhatsApp** so the verifier can

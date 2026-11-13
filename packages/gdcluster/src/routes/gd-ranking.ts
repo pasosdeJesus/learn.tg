@@ -9,15 +9,14 @@ export async function rankingClusters(deps: GdclusterDeps) {
     const db = deps.db()
 
     const rows = await sql<{
-      id: number; name: string; pseudonym: string | null; display_name: string
-      code: string; country_id: number; wallet: string; status: string
+      id: number; slug: string; display_name: string
+      country_id: number; wallet: string; status: string
       gd_status: string | null; fund_released_at: string | null
       country_name: string | null; country_code: string | null; church_count: number
     }>`
       SELECT
-        c.id, c.name, c.pseudonym,
-        COALESCE(NULLIF(c.pseudonym, ''), c.name) AS display_name,
-        c.code, c.country_id, c.status, c.gd_status, c.fund_released_at,
+        c.id, c.slug, c.slug AS display_name,
+        c.country_id, c.status, c.gd_status, c.fund_released_at,
         initiator_church.cluster_wallet as wallet,
         p.nombre as country_name, p.alfa2 as country_code,
         COUNT(member_church.id)::int as church_count
@@ -28,7 +27,7 @@ export async function rankingClusters(deps: GdclusterDeps) {
       LEFT JOIN church member_church ON member_church.id = cc.church_id AND member_church.deleted_at IS NULL
       WHERE p.tipo_region = 1
         AND c.status != 'disbanded'
-      GROUP BY c.id, c.name, c.pseudonym, c.code, c.country_id, c.status, c.gd_status, c.fund_released_at,
+      GROUP BY c.id, c.slug, c.country_id, c.status, c.gd_status, c.fund_released_at,
                initiator_church.cluster_wallet, p.nombre, p.alfa2
       ORDER BY c.id
     `.execute(db)
@@ -107,13 +106,13 @@ export async function rankingFunds(deps: GdclusterDeps) {
 
     const clusters = await sql<{
       cluster_wallet: string | null
-      cluster_name: string | null
+      cluster_slug: string | null
       usdt_total: number
       slearn_total: number
     }>`
       SELECT
         t.metadata->>'clusterWallet' AS cluster_wallet,
-        cg.name AS cluster_name,
+        cg.slug AS cluster_slug,
         COALESCE(SUM(
           CASE WHEN t.crypto = 'usdt' THEN
             CASE WHEN t.type = 'cluster_contribution' OR t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
@@ -127,7 +126,7 @@ export async function rankingFunds(deps: GdclusterDeps) {
       LEFT JOIN church_clustergd cc ON cc.church_id = ch.id AND cc.left_at IS NULL
       LEFT JOIN clustergd cg ON cg.id = cc.clustergd_id
       WHERE t.subcategoria = 'cluster' AND t.type IN ('donation', 'cluster_contribution')
-      GROUP BY t.metadata->>'clusterWallet', cg.name
+      GROUP BY t.metadata->>'clusterWallet', cg.slug
     `.execute(db)
 
     return NextResponse.json({ countries: countries.rows, clusters: clusters.rows })

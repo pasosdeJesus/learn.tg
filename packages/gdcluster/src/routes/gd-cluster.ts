@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { sql } from 'kysely'
 import {
   getPastorChurch,
   getChurchCluster,
   getClusterMembers,
   getClusterHistory,
   addClusterHistory,
-  generateUniqueClusterCode,
   notifyUser,
   getClusterCandidates,
   isType1Country,
@@ -14,18 +14,19 @@ import { readClusterFunds, hasFunds, summarizeFunds } from '../lib/cluster-funds
 import { checkWalletControl, validateClusterWallet } from '../lib/cluster-wallet.js'
 import { churchCompletedCluster } from '../lib/cluster-membership.js'
 import { getClusterPastors } from '../lib/cluster-pastors.js'
-import { MIN_CHURCHES } from '../lib/gd-presentation.js'
+import { suggestSlug, slugWithId, validateSlug } from '../lib/slug.js'
 import type { GdclusterDeps } from '../index.js'
 
 // Rutas de clústeres del curso Global Disciples (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 3, https://github.com/pasosdeJesus/learn.tg/issues/220).
 
 export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
   try {
-    const { walletAddress, name, pseudonym, inviteeIds } = await req.json()
+    const { walletAddress, name, slug, inviteeIds } = await req.json()
 
-    if (!name || name.length < 3 || name.length > 50) {
+    const clusterName = typeof name === 'string' ? name.trim() : ''
+    if (clusterName.length < 3 || clusterName.length > 50) {
       return NextResponse.json(
-        { error: 'Cluster name must be between 3 and 50 characters' },
+        { error: 'Cluster name must be between 3 and 50 characters', code: 'name_invalid' },
         { status: 400 }
       )
     }
@@ -92,33 +93,76 @@ export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
       )
     }
 
+    // R-#299: `name` y `slug` son únicos en todo learn.tg. Los índices
+    // `clustergd_name_unique` y `clustergd_slug_unique` son la verdad; esta consulta sólo
+    // da el motivo amable (sin distinguir mayúsculas ni espacios).
     const existingName = await db
       .selectFrom('clustergd')
       .select('id')
-      .where('name', '=', name)
-      .where('country_id', '=', church.country_id)
+      .where(sql<boolean>`lower(btrim(name)) = lower(btrim(${clusterName}))`)
       .executeTakeFirst()
     if (existingName) {
       return NextResponse.json(
-        { error: 'A cluster with this name already exists in your country' },
+        { error: 'A cluster with this name already exists', code: 'name_taken' },
         { status: 409 }
       )
     }
 
-    const code = await generateUniqueClusterCode(db)
+    // El alias es público y lo elige el iniciador; si no lo envía se sugiere con las
+    // iniciales del nombre (R-#299 §4). Un alias tecleado que choca no se reescribe: 409.
+    let requestedSlug: string | null = null
+    if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
+      const checked = validateSlug(String(slug).trim().toLowerCase())
+      if (!checked.ok) {
+        return NextResponse.json(
+          { error: 'The alias must have 2 to 40 characters: lowercase letters, digits and single hyphens', code: 'slug_invalid' },
+          { status: 400 }
+        )
+      }
+      requestedSlug = checked.slug
+      const taken = await db
+        .selectFrom('clustergd')
+        .select('id')
+        .where('slug', '=', requestedSlug)
+        .executeTakeFirst()
+      if (taken) {
+        return NextResponse.json(
+          { error: `The alias "${requestedSlug}" is already in use`, code: 'slug_taken' },
+          { status: 409 }
+        )
+      }
+    }
 
-    const cluster = await db
-      .insertInto('clustergd')
-      .values({
-        name,
-        pseudonym: pseudonym && String(pseudonym).trim() ? String(pseudonym).trim() : null,
-        status: 'pending',
-        initiator_church_id: church.id,
-        code,
-        country_id: church.country_id,
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow()
+    const derived = suggestSlug(clusterName)
+    const baseSlug = validateSlug(derived).ok ? derived : 'cl'
+
+    // El clúster se inserta y, cuando el alias es el derivado, se resuelve con el `id`
+    // propio (`<base>-<id>` si el derivado ya existe): una sola transacción, sin reintentos.
+    const cluster = await db.transaction().execute(async (trx: any) => {
+      const row = await trx
+        .insertInto('clustergd')
+        .values({
+          name: clusterName,
+          slug: requestedSlug ?? `cl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+          status: 'pending',
+          initiator_church_id: church.id,
+          country_id: church.country_id,
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow()
+
+      if (requestedSlug) return row
+
+      let finalSlug = baseSlug
+      const taken = await trx
+        .selectFrom('clustergd')
+        .select('id')
+        .where('slug', '=', finalSlug)
+        .executeTakeFirst()
+      if (taken) finalSlug = slugWithId(baseSlug, row.id)
+      await trx.updateTable('clustergd').set({ slug: finalSlug }).where('id', '=', row.id).execute()
+      return { ...row, slug: finalSlug }
+    })
 
     await db
       .insertInto('church_clustergd')
@@ -131,9 +175,8 @@ export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
     await addClusterHistory(db, cluster.id, 'church_join', null, church.name, user.id)
 
     // https://github.com/pasosdeJesus/learn.tg/issues/220 §2: invitaciones a los pastores seleccionados (solo candidatos
-    // válidos: referidos #163 / referidor, mismo país, iglesia verificada,
-    // sin clúster). Con < 2 candidatos no se bloquea la creación (fallback por
-    // código 6 chars en /api/cluster/join).
+    // válidos: referidos https://github.com/pasosdeJesus/learn.tg/issues/163 / referidor, mismo país, iglesia verificada,
+    // sin clúster). R-#299: es el único camino de ingreso; el código de 6 caracteres ya no existe.
     let createdInvites = 0
     if (Array.isArray(inviteeIds) && inviteeIds.length > 0) {
       const candidates = await getClusterCandidates(db, user.id, church.country_id, church.id)
@@ -154,135 +197,19 @@ export async function createCluster(deps: GdclusterDeps, req: NextRequest) {
           .onConflict((oc) => oc.columns(['clustergd_id', 'invited_pastor_id']).doNothing())
           .execute()
         createdInvites++
+        await addClusterHistory(db, cluster.id, 'invitation_sent', null, c.church_name, user.id)
         await notifyUser(
           db, c.usuario_id, 'cluster_invitation',
           'Cluster invitation',
-          `You have been invited to join cluster ${cluster.pseudonym || cluster.name} by ${user.nombre || user.nusuario}. Go to Cluster to accept or reject.`,
+          `You have been invited to join cluster ${cluster.slug} by ${user.nombre || user.nusuario}. Go to Cluster to accept or reject.`,
           `/${String(user.idioma || 'en').startsWith('es') ? 'es' : 'en'}/cluster`
         )
       }
     }
 
-    return NextResponse.json({ cluster, code: cluster.code, invited: createdInvites }, { status: 201 })
+    return NextResponse.json({ cluster, invited: createdInvites }, { status: 201 })
   } catch (error) {
     console.error('Error creating cluster:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-export async function joinCluster(deps: GdclusterDeps, req: NextRequest) {
-  try {
-    const { walletAddress, code } = await req.json()
-
-    if (!code || code.length !== 6) {
-      return NextResponse.json(
-        { error: 'Invalid cluster code' },
-        { status: 400 }
-      )
-    }
-
-    const db = deps.db()
-    const auth = await deps.authenticateUser(db, walletAddress)
-    if (!auth) {
-      return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
-    }
-
-    const user = auth.usuario
-    if (user.church_relationship !== 'pastor') {
-      return NextResponse.json(
-        { error: 'Only pastors can join clusters' },
-        { status: 403 }
-      )
-    }
-
-    const church = await getPastorChurch(db, user.id)
-    if (!church) {
-      return NextResponse.json(
-        { error: 'Your church must be registered before joining a cluster' },
-        { status: 400 }
-      )
-    }
-
-    if (!(await isType1Country(db, church.country_id))) {
-      return NextResponse.json(
-        { error: 'Clusters are available only in countries classified as type 1' },
-        { status: 403 }
-      )
-    }
-
-    const completed = await churchCompletedCluster(db, church.id)
-    if (completed) {
-      return NextResponse.json(
-        {
-          error: 'Your church belonged to a cluster that already received its funds and cannot take part in another one',
-          code: 'cluster_completed',
-        },
-        { status: 403 },
-      )
-    }
-
-    const existingMembership = await getChurchCluster(db, church.id)
-    if (existingMembership) {
-      return NextResponse.json(
-        { error: 'Your church already belongs to a cluster. Leave it first.' },
-        { status: 409 }
-      )
-    }
-
-    const cluster = await db
-      .selectFrom('clustergd')
-      .selectAll()
-      .where('code', '=', code.toUpperCase())
-      .executeTakeFirst()
-
-    if (!cluster) {
-      return NextResponse.json(
-        { error: 'Cluster not found with this code' },
-        { status: 404 }
-      )
-    }
-
-    if (cluster.status === 'disbanded') {
-      return NextResponse.json(
-        { error: 'This cluster has been disbanded' },
-        { status: 409 }
-      )
-    }
-
-    if (cluster.country_id !== church.country_id) {
-      return NextResponse.json(
-        { error: 'All churches in a cluster must be from the same country' },
-        { status: 400 }
-      )
-    }
-
-    await db
-      .insertInto('church_clustergd')
-      .values({
-        church_id: church.id,
-        clustergd_id: cluster.id,
-      })
-      .execute()
-
-    await addClusterHistory(db, cluster.id, 'church_join', null, church.name, user.id)
-
-    // La guía 2 promete que el clúster queda activo con la tercera iglesia; unirse
-    // con el código debe activarlo igual que aceptar una invitación.
-    const members = await getClusterMembers(db, cluster.id)
-    let activated = false
-    if (members.length >= MIN_CHURCHES && cluster.status !== 'active') {
-      await db
-        .updateTable('clustergd')
-        .set({ status: 'active', updated_at: new Date() })
-        .where('id', '=', cluster.id)
-        .execute()
-      await addClusterHistory(db, cluster.id, 'status_change', cluster.status, 'active', user.id)
-      activated = true
-    }
-
-    return NextResponse.json({ cluster, activated, member_count: members.length })
-  } catch (error) {
-    console.error('Error joining cluster:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -332,8 +259,7 @@ export async function getCluster(
     return NextResponse.json({
       id: cluster.id,
       name: cluster.name,
-      pseudonym: cluster.pseudonym,
-      code: cluster.code,
+      slug: cluster.slug,
       country_id: cluster.country_id,
       created_at: cluster.created_at,
       initiator_church_id: cluster.initiator_church_id,
@@ -361,7 +287,7 @@ export async function updateCluster(
   }
 
   try {
-    const { walletAddress, name, pseudonym, clusterWallet, confirmMigrate } = await req.json()
+    const { walletAddress, name, slug, clusterWallet, confirmMigrate } = await req.json()
     const db = deps.db()
     const auth = await deps.authenticateUser(db, walletAddress)
     if (!auth) {
@@ -513,40 +439,52 @@ export async function updateCluster(
         }
       }
 
-    if (name !== undefined && (!name || name.length < 3 || name.length > 50)) {
+    // R-#299: en esta ruta sólo se edita el alias (slug) y la billetera. El `name` es
+    // interno y lo cambia el verificador desde /api/admin/clusters/[id].
+    if (name !== undefined) {
       return NextResponse.json(
-        { error: 'Cluster name must be between 3 and 50 characters' },
+        { error: 'The cluster name is not editable here: use the alias (slug)', code: 'name_not_editable' },
         { status: 400 }
       )
     }
 
-    if (name !== undefined) {
-      const existingName = await db
-        .selectFrom('clustergd')
-        .select('id')
-        .where('name', '=', name)
-        .where('country_id', '=', cluster.country_id)
-        .where('id', '!=', clusterId)
-        .executeTakeFirst()
-      if (existingName) {
+    let normalizedSlug: string | undefined
+    if (slug !== undefined && slug !== null) {
+      const checked = validateSlug(String(slug).trim().toLowerCase())
+      if (!checked.ok) {
         return NextResponse.json(
-          { error: 'A cluster with this name already exists in your country' },
-          { status: 409 }
+          { error: 'The alias must have 2 to 40 characters: lowercase letters, digits and single hyphens', code: 'slug_invalid' },
+          { status: 400 }
         )
+      }
+      normalizedSlug = checked.slug
+      if (normalizedSlug !== cluster.slug) {
+        const taken = await db
+          .selectFrom('clustergd')
+          .select('id')
+          .where('slug', '=', normalizedSlug)
+          .where('id', '!=', clusterId)
+          .executeTakeFirst()
+        if (taken) {
+          return NextResponse.json(
+            {
+              error: `The alias "${normalizedSlug}" is already in use`,
+              code: 'slug_taken',
+              suggestion: slugWithId(normalizedSlug, clusterId),
+            },
+            { status: 409 }
+          )
+        }
       }
     }
 
     const updates: Record<string, unknown> = { updated_at: new Date() }
-    if (name !== undefined) updates.name = name
-    if (pseudonym !== undefined) updates.pseudonym = String(pseudonym).trim() ? String(pseudonym).trim() : null
+    if (normalizedSlug !== undefined) updates.slug = normalizedSlug
 
     await db.updateTable('clustergd').set(updates).where('id', '=', clusterId).execute()
 
-    if (name !== undefined && name !== cluster.name) {
-      await addClusterHistory(db, clusterId, 'name_change', cluster.name, name, auth.usuario.id)
-    }
-    if (pseudonym !== undefined && pseudonym !== cluster.pseudonym) {
-      await addClusterHistory(db, clusterId, 'pseudonym_change', cluster.pseudonym, updates.pseudonym as string | null, auth.usuario.id)
+    if (normalizedSlug !== undefined && normalizedSlug !== cluster.slug) {
+      await addClusterHistory(db, clusterId, 'slug_change', cluster.slug, normalizedSlug, auth.usuario.id)
     }
 
     if (normalizedWallet !== undefined && initiatorChurch) {
@@ -574,9 +512,8 @@ export async function updateCluster(
 
     return NextResponse.json({
       success: true,
-      name: updates.name ?? cluster.name,
-      pseudonym: updates.pseudonym ?? cluster.pseudonym,
-      // Solo se informa cuando el cuerpo trajo la billetera: en un renombrado no
+      slug: normalizedSlug ?? cluster.slug,
+      // Solo se informa cuando el cuerpo trajo la billetera: en un cambio de alias no
       // se consultó la fila de la iglesia iniciadora.
       ...(normalizedWallet !== undefined ? { cluster_wallet: normalizedWallet, wallet_checksummed: walletChecksummed } : {}),
       ...(fundsSummary ? { funds_left_in_previous_wallet: fundsSummary } : {}),

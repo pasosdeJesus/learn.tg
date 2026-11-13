@@ -1,9 +1,10 @@
 'use client'
 
 // All Clusters — verifier view of the GD clusters (https://github.com/pasosdeJesus/learn.tg/issues/220 §5).
-// Read-only list with search and filters; the verifier can edit name/pseudonym/status
-// and disband (soft delete). Auth is the same list as the rest of /admin: the UI hides
-// the page and every /api/admin/clusters/* route calls authenticateAdmin server-side.
+// R-#299: read-only list with search and filters; the verifier edits the internal name,
+// the public alias (slug) and the status, and disbands (soft delete). Auth is the same
+// list as the rest of /admin: the UI hides the page and every /api/admin/clusters/*
+// route calls authenticateAdmin server-side.
 
 import { use, useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -21,8 +22,7 @@ const VERIFIER_WALLETS = (process.env.NEXT_PUBLIC_VERIFIER_WALLET || '')
 type Cluster = {
   id: number
   name: string
-  pseudonym: string | null
-  code: string
+  slug: string
   country_id: number
   status: string
   initiator_church_id: number | null
@@ -63,7 +63,7 @@ export default function AdminClustersPage({ params }: PageProps) {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [selected, setSelected] = useState<Cluster | null>(null)
-  const [draft, setDraft] = useState({ name: '', pseudonym: '', status: 'pending' })
+  const [draft, setDraft] = useState({ name: '', slug: '', status: 'pending' })
   const [gdCluster, setGdCluster] = useState<any | null>(null)
   const [gdForm, setGdForm] = useState({ status: '', evaluation: '', suggestions: '', response: '', contactEmail: '' })
   const [gdSaving, setGdSaving] = useState(false)
@@ -73,10 +73,10 @@ export default function AdminClustersPage({ params }: PageProps) {
   const t = createComponentT(lang, {
     en: {
       title: 'All Clusters', accessDenied: 'Access denied. Verifier wallet required.',
-      back: '← Back to dashboard', search: 'Search by name, pseudonym or code...',
+      back: '← Back to dashboard', search: 'Search by name or alias...',
       allStatuses: 'All statuses', allCountries: 'All countries',
       loading: 'Loading...', noClusters: 'No clusters found.', error: 'Could not load the clusters.',
-      id: 'ID', name: 'Name', pseudonym: 'Pseudonym', code: 'Code',
+      id: 'ID', name: 'Name (internal)', slug: 'Public alias',
       country: 'Country', initiatorChurch: 'Initiator church', members: 'Members',
       status: 'Status', actions: 'Actions', edit: 'Edit', disband: 'Disband',
       gd: 'GD', gdTitle: 'Presentation to Global Disciples', gdRequested: 'Requested',
@@ -96,10 +96,10 @@ export default function AdminClustersPage({ params }: PageProps) {
     },
     es: {
       title: 'Todos los Clústeres', accessDenied: 'Acceso denegado. Se requiere billetera verificadora.',
-      back: '← Volver al panel', search: 'Buscar por nombre, pseudónimo o código...',
+      back: '← Volver al panel', search: 'Buscar por nombre o alias...',
       allStatuses: 'Todos los estados', allCountries: 'Todos los países',
       loading: 'Cargando...', noClusters: 'No se encontraron clústeres.', error: 'No se pudieron cargar los clústeres.',
-      id: 'ID', name: 'Nombre', pseudonym: 'Pseudónimo', code: 'Código',
+      id: 'ID', name: 'Nombre (interno)', slug: 'Alias público',
       country: 'País', initiatorChurch: 'Iglesia iniciadora', members: 'Miembros',
       status: 'Estado', actions: 'Acciones', edit: 'Editar', disband: 'Disolver',
       gd: 'GD', gdTitle: 'Presentación a Global Disciples', gdRequested: 'Solicitada',
@@ -242,7 +242,7 @@ ${body}`
     setSelected(cluster)
     setDraft({
       name: cluster.name || '',
-      pseudonym: cluster.pseudonym || '',
+      slug: cluster.slug || '',
       status: cluster.status || 'pending',
     })
   }
@@ -322,8 +322,7 @@ ${body}`
                 <tr>
                   <th className="px-3 py-2 text-left">{t('id')}</th>
                   <th className="px-3 py-2 text-left">{t('name')}</th>
-                  <th className="px-3 py-2 text-left hidden md:table-cell">{t('pseudonym')}</th>
-                  <th className="px-3 py-2 text-left hidden sm:table-cell">{t('code')}</th>
+                  <th className="px-3 py-2 text-left hidden md:table-cell">{t('slug')}</th>
                   <th className="px-3 py-2 text-left hidden md:table-cell">{t('country')}</th>
                   <th className="px-3 py-2 text-left hidden lg:table-cell">{t('initiatorChurch')}</th>
                   <th className="px-3 py-2 text-center hidden sm:table-cell">{t('members')}</th>
@@ -336,8 +335,7 @@ ${body}`
                   <tr key={c.id} className="border-b hover:bg-blue-50">
                     <td className="px-3 py-2 font-mono text-xs">{c.id}</td>
                     <td className="px-3 py-2 font-medium">{c.name || '—'}</td>
-                    <td className="px-3 py-2 hidden md:table-cell text-xs">{c.pseudonym || '—'}</td>
-                    <td className="px-3 py-2 hidden sm:table-cell font-mono text-xs">{c.code || '—'}</td>
+                    <td className="px-3 py-2 hidden md:table-cell font-mono text-xs">{c.slug || '—'}</td>
                     <td className="px-3 py-2 hidden md:table-cell text-xs">{c.country_name || '—'}</td>
                     <td className="px-3 py-2 hidden lg:table-cell text-xs">{c.initiator_church_name || '—'}</td>
                     <td className="px-3 py-2 text-center hidden sm:table-cell text-xs">{c.member_count}</td>
@@ -449,10 +447,10 @@ ${body}`
                   className="mt-1 w-full border rounded px-3 py-2 text-sm" />
               </label>
               <label className="block text-sm">
-                <span className="text-gray-600">{t('pseudonym')}</span>
-                <input value={draft.pseudonym}
-                  onChange={e => setDraft(d => ({ ...d, pseudonym: e.target.value }))}
-                  className="mt-1 w-full border rounded px-3 py-2 text-sm" />
+                <span className="text-gray-600">{t('slug')}</span>
+                <input value={draft.slug} maxLength={40}
+                  onChange={e => setDraft(d => ({ ...d, slug: e.target.value.toLowerCase() }))}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm font-mono" />
               </label>
               <label className="block text-sm">
                 <span className="text-gray-600">{t('status')}</span>

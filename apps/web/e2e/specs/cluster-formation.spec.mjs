@@ -103,7 +103,7 @@ async function main() {
   const candRes = await authFetch(`${base}/api/cluster/candidates?${qc}`)
   if (candRes.status === 200) {
     const c = await candRes.json()
-    ok(`GET /api/cluster/candidates → 200 (candidates=${c.candidates?.length ?? 0}, fallback=${c.fallback})`)
+    ok(`GET /api/cluster/candidates → 200 (candidates=${c.candidates?.length ?? 0}, hint=${c.hint})`)
   } else if (candRes.status === 400) {
     ok('GET /api/cluster/candidates → 400 (pastor without a declared church, expected)')
   } else fail(`GET /api/cluster/candidates → ${candRes.status}`)
@@ -152,7 +152,7 @@ async function main() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name, pseudonym: 'PseudonimoE2E', initiatorChurchId: initiatorChurch.id,
+        name, slug: `e2e-${Date.now().toString(36)}`, initiatorChurchId: initiatorChurch.id,
         countryId: initiatorChurch.country_id, memberChurchIds: [],
       }),
     })
@@ -231,25 +231,43 @@ async function main() {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // 7. Admin: update pseudonym and status → ranking reflects both
+    // 7. Admin: update the public alias and status → ranking reflects both
     // ══════════════════════════════════════════════════════════════
-    console.log('\n── 7. Admin: update pseudonym and status ──')
+    console.log('\n── 7. Admin: update the public alias and status ──')
+    const alias = `e2e-${Date.now().toString(36)}`
     const upRes = await authFetch(`${base}/api/admin/clusters/${clusterId}?${q}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pseudonym: 'PseudoActualizado', status: 'active' }),
+      body: JSON.stringify({ slug: alias, status: 'active' }),
     })
-    if (upRes.status === 200) ok('PUT /api/admin/clusters/[id] (pseudonym + status) → 200')
+    if (upRes.status === 200) ok('PUT /api/admin/clusters/[id] (alias + status) → 200')
     else fail(`PUT /api/admin/clusters/[id] → ${upRes.status}`)
 
     // ══════════════════════════════════════════════════════════════
-    // 8. Ranking (public API): pseudonym and status of the cluster
+    // 8. Ranking and public API: alias, status and no internal name
     // ══════════════════════════════════════════════════════════════
-    console.log('\n── 8. Ranking: pseudonym and status ──')
+    console.log('\n── 8. Ranking: alias and status ──')
     const rank = await (await fetch(`${base}/api/gdcluster/ranking/clusters`)).json().catch(() => ({ clusters: [] }))
     const row = (rank.clusters || []).find((c) => c.id === clusterId)
-    if (row && row.display_name === 'PseudoActualizado') ok(`Ranking shows the pseudonym (display_name=${row.display_name})`)
-    else { console.log(`  ranking row: ${JSON.stringify(row)}`); fail('Ranking without the updated pseudonym') }
+    if (row && row.display_name === alias) ok(`Ranking shows the alias (display_name=${row.display_name})`)
+    else { console.log(`  ranking row: ${JSON.stringify(row)}`); fail('Ranking without the updated alias') }
+    if (row && row.name !== undefined) fail('The public ranking must not expose the internal name')
+    else ok('The public ranking does not expose the internal name')
+    const pub = await (await fetch(`${base}/api/clusters`)).json().catch(() => ({ clusters: [] }))
+    const pubRow = (pub.clusters || []).find((c) => c.slug === alias)
+    if (pubRow) ok(`GET /api/clusters lists the cluster by alias (${pubRow.slug})`)
+    else fail('GET /api/clusters does not list the cluster')
+    if (pubRow && pubRow.name !== undefined) fail('GET /api/clusters must not expose the internal name')
+    else ok('GET /api/clusters does not expose the internal name')
+    const pubOne = await fetch(`${base}/api/clusters/${alias}`)
+    if (pubOne.ok) {
+      const one = await pubOne.json()
+      if (one.name !== undefined) fail('GET /api/clusters/[slug] must not expose the internal name')
+      else ok(`GET /api/clusters/[slug] answers the public page (slug=${one.slug})`)
+    } else fail(`GET /api/clusters/[slug] → ${pubOne.status}`)
+    const gone = await fetch(`${base}/api/cluster/join`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    if (gone.status === 404 || gone.status === 405) ok('POST /api/cluster/join is gone (no code flow)')
+    else fail(`POST /api/cluster/join still answers ${gone.status}`)
     if (row && 'status' in row) {
       ok(`The ranking row exposes the status (${row.status})`)
       if (row.status === 'active') ok('The ranking reports the cluster as active after the update')
@@ -257,6 +275,22 @@ async function main() {
     } else {
       fail('GET /api/gdcluster/ranking/clusters does not expose the cluster status')
     }
+
+    // ══════════════════════════════════════════════════════════════
+    // 8b. UI: the public page shows the alias and never the internal name (R-#299)
+    // ══════════════════════════════════════════════════════════════
+    console.log('\n── 8b. UI: public cluster page ──')
+    await navAndWait(page, `${base}/${lang}/clusters/${alias}`, 180000)
+    await new Promise(r => setTimeout(r, 3000))
+    const pubUi = await page.evaluate(() => document.body?.textContent || '')
+    if (pubUi.includes(alias)) ok('The public page renders the alias as its heading')
+    else fail('The public page does not render the alias')
+    if (pubUi.includes(name)) fail('The public page exposes the internal cluster name')
+    else ok('The public page does not expose the internal cluster name')
+    // La página privada se sirve en /{lang}/cluster; /{lang}/cluster/{id} ya no existe.
+    const oldPage = await page.goto(`${base}/${lang}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded', timeout: 180000 }).catch(() => null)
+    if (!oldPage || oldPage.status() === 404) ok('/{lang}/cluster/{id} is gone (404)')
+    else fail(`/{lang}/cluster/{id} still answers ${oldPage.status()}`)
 
     // ══════════════════════════════════════════════════════════════
     // 9. Admin: disband (soft) → listed as disbanded, excluded from the ranking

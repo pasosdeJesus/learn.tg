@@ -1,15 +1,17 @@
 'use client'
 
-// Página /[lang]/cluster — formación de clústeres (https://github.com/pasosdeJesus/learn.tg/issues/220):
-// 3 estados: sin clúster (crear), invitación pendiente (aceptar/rechazar),
-// en un clúster (detalle + salir). El backend vive en el motor gdcluster
-// (/api/cluster/status, /candidates, /invitation/*, /api/cluster).
+// Página /[lang]/cluster — la **única** página privada del clúster (R-#299 §6).
+// Resuelve el clúster del pastor con /api/cluster/status y muestra: creación +
+// invitaciones (sin clúster), Sí/No (invitación pendiente) o el clúster completo
+// (ClusterPageHost, sin `id` en la URL). El detalle vive en el motor gdcluster.
 import { useCallback, useEffect, useState } from 'react'
 import { use } from 'react'
 import Link from 'next/link'
+import { suggestSlug } from '@learn-tg/gdcluster/lib/slug'
 import { useAuthedApi } from '@/lib/hooks/useAuthedApi'
 import { useAuthAddress } from '@/lib/hooks/useAuthAddress'
 import { createComponentT } from '@/lib/hooks/useTranslation'
+import { ClusterPageHost } from '@/lib/gdcluster-ui'
 
 interface Candidate {
   usuario_id: number
@@ -23,10 +25,11 @@ interface Invitation {
   id: number
   clustergd_id: number
   cluster_name: string
+  slug: string
   inviter_name: string | null
 }
 
-export default function ClusterFormationPage({ params }: { params: Promise<{ lang: string }> }) {
+export default function ClusterPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params)
   const es = lang === 'es'
   const { address } = useAuthAddress()
@@ -40,24 +43,19 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
       guide2: 'Guide 2: Form Your Cluster',
       create: 'Create a cluster',
       createTitle: 'New cluster',
-      name: 'Cluster name',
-      pseudonym: 'Pseudonym (optional, shown publicly in the ranking)',
+      name: 'Cluster name (internal)',
+      slug: 'Public alias',
+      slugHint: 'This is the public name of the cluster: lowercase letters, digits and hyphens. It is suggested from the cluster name and you can change it.',
       candidates: 'Invite pastors (select up to 2)',
-      noCandidatesHelp: 'Candidates come from your referrals: pastors you invited to learn.tg or the pastor who invited you, in your country, with a verified church. Grow that list by sharing your referral link; until then, create the cluster and share the code.',
+      noCandidatesHelp: 'Candidates come from your referrals: pastors you invited to learn.tg or the pastor who invited you, in your country, with a verified church.',
       referralsLink: 'Go to referrals',
-      noCandidates: 'You have no invitable pastors yet (referred pastors from the same country with a verified church). You can also share your 6-char cluster code after creating it.',
+      noCandidates: 'You have no invitable pastors yet (referred pastors from the same country with a verified church). You can invite by wallet from the cluster page after creating it.',
       creating: 'Creating…',
       invitePending: 'You have been invited to join cluster {{0}} by {{1}}.',
       accept: 'Accept invitation',
       reject: 'Reject invitation',
-      inCluster: 'You are in cluster',
-      members: 'Members',
-      initiator: 'Initiator',
-      leave: 'Leave cluster',
-      leaveConfirm: 'Leave this cluster?',
-      details: 'View cluster details',
       error: 'Something went wrong. Try again.',
-      code: 'Cluster code',
+      notPastor: 'Only lead pastors of a verified church can create a cluster.',
     },
     es: {
       title: 'Clúster',
@@ -66,34 +64,30 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
       guide2: 'Guía 2: Forma tu clúster',
       create: 'Crear un clúster',
       createTitle: 'Nuevo clúster',
-      name: 'Nombre del clúster',
-      pseudonym: 'Pseudónimo (opcional, se muestra públicamente en el ranking)',
+      name: 'Nombre del clúster (interno)',
+      slug: 'Alias público',
+      slugHint: 'Es el nombre público del clúster: minúsculas, dígitos y guiones. Se sugiere a partir del nombre del clúster y lo puedes cambiar.',
       candidates: 'Invitar pastores (elige hasta 2)',
-      noCandidatesHelp: 'Los candidatos salen de tus referidos: pastores que invitaste a learn.tg o el pastor que te invitó, en tu país, con iglesia verificada. Amplía esa lista compartiendo tu enlace de referido; mientras tanto, crea el clúster y comparte el código.',
+      noCandidatesHelp: 'Los candidatos salen de tus referidos: pastores que invitaste a learn.tg o el pastor que te invitó, en tu país, con iglesia verificada.',
       referralsLink: 'Ir a referidos',
-      noCandidates: 'Aún no tienes pastores invitables (referidos del mismo país con iglesia verificada). También puedes compartir el código de 6 caracteres del clúster tras crearlo.',
+      noCandidates: 'Aún no tienes pastores invitables (referidos del mismo país con iglesia verificada). Puedes invitar por billetera desde la página del clúster después de crearlo.',
       creating: 'Creando…',
       invitePending: 'Has sido invitado a unirte al clúster {{0}} por {{1}}.',
       accept: 'Aceptar invitación',
       reject: 'Rechazar invitación',
-      inCluster: 'Estás en el clúster',
-      members: 'Miembros',
-      initiator: 'Iniciador',
-      leave: 'Salir del clúster',
-      leaveConfirm: '¿Salir de este clúster?',
-      details: 'Ver detalles del clúster',
       error: 'Algo salió mal. Inténtalo de nuevo.',
-      code: 'Código del clúster',
+      notPastor: 'Sólo el pastor principal de una iglesia verificada puede crear un clúster.',
     },
   })
 
   const [status, setStatus] = useState<'loading' | 'none' | 'invited' | 'member'>('loading')
-  const [cluster, setCluster] = useState<any>(null)
+  const [clusterId, setClusterId] = useState<string | null>(null)
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [showCreate, setShowCreate] = useState(false)
   const [name, setName] = useState('')
-  const [pseudonym, setPseudonym] = useState('')
+  const [slug, setSlug] = useState('')
+  const [slugEdited, setSlugEdited] = useState(false)
   const [selected, setSelected] = useState<number[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -107,12 +101,12 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
       ])
       const s = sRes?.data
       if (!s) { setStatus('none'); return }
-      if (s.hasCluster) {
-        setCluster(s.cluster)
+      if (s.hasCluster && s.clusterId) {
+        setClusterId(String(s.clusterId))
         setStatus('member')
       } else if (s.pendingInvitations?.length > 0) {
         setInvitations(s.pendingInvitations.map((i: any) => ({
-          id: i.id, clustergd_id: i.clustergd_id, cluster_name: i.pseudonym || i.cluster_name, inviter_name: i.inviter_name,
+          id: i.id, clustergd_id: i.clustergd_id, cluster_name: i.slug || i.cluster_name, slug: i.slug, inviter_name: i.inviter_name,
         })))
         setStatus('invited')
       } else {
@@ -126,6 +120,13 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
 
   useEffect(() => { load() }, [load])
 
+  // El alias se sugiere con las iniciales del nombre (R-#299 §4) y el iniciador lo puede
+  // editar antes de crear el clúster; si lo editó, no se vuelve a recalcular.
+  const onNameChange = (value: string) => {
+    setName(value)
+    if (!slugEdited) setSlug(suggestSlug(value))
+  }
+
   const toggleCandidate = (id: number) => {
     setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id].slice(-2))
   }
@@ -134,13 +135,15 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
     if (!name || name.length < 3) { setError(t('name')); return }
     setBusy(true); setError('')
     try {
-      const res = await authedPost('/api/cluster', { name, pseudonym, inviteeIds: selected })
+      const res = await authedPost('/api/cluster', { name, slug: slug || undefined, inviteeIds: selected })
       if (res.status === 201) {
         setShowCreate(false)
         await load()
       }
     } catch (e: any) {
-      setError(e?.response?.data?.error || t('error'))
+      const data = e?.response?.data ?? {}
+      if (data.code === 'slug_taken') setError(`${t('slug')}: ${data.error}`)
+      else setError(data.error || t('error'))
     } finally { setBusy(false) }
   }
 
@@ -154,18 +157,11 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
     } finally { setBusy(false) }
   }
 
-  const leave = async () => {
-    if (!cluster?.id || !confirm(t('leaveConfirm'))) return
-    setBusy(true); setError('')
-    try {
-      await authedPost(`/api/cluster/${cluster.id}/leave`, {})
-      await load()
-    } catch (e: any) {
-      setError(e?.response?.data?.error || t('error'))
-    } finally { setBusy(false) }
-  }
-
   const guideHref = es ? `/${lang}/redgd/guia2` : `/${lang}/gdcluster/guide2`
+
+  if (status === 'member' && clusterId) {
+    return <ClusterPageHost lang={lang} />
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100">
@@ -195,13 +191,17 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
                   <h2 className="font-semibold text-gray-800">{t('createTitle')}</h2>
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">{t('name')}</label>
-                    <input value={name} onChange={(e) => setName(e.target.value)}
+                    <input value={name} onChange={(e) => onNameChange(e.target.value)}
                       className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">{t('pseudonym')}</label>
-                    <input value={pseudonym} onChange={(e) => setPseudonym(e.target.value)}
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+                    <label className="block text-sm text-gray-600 mb-1">{t('slug')}</label>
+                    <input
+                      value={slug}
+                      onChange={(e) => { setSlug(e.target.value.toLowerCase()); setSlugEdited(true) }}
+                      maxLength={40}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm font-mono" />
+                    <p className="text-xs text-gray-500 mt-1">{t('slugHint')}</p>
                   </div>
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">{t('candidates')}</label>
@@ -240,7 +240,7 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
               {invitations.map((inv) => (
                 <div key={inv.id} className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-left">
                   <p className="text-gray-700 mb-4">
-                    {t('invitePending', inv.cluster_name, inv.inviter_name || '—')}
+                    {t('invitePending', inv.slug || inv.cluster_name, inv.inviter_name || '—')}
                   </p>
                   <div className="flex gap-3">
                     <button onClick={() => respond(inv.id, 'accept')} disabled={busy}
@@ -254,35 +254,6 @@ export default function ClusterFormationPage({ params }: { params: Promise<{ lan
                   </div>
                 </div>
               ))}
-              {error && <p className="text-sm text-red-600">{error}</p>}
-            </div>
-          )}
-
-          {status === 'member' && cluster && (
-            <div className="text-left space-y-3">
-              <p className="text-gray-700 font-medium">{t('inCluster')} <span className="font-bold">{cluster.pseudonym || cluster.name}</span></p>
-              <p className="text-sm text-gray-500">{t('code')}: <span className="font-mono">{cluster.code}</span></p>
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-1">{t('members')} ({cluster.member_count})</p>
-                <ul className="space-y-1 text-sm text-gray-700">
-                  {cluster.members?.map((m: any, i: number) => (
-                    <li key={i} className="rounded bg-gray-50 border px-3 py-1.5 flex justify-between">
-                      <span>{m.church_name}</span>
-                      {String(m.church_id) === String(cluster.initiator_church_id) || (i === 0 && !cluster.initiator_church_id) ? <span className="text-xs text-blue-600 font-medium">{t('initiator')}</span> : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex gap-3">
-                <Link href={`/${lang}/cluster/${cluster.id}`}
-                  className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white! hover:bg-blue-700">
-                  {t('details')}
-                </Link>
-                <button onClick={leave} disabled={busy}
-                  className="rounded border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">
-                  {t('leave')}
-                </button>
-              </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
             </div>
           )}

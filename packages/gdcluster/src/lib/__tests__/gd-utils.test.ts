@@ -12,83 +12,12 @@ vi.mock('kysely', () => ({
 }))
 
 import {
-  generateClusterCode,
-  generateClusterCodeSync,
-  generateUniqueClusterCode,
   getPastorChurch,
   getChurchCluster,
   getClusterMembers,
   getClusterHistory,
   addClusterHistory,
 } from '../gd-utils.js'
-
-describe('generateClusterCode', () => {
-  it('returns a 6-character uppercase alphanumeric string', () => {
-    const code = generateClusterCode()
-    expect(code).toHaveLength(6)
-    expect(code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/)
-  })
-
-  it('does not contain ambiguous characters (0, O, I, 1)', () => {
-    for (let i = 0; i < 100; i++) {
-      const code = generateClusterCode()
-      expect(code).not.toMatch(/[0OI1]/)
-    }
-  })
-})
-
-describe('generateClusterCodeSync', () => {
-  it('returns a valid 6-character code', () => {
-    const code = generateClusterCodeSync()
-    expect(code).toHaveLength(6)
-    expect(code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/)
-  })
-})
-
-describe('generateUniqueClusterCode', () => {
-  it('returns a 6-character code when no collision', async () => {
-    const mockDb = {
-      selectFrom: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      executeTakeFirst: vi.fn().mockResolvedValue(null),
-    } as any
-
-    const code = await generateUniqueClusterCode(mockDb)
-    expect(code).toHaveLength(6)
-    expect(code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/)
-  })
-
-  it('retries on collision and returns unique code', async () => {
-    let callCount = 0
-    const mockDb = {
-      selectFrom: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      executeTakeFirst: vi.fn().mockImplementation(() => {
-        callCount++
-        return callCount <= 2 ? Promise.resolve({ id: 1 }) : Promise.resolve(null)
-      }),
-    } as any
-
-    const code = await generateUniqueClusterCode(mockDb)
-    expect(code).toHaveLength(6)
-    expect(callCount).toBe(3)
-  })
-
-  it('throws after 10 failed attempts', async () => {
-    const mockDb = {
-      selectFrom: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      executeTakeFirst: vi.fn().mockResolvedValue({ id: 1 }),
-    } as any
-
-    await expect(generateUniqueClusterCode(mockDb)).rejects.toThrow(
-      'Could not generate unique cluster code after 10 attempts'
-    )
-  })
-})
 
 describe('getPastorChurch', () => {
   it('returns the church assigned to the pastor', async () => {

@@ -19,7 +19,7 @@ export interface RankingClientDeps {
 }
 
 interface ClusterRow {
-  id: number; name: string; pseudonym: string | null; display_name: string
+  id: number; slug: string; display_name: string
   country_name: string | null
   country_code: string | null; church_count: number; wallet: string | null
   status: string | null
@@ -140,7 +140,11 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
               ) : clusters.map((c, i) => (
                 <tr key={c.id} className="border-b hover:bg-blue-50">
                   <td className="px-3 py-2 font-mono text-xs text-gray-500">{i + 1}</td>
-                  <td className="px-3 py-2 font-medium">{c.display_name || c.name}</td>
+                  <td className="px-3 py-2 font-medium">
+                    <a href={`/${lang}/clusters/${c.slug}`} className="text-blue-600 hover:underline">
+                      {c.display_name || c.slug}
+                    </a>
+                  </td>
                   <td className="px-3 py-2 text-xs">
                     {c.country_code ? `${flagEmoji(c.country_code)} ${c.country_name}` : c.country_name || '—'}
                   </td>
@@ -167,7 +171,7 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
                         type: 'cluster-donation',
                         // The button only renders when the cluster has a wallet.
                         clusterWallet: c.wallet as string,
-                        clusterName: c.display_name || c.name,
+                        clusterName: c.display_name || c.slug,
                       })}
                       className="text-xs text-blue-600 hover:underline px-2 py-1 rounded hover:bg-blue-50">
                         {t('donate')}

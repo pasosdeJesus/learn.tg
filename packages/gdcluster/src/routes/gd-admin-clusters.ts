@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from 'kysely'
 import { getChurchCluster, getClusterMembers, addClusterHistory, notifyUser } from '../lib/gd-utils.js'
+import { suggestSlug, slugWithId, validateSlug } from '../lib/slug.js'
 import type { GdclusterDeps } from '../index.js'
 
 // Admin/verificador de clústeres (https://github.com/pasosdeJesus/learn.tg/issues/220 §5) — sobre los datos existentes
@@ -37,7 +38,7 @@ export async function adminListClusters(deps: GdclusterDeps, req: NextRequest) {
 
     const rows = await sql<any>`
       SELECT
-        c.id, c.name, c.pseudonym, c.code, c.country_id, c.status, c.initiator_church_id,
+        c.id, c.name, c.slug, c.country_id, c.status, c.initiator_church_id,
         c.gd_status, c.gd_requested_at, c.gd_sent_at, c.gd_response, c.gd_contact_email,
         c.gd_evaluation, c.gd_suggestions,
         p.nombre AS country_name,
@@ -48,7 +49,7 @@ export async function adminListClusters(deps: GdclusterDeps, req: NextRequest) {
       LEFT JOIN msip_pais p ON p.id = c.country_id
       LEFT JOIN church lc ON lc.id = c.initiator_church_id
       WHERE 1 = 1
-        ${q ? sql`AND (c.name ILIKE ${'%' + q + '%'} OR c.pseudonym ILIKE ${'%' + q + '%'} OR c.code ILIKE ${'%' + q + '%'})` : sql``}
+        ${q ? sql`AND (c.name ILIKE ${'%' + q + '%'} OR c.slug ILIKE ${'%' + q + '%'})` : sql``}
         ${country ? sql`AND c.country_id = ${Number(country)}` : sql``}
         ${status ? sql`AND c.status = ${status}` : sql``}
       ORDER BY c.id DESC
@@ -92,25 +93,47 @@ export async function adminCreateCluster(deps: GdclusterDeps, req: NextRequest) 
     if (!ctx) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     const { db, admin } = ctx
 
-    const { name, pseudonym, initiatorChurchId, memberChurchIds = [], countryId, status = 'pending' } = await req.json()
-    if (!name || name.length < 3 || name.length > 50) return badRequest('Cluster name must be between 3 and 50 characters')
+    const { name, slug, initiatorChurchId, memberChurchIds = [], countryId, status = 'pending' } = await req.json()
+    const clusterName = typeof name === 'string' ? name.trim() : ''
+    if (clusterName.length < 3 || clusterName.length > 50) return badRequest('Cluster name must be between 3 and 50 characters')
     if (!initiatorChurchId || !countryId) return badRequest('initiatorChurchId and countryId are required')
 
+    // R-#299: `name` y `slug` son únicos en todo learn.tg y la comparación ignora
+    // mayúsculas y espacios (los índices únicos son la verdad).
     const existingName = await db.selectFrom('clustergd').select('id')
-      .where('name', '=', name).where('country_id', '=', Number(countryId)).executeTakeFirst()
-    if (existingName) return NextResponse.json({ error: 'A cluster with this name already exists in your country' }, { status: 409 })
+      .where(sql<boolean>`lower(btrim(name)) = lower(btrim(${clusterName}))`).executeTakeFirst()
+    if (existingName) return NextResponse.json({ error: 'A cluster with this name already exists', code: 'name_taken' }, { status: 409 })
 
-    const cluster = await db.insertInto('clustergd')
-      .values({
-        name,
-        pseudonym: pseudonym?.trim() ? String(pseudonym).trim() : null,
-        code: await genCode(db),
-        country_id: Number(countryId),
-        status: status === 'active' || status === 'disbanded' ? status : 'pending',
-        initiator_church_id: Number(initiatorChurchId),
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow()
+    let requestedSlug: string | null = null
+    if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
+      const checked = validateSlug(String(slug).trim().toLowerCase())
+      if (!checked.ok) return NextResponse.json({ error: 'The alias must have 2 to 40 characters: lowercase letters, digits and single hyphens', code: 'slug_invalid' }, { status: 400 })
+      requestedSlug = checked.slug
+      const taken = await db.selectFrom('clustergd').select('id').where('slug', '=', requestedSlug).executeTakeFirst()
+      if (taken) return NextResponse.json({ error: `The alias "${requestedSlug}" is already in use`, code: 'slug_taken' }, { status: 409 })
+    }
+
+    const derived = suggestSlug(clusterName)
+    const baseSlug = validateSlug(derived).ok ? derived : 'cl'
+
+    const cluster = await db.transaction().execute(async (trx: any) => {
+      const row = await trx.insertInto('clustergd')
+        .values({
+          name: clusterName,
+          slug: requestedSlug ?? `cl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+          country_id: Number(countryId),
+          status: status === 'active' || status === 'disbanded' ? status : 'pending',
+          initiator_church_id: Number(initiatorChurchId),
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow()
+      if (requestedSlug) return row
+      let finalSlug = baseSlug
+      const taken = await trx.selectFrom('clustergd').select('id').where('slug', '=', finalSlug).executeTakeFirst()
+      if (taken) finalSlug = slugWithId(baseSlug, row.id)
+      await trx.updateTable('clustergd').set({ slug: finalSlug }).where('id', '=', row.id).execute()
+      return { ...row, slug: finalSlug }
+    })
 
     const churchIds = [Number(initiatorChurchId), ...memberChurchIds.map((id: any) => Number(id))]
     for (const churchId of new Set(churchIds)) {
@@ -144,16 +167,27 @@ export async function adminUpdateCluster(deps: GdclusterDeps, req: NextRequest, 
     const cluster = await db.selectFrom('clustergd').selectAll().where('id', '=', clusterId).executeTakeFirst()
     if (!cluster) return NextResponse.json({ error: 'Cluster not found' }, { status: 404 })
 
-    const { name, pseudonym, initiatorChurchId, status, gdSent, gdResponse, gdContactEmail } = await req.json()
+    const { name, slug, initiatorChurchId, status, gdSent, gdResponse, gdContactEmail } = await req.json()
     const updates: Record<string, unknown> = { updated_at: new Date() }
     if (name !== undefined) {
-      if (!name || name.length < 3 || name.length > 50) return badRequest('Cluster name must be between 3 and 50 characters')
+      const clusterName = typeof name === 'string' ? name.trim() : ''
+      if (clusterName.length < 3 || clusterName.length > 50) return badRequest('Cluster name must be between 3 and 50 characters')
       const dup = await db.selectFrom('clustergd').select('id')
-        .where('name', '=', name).where('country_id', '=', cluster.country_id).where('id', '!=', clusterId).executeTakeFirst()
-      if (dup) return NextResponse.json({ error: 'A cluster with this name already exists in your country' }, { status: 409 })
-      updates.name = name
+        .where(sql<boolean>`lower(btrim(name)) = lower(btrim(${clusterName}))`).where('id', '!=', clusterId).executeTakeFirst()
+      if (dup) return NextResponse.json({ error: 'A cluster with this name already exists', code: 'name_taken' }, { status: 409 })
+      updates.name = clusterName
     }
-    if (pseudonym !== undefined) updates.pseudonym = String(pseudonym).trim() ? String(pseudonym).trim() : null
+    // R-#299: el alias (slug) también lo edita el verificador; nunca se recalcula solo.
+    if (slug !== undefined) {
+      const checked = validateSlug(String(slug ?? '').trim().toLowerCase())
+      if (!checked.ok) return NextResponse.json({ error: 'The alias must have 2 to 40 characters: lowercase letters, digits and single hyphens', code: 'slug_invalid' }, { status: 400 })
+      if (checked.slug !== cluster.slug) {
+        const dup = await db.selectFrom('clustergd').select('id')
+          .where('slug', '=', checked.slug).where('id', '!=', clusterId).executeTakeFirst()
+        if (dup) return NextResponse.json({ error: `The alias "${checked.slug}" is already in use`, code: 'slug_taken', suggestion: slugWithId(checked.slug, clusterId) }, { status: 409 })
+      }
+      updates.slug = checked.slug
+    }
     if (initiatorChurchId !== undefined) updates.initiator_church_id = Number(initiatorChurchId)
     if (status !== undefined) updates.status = status
 
@@ -182,6 +216,9 @@ export async function adminUpdateCluster(deps: GdclusterDeps, req: NextRequest, 
     await db.updateTable('clustergd').set(updates).where('id', '=', clusterId).execute()
     if (updates.name !== undefined && updates.name !== cluster.name) {
       await addClusterHistory(db, clusterId, 'name_change', cluster.name, updates.name as string, admin.usuario_id)
+    }
+    if (updates.slug !== undefined && updates.slug !== cluster.slug) {
+      await addClusterHistory(db, clusterId, 'slug_change', cluster.slug, updates.slug as string, admin.usuario_id)
     }
     if (updates.status !== undefined && updates.status !== cluster.status) {
       await addClusterHistory(db, clusterId, 'status_change', cluster.status, updates.status as string, admin.usuario_id)
@@ -212,7 +249,7 @@ export async function adminUpdateCluster(deps: GdclusterDeps, req: NextRequest, 
           es
             ? 'La página del clúster tiene la respuesta y el correo o canal para continuar directamente con Global Disciples.'
             : 'The cluster page has the answer and the email or channel to continue directly with Global Disciples.',
-          `/${es ? 'es' : 'en'}/cluster/${clusterId}`,
+          `/${es ? 'es' : 'en'}/cluster`,
         )
       }
     }
@@ -304,18 +341,6 @@ export async function adminRemoveMember(deps: GdclusterDeps, req: NextRequest, p
 }
 
 // ── helpers ────────────────────────────────────────────────────────────────
-
-const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-
-async function genCode(db: any): Promise<string> {
-  for (let attempt = 0; attempt < 10; attempt++) {
-    let code = ''
-    for (let i = 0; i < 6; i++) code += CODE_CHARS.charAt(Math.floor(Math.random() * CODE_CHARS.length))
-    const existing = await db.selectFrom('clustergd').select('id').where('code', '=', code).executeTakeFirst()
-    if (!existing) return code
-  }
-  throw new Error('Could not generate unique cluster code after 10 attempts')
-}
 
 async function logEvent(db: any, usuarioId: number, eventType: string, eventData: unknown): Promise<void> {
   await db.insertInto('userevent')

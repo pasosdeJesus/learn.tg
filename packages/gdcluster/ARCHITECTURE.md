@@ -65,15 +65,28 @@ refusal without an explanation is a silent failure (2026-11-05).
 ### Cluster lifecycle
 
 1. **Create**: a pastor (pilot countries CO/SL, must own the GD course) creates
-   a cluster → unique 6-char code generated, rows in `clustergd` +
-   `church_clustergd`.
-2. **Join**: another user joins with the code (`cluster/join`).
-3. **Invitations (https://github.com/pasosdeJesus/learn.tg/issues/220)**: `cluster/candidates` proposes pastors from the
+   a cluster → rows in `clustergd` + `church_clustergd`. `name` and the public
+   `slug` are unique across learn.tg (unique indexes on `lower(btrim(name))` and
+   `slug`); the slug is suggested with `suggestSlug(name)` (initials of the words)
+   and the initiator can edit it before creating the cluster.
+2. **Invitations (https://github.com/pasosdeJesus/learn.tg/issues/220, R-#299)**: `cluster/candidates` proposes pastors from the
    user's **referral graph** (`referralrelationship`, https://github.com/pasosdeJesus/learn.tg/issues/163) — referred
-   pastors first, then the referrer. Invitations can be accepted or rejected;
-   state via `cluster/status`.
+   pastors first, then the referrer — and the initiator can also invite by typing the
+   pastor's **wallet** (`cluster/invitation/wallet`). Only the initiator invites and only
+   the lead pastor of a verified church in the cluster country can be invited; every
+   refusal answers the same 422 `not_invitable` + `reason` (no wallet enumeration).
+   The invited pastor accepts or rejects from the private page, the initiator is notified
+   of the answer and a rejection can be retried **once** (`invite_count` 1 → 2). State via
+   `cluster/status`.
+3. **No join by code**: `cluster/join` and `clustergd.code` were removed (R-#299); the
+   code let any pastor in without the initiator accepting.
 4. **Admin**: verifiers can list/create/update/disband clusters and add/remove
-   members (`admin/clusters/*`, auth via injected `authenticateAdmin`).
+   members (`admin/clusters/*`, auth via injected `authenticateAdmin`), editing both the
+   internal `name` and the public `slug`.
+5. **Public surface** (R-#299): `GET /api/clusters` and `GET /api/clusters/[slug]` expose
+   the slug, the churches, the total raised, the process status and the release
+   transaction. They never return `name`, pastor data or wallets; the page is
+   `/{lang}/clusters/[slug]` and the ranking links to it.
 
 ### Donations to funds
 

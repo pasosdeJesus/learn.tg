@@ -112,13 +112,17 @@ Confirming `registration_verified` is what unlocks the **22 SLEARN pastor bonus*
 ## All Clusters (`/{lang}/admin/clusters`)
 
 Verifier view of the GD clusters (https://github.com/pasosdeJesus/learn.tg/issues/220
-§5). The table lists ID, name, pseudonym, code, country, initiator church, member
-count and **status** (pending / active / disbanded), with a search box (name,
-pseudonym or code) and two filters: status and country.
+§5, updated by R-#299). The table lists ID, name, **public alias (slug)**, country,
+initiator church, member count and **status** (pending / active / disbanded), with a
+search box (name or alias) and two filters: status and country.
 
-- **Edit** opens a dialog with the name, the pseudonym and the status
-  (`PUT /api/admin/clusters/{id}`). Renaming is rejected with **409** when another
-  cluster of the same country already uses that name.
+- **Edit** opens a dialog with the internal **name**, the public **alias (slug)** and the
+  status (`PUT /api/admin/clusters/{id}`). Both `name` and `slug` are unique across
+  learn.tg: the API answers **409** with `name_taken` or `slug_taken` (and, for an alias,
+  a suffixed suggestion). The alias is what the public page `/{lang}/clusters/{slug}` and
+  the ranking show; the **name is internal** and never published. A new alias is always an
+  explicit choice here: it is not recomputed from the name (the initials are only the
+  suggestion offered when the cluster is created).
 - **Disband** applies the soft delete (`DELETE /api/admin/clusters/{id}`): the
   cluster leaves the public ranking and its history stays. A verifier can also
   disband: the auth model has no separate admin role, and `authenticateAdmin`
@@ -128,8 +132,8 @@ pseudonym or code) and two filters: status and country.
 
 **The cluster wallet is not set here.** `church.cluster_wallet` (the address the 10%
 of GD purchases and guide scholarships is routed to) is configured by the **cluster
-initiator** on the cluster page `/{lang}/cluster/{id}`, which recommends a multisig
-wallet shared by the cluster's pastors. The verifier can still correct it in the church
+initiator** on the cluster page (`/{lang}/cluster`, the single private page since R-#299),
+which recommends a multisig wallet shared by the cluster's pastors. The verifier can still correct it in the church
 modal (*Cluster wallet*) when a cluster cannot do it, as a support path.
 
 **Changing it with funds in it asks first.** The `ClusterFundsV2` fund is indexed by
@@ -152,7 +156,8 @@ the cluster page. pdJ is not GD staff: it only asks for the nearest program dire
 contact or the channel GD suggests.
 
 The public ranking (`/{lang}/gdcluster/ranking`, Clusters tab) also shows the
-status of each cluster, next to the pseudonym and the fund columns.
+status of each cluster, next to its alias and the fund columns, and each row links to the
+public page `/{lang}/clusters/{slug}`.
 
 ## Issues to resolve (`/{lang}/admin/solves`)
 
