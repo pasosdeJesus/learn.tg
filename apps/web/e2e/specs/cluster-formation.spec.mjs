@@ -253,18 +253,25 @@ async function main() {
     else { console.log(`  ranking row: ${JSON.stringify(row)}`); fail('Ranking without the updated alias') }
     if (row && row.name !== undefined) fail('The public ranking must not expose the internal name')
     else ok('The public ranking does not expose the internal name')
-    const pub = await (await fetch(`${base}/api/clusters`)).json().catch(() => ({ clusters: [] }))
-    const pubRow = (pub.clusters || []).find((c) => c.slug === alias)
+    // R-#299: superficie pública. Si la ruta no está en el build desplegado la
+    // respuesta llega como HTML: se informa sin romper el resto del spec.
+    const readJson = async (url) => {
+      const res = await fetch(url)
+      const ct = res.headers.get('content-type') || ''
+      if (!ct.includes('application/json')) return { res, ct, body: null }
+      return { res, ct, body: await res.json().catch(() => null) }
+    }
+    const pub = await readJson(`${base}/api/clusters`)
+    const pubRow = (pub.body?.clusters || []).find((c) => c.slug === alias)
     if (pubRow) ok(`GET /api/clusters lists the cluster by alias (${pubRow.slug})`)
-    else fail('GET /api/clusters does not list the cluster')
+    else fail(`GET /api/clusters does not list the cluster (${pub.res.status}, ${pub.ct})`)
     if (pubRow && pubRow.name !== undefined) fail('GET /api/clusters must not expose the internal name')
     else ok('GET /api/clusters does not expose the internal name')
-    const pubOne = await fetch(`${base}/api/clusters/${alias}`)
-    if (pubOne.ok) {
-      const one = await pubOne.json()
-      if (one.name !== undefined) fail('GET /api/clusters/[slug] must not expose the internal name')
-      else ok(`GET /api/clusters/[slug] answers the public page (slug=${one.slug})`)
-    } else fail(`GET /api/clusters/[slug] → ${pubOne.status}`)
+    const pubOne = await readJson(`${base}/api/clusters/${alias}`)
+    if (pubOne.body) {
+      if (pubOne.body.name !== undefined) fail('GET /api/clusters/[slug] must not expose the internal name')
+      else ok(`GET /api/clusters/[slug] answers the public page (slug=${pubOne.body.slug})`)
+    } else fail(`GET /api/clusters/[slug] → ${pubOne.res.status}, ${pubOne.ct}`)
     const gone = await fetch(`${base}/api/cluster/join`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
     if (gone.status === 404 || gone.status === 405) ok('POST /api/cluster/join is gone (no code flow)')
     else fail(`POST /api/cluster/join still answers ${gone.status}`)
@@ -287,10 +294,17 @@ async function main() {
     else fail('The public page does not render the alias')
     if (pubUi.includes(name)) fail('The public page exposes the internal cluster name')
     else ok('The public page does not expose the internal cluster name')
-    // La página privada se sirve en /{lang}/cluster; /{lang}/cluster/{id} ya no existe.
+    // La página privada se sirve en /{lang}/cluster; /{lang}/cluster/{id} ya no
+    // existe. El sitio devuelve un fallback 200 para rutas desconocidas, así que la
+    // comprobación es de contenido: no debe renderizarse el detalle del clúster.
     const oldPage = await page.goto(`${base}/${lang}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded', timeout: 180000 }).catch(() => null)
-    if (!oldPage || oldPage.status() === 404) ok('/{lang}/cluster/{id} is gone (404)')
-    else fail(`/{lang}/cluster/{id} still answers ${oldPage.status()}`)
+    const oldBody = await page.evaluate(() => document.body?.textContent || '').catch(() => '')
+    const oldStatus = oldPage ? oldPage.status() : 0
+    if (oldStatus === 404 || !/Member Churches|Iglesias Miembros|Cluster wallet|Billetera del clúster/.test(oldBody)) {
+      ok('/{lang}/cluster/{id} no longer renders the cluster detail')
+    } else {
+      fail(`/{lang}/cluster/{id} still renders the cluster detail (${oldStatus})`)
+    }
 
     // ══════════════════════════════════════════════════════════════
     // 9. Admin: disband (soft) → listed as disbanded, excluded from the ranking
