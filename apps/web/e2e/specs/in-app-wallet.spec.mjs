@@ -38,12 +38,39 @@ async function statusOf(page) {
   return page.$eval('[data-testid="wallet-status"]', (el) => el.textContent).catch(() => null)
 }
 
+// F-#300: un timeout a secas no dice nada. Al fallar se imprime el estado real y el
+// final del log de la página (el panel de `/en/test/wallet` muestra el error de la
+// billetera), más los errores de consola capturados en `browserLog`.
 async function waitForStatus(page, expected, timeout) {
-  await page.waitForFunction(
-    (value) => document.querySelector('[data-testid="wallet-status"]')?.textContent === value,
-    { timeout },
-    expected,
-  )
+  try {
+    await page.waitForFunction(
+      (value) => document.querySelector('[data-testid="wallet-status"]')?.textContent === value,
+      { timeout },
+      expected,
+    )
+  } catch (error) {
+    const status = await statusOf(page)
+    const pageLog = await page
+      .evaluate(() => (document.querySelector('[data-testid="wallet-test-page"]')?.textContent || '')
+        .replace(/\s+/g, ' ').slice(-700))
+      .catch(() => '(sin página)')
+    console.error(`[diag] la billetera no llegó a ${JSON.stringify(expected)}: wallet-status=${JSON.stringify(status)}`)
+    console.error(`[diag] log de la página: ${pageLog}`)
+    if (browserLog.length > 0) {
+      console.error('[diag] consola del navegador:')
+      for (const line of browserLog.slice(-10)) console.error(`  ${line}`)
+    }
+    throw error
+  }
+}
+
+/** Errores de consola y de página, para el diagnóstico de `waitForStatus`. */
+const browserLog = []
+function captureBrowserLog(page) {
+  page.on('pageerror', (error) => browserLog.push(`[pageerror] ${error.message}`))
+  page.on('console', (message) => {
+    if (message.type() === 'error') browserLog.push(`[console] ${message.text()}`)
+  })
 }
 
 async function main() {
@@ -64,6 +91,7 @@ async function main() {
 
   const browser = await launchBrowser(env.headless)
   const page = await newPage(browser, creds?.addr, timeout)
+  captureBrowserLog(page)
 
   const response = await page.goto(`${base}/en/test/wallet`, { waitUntil: 'domcontentloaded' })
   const notDeployed = !response || response.status() === 404
