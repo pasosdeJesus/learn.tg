@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from 'kysely'
+import { formatUnits } from 'viem'
 import {
   getPastorChurch,
   getChurchCluster,
@@ -10,7 +11,7 @@ import {
   getClusterCandidates,
   isType1Country,
 } from '../lib/gd-utils.js'
-import { readClusterFunds, hasFunds, summarizeFunds } from '../lib/cluster-funds.js'
+import { readClusterFunds, readCountryFunds, readClusterDonations, hasFunds, summarizeFunds } from '../lib/cluster-funds.js'
 import { checkWalletControl, validateClusterWallet } from '../lib/cluster-wallet.js'
 import { churchCompletedCluster } from '../lib/cluster-membership.js'
 import { getClusterPastors } from '../lib/cluster-pastors.js'
@@ -242,6 +243,22 @@ export async function getCluster(
     const initiatorChurch = cluster.initiator_church_id
       ? await db.selectFrom('church').select('cluster_wallet').where('id', '=', cluster.initiator_church_id).executeTakeFirst()
       : null
+    const clusterWallet = initiatorChurch?.cluster_wallet ?? null
+
+    // Indicadores de lo que el clúster ha hecho para levantar fondos: cuántos miembros
+    // tiene cada iglesia en learn.tg, cuántos referidos lleva su pastor y cuánto se ha
+    // donado al fondo del clúster. Las cifras de cadena se piden una vez cada una.
+    const membersWithIndicators = await withChurchIndicators(db, members)
+    const country = await db
+      .selectFrom('msip_pais')
+      .select(['nombre as name', 'alfa2 as code'])
+      .where('id', '=', cluster.country_id)
+      .executeTakeFirst()
+    const [clusterFunds, countryFunds, donations] = await Promise.all([
+      readClusterFunds(deps, clusterWallet),
+      readCountryFunds(deps, country?.code ?? null),
+      readClusterDonations(db, clusterWallet),
+    ])
 
     // `isInitiator` se calcula para la billetera que consulta (opcional): la página
     // del clúster lo usa para ofrecer la edición de la billetera solo al **iniciador
@@ -261,14 +278,23 @@ export async function getCluster(
       name: cluster.name,
       slug: cluster.slug,
       country_id: cluster.country_id,
+      country_name: country?.name ?? null,
+      country_code: country?.code ?? null,
       created_at: cluster.created_at,
       initiator_church_id: cluster.initiator_church_id,
-      cluster_wallet: initiatorChurch?.cluster_wallet ?? null,
+      cluster_wallet: clusterWallet,
       isInitiator,
       member_count: members.length,
       status: cluster.status ?? (members.length >= 3 ? 'active' : 'pending'),
-      members,
+      members: membersWithIndicators,
       history,
+      funds: {
+        cluster: clusterFunds ? summarizeFunds(clusterFunds) : null,
+        country: countryFunds
+          ? { usdt: formatUnits(countryFunds.usdt, 6), slearn: formatUnits(countryFunds.slearn, 2) }
+          : null,
+      },
+      donations,
     })
   } catch (error) {
     console.error('Error fetching cluster:', error)
@@ -611,6 +637,60 @@ export async function leaveCluster(
 }
 
 // ── helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Añade a cada iglesia miembro tres números que muestran su trabajo: cuántos usuarios
+ * tiene en learn.tg, el nombre de su pastor principal y cuántos referidos lleva ese
+ * pastor (R-#299 follow-up; los referidos vienen de `referralrelationship`).
+ */
+async function withChurchIndicators(db: any, members: any[]): Promise<any[]> {
+  const churchIds = members.map((member) => member.church_id).filter((id: any) => !!id)
+  if (churchIds.length === 0) return members
+
+  const learnersRows = await db
+    .selectFrom('usuario')
+    .select(['church_id'])
+    .select((eb: any) => eb.fn.count('id').as('total'))
+    .where('church_id', 'in', churchIds)
+    .where('fechadeshabilitacion', 'is', null)
+    .groupBy('church_id')
+    .execute()
+  const learners = new Map<number, number>(
+    (learnersRows as any[]).map((row) => [Number(row.church_id), Number(row.total)]),
+  )
+
+  const pastors = await db
+    .selectFrom('usuario')
+    .select(['id', 'nombre', 'nusuario', 'church_id'])
+    .where('church_id', 'in', churchIds)
+    .where('church_relationship', '=', 'pastor')
+    .where('fechadeshabilitacion', 'is', null)
+    .orderBy('id', 'asc')
+    .execute()
+
+  const referrals = new Map<number, number>()
+  const pastorIds = (pastors as any[]).map((pastor) => pastor.id)
+  if (pastorIds.length > 0) {
+    const referralRows = await db
+      .selectFrom('referralrelationship')
+      .select(['referrer_id'])
+      .select((eb: any) => eb.fn.count('referred_id').as('total'))
+      .where('referrer_id', 'in', pastorIds)
+      .groupBy('referrer_id')
+      .execute()
+    for (const row of referralRows as any[]) referrals.set(Number(row.referrer_id), Number(row.total))
+  }
+
+  return members.map((member) => {
+    const pastor = (pastors as any[]).find((row) => row.church_id === member.church_id) ?? null
+    return {
+      ...member,
+      learners: learners.get(Number(member.church_id)) ?? 0,
+      pastor_name: pastor ? (pastor.nombre || pastor.nusuario) : null,
+      pastor_referrals: pastor ? (referrals.get(Number(pastor.id)) ?? 0) : 0,
+    }
+  })
+}
 
 async function logEvent(db: any, usuarioId: number, eventType: string, eventData: unknown): Promise<void> {
   await db.insertInto('userevent')

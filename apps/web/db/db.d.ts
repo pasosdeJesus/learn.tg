@@ -134,7 +134,7 @@ export interface Clustergd {
   director_first_year_pay: Numeric | null;
   director_fixed_at: Timestamp | null;
   director_offer_path: string | null;
-  first_year_budget: Numeric | null;
+  fourth_year_budget: Numeric | null;
   fund_released_amount: Numeric | null;
   fund_released_at: Timestamp | null;
   fund_released_slearn: Numeric | null;

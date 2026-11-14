@@ -151,7 +151,7 @@ describe('auth of the cluster routes (R-#161)', () => {
   it('budget PUT: 401 without a session', async () => {
     const res = await updateBudget(
       deps({ authenticateUser: vi.fn().mockResolvedValue(null) }) as GdclusterDeps,
-      putJson('budget', { walletAddress: WALLET, firstYearBudget: 500 }),
+      putJson('budget', { walletAddress: WALLET, fourthYearBudget: 500 }),
       { id: '3' },
     )
     expect(res.status).toBe(401)
@@ -161,7 +161,7 @@ describe('auth of the cluster routes (R-#161)', () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce(CLUSTER)
       .mockResolvedValueOnce({ id: OTHER_CHURCH, name: 'Otra', country_id: 1 })
-    const res = await updateBudget(deps() as GdclusterDeps, putJson('budget', { walletAddress: WALLET, firstYearBudget: 500 }), { id: '3' })
+    const res = await updateBudget(deps() as GdclusterDeps, putJson('budget', { walletAddress: WALLET, fourthYearBudget: 500 }), { id: '3' })
     expect(res.status).toBe(403)
   })
 

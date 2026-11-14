@@ -33,6 +33,17 @@ const tEn = {
   pendingChurches: 'Invite two more churches; with three you can complete the budget, the director offer and the approvals.',
   memberChurches: 'Member Churches',
   invitations: 'Invitations',
+  clusterFundBalance: 'Cluster fund balance',
+  countryFundBalance: 'Country fund balance',
+  donationsTitle: 'Donations to the cluster fund',
+  membersLabel: 'members in learn.tg',
+  referralsLabel: 'referrals',
+  donationsLabel: 'donations',
+  pastor: 'Pastor',
+  notAvailable: 'Not available',
+  budgetTitle: 'Fourth year budget',
+  directorTitle: 'Program Director',
+  approvalsTitle: 'Pastors approval',
   inviteIntro: 'Invite a pastor by wallet. Only the lead pastor of a verified church in your country can be invited.',
   inviteWallet: 'Pastor wallet',
   inviteSend: 'Invite',
@@ -44,7 +55,8 @@ const tEn = {
   invitationRejected: 'Rejected',
   invitationFinal: 'Rejected twice: final',
   candidates: 'Pastors you can invite',
-  noCandidates: 'No pastors you can invite yet (referred pastors from your country with a verified church). You can type a wallet below.',
+  noCandidates: 'You have not referred any pastor.',
+  noCandidatesInvite: 'You can invite to this cluster another pastor already verified in learn.tg with his wallet address:',
   referralsLink: 'Go to referrals',
   leaveCluster: 'Leave cluster',
   leftCluster: 'Left cluster',
@@ -101,6 +113,17 @@ const tEs: typeof tEn = {
   pendingChurches: 'Invita dos iglesias más; con tres podrás completar el presupuesto, la oferta del director y las aprobaciones.',
   memberChurches: 'Iglesias Miembros',
   invitations: 'Invitaciones',
+  clusterFundBalance: 'Balance del fondo del clúster',
+  countryFundBalance: 'Balance del fondo del país',
+  donationsTitle: 'Donaciones al fondo del clúster',
+  membersLabel: 'miembros en learn.tg',
+  referralsLabel: 'referidos',
+  donationsLabel: 'donaciones',
+  pastor: 'Pastor',
+  notAvailable: 'No disponible',
+  budgetTitle: 'Presupuesto del cuarto año',
+  directorTitle: 'Director del programa',
+  approvalsTitle: 'Aprobación de los pastores',
   inviteIntro: 'Invita a un pastor por su billetera. Sólo se puede invitar al pastor principal de una iglesia verificada de tu país.',
   inviteWallet: 'Billetera del pastor',
   inviteSend: 'Invitar',
@@ -112,7 +135,8 @@ const tEs: typeof tEn = {
   invitationRejected: 'Rechazada',
   invitationFinal: 'Rechazada dos veces: definitiva',
   candidates: 'Pastores que puedes invitar',
-  noCandidates: 'Aún no tienes pastores invitables (referidos de tu país con iglesia verificada). Puedes escribir una billetera abajo.',
+  noCandidates: 'No has referido a ningún pastor.',
+  noCandidatesInvite: 'Puedes invitar a este clúster a otro pastor ya verificado en learn.tg con su billetera:',
   referralsLink: 'Ir a referidos',
   leaveCluster: 'Abandonar clúster',
   leftCluster: 'Saliste del clúster',
@@ -200,6 +224,10 @@ interface ClusterMember {
   church_id: number
   church_name: string
   joined_at: string
+  /** Usuarios de esa iglesia en learn.tg, su pastor principal y los referidos de ese pastor. */
+  learners?: number
+  pastor_name?: string | null
+  pastor_referrals?: number
 }
 
 interface ClusterHistory {
@@ -234,6 +262,7 @@ interface ClusterData {
   name: string
   slug: string
   country_id: number
+  country_name?: string | null
   created_at: string
   member_count: number
   status: string
@@ -241,6 +270,11 @@ interface ClusterData {
   isInitiator?: boolean
   members: ClusterMember[]
   history: ClusterHistory[]
+  funds?: {
+    cluster: { usdt: string; slearn: string } | null
+    country: { usdt: string; slearn: string } | null
+  }
+  donations?: { count: number; usdt_total: number; slearn_total: number }
 }
 
 interface PresentationPastor {
@@ -266,7 +300,7 @@ interface PresentationRequestView {
   contact_email?: string | null
   evaluation?: string | null
   suggestions?: string | null
-  first_year_budget?: number | null
+  fourth_year_budget?: number | null
   budget_draft_path?: string | null
   budget_fixed_at?: string | null
   director_offer_path?: string | null
@@ -326,6 +360,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
   const [presentation, setPresentation] = useState<PresentationView | null>(null)
   const [gdConfirmed, setGdConfirmed] = useState(false)
   const [requesting, setRequesting] = useState(false)
+  const [panelKey, setPanelKey] = useState(0)
 
   const isAuthenticated = !!(address && session?.address && address.toLowerCase() === session.address.toLowerCase())
   const isInitiator = !!cluster?.isInitiator
@@ -558,16 +593,25 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
   }
 
   const complete = cluster.member_count >= MIN_CHURCHES || cluster.status === 'active'
+  const card = 'bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6'
+  const cardTitle = 'text-lg font-semibold text-gray-900 mb-3'
+
+  // Cualquier tarjeta que edite datos (presupuesto, director, aprobación, solicitud)
+  // remonta el panel para que las otras tarjetas vean el estado nuevo.
+  const panelChanged = () => {
+    setPanelKey((key) => key + 1)
+    fetchPresentation()
+  }
 
   const invitationsCard = isAuthenticated && isInitiator && (
-    <div className="mb-6 p-3 bg-gray-50 rounded-md border border-gray-200 text-left">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('invitations')}</h3>
-      <p className="text-xs text-gray-600 mb-2">{t('inviteIntro')}</p>
+    <section className={card}>
+      <h2 className={cardTitle}>{t('invitations')}</h2>
+      <p className="text-xs text-gray-600 mb-3">{t('inviteIntro')}</p>
 
       {candidates.length > 0 ? (
         <>
           <p className="text-xs font-medium text-gray-600 mb-1">{t('candidates')}</p>
-          <ul className="text-xs space-y-1 mb-2">
+          <ul className="text-xs space-y-1 mb-3">
             {candidates.map((c) => {
               const already = invitations.some((i) => i.church_name === c.church_name)
               return (
@@ -591,34 +635,33 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
           </ul>
         </>
       ) : (
-        <div className="space-y-1 mb-2">
-          <p className="text-xs text-gray-500">{t('noCandidates')}</p>
+        <div className="space-y-1 mb-3">
+          <p className="text-sm text-gray-700">{t('noCandidates')}</p>
           <a href={`/${lang}/referrals`} className="text-xs text-blue-600 hover:underline">
             {t('referralsLink')}
           </a>
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        <label className="text-xs text-gray-600">{t('inviteWallet')}</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={inviteWallet}
-            onChange={(e) => setInviteWallet(e.target.value.trim())}
-            placeholder="0x…"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-xs font-mono"
-          />
-          <deps.Button
-            size="sm"
-            onClick={() => invite({ invitedWallet: inviteWallet }, t('inviteSent'))}
-            disabled={inviting || !/^0x[0-9a-fA-F]{40}$/.test(inviteWallet)}
-          >
-            {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('inviteSend')}
-          </deps.Button>
-        </div>
-        {inviteMessage && <p className="text-xs text-red-600">{inviteMessage}</p>}
+      <p className="text-sm text-gray-700 mb-2">{t('noCandidatesInvite')}</p>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={inviteWallet}
+          onChange={(e) => setInviteWallet(e.target.value.trim())}
+          placeholder="0x…"
+          aria-label={t('inviteWallet')}
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-xs font-mono"
+        />
+        <deps.Button
+          size="sm"
+          onClick={() => invite({ invitedWallet: inviteWallet }, t('inviteSent'))}
+          disabled={inviting || !/^0x[0-9a-fA-F]{40}$/.test(inviteWallet)}
+        >
+          {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('inviteSend')}
+        </deps.Button>
       </div>
+      {inviteMessage && <p className="text-xs text-red-600 mt-1">{inviteMessage}</p>}
 
       {invitations.length > 0 && (
         <ul className="text-xs space-y-1 mt-3">
@@ -648,34 +691,22 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
           })}
         </ul>
       )}
-    </div>
+    </section>
   )
 
-  const historyBlock = cluster.history.length > 0 && (
-    <>
-      <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('history')}</h2>
-      <ul className="space-y-2 text-sm text-gray-600">
-        {cluster.history.map((h, i) => {
-          const labels = HISTORY_LABELS[h.event_type] || { en: h.event_type, es: h.event_type }
-          const label = lang === 'es' ? labels.es : labels.en
-          let detail = ''
-          if (h.event_type === 'name_change' || h.event_type === 'slug_change') {
-            detail = `: "${h.old_value}" → "${h.new_value}"`
-          } else if (h.event_type === 'church_join' || h.event_type === 'church_leave') {
-            detail = `: ${h.new_value || h.old_value}`
-          } else if (h.event_type.startsWith('invitation_')) {
-            detail = `: ${h.new_value || h.old_value || ''}`
-          }
-          return (
-            <li key={i} className="flex justify-between">
-              <span>{label}{detail}</span>
-              <span className="text-gray-400">{new Date(h.created_at).toLocaleDateString()}</span>
-            </li>
-          )
-        })}
-      </ul>
-    </>
-  )
+  const panel = (section: 'budget' | 'director' | 'approvals' | 'cancel') =>
+    isAuthenticated && presentation && (presentation.isInitiator || presentation.isMember) ? (
+      <ClusterPresentationPanel
+        key={`${section}-${panelKey}`}
+        lang={lang}
+        clusterId={cluster.id}
+        address={address || null}
+        isInitiator={!!presentation.isInitiator}
+        onChanged={panelChanged}
+        Button={deps.Button}
+        section={section}
+      />
+    ) : null
 
   return (
     <div className="max-w-2xl mx-auto p-6 mt-12">
@@ -683,7 +714,8 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
         ← {t('back')}
       </Link>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+      {/* 1. Encabezado: nombre, estado y alias público. */}
+      <section className={card}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{cluster.name}</h1>
@@ -700,7 +732,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
           )}
         </div>
 
-        <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200 text-left">
+        <div className="p-3 bg-gray-50 rounded-md border border-gray-200 text-left">
           <p className="text-xs text-gray-600 mb-1">{t('alias')}</p>
           {editingSlug ? (
             <div className="flex flex-col gap-2">
@@ -740,197 +772,276 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
             </div>
           )}
         </div>
+      </section>
 
-        {invitationsCard}
-
-        {complete && (
-          <>
-            <div className="mb-6 p-3 bg-gray-50 rounded-md border border-gray-200 text-left">
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <p className="text-sm text-gray-600">{t('clusterWallet')}</p>
-                {cluster.isInitiator && !editingWallet && (
-                  <button
-                    type="button"
-                    onClick={() => { setEditingWallet(true); setNewWallet(cluster.cluster_wallet || '') }}
-                    className="text-xs text-blue-600 hover:underline shrink-0"
-                  >
-                    {t('changeWallet')}
-                  </button>
-                )}
+      {/* 2. Iglesias miembros, con la salida del clúster al final de la misma tarjeta. */}
+      <section className={card}>
+        <h2 className={cardTitle}>{t('memberChurches')} ({cluster.members.length})</h2>
+        <ul className="space-y-3">
+          {cluster.members.map((m) => (
+            <li key={m.church_id} className="text-sm">
+              <div className="flex items-center justify-between">
+                <Link
+                  href={`/${lang}/church/${m.church_id}`}
+                  className="text-blue-600 hover:underline"
+                >
+                  {m.church_name}
+                </Link>
+                <span className="text-gray-400 text-xs">
+                  {new Date(m.joined_at).toLocaleDateString()}
+                </span>
               </div>
-              {editingWallet ? (
-                <div className="flex flex-col gap-2">
-                  <input
-                    type="text"
-                    value={newWallet}
-                    onChange={(e) => setNewWallet(e.target.value)}
-                    placeholder="0x…"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs font-mono"
-                  />
-                  <div className="flex gap-2">
-                    <deps.Button size="sm" onClick={() => handleWallet()} disabled={savingWallet}>
-                      {t('save')}
-                    </deps.Button>
-                    <deps.Button size="sm" variant="outline" onClick={() => setEditingWallet(false)}>
-                      {t('cancel')}
-                    </deps.Button>
-                  </div>
-                </div>
-              ) : cluster.cluster_wallet ? (
-                <div className="flex items-center gap-2">
-                  <code className="text-xs font-mono break-all text-gray-900">{cluster.cluster_wallet}</code>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(cluster.cluster_wallet!)
-                      toast({ title: t('copied') })
-                    }}
-                    className="text-xs text-blue-600 hover:underline shrink-0"
-                  >
-                    {t('copy')}
-                  </button>
-                </div>
-              ) : (
-                <p className="text-xs text-gray-500">{t('notConfigured')}</p>
-              )}
-              <p className="text-xs text-gray-500 mt-2">{t('walletHint')}</p>
-            </div>
-
-            {presentation && (
-              <div className="mb-6 p-3 bg-gray-50 rounded-md border border-gray-200 text-left">
-                <h3 className="text-sm font-semibold text-gray-700 mb-1">{t('gdTitle')}</h3>
-                <p className="text-xs text-gray-600 mb-2">{t('gdIntro')}</p>
-                {presentation.pastors.length > 0 && (
-                  <ul className="text-xs space-y-1 mb-2">
-                    {presentation.pastors.map((pastor, i) => (
-                      <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-                        <span className="min-w-0 break-words">
-                          {pastor.church_name}
-                          {pastor.nombre ? ` · ${pastor.nombre}` : ''}
-                        </span>
-                        <span className={`min-w-0 break-words text-right ${pastor.missing.length ? 'text-amber-700' : 'text-green-700'}`}>
-                          {pastor.missing.length
-                            ? pastor.missing.map((key) => t(PASTOR_MISSING[key] ?? 'gdMissingCourse')).join(', ')
-                            : t('gdOk')}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {presentation.missing.length > 0 && (
-                  <p className="text-xs text-amber-700 mb-2">
-                    {presentation.missing.map((key) => t(CLUSTER_MISSING[key] ?? 'gdMissingActive')).join(' · ')}
-                  </p>
-                )}
-                {presentation.request?.status && presentation.request.status !== 'cancelled' ? (
-                  <div className="text-xs text-gray-700 space-y-1">
-                    <p>
-                      {t('gdRequested')}
-                      {presentation.request.requested_at ? ` · ${new Date(presentation.request.requested_at).toLocaleDateString(lang)}` : ''}
-                    </p>
-                    {presentation.request.returned_at && (
-                      <p className="text-amber-700">
-                        {t('gdReturned')}
-                        {` · ${new Date(presentation.request.returned_at).toLocaleDateString(lang)}`}
-                      </p>
-                    )}
-                    {presentation.request.approved_at && (
-                      <p>
-                        {t('gdApproved')}
-                        {` · ${new Date(presentation.request.approved_at).toLocaleDateString(lang)}`}
-                      </p>
-                    )}
-                    {presentation.request.sent_at && (
-                      <p>
-                        {t('gdSent')}
-                        {` · ${new Date(presentation.request.sent_at).toLocaleDateString(lang)}`}
-                      </p>
-                    )}
-                    {presentation.request.answered_at && (
-                      <p>
-                        {t('gdAnswered')}
-                        {` · ${new Date(presentation.request.answered_at).toLocaleDateString(lang)}`}
-                      </p>
-                    )}
-                    {presentation.request.response && (
-                      <div className="mt-2 rounded border border-gray-200 bg-white p-2">
-                        <p className="font-semibold mb-1">{t('gdResponse')}</p>
-                        <p className="whitespace-pre-wrap">{presentation.request.response}</p>
-                      </div>
-                    )}
-                    {presentation.request.contact_email && (
-                      <p className="mt-1">
-                        {t('gdContactEmail')}:{' '}
-                        <code className="font-mono break-all">{presentation.request.contact_email}</code>
-                      </p>
-                    )}
-                  </div>
-                ) : presentation.isInitiator ? (
-                  <div className="flex flex-col gap-2">
-                    <label className="flex items-start gap-2 text-xs text-gray-700">
-                      <input
-                        type="checkbox"
-                        className="mt-0.5"
-                        checked={gdConfirmed}
-                        onChange={(e) => setGdConfirmed(e.target.checked)}
-                        disabled={!presentation.ready || (presentation.missing_data?.length ?? 0) > 0}
-                      />
-                      <span>{t('gdRequest')}</span>
-                    </label>
-                    <div>
-                      <deps.Button
-                        size="sm"
-                        onClick={handlePresentationRequest}
-                        disabled={!gdConfirmed || !presentation.ready || (presentation.missing_data?.length ?? 0) > 0 || requesting}
-                      >
-                        {t('gdRequestSend')}
-                      </deps.Button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            )}
-
-            {isAuthenticated && presentation && (presentation.isInitiator || presentation.isMember) && (
-              <ClusterPresentationPanel
-                lang={lang}
-                clusterId={cluster.id}
-                address={address || null}
-                isInitiator={!!presentation.isInitiator}
-                onChanged={fetchPresentation}
-                Button={deps.Button}
-              />
-            )}
-
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">
-              {t('memberChurches')} ({cluster.members.length})
-            </h2>
-            <ul className="space-y-2 mb-6">
-              {cluster.members.map((m) => (
-                <li key={m.church_id} className="flex items-center justify-between text-sm">
-                  <Link
-                    href={`/${lang}/church/${m.church_id}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    {m.church_name}
-                  </Link>
-                  <span className="text-gray-400 text-xs">
-                    {new Date(m.joined_at).toLocaleDateString()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        <div className="border-t border-gray-200 pt-4 mb-6">
+              {/* Indicadores del trabajo de la iglesia (R-#299 follow-up). */}
+              <p className="text-xs text-gray-500">
+                {m.pastor_name ? `${t('pastor')}: ${m.pastor_name} · ` : ''}
+                {m.learners ?? 0} {t('membersLabel')} · {m.pastor_referrals ?? 0} {t('referralsLabel')}
+              </p>
+            </li>
+          ))}
+        </ul>
+        {!complete && <p className="text-xs text-gray-500 mt-3">{t('pendingChurches')}</p>}
+        <div className="border-t border-gray-200 pt-4 mt-4">
           <deps.Button variant="outline" size="sm" onClick={handleLeave} className="text-red-600 border-red-300 hover:bg-red-50">
             {t('leaveCluster')}
           </deps.Button>
         </div>
+      </section>
 
-        {historyBlock}
-      </div>
+      {/* 3. Invitaciones: los dos caminos (referidos y billetera). */}
+      {invitationsCard}
+
+      {complete && (
+        <>
+          {/* 4. Balances de los fondos y donaciones: lo que el clúster ha levantado. */}
+      <section className={card}>
+        <h2 className={cardTitle}>{t('clusterFundBalance')}</h2>
+        {cluster.funds?.cluster ? (
+          <p className="text-sm text-gray-700 font-semibold">
+            {cluster.funds.cluster.usdt} USDT · {cluster.funds.cluster.slearn} SLEARN
+          </p>
+        ) : (
+          <p className="text-xs text-gray-500">{t('notAvailable')}</p>
+        )}
+      </section>
+
+      <section className={card}>
+        <h2 className={cardTitle}>{t('countryFundBalance')}</h2>
+        {cluster.funds?.country ? (
+          <p className="text-sm text-gray-700 font-semibold">
+            {cluster.funds.country.usdt} USDT · {cluster.funds.country.slearn} SLEARN
+          </p>
+        ) : (
+          <p className="text-xs text-gray-500">{t('notAvailable')}</p>
+        )}
+        {cluster.country_name && <p className="text-xs text-gray-500 mt-1">{cluster.country_name}</p>}
+      </section>
+
+      <section className={card}>
+        <h2 className={cardTitle}>{t('donationsTitle')}</h2>
+        <p className="text-sm text-gray-700 font-semibold">
+          {Number(cluster.donations?.usdt_total ?? 0).toFixed(2)} USDT ·{' '}
+          {Number(cluster.donations?.slearn_total ?? 0).toFixed(2)} SLEARN
+        </p>
+        <p className="text-xs text-gray-500">
+          {cluster.donations?.count ?? 0} {t('donationsLabel')}
+        </p>
+      </section>
+
+      {/* 5. Billetera del clúster. */}
+          <section className={card}>
+            <h2 className={cardTitle}>{t('clusterWallet')}</h2>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              {cluster.isInitiator && !editingWallet ? (
+                <button
+                  type="button"
+                  onClick={() => { setEditingWallet(true); setNewWallet(cluster.cluster_wallet || '') }}
+                  className="text-xs text-blue-600 hover:underline shrink-0 ml-auto"
+                >
+                  {t('changeWallet')}
+                </button>
+              ) : null}
+            </div>
+            {editingWallet ? (
+              <div className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  value={newWallet}
+                  onChange={(e) => setNewWallet(e.target.value)}
+                  placeholder="0x…"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs font-mono"
+                />
+                <div className="flex gap-2">
+                  <deps.Button size="sm" onClick={() => handleWallet()} disabled={savingWallet}>
+                    {t('save')}
+                  </deps.Button>
+                  <deps.Button size="sm" variant="outline" onClick={() => setEditingWallet(false)}>
+                    {t('cancel')}
+                  </deps.Button>
+                </div>
+              </div>
+            ) : cluster.cluster_wallet ? (
+              <div className="flex items-center gap-2">
+                <code className="text-xs font-mono break-all text-gray-900">{cluster.cluster_wallet}</code>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(cluster.cluster_wallet!)
+                    toast({ title: t('copied') })
+                  }}
+                  className="text-xs text-blue-600 hover:underline shrink-0"
+                >
+                  {t('copy')}
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">{t('notConfigured')}</p>
+            )}
+            <p className="text-xs text-gray-500 mt-2">{t('walletHint')}</p>
+          </section>
+
+          {/* 6. Presupuesto del cuarto año. */}
+          <section className={card}>
+            <h2 className={cardTitle}>{t('budgetTitle')}</h2>
+            {panel('budget')}
+          </section>
+
+          {/* 7. Director del programa. */}
+          <section className={card}>
+            <h2 className={cardTitle}>{t('directorTitle')}</h2>
+            {panel('director')}
+          </section>
+
+          {/* 8. Aprobación de los pastores. */}
+          <section className={card}>
+            <h2 className={cardTitle}>{t('approvalsTitle')}</h2>
+            {panel('approvals')}
+          </section>
+
+          {/* 9. Presentación a Global Disciples. */}
+          {presentation && (
+            <section className={card}>
+              <h2 className={cardTitle}>{t('gdTitle')}</h2>
+              <p className="text-xs text-gray-600 mb-2">{t('gdIntro')}</p>
+              {presentation.pastors.length > 0 && (
+                <ul className="text-xs space-y-1 mb-2">
+                  {presentation.pastors.map((pastor, i) => (
+                    <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                      <span className="min-w-0 break-words">
+                        {pastor.church_name}
+                        {pastor.nombre ? ` · ${pastor.nombre}` : ''}
+                      </span>
+                      <span className={`min-w-0 break-words text-right ${pastor.missing.length ? 'text-amber-700' : 'text-green-700'}`}>
+                        {pastor.missing.length
+                          ? pastor.missing.map((key) => t(PASTOR_MISSING[key] ?? 'gdMissingCourse')).join(', ')
+                          : t('gdOk')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {presentation.missing.length > 0 && (
+                <p className="text-xs text-amber-700 mb-2">
+                  {presentation.missing.map((key) => t(CLUSTER_MISSING[key] ?? 'gdMissingActive')).join(' · ')}
+                </p>
+              )}
+              {presentation.request?.status && presentation.request.status !== 'cancelled' ? (
+                <div className="text-xs text-gray-700 space-y-1">
+                  <p>
+                    {t('gdRequested')}
+                    {presentation.request.requested_at ? ` · ${new Date(presentation.request.requested_at).toLocaleDateString(lang)}` : ''}
+                  </p>
+                  {presentation.request.returned_at && (
+                    <p className="text-amber-700">
+                      {t('gdReturned')}
+                      {` · ${new Date(presentation.request.returned_at).toLocaleDateString(lang)}`}
+                    </p>
+                  )}
+                  {presentation.request.approved_at && (
+                    <p>
+                      {t('gdApproved')}
+                      {` · ${new Date(presentation.request.approved_at).toLocaleDateString(lang)}`}
+                    </p>
+                  )}
+                  {presentation.request.sent_at && (
+                    <p>
+                      {t('gdSent')}
+                      {` · ${new Date(presentation.request.sent_at).toLocaleDateString(lang)}`}
+                    </p>
+                  )}
+                  {presentation.request.answered_at && (
+                    <p>
+                      {t('gdAnswered')}
+                      {` · ${new Date(presentation.request.answered_at).toLocaleDateString(lang)}`}
+                    </p>
+                  )}
+                  {presentation.request.response && (
+                    <div className="mt-2 rounded border border-gray-200 bg-white p-2">
+                      <p className="font-semibold mb-1">{t('gdResponse')}</p>
+                      <p className="whitespace-pre-wrap">{presentation.request.response}</p>
+                    </div>
+                  )}
+                  {presentation.request.contact_email && (
+                    <p className="mt-1">
+                      {t('gdContactEmail')}:{' '}
+                      <code className="font-mono break-all">{presentation.request.contact_email}</code>
+                    </p>
+                  )}
+                </div>
+              ) : presentation.isInitiator ? (
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-start gap-2 text-xs text-gray-700">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5"
+                      checked={gdConfirmed}
+                      onChange={(e) => setGdConfirmed(e.target.checked)}
+                      disabled={!presentation.ready || (presentation.missing_data?.length ?? 0) > 0}
+                    />
+                    <span>{t('gdRequest')}</span>
+                  </label>
+                  <div>
+                    <deps.Button
+                      size="sm"
+                      onClick={handlePresentationRequest}
+                      disabled={!gdConfirmed || !presentation.ready || (presentation.missing_data?.length ?? 0) > 0 || requesting}
+                    >
+                      {t('gdRequestSend')}
+                    </deps.Button>
+                  </div>
+                </div>
+              ) : null}
+              {panel('cancel')}
+            </section>
+          )}
+        </>
+      )}
+
+      {/* 10. Historial. */}
+      {cluster.history.length > 0 && (
+        <section className={card}>
+          <h2 className={cardTitle}>{t('history')}</h2>
+          <ul className="space-y-2 text-sm text-gray-600">
+            {cluster.history.map((h, i) => {
+              const labels = HISTORY_LABELS[h.event_type] || { en: h.event_type, es: h.event_type }
+              const label = lang === 'es' ? labels.es : labels.en
+              let detail = ''
+              if (h.event_type === 'name_change' || h.event_type === 'slug_change') {
+                detail = `: "${h.old_value}" → "${h.new_value}"`
+              } else if (h.event_type === 'church_join' || h.event_type === 'church_leave') {
+                detail = `: ${h.new_value || h.old_value}`
+              } else if (h.event_type.startsWith('invitation_')) {
+                detail = `: ${h.new_value || h.old_value || ''}`
+              }
+              return (
+                <li key={i} className="flex justify-between">
+                  <span>{label}{detail}</span>
+                  <span className="text-gray-400">{new Date(h.created_at).toLocaleDateString()}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }

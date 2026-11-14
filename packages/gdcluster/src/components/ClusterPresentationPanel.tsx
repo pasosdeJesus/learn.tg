@@ -20,7 +20,7 @@ type Presentation = {
     locked: boolean
     evaluation?: string | null
     suggestions?: string | null
-    first_year_budget?: number | null
+    fourth_year_budget?: number | null
     budget_draft_path?: string | null
     budget_fixed_at?: string | null
     director_offer_path?: string | null
@@ -40,12 +40,12 @@ type Presentation = {
 
 
 const LABELS: Record<string, { en: string; es: string }> = {
-  budget: { en: 'First-year budget', es: 'Presupuesto del primer año' },
+  budget: { en: 'Fourth year budget', es: 'Presupuesto del cuarto año' },
   budgetHint: {
-    en: 'Upload the draft budget (PDF) and enter the total for the first year. Both stay editable until you request the presentation.',
-    es: 'Sube el borrador del presupuesto (PDF) y escribe el total del primer año. Ambos siguen editables hasta que solicites la presentación.',
+    en: 'Global Disciples funds the first three years: this is the budget for the fourth year, when the cluster stands on its own. Upload the draft budget (PDF) and enter the total; both stay editable until you request the presentation.',
+    es: 'Global Disciples financia los tres primeros años: este es el presupuesto del cuarto año, cuando el clúster camina solo. Sube el borrador del presupuesto (PDF) y escribe el total; ambos siguen editables hasta que solicites la presentación.',
   },
-  budgetTotal: { en: 'Total for the first year (USDT)', es: 'Total del primer año (USDT)' },
+  budgetTotal: { en: 'Total for the fourth year (USDT)', es: 'Total del cuarto año (USDT)' },
   budgetPdf: { en: 'Draft budget (PDF)', es: 'Borrador del presupuesto (PDF)' },
   director: { en: 'Program director', es: 'Director del programa' },
   directorHint: {
@@ -89,12 +89,14 @@ const LABELS: Record<string, { en: string; es: string }> = {
 }
 
 const MISSING: Record<string, { en: string; es: string }> = {
-  budget_total: { en: 'the total for the first year', es: 'el total del primer año' },
+  budget_total: { en: 'the total for the fourth year', es: 'el total del cuarto año' },
   budget_pdf: { en: 'the draft budget PDF', es: 'el PDF del borrador del presupuesto' },
   director_offer_pdf: { en: 'the job offer PDF', es: 'el PDF de la oferta de trabajo' },
   director_pay: { en: 'the total pay for the first year', es: 'el pago total del primer año' },
   director_hours: { en: 'the expected hours for the first year', es: 'las horas esperadas del primer año' },
 }
+
+type PanelSection = 'all' | 'budget' | 'director' | 'approvals' | 'cancel'
 
 export function ClusterPresentationPanel({
   lang,
@@ -103,6 +105,7 @@ export function ClusterPresentationPanel({
   isInitiator,
   onChanged,
   Button,
+  section = 'all',
 }: {
   lang: string
   clusterId: number
@@ -110,7 +113,15 @@ export function ClusterPresentationPanel({
   isInitiator: boolean
   onChanged?: () => void
   Button: any
+  /**
+   * Qué parte se pinta. La página del clúster usa una tarjeta por sección, en el orden
+   * presupuesto → director → aprobación → solicitud (R-#299 follow-up); con `'all'`
+   * (por defecto) se pintan todas juntas y cada una con su encabezado.
+   */
+  section?: PanelSection
 }) {
+  const shows = (name: Exclude<PanelSection, 'all'>) => section === 'all' || section === name
+  const ownHeading = section === 'all'
   const tr = (key: keyof typeof LABELS, ...args: string[]) => {
     const labels = LABELS[key] ?? { en: String(key), es: String(key) }
     const value = (lang === 'es' ? labels.es : labels.en) as string
@@ -132,7 +143,7 @@ export function ClusterPresentationPanel({
       const presentationRes = await fetch(`/api/cluster/${clusterId}/gd-presentation${query}`)
       const presentationData = presentationRes.ok ? await presentationRes.json() : null
       setPresentation(presentationData)
-      setBudget(presentationData?.request?.first_year_budget != null ? String(presentationData.request.first_year_budget) : '')
+      setBudget(presentationData?.request?.fourth_year_budget != null ? String(presentationData.request.fourth_year_budget) : '')
       setDirectorPay(
         presentationData?.request?.director_first_year_pay != null ? String(presentationData.request.director_first_year_pay) : '',
       )
@@ -159,7 +170,7 @@ export function ClusterPresentationPanel({
     setNotice(null)
     try {
       const body = kind === 'budget'
-        ? { walletAddress: address, ...(budget ? { firstYearBudget: Number(budget) } : {}) }
+        ? { walletAddress: address, ...(budget ? { fourthYearBudget: Number(budget) } : {}) }
         : {
             walletAddress: address,
             ...(directorPay ? { directorFirstYearPay: Number(directorPay) } : {}),
@@ -245,8 +256,8 @@ export function ClusterPresentationPanel({
     `/api/cluster/${clusterId}/document?side=${side}${address ? `&walletAddress=${encodeURIComponent(address)}` : ''}`
 
   return (
-    <div className="border-t border-gray-200 pt-4 mb-6 space-y-4">
-      {isInitiator && missingData.length > 0 && !locked && (
+    <div className="space-y-4">
+      {isInitiator && missingData.length > 0 && !locked && (section === 'all' || section === 'cancel') && (
         <div className="rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
           <p className="font-semibold mb-1">{tr('missingData')}</p>
           <ul className="list-disc ml-4">
@@ -268,8 +279,8 @@ export function ClusterPresentationPanel({
         </div>
       )}
 
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900">{tr('budget')}</h3>
+      {shows('budget') && <section>
+        {ownHeading && <h3 className="text-sm font-semibold text-gray-900">{tr('budget')}</h3>}
         <p className="text-xs text-gray-600 mb-2">{locked ? tr('locked') : tr('budgetHint')}</p>
         <div className="grid gap-2 sm:grid-cols-2">
           <label className="text-xs text-gray-700">
@@ -312,10 +323,10 @@ export function ClusterPresentationPanel({
             </Button>
           </div>
         )}
-      </section>
+      </section>}
 
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900">{tr('director')}</h3>
+      {shows('director') && <section>
+        {ownHeading && <h3 className="text-sm font-semibold text-gray-900">{tr('director')}</h3>}
         <p className="text-xs text-gray-600 mb-2">{locked ? tr('locked') : tr('directorHint')}</p>
         <div className="grid gap-2 sm:grid-cols-3">
           <label className="text-xs text-gray-700">
@@ -370,9 +381,9 @@ export function ClusterPresentationPanel({
             </Button>
           </div>
         )}
-      </section>
+      </section>}
 
-      {isInitiator && request?.status === 'requested' && (
+      {shows('cancel') && isInitiator && request?.status === 'requested' && (
         <section>
           <p className="text-xs text-gray-600 mb-1">{tr('cancelHint')}</p>
           <Button variant="outline" size="sm" onClick={cancel} disabled={busy === 'cancel'} className="text-red-600 border-red-300 hover:bg-red-50">
@@ -381,8 +392,8 @@ export function ClusterPresentationPanel({
         </section>
       )}
 
-      <section>
-        <h3 className="text-sm font-semibold text-gray-900">{tr('approvals')}</h3>
+      {shows('approvals') && <section>
+        {ownHeading && <h3 className="text-sm font-semibold text-gray-900">{tr('approvals')}</h3>}
         <p className="text-xs text-gray-600 mb-2">{tr('approvalsHint')}</p>
         {presentation && (
           <div className="text-xs text-gray-700 space-y-1">
@@ -401,7 +412,7 @@ export function ClusterPresentationPanel({
             ) : null}
           </div>
         )}
-      </section>
+      </section>}
 
       {notice && <p className="text-xs text-green-700">{notice}</p>}
       {error && <p className="text-xs text-red-600">{error}</p>}

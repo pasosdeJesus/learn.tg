@@ -95,7 +95,7 @@ export interface PresentationRequest {
   response_at: string | null
   response_by: number | null
   contact_email: string | null
-  first_year_budget: number | null
+  fourth_year_budget: number | null
   budget_draft_path: string | null
   budget_fixed_at: string | null
   director_offer_path: string | null
@@ -124,14 +124,14 @@ export interface PresentationReadiness {
  * estables para que la UI y el error del POST usen el mismo vocabulario.
  */
 export function missingPresentationData(cluster: {
-  first_year_budget?: unknown
+  fourth_year_budget?: unknown
   budget_draft_path?: unknown
   director_offer_path?: unknown
   director_first_year_pay?: unknown
   director_first_year_hours?: unknown
 }): string[] {
   const missing: string[] = []
-  if (cluster.first_year_budget === null || cluster.first_year_budget === undefined || Number(cluster.first_year_budget) <= 0) {
+  if (cluster.fourth_year_budget === null || cluster.fourth_year_budget === undefined || Number(cluster.fourth_year_budget) <= 0) {
     missing.push('budget_total')
   }
   if (!cluster.budget_draft_path) missing.push('budget_pdf')
@@ -397,7 +397,7 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
     response_at: iso(cluster.gd_response_at),
     response_by: cluster.gd_response_by ?? null,
     contact_email: cluster.gd_contact_email ?? null,
-    first_year_budget: num(cluster.first_year_budget),
+    fourth_year_budget: num(cluster.fourth_year_budget),
     budget_draft_path: cluster.budget_draft_path ?? null,
     budget_fixed_at: iso(cluster.budget_fixed_at),
     director_offer_path: cluster.director_offer_path ?? null,
@@ -418,7 +418,7 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
     request:
       request.requested_at ||
       request.status ||
-      request.first_year_budget != null ||
+      request.fourth_year_budget != null ||
       request.budget_draft_path ||
       request.director_offer_path ||
       request.director_first_year_pay != null ||

@@ -266,7 +266,7 @@ async function main() {
     console.log('  [!] el panel no está en la página: se usan los endpoints (pendiente el despliegue)')
     const budget = await api(`/api/cluster/${clusterId}/budget`, {
       method: 'PUT',
-      body: JSON.stringify({ walletAddress: wallet, firstYearBudget: 400 }),
+      body: JSON.stringify({ walletAddress: wallet, fourthYearBudget: 400 }),
     })
     if (budget.status === 200) ok('PUT budget → 200')
     else fail(`PUT budget → ${budget.status} ${JSON.stringify(budget.body).slice(0, 120)}`)

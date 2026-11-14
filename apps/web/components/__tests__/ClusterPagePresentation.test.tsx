@@ -82,9 +82,36 @@ describe('ClusterPage with an incomplete presentation', () => {
     await waitFor(() => {
       expect(screen.getByText('Before requesting the presentation you must complete:')).toBeInTheDocument()
     })
-    expect(screen.getByText('the total for the first year')).toBeInTheDocument()
+    expect(screen.getByText('the total for the fourth year')).toBeInTheDocument()
     expect(screen.getByText('the expected hours for the first year')).toBeInTheDocument()
     expect(screen.queryByText('A wallet connection error occurred. Please try:')).not.toBeInTheDocument()
+  })
+
+  it('orders the cards of the private page (R-#299 follow-up)', async () => {
+    const { container } = render(<ClusterPage lang="en" id="52" deps={deps} />)
+    await waitFor(() => {
+      expect(screen.getByText('Fourth year budget')).toBeInTheDocument()
+    })
+    const headings = Array.from(container.querySelectorAll('h2')).map((h) => h.textContent || '')
+    const expected = [
+      'Member Churches',
+      'Invitations',
+      'Cluster fund balance',
+      'Country fund balance',
+      'Donations to the cluster fund',
+      'Cluster wallet',
+      'Fourth year budget',
+      'Program Director',
+      'Pastors approval',
+      'Global Disciples',
+      'History',
+    ]
+    let cursor = 0
+    for (const title of expected) {
+      const found = headings.findIndex((h, index) => index >= cursor && h.startsWith(title))
+      expect(found, `falta "${title}" en orden: ${headings.join(' | ')}`).toBeGreaterThanOrEqual(cursor)
+      cursor = found + 1
+    }
   })
 
   it('renders the same block in Spanish', async () => {

@@ -175,6 +175,13 @@ billetera, y el `window.location.reload()` posterior aterrizaba con la clave
 fuera de memoria (billetera bloqueada otra vez): un ciclo en el que la donación
 nunca se podía completar.
 
+**Versión mínima de `m` (F-#300).** El firmante del núcleo resolvía `viem` con
+`loadFromProject` (`createRequire`), que solo existe en Node, así que en el navegador la
+billetera no se creaba ni se desbloqueaba. Corregido en **`m@0.37.20`**: el campo `browser`
+de `@pasosdejesus/m` mapea `dist/wallet/signer-runtime.js` a la variante con `import`
+estático de `viem`. Con versiones anteriores los specs de esta página quedan en rojo; el
+catálogo de learn.tg fija `^0.37.20`.
+
 **Receta local (esta VM sí puede servir):** `bin/dev` levanta
 `http://localhost:4000` y los specs aceptan `SITE_URL`, así que se pueden correr
 **sin desplegar** (`doc/environments.md`). Medido el 2026-09-28 con `next dev`:

@@ -54,7 +54,7 @@ const CLUSTER = {
   gd_status: null as string | null,
   gd_requested_at: null as Date | null,
   gd_sent_at: null as Date | null,
-  first_year_budget: 500,
+  fourth_year_budget: 500,
   budget_draft_path: 'cluster/3/budget.pdf',
   director_offer_path: 'cluster/3/director.pdf',
   director_first_year_pay: 180,
@@ -137,7 +137,7 @@ describe('gd-presentation (R-#161)', () => {
 
   it('explains missing guides, score and data in the 400', async () => {
     viewer(INITIATOR_CHURCH, {
-      first_year_budget: null,
+      fourth_year_budget: null,
       budget_draft_path: null,
     })
     state.readiness = {
@@ -231,7 +231,7 @@ describe('gd-presentation (R-#161)', () => {
   })
 
   it('rejects the request (400) when the budget or the director offer is missing', async () => {
-    viewer(INITIATOR_CHURCH, { first_year_budget: null, director_offer_path: null })
+    viewer(INITIATOR_CHURCH, { fourth_year_budget: null, director_offer_path: null })
     const res = await requestPresentation(deps() as GdclusterDeps, post(), { id: '3' })
     expect(res.status).toBe(400)
     const json = await res.json()

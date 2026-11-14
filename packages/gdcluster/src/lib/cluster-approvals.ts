@@ -8,7 +8,7 @@ import { getClusterPastors } from './cluster-pastors.js'
 // que si pdJ devuelve la solicitud y cambia algo, las aprobaciones dejan de valer solas.
 
 export interface PresentationData {
-  first_year_budget?: unknown
+  fourth_year_budget?: unknown
   budget_draft_path?: unknown
   director_offer_path?: unknown
   director_first_year_pay?: unknown
@@ -25,7 +25,7 @@ export interface ClusterApprovals {
 
 export function presentationDataHash(data: PresentationData, wallet: string | null): string {
   const parts = [
-    data.first_year_budget,
+    data.fourth_year_budget,
     data.budget_draft_path,
     data.director_offer_path,
     data.director_first_year_pay,

@@ -5,7 +5,7 @@ import { presentationDataHash } from '../cluster-approvals.js'
 // (R-#161): cualquier cambio material cambia el hash y caduca la aprobación.
 
 const data = {
-  first_year_budget: 500,
+  fourth_year_budget: 500,
   budget_draft_path: 'cluster/3/budget.pdf',
   director_offer_path: 'cluster/3/director.pdf',
   director_first_year_pay: 180,
@@ -20,7 +20,7 @@ describe('presentationDataHash (R-#161)', () => {
 
   it('changes with any of the five fields', () => {
     const base = presentationDataHash(data, wallet)
-    expect(presentationDataHash({ ...data, first_year_budget: 501 }, wallet)).not.toBe(base)
+    expect(presentationDataHash({ ...data, fourth_year_budget: 501 }, wallet)).not.toBe(base)
     expect(presentationDataHash({ ...data, budget_draft_path: 'cluster/3/budget2.pdf' }, wallet)).not.toBe(base)
     expect(presentationDataHash({ ...data, director_offer_path: 'cluster/3/offer2.pdf' }, wallet)).not.toBe(base)
     expect(presentationDataHash({ ...data, director_first_year_pay: 181 }, wallet)).not.toBe(base)

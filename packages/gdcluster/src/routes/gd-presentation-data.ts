@@ -57,7 +57,7 @@ function amount(value: unknown, { max }: { max: number }): number | null {
 }
 
 /**
- * PUT /api/cluster/[id]/budget — { walletAddress, firstYearBudget, budgetDraftPath }.
+ * PUT /api/cluster/[id]/budget — { walletAddress, fourthYearBudget, budgetDraftPath }.
  * Ambos campos se guardan juntos: el total sin el PDF (o al revés) no basta para
  * solicitar la presentación y el error lo dice (`missing_data`).
  */
@@ -69,10 +69,10 @@ export async function updateBudget(deps: GdclusterDeps, req: NextRequest, params
     const body = ctx.body ?? {}
 
     const updates: Record<string, unknown> = { updated_at: new Date() }
-    if (body.firstYearBudget !== undefined) {
-      const budget = amount(body.firstYearBudget, { max: 1_000_000_000 })
+    if (body.fourthYearBudget !== undefined) {
+      const budget = amount(body.fourthYearBudget, { max: 1_000_000_000 })
       if (budget === null) return NextResponse.json({ error: 'Invalid first-year budget' }, { status: 400 })
-      updates.first_year_budget = budget
+      updates.fourth_year_budget = budget
     }
     if (body.budgetDraftPath !== undefined) {
       const path = String(body.budgetDraftPath ?? '').trim()
@@ -87,7 +87,7 @@ export async function updateBudget(deps: GdclusterDeps, req: NextRequest, params
     return NextResponse.json({
       success: true,
       budget: {
-        first_year_budget: updates.first_year_budget ?? ctx.cluster.first_year_budget ?? null,
+        fourth_year_budget: updates.fourth_year_budget ?? ctx.cluster.fourth_year_budget ?? null,
         budget_draft_path: updates.budget_draft_path ?? ctx.cluster.budget_draft_path ?? null,
       },
     })

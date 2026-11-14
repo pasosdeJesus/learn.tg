@@ -1960,7 +1960,7 @@ CREATE TABLE public.clustergd (
     gd_answered_at timestamp with time zone,
     gd_evaluation text,
     gd_suggestions text,
-    first_year_budget numeric(12,2),
+    fourth_year_budget numeric(12,2),
     budget_draft_path character varying(255),
     budget_fixed_at timestamp with time zone,
     director_offer_path character varying(255),

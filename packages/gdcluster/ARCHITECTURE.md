@@ -60,6 +60,26 @@ an E2E run can read why a cluster is not ready without translating codes.
 `ClusterPage` shows them in the aviso, so the initiator knows what to do; a
 refusal without an explanation is a silent failure (2026-11-05).
 
+### D5 — One private page, one card per step
+
+`/{lang}/cluster` is the only private page (R-#299): the pastor belongs to one cluster, so the
+`id` adds nothing. It is a stack of cards in the order the cluster actually advances —
+name/status/public alias, **Member Churches** (each row with its members in learn.tg and its
+pastor's referrals; `Leave cluster` at the end of the same card), **Invitations** (referred pastors
+and by wallet), **Cluster fund balance**, **Country fund balance** and **Donations to the cluster
+fund** (`getClusterFunds`, `getCountryFunds` and the `transaction` aggregate — the fund-raising
+indicators), **Cluster wallet**, **Fourth year budget** (`clustergd.fourth_year_budget`: Global
+Disciples funds the first three years, so the plan that matters is year 4), **Program Director**,
+**Pastors approval**, **Present to Global Disciples** and **History**. `GET /api/cluster/[id]`
+carries `funds { cluster, country }`, `donations { count, usdt_total, slearn_total }` and, per
+member, `learners` (`usuario` rows of that church), `pastor_name` and `pastor_referrals`
+(`referralrelationship`); a chain read that fails returns `null` and the card says "Not available". Each card that
+edits data mounts `ClusterPresentationPanel` with a single `section`, and an `onChanged` callback
+increments a key so the other cards refetch what they show; a cluster still being formed shows
+only the name, the member churches, the invitations and the history. The presentation is
+requested **only** here: the card on the course page links to this page instead of repeating the
+control (2026-11-13).
+
 ## Data flow
 
 ### Cluster lifecycle

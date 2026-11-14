@@ -41,7 +41,7 @@ describe('canTransitionPresentation (R-#161)', () => {
 
 describe('missingPresentationData (R-#161)', () => {
   const complete = {
-    first_year_budget: 500,
+    fourth_year_budget: 500,
     budget_draft_path: 'cluster/3/budget.pdf',
     director_offer_path: 'cluster/3/director.pdf',
     director_first_year_pay: 180,
@@ -60,6 +60,6 @@ describe('missingPresentationData (R-#161)', () => {
       'director_pay',
       'director_hours',
     ])
-    expect(missingPresentationData({ ...complete, first_year_budget: 0 })).toEqual(['budget_total'])
+    expect(missingPresentationData({ ...complete, fourth_year_budget: 0 })).toEqual(['budget_total'])
   })
 })

@@ -404,9 +404,17 @@ rewritten.
 public ranking shows the slug and links each row to `/{lang}/clusters/[slug]`; every step
 (invitation sent/accepted/rejected/re-invited, alias change, initiator change, fund release)
 is logged in `clustergd_history` and mirrored in `userevent`. **UI:** the private page is a
-single `/{lang}/cluster` (creation, pending invitation with Yes/No, and the cluster itself);
-a cluster with fewer than three churches shows only the invitations card (for the initiator)
-and the history.
+single `/{lang}/cluster` (creation, pending invitation with Yes/No, and the cluster itself) and
+the **only** place where the presentation to Global Disciples is requested (the card on the
+course page only links here). Its cards, in order: name/status/**public alias**, **Member
+Churches** (each row with its members in learn.tg and its pastor's referrals, and *Leave cluster*
+at the end), **Invitations** (referred pastors and by wallet), **Cluster fund balance**, **Country
+fund balance**, **Donations to the cluster fund** (the fund-raising indicators), **Cluster
+wallet**, **Fourth year budget**, **Program Director**, **Pastors approval**, **Present to Global
+Disciples** and **History**. A cluster with fewer than three churches shows
+the name, the member churches (with the way out), the invitations card (for the initiator) and
+the history; the wallet, budget, director, approvals and presentation cards appear once it is
+active.
 
 **Out of scope:** multiple clusters per church, bulk invitations, external
 notifications, on-chain member-count activation.

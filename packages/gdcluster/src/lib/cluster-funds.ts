@@ -1,4 +1,5 @@
 import { formatUnits } from 'viem'
+import { sql } from 'kysely'
 import ClusterFundsV2Abi from '../abis/ClusterFundsV2.json'
 import { getClusterFundsAddress } from './gd-cluster-routing.js'
 
@@ -21,6 +22,19 @@ export interface ClusterFundsBalance {
 export interface ClusterFundsSummary {
   usdt: string
   slearn: string
+}
+
+export interface CountryFundsBalance {
+  usdt: bigint
+  slearn: bigint
+  exists: boolean
+}
+
+/** Total donado al fondo de un clúster en learn.tg (`transaction`), para los indicadores. */
+export interface ClusterDonations {
+  count: number
+  usdt_total: number
+  slearn_total: number
 }
 
 /**
@@ -55,6 +69,72 @@ export async function readClusterFunds(
       error instanceof Error ? error.message : String(error),
     )
     return null
+  }
+}
+
+/**
+ * Saldo del fondo del **país** (`getCountryFunds(alfa2)`), o `null` si no se pudo leer.
+ * Es el pozo del que se reparte entre los clústeres presentados cuando GD responde.
+ */
+export async function readCountryFunds(
+  deps: { backend: { getPublicClient: () => any } },
+  countryCode: string | null | undefined,
+): Promise<CountryFundsBalance | null> {
+  if (!countryCode) return null
+  try {
+    const publicClient = deps.backend.getPublicClient()
+    const address = await getClusterFundsAddress()
+    const result = (await publicClient.readContract({
+      address,
+      abi: ClusterFundsV2Abi as any,
+      functionName: 'getCountryFunds',
+      args: [countryCode],
+    })) as [bigint, bigint, boolean]
+    return {
+      usdt: BigInt(result[0] ?? 0n),
+      slearn: BigInt(result[1] ?? 0n),
+      exists: Boolean(result[2]),
+    }
+  } catch (error) {
+    console.error(
+      '[gd] could not read the country funds:',
+      error instanceof Error ? error.message : String(error),
+    )
+    return null
+  }
+}
+
+/**
+ * Donaciones registradas a la billetera del clúster (`transaction.subcategoria = 'cluster'`):
+ * las directas y el 10 % ruteado de compras y becas (`cluster_contribution` se acredita
+ * completo; el resto aporta el 80 %). Es el indicador de lo que el clúster ha levantado.
+ */
+export async function readClusterDonations(
+  db: any,
+  wallet: string | null | undefined,
+): Promise<ClusterDonations> {
+  if (!wallet) return { count: 0, usdt_total: 0, slearn_total: 0 }
+  const rows = await sql<{ count: number; usdt_total: number; slearn_total: number }>`
+    SELECT
+      COUNT(*)::int AS count,
+      COALESCE(SUM(
+        CASE WHEN t.crypto = 'usdt' THEN
+          CASE WHEN t.type = 'cluster_contribution' OR t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
+        ELSE 0 END), 0)::float AS usdt_total,
+      COALESCE(SUM(
+        CASE WHEN t.crypto = 'slearn' THEN
+          CASE WHEN t.type = 'cluster_contribution' OR t.hash LIKE '%-fund' THEN t.amount ELSE t.amount * 0.8 END
+        ELSE 0 END), 0)::float AS slearn_total
+    FROM transaction t
+    WHERE t.subcategoria = 'cluster'
+      AND t.type IN ('donation', 'cluster_contribution')
+      AND lower(t.metadata->>'clusterWallet') = lower(${wallet})
+  `.execute(db)
+  const row = rows.rows[0]
+  return {
+    count: Number(row?.count ?? 0),
+    usdt_total: Number(row?.usdt_total ?? 0),
+    slearn_total: Number(row?.slearn_total ?? 0),
   }
 }
 

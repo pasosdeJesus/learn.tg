@@ -213,6 +213,7 @@ describe('getCluster — viewer role (R-#220)', () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce(CLUSTER) // clustergd
       .mockResolvedValueOnce({ cluster_wallet: OLD }) // leader church
+      .mockResolvedValueOnce({ nombre: 'Colombia', code: 'CO' }) // msip_pais (indicadores)
       .mockResolvedValueOnce(CHURCH) // getPastorChurch for the viewer
     mockExecute.mockResolvedValue([])
 
