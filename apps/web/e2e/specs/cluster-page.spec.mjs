@@ -114,7 +114,7 @@ async function main() {
 
   // Sin selector: reutiliza la billetera más antigua del registro local (creada
   // por otra prueba) en vez de exigir una nueva.
-  const registered = walletSelector() ? null : oldestFreeWallet()
+  const registered = walletSelector() ? null : oldestFreeWallet({ withGdCourse: true })
   const creds = registered
     ? { variable: 'registro local', pk: registered.privateKey, address: registered.address }
     : loadSelectedWallet()

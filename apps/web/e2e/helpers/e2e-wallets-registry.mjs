@@ -69,8 +69,20 @@ export function oldestMembers({ count = 3, religionId = 2 } = {}) {
     .slice(0, count)
 }
 
-/** Billetera libre para una prueba de pastor: la más antigua del registro. */
-export function oldestFreeWallet() {
+/**
+ * Billetera libre para una prueba de pastor: la más antigua del registro.
+ *
+ * Con `{ withGdCourse: true }` prefiere una que ya compró el curso GD (las registra
+ * `premium-course-checkout`), porque los specs de clúster no pueden crear el clúster
+ * sin el curso y de otro modo quedan en `[SKIP]` (2026-11-15).
+ */
+export function oldestFreeWallet({ withGdCourse = false } = {}) {
+  if (withGdCourse) {
+    const buyer = readRegistry()
+      .filter((row) => row.hasGdCourse === true && !row.clusterCompletedAt)
+      .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))[0]
+    if (buyer) return buyer
+  }
   return oldestMembers({ count: 1 })[0] || null
 }
 
